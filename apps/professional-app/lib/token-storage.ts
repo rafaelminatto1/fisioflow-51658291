@@ -1,12 +1,12 @@
-import * as SecureStore from 'expo-secure-store';
+import * as SecureStore from "expo-secure-store";
 
-const TOKEN_KEY = 'FISIOFLOW_AUTH_TOKEN';
+const TOKEN_KEY = "FISIOFLOW_AUTH_TOKEN";
 
 export async function getToken(): Promise<string | null> {
   try {
     return await SecureStore.getItemAsync(TOKEN_KEY);
   } catch (error) {
-    console.error('Error reading token:', error);
+    console.error("Error reading token:", error);
     return null;
   }
 }

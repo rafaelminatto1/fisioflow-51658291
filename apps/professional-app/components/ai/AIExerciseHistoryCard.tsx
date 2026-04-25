@@ -1,10 +1,10 @@
-import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { Card } from '../Card';
-import { ExerciseSession } from '../../types/pose';
-import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+import React from "react";
+import { View, Text, StyleSheet } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { Card } from "../Card";
+import { ExerciseSession } from "../../types/pose";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 
 interface Props {
   session: ExerciseSession;
@@ -13,15 +13,15 @@ interface Props {
 
 export function AIExerciseHistoryCard({ session, colors }: Props) {
   const getQualityColor = (score: number) => {
-    if (score >= 90) return '#10B981'; // Perfeito
-    if (score >= 70) return '#3B82F6'; // Bom
-    if (score >= 50) return '#F59E0B'; // Regular
-    return '#EF4444'; // Ruim
+    if (score >= 90) return "#10B981"; // Perfeito
+    if (score >= 70) return "#3B82F6"; // Bom
+    if (score >= 50) return "#F59E0B"; // Regular
+    return "#EF4444"; // Ruim
   };
 
-  const dateLabel = session.createdAt?.toDate 
+  const dateLabel = session.createdAt?.toDate
     ? format(session.createdAt.toDate(), "dd 'de' MMM", { locale: ptBR })
-    : 'Data N/A';
+    : "Data N/A";
 
   return (
     <Card style={styles.card}>
@@ -32,7 +32,12 @@ export function AIExerciseHistoryCard({ session, colors }: Props) {
           </Text>
           <Text style={[styles.date, { color: colors.textSecondary }]}>{dateLabel}</Text>
         </View>
-        <View style={[styles.scoreBadge, { backgroundColor: getQualityColor(session.totalScore) + '20' }]}>
+        <View
+          style={[
+            styles.scoreBadge,
+            { backgroundColor: getQualityColor(session.totalScore) + "20" },
+          ]}
+        >
           <Text style={[styles.scoreText, { color: getQualityColor(session.totalScore) }]}>
             {session.totalScore}%
           </Text>
@@ -78,18 +83,28 @@ export function AIExerciseHistoryCard({ session, colors }: Props) {
 
 const styles = StyleSheet.create({
   card: { marginBottom: 12, padding: 16 },
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
+  header: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 16,
+  },
   titleGroup: { gap: 2 },
-  exerciseName: { fontSize: 16, fontWeight: 'bold' },
+  exerciseName: { fontSize: 16, fontWeight: "bold" },
   date: { fontSize: 12 },
   scoreBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 },
-  scoreText: { fontWeight: 'bold', fontSize: 14 },
-  metricsRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 8 },
-  metric: { alignItems: 'center', flex: 1 },
-  metricValue: { fontSize: 18, fontWeight: 'bold' },
+  scoreText: { fontWeight: "bold", fontSize: 14 },
+  metricsRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingVertical: 8,
+  },
+  metric: { alignItems: "center", flex: 1 },
+  metricValue: { fontSize: 18, fontWeight: "bold" },
   metricLabel: { fontSize: 10, marginTop: 2 },
-  divider: { width: 1, height: 20, backgroundColor: '#e5e7eb' },
-  issuesContainer: { marginTop: 12, paddingTop: 12, borderTopWidth: 1, borderTopColor: '#f3f4f6' },
-  issuesTitle: { fontSize: 12, fontWeight: 'bold', marginBottom: 4 },
+  divider: { width: 1, height: 20, backgroundColor: "#e5e7eb" },
+  issuesContainer: { marginTop: 12, paddingTop: 12, borderTopWidth: 1, borderTopColor: "#f3f4f6" },
+  issuesTitle: { fontSize: 12, fontWeight: "bold", marginBottom: 4 },
   issueItem: { fontSize: 12, lineHeight: 18 },
 });

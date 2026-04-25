@@ -1,30 +1,30 @@
-import type { Env } from '../types/env';
+import type { Env } from "../types/env";
 
 type AuditAction =
-  | 'patient.view'
-  | 'patient.create'
-  | 'patient.update'
-  | 'patient.delete'
-  | 'session.create'
-  | 'session.update'
-  | 'session.finalize'
-  | 'session.delete'
-  | 'exam.upload'
-  | 'exam.view'
-  | 'document.sign'
-  | 'document.view'
-  | 'auth.login'
-  | 'auth.logout'
-  | 'lgpd.data_export'
-  | 'lgpd.data_delete'
-  | 'lgpd.consent_update'
-  | 'financial.view'
-  | 'financial.create';
+  | "patient.view"
+  | "patient.create"
+  | "patient.update"
+  | "patient.delete"
+  | "session.create"
+  | "session.update"
+  | "session.finalize"
+  | "session.delete"
+  | "exam.upload"
+  | "exam.view"
+  | "document.sign"
+  | "document.view"
+  | "auth.login"
+  | "auth.logout"
+  | "lgpd.data_export"
+  | "lgpd.data_delete"
+  | "lgpd.consent_update"
+  | "financial.view"
+  | "financial.create";
 
 type AuditEntry = {
   action: AuditAction;
-  entityId?: string;       // ID do recurso afetado (patient_id, session_id etc)
-  entityType?: string;     // Tipo do recurso ("patient", "session" etc)
+  entityId?: string; // ID do recurso afetado (patient_id, session_id etc)
+  entityType?: string; // Tipo do recurso ("patient", "session" etc)
   userId: string;
   organizationId: string;
   ipAddress?: string;
@@ -54,7 +54,7 @@ export function writeAuditLog(env: Env, entry: AuditEntry, ctx?: ExecutionContex
     try {
       env.ANALYTICS.writeDataPoint({
         blobs: [
-          `/audit/${entry.entityType ?? 'unknown'}`,
+          `/audit/${entry.entityType ?? "unknown"}`,
           entry.action,
           entry.organizationId,
           entry.action,
@@ -86,7 +86,7 @@ export function writeAuditLog(env: Env, entry: AuditEntry, ctx?: ExecutionContex
       .run()
       .catch((err) => {
         // Tabela pode não existir ainda — cria e retry
-        console.warn('[AuditLog] D1 write failed (table may not exist):', err.message);
+        console.warn("[AuditLog] D1 write failed (table may not exist):", err.message);
       });
 
     // Usa waitUntil se disponível para não bloquear resposta
@@ -101,7 +101,8 @@ export function writeAuditLog(env: Env, entry: AuditEntry, ctx?: ExecutionContex
  * Chamar no startup ou migration.
  */
 export async function ensureAuditLogTable(db: D1Database): Promise<void> {
-  await db.prepare(`
+  await db
+    .prepare(`
     CREATE TABLE IF NOT EXISTS audit_log (
       id TEXT PRIMARY KEY,
       action TEXT NOT NULL,
@@ -114,17 +115,22 @@ export async function ensureAuditLogTable(db: D1Database): Promise<void> {
       metadata TEXT,
       created_at TEXT NOT NULL DEFAULT (datetime('now'))
     )
-  `).run();
+  `)
+    .run();
 
-  await db.prepare(`
+  await db
+    .prepare(`
     CREATE INDEX IF NOT EXISTS idx_audit_org_action
     ON audit_log (organization_id, action, created_at)
-  `).run();
+  `)
+    .run();
 
-  await db.prepare(`
+  await db
+    .prepare(`
     CREATE INDEX IF NOT EXISTS idx_audit_entity
     ON audit_log (entity_id, entity_type, created_at)
-  `).run();
+  `)
+    .run();
 }
 
 /**
@@ -132,7 +138,7 @@ export async function ensureAuditLogTable(db: D1Database): Promise<void> {
  */
 export function extractRequestContext(c: { req: { header: (key: string) => string | undefined } }) {
   return {
-    ipAddress: c.req.header('CF-Connecting-IP') ?? c.req.header('X-Forwarded-For'),
-    userAgent: c.req.header('User-Agent'),
+    ipAddress: c.req.header("CF-Connecting-IP") ?? c.req.header("X-Forwarded-For"),
+    userAgent: c.req.header("User-Agent"),
   };
 }

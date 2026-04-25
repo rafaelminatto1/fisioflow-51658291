@@ -4,25 +4,28 @@
  * Uso: node scripts/validate-crud.mjs
  */
 
-const API = 'https://fisioflow-api.rafalegollas.workers.dev';
-const EMAIL = 'rafael.minatto@yahoo.com.br';
-const PASSWORD = 'Yukari30@';
+const API = "https://fisioflow-api.rafalegollas.workers.dev";
+const EMAIL = "rafael.minatto@yahoo.com.br";
+const PASSWORD = "Yukari30@";
 
-const ok  = (msg) => console.log(`  ✅ ${msg}`);
-const fail = (msg) => { console.error(`  ❌ ${msg}`); process.exitCode = 1; };
+const ok = (msg) => console.log(`  ✅ ${msg}`);
+const fail = (msg) => {
+  console.error(`  ❌ ${msg}`);
+  process.exitCode = 1;
+};
 const info = (msg) => console.log(`\n🔷 ${msg}`);
 
 async function getToken() {
   const res = await fetch(`${API}/api/auth/login`, {
-    method: 'POST',
+    method: "POST",
     headers: {
-      'Content-Type': 'application/json',
-      'Origin': 'https://www.moocafisio.com.br',
+      "Content-Type": "application/json",
+      Origin: "https://www.moocafisio.com.br",
     },
     body: JSON.stringify({ email: EMAIL, password: PASSWORD }),
   });
   const data = await res.json();
-  if (!res.ok || typeof data?.token !== 'string' || data.token.split('.').length !== 3) {
+  if (!res.ok || typeof data?.token !== "string" || data.token.split(".").length !== 3) {
     throw new Error(`Login falhou: ${JSON.stringify(data)}`);
   }
   return data.token;
@@ -32,27 +35,31 @@ async function api(method, path, token, body) {
   const requestInit = {
     method,
     headers: {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
     },
   };
-  if (body && method !== 'GET') {
+  if (body && method !== "GET") {
     requestInit.body = JSON.stringify(body);
   }
   const res = await fetch(`${API}${path}`, requestInit);
   const text = await res.text();
   let json;
-  try { json = JSON.parse(text); } catch { json = { raw: text }; }
+  try {
+    json = JSON.parse(text);
+  } catch {
+    json = { raw: text };
+  }
   return { status: res.status, ok: res.ok, json };
 }
 
 async function main() {
-  console.log('='.repeat(55));
-  console.log('  FisioFlow — Validação CRUD Pacientes & Agendamentos');
-  console.log('='.repeat(55));
+  console.log("=".repeat(55));
+  console.log("  FisioFlow — Validação CRUD Pacientes & Agendamentos");
+  console.log("=".repeat(55));
 
   // ── AUTH ──────────────────────────────────────────────
-  info('Autenticação');
+  info("Autenticação");
   let token;
   try {
     token = await getToken();
@@ -63,8 +70,8 @@ async function main() {
   }
 
   // ── HEALTH ────────────────────────────────────────────
-  info('Health Check');
-  const health = await api('GET', '/api/health', token);
+  info("Health Check");
+  const health = await api("GET", "/api/health", token);
   if (health.ok) {
     ok(`/api/health → ${health.status}`);
   } else {
@@ -74,10 +81,10 @@ async function main() {
   // ════════════════════════════════════════════════════
   // PACIENTES
   // ════════════════════════════════════════════════════
-  info('CRUD — Pacientes');
+  info("CRUD — Pacientes");
 
   // LIST
-  const list = await api('GET', '/api/patients', token);
+  const list = await api("GET", "/api/patients", token);
   if (list.ok) {
     ok(`LIST → ${list.status} — ${list.json?.data?.length ?? 0} pacientes`);
   } else {
@@ -86,11 +93,11 @@ async function main() {
 
   // CREATE
   const ts = Date.now();
-  const create = await api('POST', '/api/patients', token, {
+  const create = await api("POST", "/api/patients", token, {
     full_name: `Playwright Teste ${ts}`,
     email: `playwright_${ts}@test.com`,
-    phone: '11999990000',
-    status: 'Inicial',
+    phone: "11999990000",
+    status: "Inicial",
   });
   let patientId;
   if (create.status === 201 && create.json?.data?.id) {
@@ -102,7 +109,7 @@ async function main() {
 
   if (patientId) {
     // READ
-    const read = await api('GET', `/api/patients/${patientId}`, token);
+    const read = await api("GET", `/api/patients/${patientId}`, token);
     if (read.ok) {
       ok(`READ → ${read.status} — nome: ${read.json?.data?.name || read.json?.data?.full_name}`);
     } else {
@@ -110,18 +117,20 @@ async function main() {
     }
 
     // UPDATE
-    const update = await api('PATCH', `/api/patients/${patientId}`, token, {
+    const update = await api("PATCH", `/api/patients/${patientId}`, token, {
       full_name: `Playwright Teste ${ts} (Editado)`,
-      status: 'Em tratamento',
+      status: "Em tratamento",
     });
     if (update.ok) {
-      ok(`UPDATE → ${update.status} — nome: ${update.json?.data?.name || update.json?.data?.full_name}`);
+      ok(
+        `UPDATE → ${update.status} — nome: ${update.json?.data?.name || update.json?.data?.full_name}`,
+      );
     } else {
       fail(`UPDATE → ${update.status}: ${JSON.stringify(update.json)}`);
     }
 
     // DELETE (soft)
-    const del = await api('DELETE', `/api/patients/${patientId}`, token);
+    const del = await api("DELETE", `/api/patients/${patientId}`, token);
     if (del.ok) {
       ok(`DELETE → ${del.status} — removido (soft-delete)`);
     } else {
@@ -132,16 +141,16 @@ async function main() {
   // ════════════════════════════════════════════════════
   // AGENDAMENTOS
   // ════════════════════════════════════════════════════
-  info('CRUD — Agendamentos');
+  info("CRUD — Agendamentos");
 
   // Pegar um paciente real para usar como FK
-  const patientsRes = await api('GET', '/api/patients?limit=1', token);
+  const patientsRes = await api("GET", "/api/patients?limit=1", token);
   const firstPatient = patientsRes.json?.data?.[0];
   if (!firstPatient) {
-    fail('Nenhum paciente encontrado para criar agendamento');
+    fail("Nenhum paciente encontrado para criar agendamento");
   } else {
     // LIST
-    const aList = await api('GET', '/api/appointments', token);
+    const aList = await api("GET", "/api/appointments", token);
     if (aList.ok) {
       ok(`LIST → ${aList.status} — ${aList.json?.data?.length ?? 0} agendamentos`);
     } else {
@@ -149,11 +158,11 @@ async function main() {
     }
 
     // CREATE
-    const aCreate = await api('POST', '/api/appointments', token, {
+    const aCreate = await api("POST", "/api/appointments", token, {
       patientId: firstPatient.id,
-      date: '2026-03-15',
-      startTime: '09:00',
-      endTime: '09:50',
+      date: "2026-03-15",
+      startTime: "09:00",
+      endTime: "09:50",
     });
     let appointmentId;
     if (aCreate.status === 201 && aCreate.json?.data?.id) {
@@ -165,7 +174,7 @@ async function main() {
 
     if (appointmentId) {
       // READ
-      const aRead = await api('GET', `/api/appointments/${appointmentId}`, token);
+      const aRead = await api("GET", `/api/appointments/${appointmentId}`, token);
       if (aRead.ok) {
         ok(`READ → ${aRead.status} — data: ${aRead.json?.data?.date}`);
       } else {
@@ -173,9 +182,9 @@ async function main() {
       }
 
       // UPDATE
-      const aUpdate = await api('PATCH', `/api/appointments/${appointmentId}`, token, {
-        status: 'confirmed',
-        notes: 'Validado via script Playwright',
+      const aUpdate = await api("PATCH", `/api/appointments/${appointmentId}`, token, {
+        status: "confirmed",
+        notes: "Validado via script Playwright",
       });
       if (aUpdate.ok) {
         ok(`UPDATE → ${aUpdate.status} — status: ${aUpdate.json?.data?.status}`);
@@ -184,7 +193,7 @@ async function main() {
       }
 
       // DELETE
-      const aDel = await api('DELETE', `/api/appointments/${appointmentId}`, token);
+      const aDel = await api("DELETE", `/api/appointments/${appointmentId}`, token);
       if (aDel.ok) {
         ok(`DELETE → ${aDel.status}`);
       } else {
@@ -194,13 +203,16 @@ async function main() {
   }
 
   // ── RESUMO ────────────────────────────────────────────
-  console.log('\n' + '='.repeat(55));
+  console.log("\n" + "=".repeat(55));
   if (process.exitCode === 1) {
-    console.log('  ⚠️  Alguns testes FALHARAM — veja os ❌ acima');
+    console.log("  ⚠️  Alguns testes FALHARAM — veja os ❌ acima");
   } else {
-    console.log('  🎉  Todos os testes passaram!');
+    console.log("  🎉  Todos os testes passaram!");
   }
-  console.log('='.repeat(55));
+  console.log("=".repeat(55));
 }
 
-main().catch((e) => { console.error('Erro fatal:', e); process.exit(1); });
+main().catch((e) => {
+  console.error("Erro fatal:", e);
+  process.exit(1);
+});

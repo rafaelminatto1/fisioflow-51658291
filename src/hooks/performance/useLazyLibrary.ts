@@ -13,25 +13,25 @@ import { useState, useCallback, useRef, useEffect } from "react";
 import { fisioLogger as logger } from "@/lib/errors/logger";
 
 interface UseLazyLibraryOptions<T> {
-	/** Função de importação dinâmica */
-	importFn: () => Promise<T>;
-	/** Nome do módulo para logging/erros */
-	moduleName: string;
-	/** Timeout em ms (padrão: 10000) */
-	timeout?: number;
+  /** Função de importação dinâmica */
+  importFn: () => Promise<T>;
+  /** Nome do módulo para logging/erros */
+  moduleName: string;
+  /** Timeout em ms (padrão: 10000) */
+  timeout?: number;
 }
 
 interface UseLazyLibraryReturn<T> {
-	/** Carrega a biblioteca */
-	load: () => Promise<T | null>;
-	/** Se a biblioteca foi carregada com sucesso */
-	isLoaded: boolean;
-	/** Se está carregando */
-	isLoading: boolean;
-	/** Erro de carregamento */
-	error: Error | null;
-	/** Módulo carregado */
-	module: T | null;
+  /** Carrega a biblioteca */
+  load: () => Promise<T | null>;
+  /** Se a biblioteca foi carregada com sucesso */
+  isLoaded: boolean;
+  /** Se está carregando */
+  isLoading: boolean;
+  /** Erro de carregamento */
+  error: Error | null;
+  /** Módulo carregado */
+  module: T | null;
 }
 
 /**
@@ -39,106 +39,100 @@ interface UseLazyLibraryReturn<T> {
  * Implementa cache, loading state, error handling e timeout
  */
 export function useLazyLibrary<T>({
-	importFn,
-	moduleName,
-	timeout = 10000,
+  importFn,
+  moduleName,
+  timeout = 10000,
 }: UseLazyLibraryOptions<T>): UseLazyLibraryReturn<T> {
-	const [isLoaded, setIsLoaded] = useState(false);
-	const [isLoading, setIsLoading] = useState(false);
-	const [error, setError] = useState<Error | null>(null);
-	const [module, setModule] = useState<T | null>(null);
+  const [isLoaded, setIsLoaded] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
+  const [module, setModule] = useState<T | null>(null);
 
-	// Usar ref para evitar chamadas duplicadas
-	const loadPromise = useRef<Promise<T> | null>(null);
+  // Usar ref para evitar chamadas duplicadas
+  const loadPromise = useRef<Promise<T> | null>(null);
 
-	/**
-	 * Carrega a biblioteca com timeout
-	 * Usa ref para isLoaded para evitar stale closure
-	 */
-	const isLoadedRef = useRef(isLoaded);
-	useEffect(() => {
-		isLoadedRef.current = isLoaded;
-	}, [isLoaded]);
+  /**
+   * Carrega a biblioteca com timeout
+   * Usa ref para isLoaded para evitar stale closure
+   */
+  const isLoadedRef = useRef(isLoaded);
+  useEffect(() => {
+    isLoadedRef.current = isLoaded;
+  }, [isLoaded]);
 
-	const load = useCallback(async (): Promise<T | null> => {
-		// Retornar módulo em cache se já carregado (usando ref para stale fix)
-		if (isLoadedRef.current && module) {
-			return module;
-		}
+  const load = useCallback(async (): Promise<T | null> => {
+    // Retornar módulo em cache se já carregado (usando ref para stale fix)
+    if (isLoadedRef.current && module) {
+      return module;
+    }
 
-		// Retornar promise em andamento se estiver carregando
-		if (loadPromise.current) {
-			return loadPromise.current;
-		}
+    // Retornar promise em andamento se estiver carregando
+    if (loadPromise.current) {
+      return loadPromise.current;
+    }
 
-		setIsLoading(true);
-		setError(null);
+    setIsLoading(true);
+    setError(null);
 
-		loadPromise.current = new Promise<T>((resolve, reject) => {
-			const timer = setTimeout(() => {
-				reject(
-					new Error(`Timeout ao carregar ${moduleName} após ${timeout}ms`),
-				);
-			}, timeout);
+    loadPromise.current = new Promise<T>((resolve, reject) => {
+      const timer = setTimeout(() => {
+        reject(new Error(`Timeout ao carregar ${moduleName} após ${timeout}ms`));
+      }, timeout);
 
-			importFn()
-				.then((mod) => {
-					clearTimeout(timer);
-					setModule(mod);
-					setIsLoaded(true);
-					setIsLoading(false);
-					resolve(mod);
-					logger.info(
-						`[useLazyLibrary] ${moduleName} carregado com sucesso`,
-						undefined,
-						"useLazyLibrary",
-					);
-				})
-				.catch((err) => {
-					clearTimeout(timer);
-					const error = err instanceof Error ? err : new Error(String(err));
-					setError(error);
-					setIsLoading(false);
-					logger.error(
-						`[useLazyLibrary] Erro ao carregar ${moduleName}`,
-						error,
-						"useLazyLibrary",
-					);
-					reject(error);
-				})
-				.finally(() => {
-					loadPromise.current = null;
-				});
-		});
+      importFn()
+        .then((mod) => {
+          clearTimeout(timer);
+          setModule(mod);
+          setIsLoaded(true);
+          setIsLoading(false);
+          resolve(mod);
+          logger.info(
+            `[useLazyLibrary] ${moduleName} carregado com sucesso`,
+            undefined,
+            "useLazyLibrary",
+          );
+        })
+        .catch((err) => {
+          clearTimeout(timer);
+          const error = err instanceof Error ? err : new Error(String(err));
+          setError(error);
+          setIsLoading(false);
+          logger.error(`[useLazyLibrary] Erro ao carregar ${moduleName}`, error, "useLazyLibrary");
+          reject(error);
+        })
+        .finally(() => {
+          loadPromise.current = null;
+        });
+    });
 
-		return loadPromise.current;
-	}, [importFn, moduleName, timeout, module]);
+    return loadPromise.current;
+  }, [importFn, moduleName, timeout, module]);
 
-	/**
-	 * Cleanup do timer se o componente desmontar durante carregamento
-	 */
-	useEffect(() => {
-		return () => {
-			loadPromise.current = null;
-		};
-	}, []);
+  /**
+   * Cleanup do timer se o componente desmontar durante carregamento
+   */
+  useEffect(() => {
+    return () => {
+      loadPromise.current = null;
+    };
+  }, []);
 
-	return {
-		load,
-		isLoaded,
-		isLoading,
-		error,
-		module,
-	};
+  return {
+    load,
+    isLoaded,
+    isLoading,
+    error,
+    module,
+  };
 }
 
 /**
  * Hook específico para MediaPipe Tasks Vision
  */
 export function useMediaPipeVision() {
-	return useLazyLibrary({
-		importFn: () => import("@mediapipe/tasks-vision"),
-		moduleName: "MediaPipe Vision",
-		timeout: 20000,
-	});
+  return useLazyLibrary({
+    importFn: () => import("@mediapipe/tasks-vision"),
+    moduleName: "MediaPipe Vision",
+    timeout: 20000,
+  });
 }

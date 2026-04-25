@@ -4,7 +4,11 @@ export const join = () => "";
 export const dirname = () => "";
 export const basename = () => "";
 export const extname = () => "";
-export const readFile = () => { throw new Error("File system access is not available in browsers."); };
-export const readFileSync = () => { throw new Error("File system access is not available in browsers."); };
+export const readFile = () => {
+  throw new Error("File system access is not available in browsers.");
+};
+export const readFileSync = () => {
+  throw new Error("File system access is not available in browsers.");
+};
 export const existsSync = () => false;
 export const statSync = () => ({ isDirectory: () => false });

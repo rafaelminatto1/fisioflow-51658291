@@ -3,12 +3,12 @@
  * Cria schema completo no Cloud SQL PostgreSQL
  */
 
-import { Pool } from 'pg';
+import { Pool } from "pg";
 
 const CLOUD_SQL_CONNECTION_STRING = process.env.CLOUD_SQL_CONNECTION_STRING;
 
 if (!CLOUD_SQL_CONNECTION_STRING) {
-  console.error('❌ CLOUD_SQL_CONNECTION_STRING não configurada');
+  console.error("❌ CLOUD_SQL_CONNECTION_STRING não configurada");
   process.exit(1);
 }
 
@@ -637,15 +637,15 @@ ON CONFLICT (id) DO NOTHING;
  * Executa o schema SQL no Cloud SQL
  */
 async function runSchema() {
-  console.log('🔧 Executando schema SQL no Cloud SQL...');
+  console.log("🔧 Executando schema SQL no Cloud SQL...");
 
   const client = await pool.connect();
 
   try {
     await client.query(SCHEMA_SQL);
-    console.log('✅ Schema criado com sucesso!');
+    console.log("✅ Schema criado com sucesso!");
   } catch (error: any) {
-    console.error('❌ Erro ao criar schema:', error.message);
+    console.error("❌ Erro ao criar schema:", error.message);
     throw error;
   } finally {
     client.release();
@@ -656,18 +656,18 @@ async function runSchema() {
  * Função principal
  */
 async function main() {
-  console.log('\n========================================');
-  console.log('  MIGRAÇÃO DO SCHEMA CLOUD SQL');
-  console.log('========================================\n');
+  console.log("\n========================================");
+  console.log("  MIGRAÇÃO DO SCHEMA CLOUD SQL");
+  console.log("========================================\n");
 
   await runSchema();
 
-  console.log('\n✅ Schema Cloud SQL migrado com sucesso!\n');
+  console.log("\n✅ Schema Cloud SQL migrado com sucesso!\n");
 
   await pool.end();
 }
 
 main().catch((error) => {
-  console.error('Erro fatal:', error);
+  console.error("Erro fatal:", error);
   process.exit(1);
 });

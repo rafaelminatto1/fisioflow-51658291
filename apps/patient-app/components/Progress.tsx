@@ -3,15 +3,15 @@
  * Linear and circular progress indicators
  */
 
-import React from 'react';
-import { View, StyleSheet, Text } from 'react-native';
-import { useColors } from '@/hooks/useColorScheme';
+import React from "react";
+import { View, StyleSheet, Text } from "react-native";
+import { useColors } from "@/hooks/useColorScheme";
 
-export type ProgressSize = 'small' | 'medium' | 'large' | number;
+export type ProgressSize = "small" | "medium" | "large" | number;
 
 interface LinearProgressProps {
   progress?: number; // 0 to 1
-  variant?: 'determinate' | 'indeterminate';
+  variant?: "determinate" | "indeterminate";
   color?: string;
   trackColor?: string;
   height?: number;
@@ -20,7 +20,7 @@ interface LinearProgressProps {
 
 export function LinearProgress({
   progress = 0,
-  variant = 'determinate',
+  variant = "determinate",
   color,
   trackColor,
   height = 4,
@@ -33,7 +33,7 @@ export function LinearProgress({
   return (
     <View style={[styles.linearContainer, style, { height }]}>
       <View style={[styles.linearTrack, { backgroundColor: trackBackgroundColor }]}>
-        {variant === 'determinate' ? (
+        {variant === "determinate" ? (
           <View
             style={[
               styles.linearFill,
@@ -44,12 +44,7 @@ export function LinearProgress({
             ]}
           />
         ) : (
-          <View
-            style={[
-              styles.linearIndeterminate,
-              { backgroundColor: progressColor },
-            ]}
-          />
+          <View style={[styles.linearIndeterminate, { backgroundColor: progressColor }]} />
         )}
       </View>
     </View>
@@ -70,7 +65,7 @@ interface CircularProgressProps {
 
 export function CircularProgress({
   progress = 0,
-  size = 'medium',
+  size = "medium",
   thickness = 4,
   color,
   trackColor,
@@ -84,11 +79,11 @@ export function CircularProgress({
   const trackBackgroundColor = trackColor || colors.border;
 
   const getSize = (): number => {
-    if (typeof size === 'number') return size;
+    if (typeof size === "number") return size;
     switch (size) {
-      case 'small':
+      case "small":
         return 32;
-      case 'large':
+      case "large":
         return 64;
       default:
         return 48;
@@ -126,9 +121,9 @@ export function CircularProgress({
                 borderTopColor: progressColor,
                 borderRightColor: progressColor,
                 borderBottomColor: progressColor,
-                borderLeftColor: 'transparent',
+                borderLeftColor: "transparent",
                 borderWidth: thickness,
-                transform: [{ rotate: '-90deg' }],
+                transform: [{ rotate: "-90deg" }],
               },
             ]}
           />
@@ -180,8 +175,8 @@ export function ProgressSteps({ steps, style }: ProgressStepsProps) {
               <Text
                 style={[
                   styles.stepNumber,
-                  step.current && { color: '#FFFFFF' },
-                  { color: step.completed || step.error ? '#FFFFFF' : colors.text },
+                  step.current && { color: "#FFFFFF" },
+                  { color: step.completed || step.error ? "#FFFFFF" : colors.text },
                 ]}
               >
                 {index + 1}
@@ -194,7 +189,7 @@ export function ProgressSteps({ steps, style }: ProgressStepsProps) {
             <Text
               style={[
                 styles.stepLabel,
-                step.current && { color: colors.primary, fontWeight: '600' },
+                step.current && { color: colors.primary, fontWeight: "600" },
                 { color: colors.textSecondary },
               ]}
               numberOfLines={1}
@@ -221,59 +216,59 @@ export function ProgressSteps({ steps, style }: ProgressStepsProps) {
 
 const styles = StyleSheet.create({
   linearContainer: {
-    overflow: 'hidden',
+    overflow: "hidden",
   },
   linearTrack: {
-    width: '100%',
-    height: '100%',
+    width: "100%",
+    height: "100%",
     borderRadius: 999,
   },
   linearFill: {
-    height: '100%',
+    height: "100%",
     borderRadius: 999,
   },
   linearIndeterminate: {
-    width: '30%',
-    height: '100%',
+    width: "30%",
+    height: "100%",
     borderRadius: 999,
   },
   circularContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   circularTrack: {
-    position: 'absolute',
+    position: "absolute",
   },
   circularProgress: {
-    position: 'absolute',
+    position: "absolute",
   },
   circularLabel: {
-    position: 'absolute',
-    alignItems: 'center',
-    justifyContent: 'center',
+    position: "absolute",
+    alignItems: "center",
+    justifyContent: "center",
   },
   circularLabelText: {
     fontSize: 12,
-    fontWeight: '600',
+    fontWeight: "600",
     includeFontPadding: false,
   },
   stepsContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
   },
   stepItem: {
     flex: 1,
-    alignItems: 'center',
-    position: 'relative',
+    alignItems: "center",
+    position: "relative",
   },
   stepCircle: {
     width: 32,
     height: 32,
     borderRadius: 16,
     borderWidth: 2,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     marginBottom: 8,
     zIndex: 1,
   },
@@ -282,29 +277,29 @@ const styles = StyleSheet.create({
   stepCurrent: {},
   stepNumber: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   stepCompletedText: {
-    color: '#FFFFFF',
+    color: "#FFFFFF",
     fontSize: 14,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   stepErrorText: {
-    color: '#FFFFFF',
+    color: "#FFFFFF",
     fontSize: 14,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   stepLabel: {
     fontSize: 12,
     marginTop: 4,
-    textAlign: 'center',
+    textAlign: "center",
     paddingHorizontal: 4,
   },
   stepLine: {
-    position: 'absolute',
+    position: "absolute",
     top: 15,
-    left: '50%',
-    width: '100%',
+    left: "50%",
+    width: "100%",
     height: 2,
     zIndex: 0,
   },

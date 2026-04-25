@@ -1,5 +1,5 @@
-import * as ImagePicker from 'expo-image-picker';
-import { Platform } from 'react-native';
+import * as ImagePicker from "expo-image-picker";
+import { Platform } from "react-native";
 
 export interface CameraResult {
   uri: string;
@@ -12,24 +12,24 @@ export interface CameraResult {
  * Solicita permissão para usar a câmera
  */
 export async function requestCameraPermission(): Promise<boolean> {
-  if (Platform.OS === 'web') {
+  if (Platform.OS === "web") {
     return true; // Web doesn't need explicit permission
   }
 
   const { status } = await ImagePicker.requestCameraPermissionsAsync();
-  return status === 'granted';
+  return status === "granted";
 }
 
 /**
  * Solicita permissão para acessar a galeria
  */
 export async function requestGalleryPermission(): Promise<boolean> {
-  if (Platform.OS === 'web') {
+  if (Platform.OS === "web") {
     return true;
   }
 
   const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-  return status === 'granted';
+  return status === "granted";
 }
 
 /**
@@ -41,12 +41,12 @@ export async function takePhoto(quality: number = 0.8): Promise<CameraResult | n
   const hasPermission = await requestCameraPermission();
 
   if (!hasPermission) {
-    throw new Error('Permissão de câmera não concedida');
+    throw new Error("Permissão de câmera não concedida");
   }
 
   try {
     const result = await ImagePicker.launchCameraAsync({
-      mediaTypes: ['images'],
+      mediaTypes: ["images"],
       quality,
       exif: false,
       allowsEditing: true,
@@ -69,7 +69,7 @@ export async function takePhoto(quality: number = 0.8): Promise<CameraResult | n
       type: asset.mimeType,
     };
   } catch (error) {
-    console.error('Error taking photo:', error);
+    console.error("Error taking photo:", error);
     throw error;
   }
 }
@@ -82,17 +82,17 @@ export async function takePhoto(quality: number = 0.8): Promise<CameraResult | n
  */
 export async function pickFromGallery(
   quality: number = 0.8,
-  allowMultiple: boolean = false
+  allowMultiple: boolean = false,
 ): Promise<CameraResult[] | null> {
   const hasPermission = await requestGalleryPermission();
 
   if (!hasPermission) {
-    throw new Error('Permissão de galeria não concedida');
+    throw new Error("Permissão de galeria não concedida");
   }
 
   try {
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ['images'],
+      mediaTypes: ["images"],
       quality,
       allowsMultipleSelection: allowMultiple,
       allowsEditing: !allowMultiple,
@@ -111,7 +111,7 @@ export async function pickFromGallery(
       type: asset.mimeType,
     }));
   } catch (error) {
-    console.error('Error picking from gallery:', error);
+    console.error("Error picking from gallery:", error);
     throw error;
   }
 }
@@ -130,7 +130,7 @@ export async function getImageInfo(_uri: string): Promise<{
     // This is a simplified version
     return { width: 0, height: 0 };
   } catch (error) {
-    console.error('Error getting image info:', error);
+    console.error("Error getting image info:", error);
     return null;
   }
 }

@@ -33,7 +33,7 @@ export class PatientAgent extends Agent<Env, RetentionState> {
     settings: {
       autoDraft: true,
       sensitivity: "medium",
-    }
+    },
   };
 
   /**
@@ -42,13 +42,13 @@ export class PatientAgent extends Agent<Env, RetentionState> {
   @callable()
   async updateClinicalStatus(data: { painLevel?: number; missedSession?: boolean; name?: string }) {
     let { missedSessions, lastPainLevel, status, patientName } = this.state;
-    
+
     if (data.name) patientName = data.name;
     if (data.painLevel !== undefined) lastPainLevel = data.painLevel;
     if (data.missedSession) missedSessions += 1;
 
     // Lógica de Risco Baseada em Dados
-    let riskScore = (missedSessions * 30) + (lastPainLevel > 7 ? 20 : 0);
+    let riskScore = missedSessions * 30 + (lastPainLevel > 7 ? 20 : 0);
     riskScore = Math.min(100, riskScore);
 
     let nextStatus = status;
@@ -66,7 +66,11 @@ export class PatientAgent extends Agent<Env, RetentionState> {
     });
 
     // Gatilho de Automação: Se o risco for alto e o autoDraft estiver ativo, gera o rascunho via Workers AI
-    if (nextStatus === "action_needed" && this.state.settings.autoDraft && !this.state.draftMessage) {
+    if (
+      nextStatus === "action_needed" &&
+      this.state.settings.autoDraft &&
+      !this.state.draftMessage
+    ) {
       await this.generateRetentionDraft();
     }
 
@@ -89,12 +93,13 @@ export class PatientAgent extends Agent<Env, RetentionState> {
         messages: [
           {
             role: "system",
-            content: "Você é um Agente de Retenção empático da clínica FisioFlow. Sua missão é reengajar pacientes em risco de evasão. Escreva em português do Brasil, de forma curta, acolhedora e profissional. Não use emojis em excesso."
+            content:
+              "Você é um Agente de Retenção empático da clínica FisioFlow. Sua missão é reengajar pacientes em risco de evasão. Escreva em português do Brasil, de forma curta, acolhedora e profissional. Não use emojis em excesso.",
           },
           {
             role: "user",
-            content: `Paciente: ${this.state.patientName}. Status: ${this.state.missedSessions} sessões faltadas. Último nível de dor: ${this.state.lastPainLevel}/10. Escreva uma mensagem de WhatsApp para incentivá-lo a retomar o tratamento.`
-          }
+            content: `Paciente: ${this.state.patientName}. Status: ${this.state.missedSessions} sessões faltadas. Último nível de dor: ${this.state.lastPainLevel}/10. Escreva uma mensagem de WhatsApp para incentivá-lo a retomar o tratamento.`,
+          },
         ],
         max_tokens: 256,
         temperature: 0.7,
@@ -102,7 +107,9 @@ export class PatientAgent extends Agent<Env, RetentionState> {
 
       this.setState({
         ...this.state,
-        draftMessage: response.response || "Olá! Notamos sua ausência e gostaríamos de saber como você está se sentindo em relação à dor.",
+        draftMessage:
+          response.response ||
+          "Olá! Notamos sua ausência e gostaríamos de saber como você está se sentindo em relação à dor.",
         suggestedAction: "Rascunho pronto para revisão.",
       });
     } catch (error) {

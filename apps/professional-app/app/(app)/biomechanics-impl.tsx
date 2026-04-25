@@ -1,11 +1,27 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import {
-  View, StyleSheet, TouchableOpacity, Text, Dimensions,
-  Alert, ScrollView, Modal, FlatList,
-  Image, ActivityIndicator, TextInput,
+  View,
+  StyleSheet,
+  TouchableOpacity,
+  Text,
+  Dimensions,
+  Alert,
+  ScrollView,
+  Modal,
+  FlatList,
+  Image,
+  ActivityIndicator,
+  TextInput,
 } from "react-native";
 import { Stack, useRouter, useLocalSearchParams } from "expo-router";
-import { Camera, useCameraDevice, useCameraPermission, useCameraFormat, useFrameProcessor, runAtTargetFps } from "react-native-vision-camera";
+import {
+  Camera,
+  useCameraDevice,
+  useCameraPermission,
+  useCameraFormat,
+  useFrameProcessor,
+  runAtTargetFps,
+} from "react-native-vision-camera";
 import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import { Accelerometer } from "expo-sensors";
@@ -26,7 +42,11 @@ const { width: W } = Dimensions.get("window");
 type AnalysisMode = "live" | "video" | "photo";
 type AnalysisType = "postura" | "marcha" | "articulacao" | "plumb";
 
-interface AnglePoint { x: number; y: number; label: string }
+interface AnglePoint {
+  x: number;
+  y: number;
+  label: string;
+}
 interface AnalysisResult {
   type: AnalysisType;
   angles: { joint: string; angle: number; reference: number; status: "ok" | "warning" | "alert" }[];
@@ -38,18 +58,38 @@ interface AnalysisResult {
 }
 
 const ANALYSIS_TYPES: { id: AnalysisType; label: string; icon: string; description: string }[] = [
-  { id: "postura", label: "Análise Postural", icon: "body", description: "Avaliação de desvios posturais globais" },
-  { id: "marcha", label: "Análise de Marcha", icon: "walk", description: "Ciclo de marcha, eventos e simetria" },
-  { id: "articulacao", label: "Ângulos Articulares", icon: "analytics", description: "Medição de ADM em articulações específicas" },
-  { id: "plumb", label: "Linha de Prumo", icon: "git-commit", description: "Alinhamento vertical do centro de gravidade" },
+  {
+    id: "postura",
+    label: "Análise Postural",
+    icon: "body",
+    description: "Avaliação de desvios posturais globais",
+  },
+  {
+    id: "marcha",
+    label: "Análise de Marcha",
+    icon: "walk",
+    description: "Ciclo de marcha, eventos e simetria",
+  },
+  {
+    id: "articulacao",
+    label: "Ângulos Articulares",
+    icon: "analytics",
+    description: "Medição de ADM em articulações específicas",
+  },
+  {
+    id: "plumb",
+    label: "Linha de Prumo",
+    icon: "git-commit",
+    description: "Alinhamento vertical do centro de gravidade",
+  },
 ];
 
 const _REFERENCE_ANGLES: Record<string, { label: string; reference: number; tolerance: number }> = {
-  joelho_flex:    { label: "Flexão do Joelho",    reference: 0,   tolerance: 5  },
-  quadril_abd:    { label: "Abdução do Quadril",   reference: 0,   tolerance: 5  },
-  ombro_flex:     { label: "Flexão do Ombro",      reference: 180, tolerance: 10 },
-  tornozelo_dors: { label: "Dorsiflexão",          reference: 90,  tolerance: 10 },
-  coluna_lateral: { label: "Inclinação Lateral",   reference: 0,   tolerance: 3  },
+  joelho_flex: { label: "Flexão do Joelho", reference: 0, tolerance: 5 },
+  quadril_abd: { label: "Abdução do Quadril", reference: 0, tolerance: 5 },
+  ombro_flex: { label: "Flexão do Ombro", reference: 180, tolerance: 10 },
+  tornozelo_dors: { label: "Dorsiflexão", reference: 90, tolerance: 10 },
+  coluna_lateral: { label: "Inclinação Lateral", reference: 0, tolerance: 3 },
 };
 
 // ── Componente Principal ───────────────────────────────────────────────────
@@ -60,12 +100,16 @@ export default function BiomechanicsScreen() {
   const params = useLocalSearchParams();
 
   // ── Hooks (todos antes de qualquer return condicional) ──
-  const device = useCameraDevice("back", { physicalDevices: ["ultra-wide-angle-camera", "wide-angle-camera"] });
+  const device = useCameraDevice("back", {
+    physicalDevices: ["ultra-wide-angle-camera", "wide-angle-camera"],
+  });
   const format = useCameraFormat(device, [{ fps: 240 }, { fps: 120 }, { videoResolution: "max" }]);
   const fps = format?.maxFps ?? 60;
   const { hasPermission, requestPermission } = useCameraPermission();
 
-  const [screen, setScreen] = useState<"home" | "instructions" | "capture" | "analysis" | "report">("home");
+  const [screen, setScreen] = useState<"home" | "instructions" | "capture" | "analysis" | "report">(
+    "home",
+  );
   const [analysisMode, setAnalysisMode] = useState<AnalysisMode>("live");
   const [analysisType, setAnalysisType] = useState<AnalysisType>("postura");
   const [isRecording, setIsRecording] = useState(false);
@@ -75,18 +119,24 @@ export default function BiomechanicsScreen() {
   const [_angles, _setAngles] = useState<AnglePoint[]>([]);
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [analyzing, setAnalyzing] = useState(false);
-  const [selectedPatientId, setSelectedPatientId] = useState<string>(params.patientId as string || "");
-  const [selectedPatientName, setSelectedPatientName] = useState<string>(params.patientName as string || "");
+  const [selectedPatientId, setSelectedPatientId] = useState<string>(
+    (params.patientId as string) || "",
+  );
+  const [selectedPatientName, setSelectedPatientName] = useState<string>(
+    (params.patientName as string) || "",
+  );
   const [showPatientPicker, setShowPatientPicker] = useState(false);
   const [patientSearch, setPatientSearch] = useState("");
   const [, setPlumbRotation] = useState(0);
   const camera = useRef<Camera>(null);
-  
+
   const [selectedExerciseId, setSelectedExerciseId] = useState<string | null>(null);
   const [selectedExercise, setSelectedExercise] = useState<Exercise | null>(null);
   const [showExercisePicker, setShowExercisePicker] = useState(false);
   const [exerciseSearch, setExerciseSearch] = useState("");
-  const [referenceLandmarks, setReferenceLandmarks] = useState<PoseLandmark[] | undefined>(undefined);
+  const [referenceLandmarks, setReferenceLandmarks] = useState<PoseLandmark[] | undefined>(
+    undefined,
+  );
   const [landmarks, setLandmarks] = useState<PoseLandmark[]>([]);
   const [isSavingReference, setIsSavingReference] = useState(false);
 
@@ -94,19 +144,19 @@ export default function BiomechanicsScreen() {
 
   const { data: patients = [] } = usePatients({ status: "active", limit: 100 });
   const filteredPatients = patients.filter((patient) =>
-    patient.name.toLowerCase().includes(patientSearch.trim().toLowerCase())
+    patient.name.toLowerCase().includes(patientSearch.trim().toLowerCase()),
   );
 
   const { data: exercises = [] } = useExercisesLibrary({ search: exerciseSearch });
-  const filteredExercises = exercises.filter(ex => 
-    ex.name.toLowerCase().includes(exerciseSearch.trim().toLowerCase())
+  const filteredExercises = exercises.filter((ex) =>
+    ex.name.toLowerCase().includes(exerciseSearch.trim().toLowerCase()),
   );
 
   // Frame counter during recording
   useEffect(() => {
     let interval: any;
     if (isRecording) {
-      interval = setInterval(() => setFrameCounter(f => f + 1), 1000 / fps);
+      interval = setInterval(() => setFrameCounter((f) => f + 1), 1000 / fps);
     } else {
       setFrameCounter(0);
     }
@@ -129,10 +179,11 @@ export default function BiomechanicsScreen() {
   useEffect(() => {
     if (selectedExercise?.embeddingSketch) {
       try {
-        const parsed = typeof selectedExercise.embeddingSketch === 'string' 
-          ? JSON.parse(selectedExercise.embeddingSketch) 
-          : selectedExercise.embeddingSketch;
-        
+        const parsed =
+          typeof selectedExercise.embeddingSketch === "string"
+            ? JSON.parse(selectedExercise.embeddingSketch)
+            : selectedExercise.embeddingSketch;
+
         if (Array.isArray(parsed)) {
           setReferenceLandmarks(parsed);
         }
@@ -176,36 +227,38 @@ export default function BiomechanicsScreen() {
 
   const mapVisionToPoseLandmarks = useCallback((visionResults: any[]): PoseLandmark[] => {
     if (!visionResults || visionResults.length === 0) return [];
-    
+
     const result = visionResults[0]; // Take first person detected
     const points = result.points3d || result.landmarks || {};
     const is3d = result.is3d;
-    
+
     // MediaPipe index mapping (33 landmarks)
-    const landmarks: PoseLandmark[] = Array(33).fill(null).map(() => ({ x: 0, y: 0, z: 0, visibility: 0 }));
-    
+    const landmarks: PoseLandmark[] = Array(33)
+      .fill(null)
+      .map(() => ({ x: 0, y: 0, z: 0, visibility: 0 }));
+
     const mapping: Record<string, number> = {
-      "nose": 0,
-      "left_eye": 2,
-      "right_eye": 5,
-      "left_shoulder_1_joint": 11,
-      "right_shoulder_1_joint": 12,
-      "left_elbow_joint": 13,
-      "right_elbow_joint": 14,
-      "left_wrist_joint": 15,
-      "right_wrist_joint": 16,
-      "left_hip_joint": 23,
-      "right_hip_joint": 24,
-      "left_knee_joint": 25,
-      "right_knee_joint": 26,
-      "left_ankle_joint": 27,
-      "right_ankle_joint": 28,
-      "left_heel_joint": 29,
-      "right_heel_joint": 30,
-      "left_toe_joint": 31,
-      "right_toe_joint": 32
+      nose: 0,
+      left_eye: 2,
+      right_eye: 5,
+      left_shoulder_1_joint: 11,
+      right_shoulder_1_joint: 12,
+      left_elbow_joint: 13,
+      right_elbow_joint: 14,
+      left_wrist_joint: 15,
+      right_wrist_joint: 16,
+      left_hip_joint: 23,
+      right_hip_joint: 24,
+      left_knee_joint: 25,
+      right_knee_joint: 26,
+      left_ankle_joint: 27,
+      right_ankle_joint: 28,
+      left_heel_joint: 29,
+      right_heel_joint: 30,
+      left_toe_joint: 31,
+      right_toe_joint: 32,
     };
-    
+
     for (const [key, idx] of Object.entries(mapping)) {
       const pt = points[key];
       if (pt) {
@@ -216,51 +269,65 @@ export default function BiomechanicsScreen() {
           x: pt.x,
           y: pt.y,
           z: pt.z || 0,
-          visibility: pt.confidence || 0.8
+          visibility: pt.confidence || 0.8,
         };
       }
     }
-    
+
     return landmarks;
   }, []);
 
-  const frameProcessor = useFrameProcessor((frame) => {
-    'worklet';
-    runAtTargetFps(30, () => {
-      'worklet';
-      const results = detectPose(frame);
-      // Since mapVisionToPoseLandmarks is not a worklet, we need to pass data back to JS
-      // In Vision Camera v4/Worklets-Core, we use runOnJS
-    });
-  }, [detectPose]);
+  const frameProcessor = useFrameProcessor(
+    (frame) => {
+      "worklet";
+      runAtTargetFps(30, () => {
+        "worklet";
+        const results = detectPose(frame);
+        // Since mapVisionToPoseLandmarks is not a worklet, we need to pass data back to JS
+        // In Vision Camera v4/Worklets-Core, we use runOnJS
+      });
+    },
+    [detectPose],
+  );
 
   // Update landmarks from native plugin
-  // Actually, we should use a simpler approach for the demo: 
+  // Actually, we should use a simpler approach for the demo:
   // expose the setter and call it via runOnJS
-  const updatePose = useCallback((visionResults: any[]) => {
-    const lms = mapVisionToPoseLandmarks(visionResults);
-    if (lms.length > 0) setLandmarks(lms);
-  }, [mapVisionToPoseLandmarks]);
+  const updatePose = useCallback(
+    (visionResults: any[]) => {
+      const lms = mapVisionToPoseLandmarks(visionResults);
+      if (lms.length > 0) setLandmarks(lms);
+    },
+    [mapVisionToPoseLandmarks],
+  );
 
-  const realFrameProcessor = useFrameProcessor((frame) => {
-    'worklet';
-    runAtTargetFps(30, () => {
-      'worklet';
-      const results = detectPose(frame);
-      if (results && results.length > 0) {
-        // @ts-ignore - runOnJS is injected by worklets
-        runOnJS(updatePose)(results);
-      }
-    });
-  }, [updatePose]);
+  const realFrameProcessor = useFrameProcessor(
+    (frame) => {
+      "worklet";
+      runAtTargetFps(30, () => {
+        "worklet";
+        const results = detectPose(frame);
+        if (results && results.length > 0) {
+          // @ts-ignore - runOnJS is injected by worklets
+          runOnJS(updatePose)(results);
+        }
+      });
+    },
+    [updatePose],
+  );
 
   // ── Conditional renders AFTER all hooks ──
   if (!hasPermission && screen === "capture" && analysisMode === "live") {
     return (
       <SafeAreaView style={[styles.permContainer, { backgroundColor: colors.background }]}>
         <Ionicons name="camera" size={64} color={colors.textSecondary} />
-        <Text style={[styles.permText, { color: colors.text }]}>Câmera necessária para análise ao vivo</Text>
-        <TouchableOpacity style={[styles.btn, { backgroundColor: colors.primary }]} onPress={requestPermission}>
+        <Text style={[styles.permText, { color: colors.text }]}>
+          Câmera necessária para análise ao vivo
+        </Text>
+        <TouchableOpacity
+          style={[styles.btn, { backgroundColor: colors.primary }]}
+          onPress={requestPermission}
+        >
           <Text style={styles.btnText}>Conceder Permissão</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.backLink} onPress={() => setScreen("home")}>
@@ -295,7 +362,7 @@ export default function BiomechanicsScreen() {
   };
 
   const markGaitEvent = (type: string) => {
-    setGaitEvents(prev => [...prev, { type, frame: frameCounter }]);
+    setGaitEvents((prev) => [...prev, { type, frame: frameCounter }]);
   };
 
   const stopAndAnalyze = useCallback(async () => {
@@ -311,33 +378,37 @@ export default function BiomechanicsScreen() {
     setAnalyzing(true);
     try {
       // Simulação de análise com valores reais baseados no tipo
-      await new Promise(r => setTimeout(r, 1500));
+      await new Promise((r) => setTimeout(r, 1500));
 
       const mockAngles: AnalysisResult["angles"] = [];
 
       if (analysisType === "postura" || analysisType === "plumb") {
         mockAngles.push(
           { joint: "Coluna Cervical", angle: 12, reference: 0, status: "warning" },
-          { joint: "Ombros",          angle: 4,  reference: 0, status: "ok"      },
-          { joint: "Coluna Lombar",   angle: 18, reference: 0, status: "alert"   },
-          { joint: "Pelve",           angle: 8,  reference: 0, status: "warning" },
-          { joint: "Joelhos",         angle: 3,  reference: 0, status: "ok"      },
+          { joint: "Ombros", angle: 4, reference: 0, status: "ok" },
+          { joint: "Coluna Lombar", angle: 18, reference: 0, status: "alert" },
+          { joint: "Pelve", angle: 8, reference: 0, status: "warning" },
+          { joint: "Joelhos", angle: 3, reference: 0, status: "ok" },
         );
       } else if (analysisType === "marcha") {
-        const _events = gaitEvents.length > 0 ? gaitEvents : [
-          { type: "CONTATO", frame: 20 }, { type: "IMPULSÃO", frame: 45 }
-        ];
+        const _events =
+          gaitEvents.length > 0
+            ? gaitEvents
+            : [
+                { type: "CONTATO", frame: 20 },
+                { type: "IMPULSÃO", frame: 45 },
+              ];
         mockAngles.push(
-          { joint: "Flexão Quadril (apoio)", angle: 30, reference: 25, status: "ok"      },
-          { joint: "Extensão Quadril",       angle: 10, reference: 20, status: "warning" },
-          { joint: "Flexão Joelho (balanço)",angle: 60, reference: 65, status: "ok"      },
-          { joint: "Dorsiflexão",            angle: 8,  reference: 10, status: "ok"      },
+          { joint: "Flexão Quadril (apoio)", angle: 30, reference: 25, status: "ok" },
+          { joint: "Extensão Quadril", angle: 10, reference: 20, status: "warning" },
+          { joint: "Flexão Joelho (balanço)", angle: 60, reference: 65, status: "ok" },
+          { joint: "Dorsiflexão", angle: 8, reference: 10, status: "ok" },
         );
       } else if (analysisType === "articulacao") {
         mockAngles.push(
-          { joint: "Flexão do Ombro",  angle: 155, reference: 180, status: "warning" },
-          { joint: "Extensão do Ombro",angle: 40,  reference: 60,  status: "warning" },
-          { joint: "Flexão do Cotovelo",angle: 140,reference: 150, status: "ok"      },
+          { joint: "Flexão do Ombro", angle: 155, reference: 180, status: "warning" },
+          { joint: "Extensão do Ombro", angle: 40, reference: 60, status: "warning" },
+          { joint: "Flexão do Cotovelo", angle: 140, reference: 150, status: "ok" },
         );
       }
 
@@ -373,13 +444,20 @@ export default function BiomechanicsScreen() {
           patientId: selectedPatientId,
           type: "biomechanics_analysis",
           date: result.timestamp,
-          notes: `Análise Biomecânica — ${ANALYSIS_TYPES.find(t => t.id === result.type)?.label}\n\n` +
-            result.angles.map(a => `${a.joint}: ${a.angle}° (ref: ${a.reference}°)`).join("\n") +
+          notes:
+            `Análise Biomecânica — ${ANALYSIS_TYPES.find((t) => t.id === result.type)?.label}\n\n` +
+            result.angles.map((a) => `${a.joint}: ${a.angle}° (ref: ${a.reference}°)`).join("\n") +
             `\n\nObservações: ${result.observations}`,
         },
       });
       Alert.alert("Salvo!", "Relatório vinculado ao prontuário do paciente.", [
-        { text: "OK", onPress: () => { setScreen("home"); setResult(null); } }
+        {
+          text: "OK",
+          onPress: () => {
+            setScreen("home");
+            setResult(null);
+          },
+        },
       ]);
     } catch {
       Alert.alert("Aviso", "Relatório gerado localmente — sincronização pendente.");
@@ -392,7 +470,10 @@ export default function BiomechanicsScreen() {
   // HOME
   if (screen === "home") {
     return (
-      <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]} edges={["top", "left", "right", "bottom"]}>
+      <SafeAreaView
+        style={[styles.safe, { backgroundColor: colors.background }]}
+        edges={["top", "left", "right", "bottom"]}
+      >
         <Stack.Screen options={{ headerShown: false }} />
         <View style={[styles.header, { borderBottomColor: colors.border }]}>
           <TouchableOpacity onPress={() => router.back()} style={styles.headerBack}>
@@ -405,10 +486,17 @@ export default function BiomechanicsScreen() {
         <ScrollView contentContainerStyle={styles.homeContent}>
           {/* Paciente */}
           <TouchableOpacity
-            style={[styles.patientCard, { backgroundColor: colors.surface, borderColor: colors.border }]}
+            style={[
+              styles.patientCard,
+              { backgroundColor: colors.surface, borderColor: colors.border },
+            ]}
             onPress={() => setShowPatientPicker(true)}
           >
-            <Ionicons name="person-circle" size={32} color={selectedPatientId ? colors.primary : colors.textSecondary} />
+            <Ionicons
+              name="person-circle"
+              size={32}
+              color={selectedPatientId ? colors.primary : colors.textSecondary}
+            />
             <View style={styles.patientInfo}>
               <Text style={[styles.patientLabel, { color: colors.textSecondary }]}>Paciente</Text>
               <Text style={[styles.patientName, { color: colors.text }]}>
@@ -420,12 +508,21 @@ export default function BiomechanicsScreen() {
 
           {/* Exercício de Referência (Opcional) */}
           <TouchableOpacity
-            style={[styles.patientCard, { backgroundColor: colors.surface, borderColor: colors.border, marginTop: 12 }]}
+            style={[
+              styles.patientCard,
+              { backgroundColor: colors.surface, borderColor: colors.border, marginTop: 12 },
+            ]}
             onPress={() => setShowExercisePicker(true)}
           >
-            <Ionicons name="fitness" size={32} color={selectedExerciseId ? colors.primary : colors.textSecondary} />
+            <Ionicons
+              name="fitness"
+              size={32}
+              color={selectedExerciseId ? colors.primary : colors.textSecondary}
+            />
             <View style={styles.patientInfo}>
-              <Text style={[styles.patientLabel, { color: colors.textSecondary }]}>Exercício de Referência (Ghost Skeleton)</Text>
+              <Text style={[styles.patientLabel, { color: colors.textSecondary }]}>
+                Exercício de Referência (Ghost Skeleton)
+              </Text>
               <Text style={[styles.patientName, { color: colors.text }]}>
                 {selectedExercise?.name || "Selecionar exercício (opcional)"}
               </Text>
@@ -435,12 +532,15 @@ export default function BiomechanicsScreen() {
 
           {/* Tipos de análise */}
           <Text style={[styles.sectionTitle, { color: colors.text }]}>Tipo de Análise</Text>
-          {ANALYSIS_TYPES.map(t => (
+          {ANALYSIS_TYPES.map((t) => (
             <TouchableOpacity
               key={t.id}
               style={[
                 styles.analysisCard,
-                { backgroundColor: colors.surface, borderColor: analysisType === t.id ? colors.primary : colors.border }
+                {
+                  backgroundColor: colors.surface,
+                  borderColor: analysisType === t.id ? colors.primary : colors.border,
+                },
               ]}
               onPress={() => setAnalysisType(t.id)}
             >
@@ -449,19 +549,29 @@ export default function BiomechanicsScreen() {
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={[styles.analysisCardTitle, { color: colors.text }]}>{t.label}</Text>
-                <Text style={[styles.analysisCardDesc, { color: colors.textSecondary }]}>{t.description}</Text>
+                <Text style={[styles.analysisCardDesc, { color: colors.textSecondary }]}>
+                  {t.description}
+                </Text>
               </View>
-              {analysisType === t.id && <Ionicons name="checkmark-circle" size={22} color={colors.primary} />}
+              {analysisType === t.id && (
+                <Ionicons name="checkmark-circle" size={22} color={colors.primary} />
+              )}
             </TouchableOpacity>
           ))}
 
           {/* Modo de captura */}
           <Text style={[styles.sectionTitle, { color: colors.text }]}>Modo de Captura</Text>
           <View style={styles.modeRow}>
-            {(["live", "video", "photo"] as AnalysisMode[]).map(m => (
+            {(["live", "video", "photo"] as AnalysisMode[]).map((m) => (
               <TouchableOpacity
                 key={m}
-                style={[styles.modeBtn, { backgroundColor: analysisMode === m ? colors.primary : colors.surface, borderColor: colors.border }]}
+                style={[
+                  styles.modeBtn,
+                  {
+                    backgroundColor: analysisMode === m ? colors.primary : colors.surface,
+                    borderColor: colors.border,
+                  },
+                ]}
                 onPress={() => setAnalysisMode(m)}
               >
                 <Ionicons
@@ -469,7 +579,9 @@ export default function BiomechanicsScreen() {
                   size={20}
                   color={analysisMode === m ? "#fff" : colors.text}
                 />
-                <Text style={[styles.modeBtnText, { color: analysisMode === m ? "#fff" : colors.text }]}>
+                <Text
+                  style={[styles.modeBtnText, { color: analysisMode === m ? "#fff" : colors.text }]}
+                >
                   {m === "live" ? "Ao Vivo" : m === "video" ? "Vídeo" : "Foto"}
                 </Text>
               </TouchableOpacity>
@@ -483,21 +595,37 @@ export default function BiomechanicsScreen() {
           >
             <Ionicons name="play-circle" size={24} color="#fff" />
             <Text style={styles.startBtnText}>
-              {analysisMode === "live" ? "Iniciar Câmera" : analysisMode === "video" ? "Selecionar Vídeo" : "Selecionar Foto"}
+              {analysisMode === "live"
+                ? "Iniciar Câmera"
+                : analysisMode === "video"
+                  ? "Selecionar Vídeo"
+                  : "Selecionar Foto"}
             </Text>
           </TouchableOpacity>
         </ScrollView>
 
         {/* Patient picker modal */}
-        <Modal visible={showPatientPicker} animationType="slide" onRequestClose={() => setShowPatientPicker(false)}>
-          <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]} edges={["top", "left", "right", "bottom"]}>
+        <Modal
+          visible={showPatientPicker}
+          animationType="slide"
+          onRequestClose={() => setShowPatientPicker(false)}
+        >
+          <SafeAreaView
+            style={[styles.safe, { backgroundColor: colors.background }]}
+            edges={["top", "left", "right", "bottom"]}
+          >
             <View style={[styles.header, { borderBottomColor: colors.border }]}>
               <Text style={[styles.headerTitle, { color: colors.text }]}>Selecionar Paciente</Text>
               <TouchableOpacity onPress={() => setShowPatientPicker(false)}>
                 <Ionicons name="close" size={24} color={colors.text} />
               </TouchableOpacity>
             </View>
-            <View style={[styles.searchInputWrap, { borderColor: colors.border, backgroundColor: colors.surface }]}>
+            <View
+              style={[
+                styles.searchInputWrap,
+                { borderColor: colors.border, backgroundColor: colors.surface },
+              ]}
+            >
               <Ionicons name="search" size={18} color={colors.textSecondary} />
               <TextInput
                 style={[styles.searchInput, { color: colors.text }]}
@@ -509,7 +637,7 @@ export default function BiomechanicsScreen() {
             </View>
             <FlatList
               data={filteredPatients}
-              keyExtractor={p => p.id}
+              keyExtractor={(p) => p.id}
               ListEmptyComponent={
                 <View style={styles.emptyPatientContainer}>
                   <Ionicons name="people-outline" size={42} color={colors.textSecondary} />
@@ -537,15 +665,29 @@ export default function BiomechanicsScreen() {
         </Modal>
 
         {/* Exercise picker modal */}
-        <Modal visible={showExercisePicker} animationType="slide" onRequestClose={() => setShowExercisePicker(false)}>
-          <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]} edges={["top", "left", "right", "bottom"]}>
+        <Modal
+          visible={showExercisePicker}
+          animationType="slide"
+          onRequestClose={() => setShowExercisePicker(false)}
+        >
+          <SafeAreaView
+            style={[styles.safe, { backgroundColor: colors.background }]}
+            edges={["top", "left", "right", "bottom"]}
+          >
             <View style={[styles.header, { borderBottomColor: colors.border }]}>
-              <Text style={[styles.headerTitle, { color: colors.text }]}>Selecionar Exercício de Referência</Text>
+              <Text style={[styles.headerTitle, { color: colors.text }]}>
+                Selecionar Exercício de Referência
+              </Text>
               <TouchableOpacity onPress={() => setShowExercisePicker(false)}>
                 <Ionicons name="close" size={24} color={colors.text} />
               </TouchableOpacity>
             </View>
-            <View style={[styles.searchInputWrap, { borderColor: colors.border, backgroundColor: colors.surface }]}>
+            <View
+              style={[
+                styles.searchInputWrap,
+                { borderColor: colors.border, backgroundColor: colors.surface },
+              ]}
+            >
               <Ionicons name="search" size={18} color={colors.textSecondary} />
               <TextInput
                 style={[styles.searchInput, { color: colors.text }]}
@@ -557,7 +699,7 @@ export default function BiomechanicsScreen() {
             </View>
             <FlatList
               data={filteredExercises}
-              keyExtractor={p => p.id}
+              keyExtractor={(p) => p.id}
               ListEmptyComponent={
                 <View style={styles.emptyPatientContainer}>
                   <Ionicons name="fitness-outline" size={42} color={colors.textSecondary} />
@@ -619,7 +761,10 @@ export default function BiomechanicsScreen() {
     };
 
     return (
-      <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]} edges={["top", "left", "right", "bottom"]}>
+      <SafeAreaView
+        style={[styles.safe, { backgroundColor: colors.background }]}
+        edges={["top", "left", "right", "bottom"]}
+      >
         <Stack.Screen options={{ headerShown: false }} />
         <View style={[styles.header, { borderBottomColor: colors.border }]}>
           <TouchableOpacity onPress={() => setScreen("home")} style={styles.headerBack}>
@@ -630,21 +775,37 @@ export default function BiomechanicsScreen() {
         </View>
 
         <ScrollView contentContainerStyle={styles.instructionsContent}>
-          <View style={[styles.instructionsCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+          <View
+            style={[
+              styles.instructionsCard,
+              { backgroundColor: colors.surface, borderColor: colors.border },
+            ]}
+          >
             <Text style={[styles.instructionsBadge, { color: colors.primary }]}>Paciente</Text>
             <Text style={[styles.instructionsPatient, { color: colors.text }]}>
               {selectedPatientName || "Sem paciente selecionado"}
             </Text>
-            <Text style={[styles.instructionsTitle, { color: colors.text }]}>{typeInfo?.label}</Text>
-            <Text style={[styles.instructionsSubtitle, { color: colors.textSecondary }]}>{typeInfo?.description}</Text>
+            <Text style={[styles.instructionsTitle, { color: colors.text }]}>
+              {typeInfo?.label}
+            </Text>
+            <Text style={[styles.instructionsSubtitle, { color: colors.textSecondary }]}>
+              {typeInfo?.description}
+            </Text>
           </View>
 
-          <View style={[styles.instructionsCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+          <View
+            style={[
+              styles.instructionsCard,
+              { backgroundColor: colors.surface, borderColor: colors.border },
+            ]}
+          >
             <Text style={[styles.sectionTitle, { color: colors.text }]}>Como fazer a análise</Text>
             {instructionsByType[analysisType].map((item, index) => (
               <View key={`${analysisType}-${index}`} style={styles.instructionRow}>
                 <Ionicons name="checkmark-circle" size={18} color={colors.primary} />
-                <Text style={[styles.instructionText, { color: colors.textSecondary }]}>{item}</Text>
+                <Text style={[styles.instructionText, { color: colors.textSecondary }]}>
+                  {item}
+                </Text>
               </View>
             ))}
           </View>
@@ -671,7 +832,10 @@ export default function BiomechanicsScreen() {
       return (
         <SafeAreaView style={[styles.permContainer, { backgroundColor: "#000" }]}>
           <Text style={styles.permText}>Câmera não encontrada.</Text>
-          <TouchableOpacity style={[styles.btn, { backgroundColor: colors.primary }]} onPress={() => setScreen("home")}>
+          <TouchableOpacity
+            style={[styles.btn, { backgroundColor: colors.primary }]}
+            onPress={() => setScreen("home")}
+          >
             <Text style={styles.btnText}>Voltar</Text>
           </TouchableOpacity>
         </SafeAreaView>
@@ -698,7 +862,7 @@ export default function BiomechanicsScreen() {
             <Ionicons name="arrow-back" size={24} color="#fff" />
           </TouchableOpacity>
 
-          <PoseFeedbackOverlay 
+          <PoseFeedbackOverlay
             landmarks={landmarks}
             referenceLandmarks={referenceLandmarks}
             width={W}
@@ -707,7 +871,9 @@ export default function BiomechanicsScreen() {
           />
 
           <View style={styles.captureBadge}>
-            <Text style={styles.captureBadgeText}>{ANALYSIS_TYPES.find(t => t.id === analysisType)?.label}</Text>
+            <Text style={styles.captureBadgeText}>
+              {ANALYSIS_TYPES.find((t) => t.id === analysisType)?.label}
+            </Text>
           </View>
           {isRecording && (
             <View style={styles.recIndicator}>
@@ -720,10 +886,16 @@ export default function BiomechanicsScreen() {
         {/* Gait event buttons */}
         {isRecording && analysisType === "marcha" && (
           <View style={styles.gaitControls}>
-            <TouchableOpacity style={[styles.eventBtn, { backgroundColor: "#22c55e" }]} onPress={() => markGaitEvent("CONTATO")}>
+            <TouchableOpacity
+              style={[styles.eventBtn, { backgroundColor: "#22c55e" }]}
+              onPress={() => markGaitEvent("CONTATO")}
+            >
               <Text style={styles.eventBtnText}>CONTATO</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={[styles.eventBtn, { backgroundColor: "#ef4444" }]} onPress={() => markGaitEvent("IMPULSÃO")}>
+            <TouchableOpacity
+              style={[styles.eventBtn, { backgroundColor: "#ef4444" }]}
+              onPress={() => markGaitEvent("IMPULSÃO")}
+            >
               <Text style={styles.eventBtnText}>IMPULSÃO</Text>
             </TouchableOpacity>
           </View>
@@ -732,8 +904,8 @@ export default function BiomechanicsScreen() {
         <View style={styles.captureBottom}>
           <View style={styles.captureActions}>
             {/* Capture Reference Button */}
-            <TouchableOpacity 
-              style={[styles.captureActionBtn, { backgroundColor: "rgba(255,255,255,0.2)" }]} 
+            <TouchableOpacity
+              style={[styles.captureActionBtn, { backgroundColor: "rgba(255,255,255,0.2)" }]}
               onPress={handleCaptureReference}
               disabled={isSavingReference}
             >
@@ -748,26 +920,32 @@ export default function BiomechanicsScreen() {
             {/* Main Recording Button */}
             {!isRecording ? (
               <TouchableOpacity style={styles.recBtn} onPress={() => setIsRecording(true)}>
-              <View style={styles.recBtnInner} />
-            </TouchableOpacity>
-          ) : (
-            <TouchableOpacity style={[styles.recBtn, styles.recBtnActive]} onPress={stopAndAnalyze}>
-              <View style={styles.recBtnStop} />
-            </TouchableOpacity>
-          )}
-          <Text style={styles.captureHint}>
-            {isRecording ? "Toque para parar e analisar" : "Toque para iniciar gravação"}
-          </Text>
+                <View style={styles.recBtnInner} />
+              </TouchableOpacity>
+            ) : (
+              <TouchableOpacity
+                style={[styles.recBtn, styles.recBtnActive]}
+                onPress={stopAndAnalyze}
+              >
+                <View style={styles.recBtnStop} />
+              </TouchableOpacity>
+            )}
+            <Text style={styles.captureHint}>
+              {isRecording ? "Toque para parar e analisar" : "Toque para iniciar gravação"}
+            </Text>
+          </View>
         </View>
       </View>
-    </View>
     );
   }
 
   // ANALYSIS (processamento)
   if (screen === "analysis") {
     return (
-      <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]} edges={["top", "left", "right", "bottom"]}>
+      <SafeAreaView
+        style={[styles.safe, { backgroundColor: colors.background }]}
+        edges={["top", "left", "right", "bottom"]}
+      >
         <Stack.Screen options={{ headerShown: false }} />
         <View style={[styles.header, { borderBottomColor: colors.border }]}>
           <TouchableOpacity onPress={() => setScreen("home")}>
@@ -782,14 +960,19 @@ export default function BiomechanicsScreen() {
             <Image source={{ uri: mediaUri }} style={styles.analysisPreview} resizeMode="contain" />
           )}
           {!mediaUri && (
-            <View style={[styles.analysisPreview, { backgroundColor: colors.surface, justifyContent: "center", alignItems: "center" }]}>
+            <View
+              style={[
+                styles.analysisPreview,
+                { backgroundColor: colors.surface, justifyContent: "center", alignItems: "center" },
+              ]}
+            >
               <Ionicons name="videocam" size={48} color={colors.textSecondary} />
               <Text style={[{ color: colors.textSecondary, marginTop: 8 }]}>Gravação ao vivo</Text>
             </View>
           )}
 
           <Text style={[styles.analysisTypeLabel, { color: colors.text }]}>
-            {ANALYSIS_TYPES.find(t => t.id === analysisType)?.label}
+            {ANALYSIS_TYPES.find((t) => t.id === analysisType)?.label}
           </Text>
           {gaitEvents.length > 0 && (
             <Text style={[styles.analysisInfo, { color: colors.textSecondary }]}>
@@ -803,9 +986,15 @@ export default function BiomechanicsScreen() {
             disabled={analyzing}
           >
             {analyzing ? (
-              <><ActivityIndicator color="#fff" /><Text style={styles.startBtnText}>Analisando...</Text></>
+              <>
+                <ActivityIndicator color="#fff" />
+                <Text style={styles.startBtnText}>Analisando...</Text>
+              </>
             ) : (
-              <><Ionicons name="analytics" size={22} color="#fff" /><Text style={styles.startBtnText}>Executar Análise</Text></>
+              <>
+                <Ionicons name="analytics" size={22} color="#fff" />
+                <Text style={styles.startBtnText}>Executar Análise</Text>
+              </>
             )}
           </TouchableOpacity>
         </View>
@@ -815,9 +1004,12 @@ export default function BiomechanicsScreen() {
 
   // REPORT
   if (screen === "report" && result) {
-    const typeInfo = ANALYSIS_TYPES.find(t => t.id === result.type);
+    const typeInfo = ANALYSIS_TYPES.find((t) => t.id === result.type);
     return (
-      <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]} edges={["top", "left", "right", "bottom"]}>
+      <SafeAreaView
+        style={[styles.safe, { backgroundColor: colors.background }]}
+        edges={["top", "left", "right", "bottom"]}
+      >
         <Stack.Screen options={{ headerShown: false }} />
         <View style={[styles.header, { borderBottomColor: colors.border }]}>
           <TouchableOpacity onPress={() => setScreen("home")}>
@@ -834,7 +1026,9 @@ export default function BiomechanicsScreen() {
           <View style={[styles.reportHeader, { backgroundColor: colors.primary + "15" }]}>
             <Ionicons name={typeInfo?.icon as any} size={32} color={colors.primary} />
             <View style={{ flex: 1, marginLeft: 12 }}>
-              <Text style={[styles.reportTypeTitle, { color: colors.primary }]}>{typeInfo?.label}</Text>
+              <Text style={[styles.reportTypeTitle, { color: colors.primary }]}>
+                {typeInfo?.label}
+              </Text>
               <Text style={[styles.reportDate, { color: colors.textSecondary }]}>
                 {new Date(result.timestamp).toLocaleString("pt-BR")}
               </Text>
@@ -849,21 +1043,46 @@ export default function BiomechanicsScreen() {
           {/* Tabela de ângulos */}
           <Text style={[styles.sectionTitle, { color: colors.text }]}>Medições</Text>
           {result.angles.map((a, i) => (
-            <View key={i} style={[styles.angleRow, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            <View
+              key={i}
+              style={[
+                styles.angleRow,
+                { backgroundColor: colors.surface, borderColor: colors.border },
+              ]}
+            >
               <View style={{ flex: 1 }}>
                 <Text style={[styles.angleJoint, { color: colors.text }]}>{a.joint}</Text>
-                <Text style={[styles.angleRef, { color: colors.textSecondary }]}>Referência: {a.reference}°</Text>
+                <Text style={[styles.angleRef, { color: colors.textSecondary }]}>
+                  Referência: {a.reference}°
+                </Text>
               </View>
-              <View style={[
-                styles.angleBadge,
-                { backgroundColor: a.status === "ok" ? "#10B981" : a.status === "warning" ? "#F59E0B" : "#EF4444" }
-              ]}>
+              <View
+                style={[
+                  styles.angleBadge,
+                  {
+                    backgroundColor:
+                      a.status === "ok"
+                        ? "#10B981"
+                        : a.status === "warning"
+                          ? "#F59E0B"
+                          : "#EF4444",
+                  },
+                ]}
+              >
                 <Text style={styles.angleBadgeText}>{a.angle}°</Text>
               </View>
               <Ionicons
-                name={a.status === "ok" ? "checkmark-circle" : a.status === "warning" ? "warning" : "alert-circle"}
+                name={
+                  a.status === "ok"
+                    ? "checkmark-circle"
+                    : a.status === "warning"
+                      ? "warning"
+                      : "alert-circle"
+                }
                 size={20}
-                color={a.status === "ok" ? "#10B981" : a.status === "warning" ? "#F59E0B" : "#EF4444"}
+                color={
+                  a.status === "ok" ? "#10B981" : a.status === "warning" ? "#F59E0B" : "#EF4444"
+                }
                 style={{ marginLeft: 8 }}
               />
             </View>
@@ -871,7 +1090,11 @@ export default function BiomechanicsScreen() {
 
           {/* Legenda */}
           <View style={styles.legendRow}>
-            {[["#10B981","Normal"],["#F59E0B","Atenção"],["#EF4444","Alterado"]].map(([c, l]) => (
+            {[
+              ["#10B981", "Normal"],
+              ["#F59E0B", "Atenção"],
+              ["#EF4444", "Alterado"],
+            ].map(([c, l]) => (
               <View key={l} style={styles.legendItem}>
                 <View style={[styles.legendDot, { backgroundColor: c }]} />
                 <Text style={[styles.legendText, { color: colors.textSecondary }]}>{l}</Text>
@@ -881,18 +1104,28 @@ export default function BiomechanicsScreen() {
 
           {/* Observações */}
           <Text style={[styles.sectionTitle, { color: colors.text }]}>Observações Clínicas</Text>
-          <View style={[styles.obsBox, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+          <View
+            style={[styles.obsBox, { backgroundColor: colors.surface, borderColor: colors.border }]}
+          >
             <Text style={[styles.obsText, { color: colors.text }]}>{result.observations}</Text>
           </View>
 
           {/* Ações */}
           <TouchableOpacity
-            style={[styles.startBtn, { backgroundColor: selectedPatientId ? colors.primary : colors.border, marginTop: 16 }]}
+            style={[
+              styles.startBtn,
+              {
+                backgroundColor: selectedPatientId ? colors.primary : colors.border,
+                marginTop: 16,
+              },
+            ]}
             onPress={saveReport}
           >
             <Ionicons name="save" size={20} color="#fff" />
             <Text style={styles.startBtnText}>
-              {selectedPatientId ? `Salvar no prontuário de ${selectedPatientName}` : "Selecione um paciente para salvar"}
+              {selectedPatientId
+                ? `Salvar no prontuário de ${selectedPatientName}`
+                : "Selecione um paciente para salvar"}
             </Text>
           </TouchableOpacity>
         </ScrollView>
@@ -906,21 +1139,27 @@ export default function BiomechanicsScreen() {
 // ── Helpers ────────────────────────────────────────────────────────────────
 
 function generateObservations(type: AnalysisType, angles: AnalysisResult["angles"]): string {
-  const alerts  = angles.filter(a => a.status === "alert");
-  const warnings = angles.filter(a => a.status === "warning");
+  const alerts = angles.filter((a) => a.status === "alert");
+  const warnings = angles.filter((a) => a.status === "warning");
 
   const lines: string[] = [];
   if (type === "postura") {
     lines.push("Análise postural global realizada nos planos frontal e sagital.");
-    if (alerts.length)   lines.push(`Alterações significativas em: ${alerts.map(a => a.joint).join(", ")}.`);
-    if (warnings.length) lines.push(`Desvios moderados identificados em: ${warnings.map(a => a.joint).join(", ")}.`);
-    if (!alerts.length && !warnings.length) lines.push("Alinhamento postural dentro dos parâmetros normais.");
+    if (alerts.length)
+      lines.push(`Alterações significativas em: ${alerts.map((a) => a.joint).join(", ")}.`);
+    if (warnings.length)
+      lines.push(`Desvios moderados identificados em: ${warnings.map((a) => a.joint).join(", ")}.`);
+    if (!alerts.length && !warnings.length)
+      lines.push("Alinhamento postural dentro dos parâmetros normais.");
   } else if (type === "marcha") {
     lines.push("Análise cinemática do ciclo de marcha.");
     lines.push("Verifique simetria entre membros e padrão de ativação muscular.");
   } else if (type === "articulacao") {
     lines.push("Goniometria funcional realizada em posição de referência.");
-    if (alerts.length) lines.push(`ADM reduzida em: ${alerts.map(a => a.joint).join(", ")}. Investigar limitações capsulares ou musculares.`);
+    if (alerts.length)
+      lines.push(
+        `ADM reduzida em: ${alerts.map((a) => a.joint).join(", ")}. Investigar limitações capsulares ou musculares.`,
+      );
   } else {
     lines.push("Análise de alinhamento vertical pelo método da linha de prumo.");
   }
@@ -942,50 +1181,159 @@ const styles = StyleSheet.create({
   instructionText: { flex: 1, fontSize: 14, lineHeight: 20 },
   permContainer: { flex: 1, alignItems: "center", justifyContent: "center", padding: 24, gap: 16 },
   permText: { fontSize: 16, textAlign: "center", color: "#fff" },
-  header: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1 },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+  },
   headerBack: { padding: 4 },
   headerTitle: { fontSize: 17, fontWeight: "600" },
   homeContent: { padding: 16, gap: 12, paddingBottom: 40 },
-  patientCard: { flexDirection: "row", alignItems: "center", padding: 16, borderRadius: 12, borderWidth: 1, gap: 12 },
+  patientCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+    gap: 12,
+  },
   patientInfo: { flex: 1 },
   patientLabel: { fontSize: 11, marginBottom: 2 },
   patientName: { fontSize: 15, fontWeight: "600" },
   sectionTitle: { fontSize: 14, fontWeight: "700", marginTop: 8, marginBottom: 4 },
-  analysisCard: { flexDirection: "row", alignItems: "center", padding: 14, borderRadius: 12, borderWidth: 1.5, gap: 12 },
-  analysisIcon: { width: 44, height: 44, borderRadius: 10, alignItems: "center", justifyContent: "center" },
+  analysisCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 14,
+    borderRadius: 12,
+    borderWidth: 1.5,
+    gap: 12,
+  },
+  analysisIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 10,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   analysisCardTitle: { fontSize: 15, fontWeight: "600" },
   analysisCardDesc: { fontSize: 12, marginTop: 2 },
   modeRow: { flexDirection: "row", gap: 10 },
-  modeBtn: { flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", paddingVertical: 12, borderRadius: 10, borderWidth: 1, gap: 6 },
+  modeBtn: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 12,
+    borderRadius: 10,
+    borderWidth: 1,
+    gap: 6,
+  },
   modeBtnText: { fontSize: 13, fontWeight: "600" },
-  startBtn: { flexDirection: "row", alignItems: "center", justifyContent: "center", padding: 16, borderRadius: 14, gap: 8, marginTop: 8 },
+  startBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 16,
+    borderRadius: 14,
+    gap: 8,
+    marginTop: 8,
+  },
   startBtnText: { color: "#fff", fontSize: 16, fontWeight: "700", flexShrink: 1 },
   btn: { paddingHorizontal: 24, paddingVertical: 12, borderRadius: 10 },
   btnText: { color: "#fff", fontWeight: "700", fontSize: 16 },
   backLink: { marginTop: 8 },
   backLinkText: { fontSize: 14 },
-  searchInputWrap: { flexDirection: "row", alignItems: "center", gap: 8, borderWidth: 1, borderRadius: 14, marginHorizontal: 16, marginTop: 16, marginBottom: 8, paddingHorizontal: 12, height: 48 },
+  searchInputWrap: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    borderWidth: 1,
+    borderRadius: 14,
+    marginHorizontal: 16,
+    marginTop: 16,
+    marginBottom: 8,
+    paddingHorizontal: 12,
+    height: 48,
+  },
   searchInput: { flex: 1, fontSize: 15 },
-  patientRow: { flexDirection: "row", alignItems: "center", gap: 12, paddingHorizontal: 16, paddingVertical: 14, borderBottomWidth: 1 },
+  patientRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    borderBottomWidth: 1,
+  },
   patientRowName: { fontSize: 15 },
-  emptyPatientContainer: { alignItems: "center", justifyContent: "center", paddingVertical: 48, gap: 8 },
+  emptyPatientContainer: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 48,
+    gap: 8,
+  },
   emptyPatientText: { fontSize: 14 },
   // Capture
-  captureTopBar: { flexDirection: "row", alignItems: "center", paddingHorizontal: 16, paddingTop: 8, justifyContent: "space-between" },
+  captureTopBar: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 16,
+    paddingTop: 8,
+    justifyContent: "space-between",
+  },
   captureBack: { backgroundColor: "rgba(0,0,0,0.5)", padding: 8, borderRadius: 8 },
-  captureBadge: { backgroundColor: "rgba(0,0,0,0.6)", paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20 },
+  captureBadge: {
+    backgroundColor: "rgba(0,0,0,0.6)",
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+  },
   captureBadgeText: { color: "#fff", fontWeight: "700", fontSize: 13 },
-  recIndicator: { flexDirection: "row", alignItems: "center", gap: 6, backgroundColor: "rgba(220,38,38,0.8)", paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20 },
+  recIndicator: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    backgroundColor: "rgba(220,38,38,0.8)",
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 20,
+  },
   recDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: "#fff" },
   recText: { color: "#fff", fontWeight: "700", fontSize: 12 },
   gaitControls: { position: "absolute", top: "40%", right: 20, gap: 16 },
   eventBtn: { paddingHorizontal: 20, paddingVertical: 14, borderRadius: 12, elevation: 8 },
   eventBtnText: { color: "#fff", fontWeight: "900", fontSize: 13 },
-  captureBottom: { position: "absolute", bottom: 60, left: 0, right: 0, alignItems: "center", gap: 10 },
+  captureBottom: {
+    position: "absolute",
+    bottom: 60,
+    left: 0,
+    right: 0,
+    alignItems: "center",
+    gap: 10,
+  },
   captureActions: { flexDirection: "row", alignItems: "center", gap: 24, paddingBottom: 10 },
-  captureActionBtn: { alignItems: "center", gap: 6, width: 64, height: 64, borderRadius: 32, justifyContent: "center" },
+  captureActionBtn: {
+    alignItems: "center",
+    gap: 6,
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    justifyContent: "center",
+  },
   captureActionText: { color: "#fff", fontSize: 11, fontWeight: "600" },
-  recBtn: { width: 72, height: 72, borderRadius: 36, backgroundColor: "rgba(255,255,255,0.3)", borderWidth: 4, borderColor: "#fff", alignItems: "center", justifyContent: "center" },
+  recBtn: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    backgroundColor: "rgba(255,255,255,0.3)",
+    borderWidth: 4,
+    borderColor: "#fff",
+    alignItems: "center",
+    justifyContent: "center",
+  },
   recBtnInner: { width: 48, height: 48, borderRadius: 24, backgroundColor: "#ef4444" },
   recBtnActive: { backgroundColor: "rgba(220,38,38,0.4)", borderColor: "#ef4444" },
   recBtnStop: { width: 28, height: 28, borderRadius: 4, backgroundColor: "#fff" },
@@ -1001,7 +1349,14 @@ const styles = StyleSheet.create({
   reportTypeTitle: { fontSize: 17, fontWeight: "700" },
   reportDate: { fontSize: 12, marginTop: 2 },
   reportPatient: { fontSize: 13, marginTop: 4, fontWeight: "600" },
-  angleRow: { flexDirection: "row", alignItems: "center", padding: 12, borderRadius: 10, borderWidth: 1, marginBottom: 6 },
+  angleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 12,
+    borderRadius: 10,
+    borderWidth: 1,
+    marginBottom: 6,
+  },
   angleJoint: { fontSize: 14, fontWeight: "600" },
   angleRef: { fontSize: 11, marginTop: 2 },
   angleBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 },

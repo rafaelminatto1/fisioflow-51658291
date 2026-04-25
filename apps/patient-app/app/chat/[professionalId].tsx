@@ -7,7 +7,7 @@
  * @module app/chat/[professionalId]
  */
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from "react";
 import {
   View,
   Text,
@@ -20,18 +20,18 @@ import {
   ActivityIndicator,
   Alert,
   Image,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter, useLocalSearchParams } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
-import { useColors } from '@/hooks/useColorScheme';
-import { useAuthStore } from '@/store/auth';
-import { MessagingManager, Message } from '@/lib/messaging';
-const MESSAGING_UNAVAILABLE_REASON = 'O serviço de chat está em manutenção no momento.';
-import { format } from 'date-fns';
-import * as ImagePicker from 'expo-image-picker';
-import * as Haptics from 'expo-haptics';
-import { log } from '@/lib/logger';
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { useRouter, useLocalSearchParams } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
+import { useColors } from "@/hooks/useColorScheme";
+import { useAuthStore } from "@/store/auth";
+import { MessagingManager, Message } from "@/lib/messaging";
+const MESSAGING_UNAVAILABLE_REASON = "O serviço de chat está em manutenção no momento.";
+import { format } from "date-fns";
+import * as ImagePicker from "expo-image-picker";
+import * as Haptics from "expo-haptics";
+import { log } from "@/lib/logger";
 
 export default function ChatScreen() {
   const colors = useColors();
@@ -40,14 +40,14 @@ export default function ChatScreen() {
   const professionalId = params.professionalId as string;
 
   const { user } = useAuthStore();
-  const [manager] = useState(() => new MessagingManager(user?.id || ''));
+  const [manager] = useState(() => new MessagingManager(user?.id || ""));
 
   const [messages, setMessages] = useState<Message[]>([]);
-  const [inputText, setInputText] = useState('');
+  const [inputText, setInputText] = useState("");
   const [sending, setSending] = useState(false);
   const [loading, setLoading] = useState(true);
   const [conversationId, setConversationId] = useState<string | null>(null);
-  const [professionalName] = useState('Profissional');
+  const [professionalName] = useState("Profissional");
   const chatAvailable = manager.isAvailable();
 
   const flatListRef = useRef<FlatList>(null);
@@ -104,14 +104,14 @@ export default function ChatScreen() {
             setTimeout(() => {
               flatListRef.current?.scrollToEnd({ animated: true });
             }, 100);
-          }
+          },
         });
         manager.startPolling(convId);
       }
 
       setLoading(false);
     } catch (error) {
-      log.error('Error initializing chat:', error);
+      log.error("Error initializing chat:", error);
       setLoading(false);
     }
   };
@@ -125,7 +125,7 @@ export default function ChatScreen() {
 
   const handleSendMessage = async () => {
     if (!chatAvailable) {
-      Alert.alert('Chat em migracao', MESSAGING_UNAVAILABLE_REASON);
+      Alert.alert("Chat em migracao", MESSAGING_UNAVAILABLE_REASON);
       return;
     }
 
@@ -135,7 +135,7 @@ export default function ChatScreen() {
 
     setSending(true);
     const text = inputText.trim();
-    setInputText('');
+    setInputText("");
 
     try {
       // Feedback háptico
@@ -150,8 +150,8 @@ export default function ChatScreen() {
         }, 100);
       }
     } catch (error) {
-      log.error('Error sending message:', error);
-      Alert.alert('Erro', 'Não foi possível enviar a mensagem.');
+      log.error("Error sending message:", error);
+      Alert.alert("Erro", "Não foi possível enviar a mensagem.");
     } finally {
       setSending(false);
     }
@@ -159,7 +159,7 @@ export default function ChatScreen() {
 
   const handleSendImage = async () => {
     if (!chatAvailable) {
-      Alert.alert('Chat em migracao', MESSAGING_UNAVAILABLE_REASON);
+      Alert.alert("Chat em migracao", MESSAGING_UNAVAILABLE_REASON);
       return;
     }
 
@@ -168,7 +168,7 @@ export default function ChatScreen() {
       const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
 
       if (!permissionResult.granted) {
-        Alert.alert('Permissão Necessária', 'Precisamos de acesso à galeria para enviar fotos.');
+        Alert.alert("Permissão Necessária", "Precisamos de acesso à galeria para enviar fotos.");
         return;
       }
 
@@ -182,11 +182,11 @@ export default function ChatScreen() {
       if (!result.canceled && result.assets[0]) {
         setSending(true);
         const message = await manager.sendMessageWithAttachment(
-          conversationId || '',
-          'image',
-          '',
+          conversationId || "",
+          "image",
+          "",
           result.assets[0].uri,
-          'photo.jpg'
+          "photo.jpg",
         );
 
         if (message) {
@@ -199,7 +199,7 @@ export default function ChatScreen() {
         setSending(false);
       }
     } catch (error) {
-      log.error('Error sending image:', error);
+      log.error("Error sending image:", error);
       setSending(false);
     }
   };
@@ -233,14 +233,14 @@ export default function ChatScreen() {
           )}
 
           {/* Text content */}
-          {item.type === 'text' && (
-            <Text style={[styles.messageText, { color: isOwn ? '#FFFFFF' : colors.text }]}>
+          {item.type === "text" && (
+            <Text style={[styles.messageText, { color: isOwn ? "#FFFFFF" : colors.text }]}>
               {item.content}
             </Text>
           )}
 
           {/* Image attachment */}
-          {item.type === 'image' && item.attachment_url && (
+          {item.type === "image" && item.attachment_url && (
             <>
               <Image
                 source={{ uri: item.attachment_url }}
@@ -248,7 +248,7 @@ export default function ChatScreen() {
                 resizeMode="cover"
               />
               {item.content && (
-                <Text style={[styles.messageText, { color: isOwn ? '#FFFFFF' : colors.text }]}>
+                <Text style={[styles.messageText, { color: isOwn ? "#FFFFFF" : colors.text }]}>
                   {item.content}
                 </Text>
               )}
@@ -256,15 +256,15 @@ export default function ChatScreen() {
           )}
 
           {/* Other attachment types */}
-          {(item.type === 'video' || item.type === 'document') && (
+          {(item.type === "video" || item.type === "document") && (
             <View style={styles.attachmentContainer}>
               <Ionicons
-                name={item.type === 'video' ? 'videocam' : 'document'}
+                name={item.type === "video" ? "videocam" : "document"}
                 size={32}
-                color={isOwn ? '#FFFFFF' : colors.primary}
+                color={isOwn ? "#FFFFFF" : colors.primary}
               />
-              <Text style={[styles.attachmentName, { color: isOwn ? '#FFFFFF' : colors.text }]}>
-                {item.attachment_name || 'Anexo'}
+              <Text style={[styles.attachmentName, { color: isOwn ? "#FFFFFF" : colors.text }]}>
+                {item.attachment_name || "Anexo"}
               </Text>
             </View>
           )}
@@ -272,16 +272,27 @@ export default function ChatScreen() {
           {/* Timestamp and status */}
           <View style={styles.messageMeta}>
             {showTime && (
-              <Text style={[styles.messageTime, { color: isOwn ? 'rgba(255,255,255,0.7)' : colors.textMuted }]}>
-                {timeString ? format(timeString, 'HH:mm') : ''}
+              <Text
+                style={[
+                  styles.messageTime,
+                  { color: isOwn ? "rgba(255,255,255,0.7)" : colors.textMuted },
+                ]}
+              >
+                {timeString ? format(timeString, "HH:mm") : ""}
               </Text>
             )}
             {isOwn && (
               <View style={styles.messageStatus}>
-                {item.status === 'sending' && <ActivityIndicator size={10} color="#FFFFFF" />}
-                {item.status === 'sent' && <Ionicons name="checkmark" size={14} color="rgba(255,255,255,0.7)" />}
-                {item.status === 'delivered' && <Ionicons name="checkmark-done" size={14} color="rgba(255,255,255,0.7)" />}
-                {item.status === 'read' && <Ionicons name="checkmark-done" size={14} color="#4ade80" />}
+                {item.status === "sending" && <ActivityIndicator size={10} color="#FFFFFF" />}
+                {item.status === "sent" && (
+                  <Ionicons name="checkmark" size={14} color="rgba(255,255,255,0.7)" />
+                )}
+                {item.status === "delivered" && (
+                  <Ionicons name="checkmark-done" size={14} color="rgba(255,255,255,0.7)" />
+                )}
+                {item.status === "read" && (
+                  <Ionicons name="checkmark-done" size={14} color="#4ade80" />
+                )}
               </View>
             )}
           </View>
@@ -294,7 +305,7 @@ export default function ChatScreen() {
     <View style={styles.emptyState}>
       <Ionicons name="chatbubbles" size={64} color={colors.textMuted} />
       <Text style={[styles.emptyTitle, { color: colors.text }]}>
-        {chatAvailable ? 'Inicie a conversa' : 'Chat em migracao'}
+        {chatAvailable ? "Inicie a conversa" : "Chat em migracao"}
       </Text>
       <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
         {chatAvailable
@@ -305,15 +316,23 @@ export default function ChatScreen() {
   );
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: colors.background }]}
+      edges={["top"]}
+    >
       {/* Header */}
-      <View style={[styles.header, { backgroundColor: colors.background, borderBottomColor: colors.border }]}>
+      <View
+        style={[
+          styles.header,
+          { backgroundColor: colors.background, borderBottomColor: colors.border },
+        ]}
+      >
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
           <Ionicons name="arrow-back" size={24} color={colors.text} />
         </TouchableOpacity>
 
         <View style={styles.headerInfo}>
-          <View style={[styles.avatar, { backgroundColor: colors.primary + '20' }]}>
+          <View style={[styles.avatar, { backgroundColor: colors.primary + "20" }]}>
             <Text style={[styles.avatarText, { color: colors.primary }]}>
               {professionalName.charAt(0)}
             </Text>
@@ -326,7 +345,9 @@ export default function ChatScreen() {
           </View>
         </View>
 
-        <TouchableOpacity onPress={() => Alert.alert('Opções', 'Funcionalidades em desenvolvimento')}>
+        <TouchableOpacity
+          onPress={() => Alert.alert("Opções", "Funcionalidades em desenvolvimento")}
+        >
           <Ionicons name="ellipsis-vertical" size={24} color={colors.text} />
         </TouchableOpacity>
       </View>
@@ -339,7 +360,12 @@ export default function ChatScreen() {
       ) : (
         <>
           {!chatAvailable && (
-            <View style={[styles.migrationBanner, { backgroundColor: colors.warning + '18', borderColor: colors.warning + '40' }]}>
+            <View
+              style={[
+                styles.migrationBanner,
+                { backgroundColor: colors.warning + "18", borderColor: colors.warning + "40" },
+              ]}
+            >
               <Ionicons name="information-circle" size={18} color={colors.warning} />
               <Text style={[styles.migrationBannerText, { color: colors.text }]}>
                 {MESSAGING_UNAVAILABLE_REASON}
@@ -352,7 +378,10 @@ export default function ChatScreen() {
             data={messages}
             keyExtractor={(item) => item.id}
             renderItem={renderMessage}
-            contentContainerStyle={[styles.messagesContainer, messages.length === 0 && styles.emptyContainer]}
+            contentContainerStyle={[
+              styles.messagesContainer,
+              messages.length === 0 && styles.emptyContainer,
+            ]}
             ListEmptyComponent={renderEmptyState}
             onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: false })}
             onLayout={() => flatListRef.current?.scrollToEnd({ animated: false })}
@@ -362,10 +391,15 @@ export default function ChatScreen() {
 
       {/* Input */}
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
         keyboardVerticalOffset={0}
       >
-        <View style={[styles.inputContainer, { backgroundColor: colors.surface, borderTopColor: colors.border }]}>
+        <View
+          style={[
+            styles.inputContainer,
+            { backgroundColor: colors.surface, borderTopColor: colors.border },
+          ]}
+        >
           <TouchableOpacity
             onPress={handleSendImage}
             style={styles.attachButton}
@@ -387,7 +421,12 @@ export default function ChatScreen() {
 
           <TouchableOpacity
             onPress={handleSendMessage}
-            style={[styles.sendButton, inputText.trim() ? { backgroundColor: colors.primary } : { backgroundColor: colors.border }]}
+            style={[
+              styles.sendButton,
+              inputText.trim()
+                ? { backgroundColor: colors.primary }
+                : { backgroundColor: colors.border },
+            ]}
             disabled={!inputText.trim() || sending || !chatAvailable}
           >
             {sending ? (
@@ -396,7 +435,7 @@ export default function ChatScreen() {
               <Ionicons
                 name="send"
                 size={20}
-                color={inputText.trim() ? '#FFFFFF' : colors.textMuted}
+                color={inputText.trim() ? "#FFFFFF" : colors.textMuted}
               />
             )}
           </TouchableOpacity>
@@ -411,8 +450,8 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: 1,
@@ -422,45 +461,45 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   headerInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     flex: 1,
   },
   avatar: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     marginRight: 12,
   },
   avatarText: {
     fontSize: 18,
-    fontWeight: '700',
-    color: '#FFFFFF',
+    fontWeight: "700",
+    color: "#FFFFFF",
   },
   headerText: {
     flex: 1,
   },
   headerTitle: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   headerSubtitle: {
     fontSize: 13,
   },
   loadingContainer: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   messagesContainer: {
     padding: 16,
     gap: 8,
   },
   migrationBanner: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 8,
     marginHorizontal: 16,
     marginTop: 16,
@@ -480,36 +519,36 @@ const styles = StyleSheet.create({
   },
   emptyState: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     paddingVertical: 60,
   },
   emptyTitle: {
     fontSize: 18,
-    fontWeight: '600',
+    fontWeight: "600",
     marginTop: 16,
   },
   emptyText: {
     fontSize: 14,
     marginTop: 4,
-    textAlign: 'center',
+    textAlign: "center",
   },
   messageContainer: {
-    flexDirection: 'row',
+    flexDirection: "row",
     marginBottom: 4,
   },
   ownMessageContainer: {
-    justifyContent: 'flex-end',
+    justifyContent: "flex-end",
   },
   messageBubble: {
-    maxWidth: '75%',
+    maxWidth: "75%",
     borderRadius: 18,
     paddingHorizontal: 14,
     paddingVertical: 10,
   },
   senderName: {
     fontSize: 12,
-    fontWeight: '600',
+    fontWeight: "600",
     marginBottom: 4,
   },
   messageText: {
@@ -523,21 +562,21 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   attachmentContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 12,
     padding: 12,
     borderRadius: 12,
-    backgroundColor: 'rgba(0,0,0,0.05)',
+    backgroundColor: "rgba(0,0,0,0.05)",
   },
   attachmentName: {
     fontSize: 14,
-    fontWeight: '500',
+    fontWeight: "500",
   },
   messageMeta: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'flex-end',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "flex-end",
     marginTop: 4,
     gap: 4,
   },
@@ -545,12 +584,12 @@ const styles = StyleSheet.create({
     fontSize: 11,
   },
   messageStatus: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
   },
   inputContainer: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
+    flexDirection: "row",
+    alignItems: "flex-end",
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderTopWidth: 1,
@@ -571,7 +610,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
 });

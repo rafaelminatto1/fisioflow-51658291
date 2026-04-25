@@ -47,6 +47,7 @@ base64 -w0 fisioflow-release.keystore > fisioflow-release.keystore.b64
 ## 4. Pré-requisitos antes do primeiro upload
 
 Em **Política da app** → preencher:
+
 - Política de Privacidade (URL: `https://moocafisio.com.br/privacidade`)
 - Categoria: Saúde e fitness ou Medicina
 - Classificação etária: Questionário rápido (sua app é livre)
@@ -75,6 +76,7 @@ cd android
 O AAB fica em `android/app/build/outputs/bundle/release/app-release.aab`.
 
 No Play Console:
+
 1. **Versão** → **Internal testing** → **Criar nova versão**
 2. Upload do AAB (arrastar)
 3. Notas da versão
@@ -96,12 +98,12 @@ No Play Console:
 
 ## 7. Configurar GitHub Secrets
 
-| Secret name | Valor |
-|---|---|
-| `ANDROID_KEYSTORE_BASE64` | conteúdo de `fisioflow-release.keystore.b64` |
-| `ANDROID_KEYSTORE_PASSWORD` | a senha do keystore (passo 2) |
-| `ANDROID_KEY_ALIAS` | `fisioflow` |
-| `ANDROID_KEY_PASSWORD` | mesma senha (passo 2) |
+| Secret name                 | Valor                                            |
+| --------------------------- | ------------------------------------------------ |
+| `ANDROID_KEYSTORE_BASE64`   | conteúdo de `fisioflow-release.keystore.b64`     |
+| `ANDROID_KEYSTORE_PASSWORD` | a senha do keystore (passo 2)                    |
+| `ANDROID_KEY_ALIAS`         | `fisioflow`                                      |
+| `ANDROID_KEY_PASSWORD`      | mesma senha (passo 2)                            |
 | `PLAY_SERVICE_ACCOUNT_JSON` | conteúdo do `.json` da service account (passo 6) |
 
 ## 8. Trigger primeiro build via CI
@@ -113,6 +115,7 @@ git push -u origin release/mobile-android-test
 ```
 
 Ou pra upload Play Store automático:
+
 ```bash
 git tag mobile-v0.1.0
 git push origin mobile-v0.1.0
@@ -125,6 +128,7 @@ Acompanhe em https://github.com/rafaelminatto1/fisioflow-51658291/actions/workfl
 Padrão usado neste workflow: `internal` (até 100 testers, deploy imediato).
 
 Outras opções:
+
 - `alpha` (closed testing): emails específicos
 - `beta` (open testing): qualquer um com link
 - `production`: público geral

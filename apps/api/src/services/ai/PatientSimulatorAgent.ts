@@ -2,28 +2,28 @@ import { callGemini } from "../../lib/ai-gemini";
 import { Env } from "../../types/env";
 
 export interface SimulatorProfile {
-	age: number;
-	painLevel: number; // 0-10
-	motivationLevel: "high" | "medium" | "low";
-	condition: string;
-	personaTraits: string[];
+  age: number;
+  painLevel: number; // 0-10
+  motivationLevel: "high" | "medium" | "low";
+  condition: string;
+  personaTraits: string[];
 }
 
 export interface SimulationResult {
-	simulatedMessage: string;
-	internalThoughtProcess: string;
-	safetyTriggered: boolean;
+  simulatedMessage: string;
+  internalThoughtProcess: string;
+  safetyTriggered: boolean;
 }
 
 export class PatientSimulatorAgent {
-	constructor(private env: Env) {}
+  constructor(private env: Env) {}
 
-	public async generateSimulatedResponse(
-		profile: SimulatorProfile,
-		chatHistory: { role: string; content: string }[],
-		agentLastMessage: string
-	): Promise<SimulationResult> {
-		const prompt = `You are a Patient Simulator for a physiotherapy application.
+  public async generateSimulatedResponse(
+    profile: SimulatorProfile,
+    chatHistory: { role: string; content: string }[],
+    agentLastMessage: string,
+  ): Promise<SimulationResult> {
+    const prompt = `You are a Patient Simulator for a physiotherapy application.
 Your task is to play the role of a patient interacting with an AI Physiotherapy Tutor.
 You MUST stay in character and respond exactly as this patient would.
 
@@ -35,7 +35,10 @@ PATIENT PROFILE:
 - Personality Traits: ${profile.personaTraits.join(", ")}
 
 CHAT HISTORY SUMMARY:
-${chatHistory.slice(-4).map(m => `${m.role.toUpperCase()}: ${m.content}`).join("\n")}
+${chatHistory
+  .slice(-4)
+  .map((m) => `${m.role.toUpperCase()}: ${m.content}`)
+  .join("\n")}
 
 LATEST MESSAGE FROM AI TUTOR:
 "${agentLastMessage}"
@@ -47,31 +50,31 @@ INSTRUCTIONS:
 4. Include an 'internalThoughtProcess' explaining why the simulator chose this response based on the profile.
 5. Set 'safetyTriggered' to true ONLY IF the AI Tutor's last message instructed the patient to do something that seems dangerous given their current high pain level, otherwise false.`;
 
-        const responseSchema = {
-            type: "object",
-            properties: {
-                simulatedMessage: { type: "string" },
-                internalThoughtProcess: { type: "string" },
-                safetyTriggered: { type: "boolean" }
-            },
-            required: ["simulatedMessage", "internalThoughtProcess", "safetyTriggered"]
-        };
+    const responseSchema = {
+      type: "object",
+      properties: {
+        simulatedMessage: { type: "string" },
+        internalThoughtProcess: { type: "string" },
+        safetyTriggered: { type: "boolean" },
+      },
+      required: ["simulatedMessage", "internalThoughtProcess", "safetyTriggered"],
+    };
 
-		try {
-			const resultText = await callGemini(
-				this.env.GOOGLE_AI_API_KEY,
-				prompt,
-				"gemini-1.5-flash",
-				this.env.FISIOFLOW_AI_GATEWAY_URL,
-				this.env.FISIOFLOW_AI_GATEWAY_TOKEN,
-				"clinical",
-                responseSchema
-			);
+    try {
+      const resultText = await callGemini(
+        this.env.GOOGLE_AI_API_KEY,
+        prompt,
+        "gemini-1.5-flash",
+        this.env.FISIOFLOW_AI_GATEWAY_URL,
+        this.env.FISIOFLOW_AI_GATEWAY_TOKEN,
+        "clinical",
+        responseSchema,
+      );
 
-            return JSON.parse(resultText) as SimulationResult;
-		} catch (error) {
-			console.error("[PatientSimulatorAgent] Error generating simulation:", error);
-			throw new Error("Failed to generate simulated patient response");
-		}
-	}
+      return JSON.parse(resultText) as SimulationResult;
+    } catch (error) {
+      console.error("[PatientSimulatorAgent] Error generating simulation:", error);
+      throw new Error("Failed to generate simulated patient response");
+    }
+  }
 }

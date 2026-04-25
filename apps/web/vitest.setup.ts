@@ -1,9 +1,8 @@
-
 // Extend Vitest's expect with jest-dom matchers
 
-import { expect, afterEach, vi } from 'vitest';
-import { cleanup } from '@testing-library/react';
-import * as matchers from '@testing-library/jest-dom/matchers';
+import { expect, afterEach, vi } from "vitest";
+import { cleanup } from "@testing-library/react";
+import * as matchers from "@testing-library/jest-dom/matchers";
 
 expect.extend(matchers);
 
@@ -13,16 +12,16 @@ afterEach(() => {
 });
 
 // Mock Neon Auth
-vi.mock('@/integrations/neon/auth', () => ({
+vi.mock("@/integrations/neon/auth", () => ({
   signInWithOAuth: vi.fn(),
   signOut: vi.fn(),
   getCurrentUser: vi.fn(),
 }));
 
 // Mock window.matchMedia
-Object.defineProperty(window, 'matchMedia', {
+Object.defineProperty(window, "matchMedia", {
   writable: true,
-  value: vi.fn().mockImplementation(query => ({
+  value: vi.fn().mockImplementation((query) => ({
     matches: false,
     media: query,
     onchange: null,
@@ -36,19 +35,19 @@ Object.defineProperty(window, 'matchMedia', {
 
 // Mock IntersectionObserver
 global.IntersectionObserver = class IntersectionObserver {
-  constructor() { }
-  disconnect() { }
-  observe() { }
+  constructor() {}
+  disconnect() {}
+  observe() {}
   takeRecords() {
     return [];
   }
-  unobserve() { }
+  unobserve() {}
 } as any;
 
 // Mock ResizeObserver
 global.ResizeObserver = class ResizeObserver {
-  constructor() { }
-  disconnect() { }
-  observe() { }
-  unobserve() { }
+  constructor() {}
+  disconnect() {}
+  observe() {}
+  unobserve() {}
 } as any;

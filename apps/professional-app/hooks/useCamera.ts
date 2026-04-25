@@ -1,6 +1,6 @@
-import { useState, useCallback } from 'react';
-import { takePhoto, pickFromGallery, type CameraResult } from '@/lib/camera';
-import { Alert } from 'react-native';
+import { useState, useCallback } from "react";
+import { takePhoto, pickFromGallery, type CameraResult } from "@/lib/camera";
+import { Alert } from "react-native";
 
 export function useCamera() {
   const [photo, setPhoto] = useState<CameraResult | null>(null);
@@ -20,9 +20,9 @@ export function useCamera() {
       }
       return null;
     } catch (err: any) {
-      const message = err.message || 'Não foi possível tirar a foto';
+      const message = err.message || "Não foi possível tirar a foto";
       setError(message);
-      Alert.alert('Erro', message);
+      Alert.alert("Erro", message);
       return null;
     } finally {
       setIsLoading(false);
@@ -45,9 +45,9 @@ export function useCamera() {
       }
       return null;
     } catch (err: any) {
-      const message = err.message || 'Não foi possível selecionar a imagem';
+      const message = err.message || "Não foi possível selecionar a imagem";
       setError(message);
-      Alert.alert('Erro', message);
+      Alert.alert("Erro", message);
       return null;
     } finally {
       setIsLoading(false);

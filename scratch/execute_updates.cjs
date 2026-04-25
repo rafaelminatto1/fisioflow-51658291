@@ -14,7 +14,7 @@ const data = JSON.parse(fs.readFileSync('scratch/placeholder_data.json', 'utf8')
       // However, if we want to be safe, let's store them as stringified JSON or just join them with newlines if they are meant to be displayed.
       // BUT, looking at the sample: the app likely expects that specific format.
       // For now, I'll join with newlines or keep as array and let PG handle it if I cast it.
-      
+
       // Let's try to pass them as arrays and see if the Neon SDK / PG handles it for 'text' columns.
       // Actually, for 'text' columns, we'll strings.
       const tipsStr = e.tips.join('\\n');
@@ -22,7 +22,7 @@ const data = JSON.parse(fs.readFileSync('scratch/placeholder_data.json', 'utf8')
       const benefitsStr = e.benefits.join('\\n');
 
       await sql\`
-        UPDATE exercises SET 
+        UPDATE exercises SET
           description = \${e.description},
           instructions = \${e.instructions},
           tips = \${tipsStr},

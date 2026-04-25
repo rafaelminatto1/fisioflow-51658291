@@ -9,9 +9,9 @@ import { MainLayout } from "@/components/layout/MainLayout";
 import { LocalSEOTracker } from "@/components/marketing/LocalSEOTracker";
 
 export default function LocalSEOPage() {
-	return (
-		<MainLayout>
-			<LocalSEOTracker />
-		</MainLayout>
-	);
+  return (
+    <MainLayout>
+      <LocalSEOTracker />
+    </MainLayout>
+  );
 }

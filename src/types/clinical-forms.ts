@@ -1,79 +1,79 @@
 // Mapped to 'evaluation_forms' and 'evaluation_form_fields' tables
 
 export type ClinicalFieldType =
-	| "texto_curto"
-	| "texto_longo"
-	| "opcao_unica" // single select
-	| "selecao" // multi select (or generic select)
-	| "lista"
-	| "escala" // Added support for scale
-	| "data" // Added support for date
-	| "hora" // Added support for time
-	| "info" // Added support for info text
-	| "numero"; // Added support for numeric input
+  | "texto_curto"
+  | "texto_longo"
+  | "opcao_unica" // single select
+  | "selecao" // multi select (or generic select)
+  | "lista"
+  | "escala" // Added support for scale
+  | "data" // Added support for date
+  | "hora" // Added support for time
+  | "info" // Added support for info text
+  | "numero"; // Added support for numeric input
 
 export interface EvaluationForm {
-	id: string;
-	organization_id: string | null;
-	created_by?: string | null;
-	nome: string; // title
-	descricao?: string | null; // description
-	referencias?: string | null; // scientific references
-	tipo: string; // e.g., 'anamnese'
-	ativo: boolean;
-	created_at: string;
-	updated_at: string;
-	fields?: EvaluationFormField[];
-	// New fields for template statistics and favorites
-	is_favorite?: boolean;
-	usage_count?: number;
-	last_used_at?: string | null;
-	cover_image?: string | null;
-	estimated_time?: number; // Estimated completion time in minutes
+  id: string;
+  organization_id: string | null;
+  created_by?: string | null;
+  nome: string; // title
+  descricao?: string | null; // description
+  referencias?: string | null; // scientific references
+  tipo: string; // e.g., 'anamnese'
+  ativo: boolean;
+  created_at: string;
+  updated_at: string;
+  fields?: EvaluationFormField[];
+  // New fields for template statistics and favorites
+  is_favorite?: boolean;
+  usage_count?: number;
+  last_used_at?: string | null;
+  cover_image?: string | null;
+  estimated_time?: number; // Estimated completion time in minutes
 }
 
 export interface EvaluationFormField {
-	id: string;
-	form_id: string;
-	tipo_campo: ClinicalFieldType;
-	label: string;
-	placeholder?: string | null;
-	opcoes?: string[] | null; // stored as jsonb
-	ordem: number;
-	obrigatorio: boolean; // required
-	grupo?: string | null; // section
-	descricao?: string | null; // help text or description
-	minimo?: number | null;
-	maximo?: number | null;
-	created_at?: string;
+  id: string;
+  form_id: string;
+  tipo_campo: ClinicalFieldType;
+  label: string;
+  placeholder?: string | null;
+  opcoes?: string[] | null; // stored as jsonb
+  ordem: number;
+  obrigatorio: boolean; // required
+  grupo?: string | null; // section
+  descricao?: string | null; // help text or description
+  minimo?: number | null;
+  maximo?: number | null;
+  created_at?: string;
 }
 
 export interface EvaluationFormWithFields extends EvaluationForm {
-	fields: EvaluationFormField[];
+  fields: EvaluationFormField[];
 }
 
 // Helper to map UI types to DB types if needed, currently 1:1 mapped above where possible
 
 // Template filters and sorting options
 export interface TemplateFilters {
-	search?: string;
-	category?: string;
-	favorites?: boolean;
-	sortBy?: "name" | "recent" | "usage";
-	viewMode?: "grid" | "list";
+  search?: string;
+  category?: string;
+  favorites?: boolean;
+  sortBy?: "name" | "recent" | "usage";
+  viewMode?: "grid" | "list";
 }
 
 // Template statistics display
 export interface TemplateStats {
-	total: number;
-	favorites: number;
-	recentlyUsed: number;
-	byCategory: Record<string, number>;
+  total: number;
+  favorites: number;
+  recentlyUsed: number;
+  byCategory: Record<string, number>;
 }
 
 // Extended template interface for UI components
 export interface EvaluationTemplate extends EvaluationForm {
-	evaluation_form_fields?: EvaluationFormField[];
-	category?: string; // Alias for tipo for easier UI mapping
-	field_count?: number; // Cached count of fields
+  evaluation_form_fields?: EvaluationFormField[];
+  category?: string; // Alias for tipo for easier UI mapping
+  field_count?: number; // Cached count of fields
 }

@@ -7,17 +7,17 @@
 import { authClient } from "@/lib/auth/neon-token";
 
 export async function requireAdmin() {
-	const { data } = await authClient.getSession();
-	const user = data?.user;
+  const { data } = await authClient.getSession();
+  const user = data?.user;
 
-	if (!user) {
-		throw new Error("Unauthorized: No active session");
-	}
+  if (!user) {
+    throw new Error("Unauthorized: No active session");
+  }
 
-	// Todos os usuários autenticados são admins
-	return {
-		userId: user.id,
-		role: "admin",
-		email: user.email,
-	};
+  // Todos os usuários autenticados são admins
+  return {
+    userId: user.id,
+    role: "admin",
+    email: user.email,
+  };
 }

@@ -5,19 +5,19 @@
  * PUT    /api/gamification-notifications/read-all
  * DELETE /api/gamification-notifications/:id
  */
-import { Hono } from 'hono';
-import { createPool } from '../lib/db';
-import { requireAuth } from '../lib/auth';
-import type { Env } from '../types/env';
+import { Hono } from "hono";
+import { createPool } from "../lib/db";
+import { requireAuth } from "../lib/auth";
+import type { Env } from "../types/env";
 
 const app = new Hono<{ Bindings: Env }>();
 
-app.get('/', requireAuth, async (c) => {
+app.get("/", requireAuth, async (c) => {
   const pool = await createPool(c.env);
-  const { patientId, limit = '50' } = c.req.query();
+  const { patientId, limit = "50" } = c.req.query();
 
   if (!patientId) {
-    return c.json({ error: 'patientId is required' }, 400);
+    return c.json({ error: "patientId is required" }, 400);
   }
 
   const result = await pool.query(
@@ -28,36 +28,40 @@ app.get('/', requireAuth, async (c) => {
     [patientId, Number(limit)],
   );
 
-  try { return c.json({ data: result.rows || result }); } catch { return c.json({ data: [] }); }
+  try {
+    return c.json({ data: result.rows || result });
+  } catch {
+    return c.json({ data: [] });
+  }
 });
 
-app.put('/:id/read', requireAuth, async (c) => {
+app.put("/:id/read", requireAuth, async (c) => {
   const pool = await createPool(c.env);
   const { id } = c.req.param();
-  await pool.query('UPDATE gamification_notifications SET read_at = NOW() WHERE id = $1', [id]);
+  await pool.query("UPDATE gamification_notifications SET read_at = NOW() WHERE id = $1", [id]);
   return c.json({ ok: true });
 });
 
-app.put('/read-all', requireAuth, async (c) => {
+app.put("/read-all", requireAuth, async (c) => {
   const pool = await createPool(c.env);
   const body = (await c.req.json()) as { patientId?: string };
 
   if (!body?.patientId) {
-    return c.json({ error: 'patientId is required' }, 400);
+    return c.json({ error: "patientId is required" }, 400);
   }
 
   await pool.query(
-    'UPDATE gamification_notifications SET read_at = NOW() WHERE patient_id = $1 AND read_at IS NULL',
+    "UPDATE gamification_notifications SET read_at = NOW() WHERE patient_id = $1 AND read_at IS NULL",
     [body.patientId],
   );
 
   return c.json({ ok: true });
 });
 
-app.delete('/:id', requireAuth, async (c) => {
+app.delete("/:id", requireAuth, async (c) => {
   const pool = await createPool(c.env);
   const { id } = c.req.param();
-  await pool.query('DELETE FROM gamification_notifications WHERE id = $1', [id]);
+  await pool.query("DELETE FROM gamification_notifications WHERE id = $1", [id]);
   return c.json({ ok: true });
 });
 

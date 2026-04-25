@@ -3,21 +3,10 @@
   "compilerOptions": {
     "strict": true,
     "paths": {
-      "@fisioflow/core": [
-        "../../packages/core/src/index.ts"
-      ],
-      "@/*": [
-        "./*"
-      ],
-      "@mobile/*": [
-        "./*"
-      ]
+      "@fisioflow/core": ["../../packages/core/src/index.ts"],
+      "@/*": ["./*"],
+      "@mobile/*": ["./*"]
     }
   },
-  "include": [
-    "**/*.ts",
-    "**/*.tsx",
-    ".expo/types/**/*.ts",
-    "expo-env.d.ts"
-  ]
+  "include": ["**/*.ts", "**/*.tsx", ".expo/types/**/*.ts", "expo-env.d.ts"]
 }

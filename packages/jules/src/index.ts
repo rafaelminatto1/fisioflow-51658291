@@ -1,4 +1,4 @@
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
 export interface DiffChunk {
   file: string;
@@ -13,7 +13,7 @@ export function parseDiff(diff: string): DiffChunk[] {
   const files = diff.split(/^diff --git /m).slice(1);
 
   for (const fileDiff of files) {
-    const lines = fileDiff.split('\n');
+    const lines = fileDiff.split("\n");
     const fileNameMatch = lines[0].match(/a\/(.+) b\//);
     if (!fileNameMatch) continue;
 
@@ -35,7 +35,7 @@ export class JulesAI {
 
   constructor(apiKey: string) {
     this.genAI = new GoogleGenerativeAI(apiKey);
-    this.model = this.genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+    this.model = this.genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
   }
 
   async summarizeChanges(diff: string): Promise<string> {

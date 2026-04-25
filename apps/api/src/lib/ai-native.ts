@@ -1,5 +1,5 @@
-import type { Env } from '../types/env';
-import { TurboQuant } from '@fisioflow/core';
+import type { Env } from "../types/env";
+import { TurboQuant } from "@fisioflow/core";
 
 /**
  * Utilitários para usar o Cloudflare Workers AI (Modelos Nativos).
@@ -9,7 +9,7 @@ import { TurboQuant } from '@fisioflow/core';
  * Caching habilitado para chamadas não-clínicas (exercícios, educação)
  */
 
-const AI_GATEWAY_ID = 'fisioflow-gateway';
+const AI_GATEWAY_ID = "fisioflow-gateway";
 
 /** Opções de gateway para chamadas AI */
 type GatewayOpts = {
@@ -24,19 +24,17 @@ type GatewayOpts = {
 function buildGateway(opts: GatewayOpts = {}) {
   return {
     id: AI_GATEWAY_ID,
-    ...(opts.cache === false
-      ? { skipCache: true }
-      : { cacheTtl: opts.cacheTtl ?? 3600 }),
+    ...(opts.cache === false ? { skipCache: true } : { cacheTtl: opts.cacheTtl ?? 3600 }),
   };
 }
 
 /** Executa qualquer modelo Workers AI com gateway routing */
 export async function runAi(env: Env, model: string, input: unknown, opts: GatewayOpts = {}) {
-  if (!env.AI) throw new Error('Workers AI binding (env.AI) not found.');
+  if (!env.AI) throw new Error("Workers AI binding (env.AI) not found.");
   const headers: Record<string, string> = {};
   if (opts.sessionId) {
     // Prompt caching: rotas para mesma instância GPU maximizando cache-hit
-    headers['x-session-affinity'] = opts.sessionId;
+    headers["x-session-affinity"] = opts.sessionId;
   }
   // Cast necessário: Workers AI types não incluem todos os modelos partner
   return (env.AI as any).run(model, input, { gateway: buildGateway(opts), headers });
@@ -46,30 +44,34 @@ export async function runAi(env: Env, model: string, input: unknown, opts: Gatew
  * Transcrição de áudio — Deepgram Nova-3 (pt-BR nativo, mais rápido que Whisper).
  * Fallback para Whisper Large V3 Turbo se Nova-3 falhar.
  */
-export async function transcribeAudio(env: Env, audioBase64: string, language = 'pt-BR'): Promise<string> {
+export async function transcribeAudio(
+  env: Env,
+  audioBase64: string,
+  language = "pt-BR",
+): Promise<string> {
   const audioBuffer = Uint8Array.from(atob(audioBase64), (c) => c.charCodeAt(0));
 
   // Deepgram Nova-3: suporte pt-BR nativo, otimizado para voz conversacional
   try {
     const response = await runAi(
       env,
-      '@cf/deepgram/nova-3',
+      "@cf/deepgram/nova-3",
       {
         audio: [...audioBuffer],
         language,
       },
       { cache: false }, // áudio clínico nunca cacheado
     );
-    return (response as any).text as string ?? (response as any).transcript ?? '';
+    return ((response as any).text as string) ?? (response as any).transcript ?? "";
   } catch {
     // Fallback: Whisper Large V3 Turbo
     const fallback = await runAi(
       env,
-      '@cf/openai/whisper-large-v3-turbo',
+      "@cf/openai/whisper-large-v3-turbo",
       { audio: [...audioBuffer] },
       { cache: false },
     );
-    return (fallback as any).text as string ?? '';
+    return ((fallback as any).text as string) ?? "";
   }
 }
 
@@ -78,14 +80,18 @@ export async function transcribeAudio(env: Env, audioBase64: string, language = 
  * Usado para leitura de exercícios no app do paciente.
  * Retorna ArrayBuffer de áudio MP3.
  */
-export async function synthesizeSpeech(env: Env, text: string, voice = 'asteria'): Promise<ArrayBuffer> {
+export async function synthesizeSpeech(
+  env: Env,
+  text: string,
+  voice = "asteria",
+): Promise<ArrayBuffer> {
   const response = await runAi(
     env,
-    '@cf/deepgram/aura-2-es', // aura-2-es suporta pt-BR (espanhol/português similar)
+    "@cf/deepgram/aura-2-es", // aura-2-es suporta pt-BR (espanhol/português similar)
     { text, voice },
     { cache: true, cacheTtl: 86400 }, // TTS de exercícios pode ser cacheado 24h
   );
-  return (response as any) as ArrayBuffer;
+  return response as any as ArrayBuffer;
 }
 
 /**
@@ -100,21 +106,21 @@ export async function summarizeClinicalNote(
 ): Promise<string> {
   const response = await runAi(
     env,
-    '@cf/meta/llama-3.3-70b-instruct-fp8-fast',
+    "@cf/meta/llama-3.3-70b-instruct-fp8-fast",
     {
       messages: [
         {
-          role: 'system',
+          role: "system",
           content:
-            'Você é um assistente clínico especializado em fisioterapia. Resuma o seguinte registro clínico de forma concisa e técnica, em português brasileiro. Preserve terminologia fisioterapêutica, escalas de dor (EVA, PSFS) e achados objetivos.',
+            "Você é um assistente clínico especializado em fisioterapia. Resuma o seguinte registro clínico de forma concisa e técnica, em português brasileiro. Preserve terminologia fisioterapêutica, escalas de dor (EVA, PSFS) e achados objetivos.",
         },
-        { role: 'user', content: text },
+        { role: "user", content: text },
       ],
       max_tokens: 512,
     },
     { cache: false, sessionId }, // registros clínicos nunca cacheados
   );
-  return (response as any).response as string ?? '';
+  return ((response as any).response as string) ?? "";
 }
 
 /**
@@ -129,18 +135,18 @@ export async function generateSoapSuggestion(
 ): Promise<{ subjective: string; objective: string; assessment: string; plan: string }> {
   const response = await runAi(
     env,
-    '@cf/meta/llama-3.1-8b-instruct',
+    "@cf/meta/llama-3.1-8b-instruct",
     {
       messages: [
         {
-          role: 'system',
+          role: "system",
           content: `Você é um assistente de fisioterapia. Gere uma sugestão de nota SOAP em português brasileiro baseada nas informações fornecidas.
 Responda APENAS com JSON válido neste formato exato:
 {"subjective":"...","objective":"...","assessment":"...","plan":"..."}
 Sem markdown, sem explicações adicionais.`,
         },
         {
-          role: 'user',
+          role: "user",
           content: `Queixa principal: ${chiefComplaint}\nHistórico: ${patientHistory}`,
         },
       ],
@@ -149,13 +155,13 @@ Sem markdown, sem explicações adicionais.`,
     { cache: false, sessionId },
   );
 
-  const raw = (response as any).response as string ?? '{}';
+  const raw = ((response as any).response as string) ?? "{}";
   try {
     // Extrai JSON mesmo se o modelo adicionar texto extra
     const jsonMatch = raw.match(/\{[\s\S]*\}/);
-    return JSON.parse(jsonMatch?.[0] ?? '{}');
+    return JSON.parse(jsonMatch?.[0] ?? "{}");
   } catch {
-    return { subjective: '', objective: '', assessment: raw, plan: '' };
+    return { subjective: "", objective: "", assessment: raw, plan: "" };
   }
 }
 
@@ -172,14 +178,14 @@ export async function analyzeClinicImage(
 
   const response = await runAi(
     env,
-    '@cf/meta/llama-4-scout-17b-16e-instruct',
+    "@cf/meta/llama-4-scout-17b-16e-instruct",
     {
       messages: [
         {
-          role: 'user',
+          role: "user",
           content: [
-            { type: 'image', image: imageArray },
-            { type: 'text', text: prompt },
+            { type: "image", image: imageArray },
+            { type: "text", text: prompt },
           ],
         },
       ],
@@ -187,7 +193,7 @@ export async function analyzeClinicImage(
     },
     { cache: false },
   );
-  return (response as any).response as string ?? '';
+  return ((response as any).response as string) ?? "";
 }
 
 /**
@@ -199,14 +205,14 @@ export async function moderateContent(env: Env, text: string): Promise<boolean> 
   try {
     const response = await runAi(
       env,
-      '@cf/meta/llama-guard-3-8b',
+      "@cf/meta/llama-guard-3-8b",
       {
-        messages: [{ role: 'user', content: text }],
+        messages: [{ role: "user", content: text }],
       },
       { cache: true, cacheTtl: 300 },
     );
-    const result = (response as any).response as string ?? 'safe';
-    return result.toLowerCase().includes('safe');
+    const result = ((response as any).response as string) ?? "safe";
+    return result.toLowerCase().includes("safe");
   } catch {
     return true; // Fail open para não bloquear mensagens legítimas
   }
@@ -219,7 +225,7 @@ export async function moderateContent(env: Env, text: string): Promise<boolean> 
 export async function generateEmbedding(env: Env, text: string): Promise<number[]> {
   const response = await runAi(
     env,
-    '@cf/baai/bge-base-en-v1.5',
+    "@cf/baai/bge-base-en-v1.5",
     { text: [text] },
     { cache: true, cacheTtl: 86400 },
   );
@@ -231,15 +237,15 @@ export async function generateEmbedding(env: Env, text: string): Promise<number[
  * Útil para armazenamento ultra-eficiente e busca offline.
  */
 export function generateTurboSketch(embedding: number[]): string {
-  if (!embedding || embedding.length === 0) return '';
-  
+  if (!embedding || embedding.length === 0) return "";
+
   const tq = new TurboQuant({ dimension: embedding.length });
   const sketch = tq.compress(embedding);
-  
+
   // Converte Uint8Array para hex string para armazenamento simples no Postgres
   return Array.from(sketch)
-    .map((b: number) => b.toString(16).padStart(2, '0'))
-    .join('');
+    .map((b: number) => b.toString(16).padStart(2, "0"))
+    .join("");
 }
 
 /**
@@ -248,7 +254,7 @@ export function generateTurboSketch(embedding: number[]): string {
  */
 export function parseTurboSketch(hex: string): Uint8Array {
   if (!hex) return new Uint8Array(0);
-  
+
   const sketch = new Uint8Array(hex.length / 2);
   for (let i = 0; i < hex.length; i += 2) {
     sketch[i / 2] = parseInt(hex.substring(i, i + 2), 16);

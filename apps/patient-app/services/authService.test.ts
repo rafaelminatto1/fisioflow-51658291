@@ -2,20 +2,20 @@
  * Authentication Service Tests
  */
 
-describe('AuthService', () => {
-  it('should export signIn', () => {
+describe("AuthService", () => {
+  it("should export signIn", () => {
     const exports = [
-      'signIn',
-      'signUp',
-      'signOut',
-      'resetPassword',
-      'getCurrentUser',
-      'getUserData',
-      'updateProfileData',
-      'linkToProfessional',
+      "signIn",
+      "signUp",
+      "signOut",
+      "resetPassword",
+      "getCurrentUser",
+      "getUserData",
+      "updateProfileData",
+      "linkToProfessional",
     ];
-    exports.forEach(exp => {
-      expect(typeof exp).toBe('string');
+    exports.forEach((exp) => {
+      expect(typeof exp).toBe("string");
     });
   });
 });

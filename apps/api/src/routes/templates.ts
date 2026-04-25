@@ -3,77 +3,77 @@
  * GET /api/templates          — lista com filtros
  * GET /api/templates/:id      — detalhe com itens
  */
-import { Hono } from 'hono';
-import { eq, ilike, and, or, isNull, sql } from 'drizzle-orm';
-import { createDb, createPool } from '../lib/db';
-import type { Env } from '../types/env';
-import { requireAuth, verifyToken, AuthVariables } from '../lib/auth';
-import { pgTable, uuid, varchar, text, boolean, timestamp, integer } from 'drizzle-orm/pg-core';
+import { Hono } from "hono";
+import { eq, ilike, and, or, isNull, sql } from "drizzle-orm";
+import { createDb, createPool } from "../lib/db";
+import type { Env } from "../types/env";
+import { requireAuth, verifyToken, AuthVariables } from "../lib/auth";
+import { pgTable, uuid, varchar, text, boolean, timestamp, integer } from "drizzle-orm/pg-core";
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
 // Runtime table definitions (schema not in shared package yet)
 
-const exerciseTemplateCategories = pgTable('exercise_template_categories', {
-  id: text('id').primaryKey(),
-  label: text('label').notNull(),
-  icon: text('icon'),
-  orderIndex: integer('order_index').notNull().default(0),
+const exerciseTemplateCategories = pgTable("exercise_template_categories", {
+  id: text("id").primaryKey(),
+  label: text("label").notNull(),
+  icon: text("icon"),
+  orderIndex: integer("order_index").notNull().default(0),
 });
 
-const exerciseTemplates = pgTable('exercise_templates', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  name: varchar('name', { length: 500 }).notNull(),
-  description: text('description'),
-  category: varchar('category', { length: 200 }),
-  conditionName: varchar('condition_name', { length: 500 }),
-  templateVariant: varchar('template_variant', { length: 200 }),
-  clinicalNotes: text('clinical_notes'),
-  contraindications: text('contraindications'),
-  precautions: text('precautions'),
-  progressionNotes: text('progression_notes'),
-  evidenceLevel: varchar('evidence_level', { length: 1 }),
-  bibliographicReferences: text('bibliographic_references').array().default([]),
-  templateType: text('template_type').notNull().default('custom'),
-  patientProfile: text('patient_profile'),
-  sourceTemplateId: uuid('source_template_id'),
-  isDraft: boolean('is_draft').notNull().default(false),
-  exerciseCount: integer('exercise_count').notNull().default(0),
-  isActive: boolean('is_active').default(true).notNull(),
-  isPublic: boolean('is_public').default(true).notNull(),
-  organizationId: uuid('organization_id'),
-  createdBy: text('created_by'),
-  createdAt: timestamp('created_at').defaultNow().notNull(),
-  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+const exerciseTemplates = pgTable("exercise_templates", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  name: varchar("name", { length: 500 }).notNull(),
+  description: text("description"),
+  category: varchar("category", { length: 200 }),
+  conditionName: varchar("condition_name", { length: 500 }),
+  templateVariant: varchar("template_variant", { length: 200 }),
+  clinicalNotes: text("clinical_notes"),
+  contraindications: text("contraindications"),
+  precautions: text("precautions"),
+  progressionNotes: text("progression_notes"),
+  evidenceLevel: varchar("evidence_level", { length: 1 }),
+  bibliographicReferences: text("bibliographic_references").array().default([]),
+  templateType: text("template_type").notNull().default("custom"),
+  patientProfile: text("patient_profile"),
+  sourceTemplateId: uuid("source_template_id"),
+  isDraft: boolean("is_draft").notNull().default(false),
+  exerciseCount: integer("exercise_count").notNull().default(0),
+  isActive: boolean("is_active").default(true).notNull(),
+  isPublic: boolean("is_public").default(true).notNull(),
+  organizationId: uuid("organization_id"),
+  createdBy: text("created_by"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
-const exerciseTemplateItems = pgTable('exercise_template_items', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  templateId: uuid('template_id').notNull(),
-  exerciseId: text('exercise_id').notNull(),
-  orderIndex: integer('order_index').default(0).notNull(),
-  sets: integer('sets'),
-  repetitions: integer('repetitions'),
-  duration: integer('duration'),
-  notes: text('notes'),
-  weekStart: integer('week_start'),
-  weekEnd: integer('week_end'),
-  clinicalNotes: text('clinical_notes'),
-  focusMuscles: text('focus_muscles').array().default([]),
-  purpose: text('purpose'),
-  createdAt: timestamp('created_at').defaultNow().notNull(),
-  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+const exerciseTemplateItems = pgTable("exercise_template_items", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  templateId: uuid("template_id").notNull(),
+  exerciseId: text("exercise_id").notNull(),
+  orderIndex: integer("order_index").default(0).notNull(),
+  sets: integer("sets"),
+  repetitions: integer("repetitions"),
+  duration: integer("duration"),
+  notes: text("notes"),
+  weekStart: integer("week_start"),
+  weekEnd: integer("week_end"),
+  clinicalNotes: text("clinical_notes"),
+  focusMuscles: text("focus_muscles").array().default([]),
+  purpose: text("purpose"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
-const exercises = pgTable('exercises', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  name: varchar('name', { length: 250 }).notNull(),
-  imageUrl: text('image_url'),
-  thumbnailUrl: text('thumbnail_url'),
+const exercises = pgTable("exercises", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  name: varchar("name", { length: 250 }).notNull(),
+  imageUrl: text("image_url"),
+  thumbnailUrl: text("thumbnail_url"),
 });
 
 // ===== CATEGORIAS =====
-app.get('/categories', async (c) => {
+app.get("/categories", async (c) => {
   const db = createDb(c.env);
 
   const rows = await db
@@ -85,11 +85,19 @@ app.get('/categories', async (c) => {
 });
 
 // ===== LISTA =====
-app.get('/', async (c) => {
+app.get("/", async (c) => {
   const db = createDb(c.env);
   // Optional auth — needed to resolve organizationId for custom template filtering
   const user = await verifyToken(c, c.env);
-  const { q, category, patientProfile, templateType, isDraft, page = '1', limit = '20' } = c.req.query();
+  const {
+    q,
+    category,
+    patientProfile,
+    templateType,
+    isDraft,
+    page = "1",
+    limit = "20",
+  } = c.req.query();
 
   const pageNum = Math.max(1, parseInt(page));
   const limitNum = Math.min(500, Math.max(1, parseInt(limit)));
@@ -100,14 +108,14 @@ app.get('/', async (c) => {
   if (q) conditions.push(ilike(exerciseTemplates.name, `%${q}%`));
   if (category) conditions.push(ilike(exerciseTemplates.category, `%${category}%`));
   if (patientProfile) conditions.push(eq(exerciseTemplates.patientProfile, patientProfile));
-  if (isDraft !== undefined) conditions.push(eq(exerciseTemplates.isDraft, isDraft === 'true'));
+  if (isDraft !== undefined) conditions.push(eq(exerciseTemplates.isDraft, isDraft === "true"));
 
   // templateType filter: controls which organization_id condition to apply
   const organizationId = user?.organizationId ?? null;
 
-  if (templateType === 'system') {
+  if (templateType === "system") {
     conditions.push(isNull(exerciseTemplates.organizationId));
-  } else if (templateType === 'custom') {
+  } else if (templateType === "custom") {
     if (organizationId) {
       conditions.push(eq(exerciseTemplates.organizationId, organizationId));
     } else {
@@ -117,7 +125,10 @@ app.get('/', async (c) => {
   } else {
     // No templateType: return both system (org IS NULL) and custom (org = ctx.organizationId)
     const orgCondition = organizationId
-      ? or(isNull(exerciseTemplates.organizationId), eq(exerciseTemplates.organizationId, organizationId))
+      ? or(
+          isNull(exerciseTemplates.organizationId),
+          eq(exerciseTemplates.organizationId, organizationId),
+        )
       : isNull(exerciseTemplates.organizationId);
     conditions.push(orgCondition!);
   }
@@ -125,28 +136,32 @@ app.get('/', async (c) => {
   const where = and(...conditions);
 
   const [rows, countResult] = await Promise.all([
-    db.select({
-      id: exerciseTemplates.id,
-      name: exerciseTemplates.name,
-      description: exerciseTemplates.description,
-      category: exerciseTemplates.category,
-      conditionName: exerciseTemplates.conditionName,
-      templateVariant: exerciseTemplates.templateVariant,
-      evidenceLevel: exerciseTemplates.evidenceLevel,
-      templateType: exerciseTemplates.templateType,
-      patientProfile: exerciseTemplates.patientProfile,
-      sourceTemplateId: exerciseTemplates.sourceTemplateId,
-      isDraft: exerciseTemplates.isDraft,
-      exerciseCount: exerciseTemplates.exerciseCount,
-      organizationId: exerciseTemplates.organizationId,
-      createdAt: exerciseTemplates.createdAt,
-    })
+    db
+      .select({
+        id: exerciseTemplates.id,
+        name: exerciseTemplates.name,
+        description: exerciseTemplates.description,
+        category: exerciseTemplates.category,
+        conditionName: exerciseTemplates.conditionName,
+        templateVariant: exerciseTemplates.templateVariant,
+        evidenceLevel: exerciseTemplates.evidenceLevel,
+        templateType: exerciseTemplates.templateType,
+        patientProfile: exerciseTemplates.patientProfile,
+        sourceTemplateId: exerciseTemplates.sourceTemplateId,
+        isDraft: exerciseTemplates.isDraft,
+        exerciseCount: exerciseTemplates.exerciseCount,
+        organizationId: exerciseTemplates.organizationId,
+        createdAt: exerciseTemplates.createdAt,
+      })
       .from(exerciseTemplates)
       .where(where)
       .orderBy(exerciseTemplates.name)
       .limit(limitNum)
       .offset(offset),
-    db.select({ count: sql<number>`count(*)` }).from(exerciseTemplates).where(where),
+    db
+      .select({ count: sql<number>`count(*)` })
+      .from(exerciseTemplates)
+      .where(where),
   ]);
 
   return c.json({
@@ -161,19 +176,26 @@ app.get('/', async (c) => {
 });
 
 // ===== APLICAR TEMPLATE A PACIENTE =====
-app.post('/:id/apply', requireAuth, async (c) => {
+app.post("/:id/apply", requireAuth, async (c) => {
   const db = createDb(c.env);
   const pool = createPool(c.env);
-  const user = c.get('user');
+  const user = c.get("user");
   const { id } = c.req.param();
 
-  const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id);
+  const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+    id,
+  );
   if (!isUuid) {
-    return c.json({ error: 'Template inválido' }, 400);
+    return c.json({ error: "Template inválido" }, 400);
   }
 
   const body = await c.req.json();
-  const { patientId, startDate, surgeryId: _surgeryId, notes } = body as {
+  const {
+    patientId,
+    startDate,
+    surgeryId: _surgeryId,
+    notes,
+  } = body as {
     patientId: string;
     startDate: string;
     surgeryId?: string;
@@ -181,7 +203,7 @@ app.post('/:id/apply', requireAuth, async (c) => {
   };
 
   if (!patientId || !startDate) {
-    return c.json({ error: 'patientId e startDate são obrigatórios' }, 400);
+    return c.json({ error: "patientId e startDate são obrigatórios" }, 400);
   }
 
   // Fetch template
@@ -191,11 +213,11 @@ app.post('/:id/apply', requireAuth, async (c) => {
     .where(eq(exerciseTemplates.id, id))
     .limit(1);
 
-  if (!template) return c.json({ error: 'Template não encontrado' }, 404);
+  if (!template) return c.json({ error: "Template não encontrado" }, 404);
 
   // Validate active and not draft
   if (!template.isActive || template.isDraft) {
-    return c.json({ error: 'Template inativo ou em rascunho não pode ser aplicado' }, 400);
+    return c.json({ error: "Template inativo ou em rascunho não pode ser aplicado" }, 400);
   }
 
   // Fetch template items
@@ -209,7 +231,15 @@ app.post('/:id/apply', requireAuth, async (c) => {
   const planResult = await pool.query(
     `INSERT INTO exercise_plans (patient_id, template_id, name, start_date, notes, organization_id, created_by)
      VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id`,
-    [patientId, template.id, template.name, startDate, notes ?? null, user.organizationId ?? null, user.uid]
+    [
+      patientId,
+      template.id,
+      template.name,
+      startDate,
+      notes ?? null,
+      user.organizationId ?? null,
+      user.uid,
+    ],
   );
   const plan = planResult.rows[0] as { id: string };
 
@@ -219,9 +249,17 @@ app.post('/:id/apply', requireAuth, async (c) => {
         pool.query(
           `INSERT INTO exercise_plan_items (plan_id, exercise_id, order_index, sets, repetitions, duration, notes)
            VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-          [plan.id, item.exerciseId, item.orderIndex ?? idx, item.sets ?? null, item.repetitions ?? null, item.duration ?? null, item.notes ?? null]
-        )
-      )
+          [
+            plan.id,
+            item.exerciseId,
+            item.orderIndex ?? idx,
+            item.sets ?? null,
+            item.repetitions ?? null,
+            item.duration ?? null,
+            item.notes ?? null,
+          ],
+        ),
+      ),
     );
   }
 
@@ -229,14 +267,16 @@ app.post('/:id/apply', requireAuth, async (c) => {
 });
 
 // ===== PERSONALIZAR SYSTEM TEMPLATE =====
-app.post('/:id/customize', requireAuth, async (c) => {
+app.post("/:id/customize", requireAuth, async (c) => {
   const db = createDb(c.env);
-  const user = c.get('user');
+  const user = c.get("user");
   const { id } = c.req.param();
 
-  const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id);
+  const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+    id,
+  );
   if (!isUuid) {
-    return c.json({ error: 'Template inválido' }, 400);
+    return c.json({ error: "Template inválido" }, 400);
   }
 
   const body = await c.req.json().catch(() => ({}));
@@ -249,10 +289,10 @@ app.post('/:id/customize', requireAuth, async (c) => {
     .where(eq(exerciseTemplates.id, id))
     .limit(1);
 
-  if (!source) return c.json({ error: 'Template não encontrado' }, 404);
+  if (!source) return c.json({ error: "Template não encontrado" }, 404);
 
-  if (source.templateType !== 'system') {
-    return c.json({ error: 'Apenas System_Templates podem ser personalizados' }, 400);
+  if (source.templateType !== "system") {
+    return c.json({ error: "Apenas System_Templates podem ser personalizados" }, 400);
   }
 
   // Fetch all items from source template
@@ -273,7 +313,7 @@ app.post('/:id/customize', requireAuth, async (c) => {
       .values({
         ...sourceFields,
         name: name ?? source.name,
-        templateType: 'custom',
+        templateType: "custom",
         organizationId: user.organizationId ?? null,
         sourceTemplateId: id,
         createdBy: user.uid,
@@ -286,12 +326,18 @@ app.post('/:id/customize', requireAuth, async (c) => {
     if (sourceItems.length > 0) {
       await tx.insert(exerciseTemplateItems).values(
         sourceItems.map((item) => {
-          const { id: _iid, createdAt: _ica, updatedAt: _iua, templateId: _tid, ...itemFields } = item;
+          const {
+            id: _iid,
+            createdAt: _ica,
+            updatedAt: _iua,
+            templateId: _tid,
+            ...itemFields
+          } = item;
           return {
             ...itemFields,
             templateId: created.id,
           };
-        })
+        }),
       );
     }
   })(db);
@@ -300,13 +346,15 @@ app.post('/:id/customize', requireAuth, async (c) => {
 });
 
 // ===== DETALHE COM ITENS =====
-app.get('/:id', async (c) => {
+app.get("/:id", async (c) => {
   const db = createDb(c.env);
   const { id } = c.req.param();
 
-  const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id);
+  const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+    id,
+  );
   if (!isUuid) {
-    return c.json({ error: 'Template inválido' }, 400);
+    return c.json({ error: "Template inválido" }, 400);
   }
 
   const [template] = await db
@@ -315,7 +363,7 @@ app.get('/:id', async (c) => {
     .where(and(eq(exerciseTemplates.id, id), eq(exerciseTemplates.isActive, true)))
     .limit(1);
 
-  if (!template) return c.json({ error: 'Template não encontrado' }, 404);
+  if (!template) return c.json({ error: "Template não encontrado" }, 404);
 
   const items = await db
     .select({
@@ -346,13 +394,15 @@ app.get('/:id', async (c) => {
 });
 
 // ===== CRIAR TEMPLATE =====
-app.post('/', requireAuth, async (c) => {
+app.post("/", requireAuth, async (c) => {
   const db = createDb(c.env);
-  const user = c.get('user');
+  const user = c.get("user");
   const body = await c.req.json();
   const { items, ...rawData } = body;
 
-  console.log(`[Templates/Create] Creating template for org ${user.organizationId} with ${items?.length ?? 0} items`);
+  console.log(
+    `[Templates/Create] Creating template for org ${user.organizationId} with ${items?.length ?? 0} items`,
+  );
 
   try {
     const result = await db.transaction(async (tx) => {
@@ -364,8 +414,8 @@ app.post('/', requireAuth, async (c) => {
           description: rawData.description,
           category: rawData.category,
           conditionName: rawData.condition_name ?? rawData.conditionName,
-          templateVariant: rawData.template_variant ?? rawData.templateVariant ?? 'Personalizado',
-          templateType: rawData.templateType ?? 'custom',
+          templateVariant: rawData.template_variant ?? rawData.templateVariant ?? "Personalizado",
+          templateType: rawData.templateType ?? "custom",
           patientProfile: rawData.patientProfile ?? rawData.patient_profile,
           organizationId: user.organizationId ?? null,
           createdBy: user.uid,
@@ -381,7 +431,7 @@ app.post('/', requireAuth, async (c) => {
         .returning();
 
       let insertedItems: any[] = [];
-      
+
       // 2. Inserir os itens do template se existirem
       if (items && Array.isArray(items) && items.length > 0) {
         insertedItems = await tx
@@ -398,7 +448,7 @@ app.post('/', requireAuth, async (c) => {
               clinicalNotes: item.clinical_notes ?? item.clinicalNotes,
               focusMuscles: item.focus_muscles ?? item.focusMuscles,
               purpose: item.purpose,
-            }))
+            })),
           )
           .returning();
       }
@@ -409,16 +459,19 @@ app.post('/', requireAuth, async (c) => {
     return c.json({ data: result });
   } catch (error: any) {
     console.error("[Templates/Create] Error:", error.message);
-    return c.json({ 
-      error: 'Erro ao criar template', 
-      details: error.message,
-      requestId: c.get('requestId') 
-    }, 500);
+    return c.json(
+      {
+        error: "Erro ao criar template",
+        details: error.message,
+        requestId: c.get("requestId"),
+      },
+      500,
+    );
   }
 });
 
 // ===== ATUALIZAR TEMPLATE =====
-app.put('/:id', requireAuth, async (c) => {
+app.put("/:id", requireAuth, async (c) => {
   const db = createDb(c.env);
   const { id } = c.req.param();
   const body = await c.req.json();
@@ -437,7 +490,7 @@ app.put('/:id', requireAuth, async (c) => {
     .where(eq(exerciseTemplates.id, id))
     .returning();
 
-  if (!template) return c.json({ error: 'Template não encontrado' }, 404);
+  if (!template) return c.json({ error: "Template não encontrado" }, 404);
 
   let updatedItems: Array<Record<string, unknown>> = [];
   if (items && Array.isArray(items)) {
@@ -457,7 +510,7 @@ app.put('/:id', requireAuth, async (c) => {
                 templateId: template.id,
                 orderIndex: item.orderIndex ?? index,
               };
-            })
+            }),
           )
           .returning();
       }
@@ -475,13 +528,15 @@ app.put('/:id', requireAuth, async (c) => {
 });
 
 // ===== DELETAR TEMPLATE (soft delete) =====
-app.delete('/:id', requireAuth, async (c) => {
+app.delete("/:id", requireAuth, async (c) => {
   const db = createDb(c.env);
   const { id } = c.req.param();
 
-  const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id);
+  const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+    id,
+  );
   if (!isUuid) {
-    return c.json({ error: 'Template inválido' }, 400);
+    return c.json({ error: "Template inválido" }, 400);
   }
 
   // Fetch template first to check type
@@ -491,11 +546,11 @@ app.delete('/:id', requireAuth, async (c) => {
     .where(eq(exerciseTemplates.id, id))
     .limit(1);
 
-  if (!template) return c.json({ error: 'Template não encontrado' }, 404);
+  if (!template) return c.json({ error: "Template não encontrado" }, 404);
 
   // System templates cannot be deleted
-  if (template.templateType === 'system') {
-    return c.json({ error: 'System templates cannot be deleted' }, 403);
+  if (template.templateType === "system") {
+    return c.json({ error: "System templates cannot be deleted" }, 403);
   }
 
   // Soft delete

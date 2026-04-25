@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState } from "react";
 
 import {
   View,
@@ -9,23 +9,23 @@ import {
   ScrollView,
   TouchableOpacity,
   Image,
-} from 'react-native';
-import { Link, router } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Button, Input } from '@/components';
-import { useColors } from '@/hooks/useColorScheme';
-import { useAuthStore } from '@/lib/platform';
-import { validators } from '@/lib/validation';
-import logoIcon from '../../assets/icon.png';
+} from "react-native";
+import { Link, router } from "expo-router";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { Button, Input } from "@/components";
+import { useColors } from "@/hooks/useColorScheme";
+import { useAuthStore } from "@/lib/platform";
+import { validators } from "@/lib/validation";
+import logoIcon from "../../assets/icon.png";
 
 export default function LoginScreen() {
   const colors = useColors();
   const { signIn, isLoading, error, clearError } = useAuthStore();
 
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [emailError, setEmailError] = useState('');
-  const [passwordError, setPasswordError] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [emailError, setEmailError] = useState("");
+  const [passwordError, setPasswordError] = useState("");
 
   const handleLogin = async () => {
     clearError();
@@ -39,24 +39,22 @@ export default function LoginScreen() {
 
     // Validate password
     if (!password) {
-      setPasswordError('Digite sua senha');
+      setPasswordError("Digite sua senha");
       return;
     }
 
     try {
       await signIn(email.trim().toLowerCase(), password);
-      router.replace('/(tabs)');
-    } catch  {
+      router.replace("/(tabs)");
+    } catch {
       // Error is already handled by the store
     }
   };
 
-  
-
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={styles.keyboardView}
       >
         <ScrollView
@@ -66,11 +64,7 @@ export default function LoginScreen() {
         >
           {/* Logo */}
           <View style={styles.logoContainer}>
-            <Image
-              source={logoIcon}
-              style={styles.logoImage}
-              resizeMode="contain"
-            />
+            <Image source={logoIcon} style={styles.logoImage} resizeMode="contain" />
             <Text style={[styles.title, { color: colors.text }]}>FisioFlow</Text>
             <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
               Portal do Paciente
@@ -81,9 +75,7 @@ export default function LoginScreen() {
           <View style={styles.form}>
             {error ? (
               <View style={[styles.errorBox, { backgroundColor: colors.errorLight }]}>
-                <Text style={[styles.errorText, { color: colors.error }]}>
-                  {error}
-                </Text>
+                <Text style={[styles.errorText, { color: colors.error }]}>{error}</Text>
               </View>
             ) : null}
 
@@ -93,7 +85,7 @@ export default function LoginScreen() {
               value={email}
               onChangeText={(text) => {
                 setEmail(text);
-                setEmailError('');
+                setEmailError("");
                 clearError();
               }}
               keyboardType="email-address"
@@ -111,7 +103,7 @@ export default function LoginScreen() {
               value={password}
               onChangeText={(text) => {
                 setPassword(text);
-                setPasswordError('');
+                setPasswordError("");
                 clearError();
               }}
               secureTextEntry
@@ -145,9 +137,7 @@ export default function LoginScreen() {
               </Text>
               <Link href="/register" asChild>
                 <TouchableOpacity>
-                  <Text style={[styles.footerLink, { color: colors.primary }]}>
-                    Criar conta
-                  </Text>
+                  <Text style={[styles.footerLink, { color: colors.primary }]}>Criar conta</Text>
                 </TouchableOpacity>
               </Link>
             </View>
@@ -180,10 +170,10 @@ const styles = StyleSheet.create({
   scrollContent: {
     flexGrow: 1,
     padding: 24,
-    justifyContent: 'center',
+    justifyContent: "center",
   },
   logoContainer: {
-    alignItems: 'center',
+    alignItems: "center",
     marginBottom: 40,
   },
   logoImage: {
@@ -193,7 +183,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 28,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     marginBottom: 4,
   },
   subtitle: {
@@ -209,27 +199,27 @@ const styles = StyleSheet.create({
   },
   errorText: {
     fontSize: 14,
-    textAlign: 'center',
+    textAlign: "center",
   },
   forgotPassword: {
-    alignSelf: 'flex-end',
+    alignSelf: "flex-end",
     marginBottom: 24,
   },
   forgotPasswordText: {
     fontSize: 14,
-    fontWeight: '500',
+    fontWeight: "500",
   },
   loginButton: {
     marginTop: 8,
   },
   footer: {
-    alignItems: 'center',
+    alignItems: "center",
     gap: 8,
   },
   footerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     gap: 4,
   },
   footerText: {
@@ -237,6 +227,6 @@ const styles = StyleSheet.create({
   },
   footerLink: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: "600",
   },
 });

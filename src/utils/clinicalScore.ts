@@ -3,7 +3,7 @@ import { PostureMetric } from "./postureMetrics";
 export interface ClinicalPostureScore {
   totalScore: number; // 0-100
   cervicalStressKg: number; // Peso extra estimado na cervical
-  postureLevel: 'excellent' | 'good' | 'fair' | 'poor';
+  postureLevel: "excellent" | "good" | "fair" | "poor";
   recommendations: string[];
 }
 
@@ -15,13 +15,13 @@ export function calculateClinicalScore(metrics: PostureMetric[]): ClinicalPostur
   let cervicalDev = 0;
   const recommendations: string[] = [];
 
-  metrics.forEach(metric => {
+  metrics.forEach((metric) => {
     // Penalidades baseadas em desvios
-    if (metric.name === 'head_tilt' || metric.name === 'shoulder_level') {
+    if (metric.name === "head_tilt" || metric.name === "shoulder_level") {
       penalty += metric.value * 2; // Cada grau de inclinação lateral tira 2 pontos
     }
-    
-    if (metric.name === 'forward_head') {
+
+    if (metric.name === "forward_head") {
       cervicalDev = metric.value;
       penalty += metric.value * 5; // Anteriorização de cabeça é mais grave
     }
@@ -34,11 +34,11 @@ export function calculateClinicalScore(metrics: PostureMetric[]): ClinicalPostur
   const totalCervicalStress = baseHeadWeight + extraWeight;
 
   const totalScore = Math.max(0, 100 - penalty);
-  
-  let level: ClinicalPostureScore['postureLevel'] = 'poor';
-  if (totalScore > 85) level = 'excellent';
-  else if (totalScore > 70) level = 'good';
-  else if (totalScore > 50) level = 'fair';
+
+  let level: ClinicalPostureScore["postureLevel"] = "poor";
+  if (totalScore > 85) level = "excellent";
+  else if (totalScore > 70) level = "good";
+  else if (totalScore > 50) level = "fair";
 
   if (cervicalDev > 10) recommendations.push("Exercícios de retração cervical (Chin Tuck)");
   if (totalScore < 70) recommendations.push("Liberação miofascial de trapézio e peitorais");
@@ -47,6 +47,6 @@ export function calculateClinicalScore(metrics: PostureMetric[]): ClinicalPostur
     totalScore: Math.round(totalScore),
     cervicalStressKg: Number(totalCervicalStress.toFixed(1)),
     postureLevel: level,
-    recommendations
+    recommendations,
   };
 }

@@ -1,9 +1,11 @@
 # Spec Técnica: Hub Financeiro Command Center
 
 ## 1. Visão Geral
+
 O módulo financeiro do FisioFlow hoje está fragmentado entre um hub mais completo em [src/pages/Financial.tsx](/home/rafael/Documents/fisioflow/fisioflow-51658291/src/pages/Financial.tsx) e uma implementação paralela/provisória em [src/components/financial/FinancialWorkbench.tsx](/home/rafael/Documents/fisioflow/fisioflow-51658291/src/components/financial/FinancialWorkbench.tsx), ainda exposta por [src/routes/financial.tsx](/home/rafael/Documents/fisioflow/fisioflow-51658291/src/routes/financial.tsx). Além disso, a página principal desperdiça altura útil com um topo excessivamente grande e trata blocos estratégicos como abas desconectadas, em vez de um cockpit operacional integrado.
 
 O objetivo desta entrega é transformar o financeiro em um command center real para a clínica, com:
+
 - topo compacto e orientado à ação;
 - primeira dobra com caixa, cobrança, risco e projeção;
 - navegação interna organizada por contexto operacional;
@@ -11,6 +13,7 @@ O objetivo desta entrega é transformar o financeiro em um command center real p
 - uma única arquitetura de rota, layout e contrato de dados.
 
 ## 2. Objetivos
+
 - Eliminar a duplicidade entre `/financial` e `/financeiro` como experiências distintas.
 - Reduzir drasticamente a altura desperdiçada no topo da página.
 - Tornar visível sem rolagem excessiva:
@@ -30,12 +33,15 @@ O objetivo desta entrega é transformar o financeiro em um command center real p
 - Preparar o módulo para evolução posterior de régua de cobrança, reconciliação, forecast e inteligência financeira.
 
 ## 3. Estado Atual
+
 ### 3.1 Estrutura de rota e página
+
 - A rota principal carregada no núcleo do app é [src/routes/core.tsx](/home/rafael/Documents/fisioflow/fisioflow-51658291/src/routes/core.tsx), que usa `Financial` de [src/pages/Financial.tsx](/home/rafael/Documents/fisioflow/fisioflow-51658291/src/pages/Financial.tsx).
 - As rotas em [src/routes/financial.tsx](/home/rafael/Documents/fisioflow/fisioflow-51658291/src/routes/financial.tsx) ainda expõem `/financeiro` e `/financial` via `FinancialWorkbench`, criando conflito conceitual com a experiência principal.
 - A sidebar já aponta o financeiro como item estratégico em [src/components/layout/Sidebar.tsx](/home/rafael/Documents/fisioflow/fisioflow-51658291/src/components/layout/Sidebar.tsx), mas o módulo ainda não tem uma IA coesa.
 
 ### 3.2 Página atual
+
 - [src/pages/Financial.tsx](/home/rafael/Documents/fisioflow/fisioflow-51658291/src/pages/Financial.tsx) concentra:
   - header grande demais;
   - card de IA;
@@ -50,6 +56,7 @@ O objetivo desta entrega é transformar o financeiro em um command center real p
   - [src/components/financial/CommissionsDashboard.tsx](/home/rafael/Documents/fisioflow/fisioflow-51658291/src/components/financial/CommissionsDashboard.tsx)
 
 ### 3.3 Pontos de integração já existentes
+
 - Pacientes:
   - [src/components/patient/PatientFinancialTab.tsx](/home/rafael/Documents/fisioflow/fisioflow-51658291/src/components/patient/PatientFinancialTab.tsx)
 - CRM:
@@ -63,7 +70,9 @@ O objetivo desta entrega é transformar o financeiro em um command center real p
   - [apps/api/src/routes/financial-catalogs.ts](/home/rafael/Documents/fisioflow/fisioflow-51658291/apps/api/src/routes/financial-catalogs.ts)
 
 ## 4. Problemas a Resolver
+
 ### 4.1 UX e layout
+
 - O topo ocupa espaço demais para pouco valor operacional.
 - A primeira dobra não responde rapidamente:
   - o que preciso fazer agora;
@@ -72,16 +81,19 @@ O objetivo desta entrega é transformar o financeiro em um command center real p
 - O sistema mistura resumo estratégico e detalhe operacional sem hierarquia clara.
 
 ### 4.2 Arquitetura de produto
+
 - Há duas experiências financeiras concorrentes.
 - Abas foram criadas por domínio técnico, não por fluxo de gestão.
 - `Pacotes`, `DRE`, `Recibos`, `NFS-e` e `Contas` competem pelo mesmo nível hierárquico mesmo tendo pesos de uso diferentes.
 
 ### 4.3 Dados
+
 - O hub atual depende demais de composições fragmentadas.
 - Não existe um contrato único do “command center”.
 - Faltam agregados prontos para conectar financeiro a CRM, agenda, marketing e pacientes.
 
 ### 4.4 Integração de ecossistema
+
 - O financeiro ainda se comporta como um módulo isolado.
 - Não há leitura operacional cruzada de:
   - pacientes com saldo pendente e risco de evasão;
@@ -90,7 +102,9 @@ O objetivo desta entrega é transformar o financeiro em um command center real p
   - agenda com impacto financeiro direto.
 
 ## 5. Escopo
+
 ### Incluído
+
 - Redesenho completo do hub financeiro desktop.
 - Consolidação de rota e shell do módulo.
 - Nova IA de navegação do financeiro.
@@ -100,13 +114,16 @@ O objetivo desta entrega é transformar o financeiro em um command center real p
 - Contrato agregador de dados para o hub.
 
 ### Fora de Escopo
+
 - Reescrever todos os submódulos financeiros internamente nesta mesma entrega.
 - Implementar conciliação bancária completa nesta primeira fase.
 - Reescrever CRM, marketing ou agenda fora do que for necessário para integração do hub.
 - Substituir toda a modelagem fiscal/tributária do backend.
 
 ## 6. Estrutura Visual Aprovada
+
 Direção validada a partir do conceito gerado no Stitch para o projeto `FisioFlow - Hub Financeiro 2026`:
+
 - header compacto, sem hero alto;
 - linha secundária de quick actions;
 - primeira dobra em layout principal + rail lateral;
@@ -116,8 +133,11 @@ Direção validada a partir do conceito gerado no Stitch para o projeto `FisioFl
 - linguagem visual premium clínica, light-first, com densidade alta porém calma.
 
 ## 7. Arquitetura de Informação Final
+
 ### 7.1 Header
+
 O topo da página deve conter apenas:
+
 - título `Gestão Financeira`;
 - subtítulo curto;
 - seletor de período;
@@ -130,9 +150,11 @@ O topo da página deve conter apenas:
   - `Registrar despesa`
 
 ### 7.2 Primeira dobra
+
 Layout recomendado `8/4` ou `9/3`.
 
 #### Coluna principal
+
 - faixa de KPIs operacionais:
   - caixa disponível;
   - a receber;
@@ -144,6 +166,7 @@ Layout recomendado `8/4` ou `9/3`.
 - bloco de projeção dos próximos 30 dias;
 
 #### Coluna lateral
+
 - central de ações rápidas;
 - alertas fiscais e operacionais;
 - pacientes em risco financeiro;
@@ -151,7 +174,9 @@ Layout recomendado `8/4` ou `9/3`.
 - bloco de IA financeira acionável.
 
 ### 7.3 Navegação interna sticky
+
 O hub deve usar esta navegação final:
+
 - `Resumo`
 - `Cobrança`
 - `Fluxo de Caixa`
@@ -161,7 +186,9 @@ O hub deve usar esta navegação final:
 - `Comissões`
 
 ## 8. Decisões de Produto para Abas e Módulos
+
 ### 8.1 Módulos que permanecem como áreas principais
+
 - `Resumo`
 - `Cobrança`
 - `Fluxo de Caixa`
@@ -171,6 +198,7 @@ O hub deve usar esta navegação final:
 - `Comissões`
 
 ### 8.2 Módulos que mudam de posição
+
 - `Recibos` e `NFS-e` passam a compor `Documentos`.
 - `DRE` passa a compor `Performance`.
 - `Pacotes` deixa de ser aba principal e vira contexto dentro de `Cobrança` e `Paciente`.
@@ -179,7 +207,9 @@ O hub deve usar esta navegação final:
   - `Faturamento` para despesas, lançamentos e contas a pagar.
 
 ### 8.3 Justificativa
+
 Isso reduz concorrência visual entre abas, melhora a descoberta de tarefas e faz a navegação seguir o raciocínio do gestor:
+
 - entender a situação;
 - agir sobre cobrança;
 - ler o caixa;
@@ -189,36 +219,47 @@ Isso reduz concorrência visual entre abas, melhora a descoberta de tarefas e fa
 - fechar repasses.
 
 ## 9. Módulos Integrados do Ecossistema
+
 ### 9.1 Pacientes
+
 O hub deve trazer:
+
 - ranking de pacientes com maior saldo pendente;
 - pacientes com pacote vencendo ou crédito acabando;
 - LTV por paciente;
 - risco de evasão cruzando financeiro + agenda.
 
 ### 9.2 CRM
+
 O hub deve mostrar:
+
 - leads com maior potencial de receita;
 - receita prevista do funil;
 - conversão por origem;
 - oportunidades paradas com impacto financeiro.
 
 ### 9.3 Marketing
+
 O hub deve mostrar:
+
 - campanhas com melhor ROI;
 - custo por paciente adquirido;
 - reativação com melhor retorno;
 - origem de pacientes que mais geram receita líquida.
 
 ### 9.4 Agenda / Operação
+
 O hub deve mostrar:
+
 - sessões agendadas que viram receita projetada;
 - no-show com impacto financeiro;
 - capacidade ociosa por janela;
 - pacientes sem agenda futura, mas com saldo ou plano ativo.
 
 ## 10. Funcionalidades Novas Recomendadas
+
 ### 10.1 Entram já no planejamento principal
+
 - projeção de caixa 30 dias;
 - visão 90 dias como evolução posterior do mesmo bloco;
 - central de cobranças prioritárias;
@@ -230,6 +271,7 @@ O hub deve mostrar:
 - IA financeira com tarefas e sugestões acionáveis.
 
 ### 10.2 Entram como evolução posterior
+
 - régua de cobrança automatizada completa;
 - reconciliação bancária;
 - cenário “e se” para previsão;
@@ -237,9 +279,11 @@ O hub deve mostrar:
 - governança de centros de custo avançados.
 
 ## 11. Contrato de Dados Recomendado
+
 Criar um endpoint agregador do command center financeiro, preferencialmente em [apps/api/src/routes/financial-analytics.ts](/home/rafael/Documents/fisioflow/fisioflow-51658291/apps/api/src/routes/financial-analytics.ts).
 
 ### 11.1 Payload de topo
+
 - `cashPosition`
 - `receivables`
 - `payables`
@@ -249,6 +293,7 @@ Criar um endpoint agregador do command center financeiro, preferencialmente em [
 - `period`
 
 ### 11.2 Payload do gráfico principal
+
 - série por período com:
   - `date`
   - `entries`
@@ -257,12 +302,14 @@ Criar um endpoint agregador do command center financeiro, preferencialmente em [
   - `accumulated`
 
 ### 11.3 Payload de projeção
+
 - `next30Days.expectedEntries`
 - `next30Days.expectedExits`
 - `next30Days.projectedBalance`
 - `next30Days.riskEvents`
 
 ### 11.4 Payload lateral operacional
+
 - `todayCollections`
 - `fiscalAlerts`
 - `financialRiskPatients`
@@ -270,16 +317,20 @@ Criar um endpoint agregador do command center financeiro, preferencialmente em [
 - `aiSuggestions`
 
 ### 11.5 Payload de integrações
+
 - `patientsFinance`
 - `crmRevenue`
 - `marketingROI`
 - `scheduleRevenueImpact`
 
 ## 12. Arquitetura Frontend Recomendada
+
 ### 12.1 Shell principal
+
 O novo hub deve nascer como shell modular, não como página monolítica.
 
 Estrutura recomendada:
+
 - `FinancialCommandCenterPage`
 - `FinancialHeaderCompact`
 - `FinancialQuickActionsBar`
@@ -295,14 +346,18 @@ Estrutura recomendada:
 - `FinancialAIWorkbench`
 
 ### 12.2 Reuso
+
 Reaproveitar o que já funciona nos módulos existentes, mas remover a lógica de “aba como página inteira” de dentro do hub principal.
 
 ### 12.3 Rota canônica
+
 - `APP_ROUTES.FINANCIAL` em [src/lib/routing/appRoutes.ts](/home/rafael/Documents/fisioflow/fisioflow-51658291/src/lib/routing/appRoutes.ts) continua como fonte única.
 - `/financeiro` deve redirecionar para a experiência unificada ou apontar para o mesmo container, sem workbench paralelo.
 
 ## 13. Ordem Correta de Implementação
+
 ### Fase 1: Fundação
+
 - Consolidar rota única do financeiro.
 - Remover a competição entre `Financial` e `FinancialWorkbench`.
 - Congelar a IA final e validar a V2 do layout no Stitch.
@@ -310,6 +365,7 @@ Reaproveitar o que já funciona nos módulos existentes, mas remover a lógica d
 - Criar o shell modular do novo hub.
 
 ### Fase 2: Hub Core
+
 - Implementar header compacto.
 - Implementar quick actions.
 - Implementar KPI rail.
@@ -318,6 +374,7 @@ Reaproveitar o que já funciona nos módulos existentes, mas remover a lógica d
 - Implementar rail lateral com alertas, cobranças do dia e pacientes em risco financeiro.
 
 ### Fase 3: Reorganização dos módulos financeiros
+
 - Reestruturar a navegação para:
   - `Resumo`
   - `Cobrança`
@@ -331,6 +388,7 @@ Reaproveitar o que já funciona nos módulos existentes, mas remover a lógica d
 - Rebaixar `Pacotes` para contexto secundário.
 
 ### Fase 4: Integrações do ecossistema
+
 - Conectar pacientes ao command center.
 - Conectar CRM.
 - Conectar marketing.
@@ -338,6 +396,7 @@ Reaproveitar o que já funciona nos módulos existentes, mas remover a lógica d
 - Unificar leitura de oportunidade, risco e receita.
 
 ### Fase 5: QA e rollout
+
 - Teste responsivo.
 - Teste de permissão por papel.
 - Teste de performance.
@@ -346,6 +405,7 @@ Reaproveitar o que já funciona nos módulos existentes, mas remover a lógica d
 - Remoção final do legado.
 
 ## 14. Dependências Técnicas
+
 - Revisão das rotas em:
   - [src/routes/core.tsx](/home/rafael/Documents/fisioflow/fisioflow-51658291/src/routes/core.tsx)
   - [src/routes/financial.tsx](/home/rafael/Documents/fisioflow/fisioflow-51658291/src/routes/financial.tsx)
@@ -362,12 +422,14 @@ Reaproveitar o que já funciona nos módulos existentes, mas remover a lógica d
   - agenda
 
 ## 15. Riscos
+
 - Reaproveitar componentes existentes demais pode arrastar a IA antiga para o novo hub.
 - Sem endpoint agregador, o frontend vai virar uma colagem de hooks e perder performance.
 - Se a duplicidade de rotas não for eliminada cedo, a entrega tende a fragmentar novamente.
 - A integração com CRM/marketing/agenda precisa nascer com escopo controlado para não virar reescrita transversal.
 
 ## 16. Estratégia de Testes
+
 - Testes de navegação e deep-linking por aba do hub.
 - Testes dos quick actions principais.
 - Testes do período aplicado aos blocos agregados.
@@ -384,7 +446,9 @@ Reaproveitar o que já funciona nos módulos existentes, mas remover a lógica d
   - navegação entre módulos.
 
 ## 17. Referências Externas
+
 Padrões usados como referência para a arquitetura e distribuição do hub:
+
 - [Xero Dashboard](https://www.xero.com/us/accounting-software/dashboard/)
 - [QuickBooks Cash Flow Planner](https://quickbooks.intuit.com/global/cash-flow/)
 - [Stripe Reporting](https://docs.stripe.com/reports)
@@ -393,7 +457,9 @@ Padrões usados como referência para a arquitetura e distribuição do hub:
 - [Zoho Books Overview](https://www.zoho.com/books/help/getting-started/zoho-books.html)
 
 ## 18. Resultado Esperado
+
 Ao final desta iniciativa, o financeiro deixa de ser uma coleção de telas e passa a ser o centro operacional da receita da clínica:
+
 - com leitura imediata de caixa e risco;
 - com ação rápida para cobrança e faturamento;
 - com conexão direta entre receita, paciente, lead, campanha e agenda;

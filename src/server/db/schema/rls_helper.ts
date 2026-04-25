@@ -3,8 +3,8 @@ import { sql } from "drizzle-orm";
 
 /**
  * Helper para aplicar a política de isolamento por organização (Multi-tenant).
- * 
- * Esta política utiliza o parâmetro de sessão 'app.org_id' definido via SQL 
+ *
+ * Esta política utiliza o parâmetro de sessão 'app.org_id' definido via SQL
  * para garantir que um tenant nunca veja dados de outro.
  */
 export function withOrganizationPolicy(tableName: string, organizationIdColumn: any) {
@@ -32,7 +32,7 @@ export function withPublicWriteOrganizationPolicy(tableName: string, organizatio
       for: "all",
       to: "authenticated",
       using: sql`${organizationIdColumn} = (current_setting('app.org_id')::uuid)`,
-    })
+    }),
   ];
 }
 

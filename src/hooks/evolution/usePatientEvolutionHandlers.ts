@@ -268,7 +268,7 @@ export function usePatientEvolutionHandlers({
       const htmlContent = `
         <div style="padding: 20px; font-family: sans-serif;">
           <h1 style="color: #2563eb; text-align: center; border-bottom: 2px solid #2563eb; padding-bottom: 10px;">Evolução Clínica de Fisioterapia</h1>
-          
+
           <section style="margin-top: 20px;">
             <h3 style="background: #f3f4f6; padding: 8px; border-radius: 4px; border-left: 4px solid #2563eb;">Dados do Paciente</h3>
             <div style="display: grid; grid-template-cols: 1fr 1fr; gap: 10px;">

@@ -62,6 +62,7 @@ Se no futuro desejar usar TestSprite:
 ### ✅ Critérios de Uso
 
 **Use Playwright para:**
+
 - ✅ Testes E2E de fluxos de negócio
 - ✅ Testes de autenticação
 - ✅ Testes de formulários e interações
@@ -69,6 +70,7 @@ Se no futuro desejar usar TestSprite:
 - ✅ Testes de integração
 
 **Use TestSprite para:**
+
 - ⚠️ Testes visuais de regressão (futuro)
 - ⚠️ Validação de acessibilidade (futuro)
 - ⚠️ Performance testing (futuro)
@@ -76,10 +78,10 @@ Se no futuro desejar usar TestSprite:
 
 ### 📊 Status Atual
 
-| Ferramenta | Status | Uso Principal |
-|-----------|---------|---------------|
-| **Vitest** | ✅ Ativo | Testes unitários (98.9% sucesso) |
-| **Playwright** | ✅ Ativo | Testes E2E e integração |
+| Ferramenta     | Status         | Uso Principal                        |
+| -------------- | -------------- | ------------------------------------ |
+| **Vitest**     | ✅ Ativo       | Testes unitários (98.9% sucesso)     |
+| **Playwright** | ✅ Ativo       | Testes E2E e integração              |
 | **TestSprite** | 🔄 Configurado | Disponível, mas não ativo no momento |
 
 ---

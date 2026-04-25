@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 import {
   Alert,
   Modal,
@@ -10,35 +10,53 @@ import {
   StyleSheet,
   ActivityIndicator,
   ScrollView,
-} from 'react-native';
-import { useRouter, useLocalSearchParams } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
-import { launchImageLibraryAsync, launchCameraAsync, MediaTypeOptions } from 'expo-image-picker';
-import Slider from '@react-native-community/slider';
-import { useColors } from '@/hooks/useColorScheme';
-import { useHaptics } from '@/hooks/useHaptics';
-import { useEvolutions, useEvolution } from '@/hooks';
-import { useQuery } from '@tanstack/react-query';
-import { uploadFile } from '@/lib/storage';
-import { Card } from '@/components';
-import { getPatientById } from '@/lib/api';
-import { generateEvolutionPDF } from '@/lib/services/pdfGenerator';
+} from "react-native";
+import { useRouter, useLocalSearchParams } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
+import { launchImageLibraryAsync, launchCameraAsync, MediaTypeOptions } from "expo-image-picker";
+import Slider from "@react-native-community/slider";
+import { useColors } from "@/hooks/useColorScheme";
+import { useHaptics } from "@/hooks/useHaptics";
+import { useEvolutions, useEvolution } from "@/hooks";
+import { useQuery } from "@tanstack/react-query";
+import { uploadFile } from "@/lib/storage";
+import { Card } from "@/components";
+import { getPatientById } from "@/lib/api";
+import { generateEvolutionPDF } from "@/lib/services/pdfGenerator";
 
-function FullScreenImageModal({ visible, uri, onClose, colors }: { visible: boolean; uri: string | null; onClose: () => void; colors: any }) {
+function FullScreenImageModal({
+  visible,
+  uri,
+  onClose,
+  colors,
+}: {
+  visible: boolean;
+  uri: string | null;
+  onClose: () => void;
+  colors: any;
+}) {
   if (!uri) return null;
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
-      <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.92)', justifyContent: 'center', alignItems: 'center' }}>
-        <TouchableOpacity onPress={onClose} style={{ position: 'absolute', top: 48, right: 20, zIndex: 10 }}>
+      <View
+        style={{
+          flex: 1,
+          backgroundColor: "rgba(0,0,0,0.92)",
+          justifyContent: "center",
+          alignItems: "center",
+        }}
+      >
+        <TouchableOpacity
+          onPress={onClose}
+          style={{ position: "absolute", top: 48, right: 20, zIndex: 10 }}
+        >
           <Ionicons name="close" size={32} color="#fff" />
         </TouchableOpacity>
-        <Image source={{ uri }} style={{ width: '100%', height: '80%' }} resizeMode="contain" />
+        <Image source={{ uri }} style={{ width: "100%", height: "80%" }} resizeMode="contain" />
       </View>
     </Modal>
   );
 }
-
-
 
 interface Photo {
   uri: string;
@@ -49,7 +67,7 @@ interface Photo {
 // ... (SOAP_SECTIONS, ProgressRing, SOAPInputField, etc. - all the UI components from before)
 // ... (I will omit them for brevity but they are included in the final file)
 
-type SOAPKey = 'subjective' | 'objective' | 'assessment' | 'plan';
+type SOAPKey = "subjective" | "objective" | "assessment" | "plan";
 
 // Enhanced SOAP Input Field Component
 const SOAPInputField = ({
@@ -87,7 +105,15 @@ const SOAPInputField = ({
 };
 
 // Pain Level Slider Component
-const PainLevelSlider = ({ painLevel, onValueChange, colors }: { painLevel: number; onValueChange: (val: number) => void; colors: any }) => {
+const PainLevelSlider = ({
+  painLevel,
+  onValueChange,
+  colors,
+}: {
+  painLevel: number;
+  onValueChange: (val: number) => void;
+  colors: any;
+}) => {
   return (
     <View style={styles.painLevelContainer}>
       <Text style={[styles.painLevelLabel, { color: colors.text }]}>Nível de Dor</Text>
@@ -98,7 +124,7 @@ const PainLevelSlider = ({ painLevel, onValueChange, colors }: { painLevel: numb
         step={1}
         value={painLevel}
         onValueChange={onValueChange}
-        minimumTrackTintColor={painLevel <= 3 ? '#10B981' : painLevel <= 6 ? '#F59E0B' : '#EF4444'}
+        minimumTrackTintColor={painLevel <= 3 ? "#10B981" : painLevel <= 6 ? "#F59E0B" : "#EF4444"}
         maximumTrackTintColor={colors.border}
       />
       <Text style={[styles.painLevelValue, { color: colors.primary }]}>{painLevel}/10</Text>
@@ -138,10 +164,16 @@ const PhotoGrid = ({
             </TouchableOpacity>
           </View>
         ))}
-        <TouchableOpacity style={[styles.photoAddButton, { borderColor: colors.border }]} onPress={onAddPhoto}>
+        <TouchableOpacity
+          style={[styles.photoAddButton, { borderColor: colors.border }]}
+          onPress={onAddPhoto}
+        >
           <Ionicons name="image" size={24} color={colors.textMuted} />
         </TouchableOpacity>
-        <TouchableOpacity style={[styles.photoAddButton, { borderColor: colors.border }]} onPress={onTakePhoto}>
+        <TouchableOpacity
+          style={[styles.photoAddButton, { borderColor: colors.border }]}
+          onPress={onTakePhoto}
+        >
           <Ionicons name="camera" size={24} color={colors.textMuted} />
         </TouchableOpacity>
       </View>
@@ -149,14 +181,12 @@ const PhotoGrid = ({
   );
 };
 
-
 export default function EvolutionScreen() {
   const colors = useColors();
   const router = useRouter();
   const params = useLocalSearchParams();
   const patientId = params.id as string;
   const evolutionId = params.evolutionId as string | undefined;
-  
 
   const { medium, success, error: hapticError } = useHaptics();
 
@@ -166,19 +196,19 @@ export default function EvolutionScreen() {
     deleteAsync: deleteEvolutionAsync,
     isCreating,
     isUpdating,
-    } = useEvolutions(patientId);
+  } = useEvolutions(patientId);
 
   const { data: patient } = useQuery({
-    queryKey: ['patient', patientId],
+    queryKey: ["patient", patientId],
     queryFn: () => getPatientById(patientId),
     enabled: !!patientId,
   });
 
   // Form state
-  const [subjective, setSubjective] = useState('');
-  const [objective, setObjective] = useState('');
-  const [assessment, setAssessment] = useState('');
-  const [plan, setPlan] = useState('');
+  const [subjective, setSubjective] = useState("");
+  const [objective, setObjective] = useState("");
+  const [assessment, setAssessment] = useState("");
+  const [plan, setPlan] = useState("");
   const [painLevel, setPainLevel] = useState(0);
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [prescribedExercises, setPrescribedExercises] = useState<any[]>([]);
@@ -191,22 +221,24 @@ export default function EvolutionScreen() {
   const isEditing = !!evolutionId;
 
   // Load existing evolution if editing
-  
+
   const { data: evolutionData } = useEvolution(evolutionId);
 
   useEffect(() => {
     if (evolutionData) {
-      setSubjective(evolutionData.subjective || '');
-      setObjective(evolutionData.objective || '');
-      setAssessment(evolutionData.assessment || '');
-      setPlan(evolutionData.plan || '');
+      setSubjective(evolutionData.subjective || "");
+      setObjective(evolutionData.objective || "");
+      setAssessment(evolutionData.assessment || "");
+      setPlan(evolutionData.plan || "");
       setPainLevel(evolutionData.painLevel || 0);
       if (evolutionData.attachments) {
-        setPhotos(evolutionData.attachments.map((uri, index) => ({
-          uri,
-          id: `photo-${Date.now()}-${index}`,
-          isNew: false, // These are already uploaded
-        })));
+        setPhotos(
+          evolutionData.attachments.map((uri, index) => ({
+            uri,
+            id: `photo-${Date.now()}-${index}`,
+            isNew: false, // These are already uploaded
+          })),
+        );
       }
     }
   }, [evolutionData]);
@@ -215,7 +247,7 @@ export default function EvolutionScreen() {
     medium();
     const hasContent = subjective.trim() || objective.trim() || assessment.trim() || plan.trim();
     if (!hasContent) {
-      Alert.alert('Atenção', 'Preencha pelo menos um campo do SOAP para salvar.');
+      Alert.alert("Atenção", "Preencha pelo menos um campo do SOAP para salvar.");
       hapticError();
       return;
     }
@@ -227,12 +259,12 @@ export default function EvolutionScreen() {
       const uploadedUrls = await Promise.all(
         photos.map(async (photo) => {
           if (photo.isNew) {
-            const fileName = photo.uri.split('/').pop() || `photo-${Date.now()}`;
+            const fileName = photo.uri.split("/").pop() || `photo-${Date.now()}`;
             const path = `evolutions/${patientId}/${evolutionId || `new_${Date.now()}`}/${fileName}`;
             return uploadFile(photo.uri, path);
           }
           return photo.uri; // Return existing URL
-        })
+        }),
       );
 
       // 2. Prepare data for API
@@ -256,20 +288,19 @@ export default function EvolutionScreen() {
       }
 
       success();
-      Alert.alert('Sucesso', `Evolução ${isEditing ? 'atualizada' : 'registrada'}!`);
+      Alert.alert("Sucesso", `Evolução ${isEditing ? "atualizada" : "registrada"}!`);
       router.back();
-
     } catch (err: any) {
       hapticError();
-      Alert.alert('Erro', err.message || 'Não foi possível salvar a evolução.');
+      Alert.alert("Erro", err.message || "Não foi possível salvar a evolução.");
     } finally {
-        setIsUploading(false);
+      setIsUploading(false);
     }
   };
 
   const handleSharePDF = async () => {
     if (!patient || !evolutionData) {
-      Alert.alert('Erro', 'Dados insuficientes para gerar o relatório.');
+      Alert.alert("Erro", "Dados insuficientes para gerar o relatório.");
       return;
     }
     medium();
@@ -279,7 +310,7 @@ export default function EvolutionScreen() {
       success();
     } catch {
       hapticError();
-      Alert.alert('Erro', 'Falha ao gerar PDF.');
+      Alert.alert("Erro", "Falha ao gerar PDF.");
     }
   };
 
@@ -287,26 +318,26 @@ export default function EvolutionScreen() {
     if (!evolutionId) return;
     medium();
     Alert.alert(
-      'Excluir Evolução',
-      'Tem certeza que deseja excluir esta evolução? Esta ação não pode ser desfeita.',
+      "Excluir Evolução",
+      "Tem certeza que deseja excluir esta evolução? Esta ação não pode ser desfeita.",
       [
-        { text: 'Cancelar', style: 'cancel' },
+        { text: "Cancelar", style: "cancel" },
         {
-          text: 'Excluir',
-          style: 'destructive',
+          text: "Excluir",
+          style: "destructive",
           onPress: async () => {
-              try {
-                await deleteEvolutionAsync(evolutionId);
-                success();
-                Alert.alert('Sucesso', 'Evolução excluída com sucesso!');
-                router.back();
-              } catch (err: any) {
-                hapticError();
-                Alert.alert('Erro', err.message || 'Não foi possível excluir a evolução.');
-              }
+            try {
+              await deleteEvolutionAsync(evolutionId);
+              success();
+              Alert.alert("Sucesso", "Evolução excluída com sucesso!");
+              router.back();
+            } catch (err: any) {
+              hapticError();
+              Alert.alert("Erro", err.message || "Não foi possível excluir a evolução.");
+            }
           },
         },
-      ]
+      ],
     );
   };
 
@@ -325,8 +356,8 @@ export default function EvolutionScreen() {
         }));
         setPhotos([...photos, ...newPhotos]);
       }
-    } catch  {
-      Alert.alert('Erro', 'Não foi possível selecionar a imagem.');
+    } catch {
+      Alert.alert("Erro", "Não foi possível selecionar a imagem.");
     }
   };
 
@@ -344,20 +375,20 @@ export default function EvolutionScreen() {
         };
         setPhotos([...photos, newPhoto]);
       }
-    } catch  {
-      Alert.alert('Erro', 'Não foi possível tirar a foto.');
+    } catch {
+      Alert.alert("Erro", "Não foi possível tirar a foto.");
     }
   };
-  
+
   const handleRemovePhoto = (id: string) => {
     medium();
     setPhotos(photos.filter((p) => p.id !== id));
   };
 
-  const handleMoveExercise = (index: number, direction: 'up' | 'down') => {
+  const handleMoveExercise = (index: number, direction: "up" | "down") => {
     medium();
     const newExercises = [...prescribedExercises];
-    const newIndex = direction === 'up' ? index - 1 : index + 1;
+    const newIndex = direction === "up" ? index - 1 : index + 1;
     if (newIndex >= 0 && newIndex < newExercises.length) {
       [newExercises[index], newExercises[newIndex]] = [newExercises[newIndex], newExercises[index]];
       setPrescribedExercises(newExercises);
@@ -366,19 +397,22 @@ export default function EvolutionScreen() {
 
   const handleAddExercisePlaceholder = () => {
     medium();
-    setPrescribedExercises([...prescribedExercises, { 
-      id: `ex-${Date.now()}`, 
-      name: 'Novo Exercício', 
-      sets: 3, 
-      reps: 12 
-    }]);
+    setPrescribedExercises([
+      ...prescribedExercises,
+      {
+        id: `ex-${Date.now()}`,
+        name: "Novo Exercício",
+        sets: 3,
+        reps: 12,
+      },
+    ]);
   };
 
   const handleRemoveExercise = (id: string) => {
     medium();
-    setPrescribedExercises(prescribedExercises.filter(e => e.id !== id));
+    setPrescribedExercises(prescribedExercises.filter((e) => e.id !== id));
   };
-  
+
   // ... (rest of the component, including JSX)
   // ... The save button loading state should also check for isUploading
   const isSaving = isCreating || isUpdating || isUploading;
@@ -390,7 +424,7 @@ export default function EvolutionScreen() {
           <Ionicons name="arrow-back" size={24} color={colors.text} />
         </TouchableOpacity>
         <Text style={[styles.headerTitle, { color: colors.text }]}>
-          {isEditing ? 'Editar Evolução' : 'Nova Evolução'}
+          {isEditing ? "Editar Evolução" : "Nova Evolução"}
         </Text>
         <View style={styles.headerActions}>
           {isEditing && (
@@ -413,8 +447,8 @@ export default function EvolutionScreen() {
           section="Subjetivo"
           value={subjective}
           onChangeText={setSubjective}
-          isFocused={focusedField === 'subjective'}
-          onFocus={() => setFocusedField('subjective')}
+          isFocused={focusedField === "subjective"}
+          onFocus={() => setFocusedField("subjective")}
           onBlur={() => setFocusedField(null)}
           colors={colors}
         />
@@ -423,8 +457,8 @@ export default function EvolutionScreen() {
           section="Objetivo"
           value={objective}
           onChangeText={setObjective}
-          isFocused={focusedField === 'objective'}
-          onFocus={() => setFocusedField('objective')}
+          isFocused={focusedField === "objective"}
+          onFocus={() => setFocusedField("objective")}
           onBlur={() => setFocusedField(null)}
           colors={colors}
         />
@@ -433,8 +467,8 @@ export default function EvolutionScreen() {
           section="Avaliação"
           value={assessment}
           onChangeText={setAssessment}
-          isFocused={focusedField === 'assessment'}
-          onFocus={() => setFocusedField('assessment')}
+          isFocused={focusedField === "assessment"}
+          onFocus={() => setFocusedField("assessment")}
           onBlur={() => setFocusedField(null)}
           colors={colors}
         />
@@ -443,14 +477,16 @@ export default function EvolutionScreen() {
           section="Plano"
           value={plan}
           onChangeText={setPlan}
-          isFocused={focusedField === 'plan'}
-          onFocus={() => setFocusedField('plan')}
+          isFocused={focusedField === "plan"}
+          onFocus={() => setFocusedField("plan")}
           onBlur={() => setFocusedField(null)}
           colors={colors}
         />
 
         <View style={styles.exercisesHeader}>
-          <Text style={[styles.sectionTitle, { color: colors.text, marginBottom: 0 }]}>Exercícios da Sessão</Text>
+          <Text style={[styles.sectionTitle, { color: colors.text, marginBottom: 0 }]}>
+            Exercícios da Sessão
+          </Text>
           <TouchableOpacity onPress={handleAddExercisePlaceholder} style={styles.addExerciseBtn}>
             <Ionicons name="add-circle-outline" size={20} color={colors.primary} />
             <Text style={[styles.addExerciseText, { color: colors.primary }]}>Adicionar</Text>
@@ -466,11 +502,25 @@ export default function EvolutionScreen() {
               </Text>
             </View>
             <View style={styles.exerciseActions}>
-              <TouchableOpacity onPress={() => handleMoveExercise(index, 'up')} disabled={index === 0}>
-                <Ionicons name="arrow-up" size={20} color={index === 0 ? colors.border : colors.primary} />
+              <TouchableOpacity
+                onPress={() => handleMoveExercise(index, "up")}
+                disabled={index === 0}
+              >
+                <Ionicons
+                  name="arrow-up"
+                  size={20}
+                  color={index === 0 ? colors.border : colors.primary}
+                />
               </TouchableOpacity>
-              <TouchableOpacity onPress={() => handleMoveExercise(index, 'down')} disabled={index === prescribedExercises.length - 1}>
-                <Ionicons name="arrow-down" size={20} color={index === prescribedExercises.length - 1 ? colors.border : colors.primary} />
+              <TouchableOpacity
+                onPress={() => handleMoveExercise(index, "down")}
+                disabled={index === prescribedExercises.length - 1}
+              >
+                <Ionicons
+                  name="arrow-down"
+                  size={20}
+                  color={index === prescribedExercises.length - 1 ? colors.border : colors.primary}
+                />
               </TouchableOpacity>
               <TouchableOpacity onPress={() => handleRemoveExercise(ex.id)}>
                 <Ionicons name="trash-outline" size={20} color={colors.error} />
@@ -493,16 +543,19 @@ export default function EvolutionScreen() {
         />
       </View>
 
-      <FullScreenImageModal 
-        visible={isViewerVisible} 
-        uri={selectedPhotoUri} 
-        onClose={() => setIsViewerVisible(false)} 
-        colors={colors} 
+      <FullScreenImageModal
+        visible={isViewerVisible}
+        uri={selectedPhotoUri}
+        onClose={() => setIsViewerVisible(false)}
+        colors={colors}
       />
 
       <View style={styles.footer}>
         <TouchableOpacity
-          style={[styles.saveButton, { backgroundColor: colors.primary, opacity: isSaving ? 0.6 : 1 }]}
+          style={[
+            styles.saveButton,
+            { backgroundColor: colors.primary, opacity: isSaving ? 0.6 : 1 },
+          ]}
           onPress={handleSave}
           disabled={isSaving}
         >
@@ -525,19 +578,19 @@ const styles = StyleSheet.create({
     paddingBottom: 20,
   },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     paddingHorizontal: 16,
     paddingVertical: 16,
     borderBottomWidth: 1,
   },
   headerTitle: {
     fontSize: 18,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   headerActions: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: 12,
   },
   form: {
@@ -551,7 +604,7 @@ const styles = StyleSheet.create({
   },
   soapLabel: {
     fontSize: 12,
-    fontWeight: '600',
+    fontWeight: "600",
     marginBottom: 8,
   },
   soapInput: {
@@ -565,79 +618,79 @@ const styles = StyleSheet.create({
   },
   painLevelLabel: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: "600",
     marginBottom: 8,
   },
   painLevelSlider: {
-    width: '100%',
+    width: "100%",
     height: 40,
   },
   painLevelValue: {
     fontSize: 16,
-    fontWeight: '600',
-    textAlign: 'center',
+    fontWeight: "600",
+    textAlign: "center",
     marginTop: 8,
   },
   photoGridContainer: {
     padding: 16,
   },
   photoGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+    flexDirection: "row",
+    flexWrap: "wrap",
     gap: 8,
   },
   photoWrapper: {
     width: 80,
     height: 80,
-    position: 'relative',
+    position: "relative",
   },
   photo: {
-    width: '100%',
-    height: '100%',
+    width: "100%",
+    height: "100%",
     borderRadius: 8,
   },
   photoRemoveButton: {
-    position: 'absolute',
+    position: "absolute",
     top: -4,
     right: -4,
     width: 20,
     height: 20,
     borderRadius: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   photoAddButton: {
     width: 80,
     height: 80,
     borderRadius: 8,
     borderWidth: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   sectionTitle: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
     marginBottom: 8,
   },
   exercisesHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginTop: 8,
     marginBottom: 8,
   },
   addExerciseBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 4,
   },
   addExerciseText: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   exerciseCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     padding: 12,
     marginBottom: 8,
   },
@@ -646,32 +699,32 @@ const styles = StyleSheet.create({
   },
   exerciseName: {
     fontSize: 15,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   exerciseMeta: {
     fontSize: 13,
     marginTop: 2,
   },
   exerciseActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 16,
   },
   fullScreenOverlay: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   closeFullBtn: {
-    position: 'absolute',
+    position: "absolute",
     top: 50,
     right: 20,
     zIndex: 10,
     padding: 10,
   },
   fullScreenImage: {
-    width: '100%',
-    height: '80%',
+    width: "100%",
+    height: "80%",
   },
   footer: {
     padding: 16,
@@ -679,11 +732,11 @@ const styles = StyleSheet.create({
   saveButton: {
     borderRadius: 12,
     paddingVertical: 16,
-    alignItems: 'center',
+    alignItems: "center",
   },
   saveButtonText: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
   },
 });

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -8,15 +8,15 @@ import {
   TextInput,
   Alert,
   ActivityIndicator,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter, useLocalSearchParams, Stack } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
-import { useColors } from '@/hooks/useColorScheme';
-import { useHaptics } from '@/hooks/useHaptics';
-import { useProtocols } from '@/hooks/useProtocols';
-import { useProtocol } from '@/hooks/useProtocol';
-import { Card } from '@/components';
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { useRouter, useLocalSearchParams, Stack } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
+import { useColors } from "@/hooks/useColorScheme";
+import { useHaptics } from "@/hooks/useHaptics";
+import { useProtocols } from "@/hooks/useProtocols";
+import { useProtocol } from "@/hooks/useProtocol";
+import { Card } from "@/components";
 
 export default function ProtocolFormScreen() {
   const colors = useColors();
@@ -30,10 +30,10 @@ export default function ProtocolFormScreen() {
   const { create, update, isCreating, isUpdating } = useProtocols();
   const { protocol, isLoading: isLoadingProtocol } = useProtocol(protocolId || null);
 
-  const [name, setName] = useState('');
-  const [description, setDescription] = useState('');
-  const [category, setCategory] = useState('');
-  const [condition, setCondition] = useState('');
+  const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
+  const [category, setCategory] = useState("");
+  const [condition, setCondition] = useState("");
   const [isTemplate, setIsTemplate] = useState(true);
   const [exercises, setExercises] = useState<any[]>([]);
 
@@ -45,38 +45,34 @@ export default function ProtocolFormScreen() {
       setName(protocol.name);
       setDescription(protocol.description);
       setCategory(protocol.category);
-      setCondition(protocol.condition || '');
+      setCondition(protocol.condition || "");
       setIsTemplate(protocol.isTemplate);
       setExercises(protocol.exercises || []);
     }
   }, [protocol, isEditing]);
 
-  const categories = ['Ortopedia', 'Coluna', 'Neurologia', 'Cardio', 'Respiratória', 'Pediátrica'];
+  const categories = ["Ortopedia", "Coluna", "Neurologia", "Cardio", "Respiratória", "Pediátrica"];
 
   const handleAddExercise = () => {
     medium();
     // Navegar para seleção de exercícios
-    router.push('/exercises?selectMode=true&returnTo=protocol-form' as any);
+    router.push("/exercises?selectMode=true&returnTo=protocol-form" as any);
   };
 
   const handleRemoveExercise = (index: number) => {
     medium();
-    Alert.alert(
-      'Remover Exercício',
-      'Deseja remover este exercício do protocolo?',
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        {
-          text: 'Remover',
-          style: 'destructive',
-          onPress: () => {
-            const updated = exercises.filter((_, i) => i !== index);
-            setExercises(updated);
-            success();
-          },
+    Alert.alert("Remover Exercício", "Deseja remover este exercício do protocolo?", [
+      { text: "Cancelar", style: "cancel" },
+      {
+        text: "Remover",
+        style: "destructive",
+        onPress: () => {
+          const updated = exercises.filter((_, i) => i !== index);
+          setExercises(updated);
+          success();
         },
-      ]
-    );
+      },
+    ]);
   };
 
   const handleSave = async () => {
@@ -84,19 +80,19 @@ export default function ProtocolFormScreen() {
 
     if (!name.trim()) {
       hapticError();
-      Alert.alert('Atenção', 'Digite um nome para o protocolo.');
+      Alert.alert("Atenção", "Digite um nome para o protocolo.");
       return;
     }
 
     if (!category) {
       hapticError();
-      Alert.alert('Atenção', 'Selecione uma categoria.');
+      Alert.alert("Atenção", "Selecione uma categoria.");
       return;
     }
 
     if (exercises.length === 0) {
       hapticError();
-      Alert.alert('Atenção', 'Adicione pelo menos um exercício ao protocolo.');
+      Alert.alert("Atenção", "Adicione pelo menos um exercício ao protocolo.");
       return;
     }
 
@@ -109,7 +105,7 @@ export default function ProtocolFormScreen() {
         exercises,
         isTemplate,
         isActive: true,
-        professionalId: '', // Will be set by the hook
+        professionalId: "", // Will be set by the hook
       };
 
       if (isEditing && protocolId) {
@@ -119,25 +115,24 @@ export default function ProtocolFormScreen() {
       }
 
       success();
-      Alert.alert(
-        'Sucesso',
-        `Protocolo ${isEditing ? 'atualizado' : 'criado'} com sucesso!`,
-        [
-          {
-            text: 'OK',
-            onPress: () => router.back(),
-          },
-        ]
-      );
+      Alert.alert("Sucesso", `Protocolo ${isEditing ? "atualizado" : "criado"} com sucesso!`, [
+        {
+          text: "OK",
+          onPress: () => router.back(),
+        },
+      ]);
     } catch (err: any) {
       hapticError();
-      Alert.alert('Erro', err.message || 'Não foi possível salvar o protocolo.');
+      Alert.alert("Erro", err.message || "Não foi possível salvar o protocolo.");
     }
   };
 
   if (isLoadingProtocol && isEditing) {
     return (
-      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
+      <SafeAreaView
+        style={[styles.container, { backgroundColor: colors.background }]}
+        edges={["top"]}
+      >
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={colors.primary} />
           <Text style={[styles.loadingText, { color: colors.textSecondary }]}>
@@ -149,15 +144,23 @@ export default function ProtocolFormScreen() {
   }
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: colors.background }]}
+      edges={["top"]}
+    >
       <Stack.Screen options={{ headerShown: false }} />
       {/* Header */}
-      <View style={[styles.header, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
+      <View
+        style={[
+          styles.header,
+          { backgroundColor: colors.surface, borderBottomColor: colors.border },
+        ]}
+      >
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
           <Ionicons name="arrow-back" size={24} color={colors.text} />
         </TouchableOpacity>
         <Text style={[styles.headerTitle, { color: colors.text }]}>
-          {isEditing ? 'Editar Protocolo' : 'Novo Protocolo'}
+          {isEditing ? "Editar Protocolo" : "Novo Protocolo"}
         </Text>
         <View style={styles.placeholder} />
       </View>
@@ -170,7 +173,14 @@ export default function ProtocolFormScreen() {
           <View style={styles.formGroup}>
             <Text style={[styles.label, { color: colors.text }]}>Nome do Protocolo *</Text>
             <TextInput
-              style={[styles.input, { backgroundColor: colors.background, borderColor: colors.border, color: colors.text }]}
+              style={[
+                styles.input,
+                {
+                  backgroundColor: colors.background,
+                  borderColor: colors.border,
+                  color: colors.text,
+                },
+              ]}
               placeholder="Ex: Reabilitação de Joelho"
               placeholderTextColor={colors.textMuted}
               value={name}
@@ -181,7 +191,15 @@ export default function ProtocolFormScreen() {
           <View style={styles.formGroup}>
             <Text style={[styles.label, { color: colors.text }]}>Descrição</Text>
             <TextInput
-              style={[styles.input, styles.textArea, { backgroundColor: colors.background, borderColor: colors.border, color: colors.text }]}
+              style={[
+                styles.input,
+                styles.textArea,
+                {
+                  backgroundColor: colors.background,
+                  borderColor: colors.border,
+                  color: colors.text,
+                },
+              ]}
               placeholder="Descreva o objetivo e aplicação do protocolo..."
               placeholderTextColor={colors.textMuted}
               value={description}
@@ -193,7 +211,11 @@ export default function ProtocolFormScreen() {
 
           <View style={styles.formGroup}>
             <Text style={[styles.label, { color: colors.text }]}>Categoria *</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.categoriesScroll}>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              style={styles.categoriesScroll}
+            >
               {categories.map((cat) => (
                 <TouchableOpacity
                   key={cat}
@@ -212,7 +234,7 @@ export default function ProtocolFormScreen() {
                   <Text
                     style={[
                       styles.categoryOptionText,
-                      { color: category === cat ? '#fff' : colors.text },
+                      { color: category === cat ? "#fff" : colors.text },
                     ]}
                   >
                     {cat}
@@ -225,7 +247,14 @@ export default function ProtocolFormScreen() {
           <View style={styles.formGroup}>
             <Text style={[styles.label, { color: colors.text }]}>Condição/Diagnóstico</Text>
             <TextInput
-              style={[styles.input, { backgroundColor: colors.background, borderColor: colors.border, color: colors.text }]}
+              style={[
+                styles.input,
+                {
+                  backgroundColor: colors.background,
+                  borderColor: colors.border,
+                  color: colors.text,
+                },
+              ]}
               placeholder="Ex: Pós-operatório de LCA"
               placeholderTextColor={colors.textMuted}
               value={condition}
@@ -244,7 +273,9 @@ export default function ProtocolFormScreen() {
               {isTemplate && <Ionicons name="checkmark" size={18} color={colors.primary} />}
             </View>
             <View style={styles.checkboxLabel}>
-              <Text style={[styles.checkboxText, { color: colors.text }]}>Salvar como template</Text>
+              <Text style={[styles.checkboxText, { color: colors.text }]}>
+                Salvar como template
+              </Text>
               <Text style={[styles.checkboxSubtext, { color: colors.textSecondary }]}>
                 Templates podem ser reutilizados para outros pacientes
               </Text>
@@ -282,7 +313,10 @@ export default function ProtocolFormScreen() {
               {exercises.map((exercise, index) => (
                 <View
                   key={index}
-                  style={[styles.exerciseItem, { backgroundColor: colors.background, borderColor: colors.border }]}
+                  style={[
+                    styles.exerciseItem,
+                    { backgroundColor: colors.background, borderColor: colors.border },
+                  ]}
                 >
                   <View style={styles.exerciseOrder}>
                     <Text style={[styles.exerciseOrderText, { color: colors.textMuted }]}>
@@ -313,7 +347,10 @@ export default function ProtocolFormScreen() {
         <TouchableOpacity
           style={[
             styles.saveButton,
-            { backgroundColor: name && category && exercises.length > 0 ? colors.primary : colors.border },
+            {
+              backgroundColor:
+                name && category && exercises.length > 0 ? colors.primary : colors.border,
+            },
           ]}
           onPress={handleSave}
           disabled={!name || !category || exercises.length === 0 || isSaving}
@@ -324,7 +361,7 @@ export default function ProtocolFormScreen() {
             <>
               <Ionicons name="checkmark-circle" size={20} color="#fff" />
               <Text style={styles.saveButtonText}>
-                {isEditing ? 'Salvar Alterações' : 'Criar Protocolo'}
+                {isEditing ? "Salvar Alterações" : "Criar Protocolo"}
               </Text>
             </>
           )}
@@ -339,9 +376,9 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: 1,
@@ -351,9 +388,9 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 18,
-    fontWeight: '600',
+    fontWeight: "600",
     flex: 1,
-    textAlign: 'center',
+    textAlign: "center",
   },
   placeholder: {
     width: 40,
@@ -371,19 +408,19 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
   },
   formGroup: {
     gap: 8,
   },
   label: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   input: {
     borderWidth: 1,
@@ -393,10 +430,10 @@ const styles = StyleSheet.create({
   },
   textArea: {
     minHeight: 100,
-    textAlignVertical: 'top',
+    textAlignVertical: "top",
   },
   categoriesScroll: {
-    flexDirection: 'row',
+    flexDirection: "row",
   },
   categoryOption: {
     paddingHorizontal: 16,
@@ -407,11 +444,11 @@ const styles = StyleSheet.create({
   },
   categoryOptionText: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   checkboxRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
+    flexDirection: "row",
+    alignItems: "flex-start",
     gap: 12,
   },
   checkbox: {
@@ -419,8 +456,8 @@ const styles = StyleSheet.create({
     height: 24,
     borderRadius: 6,
     borderWidth: 2,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   checkboxLabel: {
     flex: 1,
@@ -428,43 +465,43 @@ const styles = StyleSheet.create({
   },
   checkboxText: {
     fontSize: 15,
-    fontWeight: '500',
+    fontWeight: "500",
   },
   checkboxSubtext: {
     fontSize: 13,
   },
   addExerciseButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 8,
     gap: 6,
   },
   addExerciseButtonText: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   emptyExercises: {
-    alignItems: 'center',
+    alignItems: "center",
     paddingVertical: 40,
     gap: 8,
   },
   emptyExercisesText: {
     fontSize: 15,
-    fontWeight: '500',
+    fontWeight: "500",
   },
   emptyExercisesSubtext: {
     fontSize: 13,
-    textAlign: 'center',
+    textAlign: "center",
   },
   exercisesList: {
     gap: 8,
   },
   exerciseItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     padding: 12,
     borderRadius: 8,
     borderWidth: 1,
@@ -474,13 +511,13 @@ const styles = StyleSheet.create({
     width: 28,
     height: 28,
     borderRadius: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'rgba(0,0,0,0.05)',
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(0,0,0,0.05)",
   },
   exerciseOrderText: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   exerciseInfo: {
     flex: 1,
@@ -488,7 +525,7 @@ const styles = StyleSheet.create({
   },
   exerciseName: {
     fontSize: 15,
-    fontWeight: '500',
+    fontWeight: "500",
   },
   exerciseDetails: {
     fontSize: 13,
@@ -497,22 +534,22 @@ const styles = StyleSheet.create({
     padding: 8,
   },
   saveButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     padding: 16,
     borderRadius: 12,
     gap: 8,
   },
   saveButtonText: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   loadingContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   loadingText: {
     marginTop: 12,

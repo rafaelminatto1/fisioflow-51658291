@@ -31,40 +31,49 @@ class Logger {
 
   debug(tagOrMessage: string, messageOrData?: any, ...args: any[]) {
     if (this.shouldLog(LogLevel.DEBUG)) {
-      if (typeof messageOrData === 'string') {
-        console.log(this.formatMessage('DEBUG', tagOrMessage, messageOrData), ...args);
+      if (typeof messageOrData === "string") {
+        console.log(this.formatMessage("DEBUG", tagOrMessage, messageOrData), ...args);
       } else {
-        console.log(this.formatMessage('DEBUG', 'APP', tagOrMessage), messageOrData, ...args);
+        console.log(this.formatMessage("DEBUG", "APP", tagOrMessage), messageOrData, ...args);
       }
     }
   }
 
   info(tagOrMessage: string, messageOrData?: any, ...args: any[]) {
     if (this.shouldLog(LogLevel.INFO)) {
-      if (typeof messageOrData === 'string') {
-        console.info(this.formatMessage('INFO', tagOrMessage, messageOrData), ...args);
+      if (typeof messageOrData === "string") {
+        console.info(this.formatMessage("INFO", tagOrMessage, messageOrData), ...args);
       } else {
-        console.info(this.formatMessage('INFO', 'APP', tagOrMessage), messageOrData, ...args);
+        console.info(this.formatMessage("INFO", "APP", tagOrMessage), messageOrData, ...args);
       }
     }
   }
 
   warn(tagOrMessage: string, messageOrData?: any, ...args: any[]) {
     if (this.shouldLog(LogLevel.WARN)) {
-      if (typeof messageOrData === 'string') {
-        console.warn(this.formatMessage('WARN', tagOrMessage, messageOrData), ...args);
+      if (typeof messageOrData === "string") {
+        console.warn(this.formatMessage("WARN", tagOrMessage, messageOrData), ...args);
       } else {
-        console.warn(this.formatMessage('WARN', 'APP', tagOrMessage), messageOrData, ...args);
+        console.warn(this.formatMessage("WARN", "APP", tagOrMessage), messageOrData, ...args);
       }
     }
   }
 
   error(tagOrMessage: string, messageOrError?: any, errorOrArg?: any, ...args: any[]) {
     if (this.shouldLog(LogLevel.ERROR)) {
-      if (typeof messageOrError === 'string') {
-        console.error(this.formatMessage('ERROR', tagOrMessage, messageOrError), errorOrArg, ...args);
+      if (typeof messageOrError === "string") {
+        console.error(
+          this.formatMessage("ERROR", tagOrMessage, messageOrError),
+          errorOrArg,
+          ...args,
+        );
       } else {
-        console.error(this.formatMessage('ERROR', 'APP', tagOrMessage), messageOrError, errorOrArg, ...args);
+        console.error(
+          this.formatMessage("ERROR", "APP", tagOrMessage),
+          messageOrError,
+          errorOrArg,
+          ...args,
+        );
       }
     }
   }
@@ -74,7 +83,7 @@ class Logger {
    */
   track(action: string, properties?: Record<string, any>) {
     if (this.isDevelopment) {
-      this.info('ANALYTICS', `Action: ${action}`, properties);
+      this.info("ANALYTICS", `Action: ${action}`, properties);
     }
     // TODO: Send to analytics service (e.g., PostHog, Mixpanel)
   }
@@ -84,7 +93,7 @@ class Logger {
    */
   screenView(screenName: string, properties?: Record<string, any>) {
     if (this.isDevelopment) {
-      this.info('ANALYTICS', `Screen View: ${screenName}`, properties);
+      this.info("ANALYTICS", `Screen View: ${screenName}`, properties);
     }
     // TODO: Send to analytics service
   }
@@ -93,7 +102,7 @@ class Logger {
    * Log errors to error reporting service
    */
   captureException(error: Error, context?: Record<string, any>) {
-    this.error('CRASH', 'Unhandled exception', error, context);
+    this.error("CRASH", "Unhandled exception", error, context);
     // TODO: Send to error reporting service (e.g., Sentry, Crashlytics)
   }
 
@@ -101,38 +110,38 @@ class Logger {
    * Log API requests/responses
    */
   apiRequest(method: string, url: string, data?: any) {
-    this.debug('API', `${method} ${url}`, data);
+    this.debug("API", `${method} ${url}`, data);
   }
 
   apiResponse(method: string, url: string, status: number, data?: any) {
-    this.debug('API', `${method} ${url} - ${status}`, data);
+    this.debug("API", `${method} ${url} - ${status}`, data);
   }
 
   /**
    * Log backend data operations
    */
   dataOperation(operation: string, collection: string, docId?: string) {
-    this.debug('DATA', `${operation} ${collection}${docId ? `/${docId}` : ''}`);
+    this.debug("DATA", `${operation} ${collection}${docId ? `/${docId}` : ""}`);
   }
 
   /**
    * Set the minimum log level
    */
-  setLevel(level: 'debug' | 'info' | 'warn' | 'error' | 'none') {
+  setLevel(level: "debug" | "info" | "warn" | "error" | "none") {
     switch (level) {
-      case 'debug':
+      case "debug":
         this.level = LogLevel.DEBUG;
         break;
-      case 'info':
+      case "info":
         this.level = LogLevel.INFO;
         break;
-      case 'warn':
+      case "warn":
         this.level = LogLevel.WARN;
         break;
-      case 'error':
+      case "error":
         this.level = LogLevel.ERROR;
         break;
-      case 'none':
+      case "none":
         this.level = LogLevel.NONE;
         break;
     }
@@ -144,9 +153,12 @@ export const logger = new Logger();
 
 // Convenience exports
 export const log = {
-  debug: (tagOrMessage: string, messageOrData?: any, ...args: any[]) => logger.debug(tagOrMessage, messageOrData, ...args),
-  info: (tagOrMessage: string, messageOrData?: any, ...args: any[]) => logger.info(tagOrMessage, messageOrData, ...args),
-  warn: (tagOrMessage: string, messageOrData?: any, ...args: any[]) => logger.warn(tagOrMessage, messageOrData, ...args),
+  debug: (tagOrMessage: string, messageOrData?: any, ...args: any[]) =>
+    logger.debug(tagOrMessage, messageOrData, ...args),
+  info: (tagOrMessage: string, messageOrData?: any, ...args: any[]) =>
+    logger.info(tagOrMessage, messageOrData, ...args),
+  warn: (tagOrMessage: string, messageOrData?: any, ...args: any[]) =>
+    logger.warn(tagOrMessage, messageOrData, ...args),
   error: (tagOrMessage: string, messageOrError?: any, errorOrArg?: any, ...args: any[]) =>
     logger.error(tagOrMessage, messageOrError, errorOrArg, ...args),
   track: (action: string, properties?: Record<string, any>) => logger.track(action, properties),

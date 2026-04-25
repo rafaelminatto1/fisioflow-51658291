@@ -12,165 +12,153 @@
 import { useState, useEffect, useRef, useCallback, RefObject } from "react";
 
 interface IntersectionObserverOptions extends IntersectionObserverInit {
-	freezeOnceVisible?: boolean; // Para de observar após primeira visibilidade
-	triggerOnce?: boolean; // Alias para freezeOnceVisible
+  freezeOnceVisible?: boolean; // Para de observar após primeira visibilidade
+  triggerOnce?: boolean; // Alias para freezeOnceVisible
 }
 
 /**
  * useIntersectionObserver - Hook básico para um elemento
  */
 export const useIntersectionObserver = (
-	options: IntersectionObserverOptions = {},
+  options: IntersectionObserverOptions = {},
 ): [RefObject<HTMLElement>, boolean] => {
-	const {
-		threshold = 0,
-		rootMargin = "0%",
-		freezeOnceVisible = false,
-	} = options;
+  const { threshold = 0, rootMargin = "0%", freezeOnceVisible = false } = options;
 
-	const [isIntersecting, setIsIntersecting] = useState(false);
-	const elementRef = useRef<HTMLElement>(null);
-	const frozenRef = useRef(false);
+  const [isIntersecting, setIsIntersecting] = useState(false);
+  const elementRef = useRef<HTMLElement>(null);
+  const frozenRef = useRef(false);
 
-	const updateEntry = useCallback(
-		([entry]: IntersectionObserverEntry[]) => {
-			if (entry.isIntersecting) {
-				setIsIntersecting(true);
+  const updateEntry = useCallback(
+    ([entry]: IntersectionObserverEntry[]) => {
+      if (entry.isIntersecting) {
+        setIsIntersecting(true);
 
-				if (freezeOnceVisible) {
-					frozenRef.current = true;
-				}
-			} else if (!frozenRef.current) {
-				setIsIntersecting(false);
-			}
-		},
-		[freezeOnceVisible],
-	);
+        if (freezeOnceVisible) {
+          frozenRef.current = true;
+        }
+      } else if (!frozenRef.current) {
+        setIsIntersecting(false);
+      }
+    },
+    [freezeOnceVisible],
+  );
 
-	useEffect(() => {
-		const element = elementRef.current;
-		if (!element || frozenRef.current) return;
+  useEffect(() => {
+    const element = elementRef.current;
+    if (!element || frozenRef.current) return;
 
-		const observer = new IntersectionObserver(updateEntry, {
-			threshold,
-			rootMargin,
-		});
+    const observer = new IntersectionObserver(updateEntry, {
+      threshold,
+      rootMargin,
+    });
 
-		observer.observe(element);
+    observer.observe(element);
 
-		return () => {
-			observer.disconnect();
-		};
-	}, [threshold, rootMargin, updateEntry, freezeOnceVisible]);
+    return () => {
+      observer.disconnect();
+    };
+  }, [threshold, rootMargin, updateEntry, freezeOnceVisible]);
 
-	return [elementRef, isIntersecting];
+  return [elementRef, isIntersecting];
 };
 
 // ============================================================================
 // VARIANTE COM CALLBACK
 // ============================================================================
 
-interface IntersectionObserverCallbackOptions
-	extends IntersectionObserverOptions {
-	onChange?: (
-		isIntersecting: boolean,
-		entry: IntersectionObserverEntry,
-	) => void;
+interface IntersectionObserverCallbackOptions extends IntersectionObserverOptions {
+  onChange?: (isIntersecting: boolean, entry: IntersectionObserverEntry) => void;
 }
 
 export const useIntersectionObserverCallback = (
-	callback: (isIntersecting: boolean, entry: IntersectionObserverEntry) => void,
-	options: IntersectionObserverCallbackOptions = {},
+  callback: (isIntersecting: boolean, entry: IntersectionObserverEntry) => void,
+  options: IntersectionObserverCallbackOptions = {},
 ): RefObject<HTMLElement> => {
-	const { threshold = 0, rootMargin = "0%", triggerOnce = false } = options;
+  const { threshold = 0, rootMargin = "0%", triggerOnce = false } = options;
 
-	const elementRef = useRef<HTMLElement>(null);
-	const hasTriggeredRef = useRef(false);
+  const elementRef = useRef<HTMLElement>(null);
+  const hasTriggeredRef = useRef(false);
 
-	useEffect(() => {
-		const element = elementRef.current;
-		if (!element || hasTriggeredRef.current) return;
+  useEffect(() => {
+    const element = elementRef.current;
+    if (!element || hasTriggeredRef.current) return;
 
-		const observer = new IntersectionObserver(
-			([entry]) => {
-				const isIntersecting = entry.isIntersecting;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        const isIntersecting = entry.isIntersecting;
 
-				callback(isIntersecting, entry);
+        callback(isIntersecting, entry);
 
-				if (isIntersecting && triggerOnce) {
-					hasTriggeredRef.current = true;
-					observer.disconnect();
-				}
-			},
-			{ threshold, rootMargin },
-		);
+        if (isIntersecting && triggerOnce) {
+          hasTriggeredRef.current = true;
+          observer.disconnect();
+        }
+      },
+      { threshold, rootMargin },
+    );
 
-		observer.observe(element);
+    observer.observe(element);
 
-		return () => {
-			observer.disconnect();
-		};
-	}, [callback, threshold, rootMargin, triggerOnce]);
+    return () => {
+      observer.disconnect();
+    };
+  }, [callback, threshold, rootMargin, triggerOnce]);
 
-	return elementRef;
+  return elementRef;
 };
 
 // ============================================================================
 // VARIANTE PARA MÚLTIPLOS ELEMENTOS
 // ============================================================================
 
-export const useMultipleIntersectionObserver = <
-	T extends HTMLElement = HTMLElement,
->(
-	count: number,
-	options: IntersectionObserverOptions = {},
+export const useMultipleIntersectionObserver = <T extends HTMLElement = HTMLElement>(
+  count: number,
+  options: IntersectionObserverOptions = {},
 ): RefObject<T>[] => {
-	const { threshold = 0, rootMargin = "0%" } = options;
-	const elementRefs = useRef<T[]>([]);
-	const [intersectingIndices, setIntersectingIndices] = useState<Set<number>>(
-		new Set(),
-	);
+  const { threshold = 0, rootMargin = "0%" } = options;
+  const elementRefs = useRef<T[]>([]);
+  const [intersectingIndices, setIntersectingIndices] = useState<Set<number>>(new Set());
 
-	// Inicializar refs
-	useEffect(() => {
-		elementRefs.current = Array.from({ length: count }, () => null as T);
-	}, [count]);
+  // Inicializar refs
+  useEffect(() => {
+    elementRefs.current = Array.from({ length: count }, () => null as T);
+  }, [count]);
 
-	useEffect(() => {
-		const elements = elementRefs.current.filter(Boolean) as T[];
-		if (elements.length === 0) return;
+  useEffect(() => {
+    const elements = elementRefs.current.filter(Boolean) as T[];
+    if (elements.length === 0) return;
 
-		const observer = new IntersectionObserver(
-			(entries) => {
-				setIntersectingIndices((prev) => {
-					const next = new Set(prev);
-					entries.forEach((entry) => {
-						const index = elementRefs.current.indexOf(entry.target as T);
-						if (index !== -1) {
-							if (entry.isIntersecting) {
-								next.add(index);
-							} else {
-								next.delete(index);
-							}
-						}
-					});
-					return next;
-				});
-			},
-			{ threshold, rootMargin },
-		);
+    const observer = new IntersectionObserver(
+      (entries) => {
+        setIntersectingIndices((prev) => {
+          const next = new Set(prev);
+          entries.forEach((entry) => {
+            const index = elementRefs.current.indexOf(entry.target as T);
+            if (index !== -1) {
+              if (entry.isIntersecting) {
+                next.add(index);
+              } else {
+                next.delete(index);
+              }
+            }
+          });
+          return next;
+        });
+      },
+      { threshold, rootMargin },
+    );
 
-		elements.forEach((element) => observer.observe(element));
+    elements.forEach((element) => observer.observe(element));
 
-		return () => {
-			observer.disconnect();
-		};
-	}, [count, threshold, rootMargin]);
+    return () => {
+      observer.disconnect();
+    };
+  }, [count, threshold, rootMargin]);
 
-	return elementRefs.current.map((el, i) => ({
-		current: el || null,
-		isIntersecting: intersectingIndices.has(i),
-	})) as any;
+  return elementRefs.current.map((el, i) => ({
+    current: el || null,
+    isIntersecting: intersectingIndices.has(i),
+  })) as any;
 };
 
 // ============================================================================
@@ -178,41 +166,38 @@ export const useMultipleIntersectionObserver = <
 // ============================================================================
 
 interface VisibilityResult {
-	ref: RefObject<HTMLElement>;
-	isVisible: boolean;
-	visibilityRatio: number; // 0-1
+  ref: RefObject<HTMLElement>;
+  isVisible: boolean;
+  visibilityRatio: number; // 0-1
 }
 
-export const useVisibilityRatio = (
-	options: IntersectionObserverOptions = {},
-): VisibilityResult => {
-	const { threshold = Array.from({ length: 101 }, (_, i) => i / 100) } =
-		options;
+export const useVisibilityRatio = (options: IntersectionObserverOptions = {}): VisibilityResult => {
+  const { threshold = Array.from({ length: 101 }, (_, i) => i / 100) } = options;
 
-	const [isVisible, setIsVisible] = useState(false);
-	const [visibilityRatio, setVisibilityRatio] = useState(0);
-	const elementRef = useRef<HTMLElement>(null);
+  const [isVisible, setIsVisible] = useState(false);
+  const [visibilityRatio, setVisibilityRatio] = useState(0);
+  const elementRef = useRef<HTMLElement>(null);
 
-	useEffect(() => {
-		const element = elementRef.current;
-		if (!element) return;
+  useEffect(() => {
+    const element = elementRef.current;
+    if (!element) return;
 
-		const observer = new IntersectionObserver(
-			([entry]) => {
-				setIsVisible(entry.isIntersecting);
-				setVisibilityRatio(entry.intersectionRatio);
-			},
-			{ threshold },
-		);
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setIsVisible(entry.isIntersecting);
+        setVisibilityRatio(entry.intersectionRatio);
+      },
+      { threshold },
+    );
 
-		observer.observe(element);
+    observer.observe(element);
 
-		return () => {
-			observer.disconnect();
-		};
-	}, [threshold]);
+    return () => {
+      observer.disconnect();
+    };
+  }, [threshold]);
 
-	return { ref: elementRef, isVisible, visibilityRatio };
+  return { ref: elementRef, isVisible, visibilityRatio };
 };
 
 // ============================================================================
@@ -220,45 +205,45 @@ export const useVisibilityRatio = (
 // ============================================================================
 
 export const useInfiniteScroll = (
-	callback: () => void,
-	options: {
-		threshold?: number;
-		enabled?: boolean;
-	} = {},
+  callback: () => void,
+  options: {
+    threshold?: number;
+    enabled?: boolean;
+  } = {},
 ): RefObject<HTMLElement> => {
-	const { threshold = 0.1, enabled = true } = options;
-	const elementRef = useRef<HTMLElement>(null);
-	const hasTriggeredRef = useRef(false);
+  const { threshold = 0.1, enabled = true } = options;
+  const elementRef = useRef<HTMLElement>(null);
+  const hasTriggeredRef = useRef(false);
 
-	useEffect(() => {
-		if (!enabled) return;
+  useEffect(() => {
+    if (!enabled) return;
 
-		const element = elementRef.current;
-		if (!element) return;
+    const element = elementRef.current;
+    if (!element) return;
 
-		const observer = new IntersectionObserver(
-			([entry]) => {
-				if (entry.isIntersecting && !hasTriggeredRef.current) {
-					hasTriggeredRef.current = true;
-					callback();
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && !hasTriggeredRef.current) {
+          hasTriggeredRef.current = true;
+          callback();
 
-					// Reset para permitir próxima carga
-					setTimeout(() => {
-						hasTriggeredRef.current = false;
-					}, 500);
-				}
-			},
-			{ threshold, rootMargin: "100px" },
-		);
+          // Reset para permitir próxima carga
+          setTimeout(() => {
+            hasTriggeredRef.current = false;
+          }, 500);
+        }
+      },
+      { threshold, rootMargin: "100px" },
+    );
 
-		observer.observe(element);
+    observer.observe(element);
 
-		return () => {
-			observer.disconnect();
-		};
-	}, [callback, threshold, enabled]);
+    return () => {
+      observer.disconnect();
+    };
+  }, [callback, threshold, enabled]);
 
-	return elementRef;
+  return elementRef;
 };
 
 // ============================================================================
@@ -266,35 +251,35 @@ export const useInfiniteScroll = (
 // ============================================================================
 
 export const useOnScreenExit = (
-	callback: () => void,
-	options: IntersectionObserverOptions = {},
+  callback: () => void,
+  options: IntersectionObserverOptions = {},
 ): RefObject<HTMLElement> => {
-	const { threshold = 0, rootMargin = "0%" } = options;
-	const elementRef = useRef<HTMLElement>(null);
-	const wasVisibleRef = useRef(false);
+  const { threshold = 0, rootMargin = "0%" } = options;
+  const elementRef = useRef<HTMLElement>(null);
+  const wasVisibleRef = useRef(false);
 
-	useEffect(() => {
-		const element = elementRef.current;
-		if (!element) return;
+  useEffect(() => {
+    const element = elementRef.current;
+    if (!element) return;
 
-		const observer = new IntersectionObserver(
-			([entry]) => {
-				if (wasVisibleRef.current && !entry.isIntersecting) {
-					callback();
-				}
-				wasVisibleRef.current = entry.isIntersecting;
-			},
-			{ threshold, rootMargin },
-		);
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (wasVisibleRef.current && !entry.isIntersecting) {
+          callback();
+        }
+        wasVisibleRef.current = entry.isIntersecting;
+      },
+      { threshold, rootMargin },
+    );
 
-		observer.observe(element);
+    observer.observe(element);
 
-		return () => {
-			observer.disconnect();
-		};
-	}, [callback, threshold, rootMargin]);
+    return () => {
+      observer.disconnect();
+    };
+  }, [callback, threshold, rootMargin]);
 
-	return elementRef;
+  return elementRef;
 };
 
 // ============================================================================

@@ -6,8 +6,14 @@ import { z } from "zod";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
-  Search, Plus, Trash2, ChevronRight, ChevronLeft,
-  Loader2, GripVertical, BookOpen,
+  Search,
+  Plus,
+  Trash2,
+  ChevronRight,
+  ChevronLeft,
+  Loader2,
+  GripVertical,
+  BookOpen,
 } from "lucide-react";
 
 import {
@@ -62,14 +68,17 @@ const exerciseItemSchema = z.object({
 
 const createTemplateSchema = z.object({
   name: z.string().trim().min(1, "Nome é obrigatório"),
-  patientProfile: z.enum(
-    ["ortopedico", "esportivo", "pos_operatorio", "prevencao", "idosos"],
-    { error: "Perfil de paciente é obrigatório" },
-  ),
+  patientProfile: z.enum(["ortopedico", "esportivo", "pos_operatorio", "prevencao", "idosos"], {
+    error: "Perfil de paciente é obrigatório",
+  }),
   conditionName: z.string().trim().min(1, "Condição clínica é obrigatória"),
   difficultyLevel: z.enum(["iniciante", "intermediario", "avancado"]).optional(),
-  treatmentPhase: z.enum(["fase_aguda", "fase_subaguda", "remodelacao", "retorno_ao_esporte"]).optional(),
-  bodyPart: z.enum(["ombro", "joelho", "quadril", "coluna_cervical", "coluna_lombar", "tornozelo"]).optional(),
+  treatmentPhase: z
+    .enum(["fase_aguda", "fase_subaguda", "remodelacao", "retorno_ao_esporte"])
+    .optional(),
+  bodyPart: z
+    .enum(["ombro", "joelho", "quadril", "coluna_cervical", "coluna_lombar", "tornozelo"])
+    .optional(),
   estimatedDuration: z.coerce.number().int().min(1).optional(),
   templateVariant: z.string().optional(),
   items: z.array(exerciseItemSchema).default([]),
@@ -121,8 +130,8 @@ function StepIndicator({ current }: { current: Step }) {
               step === current
                 ? "bg-primary text-primary-foreground"
                 : step < current
-                ? "bg-primary/20 text-primary"
-                : "bg-muted text-muted-foreground"
+                  ? "bg-primary/20 text-primary"
+                  : "bg-muted text-muted-foreground"
             }`}
           >
             {step}
@@ -158,14 +167,8 @@ function BasicInfoStep({ register, errors, watch, setValue }: Step1Props) {
         <Label htmlFor="name" className="mb-1.5 block">
           Nome do template <span className="text-destructive">*</span>
         </Label>
-        <Input
-          id="name"
-          placeholder="Ex: Protocolo Lombalgia Crônica"
-          {...register("name")}
-        />
-        {errors.name && (
-          <p className="text-xs text-destructive mt-1">{errors.name.message}</p>
-        )}
+        <Input id="name" placeholder="Ex: Protocolo Lombalgia Crônica" {...register("name")} />
+        {errors.name && <p className="text-xs text-destructive mt-1">{errors.name.message}</p>}
       </div>
 
       <div>
@@ -357,7 +360,14 @@ function ExercisesStep({ fields, isPosOperatorio, onAdd, onRemove, onUpdate }: S
                 onClick={() => onAdd(ex)}
                 className="shrink-0 h-7 text-xs"
               >
-                {addedIds.has(ex.id) ? "Adicionado" : <><Plus className="h-3 w-3 mr-1" />Adicionar</>}
+                {addedIds.has(ex.id) ? (
+                  "Adicionado"
+                ) : (
+                  <>
+                    <Plus className="h-3 w-3 mr-1" />
+                    Adicionar
+                  </>
+                )}
               </Button>
             </li>
           ))}
@@ -374,9 +384,7 @@ function ExercisesStep({ fields, isPosOperatorio, onAdd, onRemove, onUpdate }: S
       {fields.length === 0 ? (
         <div className="border border-dashed rounded-md py-8 text-center">
           <BookOpen className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
-          <p className="text-sm text-muted-foreground">
-            Nenhum exercício adicionado ainda
-          </p>
+          <p className="text-sm text-muted-foreground">Nenhum exercício adicionado ainda</p>
           <p className="text-xs text-muted-foreground mt-1">
             Busque e adicione exercícios da biblioteca acima
           </p>
@@ -390,8 +398,8 @@ function ExercisesStep({ fields, isPosOperatorio, onAdd, onRemove, onUpdate }: S
                   <GripVertical className="h-4 w-4 text-muted-foreground shrink-0" />
                   <div className="h-8 w-8 rounded bg-muted overflow-hidden shrink-0">
                     {(item as any).exerciseImageUrl ? (
-                      <img 
-                        src={(item as any).exerciseImageUrl} 
+                      <img
+                        src={(item as any).exerciseImageUrl}
                         alt={item.exerciseName}
                         className="h-full w-full object-cover"
                       />
@@ -422,7 +430,9 @@ function ExercisesStep({ fields, isPosOperatorio, onAdd, onRemove, onUpdate }: S
                     min={1}
                     placeholder="3"
                     value={item.sets ?? ""}
-                    onChange={(e) => onUpdate(index, "sets", e.target.value ? Number(e.target.value) : undefined)}
+                    onChange={(e) =>
+                      onUpdate(index, "sets", e.target.value ? Number(e.target.value) : undefined)
+                    }
                     className="h-8 text-sm"
                   />
                 </div>
@@ -433,7 +443,9 @@ function ExercisesStep({ fields, isPosOperatorio, onAdd, onRemove, onUpdate }: S
                     min={1}
                     placeholder="10"
                     value={item.reps ?? ""}
-                    onChange={(e) => onUpdate(index, "reps", e.target.value ? Number(e.target.value) : undefined)}
+                    onChange={(e) =>
+                      onUpdate(index, "reps", e.target.value ? Number(e.target.value) : undefined)
+                    }
                     className="h-8 text-sm"
                   />
                 </div>
@@ -444,7 +456,13 @@ function ExercisesStep({ fields, isPosOperatorio, onAdd, onRemove, onUpdate }: S
                     min={1}
                     placeholder="30"
                     value={item.duration ?? ""}
-                    onChange={(e) => onUpdate(index, "duration", e.target.value ? Number(e.target.value) : undefined)}
+                    onChange={(e) =>
+                      onUpdate(
+                        index,
+                        "duration",
+                        e.target.value ? Number(e.target.value) : undefined,
+                      )
+                    }
                     className="h-8 text-sm"
                   />
                 </div>
@@ -459,7 +477,13 @@ function ExercisesStep({ fields, isPosOperatorio, onAdd, onRemove, onUpdate }: S
                       min={1}
                       placeholder="1"
                       value={item.weekStart ?? ""}
-                      onChange={(e) => onUpdate(index, "weekStart", e.target.value ? Number(e.target.value) : undefined)}
+                      onChange={(e) =>
+                        onUpdate(
+                          index,
+                          "weekStart",
+                          e.target.value ? Number(e.target.value) : undefined,
+                        )
+                      }
                       className="h-8 text-sm"
                     />
                   </div>
@@ -470,7 +494,13 @@ function ExercisesStep({ fields, isPosOperatorio, onAdd, onRemove, onUpdate }: S
                       min={1}
                       placeholder="4"
                       value={item.weekEnd ?? ""}
-                      onChange={(e) => onUpdate(index, "weekEnd", e.target.value ? Number(e.target.value) : undefined)}
+                      onChange={(e) =>
+                        onUpdate(
+                          index,
+                          "weekEnd",
+                          e.target.value ? Number(e.target.value) : undefined,
+                        )
+                      }
                       className="h-8 text-sm"
                     />
                   </div>
@@ -551,9 +581,7 @@ function ClinicalInfoStep({ register, watch, setValue }: Step3Props) {
         </Label>
         <Select
           value={evidenceLevel ?? ""}
-          onValueChange={(v) =>
-            setValue("evidenceLevel", v as "A" | "B" | "C" | "D" | undefined)
-          }
+          onValueChange={(v) => setValue("evidenceLevel", v as "A" | "B" | "C" | "D" | undefined)}
         >
           <SelectTrigger id="evidenceLevel">
             <SelectValue placeholder="Selecionar nível..." />
@@ -574,7 +602,9 @@ function ClinicalInfoStep({ register, watch, setValue }: Step3Props) {
         </Label>
         <Textarea
           id="bibliographicReferences"
-          placeholder={"Autor et al. (2023). Título do artigo. Journal, vol(n), pp.\nOutra referência..."}
+          placeholder={
+            "Autor et al. (2023). Título do artigo. Journal, vol(n), pp.\nOutra referência..."
+          }
           rows={3}
           {...register("bibliographicReferences")}
         />
@@ -768,9 +798,7 @@ export function TemplateCreateFlow({
       bibliographicReferences: refs,
       isDraft,
       templateType: "custom" as const,
-      ...(isCustomizeMode && sourceTemplate
-        ? { sourceTemplateId: sourceTemplate.id }
-        : {}),
+      ...(isCustomizeMode && sourceTemplate ? { sourceTemplateId: sourceTemplate.id } : {}),
       items: exerciseItems.map((item, idx) => ({
         exerciseId: item.exerciseId,
         orderIndex: idx,
@@ -849,17 +877,18 @@ export function TemplateCreateFlow({
   // Step 1 is valid when name, patientProfile, conditionName are filled
   const name = watch("name");
   const conditionName = watch("conditionName");
-  const step1Valid =
-    name.trim().length > 0 &&
-    !!patientProfile &&
-    conditionName.trim().length > 0;
+  const step1Valid = name.trim().length > 0 && !!patientProfile && conditionName.trim().length > 0;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg max-h-[90vh] flex flex-col">
         <DialogHeader>
           <DialogTitle>
-            {isEditMode ? "Editar template" : isCustomizeMode ? "Personalizar template" : "Criar template"}
+            {isEditMode
+              ? "Editar template"
+              : isCustomizeMode
+                ? "Personalizar template"
+                : "Criar template"}
           </DialogTitle>
           <DialogDescription>
             {isCustomizeMode && sourceTemplate ? (
@@ -905,11 +934,7 @@ export function TemplateCreateFlow({
             )}
 
             {step === 3 && (
-              <ClinicalInfoStep
-                register={register}
-                watch={watch}
-                setValue={setValue}
-              />
+              <ClinicalInfoStep register={register} watch={watch} setValue={setValue} />
             )}
           </div>
 
@@ -946,17 +971,9 @@ export function TemplateCreateFlow({
                   disabled={isSaving}
                   className="flex-1 min-w-[100px]"
                 >
-                  {isSaving ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    "Salvar rascunho"
-                  )}
+                  {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : "Salvar rascunho"}
                 </Button>
-                <Button
-                  type="submit"
-                  disabled={isSaving}
-                  className="flex-1 min-w-[100px]"
-                >
+                <Button type="submit" disabled={isSaving} className="flex-1 min-w-[100px]">
                   {isSaving ? (
                     <>
                       <Loader2 className="h-4 w-4 mr-2 animate-spin" />

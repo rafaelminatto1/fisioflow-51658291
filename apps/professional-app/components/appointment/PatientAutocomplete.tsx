@@ -1,15 +1,9 @@
-import React, { useState } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  Keyboard,
-} from 'react-native';
-import { Input } from '@/components';
-import { useColors } from '@/hooks/useColorScheme';
-import { usePatients } from '@/hooks/usePatients';
-import { useHaptics } from '@/hooks/useHaptics';
+import React, { useState } from "react";
+import { View, Text, StyleSheet, TouchableOpacity, Keyboard } from "react-native";
+import { Input } from "@/components";
+import { useColors } from "@/hooks/useColorScheme";
+import { usePatients } from "@/hooks/usePatients";
+import { useHaptics } from "@/hooks/useHaptics";
 
 interface PatientAutocompleteProps {
   value: string;
@@ -27,11 +21,11 @@ export function PatientAutocomplete({
   const [search, setSearch] = useState(value);
   const [showSuggestions, setShowSuggestions] = useState(false);
 
-  const { data: patients = [] } = usePatients({ status: 'active' });
+  const { data: patients = [] } = usePatients({ status: "active" });
 
-  const filteredPatients = patients.filter((p) =>
-    p.name.toLowerCase().includes(search.toLowerCase())
-  ).slice(0, 5);
+  const filteredPatients = patients
+    .filter((p) => p.name.toLowerCase().includes(search.toLowerCase()))
+    .slice(0, 5);
 
   return (
     <View style={styles.container}>
@@ -46,14 +40,19 @@ export function PatientAutocomplete({
         leftIcon="person-outline"
         rightIcon={search.length > 0 && !disabled ? "close-circle" : undefined}
         onRightIconPress={() => {
-          setSearch('');
+          setSearch("");
           setShowSuggestions(true);
         }}
         editable={!disabled}
       />
 
       {showSuggestions && !disabled && search.length > 0 && (
-        <View style={[styles.suggestionsContainer, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+        <View
+          style={[
+            styles.suggestionsContainer,
+            { backgroundColor: colors.surface, borderColor: colors.border },
+          ]}
+        >
           {filteredPatients.length > 0 ? (
             filteredPatients.map((patient) => (
               <TouchableOpacity
@@ -72,9 +71,13 @@ export function PatientAutocomplete({
                 }}
               >
                 <View>
-                  <Text style={[styles.suggestionText, { color: colors.text }]}>{patient.name}</Text>
+                  <Text style={[styles.suggestionText, { color: colors.text }]}>
+                    {patient.name}
+                  </Text>
                   <Text style={[styles.suggestionSub, { color: colors.textSecondary }]}>
-                    {(patient as any).main_condition || (patient as any).condition || 'Sem condição'}
+                    {(patient as any).main_condition ||
+                      (patient as any).condition ||
+                      "Sem condição"}
                   </Text>
                 </View>
               </TouchableOpacity>
@@ -96,15 +99,15 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   suggestionsContainer: {
-    position: 'absolute',
+    position: "absolute",
     top: 50,
     left: 0,
     right: 0,
     borderRadius: 12,
     borderWidth: 1,
-    overflow: 'hidden',
+    overflow: "hidden",
     elevation: 5,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,

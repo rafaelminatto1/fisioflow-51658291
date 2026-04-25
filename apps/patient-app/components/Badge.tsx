@@ -3,11 +3,11 @@
  * Small badge for status indicators, counts, etc.
  */
 
-import { View, Text, StyleSheet, useWindowDimensions } from 'react-native';
-import { useColors } from '@/hooks/useColorScheme';
+import { View, Text, StyleSheet, useWindowDimensions } from "react-native";
+import { useColors } from "@/hooks/useColorScheme";
 
-export type BadgeVariant = 'default' | 'success' | 'warning' | 'error' | 'info';
-export type BadgeSize = 'small' | 'medium' | 'large';
+export type BadgeVariant = "default" | "success" | "warning" | "error" | "info";
+export type BadgeSize = "small" | "medium" | "large";
 
 interface BadgeProps {
   children: string | number;
@@ -25,8 +25,8 @@ const sizeStyles = {
 
 export function Badge({
   children,
-  variant = 'default',
-  size = 'medium',
+  variant = "default",
+  size = "medium",
   dot = false,
   style,
 }: BadgeProps) {
@@ -35,16 +35,16 @@ export function Badge({
 
   const getVariantStyle = () => {
     switch (variant) {
-      case 'success':
-        return { backgroundColor: colors.success + '20', color: colors.success };
-      case 'warning':
-        return { backgroundColor: colors.warning + '20', color: colors.warning };
-      case 'error':
-        return { backgroundColor: colors.error + '20', color: colors.error };
-      case 'info':
-        return { backgroundColor: colors.info + '20', color: colors.info };
+      case "success":
+        return { backgroundColor: colors.success + "20", color: colors.success };
+      case "warning":
+        return { backgroundColor: colors.warning + "20", color: colors.warning };
+      case "error":
+        return { backgroundColor: colors.error + "20", color: colors.error };
+      case "info":
+        return { backgroundColor: colors.info + "20", color: colors.info };
       default:
-        return { backgroundColor: colors.primary + '20', color: colors.primary };
+        return { backgroundColor: colors.primary + "20", color: colors.primary };
     }
   };
 
@@ -99,15 +99,15 @@ export function Badge({
 const styles = StyleSheet.create({
   badge: {
     borderRadius: 999,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     minWidth: 20,
   },
   dot: {
     borderRadius: 999,
   },
   text: {
-    fontWeight: '600',
+    fontWeight: "600",
     includeFontPadding: false,
   },
 });

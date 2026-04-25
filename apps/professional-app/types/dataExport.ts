@@ -1,8 +1,8 @@
-import { AuditLogEntry } from './audit';
-import { Consent } from './consent';
+import { AuditLogEntry } from "./audit";
+import { Consent } from "./consent";
 
-export type ExportFormat = 'json' | 'pdf';
-export type ExportStatus = 'pending' | 'processing' | 'completed' | 'failed' | 'expired';
+export type ExportFormat = "json" | "pdf";
+export type ExportStatus = "pending" | "processing" | "completed" | "failed" | "expired";
 
 export interface DataExportRequest {
   id: string;

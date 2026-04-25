@@ -1,8 +1,8 @@
-import type { Hono } from 'hono';
-import type { Env } from '../../types/env';
-import type { AuthVariables } from '../../lib/auth';
-import type { CustomVariables } from '../../middleware/requestId';
-import { createPool } from '../../lib/db';
+import type { Hono } from "hono";
+import type { Env } from "../../types/env";
+import type { AuthVariables } from "../../lib/auth";
+import type { CustomVariables } from "../../middleware/requestId";
+import { createPool } from "../../lib/db";
 
 export type PatientRouteApp = Hono<{ Bindings: Env; Variables: AuthVariables & CustomVariables }>;
 export type DbPool = ReturnType<typeof createPool>;
@@ -10,7 +10,7 @@ export type DbRow = Record<string, unknown>;
 export type PatientPayload = Record<string, unknown>;
 
 export function trimmedString(value: unknown): string | undefined {
-  if (typeof value !== 'string') return undefined;
+  if (typeof value !== "string") return undefined;
   const normalized = value.trim();
   return normalized.length > 0 ? normalized : undefined;
 }
@@ -20,19 +20,19 @@ export function nullableString(value: unknown): string | null {
 }
 
 export function nullableBoolean(value: unknown): boolean | null {
-  if (typeof value === 'boolean') return value;
-  if (typeof value === 'string') {
+  if (typeof value === "boolean") return value;
+  if (typeof value === "string") {
     const normalized = value.trim().toLowerCase();
-    if (['true', '1', 'yes', 'sim'].includes(normalized)) return true;
-    if (['false', '0', 'no', 'nao', 'não'].includes(normalized)) return false;
+    if (["true", "1", "yes", "sim"].includes(normalized)) return true;
+    if (["false", "0", "no", "nao", "não"].includes(normalized)) return false;
   }
   return null;
 }
 
 export function nullableNumber(value: unknown): number | null {
-  if (typeof value === 'number' && Number.isFinite(value)) return value;
-  if (typeof value === 'string') {
-    const normalized = value.replace(',', '.').trim();
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  if (typeof value === "string") {
+    const normalized = value.replace(",", ".").trim();
     if (!normalized) return null;
     const parsed = Number.parseFloat(normalized);
     return Number.isFinite(parsed) ? parsed : null;
@@ -42,13 +42,13 @@ export function nullableNumber(value: unknown): number | null {
 
 export function parseJsonObject(value: unknown): Record<string, unknown> | null {
   if (!value) return null;
-  if (typeof value === 'object' && !Array.isArray(value)) {
+  if (typeof value === "object" && !Array.isArray(value)) {
     return value as Record<string, unknown>;
   }
-  if (typeof value === 'string') {
+  if (typeof value === "string") {
     try {
       const parsed = JSON.parse(value) as unknown;
-      if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+      if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
         return parsed as Record<string, unknown>;
       }
     } catch {
@@ -60,7 +60,7 @@ export function parseJsonObject(value: unknown): Record<string, unknown> | null 
 
 export function parseJsonArray(value: unknown): unknown[] {
   if (Array.isArray(value)) return value;
-  if (typeof value === 'string') {
+  if (typeof value === "string") {
     try {
       const parsed = JSON.parse(value) as unknown;
       return Array.isArray(parsed) ? parsed : [];
@@ -136,13 +136,13 @@ export function normalizeMedicalAttachmentRow(row: DbRow) {
     id: String(row.id),
     patient_id: String(row.patient_id),
     record_id: trimmedString(row.record_id) ?? null,
-    file_name: trimmedString(row.file_name) ?? '',
-    file_url: trimmedString(row.file_url) ?? '',
-    file_type: trimmedString(row.file_type) ?? '',
+    file_name: trimmedString(row.file_name) ?? "",
+    file_url: trimmedString(row.file_url) ?? "",
+    file_type: trimmedString(row.file_type) ?? "",
     file_size: nullableNumber(row.file_size),
     uploaded_at: row.uploaded_at ? String(row.uploaded_at) : null,
     uploaded_by: trimmedString(row.uploaded_by) ?? null,
-    category: trimmedString(row.category) ?? 'other',
+    category: trimmedString(row.category) ?? "other",
     description: trimmedString(row.description) ?? null,
   };
 }
@@ -152,13 +152,19 @@ export function normalizePathologyRow(row: DbRow) {
     ...row,
     id: String(row.id),
     patient_id: String(row.patient_id),
-    name: trimmedString(row.pathology_name ?? row.name) ?? '',
-    pathology_name: trimmedString(row.pathology_name ?? row.name) ?? '',
+    name: trimmedString(row.pathology_name ?? row.name) ?? "",
+    pathology_name: trimmedString(row.pathology_name ?? row.name) ?? "",
     icd_code: trimmedString(row.icd_code ?? row.cid_code) ?? null,
     cid_code: trimmedString(row.cid_code ?? row.icd_code) ?? null,
-    status: trimmedString(row.status) ?? 'ativo',
-    diagnosed_at: row.diagnosis_date ?? row.diagnosed_at ? String(row.diagnosis_date ?? row.diagnosed_at) : null,
-    diagnosis_date: row.diagnosis_date ?? row.diagnosed_at ? String(row.diagnosis_date ?? row.diagnosed_at) : null,
+    status: trimmedString(row.status) ?? "ativo",
+    diagnosed_at:
+      (row.diagnosis_date ?? row.diagnosed_at)
+        ? String(row.diagnosis_date ?? row.diagnosed_at)
+        : null,
+    diagnosis_date:
+      (row.diagnosis_date ?? row.diagnosed_at)
+        ? String(row.diagnosis_date ?? row.diagnosed_at)
+        : null,
     treated_at: row.treated_at ? String(row.treated_at) : null,
     severity: trimmedString(row.severity) ?? null,
     affected_region: trimmedString(row.affected_region) ?? null,
@@ -173,8 +179,8 @@ export function normalizeSurgeryRow(row: DbRow) {
     ...row,
     id: String(row.id),
     patient_id: String(row.patient_id),
-    name: trimmedString(row.surgery_name ?? row.name) ?? '',
-    surgery_name: trimmedString(row.surgery_name ?? row.name) ?? '',
+    name: trimmedString(row.surgery_name ?? row.name) ?? "",
+    surgery_name: trimmedString(row.surgery_name ?? row.name) ?? "",
     surgery_date: row.surgery_date ? String(row.surgery_date) : null,
     surgeon: trimmedString(row.surgeon_name ?? row.surgeon) ?? null,
     surgeon_name: trimmedString(row.surgeon_name ?? row.surgeon) ?? null,
@@ -194,7 +200,7 @@ export function normalizeMedicalReturnRow(row: DbRow) {
     ...row,
     id: String(row.id),
     patient_id: String(row.patient_id),
-    doctor_name: trimmedString(row.doctor_name) ?? '',
+    doctor_name: trimmedString(row.doctor_name) ?? "",
     doctor_phone: trimmedString(row.doctor_phone) ?? null,
     return_date: row.return_date ? String(row.return_date) : null,
     return_period: trimmedString(row.return_period) ?? null,

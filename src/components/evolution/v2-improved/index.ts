@@ -16,15 +16,12 @@ export { AttachmentsBlock } from "./AttachmentsBlock";
 export { MeasurementsBlock } from "./MeasurementsBlock";
 
 export type {
-	EvolutionV2Data,
-	ProcedureItem,
-	ProcedureCategory,
-	ExerciseV2Item,
-	ExerciseFeedback,
-	EvolutionVersion,
+  EvolutionV2Data,
+  ProcedureItem,
+  ProcedureCategory,
+  ExerciseV2Item,
+  ExerciseFeedback,
+  EvolutionVersion,
 } from "./types";
 
-export {
-	PROCEDURE_CATEGORY_LABELS,
-	COMMON_PROCEDURES,
-} from "./types";
+export { PROCEDURE_CATEGORY_LABELS, COMMON_PROCEDURES } from "./types";

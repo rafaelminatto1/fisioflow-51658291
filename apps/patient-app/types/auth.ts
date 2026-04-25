@@ -1,4 +1,4 @@
-export type UserRole = 'patient' | 'professional' | 'admin';
+export type UserRole = "patient" | "professional" | "admin";
 
 export interface User {
   id: string;
@@ -10,7 +10,7 @@ export interface User {
   professionalId?: string;
   professionalName?: string;
   birthDate?: Date | string;
-  gender?: 'male' | 'female' | 'other';
+  gender?: "male" | "female" | "other";
   phone?: string;
   createdAt?: Date | string;
   updatedAt?: Date | string;

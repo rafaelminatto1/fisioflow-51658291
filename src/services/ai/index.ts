@@ -14,12 +14,12 @@ export * from "./geminiVisionService";
 export * from "@/integrations/neon/ai";
 
 export type {
-	GenerateReviewTemplateInput,
-	GenerateBirthdayTemplateInput,
-	GenerateRecallTemplateInput,
-	GenerateFisiolinkTemplateInput,
-	GeneratedTemplateResponse,
-	GenerateSOAPTemplateInput,
-	SOAPTemplateResponse,
-	GenerateMythVsTruthInput,
+  GenerateReviewTemplateInput,
+  GenerateBirthdayTemplateInput,
+  GenerateRecallTemplateInput,
+  GenerateFisiolinkTemplateInput,
+  GeneratedTemplateResponse,
+  GenerateSOAPTemplateInput,
+  SOAPTemplateResponse,
+  GenerateMythVsTruthInput,
 } from "./marketingAITemplateService";

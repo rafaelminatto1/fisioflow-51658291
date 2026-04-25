@@ -77,24 +77,28 @@
 ## Color Scheme Reference
 
 ### Subjective (S) - Blue
+
 - Primary: `#3B82F6`
 - Dark: `#2563EB`
 - Light: `#DBEAFE`
 - Gradient: `#3B82F6` → `#2563EB`
 
 ### Objective (O) - Green
+
 - Primary: `#10B981`
 - Dark: `#059669`
 - Light: `#D1FAE5`
 - Gradient: `#10B981` → `#059669`
 
 ### Assessment (A) - Orange
+
 - Primary: `#F59E0B`
 - Dark: `#D97706`
 - Light: `#FEF3C7`
 - Gradient: `#F59E0B` → `#D97706`
 
 ### Plan (P) - Purple
+
 - Primary: `#8B5CF6`
 - Dark: `#7C3AED`
 - Light: `#EDE9FE`
@@ -103,24 +107,28 @@
 ## Component Details
 
 ### Header
+
 - Height: 64px
 - Back button: 40px circle with surface background
 - Progress ring: 44px diameter with animated stroke
 - Date: 12px, capitalized, textSecondary color
 
 ### Patient Card
+
 - Padding: 16px
 - Avatar: 48px circle with 20% opacity primary color
 - Status dot: 8px circle, success color
 - Shadow: Subtle (2px offset, 0.05 opacity)
 
 ### SOAP Letter Badge
+
 - Size: 32px circle
 - Font: 16px, weight 800, white
 - Shadow: 1px offset, 0.1 opacity
 - Positioned at left of field header
 
 ### Input Field (Focused)
+
 - Border: 2px, animated to section color
 - Border radius: 14px
 - Padding: 16px horizontal, 14px vertical
@@ -128,15 +136,18 @@
 - Font: 16px, line height 22px
 
 ### Input Field (Unfocused)
+
 - Border: 2px, border color
 - All other dimensions same
 
 ### Pain Level Display
+
 - Emoji container: 72px circle with 15% opacity pain color
 - Value badge: 56px circle with pain color fill
 - Description card: Full width, 10% opacity pain color background
 
 ### Photo Grid
+
 - Photo width: ~46% of screen width (with margins)
 - Gap: 12px between items
 - Border radius: 16px
@@ -144,6 +155,7 @@
 - Add button: Same size, 2px dashed border
 
 ### Save Button
+
 - Height: 54px (18px padding)
 - Border radius: 16px
 - Icon + text with 10px gap
@@ -153,12 +165,14 @@
 ## Interaction States
 
 ### Input Focus
+
 ```
 Unfocused:  [border: 2px solid #E5E7EB]
 Focused:    [border: 2px solid #3B82F6] (animated 200ms)
 ```
 
 ### Button Press
+
 ```
 Normal:     [opacity: 1.0]
 Pressed:    [opacity: 0.7] (activeOpacity)
@@ -166,6 +180,7 @@ Disabled:   [opacity: 0.6, backgroundColor: #E5E7EB]
 ```
 
 ### Photo Hover (for web/debug)
+
 ```
 Normal:     [scale: 1.0]
 Hovered:    [scale: 1.02] (future enhancement)
@@ -181,6 +196,7 @@ Hovered:    [scale: 1.02] (future enhancement)
 ## Accessibility
 
 All interactive elements meet WCAG 2.1 AA standards:
+
 - Touch targets: Minimum 44x44px
 - Color contrast: Minimum 4.5:1 for text
 - Focus indicators: Visible on all inputs
@@ -189,6 +205,7 @@ All interactive elements meet WCAG 2.1 AA standards:
 ## Responsive Breakpoints
 
 While primarily designed for mobile, the layout adapts:
+
 - < 375px: Compact padding (12px)
 - 375-428px: Standard padding (16px)
 - > 428px: Large padding (20px)

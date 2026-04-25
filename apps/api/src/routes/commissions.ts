@@ -1,23 +1,23 @@
-import { Hono } from 'hono';
-import { createPool } from '../lib/db';
-import { requireAuth, type AuthVariables } from '../lib/auth';
-import type { Env } from '../types/env';
+import { Hono } from "hono";
+import { createPool } from "../lib/db";
+import { requireAuth, type AuthVariables } from "../lib/auth";
+import type { Env } from "../types/env";
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
 // GET /api/commissions/summary?month=2026-03
-app.get('/summary', requireAuth, async (c) => {
-  const user = c.get('user');
+app.get("/summary", requireAuth, async (c) => {
+  const user = c.get("user");
   const pool = createPool(c.env);
   const { month } = c.req.query(); // formato: YYYY-MM
 
   if (!month || !/^\d{4}-\d{2}$/.test(month)) {
-    return c.json({ error: 'Parâmetro month inválido (use YYYY-MM)' }, 400);
+    return c.json({ error: "Parâmetro month inválido (use YYYY-MM)" }, 400);
   }
 
-  const [year, mon] = month.split('-');
+  const [year, mon] = month.split("-");
   const periodStart = `${year}-${mon}-01`;
-  const periodEnd = new Date(Number(year), Number(mon), 0).toISOString().split('T')[0]; // último dia do mês
+  const periodEnd = new Date(Number(year), Number(mon), 0).toISOString().split("T")[0]; // último dia do mês
 
   // Busca sessões por terapeuta no período + taxa de comissão configurada
   const result = await pool.query(
@@ -55,8 +55,8 @@ app.get('/summary', requireAuth, async (c) => {
 });
 
 // GET /api/commissions/therapist/:id?limit=12
-app.get('/therapist/:id', requireAuth, async (c) => {
-  const user = c.get('user');
+app.get("/therapist/:id", requireAuth, async (c) => {
+  const user = c.get("user");
   const { id } = c.req.param();
   const { limit: lim } = c.req.query();
   const pool = createPool(c.env);
@@ -72,8 +72,8 @@ app.get('/therapist/:id', requireAuth, async (c) => {
 });
 
 // POST /api/commissions/config — configurar taxa de comissão
-app.post('/config', requireAuth, async (c) => {
-  const user = c.get('user');
+app.post("/config", requireAuth, async (c) => {
+  const user = c.get("user");
   const body = (await c.req.json()) as {
     therapist_id: string;
     commission_rate: number;
@@ -81,9 +81,9 @@ app.post('/config', requireAuth, async (c) => {
     notes?: string;
   };
 
-  if (!body.therapist_id) return c.json({ error: 'therapist_id é obrigatório' }, 400);
+  if (!body.therapist_id) return c.json({ error: "therapist_id é obrigatório" }, 400);
   if (body.commission_rate == null || body.commission_rate < 0 || body.commission_rate > 100) {
-    return c.json({ error: 'commission_rate deve ser entre 0 e 100' }, 400);
+    return c.json({ error: "commission_rate deve ser entre 0 e 100" }, 400);
   }
 
   const pool = createPool(c.env);
@@ -94,7 +94,7 @@ app.post('/config', requireAuth, async (c) => {
       user.organizationId,
       body.therapist_id,
       body.commission_rate,
-      body.effective_from ?? new Date().toISOString().split('T')[0],
+      body.effective_from ?? new Date().toISOString().split("T")[0],
       body.notes ?? null,
     ],
   );
@@ -103,8 +103,8 @@ app.post('/config', requireAuth, async (c) => {
 });
 
 // POST /api/commissions/payout — marcar período como pago
-app.post('/payout', requireAuth, async (c) => {
-  const user = c.get('user');
+app.post("/payout", requireAuth, async (c) => {
+  const user = c.get("user");
   const body = (await c.req.json()) as {
     therapist_id: string;
     period_start: string;
@@ -117,7 +117,7 @@ app.post('/payout', requireAuth, async (c) => {
   };
 
   if (!body.therapist_id || !body.period_start || !body.period_end) {
-    return c.json({ error: 'therapist_id, period_start e period_end são obrigatórios' }, 400);
+    return c.json({ error: "therapist_id, period_start e period_end são obrigatórios" }, 400);
   }
 
   const pool = createPool(c.env);
@@ -148,12 +148,12 @@ app.post('/payout', requireAuth, async (c) => {
 });
 
 // GET /api/commissions/config?therapistId=xxx
-app.get('/config', requireAuth, async (c) => {
-  const user = c.get('user');
+app.get("/config", requireAuth, async (c) => {
+  const user = c.get("user");
   const { therapistId } = c.req.query();
   const pool = createPool(c.env);
 
-  const conditions = ['organization_id = $1'];
+  const conditions = ["organization_id = $1"];
   const params: unknown[] = [user.organizationId];
 
   if (therapistId) {
@@ -163,7 +163,7 @@ app.get('/config', requireAuth, async (c) => {
 
   const result = await pool.query(
     `SELECT DISTINCT ON (therapist_id) * FROM therapist_commissions
-     WHERE ${conditions.join(' AND ')}
+     WHERE ${conditions.join(" AND ")}
      ORDER BY therapist_id, effective_from DESC`,
     params,
   );

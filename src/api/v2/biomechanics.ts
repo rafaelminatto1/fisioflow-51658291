@@ -43,6 +43,5 @@ export const biomechanicsApi = {
       body: JSON.stringify(data),
     }),
 
-  getById: (id: string) =>
-    request<{ data: BiomechanicsAssessment }>(`/api/biomechanics/${id}`),
+  getById: (id: string) => request<{ data: BiomechanicsAssessment }>(`/api/biomechanics/${id}`),
 };

@@ -10,166 +10,147 @@ import { nativePoseProvider } from "./nativePoseProvider";
 import { resolveMediaPipeVisionFileset } from "@/lib/ai/mediapipe";
 
 class MediaPipeWebProvider implements PoseProvider {
-	// ... (código existente da classe permanece o mesmo)
-	private landmarker: any = null;
-	private isInitializing: boolean = false;
-	private isLoaded: boolean = false;
-	private streamCallback: ((result: PoseDetection) => void) | null = null;
-	private videoElement: HTMLVideoElement | null = null;
-	private requestRef: number | null = null;
+  // ... (código existente da classe permanece o mesmo)
+  private landmarker: any = null;
+  private isInitializing: boolean = false;
+  private isLoaded: boolean = false;
+  private streamCallback: ((result: PoseDetection) => void) | null = null;
+  private videoElement: HTMLVideoElement | null = null;
+  private requestRef: number | null = null;
 
-	async initialize(): Promise<void> {
-		if (this.isLoaded) return;
-		if (this.isInitializing) return;
+  async initialize(): Promise<void> {
+    if (this.isLoaded) return;
+    if (this.isInitializing) return;
 
-		this.isInitializing = true;
-		try {
-			const vision = await import("@mediapipe/tasks-vision");
-			const { PoseLandmarker, FilesetResolver } = vision;
+    this.isInitializing = true;
+    try {
+      const vision = await import("@mediapipe/tasks-vision");
+      const { PoseLandmarker, FilesetResolver } = vision;
 
-			const filesetResolver =
-				await resolveMediaPipeVisionFileset(FilesetResolver);
+      const filesetResolver = await resolveMediaPipeVisionFileset(FilesetResolver);
 
-			// Silenciar temporariamente avisos internos do MediaPipe WASM (OpenGL diagnostic)
-			const originalWarn = console.warn;
-			const originalLog = console.log;
+      // Silenciar temporariamente avisos internos do MediaPipe WASM (OpenGL diagnostic)
+      const originalWarn = console.warn;
+      const originalLog = console.log;
 
-			console.warn = (...args) => {
-				if (
-					typeof args[0] === "string" &&
-					(args[0].includes("gl_context.cc") || args[0].includes("W0303"))
-				)
-					return;
-				originalWarn.apply(console, args);
-			};
+      console.warn = (...args) => {
+        if (
+          typeof args[0] === "string" &&
+          (args[0].includes("gl_context.cc") || args[0].includes("W0303"))
+        )
+          return;
+        originalWarn.apply(console, args);
+      };
 
-			console.log = (...args) => {
-				if (
-					typeof args[0] === "string" &&
-					(args[0].includes("gl_context.cc") || args[0].includes("I0303"))
-				)
-					return;
-				originalLog.apply(console, args);
-			};
+      console.log = (...args) => {
+        if (
+          typeof args[0] === "string" &&
+          (args[0].includes("gl_context.cc") || args[0].includes("I0303"))
+        )
+          return;
+        originalLog.apply(console, args);
+      };
 
-			try {
-				this.landmarker = await PoseLandmarker.createFromOptions(
-					filesetResolver,
-					{
-						baseOptions: {
-							modelAssetPath: `https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task`,
-							delegate: "GPU",
-						},
-						runningMode: "VIDEO",
-						numPoses: 1,
-						minPoseDetectionConfidence: 0.5,
-						minPosePresenceConfidence: 0.5,
-						minTrackingConfidence: 0.5,
-					},
-				);
-			} finally {
-				// Restaurar console original imediatamente
-				console.warn = originalWarn;
-				console.log = originalLog;
-			}
+      try {
+        this.landmarker = await PoseLandmarker.createFromOptions(filesetResolver, {
+          baseOptions: {
+            modelAssetPath: `https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task`,
+            delegate: "GPU",
+          },
+          runningMode: "VIDEO",
+          numPoses: 1,
+          minPoseDetectionConfidence: 0.5,
+          minPosePresenceConfidence: 0.5,
+          minTrackingConfidence: 0.5,
+        });
+      } finally {
+        // Restaurar console original imediatamente
+        console.warn = originalWarn;
+        console.log = originalLog;
+      }
 
-			this.isLoaded = true;
-			logger.info(
-				"[PoseDetectionService] MediaPipe inicializado",
-				null,
-				"PoseDetectionService",
-			);
-		} catch (err) {
-			logger.error(
-				"Erro ao inicializar MediaPipe",
-				err,
-				"PoseDetectionService",
-			);
-			throw err;
-		} finally {
-			this.isInitializing = false;
-		}
-	}
+      this.isLoaded = true;
+      logger.info("[PoseDetectionService] MediaPipe inicializado", null, "PoseDetectionService");
+    } catch (err) {
+      logger.error("Erro ao inicializar MediaPipe", err, "PoseDetectionService");
+      throw err;
+    } finally {
+      this.isInitializing = false;
+    }
+  }
 
-	async detect(
-		video:
-			| HTMLVideoElement
-			| HTMLCanvasElement
-			| ImageBitmap
-			| HTMLImageElement,
-	): Promise<PoseDetection> {
-		if (!this.isLoaded) await this.initialize();
+  async detect(
+    video: HTMLVideoElement | HTMLCanvasElement | ImageBitmap | HTMLImageElement,
+  ): Promise<PoseDetection> {
+    if (!this.isLoaded) await this.initialize();
 
-		const startTimeMs = performance.now();
-		let result;
+    const startTimeMs = performance.now();
+    let result;
 
-		if (video instanceof HTMLVideoElement) {
-			result = this.landmarker.detectForVideo(video, startTimeMs);
-		} else {
-			result = this.landmarker.detect(video);
-		}
+    if (video instanceof HTMLVideoElement) {
+      result = this.landmarker.detectForVideo(video, startTimeMs);
+    } else {
+      result = this.landmarker.detect(video);
+    }
 
-		if (result.landmarks && result.landmarks.length > 0) {
-			return {
-				landmarks: result.landmarks[0].map((l: any) => ({
-					x: l.x,
-					y: l.y,
-					z: l.z,
-					visibility: l.visibility || 0,
-				})),
-				confidence: 0.8,
-				timestamp: startTimeMs,
-				analysisType: AnalysisType.FORM,
-			};
-		}
+    if (result.landmarks && result.landmarks.length > 0) {
+      return {
+        landmarks: result.landmarks[0].map((l: any) => ({
+          x: l.x,
+          y: l.y,
+          z: l.z,
+          visibility: l.visibility || 0,
+        })),
+        confidence: 0.8,
+        timestamp: startTimeMs,
+        analysisType: AnalysisType.FORM,
+      };
+    }
 
-		return {
-			landmarks: [],
-			confidence: 0,
-			timestamp: startTimeMs,
-			analysisType: AnalysisType.FORM,
-		};
-	}
+    return {
+      landmarks: [],
+      confidence: 0,
+      timestamp: startTimeMs,
+      analysisType: AnalysisType.FORM,
+    };
+  }
 
-	startStream(
-		video: HTMLVideoElement,
-		callback: (result: PoseDetection) => void,
-	): void {
-		this.videoElement = video;
-		this.streamCallback = callback;
-		this.loop();
-	}
+  startStream(video: HTMLVideoElement, callback: (result: PoseDetection) => void): void {
+    this.videoElement = video;
+    this.streamCallback = callback;
+    this.loop();
+  }
 
-	private loop = () => {
-		if (this.videoElement && this.streamCallback && this.isLoaded) {
-			if (this.videoElement.readyState >= 2) {
-				this.detect(this.videoElement).then(this.streamCallback);
-			}
-			this.requestRef = requestAnimationFrame(this.loop);
-		}
-	};
+  private loop = () => {
+    if (this.videoElement && this.streamCallback && this.isLoaded) {
+      if (this.videoElement.readyState >= 2) {
+        this.detect(this.videoElement).then(this.streamCallback);
+      }
+      this.requestRef = requestAnimationFrame(this.loop);
+    }
+  };
 
-	stopStream(): void {
-		if (this.requestRef) {
-			cancelAnimationFrame(this.requestRef);
-			this.requestRef = null;
-		}
-		this.streamCallback = null;
-		this.videoElement = null;
-	}
+  stopStream(): void {
+    if (this.requestRef) {
+      cancelAnimationFrame(this.requestRef);
+      this.requestRef = null;
+    }
+    this.streamCallback = null;
+    this.videoElement = null;
+  }
 
-	close(): void {
-		this.stopStream();
-		if (this.landmarker) {
-			this.landmarker.close();
-			this.landmarker = null;
-		}
-		this.isLoaded = false;
-	}
+  close(): void {
+    this.stopStream();
+    if (this.landmarker) {
+      this.landmarker.close();
+      this.landmarker = null;
+    }
+    this.isLoaded = false;
+  }
 
-	isInitialized(): boolean {
-		return this.isLoaded;
-	}
+  isInitialized(): boolean {
+    return this.isLoaded;
+  }
 }
 
 /**
@@ -179,72 +160,57 @@ class MediaPipeWebProvider implements PoseProvider {
  * e na disponibilidade, garantindo a melhor performance possível.
  */
 class PoseDetectionOrchestrator implements PoseProvider {
-	private webProvider = new MediaPipeWebProvider();
-	private activeProvider: PoseProvider;
+  private webProvider = new MediaPipeWebProvider();
+  private activeProvider: PoseProvider;
 
-	constructor() {
-		// Se estiver em ambiente nativo, prefere o NativePoseProvider
-		if (nativePoseProvider.isSupported()) {
-			this.activeProvider = nativePoseProvider;
-			logger.info(
-				"[PoseOrchestrator] Usando Provedor Nativo (Capacitor)",
-				null,
-				"PoseOrchestrator",
-			);
-		} else {
-			this.activeProvider = this.webProvider;
-			logger.info(
-				"[PoseOrchestrator] Usando Provedor Web (MediaPipe)",
-				null,
-				"PoseOrchestrator",
-			);
-		}
-	}
+  constructor() {
+    // Se estiver em ambiente nativo, prefere o NativePoseProvider
+    if (nativePoseProvider.isSupported()) {
+      this.activeProvider = nativePoseProvider;
+      logger.info(
+        "[PoseOrchestrator] Usando Provedor Nativo (Capacitor)",
+        null,
+        "PoseOrchestrator",
+      );
+    } else {
+      this.activeProvider = this.webProvider;
+      logger.info("[PoseOrchestrator] Usando Provedor Web (MediaPipe)", null, "PoseOrchestrator");
+    }
+  }
 
-	async initialize(): Promise<void> {
-		return this.activeProvider.initialize();
-	}
+  async initialize(): Promise<void> {
+    return this.activeProvider.initialize();
+  }
 
-	async detect(
-		video:
-			| HTMLVideoElement
-			| HTMLCanvasElement
-			| ImageBitmap
-			| HTMLImageElement,
-	): Promise<PoseDetection> {
-		return this.activeProvider.detect(video);
-	}
+  async detect(
+    video: HTMLVideoElement | HTMLCanvasElement | ImageBitmap | HTMLImageElement,
+  ): Promise<PoseDetection> {
+    return this.activeProvider.detect(video);
+  }
 
-	startStream(
-		video: HTMLVideoElement,
-		callback: (result: PoseDetection) => void,
-	): void {
-		return this.activeProvider.startStream(video, callback);
-	}
+  startStream(video: HTMLVideoElement, callback: (result: PoseDetection) => void): void {
+    return this.activeProvider.startStream(video, callback);
+  }
 
-	stopStream(): void {
-		return this.activeProvider.stopStream();
-	}
+  stopStream(): void {
+    return this.activeProvider.stopStream();
+  }
 
-	close(): void {
-		return this.activeProvider.close();
-	}
+  close(): void {
+    return this.activeProvider.close();
+  }
 
-	isInitialized(): boolean {
-		return this.activeProvider.isInitialized();
-	}
+  isInitialized(): boolean {
+    return this.activeProvider.isInitialized();
+  }
 
-	/**
-	 * Permite forçar o uso do provedor web (útil para debug ou fallback)
-	 */
-	useWebProvider() {
-		this.activeProvider = this.webProvider;
-		logger.info(
-			"[PoseOrchestrator] Forçando Provedor Web",
-			null,
-			"PoseOrchestrator",
-		);
-	}
+  /**
+   * Permite forçar o uso do provedor web (útil para debug ou fallback)
+   */
+  useWebProvider() {
+    this.activeProvider = this.webProvider;
+    logger.info("[PoseOrchestrator] Forçando Provedor Web", null, "PoseOrchestrator");
+  }
 }
 
 // Singleton instance
@@ -253,6 +219,6 @@ export const poseDetectionService = new PoseDetectionOrchestrator();
 // Legacy compatibility
 export const initPoseEstimator = () => poseDetectionService.initialize();
 export const detectPoseInImage = async (imageElement: HTMLImageElement) => {
-	const result = await poseDetectionService.detect(imageElement);
-	return result.landmarks;
+  const result = await poseDetectionService.detect(imageElement);
+  return result.landmarks;
 };

@@ -11,15 +11,15 @@
 export type ViewType = "day" | "week" | "month";
 
 export interface PeriodQuery {
-	viewType: ViewType;
-	date: Date;
-	organizationId: string;
-	therapistId?: string;
+  viewType: ViewType;
+  date: Date;
+  organizationId: string;
+  therapistId?: string;
 }
 
 export interface PeriodBounds {
-	startDate: Date;
-	endDate: Date;
+  startDate: Date;
+  endDate: Date;
 }
 
 /**
@@ -46,32 +46,32 @@ export interface PeriodBounds {
  * // Returns: { startDate: 2024-01-01 00:00:00, endDate: 2024-01-31 23:59:59 }
  */
 export function calculatePeriodBounds(query: PeriodQuery): PeriodBounds {
-	const { viewType, date } = query;
+  const { viewType, date } = query;
 
-	switch (viewType) {
-		case "day":
-			return calculateDayBounds(date);
-		case "week":
-			return calculateWeekBounds(date);
-		case "month":
-			return calculateMonthBounds(date);
-		default:
-			// Fallback to day view
-			return calculateDayBounds(date);
-	}
+  switch (viewType) {
+    case "day":
+      return calculateDayBounds(date);
+    case "week":
+      return calculateWeekBounds(date);
+    case "month":
+      return calculateMonthBounds(date);
+    default:
+      // Fallback to day view
+      return calculateDayBounds(date);
+  }
 }
 
 /**
  * Calculates bounds for a single day (00:00:00 to 23:59:59)
  */
 function calculateDayBounds(date: Date): PeriodBounds {
-	const startDate = new Date(date);
-	startDate.setHours(0, 0, 0, 0);
+  const startDate = new Date(date);
+  startDate.setHours(0, 0, 0, 0);
 
-	const endDate = new Date(date);
-	endDate.setHours(23, 59, 59, 999);
+  const endDate = new Date(date);
+  endDate.setHours(23, 59, 59, 999);
 
-	return { startDate, endDate };
+  return { startDate, endDate };
 }
 
 /**
@@ -79,35 +79,35 @@ function calculateDayBounds(date: Date): PeriodBounds {
  * Uses ISO week standard where Monday is the first day of the week
  */
 function calculateWeekBounds(date: Date): PeriodBounds {
-	const dayOfWeek = date.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+  const dayOfWeek = date.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
 
-	// Calculate days to subtract to get to Monday
-	// If Sunday (0), go back 6 days; otherwise go back (dayOfWeek - 1) days
-	const daysToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+  // Calculate days to subtract to get to Monday
+  // If Sunday (0), go back 6 days; otherwise go back (dayOfWeek - 1) days
+  const daysToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
 
-	const startDate = new Date(date);
-	startDate.setDate(date.getDate() - daysToMonday);
-	startDate.setHours(0, 0, 0, 0);
+  const startDate = new Date(date);
+  startDate.setDate(date.getDate() - daysToMonday);
+  startDate.setHours(0, 0, 0, 0);
 
-	const endDate = new Date(startDate);
-	endDate.setDate(startDate.getDate() + 6); // Add 6 days to get to Sunday
-	endDate.setHours(23, 59, 59, 999);
+  const endDate = new Date(startDate);
+  endDate.setDate(startDate.getDate() + 6); // Add 6 days to get to Sunday
+  endDate.setHours(23, 59, 59, 999);
 
-	return { startDate, endDate };
+  return { startDate, endDate };
 }
 
 /**
  * Calculates bounds for a month (first to last day)
  */
 function calculateMonthBounds(date: Date): PeriodBounds {
-	const startDate = new Date(date.getFullYear(), date.getMonth(), 1);
-	startDate.setHours(0, 0, 0, 0);
+  const startDate = new Date(date.getFullYear(), date.getMonth(), 1);
+  startDate.setHours(0, 0, 0, 0);
 
-	// Get last day of month by going to first day of next month and subtracting 1 day
-	const endDate = new Date(date.getFullYear(), date.getMonth() + 1, 0);
-	endDate.setHours(23, 59, 59, 999);
+  // Get last day of month by going to first day of next month and subtracting 1 day
+  const endDate = new Date(date.getFullYear(), date.getMonth() + 1, 0);
+  endDate.setHours(23, 59, 59, 999);
 
-	return { startDate, endDate };
+  return { startDate, endDate };
 }
 
 /**
@@ -133,62 +133,62 @@ function calculateMonthBounds(date: Date): PeriodBounds {
  * // Returns: { viewType: 'week', date: 2024-01-08, organizationId: '123' }
  */
 export function calculateAdjacentPeriod(
-	query: PeriodQuery,
-	direction: "forward" | "backward",
+  query: PeriodQuery,
+  direction: "forward" | "backward",
 ): PeriodQuery {
-	const { viewType, date, organizationId, therapistId } = query;
-	const multiplier = direction === "forward" ? 1 : -1;
+  const { viewType, date, organizationId, therapistId } = query;
+  const multiplier = direction === "forward" ? 1 : -1;
 
-	let newDate: Date;
+  let newDate: Date;
 
-	switch (viewType) {
-		case "day":
-			newDate = new Date(date);
-			newDate.setDate(date.getDate() + 1 * multiplier);
-			break;
+  switch (viewType) {
+    case "day":
+      newDate = new Date(date);
+      newDate.setDate(date.getDate() + 1 * multiplier);
+      break;
 
-		case "week":
-			newDate = new Date(date);
-			newDate.setDate(date.getDate() + 7 * multiplier);
-			break;
+    case "week":
+      newDate = new Date(date);
+      newDate.setDate(date.getDate() + 7 * multiplier);
+      break;
 
-		case "month":
-			newDate = new Date(date);
-			newDate.setMonth(date.getMonth() + 1 * multiplier);
-			break;
+    case "month":
+      newDate = new Date(date);
+      newDate.setMonth(date.getMonth() + 1 * multiplier);
+      break;
 
-		default:
-			// Fallback to day
-			newDate = new Date(date);
-			newDate.setDate(date.getDate() + 1 * multiplier);
-	}
+    default:
+      // Fallback to day
+      newDate = new Date(date);
+      newDate.setDate(date.getDate() + 1 * multiplier);
+  }
 
-	return {
-		viewType,
-		date: newDate,
-		organizationId,
-		therapistId,
-	};
+  return {
+    viewType,
+    date: newDate,
+    organizationId,
+    therapistId,
+  };
 }
 
 /**
  * Formats period bounds for display or logging
  */
 export function formatPeriodBounds(bounds: PeriodBounds): string {
-	const formatDate = (date: Date) => {
-		const year = date.getFullYear();
-		const month = String(date.getMonth() + 1).padStart(2, "0");
-		const day = String(date.getDate()).padStart(2, "0");
-		return `${year}-${month}-${day}`;
-	};
+  const formatDate = (date: Date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  };
 
-	return `${formatDate(bounds.startDate)} to ${formatDate(bounds.endDate)}`;
+  return `${formatDate(bounds.startDate)} to ${formatDate(bounds.endDate)}`;
 }
 
 /**
  * Checks if a date falls within the given period bounds
  */
 export function isDateInPeriod(date: Date, bounds: PeriodBounds): boolean {
-	const time = date.getTime();
-	return time >= bounds.startDate.getTime() && time <= bounds.endDate.getTime();
+  const time = date.getTime();
+  return time >= bounds.startDate.getTime() && time <= bounds.endDate.getTime();
 }

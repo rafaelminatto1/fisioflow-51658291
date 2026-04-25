@@ -18,8 +18,8 @@ Comprehensive performance monitoring system for FisioFlow, tracking Core Web Vit
 In your `App.tsx` or main entry point:
 
 ```typescript
-import { initPerformanceMonitoring } from '@/lib/monitoring/initPerformanceMonitoring';
-import { QueryClient } from '@tanstack/react-query';
+import { initPerformanceMonitoring } from "@/lib/monitoring/initPerformanceMonitoring";
+import { QueryClient } from "@tanstack/react-query";
 
 const queryClient = new QueryClient({
   // your config
@@ -34,18 +34,18 @@ initPerformanceMonitoring(queryClient);
 Core Web Vitals are automatically tracked when you initialize monitoring. To manually check metrics:
 
 ```typescript
-import { getCoreWebVitals, checkPerformanceBudgets } from '@/lib/monitoring/coreWebVitals';
+import { getCoreWebVitals, checkPerformanceBudgets } from "@/lib/monitoring/coreWebVitals";
 
 // Get current metrics
 const metrics = getCoreWebVitals();
-console.log('LCP:', metrics.lcp);
-console.log('FID:', metrics.fid);
-console.log('CLS:', metrics.cls);
+console.log("LCP:", metrics.lcp);
+console.log("FID:", metrics.fid);
+console.log("CLS:", metrics.cls);
 
 // Check if metrics meet budgets
 const { passed, violations } = checkPerformanceBudgets();
 if (!passed) {
-  console.warn('Performance budget violations:', violations);
+  console.warn("Performance budget violations:", violations);
 }
 ```
 
@@ -74,16 +74,16 @@ const ProfiledComponent = withProfiler(MyComponent, 'MyComponent');
 Query performance is automatically tracked when you initialize monitoring with a QueryClient. To manually check stats:
 
 ```typescript
-import { getQueryStats, getSlowQueries } from '@/lib/monitoring/queryPerformance';
+import { getQueryStats, getSlowQueries } from "@/lib/monitoring/queryPerformance";
 
 // Get overall stats
 const stats = getQueryStats();
-console.log('Cache hit rate:', stats.cacheHitRate);
-console.log('Average duration:', stats.averageDuration);
+console.log("Cache hit rate:", stats.cacheHitRate);
+console.log("Average duration:", stats.averageDuration);
 
 // Get slow queries
 const slowQueries = getSlowQueries(1000); // queries > 1000ms
-console.log('Slow queries:', slowQueries);
+console.log("Slow queries:", slowQueries);
 ```
 
 #### 5. Development Warnings
@@ -121,7 +121,7 @@ configureQueryClientWithTracking(queryClient);
 
 // Get query statistics
 const stats = getQueryStats(); // all queries
-const specificStats = getQueryStats('patients-list'); // specific query
+const specificStats = getQueryStats("patients-list"); // specific query
 
 // Get slow queries
 const slowQueries = getSlowQueries(1000); // threshold in ms
@@ -156,25 +156,25 @@ const result = measureSync('computeValue', () => {
 
 ```typescript
 // Warn about slow render
-warnSlowRender('ComponentName', 50); // duration in ms
+warnSlowRender("ComponentName", 50); // duration in ms
 
 // Warn about excessive re-renders
-warnExcessiveRenders('ComponentName');
+warnExcessiveRenders("ComponentName");
 
 // Warn about large state
-warnLargeState('ComponentName', 2048); // size in bytes
+warnLargeState("ComponentName", 2048); // size in bytes
 
 // Warn about missing memoization
-warnMissingMemoization('ComponentName', 'propName', 'object');
+warnMissingMemoization("ComponentName", "propName", "object");
 
 // Warn about unoptimized image
-warnUnoptimizedImage('/path/to/image.jpg', 1024 * 1024); // size in bytes
+warnUnoptimizedImage("/path/to/image.jpg", 1024 * 1024); // size in bytes
 
 // Warn about potential memory leak
-warnPotentialMemoryLeak('ComponentName', 'event-listener');
+warnPotentialMemoryLeak("ComponentName", "event-listener");
 
 // Warn about blocking operation
-warnBlockingOperation('heavyComputation', 100); // duration in ms
+warnBlockingOperation("heavyComputation", 100); // duration in ms
 ```
 
 #### Metrics Collector
@@ -185,11 +185,11 @@ const pageMetrics = metricsCollector.getPageMetrics();
 
 // Get component metrics
 const allComponents = metricsCollector.getComponentMetrics();
-const specificComponent = metricsCollector.getComponentMetrics('MyComponent');
+const specificComponent = metricsCollector.getComponentMetrics("MyComponent");
 
 // Get resource metrics
 const allResources = metricsCollector.getResourceMetrics();
-const scripts = metricsCollector.getResourceMetrics('script');
+const scripts = metricsCollector.getResourceMetrics("script");
 
 // Get performance summary
 const summary = metricsCollector.getSummary();
@@ -215,12 +215,12 @@ In development mode, the following tools are available in the browser console:
 
 ```javascript
 // Access metrics collector
-window.__metricsCollector.getSummary()
-window.__metricsCollector.export()
+window.__metricsCollector.getSummary();
+window.__metricsCollector.export();
 
 // Access performance monitor
-window.__perfMonitor.getStats('ComponentName')
-window.__perfMonitor.reportSummary()
+window.__perfMonitor.getStats("ComponentName");
+window.__perfMonitor.reportSummary();
 ```
 
 ### Integration with Existing Monitoring
@@ -241,15 +241,18 @@ The system integrates with:
 ### Troubleshooting
 
 **Monitoring not working?**
+
 - Check that `initPerformanceMonitoring()` is called
 - Verify `web-vitals` package is installed
 - Check browser console for errors
 
 **No development warnings?**
+
 - Warnings only appear in development mode
 - Check that `import.meta.env.DEV` is true
 
 **Query tracking not working?**
+
 - Ensure QueryClient is passed to `initPerformanceMonitoring()`
 - Check that queries are using the configured QueryClient
 

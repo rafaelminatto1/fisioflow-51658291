@@ -43,25 +43,27 @@ src/
 A página de Agenda (`src/pages/Schedule.tsx`) é a mais utilizada. Sua estrutura:
 
 ### Hooks de Agenda
+
 ```typescript
 // src/hooks/appointments/
-import { 
-  useFilteredAppointments,  // Agendamentos com filtros
-  useScheduleState,         // Estado sincronizado com URL
-  useScheduleHandlers,      // Handlers de ações
-  useWaitlist              // Lista de espera
-} from '@/hooks/appointments';
+import {
+  useFilteredAppointments, // Agendamentos com filtros
+  useScheduleState, // Estado sincronizado com URL
+  useScheduleHandlers, // Handlers de ações
+  useWaitlist, // Lista de espera
+} from "@/hooks/appointments";
 ```
 
 ### Componentes de Agenda
+
 ```typescript
 // src/components/schedule/
-import { 
-  CalendarView,           // Visualização principal
-  AppointmentCard,        // Card de agendamento
-  AppointmentModal,       // Modal de criação/edição
-  QuickFilters           // Filtros rápidos
-} from '@/components/schedule';
+import {
+  CalendarView, // Visualização principal
+  AppointmentCard, // Card de agendamento
+  AppointmentModal, // Modal de criação/edição
+  QuickFilters, // Filtros rápidos
+} from "@/components/schedule";
 ```
 
 ## 📝 Convenções de Código
@@ -71,52 +73,52 @@ import {
 ```typescript
 // ✅ Ordem recomendada:
 // 1. React e bibliotecas externas
-import { useState, useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useState, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 
 // 2. Componentes UI
-import { Button } from '@/components/ui/button';
-import { Dialog } from '@/components/ui/dialog';
+import { Button } from "@/components/ui/button";
+import { Dialog } from "@/components/ui/dialog";
 
 // 3. Componentes de domínio
-import { CalendarView } from '@/components/schedule';
+import { CalendarView } from "@/components/schedule";
 
 // 4. Hooks
-import { useAppointments } from '@/hooks/appointments';
+import { useAppointments } from "@/hooks/appointments";
 
 // 5. Tipos
-import type { Appointment } from '@/types';
+import type { Appointment } from "@/types";
 
 // 6. Utilitários
-import { formatDate } from '@/utils/dateUtils';
+import { formatDate } from "@/utils/dateUtils";
 ```
 
 ### Nomenclatura
 
-| Tipo | Convenção | Exemplo |
-|------|-----------|---------|
-| Componentes | PascalCase | `AppointmentCard` |
-| Hooks | camelCase + use | `useAppointments` |
-| Funções | camelCase | `formatDate` |
-| Constantes | UPPER_SNAKE_CASE | `MAX_RETRIES` |
-| Tipos/Interfaces | PascalCase | `Appointment` |
-| Arquivos de componente | PascalCase | `AppointmentCard.tsx` |
-| Arquivos de hook | camelCase | `useAppointments.ts` |
-| Arquivos de utilitário | camelCase | `dateUtils.ts` |
+| Tipo                   | Convenção        | Exemplo               |
+| ---------------------- | ---------------- | --------------------- |
+| Componentes            | PascalCase       | `AppointmentCard`     |
+| Hooks                  | camelCase + use  | `useAppointments`     |
+| Funções                | camelCase        | `formatDate`          |
+| Constantes             | UPPER_SNAKE_CASE | `MAX_RETRIES`         |
+| Tipos/Interfaces       | PascalCase       | `Appointment`         |
+| Arquivos de componente | PascalCase       | `AppointmentCard.tsx` |
+| Arquivos de hook       | camelCase        | `useAppointments.ts`  |
+| Arquivos de utilitário | camelCase        | `dateUtils.ts`        |
 
 ### Componentes
 
 ```typescript
 /**
  * ComponentName - Descrição breve
- * 
+ *
  * @description Descrição detalhada se necessário
  * @example
  * <ComponentName prop="value" />
  */
 
-import { useState } from 'react';
-import { cn } from '@/lib/utils';
+import { useState } from "react";
+import { cn } from "@/lib/utils";
 
 interface ComponentNameProps {
   /** Descrição da prop obrigatória */
@@ -129,11 +131,11 @@ interface ComponentNameProps {
   className?: string;
 }
 
-export function ComponentName({ 
-  requiredProp, 
+export function ComponentName({
+  requiredProp,
   optionalProp = 0,
   onAction,
-  className 
+  className,
 }: ComponentNameProps) {
   // Implementação
 }
@@ -144,7 +146,7 @@ export function ComponentName({
 ```typescript
 /**
  * useFeatureName - Descrição breve
- * 
+ *
  * @description Descrição detalhada
  * @param options - Opções de configuração
  * @returns Objeto com dados e funções
@@ -152,7 +154,7 @@ export function ComponentName({
  * const { data, isLoading } = useFeatureName({ id: '123' });
  */
 
-import { useQuery } from '@tanstack/react-query';
+import { useQuery } from "@tanstack/react-query";
 
 interface UseFeatureNameOptions {
   id: string;
@@ -161,9 +163,9 @@ interface UseFeatureNameOptions {
 
 export function useFeatureName(options: UseFeatureNameOptions) {
   const { id, enabled = true } = options;
-  
+
   return useQuery({
-    queryKey: ['feature', id],
+    queryKey: ["feature", id],
     queryFn: () => fetchFeature(id),
     enabled,
   });
@@ -203,6 +205,7 @@ export const patientsRoutes = (
 ```
 
 **Ao adicionar uma nova rota:**
+
 1. Identifique o domínio correto (patients, financial, admin, etc.)
 2. Use lazy loading com webpackChunkName
 3. Envolva com `ProtectedRoute` se necessário
@@ -289,9 +292,9 @@ Centralize as chaves do React Query:
 ```typescript
 // src/hooks/queryKeys.ts
 export const appointmentKeys = {
-  all: ['appointments'] as const,
-  list: (filters: Filters) => [...appointmentKeys.all, 'list', filters] as const,
-  detail: (id: string) => [...appointmentKeys.all, 'detail', id] as const,
+  all: ["appointments"] as const,
+  list: (filters: Filters) => [...appointmentKeys.all, "list", filters] as const,
+  detail: (id: string) => [...appointmentKeys.all, "detail", id] as const,
 };
 ```
 
@@ -304,7 +307,7 @@ useQuery({
   queryKey: appointmentKeys.list(filters),
   queryFn: fetchAppointments,
   staleTime: 5 * 60 * 1000, // 5 minutos
-  gcTime: 30 * 60 * 1000,   // 30 minutos
+  gcTime: 30 * 60 * 1000, // 30 minutos
 });
 ```
 
@@ -353,11 +356,11 @@ npm audit
 Use o logger do projeto:
 
 ```typescript
-import { fisioLogger as logger } from '@/lib/errors/logger';
+import { fisioLogger as logger } from "@/lib/errors/logger";
 
-logger.info('Mensagem informativa', { data });
-logger.error('Erro ocorrido', { error }, 'Contexto');
-logger.warn('Aviso', { details });
+logger.info("Mensagem informativa", { data });
+logger.error("Erro ocorrido", { error }, "Contexto");
+logger.warn("Aviso", { details });
 ```
 
 ### React Query DevTools

@@ -3,12 +3,11 @@
  * Consistent animations and transitions
  */
 
-
 /**
  * Animation configurations
  */
 
-import { Animated, Easing } from 'react-native';
+import { Animated, Easing } from "react-native";
 
 export const Animations = {
   // Durations (in ms)
@@ -38,7 +37,7 @@ export const Animations = {
 export function fadeIn(
   animatedValue: Animated.Value,
   duration: number = Animations.durations.normal,
-  delay: number = 0
+  delay: number = 0,
 ): Animated.CompositeAnimation {
   return Animated.timing(animatedValue, {
     toValue: 1,
@@ -55,7 +54,7 @@ export function fadeIn(
 export function fadeOut(
   animatedValue: Animated.Value,
   duration: number = Animations.durations.normal,
-  delay: number = 0
+  delay: number = 0,
 ): Animated.CompositeAnimation {
   return Animated.timing(animatedValue, {
     toValue: 0,
@@ -71,13 +70,12 @@ export function fadeOut(
  */
 export function slideIn(
   animatedValue: Animated.Value,
-  direction: 'left' | 'right' | 'up' | 'down' = 'right',
+  direction: "left" | "right" | "up" | "down" = "right",
   distance: number = 100,
-  duration: number = Animations.durations.normal
+  duration: number = Animations.durations.normal,
 ): Animated.CompositeAnimation {
-  const toValue = direction === 'left' || direction === 'right' ? 0 : 0;
-  const fromValue =
-    direction === 'left' ? -distance : direction === 'right' ? distance : 0;
+  const toValue = direction === "left" || direction === "right" ? 0 : 0;
+  const fromValue = direction === "left" ? -distance : direction === "right" ? distance : 0;
 
   animatedValue.setValue(fromValue);
 
@@ -95,7 +93,7 @@ export function slideIn(
 export function scaleIn(
   animatedValue: Animated.Value,
   duration: number = Animations.durations.normal,
-  delay: number = 0
+  delay: number = 0,
 ): Animated.CompositeAnimation {
   animatedValue.setValue(0);
 
@@ -113,7 +111,7 @@ export function scaleIn(
  */
 export function scaleOut(
   animatedValue: Animated.Value,
-  duration: number = Animations.durations.fast
+  duration: number = Animations.durations.fast,
 ): Animated.CompositeAnimation {
   return Animated.timing(animatedValue, {
     toValue: 0,
@@ -128,7 +126,7 @@ export function scaleOut(
  */
 export function shimmer(
   shimmerValue: Animated.Value,
-  duration: number = 1500
+  duration: number = 1500,
 ): Animated.CompositeAnimation {
   return Animated.loop(
     Animated.sequence([
@@ -144,7 +142,7 @@ export function shimmer(
         easing: Easing.linear,
         useNativeDriver: true,
       }),
-    ])
+    ]),
   );
 }
 
@@ -157,7 +155,7 @@ export function spring(
   options?: {
     tension?: number;
     friction?: number;
-  }
+  },
 ): Animated.CompositeAnimation {
   return Animated.spring(animatedValue, {
     toValue,
@@ -172,7 +170,7 @@ export function spring(
  */
 export function rotate(
   animatedValue: Animated.Value,
-  duration: number = 1000
+  duration: number = 1000,
 ): Animated.CompositeAnimation {
   return Animated.loop(
     Animated.timing(animatedValue, {
@@ -180,21 +178,25 @@ export function rotate(
       duration,
       easing: Easing.linear,
       useNativeDriver: true,
-    })
+    }),
   );
 }
 
 /**
  * Parallel animations
  */
-export function parallel(...animations: Animated.CompositeAnimation[]): Animated.CompositeAnimation {
+export function parallel(
+  ...animations: Animated.CompositeAnimation[]
+): Animated.CompositeAnimation {
   return Animated.parallel(animations);
 }
 
 /**
  * Sequential animations
  */
-export function sequence(...animations: Animated.CompositeAnimation[]): Animated.CompositeAnimation {
+export function sequence(
+  ...animations: Animated.CompositeAnimation[]
+): Animated.CompositeAnimation {
   return Animated.sequence(animations);
 }
 
@@ -212,7 +214,7 @@ export function stagger(
  * Delay helper
  */
 export function delay(ms: number): Promise<void> {
-  return new Promise(resolve => setTimeout(resolve, ms));
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 /**
@@ -221,10 +223,10 @@ export function delay(ms: number): Promise<void> {
 export const Presets = {
   fadeIn: (value: Animated.Value) => fadeIn(value, Animations.durations.fast),
   fadeOut: (value: Animated.Value) => fadeOut(value, Animations.durations.fast),
-  slideInRight: (value: Animated.Value) => slideIn(value, 'right', 50, Animations.durations.normal),
-  slideInLeft: (value: Animated.Value) => slideIn(value, 'left', 50, Animations.durations.normal),
-  slideInUp: (value: Animated.Value) => slideIn(value, 'up', 50, Animations.durations.normal),
-  slideInDown: (value: Animated.Value) => slideIn(value, 'down', 50, Animations.durations.normal),
+  slideInRight: (value: Animated.Value) => slideIn(value, "right", 50, Animations.durations.normal),
+  slideInLeft: (value: Animated.Value) => slideIn(value, "left", 50, Animations.durations.normal),
+  slideInUp: (value: Animated.Value) => slideIn(value, "up", 50, Animations.durations.normal),
+  slideInDown: (value: Animated.Value) => slideIn(value, "down", 50, Animations.durations.normal),
   scaleIn: (value: Animated.Value) => scaleIn(value, Animations.durations.normal),
   scaleOut: (value: Animated.Value) => scaleOut(value, Animations.durations.fast),
   bounce: (value: Animated.Value) => spring(value, 1, { tension: 150, friction: 5 }),
@@ -233,7 +235,7 @@ export const Presets = {
       Animated.sequence([
         spring(value, 1.05, { tension: 100, friction: 5 }),
         spring(value, 1, { tension: 100, friction: 5 }),
-      ])
+      ]),
     );
   },
 };
@@ -258,18 +260,15 @@ export function useFadeIn(delay: number = 0) {
 /**
  * Hook for slide-in animation
  */
-export function useSlideIn(direction: 'left' | 'right' | 'up' | 'down' = 'right') {
-  const translate = new Animated.Value(
-    direction === 'left' || direction === 'right' ? 100 : 0
-  );
+export function useSlideIn(direction: "left" | "right" | "up" | "down" = "right") {
+  const translate = new Animated.Value(direction === "left" || direction === "right" ? 100 : 0);
 
   const start = () => {
     slideIn(translate, direction, 100, Animations.durations.normal).start();
   };
 
   const reset = () => {
-    const fromValue =
-      direction === 'left' ? -100 : direction === 'right' ? 100 : 0;
+    const fromValue = direction === "left" ? -100 : direction === "right" ? 100 : 0;
     translate.setValue(fromValue);
   };
 
@@ -354,7 +353,7 @@ export const Interpolate = {
       {
         rotate: animated.interpolate({
           inputRange: [0, 1],
-          outputRange: ['0deg', '360deg'],
+          outputRange: ["0deg", "360deg"],
         }),
       },
     ],

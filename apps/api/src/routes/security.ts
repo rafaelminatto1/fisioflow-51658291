@@ -1,15 +1,15 @@
-import { Hono } from 'hono';
-import { createPool } from '../lib/db';
-import { requireAuth, type AuthVariables } from '../lib/auth';
-import type { Env } from '../types/env';
+import { Hono } from "hono";
+import { createPool } from "../lib/db";
+import { requireAuth, type AuthVariables } from "../lib/auth";
+import type { Env } from "../types/env";
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
-const BASE32_ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+const BASE32_ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
 
 const parseArray = (value: unknown): string[] => {
   if (Array.isArray(value)) return value.map(String);
-  if (typeof value === 'string') {
+  if (typeof value === "string") {
     try {
       const parsed = JSON.parse(value);
       return Array.isArray(parsed) ? parsed.map(String) : [];
@@ -23,30 +23,32 @@ const parseArray = (value: unknown): string[] => {
 function generateBackupCodes(): string[] {
   return Array.from({ length: 10 }, () => {
     const bytes = crypto.getRandomValues(new Uint8Array(6));
-    return Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('').toUpperCase();
+    return Array.from(bytes, (b) => b.toString(16).padStart(2, "0"))
+      .join("")
+      .toUpperCase();
   });
 }
 
 function generateOtpCode() {
-  const n = crypto.getRandomValues(new Uint32Array(1))[0] % 900000 + 100000;
+  const n = (crypto.getRandomValues(new Uint32Array(1))[0] % 900000) + 100000;
   return `${n}`;
 }
 
 function generateTotpSecret(): string {
   const indices = crypto.getRandomValues(new Uint8Array(32));
-  return Array.from(indices, (b) => BASE32_ALPHABET[b % BASE32_ALPHABET.length]).join('');
+  return Array.from(indices, (b) => BASE32_ALPHABET[b % BASE32_ALPHABET.length]).join("");
 }
 
 function base32Decode(base32: string): Uint8Array {
-  const normalized = base32.toUpperCase().replace(/[^A-Z2-7]/g, '');
+  const normalized = base32.toUpperCase().replace(/[^A-Z2-7]/g, "");
   const bits = normalized
-    .split('')
+    .split("")
     .map((char) => {
       const index = BASE32_ALPHABET.indexOf(char);
       if (index === -1) throw new Error(`Invalid Base32 character: ${char}`);
-      return index.toString(2).padStart(5, '0');
+      return index.toString(2).padStart(5, "0");
     })
-    .join('');
+    .join("");
 
   const bytes = new Uint8Array(Math.floor(bits.length / 8));
   for (let i = 0; i < bytes.length; i += 1) {
@@ -71,16 +73,14 @@ async function verifyTotpCode(secret: string, code: string): Promise<boolean> {
     }
 
     const hmacKey = await crypto.subtle.importKey(
-      'raw',
+      "raw",
       secretBytes as unknown as ArrayBuffer,
-      { name: 'HMAC', hash: { name: 'SHA-1' } } as HmacImportParams,
+      { name: "HMAC", hash: { name: "SHA-1" } } as HmacImportParams,
       false,
-      ['sign'],
+      ["sign"],
     );
 
-    const signature = new Uint8Array(
-      await crypto.subtle.sign('HMAC', hmacKey, counterBytes),
-    );
+    const signature = new Uint8Array(await crypto.subtle.sign("HMAC", hmacKey, counterBytes));
     const dynamicOffset = signature[signature.length - 1] & 0x0f;
     const binary =
       ((signature[dynamicOffset] & 0x7f) << 24) |
@@ -99,7 +99,7 @@ async function logSecurityEvent(
   userId: string,
   organizationId: string,
   eventType: string,
-  severity: 'info' | 'warning' | 'error',
+  severity: "info" | "warning" | "error",
   metadata: Record<string, unknown> = {},
 ) {
   const pool = createPool(env);
@@ -112,20 +112,19 @@ async function logSecurityEvent(
   );
 }
 
-app.use('*', requireAuth);
+app.use("*", requireAuth);
 
-app.get('/mfa/settings', async (c) => {
-  const user = c.get('user');
+app.get("/mfa/settings", async (c) => {
+  const user = c.get("user");
   const pool = await createPool(c.env);
-  const result = await pool.query(
-    `SELECT * FROM mfa_settings WHERE user_id = $1 LIMIT 1`,
-    [user.uid],
-  );
+  const result = await pool.query(`SELECT * FROM mfa_settings WHERE user_id = $1 LIMIT 1`, [
+    user.uid,
+  ]);
   return c.json({ data: result.rows[0] ?? null });
 });
 
-app.get('/lgpd-consents', async (c) => {
-  const user = c.get('user');
+app.get("/lgpd-consents", async (c) => {
+  const user = c.get("user");
   const pool = await createPool(c.env);
   const result = await pool.query(
     `
@@ -136,16 +135,21 @@ app.get('/lgpd-consents', async (c) => {
     `,
     [user.uid],
   );
-  try { return c.json({ data: result.rows || result }); } catch { return c.json({ data: [] }); }
+  try {
+    return c.json({ data: result.rows || result });
+  } catch {
+    return c.json({ data: [] });
+  }
 });
 
-app.put('/lgpd-consents/:consentType', async (c) => {
-  const user = c.get('user');
+app.put("/lgpd-consents/:consentType", async (c) => {
+  const user = c.get("user");
   const pool = await createPool(c.env);
-  const consentType = c.req.param('consentType');
+  const consentType = c.req.param("consentType");
   const body = (await c.req.json().catch(() => ({}))) as Record<string, unknown>;
   const granted = Boolean(body.granted);
-  const version = typeof body.version === 'string' && body.version.trim() ? body.version.trim() : '1.0';
+  const version =
+    typeof body.version === "string" && body.version.trim() ? body.version.trim() : "1.0";
 
   const result = await pool.query(
     `
@@ -187,19 +191,19 @@ app.put('/lgpd-consents/:consentType', async (c) => {
     c.env,
     user.uid,
     user.organizationId,
-    granted ? 'lgpd_consent_granted' : 'lgpd_consent_revoked',
-    'info',
+    granted ? "lgpd_consent_granted" : "lgpd_consent_revoked",
+    "info",
     { consentType, version },
   );
 
   return c.json({ data: result.rows[0] ?? null });
 });
 
-app.post('/mfa/enable', async (c) => {
-  const user = c.get('user');
+app.post("/mfa/enable", async (c) => {
+  const user = c.get("user");
   const pool = await createPool(c.env);
   const body = (await c.req.json().catch(() => ({}))) as Record<string, unknown>;
-  const method = String(body.method ?? 'email');
+  const method = String(body.method ?? "email");
   const backupCodes = generateBackupCodes();
 
   const result = await pool.query(
@@ -222,12 +226,12 @@ app.post('/mfa/enable', async (c) => {
     [user.uid, user.organizationId, method, backupCodes],
   );
 
-  await logSecurityEvent(c.env, user.uid, user.organizationId, 'mfa_enabled', 'info', { method });
+  await logSecurityEvent(c.env, user.uid, user.organizationId, "mfa_enabled", "info", { method });
   return c.json({ data: result.rows[0], backupCodes });
 });
 
-app.post('/mfa/disable', async (c) => {
-  const user = c.get('user');
+app.post("/mfa/disable", async (c) => {
+  const user = c.get("user");
   const pool = await createPool(c.env);
   const result = await pool.query(
     `
@@ -243,12 +247,12 @@ app.post('/mfa/disable', async (c) => {
     `,
     [user.uid],
   );
-  await logSecurityEvent(c.env, user.uid, user.organizationId, 'mfa_disabled', 'warning');
+  await logSecurityEvent(c.env, user.uid, user.organizationId, "mfa_disabled", "warning");
   return c.json({ data: result.rows[0] ?? null });
 });
 
-app.post('/mfa/send-otp', async (c) => {
-  const user = c.get('user');
+app.post("/mfa/send-otp", async (c) => {
+  const user = c.get("user");
   const pool = await createPool(c.env);
   const code = generateOtpCode();
   const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
@@ -269,25 +273,27 @@ app.post('/mfa/send-otp', async (c) => {
     [user.uid, user.organizationId, code, expiresAt],
   );
 
-  await logSecurityEvent(c.env, user.uid, user.organizationId, 'mfa_otp_sent', 'info');
+  await logSecurityEvent(c.env, user.uid, user.organizationId, "mfa_otp_sent", "info");
   return c.json({
     data: {
       success: true,
       expiresAt,
-      ...(c.env.ENVIRONMENT !== 'production' ? { debugCode: code } : {}),
+      ...(c.env.ENVIRONMENT !== "production" ? { debugCode: code } : {}),
     },
   });
 });
 
-app.post('/mfa/verify-otp', async (c) => {
-  const user = c.get('user');
+app.post("/mfa/verify-otp", async (c) => {
+  const user = c.get("user");
   const pool = await createPool(c.env);
   const body = (await c.req.json().catch(() => ({}))) as Record<string, unknown>;
-  const code = String(body.code ?? '').toUpperCase();
+  const code = String(body.code ?? "").toUpperCase();
 
-  const result = await pool.query(`SELECT * FROM mfa_settings WHERE user_id = $1 LIMIT 1`, [user.uid]);
+  const result = await pool.query(`SELECT * FROM mfa_settings WHERE user_id = $1 LIMIT 1`, [
+    user.uid,
+  ]);
   const settings = result.rows[0];
-  if (!settings) return c.json({ error: 'Configuração MFA não encontrada' }, 404);
+  if (!settings) return c.json({ error: "Configuração MFA não encontrada" }, 404);
 
   const backupCodes = parseArray(settings.backup_codes);
   const validOtp =
@@ -307,7 +313,7 @@ app.post('/mfa/verify-otp', async (c) => {
       `,
       [user.uid],
     );
-    await logSecurityEvent(c.env, user.uid, user.organizationId, 'mfa_otp_verified', 'info');
+    await logSecurityEvent(c.env, user.uid, user.organizationId, "mfa_otp_verified", "info");
     return c.json({ data: { verified: true } });
   }
 
@@ -323,20 +329,20 @@ app.post('/mfa/verify-otp', async (c) => {
       `,
       [user.uid, remaining],
     );
-    await logSecurityEvent(c.env, user.uid, user.organizationId, 'mfa_backup_code_used', 'warning');
+    await logSecurityEvent(c.env, user.uid, user.organizationId, "mfa_backup_code_used", "warning");
     return c.json({ data: { verified: true } });
   }
 
-  return c.json({ error: 'Código inválido ou expirado' }, 400);
+  return c.json({ error: "Código inválido ou expirado" }, 400);
 });
 
-app.post('/mfa/enroll', async (c) => {
-  const user = c.get('user');
+app.post("/mfa/enroll", async (c) => {
+  const user = c.get("user");
   const pool = await createPool(c.env);
   const body = (await c.req.json().catch(() => ({}))) as Record<string, unknown>;
   const secret = generateTotpSecret();
   const factorId = crypto.randomUUID();
-  const friendlyName = String(body.friendlyName ?? 'Authenticator App');
+  const friendlyName = String(body.friendlyName ?? "Authenticator App");
   const qrCode = `otpauth://totp/FisioFlow:${user.email ?? user.uid}?secret=${secret}&issuer=FisioFlow`;
 
   await pool.query(
@@ -353,22 +359,22 @@ app.post('/mfa/enroll', async (c) => {
   return c.json({ data: { qrCode, secret, factorId } });
 });
 
-app.post('/mfa/enroll/verify', async (c) => {
-  const user = c.get('user');
+app.post("/mfa/enroll/verify", async (c) => {
+  const user = c.get("user");
   const pool = await createPool(c.env);
   const body = (await c.req.json().catch(() => ({}))) as Record<string, unknown>;
-  const factorId = String(body.factorId ?? '');
-  const code = String(body.code ?? '');
+  const factorId = String(body.factorId ?? "");
+  const code = String(body.code ?? "");
 
   const result = await pool.query(
     `SELECT * FROM mfa_enrollments WHERE user_id = $1 AND factor_id = $2 LIMIT 1`,
     [user.uid, factorId],
   );
   const enrollment = result.rows[0];
-  if (!enrollment) return c.json({ error: 'MFA enrollment not found' }, 404);
+  if (!enrollment) return c.json({ error: "MFA enrollment not found" }, 404);
 
-  const valid = await verifyTotpCode(String(enrollment.secret ?? ''), code);
-  if (!valid) return c.json({ error: 'Invalid verification code' }, 400);
+  const valid = await verifyTotpCode(String(enrollment.secret ?? ""), code);
+  if (!valid) return c.json({ error: "Invalid verification code" }, 400);
 
   await pool.query(
     `
@@ -393,8 +399,8 @@ app.post('/mfa/enroll/verify', async (c) => {
   return c.json({ data: { verified: true } });
 });
 
-app.get('/mfa/factors', async (c) => {
-  const user = c.get('user');
+app.get("/mfa/factors", async (c) => {
+  const user = c.get("user");
   const pool = await createPool(c.env);
   const result = await pool.query(
     `
@@ -405,17 +411,21 @@ app.get('/mfa/factors', async (c) => {
     `,
     [user.uid],
   );
-  try { return c.json({ data: result.rows || result }); } catch { return c.json({ data: [] }); }
+  try {
+    return c.json({ data: result.rows || result });
+  } catch {
+    return c.json({ data: [] });
+  }
 });
 
-app.delete('/mfa/factors/:factorId', async (c) => {
-  const user = c.get('user');
+app.delete("/mfa/factors/:factorId", async (c) => {
+  const user = c.get("user");
   const pool = await createPool(c.env);
   const { factorId } = c.req.param();
-  await pool.query(
-    `DELETE FROM mfa_enrollments WHERE user_id = $1 AND factor_id = $2`,
-    [user.uid, factorId],
-  );
+  await pool.query(`DELETE FROM mfa_enrollments WHERE user_id = $1 AND factor_id = $2`, [
+    user.uid,
+    factorId,
+  ]);
   await pool.query(
     `
       UPDATE mfa_settings

@@ -3,11 +3,11 @@
  * User profile picture with fallback
  */
 
-import { View, Image, Text, StyleSheet } from 'react-native';
-import { useColors } from '@/hooks/useColorScheme';
+import { View, Image, Text, StyleSheet } from "react-native";
+import { useColors } from "@/hooks/useColorScheme";
 
-export type AvatarSize = 'xsmall' | 'small' | 'medium' | 'large' | 'xlarge';
-export type AvatarVariant = 'circle' | 'square' | 'rounded';
+export type AvatarSize = "xsmall" | "small" | "medium" | "large" | "xlarge";
+export type AvatarVariant = "circle" | "square" | "rounded";
 
 interface AvatarProps {
   uri?: string;
@@ -44,20 +44,19 @@ const BORDER_RADIUS_MAP = {
 export function Avatar({
   uri,
   name,
-  size = 'medium',
-  variant = 'circle',
+  size = "medium",
+  variant = "circle",
   backgroundColor,
   style,
   onPress,
 }: AvatarProps) {
-  
   const avatarSize = SIZE_MAP[size];
   const fontSize = FONT_SIZE_MAP[size];
   const borderRadius = BORDER_RADIUS_MAP[variant];
 
   // Get initials from name
   const getInitials = (nameStr?: string): string => {
-    if (!nameStr) return '?';
+    if (!nameStr) return "?";
     const parts = nameStr.trim().split(/\s+/);
     if (parts.length === 1) {
       return parts[0].charAt(0).toUpperCase();
@@ -69,13 +68,13 @@ export function Avatar({
     if (backgroundColor) return backgroundColor;
 
     const colors_array = [
-      '#22c55e', // green
-      '#3b82f6', // blue
-      '#f59e0b', // orange
-      '#ef4444', // red
-      '#0891b2', // cyan
-      '#10b981', // emerald
-      '#14b8a6', // teal
+      "#22c55e", // green
+      "#3b82f6", // blue
+      "#f59e0b", // orange
+      "#ef4444", // red
+      "#0891b2", // cyan
+      "#10b981", // emerald
+      "#14b8a6", // teal
     ];
 
     if (!nameStr) return colors_array[0];
@@ -92,7 +91,7 @@ export function Avatar({
           width: avatarSize,
           height: avatarSize,
           borderRadius,
-          backgroundColor: uri ? 'transparent' : getAvatarColor(name),
+          backgroundColor: uri ? "transparent" : getAvatarColor(name),
         },
       ]}
     >
@@ -102,9 +101,7 @@ export function Avatar({
           style={[styles.image, { width: avatarSize, height: avatarSize, borderRadius }]}
         />
       ) : (
-        <Text style={[styles.text, { fontSize, color: '#FFFFFF' }]}>
-          {getInitials(name)}
-        </Text>
+        <Text style={[styles.text, { fontSize, color: "#FFFFFF" }]}>{getInitials(name)}</Text>
       )}
     </View>
   );
@@ -127,7 +124,7 @@ interface AvatarGroupProps {
   style?: any;
 }
 
-export function AvatarGroup({ avatars, max = 3, size = 'medium', style }: AvatarGroupProps) {
+export function AvatarGroup({ avatars, max = 3, size = "medium", style }: AvatarGroupProps) {
   const colors = useColors();
   const avatarSize = SIZE_MAP[size];
   const overlap = avatarSize * 0.3;
@@ -156,7 +153,12 @@ export function AvatarGroup({ avatars, max = 3, size = 'medium', style }: Avatar
             },
           ]}
         >
-          <Text style={[styles.moreText, { color: colors.textSecondary, fontSize: FONT_SIZE_MAP[size] }]}>
+          <Text
+            style={[
+              styles.moreText,
+              { color: colors.textSecondary, fontSize: FONT_SIZE_MAP[size] },
+            ]}
+          >
             +{avatars.length - max}
           </Text>
         </View>
@@ -167,24 +169,24 @@ export function AvatarGroup({ avatars, max = 3, size = 'medium', style }: Avatar
 
 const styles = StyleSheet.create({
   avatar: {
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   image: {
-    resizeMode: 'cover',
+    resizeMode: "cover",
   },
   text: {
-    fontWeight: '600',
+    fontWeight: "600",
   },
   avatarGroup: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
   },
   moreAvatars: {
     borderWidth: 2,
-    borderColor: '#FFFFFF',
+    borderColor: "#FFFFFF",
   },
   moreText: {
-    fontWeight: '600',
+    fontWeight: "600",
   },
 });

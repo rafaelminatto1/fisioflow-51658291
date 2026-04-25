@@ -1,8 +1,8 @@
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
-import { neon } from '@neondatabase/serverless';
-import { drizzle } from 'drizzle-orm/neon-http';
-import { exercises } from '../src/server/db/schema/exercises.ts';
-import { eq } from 'drizzle-orm';
+import { neon } from "@neondatabase/serverless";
+import { drizzle } from "drizzle-orm/neon-http";
+import { exercises } from "../src/server/db/schema/exercises.ts";
+import { eq } from "drizzle-orm";
 import fs from "fs";
 import path from "path";
 import dotenv from "dotenv";
@@ -22,8 +22,8 @@ const r2Client = new S3Client({
 const sql = neon(process.env.DATABASE_URL!);
 const db = drizzle(sql);
 
-const BUCKET_NAME = process.env.R2_BUCKET_NAME || 'fisioflow-media';
-const PUBLIC_DOMAIN = process.env.R2_PUBLIC_DOMAIN || 'moocafisio.com.br';
+const BUCKET_NAME = process.env.R2_BUCKET_NAME || "fisioflow-media";
+const PUBLIC_DOMAIN = process.env.R2_PUBLIC_DOMAIN || "moocafisio.com.br";
 
 async function processExercise(exerciseId: string, localPath: string) {
   if (!fs.existsSync(localPath)) {
@@ -38,15 +38,13 @@ async function processExercise(exerciseId: string, localPath: string) {
     return;
   }
 
-  const slug = exercise.slug || exercise.name.toLowerCase().replace(/[^a-z0-9]/g, '-');
+  const slug = exercise.slug || exercise.name.toLowerCase().replace(/[^a-z0-9]/g, "-");
   const fileName = `exercises/${slug}.webp`;
 
   console.log(`Processing ${exercise.name}...`);
 
   // 2. Convert to WebP using sharp
-  const webpBuffer = await sharp(localPath)
-    .webp({ quality: 85 })
-    .toBuffer();
+  const webpBuffer = await sharp(localPath).webp({ quality: 85 }).toBuffer();
 
   // 3. Upload to R2
   console.log(`Uploading to R2: ${fileName}`);
@@ -56,14 +54,15 @@ async function processExercise(exerciseId: string, localPath: string) {
       Key: fileName,
       Body: webpBuffer,
       ContentType: "image/webp",
-    })
+    }),
   );
 
   const url = `https://${PUBLIC_DOMAIN}/${fileName}`;
 
   // 4. Update Database
   console.log(`Updating DB for ${exercise.name} with URL: ${url}`);
-  await db.update(exercises)
+  await db
+    .update(exercises)
     .set({
       imageUrl: url,
       thumbnailUrl: url,
@@ -81,7 +80,7 @@ async function main() {
     process.exit(1);
   }
 
-  const batch = JSON.parse(fs.readFileSync(batchFile, 'utf8'));
+  const batch = JSON.parse(fs.readFileSync(batchFile, "utf8"));
   console.log(`Starting processing for batch of ${batch.length} exercises...`);
 
   for (const item of batch) {

@@ -25,7 +25,7 @@ export function mapRange(
   inMin: number,
   inMax: number,
   outMin: number,
-  outMax: number
+  outMax: number,
 ): number {
   return ((value - inMin) * (outMax - outMin)) / (inMax - inMin) + outMin;
 }
@@ -56,8 +56,8 @@ export function random(min: number, max: number): number {
  * Generate a random ID
  */
 export function randomId(length: number = 8): string {
-  const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
-  let result = '';
+  const chars = "abcdefghijklmnopqrstuvwxyz0123456789";
+  let result = "";
   for (let i = 0; i < length; i++) {
     result += chars.charAt(Math.floor(Math.random() * chars.length));
   }
@@ -75,12 +75,8 @@ export function percentage(part: number, total: number): number {
 /**
  * Calculate percentage with optional decimals
  */
-export function percentageFormatted(
-  part: number,
-  total: number,
-  decimals: number = 1
-): string {
-  return percentage(part, total).toFixed(decimals) + '%';
+export function percentageFormatted(part: number, total: number, decimals: number = 1): string {
+  return percentage(part, total).toFixed(decimals) + "%";
 }
 
 /**
@@ -116,9 +112,9 @@ export function min(numbers: number[]): number | undefined {
  * Format a number as currency (BRL)
  */
 export function currencyBRL(value: number): string {
-  return value.toLocaleString('pt-BR', {
-    style: 'currency',
-    currency: 'BRL',
+  return value.toLocaleString("pt-BR", {
+    style: "currency",
+    currency: "BRL",
   });
 }
 
@@ -126,7 +122,7 @@ export function currencyBRL(value: number): string {
  * Format a number with thousands separator (Brazilian format)
  */
 export function formatNumber(value: number): string {
-  return value.toLocaleString('pt-BR');
+  return value.toLocaleString("pt-BR");
 }
 
 /**
@@ -154,12 +150,12 @@ export function calculateBMI(weightKg: number, heightMeters: number): number {
  * Get BMI category
  */
 export function getBMICategory(bmi: number): string {
-  if (bmi < 18.5) return 'Abaixo do peso';
-  if (bmi < 25) return 'Peso normal';
-  if (bmi < 30) return 'Sobrepeso';
-  if (bmi < 35) return 'Obesidade grau I';
-  if (bmi < 40) return 'Obesidade grau II';
-  return 'Obesidade grau III';
+  if (bmi < 18.5) return "Abaixo do peso";
+  if (bmi < 25) return "Peso normal";
+  if (bmi < 30) return "Sobrepeso";
+  if (bmi < 35) return "Obesidade grau I";
+  if (bmi < 40) return "Obesidade grau II";
+  return "Obesidade grau III";
 }
 
 /**

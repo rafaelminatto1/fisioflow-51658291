@@ -11,115 +11,113 @@ import { lazy, Suspense, ComponentType } from "react";
 import { Loader2 } from "lucide-react";
 
 const LineChart = lazy(() =>
-	import("recharts").then((m) => ({
-		default: m.LineChart as ComponentType<unknown>,
-	})),
+  import("recharts").then((m) => ({
+    default: m.LineChart as ComponentType<unknown>,
+  })),
 );
 const BarChart = lazy(() =>
-	import("recharts").then((m) => ({
-		default: m.BarChart as ComponentType<unknown>,
-	})),
+  import("recharts").then((m) => ({
+    default: m.BarChart as ComponentType<unknown>,
+  })),
 );
 const AreaChart = lazy(() =>
-	import("recharts").then((m) => ({
-		default: m.AreaChart as ComponentType<unknown>,
-	})),
+  import("recharts").then((m) => ({
+    default: m.AreaChart as ComponentType<unknown>,
+  })),
 );
 const PieChart = lazy(() =>
-	import("recharts").then((m) => ({
-		default: m.PieChart as ComponentType<unknown>,
-	})),
+  import("recharts").then((m) => ({
+    default: m.PieChart as ComponentType<unknown>,
+  })),
 );
 const RadarChart = lazy(() =>
-	import("recharts").then((m) => ({
-		default: m.RadarChart as ComponentType<unknown>,
-	})),
+  import("recharts").then((m) => ({
+    default: m.RadarChart as ComponentType<unknown>,
+  })),
 );
 
 // Lazy load dos componentes de renderização
 const Line = lazy(() =>
-	import("recharts").then((m) => ({
-		default: m.Line as ComponentType<unknown>,
-	})),
+  import("recharts").then((m) => ({
+    default: m.Line as ComponentType<unknown>,
+  })),
 );
 const Bar = lazy(() =>
-	import("recharts").then((m) => ({
-		default: m.Bar as ComponentType<unknown>,
-	})),
+  import("recharts").then((m) => ({
+    default: m.Bar as ComponentType<unknown>,
+  })),
 );
 const Area = lazy(() =>
-	import("recharts").then((m) => ({
-		default: m.Area as ComponentType<unknown>,
-	})),
+  import("recharts").then((m) => ({
+    default: m.Area as ComponentType<unknown>,
+  })),
 );
 const Pie = lazy(() =>
-	import("recharts").then((m) => ({
-		default: m.Pie as ComponentType<unknown>,
-	})),
+  import("recharts").then((m) => ({
+    default: m.Pie as ComponentType<unknown>,
+  })),
 );
 const Radar = lazy(() =>
-	import("recharts").then((m) => ({
-		default: m.Radar as ComponentType<unknown>,
-	})),
+  import("recharts").then((m) => ({
+    default: m.Radar as ComponentType<unknown>,
+  })),
 );
 const Cell = lazy(() =>
-	import("recharts").then((m) => ({
-		default: m.Cell as ComponentType<unknown>,
-	})),
+  import("recharts").then((m) => ({
+    default: m.Cell as ComponentType<unknown>,
+  })),
 );
 
 // Lazy load dos componentes de eixos e tooltips
 const XAxis = lazy(() =>
-	import("recharts").then((m) => ({
-		default: m.XAxis as ComponentType<unknown>,
-	})),
+  import("recharts").then((m) => ({
+    default: m.XAxis as ComponentType<unknown>,
+  })),
 );
 const YAxis = lazy(() =>
-	import("recharts").then((m) => ({
-		default: m.YAxis as ComponentType<unknown>,
-	})),
+  import("recharts").then((m) => ({
+    default: m.YAxis as ComponentType<unknown>,
+  })),
 );
 const CartesianGrid = lazy(() =>
-	import("recharts").then((m) => ({
-		default: m.CartesianGrid as ComponentType<unknown>,
-	})),
+  import("recharts").then((m) => ({
+    default: m.CartesianGrid as ComponentType<unknown>,
+  })),
 );
 const Tooltip = lazy(() =>
-	import("recharts").then((m) => ({
-		default: m.Tooltip as ComponentType<unknown>,
-	})),
+  import("recharts").then((m) => ({
+    default: m.Tooltip as ComponentType<unknown>,
+  })),
 );
 const Legend = lazy(() =>
-	import("recharts").then((m) => ({
-		default: m.Legend as ComponentType<unknown>,
-	})),
+  import("recharts").then((m) => ({
+    default: m.Legend as ComponentType<unknown>,
+  })),
 );
 const ResponsiveContainer = lazy(() =>
-	import("recharts").then((m) => ({
-		default: m.ResponsiveContainer as ComponentType<unknown>,
-	})),
+  import("recharts").then((m) => ({
+    default: m.ResponsiveContainer as ComponentType<unknown>,
+  })),
 );
 
 // Loading fallback para charts
 function ChartLoader({ height = 200 }: { height?: number }) {
-	return (
-		<div className="flex items-center justify-center" style={{ height }}>
-			<Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-		</div>
-	);
+  return (
+    <div className="flex items-center justify-center" style={{ height }}>
+      <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+    </div>
+  );
 }
 
 // Wrapper paraSuspense
 function SuspenseWrapper({
-	children,
-	height = 200,
+  children,
+  height = 200,
 }: {
-	children: React.ReactNode;
-	height?: number;
+  children: React.ReactNode;
+  height?: number;
 }) {
-	return (
-		<Suspense fallback={<ChartLoader height={height} />}>{children}</Suspense>
-	);
+  return <Suspense fallback={<ChartLoader height={height} />}>{children}</Suspense>;
 }
 
 // Exportar componentes lazy-wrapped
@@ -158,33 +156,33 @@ export const LazyResponsiveContainer = ResponsiveContainer;
  * </LazyChart>
  */
 export function LazyChart({
-	children,
-	height = 300,
+  children,
+  height = 300,
 }: {
-	children: React.ReactNode;
-	height?: number;
+  children: React.ReactNode;
+  height?: number;
 }) {
-	return <SuspenseWrapper height={height}>{children}</SuspenseWrapper>;
+  return <SuspenseWrapper height={height}>{children}</SuspenseWrapper>;
 }
 
 // Re-exportar tudo do recharts para compatibilidade
 
 export {
-	LineChart,
-	BarChart,
-	AreaChart,
-	PieChart,
-	RadarChart,
-	Line,
-	Bar,
-	Area,
-	Pie,
-	Radar,
-	Cell,
-	XAxis,
-	YAxis,
-	CartesianGrid,
-	Tooltip,
-	Legend,
-	ResponsiveContainer,
+  LineChart,
+  BarChart,
+  AreaChart,
+  PieChart,
+  RadarChart,
+  Line,
+  Bar,
+  Area,
+  Pie,
+  Radar,
+  Cell,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
 } from "recharts";

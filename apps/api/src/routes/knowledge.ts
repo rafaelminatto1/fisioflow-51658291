@@ -1,7 +1,7 @@
-import { Hono } from 'hono';
-import { createPool } from '../lib/db';
-import { requireAuth, type AuthVariables } from '../lib/auth';
-import type { Env } from '../types/env';
+import { Hono } from "hono";
+import { createPool } from "../lib/db";
+import { requireAuth, type AuthVariables } from "../lib/auth";
+import type { Env } from "../types/env";
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
@@ -9,7 +9,9 @@ type Queryable = ReturnType<typeof createPool>;
 type JsonResponder = { json: (body: unknown, status?: number) => Response };
 
 async function hasTable(pool: Queryable, tableName: string): Promise<boolean> {
-  const result = await pool.query(`SELECT to_regclass($1)::text AS table_name`, [`public.${tableName}`]);
+  const result = await pool.query(`SELECT to_regclass($1)::text AS table_name`, [
+    `public.${tableName}`,
+  ]);
   return Boolean(result.rows[0]?.table_name);
 }
 
@@ -20,13 +22,13 @@ function isMissingSchemaError(error: unknown): boolean {
     cause?: { code?: string; message?: string };
   };
   const code = typedError.code ?? typedError.cause?.code;
-  const message = `${typedError.message} ${typedError.cause?.message ?? ''}`.toLowerCase();
+  const message = `${typedError.message} ${typedError.cause?.message ?? ""}`.toLowerCase();
   return (
-    code === '42P01' ||
-    code === '42703' ||
-    message.includes('does not exist') ||
-    message.includes('undefined table') ||
-    message.includes('undefined column')
+    code === "42P01" ||
+    code === "42703" ||
+    message.includes("does not exist") ||
+    message.includes("undefined table") ||
+    message.includes("undefined column")
   );
 }
 
@@ -39,7 +41,7 @@ async function ensureTables(c: JsonResponder, pool: Queryable, tableNames: strin
     if (!(await hasTable(pool, tableName))) {
       return c.json(
         {
-          error: 'KNOWLEDGE_SCHEMA_UNAVAILABLE',
+          error: "KNOWLEDGE_SCHEMA_UNAVAILABLE",
           message: `Tabela obrigatória ausente: ${tableName}`,
         },
         501,
@@ -51,7 +53,7 @@ async function ensureTables(c: JsonResponder, pool: Queryable, tableNames: strin
 
 const parseJsonArray = (value: unknown): string[] => {
   if (Array.isArray(value)) return value.map(String);
-  if (typeof value === 'string') {
+  if (typeof value === "string") {
     try {
       const parsed = JSON.parse(value);
       return Array.isArray(parsed) ? parsed.map(String) : [];
@@ -64,18 +66,18 @@ const parseJsonArray = (value: unknown): string[] => {
 
 const normalizeArticle = (row: Record<string, unknown>) => ({
   id: String(row.article_id ?? row.id),
-  organizationId: String(row.organization_id ?? ''),
-  title: String(row.title ?? ''),
-  type: String(row.article_type ?? 'pdf'),
-  url: row.url ? String(row.url) : '',
-  group: String(row.group ?? ''),
-  subgroup: String(row.subgroup ?? ''),
+  organizationId: String(row.organization_id ?? ""),
+  title: String(row.title ?? ""),
+  type: String(row.article_type ?? "pdf"),
+  url: row.url ? String(row.url) : "",
+  group: String(row.group ?? ""),
+  subgroup: String(row.subgroup ?? ""),
   focus: parseJsonArray(row.focus),
-  evidence: row.evidence ? String(row.evidence) : 'B',
-  evidenceLevel: row.evidence ? String(row.evidence) : 'B',
+  evidence: row.evidence ? String(row.evidence) : "B",
+  evidenceLevel: row.evidence ? String(row.evidence) : "B",
   year: row.year == null ? undefined : Number(row.year),
   source: row.source ? String(row.source) : undefined,
-  status: row.status ? String(row.status) : 'pending',
+  status: row.status ? String(row.status) : "pending",
   tags: parseJsonArray(row.tags),
   summary: row.summary ? String(row.summary) : undefined,
   keyFindings: parseJsonArray(row.highlights),
@@ -83,7 +85,7 @@ const normalizeArticle = (row: Record<string, unknown>) => ({
   highlights: parseJsonArray(row.highlights),
   observations: parseJsonArray(row.observations),
   keyQuestions: parseJsonArray(row.key_questions),
-  vectorStatus: row.vector_status ? String(row.vector_status) : 'pending',
+  vectorStatus: row.vector_status ? String(row.vector_status) : "pending",
   viewCount: Number(row.view_count ?? 0),
   citationCount: row.citation_count == null ? undefined : Number(row.citation_count),
   metadata: row.metadata ?? {
@@ -93,7 +95,7 @@ const normalizeArticle = (row: Record<string, unknown>) => ({
   },
   createdAt: row.created_at ? String(row.created_at) : null,
   updatedAt: row.updated_at ? String(row.updated_at) : null,
-  createdBy: row.created_by ? String(row.created_by) : '',
+  createdBy: row.created_by ? String(row.created_by) : "",
 });
 
 const normalizeAnnotation = (row: Record<string, unknown>) => ({
@@ -137,13 +139,13 @@ const normalizeAudit = (row: Record<string, unknown>) => ({
   created_at: row.created_at ? String(row.created_at) : null,
 });
 
-app.use('*', requireAuth);
+app.use("*", requireAuth);
 
-app.get('/articles', async (c) => {
-  const user = c.get('user');
+app.get("/articles", async (c) => {
+  const user = c.get("user");
   const pool = await createPool(c.env);
-  if (!(await hasTable(pool, 'knowledge_articles'))) {
-    logSchemaFallback('articles');
+  if (!(await hasTable(pool, "knowledge_articles"))) {
+    logSchemaFallback("articles");
     return c.json({ data: [] });
   }
 
@@ -160,20 +162,23 @@ app.get('/articles', async (c) => {
     return c.json({ data: result.rows.map(normalizeArticle) });
   } catch (error) {
     if (isMissingSchemaError(error)) {
-      logSchemaFallback('articles', error);
+      logSchemaFallback("articles", error);
       return c.json({ data: [] });
     }
     throw error;
   }
 });
 
-app.post('/articles', async (c) => {
-  const user = c.get('user');
+app.post("/articles", async (c) => {
+  const user = c.get("user");
   const pool = await createPool(c.env);
-  const schemaUnavailable = await ensureTables(c, pool, ['knowledge_articles']);
+  const schemaUnavailable = await ensureTables(c, pool, ["knowledge_articles"]);
   if (schemaUnavailable) return schemaUnavailable;
   const body = (await c.req.json().catch(() => ({}))) as Record<string, unknown>;
-  const metadata = (body.metadata && typeof body.metadata === 'object') ? body.metadata as Record<string, unknown> : {};
+  const metadata =
+    body.metadata && typeof body.metadata === "object"
+      ? (body.metadata as Record<string, unknown>)
+      : {};
   const articleId = String(body.article_id ?? body.id ?? crypto.randomUUID());
 
   const result = await pool.query(
@@ -189,24 +194,24 @@ app.post('/articles', async (c) => {
     [
       user.organizationId,
       articleId,
-      String(body.title ?? ''),
-      String(body.type ?? body.article_type ?? 'pdf'),
-      String(body.group ?? ''),
-      String(body.subgroup ?? ''),
+      String(body.title ?? ""),
+      String(body.type ?? body.article_type ?? "pdf"),
+      String(body.group ?? ""),
+      String(body.subgroup ?? ""),
       JSON.stringify(Array.isArray(body.focus) ? body.focus : []),
-      String(body.evidenceLevel ?? body.evidence ?? 'Consensus'),
+      String(body.evidenceLevel ?? body.evidence ?? "Consensus"),
       metadata.year == null ? null : Number(metadata.year),
-      metadata.journal ? String(metadata.journal) : (body.source ? String(body.source) : null),
+      metadata.journal ? String(metadata.journal) : body.source ? String(body.source) : null,
       body.url ? String(body.url) : null,
       JSON.stringify(Array.isArray(body.tags) ? body.tags : []),
-      String(body.status ?? 'pending'),
+      String(body.status ?? "pending"),
       body.summary ? String(body.summary) : null,
-      JSON.stringify(Array.isArray(body.keyFindings) ? body.keyFindings : body.highlights ?? []),
+      JSON.stringify(Array.isArray(body.keyFindings) ? body.keyFindings : (body.highlights ?? [])),
       JSON.stringify(Array.isArray(body.clinicalImplications) ? body.clinicalImplications : []),
       JSON.stringify(Array.isArray(body.observations) ? body.observations : []),
       JSON.stringify(Array.isArray(body.keyQuestions) ? body.keyQuestions : []),
       JSON.stringify(metadata),
-      String(body.vectorStatus ?? body.vector_status ?? 'pending'),
+      String(body.vectorStatus ?? body.vector_status ?? "pending"),
       Number(body.viewCount ?? body.view_count ?? 0),
       body.citationCount == null ? null : Number(body.citationCount),
       body.rawText ? String(body.rawText) : null,
@@ -218,15 +223,18 @@ app.post('/articles', async (c) => {
   return c.json({ data: normalizeArticle(result.rows[0]) }, 201);
 });
 
-app.put('/articles/:articleId', async (c) => {
-  const user = c.get('user');
+app.put("/articles/:articleId", async (c) => {
+  const user = c.get("user");
   const pool = await createPool(c.env);
-  const schemaUnavailable = await ensureTables(c, pool, ['knowledge_articles']);
+  const schemaUnavailable = await ensureTables(c, pool, ["knowledge_articles"]);
   if (schemaUnavailable) return schemaUnavailable;
   const { articleId } = c.req.param();
   const body = (await c.req.json().catch(() => ({}))) as Record<string, unknown>;
-  const metadata = (body.metadata && typeof body.metadata === 'object') ? body.metadata as Record<string, unknown> : undefined;
-  const sets: string[] = ['updated_by = $1', 'updated_at = NOW()'];
+  const metadata =
+    body.metadata && typeof body.metadata === "object"
+      ? (body.metadata as Record<string, unknown>)
+      : undefined;
+  const sets: string[] = ["updated_by = $1", "updated_at = NOW()"];
   const params: unknown[] = [user.uid];
 
   const addSet = (column: string, value: unknown, transform?: (v: unknown) => unknown) => {
@@ -234,47 +242,64 @@ app.put('/articles/:articleId', async (c) => {
     sets.push(`${column} = $${params.length}`);
   };
 
-  if (body.title !== undefined) addSet('title', String(body.title));
-  if (body.type !== undefined || body.article_type !== undefined) addSet('article_type', String(body.type ?? body.article_type));
+  if (body.title !== undefined) addSet("title", String(body.title));
+  if (body.type !== undefined || body.article_type !== undefined)
+    addSet("article_type", String(body.type ?? body.article_type));
   if (body.group !== undefined) addSet('"group"', String(body.group));
-  if (body.subgroup !== undefined) addSet('subgroup', String(body.subgroup));
-  if (body.focus !== undefined) addSet('focus', body.focus, (v) => JSON.stringify(Array.isArray(v) ? v : []));
-  if (body.evidenceLevel !== undefined || body.evidence !== undefined) addSet('evidence', String(body.evidenceLevel ?? body.evidence));
-  if (body.url !== undefined) addSet('url', body.url ? String(body.url) : null);
-  if (body.tags !== undefined) addSet('tags', body.tags, (v) => JSON.stringify(Array.isArray(v) ? v : []));
-  if (body.status !== undefined) addSet('status', String(body.status));
-  if (body.summary !== undefined) addSet('summary', body.summary ? String(body.summary) : null);
-  if (body.keyFindings !== undefined || body.highlights !== undefined) addSet('highlights', body.keyFindings ?? body.highlights, (v) => JSON.stringify(Array.isArray(v) ? v : []));
-  if (body.clinicalImplications !== undefined) addSet('clinical_implications', body.clinicalImplications, (v) => JSON.stringify(Array.isArray(v) ? v : []));
-  if (body.observations !== undefined) addSet('observations', body.observations, (v) => JSON.stringify(Array.isArray(v) ? v : []));
-  if (body.keyQuestions !== undefined) addSet('key_questions', body.keyQuestions, (v) => JSON.stringify(Array.isArray(v) ? v : []));
+  if (body.subgroup !== undefined) addSet("subgroup", String(body.subgroup));
+  if (body.focus !== undefined)
+    addSet("focus", body.focus, (v) => JSON.stringify(Array.isArray(v) ? v : []));
+  if (body.evidenceLevel !== undefined || body.evidence !== undefined)
+    addSet("evidence", String(body.evidenceLevel ?? body.evidence));
+  if (body.url !== undefined) addSet("url", body.url ? String(body.url) : null);
+  if (body.tags !== undefined)
+    addSet("tags", body.tags, (v) => JSON.stringify(Array.isArray(v) ? v : []));
+  if (body.status !== undefined) addSet("status", String(body.status));
+  if (body.summary !== undefined) addSet("summary", body.summary ? String(body.summary) : null);
+  if (body.keyFindings !== undefined || body.highlights !== undefined)
+    addSet("highlights", body.keyFindings ?? body.highlights, (v) =>
+      JSON.stringify(Array.isArray(v) ? v : []),
+    );
+  if (body.clinicalImplications !== undefined)
+    addSet("clinical_implications", body.clinicalImplications, (v) =>
+      JSON.stringify(Array.isArray(v) ? v : []),
+    );
+  if (body.observations !== undefined)
+    addSet("observations", body.observations, (v) => JSON.stringify(Array.isArray(v) ? v : []));
+  if (body.keyQuestions !== undefined)
+    addSet("key_questions", body.keyQuestions, (v) => JSON.stringify(Array.isArray(v) ? v : []));
   if (metadata !== undefined) {
-    addSet('metadata', metadata, (v) => JSON.stringify(v));
-    if (metadata.year !== undefined) addSet('year', Number(metadata.year));
-    if (metadata.journal !== undefined) addSet('source', metadata.journal ? String(metadata.journal) : null);
+    addSet("metadata", metadata, (v) => JSON.stringify(v));
+    if (metadata.year !== undefined) addSet("year", Number(metadata.year));
+    if (metadata.journal !== undefined)
+      addSet("source", metadata.journal ? String(metadata.journal) : null);
   }
-  if (body.vectorStatus !== undefined || body.vector_status !== undefined) addSet('vector_status', String(body.vectorStatus ?? body.vector_status));
-  if (body.viewCount !== undefined || body.view_count !== undefined) addSet('view_count', Number(body.viewCount ?? body.view_count));
-  if (body.citationCount !== undefined || body.citation_count !== undefined) addSet('citation_count', body.citationCount ?? body.citation_count);
-  if (body.rawText !== undefined || body.raw_text !== undefined) addSet('raw_text', body.rawText ?? body.raw_text);
+  if (body.vectorStatus !== undefined || body.vector_status !== undefined)
+    addSet("vector_status", String(body.vectorStatus ?? body.vector_status));
+  if (body.viewCount !== undefined || body.view_count !== undefined)
+    addSet("view_count", Number(body.viewCount ?? body.view_count));
+  if (body.citationCount !== undefined || body.citation_count !== undefined)
+    addSet("citation_count", body.citationCount ?? body.citation_count);
+  if (body.rawText !== undefined || body.raw_text !== undefined)
+    addSet("raw_text", body.rawText ?? body.raw_text);
 
   params.push(user.organizationId, articleId);
   const result = await pool.query(
     `UPDATE knowledge_articles
-        SET ${sets.join(', ')}
+        SET ${sets.join(", ")}
       WHERE organization_id = $${params.length - 1} AND article_id = $${params.length}
       RETURNING *`,
     params,
   );
 
-  if (!result.rows.length) return c.json({ error: 'Artigo não encontrado' }, 404);
+  if (!result.rows.length) return c.json({ error: "Artigo não encontrado" }, 404);
   return c.json({ data: normalizeArticle(result.rows[0]) });
 });
 
-app.post('/articles/sync', async (c) => {
-  const user = c.get('user');
+app.post("/articles/sync", async (c) => {
+  const user = c.get("user");
   const pool = await createPool(c.env);
-  const schemaUnavailable = await ensureTables(c, pool, ['knowledge_articles']);
+  const schemaUnavailable = await ensureTables(c, pool, ["knowledge_articles"]);
   if (schemaUnavailable) return schemaUnavailable;
   const body = (await c.req.json().catch(() => ({}))) as { articles?: Record<string, unknown>[] };
   const articles = Array.isArray(body.articles) ? body.articles : [];
@@ -311,20 +336,24 @@ app.post('/articles/sync', async (c) => {
       `,
       [
         user.organizationId,
-        String(article.id ?? article.article_id ?? ''),
-        String(article.title ?? ''),
-        String(article.group ?? ''),
-        String(article.subgroup ?? ''),
+        String(article.id ?? article.article_id ?? ""),
+        String(article.title ?? ""),
+        String(article.group ?? ""),
+        String(article.subgroup ?? ""),
         JSON.stringify(Array.isArray(article.focus) ? article.focus : []),
-        String(article.evidence ?? 'B'),
+        String(article.evidence ?? "B"),
         article.year == null ? null : Number(article.year),
         article.source ? String(article.source) : null,
         article.url ? String(article.url) : null,
         JSON.stringify(Array.isArray(article.tags) ? article.tags : []),
-        String(article.status ?? 'pending'),
+        String(article.status ?? "pending"),
         JSON.stringify(Array.isArray(article.highlights) ? article.highlights : []),
         JSON.stringify(Array.isArray(article.observations) ? article.observations : []),
-        JSON.stringify(Array.isArray(article.keyQuestions) ? article.keyQuestions : article.key_questions ?? []),
+        JSON.stringify(
+          Array.isArray(article.keyQuestions)
+            ? article.keyQuestions
+            : (article.key_questions ?? []),
+        ),
         user.uid,
         user.uid,
       ],
@@ -334,11 +363,11 @@ app.post('/articles/sync', async (c) => {
   return c.json({ indexed: articles.length });
 });
 
-app.post('/articles/index', async (c) => {
-  const user = c.get('user');
+app.post("/articles/index", async (c) => {
+  const user = c.get("user");
   const pool = await createPool(c.env);
-  if (!(await hasTable(pool, 'knowledge_articles'))) {
-    logSchemaFallback('articles/index');
+  if (!(await hasTable(pool, "knowledge_articles"))) {
+    logSchemaFallback("articles/index");
     return c.json({ indexed: 0 });
   }
   try {
@@ -349,26 +378,35 @@ app.post('/articles/index', async (c) => {
     return c.json({ indexed: Number(result.rows[0]?.total ?? 0) });
   } catch (error) {
     if (isMissingSchemaError(error)) {
-      logSchemaFallback('articles/index', error);
+      logSchemaFallback("articles/index", error);
       return c.json({ indexed: 0 });
     }
     throw error;
   }
 });
 
-app.post('/articles/:articleId/process', async (c) => {
-  const user = c.get('user');
+app.post("/articles/:articleId/process", async (c) => {
+  const user = c.get("user");
   const pool = await createPool(c.env);
-  const schemaUnavailable = await ensureTables(c, pool, ['knowledge_articles']);
+  const schemaUnavailable = await ensureTables(c, pool, ["knowledge_articles"]);
   if (schemaUnavailable) return schemaUnavailable;
   const { articleId } = c.req.param();
   const body = (await c.req.json().catch(() => ({}))) as { textContent?: string };
-  const rawText = String(body.textContent ?? '');
+  const rawText = String(body.textContent ?? "");
   const summary = rawText
-    ? rawText.split(/\n+/).map((line) => line.trim()).filter(Boolean).slice(0, 3).join(' ')
-    : 'Documento indexado para consulta.';
+    ? rawText
+        .split(/\n+/)
+        .map((line) => line.trim())
+        .filter(Boolean)
+        .slice(0, 3)
+        .join(" ")
+    : "Documento indexado para consulta.";
   const keyFindings = rawText
-    ? rawText.split(/\n+/).map((line) => line.trim()).filter(Boolean).slice(0, 5)
+    ? rawText
+        .split(/\n+/)
+        .map((line) => line.trim())
+        .filter(Boolean)
+        .slice(0, 5)
     : [];
 
   await pool.query(
@@ -386,15 +424,15 @@ app.post('/articles/:articleId/process', async (c) => {
   return c.json({ data: { success: true } });
 });
 
-app.post('/articles/:articleId/ask', async (c) => {
-  const user = c.get('user');
+app.post("/articles/:articleId/ask", async (c) => {
+  const user = c.get("user");
   const pool = await createPool(c.env);
-  const schemaUnavailable = await ensureTables(c, pool, ['knowledge_articles']);
+  const schemaUnavailable = await ensureTables(c, pool, ["knowledge_articles"]);
   if (schemaUnavailable) return schemaUnavailable;
   const { articleId } = c.req.param();
   const body = (await c.req.json().catch(() => ({}))) as { query?: string };
-  const question = String(body.query ?? '').trim();
-  if (!question) return c.json({ error: 'query é obrigatória' }, 400);
+  const question = String(body.query ?? "").trim();
+  if (!question) return c.json({ error: "query é obrigatória" }, 400);
 
   const result = await pool.query(
     `SELECT title, summary, highlights, raw_text
@@ -403,29 +441,31 @@ app.post('/articles/:articleId/ask', async (c) => {
     [user.organizationId, articleId],
   );
 
-  if (!result.rows.length) return c.json({ error: 'Artigo não encontrado' }, 404);
+  if (!result.rows.length) return c.json({ error: "Artigo não encontrado" }, 404);
   const row = result.rows[0];
   const contextBits = [
-    row.summary ? `Resumo: ${String(row.summary)}` : '',
+    row.summary ? `Resumo: ${String(row.summary)}` : "",
     ...parseJsonArray(row.highlights).map((item) => `- ${item}`),
   ].filter(Boolean);
 
   const answer = contextBits.length
-    ? `Documento: ${String(row.title)}\n\n${contextBits.join('\n')}\n\nPergunta: ${question}\n\nResposta resumida com base no conteúdo indexado acima.`
+    ? `Documento: ${String(row.title)}\n\n${contextBits.join("\n")}\n\nPergunta: ${question}\n\nResposta resumida com base no conteúdo indexado acima.`
     : `Documento: ${String(row.title)}\n\nO documento foi localizado, mas ainda não possui resumo estruturado. Pergunta recebida: ${question}`;
 
-  return c.json({ data: { answer, contextUsed: contextBits.join('\n') } });
+  return c.json({ data: { answer, contextUsed: contextBits.join("\n") } });
 });
 
-app.post('/semantic-search', async (c) => {
-  const user = c.get('user');
+app.post("/semantic-search", async (c) => {
+  const user = c.get("user");
   const pool = await createPool(c.env);
   const body = (await c.req.json().catch(() => ({}))) as { query?: string; limit?: number };
-  const search = String(body.query ?? '').trim().toLowerCase();
+  const search = String(body.query ?? "")
+    .trim()
+    .toLowerCase();
   const limit = Math.max(1, Math.min(Number(body.limit ?? 20), 100));
   if (!search) return c.json({ data: [] });
-  if (!(await hasTable(pool, 'knowledge_articles'))) {
-    logSchemaFallback('semantic-search');
+  if (!(await hasTable(pool, "knowledge_articles"))) {
+    logSchemaFallback("semantic-search");
     return c.json({ data: [] });
   }
 
@@ -441,7 +481,7 @@ app.post('/semantic-search', async (c) => {
     );
   } catch (error) {
     if (isMissingSchemaError(error)) {
-      logSchemaFallback('semantic-search', error);
+      logSchemaFallback("semantic-search", error);
       return c.json({ data: [] });
     }
     throw error;
@@ -457,10 +497,14 @@ app.post('/semantic-search', async (c) => {
         ...parseJsonArray(row.observations),
       ]
         .filter(Boolean)
-        .join(' \n ')
+        .join(" \n ")
         .toLowerCase();
       const occurrences = haystack.split(search).length - 1;
-      const exactTitleBoost = String(row.title ?? '').toLowerCase().includes(search) ? 5 : 0;
+      const exactTitleBoost = String(row.title ?? "")
+        .toLowerCase()
+        .includes(search)
+        ? 5
+        : 0;
       return {
         article_id: String(row.article_id),
         score: occurrences + exactTitleBoost,
@@ -473,11 +517,11 @@ app.post('/semantic-search', async (c) => {
   return c.json({ data: scored });
 });
 
-app.get('/annotations', async (c) => {
-  const user = c.get('user');
+app.get("/annotations", async (c) => {
+  const user = c.get("user");
   const pool = await createPool(c.env);
-  if (!(await hasTable(pool, 'knowledge_annotations'))) {
-    logSchemaFallback('annotations');
+  if (!(await hasTable(pool, "knowledge_annotations"))) {
+    logSchemaFallback("annotations");
     return c.json({ data: [] });
   }
   try {
@@ -497,22 +541,25 @@ app.get('/annotations', async (c) => {
     return c.json({ data: result.rows.map(normalizeAnnotation) });
   } catch (error) {
     if (isMissingSchemaError(error)) {
-      logSchemaFallback('annotations', error);
+      logSchemaFallback("annotations", error);
       return c.json({ data: [] });
     }
     throw error;
   }
 });
 
-app.put('/annotations/:articleId', async (c) => {
-  const user = c.get('user');
+app.put("/annotations/:articleId", async (c) => {
+  const user = c.get("user");
   const pool = await createPool(c.env);
-  const schemaUnavailable = await ensureTables(c, pool, ['knowledge_annotations', 'knowledge_articles']);
+  const schemaUnavailable = await ensureTables(c, pool, [
+    "knowledge_annotations",
+    "knowledge_articles",
+  ]);
   if (schemaUnavailable) return schemaUnavailable;
-  const articleId = c.req.param('articleId');
+  const articleId = c.req.param("articleId");
   const body = (await c.req.json().catch(() => ({}))) as Record<string, unknown>;
-  const scope = body.scope === 'user' ? 'user' : 'organization';
-  const scopeKey = scope === 'user' ? user.uid : 'org';
+  const scope = body.scope === "user" ? "user" : "organization";
+  const scopeKey = scope === "user" ? user.uid : "org";
 
   const queries = [
     {
@@ -539,7 +586,7 @@ app.put('/annotations/:articleId', async (c) => {
         articleId,
         scope,
         scopeKey,
-        scope === 'user' ? user.uid : null,
+        scope === "user" ? user.uid : null,
         JSON.stringify(Array.isArray(body.highlights) ? body.highlights : []),
         JSON.stringify(Array.isArray(body.observations) ? body.observations : []),
         body.status ? String(body.status) : null,
@@ -547,10 +594,10 @@ app.put('/annotations/:articleId', async (c) => {
         user.uid,
         user.uid,
       ],
-    }
+    },
   ];
 
-  if (scope === 'organization') {
+  if (scope === "organization") {
     queries.push({
       text: `
         UPDATE knowledge_articles
@@ -580,11 +627,11 @@ app.put('/annotations/:articleId', async (c) => {
   }
 });
 
-app.get('/curation', async (c) => {
-  const user = c.get('user');
+app.get("/curation", async (c) => {
+  const user = c.get("user");
   const pool = await createPool(c.env);
-  if (!(await hasTable(pool, 'knowledge_curation'))) {
-    logSchemaFallback('curation');
+  if (!(await hasTable(pool, "knowledge_curation"))) {
+    logSchemaFallback("curation");
     return c.json({ data: [] });
   }
   try {
@@ -600,19 +647,19 @@ app.get('/curation', async (c) => {
     return c.json({ data: result.rows.map(normalizeCuration) });
   } catch (error) {
     if (isMissingSchemaError(error)) {
-      logSchemaFallback('curation', error);
+      logSchemaFallback("curation", error);
       return c.json({ data: [] });
     }
     throw error;
   }
 });
 
-app.get('/articles/:articleId/notes', async (c) => {
-  const user = c.get('user');
+app.get("/articles/:articleId/notes", async (c) => {
+  const user = c.get("user");
   const pool = await createPool(c.env);
   const { articleId } = c.req.param();
-  if (!(await hasTable(pool, 'knowledge_notes'))) {
-    logSchemaFallback('notes');
+  if (!(await hasTable(pool, "knowledge_notes"))) {
+    logSchemaFallback("notes");
     return c.json({ data: [] });
   }
   try {
@@ -626,17 +673,17 @@ app.get('/articles/:articleId/notes', async (c) => {
     return c.json({ data: result.rows || result });
   } catch (error) {
     if (isMissingSchemaError(error)) {
-      logSchemaFallback('notes', error);
+      logSchemaFallback("notes", error);
       return c.json({ data: [] });
     }
     throw error;
   }
 });
 
-app.post('/articles/:articleId/notes', async (c) => {
-  const user = c.get('user');
+app.post("/articles/:articleId/notes", async (c) => {
+  const user = c.get("user");
   const pool = await createPool(c.env);
-  const schemaUnavailable = await ensureTables(c, pool, ['knowledge_notes']);
+  const schemaUnavailable = await ensureTables(c, pool, ["knowledge_notes"]);
   if (schemaUnavailable) return schemaUnavailable;
   const { articleId } = c.req.param();
   const body = (await c.req.json().catch(() => ({}))) as Record<string, unknown>;
@@ -649,7 +696,7 @@ app.post('/articles/:articleId/notes', async (c) => {
       user.organizationId,
       articleId,
       user.uid,
-      String(body.content ?? ''),
+      String(body.content ?? ""),
       body.pageRef ?? null,
       body.highlightColor ?? null,
     ],
@@ -657,12 +704,12 @@ app.post('/articles/:articleId/notes', async (c) => {
   return c.json({ data: result.rows[0] }, 201);
 });
 
-app.put('/curation/:articleId', async (c) => {
-  const user = c.get('user');
+app.put("/curation/:articleId", async (c) => {
+  const user = c.get("user");
   const pool = await createPool(c.env);
-  const schemaUnavailable = await ensureTables(c, pool, ['knowledge_curation']);
+  const schemaUnavailable = await ensureTables(c, pool, ["knowledge_curation"]);
   if (schemaUnavailable) return schemaUnavailable;
-  const articleId = c.req.param('articleId');
+  const articleId = c.req.param("articleId");
   const body = (await c.req.json().catch(() => ({}))) as Record<string, unknown>;
 
   const result = await pool.query(
@@ -685,7 +732,7 @@ app.put('/curation/:articleId', async (c) => {
     [
       user.organizationId,
       articleId,
-      String(body.status ?? 'pending'),
+      String(body.status ?? "pending"),
       body.notes ? String(body.notes) : null,
       body.assigned_to ? String(body.assigned_to) : null,
       user.uid,
@@ -695,11 +742,11 @@ app.put('/curation/:articleId', async (c) => {
   return c.json({ data: normalizeCuration(result.rows[0]) });
 });
 
-app.get('/audit', async (c) => {
-  const user = c.get('user');
+app.get("/audit", async (c) => {
+  const user = c.get("user");
   const pool = await createPool(c.env);
-  if (!(await hasTable(pool, 'knowledge_audit'))) {
-    logSchemaFallback('audit');
+  if (!(await hasTable(pool, "knowledge_audit"))) {
+    logSchemaFallback("audit");
     return c.json({ data: [] });
   }
   try {
@@ -716,17 +763,17 @@ app.get('/audit', async (c) => {
     return c.json({ data: result.rows.map(normalizeAudit) });
   } catch (error) {
     if (isMissingSchemaError(error)) {
-      logSchemaFallback('audit', error);
+      logSchemaFallback("audit", error);
       return c.json({ data: [] });
     }
     throw error;
   }
 });
 
-app.post('/audit', async (c) => {
-  const user = c.get('user');
+app.post("/audit", async (c) => {
+  const user = c.get("user");
   const pool = await createPool(c.env);
-  const schemaUnavailable = await ensureTables(c, pool, ['knowledge_audit']);
+  const schemaUnavailable = await ensureTables(c, pool, ["knowledge_audit"]);
   if (schemaUnavailable) return schemaUnavailable;
   const body = (await c.req.json().catch(() => ({}))) as Record<string, unknown>;
   const result = await pool.query(
@@ -740,9 +787,9 @@ app.post('/audit', async (c) => {
     `,
     [
       user.organizationId,
-      String(body.article_id ?? ''),
+      String(body.article_id ?? ""),
       body.actor_id ? String(body.actor_id) : user.uid,
-      String(body.action ?? 'update_annotation'),
+      String(body.action ?? "update_annotation"),
       body.before ? JSON.stringify(body.before) : null,
       body.after ? JSON.stringify(body.after) : null,
       body.context ? JSON.stringify(body.context) : null,
@@ -751,10 +798,10 @@ app.post('/audit', async (c) => {
   return c.json({ data: normalizeAudit(result.rows[0]) }, 201);
 });
 
-app.delete('/articles/:articleId', async (c) => {
-  const user = c.get('user');
+app.delete("/articles/:articleId", async (c) => {
+  const user = c.get("user");
   const pool = await createPool(c.env);
-  const schemaUnavailable = await ensureTables(c, pool, ['knowledge_articles']);
+  const schemaUnavailable = await ensureTables(c, pool, ["knowledge_articles"]);
   if (schemaUnavailable) return schemaUnavailable;
   const { articleId } = c.req.param();
 
@@ -765,21 +812,21 @@ app.delete('/articles/:articleId', async (c) => {
     [user.organizationId, articleId],
   );
 
-  if (!result.rows.length) return c.json({ error: 'Artigo não encontrado' }, 404);
+  if (!result.rows.length) return c.json({ error: "Artigo não encontrado" }, 404);
   return c.json({ success: true });
 });
 
-app.get('/profiles', async (c) => {
-  const user = c.get('user');
+app.get("/profiles", async (c) => {
+  const user = c.get("user");
   const pool = await createPool(c.env);
-  const ids = String(c.req.query('ids') ?? '')
-    .split(',')
+  const ids = String(c.req.query("ids") ?? "")
+    .split(",")
     .map((value) => value.trim())
     .filter(Boolean);
 
   if (!ids.length) return c.json({ data: {} });
-  if (!(await hasTable(pool, 'profiles')) || !(await hasTable(pool, 'organization_members'))) {
-    logSchemaFallback('profiles');
+  if (!(await hasTable(pool, "profiles")) || !(await hasTable(pool, "organization_members"))) {
+    logSchemaFallback("profiles");
     return c.json({ data: {} });
   }
 
@@ -797,7 +844,7 @@ app.get('/profiles', async (c) => {
     );
   } catch (error) {
     if (isMissingSchemaError(error)) {
-      logSchemaFallback('profiles', error);
+      logSchemaFallback("profiles", error);
       return c.json({ data: {} });
     }
     throw error;
@@ -806,7 +853,10 @@ app.get('/profiles', async (c) => {
   const data = Object.fromEntries(
     result.rows.map((row) => [
       String(row.user_id),
-      { full_name: row.full_name ? String(row.full_name) : undefined, avatar_url: row.avatar_url ? String(row.avatar_url) : undefined },
+      {
+        full_name: row.full_name ? String(row.full_name) : undefined,
+        avatar_url: row.avatar_url ? String(row.avatar_url) : undefined,
+      },
     ]),
   );
   return c.json({ data });

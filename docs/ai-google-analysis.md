@@ -5,6 +5,7 @@
 Esta análise foi realizada a partir dos sites labs.google/experiments, ai.google e cloud.google.com, utilizando os MCPs exa_web_search, exa_web_fetch e context7 para buscar documentação atualizada.
 
 O projeto **FisioFlow** já possui um ecossistema AI extremamente robusto:
+
 - **Gemini 1.5/2.5** via REST API + Cloudflare AI Gateway
 - **Workers AI** (Llama 3.3 70B, Whisper, BGE-M3 embeddings)
 - **MediaPipe** + **TensorFlow.js** para pose detection/biomecânica
@@ -17,24 +18,28 @@ O projeto **FisioFlow** já possui um ecossistema AI extremamente robusto:
 ## Tecnologias Google Analisadas
 
 ### 1. Gemini Live API
+
 - WebSocket bidirecional para conversas por voz em tempo real com Gemini
 - 70 idiomas suportados, barge-in, transcrição automática
 - **Custo:** ~$0.15-0.50 por avaliação de 30min / ~$1-2 por avaliação de 1 hora
 - Documentação: https://ai.google.dev/gemini-api/docs/live
 
 ### 2. Gemini Thinking Mode
+
 - Modelos Gemini 3 Flash/Pro com "thinking" interno
 - Melhora significativamente raciocínio multi-step
 - Níveis configuráveis: minimal, low, medium, high
 - Documentação: https://ai.google.dev/gemini-api/docs/thinking
 
 ### 3. Gemini Structured Outputs
+
 - Suporte a JSON Schema completo (Pydantic/Zod out-of-the-box)
 - Property ordering garantido
 - Suporta anyOf, $ref, minimum/maximum
 - Documentação: https://ai.google.dev/gemini-api/docs/structured-output
 
 ### 4. MedGemma 1.5 4B (Google Healthcare AI)
+
 - Modelo open-source otimizado para imagens médicas
 - Suporte a radiografia, dermatologia, CT/MRI 3D
 - Suporte longitudinal e FHIR
@@ -42,16 +47,19 @@ O projeto **FisioFlow** já possui um ecossistema AI extremamente robusto:
 - Deploy: Vertex AI Model Garden ou HuggingFace Transformers
 
 ### 5. Long Context (1M+ tokens)
+
 - Janela de contexto de 1 milhão+ tokens
 - Context Caching: ~4x menos custoso para consultas repetidas
 - Documentação: https://ai.google.dev/gemini-api/docs/long-context
 
 ### 6. Cloud Healthcare API + FHIR
+
 - API gerenciada para dados FHIR R4, HL7v2, DICOM
 - Healthcare NLP API com entity extraction (SNOMED CT, ICD-10)
 - Documentação: https://cloud.google.com/healthcare
 
 ### 7. Gemini Nano / ML Kit GenAI
+
 - IA 100% no dispositivo (on-device)
 - APIs: summarization, proofreading, rewriting, image description, speech recognition
 - Disponível em: Pixel 9+, Samsung S25+, OnePlus 13+, Motorola Razr 60 Ultra
@@ -59,6 +67,7 @@ O projeto **FisioFlow** já possui um ecossistema AI extremamente robusto:
 - Documentação: https://developers.google.com/ml-kit/genai
 
 ### 8. MedASR
+
 - Modelo de speech recognition especializado em terminologia médica
 - Lançado junto com MedGemma 1.5
 - Melhor reconhecimento de termos como "cifose", "lordose", "escápula", "manguito rotador"
@@ -67,19 +76,19 @@ O projeto **FisioFlow** já possui um ecossistema AI extremamente robusto:
 
 ## Resumo: O Que Pode Ser Implementado
 
-| Prioridade | Feature | Esforço | Impacto |
-|-----------|---------|---------|--------|
-| **P0** | Gemini Structured Outputs (Zod) | 2-3 dias | Eliminar parsing quebrado |
-| **P0** | Gemini Thinking Mode | 1 dia | Raciocínio clínico profundo |
-| **P1** | Gemini Live API (voz) | 1-2 semanas | Experiência premium |
-| **P1** | Function Calling Composicional | 1 semana | Agentes autônomos |
-| **P1** | Long Context + Caching | 3-5 dias | Patient 360° |
-| **P2** | MedGemma para radiologia | 2-3 semanas | Análise real de imagens |
-| **P2** | Healthcare NLP (entity extraction) | 1-2 semanas | ICD-10/SNOMED automático |
-| **P2** | MedASR para transcrição | 1 semana | Terminologia fisio precisa |
-| **P3** | FHIR R4 export/import | 2-4 semanas | Interoperabilidade |
-| **P3** | Gemini Nano on-device | 1-2 semanas | Funcionamento offline |
-| **P3** | Vertex AI Search Healthcare | 2-3 semanas | Busca inteligente |
+| Prioridade | Feature                            | Esforço     | Impacto                     |
+| ---------- | ---------------------------------- | ----------- | --------------------------- |
+| **P0**     | Gemini Structured Outputs (Zod)    | 2-3 dias    | Eliminar parsing quebrado   |
+| **P0**     | Gemini Thinking Mode               | 1 dia       | Raciocínio clínico profundo |
+| **P1**     | Gemini Live API (voz)              | 1-2 semanas | Experiência premium         |
+| **P1**     | Function Calling Composicional     | 1 semana    | Agentes autônomos           |
+| **P1**     | Long Context + Caching             | 3-5 dias    | Patient 360°                |
+| **P2**     | MedGemma para radiologia           | 2-3 semanas | Análise real de imagens     |
+| **P2**     | Healthcare NLP (entity extraction) | 1-2 semanas | ICD-10/SNOMED automático    |
+| **P2**     | MedASR para transcrição            | 1 semana    | Terminologia fisio precisa  |
+| **P3**     | FHIR R4 export/import              | 2-4 semanas | Interoperabilidade          |
+| **P3**     | Gemini Nano on-device              | 1-2 semanas | Funcionamento offline       |
+| **P3**     | Vertex AI Search Healthcare        | 2-3 semanas | Busca inteligente           |
 
 ---
 
@@ -115,6 +124,7 @@ Após análise de custos, o usuário decidiu por uma **abordagem híbrida com 3 
 ```
 
 **Pontos-chave:**
+
 - **Fisioterapeuta escolhe** no momento da avaliação se quer o "Modo Premium IA" (Live API) ou gravação normal
 - **90%+ das avaliações** usarão B+C (gratuito)
 - O fisioterapeuta pode testar a opção A em algumas avaliações para decidir se o custo justifica o ganho
@@ -131,6 +141,7 @@ Após análise de custos, o usuário decidiu por uma **abordagem híbrida com 3 
 **Arquivo:** `apps/api/src/lib/ai-gemini.ts`
 
 O SDK atual (`@google/generative-ai` v0.24.1) faz REST manual. O novo `@google/genai` suporta:
+
 - Structured Outputs nativo com Zod
 - Thinking Config
 - Streaming aprimorado
@@ -144,6 +155,7 @@ import { z } from "zod";
 ```
 
 **Funções novas:**
+
 - `callGeminiStructured<T>(schema: ZodSchema, prompt, model, thinkingLevel)` -- retorna T tipado
 - `callGeminiThinking(prompt, model, thinkingLevel)` -- retorna texto com raciocínio
 - `streamGeminiChatStructured(messages, schema)` -- streaming com output estruturado
@@ -153,6 +165,7 @@ import { z } from "zod";
 **Arquivo novo:** `apps/api/src/schemas/ai-schemas.ts`
 
 Schemas para substituir parsing manual:
+
 - `SoapSchema` -- `{ subjective, objective, assessment, plan }`
 - `ExerciseSuggestionSchema` -- `{ exercises: [{ name, rationale, targetArea, sets, reps }] }`
 - `ReceiptOcrSchema` -- `{ valor, nome, cardLastDigits, isFirstPayment, pixKey, dataTransacao }`
@@ -167,12 +180,12 @@ Schemas para substituir parsing manual:
 
 **Endpoints a migrar (substituir JSON.parse frágil por Structured Output):**
 
-| Endpoint | Linha atual | Problema | Solução |
-|----------|------------|----------|---------|
-| `/ai/transcribe-session` | L400-428 | `JSON.parse(aiResponse.replace(/```json...` | Structured Output com `SoapSchema` |
-| `/ai/service` (exerciseSuggestion) | L165-179 | `JSON.parse(aiResponse.replace(/```json...` | Structured Output com `ExerciseSuggestionSchema` |
-| `/ai/receipt-ocr` | L847-890 | Strip markdown + JSON.parse | Structured Output com `ReceiptOcrSchema` |
-| `/ai/service` (clinicalChat) | L132-155 | Sem schema, texto livre | Thinking mode `low` para raciocínio básico |
+| Endpoint                           | Linha atual | Problema                                    | Solução                                          |
+| ---------------------------------- | ----------- | ------------------------------------------- | ------------------------------------------------ |
+| `/ai/transcribe-session`           | L400-428    | `JSON.parse(aiResponse.replace(/```json...` | Structured Output com `SoapSchema`               |
+| `/ai/service` (exerciseSuggestion) | L165-179    | `JSON.parse(aiResponse.replace(/```json...` | Structured Output com `ExerciseSuggestionSchema` |
+| `/ai/receipt-ocr`                  | L847-890    | Strip markdown + JSON.parse                 | Structured Output com `ReceiptOcrSchema`         |
+| `/ai/service` (clinicalChat)       | L132-155    | Sem schema, texto livre                     | Thinking mode `low` para raciocínio básico       |
 
 **Estratégia:** Criar versões `_v2` dos handlers que usam structured output, e rotear progressivamente. Não quebrar endpoints existentes.
 
@@ -181,6 +194,7 @@ Schemas para substituir parsing manual:
 **Arquivo:** `apps/api/src/services/ai/EvolutionSummarizer.ts`
 
 Atualmente faz `rawResponse.match(/\{[\s\S]*\}/)` -- frágil. Migrar para:
+
 - Workers AI com JSON mode garantido, OU
 - Gemini Flash com Structured Output + `SoapSchema`
 
@@ -206,7 +220,7 @@ class AssessmentRecordingService {
     // 2. Gerar avaliação estruturada com Gemini + Structured Output + Thinking
     // 3. Retornar AssessmentFormSchema preenchido
   }
-  
+
   // Camada C: Texto on-device -> gerar avaliação (sem transcrição)
   async processTranscript(transcript, patientContext) {
     // 1. Receber texto já transcrito do device
@@ -217,6 +231,7 @@ class AssessmentRecordingService {
 ```
 
 **Cadeia de transcrição (já existe, reusar):**
+
 ```
 Deepgram Nova-3 (pt-BR, rápido, gratuito)
   -> fallback: Whisper Large V3 Turbo (Workers AI, gratuito)
@@ -228,6 +243,7 @@ Deepgram Nova-3 (pt-BR, rápido, gratuito)
 **Arquivo:** `apps/api/src/schemas/assessment-schema.ts`
 
 Schema completo da avaliação fisioterapêutica com:
+
 - Dados do paciente (nome, idade, profissão, história)
 - Queixa principal e história da doença atual
 - Antecedentes pessoais e familiares
@@ -246,11 +262,11 @@ Schema completo da avaliação fisioterapêutica com:
 
 ```typescript
 // Camada B: Gravar + transcrever + avaliar
-app.post("/assessment/recording", ...)  
+app.post("/assessment/recording", ...)
 // Body: { audioData: base64, mimeType, patientId, patientContext }
 // Response: AssessmentFormSchema (JSON validado)
 
-// Camada C: Texto transcrito -> avaliar  
+// Camada C: Texto transcrito -> avaliar
 app.post("/assessment/transcript", ...)
 // Body: { transcript, patientId, patientContext }
 // Response: AssessmentFormSchema (JSON validado)
@@ -266,6 +282,7 @@ app.post("/assessment/live-session", ...)
 **Arquivo novo:** `apps/api/src/lib/ai/prompts/assessment-prompts.ts`
 
 System prompt especializado:
+
 - Persona: fisioterapeuta experiente redigindo avaliação
 - Conhecimento: terminologia CIFF, testes especiais, escalas (EVA, PSFS, DASH, etc.)
 - Thinking mode `high`: raciocinar sobre diagnóstico diferencial
@@ -277,6 +294,7 @@ System prompt especializado:
 **Arquivo novo:** `src/components/ai/AssessmentVoiceRecorder.tsx`
 
 UI com:
+
 - **Toggle de modo:** "Gravação" (B) / "On-device" (C) / "Premium IA" (A)
 - Gravador de áudio com visualizador de waveform
 - Indicador de status: gravando -> transcrevendo -> analisando -> preenchido
@@ -285,6 +303,7 @@ UI com:
 - Botão "Salvar avaliação" que persiste no banco
 
 **Fluxo UI:**
+
 ```
 [Fisioterapeuta clica "Avaliação com IA"]
   -> Escolhe modo: Gratuito (B/C) ou Premium (A)
@@ -319,6 +338,7 @@ export class AssessmentLiveSession implements DurableObject {
 ```
 
 **Por que Durable Object:**
+
 - Mantém WebSocket aberto por 30-60 minutos (avaliação longa)
 - Estado da sessão (transcrição parcial, campos preenchidos)
 - Já tem a infraestrutura no wrangler.toml (`PATIENT_AGENT` DO)
@@ -332,12 +352,13 @@ app.get("/assessment/live-ws", async (c) => {
   // Upgrade para WebSocket
   // Conecta ao Gemini Live API
   // Retorna ephemeral token para o cliente
-})
+});
 ```
 
 #### 3.3 Toggle Premium na UI
 
 No `AssessmentVoiceRecorder.tsx`:
+
 - Badge "Premium IA" com indicador de custo estimado
 - Confirmação: "Esta avaliação usará IA em tempo real. Custo estimado: ~R$1-2"
 - Se o fisioterapeuta aceitar, abre WebSocket e começa sessão Live
@@ -352,6 +373,7 @@ No `AssessmentVoiceRecorder.tsx`:
 #### 3.5 Variável de ambiente nova
 
 **wrangler.toml + env.ts:**
+
 ```typescript
 GOOGLE_AI_PREMIUM_ENABLED?: string; // "true" para habilitar Live API
 ```
@@ -360,20 +382,20 @@ GOOGLE_AI_PREMIUM_ENABLED?: string; // "true" para habilitar Live API
 
 ## RESUMO DOS ARQUIVOS A CRIAR/MODIFICAR
 
-| Ação | Arquivo | Fase |
-|------|---------|------|
-| **CRIAR** | `apps/api/src/lib/ai-gemini-v2.ts` | F1 |
-| **CRIAR** | `apps/api/src/schemas/ai-schemas.ts` | F1 |
-| **CRIAR** | `apps/api/src/schemas/assessment-schema.ts` | F2 |
-| **CRIAR** | `apps/api/src/services/ai/AssessmentRecordingService.ts` | F2 |
-| **CRIAR** | `apps/api/src/lib/ai/prompts/assessment-prompts.ts` | F2 |
-| **CRIAR** | `src/components/ai/AssessmentVoiceRecorder.tsx` | F2 |
-| **CRIAR** | `apps/api/src/durable-objects/AssessmentLiveSession.ts` | F3 |
-| **MODIFICAR** | `apps/api/src/routes/ai.ts` | F1-F3 |
-| **MODIFICAR** | `apps/api/src/services/ai/EvolutionSummarizer.ts` | F1 |
-| **MODIFICAR** | `apps/api/src/types/env.ts` | F3 |
-| **MODIFICAR** | `apps/api/wrangler.toml` | F3 |
-| **MODIFICAR** | `package.json` (adicionar `@google/genai`) | F1 |
+| Ação          | Arquivo                                                  | Fase  |
+| ------------- | -------------------------------------------------------- | ----- |
+| **CRIAR**     | `apps/api/src/lib/ai-gemini-v2.ts`                       | F1    |
+| **CRIAR**     | `apps/api/src/schemas/ai-schemas.ts`                     | F1    |
+| **CRIAR**     | `apps/api/src/schemas/assessment-schema.ts`              | F2    |
+| **CRIAR**     | `apps/api/src/services/ai/AssessmentRecordingService.ts` | F2    |
+| **CRIAR**     | `apps/api/src/lib/ai/prompts/assessment-prompts.ts`      | F2    |
+| **CRIAR**     | `src/components/ai/AssessmentVoiceRecorder.tsx`          | F2    |
+| **CRIAR**     | `apps/api/src/durable-objects/AssessmentLiveSession.ts`  | F3    |
+| **MODIFICAR** | `apps/api/src/routes/ai.ts`                              | F1-F3 |
+| **MODIFICAR** | `apps/api/src/services/ai/EvolutionSummarizer.ts`        | F1    |
+| **MODIFICAR** | `apps/api/src/types/env.ts`                              | F3    |
+| **MODIFICAR** | `apps/api/wrangler.toml`                                 | F3    |
+| **MODIFICAR** | `package.json` (adicionar `@google/genai`)               | F1    |
 
 ---
 
@@ -406,5 +428,5 @@ GOOGLE_AI_PREMIUM_ENABLED?: string; // "true" para habilitar Live API
 
 ---
 
-*Documento gerado em: 18 de Abril de 2026*
-*Projeto: FisioFlow - Sistema de Gestão de Fisioterapia*
+_Documento gerado em: 18 de Abril de 2026_
+_Projeto: FisioFlow - Sistema de Gestão de Fisioterapia_

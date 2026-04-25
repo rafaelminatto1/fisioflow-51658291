@@ -3,11 +3,13 @@
 ## ✅ IMPLEMENTADO (Concluído)
 
 ### 1. Correção de Timezone (CRÍTICO)
+
 **Problema:** Strings de data "YYYY-MM-DD" eram interpretadas como UTC, causando deslocamento de fuso horário.
 
 **Solução:** Função `parseResponseDate()` que usa componentes locais.
 
 **Arquivos corrigidos:**
+
 - `src/services/appointmentService.ts`
 - `src/contexts/RealtimeContext.tsx`
 - `src/components/evolution/EvolutionHeader.tsx`
@@ -22,38 +24,43 @@
 ---
 
 ### 2. Funções Utilitárias Seguras
+
 **Arquivos criados:**
 
 #### `utils/safeJson.ts`
+
 ```typescript
-safeJsonParse<T>(json, fallback)      // Parse com fallback
-safeJsonParseWithLog<T>(json, fallback, context)  // Parse com log
-safeJsonStringify(obj, fallback)     // Stringify com fallback
+safeJsonParse<T>(json, fallback); // Parse com fallback
+safeJsonParseWithLog<T>(json, fallback, context); // Parse com log
+safeJsonStringify(obj, fallback); // Stringify com fallback
 ```
 
 #### `utils/safeStorage.ts`
+
 ```typescript
-safeLocalStorageGet<T>(key, fallback)  // Get seguro
-safeLocalStorageSet(key, value)         // Set com quota check
-safeLocalStorageRemove(key)             // Remove seguro
+safeLocalStorageGet<T>(key, fallback); // Get seguro
+safeLocalStorageSet(key, value); // Set com quota check
+safeLocalStorageRemove(key); // Remove seguro
 ```
 
 #### `utils/validators.ts`
+
 ```typescript
-isValidCPF(cpf)           // Valida CPF brasileiro
-isValidPhone(phone)       // Valida telefone BR
-isValidEmail(email)       // Valida email
-isValidName(name)         // Valida nome completo
-formatCPF(cpf)            // Formata CPF
-formatPhone(phone)        // Formata telefone
-sanitizeString(str)       // Previne XSS
-stripNonDigits(str)       // Remove não-numéricos
+isValidCPF(cpf); // Valida CPF brasileiro
+isValidPhone(phone); // Valida telefone BR
+isValidEmail(email); // Valida email
+isValidName(name); // Valida nome completo
+formatCPF(cpf); // Formata CPF
+formatPhone(phone); // Formata telefone
+sanitizeString(str); // Previne XSS
+stripNonDigits(str); // Remove não-numéricos
 ```
 
 #### `hooks/useInterval.ts`
+
 ```typescript
-useInterval(callback, delay)   // Auto-cleanup setInterval
-useTimeout(callback, delay)    // Auto-cleanup setTimeout
+useInterval(callback, delay); // Auto-cleanup setInterval
+useTimeout(callback, delay); // Auto-cleanup setTimeout
 ```
 
 **Commit:** `34048357`
@@ -61,11 +68,14 @@ useTimeout(callback, delay)    // Auto-cleanup setTimeout
 ---
 
 ### 3. Análise de JSON.parse e setInterval
+
 **Resultado:** Todos os JSON.parse e setInterval analisados já possuem:
+
 - Try-catch ao redor de JSON.parse
 - Cleanup adequado de setInterval (clearInterval em useEffect return)
 
 **Arquivos verificados:**
+
 - `src/hooks/useAppointments.tsx` - ✅ tem try-catch
 - `src/pages/Settings.tsx` - ✅ tem try-catch
 - `src/hooks/useAdvancedAnalytics.ts` - ✅ tem try-catch
@@ -79,20 +89,23 @@ useTimeout(callback, delay)    // Auto-cleanup setTimeout
 ## 🔄 PENDENTE (A Implementar)
 
 ### 1. Validação de Formulários (ALTA)
+
 **Ações:**
+
 - [ ] Adicionar validação de CPF em formulários de paciente
 - [ ] Adicionar validação de email com feedback visual
 - [ ] Adicionar validação de telefone brasileiro
 - [ ] Validar nome completo (mínimo 2 partes)
 
 **Schema Zod a criar:**
+
 ```typescript
 // src/schemas/patient.ts
 export const patientFormSchema = z.object({
-  name: z.string().min(3).refine(isValidName, 'Nome completo obrigatório'),
-  cpf: z.string().optional().refine(isValidCPF, 'CPF inválido'),
-  email: z.string().email().refine(isValidEmail, 'Email inválido'),
-  phone: z.string().refine(isValidPhone, 'Telefone inválido'),
+  name: z.string().min(3).refine(isValidName, "Nome completo obrigatório"),
+  cpf: z.string().optional().refine(isValidCPF, "CPF inválido"),
+  email: z.string().email().refine(isValidEmail, "Email inválido"),
+  phone: z.string().refine(isValidPhone, "Telefone inválido"),
   // ...
 });
 ```
@@ -100,25 +113,31 @@ export const patientFormSchema = z.object({
 ---
 
 ### 2. Melhorar Tratamento de Erros (MÉDIA)
+
 **Ações:**
+
 - [ ] Adicionar ErrorBoundary em rotas principais
 - [ ] Criar componente de fallback para erros
 - [ ] Adicionar toast de erro amigável para falhas de rede
 - [ ] Implementar retry automático em operações críticas
 
 **Arquivos:**
+
 - `src/components/error/ErrorBoundary.tsx` (já existe, expandir)
 - Criar `src/components/error/NetworkErrorFallback.tsx`
 
 ---
 
 ### 3. Sincronização Offline/Online (ALTA)
+
 **Problemas identificados:**
+
 - Race conditions ao mesmo dado editado offline E online
 - Merge de dados conflitantes
 - Dados obsoletos em cache
 
 **Soluções:**
+
 - [ ] Implementar versionamento de dados (etag/hash)
 - [ ] Estratégia de merge: last-write-wins com confirmação
 - [ ] Indicador visual de dados desatualizados
@@ -127,7 +146,9 @@ export const patientFormSchema = z.object({
 ---
 
 ### 4. Autenticação e Autorização (CRÍTICA)
+
 **Verificar:**
+
 - [ ] Rotas protegidas estão todas cobertas
 - [ ] Validação de permissões no backend (não confiar no client)
 - [ ] Token refresh automático antes de expirar
@@ -136,7 +157,9 @@ export const patientFormSchema = z.object({
 ---
 
 ### 5. Dados Sensíveis (ALTA)
+
 **Ações:**
+
 - [ ] Auditoria em logs (sem senhas, tokens, CPF)
 - [ ] Remover dados sensíveis do localStorage
 - [ ] Verificar se error tracking envia dados sensíveis
@@ -145,7 +168,9 @@ export const patientFormSchema = z.object({
 ---
 
 ### 6. Performance (MÉDIA)
+
 **Otimizações:**
+
 - [ ] React.memo em componentes de lista
 - [ ] useMemo em cálculos pesados
 - [ ] useCallback em handlers
@@ -156,7 +181,9 @@ export const patientFormSchema = z.object({
 ---
 
 ### 7. Accessibility (MÉDIA)
+
 **Melhorias:**
+
 - [ ] ARIA labels em todos os inputs
 - [ ] Navegação por teclado completa
 - [ ] Contraste de cores (WCAG AA)
@@ -167,7 +194,9 @@ export const patientFormSchema = z.object({
 ---
 
 ### 8. Testes de Edge Cases (ALTA)
+
 **Cenários a testar:**
+
 - [ ] Agendamento em horário de virada de dados (DST)
 - [ ] Agendamento cross-timezone
 - [ ] Concorrência: dois usuários agendando mesmo horário
@@ -180,7 +209,9 @@ export const patientFormSchema = z.object({
 ---
 
 ### 9. Segurança (CRÍTICA)
+
 **Verificações:**
+
 - [ ] Procurar por tokens/chaves hard-coded
 - [ ] Verificar SQL injection em queries dinâmicas
 - [ ] Verificar XSS em user-generated content
@@ -191,7 +222,9 @@ export const patientFormSchema = z.object({
 ---
 
 ### 10. Vazamento de Memória (MÉDIA)
+
 **Verificar:**
+
 - [ ] Event listeners não removidos
 - [ ] Timers não limpos
 - [ ] Refs não limpas
@@ -203,17 +236,20 @@ export const patientFormSchema = z.object({
 ## 📊 PRÓXIMOS PASSOS SUGERIDOS
 
 ### Imediato (esta semana)
+
 1. Implementar validação de CPF/email em formulários de paciente
 2. Adicionar ErrorBoundary em rotas principais
 3. Auditoria de logs para dados sensíveis
 
 ### Curto Prazo (este mês)
+
 1. Implementar sincronização offline com versionamento
 2. Adicionar testes de edge cases
 3. Melhorar performance com memoization
 4. Implementar rate limiting
 
 ### Médio Prazo (próximos 2 meses)
+
 1. Melhorias de accessibility
 2. Testes automatizados completos
 3. Monitoramento de performance em produção
@@ -256,19 +292,19 @@ docs2026/
 
 ## 🎯 RESUMO DE PROGRESSO
 
-| Categoria | Status | Progresso |
-|-----------|---------|-----------|
-| Timezone | ✅ Completo | 100% |
-| JSON.parse | ✅ Verificado | 100% (já protegidos) |
-| setInterval | ✅ Verificado | 100% (já com cleanup) |
-| Funções utilitárias | ✅ Criado | 100% |
-| Validação de formulários | ⏳ Pendente | 0% |
-| Error boundaries | ⏳ Pendente | 20% |
-| Sincronização offline | ⏳ Pendente | 30% |
-| Autenticação | ⏳ Pendente | 50% |
-| Performance | ⏳ Pendente | 40% |
-| Accessibility | ⏳ Pendente | 30% |
-| Testes | ⏳ Pendente | 10% |
+| Categoria                | Status        | Progresso             |
+| ------------------------ | ------------- | --------------------- |
+| Timezone                 | ✅ Completo   | 100%                  |
+| JSON.parse               | ✅ Verificado | 100% (já protegidos)  |
+| setInterval              | ✅ Verificado | 100% (já com cleanup) |
+| Funções utilitárias      | ✅ Criado     | 100%                  |
+| Validação de formulários | ⏳ Pendente   | 0%                    |
+| Error boundaries         | ⏳ Pendente   | 20%                   |
+| Sincronização offline    | ⏳ Pendente   | 30%                   |
+| Autenticação             | ⏳ Pendente   | 50%                   |
+| Performance              | ⏳ Pendente   | 40%                   |
+| Accessibility            | ⏳ Pendente   | 30%                   |
+| Testes                   | ⏳ Pendente   | 10%                   |
 
 ---
 

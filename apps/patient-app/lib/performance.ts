@@ -3,12 +3,11 @@
  * Track and monitor app performance metrics
  */
 
-
 /**
  * Performance metric interface
  */
 
-import { log } from './logger';
+import { log } from "./logger";
 
 interface PerformanceMetric {
   name: string;
@@ -50,7 +49,7 @@ class PerformanceMonitor {
 
     const metric = this.metrics.get(name);
     if (!metric) {
-      log.warn('PERFORMANCE', `No metric found for: ${name}`);
+      log.warn("PERFORMANCE", `No metric found for: ${name}`);
       return undefined;
     }
 
@@ -74,25 +73,17 @@ class PerformanceMonitor {
    * Log a performance metric
    */
   private logMetric(metric: PerformanceMetric): void {
-    const status = metric.success ? '✓' : '✗';
+    const status = metric.success ? "✓" : "✗";
     const durationStr = `${metric.duration}ms`;
-    const errorStr = metric.error ? ` [${metric.error}]` : '';
+    const errorStr = metric.error ? ` [${metric.error}]` : "";
 
-    log.info(
-      'PERFORMANCE',
-      `${status} ${metric.name}: ${durationStr}${errorStr}`,
-      metric.metadata
-    );
+    log.info("PERFORMANCE", `${status} ${metric.name}: ${durationStr}${errorStr}`, metric.metadata);
   }
 
   /**
    * Measure an async function
    */
-  async measure<T>(
-    name: string,
-    fn: () => Promise<T>,
-    metadata?: Record<string, any>
-  ): Promise<T> {
+  async measure<T>(name: string, fn: () => Promise<T>, metadata?: Record<string, any>): Promise<T> {
     this.start(name, metadata);
 
     try {
@@ -108,11 +99,7 @@ class PerformanceMonitor {
   /**
    * Measure a synchronous function
    */
-  measureSync<T>(
-    name: string,
-    fn: () => T,
-    metadata?: Record<string, any>
-  ): T {
+  measureSync<T>(name: string, fn: () => T, metadata?: Record<string, any>): T {
     this.start(name, metadata);
 
     try {
@@ -155,50 +142,47 @@ export const perf = new PerformanceMonitor();
  */
 export const PerformanceMarkers = {
   // App lifecycle
-  APP_START: 'app_start',
-  APP_READY: 'app_ready',
-  SCREEN_MOUNT: 'screen_mount',
+  APP_START: "app_start",
+  APP_READY: "app_ready",
+  SCREEN_MOUNT: "screen_mount",
 
   // Auth
-  AUTH_INIT: 'auth_init',
-  AUTH_LOGIN: 'auth_login',
-  AUTH_LOGOUT: 'auth_logout',
-  AUTH_REGISTER: 'auth_register',
+  AUTH_INIT: "auth_init",
+  AUTH_LOGIN: "auth_login",
+  AUTH_LOGOUT: "auth_logout",
+  AUTH_REGISTER: "auth_register",
 
   // Data layer
-  DATA_QUERY: 'data_query',
-  DATA_WRITE: 'data_write',
-  DATA_BATCH: 'data_batch',
+  DATA_QUERY: "data_query",
+  DATA_WRITE: "data_write",
+  DATA_BATCH: "data_batch",
 
   // API
-  API_REQUEST: 'api_request',
-  API_UPLOAD: 'api_upload',
+  API_REQUEST: "api_request",
+  API_UPLOAD: "api_upload",
 
   // Navigation
-  NAVIGATE: 'navigate',
-  NAVIGATE_BACK: 'navigate_back',
+  NAVIGATE: "navigate",
+  NAVIGATE_BACK: "navigate_back",
 
   // Storage
-  STORAGE_GET: 'storage_get',
-  STORAGE_SET: 'storage_set',
-  STORAGE_CLEAR: 'storage_clear',
+  STORAGE_GET: "storage_get",
+  STORAGE_SET: "storage_set",
+  STORAGE_CLEAR: "storage_clear",
 
   // Images
-  IMAGE_LOAD: 'image_load',
-  IMAGE_CROP: 'image_crop',
+  IMAGE_LOAD: "image_load",
+  IMAGE_CROP: "image_crop",
 
   // Video
-  VIDEO_LOAD: 'video_load',
-  VIDEO_PLAY: 'video_play',
+  VIDEO_LOAD: "video_load",
+  VIDEO_PLAY: "video_play",
 };
 
 /**
  * Higher-order function to measure performance
  */
-export function withPerformanceTracking<T extends (...args: any[]) => any>(
-  name: string,
-  fn: T
-): T {
+export function withPerformanceTracking<T extends (...args: any[]) => any>(name: string, fn: T): T {
   return ((...args: any[]) => {
     perf.start(name);
     try {
@@ -207,11 +191,11 @@ export function withPerformanceTracking<T extends (...args: any[]) => any>(
       // Handle promises
       if (result instanceof Promise) {
         return result
-          .then(data => {
+          .then((data) => {
             perf.end(name, true);
             return data;
           })
-          .catch(error => {
+          .catch((error) => {
             perf.end(name, false, error.message);
             throw error;
           });
@@ -239,7 +223,7 @@ export function useRenderTime(componentName: string): () => number | undefined {
 
   return () => {
     const duration = Date.now() - startTime;
-    log.info('RENDER', `${componentName} rendered in ${duration}ms`);
+    log.info("RENDER", `${componentName} rendered in ${duration}ms`);
     return duration;
   };
 }
@@ -296,15 +280,15 @@ export class FPSMonitor {
 /**
  * Memory usage monitor (development only)
  */
-export async function logMemoryUsage(tag: string = 'MEMORY'): Promise<void> {
+export async function logMemoryUsage(tag: string = "MEMORY"): Promise<void> {
   if (!__DEV__) return;
 
   try {
     // Note: Native memory monitoring requires native modules
     // This is a placeholder for React Native's memory API
-    log.info(tag, 'Memory usage logging not available in JS');
+    log.info(tag, "Memory usage logging not available in JS");
   } catch (error) {
-    log.error('MEMORY', 'Failed to log memory usage', error);
+    log.error("MEMORY", "Failed to log memory usage", error);
   }
 }
 
@@ -327,7 +311,7 @@ export class PerformanceAlerts {
     if (duration > threshold) {
       const alert = `⚠️ ${name} took ${duration}ms (threshold: ${threshold}ms)`;
       this.alerts.push(alert);
-      log.warn('PERF_ALERT', alert);
+      log.warn("PERF_ALERT", alert);
       return true;
     }
 

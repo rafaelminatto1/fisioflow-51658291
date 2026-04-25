@@ -3,12 +3,7 @@ import { Cloud, Share2, Copy, Check, ExternalLink, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button";
 import { reportsApi } from "@/api/v2";
 import { toast } from "sonner";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface CloudReportActionsProps {
   reportData: any;
@@ -17,10 +12,19 @@ interface CloudReportActionsProps {
   type: string;
 }
 
-export function CloudReportActions({ reportData, patientId, patientName, type }: CloudReportActionsProps) {
+export function CloudReportActions({
+  reportData,
+  patientId,
+  patientName,
+  type,
+}: CloudReportActionsProps) {
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSharing, setIsSharing] = useState(false);
-  const [cloudInfo, setCloudInfo] = useState<{ pdfKey: string; htmlKey?: string; pdfUrl: string } | null>(null);
+  const [cloudInfo, setCloudInfo] = useState<{
+    pdfKey: string;
+    htmlKey?: string;
+    pdfUrl: string;
+  } | null>(null);
   const [copied, setCopied] = useState(false);
 
   const handleGenerateCloud = async () => {
@@ -51,7 +55,7 @@ export function CloudReportActions({ reportData, patientId, patientName, type }:
 
   const handleShare = async () => {
     if (!cloudInfo?.pdfKey) return;
-    
+
     setIsSharing(true);
     try {
       // Gera um link temporário de 48 horas (172800 segundos)
@@ -83,9 +87,9 @@ export function CloudReportActions({ reportData, patientId, patientName, type }:
 
       <div className="flex flex-wrap gap-2">
         {!cloudInfo ? (
-          <Button 
-            size="sm" 
-            onClick={handleGenerateCloud} 
+          <Button
+            size="sm"
+            onClick={handleGenerateCloud}
             disabled={isGenerating}
             className="flex-1 sm:flex-none"
           >
@@ -101,9 +105,9 @@ export function CloudReportActions({ reportData, patientId, patientName, type }:
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
+                  <Button
+                    variant="outline"
+                    size="sm"
                     onClick={handleShare}
                     disabled={isSharing}
                     className="flex-1 sm:flex-none"
@@ -135,7 +139,7 @@ export function CloudReportActions({ reportData, patientId, patientName, type }:
           </>
         )}
       </div>
-      
+
       {cloudInfo && (
         <p className="text-[10px] text-muted-foreground italic">
           * O link para o médico é temporário e expira em 48 horas por segurança.

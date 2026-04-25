@@ -1,5 +1,5 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useAuthStore } from '@/store/auth';
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useAuthStore } from "@/store/auth";
 import {
   getTarefas,
   createTarefa,
@@ -7,9 +7,9 @@ import {
   deleteTarefa,
   bulkUpdateTarefas,
   type ApiTarefa,
-} from '@/lib/api';
+} from "@/lib/api";
 
-const QUERY_KEY = ['tarefas'] as const;
+const QUERY_KEY = ["tarefas"] as const;
 
 export function useTarefas() {
   const { user } = useAuthStore();
@@ -35,13 +35,13 @@ export function useTarefas() {
 
   // ── UPDATE (com optimistic update) ─────────────────────────────────────
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }: { id: string; data: Partial<ApiTarefa> }) =>
-      updateTarefa(id, data),
+    mutationFn: ({ id, data }: { id: string; data: Partial<ApiTarefa> }) => updateTarefa(id, data),
     onMutate: async ({ id, data }) => {
       await queryClient.cancelQueries({ queryKey: QUERY_KEY });
       const previous = queryClient.getQueryData<ApiTarefa[]>(QUERY_KEY);
-      queryClient.setQueryData<ApiTarefa[]>(QUERY_KEY, (old) =>
-        old?.map((t) => (t.id === id ? { ...t, ...data } : t)) ?? []
+      queryClient.setQueryData<ApiTarefa[]>(
+        QUERY_KEY,
+        (old) => old?.map((t) => (t.id === id ? { ...t, ...data } : t)) ?? [],
       );
       return { previous };
     },
@@ -61,8 +61,9 @@ export function useTarefas() {
     onMutate: async (id) => {
       await queryClient.cancelQueries({ queryKey: QUERY_KEY });
       const previous = queryClient.getQueryData<ApiTarefa[]>(QUERY_KEY);
-      queryClient.setQueryData<ApiTarefa[]>(QUERY_KEY, (old) =>
-        old?.filter((t) => t.id !== id) ?? []
+      queryClient.setQueryData<ApiTarefa[]>(
+        QUERY_KEY,
+        (old) => old?.filter((t) => t.id !== id) ?? [],
       );
       return { previous };
     },
@@ -78,8 +79,7 @@ export function useTarefas() {
 
   // ── BULK UPDATE ─────────────────────────────────────────────────────────
   const bulkUpdateMutation = useMutation({
-    mutationFn: (updates: { id: string; data: Partial<ApiTarefa> }[]) =>
-      bulkUpdateTarefas(updates),
+    mutationFn: (updates: { id: string; data: Partial<ApiTarefa> }[]) => bulkUpdateTarefas(updates),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEY });
     },

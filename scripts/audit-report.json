@@ -11,9 +11,7 @@
         "Failed to load resource: the server responded with a status of 500 ()",
         "Failed to load resource: the server responded with a status of 500 ()"
       ],
-      "warnings": [
-        "⚠️ Poor LCP: 4032"
-      ],
+      "warnings": ["⚠️ Poor LCP: 4032"],
       "networkFailures": [
         "https://ep-wandering-bonus-acj4zwvo.neonauth.sa-east-1.aws.neon.tech/neondb/auth/token - net::ERR_ABORTED",
         "https://www.moocafisio.com.br/cdn-cgi/rum? - net::ERR_ABORTED",
@@ -60,9 +58,7 @@
         "Failed to load resource: the server responded with a status of 500 ()"
       ],
       "warnings": [],
-      "networkFailures": [
-        "https://www.moocafisio.com.br/cdn-cgi/rum? - net::ERR_ABORTED"
-      ],
+      "networkFailures": ["https://www.moocafisio.com.br/cdn-cgi/rum? - net::ERR_ABORTED"],
       "metrics": {
         "ttfb": 39.5,
         "domInteractive": 238.69999999552965,
@@ -73,13 +69,8 @@
       "name": "Exercícios",
       "path": "/exercises",
       "durationMs": 9527,
-      "errors": [
-        "Failed to load resource: the server responded with a status of 500 ()"
-      ],
-      "warnings": [
-        "⚠️ Poor LCP: 4456",
-        "⚠️ Poor LCP: 5864"
-      ],
+      "errors": ["Failed to load resource: the server responded with a status of 500 ()"],
+      "warnings": ["⚠️ Poor LCP: 4456", "⚠️ Poor LCP: 5864"],
       "networkFailures": [
         "https://www.moocafisio.com.br/cdn-cgi/rum? - net::ERR_ABORTED",
         "https://fisioflow-api.rafalegollas.workers.dev/api/patients?status=ativo&limit=1000 - net::ERR_ABORTED",
@@ -121,9 +112,7 @@
       "durationMs": 4079,
       "errors": [],
       "warnings": [],
-      "networkFailures": [
-        "https://www.moocafisio.com.br/cdn-cgi/rum? - net::ERR_ABORTED"
-      ],
+      "networkFailures": ["https://www.moocafisio.com.br/cdn-cgi/rum? - net::ERR_ABORTED"],
       "metrics": {
         "ttfb": 34.899999998509884,
         "domInteractive": 273.8999999985099,
@@ -147,9 +136,7 @@
         "Failed to load resource: the server responded with a status of 500 ()"
       ],
       "warnings": [],
-      "networkFailures": [
-        "https://www.moocafisio.com.br/cdn-cgi/rum? - net::ERR_ABORTED"
-      ],
+      "networkFailures": ["https://www.moocafisio.com.br/cdn-cgi/rum? - net::ERR_ABORTED"],
       "metrics": {
         "ttfb": 36.30000000447035,
         "domInteractive": 301.29999999701977,
@@ -162,9 +149,7 @@
       "durationMs": 4460,
       "errors": [],
       "warnings": [],
-      "networkFailures": [
-        "https://www.moocafisio.com.br/cdn-cgi/rum? - net::ERR_ABORTED"
-      ],
+      "networkFailures": ["https://www.moocafisio.com.br/cdn-cgi/rum? - net::ERR_ABORTED"],
       "metrics": {
         "ttfb": 30.200000002980232,
         "domInteractive": 197.69999999552965,

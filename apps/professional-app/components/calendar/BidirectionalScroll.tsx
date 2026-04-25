@@ -1,12 +1,12 @@
-import React from 'react';
-import { View, StyleSheet, useWindowDimensions } from 'react-native';
-import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
-import Animated, { 
-  useSharedValue, 
-  useAnimatedStyle, 
+import React from "react";
+import { View, StyleSheet, useWindowDimensions } from "react-native";
+import { Gesture, GestureDetector, GestureHandlerRootView } from "react-native-gesture-handler";
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
   withDecay,
   cancelAnimation,
-} from 'react-native-reanimated';
+} from "react-native-reanimated";
 
 interface BidirectionalScrollProps {
   width: number;
@@ -69,10 +69,7 @@ export function BidirectionalScroll({
     });
 
   const animatedContentStyle = useAnimatedStyle(() => ({
-    transform: [
-      { translateX: translateX.value },
-      { translateY: translateY.value },
-    ],
+    transform: [{ translateX: translateX.value }, { translateY: translateY.value }],
   }));
 
   const animatedHeaderStyle = useAnimatedStyle(() => ({
@@ -88,7 +85,13 @@ export function BidirectionalScroll({
       <GestureDetector gesture={gesture}>
         <View style={[styles.container, { width, height }]}>
           {/* Main Grid Content */}
-          <Animated.View style={[styles.content, animatedContentStyle, { width: contentWidth, height: contentHeight }]}>
+          <Animated.View
+            style={[
+              styles.content,
+              animatedContentStyle,
+              { width: contentWidth, height: contentHeight },
+            ]}
+          >
             {children}
           </Animated.View>
 
@@ -124,26 +127,26 @@ export function BidirectionalScroll({
 
 const styles = StyleSheet.create({
   container: {
-    overflow: 'hidden',
-    position: 'relative',
+    overflow: "hidden",
+    position: "relative",
   },
   content: {
-    position: 'absolute',
+    position: "absolute",
     top: 0,
     left: 0,
   },
   headerContainer: {
-    position: 'absolute',
+    position: "absolute",
     top: 0,
-    overflow: 'hidden',
+    overflow: "hidden",
   },
   columnContainer: {
-    position: 'absolute',
+    position: "absolute",
     left: 0,
-    overflow: 'hidden',
+    overflow: "hidden",
   },
   cornerContainer: {
-    position: 'absolute',
+    position: "absolute",
     top: 0,
     left: 0,
     zIndex: 10,

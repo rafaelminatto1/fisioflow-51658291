@@ -8,28 +8,37 @@ Este documento define o padrão para escrever changelogs do FisioFlow, seguindo 
 # [Versão] - [Data]
 
 ## ⚠️ Mudanças que Rompem (Breaking Changes)
+
 - Lista de mudanças que podem quebrar integrações ou fluxos existentes
 
 ## ✨ Novas Funcionalidades
+
 - Novidades adicionadas ao sistema
 
 ## 🐛 Correções
+
 - Bugs corrigidos
 
 ## ⚡ Performance
+
 - Melhorias de performance
 
 ## 📝 Documentação
+
 - Atualizações na documentação
 
 ## 📋 Por Módulo
+
 ### Gestão de Pacientes
+
 - Mudanças específicas deste módulo
 
 ### Agendamento
+
 - Mudanças específicas deste módulo
 
 ### Evolução Clínica
+
 - Mudanças específicas deste módulo
 ```
 
@@ -47,33 +56,33 @@ Usamos **Conventional Commits** para garantir consistência:
 
 ### Tipos Suportados
 
-| Tipo | Ícone | Uso |
-|------|-------|-----|
-| `feat` | ✨ | Nova funcionalidade |
-| `fix` | 🐛 | Correção de bug |
-| `perf` | ⚡ | Melhoria de performance |
-| `refactor` | ♻️ | Refatoração de código |
-| `docs` | 📝 | Alterações em documentação |
-| `test` | ✅ | Adição ou modificação de testes |
-| `chore` | 🔧 | Tarefas de manutenção |
-| `style` | 💅 | Formatação de código |
-| `ci` | 👷 | Configurações de CI/CD |
-| `build` | 📦 | Sistema de build |
+| Tipo       | Ícone | Uso                             |
+| ---------- | ----- | ------------------------------- |
+| `feat`     | ✨    | Nova funcionalidade             |
+| `fix`      | 🐛    | Correção de bug                 |
+| `perf`     | ⚡    | Melhoria de performance         |
+| `refactor` | ♻️    | Refatoração de código           |
+| `docs`     | 📝    | Alterações em documentação      |
+| `test`     | ✅    | Adição ou modificação de testes |
+| `chore`    | 🔧    | Tarefas de manutenção           |
+| `style`    | 💅    | Formatação de código            |
+| `ci`       | 👷    | Configurações de CI/CD          |
+| `build`    | 📦    | Sistema de build                |
 
 ### Escopos do FisioFlow
 
-| Escopo | Descrição |
-|--------|-----------|
-| `patients` | Gestão de Pacientes |
-| `schedule` | Agendamento |
-| `evolution` | Evolução Clínica (SOAP) |
-| `exercises` | Biblioteca de Exercícios |
-| `telemedicine` | Telemedicina |
-| `reports` | Relatórios |
-| `auth` | Autenticação/Permissões |
-| `mobile` | Apps Mobile |
-| `ui` | Interface de Usuário |
-| `api` | API/Backend |
+| Escopo         | Descrição                |
+| -------------- | ------------------------ |
+| `patients`     | Gestão de Pacientes      |
+| `schedule`     | Agendamento              |
+| `evolution`    | Evolução Clínica (SOAP)  |
+| `exercises`    | Biblioteca de Exercícios |
+| `telemedicine` | Telemedicina             |
+| `reports`      | Relatórios               |
+| `auth`         | Autenticação/Permissões  |
+| `mobile`       | Apps Mobile              |
+| `ui`           | Interface de Usuário     |
+| `api`          | API/Backend              |
 
 ## Exemplos de Commits
 
@@ -119,17 +128,20 @@ Para comunicação com usuários finais (fisioterapeutas), criar versão simplif
 O sistema agora sugere os melhores horários baseados no histórico do paciente.
 
 🔧 **Correções**
+
 - Corrigimos um problema ao adicionar anexos na evolução clínica.
 - Melhoramos a estabilidade do vídeo na telemedicina.
 
 ## Para a Equipe de TI
 
 ### Mudanças Técnicas
+
 - Atualizado React para v19.1.0
 - Migrado para Neon Auth
 - Adicionado testes E2E para fluxo de agendamento
 
 ### Breaking Changes
+
 - A API de pacientes agora requer o campo `organizationId`
 ```
 

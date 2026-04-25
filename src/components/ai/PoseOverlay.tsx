@@ -9,391 +9,349 @@ import { Button } from "@/components/ui/button";
 import { Camera, Video, RefreshCw, Download } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { resolveMediaPipeVisionFileset } from "@/lib/ai/mediapipe";
-import type {
-	Landmark,
-	PoseLandmarker as PoseLandmarkerType,
-} from "@mediapipe/tasks-vision";
+import type { Landmark, PoseLandmarker as PoseLandmarkerType } from "@mediapipe/tasks-vision";
 
 interface PoseKeypoint {
-	x: number;
-	y: number;
-	z: number;
-	visibility: number;
+  x: number;
+  y: number;
+  z: number;
+  visibility: number;
 }
 
 interface PoseDetection {
-	keypoints: PoseKeypoint[];
-	score: number;
+  keypoints: PoseKeypoint[];
+  score: number;
 }
 
 interface PoseOverlayProps {
-	videoRef?: React.RefObject<HTMLVideoElement>;
-	imageUrl?: string;
-	onPoseDetected?: (pose: PoseDetection) => void;
-	className?: string;
+  videoRef?: React.RefObject<HTMLVideoElement>;
+  imageUrl?: string;
+  onPoseDetected?: (pose: PoseDetection) => void;
+  className?: string;
 }
 
 const KEYPOINT_CONNECTIONS = [
-	// Tronco
-	[11, 12], // ombros
-	[11, 23], // ombro esquerdo -> quadril esquerdo
-	[12, 24], // ombro direito -> quadril direito
-	[23, 24], // quadil esquerdo -> quadril direito
-	// Braço esquerdo
-	[11, 13], // ombro -> cotovelo
-	[13, 15], // cotovelo -> punho
-	// Braço direito
-	[12, 14], // ombro -> cotovelo
-	[14, 16], // cotovelo -> punho
-	// Perna esquerda
-	[23, 25], // quadril -> joelho
-	[25, 27], // joelho -> tornozelo
-	// Perna direita
-	[24, 26], // quadril -> joelho
-	[26, 28], // joelho -> tornozelo
+  // Tronco
+  [11, 12], // ombros
+  [11, 23], // ombro esquerdo -> quadril esquerdo
+  [12, 24], // ombro direito -> quadril direito
+  [23, 24], // quadil esquerdo -> quadril direito
+  // Braço esquerdo
+  [11, 13], // ombro -> cotovelo
+  [13, 15], // cotovelo -> punho
+  // Braço direito
+  [12, 14], // ombro -> cotovelo
+  [14, 16], // cotovelo -> punho
+  // Perna esquerda
+  [23, 25], // quadril -> joelho
+  [25, 27], // joelho -> tornozelo
+  // Perna direita
+  [24, 26], // quadril -> joelho
+  [26, 28], // joelho -> tornozelo
 ];
 
 const JOINT_ANALYSIS = {
-	left_shoulder: { left: 11, right: 13 },
-	right_shoulder: { left: 12, right: 14 },
-	left_elbow: { left: 13, right: 15 },
-	right_elbow: { left: 14, right: 16 },
-	left_hip: { left: 11, right: 23 },
-	right_hip: { left: 12, right: 24 },
-	left_knee: { left: 23, right: 25 },
-	right_knee: { left: 24, right: 26 },
+  left_shoulder: { left: 11, right: 13 },
+  right_shoulder: { left: 12, right: 14 },
+  left_elbow: { left: 13, right: 15 },
+  right_elbow: { left: 14, right: 16 },
+  left_hip: { left: 11, right: 23 },
+  right_hip: { left: 12, right: 24 },
+  left_knee: { left: 23, right: 25 },
+  right_knee: { left: 24, right: 26 },
 };
 
-export function PoseOverlay({
-	videoRef,
-	imageUrl,
-	onPoseDetected,
-	className,
-}: PoseOverlayProps) {
-	const canvasRef = useRef<HTMLCanvasElement>(null);
-	const [pose, setPose] = useState<PoseDetection | null>(null);
-	const [isAnalyzing, setIsAnalyzing] = useState(false);
-	const [jointAngles, setJointAngles] = useState<Record<string, number>>({});
-	const poseLandmarkerRef = useRef<PoseLandmarkerType | null>(null);
-	const { toast } = useToast();
+export function PoseOverlay({ videoRef, imageUrl, onPoseDetected, className }: PoseOverlayProps) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [pose, setPose] = useState<PoseDetection | null>(null);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [jointAngles, setJointAngles] = useState<Record<string, number>>({});
+  const poseLandmarkerRef = useRef<PoseLandmarkerType | null>(null);
+  const { toast } = useToast();
 
-	// Inicializar MediaPipe Pose Landmarker
-	useEffect(() => {
-		const initializePoseLandmarker = async () => {
-			try {
-				const { PoseLandmarker, FilesetResolver } = await import(
-					"@mediapipe/tasks-vision"
-				);
-				const vision = await resolveMediaPipeVisionFileset(FilesetResolver);
-				const poseLandmarker = await PoseLandmarker.createFromOptions(vision, {
-					baseOptions: {
-						modelAssetPath: `https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task`,
-						delegate: "GPU",
-					},
-					runningMode: videoRef ? "VIDEO" : "IMAGE",
-					numPoses: 1,
-				});
-				poseLandmarkerRef.current = poseLandmarker;
-			} catch (error) {
-				console.error("Failed to initialize Pose Landmarker:", error);
-				toast({
-					title: "Erro ao carregar IA",
-					description: "Não foi possível inicializar o modelo de pose.",
-					variant: "destructive",
-				});
-			}
-		};
+  // Inicializar MediaPipe Pose Landmarker
+  useEffect(() => {
+    const initializePoseLandmarker = async () => {
+      try {
+        const { PoseLandmarker, FilesetResolver } = await import("@mediapipe/tasks-vision");
+        const vision = await resolveMediaPipeVisionFileset(FilesetResolver);
+        const poseLandmarker = await PoseLandmarker.createFromOptions(vision, {
+          baseOptions: {
+            modelAssetPath: `https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task`,
+            delegate: "GPU",
+          },
+          runningMode: videoRef ? "VIDEO" : "IMAGE",
+          numPoses: 1,
+        });
+        poseLandmarkerRef.current = poseLandmarker;
+      } catch (error) {
+        console.error("Failed to initialize Pose Landmarker:", error);
+        toast({
+          title: "Erro ao carregar IA",
+          description: "Não foi possível inicializar o modelo de pose.",
+          variant: "destructive",
+        });
+      }
+    };
 
-		initializePoseLandmarker();
+    initializePoseLandmarker();
 
-		return () => {
-			poseLandmarkerRef.current?.close();
-		};
-	}, [videoRef, toast]);
+    return () => {
+      poseLandmarkerRef.current?.close();
+    };
+  }, [videoRef, toast]);
 
-	// Calcular ângulo entre três pontos
-	const calculateAngle = (
-		a: PoseKeypoint,
-		b: PoseKeypoint,
-		c: PoseKeypoint,
-	): number => {
-		const radians =
-			Math.atan2(c.y - b.y, c.x - b.x) - Math.atan2(a.y - b.y, a.x - b.x);
-		let angle = Math.abs((radians * 180) / Math.PI);
-		if (angle > 180) angle = 360 - angle;
-		return angle;
-	};
+  // Calcular ângulo entre três pontos
+  const calculateAngle = (a: PoseKeypoint, b: PoseKeypoint, c: PoseKeypoint): number => {
+    const radians = Math.atan2(c.y - b.y, c.x - b.x) - Math.atan2(a.y - b.y, a.x - b.x);
+    let angle = Math.abs((radians * 180) / Math.PI);
+    if (angle > 180) angle = 360 - angle;
+    return angle;
+  };
 
-	// Detectar pose usando MediaPipe
-	const detectPose = async () => {
-		if (!poseLandmarkerRef.current) return;
-		setIsAnalyzing(true);
+  // Detectar pose usando MediaPipe
+  const detectPose = async () => {
+    if (!poseLandmarkerRef.current) return;
+    setIsAnalyzing(true);
 
-		try {
-			let result;
-			if (videoRef?.current) {
-				const startTimeMs = performance.now();
-				result = poseLandmarkerRef.current.detectForVideo(
-					videoRef.current,
-					startTimeMs,
-				);
-			} else if (imageUrl) {
-				// Para imagem, precisamos carregar o elemento HTMLImageElement
-				const img = new Image();
-				img.crossOrigin = "anonymous";
-				img.src = imageUrl;
-				await new Promise((resolve) => (img.onload = resolve));
-				result = poseLandmarkerRef.current.detect(img);
-			}
+    try {
+      let result;
+      if (videoRef?.current) {
+        const startTimeMs = performance.now();
+        result = poseLandmarkerRef.current.detectForVideo(videoRef.current, startTimeMs);
+      } else if (imageUrl) {
+        // Para imagem, precisamos carregar o elemento HTMLImageElement
+        const img = new Image();
+        img.crossOrigin = "anonymous";
+        img.src = imageUrl;
+        await new Promise((resolve) => (img.onload = resolve));
+        result = poseLandmarkerRef.current.detect(img);
+      }
 
-			if (result && result.landmarks && result.landmarks.length > 0) {
-				const landmarks = result.landmarks[0];
-				const keypoints: PoseKeypoint[] = landmarks.map((l: Landmark) => {
-					const lm = l as Landmark & { visibility?: number };
-					return {
-						x: l.x,
-						y: l.y,
-						z: l.z,
-						visibility: lm.visibility ?? 1.0,
-					};
-				});
+      if (result && result.landmarks && result.landmarks.length > 0) {
+        const landmarks = result.landmarks[0];
+        const keypoints: PoseKeypoint[] = landmarks.map((l: Landmark) => {
+          const lm = l as Landmark & { visibility?: number };
+          return {
+            x: l.x,
+            y: l.y,
+            z: l.z,
+            visibility: lm.visibility ?? 1.0,
+          };
+        });
 
-				const detection: PoseDetection = {
-					keypoints,
-					score: 1.0,
-				};
+        const detection: PoseDetection = {
+          keypoints,
+          score: 1.0,
+        };
 
-				setPose(detection);
+        setPose(detection);
 
-				// Calcular ângulos das articulações
-				const angles: Record<string, number> = {};
+        // Calcular ângulos das articulações
+        const angles: Record<string, number> = {};
 
-				for (const [joint, points] of Object.entries(JOINT_ANALYSIS)) {
-					const a = keypoints[points.left];
-					const b = keypoints[points.right - 1];
-					if (a && b && keypoints[points.right]) {
-						const c = keypoints[points.right];
-						if (
-							a.visibility > 0.5 &&
-							b.visibility > 0.5 &&
-							c.visibility > 0.5
-						) {
-							angles[`${joint}_angle`] = calculateAngle(a, b, c);
-						}
-					}
-				}
+        for (const [joint, points] of Object.entries(JOINT_ANALYSIS)) {
+          const a = keypoints[points.left];
+          const b = keypoints[points.right - 1];
+          if (a && b && keypoints[points.right]) {
+            const c = keypoints[points.right];
+            if (a.visibility > 0.5 && b.visibility > 0.5 && c.visibility > 0.5) {
+              angles[`${joint}_angle`] = calculateAngle(a, b, c);
+            }
+          }
+        }
 
-				setJointAngles(angles);
+        setJointAngles(angles);
 
-				if (onPoseDetected) {
-					onPoseDetected(detection);
-				}
+        if (onPoseDetected) {
+          onPoseDetected(detection);
+        }
 
-				toast({
-					title: "Análise concluída",
-					description: "33 pontos de referência detectados",
-				});
-			} else {
-				toast({
-					title: "IA não detectou pose",
-					description: "Certifique-se de que a pessoa está visível na imagem.",
-					variant: "warning",
-				});
-			}
-		} catch (error) {
-			console.error("Erro ao detectar pose:", error);
-			toast({
-				title: "Erro na análise",
-				description: "Falha ao detectar pose",
-				variant: "destructive",
-			});
-		} finally {
-			setIsAnalyzing(false);
-		}
-	};
+        toast({
+          title: "Análise concluída",
+          description: "33 pontos de referência detectados",
+        });
+      } else {
+        toast({
+          title: "IA não detectou pose",
+          description: "Certifique-se de que a pessoa está visível na imagem.",
+          variant: "warning",
+        });
+      }
+    } catch (error) {
+      console.error("Erro ao detectar pose:", error);
+      toast({
+        title: "Erro na análise",
+        description: "Falha ao detectar pose",
+        variant: "destructive",
+      });
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
 
-	// Desenhar pose no canvas
-	const drawPose = useCallback(() => {
-		const canvas = canvasRef.current;
-		if (!canvas || !pose) return;
+  // Desenhar pose no canvas
+  const drawPose = useCallback(() => {
+    const canvas = canvasRef.current;
+    if (!canvas || !pose) return;
 
-		const ctx = canvas.getContext("2d");
-		if (!ctx) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
 
-		const { width, height } = canvas;
-		ctx.clearRect(0, 0, width, height);
+    const { width, height } = canvas;
+    ctx.clearRect(0, 0, width, height);
 
-		// Desenhar conexões
-		ctx.strokeStyle = "#3b82f6";
-		ctx.lineWidth = 2;
+    // Desenhar conexões
+    ctx.strokeStyle = "#3b82f6";
+    ctx.lineWidth = 2;
 
-		KEYPOINT_CONNECTIONS.forEach(([i, j]) => {
-			const kp1 = pose.keypoints[i];
-			const kp2 = pose.keypoints[j];
+    KEYPOINT_CONNECTIONS.forEach(([i, j]) => {
+      const kp1 = pose.keypoints[i];
+      const kp2 = pose.keypoints[j];
 
-			if (kp1.visibility > 0.5 && kp2.visibility > 0.5) {
-				ctx.beginPath();
-				ctx.moveTo(kp1.x * width, kp1.y * height);
-				ctx.lineTo(kp2.x * width, kp2.y * height);
-				ctx.stroke();
-			}
-		});
+      if (kp1.visibility > 0.5 && kp2.visibility > 0.5) {
+        ctx.beginPath();
+        ctx.moveTo(kp1.x * width, kp1.y * height);
+        ctx.lineTo(kp2.x * width, kp2.y * height);
+        ctx.stroke();
+      }
+    });
 
-		// Desenhar keypoints
-		pose.keypoints.forEach((kp, index) => {
-			if (kp.visibility > 0.5) {
-				const x = kp.x * width;
-				const y = kp.y * height;
+    // Desenhar keypoints
+    pose.keypoints.forEach((kp, index) => {
+      if (kp.visibility > 0.5) {
+        const x = kp.x * width;
+        const y = kp.y * height;
 
-				ctx.beginPath();
-				ctx.arc(x, y, 4, 0, 2 * Math.PI);
+        ctx.beginPath();
+        ctx.arc(x, y, 4, 0, 2 * Math.PI);
 
-				// Cores diferentes para lados esquerdo/direito
-				if (index >= 11 && index <= 22) {
-					ctx.fillStyle = "#10b981"; // Verde para lado esquerdo
-				} else {
-					ctx.fillStyle = "#ef4444"; // Vermelho para lado direito
-				}
+        // Cores diferentes para lados esquerdo/direito
+        if (index >= 11 && index <= 22) {
+          ctx.fillStyle = "#10b981"; // Verde para lado esquerdo
+        } else {
+          ctx.fillStyle = "#ef4444"; // Vermelho para lado direito
+        }
 
-				ctx.fill();
+        ctx.fill();
 
-				// Desenhar índice do ponto
-				ctx.fillStyle = "#000";
-				ctx.font = "8px sans-serif";
-				ctx.fillText(index.toString(), x + 6, y - 6);
-			}
-		});
-	}, [pose]);
+        // Desenhar índice do ponto
+        ctx.fillStyle = "#000";
+        ctx.font = "8px sans-serif";
+        ctx.fillText(index.toString(), x + 6, y - 6);
+      }
+    });
+  }, [pose]);
 
-	useEffect(() => {
-		if (pose) {
-			drawPose();
-		}
-	}, [pose, drawPose]);
+  useEffect(() => {
+    if (pose) {
+      drawPose();
+    }
+  }, [pose, drawPose]);
 
-	const handleDownloadImage = () => {
-		const canvas = canvasRef.current;
-		if (!canvas) return;
+  const handleDownloadImage = () => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
 
-		const link = document.createElement("a");
-		link.download = `pose-analysis-${Date.now()}.png`;
-		link.href = canvas.toDataURL();
-		link.click();
+    const link = document.createElement("a");
+    link.download = `pose-analysis-${Date.now()}.png`;
+    link.href = canvas.toDataURL();
+    link.click();
 
-		toast({
-			title: "Imagem salva",
-			description: "Análise de pose baixada",
-		});
-	};
+    toast({
+      title: "Imagem salva",
+      description: "Análise de pose baixada",
+    });
+  };
 
-	return (
-		<Card className={className}>
-			<CardHeader>
-				<CardTitle className="flex items-center justify-between">
-					<span>Análise de Pose - MediaPipe</span>
-					<div className="flex gap-2">
-						<Button
-							variant="outline"
-							size="sm"
-							onClick={detectPose}
-							disabled={isAnalyzing}
-						>
-							{isAnalyzing ? (
-								<RefreshCw className="w-4 h-4 animate-spin" />
-							) : (
-								<Video className="w-4 h-4" />
-							)}
-							{isAnalyzing ? "Analisando..." : "Analisar"}
-						</Button>
-						<Button
-							variant="outline"
-							size="sm"
-							onClick={handleDownloadImage}
-							disabled={!pose}
-						>
-							<Download className="w-4 h-4" />
-						</Button>
-					</div>
-				</CardTitle>
-			</CardHeader>
-			<CardContent>
-				<div className="relative bg-gray-100 rounded-lg overflow-hidden">
-					{videoRef && videoRef.current ? (
-						<video
-							ref={videoRef}
-							className="w-full h-auto"
-							playsInline
-							muted
-							loop
-						/>
-					) : imageUrl ? (
-						<img src={imageUrl} alt="Análise" className="w-full h-auto" />
-					) : (
-						<div className="aspect-video flex items-center justify-center bg-gray-200">
-							<Camera className="w-12 h-12 text-gray-400" />
-						</div>
-					)}
+  return (
+    <Card className={className}>
+      <CardHeader>
+        <CardTitle className="flex items-center justify-between">
+          <span>Análise de Pose - MediaPipe</span>
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" onClick={detectPose} disabled={isAnalyzing}>
+              {isAnalyzing ? (
+                <RefreshCw className="w-4 h-4 animate-spin" />
+              ) : (
+                <Video className="w-4 h-4" />
+              )}
+              {isAnalyzing ? "Analisando..." : "Analisar"}
+            </Button>
+            <Button variant="outline" size="sm" onClick={handleDownloadImage} disabled={!pose}>
+              <Download className="w-4 h-4" />
+            </Button>
+          </div>
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="relative bg-gray-100 rounded-lg overflow-hidden">
+          {videoRef && videoRef.current ? (
+            <video ref={videoRef} className="w-full h-auto" playsInline muted loop />
+          ) : imageUrl ? (
+            <img src={imageUrl} alt="Análise" className="w-full h-auto" />
+          ) : (
+            <div className="aspect-video flex items-center justify-center bg-gray-200">
+              <Camera className="w-12 h-12 text-gray-400" />
+            </div>
+          )}
 
-					{/* Canvas sobreposto */}
-					<canvas
-						ref={canvasRef}
-						className="absolute inset-0 w-full h-full pointer-events-none"
-						width={640}
-						height={480}
-					/>
-				</div>
+          {/* Canvas sobreposto */}
+          <canvas
+            ref={canvasRef}
+            className="absolute inset-0 w-full h-full pointer-events-none"
+            width={640}
+            height={480}
+          />
+        </div>
 
-				{/* Análise de articulações */}
-				{Object.keys(jointAngles).length > 0 && (
-					<div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-2">
-						{Object.entries(jointAngles).map(([joint, angle]) => {
-							const [jointName] = joint.split("_");
-							const isValidAngle = angle >= 30 && angle <= 180;
-							const isLeft = jointName.includes("left");
+        {/* Análise de articulações */}
+        {Object.keys(jointAngles).length > 0 && (
+          <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-2">
+            {Object.entries(jointAngles).map(([joint, angle]) => {
+              const [jointName] = joint.split("_");
+              const isValidAngle = angle >= 30 && angle <= 180;
+              const isLeft = jointName.includes("left");
 
-							return (
-								<div
-									key={joint}
-									className={`p-2 rounded border text-center ${
-										isValidAngle
-											? "bg-green-50 border-green-200"
-											: "bg-yellow-50 border-yellow-200"
-									}`}
-								>
-									<div className="text-xs text-gray-600 capitalize">
-										{jointName.replace("_", " ")}
-									</div>
-									<div
-										className={`text-lg font-bold ${
-											isLeft ? "text-green-600" : "text-red-600"
-										}`}
-									>
-										{angle.toFixed(1)}°
-									</div>
-								</div>
-							);
-						})}
-					</div>
-				)}
+              return (
+                <div
+                  key={joint}
+                  className={`p-2 rounded border text-center ${
+                    isValidAngle ? "bg-green-50 border-green-200" : "bg-yellow-50 border-yellow-200"
+                  }`}
+                >
+                  <div className="text-xs text-gray-600 capitalize">
+                    {jointName.replace("_", " ")}
+                  </div>
+                  <div
+                    className={`text-lg font-bold ${isLeft ? "text-green-600" : "text-red-600"}`}
+                  >
+                    {angle.toFixed(1)}°
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
 
-				{/* Legenda */}
-				<div className="mt-4 flex items-center gap-4 text-xs text-gray-600">
-					<div className="flex items-center gap-1">
-						<div className="w-3 h-3 rounded-full bg-green-500"></div>
-						<span>Lado Esquerdo</span>
-					</div>
-					<div className="flex items-center gap-1">
-						<div className="w-3 h-3 rounded-full bg-red-500"></div>
-						<span>Lado Direito</span>
-					</div>
-					<div className="flex items-center gap-1">
-						<div className="w-3 h-3 rounded-full bg-blue-500"></div>
-						<span>Conexões</span>
-					</div>
-				</div>
-			</CardContent>
-		</Card>
-	);
+        {/* Legenda */}
+        <div className="mt-4 flex items-center gap-4 text-xs text-gray-600">
+          <div className="flex items-center gap-1">
+            <div className="w-3 h-3 rounded-full bg-green-500"></div>
+            <span>Lado Esquerdo</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <div className="w-3 h-3 rounded-full bg-red-500"></div>
+            <span>Lado Direito</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <div className="w-3 h-3 rounded-full bg-blue-500"></div>
+            <span>Conexões</span>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
 }
 
 export default PoseOverlay;

@@ -1,4 +1,4 @@
-import type { Env } from '../../types/env';
+import type { Env } from "../../types/env";
 
 export interface NFSeData {
   numero?: string;
@@ -23,14 +23,14 @@ export interface NFSeData {
  * NFSe Service (Integration with FocusNFe)
  */
 export class NFSeService {
-  private baseUrl = 'https://api.focusnfe.com.br/v2';
+  private baseUrl = "https://api.focusnfe.com.br/v2";
 
   constructor(private env: Env) {}
 
   private get authHeader() {
     return {
-      'Authorization': `Basic ${btoa(this.env.FOCUS_NFE_TOKEN + ':')}`,
-      'Content-Type': 'application/json',
+      Authorization: `Basic ${btoa(this.env.FOCUS_NFE_TOKEN + ":")}`,
+      "Content-Type": "application/json",
     };
   }
 
@@ -40,19 +40,19 @@ export class NFSeService {
   async emit(data: NFSeData) {
     if (!this.env.FOCUS_NFE_TOKEN) {
       // Mock for development if token is missing
-      console.warn('[NFSe] FOCUS_NFE_TOKEN missing, returning mock');
+      console.warn("[NFSe] FOCUS_NFE_TOKEN missing, returning mock");
       return {
-        status: 'authorized',
-        protocolo: 'MOCK-' + crypto.randomUUID().substring(0, 8),
-        url_pdf: 'https://example.com/mock-nfse.pdf',
+        status: "authorized",
+        protocolo: "MOCK-" + crypto.randomUUID().substring(0, 8),
+        url_pdf: "https://example.com/mock-nfse.pdf",
       };
     }
 
-    const isProduction = this.env.FOCUS_NFE_ENVIRONMENT === 'production';
-    const endpoint = `${this.baseUrl}/nfse?ambiente=${isProduction ? '1' : '2'}`;
+    const isProduction = this.env.FOCUS_NFE_ENVIRONMENT === "production";
+    const endpoint = `${this.baseUrl}/nfse?ambiente=${isProduction ? "1" : "2"}`;
 
     const body = {
-      data_emissao: data.dataEmissao.toISOString().split('T')[0],
+      data_emissao: data.dataEmissao.toISOString().split("T")[0],
       prestador: {
         cnpj: this.env.WHATSAPP_PHONE_NUMBER_ID, // Example: reuse some ID if needed or add new env
       },
@@ -71,15 +71,15 @@ export class NFSeService {
     };
 
     const response = await fetch(endpoint, {
-      method: 'POST',
+      method: "POST",
       headers: this.authHeader,
       body: JSON.stringify(body),
     });
 
-    const result = await response.json() as any;
+    const result = (await response.json()) as any;
     if (!response.ok) {
-      console.error('[NFSe Error]', result);
-      throw new Error(result.mensagem || 'NFSe API error');
+      console.error("[NFSe Error]", result);
+      throw new Error(result.mensagem || "NFSe API error");
     }
 
     return result;
@@ -89,10 +89,10 @@ export class NFSeService {
    * Consults an NFSe status
    */
   async getStatus(id: string) {
-    if (!this.env.FOCUS_NFE_TOKEN) return { status: 'authorized' };
+    if (!this.env.FOCUS_NFE_TOKEN) return { status: "authorized" };
 
     const response = await fetch(`${this.baseUrl}/nfse/${id}`, {
-      method: 'GET',
+      method: "GET",
       headers: this.authHeader,
     });
 

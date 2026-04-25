@@ -9,8 +9,11 @@ async function main() {
   const db = drizzle(sql);
 
   console.log("Deleting E2E templates...");
-  const e2eTemplates = await db.select().from(exerciseTemplates).where(ilike(exerciseTemplates.name, "%E2E Template%"));
-  
+  const e2eTemplates = await db
+    .select()
+    .from(exerciseTemplates)
+    .where(ilike(exerciseTemplates.name, "%E2E Template%"));
+
   if (e2eTemplates.length === 0) {
     console.log("No E2E templates found.");
     process.exit(0);

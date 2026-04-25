@@ -1,29 +1,22 @@
-import { useState } from 'react';
+import { useState } from "react";
 
-import {
-  View,
-  Text,
-  StyleSheet,
-  KeyboardAvoidingView,
-  Platform,
-  Alert,
-} from 'react-native';
-import { router } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { authApi } from '@/lib/auth-api';
-import { Button, Input } from '@/components';
-import { useColors } from '@/hooks/useColorScheme';
-import { Ionicons } from '@expo/vector-icons';
+import { View, Text, StyleSheet, KeyboardAvoidingView, Platform, Alert } from "react-native";
+import { router } from "expo-router";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { authApi } from "@/lib/auth-api";
+import { Button, Input } from "@/components";
+import { useColors } from "@/hooks/useColorScheme";
+import { Ionicons } from "@expo/vector-icons";
 
 export default function ForgotPasswordScreen() {
   const colors = useColors();
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [sent, setSent] = useState(false);
 
   const handleResetPassword = async () => {
     if (!email.trim()) {
-      Alert.alert('Erro', 'Digite seu email');
+      Alert.alert("Erro", "Digite seu email");
       return;
     }
 
@@ -32,13 +25,13 @@ export default function ForgotPasswordScreen() {
       await authApi.resetPassword(email.trim());
       setSent(true);
     } catch (error: any) {
-      let message = 'Erro ao enviar email de recuperacao';
-      if (error.code === 'auth/user-not-found') {
-        message = 'Email nao encontrado';
-      } else if (error.code === 'auth/invalid-email') {
-        message = 'Email invalido';
+      let message = "Erro ao enviar email de recuperacao";
+      if (error.code === "auth/user-not-found") {
+        message = "Email nao encontrado";
+      } else if (error.code === "auth/invalid-email") {
+        message = "Email invalido";
       }
-      Alert.alert('Erro', message);
+      Alert.alert("Erro", message);
     } finally {
       setIsLoading(false);
     }
@@ -55,11 +48,7 @@ export default function ForgotPasswordScreen() {
           <Text style={[styles.description, { color: colors.textSecondary }]}>
             Enviamos um link de recuperacao para {email}. Verifique sua caixa de entrada.
           </Text>
-          <Button
-            title="Voltar ao Login"
-            onPress={() => router.back()}
-            style={styles.button}
-          />
+          <Button title="Voltar ao Login" onPress={() => router.back()} style={styles.button} />
         </View>
       </SafeAreaView>
     );
@@ -68,11 +57,11 @@ export default function ForgotPasswordScreen() {
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={styles.keyboardView}
       >
         <View style={styles.content}>
-          <View style={[styles.iconContainer, { backgroundColor: colors.primaryLight + '20' }]}>
+          <View style={[styles.iconContainer, { backgroundColor: colors.primaryLight + "20" }]}>
             <Ionicons name="key" size={48} color={colors.primary} />
           </View>
           <Text style={[styles.title, { color: colors.text }]}>Esqueceu a Senha?</Text>
@@ -121,38 +110,38 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     padding: 24,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   iconContainer: {
     width: 96,
     height: 96,
     borderRadius: 48,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     marginBottom: 24,
   },
   title: {
     fontSize: 24,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     marginBottom: 12,
-    textAlign: 'center',
+    textAlign: "center",
   },
   description: {
     fontSize: 16,
-    textAlign: 'center',
+    textAlign: "center",
     marginBottom: 32,
     lineHeight: 24,
   },
   input: {
-    width: '100%',
+    width: "100%",
   },
   button: {
-    width: '100%',
+    width: "100%",
     marginTop: 8,
   },
   backButton: {
-    width: '100%',
+    width: "100%",
     marginTop: 12,
   },
 });

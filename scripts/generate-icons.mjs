@@ -5,7 +5,7 @@
  * node scripts/generate-icons.mjs
  */
 
-import sharp from 'sharp';
+import sharp from "sharp";
 
 // SVG do ícone Patient App (Teal)
 const patientIconSvg = Buffer.from(`
@@ -57,7 +57,6 @@ const notificationIconSvg = Buffer.from(`
 
 // Favicon
 
-
 // Adaptive icon foreground
 const adaptiveIconSvg = Buffer.from(`
 <svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
@@ -72,7 +71,7 @@ const adaptiveIconSvg = Buffer.from(`
 async function generateIcon(svg, outputPath, width, height) {
   try {
     await sharp(svg, { density: 300 })
-      .resize(width, height, { fit: 'cover' })
+      .resize(width, height, { fit: "cover" })
       .png()
       .toFile(outputPath);
     console.log(`✓ Generated ${outputPath} (${width}x${height})`);
@@ -82,23 +81,28 @@ async function generateIcon(svg, outputPath, width, height) {
 }
 
 async function generateAll() {
-  console.log('🎨 Generating app icons...\n');
+  console.log("🎨 Generating app icons...\n");
 
   // Patient App Icons
-  console.log('Patient App:');
-  await generateIcon(patientIconSvg, 'apps/patient-app/assets/icon.png', 1024, 1024);
-  await generateIcon(patientIconSvg, 'apps/patient-app/assets/favicon.png', 48, 48);
-  await generateIcon(patientIconSvg, 'apps/patient-app/assets/notification-icon.png', 96, 96);
-  await generateIcon(adaptiveIconSvg, 'apps/patient-app/assets/adaptive-icon.png', 1024, 1024);
+  console.log("Patient App:");
+  await generateIcon(patientIconSvg, "apps/patient-app/assets/icon.png", 1024, 1024);
+  await generateIcon(patientIconSvg, "apps/patient-app/assets/favicon.png", 48, 48);
+  await generateIcon(patientIconSvg, "apps/patient-app/assets/notification-icon.png", 96, 96);
+  await generateIcon(adaptiveIconSvg, "apps/patient-app/assets/adaptive-icon.png", 1024, 1024);
 
   // Professional App Icons
-  console.log('\nProfessional App:');
-  await generateIcon(professionalIconSvg, 'apps/professional-app/assets/icon.png', 1024, 1024);
-  await generateIcon(professionalIconSvg, 'apps/professional-app/assets/favicon.png', 48, 48);
-  await generateIcon(notificationIconSvg, 'apps/professional-app/assets/notification-icon.png', 96, 96);
-  await generateIcon(adaptiveIconSvg, 'apps/professional-app/assets/adaptive-icon.png', 1024, 1024);
+  console.log("\nProfessional App:");
+  await generateIcon(professionalIconSvg, "apps/professional-app/assets/icon.png", 1024, 1024);
+  await generateIcon(professionalIconSvg, "apps/professional-app/assets/favicon.png", 48, 48);
+  await generateIcon(
+    notificationIconSvg,
+    "apps/professional-app/assets/notification-icon.png",
+    96,
+    96,
+  );
+  await generateIcon(adaptiveIconSvg, "apps/professional-app/assets/adaptive-icon.png", 1024, 1024);
 
-  console.log('\n✅ All icons generated successfully!');
+  console.log("\n✅ All icons generated successfully!");
 }
 
 generateAll().catch(console.error);

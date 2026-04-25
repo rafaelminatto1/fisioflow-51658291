@@ -3,13 +3,13 @@
  * Interactive chips for filters, selections, etc.
  */
 
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { useColors } from '@/hooks/useColorScheme';
+import React from "react";
+import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { useColors } from "@/hooks/useColorScheme";
 
-export type ChipVariant = 'default' | 'outline' | 'flat';
-export type ChipSize = 'small' | 'medium' | 'large';
+export type ChipVariant = "default" | "outline" | "flat";
+export type ChipSize = "small" | "medium" | "large";
 
 interface ChipProps {
   label: string;
@@ -33,8 +33,8 @@ const sizeStyles = {
 export function Chip({
   label,
   selected = false,
-  variant = 'outline',
-  size = 'medium',
+  variant = "outline",
+  size = "medium",
   disabled = false,
   loading = false,
   icon,
@@ -47,11 +47,11 @@ export function Chip({
 
   const getContainerStyle = () => {
     const base: any = {
-      flexDirection: 'row',
-      alignItems: 'center',
+      flexDirection: "row",
+      alignItems: "center",
       paddingHorizontal: sizeStyle.paddingHorizontal,
       paddingVertical: sizeStyle.paddingVertical,
-      borderRadius: size === 'small' ? 14 : size === 'medium' ? 16 : 18,
+      borderRadius: size === "small" ? 14 : size === "medium" ? 16 : 18,
       gap: 6,
     };
 
@@ -63,7 +63,7 @@ export function Chip({
     }
 
     switch (variant) {
-      case 'default':
+      case "default":
         if (selected) {
           base.backgroundColor = colors.primary;
           base.borderColor = colors.primary;
@@ -72,13 +72,13 @@ export function Chip({
           base.borderColor = colors.border;
         }
         break;
-      case 'outline':
-        base.backgroundColor = 'transparent';
+      case "outline":
+        base.backgroundColor = "transparent";
         base.borderWidth = 1;
         base.borderColor = selected ? colors.primary : colors.border;
         break;
-      case 'flat':
-        base.backgroundColor = selected ? colors.primary + '20' : colors.surface;
+      case "flat":
+        base.backgroundColor = selected ? colors.primary + "20" : colors.surface;
         base.borderWidth = 0;
         break;
     }
@@ -89,15 +89,15 @@ export function Chip({
   const getLabelStyle = () => {
     const base: any = {
       fontSize: sizeStyle.fontSize,
-      fontWeight: '500',
+      fontWeight: "500",
     };
 
     if (disabled) {
       base.color = colors.textMuted;
-    } else if (selected && variant === 'outline') {
+    } else if (selected && variant === "outline") {
       base.color = colors.primary;
-    } else if (selected && variant !== 'outline') {
-      base.color = '#FFFFFF';
+    } else if (selected && variant !== "outline") {
+      base.color = "#FFFFFF";
     } else {
       base.color = colors.text;
     }
@@ -107,8 +107,8 @@ export function Chip({
 
   const getIconColor = () => {
     if (disabled) return colors.textMuted;
-    if (selected && variant === 'outline') return colors.primary;
-    if (selected && variant !== 'outline') return '#FFFFFF';
+    if (selected && variant === "outline") return colors.primary;
+    if (selected && variant !== "outline") return "#FFFFFF";
     return colors.textSecondary;
   };
 
@@ -117,9 +117,7 @@ export function Chip({
 
   const content = (
     <>
-      {icon && (
-        <Ionicons name={icon} size={sizeStyle.iconSize} color={getIconColor()} />
-      )}
+      {icon && <Ionicons name={icon} size={sizeStyle.iconSize} color={getIconColor()} />}
       <Text style={labelStyle} numberOfLines={1}>
         {label}
       </Text>
@@ -140,11 +138,7 @@ export function Chip({
 
   if (onPress && !disabled && !loading) {
     return (
-      <TouchableOpacity
-        style={[containerStyle, style]}
-        onPress={onPress}
-        activeOpacity={0.7}
-      >
+      <TouchableOpacity style={[containerStyle, style]} onPress={onPress} activeOpacity={0.7}>
         {content}
       </TouchableOpacity>
     );
@@ -170,8 +164,8 @@ export function ChipGroup({
   options,
   value,
   onChange,
-  variant = 'outline',
-  size = 'medium',
+  variant = "outline",
+  size = "medium",
   multiple = false,
   style,
 }: ChipGroupProps) {
@@ -187,7 +181,7 @@ export function ChipGroup({
 
     if (multiple && Array.isArray(value)) {
       if (value.includes(optionValue)) {
-        onChange(value.filter(v => v !== optionValue));
+        onChange(value.filter((v) => v !== optionValue));
       } else {
         onChange([...value, optionValue]);
       }
@@ -215,8 +209,8 @@ export function ChipGroup({
 
 const styles = StyleSheet.create({
   chipGroup: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+    flexDirection: "row",
+    flexWrap: "wrap",
     gap: 8,
   },
 });

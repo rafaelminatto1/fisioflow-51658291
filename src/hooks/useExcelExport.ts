@@ -5,257 +5,242 @@
 
 import { useState, useCallback } from "react";
 
-type XlsxIntegrationModule =
-	typeof import("../lib/skills/fase2-documentos/xlsx-integration");
+type XlsxIntegrationModule = typeof import("../lib/skills/fase2-documentos/xlsx-integration");
 
 interface UseExcelExportOptions {
-	onError?: (error: Error) => void;
-	onSuccess?: () => void;
+  onError?: (error: Error) => void;
+  onSuccess?: () => void;
 }
 
 export function useExcelExport(options?: UseExcelExportOptions) {
-	const [isExporting, setIsExporting] = useState(false);
-	const [error, setError] = useState<Error | null>(null);
+  const [isExporting, setIsExporting] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
 
-	const loadXlsxIntegration = useCallback(
-		() => import("../lib/skills/fase2-documentos/xlsx-integration"),
-		[],
-	);
+  const loadXlsxIntegration = useCallback(
+    () => import("../lib/skills/fase2-documentos/xlsx-integration"),
+    [],
+  );
 
-	const exportPatients = useCallback(
-		async (
-			patients: Array<{
-				id: string;
-				name: string;
-				cpf?: string;
-				birthDate?: Date;
-				phone?: string;
-				email?: string;
-				status: "active" | "inactive";
-				firstAppointment?: Date;
-				lastAppointment?: Date;
-				totalSessions?: number;
-				city?: string;
-			}>,
-			clinicName: string,
-			filename?: string,
-		) => {
-			setIsExporting(true);
-			setError(null);
+  const exportPatients = useCallback(
+    async (
+      patients: Array<{
+        id: string;
+        name: string;
+        cpf?: string;
+        birthDate?: Date;
+        phone?: string;
+        email?: string;
+        status: "active" | "inactive";
+        firstAppointment?: Date;
+        lastAppointment?: Date;
+        totalSessions?: number;
+        city?: string;
+      }>,
+      clinicName: string,
+      filename?: string,
+    ) => {
+      setIsExporting(true);
+      setError(null);
 
-			try {
-				const { exportPatientsToExcel, downloadExcelFile } =
-					(await loadXlsxIntegration()) as XlsxIntegrationModule;
-				const buffer = await exportPatientsToExcel(patients, clinicName);
-				downloadExcelFile(
-					buffer,
-					filename ||
-						`pacientes-${new Date().toISOString().split("T")[0]}.xlsx`,
-				);
+      try {
+        const { exportPatientsToExcel, downloadExcelFile } =
+          (await loadXlsxIntegration()) as XlsxIntegrationModule;
+        const buffer = await exportPatientsToExcel(patients, clinicName);
+        downloadExcelFile(
+          buffer,
+          filename || `pacientes-${new Date().toISOString().split("T")[0]}.xlsx`,
+        );
 
-				if (options?.onSuccess) {
-					options.onSuccess();
-				}
-			} catch (err) {
-				const error =
-					err instanceof Error ? err : new Error("Erro ao exportar pacientes");
-				setError(error);
-				if (options?.onError) {
-					options.onError(error);
-				}
-			} finally {
-				setIsExporting(false);
-			}
-		},
-		[loadXlsxIntegration, options],
-	);
+        if (options?.onSuccess) {
+          options.onSuccess();
+        }
+      } catch (err) {
+        const error = err instanceof Error ? err : new Error("Erro ao exportar pacientes");
+        setError(error);
+        if (options?.onError) {
+          options.onError(error);
+        }
+      } finally {
+        setIsExporting(false);
+      }
+    },
+    [loadXlsxIntegration, options],
+  );
 
-	const exportFinancials = useCallback(
-		async (
-			data: {
-				period: { start: Date; end: Date };
-				appointments: Array<{
-					date: Date;
-					patient: string;
-					professional: string;
-					type: string;
-					value: number;
-					status: "scheduled" | "completed" | "cancelled" | "no-show";
-					paymentMethod?: string;
-				}>;
-				expenses?: Array<{
-					date: Date;
-					description: string;
-					category: string;
-					value: number;
-				}>;
-			},
-			clinicName: string,
-			filename?: string,
-		): Promise<void> => {
-			setIsExporting(true);
-			setError(null);
+  const exportFinancials = useCallback(
+    async (
+      data: {
+        period: { start: Date; end: Date };
+        appointments: Array<{
+          date: Date;
+          patient: string;
+          professional: string;
+          type: string;
+          value: number;
+          status: "scheduled" | "completed" | "cancelled" | "no-show";
+          paymentMethod?: string;
+        }>;
+        expenses?: Array<{
+          date: Date;
+          description: string;
+          category: string;
+          value: number;
+        }>;
+      },
+      clinicName: string,
+      filename?: string,
+    ): Promise<void> => {
+      setIsExporting(true);
+      setError(null);
 
-			try {
-				const { exportFinancialReport, downloadExcelFile } =
-					(await loadXlsxIntegration()) as XlsxIntegrationModule;
-				const buffer = await exportFinancialReport(data, clinicName);
-				downloadExcelFile(
-					buffer,
-					filename ||
-						`relatorio-financeiro-${new Date().toISOString().split("T")[0]}.xlsx`,
-				);
+      try {
+        const { exportFinancialReport, downloadExcelFile } =
+          (await loadXlsxIntegration()) as XlsxIntegrationModule;
+        const buffer = await exportFinancialReport(data, clinicName);
+        downloadExcelFile(
+          buffer,
+          filename || `relatorio-financeiro-${new Date().toISOString().split("T")[0]}.xlsx`,
+        );
 
-				if (options?.onSuccess) {
-					options.onSuccess();
-				}
-			} catch (err) {
-				const error =
-					err instanceof Error
-						? err
-						: new Error("Erro ao exportar relatório financeiro");
-				setError(error);
-				if (options?.onError) {
-					options.onError(error);
-				}
-			} finally {
-				setIsExporting(false);
-			}
-		},
-		[loadXlsxIntegration, options],
-	);
+        if (options?.onSuccess) {
+          options.onSuccess();
+        }
+      } catch (err) {
+        const error =
+          err instanceof Error ? err : new Error("Erro ao exportar relatório financeiro");
+        setError(error);
+        if (options?.onError) {
+          options.onError(error);
+        }
+      } finally {
+        setIsExporting(false);
+      }
+    },
+    [loadXlsxIntegration, options],
+  );
 
-	const exportAttendanceStats = useCallback(
-		async (
-			data: {
-				period: { start: Date; end: Date };
-				byProfessional: Array<{
-					name: string;
-					totalSessions: number;
-					completedSessions: number;
-					noShows: number;
-					revenue: number;
-				}>;
-			},
-			clinicName: string,
-			filename?: string,
-		): Promise<void> => {
-			setIsExporting(true);
-			setError(null);
+  const exportAttendanceStats = useCallback(
+    async (
+      data: {
+        period: { start: Date; end: Date };
+        byProfessional: Array<{
+          name: string;
+          totalSessions: number;
+          completedSessions: number;
+          noShows: number;
+          revenue: number;
+        }>;
+      },
+      clinicName: string,
+      filename?: string,
+    ): Promise<void> => {
+      setIsExporting(true);
+      setError(null);
 
-			try {
-				const { exportAttendanceStats, downloadExcelFile } =
-					(await loadXlsxIntegration()) as XlsxIntegrationModule;
-				const buffer = await exportAttendanceStats(data, clinicName);
-				downloadExcelFile(
-					buffer,
-					filename ||
-						`estatisticas-atendimento-${new Date().toISOString().split("T")[0]}.xlsx`,
-				);
+      try {
+        const { exportAttendanceStats, downloadExcelFile } =
+          (await loadXlsxIntegration()) as XlsxIntegrationModule;
+        const buffer = await exportAttendanceStats(data, clinicName);
+        downloadExcelFile(
+          buffer,
+          filename || `estatisticas-atendimento-${new Date().toISOString().split("T")[0]}.xlsx`,
+        );
 
-				if (options?.onSuccess) {
-					options.onSuccess();
-				}
-			} catch (err) {
-				const error =
-					err instanceof Error
-						? err
-						: new Error("Erro ao exportar estatísticas");
-				setError(error);
-				if (options?.onError) {
-					options.onError(error);
-				}
-			} finally {
-				setIsExporting(false);
-			}
-		},
-		[loadXlsxIntegration, options],
-	);
+        if (options?.onSuccess) {
+          options.onSuccess();
+        }
+      } catch (err) {
+        const error = err instanceof Error ? err : new Error("Erro ao exportar estatísticas");
+        setError(error);
+        if (options?.onError) {
+          options.onError(error);
+        }
+      } finally {
+        setIsExporting(false);
+      }
+    },
+    [loadXlsxIntegration, options],
+  );
 
-	const downloadTemplate = useCallback(async () => {
-		setIsExporting(true);
-		setError(null);
+  const downloadTemplate = useCallback(async () => {
+    setIsExporting(true);
+    setError(null);
 
-		try {
-			const { generatePatientImportTemplate, downloadExcelFile } =
-				(await loadXlsxIntegration()) as XlsxIntegrationModule;
-			const buffer = await generatePatientImportTemplate();
-			downloadExcelFile(buffer, "template-importacao-pacientes.xlsx");
+    try {
+      const { generatePatientImportTemplate, downloadExcelFile } =
+        (await loadXlsxIntegration()) as XlsxIntegrationModule;
+      const buffer = await generatePatientImportTemplate();
+      downloadExcelFile(buffer, "template-importacao-pacientes.xlsx");
 
-			if (options?.onSuccess) {
-				options.onSuccess();
-			}
-		} catch (err) {
-			const error =
-				err instanceof Error ? err : new Error("Erro ao baixar template");
-			setError(error);
-			if (options?.onError) {
-				options.onError(error);
-			}
-		} finally {
-			setIsExporting(false);
-		}
-	}, [loadXlsxIntegration, options]);
+      if (options?.onSuccess) {
+        options.onSuccess();
+      }
+    } catch (err) {
+      const error = err instanceof Error ? err : new Error("Erro ao baixar template");
+      setError(error);
+      if (options?.onError) {
+        options.onError(error);
+      }
+    } finally {
+      setIsExporting(false);
+    }
+  }, [loadXlsxIntegration, options]);
 
-	const importPatients = useCallback(
-		async (
-			file: File,
-		): Promise<
-			Array<{
-				name: string;
-				cpf?: string;
-				birthDate?: Date;
-				phone?: string;
-				email?: string;
-				address: {
-					street: string;
-					number: string;
-					complement?: string;
-					district: string;
-					city: string;
-					state: string;
-					zipCode: string;
-				};
-			}>
-		> => {
-			setIsExporting(true);
-			setError(null);
+  const importPatients = useCallback(
+    async (
+      file: File,
+    ): Promise<
+      Array<{
+        name: string;
+        cpf?: string;
+        birthDate?: Date;
+        phone?: string;
+        email?: string;
+        address: {
+          street: string;
+          number: string;
+          complement?: string;
+          district: string;
+          city: string;
+          state: string;
+          zipCode: string;
+        };
+      }>
+    > => {
+      setIsExporting(true);
+      setError(null);
 
-			try {
-				const { importPatientsFromExcel } =
-					(await loadXlsxIntegration()) as XlsxIntegrationModule;
-				const arrayBuffer = await file.arrayBuffer();
-				const patients = await importPatientsFromExcel(
-					Buffer.from(arrayBuffer),
-				);
+      try {
+        const { importPatientsFromExcel } = (await loadXlsxIntegration()) as XlsxIntegrationModule;
+        const arrayBuffer = await file.arrayBuffer();
+        const patients = await importPatientsFromExcel(Buffer.from(arrayBuffer));
 
-				if (options?.onSuccess) {
-					options.onSuccess();
-				}
+        if (options?.onSuccess) {
+          options.onSuccess();
+        }
 
-				return patients;
-			} catch (err) {
-				const error =
-					err instanceof Error ? err : new Error("Erro ao importar pacientes");
-				setError(error);
-				if (options?.onError) {
-					options.onError(error);
-				}
-				return [];
-			} finally {
-				setIsExporting(false);
-			}
-		},
-		[loadXlsxIntegration, options],
-	);
+        return patients;
+      } catch (err) {
+        const error = err instanceof Error ? err : new Error("Erro ao importar pacientes");
+        setError(error);
+        if (options?.onError) {
+          options.onError(error);
+        }
+        return [];
+      } finally {
+        setIsExporting(false);
+      }
+    },
+    [loadXlsxIntegration, options],
+  );
 
-	return {
-		isExporting,
-		error,
-		exportPatients,
-		exportFinancials,
-		exportAttendanceStats,
-		downloadTemplate,
-		importPatients,
-	};
+  return {
+    isExporting,
+    error,
+    exportPatients,
+    exportFinancials,
+    exportAttendanceStats,
+    downloadTemplate,
+    importPatients,
+  };
 }

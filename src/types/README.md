@@ -17,6 +17,7 @@ This module provides centralized type definitions that replace `any` types with 
 ## Common Types
 
 ### Location
+
 ```
 src/types/common.ts
 ```
@@ -24,10 +25,11 @@ src/types/common.ts
 ### Key Types
 
 #### `Dictionary<T>`
+
 A type-safe replacement for `Record<string, any>`.
 
 ```typescript
-import type { Dictionary } from '@/types';
+import type { Dictionary } from "@/types";
 
 // Before
 const data: Record<string, any> = {};
@@ -37,10 +39,11 @@ const data: Dictionary = {};
 ```
 
 #### `IconComponent`
+
 Type for Lucide React icon components.
 
 ```typescript
-import type { IconComponent } from '@/types';
+import type { IconComponent } from "@/types";
 
 interface ButtonProps {
   icon: IconComponent; // Instead of: icon: any
@@ -48,10 +51,11 @@ interface ButtonProps {
 ```
 
 #### `UnknownError` & Error Handling
+
 Type-safe error handling utilities.
 
 ```typescript
-import { getErrorMessage, asError, type UnknownError } from '@/types';
+import { getErrorMessage, asError, type UnknownError } from "@/types";
 
 try {
   // Some operation
@@ -62,28 +66,31 @@ try {
 ```
 
 #### Entity ID Types
+
 Type-safe IDs for different entities.
 
 ```typescript
-import type { UserId, PatientId, AppointmentId } from '@/types';
+import type { UserId, PatientId, AppointmentId } from "@/types";
 
-const userId: UserId = 'user-123';
-const patientId: PatientId = 'patient-456';
+const userId: UserId = "user-123";
+const patientId: PatientId = "patient-456";
 ```
 
 #### Status Types
+
 Enumerated types for various statuses.
 
 ```typescript
-import type { AppointmentStatus, PaymentStatus, UserRole } from '@/types';
+import type { AppointmentStatus, PaymentStatus, UserRole } from "@/types";
 
-const status: AppointmentStatus = 'confirmado';
-const role: UserRole = 'fisioterapeuta';
+const status: AppointmentStatus = "confirmado";
+const role: UserRole = "fisioterapeuta";
 ```
 
 ## API Types
 
 ### Location
+
 ```
 src/types/api.ts
 ```
@@ -91,10 +98,11 @@ src/types/api.ts
 ### Key Types
 
 #### `ApiResponse<T>`
+
 Standard API response wrapper.
 
 ```typescript
-import type { ApiResponse } from '@/types';
+import type { ApiResponse } from "@/types";
 
 interface UserResponse extends ApiResponse<User> {
   data: User;
@@ -104,23 +112,25 @@ interface UserResponse extends ApiResponse<User> {
 ```
 
 #### `ApiError`
+
 Standardized API error type.
 
 ```typescript
-import type { ApiError, ApiErrorCode } from '@/types';
+import type { ApiError, ApiErrorCode } from "@/types";
 
 const error: ApiError = {
-  code: 'VALIDATION_ERROR',
-  message: 'Invalid input',
+  code: "VALIDATION_ERROR",
+  message: "Invalid input",
   timestamp: new Date().toISOString(),
 };
 ```
 
 #### `PaginatedApiResponse<T>`
+
 Paginated list response.
 
 ```typescript
-import type { PaginatedApiResponse } from '@/types';
+import type { PaginatedApiResponse } from "@/types";
 
 interface PatientsResponse extends PaginatedApiResponse<Patient> {
   data: Patient[];
@@ -136,6 +146,7 @@ interface PatientsResponse extends PaginatedApiResponse<Patient> {
 ## Component Types
 
 ### Location
+
 ```
 src/types/components.ts
 ```
@@ -143,10 +154,11 @@ src/types/components.ts
 ### Key Types
 
 #### `BaseComponentProps`
+
 Base props for all components.
 
 ```typescript
-import type { BaseComponentProps } from '@/types';
+import type { BaseComponentProps } from "@/types";
 
 interface MyComponentProps extends BaseComponentProps {
   // Your custom props
@@ -154,27 +166,29 @@ interface MyComponentProps extends BaseComponentProps {
 ```
 
 #### `IconProps`
+
 Icon component with type-safe icon prop.
 
 ```typescript
-import type { IconProps } from '@/types';
-import { ChevronDown } from 'lucide-react';
+import type { IconProps } from "@/types";
+import { ChevronDown } from "lucide-react";
 
 interface DropdownProps {
-  icon?: IconProps['icon']; // Already typed as IconComponent
+  icon?: IconProps["icon"]; // Already typed as IconComponent
 }
 ```
 
 #### `FormFieldProps<T>`
+
 Generic form field props.
 
 ```typescript
-import type { FormFieldProps } from '@/types';
+import type { FormFieldProps } from "@/types";
 
 interface EmailInputProps extends FormFieldProps<string> {
-  name: 'email';
-  label: 'Email';
-  placeholder: 'user@example.com';
+  name: "email";
+  label: "Email";
+  placeholder: "user@example.com";
   required: true;
 }
 ```
@@ -182,6 +196,7 @@ interface EmailInputProps extends FormFieldProps<string> {
 ## Evolution Types
 
 ### Location
+
 ```
 src/types/evolution.ts
 ```
@@ -189,40 +204,42 @@ src/types/evolution.ts
 ### Key Types
 
 #### `TimelineEvent`
+
 Timeline event with typed data.
 
 ```typescript
-import type { TimelineEvent, TimelineEventType } from '@/types';
+import type { TimelineEvent, TimelineEventType } from "@/types";
 
 const event: TimelineEvent = {
-  id: 'evt-1',
-  type: 'session' as TimelineEventType,
+  id: "evt-1",
+  type: "session" as TimelineEventType,
   date: new Date(),
-  title: 'Sessão de Avaliação',
+  title: "Sessão de Avaliação",
   data: {
-    sessionId: 'session-1',
-    soap: { subjective: '...' },
+    sessionId: "session-1",
+    soap: { subjective: "..." },
     exercises: [],
   },
 };
 ```
 
 #### `SessionEventData`
+
 Typed session data (replaces `any[]`).
 
 ```typescript
-import type { SessionEventData } from '@/types';
+import type { SessionEventData } from "@/types";
 
 const sessionData: SessionEventData = {
-  sessionId: 'session-1',
+  sessionId: "session-1",
   soap: {
-    subjective: 'Patient reports pain',
-    objective: { inspection: 'Normal' },
+    subjective: "Patient reports pain",
+    objective: { inspection: "Normal" },
   },
   exercises: [
     {
-      exerciseId: 'ex-1',
-      exerciseName: 'Calf Stretch',
+      exerciseId: "ex-1",
+      exerciseName: "Calf Stretch",
       setsCompleted: 3,
       repsCompleted: 10,
     },
@@ -235,8 +252,8 @@ const sessionData: SessionEventData = {
 ### Example 1: Type-Safe API Response
 
 ```typescript
-import { patientSchemas, validateApiResponse } from '@/lib/validations';
-import type { ApiResponse } from '@/types';
+import { patientSchemas, validateApiResponse } from "@/lib/validations";
+import type { ApiResponse } from "@/types";
 
 async function fetchPatient(id: string): Promise<Patient> {
   const response = await fetch(`/api/patients/${id}`);
@@ -289,7 +306,7 @@ function renderTimelineEvent(event: TimelineEvent) {
 ### Example 4: Error Handling with UnknownError
 
 ```typescript
-import { getErrorMessage, type UnknownError } from '@/types';
+import { getErrorMessage, type UnknownError } from "@/types";
 
 try {
   await riskyOperation();
@@ -302,29 +319,32 @@ try {
 
 ### Replacing `any` with Proper Types
 
-| Pattern | Before | After |
-|---------|--------|-------|
-| Error catch | `catch (e: any)` | `catch (e: UnknownError)` |
-| Dynamic object | `Record<string, any>` | `Dictionary` |
-| Icon prop | `icon: any` | `icon: IconComponent` |
-| Array items | `any[]` | `SpecificType[]` |
-| API response | `any` | `ApiResponse<T>` |
+| Pattern        | Before                | After                     |
+| -------------- | --------------------- | ------------------------- |
+| Error catch    | `catch (e: any)`      | `catch (e: UnknownError)` |
+| Dynamic object | `Record<string, any>` | `Dictionary`              |
+| Icon prop      | `icon: any`           | `icon: IconComponent`     |
+| Array items    | `any[]`               | `SpecificType[]`          |
+| API response   | `any`                 | `ApiResponse<T>`          |
 
 ## Converting Legacy Code
 
 ### Step 1: Identify `any` Usage
+
 ```bash
 grep -rn ": any" src/ --include="*.ts" --include="*.tsx"
 ```
 
 ### Step 2: Find or Create Type
+
 ```typescript
 // Check if type exists in src/types/
 // Import it
-import type { MyType } from '@/types';
+import type { MyType } from "@/types";
 ```
 
 ### Step 3: Replace `any`
+
 ```typescript
 // Before
 function process(data: any) { ... }
@@ -336,6 +356,7 @@ function process(data: MyType) { ... }
 ## Best Practices
 
 ### 1. Use Specific Types Over Generic
+
 ```typescript
 // Good
 interface PatientData {
@@ -348,14 +369,16 @@ type GenericData = Record<string, unknown>;
 ```
 
 ### 2. Leverage Zod for Runtime Validation
+
 ```typescript
-import { patientSchemas, validateOrNull } from '@/lib/validations';
+import { patientSchemas, validateOrNull } from "@/lib/validations";
 
 const patient = validateOrNull(patientSchemas.base, rawData);
 // patient: PatientBase | null (type-safe)
 ```
 
 ### 3. Create Shared Types for Common Patterns
+
 ```typescript
 // src/types/common.ts already provides many useful types
 // Import and use them instead of creating duplicates
@@ -366,7 +389,7 @@ import type {
   ErrorHandler,
   AsyncErrorHandler,
   ClassName,
-} from '@/types';
+} from "@/types";
 ```
 
 ## Type Exports
@@ -400,8 +423,8 @@ import type {
 ## Type Guards
 
 ```typescript
-import { matchesSchema } from '@/lib/validation-utils';
-import { patientSchemas } from '@/lib/validations';
+import { matchesSchema } from "@/lib/validation-utils";
+import { patientSchemas } from "@/lib/validations";
 
 // Type guard for runtime type checking
 if (matchesSchema(patientSchemas.base, data)) {

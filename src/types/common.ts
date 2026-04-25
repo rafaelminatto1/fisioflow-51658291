@@ -16,19 +16,13 @@
 import type { ComponentType } from "react";
 import type { LucideIcon } from "lucide-react";
 
-export type JsonValue =
-	| string
-	| number
-	| boolean
-	| null
-	| JsonObject
-	| JsonArray;
+export type JsonValue = string | number | boolean | null | JsonObject | JsonArray;
 
 /**
  * JSON object with string keys
  */
 export interface JsonObject {
-	[key: string]: JsonValue;
+  [key: string]: JsonValue;
 }
 
 /**
@@ -59,8 +53,8 @@ export { getErrorMessage, asError } from "./error";
  * Use instead of `icon: any`
  */
 export type IconComponent = ComponentType<{
-	className?: string;
-	size?: number;
+  className?: string;
+  size?: number;
 }>;
 export type LucideIconType = LucideIcon;
 
@@ -68,19 +62,15 @@ export type LucideIconType = LucideIcon;
  * Event handler types for common UI patterns
  */
 export type ValueChangeHandler<T = unknown> = (value: T) => void;
-export type AsyncValueChangeHandler<T = unknown> = (
-	value: T,
-) => void | Promise<void>;
+export type AsyncValueChangeHandler<T = unknown> = (value: T) => void | Promise<void>;
 
-export type ChangeEventHandler<T = EventTarget> = (event: {
-	target: T;
-}) => void;
+export type ChangeEventHandler<T = EventTarget> = (event: { target: T }) => void;
 
 /**
  * Function type for async operations
  */
 export type AsyncFunction<T = unknown, Args extends unknown[] = unknown[]> = (
-	...args: Args
+  ...args: Args
 ) => Promise<T>;
 
 /**
@@ -91,9 +81,7 @@ export type PromiseResult<T> = Promise<T>;
 /**
  * Type for timer/interval IDs
  */
-export type TimerId =
-	| ReturnType<typeof setInterval>
-	| ReturnType<typeof setTimeout>;
+export type TimerId = ReturnType<typeof setInterval> | ReturnType<typeof setTimeout>;
 
 /**
  * ID types - use these for entity IDs instead of `string` with `any`
@@ -115,34 +103,29 @@ export type IsoDateTime = string; // ISO 8601 datetime string
  * Status types for common entities
  */
 export type AppointmentStatus =
-	| "agendado"
-	| "confirmado"
-	| "em_atendimento"
-	| "concluido"
-	| "cancelado"
-	| "nao_compareceu"
-	| "remarcado"
-	| "aguardando_confirmacao"
-	| "bloqueado"
-	| "disponivel"
-	| "avaliacao"
-	| "retorno"
-	| "encaixe";
+  | "agendado"
+  | "confirmado"
+  | "em_atendimento"
+  | "concluido"
+  | "cancelado"
+  | "nao_compareceu"
+  | "remarcado"
+  | "aguardando_confirmacao"
+  | "bloqueado"
+  | "disponivel"
+  | "avaliacao"
+  | "retorno"
+  | "encaixe";
 
-export type PaymentStatus =
-	| "pending"
-	| "partial"
-	| "paid"
-	| "overdue"
-	| "cancelled";
+export type PaymentStatus = "pending" | "partial" | "paid" | "overdue" | "cancelled";
 
 export type UserRole =
-	| "admin"
-	| "fisioterapeuta"
-	| "estagiario"
-	| "recepcionista"
-	| "paciente"
-	| "owner";
+  | "admin"
+  | "fisioterapeuta"
+  | "estagiario"
+  | "recepcionista"
+  | "paciente"
+  | "owner";
 
 /**
  * Query parameter types
@@ -153,27 +136,27 @@ export type QueryParams = Record<string, string | number | boolean | undefined>;
  * Pagination types
  */
 export interface PaginationParams {
-	page?: number;
-	limit?: number;
-	offset?: number;
+  page?: number;
+  limit?: number;
+  offset?: number;
 }
 
 export interface PaginatedMeta {
-	total: number;
-	page: number;
-	limit: number;
-	totalPages: number;
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
 }
 
 /**
  * Selection state type
  */
 export type SelectionState<T> = {
-	selected: Set<T>;
-	toggle: (item: T) => void;
-	isSelected: (item: T) => boolean;
-	clear: () => void;
-	selectAll: (items: T[]) => void;
+  selected: Set<T>;
+  toggle: (item: T) => void;
+  isSelected: (item: T) => boolean;
+  clear: () => void;
+  selectAll: (items: T[]) => void;
 };
 
 /**
@@ -185,44 +168,44 @@ export type SortDirection = "asc" | "desc";
  * Filter operator types
  */
 export type FilterOperator =
-	| "eq"
-	| "ne"
-	| "gt"
-	| "gte"
-	| "lt"
-	| "lte"
-	| "contains"
-	| "startsWith"
-	| "endsWith"
-	| "in"
-	| "nin";
+  | "eq"
+  | "ne"
+  | "gt"
+  | "gte"
+  | "lt"
+  | "lte"
+  | "contains"
+  | "startsWith"
+  | "endsWith"
+  | "in"
+  | "nin";
 
 /**
  * Generic filter type
  */
 export interface Filter<T = unknown> {
-	field: keyof T | string;
-	operator: FilterOperator;
-	value: unknown;
+  field: keyof T | string;
+  operator: FilterOperator;
+  value: unknown;
 }
 
 /**
  * Date range type
  */
 export interface DateRange {
-	start: Date | IsoDateTime;
-	end: Date | IsoDateTime;
+  start: Date | IsoDateTime;
+  end: Date | IsoDateTime;
 }
 
 /**
  * File upload types
  */
 export interface FileUpload {
-	file: File;
-	progress: number;
-	status: "pending" | "uploading" | "success" | "error";
-	url?: string;
-	error?: string;
+  file: File;
+  progress: number;
+  status: "pending" | "uploading" | "success" | "error";
+  url?: string;
+  error?: string;
 }
 
 /**
@@ -231,42 +214,42 @@ export interface FileUpload {
 export type ToastVariant = "success" | "error" | "warning" | "info";
 
 export interface ToastOptions {
-	title?: string;
-	description?: string;
-	variant?: ToastVariant;
-	duration?: number;
-	action?: {
-		label: string;
-		onClick: () => void;
-	};
+  title?: string;
+  description?: string;
+  variant?: ToastVariant;
+  duration?: number;
+  action?: {
+    label: string;
+    onClick: () => void;
+  };
 }
 
 /**
  * Modal/dialog state
  */
 export interface ModalState {
-	isOpen: boolean;
-	open: (data?: unknown) => void;
-	close: () => void;
-	toggle: () => void;
-	data: unknown;
+  isOpen: boolean;
+  open: (data?: unknown) => void;
+  close: () => void;
+  toggle: () => void;
+  data: unknown;
 }
 
 /**
  * Form state types
  */
 export interface FormFieldError {
-	message: string;
-	path?: string;
+  message: string;
+  path?: string;
 }
 
 export interface FormState<T = unknown> {
-	values: T;
-	errors: FormFieldError[];
-	touched: Set<keyof T>;
-	isSubmitting: boolean;
-	isValid: boolean;
-	isDirty: boolean;
+  values: T;
+  errors: FormFieldError[];
+  touched: Set<keyof T>;
+  isSubmitting: boolean;
+  isValid: boolean;
+  isDirty: boolean;
 }
 
 /**
@@ -275,22 +258,22 @@ export interface FormState<T = unknown> {
 export type LoadingState = "idle" | "loading" | "success" | "error";
 
 export interface AsyncState<T = unknown, E = Error> {
-	status: LoadingState;
-	data: T | null;
-	error: E | null;
+  status: LoadingState;
+  data: T | null;
+  error: E | null;
 }
 
 /**
  * Color types
  */
 export type ColorValue =
-	| string
-	| {
-			r: number;
-			g: number;
-			b: number;
-			a?: number;
-	  };
+  | string
+  | {
+      r: number;
+      g: number;
+      b: number;
+      a?: number;
+    };
 
 /**
  * Size variants for UI components
@@ -343,16 +326,16 @@ export type Index = number;
  * Coordinates type
  */
 export interface Coordinates {
-	x: number;
-	y: number;
+  x: number;
+  y: number;
 }
 
 /**
  * Dimensions type
  */
 export interface Dimensions {
-	width: number;
-	height: number;
+  width: number;
+  height: number;
 }
 
 /**
@@ -369,8 +352,8 @@ export type Percentage = number & { readonly __percentage: unique symbol };
  * Create a percentage value (runtime validation)
  */
 export function asPercentage(value: number): Percentage {
-	if (value < 0 || value > 100) {
-		throw new Error(`Percentage must be between 0 and 100, got ${value}`);
-	}
-	return value as Percentage;
+  if (value < 0 || value > 100) {
+    throw new Error(`Percentage must be between 0 and 100, got ${value}`);
+  }
+  return value as Percentage;
 }

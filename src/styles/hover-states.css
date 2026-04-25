@@ -1,29 +1,31 @@
 /* Enhanced Hover States - Micro-interactions Premium */
 
 @layer base {
-	:root {
-		/* Easing Curves Premium */
-		--ease-out-back: cubic-bezier(0.34, 1.56, 0.64, 1);
-		--ease-in-out-quart: cubic-bezier(0.76, 0, 0.24, 1);
-		--ease-elastic-out: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  :root {
+    /* Easing Curves Premium */
+    --ease-out-back: cubic-bezier(0.34, 1.56, 0.64, 1);
+    --ease-in-out-quart: cubic-bezier(0.76, 0, 0.24, 1);
+    --ease-elastic-out: cubic-bezier(0.68, -0.55, 0.265, 1.55);
 
-		/* Transition Durations */
-		--duration-fast: 150ms;
-		--duration-base: 300ms;
-		--duration-slow: 600ms;
-	}
+    /* Transition Durations */
+    --duration-fast: 150ms;
+    --duration-base: 300ms;
+    --duration-slow: 600ms;
+  }
 }
 
 @utility card-hover-premium {
   transition: all var(--duration-base) var(--ease-in-out-quart);
   transform: translate3d(0, 0, 0) scale3d(1, 1, 1);
-  box-shadow: 0 0 0 rgba(0, 0, 0, 0),
-              0 10px 25px -5px rgba(0, 0, 0, 0.1);
-  
+  box-shadow:
+    0 0 0 rgba(0, 0, 0, 0),
+    0 10px 25px -5px rgba(0, 0, 0, 0.1);
+
   &:hover {
     transform: translate3d(0, -4px, 0) scale3d(1.02, 1.02, 1);
-    box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.15),
-                0 0 0 rgba(0, 0, 0, 0.1);
+    box-shadow:
+      0 20px 40px -10px rgba(0, 0, 0, 0.15),
+      0 0 0 rgba(0, 0, 0, 0.1);
     border-color: hsl(var(--primary) / 0.3);
   }
 
@@ -35,7 +37,7 @@
 
 @utility button-hover-premium {
   transition: all var(--duration-fast) var(--ease-out-back);
-  
+
   &:hover {
     transform: translateY(-2px);
     box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
@@ -49,7 +51,7 @@
 
 @utility link-hover-premium {
   transition: all var(--duration-base) var(--ease-in-out-quart);
-  
+
   &:hover {
     color: hsl(var(--primary));
     text-decoration-color: hsl(var(--primary));
@@ -60,7 +62,7 @@
 @utility magnetic-hover {
   transition: all var(--duration-base) var(--ease-elastic-out);
   transform-origin: center;
-  
+
   &:hover {
     transform: scale(1.05);
     filter: brightness(1.1);
@@ -72,7 +74,7 @@
   overflow: hidden;
 
   &::after {
-    content: '';
+    content: "";
     position: absolute;
     top: 0;
     left: -100%;
@@ -89,19 +91,19 @@
 }
 
 @keyframes shimmer {
-	0% {
-		transform: translateX(-100%);
-	}
-	100% {
-		transform: translateX(100%);
-	}
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
 }
 
 @utility glow-on-hover {
   transition: box-shadow var(--duration-base) var(--ease-in-out-quart);
-  
+
   &:hover {
-    box-shadow: 
+    box-shadow:
       0 0 0 4px hsl(var(--primary) / 0.3),
       0 0 20px hsl(var(--primary) / 0.1);
   }
@@ -109,7 +111,7 @@
 
 @utility rotate-on-hover {
   transition: transform var(--duration-base) var(--ease-out-back);
-  
+
   &:hover {
     transform: rotate(2deg);
   }
@@ -117,13 +119,13 @@
 
 /* Apply to existing cards */
 .card {
-	@apply card-hover-premium;
+  @apply card-hover-premium;
 }
 
 button {
-	@apply button-hover-premium;
+  @apply button-hover-premium;
 }
 
 a {
-	@apply link-hover-premium;
+  @apply link-hover-premium;
 }

@@ -1,114 +1,114 @@
 {
-	"expo": {
-		"name": "FisioFlow Pro",
-		"slug": "fisioflow-pro",
-		"version": "1.0.0",
-		"orientation": "default",
-		"icon": "./assets/icon.png",
-		"scheme": "fisioflowpro",
-		"userInterfaceStyle": "automatic",
-		"splash": {
-			"image": "./assets/splash.png",
-			"resizeMode": "contain",
-			"backgroundColor": "#1E40AF"
-		},
-		"ios": {
-			"supportsTablet": true,
-			"bundleIdentifier": "com.fisioflow.professionals",
-			"appleTeamId": "G7FDW933SF",
-			"infoPlist": {
-				"NSHealthShareUsageDescription": "O FisioFlow utiliza dados de saúde para analisar a assimetria e estabilidade da sua marcha, permitindo um acompanhamento clínico preciso.",
-				"NSHealthUpdateUsageDescription": "O FisioFlow salva dados de evolução biomecânica no HealthKit para histórico do paciente.",
-				"NSCameraUsageDescription": "O FisioFlow precisa acessar sua câmera para capturar fotos de progresso dos pacientes e demonstrações de exercícios. Essas fotos são criptografadas e armazenadas com segurança.",
-				"NSPhotoLibraryUsageDescription": "O FisioFlow precisa acessar sua galeria de fotos para selecionar imagens existentes de pacientes e exercícios. Suas fotos são protegidas com criptografia.",
-				"NSLocationWhenInUseUsageDescription": "O FisioFlow usa sua localização para verificar check-in na clínica e confirmar presença em consultas. Sua localização nunca é compartilhada com terceiros.",
-				"NSFaceIDUsageDescription": "O FisioFlow usa Face ID para proteger o acesso aos dados sensíveis de saúde dos seus pacientes com autenticação biométrica segura.",
-				"UIBackgroundModes": ["remote-notification", "fetch"],
-				"UISupportedInterfaceOrientations~ipad": [
-					"UIInterfaceOrientationPortrait",
-					"UIInterfaceOrientationPortraitUpsideDown",
-					"UIInterfaceOrientationLandscapeLeft",
-					"UIInterfaceOrientationLandscapeRight"
-				]
-			},
-			"config": {
-				"usesNonExemptEncryption": false
-			}
-		},
-		"android": {
-			"adaptiveIcon": {
-				"foregroundImage": "./assets/adaptive-icon.png",
-				"backgroundColor": "#1E40AF"
-			},
-			"package": "com.fisioflow.professional",
-			"edgeToEdgeEnabled": true
-		},
-		"web": {
-			"bundler": "metro",
-			"output": "static",
-			"favicon": "./assets/favicon.png"
-		},
-		"plugins": [
-			"expo-router",
-			[
-				"expo-secure-store",
-				{
-					"faceIDPermission": "O FisioFlow usa Face ID para proteger o acesso aos dados dos seus pacientes."
-				}
-			],
-			[
-				"expo-local-authentication",
-				{
-					"faceIDPermission": "O FisioFlow usa Face ID para autenticação rápida e segura."
-				}
-			],
-			[
-				"expo-notifications",
-				{
-					"icon": "./assets/notification-icon.png",
-					"color": "#1E40AF",
-					"sounds": [],
-					"enableBackgroundRemoteNotifications": true
-				}
-			],
-			[
-				"react-native-vision-camera",
-				{
-					"cameraPermissionText": "O FisioFlow precisa acessar sua câmera para análise biomecânica.",
-					"enableMicrophonePermission": true
-				}
-			],
-			"expo-font",
-			"@react-native-community/datetimepicker",
-			[
-				"@sentry/react-native/expo",
-				{
-					"url": "https://sentry.io/",
-					"project": "fisioflow-professional",
-					"organization": "activity-fisioterapia-rg"
-				}
-			]
-		],
-		"experiments": {
-			"typedRoutes": true
-		},
-		"newArchEnabled": true,
-		"extra": {
-			"router": {
-				"origin": false
-			},
-			"eas": {
-				"projectId": "ca7042a7-03d4-4731-b4e5-6f5de3b48300"
-			}
-		},
-		"owner": "rafaelminatto",
-		"updates": {
-			"enabled": true,
-			"url": "https://u.expo.dev/ca7042a7-03d4-4731-b4e5-6f5de3b48300",
-			"enableBsdiffPatchSupport": true
-		},
-		"runtimeVersion": {
-			"policy": "appVersion"
-		}
-	}
+  "expo": {
+    "name": "FisioFlow Pro",
+    "slug": "fisioflow-pro",
+    "version": "1.0.0",
+    "orientation": "default",
+    "icon": "./assets/icon.png",
+    "scheme": "fisioflowpro",
+    "userInterfaceStyle": "automatic",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#1E40AF"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.fisioflow.professionals",
+      "appleTeamId": "G7FDW933SF",
+      "infoPlist": {
+        "NSHealthShareUsageDescription": "O FisioFlow utiliza dados de saúde para analisar a assimetria e estabilidade da sua marcha, permitindo um acompanhamento clínico preciso.",
+        "NSHealthUpdateUsageDescription": "O FisioFlow salva dados de evolução biomecânica no HealthKit para histórico do paciente.",
+        "NSCameraUsageDescription": "O FisioFlow precisa acessar sua câmera para capturar fotos de progresso dos pacientes e demonstrações de exercícios. Essas fotos são criptografadas e armazenadas com segurança.",
+        "NSPhotoLibraryUsageDescription": "O FisioFlow precisa acessar sua galeria de fotos para selecionar imagens existentes de pacientes e exercícios. Suas fotos são protegidas com criptografia.",
+        "NSLocationWhenInUseUsageDescription": "O FisioFlow usa sua localização para verificar check-in na clínica e confirmar presença em consultas. Sua localização nunca é compartilhada com terceiros.",
+        "NSFaceIDUsageDescription": "O FisioFlow usa Face ID para proteger o acesso aos dados sensíveis de saúde dos seus pacientes com autenticação biométrica segura.",
+        "UIBackgroundModes": ["remote-notification", "fetch"],
+        "UISupportedInterfaceOrientations~ipad": [
+          "UIInterfaceOrientationPortrait",
+          "UIInterfaceOrientationPortraitUpsideDown",
+          "UIInterfaceOrientationLandscapeLeft",
+          "UIInterfaceOrientationLandscapeRight"
+        ]
+      },
+      "config": {
+        "usesNonExemptEncryption": false
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#1E40AF"
+      },
+      "package": "com.fisioflow.professional",
+      "edgeToEdgeEnabled": true
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "static",
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-secure-store",
+        {
+          "faceIDPermission": "O FisioFlow usa Face ID para proteger o acesso aos dados dos seus pacientes."
+        }
+      ],
+      [
+        "expo-local-authentication",
+        {
+          "faceIDPermission": "O FisioFlow usa Face ID para autenticação rápida e segura."
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/notification-icon.png",
+          "color": "#1E40AF",
+          "sounds": [],
+          "enableBackgroundRemoteNotifications": true
+        }
+      ],
+      [
+        "react-native-vision-camera",
+        {
+          "cameraPermissionText": "O FisioFlow precisa acessar sua câmera para análise biomecânica.",
+          "enableMicrophonePermission": true
+        }
+      ],
+      "expo-font",
+      "@react-native-community/datetimepicker",
+      [
+        "@sentry/react-native/expo",
+        {
+          "url": "https://sentry.io/",
+          "project": "fisioflow-professional",
+          "organization": "activity-fisioterapia-rg"
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "newArchEnabled": true,
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "ca7042a7-03d4-4731-b4e5-6f5de3b48300"
+      }
+    },
+    "owner": "rafaelminatto",
+    "updates": {
+      "enabled": true,
+      "url": "https://u.expo.dev/ca7042a7-03d4-4731-b4e5-6f5de3b48300",
+      "enableBsdiffPatchSupport": true
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    }
+  }
 }

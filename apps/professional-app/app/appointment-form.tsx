@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
+import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import {
   View,
   Text,
@@ -12,50 +12,57 @@ import {
   TextInput,
   Animated,
   Dimensions,
-} from 'react-native';
-import { useLocalSearchParams, useRouter } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
-import { Button, Input } from '@/components';
-import { useColors } from '@/hooks/useColorScheme';
-import { useAppointments, getAppointmentByIdHook } from '@/hooks/useAppointments';
-import { useHaptics } from '@/hooks/useHaptics';
-import { useCreateFinancialRecord, useMarkAsPaid } from '@/hooks/usePatientFinancial';
-import type { AppointmentStatus } from '@/types';
-import { format } from 'date-fns';
-import { useForm, Controller, type FieldErrors } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
-import { PatientAutocomplete } from '@/components/appointment/PatientAutocomplete';
-import { OptionSelector } from '@/components/appointment/OptionSelector';
-import DateTimePicker from '@react-native-community/datetimepicker';
+} from "react-native";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { Ionicons } from "@expo/vector-icons";
+import { Button, Input } from "@/components";
+import { useColors } from "@/hooks/useColorScheme";
+import { useAppointments, getAppointmentByIdHook } from "@/hooks/useAppointments";
+import { useHaptics } from "@/hooks/useHaptics";
+import { useCreateFinancialRecord, useMarkAsPaid } from "@/hooks/usePatientFinancial";
+import type { AppointmentStatus } from "@/types";
+import { format } from "date-fns";
+import { useForm, Controller, type FieldErrors } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import { PatientAutocomplete } from "@/components/appointment/PatientAutocomplete";
+import { OptionSelector } from "@/components/appointment/OptionSelector";
+import DateTimePicker from "@react-native-community/datetimepicker";
 
-const SCREEN_WIDTH = Dimensions.get('window').width;
+const SCREEN_WIDTH = Dimensions.get("window").width;
 
 const APPOINTMENT_TYPES = [
-  'Avaliação Inicial', 'Fisioterapia', 'Osteopatia', 'Pilates', 
-  'Reabilitação', 'Drenagem Linfática', 'Massagem', 'RPG', 'Outro'
+  "Avaliação Inicial",
+  "Fisioterapia",
+  "Osteopatia",
+  "Pilates",
+  "Reabilitação",
+  "Drenagem Linfática",
+  "Massagem",
+  "RPG",
+  "Outro",
 ];
 
 const DURATIONS = [30, 45, 60, 90, 120];
 
 const STATUS_OPTIONS: { label: string; value: AppointmentStatus }[] = [
-  { label: 'Agendado', value: 'scheduled' },
-  { label: 'Confirmado', value: 'confirmed' },
-  { label: 'Em Atendimento', value: 'in_progress' },
-  { label: 'Concluído', value: 'completed' },
-  { label: 'Cancelado', value: 'cancelled' },
-  { label: 'Faltou', value: 'no_show' },
+  { label: "Agendado", value: "scheduled" },
+  { label: "Confirmado", value: "confirmed" },
+  { label: "Em Atendimento", value: "in_progress" },
+  { label: "Concluído", value: "completed" },
+  { label: "Cancelado", value: "cancelled" },
+  { label: "Faltou", value: "no_show" },
 ];
 
 const appointmentSchema = z.object({
-  patientId: z.string().min(1, 'Selecione um paciente'),
+  patientId: z.string().min(1, "Selecione um paciente"),
   patientName: z.string(),
-  date: z.string().regex(/^\d{2}\/\d{2}\/\d{4}$/, 'Data inválida (DD/MM/AAAA)'),
-  time: z.string().regex(/^\d{2}:\d{2}$/, 'Horário inválido (HH:MM)'),
-  type: z.string().min(1, 'Selecione o tipo'),
+  date: z.string().regex(/^\d{2}\/\d{2}\/\d{4}$/, "Data inválida (DD/MM/AAAA)"),
+  time: z.string().regex(/^\d{2}:\d{2}$/, "Horário inválido (HH:MM)"),
+  type: z.string().min(1, "Selecione o tipo"),
   duration: z.number().positive(),
-  status: z.enum(['scheduled', 'confirmed', 'in_progress', 'completed', 'cancelled', 'no_show']),
+  status: z.enum(["scheduled", "confirmed", "in_progress", "completed", "cancelled", "no_show"]),
   notes: z.string().optional(),
   isGroup: z.boolean().default(false),
   additionalNames: z.string().optional(),
@@ -73,10 +80,10 @@ export default function AppointmentFormScreen() {
 
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
-  const [sessionValueRaw, setSessionValueRaw] = useState('');
+  const [sessionValueRaw, setSessionValueRaw] = useState("");
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [isPaid, setIsPaid] = useState(false);
-  const [,setFinancialRecordId] = useState<string | null>(null);
+  const [, setFinancialRecordId] = useState<string | null>(null);
 
   const drawerAnim = useRef(new Animated.Value(0)).current;
 
@@ -98,41 +105,42 @@ export default function AppointmentFormScreen() {
     }).start(() => setShowPaymentModal(false));
   }, [drawerAnim]);
 
-  const { 
-    createAsync, 
-    updateAsync, 
-    deleteAsync, 
-    isCreating, 
-    isDeleting 
-  } = useAppointments();
+  const { createAsync, updateAsync, deleteAsync, isCreating, isDeleting } = useAppointments();
 
   const createFinancialMutation = useCreateFinancialRecord();
   const markAsPaidMutation = useMarkAsPaid();
 
   const [isLoadingData, setIsLoadingData] = useState(!!appointmentId);
 
-  const { control, handleSubmit, setValue, reset, watch, formState: { errors, isDirty } } = useForm<AppointmentFormData>({
+  const {
+    control,
+    handleSubmit,
+    setValue,
+    reset,
+    watch,
+    formState: { errors, isDirty },
+  } = useForm<AppointmentFormData>({
     resolver: zodResolver(appointmentSchema),
     defaultValues: {
-      patientId: params.patientId as string || '',
-      patientName: params.patientName as string || '',
-      date: params.date as string || format(new Date(), 'dd/MM/yyyy'),
-      time: params.time as string || format(new Date(), 'HH:mm'),
-      type: 'Fisioterapia',
+      patientId: (params.patientId as string) || "",
+      patientName: (params.patientName as string) || "",
+      date: (params.date as string) || format(new Date(), "dd/MM/yyyy"),
+      time: (params.time as string) || format(new Date(), "HH:mm"),
+      type: "Fisioterapia",
       duration: 60,
-      status: 'scheduled',
-      notes: '',
+      status: "scheduled",
+      notes: "",
       isGroup: false,
-      additionalNames: '',
+      additionalNames: "",
       isUnlimited: false,
-    }
+    },
   });
 
-  const selectedPatientId = watch('patientId');
+  const selectedPatientId = watch("patientId");
   const isEditing = !!appointmentId;
 
   const navigateToAgenda = () => {
-    router.replace('/(tabs)/agenda');
+    router.replace("/(tabs)/agenda");
   };
 
   useEffect(() => {
@@ -145,19 +153,19 @@ export default function AppointmentFormScreen() {
           reset({
             patientId: data.patientId,
             patientName: data.patientName,
-            date: format(appointmentDate, 'dd/MM/yyyy'),
-            time: data.time || format(appointmentDate, 'HH:mm'),
+            date: format(appointmentDate, "dd/MM/yyyy"),
+            time: data.time || format(appointmentDate, "HH:mm"),
             type: data.type,
             duration: data.duration,
             status: data.status as any,
-            notes: data.notes || '',
+            notes: data.notes || "",
             isGroup: data.isGroup || false,
-            additionalNames: data.additionalNames || '',
+            additionalNames: data.additionalNames || "",
             isUnlimited: data.isUnlimited || false,
           });
         }
       } catch {
-        Alert.alert('Erro', 'Não foi possível carregar os dados do agendamento.');
+        Alert.alert("Erro", "Não foi possível carregar os dados do agendamento.");
       } finally {
         setIsLoadingData(false);
       }
@@ -168,72 +176,82 @@ export default function AppointmentFormScreen() {
   const onSave = async (formData: AppointmentFormData) => {
     medium();
     try {
-      const [day, month, year] = formData.date.split('/');
-      const [hour, minute] = formData.time.split(':');
+      const [day, month, year] = formData.date.split("/");
+      const [hour, minute] = formData.time.split(":");
 
       const appointmentDate = new Date(
         parseInt(year),
         parseInt(month) - 1,
         parseInt(day),
         parseInt(hour),
-        parseInt(minute)
+        parseInt(minute),
       );
 
       const appointmentData = {
         ...formData,
         date: appointmentDate,
-        professionalId: '', // Set by hook
+        professionalId: "", // Set by hook
       };
 
       if (isEditing && appointmentId) {
         await updateAsync({ id: appointmentId, data: appointmentData });
         success();
 
-        if (formData.status === 'completed') {
+        if (formData.status === "completed") {
           Alert.alert(
-            'Consulta Concluída',
-            'Deseja criar um registro financeiro para este atendimento agora?',
+            "Consulta Concluída",
+            "Deseja criar um registro financeiro para este atendimento agora?",
             [
-              { text: 'Não', onPress: navigateToAgenda },
+              { text: "Não", onPress: navigateToAgenda },
               {
-                text: 'Sim, Criar',
+                text: "Sim, Criar",
                 onPress: () => {
-                  router.replace(`/patient/${formData.patientId}?tab=financial&autoCreate=true&date=${year}-${month}-${day}`);
-                }
-              }
-            ]
+                  router.replace(
+                    `/patient/${formData.patientId}?tab=financial&autoCreate=true&date=${year}-${month}-${day}`,
+                  );
+                },
+              },
+            ],
           );
         } else {
-          Alert.alert('Sucesso', 'Agendamento atualizado com sucesso');
+          Alert.alert("Sucesso", "Agendamento atualizado com sucesso");
           navigateToAgenda();
         }
       } else {
         await createAsync(appointmentData);
         success();
-        Alert.alert('Sucesso', 'Agendamento criado com sucesso');
+        Alert.alert("Sucesso", "Agendamento criado com sucesso");
         router.back();
       }
     } catch (err: any) {
       hapticError();
-      const rawMsg: string = err?.message || String(err) || '';
+      const rawMsg: string = err?.message || String(err) || "";
       const normalizedRawMsg = rawMsg.trim();
-      let userMsg = isEditing ? 'Não foi possível atualizar o agendamento.' : 'Não foi possível criar o agendamento.';
-      if (rawMsg.includes('date') || rawMsg.includes('data')) userMsg = 'Data inválida. Verifique o campo Data.';
-      else if (rawMsg.includes('conflict') || rawMsg.includes('ocupado')) userMsg = 'Horário já ocupado. Escolha outro horário.';
-      else if (rawMsg.includes('patient') || rawMsg.includes('paciente')) userMsg = 'Paciente não encontrado. Selecione um paciente válido.';
-      else if (rawMsg.includes('401') || rawMsg.includes('auth')) userMsg = 'Sessão expirada. Saia e entre novamente.';
-      else if (rawMsg.includes('400') || rawMsg.includes('obrigatório')) userMsg = 'Campos obrigatórios ausentes. Verifique o formulário.';
-      else if (rawMsg.includes('500') || rawMsg.includes('SERVER')) userMsg = 'Erro interno do servidor. Tente novamente em instantes.';
+      let userMsg = isEditing
+        ? "Não foi possível atualizar o agendamento."
+        : "Não foi possível criar o agendamento.";
+      if (rawMsg.includes("date") || rawMsg.includes("data"))
+        userMsg = "Data inválida. Verifique o campo Data.";
+      else if (rawMsg.includes("conflict") || rawMsg.includes("ocupado"))
+        userMsg = "Horário já ocupado. Escolha outro horário.";
+      else if (rawMsg.includes("patient") || rawMsg.includes("paciente"))
+        userMsg = "Paciente não encontrado. Selecione um paciente válido.";
+      else if (rawMsg.includes("401") || rawMsg.includes("auth"))
+        userMsg = "Sessão expirada. Saia e entre novamente.";
+      else if (rawMsg.includes("400") || rawMsg.includes("obrigatório"))
+        userMsg = "Campos obrigatórios ausentes. Verifique o formulário.";
+      else if (rawMsg.includes("500") || rawMsg.includes("SERVER"))
+        userMsg = "Erro interno do servidor. Tente novamente em instantes.";
       const detailText =
         !normalizedRawMsg ||
         normalizedRawMsg === userMsg ||
-        normalizedRawMsg === 'Erro ao criar agendamento' ||
-        normalizedRawMsg === 'Erro ao atualizar agendamento'
+        normalizedRawMsg === "Erro ao criar agendamento" ||
+        normalizedRawMsg === "Erro ao atualizar agendamento"
           ? null
           : `\n\nDetalhe técnico: ${normalizedRawMsg.substring(0, 180)}`;
       Alert.alert(
-        isEditing ? 'Erro ao salvar agendamento' : 'Erro ao criar agendamento',
-        `${userMsg}${detailText ?? ''}`,
+        isEditing ? "Erro ao salvar agendamento" : "Erro ao criar agendamento",
+        `${userMsg}${detailText ?? ""}`,
       );
     }
   };
@@ -250,7 +268,7 @@ export default function AppointmentFormScreen() {
       fieldErrors.status?.message;
 
     if (firstMessage) {
-      Alert.alert('Campos pendentes', String(firstMessage));
+      Alert.alert("Campos pendentes", String(firstMessage));
     }
   };
 
@@ -259,31 +277,31 @@ export default function AppointmentFormScreen() {
   const handleDelete = () => {
     medium();
     Alert.alert(
-      'Excluir Agendamento',
-      'Tem certeza que deseja excluir este agendamento? Esta ação não pode ser desfeita.',
+      "Excluir Agendamento",
+      "Tem certeza que deseja excluir este agendamento? Esta ação não pode ser desfeita.",
       [
-        { text: 'Cancelar', style: 'cancel' },
+        { text: "Cancelar", style: "cancel" },
         {
-          text: 'Excluir',
-          style: 'destructive',
+          text: "Excluir",
+          style: "destructive",
           onPress: async () => {
             try {
               await deleteAsync(appointmentId!);
               success();
               navigateToAgenda();
-            } catch  {
+            } catch {
               hapticError();
-              Alert.alert('Erro', 'Não foi possível excluir.');
+              Alert.alert("Erro", "Não foi possível excluir.");
             }
           },
         },
-      ]
+      ],
     );
   };
 
   const parseDateString = (dateStr: string) => {
     if (!dateStr) return new Date();
-    const parts = dateStr.split('/');
+    const parts = dateStr.split("/");
     if (parts.length === 3) {
       const [day, month, year] = parts;
       const parsed = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
@@ -294,7 +312,7 @@ export default function AppointmentFormScreen() {
 
   const parseTimeString = (timeStr: string) => {
     if (!timeStr) return new Date();
-    const parts = timeStr.split(':');
+    const parts = timeStr.split(":");
     const d = new Date();
     if (parts.length >= 2) {
       const [hour, minute] = parts;
@@ -305,39 +323,39 @@ export default function AppointmentFormScreen() {
   };
 
   const PAYMENT_METHODS = [
-    { label: 'Pix', value: 'pix' },
-    { label: 'Dinheiro', value: 'cash' },
-    { label: 'Cartão de Crédito', value: 'credit_card' },
-    { label: 'Cartão de Débito', value: 'debit_card' },
-    { label: 'Transferência', value: 'transfer' },
+    { label: "Pix", value: "pix" },
+    { label: "Dinheiro", value: "cash" },
+    { label: "Cartão de Crédito", value: "credit_card" },
+    { label: "Cartão de Débito", value: "debit_card" },
+    { label: "Transferência", value: "transfer" },
   ];
 
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('pix');
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState("pix");
 
   const handleAmountChange = (text: string) => {
-    const rawText = text.replace(/\D/g, '');
+    const rawText = text.replace(/\D/g, "");
     setSessionValueRaw(rawText);
   };
 
   const displayAmount = useMemo(() => {
-    if (!sessionValueRaw) return '';
+    if (!sessionValueRaw) return "";
     const val = parseFloat(sessionValueRaw) / 100;
-    return val.toLocaleString('pt-BR', { 
-      style: 'currency', 
-      currency: 'BRL',
-      minimumFractionDigits: 2 
+    return val.toLocaleString("pt-BR", {
+      style: "currency",
+      currency: "BRL",
+      minimumFractionDigits: 2,
     });
   }, [sessionValueRaw]);
 
   const handlePayment = async () => {
     if (!sessionValueRaw || parseFloat(sessionValueRaw) <= 0) {
-      Alert.alert('Erro', 'Informe o valor da sessão.');
+      Alert.alert("Erro", "Informe o valor da sessão.");
       return;
     }
 
     medium();
     try {
-      const [day, month, year] = watch('date').split('/');
+      const [day, month, year] = watch("date").split("/");
       const sessionDate = `${year}-${month}-${day}`;
       const finalAmount = parseFloat(sessionValueRaw) / 100;
 
@@ -347,7 +365,7 @@ export default function AppointmentFormScreen() {
         session_date: sessionDate,
         session_value: finalAmount,
         payment_method: selectedPaymentMethod,
-        notes: `Sessão de ${watch('type')} - ${watch('time')}`,
+        notes: `Sessão de ${watch("type")} - ${watch("time")}`,
       });
 
       // Mark as paid
@@ -362,17 +380,22 @@ export default function AppointmentFormScreen() {
       setFinancialRecordId(record?.id || null);
       setShowPaymentModal(false);
       success();
-      Alert.alert('Sucesso', 'Pagamento registrado com sucesso!');
+      Alert.alert("Sucesso", "Pagamento registrado com sucesso!");
     } catch (err) {
       hapticError();
       console.error(err);
-      Alert.alert('Erro', 'Não foi possível registrar o pagamento.');
+      Alert.alert("Erro", "Não foi possível registrar o pagamento.");
     }
   };
 
   if (isLoadingData) {
     return (
-      <SafeAreaView style={[styles.container, { backgroundColor: colors.background, justifyContent: 'center', alignItems: 'center' }]}>
+      <SafeAreaView
+        style={[
+          styles.container,
+          { backgroundColor: colors.background, justifyContent: "center", alignItems: "center" },
+        ]}
+      >
         <ActivityIndicator size="large" color={colors.primary} />
         <Text style={{ marginTop: 16, color: colors.textSecondary }}>Carregando dados...</Text>
       </SafeAreaView>
@@ -380,19 +403,18 @@ export default function AppointmentFormScreen() {
   }
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top', 'left', 'right', 'bottom']}>
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: colors.background }]}
+      edges={["top", "left", "right", "bottom"]}
+    >
       <View style={[styles.header, { borderBottomColor: colors.border }]}>
         <TouchableOpacity
           onPress={() => {
             if (isEditing && isDirty) {
-                  Alert.alert(
-                'Salvar alterações?',
-                'Você fez alterações neste agendamento.',
-                [
-                  { text: 'Não', style: 'cancel', onPress: navigateToAgenda },
-                  { text: 'Sim', onPress: () => void submitAppointment() },
-                ]
-              );
+              Alert.alert("Salvar alterações?", "Você fez alterações neste agendamento.", [
+                { text: "Não", style: "cancel", onPress: navigateToAgenda },
+                { text: "Sim", onPress: () => void submitAppointment() },
+              ]);
             } else {
               if (isEditing) {
                 navigateToAgenda();
@@ -406,13 +428,12 @@ export default function AppointmentFormScreen() {
           <Ionicons name="arrow-back" size={24} color={colors.text} />
         </TouchableOpacity>
         <Text style={[styles.title, { color: colors.text }]}>
-          {isEditing ? 'Editar Agendamento' : 'Novo Agendamento'}
+          {isEditing ? "Editar Agendamento" : "Novo Agendamento"}
         </Text>
         <View style={{ width: 40 }} />
       </View>
 
       <ScrollView style={styles.content} keyboardShouldPersistTaps="handled">
-        
         {/* Patient Selection */}
         <Text style={[styles.label, { color: colors.textSecondary }]}>Paciente *</Text>
         <Controller
@@ -420,10 +441,10 @@ export default function AppointmentFormScreen() {
           name="patientId"
           render={({ field: { value: _value, onChange } }) => (
             <PatientAutocomplete
-              value={watch('patientName')}
+              value={watch("patientName")}
               onSelect={(p) => {
                 onChange(p.id);
-                setValue('patientName', p.name);
+                setValue("patientName", p.name);
               }}
               disabled={isEditing}
             />
@@ -441,8 +462,13 @@ export default function AppointmentFormScreen() {
               name="date"
               render={({ field: { value, onChange } }) => (
                 <View>
-                  {Platform.OS === 'ios' ? (
-                    <View style={[styles.pickerButton, { borderColor: colors.border, backgroundColor: colors.surface }]}>
+                  {Platform.OS === "ios" ? (
+                    <View
+                      style={[
+                        styles.pickerButton,
+                        { borderColor: colors.border, backgroundColor: colors.surface },
+                      ]}
+                    >
                       <Ionicons name="calendar-outline" size={20} color={colors.textSecondary} />
                       <DateTimePicker
                         value={parseDateString(value)}
@@ -451,18 +477,23 @@ export default function AppointmentFormScreen() {
                         display="compact"
                         style={{ flex: 1 }}
                         onChange={(_e, date) => {
-                          if (date) onChange(format(date, 'dd/MM/yyyy'));
+                          if (date) onChange(format(date, "dd/MM/yyyy"));
                         }}
                       />
                     </View>
                   ) : (
                     <>
                       <TouchableOpacity
-                        style={[styles.pickerButton, { borderColor: colors.border, backgroundColor: colors.surface }]}
+                        style={[
+                          styles.pickerButton,
+                          { borderColor: colors.border, backgroundColor: colors.surface },
+                        ]}
                         onPress={() => setShowDatePicker(true)}
                       >
                         <Ionicons name="calendar-outline" size={20} color={colors.textSecondary} />
-                        <Text style={[styles.pickerText, { color: colors.text }]}>{value || 'DD/MM/AAAA'}</Text>
+                        <Text style={[styles.pickerText, { color: colors.text }]}>
+                          {value || "DD/MM/AAAA"}
+                        </Text>
                       </TouchableOpacity>
                       {showDatePicker && (
                         <DateTimePicker
@@ -471,7 +502,7 @@ export default function AppointmentFormScreen() {
                           display="default"
                           onChange={(_e, date) => {
                             setShowDatePicker(false);
-                            if (date) onChange(format(date, 'dd/MM/yyyy'));
+                            if (date) onChange(format(date, "dd/MM/yyyy"));
                           }}
                         />
                       )}
@@ -489,8 +520,13 @@ export default function AppointmentFormScreen() {
               name="time"
               render={({ field: { value, onChange } }) => (
                 <View>
-                  {Platform.OS === 'ios' ? (
-                    <View style={[styles.pickerButton, { borderColor: colors.border, backgroundColor: colors.surface }]}>
+                  {Platform.OS === "ios" ? (
+                    <View
+                      style={[
+                        styles.pickerButton,
+                        { borderColor: colors.border, backgroundColor: colors.surface },
+                      ]}
+                    >
                       <Ionicons name="time-outline" size={20} color={colors.textSecondary} />
                       <DateTimePicker
                         value={parseTimeString(value)}
@@ -499,18 +535,23 @@ export default function AppointmentFormScreen() {
                         display="compact"
                         style={{ flex: 1 }}
                         onChange={(_e, date) => {
-                          if (date) onChange(format(date, 'HH:mm'));
+                          if (date) onChange(format(date, "HH:mm"));
                         }}
                       />
                     </View>
                   ) : (
                     <>
                       <TouchableOpacity
-                        style={[styles.pickerButton, { borderColor: colors.border, backgroundColor: colors.surface }]}
+                        style={[
+                          styles.pickerButton,
+                          { borderColor: colors.border, backgroundColor: colors.surface },
+                        ]}
                         onPress={() => setShowTimePicker(true)}
                       >
                         <Ionicons name="time-outline" size={20} color={colors.textSecondary} />
-                        <Text style={[styles.pickerText, { color: colors.text }]}>{value || 'HH:MM'}</Text>
+                        <Text style={[styles.pickerText, { color: colors.text }]}>
+                          {value || "HH:MM"}
+                        </Text>
                       </TouchableOpacity>
                       {showTimePicker && (
                         <DateTimePicker
@@ -520,7 +561,7 @@ export default function AppointmentFormScreen() {
                           display="default"
                           onChange={(_e, date) => {
                             setShowTimePicker(false);
-                            if (date) onChange(format(date, 'HH:mm'));
+                            if (date) onChange(format(date, "HH:mm"));
                           }}
                         />
                       )}
@@ -541,7 +582,7 @@ export default function AppointmentFormScreen() {
             <OptionSelector
               label="Tipo de Atendimento"
               value={value}
-              options={APPOINTMENT_TYPES.map(t => ({ label: t, value: t }))}
+              options={APPOINTMENT_TYPES.map((t) => ({ label: t, value: t }))}
               onSelect={onChange}
             />
           )}
@@ -558,7 +599,7 @@ export default function AppointmentFormScreen() {
                 <OptionSelector
                   label="Duração"
                   value={value}
-                  options={DURATIONS.map(d => ({ label: `${d} min`, value: d }))}
+                  options={DURATIONS.map((d) => ({ label: `${d} min`, value: d }))}
                   onSelect={onChange}
                 />
               )}
@@ -584,25 +625,37 @@ export default function AppointmentFormScreen() {
 
         {/* Payment Section - Only for editing */}
         {isEditing && (
-          <View style={[styles.paymentSection, { borderColor: colors.border, backgroundColor: colors.surface }]}>
+          <View
+            style={[
+              styles.paymentSection,
+              { borderColor: colors.border, backgroundColor: colors.surface },
+            ]}
+          >
             <View style={styles.paymentHeader}>
               <Ionicons name="card-outline" size={24} color={colors.primary} />
               <Text style={[styles.paymentTitle, { color: colors.text }]}>Pagamento</Text>
             </View>
-            
+
             <View style={styles.paymentStatusRow}>
               <View style={styles.paymentInfo}>
                 <Text style={[styles.paymentLabel, { color: colors.textSecondary }]}>Status</Text>
-                <View style={[styles.statusBadge, { 
-                  backgroundColor: isPaid ? colors.success + '20' : colors.warning + '20',
-                }]}>
-                  <Ionicons 
-                    name={isPaid ? 'checkmark-circle' : 'time-outline'} 
-                    size={16} 
-                    color={isPaid ? colors.success : colors.warning} 
+                <View
+                  style={[
+                    styles.statusBadge,
+                    {
+                      backgroundColor: isPaid ? colors.success + "20" : colors.warning + "20",
+                    },
+                  ]}
+                >
+                  <Ionicons
+                    name={isPaid ? "checkmark-circle" : "time-outline"}
+                    size={16}
+                    color={isPaid ? colors.success : colors.warning}
                   />
-                  <Text style={[styles.statusText, { color: isPaid ? colors.success : colors.warning }]}>
-                    {isPaid ? 'Pago' : 'Pendente'}
+                  <Text
+                    style={[styles.statusText, { color: isPaid ? colors.success : colors.warning }]}
+                  >
+                    {isPaid ? "Pago" : "Pendente"}
                   </Text>
                 </View>
               </View>
@@ -619,7 +672,7 @@ export default function AppointmentFormScreen() {
             )}
 
             {isPaid && (
-              <View style={[styles.paidInfo, { backgroundColor: colors.success + '10' }]}>
+              <View style={[styles.paidInfo, { backgroundColor: colors.success + "10" }]}>
                 <Ionicons name="checkmark-done-circle" size={20} color={colors.success} />
                 <Text style={[styles.paidText, { color: colors.success }]}>
                   Pagamento registrado
@@ -657,10 +710,14 @@ export default function AppointmentFormScreen() {
           />
         )}
 
-        {isEditing && watch('status') !== 'completed' && (
+        {isEditing && watch("status") !== "completed" && (
           <Button
             title="Iniciar Atendimento"
-            onPress={() => router.push(`/evolution-form?patientId=${selectedPatientId}&appointmentId=${appointmentId}` as any)}
+            onPress={() =>
+              router.push(
+                `/evolution-form?patientId=${selectedPatientId}&appointmentId=${appointmentId}` as any,
+              )
+            }
             variant="secondary"
             style={[styles.startButton, { backgroundColor: colors.success }] as any}
             leftIcon="play-circle-outline"
@@ -699,16 +756,18 @@ export default function AppointmentFormScreen() {
               styles.drawerPanel,
               { backgroundColor: colors.background },
               {
-                transform: [{
-                  translateX: drawerAnim.interpolate({
-                    inputRange: [0, 1],
-                    outputRange: [-SCREEN_WIDTH * 0.85, 0],
-                  })
-                }]
-              }
+                transform: [
+                  {
+                    translateX: drawerAnim.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [-SCREEN_WIDTH * 0.85, 0],
+                    }),
+                  },
+                ],
+              },
             ]}
           >
-            <SafeAreaView style={{ flex: 1 }} edges={['top', 'left', 'bottom']}>
+            <SafeAreaView style={{ flex: 1 }} edges={["top", "left", "bottom"]}>
               <View style={[styles.modalHeader, { borderBottomColor: colors.border }]}>
                 <Text style={[styles.modalTitle, { color: colors.text }]}>Registrar Pagamento</Text>
                 <TouchableOpacity onPress={closePaymentDrawer}>
@@ -718,13 +777,20 @@ export default function AppointmentFormScreen() {
 
               <ScrollView style={styles.modalBody} keyboardShouldPersistTaps="handled">
                 {/* Valor */}
-                <Text style={[styles.label, { color: colors.textSecondary }]}>Valor da Sessão *</Text>
-                <View style={[styles.valueInputContainer, { borderColor: colors.border, backgroundColor: colors.surface }]}>
+                <Text style={[styles.label, { color: colors.textSecondary }]}>
+                  Valor da Sessão *
+                </Text>
+                <View
+                  style={[
+                    styles.valueInputContainer,
+                    { borderColor: colors.border, backgroundColor: colors.surface },
+                  ]}
+                >
                   <Text style={[styles.currencyPrefix, { color: colors.textSecondary }]}>R$</Text>
                   <TextInput
                     key="payment-value-input"
                     style={[styles.valueInput, { color: colors.text }]}
-                    value={displayAmount.replace('R$', '').trim()}
+                    value={displayAmount.replace("R$", "").trim()}
                     onChangeText={handleAmountChange}
                     placeholder="0,00"
                     placeholderTextColor={colors.textMuted}
@@ -734,7 +800,9 @@ export default function AppointmentFormScreen() {
                 <Text style={styles.inputHint}>Toque para digitar o valor em centavos</Text>
 
                 {/* Payment Method */}
-                <Text style={[styles.label, { color: colors.textSecondary, marginTop: 16 }]}>Forma de Pagamento</Text>
+                <Text style={[styles.label, { color: colors.textSecondary, marginTop: 16 }]}>
+                  Forma de Pagamento
+                </Text>
                 <View style={styles.paymentMethodsGrid}>
                   {PAYMENT_METHODS.map((method) => (
                     <TouchableOpacity
@@ -742,28 +810,43 @@ export default function AppointmentFormScreen() {
                       style={[
                         styles.paymentMethodButton,
                         { borderColor: colors.border },
-                        selectedPaymentMethod === method.value && { 
-                          backgroundColor: colors.primary + '20', 
-                          borderColor: colors.primary 
-                        }
+                        selectedPaymentMethod === method.value && {
+                          backgroundColor: colors.primary + "20",
+                          borderColor: colors.primary,
+                        },
                       ]}
                       onPress={() => setSelectedPaymentMethod(method.value)}
                     >
                       <Ionicons
                         name={
-                          method.value === 'pix' ? 'qr-code-outline' :
-                          method.value === 'cash' ? 'cash-outline' :
-                          method.value === 'credit_card' ? 'card-outline' :
-                          method.value === 'debit_card' ? 'card-outline' :
-                          'swap-horizontal-outline'
+                          method.value === "pix"
+                            ? "qr-code-outline"
+                            : method.value === "cash"
+                              ? "cash-outline"
+                              : method.value === "credit_card"
+                                ? "card-outline"
+                                : method.value === "debit_card"
+                                  ? "card-outline"
+                                  : "swap-horizontal-outline"
                         }
                         size={24}
-                        color={selectedPaymentMethod === method.value ? colors.primary : colors.textSecondary}
+                        color={
+                          selectedPaymentMethod === method.value
+                            ? colors.primary
+                            : colors.textSecondary
+                        }
                       />
-                      <Text style={[
-                        styles.paymentMethodText,
-                        { color: selectedPaymentMethod === method.value ? colors.primary : colors.textSecondary }
-                      ]}>
+                      <Text
+                        style={[
+                          styles.paymentMethodText,
+                          {
+                            color:
+                              selectedPaymentMethod === method.value
+                                ? colors.primary
+                                : colors.textSecondary,
+                          },
+                        ]}
+                      >
                         {method.label}
                       </Text>
                     </TouchableOpacity>
@@ -776,7 +859,7 @@ export default function AppointmentFormScreen() {
                   onPress={handlePayment}
                   disabled={createFinancialMutation.isPending || markAsPaidMutation.isPending}
                 >
-                  {(createFinancialMutation.isPending || markAsPaidMutation.isPending) ? (
+                  {createFinancialMutation.isPending || markAsPaidMutation.isPending ? (
                     <ActivityIndicator color="#fff" />
                   ) : (
                     <>
@@ -797,9 +880,9 @@ export default function AppointmentFormScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     paddingHorizontal: 20,
     paddingVertical: 18,
     borderBottomWidth: 1,
@@ -808,14 +891,14 @@ const styles = StyleSheet.create({
     padding: 10,
     marginLeft: -10,
   },
-  title: { fontSize: 20, fontWeight: '700' },
+  title: { fontSize: 20, fontWeight: "700" },
   content: { flex: 1, padding: 20, gap: 4 },
-  label: { fontSize: 14, fontWeight: '600', marginBottom: 8 },
-  row: { flexDirection: 'row', gap: 16 },
+  label: { fontSize: 14, fontWeight: "600", marginBottom: 8 },
+  row: { flexDirection: "row", gap: 16 },
   col: { flex: 1 },
   pickerButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     height: 56,
     borderWidth: 1,
     borderRadius: 14,
@@ -834,7 +917,7 @@ const styles = StyleSheet.create({
   saveButton: { marginTop: 8 },
   startButton: { marginTop: 12 },
   deleteButton: { marginTop: 12, borderWidth: 1 },
-  errorText: { color: '#ef4444', fontSize: 12, marginTop: -12, marginBottom: 12 },
+  errorText: { color: "#ef4444", fontSize: 12, marginTop: -12, marginBottom: 12 },
   // Payment Section Styles
   paymentSection: {
     marginTop: 20,
@@ -844,14 +927,14 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   paymentHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 12,
     marginBottom: 18,
   },
   paymentTitle: {
     fontSize: 18,
-    fontWeight: '700',
+    fontWeight: "700",
   },
   paymentStatusRow: {
     marginBottom: 18,
@@ -861,37 +944,37 @@ const styles = StyleSheet.create({
   },
   paymentLabel: {
     fontSize: 13,
-    fontWeight: '500',
+    fontWeight: "500",
   },
   statusBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 6,
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 20,
-    alignSelf: 'flex-start',
+    alignSelf: "flex-start",
   },
   statusText: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   payButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     gap: 10,
     paddingVertical: 16,
     borderRadius: 14,
   },
   payButtonText: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 16,
-    fontWeight: '700',
+    fontWeight: "700",
   },
   paidInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 10,
     paddingVertical: 14,
     paddingHorizontal: 18,
@@ -899,45 +982,45 @@ const styles = StyleSheet.create({
   },
   paidText: {
     fontSize: 14,
-    fontWeight: '500',
+    fontWeight: "500",
   },
   // Drawer Styles
   drawerOverlay: {
     flex: 1,
-    flexDirection: 'row',
+    flexDirection: "row",
   },
   drawerBackdrop: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    backgroundColor: "rgba(0,0,0,0.5)",
   },
   drawerPanel: {
-    position: 'absolute',
+    position: "absolute",
     left: 0,
     top: 0,
     bottom: 0,
     width: SCREEN_WIDTH * 0.85,
     maxWidth: 420,
     borderRightWidth: 1,
-    borderRightColor: 'rgba(0,0,0,0.1)',
+    borderRightColor: "rgba(0,0,0,0.1)",
   },
   modalHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     paddingHorizontal: 24,
     paddingVertical: 18,
     borderBottomWidth: 1,
   },
   modalTitle: {
     fontSize: 20,
-    fontWeight: '700',
+    fontWeight: "700",
   },
   modalBody: {
     padding: 24,
   },
   valueInputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     borderWidth: 1,
     borderRadius: 14,
     paddingHorizontal: 18,
@@ -945,30 +1028,30 @@ const styles = StyleSheet.create({
   },
   currencyPrefix: {
     fontSize: 20,
-    fontWeight: '700',
+    fontWeight: "700",
     marginRight: 10,
   },
   valueInput: {
     flex: 1,
     fontSize: 22,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   inputHint: {
     fontSize: 11,
-    color: '#94a3b8',
+    color: "#94a3b8",
     marginLeft: 4,
     marginTop: 4,
   },
   paymentMethodsGrid: {
-    flexDirection: 'column',
+    flexDirection: "column",
     gap: 10,
     marginTop: 8,
   },
   paymentMethodButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 12,
-    width: '100%',
+    width: "100%",
     paddingVertical: 16,
     paddingHorizontal: 16,
     borderRadius: 14,
@@ -976,20 +1059,20 @@ const styles = StyleSheet.create({
   },
   paymentMethodText: {
     fontSize: 15,
-    fontWeight: '500',
+    fontWeight: "500",
   },
   confirmPaymentButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     gap: 10,
     marginTop: 28,
     paddingVertical: 18,
     borderRadius: 14,
   },
   confirmPaymentText: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 17,
-    fontWeight: '700',
+    fontWeight: "700",
   },
 });

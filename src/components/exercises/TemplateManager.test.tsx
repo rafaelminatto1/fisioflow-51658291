@@ -90,98 +90,86 @@ function hasCustomTemplates(templates: ExerciseTemplate[]): boolean {
 
 describe("TemplateManager — visibilidade de System_Templates", () => {
   // Feature: exercise-templates-refactor, Property 11: System_Templates sempre visíveis independentemente de Custom_Templates
-  it(
-    "Property 11: system templates ativos são sempre incluídos no resultado do filtro, independentemente de custom templates",
-    () => {
-      // Validates: Requirements 7.2
-      fc.assert(
-        fc.property(
-          // A list of active system templates (the ones that must always be visible)
-          fc.array(arbitrarySystemTemplate(), { minLength: 1, maxLength: 10 }),
-          // An arbitrary list of custom templates (may be empty or not)
-          fc.array(arbitraryCustomTemplate(), { maxLength: 10 }),
-          // Any profile filter (including 'all')
-          fc.constantFrom("all" as const, ...PATIENT_PROFILES),
-          (systemTemplates, customTemplates, profile) => {
-            const allTemplates = [...systemTemplates, ...customTemplates];
+  it("Property 11: system templates ativos são sempre incluídos no resultado do filtro, independentemente de custom templates", () => {
+    // Validates: Requirements 7.2
+    fc.assert(
+      fc.property(
+        // A list of active system templates (the ones that must always be visible)
+        fc.array(arbitrarySystemTemplate(), { minLength: 1, maxLength: 10 }),
+        // An arbitrary list of custom templates (may be empty or not)
+        fc.array(arbitraryCustomTemplate(), { maxLength: 10 }),
+        // Any profile filter (including 'all')
+        fc.constantFrom("all" as const, ...PATIENT_PROFILES),
+        (systemTemplates, customTemplates, profile) => {
+          const allTemplates = [...systemTemplates, ...customTemplates];
 
-            const result = filterTemplates(allTemplates, profile, "");
+          const result = filterTemplates(allTemplates, profile, "");
 
-            // For each active system template whose patientProfile matches the filter,
-            // it must appear in the result — regardless of whether custom templates exist.
-            const systemTemplatesExpectedInResult = systemTemplates.filter(
-              (t) => profile === "all" || t.patientProfile === profile,
-            );
+          // For each active system template whose patientProfile matches the filter,
+          // it must appear in the result — regardless of whether custom templates exist.
+          const systemTemplatesExpectedInResult = systemTemplates.filter(
+            (t) => profile === "all" || t.patientProfile === profile,
+          );
 
-            return systemTemplatesExpectedInResult.every((st) =>
-              result.some((r) => r.id === st.id),
-            );
-          },
-        ),
-        { numRuns: 100 },
-      );
-    },
-  );
+          return systemTemplatesExpectedInResult.every((st) => result.some((r) => r.id === st.id));
+        },
+      ),
+      { numRuns: 100 },
+    );
+  });
 
-  it(
-    "Property 11 (org sem custom templates): system templates são visíveis mesmo quando não há custom templates",
-    () => {
-      // Validates: Requirements 7.2
-      fc.assert(
-        fc.property(
-          fc.array(arbitrarySystemTemplate(), { minLength: 1, maxLength: 15 }),
-          (systemTemplates) => {
-            // Org has NO custom templates
-            expect(hasCustomTemplates(systemTemplates)).toBe(false);
+  it("Property 11 (org sem custom templates): system templates são visíveis mesmo quando não há custom templates", () => {
+    // Validates: Requirements 7.2
+    fc.assert(
+      fc.property(
+        fc.array(arbitrarySystemTemplate(), { minLength: 1, maxLength: 15 }),
+        (systemTemplates) => {
+          // Org has NO custom templates
+          expect(hasCustomTemplates(systemTemplates)).toBe(false);
 
-            // All system templates must still appear when filtering with 'all'
-            const result = filterTemplates(systemTemplates, "all", "");
+          // All system templates must still appear when filtering with 'all'
+          const result = filterTemplates(systemTemplates, "all", "");
 
-            return result.length === systemTemplates.length &&
-              systemTemplates.every((st) => result.some((r) => r.id === st.id));
-          },
-        ),
-        { numRuns: 100 },
-      );
-    },
-  );
+          return (
+            result.length === systemTemplates.length &&
+            systemTemplates.every((st) => result.some((r) => r.id === st.id))
+          );
+        },
+      ),
+      { numRuns: 100 },
+    );
+  });
 
-  it(
-    "Property 11 (org com custom templates): system templates permanecem visíveis quando custom templates existem",
-    () => {
-      // Validates: Requirements 7.2
-      fc.assert(
-        fc.property(
-          fc.array(arbitrarySystemTemplate(), { minLength: 1, maxLength: 10 }),
-          fc.array(arbitraryCustomTemplate(), { minLength: 1, maxLength: 10 }),
-          (systemTemplates, customTemplates) => {
-            const allTemplates = [...systemTemplates, ...customTemplates];
+  it("Property 11 (org com custom templates): system templates permanecem visíveis quando custom templates existem", () => {
+    // Validates: Requirements 7.2
+    fc.assert(
+      fc.property(
+        fc.array(arbitrarySystemTemplate(), { minLength: 1, maxLength: 10 }),
+        fc.array(arbitraryCustomTemplate(), { minLength: 1, maxLength: 10 }),
+        (systemTemplates, customTemplates) => {
+          const allTemplates = [...systemTemplates, ...customTemplates];
 
-            // Org HAS custom templates
-            expect(hasCustomTemplates(allTemplates)).toBe(true);
+          // Org HAS custom templates
+          expect(hasCustomTemplates(allTemplates)).toBe(true);
 
-            // System templates must still be present in the unfiltered result
-            const result = filterTemplates(allTemplates, "all", "");
+          // System templates must still be present in the unfiltered result
+          const result = filterTemplates(allTemplates, "all", "");
 
-            return systemTemplates.every((st) => result.some((r) => r.id === st.id));
-          },
-        ),
-        { numRuns: 100 },
-      );
-    },
-  );
+          return systemTemplates.every((st) => result.some((r) => r.id === st.id));
+        },
+      ),
+      { numRuns: 100 },
+    );
+  });
 
   // ─── hasCustomTemplates logic ─────────────────────────────────────────────
 
   describe("hasCustomTemplates — lógica do TemplateManager", () => {
     it("retorna false quando não há custom templates (apenas system)", () => {
       fc.assert(
-        fc.property(
-          fc.array(arbitrarySystemTemplate(), { maxLength: 15 }),
-          (systemTemplates) => {
-            return hasCustomTemplates(systemTemplates) === false;
-          },
-        ),
+        fc.property(fc.array(arbitrarySystemTemplate(), { maxLength: 15 }), (systemTemplates) => {
+          return hasCustomTemplates(systemTemplates) === false;
+        }),
         { numRuns: 100 },
       );
     });
@@ -229,8 +217,12 @@ describe("TemplateManager — edição de System_Templates (Req 5.5)", () => {
 
     simulateHandleEdit(
       "system",
-      () => { editCalled = true; },
-      () => { customizeCalled = true; },
+      () => {
+        editCalled = true;
+      },
+      () => {
+        customizeCalled = true;
+      },
     );
 
     expect(customizeCalled).toBe(true);
@@ -243,8 +235,12 @@ describe("TemplateManager — edição de System_Templates (Req 5.5)", () => {
 
     simulateHandleEdit(
       "custom",
-      () => { editCalled = true; },
-      () => { customizeCalled = true; },
+      () => {
+        editCalled = true;
+      },
+      () => {
+        customizeCalled = true;
+      },
     );
 
     expect(customizeCalled).toBe(false);
@@ -254,21 +250,22 @@ describe("TemplateManager — edição de System_Templates (Req 5.5)", () => {
   it("Property: para qualquer system template, o fluxo de versão custom é iniciado", () => {
     // Validates: Requirements 5.5
     fc.assert(
-      fc.property(
-        arbitrarySystemTemplate(),
-        (systemTemplate) => {
-          let editCalled = false;
-          let customizeCalled = false;
+      fc.property(arbitrarySystemTemplate(), (systemTemplate) => {
+        let editCalled = false;
+        let customizeCalled = false;
 
-          simulateHandleEdit(
-            systemTemplate.templateType as "system" | "custom",
-            () => { editCalled = true; },
-            () => { customizeCalled = true; },
-          );
+        simulateHandleEdit(
+          systemTemplate.templateType as "system" | "custom",
+          () => {
+            editCalled = true;
+          },
+          () => {
+            customizeCalled = true;
+          },
+        );
 
-          return customizeCalled === true && editCalled === false;
-        },
-      ),
+        return customizeCalled === true && editCalled === false;
+      }),
       { numRuns: 100 },
     );
   });
@@ -276,21 +273,22 @@ describe("TemplateManager — edição de System_Templates (Req 5.5)", () => {
   it("Property: para qualquer custom template, o fluxo de edição direta é iniciado", () => {
     // Validates: Requirements 5.5 (inverse — custom templates can be edited)
     fc.assert(
-      fc.property(
-        arbitraryCustomTemplate(),
-        (customTemplate) => {
-          let editCalled = false;
-          let customizeCalled = false;
+      fc.property(arbitraryCustomTemplate(), (customTemplate) => {
+        let editCalled = false;
+        let customizeCalled = false;
 
-          simulateHandleEdit(
-            customTemplate.templateType as "system" | "custom",
-            () => { editCalled = true; },
-            () => { customizeCalled = true; },
-          );
+        simulateHandleEdit(
+          customTemplate.templateType as "system" | "custom",
+          () => {
+            editCalled = true;
+          },
+          () => {
+            customizeCalled = true;
+          },
+        );
 
-          return editCalled === true && customizeCalled === false;
-        },
-      ),
+        return editCalled === true && customizeCalled === false;
+      }),
       { numRuns: 100 },
     );
   });

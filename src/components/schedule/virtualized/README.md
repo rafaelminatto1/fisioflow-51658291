@@ -16,17 +16,17 @@ A virtualized list component that renders only visible appointment cards, improv
 ### Usage
 
 ```tsx
-import { VirtualizedAppointmentList } from '@/components/schedule/virtualized/VirtualizedAppointmentList';
+import { VirtualizedAppointmentList } from "@/components/schedule/virtualized/VirtualizedAppointmentList";
 
 function MyScheduleView() {
   const appointments = useAppointments(); // Your appointments data
-  
+
   return (
     <VirtualizedAppointmentList
       appointments={appointments}
-      onAppointmentClick={(apt) => console.log('Clicked:', apt)}
+      onAppointmentClick={(apt) => console.log("Clicked:", apt)}
       itemHeight={200} // Optional: default is 200px
-      overscan={3}     // Optional: default is 3 items
+      overscan={3} // Optional: default is 3 items
       className="h-full" // Optional: custom styling
     />
   );
@@ -39,40 +39,44 @@ To integrate virtualization into the existing `AppointmentListView`, you can rep
 
 ```tsx
 // Before (non-virtualized)
-{groupedAppointments.morning.map(apt => (
-  <SwipeableAppointmentCard
-    key={apt.id}
-    appointment={apt}
-    onClick={handleAppointmentClickWrapper}
-  />
-))}
-
-// After (virtualized for large lists)
-{groupedAppointments.morning.length > 50 ? (
-  <VirtualizedAppointmentList
-    appointments={groupedAppointments.morning}
-    onAppointmentClick={handleAppointmentClickWrapper}
-  />
-) : (
-  groupedAppointments.morning.map(apt => (
+{
+  groupedAppointments.morning.map((apt) => (
     <SwipeableAppointmentCard
       key={apt.id}
       appointment={apt}
       onClick={handleAppointmentClickWrapper}
     />
-  ))
-)}
+  ));
+}
+
+// After (virtualized for large lists)
+{
+  groupedAppointments.morning.length > 50 ? (
+    <VirtualizedAppointmentList
+      appointments={groupedAppointments.morning}
+      onAppointmentClick={handleAppointmentClickWrapper}
+    />
+  ) : (
+    groupedAppointments.morning.map((apt) => (
+      <SwipeableAppointmentCard
+        key={apt.id}
+        appointment={apt}
+        onClick={handleAppointmentClickWrapper}
+      />
+    ))
+  );
+}
 ```
 
 ### Props
 
-| Prop | Type | Default | Description |
-|------|------|---------|-------------|
-| `appointments` | `Appointment[]` | Required | Array of appointments to display |
-| `onAppointmentClick` | `(appointment: Appointment) => void` | Required | Callback when an appointment is clicked |
-| `itemHeight` | `number` | `200` | Height of each appointment card in pixels |
-| `overscan` | `number` | `3` | Number of items to render outside viewport |
-| `className` | `string` | `''` | Additional CSS classes |
+| Prop                 | Type                                 | Default  | Description                                |
+| -------------------- | ------------------------------------ | -------- | ------------------------------------------ |
+| `appointments`       | `Appointment[]`                      | Required | Array of appointments to display           |
+| `onAppointmentClick` | `(appointment: Appointment) => void` | Required | Callback when an appointment is clicked    |
+| `itemHeight`         | `number`                             | `200`    | Height of each appointment card in pixels  |
+| `overscan`           | `number`                             | `3`      | Number of items to render outside viewport |
+| `className`          | `string`                             | `''`     | Additional CSS classes                     |
 
 ### Performance Characteristics
 

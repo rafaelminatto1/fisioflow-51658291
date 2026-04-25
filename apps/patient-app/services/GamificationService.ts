@@ -1,5 +1,5 @@
-import { gamificationApi, patientApi } from '@/lib/api';
-import { log } from '@/lib/logger';
+import { gamificationApi, patientApi } from "@/lib/api";
+import { log } from "@/lib/logger";
 
 export class GamificationService {
   private static async getPatientId(): Promise<string | null> {
@@ -7,7 +7,7 @@ export class GamificationService {
       const profile = await patientApi.getProfile();
       return profile?.id || null;
     } catch (error) {
-      log.error('Error loading patient profile for gamification:', error);
+      log.error("Error loading patient profile for gamification:", error);
       return null;
     }
   }
@@ -23,11 +23,11 @@ export class GamificationService {
       await gamificationApi.awardXp({
         patientId,
         amount: 25,
-        reason: 'exercise_completed',
+        reason: "exercise_completed",
         description: `Exercício concluído: ${exerciseId}`,
       });
     } catch (error) {
-      log.error('Error awarding exercise XP:', error);
+      log.error("Error awarding exercise XP:", error);
     }
   }
 
@@ -42,11 +42,11 @@ export class GamificationService {
       await gamificationApi.awardXp({
         patientId,
         amount: 10,
-        reason: 'daily_login',
-        description: 'Login diário no app do paciente',
+        reason: "daily_login",
+        description: "Login diário no app do paciente",
       });
     } catch (error) {
-      log.error('Error awarding login XP:', error);
+      log.error("Error awarding login XP:", error);
     }
   }
 }

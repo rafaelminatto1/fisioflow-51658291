@@ -8,6 +8,7 @@ description: Reference for Brazilian document validation and formatting utilitie
 Validation and formatting utilities for Brazilian documents used throughout the FisioFlow physiotherapy clinic system. Covers CPF, CNPJ, CEP, phone numbers, RG identity cards, and CRM medical licenses.
 
 All validators follow the same contract:
+
 - **validate(input: string): boolean** — returns `true` if the input is structurally valid
 - **format(input: string): string** — returns the formatted representation, throws on invalid input
 - **clean(input: string): string** — strips all non-digit characters
@@ -43,23 +44,15 @@ function validateCpf(input: string): boolean {
   if (/^(\d)\1{10}$/.test(cpf)) return false;
 
   const calcCheckDigit = (slice: string, weights: number[]): number => {
-    const sum = slice
-      .split("")
-      .reduce((acc, digit, i) => acc + parseInt(digit) * weights[i], 0);
+    const sum = slice.split("").reduce((acc, digit, i) => acc + parseInt(digit) * weights[i], 0);
     const remainder = sum % 11;
     return remainder < 2 ? 0 : 11 - remainder;
   };
 
   const firstDigit = calcCheckDigit(cpf.slice(0, 9), [10, 9, 8, 7, 6, 5, 4, 3, 2]);
-  const secondDigit = calcCheckDigit(
-    cpf.slice(0, 10),
-    [11, 10, 9, 8, 7, 6, 5, 4, 3, 2],
-  );
+  const secondDigit = calcCheckDigit(cpf.slice(0, 10), [11, 10, 9, 8, 7, 6, 5, 4, 3, 2]);
 
-  return (
-    parseInt(cpf.charAt(9)) === firstDigit &&
-    parseInt(cpf.charAt(10)) === secondDigit
-  );
+  return parseInt(cpf.charAt(9)) === firstDigit && parseInt(cpf.charAt(10)) === secondDigit;
 }
 
 function formatCpf(input: string): string {
@@ -70,6 +63,7 @@ function formatCpf(input: string): string {
 ```
 
 **Common Patterns in FisioFlow:**
+
 - Patient registration form (required field)
 - Health insurance billing (must be valid CPF)
 - Invoice generation for private sessions
@@ -106,39 +100,26 @@ function validateCnpj(input: string): boolean {
   if (/^(\d)\1{13}$/.test(cnpj)) return false;
 
   const calcCheckDigit = (slice: string, weights: number[]): number => {
-    const sum = slice
-      .split("")
-      .reduce((acc, digit, i) => acc + parseInt(digit) * weights[i], 0);
+    const sum = slice.split("").reduce((acc, digit, i) => acc + parseInt(digit) * weights[i], 0);
     const remainder = sum % 11;
     return remainder < 2 ? 0 : 11 - remainder;
   };
 
-  const firstDigit = calcCheckDigit(
-    cnpj.slice(0, 12),
-    [5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2],
-  );
-  const secondDigit = calcCheckDigit(
-    cnpj.slice(0, 13),
-    [6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2],
-  );
+  const firstDigit = calcCheckDigit(cnpj.slice(0, 12), [5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2]);
+  const secondDigit = calcCheckDigit(cnpj.slice(0, 13), [6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2]);
 
-  return (
-    parseInt(cnpj.charAt(12)) === firstDigit &&
-    parseInt(cnpj.charAt(13)) === secondDigit
-  );
+  return parseInt(cnpj.charAt(12)) === firstDigit && parseInt(cnpj.charAt(13)) === secondDigit;
 }
 
 function formatCnpj(input: string): string {
   const cnpj = cleanCnpj(input);
   if (!validateCnpj(cnpj)) throw new Error("Invalid CNPJ");
-  return cnpj.replace(
-    /^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/,
-    "$1.$2.$3/$4-$5",
-  );
+  return cnpj.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, "$1.$2.$3/$4-$5");
 }
 ```
 
 **Common Patterns in FisioFlow:**
+
 - Clinic registration (the clinic's own CNPJ)
 - Health insurance provider identification
 - Supplier/vendor management
@@ -199,6 +180,7 @@ async function lookupCep(input: string): Promise<ViaCepResponse> {
 ```
 
 **Common Patterns in FisioFlow:**
+
 - Patient address auto-fill on registration
 - Clinic branch location
 - Automatic UF/state resolution from address
@@ -215,6 +197,7 @@ Brazilian phone numbers. 10 digits (landline) or 11 digits (mobile with 9th digi
 **DDD codes** are 2-digit area codes (11-99 range).
 
 **Validation Rules:**
+
 - Mobile: 11 digits, 3rd digit (after DDD) must be `9`, 4th digit must be `[6-9]`
 - Landline: 10 digits, 3rd digit must be `[2-5]`
 - DDD (first 2 digits): valid range 11-99, not all combinations are real but structural check is sufficient
@@ -258,6 +241,7 @@ function formatPhone(input: string): string {
 ```
 
 **Common Patterns in FisioFlow:**
+
 - Patient contact (mobile required for WhatsApp appointment reminders)
 - Emergency contact field
 - Clinic phone numbers (landline or mobile)
@@ -271,14 +255,14 @@ State-issued identity card. Format varies by state (UF).
 
 **Format varies by state:**
 
-| State | Format | Example |
-|-------|--------|---------|
-| SP | `XX.XXX.XXX-X` | `12.345.678-9` |
-| RJ | `XX.XXX.XXX-X` | `12.345.678-9` |
-| MG | `XXX.XXX.XXX-X` | `123.456.789-0` (9 digits, but can be up to 11) |
-| PR | `X.XXX.XXX-X` (7-9 digits) | `1.234.567-8` |
-| RS | `XXXXXXXXX-X` (10 digits) | `1234567890-1` |
-| BA | `XXXXXXX-XX` (8 digits + 2 check) | `1234567-89` |
+| State | Format                            | Example                                         |
+| ----- | --------------------------------- | ----------------------------------------------- |
+| SP    | `XX.XXX.XXX-X`                    | `12.345.678-9`                                  |
+| RJ    | `XX.XXX.XXX-X`                    | `12.345.678-9`                                  |
+| MG    | `XXX.XXX.XXX-X`                   | `123.456.789-0` (9 digits, but can be up to 11) |
+| PR    | `X.XXX.XXX-X` (7-9 digits)        | `1.234.567-8`                                   |
+| RS    | `XXXXXXXXX-X` (10 digits)         | `1234567890-1`                                  |
+| BA    | `XXXXXXX-XX` (8 digits + 2 check) | `1234567-89`                                    |
 
 **General rule:** 7–14 characters including formatting. No single nationwide algorithm. FisioFlow validates structure only (digits + separators), with optional state-specific formatting.
 
@@ -318,6 +302,7 @@ function formatRgGeneric(input: string): string {
 ```
 
 **Common Patterns in FisioFlow:**
+
 - Patient identification (secondary document after CPF)
 - Health insurance plan registration often requires RG
 - Store raw digits + issuing state (UF)
@@ -332,15 +317,40 @@ Medical license number issued by Regional Medical Councils. Required for doctors
 **Format:** `CRM/UF XXXXX` — numeric part varies (1–6 digits), UF is the 2-letter state code.
 
 **Examples:**
+
 - `CRM/SP 12345`
 - `CRM/RJ 98765`
 - `CRM/MG 54321`
 
 ```typescript
 const BRAZILIAN_UFS = [
-  "AC", "AL", "AM", "AP", "BA", "CE", "DF", "ES", "GO", "MA",
-  "MG", "MS", "MT", "PA", "PB", "PE", "PI", "PR", "RJ", "RN",
-  "RO", "RR", "RS", "SC", "SE", "SP", "TO",
+  "AC",
+  "AL",
+  "AM",
+  "AP",
+  "BA",
+  "CE",
+  "DF",
+  "ES",
+  "GO",
+  "MA",
+  "MG",
+  "MS",
+  "MT",
+  "PA",
+  "PB",
+  "PE",
+  "PI",
+  "PR",
+  "RJ",
+  "RN",
+  "RO",
+  "RR",
+  "RS",
+  "SC",
+  "SE",
+  "SP",
+  "TO",
 ] as const;
 
 type BrazilianUF = (typeof BRAZILIAN_UFS)[number];
@@ -379,6 +389,7 @@ function formatCrm(uf: string, number: number): string {
 ```
 
 **Common Patterns in FisioFlow:**
+
 - Prescribing physician registration (doctors who refer patients to physiotherapy)
 - Appears on treatment prescriptions and medical reports
 - Required field when linking a treatment plan to a medical referral
@@ -388,14 +399,14 @@ function formatCrm(uf: string, number: number): string {
 
 ## Database Storage Conventions
 
-| Document | DB Column Type | Storage Format | Display Format |
-|----------|---------------|----------------|----------------|
-| CPF | `VARCHAR(11)` | Digits only | `XXX.XXX.XXX-XX` |
-| CNPJ | `VARCHAR(14)` | Digits only | `XX.XXX.XXX/XXXX-XX` |
-| CEP | `VARCHAR(8)` | Digits only | `XXXXX-XXX` |
-| Phone | `VARCHAR(11)` | Digits only | `(XX) XXXXX-XXXX` |
-| RG | `VARCHAR(20)` | Digits only + issuing UF | State-specific |
-| CRM | Two columns: `crm_number INT`, `crm_uf CHAR(2)` | Structured | `CRM/UF XXXXX` |
+| Document | DB Column Type                                  | Storage Format           | Display Format       |
+| -------- | ----------------------------------------------- | ------------------------ | -------------------- |
+| CPF      | `VARCHAR(11)`                                   | Digits only              | `XXX.XXX.XXX-XX`     |
+| CNPJ     | `VARCHAR(14)`                                   | Digits only              | `XX.XXX.XXX/XXXX-XX` |
+| CEP      | `VARCHAR(8)`                                    | Digits only              | `XXXXX-XXX`          |
+| Phone    | `VARCHAR(11)`                                   | Digits only              | `(XX) XXXXX-XXXX`    |
+| RG       | `VARCHAR(20)`                                   | Digits only + issuing UF | State-specific       |
+| CRM      | Two columns: `crm_number INT`, `crm_uf CHAR(2)` | Structured               | `CRM/UF XXXXX`       |
 
 ---
 

@@ -1,1 +1,3355 @@
-{"files":{"apps/web/dist/index.html":{"size":11237,"mtime_nanos":1774465611430537871,"mode":436,"is_dir":false},"apps/web/dist/assets/ClinicAIInsights-BvDRP8No.js":{"size":3862,"mtime_nanos":1774465611407836338,"mode":436,"is_dir":false},"apps/web/dist/assets/ClinicalReportPDF-DqCk4UVT.js":{"size":5709,"mtime_nanos":1774465611408028136,"mode":436,"is_dir":false},"apps/web/dist/assets/ActivityLabPage-CruVRAzr.js":{"size":17586,"mtime_nanos":1774465611406162266,"mode":436,"is_dir":false},"apps/web/dist/assets/MetaFormModal-ByqLPem2.js":{"size":5394,"mtime_nanos":1774465611413281893,"mode":436,"is_dir":false},"apps/web/dist/assets/useDashboardMetrics-CuQX8bzB.js":{"size":4616,"mtime_nanos":1774465611422786555,"mode":436,"is_dir":false},"apps/web/dist/assets/PatientSetupPanel-CTGOIuOV.js":{"size":1620,"mtime_nanos":1774465611415421140,"mode":436,"is_dir":false},"apps/web/dist/assets/geometry-BHmVnh6X.js":{"size":720,"mtime_nanos":1774465611420330416,"mode":436,"is_dir":false},"apps/web/dist/assets/KanbanCardV2-Dz-y1iXT.js":{"size":8205,"mtime_nanos":1774465611412526367,"mode":436,"is_dir":false},"apps/web/dist/android-chrome-512x512.png":{"size":25320,"mtime_nanos":1774465606521144846,"mode":436,"is_dir":false},"apps/web/dist/assets/geminiAiService-DOqeG-de.js":{"size":2897,"mtime_nanos":1774465611420262665,"mode":436,"is_dir":false},"apps/web/dist/assets/TaskDetailModal-BWiJbhat.js":{"size":24326,"mtime_nanos":1774465611417906825,"mode":436,"is_dir":false},"apps/web/dist/assets/PatientForm-Dh2bqy64.js":{"size":18790,"mtime_nanos":1774465611415013798,"mode":436,"is_dir":false},"apps/web/dist/assets/PainMapRegistration-UKy9sVJ7.js":{"size":3989,"mtime_nanos":1774465611414442456,"mode":436,"is_dir":false},"apps/web/dist/assets/triageUtils-BFpDF3Un.js":{"size":2409,"mtime_nanos":1774465611422230720,"mode":436,"is_dir":false},"apps/web/dist/assets/AppointmentQuickEditModal-B_mXQjVj.js":{"size":16634,"mtime_nanos":1774465611406838446,"mode":436,"is_dir":false},"apps/web/dist/assets/FeedbackPreCadastro-gxrgGB1h.js":{"size":2427,"mtime_nanos":1774465611410939183,"mode":436,"is_dir":false},"apps/web/dist/assets/LazyPdfDownloadButton-5Oe-fefv.js":{"size":1124,"mtime_nanos":1774465611412675279,"mode":436,"is_dir":false},"apps/web/dist/assets/loading-skeleton-r1nR77IU.js":{"size":3483,"mtime_nanos":1774465611420657296,"mode":436,"is_dir":false},"apps/web/dist/assets/evolutionPdfExport-CmgQFu_p.js":{"size":3746,"mtime_nanos":1774465611419994177,"mode":436,"is_dir":false},"apps/web/dist/assets/NewPatientPage-DtnESvpr.js":{"size":2990,"mtime_nanos":1774465611413642578,"mode":436,"is_dir":false},"apps/web/dist/assets/Communications-CRh7F3i2.js":{"size":57608,"mtime_nanos":1774465611408270153,"mode":436,"is_dir":false},"apps/web/dist/icons/icon-512x512.svg":{"size":20948,"mtime_nanos":1774465606545632629,"mode":436,"is_dir":false},"apps/web/dist/assets/DiffViewer-BrWmmz5b.js":{"size":1452,"mtime_nanos":1774465611409027774,"mode":436,"is_dir":false},"apps/web/dist/assets/GoalProfileListPage-B84rfza7.js":{"size":18297,"mtime_nanos":1774465611411868835,"mode":436,"is_dir":false},"apps/web/dist/assets/GaitAnalysisStudio-BiMpyfFz.js":{"size":9715,"mtime_nanos":1774465611411495647,"mode":436,"is_dir":false},"apps/web/dist/assets/RelatorioMedicoPage-BrPHJBcs.js":{"size":37937,"mtime_nanos":1774465611416660770,"mode":436,"is_dir":false},"apps/web/dist/assets/ImageAnalysisDashboard-hRaYDtc-.js":{"size":9731,"mtime_nanos":1774465611412006362,"mode":436,"is_dir":false},"apps/web/dist/assets/TourGuide-Cu96HKep.js":{"size":38,"mtime_nanos":1774465611418387157,"mode":436,"is_dir":false},"apps/web/dist/assets/ContratadosPage-DOw1OVyL.js":{"size":6310,"mtime_nanos":1774465611408648719,"mode":436,"is_dir":false},"apps/web/dist/assets/SyncManager-DCrSsiJb.js":{"size":13351,"mtime_nanos":1774465611417811485,"mode":436,"is_dir":false},"apps/web/dist/assets/esm-sgJm8UYT.js":{"size":748,"mtime_nanos":1774465611419956530,"mode":436,"is_dir":false},"apps/web/dist/assets/PatientObjectivesPage-BNVeTlIo.js":{"size":7307,"mtime_nanos":1774465611415232206,"mode":436,"is_dir":false},"apps/web/dist/assets/AuditLogs-w83QJsgW.js":{"size":27987,"mtime_nanos":1774465611407060348,"mode":436,"is_dir":false},"apps/web/dist/assets/WhatsAppScripts-Bu6pJZNP.js":{"size":11212,"mtime_nanos":1774465611418877057,"mode":436,"is_dir":false},"apps/web/dist/assets/clinicalTestsCatalog-CXSt9SAy.js":{"size":37939,"mtime_nanos":1774465611419546603,"mode":436,"is_dir":false},"apps/web/dist/assets/MetasCard-Bzyw4GJc.js":{"size":5012,"mtime_nanos":1774465611413321495,"mode":436,"is_dir":false},"apps/web/dist/assets/index-CZEOGasW.css":{"size":17765,"mtime_nanos":1774465611428965075,"mode":436,"is_dir":false},"apps/web/dist/assets/multi-select-BnPTWgE-.js":{"size":6784,"mtime_nanos":1774465611420957215,"mode":436,"is_dir":false},"apps/web/dist/assets/poseDetectionService-BaxJgXFu.js":{"size":4550,"mtime_nanos":1774465611421520035,"mode":436,"is_dir":false},"apps/web/dist/assets/MovementLabPage-B0nVu_a2.js":{"size":1588,"mtime_nanos":1774465611413372413,"mode":436,"is_dir":false},"apps/web/dist/clinical-tests/papers/shoulder-impingement-calis-2000.pdf":{"size":1817,"mtime_nanos":1774465606524452410,"mode":436,"is_dir":false},"apps/web/dist/assets/extractTransferSyntax-DTFrphwz.js":{"size":560,"mtime_nanos":1774465611420112496,"mode":436,"is_dir":false},"apps/web/dist/assets/types-mm7lDV1i.js":{"size":284,"mtime_nanos":1774465611422266411,"mode":436,"is_dir":false},"apps/web/dist/assets/MythVsTruth-CFfBIYaz.js":{"size":9036,"mtime_nanos":1774465611413418791,"mode":436,"is_dir":false},"apps/web/dist/assets/excelExport-BLjGyUpk.js":{"size":8989,"mtime_nanos":1774465611420035805,"mode":436,"is_dir":false},"apps/web/dist/assets/LevelUpModal-CyJvf_s5.js":{"size":10624,"mtime_nanos":1774465611412819511,"mode":436,"is_dir":false},"apps/web/dist/assets/PatientEvolution-DpLxpZ5T.js":{"size":82877,"mtime_nanos":1774465611414825073,"mode":436,"is_dir":false},"apps/web/dist/assets/usePackages-CcPMHuyp.js":{"size":3212,"mtime_nanos":1774465611423389747,"mode":436,"is_dir":false},"apps/web/dist/assets/TaskInsights-DQQyqF8d.js":{"size":7237,"mtime_nanos":1774465611417961305,"mode":436,"is_dir":false},"apps/web/dist/assets/Patients-K8k502yv.js":{"size":48152,"mtime_nanos":1774465611415496155,"mode":436,"is_dir":false},"apps/web/dist/assets/AuthContext-UsFxPPfD.js":{"size":321,"mtime_nanos":1774465611407216943,"mode":436,"is_dir":false},"apps/web/dist/assets/goalProfiles.seed-CbwvDx9_.js":{"size":8990,"mtime_nanos":1774465611420365618,"mode":436,"is_dir":false},"apps/web/dist/assets/PosePreloadManager-BNNhgeHg.js":{"size":1332,"mtime_nanos":1774465611415676847,"mode":436,"is_dir":false},"apps/web/dist/assets/GamificationFeedbackContext-CFa-c42k.js":{"size":2569,"mtime_nanos":1774465611411614805,"mode":436,"is_dir":false},"apps/web/dist/sw.js":{"size":2772,"mtime_nanos":1774465606547006922,"mode":436,"is_dir":false},"apps/web/dist/assets/NotFound-DO_eoVWF.js":{"size":866,"mtime_nanos":1774465611413719758,"mode":436,"is_dir":false},"apps/web/dist/assets/RichTextToolbar-D_AWC4rA.js":{"size":22681,"mtime_nanos":1774465611416870937,"mode":436,"is_dir":false},"apps/web/dist/assets/PatientGamification-D8AY-xQ3.js":{"size":23986,"mtime_nanos":1774465611415058429,"mode":436,"is_dir":false},"apps/web/dist/assets/esm-C027tXEi.js":{"size":2240,"mtime_nanos":1774465611419912736,"mode":436,"is_dir":false},"apps/web/dist/assets/Projects-BKs5ODk0.js":{"size":5835,"mtime_nanos":1774465611416107518,"mode":436,"is_dir":false},"apps/web/dist/assets/computeWorker-4fn2p8hj.js":{"size":1234217,"mtime_nanos":1774465611430002011,"mode":436,"is_dir":false},"apps/web/dist/assets/openjphjs-C-BUUy4a.wasm":{"size":2094918,"mtime_nanos":1774465611429288114,"mode":436,"is_dir":false},"apps/web/dist/assets/useAppointments-BTL2GkCa.js":{"size":19343,"mtime_nanos":1774465611422529801,"mode":436,"is_dir":false},"apps/web/dist/assets/BiomechanicsAnalysisPage-DU_jNDhG.js":{"size":13388,"mtime_nanos":1774465611407407134,"mode":436,"is_dir":false},"apps/web/dist/assets/DynamicComparisonPage-BLkolJJV.js":{"size":36118,"mtime_nanos":1774465611409454464,"mode":436,"is_dir":false},"apps/web/dist/assets/ROI-D9E2LUIp.js":{"size":6124,"mtime_nanos":1774465611416334588,"mode":436,"is_dir":false},"apps/web/dist/assets/alert-dialog-DXIaw_T3.js":{"size":2204,"mtime_nanos":1774465611419092044,"mode":436,"is_dir":false},"apps/web/dist/clinical-tests":{"size":0,"mtime_nanos":0,"mode":0,"is_dir":true},"apps/web/dist/assets/Gamification-cawmUYmR.js":{"size":12310,"mtime_nanos":1774465611411533225,"mode":436,"is_dir":false},"apps/web/dist/assets/Schedule-DlwqONgU.css":{"size":46736,"mtime_nanos":1774465611428622550,"mode":436,"is_dir":false},"apps/web/dist/assets/PostureAnalysisStudio-bn4F7KMu.js":{"size":6375,"mtime_nanos":1774465611415748998,"mode":436,"is_dir":false},"apps/web/dist/assets/LocalSEOTracker-BTUi7afM.js":{"size":8711,"mtime_nanos":1774465611412895364,"mode":436,"is_dir":false},"apps/web/dist/assets/useBoards-BuWqlAbU.js":{"size":1248,"mtime_nanos":1774465611422646235,"mode":436,"is_dir":false},"apps/web/dist/assets/jpeg-BK0GpJrn.js":{"size":75,"mtime_nanos":1774465611420515508,"mode":436,"is_dir":false},"apps/web/dist/diagnose.js":{"size":4384,"mtime_nanos":1774465606541589934,"mode":436,"is_dir":false},"apps/web/dist/api/health.json":{"size":265,"mtime_nanos":1774465606521664012,"mode":436,"is_dir":false},"apps/web/dist/_headers":{"size":558,"mtime_nanos":1774465606519848571,"mode":436,"is_dir":false},"apps/web/dist/assets/GamificationAchievementsPage-nsG8De0v.js":{"size":5849,"mtime_nanos":1774465611411578485,"mode":436,"is_dir":false},"apps/web/dist/assets/Auth-BxrpGDFG.js":{"size":23133,"mtime_nanos":1774465611407164628,"mode":436,"is_dir":false},"apps/web/dist/assets/useTemplateStats-DoCeFdZ0.js":{"size":9165,"mtime_nanos":1774465611423969959,"mode":436,"is_dir":false},"apps/web/dist/assets/EditPatientModal-Dxn6j_3u.js":{"size":9111,"mtime_nanos":1774465611409555950,"mode":436,"is_dir":false},"apps/web/dist/assets/usePatients-ClfkXVI3.js":{"size":5114,"mtime_nanos":1774465611423584967,"mode":436,"is_dir":false},"apps/web/dist/assets/CalendarView-BP1Iwf4F.js":{"size":101278,"mtime_nanos":1774465611407723537,"mode":436,"is_dir":false},"apps/web/dist/assets/Exercises-GWi9gc-A.js":{"size":12315,"mtime_nanos":1774465611410836020,"mode":436,"is_dir":false},"apps/web/dist/assets/HistoricoTab-Bwtn7HSt.js":{"size":2237,"mtime_nanos":1774465611411959565,"mode":436,"is_dir":false},"apps/web/dist":{"size":0,"mtime_nanos":0,"mode":0,"is_dir":true},"apps/web/dist/assets/formatInputs-BoC9jLqG.js":{"size":9418,"mtime_nanos":1774465611420181993,"mode":436,"is_dir":false},"apps/web/dist/assets/patientService-C-lx24Eq.js":{"size":3510,"mtime_nanos":1774465611421333476,"mode":436,"is_dir":false},"apps/web/dist/assets/PainMapHistoryPage-CXPAgpGE.js":{"size":24840,"mtime_nanos":1774465611414327908,"mode":436,"is_dir":false},"apps/web/dist/assets/Referral-DBD-x7rf.js":{"size":12493,"mtime_nanos":1774465611416508226,"mode":436,"is_dir":false},"apps/web/dist/assets/GaitAnalysisPage-ZbQDbpJT.js":{"size":1584,"mtime_nanos":1774465611411461772,"mode":436,"is_dir":false},"apps/web/dist/assets/NotificationHistory-DfFyjklG.js":{"size":374,"mtime_nanos":1774465611413768511,"mode":436,"is_dir":false},"apps/web/dist/assets/EvaluationFormBuilderPage-BIHGKCt4.js":{"size":13038,"mtime_nanos":1774465611409773870,"mode":436,"is_dir":false},"apps/web/dist/assets/PatientLifecycleChart-DntyRUzy.js":{"size":6837,"mtime_nanos":1774465611415194489,"mode":436,"is_dir":false},"apps/web/dist/assets/marketingAITemplateService-S9TU1kzb.js":{"size":10327,"mtime_nanos":1774465611420726374,"mode":436,"is_dir":false},"apps/web/dist/assets/public-url-B-zbiUr9.js":{"size":421,"mtime_nanos":1774465611421593933,"mode":436,"is_dir":false},"apps/web/dist/assets/Protocols-B-W261aa.js":{"size":54320,"mtime_nanos":1774465611416147889,"mode":436,"is_dir":false},"apps/web/dist/assets/TaskQuickCreateModal-CreFxH3d.js":{"size":6478,"mtime_nanos":1774465611418000768,"mode":436,"is_dir":false},"apps/web/dist/assets/ProjectModal-_I7e-xCp.js":{"size":3527,"mtime_nanos":1774465611416070360,"mode":436,"is_dir":false},"apps/web/dist/robots.txt":{"size":160,"mtime_nanos":1774465606546790259,"mode":436,"is_dir":false},"apps/web/dist/assets/DocumentScanner-p_G37eBx.js":{"size":2406,"mtime_nanos":1774465611409202529,"mode":436,"is_dir":false},"apps/web/dist/assets/FluxoCaixaPage-BYfhNgZx.js":{"size":9638,"mtime_nanos":1774465611411216472,"mode":436,"is_dir":false},"apps/web/dist/assets/PatientDashboard-CHWSSyOA.js":{"size":12729,"mtime_nanos":1774465611414732038,"mode":436,"is_dir":false},"apps/web/dist/assets/useAudioRecorder-osj49BRq.js":{"size":716,"mtime_nanos":1774465611422573734,"mode":436,"is_dir":false},"apps/web/dist/assets/usePatientAnalytics-DGU6gCSf.js":{"size":6620,"mtime_nanos":1774465611423426067,"mode":436,"is_dir":false},"apps/web/dist/assets/ScheduleSettings-DfAYVC58.js":{"size":111563,"mtime_nanos":1774465611417013772,"mode":436,"is_dir":false},"apps/web/dist/assets/ai-DKfxiD4N.js":{"size":2805,"mtime_nanos":1774465611419057260,"mode":436,"is_dir":false},"apps/web/dist/assets/ExercisePlayer-Bx7E_IUe.js":{"size":11141,"mtime_nanos":1774465611410704081,"mode":436,"is_dir":false},"apps/web/dist/assets/PatientSmartSummary-DuCp0PGQ.js":{"size":5310,"mtime_nanos":1774465611415457460,"mode":436,"is_dir":false},"apps/web/dist/assets/EventoDetalhes-6QX8RWEO.js":{"size":61966,"mtime_nanos":1774465611409871375,"mode":436,"is_dir":false},"apps/web/dist/assets/network-status-DIxzAkuJ.js":{"size":935,"mtime_nanos":1774465611421041170,"mode":436,"is_dir":false},"apps/web/dist/assets/useExercises-3D0l2gsa.js":{"size":9208,"mtime_nanos":1774465611423131386,"mode":436,"is_dir":false},"apps/web/dist/assets/PackagesManager-B6zWDg4E.js":{"size":10184,"mtime_nanos":1774465611414284464,"mode":436,"is_dir":false},"apps/web/dist/assets/RecibosPage-CUDOZ-7N.js":{"size":31100,"mtime_nanos":1774465611416456260,"mode":436,"is_dir":false},"apps/web/dist/assets/accordion-CblwHRir.js":{"size":1065,"mtime_nanos":1774465611419018845,"mode":436,"is_dir":false},"apps/web/dist/assets/NewEvaluationPage-C_zdgGvH.js":{"size":66397,"mtime_nanos":1774465611413509242,"mode":436,"is_dir":false},"apps/web/dist/assets/PublicPrescriptionPage-BcHKKBIJ.js":{"size":6980,"mtime_nanos":1774465611416252519,"mode":436,"is_dir":false},"apps/web/dist/assets/PreCadastro-Bxa_VXGj.js":{"size":11838,"mtime_nanos":1774465611415788531,"mode":436,"is_dir":false},"apps/web/dist/assets/dateUtils-DAdaWxnC.js":{"size":1509,"mtime_nanos":1774465611419738889,"mode":436,"is_dir":false},"apps/web/dist/assets/jspdf.plugin.autotable-CLBsU4T0.js":{"size":273,"mtime_nanos":1774465611420584726,"mode":436,"is_dir":false},"apps/web/dist/favicon-16x16.avif":{"size":912,"mtime_nanos":1774465606541929735,"mode":436,"is_dir":false},"apps/web/dist/api":{"size":0,"mtime_nanos":0,"mode":0,"is_dir":true},"apps/web/dist/assets/Surveys-DFfQ2r9T.js":{"size":8223,"mtime_nanos":1774465611417771952,"mode":436,"is_dir":false},"apps/web/dist/assets/knowledge-y5bMXdd1.js":{"size":6683,"mtime_nanos":1774465611420619020,"mode":436,"is_dir":false},"apps/web/dist/assets/toggle-group-lXQBRpru.js":{"size":774,"mtime_nanos":1774465611422160664,"mode":436,"is_dir":false},"apps/web/dist/assets/SessionExercisesPanel-CkWcQ4XX.js":{"size":8391,"mtime_nanos":1774465611417405888,"mode":436,"is_dir":false},"apps/web/dist/assets/use-toast-DfYygefj.js":{"size":1251,"mtime_nanos":1774465611422460095,"mode":436,"is_dir":false},"apps/web/dist/favicon-32x32.avif":{"size":1339,"mtime_nanos":1774465606542567850,"mode":436,"is_dir":false},"apps/web/dist/assets/NotionEvolutionEditor-8AagwENp.js":{"size":91,"mtime_nanos":1774465611413904711,"mode":436,"is_dir":false},"apps/web/dist/assets/pose-CfUPWXyy.js":{"size":7699,"mtime_nanos":1774465611421481969,"mode":436,"is_dir":false},"apps/web/dist/clinical-tests/papers/hop-tests-critical-review-davies-2020.pdf":{"size":1817,"mtime_nanos":1774465606524186785,"mode":436,"is_dir":false},"apps/web/dist/assets/AssetViewer-hJzXoikg.js":{"size":7741,"mtime_nanos":1774465611406904172,"mode":436,"is_dir":false},"apps/web/dist/assets/PROMsDashboard-BmBF6W2C.js":{"size":62978,"mtime_nanos":1774465611414166564,"mode":436,"is_dir":false},"apps/web/dist/assets/PatientPortal-DTo06_A-.js":{"size":16227,"mtime_nanos":1774465611415270971,"mode":436,"is_dir":false},"apps/web/dist/assets/Admin-CjfoyQxS.js":{"size":24572,"mtime_nanos":1774465611406208993,"mode":436,"is_dir":false},"apps/web/dist/assets/userHelpers-CNbhGoGy.js":{"size":81,"mtime_nanos":1774465611424051399,"mode":436,"is_dir":false},"apps/web/dist/assets/card-eZpAxzSP.js":{"size":1117,"mtime_nanos":1774465611419372616,"mode":436,"is_dir":false},"apps/web/dist/assets/jpeg-BmmYk2Lq.js":{"size":10379,"mtime_nanos":1774465611430489537,"mode":436,"is_dir":false},"apps/web/dist/assets/useScheduleSettings-BzFvFv6f.js":{"size":5178,"mtime_nanos":1774465611423770897,"mode":436,"is_dir":false},"apps/web/dist/assets/utils-RhYpY795.js":{"size":1515,"mtime_nanos":1774465611424131233,"mode":436,"is_dir":false},"apps/web/dist/assets/RealtimeContext-C9P2oxOQ.js":{"size":4188,"mtime_nanos":1774465611416376985,"mode":436,"is_dir":false},"apps/web/dist/assets/Dashboard-BBMbvdjs.js":{"size":8405,"mtime_nanos":1774465611408742732,"mode":436,"is_dir":false},"apps/web/dist/icons":{"size":0,"mtime_nanos":0,"mode":0,"is_dir":true},"apps/web/dist/assets/EmptyStateEnhanced-Ec4U5T4w.js":{"size":3379,"mtime_nanos":1774465611409648496,"mode":436,"is_dir":false},"apps/web/dist/assets/StreakCalendar-CAuLwnRJ.js":{"size":1909,"mtime_nanos":1774465611417691140,"mode":436,"is_dir":false},"apps/web/dist/assets/monitoring-Bj7JVdzt.js":{"size":3575,"mtime_nanos":1774465611420913003,"mode":436,"is_dir":false},"apps/web/dist/assets/AdvancedAnalytics-efoH1jvL.js":{"size":10152,"mtime_nanos":1774465611406648395,"mode":436,"is_dir":false},"apps/web/dist/assets/push-notifications-HeWV7Jed.js":{"size":2299,"mtime_nanos":1774465611421629205,"mode":436,"is_dir":false},"apps/web/dist/assets/useInnovations-B_RNSq52.js":{"size":1732,"mtime_nanos":1774465611423245026,"mode":436,"is_dir":false},"apps/web/dist/assets/index-DesgWhaf.js":{"size":254428,"mtime_nanos":1774465611403963789,"mode":436,"is_dir":false},"apps/web/dist/clinical-tests/papers":{"size":0,"mtime_nanos":0,"mode":0,"is_dir":true},"apps/web/dist/assets/CommandPalette-CS3CFSbt.js":{"size":8530,"mtime_nanos":1774465611408226918,"mode":436,"is_dir":false},"apps/web/dist/assets/network-status-Q42BaXvN.js":{"size":76,"mtime_nanos":1774465611421076023,"mode":436,"is_dir":false},"apps/web/dist/assets/usePermissions-zfymgalR.js":{"size":433,"mtime_nanos":1774465611423623173,"mode":436,"is_dir":false},"apps/web/dist/assets/AchievementModal-C27Z2dit.js":{"size":2805,"mtime_nanos":1774465611406101500,"mode":436,"is_dir":false},"apps/web/dist/assets/mediapipe-BXOhjyqn.js":{"size":313,"mtime_nanos":1774465611420807046,"mode":436,"is_dir":false},"apps/web/dist/apple-touch-icon.png":{"size":7919,"mtime_nanos":1774465606522511176,"mode":436,"is_dir":false},"apps/web/dist/assets/ui-variants-DZUnVdTJ.js":{"size":3923,"mtime_nanos":1774465611422355256,"mode":436,"is_dir":false},"apps/web/dist/assets/DynamicAnalysisViewer-BuyKfpUq.js":{"size":9990,"mtime_nanos":1774465611409376725,"mode":436,"is_dir":false},"apps/web/dist/assets/Partner-D1A8kIyl.js":{"size":6767,"mtime_nanos":1774465611414478567,"mode":436,"is_dir":false},"apps/web/dist/assets/vendor-react-DrT8DoSr.js":{"size":2416320,"mtime_nanos":1774465611427790822,"mode":436,"is_dir":false},"apps/web/dist/assets/table-DLvfUzir.js":{"size":1610,"mtime_nanos":1774465611422050587,"mode":436,"is_dir":false},"apps/web/dist/assets/premium-utilities-DK5sCiW5.css":{"size":1083,"mtime_nanos":1774465611429894448,"mode":436,"is_dir":false},"apps/web/dist/assets/WaitlistQuickAdd-GstmQkLW.js":{"size":94,"mtime_nanos":1774465611418707681,"mode":436,"is_dir":false},"apps/web/dist/assets/TherapistDashboard-e90_p-h_.js":{"size":14717,"mtime_nanos":1774465611418243064,"mode":436,"is_dir":false},"apps/web/dist/assets/remote-config-manager-BgvYjblb.js":{"size":456,"mtime_nanos":1774465611421733834,"mode":436,"is_dir":false},"apps/web/dist/clinical-tests/papers/tka-balance-tests-sarac-2022.pdf":{"size":835171,"mtime_nanos":1774465606536685546,"mode":436,"is_dir":false},"apps/web/dist/assets/SecuritySettings-DEADNLwg.js":{"size":19154,"mtime_nanos":1774465611417132999,"mode":436,"is_dir":false},"apps/web/dist/assets/NotionEvolutionEditor-CjguLu7n.js":{"size":20534,"mtime_nanos":1774465611413938516,"mode":436,"is_dir":false},"apps/web/dist/assets/button-BaDomLNQ.js":{"size":414,"mtime_nanos":1774465611419306262,"mode":436,"is_dir":false},"apps/web/dist/assets/ContasFinanceirasPage-8kH3DuY9.js":{"size":13698,"mtime_nanos":1774465611408428005,"mode":436,"is_dir":false},"apps/web/dist/assets/SmartAI-B77I5z73.js":{"size":9864,"mtime_nanos":1774465611417567163,"mode":436,"is_dir":false},"apps/web/dist/assets/AnalyticsFiltersContext-QNidXAX4.js":{"size":696,"mtime_nanos":1774465611406747856,"mode":436,"is_dir":false},"apps/web/dist/assets/TherapistOccupancy-CpJIdPSz.js":{"size":16274,"mtime_nanos":1774465611418285181,"mode":436,"is_dir":false},"apps/web/dist/assets/IntelligentReports-B7UXwjC6.js":{"size":5050,"mtime_nanos":1774465611412237274,"mode":436,"is_dir":false},"apps/web/dist/assets/useEvolutionTemplates-oNgo4VAu.js":{"size":2212,"mtime_nanos":1774465611423020051,"mode":436,"is_dir":false},"apps/web/dist/assets/web-vitals-D9-THrK8.js":{"size":3000,"mtime_nanos":1774465611428494312,"mode":436,"is_dir":false},"apps/web/dist/clinical-tests/papers/spurling-cervical-review-rubinstein-2007.pdf":{"size":1817,"mtime_nanos":1774465606525024450,"mode":436,"is_dir":false},"apps/web/dist/assets/ClinicalAnalyticsDashboard-CH9kyrI4.js":{"size":5852,"mtime_nanos":1774465611407911842,"mode":436,"is_dir":false},"apps/web/dist/assets/SmartDashboard-BD_zru7F.js":{"size":22041,"mtime_nanos":1774465611417605927,"mode":436,"is_dir":false},"apps/web/dist/assets/ProtocolsManager-ERrkLA4Z.js":{"size":20986,"mtime_nanos":1774465611416205862,"mode":436,"is_dir":false},"apps/web/dist/assets/pathologies-Cb5BwVET.js":{"size":3214,"mtime_nanos":1774465611421148524,"mode":436,"is_dir":false},"apps/web/dist/assets/patient-chat-context-CSrHcnMH.js":{"size":1852,"mtime_nanos":1774465611421218510,"mode":436,"is_dir":false},"apps/web/dist/assets/MasterDataHub-CJxyjhY5.js":{"size":3786,"mtime_nanos":1774465611413001111,"mode":436,"is_dir":false},"apps/web/dist/icons/favicon-32x32.svg":{"size":20948,"mtime_nanos":1774465606545065548,"mode":436,"is_dir":false},"apps/web/dist/assets/ActivityLabChart-fylar3dK.js":{"size":10347,"mtime_nanos":1774465611406129368,"mode":436,"is_dir":false},"apps/web/dist/assets/RewardShop-D886GSjc.js":{"size":4162,"mtime_nanos":1774465611416788797,"mode":436,"is_dir":false},"apps/web/dist/assets/MeasurementForm-DbSIyHrG.js":{"size":59979,"mtime_nanos":1774465611413091981,"mode":436,"is_dir":false},"apps/web/dist/assets/MedicalReturnCard-CvYXib45.js":{"size":17119,"mtime_nanos":1774465611413239636,"mode":436,"is_dir":false},"apps/web/dist/assets/pathologyService-wx2Bo34e.js":{"size":1758,"mtime_nanos":1774465611421183656,"mode":436,"is_dir":false},"apps/web/dist/assets/DoctorFormModal-CWu52z6X.js":{"size":14280,"mtime_nanos":1774465611409062836,"mode":436,"is_dir":false},"apps/web/dist/assets/transferSyntaxTracker-D_LtRIis.js":{"size":3803,"mtime_nanos":1774465611422195936,"mode":436,"is_dir":false},"apps/web/dist/assets/date-picker-BWGC-_65.js":{"size":1574,"mtime_nanos":1774465611419669811,"mode":436,"is_dir":false},"apps/web/dist/assets/PatientAIChat-DDaqFe3n.js":{"size":3846,"mtime_nanos":1774465611414570065,"mode":436,"is_dir":false},"apps/web/dist/assets/GamificationHeader-DtGOcpF3.js":{"size":3923,"mtime_nanos":1774465611411648261,"mode":436,"is_dir":false},"apps/web/dist/assets/MeasurementCharts-CR2Hrdpm.js":{"size":5061,"mtime_nanos":1774465611413050842,"mode":436,"is_dir":false},"apps/web/dist/assets/FisioLink-BLNzfK85.js":{"size":11244,"mtime_nanos":1774465611411175473,"mode":436,"is_dir":false},"apps/web/dist/assets/CRMDashboard-jDT4bHds.js":{"size":74666,"mtime_nanos":1774465611407613529,"mode":436,"is_dir":false},"apps/web/dist/assets/RichTextEditor-BJWbN_U5.js":{"size":24698,"mtime_nanos":1774465611416825956,"mode":436,"is_dir":false},"apps/web/dist/assets/app-check-Dfacol3M.js":{"size":94,"mtime_nanos":1774465611419159306,"mode":436,"is_dir":false},"apps/web/dist/assets/ExerciseExecutionScreen-DZ_JtHl2.js":{"size":49781,"mtime_nanos":1774465611410446628,"mode":436,"is_dir":false},"apps/web/dist/assets/ServerSideVideoAnalyzer-kG8J0k0z.js":{"size":5972,"mtime_nanos":1774465611417210598,"mode":436,"is_dir":false},"apps/web/dist/clinical-tests/papers/shoulder-systematic-review-gismervik-2017.pdf":{"size":1817,"mtime_nanos":1774465606524774960,"mode":436,"is_dir":false},"apps/web/dist/assets/RelatorioConvenioPDF-ORxzTxxv.js":{"size":6167,"mtime_nanos":1774465611416549365,"mode":436,"is_dir":false},"apps/web/dist/assets/SurgeriesCard-8EEp8FCe.js":{"size":12568,"mtime_nanos":1774465611417725364,"mode":436,"is_dir":false},"apps/web/dist/icons/icon-192x192.svg":{"size":20948,"mtime_nanos":1774465606545354921,"mode":436,"is_dir":false},"apps/web/dist/assets/TemplateAnalyticsPage-byrrZP5F.js":{"size":7791,"mtime_nanos":1774465611418160925,"mode":436,"is_dir":false},"apps/web/dist/assets/NewProtocolModal-pvWHCBXF.js":{"size":10564,"mtime_nanos":1774465611413677361,"mode":436,"is_dir":false},"apps/web/dist/assets/useTeamMembers-DyGFo-gH.js":{"size":2915,"mtime_nanos":1774465611423925536,"mode":436,"is_dir":false},"apps/web/dist/assets/vendor-react-DeJwdkZc.css":{"size":21436,"mtime_nanos":1774465611429940477,"mode":436,"is_dir":false},"apps/web/dist/favicon-32x32.png":{"size":1747,"mtime_nanos":1774465606542825023,"mode":436,"is_dir":false},"apps/web/dist/assets/AdminGamificationPage-MJZ9Bxbh.js":{"size":95437,"mtime_nanos":1774465611406386332,"mode":436,"is_dir":false},"apps/web/dist/assets/CohortAnalysis-D8mXQEPI.js":{"size":291,"mtime_nanos":1774465611408153160,"mode":436,"is_dir":false},"apps/web/dist/assets/WaitlistQuickAdd-B7bj16JU.js":{"size":10629,"mtime_nanos":1774465611418668148,"mode":436,"is_dir":false},"apps/web/dist/assets/NotificationPreferences-CKhZWU8m.js":{"size":6862,"mtime_nanos":1774465611413825016,"mode":436,"is_dir":false},"apps/web/dist/assets/appointment-status-BXEPNWo3.js":{"size":9338,"mtime_nanos":1774465611419192622,"mode":436,"is_dir":false},"apps/web/dist/assets/NFSePage-CIhNWlQR.js":{"size":9028,"mtime_nanos":1774465611413469290,"mode":436,"is_dir":false},"apps/web/dist/assets/PatientGamificationPage-I1QeTEgh.js":{"size":12353,"mtime_nanos":1774465611415104597,"mode":436,"is_dir":false},"apps/web/dist/assets/NotionEvolutionPanel-CCcGBwGT.js":{"size":122,"mtime_nanos":1774465611414055299,"mode":436,"is_dir":false},"apps/web/dist/assets/useRenderTracking-CtkKFFdx.js":{"size":974,"mtime_nanos":1774465611423695603,"mode":436,"is_dir":false},"apps/web/dist/assets/Welcome-C5KxVit_.js":{"size":6129,"mtime_nanos":1774465611418782835,"mode":436,"is_dir":false},"apps/web/dist/assets/slider-BA-k35dE.js":{"size":834,"mtime_nanos":1774465611421880162,"mode":436,"is_dir":false},"apps/web/dist/assets/RelatorioConvenioPage-BEvNSehk.js":{"size":18961,"mtime_nanos":1774465611416585126,"mode":436,"is_dir":false},"apps/web/dist/assets/AugmentedRealityExercise-CFNZrvJL.js":{"size":419,"mtime_nanos":1774465611407127121,"mode":436,"is_dir":false},"apps/web/dist/assets":{"size":0,"mtime_nanos":0,"mode":0,"is_dir":true},"apps/web/dist/assets/useOrganizationMembers-B9fL_XCw.js":{"size":1235,"mtime_nanos":1774465611423280228,"mode":436,"is_dir":false},"apps/web/dist/assets/SessionHistoryPanel-c3cSQ6_V.js":{"size":2851,"mtime_nanos":1774465611417445142,"mode":436,"is_dir":false},"apps/web/dist/assets/app-check-B5MUzEZ7.js":{"size":183,"mtime_nanos":1774465611419125430,"mode":436,"is_dir":false},"apps/web/dist/api/insights.json":{"size":743,"mtime_nanos":1774465606521988378,"mode":436,"is_dir":false},"apps/web/dist/assets/ComputerVisionExercise-CpUH1r7M.js":{"size":24226,"mtime_nanos":1774465611408347822,"mode":436,"is_dir":false},"apps/web/dist/assets/Install-CbUgDMIC.js":{"size":6704,"mtime_nanos":1774465611412167148,"mode":436,"is_dir":false},"apps/web/dist/assets/LeadImport-B3a5r5Fk.js":{"size":5141,"mtime_nanos":1774465611412709643,"mode":436,"is_dir":false},"apps/web/dist/assets/ClinicalTestsLibrary-BPRJ1OCE.js":{"size":43728,"mtime_nanos":1774465611408103639,"mode":436,"is_dir":false},"apps/web/dist/assets/useAppointmentActions-DrWa_HgB.js":{"size":2408,"mtime_nanos":1774465611422493760,"mode":436,"is_dir":false},"apps/web/dist/assets/useAuth-Bp-sZlD1.js":{"size":34,"mtime_nanos":1774465611422609984,"mode":436,"is_dir":false},"apps/web/dist/assets/useDebounce-gUVOa9Dr.js":{"size":272,"mtime_nanos":1774465611422825250,"mode":436,"is_dir":false},"apps/web/dist/assets/usePatientEvolution-BlRfDbvT.js":{"size":12741,"mtime_nanos":1774465611423502828,"mode":436,"is_dir":false},"apps/web/dist/assets/rolldown-runtime-Bhmf7a9N.js":{"size":1207,"mtime_nanos":1774465611421844890,"mode":436,"is_dir":false},"apps/web/dist/assets/Leaderboard-yJH-qwmJ.js":{"size":3469,"mtime_nanos":1774465611412747570,"mode":436,"is_dir":false},"apps/web/dist/assets/ui-BDLlKLEh.js":{"size":37998,"mtime_nanos":1774465611422302172,"mode":436,"is_dir":false},"apps/web/dist/assets/useSoapRecordsV2-CCN3xB_F.js":{"size":854,"mtime_nanos":1774465611423809941,"mode":436,"is_dir":false},"apps/web/dist/assets/charlswasm_decode-CuMOjBqA.js":{"size":73,"mtime_nanos":1774465611419406491,"mode":436,"is_dir":false},"apps/web/dist/assets/ContentCalendar-CTEvu-3D.js":{"size":10829,"mtime_nanos":1774465611408487234,"mode":436,"is_dir":false},"apps/web/dist/assets/ProjectDetails-BNgQGBu2.js":{"size":36300,"mtime_nanos":1774465611416020211,"mode":436,"is_dir":false},"apps/web/dist/assets/KeyboardShortcuts-Dppjewi2.js":{"size":3812,"mtime_nanos":1774465611412629809,"mode":436,"is_dir":false},"apps/web/dist/assets/TimeTracking-e0CL1626.js":{"size":29470,"mtime_nanos":1774465611418335051,"mode":436,"is_dir":false},"apps/web/dist/assets/ExerciseVideoLibrary-BfeSnhvY.js":{"size":29410,"mtime_nanos":1774465611410744033,"mode":436,"is_dir":false},"apps/web/dist/assets/ChartWidget-zNu1GxLq.js":{"size":4223,"mtime_nanos":1774465611407798202,"mode":436,"is_dir":false},"apps/web/dist/assets/Index-r4Kv3zSc.js":{"size":16289,"mtime_nanos":1774465611412124053,"mode":436,"is_dir":false},"apps/web/dist/assets/ExerciseLibrary-zH8PzV5v.js":{"size":43727,"mtime_nanos":1774465611410525764,"mode":436,"is_dir":false},"apps/web/dist/assets/PainMapManager-D-foUZPe.js":{"size":64812,"mtime_nanos":1774465611414381830,"mode":436,"is_dir":false},"apps/web/dist/assets/PatientInsightsPanel-CKajm5Da.js":{"size":7665,"mtime_nanos":1774465611415155026,"mode":436,"is_dir":false},"apps/web/dist/android-chrome-192x192.png":{"size":8234,"mtime_nanos":1774465606520532155,"mode":436,"is_dir":false},"apps/web/dist/assets/BookingPage-Ukop81KE.js":{"size":6884,"mtime_nanos":1774465611407559259,"mode":436,"is_dir":false},"apps/web/dist/placeholder.svg":{"size":304,"mtime_nanos":1774465606546544680,"mode":436,"is_dir":false},"apps/web/dist/assets/Settings-BWhNCC0p.js":{"size":17135,"mtime_nanos":1774465611417478738,"mode":436,"is_dir":false},"apps/web/dist/assets/SessionExercisesPanel-CFOezRuL.js":{"size":91,"mtime_nanos":1774465611417371035,"mode":436,"is_dir":false},"apps/web/dist/assets/FornecedoresPage-B9DFcECl.js":{"size":9040,"mtime_nanos":1774465611411256983,"mode":436,"is_dir":false},"apps/web/dist/assets/useProjects-DiFw-9rY.js":{"size":1190,"mtime_nanos":1774465611423659423,"mode":436,"is_dir":false},"apps/web/dist/assets/EvolutionDraggableGrid-DAgwOQyD.js":{"size":68452,"mtime_nanos":1774465611410130784,"mode":436,"is_dir":false},"apps/web/dist/clinical-tests/papers/y-balance-review-plisky-2021.pdf":{"size":3172219,"mtime_nanos":1774465606540685775,"mode":436,"is_dir":false},"apps/web/dist/assets/ProgressAnalysisCard-BxQ1wWVv.js":{"size":7191,"mtime_nanos":1774465611415977325,"mode":436,"is_dir":false},"apps/web/dist/assets/form-CSt_rhp8.js":{"size":1796,"mtime_nanos":1774465611420146721,"mode":436,"is_dir":false},"apps/web/dist/assets/useContratados-B7qHhVtG.js":{"size":1091,"mtime_nanos":1774465611422751912,"mode":436,"is_dir":false},"apps/web/dist/clinical-tests/papers/spurling-radiculopathy-thoomes-2026.pdf":{"size":0,"mtime_nanos":1774077280164439438,"mode":436,"is_dir":false},"apps/web/dist/assets/MedicalChatbot-Cr4MLT5e.js":{"size":22515,"mtime_nanos":1774465611413150582,"mode":436,"is_dir":false},"apps/web/dist/assets/useTarefas-CZQKsBbB.js":{"size":3329,"mtime_nanos":1774465611423888867,"mode":436,"is_dir":false},"apps/web/dist/assets/PatientActivityLabTab-DMSm0jMZ.js":{"size":4582,"mtime_nanos":1774465611414618887,"mode":436,"is_dir":false},"apps/web/dist/assets/Telemedicine-xBYiOhoZ.js":{"size":9175,"mtime_nanos":1774465611418086120,"mode":436,"is_dir":false},"apps/web/dist/assets/Integrations-BPQBw_qp.js":{"size":3561,"mtime_nanos":1774465611412204027,"mode":436,"is_dir":false},"apps/web/dist/assets/PendingApproval-D1qhlplM.js":{"size":2039,"mtime_nanos":1774465611415550425,"mode":436,"is_dir":false},"apps/web/dist/assets/BeforeAfter-DLHjMZBJ.js":{"size":10294,"mtime_nanos":1774465611407372420,"mode":436,"is_dir":false},"apps/web/dist/assets/PackagesManager-An7ClwHK.js":{"size":79,"mtime_nanos":1774465611414246398,"mode":436,"is_dir":false},"apps/web/dist/assets/VersionManager-C13ORyOz.js":{"size":640,"mtime_nanos":1774465611418593692,"mode":436,"is_dir":false},"apps/web/dist/assets/ClinicalReportPDFDocument-CrPyrC2C.js":{"size":7203,"mtime_nanos":1774465611408068786,"mode":436,"is_dir":false},"apps/web/dist/assets/biomechanics-reports-Bcv2_uE3.js":{"size":5393,"mtime_nanos":1774465611419268126,"mode":436,"is_dir":false},"apps/web/dist/assets/Notifications-BwoEzsAi.js":{"size":5793,"mtime_nanos":1774465611413868041,"mode":436,"is_dir":false},"apps/web/dist/assets/ContratosPage-BEYR3Pex.js":{"size":7584,"mtime_nanos":1774465611408697751,"mode":436,"is_dir":false},"apps/web/dist/assets/EmailTest-Cmk4H83k.js":{"size":2189,"mtime_nanos":1774465611409604074,"mode":436,"is_dir":false},"apps/web/dist/assets/TrajectoryPanel-Bq-Nv_kR.js":{"size":12415,"mtime_nanos":1774465611418421451,"mode":436,"is_dir":false},"apps/web/dist/assets/initCornerstone-CPHGTVyt.js":{"size":453,"mtime_nanos":1774465611420440982,"mode":436,"is_dir":false},"apps/web/dist/assets/LevelJourneyMap-BW6-5Tau.js":{"size":2369,"mtime_nanos":1774465611412786195,"mode":436,"is_dir":false},"apps/web/dist/assets/goalsAdminService-EuBxuR6M.js":{"size":1734,"mtime_nanos":1774465611420405780,"mode":436,"is_dir":false},"apps/web/dist/assets/usePatientEvolutionReport-DvB2sTnk.js":{"size":2713,"mtime_nanos":1774465611423548437,"mode":436,"is_dir":false},"apps/web/dist/assets/WhatsAppIntegration-Fa1yziRq.js":{"size":9362,"mtime_nanos":1774465611418831867,"mode":436,"is_dir":false},"apps/web/dist/assets/NotionEvolutionPanel-BiM_PXKR.js":{"size":37848,"mtime_nanos":1774465611414003333,"mode":436,"is_dir":false},"apps/web/dist/assets/AttendanceReport-QR4Ta-5I.js":{"size":22898,"mtime_nanos":1774465611407014668,"mode":436,"is_dir":false},"apps/web/dist/assets/DicomBrowser-C0c4Ghl8.js":{"size":4421,"mtime_nanos":1774465611408861889,"mode":436,"is_dir":false},"apps/web/dist/assets/FunctionalAnalysisStudio-DWhUobuM.js":{"size":21305,"mtime_nanos":1774465611411402752,"mode":436,"is_dir":false},"apps/web/dist/android-chrome-192x192.avif":{"size":6802,"mtime_nanos":1774465606520191725,"mode":436,"is_dir":false},"apps/web/dist/assets/AdminCRUD-D7CM-h7i.js":{"size":54687,"mtime_nanos":1774465611406274858,"mode":436,"is_dir":false},"apps/web/dist/assets/PhysiotherapyHub-Dm5cUpYF.js":{"size":15828,"mtime_nanos":1774465611415587234,"mode":436,"is_dir":false},"apps/web/dist/assets/BoardDetail-Dhqoy9Zk.js":{"size":38531,"mtime_nanos":1774465611407444711,"mode":436,"is_dir":false},"apps/web/dist/assets/ExerciseLibraryModal-Dhn7aaqG.js":{"size":889,"mtime_nanos":1774465611410668809,"mode":436,"is_dir":false},"apps/web/dist/assets/PreCadastroAdmin-BFQGzgb-.js":{"size":19030,"mtime_nanos":1774465611415829950,"mode":436,"is_dir":false},"apps/web/dist/assets/ServicosPage-BICx0caZ.js":{"size":8661,"mtime_nanos":1774465611417246569,"mode":436,"is_dir":false},"apps/web/dist/favicon.svg":{"size":20948,"mtime_nanos":1774465606543649138,"mode":436,"is_dir":false},"apps/web/dist/assets/Inventory-D-mHsPG6.js":{"size":13372,"mtime_nanos":1774465611412274432,"mode":436,"is_dir":false},"apps/web/dist/assets/FinancialAIAdvisor-BvR1NlVF.js":{"size":85,"mtime_nanos":1774465611411098991,"mode":436,"is_dir":false},"apps/web/dist/assets/Profile-DMgBbeaG.js":{"size":12839,"mtime_nanos":1774465611415921518,"mode":436,"is_dir":false},"apps/web/dist/assets/EvolutionHistoryTab-BeW1RZMz.js":{"size":63023,"mtime_nanos":1774465611410191829,"mode":436,"is_dir":false},"apps/web/dist/assets/EvaluationFormsPage-D8ZeC5KH.js":{"size":49765,"mtime_nanos":1774465611409815708,"mode":436,"is_dir":false},"apps/web/dist/assets/PatientAnalyticsDashboard-BUviVrOZ.js":{"size":21303,"mtime_nanos":1774465611414681819,"mode":436,"is_dir":false},"apps/web/dist/assets/TeamPerformance-8YofLpOp.js":{"size":18465,"mtime_nanos":1774465611418042606,"mode":436,"is_dir":false},"apps/web/dist/assets/usePDFGenerator-Cewk_-Kn.js":{"size":2403,"mtime_nanos":1774465611423353008,"mode":436,"is_dir":false},"apps/web/dist/assets/PathologyStatus-BUbaykBB.js":{"size":6724,"mtime_nanos":1774465611414517191,"mode":436,"is_dir":false},"apps/web/dist/clinical-tests/papers/acl-meta-analysis-huang-2022.pdf":{"size":1817,"mtime_nanos":1774465606522940590,"mode":436,"is_dir":false},"apps/web/dist/assets/KanbanColumnV2-CPy7Ly8w.js":{"size":4149,"mtime_nanos":1774465611412571627,"mode":436,"is_dir":false},"apps/web/dist/assets/DraggableGrid-Bxsdp7JP.js":{"size":2356,"mtime_nanos":1774465611409343827,"mode":436,"is_dir":false},"apps/web/dist/assets/useEmpresasParceiras-y_HOFZrP.js":{"size":1101,"mtime_nanos":1774465611422895725,"mode":436,"is_dir":false},"apps/web/dist/assets/DocumentScannerPage-DEh6m0lk.js":{"size":23209,"mtime_nanos":1774465611409245973,"mode":436,"is_dir":false},"apps/web/dist/assets/context-menu-CFoYmvOW.js":{"size":5141,"mtime_nanos":1774465611419631745,"mode":436,"is_dir":false},"apps/web/dist/assets/Reports-BpDjljyM.js":{"size":15316,"mtime_nanos":1774465611416710151,"mode":436,"is_dir":false},"apps/web/dist/assets/BoardsHome-D_h472tv.js":{"size":22774,"mtime_nanos":1774465611407506734,"mode":436,"is_dir":false},"apps/web/dist/assets/tarefas-D7jtnrCH.js":{"size":1199,"mtime_nanos":1774465611422091167,"mode":436,"is_dir":false},"apps/web/dist/assets/PatientEvolutionReport-DTVIyTyJ.js":{"size":12365,"mtime_nanos":1774465611414952682,"mode":436,"is_dir":false},"apps/web/dist/assets/MedicalReportSuggestions-6KgQ7BLD.js":{"size":6659,"mtime_nanos":1774465611413202478,"mode":436,"is_dir":false},"apps/web/dist/assets/charlswasm_decode-484ovEoR.wasm":{"size":145700,"mtime_nanos":1774465611428679824,"mode":436,"is_dir":false},"apps/web/dist/assets/AppointmentsCacheService-Dd3kdTcI.js":{"size":2227,"mtime_nanos":1774465611406876163,"mode":436,"is_dir":false},"apps/web/dist/assets/Eventos-xI6w8qol.js":{"size":27784,"mtime_nanos":1774465611409929976,"mode":436,"is_dir":false},"apps/web/dist/assets/ClinicalPostureAnalysis-D6Ba_f20.js":{"size":8331,"mtime_nanos":1774465611407968836,"mode":436,"is_dir":false},"apps/web/dist/assets/GoalProfileEditorPage-CPChx0vO.js":{"size":16590,"mtime_nanos":1774465611411816940,"mode":436,"is_dir":false},"apps/web/dist/assets/LocalSEO-DfTcPxq9.js":{"size":279,"mtime_nanos":1774465611412859533,"mode":436,"is_dir":false},"apps/web/dist/assets/DicomWorkspacePage-C2GtqKGd.js":{"size":10943,"mtime_nanos":1774465611408983980,"mode":436,"is_dir":false},"apps/web/dist/assets/NewExerciseModal-BGaHe9jn.js":{"size":81,"mtime_nanos":1774465611413563303,"mode":436,"is_dir":false},"apps/web/dist/assets/CalendarSettings-DEpQ9R1m.js":{"size":27786,"mtime_nanos":1774465611407669755,"mode":436,"is_dir":false},"apps/web/dist/assets/DoctorReferralReportGenerator-DV95ybtR.js":{"size":6511,"mtime_nanos":1774465611409138200,"mode":436,"is_dir":false},"apps/web/dist/assets/lossless-uwRnEbWE.js":{"size":14302,"mtime_nanos":1774465611430537871,"mode":436,"is_dir":false},"apps/web/dist/clinical-tests/papers/thessaly-meniscal-hta-2015.pdf":{"size":12701426,"mtime_nanos":1774465606533685374,"mode":436,"is_dir":false},"apps/web/dist/assets/EvolutionResponsiveLayout-BEqhwVWJ.js":{"size":721,"mtime_nanos":1774465611410279207,"mode":436,"is_dir":false},"apps/web/dist/assets/validators-CDpxGWAE.js":{"size":1277,"mtime_nanos":1774465611424249483,"mode":436,"is_dir":false},"apps/web/dist/assets/NewExerciseModal-Bt9jhs3E.js":{"size":12602,"mtime_nanos":1774465611413601020,"mode":436,"is_dir":false},"apps/web/dist/assets/esm-C-BlKPb7.js":{"size":2617,"mtime_nanos":1774465611419879280,"mode":436,"is_dir":false},"apps/web/dist/assets/GamificationLeaderboardPage-Df57TCN7.js":{"size":8143,"mtime_nanos":1774465611411680949,"mode":436,"is_dir":false},"apps/web/dist/assets/Automation-B-VaP923.js":{"size":12317,"mtime_nanos":1774465611407278407,"mode":436,"is_dir":false},"apps/web/dist/assets/use-toast-BVLp0f7A.js":{"size":32,"mtime_nanos":1774465611422425241,"mode":436,"is_dir":false},"apps/web/dist/assets/UserManagement--mjoxg1o.js":{"size":13964,"mtime_nanos":1774465611418551714,"mode":436,"is_dir":false},"apps/web/dist/apple-touch-icon.avif":{"size":6720,"mtime_nanos":1774465606522233398,"mode":436,"is_dir":false},"apps/web/dist/assets/native-C9lqLBeo.js":{"size":2894,"mtime_nanos":1774465611420997935,"mode":436,"is_dir":false},"apps/web/dist/assets/DicomViewer-BwWOQiqZ.js":{"size":1609,"mtime_nanos":1774465611408900165,"mode":436,"is_dir":false},"apps/web/dist/assets/InviteUserModal-D8tHdGG6.js":{"size":5443,"mtime_nanos":1774465611412356082,"mode":436,"is_dir":false},"apps/web/dist/assets/MagicTextarea-BGifWVn5.js":{"size":2358,"mtime_nanos":1774465611412941602,"mode":436,"is_dir":false},"apps/web/dist/assets/EvolutionTemplatesPage-DCY1LZaK.js":{"size":7152,"mtime_nanos":1774465611410317273,"mode":436,"is_dir":false},"apps/web/dist/assets/patient-summary-BOvVivY8.js":{"size":185,"mtime_nanos":1774465611421297715,"mode":436,"is_dir":false},"apps/web/dist/assets/useExerciseProtocols-Wqj2vciJ.js":{"size":2699,"mtime_nanos":1774465611423059444,"mode":436,"is_dir":false},"apps/web/dist/assets/useTherapists-mmI3MgG6.js":{"size":1018,"mtime_nanos":1774465611424015219,"mode":436,"is_dir":false},"apps/web/dist/assets/GamificationQuestsPage-BB7en6Lt.js":{"size":6631,"mtime_nanos":1774465611411717199,"mode":436,"is_dir":false},"apps/web/dist/favicon.ico":{"size":4154,"mtime_nanos":1774465606543429611,"mode":436,"is_dir":false},"apps/web/dist/assets/EventosAnalytics-Br5T7g_E.js":{"size":4299,"mtime_nanos":1774465611409994374,"mode":436,"is_dir":false},"apps/web/dist/assets/vendor-jspdf-DBvvQPSl.js":{"size":356582,"mtime_nanos":1774465611427640792,"mode":436,"is_dir":false},"apps/web/dist/assets/PatientEvolutionDashboard-BIJocZze.js":{"size":13502,"mtime_nanos":1774465611414890240,"mode":436,"is_dir":false},"apps/web/dist/assets/calendar-CGy78mOm.js":{"size":2544,"mtime_nanos":1774465611419339439,"mode":436,"is_dir":false},"apps/web/dist/assets/marketingService-kzppIflg.js":{"size":6087,"mtime_nanos":1774465611420768840,"mode":436,"is_dir":false},"apps/web/dist/assets/openjpegwasm_decode-B3gWTHpv.wasm":{"size":255489,"mtime_nanos":1774465611429114336,"mode":436,"is_dir":false},"apps/web/dist/assets/AniversariantesPage-CoyhXuGe.js":{"size":6694,"mtime_nanos":1774465611406802196,"mode":436,"is_dir":false},"apps/web/dist/assets/AdminDashboard-B5OZhIko.js":{"size":19724,"mtime_nanos":1774465611406339745,"mode":436,"is_dir":false},"apps/web/dist/clinical-tests/papers/hip-fai-combined-tests-palsson-2020.pdf":{"size":1817,"mtime_nanos":1774465606523218508,"mode":436,"is_dir":false},"apps/web/dist/assets/ExerciseAI-BniidMdZ.js":{"size":28137,"mtime_nanos":1774465611410362184,"mode":436,"is_dir":false},"apps/web/dist/assets/Wiki-CaaqD3tA.js":{"size":155381,"mtime_nanos":1774465611418916730,"mode":436,"is_dir":false},"apps/web/dist/assets/exceljsWrapper-BnM8SekV.js":{"size":3694,"mtime_nanos":1774465611420077224,"mode":436,"is_dir":false},"apps/web/dist/icons/favicon-16x16.svg":{"size":20948,"mtime_nanos":1774465606544773102,"mode":436,"is_dir":false},"apps/web/dist/assets/date-range-picker-CKqfMefW.js":{"size":1059,"mtime_nanos":1774465611419705083,"mode":436,"is_dir":false},"apps/web/dist/assets/ErrorPage-BmmbuGVa.js":{"size":983,"mtime_nanos":1774465611409736712,"mode":436,"is_dir":false},"apps/web/dist/assets/dialog-VVUdh5V0.js":{"size":2928,"mtime_nanos":1774465611419772764,"mode":436,"is_dir":false},"apps/web/dist/assets/mfa-D3Ls-vIo.js":{"size":2094,"mtime_nanos":1774465611420878499,"mode":436,"is_dir":false},"apps/web/dist/assets/config-CKrnpnU0.js":{"size":221,"mtime_nanos":1774465611419597031,"mode":436,"is_dir":false},"apps/web/dist/assets/usePatientCrud-D3e7rG6J.js":{"size":6840,"mtime_nanos":1774465611423463853,"mode":436,"is_dir":false},"apps/web/dist/assets/Settings-BrJvwYro.js":{"size":26666,"mtime_nanos":1774465611417519598,"mode":436,"is_dir":false},"apps/web/dist/assets/RelatorioMedicoPDF-CYsa57Tb.js":{"size":5415,"mtime_nanos":1774465611416624589,"mode":436,"is_dir":false},"apps/web/dist/assets/SecurityMonitoring-Cm_Fo4c3.js":{"size":253,"mtime_nanos":1774465611417097797,"mode":436,"is_dir":false},"apps/web/dist/assets/JourneyTimelapse-BFu_jtuR.js":{"size":9019,"mtime_nanos":1774465611412406022,"mode":436,"is_dir":false},"apps/web/dist/assets/PatientProfilePage-Dpg7blrO.js":{"size":49346,"mtime_nanos":1774465611415318466,"mode":436,"is_dir":false},"apps/web/dist/assets/useStatusConfig-BbfFZIEO.js":{"size":8299,"mtime_nanos":1774465611423846890,"mode":436,"is_dir":false},"apps/web/dist/assets/TarefasV2-Dd-lThQZ.js":{"size":40811,"mtime_nanos":1774465611417854859,"mode":436,"is_dir":false},"apps/web/dist/assets/useGoogleOAuth-D-sR0zks.js":{"size":639,"mtime_nanos":1774465611423209753,"mode":436,"is_dir":false},"apps/web/dist/assets/auth-CAma0SCY.js":{"size":851,"mtime_nanos":1774465611419233273,"mode":436,"is_dir":false},"apps/web/dist/assets/v2-BKr-sq3N.js":{"size":52243,"mtime_nanos":1774465611424170417,"mode":436,"is_dir":false},"apps/web/dist/assets/vendor-cornerstone-NUH966Ie.js":{"size":1416337,"mtime_nanos":1774465611425965044,"mode":436,"is_dir":false},"apps/web/dist/assets/grid-layout-6GVPrQjZ.css":{"size":3192,"mtime_nanos":1774465611428916881,"mode":436,"is_dir":false},"apps/web/dist/android-chrome-512x512.avif":{"size":16387,"mtime_nanos":1774465606520843669,"mode":436,"is_dir":false},"apps/web/dist/assets/DoctorManagement-CpmefAYI.js":{"size":4661,"mtime_nanos":1774465611409102439,"mode":436,"is_dir":false},"apps/web/dist/assets/Schedule-BAYE50xx.js":{"size":120778,"mtime_nanos":1774465611416914590,"mode":436,"is_dir":false},"apps/web/dist/assets/useEventosStats-DRgMPyUa.js":{"size":1280,"mtime_nanos":1774465611422977864,"mode":436,"is_dir":false},"apps/web/dist/assets/dicomWebClient-DEd7ZiY2.js":{"size":1231,"mtime_nanos":1774465611419807198,"mode":436,"is_dir":false},"apps/web/dist/assets/JumpAnalysisStudio-Dslkq2Iu.js":{"size":11403,"mtime_nanos":1774465611412487253,"mode":436,"is_dir":false},"apps/web/dist/assets/logger-xbvtnlpA.js":{"size":3467,"mtime_nanos":1774465611420691520,"mode":436,"is_dir":false},"apps/web/dist/assets/TreatmentAssistant-CzKatv5Z.js":{"size":8752,"mtime_nanos":1774465611418511133,"mode":436,"is_dir":false},"apps/web/dist/assets/useOrganizations-DGF6JjGQ.js":{"size":2201,"mtime_nanos":1774465611423316827,"mode":436,"is_dir":false},"apps/web/dist/assets/IncompleteRegistrationAlert-CUjpJByB.js":{"size":5629,"mtime_nanos":1774465611412086406,"mode":436,"is_dir":false},"apps/web/dist/assets/useDocumentTemplates-Buq82XtF.js":{"size":2104,"mtime_nanos":1774465611422860453,"mode":436,"is_dir":false},"apps/web/dist/assets/PoseAnalyzer-EtqbekY0.js":{"size":4802,"mtime_nanos":1774465611415633123,"mode":436,"is_dir":false},"apps/web/dist/assets/RichTextEditor-Bs-Hcd9K.css":{"size":13892,"mtime_nanos":1774465611428575683,"mode":436,"is_dir":false},"apps/web/dist/assets/clinicalReportPdfExport-DlBJcM8B.js":{"size":1037,"mtime_nanos":1774465611419511819,"mode":436,"is_dir":false},"apps/web/dist/assets/FunctionalAnalysisPage-FEFJ2PBX.js":{"size":1573,"mtime_nanos":1774465611411296586,"mode":436,"is_dir":false},"apps/web/dist/manifest.json":{"size":1998,"mtime_nanos":1774465606545923608,"mode":436,"is_dir":false},"apps/web/dist/assets/AuthenticatedAppShell-BQ_2jDh9.js":{"size":2895,"mtime_nanos":1774465611407248932,"mode":436,"is_dir":false},"apps/web/dist/assets/DynamicCompareDetailsPage-D049yncV.js":{"size":18334,"mtime_nanos":1774465611409415001,"mode":436,"is_dir":false},"apps/web/dist/assets/Financial-BlR3moee.js":{"size":24670,"mtime_nanos":1774465611411049959,"mode":436,"is_dir":false},"apps/web/dist/assets/initPerformanceMonitoring-TpPhAJtr.js":{"size":8846,"mtime_nanos":1774465611420475836,"mode":436,"is_dir":false},"apps/web/dist/assets/ClinicalAnalysisPage-D0ub2_Oz.js":{"size":24709,"mtime_nanos":1774465611407870214,"mode":436,"is_dir":false},"apps/web/dist/assets/PatientService-830bt_xQ.js":{"size":3799,"mtime_nanos":1774465611415380210,"mode":436,"is_dir":false},"apps/web/dist/favicon-16x16.png":{"size":884,"mtime_nanos":1774465606542236849,"mode":436,"is_dir":false},"apps/web/dist/assets/useEvaluationForms-TN4KdI9E.js":{"size":2418,"mtime_nanos":1774465611422931975,"mode":436,"is_dir":false},"apps/web/dist/assets/useCRM-Bh9ZYtiJ.js":{"size":3780,"mtime_nanos":1774465611422681018,"mode":436,"is_dir":false},"apps/web/dist/offline.html":{"size":4344,"mtime_nanos":1774465606546261454,"mode":436,"is_dir":false},"apps/web/dist/assets/WeeklyChallenges-DxHkniaE.js":{"size":2916,"mtime_nanos":1774465611418745328,"mode":436,"is_dir":false},"apps/web/dist/assets/useFinancial-gVZvUqHu.js":{"size":2270,"mtime_nanos":1774465611423173503,"mode":436,"is_dir":false},"apps/web/dist/assets/upload-DK3Ylm2A.js":{"size":267,"mtime_nanos":1774465611422390458,"mode":436,"is_dir":false},"apps/web/dist/assets/ErrorHandler-D6l_0QyU.js":{"size":3929,"mtime_nanos":1774465611409694176,"mode":436,"is_dir":false},"apps/web/dist/assets/pdf-generator-D_06bxjZ.js":{"size":8726,"mtime_nanos":1774465611421367771,"mode":436,"is_dir":false},"apps/web/dist/assets/FeedbackPreCadastro-VTmTJBGC.css":{"size":2443,"mtime_nanos":1774465611428535731,"mode":436,"is_dir":false},"apps/web/dist/assets/posthog-C0epDyve.js":{"size":186,"mtime_nanos":1774465611421557682,"mode":436,"is_dir":false},"apps/web/dist/assets/src-CtI1WNJ1.js":{"size":6089,"mtime_nanos":1774465611421916412,"mode":436,"is_dir":false},"apps/web/dist/assets/ExerciseVideoUpload-1MxNYB92.js":{"size":17795,"mtime_nanos":1774465611410793764,"mode":436,"is_dir":false},"apps/web/dist/assets/useScheduleCapacity-D71W46W8.js":{"size":6530,"mtime_nanos":1774465611423730875,"mode":436,"is_dir":false},"apps/web/dist/assets/TelemedicineRoom-q3zs3Th-.js":{"size":2479,"mtime_nanos":1774465611418126630,"mode":436,"is_dir":false},"apps/web/dist/assets/InviteUserModal-CJxudjCX.js":{"size":79,"mtime_nanos":1774465611412316828,"mode":436,"is_dir":false},"apps/web/dist/favicon-48x48.png":{"size":1900,"mtime_nanos":1774465606543158119,"mode":436,"is_dir":false},"apps/web/dist/assets/InclinometerPanel-Dzrf27Rc.js":{"size":5000,"mtime_nanos":1774465611412048759,"mode":436,"is_dir":false},"apps/web/dist/assets/DemonstrativoMensalPage-CfGnfJY1.js":{"size":13093,"mtime_nanos":1774465611408812368,"mode":436,"is_dir":false},"apps/web/dist/assets/vendor-D_THMjjY.js":{"size":8109535,"mtime_nanos":1774465611424289155,"mode":436,"is_dir":false},"apps/web/dist/assets/EvolucaoTab-DLaAep_6.js":{"size":303,"mtime_nanos":1774465611410092857,"mode":436,"is_dir":false},"apps/web/dist/assets/AtestadosPage-B8_hTNOd.js":{"size":10475,"mtime_nanos":1774465611406975904,"mode":436,"is_dir":false},"apps/web/dist/assets/SeedData-CwVOh5WM.js":{"size":6692,"mtime_nanos":1774465611417174418,"mode":436,"is_dir":false},"apps/web/dist/assets/pdfExport-DGmTL58p.js":{"size":1809,"mtime_nanos":1774465611421408840,"mode":436,"is_dir":false},"apps/web/dist/assets/geminiAiService-BPY7v396.js":{"size":147,"mtime_nanos":1774465611420222015,"mode":436,"is_dir":false},"apps/web/dist/assets/dialog-utilities-BHuTQCh1.css":{"size":1345,"mtime_nanos":1774465611428874904,"mode":436,"is_dir":false},"apps/web/dist/assets/checkbox-C0I1jnoG.js":{"size":750,"mtime_nanos":1774465611419440786,"mode":436,"is_dir":false},"apps/web/dist/assets/AIAssistantPanel-BO-E-Auo.js":{"size":14711,"mtime_nanos":1774465611404963846,"mode":436,"is_dir":false},"apps/web/dist/assets/TemplateManager-B6X0kO-F.js":{"size":20161,"mtime_nanos":1774465611418199550,"mode":436,"is_dir":false},"apps/web/dist/assets/textarea-CsBO4U_7.js":{"size":588,"mtime_nanos":1774465611422124973,"mode":436,"is_dir":false},"apps/web/dist/assets/FinancialAIAdvisor-H0wU__hY.js":{"size":3277,"mtime_nanos":1774465611411139432,"mode":436,"is_dir":false},"apps/web/dist/assets/patient-combobox-BvhalMU9.js":{"size":13915,"mtime_nanos":1774465611421253363,"mode":436,"is_dir":false},"apps/web/dist/assets/userHelpers-DjdPD12I.js":{"size":440,"mtime_nanos":1774465611424093028,"mode":436,"is_dir":false},"apps/web/dist/assets/PostureAnalysisPage-Clq2GEMe.js":{"size":1574,"mtime_nanos":1774465611415713167,"mode":436,"is_dir":false},"apps/web/dist/assets/radio-group-BaG5AN9C.js":{"size":835,"mtime_nanos":1774465611421665036,"mode":436,"is_dir":false},"apps/web/dist/assets/FeriadosPage-DoZT68S-.js":{"size":7803,"mtime_nanos":1774465611410997435,"mode":436,"is_dir":false},"apps/web/dist/assets/CohortComparison-BV-ni-8-.js":{"size":18813,"mtime_nanos":1774465611408188922,"mode":436,"is_dir":false},"apps/web/dist/assets/SessionEvolutionPage-b_ZKny7l.js":{"size":166877,"mtime_nanos":1774465611417285264,"mode":436,"is_dir":false},"apps/web/dist/assets/react-pdf.browser-CNFhtOCT.js":{"size":990,"mtime_nanos":1774465611421699191,"mode":436,"is_dir":false},"apps/web/dist/assets/ProfessionalManagement-xr5dz9so.js":{"size":10868,"mtime_nanos":1774465611415873953,"mode":436,"is_dir":false},"apps/web/dist/assets/AvaliacaoTab-x2HTvRc4.js":{"size":3778,"mtime_nanos":1774465611407315146,"mode":436,"is_dir":false},"apps/web/dist/assets/GridWidget-DfiPmR8-.js":{"size":3069,"mtime_nanos":1774465611411910953,"mode":436,"is_dir":false},"apps/web/dist/assets/resizable-mFTGNSPw.js":{"size":1174,"mtime_nanos":1774465611421809129,"mode":436,"is_dir":false},"apps/web/dist/icons/badge-72x72.svg":{"size":20948,"mtime_nanos":1774465606544364223,"mode":436,"is_dir":false},"apps/web/dist/assets/NotionEvolutionPanel-CMGg3fes.js":{"size":79453,"mtime_nanos":1774465611414090362,"mode":436,"is_dir":false},"apps/web/dist/assets/surgery-3z0U6Iep.js":{"size":1056,"mtime_nanos":1774465611422015245,"mode":436,"is_dir":false},"apps/web/dist/assets/decodeImageFrameWorker-DeI2RQoo.js":{"size":148999,"mtime_nanos":1774465611430382673,"mode":436,"is_dir":false},"apps/web/dist/assets/AdvancedAnalytics-BD4cT5D8.js":{"size":44121,"mtime_nanos":1774465611406600970,"mode":436,"is_dir":false},"apps/web/dist/clinical-tests/papers/hip-systematic-review-rahman-2013.pdf":{"size":322832,"mtime_nanos":1774465606523684801,"mode":436,"is_dir":false},"apps/web/dist/assets/clinical-test-combobox-Cvrhcm1b.js":{"size":6600,"mtime_nanos":1774465611419475080,"mode":436,"is_dir":false},"apps/web/dist/assets/BackupSettings-C_ZUjgCN.js":{"size":2822,"mtime_nanos":1774465611407343224,"mode":436,"is_dir":false},"apps/web/dist/assets/EditEventoModal-DoB4yDDp.js":{"size":7734,"mtime_nanos":1774465611409517465,"mode":436,"is_dir":false},"apps/web/dist/assets/generateClinicalTestPdf-ywM8CfUD.js":{"size":2657,"mtime_nanos":1774465611420296541,"mode":436,"is_dir":false},"apps/web/dist/assets/AIInsightsWidget-CSO0tYGl.js":{"size":3402,"mtime_nanos":1774465611406069580,"mode":436,"is_dir":false},"apps/web/dist/assets/AdvancedReportGenerator-CCGSGiRN.js":{"size":5479,"mtime_nanos":1774465611406700221,"mode":436,"is_dir":false},"apps/web/dist/assets/DicomViewerInner-5Hn5FCiW.js":{"size":5303,"mtime_nanos":1774465611408935437,"mode":436,"is_dir":false},"apps/web/dist/assets/EventosStatsWidget-BmfiyE6O.js":{"size":2919,"mtime_nanos":1774465611410046270,"mode":436,"is_dir":false},"apps/web/dist/assets/Vouchers-B21iPQUR.js":{"size":18461,"mtime_nanos":1774465611418627637,"mode":436,"is_dir":false},"apps/web/dist/assets/Reviews-B6GYd5nm.js":{"size":8763,"mtime_nanos":1774465611416749753,"mode":436,"is_dir":false},"apps/web/dist/assets/libjpegturbowasm_decode-daqMmuVl.wasm":{"size":178739,"mtime_nanos":1774465611429018857,"mode":436,"is_dir":false},"apps/web/dist/assets/Exports-jNnOorYf.js":{"size":9175,"mtime_nanos":1774465611410877439,"mode":436,"is_dir":false},"apps/web/dist/assets/TratamentoTab-UsITN4qh.js":{"size":18855,"mtime_nanos":1774465611418462451,"mode":436,"is_dir":false},"apps/web/dist/assets/JumpAnalysisPage-DTI10sYC.js":{"size":1573,"mtime_nanos":1774465611412450304,"mode":436,"is_dir":false},"apps/web/dist/assets/painMapService-Kye798dw.js":{"size":4684,"mtime_nanos":1774465611421110807,"mode":436,"is_dir":false},"apps/web/dist/assets/useExerciseTemplates-r-oYQCqg.js":{"size":3608,"mtime_nanos":1774465611423094647,"mode":436,"is_dir":false},"apps/web/.turbo/turbo-build.log":{"size":87240,"mtime_nanos":1774465611905992426,"mode":436,"is_dir":false},"apps/web/dist/assets/DraggableGrid-BnIWkQIv.js":{"size":75,"mtime_nanos":1774465611409310860,"mode":436,"is_dir":false},"apps/web/dist/assets/SmartTextarea-D8Lcdn0J.js":{"size":8685,"mtime_nanos":1774465611417651607,"mode":436,"is_dir":false},"apps/web/dist/assets/remote-config-manager-DFj6be9n.js":{"size":4436,"mtime_nanos":1774465611421770573,"mode":436,"is_dir":false},"apps/web/dist/assets/storageProxy-BkAPUHQb.js":{"size":586,"mtime_nanos":1774465611421973337,"mode":436,"is_dir":false},"apps/web/dist/assets/jspdf.es.min-CJ8dgWYN.js":{"size":503,"mtime_nanos":1774465611420549872,"mode":436,"is_dir":false},"apps/web/dist/assets/ExerciseLibraryExpanded-CMXO2d7q.js":{"size":7483,"mtime_nanos":1774465611410615796,"mode":436,"is_dir":false},"apps/web/dist/assets/performance-CA9n7UiA.js":{"size":4728,"mtime_nanos":1774465611421444462,"mode":436,"is_dir":false},"apps/web/dist/assets/PatientDashboard360-BaiRmNti.js":{"size":26785,"mtime_nanos":1774465611414779603,"mode":436,"is_dir":false},"apps/web/dist/assets/AssistenteTab-iNQOz5OS.js":{"size":2341,"mtime_nanos":1774465611406935882,"mode":436,"is_dir":false},"apps/web/dist/assets/metricRegistry-CAAKAu-4.js":{"size":7391,"mtime_nanos":1774465611420841410,"mode":436,"is_dir":false},"apps/web/dist/assets/empty-state-UZmMehM9.js":{"size":802,"mtime_nanos":1774465611419841353,"mode":436,"is_dir":false},"apps/web/dist/assets/useConnectionStatus-C3Ie7pup.js":{"size":3198,"mtime_nanos":1774465611422716779,"mode":436,"is_dir":false},"apps/web/dist/assets/GamificationShopPage-DmL7sinf.js":{"size":7282,"mtime_nanos":1774465611411764834,"mode":436,"is_dir":false},"apps/web/dist/assets/ContentGenerator-BUDBIcUq.js":{"size":11326,"mtime_nanos":1774465611408542273,"mode":436,"is_dir":false}},"order":["apps/web/.turbo/turbo-build.log","apps/web/dist","apps/web/dist/_headers","apps/web/dist/android-chrome-192x192.avif","apps/web/dist/android-chrome-192x192.png","apps/web/dist/android-chrome-512x512.avif","apps/web/dist/android-chrome-512x512.png","apps/web/dist/api","apps/web/dist/api/health.json","apps/web/dist/api/insights.json","apps/web/dist/apple-touch-icon.avif","apps/web/dist/apple-touch-icon.png","apps/web/dist/assets","apps/web/dist/assets/AIAssistantPanel-BO-E-Auo.js","apps/web/dist/assets/AIInsightsWidget-CSO0tYGl.js","apps/web/dist/assets/AchievementModal-C27Z2dit.js","apps/web/dist/assets/ActivityLabChart-fylar3dK.js","apps/web/dist/assets/ActivityLabPage-CruVRAzr.js","apps/web/dist/assets/Admin-CjfoyQxS.js","apps/web/dist/assets/AdminCRUD-D7CM-h7i.js","apps/web/dist/assets/AdminDashboard-B5OZhIko.js","apps/web/dist/assets/AdminGamificationPage-MJZ9Bxbh.js","apps/web/dist/assets/AdvancedAnalytics-BD4cT5D8.js","apps/web/dist/assets/AdvancedAnalytics-efoH1jvL.js","apps/web/dist/assets/AdvancedReportGenerator-CCGSGiRN.js","apps/web/dist/assets/AnalyticsFiltersContext-QNidXAX4.js","apps/web/dist/assets/AniversariantesPage-CoyhXuGe.js","apps/web/dist/assets/AppointmentQuickEditModal-B_mXQjVj.js","apps/web/dist/assets/AppointmentsCacheService-Dd3kdTcI.js","apps/web/dist/assets/AssetViewer-hJzXoikg.js","apps/web/dist/assets/AssistenteTab-iNQOz5OS.js","apps/web/dist/assets/AtestadosPage-B8_hTNOd.js","apps/web/dist/assets/AttendanceReport-QR4Ta-5I.js","apps/web/dist/assets/AuditLogs-w83QJsgW.js","apps/web/dist/assets/AugmentedRealityExercise-CFNZrvJL.js","apps/web/dist/assets/Auth-BxrpGDFG.js","apps/web/dist/assets/AuthContext-UsFxPPfD.js","apps/web/dist/assets/AuthenticatedAppShell-BQ_2jDh9.js","apps/web/dist/assets/Automation-B-VaP923.js","apps/web/dist/assets/AvaliacaoTab-x2HTvRc4.js","apps/web/dist/assets/BackupSettings-C_ZUjgCN.js","apps/web/dist/assets/BeforeAfter-DLHjMZBJ.js","apps/web/dist/assets/BiomechanicsAnalysisPage-DU_jNDhG.js","apps/web/dist/assets/BoardDetail-Dhqoy9Zk.js","apps/web/dist/assets/BoardsHome-D_h472tv.js","apps/web/dist/assets/BookingPage-Ukop81KE.js","apps/web/dist/assets/CRMDashboard-jDT4bHds.js","apps/web/dist/assets/CalendarSettings-DEpQ9R1m.js","apps/web/dist/assets/CalendarView-BP1Iwf4F.js","apps/web/dist/assets/ChartWidget-zNu1GxLq.js","apps/web/dist/assets/ClinicAIInsights-BvDRP8No.js","apps/web/dist/assets/ClinicalAnalysisPage-D0ub2_Oz.js","apps/web/dist/assets/ClinicalAnalyticsDashboard-CH9kyrI4.js","apps/web/dist/assets/ClinicalPostureAnalysis-D6Ba_f20.js","apps/web/dist/assets/ClinicalReportPDF-DqCk4UVT.js","apps/web/dist/assets/ClinicalReportPDFDocument-CrPyrC2C.js","apps/web/dist/assets/ClinicalTestsLibrary-BPRJ1OCE.js","apps/web/dist/assets/CohortAnalysis-D8mXQEPI.js","apps/web/dist/assets/CohortComparison-BV-ni-8-.js","apps/web/dist/assets/CommandPalette-CS3CFSbt.js","apps/web/dist/assets/Communications-CRh7F3i2.js","apps/web/dist/assets/ComputerVisionExercise-CpUH1r7M.js","apps/web/dist/assets/ContasFinanceirasPage-8kH3DuY9.js","apps/web/dist/assets/ContentCalendar-CTEvu-3D.js","apps/web/dist/assets/ContentGenerator-BUDBIcUq.js","apps/web/dist/assets/ContratadosPage-DOw1OVyL.js","apps/web/dist/assets/ContratosPage-BEYR3Pex.js","apps/web/dist/assets/Dashboard-BBMbvdjs.js","apps/web/dist/assets/DemonstrativoMensalPage-CfGnfJY1.js","apps/web/dist/assets/DicomBrowser-C0c4Ghl8.js","apps/web/dist/assets/DicomViewer-BwWOQiqZ.js","apps/web/dist/assets/DicomViewerInner-5Hn5FCiW.js","apps/web/dist/assets/DicomWorkspacePage-C2GtqKGd.js","apps/web/dist/assets/DiffViewer-BrWmmz5b.js","apps/web/dist/assets/DoctorFormModal-CWu52z6X.js","apps/web/dist/assets/DoctorManagement-CpmefAYI.js","apps/web/dist/assets/DoctorReferralReportGenerator-DV95ybtR.js","apps/web/dist/assets/DocumentScanner-p_G37eBx.js","apps/web/dist/assets/DocumentScannerPage-DEh6m0lk.js","apps/web/dist/assets/DraggableGrid-BnIWkQIv.js","apps/web/dist/assets/DraggableGrid-Bxsdp7JP.js","apps/web/dist/assets/DynamicAnalysisViewer-BuyKfpUq.js","apps/web/dist/assets/DynamicCompareDetailsPage-D049yncV.js","apps/web/dist/assets/DynamicComparisonPage-BLkolJJV.js","apps/web/dist/assets/EditEventoModal-DoB4yDDp.js","apps/web/dist/assets/EditPatientModal-Dxn6j_3u.js","apps/web/dist/assets/EmailTest-Cmk4H83k.js","apps/web/dist/assets/EmptyStateEnhanced-Ec4U5T4w.js","apps/web/dist/assets/ErrorHandler-D6l_0QyU.js","apps/web/dist/assets/ErrorPage-BmmbuGVa.js","apps/web/dist/assets/EvaluationFormBuilderPage-BIHGKCt4.js","apps/web/dist/assets/EvaluationFormsPage-D8ZeC5KH.js","apps/web/dist/assets/EventoDetalhes-6QX8RWEO.js","apps/web/dist/assets/Eventos-xI6w8qol.js","apps/web/dist/assets/EventosAnalytics-Br5T7g_E.js","apps/web/dist/assets/EventosStatsWidget-BmfiyE6O.js","apps/web/dist/assets/EvolucaoTab-DLaAep_6.js","apps/web/dist/assets/EvolutionDraggableGrid-DAgwOQyD.js","apps/web/dist/assets/EvolutionHistoryTab-BeW1RZMz.js","apps/web/dist/assets/EvolutionResponsiveLayout-BEqhwVWJ.js","apps/web/dist/assets/EvolutionTemplatesPage-DCY1LZaK.js","apps/web/dist/assets/ExerciseAI-BniidMdZ.js","apps/web/dist/assets/ExerciseExecutionScreen-DZ_JtHl2.js","apps/web/dist/assets/ExerciseLibrary-zH8PzV5v.js","apps/web/dist/assets/ExerciseLibraryExpanded-CMXO2d7q.js","apps/web/dist/assets/ExerciseLibraryModal-Dhn7aaqG.js","apps/web/dist/assets/ExercisePlayer-Bx7E_IUe.js","apps/web/dist/assets/ExerciseVideoLibrary-BfeSnhvY.js","apps/web/dist/assets/ExerciseVideoUpload-1MxNYB92.js","apps/web/dist/assets/Exercises-GWi9gc-A.js","apps/web/dist/assets/Exports-jNnOorYf.js","apps/web/dist/assets/FeedbackPreCadastro-VTmTJBGC.css","apps/web/dist/assets/FeedbackPreCadastro-gxrgGB1h.js","apps/web/dist/assets/FeriadosPage-DoZT68S-.js","apps/web/dist/assets/Financial-BlR3moee.js","apps/web/dist/assets/FinancialAIAdvisor-BvR1NlVF.js","apps/web/dist/assets/FinancialAIAdvisor-H0wU__hY.js","apps/web/dist/assets/FisioLink-BLNzfK85.js","apps/web/dist/assets/FluxoCaixaPage-BYfhNgZx.js","apps/web/dist/assets/FornecedoresPage-B9DFcECl.js","apps/web/dist/assets/FunctionalAnalysisPage-FEFJ2PBX.js","apps/web/dist/assets/FunctionalAnalysisStudio-DWhUobuM.js","apps/web/dist/assets/GaitAnalysisPage-ZbQDbpJT.js","apps/web/dist/assets/GaitAnalysisStudio-BiMpyfFz.js","apps/web/dist/assets/Gamification-cawmUYmR.js","apps/web/dist/assets/GamificationAchievementsPage-nsG8De0v.js","apps/web/dist/assets/GamificationFeedbackContext-CFa-c42k.js","apps/web/dist/assets/GamificationHeader-DtGOcpF3.js","apps/web/dist/assets/GamificationLeaderboardPage-Df57TCN7.js","apps/web/dist/assets/GamificationQuestsPage-BB7en6Lt.js","apps/web/dist/assets/GamificationShopPage-DmL7sinf.js","apps/web/dist/assets/GoalProfileEditorPage-CPChx0vO.js","apps/web/dist/assets/GoalProfileListPage-B84rfza7.js","apps/web/dist/assets/GridWidget-DfiPmR8-.js","apps/web/dist/assets/HistoricoTab-Bwtn7HSt.js","apps/web/dist/assets/ImageAnalysisDashboard-hRaYDtc-.js","apps/web/dist/assets/InclinometerPanel-Dzrf27Rc.js","apps/web/dist/assets/IncompleteRegistrationAlert-CUjpJByB.js","apps/web/dist/assets/Index-r4Kv3zSc.js","apps/web/dist/assets/Install-CbUgDMIC.js","apps/web/dist/assets/Integrations-BPQBw_qp.js","apps/web/dist/assets/IntelligentReports-B7UXwjC6.js","apps/web/dist/assets/Inventory-D-mHsPG6.js","apps/web/dist/assets/InviteUserModal-CJxudjCX.js","apps/web/dist/assets/InviteUserModal-D8tHdGG6.js","apps/web/dist/assets/JourneyTimelapse-BFu_jtuR.js","apps/web/dist/assets/JumpAnalysisPage-DTI10sYC.js","apps/web/dist/assets/JumpAnalysisStudio-Dslkq2Iu.js","apps/web/dist/assets/KanbanCardV2-Dz-y1iXT.js","apps/web/dist/assets/KanbanColumnV2-CPy7Ly8w.js","apps/web/dist/assets/KeyboardShortcuts-Dppjewi2.js","apps/web/dist/assets/LazyPdfDownloadButton-5Oe-fefv.js","apps/web/dist/assets/LeadImport-B3a5r5Fk.js","apps/web/dist/assets/Leaderboard-yJH-qwmJ.js","apps/web/dist/assets/LevelJourneyMap-BW6-5Tau.js","apps/web/dist/assets/LevelUpModal-CyJvf_s5.js","apps/web/dist/assets/LocalSEO-DfTcPxq9.js","apps/web/dist/assets/LocalSEOTracker-BTUi7afM.js","apps/web/dist/assets/MagicTextarea-BGifWVn5.js","apps/web/dist/assets/MasterDataHub-CJxyjhY5.js","apps/web/dist/assets/MeasurementCharts-CR2Hrdpm.js","apps/web/dist/assets/MeasurementForm-DbSIyHrG.js","apps/web/dist/assets/MedicalChatbot-Cr4MLT5e.js","apps/web/dist/assets/MedicalReportSuggestions-6KgQ7BLD.js","apps/web/dist/assets/MedicalReturnCard-CvYXib45.js","apps/web/dist/assets/MetaFormModal-ByqLPem2.js","apps/web/dist/assets/MetasCard-Bzyw4GJc.js","apps/web/dist/assets/MovementLabPage-B0nVu_a2.js","apps/web/dist/assets/MythVsTruth-CFfBIYaz.js","apps/web/dist/assets/NFSePage-CIhNWlQR.js","apps/web/dist/assets/NewEvaluationPage-C_zdgGvH.js","apps/web/dist/assets/NewExerciseModal-BGaHe9jn.js","apps/web/dist/assets/NewExerciseModal-Bt9jhs3E.js","apps/web/dist/assets/NewPatientPage-DtnESvpr.js","apps/web/dist/assets/NewProtocolModal-pvWHCBXF.js","apps/web/dist/assets/NotFound-DO_eoVWF.js","apps/web/dist/assets/NotificationHistory-DfFyjklG.js","apps/web/dist/assets/NotificationPreferences-CKhZWU8m.js","apps/web/dist/assets/Notifications-BwoEzsAi.js","apps/web/dist/assets/NotionEvolutionEditor-8AagwENp.js","apps/web/dist/assets/NotionEvolutionEditor-CjguLu7n.js","apps/web/dist/assets/NotionEvolutionPanel-BiM_PXKR.js","apps/web/dist/assets/NotionEvolutionPanel-CCcGBwGT.js","apps/web/dist/assets/NotionEvolutionPanel-CMGg3fes.js","apps/web/dist/assets/PROMsDashboard-BmBF6W2C.js","apps/web/dist/assets/PackagesManager-An7ClwHK.js","apps/web/dist/assets/PackagesManager-B6zWDg4E.js","apps/web/dist/assets/PainMapHistoryPage-CXPAgpGE.js","apps/web/dist/assets/PainMapManager-D-foUZPe.js","apps/web/dist/assets/PainMapRegistration-UKy9sVJ7.js","apps/web/dist/assets/Partner-D1A8kIyl.js","apps/web/dist/assets/PathologyStatus-BUbaykBB.js","apps/web/dist/assets/PatientAIChat-DDaqFe3n.js","apps/web/dist/assets/PatientActivityLabTab-DMSm0jMZ.js","apps/web/dist/assets/PatientAnalyticsDashboard-BUviVrOZ.js","apps/web/dist/assets/PatientDashboard-CHWSSyOA.js","apps/web/dist/assets/PatientDashboard360-BaiRmNti.js","apps/web/dist/assets/PatientEvolution-DpLxpZ5T.js","apps/web/dist/assets/PatientEvolutionDashboard-BIJocZze.js","apps/web/dist/assets/PatientEvolutionReport-DTVIyTyJ.js","apps/web/dist/assets/PatientForm-Dh2bqy64.js","apps/web/dist/assets/PatientGamification-D8AY-xQ3.js","apps/web/dist/assets/PatientGamificationPage-I1QeTEgh.js","apps/web/dist/assets/PatientInsightsPanel-CKajm5Da.js","apps/web/dist/assets/PatientLifecycleChart-DntyRUzy.js","apps/web/dist/assets/PatientObjectivesPage-BNVeTlIo.js","apps/web/dist/assets/PatientPortal-DTo06_A-.js","apps/web/dist/assets/PatientProfilePage-Dpg7blrO.js","apps/web/dist/assets/PatientService-830bt_xQ.js","apps/web/dist/assets/PatientSetupPanel-CTGOIuOV.js","apps/web/dist/assets/PatientSmartSummary-DuCp0PGQ.js","apps/web/dist/assets/Patients-K8k502yv.js","apps/web/dist/assets/PendingApproval-D1qhlplM.js","apps/web/dist/assets/PhysiotherapyHub-Dm5cUpYF.js","apps/web/dist/assets/PoseAnalyzer-EtqbekY0.js","apps/web/dist/assets/PosePreloadManager-BNNhgeHg.js","apps/web/dist/assets/PostureAnalysisPage-Clq2GEMe.js","apps/web/dist/assets/PostureAnalysisStudio-bn4F7KMu.js","apps/web/dist/assets/PreCadastro-Bxa_VXGj.js","apps/web/dist/assets/PreCadastroAdmin-BFQGzgb-.js","apps/web/dist/assets/ProfessionalManagement-xr5dz9so.js","apps/web/dist/assets/Profile-DMgBbeaG.js","apps/web/dist/assets/ProgressAnalysisCard-BxQ1wWVv.js","apps/web/dist/assets/ProjectDetails-BNgQGBu2.js","apps/web/dist/assets/ProjectModal-_I7e-xCp.js","apps/web/dist/assets/Projects-BKs5ODk0.js","apps/web/dist/assets/Protocols-B-W261aa.js","apps/web/dist/assets/ProtocolsManager-ERrkLA4Z.js","apps/web/dist/assets/PublicPrescriptionPage-BcHKKBIJ.js","apps/web/dist/assets/ROI-D9E2LUIp.js","apps/web/dist/assets/RealtimeContext-C9P2oxOQ.js","apps/web/dist/assets/RecibosPage-CUDOZ-7N.js","apps/web/dist/assets/Referral-DBD-x7rf.js","apps/web/dist/assets/RelatorioConvenioPDF-ORxzTxxv.js","apps/web/dist/assets/RelatorioConvenioPage-BEvNSehk.js","apps/web/dist/assets/RelatorioMedicoPDF-CYsa57Tb.js","apps/web/dist/assets/RelatorioMedicoPage-BrPHJBcs.js","apps/web/dist/assets/Reports-BpDjljyM.js","apps/web/dist/assets/Reviews-B6GYd5nm.js","apps/web/dist/assets/RewardShop-D886GSjc.js","apps/web/dist/assets/RichTextEditor-BJWbN_U5.js","apps/web/dist/assets/RichTextEditor-Bs-Hcd9K.css","apps/web/dist/assets/RichTextToolbar-D_AWC4rA.js","apps/web/dist/assets/Schedule-BAYE50xx.js","apps/web/dist/assets/Schedule-DlwqONgU.css","apps/web/dist/assets/ScheduleSettings-DfAYVC58.js","apps/web/dist/assets/SecurityMonitoring-Cm_Fo4c3.js","apps/web/dist/assets/SecuritySettings-DEADNLwg.js","apps/web/dist/assets/SeedData-CwVOh5WM.js","apps/web/dist/assets/ServerSideVideoAnalyzer-kG8J0k0z.js","apps/web/dist/assets/ServicosPage-BICx0caZ.js","apps/web/dist/assets/SessionEvolutionPage-b_ZKny7l.js","apps/web/dist/assets/SessionExercisesPanel-CFOezRuL.js","apps/web/dist/assets/SessionExercisesPanel-CkWcQ4XX.js","apps/web/dist/assets/SessionHistoryPanel-c3cSQ6_V.js","apps/web/dist/assets/Settings-BWhNCC0p.js","apps/web/dist/assets/Settings-BrJvwYro.js","apps/web/dist/assets/SmartAI-B77I5z73.js","apps/web/dist/assets/SmartDashboard-BD_zru7F.js","apps/web/dist/assets/SmartTextarea-D8Lcdn0J.js","apps/web/dist/assets/StreakCalendar-CAuLwnRJ.js","apps/web/dist/assets/SurgeriesCard-8EEp8FCe.js","apps/web/dist/assets/Surveys-DFfQ2r9T.js","apps/web/dist/assets/SyncManager-DCrSsiJb.js","apps/web/dist/assets/TarefasV2-Dd-lThQZ.js","apps/web/dist/assets/TaskDetailModal-BWiJbhat.js","apps/web/dist/assets/TaskInsights-DQQyqF8d.js","apps/web/dist/assets/TaskQuickCreateModal-CreFxH3d.js","apps/web/dist/assets/TeamPerformance-8YofLpOp.js","apps/web/dist/assets/Telemedicine-xBYiOhoZ.js","apps/web/dist/assets/TelemedicineRoom-q3zs3Th-.js","apps/web/dist/assets/TemplateAnalyticsPage-byrrZP5F.js","apps/web/dist/assets/TemplateManager-B6X0kO-F.js","apps/web/dist/assets/TherapistDashboard-e90_p-h_.js","apps/web/dist/assets/TherapistOccupancy-CpJIdPSz.js","apps/web/dist/assets/TimeTracking-e0CL1626.js","apps/web/dist/assets/TourGuide-Cu96HKep.js","apps/web/dist/assets/TrajectoryPanel-Bq-Nv_kR.js","apps/web/dist/assets/TratamentoTab-UsITN4qh.js","apps/web/dist/assets/TreatmentAssistant-CzKatv5Z.js","apps/web/dist/assets/UserManagement--mjoxg1o.js","apps/web/dist/assets/VersionManager-C13ORyOz.js","apps/web/dist/assets/Vouchers-B21iPQUR.js","apps/web/dist/assets/WaitlistQuickAdd-B7bj16JU.js","apps/web/dist/assets/WaitlistQuickAdd-GstmQkLW.js","apps/web/dist/assets/WeeklyChallenges-DxHkniaE.js","apps/web/dist/assets/Welcome-C5KxVit_.js","apps/web/dist/assets/WhatsAppIntegration-Fa1yziRq.js","apps/web/dist/assets/WhatsAppScripts-Bu6pJZNP.js","apps/web/dist/assets/Wiki-CaaqD3tA.js","apps/web/dist/assets/accordion-CblwHRir.js","apps/web/dist/assets/ai-DKfxiD4N.js","apps/web/dist/assets/alert-dialog-DXIaw_T3.js","apps/web/dist/assets/app-check-B5MUzEZ7.js","apps/web/dist/assets/app-check-Dfacol3M.js","apps/web/dist/assets/appointment-status-BXEPNWo3.js","apps/web/dist/assets/auth-CAma0SCY.js","apps/web/dist/assets/biomechanics-reports-Bcv2_uE3.js","apps/web/dist/assets/button-BaDomLNQ.js","apps/web/dist/assets/calendar-CGy78mOm.js","apps/web/dist/assets/card-eZpAxzSP.js","apps/web/dist/assets/charlswasm_decode-484ovEoR.wasm","apps/web/dist/assets/charlswasm_decode-CuMOjBqA.js","apps/web/dist/assets/checkbox-C0I1jnoG.js","apps/web/dist/assets/clinical-test-combobox-Cvrhcm1b.js","apps/web/dist/assets/clinicalReportPdfExport-DlBJcM8B.js","apps/web/dist/assets/clinicalTestsCatalog-CXSt9SAy.js","apps/web/dist/assets/computeWorker-4fn2p8hj.js","apps/web/dist/assets/config-CKrnpnU0.js","apps/web/dist/assets/context-menu-CFoYmvOW.js","apps/web/dist/assets/date-picker-BWGC-_65.js","apps/web/dist/assets/date-range-picker-CKqfMefW.js","apps/web/dist/assets/dateUtils-DAdaWxnC.js","apps/web/dist/assets/decodeImageFrameWorker-DeI2RQoo.js","apps/web/dist/assets/dialog-VVUdh5V0.js","apps/web/dist/assets/dialog-utilities-BHuTQCh1.css","apps/web/dist/assets/dicomWebClient-DEd7ZiY2.js","apps/web/dist/assets/empty-state-UZmMehM9.js","apps/web/dist/assets/esm-C-BlKPb7.js","apps/web/dist/assets/esm-C027tXEi.js","apps/web/dist/assets/esm-sgJm8UYT.js","apps/web/dist/assets/evolutionPdfExport-CmgQFu_p.js","apps/web/dist/assets/excelExport-BLjGyUpk.js","apps/web/dist/assets/exceljsWrapper-BnM8SekV.js","apps/web/dist/assets/extractTransferSyntax-DTFrphwz.js","apps/web/dist/assets/form-CSt_rhp8.js","apps/web/dist/assets/formatInputs-BoC9jLqG.js","apps/web/dist/assets/geminiAiService-BPY7v396.js","apps/web/dist/assets/geminiAiService-DOqeG-de.js","apps/web/dist/assets/generateClinicalTestPdf-ywM8CfUD.js","apps/web/dist/assets/geometry-BHmVnh6X.js","apps/web/dist/assets/goalProfiles.seed-CbwvDx9_.js","apps/web/dist/assets/goalsAdminService-EuBxuR6M.js","apps/web/dist/assets/grid-layout-6GVPrQjZ.css","apps/web/dist/assets/index-CZEOGasW.css","apps/web/dist/assets/index-DesgWhaf.js","apps/web/dist/assets/initCornerstone-CPHGTVyt.js","apps/web/dist/assets/initPerformanceMonitoring-TpPhAJtr.js","apps/web/dist/assets/jpeg-BK0GpJrn.js","apps/web/dist/assets/jpeg-BmmYk2Lq.js","apps/web/dist/assets/jspdf.es.min-CJ8dgWYN.js","apps/web/dist/assets/jspdf.plugin.autotable-CLBsU4T0.js","apps/web/dist/assets/knowledge-y5bMXdd1.js","apps/web/dist/assets/libjpegturbowasm_decode-daqMmuVl.wasm","apps/web/dist/assets/loading-skeleton-r1nR77IU.js","apps/web/dist/assets/logger-xbvtnlpA.js","apps/web/dist/assets/lossless-uwRnEbWE.js","apps/web/dist/assets/marketingAITemplateService-S9TU1kzb.js","apps/web/dist/assets/marketingService-kzppIflg.js","apps/web/dist/assets/mediapipe-BXOhjyqn.js","apps/web/dist/assets/metricRegistry-CAAKAu-4.js","apps/web/dist/assets/mfa-D3Ls-vIo.js","apps/web/dist/assets/monitoring-Bj7JVdzt.js","apps/web/dist/assets/multi-select-BnPTWgE-.js","apps/web/dist/assets/native-C9lqLBeo.js","apps/web/dist/assets/network-status-DIxzAkuJ.js","apps/web/dist/assets/network-status-Q42BaXvN.js","apps/web/dist/assets/openjpegwasm_decode-B3gWTHpv.wasm","apps/web/dist/assets/openjphjs-C-BUUy4a.wasm","apps/web/dist/assets/painMapService-Kye798dw.js","apps/web/dist/assets/pathologies-Cb5BwVET.js","apps/web/dist/assets/pathologyService-wx2Bo34e.js","apps/web/dist/assets/patient-chat-context-CSrHcnMH.js","apps/web/dist/assets/patient-combobox-BvhalMU9.js","apps/web/dist/assets/patient-summary-BOvVivY8.js","apps/web/dist/assets/patientService-C-lx24Eq.js","apps/web/dist/assets/pdf-generator-D_06bxjZ.js","apps/web/dist/assets/pdfExport-DGmTL58p.js","apps/web/dist/assets/performance-CA9n7UiA.js","apps/web/dist/assets/pose-CfUPWXyy.js","apps/web/dist/assets/poseDetectionService-BaxJgXFu.js","apps/web/dist/assets/posthog-C0epDyve.js","apps/web/dist/assets/premium-utilities-DK5sCiW5.css","apps/web/dist/assets/public-url-B-zbiUr9.js","apps/web/dist/assets/push-notifications-HeWV7Jed.js","apps/web/dist/assets/radio-group-BaG5AN9C.js","apps/web/dist/assets/react-pdf.browser-CNFhtOCT.js","apps/web/dist/assets/remote-config-manager-BgvYjblb.js","apps/web/dist/assets/remote-config-manager-DFj6be9n.js","apps/web/dist/assets/resizable-mFTGNSPw.js","apps/web/dist/assets/rolldown-runtime-Bhmf7a9N.js","apps/web/dist/assets/slider-BA-k35dE.js","apps/web/dist/assets/src-CtI1WNJ1.js","apps/web/dist/assets/storageProxy-BkAPUHQb.js","apps/web/dist/assets/surgery-3z0U6Iep.js","apps/web/dist/assets/table-DLvfUzir.js","apps/web/dist/assets/tarefas-D7jtnrCH.js","apps/web/dist/assets/textarea-CsBO4U_7.js","apps/web/dist/assets/toggle-group-lXQBRpru.js","apps/web/dist/assets/transferSyntaxTracker-D_LtRIis.js","apps/web/dist/assets/triageUtils-BFpDF3Un.js","apps/web/dist/assets/types-mm7lDV1i.js","apps/web/dist/assets/ui-BDLlKLEh.js","apps/web/dist/assets/ui-variants-DZUnVdTJ.js","apps/web/dist/assets/upload-DK3Ylm2A.js","apps/web/dist/assets/use-toast-BVLp0f7A.js","apps/web/dist/assets/use-toast-DfYygefj.js","apps/web/dist/assets/useAppointmentActions-DrWa_HgB.js","apps/web/dist/assets/useAppointments-BTL2GkCa.js","apps/web/dist/assets/useAudioRecorder-osj49BRq.js","apps/web/dist/assets/useAuth-Bp-sZlD1.js","apps/web/dist/assets/useBoards-BuWqlAbU.js","apps/web/dist/assets/useCRM-Bh9ZYtiJ.js","apps/web/dist/assets/useConnectionStatus-C3Ie7pup.js","apps/web/dist/assets/useContratados-B7qHhVtG.js","apps/web/dist/assets/useDashboardMetrics-CuQX8bzB.js","apps/web/dist/assets/useDebounce-gUVOa9Dr.js","apps/web/dist/assets/useDocumentTemplates-Buq82XtF.js","apps/web/dist/assets/useEmpresasParceiras-y_HOFZrP.js","apps/web/dist/assets/useEvaluationForms-TN4KdI9E.js","apps/web/dist/assets/useEventosStats-DRgMPyUa.js","apps/web/dist/assets/useEvolutionTemplates-oNgo4VAu.js","apps/web/dist/assets/useExerciseProtocols-Wqj2vciJ.js","apps/web/dist/assets/useExerciseTemplates-r-oYQCqg.js","apps/web/dist/assets/useExercises-3D0l2gsa.js","apps/web/dist/assets/useFinancial-gVZvUqHu.js","apps/web/dist/assets/useGoogleOAuth-D-sR0zks.js","apps/web/dist/assets/useInnovations-B_RNSq52.js","apps/web/dist/assets/useOrganizationMembers-B9fL_XCw.js","apps/web/dist/assets/useOrganizations-DGF6JjGQ.js","apps/web/dist/assets/usePDFGenerator-Cewk_-Kn.js","apps/web/dist/assets/usePackages-CcPMHuyp.js","apps/web/dist/assets/usePatientAnalytics-DGU6gCSf.js","apps/web/dist/assets/usePatientCrud-D3e7rG6J.js","apps/web/dist/assets/usePatientEvolution-BlRfDbvT.js","apps/web/dist/assets/usePatientEvolutionReport-DvB2sTnk.js","apps/web/dist/assets/usePatients-ClfkXVI3.js","apps/web/dist/assets/usePermissions-zfymgalR.js","apps/web/dist/assets/useProjects-DiFw-9rY.js","apps/web/dist/assets/useRenderTracking-CtkKFFdx.js","apps/web/dist/assets/useScheduleCapacity-D71W46W8.js","apps/web/dist/assets/useScheduleSettings-BzFvFv6f.js","apps/web/dist/assets/useSoapRecordsV2-CCN3xB_F.js","apps/web/dist/assets/useStatusConfig-BbfFZIEO.js","apps/web/dist/assets/useTarefas-CZQKsBbB.js","apps/web/dist/assets/useTeamMembers-DyGFo-gH.js","apps/web/dist/assets/useTemplateStats-DoCeFdZ0.js","apps/web/dist/assets/useTherapists-mmI3MgG6.js","apps/web/dist/assets/userHelpers-CNbhGoGy.js","apps/web/dist/assets/userHelpers-DjdPD12I.js","apps/web/dist/assets/utils-RhYpY795.js","apps/web/dist/assets/v2-BKr-sq3N.js","apps/web/dist/assets/validators-CDpxGWAE.js","apps/web/dist/assets/vendor-D_THMjjY.js","apps/web/dist/assets/vendor-cornerstone-NUH966Ie.js","apps/web/dist/assets/vendor-jspdf-DBvvQPSl.js","apps/web/dist/assets/vendor-react-DeJwdkZc.css","apps/web/dist/assets/vendor-react-DrT8DoSr.js","apps/web/dist/assets/web-vitals-D9-THrK8.js","apps/web/dist/clinical-tests","apps/web/dist/clinical-tests/papers","apps/web/dist/clinical-tests/papers/acl-meta-analysis-huang-2022.pdf","apps/web/dist/clinical-tests/papers/hip-fai-combined-tests-palsson-2020.pdf","apps/web/dist/clinical-tests/papers/hip-systematic-review-rahman-2013.pdf","apps/web/dist/clinical-tests/papers/hop-tests-critical-review-davies-2020.pdf","apps/web/dist/clinical-tests/papers/shoulder-impingement-calis-2000.pdf","apps/web/dist/clinical-tests/papers/shoulder-systematic-review-gismervik-2017.pdf","apps/web/dist/clinical-tests/papers/spurling-cervical-review-rubinstein-2007.pdf","apps/web/dist/clinical-tests/papers/spurling-radiculopathy-thoomes-2026.pdf","apps/web/dist/clinical-tests/papers/thessaly-meniscal-hta-2015.pdf","apps/web/dist/clinical-tests/papers/tka-balance-tests-sarac-2022.pdf","apps/web/dist/clinical-tests/papers/y-balance-review-plisky-2021.pdf","apps/web/dist/diagnose.js","apps/web/dist/favicon-16x16.avif","apps/web/dist/favicon-16x16.png","apps/web/dist/favicon-32x32.avif","apps/web/dist/favicon-32x32.png","apps/web/dist/favicon-48x48.png","apps/web/dist/favicon.ico","apps/web/dist/favicon.svg","apps/web/dist/icons","apps/web/dist/icons/badge-72x72.svg","apps/web/dist/icons/favicon-16x16.svg","apps/web/dist/icons/favicon-32x32.svg","apps/web/dist/icons/icon-192x192.svg","apps/web/dist/icons/icon-512x512.svg","apps/web/dist/index.html","apps/web/dist/manifest.json","apps/web/dist/offline.html","apps/web/dist/placeholder.svg","apps/web/dist/robots.txt","apps/web/dist/sw.js"]}
+{
+  "files": {
+    "apps/web/dist/index.html": {
+      "size": 11237,
+      "mtime_nanos": 1774465611430537871,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/ClinicAIInsights-BvDRP8No.js": {
+      "size": 3862,
+      "mtime_nanos": 1774465611407836338,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/ClinicalReportPDF-DqCk4UVT.js": {
+      "size": 5709,
+      "mtime_nanos": 1774465611408028136,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/ActivityLabPage-CruVRAzr.js": {
+      "size": 17586,
+      "mtime_nanos": 1774465611406162266,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/MetaFormModal-ByqLPem2.js": {
+      "size": 5394,
+      "mtime_nanos": 1774465611413281893,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/useDashboardMetrics-CuQX8bzB.js": {
+      "size": 4616,
+      "mtime_nanos": 1774465611422786555,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/PatientSetupPanel-CTGOIuOV.js": {
+      "size": 1620,
+      "mtime_nanos": 1774465611415421140,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/geometry-BHmVnh6X.js": {
+      "size": 720,
+      "mtime_nanos": 1774465611420330416,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/KanbanCardV2-Dz-y1iXT.js": {
+      "size": 8205,
+      "mtime_nanos": 1774465611412526367,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/android-chrome-512x512.png": {
+      "size": 25320,
+      "mtime_nanos": 1774465606521144846,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/geminiAiService-DOqeG-de.js": {
+      "size": 2897,
+      "mtime_nanos": 1774465611420262665,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/TaskDetailModal-BWiJbhat.js": {
+      "size": 24326,
+      "mtime_nanos": 1774465611417906825,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/PatientForm-Dh2bqy64.js": {
+      "size": 18790,
+      "mtime_nanos": 1774465611415013798,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/PainMapRegistration-UKy9sVJ7.js": {
+      "size": 3989,
+      "mtime_nanos": 1774465611414442456,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/triageUtils-BFpDF3Un.js": {
+      "size": 2409,
+      "mtime_nanos": 1774465611422230720,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/AppointmentQuickEditModal-B_mXQjVj.js": {
+      "size": 16634,
+      "mtime_nanos": 1774465611406838446,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/FeedbackPreCadastro-gxrgGB1h.js": {
+      "size": 2427,
+      "mtime_nanos": 1774465611410939183,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/LazyPdfDownloadButton-5Oe-fefv.js": {
+      "size": 1124,
+      "mtime_nanos": 1774465611412675279,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/loading-skeleton-r1nR77IU.js": {
+      "size": 3483,
+      "mtime_nanos": 1774465611420657296,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/evolutionPdfExport-CmgQFu_p.js": {
+      "size": 3746,
+      "mtime_nanos": 1774465611419994177,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/NewPatientPage-DtnESvpr.js": {
+      "size": 2990,
+      "mtime_nanos": 1774465611413642578,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/Communications-CRh7F3i2.js": {
+      "size": 57608,
+      "mtime_nanos": 1774465611408270153,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/icons/icon-512x512.svg": {
+      "size": 20948,
+      "mtime_nanos": 1774465606545632629,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/DiffViewer-BrWmmz5b.js": {
+      "size": 1452,
+      "mtime_nanos": 1774465611409027774,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/GoalProfileListPage-B84rfza7.js": {
+      "size": 18297,
+      "mtime_nanos": 1774465611411868835,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/GaitAnalysisStudio-BiMpyfFz.js": {
+      "size": 9715,
+      "mtime_nanos": 1774465611411495647,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/RelatorioMedicoPage-BrPHJBcs.js": {
+      "size": 37937,
+      "mtime_nanos": 1774465611416660770,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/ImageAnalysisDashboard-hRaYDtc-.js": {
+      "size": 9731,
+      "mtime_nanos": 1774465611412006362,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/TourGuide-Cu96HKep.js": {
+      "size": 38,
+      "mtime_nanos": 1774465611418387157,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/ContratadosPage-DOw1OVyL.js": {
+      "size": 6310,
+      "mtime_nanos": 1774465611408648719,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/SyncManager-DCrSsiJb.js": {
+      "size": 13351,
+      "mtime_nanos": 1774465611417811485,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/esm-sgJm8UYT.js": {
+      "size": 748,
+      "mtime_nanos": 1774465611419956530,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/PatientObjectivesPage-BNVeTlIo.js": {
+      "size": 7307,
+      "mtime_nanos": 1774465611415232206,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/AuditLogs-w83QJsgW.js": {
+      "size": 27987,
+      "mtime_nanos": 1774465611407060348,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/WhatsAppScripts-Bu6pJZNP.js": {
+      "size": 11212,
+      "mtime_nanos": 1774465611418877057,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/clinicalTestsCatalog-CXSt9SAy.js": {
+      "size": 37939,
+      "mtime_nanos": 1774465611419546603,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/MetasCard-Bzyw4GJc.js": {
+      "size": 5012,
+      "mtime_nanos": 1774465611413321495,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/index-CZEOGasW.css": {
+      "size": 17765,
+      "mtime_nanos": 1774465611428965075,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/multi-select-BnPTWgE-.js": {
+      "size": 6784,
+      "mtime_nanos": 1774465611420957215,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/poseDetectionService-BaxJgXFu.js": {
+      "size": 4550,
+      "mtime_nanos": 1774465611421520035,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/MovementLabPage-B0nVu_a2.js": {
+      "size": 1588,
+      "mtime_nanos": 1774465611413372413,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/clinical-tests/papers/shoulder-impingement-calis-2000.pdf": {
+      "size": 1817,
+      "mtime_nanos": 1774465606524452410,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/extractTransferSyntax-DTFrphwz.js": {
+      "size": 560,
+      "mtime_nanos": 1774465611420112496,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/types-mm7lDV1i.js": {
+      "size": 284,
+      "mtime_nanos": 1774465611422266411,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/MythVsTruth-CFfBIYaz.js": {
+      "size": 9036,
+      "mtime_nanos": 1774465611413418791,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/excelExport-BLjGyUpk.js": {
+      "size": 8989,
+      "mtime_nanos": 1774465611420035805,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/LevelUpModal-CyJvf_s5.js": {
+      "size": 10624,
+      "mtime_nanos": 1774465611412819511,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/PatientEvolution-DpLxpZ5T.js": {
+      "size": 82877,
+      "mtime_nanos": 1774465611414825073,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/usePackages-CcPMHuyp.js": {
+      "size": 3212,
+      "mtime_nanos": 1774465611423389747,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/TaskInsights-DQQyqF8d.js": {
+      "size": 7237,
+      "mtime_nanos": 1774465611417961305,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/Patients-K8k502yv.js": {
+      "size": 48152,
+      "mtime_nanos": 1774465611415496155,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/AuthContext-UsFxPPfD.js": {
+      "size": 321,
+      "mtime_nanos": 1774465611407216943,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/goalProfiles.seed-CbwvDx9_.js": {
+      "size": 8990,
+      "mtime_nanos": 1774465611420365618,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/PosePreloadManager-BNNhgeHg.js": {
+      "size": 1332,
+      "mtime_nanos": 1774465611415676847,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/GamificationFeedbackContext-CFa-c42k.js": {
+      "size": 2569,
+      "mtime_nanos": 1774465611411614805,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/sw.js": {
+      "size": 2772,
+      "mtime_nanos": 1774465606547006922,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/NotFound-DO_eoVWF.js": {
+      "size": 866,
+      "mtime_nanos": 1774465611413719758,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/RichTextToolbar-D_AWC4rA.js": {
+      "size": 22681,
+      "mtime_nanos": 1774465611416870937,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/PatientGamification-D8AY-xQ3.js": {
+      "size": 23986,
+      "mtime_nanos": 1774465611415058429,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/esm-C027tXEi.js": {
+      "size": 2240,
+      "mtime_nanos": 1774465611419912736,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/Projects-BKs5ODk0.js": {
+      "size": 5835,
+      "mtime_nanos": 1774465611416107518,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/computeWorker-4fn2p8hj.js": {
+      "size": 1234217,
+      "mtime_nanos": 1774465611430002011,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/openjphjs-C-BUUy4a.wasm": {
+      "size": 2094918,
+      "mtime_nanos": 1774465611429288114,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/useAppointments-BTL2GkCa.js": {
+      "size": 19343,
+      "mtime_nanos": 1774465611422529801,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/BiomechanicsAnalysisPage-DU_jNDhG.js": {
+      "size": 13388,
+      "mtime_nanos": 1774465611407407134,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/DynamicComparisonPage-BLkolJJV.js": {
+      "size": 36118,
+      "mtime_nanos": 1774465611409454464,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/ROI-D9E2LUIp.js": {
+      "size": 6124,
+      "mtime_nanos": 1774465611416334588,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/alert-dialog-DXIaw_T3.js": {
+      "size": 2204,
+      "mtime_nanos": 1774465611419092044,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/clinical-tests": { "size": 0, "mtime_nanos": 0, "mode": 0, "is_dir": true },
+    "apps/web/dist/assets/Gamification-cawmUYmR.js": {
+      "size": 12310,
+      "mtime_nanos": 1774465611411533225,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/Schedule-DlwqONgU.css": {
+      "size": 46736,
+      "mtime_nanos": 1774465611428622550,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/PostureAnalysisStudio-bn4F7KMu.js": {
+      "size": 6375,
+      "mtime_nanos": 1774465611415748998,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/LocalSEOTracker-BTUi7afM.js": {
+      "size": 8711,
+      "mtime_nanos": 1774465611412895364,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/useBoards-BuWqlAbU.js": {
+      "size": 1248,
+      "mtime_nanos": 1774465611422646235,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/jpeg-BK0GpJrn.js": {
+      "size": 75,
+      "mtime_nanos": 1774465611420515508,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/diagnose.js": {
+      "size": 4384,
+      "mtime_nanos": 1774465606541589934,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/api/health.json": {
+      "size": 265,
+      "mtime_nanos": 1774465606521664012,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/_headers": {
+      "size": 558,
+      "mtime_nanos": 1774465606519848571,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/GamificationAchievementsPage-nsG8De0v.js": {
+      "size": 5849,
+      "mtime_nanos": 1774465611411578485,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/Auth-BxrpGDFG.js": {
+      "size": 23133,
+      "mtime_nanos": 1774465611407164628,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/useTemplateStats-DoCeFdZ0.js": {
+      "size": 9165,
+      "mtime_nanos": 1774465611423969959,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/EditPatientModal-Dxn6j_3u.js": {
+      "size": 9111,
+      "mtime_nanos": 1774465611409555950,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/usePatients-ClfkXVI3.js": {
+      "size": 5114,
+      "mtime_nanos": 1774465611423584967,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/CalendarView-BP1Iwf4F.js": {
+      "size": 101278,
+      "mtime_nanos": 1774465611407723537,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/Exercises-GWi9gc-A.js": {
+      "size": 12315,
+      "mtime_nanos": 1774465611410836020,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/HistoricoTab-Bwtn7HSt.js": {
+      "size": 2237,
+      "mtime_nanos": 1774465611411959565,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist": { "size": 0, "mtime_nanos": 0, "mode": 0, "is_dir": true },
+    "apps/web/dist/assets/formatInputs-BoC9jLqG.js": {
+      "size": 9418,
+      "mtime_nanos": 1774465611420181993,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/patientService-C-lx24Eq.js": {
+      "size": 3510,
+      "mtime_nanos": 1774465611421333476,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/PainMapHistoryPage-CXPAgpGE.js": {
+      "size": 24840,
+      "mtime_nanos": 1774465611414327908,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/Referral-DBD-x7rf.js": {
+      "size": 12493,
+      "mtime_nanos": 1774465611416508226,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/GaitAnalysisPage-ZbQDbpJT.js": {
+      "size": 1584,
+      "mtime_nanos": 1774465611411461772,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/NotificationHistory-DfFyjklG.js": {
+      "size": 374,
+      "mtime_nanos": 1774465611413768511,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/EvaluationFormBuilderPage-BIHGKCt4.js": {
+      "size": 13038,
+      "mtime_nanos": 1774465611409773870,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/PatientLifecycleChart-DntyRUzy.js": {
+      "size": 6837,
+      "mtime_nanos": 1774465611415194489,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/marketingAITemplateService-S9TU1kzb.js": {
+      "size": 10327,
+      "mtime_nanos": 1774465611420726374,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/public-url-B-zbiUr9.js": {
+      "size": 421,
+      "mtime_nanos": 1774465611421593933,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/Protocols-B-W261aa.js": {
+      "size": 54320,
+      "mtime_nanos": 1774465611416147889,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/TaskQuickCreateModal-CreFxH3d.js": {
+      "size": 6478,
+      "mtime_nanos": 1774465611418000768,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/ProjectModal-_I7e-xCp.js": {
+      "size": 3527,
+      "mtime_nanos": 1774465611416070360,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/robots.txt": {
+      "size": 160,
+      "mtime_nanos": 1774465606546790259,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/DocumentScanner-p_G37eBx.js": {
+      "size": 2406,
+      "mtime_nanos": 1774465611409202529,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/FluxoCaixaPage-BYfhNgZx.js": {
+      "size": 9638,
+      "mtime_nanos": 1774465611411216472,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/PatientDashboard-CHWSSyOA.js": {
+      "size": 12729,
+      "mtime_nanos": 1774465611414732038,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/useAudioRecorder-osj49BRq.js": {
+      "size": 716,
+      "mtime_nanos": 1774465611422573734,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/usePatientAnalytics-DGU6gCSf.js": {
+      "size": 6620,
+      "mtime_nanos": 1774465611423426067,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/ScheduleSettings-DfAYVC58.js": {
+      "size": 111563,
+      "mtime_nanos": 1774465611417013772,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/ai-DKfxiD4N.js": {
+      "size": 2805,
+      "mtime_nanos": 1774465611419057260,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/ExercisePlayer-Bx7E_IUe.js": {
+      "size": 11141,
+      "mtime_nanos": 1774465611410704081,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/PatientSmartSummary-DuCp0PGQ.js": {
+      "size": 5310,
+      "mtime_nanos": 1774465611415457460,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/EventoDetalhes-6QX8RWEO.js": {
+      "size": 61966,
+      "mtime_nanos": 1774465611409871375,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/network-status-DIxzAkuJ.js": {
+      "size": 935,
+      "mtime_nanos": 1774465611421041170,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/useExercises-3D0l2gsa.js": {
+      "size": 9208,
+      "mtime_nanos": 1774465611423131386,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/PackagesManager-B6zWDg4E.js": {
+      "size": 10184,
+      "mtime_nanos": 1774465611414284464,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/RecibosPage-CUDOZ-7N.js": {
+      "size": 31100,
+      "mtime_nanos": 1774465611416456260,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/accordion-CblwHRir.js": {
+      "size": 1065,
+      "mtime_nanos": 1774465611419018845,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/NewEvaluationPage-C_zdgGvH.js": {
+      "size": 66397,
+      "mtime_nanos": 1774465611413509242,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/PublicPrescriptionPage-BcHKKBIJ.js": {
+      "size": 6980,
+      "mtime_nanos": 1774465611416252519,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/PreCadastro-Bxa_VXGj.js": {
+      "size": 11838,
+      "mtime_nanos": 1774465611415788531,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/dateUtils-DAdaWxnC.js": {
+      "size": 1509,
+      "mtime_nanos": 1774465611419738889,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/jspdf.plugin.autotable-CLBsU4T0.js": {
+      "size": 273,
+      "mtime_nanos": 1774465611420584726,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/favicon-16x16.avif": {
+      "size": 912,
+      "mtime_nanos": 1774465606541929735,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/api": { "size": 0, "mtime_nanos": 0, "mode": 0, "is_dir": true },
+    "apps/web/dist/assets/Surveys-DFfQ2r9T.js": {
+      "size": 8223,
+      "mtime_nanos": 1774465611417771952,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/knowledge-y5bMXdd1.js": {
+      "size": 6683,
+      "mtime_nanos": 1774465611420619020,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/toggle-group-lXQBRpru.js": {
+      "size": 774,
+      "mtime_nanos": 1774465611422160664,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/SessionExercisesPanel-CkWcQ4XX.js": {
+      "size": 8391,
+      "mtime_nanos": 1774465611417405888,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/use-toast-DfYygefj.js": {
+      "size": 1251,
+      "mtime_nanos": 1774465611422460095,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/favicon-32x32.avif": {
+      "size": 1339,
+      "mtime_nanos": 1774465606542567850,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/NotionEvolutionEditor-8AagwENp.js": {
+      "size": 91,
+      "mtime_nanos": 1774465611413904711,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/pose-CfUPWXyy.js": {
+      "size": 7699,
+      "mtime_nanos": 1774465611421481969,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/clinical-tests/papers/hop-tests-critical-review-davies-2020.pdf": {
+      "size": 1817,
+      "mtime_nanos": 1774465606524186785,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/AssetViewer-hJzXoikg.js": {
+      "size": 7741,
+      "mtime_nanos": 1774465611406904172,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/PROMsDashboard-BmBF6W2C.js": {
+      "size": 62978,
+      "mtime_nanos": 1774465611414166564,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/PatientPortal-DTo06_A-.js": {
+      "size": 16227,
+      "mtime_nanos": 1774465611415270971,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/Admin-CjfoyQxS.js": {
+      "size": 24572,
+      "mtime_nanos": 1774465611406208993,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/userHelpers-CNbhGoGy.js": {
+      "size": 81,
+      "mtime_nanos": 1774465611424051399,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/card-eZpAxzSP.js": {
+      "size": 1117,
+      "mtime_nanos": 1774465611419372616,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/jpeg-BmmYk2Lq.js": {
+      "size": 10379,
+      "mtime_nanos": 1774465611430489537,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/useScheduleSettings-BzFvFv6f.js": {
+      "size": 5178,
+      "mtime_nanos": 1774465611423770897,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/utils-RhYpY795.js": {
+      "size": 1515,
+      "mtime_nanos": 1774465611424131233,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/RealtimeContext-C9P2oxOQ.js": {
+      "size": 4188,
+      "mtime_nanos": 1774465611416376985,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/Dashboard-BBMbvdjs.js": {
+      "size": 8405,
+      "mtime_nanos": 1774465611408742732,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/icons": { "size": 0, "mtime_nanos": 0, "mode": 0, "is_dir": true },
+    "apps/web/dist/assets/EmptyStateEnhanced-Ec4U5T4w.js": {
+      "size": 3379,
+      "mtime_nanos": 1774465611409648496,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/StreakCalendar-CAuLwnRJ.js": {
+      "size": 1909,
+      "mtime_nanos": 1774465611417691140,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/monitoring-Bj7JVdzt.js": {
+      "size": 3575,
+      "mtime_nanos": 1774465611420913003,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/AdvancedAnalytics-efoH1jvL.js": {
+      "size": 10152,
+      "mtime_nanos": 1774465611406648395,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/push-notifications-HeWV7Jed.js": {
+      "size": 2299,
+      "mtime_nanos": 1774465611421629205,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/useInnovations-B_RNSq52.js": {
+      "size": 1732,
+      "mtime_nanos": 1774465611423245026,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/index-DesgWhaf.js": {
+      "size": 254428,
+      "mtime_nanos": 1774465611403963789,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/clinical-tests/papers": {
+      "size": 0,
+      "mtime_nanos": 0,
+      "mode": 0,
+      "is_dir": true
+    },
+    "apps/web/dist/assets/CommandPalette-CS3CFSbt.js": {
+      "size": 8530,
+      "mtime_nanos": 1774465611408226918,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/network-status-Q42BaXvN.js": {
+      "size": 76,
+      "mtime_nanos": 1774465611421076023,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/usePermissions-zfymgalR.js": {
+      "size": 433,
+      "mtime_nanos": 1774465611423623173,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/AchievementModal-C27Z2dit.js": {
+      "size": 2805,
+      "mtime_nanos": 1774465611406101500,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/mediapipe-BXOhjyqn.js": {
+      "size": 313,
+      "mtime_nanos": 1774465611420807046,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/apple-touch-icon.png": {
+      "size": 7919,
+      "mtime_nanos": 1774465606522511176,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/ui-variants-DZUnVdTJ.js": {
+      "size": 3923,
+      "mtime_nanos": 1774465611422355256,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/DynamicAnalysisViewer-BuyKfpUq.js": {
+      "size": 9990,
+      "mtime_nanos": 1774465611409376725,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/Partner-D1A8kIyl.js": {
+      "size": 6767,
+      "mtime_nanos": 1774465611414478567,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/vendor-react-DrT8DoSr.js": {
+      "size": 2416320,
+      "mtime_nanos": 1774465611427790822,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/table-DLvfUzir.js": {
+      "size": 1610,
+      "mtime_nanos": 1774465611422050587,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/premium-utilities-DK5sCiW5.css": {
+      "size": 1083,
+      "mtime_nanos": 1774465611429894448,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/WaitlistQuickAdd-GstmQkLW.js": {
+      "size": 94,
+      "mtime_nanos": 1774465611418707681,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/TherapistDashboard-e90_p-h_.js": {
+      "size": 14717,
+      "mtime_nanos": 1774465611418243064,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/remote-config-manager-BgvYjblb.js": {
+      "size": 456,
+      "mtime_nanos": 1774465611421733834,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/clinical-tests/papers/tka-balance-tests-sarac-2022.pdf": {
+      "size": 835171,
+      "mtime_nanos": 1774465606536685546,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/SecuritySettings-DEADNLwg.js": {
+      "size": 19154,
+      "mtime_nanos": 1774465611417132999,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/NotionEvolutionEditor-CjguLu7n.js": {
+      "size": 20534,
+      "mtime_nanos": 1774465611413938516,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/button-BaDomLNQ.js": {
+      "size": 414,
+      "mtime_nanos": 1774465611419306262,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/ContasFinanceirasPage-8kH3DuY9.js": {
+      "size": 13698,
+      "mtime_nanos": 1774465611408428005,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/SmartAI-B77I5z73.js": {
+      "size": 9864,
+      "mtime_nanos": 1774465611417567163,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/AnalyticsFiltersContext-QNidXAX4.js": {
+      "size": 696,
+      "mtime_nanos": 1774465611406747856,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/TherapistOccupancy-CpJIdPSz.js": {
+      "size": 16274,
+      "mtime_nanos": 1774465611418285181,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/IntelligentReports-B7UXwjC6.js": {
+      "size": 5050,
+      "mtime_nanos": 1774465611412237274,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/useEvolutionTemplates-oNgo4VAu.js": {
+      "size": 2212,
+      "mtime_nanos": 1774465611423020051,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/web-vitals-D9-THrK8.js": {
+      "size": 3000,
+      "mtime_nanos": 1774465611428494312,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/clinical-tests/papers/spurling-cervical-review-rubinstein-2007.pdf": {
+      "size": 1817,
+      "mtime_nanos": 1774465606525024450,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/ClinicalAnalyticsDashboard-CH9kyrI4.js": {
+      "size": 5852,
+      "mtime_nanos": 1774465611407911842,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/SmartDashboard-BD_zru7F.js": {
+      "size": 22041,
+      "mtime_nanos": 1774465611417605927,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/ProtocolsManager-ERrkLA4Z.js": {
+      "size": 20986,
+      "mtime_nanos": 1774465611416205862,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/pathologies-Cb5BwVET.js": {
+      "size": 3214,
+      "mtime_nanos": 1774465611421148524,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/patient-chat-context-CSrHcnMH.js": {
+      "size": 1852,
+      "mtime_nanos": 1774465611421218510,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/MasterDataHub-CJxyjhY5.js": {
+      "size": 3786,
+      "mtime_nanos": 1774465611413001111,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/icons/favicon-32x32.svg": {
+      "size": 20948,
+      "mtime_nanos": 1774465606545065548,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/ActivityLabChart-fylar3dK.js": {
+      "size": 10347,
+      "mtime_nanos": 1774465611406129368,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/RewardShop-D886GSjc.js": {
+      "size": 4162,
+      "mtime_nanos": 1774465611416788797,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/MeasurementForm-DbSIyHrG.js": {
+      "size": 59979,
+      "mtime_nanos": 1774465611413091981,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/MedicalReturnCard-CvYXib45.js": {
+      "size": 17119,
+      "mtime_nanos": 1774465611413239636,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/pathologyService-wx2Bo34e.js": {
+      "size": 1758,
+      "mtime_nanos": 1774465611421183656,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/DoctorFormModal-CWu52z6X.js": {
+      "size": 14280,
+      "mtime_nanos": 1774465611409062836,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/transferSyntaxTracker-D_LtRIis.js": {
+      "size": 3803,
+      "mtime_nanos": 1774465611422195936,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/date-picker-BWGC-_65.js": {
+      "size": 1574,
+      "mtime_nanos": 1774465611419669811,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/PatientAIChat-DDaqFe3n.js": {
+      "size": 3846,
+      "mtime_nanos": 1774465611414570065,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/GamificationHeader-DtGOcpF3.js": {
+      "size": 3923,
+      "mtime_nanos": 1774465611411648261,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/MeasurementCharts-CR2Hrdpm.js": {
+      "size": 5061,
+      "mtime_nanos": 1774465611413050842,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/FisioLink-BLNzfK85.js": {
+      "size": 11244,
+      "mtime_nanos": 1774465611411175473,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/CRMDashboard-jDT4bHds.js": {
+      "size": 74666,
+      "mtime_nanos": 1774465611407613529,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/RichTextEditor-BJWbN_U5.js": {
+      "size": 24698,
+      "mtime_nanos": 1774465611416825956,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/app-check-Dfacol3M.js": {
+      "size": 94,
+      "mtime_nanos": 1774465611419159306,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/ExerciseExecutionScreen-DZ_JtHl2.js": {
+      "size": 49781,
+      "mtime_nanos": 1774465611410446628,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/ServerSideVideoAnalyzer-kG8J0k0z.js": {
+      "size": 5972,
+      "mtime_nanos": 1774465611417210598,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/clinical-tests/papers/shoulder-systematic-review-gismervik-2017.pdf": {
+      "size": 1817,
+      "mtime_nanos": 1774465606524774960,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/RelatorioConvenioPDF-ORxzTxxv.js": {
+      "size": 6167,
+      "mtime_nanos": 1774465611416549365,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/SurgeriesCard-8EEp8FCe.js": {
+      "size": 12568,
+      "mtime_nanos": 1774465611417725364,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/icons/icon-192x192.svg": {
+      "size": 20948,
+      "mtime_nanos": 1774465606545354921,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/TemplateAnalyticsPage-byrrZP5F.js": {
+      "size": 7791,
+      "mtime_nanos": 1774465611418160925,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/NewProtocolModal-pvWHCBXF.js": {
+      "size": 10564,
+      "mtime_nanos": 1774465611413677361,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/useTeamMembers-DyGFo-gH.js": {
+      "size": 2915,
+      "mtime_nanos": 1774465611423925536,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/vendor-react-DeJwdkZc.css": {
+      "size": 21436,
+      "mtime_nanos": 1774465611429940477,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/favicon-32x32.png": {
+      "size": 1747,
+      "mtime_nanos": 1774465606542825023,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/AdminGamificationPage-MJZ9Bxbh.js": {
+      "size": 95437,
+      "mtime_nanos": 1774465611406386332,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/CohortAnalysis-D8mXQEPI.js": {
+      "size": 291,
+      "mtime_nanos": 1774465611408153160,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/WaitlistQuickAdd-B7bj16JU.js": {
+      "size": 10629,
+      "mtime_nanos": 1774465611418668148,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/NotificationPreferences-CKhZWU8m.js": {
+      "size": 6862,
+      "mtime_nanos": 1774465611413825016,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/appointment-status-BXEPNWo3.js": {
+      "size": 9338,
+      "mtime_nanos": 1774465611419192622,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/NFSePage-CIhNWlQR.js": {
+      "size": 9028,
+      "mtime_nanos": 1774465611413469290,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/PatientGamificationPage-I1QeTEgh.js": {
+      "size": 12353,
+      "mtime_nanos": 1774465611415104597,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/NotionEvolutionPanel-CCcGBwGT.js": {
+      "size": 122,
+      "mtime_nanos": 1774465611414055299,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/useRenderTracking-CtkKFFdx.js": {
+      "size": 974,
+      "mtime_nanos": 1774465611423695603,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/Welcome-C5KxVit_.js": {
+      "size": 6129,
+      "mtime_nanos": 1774465611418782835,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/slider-BA-k35dE.js": {
+      "size": 834,
+      "mtime_nanos": 1774465611421880162,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/RelatorioConvenioPage-BEvNSehk.js": {
+      "size": 18961,
+      "mtime_nanos": 1774465611416585126,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/AugmentedRealityExercise-CFNZrvJL.js": {
+      "size": 419,
+      "mtime_nanos": 1774465611407127121,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets": { "size": 0, "mtime_nanos": 0, "mode": 0, "is_dir": true },
+    "apps/web/dist/assets/useOrganizationMembers-B9fL_XCw.js": {
+      "size": 1235,
+      "mtime_nanos": 1774465611423280228,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/SessionHistoryPanel-c3cSQ6_V.js": {
+      "size": 2851,
+      "mtime_nanos": 1774465611417445142,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/app-check-B5MUzEZ7.js": {
+      "size": 183,
+      "mtime_nanos": 1774465611419125430,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/api/insights.json": {
+      "size": 743,
+      "mtime_nanos": 1774465606521988378,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/ComputerVisionExercise-CpUH1r7M.js": {
+      "size": 24226,
+      "mtime_nanos": 1774465611408347822,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/Install-CbUgDMIC.js": {
+      "size": 6704,
+      "mtime_nanos": 1774465611412167148,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/LeadImport-B3a5r5Fk.js": {
+      "size": 5141,
+      "mtime_nanos": 1774465611412709643,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/ClinicalTestsLibrary-BPRJ1OCE.js": {
+      "size": 43728,
+      "mtime_nanos": 1774465611408103639,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/useAppointmentActions-DrWa_HgB.js": {
+      "size": 2408,
+      "mtime_nanos": 1774465611422493760,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/useAuth-Bp-sZlD1.js": {
+      "size": 34,
+      "mtime_nanos": 1774465611422609984,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/useDebounce-gUVOa9Dr.js": {
+      "size": 272,
+      "mtime_nanos": 1774465611422825250,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/usePatientEvolution-BlRfDbvT.js": {
+      "size": 12741,
+      "mtime_nanos": 1774465611423502828,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/rolldown-runtime-Bhmf7a9N.js": {
+      "size": 1207,
+      "mtime_nanos": 1774465611421844890,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/Leaderboard-yJH-qwmJ.js": {
+      "size": 3469,
+      "mtime_nanos": 1774465611412747570,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/ui-BDLlKLEh.js": {
+      "size": 37998,
+      "mtime_nanos": 1774465611422302172,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/useSoapRecordsV2-CCN3xB_F.js": {
+      "size": 854,
+      "mtime_nanos": 1774465611423809941,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/charlswasm_decode-CuMOjBqA.js": {
+      "size": 73,
+      "mtime_nanos": 1774465611419406491,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/ContentCalendar-CTEvu-3D.js": {
+      "size": 10829,
+      "mtime_nanos": 1774465611408487234,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/ProjectDetails-BNgQGBu2.js": {
+      "size": 36300,
+      "mtime_nanos": 1774465611416020211,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/KeyboardShortcuts-Dppjewi2.js": {
+      "size": 3812,
+      "mtime_nanos": 1774465611412629809,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/TimeTracking-e0CL1626.js": {
+      "size": 29470,
+      "mtime_nanos": 1774465611418335051,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/ExerciseVideoLibrary-BfeSnhvY.js": {
+      "size": 29410,
+      "mtime_nanos": 1774465611410744033,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/ChartWidget-zNu1GxLq.js": {
+      "size": 4223,
+      "mtime_nanos": 1774465611407798202,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/Index-r4Kv3zSc.js": {
+      "size": 16289,
+      "mtime_nanos": 1774465611412124053,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/ExerciseLibrary-zH8PzV5v.js": {
+      "size": 43727,
+      "mtime_nanos": 1774465611410525764,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/PainMapManager-D-foUZPe.js": {
+      "size": 64812,
+      "mtime_nanos": 1774465611414381830,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/PatientInsightsPanel-CKajm5Da.js": {
+      "size": 7665,
+      "mtime_nanos": 1774465611415155026,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/android-chrome-192x192.png": {
+      "size": 8234,
+      "mtime_nanos": 1774465606520532155,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/BookingPage-Ukop81KE.js": {
+      "size": 6884,
+      "mtime_nanos": 1774465611407559259,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/placeholder.svg": {
+      "size": 304,
+      "mtime_nanos": 1774465606546544680,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/Settings-BWhNCC0p.js": {
+      "size": 17135,
+      "mtime_nanos": 1774465611417478738,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/SessionExercisesPanel-CFOezRuL.js": {
+      "size": 91,
+      "mtime_nanos": 1774465611417371035,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/FornecedoresPage-B9DFcECl.js": {
+      "size": 9040,
+      "mtime_nanos": 1774465611411256983,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/useProjects-DiFw-9rY.js": {
+      "size": 1190,
+      "mtime_nanos": 1774465611423659423,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/EvolutionDraggableGrid-DAgwOQyD.js": {
+      "size": 68452,
+      "mtime_nanos": 1774465611410130784,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/clinical-tests/papers/y-balance-review-plisky-2021.pdf": {
+      "size": 3172219,
+      "mtime_nanos": 1774465606540685775,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/ProgressAnalysisCard-BxQ1wWVv.js": {
+      "size": 7191,
+      "mtime_nanos": 1774465611415977325,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/form-CSt_rhp8.js": {
+      "size": 1796,
+      "mtime_nanos": 1774465611420146721,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/useContratados-B7qHhVtG.js": {
+      "size": 1091,
+      "mtime_nanos": 1774465611422751912,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/clinical-tests/papers/spurling-radiculopathy-thoomes-2026.pdf": {
+      "size": 0,
+      "mtime_nanos": 1774077280164439438,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/MedicalChatbot-Cr4MLT5e.js": {
+      "size": 22515,
+      "mtime_nanos": 1774465611413150582,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/useTarefas-CZQKsBbB.js": {
+      "size": 3329,
+      "mtime_nanos": 1774465611423888867,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/PatientActivityLabTab-DMSm0jMZ.js": {
+      "size": 4582,
+      "mtime_nanos": 1774465611414618887,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/Telemedicine-xBYiOhoZ.js": {
+      "size": 9175,
+      "mtime_nanos": 1774465611418086120,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/Integrations-BPQBw_qp.js": {
+      "size": 3561,
+      "mtime_nanos": 1774465611412204027,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/PendingApproval-D1qhlplM.js": {
+      "size": 2039,
+      "mtime_nanos": 1774465611415550425,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/BeforeAfter-DLHjMZBJ.js": {
+      "size": 10294,
+      "mtime_nanos": 1774465611407372420,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/PackagesManager-An7ClwHK.js": {
+      "size": 79,
+      "mtime_nanos": 1774465611414246398,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/VersionManager-C13ORyOz.js": {
+      "size": 640,
+      "mtime_nanos": 1774465611418593692,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/ClinicalReportPDFDocument-CrPyrC2C.js": {
+      "size": 7203,
+      "mtime_nanos": 1774465611408068786,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/biomechanics-reports-Bcv2_uE3.js": {
+      "size": 5393,
+      "mtime_nanos": 1774465611419268126,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/Notifications-BwoEzsAi.js": {
+      "size": 5793,
+      "mtime_nanos": 1774465611413868041,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/ContratosPage-BEYR3Pex.js": {
+      "size": 7584,
+      "mtime_nanos": 1774465611408697751,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/EmailTest-Cmk4H83k.js": {
+      "size": 2189,
+      "mtime_nanos": 1774465611409604074,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/TrajectoryPanel-Bq-Nv_kR.js": {
+      "size": 12415,
+      "mtime_nanos": 1774465611418421451,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/initCornerstone-CPHGTVyt.js": {
+      "size": 453,
+      "mtime_nanos": 1774465611420440982,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/LevelJourneyMap-BW6-5Tau.js": {
+      "size": 2369,
+      "mtime_nanos": 1774465611412786195,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/goalsAdminService-EuBxuR6M.js": {
+      "size": 1734,
+      "mtime_nanos": 1774465611420405780,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/usePatientEvolutionReport-DvB2sTnk.js": {
+      "size": 2713,
+      "mtime_nanos": 1774465611423548437,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/WhatsAppIntegration-Fa1yziRq.js": {
+      "size": 9362,
+      "mtime_nanos": 1774465611418831867,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/NotionEvolutionPanel-BiM_PXKR.js": {
+      "size": 37848,
+      "mtime_nanos": 1774465611414003333,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/AttendanceReport-QR4Ta-5I.js": {
+      "size": 22898,
+      "mtime_nanos": 1774465611407014668,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/DicomBrowser-C0c4Ghl8.js": {
+      "size": 4421,
+      "mtime_nanos": 1774465611408861889,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/FunctionalAnalysisStudio-DWhUobuM.js": {
+      "size": 21305,
+      "mtime_nanos": 1774465611411402752,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/android-chrome-192x192.avif": {
+      "size": 6802,
+      "mtime_nanos": 1774465606520191725,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/AdminCRUD-D7CM-h7i.js": {
+      "size": 54687,
+      "mtime_nanos": 1774465611406274858,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/PhysiotherapyHub-Dm5cUpYF.js": {
+      "size": 15828,
+      "mtime_nanos": 1774465611415587234,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/BoardDetail-Dhqoy9Zk.js": {
+      "size": 38531,
+      "mtime_nanos": 1774465611407444711,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/ExerciseLibraryModal-Dhn7aaqG.js": {
+      "size": 889,
+      "mtime_nanos": 1774465611410668809,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/PreCadastroAdmin-BFQGzgb-.js": {
+      "size": 19030,
+      "mtime_nanos": 1774465611415829950,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/ServicosPage-BICx0caZ.js": {
+      "size": 8661,
+      "mtime_nanos": 1774465611417246569,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/favicon.svg": {
+      "size": 20948,
+      "mtime_nanos": 1774465606543649138,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/Inventory-D-mHsPG6.js": {
+      "size": 13372,
+      "mtime_nanos": 1774465611412274432,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/FinancialAIAdvisor-BvR1NlVF.js": {
+      "size": 85,
+      "mtime_nanos": 1774465611411098991,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/Profile-DMgBbeaG.js": {
+      "size": 12839,
+      "mtime_nanos": 1774465611415921518,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/EvolutionHistoryTab-BeW1RZMz.js": {
+      "size": 63023,
+      "mtime_nanos": 1774465611410191829,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/EvaluationFormsPage-D8ZeC5KH.js": {
+      "size": 49765,
+      "mtime_nanos": 1774465611409815708,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/PatientAnalyticsDashboard-BUviVrOZ.js": {
+      "size": 21303,
+      "mtime_nanos": 1774465611414681819,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/TeamPerformance-8YofLpOp.js": {
+      "size": 18465,
+      "mtime_nanos": 1774465611418042606,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/usePDFGenerator-Cewk_-Kn.js": {
+      "size": 2403,
+      "mtime_nanos": 1774465611423353008,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/PathologyStatus-BUbaykBB.js": {
+      "size": 6724,
+      "mtime_nanos": 1774465611414517191,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/clinical-tests/papers/acl-meta-analysis-huang-2022.pdf": {
+      "size": 1817,
+      "mtime_nanos": 1774465606522940590,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/KanbanColumnV2-CPy7Ly8w.js": {
+      "size": 4149,
+      "mtime_nanos": 1774465611412571627,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/DraggableGrid-Bxsdp7JP.js": {
+      "size": 2356,
+      "mtime_nanos": 1774465611409343827,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/useEmpresasParceiras-y_HOFZrP.js": {
+      "size": 1101,
+      "mtime_nanos": 1774465611422895725,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/DocumentScannerPage-DEh6m0lk.js": {
+      "size": 23209,
+      "mtime_nanos": 1774465611409245973,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/context-menu-CFoYmvOW.js": {
+      "size": 5141,
+      "mtime_nanos": 1774465611419631745,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/Reports-BpDjljyM.js": {
+      "size": 15316,
+      "mtime_nanos": 1774465611416710151,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/BoardsHome-D_h472tv.js": {
+      "size": 22774,
+      "mtime_nanos": 1774465611407506734,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/tarefas-D7jtnrCH.js": {
+      "size": 1199,
+      "mtime_nanos": 1774465611422091167,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/PatientEvolutionReport-DTVIyTyJ.js": {
+      "size": 12365,
+      "mtime_nanos": 1774465611414952682,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/MedicalReportSuggestions-6KgQ7BLD.js": {
+      "size": 6659,
+      "mtime_nanos": 1774465611413202478,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/charlswasm_decode-484ovEoR.wasm": {
+      "size": 145700,
+      "mtime_nanos": 1774465611428679824,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/AppointmentsCacheService-Dd3kdTcI.js": {
+      "size": 2227,
+      "mtime_nanos": 1774465611406876163,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/Eventos-xI6w8qol.js": {
+      "size": 27784,
+      "mtime_nanos": 1774465611409929976,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/ClinicalPostureAnalysis-D6Ba_f20.js": {
+      "size": 8331,
+      "mtime_nanos": 1774465611407968836,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/GoalProfileEditorPage-CPChx0vO.js": {
+      "size": 16590,
+      "mtime_nanos": 1774465611411816940,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/LocalSEO-DfTcPxq9.js": {
+      "size": 279,
+      "mtime_nanos": 1774465611412859533,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/DicomWorkspacePage-C2GtqKGd.js": {
+      "size": 10943,
+      "mtime_nanos": 1774465611408983980,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/NewExerciseModal-BGaHe9jn.js": {
+      "size": 81,
+      "mtime_nanos": 1774465611413563303,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/CalendarSettings-DEpQ9R1m.js": {
+      "size": 27786,
+      "mtime_nanos": 1774465611407669755,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/DoctorReferralReportGenerator-DV95ybtR.js": {
+      "size": 6511,
+      "mtime_nanos": 1774465611409138200,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/lossless-uwRnEbWE.js": {
+      "size": 14302,
+      "mtime_nanos": 1774465611430537871,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/clinical-tests/papers/thessaly-meniscal-hta-2015.pdf": {
+      "size": 12701426,
+      "mtime_nanos": 1774465606533685374,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/EvolutionResponsiveLayout-BEqhwVWJ.js": {
+      "size": 721,
+      "mtime_nanos": 1774465611410279207,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/validators-CDpxGWAE.js": {
+      "size": 1277,
+      "mtime_nanos": 1774465611424249483,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/NewExerciseModal-Bt9jhs3E.js": {
+      "size": 12602,
+      "mtime_nanos": 1774465611413601020,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/esm-C-BlKPb7.js": {
+      "size": 2617,
+      "mtime_nanos": 1774465611419879280,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/GamificationLeaderboardPage-Df57TCN7.js": {
+      "size": 8143,
+      "mtime_nanos": 1774465611411680949,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/Automation-B-VaP923.js": {
+      "size": 12317,
+      "mtime_nanos": 1774465611407278407,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/use-toast-BVLp0f7A.js": {
+      "size": 32,
+      "mtime_nanos": 1774465611422425241,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/UserManagement--mjoxg1o.js": {
+      "size": 13964,
+      "mtime_nanos": 1774465611418551714,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/apple-touch-icon.avif": {
+      "size": 6720,
+      "mtime_nanos": 1774465606522233398,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/native-C9lqLBeo.js": {
+      "size": 2894,
+      "mtime_nanos": 1774465611420997935,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/DicomViewer-BwWOQiqZ.js": {
+      "size": 1609,
+      "mtime_nanos": 1774465611408900165,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/InviteUserModal-D8tHdGG6.js": {
+      "size": 5443,
+      "mtime_nanos": 1774465611412356082,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/MagicTextarea-BGifWVn5.js": {
+      "size": 2358,
+      "mtime_nanos": 1774465611412941602,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/EvolutionTemplatesPage-DCY1LZaK.js": {
+      "size": 7152,
+      "mtime_nanos": 1774465611410317273,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/patient-summary-BOvVivY8.js": {
+      "size": 185,
+      "mtime_nanos": 1774465611421297715,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/useExerciseProtocols-Wqj2vciJ.js": {
+      "size": 2699,
+      "mtime_nanos": 1774465611423059444,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/useTherapists-mmI3MgG6.js": {
+      "size": 1018,
+      "mtime_nanos": 1774465611424015219,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/GamificationQuestsPage-BB7en6Lt.js": {
+      "size": 6631,
+      "mtime_nanos": 1774465611411717199,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/favicon.ico": {
+      "size": 4154,
+      "mtime_nanos": 1774465606543429611,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/EventosAnalytics-Br5T7g_E.js": {
+      "size": 4299,
+      "mtime_nanos": 1774465611409994374,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/vendor-jspdf-DBvvQPSl.js": {
+      "size": 356582,
+      "mtime_nanos": 1774465611427640792,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/PatientEvolutionDashboard-BIJocZze.js": {
+      "size": 13502,
+      "mtime_nanos": 1774465611414890240,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/calendar-CGy78mOm.js": {
+      "size": 2544,
+      "mtime_nanos": 1774465611419339439,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/marketingService-kzppIflg.js": {
+      "size": 6087,
+      "mtime_nanos": 1774465611420768840,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/openjpegwasm_decode-B3gWTHpv.wasm": {
+      "size": 255489,
+      "mtime_nanos": 1774465611429114336,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/AniversariantesPage-CoyhXuGe.js": {
+      "size": 6694,
+      "mtime_nanos": 1774465611406802196,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/AdminDashboard-B5OZhIko.js": {
+      "size": 19724,
+      "mtime_nanos": 1774465611406339745,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/clinical-tests/papers/hip-fai-combined-tests-palsson-2020.pdf": {
+      "size": 1817,
+      "mtime_nanos": 1774465606523218508,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/ExerciseAI-BniidMdZ.js": {
+      "size": 28137,
+      "mtime_nanos": 1774465611410362184,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/Wiki-CaaqD3tA.js": {
+      "size": 155381,
+      "mtime_nanos": 1774465611418916730,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/exceljsWrapper-BnM8SekV.js": {
+      "size": 3694,
+      "mtime_nanos": 1774465611420077224,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/icons/favicon-16x16.svg": {
+      "size": 20948,
+      "mtime_nanos": 1774465606544773102,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/date-range-picker-CKqfMefW.js": {
+      "size": 1059,
+      "mtime_nanos": 1774465611419705083,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/ErrorPage-BmmbuGVa.js": {
+      "size": 983,
+      "mtime_nanos": 1774465611409736712,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/dialog-VVUdh5V0.js": {
+      "size": 2928,
+      "mtime_nanos": 1774465611419772764,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/mfa-D3Ls-vIo.js": {
+      "size": 2094,
+      "mtime_nanos": 1774465611420878499,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/config-CKrnpnU0.js": {
+      "size": 221,
+      "mtime_nanos": 1774465611419597031,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/usePatientCrud-D3e7rG6J.js": {
+      "size": 6840,
+      "mtime_nanos": 1774465611423463853,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/Settings-BrJvwYro.js": {
+      "size": 26666,
+      "mtime_nanos": 1774465611417519598,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/RelatorioMedicoPDF-CYsa57Tb.js": {
+      "size": 5415,
+      "mtime_nanos": 1774465611416624589,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/SecurityMonitoring-Cm_Fo4c3.js": {
+      "size": 253,
+      "mtime_nanos": 1774465611417097797,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/JourneyTimelapse-BFu_jtuR.js": {
+      "size": 9019,
+      "mtime_nanos": 1774465611412406022,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/PatientProfilePage-Dpg7blrO.js": {
+      "size": 49346,
+      "mtime_nanos": 1774465611415318466,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/useStatusConfig-BbfFZIEO.js": {
+      "size": 8299,
+      "mtime_nanos": 1774465611423846890,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/TarefasV2-Dd-lThQZ.js": {
+      "size": 40811,
+      "mtime_nanos": 1774465611417854859,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/useGoogleOAuth-D-sR0zks.js": {
+      "size": 639,
+      "mtime_nanos": 1774465611423209753,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/auth-CAma0SCY.js": {
+      "size": 851,
+      "mtime_nanos": 1774465611419233273,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/v2-BKr-sq3N.js": {
+      "size": 52243,
+      "mtime_nanos": 1774465611424170417,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/vendor-cornerstone-NUH966Ie.js": {
+      "size": 1416337,
+      "mtime_nanos": 1774465611425965044,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/grid-layout-6GVPrQjZ.css": {
+      "size": 3192,
+      "mtime_nanos": 1774465611428916881,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/android-chrome-512x512.avif": {
+      "size": 16387,
+      "mtime_nanos": 1774465606520843669,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/DoctorManagement-CpmefAYI.js": {
+      "size": 4661,
+      "mtime_nanos": 1774465611409102439,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/Schedule-BAYE50xx.js": {
+      "size": 120778,
+      "mtime_nanos": 1774465611416914590,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/useEventosStats-DRgMPyUa.js": {
+      "size": 1280,
+      "mtime_nanos": 1774465611422977864,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/dicomWebClient-DEd7ZiY2.js": {
+      "size": 1231,
+      "mtime_nanos": 1774465611419807198,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/JumpAnalysisStudio-Dslkq2Iu.js": {
+      "size": 11403,
+      "mtime_nanos": 1774465611412487253,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/logger-xbvtnlpA.js": {
+      "size": 3467,
+      "mtime_nanos": 1774465611420691520,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/TreatmentAssistant-CzKatv5Z.js": {
+      "size": 8752,
+      "mtime_nanos": 1774465611418511133,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/useOrganizations-DGF6JjGQ.js": {
+      "size": 2201,
+      "mtime_nanos": 1774465611423316827,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/IncompleteRegistrationAlert-CUjpJByB.js": {
+      "size": 5629,
+      "mtime_nanos": 1774465611412086406,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/useDocumentTemplates-Buq82XtF.js": {
+      "size": 2104,
+      "mtime_nanos": 1774465611422860453,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/PoseAnalyzer-EtqbekY0.js": {
+      "size": 4802,
+      "mtime_nanos": 1774465611415633123,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/RichTextEditor-Bs-Hcd9K.css": {
+      "size": 13892,
+      "mtime_nanos": 1774465611428575683,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/clinicalReportPdfExport-DlBJcM8B.js": {
+      "size": 1037,
+      "mtime_nanos": 1774465611419511819,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/FunctionalAnalysisPage-FEFJ2PBX.js": {
+      "size": 1573,
+      "mtime_nanos": 1774465611411296586,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/manifest.json": {
+      "size": 1998,
+      "mtime_nanos": 1774465606545923608,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/AuthenticatedAppShell-BQ_2jDh9.js": {
+      "size": 2895,
+      "mtime_nanos": 1774465611407248932,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/DynamicCompareDetailsPage-D049yncV.js": {
+      "size": 18334,
+      "mtime_nanos": 1774465611409415001,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/Financial-BlR3moee.js": {
+      "size": 24670,
+      "mtime_nanos": 1774465611411049959,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/initPerformanceMonitoring-TpPhAJtr.js": {
+      "size": 8846,
+      "mtime_nanos": 1774465611420475836,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/ClinicalAnalysisPage-D0ub2_Oz.js": {
+      "size": 24709,
+      "mtime_nanos": 1774465611407870214,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/PatientService-830bt_xQ.js": {
+      "size": 3799,
+      "mtime_nanos": 1774465611415380210,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/favicon-16x16.png": {
+      "size": 884,
+      "mtime_nanos": 1774465606542236849,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/useEvaluationForms-TN4KdI9E.js": {
+      "size": 2418,
+      "mtime_nanos": 1774465611422931975,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/useCRM-Bh9ZYtiJ.js": {
+      "size": 3780,
+      "mtime_nanos": 1774465611422681018,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/offline.html": {
+      "size": 4344,
+      "mtime_nanos": 1774465606546261454,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/WeeklyChallenges-DxHkniaE.js": {
+      "size": 2916,
+      "mtime_nanos": 1774465611418745328,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/useFinancial-gVZvUqHu.js": {
+      "size": 2270,
+      "mtime_nanos": 1774465611423173503,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/upload-DK3Ylm2A.js": {
+      "size": 267,
+      "mtime_nanos": 1774465611422390458,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/ErrorHandler-D6l_0QyU.js": {
+      "size": 3929,
+      "mtime_nanos": 1774465611409694176,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/pdf-generator-D_06bxjZ.js": {
+      "size": 8726,
+      "mtime_nanos": 1774465611421367771,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/FeedbackPreCadastro-VTmTJBGC.css": {
+      "size": 2443,
+      "mtime_nanos": 1774465611428535731,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/posthog-C0epDyve.js": {
+      "size": 186,
+      "mtime_nanos": 1774465611421557682,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/src-CtI1WNJ1.js": {
+      "size": 6089,
+      "mtime_nanos": 1774465611421916412,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/ExerciseVideoUpload-1MxNYB92.js": {
+      "size": 17795,
+      "mtime_nanos": 1774465611410793764,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/useScheduleCapacity-D71W46W8.js": {
+      "size": 6530,
+      "mtime_nanos": 1774465611423730875,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/TelemedicineRoom-q3zs3Th-.js": {
+      "size": 2479,
+      "mtime_nanos": 1774465611418126630,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/InviteUserModal-CJxudjCX.js": {
+      "size": 79,
+      "mtime_nanos": 1774465611412316828,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/favicon-48x48.png": {
+      "size": 1900,
+      "mtime_nanos": 1774465606543158119,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/InclinometerPanel-Dzrf27Rc.js": {
+      "size": 5000,
+      "mtime_nanos": 1774465611412048759,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/DemonstrativoMensalPage-CfGnfJY1.js": {
+      "size": 13093,
+      "mtime_nanos": 1774465611408812368,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/vendor-D_THMjjY.js": {
+      "size": 8109535,
+      "mtime_nanos": 1774465611424289155,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/EvolucaoTab-DLaAep_6.js": {
+      "size": 303,
+      "mtime_nanos": 1774465611410092857,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/AtestadosPage-B8_hTNOd.js": {
+      "size": 10475,
+      "mtime_nanos": 1774465611406975904,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/SeedData-CwVOh5WM.js": {
+      "size": 6692,
+      "mtime_nanos": 1774465611417174418,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/pdfExport-DGmTL58p.js": {
+      "size": 1809,
+      "mtime_nanos": 1774465611421408840,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/geminiAiService-BPY7v396.js": {
+      "size": 147,
+      "mtime_nanos": 1774465611420222015,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/dialog-utilities-BHuTQCh1.css": {
+      "size": 1345,
+      "mtime_nanos": 1774465611428874904,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/checkbox-C0I1jnoG.js": {
+      "size": 750,
+      "mtime_nanos": 1774465611419440786,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/AIAssistantPanel-BO-E-Auo.js": {
+      "size": 14711,
+      "mtime_nanos": 1774465611404963846,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/TemplateManager-B6X0kO-F.js": {
+      "size": 20161,
+      "mtime_nanos": 1774465611418199550,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/textarea-CsBO4U_7.js": {
+      "size": 588,
+      "mtime_nanos": 1774465611422124973,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/FinancialAIAdvisor-H0wU__hY.js": {
+      "size": 3277,
+      "mtime_nanos": 1774465611411139432,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/patient-combobox-BvhalMU9.js": {
+      "size": 13915,
+      "mtime_nanos": 1774465611421253363,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/userHelpers-DjdPD12I.js": {
+      "size": 440,
+      "mtime_nanos": 1774465611424093028,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/PostureAnalysisPage-Clq2GEMe.js": {
+      "size": 1574,
+      "mtime_nanos": 1774465611415713167,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/radio-group-BaG5AN9C.js": {
+      "size": 835,
+      "mtime_nanos": 1774465611421665036,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/FeriadosPage-DoZT68S-.js": {
+      "size": 7803,
+      "mtime_nanos": 1774465611410997435,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/CohortComparison-BV-ni-8-.js": {
+      "size": 18813,
+      "mtime_nanos": 1774465611408188922,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/SessionEvolutionPage-b_ZKny7l.js": {
+      "size": 166877,
+      "mtime_nanos": 1774465611417285264,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/react-pdf.browser-CNFhtOCT.js": {
+      "size": 990,
+      "mtime_nanos": 1774465611421699191,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/ProfessionalManagement-xr5dz9so.js": {
+      "size": 10868,
+      "mtime_nanos": 1774465611415873953,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/AvaliacaoTab-x2HTvRc4.js": {
+      "size": 3778,
+      "mtime_nanos": 1774465611407315146,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/GridWidget-DfiPmR8-.js": {
+      "size": 3069,
+      "mtime_nanos": 1774465611411910953,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/resizable-mFTGNSPw.js": {
+      "size": 1174,
+      "mtime_nanos": 1774465611421809129,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/icons/badge-72x72.svg": {
+      "size": 20948,
+      "mtime_nanos": 1774465606544364223,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/NotionEvolutionPanel-CMGg3fes.js": {
+      "size": 79453,
+      "mtime_nanos": 1774465611414090362,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/surgery-3z0U6Iep.js": {
+      "size": 1056,
+      "mtime_nanos": 1774465611422015245,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/decodeImageFrameWorker-DeI2RQoo.js": {
+      "size": 148999,
+      "mtime_nanos": 1774465611430382673,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/AdvancedAnalytics-BD4cT5D8.js": {
+      "size": 44121,
+      "mtime_nanos": 1774465611406600970,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/clinical-tests/papers/hip-systematic-review-rahman-2013.pdf": {
+      "size": 322832,
+      "mtime_nanos": 1774465606523684801,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/clinical-test-combobox-Cvrhcm1b.js": {
+      "size": 6600,
+      "mtime_nanos": 1774465611419475080,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/BackupSettings-C_ZUjgCN.js": {
+      "size": 2822,
+      "mtime_nanos": 1774465611407343224,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/EditEventoModal-DoB4yDDp.js": {
+      "size": 7734,
+      "mtime_nanos": 1774465611409517465,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/generateClinicalTestPdf-ywM8CfUD.js": {
+      "size": 2657,
+      "mtime_nanos": 1774465611420296541,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/AIInsightsWidget-CSO0tYGl.js": {
+      "size": 3402,
+      "mtime_nanos": 1774465611406069580,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/AdvancedReportGenerator-CCGSGiRN.js": {
+      "size": 5479,
+      "mtime_nanos": 1774465611406700221,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/DicomViewerInner-5Hn5FCiW.js": {
+      "size": 5303,
+      "mtime_nanos": 1774465611408935437,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/EventosStatsWidget-BmfiyE6O.js": {
+      "size": 2919,
+      "mtime_nanos": 1774465611410046270,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/Vouchers-B21iPQUR.js": {
+      "size": 18461,
+      "mtime_nanos": 1774465611418627637,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/Reviews-B6GYd5nm.js": {
+      "size": 8763,
+      "mtime_nanos": 1774465611416749753,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/libjpegturbowasm_decode-daqMmuVl.wasm": {
+      "size": 178739,
+      "mtime_nanos": 1774465611429018857,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/Exports-jNnOorYf.js": {
+      "size": 9175,
+      "mtime_nanos": 1774465611410877439,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/TratamentoTab-UsITN4qh.js": {
+      "size": 18855,
+      "mtime_nanos": 1774465611418462451,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/JumpAnalysisPage-DTI10sYC.js": {
+      "size": 1573,
+      "mtime_nanos": 1774465611412450304,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/painMapService-Kye798dw.js": {
+      "size": 4684,
+      "mtime_nanos": 1774465611421110807,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/useExerciseTemplates-r-oYQCqg.js": {
+      "size": 3608,
+      "mtime_nanos": 1774465611423094647,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/.turbo/turbo-build.log": {
+      "size": 87240,
+      "mtime_nanos": 1774465611905992426,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/DraggableGrid-BnIWkQIv.js": {
+      "size": 75,
+      "mtime_nanos": 1774465611409310860,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/SmartTextarea-D8Lcdn0J.js": {
+      "size": 8685,
+      "mtime_nanos": 1774465611417651607,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/remote-config-manager-DFj6be9n.js": {
+      "size": 4436,
+      "mtime_nanos": 1774465611421770573,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/storageProxy-BkAPUHQb.js": {
+      "size": 586,
+      "mtime_nanos": 1774465611421973337,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/jspdf.es.min-CJ8dgWYN.js": {
+      "size": 503,
+      "mtime_nanos": 1774465611420549872,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/ExerciseLibraryExpanded-CMXO2d7q.js": {
+      "size": 7483,
+      "mtime_nanos": 1774465611410615796,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/performance-CA9n7UiA.js": {
+      "size": 4728,
+      "mtime_nanos": 1774465611421444462,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/PatientDashboard360-BaiRmNti.js": {
+      "size": 26785,
+      "mtime_nanos": 1774465611414779603,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/AssistenteTab-iNQOz5OS.js": {
+      "size": 2341,
+      "mtime_nanos": 1774465611406935882,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/metricRegistry-CAAKAu-4.js": {
+      "size": 7391,
+      "mtime_nanos": 1774465611420841410,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/empty-state-UZmMehM9.js": {
+      "size": 802,
+      "mtime_nanos": 1774465611419841353,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/useConnectionStatus-C3Ie7pup.js": {
+      "size": 3198,
+      "mtime_nanos": 1774465611422716779,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/GamificationShopPage-DmL7sinf.js": {
+      "size": 7282,
+      "mtime_nanos": 1774465611411764834,
+      "mode": 436,
+      "is_dir": false
+    },
+    "apps/web/dist/assets/ContentGenerator-BUDBIcUq.js": {
+      "size": 11326,
+      "mtime_nanos": 1774465611408542273,
+      "mode": 436,
+      "is_dir": false
+    }
+  },
+  "order": [
+    "apps/web/.turbo/turbo-build.log",
+    "apps/web/dist",
+    "apps/web/dist/_headers",
+    "apps/web/dist/android-chrome-192x192.avif",
+    "apps/web/dist/android-chrome-192x192.png",
+    "apps/web/dist/android-chrome-512x512.avif",
+    "apps/web/dist/android-chrome-512x512.png",
+    "apps/web/dist/api",
+    "apps/web/dist/api/health.json",
+    "apps/web/dist/api/insights.json",
+    "apps/web/dist/apple-touch-icon.avif",
+    "apps/web/dist/apple-touch-icon.png",
+    "apps/web/dist/assets",
+    "apps/web/dist/assets/AIAssistantPanel-BO-E-Auo.js",
+    "apps/web/dist/assets/AIInsightsWidget-CSO0tYGl.js",
+    "apps/web/dist/assets/AchievementModal-C27Z2dit.js",
+    "apps/web/dist/assets/ActivityLabChart-fylar3dK.js",
+    "apps/web/dist/assets/ActivityLabPage-CruVRAzr.js",
+    "apps/web/dist/assets/Admin-CjfoyQxS.js",
+    "apps/web/dist/assets/AdminCRUD-D7CM-h7i.js",
+    "apps/web/dist/assets/AdminDashboard-B5OZhIko.js",
+    "apps/web/dist/assets/AdminGamificationPage-MJZ9Bxbh.js",
+    "apps/web/dist/assets/AdvancedAnalytics-BD4cT5D8.js",
+    "apps/web/dist/assets/AdvancedAnalytics-efoH1jvL.js",
+    "apps/web/dist/assets/AdvancedReportGenerator-CCGSGiRN.js",
+    "apps/web/dist/assets/AnalyticsFiltersContext-QNidXAX4.js",
+    "apps/web/dist/assets/AniversariantesPage-CoyhXuGe.js",
+    "apps/web/dist/assets/AppointmentQuickEditModal-B_mXQjVj.js",
+    "apps/web/dist/assets/AppointmentsCacheService-Dd3kdTcI.js",
+    "apps/web/dist/assets/AssetViewer-hJzXoikg.js",
+    "apps/web/dist/assets/AssistenteTab-iNQOz5OS.js",
+    "apps/web/dist/assets/AtestadosPage-B8_hTNOd.js",
+    "apps/web/dist/assets/AttendanceReport-QR4Ta-5I.js",
+    "apps/web/dist/assets/AuditLogs-w83QJsgW.js",
+    "apps/web/dist/assets/AugmentedRealityExercise-CFNZrvJL.js",
+    "apps/web/dist/assets/Auth-BxrpGDFG.js",
+    "apps/web/dist/assets/AuthContext-UsFxPPfD.js",
+    "apps/web/dist/assets/AuthenticatedAppShell-BQ_2jDh9.js",
+    "apps/web/dist/assets/Automation-B-VaP923.js",
+    "apps/web/dist/assets/AvaliacaoTab-x2HTvRc4.js",
+    "apps/web/dist/assets/BackupSettings-C_ZUjgCN.js",
+    "apps/web/dist/assets/BeforeAfter-DLHjMZBJ.js",
+    "apps/web/dist/assets/BiomechanicsAnalysisPage-DU_jNDhG.js",
+    "apps/web/dist/assets/BoardDetail-Dhqoy9Zk.js",
+    "apps/web/dist/assets/BoardsHome-D_h472tv.js",
+    "apps/web/dist/assets/BookingPage-Ukop81KE.js",
+    "apps/web/dist/assets/CRMDashboard-jDT4bHds.js",
+    "apps/web/dist/assets/CalendarSettings-DEpQ9R1m.js",
+    "apps/web/dist/assets/CalendarView-BP1Iwf4F.js",
+    "apps/web/dist/assets/ChartWidget-zNu1GxLq.js",
+    "apps/web/dist/assets/ClinicAIInsights-BvDRP8No.js",
+    "apps/web/dist/assets/ClinicalAnalysisPage-D0ub2_Oz.js",
+    "apps/web/dist/assets/ClinicalAnalyticsDashboard-CH9kyrI4.js",
+    "apps/web/dist/assets/ClinicalPostureAnalysis-D6Ba_f20.js",
+    "apps/web/dist/assets/ClinicalReportPDF-DqCk4UVT.js",
+    "apps/web/dist/assets/ClinicalReportPDFDocument-CrPyrC2C.js",
+    "apps/web/dist/assets/ClinicalTestsLibrary-BPRJ1OCE.js",
+    "apps/web/dist/assets/CohortAnalysis-D8mXQEPI.js",
+    "apps/web/dist/assets/CohortComparison-BV-ni-8-.js",
+    "apps/web/dist/assets/CommandPalette-CS3CFSbt.js",
+    "apps/web/dist/assets/Communications-CRh7F3i2.js",
+    "apps/web/dist/assets/ComputerVisionExercise-CpUH1r7M.js",
+    "apps/web/dist/assets/ContasFinanceirasPage-8kH3DuY9.js",
+    "apps/web/dist/assets/ContentCalendar-CTEvu-3D.js",
+    "apps/web/dist/assets/ContentGenerator-BUDBIcUq.js",
+    "apps/web/dist/assets/ContratadosPage-DOw1OVyL.js",
+    "apps/web/dist/assets/ContratosPage-BEYR3Pex.js",
+    "apps/web/dist/assets/Dashboard-BBMbvdjs.js",
+    "apps/web/dist/assets/DemonstrativoMensalPage-CfGnfJY1.js",
+    "apps/web/dist/assets/DicomBrowser-C0c4Ghl8.js",
+    "apps/web/dist/assets/DicomViewer-BwWOQiqZ.js",
+    "apps/web/dist/assets/DicomViewerInner-5Hn5FCiW.js",
+    "apps/web/dist/assets/DicomWorkspacePage-C2GtqKGd.js",
+    "apps/web/dist/assets/DiffViewer-BrWmmz5b.js",
+    "apps/web/dist/assets/DoctorFormModal-CWu52z6X.js",
+    "apps/web/dist/assets/DoctorManagement-CpmefAYI.js",
+    "apps/web/dist/assets/DoctorReferralReportGenerator-DV95ybtR.js",
+    "apps/web/dist/assets/DocumentScanner-p_G37eBx.js",
+    "apps/web/dist/assets/DocumentScannerPage-DEh6m0lk.js",
+    "apps/web/dist/assets/DraggableGrid-BnIWkQIv.js",
+    "apps/web/dist/assets/DraggableGrid-Bxsdp7JP.js",
+    "apps/web/dist/assets/DynamicAnalysisViewer-BuyKfpUq.js",
+    "apps/web/dist/assets/DynamicCompareDetailsPage-D049yncV.js",
+    "apps/web/dist/assets/DynamicComparisonPage-BLkolJJV.js",
+    "apps/web/dist/assets/EditEventoModal-DoB4yDDp.js",
+    "apps/web/dist/assets/EditPatientModal-Dxn6j_3u.js",
+    "apps/web/dist/assets/EmailTest-Cmk4H83k.js",
+    "apps/web/dist/assets/EmptyStateEnhanced-Ec4U5T4w.js",
+    "apps/web/dist/assets/ErrorHandler-D6l_0QyU.js",
+    "apps/web/dist/assets/ErrorPage-BmmbuGVa.js",
+    "apps/web/dist/assets/EvaluationFormBuilderPage-BIHGKCt4.js",
+    "apps/web/dist/assets/EvaluationFormsPage-D8ZeC5KH.js",
+    "apps/web/dist/assets/EventoDetalhes-6QX8RWEO.js",
+    "apps/web/dist/assets/Eventos-xI6w8qol.js",
+    "apps/web/dist/assets/EventosAnalytics-Br5T7g_E.js",
+    "apps/web/dist/assets/EventosStatsWidget-BmfiyE6O.js",
+    "apps/web/dist/assets/EvolucaoTab-DLaAep_6.js",
+    "apps/web/dist/assets/EvolutionDraggableGrid-DAgwOQyD.js",
+    "apps/web/dist/assets/EvolutionHistoryTab-BeW1RZMz.js",
+    "apps/web/dist/assets/EvolutionResponsiveLayout-BEqhwVWJ.js",
+    "apps/web/dist/assets/EvolutionTemplatesPage-DCY1LZaK.js",
+    "apps/web/dist/assets/ExerciseAI-BniidMdZ.js",
+    "apps/web/dist/assets/ExerciseExecutionScreen-DZ_JtHl2.js",
+    "apps/web/dist/assets/ExerciseLibrary-zH8PzV5v.js",
+    "apps/web/dist/assets/ExerciseLibraryExpanded-CMXO2d7q.js",
+    "apps/web/dist/assets/ExerciseLibraryModal-Dhn7aaqG.js",
+    "apps/web/dist/assets/ExercisePlayer-Bx7E_IUe.js",
+    "apps/web/dist/assets/ExerciseVideoLibrary-BfeSnhvY.js",
+    "apps/web/dist/assets/ExerciseVideoUpload-1MxNYB92.js",
+    "apps/web/dist/assets/Exercises-GWi9gc-A.js",
+    "apps/web/dist/assets/Exports-jNnOorYf.js",
+    "apps/web/dist/assets/FeedbackPreCadastro-VTmTJBGC.css",
+    "apps/web/dist/assets/FeedbackPreCadastro-gxrgGB1h.js",
+    "apps/web/dist/assets/FeriadosPage-DoZT68S-.js",
+    "apps/web/dist/assets/Financial-BlR3moee.js",
+    "apps/web/dist/assets/FinancialAIAdvisor-BvR1NlVF.js",
+    "apps/web/dist/assets/FinancialAIAdvisor-H0wU__hY.js",
+    "apps/web/dist/assets/FisioLink-BLNzfK85.js",
+    "apps/web/dist/assets/FluxoCaixaPage-BYfhNgZx.js",
+    "apps/web/dist/assets/FornecedoresPage-B9DFcECl.js",
+    "apps/web/dist/assets/FunctionalAnalysisPage-FEFJ2PBX.js",
+    "apps/web/dist/assets/FunctionalAnalysisStudio-DWhUobuM.js",
+    "apps/web/dist/assets/GaitAnalysisPage-ZbQDbpJT.js",
+    "apps/web/dist/assets/GaitAnalysisStudio-BiMpyfFz.js",
+    "apps/web/dist/assets/Gamification-cawmUYmR.js",
+    "apps/web/dist/assets/GamificationAchievementsPage-nsG8De0v.js",
+    "apps/web/dist/assets/GamificationFeedbackContext-CFa-c42k.js",
+    "apps/web/dist/assets/GamificationHeader-DtGOcpF3.js",
+    "apps/web/dist/assets/GamificationLeaderboardPage-Df57TCN7.js",
+    "apps/web/dist/assets/GamificationQuestsPage-BB7en6Lt.js",
+    "apps/web/dist/assets/GamificationShopPage-DmL7sinf.js",
+    "apps/web/dist/assets/GoalProfileEditorPage-CPChx0vO.js",
+    "apps/web/dist/assets/GoalProfileListPage-B84rfza7.js",
+    "apps/web/dist/assets/GridWidget-DfiPmR8-.js",
+    "apps/web/dist/assets/HistoricoTab-Bwtn7HSt.js",
+    "apps/web/dist/assets/ImageAnalysisDashboard-hRaYDtc-.js",
+    "apps/web/dist/assets/InclinometerPanel-Dzrf27Rc.js",
+    "apps/web/dist/assets/IncompleteRegistrationAlert-CUjpJByB.js",
+    "apps/web/dist/assets/Index-r4Kv3zSc.js",
+    "apps/web/dist/assets/Install-CbUgDMIC.js",
+    "apps/web/dist/assets/Integrations-BPQBw_qp.js",
+    "apps/web/dist/assets/IntelligentReports-B7UXwjC6.js",
+    "apps/web/dist/assets/Inventory-D-mHsPG6.js",
+    "apps/web/dist/assets/InviteUserModal-CJxudjCX.js",
+    "apps/web/dist/assets/InviteUserModal-D8tHdGG6.js",
+    "apps/web/dist/assets/JourneyTimelapse-BFu_jtuR.js",
+    "apps/web/dist/assets/JumpAnalysisPage-DTI10sYC.js",
+    "apps/web/dist/assets/JumpAnalysisStudio-Dslkq2Iu.js",
+    "apps/web/dist/assets/KanbanCardV2-Dz-y1iXT.js",
+    "apps/web/dist/assets/KanbanColumnV2-CPy7Ly8w.js",
+    "apps/web/dist/assets/KeyboardShortcuts-Dppjewi2.js",
+    "apps/web/dist/assets/LazyPdfDownloadButton-5Oe-fefv.js",
+    "apps/web/dist/assets/LeadImport-B3a5r5Fk.js",
+    "apps/web/dist/assets/Leaderboard-yJH-qwmJ.js",
+    "apps/web/dist/assets/LevelJourneyMap-BW6-5Tau.js",
+    "apps/web/dist/assets/LevelUpModal-CyJvf_s5.js",
+    "apps/web/dist/assets/LocalSEO-DfTcPxq9.js",
+    "apps/web/dist/assets/LocalSEOTracker-BTUi7afM.js",
+    "apps/web/dist/assets/MagicTextarea-BGifWVn5.js",
+    "apps/web/dist/assets/MasterDataHub-CJxyjhY5.js",
+    "apps/web/dist/assets/MeasurementCharts-CR2Hrdpm.js",
+    "apps/web/dist/assets/MeasurementForm-DbSIyHrG.js",
+    "apps/web/dist/assets/MedicalChatbot-Cr4MLT5e.js",
+    "apps/web/dist/assets/MedicalReportSuggestions-6KgQ7BLD.js",
+    "apps/web/dist/assets/MedicalReturnCard-CvYXib45.js",
+    "apps/web/dist/assets/MetaFormModal-ByqLPem2.js",
+    "apps/web/dist/assets/MetasCard-Bzyw4GJc.js",
+    "apps/web/dist/assets/MovementLabPage-B0nVu_a2.js",
+    "apps/web/dist/assets/MythVsTruth-CFfBIYaz.js",
+    "apps/web/dist/assets/NFSePage-CIhNWlQR.js",
+    "apps/web/dist/assets/NewEvaluationPage-C_zdgGvH.js",
+    "apps/web/dist/assets/NewExerciseModal-BGaHe9jn.js",
+    "apps/web/dist/assets/NewExerciseModal-Bt9jhs3E.js",
+    "apps/web/dist/assets/NewPatientPage-DtnESvpr.js",
+    "apps/web/dist/assets/NewProtocolModal-pvWHCBXF.js",
+    "apps/web/dist/assets/NotFound-DO_eoVWF.js",
+    "apps/web/dist/assets/NotificationHistory-DfFyjklG.js",
+    "apps/web/dist/assets/NotificationPreferences-CKhZWU8m.js",
+    "apps/web/dist/assets/Notifications-BwoEzsAi.js",
+    "apps/web/dist/assets/NotionEvolutionEditor-8AagwENp.js",
+    "apps/web/dist/assets/NotionEvolutionEditor-CjguLu7n.js",
+    "apps/web/dist/assets/NotionEvolutionPanel-BiM_PXKR.js",
+    "apps/web/dist/assets/NotionEvolutionPanel-CCcGBwGT.js",
+    "apps/web/dist/assets/NotionEvolutionPanel-CMGg3fes.js",
+    "apps/web/dist/assets/PROMsDashboard-BmBF6W2C.js",
+    "apps/web/dist/assets/PackagesManager-An7ClwHK.js",
+    "apps/web/dist/assets/PackagesManager-B6zWDg4E.js",
+    "apps/web/dist/assets/PainMapHistoryPage-CXPAgpGE.js",
+    "apps/web/dist/assets/PainMapManager-D-foUZPe.js",
+    "apps/web/dist/assets/PainMapRegistration-UKy9sVJ7.js",
+    "apps/web/dist/assets/Partner-D1A8kIyl.js",
+    "apps/web/dist/assets/PathologyStatus-BUbaykBB.js",
+    "apps/web/dist/assets/PatientAIChat-DDaqFe3n.js",
+    "apps/web/dist/assets/PatientActivityLabTab-DMSm0jMZ.js",
+    "apps/web/dist/assets/PatientAnalyticsDashboard-BUviVrOZ.js",
+    "apps/web/dist/assets/PatientDashboard-CHWSSyOA.js",
+    "apps/web/dist/assets/PatientDashboard360-BaiRmNti.js",
+    "apps/web/dist/assets/PatientEvolution-DpLxpZ5T.js",
+    "apps/web/dist/assets/PatientEvolutionDashboard-BIJocZze.js",
+    "apps/web/dist/assets/PatientEvolutionReport-DTVIyTyJ.js",
+    "apps/web/dist/assets/PatientForm-Dh2bqy64.js",
+    "apps/web/dist/assets/PatientGamification-D8AY-xQ3.js",
+    "apps/web/dist/assets/PatientGamificationPage-I1QeTEgh.js",
+    "apps/web/dist/assets/PatientInsightsPanel-CKajm5Da.js",
+    "apps/web/dist/assets/PatientLifecycleChart-DntyRUzy.js",
+    "apps/web/dist/assets/PatientObjectivesPage-BNVeTlIo.js",
+    "apps/web/dist/assets/PatientPortal-DTo06_A-.js",
+    "apps/web/dist/assets/PatientProfilePage-Dpg7blrO.js",
+    "apps/web/dist/assets/PatientService-830bt_xQ.js",
+    "apps/web/dist/assets/PatientSetupPanel-CTGOIuOV.js",
+    "apps/web/dist/assets/PatientSmartSummary-DuCp0PGQ.js",
+    "apps/web/dist/assets/Patients-K8k502yv.js",
+    "apps/web/dist/assets/PendingApproval-D1qhlplM.js",
+    "apps/web/dist/assets/PhysiotherapyHub-Dm5cUpYF.js",
+    "apps/web/dist/assets/PoseAnalyzer-EtqbekY0.js",
+    "apps/web/dist/assets/PosePreloadManager-BNNhgeHg.js",
+    "apps/web/dist/assets/PostureAnalysisPage-Clq2GEMe.js",
+    "apps/web/dist/assets/PostureAnalysisStudio-bn4F7KMu.js",
+    "apps/web/dist/assets/PreCadastro-Bxa_VXGj.js",
+    "apps/web/dist/assets/PreCadastroAdmin-BFQGzgb-.js",
+    "apps/web/dist/assets/ProfessionalManagement-xr5dz9so.js",
+    "apps/web/dist/assets/Profile-DMgBbeaG.js",
+    "apps/web/dist/assets/ProgressAnalysisCard-BxQ1wWVv.js",
+    "apps/web/dist/assets/ProjectDetails-BNgQGBu2.js",
+    "apps/web/dist/assets/ProjectModal-_I7e-xCp.js",
+    "apps/web/dist/assets/Projects-BKs5ODk0.js",
+    "apps/web/dist/assets/Protocols-B-W261aa.js",
+    "apps/web/dist/assets/ProtocolsManager-ERrkLA4Z.js",
+    "apps/web/dist/assets/PublicPrescriptionPage-BcHKKBIJ.js",
+    "apps/web/dist/assets/ROI-D9E2LUIp.js",
+    "apps/web/dist/assets/RealtimeContext-C9P2oxOQ.js",
+    "apps/web/dist/assets/RecibosPage-CUDOZ-7N.js",
+    "apps/web/dist/assets/Referral-DBD-x7rf.js",
+    "apps/web/dist/assets/RelatorioConvenioPDF-ORxzTxxv.js",
+    "apps/web/dist/assets/RelatorioConvenioPage-BEvNSehk.js",
+    "apps/web/dist/assets/RelatorioMedicoPDF-CYsa57Tb.js",
+    "apps/web/dist/assets/RelatorioMedicoPage-BrPHJBcs.js",
+    "apps/web/dist/assets/Reports-BpDjljyM.js",
+    "apps/web/dist/assets/Reviews-B6GYd5nm.js",
+    "apps/web/dist/assets/RewardShop-D886GSjc.js",
+    "apps/web/dist/assets/RichTextEditor-BJWbN_U5.js",
+    "apps/web/dist/assets/RichTextEditor-Bs-Hcd9K.css",
+    "apps/web/dist/assets/RichTextToolbar-D_AWC4rA.js",
+    "apps/web/dist/assets/Schedule-BAYE50xx.js",
+    "apps/web/dist/assets/Schedule-DlwqONgU.css",
+    "apps/web/dist/assets/ScheduleSettings-DfAYVC58.js",
+    "apps/web/dist/assets/SecurityMonitoring-Cm_Fo4c3.js",
+    "apps/web/dist/assets/SecuritySettings-DEADNLwg.js",
+    "apps/web/dist/assets/SeedData-CwVOh5WM.js",
+    "apps/web/dist/assets/ServerSideVideoAnalyzer-kG8J0k0z.js",
+    "apps/web/dist/assets/ServicosPage-BICx0caZ.js",
+    "apps/web/dist/assets/SessionEvolutionPage-b_ZKny7l.js",
+    "apps/web/dist/assets/SessionExercisesPanel-CFOezRuL.js",
+    "apps/web/dist/assets/SessionExercisesPanel-CkWcQ4XX.js",
+    "apps/web/dist/assets/SessionHistoryPanel-c3cSQ6_V.js",
+    "apps/web/dist/assets/Settings-BWhNCC0p.js",
+    "apps/web/dist/assets/Settings-BrJvwYro.js",
+    "apps/web/dist/assets/SmartAI-B77I5z73.js",
+    "apps/web/dist/assets/SmartDashboard-BD_zru7F.js",
+    "apps/web/dist/assets/SmartTextarea-D8Lcdn0J.js",
+    "apps/web/dist/assets/StreakCalendar-CAuLwnRJ.js",
+    "apps/web/dist/assets/SurgeriesCard-8EEp8FCe.js",
+    "apps/web/dist/assets/Surveys-DFfQ2r9T.js",
+    "apps/web/dist/assets/SyncManager-DCrSsiJb.js",
+    "apps/web/dist/assets/TarefasV2-Dd-lThQZ.js",
+    "apps/web/dist/assets/TaskDetailModal-BWiJbhat.js",
+    "apps/web/dist/assets/TaskInsights-DQQyqF8d.js",
+    "apps/web/dist/assets/TaskQuickCreateModal-CreFxH3d.js",
+    "apps/web/dist/assets/TeamPerformance-8YofLpOp.js",
+    "apps/web/dist/assets/Telemedicine-xBYiOhoZ.js",
+    "apps/web/dist/assets/TelemedicineRoom-q3zs3Th-.js",
+    "apps/web/dist/assets/TemplateAnalyticsPage-byrrZP5F.js",
+    "apps/web/dist/assets/TemplateManager-B6X0kO-F.js",
+    "apps/web/dist/assets/TherapistDashboard-e90_p-h_.js",
+    "apps/web/dist/assets/TherapistOccupancy-CpJIdPSz.js",
+    "apps/web/dist/assets/TimeTracking-e0CL1626.js",
+    "apps/web/dist/assets/TourGuide-Cu96HKep.js",
+    "apps/web/dist/assets/TrajectoryPanel-Bq-Nv_kR.js",
+    "apps/web/dist/assets/TratamentoTab-UsITN4qh.js",
+    "apps/web/dist/assets/TreatmentAssistant-CzKatv5Z.js",
+    "apps/web/dist/assets/UserManagement--mjoxg1o.js",
+    "apps/web/dist/assets/VersionManager-C13ORyOz.js",
+    "apps/web/dist/assets/Vouchers-B21iPQUR.js",
+    "apps/web/dist/assets/WaitlistQuickAdd-B7bj16JU.js",
+    "apps/web/dist/assets/WaitlistQuickAdd-GstmQkLW.js",
+    "apps/web/dist/assets/WeeklyChallenges-DxHkniaE.js",
+    "apps/web/dist/assets/Welcome-C5KxVit_.js",
+    "apps/web/dist/assets/WhatsAppIntegration-Fa1yziRq.js",
+    "apps/web/dist/assets/WhatsAppScripts-Bu6pJZNP.js",
+    "apps/web/dist/assets/Wiki-CaaqD3tA.js",
+    "apps/web/dist/assets/accordion-CblwHRir.js",
+    "apps/web/dist/assets/ai-DKfxiD4N.js",
+    "apps/web/dist/assets/alert-dialog-DXIaw_T3.js",
+    "apps/web/dist/assets/app-check-B5MUzEZ7.js",
+    "apps/web/dist/assets/app-check-Dfacol3M.js",
+    "apps/web/dist/assets/appointment-status-BXEPNWo3.js",
+    "apps/web/dist/assets/auth-CAma0SCY.js",
+    "apps/web/dist/assets/biomechanics-reports-Bcv2_uE3.js",
+    "apps/web/dist/assets/button-BaDomLNQ.js",
+    "apps/web/dist/assets/calendar-CGy78mOm.js",
+    "apps/web/dist/assets/card-eZpAxzSP.js",
+    "apps/web/dist/assets/charlswasm_decode-484ovEoR.wasm",
+    "apps/web/dist/assets/charlswasm_decode-CuMOjBqA.js",
+    "apps/web/dist/assets/checkbox-C0I1jnoG.js",
+    "apps/web/dist/assets/clinical-test-combobox-Cvrhcm1b.js",
+    "apps/web/dist/assets/clinicalReportPdfExport-DlBJcM8B.js",
+    "apps/web/dist/assets/clinicalTestsCatalog-CXSt9SAy.js",
+    "apps/web/dist/assets/computeWorker-4fn2p8hj.js",
+    "apps/web/dist/assets/config-CKrnpnU0.js",
+    "apps/web/dist/assets/context-menu-CFoYmvOW.js",
+    "apps/web/dist/assets/date-picker-BWGC-_65.js",
+    "apps/web/dist/assets/date-range-picker-CKqfMefW.js",
+    "apps/web/dist/assets/dateUtils-DAdaWxnC.js",
+    "apps/web/dist/assets/decodeImageFrameWorker-DeI2RQoo.js",
+    "apps/web/dist/assets/dialog-VVUdh5V0.js",
+    "apps/web/dist/assets/dialog-utilities-BHuTQCh1.css",
+    "apps/web/dist/assets/dicomWebClient-DEd7ZiY2.js",
+    "apps/web/dist/assets/empty-state-UZmMehM9.js",
+    "apps/web/dist/assets/esm-C-BlKPb7.js",
+    "apps/web/dist/assets/esm-C027tXEi.js",
+    "apps/web/dist/assets/esm-sgJm8UYT.js",
+    "apps/web/dist/assets/evolutionPdfExport-CmgQFu_p.js",
+    "apps/web/dist/assets/excelExport-BLjGyUpk.js",
+    "apps/web/dist/assets/exceljsWrapper-BnM8SekV.js",
+    "apps/web/dist/assets/extractTransferSyntax-DTFrphwz.js",
+    "apps/web/dist/assets/form-CSt_rhp8.js",
+    "apps/web/dist/assets/formatInputs-BoC9jLqG.js",
+    "apps/web/dist/assets/geminiAiService-BPY7v396.js",
+    "apps/web/dist/assets/geminiAiService-DOqeG-de.js",
+    "apps/web/dist/assets/generateClinicalTestPdf-ywM8CfUD.js",
+    "apps/web/dist/assets/geometry-BHmVnh6X.js",
+    "apps/web/dist/assets/goalProfiles.seed-CbwvDx9_.js",
+    "apps/web/dist/assets/goalsAdminService-EuBxuR6M.js",
+    "apps/web/dist/assets/grid-layout-6GVPrQjZ.css",
+    "apps/web/dist/assets/index-CZEOGasW.css",
+    "apps/web/dist/assets/index-DesgWhaf.js",
+    "apps/web/dist/assets/initCornerstone-CPHGTVyt.js",
+    "apps/web/dist/assets/initPerformanceMonitoring-TpPhAJtr.js",
+    "apps/web/dist/assets/jpeg-BK0GpJrn.js",
+    "apps/web/dist/assets/jpeg-BmmYk2Lq.js",
+    "apps/web/dist/assets/jspdf.es.min-CJ8dgWYN.js",
+    "apps/web/dist/assets/jspdf.plugin.autotable-CLBsU4T0.js",
+    "apps/web/dist/assets/knowledge-y5bMXdd1.js",
+    "apps/web/dist/assets/libjpegturbowasm_decode-daqMmuVl.wasm",
+    "apps/web/dist/assets/loading-skeleton-r1nR77IU.js",
+    "apps/web/dist/assets/logger-xbvtnlpA.js",
+    "apps/web/dist/assets/lossless-uwRnEbWE.js",
+    "apps/web/dist/assets/marketingAITemplateService-S9TU1kzb.js",
+    "apps/web/dist/assets/marketingService-kzppIflg.js",
+    "apps/web/dist/assets/mediapipe-BXOhjyqn.js",
+    "apps/web/dist/assets/metricRegistry-CAAKAu-4.js",
+    "apps/web/dist/assets/mfa-D3Ls-vIo.js",
+    "apps/web/dist/assets/monitoring-Bj7JVdzt.js",
+    "apps/web/dist/assets/multi-select-BnPTWgE-.js",
+    "apps/web/dist/assets/native-C9lqLBeo.js",
+    "apps/web/dist/assets/network-status-DIxzAkuJ.js",
+    "apps/web/dist/assets/network-status-Q42BaXvN.js",
+    "apps/web/dist/assets/openjpegwasm_decode-B3gWTHpv.wasm",
+    "apps/web/dist/assets/openjphjs-C-BUUy4a.wasm",
+    "apps/web/dist/assets/painMapService-Kye798dw.js",
+    "apps/web/dist/assets/pathologies-Cb5BwVET.js",
+    "apps/web/dist/assets/pathologyService-wx2Bo34e.js",
+    "apps/web/dist/assets/patient-chat-context-CSrHcnMH.js",
+    "apps/web/dist/assets/patient-combobox-BvhalMU9.js",
+    "apps/web/dist/assets/patient-summary-BOvVivY8.js",
+    "apps/web/dist/assets/patientService-C-lx24Eq.js",
+    "apps/web/dist/assets/pdf-generator-D_06bxjZ.js",
+    "apps/web/dist/assets/pdfExport-DGmTL58p.js",
+    "apps/web/dist/assets/performance-CA9n7UiA.js",
+    "apps/web/dist/assets/pose-CfUPWXyy.js",
+    "apps/web/dist/assets/poseDetectionService-BaxJgXFu.js",
+    "apps/web/dist/assets/posthog-C0epDyve.js",
+    "apps/web/dist/assets/premium-utilities-DK5sCiW5.css",
+    "apps/web/dist/assets/public-url-B-zbiUr9.js",
+    "apps/web/dist/assets/push-notifications-HeWV7Jed.js",
+    "apps/web/dist/assets/radio-group-BaG5AN9C.js",
+    "apps/web/dist/assets/react-pdf.browser-CNFhtOCT.js",
+    "apps/web/dist/assets/remote-config-manager-BgvYjblb.js",
+    "apps/web/dist/assets/remote-config-manager-DFj6be9n.js",
+    "apps/web/dist/assets/resizable-mFTGNSPw.js",
+    "apps/web/dist/assets/rolldown-runtime-Bhmf7a9N.js",
+    "apps/web/dist/assets/slider-BA-k35dE.js",
+    "apps/web/dist/assets/src-CtI1WNJ1.js",
+    "apps/web/dist/assets/storageProxy-BkAPUHQb.js",
+    "apps/web/dist/assets/surgery-3z0U6Iep.js",
+    "apps/web/dist/assets/table-DLvfUzir.js",
+    "apps/web/dist/assets/tarefas-D7jtnrCH.js",
+    "apps/web/dist/assets/textarea-CsBO4U_7.js",
+    "apps/web/dist/assets/toggle-group-lXQBRpru.js",
+    "apps/web/dist/assets/transferSyntaxTracker-D_LtRIis.js",
+    "apps/web/dist/assets/triageUtils-BFpDF3Un.js",
+    "apps/web/dist/assets/types-mm7lDV1i.js",
+    "apps/web/dist/assets/ui-BDLlKLEh.js",
+    "apps/web/dist/assets/ui-variants-DZUnVdTJ.js",
+    "apps/web/dist/assets/upload-DK3Ylm2A.js",
+    "apps/web/dist/assets/use-toast-BVLp0f7A.js",
+    "apps/web/dist/assets/use-toast-DfYygefj.js",
+    "apps/web/dist/assets/useAppointmentActions-DrWa_HgB.js",
+    "apps/web/dist/assets/useAppointments-BTL2GkCa.js",
+    "apps/web/dist/assets/useAudioRecorder-osj49BRq.js",
+    "apps/web/dist/assets/useAuth-Bp-sZlD1.js",
+    "apps/web/dist/assets/useBoards-BuWqlAbU.js",
+    "apps/web/dist/assets/useCRM-Bh9ZYtiJ.js",
+    "apps/web/dist/assets/useConnectionStatus-C3Ie7pup.js",
+    "apps/web/dist/assets/useContratados-B7qHhVtG.js",
+    "apps/web/dist/assets/useDashboardMetrics-CuQX8bzB.js",
+    "apps/web/dist/assets/useDebounce-gUVOa9Dr.js",
+    "apps/web/dist/assets/useDocumentTemplates-Buq82XtF.js",
+    "apps/web/dist/assets/useEmpresasParceiras-y_HOFZrP.js",
+    "apps/web/dist/assets/useEvaluationForms-TN4KdI9E.js",
+    "apps/web/dist/assets/useEventosStats-DRgMPyUa.js",
+    "apps/web/dist/assets/useEvolutionTemplates-oNgo4VAu.js",
+    "apps/web/dist/assets/useExerciseProtocols-Wqj2vciJ.js",
+    "apps/web/dist/assets/useExerciseTemplates-r-oYQCqg.js",
+    "apps/web/dist/assets/useExercises-3D0l2gsa.js",
+    "apps/web/dist/assets/useFinancial-gVZvUqHu.js",
+    "apps/web/dist/assets/useGoogleOAuth-D-sR0zks.js",
+    "apps/web/dist/assets/useInnovations-B_RNSq52.js",
+    "apps/web/dist/assets/useOrganizationMembers-B9fL_XCw.js",
+    "apps/web/dist/assets/useOrganizations-DGF6JjGQ.js",
+    "apps/web/dist/assets/usePDFGenerator-Cewk_-Kn.js",
+    "apps/web/dist/assets/usePackages-CcPMHuyp.js",
+    "apps/web/dist/assets/usePatientAnalytics-DGU6gCSf.js",
+    "apps/web/dist/assets/usePatientCrud-D3e7rG6J.js",
+    "apps/web/dist/assets/usePatientEvolution-BlRfDbvT.js",
+    "apps/web/dist/assets/usePatientEvolutionReport-DvB2sTnk.js",
+    "apps/web/dist/assets/usePatients-ClfkXVI3.js",
+    "apps/web/dist/assets/usePermissions-zfymgalR.js",
+    "apps/web/dist/assets/useProjects-DiFw-9rY.js",
+    "apps/web/dist/assets/useRenderTracking-CtkKFFdx.js",
+    "apps/web/dist/assets/useScheduleCapacity-D71W46W8.js",
+    "apps/web/dist/assets/useScheduleSettings-BzFvFv6f.js",
+    "apps/web/dist/assets/useSoapRecordsV2-CCN3xB_F.js",
+    "apps/web/dist/assets/useStatusConfig-BbfFZIEO.js",
+    "apps/web/dist/assets/useTarefas-CZQKsBbB.js",
+    "apps/web/dist/assets/useTeamMembers-DyGFo-gH.js",
+    "apps/web/dist/assets/useTemplateStats-DoCeFdZ0.js",
+    "apps/web/dist/assets/useTherapists-mmI3MgG6.js",
+    "apps/web/dist/assets/userHelpers-CNbhGoGy.js",
+    "apps/web/dist/assets/userHelpers-DjdPD12I.js",
+    "apps/web/dist/assets/utils-RhYpY795.js",
+    "apps/web/dist/assets/v2-BKr-sq3N.js",
+    "apps/web/dist/assets/validators-CDpxGWAE.js",
+    "apps/web/dist/assets/vendor-D_THMjjY.js",
+    "apps/web/dist/assets/vendor-cornerstone-NUH966Ie.js",
+    "apps/web/dist/assets/vendor-jspdf-DBvvQPSl.js",
+    "apps/web/dist/assets/vendor-react-DeJwdkZc.css",
+    "apps/web/dist/assets/vendor-react-DrT8DoSr.js",
+    "apps/web/dist/assets/web-vitals-D9-THrK8.js",
+    "apps/web/dist/clinical-tests",
+    "apps/web/dist/clinical-tests/papers",
+    "apps/web/dist/clinical-tests/papers/acl-meta-analysis-huang-2022.pdf",
+    "apps/web/dist/clinical-tests/papers/hip-fai-combined-tests-palsson-2020.pdf",
+    "apps/web/dist/clinical-tests/papers/hip-systematic-review-rahman-2013.pdf",
+    "apps/web/dist/clinical-tests/papers/hop-tests-critical-review-davies-2020.pdf",
+    "apps/web/dist/clinical-tests/papers/shoulder-impingement-calis-2000.pdf",
+    "apps/web/dist/clinical-tests/papers/shoulder-systematic-review-gismervik-2017.pdf",
+    "apps/web/dist/clinical-tests/papers/spurling-cervical-review-rubinstein-2007.pdf",
+    "apps/web/dist/clinical-tests/papers/spurling-radiculopathy-thoomes-2026.pdf",
+    "apps/web/dist/clinical-tests/papers/thessaly-meniscal-hta-2015.pdf",
+    "apps/web/dist/clinical-tests/papers/tka-balance-tests-sarac-2022.pdf",
+    "apps/web/dist/clinical-tests/papers/y-balance-review-plisky-2021.pdf",
+    "apps/web/dist/diagnose.js",
+    "apps/web/dist/favicon-16x16.avif",
+    "apps/web/dist/favicon-16x16.png",
+    "apps/web/dist/favicon-32x32.avif",
+    "apps/web/dist/favicon-32x32.png",
+    "apps/web/dist/favicon-48x48.png",
+    "apps/web/dist/favicon.ico",
+    "apps/web/dist/favicon.svg",
+    "apps/web/dist/icons",
+    "apps/web/dist/icons/badge-72x72.svg",
+    "apps/web/dist/icons/favicon-16x16.svg",
+    "apps/web/dist/icons/favicon-32x32.svg",
+    "apps/web/dist/icons/icon-192x192.svg",
+    "apps/web/dist/icons/icon-512x512.svg",
+    "apps/web/dist/index.html",
+    "apps/web/dist/manifest.json",
+    "apps/web/dist/offline.html",
+    "apps/web/dist/placeholder.svg",
+    "apps/web/dist/robots.txt",
+    "apps/web/dist/sw.js"
+  ]
+}

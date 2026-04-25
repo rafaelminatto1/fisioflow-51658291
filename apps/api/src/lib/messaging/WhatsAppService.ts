@@ -1,4 +1,4 @@
-import type { Env } from '../../types/env';
+import type { Env } from "../../types/env";
 
 export interface WhatsAppMessage {
   to: string;
@@ -19,38 +19,38 @@ export class WhatsAppService {
    */
   async send(data: WhatsAppMessage) {
     if (!this.env.TWILIO_ACCOUNT_SID || !this.env.TWILIO_AUTH_TOKEN) {
-      console.warn('[WhatsApp] TWILIO credentials missing, returning mock');
-      return { sid: 'MOCK-' + crypto.randomUUID().substring(0, 8), status: 'sent' };
+      console.warn("[WhatsApp] TWILIO credentials missing, returning mock");
+      return { sid: "MOCK-" + crypto.randomUUID().substring(0, 8), status: "sent" };
     }
 
     const auth = btoa(`${this.env.TWILIO_ACCOUNT_SID}:${this.env.TWILIO_AUTH_TOKEN}`);
     const endpoint = `https://api.twilio.com/2010-04-01/Accounts/${this.env.TWILIO_ACCOUNT_SID}/Messages.json`;
 
     const formData = new URLSearchParams();
-    formData.append('To', `whatsapp:${data.to.replace(/\D/g, '')}`);
-    formData.append('From', `whatsapp:${this.env.TWILIO_PHONE_NUMBER}`);
+    formData.append("To", `whatsapp:${data.to.replace(/\D/g, "")}`);
+    formData.append("From", `whatsapp:${this.env.TWILIO_PHONE_NUMBER}`);
 
     if (data.templateName) {
       // For more complex template handling, you'd use Twilio Content API
       // Here we assume a simple body formatted according to template
-      formData.append('Body', data.body || '');
+      formData.append("Body", data.body || "");
     } else {
-      formData.append('Body', data.body || '');
+      formData.append("Body", data.body || "");
     }
 
     const response = await fetch(endpoint, {
-      method: 'POST',
+      method: "POST",
       headers: {
-        'Authorization': `Basic ${auth}`,
-        'Content-Type': 'application/x-www-form-urlencoded',
+        Authorization: `Basic ${auth}`,
+        "Content-Type": "application/x-www-form-urlencoded",
       },
       body: formData,
     });
 
-    const result = await response.json() as any;
+    const result = (await response.json()) as any;
     if (!response.ok) {
-      console.error('[WhatsApp Error]', result);
-      throw new Error(result.message || 'Twilio API error');
+      console.error("[WhatsApp Error]", result);
+      throw new Error(result.message || "Twilio API error");
     }
 
     return result;

@@ -1,15 +1,35 @@
 // For more info, see https://github.com/storybookjs/eslint-plugin-storybook#configuration-flat-config-format
 import storybook from "eslint-plugin-storybook";
 
-import js from '@eslint/js';
-import globals from 'globals';
-import reactHooks from 'eslint-plugin-react-hooks';
-import reactRefresh from 'eslint-plugin-react-refresh';
-import tseslint from 'typescript-eslint';
-import unusedImports from 'eslint-plugin-unused-imports';
+import js from "@eslint/js";
+import globals from "globals";
+import reactHooks from "eslint-plugin-react-hooks";
+import reactRefresh from "eslint-plugin-react-refresh";
+import tseslint from "typescript-eslint";
+import unusedImports from "eslint-plugin-unused-imports";
 
 export default tseslint.config(
-  { ignores: ["dist", "**/dist/**", "**/*.mjs", "test-*.js", "manual-test.js", "create-test-users.mjs", "public/sw.js", "scripts/**", "supabase/**", "src/test/**", "src/**/__tests__/**", "**/*.test.ts", "**/*.test.tsx", "e2e/**", "vitest.setup.ts", "workers/.wrangler/**", "**/.wrangler/**"] },
+  {
+    ignores: [
+      "dist",
+      "**/dist/**",
+      "**/*.mjs",
+      "test-*.js",
+      "manual-test.js",
+      "create-test-users.mjs",
+      "public/sw.js",
+      "scripts/**",
+      "supabase/**",
+      "src/test/**",
+      "src/**/__tests__/**",
+      "**/*.test.ts",
+      "**/*.test.tsx",
+      "e2e/**",
+      "vitest.setup.ts",
+      "workers/.wrangler/**",
+      "**/.wrangler/**",
+    ],
+  },
   {
     extends: [js.configs.recommended, ...tseslint.configs.recommended],
     files: ["**/*.{ts,tsx}"],
@@ -24,16 +44,13 @@ export default tseslint.config(
     },
     rules: {
       ...reactHooks.configs.recommended.rules,
-      "react-refresh/only-export-components": [
-        "warn",
-        { allowConstantExport: true },
-      ],
+      "react-refresh/only-export-components": ["warn", { allowConstantExport: true }],
       "@typescript-eslint/no-unused-vars": [
         "warn",
         {
-          "argsIgnorePattern": "^_",
-          "varsIgnorePattern": "^_",
-          "caughtErrorsIgnorePattern": "^_"
+          argsIgnorePattern: "^_",
+          varsIgnorePattern: "^_",
+          caughtErrorsIgnorePattern: "^_",
         },
       ],
       "no-unused-vars": "off",
@@ -46,11 +63,11 @@ export default tseslint.config(
       "src/contexts/**/*.{ts,tsx}",
       "src/hooks/**/*.{ts,tsx}",
       "src/lib/**/*.{ts,tsx}",
-      "src/test-utils.tsx"
+      "src/test-utils.tsx",
     ],
     rules: {
       "react-refresh/only-export-components": "off",
     },
   },
-  storybook.configs["flat/recommended"]
+  storybook.configs["flat/recommended"],
 );

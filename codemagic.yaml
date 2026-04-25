@@ -78,25 +78,25 @@ workflows:
       - name: Initialize keychain and set up code signing
         script: |
           keychain initialize
-          
+
           # 1. Install certificate from environment variable
           if [ -z "$CM_CERTIFICATE" ]; then
             echo "ERRO: CM_CERTIFICATE não encontrada no grupo appstore."
             exit 1
           fi
-          
+
           echo "$CM_CERTIFICATE" | base64 --decode > /tmp/certificate.p12
           keychain add-certificates --certificate /tmp/certificate.p12 --certificate-password "$CM_CERTIFICATE_PASSWORD"
-          
+
           # 2. Install provisioning profile from repo
           # UUID: 33c33a27-a698-4984-9461-2f2383749de9
           PROFILES_HOME="$HOME/Library/MobileDevice/Provisioning Profiles"
           mkdir -p "$PROFILES_HOME"
           cp "$CM_BUILD_DIR/FisioFlow_Profissionais_AdHoc.mobileprovision" "$PROFILES_HOME/33c33a27-a698-4984-9461-2f2383749de9.mobileprovision"
-          
+
           # 3. List identities for debug
           security find-identity -v -p codesigning
-          
+
           # 4. Create ExportOptions.plist manually
           cat <<EOF > "$CM_BUILD_DIR/$APP_DIR/ios/ExportOptions.plist"
           <?xml version="1.0" encoding="UTF-8"?>

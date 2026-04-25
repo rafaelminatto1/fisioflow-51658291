@@ -7,12 +7,12 @@ import { equipmentDictionary } from "@/data/equipmentDictionary";
 
 /** Combined dictionary: physio terms + extended exercise catalog */
 const combinedDictionary = [
-	...physioDictionary,
-	...exerciseDictionary,
-	...procedureDictionary,
-	...diagnosticDictionary,
-	...protocolDictionary,
-	...equipmentDictionary,
+  ...physioDictionary,
+  ...exerciseDictionary,
+  ...procedureDictionary,
+  ...diagnosticDictionary,
+  ...protocolDictionary,
+  ...equipmentDictionary,
 ];
 
 /**
@@ -22,11 +22,11 @@ const combinedDictionary = [
  * - Trims extra whitespace
  */
 export function normalizeForSearch(str: string): string {
-	return str
-		.normalize("NFD")
-		.replace(/[\u0300-\u036f]/g, "")
-		.toLowerCase()
-		.trim();
+  return str
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
 }
 
 /**
@@ -43,7 +43,7 @@ export function normalizeForSearch(str: string): string {
  * accentIncludes("fisioterapia", "fisioterapia") // true
  */
 export function accentIncludes(value: string, query: string): boolean {
-	return normalizeForSearch(value).includes(normalizeForSearch(query));
+  return normalizeForSearch(value).includes(normalizeForSearch(query));
 }
 
 /**
@@ -53,36 +53,36 @@ export function accentIncludes(value: string, query: string): boolean {
  * -> ["lca", "acl", "anterior cruciate ligament", "ligamento cruzado anterior"]
  */
 export function expandSearchQuery(query: string): string[] {
-	if (!query || query.trim() === "") return [];
+  if (!query || query.trim() === "") return [];
 
-	const normalizedQuery = normalizeForSearch(query);
-	const equivalentTerms = new Set<string>();
+  const normalizedQuery = normalizeForSearch(query);
+  const equivalentTerms = new Set<string>();
 
-	// Always include the original normalized query
-	equivalentTerms.add(normalizedQuery);
+  // Always include the original normalized query
+  equivalentTerms.add(normalizedQuery);
 
-	for (const entry of combinedDictionary) {
-		const termsInEntry = [
-			normalizeForSearch(entry.pt),
-			normalizeForSearch(entry.en),
-			...entry.aliases_pt.map(normalizeForSearch),
-			...entry.aliases_en.map(normalizeForSearch),
-		];
+  for (const entry of combinedDictionary) {
+    const termsInEntry = [
+      normalizeForSearch(entry.pt),
+      normalizeForSearch(entry.en),
+      ...entry.aliases_pt.map(normalizeForSearch),
+      ...entry.aliases_en.map(normalizeForSearch),
+    ];
 
-		// Check if any term in the entry matches or contains the query
-		const isMatch = termsInEntry.some(
-			(term) =>
-				term === normalizedQuery ||
-				term.includes(normalizedQuery) ||
-				normalizedQuery.includes(term),
-		);
+    // Check if any term in the entry matches or contains the query
+    const isMatch = termsInEntry.some(
+      (term) =>
+        term === normalizedQuery ||
+        term.includes(normalizedQuery) ||
+        normalizedQuery.includes(term),
+    );
 
-		if (isMatch) {
-			termsInEntry.forEach((term) => equivalentTerms.add(term));
-		}
-	}
+    if (isMatch) {
+      termsInEntry.forEach((term) => equivalentTerms.add(term));
+    }
+  }
 
-	return Array.from(equivalentTerms);
+  return Array.from(equivalentTerms);
 }
 
 /**
@@ -93,79 +93,68 @@ export function expandSearchQuery(query: string): string[] {
  * @param fields Array of keys/fields in the item to search against
  * @returns Filtered array
  */
-export function bilingualFilter<T>(
-	items: T[],
-	query: string,
-	fields: (keyof T)[],
-): T[] {
-	if (!query || query.trim() === "") return items;
+export function bilingualFilter<T>(items: T[], query: string, fields: (keyof T)[]): T[] {
+  if (!query || query.trim() === "") return items;
 
-	const expandedQueries = expandSearchQuery(query);
+  const expandedQueries = expandSearchQuery(query);
 
-	return items.filter((item) => {
-		for (const field of fields) {
-			const value = item[field];
-			if (!value) continue;
+  return items.filter((item) => {
+    for (const field of fields) {
+      const value = item[field];
+      if (!value) continue;
 
-			// Simple string fields
-			if (typeof value === "string") {
-				const normalizedValue = normalizeForSearch(value);
-				if (expandedQueries.some((q) => normalizedValue.includes(q))) {
-					return true;
-				}
-			}
-			// Array of strings (like tags or aliases)
-			else if (Array.isArray(value)) {
-				const normalizedArray = value.map((v) =>
-					typeof v === "string" ? normalizeForSearch(v) : "",
-				);
-				if (
-					normalizedArray.some((val) =>
-						expandedQueries.some((q) => val.includes(q)),
-					)
-				) {
-					return true;
-				}
-			}
-		}
-		return false;
-	});
+      // Simple string fields
+      if (typeof value === "string") {
+        const normalizedValue = normalizeForSearch(value);
+        if (expandedQueries.some((q) => normalizedValue.includes(q))) {
+          return true;
+        }
+      }
+      // Array of strings (like tags or aliases)
+      else if (Array.isArray(value)) {
+        const normalizedArray = value.map((v) =>
+          typeof v === "string" ? normalizeForSearch(v) : "",
+        );
+        if (normalizedArray.some((val) => expandedQueries.some((q) => val.includes(q)))) {
+          return true;
+        }
+      }
+    }
+    return false;
+  });
 }
 
 /**
  * Retrieves specific terms by category
  */
 export function getTermsByCategory(category: PhysioTermCategory) {
-	return combinedDictionary.filter((entry) => entry.category === category);
+  return combinedDictionary.filter((entry) => entry.category === category);
 }
 
 /**
  * Search the dictionary itself
  */
-export function searchDictionary(
-	query: string,
-	categoryFilter?: PhysioTermCategory,
-) {
-	let results = combinedDictionary;
+export function searchDictionary(query: string, categoryFilter?: PhysioTermCategory) {
+  let results = combinedDictionary;
 
-	if (categoryFilter) {
-		results = results.filter((entry) => entry.category === categoryFilter);
-	}
+  if (categoryFilter) {
+    results = results.filter((entry) => entry.category === categoryFilter);
+  }
 
-	if (!query || query.trim() === "") {
-		return results;
-	}
+  if (!query || query.trim() === "") {
+    return results;
+  }
 
-	const expandedQueries = expandSearchQuery(query);
+  const expandedQueries = expandSearchQuery(query);
 
-	return results.filter((entry) => {
-		const termsInEntry = [
-			normalizeForSearch(entry.pt),
-			normalizeForSearch(entry.en),
-			...entry.aliases_pt.map(normalizeForSearch),
-			...entry.aliases_en.map(normalizeForSearch),
-		];
+  return results.filter((entry) => {
+    const termsInEntry = [
+      normalizeForSearch(entry.pt),
+      normalizeForSearch(entry.en),
+      ...entry.aliases_pt.map(normalizeForSearch),
+      ...entry.aliases_en.map(normalizeForSearch),
+    ];
 
-		return termsInEntry.some((term) => expandedQueries.includes(term));
-	});
+    return termsInEntry.some((term) => expandedQueries.includes(term));
+  });
 }

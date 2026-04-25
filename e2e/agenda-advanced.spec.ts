@@ -11,7 +11,7 @@ async function authenticatePage(page: Page) {
   // Proxy para a API de produção: permite contornar CORS nos testes E2E injetando o header nas respostas
   await page.route('https://fisioflow-api.rafalegollas.workers.dev/**', async (route) => {
     const response = await page.context().request.fetch(route.request());
-    
+
     await route.fulfill({
       response,
       headers: {
@@ -21,7 +21,7 @@ async function authenticatePage(page: Page) {
       }
     });
   });
-  
+
   await authenticateBrowserContext(page.context(), testUsers.fisio.email, testUsers.fisio.password);
 }
 
@@ -38,7 +38,7 @@ test.describe('Agenda Avançada - E2E Tests', () => {
   test.beforeEach(async ({ page }) => {
     await authenticatePage(page);
     await ensureScheduleReady(page);
-    
+
     // Check for "Failed to fetch" error and reload once if present
     const errorToast = page.locator('text=/Ocorreu um Erro: Failed to fetch/i');
     if (await errorToast.isVisible({ timeout: 5000 })) {
@@ -55,15 +55,15 @@ test.describe('Agenda Avançada - E2E Tests', () => {
 
     // 2. Selecionar paciente (usando o PatientCombobox)
     const patientSelect = page.getByTestId('patient-select');
-    
+
     // Esperar habilitar (pode estar carregando pacientes)
     await expect(patientSelect).toBeEnabled({ timeout: 15000 });
     await patientSelect.click();
-    
+
     const patientInput = page.getByTestId('patient-search');
     await patientInput.fill('FisioFlow Test Patient');
     await page.waitForTimeout(1000);
-    
+
     // Tentar selecionar a opção de cadastrar novo se não houver resultados
     const createNewOption = page.locator('text=/Cadastrar novo paciente/i');
     const existingOption = page.locator('[role="option"]').first();
@@ -92,7 +92,7 @@ test.describe('Agenda Avançada - E2E Tests', () => {
     ).or(
       page.locator('label:has-text("Agendamento Recorrente")')
     ).first();
-    
+
     await expect(recurringSwitch).toBeVisible({ timeout: 5000 });
     await recurringSwitch.click({ force: true });
 
@@ -123,11 +123,11 @@ test.describe('Agenda Avançada - E2E Tests', () => {
     // 1. Localizar um agendamento na grade (esperar carregar)
     await page.waitForTimeout(3000);
     const appointment = page.locator('[class*="appointment-card"], [class*="calendar-card"]').first();
-    
+
     if (await appointment.isVisible()) {
       // 2. Abrir menu de contexto (clique direito)
       await appointment.click({ button: 'right' });
-      
+
       // 3. Selecionar Excluir
       const deleteOption = page.locator('text=/Excluir|Remover/i');
       await deleteOption.click();
@@ -150,7 +150,7 @@ test.describe('Agenda Avançada - E2E Tests', () => {
     // Este teste é sensível à grade do calendário
     await page.waitForTimeout(3000);
     const appointment = page.locator('[class*="appointment-card"], [class*="calendar-card"]').first();
-    
+
     if (await appointment.isVisible()) {
       const box = await appointment.boundingBox();
       if (box) {

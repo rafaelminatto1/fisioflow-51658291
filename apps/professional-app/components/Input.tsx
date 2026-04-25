@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 
 import {
   View,
@@ -8,9 +8,9 @@ import {
   TouchableOpacity,
   TextInputProps,
   ViewStyle,
-} from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { useColors } from '@/hooks/useColorScheme';
+} from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { useColors } from "@/hooks/useColorScheme";
 
 interface InputProps extends TextInputProps {
   label?: string;
@@ -40,19 +40,13 @@ export function Input({
 
   return (
     <View style={[styles.container, containerStyle]}>
-      {label && (
-        <Text style={[styles.label, { color: colors.text }]}>{label}</Text>
-      )}
+      {label && <Text style={[styles.label, { color: colors.text }]}>{label}</Text>}
       <View
         style={[
           styles.inputContainer,
           {
             backgroundColor: isFocused ? colors.background : colors.surface,
-            borderColor: error
-              ? colors.error
-              : isFocused
-                ? colors.primary
-                : colors.border,
+            borderColor: error ? colors.error : isFocused ? colors.primary : colors.border,
             borderWidth: 1.5, // Constant border width to avoid layout shifts
             paddingHorizontal: 0,
           },
@@ -80,16 +74,13 @@ export function Input({
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
           secureTextEntry={actualSecureTextEntry}
-          textAlignVertical={props.multiline ? 'top' : 'center'}
+          textAlignVertical={props.multiline ? "top" : "center"}
           {...props}
         />
         {isPassword && (
-          <TouchableOpacity
-            onPress={() => setShowPassword(!showPassword)}
-            style={styles.rightIcon}
-          >
+          <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={styles.rightIcon}>
             <Ionicons
-              name={showPassword ? 'eye-off' : 'eye'}
+              name={showPassword ? "eye-off" : "eye"}
               size={20}
               color={colors.textSecondary}
             />
@@ -105,9 +96,7 @@ export function Input({
           </TouchableOpacity>
         )}
       </View>
-      {error && (
-        <Text style={[styles.error, { color: colors.error }]}>{error}</Text>
-      )}
+      {error && <Text style={[styles.error, { color: colors.error }]}>{error}</Text>}
     </View>
   );
 }
@@ -118,12 +107,12 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 14,
-    fontWeight: '500',
+    fontWeight: "500",
     marginBottom: 6,
   },
   inputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     borderRadius: 12,
     minHeight: 52,
   },
@@ -134,7 +123,7 @@ const styles = StyleSheet.create({
   },
   inputMultiline: {
     minHeight: 100,
-    textAlignVertical: 'top',
+    textAlignVertical: "top",
   },
   leftIcon: {
     marginLeft: 16,

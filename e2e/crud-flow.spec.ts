@@ -22,7 +22,7 @@ test.describe('Fluxo CRUD Completo - Produção', () => {
     console.log('[CRUD] Navegando para /patients');
     await page.goto('/patients', { waitUntil: 'domcontentloaded' });
     await expect(page.getByRole('heading', { name: 'Pacientes' })).toBeVisible({ timeout: 30000 });
-    
+
     const addBtn = page.locator('button:has-text("Novo Paciente"), [data-testid="add-patient"]').first();
     await addBtn.waitFor({ state: 'visible', timeout: 30000 });
     await addBtn.click();
@@ -51,7 +51,7 @@ test.describe('Fluxo CRUD Completo - Produção', () => {
       .first();
     await nameInput.waitFor({ state: 'visible', timeout: 15000 });
     await nameInput.fill(testPatientName);
-    
+
     const birthDateTrigger = patientForm.getByRole('button', { name: /Selecione uma data|\d{2}\/\d{2}\/\d{4}/ }).first();
     await birthDateTrigger.click();
     const calendarGrid = page.getByRole('grid').first();
@@ -78,15 +78,15 @@ test.describe('Fluxo CRUD Completo - Produção', () => {
     // 3. AGENDAMENTO
     await page.goto('/agenda', { waitUntil: 'domcontentloaded' });
     await page.locator('button:has-text("Novo")').first().click();
-    
+
     const patientCombo = page.locator('button[role="combobox"]').first();
     await expect(patientCombo).toBeEnabled({ timeout: 30000 });
-    
+
     await patientCombo.click();
     await page.keyboard.type(testPatientName);
     await page.waitForTimeout(2000);
     await page.keyboard.press('Enter');
-    
+
     await page.click('button[type="submit"]');
     console.log('✅ Agendamento Criado');
 

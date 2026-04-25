@@ -6,23 +6,23 @@
 /**
  * App metadata
  */
-export const APP_NAME = 'FisioFlow';
-export const APP_VERSION = '1.0.0';
-export const EAS_PROJECT_ID = 'ca7042a7-03d4-4731-b4e5-6f5de3b48300';
+export const APP_NAME = "FisioFlow";
+export const APP_VERSION = "1.0.0";
+export const EAS_PROJECT_ID = "ca7042a7-03d4-4731-b4e5-6f5de3b48300";
 
 /**
  * Storage keys
  */
 export const STORAGE_KEYS = {
-  ONBOARDING_COMPLETED: '@fisioflow_onboarding_completed',
-  NOTIFICATION_PROMPT_SHOWN: '@fisioflow_notification_prompt_shown',
-  SETTINGS_NOTIFICATIONS: '@fisioflow_settings_notifications',
-  SETTINGS_EXERCISE_REMINDERS: '@fisioflow_settings_exercise_reminders',
-  SETTINGS_APPOINTMENT_REMINDERS: '@fisioflow_settings_appointment_reminders',
-  SETTINGS_AUTO_PLAY_VIDEOS: '@fisioflow_settings_auto_play_videos',
-  SETTINGS_HAPTIC_FEEDBACK: '@fisioflow_settings_haptic_feedback',
-  OFFLINE_QUEUE: '@fisioflow_offline_queue',
-  CACHED_DATA_PREFIX: '@fisioflow_cache_',
+  ONBOARDING_COMPLETED: "@fisioflow_onboarding_completed",
+  NOTIFICATION_PROMPT_SHOWN: "@fisioflow_notification_prompt_shown",
+  SETTINGS_NOTIFICATIONS: "@fisioflow_settings_notifications",
+  SETTINGS_EXERCISE_REMINDERS: "@fisioflow_settings_exercise_reminders",
+  SETTINGS_APPOINTMENT_REMINDERS: "@fisioflow_settings_appointment_reminders",
+  SETTINGS_AUTO_PLAY_VIDEOS: "@fisioflow_settings_auto_play_videos",
+  SETTINGS_HAPTIC_FEEDBACK: "@fisioflow_settings_haptic_feedback",
+  OFFLINE_QUEUE: "@fisioflow_offline_queue",
+  CACHED_DATA_PREFIX: "@fisioflow_cache_",
 } as const;
 
 /**
@@ -72,13 +72,13 @@ export const TEXT_SIZE = {
 } as const;
 
 /**
-* Font weights
-*/
+ * Font weights
+ */
 export const FONT_WEIGHT = {
-  REGULAR: '400' as const,
-  MEDIUM: '500' as const,
-  SEMIBOLD: '600' as const,
-  BOLD: '700' as const,
+  REGULAR: "400" as const,
+  MEDIUM: "500" as const,
+  SEMIBOLD: "600" as const,
+  BOLD: "700" as const,
 } as const;
 
 /**
@@ -109,19 +109,19 @@ export const BREAKPOINTS = {
  */
 export const SCREENS = {
   // Auth
-  LOGIN: 'Login',
-  REGISTER: 'Register',
-  FORGOT_PASSWORD: 'ForgotPassword',
-  LINK_PROFESSIONAL: 'LinkProfessional',
-  ONBOARDING: 'Onboarding',
+  LOGIN: "Login",
+  REGISTER: "Register",
+  FORGOT_PASSWORD: "ForgotPassword",
+  LINK_PROFESSIONAL: "LinkProfessional",
+  ONBOARDING: "Onboarding",
 
   // Tabs
-  DASHBOARD: 'Dashboard',
-  EXERCISES: 'Exercises',
-  APPOINTMENTS: 'Appointments',
-  PROGRESS: 'Progress',
-  PROFILE: 'Profile',
-  SETTINGS: 'Settings',
+  DASHBOARD: "Dashboard",
+  EXERCISES: "Exercises",
+  APPOINTMENTS: "Appointments",
+  PROGRESS: "Progress",
+  PROFILE: "Profile",
+  SETTINGS: "Settings",
 } as const;
 
 // COLLECTIONS removed - using REST API
@@ -138,11 +138,11 @@ export const EXERCISE_DIFFICULTY = {
 } as const;
 
 export const EXERCISE_DIFFICULTY_LABELS = {
-  1: 'Muito Fácil',
-  2: 'Fácil',
-  3: 'Médio',
-  4: 'Difícil',
-  5: 'Muito Difícil',
+  1: "Muito Fácil",
+  2: "Fácil",
+  3: "Médio",
+  4: "Difícil",
+  5: "Muito Difícil",
 } as const;
 
 /**
@@ -156,44 +156,44 @@ export const PAIN_LEVEL = {
 } as const;
 
 export const PAIN_LEVEL_LABELS = {
-  0: 'Sem dor',
-  3: 'Dor leve',
-  6: 'Dor moderada',
-  10: 'Dor intensa',
+  0: "Sem dor",
+  3: "Dor leve",
+  6: "Dor moderada",
+  10: "Dor intensa",
 } as const;
 
 /**
  * Appointment status
  */
 export const APPOINTMENT_STATUS = {
-  SCHEDULED: 'scheduled',
-  CONFIRMED: 'confirmed',
-  COMPLETED: 'completed',
-  CANCELLED: 'cancelled',
+  SCHEDULED: "scheduled",
+  CONFIRMED: "confirmed",
+  COMPLETED: "completed",
+  CANCELLED: "cancelled",
 } as const;
 
 export const APPOINTMENT_STATUS_LABELS = {
-  scheduled: 'Agendado',
-  confirmed: 'Confirmado',
-  completed: 'Concluído',
-  cancelled: 'Cancelado',
+  scheduled: "Agendado",
+  confirmed: "Confirmado",
+  completed: "Concluído",
+  cancelled: "Cancelado",
 } as const;
 
 /**
  * User roles
  */
 export const USER_ROLES = {
-  PATIENT: 'patient',
-  PROFESSIONAL: 'professional',
-  ADMIN: 'admin',
+  PATIENT: "patient",
+  PROFESSIONAL: "professional",
+  ADMIN: "admin",
 } as const;
 
 /**
  * Date formats for date-fns
  */
 export const DATE_FORMATS = {
-  DATE_ONLY: 'dd/MM/yyyy',
-  TIME_ONLY: 'HH:mm',
+  DATE_ONLY: "dd/MM/yyyy",
+  TIME_ONLY: "HH:mm",
   DATE_TIME: "dd/MM/yyyy 'às' HH:mm",
   FULL_DATE: "EEEE, d 'de' MMMM 'de' yyyy",
   RELATIVE: "EEEE, d 'de' MMMM",
@@ -203,38 +203,38 @@ export const DATE_FORMATS = {
  * Error messages (for user-facing errors)
  */
 export const ERROR_MESSAGES = {
-  NETWORK_ERROR: 'Erro de conexão. Verifique sua internet.',
-  GENERIC_ERROR: 'Ocorreu um erro. Tente novamente.',
-  UNAUTHORIZED: 'Você não tem permissão para acessar este recurso.',
-  NOT_FOUND: 'Recurso não encontrado.',
-  VALIDATION_ERROR: 'Por favor, verifique os dados inseridos.',
+  NETWORK_ERROR: "Erro de conexão. Verifique sua internet.",
+  GENERIC_ERROR: "Ocorreu um erro. Tente novamente.",
+  UNAUTHORIZED: "Você não tem permissão para acessar este recurso.",
+  NOT_FOUND: "Recurso não encontrado.",
+  VALIDATION_ERROR: "Por favor, verifique os dados inseridos.",
 } as const;
 
 /**
  * Success messages
  */
 export const SUCCESS_MESSAGES = {
-  SAVE_SUCCESS: 'Salvo com sucesso!',
-  UPDATE_SUCCESS: 'Atualizado com sucesso!',
-  DELETE_SUCCESS: 'Excluído com sucesso!',
-  SYNC_SUCCESS: 'Sincronizado com sucesso!',
+  SAVE_SUCCESS: "Salvo com sucesso!",
+  UPDATE_SUCCESS: "Atualizado com sucesso!",
+  DELETE_SUCCESS: "Excluído com sucesso!",
+  SYNC_SUCCESS: "Sincronizado com sucesso!",
 } as const;
 
 /**
  * Help/Support URLs
  */
 export const SUPPORT_URLS = {
-  PRIVACY_POLICY: 'https://fisioflow.app/privacy',
-  TERMS_OF_SERVICE: 'https://fisioflow.app/terms',
-  HELP_CENTER: 'https://fisioflow.app/help',
-  CONTACT_EMAIL: 'support@fisioflow.app',
+  PRIVACY_POLICY: "https://fisioflow.app/privacy",
+  TERMS_OF_SERVICE: "https://fisioflow.app/terms",
+  HELP_CENTER: "https://fisioflow.app/help",
+  CONTACT_EMAIL: "support@fisioflow.app",
 } as const;
 
 /**
  * Social media links
  */
 export const SOCIAL_LINKS = {
-  INSTAGRAM: 'https://instagram.com/fisioflow',
-  FACEBOOK: 'https://facebook.com/fisioflow',
-  LINKEDIN: 'https://linkedin.com/company/fisioflow',
+  INSTAGRAM: "https://instagram.com/fisioflow",
+  FACEBOOK: "https://facebook.com/fisioflow",
+  LINKEDIN: "https://linkedin.com/company/fisioflow",
 } as const;

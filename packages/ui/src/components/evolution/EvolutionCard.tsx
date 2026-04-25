@@ -1,7 +1,7 @@
-import React from 'react';
-import { MotionCard } from '../MotionCard';
-import { cn } from '../../lib/utils';
-import { Calendar, User } from 'lucide-react';
+import React from "react";
+import { MotionCard } from "../MotionCard";
+import { cn } from "../../lib/utils";
+import { Calendar, User } from "lucide-react";
 
 export interface EvolutionCardProps extends React.HTMLAttributes<HTMLDivElement> {
   date: string;
@@ -17,21 +17,23 @@ export interface EvolutionCardProps extends React.HTMLAttributes<HTMLDivElement>
 }
 
 export const EvolutionCard = React.forwardRef<HTMLDivElement, EvolutionCardProps>(
-  ({ 
-    date, 
-    therapistName, 
-    subjective, 
-    objective: _objective, 
-    assessment, 
-    plan: _plan,
-    sessionNumber, 
-    painLevel,
-    onClick, 
-    compact = false,
-    className, 
-    ...props 
-  }, ref) => {
-    
+  (
+    {
+      date,
+      therapistName,
+      subjective,
+      objective: _objective,
+      assessment,
+      plan: _plan,
+      sessionNumber,
+      painLevel,
+      onClick,
+      compact = false,
+      className,
+      ...props
+    },
+    ref,
+  ) => {
     return (
       <MotionCard
         ref={ref}
@@ -40,7 +42,7 @@ export const EvolutionCard = React.forwardRef<HTMLDivElement, EvolutionCardProps
         className={cn(
           "cursor-pointer flex flex-col gap-3 group relative overflow-hidden",
           compact ? "p-3" : "p-4",
-          className
+          className,
         )}
         {...(props as any)}
       >
@@ -51,12 +53,16 @@ export const EvolutionCard = React.forwardRef<HTMLDivElement, EvolutionCardProps
             {sessionNumber && <span className="text-xs opacity-70">• Sessão #{sessionNumber}</span>}
           </div>
           {painLevel !== undefined && (
-            <div className={cn(
-              "px-2 py-0.5 rounded-full text-[10px] font-bold",
-              painLevel > 7 ? "bg-red-500/10 text-red-600" :
-              painLevel > 3 ? "bg-amber-500/10 text-amber-600" :
-              "bg-green-500/10 text-green-600"
-            )}>
+            <div
+              className={cn(
+                "px-2 py-0.5 rounded-full text-[10px] font-bold",
+                painLevel > 7
+                  ? "bg-red-500/10 text-red-600"
+                  : painLevel > 3
+                    ? "bg-amber-500/10 text-amber-600"
+                    : "bg-green-500/10 text-green-600",
+              )}
+            >
               Dor: {painLevel}/10
             </div>
           )}
@@ -65,14 +71,18 @@ export const EvolutionCard = React.forwardRef<HTMLDivElement, EvolutionCardProps
         <div className="space-y-2">
           {subjective && (
             <div>
-              <span className="text-xs font-semibold text-primary/80 uppercase tracking-wider">Subjetivo</span>
+              <span className="text-xs font-semibold text-primary/80 uppercase tracking-wider">
+                Subjetivo
+              </span>
               <p className="text-sm text-muted-foreground line-clamp-2">{subjective}</p>
             </div>
           )}
-          
+
           {!compact && assessment && (
             <div>
-              <span className="text-xs font-semibold text-primary/80 uppercase tracking-wider">Avaliação</span>
+              <span className="text-xs font-semibold text-primary/80 uppercase tracking-wider">
+                Avaliação
+              </span>
               <p className="text-sm text-muted-foreground line-clamp-2">{assessment}</p>
             </div>
           )}
@@ -84,7 +94,7 @@ export const EvolutionCard = React.forwardRef<HTMLDivElement, EvolutionCardProps
         </div>
       </MotionCard>
     );
-  }
+  },
 );
 
-EvolutionCard.displayName = 'EvolutionCard';
+EvolutionCard.displayName = "EvolutionCard";

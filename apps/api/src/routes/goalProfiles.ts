@@ -8,15 +8,15 @@
  * POST   /api/goal-profiles/:id/publish  — publish (DRAFT → PUBLISHED)
  * DELETE /api/goal-profiles/:id          — delete
  */
-import { Hono } from 'hono';
-import { createPool } from '../lib/db';
-import { requireAuth, type AuthVariables } from '../lib/auth';
-import type { Env } from '../types/env';
+import { Hono } from "hono";
+import { createPool } from "../lib/db";
+import { requireAuth, type AuthVariables } from "../lib/auth";
+import type { Env } from "../types/env";
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
-app.get('/', requireAuth, async (c) => {
-  const user = c.get('user');
+app.get("/", requireAuth, async (c) => {
+  const user = c.get("user");
   const pool = await createPool(c.env);
 
   const result = await pool.query(
@@ -25,11 +25,15 @@ app.get('/', requireAuth, async (c) => {
      ORDER BY status, name`,
     [user.organizationId],
   );
-  try { return c.json({ data: result.rows || result }); } catch { return c.json({ data: [] }); }
+  try {
+    return c.json({ data: result.rows || result });
+  } catch {
+    return c.json({ data: [] });
+  }
 });
 
-app.get('/:id', requireAuth, async (c) => {
-  const user = c.get('user');
+app.get("/:id", requireAuth, async (c) => {
+  const user = c.get("user");
   const pool = await createPool(c.env);
   const { id } = c.req.param();
 
@@ -38,17 +42,17 @@ app.get('/:id', requireAuth, async (c) => {
      WHERE id = $1 AND (organization_id = $2 OR organization_id IS NULL)`,
     [id, user.organizationId],
   );
-  if (!result.rows.length) return c.json({ error: 'Perfil não encontrado' }, 404);
+  if (!result.rows.length) return c.json({ error: "Perfil não encontrado" }, 404);
   return c.json({ data: result.rows[0] });
 });
 
-app.post('/', requireAuth, async (c) => {
-  const user = c.get('user');
+app.post("/", requireAuth, async (c) => {
+  const user = c.get("user");
   const pool = await createPool(c.env);
   const body = (await c.req.json()) as Record<string, unknown>;
 
-  const id = String(body.id || '').trim();
-  if (!id) return c.json({ error: 'id é obrigatório' }, 400);
+  const id = String(body.id || "").trim();
+  if (!id) return c.json({ error: "id é obrigatório" }, 400);
 
   const result = await pool.query(
     `INSERT INTO goal_profiles
@@ -61,7 +65,7 @@ app.post('/', requireAuth, async (c) => {
     [
       id,
       user.organizationId,
-      String(body.name || '').trim() || 'Perfil sem nome',
+      String(body.name || "").trim() || "Perfil sem nome",
       body.description ?? null,
       JSON.stringify(body.applicable_tests ?? body.applicableTests ?? []),
       body.quality_gate != null || body.qualityGate != null
@@ -76,21 +80,21 @@ app.post('/', requireAuth, async (c) => {
     ],
   );
 
-  if (!result.rows.length) return c.json({ error: 'ID já existe' }, 409);
+  if (!result.rows.length) return c.json({ error: "ID já existe" }, 409);
   return c.json({ data: result.rows[0] }, 201);
 });
 
-app.put('/:id', requireAuth, async (c) => {
-  const user = c.get('user');
+app.put("/:id", requireAuth, async (c) => {
+  const user = c.get("user");
   const pool = await createPool(c.env);
   const { id } = c.req.param();
   const body = (await c.req.json()) as Record<string, unknown>;
 
   const check = await pool.query(
-    'SELECT id FROM goal_profiles WHERE id = $1 AND organization_id = $2',
+    "SELECT id FROM goal_profiles WHERE id = $1 AND organization_id = $2",
     [id, user.organizationId],
   );
-  if (!check.rows.length) return c.json({ error: 'Perfil não encontrado' }, 404);
+  if (!check.rows.length) return c.json({ error: "Perfil não encontrado" }, 404);
 
   const fields: string[] = [];
   const values: unknown[] = [id, user.organizationId];
@@ -98,33 +102,40 @@ app.put('/:id', requireAuth, async (c) => {
 
   const maybeSet = (col: string, val: unknown, jsonb = false) => {
     if (val === undefined) return;
-    fields.push(`${col} = $${idx++}${jsonb ? '::jsonb' : ''}`);
+    fields.push(`${col} = $${idx++}${jsonb ? "::jsonb" : ""}`);
     values.push(jsonb ? JSON.stringify(val) : val);
   };
 
-  maybeSet('name', body.name);
-  maybeSet('description', body.description);
-  maybeSet('applicable_tests', body.applicable_tests ?? body.applicableTests, true);
-  maybeSet('quality_gate', body.quality_gate ?? body.qualityGate, true);
-  maybeSet('targets', body.targets, true);
-  maybeSet('clinician_notes_template', body.clinician_notes_template ?? body.clinicianNotesTemplate);
-  maybeSet('patient_notes_template', body.patient_notes_template ?? body.patientNotesTemplate);
-  maybeSet('evidence', body.evidence, true);
-  maybeSet('default_pinned_metric_keys', body.default_pinned_metric_keys ?? body.defaultPinnedMetricKeys, true);
-  maybeSet('tags', body.tags, true);
+  maybeSet("name", body.name);
+  maybeSet("description", body.description);
+  maybeSet("applicable_tests", body.applicable_tests ?? body.applicableTests, true);
+  maybeSet("quality_gate", body.quality_gate ?? body.qualityGate, true);
+  maybeSet("targets", body.targets, true);
+  maybeSet(
+    "clinician_notes_template",
+    body.clinician_notes_template ?? body.clinicianNotesTemplate,
+  );
+  maybeSet("patient_notes_template", body.patient_notes_template ?? body.patientNotesTemplate);
+  maybeSet("evidence", body.evidence, true);
+  maybeSet(
+    "default_pinned_metric_keys",
+    body.default_pinned_metric_keys ?? body.defaultPinnedMetricKeys,
+    true,
+  );
+  maybeSet("tags", body.tags, true);
 
-  if (!fields.length) return c.json({ error: 'Nenhum campo para atualizar' }, 400);
-  fields.push('updated_at = NOW()');
+  if (!fields.length) return c.json({ error: "Nenhum campo para atualizar" }, 400);
+  fields.push("updated_at = NOW()");
 
   const result = await pool.query(
-    `UPDATE goal_profiles SET ${fields.join(', ')} WHERE id = $1 AND organization_id = $2 RETURNING *`,
+    `UPDATE goal_profiles SET ${fields.join(", ")} WHERE id = $1 AND organization_id = $2 RETURNING *`,
     values,
   );
   return c.json({ data: result.rows[0] });
 });
 
-app.post('/:id/publish', requireAuth, async (c) => {
-  const user = c.get('user');
+app.post("/:id/publish", requireAuth, async (c) => {
+  const user = c.get("user");
   const pool = await createPool(c.env);
   const { id } = c.req.param();
 
@@ -135,20 +146,20 @@ app.post('/:id/publish', requireAuth, async (c) => {
      RETURNING *`,
     [id, user.organizationId],
   );
-  if (!result.rows.length) return c.json({ error: 'Perfil não encontrado' }, 404);
+  if (!result.rows.length) return c.json({ error: "Perfil não encontrado" }, 404);
   return c.json({ data: result.rows[0] });
 });
 
-app.delete('/:id', requireAuth, async (c) => {
-  const user = c.get('user');
+app.delete("/:id", requireAuth, async (c) => {
+  const user = c.get("user");
   const pool = await createPool(c.env);
   const { id } = c.req.param();
 
   const result = await pool.query(
-    'DELETE FROM goal_profiles WHERE id = $1 AND organization_id = $2 RETURNING id',
+    "DELETE FROM goal_profiles WHERE id = $1 AND organization_id = $2 RETURNING id",
     [id, user.organizationId],
   );
-  if (!result.rows.length) return c.json({ error: 'Perfil não encontrado' }, 404);
+  if (!result.rows.length) return c.json({ error: "Perfil não encontrado" }, 404);
   return c.json({ ok: true });
 });
 

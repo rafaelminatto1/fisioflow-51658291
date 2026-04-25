@@ -12,6 +12,7 @@ Telemedicine integration using Jitsi Meet for remote physiotherapy sessions.
 ## Architecture
 
 ### Route File
+
 `apps/api/src/routes/telemedicine.ts` (~372 lines)
 
 ### Database Table
@@ -43,16 +44,16 @@ telemedicine_rooms
 Schema is lazily initialized on first request via singleton promise pattern:
 
 ```ts
-let schemaInitialized = false
-let schemaInitPromise: Promise<void> | null = null
+let schemaInitialized = false;
+let schemaInitPromise: Promise<void> | null = null;
 
 async function ensureTelemedicineSchema(db: Pool) {
-  if (schemaInitialized) return
+  if (schemaInitialized) return;
   if (!schemaInitPromise) {
-    schemaInitPromise = db.query(`CREATE TABLE IF NOT EXISTS telemedicine_rooms (...)`)
+    schemaInitPromise = db.query(`CREATE TABLE IF NOT EXISTS telemedicine_rooms (...)`);
   }
-  await schemaInitPromise
-  schemaInitialized = true
+  await schemaInitPromise;
+  schemaInitialized = true;
 }
 ```
 
@@ -61,6 +62,7 @@ async function ensureTelemedicineSchema(db: Pool) {
 ## Meeting Provider: Jitsi Meet
 
 URLs are built as:
+
 ```
 https://meet.jit.si/fisioflow-{roomCode}
 ```
@@ -68,6 +70,7 @@ https://meet.jit.si/fisioflow-{roomCode}
 Room codes are unique identifiers generated on room creation.
 
 ### Jitsi Configuration
+
 - **No server required** — Uses public Jitsi Meet infrastructure
 - **Custom domain option** — For production, deploy self-hosted Jitsi on Cloudflare
 - **Features:** Screen sharing, recording, chat, virtual backgrounds
@@ -78,6 +81,7 @@ Room codes are unique identifiers generated on room creation.
 ## Room Lifecycle
 
 ### State Machine
+
 ```
 aguardando → em_andamento → finalizada
      ↓              ↓
@@ -85,48 +89,57 @@ aguardando → em_andamento → finalizada
 ```
 
 ### Create Room
+
 ```ts
 app.post("/rooms", requireAuth, async (c) => {
-  const user = c.get("user")
-  const body = await c.req.json()
-  const roomCode = generateRoomCode() // crypto.randomUUID().slice(0, 8)
-  const meetingUrl = `https://meet.jit.si/fisioflow-${roomCode}`
-  
-  const [room] = await db.insert(telemedicineRooms).values({
-    organizationId: user.organizationId,
-    patientId: body.patientId,
-    therapistId: user.uid,
-    appointmentId: body.appointmentId,
-    roomCode,
-    status: "aguardando",
-    scheduledAt: body.scheduledAt,
-    meetingProvider: "jitsi",
-    meetingUrl,
-  }).returning()
-  
-  return c.json({ data: normalizeRoomRow(room) }, 201)
-})
+  const user = c.get("user");
+  const body = await c.req.json();
+  const roomCode = generateRoomCode(); // crypto.randomUUID().slice(0, 8)
+  const meetingUrl = `https://meet.jit.si/fisioflow-${roomCode}`;
+
+  const [room] = await db
+    .insert(telemedicineRooms)
+    .values({
+      organizationId: user.organizationId,
+      patientId: body.patientId,
+      therapistId: user.uid,
+      appointmentId: body.appointmentId,
+      roomCode,
+      status: "aguardando",
+      scheduledAt: body.scheduledAt,
+      meetingProvider: "jitsi",
+      meetingUrl,
+    })
+    .returning();
+
+  return c.json({ data: normalizeRoomRow(room) }, 201);
+});
 ```
 
 ### Start Room
+
 ```ts
 app.post("/rooms/:id/start", requireAuth, async (c) => {
-  await db.update(telemedicineRooms)
+  await db
+    .update(telemedicineRooms)
     .set({ status: "em_andamento", startedAt: new Date() })
-    .where(and(
-      eq(telemedicineRooms.id, roomId),
-      eq(telemedicineRooms.organizationId, user.organizationId),
-    ))
-})
+    .where(
+      and(
+        eq(telemedicineRooms.id, roomId),
+        eq(telemedicineRooms.organizationId, user.organizationId),
+      ),
+    );
+});
 ```
 
 ### End Room
+
 ```ts
 app.post("/rooms/:id/end", requireAuth, async (c) => {
   const startedAt = room.startedAt
   const endedAt = new Date()
   const durationMinutes = Math.round((endedAt - startedAt) / 60000)
-  
+
   await db.update(telemedicineRooms)
     .set({ status: "finalizada", endedAt, durationMinutes, recordingUrl })
     .where(...)
@@ -134,18 +147,22 @@ app.post("/rooms/:id/end", requireAuth, async (c) => {
 ```
 
 ### List Rooms
+
 ```ts
 app.get("/rooms", requireAuth, async (c) => {
-  const rooms = await db.query(`
+  const rooms = await db.query(
+    `
     SELECT r.*, p.name as patient_name, p.email as patient_email, p.phone as patient_phone
     FROM telemedicine_rooms r
     LEFT JOIN patients p ON p.id = r.patient_id
     WHERE r.organization_id = $1
     ORDER BY r.created_at DESC
-  `, [user.organizationId])
-  
-  return c.json({ data: rooms.map(normalizeRoomRow) })
-})
+  `,
+    [user.organizationId],
+  );
+
+  return c.json({ data: rooms.map(normalizeRoomRow) });
+});
 ```
 
 ---
@@ -153,6 +170,7 @@ app.get("/rooms", requireAuth, async (c) => {
 ## Appointment Integration
 
 When creating a telemedicine appointment:
+
 1. Create `appointment` with `type: "session"` (or new type `telemedicine`)
 2. Create `telemedicine_room` linked to the appointment
 3. Send WhatsApp message with meeting link to patient
@@ -172,8 +190,8 @@ c.executionCtx.waitUntil(
       time: appointment.startTime,
     },
     extra: { meetingUrl: room.meetingUrl },
-  })
-)
+  }),
+);
 ```
 
 ---
@@ -186,6 +204,7 @@ c.executionCtx.waitUntil(
 - Recording start/stop managed via Jitsi API or custom backend
 
 ### R2 Storage Path
+
 ```
 telemedicine-recordings/{organizationId}/{roomId}/{timestamp}.mp4
 ```
@@ -195,12 +214,14 @@ telemedicine-recordings/{organizationId}/{roomId}/{timestamp}.mp4
 ## Frontend Integration
 
 ### Therapist View (Web)
+
 - Room management in appointment detail
 - "Start Video Call" button when appointment time arrives
 - Embedded Jitsi iframe or external link
 - Duration timer
 
 ### Patient View (Mobile/Web)
+
 - Deep link from WhatsApp notification
 - In-app Jitsi Meet via SDK (mobile)
 - Embedded iframe (web portal)

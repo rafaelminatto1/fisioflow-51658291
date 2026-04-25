@@ -19,351 +19,323 @@ import { pdf } from "@react-pdf/renderer";
 import { saveAs } from "file-saver";
 
 const PatientEvolutionReport = () => {
-	const { patientId } = useParams<{ patientId: string }>();
-	const navigate = useNavigate();
-	const [isAIModalOpen, setIsAIModalOpen] = useState(false);
+  const { patientId } = useParams<{ patientId: string }>();
+  const navigate = useNavigate();
+  const [isAIModalOpen, setIsAIModalOpen] = useState(false);
 
-	const { data: patients } = usePatients();
-	const patient = patients?.find((p) => p.id === patientId);
+  const { data: patients } = usePatients();
+  const patient = patients?.find((p) => p.id === patientId);
 
-	const { data: evolutionData, isLoading } = usePatientEvolutionReport(
-		patientId || "",
-	);
+  const { data: evolutionData, isLoading } = usePatientEvolutionReport(patientId || "");
 
-	const reportInput = useMemo<ClinicalReportInput | null>(() => {
-		if (!patient || !evolutionData) return null;
-		return {
-			patientInfo: {
-				name: patient.name || "Paciente Desconhecido",
-				condition: "", // can be left empty or derive from patient data if available
-			},
-			sessions: evolutionData.sessions.map((s) => ({
-				date: s.date
-					? new Date(s.date).toLocaleDateString("pt-BR")
-					: "Data não informada",
-				subjective: s.subjective,
-				objective: s.objective,
-				assessment: s.assessment,
-				plan: s.plan,
-				painLevel: s.painLevel,
-			})),
-			measurementEvolution: evolutionData.measurementEvolution,
-		};
-	}, [patient, evolutionData]);
+  const reportInput = useMemo<ClinicalReportInput | null>(() => {
+    if (!patient || !evolutionData) return null;
+    return {
+      patientInfo: {
+        name: patient.name || "Paciente Desconhecido",
+        condition: "", // can be left empty or derive from patient data if available
+      },
+      sessions: evolutionData.sessions.map((s) => ({
+        date: s.date ? new Date(s.date).toLocaleDateString("pt-BR") : "Data não informada",
+        subjective: s.subjective,
+        objective: s.objective,
+        assessment: s.assessment,
+        plan: s.plan,
+        painLevel: s.painLevel,
+      })),
+      measurementEvolution: evolutionData.measurementEvolution,
+    };
+  }, [patient, evolutionData]);
 
-	const handlePrint = () => {
-		window.print();
-	};
+  const handlePrint = () => {
+    window.print();
+  };
 
-	const handleExport = async () => {
-		if (!patient || !evolutionData) {
-			toast.error("Dados insuficientes para gerar PDF");
-			return;
-		}
+  const handleExport = async () => {
+    if (!patient || !evolutionData) {
+      toast.error("Dados insuficientes para gerar PDF");
+      return;
+    }
 
-		const patientName = PatientHelpers.getName(patient);
-		try {
-			const { generateEvolutionPDF } = await import(
-				"@/lib/export/evolutionPdfExport"
-			);
-			const pdf = generateEvolutionPDF(
-				{
-					name: patientName,
-					phone: patient.phone || undefined,
-					email: patient.email || undefined,
-					birthDate: (patient as any).birth_date || undefined,
-				},
-				evolutionData.sessions,
-				{
-					currentPainLevel: evolutionData.currentPainLevel,
-					initialPainLevel: evolutionData.initialPainLevel,
-					totalSessions: evolutionData.totalSessions,
-					prescribedSessions: evolutionData.prescribedSessions,
-					averageImprovement: evolutionData.averageImprovement,
-					measurementEvolution: evolutionData.measurementEvolution,
-				},
-			);
+    const patientName = PatientHelpers.getName(patient);
+    try {
+      const { generateEvolutionPDF } = await import("@/lib/export/evolutionPdfExport");
+      const pdf = generateEvolutionPDF(
+        {
+          name: patientName,
+          phone: patient.phone || undefined,
+          email: patient.email || undefined,
+          birthDate: (patient as any).birth_date || undefined,
+        },
+        evolutionData.sessions,
+        {
+          currentPainLevel: evolutionData.currentPainLevel,
+          initialPainLevel: evolutionData.initialPainLevel,
+          totalSessions: evolutionData.totalSessions,
+          prescribedSessions: evolutionData.prescribedSessions,
+          averageImprovement: evolutionData.averageImprovement,
+          measurementEvolution: evolutionData.measurementEvolution,
+        },
+      );
 
-			pdf.save(
-				`evolucao-${patientName.replace(/\s/g, "-")}-${new Date().toISOString().split("T")[0]}.pdf`,
-			);
-			toast.success("PDF gerado com sucesso!");
-		} catch (error) {
-			logger.error("Erro ao gerar PDF", error, "PatientEvolutionReport");
-			toast.error("Erro ao gerar PDF");
-		}
-	};
+      pdf.save(
+        `evolucao-${patientName.replace(/\s/g, "-")}-${new Date().toISOString().split("T")[0]}.pdf`,
+      );
+      toast.success("PDF gerado com sucesso!");
+    } catch (error) {
+      logger.error("Erro ao gerar PDF", error, "PatientEvolutionReport");
+      toast.error("Erro ao gerar PDF");
+    }
+  };
 
-	const handleExportPremium = async () => {
-		if (!patient || !evolutionData) {
-			toast.error("Dados insuficientes para gerar PDF");
-			return;
-		}
+  const handleExportPremium = async () => {
+    if (!patient || !evolutionData) {
+      toast.error("Dados insuficientes para gerar PDF");
+      return;
+    }
 
-		const patientName = PatientHelpers.getName(patient);
-		try {
-			const blob = await pdf(
-				<RelatorioPremiumPDF
-					data={{
-						clinica: {
-							nome: "Activity Fisioterapia Mooca",
-							endereco: "Rua Manuel Vieira de Sousa, 166 - Mooca, São Paulo - SP",
-							telefone: "(11) 5874-9885",
-							whatsapp: "11 93433-5858",
-							logoUrl: "/logo/logo.png",
-						},
-						paciente: {
-							nome: patientName,
-							cpf: patient.cpf || "---",
-							data_nascimento: (patient as any).birth_date,
-						},
-						profissional: {
-							nome: "Rafael Minatto",
-							registro: "CREFITO 12345-F",
-							especialidade: "Fisioterapia Ortopédica",
-						},
-						data_emissao: new Date().toISOString(),
-						narrativa_medica: `Paciente ${patientName} apresenta evolução progressiva após intervenção fisioterapêutica. O quadro clínico inicial apresentava limitações funcionais e álgicas que foram mitigadas através de protocolo de cinesioterapia e mobilização articular precoce, fundamentado em evidências científicas.`,
-						narrativa_paciente: `Olá, ${patientName}! Seu progresso está excelente. Aumentamos seu movimento do joelho e a dor diminuiu significativamente. Continue firme nos exercícios!`,
-						evolucoes: evolutionData.sessions.map((s) => ({
-							data: s.date,
-							objetivo: s.objective || s.observations || "Evolução de rotina.",
-							dor: s.painLevel,
-							mobilidade: s.mobilityScore,
-						})),
-						metricas: (evolutionData.measurementEvolution || []).map((m) => ({
-							nome: m.name,
-							inicial: `${m.initial.value}${m.initial.unit}`,
-							atual: `${m.current.value}${m.current.unit}`,
-							melhora: `${m.improvement}`,
-						})),
-						referencias: [
-							{
-								autor: "Smith et al.",
-								titulo: "Efficacy of Early Mobilization in Knee Rehabilitation",
-								periodico: "Journal of Orthopaedic & Sports Physical Therapy",
-								url: "https://pubmed.ncbi.nlm.nih.gov/",
-							},
-						],
-					}}
-				/>
-			).toBlob();
+    const patientName = PatientHelpers.getName(patient);
+    try {
+      const blob = await pdf(
+        <RelatorioPremiumPDF
+          data={{
+            clinica: {
+              nome: "Activity Fisioterapia Mooca",
+              endereco: "Rua Manuel Vieira de Sousa, 166 - Mooca, São Paulo - SP",
+              telefone: "(11) 5874-9885",
+              whatsapp: "11 93433-5858",
+              logoUrl: "/logo/logo.png",
+            },
+            paciente: {
+              nome: patientName,
+              cpf: patient.cpf || "---",
+              data_nascimento: (patient as any).birth_date,
+            },
+            profissional: {
+              nome: "Rafael Minatto",
+              registro: "CREFITO 12345-F",
+              especialidade: "Fisioterapia Ortopédica",
+            },
+            data_emissao: new Date().toISOString(),
+            narrativa_medica: `Paciente ${patientName} apresenta evolução progressiva após intervenção fisioterapêutica. O quadro clínico inicial apresentava limitações funcionais e álgicas que foram mitigadas através de protocolo de cinesioterapia e mobilização articular precoce, fundamentado em evidências científicas.`,
+            narrativa_paciente: `Olá, ${patientName}! Seu progresso está excelente. Aumentamos seu movimento do joelho e a dor diminuiu significativamente. Continue firme nos exercícios!`,
+            evolucoes: evolutionData.sessions.map((s) => ({
+              data: s.date,
+              objetivo: s.objective || s.observations || "Evolução de rotina.",
+              dor: s.painLevel,
+              mobilidade: s.mobilityScore,
+            })),
+            metricas: (evolutionData.measurementEvolution || []).map((m) => ({
+              nome: m.name,
+              inicial: `${m.initial.value}${m.initial.unit}`,
+              atual: `${m.current.value}${m.current.unit}`,
+              melhora: `${m.improvement}`,
+            })),
+            referencias: [
+              {
+                autor: "Smith et al.",
+                titulo: "Efficacy of Early Mobilization in Knee Rehabilitation",
+                periodico: "Journal of Orthopaedic & Sports Physical Therapy",
+                url: "https://pubmed.ncbi.nlm.nih.gov/",
+              },
+            ],
+          }}
+        />,
+      ).toBlob();
 
-			saveAs(blob, `RELATORIO-PREMIUM-${patientName.replace(/\s/g, "-")}.pdf`);
-			toast.success("PDF Premium gerado com sucesso!");
-		} catch (error) {
-			logger.error("Erro ao gerar PDF Premium", error, "PatientEvolutionReport");
-			toast.error("Erro ao gerar PDF Premium");
-		}
-	};
+      saveAs(blob, `RELATORIO-PREMIUM-${patientName.replace(/\s/g, "-")}.pdf`);
+      toast.success("PDF Premium gerado com sucesso!");
+    } catch (error) {
+      logger.error("Erro ao gerar PDF Premium", error, "PatientEvolutionReport");
+      toast.error("Erro ao gerar PDF Premium");
+    }
+  };
 
-	if (isLoading) {
-		return (
-			<MainLayout>
-				<div className="space-y-4">
-					<LoadingSkeleton type="card" rows={4} />
-				</div>
-			</MainLayout>
-		);
-	}
+  if (isLoading) {
+    return (
+      <MainLayout>
+        <div className="space-y-4">
+          <LoadingSkeleton type="card" rows={4} />
+        </div>
+      </MainLayout>
+    );
+  }
 
-	if (!evolutionData || evolutionData.sessions.length === 0) {
-		return (
-			<MainLayout>
-				<div className="space-y-4">
-					<Button variant="ghost" onClick={() => navigate(-1)}>
-						<ArrowLeft className="mr-2 h-4 w-4" />
-						Voltar
-					</Button>
-					<EmptyState
-						title="Nenhum registro encontrado"
-						description="Este paciente ainda não possui registros de evolução."
-					/>
-				</div>
-			</MainLayout>
-		);
-	}
+  if (!evolutionData || evolutionData.sessions.length === 0) {
+    return (
+      <MainLayout>
+        <div className="space-y-4">
+          <Button variant="ghost" onClick={() => navigate(-1)}>
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Voltar
+          </Button>
+          <EmptyState
+            title="Nenhum registro encontrado"
+            description="Este paciente ainda não possui registros de evolução."
+          />
+        </div>
+      </MainLayout>
+    );
+  }
 
-	return (
-		<MainLayout>
-			<div className="space-y-4 sm:space-y-6 print:space-y-4 animate-fade-in px-1 sm:px-0">
-				{/* Header moderno com gradiente */}
-				<div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-primary/10 via-primary/5 to-background p-4 sm:p-6 shadow-lg border print:hidden">
-					<div className="relative z-10">
-						<div className="flex flex-col gap-4">
-							<div className="flex items-center gap-3 sm:gap-4">
-								<Button
-									variant="outline"
-									size="icon"
-									onClick={() => navigate(-1)}
-									className="hover:scale-105 transition-transform flex-shrink-0"
-								>
-									<ArrowLeft className="h-5 w-5" />
-								</Button>
-								<div className="min-w-0 flex-1">
-									<h1 className="text-2xl sm:text-3xl font-bold tracking-tight flex items-center gap-2">
-										<Activity className="h-6 w-6 sm:h-8 sm:w-8 text-primary flex-shrink-0" />
-										<span className="truncate">Dashboard 360º</span>
-									</h1>
-									<p className="text-muted-foreground mt-1 truncate">
-										Visão completa da evolução de {patient?.name}
-									</p>
-								</div>
-							</div>
+  return (
+    <MainLayout>
+      <div className="space-y-4 sm:space-y-6 print:space-y-4 animate-fade-in px-1 sm:px-0">
+        {/* Header moderno com gradiente */}
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-primary/10 via-primary/5 to-background p-4 sm:p-6 shadow-lg border print:hidden">
+          <div className="relative z-10">
+            <div className="flex flex-col gap-4">
+              <div className="flex items-center gap-3 sm:gap-4">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => navigate(-1)}
+                  className="hover:scale-105 transition-transform flex-shrink-0"
+                >
+                  <ArrowLeft className="h-5 w-5" />
+                </Button>
+                <div className="min-w-0 flex-1">
+                  <h1 className="text-2xl sm:text-3xl font-bold tracking-tight flex items-center gap-2">
+                    <Activity className="h-6 w-6 sm:h-8 sm:w-8 text-primary flex-shrink-0" />
+                    <span className="truncate">Dashboard 360º</span>
+                  </h1>
+                  <p className="text-muted-foreground mt-1 truncate">
+                    Visão completa da evolução de {patient?.name}
+                  </p>
+                </div>
+              </div>
 
-							<div className="flex flex-col sm:flex-row gap-2 sm:gap-3 ml-0 sm:ml-14">
-								<Button
-									variant="default"
-									onClick={handleExportPremium}
-									className="gap-2 shadow-premium-md hover:shadow-premium-lg transition-all w-full sm:w-auto justify-center bg-primary text-white"
-								>
-									<Activity className="h-4 w-4" />
-									<span>Relatório Premium (IA)</span>
-								</Button>
-								<Button
-									variant="outline"
-									onClick={handleExport}
-									className="gap-2 shadow hover:shadow-lg transition-all w-full sm:w-auto justify-center"
-								>
-									<FileDown className="h-4 w-4" />
-									<span>PDF Simples</span>
-								</Button>
-								<Button
-									variant="outline"
-									onClick={handlePrint}
-									className="gap-2 shadow hover:shadow-lg transition-all w-full sm:w-auto justify-center"
-								>
-									<Printer className="h-4 w-4" />
-									<span>Imprimir</span>
-								</Button>
-							</div>
-						</div>
-					</div>
-					<div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl -z-0" />
-				</div>
+              <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 ml-0 sm:ml-14">
+                <Button
+                  variant="default"
+                  onClick={handleExportPremium}
+                  className="gap-2 shadow-premium-md hover:shadow-premium-lg transition-all w-full sm:w-auto justify-center bg-primary text-white"
+                >
+                  <Activity className="h-4 w-4" />
+                  <span>Relatório Premium (IA)</span>
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={handleExport}
+                  className="gap-2 shadow hover:shadow-lg transition-all w-full sm:w-auto justify-center"
+                >
+                  <FileDown className="h-4 w-4" />
+                  <span>PDF Simples</span>
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={handlePrint}
+                  className="gap-2 shadow hover:shadow-lg transition-all w-full sm:w-auto justify-center"
+                >
+                  <Printer className="h-4 w-4" />
+                  <span>Imprimir</span>
+                </Button>
+              </div>
+            </div>
+          </div>
+          <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl -z-0" />
+        </div>
 
-				{/* Análise de Progresso */}
-				<ProgressAnalysisCard sessions={evolutionData.sessions} />
+        {/* Análise de Progresso */}
+        <ProgressAnalysisCard sessions={evolutionData.sessions} />
 
-				{/* Relatório Clínico Humanizado */}
-				<ClinicalNarrativeReport 
-					patientName={patient?.name || "Paciente"} 
-					sessions={evolutionData.sessions} 
-				/>
+        {/* Relatório Clínico Humanizado */}
+        <ClinicalNarrativeReport
+          patientName={patient?.name || "Paciente"}
+          sessions={evolutionData.sessions}
+        />
 
-				{/* Dashboard Principal (SOAP Timeline + Gráficos) */}
-				<PatientEvolutionDashboard
-					patientId={patientId || ""}
-					patientName={patient?.name || "Paciente"}
-					sessions={evolutionData.sessions}
-					currentPainLevel={evolutionData.currentPainLevel}
-					initialPainLevel={evolutionData.initialPainLevel}
-					totalSessions={evolutionData.totalSessions}
-					prescribedSessions={evolutionData.prescribedSessions}
-					averageImprovement={evolutionData.averageImprovement}
-				/>
+        {/* Dashboard Principal (SOAP Timeline + Gráficos) */}
+        <PatientEvolutionDashboard
+          patientId={patientId || ""}
+          patientName={patient?.name || "Paciente"}
+          sessions={evolutionData.sessions}
+          currentPainLevel={evolutionData.currentPainLevel}
+          initialPainLevel={evolutionData.initialPainLevel}
+          totalSessions={evolutionData.totalSessions}
+          prescribedSessions={evolutionData.prescribedSessions}
+          averageImprovement={evolutionData.averageImprovement}
+        />
 
-				{/* Evolução de Medições (Tabela) */}
-				{evolutionData.measurementEvolution &&
-					evolutionData.measurementEvolution.length > 0 && (
-						<div className="grid grid-cols-1 gap-4">
-							<div className="rounded-2xl border bg-card text-card-foreground shadow-sm overflow-hidden">
-								<div className="p-4 sm:p-6 bg-teal-50/50 border-b flex items-center gap-2">
-									<Activity className="h-5 w-5 text-teal-600 flex-shrink-0" />
-									<h3 className="font-bold text-teal-900 uppercase tracking-wider text-xs sm:text-sm">
-										Evolução dos Marcadores Clínicos
-									</h3>
-								</div>
-								<div className="overflow-x-auto -mx-2 sm:mx-0">
-									<div className="px-2 sm:px-0 min-w-[500px] sm:min-w-0">
-										<table className="w-full text-sm">
-											<thead>
-												<tr className="bg-slate-50/50 text-slate-500 font-bold uppercase tracking-widest text-[10px] border-b">
-													<th className="px-3 sm:px-6 py-3 sm:py-4 text-left">
-														Parâmetro
-													</th>
-													<th className="px-3 sm:px-6 py-3 sm:py-4 text-left">
-														Inicial
-													</th>
-													<th className="px-3 sm:px-6 py-3 sm:py-4 text-left">
-														Atual
-													</th>
-													<th className="px-3 sm:px-6 py-3 sm:py-4 text-left">
-														Melhora
-													</th>
-												</tr>
-											</thead>
-											<tbody className="divide-y">
-												{evolutionData.measurementEvolution.map((m, i) => (
-													<tr
-														key={i}
-														className="hover:bg-slate-50/30 transition-colors"
-													>
-														<td className="px-3 sm:px-6 py-3 sm:py-4">
-															<div className="font-bold text-slate-800 text-sm">
-																{m.name}
-															</div>
-															<div className="text-[10px] text-slate-500 font-medium">
-																{m.type}
-															</div>
-														</td>
-														<td className="px-3 sm:px-6 py-3 sm:py-4">
-															<span className="font-medium text-slate-600">
-																{m.initial.value}
-															</span>
-															<span className="text-[10px] text-slate-500 ml-1 font-bold">
-																{m.initial.unit}
-															</span>
-														</td>
-														<td className="px-3 sm:px-6 py-3 sm:py-4">
-															<span className="font-bold text-teal-700">
-																{m.current.value}
-															</span>
-															<span className="text-[10px] text-slate-500 ml-1 font-bold">
-																{m.current.unit}
-															</span>
-														</td>
-														<td className="px-3 sm:px-6 py-3 sm:py-4">
-															<div
-																className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold ${
-																	parseFloat(m.improvement.toString()) >= 0
-																		? "bg-green-50 text-green-700 border border-green-100"
-																		: "bg-red-50 text-red-700 border border-red-100"
-																}`}
-															>
-																{m.improvement}%{" "}
-																{parseFloat(m.improvement.toString()) >= 0
-																	? "↑"
-																	: "↓"}
-															</div>
-														</td>
-													</tr>
-												))}
-											</tbody>
-										</table>
-									</div>
-								</div>
-							</div>
-						</div>
-					)}
+        {/* Evolução de Medições (Tabela) */}
+        {evolutionData.measurementEvolution && evolutionData.measurementEvolution.length > 0 && (
+          <div className="grid grid-cols-1 gap-4">
+            <div className="rounded-2xl border bg-card text-card-foreground shadow-sm overflow-hidden">
+              <div className="p-4 sm:p-6 bg-teal-50/50 border-b flex items-center gap-2">
+                <Activity className="h-5 w-5 text-teal-600 flex-shrink-0" />
+                <h3 className="font-bold text-teal-900 uppercase tracking-wider text-xs sm:text-sm">
+                  Evolução dos Marcadores Clínicos
+                </h3>
+              </div>
+              <div className="overflow-x-auto -mx-2 sm:mx-0">
+                <div className="px-2 sm:px-0 min-w-[500px] sm:min-w-0">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="bg-slate-50/50 text-slate-500 font-bold uppercase tracking-widest text-[10px] border-b">
+                        <th className="px-3 sm:px-6 py-3 sm:py-4 text-left">Parâmetro</th>
+                        <th className="px-3 sm:px-6 py-3 sm:py-4 text-left">Inicial</th>
+                        <th className="px-3 sm:px-6 py-3 sm:py-4 text-left">Atual</th>
+                        <th className="px-3 sm:px-6 py-3 sm:py-4 text-left">Melhora</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y">
+                      {evolutionData.measurementEvolution.map((m, i) => (
+                        <tr key={i} className="hover:bg-slate-50/30 transition-colors">
+                          <td className="px-3 sm:px-6 py-3 sm:py-4">
+                            <div className="font-bold text-slate-800 text-sm">{m.name}</div>
+                            <div className="text-[10px] text-slate-500 font-medium">{m.type}</div>
+                          </td>
+                          <td className="px-3 sm:px-6 py-3 sm:py-4">
+                            <span className="font-medium text-slate-600">{m.initial.value}</span>
+                            <span className="text-[10px] text-slate-500 ml-1 font-bold">
+                              {m.initial.unit}
+                            </span>
+                          </td>
+                          <td className="px-3 sm:px-6 py-3 sm:py-4">
+                            <span className="font-bold text-teal-700">{m.current.value}</span>
+                            <span className="text-[10px] text-slate-500 ml-1 font-bold">
+                              {m.current.unit}
+                            </span>
+                          </td>
+                          <td className="px-3 sm:px-6 py-3 sm:py-4">
+                            <div
+                              className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold ${
+                                parseFloat(m.improvement.toString()) >= 0
+                                  ? "bg-green-50 text-green-700 border border-green-100"
+                                  : "bg-red-50 text-red-700 border border-red-100"
+                              }`}
+                            >
+                              {m.improvement}%{" "}
+                              {parseFloat(m.improvement.toString()) >= 0 ? "↑" : "↓"}
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
-				{/* Print Footer */}
-				<div className="hidden print:block mt-8 pt-4 border-t">
-					<div className="text-center text-sm text-muted-foreground">
-						<p>Relatório gerado em {new Date().toLocaleDateString("pt-BR")}</p>
-						<p>FisioFlow - Sistema de Gestão de Fisioterapia</p>
-					</div>
-				</div>
-			</div>
+        {/* Print Footer */}
+        <div className="hidden print:block mt-8 pt-4 border-t">
+          <div className="text-center text-sm text-muted-foreground">
+            <p>Relatório gerado em {new Date().toLocaleDateString("pt-BR")}</p>
+            <p>FisioFlow - Sistema de Gestão de Fisioterapia</p>
+          </div>
+        </div>
+      </div>
 
-			<AIReportGeneratorModal
-				open={isAIModalOpen}
-				onOpenChange={setIsAIModalOpen}
-				patientName={patient?.name || "Paciente Desconhecido"}
-				reportInput={reportInput}
-			/>
-		</MainLayout>
-	);
+      <AIReportGeneratorModal
+        open={isAIModalOpen}
+        onOpenChange={setIsAIModalOpen}
+        patientName={patient?.name || "Paciente Desconhecido"}
+        reportInput={reportInput}
+      />
+    </MainLayout>
+  );
 };
 
 export default PatientEvolutionReport;

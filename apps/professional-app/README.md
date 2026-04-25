@@ -12,6 +12,7 @@
 ## 🎯 Sobre
 
 App mobile para profissionais de fisioterapia gerenciarem:
+
 - 👥 Pacientes e prontuários
 - 📅 Agendamentos e calendário
 - 📝 Evoluções SOAP com fotos
@@ -156,23 +157,27 @@ apps/professional-app/
 ## 🛠️ Tecnologias
 
 ### Core
+
 - **React Native** - Framework mobile
 - **Expo** - Toolchain e SDK
 - **TypeScript** - Type safety
 - **Expo Router** - Navegação
 
 ### Estado e Dados
+
 - **TanStack Query** - Cache e sincronização
 - **Zustand** - Estado global
 - **Neon (PostgreSQL) / Cloudflare API** - Backend
 
 ### UI/UX
+
 - **React Native Paper** - Componentes
 - **Expo Haptics** - Feedback tátil
 - **React Native Chart Kit** - Gráficos
 - **Expo Image Picker** - Fotos
 
 ### Desenvolvimento
+
 - **ESLint** - Linting
 - **Prettier** - Formatação
 - **Jest** - Testes
@@ -183,29 +188,31 @@ apps/professional-app/
 
 ### Completude Geral: **89%**
 
-| Módulo | Status | % |
-|--------|--------|---|
-| Autenticação | ✅ | 100% |
-| Dashboard | ✅ | 100% |
-| Pacientes | ✅ | 100% |
-| Agendamentos | ✅ | 100% |
-| Evoluções | ✅ | 95% |
-| Upload Fotos | ✅ | 100% |
-| Protocolos | ⚠️ | 60% |
-| Exercícios | ⚠️ | 60% |
-| Financeiro | ✅ | 90% |
-| Modo Offline | ❌ | 0% |
+| Módulo       | Status | %    |
+| ------------ | ------ | ---- |
+| Autenticação | ✅     | 100% |
+| Dashboard    | ✅     | 100% |
+| Pacientes    | ✅     | 100% |
+| Agendamentos | ✅     | 100% |
+| Evoluções    | ✅     | 95%  |
+| Upload Fotos | ✅     | 100% |
+| Protocolos   | ⚠️     | 60%  |
+| Exercícios   | ⚠️     | 60%  |
+| Financeiro   | ✅     | 90%  |
+| Modo Offline | ❌     | 0%   |
 
 ---
 
 ## 📚 Documentação
 
 ### Essencial
+
 - [Quick Start Guide](./QUICK_START_GUIDE.md) - Início rápido
 - [Final Report](./FINAL_IMPLEMENTATION_REPORT.md) - Relatório completo
 - [Testing Guide](./TESTING_GUIDE.md) - Guia de testes
 
 ### Detalhada
+
 - [App Analysis](./APP_ANALYSIS_AND_ROADMAP.md) - Análise completa
 - [Executive Summary](./EXECUTIVE_SUMMARY.md) - Resumo executivo
 - [Evolutions](./IMPLEMENTATION_COMPLETE.md) - Evoluções SOAP
@@ -267,16 +274,19 @@ eas update --branch production --message "Bug fixes"
 ### Próximas Implementações
 
 #### Curto Prazo (1-2 semanas)
+
 - [ ] Backend de Protocolos (4-6h)
 - [ ] Modo Offline Básico (8-10h)
 - [ ] Upload Cloudflare R2 (3-4h)
 
 #### Médio Prazo (3-4 semanas)
+
 - [ ] Exercícios CRUD Completo (5-6h)
 - [ ] Notificações Push (6-8h)
 - [ ] Relatórios Avançados (5-6h)
 
 #### Longo Prazo (1-2 meses)
+
 - [ ] Assinatura Digital (4-5h)
 - [ ] Chat/Mensagens (10-12h)
 - [ ] Agendamentos Recorrentes (4-5h)
@@ -307,6 +317,7 @@ eas update --branch production --message "Bug fixes"
 ### [0.9.0] - 2026-02-21
 
 #### Added ⭐
+
 - Sistema completo de Evoluções SOAP
 - Upload de fotos (câmera e galeria)
 - Protocolos de tratamento (UI completa)
@@ -315,6 +326,7 @@ eas update --branch production --message "Bug fixes"
 - Aplicar protocolo a paciente
 
 #### Fixed 🐛
+
 - Agendamentos sobrepostos no calendário
 - Texto "grupo" nos cards
 - Erros de Neon (índices e permissões)
@@ -322,6 +334,7 @@ eas update --branch production --message "Bug fixes"
 - TypeScript errors
 
 #### Changed 🔄
+
 - Melhorias na UX de evoluções
 - Otimização de performance
 - Atualização de documentação

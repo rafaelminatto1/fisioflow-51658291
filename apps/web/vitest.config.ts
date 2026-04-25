@@ -8,12 +8,12 @@
 
 /// <reference types="@testing-library/jest-dom" />
 
-import { defineConfig } from 'vitest/config';
-import react from '@vitejs/plugin-react';
-import path from 'path';
+import { defineConfig } from "vitest/config";
+import react from "@vitejs/plugin-react";
+import path from "path";
 
-const repoRoot = path.resolve(__dirname, '../..');
-const coverageDir = path.resolve(__dirname, 'coverage');
+const repoRoot = path.resolve(__dirname, "../..");
+const coverageDir = path.resolve(__dirname, "coverage");
 
 export default defineConfig({
   root: repoRoot,
@@ -24,41 +24,43 @@ export default defineConfig({
     globals: true,
 
     // Test environment - jsdom for DOM testing
-    environment: 'jsdom',
+    environment: "jsdom",
 
     // Pool configuration
-    pool: 'threads',
+    pool: "threads",
 
     // Setup files for test configuration
-    setupFiles: [path.resolve(__dirname, 'src/test/setup.ts')],
+    setupFiles: [
+      path.resolve(__dirname, "src/test/polyfills.ts"),
+      path.resolve(__dirname, "src/test/setup.ts"),
+    ],
 
     // Enable CSS modules for component tests
     css: true,
 
     // Include patterns
-    include: ['**/*.{test,spec}.{ts,tsx}'],
+    include: ["**/*.{test,spec}.{ts,tsx}"],
 
     // Reporters
-    reporters: ['default', 'json', 'html', 'verbose'],
+    reporters: ["default", "json", "verbose"],
 
     // Output files
     outputFile: {
-      json: path.resolve(coverageDir, 'test-results.json'),
-      html: path.resolve(coverageDir, 'index.html'),
+      json: path.resolve(coverageDir, "test-results.json"),
     },
 
     // Exclude Edge Functions and problematic tests
     exclude: [
-      'node_modules/',
-      '**/node_modules/**',
-      'dist/',
-      '.idea/',
-      '.git/',
-      '.cache/',
-      'functions/**',
-      'e2e/**',
-      'e2e-tests/**',
-      'tests/**',
+      "node_modules/",
+      "**/node_modules/**",
+      "dist/",
+      ".idea/",
+      ".git/",
+      ".cache/",
+      "functions/**",
+      "e2e/**",
+      "e2e-tests/**",
+      "tests/**",
     ],
 
     // Test timeouts
@@ -76,25 +78,25 @@ export default defineConfig({
 
     // Coverage configuration
     coverage: {
-      provider: 'v8',
-      reporter: ['text', 'json', 'html', 'lcov'],
-      include: ['src/**/*.{ts,tsx}'],
+      provider: "v8",
+      reporter: ["text", "json", "html", "lcov"],
+      include: ["src/**/*.{ts,tsx}"],
       reportsDirectory: coverageDir,
       exclude: [
-        'node_modules/',
-        'dist/',
-        'src/test/',
-        'src/tests/',
-        '**/*.d.ts',
-        '**/*.config.*',
-        '**/coverage/**',
-        '**/*.test.{ts,tsx}',
-        '**/*.spec.{ts,tsx}',
-        '**/mockData/**',
-        'functions/**',
+        "node_modules/",
+        "dist/",
+        "src/test/",
+        "src/tests/",
+        "**/*.d.ts",
+        "**/*.config.*",
+        "**/coverage/**",
+        "**/*.test.{ts,tsx}",
+        "**/*.spec.{ts,tsx}",
+        "**/mockData/**",
+        "functions/**",
         // Entry points
-        'src/main.tsx',
-        'src/vite-env.d.ts',
+        "src/main.tsx",
+        "src/vite-env.d.ts",
       ],
       // Coverage thresholds
       thresholds: {
@@ -116,12 +118,12 @@ export default defineConfig({
   resolve: {
     tsconfigPaths: true,
     alias: {
-      '@': path.resolve(repoRoot, 'src'),
-      '@fisioflow/ui': path.resolve(repoRoot, 'packages/ui/src'),
-      '@fisioflow/core': path.resolve(repoRoot, 'packages/core/src'),
-      '@fisioflow/config': path.resolve(repoRoot, 'packages/config/src'),
-      '@fisioflow/skills': path.resolve(repoRoot, 'src/lib/skills'),
-      'lodash': 'lodash-es',
+      "@": path.resolve(repoRoot, "src"),
+      "@fisioflow/ui": path.resolve(repoRoot, "packages/ui/src"),
+      "@fisioflow/core": path.resolve(repoRoot, "packages/core/src"),
+      "@fisioflow/config": path.resolve(repoRoot, "packages/config/src"),
+      "@fisioflow/skills": path.resolve(repoRoot, "src/lib/skills"),
+      lodash: "lodash-es",
     },
   },
 });

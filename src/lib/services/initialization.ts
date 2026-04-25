@@ -7,143 +7,136 @@
 import { initPerformanceMonitoring } from "@/lib/monitoring/performance";
 import { initRemoteConfig } from "@/lib/config/remote-config";
 import { initAnalytics } from "@/lib/analytics/events";
-import {
-	clearUser as clearSentryUser,
-	initSentry,
-	setUser,
-} from "@/lib/monitoring/sentry";
+import { clearUser as clearSentryUser, initSentry, setUser } from "@/lib/monitoring/sentry";
 import { logger } from "@/lib/errors/logger";
 
 /**
  * Inicializa todos os serviços de plataforma
  */
 export async function initializeServices() {
-	logger.info("[Init] Inicializando serviços de plataforma");
+  logger.info("[Init] Inicializando serviços de plataforma");
 
-	try {
-		// 1. Sentry (Error Tracking) - PRIMEIRO para capturar erros
-		initSentry({
-			environment: import.meta.env.MODE,
-			tracesSampleRate: 0.1, // 10% das transações
-			profilesSampleRate: 0.1,
-		});
+  try {
+    // 1. Sentry (Error Tracking) - PRIMEIRO para capturar erros
+    initSentry({
+      environment: import.meta.env.MODE,
+      tracesSampleRate: 0.1, // 10% das transações
+      profilesSampleRate: 0.1,
+    });
 
-		// 2. Analytics (Event Tracking)
-		initAnalytics();
+    // 2. Analytics (Event Tracking)
+    initAnalytics();
 
-		// 3. Performance Monitoring
-		initPerformanceMonitoring();
+    // 3. Performance Monitoring
+    initPerformanceMonitoring();
 
-		// 4. Remote Config (Feature Flags)
-		await initRemoteConfig();
+    // 4. Remote Config (Feature Flags)
+    await initRemoteConfig();
 
-		logger.info("[Init] Todos os serviços inicializados com sucesso");
-	} catch (error) {
-		logger.error("[Init] Erro ao inicializar serviços:", error);
-		// Não lança erro para não quebrar o app
-	}
+    logger.info("[Init] Todos os serviços inicializados com sucesso");
+  } catch (error) {
+    logger.error("[Init] Erro ao inicializar serviços:", error);
+    // Não lança erro para não quebrar o app
+  }
 }
 
 /**
  * Configura usuário para tracking
  */
 export function setupUserTracking(user: {
-	uid: string;
-	email?: string | null;
-	displayName?: string | null;
+  uid: string;
+  email?: string | null;
+  displayName?: string | null;
 }) {
-	try {
-		// Sentry
-		setUser({
-			id: user.uid,
-			email: user.email || undefined,
-			name: user.displayName || undefined,
-		});
+  try {
+    // Sentry
+    setUser({
+      id: user.uid,
+      email: user.email || undefined,
+      name: user.displayName || undefined,
+    });
 
-		logger.debug(`[Init] Tracking configurado para usuário ${user.uid}`);
-	} catch (error) {
-		logger.error("[Init] Erro ao configurar tracking do usuário:", error);
-	}
+    logger.debug(`[Init] Tracking configurado para usuário ${user.uid}`);
+  } catch (error) {
+    logger.error("[Init] Erro ao configurar tracking do usuário:", error);
+  }
 }
 
 /**
  * Limpa dados do usuário ao fazer logout
  */
 export function clearUserTracking() {
-	try {
-		clearSentryUser();
+  try {
+    clearSentryUser();
 
-		logger.debug("[Init] Tracking do usuário limpo");
-	} catch (error) {
-		logger.error("[Init] Erro ao limpar tracking do usuário:", error);
-	}
+    logger.debug("[Init] Tracking do usuário limpo");
+  } catch (error) {
+    logger.error("[Init] Erro ao limpar tracking do usuário:", error);
+  }
 }
 
 /**
  * Verifica se todos os serviços estão ativos
  */
 export async function checkServicesHealth(): Promise<{
-	sentry: boolean;
-	analytics: boolean;
-	performance: boolean;
-	remoteConfig: boolean;
+  sentry: boolean;
+  analytics: boolean;
+  performance: boolean;
+  remoteConfig: boolean;
 }> {
-	const health = {
-		sentry: false,
-		analytics: false,
-		performance: false,
-		remoteConfig: false,
-	};
+  const health = {
+    sentry: false,
+    analytics: false,
+    performance: false,
+    remoteConfig: false,
+  };
 
-	try {
-		// Sentry
-		health.sentry =
-			typeof window !== "undefined" && (window as any).__SENTRY__ !== undefined;
+  try {
+    // Sentry
+    health.sentry = typeof window !== "undefined" && (window as any).__SENTRY__ !== undefined;
 
-		// Analytics
-		health.analytics =
-			typeof window !== "undefined" && (window as any).gtag !== undefined;
+    // Analytics
+    health.analytics = typeof window !== "undefined" && (window as any).gtag !== undefined;
 
-		// Performance
-		health.performance =
-			typeof window !== "undefined" && "performance" in window;
+    // Performance
+    health.performance = typeof window !== "undefined" && "performance" in window;
 
-		// Remote Config
-		// Não há como verificar sem chamar uma função, então assumimos true se inicializou
-		health.remoteConfig = true;
-	} catch (error) {
-		logger.error("[Init] Erro ao verificar saúde dos serviços:", error);
-	}
+    // Remote Config
+    // Não há como verificar sem chamar uma função, então assumimos true se inicializou
+    health.remoteConfig = true;
+  } catch (error) {
+    logger.error("[Init] Erro ao verificar saúde dos serviços:", error);
+  }
 
-	return health;
+  return health;
 }
 
 /**
  * Inicialização no cliente (para ser chamada no main.tsx)
  */
 export async function initializeOnClient(): Promise<void> {
-	if (typeof window === "undefined") return;
+  if (typeof window === "undefined") return;
 
-	// Aguarda o DOM estar pronto
-	if (document.readyState === "loading") {
-		await new Promise<void>((resolve) => {
-			document.addEventListener("DOMContentLoaded", () => {
-				initializeServices().then(() => resolve());
-			});
-		});
-	} else {
-		await initializeServices();
-	}
+  // Aguarda o DOM estar pronto
+  if (document.readyState === "loading") {
+    await new Promise<void>((resolve) => {
+      document.addEventListener("DOMContentLoaded", () => {
+        initializeServices().then(() => resolve());
+      });
+    });
+  } else {
+    await initializeServices();
+  }
 }
 
 /**
  * Exportar tudo em um único objeto
  */
 export const platformServices = {
-	initialize: initializeServices,
-	setupUser: setupUserTracking,
-	clearUser: clearUserTracking,
-	checkHealth: checkServicesHealth,
+  initialize: initializeServices,
+  setupUser: setupUserTracking,
+  clearUser: clearUserTracking,
+  checkHealth: checkServicesHealth,
 };
 
 export default platformServices;

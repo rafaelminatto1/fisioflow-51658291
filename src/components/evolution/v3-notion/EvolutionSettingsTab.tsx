@@ -1,18 +1,24 @@
-import React from 'react';
-import { useEvolutionSettings } from '@/hooks/useEvolutionSettings';
-import { Settings, SlidersHorizontal, EyeOff, LayoutTemplate, MessageSquarePlus } from 'lucide-react';
+import React from "react";
+import { useEvolutionSettings } from "@/hooks/useEvolutionSettings";
+import {
+  Settings,
+  SlidersHorizontal,
+  EyeOff,
+  LayoutTemplate,
+  MessageSquarePlus,
+} from "lucide-react";
 
 // Hardcoded available commands for now.
 // Eventually this could be dynamic, but since we are controlling Tiptap commands, we list the main ones.
 const AVAILABLE_COMMANDS = [
-  { id: 'heading', label: 'Cabeçalhos (H1, H2, H3)', icon: 'T' },
-  { id: 'bold', label: 'Negrito', icon: 'B' },
-  { id: 'italic', label: 'Itálico', icon: 'I' },
-  { id: 'bulletList', label: 'Lista de Marcadores', icon: '•' },
-  { id: 'orderedList', label: 'Lista Numerada', icon: '1.' },
-  { id: 'template', label: 'Inserir Modelo', icon: 'LayoutTemplate' },
-  { id: 'exercise', label: 'Inserir Exercício', icon: 'Dumbbell' },
-  { id: 'suggestion', label: 'Assistente Clínico (/sugestoes)', icon: 'MessageSquarePlus' }
+  { id: "heading", label: "Cabeçalhos (H1, H2, H3)", icon: "T" },
+  { id: "bold", label: "Negrito", icon: "B" },
+  { id: "italic", label: "Itálico", icon: "I" },
+  { id: "bulletList", label: "Lista de Marcadores", icon: "•" },
+  { id: "orderedList", label: "Lista Numerada", icon: "1." },
+  { id: "template", label: "Inserir Modelo", icon: "LayoutTemplate" },
+  { id: "exercise", label: "Inserir Exercício", icon: "Dumbbell" },
+  { id: "suggestion", label: "Assistente Clínico (/sugestoes)", icon: "MessageSquarePlus" },
 ];
 
 export const EvolutionSettingsTab: React.FC = () => {
@@ -31,7 +37,6 @@ export const EvolutionSettingsTab: React.FC = () => {
       </div>
 
       <div className="p-6 space-y-8">
-        
         {/* Editor View Settings */}
         <section>
           <div className="flex items-center gap-2 mb-4">
@@ -40,22 +45,24 @@ export const EvolutionSettingsTab: React.FC = () => {
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <button
-              onClick={() => updateSettings({ defaultView: 'notion' })}
+              onClick={() => updateSettings({ defaultView: "notion" })}
               className={`p-4 rounded-xl border text-left transition-all ${
-                settings.defaultView === 'notion' 
-                  ? 'border-blue-500 bg-blue-50 ring-1 ring-blue-500' 
-                  : 'border-gray-200 hover:border-gray-300 bg-white'
+                settings.defaultView === "notion"
+                  ? "border-blue-500 bg-blue-50 ring-1 ring-blue-500"
+                  : "border-gray-200 hover:border-gray-300 bg-white"
               }`}
             >
               <div className="font-medium text-gray-900 mb-1">Editor Inteligente (Modão Novo)</div>
-              <p className="text-sm text-gray-500">Editor em blocos com comandos / e templates rápidos.</p>
+              <p className="text-sm text-gray-500">
+                Editor em blocos com comandos / e templates rápidos.
+              </p>
             </button>
             <button
-              onClick={() => updateSettings({ defaultView: 'classic' })}
+              onClick={() => updateSettings({ defaultView: "classic" })}
               className={`p-4 rounded-xl border text-left transition-all ${
-                settings.defaultView === 'classic' 
-                  ? 'border-blue-500 bg-blue-50 ring-1 ring-blue-500' 
-                  : 'border-gray-200 hover:border-gray-300 bg-white'
+                settings.defaultView === "classic"
+                  ? "border-blue-500 bg-blue-50 ring-1 ring-blue-500"
+                  : "border-gray-200 hover:border-gray-300 bg-white"
               }`}
             >
               <div className="font-medium text-gray-900 mb-1">Visualização Clássica</div>
@@ -76,12 +83,13 @@ export const EvolutionSettingsTab: React.FC = () => {
             <div className="flex-1">
               <div className="font-medium text-gray-900">Assistente Clínico (/sugestoes)</div>
               <p className="text-sm text-gray-500 mt-1">
-                Habilita a sugestão de blocos clínicos (exercícios, patologias, protocolos) durante a digitação.
+                Habilita a sugestão de blocos clínicos (exercícios, patologias, protocolos) durante
+                a digitação.
               </p>
             </div>
             <div className="relative inline-block w-12 h-6 flex-shrink-0 transition-opacity">
-              <input 
-                type="checkbox" 
+              <input
+                type="checkbox"
                 className="peer sr-only"
                 checked={settings.enableSuggestions}
                 onChange={(e) => updateSettings({ enableSuggestions: e.target.checked })}
@@ -107,18 +115,23 @@ export const EvolutionSettingsTab: React.FC = () => {
             {AVAILABLE_COMMANDS.map((cmd) => {
               const isEnabled = !settings.disabledCommands.includes(cmd.id);
               return (
-                <div key={cmd.id} className="flex items-center justify-between p-3 hover:bg-gray-100 rounded-lg transition-colors">
+                <div
+                  key={cmd.id}
+                  className="flex items-center justify-between p-3 hover:bg-gray-100 rounded-lg transition-colors"
+                >
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 rounded bg-white border border-gray-200 shadow-sm flex items-center justify-center text-xs font-bold text-gray-600">
                       {cmd.icon}
                     </div>
-                    <span className={`font-medium ${isEnabled ? 'text-gray-900' : 'text-gray-400 line-through'}`}>
+                    <span
+                      className={`font-medium ${isEnabled ? "text-gray-900" : "text-gray-400 line-through"}`}
+                    >
                       {cmd.label}
                     </span>
                   </div>
                   <label className="relative inline-flex items-center cursor-pointer">
-                    <input 
-                      type="checkbox" 
+                    <input
+                      type="checkbox"
                       className="sr-only peer"
                       checked={isEnabled}
                       onChange={() => toggleCommand(cmd.id)}
@@ -130,7 +143,6 @@ export const EvolutionSettingsTab: React.FC = () => {
             })}
           </div>
         </section>
-
       </div>
     </div>
   );

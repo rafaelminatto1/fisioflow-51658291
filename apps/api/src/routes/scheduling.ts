@@ -1,7 +1,7 @@
-import { Hono } from 'hono';
-import { createPool } from '../lib/db';
-import { requireAuth, type AuthVariables } from '../lib/auth';
-import type { Env } from '../types/env';
+import { Hono } from "hono";
+import { createPool } from "../lib/db";
+import { requireAuth, type AuthVariables } from "../lib/auth";
+import type { Env } from "../types/env";
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
@@ -15,11 +15,14 @@ async function ensureSchedulingSchema(pool: Pool, section: string) {
 }
 
 const parseRecurringDays = (value: unknown): number[] => {
-  if (Array.isArray(value)) return value.map((day) => Number(day)).filter((day) => !Number.isNaN(day));
-  if (typeof value === 'string' && value.trim()) {
+  if (Array.isArray(value))
+    return value.map((day) => Number(day)).filter((day) => !Number.isNaN(day));
+  if (typeof value === "string" && value.trim()) {
     try {
       const parsed = JSON.parse(value);
-      return Array.isArray(parsed) ? parsed.map((day) => Number(day)).filter((day) => !Number.isNaN(day)) : [];
+      return Array.isArray(parsed)
+        ? parsed.map((day) => Number(day)).filter((day) => !Number.isNaN(day))
+        : [];
     } catch {
       return [];
     }
@@ -29,7 +32,7 @@ const parseRecurringDays = (value: unknown): number[] => {
 
 const parseStringArray = (value: unknown): string[] => {
   if (Array.isArray(value)) return value.map((item) => String(item));
-  if (typeof value === 'string' && value.trim()) {
+  if (typeof value === "string" && value.trim()) {
     try {
       const parsed = JSON.parse(value);
       return Array.isArray(parsed) ? parsed.map((item) => String(item)) : [];
@@ -62,8 +65,8 @@ const normalizeBusinessHourPayload = (item: Record<string, any>) => {
   }
 
   const isOpen = item.is_open ?? (item.is_closed !== undefined ? !item.is_closed : true);
-  const openTime = item.open_time ?? item.start_time ?? '07:00';
-  const closeTime = item.close_time ?? item.end_time ?? '21:00';
+  const openTime = item.open_time ?? item.start_time ?? "07:00";
+  const closeTime = item.close_time ?? item.end_time ?? "21:00";
   const breakStart = item.break_start ?? null;
   const breakEnd = item.break_end ?? null;
 
@@ -95,7 +98,9 @@ const mapCancellationRuleRow = (row: Record<string, any>) => ({
   min_hours_before: Number(row.min_hours_before ?? row.min_hours_notice ?? 24),
   allow_patient_cancellation: row.allow_patient_cancellation ?? row.allow_reschedule ?? true,
   max_cancellations_month: Number(row.max_cancellations_month ?? 3),
-  charge_late_cancellation: row.charge_late_cancellation ?? Number(row.late_cancellation_fee ?? row.cancellation_fee ?? 0) > 0,
+  charge_late_cancellation:
+    row.charge_late_cancellation ??
+    Number(row.late_cancellation_fee ?? row.cancellation_fee ?? 0) > 0,
   late_cancellation_fee: Number(row.late_cancellation_fee ?? row.cancellation_fee ?? 0),
 });
 
@@ -122,18 +127,19 @@ const mapNotificationSettingsRow = (row: Record<string, any>) => ({
   send_reminder_24h: row.send_reminder_24h ?? row.enable_reminders ?? true,
   send_reminder_2h: row.send_reminder_2h ?? false,
   send_cancellation_notice: row.send_cancellation_notice ?? true,
-  custom_confirmation_message: row.custom_confirmation_message ?? '',
-  custom_reminder_message: row.custom_reminder_message ?? '',
+  custom_confirmation_message: row.custom_confirmation_message ?? "",
+  custom_reminder_message: row.custom_reminder_message ?? "",
 });
 
 const normalizeNotificationSettingsPayload = (body: Record<string, any>) => {
   const sendConfirmationEmail = body.send_confirmation_email ?? body.enable_confirmation ?? true;
-  const sendConfirmationWhatsApp = body.send_confirmation_whatsapp ?? body.enable_confirmation ?? true;
+  const sendConfirmationWhatsApp =
+    body.send_confirmation_whatsapp ?? body.enable_confirmation ?? true;
   const sendReminder24h = body.send_reminder_24h ?? body.enable_reminders ?? true;
   const sendReminder2h = body.send_reminder_2h ?? false;
   const sendCancellationNotice = body.send_cancellation_notice ?? true;
-  const customConfirmationMessage = body.custom_confirmation_message ?? '';
-  const customReminderMessage = body.custom_reminder_message ?? '';
+  const customConfirmationMessage = body.custom_confirmation_message ?? "";
+  const customReminderMessage = body.custom_reminder_message ?? "";
 
   return {
     sendConfirmationEmail: Boolean(sendConfirmationEmail),
@@ -145,8 +151,7 @@ const normalizeNotificationSettingsPayload = (body: Record<string, any>) => {
     customReminderMessage,
     enableReminders: Boolean(sendReminder24h || sendReminder2h),
     reminderHoursBefore: Number(
-      body.reminder_hours_before ??
-      (sendReminder24h ? 24 : sendReminder2h ? 2 : 24)
+      body.reminder_hours_before ?? (sendReminder24h ? 24 : sendReminder2h ? 2 : 24),
     ),
     enableConfirmation: Boolean(sendConfirmationEmail || sendConfirmationWhatsApp),
   };
@@ -154,7 +159,7 @@ const normalizeNotificationSettingsPayload = (body: Record<string, any>) => {
 
 const mapBlockedTimeRow = (row: Record<string, any>) => ({
   ...row,
-  title: row.title ?? 'Bloqueio',
+  title: row.title ?? "Bloqueio",
   start_date: row.start_date,
   end_date: row.end_date,
   start_time: formatTime(row.start_time),
@@ -166,7 +171,7 @@ const mapBlockedTimeRow = (row: Record<string, any>) => ({
 
 const normalizeBlockedTimePayload = (body: Record<string, any>) => ({
   therapistId: body.therapist_id ?? null,
-  title: body.title?.trim() || body.reason?.trim() || 'Bloqueio',
+  title: body.title?.trim() || body.reason?.trim() || "Bloqueio",
   reason: body.reason?.trim() || null,
   startDate: body.start_date,
   endDate: body.end_date ?? body.start_date,
@@ -186,17 +191,17 @@ const mapCapacityRow = (row: Record<string, any>) => ({
 const normalizeCapacityPayload = (body: Record<string, any>) => {
   const dayOfWeek = Number(body.day_of_week);
   const maxPatients = Number(body.max_patients);
-  const startTime = String(body.start_time ?? '').trim();
-  const endTime = String(body.end_time ?? '').trim();
+  const startTime = String(body.start_time ?? "").trim();
+  const endTime = String(body.end_time ?? "").trim();
 
   if (Number.isNaN(dayOfWeek) || dayOfWeek < 0 || dayOfWeek > 6) {
-    throw new Error('day_of_week inválido');
+    throw new Error("day_of_week inválido");
   }
   if (!startTime || !endTime) {
-    throw new Error('start_time e end_time são obrigatórios');
+    throw new Error("start_time e end_time são obrigatórios");
   }
   if (Number.isNaN(maxPatients) || maxPatients < 1) {
-    throw new Error('max_patients inválido');
+    throw new Error("max_patients inválido");
   }
 
   return {
@@ -216,12 +221,14 @@ const mapWaitlistRow = (row: Record<string, any>) => ({
 });
 
 const normalizeWaitlistPayload = (body: Record<string, any>) => ({
-  patientId: String(body.patient_id ?? body.patientId ?? '').trim(),
+  patientId: String(body.patient_id ?? body.patientId ?? "").trim(),
   preferredDays: JSON.stringify(parseStringArray(body.preferred_days ?? body.preferredDays)),
-  preferredPeriods: JSON.stringify(parseStringArray(body.preferred_periods ?? body.preferredPeriods)),
+  preferredPeriods: JSON.stringify(
+    parseStringArray(body.preferred_periods ?? body.preferredPeriods),
+  ),
   preferredTherapistId: body.preferred_therapist_id ?? body.preferredTherapistId ?? null,
-  priority: String(body.priority ?? 'normal').trim() || 'normal',
-  status: String(body.status ?? 'waiting').trim() || 'waiting',
+  priority: String(body.priority ?? "normal").trim() || "normal",
+  status: String(body.status ?? "waiting").trim() || "waiting",
   notes: body.notes?.trim() || null,
   refusalCount: Number(body.refusal_count ?? body.refusalCount ?? 0),
   offeredSlot: body.offered_slot ?? body.offeredSlot ?? null,
@@ -238,31 +245,37 @@ const mapRecurringSeriesRow = (row: Record<string, any>) => ({
   ...row,
   appointment_time: formatTime(row.appointment_time),
   recurrence_interval: Number(row.recurrence_interval ?? 1),
-  recurrence_days_of_week: row.recurrence_days_of_week == null
-    ? null
-    : parseRecurringDays(row.recurrence_days_of_week),
+  recurrence_days_of_week:
+    row.recurrence_days_of_week == null ? null : parseRecurringDays(row.recurrence_days_of_week),
   auto_confirm: row.auto_confirm === true,
   is_active: row.is_active !== false,
 });
 
 const normalizeRecurringSeriesPayload = (body: Record<string, any>) => {
-  const patientId = String(body.patient_id ?? body.patientId ?? '').trim();
-  const appointmentDate = String(body.appointment_date ?? body.appointmentDate ?? '').trim();
-  const appointmentTime = String(body.appointment_time ?? body.appointmentTime ?? '').trim();
-  const recurrenceInterval = Math.max(1, Number(body.recurrence_interval ?? body.recurrenceInterval ?? 1) || 1);
+  const patientId = String(body.patient_id ?? body.patientId ?? "").trim();
+  const appointmentDate = String(body.appointment_date ?? body.appointmentDate ?? "").trim();
+  const appointmentTime = String(body.appointment_time ?? body.appointmentTime ?? "").trim();
+  const recurrenceInterval = Math.max(
+    1,
+    Number(body.recurrence_interval ?? body.recurrenceInterval ?? 1) || 1,
+  );
 
-  if (!patientId) throw new Error('patient_id é obrigatório');
-  if (!appointmentDate) throw new Error('appointment_date é obrigatório');
-  if (!appointmentTime) throw new Error('appointment_time é obrigatório');
+  if (!patientId) throw new Error("patient_id é obrigatório");
+  if (!appointmentDate) throw new Error("appointment_date é obrigatório");
+  if (!appointmentTime) throw new Error("appointment_time é obrigatório");
 
   return {
     patientId,
     therapistId: body.therapist_id ?? body.therapistId ?? null,
-    recurrenceType: String(body.recurrence_type ?? body.recurrenceType ?? 'weekly').trim() || 'weekly',
+    recurrenceType:
+      String(body.recurrence_type ?? body.recurrenceType ?? "weekly").trim() || "weekly",
     recurrenceInterval,
-    recurrenceDaysOfWeek: body.recurrence_days_of_week == null && body.recurrenceDaysOfWeek == null
-      ? null
-      : JSON.stringify(parseRecurringDays(body.recurrence_days_of_week ?? body.recurrenceDaysOfWeek)),
+    recurrenceDaysOfWeek:
+      body.recurrence_days_of_week == null && body.recurrenceDaysOfWeek == null
+        ? null
+        : JSON.stringify(
+            parseRecurringDays(body.recurrence_days_of_week ?? body.recurrenceDaysOfWeek),
+          ),
     appointmentDate,
     appointmentTime,
     duration: body.duration == null ? null : Number(body.duration),
@@ -274,18 +287,18 @@ const normalizeRecurringSeriesPayload = (body: Record<string, any>) => {
   };
 };
 
-const toIsoDate = (date: Date) => date.toISOString().split('T')[0];
+const toIsoDate = (date: Date) => date.toISOString().split("T")[0];
 
 const generateRecurringOccurrences = (row: Record<string, any>, limit = 24) => {
   const series = mapRecurringSeriesRow(row) as Record<string, any>;
-  const appointmentDate = String(series.appointment_date ?? '').trim();
-  const appointmentTime = String(series.appointment_time ?? '').trim();
+  const appointmentDate = String(series.appointment_date ?? "").trim();
+  const appointmentTime = String(series.appointment_time ?? "").trim();
 
   if (!appointmentDate || !appointmentTime) {
     return [];
   }
 
-  const recurrenceType = String(series.recurrence_type ?? 'weekly');
+  const recurrenceType = String(series.recurrence_type ?? "weekly");
   const recurrenceInterval = Math.max(1, Number(series.recurrence_interval ?? 1) || 1);
   const recurrenceDays = Array.isArray(series.recurrence_days_of_week)
     ? series.recurrence_days_of_week.map((day) => Number(day)).filter((day) => !Number.isNaN(day))
@@ -293,19 +306,22 @@ const generateRecurringOccurrences = (row: Record<string, any>, limit = 24) => {
   const start = new Date(`${appointmentDate}T00:00:00.000Z`);
   const results: Array<Record<string, any>> = [];
 
-  if (recurrenceType === 'weekly' && recurrenceDays.length > 0) {
+  if (recurrenceType === "weekly" && recurrenceDays.length > 0) {
     let current = new Date(start);
     let guard = 0;
     while (results.length < limit && guard < 366) {
       const diffDays = Math.floor((current.getTime() - start.getTime()) / 86400000);
       const weeksSinceStart = Math.floor(diffDays / 7);
-      if (weeksSinceStart % recurrenceInterval === 0 && recurrenceDays.includes(current.getUTCDay())) {
+      if (
+        weeksSinceStart % recurrenceInterval === 0 &&
+        recurrenceDays.includes(current.getUTCDay())
+      ) {
         results.push({
           id: `${series.id}:${toIsoDate(current)}`,
           series_id: series.id,
           occurrence_date: toIsoDate(current),
           occurrence_time: appointmentTime,
-          status: series.is_active === false ? 'cancelado' : 'agendado',
+          status: series.is_active === false ? "cancelado" : "agendado",
           created_at: series.created_at ?? new Date().toISOString(),
         });
       }
@@ -322,13 +338,15 @@ const generateRecurringOccurrences = (row: Record<string, any>, limit = 24) => {
       series_id: series.id,
       occurrence_date: toIsoDate(current),
       occurrence_time: appointmentTime,
-      status: series.is_active === false ? 'cancelado' : 'agendado',
+      status: series.is_active === false ? "cancelado" : "agendado",
       created_at: series.created_at ?? new Date().toISOString(),
     });
 
-    if (recurrenceType === 'daily') current.setUTCDate(current.getUTCDate() + recurrenceInterval);
-    else if (recurrenceType === 'monthly') current.setUTCMonth(current.getUTCMonth() + recurrenceInterval);
-    else if (recurrenceType === 'yearly') current.setUTCFullYear(current.getUTCFullYear() + recurrenceInterval);
+    if (recurrenceType === "daily") current.setUTCDate(current.getUTCDate() + recurrenceInterval);
+    else if (recurrenceType === "monthly")
+      current.setUTCMonth(current.getUTCMonth() + recurrenceInterval);
+    else if (recurrenceType === "yearly")
+      current.setUTCFullYear(current.getUTCFullYear() + recurrenceInterval);
     else current.setUTCDate(current.getUTCDate() + 7 * recurrenceInterval);
   }
 
@@ -336,20 +354,20 @@ const generateRecurringOccurrences = (row: Record<string, any>, limit = 24) => {
 };
 
 async function handleUpsertBusinessHours(c: any) {
-  const user = c.get('user');
+  const user = c.get("user");
   const pool = await createPool(c.env);
 
   try {
     const body = (await c.req.json()) as Record<string, any>[] | Record<string, any>;
     const items = Array.isArray(body) ? body : [body];
-    const normalizedItems = items.map(item => normalizeBusinessHourPayload(item));
+    const normalizedItems = items.map((item) => normalizeBusinessHourPayload(item));
 
     // Atomic transaction for business hours update
     const queries = [
       {
-        text: 'DELETE FROM business_hours WHERE organization_id = $1',
-        values: [user.organizationId]
-      }
+        text: "DELETE FROM business_hours WHERE organization_id = $1",
+        values: [user.organizationId],
+      },
     ];
 
     for (const normalized of normalizedItems) {
@@ -367,32 +385,39 @@ async function handleUpsertBusinessHours(c: any) {
           normalized.isOpen,
           normalized.breakStart,
           normalized.breakEnd,
-        ]
+        ],
       });
     }
 
     await pool.transaction(queries);
 
     // Fetch updated results to return
-    const res = await pool.query('SELECT * FROM business_hours WHERE organization_id = $1 ORDER BY day_of_week ASC', [user.organizationId]);
+    const res = await pool.query(
+      "SELECT * FROM business_hours WHERE organization_id = $1 ORDER BY day_of_week ASC",
+      [user.organizationId],
+    );
     const results = res.rows.map(mapBusinessHourRow);
 
     // Clear cache
     const d1 = c.env.EDGE_CACHE || c.env.DB;
     if (d1) {
-        const cacheKey = `business-hours:${user.organizationId}`;
-        await d1.prepare('DELETE FROM query_cache WHERE id = ?').bind(cacheKey).run().catch(() => {});
+      const cacheKey = `business-hours:${user.organizationId}`;
+      await d1
+        .prepare("DELETE FROM query_cache WHERE id = ?")
+        .bind(cacheKey)
+        .run()
+        .catch(() => {});
     }
 
     return c.json({ data: results });
   } catch (error: any) {
-    console.error('[Business Hours Error]:', error);
-    return c.json({ error: error.message || 'Erro ao salvar horários de atendimento' }, 500);
+    console.error("[Business Hours Error]:", error);
+    return c.json({ error: error.message || "Erro ao salvar horários de atendimento" }, 500);
   }
 }
 
 async function handleUpsertCancellationRules(c: any) {
-  const user = c.get('user');
+  const user = c.get("user");
   const pool = await createPool(c.env);
 
   try {
@@ -414,7 +439,7 @@ async function handleUpsertCancellationRules(c: any) {
         charge_late_cancellation, late_cancellation_fee, organization_id, updated_at
       )
       VALUES ($1, $2, $5, $1, $2, $3, $4, $5, $6, NOW())
-      ON CONFLICT (organization_id) 
+      ON CONFLICT (organization_id)
       DO UPDATE SET
         min_hours_notice = EXCLUDED.min_hours_notice,
         allow_reschedule = EXCLUDED.allow_reschedule,
@@ -426,7 +451,7 @@ async function handleUpsertCancellationRules(c: any) {
         late_cancellation_fee = EXCLUDED.late_cancellation_fee,
         updated_at = EXCLUDED.updated_at
       RETURNING *`,
-      params
+      params,
     );
 
     return c.json({ data: mapCancellationRuleRow(res.rows[0]) });
@@ -436,7 +461,7 @@ async function handleUpsertCancellationRules(c: any) {
 }
 
 async function handleUpsertNotificationSettings(c: any) {
-  const user = c.get('user');
+  const user = c.get("user");
   const pool = await createPool(c.env);
 
   try {
@@ -478,7 +503,7 @@ async function handleUpsertNotificationSettings(c: any) {
         custom_reminder_message = EXCLUDED.custom_reminder_message,
         updated_at = EXCLUDED.updated_at
       RETURNING *`,
-      params
+      params,
     );
 
     return c.json({ data: mapNotificationSettingsRow(res.rows[0]) });
@@ -487,14 +512,14 @@ async function handleUpsertNotificationSettings(c: any) {
   }
 }
 
-app.get('/waitlist', requireAuth, async (c) => {
-  const user = c.get('user');
+app.get("/waitlist", requireAuth, async (c) => {
+  const user = c.get("user");
   const pool = await createPool(c.env);
   try {
     const { status, priority } = c.req.query();
     const params: unknown[] = [user.organizationId];
     let idx = 2;
-    let sql = 'SELECT * FROM waitlist WHERE organization_id = $1';
+    let sql = "SELECT * FROM waitlist WHERE organization_id = $1";
 
     if (status) {
       sql += ` AND status = $${idx++}`;
@@ -505,7 +530,7 @@ app.get('/waitlist', requireAuth, async (c) => {
       params.push(priority);
     }
 
-    sql += ' ORDER BY created_at ASC';
+    sql += " ORDER BY created_at ASC";
 
     const result = await pool.query(sql, params);
     return c.json({ data: result.rows.map(mapWaitlistRow) });
@@ -514,15 +539,15 @@ app.get('/waitlist', requireAuth, async (c) => {
   }
 });
 
-app.post('/waitlist', requireAuth, async (c) => {
-  const user = c.get('user');
+app.post("/waitlist", requireAuth, async (c) => {
+  const user = c.get("user");
   const pool = await createPool(c.env);
   try {
     const body = await c.req.json();
     const normalized = normalizeWaitlistPayload(body);
 
     if (!normalized.patientId) {
-      return c.json({ error: 'patient_id é obrigatório' }, 400);
+      return c.json({ error: "patient_id é obrigatório" }, 400);
     }
 
     const result = await pool.query(
@@ -555,23 +580,23 @@ app.post('/waitlist', requireAuth, async (c) => {
   }
 });
 
-app.put('/waitlist/:id', requireAuth, async (c) => {
-  const user = c.get('user');
+app.put("/waitlist/:id", requireAuth, async (c) => {
+  const user = c.get("user");
   const pool = await createPool(c.env);
   const { id } = c.req.param();
   try {
     const body = await c.req.json();
     const allowed = [
-      'preferred_days',
-      'preferred_periods',
-      'preferred_therapist_id',
-      'priority',
-      'status',
-      'notes',
-      'refusal_count',
-      'offered_slot',
-      'offered_at',
-      'offer_expires_at',
+      "preferred_days",
+      "preferred_periods",
+      "preferred_therapist_id",
+      "priority",
+      "status",
+      "notes",
+      "refusal_count",
+      "offered_slot",
+      "offered_at",
+      "offer_expires_at",
     ] as const;
     const sets: string[] = [];
     const params: unknown[] = [];
@@ -581,7 +606,7 @@ app.put('/waitlist/:id', requireAuth, async (c) => {
       if (!(key in body)) continue;
 
       let value = body[key];
-      if (key === 'preferred_days' || key === 'preferred_periods') {
+      if (key === "preferred_days" || key === "preferred_periods") {
         value = JSON.stringify(parseStringArray(value));
         sets.push(`${key} = $${idx++}::jsonb`);
       } else {
@@ -591,22 +616,22 @@ app.put('/waitlist/:id', requireAuth, async (c) => {
     }
 
     if (!sets.length) {
-      return c.json({ error: 'Nenhum campo para atualizar' }, 400);
+      return c.json({ error: "Nenhum campo para atualizar" }, 400);
     }
 
-    sets.push('updated_at = NOW()');
+    sets.push("updated_at = NOW()");
     params.push(id, user.organizationId);
 
     const result = await pool.query(
       `UPDATE waitlist
-       SET ${sets.join(', ')}
+       SET ${sets.join(", ")}
        WHERE id = $${idx++} AND organization_id = $${idx++}
        RETURNING *`,
       params,
     );
 
     if (!result.rows[0]) {
-      return c.json({ error: 'Entrada da lista de espera não encontrada' }, 404);
+      return c.json({ error: "Entrada da lista de espera não encontrada" }, 404);
     }
 
     return c.json({ data: mapWaitlistRow(result.rows[0]) });
@@ -615,33 +640,33 @@ app.put('/waitlist/:id', requireAuth, async (c) => {
   }
 });
 
-app.delete('/waitlist/:id', requireAuth, async (c) => {
-  const user = c.get('user');
+app.delete("/waitlist/:id", requireAuth, async (c) => {
+  const user = c.get("user");
   const pool = await createPool(c.env);
   const { id } = c.req.param();
   try {
-    await pool.query(
-      'DELETE FROM waitlist WHERE id = $1 AND organization_id = $2',
-      [id, user.organizationId],
-    );
+    await pool.query("DELETE FROM waitlist WHERE id = $1 AND organization_id = $2", [
+      id,
+      user.organizationId,
+    ]);
     return c.json({ success: true });
   } catch (error: any) {
     return c.json({ error: error.message }, 500);
   }
 });
 
-app.get('/waitlist-offers', requireAuth, async (c) => {
-  const user = c.get('user');
+app.get("/waitlist-offers", requireAuth, async (c) => {
+  const user = c.get("user");
   const pool = await createPool(c.env);
   try {
     const { waitlistId } = c.req.query();
     const params: unknown[] = [user.organizationId];
-    let sql = 'SELECT * FROM waitlist_offers WHERE organization_id = $1';
+    let sql = "SELECT * FROM waitlist_offers WHERE organization_id = $1";
     if (waitlistId) {
-      sql += ' AND waitlist_id = $2';
+      sql += " AND waitlist_id = $2";
       params.push(waitlistId);
     }
-    sql += ' ORDER BY created_at DESC';
+    sql += " ORDER BY created_at DESC";
 
     const result = await pool.query(sql, params);
     return c.json({ data: result.rows.map(mapWaitlistOfferRow) });
@@ -650,16 +675,16 @@ app.get('/waitlist-offers', requireAuth, async (c) => {
   }
 });
 
-app.post('/waitlist-offers', requireAuth, async (c) => {
-  const user = c.get('user');
+app.post("/waitlist-offers", requireAuth, async (c) => {
+  const user = c.get("user");
   const pool = await createPool(c.env);
   try {
     const body = await c.req.json();
-    const waitlistId = String(body.waitlist_id ?? '').trim();
-    const offeredSlot = String(body.offered_slot ?? '').trim();
+    const waitlistId = String(body.waitlist_id ?? "").trim();
+    const offeredSlot = String(body.offered_slot ?? "").trim();
 
     if (!waitlistId || !offeredSlot) {
-      return c.json({ error: 'waitlist_id e offered_slot são obrigatórios' }, 400);
+      return c.json({ error: "waitlist_id e offered_slot são obrigatórios" }, 400);
     }
 
     const result = await pool.query(
@@ -673,8 +698,8 @@ app.post('/waitlist-offers', requireAuth, async (c) => {
         user.organizationId,
         waitlistId,
         offeredSlot,
-        body.response ?? 'pending',
-        body.status ?? 'pending',
+        body.response ?? "pending",
+        body.status ?? "pending",
         body.expiration_time ?? null,
         body.responded_at ?? null,
       ],
@@ -686,13 +711,13 @@ app.post('/waitlist-offers', requireAuth, async (c) => {
   }
 });
 
-app.post('/waitlist-offers/:id/respond', requireAuth, async (c) => {
-  const user = c.get('user');
+app.post("/waitlist-offers/:id/respond", requireAuth, async (c) => {
+  const user = c.get("user");
   const pool = await createPool(c.env);
   const { id } = c.req.param();
   try {
     const body = await c.req.json();
-    const response = body.response ?? body.status ?? 'pending';
+    const response = body.response ?? body.status ?? "pending";
     const result = await pool.query(
       `UPDATE waitlist_offers
        SET response = $1,
@@ -705,7 +730,7 @@ app.post('/waitlist-offers/:id/respond', requireAuth, async (c) => {
     );
 
     if (!result.rows[0]) {
-      return c.json({ error: 'Oferta não encontrada' }, 404);
+      return c.json({ error: "Oferta não encontrada" }, 404);
     }
 
     return c.json({ data: mapWaitlistOfferRow(result.rows[0]) });
@@ -714,13 +739,13 @@ app.post('/waitlist-offers/:id/respond', requireAuth, async (c) => {
   }
 });
 
-app.get('/settings/business-hours', requireAuth, async (c) => {
-  const user = c.get('user');
+app.get("/settings/business-hours", requireAuth, async (c) => {
+  const user = c.get("user");
   const pool = await createPool(c.env);
   try {
     const result = await pool.query(
-      'SELECT * FROM business_hours WHERE organization_id = $1 ORDER BY day_of_week ASC',
-      [user.organizationId]
+      "SELECT * FROM business_hours WHERE organization_id = $1 ORDER BY day_of_week ASC",
+      [user.organizationId],
     );
     return c.json({ data: result.rows.map(mapBusinessHourRow) });
   } catch {
@@ -728,16 +753,16 @@ app.get('/settings/business-hours', requireAuth, async (c) => {
   }
 });
 
-app.post('/settings/business-hours', requireAuth, handleUpsertBusinessHours);
-app.put('/settings/business-hours', requireAuth, handleUpsertBusinessHours);
+app.post("/settings/business-hours", requireAuth, handleUpsertBusinessHours);
+app.put("/settings/business-hours", requireAuth, handleUpsertBusinessHours);
 
-app.get('/settings/blocked-times', requireAuth, async (c) => {
-  const user = c.get('user');
+app.get("/settings/blocked-times", requireAuth, async (c) => {
+  const user = c.get("user");
   const pool = await createPool(c.env);
   try {
     const result = await pool.query(
-      'SELECT * FROM blocked_times WHERE organization_id = $1 ORDER BY start_date ASC, start_time ASC NULLS FIRST',
-      [user.organizationId]
+      "SELECT * FROM blocked_times WHERE organization_id = $1 ORDER BY start_date ASC, start_time ASC NULLS FIRST",
+      [user.organizationId],
     );
     return c.json({ data: result.rows.map(mapBlockedTimeRow) });
   } catch {
@@ -745,8 +770,8 @@ app.get('/settings/blocked-times', requireAuth, async (c) => {
   }
 });
 
-app.post('/settings/blocked-times', requireAuth, async (c) => {
-  const user = c.get('user');
+app.post("/settings/blocked-times", requireAuth, async (c) => {
+  const user = c.get("user");
   const pool = await createPool(c.env);
   try {
     const body = await c.req.json();
@@ -771,7 +796,7 @@ app.post('/settings/blocked-times', requireAuth, async (c) => {
         normalized.isRecurring,
         normalized.recurringDays,
         user.uid,
-      ]
+      ],
     );
     return c.json({ data: mapBlockedTimeRow(result.rows[0]) });
   } catch (error: any) {
@@ -779,28 +804,28 @@ app.post('/settings/blocked-times', requireAuth, async (c) => {
   }
 });
 
-app.delete('/settings/blocked-times/:id', requireAuth, async (c) => {
-  const user = c.get('user');
+app.delete("/settings/blocked-times/:id", requireAuth, async (c) => {
+  const user = c.get("user");
   const pool = await createPool(c.env);
   const { id } = c.req.param();
   try {
-    await pool.query(
-      'DELETE FROM blocked_times WHERE id = $1 AND organization_id = $2',
-      [id, user.organizationId]
-    );
+    await pool.query("DELETE FROM blocked_times WHERE id = $1 AND organization_id = $2", [
+      id,
+      user.organizationId,
+    ]);
     return c.json({ success: true });
   } catch (error: any) {
     return c.json({ error: error.message }, 500);
   }
 });
 
-app.get('/settings/cancellation-rules', requireAuth, async (c) => {
-  const user = c.get('user');
+app.get("/settings/cancellation-rules", requireAuth, async (c) => {
+  const user = c.get("user");
   const pool = await createPool(c.env);
   try {
     const result = await pool.query(
-      'SELECT * FROM cancellation_rules WHERE organization_id = $1 LIMIT 1',
-      [user.organizationId]
+      "SELECT * FROM cancellation_rules WHERE organization_id = $1 LIMIT 1",
+      [user.organizationId],
     );
     return c.json({ data: result.rows[0] ? mapCancellationRuleRow(result.rows[0]) : null });
   } catch {
@@ -808,16 +833,16 @@ app.get('/settings/cancellation-rules', requireAuth, async (c) => {
   }
 });
 
-app.post('/settings/cancellation-rules', requireAuth, handleUpsertCancellationRules);
-app.put('/settings/cancellation-rules', requireAuth, handleUpsertCancellationRules);
+app.post("/settings/cancellation-rules", requireAuth, handleUpsertCancellationRules);
+app.put("/settings/cancellation-rules", requireAuth, handleUpsertCancellationRules);
 
-app.get('/settings/notification-settings', requireAuth, async (c) => {
-  const user = c.get('user');
+app.get("/settings/notification-settings", requireAuth, async (c) => {
+  const user = c.get("user");
   const pool = await createPool(c.env);
   try {
     const result = await pool.query(
-      'SELECT * FROM scheduling_notification_settings WHERE organization_id = $1 LIMIT 1',
-      [user.organizationId]
+      "SELECT * FROM scheduling_notification_settings WHERE organization_id = $1 LIMIT 1",
+      [user.organizationId],
     );
     return c.json({ data: result.rows[0] ? mapNotificationSettingsRow(result.rows[0]) : null });
   } catch {
@@ -825,16 +850,16 @@ app.get('/settings/notification-settings', requireAuth, async (c) => {
   }
 });
 
-app.post('/settings/notification-settings', requireAuth, handleUpsertNotificationSettings);
-app.put('/settings/notification-settings', requireAuth, handleUpsertNotificationSettings);
+app.post("/settings/notification-settings", requireAuth, handleUpsertNotificationSettings);
+app.put("/settings/notification-settings", requireAuth, handleUpsertNotificationSettings);
 
-app.get('/capacity-config', requireAuth, async (c) => {
-  const user = c.get('user');
+app.get("/capacity-config", requireAuth, async (c) => {
+  const user = c.get("user");
   const pool = await createPool(c.env);
   try {
     const result = await pool.query(
-      'SELECT * FROM schedule_capacity WHERE organization_id = $1 ORDER BY day_of_week ASC, start_time ASC',
-      [user.organizationId]
+      "SELECT * FROM schedule_capacity WHERE organization_id = $1 ORDER BY day_of_week ASC, start_time ASC",
+      [user.organizationId],
     );
     return c.json({ data: result.rows.map(mapCapacityRow) });
   } catch {
@@ -842,8 +867,8 @@ app.get('/capacity-config', requireAuth, async (c) => {
   }
 });
 
-app.post('/capacity-config', requireAuth, async (c) => {
-  const user = c.get('user');
+app.post("/capacity-config", requireAuth, async (c) => {
+  const user = c.get("user");
   const pool = await createPool(c.env);
   try {
     const body = await c.req.json();
@@ -862,7 +887,7 @@ app.post('/capacity-config', requireAuth, async (c) => {
           normalized.startTime,
           normalized.endTime,
           normalized.maxPatients,
-        ]
+        ],
       );
       results.push(mapCapacityRow(res.rows[0]));
     }
@@ -873,19 +898,19 @@ app.post('/capacity-config', requireAuth, async (c) => {
   }
 });
 
-app.put('/capacity-config/:id', requireAuth, async (c) => {
-  const user = c.get('user');
+app.put("/capacity-config/:id", requireAuth, async (c) => {
+  const user = c.get("user");
   const pool = await createPool(c.env);
   const { id } = c.req.param();
   try {
     const body = await c.req.json();
     const current = await pool.query(
-      'SELECT * FROM schedule_capacity WHERE id = $1 AND organization_id = $2 LIMIT 1',
-      [id, user.organizationId]
+      "SELECT * FROM schedule_capacity WHERE id = $1 AND organization_id = $2 LIMIT 1",
+      [id, user.organizationId],
     );
 
     if (!current.rows[0]) {
-      return c.json({ error: 'Configuração de capacidade não encontrada' }, 404);
+      return c.json({ error: "Configuração de capacidade não encontrada" }, 404);
     }
 
     const merged = {
@@ -908,7 +933,7 @@ app.put('/capacity-config/:id', requireAuth, async (c) => {
         normalized.maxPatients,
         id,
         user.organizationId,
-      ]
+      ],
     );
 
     return c.json({ data: mapCapacityRow(res.rows[0]) });
@@ -917,29 +942,29 @@ app.put('/capacity-config/:id', requireAuth, async (c) => {
   }
 });
 
-app.delete('/capacity-config/:id', requireAuth, async (c) => {
-  const user = c.get('user');
+app.delete("/capacity-config/:id", requireAuth, async (c) => {
+  const user = c.get("user");
   const pool = await createPool(c.env);
   const { id } = c.req.param();
   try {
-    await pool.query(
-      'DELETE FROM schedule_capacity WHERE id = $1 AND organization_id = $2',
-      [id, user.organizationId]
-    );
+    await pool.query("DELETE FROM schedule_capacity WHERE id = $1 AND organization_id = $2", [
+      id,
+      user.organizationId,
+    ]);
     return c.json({ success: true });
   } catch (error: any) {
     return c.json({ error: error.message }, 500);
   }
 });
 
-app.get('/recurring-series', requireAuth, async (c) => {
-  const user = c.get('user');
+app.get("/recurring-series", requireAuth, async (c) => {
+  const user = c.get("user");
   const pool = await createPool(c.env);
   try {
     const { patientId, isActive } = c.req.query();
     const params: unknown[] = [user.organizationId];
     let idx = 2;
-    let sql = 'SELECT * FROM recurring_series WHERE organization_id = $1';
+    let sql = "SELECT * FROM recurring_series WHERE organization_id = $1";
 
     if (patientId) {
       sql += ` AND patient_id = $${idx++}`;
@@ -947,10 +972,10 @@ app.get('/recurring-series', requireAuth, async (c) => {
     }
     if (isActive !== undefined) {
       sql += ` AND is_active = $${idx++}`;
-      params.push(isActive === 'true');
+      params.push(isActive === "true");
     }
 
-    sql += ' ORDER BY created_at DESC';
+    sql += " ORDER BY created_at DESC";
 
     const result = await pool.query(sql, params);
     return c.json({ data: result.rows.map(mapRecurringSeriesRow) });
@@ -959,8 +984,8 @@ app.get('/recurring-series', requireAuth, async (c) => {
   }
 });
 
-app.post('/recurring-series', requireAuth, async (c) => {
-  const user = c.get('user');
+app.post("/recurring-series", requireAuth, async (c) => {
+  const user = c.get("user");
   const pool = await createPool(c.env);
   try {
     const body = await c.req.json();
@@ -998,26 +1023,26 @@ app.post('/recurring-series', requireAuth, async (c) => {
   }
 });
 
-app.put('/recurring-series/:id', requireAuth, async (c) => {
-  const user = c.get('user');
+app.put("/recurring-series/:id", requireAuth, async (c) => {
+  const user = c.get("user");
   const pool = await createPool(c.env);
   const { id } = c.req.param();
   try {
     const body = await c.req.json();
     const allowed = [
-      'patient_id',
-      'therapist_id',
-      'recurrence_type',
-      'recurrence_interval',
-      'recurrence_days_of_week',
-      'appointment_date',
-      'appointment_time',
-      'duration',
-      'appointment_type',
-      'notes',
-      'auto_confirm',
-      'is_active',
-      'canceled_at',
+      "patient_id",
+      "therapist_id",
+      "recurrence_type",
+      "recurrence_interval",
+      "recurrence_days_of_week",
+      "appointment_date",
+      "appointment_time",
+      "duration",
+      "appointment_type",
+      "notes",
+      "auto_confirm",
+      "is_active",
+      "canceled_at",
     ] as const;
     const sets: string[] = [];
     const params: unknown[] = [];
@@ -1027,7 +1052,7 @@ app.put('/recurring-series/:id', requireAuth, async (c) => {
       if (!(key in body)) continue;
 
       let value = body[key];
-      if (key === 'recurrence_days_of_week') {
+      if (key === "recurrence_days_of_week") {
         value = JSON.stringify(parseRecurringDays(value));
         sets.push(`${key} = $${idx++}::jsonb`);
       } else {
@@ -1037,22 +1062,22 @@ app.put('/recurring-series/:id', requireAuth, async (c) => {
     }
 
     if (!sets.length) {
-      return c.json({ error: 'Nenhum campo para atualizar' }, 400);
+      return c.json({ error: "Nenhum campo para atualizar" }, 400);
     }
 
-    sets.push('updated_at = NOW()');
+    sets.push("updated_at = NOW()");
     params.push(id, user.organizationId);
 
     const result = await pool.query(
       `UPDATE recurring_series
-       SET ${sets.join(', ')}
+       SET ${sets.join(", ")}
        WHERE id = $${idx++} AND organization_id = $${idx++}
        RETURNING *`,
       params,
     );
 
     if (!result.rows[0]) {
-      return c.json({ error: 'Série recorrente não encontrada' }, 404);
+      return c.json({ error: "Série recorrente não encontrada" }, 404);
     }
 
     return c.json({ data: mapRecurringSeriesRow(result.rows[0]) });
@@ -1061,28 +1086,28 @@ app.put('/recurring-series/:id', requireAuth, async (c) => {
   }
 });
 
-app.delete('/recurring-series/:id', requireAuth, async (c) => {
-  const user = c.get('user');
+app.delete("/recurring-series/:id", requireAuth, async (c) => {
+  const user = c.get("user");
   const pool = await createPool(c.env);
   const { id } = c.req.param();
   try {
-    await pool.query(
-      'DELETE FROM recurring_series WHERE id = $1 AND organization_id = $2',
-      [id, user.organizationId],
-    );
+    await pool.query("DELETE FROM recurring_series WHERE id = $1 AND organization_id = $2", [
+      id,
+      user.organizationId,
+    ]);
     return c.json({ success: true });
   } catch (error: any) {
     return c.json({ error: error.message }, 500);
   }
 });
 
-app.get('/recurring-series/:id/occurrences', requireAuth, async (c) => {
-  const user = c.get('user');
+app.get("/recurring-series/:id/occurrences", requireAuth, async (c) => {
+  const user = c.get("user");
   const pool = await createPool(c.env);
   const { id } = c.req.param();
   try {
     const result = await pool.query(
-      'SELECT * FROM recurring_series WHERE id = $1 AND organization_id = $2 LIMIT 1',
+      "SELECT * FROM recurring_series WHERE id = $1 AND organization_id = $2 LIMIT 1",
       [id, user.organizationId],
     );
 
@@ -1112,18 +1137,18 @@ const mapAppointmentTypeRow = (row: Record<string, any>) => ({
 });
 
 const normalizeAppointmentTypePayload = (body: Record<string, any>) => {
-  const name = String(body.name ?? '').trim();
-  if (!name) throw new Error('name é obrigatório');
+  const name = String(body.name ?? "").trim();
+  if (!name) throw new Error("name é obrigatório");
 
   const duration = Number(body.duration_minutes ?? 30);
-  if (Number.isNaN(duration) || duration < 5) throw new Error('duration_minutes inválido');
+  if (Number.isNaN(duration) || duration < 5) throw new Error("duration_minutes inválido");
 
   return {
     name,
     durationMinutes: duration,
     bufferBefore: Number(body.buffer_before_minutes ?? 0),
     bufferAfter: Number(body.buffer_after_minutes ?? 0),
-    color: String(body.color ?? '#195de6'),
+    color: String(body.color ?? "#195de6"),
     maxPerDay: body.max_per_day != null ? Number(body.max_per_day) : null,
     isActive: body.is_active !== false,
     isDefault: body.is_default === true,
@@ -1131,12 +1156,12 @@ const normalizeAppointmentTypePayload = (body: Record<string, any>) => {
   };
 };
 
-app.get('/appointment-types', requireAuth, async (c) => {
-  const user = c.get('user');
+app.get("/appointment-types", requireAuth, async (c) => {
+  const user = c.get("user");
   const pool = await createPool(c.env);
   try {
     const result = await pool.query(
-      'SELECT * FROM appointment_types WHERE organization_id = $1 ORDER BY sort_order ASC, name ASC',
+      "SELECT * FROM appointment_types WHERE organization_id = $1 ORDER BY sort_order ASC, name ASC",
       [user.organizationId],
     );
     return c.json({ data: result.rows.map(mapAppointmentTypeRow) });
@@ -1145,8 +1170,8 @@ app.get('/appointment-types', requireAuth, async (c) => {
   }
 });
 
-app.post('/appointment-types', requireAuth, async (c) => {
-  const user = c.get('user');
+app.post("/appointment-types", requireAuth, async (c) => {
+  const user = c.get("user");
   const pool = await createPool(c.env);
   try {
     const body = await c.req.json();
@@ -1155,7 +1180,18 @@ app.post('/appointment-types', requireAuth, async (c) => {
       `INSERT INTO appointment_types (organization_id, name, duration_minutes, buffer_before_minutes, buffer_after_minutes, color, max_per_day, is_active, is_default, sort_order)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
        RETURNING *`,
-      [user.organizationId, n.name, n.durationMinutes, n.bufferBefore, n.bufferAfter, n.color, n.maxPerDay, n.isActive, n.isDefault, n.sortOrder],
+      [
+        user.organizationId,
+        n.name,
+        n.durationMinutes,
+        n.bufferBefore,
+        n.bufferAfter,
+        n.color,
+        n.maxPerDay,
+        n.isActive,
+        n.isDefault,
+        n.sortOrder,
+      ],
     );
     return c.json({ data: mapAppointmentTypeRow(result.rows[0]) });
   } catch (error: any) {
@@ -1163,18 +1199,18 @@ app.post('/appointment-types', requireAuth, async (c) => {
   }
 });
 
-app.put('/appointment-types/:id', requireAuth, async (c) => {
-  const user = c.get('user');
+app.put("/appointment-types/:id", requireAuth, async (c) => {
+  const user = c.get("user");
   const pool = await createPool(c.env);
   const { id } = c.req.param();
   try {
     const body = await c.req.json();
     const current = await pool.query(
-      'SELECT * FROM appointment_types WHERE id = $1 AND organization_id = $2 LIMIT 1',
+      "SELECT * FROM appointment_types WHERE id = $1 AND organization_id = $2 LIMIT 1",
       [id, user.organizationId],
     );
     if (!current.rows[0]) {
-      return c.json({ error: 'Tipo de atendimento não encontrado' }, 404);
+      return c.json({ error: "Tipo de atendimento não encontrado" }, 404);
     }
 
     const merged = {
@@ -1195,9 +1231,19 @@ app.put('/appointment-types/:id', requireAuth, async (c) => {
            color = $5, max_per_day = $6, is_active = $7, is_default = $8, sort_order = $9, updated_at = NOW()
        WHERE id = $10 AND organization_id = $11
        RETURNING *`,
-      [merged.name, merged.duration_minutes, merged.buffer_before_minutes, merged.buffer_after_minutes,
-       merged.color, merged.max_per_day, merged.is_active, merged.is_default, merged.sort_order,
-       id, user.organizationId],
+      [
+        merged.name,
+        merged.duration_minutes,
+        merged.buffer_before_minutes,
+        merged.buffer_after_minutes,
+        merged.color,
+        merged.max_per_day,
+        merged.is_active,
+        merged.is_default,
+        merged.sort_order,
+        id,
+        user.organizationId,
+      ],
     );
     return c.json({ data: mapAppointmentTypeRow(result.rows[0]) });
   } catch (error: any) {
@@ -1205,15 +1251,15 @@ app.put('/appointment-types/:id', requireAuth, async (c) => {
   }
 });
 
-app.delete('/appointment-types/:id', requireAuth, async (c) => {
-  const user = c.get('user');
+app.delete("/appointment-types/:id", requireAuth, async (c) => {
+  const user = c.get("user");
   const pool = await createPool(c.env);
   const { id } = c.req.param();
   try {
-    await pool.query(
-      'DELETE FROM appointment_types WHERE id = $1 AND organization_id = $2',
-      [id, user.organizationId],
-    );
+    await pool.query("DELETE FROM appointment_types WHERE id = $1 AND organization_id = $2", [
+      id,
+      user.organizationId,
+    ]);
     return c.json({ success: true });
   } catch (error: any) {
     return c.json({ error: error.message }, 500);
@@ -1232,12 +1278,12 @@ const mapBookingWindowRow = (row: Record<string, any>) => ({
   online_booking: row.online_booking ?? true,
 });
 
-app.get('/settings/booking-window', requireAuth, async (c) => {
-  const user = c.get('user');
+app.get("/settings/booking-window", requireAuth, async (c) => {
+  const user = c.get("user");
   const pool = await createPool(c.env);
   try {
     const result = await pool.query(
-      'SELECT * FROM schedule_booking_window WHERE organization_id = $1 LIMIT 1',
+      "SELECT * FROM schedule_booking_window WHERE organization_id = $1 LIMIT 1",
       [user.organizationId],
     );
     return c.json({ data: result.rows[0] ? mapBookingWindowRow(result.rows[0]) : null });
@@ -1247,7 +1293,7 @@ app.get('/settings/booking-window', requireAuth, async (c) => {
 });
 
 const handleUpsertBookingWindow = async (c: any) => {
-  const user = c.get('user');
+  const user = c.get("user");
   const pool = await createPool(c.env);
   try {
     const body = await c.req.json();
@@ -1270,8 +1316,8 @@ const handleUpsertBookingWindow = async (c: any) => {
   }
 };
 
-app.post('/settings/booking-window', requireAuth, handleUpsertBookingWindow);
-app.put('/settings/booking-window', requireAuth, handleUpsertBookingWindow);
+app.post("/settings/booking-window", requireAuth, handleUpsertBookingWindow);
+app.put("/settings/booking-window", requireAuth, handleUpsertBookingWindow);
 
 // ============================================================
 // Slot Config (single row per org)
@@ -1280,15 +1326,15 @@ app.put('/settings/booking-window', requireAuth, handleUpsertBookingWindow);
 const mapSlotConfigRow = (row: Record<string, any>) => ({
   ...row,
   slot_interval_minutes: Number(row.slot_interval_minutes ?? 30),
-  alignment_type: row.alignment_type ?? 'fixed',
+  alignment_type: row.alignment_type ?? "fixed",
 });
 
-app.get('/settings/slot-config', requireAuth, async (c) => {
-  const user = c.get('user');
+app.get("/settings/slot-config", requireAuth, async (c) => {
+  const user = c.get("user");
   const pool = await createPool(c.env);
   try {
     const result = await pool.query(
-      'SELECT * FROM schedule_slot_config WHERE organization_id = $1 LIMIT 1',
+      "SELECT * FROM schedule_slot_config WHERE organization_id = $1 LIMIT 1",
       [user.organizationId],
     );
     return c.json({ data: result.rows[0] ? mapSlotConfigRow(result.rows[0]) : null });
@@ -1298,15 +1344,15 @@ app.get('/settings/slot-config', requireAuth, async (c) => {
 });
 
 const handleUpsertSlotConfig = async (c: any) => {
-  const user = c.get('user');
+  const user = c.get("user");
   const pool = await createPool(c.env);
   try {
     const body = await c.req.json();
     const interval = Number(body.slot_interval_minutes ?? 30);
-    const alignment = String(body.alignment_type ?? 'fixed');
+    const alignment = String(body.alignment_type ?? "fixed");
 
     if (![15, 30, 60].includes(interval)) {
-      return c.json({ error: 'slot_interval_minutes deve ser 15, 30 ou 60' }, 400);
+      return c.json({ error: "slot_interval_minutes deve ser 15, 30 ou 60" }, 400);
     }
 
     const result = await pool.query(
@@ -1323,7 +1369,7 @@ const handleUpsertSlotConfig = async (c: any) => {
   }
 };
 
-app.post('/settings/slot-config', requireAuth, handleUpsertSlotConfig);
-app.put('/settings/slot-config', requireAuth, handleUpsertSlotConfig);
+app.post("/settings/slot-config", requireAuth, handleUpsertSlotConfig);
+app.put("/settings/slot-config", requireAuth, handleUpsertSlotConfig);
 
 export { app as schedulingRoutes };

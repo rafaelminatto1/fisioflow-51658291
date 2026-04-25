@@ -3,27 +3,26 @@
  * Helper functions for file operations
  */
 
-
 /**
  * Get document directory
  */
 
-import * as FileSystem from 'expo-file-system/legacy';
-import * as DocumentPicker from 'expo-document-picker';
-import * as ImagePicker from 'expo-image-picker';
-import { Alert, Linking, Share } from 'react-native';
-import { log } from './logger';
-import { asyncResult, Result } from './async';
+import * as FileSystem from "expo-file-system/legacy";
+import * as DocumentPicker from "expo-document-picker";
+import * as ImagePicker from "expo-image-picker";
+import { Alert, Linking, Share } from "react-native";
+import { log } from "./logger";
+import { asyncResult, Result } from "./async";
 
 export async function getDocumentDirectory(): Promise<Result<string>> {
   return asyncResult(async () => {
     const dir = FileSystem.documentDirectory;
     if (!dir) {
-      throw new Error('Document directory unavailable');
+      throw new Error("Document directory unavailable");
     }
-    log.info('FS', 'Document directory accessed', { dir });
+    log.info("FS", "Document directory accessed", { dir });
     return dir;
-  }, 'getDocumentDirectory');
+  }, "getDocumentDirectory");
 }
 
 /**
@@ -33,11 +32,11 @@ export async function getCacheDirectory(): Promise<Result<string>> {
   return asyncResult(async () => {
     const dir = FileSystem.cacheDirectory;
     if (!dir) {
-      throw new Error('Cache directory unavailable');
+      throw new Error("Cache directory unavailable");
     }
-    log.info('FS', 'Cache directory accessed', { dir });
+    log.info("FS", "Cache directory accessed", { dir });
     return dir;
-  }, 'getCacheDirectory');
+  }, "getCacheDirectory");
 }
 
 /**
@@ -46,23 +45,20 @@ export async function getCacheDirectory(): Promise<Result<string>> {
 export async function readFile(filePath: string): Promise<Result<string>> {
   return asyncResult(async () => {
     const content = await FileSystem.readAsStringAsync(filePath);
-    log.info('FS', 'File read', { filePath, size: content.length });
+    log.info("FS", "File read", { filePath, size: content.length });
     return content;
-  }, 'readFile');
+  }, "readFile");
 }
 
 /**
  * Write text to file
  */
-export async function writeFile(
-  filePath: string,
-  content: string
-): Promise<Result<void>> {
+export async function writeFile(filePath: string, content: string): Promise<Result<void>> {
   return asyncResult(async () => {
     const dir = FileSystem.documentDirectory;
 
     // Ensure directory exists
-    const directory = filePath.split('/').slice(0, -1).join('/');
+    const directory = filePath.split("/").slice(0, -1).join("/");
     const fullPath = `${dir}/${directory}`;
 
     await FileSystem.makeDirectoryAsync(fullPath, { intermediates: true });
@@ -70,8 +66,8 @@ export async function writeFile(
     // Write file
     await FileSystem.writeAsStringAsync(fullPath, content);
 
-    log.info('FS', 'File written', { filePath, size: content.length });
-  }, 'writeFile');
+    log.info("FS", "File written", { filePath, size: content.length });
+  }, "writeFile");
 }
 
 /**
@@ -85,9 +81,9 @@ export async function deleteFile(filePath: string): Promise<Result<void>> {
     const exists = await FileSystem.getInfoAsync(fullPath);
     if (exists.exists) {
       await FileSystem.deleteAsync(fullPath);
-      log.info('FS', 'File deleted', { filePath });
+      log.info("FS", "File deleted", { filePath });
     }
-  }, 'deleteFile');
+  }, "deleteFile");
 }
 
 /**
@@ -110,7 +106,7 @@ export async function fileExists(filePath: string): Promise<boolean> {
 export async function pickDocument(): Promise<Result<string | null>> {
   return asyncResult(async () => {
     const result = await DocumentPicker.getDocumentAsync({
-      type: ['text/plain', 'application/pdf', 'image/*'],
+      type: ["text/plain", "application/pdf", "image/*"],
       copyToCacheDirectory: true,
     });
 
@@ -119,9 +115,9 @@ export async function pickDocument(): Promise<Result<string | null>> {
     }
 
     const uri = result.assets?.[0]?.uri ?? null;
-    log.info('FS', 'Document picked', { uri });
+    log.info("FS", "Document picked", { uri });
     return uri;
-  }, 'pickDocument');
+  }, "pickDocument");
 }
 
 /**
@@ -140,9 +136,9 @@ export async function pickImage(): Promise<Result<string | null>> {
       return null;
     }
 
-    log.info('FS', 'Image picked', { uri: result.assets[0].uri });
+    log.info("FS", "Image picked", { uri: result.assets[0].uri });
     return result.assets[0].uri;
-  }, 'pickImage');
+  }, "pickImage");
 }
 
 /**
@@ -153,10 +149,7 @@ export async function takePhoto(): Promise<Result<string | null>> {
     const permission = await ImagePicker.requestCameraPermissionsAsync();
 
     if (permission.granted === false) {
-      Alert.alert(
-        'Permissão Necessária',
-        'Precisamos de permissão para acessar a câmera.'
-      );
+      Alert.alert("Permissão Necessária", "Precisamos de permissão para acessar a câmera.");
       return null;
     }
 
@@ -171,30 +164,27 @@ export async function takePhoto(): Promise<Result<string | null>> {
       return null;
     }
 
-    log.info('FS', 'Photo taken', { uri: result.assets[0].uri });
+    log.info("FS", "Photo taken", { uri: result.assets[0].uri });
     return result.assets[0].uri;
-  }, 'takePhoto');
+  }, "takePhoto");
 }
 
 /**
  * Share content
  */
-export async function shareContent(
-  message?: string,
-  url?: string
-): Promise<void> {
+export async function shareContent(message?: string, url?: string): Promise<void> {
   try {
     if (!message && !url) {
       return;
     }
 
     await Share.share({
-      message: [message, url].filter(Boolean).join('\n'),
+      message: [message, url].filter(Boolean).join("\n"),
     });
 
-    log.info('FS', 'Content shared');
+    log.info("FS", "Content shared");
   } catch (error) {
-    log.error('FS', 'Share failed', error);
+    log.error("FS", "Share failed", error);
   }
 }
 
@@ -206,13 +196,13 @@ export async function openUrl(url: string): Promise<void> {
     const canOpen = await Linking.canOpenURL(url);
     if (canOpen) {
       await Linking.openURL(url);
-      log.info('FS', 'URL opened', { url });
+      log.info("FS", "URL opened", { url });
     } else {
-      Alert.alert('Erro', 'Não foi possível abrir este link.');
+      Alert.alert("Erro", "Não foi possível abrir este link.");
     }
   } catch (error) {
-    log.error('FS', 'Failed to open URL', error);
-    Alert.alert('Erro', 'Não foi possível abrir este link.');
+    log.error("FS", "Failed to open URL", error);
+    Alert.alert("Erro", "Não foi possível abrir este link.");
   }
 }
 
@@ -229,7 +219,7 @@ export async function getFileSize(filePath: string): Promise<string | null> {
       return null;
     }
 
-    const bytes = 'size' in info ? info.size || 0 : 0;
+    const bytes = "size" in info ? info.size || 0 : 0;
     return formatBytes(bytes);
   } catch {
     return null;
@@ -240,22 +230,19 @@ export async function getFileSize(filePath: string): Promise<string | null> {
  * Format bytes to human readable format
  */
 export function formatBytes(bytes: number): string {
-  if (bytes === 0) return '0 Bytes';
+  if (bytes === 0) return "0 Bytes";
 
   const k = 1024;
-  const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+  const sizes = ["Bytes", "KB", "MB", "GB", "TB"];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
 
-  return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+  return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + " " + sizes[i];
 }
 
 /**
  * Save file to downloads
  */
-export async function saveToDownloads(
-  filename: string,
-  content: string
-): Promise<Result<string>> {
+export async function saveToDownloads(filename: string, content: string): Promise<Result<string>> {
   return asyncResult(async () => {
     const dir = FileSystem.documentDirectory;
     const downloadsDir = `${dir}/downloads`;
@@ -266,7 +253,7 @@ export async function saveToDownloads(
     const filePath = `${downloadsDir}/${filename}`;
     await FileSystem.writeAsStringAsync(filePath, content);
 
-    log.info('FS', 'File saved to downloads', { filename, size: content.length });
+    log.info("FS", "File saved to downloads", { filename, size: content.length });
     return filePath;
-  }, 'saveToDownloads');
+  }, "saveToDownloads");
 }

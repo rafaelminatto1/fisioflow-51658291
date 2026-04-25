@@ -32,7 +32,6 @@ O aplicativo atualmente apresenta lacunas críticas de compliance que impedem su
 - **HealthKit**: Framework da Apple para dados de saúde
 - **Firebase**: Backend usado pelo aplicativo (Firestore, Auth, Storage)
 
-
 ## Requirements
 
 ### Requirement 1: Privacy Policy and Terms of Service
@@ -57,7 +56,6 @@ O aplicativo atualmente apresenta lacunas críticas de compliance que impedem su
 14. THE Privacy_Policy SHALL include contact information for privacy inquiries (email: privacidade@moocafisio.com.br)
 15. THE Privacy_Policy SHALL include information about Professional_User rights under LGPD (access, correction, deletion, portability)
 
-
 ### Requirement 2: PHI Data Protection and Encryption
 
 **User Story:** As a Professional_User, I want all patient health information to be protected with industry-standard encryption, so that I can trust the app meets healthcare data security requirements and protects my patients' privacy.
@@ -79,7 +77,6 @@ O aplicativo atualmente apresenta lacunas críticas de compliance que impedem su
 13. WHEN Professional_User logs out, THE App SHALL clear all cached PHI from device
 14. THE App SHALL implement certificate pinning for Firebase connections
 15. THE App SHALL validate all data inputs to prevent injection attacks
-
 
 ### Requirement 3: Permission Justifications and Usage
 
@@ -103,7 +100,6 @@ O aplicativo atualmente apresenta lacunas críticas de compliance que impedem su
 14. THE App SHALL document all permission usage in Privacy_Policy
 15. THE App SHALL remove all unused SDK references and permissions from app configuration
 
-
 ### Requirement 4: HealthKit Cleanup and Compliance
 
 **User Story:** As a Professional_User, I want the app to only include APIs and frameworks that are actually used, so that the app is not rejected for including unused health-related APIs.
@@ -120,7 +116,6 @@ O aplicativo atualmente apresenta lacunas críticas de compliance que impedem su
 8. THE App SHALL remove any unused Expo modules related to health data
 9. THE App SHALL document in code comments why each health-related API is necessary
 10. WHEN submitting to App Store, THE App SHALL include explanation of health data usage in App Store Connect notes
-
 
 ### Requirement 5: Authentication and Security Enhancements
 
@@ -143,7 +138,6 @@ O aplicativo atualmente apresenta lacunas críticas de compliance que impedem su
 13. THE App SHALL log all authentication attempts in Audit_Log
 14. WHEN Professional_User changes password, THE App SHALL invalidate all existing sessions
 15. THE App SHALL provide password reset functionality with email verification
-
 
 ### Requirement 6: Data Transparency and User Control
 
@@ -170,7 +164,6 @@ O aplicativo atualmente apresenta lacunas críticas de compliance que impedem su
 17. THE App SHALL respect Professional_User privacy choices immediately without requiring app restart
 18. THE Data_Transparency_Screen SHALL be updated automatically when data practices change
 
-
 ### Requirement 7: Push Notifications Consent and Control
 
 **User Story:** As a Professional_User, I want granular control over what types of notifications I receive, so that I only get alerts that are relevant to my workflow without being overwhelmed.
@@ -192,7 +185,6 @@ O aplicativo atualmente apresenta lacunas críticas de compliance que impedem su
 13. THE App SHALL document notification practices in Privacy_Policy
 14. THE App SHALL allow Professional_User to test notification settings
 15. WHEN Professional_User disables a notification category, THE App SHALL stop sending those notifications immediately
-
 
 ### Requirement 8: Payment and Financial Compliance
 
@@ -216,7 +208,6 @@ O aplicativo atualmente apresenta lacunas críticas de compliance que impedem su
 14. IF financial features exist for patient billing, THE App SHALL clarify these are clinic management tools, not patient-facing purchases
 15. THE App SHALL never circumvent IAP for digital goods or services
 
-
 ### Requirement 9: Medical Content Disclaimers
 
 **User Story:** As a Professional_User, I want clear disclaimers about the app's medical capabilities and limitations, so that I understand the app is a management tool and not a replacement for professional medical judgment.
@@ -238,7 +229,6 @@ O aplicativo atualmente apresenta lacunas críticas de compliance que impedem su
 13. THE App SHALL state that Professional_User is responsible for monitoring patient progress and adjusting treatment
 14. THE Medical_Disclaimer SHALL be written in clear, non-technical Portuguese
 15. THE App SHALL log Professional_User acceptance of Medical_Disclaimer with timestamp
-
 
 ### Requirement 10: App Store Metadata and Configuration
 
@@ -267,7 +257,6 @@ O aplicativo atualmente apresenta lacunas críticas de compliance que impedem su
 19. THE App SHALL have version number following semantic versioning (1.0.0)
 20. THE App SHALL have build number auto-incrementing for each submission
 
-
 ### Requirement 11: Audit Logging and Compliance Tracking
 
 **User Story:** As a Professional_User, I want comprehensive audit logs of all data access and modifications, so that I can demonstrate LGPD and HIPAA compliance and investigate any security incidents.
@@ -294,7 +283,6 @@ O aplicativo atualmente apresenta lacunas críticas de compliance que impedem su
 18. THE App SHALL allow administrators to export Audit_Log for compliance reporting
 19. THE Audit_Log SHALL never contain PHI in log messages
 20. THE Audit_Log SHALL be included in Data_Export functionality
-
 
 ### Requirement 12: Consent Management System
 
@@ -323,7 +311,6 @@ O aplicativo atualmente apresenta lacunas críticas de compliance que impedem su
 19. THE App SHALL provide clear explanation of consequences when withdrawing consent
 20. THE Consent_Manager SHALL comply with LGPD Article 8 consent requirements
 
-
 ### Requirement 13: Secure Data Storage and Backup
 
 **User Story:** As a Professional_User, I want assurance that patient data is securely stored with proper backup mechanisms, so that data is protected against loss and unauthorized access.
@@ -345,7 +332,6 @@ O aplicativo atualmente apresenta lacunas críticas de compliance que impedem su
 13. THE App SHALL provide data recovery mechanism for accidental deletions within 30 days
 14. THE App SHALL document backup and recovery procedures in Privacy_Policy
 15. THE App SHALL comply with LGPD Article 46 security requirements
-
 
 ### Requirement 14: Accessibility and Localization
 
@@ -369,7 +355,6 @@ O aplicativo atualmente apresenta lacunas críticas de compliance que impedem su
 14. THE App SHALL provide skip navigation for repetitive content
 15. THE App SHALL test accessibility with real screen reader users
 
-
 ### Requirement 15: Error Handling and User Feedback
 
 **User Story:** As a Professional_User, I want clear error messages and feedback when something goes wrong, so that I can understand issues and take appropriate action without losing data.
@@ -391,7 +376,6 @@ O aplicativo atualmente apresenta lacunas críticas de compliance que impedem su
 13. THE App SHALL prevent data loss during errors by auto-saving drafts
 14. THE App SHALL provide error recovery options (retry, cancel, contact support)
 15. THE App SHALL display helpful messages for common user mistakes
-
 
 ### Requirement 16: Performance and Reliability
 
@@ -415,7 +399,6 @@ O aplicativo atualmente apresenta lacunas críticas de compliance que impedem su
 14. THE App SHALL optimize bundle size to minimize download time
 15. THE App SHALL implement code splitting for faster initial load
 
-
 ### Requirement 17: Third-Party Service Documentation
 
 **User Story:** As a Professional_User, I want to know exactly which third-party services have access to data, so that I can assess privacy risks and comply with data processing agreements.
@@ -437,7 +420,6 @@ O aplicativo atualmente apresenta lacunas críticas de compliance que impedem su
 13. THE App SHALL provide mechanism to object to specific third-party processing
 14. THE Privacy_Policy SHALL document incident response procedures for third-party breaches
 15. THE App SHALL review and update third-party documentation annually
-
 
 ### Requirement 18: Testing and Quality Assurance
 
@@ -466,7 +448,6 @@ O aplicativo atualmente apresenta lacunas críticas de compliance que impedem su
 19. THE App SHALL conduct penetration testing for security vulnerabilities
 20. THE App SHALL document all test results for App Store review
 
-
 ### Requirement 19: Documentation and Support
 
 **User Story:** As a Professional_User, I want comprehensive documentation and support resources, so that I can effectively use the app and get help when needed.
@@ -488,7 +469,6 @@ O aplicativo atualmente apresenta lacunas críticas de compliance que impedem su
 13. THE App SHALL provide release notes for each app update
 14. THE App SHALL provide migration guide when introducing breaking changes
 15. THE App SHALL respond to support inquiries within 48 hours
-
 
 ### Requirement 20: App Store Review Preparation
 
@@ -516,7 +496,6 @@ O aplicativo atualmente apresenta lacunas críticas de compliance que impedem su
 18. THE App SHALL document compliance with Guideline 5.1.1 (Privacy)
 19. THE App SHALL document compliance with Guideline 5.1.3 (Health Data)
 20. THE App SHALL document compliance with Guideline 2.5.2 (Unused APIs)
-
 
 ## Cross-Cutting Requirements
 
@@ -565,7 +544,6 @@ These requirements ensure regulatory compliance:
 9. THE App SHALL implement data processing impact assessment (DPIA)
 10. THE App SHALL maintain records of processing activities
 
-
 ## Requirements Summary
 
 This specification defines 20 major requirements with 315 acceptance criteria covering:
@@ -583,26 +561,31 @@ This specification defines 20 major requirements with 315 acceptance criteria co
 The following requirements are critical for App Store approval and must be completed first:
 
 **Phase 1 - Legal Foundation (Week 1)**
+
 - Requirement 1: Privacy Policy and Terms of Service
 - Requirement 9: Medical Content Disclaimers
 - Requirement 3: Permission Justifications (NSUsageDescription updates)
 
 **Phase 2 - Security & Data Protection (Week 2-3)**
+
 - Requirement 2: PHI Data Protection and Encryption
 - Requirement 5: Authentication and Security Enhancements
 - Requirement 4: HealthKit Cleanup and Compliance
 
 **Phase 3 - User Control & Transparency (Week 3-4)**
+
 - Requirement 6: Data Transparency and User Control
 - Requirement 12: Consent Management System
 - Requirement 7: Push Notifications Consent and Control
 
 **Phase 4 - App Store Preparation (Week 4-5)**
+
 - Requirement 10: App Store Metadata and Configuration
 - Requirement 11: Audit Logging and Compliance Tracking
 - Requirement 20: App Store Review Preparation
 
 **Phase 5 - Quality & Polish (Week 5-6)**
+
 - Requirement 18: Testing and Quality Assurance
 - Requirement 14: Accessibility and Localization
 - Requirement 15: Error Handling and User Feedback
@@ -639,67 +622,76 @@ The implementation will be considered successful when:
 - Test devices (iPhone 8, iPhone 14, iPhone 14 Pro Max)
 - iOS 14, 15, 16, 17 testing environments
 
-
 ## Apple App Store Guidelines Reference
 
 This specification addresses the following Apple App Store Review Guidelines:
 
 ### Guideline 5.1.1 - Data Collection and Storage
+
 - **Requirements Addressed**: 1, 6, 12, 17
 - **Key Points**: Privacy policies must be accessible, data collection must be transparent, user consent required
 - **Compliance**: Privacy Policy accessible from login and settings, Consent Manager tracks all consents, Data Transparency Screen shows all collection
 
 ### Guideline 5.1.3 - Health and Health Research
+
 - **Requirements Addressed**: 2, 5, 9, 13
 - **Key Points**: Health apps must comply with applicable laws, use appropriate security, include disclaimers
 - **Compliance**: AES-256 encryption, biometric authentication, medical disclaimers, LGPD/HIPAA-aligned controls
 
 ### Guideline 5.1.5 - Location Services
+
 - **Requirements Addressed**: 3
 - **Key Points**: Apps must request location permission with clear purpose, provide value before requesting
 - **Compliance**: NSLocationWhenInUseUsageDescription explains clinic check-in, permission requested only when needed
 
 ### Guideline 2.5.2 - Unused APIs
+
 - **Requirements Addressed**: 4
 - **Key Points**: Apps must not include unused APIs, especially health-related frameworks
 - **Compliance**: HealthKit audit and removal if unused, all SDK references documented and justified
 
 ### Guideline 4.5.4 - Push Notifications
+
 - **Requirements Addressed**: 7
 - **Key Points**: Must obtain user consent, provide opt-out, not required for app functionality
 - **Compliance**: Contextual permission request, granular notification preferences, alternative in-app notifications
 
 ### Guideline 3.1.1 - In-App Purchase
+
 - **Requirements Addressed**: 8
 - **Key Points**: Digital goods must use IAP, physical goods/services can use alternative payment
 - **Compliance**: B2B model documented, no patient-facing purchases, clinic management tools clarified
 
 ### Guideline 2.3.8 - Metadata
+
 - **Requirements Addressed**: 10, 20
 - **Key Points**: Complete and accurate metadata, screenshots, descriptions
 - **Compliance**: All placeholders replaced, complete App Store Connect listing, test account provided
 
 ### Guideline 2.1 - App Completeness
+
 - **Requirements Addressed**: 15, 16, 18, 19
 - **Key Points**: Apps must be complete, functional, ready for review
 - **Compliance**: Error handling, performance optimization, comprehensive testing, documentation
 
 ### Guideline 4.0 - Design
+
 - **Requirements Addressed**: 14
 - **Key Points**: Apps must be accessible, support Dynamic Type, work with assistive technologies
 - **Compliance**: VoiceOver support, accessibility labels, WCAG AA contrast, Portuguese localization
 
 ### Guideline 5.1.2 - Data Use and Sharing
+
 - **Requirements Addressed**: 11, 17
 - **Key Points**: Transparent about data sharing, audit logs for sensitive data
 - **Compliance**: Audit logging for all PHI access, third-party documentation, data processing agreements
-
 
 ## Implementation Notes
 
 ### Technology Stack Considerations
 
 Given the FisioFlow Professional App uses:
+
 - **React Native/Expo**: Leverage Expo modules for permissions, secure storage, biometrics
 - **Firebase**: Use Firestore RLS, Firebase Auth, Storage encryption, Crashlytics (without PHI)
 - **TypeScript**: Implement strict typing for all compliance-related functions
@@ -707,30 +699,35 @@ Given the FisioFlow Professional App uses:
 ### Key Implementation Patterns
 
 **Privacy Policy Component**
+
 ```typescript
 // components/legal/PrivacyPolicyScreen.tsx
 // Should render markdown, track acceptance, store timestamp
 ```
 
 **Consent Manager Hook**
+
 ```typescript
 // hooks/useConsentManager.ts
 // Centralized consent tracking with Firebase persistence
 ```
 
 **Audit Logger Service**
+
 ```typescript
 // services/auditLogger.ts
 // Immutable append-only logging to Firestore
 ```
 
 **Data Export Service**
+
 ```typescript
 // services/dataExport.ts
 // Generate JSON/PDF exports with all user data
 ```
 
 **Biometric Auth Wrapper**
+
 ```typescript
 // hooks/useBiometricAuth.ts
 // Wrap expo-local-authentication with fallback
@@ -739,16 +736,19 @@ Given the FisioFlow Professional App uses:
 ### Firebase Configuration Requirements
 
 **Firestore Security Rules**
+
 - Implement RLS preventing cross-organization access
 - Audit log collection must be append-only
 - PHI collections must require authentication
 
 **Firebase Storage Rules**
+
 - Encrypt all uploaded files
 - Implement access controls based on organization
 - Set appropriate CORS policies
 
 **Firebase Auth Configuration**
+
 - Enable email/password authentication
 - Configure session timeout (15 minutes)
 - Implement custom claims for roles
@@ -756,24 +756,28 @@ Given the FisioFlow Professional App uses:
 ### Testing Strategy
 
 **Unit Tests** (Vitest)
+
 - All encryption/decryption functions
 - Consent manager logic
 - Audit logger functionality
 - Permission request flows
 
 **Integration Tests** (Detox/Expo)
+
 - Privacy policy acceptance flow
 - Biometric authentication with fallback
 - Data export end-to-end
 - Notification permission flow
 
 **Security Tests**
+
 - Penetration testing for authentication
 - Data isolation verification
 - Encryption validation
 - Permission bypass attempts
 
 **Accessibility Tests**
+
 - VoiceOver navigation
 - Dynamic Type scaling
 - Color contrast validation

@@ -1,7 +1,7 @@
-import React, { useMemo } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { useColors } from '@/hooks/useColorScheme';
-import { AppointmentBase } from '@/types';
+import React, { useMemo } from "react";
+import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
+import { useColors } from "@/hooks/useColorScheme";
+import { AppointmentBase } from "@/types";
 import {
   addDays,
   endOfMonth,
@@ -11,8 +11,8 @@ import {
   isSameMonth,
   startOfMonth,
   startOfWeek,
-} from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+} from "date-fns";
+import { ptBR } from "date-fns/locale";
 
 interface MonthViewProps {
   selectedDate: Date;
@@ -20,19 +20,15 @@ interface MonthViewProps {
   appointments: AppointmentBase[];
 }
 
-const WEEK_DAYS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+const WEEK_DAYS = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
 
-export const MonthView = ({
-  selectedDate,
-  onSelectDate,
-  appointments,
-}: MonthViewProps) => {
+export const MonthView = ({ selectedDate, onSelectDate, appointments }: MonthViewProps) => {
   const colors = useColors();
 
   const appointmentMetadata = useMemo(() => {
     const map = new Map<string, { hasGroup: boolean; hasUnlimited: boolean; count: number }>();
     appointments.forEach((apt) => {
-      const dateKey = format(new Date(apt.date), 'yyyy-MM-dd');
+      const dateKey = format(new Date(apt.date), "yyyy-MM-dd");
       const existing = map.get(dateKey) || { hasGroup: false, hasUnlimited: false, count: 0 };
       map.set(dateKey, {
         hasGroup: existing.hasGroup || !!apt.isGroup,
@@ -63,7 +59,7 @@ export const MonthView = ({
   return (
     <View style={styles.container}>
       <Text style={[styles.monthTitle, { color: colors.text }]}>
-        {format(selectedDate, 'MMMM yyyy', { locale: ptBR })}
+        {format(selectedDate, "MMMM yyyy", { locale: ptBR })}
       </Text>
 
       <View style={styles.weekHeader}>
@@ -84,10 +80,7 @@ export const MonthView = ({
           return (
             <TouchableOpacity
               key={dateKey}
-              style={[
-                styles.dayCell,
-                isSelected && { backgroundColor: colors.primary },
-              ]}
+              style={[styles.dayCell, isSelected && { backgroundColor: colors.primary }]}
               onPress={() => onSelectDate(day)}
               activeOpacity={0.7}
             >
@@ -95,11 +88,7 @@ export const MonthView = ({
                 style={[
                   styles.dayLabel,
                   {
-                    color: isSelected
-                      ? "#fff"
-                      : inMonth
-                        ? colors.text
-                        : colors.textMuted,
+                    color: isSelected ? "#fff" : inMonth ? colors.text : colors.textMuted,
                   },
                 ]}
               >
@@ -125,17 +114,12 @@ export const MonthView = ({
                     style={[
                       styles.tinyBadge,
                       {
-                        backgroundColor: isSelected
-                          ? "rgba(255,255,255,0.3)"
-                          : "#6366f120",
+                        backgroundColor: isSelected ? "rgba(255,255,255,0.3)" : "#6366f120",
                       },
                     ]}
                   >
                     <Text
-                      style={[
-                        styles.tinyBadgeText,
-                        { color: isSelected ? "#fff" : "#6366f1" },
-                      ]}
+                      style={[styles.tinyBadgeText, { color: isSelected ? "#fff" : "#6366f1" }]}
                     >
                       ∞
                     </Text>
@@ -157,35 +141,35 @@ const styles = StyleSheet.create({
   },
   monthTitle: {
     fontSize: 18,
-    fontWeight: '700',
+    fontWeight: "700",
     marginBottom: 16,
-    textTransform: 'capitalize',
+    textTransform: "capitalize",
   },
   weekHeader: {
-    flexDirection: 'row',
+    flexDirection: "row",
     marginBottom: 8,
   },
   weekLabel: {
     flex: 1,
-    textAlign: 'center',
+    textAlign: "center",
     fontSize: 12,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   grid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+    flexDirection: "row",
+    flexWrap: "wrap",
   },
   dayCell: {
-    width: '14.2857%',
+    width: "14.2857%",
     aspectRatio: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     borderRadius: 12,
     marginBottom: 8,
   },
   dayLabel: {
     fontSize: 14,
-    fontWeight: '500',
+    fontWeight: "500",
   },
   dot: {
     width: 6,
@@ -193,19 +177,19 @@ const styles = StyleSheet.create({
     borderRadius: 3,
   },
   dotContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginTop: 6,
     gap: 2,
   },
   tinyBadge: {
     paddingHorizontal: 2,
     borderRadius: 2,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   tinyBadgeText: {
     fontSize: 8,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
 });

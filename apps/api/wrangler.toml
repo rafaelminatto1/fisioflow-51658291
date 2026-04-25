@@ -10,7 +10,7 @@ mode = "smart"
 # ===== ROTAS (SUBDOMINIOS CUSTOMIZADOS) =====
 routes = [
   { pattern = "api-pro.moocafisio.com.br", custom_domain = true },
-  { pattern = "api-paciente.moocafisio.com.br", custom_domain = true }
+  { pattern = "api-paciente.moocafisio.com.br", custom_domain = true },
 ]
 
 
@@ -304,7 +304,7 @@ bucket_name = "fisioflow-media"
 bindings = [
   { name = "ORGANIZATION_STATE", class_name = "OrganizationState" },
   { name = "PATIENT_AGENT", class_name = "PatientAgent" },
-  { name = "ASSESSMENT_LIVE_SESSION", class_name = "AssessmentLiveSession" }
+  { name = "ASSESSMENT_LIVE_SESSION", class_name = "AssessmentLiveSession" },
 ]
 
 [env.production.ai]
@@ -367,7 +367,7 @@ bucket_name = "fisioflow-media-staging"
 bindings = [
   { name = "ORGANIZATION_STATE", class_name = "OrganizationState" },
   { name = "PATIENT_AGENT", class_name = "PatientAgent" },
-  { name = "ASSESSMENT_LIVE_SESSION", class_name = "AssessmentLiveSession" }
+  { name = "ASSESSMENT_LIVE_SESSION", class_name = "AssessmentLiveSession" },
 ]
 
 [[env.staging.migrations]]
@@ -471,9 +471,9 @@ class_name = "PatientReengagementWorkflow"
 # ===== CRON TRIGGERS =====
 [triggers]
 crons = [
-  "0 9 * * *",   # Diário às 06:00 BRT - Lembretes de Consultas (banco já acorda aqui)
-  "0 11 * * *",  # Diário às 08:00 BRT - Relatórios e Limpeza (horário de expediente)
-  "0 12 * * *",  # Diário às 09:00 BRT - Automações de vencimento de tarefas
+  "0 9 * * *", # Diário às 06:00 BRT - Lembretes de Consultas (banco já acorda aqui)
+  "0 11 * * *", # Diário às 08:00 BRT - Relatórios e Limpeza (horário de expediente)
+  "0 12 * * *", # Diário às 09:00 BRT - Automações de vencimento de tarefas
 ]
 
 # ===== OBSERVABILIDADE =====

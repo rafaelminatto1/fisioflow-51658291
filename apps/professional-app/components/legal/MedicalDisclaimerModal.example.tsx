@@ -3,9 +3,9 @@
  * This file demonstrates how to integrate the modal in different contexts
  */
 
-import React, { useState } from 'react';
-import { View, Button } from 'react-native';
-import MedicalDisclaimerModal from './MedicalDisclaimerModal';
+import React, { useState } from "react";
+import { View, Button } from "react-native";
+import MedicalDisclaimerModal from "./MedicalDisclaimerModal";
 
 /**
  * Example 1: First Launch Context
@@ -15,7 +15,7 @@ export function FirstLaunchExample() {
   const [showDisclaimer, setShowDisclaimer] = useState(true);
 
   const handleAcknowledge = () => {
-    console.log('User acknowledged first-launch disclaimer');
+    console.log("User acknowledged first-launch disclaimer");
     setShowDisclaimer(false);
     // Proceed to next onboarding step
   };
@@ -44,7 +44,7 @@ export function ExercisePrescriptionExample() {
   };
 
   const handleAcknowledge = () => {
-    console.log('User acknowledged exercise prescription disclaimer');
+    console.log("User acknowledged exercise prescription disclaimer");
     setShowDisclaimer(false);
     // Proceed with exercise prescription
   };
@@ -74,7 +74,7 @@ export function ProtocolApplicationExample() {
   };
 
   const handleAcknowledge = () => {
-    console.log('User acknowledged protocol application disclaimer');
+    console.log("User acknowledged protocol application disclaimer");
     setShowDisclaimer(false);
     // Proceed with protocol application
   };
@@ -110,14 +110,14 @@ export function ConditionalDisplayExample() {
   };
 
   const handleAcknowledge = () => {
-    console.log('User acknowledged disclaimer');
+    console.log("User acknowledged disclaimer");
     setHasAcknowledged(true);
     setShowDisclaimer(false);
     proceedWithPrescription();
   };
 
   const proceedWithPrescription = () => {
-    console.log('Proceeding with exercise prescription');
+    console.log("Proceeding with exercise prescription");
     // Your prescription logic here
   };
 
