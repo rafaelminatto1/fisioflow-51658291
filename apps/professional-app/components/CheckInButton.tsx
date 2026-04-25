@@ -1,10 +1,10 @@
-import { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { useColors } from '@/hooks/useColorScheme';
-import { useHaptics } from '@/hooks/useHaptics';
-import { useCheckIn } from '@/hooks/useCheckIn';
-import { useAuthStore } from '@/store/auth';
+import { useState, useEffect } from "react";
+import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { useColors } from "@/hooks/useColorScheme";
+import { useHaptics } from "@/hooks/useHaptics";
+import { useCheckIn } from "@/hooks/useCheckIn";
+import { useAuthStore } from "@/store/auth";
 
 interface CheckInButtonProps {
   appointmentId: string;
@@ -28,7 +28,7 @@ export function CheckInButton({
   const colors = useColors();
   const { medium, success } = useHaptics();
   const { user } = useAuthStore();
-  const { isCheckingIn, performCheckIn, lastCheckIn, } = useCheckIn();
+  const { isCheckingIn, performCheckIn, lastCheckIn } = useCheckIn();
 
   const [status, setStatus] = useState<CheckInStatus>({
     hasCheckedIn: false,
@@ -56,7 +56,7 @@ export function CheckInButton({
     const isValidWindow = timeDiff > 0 && timeDiff < twoHoursInMs;
     const isAfterButRecent = timeDiff < 0 && Math.abs(timeDiff) < 60 * 60 * 1000;
 
-    setStatus(prev => ({
+    setStatus((prev) => ({
       ...prev,
       canCheckIn: (isValidWindow || isAfterButRecent) && !status.hasCheckedIn,
     }));
@@ -78,14 +78,19 @@ export function CheckInButton({
         });
         onCheckedIn?.(result);
       }
-    } catch  {
+    } catch {
       // Error handled in hook
     }
   };
 
   if (!status.canCheckIn && status.hasCheckedIn) {
     return (
-      <View style={[styles.container, { backgroundColor: colors.success + '20', borderColor: colors.success }]}>
+      <View
+        style={[
+          styles.container,
+          { backgroundColor: colors.success + "20", borderColor: colors.success },
+        ]}
+      >
         <Ionicons name="checkmark-circle" size={20} color={colors.success} />
         <Text style={[styles.text, { color: colors.success }]}>Check-in realizado</Text>
       </View>
@@ -94,7 +99,9 @@ export function CheckInButton({
 
   if (!status.canCheckIn) {
     return (
-      <View style={[styles.container, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+      <View
+        style={[styles.container, { backgroundColor: colors.surface, borderColor: colors.border }]}
+      >
         <Ionicons name="time" size={20} color={colors.textSecondary} />
         <Text style={[styles.text, { color: colors.textSecondary }]}>Aguardando horário</Text>
       </View>
@@ -103,7 +110,10 @@ export function CheckInButton({
 
   return (
     <TouchableOpacity
-      style={[styles.container, { backgroundColor: colors.primary + '20', borderColor: colors.primary }]}
+      style={[
+        styles.container,
+        { backgroundColor: colors.primary + "20", borderColor: colors.primary },
+      ]}
       onPress={handlePress}
       disabled={isCheckingIn}
     >
@@ -113,7 +123,9 @@ export function CheckInButton({
         <>
           <Ionicons name="location" size={20} color={colors.primary} />
           <Text style={[styles.text, { color: colors.primary }]}>
-            {status.distanceFromClinic ? `Check-in (${status.distanceFromClinic}m)` : 'Fazer check-in'}
+            {status.distanceFromClinic
+              ? `Check-in (${status.distanceFromClinic}m)`
+              : "Fazer check-in"}
           </Text>
         </>
       )}
@@ -123,9 +135,9 @@ export function CheckInButton({
 
 const styles = StyleSheet.create({
   container: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderRadius: 10,
@@ -134,6 +146,6 @@ const styles = StyleSheet.create({
   },
   text: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: "600",
   },
 });

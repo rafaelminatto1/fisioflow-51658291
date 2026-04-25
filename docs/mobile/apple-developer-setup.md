@@ -89,17 +89,17 @@ base64 -w0 AuthKey_ABC123DEF4.p8 > apikey.b64
 
 Em https://github.com/rafaelminatto1/fisioflow-51658291/settings/secrets/actions:
 
-| Secret name | Valor |
-|---|---|
-| `IOS_DISTRIBUTION_CERT_BASE64` | conteúdo de `distribution.p12.b64` |
-| `IOS_CERT_PASSWORD` | senha do `.p12` (passo 3) |
-| `IOS_PROVISIONING_PROFILE_BASE64` | conteúdo de `profile.b64` |
-| `IOS_PROVISIONING_PROFILE_NAME` | `FisioFlow App Store` |
-| `IOS_TEAM_ID` | seu Team ID (10 chars, no canto superior do Apple Developer) |
-| `KEYCHAIN_PASSWORD` | qualquer string longa (ex: `openssl rand -hex 16`) |
-| `APP_STORE_CONNECT_API_KEY_ID` | Key ID (ex: `ABC123DEF4`) |
-| `APP_STORE_CONNECT_API_KEY_ISSUER_ID` | UUID do passo 6 |
-| `APP_STORE_CONNECT_API_KEY_BASE64` | conteúdo de `apikey.b64` |
+| Secret name                           | Valor                                                        |
+| ------------------------------------- | ------------------------------------------------------------ |
+| `IOS_DISTRIBUTION_CERT_BASE64`        | conteúdo de `distribution.p12.b64`                           |
+| `IOS_CERT_PASSWORD`                   | senha do `.p12` (passo 3)                                    |
+| `IOS_PROVISIONING_PROFILE_BASE64`     | conteúdo de `profile.b64`                                    |
+| `IOS_PROVISIONING_PROFILE_NAME`       | `FisioFlow App Store`                                        |
+| `IOS_TEAM_ID`                         | seu Team ID (10 chars, no canto superior do Apple Developer) |
+| `KEYCHAIN_PASSWORD`                   | qualquer string longa (ex: `openssl rand -hex 16`)           |
+| `APP_STORE_CONNECT_API_KEY_ID`        | Key ID (ex: `ABC123DEF4`)                                    |
+| `APP_STORE_CONNECT_API_KEY_ISSUER_ID` | UUID do passo 6                                              |
+| `APP_STORE_CONNECT_API_KEY_BASE64`    | conteúdo de `apikey.b64`                                     |
 
 ## 9. Trigger primeiro build TestFlight
 

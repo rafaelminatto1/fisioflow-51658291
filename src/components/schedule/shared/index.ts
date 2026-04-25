@@ -10,26 +10,26 @@
 
 // Status configuration
 export {
-	getStatusConfig,
-	getStatusColor,
-	APPOINTMENT_STATUS_CONFIG,
-	type AppointmentStatusConfig,
+  getStatusConfig,
+  getStatusColor,
+  APPOINTMENT_STATUS_CONFIG,
+  type AppointmentStatusConfig,
 } from "./appointment-status";
 
 // Utilities
 export {
-	getInitials,
-	normalizeTime,
-	calculateEndTime,
-	formatDuration,
-	isPastAppointment,
-	isToday,
-	formatAppointmentType,
+  getInitials,
+  normalizeTime,
+  calculateEndTime,
+  formatDuration,
+  isPastAppointment,
+  isToday,
+  formatAppointmentType,
 } from "./utils";
 
 export {
-	NON_CAPACITY_STATUSES,
-	OVERBOOK_MARKER,
-	isCapacityCountedStatus,
-	isMarkedOverbooked,
+  NON_CAPACITY_STATUSES,
+  OVERBOOK_MARKER,
+  isCapacityCountedStatus,
+  isMarkedOverbooked,
 } from "./capacity";

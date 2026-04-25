@@ -15,22 +15,22 @@
  * @module lib/healthkit
  */
 
-import { Platform } from 'react-native';
-import { useState, useEffect } from 'react';
-import { log } from '@/lib/logger';
+import { Platform } from "react-native";
+import { useState, useEffect } from "react";
+import { log } from "@/lib/logger";
 
 // Tipos de dados do HealthKit
 export type HealthDataType =
-  | 'Steps'
-  | 'Distance'
-  | 'Energy'
-  | 'HeartRate'
-  | 'RestingHeartRate'
-  | 'ActiveEnergyBurned'
-  | 'BasalEnergyBurned'
-  | 'SleepAnalysis'
-  | 'Weight'
-  | 'Height';
+  | "Steps"
+  | "Distance"
+  | "Energy"
+  | "HeartRate"
+  | "RestingHeartRate"
+  | "ActiveEnergyBurned"
+  | "BasalEnergyBurned"
+  | "SleepAnalysis"
+  | "Weight"
+  | "Height";
 
 /**
  * Dados de saúde importados
@@ -67,7 +67,7 @@ export class HealthKitManager {
   private isInitialized: boolean = false;
 
   constructor() {
-    this.isAvailable = Platform.OS === 'ios';
+    this.isAvailable = Platform.OS === "ios";
   }
 
   /**
@@ -82,7 +82,7 @@ export class HealthKitManager {
    */
   async initialize(): Promise<boolean> {
     if (!this.isAvailable) {
-      log.warn('HealthKit is only available on iOS');
+      log.warn("HealthKit is only available on iOS");
       return false;
     }
 
@@ -110,11 +110,11 @@ export class HealthKitManager {
       // return init;
 
       // Simulação para desenvolvimento
-      log.info('HealthKit initialization (simulated)');
+      log.info("HealthKit initialization (simulated)");
       this.isInitialized = true;
       return true;
     } catch (error) {
-      log.error('Error initializing HealthKit:', error);
+      log.error("Error initializing HealthKit:", error);
       return false;
     }
   }
@@ -140,7 +140,7 @@ export class HealthKitManager {
       // Simulação
       return true;
     } catch (error) {
-      log.error('Error requesting HealthKit permissions:', error);
+      log.error("Error requesting HealthKit permissions:", error);
       return false;
     }
   }
@@ -173,7 +173,7 @@ export class HealthKitManager {
       // Simulação para desenvolvimento
       return this.getMockHealthData();
     } catch (error) {
-      log.error('Error fetching health data:', error);
+      log.error("Error fetching health data:", error);
       return null;
     }
   }
@@ -194,7 +194,7 @@ export class HealthKitManager {
 
       return this.getMockHealthData().steps || null;
     } catch (error) {
-      log.error('Error fetching steps:', error);
+      log.error("Error fetching steps:", error);
       return null;
     }
   }
@@ -214,7 +214,7 @@ export class HealthKitManager {
 
       return null;
     } catch (error) {
-      log.error('Error fetching heart rate:', error);
+      log.error("Error fetching heart rate:", error);
       return null;
     }
   }
@@ -237,7 +237,7 @@ export class HealthKitManager {
 
       return null;
     } catch (error) {
-      log.error('Error fetching sleep data:', error);
+      log.error("Error fetching sleep data:", error);
       return null;
     }
   }
@@ -267,10 +267,10 @@ export class HealthKitManager {
       // });
 
       // Simulação
-      log.info('Workout saved to HealthKit (simulated)');
+      log.info("Workout saved to HealthKit (simulated)");
       return true;
     } catch (error) {
-      log.error('Error saving workout:', error);
+      log.error("Error saving workout:", error);
       return false;
     }
   }
@@ -339,7 +339,7 @@ export function useHealthKit() {
       const initialized = await manager.initialize();
       setIsAuthorized(initialized);
     } catch (error) {
-      log.error('Error initializing HealthKit:', error);
+      log.error("Error initializing HealthKit:", error);
     } finally {
       setLoading(false);
     }
@@ -369,7 +369,7 @@ export function useHealthKit() {
       setHealthData(data);
       return data;
     } catch (error) {
-      log.error('Error fetching health data:', error);
+      log.error("Error fetching health data:", error);
       return null;
     } finally {
       setLoading(false);

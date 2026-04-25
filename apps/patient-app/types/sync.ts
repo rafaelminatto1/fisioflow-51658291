@@ -1,6 +1,6 @@
 export interface QueuedOperation {
   id: string;
-  type: 'complete_exercise' | 'submit_feedback' | 'update_profile' | 'appointment';
+  type: "complete_exercise" | "submit_feedback" | "update_profile" | "appointment";
   data: any;
   timestamp: number;
   retries: number;

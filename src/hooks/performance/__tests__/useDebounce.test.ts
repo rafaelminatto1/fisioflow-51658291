@@ -135,9 +135,12 @@ describe("useDebounceWithPending", () => {
   });
 
   it("should update isPending when value changes and resolve after delay", () => {
-    const { result, rerender } = renderHook(({ value, delay }) => useDebounceWithPending(value, delay), {
-      initialProps: { value: "initial", delay: 500 },
-    });
+    const { result, rerender } = renderHook(
+      ({ value, delay }) => useDebounceWithPending(value, delay),
+      {
+        initialProps: { value: "initial", delay: 500 },
+      },
+    );
 
     rerender({ value: "updated", delay: 500 });
 

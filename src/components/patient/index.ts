@@ -17,16 +17,9 @@ export { PatientStatsCard, PatientStatsCardSkeleton } from "./PatientStatsCard";
 export { usePatientFilters } from "./usePatientFilters";
 
 // Utilities
-export {
-	countActiveFilters,
-	matchesFilters,
-	type PatientFilters,
-} from "./patientFiltersUtils";
+export { countActiveFilters, matchesFilters, type PatientFilters } from "./patientFiltersUtils";
 
 // Types
 export type { PatientAdvancedFiltersProps } from "./PatientAdvancedFilters";
 export type { StatsCardProps } from "./PatientStatsCard";
-export type {
-	PatientsPageHeaderProps,
-	PatientsPageHeaderStats,
-} from "./PatientsPageHeader";
+export type { PatientsPageHeaderProps, PatientsPageHeaderStats } from "./PatientsPageHeader";

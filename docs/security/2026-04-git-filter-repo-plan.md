@@ -6,14 +6,15 @@
 
 ## Escopo: strings a purgar do histórico
 
-| Categoria | Valor | Ação já tomada |
-|---|---|---|
-| Senha antiga `neondb_owner` | `REDACTED-NEON-PASSWORD` | Rotacionada em 2026-04-24 |
-| LiveKit API Key antiga | `REDACTED-LIVEKIT-KEY` | Revogada/descartada — vamos pra CF RealtimeKit |
-| LiveKit API Secret antigo | `REDACTED-LIVEKIT-SECRET` | Revogado |
-| Google AI Key antiga | `REDACTED-GOOGLE-AI-KEY` | Rotacionada em 2026-04-24 |
+| Categoria                   | Valor                     | Ação já tomada                                 |
+| --------------------------- | ------------------------- | ---------------------------------------------- |
+| Senha antiga `neondb_owner` | `REDACTED-NEON-PASSWORD`  | Rotacionada em 2026-04-24                      |
+| LiveKit API Key antiga      | `REDACTED-LIVEKIT-KEY`    | Revogada/descartada — vamos pra CF RealtimeKit |
+| LiveKit API Secret antigo   | `REDACTED-LIVEKIT-SECRET` | Revogado                                       |
+| Google AI Key antiga        | `REDACTED-GOOGLE-AI-KEY`  | Rotacionada em 2026-04-24                      |
 
 Novos valores (mantidos):
+
 - Google AI Key nova: `AIzaSyBOZSFzfQQXO_STq0ACNdODL1sY96rRaI0`
 - LiveKit key nova (`API5VeauxZHf32D`): **será revogada pelo usuário** (descartando LiveKit)
 
@@ -125,20 +126,22 @@ git reset --hard origin/main
 ## Decisões de escopo
 
 ### O que NÃO vou purgar
+
 - Emails de commit (nomes/emails pessoais são OK em repo público se já estão lá)
 - Diffs de features (só os 4 secrets vazados acima)
 - `apps/api/.dev.vars` já foi removido do tracking (commit separado da purge)
 
 ### PRs abertos — triagem
-| # | Título | Decisão |
-|---|---|---|
-| 65 | docs: cloudflare/neon strategy plan | reabrir |
-| 64 | docs: google innovation proposal | reabrir |
-| 58 | palette a11y icon buttons | fechar (obsoleto) |
-| 51 | vinext POC | fechar (fora de roadmap) |
-| 38 | v2 evolution editor | avaliar — pode já ter sido mergeado conceito |
-| 37 | debounce consolidation | fechar ou rebase manual |
-| 36, 35, 34, 33 | bolt optimizations | fechar (provavelmente obsoletos) |
+
+| #              | Título                              | Decisão                                      |
+| -------------- | ----------------------------------- | -------------------------------------------- |
+| 65             | docs: cloudflare/neon strategy plan | reabrir                                      |
+| 64             | docs: google innovation proposal    | reabrir                                      |
+| 58             | palette a11y icon buttons           | fechar (obsoleto)                            |
+| 51             | vinext POC                          | fechar (fora de roadmap)                     |
+| 38             | v2 evolution editor                 | avaliar — pode já ter sido mergeado conceito |
+| 37             | debounce consolidation              | fechar ou rebase manual                      |
+| 36, 35, 34, 33 | bolt optimizations                  | fechar (provavelmente obsoletos)             |
 
 ## Riscos residuais
 

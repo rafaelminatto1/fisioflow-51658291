@@ -5,19 +5,19 @@ const delay = (ms) => new Promise((r) => setTimeout(r, ms));
 (async () => {
   const browser = await chromium.launch({ headless: true });
   const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
-  
+
   const allRequests = [];
   page.on("response", async (resp) => {
     if (resp.url().includes("whatsapp") || resp.url().includes("inbox")) {
-      allRequests.push({ 
-        url: resp.url(), 
+      allRequests.push({
+        url: resp.url(),
         status: resp.status(),
-        ct: resp.headers()["content-type"]
+        ct: resp.headers()["content-type"],
       });
     }
   });
-  
-  page.on("console", msg => {
+
+  page.on("console", (msg) => {
     if (msg.type() === "error") console.log("CONSOLE:", msg.text().substring(0, 300));
   });
 
@@ -29,12 +29,12 @@ const delay = (ms) => new Promise((r) => setTimeout(r, ms));
 
   await page.goto(`${BASE_URL}/whatsapp/inbox`, { waitUntil: "domcontentloaded" });
   await delay(15000);
-  
+
   console.log("\n=== WHATSAPP API REQUESTS ===");
-  allRequests.forEach(r => {
+  allRequests.forEach((r) => {
     console.log(`${r.status} [${r.ct}] ${r.url}`);
   });
-  
+
   console.log("\n=== FINAL STATE ===");
   const body = await page.locator("body").innerText();
   console.log("Rafael:", body.includes("Rafael"));

@@ -49,78 +49,78 @@ src/components/schedule/
 
 ### Visualização de Calendário
 
-| Componente | Descrição |
-|------------|-----------|
-| `CalendarView` | Componente principal que renderiza a visualização correta |
-| `CalendarDayView` | Visualização diária |
-| `CalendarWeekViewDndKit` | Visualização semanal com drag-and-drop |
-| `CalendarMonthView` | Visualização mensal |
-| `ScheduleGrid` | Grid de horários |
+| Componente               | Descrição                                                 |
+| ------------------------ | --------------------------------------------------------- |
+| `CalendarView`           | Componente principal que renderiza a visualização correta |
+| `CalendarDayView`        | Visualização diária                                       |
+| `CalendarWeekViewDndKit` | Visualização semanal com drag-and-drop                    |
+| `CalendarMonthView`      | Visualização mensal                                       |
+| `ScheduleGrid`           | Grid de horários                                          |
 
 ### Cards de Agendamento
 
-| Componente | Descrição |
-|------------|-----------|
-| `AppointmentCard` | Card de agendamento padrão |
-| `SwipeableAppointmentCard` | Card com swipe actions (mobile) |
-| `CalendarAppointmentCard` | Card para visualização de calendário |
-| `DraggableAppointment` | Card arrastável para reagendamento |
+| Componente                 | Descrição                            |
+| -------------------------- | ------------------------------------ |
+| `AppointmentCard`          | Card de agendamento padrão           |
+| `SwipeableAppointmentCard` | Card com swipe actions (mobile)      |
+| `CalendarAppointmentCard`  | Card para visualização de calendário |
+| `DraggableAppointment`     | Card arrastável para reagendamento   |
 
 ### Modais
 
-| Componente | Descrição |
-|------------|-----------|
-| `AppointmentModal` | Modal de criação/edição de agendamento |
-| `AppointmentModalRefactored` | Versão refatorada do modal |
-| `AppointmentQuickEditModal` | Edição rápida inline |
-| `AppointmentQuickView` | Visualização rápida |
-| `RecurringAppointmentModal` | Modal de agendamento recorrente |
-| `RescheduleConfirmDialog` | Confirmação de reagendamento |
-| `PaymentRegistrationModal` | Registro de pagamento |
+| Componente                   | Descrição                              |
+| ---------------------------- | -------------------------------------- |
+| `AppointmentModal`           | Modal de criação/edição de agendamento |
+| `AppointmentModalRefactored` | Versão refatorada do modal             |
+| `AppointmentQuickEditModal`  | Edição rápida inline                   |
+| `AppointmentQuickView`       | Visualização rápida                    |
+| `RecurringAppointmentModal`  | Modal de agendamento recorrente        |
+| `RescheduleConfirmDialog`    | Confirmação de reagendamento           |
+| `PaymentRegistrationModal`   | Registro de pagamento                  |
 
 ### Lista de Espera
 
-| Componente | Descrição |
-|------------|-----------|
-| `WaitlistHorizontal` | Lista de espera horizontal |
-| `WaitlistIndicator` | Indicador de lista de espera |
-| `WaitlistNotification` | Notificação de vaga |
-| `WaitlistQuickAdd` | Adição rápida à lista |
-| `WaitlistQuickViewModal` | Visualização rápida |
-| `WaitlistSidebar` | Sidebar de lista de espera |
+| Componente               | Descrição                    |
+| ------------------------ | ---------------------------- |
+| `WaitlistHorizontal`     | Lista de espera horizontal   |
+| `WaitlistIndicator`      | Indicador de lista de espera |
+| `WaitlistNotification`   | Notificação de vaga          |
+| `WaitlistQuickAdd`       | Adição rápida à lista        |
+| `WaitlistQuickViewModal` | Visualização rápida          |
+| `WaitlistSidebar`        | Sidebar de lista de espera   |
 
 ### UI Components
 
-| Componente | Descrição |
-|------------|-----------|
-| `MiniCalendar` | Calendário mini para navegação |
-| `WeekNavigation` | Navegação por semana |
-| `ScheduleHeader` | Cabeçalho da agenda |
-| `ScheduleToolbar` | Toolbar com filtros |
-| `QuickFilters` | Filtros rápidos |
-| `AdvancedFilters` | Filtros avançados |
-| `AppointmentSearch` | Busca de agendamentos |
-| `BulkActionsBar` | Barra de ações em massa |
+| Componente          | Descrição                      |
+| ------------------- | ------------------------------ |
+| `MiniCalendar`      | Calendário mini para navegação |
+| `WeekNavigation`    | Navegação por semana           |
+| `ScheduleHeader`    | Cabeçalho da agenda            |
+| `ScheduleToolbar`   | Toolbar com filtros            |
+| `QuickFilters`      | Filtros rápidos                |
+| `AdvancedFilters`   | Filtros avançados              |
+| `AppointmentSearch` | Busca de agendamentos          |
+| `BulkActionsBar`    | Barra de ações em massa        |
 
 ### Performance
 
-| Componente | Descrição |
-|------------|-----------|
+| Componente                   | Descrição                           |
+| ---------------------------- | ----------------------------------- |
 | `VirtualizedAppointmentList` | Lista virtualizada para performance |
-| `VirtualizedDayView` | Visualização diária virtualizada |
-| `VirtualizedWeekView` | Visualização semanal virtualizada |
-| `LazyAppointmentModal` | Modal com lazy loading |
-| `OptimizedImageLoader` | Carregamento otimizado de imagens |
-| `BackgroundSync` | Sincronização em background |
+| `VirtualizedDayView`         | Visualização diária virtualizada    |
+| `VirtualizedWeekView`        | Visualização semanal virtualizada   |
+| `LazyAppointmentModal`       | Modal com lazy loading              |
+| `OptimizedImageLoader`       | Carregamento otimizado de imagens   |
+| `BackgroundSync`             | Sincronização em background         |
 
 ### Skeletons
 
-| Componente | Descrição |
-|------------|-----------|
-| `CalendarSkeleton` | Skeleton do calendário |
-| `CalendarSkeletonEnhanced` | Skeleton aprimorado |
-| `AppointmentCardSkeleton` | Skeleton do card |
-| `AppointmentListSkeleton` | Skeleton da lista |
+| Componente                 | Descrição              |
+| -------------------------- | ---------------------- |
+| `CalendarSkeleton`         | Skeleton do calendário |
+| `CalendarSkeletonEnhanced` | Skeleton aprimorado    |
+| `AppointmentCardSkeleton`  | Skeleton do card       |
+| `AppointmentListSkeleton`  | Skeleton da lista      |
 
 ## Como Usar
 
@@ -128,14 +128,10 @@ src/components/schedule/
 
 ```typescript
 // Recomendado: importar do barrel export
-import { 
-  CalendarView, 
-  AppointmentModal, 
-  AppointmentCard 
-} from '@/components/schedule';
+import { CalendarView, AppointmentModal, AppointmentCard } from "@/components/schedule";
 
 // Ou importar diretamente (não recomendado)
-import { CalendarView } from '@/components/schedule/CalendarView';
+import { CalendarView } from "@/components/schedule/CalendarView";
 ```
 
 ### Exemplo de Uso
@@ -146,11 +142,11 @@ import { useFilteredAppointments } from '@/hooks/appointments';
 
 function SchedulePage() {
   const { currentDate, viewType, setViewType } = useScheduleState();
-  const { data: appointments } = useFilteredAppointments({ 
-    viewType, 
-    date: currentDate 
+  const { data: appointments } = useFilteredAppointments({
+    viewType,
+    date: currentDate
   });
-  
+
   return (
     <CalendarView
       appointments={appointments}
@@ -175,14 +171,14 @@ function SchedulePage() {
 ```typescript
 /**
  * Descrição breve do componente
- * 
+ *
  * @description Descrição detalhada se necessário
  * @example
  * <ComponentName prop="value" />
  */
 
-import { useState } from 'react';
-import { cn } from '@/lib/utils';
+import { useState } from "react";
+import { cn } from "@/lib/utils";
 
 interface ComponentNameProps {
   /** Descrição da prop */

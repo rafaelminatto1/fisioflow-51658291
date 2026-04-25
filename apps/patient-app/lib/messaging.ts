@@ -1,11 +1,11 @@
-import { useEffect, useState } from 'react';
-import { log } from '@/lib/logger';
-import { messagingApi } from './api';
-import type { Conversation, Message } from '@/types/api';
-export type { Conversation, Message } from '@/types/api';
+import { useEffect, useState } from "react";
+import { log } from "@/lib/logger";
+import { messagingApi } from "./api";
+import type { Conversation, Message } from "@/types/api";
+export type { Conversation, Message } from "@/types/api";
 
-export type MessageType = Message['type'];
-export type MessageStatus = Message['status'];
+export type MessageType = Message["type"];
+export type MessageStatus = Message["status"];
 
 export interface MessagingCallbacks {
   onNewMessage?: (message: Message) => void;
@@ -28,7 +28,7 @@ export class MessagingManager {
       const data = await messagingApi.getConversations();
       return data;
     } catch (error) {
-      log.error('MESSAGING', 'Failed to get conversations', error);
+      log.error("MESSAGING", "Failed to get conversations", error);
       return [];
     }
   }
@@ -40,10 +40,10 @@ export class MessagingManager {
         const messages = await this.getMessages(conversationId);
         if (messages.length > 0 && this.callbacks.onNewMessage) {
           // This is a naive implementation; in a real app, we'd check for NEW messages
-          messages.forEach(msg => this.callbacks.onNewMessage!(msg));
+          messages.forEach((msg) => this.callbacks.onNewMessage!(msg));
         }
       } catch (error) {
-        log.error('MESSAGING', 'Polling failed', error);
+        log.error("MESSAGING", "Polling failed", error);
       }
     }, intervalMs);
   }
@@ -63,7 +63,7 @@ export class MessagingManager {
     try {
       return await messagingApi.getMessages(participantId, limit);
     } catch (error) {
-      log.error('MESSAGING', `Failed to get messages for ${participantId}`, error);
+      log.error("MESSAGING", `Failed to get messages for ${participantId}`, error);
       return [];
     }
   }
@@ -72,7 +72,7 @@ export class MessagingManager {
     try {
       return await messagingApi.sendMessage({ recipientId, content });
     } catch (error) {
-      log.error('MESSAGING', 'Failed to send message', error);
+      log.error("MESSAGING", "Failed to send message", error);
       return null;
     }
   }
@@ -85,15 +85,15 @@ export class MessagingManager {
     attachmentName: string,
   ): Promise<Message | null> {
     try {
-      return await messagingApi.sendMessage({ 
-        recipientId, 
-        content, 
-        type, 
-        attachmentUrl, 
-        attachmentName 
+      return await messagingApi.sendMessage({
+        recipientId,
+        content,
+        type,
+        attachmentUrl,
+        attachmentName,
       });
     } catch (error) {
-      log.error('MESSAGING', 'Failed to send message with attachment', error);
+      log.error("MESSAGING", "Failed to send message with attachment", error);
       return null;
     }
   }
@@ -102,7 +102,7 @@ export class MessagingManager {
     try {
       await messagingApi.markConversationRead(participantId);
     } catch (error) {
-      log.error('MESSAGING', 'Failed to mark conversation as read', error);
+      log.error("MESSAGING", "Failed to mark conversation as read", error);
     }
   }
 

@@ -66,13 +66,7 @@ function useDebounce<T>(value: T, delay: number): T {
 
 // ─── Step indicators ─────────────────────────────────────────────────────────
 
-function StepIndicator({
-  current,
-  total,
-}: {
-  current: Step;
-  total: number;
-}) {
+function StepIndicator({ current, total }: { current: Step; total: number }) {
   return (
     <div className="flex items-center gap-2 mb-6">
       {Array.from({ length: total }, (_, i) => i + 1).map((step) => (
@@ -82,8 +76,8 @@ function StepIndicator({
               step === current
                 ? "bg-primary text-primary-foreground"
                 : step < current
-                ? "bg-primary/20 text-primary"
-                : "bg-muted text-muted-foreground"
+                  ? "bg-primary/20 text-primary"
+                  : "bg-muted text-muted-foreground"
             }`}
           >
             {step}
@@ -116,8 +110,7 @@ function PatientSearchStep({
 
   const { data, isLoading } = useQuery({
     queryKey: ["patients", { q: debouncedSearch }],
-    queryFn: () =>
-      patientsApi.list({ search: debouncedSearch, limit: 10 }),
+    queryFn: () => patientsApi.list({ search: debouncedSearch, limit: 10 }),
     enabled: debouncedSearch.length >= 2,
     staleTime: 1000 * 30,
   });
@@ -174,25 +167,18 @@ function PatientSearchStep({
                 className="w-full text-left px-3 py-2.5 hover:bg-muted/50 transition-colors"
               >
                 <p className="text-sm font-medium">{patient.full_name}</p>
-                {patient.cpf && (
-                  <p className="text-xs text-muted-foreground">
-                    CPF: {patient.cpf}
-                  </p>
-                )}
+                {patient.cpf && <p className="text-xs text-muted-foreground">CPF: {patient.cpf}</p>}
               </button>
             </li>
           ))}
         </ul>
       )}
 
-      {!selectedPatient &&
-        debouncedSearch.length >= 2 &&
-        !isLoading &&
-        patients.length === 0 && (
-          <p className="text-sm text-muted-foreground text-center py-4">
-            Nenhum paciente encontrado para "{debouncedSearch}"
-          </p>
-        )}
+      {!selectedPatient && debouncedSearch.length >= 2 && !isLoading && patients.length === 0 && (
+        <p className="text-sm text-muted-foreground text-center py-4">
+          Nenhum paciente encontrado para "{debouncedSearch}"
+        </p>
+      )}
 
       {/* Selected patient badge */}
       {selectedPatient && (
@@ -200,27 +186,17 @@ function PatientSearchStep({
           <div>
             <p className="text-sm font-medium">{selectedPatient.full_name}</p>
             {selectedPatient.cpf && (
-              <p className="text-xs text-muted-foreground">
-                CPF: {selectedPatient.cpf}
-              </p>
+              <p className="text-xs text-muted-foreground">CPF: {selectedPatient.cpf}</p>
             )}
           </div>
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={handleClear}
-            className="text-xs"
-          >
+          <Button type="button" variant="ghost" size="sm" onClick={handleClear} className="text-xs">
             Trocar
           </Button>
         </div>
       )}
 
       {!value && debouncedSearch.length < 2 && (
-        <p className="text-xs text-muted-foreground">
-          Digite pelo menos 2 caracteres para buscar
-        </p>
+        <p className="text-xs text-muted-foreground">Digite pelo menos 2 caracteres para buscar</p>
       )}
     </div>
   );
@@ -369,10 +345,7 @@ export function TemplateApplyFlow({
       templatesApi.apply(template.id, {
         patientId: values.patientId,
         startDate: values.startDate,
-        surgeryId:
-          values.surgeryId && values.surgeryId !== "none"
-            ? values.surgeryId
-            : undefined,
+        surgeryId: values.surgeryId && values.surgeryId !== "none" ? values.surgeryId : undefined,
         notes: values.notes,
       }),
     onSuccess: (res) => {
@@ -495,10 +468,7 @@ export function TemplateApplyFlow({
               <Button
                 type="button"
                 onClick={handleNext}
-                disabled={
-                  (step === 1 && !canAdvanceStep1) ||
-                  (step === 2 && !canAdvanceStep2)
-                }
+                disabled={(step === 1 && !canAdvanceStep1) || (step === 2 && !canAdvanceStep2)}
                 className="flex-1"
               >
                 Próximo

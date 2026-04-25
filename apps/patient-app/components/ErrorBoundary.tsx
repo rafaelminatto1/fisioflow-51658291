@@ -3,12 +3,12 @@
  * Catches JavaScript errors in child components and displays a fallback UI
  */
 
-import { Component, ReactNode } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import * as Sentry from '@sentry/react-native';
-import { useColors } from '@/hooks/useColorScheme';
-import { log } from '@/lib/logger';
+import { Component, ReactNode } from "react";
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import * as Sentry from "@sentry/react-native";
+import { useColors } from "@/hooks/useColorScheme";
+import { log } from "@/lib/logger";
 
 interface Props {
   children: ReactNode;
@@ -31,8 +31,8 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: any) {
-    log.error('ErrorBoundary caught an error:', error, errorInfo);
-    
+    log.error("ErrorBoundary caught an error:", error, errorInfo);
+
     // Log to Sentry
     Sentry.captureException(error, { extra: { errorInfo } });
   }
@@ -59,17 +59,12 @@ function ErrorFallback({ error, onReset }: { error: Error | null; onReset: () =>
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
-        <View style={[styles.iconContainer, { backgroundColor: colors.error + '20' }]}>
+      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        <View style={[styles.iconContainer, { backgroundColor: colors.error + "20" }]}>
           <Ionicons name="warning-outline" size={64} color={colors.error} />
         </View>
 
-        <Text style={[styles.title, { color: colors.text }]}>
-          Ops! Algo deu errado
-        </Text>
+        <Text style={[styles.title, { color: colors.text }]}>Ops! Algo deu errado</Text>
 
         <Text style={[styles.message, { color: colors.textSecondary }]}>
           Ocorreu um erro inesperado. Por favor, tente novamente.
@@ -105,57 +100,57 @@ const styles = StyleSheet.create({
   scrollContent: {
     flexGrow: 1,
     padding: 24,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   iconContainer: {
     width: 120,
     height: 120,
     borderRadius: 60,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     marginBottom: 24,
   },
   title: {
     fontSize: 24,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     marginBottom: 12,
-    textAlign: 'center',
+    textAlign: "center",
   },
   message: {
     fontSize: 16,
-    textAlign: 'center',
+    textAlign: "center",
     marginBottom: 32,
     lineHeight: 24,
   },
   errorDetails: {
-    width: '100%',
+    width: "100%",
     padding: 16,
     borderRadius: 12,
     marginBottom: 24,
   },
   errorTitle: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: "600",
     marginBottom: 8,
   },
   errorText: {
     fontSize: 12,
-    fontFamily: 'monospace',
+    fontFamily: "monospace",
     lineHeight: 18,
   },
   button: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     paddingHorizontal: 32,
     paddingVertical: 14,
     borderRadius: 12,
     gap: 8,
   },
   buttonText: {
-    color: '#FFFFFF',
+    color: "#FFFFFF",
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
   },
 });

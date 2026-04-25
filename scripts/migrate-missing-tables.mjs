@@ -6,7 +6,7 @@
  *   - formas_pagamento
  *   - fcm_tokens
  */
-import pg from 'pg';
+import pg from "pg";
 
 const { Client } = pg;
 const DB_URL = process.env.DATABASE_URL;
@@ -96,21 +96,30 @@ CREATE INDEX IF NOT EXISTS idx_fcm_tokens_user_id ON fcm_tokens(user_id);
 async function main() {
   const client = new Client({ connectionString: DB_URL });
   await client.connect();
-  console.log('✅ Conectado ao Neon DB');
+  console.log("✅ Conectado ao Neon DB");
 
   try {
     await client.query(SQL);
-    console.log('✅ Tabelas criadas (ou já existiam)');
+    console.log("✅ Tabelas criadas (ou já existiam)");
 
     // Verifica quais existem
-    for (const table of ['conduct_library', 'crm_campanhas', 'crm_campanha_envios', 'formas_pagamento', 'fcm_tokens']) {
+    for (const table of [
+      "conduct_library",
+      "crm_campanhas",
+      "crm_campanha_envios",
+      "formas_pagamento",
+      "fcm_tokens",
+    ]) {
       const res = await client.query(`SELECT to_regclass($1)::text AS t`, [`public.${table}`]);
       const exists = Boolean(res.rows[0]?.t);
-      console.log(`  ${exists ? '✅' : '❌'} ${table}`);
+      console.log(`  ${exists ? "✅" : "❌"} ${table}`);
     }
   } finally {
     await client.end();
   }
 }
 
-main().catch(e => { console.error('Erro:', e.message); process.exit(1); });
+main().catch((e) => {
+  console.error("Erro:", e.message);
+  process.exit(1);
+});

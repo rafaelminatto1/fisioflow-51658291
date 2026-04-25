@@ -1,6 +1,5 @@
-
-import { Pool } from '@neondatabase/serverless';
-import dotenv from 'dotenv';
+import { Pool } from "@neondatabase/serverless";
+import dotenv from "dotenv";
 
 dotenv.config();
 
@@ -9,7 +8,7 @@ async function optimizeDatabase() {
   const pool = new Pool({ connectionString });
 
   try {
-    console.log('Otimizando índices do banco de dados para velocidade máxima...');
+    console.log("Otimizando índices do banco de dados para velocidade máxima...");
 
     // Índice composto para busca ultra-rápida na Agenda
     await pool.query(`
@@ -17,9 +16,9 @@ async function optimizeDatabase() {
       ON appointments (organization_id, date, start_time);
     `);
 
-    console.log('✅ Índice de agendamentos criado!');
+    console.log("✅ Índice de agendamentos criado!");
   } catch (e) {
-    console.error('❌ Falha na otimização:', e);
+    console.error("❌ Falha na otimização:", e);
   } finally {
     await pool.end();
   }

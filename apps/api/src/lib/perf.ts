@@ -11,7 +11,7 @@ export class PerformanceTracker {
   end(label: string) {
     const startTime = this.markers.get(label);
     if (startTime === undefined) return;
-    
+
     const duration = performance.now() - startTime;
     console.log(`[Perf] ${label}: ${duration.toFixed(2)}ms`);
     this.markers.delete(label);

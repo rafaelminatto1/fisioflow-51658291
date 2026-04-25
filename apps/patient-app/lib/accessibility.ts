@@ -3,12 +3,11 @@
  * Helper functions for improving app accessibility
  */
 
-
 /**
  * Check if screen reader is enabled
  */
 
-import { AccessibilityInfo, Platform } from 'react-native';
+import { AccessibilityInfo, Platform } from "react-native";
 
 export async function isScreenReaderEnabled(): Promise<boolean> {
   return await AccessibilityInfo.isScreenReaderEnabled();
@@ -18,7 +17,7 @@ export async function isScreenReaderEnabled(): Promise<boolean> {
  * Check if reduce motion is enabled
  */
 export async function isReduceMotionEnabled(): Promise<boolean> {
-  if (Platform.OS === 'ios') {
+  if (Platform.OS === "ios") {
     return await AccessibilityInfo.isReduceMotionEnabled();
   }
   return false; // Android doesn't have this setting
@@ -28,7 +27,7 @@ export async function isReduceMotionEnabled(): Promise<boolean> {
  * Check if bold text is enabled (iOS)
  */
 export async function isBoldTextEnabled(): Promise<boolean> {
-  if (Platform.OS === 'ios') {
+  if (Platform.OS === "ios") {
     return await AccessibilityInfo.isBoldTextEnabled();
   }
   return false; // Android doesn't have this setting
@@ -38,7 +37,7 @@ export async function isBoldTextEnabled(): Promise<boolean> {
  * Announce a message to screen readers
  */
 export function announceForAccessibility(message: string): void {
-  if (Platform.OS === 'android') {
+  if (Platform.OS === "android") {
     // Android: Use AccessibilityInfo.announceForAccessibility
     AccessibilityInfo.announceForAccessibility(message);
   } else {
@@ -53,21 +52,21 @@ export function announceForAccessibility(message: string): void {
 export function getAccessibilityLabelForProgress(
   current: number,
   total: number,
-  itemLabel?: string
+  itemLabel?: string,
 ): string {
-  const base = itemLabel ? `${itemLabel} ` : '';
+  const base = itemLabel ? `${itemLabel} ` : "";
   return `${base}${current} de ${total}`;
 }
 
 /**
  * Get accessibility hint for a swipeable action
  */
-export function getSwipeHint(action: string, direction: 'left' | 'right' | 'up' | 'down'): string {
+export function getSwipeHint(action: string, direction: "left" | "right" | "up" | "down"): string {
   const directions = {
-    left: 'deslize para a esquerda',
-    right: 'deslize para a direita',
-    up: 'deslize para cima',
-    down: 'deslize para baixo',
+    left: "deslize para a esquerda",
+    right: "deslize para a direita",
+    up: "deslize para cima",
+    down: "deslize para baixo",
   };
   return `${directions[direction]} para ${action}`;
 }
@@ -78,12 +77,12 @@ export function getSwipeHint(action: string, direction: 'left' | 'right' | 'up' 
 export function getAccessibilityStateForChecklist(
   checked: boolean,
   total: number,
-  checkedCount: number
+  checkedCount: number,
 ) {
   return {
     checked,
-    accessibilityLabel: checked ? 'Marcado' : 'Não marcado',
-    accessibilityRole: 'checkbox' as const,
+    accessibilityLabel: checked ? "Marcado" : "Não marcado",
+    accessibilityRole: "checkbox" as const,
     accessibilityState: {
       checked,
     },
@@ -98,51 +97,51 @@ export function getAccessibilityStateForChecklist(
  */
 export const AccessibilityLabels = {
   // Navigation
-  goBack: 'Voltar',
-  close: 'Fechar',
-  menu: 'Menu',
-  settings: 'Configurações',
-  profile: 'Perfil',
+  goBack: "Voltar",
+  close: "Fechar",
+  menu: "Menu",
+  settings: "Configurações",
+  profile: "Perfil",
 
   // Actions
-  confirm: 'Confirmar',
-  cancel: 'Cancelar',
-  delete: 'Excluir',
-  edit: 'Editar',
-  save: 'Salvar',
-  refresh: 'Atualizar',
+  confirm: "Confirmar",
+  cancel: "Cancelar",
+  delete: "Excluir",
+  edit: "Editar",
+  save: "Salvar",
+  refresh: "Atualizar",
 
   // States
-  loading: 'Carregando',
-  error: 'Erro',
-  success: 'Sucesso',
-  empty: 'Vazio',
+  loading: "Carregando",
+  error: "Erro",
+  success: "Sucesso",
+  empty: "Vazio",
 
   // Exercise
-  exercise: 'Exercício',
-  exercises: 'Exercícios',
-  completed: 'Concluído',
-  notCompleted: 'Não concluído',
-  video: 'Vídeo',
+  exercise: "Exercício",
+  exercises: "Exercícios",
+  completed: "Concluído",
+  notCompleted: "Não concluído",
+  video: "Vídeo",
 
   // Progress
-  progress: 'Progresso',
-  streak: 'Sequência',
-  sessions: 'Sessões',
+  progress: "Progresso",
+  streak: "Sequência",
+  sessions: "Sessões",
 
   // Appointments
-  appointment: 'Consulta',
-  appointments: 'Consultas',
-  upcoming: 'Próximas',
-  past: 'Anteriores',
-  today: 'Hoje',
-  tomorrow: 'Amanhã',
+  appointment: "Consulta",
+  appointments: "Consultas",
+  upcoming: "Próximas",
+  past: "Anteriores",
+  today: "Hoje",
+  tomorrow: "Amanhã",
 
   // Notifications
-  notification: 'Notificação',
-  notifications: 'Notificações',
-  enableNotifications: 'Ativar notificações',
-  notificationPermission: 'Permissão de notificação',
+  notification: "Notificação",
+  notifications: "Notificações",
+  enableNotifications: "Ativar notificações",
+  notificationPermission: "Permissão de notificação",
 };
 
 /**
@@ -155,7 +154,7 @@ export const FocusManagement = {
   getFieldHint(label: string, required: boolean, type?: string): string {
     let hint = `${label}`;
     if (required) {
-      hint += ', obrigatório';
+      hint += ", obrigatório";
     }
     if (type) {
       hint += `, ${type}`;

@@ -11,19 +11,12 @@
  * - Auto-logout after failed attempts
  */
 
-import React, { useState, useEffect } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  Alert,
-  ActivityIndicator,
-} from 'react-native';
-import { useRouter } from 'expo-router';
-import { useAuthStore, unlockSessionWithPIN } from '@/store/auth';
-import { biometricAuthService } from '@/lib/services/biometricAuthService';
-import { useColors } from '@/hooks/useColorScheme';
+import React, { useState, useEffect } from "react";
+import { View, Text, StyleSheet, TouchableOpacity, Alert, ActivityIndicator } from "react-native";
+import { useRouter } from "expo-router";
+import { useAuthStore, unlockSessionWithPIN } from "@/store/auth";
+import { biometricAuthService } from "@/lib/services/biometricAuthService";
+import { useColors } from "@/hooks/useColorScheme";
 
 const MAX_PIN_ATTEMPTS = 5;
 
@@ -32,7 +25,7 @@ export default function UnlockScreen() {
   const colors = useColors();
   const { unlockSession, clearSession, isLocked } = useAuthStore();
 
-  const [pin, setPin] = useState('');
+  const [pin, setPin] = useState("");
   const [isAuthenticating, setIsAuthenticating] = useState(false);
   const [failedAttempts, setFailedAttempts] = useState(0);
   const [biometricAvailable, setBiometricAvailable] = useState(false);
@@ -44,7 +37,7 @@ export default function UnlockScreen() {
         const currentUserId = useAuthStore.getState().user?.id ?? null;
         setUserId(currentUserId);
 
-        const config = await biometricAuthService.getConfig(currentUserId || '');
+        const config = await biometricAuthService.getConfig(currentUserId || "");
         setBiometricAvailable(config.isEnabled);
 
         if (config.isEnabled) {
@@ -56,7 +49,7 @@ export default function UnlockScreen() {
     };
 
     checkBiometric();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleBiometricAuth = async (_currentUserId: string) => {
@@ -67,11 +60,9 @@ export default function UnlockScreen() {
       await unlockSession();
       router.back();
     } catch {
-      Alert.alert(
-        'Erro',
-        'Falha na autenticação biométrica. Por favor, use seu PIN.',
-        [{ text: 'OK' }]
-      );
+      Alert.alert("Erro", "Falha na autenticação biométrica. Por favor, use seu PIN.", [
+        { text: "OK" },
+      ]);
     } finally {
       setIsAuthenticating(false);
     }
@@ -88,7 +79,7 @@ export default function UnlockScreen() {
 
   const handlePinSubmit = async (pinToVerify: string) => {
     if (!userId) {
-      Alert.alert('Erro', 'Usuário não identificado. Por favor, faça login novamente.');
+      Alert.alert("Erro", "Usuário não identificado. Por favor, faça login novamente.");
       handleLogout();
       return;
     }
@@ -98,31 +89,31 @@ export default function UnlockScreen() {
       const ok = await unlockSessionWithPIN(pinToVerify);
 
       if (ok) {
-        setPin('');
+        setPin("");
         setFailedAttempts(0);
         router.back();
       } else {
         const newFailed = failedAttempts + 1;
         setFailedAttempts(newFailed);
-        setPin('');
+        setPin("");
 
         if (newFailed >= MAX_PIN_ATTEMPTS) {
           Alert.alert(
-            'Muitas Tentativas Falhas',
-            'Você excedeu o número máximo de tentativas. Por favor, faça login novamente.',
-            [{ text: 'OK', onPress: handleLogout }]
+            "Muitas Tentativas Falhas",
+            "Você excedeu o número máximo de tentativas. Por favor, faça login novamente.",
+            [{ text: "OK", onPress: handleLogout }],
           );
         } else {
           Alert.alert(
-            'PIN Incorreto',
+            "PIN Incorreto",
             `Tentativa ${newFailed} de ${MAX_PIN_ATTEMPTS}. Por favor, tente novamente.`,
-            [{ text: 'OK' }]
+            [{ text: "OK" }],
           );
         }
       }
     } catch {
-      Alert.alert('Erro', 'Falha ao verificar PIN. Por favor, tente novamente.');
-      setPin('');
+      Alert.alert("Erro", "Falha ao verificar PIN. Por favor, tente novamente.");
+      setPin("");
     } finally {
       setIsAuthenticating(false);
     }
@@ -135,7 +126,7 @@ export default function UnlockScreen() {
     } catch {
       // Ensure navigation even if signOut fails
     }
-    router.replace('/(auth)/login');
+    router.replace("/(auth)/login");
   };
 
   const handleBackspace = () => {
@@ -170,7 +161,10 @@ export default function UnlockScreen() {
             style={[
               styles.pinDot,
               { borderColor: colors.border },
-              pin.length > index && { backgroundColor: colors.primary, borderColor: colors.primary },
+              pin.length > index && {
+                backgroundColor: colors.primary,
+                borderColor: colors.primary,
+              },
             ]}
           />
         ))}
@@ -206,7 +200,7 @@ export default function UnlockScreen() {
         {/* Zero */}
         <TouchableOpacity
           style={[styles.keypadButton, { backgroundColor: colors.surface }]}
-          onPress={() => handlePinInput('0')}
+          onPress={() => handlePinInput("0")}
           disabled={isAuthenticating}
         >
           <Text style={[styles.keypadButtonText, { color: colors.text }]}>0</Text>
@@ -247,24 +241,24 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 24,
-    justifyContent: 'center',
+    justifyContent: "center",
   },
   header: {
-    alignItems: 'center',
+    alignItems: "center",
     marginBottom: 48,
   },
   title: {
     fontSize: 28,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     marginBottom: 8,
   },
   subtitle: {
     fontSize: 16,
-    textAlign: 'center',
+    textAlign: "center",
   },
   pinContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
+    flexDirection: "row",
+    justifyContent: "center",
     gap: 16,
     marginBottom: 32,
   },
@@ -273,24 +267,24 @@ const styles = StyleSheet.create({
     height: 16,
     borderRadius: 8,
     borderWidth: 2,
-    backgroundColor: 'transparent',
+    backgroundColor: "transparent",
   },
   biometricButton: {
     paddingVertical: 16,
     paddingHorizontal: 24,
     borderRadius: 12,
-    alignItems: 'center',
+    alignItems: "center",
     marginBottom: 32,
   },
   biometricButtonText: {
-    color: '#FFFFFF',
+    color: "#FFFFFF",
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   keypad: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'center',
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "center",
     gap: 16,
     marginBottom: 32,
   },
@@ -298,9 +292,9 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 40,
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: '#000',
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
@@ -308,24 +302,24 @@ const styles = StyleSheet.create({
   },
   keypadButtonText: {
     fontSize: 28,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   loadingContainer: {
-    position: 'absolute',
+    position: "absolute",
     top: 0,
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.3)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "rgba(0, 0, 0, 0.3)",
+    justifyContent: "center",
+    alignItems: "center",
   },
   logoutButton: {
     paddingVertical: 16,
-    alignItems: 'center',
+    alignItems: "center",
   },
   logoutButtonText: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
   },
 });

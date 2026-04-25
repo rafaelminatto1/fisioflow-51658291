@@ -3,14 +3,14 @@
  * React hook for accessibility features
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 
 import {
   isScreenReaderEnabled,
   isReduceMotionEnabled,
   isBoldTextEnabled,
   announceForAccessibility,
-} from '@/lib/accessibility';
+} from "@/lib/accessibility";
 
 export interface AccessibilitySettings {
   screenReaderEnabled: boolean;
@@ -43,18 +43,17 @@ export function useAccessibility(): AccessibilitySettings & {
 
     // Listen for changes in accessibility settings
     const screenReaderSubscription = AccessibilityInfo.addEventListener(
-      'screenReaderChanged',
-      (enabled) => setScreenReaderEnabled(enabled)
+      "screenReaderChanged",
+      (enabled) => setScreenReaderEnabled(enabled),
     );
 
     const reduceMotionSubscription = AccessibilityInfo.addEventListener(
-      'reduceMotionChanged',
-      (enabled) => setReduceMotionEnabled(enabled)
+      "reduceMotionChanged",
+      (enabled) => setReduceMotionEnabled(enabled),
     );
 
-    const boldTextSubscription = AccessibilityInfo.addEventListener(
-      'boldTextChanged',
-      (enabled) => setBoldTextEnabled(enabled)
+    const boldTextSubscription = AccessibilityInfo.addEventListener("boldTextChanged", (enabled) =>
+      setBoldTextEnabled(enabled),
     );
 
     return () => {
@@ -102,4 +101,4 @@ export function useScreenAnnouncement() {
   return { announceScreenChange, announceAction };
 }
 
-import { AccessibilityInfo } from 'react-native';
+import { AccessibilityInfo } from "react-native";

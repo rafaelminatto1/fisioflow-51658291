@@ -1,5 +1,5 @@
-import { Stack } from 'expo-router';
-import { useColors } from '@/hooks/useColorScheme';
+import { Stack } from "expo-router";
+import { useColors } from "@/hooks/useColorScheme";
 
 export default function AuthLayout() {
   const colors = useColors();
@@ -14,9 +14,9 @@ export default function AuthLayout() {
       }}
     >
       <Stack.Screen name="login" />
-      <Stack.Screen name="register" options={{ presentation: 'card' }} />
+      <Stack.Screen name="register" options={{ presentation: "card" }} />
       <Stack.Screen name="forgot-password" />
-      <Stack.Screen name="link-professional" options={{ presentation: 'card' }} />
+      <Stack.Screen name="link-professional" options={{ presentation: "card" }} />
     </Stack>
   );
 }

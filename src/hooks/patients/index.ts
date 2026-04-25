@@ -31,15 +31,22 @@
  */
 
 // Hook principal de pacientes
-export { usePatients, useActivePatients, usePatientById, useCreatePatient, useUpdatePatient, useDeletePatient } from "./usePatients";
+export {
+  usePatients,
+  useActivePatients,
+  usePatientById,
+  useCreatePatient,
+  useUpdatePatient,
+  useDeletePatient,
+} from "./usePatients";
 
 // Hook de CRUD de paciente
 export * from "./usePatientCrud";
 
 // Hook de perfil de paciente otimizado
 export {
-	usePatientProfileOptimized,
-	usePatientProfilePrefetch,
+  usePatientProfileOptimized,
+  usePatientProfilePrefetch,
 } from "../usePatientProfileOptimized";
 
 // ============================================================================
@@ -48,10 +55,10 @@ export {
 
 // Hook de documentos do paciente
 export {
-	usePatientDocuments,
-	useUploadDocument,
-	useDeleteDocument,
-	useDownloadDocument,
+  usePatientDocuments,
+  useUploadDocument,
+  useDeleteDocument,
+  useDownloadDocument,
 } from "../usePatientDocuments";
 
 // Hook de exames do paciente
@@ -90,16 +97,16 @@ export { usePatientEvolutionReport } from "../usePatientEvolutionReport";
 // ============================================================================
 
 export {
-	usePainMaps,
-	usePainMapsBySession,
-	usePainMapsByPatient,
-	usePainMap,
-	useCreatePainMap,
-	useDeletePainMap,
-	useUpdatePainMap,
-	useComparePainMaps,
-	usePainEvolution,
-	usePainStatistics,
+  usePainMaps,
+  usePainMapsBySession,
+  usePainMapsByPatient,
+  usePainMap,
+  useCreatePainMap,
+  useDeletePainMap,
+  useUpdatePainMap,
+  useComparePainMaps,
+  usePainEvolution,
+  usePainStatistics,
 } from "../usePainMaps";
 
 export { usePainMapHistory } from "../usePainMapHistory";
@@ -110,23 +117,23 @@ export { usePainMapShortcuts } from "../usePainMapShortcuts";
 // ============================================================================
 
 export {
-	useSoapRecords,
-	useInfiniteSoapRecords,
-	useSoapRecord,
-	useCreateSoapRecord,
-	useUpdateSoapRecord,
-	useSignSoapRecord,
-	useDeleteSoapRecord,
-	useDraftSoapRecords,
-	useDraftSoapRecordByAppointment,
-	useAutoSaveSoapRecord,
-	useSessionAttachments,
-	useUploadSessionAttachment,
-	useDeleteSessionAttachment,
-	useSessionTemplates,
-	useCreateSessionTemplate,
-	useUpdateSessionTemplate,
-	useDeleteSessionTemplate,
+  useSoapRecords,
+  useInfiniteSoapRecords,
+  useSoapRecord,
+  useCreateSoapRecord,
+  useUpdateSoapRecord,
+  useSignSoapRecord,
+  useDeleteSoapRecord,
+  useDraftSoapRecords,
+  useDraftSoapRecordByAppointment,
+  useAutoSaveSoapRecord,
+  useSessionAttachments,
+  useUploadSessionAttachment,
+  useDeleteSessionAttachment,
+  useSessionTemplates,
+  useCreateSessionTemplate,
+  useUpdateSessionTemplate,
+  useDeleteSessionTemplate,
 } from "../useSoapRecords";
 
 // ============================================================================
@@ -134,10 +141,10 @@ export {
 // ============================================================================
 
 export {
-	useMedicalRecords,
-	useCreateMedicalRecord,
-	useUpdateMedicalRecord,
-	useDeleteMedicalRecord,
+  useMedicalRecords,
+  useCreateMedicalRecord,
+  useUpdateMedicalRecord,
+  useDeleteMedicalRecord,
 } from "../useMedicalRecords";
 
 // useMedicalRecord — importar diretamente de @/hooks/useMedicalRecord
@@ -152,9 +159,4 @@ export { useIncompletePatients } from "../useIncompletePatients";
 // Types
 // ============================================================================
 
-export type {
-	Patient,
-	PatientDocument,
-	PatientConsent,
-	PatientFormData,
-} from "@/types";
+export type { Patient, PatientDocument, PatientConsent, PatientFormData } from "@/types";

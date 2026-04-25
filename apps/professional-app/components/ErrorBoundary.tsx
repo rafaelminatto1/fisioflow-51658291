@@ -1,8 +1,8 @@
-import React, { Component, ErrorInfo, ReactNode } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import React, { Component, ErrorInfo, ReactNode } from "react";
+import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 
-import * as Sentry from '@sentry/react-native';
+import * as Sentry from "@sentry/react-native";
 
 interface Props {
   children: ReactNode;
@@ -25,8 +25,8 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error('Uncaught error:', error, errorInfo);
-    
+    console.error("Uncaught error:", error, errorInfo);
+
     // Log to Sentry
     Sentry.captureException(error, { extra: { errorInfo } });
   }
@@ -49,11 +49,11 @@ export class ErrorBoundary extends Component<Props, State> {
             <Text style={styles.description}>
               Ocorreu um erro inesperado no aplicativo. Nossa equipe técnica já foi notificada.
             </Text>
-            
+
             <TouchableOpacity style={styles.button} onPress={this.handleReset}>
               <Text style={styles.buttonText}>Tentar Novamente</Text>
             </TouchableOpacity>
-            
+
             {__DEV__ && (
               <View style={styles.devContainer}>
                 <Text style={styles.devTitle}>Debug Error:</Text>
@@ -72,57 +72,57 @@ export class ErrorBoundary extends Component<Props, State> {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "#FFFFFF",
+    justifyContent: "center",
+    alignItems: "center",
     padding: 24,
   },
   content: {
-    alignItems: 'center',
-    width: '100%',
+    alignItems: "center",
+    width: "100%",
   },
   title: {
     fontSize: 22,
-    fontWeight: 'bold',
-    color: '#1F2937',
+    fontWeight: "bold",
+    color: "#1F2937",
     marginTop: 20,
     marginBottom: 12,
   },
   description: {
     fontSize: 16,
-    color: '#6B7280',
-    textAlign: 'center',
+    color: "#6B7280",
+    textAlign: "center",
     lineHeight: 24,
     marginBottom: 32,
   },
   button: {
-    backgroundColor: '#1E40AF',
+    backgroundColor: "#1E40AF",
     paddingHorizontal: 24,
     paddingVertical: 12,
     borderRadius: 8,
-    width: '100%',
-    alignItems: 'center',
+    width: "100%",
+    alignItems: "center",
   },
   buttonText: {
-    color: '#FFFFFF',
+    color: "#FFFFFF",
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   devContainer: {
     marginTop: 40,
     padding: 12,
-    backgroundColor: '#F3F4F6',
+    backgroundColor: "#F3F4F6",
     borderRadius: 8,
-    width: '100%',
+    width: "100%",
   },
   devTitle: {
-    fontWeight: 'bold',
-    color: '#374151',
+    fontWeight: "bold",
+    color: "#374151",
     marginBottom: 4,
   },
   devText: {
-    fontFamily: 'monospace',
+    fontFamily: "monospace",
     fontSize: 12,
-    color: '#EF4444',
-  }
+    color: "#EF4444",
+  },
 });

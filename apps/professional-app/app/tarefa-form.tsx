@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -9,37 +9,37 @@ import {
   Alert,
   Platform,
   ActivityIndicator,
-} from 'react-native';
-import { router, useLocalSearchParams, Stack } from 'expo-router';
-import DateTimePicker from '@react-native-community/datetimepicker';
-import Slider from '@react-native-community/slider';
-import { useTarefas } from '@/hooks/useTarefas';
-import { useColors } from '@/hooks/useColorScheme';
-import { isTarefaStatus } from '@/lib/tarefas';
-import type { TarefaStatus, TarefaPrioridade, TarefaTipo } from '@/lib/api';
+} from "react-native";
+import { router, useLocalSearchParams, Stack } from "expo-router";
+import DateTimePicker from "@react-native-community/datetimepicker";
+import Slider from "@react-native-community/slider";
+import { useTarefas } from "@/hooks/useTarefas";
+import { useColors } from "@/hooks/useColorScheme";
+import { isTarefaStatus } from "@/lib/tarefas";
+import type { TarefaStatus, TarefaPrioridade, TarefaTipo } from "@/lib/api";
 
 const STATUS_OPTIONS: { label: string; value: TarefaStatus }[] = [
-  { label: 'Backlog',       value: 'BACKLOG' },
-  { label: 'A Fazer',       value: 'A_FAZER' },
-  { label: 'Em Progresso',  value: 'EM_PROGRESSO' },
-  { label: 'Revisão',       value: 'REVISAO' },
-  { label: 'Concluído',     value: 'CONCLUIDO' },
+  { label: "Backlog", value: "BACKLOG" },
+  { label: "A Fazer", value: "A_FAZER" },
+  { label: "Em Progresso", value: "EM_PROGRESSO" },
+  { label: "Revisão", value: "REVISAO" },
+  { label: "Concluído", value: "CONCLUIDO" },
 ];
 
 const PRIORIDADE_OPTIONS: { label: string; value: TarefaPrioridade }[] = [
-  { label: 'Baixa',   value: 'BAIXA' },
-  { label: 'Média',   value: 'MEDIA' },
-  { label: 'Alta',    value: 'ALTA' },
-  { label: 'Urgente', value: 'URGENTE' },
+  { label: "Baixa", value: "BAIXA" },
+  { label: "Média", value: "MEDIA" },
+  { label: "Alta", value: "ALTA" },
+  { label: "Urgente", value: "URGENTE" },
 ];
 
 const TIPO_OPTIONS: { label: string; value: TarefaTipo }[] = [
-  { label: 'Tarefa',       value: 'TAREFA' },
-  { label: 'Reunião',      value: 'REUNIAO' },
-  { label: 'Melhoria',     value: 'MELHORIA' },
-  { label: 'Documentação', value: 'DOCUMENTACAO' },
-  { label: 'Feature',      value: 'FEATURE' },
-  { label: 'Bug',          value: 'BUG' },
+  { label: "Tarefa", value: "TAREFA" },
+  { label: "Reunião", value: "REUNIAO" },
+  { label: "Melhoria", value: "MELHORIA" },
+  { label: "Documentação", value: "DOCUMENTACAO" },
+  { label: "Feature", value: "FEATURE" },
+  { label: "Bug", value: "BUG" },
 ];
 
 // ── Segmented picker reutilizável ────────────────────────────────────────────
@@ -67,7 +67,7 @@ function SegmentedPicker<T extends string>({
               style={[pickerStyles.pill, active && { backgroundColor: primaryColor }]}
               onPress={() => onChange(opt.value)}
             >
-              <Text style={[pickerStyles.text, { color: active ? '#fff' : textMuted }]}>
+              <Text style={[pickerStyles.text, { color: active ? "#fff" : textMuted }]}>
                 {opt.label}
               </Text>
             </TouchableOpacity>
@@ -79,25 +79,27 @@ function SegmentedPicker<T extends string>({
 }
 
 const pickerStyles = StyleSheet.create({
-  row: { flexDirection: 'row', gap: 6 },
+  row: { flexDirection: "row", gap: 6 },
   pill: {
-    paddingHorizontal: 12, paddingVertical: 7,
-    borderRadius: 999, backgroundColor: '#f1f5f9',
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: 999,
+    backgroundColor: "#f1f5f9",
   },
-  text: { fontSize: 13, fontWeight: '500' },
+  text: { fontSize: 13, fontWeight: "500" },
 });
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 function parseDate(str?: string): Date | undefined {
   if (!str) return undefined;
-  const d = new Date(str + 'T00:00:00');
+  const d = new Date(str + "T00:00:00");
   return isNaN(d.getTime()) ? undefined : d;
 }
 
 function toDateStr(d: Date): string {
   const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
   return `${y}-${m}-${day}`;
 }
 
@@ -108,17 +110,17 @@ export default function TarefaFormScreen() {
   const { data: allData, createAsync, updateAsync, isCreating, isUpdating } = useTarefas();
 
   const existing = id ? allData.find((t) => t.id === id) : undefined;
-  const initialStatus: TarefaStatus = isTarefaStatus(rawStatus) ? rawStatus : 'A_FAZER';
+  const initialStatus: TarefaStatus = isTarefaStatus(rawStatus) ? rawStatus : "A_FAZER";
 
   // ── Form state ─────────────────────────────────────────────────────────────
-  const [titulo, setTitulo] = useState('');
-  const [descricao, setDescricao] = useState('');
+  const [titulo, setTitulo] = useState("");
+  const [descricao, setDescricao] = useState("");
   const [status, setStatus] = useState<TarefaStatus>(initialStatus);
-  const [prioridade, setPrioridade] = useState<TarefaPrioridade>('MEDIA');
-  const [tipo, setTipo] = useState<TarefaTipo>('TAREFA');
+  const [prioridade, setPrioridade] = useState<TarefaPrioridade>("MEDIA");
+  const [tipo, setTipo] = useState<TarefaTipo>("TAREFA");
   const [progress, setProgress] = useState(0);
   const [tags, setTags] = useState<string[]>([]);
-  const [tagInput, setTagInput] = useState('');
+  const [tagInput, setTagInput] = useState("");
   const [dataVencimento, setDataVencimento] = useState<Date | undefined>();
   const [startDate, setStartDate] = useState<Date | undefined>();
   const [showVencPicker, setShowVencPicker] = useState(false);
@@ -129,10 +131,10 @@ export default function TarefaFormScreen() {
   useEffect(() => {
     if (existing) {
       setTitulo(existing.titulo);
-      setDescricao(existing.descricao ?? '');
+      setDescricao(existing.descricao ?? "");
       setStatus(existing.status);
       setPrioridade(existing.prioridade);
-      setTipo(existing.tipo ?? 'TAREFA');
+      setTipo(existing.tipo ?? "TAREFA");
       setProgress(existing.progress ?? 0);
       setTags(existing.tags ?? []);
       setDataVencimento(parseDate(existing.data_vencimento ?? undefined));
@@ -143,11 +145,11 @@ export default function TarefaFormScreen() {
 
   // ── Tag management ─────────────────────────────────────────────────────────
   function addTag() {
-    const trimmed = tagInput.trim().replace(/,+/g, '').trim();
+    const trimmed = tagInput.trim().replace(/,+/g, "").trim();
     if (trimmed && !tags.includes(trimmed) && tags.length < 10) {
       setTags([...tags, trimmed]);
     }
-    setTagInput('');
+    setTagInput("");
   }
 
   function removeTag(tag: string) {
@@ -156,9 +158,9 @@ export default function TarefaFormScreen() {
 
   // ── Validation ─────────────────────────────────────────────────────────────
   function validate(): string | null {
-    if (!titulo.trim()) return 'Informe o título da tarefa.';
+    if (!titulo.trim()) return "Informe o título da tarefa.";
     if (startDate && dataVencimento && startDate > dataVencimento)
-      return 'A data de início não pode ser posterior ao vencimento.';
+      return "A data de início não pode ser posterior ao vencimento.";
     return null;
   }
 
@@ -191,8 +193,8 @@ export default function TarefaFormScreen() {
       }
       router.back();
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Não foi possível salvar a tarefa.';
-      Alert.alert('Erro ao salvar', msg);
+      const msg = err instanceof Error ? err.message : "Não foi possível salvar a tarefa.";
+      Alert.alert("Erro ao salvar", msg);
     }
   }
 
@@ -221,16 +223,21 @@ export default function TarefaFormScreen() {
           style={[styles.dateBtn, { borderColor: colors.border, backgroundColor: colors.surface }]}
           onPress={onOpen}
         >
-          <Ionicons name="calendar-outline" size={14} color={colors.textMuted} style={{ marginRight: 6 }} />
+          <Ionicons
+            name="calendar-outline"
+            size={14}
+            color={colors.textMuted}
+            style={{ marginRight: 6 }}
+          />
           <Text style={{ color: value ? colors.text : colors.textMuted, fontSize: 14 }}>
-            {value ? value.toLocaleDateString('pt-BR') : 'Selecionar'}
+            {value ? value.toLocaleDateString("pt-BR") : "Selecionar"}
           </Text>
         </TouchableOpacity>
         {showPicker && (
           <DateTimePicker
             value={value ?? new Date()}
             mode="date"
-            display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+            display={Platform.OS === "ios" ? "spinner" : "default"}
             onChange={(_e, date) => {
               onClose();
               if (date) onChange(date);
@@ -245,10 +252,10 @@ export default function TarefaFormScreen() {
     <>
       <Stack.Screen
         options={{
-          title: existing ? 'Editar Tarefa' : 'Nova Tarefa',
+          title: existing ? "Editar Tarefa" : "Nova Tarefa",
           headerStyle: { backgroundColor: colors.background },
           headerTintColor: colors.text,
-          headerTitleStyle: { fontWeight: '600' },
+          headerTitleStyle: { fontWeight: "600" },
         }}
       />
       <ScrollView
@@ -267,13 +274,19 @@ export default function TarefaFormScreen() {
         {/* Título */}
         <Text style={[styles.label, { color: colors.text }]}>Título *</Text>
         <TextInput
-          style={[styles.input, {
-            borderColor: !titulo.trim() && formError ? '#dc2626' : colors.border,
-            color: colors.text,
-            backgroundColor: colors.surface,
-          }]}
+          style={[
+            styles.input,
+            {
+              borderColor: !titulo.trim() && formError ? "#dc2626" : colors.border,
+              color: colors.text,
+              backgroundColor: colors.surface,
+            },
+          ]}
           value={titulo}
-          onChangeText={(v) => { setTitulo(v); setFormError(null); }}
+          onChangeText={(v) => {
+            setTitulo(v);
+            setFormError(null);
+          }}
           placeholder="Nome da tarefa"
           placeholderTextColor={colors.textMuted}
           maxLength={200}
@@ -283,9 +296,15 @@ export default function TarefaFormScreen() {
         {/* Descrição */}
         <Text style={[styles.label, { color: colors.text }]}>Descrição</Text>
         <TextInput
-          style={[styles.input, styles.inputMultiline, {
-            borderColor: colors.border, color: colors.text, backgroundColor: colors.surface,
-          }]}
+          style={[
+            styles.input,
+            styles.inputMultiline,
+            {
+              borderColor: colors.border,
+              color: colors.text,
+              backgroundColor: colors.surface,
+            },
+          ]}
           value={descricao}
           onChangeText={setDescricao}
           placeholder="Descreva a tarefa…"
@@ -331,7 +350,10 @@ export default function TarefaFormScreen() {
             label="Data de início"
             value={startDate}
             showPicker={showStartPicker}
-            onOpen={() => { setShowVencPicker(false); setShowStartPicker(true); }}
+            onOpen={() => {
+              setShowVencPicker(false);
+              setShowStartPicker(true);
+            }}
             onClose={() => setShowStartPicker(false)}
             onChange={setStartDate}
           />
@@ -339,7 +361,10 @@ export default function TarefaFormScreen() {
             label="Vencimento"
             value={dataVencimento}
             showPicker={showVencPicker}
-            onOpen={() => { setShowStartPicker(false); setShowVencPicker(true); }}
+            onOpen={() => {
+              setShowStartPicker(false);
+              setShowVencPicker(true);
+            }}
             onClose={() => setShowVencPicker(false)}
             onChange={setDataVencimento}
           />
@@ -363,7 +388,12 @@ export default function TarefaFormScreen() {
 
         {/* Tags */}
         <Text style={[styles.label, { color: colors.text }]}>Tags</Text>
-        <View style={[styles.tagInputRow, { borderColor: colors.border, backgroundColor: colors.surface }]}>
+        <View
+          style={[
+            styles.tagInputRow,
+            { borderColor: colors.border, backgroundColor: colors.surface },
+          ]}
+        >
           <TextInput
             style={[styles.tagInput, { color: colors.text }]}
             value={tagInput}
@@ -389,7 +419,10 @@ export default function TarefaFormScreen() {
             {tags.map((tag) => (
               <TouchableOpacity
                 key={tag}
-                style={[styles.tagChip, { backgroundColor: colors.surface, borderColor: colors.border }]}
+                style={[
+                  styles.tagChip,
+                  { backgroundColor: colors.surface, borderColor: colors.border },
+                ]}
                 onPress={() => removeTag(tag)}
                 accessibilityLabel={`Remover tag ${tag}`}
               >
@@ -410,14 +443,20 @@ export default function TarefaFormScreen() {
             <Text style={[styles.cancelBtnText, { color: colors.textMuted }]}>Cancelar</Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.saveBtn, { backgroundColor: colors.primary }, isBusy && styles.btnDisabled]}
+            style={[
+              styles.saveBtn,
+              { backgroundColor: colors.primary },
+              isBusy && styles.btnDisabled,
+            ]}
             onPress={handleSave}
             disabled={isBusy}
           >
             {isBusy ? (
               <ActivityIndicator color="#fff" size="small" />
             ) : (
-              <Text style={styles.saveBtnText}>{existing ? 'Salvar alterações' : 'Criar tarefa'}</Text>
+              <Text style={styles.saveBtnText}>
+                {existing ? "Salvar alterações" : "Criar tarefa"}
+              </Text>
             )}
           </TouchableOpacity>
         </View>
@@ -427,49 +466,71 @@ export default function TarefaFormScreen() {
 }
 
 // workaround: importar Ionicons dentro do arquivo (também usado no DateField)
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons } from "@expo/vector-icons";
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
   content: { padding: 16, paddingBottom: 56, gap: 4 },
-  label: { fontSize: 13, fontWeight: '600', marginTop: 16, marginBottom: 6, letterSpacing: 0.1 },
+  label: { fontSize: 13, fontWeight: "600", marginTop: 16, marginBottom: 6, letterSpacing: 0.1 },
   input: {
-    borderWidth: 1, borderRadius: 8,
-    paddingHorizontal: 12, paddingVertical: 10, fontSize: 15,
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    fontSize: 15,
   },
   inputMultiline: { minHeight: 100, paddingTop: 10 },
-  row: { flexDirection: 'row', gap: 12, marginTop: 8 },
+  row: { flexDirection: "row", gap: 12, marginTop: 8 },
   flex1: { flex: 1 },
   dateBtn: {
-    borderWidth: 1, borderRadius: 8,
-    paddingHorizontal: 12, paddingVertical: 10,
-    flexDirection: 'row', alignItems: 'center',
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    flexDirection: "row",
+    alignItems: "center",
   },
-  slider: { width: '100%', height: 36, marginVertical: 4 },
+  slider: { width: "100%", height: 36, marginVertical: 4 },
   tagInputRow: {
-    flexDirection: 'row', borderWidth: 1, borderRadius: 8, overflow: 'hidden',
+    flexDirection: "row",
+    borderWidth: 1,
+    borderRadius: 8,
+    overflow: "hidden",
   },
   tagInput: { flex: 1, paddingHorizontal: 12, paddingVertical: 10, fontSize: 14 },
-  tagAddBtn: { paddingHorizontal: 16, alignItems: 'center', justifyContent: 'center' },
-  tagAddBtnText: { color: '#fff', fontSize: 18, fontWeight: '700' },
-  tagsWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 8 },
+  tagAddBtn: { paddingHorizontal: 16, alignItems: "center", justifyContent: "center" },
+  tagAddBtnText: { color: "#fff", fontSize: 18, fontWeight: "700" },
+  tagsWrap: { flexDirection: "row", flexWrap: "wrap", gap: 6, marginTop: 8 },
   tagChip: {
-    borderRadius: 999, paddingHorizontal: 10, paddingVertical: 4,
-    flexDirection: 'row', alignItems: 'center', gap: 4, borderWidth: 1,
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    borderWidth: 1,
   },
   tagChipText: { fontSize: 12 },
   inlineError: {
-    flexDirection: 'row', alignItems: 'center', gap: 6,
-    backgroundColor: '#fff5f5', borderRadius: 8, padding: 10, marginBottom: 4,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    backgroundColor: "#fff5f5",
+    borderRadius: 8,
+    padding: 10,
+    marginBottom: 4,
   },
-  inlineErrorText: { fontSize: 13, color: '#dc2626', flex: 1 },
-  buttons: { flexDirection: 'row', gap: 12, marginTop: 28 },
+  inlineErrorText: { fontSize: 13, color: "#dc2626", flex: 1 },
+  buttons: { flexDirection: "row", gap: 12, marginTop: 28 },
   cancelBtn: {
-    flex: 1, borderWidth: 1, borderRadius: 10,
-    paddingVertical: 14, alignItems: 'center',
+    flex: 1,
+    borderWidth: 1,
+    borderRadius: 10,
+    paddingVertical: 14,
+    alignItems: "center",
   },
-  cancelBtnText: { fontSize: 15, fontWeight: '600' },
-  saveBtn: { flex: 2, borderRadius: 10, paddingVertical: 14, alignItems: 'center' },
-  saveBtnText: { color: '#fff', fontSize: 15, fontWeight: '700' },
+  cancelBtnText: { fontSize: 15, fontWeight: "600" },
+  saveBtn: { flex: 2, borderRadius: 10, paddingVertical: 14, alignItems: "center" },
+  saveBtnText: { color: "#fff", fontSize: 15, fontWeight: "700" },
   btnDisabled: { opacity: 0.55 },
 });

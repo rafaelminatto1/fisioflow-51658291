@@ -1,26 +1,26 @@
-import { DeviceInfo } from './legal';
+import { DeviceInfo } from "./legal";
 
-export type AuditAction = 
-  | 'login' 
-  | 'logout' 
-  | 'view' 
-  | 'create' 
-  | 'update' 
-  | 'delete' 
-  | 'export'
-  | 'consent-granted'
-  | 'consent-withdrawn'
-  | 'settings-changed';
+export type AuditAction =
+  | "login"
+  | "logout"
+  | "view"
+  | "create"
+  | "update"
+  | "delete"
+  | "export"
+  | "consent-granted"
+  | "consent-withdrawn"
+  | "settings-changed";
 
-export type AuditResourceType = 
-  | 'patient' 
-  | 'soap_note' 
-  | 'photo' 
-  | 'protocol' 
-  | 'exercise'
-  | 'appointment'
-  | 'settings'
-  | 'consent';
+export type AuditResourceType =
+  | "patient"
+  | "soap_note"
+  | "photo"
+  | "protocol"
+  | "exercise"
+  | "appointment"
+  | "settings"
+  | "consent";
 
 export interface AuditLogEntry {
   id: string;

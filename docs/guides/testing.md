@@ -5,6 +5,7 @@
 O projeto utiliza **Vitest** como motor principal de testes, integrado ao **Vite 8** e otimizado para **Node.js v20.12.0+**.
 
 ### Tecnologias
+
 - `vitest` - Framework de testes unitários e integração.
 - `@testing-library/react` - Testes de componentes (React 19).
 - `playwright` - Testes End-to-End (E2E).
@@ -26,23 +27,28 @@ pnpm --filter fisioflow-web test:unit
 ## 📁 Estrutura de Testes
 
 ### Backend (API)
+
 Localizados em `apps/api/src/__tests__/`:
+
 - `schema.test.ts` - Validação de integridade do banco (Drizzle).
 - `auth.test.ts` - Validação de JWT e permissões.
 
 ### Frontend (Web)
+
 Localizados em `apps/web/src/**/*.test.{ts,tsx}`:
+
 - Testes de componentes UI e Hooks customizados.
 
 ## ✅ Exemplos de Teste (Drizzle/Neon)
 
 ### Validando Tabelas Core
-```typescript
-import { describe, it, expect } from 'vitest';
-import { patients } from '@fisioflow/db';
 
-describe('Schema Integrity', () => {
-  it('should ensure patients table has organizationId', () => {
+```typescript
+import { describe, it, expect } from "vitest";
+import { patients } from "@fisioflow/db";
+
+describe("Schema Integrity", () => {
+  it("should ensure patients table has organizationId", () => {
     expect(patients.organizationId).toBeDefined();
   });
 });
@@ -54,15 +60,17 @@ describe('Schema Integrity', () => {
 
 1. **Unitário (Logic):** 100% de cobertura em schemas Zod e cálculos financeiros.
 2. **Integração (API):** Cobertura das rotas principais de `patientPortal`.
-3. **E2E (User Flow):** Jornada crítica: *Agendamento -> Triagem -> Evolução SOAP*.
+3. **E2E (User Flow):** Jornada crítica: _Agendamento -> Triagem -> Evolução SOAP_.
 
 ## 🐛 Troubleshooting (Node 20+)
 
 ### Erro: `styleText` is not defined
+
 **Causa:** Node.js v18 ou inferior detectado.  
 **Solução:** Certifique-se de estar usando o Node v20.12.0+. Utilize `nvm use 20`.
 
 ### Problemas com Mocks de Banco
+
 O FisioFlow utiliza o client do Drizzle. Para testes, prefira usar o database local ou `pg-mem` para maior fidelidade aos tipos do PostgreSQL.
 
 ---

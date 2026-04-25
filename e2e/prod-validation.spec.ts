@@ -30,7 +30,7 @@ test.describe('Production Validation - FisioFlow (Official Domain)', () => {
     // Preenche login
     await page.fill('input[type="email"]', 'REDACTED_EMAIL');
     await page.fill('input[type="password"]', 'REDACTED');
-    
+
     // Tenta clicar no botão de login usando texto (mais estável)
     await page.click('button:has-text("Acessar"), button[type="submit"]');
 
@@ -50,7 +50,7 @@ test.describe('Production Validation - FisioFlow (Official Domain)', () => {
 
     // VALIDAÇÃO CRÍTICA: Não pode ter nada de localhost em produção
     expect(localhostRefs, 'Production environment MUST NOT reference localhost').toHaveLength(0);
-    
+
     // VALIDAÇÃO DE SUCESSO: Deve ter feito chamadas para a API de produção
     expect(prodApiRefs.length, 'Should have made calls to official production API').toBeGreaterThan(0);
   });

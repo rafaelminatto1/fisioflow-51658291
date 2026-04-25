@@ -8,7 +8,8 @@
 
 **Sintoma:** A página `/auth` está carregando um loading spinner inicial e NUNCA transita para o formulário de login. O React app nunca é inicializado.
 
-**Impacto:** 
+**Impacto:**
+
 - ✅ Testes unitários: 98.9% sucesso (funcionando bem)
 - ❌ Testes E2E: Bloqueados (elementos com data-testid não encontrados)
 - ❌ Usuários: Não conseguem fazer login na aplicação
@@ -18,6 +19,7 @@
 ## 🔍 Evidências Coletadas via Chrome DevTools MCP
 
 ### 1. Estado da Página HTML
+
 ```
 URL: http://localhost:5173/auth
 Estado: Loader inicial visível
@@ -25,6 +27,7 @@ Conteúdo do #root: Apenas CSS, sem componentes React
 ```
 
 ### 2. Network Requests
+
 ```
 ✅ GET http://localhost:5173/auth [200]
 ✅ GET http://localhost:5173/@vite/client [200]
@@ -32,6 +35,7 @@ Conteúdo do #root: Apenas CSS, sem componentes React
 ```
 
 ### 3. Console Logs
+
 ```
 [error] Failed to load resource: the server responded with a status of 404 (Not Found)
 [debug] [vite] connecting...
@@ -39,6 +43,7 @@ Conteúdo do #root: Apenas CSS, sem componentes React
 ```
 
 ### 4. Avaliação JavaScript
+
 ```json
 {
   "hasReact": true,
@@ -71,9 +76,11 @@ Conteúdo do #root: Apenas CSS, sem componentes React
    - Deveria servir o arquivo corretamente
 
 3. **Script Tag no HTML:**
+
    ```html
    <script type="module" src="/src/main.tsx"></script>
    ```
+
    - O caminho está correto
    - Mas o servidor retorna 404
 
@@ -82,6 +89,7 @@ Conteúdo do #root: Apenas CSS, sem componentes React
 ## 📊 Possíveis Causas
 
 ### Causa 1: Vite Dev Server Cache Corrompido (MAIS PROVÁVEL)
+
 ```
 Sintomas:
 - Após mudanças recentes, o cache pode estar desincronizado
@@ -94,6 +102,7 @@ Solução:
 ```
 
 ### Causa 2: Problema no Path Resolve
+
 ```
 Possíveis problemas:
 1. O repoRoot pode não estar correto
@@ -106,6 +115,7 @@ Solução:
 ```
 
 ### Causa 3: Arquivo main.tsx em Local Errado
+
 ```
 Possível problema:
 - Arquivo pode estar em outra localização
@@ -124,6 +134,7 @@ Solução:
 ### Plano 1: Limpeza de Cache e Reinício (RECOMENDADO)
 
 **Passo 1:** Limpar cache do Vite
+
 ```bash
 rm -rf node_modules/.vite
 rm -rf node_modules/.vite/deps
@@ -131,6 +142,7 @@ pnpm run dev:clean
 ```
 
 **Passo 2:** Reiniciar dev server completamente
+
 ```bash
 # Matar processos existentes
 pkill -f "vite.*5173"
@@ -140,6 +152,7 @@ pnpm run dev
 ```
 
 **Passo 3:** Verificar se o app carrega
+
 ```bash
 # Acessar http://localhost:5173/auth no navegador
 # Verificar se o formulário de login aparece
@@ -149,19 +162,26 @@ pnpm run dev
 ### Plano 2: Debug Adicional
 
 **Passo 1:** Adicionar logging no main.tsx
+
 ```typescript
 // Adicionar no topo do main.tsx
-console.log('[main.tsx] File loaded, path:', import.meta.url);
-console.log('[main.tsx] Root element:', document.getElementById('root'));
+console.log("[main.tsx] File loaded, path:", import.meta.url);
+console.log("[main.tsx] Root element:", document.getElementById("root"));
 ```
 
 **Passo 2:** Adicionar erro handler no script tag
+
 ```html
 <!-- No index.html, adicionar onerror ao script -->
-<script type="module" src="/src/main.tsx" onerror="console.error('Error loading main.tsx:', event)"></script>
+<script
+  type="module"
+  src="/src/main.tsx"
+  onerror="console.error('Error loading main.tsx:', event)"
+></script>
 ```
 
 **Passo 3:** Verificar configuração do Vite
+
 - Revisar o root resolve path
 - Verificar se há configurações conflitantes
 - Verificar se server.fs.allow está correto
@@ -171,18 +191,21 @@ console.log('[main.tsx] Root element:', document.getElementById('root'));
 ## 📝 Testes para Verificar Fixes
 
 ### Teste 1: Verificar se o React carrega
+
 ```bash
 curl -s http://localhost:5173/auth
 # Esperado: Verificar se há elementos React no HTML
 ```
 
 ### Teste 2: Verificar logs do dev server
+
 ```bash
 # Verificar logs do dev server em /tmp/dev-server.log
 # Buscar por erros 404 relacionados a main.tsx
 ```
 
 ### Teste 3: Rodar testes E2E após correção
+
 ```bash
 pnpm --filter fisioflow-web exec playwright test e2e/auth.spec.ts --reporter=list
 # Esperado: Testes devem encontrar data-testids e passar
@@ -205,6 +228,7 @@ pnpm --filter fisioflow-web exec playwright test e2e/auth.spec.ts --reporter=lis
 ## 📞 Informações de Debug
 
 ### Comandos Úteis
+
 ```bash
 # Limpar cache do Vite
 rm -rf node_modules/.vite node_modules/.vite/deps
@@ -220,6 +244,7 @@ tail -f /tmp/dev-server.log
 ```
 
 ### Arquivos Chave
+
 - `src/main.tsx` - Entry point do React app
 - `apps/web/vite.config.ts` - Configuração do Vite
 - `src/App.tsx` - Componente principal do React

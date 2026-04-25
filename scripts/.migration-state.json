@@ -1,7 +1,5 @@
 {
-  "completed": [
-    "patient_gamification"
-  ],
+  "completed": ["patient_gamification"],
   "failed": [
     {
       "table": "xp_transactions",

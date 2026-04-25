@@ -1,16 +1,10 @@
-import React from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
-import { useColors } from '@/hooks/useColorScheme';
-import { Card } from '@/components';
-import { router } from 'expo-router';
+import React from "react";
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { Ionicons } from "@expo/vector-icons";
+import { useColors } from "@/hooks/useColorScheme";
+import { Card } from "@/components";
+import { router } from "expo-router";
 
 interface DataCategory {
   id: string;
@@ -25,44 +19,44 @@ interface DataCategory {
 
 const DATA_CATEGORIES: DataCategory[] = [
   {
-    id: 'personal',
-    name: 'Dados Pessoais',
-    icon: 'person-outline',
-    description: 'Informações básicas sobre você e seus pacientes.',
-    examples: ['Nome', 'Email', 'CPF', 'Telefone', 'Data de Nascimento'],
-    purpose: 'Identificação do usuário, comunicação e gestão de prontuários.',
-    retention: 'Enquanto a conta estiver ativa ou conforme exigido por lei.',
-    thirdParties: ['Neon DB (PostgreSQL)', 'Cloudflare'],
+    id: "personal",
+    name: "Dados Pessoais",
+    icon: "person-outline",
+    description: "Informações básicas sobre você e seus pacientes.",
+    examples: ["Nome", "Email", "CPF", "Telefone", "Data de Nascimento"],
+    purpose: "Identificação do usuário, comunicação e gestão de prontuários.",
+    retention: "Enquanto a conta estiver ativa ou conforme exigido por lei.",
+    thirdParties: ["Neon DB (PostgreSQL)", "Cloudflare"],
   },
   {
-    id: 'health',
-    name: 'Dados de Saúde (PHI)',
-    icon: 'medical-outline',
-    description: 'Informações clínicas sensíveis dos seus pacientes.',
-    examples: ['Evoluções SOAP', 'Fotos de Progresso', 'Histórico Médico', 'Prescrições'],
-    purpose: 'Prestação de serviços de fisioterapia e acompanhamento clínico.',
-    retention: 'Mínimo de 20 anos (conforme regulamentação do COFFITO).',
-    thirdParties: ['Neon DB (Criptografado)', 'Cloudflare R2'],
+    id: "health",
+    name: "Dados de Saúde (PHI)",
+    icon: "medical-outline",
+    description: "Informações clínicas sensíveis dos seus pacientes.",
+    examples: ["Evoluções SOAP", "Fotos de Progresso", "Histórico Médico", "Prescrições"],
+    purpose: "Prestação de serviços de fisioterapia e acompanhamento clínico.",
+    retention: "Mínimo de 20 anos (conforme regulamentação do COFFITO).",
+    thirdParties: ["Neon DB (Criptografado)", "Cloudflare R2"],
   },
   {
-    id: 'usage',
-    name: 'Dados de Uso',
-    icon: 'analytics-outline',
-    description: 'Como você interage com as funcionalidades do aplicativo.',
-    examples: ['Interações com recursos', 'Tempo de uso', 'Frequência de acesso'],
-    purpose: 'Melhoria contínua da experiência do usuário e otimização de recursos.',
-    retention: 'Até 2 anos.',
-    thirdParties: ['PostHog', 'Cloudflare Analytics'],
+    id: "usage",
+    name: "Dados de Uso",
+    icon: "analytics-outline",
+    description: "Como você interage com as funcionalidades do aplicativo.",
+    examples: ["Interações com recursos", "Tempo de uso", "Frequência de acesso"],
+    purpose: "Melhoria contínua da experiência do usuário e otimização de recursos.",
+    retention: "Até 2 anos.",
+    thirdParties: ["PostHog", "Cloudflare Analytics"],
   },
   {
-    id: 'technical',
-    name: 'Dados Técnicos',
-    icon: 'hardware-chip-outline',
-    description: 'Informações sobre o dispositivo e erros do sistema.',
-    examples: ['Modelo do aparelho', 'Versão do SO', 'Logs de erro'],
-    purpose: 'Segurança, suporte técnico e correção de bugs.',
-    retention: '90 dias para logs detalhados.',
-    thirdParties: ['Sentry', 'Expo'],
+    id: "technical",
+    name: "Dados Técnicos",
+    icon: "hardware-chip-outline",
+    description: "Informações sobre o dispositivo e erros do sistema.",
+    examples: ["Modelo do aparelho", "Versão do SO", "Logs de erro"],
+    purpose: "Segurança, suporte técnico e correção de bugs.",
+    retention: "90 dias para logs detalhados.",
+    thirdParties: ["Sentry", "Expo"],
   },
 ];
 
@@ -72,11 +66,14 @@ export default function DataTransparencyScreen() {
   const handleOpenPrivacyPolicy = () => {
     // In a real app, this would open a URL or navigate to the privacy policy screen
     // For now, let's try to navigate to the legal group if it exists
-    router.push('/(legal)/privacy-policy' as any);
+    router.push("/(legal)/privacy-policy" as any);
   };
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['bottom', 'left', 'right']}>
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: colors.background }]}
+      edges={["bottom", "left", "right"]}
+    >
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.header}>
           <Text style={[styles.title, { color: colors.text }]}>Transparência de Dados</Text>
@@ -88,7 +85,7 @@ export default function DataTransparencyScreen() {
         {DATA_CATEGORIES.map((category) => (
           <Card key={category.id} style={styles.categoryCard}>
             <View style={styles.categoryHeader}>
-              <View style={[styles.iconContainer, { backgroundColor: colors.primary + '15' }]}>
+              <View style={[styles.iconContainer, { backgroundColor: colors.primary + "15" }]}>
                 <Ionicons name={category.icon as any} size={24} color={colors.primary} />
               </View>
               <Text style={[styles.categoryName, { color: colors.text }]}>{category.name}</Text>
@@ -101,7 +98,7 @@ export default function DataTransparencyScreen() {
             <View style={styles.detailSection}>
               <Text style={[styles.detailLabel, { color: colors.text }]}>Exemplos:</Text>
               <Text style={[styles.detailValue, { color: colors.textSecondary }]}>
-                {category.examples.join(', ')}
+                {category.examples.join(", ")}
               </Text>
             </View>
 
@@ -122,7 +119,7 @@ export default function DataTransparencyScreen() {
             <View style={styles.detailSection}>
               <Text style={[styles.detailLabel, { color: colors.text }]}>Compartilhamento:</Text>
               <Text style={[styles.detailValue, { color: colors.textSecondary }]}>
-                {category.thirdParties.join(', ')}
+                {category.thirdParties.join(", ")}
               </Text>
             </View>
           </Card>
@@ -131,10 +128,10 @@ export default function DataTransparencyScreen() {
         <Card style={styles.footerCard}>
           <Text style={[styles.footerTitle, { color: colors.text }]}>Mais informações</Text>
           <Text style={[styles.footerText, { color: colors.textSecondary }]}>
-            Para detalhes completos sobre nossos métodos de proteção, direitos do titular (LGPD) e 
+            Para detalhes completos sobre nossos métodos de proteção, direitos do titular (LGPD) e
             políticas de segurança, consulte nossa Política de Privacidade.
           </Text>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={[styles.linkButton, { backgroundColor: colors.primary }]}
             onPress={handleOpenPrivacyPolicy}
           >
@@ -158,7 +155,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 24,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     marginBottom: 8,
   },
   subtitle: {
@@ -170,8 +167,8 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   categoryHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginBottom: 12,
     gap: 12,
   },
@@ -179,12 +176,12 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   categoryName: {
     fontSize: 18,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   description: {
     fontSize: 14,
@@ -196,7 +193,7 @@ const styles = StyleSheet.create({
   },
   detailLabel: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: "600",
     marginBottom: 2,
   },
   detailValue: {
@@ -207,16 +204,16 @@ const styles = StyleSheet.create({
     marginTop: 8,
     marginBottom: 24,
     padding: 20,
-    alignItems: 'center',
+    alignItems: "center",
   },
   footerTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     marginBottom: 8,
   },
   footerText: {
     fontSize: 14,
-    textAlign: 'center',
+    textAlign: "center",
     lineHeight: 20,
     marginBottom: 20,
   },
@@ -226,8 +223,8 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   linkButtonText: {
-    color: '#FFFFFF',
-    fontWeight: '600',
+    color: "#FFFFFF",
+    fontWeight: "600",
     fontSize: 16,
   },
 });

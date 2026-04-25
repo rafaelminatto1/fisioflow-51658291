@@ -14,7 +14,7 @@ test.describe('FisioFlow - Validação Completa de Fluxo (moocafisio.com.br)', (
     await page.fill('input[type="email"]', credentials.email);
     await page.fill('input[type="password"]', credentials.pw);
     await page.click('button[type="submit"]');
-    
+
     // Aguarda carregar o dashboard
     await page.waitForURL(/.*dashboard|.*agenda/, { timeout: 30000 });
     console.log('✅ Login realizado com sucesso.');
@@ -27,11 +27,11 @@ test.describe('FisioFlow - Validação Completa de Fluxo (moocafisio.com.br)', (
     const novoBtn = page.getByRole('button', { name: /novo paciente/i }).first();
     await novoBtn.waitFor({ state: 'visible' });
     await novoBtn.click();
-    
+
     await page.fill('input[placeholder*="Nome"], input[name="full_name"]', testPatientName);
     await page.fill('input[placeholder*="Telefone"], input[name="phone"]', '11988887777');
     await page.click('button:has-text("Salvar"), button[type="submit"]');
-    
+
     console.log(`✅ Paciente ${testPatientName} criado.`);
 
     // READ & UPDATE
@@ -40,7 +40,7 @@ test.describe('FisioFlow - Validação Completa de Fluxo (moocafisio.com.br)', (
     const row = page.getByText(testPatientName).first();
     await row.waitFor({ state: 'visible' });
     await row.click();
-    
+
     await page.fill('input[placeholder*="Nome"], input[name="full_name"]', testPatientName + ' MODIFICADO');
     await page.click('button:has-text("Salvar"), button[type="submit"]');
     console.log('✅ Paciente editado com sucesso.');
@@ -51,14 +51,14 @@ test.describe('FisioFlow - Validação Completa de Fluxo (moocafisio.com.br)', (
 
     // CREATE AGENDAMENTO
     await page.getByRole('button', { name: /novo/i }).first().click();
-    
+
     // Seleciona o paciente recém criado no combobox
     const combo = page.locator('button[role="combobox"]').first();
     await combo.click();
     await page.keyboard.type(testPatientName);
     await page.waitForTimeout(1000);
     await page.keyboard.press('Enter');
-    
+
     await page.click('button:has-text("Salvar"), button:has-text("Agendar")');
     console.log('✅ Agendamento criado (Evento disparado para Inngest).');
 
@@ -66,7 +66,7 @@ test.describe('FisioFlow - Validação Completa de Fluxo (moocafisio.com.br)', (
     await page.waitForTimeout(2000);
     const evento = page.locator('.rbc-event').last();
     await evento.click();
-    
+
     // Tenta clicar no botão de confirmar ou mudar status
     const confirmarBtn = page.locator('button:has-text("Confirmar"), button:has-text("Realizado")').first();
     if (await confirmarBtn.isVisible()) {
@@ -76,7 +76,7 @@ test.describe('FisioFlow - Validação Completa de Fluxo (moocafisio.com.br)', (
 
     // 4. DELETE (LIMPEZA)
     console.log('Iniciando limpeza de dados do teste...');
-    
+
     // Excluir Agendamento
     if (await evento.isVisible()) {
       await evento.click();

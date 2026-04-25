@@ -15,29 +15,22 @@
  *   - react-native-reanimated: animações fluidas
  */
 
-import { useState, useRef, useCallback } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  ScrollView,
-  Dimensions,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
-import * as Haptics from 'expo-haptics';
-import { CameraView, CameraType, useCameraPermissions } from 'expo-camera';
-import { useColors } from '@/hooks/useColorScheme';
+import { useState, useRef, useCallback } from "react";
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Dimensions } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { useRouter } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
+import * as Haptics from "expo-haptics";
+import { CameraView, CameraType, useCameraPermissions } from "expo-camera";
+import { useColors } from "@/hooks/useColorScheme";
 
-const { width: SCREEN_W } = Dimensions.get('window');
+const { width: SCREEN_W } = Dimensions.get("window");
 
 // ─── Cálculos científicos ──────────────────────────────────────────────────────
 // Bosco et al. (1983): h = g × tf² / 8
 const boscoHeight = (takeoffFrame: number, landingFrame: number, fps: number) => {
   const tf = (landingFrame - takeoffFrame) / fps;
-  return (9.81 * tf * tf / 8) * 100; // cm
+  return ((9.81 * tf * tf) / 8) * 100; // cm
 };
 
 // Sayers et al. (1999): PAPw(W) = 60.7 × h(cm) + 45.3 × BM(kg) − 2055
@@ -49,8 +42,8 @@ const morinGait = (tcFrames: number, tfFrames: number, fps: number) => {
   const tc = tcFrames / fps;
   const tf = tfFrames / fps;
   return {
-    cadence: 120 / (tc + tf),                              // steps/min
-    oscillation: 9.81 * tc * tc / (Math.PI * Math.PI) * 100, // cm
+    cadence: 120 / (tc + tf), // steps/min
+    oscillation: ((9.81 * tc * tc) / (Math.PI * Math.PI)) * 100, // cm
     tcMs: tc * 1000,
     tfMs: tf * 1000,
   };
@@ -58,14 +51,14 @@ const morinGait = (tcFrames: number, tfFrames: number, fps: number) => {
 
 // ─── Zonas de Risco ────────────────────────────────────────────────────────────
 const oscillationLabel = (v: number) =>
-  v < 5 ? '🔵 Baixa' : v <= 10 ? '🟢 Ideal' : '🟡 Ineficiente (> 10cm)';
+  v < 5 ? "🔵 Baixa" : v <= 10 ? "🟢 Ideal" : "🟡 Ineficiente (> 10cm)";
 
 const cadenceLabel = (v: number) =>
-  v >= 180 ? '🟢 Elite (≥180)' : v >= 160 ? '🟡 Moderada' : '🔴 Baixa (< 160)';
+  v >= 180 ? "🟢 Elite (≥180)" : v >= 160 ? "🟡 Moderada" : "🔴 Baixa (< 160)";
 
 // ─── Tipos ────────────────────────────────────────────────────────────────────
-type TestMode = 'select' | 'jump' | 'gait';
-type GaitEvent = { type: 'contact' | 'toe-off'; frame: number; side: 'L' | 'R' };
+type TestMode = "select" | "jump" | "gait";
+type GaitEvent = { type: "contact" | "toe-off"; frame: number; side: "L" | "R" };
 
 export default function BiomechanicsScreen() {
   const colors = useColors();
@@ -73,8 +66,8 @@ export default function BiomechanicsScreen() {
   const cameraRef = useRef<CameraView>(null);
   const [permission, requestPermission] = useCameraPermissions();
 
-  const [mode, setMode] = useState<TestMode>('select');
-  const [facing, setFacing] = useState<CameraType>('back');
+  const [mode, setMode] = useState<TestMode>("select");
+  const [facing, setFacing] = useState<CameraType>("back");
   const [recording, setRecording] = useState(false);
   const [frameCount, setFrameCount] = useState(0);
   const frameTimer = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -101,7 +94,7 @@ export default function BiomechanicsScreen() {
 
     // Simulates frame counter (real frame count needs vision-camera)
     // At 60fps: 1 frame ≈ 16.67ms
-    frameTimer.current = setInterval(() => setFrameCount(f => f + 1), 16);
+    frameTimer.current = setInterval(() => setFrameCount((f) => f + 1), 16);
   }, []);
 
   const stopRecording = useCallback(async () => {
@@ -122,15 +115,18 @@ export default function BiomechanicsScreen() {
   }, [frameCount]);
 
   // ─── Gait Events ──────────────────────────────────────────────────────────
-  const markGait = useCallback(async (type: GaitEvent['type'], side: GaitEvent['side']) => {
-    setGaitEvents(prev => [...prev, { type, frame: frameCount, side }]);
-    // Vibração curta = contato, longa = impulsão
-    if (type === 'contact') {
-      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    } else {
-      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-    }
-  }, [frameCount]);
+  const markGait = useCallback(
+    async (type: GaitEvent["type"], side: GaitEvent["side"]) => {
+      setGaitEvents((prev) => [...prev, { type, frame: frameCount, side }]);
+      // Vibração curta = contato, longa = impulsão
+      if (type === "contact") {
+        await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      } else {
+        await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+      }
+    },
+    [frameCount],
+  );
 
   // ─── Results ──────────────────────────────────────────────────────────────
   const jumpResult = (() => {
@@ -144,11 +140,13 @@ export default function BiomechanicsScreen() {
 
   const gaitResult = (() => {
     const sorted = [...gaitEvents].sort((a, b) => a.frame - b.frame);
-    let tcFrames = 0, tfFrames = 0;
+    let tcFrames = 0,
+      tfFrames = 0;
     for (let i = 0; i < sorted.length - 1; i++) {
-      const e1 = sorted[i], e2 = sorted[i + 1];
-      if (e1.type === 'contact' && e2.type === 'toe-off') tcFrames = e2.frame - e1.frame;
-      else if (e1.type === 'toe-off' && e2.type === 'contact') tfFrames = e2.frame - e1.frame;
+      const e1 = sorted[i],
+        e2 = sorted[i + 1];
+      if (e1.type === "contact" && e2.type === "toe-off") tcFrames = e2.frame - e1.frame;
+      else if (e1.type === "toe-off" && e2.type === "contact") tfFrames = e2.frame - e1.frame;
     }
     if (tcFrames === 0) return null;
     return morinGait(tcFrames, tfFrames, 60);
@@ -171,7 +169,7 @@ export default function BiomechanicsScreen() {
   }
 
   // ─── Test Selection ───────────────────────────────────────────────────────
-  if (mode === 'select') {
+  if (mode === "select") {
     return (
       <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
         <View style={styles.header}>
@@ -190,14 +188,16 @@ export default function BiomechanicsScreen() {
           {/* Jump Test */}
           <TouchableOpacity
             style={[styles.testCard, { backgroundColor: colors.surface }]}
-            onPress={() => setMode('jump')}
+            onPress={() => setMode("jump")}
           >
-            <View style={[styles.testIcon, { backgroundColor: '#3b82f620' }]}>
+            <View style={[styles.testIcon, { backgroundColor: "#3b82f620" }]}>
               <Ionicons name="arrow-up" size={28} color="#3b82f6" />
             </View>
             <View style={styles.testInfo}>
               <Text style={[styles.testTitle, { color: colors.text }]}>Salto Vertical</Text>
-              <Text style={[styles.testRef, { color: '#3b82f6' }]}>Bosco (1983) + Sayers (1999)</Text>
+              <Text style={[styles.testRef, { color: "#3b82f6" }]}>
+                Bosco (1983) + Sayers (1999)
+              </Text>
               <Text style={[styles.testDesc, { color: colors.textSecondary }]}>
                 Altura de salto (CMJ/SJ) e Potência de Pico em Watts
               </Text>
@@ -208,14 +208,14 @@ export default function BiomechanicsScreen() {
           {/* Gait Test */}
           <TouchableOpacity
             style={[styles.testCard, { backgroundColor: colors.surface }]}
-            onPress={() => setMode('gait')}
+            onPress={() => setMode("gait")}
           >
-            <View style={[styles.testIcon, { backgroundColor: '#22c55e20' }]}>
+            <View style={[styles.testIcon, { backgroundColor: "#22c55e20" }]}>
               <Ionicons name="walk" size={28} color="#22c55e" />
             </View>
             <View style={styles.testInfo}>
               <Text style={[styles.testTitle, { color: colors.text }]}>Corrida & Marcha</Text>
-              <Text style={[styles.testRef, { color: '#22c55e' }]}>Morin et al. (2005)</Text>
+              <Text style={[styles.testRef, { color: "#22c55e" }]}>Morin et al. (2005)</Text>
               <Text style={[styles.testDesc, { color: colors.textSecondary }]}>
                 Cadência, oscilação vertical e rigidez de perna
               </Text>
@@ -227,8 +227,8 @@ export default function BiomechanicsScreen() {
           <View style={[styles.infoCard, { backgroundColor: colors.surface }]}>
             <Ionicons name="information-circle-outline" size={18} color={colors.textSecondary} />
             <Text style={[styles.infoText, { color: colors.textSecondary }]}>
-              IA de rastreamento de pose (MoveNet) disponível no painel web.
-              Versão mobile aguarda estabilização do react-native-fast-tflite (março 2026).
+              IA de rastreamento de pose (MoveNet) disponível no painel web. Versão mobile aguarda
+              estabilização do react-native-fast-tflite (março 2026).
             </Text>
           </View>
         </ScrollView>
@@ -237,41 +237,37 @@ export default function BiomechanicsScreen() {
   }
 
   // ─── Jump / Gait Test Screen ──────────────────────────────────────────────
-  const isJump = mode === 'jump';
+  const isJump = mode === "jump";
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: '#000' }]}>
+    <SafeAreaView style={[styles.container, { backgroundColor: "#000" }]}>
       {/* Camera Preview */}
-      <CameraView
-        ref={cameraRef}
-        style={styles.camera}
-        facing={facing}
-      />
+      <CameraView ref={cameraRef} style={styles.camera} facing={facing} />
 
       {/* Overlay HUD */}
       <View style={styles.overlay}>
-
         {/* Top Bar */}
         <View style={styles.topBar}>
           <TouchableOpacity
             style={styles.backBtn}
-            onPress={() => { stopRecording(); setMode('select'); }}
+            onPress={() => {
+              stopRecording();
+              setMode("select");
+            }}
           >
             <Ionicons name="arrow-back" size={20} color="#fff" />
           </TouchableOpacity>
 
           <View style={styles.topCenter}>
-            <Text style={styles.hudTitle}>
-              {isJump ? '⚡ MYJUMP LAB' : '🏃 GAIT ANALYSIS'}
-            </Text>
+            <Text style={styles.hudTitle}>{isJump ? "⚡ MYJUMP LAB" : "🏃 GAIT ANALYSIS"}</Text>
             <Text style={styles.hudRef}>
-              {isJump ? 'Bosco 1983 · Sayers 1999' : 'Morin 2005 Sine-Wave'}
+              {isJump ? "Bosco 1983 · Sayers 1999" : "Morin 2005 Sine-Wave"}
             </Text>
           </View>
 
           <TouchableOpacity
             style={styles.flipBtn}
-            onPress={() => setFacing(f => f === 'back' ? 'front' : 'back')}
+            onPress={() => setFacing((f) => (f === "back" ? "front" : "back"))}
           >
             <Ionicons name="camera-reverse-outline" size={20} color="#fff" />
           </TouchableOpacity>
@@ -297,19 +293,25 @@ export default function BiomechanicsScreen() {
               <>
                 <View style={styles.jumpBtns}>
                   <TouchableOpacity
-                    style={[styles.eventBtn, { backgroundColor: takeoffFrame != null ? '#22c55e' : '#1e40af' }]}
+                    style={[
+                      styles.eventBtn,
+                      { backgroundColor: takeoffFrame != null ? "#22c55e" : "#1e40af" },
+                    ]}
                     onPress={markTakeoff}
                   >
                     <Text style={styles.eventBtnText}>
-                      {takeoffFrame != null ? `✓ DECOLAGEM\nF ${takeoffFrame}` : '① DECOLAGEM'}
+                      {takeoffFrame != null ? `✓ DECOLAGEM\nF ${takeoffFrame}` : "① DECOLAGEM"}
                     </Text>
                   </TouchableOpacity>
                   <TouchableOpacity
-                    style={[styles.eventBtn, { backgroundColor: landingFrame != null ? '#22c55e' : '#7c3aed' }]}
+                    style={[
+                      styles.eventBtn,
+                      { backgroundColor: landingFrame != null ? "#22c55e" : "#7c3aed" },
+                    ]}
                     onPress={markLanding}
                   >
                     <Text style={styles.eventBtnText}>
-                      {landingFrame != null ? `✓ POUSO\nF ${landingFrame}` : '② POUSO'}
+                      {landingFrame != null ? `✓ POUSO\nF ${landingFrame}` : "② POUSO"}
                     </Text>
                   </TouchableOpacity>
                 </View>
@@ -335,28 +337,28 @@ export default function BiomechanicsScreen() {
                 <View style={styles.gaitBtnsGrid}>
                   {/* Contato: vibração curta | Impulso: vibração forte */}
                   <TouchableOpacity
-                    style={[styles.gaitBtn, { backgroundColor: '#22c55e' }]}
-                    onPress={() => markGait('contact', 'R')}
+                    style={[styles.gaitBtn, { backgroundColor: "#22c55e" }]}
+                    onPress={() => markGait("contact", "R")}
                   >
-                    <Text style={styles.gaitBtnText}>CONTATO{'\n'}DIREITA</Text>
+                    <Text style={styles.gaitBtnText}>CONTATO{"\n"}DIREITA</Text>
                   </TouchableOpacity>
                   <TouchableOpacity
-                    style={[styles.gaitBtn, { backgroundColor: '#3b82f6' }]}
-                    onPress={() => markGait('contact', 'L')}
+                    style={[styles.gaitBtn, { backgroundColor: "#3b82f6" }]}
+                    onPress={() => markGait("contact", "L")}
                   >
-                    <Text style={styles.gaitBtnText}>CONTATO{'\n'}ESQUERDA</Text>
+                    <Text style={styles.gaitBtnText}>CONTATO{"\n"}ESQUERDA</Text>
                   </TouchableOpacity>
                   <TouchableOpacity
-                    style={[styles.gaitBtn, { backgroundColor: '#ef4444' }]}
-                    onPress={() => markGait('toe-off', 'R')}
+                    style={[styles.gaitBtn, { backgroundColor: "#ef4444" }]}
+                    onPress={() => markGait("toe-off", "R")}
                   >
-                    <Text style={styles.gaitBtnText}>IMPULSO{'\n'}DIREITA</Text>
+                    <Text style={styles.gaitBtnText}>IMPULSO{"\n"}DIREITA</Text>
                   </TouchableOpacity>
                   <TouchableOpacity
-                    style={[styles.gaitBtn, { backgroundColor: '#a855f7' }]}
-                    onPress={() => markGait('toe-off', 'L')}
+                    style={[styles.gaitBtn, { backgroundColor: "#a855f7" }]}
+                    onPress={() => markGait("toe-off", "L")}
                   >
-                    <Text style={styles.gaitBtnText}>IMPULSO{'\n'}ESQUERDA</Text>
+                    <Text style={styles.gaitBtnText}>IMPULSO{"\n"}ESQUERDA</Text>
                   </TouchableOpacity>
                 </View>
                 <Text style={styles.eventCount}>{gaitEvents.length} eventos marcados</Text>
@@ -402,7 +404,9 @@ export default function BiomechanicsScreen() {
                   <View style={styles.resultItem}>
                     <Text style={styles.resultBig}>{gaitResult.oscillation.toFixed(1)}</Text>
                     <Text style={styles.resultSub}>cm oscilação</Text>
-                    <Text style={styles.resultZone}>{oscillationLabel(gaitResult.oscillation)}</Text>
+                    <Text style={styles.resultZone}>
+                      {oscillationLabel(gaitResult.oscillation)}
+                    </Text>
                   </View>
                 </View>
                 <Text style={styles.resultHint}>
@@ -419,65 +423,179 @@ export default function BiomechanicsScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 16 },
-  title: { fontSize: 20, fontWeight: '900', letterSpacing: -0.5 },
-  subtitle: { fontSize: 14, marginHorizontal: 16, marginBottom: 24, textAlign: 'center' },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    padding: 16,
+  },
+  title: { fontSize: 20, fontWeight: "900", letterSpacing: -0.5 },
+  subtitle: { fontSize: 14, marginHorizontal: 16, marginBottom: 24, textAlign: "center" },
   scrollView: { flex: 1 },
   scrollContent: { padding: 16, gap: 12 },
-  sectionTitle: { fontSize: 10, fontWeight: '800', letterSpacing: 2, marginBottom: 8 },
+  sectionTitle: { fontSize: 10, fontWeight: "800", letterSpacing: 2, marginBottom: 8 },
   testCard: {
-    flexDirection: 'row', alignItems: 'center', padding: 16,
-    borderRadius: 16, gap: 12, marginBottom: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 16,
+    borderRadius: 16,
+    gap: 12,
+    marginBottom: 12,
   },
-  testIcon: { width: 52, height: 52, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
+  testIcon: {
+    width: 52,
+    height: 52,
+    borderRadius: 14,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   testInfo: { flex: 1 },
-  testTitle: { fontSize: 16, fontWeight: '800' },
-  testRef: { fontSize: 10, fontWeight: '700', marginTop: 2 },
+  testTitle: { fontSize: 16, fontWeight: "800" },
+  testRef: { fontSize: 10, fontWeight: "700", marginTop: 2 },
   testDesc: { fontSize: 12, marginTop: 4, lineHeight: 16 },
-  infoCard: { flexDirection: 'row', gap: 8, padding: 12, borderRadius: 12, marginTop: 8 },
+  infoCard: { flexDirection: "row", gap: 8, padding: 12, borderRadius: 12, marginTop: 8 },
   infoText: { fontSize: 11, flex: 1, lineHeight: 16 },
-  primaryBtn: { backgroundColor: '#3b82f6', margin: 16, padding: 16, borderRadius: 12, alignItems: 'center' },
-  primaryBtnText: { color: '#fff', fontWeight: '800', fontSize: 16 },
+  primaryBtn: {
+    backgroundColor: "#3b82f6",
+    margin: 16,
+    padding: 16,
+    borderRadius: 12,
+    alignItems: "center",
+  },
+  primaryBtnText: { color: "#fff", fontWeight: "800", fontSize: 16 },
 
   // Camera screen
   camera: { ...StyleSheet.absoluteFillObject },
-  overlay: { flex: 1, justifyContent: 'space-between' },
-  topBar: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 16, paddingTop: 8 },
-  backBtn: { width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(0,0,0,0.5)', alignItems: 'center', justifyContent: 'center' },
-  flipBtn: { width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(0,0,0,0.5)', alignItems: 'center', justifyContent: 'center' },
-  topCenter: { alignItems: 'center' },
-  hudTitle: { color: '#fff', fontSize: 13, fontWeight: '900', letterSpacing: 1 },
-  hudRef: { color: 'rgba(255,255,255,0.6)', fontSize: 9, marginTop: 2 },
-  frameCounter: { flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'center', backgroundColor: 'rgba(0,0,0,0.6)', paddingHorizontal: 12, paddingVertical: 4, borderRadius: 20 },
-  recDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#ef4444' },
-  frameText: { color: '#fff', fontSize: 12, fontWeight: '700' },
+  overlay: { flex: 1, justifyContent: "space-between" },
+  topBar: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    padding: 16,
+    paddingTop: 8,
+  },
+  backBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  flipBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  topCenter: { alignItems: "center" },
+  hudTitle: { color: "#fff", fontSize: 13, fontWeight: "900", letterSpacing: 1 },
+  hudRef: { color: "rgba(255,255,255,0.6)", fontSize: 9, marginTop: 2 },
+  frameCounter: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    alignSelf: "center",
+    backgroundColor: "rgba(0,0,0,0.6)",
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 20,
+  },
+  recDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: "#ef4444" },
+  frameText: { color: "#fff", fontSize: 12, fontWeight: "700" },
 
   // Jump controls
-  jumpControls: { padding: 16, gap: 12, backgroundColor: 'rgba(0,0,0,0.8)', borderTopLeftRadius: 24, borderTopRightRadius: 24 },
-  jumpBtns: { flexDirection: 'row', gap: 12 },
-  eventBtn: { flex: 1, padding: 14, borderRadius: 16, alignItems: 'center' },
-  eventBtnText: { color: '#fff', fontWeight: '900', fontSize: 12, textAlign: 'center', lineHeight: 18 },
+  jumpControls: {
+    padding: 16,
+    gap: 12,
+    backgroundColor: "rgba(0,0,0,0.8)",
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+  },
+  jumpBtns: { flexDirection: "row", gap: 12 },
+  eventBtn: { flex: 1, padding: 14, borderRadius: 16, alignItems: "center" },
+  eventBtnText: {
+    color: "#fff",
+    fontWeight: "900",
+    fontSize: 12,
+    textAlign: "center",
+    lineHeight: 18,
+  },
 
   // Gait controls
-  gaitControls: { padding: 16, gap: 10, backgroundColor: 'rgba(0,0,0,0.8)', borderTopLeftRadius: 24, borderTopRightRadius: 24 },
-  gaitBtnsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  gaitBtn: { width: (SCREEN_W - 56) / 2, padding: 14, borderRadius: 14, alignItems: 'center' },
-  gaitBtnText: { color: '#fff', fontWeight: '900', fontSize: 11, textAlign: 'center', lineHeight: 16 },
-  eventCount: { color: 'rgba(255,255,255,0.7)', fontSize: 11, textAlign: 'center' },
+  gaitControls: {
+    padding: 16,
+    gap: 10,
+    backgroundColor: "rgba(0,0,0,0.8)",
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+  },
+  gaitBtnsGrid: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
+  gaitBtn: { width: (SCREEN_W - 56) / 2, padding: 14, borderRadius: 14, alignItems: "center" },
+  gaitBtnText: {
+    color: "#fff",
+    fontWeight: "900",
+    fontSize: 11,
+    textAlign: "center",
+    lineHeight: 16,
+  },
+  eventCount: { color: "rgba(255,255,255,0.7)", fontSize: 11, textAlign: "center" },
 
   // Shared
-  startBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: '#ef4444', padding: 16, borderRadius: 16 },
-  startBtnText: { color: '#fff', fontWeight: '900', fontSize: 14 },
-  stopBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: 'rgba(255,255,255,0.15)', padding: 12, borderRadius: 12 },
-  stopBtnText: { color: '#fff', fontWeight: '700', fontSize: 13 },
+  startBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    backgroundColor: "#ef4444",
+    padding: 16,
+    borderRadius: 16,
+  },
+  startBtnText: { color: "#fff", fontWeight: "900", fontSize: 14 },
+  stopBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    backgroundColor: "rgba(255,255,255,0.15)",
+    padding: 12,
+    borderRadius: 12,
+  },
+  stopBtnText: { color: "#fff", fontWeight: "700", fontSize: 13 },
 
   // Results
-  results: { backgroundColor: 'rgba(0,0,0,0.9)', padding: 20, borderTopLeftRadius: 24, borderTopRightRadius: 24, gap: 8 },
-  resultTitle: { color: 'rgba(255,255,255,0.5)', fontSize: 9, fontWeight: '900', letterSpacing: 2, textAlign: 'center' },
-  resultBig: { color: '#fff', fontSize: 40, fontWeight: '900', textAlign: 'center', letterSpacing: -1 },
-  resultSub: { color: 'rgba(255,255,255,0.5)', fontSize: 11, textAlign: 'center', marginTop: -4 },
-  resultRow: { flexDirection: 'row', gap: 16 },
-  resultItem: { flex: 1, alignItems: 'center' },
-  resultZone: { fontSize: 10, fontWeight: '700', marginTop: 4, textAlign: 'center', color: '#a3e635' },
-  resultHint: { color: 'rgba(255,255,255,0.4)', fontSize: 10, textAlign: 'center' },
+  results: {
+    backgroundColor: "rgba(0,0,0,0.9)",
+    padding: 20,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    gap: 8,
+  },
+  resultTitle: {
+    color: "rgba(255,255,255,0.5)",
+    fontSize: 9,
+    fontWeight: "900",
+    letterSpacing: 2,
+    textAlign: "center",
+  },
+  resultBig: {
+    color: "#fff",
+    fontSize: 40,
+    fontWeight: "900",
+    textAlign: "center",
+    letterSpacing: -1,
+  },
+  resultSub: { color: "rgba(255,255,255,0.5)", fontSize: 11, textAlign: "center", marginTop: -4 },
+  resultRow: { flexDirection: "row", gap: 16 },
+  resultItem: { flex: 1, alignItems: "center" },
+  resultZone: {
+    fontSize: 10,
+    fontWeight: "700",
+    marginTop: 4,
+    textAlign: "center",
+    color: "#a3e635",
+  },
+  resultHint: { color: "rgba(255,255,255,0.4)", fontSize: 10, textAlign: "center" },
 });

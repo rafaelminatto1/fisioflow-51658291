@@ -5,7 +5,7 @@ const delay = (ms) => new Promise((r) => setTimeout(r, ms));
 (async () => {
   const browser = await chromium.launch({ headless: true });
   const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
-  
+
   const failedRequests = [];
   page.on("response", async (resp) => {
     if (resp.status() >= 400) {
@@ -21,10 +21,10 @@ const delay = (ms) => new Promise((r) => setTimeout(r, ms));
 
   await page.goto(`${BASE_URL}/whatsapp/inbox`, { waitUntil: "domcontentloaded", timeout: 60000 });
   await delay(15000);
-  
+
   console.log("=== REQUISICOES COM ERRO ===");
-  failedRequests.forEach(r => console.log(`${r.status} ${r.url}`));
-  
+  failedRequests.forEach((r) => console.log(`${r.status} ${r.url}`));
+
   const bodyText = await page.locator("body").innerText();
   console.log("\n--- ESTADO FINAL ---");
   console.log("Tem Rafael:", bodyText.includes("Rafael"));

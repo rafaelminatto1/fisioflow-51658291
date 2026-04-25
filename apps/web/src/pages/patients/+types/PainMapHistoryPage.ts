@@ -2,28 +2,33 @@
 
 import type { GetInfo, GetAnnotations } from "react-router/internal";
 
-type Module = typeof import("../PainMapHistoryPage.js")
+type Module = typeof import("../PainMapHistoryPage.js");
 
 type Info = GetInfo<{
-  file: "pages/patients/PainMapHistoryPage.tsx",
-  module: Module
-}>
+  file: "pages/patients/PainMapHistoryPage.tsx";
+  module: Module;
+}>;
 
-type Matches = [{
-  id: "root";
-  module: typeof import("../../../root.js");
-}, {
-  id: "components/layout/InfrastructureLayout";
-  module: typeof import("../../../components/layout/InfrastructureLayout.js");
-}, {
-  id: "components/layout/AppShellLayout";
-  module: typeof import("../../../components/layout/AppShellLayout.js");
-}, {
-  id: "pages/patients/PainMapHistoryPage";
-  module: typeof import("../PainMapHistoryPage.js");
-}];
+type Matches = [
+  {
+    id: "root";
+    module: typeof import("../../../root.js");
+  },
+  {
+    id: "components/layout/InfrastructureLayout";
+    module: typeof import("../../../components/layout/InfrastructureLayout.js");
+  },
+  {
+    id: "components/layout/AppShellLayout";
+    module: typeof import("../../../components/layout/AppShellLayout.js");
+  },
+  {
+    id: "pages/patients/PainMapHistoryPage";
+    module: typeof import("../PainMapHistoryPage.js");
+  },
+];
 
-type Annotations = GetAnnotations<Info & { module: Module, matches: Matches }, false>;
+type Annotations = GetAnnotations<Info & { module: Module; matches: Matches }, false>;
 
 export namespace Route {
   // links

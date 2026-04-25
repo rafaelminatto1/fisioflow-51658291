@@ -1,12 +1,12 @@
 /**
  * Push Notification Service - Envio Real via Expo Push API
- * 
+ *
  * Integra com Expo Push API para enviar notificações push reais
  */
 
-import { Platform } from 'react-native';
-import { fetchApi } from '@/lib/api';
-import { fisioLogger } from '@/lib/errors/logger';
+import { Platform } from "react-native";
+import { fetchApi } from "@/lib/api";
+import { fisioLogger } from "@/lib/errors/logger";
 
 // ============================================
 // TYPES
@@ -17,8 +17,8 @@ export interface PushMessage {
   title: string;
   body: string;
   data?: Record<string, any>;
-  sound?: 'default' | 'default_critical' | null;
-  priority?: 'default' | 'normal' | 'high';
+  sound?: "default" | "default_critical" | null;
+  priority?: "default" | "normal" | "high";
   ttl?: number;
   expiration?: number;
   badge?: number;
@@ -26,14 +26,14 @@ export interface PushMessage {
 }
 
 export interface PushTicket {
-  status: 'ok' | 'error';
+  status: "ok" | "error";
   id?: string;
   message?: string;
   details?: any;
 }
 
 export interface PushReceipt {
-  status: 'ok' | 'error';
+  status: "ok" | "error";
   message?: string;
   details?: any;
 }
@@ -44,8 +44,8 @@ export interface PushReceipt {
 
 class PushNotificationService {
   private static instance: PushNotificationService;
-  private expoPushUrl = 'https://exp.host/--/api/v2/push/send';
-  private expoReceiptUrl = 'https://exp.host/--/api/v2/push/getReceipts';
+  private expoPushUrl = "https://exp.host/--/api/v2/push/send";
+  private expoReceiptUrl = "https://exp.host/--/api/v2/push/getReceipts";
 
   private constructor() {}
 
@@ -62,24 +62,24 @@ class PushNotificationService {
   async sendPushNotification(message: PushMessage): Promise<PushTicket[]> {
     try {
       const messages = Array.isArray(message.to) ? message.to : [message.to];
-      
-      const pushMessages = messages.map(token => ({
+
+      const pushMessages = messages.map((token) => ({
         to: token,
         title: message.title,
         body: message.body,
         data: message.data || {},
-        sound: message.sound || 'default',
-        priority: message.priority || 'high',
+        sound: message.sound || "default",
+        priority: message.priority || "high",
         ttl: message.ttl || 3600,
         badge: message.badge,
-        channelId: message.channelId || 'default',
+        channelId: message.channelId || "default",
       }));
 
       const response = await fetch(this.expoPushUrl, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
+          "Content-Type": "application/json",
+          Accept: "application/json",
         },
         body: JSON.stringify(pushMessages),
       });
@@ -91,7 +91,7 @@ class PushNotificationService {
       const result = await response.json();
       return result.data || [];
     } catch (error) {
-      fisioLogger.error('Failed to send push notification', error, 'PushNotificationService');
+      fisioLogger.error("Failed to send push notification", error, "PushNotificationService");
       throw error;
     }
   }
@@ -102,10 +102,10 @@ class PushNotificationService {
   async checkReceipts(ticketIds: string[]): Promise<Record<string, PushReceipt>> {
     try {
       const response = await fetch(this.expoReceiptUrl, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
+          "Content-Type": "application/json",
+          Accept: "application/json",
         },
         body: JSON.stringify({ ids: ticketIds }),
       });
@@ -117,7 +117,7 @@ class PushNotificationService {
       const result = await response.json();
       return result.data || {};
     } catch (error) {
-      fisioLogger.error('Failed to check receipts', error, 'PushNotificationService');
+      fisioLogger.error("Failed to check receipts", error, "PushNotificationService");
       throw error;
     }
   }
@@ -125,29 +125,36 @@ class PushNotificationService {
   /**
    * Send notification to specific user via API
    */
-  async sendToUser(userId: string, notification: {
-    title: string;
-    body: string;
-    data?: Record<string, any>;
-    type?: string;
-  }): Promise<void> {
+  async sendToUser(
+    userId: string,
+    notification: {
+      title: string;
+      body: string;
+      data?: Record<string, any>;
+      type?: string;
+    },
+  ): Promise<void> {
     try {
-      await fetchApi('/api/notifications/send', {
-        method: 'POST',
+      await fetchApi("/api/notifications/send", {
+        method: "POST",
         data: {
           userId,
           notification: {
             title: notification.title,
             body: notification.body,
             data: notification.data,
-            type: notification.type || 'info',
-          }
-        }
+            type: notification.type || "info",
+          },
+        },
       });
 
-      fisioLogger.info('Notification sent to user', { userId, type: notification.type }, 'PushNotificationService');
+      fisioLogger.info(
+        "Notification sent to user",
+        { userId, type: notification.type },
+        "PushNotificationService",
+      );
     } catch (error) {
-      fisioLogger.error('Failed to send notification to user', error, 'PushNotificationService');
+      fisioLogger.error("Failed to send notification to user", error, "PushNotificationService");
       throw error;
     }
   }
@@ -155,29 +162,36 @@ class PushNotificationService {
   /**
    * Send notification to multiple users
    */
-  async sendToUsers(userIds: string[], notification: {
-    title: string;
-    body: string;
-    data?: Record<string, any>;
-    type?: string;
-  }): Promise<void> {
+  async sendToUsers(
+    userIds: string[],
+    notification: {
+      title: string;
+      body: string;
+      data?: Record<string, any>;
+      type?: string;
+    },
+  ): Promise<void> {
     try {
-      await fetchApi('/api/notifications/send-batch', {
-        method: 'POST',
+      await fetchApi("/api/notifications/send-batch", {
+        method: "POST",
         data: {
           userIds,
           notification: {
             title: notification.title,
             body: notification.body,
             data: notification.data,
-            type: notification.type || 'info',
-          }
-        }
+            type: notification.type || "info",
+          },
+        },
       });
 
-      fisioLogger.info('Notification sent to users', { count: userIds.length, type: notification.type }, 'PushNotificationService');
+      fisioLogger.info(
+        "Notification sent to users",
+        { count: userIds.length, type: notification.type },
+        "PushNotificationService",
+      );
     } catch (error) {
-      fisioLogger.error('Failed to send notification to users', error, 'PushNotificationService');
+      fisioLogger.error("Failed to send notification to users", error, "PushNotificationService");
       throw error;
     }
   }
@@ -192,16 +206,16 @@ class PushNotificationService {
       patientName: string;
       date: string;
       time: string;
-    }
+    },
   ): Promise<void> {
     await this.sendToUser(userId, {
-      title: '📅 Lembrete de Atendimento',
+      title: "📅 Lembrete de Atendimento",
       body: `Sessão com ${appointment.patientName} às ${appointment.time}`,
       data: {
-        type: 'appointment_reminder',
+        type: "appointment_reminder",
         appointmentId: appointment.id,
       },
-      type: 'appointment',
+      type: "appointment",
     });
   }
 
@@ -215,16 +229,16 @@ class PushNotificationService {
       patientName: string;
       date: string;
       time: string;
-    }
+    },
   ): Promise<void> {
     await this.sendToUser(userId, {
-      title: '✨ Novo Agendamento',
+      title: "✨ Novo Agendamento",
       body: `${appointment.patientName} agendou para ${appointment.date} às ${appointment.time}`,
       data: {
-        type: 'new_appointment',
+        type: "new_appointment",
         appointmentId: appointment.id,
       },
-      type: 'appointment',
+      type: "appointment",
     });
   }
 
@@ -238,16 +252,16 @@ class PushNotificationService {
       patientName: string;
       date: string;
       reason?: string;
-    }
+    },
   ): Promise<void> {
     await this.sendToUser(userId, {
-      title: '❌ Agendamento Cancelado',
-      body: `${appointment.patientName} cancelou a sessão de ${appointment.date}${appointment.reason ? `: ${appointment.reason}` : ''}`,
+      title: "❌ Agendamento Cancelado",
+      body: `${appointment.patientName} cancelou a sessão de ${appointment.date}${appointment.reason ? `: ${appointment.reason}` : ""}`,
       data: {
-        type: 'appointment_cancelled',
+        type: "appointment_cancelled",
         appointmentId: appointment.id,
       },
-      type: 'appointment',
+      type: "appointment",
     });
   }
 
@@ -260,15 +274,15 @@ class PushNotificationService {
       totalAppointments: number;
       completedAppointments: number;
       newPatients: number;
-    }
+    },
   ): Promise<void> {
     await this.sendToUser(userId, {
-      title: '📊 Resumo do Dia',
+      title: "📊 Resumo do Dia",
       body: `${summary.completedAppointments}/${summary.totalAppointments} sessões realizadas, ${summary.newPatients} novos pacientes`,
       data: {
-        type: 'daily_summary',
+        type: "daily_summary",
       },
-      type: 'system',
+      type: "system",
     });
   }
 
@@ -277,18 +291,22 @@ class PushNotificationService {
    */
   async registerPushToken(token: string, deviceName?: string): Promise<void> {
     try {
-      await fetchApi('/api/push-tokens', {
-        method: 'POST',
+      await fetchApi("/api/push-tokens", {
+        method: "POST",
         data: {
           expo_push_token: token,
           device_name: deviceName || Platform.OS,
           device_type: Platform.OS,
-        }
+        },
       });
 
-      fisioLogger.info('Push token registered', { token: token.substring(0, 20) + '...' }, 'PushNotificationService');
+      fisioLogger.info(
+        "Push token registered",
+        { token: token.substring(0, 20) + "..." },
+        "PushNotificationService",
+      );
     } catch (error) {
-      fisioLogger.error('Failed to register push token', error, 'PushNotificationService');
+      fisioLogger.error("Failed to register push token", error, "PushNotificationService");
     }
   }
 }

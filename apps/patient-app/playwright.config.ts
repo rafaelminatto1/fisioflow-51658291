@@ -1,4 +1,4 @@
-import { defineConfig, devices, expect } from '@playwright/test';
+import { defineConfig, devices, expect } from "@playwright/test";
 
 /**
  * Playwright Configuration para Fisioflow Patient App
@@ -7,11 +7,11 @@ import { defineConfig, devices, expect } from '@playwright/test';
  * quando rodado localmente com Expo Go.
  */
 
-const DEFAULT_BASE_URL = process.env.PLAYWRIGHT_BASE_URL || 'http://127.0.0.1:19006';
+const DEFAULT_BASE_URL = process.env.PLAYWRIGHT_BASE_URL || "http://127.0.0.1:19006";
 
 export default defineConfig({
   // Diretório onde estão os testes E2E
-  testDir: './e2e',
+  testDir: "./e2e",
 
   // Compartilhar relatórios entre testes para evitar sobrescrever
   fullyParallel: false,
@@ -25,10 +25,10 @@ export default defineConfig({
 
   // Relatório HTML para visualização detalhada
   reporter: [
-    ['html', { outputFolder: 'playwright-report' }],
-    ['json', { outputFile: 'test-results.json' }],
-    ['junit', { outputFile: 'test-results.xml' }],
-    ['list'],
+    ["html", { outputFolder: "playwright-report" }],
+    ["json", { outputFile: "test-results.json" }],
+    ["junit", { outputFile: "test-results.xml" }],
+    ["list"],
   ],
 
   // Dispositivos para testar
@@ -37,13 +37,13 @@ export default defineConfig({
     baseURL: DEFAULT_BASE_URL,
 
     // Traces de rede para debug
-    trace: 'retain-on-failure',
+    trace: "retain-on-failure",
 
     // Capturar erros com screenshot
-    screenshot: 'only-on-failure',
+    screenshot: "only-on-failure",
 
     // Vídeo em caso de falha (útil para CI)
-    video: 'retain-on-failure',
+    video: "retain-on-failure",
 
     // Action timeout
     actionTimeout: 10000,
@@ -56,24 +56,24 @@ export default defineConfig({
   projects: [
     {
       // Patient iOS App
-      name: 'patient-ios',
+      name: "patient-ios",
       use: {
         // URL do app nativo quando testado com Expo Go
-        baseURL: process.env.EAS_URL || 'exp://192.168.1.2:8082',
+        baseURL: process.env.EAS_URL || "exp://192.168.1.2:8082",
       },
     },
     {
       // Testes em navegador (web)
-    name: 'chromium',
-    use: { ...devices['Desktop Chrome'], baseURL: DEFAULT_BASE_URL },
-  },
-  {
-    name: 'mobile',
-    use: {
-      ...devices['iPhone 13 Mini'],
-      baseURL: DEFAULT_BASE_URL,
+      name: "chromium",
+      use: { ...devices["Desktop Chrome"], baseURL: DEFAULT_BASE_URL },
     },
-  },
+    {
+      name: "mobile",
+      use: {
+        ...devices["iPhone 13 Mini"],
+        baseURL: DEFAULT_BASE_URL,
+      },
+    },
   ],
 
   // Emuladores para testes locais
@@ -87,15 +87,21 @@ export const patientTestFixtures = async ({ page }: any, _use: any) => {
   return {
     page,
     auth: {
-      async login(email = 'patient.test@fisioflow.test', password = 'Test@123456') {
-        console.log('🔐 Patient App Login...');
+      async login(email = "patient.test@fisioflow.test", password = "Test@123456") {
+        console.log("🔐 Patient App Login...");
 
         // Procurar elementos de login
-        const emailInput = page.locator('input[type="email"], [data-testid*="email"], [placeholder*="email"]');
-        const passwordInput = page.locator('input[type="password"], [data-testid*="password"], [placeholder*="senha"]');
-        const loginButton = page.locator('button:has-text("Entrar"), [data-testid*="login"], [type="submit"]');
+        const emailInput = page.locator(
+          'input[type="email"], [data-testid*="email"], [placeholder*="email"]',
+        );
+        const passwordInput = page.locator(
+          'input[type="password"], [data-testid*="password"], [placeholder*="senha"]',
+        );
+        const loginButton = page.locator(
+          'button:has-text("Entrar"), [data-testid*="login"], [type="submit"]',
+        );
 
-        await page.goto('/(auth)/login');
+        await page.goto("/(auth)/login");
 
         await expect(emailInput).toBeVisible({ timeout: 10000 });
         await expect(passwordInput).toBeVisible({ timeout: 10000 });
@@ -108,30 +114,32 @@ export const patientTestFixtures = async ({ page }: any, _use: any) => {
         // Verificar redirecionamento
         await expect(page).toHaveURL(/\/(tabs)\//, { timeout: 10000 });
 
-        console.log('✅ Patient Login successful');
+        console.log("✅ Patient Login successful");
       },
 
       async logout() {
-        console.log('🚪 Patient Logout...');
+        console.log("🚪 Patient Logout...");
 
-        await page.goto('/(tabs)/profile');
+        await page.goto("/(tabs)/profile");
 
-        const logoutButton = page.locator('button:has-text("Sair"), button:has-text("Logout"), [data-testid*="logout"], [aria-label*="logout"]');
+        const logoutButton = page.locator(
+          'button:has-text("Sair"), button:has-text("Logout"), [data-testid*="logout"], [aria-label*="logout"]',
+        );
 
-        if (await logoutButton.count() > 0) {
+        if ((await logoutButton.count()) > 0) {
           await logoutButton.first().click();
         }
 
         await expect(page).toHaveURL(/\(auth\)\/login$/, { timeout: 10000 });
-        console.log('✅ Patient Logout successful');
+        console.log("✅ Patient Logout successful");
       },
     },
 
     // Verificar tabs principais
     async verifyTabs() {
-      await expect(page.locator('text=Agendamentos')).toBeVisible({ timeout: 10000 });
-      await expect(page.locator('text=Exercícios')).toBeVisible({ timeout: 10000 });
-      await expect(page.locator('text=Progresso')).toBeVisible({ timeout: 10000 });
+      await expect(page.locator("text=Agendamentos")).toBeVisible({ timeout: 10000 });
+      await expect(page.locator("text=Exercícios")).toBeVisible({ timeout: 10000 });
+      await expect(page.locator("text=Progresso")).toBeVisible({ timeout: 10000 });
     },
   };
 };

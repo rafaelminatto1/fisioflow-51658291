@@ -37,6 +37,7 @@ npm run test:ui
 ## Cobertura de Código
 
 ### Validações (src/lib/validations/)
+
 - ✅ CPF - Formato e dígitos verificadores
 - ✅ Email - Formato válido
 - ✅ Telefone - Formatos brasileiros
@@ -47,6 +48,7 @@ npm run test:ui
 - ✅ Sanitização de strings
 
 ### Agendamentos (appointments)
+
 - ✅ Criação com dados válidos
 - ✅ Validação de campos obrigatórios
 - ✅ Verificação de conflitos de horário
@@ -56,6 +58,7 @@ npm run test:ui
 - ✅ Mudança de fisioterapeuta
 
 ### Pacientes (patients)
+
 - ✅ Criação com dados completos
 - ✅ Criação com dados mínimos
 - ✅ Validação de CPF
@@ -66,6 +69,7 @@ npm run test:ui
 - ✅ Busca por nome
 
 ### Transações (transactions)
+
 - ✅ Criação de receita
 - ✅ Criação de despesa
 - ✅ Vínculo com agendamento
@@ -76,6 +80,7 @@ npm run test:ui
 - ✅ Identificação de vencidos
 
 ### Testes de Integração
+
 - ✅ Agendamento + Transação + Notificação
 - ✅ Editar Agendamento + Atualizar Calendário
 - ✅ Cancelar + Lista de Espera
@@ -84,13 +89,17 @@ npm run test:ui
 ## Mocks
 
 ### Mock do Supabase
+
 O arquivo `setup.ts` configura mocks globais para:
+
 - `neon.auth` - Autenticação (via SDK)
 - `api.v2` - Queries and Mutations (via Axios)
 - `neon.data` - Data access layer
 
 ### Helpers de Teste
+
 O arquivo `testHelpers.ts` fornece:
+
 - Geradores de dados mock (patients, appointments, transactions)
 - Builders de resposta Supabase
 - Arrays de dados válidos/inválidos para validação
@@ -99,13 +108,15 @@ O arquivo `testHelpers.ts` fornece:
 ## Convenções
 
 ### Nomenclatura
+
 - Arquivos: `[feature].test.ts`
 - Describes: Nome do módulo ou feature
 - Its: Comportamento esperado em português
 
 ### Estrutura de Teste
+
 ```typescript
-describe('Feature', () => {
+describe("Feature", () => {
   beforeEach(() => {
     // Setup
   });
@@ -114,7 +125,7 @@ describe('Feature', () => {
     // Cleanup
   });
 
-  it('deve fazer algo específico', async () => {
+  it("deve fazer algo específico", async () => {
     // Arrange
     // Act
     // Assert

@@ -1,17 +1,17 @@
-import type { Env } from '../../types/env';
+import type { Env } from "../../types/env";
 
 /**
  * Stripe Payment Service (Worker-compatible fetch implementation)
  */
 export class StripeService {
-  private apiUrl = 'https://api.stripe.com/v1';
+  private apiUrl = "https://api.stripe.com/v1";
 
   constructor(private env: Env) {}
 
   private get authHeader() {
     return {
-      'Authorization': `Bearer ${this.env.STRIPE_SECRET_KEY}`,
-      'Content-Type': 'application/x-www-form-urlencoded',
+      Authorization: `Bearer ${this.env.STRIPE_SECRET_KEY}`,
+      "Content-Type": "application/x-www-form-urlencoded",
     };
   }
 
@@ -25,15 +25,15 @@ export class StripeService {
     metadata?: Record<string, string>;
   }) {
     if (!this.env.STRIPE_SECRET_KEY) {
-      throw new Error('STRIPE_SECRET_KEY not configured');
+      throw new Error("STRIPE_SECRET_KEY not configured");
     }
 
     const body = new URLSearchParams({
-      'mode': 'payment',
-      'line_items[0][price]': params.priceId,
-      'line_items[0][quantity]': '1',
-      'success_url': params.successUrl,
-      'cancel_url': params.cancelUrl,
+      mode: "payment",
+      "line_items[0][price]": params.priceId,
+      "line_items[0][quantity]": "1",
+      success_url: params.successUrl,
+      cancel_url: params.cancelUrl,
     });
 
     if (params.metadata) {
@@ -43,15 +43,15 @@ export class StripeService {
     }
 
     const response = await fetch(`${this.apiUrl}/checkout/sessions`, {
-      method: 'POST',
+      method: "POST",
       headers: this.authHeader,
       body,
     });
 
-    const result = await response.json() as any;
+    const result = (await response.json()) as any;
     if (!response.ok) {
-      console.error('[Stripe Error]', result);
-      throw new Error(result.error?.message || 'Stripe API error');
+      console.error("[Stripe Error]", result);
+      throw new Error(result.error?.message || "Stripe API error");
     }
 
     return result;
@@ -62,14 +62,14 @@ export class StripeService {
    */
   async getCheckoutSession(sessionId: string) {
     const response = await fetch(`${this.apiUrl}/checkout/sessions/${sessionId}`, {
-      method: 'GET',
+      method: "GET",
       headers: this.authHeader,
     });
 
-    const result = await response.json() as any;
+    const result = (await response.json()) as any;
     if (!response.ok) {
-      console.error('[Stripe Get Error]', result);
-      throw new Error(result.error?.message || 'Stripe API error');
+      console.error("[Stripe Get Error]", result);
+      throw new Error(result.error?.message || "Stripe API error");
     }
 
     return result;

@@ -4,15 +4,20 @@ const delay = (ms) => new Promise((r) => setTimeout(r, ms));
 
 (async () => {
   const browser = await chromium.launch({ headless: true });
-  const context = await browser.newContext({ 
+  const context = await browser.newContext({
     viewport: { width: 1440, height: 900 },
-    locale: "pt-BR"
+    locale: "pt-BR",
   });
   const page = await context.newPage();
-  
-  page.on("console", msg => {
+
+  page.on("console", (msg) => {
     const text = msg.text();
-    if (text.includes("WhatsAppInbox") || text.includes("Rafael") || text.includes("conversations:") || text.includes("filtered:")) {
+    if (
+      text.includes("WhatsAppInbox") ||
+      text.includes("Rafael") ||
+      text.includes("conversations:") ||
+      text.includes("filtered:")
+    ) {
       console.log("PAGE LOG:", text);
     }
     if (msg.type() === "error" && !text.includes("500")) {
@@ -29,7 +34,7 @@ const delay = (ms) => new Promise((r) => setTimeout(r, ms));
 
   await page.goto(`${BASE_URL}/whatsapp/inbox`, { waitUntil: "networkidle", timeout: 60000 });
   await delay(15000);
-  
+
   console.log("\n=== FINAL STATE ===");
   const body = await page.locator("body").innerText();
   console.log("Has Rafael:", body.includes("Rafael"));

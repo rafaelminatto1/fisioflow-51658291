@@ -5,19 +5,9 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { invitationsApi } from "@/api/v2";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-	Card,
-	CardContent,
-	CardDescription,
-	CardHeader,
-	CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import {
-	passwordSchema,
-	emailSchema,
-	fullNameSchema,
-} from "@/lib/validations/auth";
+import { passwordSchema, emailSchema, fullNameSchema } from "@/lib/validations/auth";
 import { fisioLogger as logger } from "@/lib/errors/logger";
 import { AuthLayout } from "@/components/auth/AuthLayout";
 import { LoginForm } from "@/components/auth/LoginForm";
@@ -26,522 +16,473 @@ import { RegisterForm } from "@/components/auth/RegisterForm";
 import { signInWithOAuth } from "@/integrations/neon/auth";
 
 export default function Auth() {
-	const navigate = useNavigate();
-	const { toast } = useToast();
-	const { signIn, signUp, user, initialized } = useAuth();
-	const [searchParams] = useSearchParams();
-	const inviteToken = searchParams.get("invite");
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  const { signIn, signUp, user, initialized } = useAuth();
+  const [searchParams] = useSearchParams();
+  const inviteToken = searchParams.get("invite");
 
-	const [loading, setLoading] = useState(false);
-	const [email, setEmail] = useState("");
-	const [password, setPassword] = useState("");
-	const [confirmPassword, setConfirmPassword] = useState("");
-	const [fullName, setFullName] = useState("");
-	const [error, setError] = useState("");
-	const [validationErrors, setValidationErrors] = useState<
-		Record<string, string>
-	>({});
-	const [invitationData, setInvitationData] = useState<{
-		email: string;
-		role: string;
-	} | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [fullName, setFullName] = useState("");
+  const [error, setError] = useState("");
+  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
+  const [invitationData, setInvitationData] = useState<{
+    email: string;
+    role: string;
+  } | null>(null);
 
-	// Use lazy initial state to avoid reading searchParams during render
-	const [activeTab, setActiveTab] = useState<"login" | "register">(() =>
-		searchParams.get("mode") === "register" ? "register" : "login",
-	);
+  // Use lazy initial state to avoid reading searchParams during render
+  const [activeTab, setActiveTab] = useState<"login" | "register">(() =>
+    searchParams.get("mode") === "register" ? "register" : "login",
+  );
 
-	// Memoize tab change handler
-	const handleTabChange = useCallback((value: string) => {
-		setActiveTab(value as "login" | "register");
-	}, []);
+  // Memoize tab change handler
+  const handleTabChange = useCallback((value: string) => {
+    setActiveTab(value as "login" | "register");
+  }, []);
 
-	// Memoize input handlers to prevent recreating functions on every render
-	const _handleEmailChange = useCallback(
-		(e: React.ChangeEvent<HTMLInputElement>) => {
-			setEmail(e.target.value);
-		},
-		[],
-	);
+  // Memoize input handlers to prevent recreating functions on every render
+  const _handleEmailChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setEmail(e.target.value);
+  }, []);
 
-	const _handlePasswordChange = useCallback(
-		(e: React.ChangeEvent<HTMLInputElement>) => {
-			setPassword(e.target.value);
-		},
-		[],
-	);
+  const _handlePasswordChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setPassword(e.target.value);
+  }, []);
 
-	const _handleConfirmPasswordChange = useCallback(
-		(e: React.ChangeEvent<HTMLInputElement>) => {
-			setConfirmPassword(e.target.value);
-		},
-		[],
-	);
+  const _handleConfirmPasswordChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setConfirmPassword(e.target.value);
+  }, []);
 
-	const handleFullNameChange = useCallback(
-		(e: React.ChangeEvent<HTMLInputElement>) => {
-			setFullName(e.target.value);
-			setValidationErrors((prev) => ({ ...prev, fullName: "" }));
-		},
-		[],
-	);
+  const handleFullNameChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setFullName(e.target.value);
+    setValidationErrors((prev) => ({ ...prev, fullName: "" }));
+  }, []);
 
-	const handleEmailWithValidationChange = useCallback(
-		(e: React.ChangeEvent<HTMLInputElement>) => {
-			setEmail(e.target.value);
-			setValidationErrors((prev) => ({ ...prev, email: "" }));
-		},
-		[],
-	);
+  const handleEmailWithValidationChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setEmail(e.target.value);
+    setValidationErrors((prev) => ({ ...prev, email: "" }));
+  }, []);
 
-	const handlePasswordWithValidationChange = useCallback(
-		(e: React.ChangeEvent<HTMLInputElement>) => {
-			setPassword(e.target.value);
-			setValidationErrors((prev) => ({ ...prev, password: "" }));
-		},
-		[],
-	);
+  const handlePasswordWithValidationChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setPassword(e.target.value);
+      setValidationErrors((prev) => ({ ...prev, password: "" }));
+    },
+    [],
+  );
 
-	const handleConfirmPasswordWithValidationChange = useCallback(
-		(e: React.ChangeEvent<HTMLInputElement>) => {
-			setConfirmPassword(e.target.value);
-			setValidationErrors((prev) => ({ ...prev, confirmPassword: "" }));
-		},
-		[],
-	);
+  const handleConfirmPasswordWithValidationChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setConfirmPassword(e.target.value);
+      setValidationErrors((prev) => ({ ...prev, confirmPassword: "" }));
+    },
+    [],
+  );
 
-	// Memoize password requirements to avoid recalculation on every render
-	const passwordRequirements = useMemo(
-		() => [
-			{ label: "Mínimo 8 caracteres", met: password.length >= 8 },
-			{ label: "Uma letra maiúscula", met: /[A-Z]/.test(password) },
-			{ label: "Uma letra minúscula", met: /[a-z]/.test(password) },
-			{ label: "Um número", met: /[0-9]/.test(password) },
-			{ label: "Um caractere especial", met: /[^A-Za-z0-9]/.test(password) },
-		],
-		[password],
-	);
+  // Memoize password requirements to avoid recalculation on every render
+  const passwordRequirements = useMemo(
+    () => [
+      { label: "Mínimo 8 caracteres", met: password.length >= 8 },
+      { label: "Uma letra maiúscula", met: /[A-Z]/.test(password) },
+      { label: "Uma letra minúscula", met: /[a-z]/.test(password) },
+      { label: "Um número", met: /[0-9]/.test(password) },
+      { label: "Um caractere especial", met: /[^A-Za-z0-9]/.test(password) },
+    ],
+    [password],
+  );
 
-	useEffect(() => {
-		// Check if user is already logged in
-		if (initialized && user) {
-			navigate("/");
-		}
-	}, [user, initialized, navigate]);
+  useEffect(() => {
+    // Check if user is already logged in
+    if (initialized && user) {
+      navigate("/");
+    }
+  }, [user, initialized, navigate]);
 
-	useEffect(() => {
-		const checkInvitation = async () => {
-			if (!inviteToken) return;
+  useEffect(() => {
+    const checkInvitation = async () => {
+      if (!inviteToken) return;
 
-			try {
-				const result = await invitationsApi.validate(inviteToken);
-				const invitation = result?.data;
+      try {
+        const result = await invitationsApi.validate(inviteToken);
+        const invitation = result?.data;
 
-				if (!invitation?.email) {
-					toast({
-						title: "Convite inválido",
-						description: "Este convite expirou ou já foi utilizado",
-						variant: "destructive",
-					});
-					return;
-				}
+        if (!invitation?.email) {
+          toast({
+            title: "Convite inválido",
+            description: "Este convite expirou ou já foi utilizado",
+            variant: "destructive",
+          });
+          return;
+        }
 
-				setInvitationData({
-					email: invitation.email,
-					role: invitation.role || "fisioterapeuta",
-				});
-				setEmail(invitation.email);
-				toast({
-					title: "Convite válido!",
-					description: `Você foi convidado como ${invitation.role || "fisioterapeuta"}`,
-				});
-			} catch (err) {
-				logger.error("Erro ao verificar convite", err, "Auth");
-				toast({
-					title: "Convite inválido",
-					description: "Não foi possível validar o convite.",
-					variant: "destructive",
-				});
-			}
-		};
+        setInvitationData({
+          email: invitation.email,
+          role: invitation.role || "fisioterapeuta",
+        });
+        setEmail(invitation.email);
+        toast({
+          title: "Convite válido!",
+          description: `Você foi convidado como ${invitation.role || "fisioterapeuta"}`,
+        });
+      } catch (err) {
+        logger.error("Erro ao verificar convite", err, "Auth");
+        toast({
+          title: "Convite inválido",
+          description: "Não foi possível validar o convite.",
+          variant: "destructive",
+        });
+      }
+    };
 
-		checkInvitation();
-	}, [inviteToken, toast]);
+    checkInvitation();
+  }, [inviteToken, toast]);
 
-	const handleGoogleSignIn = async () => {
-		setLoading(true);
-		setError("");
+  const handleGoogleSignIn = async () => {
+    setLoading(true);
+    setError("");
 
-		try {
-			await signInWithOAuth("google");
-		} catch (err) {
-			logger.error("Erro no login com Google", err, "Auth");
-			const errorMessage =
-				err instanceof Error ? err.message : "Erro ao conectar com Google.";
-			setError(errorMessage);
-			toast({
-				title: "Erro no login",
-				description: errorMessage,
-				variant: "destructive",
-			});
-		} finally {
-			setLoading(false);
-		}
-	};
+    try {
+      await signInWithOAuth("google");
+    } catch (err) {
+      logger.error("Erro no login com Google", err, "Auth");
+      const errorMessage = err instanceof Error ? err.message : "Erro ao conectar com Google.";
+      setError(errorMessage);
+      toast({
+        title: "Erro no login",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
-	const handleGithubSignIn = async () => {
-		setLoading(true);
-		setError("");
+  const handleGithubSignIn = async () => {
+    setLoading(true);
+    setError("");
 
-		try {
-			await signInWithOAuth("github");
-		} catch (err: unknown) {
-			logger.error("Erro no login com GitHub", err, "Auth");
-			const errorMessage =
-				err instanceof Error ? err.message : "Erro ao conectar com GitHub.";
-			setError(errorMessage);
-			toast({
-				title: "Erro no login",
-				description: errorMessage,
-				variant: "destructive",
-			});
-		} finally {
-			setLoading(false);
-		}
-	};
+    try {
+      await signInWithOAuth("github");
+    } catch (err: unknown) {
+      logger.error("Erro no login com GitHub", err, "Auth");
+      const errorMessage = err instanceof Error ? err.message : "Erro ao conectar com GitHub.";
+      setError(errorMessage);
+      toast({
+        title: "Erro no login",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
-	const handleAppleSignIn = async () => {
-		setLoading(true);
-		setError("");
+  const handleAppleSignIn = async () => {
+    setLoading(true);
+    setError("");
 
-		try {
-			await signInWithOAuth("apple");
-		} catch (err: unknown) {
-			logger.error("Erro no login com Apple", err, "Auth");
-			const errorMessage =
-				err instanceof Error ? err.message : "Erro ao conectar com Apple.";
-			setError(errorMessage);
-			toast({
-				title: "Erro no login",
-				description: errorMessage,
-				variant: "destructive",
-			});
-		} finally {
-			setLoading(false);
-		}
-	};
+    try {
+      await signInWithOAuth("apple");
+    } catch (err: unknown) {
+      logger.error("Erro no login com Apple", err, "Auth");
+      const errorMessage = err instanceof Error ? err.message : "Erro ao conectar com Apple.";
+      setError(errorMessage);
+      toast({
+        title: "Erro no login",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
-	const handleSignIn = async (data: { email: string; password: string }) => {
-		setLoading(true);
-		setError("");
+  const handleSignIn = async (data: { email: string; password: string }) => {
+    setLoading(true);
+    setError("");
 
-		try {
-			const { error } = await signIn(data.email, data.password);
+    try {
+      const { error } = await signIn(data.email, data.password);
 
-			if (error) {
-				setError(error.message);
-				toast({
-					title: "Erro no login",
-					description: error.message,
-					variant: "destructive",
-				});
-			} else {
-				if (inviteToken) {
-					try {
-						await invitationsApi.use(inviteToken);
-					} catch (consumeErr) {
-						logger.error(
-							"Error consuming invitation after login",
-							consumeErr,
-							"Auth",
-						);
-					}
-				}
-				toast({
-					title: "Login realizado com sucesso!",
-					description: "Bem-vindo ao FisioFlow",
-				});
-				navigate("/");
-			}
-		} catch (err: unknown) {
-			logger.error("Erro no login", err, "Auth");
-			const message =
-				err instanceof Error
-					? err.message
-					: "Erro inesperado. Tente novamente.";
-			setError(message);
-			toast({
-				title: "Erro no login",
-				description: message,
-				variant: "destructive",
-			});
-		} finally {
-			setLoading(false);
-		}
-	};
+      if (error) {
+        setError(error.message);
+        toast({
+          title: "Erro no login",
+          description: error.message,
+          variant: "destructive",
+        });
+      } else {
+        if (inviteToken) {
+          try {
+            await invitationsApi.use(inviteToken);
+          } catch (consumeErr) {
+            logger.error("Error consuming invitation after login", consumeErr, "Auth");
+          }
+        }
+        toast({
+          title: "Login realizado com sucesso!",
+          description: "Bem-vindo ao FisioFlow",
+        });
+        navigate("/");
+      }
+    } catch (err: unknown) {
+      logger.error("Erro no login", err, "Auth");
+      const message = err instanceof Error ? err.message : "Erro inesperado. Tente novamente.";
+      setError(message);
+      toast({
+        title: "Erro no login",
+        description: message,
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
-	const handleSignUp = async (e: React.FormEvent) => {
-		e.preventDefault();
-		e.stopPropagation();
+  const handleSignUp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
 
-		setLoading(true);
-		setError("");
-		setValidationErrors({});
+    setLoading(true);
+    setError("");
+    setValidationErrors({});
 
-		try {
-			// Validar campos com Zod
-			const fullNameResult = fullNameSchema.safeParse(fullName.trim());
-			const emailResult = emailSchema.safeParse(email.trim());
-			const passwordResult = passwordSchema.safeParse(password);
+    try {
+      // Validar campos com Zod
+      const fullNameResult = fullNameSchema.safeParse(fullName.trim());
+      const emailResult = emailSchema.safeParse(email.trim());
+      const passwordResult = passwordSchema.safeParse(password);
 
-			const errors: Record<string, string> = {};
+      const errors: Record<string, string> = {};
 
-			if (!fullNameResult.success) {
-				errors.fullName = fullNameResult.error.issues[0].message;
-			}
-			if (!emailResult.success) {
-				errors.email = emailResult.error.issues[0].message;
-			}
-			if (!passwordResult.success) {
-				errors.password = passwordResult.error.issues[0].message;
-			}
-			if (password !== confirmPassword) {
-				errors.confirmPassword = "As senhas não coincidem";
-			}
+      if (!fullNameResult.success) {
+        errors.fullName = fullNameResult.error.issues[0].message;
+      }
+      if (!emailResult.success) {
+        errors.email = emailResult.error.issues[0].message;
+      }
+      if (!passwordResult.success) {
+        errors.password = passwordResult.error.issues[0].message;
+      }
+      if (password !== confirmPassword) {
+        errors.confirmPassword = "As senhas não coincidem";
+      }
 
-			if (Object.keys(errors).length > 0) {
-				setValidationErrors(errors);
-				setLoading(false);
-				toast({
-					title: "Erro de validação",
-					description: "Por favor, corrija os campos destacados",
-					variant: "destructive",
-				});
-				return;
-			}
+      if (Object.keys(errors).length > 0) {
+        setValidationErrors(errors);
+        setLoading(false);
+        toast({
+          title: "Erro de validação",
+          description: "Por favor, corrija os campos destacados",
+          variant: "destructive",
+        });
+        return;
+      }
 
-			const _redirectUrl = `${window.location.origin}/`;
+      const _redirectUrl = `${window.location.origin}/`;
 
-			// Dado sensível removido: email completo mascarado para logs (LGPD)
-			const maskedEmail = email.trim();
-			const emailDomain = maskedEmail.split("@")[1];
-			logger.info(
-				"Iniciando cadastro",
-				{ email: `***@${emailDomain}` },
-				"Auth",
-			);
+      // Dado sensível removido: email completo mascarado para logs (LGPD)
+      const maskedEmail = email.trim();
+      const emailDomain = maskedEmail.split("@")[1];
+      logger.info("Iniciando cadastro", { email: `***@${emailDomain}` }, "Auth");
 
-			const { user: newUser, error: signUpError } = await signUp({
-				email: email.trim(),
-				password,
-				confirmPassword,
-				full_name: fullName.trim(),
-				userType: "paciente", // Default for public signup
-				terms_accepted: true,
-			});
+      const { user: newUser, error: signUpError } = await signUp({
+        email: email.trim(),
+        password,
+        confirmPassword,
+        full_name: fullName.trim(),
+        userType: "paciente", // Default for public signup
+        terms_accepted: true,
+      });
 
-			if (signUpError) {
-				logger.error("Erro no cadastro", signUpError, "Auth");
-				let errorMessage = signUpError.message;
+      if (signUpError) {
+        logger.error("Erro no cadastro", signUpError, "Auth");
+        let errorMessage = signUpError.message;
 
-				if (
-					signUpError.message.includes("User already registered") ||
-					signUpError.message.includes("already registered")
-				) {
-					errorMessage = "Este email já está cadastrado. Tente fazer login.";
-				} else if (signUpError.message.includes("Invalid email")) {
-					errorMessage = "Email inválido. Verifique o formato do email.";
-				} else if (signUpError.message.includes("Password")) {
-					errorMessage = "Senha inválida. Verifique os requisitos de senha.";
-				}
+        if (
+          signUpError.message.includes("User already registered") ||
+          signUpError.message.includes("already registered")
+        ) {
+          errorMessage = "Este email já está cadastrado. Tente fazer login.";
+        } else if (signUpError.message.includes("Invalid email")) {
+          errorMessage = "Email inválido. Verifique o formato do email.";
+        } else if (signUpError.message.includes("Password")) {
+          errorMessage = "Senha inválida. Verifique os requisitos de senha.";
+        }
 
-				setError(errorMessage);
-				toast({
-					title: "Erro no cadastro",
-					description: errorMessage,
-					variant: "destructive",
-				});
-				setLoading(false);
-				return;
-			}
+        setError(errorMessage);
+        toast({
+          title: "Erro no cadastro",
+          description: errorMessage,
+          variant: "destructive",
+        });
+        setLoading(false);
+        return;
+      }
 
-			if (!newUser) {
-				setError("Erro ao criar conta. Tente novamente.");
-				toast({
-					title: "Erro no cadastro",
-					description: "Não foi possível criar a conta. Tente novamente.",
-					variant: "destructive",
-				});
-				setLoading(false);
-				return;
-			}
+      if (!newUser) {
+        setError("Erro ao criar conta. Tente novamente.");
+        toast({
+          title: "Erro no cadastro",
+          description: "Não foi possível criar a conta. Tente novamente.",
+          variant: "destructive",
+        });
+        setLoading(false);
+        return;
+      }
 
-			logger.info("Conta criada com sucesso", { userId: newUser.uid }, "Auth");
+      logger.info("Conta criada com sucesso", { userId: newUser.uid }, "Auth");
 
-			if (newUser && inviteToken) {
-				try {
-					await invitationsApi.use(inviteToken);
-					logger.info(
-						"Invitation consumed after signup",
-						{ userId: newUser.uid },
-						"Auth",
-					);
-				} catch (consumeErr) {
-					logger.error("Error consuming invitation", consumeErr, "Auth");
-				}
-			}
+      if (newUser && inviteToken) {
+        try {
+          await invitationsApi.use(inviteToken);
+          logger.info("Invitation consumed after signup", { userId: newUser.uid }, "Auth");
+        } catch (consumeErr) {
+          logger.error("Error consuming invitation", consumeErr, "Auth");
+        }
+      }
 
-			// Sucesso no cadastro
-			toast({
-				title: "Conta criada com sucesso!",
-				description:
-					"Verifique seu email para confirmar a conta. Você será redirecionado...",
-			});
+      // Sucesso no cadastro
+      toast({
+        title: "Conta criada com sucesso!",
+        description: "Verifique seu email para confirmar a conta. Você será redirecionado...",
+      });
 
-			// Salvar email cadastrado e limpar outros campos
-			const registeredEmail = email.trim();
-			setFullName("");
-			setPassword("");
-			setConfirmPassword("");
-			setValidationErrors({});
+      // Salvar email cadastrado e limpar outros campos
+      const registeredEmail = email.trim();
+      setFullName("");
+      setPassword("");
+      setConfirmPassword("");
+      setValidationErrors({});
 
-			// Redirecionar para login após 3 segundos
-			setTimeout(() => {
-				setActiveTab("login");
-				setEmail(registeredEmail);
-			}, 3000);
-		} catch (err: unknown) {
-			logger.error("Erro no cadastro", err, "Auth");
-			const errorMessage =
-				err instanceof Error
-					? err.message
-					: "Erro inesperado. Tente novamente.";
-			setError(errorMessage);
-			toast({
-				title: "Erro no cadastro",
-				description: errorMessage,
-				variant: "destructive",
-			});
-		} finally {
-			setLoading(false);
-		}
-	};
+      // Redirecionar para login após 3 segundos
+      setTimeout(() => {
+        setActiveTab("login");
+        setEmail(registeredEmail);
+      }, 3000);
+    } catch (err: unknown) {
+      logger.error("Erro no cadastro", err, "Auth");
+      const errorMessage = err instanceof Error ? err.message : "Erro inesperado. Tente novamente.";
+      setError(errorMessage);
+      toast({
+        title: "Erro no cadastro",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
-	return (
-		<AuthLayout>
-			<Card className="border-border/50 shadow-xl shadow-primary/5 bg-background/80 backdrop-blur-sm">
-				<CardHeader className="space-y-1.5 pb-6">
-					<CardTitle className="text-2xl font-bold text-center">
-						{activeTab === "login" ? "Bem-vindo de volta" : "Crie sua conta"}
-					</CardTitle>
-					<CardDescription className="text-center text-base">
-						{activeTab === "login"
-							? "Entre com suas credenciais para acessar sua conta"
-							: "Preencha os dados abaixo para começar"}
-					</CardDescription>
-				</CardHeader>
+  return (
+    <AuthLayout>
+      <Card className="border-border/50 shadow-xl shadow-primary/5 bg-background/80 backdrop-blur-sm">
+        <CardHeader className="space-y-1.5 pb-6">
+          <CardTitle className="text-2xl font-bold text-center">
+            {activeTab === "login" ? "Bem-vindo de volta" : "Crie sua conta"}
+          </CardTitle>
+          <CardDescription className="text-center text-base">
+            {activeTab === "login"
+              ? "Entre com suas credenciais para acessar sua conta"
+              : "Preencha os dados abaixo para começar"}
+          </CardDescription>
+        </CardHeader>
 
-				<CardContent className="space-y-6">
-					<Tabs
-						value={activeTab}
-						onValueChange={handleTabChange}
-						className="w-full"
-						aria-label="Opções de autenticação"
-					>
-						<TabsList className="grid w-full grid-cols-2 h-11 p-1 bg-muted/50">
-							<TabsTrigger
-								value="login"
-								className="rounded-lg text-sm font-medium data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all duration-150"
-								tabIndex={0}
-							>
-								Login
-							</TabsTrigger>
-							<TabsTrigger
-								value="register"
-								className="rounded-lg text-sm font-medium data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all duration-150"
-								tabIndex={-1}
-							>
-								Cadastro
-							</TabsTrigger>
-						</TabsList>
+        <CardContent className="space-y-6">
+          <Tabs
+            value={activeTab}
+            onValueChange={handleTabChange}
+            className="w-full"
+            aria-label="Opções de autenticação"
+          >
+            <TabsList className="grid w-full grid-cols-2 h-11 p-1 bg-muted/50">
+              <TabsTrigger
+                value="login"
+                className="rounded-lg text-sm font-medium data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all duration-150"
+                tabIndex={0}
+              >
+                Login
+              </TabsTrigger>
+              <TabsTrigger
+                value="register"
+                className="rounded-lg text-sm font-medium data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all duration-150"
+                tabIndex={-1}
+              >
+                Cadastro
+              </TabsTrigger>
+            </TabsList>
 
-						<TabsContent
-							value="login"
-							className="space-y-5 mt-6 focus-visible:outline-none"
-						>
-							<LoginForm
-								onSubmit={handleSignIn}
-								defaultEmail={email}
-								loading={loading}
-								error={error}
-								activeTab={activeTab}
-							/>
-						</TabsContent>
+            <TabsContent value="login" className="space-y-5 mt-6 focus-visible:outline-none">
+              <LoginForm
+                onSubmit={handleSignIn}
+                defaultEmail={email}
+                loading={loading}
+                error={error}
+                activeTab={activeTab}
+              />
+            </TabsContent>
 
-						<TabsContent
-							value="register"
-							className="space-y-5 mt-6 focus-visible:outline-none"
-						>
-							<RegisterForm
-								onSubmit={handleSignUp}
-								fullName={fullName}
-								onFullNameChange={handleFullNameChange}
-								email={email}
-								onEmailChange={handleEmailWithValidationChange}
-								password={password}
-								onPasswordChange={handlePasswordWithValidationChange}
-								confirmPassword={confirmPassword}
-								onConfirmPasswordChange={
-									handleConfirmPasswordWithValidationChange
-								}
-								loading={loading}
-								error={error}
-								validationErrors={validationErrors}
-								invitationData={invitationData}
-								passwordRequirements={passwordRequirements}
-								activeTab={activeTab}
-							/>
-						</TabsContent>
-					</Tabs>
+            <TabsContent value="register" className="space-y-5 mt-6 focus-visible:outline-none">
+              <RegisterForm
+                onSubmit={handleSignUp}
+                fullName={fullName}
+                onFullNameChange={handleFullNameChange}
+                email={email}
+                onEmailChange={handleEmailWithValidationChange}
+                password={password}
+                onPasswordChange={handlePasswordWithValidationChange}
+                confirmPassword={confirmPassword}
+                onConfirmPasswordChange={handleConfirmPasswordWithValidationChange}
+                loading={loading}
+                error={error}
+                validationErrors={validationErrors}
+                invitationData={invitationData}
+                passwordRequirements={passwordRequirements}
+                activeTab={activeTab}
+              />
+            </TabsContent>
+          </Tabs>
 
-					<div className="relative">
-						<div className="absolute inset-0 flex items-center">
-							<span className="w-full border-t" />
-						</div>
-						<div className="relative flex justify-center text-xs uppercase">
-							<span className="bg-background px-2 text-muted-foreground">
-								Ou continue com
-							</span>
-						</div>
-					</div>
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-background px-2 text-muted-foreground">Ou continue com</span>
+            </div>
+          </div>
 
-					<OAuthButtons
-						loading={loading}
-						onGoogleClick={handleGoogleSignIn}
-						onGithubClick={handleGithubSignIn}
-						onAppleClick={handleAppleSignIn}
-						activeTab={activeTab}
-					/>
-				</CardContent>
-			</Card>
+          <OAuthButtons
+            loading={loading}
+            onGoogleClick={handleGoogleSignIn}
+            onGithubClick={handleGithubSignIn}
+            onAppleClick={handleAppleSignIn}
+            activeTab={activeTab}
+          />
+        </CardContent>
+      </Card>
 
-			<p className="text-center text-xs text-muted-foreground px-4">
-				Ao continuar, você concorda com nossos{" "}
-				<button
-					type="button"
-					className="underline hover:text-foreground transition-colors bg-transparent border-0 p-0 cursor-pointer text-inherit"
-				>
-					Termos de Serviço
-				</button>{" "}
-				e{" "}
-				<button
-					type="button"
-					className="underline hover:text-foreground transition-colors bg-transparent border-0 p-0 cursor-pointer text-inherit"
-				>
-					Política de Privacidade
-				</button>
-				.
-			</p>
-		</AuthLayout>
-	);
+      <p className="text-center text-xs text-muted-foreground px-4">
+        Ao continuar, você concorda com nossos{" "}
+        <button
+          type="button"
+          className="underline hover:text-foreground transition-colors bg-transparent border-0 p-0 cursor-pointer text-inherit"
+        >
+          Termos de Serviço
+        </button>{" "}
+        e{" "}
+        <button
+          type="button"
+          className="underline hover:text-foreground transition-colors bg-transparent border-0 p-0 cursor-pointer text-inherit"
+        >
+          Política de Privacidade
+        </button>
+        .
+      </p>
+    </AuthLayout>
+  );
 }

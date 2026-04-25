@@ -1,6 +1,6 @@
-export type ConsentType = 'required' | 'optional';
-export type ConsentCategory = 'legal' | 'permission' | 'analytics' | 'marketing';
-export type ConsentStatus = 'granted' | 'withdrawn' | 'pending';
+export type ConsentType = "required" | "optional";
+export type ConsentCategory = "legal" | "permission" | "analytics" | "marketing";
+export type ConsentStatus = "granted" | "withdrawn" | "pending";
 
 export interface Consent {
   id: string;
@@ -20,7 +20,7 @@ export interface ConsentHistory {
   id: string;
   consentId: string;
   userId: string;
-  action: 'granted' | 'withdrawn' | 'updated';
+  action: "granted" | "withdrawn" | "updated";
   timestamp: Date;
   version: string;
   reason?: string;

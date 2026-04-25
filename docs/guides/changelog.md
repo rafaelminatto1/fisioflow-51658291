@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+
 - Security documentation (SECURITY.md)
 - Contributing guidelines (CONTRIBUTING.md)
 - Enhanced caching strategies in CI/CD workflows
@@ -16,17 +17,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Patient CRUD hooks and components
 
 ### Changed
+
 - Upgraded @testing-library/react to v16 for better React 18 compatibility
 - Improved Cloudflare deployment configuration with security headers
 - Enhanced test configuration with threads pool
 - Optimized build process with 4GB heap allocation
 
 ### Fixed
+
 - Removed exposed Supabase credentials from Cloudflare.json
 - Fixed AIAssistantPanel test imports
 - Resolved import issues with useDebounce hook consolidation
 
 ### Security
+
 - **CRITICAL**: Removed hardcoded Supabase credentials from Cloudflare.json
 - Added Referrer-Policy and Permissions-Policy headers
 - Added cache-control headers for static assets
@@ -34,6 +38,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.0.0] - 2025-01-15
 
 ### Added
+
 - Complete patient management system
 - Advanced SOAP notes system
 - Exercise library with prescription capabilities
@@ -45,12 +50,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Multi-role authentication system
 
 ### Changed
+
 - Migrated to TypeScript strict mode
 - Upgraded to React 18
 - Improved database query optimization
 - Enhanced performance with lazy loading
 
 ### Security
+
 - Implemented RLS policies for all tables
 - Added JWT token rotation
 - Encrypted sensitive data at rest
@@ -60,6 +67,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.9.0] - 2024-12-01
 
 ### Added
+
 - Initial patient CRUD operations
 - Basic SOAP notes
 - Exercise library
@@ -69,6 +77,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ---
 
 For versioning, we use:
+
 - **MAJOR**: Incompatible API changes
 - **MINOR**: Backwards-compatible functionality additions
 - **PATCH**: Backwards-compatible bug fixes

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -7,11 +7,11 @@ import {
   ActivityIndicator,
   Alert,
   Share,
-} from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { reportsApi } from '@/lib/api';
-import { useColors } from '@/hooks/useColorScheme';
-import { useHaptics } from '@/hooks/useHaptics';
+} from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { reportsApi } from "@/lib/api";
+import { useColors } from "@/hooks/useColorScheme";
+import { useHaptics } from "@/hooks/useHaptics";
 
 interface CloudReportActionsProps {
   patientId: string;
@@ -20,7 +20,12 @@ interface CloudReportActionsProps {
   reportType: string;
 }
 
-export function CloudReportActions({ patientId, patientName, reportData, reportType }: CloudReportActionsProps) {
+export function CloudReportActions({
+  patientId,
+  patientName,
+  reportData,
+  reportType,
+}: CloudReportActionsProps) {
   const colors = useColors();
   const { light, success, error } = useHaptics();
   const [isGenerating, setIsGenerating] = useState(false);
@@ -45,11 +50,11 @@ export function CloudReportActions({ patientId, patientName, reportData, reportT
         pdfUrl: res.pdfUrl,
       });
       success();
-      Alert.alert('Sucesso', 'Relatório salvo na nuvem!');
+      Alert.alert("Sucesso", "Relatório salvo na nuvem!");
     } catch (err: any) {
       error();
-      console.error('[Cloud] Error:', err);
-      Alert.alert('Erro', 'Falha ao salvar relatório na nuvem.');
+      console.error("[Cloud] Error:", err);
+      Alert.alert("Erro", "Falha ao salvar relatório na nuvem.");
     } finally {
       setIsGenerating(false);
     }
@@ -57,7 +62,7 @@ export function CloudReportActions({ patientId, patientName, reportData, reportT
 
   const handleShare = async () => {
     if (!cloudInfo?.pdfKey) return;
-    
+
     light();
     setIsSharing(true);
     try {
@@ -68,24 +73,23 @@ export function CloudReportActions({ patientId, patientName, reportData, reportT
       });
 
       setIsSharing(false);
-      
+
       const message = `Olá, segue o link para o relatório de ${patientName}:\n\n${res.url}\n\nEste link expira em 48 horas.`;
-      
+
       await Share.share({
         message,
         url: res.url,
         title: `Relatório - ${patientName}`,
       });
-      
     } catch (err: any) {
       setIsSharing(false);
       error();
-      Alert.alert('Erro', 'Falha ao gerar link de compartilhamento.');
+      Alert.alert("Erro", "Falha ao gerar link de compartilhamento.");
     }
   };
 
   return (
-    <View style={[styles.container, { borderTopColor: colors.border + '40' }]}>
+    <View style={[styles.container, { borderTopColor: colors.border + "40" }]}>
       <View style={styles.header}>
         <Ionicons name="cloud-outline" size={18} color={colors.primary} />
         <Text style={[styles.title, { color: colors.text }]}>Compartilhamento em Nuvem</Text>
@@ -135,7 +139,7 @@ export function CloudReportActions({ patientId, patientName, reportData, reportT
           </TouchableOpacity>
         </View>
       )}
-      
+
       {cloudInfo && (
         <Text style={[styles.footerText, { color: colors.textSecondary }]}>
           * O link gerado expira em 48 horas por segurança.
@@ -152,51 +156,51 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
   },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 8,
     marginBottom: 12,
   },
   title: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   button: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     paddingVertical: 12,
     borderRadius: 10,
     gap: 8,
   },
   buttonText: {
-    color: '#FFFFFF',
+    color: "#FFFFFF",
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   actionsRow: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: 12,
   },
   shareBtn: {
     flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     paddingVertical: 12,
     borderRadius: 10,
     gap: 8,
   },
   viewBtn: {
     width: 48,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     borderRadius: 10,
   },
   footerText: {
     fontSize: 11,
-    fontStyle: 'italic',
+    fontStyle: "italic",
     marginTop: 8,
-    textAlign: 'center',
+    textAlign: "center",
   },
 });

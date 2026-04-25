@@ -1,7 +1,7 @@
-import React from 'react';
-import { View, StyleSheet } from 'react-native';
-import { Skeleton } from './ui/Skeleton';
-import { useColors } from '@/hooks/useColorScheme';
+import React from "react";
+import { View, StyleSheet } from "react-native";
+import { Skeleton } from "./ui/Skeleton";
+import { useColors } from "@/hooks/useColorScheme";
 
 export function SkeletonExercise() {
   const colors = useColors();
@@ -28,7 +28,7 @@ export function SkeletonExercise() {
 const styles = StyleSheet.create({
   card: {
     borderRadius: 16,
-    overflow: 'hidden',
+    overflow: "hidden",
     marginBottom: 16,
     borderWidth: 1,
   },
@@ -40,9 +40,9 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 12,
   },
   badge: {
@@ -52,7 +52,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   footer: {
-    flexDirection: 'row',
+    flexDirection: "row",
     marginTop: 12,
     gap: 8,
   },

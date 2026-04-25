@@ -7,6 +7,7 @@ This design document specifies the technical implementation for making the Fisio
 ### Problem Statement
 
 The FisioFlow Professional App currently has critical compliance gaps preventing App Store approval:
+
 - No accessible privacy policy or terms of service
 - Inadequate PHI data protection and encryption
 - Missing or generic permission justifications (NSUsageDescription)
@@ -33,7 +34,6 @@ We will implement a comprehensive compliance system across 5 phases:
 - All App Store Connect metadata complete with valid credentials
 - Test account prepared with sample data
 - App approved by Apple on first submission attempt
-
 
 ## Architecture
 
@@ -92,25 +92,27 @@ We will implement a comprehensive compliance system across 5 phases:
 5. **Auditability**: All PHI access is logged immutably
 6. **Testability**: Each component is independently testable
 
-
 ## Components and Interfaces
 
 ### 1. Legal Components
 
 #### PrivacyPolicyScreen
+
 **Location**: `app/(legal)/privacy-policy.tsx`
 
 **Purpose**: Display privacy policy with acceptance tracking
 
 **Interface**:
+
 ```typescript
 interface PrivacyPolicyScreenProps {
-  mode: 'onboarding' | 'view'; // Onboarding requires acceptance
+  mode: "onboarding" | "view"; // Onboarding requires acceptance
   onAccept?: () => void;
 }
 ```
 
 **Features**:
+
 - Render markdown content from remote URL or local fallback
 - Track scroll position to ensure user reads content
 - Require explicit acceptance checkbox for onboarding
@@ -118,14 +120,16 @@ interface PrivacyPolicyScreenProps {
 - Support version tracking for policy updates
 
 #### TermsOfServiceScreen
+
 **Location**: `app/(legal)/terms-of-service.tsx`
 
 **Purpose**: Display terms of service with acceptance tracking
 
 **Interface**:
+
 ```typescript
 interface TermsOfServiceScreenProps {
-  mode: 'onboarding' | 'view';
+  mode: "onboarding" | "view";
   onAccept?: () => void;
 }
 ```
@@ -133,34 +137,38 @@ interface TermsOfServiceScreenProps {
 **Features**: Same as PrivacyPolicyScreen
 
 #### MedicalDisclaimerModal
+
 **Location**: `components/legal/MedicalDisclaimerModal.tsx`
 
 **Purpose**: Display medical disclaimers in relevant contexts
 
 **Interface**:
+
 ```typescript
 interface MedicalDisclaimerModalProps {
   visible: boolean;
-  context: 'first-launch' | 'exercise-prescription' | 'protocol-application';
+  context: "first-launch" | "exercise-prescription" | "protocol-application";
   onAcknowledge: () => void;
 }
 ```
 
 **Features**:
+
 - Context-specific disclaimer text
 - Require acknowledgment before proceeding
 - Log acknowledgment with timestamp
 - Non-dismissible until acknowledged
 
-
 ### 2. Data Control Components
 
 #### DataTransparencyScreen
+
 **Location**: `app/(settings)/data-transparency.tsx`
 
 **Purpose**: Show all data collected and how it's used
 
 **Interface**:
+
 ```typescript
 interface DataCategory {
   id: string;
@@ -178,6 +186,7 @@ interface DataTransparencyScreenProps {
 ```
 
 **Features**:
+
 - Display categorized data collection (Personal, Health, Usage, Technical)
 - Show purpose for each data type
 - List third-party recipients (Firebase, Expo)
@@ -186,18 +195,20 @@ interface DataTransparencyScreenProps {
 - Real-time updates when practices change
 
 #### DataExportScreen
+
 **Location**: `app/(settings)/data-export.tsx`
 
 **Purpose**: Allow users to export all their data
 
 **Interface**:
+
 ```typescript
 interface DataExportScreenProps {
   userId: string;
 }
 
 interface ExportOptions {
-  format: 'json' | 'pdf';
+  format: "json" | "pdf";
   includePatients: boolean;
   includeSOAPNotes: boolean;
   includePhotos: boolean;
@@ -206,6 +217,7 @@ interface ExportOptions {
 ```
 
 **Features**:
+
 - Select export format (JSON, PDF)
 - Choose data categories to include
 - Generate export asynchronously for large datasets
@@ -214,11 +226,13 @@ interface ExportOptions {
 - Auto-delete export after 7 days
 
 #### DataDeletionScreen
+
 **Location**: `app/(settings)/data-deletion.tsx`
 
 **Purpose**: Allow users to request account and data deletion
 
 **Interface**:
+
 ```typescript
 interface DataDeletionScreenProps {
   userId: string;
@@ -228,12 +242,13 @@ interface DeletionRequest {
   userId: string;
   requestedAt: Date;
   scheduledFor: Date; // 30 days later
-  status: 'pending' | 'cancelled' | 'completed';
+  status: "pending" | "cancelled" | "completed";
   reason?: string;
 }
 ```
 
 **Features**:
+
 - Display warning about permanent data loss
 - Explain 30-day grace period
 - Require password confirmation
@@ -242,26 +257,27 @@ interface DeletionRequest {
 - Provide data export before deletion
 - Log deletion request in audit log
 
-
 ### 3. Consent Management Components
 
 #### ConsentManagerScreen
+
 **Location**: `app/(settings)/consent-management.tsx`
 
 **Purpose**: Central hub for reviewing and managing all consents
 
 **Interface**:
+
 ```typescript
 interface Consent {
   id: string;
-  type: 'required' | 'optional';
-  category: 'legal' | 'permission' | 'analytics' | 'marketing';
+  type: "required" | "optional";
+  category: "legal" | "permission" | "analytics" | "marketing";
   name: string;
   description: string;
   grantedAt?: Date;
   withdrawnAt?: Date;
   version: string;
-  status: 'granted' | 'withdrawn' | 'pending';
+  status: "granted" | "withdrawn" | "pending";
 }
 
 interface ConsentManagerScreenProps {
@@ -270,6 +286,7 @@ interface ConsentManagerScreenProps {
 ```
 
 **Features**:
+
 - List all consents (required and optional)
 - Show consent status and timestamps
 - Allow withdrawal of optional consents
@@ -278,14 +295,16 @@ interface ConsentManagerScreenProps {
 - Sync with Firebase in real-time
 
 #### PermissionExplainerModal
+
 **Location**: `components/permissions/PermissionExplainerModal.tsx`
 
 **Purpose**: Explain permissions before requesting them
 
 **Interface**:
+
 ```typescript
 interface PermissionExplainerModalProps {
-  permission: 'camera' | 'photos' | 'location' | 'notifications';
+  permission: "camera" | "photos" | "location" | "notifications";
   visible: boolean;
   onRequest: () => void;
   onCancel: () => void;
@@ -293,6 +312,7 @@ interface PermissionExplainerModalProps {
 ```
 
 **Features**:
+
 - Context-specific explanation for each permission
 - Visual examples of how permission is used
 - Alternative workflows if denied
@@ -300,14 +320,16 @@ interface PermissionExplainerModalProps {
 - Track explanation views in analytics
 
 #### NotificationPreferencesScreen
+
 **Location**: `app/(settings)/notification-preferences.tsx`
 
 **Purpose**: Granular control over notification types
 
 **Interface**:
+
 ```typescript
 interface NotificationPreference {
-  category: 'appointments' | 'patients' | 'system' | 'marketing';
+  category: "appointments" | "patients" | "system" | "marketing";
   enabled: boolean;
   quietHoursEnabled: boolean;
   quietHoursStart?: string; // HH:mm
@@ -320,6 +342,7 @@ interface NotificationPreferencesScreenProps {
 ```
 
 **Features**:
+
 - Toggle each notification category
 - Set quiet hours per category
 - Test notification delivery
@@ -327,25 +350,26 @@ interface NotificationPreferencesScreenProps {
 - Sync preferences to Firebase
 - Immediate effect (no app restart)
 
-
 ### 4. Authentication Components
 
 #### BiometricAuthScreen
+
 **Location**: `app/(auth)/biometric-setup.tsx`
 
 **Purpose**: Setup and manage biometric authentication
 
 **Interface**:
+
 ```typescript
 interface BiometricAuthScreenProps {
-  mode: 'setup' | 'verify';
+  mode: "setup" | "verify";
   onSuccess: () => void;
   onFallback: () => void;
 }
 
 interface BiometricConfig {
   enabled: boolean;
-  type: 'faceId' | 'touchId' | 'none';
+  type: "faceId" | "touchId" | "none";
   fallbackEnabled: boolean;
   requireOnLaunch: boolean;
   requireAfterBackground: boolean; // 5 minutes
@@ -353,6 +377,7 @@ interface BiometricConfig {
 ```
 
 **Features**:
+
 - Detect available biometric hardware
 - Setup Face ID or Touch ID
 - Configure PIN fallback (6 digits minimum)
@@ -361,19 +386,22 @@ interface BiometricConfig {
 - Auto-logout after failed attempts (5 tries)
 
 #### PINSetupScreen
+
 **Location**: `app/(auth)/pin-setup.tsx`
 
 **Purpose**: Setup PIN as biometric fallback
 
 **Interface**:
+
 ```typescript
 interface PINSetupScreenProps {
-  mode: 'create' | 'verify' | 'change';
+  mode: "create" | "verify" | "change";
   onSuccess: (pin: string) => void;
 }
 ```
 
 **Features**:
+
 - Require 6-digit PIN minimum
 - Confirm PIN entry (enter twice)
 - Validate PIN strength
@@ -381,47 +409,51 @@ interface PINSetupScreenProps {
 - Support PIN change with old PIN verification
 
 #### TwoFactorAuthScreen
+
 **Location**: `app/(auth)/two-factor-setup.tsx`
 
 **Purpose**: Optional 2FA setup for enhanced security
 
 **Interface**:
+
 ```typescript
 interface TwoFactorAuthScreenProps {
   userId: string;
-  mode: 'setup' | 'verify' | 'disable';
+  mode: "setup" | "verify" | "disable";
 }
 
 interface TwoFactorConfig {
   enabled: boolean;
-  method: 'sms' | 'email' | 'authenticator';
+  method: "sms" | "email" | "authenticator";
   backupCodes: string[];
 }
 ```
 
 **Features**:
+
 - Generate QR code for authenticator apps
 - Send verification codes via SMS or email
 - Generate backup codes
 - Verify 2FA during setup
 - Allow disabling with password confirmation
 
-
 ### 5. Audit and Compliance Components
 
 #### AuditLogScreen
+
 **Location**: `app/(settings)/audit-log.tsx`
 
 **Purpose**: Display user's audit log entries
 
 **Interface**:
+
 ```typescript
 interface AuditLogEntry {
   id: string;
   userId: string;
   timestamp: Date;
-  action: 'login' | 'logout' | 'view' | 'create' | 'update' | 'delete' | 'export';
-  resourceType: 'patient' | 'soap_note' | 'photo' | 'protocol' | 'settings';
+  action: "login" | "logout" | "view" | "create" | "update" | "delete" | "export";
+  resourceType: "patient" | "soap_note" | "photo" | "protocol" | "settings";
   resourceId?: string;
   deviceInfo: {
     model: string;
@@ -444,6 +476,7 @@ interface AuditLogScreenProps {
 ```
 
 **Features**:
+
 - Display chronological audit log
 - Filter by date range, action type, resource type
 - Search by resource ID
@@ -451,7 +484,6 @@ interface AuditLogScreenProps {
 - Paginate for performance (50 entries per page)
 - Real-time updates for new entries
 - Cannot modify or delete entries (immutable)
-
 
 ## Data Models
 
@@ -483,7 +515,7 @@ export interface TermsOfServiceAcceptance {
 export interface MedicalDisclaimerAcknowledgment {
   id: string;
   userId: string;
-  context: 'first-launch' | 'exercise-prescription' | 'protocol-application';
+  context: "first-launch" | "exercise-prescription" | "protocol-application";
   acknowledgedAt: Date;
   version: string;
 }
@@ -492,7 +524,7 @@ export interface DeviceInfo {
   model: string;
   osVersion: string;
   appVersion: string;
-  platform: 'ios' | 'android';
+  platform: "ios" | "android";
 }
 ```
 
@@ -501,9 +533,9 @@ export interface DeviceInfo {
 ```typescript
 // types/consent.ts
 
-export type ConsentType = 'required' | 'optional';
-export type ConsentCategory = 'legal' | 'permission' | 'analytics' | 'marketing';
-export type ConsentStatus = 'granted' | 'withdrawn' | 'pending';
+export type ConsentType = "required" | "optional";
+export type ConsentCategory = "legal" | "permission" | "analytics" | "marketing";
+export type ConsentStatus = "granted" | "withdrawn" | "pending";
 
 export interface Consent {
   id: string;
@@ -523,7 +555,7 @@ export interface ConsentHistory {
   id: string;
   consentId: string;
   userId: string;
-  action: 'granted' | 'withdrawn' | 'updated';
+  action: "granted" | "withdrawn" | "updated";
   timestamp: Date;
   version: string;
   reason?: string;
@@ -531,45 +563,44 @@ export interface ConsentHistory {
 
 // Predefined consent types
 export const CONSENT_TYPES = {
-  PRIVACY_POLICY: 'privacy-policy',
-  TERMS_OF_SERVICE: 'terms-of-service',
-  CAMERA_PERMISSION: 'camera-permission',
-  PHOTOS_PERMISSION: 'photos-permission',
-  LOCATION_PERMISSION: 'location-permission',
-  NOTIFICATIONS_PERMISSION: 'notifications-permission',
-  ANALYTICS: 'analytics',
-  CRASH_REPORTS: 'crash-reports',
-  MARKETING_EMAILS: 'marketing-emails',
+  PRIVACY_POLICY: "privacy-policy",
+  TERMS_OF_SERVICE: "terms-of-service",
+  CAMERA_PERMISSION: "camera-permission",
+  PHOTOS_PERMISSION: "photos-permission",
+  LOCATION_PERMISSION: "location-permission",
+  NOTIFICATIONS_PERMISSION: "notifications-permission",
+  ANALYTICS: "analytics",
+  CRASH_REPORTS: "crash-reports",
+  MARKETING_EMAILS: "marketing-emails",
 } as const;
 ```
-
 
 #### Audit Log Models
 
 ```typescript
 // types/audit.ts
 
-export type AuditAction = 
-  | 'login' 
-  | 'logout' 
-  | 'view' 
-  | 'create' 
-  | 'update' 
-  | 'delete' 
-  | 'export'
-  | 'consent-granted'
-  | 'consent-withdrawn'
-  | 'settings-changed';
+export type AuditAction =
+  | "login"
+  | "logout"
+  | "view"
+  | "create"
+  | "update"
+  | "delete"
+  | "export"
+  | "consent-granted"
+  | "consent-withdrawn"
+  | "settings-changed";
 
-export type AuditResourceType = 
-  | 'patient' 
-  | 'soap_note' 
-  | 'photo' 
-  | 'protocol' 
-  | 'exercise'
-  | 'appointment'
-  | 'settings'
-  | 'consent';
+export type AuditResourceType =
+  | "patient"
+  | "soap_note"
+  | "photo"
+  | "protocol"
+  | "exercise"
+  | "appointment"
+  | "settings"
+  | "consent";
 
 export interface AuditLogEntry {
   id: string;
@@ -600,8 +631,8 @@ export interface AuditLogQuery {
 ```typescript
 // types/dataExport.ts
 
-export type ExportFormat = 'json' | 'pdf';
-export type ExportStatus = 'pending' | 'processing' | 'completed' | 'failed' | 'expired';
+export type ExportFormat = "json" | "pdf";
+export type ExportStatus = "pending" | "processing" | "completed" | "failed" | "expired";
 
 export interface DataExportRequest {
   id: string;
@@ -648,13 +679,12 @@ export interface ExportedData {
 }
 ```
 
-
 #### Data Deletion Models
 
 ```typescript
 // types/dataDeletion.ts
 
-export type DeletionStatus = 'pending' | 'cancelled' | 'completed';
+export type DeletionStatus = "pending" | "cancelled" | "completed";
 
 export interface DataDeletionRequest {
   id: string;
@@ -686,8 +716,8 @@ export interface DeletionScope {
 ```typescript
 // types/auth.ts
 
-export type BiometricType = 'faceId' | 'touchId' | 'none';
-export type TwoFactorMethod = 'sms' | 'email' | 'authenticator';
+export type BiometricType = "faceId" | "touchId" | "none";
+export type TwoFactorMethod = "sms" | "email" | "authenticator";
 
 export interface BiometricConfig {
   userId: string;
@@ -721,7 +751,6 @@ export interface SessionConfig {
 }
 ```
 
-
 #### Encryption Models
 
 ```typescript
@@ -730,7 +759,7 @@ export interface SessionConfig {
 export interface EncryptionKey {
   id: string;
   userId: string;
-  algorithm: 'AES-256-GCM';
+  algorithm: "AES-256-GCM";
   keyHash: string; // Never store actual key
   createdAt: Date;
   rotatedAt?: Date;
@@ -741,13 +770,13 @@ export interface EncryptedData {
   ciphertext: string;
   iv: string; // Initialization vector
   authTag: string; // Authentication tag for GCM
-  algorithm: 'AES-256-GCM';
+  algorithm: "AES-256-GCM";
   keyId: string;
 }
 
 export interface E2EEConfig {
   enabled: boolean;
-  resourceTypes: ('soap_note' | 'photo' | 'document')[];
+  resourceTypes: ("soap_note" | "photo" | "document")[];
   keyRotationDays: number; // Default 90
 }
 ```
@@ -757,7 +786,7 @@ export interface E2EEConfig {
 ```typescript
 // types/notifications.ts
 
-export type NotificationCategory = 'appointments' | 'patients' | 'system' | 'marketing';
+export type NotificationCategory = "appointments" | "patients" | "system" | "marketing";
 
 export interface NotificationPreference {
   userId: string;
@@ -783,7 +812,6 @@ export interface NotificationPreferences {
 }
 ```
 
-
 ## API and Service Layer
 
 ### 1. Consent Manager Service
@@ -804,17 +832,13 @@ export class ConsentManager {
     userId: string,
     consentType: string,
     version: string,
-    metadata?: Record<string, any>
+    metadata?: Record<string, any>,
   ): Promise<Consent>;
 
   /**
    * Withdraw consent (only for optional consents)
    */
-  async withdrawConsent(
-    userId: string,
-    consentType: string,
-    reason?: string
-  ): Promise<void>;
+  async withdrawConsent(userId: string, consentType: string, reason?: string): Promise<void>;
 
   /**
    * Check if user has granted specific consent
@@ -844,6 +868,7 @@ export class ConsentManager {
 ```
 
 **Implementation Notes**:
+
 - Store consents in Firestore collection `user_consents`
 - Use Firebase Auth UID as userId
 - Implement real-time listeners for consent changes
@@ -851,7 +876,6 @@ export class ConsentManager {
 - Validate consent type against predefined list
 - Prevent withdrawal of required consents
 - Log all consent changes to audit log
-
 
 ### 2. Audit Logger Service
 
@@ -862,7 +886,7 @@ export class AuditLogger {
   /**
    * Log an audit event
    */
-  async log(entry: Omit<AuditLogEntry, 'id' | 'timestamp'>): Promise<void>;
+  async log(entry: Omit<AuditLogEntry, "id" | "timestamp">): Promise<void>;
 
   /**
    * Log user login
@@ -880,7 +904,7 @@ export class AuditLogger {
   async logPHIAccess(
     userId: string,
     resourceType: AuditResourceType,
-    resourceId: string
+    resourceId: string,
   ): Promise<void>;
 
   /**
@@ -888,10 +912,10 @@ export class AuditLogger {
    */
   async logPHIModification(
     userId: string,
-    action: 'create' | 'update' | 'delete',
+    action: "create" | "update" | "delete",
     resourceType: AuditResourceType,
     resourceId: string,
-    metadata?: Record<string, any>
+    metadata?: Record<string, any>,
   ): Promise<void>;
 
   /**
@@ -905,7 +929,7 @@ export class AuditLogger {
   async logConsentChange(
     userId: string,
     consentType: string,
-    action: 'granted' | 'withdrawn'
+    action: "granted" | "withdrawn",
   ): Promise<void>;
 
   /**
@@ -931,6 +955,7 @@ export class AuditLogger {
 ```
 
 **Implementation Notes**:
+
 - Store in Firestore collection `audit_logs` with append-only security rules
 - Use Firestore server timestamp for accuracy
 - Never include PHI in log messages (only IDs)
@@ -938,7 +963,6 @@ export class AuditLogger {
 - Set TTL for automatic deletion after 1 year (Firestore TTL policy)
 - Index by userId, timestamp, action, resourceType for efficient queries
 - Compress old logs (> 90 days) to reduce storage costs
-
 
 ### 3. Encryption Service
 
@@ -999,6 +1023,7 @@ export class EncryptionService {
 ```
 
 **Implementation Notes**:
+
 - Use `expo-crypto` for AES-256-GCM encryption
 - Store keys in `expo-secure-store` (iOS Keychain)
 - Implement key derivation using PBKDF2
@@ -1006,7 +1031,6 @@ export class EncryptionService {
 - Use authenticated encryption (GCM mode) to prevent tampering
 - Implement key rotation every 90 days
 - Clear all keys from memory on logout or app background
-
 
 ### 4. Data Export Service
 
@@ -1020,7 +1044,7 @@ export class DataExportService {
   async requestExport(
     userId: string,
     format: ExportFormat,
-    options: ExportOptions
+    options: ExportOptions,
   ): Promise<DataExportRequest>;
 
   /**
@@ -1061,6 +1085,7 @@ export class DataExportService {
 ```
 
 **Implementation Notes**:
+
 - Use Firebase Cloud Functions for async export generation
 - Store export files in Firebase Storage with 7-day expiration
 - Send email notification when export is ready
@@ -1069,7 +1094,6 @@ export class DataExportService {
 - Encrypt exports with user-provided password
 - Include metadata (export date, version, user info)
 - Implement rate limiting (1 export per 24 hours)
-
 
 ### 5. Data Deletion Service
 
@@ -1083,7 +1107,7 @@ export class DataDeletionService {
   async requestDeletion(
     userId: string,
     password: string,
-    reason?: string
+    reason?: string,
   ): Promise<DataDeletionRequest>;
 
   /**
@@ -1123,6 +1147,7 @@ export class DataDeletionService {
 ```
 
 **Implementation Notes**:
+
 - Require password confirmation before deletion
 - Implement 30-day grace period (LGPD requirement)
 - Send email confirmation with cancellation link
@@ -1132,7 +1157,6 @@ export class DataDeletionService {
 - Delete all Firebase Storage files
 - Remove user from Firebase Auth
 - Log deletion in audit log before anonymization
-
 
 ### 6. Permission Manager Service
 
@@ -1144,22 +1168,22 @@ export class PermissionManager {
    * Request permission with explanation
    */
   async requestPermission(
-    permission: 'camera' | 'photos' | 'location' | 'notifications',
-    context?: string
+    permission: "camera" | "photos" | "location" | "notifications",
+    context?: string,
   ): Promise<boolean>;
 
   /**
    * Check permission status
    */
   async checkPermission(
-    permission: 'camera' | 'photos' | 'location' | 'notifications'
-  ): Promise<'granted' | 'denied' | 'undetermined'>;
+    permission: "camera" | "photos" | "location" | "notifications",
+  ): Promise<"granted" | "denied" | "undetermined">;
 
   /**
    * Show permission explainer before requesting
    */
   async showExplainer(
-    permission: 'camera' | 'photos' | 'location' | 'notifications'
+    permission: "camera" | "photos" | "location" | "notifications",
   ): Promise<boolean>;
 
   /**
@@ -1180,14 +1204,12 @@ export class PermissionManager {
   /**
    * Track permission request in analytics
    */
-  private async trackPermissionRequest(
-    permission: string,
-    granted: boolean
-  ): Promise<void>;
+  private async trackPermissionRequest(permission: string, granted: boolean): Promise<void>;
 }
 ```
 
 **Implementation Notes**:
+
 - Use Expo modules for permission requests
 - Show explainer modal before first request
 - Track permission status in consent manager
@@ -1195,7 +1217,6 @@ export class PermissionManager {
 - Never request permissions on app launch
 - Request permissions just-in-time (when feature is used)
 - Log permission changes to audit log
-
 
 ### 7. Biometric Authentication Service
 
@@ -1261,6 +1282,7 @@ export class BiometricAuthService {
 ```
 
 **Implementation Notes**:
+
 - Use `expo-local-authentication` for biometric auth
 - Store PIN hash in `expo-secure-store`
 - Implement exponential backoff for failed attempts
@@ -1270,23 +1292,25 @@ export class BiometricAuthService {
 - Provide clear error messages for biometric failures
 - Log authentication attempts to audit log
 
-
 ## Security Architecture
 
 ### Encryption Strategy
 
 #### Data at Rest
+
 - **PHI in Firestore**: Encrypted using AES-256-GCM before storage
 - **Files in Storage**: Encrypted before upload to Firebase Storage
 - **Local Cache**: Encrypted using `expo-secure-store`
 - **Authentication Tokens**: Stored in iOS Keychain via SecureStore
 
 #### Data in Transit
+
 - **Firebase Connections**: TLS 1.3 with certificate pinning
 - **API Calls**: HTTPS only, reject HTTP connections
 - **WebSocket**: Secure WebSocket (WSS) for real-time updates
 
 #### Key Management
+
 - **User Keys**: Derived from user credentials using PBKDF2
 - **Storage**: iOS Keychain via `expo-secure-store`
 - **Rotation**: Automatic key rotation every 90 days
@@ -1334,7 +1358,6 @@ export class BiometricAuthService {
    └─ Return to login screen
 ```
 
-
 ### Firebase Security Rules
 
 #### Firestore Security Rules
@@ -1343,93 +1366,93 @@ export class BiometricAuthService {
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    
+
     // Helper functions
     function isAuthenticated() {
       return request.auth != null;
     }
-    
+
     function isOwner(userId) {
       return request.auth.uid == userId;
     }
-    
+
     function isValidTimestamp() {
       return request.resource.data.timestamp == request.time;
     }
-    
+
     // User Consents
     match /user_consents/{consentId} {
       allow read: if isAuthenticated() && isOwner(resource.data.userId);
-      allow create: if isAuthenticated() && 
+      allow create: if isAuthenticated() &&
                       isOwner(request.resource.data.userId) &&
                       isValidTimestamp();
       allow update: if isAuthenticated() && isOwner(resource.data.userId);
       allow delete: if false; // Never allow deletion
     }
-    
+
     // Consent History
     match /consent_history/{historyId} {
       allow read: if isAuthenticated() && isOwner(resource.data.userId);
-      allow create: if isAuthenticated() && 
+      allow create: if isAuthenticated() &&
                       isOwner(request.resource.data.userId) &&
                       isValidTimestamp();
       allow update, delete: if false; // Immutable
     }
-    
+
     // Audit Logs (append-only)
     match /audit_logs/{logId} {
       allow read: if isAuthenticated() && isOwner(resource.data.userId);
-      allow create: if isAuthenticated() && 
+      allow create: if isAuthenticated() &&
                       isOwner(request.resource.data.userId) &&
                       isValidTimestamp();
       allow update, delete: if false; // Immutable
     }
-    
+
     // Privacy Policy Acceptances
     match /privacy_acceptances/{acceptanceId} {
       allow read: if isAuthenticated() && isOwner(resource.data.userId);
-      allow create: if isAuthenticated() && 
+      allow create: if isAuthenticated() &&
                       isOwner(request.resource.data.userId) &&
                       isValidTimestamp();
       allow update, delete: if false; // Immutable
     }
-    
+
     // Terms of Service Acceptances
     match /terms_acceptances/{acceptanceId} {
       allow read: if isAuthenticated() && isOwner(resource.data.userId);
-      allow create: if isAuthenticated() && 
+      allow create: if isAuthenticated() &&
                       isOwner(request.resource.data.userId) &&
                       isValidTimestamp();
       allow update, delete: if false; // Immutable
     }
-    
+
     // Data Export Requests
     match /data_exports/{exportId} {
       allow read: if isAuthenticated() && isOwner(resource.data.userId);
-      allow create: if isAuthenticated() && 
+      allow create: if isAuthenticated() &&
                       isOwner(request.resource.data.userId);
-      allow update: if isAuthenticated() && 
+      allow update: if isAuthenticated() &&
                       isOwner(resource.data.userId) &&
                       request.resource.data.userId == resource.data.userId;
       allow delete: if false; // Keep for audit trail
     }
-    
+
     // Data Deletion Requests
     match /deletion_requests/{deletionId} {
       allow read: if isAuthenticated() && isOwner(resource.data.userId);
-      allow create: if isAuthenticated() && 
+      allow create: if isAuthenticated() &&
                       isOwner(request.resource.data.userId);
-      allow update: if isAuthenticated() && 
+      allow update: if isAuthenticated() &&
                       isOwner(resource.data.userId) &&
                       request.resource.data.status in ['pending', 'cancelled'];
       allow delete: if false; // Keep for audit trail
     }
-    
+
     // Biometric Configs
     match /biometric_configs/{userId} {
       allow read, write: if isAuthenticated() && isOwner(userId);
     }
-    
+
     // Notification Preferences
     match /notification_preferences/{userId} {
       allow read, write: if isAuthenticated() && isOwner(userId);
@@ -1438,45 +1461,44 @@ service cloud.firestore {
 }
 ```
 
-
 #### Firebase Storage Security Rules
 
 ```javascript
 rules_version = '2';
 service firebase.storage {
   match /b/{bucket}/o {
-    
+
     // Helper functions
     function isAuthenticated() {
       return request.auth != null;
     }
-    
+
     function isOwner(userId) {
       return request.auth.uid == userId;
     }
-    
+
     function isValidFileSize() {
       return request.resource.size < 50 * 1024 * 1024; // 50MB limit
     }
-    
+
     // Patient Photos (encrypted)
     match /patients/{userId}/{patientId}/photos/{photoId} {
       allow read: if isAuthenticated() && isOwner(userId);
-      allow write: if isAuthenticated() && 
-                     isOwner(userId) && 
+      allow write: if isAuthenticated() &&
+                     isOwner(userId) &&
                      isValidFileSize();
       allow delete: if isAuthenticated() && isOwner(userId);
     }
-    
+
     // SOAP Note Attachments (encrypted)
     match /soap_notes/{userId}/{soapId}/attachments/{attachmentId} {
       allow read: if isAuthenticated() && isOwner(userId);
-      allow write: if isAuthenticated() && 
-                     isOwner(userId) && 
+      allow write: if isAuthenticated() &&
+                     isOwner(userId) &&
                      isValidFileSize();
       allow delete: if isAuthenticated() && isOwner(userId);
     }
-    
+
     // Data Exports (encrypted, temporary)
     match /exports/{userId}/{exportId} {
       allow read: if isAuthenticated() && isOwner(userId);
@@ -1531,7 +1553,6 @@ service firebase.storage {
 }
 ```
 
-
 ## State Management
 
 ### Global State Architecture
@@ -1548,13 +1569,13 @@ interface ComplianceState {
   privacyPolicyAccepted: boolean;
   termsAccepted: boolean;
   medicalDisclaimerAcknowledged: boolean;
-  
+
   // Consent status
   consents: Record<string, Consent>;
-  
+
   // Onboarding status
   onboardingCompleted: boolean;
-  
+
   // Actions
   setPrivacyPolicyAccepted: (accepted: boolean) => void;
   setTermsAccepted: (accepted: boolean) => void;
@@ -1574,13 +1595,13 @@ interface AuthState {
   // Existing auth state
   user: User | null;
   loading: boolean;
-  
+
   // Enhanced security
   biometricEnabled: boolean;
   sessionTimeout: number;
   lastActivityAt: Date | null;
   isLocked: boolean;
-  
+
   // Actions
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
@@ -1602,18 +1623,17 @@ interface AuditState {
   // Audit log entries
   entries: AuditLogEntry[];
   loading: boolean;
-  
+
   // Filters
   filters: AuditLogQuery;
-  
+
   // Actions
   loadAuditLog: (userId: string, query?: AuditLogQuery) => Promise<void>;
-  logAction: (entry: Omit<AuditLogEntry, 'id' | 'timestamp'>) => Promise<void>;
+  logAction: (entry: Omit<AuditLogEntry, "id" | "timestamp">) => Promise<void>;
   exportAuditLog: (userId: string) => Promise<string>;
   setFilters: (filters: Partial<AuditLogQuery>) => void;
 }
 ```
-
 
 ## Navigation and User Flows
 
@@ -1700,7 +1720,6 @@ Request System Permission
     └─ Denied → Log denial, show alternative workflow
 ```
 
-
 ### Data Export Flow
 
 ```
@@ -1765,7 +1784,6 @@ After 30 Days (Automated)
     ├─ Delete Firebase Auth account
     └─ Send final confirmation email
 ```
-
 
 ## Firebase Configuration
 
@@ -1878,7 +1896,6 @@ Firebase Storage:
          (Auto-deleted after 7 days via TTL)
 ```
 
-
 ### App Configuration Updates
 
 #### app.json Updates
@@ -1921,7 +1938,6 @@ Firebase Storage:
 
 **Note**: Replace placeholders with actual Apple Developer credentials.
 
-
 ## Error Handling Strategy
 
 ### Error Categories
@@ -1955,33 +1971,32 @@ Firebase Storage:
 ```typescript
 export const ERROR_MESSAGES = {
   // Network
-  OFFLINE: 'Você está offline. As alterações serão sincronizadas quando reconectar.',
-  NETWORK_ERROR: 'Erro de conexão. Tentando novamente...',
-  
+  OFFLINE: "Você está offline. As alterações serão sincronizadas quando reconectar.",
+  NETWORK_ERROR: "Erro de conexão. Tentando novamente...",
+
   // Authentication
-  INVALID_CREDENTIALS: 'Email ou senha incorretos.',
-  SESSION_EXPIRED: 'Sua sessão expirou. Por favor, faça login novamente.',
-  BIOMETRIC_FAILED: 'Autenticação biométrica falhou. Use seu PIN.',
-  ACCOUNT_LOCKED: 'Conta bloqueada por 15 minutos após múltiplas tentativas.',
-  
+  INVALID_CREDENTIALS: "Email ou senha incorretos.",
+  SESSION_EXPIRED: "Sua sessão expirou. Por favor, faça login novamente.",
+  BIOMETRIC_FAILED: "Autenticação biométrica falhou. Use seu PIN.",
+  ACCOUNT_LOCKED: "Conta bloqueada por 15 minutos após múltiplas tentativas.",
+
   // Permissions
-  CAMERA_DENIED: 'Acesso à câmera negado. Você pode habilitar nas Configurações.',
-  PHOTOS_DENIED: 'Acesso às fotos negado. Você pode habilitar nas Configurações.',
-  LOCATION_DENIED: 'Acesso à localização negado. Check-in manual disponível.',
-  NOTIFICATIONS_DENIED: 'Notificações desabilitadas. Você receberá alertas no app.',
-  
+  CAMERA_DENIED: "Acesso à câmera negado. Você pode habilitar nas Configurações.",
+  PHOTOS_DENIED: "Acesso às fotos negado. Você pode habilitar nas Configurações.",
+  LOCATION_DENIED: "Acesso à localização negado. Check-in manual disponível.",
+  NOTIFICATIONS_DENIED: "Notificações desabilitadas. Você receberá alertas no app.",
+
   // Data
-  ENCRYPTION_ERROR: 'Erro ao proteger dados. Contate o suporte.',
-  EXPORT_FAILED: 'Falha ao exportar dados. Tente novamente.',
-  DELETION_FAILED: 'Falha ao processar solicitação de exclusão.',
-  
+  ENCRYPTION_ERROR: "Erro ao proteger dados. Contate o suporte.",
+  EXPORT_FAILED: "Falha ao exportar dados. Tente novamente.",
+  DELETION_FAILED: "Falha ao processar solicitação de exclusão.",
+
   // Firebase
-  PERMISSION_DENIED: 'Você não tem permissão para acessar estes dados.',
-  QUOTA_EXCEEDED: 'Limite de armazenamento atingido. Contate o suporte.',
-  FUNCTION_TIMEOUT: 'Operação demorou muito. Tente novamente.',
+  PERMISSION_DENIED: "Você não tem permissão para acessar estes dados.",
+  QUOTA_EXCEEDED: "Limite de armazenamento atingido. Contate o suporte.",
+  FUNCTION_TIMEOUT: "Operação demorou muito. Tente novamente.",
 };
 ```
-
 
 ## Testing Strategy
 
@@ -2004,6 +2019,7 @@ We will implement a dual testing strategy combining unit tests and property-base
 All property-based tests will run with minimum 100 iterations to ensure comprehensive coverage through randomization.
 
 Each property test must include a comment tag referencing the design document property:
+
 ```typescript
 // Feature: app-store-compliance, Property 1: First-time users must accept legal documents
 ```
@@ -2015,14 +2031,14 @@ Each property test must include a comment tag referencing the design document pr
 - E2E test coverage: Critical user flows (onboarding, data export, deletion)
 - Accessibility test coverage: All interactive screens
 
-
 ## Correctness Properties
 
-*A property is a characteristic or behavior that should hold true across all valid executions of a system—essentially, a formal statement about what the system should do. Properties serve as the bridge between human-readable specifications and machine-verifiable correctness guarantees.*
+_A property is a characteristic or behavior that should hold true across all valid executions of a system—essentially, a formal statement about what the system should do. Properties serve as the bridge between human-readable specifications and machine-verifiable correctness guarantees._
 
 ### Property Reflection
 
 After analyzing all 315 acceptance criteria, I identified the following redundancies:
+
 - Properties 2.1 and 13.1 both test PHI encryption at rest → Combined into Property 1
 - Properties 2.13 and 13.9 both test cache clearing on logout → Combined into Property 2
 - Properties 5.13 and 11.1 both test audit logging for authentication → Combined into Property 6
@@ -2031,7 +2047,7 @@ The following properties provide unique validation value and will be implemented
 
 ### Property 1: PHI Encryption at Rest
 
-*For any* PHI data (SOAP notes, patient photos, medical records), when stored in Firestore or Firebase Storage, the data must be encrypted using AES-256-GCM before storage.
+_For any_ PHI data (SOAP notes, patient photos, medical records), when stored in Firestore or Firebase Storage, the data must be encrypted using AES-256-GCM before storage.
 
 **Validates: Requirements 2.1, 2.4, 13.1**
 
@@ -2039,7 +2055,7 @@ The following properties provide unique validation value and will be implemented
 
 ### Property 2: Cache Clearing on Logout
 
-*For any* user session, when the user logs out, all cached PHI data must be cleared from device memory, SecureStore, and AsyncStorage.
+_For any_ user session, when the user logs out, all cached PHI data must be cleared from device memory, SecureStore, and AsyncStorage.
 
 **Validates: Requirements 2.13, 13.9**
 
@@ -2047,16 +2063,15 @@ The following properties provide unique validation value and will be implemented
 
 ### Property 3: SOAP Note Encryption Round Trip
 
-*For any* SOAP note content, encrypting then decrypting the content must produce the original text without data loss or corruption.
+_For any_ SOAP note content, encrypting then decrypting the content must produce the original text without data loss or corruption.
 
 **Validates: Requirements 2.5**
 
 **Test Strategy**: Generate random SOAP note text (including special characters, Unicode), encrypt with E2EE, decrypt, and verify equality.
 
-
 ### Property 4: Legal Acceptance Required for First Use
 
-*For any* new user account, the user cannot access the main app functionality until they have explicitly accepted both Privacy Policy and Terms of Service.
+_For any_ new user account, the user cannot access the main app functionality until they have explicitly accepted both Privacy Policy and Terms of Service.
 
 **Validates: Requirements 1.5, 9.9**
 
@@ -2064,7 +2079,7 @@ The following properties provide unique validation value and will be implemented
 
 ### Property 5: Legal Acceptance Timestamp Storage
 
-*For any* Privacy Policy or Terms of Service acceptance, a timestamp must be stored in Firestore with the user ID and document version.
+_For any_ Privacy Policy or Terms of Service acceptance, a timestamp must be stored in Firestore with the user ID and document version.
 
 **Validates: Requirements 1.12**
 
@@ -2072,7 +2087,7 @@ The following properties provide unique validation value and will be implemented
 
 ### Property 6: Policy Version Change Requires Re-acceptance
 
-*For any* user with existing policy acceptance, when the policy version changes, the user must re-accept before continuing to use the app.
+_For any_ user with existing policy acceptance, when the policy version changes, the user must re-accept before continuing to use the app.
 
 **Validates: Requirements 1.13**
 
@@ -2080,7 +2095,7 @@ The following properties provide unique validation value and will be implemented
 
 ### Property 7: Authentication Audit Logging
 
-*For any* authentication event (login, logout, biometric auth), an immutable audit log entry must be created in Firestore with timestamp, userId, action, and device info.
+_For any_ authentication event (login, logout, biometric auth), an immutable audit log entry must be created in Firestore with timestamp, userId, action, and device info.
 
 **Validates: Requirements 5.13, 11.1, 11.3**
 
@@ -2088,7 +2103,7 @@ The following properties provide unique validation value and will be implemented
 
 ### Property 8: PHI Modification Audit Logging
 
-*For any* PHI modification (create, update, delete of patient data, SOAP notes, photos), an immutable audit log entry must be created with action type, resource type, and resource ID.
+_For any_ PHI modification (create, update, delete of patient data, SOAP notes, photos), an immutable audit log entry must be created with action type, resource type, and resource ID.
 
 **Validates: Requirements 11.4, 11.5**
 
@@ -2096,16 +2111,15 @@ The following properties provide unique validation value and will be implemented
 
 ### Property 9: Audit Log Immutability
 
-*For any* audit log entry, once created, it cannot be modified or deleted through the app's normal operations.
+_For any_ audit log entry, once created, it cannot be modified or deleted through the app's normal operations.
 
 **Validates: Requirements 11.16**
 
 **Test Strategy**: Create random audit log entries, attempt to update or delete them, verify operations fail with permission denied.
 
-
 ### Property 10: Permission Alternative Workflows
 
-*For any* denied device permission (camera, photos, location), the app must provide an alternative workflow that allows the user to accomplish their goal without that permission.
+_For any_ denied device permission (camera, photos, location), the app must provide an alternative workflow that allows the user to accomplish their goal without that permission.
 
 **Validates: Requirements 3.10**
 
@@ -2113,7 +2127,7 @@ The following properties provide unique validation value and will be implemented
 
 ### Property 11: Biometric Authentication for PHI Access
 
-*For any* PHI access attempt when biometric authentication is enabled, the user must successfully authenticate with Face ID/Touch ID or PIN before viewing the data.
+_For any_ PHI access attempt when biometric authentication is enabled, the user must successfully authenticate with Face ID/Touch ID or PIN before viewing the data.
 
 **Validates: Requirements 5.1**
 
@@ -2121,7 +2135,7 @@ The following properties provide unique validation value and will be implemented
 
 ### Property 12: Data Export Completeness
 
-*For any* data export request with all categories selected, the exported JSON must contain all user data including patients, SOAP notes, photos, protocols, exercises, appointments, audit log, and consents.
+_For any_ data export request with all categories selected, the exported JSON must contain all user data including patients, SOAP notes, photos, protocols, exercises, appointments, audit log, and consents.
 
 **Validates: Requirements 6.6, 6.8, 6.9**
 
@@ -2129,7 +2143,7 @@ The following properties provide unique validation value and will be implemented
 
 ### Property 13: Data Deletion Grace Period
 
-*For any* data deletion request, the deletion must be scheduled exactly 30 days in the future, and the user must be able to cancel the request at any time before that date.
+_For any_ data deletion request, the deletion must be scheduled exactly 30 days in the future, and the user must be able to cancel the request at any time before that date.
 
 **Validates: Requirements 6.13**
 
@@ -2137,16 +2151,15 @@ The following properties provide unique validation value and will be implemented
 
 ### Property 14: Notification Permission Not on Launch
 
-*For any* first app launch, the push notification permission request must not be triggered automatically—it should only be requested when the user accesses notification-related features.
+_For any_ first app launch, the push notification permission request must not be triggered automatically—it should only be requested when the user accesses notification-related features.
 
 **Validates: Requirements 7.2**
 
 **Test Strategy**: Simulate first app launch, verify notification permission is not requested, navigate through app, verify permission is only requested when accessing notification settings.
 
-
 ### Property 15: Notification Preference Immediate Effect
 
-*For any* notification category that is disabled by the user, notifications of that category must stop being sent immediately without requiring app restart.
+_For any_ notification category that is disabled by the user, notifications of that category must stop being sent immediately without requiring app restart.
 
 **Validates: Requirements 7.15**
 
@@ -2154,7 +2167,7 @@ The following properties provide unique validation value and will be implemented
 
 ### Property 16: Consent Withdrawal Stops Data Collection
 
-*For any* optional consent that is withdrawn, the related data collection activity must stop immediately.
+_For any_ optional consent that is withdrawn, the related data collection activity must stop immediately.
 
 **Validates: Requirements 12.10**
 
@@ -2162,7 +2175,7 @@ The following properties provide unique validation value and will be implemented
 
 ### Property 17: Consent Version Tracking
 
-*For any* consent record stored in Firestore, it must include a version field that tracks which version of the policy/permission the user consented to.
+_For any_ consent record stored in Firestore, it must include a version field that tracks which version of the policy/permission the user consented to.
 
 **Validates: Requirements 12.11**
 
@@ -2170,7 +2183,7 @@ The following properties provide unique validation value and will be implemented
 
 ### Property 18: Portuguese Localization
 
-*For any* user-facing text in the app (buttons, labels, errors, messages), the text must be in Portuguese (Brazil).
+_For any_ user-facing text in the app (buttons, labels, errors, messages), the text must be in Portuguese (Brazil).
 
 **Validates: Requirements 14.1, 14.2, 15.1**
 
@@ -2178,7 +2191,7 @@ The following properties provide unique validation value and will be implemented
 
 ### Property 19: Accessibility Labels
 
-*For any* interactive element (button, input, touchable), it must have an accessibility label for VoiceOver screen readers.
+_For any_ interactive element (button, input, touchable), it must have an accessibility label for VoiceOver screen readers.
 
 **Validates: Requirements 14.4, 14.5**
 
@@ -2186,12 +2199,11 @@ The following properties provide unique validation value and will be implemented
 
 ### Property 20: Offline Queue Synchronization
 
-*For any* data modification made while offline, the change must be queued locally and synchronized to Firebase when connection is restored.
+_For any_ data modification made while offline, the change must be queued locally and synchronized to Firebase when connection is restored.
 
 **Validates: Requirements 15.5, 15.6**
 
 **Test Strategy**: Simulate offline mode, make random data changes, verify changes are queued, restore connection, verify changes sync to Firebase.
-
 
 ## Implementation Phases
 
@@ -2200,6 +2212,7 @@ The following properties provide unique validation value and will be implemented
 **Goal**: Implement privacy policy, terms of service, medical disclaimers, and permission justifications.
 
 **Tasks**:
+
 1. Create Privacy Policy and Terms of Service content (Portuguese)
 2. Implement PrivacyPolicyScreen component with scroll tracking
 3. Implement TermsOfServiceScreen component with acceptance checkbox
@@ -2212,6 +2225,7 @@ The following properties provide unique validation value and will be implemented
 10. Property tests for acceptance requirements
 
 **Deliverables**:
+
 - Privacy Policy and Terms of Service screens
 - Medical disclaimer modal
 - Onboarding flow
@@ -2224,6 +2238,7 @@ The following properties provide unique validation value and will be implemented
 **Goal**: Implement PHI encryption, enhanced authentication, and HealthKit cleanup.
 
 **Tasks**:
+
 1. Implement EncryptionService with AES-256-GCM
 2. Integrate expo-crypto for encryption operations
 3. Implement key management with expo-secure-store
@@ -2240,6 +2255,7 @@ The following properties provide unique validation value and will be implemented
 14. Security audit of implementation
 
 **Deliverables**:
+
 - EncryptionService with AES-256-GCM
 - BiometricAuthService with PIN fallback
 - Session management with timeouts
@@ -2248,12 +2264,12 @@ The following properties provide unique validation value and will be implemented
 - HealthKit cleanup (if applicable)
 - Security test suite
 
-
 ### Phase 3: User Control & Transparency (Week 3-4)
 
 **Goal**: Implement data transparency, consent management, notification preferences, data export, and data deletion.
 
 **Tasks**:
+
 1. Implement DataTransparencyScreen showing all collected data
 2. Implement ConsentManager service
 3. Implement ConsentManagerScreen for reviewing consents
@@ -2274,6 +2290,7 @@ The following properties provide unique validation value and will be implemented
 18. Integration tests for export and deletion flows
 
 **Deliverables**:
+
 - Data Transparency Screen
 - Consent Management System
 - Permission Manager with explainers
@@ -2288,6 +2305,7 @@ The following properties provide unique validation value and will be implemented
 **Goal**: Implement audit logging, update App Store metadata, and prepare review materials.
 
 **Tasks**:
+
 1. Implement AuditLogger service
 2. Add audit logging to all PHI access points
 3. Add audit logging to all authentication events
@@ -2310,6 +2328,7 @@ The following properties provide unique validation value and will be implemented
 20. Final security and privacy review
 
 **Deliverables**:
+
 - Audit Logging System
 - Audit Log Screen
 - Firestore security rules and indexes
@@ -2320,12 +2339,12 @@ The following properties provide unique validation value and will be implemented
 - Published legal documents
 - Audit test suite
 
-
 ### Phase 5: Quality & Polish (Week 5-6)
 
 **Goal**: Implement accessibility, error handling, performance optimizations, and documentation.
 
 **Tasks**:
+
 1. Add accessibility labels to all interactive elements
 2. Implement VoiceOver support
 3. Test with iOS VoiceOver
@@ -2348,6 +2367,7 @@ The following properties provide unique validation value and will be implemented
 20. Final QA and bug fixes
 
 **Deliverables**:
+
 - Full accessibility support
 - Comprehensive error handling
 - Offline mode with sync
@@ -2362,6 +2382,7 @@ The following properties provide unique validation value and will be implemented
 ## Success Metrics
 
 ### Compliance Metrics
+
 - ✅ All 315 acceptance criteria met
 - ✅ Privacy Policy and Terms of Service published
 - ✅ All NSUsageDescription strings updated
@@ -2371,6 +2392,7 @@ The following properties provide unique validation value and will be implemented
 - ✅ Biometric authentication implemented
 
 ### Quality Metrics
+
 - ✅ Test coverage > 80% for compliance code
 - ✅ All property tests passing (100 iterations each)
 - ✅ Zero critical security vulnerabilities
@@ -2379,6 +2401,7 @@ The following properties provide unique validation value and will be implemented
 - ✅ Crash-free rate > 99.5%
 
 ### App Store Metrics
+
 - ✅ App Store Connect listing complete
 - ✅ Valid Apple credentials in eas.json
 - ✅ Test account prepared with sample data
@@ -2387,14 +2410,15 @@ The following properties provide unique validation value and will be implemented
 - ✅ Privacy Policy URL accessible
 - ✅ App approved on first submission
 
-
 ## Risk Assessment and Mitigation
 
 ### High-Risk Areas
 
 #### 1. PHI Encryption Implementation
+
 **Risk**: Incorrect encryption implementation could expose patient data
 **Mitigation**:
+
 - Use well-tested libraries (expo-crypto)
 - Implement comprehensive property tests for encryption round-trip
 - Conduct security audit before deployment
@@ -2402,8 +2426,10 @@ The following properties provide unique validation value and will be implemented
 - Never log encryption keys or plaintext PHI
 
 #### 2. Audit Log Integrity
+
 **Risk**: Audit logs could be modified or deleted, compromising compliance
 **Mitigation**:
+
 - Implement append-only Firestore security rules
 - Use server timestamps (not client timestamps)
 - Test immutability with property tests
@@ -2411,8 +2437,10 @@ The following properties provide unique validation value and will be implemented
 - Monitor for unauthorized access attempts
 
 #### 3. Data Deletion Compliance
+
 **Risk**: Data not fully deleted could violate LGPD
 **Mitigation**:
+
 - Implement comprehensive deletion across all Firebase services
 - Test deletion completeness
 - Implement 30-day grace period as required
@@ -2420,8 +2448,10 @@ The following properties provide unique validation value and will be implemented
 - Send confirmation emails at each step
 
 #### 4. Session Management
+
 **Risk**: Improper session handling could allow unauthorized PHI access
 **Mitigation**:
+
 - Implement automatic timeout (15 minutes)
 - Clear sensitive data on background (5 minutes)
 - Require re-authentication after timeout
@@ -2429,8 +2459,10 @@ The following properties provide unique validation value and will be implemented
 - Test session timeout with property tests
 
 #### 5. App Store Rejection
+
 **Risk**: App could be rejected for compliance issues
 **Mitigation**:
+
 - Follow all Apple guidelines precisely
 - Provide detailed review notes
 - Create comprehensive test account
@@ -2441,8 +2473,10 @@ The following properties provide unique validation value and will be implemented
 ### Medium-Risk Areas
 
 #### 6. Permission Handling
+
 **Risk**: Incorrect permission requests could cause rejection
 **Mitigation**:
+
 - Request permissions just-in-time
 - Provide clear explanations before requesting
 - Implement alternative workflows for denied permissions
@@ -2450,8 +2484,10 @@ The following properties provide unique validation value and will be implemented
 - Test permission flows thoroughly
 
 #### 7. Offline Sync
+
 **Risk**: Data loss or corruption during offline sync
 **Mitigation**:
+
 - Implement robust queue mechanism
 - Use optimistic UI updates
 - Handle conflicts gracefully
@@ -2459,20 +2495,22 @@ The following properties provide unique validation value and will be implemented
 - Provide clear sync status to users
 
 #### 8. Localization
+
 **Risk**: English text could slip through, violating Portuguese requirement
 **Mitigation**:
+
 - Centralize all strings in constants
 - Use i18n library for consistency
 - Automated tests to detect English strings
 - Manual review by Portuguese speaker
 - Test all screens and error messages
 
-
 ## Dependencies and Prerequisites
 
 ### Technical Dependencies
 
 **Required Expo Modules**:
+
 - `expo-crypto`: For AES-256-GCM encryption
 - `expo-secure-store`: For secure key storage (iOS Keychain)
 - `expo-local-authentication`: For Face ID/Touch ID
@@ -2482,6 +2520,7 @@ The following properties provide unique validation value and will be implemented
 - `expo-device`: For device information
 
 **Required npm Packages**:
+
 - `firebase`: Firebase SDK (already installed)
 - `fast-check`: Property-based testing library
 - `@testing-library/react-native`: Testing utilities
@@ -2489,6 +2528,7 @@ The following properties provide unique validation value and will be implemented
 - `react-native-pdf`: For PDF generation (data export)
 
 **Firebase Services**:
+
 - Firebase Authentication
 - Cloud Firestore
 - Cloud Storage
@@ -2498,18 +2538,21 @@ The following properties provide unique validation value and will be implemented
 ### External Dependencies
 
 **Apple Developer Account**:
+
 - Valid Apple Developer Program membership ($99/year)
 - App Store Connect access
 - Apple Team ID
 - App-specific password for EAS Submit
 
 **Legal Documents**:
+
 - Privacy Policy (Portuguese) - needs legal review
 - Terms of Service (Portuguese) - needs legal review
 - Medical Disclaimer (Portuguese) - needs legal review
 - Data Processing Agreement with Firebase
 
 **Infrastructure**:
+
 - Firebase project with Blaze plan (for Cloud Functions)
 - Domain for hosting Privacy Policy and Terms of Service
 - Email service for notifications (Firebase can use SendGrid)
@@ -2518,6 +2561,7 @@ The following properties provide unique validation value and will be implemented
 ### Team Prerequisites
 
 **Required Skills**:
+
 - React Native/Expo development
 - Firebase (Firestore, Auth, Storage, Functions)
 - iOS development and App Store submission
@@ -2526,12 +2570,12 @@ The following properties provide unique validation value and will be implemented
 - Portuguese language (for content review)
 
 **Required Access**:
+
 - Firebase Console admin access
 - Apple Developer Portal access
 - App Store Connect access
 - GitHub repository access
 - Domain/hosting for legal documents
-
 
 ## Appendix A: File Structure
 
@@ -2621,7 +2665,6 @@ professional-app/
 └── app/_layout.tsx (add onboarding check)
 ```
 
-
 ## Appendix B: Configuration Examples
 
 ### Privacy Policy Content Structure (Portuguese)
@@ -2633,54 +2676,67 @@ professional-app/
 **Versão**: 1.0.0
 
 ## 1. Introdução
+
 O FisioFlow Professional é uma ferramenta de gerenciamento clínico...
 
 ## 2. Dados Coletados
+
 ### 2.1 Dados Pessoais
+
 - Nome completo
 - Email
 - Telefone
 - CPF (opcional)
 
 ### 2.2 Dados de Saúde (PHI)
+
 - Registros SOAP
 - Fotos de pacientes
 - Histórico médico
 - Prescrições de exercícios
 
 ### 2.3 Dados Técnicos
+
 - Informações do dispositivo
 - Logs de acesso
 - Dados de uso do aplicativo
 
 ## 3. Como Usamos Seus Dados
+
 [Detailed explanation of data usage]
 
 ## 4. Compartilhamento de Dados
+
 ### 4.1 Firebase (Google Cloud)
+
 - Armazenamento de dados
 - Autenticação
 - Backup
 
 ### 4.2 Expo
+
 - Notificações push
 - Atualizações do aplicativo
 
 ## 5. Segurança dos Dados
+
 - Criptografia AES-256
 - Autenticação biométrica
 - Logs de auditoria
 
 ## 6. Seus Direitos (LGPD)
+
 - Acesso aos seus dados
 - Correção de dados
 - Exclusão de dados
 - Portabilidade de dados
 
 ## 7. Retenção de Dados
+
 [Retention periods for each data category]
 
 ## 8. Contato
+
 Email: privacidade@moocafisio.com.br
 Telefone: [Phone]
 ```
@@ -2690,7 +2746,7 @@ Telefone: [Phone]
 ```markdown
 # Aviso Médico Importante
 
-O FisioFlow Professional é uma ferramenta de gerenciamento clínico 
+O FisioFlow Professional é uma ferramenta de gerenciamento clínico
 e NÃO substitui consulta, diagnóstico ou tratamento médico profissional.
 
 ## Responsabilidades do Profissional
@@ -2710,15 +2766,14 @@ e NÃO substitui consulta, diagnóstico ou tratamento médico profissional.
 Ao usar este aplicativo, você reconhece e aceita estas limitações.
 ```
 
-
 ## Appendix C: App Store Review Notes Template
 
 ```
 App Store Review Notes - FisioFlow Professional
 
 ## App Overview
-FisioFlow Professional is a clinical management tool for physiotherapists 
-in Brazil. The app handles Protected Health Information (PHI) including 
+FisioFlow Professional is a clinical management tool for physiotherapists
+in Brazil. The app handles Protected Health Information (PHI) including
 patient records, SOAP notes, photos, and exercise prescriptions.
 
 ## Test Account
@@ -2742,24 +2797,24 @@ All patient health information is:
 ## Permissions Explained
 
 ### Camera (NSCameraUsageDescription)
-Used for capturing patient progress photos and exercise demonstration 
+Used for capturing patient progress photos and exercise demonstration
 photos. Photos are encrypted before storage.
 
 ### Photo Library (NSPhotoLibraryUsageDescription)
-Used for selecting existing photos of patients and exercises. All 
+Used for selecting existing photos of patients and exercises. All
 selected photos are encrypted.
 
 ### Location (NSLocationWhenInUseUsageDescription)
-Used for clinic check-in verification and appointment confirmation. 
+Used for clinic check-in verification and appointment confirmation.
 Location is never shared with third parties.
 
 ### Face ID (NSFaceIDUsageDescription)
-Used to protect access to sensitive patient health data with biometric 
+Used to protect access to sensitive patient health data with biometric
 authentication.
 
 ## Business Model
-This is a B2B application. Physiotherapists subscribe through our 
-website (external billing). No in-app purchases. The app does not 
+This is a B2B application. Physiotherapists subscribe through our
+website (external billing). No in-app purchases. The app does not
 collect payment information.
 
 ## Privacy & Legal
@@ -2795,94 +2850,86 @@ Phone: +55 11 XXXX-XXXX
 Available 9am-6pm BRT (UTC-3)
 ```
 
-
 ## Appendix D: Firebase Cloud Functions
 
 ### Data Export Function
 
 ```typescript
 // functions/src/dataExport.ts
-import * as functions from 'firebase-functions';
-import * as admin from 'firebase-admin';
-import { generatePDF } from './utils/pdfGenerator';
-import { encryptFile } from './utils/encryption';
+import * as functions from "firebase-functions";
+import * as admin from "firebase-admin";
+import { generatePDF } from "./utils/pdfGenerator";
+import { encryptFile } from "./utils/encryption";
 
 export const generateDataExport = functions.https.onCall(async (data, context) => {
   // Verify authentication
   if (!context.auth) {
-    throw new functions.https.HttpsError('unauthenticated', 'User must be authenticated');
+    throw new functions.https.HttpsError("unauthenticated", "User must be authenticated");
   }
 
   const { userId, format, options, password } = data;
-  
+
   // Verify user is requesting their own data
   if (context.auth.uid !== userId) {
-    throw new functions.https.HttpsError('permission-denied', 'Cannot export other user data');
+    throw new functions.https.HttpsError("permission-denied", "Cannot export other user data");
   }
 
   try {
     // Collect all user data
     const userData = await collectUserData(userId, options);
-    
+
     // Generate export file
     let exportFile: Buffer;
-    if (format === 'json') {
+    if (format === "json") {
       exportFile = Buffer.from(JSON.stringify(userData, null, 2));
     } else {
       exportFile = await generatePDF(userData);
     }
-    
+
     // Encrypt with user password
     const encryptedFile = await encryptFile(exportFile, password);
-    
+
     // Upload to Storage with 7-day expiration
     const bucket = admin.storage().bucket();
     const fileName = `exports/${userId}/${Date.now()}.${format}.encrypted`;
     const file = bucket.file(fileName);
-    
+
     await file.save(encryptedFile, {
       metadata: {
-        contentType: 'application/octet-stream',
+        contentType: "application/octet-stream",
         metadata: {
-          expiresAt: Date.now() + (7 * 24 * 60 * 60 * 1000) // 7 days
-        }
-      }
+          expiresAt: Date.now() + 7 * 24 * 60 * 60 * 1000, // 7 days
+        },
+      },
     });
-    
+
     // Generate signed URL (valid for 7 days)
     const [url] = await file.getSignedUrl({
-      action: 'read',
-      expires: Date.now() + (7 * 24 * 60 * 60 * 1000)
+      action: "read",
+      expires: Date.now() + 7 * 24 * 60 * 60 * 1000,
     });
-    
+
     // Update export request status
-    await admin.firestore()
-      .collection('data_exports')
-      .doc(data.exportId)
-      .update({
-        status: 'completed',
-        completedAt: admin.firestore.FieldValue.serverTimestamp(),
-        downloadUrl: url,
-        fileSize: encryptedFile.length
-      });
-    
+    await admin.firestore().collection("data_exports").doc(data.exportId).update({
+      status: "completed",
+      completedAt: admin.firestore.FieldValue.serverTimestamp(),
+      downloadUrl: url,
+      fileSize: encryptedFile.length,
+    });
+
     // Send email notification
     await sendExportReadyEmail(userId, url);
-    
+
     return { success: true, downloadUrl: url };
-    
   } catch (error) {
-    console.error('Export generation failed:', error);
-    
-    await admin.firestore()
-      .collection('data_exports')
-      .doc(data.exportId)
-      .update({
-        status: 'failed',
-        error: error.message
-      });
-    
-    throw new functions.https.HttpsError('internal', 'Export generation failed');
+    console.error("Export generation failed:", error);
+
+    await admin.firestore().collection("data_exports").doc(data.exportId).update({
+      status: "failed",
+      error: error.message,
+    });
+
+    throw new functions.https.HttpsError("internal", "Export generation failed");
   }
 });
 ```
@@ -2891,34 +2938,34 @@ export const generateDataExport = functions.https.onCall(async (data, context) =
 
 ```typescript
 // functions/src/scheduledDeletion.ts
-import * as functions from 'firebase-functions';
-import * as admin from 'firebase-admin';
+import * as functions from "firebase-functions";
+import * as admin from "firebase-admin";
 
 export const processScheduledDeletions = functions.pubsub
-  .schedule('every 24 hours')
+  .schedule("every 24 hours")
   .onRun(async (context) => {
     const now = admin.firestore.Timestamp.now();
-    
+
     // Find deletion requests scheduled for today or earlier
-    const snapshot = await admin.firestore()
-      .collection('deletion_requests')
-      .where('status', '==', 'pending')
-      .where('scheduledFor', '<=', now)
+    const snapshot = await admin
+      .firestore()
+      .collection("deletion_requests")
+      .where("status", "==", "pending")
+      .where("scheduledFor", "<=", now)
       .get();
-    
+
     for (const doc of snapshot.docs) {
       const request = doc.data();
-      
+
       try {
         await executeUserDeletion(request.userId);
-        
+
         await doc.ref.update({
-          status: 'completed',
-          completedAt: admin.firestore.FieldValue.serverTimestamp()
+          status: "completed",
+          completedAt: admin.firestore.FieldValue.serverTimestamp(),
         });
-        
+
         await sendDeletionCompletedEmail(request.userId);
-        
       } catch (error) {
         console.error(`Deletion failed for user ${request.userId}:`, error);
       }
@@ -2928,25 +2975,24 @@ export const processScheduledDeletions = functions.pubsub
 async function executeUserDeletion(userId: string) {
   const db = admin.firestore();
   const storage = admin.storage().bucket();
-  
+
   // Delete user data from Firestore
   await deleteCollection(db, `patients/${userId}`);
   await deleteCollection(db, `soap_notes/${userId}`);
   await deleteCollection(db, `protocols/${userId}`);
   await deleteCollection(db, `appointments/${userId}`);
-  
+
   // Delete files from Storage
   await storage.deleteFiles({ prefix: `patients/${userId}/` });
   await storage.deleteFiles({ prefix: `soap_notes/${userId}/` });
-  
+
   // Anonymize audit log (keep for compliance)
   await anonymizeAuditLog(userId);
-  
+
   // Delete user from Firebase Auth
   await admin.auth().deleteUser(userId);
 }
 ```
-
 
 ## Conclusion
 
@@ -2985,6 +3031,7 @@ This design document provides a comprehensive technical specification for implem
 ### Success Criteria
 
 The implementation will be considered successful when:
+
 - All 315 acceptance criteria are met and verified
 - All 20 correctness properties pass with 100 iterations
 - App passes internal security and privacy audits
@@ -2999,4 +3046,3 @@ The implementation will be considered successful when:
 **Last Updated**: 2025-02-08  
 **Status**: Ready for Implementation  
 **Next Phase**: Task Breakdown and Implementation
-

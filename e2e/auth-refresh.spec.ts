@@ -5,7 +5,7 @@ test.describe('Login Page Refresh Test', () => {
 
   test('should not refresh every 10 seconds', async ({ page }) => {
     let navigationCount = 0;
-    
+
 
     // Listen for navigation events
     page.on('load', () => {
@@ -55,7 +55,7 @@ test.describe('Login Page Refresh Test', () => {
     });
 
     // Listen for auth state changes via window events
-    
+
     await page.evaluate(() => {
       (window as any).authChangeCount = 0;
 

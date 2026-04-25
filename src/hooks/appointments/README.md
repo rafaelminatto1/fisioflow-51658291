@@ -15,54 +15,54 @@ src/hooks/appointments/
 
 ### Core Hooks
 
-| Hook | Descrição | Arquivo Original |
-|------|-----------|------------------|
-| `useAppointments` | Hook principal de agendamentos | `src/hooks/useAppointments.tsx` |
-| `useAppointmentsByPeriod` | Agendamentos por período | `src/hooks/useAppointmentsByPeriod.ts` |
-| `useAppointmentActions` | Ações CRUD de agendamentos | `src/hooks/useAppointmentActions.ts` |
-| `useAppointmentData` | Dados de agendamento | `src/hooks/useAppointmentData.ts` |
-| `useFilteredAppointments` | Agendamentos com filtros | `src/hooks/useFilteredAppointments.ts` |
+| Hook                      | Descrição                      | Arquivo Original                       |
+| ------------------------- | ------------------------------ | -------------------------------------- |
+| `useAppointments`         | Hook principal de agendamentos | `src/hooks/useAppointments.tsx`        |
+| `useAppointmentsByPeriod` | Agendamentos por período       | `src/hooks/useAppointmentsByPeriod.ts` |
+| `useAppointmentActions`   | Ações CRUD de agendamentos     | `src/hooks/useAppointmentActions.ts`   |
+| `useAppointmentData`      | Dados de agendamento           | `src/hooks/useAppointmentData.ts`      |
+| `useFilteredAppointments` | Agendamentos com filtros       | `src/hooks/useFilteredAppointments.ts` |
 
 ### Schedule Hooks
 
-| Hook | Descrição | Arquivo Original |
-|------|-----------|------------------|
-| `useScheduleHandlers` | Handlers da página Agenda | `src/hooks/useScheduleHandlers.ts` |
-| `useScheduleState` | Estado da agenda (URL sync) | `src/hooks/useScheduleState.ts` |
-| `usePrefetchAdjacentPeriods` | Prefetch de períodos | `src/hooks/usePrefetchAdjacentPeriods.ts` |
-| `useAvailableTimeSlots` | Horários disponíveis | `src/hooks/useAvailableTimeSlots.ts` |
+| Hook                         | Descrição                   | Arquivo Original                          |
+| ---------------------------- | --------------------------- | ----------------------------------------- |
+| `useScheduleHandlers`        | Handlers da página Agenda   | `src/hooks/useScheduleHandlers.ts`        |
+| `useScheduleState`           | Estado da agenda (URL sync) | `src/hooks/useScheduleState.ts`           |
+| `usePrefetchAdjacentPeriods` | Prefetch de períodos        | `src/hooks/usePrefetchAdjacentPeriods.ts` |
+| `useAvailableTimeSlots`      | Horários disponíveis        | `src/hooks/useAvailableTimeSlots.ts`      |
 
 ### Calendar Hooks
 
-| Hook | Descrição | Arquivo Original |
-|------|-----------|------------------|
-| `useAppointmentGroups` | Agrupamento de agendamentos | `src/hooks/calendar/useAppointmentGroups.ts` |
+| Hook                        | Descrição                    | Arquivo Original                                  |
+| --------------------------- | ---------------------------- | ------------------------------------------------- |
+| `useAppointmentGroups`      | Agrupamento de agendamentos  | `src/hooks/calendar/useAppointmentGroups.ts`      |
 | `useAppointmentPositioning` | Posicionamento no calendário | `src/hooks/calendar/useAppointmentPositioning.ts` |
-| `useDayAppointments` | Agendamentos do dia | `src/hooks/calendar/useAppointmentGroups.ts` |
-| `useAppointmentOverlap` | Detecção de sobreposição | `src/hooks/calendar/useAppointmentGroups.ts` |
+| `useDayAppointments`        | Agendamentos do dia          | `src/hooks/calendar/useAppointmentGroups.ts`      |
+| `useAppointmentOverlap`     | Detecção de sobreposição     | `src/hooks/calendar/useAppointmentGroups.ts`      |
 
 ### Recurring Appointments
 
-| Hook | Descrição | Arquivo Original |
-|------|-----------|------------------|
-| `useRecurringSeries` | Séries recorrentes | `src/hooks/useRecurringAppointments.ts` |
+| Hook                       | Descrição              | Arquivo Original                        |
+| -------------------------- | ---------------------- | --------------------------------------- |
+| `useRecurringSeries`       | Séries recorrentes     | `src/hooks/useRecurringAppointments.ts` |
 | `useCreateRecurringSeries` | Criar série recorrente | `src/hooks/useRecurringAppointments.ts` |
-| `useCancelRecurringSeries` | Cancelar série | `src/hooks/useRecurringAppointments.ts` |
+| `useCancelRecurringSeries` | Cancelar série         | `src/hooks/useRecurringAppointments.ts` |
 
 ### Realtime & Optimistic
 
-| Hook | Descrição | Arquivo Original |
-|------|-----------|------------------|
-| `useRealtimeAppointments` | Atualizações em tempo real | `src/hooks/useRealtimeAppointments.ts` |
-| `useAppointmentOptimistic` | Updates otimistas | `src/hooks/appointmentOptimistic.ts` |
+| Hook                       | Descrição                  | Arquivo Original                       |
+| -------------------------- | -------------------------- | -------------------------------------- |
+| `useRealtimeAppointments`  | Atualizações em tempo real | `src/hooks/useRealtimeAppointments.ts` |
+| `useAppointmentOptimistic` | Updates otimistas          | `src/hooks/appointmentOptimistic.ts`   |
 
 ### Waitlist
 
-| Hook | Descrição | Arquivo Original |
-|------|-----------|------------------|
-| `useWaitlist` | Lista de espera | `src/hooks/useWaitlist.ts` |
+| Hook               | Descrição         | Arquivo Original           |
+| ------------------ | ----------------- | -------------------------- |
+| `useWaitlist`      | Lista de espera   | `src/hooks/useWaitlist.ts` |
 | `useAddToWaitlist` | Adicionar à lista | `src/hooks/useWaitlist.ts` |
-| `useOfferSlot` | Oferecer horário | `src/hooks/useWaitlist.ts` |
+| `useOfferSlot`     | Oferecer horário  | `src/hooks/useWaitlist.ts` |
 
 ## Como Usar
 
@@ -70,27 +70,27 @@ src/hooks/appointments/
 
 ```typescript
 // Para code-splitting otimizado, importe do submódulo:
-import { useAppointments, useScheduleHandlers } from '@/hooks/appointments';
+import { useAppointments, useScheduleHandlers } from "@/hooks/appointments";
 
 // Para conveniência, pode importar do barrel principal:
-import { useAppointments } from '@/hooks';
+import { useAppointments } from "@/hooks";
 ```
 
 ### Exemplo de Uso
 
 ```typescript
-import { useFilteredAppointments, useScheduleHandlers } from '@/hooks/appointments';
+import { useFilteredAppointments, useScheduleHandlers } from "@/hooks/appointments";
 
 function MyScheduleComponent() {
   const { currentDate, viewType } = useScheduleState();
-  
+
   const { data: appointments, isLoading } = useFilteredAppointments(
     { viewType, date: currentDate, organizationId },
-    { status: 'confirmed' }
+    { status: "confirmed" },
   );
-  
+
   const { actions, modals } = useScheduleHandlers(currentDate, refetch);
-  
+
   // ...
 }
 ```

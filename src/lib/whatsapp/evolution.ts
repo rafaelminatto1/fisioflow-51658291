@@ -8,36 +8,36 @@
 import { fisioLogger as logger } from "@/lib/errors/logger";
 
 interface EvolutionApiConfig {
-	apiUrl: string;
-	apiKey: string;
+  apiUrl: string;
+  apiKey: string;
 }
 
 interface WhatsAppMessageOptions {
-	delay?: number; // Delay between messages in milliseconds
-	presence?: "composing" | "recording" | "available";
-	linkPreview?: boolean;
+  delay?: number; // Delay between messages in milliseconds
+  presence?: "composing" | "recording" | "available";
+  linkPreview?: boolean;
 }
 
 interface WhatsAppMediaOptions {
-	url: string;
-	caption?: string;
-	fileName?: string;
+  url: string;
+  caption?: string;
+  fileName?: string;
 }
 
 interface EvolutionApiResponse {
-	key: {
-		remoteJid: string;
-		fromMe: boolean;
-		id: string;
-	};
-	message?: {
-		conversation?: string;
-		extendedTextMessage?: {
-			text: string;
-		};
-	};
-	messageTimestamp?: number;
-	status?: string;
+  key: {
+    remoteJid: string;
+    fromMe: boolean;
+    id: string;
+  };
+  message?: {
+    conversation?: string;
+    extendedTextMessage?: {
+      text: string;
+    };
+  };
+  messageTimestamp?: number;
+  status?: string;
 }
 
 // ============================================================================
@@ -45,254 +45,249 @@ interface EvolutionApiResponse {
 // ============================================================================
 
 class EvolutionApiClient {
-	private config: EvolutionApiConfig;
+  private config: EvolutionApiConfig;
 
-	constructor() {
-		this.config = {
-			apiUrl: process.env.WHATSAPP_API_URL || "",
-			apiKey: process.env.WHATSAPP_API_KEY || "",
-		};
+  constructor() {
+    this.config = {
+      apiUrl: process.env.WHATSAPP_API_URL || "",
+      apiKey: process.env.WHATSAPP_API_KEY || "",
+    };
 
-		if (!this.config.apiUrl || !this.config.apiKey) {
-			logger.warn(
-				"Evolution API not configured. Set WHATSAPP_API_URL and WHATSAPP_API_KEY.",
-				undefined,
-				"whatsapp-evolution",
-			);
-		}
-	}
+    if (!this.config.apiUrl || !this.config.apiKey) {
+      logger.warn(
+        "Evolution API not configured. Set WHATSAPP_API_URL and WHATSAPP_API_KEY.",
+        undefined,
+        "whatsapp-evolution",
+      );
+    }
+  }
 
-	/**
-	 * Send a text message via WhatsApp
-	 */
-	async sendText(
-		number: string,
-		text: string,
-		options?: WhatsAppMessageOptions,
-	): Promise<{ success: boolean; messageId?: string; error?: string }> {
-		try {
-			if (!this.config.apiUrl || !this.config.apiKey) {
-				return { success: false, error: "Evolution API not configured" };
-			}
+  /**
+   * Send a text message via WhatsApp
+   */
+  async sendText(
+    number: string,
+    text: string,
+    options?: WhatsAppMessageOptions,
+  ): Promise<{ success: boolean; messageId?: string; error?: string }> {
+    try {
+      if (!this.config.apiUrl || !this.config.apiKey) {
+        return { success: false, error: "Evolution API not configured" };
+      }
 
-			// Clean phone number (remove non-digits, add country code if needed)
-			const cleanNumber = this.cleanPhoneNumber(number);
+      // Clean phone number (remove non-digits, add country code if needed)
+      const cleanNumber = this.cleanPhoneNumber(number);
 
-			// External Evolution API payload - structure not fully typed
-			const payload: Record<string, unknown> = {
-				number: cleanNumber,
-				text,
-				options: {
-					delay: options?.delay || 1200,
-					presence: options?.presence || "composing",
-					linkPreview: options?.linkPreview ?? false,
-				},
-			};
+      // External Evolution API payload - structure not fully typed
+      const payload: Record<string, unknown> = {
+        number: cleanNumber,
+        text,
+        options: {
+          delay: options?.delay || 1200,
+          presence: options?.presence || "composing",
+          linkPreview: options?.linkPreview ?? false,
+        },
+      };
 
-			const response = await fetch(
-				`${this.config.apiUrl}/message/sendText/${this.config.apiKey}`,
-				{
-					method: "POST",
-					headers: {
-						"Content-Type": "application/json",
-					},
-					body: JSON.stringify(payload),
-				},
-			);
+      const response = await fetch(`${this.config.apiUrl}/message/sendText/${this.config.apiKey}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
 
-			if (!response.ok) {
-				const error = await response.text();
-				throw new Error(`Evolution API error: ${error}`);
-			}
+      if (!response.ok) {
+        const error = await response.text();
+        throw new Error(`Evolution API error: ${error}`);
+      }
 
-			const data: EvolutionApiResponse = await response.json();
+      const data: EvolutionApiResponse = await response.json();
 
-			return {
-				success: true,
-				messageId: data.key?.id,
-			};
-		} catch (error) {
-			logger.error("WhatsApp send error", error, "whatsapp-evolution");
-			return {
-				success: false,
-				error: error instanceof Error ? error.message : "Unknown error",
-			};
-		}
-	}
+      return {
+        success: true,
+        messageId: data.key?.id,
+      };
+    } catch (error) {
+      logger.error("WhatsApp send error", error, "whatsapp-evolution");
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Unknown error",
+      };
+    }
+  }
 
-	/**
-	 * Send a media message (image, video, document, audio)
-	 */
-	async sendMedia(
-		number: string,
-		media: WhatsAppMediaOptions,
-		options?: WhatsAppMessageOptions,
-	): Promise<{ success: boolean; messageId?: string; error?: string }> {
-		try {
-			if (!this.config.apiUrl || !this.config.apiKey) {
-				return { success: false, error: "Evolution API not configured" };
-			}
+  /**
+   * Send a media message (image, video, document, audio)
+   */
+  async sendMedia(
+    number: string,
+    media: WhatsAppMediaOptions,
+    options?: WhatsAppMessageOptions,
+  ): Promise<{ success: boolean; messageId?: string; error?: string }> {
+    try {
+      if (!this.config.apiUrl || !this.config.apiKey) {
+        return { success: false, error: "Evolution API not configured" };
+      }
 
-			const cleanNumber = this.cleanPhoneNumber(number);
+      const cleanNumber = this.cleanPhoneNumber(number);
 
-			// External Evolution API payload - structure not fully typed
-			const payload: Record<string, unknown> = {
-				number: cleanNumber,
-				mediaUrl: media.url,
-				caption: media.caption || "",
-				fileName: media.fileName || "",
-				options: {
-					delay: options?.delay || 1200,
-					presence: options?.presence || "composing",
-				},
-			};
+      // External Evolution API payload - structure not fully typed
+      const payload: Record<string, unknown> = {
+        number: cleanNumber,
+        mediaUrl: media.url,
+        caption: media.caption || "",
+        fileName: media.fileName || "",
+        options: {
+          delay: options?.delay || 1200,
+          presence: options?.presence || "composing",
+        },
+      };
 
-			const response = await fetch(
-				`${this.config.apiUrl}/message/sendMedia/${this.config.apiKey}`,
-				{
-					method: "POST",
-					headers: {
-						"Content-Type": "application/json",
-					},
-					body: JSON.stringify(payload),
-				},
-			);
+      const response = await fetch(
+        `${this.config.apiUrl}/message/sendMedia/${this.config.apiKey}`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(payload),
+        },
+      );
 
-			if (!response.ok) {
-				const error = await response.text();
-				throw new Error(`Evolution API error: ${error}`);
-			}
+      if (!response.ok) {
+        const error = await response.text();
+        throw new Error(`Evolution API error: ${error}`);
+      }
 
-			const data: EvolutionApiResponse = await response.json();
+      const data: EvolutionApiResponse = await response.json();
 
-			return {
-				success: true,
-				messageId: data.key?.id,
-			};
-		} catch (error) {
-			logger.error("WhatsApp media send error", error, "whatsapp-evolution");
-			return {
-				success: false,
-				error: error instanceof Error ? error.message : "Unknown error",
-			};
-		}
-	}
+      return {
+        success: true,
+        messageId: data.key?.id,
+      };
+    } catch (error) {
+      logger.error("WhatsApp media send error", error, "whatsapp-evolution");
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Unknown error",
+      };
+    }
+  }
 
-	/**
-	 * Send a template message
-	 */
-	async sendTemplate(
-		number: string,
-		templateName: string,
-		templateData: Record<string, string> = {},
-		// External API components structure - not fully typed
-		components?: Array<Record<string, unknown>>,
-	): Promise<{ success: boolean; messageId?: string; error?: string }> {
-		try {
-			if (!this.config.apiUrl || !this.config.apiKey) {
-				return { success: false, error: "Evolution API not configured" };
-			}
+  /**
+   * Send a template message
+   */
+  async sendTemplate(
+    number: string,
+    templateName: string,
+    templateData: Record<string, string> = {},
+    // External API components structure - not fully typed
+    components?: Array<Record<string, unknown>>,
+  ): Promise<{ success: boolean; messageId?: string; error?: string }> {
+    try {
+      if (!this.config.apiUrl || !this.config.apiKey) {
+        return { success: false, error: "Evolution API not configured" };
+      }
 
-			const cleanNumber = this.cleanPhoneNumber(number);
+      const cleanNumber = this.cleanPhoneNumber(number);
 
-			// External Evolution API payload - structure not fully typed
-			const payload: Record<string, unknown> = {
-				number: cleanNumber,
-				templateName,
-				templateData,
-				components,
-			};
+      // External Evolution API payload - structure not fully typed
+      const payload: Record<string, unknown> = {
+        number: cleanNumber,
+        templateName,
+        templateData,
+        components,
+      };
 
-			const response = await fetch(
-				`${this.config.apiUrl}/message/sendTemplate/${this.config.apiKey}`,
-				{
-					method: "POST",
-					headers: {
-						"Content-Type": "application/json",
-					},
-					body: JSON.stringify(payload),
-				},
-			);
+      const response = await fetch(
+        `${this.config.apiUrl}/message/sendTemplate/${this.config.apiKey}`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(payload),
+        },
+      );
 
-			if (!response.ok) {
-				const error = await response.text();
-				throw new Error(`Evolution API error: ${error}`);
-			}
+      if (!response.ok) {
+        const error = await response.text();
+        throw new Error(`Evolution API error: ${error}`);
+      }
 
-			const data: EvolutionApiResponse = await response.json();
+      const data: EvolutionApiResponse = await response.json();
 
-			return {
-				success: true,
-				messageId: data.key?.id,
-			};
-		} catch (error) {
-			logger.error("WhatsApp template send error", error, "whatsapp-evolution");
-			return {
-				success: false,
-				error: error instanceof Error ? error.message : "Unknown error",
-			};
-		}
-	}
+      return {
+        success: true,
+        messageId: data.key?.id,
+      };
+    } catch (error) {
+      logger.error("WhatsApp template send error", error, "whatsapp-evolution");
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Unknown error",
+      };
+    }
+  }
 
-	/**
-	 * Check if a number is registered on WhatsApp
-	 */
-	async checkNumber(
-		number: string,
-	): Promise<{ exists: boolean; jid?: string; error?: string }> {
-		try {
-			if (!this.config.apiUrl || !this.config.apiKey) {
-				return { exists: false, error: "Evolution API not configured" };
-			}
+  /**
+   * Check if a number is registered on WhatsApp
+   */
+  async checkNumber(number: string): Promise<{ exists: boolean; jid?: string; error?: string }> {
+    try {
+      if (!this.config.apiUrl || !this.config.apiKey) {
+        return { exists: false, error: "Evolution API not configured" };
+      }
 
-			const cleanNumber = this.cleanPhoneNumber(number);
+      const cleanNumber = this.cleanPhoneNumber(number);
 
-			const response = await fetch(
-				`${this.config.apiUrl}/checkNumber/${cleanNumber}/${this.config.apiKey}`,
-				{
-					method: "GET",
-				},
-			);
+      const response = await fetch(
+        `${this.config.apiUrl}/checkNumber/${cleanNumber}/${this.config.apiKey}`,
+        {
+          method: "GET",
+        },
+      );
 
-			if (!response.ok) {
-				const error = await response.text();
-				throw new Error(`Evolution API error: ${error}`);
-			}
+      if (!response.ok) {
+        const error = await response.text();
+        throw new Error(`Evolution API error: ${error}`);
+      }
 
-			const data = await response.json();
+      const data = await response.json();
 
-			return {
-				exists: data.exists || false,
-				jid: data.jid,
-			};
-		} catch (error) {
-			logger.error("WhatsApp check number error", error, "whatsapp-evolution");
-			return {
-				exists: false,
-				error: error instanceof Error ? error.message : "Unknown error",
-			};
-		}
-	}
+      return {
+        exists: data.exists || false,
+        jid: data.jid,
+      };
+    } catch (error) {
+      logger.error("WhatsApp check number error", error, "whatsapp-evolution");
+      return {
+        exists: false,
+        error: error instanceof Error ? error.message : "Unknown error",
+      };
+    }
+  }
 
-	/**
-	 * Clean and format phone number
-	 */
-	private cleanPhoneNumber(number: string): string {
-		// Remove all non-numeric characters
-		let cleaned = number.replace(/\D/g, "");
+  /**
+   * Clean and format phone number
+   */
+  private cleanPhoneNumber(number: string): string {
+    // Remove all non-numeric characters
+    let cleaned = number.replace(/\D/g, "");
 
-		// Add country code if missing (assuming Brazil +55)
-		if (cleaned.length === 11 && cleaned.startsWith("0")) {
-			cleaned = cleaned.substring(1);
-		}
+    // Add country code if missing (assuming Brazil +55)
+    if (cleaned.length === 11 && cleaned.startsWith("0")) {
+      cleaned = cleaned.substring(1);
+    }
 
-		if (cleaned.length === 11 && !cleaned.startsWith("55")) {
-			cleaned = "55" + cleaned;
-		}
+    if (cleaned.length === 11 && !cleaned.startsWith("55")) {
+      cleaned = "55" + cleaned;
+    }
 
-		// Format for WhatsApp API: add @s.whatsapp.net suffix
-		return `${cleaned}@s.whatsapp.net`;
-	}
+    // Format for WhatsApp API: add @s.whatsapp.net suffix
+    return `${cleaned}@s.whatsapp.net`;
+  }
 }
 
 // ============================================================================
@@ -300,14 +295,14 @@ class EvolutionApiClient {
 // ============================================================================
 
 export const WhatsAppTemplates = {
-	APPOINTMENT_CONFIRMATION: "appointment_confirmation",
-	APPOINTMENT_REMINDER: "appointment_reminder",
-	APPOINTMENT_CANCELLED: "appointment_cancelled",
-	BIRTHDAY_GREETING: "birthday_greeting",
-	WELCOME_MESSAGE: "welcome_message",
-	SESSION_REMINDER: "session_reminder",
-	PAYMENT_CONFIRMATION: "payment_confirmation",
-	REACTIVATION: "reactivation",
+  APPOINTMENT_CONFIRMATION: "appointment_confirmation",
+  APPOINTMENT_REMINDER: "appointment_reminder",
+  APPOINTMENT_CANCELLED: "appointment_cancelled",
+  BIRTHDAY_GREETING: "birthday_greeting",
+  WELCOME_MESSAGE: "welcome_message",
+  SESSION_REMINDER: "session_reminder",
+  PAYMENT_CONFIRMATION: "payment_confirmation",
+  REACTIVATION: "reactivation",
 } as const;
 
 // ============================================================================
@@ -315,40 +310,38 @@ export const WhatsAppTemplates = {
 // ============================================================================
 
 export interface AppointmentMessageData {
-	patientName: string;
-	therapistName: string;
-	date: string;
-	time: string;
-	location?: string;
-	organizationName: string;
+  patientName: string;
+  therapistName: string;
+  date: string;
+  time: string;
+  location?: string;
+  organizationName: string;
 }
 
 export interface BirthdayMessageData {
-	patientName: string;
-	organizationName: string;
-	therapistName?: string;
+  patientName: string;
+  organizationName: string;
+  therapistName?: string;
 }
 
 export interface SessionReminderData {
-	patientName: string;
-	date: string;
-	time: string;
+  patientName: string;
+  date: string;
+  time: string;
 }
 
 export interface ReactivationMessageData {
-	patientName: string;
-	organizationName: string;
+  patientName: string;
+  organizationName: string;
 }
 
 /**
  * Render appointment confirmation message
  */
-export function renderAppointmentConfirmation(
-	data: AppointmentMessageData,
-): string {
-	const location = data.location ? `\n📍 *Local*: ${data.location}` : "";
+export function renderAppointmentConfirmation(data: AppointmentMessageData): string {
+  const location = data.location ? `\n📍 *Local*: ${data.location}` : "";
 
-	return `
+  return `
 ✅ *Consulta Confirmada*
 
 Olá *${data.patientName}*!
@@ -370,10 +363,8 @@ _${data.organizationName}_
 /**
  * Render appointment reminder message
  */
-export function renderAppointmentReminder(
-	data: AppointmentMessageData,
-): string {
-	return `
+export function renderAppointmentReminder(data: AppointmentMessageData): string {
+  return `
 🔔 *Lembrete de Consulta*
 
 Olá *${data.patientName}*!
@@ -393,11 +384,11 @@ _${data.organizationName}_
  * Render birthday greeting message
  */
 export function renderBirthdayGreeting(data: BirthdayMessageData): string {
-	const therapist = data.therapistName
-		? `\n\nCom carinho,\n*${data.therapistName}* e toda a equipe.`
-		: "";
+  const therapist = data.therapistName
+    ? `\n\nCom carinho,\n*${data.therapistName}* e toda a equipe.`
+    : "";
 
-	return `
+  return `
 🎉 *Feliz Aniversário!*
 
 Olá *${data.patientName}*!
@@ -412,7 +403,7 @@ Que este novo ano traga muita saúde, felicidade e realizações!${therapist}
  * Render session reminder message
  */
 export function renderSessionReminder(data: SessionReminderData): string {
-	return `
+  return `
 ⏰ *Lembrete de Sessão*
 
 Olá *${data.patientName}*!
@@ -427,11 +418,11 @@ Nos vemos logo mais! 💪
  * Render payment confirmation message
  */
 export function renderPaymentConfirmation(data: {
-	patientName: string;
-	amount: string;
-	paymentMethod: string;
+  patientName: string;
+  amount: string;
+  paymentMethod: string;
 }): string {
-	return `
+  return `
 💳 *Pagamento Confirmado*
 
 Olá *${data.patientName}*!
@@ -447,10 +438,8 @@ Obrigado pela preferência! 💜
 /**
  * Render reactivation message
  */
-export function renderReactivationMessage(
-	data: ReactivationMessageData,
-): string {
-	return `
+export function renderReactivationMessage(data: ReactivationMessageData): string {
+  return `
 👋 *Olá ${data.patientName}!*
 
 Sentimos sua falta aqui na *${data.organizationName}*!
@@ -472,49 +461,46 @@ Equipe *${data.organizationName}* 💙
 const client = new EvolutionApiClient();
 
 export const WhatsAppService = {
-	sendText: client.sendText.bind(client),
-	sendMedia: client.sendMedia.bind(client),
-	sendTemplate: client.sendTemplate.bind(client),
-	checkNumber: client.checkNumber.bind(client),
+  sendText: client.sendText.bind(client),
+  sendMedia: client.sendMedia.bind(client),
+  sendTemplate: client.sendTemplate.bind(client),
+  checkNumber: client.checkNumber.bind(client),
 
-	// Convenience methods for common messages
-	async sendAppointmentConfirmation(
-		number: string,
-		data: AppointmentMessageData,
-	) {
-		return this.sendText(number, renderAppointmentConfirmation(data));
-	},
+  // Convenience methods for common messages
+  async sendAppointmentConfirmation(number: string, data: AppointmentMessageData) {
+    return this.sendText(number, renderAppointmentConfirmation(data));
+  },
 
-	async sendAppointmentReminder(number: string, data: AppointmentMessageData) {
-		return this.sendText(number, renderAppointmentReminder(data));
-	},
+  async sendAppointmentReminder(number: string, data: AppointmentMessageData) {
+    return this.sendText(number, renderAppointmentReminder(data));
+  },
 
-	async sendBirthdayGreeting(number: string, data: BirthdayMessageData) {
-		return this.sendText(number, renderBirthdayGreeting(data));
-	},
+  async sendBirthdayGreeting(number: string, data: BirthdayMessageData) {
+    return this.sendText(number, renderBirthdayGreeting(data));
+  },
 
-	async sendSessionReminder(number: string, data: SessionReminderData) {
-		return this.sendText(number, renderSessionReminder(data));
-	},
+  async sendSessionReminder(number: string, data: SessionReminderData) {
+    return this.sendText(number, renderSessionReminder(data));
+  },
 
-	async sendPaymentConfirmation(
-		number: string,
-		data: { patientName: string; amount: string; paymentMethod: string },
-	) {
-		return this.sendText(number, renderPaymentConfirmation(data));
-	},
+  async sendPaymentConfirmation(
+    number: string,
+    data: { patientName: string; amount: string; paymentMethod: string },
+  ) {
+    return this.sendText(number, renderPaymentConfirmation(data));
+  },
 
-	async sendReactivation(number: string, data: ReactivationMessageData) {
-		return this.sendText(number, renderReactivationMessage(data));
-	},
+  async sendReactivation(number: string, data: ReactivationMessageData) {
+    return this.sendText(number, renderReactivationMessage(data));
+  },
 
-	templates: WhatsAppTemplates,
-	renderers: {
-		renderAppointmentConfirmation,
-		renderAppointmentReminder,
-		renderBirthdayGreeting,
-		renderSessionReminder,
-		renderPaymentConfirmation,
-		renderReactivationMessage,
-	},
+  templates: WhatsAppTemplates,
+  renderers: {
+    renderAppointmentConfirmation,
+    renderAppointmentReminder,
+    renderBirthdayGreeting,
+    renderSessionReminder,
+    renderPaymentConfirmation,
+    renderReactivationMessage,
+  },
 };

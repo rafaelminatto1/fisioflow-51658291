@@ -4,15 +4,15 @@ A arquitetura do **FisioFlow** foi projetada para ser nativa da borda (Edge-Nati
 
 ## 🚀 Tecnologias Principais
 
-| Camada | Tecnologia | Implementação |
-| :--- | :--- | :--- |
-| **Runtime** | Node.js v20.12.0+ | Ambiente de desenvolvimento e build consistente. |
-| **Frontend** | React 19 + Vite 8 | Hospedado no **Cloudflare Pages**. |
-| **Backend** | Cloudflare Workers | Serverless API (Hono.js/TypeScript) em `apps/api`. |
-| **Database** | **Neon DB (PostgreSQL)** | Banco relacional serverless com **Drizzle ORM**. |
-| **Auth** | **Neon Auth (JWKS)** | Gestão de identidade integrada com validação por chaves públicas. |
-| **Storage** | **Cloudflare R2** | Armazenamento de mídia (Vídeos/Imagens) via S3 API. |
-| **Aceleração** | Cloudflare Hyperdrive | Pooling de conexões PostgreSQL distribuído na borda. |
+| Camada         | Tecnologia               | Implementação                                                     |
+| :------------- | :----------------------- | :---------------------------------------------------------------- |
+| **Runtime**    | Node.js v20.12.0+        | Ambiente de desenvolvimento e build consistente.                  |
+| **Frontend**   | React 19 + Vite 8        | Hospedado no **Cloudflare Pages**.                                |
+| **Backend**    | Cloudflare Workers       | Serverless API (Hono.js/TypeScript) em `apps/api`.                |
+| **Database**   | **Neon DB (PostgreSQL)** | Banco relacional serverless com **Drizzle ORM**.                  |
+| **Auth**       | **Neon Auth (JWKS)**     | Gestão de identidade integrada com validação por chaves públicas. |
+| **Storage**    | **Cloudflare R2**        | Armazenamento de mídia (Vídeos/Imagens) via S3 API.               |
+| **Aceleração** | Cloudflare Hyperdrive    | Pooling de conexões PostgreSQL distribuído na borda.              |
 
 ## 📐 Diagrama de Arquitetura
 
@@ -21,16 +21,16 @@ graph TD
     User((Paciente/Fisio)) --> CF_Edge[Cloudflare Edge / WAF]
     CF_Edge --> CF_Pages[Cloudflare Pages - Frontend]
     CF_Edge --> CF_Workers[Cloudflare Workers - API]
-    
+
     subgraph "Auth & Security"
         CF_Workers --> Neon_Auth[Neon Auth / JWKS Verification]
     end
-    
+
     subgraph "Data Persistence"
         CF_Workers --> CF_Hyperdrive[Cloudflare Hyperdrive]
         CF_Hyperdrive --> Neon_DB[(Neon PostgreSQL)]
     end
-    
+
     subgraph "Media Storage"
         CF_Workers --> CF_R2[Cloudflare R2 Storage]
     end

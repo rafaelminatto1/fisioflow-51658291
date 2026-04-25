@@ -1,7 +1,15 @@
-import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, Modal, StyleSheet, SafeAreaView, ScrollView } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { useColors } from '@/hooks/useColorScheme';
+import React, { useState } from "react";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  Modal,
+  StyleSheet,
+  SafeAreaView,
+  ScrollView,
+} from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { useColors } from "@/hooks/useColorScheme";
 
 interface PickerItem {
   label: string;
@@ -16,11 +24,17 @@ interface PickerProps {
   placeholder?: string;
 }
 
-export function Picker({ label, items, selectedValue, onValueChange, placeholder = 'Selecione...' }: PickerProps) {
+export function Picker({
+  label,
+  items,
+  selectedValue,
+  onValueChange,
+  placeholder = "Selecione...",
+}: PickerProps) {
   const colors = useColors();
   const [modalVisible, setModalVisible] = useState(false);
 
-  const selectedLabel = items.find(item => item.value === selectedValue)?.label || placeholder;
+  const selectedLabel = items.find((item) => item.value === selectedValue)?.label || placeholder;
 
   return (
     <View>
@@ -51,7 +65,14 @@ export function Picker({ label, items, selectedValue, onValueChange, placeholder
               {items.map((item) => (
                 <TouchableOpacity
                   key={item.value}
-                  style={[styles.modalItem, { borderBottomColor: colors.border, backgroundColor: selectedValue === item.value ? colors.primaryLight : 'transparent' }]}
+                  style={[
+                    styles.modalItem,
+                    {
+                      borderBottomColor: colors.border,
+                      backgroundColor:
+                        selectedValue === item.value ? colors.primaryLight : "transparent",
+                    },
+                  ]}
                   onPress={() => {
                     onValueChange(item.value);
                     setModalVisible(false);
@@ -74,13 +95,13 @@ export function Picker({ label, items, selectedValue, onValueChange, placeholder
 const styles = StyleSheet.create({
   label: {
     fontSize: 14,
-    fontWeight: '500',
+    fontWeight: "500",
     marginBottom: 6,
   },
   selector: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     paddingHorizontal: 16,
     paddingVertical: 14,
     borderRadius: 12,
@@ -92,30 +113,30 @@ const styles = StyleSheet.create({
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'flex-end',
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "flex-end",
   },
   modalContent: {
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     paddingBottom: 20,
-    maxHeight: '50%',
+    maxHeight: "50%",
   },
   modalHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     padding: 16,
     borderBottomWidth: 1,
   },
   modalTitle: {
     fontSize: 18,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   modalItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     paddingHorizontal: 16,
     paddingVertical: 14,
     borderBottomWidth: 1,

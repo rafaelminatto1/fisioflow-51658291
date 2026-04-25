@@ -5,7 +5,7 @@ test.describe('Agenda - Fluxo de Criação (Schedule-X) - Produção', () => {
   test.beforeEach(async ({ page }) => {
     // Acessar a URL de produção/staging
     await page.goto('https://fisioflow-web.rafalegollas.workers.dev/login');
-    
+
     // Login
     await page.fill('input[type="email"]', testUsers.admin.email);
     await page.fill('input[type="password"]', testUsers.admin.password);
@@ -26,7 +26,7 @@ test.describe('Agenda - Fluxo de Criação (Schedule-X) - Produção', () => {
   test('deve abrir modal de novo agendamento ao clicar em espaço vazio', async ({ page }) => {
     // 1. Localizar um slot de tempo vazio no grid
     const timeSlot = page.locator('.sx__time-grid-day').first();
-    
+
     // 2. Clicar no slot
     await timeSlot.click({ position: { x: 50, y: 100 } });
 
@@ -38,12 +38,12 @@ test.describe('Agenda - Fluxo de Criação (Schedule-X) - Produção', () => {
   test('deve permitir interagir com um agendamento existente (iniciar atendimento e DND)', async ({ page }) => {
     // Procura por um agendamento (evento) no grid
     const appointment = page.locator('.sx__time-grid-event').first();
-    
+
     // Verifica se há pelo menos um agendamento visível antes de testar
     if (await appointment.isVisible()) {
       // 1. Abrir o popover do agendamento
       await appointment.click();
-      
+
       // 2. Localizar o botão "Iniciar Atendimento"
       const startButton = page.locator('button:has-text("Iniciar Atendimento")');
       await expect(startButton).toBeVisible();

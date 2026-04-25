@@ -1,423 +1,678 @@
-<!DOCTYPE html>
+<!doctype html>
 
-<html lang="pt-BR"><head>
-<meta charset="utf-8"/>
-<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>Configurações da Agenda - Bloqueios | FisioFlow</title>
-<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&amp;display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-<script id="tailwind-config">
-        tailwind.config = {
-            darkMode: "class",
-            theme: {
-                extend: {
-                    "colors": {
-                        "tertiary": "#4d5052",
-                        "on-secondary-fixed": "#002113",
-                        "on-surface-variant": "#434655",
-                        "surface-dim": "#d9d9e5",
-                        "inverse-surface": "#2e3039",
-                        "primary-fixed": "#dbe1ff",
-                        "on-tertiary-fixed-variant": "#444749",
-                        "on-secondary": "#ffffff",
-                        "on-error-container": "#93000a",
-                        "surface-container": "#ededf9",
-                        "primary-container": "#195de6",
-                        "surface-container-lowest": "#ffffff",
-                        "primary": "#0046bb",
-                        "surface-container-high": "#e7e7f3",
-                        "surface-bright": "#faf8ff",
-                        "surface": "#faf8ff",
-                        "outline": "#737686",
-                        "on-primary-fixed-variant": "#003ea8",
-                        "on-secondary-container": "#00714d",
-                        "on-tertiary": "#ffffff",
-                        "primary-fixed-dim": "#b4c5ff",
-                        "on-tertiary-container": "#e5e8ea",
-                        "tertiary-container": "#65686a",
-                        "on-background": "#191b23",
-                        "inverse-primary": "#b4c5ff",
-                        "on-primary-fixed": "#00174b",
-                        "secondary": "#006c49",
-                        "surface-tint": "#0053da",
-                        "error-container": "#ffdad6",
-                        "surface-container-low": "#f3f3fe",
-                        "on-tertiary-fixed": "#191c1e",
-                        "tertiary-fixed-dim": "#c4c7c9",
-                        "secondary-fixed": "#6ffbbe",
-                        "inverse-on-surface": "#f0f0fc",
-                        "secondary-container": "#6cf8bb",
-                        "on-primary": "#ffffff",
-                        "on-surface": "#191b23",
-                        "surface-container-highest": "#e1e2ed",
-                        "secondary-fixed-dim": "#4edea3",
-                        "on-primary-container": "#e2e7ff",
-                        "on-error": "#ffffff",
-                        "background": "#faf8ff",
-                        "surface-variant": "#e1e2ed",
-                        "error": "#ba1a1a",
-                        "tertiary-fixed": "#e0e3e5",
-                        "outline-variant": "#c3c6d7",
-                        "on-secondary-fixed-variant": "#005236"
-                    },
-                    "borderRadius": {
-                        "DEFAULT": "0.25rem",
-                        "lg": "0.5rem",
-                        "xl": "0.75rem",
-                        "full": "9999px"
-                    },
-                    "spacing": {
-                        "stack-sm": "8px",
-                        "container-max-width": "1280px",
-                        "unit": "8px",
-                        "margin": "32px",
-                        "stack-md": "16px",
-                        "gutter": "24px",
-                        "stack-lg": "32px"
-                    },
-                    "fontFamily": {
-                        "h1": ["Inter"],
-                        "time-display": ["monospace"],
-                        "label-caps": ["Inter"],
-                        "h2": ["Inter"],
-                        "body-sm": ["Inter"],
-                        "body-base": ["Inter"]
-                    },
-                    "fontSize": {
-                        "h1": ["32px", { "lineHeight": "1.2", "fontWeight": "700" }],
-                        "time-display": ["14px", { "lineHeight": "1.0", "fontWeight": "500" }],
-                        "label-caps": ["12px", { "lineHeight": "1.0", "letterSpacing": "0.05em", "fontWeight": "600" }],
-                        "h2": ["24px", { "lineHeight": "1.3", "fontWeight": "600" }],
-                        "body-sm": ["14px", { "lineHeight": "1.5", "fontWeight": "400" }],
-                        "body-base": ["16px", { "lineHeight": "1.6", "fontWeight": "400" }]
-                    }
-                }
-            }
-        }
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Configurações da Agenda - Bloqueios | FisioFlow</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&amp;display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+      rel="stylesheet"
+    />
+    <script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              tertiary: "#4d5052",
+              "on-secondary-fixed": "#002113",
+              "on-surface-variant": "#434655",
+              "surface-dim": "#d9d9e5",
+              "inverse-surface": "#2e3039",
+              "primary-fixed": "#dbe1ff",
+              "on-tertiary-fixed-variant": "#444749",
+              "on-secondary": "#ffffff",
+              "on-error-container": "#93000a",
+              "surface-container": "#ededf9",
+              "primary-container": "#195de6",
+              "surface-container-lowest": "#ffffff",
+              primary: "#0046bb",
+              "surface-container-high": "#e7e7f3",
+              "surface-bright": "#faf8ff",
+              surface: "#faf8ff",
+              outline: "#737686",
+              "on-primary-fixed-variant": "#003ea8",
+              "on-secondary-container": "#00714d",
+              "on-tertiary": "#ffffff",
+              "primary-fixed-dim": "#b4c5ff",
+              "on-tertiary-container": "#e5e8ea",
+              "tertiary-container": "#65686a",
+              "on-background": "#191b23",
+              "inverse-primary": "#b4c5ff",
+              "on-primary-fixed": "#00174b",
+              secondary: "#006c49",
+              "surface-tint": "#0053da",
+              "error-container": "#ffdad6",
+              "surface-container-low": "#f3f3fe",
+              "on-tertiary-fixed": "#191c1e",
+              "tertiary-fixed-dim": "#c4c7c9",
+              "secondary-fixed": "#6ffbbe",
+              "inverse-on-surface": "#f0f0fc",
+              "secondary-container": "#6cf8bb",
+              "on-primary": "#ffffff",
+              "on-surface": "#191b23",
+              "surface-container-highest": "#e1e2ed",
+              "secondary-fixed-dim": "#4edea3",
+              "on-primary-container": "#e2e7ff",
+              "on-error": "#ffffff",
+              background: "#faf8ff",
+              "surface-variant": "#e1e2ed",
+              error: "#ba1a1a",
+              "tertiary-fixed": "#e0e3e5",
+              "outline-variant": "#c3c6d7",
+              "on-secondary-fixed-variant": "#005236",
+            },
+            borderRadius: {
+              DEFAULT: "0.25rem",
+              lg: "0.5rem",
+              xl: "0.75rem",
+              full: "9999px",
+            },
+            spacing: {
+              "stack-sm": "8px",
+              "container-max-width": "1280px",
+              unit: "8px",
+              margin: "32px",
+              "stack-md": "16px",
+              gutter: "24px",
+              "stack-lg": "32px",
+            },
+            fontFamily: {
+              h1: ["Inter"],
+              "time-display": ["monospace"],
+              "label-caps": ["Inter"],
+              h2: ["Inter"],
+              "body-sm": ["Inter"],
+              "body-base": ["Inter"],
+            },
+            fontSize: {
+              h1: ["32px", { lineHeight: "1.2", fontWeight: "700" }],
+              "time-display": ["14px", { lineHeight: "1.0", fontWeight: "500" }],
+              "label-caps": [
+                "12px",
+                { lineHeight: "1.0", letterSpacing: "0.05em", fontWeight: "600" },
+              ],
+              h2: ["24px", { lineHeight: "1.3", fontWeight: "600" }],
+              "body-sm": ["14px", { lineHeight: "1.5", fontWeight: "400" }],
+              "body-base": ["16px", { lineHeight: "1.6", fontWeight: "400" }],
+            },
+          },
+        },
+      };
     </script>
-<style>
-        .material-symbols-outlined {
-            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
-        }
+    <style>
+      .material-symbols-outlined {
+        font-variation-settings:
+          "FILL" 0,
+          "wght" 400,
+          "GRAD" 0,
+          "opsz" 24;
+      }
     </style>
-</head>
-<body class="bg-background text-on-background font-body-base antialiased min-h-screen flex">
-<!-- SideNavBar -->
-<nav class="hidden md:flex h-screen w-64 border-r border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 fixed left-0 top-0 flex-col z-50 flat no shadows">
-<div class="p-6">
-<h1 class="text-xl font-black text-blue-700 dark:text-blue-400 font-h2 text-h2 mb-1">FisioFlow</h1>
-<p class="text-slate-500 font-body-sm text-body-sm">Gestão Clínica</p>
-</div>
-<div class="flex-1 overflow-y-auto py-4">
-<ul class="space-y-1">
-<li>
-<a class="flex items-center px-6 py-3 font-sans text-sm text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-blue-600 dark:hover:text-blue-400 duration-200 ease-in-out group" href="#">
-<span class="material-symbols-outlined mr-4 group-hover:text-blue-600 dark:group-hover:text-blue-400" data-icon="group">group</span>
-<span class="font-medium">Capacidade</span>
-</a>
-</li>
-<li>
-<a class="flex items-center px-6 py-3 font-sans text-sm text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-blue-600 dark:hover:text-blue-400 duration-200 ease-in-out group" href="#">
-<span class="material-symbols-outlined mr-4 group-hover:text-blue-600 dark:group-hover:text-blue-400" data-icon="schedule">schedule</span>
-<span class="font-medium">Horários</span>
-</a>
-</li>
-<li>
-<a class="flex items-center px-6 py-3 font-sans text-sm text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-blue-600 dark:hover:text-blue-400 duration-200 ease-in-out group" href="#">
-<span class="material-symbols-outlined mr-4 group-hover:text-blue-600 dark:group-hover:text-blue-400" data-icon="medical_services">medical_services</span>
-<span class="font-medium">Tipos de Atendimento</span>
-</a>
-</li>
-<li>
-<a class="flex items-center px-6 py-3 font-sans text-sm text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-blue-600 dark:hover:text-blue-400 duration-200 ease-in-out group" href="#">
-<span class="material-symbols-outlined mr-4 group-hover:text-blue-600 dark:group-hover:text-blue-400" data-icon="policy">policy</span>
-<span class="font-medium">Políticas</span>
-</a>
-</li>
-<li>
-<a class="flex items-center px-6 py-3 font-sans text-sm bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 font-semibold border-r-4 border-blue-600 duration-200 ease-in-out" href="#">
-<span class="material-symbols-outlined mr-4" data-icon="block" style="font-variation-settings: 'FILL' 1;">block</span>
-<span class="font-medium">Bloqueios</span>
-</a>
-</li>
-<li>
-<a class="flex items-center px-6 py-3 font-sans text-sm text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-blue-600 dark:hover:text-blue-400 duration-200 ease-in-out group" href="#">
-<span class="material-symbols-outlined mr-4 group-hover:text-blue-600 dark:group-hover:text-blue-400" data-icon="palette">palette</span>
-<span class="font-medium">Aparência</span>
-</a>
-</li>
-</ul>
-</div>
-</nav>
-<!-- Main Content Area -->
-<main class="flex-1 ml-0 md:ml-64 flex flex-col min-h-screen">
-<!-- TopAppBar -->
-<header class="flex justify-between items-center h-16 px-6 w-full sticky top-0 z-40 bg-white dark:bg-slate-900 font-sans text-sm font-medium docked full-width top-0 border-b border-slate-100 dark:border-slate-800 shadow-sm">
-<div class="flex items-center gap-4">
-<button class="md:hidden text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 active:opacity-80 transition-opacity">
-<span class="material-symbols-outlined" data-icon="menu">menu</span>
-</button>
-<div>
-<h2 class="text-lg font-bold text-blue-700 dark:text-blue-400">Configurações da Agenda</h2>
-</div>
-</div>
-<div class="flex items-center gap-4">
-<button class="text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors p-2 rounded-full active:opacity-80 transition-opacity">
-<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
-</button>
-<button class="text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors p-2 rounded-full active:opacity-80 transition-opacity">
-<span class="material-symbols-outlined" data-icon="settings">settings</span>
-</button>
-<button class="hidden sm:flex items-center gap-2 bg-primary-container text-on-primary px-4 py-2 rounded-lg hover:bg-primary transition-colors active:opacity-80">
-<span class="material-symbols-outlined text-sm" data-icon="calendar_month">calendar_month</span>
-                    Ver Agenda
+  </head>
+  <body class="bg-background text-on-background font-body-base antialiased min-h-screen flex">
+    <!-- SideNavBar -->
+    <nav
+      class="hidden md:flex h-screen w-64 border-r border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 fixed left-0 top-0 flex-col z-50 flat no shadows"
+    >
+      <div class="p-6">
+        <h1 class="text-xl font-black text-blue-700 dark:text-blue-400 font-h2 text-h2 mb-1">
+          FisioFlow
+        </h1>
+        <p class="text-slate-500 font-body-sm text-body-sm">Gestão Clínica</p>
+      </div>
+      <div class="flex-1 overflow-y-auto py-4">
+        <ul class="space-y-1">
+          <li>
+            <a
+              class="flex items-center px-6 py-3 font-sans text-sm text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-blue-600 dark:hover:text-blue-400 duration-200 ease-in-out group"
+              href="#"
+            >
+              <span
+                class="material-symbols-outlined mr-4 group-hover:text-blue-600 dark:group-hover:text-blue-400"
+                data-icon="group"
+                >group</span
+              >
+              <span class="font-medium">Capacidade</span>
+            </a>
+          </li>
+          <li>
+            <a
+              class="flex items-center px-6 py-3 font-sans text-sm text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-blue-600 dark:hover:text-blue-400 duration-200 ease-in-out group"
+              href="#"
+            >
+              <span
+                class="material-symbols-outlined mr-4 group-hover:text-blue-600 dark:group-hover:text-blue-400"
+                data-icon="schedule"
+                >schedule</span
+              >
+              <span class="font-medium">Horários</span>
+            </a>
+          </li>
+          <li>
+            <a
+              class="flex items-center px-6 py-3 font-sans text-sm text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-blue-600 dark:hover:text-blue-400 duration-200 ease-in-out group"
+              href="#"
+            >
+              <span
+                class="material-symbols-outlined mr-4 group-hover:text-blue-600 dark:group-hover:text-blue-400"
+                data-icon="medical_services"
+                >medical_services</span
+              >
+              <span class="font-medium">Tipos de Atendimento</span>
+            </a>
+          </li>
+          <li>
+            <a
+              class="flex items-center px-6 py-3 font-sans text-sm text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-blue-600 dark:hover:text-blue-400 duration-200 ease-in-out group"
+              href="#"
+            >
+              <span
+                class="material-symbols-outlined mr-4 group-hover:text-blue-600 dark:group-hover:text-blue-400"
+                data-icon="policy"
+                >policy</span
+              >
+              <span class="font-medium">Políticas</span>
+            </a>
+          </li>
+          <li>
+            <a
+              class="flex items-center px-6 py-3 font-sans text-sm bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 font-semibold border-r-4 border-blue-600 duration-200 ease-in-out"
+              href="#"
+            >
+              <span
+                class="material-symbols-outlined mr-4"
+                data-icon="block"
+                style="font-variation-settings: &quot;FILL&quot; 1"
+                >block</span
+              >
+              <span class="font-medium">Bloqueios</span>
+            </a>
+          </li>
+          <li>
+            <a
+              class="flex items-center px-6 py-3 font-sans text-sm text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-blue-600 dark:hover:text-blue-400 duration-200 ease-in-out group"
+              href="#"
+            >
+              <span
+                class="material-symbols-outlined mr-4 group-hover:text-blue-600 dark:group-hover:text-blue-400"
+                data-icon="palette"
+                >palette</span
+              >
+              <span class="font-medium">Aparência</span>
+            </a>
+          </li>
+        </ul>
+      </div>
+    </nav>
+    <!-- Main Content Area -->
+    <main class="flex-1 ml-0 md:ml-64 flex flex-col min-h-screen">
+      <!-- TopAppBar -->
+      <header
+        class="flex justify-between items-center h-16 px-6 w-full sticky top-0 z-40 bg-white dark:bg-slate-900 font-sans text-sm font-medium docked full-width top-0 border-b border-slate-100 dark:border-slate-800 shadow-sm"
+      >
+        <div class="flex items-center gap-4">
+          <button
+            class="md:hidden text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 active:opacity-80 transition-opacity"
+          >
+            <span class="material-symbols-outlined" data-icon="menu">menu</span>
+          </button>
+          <div>
+            <h2 class="text-lg font-bold text-blue-700 dark:text-blue-400">
+              Configurações da Agenda
+            </h2>
+          </div>
+        </div>
+        <div class="flex items-center gap-4">
+          <button
+            class="text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors p-2 rounded-full active:opacity-80 transition-opacity"
+          >
+            <span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+          </button>
+          <button
+            class="text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors p-2 rounded-full active:opacity-80 transition-opacity"
+          >
+            <span class="material-symbols-outlined" data-icon="settings">settings</span>
+          </button>
+          <button
+            class="hidden sm:flex items-center gap-2 bg-primary-container text-on-primary px-4 py-2 rounded-lg hover:bg-primary transition-colors active:opacity-80"
+          >
+            <span class="material-symbols-outlined text-sm" data-icon="calendar_month"
+              >calendar_month</span
+            >
+            Ver Agenda
+          </button>
+        </div>
+      </header>
+      <!-- Page Content -->
+      <div class="flex-1 p-6 lg:p-8 max-w-container-max-width mx-auto w-full">
+        <!-- Header Section -->
+        <div
+          class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-stack-lg"
+        >
+          <div>
+            <h1 class="font-h1 text-h1 text-on-background mb-stack-sm">Bloqueios de Agenda</h1>
+            <p class="font-body-base text-body-base text-on-surface-variant">
+              Gerencie ausências, férias, feriados e períodos em que você não estará disponível para
+              atendimentos.
+            </p>
+          </div>
+          <button
+            class="flex items-center gap-2 bg-error text-on-error h-[44px] px-6 rounded-lg hover:bg-error-container hover:text-on-error-container transition-colors shadow-[0_4px_16px_rgba(186,26,26,0.1)]"
+          >
+            <span class="material-symbols-outlined" data-icon="add">add</span>
+            <span class="font-medium">Novo Bloqueio</span>
+          </button>
+        </div>
+        <!-- Templates Row -->
+        <div class="mb-stack-lg">
+          <h3 class="font-label-caps text-label-caps text-outline mb-stack-sm uppercase">
+            Adição Rápida
+          </h3>
+          <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+            <button
+              class="flex flex-col items-center justify-center p-4 bg-surface-container-lowest rounded-xl shadow-[0_4px_12px_rgba(0,0,0,0.05)] hover:shadow-[0_8px_24px_rgba(0,0,0,0.08)] transition-all border border-transparent hover:border-error/20 group"
+            >
+              <div
+                class="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center mb-2 group-hover:bg-error/10 transition-colors"
+              >
+                <span
+                  class="material-symbols-outlined text-on-surface-variant group-hover:text-error transition-colors"
+                  data-icon="palm_tree"
+                  >palm_logo</span
+                >
+              </div>
+              <span class="font-body-sm text-body-sm font-medium text-on-background">Férias</span>
+              <span class="font-label-caps text-label-caps text-outline mt-1">15 DIAS</span>
+            </button>
+            <button
+              class="flex flex-col items-center justify-center p-4 bg-surface-container-lowest rounded-xl shadow-[0_4px_12px_rgba(0,0,0,0.05)] hover:shadow-[0_8px_24px_rgba(0,0,0,0.08)] transition-all border border-transparent hover:border-error/20 group"
+            >
+              <div
+                class="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center mb-2 group-hover:bg-error/10 transition-colors"
+              >
+                <span
+                  class="material-symbols-outlined text-on-surface-variant group-hover:text-error transition-colors"
+                  data-icon="flag"
+                  >flag</span
+                >
+              </div>
+              <span class="font-body-sm text-body-sm font-medium text-on-background">Feriado</span>
+              <span class="font-label-caps text-label-caps text-outline mt-1">1 DIA</span>
+            </button>
+            <button
+              class="flex flex-col items-center justify-center p-4 bg-surface-container-lowest rounded-xl shadow-[0_4px_12px_rgba(0,0,0,0.05)] hover:shadow-[0_8px_24px_rgba(0,0,0,0.08)] transition-all border border-transparent hover:border-error/20 group"
+            >
+              <div
+                class="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center mb-2 group-hover:bg-error/10 transition-colors"
+              >
+                <span
+                  class="material-symbols-outlined text-on-surface-variant group-hover:text-error transition-colors"
+                  data-icon="menu_book"
+                  >menu_book</span
+                >
+              </div>
+              <span class="font-body-sm text-body-sm font-medium text-on-background">Curso</span>
+              <span class="font-label-caps text-label-caps text-outline mt-1">3 DIAS</span>
+            </button>
+            <button
+              class="flex flex-col items-center justify-center p-4 bg-surface-container-lowest rounded-xl shadow-[0_4px_12px_rgba(0,0,0,0.05)] hover:shadow-[0_8px_24px_rgba(0,0,0,0.08)] transition-all border border-transparent hover:border-error/20 group"
+            >
+              <div
+                class="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center mb-2 group-hover:bg-error/10 transition-colors"
+              >
+                <span
+                  class="material-symbols-outlined text-on-surface-variant group-hover:text-error transition-colors"
+                  data-icon="build"
+                  >build</span
+                >
+              </div>
+              <span class="font-body-sm text-body-sm font-medium text-on-background"
+                >Manutenção</span
+              >
+              <span class="font-label-caps text-label-caps text-outline mt-1">1 DIA</span>
+            </button>
+            <button
+              class="flex flex-col items-center justify-center p-4 bg-surface-container-lowest rounded-xl shadow-[0_4px_12px_rgba(0,0,0,0.05)] hover:shadow-[0_8px_24px_rgba(0,0,0,0.08)] transition-all border border-transparent hover:border-error/20 group"
+            >
+              <div
+                class="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center mb-2 group-hover:bg-error/10 transition-colors"
+              >
+                <span
+                  class="material-symbols-outlined text-on-surface-variant group-hover:text-error transition-colors"
+                  data-icon="person"
+                  >person</span
+                >
+              </div>
+              <span class="font-body-sm text-body-sm font-medium text-on-background">Pessoal</span>
+              <span class="font-label-caps text-label-caps text-outline mt-1">PERSONALIZAR</span>
+            </button>
+          </div>
+        </div>
+        <!-- Main Content Area with List and Form -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-gutter">
+          <!-- Left Column: List -->
+          <div class="lg:col-span-2 flex flex-col gap-stack-md">
+            <!-- Filters -->
+            <div class="flex items-center gap-2 border-b border-surface-variant pb-2 mb-2">
+              <button
+                class="px-4 py-2 font-body-sm text-body-sm font-medium text-primary border-b-2 border-primary -mb-[10px]"
+              >
+                Ativos
+              </button>
+              <button
+                class="px-4 py-2 font-body-sm text-body-sm text-on-surface-variant hover:text-on-background transition-colors"
+              >
+                Todos
+              </button>
+              <button
+                class="px-4 py-2 font-body-sm text-body-sm text-on-surface-variant hover:text-on-background transition-colors"
+              >
+                Esta semana
+              </button>
+            </div>
+            <!-- Active Blocks List -->
+            <div class="flex flex-col gap-3">
+              <!-- Block Item 1 -->
+              <div
+                class="bg-surface-container-lowest rounded-xl p-4 shadow-[0_4px_12px_rgba(0,0,0,0.05)] flex items-center justify-between border-l-4 border-emerald-500"
+              >
+                <div class="flex items-start gap-4">
+                  <div class="mt-1 w-2 h-2 rounded-full bg-emerald-500"></div>
+                  <div>
+                    <h4 class="font-body-base text-body-base font-semibold text-on-background mb-1">
+                      Férias de Verão
+                    </h4>
+                    <div class="flex items-center gap-3 text-on-surface-variant">
+                      <div class="flex items-center gap-1">
+                        <span
+                          class="material-symbols-outlined text-[16px]"
+                          data-icon="calendar_today"
+                          >calendar_today</span
+                        >
+                        <span class="font-body-sm text-body-sm">15/01 a 30/01/2026</span>
+                      </div>
+                      <div class="w-1 h-1 rounded-full bg-outline-variant"></div>
+                      <span class="font-time-display text-time-display">Integral</span>
+                    </div>
+                    <div class="flex items-center gap-2 mt-2">
+                      <span
+                        class="px-2 py-1 bg-surface-container text-on-surface-variant rounded font-label-caps text-label-caps"
+                        >16 DIAS</span
+                      >
+                      <span
+                        class="px-2 py-1 bg-primary-fixed text-on-primary-fixed-variant rounded font-label-caps text-label-caps"
+                        >FÉRIAS</span
+                      >
+                    </div>
+                  </div>
+                </div>
+                <div class="flex gap-2">
+                  <button
+                    class="p-2 text-on-surface-variant hover:bg-surface-container rounded-lg transition-colors"
+                  >
+                    <span class="material-symbols-outlined" data-icon="edit">edit</span>
+                  </button>
+                  <button
+                    class="p-2 text-error hover:bg-error-container rounded-lg transition-colors"
+                  >
+                    <span class="material-symbols-outlined" data-icon="delete">delete</span>
+                  </button>
+                </div>
+              </div>
+              <!-- Block Item 2 -->
+              <div
+                class="bg-surface-container-lowest rounded-xl p-4 shadow-[0_4px_12px_rgba(0,0,0,0.05)] flex items-center justify-between border-l-4 border-amber-500"
+              >
+                <div class="flex items-start gap-4">
+                  <div class="mt-1 w-2 h-2 rounded-full bg-amber-500"></div>
+                  <div>
+                    <h4 class="font-body-base text-body-base font-semibold text-on-background mb-1">
+                      Manutenção Clínica
+                    </h4>
+                    <div class="flex items-center gap-3 text-on-surface-variant">
+                      <div class="flex items-center gap-1">
+                        <span
+                          class="material-symbols-outlined text-[16px]"
+                          data-icon="calendar_today"
+                          >calendar_today</span
+                        >
+                        <span class="font-body-sm text-body-sm">25/04/2026</span>
+                      </div>
+                      <div class="w-1 h-1 rounded-full bg-outline-variant"></div>
+                      <div class="flex items-center gap-1">
+                        <span class="material-symbols-outlined text-[16px]" data-icon="schedule"
+                          >schedule</span
+                        >
+                        <span class="font-time-display text-time-display">08:00 - 12:00</span>
+                      </div>
+                    </div>
+                    <div class="flex items-center gap-2 mt-2">
+                      <span
+                        class="px-2 py-1 bg-surface-container text-on-surface-variant rounded font-label-caps text-label-caps"
+                        >1 DIA</span
+                      >
+                      <span
+                        class="px-2 py-1 bg-amber-100 text-amber-800 rounded font-label-caps text-label-caps"
+                        >MANUTENÇÃO</span
+                      >
+                    </div>
+                  </div>
+                </div>
+                <div class="flex gap-2">
+                  <button
+                    class="p-2 text-on-surface-variant hover:bg-surface-container rounded-lg transition-colors"
+                  >
+                    <span class="material-symbols-outlined" data-icon="edit">edit</span>
+                  </button>
+                  <button
+                    class="p-2 text-error hover:bg-error-container rounded-lg transition-colors"
+                  >
+                    <span class="material-symbols-outlined" data-icon="delete">delete</span>
+                  </button>
+                </div>
+              </div>
+              <!-- Block Item 3 -->
+              <div
+                class="bg-surface-container-lowest rounded-xl p-4 shadow-[0_4px_12px_rgba(0,0,0,0.05)] flex items-center justify-between border-l-4 border-blue-500"
+              >
+                <div class="flex items-start gap-4">
+                  <div class="mt-1 w-2 h-2 rounded-full bg-blue-500"></div>
+                  <div>
+                    <h4 class="font-body-base text-body-base font-semibold text-on-background mb-1">
+                      Curso de Atualização
+                    </h4>
+                    <div class="flex items-center gap-3 text-on-surface-variant">
+                      <div class="flex items-center gap-1">
+                        <span
+                          class="material-symbols-outlined text-[16px]"
+                          data-icon="calendar_today"
+                          >calendar_today</span
+                        >
+                        <span class="font-body-sm text-body-sm">10/05 a 12/05/2026</span>
+                      </div>
+                      <div class="w-1 h-1 rounded-full bg-outline-variant"></div>
+                      <span class="font-time-display text-time-display">Integral</span>
+                    </div>
+                    <div class="flex items-center gap-2 mt-2">
+                      <span
+                        class="px-2 py-1 bg-surface-container text-on-surface-variant rounded font-label-caps text-label-caps"
+                        >3 DIAS</span
+                      >
+                      <span
+                        class="px-2 py-1 bg-blue-100 text-blue-800 rounded font-label-caps text-label-caps"
+                        >CURSO</span
+                      >
+                    </div>
+                  </div>
+                </div>
+                <div class="flex gap-2">
+                  <button
+                    class="p-2 text-on-surface-variant hover:bg-surface-container rounded-lg transition-colors"
+                  >
+                    <span class="material-symbols-outlined" data-icon="edit">edit</span>
+                  </button>
+                  <button
+                    class="p-2 text-error hover:bg-error-container rounded-lg transition-colors"
+                  >
+                    <span class="material-symbols-outlined" data-icon="delete">delete</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+            <!-- Past Blocks Header -->
+            <div
+              class="mt-stack-md flex items-center justify-between cursor-pointer border-t border-surface-variant pt-4"
+            >
+              <div class="flex items-center gap-2 text-outline">
+                <span class="material-symbols-outlined" data-icon="history">history</span>
+                <h3 class="font-body-base text-body-base font-medium">Bloqueios Passados</h3>
+              </div>
+              <span class="material-symbols-outlined text-outline" data-icon="expand_more"
+                >expand_more</span
+              >
+            </div>
+          </div>
+          <!-- Right Column: Create Form -->
+          <div class="lg:col-span-1">
+            <div
+              class="bg-surface-container-lowest rounded-xl p-6 shadow-[0_4px_12px_rgba(0,0,0,0.05)] border border-surface-variant sticky top-24"
+            >
+              <h3 class="font-h2 text-h2 text-on-background mb-stack-md flex items-center gap-2">
+                <span class="material-symbols-outlined text-error" data-icon="edit_calendar"
+                  >edit_calendar</span
+                >
+                Criar Bloqueio
+              </h3>
+              <form class="flex flex-col gap-4">
+                <!-- Name Input -->
+                <div class="flex flex-col gap-1">
+                  <label class="font-label-caps text-label-caps text-on-surface-variant"
+                    >MOTIVO / NOME DO BLOQUEIO</label
+                  >
+                  <input
+                    class="h-[44px] rounded-lg border-outline-variant px-3 font-body-sm focus:border-error focus:ring-1 focus:ring-error transition-shadow"
+                    placeholder="Ex: Férias de Julho"
+                    type="text"
+                  />
+                </div>
+                <!-- Reason Dropdown -->
+                <div class="flex flex-col gap-1">
+                  <label class="font-label-caps text-label-caps text-on-surface-variant"
+                    >TIPO DE BLOQUEIO</label
+                  >
+                  <select
+                    class="h-[44px] rounded-lg border-outline-variant px-3 font-body-sm focus:border-error focus:ring-1 focus:ring-error transition-shadow text-on-background"
+                  >
+                    <option>Selecione um tipo...</option>
+                    <option>Férias</option>
+                    <option>Feriado</option>
+                    <option>Curso</option>
+                    <option>Manutenção</option>
+                    <option>Pessoal</option>
+                    <option>Outro</option>
+                  </select>
+                </div>
+                <hr class="border-surface-variant my-2" />
+                <!-- Date Range -->
+                <div class="grid grid-cols-2 gap-4">
+                  <div class="flex flex-col gap-1">
+                    <label class="font-label-caps text-label-caps text-on-surface-variant"
+                      >DATA INÍCIO</label
+                    >
+                    <input
+                      class="h-[44px] rounded-lg border-outline-variant px-3 font-body-sm focus:border-error focus:ring-1 focus:ring-error transition-shadow"
+                      type="date"
+                    />
+                  </div>
+                  <div class="flex flex-col gap-1">
+                    <label class="font-label-caps text-label-caps text-on-surface-variant"
+                      >DATA FIM</label
+                    >
+                    <input
+                      class="h-[44px] rounded-lg border-outline-variant px-3 font-body-sm focus:border-error focus:ring-1 focus:ring-error transition-shadow"
+                      type="date"
+                    />
+                  </div>
+                </div>
+                <!-- Full Day Toggle -->
+                <div class="flex items-center justify-between py-2">
+                  <label class="font-body-base text-body-base text-on-background"
+                    >Dia inteiro</label
+                  >
+                  <label class="relative inline-flex items-center cursor-pointer">
+                    <input checked="" class="sr-only peer" type="checkbox" />
+                    <div
+                      class="w-11 h-6 bg-surface-variant peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-error"
+                    ></div>
+                  </label>
+                </div>
+                <!-- Time Range (Hidden/Disabled state style since Full Day is usually default for vacations) -->
+                <div class="grid grid-cols-2 gap-4 opacity-50">
+                  <div class="flex flex-col gap-1">
+                    <label class="font-label-caps text-label-caps text-on-surface-variant"
+                      >HORA INÍCIO</label
+                    >
+                    <input
+                      class="h-[44px] rounded-lg border-outline-variant px-3 font-time-display focus:border-error focus:ring-1 focus:ring-error transition-shadow bg-surface-container-low"
+                      disabled=""
+                      type="time"
+                      value="08:00"
+                    />
+                  </div>
+                  <div class="flex flex-col gap-1">
+                    <label class="font-label-caps text-label-caps text-on-surface-variant"
+                      >HORA FIM</label
+                    >
+                    <input
+                      class="h-[44px] rounded-lg border-outline-variant px-3 font-time-display focus:border-error focus:ring-1 focus:ring-error transition-shadow bg-surface-container-low"
+                      disabled=""
+                      type="time"
+                      value="18:00"
+                    />
+                  </div>
+                </div>
+                <!-- Recurring Toggle -->
+                <div
+                  class="flex items-center justify-between py-2 border-t border-surface-variant mt-2"
+                >
+                  <label
+                    class="font-body-base text-body-base text-on-background flex items-center gap-2"
+                  >
+                    <span class="material-symbols-outlined text-on-surface-variant" data-icon="sync"
+                      >sync</span
+                    >
+                    Bloqueio recorrente
+                  </label>
+                  <label class="relative inline-flex items-center cursor-pointer">
+                    <input class="sr-only peer" type="checkbox" />
+                    <div
+                      class="w-11 h-6 bg-surface-variant peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-error"
+                    ></div>
+                  </label>
+                </div>
+                <!-- Submit Button -->
+                <button
+                  class="w-full h-[44px] mt-4 bg-error text-on-error rounded-lg font-medium hover:bg-error-container hover:text-on-error-container transition-colors shadow-[0_4px_16px_rgba(186,26,26,0.1)]"
+                  type="button"
+                >
+                  Salvar Bloqueio
                 </button>
-</div>
-</header>
-<!-- Page Content -->
-<div class="flex-1 p-6 lg:p-8 max-w-container-max-width mx-auto w-full">
-<!-- Header Section -->
-<div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-stack-lg">
-<div>
-<h1 class="font-h1 text-h1 text-on-background mb-stack-sm">Bloqueios de Agenda</h1>
-<p class="font-body-base text-body-base text-on-surface-variant">Gerencie ausências, férias, feriados e períodos em que você não estará disponível para atendimentos.</p>
-</div>
-<button class="flex items-center gap-2 bg-error text-on-error h-[44px] px-6 rounded-lg hover:bg-error-container hover:text-on-error-container transition-colors shadow-[0_4px_16px_rgba(186,26,26,0.1)]">
-<span class="material-symbols-outlined" data-icon="add">add</span>
-<span class="font-medium">Novo Bloqueio</span>
-</button>
-</div>
-<!-- Templates Row -->
-<div class="mb-stack-lg">
-<h3 class="font-label-caps text-label-caps text-outline mb-stack-sm uppercase">Adição Rápida</h3>
-<div class="grid grid-cols-2 md:grid-cols-5 gap-4">
-<button class="flex flex-col items-center justify-center p-4 bg-surface-container-lowest rounded-xl shadow-[0_4px_12px_rgba(0,0,0,0.05)] hover:shadow-[0_8px_24px_rgba(0,0,0,0.08)] transition-all border border-transparent hover:border-error/20 group">
-<div class="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center mb-2 group-hover:bg-error/10 transition-colors">
-<span class="material-symbols-outlined text-on-surface-variant group-hover:text-error transition-colors" data-icon="palm_tree">palm_logo</span>
-</div>
-<span class="font-body-sm text-body-sm font-medium text-on-background">Férias</span>
-<span class="font-label-caps text-label-caps text-outline mt-1">15 DIAS</span>
-</button>
-<button class="flex flex-col items-center justify-center p-4 bg-surface-container-lowest rounded-xl shadow-[0_4px_12px_rgba(0,0,0,0.05)] hover:shadow-[0_8px_24px_rgba(0,0,0,0.08)] transition-all border border-transparent hover:border-error/20 group">
-<div class="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center mb-2 group-hover:bg-error/10 transition-colors">
-<span class="material-symbols-outlined text-on-surface-variant group-hover:text-error transition-colors" data-icon="flag">flag</span>
-</div>
-<span class="font-body-sm text-body-sm font-medium text-on-background">Feriado</span>
-<span class="font-label-caps text-label-caps text-outline mt-1">1 DIA</span>
-</button>
-<button class="flex flex-col items-center justify-center p-4 bg-surface-container-lowest rounded-xl shadow-[0_4px_12px_rgba(0,0,0,0.05)] hover:shadow-[0_8px_24px_rgba(0,0,0,0.08)] transition-all border border-transparent hover:border-error/20 group">
-<div class="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center mb-2 group-hover:bg-error/10 transition-colors">
-<span class="material-symbols-outlined text-on-surface-variant group-hover:text-error transition-colors" data-icon="menu_book">menu_book</span>
-</div>
-<span class="font-body-sm text-body-sm font-medium text-on-background">Curso</span>
-<span class="font-label-caps text-label-caps text-outline mt-1">3 DIAS</span>
-</button>
-<button class="flex flex-col items-center justify-center p-4 bg-surface-container-lowest rounded-xl shadow-[0_4px_12px_rgba(0,0,0,0.05)] hover:shadow-[0_8px_24px_rgba(0,0,0,0.08)] transition-all border border-transparent hover:border-error/20 group">
-<div class="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center mb-2 group-hover:bg-error/10 transition-colors">
-<span class="material-symbols-outlined text-on-surface-variant group-hover:text-error transition-colors" data-icon="build">build</span>
-</div>
-<span class="font-body-sm text-body-sm font-medium text-on-background">Manutenção</span>
-<span class="font-label-caps text-label-caps text-outline mt-1">1 DIA</span>
-</button>
-<button class="flex flex-col items-center justify-center p-4 bg-surface-container-lowest rounded-xl shadow-[0_4px_12px_rgba(0,0,0,0.05)] hover:shadow-[0_8px_24px_rgba(0,0,0,0.08)] transition-all border border-transparent hover:border-error/20 group">
-<div class="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center mb-2 group-hover:bg-error/10 transition-colors">
-<span class="material-symbols-outlined text-on-surface-variant group-hover:text-error transition-colors" data-icon="person">person</span>
-</div>
-<span class="font-body-sm text-body-sm font-medium text-on-background">Pessoal</span>
-<span class="font-label-caps text-label-caps text-outline mt-1">PERSONALIZAR</span>
-</button>
-</div>
-</div>
-<!-- Main Content Area with List and Form -->
-<div class="grid grid-cols-1 lg:grid-cols-3 gap-gutter">
-<!-- Left Column: List -->
-<div class="lg:col-span-2 flex flex-col gap-stack-md">
-<!-- Filters -->
-<div class="flex items-center gap-2 border-b border-surface-variant pb-2 mb-2">
-<button class="px-4 py-2 font-body-sm text-body-sm font-medium text-primary border-b-2 border-primary -mb-[10px]">Ativos</button>
-<button class="px-4 py-2 font-body-sm text-body-sm text-on-surface-variant hover:text-on-background transition-colors">Todos</button>
-<button class="px-4 py-2 font-body-sm text-body-sm text-on-surface-variant hover:text-on-background transition-colors">Esta semana</button>
-</div>
-<!-- Active Blocks List -->
-<div class="flex flex-col gap-3">
-<!-- Block Item 1 -->
-<div class="bg-surface-container-lowest rounded-xl p-4 shadow-[0_4px_12px_rgba(0,0,0,0.05)] flex items-center justify-between border-l-4 border-emerald-500">
-<div class="flex items-start gap-4">
-<div class="mt-1 w-2 h-2 rounded-full bg-emerald-500"></div>
-<div>
-<h4 class="font-body-base text-body-base font-semibold text-on-background mb-1">Férias de Verão</h4>
-<div class="flex items-center gap-3 text-on-surface-variant">
-<div class="flex items-center gap-1">
-<span class="material-symbols-outlined text-[16px]" data-icon="calendar_today">calendar_today</span>
-<span class="font-body-sm text-body-sm">15/01 a 30/01/2026</span>
-</div>
-<div class="w-1 h-1 rounded-full bg-outline-variant"></div>
-<span class="font-time-display text-time-display">Integral</span>
-</div>
-<div class="flex items-center gap-2 mt-2">
-<span class="px-2 py-1 bg-surface-container text-on-surface-variant rounded font-label-caps text-label-caps">16 DIAS</span>
-<span class="px-2 py-1 bg-primary-fixed text-on-primary-fixed-variant rounded font-label-caps text-label-caps">FÉRIAS</span>
-</div>
-</div>
-</div>
-<div class="flex gap-2">
-<button class="p-2 text-on-surface-variant hover:bg-surface-container rounded-lg transition-colors">
-<span class="material-symbols-outlined" data-icon="edit">edit</span>
-</button>
-<button class="p-2 text-error hover:bg-error-container rounded-lg transition-colors">
-<span class="material-symbols-outlined" data-icon="delete">delete</span>
-</button>
-</div>
-</div>
-<!-- Block Item 2 -->
-<div class="bg-surface-container-lowest rounded-xl p-4 shadow-[0_4px_12px_rgba(0,0,0,0.05)] flex items-center justify-between border-l-4 border-amber-500">
-<div class="flex items-start gap-4">
-<div class="mt-1 w-2 h-2 rounded-full bg-amber-500"></div>
-<div>
-<h4 class="font-body-base text-body-base font-semibold text-on-background mb-1">Manutenção Clínica</h4>
-<div class="flex items-center gap-3 text-on-surface-variant">
-<div class="flex items-center gap-1">
-<span class="material-symbols-outlined text-[16px]" data-icon="calendar_today">calendar_today</span>
-<span class="font-body-sm text-body-sm">25/04/2026</span>
-</div>
-<div class="w-1 h-1 rounded-full bg-outline-variant"></div>
-<div class="flex items-center gap-1">
-<span class="material-symbols-outlined text-[16px]" data-icon="schedule">schedule</span>
-<span class="font-time-display text-time-display">08:00 - 12:00</span>
-</div>
-</div>
-<div class="flex items-center gap-2 mt-2">
-<span class="px-2 py-1 bg-surface-container text-on-surface-variant rounded font-label-caps text-label-caps">1 DIA</span>
-<span class="px-2 py-1 bg-amber-100 text-amber-800 rounded font-label-caps text-label-caps">MANUTENÇÃO</span>
-</div>
-</div>
-</div>
-<div class="flex gap-2">
-<button class="p-2 text-on-surface-variant hover:bg-surface-container rounded-lg transition-colors">
-<span class="material-symbols-outlined" data-icon="edit">edit</span>
-</button>
-<button class="p-2 text-error hover:bg-error-container rounded-lg transition-colors">
-<span class="material-symbols-outlined" data-icon="delete">delete</span>
-</button>
-</div>
-</div>
-<!-- Block Item 3 -->
-<div class="bg-surface-container-lowest rounded-xl p-4 shadow-[0_4px_12px_rgba(0,0,0,0.05)] flex items-center justify-between border-l-4 border-blue-500">
-<div class="flex items-start gap-4">
-<div class="mt-1 w-2 h-2 rounded-full bg-blue-500"></div>
-<div>
-<h4 class="font-body-base text-body-base font-semibold text-on-background mb-1">Curso de Atualização</h4>
-<div class="flex items-center gap-3 text-on-surface-variant">
-<div class="flex items-center gap-1">
-<span class="material-symbols-outlined text-[16px]" data-icon="calendar_today">calendar_today</span>
-<span class="font-body-sm text-body-sm">10/05 a 12/05/2026</span>
-</div>
-<div class="w-1 h-1 rounded-full bg-outline-variant"></div>
-<span class="font-time-display text-time-display">Integral</span>
-</div>
-<div class="flex items-center gap-2 mt-2">
-<span class="px-2 py-1 bg-surface-container text-on-surface-variant rounded font-label-caps text-label-caps">3 DIAS</span>
-<span class="px-2 py-1 bg-blue-100 text-blue-800 rounded font-label-caps text-label-caps">CURSO</span>
-</div>
-</div>
-</div>
-<div class="flex gap-2">
-<button class="p-2 text-on-surface-variant hover:bg-surface-container rounded-lg transition-colors">
-<span class="material-symbols-outlined" data-icon="edit">edit</span>
-</button>
-<button class="p-2 text-error hover:bg-error-container rounded-lg transition-colors">
-<span class="material-symbols-outlined" data-icon="delete">delete</span>
-</button>
-</div>
-</div>
-</div>
-<!-- Past Blocks Header -->
-<div class="mt-stack-md flex items-center justify-between cursor-pointer border-t border-surface-variant pt-4">
-<div class="flex items-center gap-2 text-outline">
-<span class="material-symbols-outlined" data-icon="history">history</span>
-<h3 class="font-body-base text-body-base font-medium">Bloqueios Passados</h3>
-</div>
-<span class="material-symbols-outlined text-outline" data-icon="expand_more">expand_more</span>
-</div>
-</div>
-<!-- Right Column: Create Form -->
-<div class="lg:col-span-1">
-<div class="bg-surface-container-lowest rounded-xl p-6 shadow-[0_4px_12px_rgba(0,0,0,0.05)] border border-surface-variant sticky top-24">
-<h3 class="font-h2 text-h2 text-on-background mb-stack-md flex items-center gap-2">
-<span class="material-symbols-outlined text-error" data-icon="edit_calendar">edit_calendar</span>
-                            Criar Bloqueio
-                        </h3>
-<form class="flex flex-col gap-4">
-<!-- Name Input -->
-<div class="flex flex-col gap-1">
-<label class="font-label-caps text-label-caps text-on-surface-variant">MOTIVO / NOME DO BLOQUEIO</label>
-<input class="h-[44px] rounded-lg border-outline-variant px-3 font-body-sm focus:border-error focus:ring-1 focus:ring-error transition-shadow" placeholder="Ex: Férias de Julho" type="text"/>
-</div>
-<!-- Reason Dropdown -->
-<div class="flex flex-col gap-1">
-<label class="font-label-caps text-label-caps text-on-surface-variant">TIPO DE BLOQUEIO</label>
-<select class="h-[44px] rounded-lg border-outline-variant px-3 font-body-sm focus:border-error focus:ring-1 focus:ring-error transition-shadow text-on-background">
-<option>Selecione um tipo...</option>
-<option>Férias</option>
-<option>Feriado</option>
-<option>Curso</option>
-<option>Manutenção</option>
-<option>Pessoal</option>
-<option>Outro</option>
-</select>
-</div>
-<hr class="border-surface-variant my-2"/>
-<!-- Date Range -->
-<div class="grid grid-cols-2 gap-4">
-<div class="flex flex-col gap-1">
-<label class="font-label-caps text-label-caps text-on-surface-variant">DATA INÍCIO</label>
-<input class="h-[44px] rounded-lg border-outline-variant px-3 font-body-sm focus:border-error focus:ring-1 focus:ring-error transition-shadow" type="date"/>
-</div>
-<div class="flex flex-col gap-1">
-<label class="font-label-caps text-label-caps text-on-surface-variant">DATA FIM</label>
-<input class="h-[44px] rounded-lg border-outline-variant px-3 font-body-sm focus:border-error focus:ring-1 focus:ring-error transition-shadow" type="date"/>
-</div>
-</div>
-<!-- Full Day Toggle -->
-<div class="flex items-center justify-between py-2">
-<label class="font-body-base text-body-base text-on-background">Dia inteiro</label>
-<label class="relative inline-flex items-center cursor-pointer">
-<input checked="" class="sr-only peer" type="checkbox"/>
-<div class="w-11 h-6 bg-surface-variant peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-error"></div>
-</label>
-</div>
-<!-- Time Range (Hidden/Disabled state style since Full Day is usually default for vacations) -->
-<div class="grid grid-cols-2 gap-4 opacity-50">
-<div class="flex flex-col gap-1">
-<label class="font-label-caps text-label-caps text-on-surface-variant">HORA INÍCIO</label>
-<input class="h-[44px] rounded-lg border-outline-variant px-3 font-time-display focus:border-error focus:ring-1 focus:ring-error transition-shadow bg-surface-container-low" disabled="" type="time" value="08:00"/>
-</div>
-<div class="flex flex-col gap-1">
-<label class="font-label-caps text-label-caps text-on-surface-variant">HORA FIM</label>
-<input class="h-[44px] rounded-lg border-outline-variant px-3 font-time-display focus:border-error focus:ring-1 focus:ring-error transition-shadow bg-surface-container-low" disabled="" type="time" value="18:00"/>
-</div>
-</div>
-<!-- Recurring Toggle -->
-<div class="flex items-center justify-between py-2 border-t border-surface-variant mt-2">
-<label class="font-body-base text-body-base text-on-background flex items-center gap-2">
-<span class="material-symbols-outlined text-on-surface-variant" data-icon="sync">sync</span>
-                                    Bloqueio recorrente
-                                </label>
-<label class="relative inline-flex items-center cursor-pointer">
-<input class="sr-only peer" type="checkbox"/>
-<div class="w-11 h-6 bg-surface-variant peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-error"></div>
-</label>
-</div>
-<!-- Submit Button -->
-<button class="w-full h-[44px] mt-4 bg-error text-on-error rounded-lg font-medium hover:bg-error-container hover:text-on-error-container transition-colors shadow-[0_4px_16px_rgba(186,26,26,0.1)]" type="button">
-                                Salvar Bloqueio
-                            </button>
-</form>
-</div>
-</div>
-</div>
-</div>
-</main>
-</body></html>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </body>
+</html>

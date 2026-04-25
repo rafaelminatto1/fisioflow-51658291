@@ -1,6 +1,6 @@
-import React from 'react';
-import { View, Text, StyleSheet, TextInput } from 'react-native';
-import { useColors } from '@/hooks/useColorScheme';
+import React from "react";
+import { View, Text, StyleSheet, TextInput } from "react-native";
+import { useColors } from "@/hooks/useColorScheme";
 
 interface Props {
   label?: string;
@@ -29,11 +29,7 @@ export function TextArea({
 
   return (
     <View style={[styles.container, style]}>
-      {label && (
-        <Text style={[styles.label, { color: colors.textSecondary }]}>
-          {label}
-        </Text>
-      )}
+      {label && <Text style={[styles.label, { color: colors.textSecondary }]}>{label}</Text>}
       <View
         style={[
           styles.inputContainer,
@@ -56,9 +52,7 @@ export function TextArea({
           textAlignVertical="top"
         />
       </View>
-      {error && (
-        <Text style={[styles.errorText, { color: colors.error }]}>{error}</Text>
-      )}
+      {error && <Text style={[styles.errorText, { color: colors.error }]}>{error}</Text>}
       {maxLength && (
         <Text style={[styles.charCount, { color: colors.textMuted }]}>
           {value.length}/{maxLength}
@@ -74,12 +68,12 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 14,
-    fontWeight: '500',
+    fontWeight: "500",
     marginBottom: 6,
   },
   inputContainer: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
+    flexDirection: "row",
+    alignItems: "flex-start",
     borderRadius: 12,
     borderWidth: 1,
     paddingHorizontal: 16,
@@ -98,6 +92,6 @@ const styles = StyleSheet.create({
   charCount: {
     fontSize: 12,
     marginTop: 4,
-    textAlign: 'right',
+    textAlign: "right",
   },
 });

@@ -5,38 +5,36 @@
 import { useRealtime } from "@/hooks/useRealtimeContext";
 
 export interface PresenceUser {
-	userId: string;
-	userName: string;
-	role: string;
-	joinedAt: Date;
-	lastSeen: Date;
+  userId: string;
+  userName: string;
+  role: string;
+  joinedAt: Date;
+  lastSeen: Date;
 }
 
 export function useOnlineUsers(_channelName: string = "online-users") {
-	const { onlineUsers, isSubscribed } = useRealtime();
+  const { onlineUsers, isSubscribed } = useRealtime();
 
-	// Converter o Map do RealtimeContext para a interface PresenceUser esperada pelo componente
-	const mappedUsers: PresenceUser[] = Array.from(onlineUsers.values()).map(
-		(user) => ({
-			userId: user.userId,
-			userName: user.name,
-			role: user.role || "fisioterapeuta",
-			joinedAt: new Date(), // WebSocket não envia tempo de entrada por padrão ainda
-			lastSeen: new Date(),
-		}),
-	);
+  // Converter o Map do RealtimeContext para a interface PresenceUser esperada pelo componente
+  const mappedUsers: PresenceUser[] = Array.from(onlineUsers.values()).map((user) => ({
+    userId: user.userId,
+    userName: user.name,
+    role: user.role || "fisioterapeuta",
+    joinedAt: new Date(), // WebSocket não envia tempo de entrada por padrão ainda
+    lastSeen: new Date(),
+  }));
 
-	return {
-		onlineUsers: mappedUsers,
-		isConnected: isSubscribed,
-		onlineCount: mappedUsers.length,
-	};
+  return {
+    onlineUsers: mappedUsers,
+    isConnected: isSubscribed,
+    onlineCount: mappedUsers.length,
+  };
 }
 
 export function usePresence(channelName: string) {
-	return useOnlineUsers(channelName);
+  return useOnlineUsers(channelName);
 }
 
 export function useGlobalPresence() {
-	return useOnlineUsers("global-online-users");
+  return useOnlineUsers("global-online-users");
 }

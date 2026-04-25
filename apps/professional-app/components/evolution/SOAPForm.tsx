@@ -1,6 +1,6 @@
-import React from 'react';
-import { View, Text, TextInput, StyleSheet } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import React from "react";
+import { View, Text, TextInput, StyleSheet } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 
 interface SOAPFormProps {
   subjective: string;
@@ -15,10 +15,30 @@ interface SOAPFormProps {
 }
 
 const SOAP_SECTIONS = [
-  { key: 'subjective', label: 'Subjetivo (S)', placeholder: 'Queixas e sintomas relatados pelo paciente...', icon: 'chatbubble-outline' },
-  { key: 'objective', label: 'Objetivo (O)', placeholder: 'Observações clínicas, testes realizados...', icon: 'eye-outline' },
-  { key: 'assessment', label: 'Avaliação (A)', placeholder: 'Análise e diagnóstico fisioterapêutico...', icon: 'analytics-outline' },
-  { key: 'plan', label: 'Plano (P)', placeholder: 'Condutas e orientações para próximas sessões...', icon: 'clipboard-outline' },
+  {
+    key: "subjective",
+    label: "Subjetivo (S)",
+    placeholder: "Queixas e sintomas relatados pelo paciente...",
+    icon: "chatbubble-outline",
+  },
+  {
+    key: "objective",
+    label: "Objetivo (O)",
+    placeholder: "Observações clínicas, testes realizados...",
+    icon: "eye-outline",
+  },
+  {
+    key: "assessment",
+    label: "Avaliação (A)",
+    placeholder: "Análise e diagnóstico fisioterapêutico...",
+    icon: "analytics-outline",
+  },
+  {
+    key: "plan",
+    label: "Plano (P)",
+    placeholder: "Condutas e orientações para próximas sessões...",
+    icon: "clipboard-outline",
+  },
 ];
 
 export function SOAPForm({
@@ -73,14 +93,14 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   sectionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 8,
     marginBottom: 12,
   },
   sectionLabel: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   input: {
     minHeight: 100,

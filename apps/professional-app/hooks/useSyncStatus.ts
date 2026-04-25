@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
-import NetInfo from '@react-native-community/netinfo';
+import { useState, useEffect } from "react";
+import NetInfo from "@react-native-community/netinfo";
 
-export type SyncStatus = 'synced' | 'syncing' | 'error' | 'offline';
+export type SyncStatus = "synced" | "syncing" | "error" | "offline";
 
 export interface SyncState {
   status: SyncStatus;
@@ -12,7 +12,7 @@ export interface SyncState {
 
 export function useSyncStatus() {
   const [syncState, setSyncState] = useState<SyncState>({
-    status: 'synced',
+    status: "synced",
     isOnline: true,
     lastSync: null,
     pendingChanges: 0,
@@ -26,7 +26,7 @@ export function useSyncStatus() {
       setSyncState((prev) => ({
         ...prev,
         isOnline,
-        status: isOnline ? 'synced' : 'offline',
+        status: isOnline ? "synced" : "offline",
       }));
     });
 
@@ -36,20 +36,20 @@ export function useSyncStatus() {
   }, []);
 
   const setSyncing = () => {
-    setSyncState((prev) => ({ ...prev, status: 'syncing' }));
+    setSyncState((prev) => ({ ...prev, status: "syncing" }));
   };
 
   const setSynced = () => {
     setSyncState((prev) => ({
       ...prev,
-      status: 'synced',
+      status: "synced",
       lastSync: new Date(),
       pendingChanges: 0,
     }));
   };
 
   const setSyncError = () => {
-    setSyncState((prev) => ({ ...prev, status: 'error' }));
+    setSyncState((prev) => ({ ...prev, status: "error" }));
   };
 
   const incrementPending = () => {

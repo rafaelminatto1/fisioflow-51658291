@@ -1,29 +1,26 @@
 /**
  * AI Assessment Screen - Avaliação em Tempo Real com IA (Mobile)
- * 
+ *
  * Permite ao fisioterapeuta avaliar a biomecânica do paciente usando a câmera do dispositivo.
  */
 
-import React, { useState, useEffect, useRef } from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  TouchableOpacity, 
-  ActivityIndicator,
-  Alert 
-} from 'react-native';
-import { useLocalSearchParams, useRouter } from 'expo-router';
-import { CameraView, useCameraPermissions } from 'expo-camera';
-import { Ionicons } from '@expo/vector-icons';
-import { useColors } from '@/hooks/useColorScheme';
-import { useHaptics } from '@/hooks/useHaptics';
-import { AnalysisEngine } from '@/lib/ai/analysisEngine';
-import { PoseFeedbackOverlay } from '@/components/ai/PoseFeedbackOverlay';
-import { useAIExercisePersistence } from '@/hooks/useAIExercisePersistence';
-import { ExerciseType, ExerciseSession } from '@/types/pose';
+import React, { useState, useEffect, useRef } from "react";
+import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, Alert } from "react-native";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import { CameraView, useCameraPermissions } from "expo-camera";
+import { Ionicons } from "@expo/vector-icons";
+import { useColors } from "@/hooks/useColorScheme";
+import { useHaptics } from "@/hooks/useHaptics";
+import { AnalysisEngine } from "@/lib/ai/analysisEngine";
+import { PoseFeedbackOverlay } from "@/components/ai/PoseFeedbackOverlay";
+import { useAIExercisePersistence } from "@/hooks/useAIExercisePersistence";
+import { ExerciseType, ExerciseSession } from "@/types/pose";
 
-const createSession = (id: string, patientId: string, exerciseType: ExerciseType): ExerciseSession => ({
+const createSession = (
+  id: string,
+  patientId: string,
+  exerciseType: ExerciseType,
+): ExerciseSession => ({
   id,
   exerciseId: id,
   exerciseType,
@@ -40,26 +37,26 @@ const createSession = (id: string, patientId: string, exerciseType: ExerciseType
     repetitions: 0,
     avgAngles: {},
     duration: 0,
-    avgFps: 0
+    avgFps: 0,
   },
   postureIssues: [],
   completed: false,
-  createdAt: new Date()
+  createdAt: new Date(),
 });
 
 export default function AIAssessmentScreen() {
-  const { id, } = useLocalSearchParams();
+  const { id } = useLocalSearchParams();
   const colors = useColors();
   const router = useRouter();
   const { medium, success: hapticSuccess } = useHaptics();
-  
+
   const { saveSession } = useAIExercisePersistence();
-  
+
   const [permission, requestPermission] = useCameraPermissions();
   const [isActive, setIsActive] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [exerciseType] = useState<ExerciseType>(ExerciseType.SQUAT);
-  
+
   // Refs
   const engineRef = useRef(new AnalysisEngine(ExerciseType.SQUAT));
   const [lastAnalysis] = useState<any>(null);
@@ -72,34 +69,32 @@ export default function AIAssessmentScreen() {
   }, [permission]);
 
   if (!permission) {
-    return <View style={styles.centered}><ActivityIndicator size="large" color={colors.primary} /></View>;
+    return (
+      <View style={styles.centered}>
+        <ActivityIndicator size="large" color={colors.primary} />
+      </View>
+    );
   }
 
   if (!permission.granted) {
     return (
       <View style={styles.centered}>
         <Text style={{ color: colors.text, marginBottom: 20 }}>Precisamos de acesso à câmera</Text>
-        <TouchableOpacity 
-          style={[styles.button, { backgroundColor: colors.primary }]} 
+        <TouchableOpacity
+          style={[styles.button, { backgroundColor: colors.primary }]}
           onPress={requestPermission}
         >
-          <Text style={{ color: '#fff' }}>Conceder Permissão</Text>
+          <Text style={{ color: "#fff" }}>Conceder Permissão</Text>
         </TouchableOpacity>
       </View>
     );
   }
 
-  
-
   const handleComplete = async () => {
     medium();
     setIsSaving(true);
     try {
-      const session = createSession(
-        'clinica-eval-' + Date.now(),
-        id as string,
-        exerciseType
-      );
+      const session = createSession("clinica-eval-" + Date.now(), id as string, exerciseType);
 
       // Preencher com métricas reais coletadas
       session.totalScore = lastAnalysis?.metrics?.formScore || 0;
@@ -109,10 +104,10 @@ export default function AIAssessmentScreen() {
 
       await saveSession(session);
       hapticSuccess();
-      Alert.alert('Sucesso', 'Avaliação salva no histórico do paciente!');
+      Alert.alert("Sucesso", "Avaliação salva no histórico do paciente!");
       router.back();
-    } catch  {
-      Alert.alert('Erro', 'Falha ao salvar sessão.');
+    } catch {
+      Alert.alert("Erro", "Falha ao salvar sessão.");
     } finally {
       setIsSaving(false);
     }
@@ -131,13 +126,9 @@ export default function AIAssessmentScreen() {
 
       {/* Camera View */}
       <View style={styles.cameraContainer}>
-        <CameraView 
-          style={styles.camera} 
-          facing="front"
-          onResponsiveOrientationChanged={() => {}}
-        >
+        <CameraView style={styles.camera} facing="front" onResponsiveOrientationChanged={() => {}}>
           {/* Overlay da IA */}
-          <PoseFeedbackOverlay 
+          <PoseFeedbackOverlay
             landmarks={lastAnalysis?.pose?.landmarks || []}
             jointAngles={lastAnalysis?.jointAngles}
             width={400} // Ajustar dinamicamente
@@ -147,13 +138,13 @@ export default function AIAssessmentScreen() {
 
         {/* HUD de Métricas */}
         <View style={styles.hud}>
-          <View style={[styles.metricCard, { backgroundColor: 'rgba(0,0,0,0.6)' }]}>
+          <View style={[styles.metricCard, { backgroundColor: "rgba(0,0,0,0.6)" }]}>
             <Text style={styles.metricLabel}>Qualidade</Text>
             <Text style={styles.metricValue}>{lastAnalysis?.metrics?.formScore || 0}%</Text>
           </View>
-          
+
           {lastAnalysis?.postureIssues.length > 0 && (
-            <View style={[styles.alertCard, { backgroundColor: '#EF4444' }]}>
+            <View style={[styles.alertCard, { backgroundColor: "#EF4444" }]}>
               <Text style={styles.alertText}>{lastAnalysis.postureIssues[0].description}</Text>
             </View>
           )}
@@ -163,8 +154,8 @@ export default function AIAssessmentScreen() {
       {/* Controls */}
       <View style={[styles.controls, { backgroundColor: colors.surface }]}>
         <View style={styles.buttonRow}>
-          <TouchableOpacity 
-            style={[styles.startButton, { backgroundColor: isActive ? '#EF4444' : colors.success }]}
+          <TouchableOpacity
+            style={[styles.startButton, { backgroundColor: isActive ? "#EF4444" : colors.success }]}
             onPress={() => {
               medium();
               setIsActive(!isActive);
@@ -175,12 +166,14 @@ export default function AIAssessmentScreen() {
           </TouchableOpacity>
 
           {!isActive && lastAnalysis && (
-            <TouchableOpacity 
+            <TouchableOpacity
               style={[styles.startButton, { backgroundColor: colors.primary, marginLeft: 12 }]}
               onPress={handleComplete}
               disabled={isSaving}
             >
-              {isSaving ? <ActivityIndicator color="#fff" /> : (
+              {isSaving ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
                 <>
                   <Ionicons name="checkmark-done" size={24} color="#fff" />
                   <Text style={styles.buttonText}>Salvar</Text>
@@ -196,51 +189,51 @@ export default function AIAssessmentScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  centered: { flex: 1, justifyContent: "center", alignItems: "center" },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     padding: 16,
     paddingTop: 50,
     borderBottomWidth: 1,
   },
-  title: { fontSize: 18, fontWeight: 'bold' },
-  cameraContainer: { flex: 1, position: 'relative' },
+  title: { fontSize: 18, fontWeight: "bold" },
+  cameraContainer: { flex: 1, position: "relative" },
   camera: { flex: 1 },
   hud: {
-    position: 'absolute',
+    position: "absolute",
     top: 20,
     left: 20,
     right: 20,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    justifyContent: "space-between",
   },
-  metricCard: { padding: 12, borderRadius: 8, alignItems: 'center' },
-  metricLabel: { color: '#ccc', fontSize: 10 },
-  metricValue: { color: '#fff', fontSize: 20, fontWeight: 'bold' },
+  metricCard: { padding: 12, borderRadius: 8, alignItems: "center" },
+  metricLabel: { color: "#ccc", fontSize: 10 },
+  metricValue: { color: "#fff", fontSize: 20, fontWeight: "bold" },
   alertCard: { padding: 12, borderRadius: 8, flex: 1, marginLeft: 12 },
-  alertText: { color: '#fff', fontWeight: 'bold' },
+  alertText: { color: "#fff", fontWeight: "bold" },
   controls: {
     padding: 24,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
-    alignItems: 'center',
+    alignItems: "center",
   },
   buttonRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    width: '100%',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    width: "100%",
   },
   startButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     paddingVertical: 16,
     paddingHorizontal: 32,
     borderRadius: 12,
     gap: 12,
   },
-  buttonText: { color: '#fff', fontSize: 18, fontWeight: 'bold' },
+  buttonText: { color: "#fff", fontSize: 18, fontWeight: "bold" },
   button: { padding: 12, borderRadius: 8 },
 });

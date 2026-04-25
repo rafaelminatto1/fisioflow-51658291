@@ -1,4 +1,4 @@
-import type { Env } from '../types/env';
+import type { Env } from "../types/env";
 
 /**
  * Cloudflare Workers Analytics Engine — helper para instrumentação.
@@ -49,18 +49,9 @@ export function writeEvent(env: Env, data: EventData): void {
   if (!env.ANALYTICS) return;
   try {
     env.ANALYTICS.writeDataPoint({
-      blobs: [
-        data.route ?? '',
-        data.method ?? '',
-        data.orgId ?? '',
-        data.event ?? 'request',
-      ],
-      doubles: [
-        data.latencyMs ?? 0,
-        data.status ?? 200,
-        data.value ?? 0,
-      ],
-      indexes: [data.orgId ?? 'global'],
+      blobs: [data.route ?? "", data.method ?? "", data.orgId ?? "", data.event ?? "request"],
+      doubles: [data.latencyMs ?? 0, data.status ?? 200, data.value ?? 0],
+      indexes: [data.orgId ?? "global"],
     });
   } catch {
     // Nunca falhar requisição por causa de analytics
@@ -72,7 +63,10 @@ export function writeEvent(env: Env, data: EventData): void {
  * Registra rota, método, status e latência no Analytics Engine.
  */
 export function analyticsMiddleware(env: Env) {
-  return async (c: { req: { url: string; method: string }; res: { status: number }; get: (key: string) => any }, next: () => Promise<void>) => {
+  return async (
+    c: { req: { url: string; method: string }; res: { status: number }; get: (key: string) => any },
+    next: () => Promise<void>,
+  ) => {
     const start = Date.now();
     try {
       await next();
@@ -80,17 +74,16 @@ export function analyticsMiddleware(env: Env) {
       const latencyMs = Date.now() - start;
       const url = new URL(c.req.url);
       // Normaliza path removendo IDs (UUIDs e números) para agrupamento correto
-      const route = url.pathname.replace(
-        /\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi,
-        '/:id'
-      ).replace(/\/\d+/g, '/:n');
+      const route = url.pathname
+        .replace(/\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi, "/:id")
+        .replace(/\/\d+/g, "/:n");
 
       writeEvent(env, {
         route,
         method: c.req.method,
         status: c.res.status,
-        orgId: c.get('user')?.organizationId,
-        event: 'request',
+        orgId: c.get("user")?.organizationId,
+        event: "request",
         latencyMs,
       });
     }

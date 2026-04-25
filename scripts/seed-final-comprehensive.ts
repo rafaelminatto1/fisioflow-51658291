@@ -21,7 +21,8 @@ async function main() {
       treatmentPhase: "remodelacao",
       bodyPart: "joelho",
       estimatedDuration: 40,
-      clinicalNotes: "Enfoque em fortalecimento de quadríceps e glúteos. Redução de dor via carga progressiva.",
+      clinicalNotes:
+        "Enfoque em fortalecimento de quadríceps e glúteos. Redução de dor via carga progressiva.",
       contraindications: "Sinovite aguda com derrame articular volumoso.",
       precautions: "Evitar impacto excessivo em fases de dor > 6/10.",
       evidenceLevel: "A",
@@ -29,7 +30,7 @@ async function main() {
       templateType: "system",
       patientProfile: "ortopedico",
       isActive: true,
-      isPublic: true
+      isPublic: true,
     },
     {
       name: "Hérnia de Disco Lombar — Controle Motor",
@@ -48,7 +49,7 @@ async function main() {
       templateType: "system",
       patientProfile: "ortopedico",
       isActive: true,
-      isPublic: true
+      isPublic: true,
     },
     {
       name: "Impacto Subacromial — Estabilização Escapular",
@@ -67,7 +68,7 @@ async function main() {
       templateType: "system",
       patientProfile: "ortopedico",
       isActive: true,
-      isPublic: true
+      isPublic: true,
     },
 
     // --- ESPORTIVO ---
@@ -88,7 +89,7 @@ async function main() {
       templateType: "system",
       patientProfile: "esportivo",
       isActive: true,
-      isPublic: true
+      isPublic: true,
     },
     {
       name: "Tendinopatia Patelar — Carga Progressiva",
@@ -107,7 +108,7 @@ async function main() {
       templateType: "system",
       patientProfile: "esportivo",
       isActive: true,
-      isPublic: true
+      isPublic: true,
     },
 
     // --- PÓS-OPERATÓRIO ---
@@ -128,7 +129,7 @@ async function main() {
       templateType: "system",
       patientProfile: "pos_operatorio",
       isActive: true,
-      isPublic: true
+      isPublic: true,
     },
     {
       name: "Pós-Op Manguito Rotador — Proteção Inicial",
@@ -147,7 +148,7 @@ async function main() {
       templateType: "system",
       patientProfile: "pos_operatorio",
       isActive: true,
-      isPublic: true
+      isPublic: true,
     },
 
     // --- GERIÁTRICO (IDOSOS) ---
@@ -168,7 +169,7 @@ async function main() {
       templateType: "system",
       patientProfile: "idosos",
       isActive: true,
-      isPublic: true
+      isPublic: true,
     },
     {
       name: "Manutenção Funcional — Sarcopenia",
@@ -187,13 +188,17 @@ async function main() {
       templateType: "system",
       patientProfile: "idosos",
       isActive: true,
-      isPublic: true
-    }
+      isPublic: true,
+    },
   ];
 
   for (const t of allTemplates) {
-    const existing = await db.select().from(exerciseTemplates).where(eq(exerciseTemplates.name, t.name)).limit(1);
-    
+    const existing = await db
+      .select()
+      .from(exerciseTemplates)
+      .where(eq(exerciseTemplates.name, t.name))
+      .limit(1);
+
     if (existing.length > 0) {
       console.log(`Updating existing template: ${t.name}`);
       await db.update(exerciseTemplates).set(t).where(eq(exerciseTemplates.id, existing[0].id));

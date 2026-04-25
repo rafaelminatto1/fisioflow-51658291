@@ -66,7 +66,7 @@ test.describe('Validação em Produção - Cadastro de Paciente', () => {
 
     // 6. Validar sucesso
     console.log('[Test] Aguardando confirmação de sucesso...');
-    
+
     // Esperar redirecionamento para o perfil do paciente ou toast de sucesso
     // A rota de perfil é /patients/:id
     await page.waitForURL(/\/patients\/[^/]+/, { timeout: 30000 });
@@ -74,7 +74,7 @@ test.describe('Validação em Produção - Cadastro de Paciente', () => {
 
     // Verificar se o nome do paciente está no perfil
     await expect(page.locator('h1, h2').filter({ hasText: newPatientName }).first()).toBeVisible({ timeout: 15000 });
-    
+
     console.log('[Test] Cadastro realizado e validado com sucesso!');
   });
 });

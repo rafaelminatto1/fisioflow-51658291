@@ -1,15 +1,7 @@
-import React, { useState } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  TextInput,
-  FlatList,
-  Modal,
-} from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { ClinicalResource } from '@/constants/clinicalData';
+import React, { useState } from "react";
+import { View, Text, StyleSheet, TouchableOpacity, TextInput, FlatList, Modal } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { ClinicalResource } from "@/constants/clinicalData";
 
 interface ClinicalSelectorModalProps {
   isVisible: boolean;
@@ -28,11 +20,12 @@ export function ClinicalSelectorModal({
   data,
   colors,
 }: ClinicalSelectorModalProps) {
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
 
-  const filteredData = data.filter((item) =>
-    item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    item.category.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredData = data.filter(
+    (item) =>
+      item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      item.category.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
   return (
@@ -51,7 +44,12 @@ export function ClinicalSelectorModal({
         </View>
 
         <View style={styles.searchContainer}>
-          <View style={[styles.searchBar, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+          <View
+            style={[
+              styles.searchBar,
+              { backgroundColor: colors.surface, borderColor: colors.border },
+            ]}
+          >
             <Ionicons name="search" size={20} color={colors.textSecondary} />
             <TextInput
               style={[styles.searchInput, { color: colors.text }]}
@@ -78,14 +76,22 @@ export function ClinicalSelectorModal({
             contentContainerStyle={styles.listPadding}
             renderItem={({ item }) => (
               <TouchableOpacity
-                style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}
+                style={[
+                  styles.card,
+                  { backgroundColor: colors.surface, borderColor: colors.border },
+                ]}
                 onPress={() => onSelect(item)}
               >
                 <View style={styles.cardContent}>
                   <Text style={[styles.name, { color: colors.text }]}>{item.name}</Text>
-                  <Text style={[styles.category, { color: colors.textSecondary }]}>{item.category}</Text>
+                  <Text style={[styles.category, { color: colors.textSecondary }]}>
+                    {item.category}
+                  </Text>
                   {item.description && (
-                    <Text style={[styles.description, { color: colors.textMuted }]} numberOfLines={2}>
+                    <Text
+                      style={[styles.description, { color: colors.textMuted }]}
+                      numberOfLines={2}
+                    >
                       {item.description}
                     </Text>
                   )}
@@ -105,15 +111,15 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     padding: 16,
     borderBottomWidth: 1,
   },
   headerTitle: {
     fontSize: 18,
-    fontWeight: '700',
+    fontWeight: "700",
   },
   closeButton: {
     padding: 4,
@@ -122,8 +128,8 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   searchBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     paddingHorizontal: 12,
     height: 44,
     borderRadius: 8,
@@ -136,8 +142,8 @@ const styles = StyleSheet.create({
   },
   centerContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     padding: 20,
   },
   emptyText: {
@@ -148,8 +154,8 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   card: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     padding: 12,
     borderRadius: 12,
     borderWidth: 1,
@@ -161,12 +167,12 @@ const styles = StyleSheet.create({
   },
   name: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
     marginBottom: 2,
   },
   category: {
     fontSize: 12,
-    fontWeight: '500',
+    fontWeight: "500",
     marginBottom: 4,
   },
   description: {

@@ -1,12 +1,12 @@
-import { useEffect } from 'react';
-import { Platform } from 'react-native';
-import * as Calendar from 'expo-calendar';
-import { patientApi } from '@/lib/api';
-import { log } from '@/lib/logger';
-import { useLocalStorage } from './useLocalStorage';
+import { useEffect } from "react";
+import { Platform } from "react-native";
+import * as Calendar from "expo-calendar";
+import { patientApi } from "@/lib/api";
+import { log } from "@/lib/logger";
+import { useLocalStorage } from "./useLocalStorage";
 
-const CALENDAR_NAME = 'FisioFlow Appointments';
-const SYNC_STORAGE_KEY = 'fisioflow_calendar_sync_enabled';
+const CALENDAR_NAME = "FisioFlow Appointments";
+const SYNC_STORAGE_KEY = "fisioflow_calendar_sync_enabled";
 
 /**
  * Hook para sincronização automática de agendamentos com a agenda nativa do celular.
@@ -16,14 +16,14 @@ export function useCalendarSync(patientId: string | undefined) {
   const [isSyncEnabled, setSyncEnabled] = useLocalStorage<boolean>(SYNC_STORAGE_KEY, false);
 
   useEffect(() => {
-    if (!patientId || Platform.OS === 'web') return;
+    if (!patientId || Platform.OS === "web") return;
 
     const sync = async () => {
       try {
         // 1. Pedir permissão se ainda não tivermos
         const { status } = await Calendar.requestCalendarPermissionsAsync();
-        if (status !== 'granted') {
-          log.warn('CALENDAR_SYNC', 'Permissão de calendário negada pelo usuário.');
+        if (status !== "granted") {
+          log.warn("CALENDAR_SYNC", "Permissão de calendário negada pelo usuário.");
           return;
         }
 
@@ -42,9 +42,9 @@ export function useCalendarSync(patientId: string | undefined) {
           await syncAppointmentToCalendar(calendarId, app);
         }
 
-        log.info('CALENDAR_SYNC', `${appointments.length} agendamentos sincronizados.`);
+        log.info("CALENDAR_SYNC", `${appointments.length} agendamentos sincronizados.`);
       } catch (error) {
-        log.error('CALENDAR_SYNC', 'Erro ao sincronizar calendário:', error);
+        log.error("CALENDAR_SYNC", "Erro ao sincronizar calendário:", error);
       }
     };
 
@@ -68,20 +68,20 @@ async function getOrCreateCalendarId() {
 
   // Cria um novo calendário se não existir
   const defaultCalendarSource =
-    Platform.OS === 'ios'
+    Platform.OS === "ios"
       ? await getDefaultSource()
-      : { isLocalAccount: true, name: CALENDAR_NAME, type: 'LOCAL' };
+      : { isLocalAccount: true, name: CALENDAR_NAME, type: "LOCAL" };
 
   if (!defaultCalendarSource) return null;
 
   return await Calendar.createCalendarAsync({
     title: CALENDAR_NAME,
-    color: '#0ea5e9',
+    color: "#0ea5e9",
     entityType: Calendar.EntityTypes.EVENT,
     sourceId: (defaultCalendarSource as any).id,
     source: defaultCalendarSource as any,
-    name: 'fisioflow_internal',
-    ownerAccount: 'personal',
+    name: "fisioflow_internal",
+    ownerAccount: "personal",
     accessLevel: Calendar.CalendarAccessLevel.OWNER,
   });
 }
@@ -98,18 +98,18 @@ async function getDefaultSource() {
  * Sincroniza um agendamento específico, evitando duplicatas.
  */
 async function syncAppointmentToCalendar(calendarId: string, app: any) {
-  const startDate = new Date(app.date + 'T' + app.start_time);
-  const endDate = new Date(app.date + 'T' + app.end_time);
+  const startDate = new Date(app.date + "T" + app.start_time);
+  const endDate = new Date(app.date + "T" + app.end_time);
 
   // Verifica se o evento já existe na agenda (busca por título e data)
   const existingEvents = await Calendar.getEventsAsync(
     [calendarId],
     new Date(startDate.getTime() - 1000),
-    new Date(startDate.getTime() + 1000)
+    new Date(startDate.getTime() + 1000),
   );
 
   const isDuplicate = existingEvents.some(
-    (e) => e.title === 'Fisioterapia: FisioFlow' || e.title.includes('FisioFlow')
+    (e) => e.title === "Fisioterapia: FisioFlow" || e.title.includes("FisioFlow"),
   );
 
   if (isDuplicate) return;
@@ -119,7 +119,7 @@ async function syncAppointmentToCalendar(calendarId: string, app: any) {
     title: `Fisioterapia: FisioFlow`,
     startDate,
     endDate,
-    location: app.clinic_name || 'Clínica de Fisioterapia',
+    location: app.clinic_name || "Clínica de Fisioterapia",
     notes: `Consulta agendada via FisioFlow. Status: ${app.status}`,
     alarms: [{ relativeOffset: -120 }], // Alerta 2 horas antes
   });

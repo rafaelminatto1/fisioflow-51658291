@@ -2,34 +2,44 @@
 
 import type { GetInfo, GetAnnotations } from "react-router/internal";
 
-type Module = typeof import("../PreCadastro.js")
+type Module = typeof import("../PreCadastro.js");
 
 type Info = GetInfo<{
-  file: "pages/PreCadastro.tsx",
-  module: Module
-}>
+  file: "pages/PreCadastro.tsx";
+  module: Module;
+}>;
 
-type Matches = [{
-  id: "root";
-  module: typeof import("../../root.js");
-}, {
-  id: "components/layout/InfrastructureLayout";
-  module: typeof import("../../components/layout/InfrastructureLayout.js");
-}, {
-  id: "pre-cadastro-root";
-  module: typeof import("../PreCadastro.js");
-}] | [{
-  id: "root";
-  module: typeof import("../../root.js");
-}, {
-  id: "components/layout/InfrastructureLayout";
-  module: typeof import("../../components/layout/InfrastructureLayout.js");
-}, {
-  id: "pre-cadastro-token";
-  module: typeof import("../PreCadastro.js");
-}];
+type Matches =
+  | [
+      {
+        id: "root";
+        module: typeof import("../../root.js");
+      },
+      {
+        id: "components/layout/InfrastructureLayout";
+        module: typeof import("../../components/layout/InfrastructureLayout.js");
+      },
+      {
+        id: "pre-cadastro-root";
+        module: typeof import("../PreCadastro.js");
+      },
+    ]
+  | [
+      {
+        id: "root";
+        module: typeof import("../../root.js");
+      },
+      {
+        id: "components/layout/InfrastructureLayout";
+        module: typeof import("../../components/layout/InfrastructureLayout.js");
+      },
+      {
+        id: "pre-cadastro-token";
+        module: typeof import("../PreCadastro.js");
+      },
+    ];
 
-type Annotations = GetAnnotations<Info & { module: Module, matches: Matches }, false>;
+type Annotations = GetAnnotations<Info & { module: Module; matches: Matches }, false>;
 
 export namespace Route {
   // links

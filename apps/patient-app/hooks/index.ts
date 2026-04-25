@@ -1,11 +1,11 @@
-export { useColorScheme, useColors } from './useColorScheme';
-export { useNetworkStatus } from './useNetworkStatus';
-export { useOfflineSync } from './useOfflineSync';
-export { useAccessibility, useAnimationDuration, useScreenAnnouncement } from './useAccessibility';
-export { useTheme } from './useTheme';
-export { useDebounce, useDebouncedCallback } from './useDebounce';
-export { usePrevious, useLatest } from './usePrevious';
-export { useLocalStorage, useSyncedLocalStorage } from './useLocalStorage';
+export { useColorScheme, useColors } from "./useColorScheme";
+export { useNetworkStatus } from "./useNetworkStatus";
+export { useOfflineSync } from "./useOfflineSync";
+export { useAccessibility, useAnimationDuration, useScreenAnnouncement } from "./useAccessibility";
+export { useTheme } from "./useTheme";
+export { useDebounce, useDebouncedCallback } from "./useDebounce";
+export { usePrevious, useLatest } from "./usePrevious";
+export { useLocalStorage, useSyncedLocalStorage } from "./useLocalStorage";
 export {
   useFirstRender,
   useIsMounted,
@@ -14,8 +14,8 @@ export {
   useToggle,
   useArray,
   useCounter,
-} from './useHooks';
-export { useExercises, useCompleteExercise, useExerciseStats } from './useExercises';
-export { useAppointments, useConfirmAppointment, useCancelAppointment } from './useAppointments';
-export { useProgress } from './useProgress';
-export { useGamification } from './useGamification';
+} from "./useHooks";
+export { useExercises, useCompleteExercise, useExerciseStats } from "./useExercises";
+export { useAppointments, useConfirmAppointment, useCancelAppointment } from "./useAppointments";
+export { useProgress } from "./useProgress";
+export { useGamification } from "./useGamification";

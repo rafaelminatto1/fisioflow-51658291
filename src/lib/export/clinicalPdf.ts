@@ -37,7 +37,14 @@ function addSectionTitle(doc: jsPDF, title: string, y: number): number {
   return y + 7;
 }
 
-function addField(doc: jsPDF, label: string, value: string, x: number, y: number, maxWidth = 85): number {
+function addField(
+  doc: jsPDF,
+  label: string,
+  value: string,
+  x: number,
+  y: number,
+  maxWidth = 85,
+): number {
   doc.setFontSize(8.5);
   doc.setFont("helvetica", "bold");
   doc.setTextColor(80, 80, 80);
@@ -56,7 +63,9 @@ function addFooter(doc: jsPDF, page: number, totalPages: number) {
   doc.setTextColor(150, 150, 150);
   doc.text(
     `Gerado em ${format(new Date(), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })} — Página ${page}/${totalPages}`,
-    pw / 2, ph - 8, { align: "center" },
+    pw / 2,
+    ph - 8,
+    { align: "center" },
   );
   doc.setDrawColor(200, 200, 200);
   doc.line(14, ph - 12, pw - 14, ph - 12);
@@ -97,12 +106,20 @@ export function generateSoapPDF(evolution: SoapEvolution): void {
 
   // Informações do atendimento
   y = addSectionTitle(doc, "Dados do Atendimento", y);
-  const dateStr = (() => { try { return format(new Date(evolution.date), "dd/MM/yyyy", { locale: ptBR }); } catch { return evolution.date; } })();
+  const dateStr = (() => {
+    try {
+      return format(new Date(evolution.date), "dd/MM/yyyy", { locale: ptBR });
+    } catch {
+      return evolution.date;
+    }
+  })();
   y = addField(doc, "Data", dateStr, 14, y, 80);
   y = addField(doc, "Paciente", evolution.patient_name ?? "—", 14, y, 80);
   y = addField(doc, "Terapeuta", evolution.therapist_name ?? "—", 14, y, 80);
-  if (evolution.session_number) y = addField(doc, "Sessão nº", String(evolution.session_number), 14, y, 80);
-  if (evolution.pain_level !== undefined) y = addField(doc, "Nível de dor (EVA)", `${evolution.pain_level}/10`, 14, y, 80);
+  if (evolution.session_number)
+    y = addField(doc, "Sessão nº", String(evolution.session_number), 14, y, 80);
+  if (evolution.pain_level !== undefined)
+    y = addField(doc, "Nível de dor (EVA)", `${evolution.pain_level}/10`, 14, y, 80);
   y += 4;
 
   // SOAP
@@ -143,7 +160,9 @@ export function generateSoapPDF(evolution: SoapEvolution): void {
   if (evolution.signature_image) {
     try {
       doc.addImage(evolution.signature_image, "PNG", 14, signY - 20, 60, 18);
-    } catch { /* ignore invalid image */ }
+    } catch {
+      /* ignore invalid image */
+    }
   }
   doc.setDrawColor(60, 60, 60);
   doc.line(14, signY, 90, signY);
@@ -280,7 +299,10 @@ export function generateReceiptPDF(data: ReceiptData): void {
   doc.setFontSize(9);
   doc.setFont("helvetica", "normal");
   doc.setTextColor(100, 100, 100);
-  if (data.appointment_id) doc.text(`Ref: #${data.appointment_id.slice(0, 8).toUpperCase()}`, pw / 2, y, { align: "center" });
+  if (data.appointment_id)
+    doc.text(`Ref: #${data.appointment_id.slice(0, 8).toUpperCase()}`, pw / 2, y, {
+      align: "center",
+    });
   doc.setTextColor(40, 40, 40);
   y += 10;
 
@@ -289,12 +311,21 @@ export function generateReceiptPDF(data: ReceiptData): void {
   doc.setLineWidth(0.3);
   doc.rect(14, y, pw - 28, 55);
 
-  const dateStr = (() => { try { return format(new Date(data.date), "dd 'de' MMMM 'de' yyyy", { locale: ptBR }); } catch { return data.date; } })();
+  const dateStr = (() => {
+    try {
+      return format(new Date(data.date), "dd 'de' MMMM 'de' yyyy", { locale: ptBR });
+    } catch {
+      return data.date;
+    }
+  })();
   y += 8;
   doc.setFontSize(10);
   doc.setFont("helvetica", "normal");
 
-  const amountFormatted = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(data.amount);
+  const amountFormatted = new Intl.NumberFormat("pt-BR", {
+    style: "currency",
+    currency: "BRL",
+  }).format(data.amount);
 
   doc.text(`Recebi de `, 20, y);
   doc.setFont("helvetica", "bold");
@@ -302,7 +333,11 @@ export function generateReceiptPDF(data: ReceiptData): void {
   if (data.patient_cpf) {
     doc.setFont("helvetica", "normal");
     doc.setFontSize(9);
-    doc.text(` (CPF: ${data.patient_cpf})`, 20 + doc.getTextWidth("Recebi de " + data.patient_name), y);
+    doc.text(
+      ` (CPF: ${data.patient_cpf})`,
+      20 + doc.getTextWidth("Recebi de " + data.patient_name),
+      y,
+    );
   }
   y += 8;
 
@@ -333,7 +368,9 @@ export function generateReceiptPDF(data: ReceiptData): void {
   doc.setDrawColor(60, 60, 60);
   doc.line(signX, y, signX + 80, y);
   doc.setFontSize(8.5);
-  doc.text(data.therapist_name ?? "Fisioterapeuta Responsável", signX + 40, y + 5, { align: "center" });
+  doc.text(data.therapist_name ?? "Fisioterapeuta Responsável", signX + 40, y + 5, {
+    align: "center",
+  });
   if (data.clinic_cnpj) {
     doc.setTextColor(100, 100, 100);
     doc.setFontSize(8);

@@ -4,7 +4,7 @@
  * All content complies with LGPD (Brazilian data protection law) and Apple App Store guidelines
  */
 
-import { LEGAL_VERSIONS, LEGAL_LAST_UPDATED } from './legalVersions';
+import { LEGAL_VERSIONS, LEGAL_LAST_UPDATED } from "./legalVersions";
 
 /**
  * Privacy Policy content in Portuguese
@@ -468,7 +468,7 @@ export const MEDICAL_DISCLAIMER_CONTENT = {
    * Medical disclaimer for first app launch
    * Shown during onboarding before accessing main functionality
    */
-  'first-launch': `
+  "first-launch": `
 # Aviso Médico Importante
 
 ## O FisioFlow Professional é uma Ferramenta de Gerenciamento Clínico
@@ -572,7 +572,7 @@ Ao prosseguir, você reconhece e concorda que:
    * Medical disclaimer for exercise prescription screens
    * Shown when prescribing exercises to patients
    */
-  'exercise-prescription': `
+  "exercise-prescription": `
 # Aviso: Prescrição de Exercícios
 
 ## Responsabilidade Profissional
@@ -627,7 +627,7 @@ Certifique-se de que o paciente:
    * Medical disclaimer for protocol application screens
    * Shown when applying treatment protocols to patients
    */
-  'protocol-application': `
+  "protocol-application": `
 # Aviso: Aplicação de Protocolo de Tratamento
 
 ## Responsabilidade na Aplicação de Protocolos
@@ -683,7 +683,7 @@ Certifique-se de documentar:
  * Helper function to get medical disclaimer content by context
  */
 export function getMedicalDisclaimerContent(
-  context: 'first-launch' | 'exercise-prescription' | 'protocol-application'
+  context: "first-launch" | "exercise-prescription" | "protocol-application",
 ): string {
   return MEDICAL_DISCLAIMER_CONTENT[context];
 }
@@ -702,8 +702,8 @@ export function shouldFetchRemoteLegalContent(): boolean {
  * Remote URLs for legal documents (for web viewing and updates)
  */
 export const LEGAL_DOCUMENT_URLS = {
-  PRIVACY_POLICY: 'https://moocafisio.com.br/privacidade',
-  TERMS_OF_SERVICE: 'https://moocafisio.com.br/termos',
-  SUPPORT: 'https://moocafisio.com.br/suporte',
-  CONTACT: 'mailto:privacidade@moocafisio.com.br',
+  PRIVACY_POLICY: "https://moocafisio.com.br/privacidade",
+  TERMS_OF_SERVICE: "https://moocafisio.com.br/termos",
+  SUPPORT: "https://moocafisio.com.br/suporte",
+  CONTACT: "mailto:privacidade@moocafisio.com.br",
 } as const;

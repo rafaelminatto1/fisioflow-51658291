@@ -17,12 +17,14 @@ O FisioFlow é um monorepo focado em latência ultra-baixa, operando na borda (E
 ## 🚀 Configuração de Desenvolvimento
 
 ### 1. Requisitos
+
 - **Node.js v20.12.0+**
 - **pnpm v9+**
 - Cloudflare Wrangler CLI (`pnpm install -g wrangler`)
 - Conta no Neon.tech
 
 ### 2. Variáveis de Ambiente
+
 Crie um arquivo `.env` no root e nas pastas dos apps:
 
 ```env
@@ -61,4 +63,5 @@ pnpm db:push
 - **Privacy First**: URLs assinadas para mídia no R2 e proibição de indexação SEO.
 
 ---
+
 Desenvolvido para transformar a fisioterapia brasileira com tecnologia de ponta.

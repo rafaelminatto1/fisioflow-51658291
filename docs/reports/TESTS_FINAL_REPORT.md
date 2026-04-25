@@ -1,4 +1,5 @@
 # 📊 Relatório Final de Correções - Testes E2E do FisioFlow
+
 ## Data: $(date +%d/%m/%Y) às $(date +%H:%M)
 
 ---
@@ -8,6 +9,7 @@
 ### 1. Testes de Autenticação E2E ✅
 
 **Alterações Realizadas:**
+
 - ✅ Adicionado `data-testid="auth-email-input"` no campo de email
 - ✅ Adicionado `data-testid="auth-password-input"` no campo de password
 - ✅ Adicionado `data-testid="auth-submit-button"` no botão de submit
@@ -17,30 +19,35 @@
 - ✅ Removida dependência do loading spinner (causa de timeout)
 
 **Arquivos Modificados:**
+
 - `src/components/auth/LoginForm.tsx` (3 data-testids adicionados)
 - `e2e/auth.spec.ts` (timeout aumentados, melhorados waits)
 
 ### 2. Testes do TransactionModal ✅
 
 **Alterações Realizadas:**
+
 - ✅ Migrado de `fireEvent.submit` para `userEvent.setup()`
 - ✅ Melhorada interação de clique com `await user.click()`
 - ✅ Instalado `@testing-library/user-event` como dev dependency
 - ✅ Atualizado mock do `use-mobile` hook
 
 **Arquivos Modificados:**
+
 - `package.json` (workspace root)
 - `src/components/financial/__tests__/TransactionModal.test.tsx`
 
 ### 3. Configuração de Portas ✅
 
 **Alterações Realizadas:**
+
 - ✅ Adicionado `port: 5173` explicitamente no Vite config
 - ✅ Adicionado `strictPort: false` no Vite config
 - ✅ Atualizado `testsprite.config.json` com `http://localhost:5173`
 - ✅ Atualizados todos os testes Python de `http://localhost:8080` para `http://localhost:5173`
 
 **Arquivos Modificados:**
+
 - `apps/web/vite.config.ts`
 - `testsprite.config.json`
 - `testsprite_tests/*.py` (via sed)
@@ -48,12 +55,14 @@
 ### 4. TestSprite - Decisão Documentada ✅
 
 **Alterações Realizadas:**
+
 - ✅ Decisão documentada em `TESTSPRITE_DECISION.md`
 - ✅ Motivos da escolha por Playwright explicados
 - ✅ Casos de uso para cada ferramenta mapeados
 - ✅ Critérios de uso definidos
 
 **Arquivos Criados:**
+
 - `TESTSPRITE_DECISION.md`
 
 ---
@@ -61,6 +70,7 @@
 ## 📋 Status Atual dos Testes
 
 ### Testes Unitários (Vitest)
+
 ```
 Status: ✅ ESTÁVEIS
 Resultados: 445 passed, 5 failed (450 total)
@@ -69,11 +79,13 @@ Duração: ~14 segundos
 ```
 
 **Análise:**
+
 - ✅ Testes unitários funcionando muito bem
 - ⚠️ 5 testes falhando são de outras categorias (validations, api)
 - ✅ TransactionModal deve estar passando agora após migração para userEvent
 
 ### Testes E2E (Playwright - Auth)
+
 ```
 Status: ⚠️ REQUER INVESTIGAÇÃO ADICIONAL
 Resultados: 2 testes ainda falhando
@@ -81,6 +93,7 @@ Causa principal: Elementos data-testid não sendo encontrados
 ```
 
 **Problema Identificado:**
+
 ```
 🚨 Problema Crítico de Renderização:
 
@@ -98,6 +111,7 @@ Causa Provável:
 ```
 
 **Evidência:**
+
 ```bash
 # curl retorna apenas loader:
 curl http://localhost:5173/auth
@@ -114,6 +128,7 @@ curl http://localhost:5173/auth
 ### Imediato (Alta Prioridade)
 
 1. **Investigar por que React não está montando o formulário de login**
+
    ```bash
    # Verificar:
    - O que acontece ao acessar /auth no navegador?
@@ -255,20 +270,21 @@ Documentação:         ✅ COMPLETA E ATUALIZADA
 
 ## 📊 Métricas de Qualidade
 
-| Métrica | Antes | Depois | Status |
-|-----------|--------|---------|--------|
-| Data-testids no LoginForm | 0 | 3 | ✅ Melhorou |
-| Testes com userEvent | 0 | 2 | ✅ Melhorou |
-| Portas padronizadas | Não | Sim | ✅ Melhorou |
-| Documentação de TestSprite | Não | Sim | ✅ Melhorou |
-| Testes unitários passando | 445 | 445 | ✅ Mantido |
-| Testes E2E passando | Variável | Variável | ⚠️ Bloqueado |
+| Métrica                    | Antes    | Depois   | Status       |
+| -------------------------- | -------- | -------- | ------------ |
+| Data-testids no LoginForm  | 0        | 3        | ✅ Melhorou  |
+| Testes com userEvent       | 0        | 2        | ✅ Melhorou  |
+| Portas padronizadas        | Não      | Sim      | ✅ Melhorou  |
+| Documentação de TestSprite | Não      | Sim      | ✅ Melhorou  |
+| Testes unitários passando  | 445      | 445      | ✅ Mantido   |
+| Testes E2E passando        | Variável | Variável | ⚠️ Bloqueado |
 
 ---
 
 ## 🚀 Recomendações Finais
 
 ### Para Imediato
+
 1. **Investigar renderização da página de autenticação manualmente**
    - Abrir http://localhost:5173/auth no navegador
    - Verificar console para erros
@@ -276,12 +292,14 @@ Documentação:         ✅ COMPLETA E ATUALIZADA
    - Tentar fazer login
 
 ### Para Curto Prazo
+
 2. **Corrigir problema de renderização descoberto**
    - Uma vez identificada a causa, implementar correção
    - Atualizar testes E2E para refletir correção
    - Verificar se todos os testes E2E passam
 
 ### Para Longo Prazo
+
 3. **Estabilizar todos os testes E2E**
    - Implementar retry e robustez
    - Adicionar mais testes para aumentar cobertura

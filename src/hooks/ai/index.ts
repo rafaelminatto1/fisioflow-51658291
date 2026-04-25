@@ -12,22 +12,22 @@
 // ============================================================================
 
 export {
-	// Main hook
-	useAIExercises,
-	// Specialized hooks
-	useAIExercisesWithLibrary,
-	useAIExercisesStale,
-	useBatchAIExercises,
-	// Utility functions
-	prefetchAIExercises,
-	invalidateAIExercises,
-	invalidateAllAIExercises,
-	// Query keys
-	aiExercisesQueryKeys,
-	// Types
-	type UseAIExercisesOptions,
-	type UseAIExercisesReturn,
-	type ExerciseSuggestionVariables,
+  // Main hook
+  useAIExercises,
+  // Specialized hooks
+  useAIExercisesWithLibrary,
+  useAIExercisesStale,
+  useBatchAIExercises,
+  // Utility functions
+  prefetchAIExercises,
+  invalidateAIExercises,
+  invalidateAllAIExercises,
+  // Query keys
+  aiExercisesQueryKeys,
+  // Types
+  type UseAIExercisesOptions,
+  type UseAIExercisesReturn,
+  type ExerciseSuggestionVariables,
 } from "../useAIExercises";
 
 // ============================================================================
@@ -35,17 +35,17 @@ export {
 // ============================================================================
 
 export type {
-	// Exercise types
-	PatientProfileContext,
-	ExerciseRecommendation,
-	ExerciseProgramRecommendation,
-	// SOAP types
-	PatientSOAPContext,
-	SOAPSection,
-	SOAPGenerationResult,
-	// Clinical types
-	PatientCaseData,
-	ClinicalRedFlag,
-	ClinicalAnalysisResult,
+  // Exercise types
+  PatientProfileContext,
+  ExerciseRecommendation,
+  ExerciseProgramRecommendation,
+  // SOAP types
+  PatientSOAPContext,
+  SOAPSection,
+  SOAPGenerationResult,
+  // Clinical types
+  PatientCaseData,
+  ClinicalRedFlag,
+  ClinicalAnalysisResult,
 } from "@/lib/ai";
 export { useSuggestReply } from "./useSuggestReply";

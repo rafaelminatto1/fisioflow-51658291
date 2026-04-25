@@ -13,11 +13,11 @@ export { RouteErrorBoundary } from "./RouteErrorBoundary";
 
 // Component-level (inline widgets, suppressable)
 export {
-	ComponentErrorBoundary,
-	HeavyComponentFallback,
-	PDFComponentFallback,
-	ComputerVisionFallback,
-	ChartFallback,
+  ComponentErrorBoundary,
+  HeavyComponentFallback,
+  PDFComponentFallback,
+  ComputerVisionFallback,
+  ChartFallback,
 } from "./ComponentErrorBoundary";
 export type { ComponentErrorBoundaryProps } from "./ComponentErrorBoundary";
 

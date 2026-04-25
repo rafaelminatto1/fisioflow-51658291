@@ -62,14 +62,17 @@ export const packagesApi = {
       body: JSON.stringify(data),
     }),
 
-  update: (id: string, data: Partial<{
-    name: string;
-    description: string;
-    total_sessions: number;
-    price: number;
-    valid_days: number;
-    is_active: boolean;
-  }>) =>
+  update: (
+    id: string,
+    data: Partial<{
+      name: string;
+      description: string;
+      total_sessions: number;
+      price: number;
+      valid_days: number;
+      is_active: boolean;
+    }>,
+  ) =>
     request<{ data: SessionPackage }>(`/api/packages/${id}`, {
       method: "PATCH",
       body: JSON.stringify(data),

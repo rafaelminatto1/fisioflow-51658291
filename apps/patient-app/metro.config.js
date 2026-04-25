@@ -1,12 +1,12 @@
-const { getDefaultConfig } = require('expo/metro-config');
+const { getDefaultConfig } = require("expo/metro-config");
 
 const config = getDefaultConfig(__dirname);
 
 // Enable web platform
-config.resolver.platforms = ['ios', 'android', 'web'];
+config.resolver.platforms = ["ios", "android", "web"];
 
 // Add source extensions for TypeScript and Neon
-config.resolver.sourceExts = [...config.resolver.sourceExts, 'jsx', 'ts', 'tsx', 'mjs', 'cjs'];
+config.resolver.sourceExts = [...config.resolver.sourceExts, "jsx", "ts", "tsx", "mjs", "cjs"];
 
 // Habilitar suporte a package exports (necessário para Neon v11+)
 config.resolver.unstable_enablePackageExports = true;

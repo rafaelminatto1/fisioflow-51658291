@@ -3,8 +3,8 @@
  * Loading placeholders for better UX while data loads
  */
 
-import { View, StyleSheet } from 'react-native';
-import { useColors } from '@/hooks/useColorScheme';
+import { View, StyleSheet } from "react-native";
+import { useColors } from "@/hooks/useColorScheme";
 
 interface SkeletonProps {
   width?: number | string;
@@ -36,13 +36,13 @@ interface SkeletonTextProps {
   style?: any;
 }
 
-export function SkeletonText({ width = '100%', lines = 1, style }: SkeletonTextProps) {
+export function SkeletonText({ width = "100%", lines = 1, style }: SkeletonTextProps) {
   return (
     <View style={style}>
       {Array.from({ length: lines }).map((_, index) => (
         <Skeleton
           key={index}
-          width={index === lines - 1 && lines > 1 ? '70%' : width}
+          width={index === lines - 1 && lines > 1 ? "70%" : width}
           height={14}
           style={index > 0 ? { marginTop: 6 } : undefined}
         />
@@ -148,8 +148,8 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   cardHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
   },
   cardHeaderText: {
     flex: 1,
@@ -160,8 +160,8 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   exerciseHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
   },
   exerciseCheckbox: {
     borderRadius: 12,
@@ -175,8 +175,8 @@ const styles = StyleSheet.create({
     marginLeft: 10,
   },
   listItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     paddingVertical: 12,
     paddingHorizontal: 16,
     borderBottomWidth: 1,
@@ -186,7 +186,7 @@ const styles = StyleSheet.create({
     marginLeft: 12,
   },
   statsRow: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: 12,
   },
   statCard: {

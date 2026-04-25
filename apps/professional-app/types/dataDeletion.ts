@@ -1,5 +1,4 @@
-
-export type DeletionStatus = 'pending' | 'cancelled' | 'completed';
+export type DeletionStatus = "pending" | "cancelled" | "completed";
 
 export interface DataDeletionRequest {
   id: string;

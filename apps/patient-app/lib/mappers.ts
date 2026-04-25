@@ -1,14 +1,14 @@
-import { User } from '@/types/auth';
-import { 
-  PatientProfile, 
-  Appointment, 
-  Exercise, 
-  ExerciseAssignment, 
-  Notification, 
-  Evolution, 
-  Conversation, 
-  Message 
-} from '@/types/api';
+import { User } from "@/types/auth";
+import {
+  PatientProfile,
+  Appointment,
+  Exercise,
+  ExerciseAssignment,
+  Notification,
+  Evolution,
+  Conversation,
+  Message,
+} from "@/types/api";
 
 /**
  * Mappers to convert API response (snake_case) to internal model (camelCase)
@@ -19,8 +19,8 @@ export const Mappers = {
     return {
       id: data.id,
       email: data.email,
-      name: data.name || 'Usuário',
-      role: data.role || 'patient',
+      name: data.name || "Usuário",
+      role: data.role || "patient",
       clinicId: data.clinic_id,
       avatarUrl: data.avatar_url || data.image,
       professionalId: data.professional_id,
@@ -37,9 +37,9 @@ export const Mappers = {
     return {
       ...this.user(data),
       birthDate:
-        typeof data.birth_date === 'string'
+        typeof data.birth_date === "string"
           ? data.birth_date
-          : typeof data.birthDate === 'string'
+          : typeof data.birthDate === "string"
             ? data.birthDate
             : undefined,
       goals: data.goals,
@@ -65,7 +65,7 @@ export const Mappers = {
       status: data.status,
       notes: data.notes,
       isGroup: data.is_group ?? data.isGroup ?? false,
-      additionalNames: data.additional_names ?? data.additionalNames ?? '',
+      additionalNames: data.additional_names ?? data.additionalNames ?? "",
       isUnlimited: data.is_unlimited ?? data.isUnlimited ?? false,
       location: data.location,
     };
@@ -93,9 +93,9 @@ export const Mappers = {
 
   exerciseAssignment(data: any): ExerciseAssignment {
     const fallbackExercise = this.exercise({
-      id: data.exercise_id || data.id || 'unknown-exercise',
-      name: data.exercise_name || 'Exercício',
-      description: data.exercise_description || data.notes || '',
+      id: data.exercise_id || data.id || "unknown-exercise",
+      name: data.exercise_name || "Exercício",
+      description: data.exercise_description || data.notes || "",
       sets: data.sets || 0,
       reps: data.reps || 0,
       hold_time: data.hold_time,
@@ -156,19 +156,19 @@ export const Mappers = {
       id: data.id,
       participantIds: data.participantIds || [data.participant_id].filter(Boolean),
       participantNames: data.participantNames || {
-        [data.participant_id]: data.participant_name || 'Usuário',
+        [data.participant_id]: data.participant_name || "Usuário",
       },
-      lastMessage: data.lastMessage || (
-        data.last_message || data.last_message_at
+      lastMessage:
+        data.lastMessage ||
+        (data.last_message || data.last_message_at
           ? {
-              content: data.last_message || '',
+              content: data.last_message || "",
               senderId: data.participant_id,
               createdAt: data.last_message_at || null,
             }
-          : undefined
-      ),
+          : undefined),
       unreadCount:
-        data.unreadCount && typeof data.unreadCount === 'object'
+        data.unreadCount && typeof data.unreadCount === "object"
           ? data.unreadCount
           : { [data.participant_id]: Number(data.unread_count || 0) },
       updatedAt: data.updatedAt || data.last_message_at || null,
@@ -183,8 +183,8 @@ export const Mappers = {
       content: data.content,
       created_at: data.created_at,
       read_at: data.read_at,
-      status: data.status || 'sent',
-      type: data.type || 'text',
+      status: data.status || "sent",
+      type: data.type || "text",
       attachment_url: data.attachment_url,
       attachment_name: data.attachment_name,
     };

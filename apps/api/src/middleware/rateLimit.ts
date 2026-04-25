@@ -1,7 +1,7 @@
-import { createMiddleware } from 'hono/factory';
-import type { Context } from 'hono';
-import type { Env } from '../types/env';
-import type { AuthVariables } from '../lib/auth';
+import { createMiddleware } from "hono/factory";
+import type { Context } from "hono";
+import type { Env } from "../types/env";
+import type { AuthVariables } from "../lib/auth";
 
 type RateLimitOptions = {
   /** Max requests per window */
@@ -31,9 +31,7 @@ export function rateLimit(opts: RateLimitOptions) {
     const db = c.env.EDGE_CACHE;
     if (!db) return next(); // local dev: sem cache
 
-    const subject = opts.keyFn
-      ? opts.keyFn(c)
-      : (c.get('user')?.organizationId ?? 'anon');
+    const subject = opts.keyFn ? opts.keyFn(c) : (c.get("user")?.organizationId ?? "anon");
 
     // Janela atual: ex. "2026-03-31:14" para window de 1h
     const now = Math.floor(Date.now() / 1000);
@@ -42,30 +40,30 @@ export function rateLimit(opts: RateLimitOptions) {
 
     try {
       // Upsert atômico — D1 SQLite garante atomicidade por statement
-      const result = await db.prepare(`
+      const result = await db
+        .prepare(`
         INSERT INTO rate_limits (id, count, window_start)
         VALUES (?, 1, ?)
         ON CONFLICT(id) DO UPDATE SET count = count + 1
         RETURNING count
-      `).bind(key, windowStart).first<{ count: number }>();
+      `)
+        .bind(key, windowStart)
+        .first<{ count: number }>();
 
       const count = Number(result?.count ?? 1);
 
-      c.header('X-RateLimit-Limit', String(opts.limit));
-      c.header('X-RateLimit-Remaining', String(Math.max(0, opts.limit - count)));
-      c.header('X-RateLimit-Reset', String(windowStart + windowSeconds));
+      c.header("X-RateLimit-Limit", String(opts.limit));
+      c.header("X-RateLimit-Remaining", String(Math.max(0, opts.limit - count)));
+      c.header("X-RateLimit-Reset", String(windowStart + windowSeconds));
 
       if (count > opts.limit) {
         const retryAfter = Math.max(1, windowStart + windowSeconds - now);
-        c.header('Retry-After', String(retryAfter));
-        return c.json(
-          { error: 'Rate limit exceeded', retryAfter },
-          429,
-        );
+        c.header("Retry-After", String(retryAfter));
+        return c.json({ error: "Rate limit exceeded", retryAfter }, 429);
       }
     } catch (err) {
       // Falha silenciosa — não bloquear requisição por erro de cache
-      console.warn('[RateLimit] D1 error, bypassing:', err);
+      console.warn("[RateLimit] D1 error, bypassing:", err);
     }
 
     return next();
@@ -78,8 +76,9 @@ export function rateLimit(opts: RateLimitOptions) {
  */
 export async function cleanupRateLimits(db: D1Database): Promise<number> {
   const cutoff = Math.floor(Date.now() / 1000) - 7200; // mais de 2h atrás
-  const result = await db.prepare(
-    'DELETE FROM rate_limits WHERE window_start < ?'
-  ).bind(cutoff).run();
+  const result = await db
+    .prepare("DELETE FROM rate_limits WHERE window_start < ?")
+    .bind(cutoff)
+    .run();
   return result.meta.changes ?? 0;
 }

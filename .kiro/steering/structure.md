@@ -182,26 +182,31 @@ src/types/
 ## Key Architectural Patterns
 
 ### Component Organization
+
 - **Feature-based**: Components grouped by domain (appointments, patients, etc.)
 - **Atomic Design**: UI components in `src/components/ui/` follow atomic principles
 - **Colocation**: Tests, styles, and related files near components
 
 ### Data Flow
+
 - **Server State**: TanStack Query for API data (hooks in `src/hooks/`)
 - **Client State**: Zustand stores in `src/stores/`
 - **Context**: React Context for cross-cutting concerns (auth, theme)
 
 ### API Layer
+
 - **Services**: Service layer in `src/services/` wraps Firebase callable functions
 - **Hooks**: Custom hooks consume services and provide React integration
 - **Types**: Shared types ensure type safety across layers
 
 ### Routing
+
 - **React Router**: Defined in `src/routes.tsx`
 - **Protected Routes**: `ProtectedRoute` component wraps authenticated routes
 - **Lazy Loading**: Route-based code splitting for performance
 
 ### Testing
+
 - **Unit Tests**: Colocated with source files (`*.test.ts`, `*.test.tsx`)
 - **E2E Tests**: In `e2e/` directory (Playwright)
 - **Test Utils**: Shared utilities in `src/tests/` and `src/test/`
@@ -228,6 +233,7 @@ apps/professional-ios/
 ## Configuration Files
 
 ### Root Level
+
 - `package.json`: Dependencies, scripts, pnpm workspace config
 - `vite.config.ts`: Build configuration, plugins, aliases
 - `tsconfig.json`: TypeScript compiler options
@@ -238,20 +244,23 @@ apps/professional-ios/
 - `storage.rules`: Storage security rules
 
 ### Environment
+
 - `.env`: Local environment variables (gitignored)
 - `.env.example`: Template for required variables
 
 ## Import Conventions
 
 ### Path Aliases
+
 ```typescript
-import { Button } from '@/components/ui/button'
-import { useAuth } from '@/hooks/useAuth'
-import { PatientService } from '@/services/patientService'
-import type { Patient } from '@fisioflow/shared-types'
+import { Button } from "@/components/ui/button";
+import { useAuth } from "@/hooks/useAuth";
+import { PatientService } from "@/services/patientService";
+import type { Patient } from "@fisioflow/shared-types";
 ```
 
 ### Barrel Exports
+
 - Avoid deep imports where barrel exports exist
 - Use index files for cleaner imports
 - Example: `@/hooks` exports common hooks
@@ -259,52 +268,65 @@ import type { Patient } from '@fisioflow/shared-types'
 ## File Naming Conventions
 
 ### Components
+
 - **PascalCase**: `PatientCard.tsx`, `AppointmentList.tsx`
 - **Tests**: `PatientCard.test.tsx`
 - **Styles**: Inline with Tailwind (no separate CSS files)
 
 ### Hooks
+
 - **camelCase with 'use' prefix**: `usePatients.ts`, `useAuth.ts`
 - **Tests**: `usePatients.test.ts`
 
 ### Services
+
 - **camelCase**: `patientService.ts`, `appointmentService.ts`
 - **Tests**: `patientService.test.ts`
 
 ### Types
+
 - **camelCase**: `patient.ts`, `appointment.ts`
 - **Interfaces/Types**: PascalCase within files
 
 ### Utilities
+
 - **camelCase**: `dateUtils.ts`, `formatters.ts`
 
 ## Special Directories
 
 ### `.agent/`
+
 Contains AI agent configuration, skills, and documentation. Not part of the runtime application.
 
 ### `.kiro/`
+
 Kiro IDE configuration including specs, steering rules, and settings.
 
 ### `docs2026/`
+
 Project documentation for 2026 roadmap and features.
 
 ### `functions/`
+
 Firebase Cloud Functions (separate Node.js project with own package.json).
 
 ### `e2e/`
+
 End-to-end tests using Playwright.
 
 ## Multi-tenant Architecture
 
 ### Organization Isolation
+
 - **Database**: Row Level Security (RLS) enforces organization_id filtering
 - **Firestore**: Security rules check organization membership
 - **Storage**: Bucket paths include organization_id
 - **Functions**: Middleware sets organization context from auth token
 
 ### User Context
+
 Every authenticated request includes:
+
 - `userId`: Firebase Auth UID
 - `organizationId`: User's organization
 - `role`: User's role (admin, fisioterapeuta, etc.)

@@ -8,13 +8,13 @@
 
 ### Tabela de Performance Básica
 
-| Page | Load Time | TTFB* | Page Size | Status HTTP |
-|------|-----------|-------|-----------|-------------|
-| Dashboard | 0.157s | 0.125s | 4,053 bytes | 200 OK |
-| Patients | 0.596s | 0.197s | 4,053 bytes | 200 OK |
-| Financial | 0.547s | 0.147s | 4,053 bytes | 200 OK |
+| Page      | Load Time | TTFB\* | Page Size   | Status HTTP |
+| --------- | --------- | ------ | ----------- | ----------- |
+| Dashboard | 0.157s    | 0.125s | 4,053 bytes | 200 OK      |
+| Patients  | 0.596s    | 0.197s | 4,053 bytes | 200 OK      |
+| Financial | 0.547s    | 0.147s | 4,053 bytes | 200 OK      |
 
-*TTFB (Time to First Byte): Tempo até o primeiro byte do servidor
+\*TTFB (Time to First Byte): Tempo até o primeiro byte do servidor
 
 ### Métricas Resumo
 
@@ -27,31 +27,37 @@
 Como a medição foi feita via curl, não foi possível capturar diretamente as métricas do Core Web Vitals. No entanto, com base nos tempos de carregamento:
 
 ### LCP (Largest Contentful Paint)
+
 - **Dashboard:** Provavelmente < 2.5s ✅
 - **Patients:** Provavelmente < 2.5s ✅
 - **Financial:** Provavelmente < 2.5s ✅
 
 ### FID (First Input Delay)
+
 - Baseado nos tempos de carregamento todos abaixo de 1s, provavelmente FID < 100ms ✅
 
 ### CLS (Cumulative Layout Shift)
+
 - Não possível medir via curl, mas como as páginas são leves (4KB), provavelmente baixo ✅
 
 ## 🔍 Análise Detalhada
 
 ### 1. Dashboard (/dashboard)
+
 - **Load Time:** 0.157s (Excelente)
 - **TTFB:** 0.125s (Excelente)
 - **Tamanho:** 4.05KB (Excelente)
 - **Status:** ✅ Ótimo desempenho
 
 ### 2. Patients (/patients)
+
 - **Load Time:** 0.596s (Bom)
 - **TTFB:** 0.197s (Bom)
 - **Tamanho:** 4.05KB (Excelente)
 - **Status:** ✅ Bom desempenho
 
 ### 3. Financial (/financial)
+
 - **Load Time:** 0.547s (Bom)
 - **TTFB:** 0.147s (Excelente)
 - **Tamanho:** 4.05KB (Excelente)
@@ -59,33 +65,38 @@ Como a medição foi feita via curl, não foi possível capturar diretamente as 
 
 ## 📈 Desempenho vs Metas
 
-| Métrica | Meta | Dashboard | Patients | Financial | Status Geral |
-|---------|------|----------|----------|-----------|--------------|
-| LCP | < 2.5s | ✅ | ✅ | ✅ | ✅ EXCELENTE |
-| FID | < 100ms | ✅ | ✅ | ✅ | ✅ EXCELENTE |
-| CLS | < 0.1 | ? | ? | ? | ❌ NÃO MEDIDO |
-| Load Time | < 3s | ✅ | ✅ | ✅ | ✅ EXCELENTE |
-| TTFB | < 200ms | ✅ | ✅ | ✅ | ✅ EXCELENTE |
+| Métrica   | Meta    | Dashboard | Patients | Financial | Status Geral  |
+| --------- | ------- | --------- | -------- | --------- | ------------- |
+| LCP       | < 2.5s  | ✅        | ✅       | ✅        | ✅ EXCELENTE  |
+| FID       | < 100ms | ✅        | ✅       | ✅        | ✅ EXCELENTE  |
+| CLS       | < 0.1   | ?         | ?        | ?         | ❌ NÃO MEDIDO |
+| Load Time | < 3s    | ✅        | ✅       | ✅        | ✅ EXCELENTE  |
+| TTFB      | < 200ms | ✅        | ✅       | ✅        | ✅ EXCELENTE  |
 
 ## 💡 Recomendações de Otimização
 
 ### 1. Performance Geral
+
 ✅ **Ótimo Desempenho Global**: Todas as páginas carregam rapidamente e dentro das metas de performance.
 
 ### 2. Otimizações Recomendadas
 
 #### Para o Patients (pagina mais lenta)
+
 - **Investigar** por que o load time é maior (0.596s vs 0.157s do Dashboard)
 - Verificar se há recursos adicionais carregados dinamicamente
 - Considerar lazy loading para componentes não críticos
 
 #### Melhorias Gerais
+
 - ✅ **Tamanho de Página**: Excelente (menos de 5KB por página)
 - ✅ **TTFB**: Excelente (todos abaixo de 200ms)
 - ✅ **CDN**: Parece estar funcionando bem
 
 ### 3. Implementar Core Web Vitals Monitoramento
+
 Para uma avaliação completa, implementar:
+
 - RUM (Real User Monitoring) usando tools como:
   - Google Analytics with Core Web Vitals
   - Sentry Performance Monitoring
@@ -93,6 +104,7 @@ Para uma avaliação completa, implementar:
   - Datadog
 
 ### 4. Contínuo Monitoramento
+
 - Configurar alertas para:
   - Páginas com load time > 3s
   - TTFB > 200ms

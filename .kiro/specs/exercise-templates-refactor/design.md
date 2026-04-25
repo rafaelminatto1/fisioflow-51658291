@@ -77,7 +77,7 @@ Componente raiz da aba. Gerencia estado de seleção e orquestra os sub-componen
 ```typescript
 interface TemplateManagerState {
   selectedTemplateId: string | null;
-  activeProfile: PatientProfileCategory | 'all';
+  activeProfile: PatientProfileCategory | "all";
   searchQuery: string;
   showApplyFlow: boolean;
   showCreateFlow: boolean;
@@ -91,15 +91,16 @@ interface TemplateManagerState {
 Lista de templates com filtro por perfil e busca. Emite `onSelect(id)`.
 
 Props:
+
 ```typescript
 interface TemplateSidebarProps {
   templates: ExerciseTemplate[];
   selectedId: string | null;
-  activeProfile: PatientProfileCategory | 'all';
+  activeProfile: PatientProfileCategory | "all";
   searchQuery: string;
   loading: boolean;
   onSelect: (id: string) => void;
-  onProfileChange: (profile: PatientProfileCategory | 'all') => void;
+  onProfileChange: (profile: PatientProfileCategory | "all") => void;
   onSearchChange: (q: string) => void;
   onCreateClick: () => void;
 }
@@ -134,6 +135,7 @@ interface TemplateDetailPanelProps {
 ### TemplateApplyFlow
 
 Sheet lateral com 2–3 etapas:
+
 1. Seleção de paciente (combobox com busca por nome/CPF)
 2. Data de início
 3. (Condicional) Vinculação a cirurgia — apenas para templates Pós-operatório
@@ -174,14 +176,14 @@ export interface ExerciseTemplate {
   id: string;
   name: string;
   description: string | null;
-  category: string | null;           // agora = PatientProfileCategory
+  category: string | null; // agora = PatientProfileCategory
   conditionName: string | null;
   templateVariant: string | null;
   clinicalNotes: string | null;
   contraindications: string | null;
   precautions: string | null;
   progressionNotes: string | null;
-  evidenceLevel: 'A' | 'B' | 'C' | 'D' | null;
+  evidenceLevel: "A" | "B" | "C" | "D" | null;
   bibliographicReferences: string[];
   isActive: boolean;
   isPublic: boolean;
@@ -191,19 +193,19 @@ export interface ExerciseTemplate {
   updatedAt: string;
 
   // NOVOS campos
-  templateType: 'system' | 'custom';   // distingue System vs Custom
+  templateType: "system" | "custom"; // distingue System vs Custom
   patientProfile: PatientProfileCategory; // perfil clínico principal
-  sourceTemplateId: string | null;      // referência ao System_Template original (para Custom)
-  isDraft: boolean;                     // suporte a rascunho (Req 4.7)
-  exerciseCount: number;                // desnormalizado para performance na listagem
+  sourceTemplateId: string | null; // referência ao System_Template original (para Custom)
+  isDraft: boolean; // suporte a rascunho (Req 4.7)
+  exerciseCount: number; // desnormalizado para performance na listagem
 }
 
 type PatientProfileCategory =
-  | 'ortopedico'
-  | 'esportivo'
-  | 'pos_operatorio'
-  | 'prevencao'
-  | 'idosos';
+  | "ortopedico"
+  | "esportivo"
+  | "pos_operatorio"
+  | "prevencao"
+  | "idosos";
 ```
 
 ### ExercisePlan (novo — baseado em ExercisePlanRow existente)
@@ -216,8 +218,8 @@ interface CreateExercisePlanFromTemplatePayload {
   patient_id: string;
   template_id: string;
   name: string;
-  start_date: string;           // ISO date
-  surgery_id?: string;          // opcional, apenas pós-op
+  start_date: string; // ISO date
+  surgery_id?: string; // opcional, apenas pós-op
   notes?: string;
 }
 ```
@@ -301,46 +303,46 @@ FOR EACH ROW EXECUTE FUNCTION update_template_exercise_count();
 
 ### Perfil Ortopédico (5 templates)
 
-| Nome | Condição | Variante | Evidência |
-|------|----------|----------|-----------|
-| Protocolo Lombalgia Crônica | Lombalgia | Conservador | A |
-| Protocolo Cervicalgia Postural | Cervicalgia | Inicial | B |
-| Reabilitação Tendinite Patelar | Tendinite Patelar | Progressivo | B |
-| Tratamento Fascite Plantar | Fascite Plantar | Conservador | A |
-| Reabilitação Manguito Rotador | Síndrome do Manguito Rotador | Conservador | B |
+| Nome                           | Condição                     | Variante    | Evidência |
+| ------------------------------ | ---------------------------- | ----------- | --------- |
+| Protocolo Lombalgia Crônica    | Lombalgia                    | Conservador | A         |
+| Protocolo Cervicalgia Postural | Cervicalgia                  | Inicial     | B         |
+| Reabilitação Tendinite Patelar | Tendinite Patelar            | Progressivo | B         |
+| Tratamento Fascite Plantar     | Fascite Plantar              | Conservador | A         |
+| Reabilitação Manguito Rotador  | Síndrome do Manguito Rotador | Conservador | B         |
 
 ### Perfil Esportivo (3 templates)
 
-| Nome | Condição | Variante | Evidência |
-|------|----------|----------|-----------|
-| Retorno ao Esporte - Entorse de Tornozelo | Entorse de Tornozelo | Progressivo | A |
-| Fortalecimento para Corredores | Síndrome do Trato Iliotibial | Preventivo | B |
-| Prevenção de Lesões em Atletas | Prevenção Geral | Funcional | B |
+| Nome                                      | Condição                     | Variante    | Evidência |
+| ----------------------------------------- | ---------------------------- | ----------- | --------- |
+| Retorno ao Esporte - Entorse de Tornozelo | Entorse de Tornozelo         | Progressivo | A         |
+| Fortalecimento para Corredores            | Síndrome do Trato Iliotibial | Preventivo  | B         |
+| Prevenção de Lesões em Atletas            | Prevenção Geral              | Funcional   | B         |
 
 ### Perfil Pós-operatório (4 templates)
 
-| Nome | Condição | Semanas Totais | Evidência |
-|------|----------|----------------|-----------|
-| Reconstrução LCA - Protocolo Acelerado | Reconstrução de LCA | 24 | A |
-| Prótese Total de Joelho | Artroplastia de Joelho | 12 | A |
-| Prótese Total de Quadril | Artroplastia de Quadril | 12 | A |
-| Reparo do Manguito Rotador | Reparo Cirúrgico do Manguito | 16 | B |
+| Nome                                   | Condição                     | Semanas Totais | Evidência |
+| -------------------------------------- | ---------------------------- | -------------- | --------- |
+| Reconstrução LCA - Protocolo Acelerado | Reconstrução de LCA          | 24             | A         |
+| Prótese Total de Joelho                | Artroplastia de Joelho       | 12             | A         |
+| Prótese Total de Quadril               | Artroplastia de Quadril      | 12             | A         |
+| Reparo do Manguito Rotador             | Reparo Cirúrgico do Manguito | 16             | B         |
 
 ### Perfil Prevenção (3 templates)
 
-| Nome | Condição | Variante | Evidência |
-|------|----------|----------|-----------|
-| Prevenção de Quedas | Prevenção de Quedas | Funcional | A |
-| Fortalecimento Postural | Desvios Posturais | Progressivo | B |
-| Ergonomia para Escritório | Síndrome do Trabalhador Sedentário | Educativo | C |
+| Nome                      | Condição                           | Variante    | Evidência |
+| ------------------------- | ---------------------------------- | ----------- | --------- |
+| Prevenção de Quedas       | Prevenção de Quedas                | Funcional   | A         |
+| Fortalecimento Postural   | Desvios Posturais                  | Progressivo | B         |
+| Ergonomia para Escritório | Síndrome do Trabalhador Sedentário | Educativo   | C         |
 
 ### Perfil Idosos (3 templates)
 
-| Nome | Condição | Variante | Evidência |
-|------|----------|----------|-----------|
-| Equilíbrio e Marcha para Idosos | Instabilidade Postural | Funcional | A |
-| Fortalecimento Funcional para Idosos | Sarcopenia | Progressivo | B |
-| Mobilidade Articular Geral | Rigidez Articular | Conservador | B |
+| Nome                                 | Condição               | Variante    | Evidência |
+| ------------------------------------ | ---------------------- | ----------- | --------- |
+| Equilíbrio e Marcha para Idosos      | Instabilidade Postural | Funcional   | A         |
+| Fortalecimento Funcional para Idosos | Sarcopenia             | Progressivo | B         |
+| Mobilidade Articular Geral           | Rigidez Articular      | Conservador | B         |
 
 O seed será implementado como script Drizzle em `functions/src/seed/exercise-templates.ts`, executado uma única vez via Cloud Function admin.
 
@@ -350,14 +352,14 @@ O seed será implementado como script Drizzle em `functions/src/seed/exercise-te
 
 ### Endpoints existentes (reutilizados sem alteração)
 
-| Método | Endpoint | Uso |
-|--------|----------|-----|
-| GET | `/api/templates` | Listagem com filtros `?category=&q=` |
-| GET | `/api/templates/:id` | Detalhes + items |
-| POST | `/api/templates` | Criar Custom_Template |
-| PUT | `/api/templates/:id` | Atualizar Custom_Template |
-| DELETE | `/api/templates/:id` | Excluir Custom_Template |
-| POST | `/api/clinical/exercise-plans` | Criar Exercise_Plan |
+| Método | Endpoint                       | Uso                                  |
+| ------ | ------------------------------ | ------------------------------------ |
+| GET    | `/api/templates`               | Listagem com filtros `?category=&q=` |
+| GET    | `/api/templates/:id`           | Detalhes + items                     |
+| POST   | `/api/templates`               | Criar Custom_Template                |
+| PUT    | `/api/templates/:id`           | Atualizar Custom_Template            |
+| DELETE | `/api/templates/:id`           | Excluir Custom_Template              |
+| POST   | `/api/clinical/exercise-plans` | Criar Exercise_Plan                  |
 
 ### Novos parâmetros de query (GET `/api/templates`)
 
@@ -374,6 +376,7 @@ O Worker/Cloud Function filtra por `organization_id IS NULL` para `system` e por
 Cria um `Exercise_Plan` a partir de um template, copiando todos os `exercise_template_items`.
 
 Request body:
+
 ```typescript
 {
   patientId: string;
@@ -384,6 +387,7 @@ Request body:
 ```
 
 Response:
+
 ```typescript
 {
   data: {
@@ -395,6 +399,7 @@ Response:
 ```
 
 Lógica:
+
 1. Busca o template e seus items
 2. Valida que o template está ativo (`is_active = true`, `is_draft = false`)
 3. Cria `exercise_plans` com `template_id` referenciando o template original
@@ -406,6 +411,7 @@ Lógica:
 Cria um `Custom_Template` como cópia de um `System_Template`.
 
 Request body:
+
 ```typescript
 {
   name?: string;  // opcional — usa nome original se omitido
@@ -415,6 +421,7 @@ Request body:
 Response: `{ data: ExerciseTemplate }` (o novo Custom_Template)
 
 Lógica:
+
 1. Valida que o template fonte é `template_type = 'system'`
 2. Cria novo template com `template_type = 'custom'`, `organization_id = ctx.organizationId`, `source_template_id = id`
 3. Copia todos os `exercise_template_items`
@@ -427,13 +434,13 @@ Lógica:
 
 ```typescript
 // Listagem (com filtros)
-['templates', { patientProfile, templateType, q }]
-
-// Detalhe
-['template', id]
-
-// Categorias
-['template-categories']  // staleTime: 30min (dados estáticos)
+["templates", { patientProfile, templateType, q }][
+  // Detalhe
+  ("template", id)
+][
+  // Categorias
+  "template-categories"
+]; // staleTime: 30min (dados estáticos)
 ```
 
 ### Zustand Store: `useTemplateUIStore`
@@ -443,14 +450,14 @@ Estado de UI local (não persistido):
 ```typescript
 interface TemplateUIStore {
   selectedTemplateId: string | null;
-  activeProfile: PatientProfileCategory | 'all';
+  activeProfile: PatientProfileCategory | "all";
   searchQuery: string;
   applyFlowOpen: boolean;
   createFlowOpen: boolean;
   createFlowSourceId: string | null;
 
   setSelectedTemplate: (id: string | null) => void;
-  setActiveProfile: (p: PatientProfileCategory | 'all') => void;
+  setActiveProfile: (p: PatientProfileCategory | "all") => void;
   setSearchQuery: (q: string) => void;
   openApplyFlow: () => void;
   closeApplyFlow: () => void;
@@ -481,11 +488,11 @@ interface TemplateUIStore {
 
 ## Correctness Properties
 
-*A property is a characteristic or behavior that should hold true across all valid executions of a system — essentially, a formal statement about what the system should do. Properties serve as the bridge between human-readable specifications and machine-verifiable correctness guarantees.*
+_A property is a characteristic or behavior that should hold true across all valid executions of a system — essentially, a formal statement about what the system should do. Properties serve as the bridge between human-readable specifications and machine-verifiable correctness guarantees._
 
 ### Property 1: Filtro por perfil retorna apenas templates do perfil selecionado
 
-*Para qualquer* lista de templates e qualquer perfil de paciente selecionado (`ortopedico`, `esportivo`, `pos_operatorio`, `prevencao` ou `idosos`), todos os templates retornados pela função de filtro devem ter `patientProfile` igual ao perfil selecionado. Quando nenhum perfil está selecionado (`'all'`), todos os templates da lista original devem ser retornados.
+_Para qualquer_ lista de templates e qualquer perfil de paciente selecionado (`ortopedico`, `esportivo`, `pos_operatorio`, `prevencao` ou `idosos`), todos os templates retornados pela função de filtro devem ter `patientProfile` igual ao perfil selecionado. Quando nenhum perfil está selecionado (`'all'`), todos os templates da lista original devem ser retornados.
 
 **Validates: Requirements 1.2, 1.4**
 
@@ -493,7 +500,7 @@ interface TemplateUIStore {
 
 ### Property 2: Busca retorna subconjunto relevante
 
-*Para qualquer* query de busca não-vazia e qualquer lista de templates, o conjunto de templates retornados deve ser um subconjunto da lista original, e cada resultado deve conter a query (case-insensitive) em pelo menos um dos campos: `name`, `conditionName` ou `templateVariant`.
+_Para qualquer_ query de busca não-vazia e qualquer lista de templates, o conjunto de templates retornados deve ser um subconjunto da lista original, e cada resultado deve conter a query (case-insensitive) em pelo menos um dos campos: `name`, `conditionName` ou `templateVariant`.
 
 **Validates: Requirements 1.6**
 
@@ -501,7 +508,7 @@ interface TemplateUIStore {
 
 ### Property 3: Renderização de card contém todas as informações obrigatórias
 
-*Para qualquer* template com campos preenchidos, o `TemplateCard` renderizado deve conter: o nome do template, a condição clínica, o número de exercícios (`exerciseCount`), e um badge indicando `template_type` ('Sistema' ou 'Personalizado'). Quando `evidenceLevel` não é nulo, o badge de evidência também deve estar presente.
+_Para qualquer_ template com campos preenchidos, o `TemplateCard` renderizado deve conter: o nome do template, a condição clínica, o número de exercícios (`exerciseCount`), e um badge indicando `template_type` ('Sistema' ou 'Personalizado'). Quando `evidenceLevel` não é nulo, o badge de evidência também deve estar presente.
 
 **Validates: Requirements 1.5**
 
@@ -509,7 +516,7 @@ interface TemplateUIStore {
 
 ### Property 4: Renderização condicional por perfil pós-operatório
 
-*Para qualquer* template, os campos e componentes específicos de pós-operatório (timeline de semanas no `TemplateDetailPanel`, campos `week_start`/`week_end` no `TemplateCreateFlow`, etapa de vinculação a cirurgia no `TemplateApplyFlow`) devem aparecer se e somente se `patientProfile = 'pos_operatorio'`.
+_Para qualquer_ template, os campos e componentes específicos de pós-operatório (timeline de semanas no `TemplateDetailPanel`, campos `week_start`/`week_end` no `TemplateCreateFlow`, etapa de vinculação a cirurgia no `TemplateApplyFlow`) devem aparecer se e somente se `patientProfile = 'pos_operatorio'`.
 
 **Validates: Requirements 2.4, 3.4, 4.6**
 
@@ -517,7 +524,7 @@ interface TemplateUIStore {
 
 ### Property 5: Aplicação de template cria plano com exercícios corretos
 
-*Para qualquer* template com N exercícios (`exerciseCount = N`) e qualquer paciente válido, a operação de aplicação deve criar um `Exercise_Plan` com exatamente N itens, onde o `exercise_id` de cada item corresponde ao `exercise_id` de um item do template original.
+_Para qualquer_ template com N exercícios (`exerciseCount = N`) e qualquer paciente válido, a operação de aplicação deve criar um `Exercise_Plan` com exatamente N itens, onde o `exercise_id` de cada item corresponde ao `exercise_id` de um item do template original.
 
 **Validates: Requirements 3.5**
 
@@ -525,7 +532,7 @@ interface TemplateUIStore {
 
 ### Property 6: Personalizar System_Template não modifica o original
 
-*Para qualquer* `System_Template`, após executar a operação "Personalizar", o template original deve permanecer inalterado (mesmo `id`, mesmos valores de todos os campos, mesmos items). O novo `Custom_Template` criado deve ter `source_template_id` igual ao `id` do original e `template_type = 'custom'`.
+_Para qualquer_ `System_Template`, após executar a operação "Personalizar", o template original deve permanecer inalterado (mesmo `id`, mesmos valores de todos os campos, mesmos items). O novo `Custom_Template` criado deve ter `source_template_id` igual ao `id` do original e `template_type = 'custom'`.
 
 **Validates: Requirements 5.3**
 
@@ -533,7 +540,7 @@ interface TemplateUIStore {
 
 ### Property 7: System_Templates não podem ser excluídos
 
-*Para qualquer* template com `template_type = 'system'`, uma tentativa de exclusão (via API ou UI) deve ser rejeitada, e o template deve continuar existindo na listagem após a tentativa.
+_Para qualquer_ template com `template_type = 'system'`, uma tentativa de exclusão (via API ou UI) deve ser rejeitada, e o template deve continuar existindo na listagem após a tentativa.
 
 **Validates: Requirements 8.1**
 
@@ -541,7 +548,7 @@ interface TemplateUIStore {
 
 ### Property 8: Contagem de exercícios é consistente com os items
 
-*Para qualquer* template, após qualquer operação de adição ou remoção de exercícios, o campo `exercise_count` deve ser igual ao número de registros em `exercise_template_items` com `template_id` correspondente.
+_Para qualquer_ template, após qualquer operação de adição ou remoção de exercícios, o campo `exercise_count` deve ser igual ao número de registros em `exercise_template_items` com `template_id` correspondente.
 
 **Validates: Requirements 1.5**
 
@@ -549,7 +556,7 @@ interface TemplateUIStore {
 
 ### Property 9: Badges distintos por tipo de template
 
-*Para qualquer* template, o componente `TemplateCard` deve renderizar badges visualmente distintos: templates com `template_type = 'system'` devem exibir badge "Sistema", e templates com `template_type = 'custom'` devem exibir badge "Personalizado". Nunca ambos ao mesmo tempo.
+_Para qualquer_ template, o componente `TemplateCard` deve renderizar badges visualmente distintos: templates com `template_type = 'system'` devem exibir badge "Sistema", e templates com `template_type = 'custom'` devem exibir badge "Personalizado". Nunca ambos ao mesmo tempo.
 
 **Validates: Requirements 5.1, 5.4**
 
@@ -557,7 +564,7 @@ interface TemplateUIStore {
 
 ### Property 10: Preservação de estado do formulário em caso de erro
 
-*Para qualquer* conjunto de dados preenchidos no `TemplateApplyFlow` ou no diálogo de exclusão, quando a operação de backend falha com erro, todos os campos do formulário devem manter seus valores anteriores ao erro, permitindo nova tentativa sem repreenchimento.
+_Para qualquer_ conjunto de dados preenchidos no `TemplateApplyFlow` ou no diálogo de exclusão, quando a operação de backend falha com erro, todos os campos do formulário devem manter seus valores anteriores ao erro, permitindo nova tentativa sem repreenchimento.
 
 **Validates: Requirements 3.7, 8.4**
 
@@ -565,7 +572,7 @@ interface TemplateUIStore {
 
 ### Property 11: System_Templates sempre visíveis independentemente de Custom_Templates
 
-*Para qualquer* organização (com ou sem Custom_Templates cadastrados), a listagem de templates deve sempre incluir todos os templates com `template_type = 'system'` e `is_active = true`.
+_Para qualquer_ organização (com ou sem Custom_Templates cadastrados), a listagem de templates deve sempre incluir todos os templates com `template_type = 'system'` e `is_active = true`.
 
 **Validates: Requirements 7.2**
 
@@ -573,7 +580,7 @@ interface TemplateUIStore {
 
 ### Property 12: Validação de campos obrigatórios no formulário de criação
 
-*Para qualquer* submissão do `TemplateCreateFlow` onde `name`, `patientProfile` ou `conditionName` estão ausentes ou compostos apenas de espaços em branco, a submissão deve ser rejeitada com mensagem de erro, e nenhum template deve ser criado.
+_Para qualquer_ submissão do `TemplateCreateFlow` onde `name`, `patientProfile` ou `conditionName` estão ausentes ou compostos apenas de espaços em branco, a submissão deve ser rejeitada com mensagem de erro, e nenhum template deve ser criado.
 
 **Validates: Requirements 4.3**
 
@@ -581,15 +588,15 @@ interface TemplateUIStore {
 
 ## Error Handling
 
-| Cenário | Comportamento |
-|---------|---------------|
-| Falha ao carregar lista de templates | Skeleton + botão "Tentar novamente" |
-| Template selecionado não encontrado (404) | Painel de detalhes exibe estado de erro com opção de voltar |
-| Falha ao aplicar template | Toast de erro descritivo; Sheet permanece aberta com dados |
-| Falha ao criar Custom_Template | Toast de erro; formulário mantém estado |
-| Tentativa de excluir System_Template | AlertDialog bloqueante com explicação |
-| Tentativa de editar System_Template | Toast informativo + oferta de "Personalizar" |
-| Template sem exercícios ao aplicar | Validação no cliente antes de chamar API; mensagem informativa |
+| Cenário                                   | Comportamento                                                  |
+| ----------------------------------------- | -------------------------------------------------------------- |
+| Falha ao carregar lista de templates      | Skeleton + botão "Tentar novamente"                            |
+| Template selecionado não encontrado (404) | Painel de detalhes exibe estado de erro com opção de voltar    |
+| Falha ao aplicar template                 | Toast de erro descritivo; Sheet permanece aberta com dados     |
+| Falha ao criar Custom_Template            | Toast de erro; formulário mantém estado                        |
+| Tentativa de excluir System_Template      | AlertDialog bloqueante com explicação                          |
+| Tentativa de editar System_Template       | Toast informativo + oferta de "Personalizar"                   |
+| Template sem exercícios ao aplicar        | Validação no cliente antes de chamar API; mensagem informativa |
 
 ---
 
@@ -614,17 +621,17 @@ Cada propriedade do design deve ser coberta por um teste de propriedade com mín
 
 ```typescript
 // Exemplo de estrutura — Feature: exercise-templates-refactor, Property 1
-it('filtro por perfil retorna apenas templates do perfil selecionado', () => {
+it("filtro por perfil retorna apenas templates do perfil selecionado", () => {
   fc.assert(
     fc.property(
       fc.array(arbitraryTemplate()),
-      fc.constantFrom('ortopedico', 'esportivo', 'pos_operatorio', 'prevencao', 'idosos'),
+      fc.constantFrom("ortopedico", "esportivo", "pos_operatorio", "prevencao", "idosos"),
       (templates, profile) => {
         const result = filterByProfile(templates, profile);
-        return result.every(t => t.patientProfile === profile);
-      }
+        return result.every((t) => t.patientProfile === profile);
+      },
     ),
-    { numRuns: 100 }
+    { numRuns: 100 },
   );
 });
 ```
