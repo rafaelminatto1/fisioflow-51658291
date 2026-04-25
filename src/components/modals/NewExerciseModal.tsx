@@ -48,6 +48,28 @@ import {
   getEvidenceLevelOptions,
 } from "@/lib/constants/exerciseConstants";
 import type { Exercise } from "@/hooks/useExercises";
+
+interface MediaItem {
+  id: string;
+  url: string;
+  type: "image" | "video" | "youtube";
+  caption?: string | null;
+  orderIndex?: number;
+}
+
+interface ScientificReference {
+  citation: string;
+  url?: string;
+  evidenceLevel?: string;
+}
+
+type ExerciseExtended = Exercise & {
+  alternativeEquipment?: string[];
+  precaution_level?: string;
+  precaution_notes?: string;
+  scientific_references?: ScientificReference[] | string | null;
+  media?: MediaItem[];
+};
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { knowledgeBase } from "@/data/knowledgeBase";
 import { MediaGalleryModal } from "../media/MediaGalleryModal";
@@ -254,8 +276,8 @@ export function NewExerciseModal({
 
   // Sincronizar mídia quando o formulário reseta (ex: ao abrir para editar)
   useEffect(() => {
-    if (exercise && (exercise as any).media) {
-      form.setValue("media", (exercise as any).media);
+    if (exercise && (exercise as ExerciseExtended).media) {
+      form.setValue("media", (exercise as ExerciseExtended).media);
     }
   }, [exercise, form]);
 
@@ -289,18 +311,18 @@ export function NewExerciseModal({
           : [],
         body_parts: Array.isArray(exercise.body_parts) ? exercise.body_parts : [],
         equipment: Array.isArray(exercise.equipment) ? exercise.equipment : [],
-        alternativeEquipment: Array.isArray((exercise as any).alternativeEquipment)
-          ? (exercise as any).alternativeEquipment
+        alternativeEquipment: Array.isArray((exercise as ExerciseExtended).alternativeEquipment)
+          ? (exercise as ExerciseExtended).alternativeEquipment
           : [],
-        precaution_level: (exercise as any).precaution_level || "safe",
-        precaution_notes: (exercise as any).precaution_notes || "",
-        scientific_references: Array.isArray((exercise as any).scientific_references)
-          ? (exercise as any).scientific_references
+        precaution_level: (exercise as ExerciseExtended).precaution_level || "safe",
+        precaution_notes: (exercise as ExerciseExtended).precaution_notes || "",
+        scientific_references: Array.isArray((exercise as ExerciseExtended).scientific_references)
+          ? (exercise as ExerciseExtended).scientific_references
           : [],
-        media: (exercise as any).media || [],
+        media: (exercise as ExerciseExtended).media || [],
       });
-      if (Array.isArray((exercise as any).scientific_references)) {
-        replace((exercise as any).scientific_references);
+      if (Array.isArray((exercise as ExerciseExtended).scientific_references)) {
+        replace((exercise as ExerciseExtended).scientific_references);
       }
     } else {
       form.reset({

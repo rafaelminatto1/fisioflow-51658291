@@ -154,8 +154,8 @@ export function trackMetric(type: MetricType, data: Record<string, unknown>, val
   });
 
   // Enviar para analytics (PostHog ou similar)
-  if ((window as any).analytics) {
-    (window as any).analytics.track(type, {
+  if (window.analytics) {
+    window.analytics.track(type, {
       ...data,
       timestamp,
       userId,
@@ -164,8 +164,8 @@ export function trackMetric(type: MetricType, data: Record<string, unknown>, val
   }
 
   // Para analytics interno
-  if ((window as any).gtag) {
-    (window as any).gtag("event", type, {
+  if (window.gtag) {
+    window.gtag("event", type, {
       ...data,
       event_label: JSON.stringify(data),
       value,
@@ -265,8 +265,8 @@ export function trackBusinessEvent(event: string, data: Record<string, unknown>)
   trackMetric(event as MetricType, data);
 
   // Analytics
-  if ((window as any).gtag) {
-    (window as any).gtag("event", event, {
+  if (window.gtag) {
+    window.gtag("event", event, {
       ...data,
       send_to: import.meta.env.VITE_GA_MEASUREMENT_ID,
     });
@@ -367,7 +367,7 @@ export function measureCoreWebVitals() {
       // First Input Delay (FID)
       const fidObserver = new PerformanceObserver((list) => {
         for (const entry of list.getEntries()) {
-          const fidEntry = entry as any; // Cast to any as FID types might be missing in older libs
+          const fidEntry = entry as PerformanceEntry & { processingStart: number };
           trackMetric(MetricType.PAGE_LOAD, {
             metric: "FID",
             value: fidEntry.processingStart - fidEntry.startTime,
@@ -378,10 +378,10 @@ export function measureCoreWebVitals() {
       // Cumulative Layout Shift (CLS)
       const clsObserver = new PerformanceObserver((list) => {
         for (const entry of list.getEntries()) {
-          const clsEntry = entry as any;
+          const clsEntry = entry as PerformanceEntry & { value?: number };
           trackMetric(MetricType.PAGE_LOAD, {
             metric: "CLS",
-            value: clsEntry.value,
+            value: clsEntry.value ?? 0,
           });
         }
       });
