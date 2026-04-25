@@ -3,6 +3,7 @@
 ## Header Section
 
 ### Before
+
 ```tsx
 <View style={[styles.header, { borderBottomColor: colors.border }]}>
   <TouchableOpacity onPress={() => router.back()}>
@@ -12,11 +13,13 @@
   <View style={{ width: 28 }} />
 </View>
 ```
+
 - Simple back button (no background)
 - Static title only
 - Empty spacer for layout balance
 
 ### After
+
 ```tsx
 <View style={[styles.header, { borderBottomColor: colors.border }]}>
   <TouchableOpacity style={[styles.headerButton, { backgroundColor: colors.surface }]}>
@@ -25,7 +28,7 @@
   <View style={styles.headerCenter}>
     <Text style={[styles.headerTitle, { color: colors.text }]}>Nova Evolução</Text>
     <Text style={[styles.headerSubtitle, { color: colors.textSecondary }]}>
-      {new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })}
+      {new Date().toLocaleDateString("pt-BR", { day: "2-digit", month: "short" })}
     </Text>
   </View>
   <View style={styles.headerProgress}>
@@ -33,6 +36,7 @@
   </View>
 </View>
 ```
+
 - Circular back button with background
 - Title + current date
 - Animated circular progress indicator
@@ -40,17 +44,20 @@
 ## Patient Info Section
 
 ### Before
+
 ```tsx
 <View style={[styles.patientInfo, { backgroundColor: colors.surface }]}>
   <Ionicons name="person" size={20} color={colors.primary} />
   <Text style={[styles.patientName, { color: colors.text }]}>{patientName}</Text>
 </View>
 ```
+
 - Simple row with icon and text
 - No session status indicator
 - Minimal visual interest
 
 ### After
+
 ```tsx
 <View style={[styles.patientCard, { backgroundColor: colors.surface }]}>
   <View style={[styles.patientAvatar, { backgroundColor: `${colors.primary}20` }]}>
@@ -58,9 +65,7 @@
   </View>
   <View style={styles.patientInfo}>
     <Text style={[styles.patientName, { color: colors.text }]}>{patientName}</Text>
-    <Text style={[styles.sessionLabel, { color: colors.textSecondary }]}>
-      Sessão de avaliação
-    </Text>
+    <Text style={[styles.sessionLabel, { color: colors.textSecondary }]}>Sessão de avaliação</Text>
   </View>
   <View style={styles.sessionStatus}>
     <View style={[styles.statusDot, { backgroundColor: colors.success }]} />
@@ -68,6 +73,7 @@
   </View>
 </View>
 ```
+
 - Large avatar with colored background
 - Patient name + session label
 - Live status indicator with dot
@@ -75,11 +81,12 @@
 ## SOAP Input Fields
 
 ### Before
+
 ```tsx
 <View style={styles.soapField}>
   <View style={styles.soapLabelRow}>
     <View style={[styles.soapLabelBadge, { backgroundColor: colors.primary }]}>
-      <Text style={[styles.soapLabelText, { color: '#FFFFFF' }]}>S</Text>
+      <Text style={[styles.soapLabelText, { color: "#FFFFFF" }]}>S</Text>
     </View>
     <Text style={[styles.soapFieldLabel, { color: colors.text }]}>Subjetivo</Text>
   </View>
@@ -90,6 +97,7 @@
   />
 </View>
 ```
+
 - Simple label row with badge
 - Basic text input
 - No focus feedback
@@ -97,16 +105,18 @@
 - No clear button
 
 ### After
+
 ```tsx
 <SOAPInputField
   section={SOAP_SECTIONS.subjective}
   value={subjective}
   onChangeText={setSubjective}
-  isFocused={focusedField === 'subjective'}
-  onFocus={() => setFocusedField('subjective')}
+  isFocused={focusedField === "subjective"}
+  onFocus={() => setFocusedField("subjective")}
   colors={colors}
 />
 ```
+
 - Animated border color on focus
 - Field description below label
 - Completion checkmark when filled
@@ -117,6 +127,7 @@
 ## Pain Level Section
 
 ### Before
+
 ```tsx
 <Card style={styles.sectionCard} padding="sm">
   <View style={styles.painDisplay}>
@@ -131,14 +142,17 @@
   <Slider ... />
 </Card>
 ```
+
 - Simple colored circle for value
 - Plain text description
 - No emoji visual
 
 ### After
+
 ```tsx
 <PainLevelSlider painLevel={painLevel} onValueChange={setPainLevel} colors={colors} />
 ```
+
 - Emoji representation (😊 to 😫)
 - Large value display with shadow
 - Colored description card with background
@@ -147,30 +161,35 @@
 ## Photos Section
 
 ### Before
+
 ```tsx
-{photos.length > 0 ? (
-  <View style={styles.photosGrid}>
-    {photos.map((photo) => (
-      <View key={photo.id} style={styles.photoContainer}>
-        <Image source={{ uri: photo.uri }} style={styles.photo} />
-        <TouchableOpacity style={styles.removePhotoButton}>
-          <Ionicons name="close-circle" size={24} color={colors.error} />
-        </TouchableOpacity>
-      </View>
-    ))}
-  </View>
-) : (
-  <TouchableOpacity style={[styles.emptyPhotos, { borderColor: colors.border }]}>
-    <Ionicons name="images" size={48} color={colors.textMuted} />
-    <Text>Adicionar fotos</Text>
-  </TouchableOpacity>
-)}
+{
+  photos.length > 0 ? (
+    <View style={styles.photosGrid}>
+      {photos.map((photo) => (
+        <View key={photo.id} style={styles.photoContainer}>
+          <Image source={{ uri: photo.uri }} style={styles.photo} />
+          <TouchableOpacity style={styles.removePhotoButton}>
+            <Ionicons name="close-circle" size={24} color={colors.error} />
+          </TouchableOpacity>
+        </View>
+      ))}
+    </View>
+  ) : (
+    <TouchableOpacity style={[styles.emptyPhotos, { borderColor: colors.border }]}>
+      <Ionicons name="images" size={48} color={colors.textMuted} />
+      <Text>Adicionar fotos</Text>
+    </TouchableOpacity>
+  );
+}
 ```
+
 - Basic grid layout
 - Simple empty state
 - Icon overlay for remove
 
 ### After
+
 ```tsx
 <PhotoGrid
   photos={photos}
@@ -180,6 +199,7 @@
   colors={colors}
 />
 ```
+
 - Improved empty state with large icon
 - Photo count badge (X/5)
 - Styled remove button (red circle)
@@ -189,6 +209,7 @@
 ## Save Button
 
 ### Before
+
 ```tsx
 <Button
   title="Salvar Evolução"
@@ -197,11 +218,13 @@
   style={styles.saveButton}
 />
 ```
+
 - Standard button component
 - No disabled state feedback
 - No context hint
 
 ### After
+
 ```tsx
 <TouchableOpacity
   style={[
@@ -230,6 +253,7 @@
   Preencha pelo menos um campo do SOAP para salvar
 </Text>
 ```
+
 - Visual disabled state
 - Loading state with spinner
 - Icon + text for normal state
@@ -237,13 +261,13 @@
 
 ## Key Metrics
 
-| Metric | Before | After | Change |
-|--------|--------|-------|--------|
-| Visual Feedback Elements | 3 | 12+ | +300% |
-| Color Variants | 4 basic | 4 gradients + light variants | +100% |
-| Progress Indicators | 0 | 3 (ring, bar, badges) | New |
-| Input Enhancements | 0 | 4 (focus, counter, clear, checkmark) | New |
-| Card Border Radius | 16px | 20px (main), 16px (small) | More cohesive |
-| Shadow Levels | 1 | 3 (subtle, medium, strong) | Better depth |
-| Touch Target Sizes | Mixed | Consistent 44px minimum | Better UX |
-| Empty States | Basic icon | Icon + text + background | More helpful |
+| Metric                   | Before     | After                                | Change        |
+| ------------------------ | ---------- | ------------------------------------ | ------------- |
+| Visual Feedback Elements | 3          | 12+                                  | +300%         |
+| Color Variants           | 4 basic    | 4 gradients + light variants         | +100%         |
+| Progress Indicators      | 0          | 3 (ring, bar, badges)                | New           |
+| Input Enhancements       | 0          | 4 (focus, counter, clear, checkmark) | New           |
+| Card Border Radius       | 16px       | 20px (main), 16px (small)            | More cohesive |
+| Shadow Levels            | 1          | 3 (subtle, medium, strong)           | Better depth  |
+| Touch Target Sizes       | Mixed      | Consistent 44px minimum              | Better UX     |
+| Empty States             | Basic icon | Icon + text + background             | More helpful  |

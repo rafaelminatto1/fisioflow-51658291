@@ -17,22 +17,22 @@ import { ptBR } from "date-fns/locale";
  * @returns Formatted date string
  */
 export function useMemoizedDateFormat(
-	date: Date | null | undefined,
-	formatStr: string,
-	locale: Locale = ptBR,
+  date: Date | null | undefined,
+  formatStr: string,
+  locale: Locale = ptBR,
 ): string {
-	return useMemo(() => {
-		if (!date || !(date instanceof Date) || isNaN(date.getTime())) {
-			return "";
-		}
+  return useMemo(() => {
+    if (!date || !(date instanceof Date) || isNaN(date.getTime())) {
+      return "";
+    }
 
-		try {
-			return format(date, formatStr, { locale });
-		} catch (error) {
-			console.error("Error formatting date:", error);
-			return "";
-		}
-	}, [date?.getTime(), formatStr, locale]);
+    try {
+      return format(date, formatStr, { locale });
+    } catch (error) {
+      console.error("Error formatting date:", error);
+      return "";
+    }
+  }, [date?.getTime(), formatStr, locale]);
 }
 
 /**
@@ -45,22 +45,22 @@ export function useMemoizedDateFormat(
  * @returns Array of formatted date strings
  */
 export function useMemoizedDateFormats(
-	dates: (Date | null | undefined)[],
-	formatStr: string,
-	locale: Locale = ptBR,
+  dates: (Date | null | undefined)[],
+  formatStr: string,
+  locale: Locale = ptBR,
 ): string[] {
-	return useMemo(() => {
-		return dates.map((date) => {
-			if (!date || !(date instanceof Date) || isNaN(date.getTime())) {
-				return "";
-			}
+  return useMemo(() => {
+    return dates.map((date) => {
+      if (!date || !(date instanceof Date) || isNaN(date.getTime())) {
+        return "";
+      }
 
-			try {
-				return format(date, formatStr, { locale });
-			} catch (error) {
-				console.error("Error formatting date:", error);
-				return "";
-			}
-		});
-	}, [dates.map((d) => d?.getTime()).join(","), formatStr, locale]);
+      try {
+        return format(date, formatStr, { locale });
+      } catch (error) {
+        console.error("Error formatting date:", error);
+        return "";
+      }
+    });
+  }, [dates.map((d) => d?.getTime()).join(","), formatStr, locale]);
 }

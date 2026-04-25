@@ -7,17 +7,20 @@ Virtualization infrastructure has been implemented for the Schedule calendar vie
 ## Components
 
 ### VirtualizedCalendarGrid
+
 Located: `src/components/schedule/virtualized/VirtualizedCalendarGrid.tsx`
 
 Renders only visible time slots for optimal performance. Automatically enables virtualization only when slot count exceeds 50.
 
 **Features:**
+
 - Only renders visible time slots (plus overscan buffer)
-- Uses `transform: translateY()` for optimal performance  
+- Uses `transform: translateY()` for optimal performance
 - Maintains smooth scrolling at 60fps
 - Automatic threshold detection (>50 slots)
 
 **Usage Example:**
+
 ```typescript
 <VirtualizedCalendarGrid
   timeSlots={timeSlots}
@@ -31,17 +34,20 @@ Renders only visible time slots for optimal performance. Automatically enables v
 ```
 
 ### VirtualizedAppointmentList
+
 Located: `src/components/schedule/virtualized/VirtualizedAppointmentList.tsx`
 
 Renders only visible appointment cards in list views. Automatically enables virtualization only when appointment count exceeds 50.
 
 **Features:**
+
 - Custom virtualization for appointment cards
 - Automatic threshold detection (>50 appointments)
 - Smooth scrolling performance
 - Preserves all appointment card functionality
 
 **Usage Example:**
+
 ```typescript
 <VirtualizedAppointmentList
   appointments={appointments}
@@ -54,6 +60,7 @@ Renders only visible appointment cards in list views. Automatically enables virt
 ## Current Integration Status
 
 ### CalendarView (src/components/schedule/CalendarView.tsx)
+
 - Delegates rendering to CalendarDayView, CalendarWeekView, CalendarMonthView
 - **Integrated in CalendarDayView and CalendarWeekViewDndKit**
 - Virtualization activates when slot count exceeds 50 (configurable threshold)
@@ -61,7 +68,9 @@ Renders only visible appointment cards in list views. Automatically enables virt
 - Correctly handles appointments spanning multiple rows via overscan and absolute positioning
 
 ### When to Integrate (DONE)
+
 Virtualization has been integrated to ensure scalability when:
+
 1. Business hours are extended significantly
 2. Slot duration is reduced
 3. Performance needs to be maintained with large numbers of appointments
@@ -71,6 +80,7 @@ Virtualization has been integrated to ensure scalability when:
 To integrate VirtualizedCalendarGrid into CalendarDayView or CalendarWeekView:
 
 1. **Wrap the time slot rendering section:**
+
 ```typescript
 // Before:
 {timeSlots.map((time, index) => (
@@ -108,10 +118,12 @@ To integrate VirtualizedCalendarGrid into CalendarDayView or CalendarWeekView:
 ## Testing
 
 Tests are located in:
+
 - `src/components/schedule/virtualized/__tests__/VirtualizedCalendarGrid.test.tsx`
 - `src/components/schedule/virtualized/__tests__/VirtualizedAppointmentList.test.tsx`
 
 Run tests with:
+
 ```bash
 npm run test -- virtualized
 ```

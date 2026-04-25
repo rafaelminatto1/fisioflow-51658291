@@ -22,105 +22,96 @@ import type { CreateCycleInput } from "@/hooks/evolution/useTreatmentCycles";
 
 // Lazy load heavy components
 const LazySessionExercisesPanel = lazy(() =>
-	import("@/components/evolution/SessionExercisesPanel").then((m) => ({
-		default: m.SessionExercisesPanel,
-	})),
+  import("@/components/evolution/SessionExercisesPanel").then((m) => ({
+    default: m.SessionExercisesPanel,
+  })),
 );
 
 interface TratamentoTabProps {
-	sessionExercises: SessionExercise[];
-	onExercisesChange: (exercises: SessionExercise[]) => void;
-	goals: Goal[];
-	pathologies: Pathology[];
-	patientId?: string;
-	currentSessionCount?: number;
+  sessionExercises: SessionExercise[];
+  onExercisesChange: (exercises: SessionExercise[]) => void;
+  goals: Goal[];
+  pathologies: Pathology[];
+  patientId?: string;
+  currentSessionCount?: number;
 }
 
 export function TratamentoTab({
-	sessionExercises,
-	onExercisesChange,
-	goals,
-	pathologies,
-	patientId = "",
-	currentSessionCount,
+  sessionExercises,
+  onExercisesChange,
+  goals,
+  pathologies,
+  patientId = "",
+  currentSessionCount,
 }: TratamentoTabProps) {
-	const [modalOpen, setModalOpen] = useState(false);
-	const [editingCycle, setEditingCycle] = useState<TreatmentCycle | null>(null);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [editingCycle, setEditingCycle] = useState<TreatmentCycle | null>(null);
 
-	const {
-		cycles,
-		isLoading,
-		createCycle,
-		isCreating,
-		updateCycle,
-		isUpdating,
-	} = useTreatmentCycles(patientId);
-	const { toast } = useToast();
+  const { cycles, isLoading, createCycle, isCreating, updateCycle, isUpdating } =
+    useTreatmentCycles(patientId);
+  const { toast } = useToast();
 
-	const handleOpenCreate = () => {
-		setEditingCycle(null);
-		setModalOpen(true);
-	};
+  const handleOpenCreate = () => {
+    setEditingCycle(null);
+    setModalOpen(true);
+  };
 
-	const handleOpenEdit = (cycle: TreatmentCycle) => {
-		setEditingCycle(cycle);
-		setModalOpen(true);
-	};
+  const handleOpenEdit = (cycle: TreatmentCycle) => {
+    setEditingCycle(cycle);
+    setModalOpen(true);
+  };
 
-	const handleSubmit = async (data: CreateCycleInput) => {
-		try {
-			if (editingCycle) {
-				await updateCycle({ id: editingCycle.id, data });
-				toast({ title: "Ciclo atualizado com sucesso" });
-			} else {
-				await createCycle({ ...data, patient_id: patientId });
-				toast({ title: "Ciclo criado com sucesso" });
-			}
-		} catch {
-			toast({
-				title: "Erro ao salvar ciclo",
-				description: "Tente novamente.",
-				variant: "destructive",
-			});
-			throw new Error("save failed"); // re-throw so modal stays open
-		}
-	};
+  const handleSubmit = async (data: CreateCycleInput) => {
+    try {
+      if (editingCycle) {
+        await updateCycle({ id: editingCycle.id, data });
+        toast({ title: "Ciclo atualizado com sucesso" });
+      } else {
+        await createCycle({ ...data, patient_id: patientId });
+        toast({ title: "Ciclo criado com sucesso" });
+      }
+    } catch {
+      toast({
+        title: "Erro ao salvar ciclo",
+        description: "Tente novamente.",
+        variant: "destructive",
+      });
+      throw new Error("save failed"); // re-throw so modal stays open
+    }
+  };
 
-	return (
-		<div className="mt-4 space-y-4">
-			<Suspense fallback={<LoadingSkeleton type="card" />}>
-				<LazySessionExercisesPanel
-					exercises={sessionExercises}
-					onChange={onExercisesChange}
-				/>
-			</Suspense>
+  return (
+    <div className="mt-4 space-y-4">
+      <Suspense fallback={<LoadingSkeleton type="card" />}>
+        <LazySessionExercisesPanel exercises={sessionExercises} onChange={onExercisesChange} />
+      </Suspense>
 
-			<GoalsTracker goals={goals} />
-			<PathologyStatus pathologies={pathologies} />
+      <GoalsTracker goals={goals} />
+      <PathologyStatus pathologies={pathologies} />
 
-			{/* Treatment Cycles - Linear-inspired sprint/cycle tracking */}
-			{!isLoading && (
-				<TreatmentCycles
-					patientId={patientId}
-					cycles={cycles}
-					currentSessionCount={currentSessionCount}
-					onCreateCycle={handleOpenCreate}
-					onEditCycle={handleOpenEdit}
-				/>
-			)}
-			{isLoading && <LoadingSkeleton type="card" />}
+      {/* Treatment Cycles - Linear-inspired sprint/cycle tracking */}
+      {!isLoading && (
+        <TreatmentCycles
+          patientId={patientId}
+          cycles={cycles}
+          currentSessionCount={currentSessionCount}
+          onCreateCycle={handleOpenCreate}
+          onEditCycle={handleOpenEdit}
+        />
+      )}
+      {isLoading && <LoadingSkeleton type="card" />}
 
-			{/* Create / Edit Modal */}
-			<TreatmentCycleFormModal
-				open={modalOpen}
-				onOpenChange={(open) => {
-					setModalOpen(open);
-					if (!open) setEditingCycle(null);
-				}}
-				cycle={editingCycle}
-				onSubmit={handleSubmit}
-				isSaving={isCreating || isUpdating}
-			/>
-		</div>
-	);
+      {/* Create / Edit Modal */}
+      <TreatmentCycleFormModal
+        open={modalOpen}
+        onOpenChange={(open) => {
+          setModalOpen(open);
+          if (!open) setEditingCycle(null);
+        }}
+        cycle={editingCycle}
+        onSubmit={handleSubmit}
+        isSaving={isCreating || isUpdating}
+      />
+    </div>
+  );
 }

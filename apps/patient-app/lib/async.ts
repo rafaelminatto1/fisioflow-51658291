@@ -3,31 +3,28 @@
  * Helper functions for handling async operations with better error handling
  */
 
-
 /**
  * Result type for operations that can fail
  */
 
-import { Alert } from 'react-native';
-import { log } from './logger';
+import { Alert } from "react-native";
+import { log } from "./logger";
 
-export type Result<T, E = Error> =
-  | { success: true; data: T }
-  | { success: false; error: E };
+export type Result<T, E = Error> = { success: true; data: T } | { success: false; error: E };
 
 /**
  * Wrap an async operation in a try-catch and return a Result
  */
 export async function asyncResult<T>(
   operation: () => Promise<T>,
-  context?: string
+  context?: string,
 ): Promise<Result<T>> {
   try {
     const data = await operation();
     return { success: true, data };
   } catch (error) {
     if (context) {
-      log.error(context, 'Operation failed', error);
+      log.error(context, "Operation failed", error);
     }
     return { success: false, error: error as Error };
   }
@@ -38,12 +35,12 @@ export async function asyncResult<T>(
  */
 export async function safeAsync<T>(
   operation: () => Promise<T>,
-  defaultValue: T | null = null
+  defaultValue: T | null = null,
 ): Promise<T | null> {
   try {
     return await operation();
   } catch (error) {
-    log.error('SAFE_ASYNC', 'Operation failed', error);
+    log.error("SAFE_ASYNC", "Operation failed", error);
     return defaultValue;
   }
 }
@@ -58,14 +55,9 @@ export async function withRetry<T>(
     delay?: number;
     backoff?: boolean;
     onRetry?: (attempt: number, error: Error) => void;
-  } = {}
+  } = {},
 ): Promise<T> {
-  const {
-    maxRetries = 3,
-    delay = 1000,
-    backoff = true,
-    onRetry,
-  } = options;
+  const { maxRetries = 3, delay = 1000, backoff = true, onRetry } = options;
 
   let lastError: Error | undefined;
 
@@ -74,12 +66,12 @@ export async function withRetry<T>(
       return await operation();
     } catch (error) {
       lastError = error as Error;
-      log.warn('RETRY', `Attempt ${attempt}/${maxRetries} failed`, error);
+      log.warn("RETRY", `Attempt ${attempt}/${maxRetries} failed`, error);
 
       if (attempt < maxRetries) {
         onRetry?.(attempt, lastError);
         const waitTime = backoff ? delay * attempt : delay;
-        await new Promise(resolve => setTimeout(resolve, waitTime));
+        await new Promise((resolve) => setTimeout(resolve, waitTime));
       }
     }
   }
@@ -93,33 +85,25 @@ export async function withRetry<T>(
 export async function withTimeout<T>(
   operation: () => Promise<T>,
   timeoutMs: number,
-  timeoutMessage: string = 'Operation timed out'
+  timeoutMessage: string = "Operation timed out",
 ): Promise<T> {
   return Promise.race([
     operation(),
-    new Promise<T>((_, reject) =>
-      setTimeout(() => reject(new Error(timeoutMessage)), timeoutMs)
-    ),
+    new Promise<T>((_, reject) => setTimeout(() => reject(new Error(timeoutMessage)), timeoutMs)),
   ]);
 }
 
 /**
  * Execute multiple operations in parallel and return all results
  */
-export async function parallel<T>(
-  operations: (() => Promise<T>)[]
-): Promise<Result<T>[]> {
-  return Promise.all(
-    operations.map(op => asyncResult(op))
-  );
+export async function parallel<T>(operations: (() => Promise<T>)[]): Promise<Result<T>[]> {
+  return Promise.all(operations.map((op) => asyncResult(op)));
 }
 
 /**
  * Execute operations sequentially, stopping on first error
  */
-export async function sequence<T>(
-  operations: (() => Promise<T>)[]
-): Promise<Result<T>[]> {
+export async function sequence<T>(operations: (() => Promise<T>)[]): Promise<Result<T>[]> {
   const results: Result<T>[] = [];
 
   for (const operation of operations) {
@@ -139,7 +123,7 @@ export async function sequence<T>(
 export async function batch<T>(
   items: T[],
   processor: (item: T) => Promise<any>,
-  concurrency: number = 5
+  concurrency: number = 5,
 ): Promise<void> {
   const batches: T[][] = [];
   for (let i = 0; i < items.length; i += concurrency) {
@@ -156,7 +140,7 @@ export async function batch<T>(
  */
 export function debounce<T extends (...args: any[]) => any>(
   func: T,
-  waitMs: number
+  waitMs: number,
 ): (...args: Parameters<T>) => void {
   let timeout: ReturnType<typeof setTimeout> | null = null;
 
@@ -178,7 +162,7 @@ export function debounce<T extends (...args: any[]) => any>(
  */
 export function throttle<T extends (...args: any[]) => any>(
   func: T,
-  limitMs: number
+  limitMs: number,
 ): (...args: Parameters<T>) => void {
   let inThrottle: boolean;
 
@@ -201,11 +185,11 @@ export async function withLoading<T>(
     successMessage?: string;
     errorMessage?: string;
     showErrorAlert?: boolean;
-  } = {}
+  } = {},
 ): Promise<T | null> {
   const {
     successMessage,
-    errorMessage = 'Ocorreu um erro. Tente novamente.',
+    errorMessage = "Ocorreu um erro. Tente novamente.",
     showErrorAlert = true,
   } = options;
 
@@ -215,16 +199,16 @@ export async function withLoading<T>(
     const result = await operation();
 
     if (successMessage) {
-      Alert.alert('Sucesso', successMessage);
+      Alert.alert("Sucesso", successMessage);
     }
 
     return result;
   } catch (error) {
-    log.error('WITH_LOADING', 'Operation failed', error);
+    log.error("WITH_LOADING", "Operation failed", error);
 
     if (showErrorAlert) {
       const message = (error as any)?.message || errorMessage;
-      Alert.alert('Erro', message);
+      Alert.alert("Erro", message);
     }
 
     return null;
@@ -242,13 +226,9 @@ export async function poll<T>(
     interval?: number;
     timeout?: number;
     skipFirst?: boolean;
-  } = {}
+  } = {},
 ): Promise<T | null> {
-  const {
-    interval = 1000,
-    timeout = 30000,
-    skipFirst = false,
-  } = options;
+  const { interval = 1000, timeout = 30000, skipFirst = false } = options;
 
   const startTime = Date.now();
 
@@ -261,7 +241,7 @@ export async function poll<T>(
   }
 
   while (Date.now() - startTime < timeout) {
-    await new Promise(resolve => setTimeout(resolve, interval));
+    await new Promise((resolve) => setTimeout(resolve, interval));
 
     const result = await condition();
     if (result) {
@@ -276,7 +256,7 @@ export async function poll<T>(
  * Create a promise that resolves after a delay
  */
 export function delay(ms: number): Promise<void> {
-  return new Promise(resolve => setTimeout(resolve, ms));
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 /**
@@ -284,7 +264,7 @@ export function delay(ms: number): Promise<void> {
  */
 export function memoizeAsync<T extends (...args: any[]) => Promise<any>>(
   func: T,
-  keyGenerator?: (...args: Parameters<T>) => string
+  keyGenerator?: (...args: Parameters<T>) => string,
 ): T {
   const cache = new Map<string, Promise<ReturnType<T>>>();
 

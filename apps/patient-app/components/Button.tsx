@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 
 import {
   TouchableOpacity,
@@ -9,14 +9,14 @@ import {
   ViewStyle,
   TextStyle,
   StyleProp,
-} from 'react-native';
-import { useColors } from '@/hooks/useColorScheme';
+} from "react-native";
+import { useColors } from "@/hooks/useColorScheme";
 
 interface ButtonProps {
   title: string;
   onPress: () => void;
-  variant?: 'primary' | 'secondary' | 'outline' | 'ghost';
-  size?: 'sm' | 'md' | 'lg';
+  variant?: "primary" | "secondary" | "outline" | "ghost";
+  size?: "sm" | "md" | "lg";
   disabled?: boolean;
   loading?: boolean;
   style?: StyleProp<ViewStyle>;
@@ -27,8 +27,8 @@ interface ButtonProps {
 export function Button({
   title,
   onPress,
-  variant = 'primary',
-  size = 'md',
+  variant = "primary",
+  size = "md",
   disabled = false,
   loading = false,
   style,
@@ -40,13 +40,13 @@ export function Button({
   const getBackgroundColor = () => {
     if (disabled) return colors.border;
     switch (variant) {
-      case 'primary':
+      case "primary":
         return colors.primary;
-      case 'secondary':
+      case "secondary":
         return colors.secondary;
-      case 'outline':
-      case 'ghost':
-        return 'transparent';
+      case "outline":
+      case "ghost":
+        return "transparent";
       default:
         return colors.primary;
     }
@@ -55,28 +55,28 @@ export function Button({
   const getTextColor = () => {
     if (disabled) return colors.textMuted;
     switch (variant) {
-      case 'primary':
-      case 'secondary':
-        return '#FFFFFF';
-      case 'outline':
+      case "primary":
+      case "secondary":
+        return "#FFFFFF";
+      case "outline":
         return colors.primary;
-      case 'ghost':
+      case "ghost":
         return colors.text;
       default:
-        return '#FFFFFF';
+        return "#FFFFFF";
     }
   };
 
   const getBorderColor = () => {
-    if (variant === 'outline') return colors.primary;
-    return 'transparent';
+    if (variant === "outline") return colors.primary;
+    return "transparent";
   };
 
   const getPadding = () => {
     switch (size) {
-      case 'sm':
+      case "sm":
         return { paddingVertical: 8, paddingHorizontal: 16 };
-      case 'lg':
+      case "lg":
         return { paddingVertical: 16, paddingHorizontal: 32 };
       default:
         return { paddingVertical: 12, paddingHorizontal: 24 };
@@ -85,9 +85,9 @@ export function Button({
 
   const getFontSize = () => {
     switch (size) {
-      case 'sm':
+      case "sm":
         return 14;
-      case 'lg':
+      case "lg":
         return 18;
       default:
         return 16;
@@ -103,7 +103,7 @@ export function Button({
         {
           backgroundColor: getBackgroundColor(),
           borderColor: getBorderColor(),
-          borderWidth: variant === 'outline' ? 2 : 0,
+          borderWidth: variant === "outline" ? 2 : 0,
           ...getPadding(),
         },
         style,
@@ -136,16 +136,16 @@ export function Button({
 const styles = StyleSheet.create({
   button: {
     borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexDirection: 'row',
+    alignItems: "center",
+    justifyContent: "center",
+    flexDirection: "row",
   },
   text: {
-    fontWeight: '600',
+    fontWeight: "600",
   },
   content: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
   },
 });

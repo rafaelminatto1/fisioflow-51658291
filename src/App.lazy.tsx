@@ -23,9 +23,7 @@ export const EventosAnalytics = lazy(() => import("@/pages/EventosAnalytics"));
 
 // Exercícios e Fisioterapia
 export const Exercises = lazy(() => import("@/pages/Exercises"));
-export const ExerciseLibraryExpanded = lazy(
-	() => import("@/pages/ExerciseLibraryExpanded"),
-);
+export const ExerciseLibraryExpanded = lazy(() => import("@/pages/ExerciseLibraryExpanded"));
 export const PhysiotherapyHub = lazy(() => import("@/pages/PhysiotherapyHub"));
 // Financeiro
 export const Financial = lazy(() => import("@/pages/Financial"));
@@ -41,22 +39,16 @@ export const SmartAI = lazy(() => import("@/pages/SmartAI"));
 // Relatórios e Analytics
 export const Reports = lazy(() => import("@/pages/Reports"));
 export const AuditLogs = lazy(() => import("@/pages/AuditLogs"));
-export const SecurityMonitoring = lazy(
-	() => import("@/pages/SecurityMonitoring"),
-);
+export const SecurityMonitoring = lazy(() => import("@/pages/SecurityMonitoring"));
 
 // Administração
 export const AdminCRUD = lazy(() => import("@/pages/AdminCRUD"));
 export const UserManagement = lazy(() => import("@/pages/UserManagement"));
-export const OrganizationSettings = lazy(
-	() => import("@/pages/OrganizationSettings"),
-);
+export const OrganizationSettings = lazy(() => import("@/pages/OrganizationSettings"));
 
 // Configurações
 export const Settings = lazy(() => import("@/pages/Settings"));
-export const Profile = lazy(() =>
-	import("@/pages/Profile").then((m) => ({ default: m.Profile })),
-);
+export const Profile = lazy(() => import("@/pages/Profile").then((m) => ({ default: m.Profile })));
 
 // Outros
 export const Partner = lazy(() => import("@/pages/Partner"));

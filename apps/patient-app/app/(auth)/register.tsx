@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState } from "react";
 
 import {
   View,
@@ -9,24 +9,24 @@ import {
   ScrollView,
   TouchableOpacity,
   Alert,
-} from 'react-native';
-import { router } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Button, Input, PasswordStrength } from '@/components';
-import { useColors } from '@/hooks/useColorScheme';
-import { signUp } from '@/services/authService';
-import { validators } from '@/lib/validation';
-import { log } from '@/lib/logger';
+} from "react-native";
+import { router } from "expo-router";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { Button, Input, PasswordStrength } from "@/components";
+import { useColors } from "@/hooks/useColorScheme";
+import { signUp } from "@/services/authService";
+import { validators } from "@/lib/validation";
+import { log } from "@/lib/logger";
 
 export default function RegisterScreen() {
   const colors = useColors();
 
   const [formData, setFormData] = useState({
-    fullName: '',
-    email: '',
-    password: '',
-    confirmPassword: '',
-    phone: '',
+    fullName: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+    phone: "",
     acceptTerms: false,
   });
 
@@ -52,14 +52,14 @@ export default function RegisterScreen() {
 
     // Validate confirm password
     if (!formData.confirmPassword) {
-      newErrors.confirmPassword = 'Confirme sua senha';
+      newErrors.confirmPassword = "Confirme sua senha";
     } else if (formData.password !== formData.confirmPassword) {
-      newErrors.confirmPassword = 'As senhas não coincidem';
+      newErrors.confirmPassword = "As senhas não coincidem";
     }
 
     // Validate terms
     if (!formData.acceptTerms) {
-      newErrors.acceptTerms = 'Você deve aceitar os termos de uso';
+      newErrors.acceptTerms = "Você deve aceitar os termos de uso";
     }
 
     setErrors(newErrors);
@@ -80,36 +80,36 @@ export default function RegisterScreen() {
       });
 
       if (!result.success) {
-        throw result.error || new Error('Erro ao criar conta');
+        throw result.error || new Error("Erro ao criar conta");
       }
 
       Alert.alert(
-        'Conta criada!',
-        'Sua conta foi criada com sucesso. Agora você pode vincular seu perfil ao seu fisioterapeuta.',
+        "Conta criada!",
+        "Sua conta foi criada com sucesso. Agora você pode vincular seu perfil ao seu fisioterapeuta.",
         [
           {
-            text: 'Continuar',
-            onPress: () => router.replace('/(auth)/link-professional'),
+            text: "Continuar",
+            onPress: () => router.replace("/(auth)/link-professional"),
           },
-        ]
+        ],
       );
     } catch (error: any) {
-      log.error('Registration error:', error);
+      log.error("Registration error:", error);
 
-      const message = String(error?.message || '');
-      let errorMessage = 'Erro ao criar conta. Tente novamente.';
+      const message = String(error?.message || "");
+      let errorMessage = "Erro ao criar conta. Tente novamente.";
 
-      if (message.toLowerCase().includes('already')) {
-        errorMessage = 'Este email já está cadastrado. Faça login.';
-      } else if (message.toLowerCase().includes('email')) {
-        errorMessage = 'Email inválido.';
-      } else if (message.toLowerCase().includes('password')) {
-        errorMessage = 'A senha é muito fraca. Use pelo menos 8 caracteres.';
-      } else if (message.toLowerCase().includes('network')) {
-        errorMessage = 'Erro de conexão. Verifique sua internet.';
+      if (message.toLowerCase().includes("already")) {
+        errorMessage = "Este email já está cadastrado. Faça login.";
+      } else if (message.toLowerCase().includes("email")) {
+        errorMessage = "Email inválido.";
+      } else if (message.toLowerCase().includes("password")) {
+        errorMessage = "A senha é muito fraca. Use pelo menos 8 caracteres.";
+      } else if (message.toLowerCase().includes("network")) {
+        errorMessage = "Erro de conexão. Verifique sua internet.";
       }
 
-      Alert.alert('Erro', errorMessage);
+      Alert.alert("Erro", errorMessage);
     } finally {
       setLoading(false);
     }
@@ -118,7 +118,7 @@ export default function RegisterScreen() {
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={styles.keyboardView}
       >
         <ScrollView
@@ -145,7 +145,7 @@ export default function RegisterScreen() {
               value={formData.fullName}
               onChangeText={(text) => {
                 setFormData({ ...formData, fullName: text });
-                setErrors({ ...errors, fullName: '' });
+                setErrors({ ...errors, fullName: "" });
               }}
               error={errors.fullName}
               autoCapitalize="words"
@@ -160,7 +160,7 @@ export default function RegisterScreen() {
               value={formData.email}
               onChangeText={(text) => {
                 setFormData({ ...formData, email: text });
-                setErrors({ ...errors, email: '' });
+                setErrors({ ...errors, email: "" });
               }}
               error={errors.email}
               keyboardType="email-address"
@@ -177,7 +177,7 @@ export default function RegisterScreen() {
               value={formData.phone}
               onChangeText={(text) => {
                 setFormData({ ...formData, phone: text });
-                setErrors({ ...errors, phone: '' });
+                setErrors({ ...errors, phone: "" });
               }}
               error={errors.phone}
               keyboardType="phone-pad"
@@ -192,13 +192,11 @@ export default function RegisterScreen() {
               value={formData.password}
               onChangeText={(text) => {
                 setFormData({ ...formData, password: text });
-                setErrors({ ...errors, password: '' });
+                setErrors({ ...errors, password: "" });
               }}
               error={errors.password}
               secureTextEntry={!showPassword}
-              rightIcon={
-                showPassword ? 'eye-outline' : 'eye-off-outline'
-              }
+              rightIcon={showPassword ? "eye-outline" : "eye-off-outline"}
               onRightIconPress={() => setShowPassword(!showPassword)}
               leftIcon="lock-closed-outline"
               testID="password-input"
@@ -213,13 +211,11 @@ export default function RegisterScreen() {
               value={formData.confirmPassword}
               onChangeText={(text) => {
                 setFormData({ ...formData, confirmPassword: text });
-                setErrors({ ...errors, confirmPassword: '' });
+                setErrors({ ...errors, confirmPassword: "" });
               }}
               error={errors.confirmPassword}
               secureTextEntry={!showConfirmPassword}
-              rightIcon={
-                showConfirmPassword ? 'eye-outline' : 'eye-off-outline'
-              }
+              rightIcon={showConfirmPassword ? "eye-outline" : "eye-off-outline"}
               onRightIconPress={() => setShowConfirmPassword(!showConfirmPassword)}
               leftIcon="lock-closed-outline"
               testID="confirm-password-input"
@@ -229,30 +225,23 @@ export default function RegisterScreen() {
             {/* Terms */}
             <TouchableOpacity
               style={styles.termsContainer}
-              onPress={() =>
-                setFormData({ ...formData, acceptTerms: !formData.acceptTerms })
-              }
+              onPress={() => setFormData({ ...formData, acceptTerms: !formData.acceptTerms })}
             >
               <View
                 style={[
                   styles.checkbox,
                   {
                     borderColor: errors.acceptTerms ? colors.error : colors.border,
-                    backgroundColor: formData.acceptTerms ? colors.primary : 'transparent',
+                    backgroundColor: formData.acceptTerms ? colors.primary : "transparent",
                   },
                 ]}
               >
-                {formData.acceptTerms && (
-                  <Text style={styles.checkmark}>✓</Text>
-                )}
+                {formData.acceptTerms && <Text style={styles.checkmark}>✓</Text>}
               </View>
               <View style={styles.termsTextContainer}>
                 <Text style={[styles.termsText, { color: colors.text }]}>
-                  Eu li e aceito os{' '}
-                  <Text style={[styles.termsLink, { color: colors.primary }]}>
-                    Termos de Uso
-                  </Text>{' '}
-                  e{' '}
+                  Eu li e aceito os{" "}
+                  <Text style={[styles.termsLink, { color: colors.primary }]}>Termos de Uso</Text> e{" "}
                   <Text style={[styles.termsLink, { color: colors.primary }]}>
                     Política de Privacidade
                   </Text>
@@ -261,9 +250,7 @@ export default function RegisterScreen() {
             </TouchableOpacity>
 
             {errors.acceptTerms && (
-              <Text style={[styles.errorText, { color: colors.error }]}>
-                {errors.acceptTerms}
-              </Text>
+              <Text style={[styles.errorText, { color: colors.error }]}>{errors.acceptTerms}</Text>
             )}
 
             <Button
@@ -278,9 +265,7 @@ export default function RegisterScreen() {
                 Já tem uma conta?
               </Text>
               <TouchableOpacity onPress={() => router.back()}>
-                <Text style={[styles.loginLink, { color: colors.primary }]}>
-                  Entrar
-                </Text>
+                <Text style={[styles.loginLink, { color: colors.primary }]}>Entrar</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -300,40 +285,40 @@ const styles = StyleSheet.create({
   scrollContent: {
     flexGrow: 1,
     padding: 24,
-    justifyContent: 'center',
+    justifyContent: "center",
   },
   header: {
-    alignItems: 'center',
+    alignItems: "center",
     marginBottom: 32,
   },
   logoPlaceholder: {
     width: 80,
     height: 80,
     borderRadius: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     marginBottom: 16,
   },
   logoText: {
     fontSize: 32,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
+    fontWeight: "bold",
+    color: "#FFFFFF",
   },
   title: {
     fontSize: 28,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     marginBottom: 4,
   },
   subtitle: {
     fontSize: 16,
-    textAlign: 'center',
+    textAlign: "center",
   },
   form: {
-    width: '100%',
+    width: "100%",
   },
   termsContainer: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
+    flexDirection: "row",
+    alignItems: "flex-start",
     marginVertical: 16,
   },
   checkbox: {
@@ -341,14 +326,14 @@ const styles = StyleSheet.create({
     height: 24,
     borderRadius: 6,
     borderWidth: 2,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     marginRight: 12,
   },
   checkmark: {
-    color: '#FFFFFF',
+    color: "#FFFFFF",
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   termsTextContainer: {
     flex: 1,
@@ -358,8 +343,8 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
   termsLink: {
-    textDecorationLine: 'underline',
-    fontWeight: '600',
+    textDecorationLine: "underline",
+    fontWeight: "600",
   },
   errorText: {
     fontSize: 12,
@@ -371,9 +356,9 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   loginContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
     marginTop: 24,
     gap: 4,
   },
@@ -382,6 +367,6 @@ const styles = StyleSheet.create({
   },
   loginLink: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: "600",
   },
 });

@@ -16,22 +16,24 @@ O FisioFlow precisa oferecer videochamada para consultas de telemedicina. Hoje:
 
 ## Opções avaliadas
 
-| Opção | Custo/mês (10 consultas × 1h) | Maturidade | Integração stack | LGPD |
-|---|---|---|---|---|
-| Manter Jitsi público | R$ 0 | alta | zero | sem BAA/DPA |
-| Cloudflare Realtime SFU (low-level) | R$ 0 (sempre, até 1000GB/mês) | média (beta→GA) | nativa | DPA CF ✅ |
-| Cloudflare RealtimeKit (high-level) | R$ 0 hoje (Beta); ~R$ 12–42 pós-GA | média (Beta) | nativa | DPA CF ✅ |
-| LiveKit Cloud | R$ 0 (free tier 83h/mês) a R$ 90–360 escalando | alta | externa | BAA opcional |
-| Daily.co | R$ 0 (free 10k min) a pago | alta | externa | BAA |
-| Zoom Video SDK | R$ 500+/mês | muito alta | externa | BAA |
-| Agora | R$ 0 free tier, depois $/min | alta | externa | OK |
-| Twilio Programmable Video | — | **descontinuado 2024** | — | — |
+| Opção                               | Custo/mês (10 consultas × 1h)                  | Maturidade             | Integração stack | LGPD         |
+| ----------------------------------- | ---------------------------------------------- | ---------------------- | ---------------- | ------------ |
+| Manter Jitsi público                | R$ 0                                           | alta                   | zero             | sem BAA/DPA  |
+| Cloudflare Realtime SFU (low-level) | R$ 0 (sempre, até 1000GB/mês)                  | média (beta→GA)        | nativa           | DPA CF ✅    |
+| Cloudflare RealtimeKit (high-level) | R$ 0 hoje (Beta); ~R$ 12–42 pós-GA             | média (Beta)           | nativa           | DPA CF ✅    |
+| LiveKit Cloud                       | R$ 0 (free tier 83h/mês) a R$ 90–360 escalando | alta                   | externa          | BAA opcional |
+| Daily.co                            | R$ 0 (free 10k min) a pago                     | alta                   | externa          | BAA          |
+| Zoom Video SDK                      | R$ 500+/mês                                    | muito alta             | externa          | BAA          |
+| Agora                               | R$ 0 free tier, depois $/min                   | alta                   | externa          | OK           |
+| Twilio Programmable Video           | —                                              | **descontinuado 2024** | —                | —            |
 
 Pricing oficial consultado:
+
 - https://developers.cloudflare.com/realtime/realtimekit/pricing/
 - https://developers.cloudflare.com/realtime/sfu/pricing/
 
 Cloudflare RealtimeKit Beta: **grátis enquanto durar**. Pós-GA:
+
 - Audio/Video Participant: $0.002/min
 - Gravação (exportação): $0.010/min
 - Áudio-só: $0.0005/min
@@ -64,12 +66,14 @@ Cloudflare RealtimeKit Beta: **grátis enquanto durar**. Pós-GA:
 ## Consequências
 
 **Positivas:**
+
 - Stack 100% Cloudflare (reforça tese arquitetural do projeto)
 - Secrets gerenciáveis via `wrangler secret put`
 - Gravações já no R2 sem integração extra
 - Próximo incidente de vazamento impacta só um vendor
 
 **Negativas a mitigar:**
+
 - CF RealtimeKit ainda em Beta → roadmap depende de Cloudflare não mudar direção
 - Comunidade menor que LiveKit → menos Stack Overflow
 - Sem BAA HIPAA americano (irrelevante: operamos sob LGPD no Brasil)

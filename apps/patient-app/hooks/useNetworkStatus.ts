@@ -3,8 +3,8 @@
  * Monitors network connection status
  */
 
-import { useState, useEffect } from 'react';
-import NetInfo from '@react-native-community/netinfo';
+import { useState, useEffect } from "react";
+import NetInfo from "@react-native-community/netinfo";
 
 export interface NetworkStatus {
   isConnected: boolean;
@@ -17,28 +17,28 @@ export function useNetworkStatus(): NetworkStatus {
   const [status, setStatus] = useState<NetworkStatus>({
     isConnected: true,
     isInternetReachable: true,
-    type: 'unknown',
+    type: "unknown",
     isWifi: false,
   });
 
   useEffect(() => {
     // Subscribe to network status updates
-    const unsubscribe = NetInfo.addEventListener(state => {
+    const unsubscribe = NetInfo.addEventListener((state) => {
       setStatus({
         isConnected: state.isConnected ?? false,
         isInternetReachable: state.isInternetReachable ?? false,
-        type: state.type || 'unknown',
-        isWifi: state.type === 'wifi',
+        type: state.type || "unknown",
+        isWifi: state.type === "wifi",
       });
     });
 
     // Get initial status
-    NetInfo.fetch().then(state => {
+    NetInfo.fetch().then((state) => {
       setStatus({
         isConnected: state.isConnected ?? false,
         isInternetReachable: state.isInternetReachable ?? false,
-        type: state.type || 'unknown',
-        isWifi: state.type === 'wifi',
+        type: state.type || "unknown",
+        isWifi: state.type === "wifi",
       });
     });
 

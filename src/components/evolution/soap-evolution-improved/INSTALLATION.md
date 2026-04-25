@@ -35,6 +35,7 @@ The improved component uses the same dependencies as the original. Verify you ha
 ## Step 4: Test the Changes
 
 1. Start your development server:
+
    ```bash
    npm start
    # or
@@ -61,9 +62,9 @@ Edit the `SOAP_SECTIONS` object at the top of the file:
 ```typescript
 const SOAP_SECTIONS = {
   subjective: {
-    gradient: ['#YOUR_COLOR_1', '#YOUR_COLOR_2'],
-    color: '#YOUR_MAIN_COLOR',
-    lightColor: '#YOUR_LIGHT_COLOR',
+    gradient: ["#YOUR_COLOR_1", "#YOUR_COLOR_2"],
+    color: "#YOUR_MAIN_COLOR",
+    lightColor: "#YOUR_LIGHT_COLOR",
   },
   // ... other sections
 };
@@ -97,7 +98,7 @@ soapContainer: {
 **Fix**: Add the import at the top of the file:
 
 ```typescript
-import { ActivityIndicator } from 'react-native';
+import { ActivityIndicator } from "react-native";
 ```
 
 ### Issue: Progress ring not animating smoothly
@@ -115,7 +116,7 @@ Then replace the `ProgressRing` component with an SVG-based implementation.
 **Fix**: Ensure `Image` is imported:
 
 ```typescript
-import { Image } from 'react-native';
+import { Image } from "react-native";
 ```
 
 ### Issue: Type errors
@@ -144,5 +145,6 @@ Consider adding these for even better UX:
 ## Support
 
 For issues or questions, refer to:
+
 - Main README: `/home/rafael/antigravity/fisioflow/fisioflow-51658291/.agent/improved-soap-evolution/README.md`
 - Style Guide: `/home/rafael/antigravity/fisioflow/fisioflow-51658291/.agent/improved-soap-evolution/STYLE_GUIDE.md`

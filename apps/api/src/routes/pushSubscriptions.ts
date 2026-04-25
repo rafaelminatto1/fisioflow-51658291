@@ -1,7 +1,7 @@
-import { Hono } from 'hono';
-import type { Env } from '../types/env';
-import { requireAuth, type AuthVariables } from '../lib/auth';
-import { createPool } from '../lib/db';
+import { Hono } from "hono";
+import type { Env } from "../types/env";
+import { requireAuth, type AuthVariables } from "../lib/auth";
+import { createPool } from "../lib/db";
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 type Pool = ReturnType<typeof createPool>;
@@ -49,8 +49,8 @@ async function ensurePushSubscriptionsSchema(pool: Pool) {
   await pushSubscriptionsSchemaReady;
 }
 
-app.get('/', requireAuth, async (c) => {
-  const user = c.get('user');
+app.get("/", requireAuth, async (c) => {
+  const user = c.get("user");
   const pool = await createPool(c.env);
   const { userId, activeOnly } = c.req.query();
   const targetUser = userId || user.uid;
@@ -61,30 +61,34 @@ app.get('/', requireAuth, async (c) => {
   try {
     await ensurePushSubscriptionsSchema(pool);
 
-    const conditions = ['user_id = $1'];
+    const conditions = ["user_id = $1"];
     const params: unknown[] = [targetUser];
-    if (activeOnly === 'true') {
-      conditions.push('active = true');
+    if (activeOnly === "true") {
+      conditions.push("active = true");
     }
 
     const result = await pool.query(
       `
         SELECT *
         FROM push_subscriptions
-        WHERE ${conditions.join(' AND ')}
+        WHERE ${conditions.join(" AND ")}
         ORDER BY created_at DESC
       `,
       params,
     );
-    try { return c.json({ data: result.rows || result }); } catch  { return c.json({ data: [] }); }
+    try {
+      return c.json({ data: result.rows || result });
+    } catch {
+      return c.json({ data: [] });
+    }
   } catch (error) {
-    console.error('[PushSubscriptions/List] Error:', error);
+    console.error("[PushSubscriptions/List] Error:", error);
     return c.json({ data: [] });
   }
 });
 
-app.post('/', requireAuth, async (c) => {
-  const user = c.get('user');
+app.post("/", requireAuth, async (c) => {
+  const user = c.get("user");
   const pool = await createPool(c.env);
   try {
     await ensurePushSubscriptionsSchema(pool);
@@ -99,10 +103,11 @@ app.post('/', requireAuth, async (c) => {
       active?: boolean;
     };
     const deviceInfo = body.device_info ?? body.deviceInfo ?? null;
-    const organizationId = body.organization_id ?? body.organizationId ?? user.organizationId ?? null;
+    const organizationId =
+      body.organization_id ?? body.organizationId ?? user.organizationId ?? null;
 
     if (!body.endpoint) {
-      return c.json({ error: 'endpoint é obrigatório' }, 400);
+      return c.json({ error: "endpoint é obrigatório" }, 400);
     }
 
     const existing = await pool.query(
@@ -164,19 +169,19 @@ app.post('/', requireAuth, async (c) => {
     );
     return c.json({ data: result.rows[0] }, 201);
   } catch (error) {
-    console.error('[PushSubscriptions/Post] Error:', error);
-    return c.json({ error: 'Erro ao salvar assinatura push' }, 500);
+    console.error("[PushSubscriptions/Post] Error:", error);
+    return c.json({ error: "Erro ao salvar assinatura push" }, 500);
   }
 });
 
-app.put('/deactivate', requireAuth, async (c) => {
-  const user = c.get('user');
+app.put("/deactivate", requireAuth, async (c) => {
+  const user = c.get("user");
   const pool = await createPool(c.env);
   try {
     await ensurePushSubscriptionsSchema(pool);
     const body = (await c.req.json()) as { endpoint?: string };
     if (!body.endpoint) {
-      return c.json({ error: 'endpoint é obrigatório' }, 400);
+      return c.json({ error: "endpoint é obrigatório" }, 400);
     }
 
     const res = await pool.query(
@@ -190,8 +195,8 @@ app.put('/deactivate', requireAuth, async (c) => {
     );
     return c.json({ data: res.rows[0] ?? null });
   } catch (error) {
-    console.error('[PushSubscriptions/Deactivate] Error:', error);
-    return c.json({ error: 'Erro ao desativar assinatura push' }, 500);
+    console.error("[PushSubscriptions/Deactivate] Error:", error);
+    return c.json({ error: "Erro ao desativar assinatura push" }, 500);
   }
 });
 

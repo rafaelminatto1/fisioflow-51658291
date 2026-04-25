@@ -13,11 +13,7 @@
 
 import { QueryClient } from "@tanstack/react-query";
 import { parseISO } from "date-fns";
-import {
-	ViewType,
-	calculatePeriodBounds,
-	isDateInPeriod,
-} from "./periodCalculations";
+import { ViewType, calculatePeriodBounds, isDateInPeriod } from "./periodCalculations";
 import { appointmentPeriodKeys } from "@/hooks/useAppointmentsByPeriod";
 import { fisioLogger as logger } from "@/lib/errors/logger";
 import { formatDateToLocalISO } from "@/utils/dateUtils";
@@ -35,57 +31,55 @@ import { formatDateToLocalISO } from "@/utils/dateUtils";
  * @param organizationId - Optional organization ID for targeted invalidation
  */
 export async function invalidateAppointmentsComprehensive(
-	queryClient: QueryClient,
-	date?: string | Date,
-	organizationId?: string,
+  queryClient: QueryClient,
+  date?: string | Date,
+  organizationId?: string,
 ): Promise<void> {
-	logger.info("Performing comprehensive appointment cache invalidation", {
-		date,
-		organizationId,
-	});
+  logger.info("Performing comprehensive appointment cache invalidation", {
+    date,
+    organizationId,
+  });
 
-	const keysToInvalidate = [
-		["appointments_v2"],
-		["schedule-appointments"],
-		["appointments", "period"],
-		["appointments"],
-	];
+  const keysToInvalidate = [
+    ["appointments_v2"],
+    ["schedule-appointments"],
+    ["appointments", "period"],
+    ["appointments"],
+  ];
 
-	// 1. Basic Invalidation for all known patterns
-	const invalidationPromises = keysToInvalidate.map((key) =>
-		queryClient.invalidateQueries({
-			queryKey: key,
-			exact: false,
-		}),
-	);
+  // 1. Basic Invalidation for all known patterns
+  const invalidationPromises = keysToInvalidate.map((key) =>
+    queryClient.invalidateQueries({
+      queryKey: key,
+      exact: false,
+    }),
+  );
 
-	// 2. If a specific date is provided, prioritize invalidating affected periods
-	if (date) {
-		const dateStr = typeof date === "string" ? date : formatDateToLocalISO(date);
-		if (organizationId) {
-			invalidationPromises.push(
-				invalidateAffectedPeriods(dateStr, queryClient, organizationId),
-			);
-		}
-	}
+  // 2. If a specific date is provided, prioritize invalidating affected periods
+  if (date) {
+    const dateStr = typeof date === "string" ? date : formatDateToLocalISO(date);
+    if (organizationId) {
+      invalidationPromises.push(invalidateAffectedPeriods(dateStr, queryClient, organizationId));
+    }
+  }
 
-	await Promise.all(invalidationPromises);
+  await Promise.all(invalidationPromises);
 
-	// 3. Force refetch of active queries to ensure immediate UI update
-	await queryClient.refetchQueries({
-		type: "active",
-		predicate: (query) => {
-			const key = query.queryKey as any[];
-			return (
-				key[0] === "appointments_v2" ||
-				key[0] === "schedule-appointments" ||
-				(key[0] === "appointments" && key[1] === "period") ||
-				key[0] === "appointments"
-			);
-		},
-	});
+  // 3. Force refetch of active queries to ensure immediate UI update
+  await queryClient.refetchQueries({
+    type: "active",
+    predicate: (query) => {
+      const key = query.queryKey as any[];
+      return (
+        key[0] === "appointments_v2" ||
+        key[0] === "schedule-appointments" ||
+        (key[0] === "appointments" && key[1] === "period") ||
+        key[0] === "appointments"
+      );
+    },
+  });
 
-	logger.debug("Comprehensive invalidation completed");
+  logger.debug("Comprehensive invalidation completed");
 }
 
 /**
@@ -100,106 +94,93 @@ export async function invalidateAppointmentsComprehensive(
  * @param patientId - Optional specific patient ID to invalidate
  */
 export async function invalidatePatientsComprehensive(
-	queryClient: QueryClient,
-	patientId?: string,
+  queryClient: QueryClient,
+  patientId?: string,
 ): Promise<void> {
-	logger.info("Performing comprehensive patient cache invalidation", {
-		patientId,
-	});
+  logger.info("Performing comprehensive patient cache invalidation", {
+    patientId,
+  });
 
-	const keysToInvalidate = [
-		["patients"],
-		["patients-list"],
-		["patients-stats"],
-	];
+  const keysToInvalidate = [["patients"], ["patients-list"], ["patients-stats"]];
 
-	if (patientId) {
-		keysToInvalidate.push(["patient", patientId]);
-	}
+  if (patientId) {
+    keysToInvalidate.push(["patient", patientId]);
+  }
 
-	// Invalidate all related lists
-	const invalidationPromises = keysToInvalidate.map((key) =>
-		queryClient.invalidateQueries({
-			queryKey: key,
-			exact: false,
-		}),
-	);
+  // Invalidate all related lists
+  const invalidationPromises = keysToInvalidate.map((key) =>
+    queryClient.invalidateQueries({
+      queryKey: key,
+      exact: false,
+    }),
+  );
 
-	await Promise.all(invalidationPromises);
+  await Promise.all(invalidationPromises);
 
-	// Force immediate refetch of active queries
-	await queryClient.refetchQueries({
-		type: "active",
-		predicate: (query) => {
-			const key = query.queryKey as any[];
-			return (
-				key[0] === "patients" ||
-				key[0] === "patients-list" ||
-				key[0] === "patients-stats" ||
-				(key[0] === "patient" && key[1] === patientId)
-			);
-		},
-	});
+  // Force immediate refetch of active queries
+  await queryClient.refetchQueries({
+    type: "active",
+    predicate: (query) => {
+      const key = query.queryKey as any[];
+      return (
+        key[0] === "patients" ||
+        key[0] === "patients-list" ||
+        key[0] === "patients-stats" ||
+        (key[0] === "patient" && key[1] === patientId)
+      );
+    },
+  });
 
-	logger.debug("Comprehensive patient invalidation completed");
+  logger.debug("Comprehensive patient invalidation completed");
 }
 
 /**
  * Invalidates all financial-related caches.
  * Ensures that when a transaction is modified, all analytics and reports are updated.
  */
-export async function invalidateFinancialComprehensive(
-	queryClient: QueryClient,
-): Promise<void> {
-	logger.info("Performing comprehensive financial cache invalidation");
+export async function invalidateFinancialComprehensive(queryClient: QueryClient): Promise<void> {
+  logger.info("Performing comprehensive financial cache invalidation");
 
-	const keysToInvalidate = [
-		["financial-transactions"],
-		["financial-transactions-dre"],
-		["financial-by-month"],
-		["financial-revenue-analytics"],
-		["financial-payment-methods"],
-		["patient-analytics"], // Financial changes often affect patient value metrics
-	];
+  const keysToInvalidate = [
+    ["financial-transactions"],
+    ["financial-transactions-dre"],
+    ["financial-by-month"],
+    ["financial-revenue-analytics"],
+    ["financial-payment-methods"],
+    ["patient-analytics"], // Financial changes often affect patient value metrics
+  ];
 
-	await Promise.all(
-		keysToInvalidate.map((key) =>
-			queryClient.invalidateQueries({ queryKey: key, exact: false }),
-		),
-	);
+  await Promise.all(
+    keysToInvalidate.map((key) => queryClient.invalidateQueries({ queryKey: key, exact: false })),
+  );
 
-	await queryClient.refetchQueries({
-		type: "active",
-		predicate: (query) => String(query.queryKey[0]).startsWith("financial-"),
-	});
+  await queryClient.refetchQueries({
+    type: "active",
+    predicate: (query) => String(query.queryKey[0]).startsWith("financial-"),
+  });
 }
 
 /**
  * Invalidates all evaluation and clinical form caches.
  */
 export async function invalidateEvaluationsComprehensive(
-	queryClient: QueryClient,
-	formId?: string,
-	patientId?: string,
+  queryClient: QueryClient,
+  formId?: string,
+  patientId?: string,
 ): Promise<void> {
-	logger.info("Performing comprehensive evaluation cache invalidation", {
-		formId,
-		patientId,
-	});
+  logger.info("Performing comprehensive evaluation cache invalidation", {
+    formId,
+    patientId,
+  });
 
-	const keysToInvalidate = [
-		["evaluation-forms"],
-		["evaluation-templates-with-fields"],
-	];
+  const keysToInvalidate = [["evaluation-forms"], ["evaluation-templates-with-fields"]];
 
-	if (formId) keysToInvalidate.push(["evaluation-form", formId]);
-	if (patientId) keysToInvalidate.push(["patient-evaluations", "patient", patientId]);
+  if (formId) keysToInvalidate.push(["evaluation-form", formId]);
+  if (patientId) keysToInvalidate.push(["patient-evaluations", "patient", patientId]);
 
-	await Promise.all(
-		keysToInvalidate.map((key) =>
-			queryClient.invalidateQueries({ queryKey: key, exact: false }),
-		),
-	);
+  await Promise.all(
+    keysToInvalidate.map((key) => queryClient.invalidateQueries({ queryKey: key, exact: false })),
+  );
 }
 
 /**
@@ -225,68 +206,68 @@ export async function invalidateEvaluationsComprehensive(
  * // But NOT other periods (e.g., February 2024, previous week, etc.)
  */
 export async function invalidateAffectedPeriods(
-	appointmentDate: string,
-	queryClient: QueryClient,
-	organizationId: string,
+  appointmentDate: string,
+  queryClient: QueryClient,
+  organizationId: string,
 ): Promise<void> {
-	try {
-		const date = parseISO(appointmentDate);
+  try {
+    const date = parseISO(appointmentDate);
 
-		if (isNaN(date.getTime())) {
-			logger.warn("Invalid appointment date for cache invalidation", {
-				appointmentDate,
-			});
-			// Fallback to invalidating all periods
-			await queryClient.invalidateQueries({
-				queryKey: appointmentPeriodKeys.all,
-			});
-			return;
-		}
+    if (isNaN(date.getTime())) {
+      logger.warn("Invalid appointment date for cache invalidation", {
+        appointmentDate,
+      });
+      // Fallback to invalidating all periods
+      await queryClient.invalidateQueries({
+        queryKey: appointmentPeriodKeys.all,
+      });
+      return;
+    }
 
-		logger.debug("Invalidating affected periods", {
-			appointmentDate,
-			organizationId,
-		});
+    logger.debug("Invalidating affected periods", {
+      appointmentDate,
+      organizationId,
+    });
 
-		// Invalidate all view types that contain this date
-		const viewTypes: ViewType[] = ["day", "week", "month"];
+    // Invalidate all view types that contain this date
+    const viewTypes: ViewType[] = ["day", "week", "month"];
 
-		for (const viewType of viewTypes) {
-			const bounds = calculatePeriodBounds({
-				viewType,
-				date,
-				organizationId,
-			});
+    for (const viewType of viewTypes) {
+      const bounds = calculatePeriodBounds({
+        viewType,
+        date,
+        organizationId,
+      });
 
-			// Check if the appointment date falls within this period
-			if (isDateInPeriod(date, bounds)) {
-				// Invalidate this specific period
-				await queryClient.invalidateQueries({
-					queryKey: appointmentPeriodKeys.period({
-						viewType,
-						date,
-						organizationId,
-					}),
-				});
+      // Check if the appointment date falls within this period
+      if (isDateInPeriod(date, bounds)) {
+        // Invalidate this specific period
+        await queryClient.invalidateQueries({
+          queryKey: appointmentPeriodKeys.period({
+            viewType,
+            date,
+            organizationId,
+          }),
+        });
 
-				logger.debug("Invalidated period cache", {
-					viewType,
-					appointmentDate,
-				});
-			}
-		}
+        logger.debug("Invalidated period cache", {
+          viewType,
+          appointmentDate,
+        });
+      }
+    }
 
-		logger.info("Selective cache invalidation completed", {
-			appointmentDate,
-			viewTypesInvalidated: viewTypes.length,
-		});
-	} catch (error) {
-		logger.error("Error during selective cache invalidation", error);
-		// Fallback to invalidating all periods
-		await queryClient.invalidateQueries({
-			queryKey: appointmentPeriodKeys.all,
-		});
-	}
+    logger.info("Selective cache invalidation completed", {
+      appointmentDate,
+      viewTypesInvalidated: viewTypes.length,
+    });
+  } catch (error) {
+    logger.error("Error during selective cache invalidation", error);
+    // Fallback to invalidating all periods
+    await queryClient.invalidateQueries({
+      queryKey: appointmentPeriodKeys.all,
+    });
+  }
 }
 
 /**
@@ -303,72 +284,72 @@ export async function invalidateAffectedPeriods(
  * await invalidateDateRange('2024-01-01', '2024-01-15', queryClient, 'org-123');
  */
 export async function invalidateDateRange(
-	startDate: string,
-	endDate: string,
-	queryClient: QueryClient,
-	organizationId: string,
+  startDate: string,
+  endDate: string,
+  queryClient: QueryClient,
+  organizationId: string,
 ): Promise<void> {
-	try {
-		const start = parseISO(startDate);
-		const end = parseISO(endDate);
+  try {
+    const start = parseISO(startDate);
+    const end = parseISO(endDate);
 
-		if (isNaN(start.getTime()) || isNaN(end.getTime())) {
-			logger.warn("Invalid date range for cache invalidation", {
-				startDate,
-				endDate,
-			});
-			await queryClient.invalidateQueries({
-				queryKey: appointmentPeriodKeys.all,
-			});
-			return;
-		}
+    if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+      logger.warn("Invalid date range for cache invalidation", {
+        startDate,
+        endDate,
+      });
+      await queryClient.invalidateQueries({
+        queryKey: appointmentPeriodKeys.all,
+      });
+      return;
+    }
 
-		logger.debug("Invalidating date range", {
-			startDate,
-			endDate,
-			organizationId,
-		});
+    logger.debug("Invalidating date range", {
+      startDate,
+      endDate,
+      organizationId,
+    });
 
-		// For date ranges, it's more efficient to invalidate all periods
-		// that might overlap with the range
-		await queryClient.invalidateQueries({
-			queryKey: appointmentPeriodKeys.all,
-			predicate: (query) => {
-				// Check if query key matches our organization
-				const queryKey = query.queryKey as any[];
-				if (queryKey[0] !== "appointments" || queryKey[1] !== "period") {
-					return false;
-				}
+    // For date ranges, it's more efficient to invalidate all periods
+    // that might overlap with the range
+    await queryClient.invalidateQueries({
+      queryKey: appointmentPeriodKeys.all,
+      predicate: (query) => {
+        // Check if query key matches our organization
+        const queryKey = query.queryKey as any[];
+        if (queryKey[0] !== "appointments" || queryKey[1] !== "period") {
+          return false;
+        }
 
-				// Check organization ID
-				const queryOrgId = queryKey[4];
-				if (queryOrgId !== organizationId) {
-					return false;
-				}
+        // Check organization ID
+        const queryOrgId = queryKey[4];
+        if (queryOrgId !== organizationId) {
+          return false;
+        }
 
-				// Check if period overlaps with date range
-				const periodStart = parseISO(queryKey[2]);
-				const periodEnd = parseISO(queryKey[3]);
+        // Check if period overlaps with date range
+        const periodStart = parseISO(queryKey[2]);
+        const periodEnd = parseISO(queryKey[3]);
 
-				// Periods overlap if:
-				// - Period start is before range end AND
-				// - Period end is after range start
-				const overlaps = periodStart <= end && periodEnd >= start;
+        // Periods overlap if:
+        // - Period start is before range end AND
+        // - Period end is after range start
+        const overlaps = periodStart <= end && periodEnd >= start;
 
-				return overlaps;
-			},
-		});
+        return overlaps;
+      },
+    });
 
-		logger.info("Date range cache invalidation completed", {
-			startDate,
-			endDate,
-		});
-	} catch (error) {
-		logger.error("Error during date range cache invalidation", error);
-		await queryClient.invalidateQueries({
-			queryKey: appointmentPeriodKeys.all,
-		});
-	}
+    logger.info("Date range cache invalidation completed", {
+      startDate,
+      endDate,
+    });
+  } catch (error) {
+    logger.error("Error during date range cache invalidation", error);
+    await queryClient.invalidateQueries({
+      queryKey: appointmentPeriodKeys.all,
+    });
+  }
 }
 
 /**
@@ -383,24 +364,24 @@ export async function invalidateDateRange(
  * await invalidateAllAppointmentCaches(queryClient, 'org-123');
  */
 export async function invalidateAllAppointmentCaches(
-	queryClient: QueryClient,
-	organizationId?: string,
+  queryClient: QueryClient,
+  organizationId?: string,
 ): Promise<void> {
-	logger.info("Invalidating all appointment caches", { organizationId });
+  logger.info("Invalidating all appointment caches", { organizationId });
 
-	if (organizationId) {
-		// Invalidate only for specific organization
-		await queryClient.invalidateQueries({
-			queryKey: appointmentPeriodKeys.all,
-			predicate: (query) => {
-				const queryKey = query.queryKey as any[];
-				return queryKey[4] === organizationId;
-			},
-		});
-	} else {
-		// Invalidate all appointment caches
-		await queryClient.invalidateQueries({
-			queryKey: appointmentPeriodKeys.all,
-		});
-	}
+  if (organizationId) {
+    // Invalidate only for specific organization
+    await queryClient.invalidateQueries({
+      queryKey: appointmentPeriodKeys.all,
+      predicate: (query) => {
+        const queryKey = query.queryKey as any[];
+        return queryKey[4] === organizationId;
+      },
+    });
+  } else {
+    // Invalidate all appointment caches
+    await queryClient.invalidateQueries({
+      queryKey: appointmentPeriodKeys.all,
+    });
+  }
 }

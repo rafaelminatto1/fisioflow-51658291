@@ -16,7 +16,7 @@ export {
   setupTest,
   PerformanceTest,
   createMockStore,
-} from './utils/test-utils';
+} from "./utils/test-utils";
 
 // Platform mocks
 export {
@@ -36,4 +36,4 @@ export {
   mockNetworkDelay,
   mockNetworkError,
   resetAllMocks,
-} from './mocks/platform';
+} from "./mocks/platform";

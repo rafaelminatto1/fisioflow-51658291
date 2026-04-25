@@ -3,11 +3,11 @@
  * Form select with options
  */
 
-import { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Modal } from 'react-native';
-import { useColors } from '@/hooks/useColorScheme';
-import { Ionicons } from '@expo/vector-icons';
-import { Badge } from './Badge';
+import { useState } from "react";
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Modal } from "react-native";
+import { useColors } from "@/hooks/useColorScheme";
+import { Ionicons } from "@expo/vector-icons";
+import { Badge } from "./Badge";
 
 export interface SelectOption {
   label: string;
@@ -32,7 +32,7 @@ interface SelectProps {
 
 export function Select({
   label,
-  placeholder = 'Selecione...',
+  placeholder = "Selecione...",
   value,
   options,
   onValueChange,
@@ -45,7 +45,7 @@ export function Select({
   const colors = useColors();
   const [isOpen, setIsOpen] = useState(false);
 
-  const selectedOption = options.find(opt => opt.value === value);
+  const selectedOption = options.find((opt) => opt.value === value);
 
   const handleSelect = (option: SelectOption) => {
     if (!option.disabled) {
@@ -91,16 +91,14 @@ export function Select({
             </Badge>
           )}
           <Ionicons
-            name={isOpen ? 'chevron-up' : 'chevron-down'}
+            name={isOpen ? "chevron-up" : "chevron-down"}
             size={20}
             color={colors.textSecondary}
           />
         </View>
       </TouchableOpacity>
 
-      {error && (
-        <Text style={[styles.errorText, { color: colors.error }]}>{error}</Text>
-      )}
+      {error && <Text style={[styles.errorText, { color: colors.error }]}>{error}</Text>}
 
       <Modal
         visible={isOpen}
@@ -113,7 +111,12 @@ export function Select({
           activeOpacity={1}
           onPress={() => setIsOpen(false)}
         >
-          <View style={[styles.dropdown, { backgroundColor: colors.background, borderColor: colors.border }]}>
+          <View
+            style={[
+              styles.dropdown,
+              { backgroundColor: colors.background, borderColor: colors.border },
+            ]}
+          >
             <ScrollView style={styles.optionsList} nestedScrollEnabled>
               {options.map((option) => (
                 <TouchableOpacity
@@ -144,9 +147,7 @@ export function Select({
                   >
                     {option.label}
                   </Text>
-                  {option.badge && (
-                    <Badge size="small">{option.badge}</Badge>
-                  )}
+                  {option.badge && <Badge size="small">{option.badge}</Badge>}
                 </TouchableOpacity>
               ))}
             </ScrollView>
@@ -172,7 +173,7 @@ interface MultiSelectProps {
 
 export function MultiSelect({
   label,
-  placeholder = 'Selecione...',
+  placeholder = "Selecione...",
   values,
   options,
   onValuesChange,
@@ -189,7 +190,7 @@ export function MultiSelect({
     if (option.disabled) return;
 
     if (values.includes(option.value)) {
-      onValuesChange(values.filter(v => v !== option.value));
+      onValuesChange(values.filter((v) => v !== option.value));
     } else {
       if (max && values.length >= max) return;
       onValuesChange([...values, option.value]);
@@ -197,18 +198,14 @@ export function MultiSelect({
   };
 
   const handleRemove = (value: string) => {
-    onValuesChange(values.filter(v => v !== value));
+    onValuesChange(values.filter((v) => v !== value));
   };
 
-  const selectedOptions = options.filter(opt => values.includes(opt.value));
+  const selectedOptions = options.filter((opt) => values.includes(opt.value));
 
   return (
     <View style={containerStyle}>
-      {label && (
-        <Text style={[styles.label, { color: colors.text }]}>
-          {label}
-        </Text>
-      )}
+      {label && <Text style={[styles.label, { color: colors.text }]}>{label}</Text>}
 
       {/* Selected items */}
       {selectedOptions.length > 0 && (
@@ -216,7 +213,7 @@ export function MultiSelect({
           {selectedOptions.map((option) => (
             <TouchableOpacity
               key={option.value}
-              style={[styles.selectedChip, { backgroundColor: colors.primary + '20' }]}
+              style={[styles.selectedChip, { backgroundColor: colors.primary + "20" }]}
               onPress={() => !disabled && handleRemove(option.value)}
             >
               <Text style={[styles.selectedChipText, { color: colors.primary }]}>
@@ -247,9 +244,7 @@ export function MultiSelect({
         <Ionicons name="chevron-down" size={20} color={colors.textSecondary} />
       </TouchableOpacity>
 
-      {error && (
-        <Text style={[styles.errorText, { color: colors.error }]}>{error}</Text>
-      )}
+      {error && <Text style={[styles.errorText, { color: colors.error }]}>{error}</Text>}
 
       <Modal
         visible={isOpen}
@@ -262,11 +257,17 @@ export function MultiSelect({
           activeOpacity={1}
           onPress={() => setIsOpen(false)}
         >
-          <View style={[styles.dropdown, { backgroundColor: colors.background, borderColor: colors.border }]}>
+          <View
+            style={[
+              styles.dropdown,
+              { backgroundColor: colors.background, borderColor: colors.border },
+            ]}
+          >
             <ScrollView style={styles.optionsList} nestedScrollEnabled>
               {options.map((option) => {
                 const isSelected = values.includes(option.value);
-                const isDisabled = !!option.disabled || !!(max && values.length >= max && !isSelected);
+                const isDisabled =
+                  !!option.disabled || !!(max && values.length >= max && !isSelected);
 
                 return (
                   <TouchableOpacity
@@ -281,9 +282,7 @@ export function MultiSelect({
                     disabled={isDisabled}
                   >
                     <View style={styles.checkbox}>
-                      {isSelected && (
-                        <Ionicons name="checkbox" size={20} color={colors.primary} />
-                      )}
+                      {isSelected && <Ionicons name="checkbox" size={20} color={colors.primary} />}
                     </View>
                     <Text
                       style={[
@@ -308,13 +307,13 @@ export function MultiSelect({
 const styles = StyleSheet.create({
   label: {
     fontSize: 14,
-    fontWeight: '500',
+    fontWeight: "500",
     marginBottom: 6,
   },
   trigger: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     borderWidth: 1,
     borderRadius: 8,
     paddingHorizontal: 12,
@@ -325,8 +324,8 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   triggerRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 8,
   },
   badge: {
@@ -338,21 +337,21 @@ const styles = StyleSheet.create({
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'center',
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "center",
     padding: 16,
   },
   dropdown: {
     borderRadius: 12,
     borderWidth: 1,
-    maxHeight: '50%',
+    maxHeight: "50%",
   },
   optionsList: {
     padding: 8,
   },
   option: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     paddingVertical: 10,
     paddingHorizontal: 12,
     gap: 12,
@@ -362,7 +361,7 @@ const styles = StyleSheet.create({
     opacity: 0.5,
   },
   optionSelected: {
-    backgroundColor: 'rgba(0, 0, 0, 0.05)',
+    backgroundColor: "rgba(0, 0, 0, 0.05)",
   },
   optionIcon: {
     marginRight: 4,
@@ -373,12 +372,12 @@ const styles = StyleSheet.create({
   },
   checkbox: {
     width: 20,
-    alignItems: 'center',
+    alignItems: "center",
   },
   // MultiSelect
   selectedChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     paddingVertical: 10,
     paddingHorizontal: 12,
     marginBottom: 8,
@@ -387,12 +386,12 @@ const styles = StyleSheet.create({
   },
   selectedChipText: {
     fontSize: 13,
-    fontWeight: '500',
+    fontWeight: "500",
     marginRight: 4,
   },
   selectedItems: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+    flexDirection: "row",
+    flexWrap: "wrap",
     marginBottom: 8,
   },
 });

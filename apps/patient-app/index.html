@@ -1,89 +1,103 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="pt-BR">
-<head>
-  <meta charset="utf-8" />
-  <meta name="description" content="FisioFlow - Sua plataforma de fisioterapia digital para acompanhamento e exercícios personalizados." />
-  <title>FisioFlow - Acompanhamento de Fisioterapia</title>
-  
-  <meta property="og:title" content="FisioFlow - App do Paciente" />
-  <meta property="og:description" content="Sua plataforma de fisioterapia digital para acompanhamento e exercícios personalizados." />
-  <meta property="og:type" content="website" />
-  <meta property="og:image" content="/favicon.svg" />
-  <style>
-    :root {
-      --primary-h: 175;
-      --primary-s: 84%;
-      --primary-l: 32%;
-      --primary: hsl(var(--primary-h), var(--primary-s), var(--primary-l));
-      --primary-dark: hsl(var(--primary-h), var(--primary-s), calc(var(--primary-l) - 5%));
-    }
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="description"
+      content="FisioFlow - Sua plataforma de fisioterapia digital para acompanhamento e exercícios personalizados."
+    />
+    <title>FisioFlow - Acompanhamento de Fisioterapia</title>
 
-    /* Reset styles */
-    html, body {
-      margin: 0;
-      padding: 0;
-      width: 100%;
-      height: 100%;
-      overflow: hidden;
-      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-      -webkit-font-smoothing: antialiased;
-    }
-    #root {
-      display: flex;
-      width: 100%;
-      height: 100%;
-    }
-    /* Loading spinner */
-    .loading {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-    }
-    .spinner {
-      width: 40px;
-      height: 40px;
-      border: 4px solid rgba(255, 255, 255, 0.3);
-      border-radius: 50%;
-      border-top-color: #fff;
-      animation: spin 1s linear infinite;
-    }
-
-    @media (prefers-reduced-motion: reduce) {
-      .spinner {
-        animation: none;
-        border-top-color: rgba(255, 255, 255, 0.8);
+    <meta property="og:title" content="FisioFlow - App do Paciente" />
+    <meta
+      property="og:description"
+      content="Sua plataforma de fisioterapia digital para acompanhamento e exercícios personalizados."
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content="/favicon.svg" />
+    <style>
+      :root {
+        --primary-h: 175;
+        --primary-s: 84%;
+        --primary-l: 32%;
+        --primary: hsl(var(--primary-h), var(--primary-s), var(--primary-l));
+        --primary-dark: hsl(var(--primary-h), var(--primary-s), calc(var(--primary-l) - 5%));
       }
-    }
 
-    @keyframes spin {
-      from { transform: rotate(0deg); }
-      to { transform: rotate(360deg); }
-    }
+      /* Reset styles */
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+        -webkit-font-smoothing: antialiased;
+      }
+      #root {
+        display: flex;
+        width: 100%;
+        height: 100%;
+      }
+      /* Loading spinner */
+      .loading {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+      }
+      .spinner {
+        width: 40px;
+        height: 40px;
+        border: 4px solid rgba(255, 255, 255, 0.3);
+        border-radius: 50%;
+        border-top-color: #fff;
+        animation: spin 1s linear infinite;
+      }
 
-    /* SEO hidden header */
-    .sr-only {
-      position: absolute;
-      width: 1px;
-      height: 1px;
-      padding: 0;
-      margin: -1px;
-      overflow: hidden;
-      clip: rect(0, 0, 0, 0);
-      white-space: nowrap;
-      border-width: 0;
-    }
-  </style>
-</head>
-<body>
-  <header class="sr-only">
-    <h1>FisioFlow - App do Paciente</h1>
-  </header>
-  <div id="root">
-    <div class="loading">
-      <div class="spinner"></div>
+      @media (prefers-reduced-motion: reduce) {
+        .spinner {
+          animation: none;
+          border-top-color: rgba(255, 255, 255, 0.8);
+        }
+      }
+
+      @keyframes spin {
+        from {
+          transform: rotate(0deg);
+        }
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      /* SEO hidden header */
+      .sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border-width: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <header class="sr-only">
+      <h1>FisioFlow - App do Paciente</h1>
+    </header>
+    <div id="root">
+      <div class="loading">
+        <div class="spinner"></div>
+      </div>
     </div>
-  </div>
-  <script src="/node_modules/expo-router/entry.bundle?platform=web&dev=true&hot=false&lazy=true&transform.engine=hermes&transform.routerRoot=app&unstable_transformProfile=hermes-stable" defer></script>
-</body>
+    <script
+      src="/node_modules/expo-router/entry.bundle?platform=web&dev=true&hot=false&lazy=true&transform.engine=hermes&transform.routerRoot=app&unstable_transformProfile=hermes-stable"
+      defer
+    ></script>
+  </body>
 </html>

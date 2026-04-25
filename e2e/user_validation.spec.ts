@@ -5,7 +5,7 @@ test.describe('Validação de Usuário e Fluxo de Paciente', () => {
   const patientName = 'Rafael Teste ' + Math.floor(Math.random() * 10000);
 
   test('Deve criar paciente, validar abas e agendar/evoluir 10 sessões', async ({ page, baseURL }) => {
-    test.setTimeout(600000); 
+    test.setTimeout(600000);
 
     const consoleErrors: string[] = [];
     page.on('console', msg => {
@@ -24,12 +24,12 @@ test.describe('Validação de Usuário e Fluxo de Paciente', () => {
     await page.waitForLoadState('networkidle');
     const addPatientBtn = page.locator('[data-testid="add-patient"]').first();
     await addPatientBtn.waitFor({ timeout: 30000 });
-    
+
     // 2. Criar novo paciente
     await addPatientBtn.click();
     const dialog = page.getByRole('dialog').filter({ hasText: /Novo Paciente/i }).last();
     await dialog.waitFor({ state: 'visible', timeout: 20000 });
-    
+
     await dialog.locator('input[id="full_name"]').fill(patientName);
     const genderTrigger = dialog.locator('button').filter({ hasText: /Selecione o gênero|masculino|feminino/i });
     await genderTrigger.click();
@@ -37,7 +37,7 @@ test.describe('Validação de Usuário e Fluxo de Paciente', () => {
     await dialog.locator('input[id="phone"]').fill('11999999999');
     await dialog.locator('button[role="tab"]:has-text("Médico")').click();
     await dialog.locator('input[id="main_condition"]').fill('Dor Lombar Crônica');
-    
+
     await dialog.locator('button[type="submit"]').click();
     await dialog.waitFor({ state: 'hidden', timeout: 30000 });
 
@@ -47,7 +47,7 @@ test.describe('Validação de Usuário e Fluxo de Paciente', () => {
     const patientCard = page.locator(`[data-patient-id]`).filter({ hasText: patientName }).first();
     await patientCard.waitFor({ state: 'visible', timeout: 30000 });
     const patientId = await patientCard.getAttribute('data-patient-id');
-    
+
     console.log(`Paciente criado! ID: ${patientId}.`);
 
     // 4. Validar abas
@@ -70,20 +70,20 @@ test.describe('Validação de Usuário e Fluxo de Paciente', () => {
 
     for (let i = 0; i < 10; i++) {
       console.log(`Agendando sessão ${i+1}/10...`);
-      
+
       const newAptBtn = page.locator('button:has-text("Novo Agendamento")').first();
       await newAptBtn.waitFor({ state: 'visible', timeout: 20000 });
       await newAptBtn.click({ force: true });
-      
+
       const aptModal = page.getByRole('dialog').filter({ hasText: /Agendamento/i }).last();
       await aptModal.waitFor({ state: 'visible' });
-      
+
       // Selecionar paciente
       await aptModal.locator('[data-testid="patient-select"]').click();
       const pSearch = page.locator('[data-testid="patient-search"]');
       await pSearch.fill(patientName);
       await page.locator('div[role="option"]').filter({ hasText: patientName }).first().click();
-      
+
       // Selecionar Profissional
       const therapistTrigger = aptModal.locator('[data-testid="therapist-select"]');
       await therapistTrigger.click();
@@ -93,7 +93,7 @@ test.describe('Validação de Usuário e Fluxo de Paciente', () => {
       } else {
           await tOption.first().click();
       }
-      
+
       // Selecionar Horário
       const timeTrigger = aptModal.locator('button').filter({ hasText: /Hora/i }).or(aptModal.locator('button:has-text("07:00")')).first();
       await timeTrigger.click();
@@ -105,7 +105,7 @@ test.describe('Validação de Usuário e Fluxo de Paciente', () => {
       // Submit
       const submitBtn = aptModal.locator('button[type="submit"]').last();
       await submitBtn.click();
-      
+
       // Check if "Capacidade Atingida" dialog appears
       const capacityDialog = page.getByRole('alertdialog').or(page.locator('text=Capacidade Atingida'));
       try {
@@ -116,7 +116,7 @@ test.describe('Validação de Usuário e Fluxo de Paciente', () => {
       } catch  {
           // Dialog didn't appear, which is fine
       }
-      
+
       // Esperar modal fechar
       await aptModal.waitFor({ state: 'hidden', timeout: 20000 });
       console.log(`Sessão ${i+1} agendada.`);
@@ -126,12 +126,12 @@ test.describe('Validação de Usuário e Fluxo de Paciente', () => {
     // 6. Evoluir 10 sessões
     console.log('Evoluindo 10 sessões...');
     await page.goto(`${baseURL}/patients/${patientId}`);
-    
+
     for (let i = 0; i < 10; i++) {
         await page.goto(`${baseURL}/patients/${patientId}`);
         await page.click('button[role="tab"]:has-text("Visão Geral")');
-        await page.waitForTimeout(3000); 
-        
+        await page.waitForTimeout(3000);
+
         const evolutionButton = page.locator('button:has-text("Evoluir")').first();
         if (await evolutionButton.isVisible()) {
             console.log(`Evoluindo sessão ${i+1}/10...`);
@@ -147,7 +147,7 @@ test.describe('Validação de Usuário e Fluxo de Paciente', () => {
     }
 
     console.log('Processo completo com sucesso!');
-    const criticalErrors = consoleErrors.filter(e => 
+    const criticalErrors = consoleErrors.filter(e =>
       e.includes('Minified React error #306') || e.includes('toUpperCase')
     );
     expect(criticalErrors.length).toBe(0);

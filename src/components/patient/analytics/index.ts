@@ -11,7 +11,4 @@ export { PatientInsightsPanel } from "./PatientInsightsPanel";
 
 // AI Components
 export { AIAssistantPanel, AIAssistantMini } from "./AIAssistantPanel";
-export {
-	AITreatmentRecommendations,
-	AITreatmentMini,
-} from "./AITreatmentRecommendations";
+export { AITreatmentRecommendations, AITreatmentMini } from "./AITreatmentRecommendations";

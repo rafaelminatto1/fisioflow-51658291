@@ -7,7 +7,7 @@
  * @module app/exercise/[id]
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -17,18 +17,18 @@ import {
   Image,
   ActivityIndicator,
   Alert,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter, useLocalSearchParams } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
-import { useColors } from '@/hooks/useColorScheme';
-import { Card, Button, VideoModal } from '@/components';
-import { useAuthStore } from '@/store/auth';
-import { patientApi } from '@/lib/api';
-import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
-import * as Haptics from 'expo-haptics';
-import { log } from '@/lib/logger';
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { useRouter, useLocalSearchParams } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
+import { useColors } from "@/hooks/useColorScheme";
+import { Card, Button, VideoModal } from "@/components";
+import { useAuthStore } from "@/store/auth";
+import { patientApi } from "@/lib/api";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import * as Haptics from "expo-haptics";
+import { log } from "@/lib/logger";
 
 interface ExerciseDetail {
   id: string;
@@ -44,7 +44,7 @@ interface ExerciseDetail {
   videoUrl?: string;
   imageUrl?: string;
   category?: string;
-  difficulty?: 'easy' | 'medium' | 'hard';
+  difficulty?: "easy" | "medium" | "hard";
 }
 
 interface ExerciseHistory {
@@ -88,21 +88,21 @@ export default function ExerciseDetailScreen() {
       if (foundExercise) {
         setExercise({
           id: foundExercise.id,
-          name: foundExercise.exercise?.name || 'Exercício',
+          name: foundExercise.exercise?.name || "Exercício",
           description: foundExercise.notes || foundExercise.exercise?.description,
           instructions: foundExercise.exercise?.instructions || [
-            'Mantenha a postura correta durante todo o exercício',
-            'Respire normalmente, não prenda a respiração',
-            'Execute o movimento de forma controlada',
+            "Mantenha a postura correta durante todo o exercício",
+            "Respire normalmente, não prenda a respiração",
+            "Execute o movimento de forma controlada",
           ],
           benefits: foundExercise.exercise?.benefits || [
-            'Melhora a flexibilidade',
-            'Fortalece os músculos',
-            'Reduz a dor',
+            "Melhora a flexibilidade",
+            "Fortalece os músculos",
+            "Reduz a dor",
           ],
           precautions: foundExercise.exercise?.precautions || [
-            'Pare se sentir dor intensa',
-            'Não force além dos seus limites',
+            "Pare se sentir dor intensa",
+            "Não force além dos seus limites",
           ],
           sets: foundExercise.sets || 3,
           reps: foundExercise.reps || 10,
@@ -117,8 +117,8 @@ export default function ExerciseDetailScreen() {
         setCompleted(foundExercise.completed || false);
       }
     } catch (error) {
-      log.error('Error loading exercise:', error);
-      Alert.alert('Erro', 'Não foi possível carregar os detalhes do exercício.');
+      log.error("Error loading exercise:", error);
+      Alert.alert("Erro", "Não foi possível carregar os detalhes do exercício.");
     } finally {
       setLoading(false);
     }
@@ -142,11 +142,11 @@ export default function ExerciseDetailScreen() {
       });
 
       if (newCompletedState) {
-        Alert.alert('Parabéns!', 'Exercício marcado como completo! 💪');
+        Alert.alert("Parabéns!", "Exercício marcado como completo! 💪");
       }
     } catch (error) {
-      log.error('Error toggling exercise completion:', error);
-      Alert.alert('Erro', 'Não foi possível atualizar o exercício.');
+      log.error("Error toggling exercise completion:", error);
+      Alert.alert("Erro", "Não foi possível atualizar o exercício.");
     } finally {
       setCompleting(false);
     }
@@ -155,26 +155,37 @@ export default function ExerciseDetailScreen() {
   const getDifficultyColor = () => {
     if (!exercise?.difficulty) return colors.textSecondary;
     switch (exercise.difficulty) {
-      case 'easy': return colors.success;
-      case 'medium': return colors.warning;
-      case 'hard': return colors.error;
-      default: return colors.textSecondary;
+      case "easy":
+        return colors.success;
+      case "medium":
+        return colors.warning;
+      case "hard":
+        return colors.error;
+      default:
+        return colors.textSecondary;
     }
   };
 
   const getDifficultyLabel = () => {
-    if (!exercise?.difficulty) return '';
+    if (!exercise?.difficulty) return "";
     switch (exercise.difficulty) {
-      case 'easy': return 'Fácil';
-      case 'medium': return 'Médio';
-      case 'hard': return 'Difícil';
-      default: return '';
+      case "easy":
+        return "Fácil";
+      case "medium":
+        return "Médio";
+      case "hard":
+        return "Difícil";
+      default:
+        return "";
     }
   };
 
   if (loading) {
     return (
-      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
+      <SafeAreaView
+        style={[styles.container, { backgroundColor: colors.background }]}
+        edges={["top"]}
+      >
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={colors.primary} />
           <Text style={[styles.loadingText, { color: colors.textSecondary }]}>
@@ -187,12 +198,13 @@ export default function ExerciseDetailScreen() {
 
   if (!exercise) {
     return (
-      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
+      <SafeAreaView
+        style={[styles.container, { backgroundColor: colors.background }]}
+        edges={["top"]}
+      >
         <View style={styles.errorContainer}>
           <Ionicons name="sad-outline" size={64} color={colors.textMuted} />
-          <Text style={[styles.errorTitle, { color: colors.text }]}>
-            Exercício não encontrado
-          </Text>
+          <Text style={[styles.errorTitle, { color: colors.text }]}>Exercício não encontrado</Text>
           <Button title="Voltar" onPress={() => router.back()} style={styles.errorButton} />
         </View>
       </SafeAreaView>
@@ -200,7 +212,10 @@ export default function ExerciseDetailScreen() {
   }
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: colors.background }]}
+      edges={["top"]}
+    >
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
@@ -210,10 +225,7 @@ export default function ExerciseDetailScreen() {
         <View style={styles.placeholder} />
       </View>
 
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
+      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         {/* Video Thumbnail */}
         {exercise.videoUrl ? (
           <TouchableOpacity
@@ -224,7 +236,9 @@ export default function ExerciseDetailScreen() {
             {exercise.imageUrl ? (
               <Image source={{ uri: exercise.imageUrl }} style={styles.thumbnailImage} />
             ) : (
-              <View style={[styles.thumbnailPlaceholder, { backgroundColor: colors.primary + '20' }]}>
+              <View
+                style={[styles.thumbnailPlaceholder, { backgroundColor: colors.primary + "20" }]}
+              >
                 <Ionicons name="play-circle" size={64} color={colors.primary} />
               </View>
             )}
@@ -241,7 +255,9 @@ export default function ExerciseDetailScreen() {
           <View style={styles.titleRow}>
             <Text style={[styles.title, { color: colors.text }]}>{exercise.name}</Text>
             {exercise.difficulty && (
-              <View style={[styles.difficultyBadge, { backgroundColor: getDifficultyColor() + '20' }]}>
+              <View
+                style={[styles.difficultyBadge, { backgroundColor: getDifficultyColor() + "20" }]}
+              >
                 <Text style={[styles.difficultyText, { color: getDifficultyColor() }]}>
                   {getDifficultyLabel()}
                 </Text>
@@ -272,7 +288,9 @@ export default function ExerciseDetailScreen() {
             {exercise.holdTime && (
               <View style={[styles.paramItem, { backgroundColor: colors.surface }]}>
                 <Ionicons name="time" size={20} color={colors.warning} />
-                <Text style={[styles.paramValue, { color: colors.text }]}>{exercise.holdTime}s</Text>
+                <Text style={[styles.paramValue, { color: colors.text }]}>
+                  {exercise.holdTime}s
+                </Text>
                 <Text style={[styles.paramLabel, { color: colors.textSecondary }]}>descanso</Text>
               </View>
             )}
@@ -280,7 +298,9 @@ export default function ExerciseDetailScreen() {
             {exercise.restTime && (
               <View style={[styles.paramItem, { backgroundColor: colors.surface }]}>
                 <Ionicons name="hourglass" size={20} color={colors.info} />
-                <Text style={[styles.paramValue, { color: colors.text }]}>{exercise.restTime}s</Text>
+                <Text style={[styles.paramValue, { color: colors.text }]}>
+                  {exercise.restTime}s
+                </Text>
                 <Text style={[styles.paramLabel, { color: colors.textSecondary }]}>intervalo</Text>
               </View>
             )}
@@ -296,8 +316,12 @@ export default function ExerciseDetailScreen() {
             </View>
             {exercise.instructions.map((instruction, index) => (
               <View key={index} style={styles.instructionItem}>
-                <View style={[styles.instructionNumber, { backgroundColor: colors.primary + '20' }]}>
-                  <Text style={[styles.instructionNumberText, { color: colors.primary }]}>{index + 1}</Text>
+                <View
+                  style={[styles.instructionNumber, { backgroundColor: colors.primary + "20" }]}
+                >
+                  <Text style={[styles.instructionNumberText, { color: colors.primary }]}>
+                    {index + 1}
+                  </Text>
                 </View>
                 <Text style={[styles.instructionText, { color: colors.text }]}>{instruction}</Text>
               </View>
@@ -352,7 +376,9 @@ export default function ExerciseDetailScreen() {
                 <View style={styles.historyFeedback}>
                   {entry.feedback && (
                     <>
-                      <Text style={[styles.historyLabel, { color: colors.textSecondary }]}>Dificuldade:</Text>
+                      <Text style={[styles.historyLabel, { color: colors.textSecondary }]}>
+                        Dificuldade:
+                      </Text>
                       <Text style={[styles.historyValue, { color: colors.text }]}>
                         {entry.feedback.difficulty}/5
                       </Text>
@@ -375,28 +401,32 @@ export default function ExerciseDetailScreen() {
             title="Iniciar Biofeedback com Câmera"
             onPress={() => {
               Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-              Alert.alert('Motion Vision', 'O rastreamento de movimento por IA ajudará você a manter a forma correta durante este exercício.');
+              Alert.alert(
+                "Motion Vision",
+                "O rastreamento de movimento por IA ajudará você a manter a forma correta durante este exercício.",
+              );
               // This would navigate to a specialized Camera screen
               // router.push(`/exercise/vision/${exerciseId}`);
             }}
             variant="outline"
             style={{ borderColor: colors.primary, borderWidth: 2 }}
-            textStyle={{ color: colors.primary, fontWeight: '800' }}
-            icon={<Ionicons name="videocam" size={20} color={colors.primary} style={{ marginRight: 8 }} />}
+            textStyle={{ color: colors.primary, fontWeight: "800" }}
+            icon={
+              <Ionicons
+                name="videocam"
+                size={20}
+                color={colors.primary}
+                style={{ marginRight: 8 }}
+              />
+            }
           />
           <Button
-            title={completed ? '✓ Concluído' : 'Marcar como Concluído'}
+            title={completed ? "✓ Concluído" : "Marcar como Concluído"}
             onPress={handleToggleComplete}
             loading={completing}
-            variant={completed ? 'primary' : 'primary'}
-            style={[
-              styles.completeButton,
-              completed && styles.completeButtonDone,
-            ]}
-            textStyle={[
-              styles.completeButtonText,
-              completed && { color: '#FFFFFF' },
-            ]}
+            variant={completed ? "primary" : "primary"}
+            style={[styles.completeButton, completed && styles.completeButtonDone]}
+            textStyle={[styles.completeButtonText, completed && { color: "#FFFFFF" }]}
           />
         </View>
       </View>
@@ -422,8 +452,8 @@ const styles = StyleSheet.create({
   },
   loadingContainer: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     gap: 12,
   },
   loadingText: {
@@ -431,13 +461,13 @@ const styles = StyleSheet.create({
   },
   errorContainer: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     padding: 32,
   },
   errorTitle: {
     fontSize: 18,
-    fontWeight: '600',
+    fontWeight: "600",
     marginTop: 16,
     marginBottom: 24,
   },
@@ -445,13 +475,13 @@ const styles = StyleSheet.create({
     minWidth: 120,
   },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(0,0,0,0.05)',
+    borderBottomColor: "rgba(0,0,0,0.05)",
   },
   backButton: {
     padding: 8,
@@ -459,7 +489,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 18,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   placeholder: {
     width: 40,
@@ -468,52 +498,52 @@ const styles = StyleSheet.create({
     paddingBottom: 100,
   },
   videoThumbnail: {
-    width: '100%',
+    width: "100%",
     aspectRatio: 16 / 9,
-    backgroundColor: '#000',
-    position: 'relative',
+    backgroundColor: "#000",
+    position: "relative",
   },
   thumbnailImage: {
-    width: '100%',
-    height: '100%',
+    width: "100%",
+    height: "100%",
     opacity: 0.7,
   },
   thumbnailPlaceholder: {
-    width: '100%',
-    height: '100%',
-    alignItems: 'center',
-    justifyContent: 'center',
+    width: "100%",
+    height: "100%",
+    alignItems: "center",
+    justifyContent: "center",
   },
   playButton: {
-    position: 'absolute',
-    top: '50%',
-    left: '50%',
+    position: "absolute",
+    top: "50%",
+    left: "50%",
     marginLeft: -30,
     marginTop: -30,
     width: 60,
     height: 60,
     borderRadius: 30,
-    backgroundColor: 'rgba(0,0,0,0.6)',
-    alignItems: 'center',
-    justifyContent: 'center',
+    backgroundColor: "rgba(0,0,0,0.6)",
+    alignItems: "center",
+    justifyContent: "center",
   },
   headerImage: {
-    width: '100%',
+    width: "100%",
     height: 200,
-    resizeMode: 'cover',
+    resizeMode: "cover",
   },
   titleSection: {
     padding: 16,
   },
   titleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     marginBottom: 8,
   },
   title: {
     fontSize: 24,
-    fontWeight: '700',
+    fontWeight: "700",
     flex: 1,
   },
   difficultyBadge: {
@@ -523,7 +553,7 @@ const styles = StyleSheet.create({
   },
   difficultyText: {
     fontSize: 12,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   description: {
     fontSize: 16,
@@ -531,13 +561,13 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   paramsContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+    flexDirection: "row",
+    flexWrap: "wrap",
     gap: 12,
   },
   paramItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 6,
     paddingHorizontal: 12,
     paddingVertical: 8,
@@ -545,7 +575,7 @@ const styles = StyleSheet.create({
   },
   paramValue: {
     fontSize: 18,
-    fontWeight: '700',
+    fontWeight: "700",
   },
   paramLabel: {
     fontSize: 12,
@@ -556,18 +586,18 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   cardHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 8,
     marginBottom: 16,
   },
   cardTitle: {
     fontSize: 18,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   instructionItem: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
+    flexDirection: "row",
+    alignItems: "flex-start",
     gap: 12,
     marginBottom: 12,
   },
@@ -575,12 +605,12 @@ const styles = StyleSheet.create({
     width: 28,
     height: 28,
     borderRadius: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   instructionNumberText: {
     fontSize: 14,
-    fontWeight: '700',
+    fontWeight: "700",
   },
   instructionText: {
     flex: 1,
@@ -588,8 +618,8 @@ const styles = StyleSheet.create({
     lineHeight: 22,
   },
   benefitItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 8,
     marginBottom: 8,
   },
@@ -598,8 +628,8 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   precautionItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 8,
     marginBottom: 8,
   },
@@ -608,19 +638,19 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   historyItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     paddingVertical: 8,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(0,0,0,0.05)',
+    borderBottomColor: "rgba(0,0,0,0.05)",
   },
   historyDate: {
     fontSize: 14,
   },
   historyFeedback: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 4,
   },
   historyLabel: {
@@ -628,26 +658,26 @@ const styles = StyleSheet.create({
   },
   historyValue: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   fabContainer: {
-    position: 'absolute',
+    position: "absolute",
     bottom: 0,
     left: 0,
     right: 0,
     padding: 16,
-    backgroundColor: 'rgba(255,255,255,0.9)',
+    backgroundColor: "rgba(255,255,255,0.9)",
     borderTopWidth: 1,
-    borderTopColor: 'rgba(0,0,0,0.1)',
+    borderTopColor: "rgba(0,0,0,0.1)",
   },
   completeButton: {
     // Style will be applied by Button component or inline
   },
   completeButtonDone: {
-    backgroundColor: '#22c55e',
+    backgroundColor: "#22c55e",
   },
   completeButtonText: {
-    color: '#FFFFFF',
+    color: "#FFFFFF",
   },
   bottomSpacing: {
     height: 80,

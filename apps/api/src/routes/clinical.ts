@@ -8,33 +8,30 @@
  * GET/POST/PUT/DELETE /api/clinical/conduct-library
  * GET/POST /api/clinical/standardized-tests
  */
-import { Hono } from 'hono';
-import { createDb } from '../lib/db';
-import { requireAuth, type AuthVariables } from '../lib/auth';
-import { withTenant } from '../lib/db-utils';
-import type { Env } from '../types/env';
-import { registerClinicalResourceRoutes } from './clinical/resources';
-import { 
-  patientGoals, 
-  patientPathologies 
-} from '@fisioflow/db';
-import { eq, sql, desc } from 'drizzle-orm';
+import { Hono } from "hono";
+import { createDb } from "../lib/db";
+import { requireAuth, type AuthVariables } from "../lib/auth";
+import { withTenant } from "../lib/db-utils";
+import type { Env } from "../types/env";
+import { registerClinicalResourceRoutes } from "./clinical/resources";
+import { patientGoals, patientPathologies } from "@fisioflow/db";
+import { eq, sql, desc } from "drizzle-orm";
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
-app.get('/pathologies/options', async (c) => {
+app.get("/pathologies/options", async (c) => {
   if (c.env.FISIOFLOW_CONFIG) {
-    const cached = await c.env.FISIOFLOW_CONFIG.get('CLINICAL_PATHOLOGY_OPTIONS', 'json');
+    const cached = await c.env.FISIOFLOW_CONFIG.get("CLINICAL_PATHOLOGY_OPTIONS", "json");
     if (cached) {
       return c.json({ data: cached, fromCache: true });
     }
   }
-  
-  return c.json({ data: [], error: 'Cache not found' });
+
+  return c.json({ data: [], error: "Cache not found" });
 });
 
-app.get('/insights', requireAuth, async (c) => {
-  const user = c.get('user');
+app.get("/insights", requireAuth, async (c) => {
+  const user = c.get("user");
   const db = createDb(c.env);
 
   // 1. Goals Insights
@@ -108,13 +105,13 @@ app.get('/insights', requireAuth, async (c) => {
         avg_days_to_achieve: row.avg_days_to_achieve ? Number(row.avg_days_to_achieve) : null,
       })),
       pathologies: pathologiesData.map((row) => ({
-        name: String(row.name ?? 'Sem classificacao'),
+        name: String(row.name ?? "Sem classificacao"),
         patient_count: String(row.patient_count),
       })),
       painTrend: (painTrendData.rows as Record<string, unknown>[]).map((row) => ({
-        pathology: String(row.pathology ?? 'Sem classificacao'),
+        pathology: String(row.pathology ?? "Sem classificacao"),
         avg_pain_level: Number(row.avg_pain_level ?? 0),
-        record_count: String(row.record_count ?? '0'),
+        record_count: String(row.record_count ?? "0"),
       })),
       timestamp: new Date().toISOString(),
     },

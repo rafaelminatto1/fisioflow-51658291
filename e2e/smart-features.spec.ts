@@ -14,7 +14,7 @@ test.describe('Smart Features - Agenda', () => {
 
     // Wait for redirect
     await page.waitForURL('/');
-    
+
     // Navigate to Schedule
     await page.goto('/schedule');
     await page.waitForLoadState('domcontentloaded');
@@ -25,7 +25,7 @@ test.describe('Smart Features - Agenda', () => {
     const selectionButton = page.locator('button[title="Modo de Seleção"]');
     await expect(selectionButton).toBeVisible();
     await selectionButton.click();
-    
+
     // Check if button state changed (variant default usually has primary background color or class)
     // We can check class or attribute
     await expect(selectionButton).toHaveClass(/bg-primary/); // Assuming default variant has primary bg
@@ -34,7 +34,7 @@ test.describe('Smart Features - Agenda', () => {
     // Find an appointment card. We assume there is at least one.
     // If empty, this test might fail, but for E2E in dev env usually we have data.
     // Alternatively, we create one first.
-    
+
     // Let's create a quick appointment to ensure we have something to select
     await page.click('button:has-text("Novo Agendamento")');
     await page.click('[role="combobox"]');
@@ -44,7 +44,7 @@ test.describe('Smart Features - Agenda', () => {
     await page.waitForTimeout(1000); // Wait for creation
 
     // Re-enable selection mode if it reset (it shouldn't, but good to be safe or check state)
-    // Actually, creating appointment closes modal, but selection mode might persist? 
+    // Actually, creating appointment closes modal, but selection mode might persist?
     // Let's assume we need to re-enable or check.
     if (!await selectionButton.evaluate(el => el.classList.contains('bg-primary'))) {
         await selectionButton.click();
@@ -61,11 +61,11 @@ test.describe('Smart Features - Agenda', () => {
     await expect(bulkBar).toContainText('1');
 
     // 4. Clear selection
-     
+
     // Specific selector for the clear button in BulkActionsBar might be tricky without test-id
     // Let's use the icon or position
-    await page.click('button:has-text("X"), button:has(.lucide-x)'); 
-    
+    await page.click('button:has-text("X"), button:has(.lucide-x)');
+
     await expect(bulkBar).not.toBeVisible();
   });
 
@@ -89,10 +89,10 @@ test.describe('Smart Features - Agenda', () => {
 
     // 4. Verify Toast and Input Change
     await expect(page.locator('text=Horário sugerido')).toBeVisible();
-    
+
     // Verify the select has a value (not empty)
     // The select trigger usually displays the selected value
-     
+
     // Or check the specific time select trigger
     // It's the second SelectTrigger in DateTimeSection typically.
     // Let's look for text matching a time pattern (HH:mm)

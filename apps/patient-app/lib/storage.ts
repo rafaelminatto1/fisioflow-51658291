@@ -3,14 +3,13 @@
  * Helper functions for AsyncStorage with better error handling and typing
  */
 
-
 /**
  * Storage utility with typed operations
  */
 
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { log } from './logger';
-import { STORAGE_KEYS } from './constants';
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { log } from "./logger";
+import { STORAGE_KEYS } from "./constants";
 
 export const Storage = {
   /**
@@ -29,7 +28,7 @@ export const Storage = {
         return value as T;
       }
     } catch (error) {
-      log.error('STORAGE', `Failed to get key: ${key}`, error);
+      log.error("STORAGE", `Failed to get key: ${key}`, error);
       return null;
     }
   },
@@ -39,11 +38,11 @@ export const Storage = {
    */
   async set<T>(key: string, value: T): Promise<boolean> {
     try {
-      const serialized = typeof value === 'string' ? value : JSON.stringify(value);
+      const serialized = typeof value === "string" ? value : JSON.stringify(value);
       await AsyncStorage.setItem(key, serialized);
       return true;
     } catch (error) {
-      log.error('STORAGE', `Failed to set key: ${key}`, error);
+      log.error("STORAGE", `Failed to set key: ${key}`, error);
       return false;
     }
   },
@@ -56,7 +55,7 @@ export const Storage = {
       await AsyncStorage.removeItem(key);
       return true;
     } catch (error) {
-      log.error('STORAGE', `Failed to remove key: ${key}`, error);
+      log.error("STORAGE", `Failed to remove key: ${key}`, error);
       return false;
     }
   },
@@ -69,7 +68,7 @@ export const Storage = {
       await AsyncStorage.clear();
       return true;
     } catch (error) {
-      log.error('STORAGE', 'Failed to clear storage', error);
+      log.error("STORAGE", "Failed to clear storage", error);
       return false;
     }
   },
@@ -81,7 +80,7 @@ export const Storage = {
     try {
       return [...(await AsyncStorage.getAllKeys())];
     } catch (error) {
-      log.error('STORAGE', 'Failed to get all keys', error);
+      log.error("STORAGE", "Failed to get all keys", error);
       return [];
     }
   },
@@ -108,7 +107,7 @@ export const Storage = {
 
       return result;
     } catch (error) {
-      log.error('STORAGE', `Failed to get multiple keys: ${keys.join(', ')}`, error);
+      log.error("STORAGE", `Failed to get multiple keys: ${keys.join(", ")}`, error);
       return {};
     }
   },
@@ -118,14 +117,14 @@ export const Storage = {
    */
   async setMultiple<T>(entries: Array<[string, T]>): Promise<boolean> {
     try {
-      const serializedEntries = entries.map(([key, value]) => [
-        key,
-        typeof value === 'string' ? value : JSON.stringify(value),
-      ] as [string, string]);
+      const serializedEntries = entries.map(
+        ([key, value]) =>
+          [key, typeof value === "string" ? value : JSON.stringify(value)] as [string, string],
+      );
       await AsyncStorage.multiSet(serializedEntries);
       return true;
     } catch (error) {
-      log.error('STORAGE', 'Failed to set multiple values', error);
+      log.error("STORAGE", "Failed to set multiple values", error);
       return false;
     }
   },
@@ -138,7 +137,7 @@ export const Storage = {
       await AsyncStorage.multiRemove(keys);
       return true;
     } catch (error) {
-      log.error('STORAGE', `Failed to remove multiple keys: ${keys.join(', ')}`, error);
+      log.error("STORAGE", `Failed to remove multiple keys: ${keys.join(", ")}`, error);
       return false;
     }
   },
@@ -151,7 +150,7 @@ export const Storage = {
       const value = await AsyncStorage.getItem(key);
       return value !== null;
     } catch (error) {
-      log.error('STORAGE', `Failed to check key: ${key}`, error);
+      log.error("STORAGE", `Failed to check key: ${key}`, error);
       return false;
     }
   },
@@ -234,7 +233,7 @@ export const AppStorage = {
   },
   async clearCache(): Promise<boolean> {
     const allKeys = await Storage.getAllKeys();
-    const cacheKeys = allKeys.filter(key => key.startsWith(STORAGE_KEYS.CACHED_DATA_PREFIX));
+    const cacheKeys = allKeys.filter((key) => key.startsWith(STORAGE_KEYS.CACHED_DATA_PREFIX));
     if (cacheKeys.length === 0) {
       return true;
     }
@@ -275,7 +274,7 @@ export const StorageSize = {
 
       return totalSize;
     } catch (error) {
-      log.error('STORAGE', 'Failed to calculate storage size', error);
+      log.error("STORAGE", "Failed to calculate storage size", error);
       return 0;
     }
   },
@@ -306,7 +305,7 @@ export const StorageSize = {
       const keys = await Storage.getAllKeys();
       return keys.length;
     } catch (error) {
-      log.error('STORAGE', 'Failed to get item count', error);
+      log.error("STORAGE", "Failed to get item count", error);
       return 0;
     }
   },
@@ -326,14 +325,14 @@ export const StorageDebug = {
       const keys = await Storage.getAllKeys();
       const values = await AsyncStorage.multiGet(keys);
 
-      log.info('STORAGE_DEBUG', `Total items: ${keys.length}`);
+      log.info("STORAGE_DEBUG", `Total items: ${keys.length}`);
 
       for (const [key, value] of values) {
-        const preview = value ? (value.length > 100 ? `${value.slice(0, 100)}...` : value) : 'null';
-        log.debug('STORAGE_DEBUG', `${key}: ${preview}`);
+        const preview = value ? (value.length > 100 ? `${value.slice(0, 100)}...` : value) : "null";
+        log.debug("STORAGE_DEBUG", `${key}: ${preview}`);
       }
     } catch (error) {
-      log.error('STORAGE_DEBUG', 'Failed to log all items', error);
+      log.error("STORAGE_DEBUG", "Failed to log all items", error);
     }
   },
 
@@ -342,11 +341,11 @@ export const StorageDebug = {
    */
   async clearAll(): Promise<boolean> {
     if (!__DEV__) {
-      log.warn('STORAGE_DEBUG', 'clearAll is only available in development');
+      log.warn("STORAGE_DEBUG", "clearAll is only available in development");
       return false;
     }
 
-    log.warn('STORAGE_DEBUG', 'Clearing all storage data');
+    log.warn("STORAGE_DEBUG", "Clearing all storage data");
     return Storage.clear();
   },
 };

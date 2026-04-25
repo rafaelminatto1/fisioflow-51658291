@@ -16,12 +16,15 @@ async function main() {
     "Pós-Op LCA — Fase I (Proteção e Ativação)",
     "Pós-Op Manguito Rotador — Proteção Inicial",
     "Prevenção de Quedas — Equilíbrio e Força",
-    "Manutenção Funcional — Sarcopenia"
+    "Manutenção Funcional — Sarcopenia",
   ];
 
   console.log("Cleaning up all other templates to maintain high quality...");
 
-  const toDelete = await db.select().from(exerciseTemplates).where(notInArray(exerciseTemplates.name, keptNames));
+  const toDelete = await db
+    .select()
+    .from(exerciseTemplates)
+    .where(notInArray(exerciseTemplates.name, keptNames));
 
   for (const t of toDelete) {
     console.log(`Deleting: ${t.name}`);

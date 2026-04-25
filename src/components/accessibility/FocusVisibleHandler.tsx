@@ -19,6 +19,6 @@ import { useFocusVisibleHandler } from "@/hooks/accessibility/useFocusVisibleHan
  * Componente que inicializa o handler de focus-visible
  */
 export function FocusVisibleHandler() {
-	useFocusVisibleHandler();
-	return null;
+  useFocusVisibleHandler();
+  return null;
 }

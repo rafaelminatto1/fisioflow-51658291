@@ -65,151 +65,128 @@ const noop = () => {};
 
 describe("TemplateDetailPanel — testes de propriedade", () => {
   // Feature: exercise-templates-refactor, Property 4: Renderização condicional por perfil pós-operatório
-  it(
-    "Property 4a: ExerciseTimeline aparece se e somente se patientProfile = 'pos_operatorio' E exerciseCount > 0",
-    () => {
-      // Validates: Requirements 2.4
-      fc.assert(
-        fc.property(
-          arbitraryTemplate(),
-          (template) => {
-            const { unmount, container } = render(
-              <TemplateDetailPanel
-                template={template}
-                onApply={noop}
-                onCustomize={noop}
-                onEdit={noop}
-                onDelete={noop}
-              />,
-            );
+  it("Property 4a: ExerciseTimeline aparece se e somente se patientProfile = 'pos_operatorio' E exerciseCount > 0", () => {
+    // Validates: Requirements 2.4
+    fc.assert(
+      fc.property(arbitraryTemplate(), (template) => {
+        const { unmount, container } = render(
+          <TemplateDetailPanel
+            template={template}
+            onApply={noop}
+            onCustomize={noop}
+            onEdit={noop}
+            onDelete={noop}
+          />,
+        );
 
-            const q = within(container);
-            const timeline = q.queryByTestId("exercise-timeline");
+        const q = within(container);
+        const timeline = q.queryByTestId("exercise-timeline");
 
-            const shouldShow =
-              template.patientProfile === "pos_operatorio" &&
-              template.exerciseCount > 0;
+        const shouldShow =
+          template.patientProfile === "pos_operatorio" && template.exerciseCount > 0;
 
-            const result = shouldShow ? timeline !== null : timeline === null;
+        const result = shouldShow ? timeline !== null : timeline === null;
 
-            unmount();
-            return result;
-          },
-        ),
-        { numRuns: 100 },
-      );
-    },
-  );
+        unmount();
+        return result;
+      }),
+      { numRuns: 100 },
+    );
+  });
 
   // Feature: exercise-templates-refactor, Property 4: Renderização condicional — botão Editar
-  it(
-    "Property 4d: 'Personalizar' appears for system, trash icon only for custom",
-    () => {
-      fc.assert(
-        fc.property(
-          arbitraryTemplate(),
-          (template) => {
-            const { unmount, container } = render(
-              <TemplateDetailPanel
-                template={template}
-                onApply={noop}
-                onCustomize={noop}
-                onEdit={noop}
-                onDelete={noop}
-              />,
-            );
+  it("Property 4d: 'Personalizar' appears for system, trash icon only for custom", () => {
+    fc.assert(
+      fc.property(arbitraryTemplate(), (template) => {
+        const { unmount, container } = render(
+          <TemplateDetailPanel
+            template={template}
+            onApply={noop}
+            onCustomize={noop}
+            onEdit={noop}
+            onDelete={noop}
+          />,
+        );
 
-            const q = within(container);
-            const customizeBtn = q.queryByRole("button", { name: /personalizar/i });
-            const editBtn = q.queryByRole("button", { name: /editar/i });
-            const deleteDialogBtn = container.querySelector("[data-testid='delete-trigger']") || q.queryByRole("button", { name: /confirmar exclusão/i });
+        const q = within(container);
+        const customizeBtn = q.queryByRole("button", { name: /personalizar/i });
+        const editBtn = q.queryByRole("button", { name: /editar/i });
+        const deleteDialogBtn =
+          container.querySelector("[data-testid='delete-trigger']") ||
+          q.queryByRole("button", { name: /confirmar exclusão/i });
 
-            const isSystem = template.templateType === "system";
-            const customizeCorrect = isSystem ? customizeBtn !== null : customizeBtn === null;
-            const editCorrect = isSystem ? editBtn === null : editBtn !== null;
+        const isSystem = template.templateType === "system";
+        const customizeCorrect = isSystem ? customizeBtn !== null : customizeBtn === null;
+        const editCorrect = isSystem ? editBtn === null : editBtn !== null;
 
-            const result = customizeCorrect && editCorrect;
+        const result = customizeCorrect && editCorrect;
 
-            unmount();
-            return result;
-          },
-        ),
-        { numRuns: 100 },
-      );
-    },
-  );
+        unmount();
+        return result;
+      }),
+      { numRuns: 100 },
+    );
+  });
 
   // Feature: exercise-templates-refactor, Property 4: Renderização condicional — botão Excluir
-  it(
-    "Property 4c: custom templates have 'Editar' + trash icon, system has neither",
-    () => {
-      fc.assert(
-        fc.property(
-          arbitraryTemplate(),
-          (template) => {
-            const { unmount, container } = render(
-              <TemplateDetailPanel
-                template={template}
-                onApply={noop}
-                onCustomize={noop}
-                onEdit={noop}
-                onDelete={noop}
-              />,
-            );
+  it("Property 4c: custom templates have 'Editar' + trash icon, system has neither", () => {
+    fc.assert(
+      fc.property(arbitraryTemplate(), (template) => {
+        const { unmount, container } = render(
+          <TemplateDetailPanel
+            template={template}
+            onApply={noop}
+            onCustomize={noop}
+            onEdit={noop}
+            onDelete={noop}
+          />,
+        );
 
-            const q = within(container);
-            const editBtn = q.queryByRole("button", { name: /editar/i });
-            const customizeBtn = q.queryByRole("button", { name: /personalizar/i });
+        const q = within(container);
+        const editBtn = q.queryByRole("button", { name: /editar/i });
+        const customizeBtn = q.queryByRole("button", { name: /personalizar/i });
 
-            const isCustom = template.templateType === "custom";
-            const editCorrect = isCustom ? editBtn !== null : editBtn === null;
-            const customizeCorrect = isCustom ? customizeBtn === null : customizeBtn !== null;
+        const isCustom = template.templateType === "custom";
+        const editCorrect = isCustom ? editBtn !== null : editBtn === null;
+        const customizeCorrect = isCustom ? customizeBtn === null : customizeBtn !== null;
 
-            const result = editCorrect && customizeCorrect;
+        const result = editCorrect && customizeCorrect;
 
-            unmount();
-            return result;
-          },
-        ),
-        { numRuns: 100 },
-      );
-    },
-  );
+        unmount();
+        return result;
+      }),
+      { numRuns: 100 },
+    );
+  });
 
-  it(
-    "Property 4d: 'Personalizar' for system only, 'Editar' for custom only",
-    () => {
-      fc.assert(
-        fc.property(
-          arbitraryTemplate(),
-          (template) => {
-            const { unmount, container } = render(
-              <TemplateDetailPanel
-                template={template}
-                onApply={noop}
-                onCustomize={noop}
-                onEdit={noop}
-                onDelete={noop}
-              />,
-            );
+  it("Property 4d: 'Personalizar' for system only, 'Editar' for custom only", () => {
+    fc.assert(
+      fc.property(arbitraryTemplate(), (template) => {
+        const { unmount, container } = render(
+          <TemplateDetailPanel
+            template={template}
+            onApply={noop}
+            onCustomize={noop}
+            onEdit={noop}
+            onDelete={noop}
+          />,
+        );
 
-            const q = within(container);
-            const customizeBtn = q.queryByRole("button", { name: /personalizar/i });
-            const editBtn = q.queryByRole("button", { name: /editar/i });
+        const q = within(container);
+        const customizeBtn = q.queryByRole("button", { name: /personalizar/i });
+        const editBtn = q.queryByRole("button", { name: /editar/i });
 
-            const isSystem = template.templateType === "system";
-            const result = isSystem
-              ? customizeBtn !== null && editBtn === null
-              : customizeBtn === null && editBtn !== null;
+        const isSystem = template.templateType === "system";
+        const result = isSystem
+          ? customizeBtn !== null && editBtn === null
+          : customizeBtn === null && editBtn !== null;
 
-            unmount();
-            return result;
-          },
-        ),
-        { numRuns: 100 },
-      );
-    },
-  );
+        unmount();
+        return result;
+      }),
+      { numRuns: 100 },
+    );
+  });
 });
 
 // ─── Unit Tests ───────────────────────────────────────────────────────────────
@@ -281,8 +258,12 @@ describe("TemplateDetailPanel — testes unitários", () => {
       <TemplateDetailPanel
         template={template}
         onApply={noop}
-        onCustomize={() => { customizeCalled = true; }}
-        onEdit={() => { editCalled = true; }}
+        onCustomize={() => {
+          customizeCalled = true;
+        }}
+        onEdit={() => {
+          editCalled = true;
+        }}
         onDelete={noop}
       />,
     );
@@ -302,8 +283,12 @@ describe("TemplateDetailPanel — testes unitários", () => {
       <TemplateDetailPanel
         template={template}
         onApply={noop}
-        onCustomize={() => { customizeCalled = true; }}
-        onEdit={() => { editCalled = true; }}
+        onCustomize={() => {
+          customizeCalled = true;
+        }}
+        onEdit={() => {
+          editCalled = true;
+        }}
         onDelete={noop}
       />,
     );
@@ -352,7 +337,7 @@ describe("TemplateDetailPanel — testes unitários", () => {
   it("não deve quebrar quando bibliographicReferences for undefined (Regression test)", () => {
     // @ts-ignore — simulate invalid runtime data
     const template = makeTemplate({ bibliographicReferences: undefined });
-    
+
     // This will throw if the component crashes during initial render
     const { container } = render(
       <TemplateDetailPanel
@@ -363,7 +348,7 @@ describe("TemplateDetailPanel — testes unitários", () => {
         onDelete={noop}
       />,
     );
-    
+
     expect(container).toBeTruthy();
   });
 });

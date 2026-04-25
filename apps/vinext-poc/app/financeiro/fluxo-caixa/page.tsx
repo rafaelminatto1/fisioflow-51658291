@@ -1,17 +1,17 @@
-import { db } from '../../lib/db';
-import { getAuthSession } from '../../lib/auth';
-import { transacoes } from '@fisioflow/db';
-import { eq, desc } from 'drizzle-orm';
-import { Card, CardContent, CardHeader, CardTitle } from '@fisioflow/ui';
-import { TrendingUp, TrendingDown, DollarSign, Calendar, LineChart } from 'lucide-react';
-import { FluxoCaixaChart } from '../../components/financeiro/FluxoCaixaChart';
-import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+import { db } from "../../lib/db";
+import { getAuthSession } from "../../lib/auth";
+import { transacoes } from "@fisioflow/db";
+import { eq, desc } from "drizzle-orm";
+import { Card, CardContent, CardHeader, CardTitle } from "@fisioflow/ui";
+import { TrendingUp, TrendingDown, DollarSign, Calendar, LineChart } from "lucide-react";
+import { FluxoCaixaChart } from "../../components/financeiro/FluxoCaixaChart";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 
 function formatMonthLabel(monthKey: string): string {
-  const [year, month] = monthKey.split('-').map(Number);
+  const [year, month] = monthKey.split("-").map(Number);
   const date = new Date(year, month - 1, 1);
-  return format(date, 'MMM/yy', { locale: ptBR });
+  return format(date, "MMM/yy", { locale: ptBR });
 }
 
 export default async function FluxoCaixaPage() {
@@ -28,14 +28,17 @@ export default async function FluxoCaixaPage() {
   });
 
   // 2. Process data (Server-side grouping)
-  const grouped = new Map<string, { mes: string, entradas: number, saidas: number, saldo: number }>();
+  const grouped = new Map<
+    string,
+    { mes: string; entradas: number; saidas: number; saldo: number }
+  >();
 
   data.forEach((t) => {
     const mes = t.createdAt.toISOString().slice(0, 7);
     const valor = Number(t.valor);
     const existing = grouped.get(mes) || { mes, entradas: 0, saidas: 0, saldo: 0 };
-    
-    if (t.tipo === 'receita') {
+
+    if (t.tipo === "receita") {
       existing.entradas += valor;
     } else {
       // 'despesa' e outros tipos são saídas
@@ -87,7 +90,7 @@ export default async function FluxoCaixaPage() {
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-black text-emerald-600">
-              R$ {totalEntradas.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+              R$ {totalEntradas.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
             </div>
           </CardContent>
         </Card>
@@ -101,7 +104,7 @@ export default async function FluxoCaixaPage() {
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-black text-red-600">
-              R$ {totalSaidas.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+              R$ {totalSaidas.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
             </div>
           </CardContent>
         </Card>
@@ -114,8 +117,11 @@ export default async function FluxoCaixaPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className={`text-3xl font-black ${(totalEntradas - totalSaidas) >= 0 ? "text-emerald-600" : "text-red-600"}`}>
-              R$ {(totalEntradas - totalSaidas).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+            <div
+              className={`text-3xl font-black ${totalEntradas - totalSaidas >= 0 ? "text-emerald-600" : "text-red-600"}`}
+            >
+              R${" "}
+              {(totalEntradas - totalSaidas).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
             </div>
           </CardContent>
         </Card>
@@ -128,9 +134,7 @@ export default async function FluxoCaixaPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-xl font-black tracking-tight text-primary">
-              Últimos 12 Meses
-            </div>
+            <div className="text-xl font-black tracking-tight text-primary">Últimos 12 Meses</div>
           </CardContent>
         </Card>
       </div>

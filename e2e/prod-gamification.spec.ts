@@ -26,14 +26,14 @@ test('Verificar Admin Gamification em Produção', async ({ page }) => {
 
   // Verificações
   console.log('Verificando elementos...');
-  
+
   // Título Principal
   await expect(page.locator('body')).toContainText('Gestão de Gamificação');
-  
+
   // Abas
   await expect(page.locator('body')).toContainText('Dashboard');
   await expect(page.locator('body')).toContainText('Ranking');
-  
+
   // Métricas (verificar se carregou algum número ou elemento de skeleton sumiu)
   // Esperar que o loading skeleton desapareça
   await expect(page.locator('.animate-pulse')).toHaveCount(0, { timeout: 15000 }).catch(() => console.log('Timeout aguardando loading, prosseguindo...'));

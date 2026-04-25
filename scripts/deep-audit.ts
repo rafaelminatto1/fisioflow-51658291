@@ -52,14 +52,14 @@ async function runDeepAudit() {
   // --- AUDIT ROUTES & TABS ---
   for (const route of ROUTES) {
     console.log(`\n🔍 Auditing ${route.name} (${route.path})...`);
-    
+
     const routeResults: any = {
       name: route.name,
       path: route.path,
       tabs: [],
       errors: [],
       warnings: [],
-      networkErrors: []
+      networkErrors: [],
     };
 
     const consoleListener = (msg: ConsoleMessage) => {
@@ -73,15 +73,19 @@ async function runDeepAudit() {
 
     const requestFailedListener = (request: any) => {
       const failure = request.failure();
-      const errorText = `${request.url()} - ${failure?.errorText || 'Unknown'}`;
-      routeResults.networkErrors.push({ type: 'failed', url: request.url(), error: failure?.errorText });
+      const errorText = `${request.url()} - ${failure?.errorText || "Unknown"}`;
+      routeResults.networkErrors.push({
+        type: "failed",
+        url: request.url(),
+        error: failure?.errorText,
+      });
       console.log(`   [NET FAIL] ${errorText}`);
     };
 
     const responseListener = (response: any) => {
       const status = response.status();
       if (status >= 400) {
-        routeResults.networkErrors.push({ type: 'http_error', url: response.url(), status });
+        routeResults.networkErrors.push({ type: "http_error", url: response.url(), status });
         console.log(`   [HTTP ERROR] ${status} - ${response.url()}`);
       }
     };
@@ -100,27 +104,26 @@ async function runDeepAudit() {
 
       for (let i = 0; i < tabs.length; i++) {
         const tab = tabs[i];
-        const tabName = await tab.innerText() || `Tab ${i+1}`;
+        const tabName = (await tab.innerText()) || `Tab ${i + 1}`;
         console.log(`   -> Clicking tab: ${tabName}`);
-        
+
         try {
           await tab.click();
           await page.waitForTimeout(2000); // Wait for tab content to render
-          
+
           routeResults.tabs.push({
             name: tabName,
-            status: "ok"
+            status: "ok",
           });
         } catch (tabErr: any) {
           console.error(`   [TAB ERROR] ${tabName}: ${tabErr.message}`);
           routeResults.tabs.push({
             name: tabName,
             status: "error",
-            error: tabErr.message
+            error: tabErr.message,
           });
         }
       }
-
     } catch (e: any) {
       console.error(`   [ROUTE ERROR] ${route.name}: ${e.message}`);
       routeResults.errors.push(`Navigation/Interaction failed: ${e.message}`);
@@ -143,8 +146,8 @@ async function runDeepAudit() {
       totalErrors: auditResults.reduce((acc, r) => acc + r.errors.length, 0),
       totalWarnings: auditResults.reduce((acc, r) => acc + r.warnings.length, 0),
       totalNetworkErrors: auditResults.reduce((acc, r) => acc + r.networkErrors.length, 0),
-      totalTabsTested: auditResults.reduce((acc, r) => acc + r.tabs.length, 0)
-    }
+      totalTabsTested: auditResults.reduce((acc, r) => acc + r.tabs.length, 0),
+    },
   };
 
   fs.writeFileSync(REPORT_PATH, JSON.stringify(finalReport, null, 2));

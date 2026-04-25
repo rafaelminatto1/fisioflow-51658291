@@ -1,6 +1,6 @@
-import { WorkflowEntrypoint, WorkflowStep, WorkflowEvent } from 'cloudflare:workers';
-import type { Env } from '../types/env';
-import { createPool } from '../lib/db';
+import { WorkflowEntrypoint, WorkflowStep, WorkflowEvent } from "cloudflare:workers";
+import type { Env } from "../types/env";
+import { createPool } from "../lib/db";
 
 export type HEPComplianceParams = {
   patientId: string;
@@ -23,21 +23,28 @@ export type HEPComplianceParams = {
  */
 export class HEPComplianceWorkflow extends WorkflowEntrypoint<Env, HEPComplianceParams> {
   async run(event: WorkflowEvent<HEPComplianceParams>, step: WorkflowStep) {
-    const { patientId, patientName, patientPhone, exercisePlanId, organizationId, therapistName, durationWeeks } =
-      event.payload;
+    const {
+      patientId,
+      patientName,
+      patientPhone,
+      exercisePlanId,
+      organizationId,
+      therapistName,
+      durationWeeks,
+    } = event.payload;
 
     const weeklyAdherence: number[] = [];
 
     for (let week = 1; week <= durationWeeks; week++) {
       // Aguarda 7 dias (exceto na 1ª iteração)
       if (week > 1) {
-        await step.sleep(`wait-week-${week}`, '7 days');
+        await step.sleep(`wait-week-${week}`, "7 days");
       }
 
       // Verifica adesão da semana
       const adherence = await step.do(`check-adherence-week-${week}`, async () => {
         const pool = createPool(this.env);
-        const result = await pool.query(
+        const result = (await pool.query(
           `SELECT
              ROUND(
                COUNT(CASE WHEN completed = true THEN 1 END)::numeric /
@@ -49,7 +56,7 @@ export class HEPComplianceWorkflow extends WorkflowEntrypoint<Env, HEPCompliance
              AND patient_id = $2
              AND completed_at >= NOW() - INTERVAL '7 days'`,
           [exercisePlanId, patientId],
-        ) as unknown as { rows: { rate: string }[] };
+        )) as unknown as { rows: { rate: string }[] };
         return Number(result.rows[0]?.rate ?? 0);
       });
 
@@ -72,13 +79,13 @@ export class HEPComplianceWorkflow extends WorkflowEntrypoint<Env, HEPCompliance
     }
 
     // Relatório final ao terapeuta
-    await step.do('generate-final-report', async () => {
+    await step.do("generate-final-report", async () => {
       const avgAdherence =
         weeklyAdherence.length > 0
           ? Math.round(weeklyAdherence.reduce((a, b) => a + b, 0) / weeklyAdherence.length)
           : 0;
 
-      const _weeklyStr = weeklyAdherence.map((r, i) => `Semana ${i + 1}: ${r}%`).join('\n');
+      const _weeklyStr = weeklyAdherence.map((r, i) => `Semana ${i + 1}: ${r}%`).join("\n");
 
       await this.sendWhatsApp(
         patientPhone,
@@ -87,7 +94,7 @@ export class HEPComplianceWorkflow extends WorkflowEntrypoint<Env, HEPCompliance
 
       if (this.env.ANALYTICS) {
         this.env.ANALYTICS.writeDataPoint({
-          blobs: ['/workflow/hep-compliance', 'WORKFLOW', organizationId, 'hep_completed'],
+          blobs: ["/workflow/hep-compliance", "WORKFLOW", organizationId, "hep_completed"],
           doubles: [0, 200, avgAdherence],
           indexes: [organizationId],
         });
@@ -97,21 +104,18 @@ export class HEPComplianceWorkflow extends WorkflowEntrypoint<Env, HEPCompliance
 
   private async sendWhatsApp(phone: string, message: string) {
     if (!this.env.WHATSAPP_PHONE_NUMBER_ID || !this.env.WHATSAPP_ACCESS_TOKEN) return;
-    await fetch(
-      `https://graph.facebook.com/v21.0/${this.env.WHATSAPP_PHONE_NUMBER_ID}/messages`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${this.env.WHATSAPP_ACCESS_TOKEN}`,
-        },
-        body: JSON.stringify({
-          messaging_product: 'whatsapp',
-          to: phone.replace(/\D/g, ''),
-          type: 'text',
-          text: { body: message },
-        }),
+    await fetch(`https://graph.facebook.com/v21.0/${this.env.WHATSAPP_PHONE_NUMBER_ID}/messages`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${this.env.WHATSAPP_ACCESS_TOKEN}`,
       },
-    );
+      body: JSON.stringify({
+        messaging_product: "whatsapp",
+        to: phone.replace(/\D/g, ""),
+        type: "text",
+        text: { body: message },
+      }),
+    });
   }
 }

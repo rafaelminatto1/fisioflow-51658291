@@ -1,10 +1,18 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { fetchApi } from '@/lib/api';
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { fetchApi } from "@/lib/api";
 
 export interface Notification {
   id: string;
   user_id: string;
-  type: 'info' | 'success' | 'warning' | 'error' | 'appointment' | 'payment' | 'whatsapp' | 'waitlist';
+  type:
+    | "info"
+    | "success"
+    | "warning"
+    | "error"
+    | "appointment"
+    | "payment"
+    | "whatsapp"
+    | "waitlist";
   title: string;
   message: string;
   link?: string;
@@ -24,13 +32,14 @@ export interface NotificationsResponse {
  */
 export function useNotifications(options?: { unreadOnly?: boolean; limit?: number }) {
   return useQuery<NotificationsResponse>({
-    queryKey: ['notifications', options],
-    queryFn: () => fetchApi('/api/notifications', {
+    queryKey: ["notifications", options],
+    queryFn: () =>
+      fetchApi("/api/notifications", {
         params: {
-            unread: options?.unreadOnly ? 'true' : undefined,
-            limit: options?.limit ? String(options.limit) : undefined,
-        }
-    }),
+          unread: options?.unreadOnly ? "true" : undefined,
+          limit: options?.limit ? String(options.limit) : undefined,
+        },
+      }),
     staleTime: 1000 * 30, // 30 seconds
     refetchInterval: 1000 * 60, // Refetch every minute
   });
@@ -51,33 +60,33 @@ export function useNotificationMutations() {
   const queryClient = useQueryClient();
 
   const markAsRead = useMutation({
-    mutationFn: (notificationId: string) => 
-      fetchApi(`/api/notifications/${notificationId}/read`, { method: 'PUT' }),
+    mutationFn: (notificationId: string) =>
+      fetchApi(`/api/notifications/${notificationId}/read`, { method: "PUT" }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['notifications'] });
+      queryClient.invalidateQueries({ queryKey: ["notifications"] });
     },
   });
 
   const markAllAsRead = useMutation({
-    mutationFn: () => fetchApi('/api/notifications/read-all', { method: 'PUT' }),
+    mutationFn: () => fetchApi("/api/notifications/read-all", { method: "PUT" }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['notifications'] });
+      queryClient.invalidateQueries({ queryKey: ["notifications"] });
     },
   });
 
   const deleteNotification = useMutation({
-    mutationFn: (notificationId: string) => 
-      fetchApi(`/api/notifications/${notificationId}`, { method: 'DELETE' }),
+    mutationFn: (notificationId: string) =>
+      fetchApi(`/api/notifications/${notificationId}`, { method: "DELETE" }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['notifications'] });
+      queryClient.invalidateQueries({ queryKey: ["notifications"] });
     },
   });
 
   const createNotification = useMutation({
-    mutationFn: (data: Partial<Notification>) => 
-      fetchApi('/api/notifications', { method: 'POST', data }),
+    mutationFn: (data: Partial<Notification>) =>
+      fetchApi("/api/notifications", { method: "POST", data }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['notifications'] });
+      queryClient.invalidateQueries({ queryKey: ["notifications"] });
     },
   });
 
@@ -94,16 +103,16 @@ export function useNotificationMutations() {
  */
 export async function registerPushToken(token: string, deviceName?: string, deviceType?: string) {
   try {
-    await fetchApi('/api/push-tokens', {
-      method: 'POST',
+    await fetchApi("/api/push-tokens", {
+      method: "POST",
       data: {
         expo_push_token: token,
         device_name: deviceName,
         device_type: deviceType,
       },
     });
-    console.log('Push token registered successfully');
+    console.log("Push token registered successfully");
   } catch (error) {
-    console.error('Failed to register push token:', error);
+    console.error("Failed to register push token:", error);
   }
 }

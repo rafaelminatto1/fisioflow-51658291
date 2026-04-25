@@ -12,16 +12,20 @@ Neon PostgreSQL + Drizzle ORM. Schema files at `src/server/db/schema/`. All tabl
 Every table has an `organizationId: uuid("organization_id")` column. Row-Level Security enforces isolation using a session variable:
 
 ```ts
-import { withOrganizationPolicy, withPublicOrOrganizationPolicy, withPublicWriteOrganizationPolicy } from "./rls_helper";
+import {
+  withOrganizationPolicy,
+  withPublicOrOrganizationPolicy,
+  withPublicWriteOrganizationPolicy,
+} from "./rls_helper";
 ```
 
 Three RLS policies exist:
 
-| Policy | Helper | Behavior |
-|--------|--------|----------|
-| Strict tenant isolation | `withOrganizationPolicy(tableName, table.organizationId)` | All operations scoped to `current_setting('app.org_id')::uuid` |
-| Hybrid (public OR org) | `withPublicOrOrganizationPolicy(...)` | Visible when `organizationId IS NULL` OR matches session org. Used by wiki, dictionary, templates |
-| Public write + org read | `withPublicWriteOrganizationPolicy(...)` | Anyone can INSERT; SELECT/UPDATE/DELETE scoped to org. Used by `precadastros` |
+| Policy                  | Helper                                                    | Behavior                                                                                          |
+| ----------------------- | --------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| Strict tenant isolation | `withOrganizationPolicy(tableName, table.organizationId)` | All operations scoped to `current_setting('app.org_id')::uuid`                                    |
+| Hybrid (public OR org)  | `withPublicOrOrganizationPolicy(...)`                     | Visible when `organizationId IS NULL` OR matches session org. Used by wiki, dictionary, templates |
+| Public write + org read | `withPublicWriteOrganizationPolicy(...)`                  | Anyone can INSERT; SELECT/UPDATE/DELETE scoped to org. Used by `precadastros`                     |
 
 Before querying, set the session variable:
 
@@ -89,6 +93,7 @@ patients
 ```
 
 **Relations from patients:**
+
 ```
 patients 1:N medicalRecords
 patients 1:N appointments
@@ -114,6 +119,7 @@ medical_records
 ```
 
 **Relations from medicalRecords:**
+
 ```
 medicalRecords N:1 patients
 medicalRecords 1:N pathologies
@@ -180,6 +186,7 @@ appointments
 ```
 
 **Relations:**
+
 ```
 appointments N:1 patients
 appointments 1:1 sessions (via sessions.appointmentId)
@@ -209,6 +216,7 @@ sessions
 ```
 
 **Relations:**
+
 ```
 sessions N:1 patients
 sessions N:1 appointments
@@ -313,24 +321,24 @@ exercise_favorites
 
 Tables in `financial.ts`. Most use Portuguese column names.
 
-| Table | Purpose |
-|-------|---------|
-| `transacoes` | Revenue/expense transactions |
-| `contas_financeiras` | Bills payable/receivable |
-| `centros_custo` | Cost centers |
-| `convenios` | Health insurance providers |
-| `pagamentos` | Payment records |
-| `empresas_parceiras` | Partner companies |
-| `fornecedores` | Suppliers |
-| `formas_pagamento` | Payment methods config |
-| `sessionPackageTemplates` | Package templates (N sessions for price) |
-| `patientPackages` | Packages sold to patients |
-| `packageUsage` | Package consumption log |
-| `vouchers` | Voucher definitions |
-| `userVouchers` | Vouchers purchased by users |
-| `voucherCheckoutSessions` | Stripe checkout for vouchers |
-| `nfse` | NFS-e (municipal tax invoices) |
-| `nfseConfig` | NFS-e configuration per org (PK = organizationId) |
+| Table                     | Purpose                                           |
+| ------------------------- | ------------------------------------------------- |
+| `transacoes`              | Revenue/expense transactions                      |
+| `contas_financeiras`      | Bills payable/receivable                          |
+| `centros_custo`           | Cost centers                                      |
+| `convenios`               | Health insurance providers                        |
+| `pagamentos`              | Payment records                                   |
+| `empresas_parceiras`      | Partner companies                                 |
+| `fornecedores`            | Suppliers                                         |
+| `formas_pagamento`        | Payment methods config                            |
+| `sessionPackageTemplates` | Package templates (N sessions for price)          |
+| `patientPackages`         | Packages sold to patients                         |
+| `packageUsage`            | Package consumption log                           |
+| `vouchers`                | Voucher definitions                               |
+| `userVouchers`            | Vouchers purchased by users                       |
+| `voucherCheckoutSessions` | Stripe checkout for vouchers                      |
+| `nfse`                    | NFS-e (municipal tax invoices)                    |
+| `nfseConfig`              | NFS-e configuration per org (PK = organizationId) |
 
 ### patientPackages (key financial relation)
 
@@ -352,20 +360,20 @@ patient_packages
 
 Simpler clinical tables, some with Portuguese column names:
 
-| Table | Purpose |
-|-------|---------|
-| `patient_goals` | Goals linked to patient directly (status: em_andamento/concluido/cancelado) |
-| `patient_pathologies` | Pathologies linked to patient directly (status: ativo/resolvido/cronico) |
-| `patient_session_metrics` | Before/after metrics per session (pain, functional score, mood, satisfaction) |
-| `prescribed_exercises` | Exercise prescriptions for patients |
-| `generated_reports` | AI-generated clinical reports |
-| `conduct_library` | Reusable clinical conduct templates |
-| `clinical_test_templates` | Special test definitions with fields_definition |
-| `standardized_test_results` | Standardized test/scale results |
-| `pain_maps` + `pain_map_points` | Body pain mapping with coordinates |
-| `evolution_templates` | SOAP evolution templates |
-| `exercise_prescriptions` | Home exercise programs with QR codes |
-| `patient_objectives` + `patient_objective_assignments` | Objective library and patient assignments |
+| Table                                                  | Purpose                                                                       |
+| ------------------------------------------------------ | ----------------------------------------------------------------------------- |
+| `patient_goals`                                        | Goals linked to patient directly (status: em_andamento/concluido/cancelado)   |
+| `patient_pathologies`                                  | Pathologies linked to patient directly (status: ativo/resolvido/cronico)      |
+| `patient_session_metrics`                              | Before/after metrics per session (pain, functional score, mood, satisfaction) |
+| `prescribed_exercises`                                 | Exercise prescriptions for patients                                           |
+| `generated_reports`                                    | AI-generated clinical reports                                                 |
+| `conduct_library`                                      | Reusable clinical conduct templates                                           |
+| `clinical_test_templates`                              | Special test definitions with fields_definition                               |
+| `standardized_test_results`                            | Standardized test/scale results                                               |
+| `pain_maps` + `pain_map_points`                        | Body pain mapping with coordinates                                            |
+| `evolution_templates`                                  | SOAP evolution templates                                                      |
+| `exercise_prescriptions`                               | Home exercise programs with QR codes                                          |
+| `patient_objectives` + `patient_objective_assignments` | Objective library and patient assignments                                     |
 
 ## Additional Modules
 
@@ -411,23 +419,23 @@ Simpler clinical tables, some with Portuguese column names:
 
 ## Enums Reference
 
-| Enum Name | Values |
-|-----------|--------|
-| `gender` | M, F, O |
-| `pathology_status` | active, treated, monitoring |
-| `goal_status` | pending, in_progress, achieved, abandoned |
-| `appointment_status` | agendado, atendido, avaliacao, cancelado, faltou, faltou_com_aviso, faltou_sem_aviso, nao_atendido, nao_atendido_sem_cobranca, presenca_confirmada, remarcar |
-| `appointment_type` | evaluation, session, reassessment, group, return |
-| `payment_status` | pending, paid, partial, refunded |
-| `session_status` | draft, finalized, cancelled |
-| `exercise_difficulty` | iniciante, intermediario, avancado |
-| `protocol_type` | pos_operatorio, patologia, preventivo, esportivo, funcional, neurologico, respiratorio, conservador, geriatria |
-| `evidence_level` | A, B, C, D |
-| `package_status` | active, expired, used, cancelled |
-| `task_priority` | low, medium, high, urgent |
-| `file_type` | pdf, jpg, png, docx, other |
-| `file_category` | exam, imaging, document, before_after, other |
-| `biomechanics_assessment_type` | static_posture, gait_analysis, running_analysis, functional_movement |
+| Enum Name                      | Values                                                                                                                                                       |
+| ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `gender`                       | M, F, O                                                                                                                                                      |
+| `pathology_status`             | active, treated, monitoring                                                                                                                                  |
+| `goal_status`                  | pending, in_progress, achieved, abandoned                                                                                                                    |
+| `appointment_status`           | agendado, atendido, avaliacao, cancelado, faltou, faltou_com_aviso, faltou_sem_aviso, nao_atendido, nao_atendido_sem_cobranca, presenca_confirmada, remarcar |
+| `appointment_type`             | evaluation, session, reassessment, group, return                                                                                                             |
+| `payment_status`               | pending, paid, partial, refunded                                                                                                                             |
+| `session_status`               | draft, finalized, cancelled                                                                                                                                  |
+| `exercise_difficulty`          | iniciante, intermediario, avancado                                                                                                                           |
+| `protocol_type`                | pos_operatorio, patologia, preventivo, esportivo, funcional, neurologico, respiratorio, conservador, geriatria                                               |
+| `evidence_level`               | A, B, C, D                                                                                                                                                   |
+| `package_status`               | active, expired, used, cancelled                                                                                                                             |
+| `task_priority`                | low, medium, high, urgent                                                                                                                                    |
+| `file_type`                    | pdf, jpg, png, docx, other                                                                                                                                   |
+| `file_category`                | exam, imaging, document, before_after, other                                                                                                                 |
+| `biomechanics_assessment_type` | static_posture, gait_analysis, running_analysis, functional_movement                                                                                         |
 
 ## Query Patterns
 
@@ -437,11 +445,13 @@ Simpler clinical tables, some with Portuguese column names:
 const result = await db
   .select()
   .from(patients)
-  .where(and(
-    eq(patients.organizationId, orgId),
-    isNull(patients.deletedAt),
-    eq(patients.isActive, true),
-  ));
+  .where(
+    and(
+      eq(patients.organizationId, orgId),
+      isNull(patients.deletedAt),
+      eq(patients.isActive, true),
+    ),
+  );
 ```
 
 ### Relational query with joins (Drizzle `.with()`)
@@ -481,10 +491,7 @@ await db.insert(patients).values({
 ### Soft delete pattern
 
 ```ts
-await db
-  .update(patients)
-  .set({ deletedAt: new Date() })
-  .where(eq(patients.id, patientId));
+await db.update(patients).set({ deletedAt: new Date() }).where(eq(patients.id, patientId));
 ```
 
 ### Filter active (non-deleted) records
@@ -508,15 +515,17 @@ await db
 const conflicts = await db
   .select()
   .from(appointments)
-  .where(and(
-    eq(appointments.organizationId, orgId),
-    eq(appointments.therapistId, therapistId),
-    eq(appointments.date, dateStr),
-    isNull(appointments.deletedAt),
-    notInArray(appointments.status, ["cancelado"]),
-    lt(appointments.startTime, endTime),
-    gt(appointments.endTime, startTime),
-  ));
+  .where(
+    and(
+      eq(appointments.organizationId, orgId),
+      eq(appointments.therapistId, therapistId),
+      eq(appointments.date, dateStr),
+      isNull(appointments.deletedAt),
+      notInArray(appointments.status, ["cancelado"]),
+      lt(appointments.startTime, endTime),
+      gt(appointments.endTime, startTime),
+    ),
+  );
 ```
 
 ### Session with SOAP data and attachments

@@ -1,4 +1,4 @@
-version: '3.8'
+version: "3.8"
 
 services:
   orthanc:
@@ -15,7 +15,7 @@ services:
       # Default credentials (CHANGE IN PRODUCTION)
       # For dev/internal usage behind proxy, we can keep default or disable auth if purely internal
       # Using default orthanc:orthanc for now
-      ORTHANC__AUTHENTICATION_ENABLED: "false" 
+      ORTHANC__AUTHENTICATION_ENABLED: "false"
       # Enable DICOMweb
       ORTHANC__DICOM_WEB__ENABLE: "true"
       ORTHANC__DICOM_WEB__ROOT: "/dicom-web/"

@@ -43,10 +43,12 @@ export { app as myFeatureRoutes };
 ```
 
 ### File naming
+
 - Route files: `apps/api/src/routes/<featureName>.ts`
 - Export name: `<featureName>Routes`
 
 ### Registration in index.ts
+
 Add to the `apiRoutes` array in `apps/api/src/index.ts`:
 
 ```ts
@@ -75,14 +77,14 @@ const app = new Hono<{ Bindings: Env }>();
 
 Global middleware (applied in `index.ts` in this order):
 
-| Order | Middleware | Purpose |
-|-------|-----------|---------|
-| 1 | `cors()` | Origin allowlist from `ALLOWED_ORIGINS` env var. Wildcard only outside production. |
-| 2 | `logger()` | Request logging |
-| 3 | `secureHeaders()` | Security headers |
-| 4 | `requestIdMiddleware` | Generates/propagates `X-Request-ID` |
-| 5 | `analyticsMiddleware` | Fire-and-forget analytics |
-| 6 | `errorHandler` | Global error handler via `app.onError()` |
+| Order | Middleware            | Purpose                                                                            |
+| ----- | --------------------- | ---------------------------------------------------------------------------------- |
+| 1     | `cors()`              | Origin allowlist from `ALLOWED_ORIGINS` env var. Wildcard only outside production. |
+| 2     | `logger()`            | Request logging                                                                    |
+| 3     | `secureHeaders()`     | Security headers                                                                   |
+| 4     | `requestIdMiddleware` | Generates/propagates `X-Request-ID`                                                |
+| 5     | `analyticsMiddleware` | Fire-and-forget analytics                                                          |
+| 6     | `errorHandler`        | Global error handler via `app.onError()`                                           |
 
 ### Per-route middleware
 
@@ -93,7 +95,7 @@ app.use("*", requireAuth);
 ```
 
 ```ts
-app.get("/", requireAuth, async (c) => { });
+app.get("/", requireAuth, async (c) => {});
 ```
 
 Both work. The first applies to all routes in the sub-app. The second is per-handler.
@@ -101,7 +103,12 @@ Both work. The first applies to all routes in the sub-app. The second is per-han
 **Rate limiting** — applied per-handler with config:
 
 ```ts
-app.post("/", requireAuth, rateLimit({ limit: 20, windowSeconds: 3600, endpoint: "feature-name" }), async (c) => { });
+app.post(
+  "/",
+  requireAuth,
+  rateLimit({ limit: 20, windowSeconds: 3600, endpoint: "feature-name" }),
+  async (c) => {},
+);
 ```
 
 For unauthenticated routes, provide `keyFn`:
@@ -112,7 +119,7 @@ rateLimit({
   windowSeconds: 900,
   endpoint: "auth-login",
   keyFn: (c) => c.req.header("CF-Connecting-IP") ?? "unknown",
-})
+});
 ```
 
 **Validation** — inline in handler (most common) or via `validate(schema)` middleware:
@@ -140,10 +147,10 @@ app.post("/", requireAuth, validate(myZodSchema), async (c) => {
 
 ```ts
 const user = c.get("user");
-user.uid
-user.email
-user.organizationId
-user.role
+user.uid;
+user.email;
+user.organizationId;
+user.role;
 ```
 
 ---
@@ -168,24 +175,26 @@ const result = await db
 
 const db = createDb(c.env);
 const [row] = await db.insert(patients).values(payload).returning();
-const [row] = await db.update(patients).set(payload).where(
-  withTenant(patients, user.organizationId, eq(patients.id, id))
-).returning();
+const [row] = await db
+  .update(patients)
+  .set(payload)
+  .where(withTenant(patients, user.organizationId, eq(patients.id, id)))
+  .returning();
 ```
 
 **`withTenant` helper** — always use this for tenant-scoped queries. It adds `organizationId = $1` and `deletedAt IS NULL` filters:
 
 ```ts
-withTenant(table, user.organizationId)
-withTenant(table, user.organizationId, eq(table.id, id))
+withTenant(table, user.organizationId);
+withTenant(table, user.organizationId, eq(table.id, id));
 ```
 
 **Read vs Write:**
 
 ```ts
-createDb(c.env, "read")
-createDb(c.env)
-createDb(c.env, "write")
+createDb(c.env, "read");
+createDb(c.env);
+createDb(c.env, "write");
 ```
 
 ### Raw SQL via `createPool` (for complex queries)
@@ -194,10 +203,10 @@ createDb(c.env, "write")
 import { createPool } from "../lib/db";
 
 const pool = createPool(c.env);
-const result = await pool.query(
-  "SELECT * FROM table WHERE organization_id = $1 AND status = $2",
-  [user.organizationId, "active"]
-);
+const result = await pool.query("SELECT * FROM table WHERE organization_id = $1 AND status = $2", [
+  user.organizationId,
+  "active",
+]);
 ```
 
 ### Raw SQL via `getRawSql` (for simple queries)
@@ -263,27 +272,32 @@ if (!isUuid(id)) return c.json({ error: "ID inválido" }, 400);
 All responses follow consistent shapes:
 
 **Success (single item):**
+
 ```ts
 return c.json({ data: normalizedRow });
 ```
 
 **Success (list with pagination):**
+
 ```ts
 return c.json({ data: items, total: 100, page: 1, perPage: 50 });
 ```
 
 **Success (created):**
+
 ```ts
 return c.json({ data: normalizedRow }, 201);
 ```
 
 **Success (action):**
+
 ```ts
 return c.json({ success: true });
 return c.json({ ok: true });
 ```
 
 **Error:**
+
 ```ts
 return c.json({ error: "Human-readable message" }, 400);
 return c.json({ error: "Message", details: "Technical details" }, 500);
@@ -291,6 +305,7 @@ return c.json({ error: "Message", code: "VALIDATION_ERROR" }, 400);
 ```
 
 **HTTP status codes used:**
+
 - `200` — success
 - `201` — created
 - `400` — validation error, bad request
@@ -360,13 +375,15 @@ Always use the normalizer before returning data.
 Use `c.executionCtx.waitUntil()` for fire-and-forget work after sending the response:
 
 ```ts
-c.executionCtx.waitUntil((async () => {
-  await broadcastToOrg(c.env, user.organizationId, {
-    type: "ITEM_UPDATED",
-    payload: { id, action: "updated" },
-  });
-  await triggerInngestEvent(c.env, c.executionCtx, "item.created", { id }, { id: user.uid });
-})());
+c.executionCtx.waitUntil(
+  (async () => {
+    await broadcastToOrg(c.env, user.organizationId, {
+      type: "ITEM_UPDATED",
+      payload: { id, action: "updated" },
+    });
+    await triggerInngestEvent(c.env, c.executionCtx, "item.created", { id }, { id: user.uid });
+  })(),
+);
 ```
 
 ---
@@ -387,12 +404,15 @@ const startTime = body.startTime || body.start_time;
 Most entities use soft delete (archiving):
 
 ```ts
-await db.update(patients).set({
-  isActive: false,
-  status: "Arquivado",
-  deletedAt: new Date(),
-  updatedAt: new Date(),
-}).where(condition);
+await db
+  .update(patients)
+  .set({
+    isActive: false,
+    status: "Arquivado",
+    deletedAt: new Date(),
+    updatedAt: new Date(),
+  })
+  .where(condition);
 ```
 
 The `withTenant()` helper automatically filters `deletedAt IS NULL` from queries.

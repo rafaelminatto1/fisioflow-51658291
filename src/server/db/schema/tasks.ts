@@ -1,118 +1,139 @@
 import {
-	pgTable,
-	uuid,
-	varchar,
-	text,
-	timestamp,
-	boolean,
-	integer,
-	jsonb,
-	pgEnum,
+  pgTable,
+  uuid,
+  varchar,
+  text,
+  timestamp,
+  boolean,
+  integer,
+  jsonb,
+  pgEnum,
 } from "drizzle-orm/pg-core";
 import { withOrganizationPolicy } from "./rls_helper";
 
-export const taskPriorityEnum = pgEnum("task_priority", [
-	"low",
-	"medium",
-	"high",
-	"urgent",
-]);
+export const taskPriorityEnum = pgEnum("task_priority", ["low", "medium", "high", "urgent"]);
 
-export const taskBoards = pgTable("task_boards", {
-	id: uuid("id").primaryKey().defaultRandom(),
-	title: varchar("title", { length: 255 }).notNull(),
-	description: text("description"),
-	ownerId: varchar("owner_id").notNull(), // User who created the board
-	organizationId: uuid("organization_id"),
-	createdAt: timestamp("created_at").defaultNow().notNull(),
-	updatedAt: timestamp("updated_at").defaultNow().notNull(),
-}, (table) => [withOrganizationPolicy("task_boards", table.organizationId)]);
+export const taskBoards = pgTable(
+  "task_boards",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    title: varchar("title", { length: 255 }).notNull(),
+    description: text("description"),
+    ownerId: varchar("owner_id").notNull(), // User who created the board
+    organizationId: uuid("organization_id"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  },
+  (table) => [withOrganizationPolicy("task_boards", table.organizationId)],
+);
 
-export const taskColumns = pgTable("task_columns", {
-	id: uuid("id").primaryKey().defaultRandom(),
-	boardId: uuid("board_id")
-		.references(() => taskBoards.id)
-		.notNull(),
-	title: varchar("title", { length: 255 }).notNull(),
-	order: integer("order").notNull().default(0),
-	organizationId: uuid("organization_id"),
-	createdAt: timestamp("created_at").defaultNow().notNull(),
-	updatedAt: timestamp("updated_at").defaultNow().notNull(),
-}, (table) => [withOrganizationPolicy("task_columns", table.organizationId)]);
+export const taskColumns = pgTable(
+  "task_columns",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    boardId: uuid("board_id")
+      .references(() => taskBoards.id)
+      .notNull(),
+    title: varchar("title", { length: 255 }).notNull(),
+    order: integer("order").notNull().default(0),
+    organizationId: uuid("organization_id"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  },
+  (table) => [withOrganizationPolicy("task_columns", table.organizationId)],
+);
 
-export const tasks = pgTable("tasks", {
-	id: uuid("id").primaryKey().defaultRandom(),
-	columnId: uuid("column_id")
-		.references(() => taskColumns.id)
-		.notNull(),
-	title: varchar("title", { length: 255 }).notNull(),
-	description: text("description"), // Rich text content
-	priority: taskPriorityEnum("priority").default("medium"),
-	dueDate: timestamp("due_date"),
+export const tasks = pgTable(
+  "tasks",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    columnId: uuid("column_id")
+      .references(() => taskColumns.id)
+      .notNull(),
+    title: varchar("title", { length: 255 }).notNull(),
+    description: text("description"), // Rich text content
+    priority: taskPriorityEnum("priority").default("medium"),
+    dueDate: timestamp("due_date"),
 
-	// Accountability Feature
-	requiresAcknowledgment: boolean("requires_acknowledgment")
-		.default(false)
-		.notNull(),
+    // Accountability Feature
+    requiresAcknowledgment: boolean("requires_acknowledgment").default(false).notNull(),
 
-	// Relations to entities (e.g. Patient Evolution)
-	patientId: uuid("patient_id"),
-	relatedEntityId: uuid("related_entity_id"),
-	relatedEntityType: varchar("related_entity_type"), // e.g., 'evolution', 'appointment'
+    // Relations to entities (e.g. Patient Evolution)
+    patientId: uuid("patient_id"),
+    relatedEntityId: uuid("related_entity_id"),
+    relatedEntityType: varchar("related_entity_type"), // e.g., 'evolution', 'appointment'
 
-	createdBy: varchar("created_by").notNull(),
-	organizationId: uuid("organization_id"),
-	createdAt: timestamp("created_at").defaultNow().notNull(),
-	updatedAt: timestamp("updated_at").defaultNow().notNull(),
-}, (table) => [withOrganizationPolicy("tasks", table.organizationId)]);
+    createdBy: varchar("created_by").notNull(),
+    organizationId: uuid("organization_id"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  },
+  (table) => [withOrganizationPolicy("tasks", table.organizationId)],
+);
 
-export const taskAssignments = pgTable("task_assignments", {
-	id: uuid("id").primaryKey().defaultRandom(),
-	taskId: uuid("task_id")
-		.references(() => tasks.id)
-		.notNull(),
-	userId: varchar("user_id").notNull(), // Assigned to
-	organizationId: uuid("organization_id"),
-	assignedAt: timestamp("assigned_at").defaultNow().notNull(),
-	assignedBy: varchar("assigned_by"),
-}, (table) => [withOrganizationPolicy("task_assignments", table.organizationId)]);
+export const taskAssignments = pgTable(
+  "task_assignments",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    taskId: uuid("task_id")
+      .references(() => tasks.id)
+      .notNull(),
+    userId: varchar("user_id").notNull(), // Assigned to
+    organizationId: uuid("organization_id"),
+    assignedAt: timestamp("assigned_at").defaultNow().notNull(),
+    assignedBy: varchar("assigned_by"),
+  },
+  (table) => [withOrganizationPolicy("task_assignments", table.organizationId)],
+);
 
-export const taskAcknowledgments = pgTable("task_acknowledgments", {
-	id: uuid("id").primaryKey().defaultRandom(),
-	taskId: uuid("task_id")
-		.references(() => tasks.id)
-		.notNull(),
-	userId: varchar("user_id").notNull(),
+export const taskAcknowledgments = pgTable(
+  "task_acknowledgments",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    taskId: uuid("task_id")
+      .references(() => tasks.id)
+      .notNull(),
+    userId: varchar("user_id").notNull(),
 
-	// Accountability mechanisms
-	readAt: timestamp("read_at"), // Recibo de Leitura
-	acknowledgedAt: timestamp("acknowledged_at"), // Aceite explícito
-	notes: text("notes"), // Optional notes upon acknowledgment
-	organizationId: uuid("organization_id"),
+    // Accountability mechanisms
+    readAt: timestamp("read_at"), // Recibo de Leitura
+    acknowledgedAt: timestamp("acknowledged_at"), // Aceite explícito
+    notes: text("notes"), // Optional notes upon acknowledgment
+    organizationId: uuid("organization_id"),
 
-	createdAt: timestamp("created_at").defaultNow().notNull(),
-}, (table) => [withOrganizationPolicy("task_acknowledgments", table.organizationId)]);
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [withOrganizationPolicy("task_acknowledgments", table.organizationId)],
+);
 
-export const taskVisibility = pgTable("task_visibility", {
-	id: uuid("id").primaryKey().defaultRandom(),
-	taskId: uuid("task_id")
-		.references(() => tasks.id)
-		.notNull(),
-	role: varchar("role", { length: 50 }), // 'ADMIN', 'PHYSIOTHERAPIST', 'INTERN'
-	userId: varchar("user_id"), // Specific user override
-	canView: boolean("can_view").default(true).notNull(),
-	organizationId: uuid("organization_id"),
-	createdAt: timestamp("created_at").defaultNow().notNull(),
-}, (table) => [withOrganizationPolicy("task_visibility", table.organizationId)]);
+export const taskVisibility = pgTable(
+  "task_visibility",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    taskId: uuid("task_id")
+      .references(() => tasks.id)
+      .notNull(),
+    role: varchar("role", { length: 50 }), // 'ADMIN', 'PHYSIOTHERAPIST', 'INTERN'
+    userId: varchar("user_id"), // Specific user override
+    canView: boolean("can_view").default(true).notNull(),
+    organizationId: uuid("organization_id"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [withOrganizationPolicy("task_visibility", table.organizationId)],
+);
 
-export const taskAuditLogs = pgTable("task_audit_logs", {
-	id: uuid("id").primaryKey().defaultRandom(),
-	taskId: uuid("task_id")
-		.references(() => tasks.id)
-		.notNull(),
-	action: varchar("action", { length: 100 }).notNull(), // 'created', 'moved', 'assigned', 'read', 'acknowledged'
-	performedBy: varchar("performed_by").notNull(),
-	details: jsonb("details"), // Optional JSON for old/new values
-	organizationId: uuid("organization_id"),
-	timestamp: timestamp("timestamp").defaultNow().notNull(),
-}, (table) => [withOrganizationPolicy("task_audit_logs", table.organizationId)]);
+export const taskAuditLogs = pgTable(
+  "task_audit_logs",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    taskId: uuid("task_id")
+      .references(() => tasks.id)
+      .notNull(),
+    action: varchar("action", { length: 100 }).notNull(), // 'created', 'moved', 'assigned', 'read', 'acknowledged'
+    performedBy: varchar("performed_by").notNull(),
+    details: jsonb("details"), // Optional JSON for old/new values
+    organizationId: uuid("organization_id"),
+    timestamp: timestamp("timestamp").defaultNow().notNull(),
+  },
+  (table) => [withOrganizationPolicy("task_audit_logs", table.organizationId)],
+);

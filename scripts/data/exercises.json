@@ -12,25 +12,14 @@
         "Desça até que as coxas fiquem paralelas ao chão (aproximadamente 90° de flexão).",
         "Retorne à posição inicial empurrando o chão firmemente pelos calcanhares, contraindo glúteos ao subir."
       ],
-      "muscles": [
-        "quadríceps",
-        "glúteo máximo",
-        "isquiotibiais",
-        "core"
-      ],
+      "muscles": ["quadríceps", "glúteo máximo", "isquiotibiais", "core"],
       "equipment": "nenhum",
       "difficulty": "beginner",
       "sets_recommended": 3,
       "reps_recommended": 12,
       "precautions": "Evite que os joelhos colapsem para dentro (valgo). Mantenha o peso distribuído nos calcanhares.",
       "benefits": "Melhora a força funcional, estabilidade de joelho e autonomia em atividades diárias.",
-      "tags": [
-        "pernas",
-        "quadríceps",
-        "glúteos",
-        "funcional",
-        "membros inferiores"
-      ]
+      "tags": ["pernas", "quadríceps", "glúteos", "funcional", "membros inferiores"]
     },
     {
       "name": "Abdominal Crupeado",
@@ -44,21 +33,14 @@
         "Mantenha o queixo longe do peito (olhe para o teto).",
         "Retorne lentamente à posição inicial."
       ],
-      "muscles": [
-        "reto abdominal",
-        "oblíquos"
-      ],
+      "muscles": ["reto abdominal", "oblíquos"],
       "equipment": "nenhum",
       "difficulty": "beginner",
       "sets_recommended": 3,
       "reps_recommended": 15,
       "precautions": "Não puxe a cabeça com as mãos para evitar tensão cervical.",
       "benefits": "Fortalece a musculatura central e estabiliza a coluna.",
-      "tags": [
-        "core",
-        "abdominal",
-        "coluna"
-      ]
+      "tags": ["core", "abdominal", "coluna"]
     },
     {
       "name": "4 Apoios (Four Point Kneeling)",
@@ -71,23 +53,14 @@
         "Mantenha a coluna neutra e o abdômen levemente contraído.",
         "Pode-se progredir retirando um membro de cada vez sem oscilar o tronco."
       ],
-      "muscles": [
-        "transverso do abdômen",
-        "multífidos",
-        "core"
-      ],
+      "muscles": ["transverso do abdômen", "multífidos", "core"],
       "equipment": "nenhum",
       "difficulty": "beginner",
       "sets_recommended": 3,
       "duration_seconds": 30,
       "precautions": "Não deixe a lombar 'arquear' nem a pelve girar.",
       "benefits": "Melhora a estabilidade lombo-pélvica e controle motor.",
-      "tags": [
-        "estabilização",
-        "coluna",
-        "core",
-        "postura"
-      ]
+      "tags": ["estabilização", "coluna", "core", "postura"]
     },
     {
       "name": "Abdominal Oblíquo",
@@ -100,22 +73,14 @@
         "Alterne os lados de forma controlada.",
         "Mantenha a contração abdominal durante todo o percurso."
       ],
-      "muscles": [
-        "oblíquo interno",
-        "oblíquo externo",
-        "reto abdominal"
-      ],
+      "muscles": ["oblíquo interno", "oblíquo externo", "reto abdominal"],
       "equipment": "nenhum",
       "difficulty": "beginner",
       "sets_recommended": 3,
       "reps_recommended": 12,
       "precautions": "Evite movimentos bruscos de pescoço.",
       "benefits": "Melhora a rotação do tronco e estabilidade lateral.",
-      "tags": [
-        "core",
-        "oblíquos",
-        "abdominal"
-      ]
+      "tags": ["core", "oblíquos", "abdominal"]
     },
     {
       "name": "Abdução de Quadril Deitado",
@@ -128,22 +93,14 @@
         "Eleve a perna de cima em direção ao teto sem girar o quadril para trás.",
         "Desça lentamente com controle."
       ],
-      "muscles": [
-        "glúteo médio",
-        "glúteo mínimo",
-        "tensor da fáscia lata"
-      ],
+      "muscles": ["glúteo médio", "glúteo mínimo", "tensor da fáscia lata"],
       "equipment": "nenhum",
       "difficulty": "beginner",
       "sets_recommended": 3,
       "reps_recommended": 12,
       "precautions": "Não deixe o tronco rodar para trás durante a subida.",
       "benefits": "Fundamental para estabilidade pélvica e prevenção de dores no joelho.",
-      "tags": [
-        "quadril",
-        "glúteos",
-        "membros inferiores"
-      ]
+      "tags": ["quadril", "glúteos", "membros inferiores"]
     },
     {
       "name": "Abdução de Quadril em Pé",
@@ -156,21 +113,14 @@
         "Afaste a outra perna lateralmente, mantendo o pé apontado para frente.",
         "Retorne devagar sem tocar o pé no chão para manter a tensão."
       ],
-      "muscles": [
-        "glúteo médio",
-        "estabilizadores do quadril"
-      ],
+      "muscles": ["glúteo médio", "estabilizadores do quadril"],
       "equipment": "nenhum",
       "difficulty": "beginner",
       "sets_recommended": 3,
       "reps_recommended": 15,
       "precautions": "Evite inclinar o tronco para o lado oposto.",
       "benefits": "Melhora o equilíbrio dinâmico e força de suporte do quadril.",
-      "tags": [
-        "quadril",
-        "glúteos",
-        "equilíbrio"
-      ]
+      "tags": ["quadril", "glúteos", "equilíbrio"]
     },
     {
       "name": "Agachamento Sumô",
@@ -183,22 +133,14 @@
         "Garanta que os joelhos sigam a direção da ponta dos pés.",
         "Suba contraindo adutores e glúteos."
       ],
-      "muscles": [
-        "adutores",
-        "glúteo máximo",
-        "quadríceps"
-      ],
+      "muscles": ["adutores", "glúteo máximo", "quadríceps"],
       "equipment": "nenhum",
       "difficulty": "beginner",
       "sets_recommended": 3,
       "reps_recommended": 12,
       "precautions": "Não deixe os joelhos caírem para dentro.",
       "benefits": "Fortalece a parte interna da coxa e base pélvica.",
-      "tags": [
-        "pernas",
-        "adutores",
-        "glúteos"
-      ]
+      "tags": ["pernas", "adutores", "glúteos"]
     },
     {
       "name": "Alongamento de Quadríceps",
@@ -211,21 +153,14 @@
         "Empurre o quadril levemente para frente para intensificar.",
         "Segure a posição por 30 segundos."
       ],
-      "muscles": [
-        "quadríceps",
-        "iliopsoas"
-      ],
+      "muscles": ["quadríceps", "iliopsoas"],
       "equipment": "nenhum",
       "difficulty": "beginner",
       "sets_recommended": 2,
       "duration_seconds": 30,
       "precautions": "Não incline o tronco para frente.",
       "benefits": "Reduz tensão no joelho e melhora flexibilidade anterior.",
-      "tags": [
-        "alongamento",
-        "quadríceps",
-        "joelho"
-      ]
+      "tags": ["alongamento", "quadríceps", "joelho"]
     },
     {
       "name": "Elevação Pélvica (Ponte)",
@@ -238,22 +173,14 @@
         "Contraia firmemente os glúteos no topo por 2 segundos.",
         "Desça lentamente sem relaxar totalmente no chão."
       ],
-      "muscles": [
-        "glúteo máximo",
-        "isquiotibiais",
-        "eretores da espinha"
-      ],
+      "muscles": ["glúteo máximo", "isquiotibiais", "eretores da espinha"],
       "equipment": "nenhum",
       "difficulty": "beginner",
       "sets_recommended": 3,
       "reps_recommended": 12,
       "precautions": "Não hiperestenda a lombar no topo.",
       "benefits": "Fundamental para reabilitação lombar e força propulsiva.",
-      "tags": [
-        "glúteos",
-        "cadeia posterior",
-        "lombar"
-      ]
+      "tags": ["glúteos", "cadeia posterior", "lombar"]
     },
     {
       "name": "Extensão de Quadril (4 Apoios)",
@@ -266,20 +193,14 @@
         "Mantenha o abdômen contraído para não arquear a lombar.",
         "Retorne sem encostar o joelho no chão."
       ],
-      "muscles": [
-        "glúteo máximo"
-      ],
+      "muscles": ["glúteo máximo"],
       "equipment": "nenhum",
       "difficulty": "beginner",
       "sets_recommended": 3,
       "reps_recommended": 12,
       "precautions": "Mantenha a pelve paralela ao chão (evite girar).",
       "benefits": "Fortalecimento específico do motor primário do quadril.",
-      "tags": [
-        "glúteos",
-        "quadril",
-        "estabilização"
-      ]
+      "tags": ["glúteos", "quadril", "estabilização"]
     },
     {
       "name": "Flexão de Braço (Push-up)",
@@ -293,23 +214,14 @@
         "Empurre de volta mantendo o corpo rígido.",
         "Pode ser feito com joelhos apoiados para iniciantes."
       ],
-      "muscles": [
-        "peitoral maior",
-        "deltóide anterior",
-        "tríceps braquial",
-        "core"
-      ],
+      "muscles": ["peitoral maior", "deltóide anterior", "tríceps braquial", "core"],
       "equipment": "nenhum",
       "difficulty": "intermediate",
       "sets_recommended": 3,
       "reps_recommended": 10,
       "precautions": "Não deixe o quadril 'selar' (cair) nem o bumbum subir demais.",
       "benefits": "Fortalece toda a cadeia anterior superior.",
-      "tags": [
-        "braços",
-        "peito",
-        "funcional"
-      ]
+      "tags": ["braços", "peito", "funcional"]
     },
     {
       "name": "Panturrilha Unilateral",
@@ -322,21 +234,14 @@
         "Desça lentamente até alongar levemente a panturrilha.",
         "Mantenha o joelho estendido (ênfase em gastrocnêmio)."
       ],
-      "muscles": [
-        "gastrocnêmio",
-        "sóleo"
-      ],
+      "muscles": ["gastrocnêmio", "sóleo"],
       "equipment": "nenhum",
       "difficulty": "beginner",
       "sets_recommended": 3,
       "reps_recommended": 15,
       "precautions": "Evite balançar o corpo para subir.",
       "benefits": "Melhora a força de impulsão e estabilidade de tornozelo.",
-      "tags": [
-        "tornozelo",
-        "panturrilha",
-        "propriocepção"
-      ]
+      "tags": ["tornozelo", "panturrilha", "propriocepção"]
     },
     {
       "name": "Prancha Lateral",
@@ -349,22 +254,14 @@
         "Mantenha o cotovelo alinhado abaixo do ombro.",
         "Segure a posição respirando calmamente."
       ],
-      "muscles": [
-        "quadrado lombar",
-        "oblíquos",
-        "glúteo médio"
-      ],
+      "muscles": ["quadrado lombar", "oblíquos", "glúteo médio"],
       "equipment": "nenhum",
       "difficulty": "intermediate",
       "sets_recommended": 3,
       "duration_seconds": 30,
       "precautions": "Não deixe o quadril cair em direção ao chão.",
       "benefits": "Reduz dor lombar e estabiliza a coluna contra forças laterais.",
-      "tags": [
-        "core",
-        "estabilização",
-        "lombar"
-      ]
+      "tags": ["core", "estabilização", "lombar"]
     },
     {
       "name": "Ponte com uma perna",
@@ -377,22 +274,14 @@
         "Mantenha as cristas ilíacas (ossos do quadril) niveladas.",
         "Retorne com controle."
       ],
-      "muscles": [
-        "glúteo máximo",
-        "isquiotibiais",
-        "core"
-      ],
+      "muscles": ["glúteo máximo", "isquiotibiais", "core"],
       "equipment": "nenhum",
       "difficulty": "intermediate",
       "sets_recommended": 3,
       "reps_recommended": 10,
       "precautions": "Se houver câimbra nos isquiotibiais, aproxime o pé do quadril.",
       "benefits": "Corrige assimetrias de força entre os membros inferiores.",
-      "tags": [
-        "glúteos",
-        "unilateral",
-        "quadril"
-      ]
+      "tags": ["glúteos", "unilateral", "quadril"]
     },
     {
       "name": "Serrote com halter (Remada Unilateral)",
@@ -406,23 +295,14 @@
         "Mantenha a escápula retraída ao final do movimento.",
         "Retorne lentamente."
       ],
-      "muscles": [
-        "latíssimo do dorso",
-        "trapezio médio/inferior",
-        "rombóides",
-        "bíceps"
-      ],
+      "muscles": ["latíssimo do dorso", "trapezio médio/inferior", "rombóides", "bíceps"],
       "equipment": "halter",
       "difficulty": "beginner",
       "sets_recommended": 3,
       "reps_recommended": 12,
       "precautions": "Mantenha a coluna reta e paralela ao banco.",
       "benefits": "Melhora a postura e força de tração.",
-      "tags": [
-        "costas",
-        "braços",
-        "escápula"
-      ]
+      "tags": ["costas", "braços", "escápula"]
     },
     {
       "name": "Supino com halter",
@@ -435,22 +315,14 @@
         "Desça os pesos lateralmente até os cotovelos passarem levemente da linha do tronco.",
         "Empurre os pesos de volta à posição inicial, aproximando-os no topo."
       ],
-      "muscles": [
-        "peitoral maior",
-        "deltóide anterior",
-        "tríceps"
-      ],
+      "muscles": ["peitoral maior", "deltóide anterior", "tríceps"],
       "equipment": "halteres",
       "difficulty": "intermediate",
       "sets_recommended": 3,
       "reps_recommended": 10,
       "precautions": "Mantenha os pés firmes no chão e a lombar apoiada.",
       "benefits": "Desenvolve força de empurrar e estabilidade de ombro.",
-      "tags": [
-        "peito",
-        "braços",
-        "ombro"
-      ]
+      "tags": ["peito", "braços", "ombro"]
     },
     {
       "name": "Prancha abdominal",

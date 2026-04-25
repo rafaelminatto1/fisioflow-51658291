@@ -1,4 +1,5 @@
 # 📊 Relatório de Testes - FisioFlow (Atualizado)
+
 ## Data: $(date +%d/%m/%Y) às $(date +%H:%M)
 
 ---
@@ -6,9 +7,11 @@
 ## ✅ Correções Implementadas
 
 ### Problema 1: Testes de Autenticação E2E ✅
+
 **Solução Implementada:** Adicionar `data-testid` attributes ao componente `LoginForm`
 
 **Arquivos Modificados:**
+
 - `src/components/auth/LoginForm.tsx`
   - ✅ Adicionado `data-testid="auth-email-input"` no campo de email
   - ✅ Adicionado `data-testid="auth-password-input"` no campo de password
@@ -22,6 +25,7 @@
   - ✅ Corrigido problema de parênteses extra no final do arquivo
 
 **Benefícios:**
+
 - 🔍 Seletores mais robustos e fáceis de manter
 - 🎯 Melhor separação de seletores de teste e UI (CSS classes)
 - ✅ Melhor experiência para E2E testing
@@ -29,9 +33,11 @@
 ---
 
 ### Problema 2: Testes do TransactionModal ✅
+
 **Solução Implementada:** Usar `@testing-library/user-event` em vez de `fireEvent`
 
 **Arquivos Modificados:**
+
 - `package.json` (workspace root)
   - ✅ Instalado `@testing-library/user-event` como dev dependency
 
@@ -42,6 +48,7 @@
   - ✅ Melhorado teste "closes modal from cancel action"
 
 **Benefícios:**
+
 - 🎯 Simulação mais realista de interações do usuário
 - ✅ API moderna e recomendada pela Testing Library
 - 🔧 Testes mais confiáveis e menos propensos a flaky behavior
@@ -49,9 +56,11 @@
 ---
 
 ### Problema 3: Configuração de Portas ✅
+
 **Solução Implementada:** Padronizar porta em Vite e TestSprite
 
 **Arquivos Modificados:**
+
 - `apps/web/vite.config.ts`
   - ✅ Adicionado `port: 5173` explicitamente
   - ✅ Adicionado `strictPort: false` para evitar conflitos
@@ -64,6 +73,7 @@
   - ✅ Atualizados todos os testes Python de `http://localhost:8080` para `http://localhost:5173`
 
 **Benefícios:**
+
 - 🔗 Consistência de portas em todo o ecossistema
 - 🚀 TestSprite pode rodar localmente
 - 📦 Dev server usa porta previsível
@@ -72,9 +82,11 @@
 ---
 
 ### Problema 4: TestSprite CLI ✅
+
 **Decisão Documentada:** Continuar com Playwright (melhor escolha)
 
 **Arquivos Criados:**
+
 - `TESTSPRITE_DECISION.md`
   - ✅ Documentada decisão arquitetural
   - ✅ Explicados motivos da escolha
@@ -82,6 +94,7 @@
   - ✅ Definidos critérios para TestSprite vs Playwright
 
 **Benefícios:**
+
 - 📝 Documentação clara de decisões técnicas
 - 🎯 ROI claro para ferramenta de testes
 - 🔄 Flexibilidade para usar TestSprite no futuro se desejado
@@ -92,17 +105,20 @@
 ## 📊 Resultados dos Testes
 
 ### Testes Unitários (Vitest)
+
 - **Status:** ⚠️ 445 passed, 5 failed (450 total)
 - **Sucesso:** 98.9%
 - **Duração:** ~10-14 segundos
 - **Melhoria:** Testes de TransactionModal atualizados com userEvent
 
 **Notas:**
+
 - ✅ Testes de TransactionModal devem estar passando agora
 - ⚠️ 5 testes falhando são de outras categorias (validations, api)
 - 📝 Falhas não relacionadas às correções implementadas
 
 ### Testes E2E (Playwright)
+
 - **Status:** ⚠️ Alguns testes ainda falhando
 - **Problemas:**
   - 🔍 Elementos com `data-testid` não encontrados pelo Playwright
@@ -110,6 +126,7 @@
   - 🚦 Pode haver problema de roteamento ou estado da aplicação
 
 **Análise de Falhas:**
+
 ```
 1. "deve fazer login com credenciais válidas"
    - Erro: Elementos não encontrados
@@ -137,6 +154,7 @@
 ## 📝 Próximos Passos Sugeridos
 
 ### Imediato (Alta Prioridade)
+
 1. **Investigar renderização da página de autenticação**
    - Verificar se componentes estão sendo renderizados corretamente
    - Debugar por que `data-testid` attributes não são encontrados
@@ -153,6 +171,7 @@
    - Considerar usar `--headed` para ver o que está acontecendo
 
 ### Curto Prazo (Média Prioridade)
+
 4. **Melhorar seletores E2E**
    - Adicionar mais `data-testid` attributes em outros componentes
    - Criar padrão consistente para seletores
@@ -164,6 +183,7 @@
    - Melhorar timeouts e waits
 
 ### Longo Prazo (Baixa Prioridade)
+
 6. **Expandir cobertura de código**
    - Adicionar testes para componentes sem testes
    - Atingir meta de 70%+ de cobertura
@@ -179,17 +199,20 @@
 ## 🎯 Métricas Atuais
 
 ### Qualidade de Código
+
 - **Testes Unitários:** 98.9% de sucesso (445/450)
 - **Cobertura Estimada:** 60-70%
 - **Linter:** Passando
 - **Type Checking:** Passando
 
 ### Estabilidade de Testes
+
 - **Unitários:** Alta (98.9%)
 - **Integração:** Alta
 - **E2E:** Média (investigação necessária)
 
 ### Infraestrutura de Testes
+
 - **Framework Principal:** Vitest (unitários) + Playwright (E2E)
 - **Configuração:** ✅ Padronizada
 - **Portas:** ✅ Consistentes
@@ -200,12 +223,14 @@
 ## 📚 Recursos Disponíveis
 
 ### Documentação
+
 - ✅ `TEST_REPORT.md` - Relatório geral de testes
 - ✅ `TESTSPRITE_DECISION.md` - Decisão sobre TestSprite
 - ✅ `TESTING_README.md` - Guia de testes existente
 - ✅ `testsprite_tests/README.md` - Guia do TestSprite
 
 ### Comandos Úteis
+
 ```bash
 # Rodar testes unitários
 pnpm run test:unit
@@ -236,6 +261,7 @@ pnpm run test:e2e:debug
 ## 🎉 Conclusão
 
 ### Resumo das Mudanças
+
 - ✅ **4 problemas principais identificados e corrigidos**
 - ✅ **Melhores soluções escolhidas para cada problema**
 - ✅ **Código melhorado com data-testid e userEvent**
@@ -243,12 +269,14 @@ pnpm run test:e2e:debug
 - ✅ **Documentação atualizada e expandida**
 
 ### Status do Projeto
+
 - **Testes Unitários:** ✅ **ROBUSTOS** (98.9% de sucesso)
 - **Testes E2E:** ⚠️ **REQUER INVESTIGAÇÃO** (timing/renderização issues)
 - **Infraestrutura:** ✅ **ESTÁVEL E PADRONIZADA**
 - **Cobertura:** ⚠️ **PODE SER MELHORADA** (meta: 70%)
 
 ### Recomendação Final
+
 **O FisioFlow tem uma base sólida de testes unitários.** Os testes E2E precisam de investigação adicional para resolver issues de renderização da página de autenticação. Uma vez que esses issues forem resolvidos, a estratégia atual com Playwright será adequada para o projeto.
 
 **Estado Atual:** ✅ **PRODUÇÃO PRONTA** (com melhorias recomendadas em E2E)

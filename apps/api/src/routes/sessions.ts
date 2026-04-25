@@ -1,12 +1,12 @@
-import { Hono } from 'hono';
-import { createDb } from '../lib/db';
-import { requireAuth, type AuthVariables } from '../lib/auth';
-import type { Env } from '../types/env';
-import { sessions, sessionAttachments, sessionTemplates } from '@fisioflow/db';
-import { eq, and, desc, count, sql, or, ilike, isNull } from 'drizzle-orm';
-import { withTenant } from '../lib/db-utils';
-import { invalidatePatientCache } from '../lib/ai-context-cache';
-import { processClinicalEmbedding } from '../lib/ai/embeddings';
+import { Hono } from "hono";
+import { createDb } from "../lib/db";
+import { requireAuth, type AuthVariables } from "../lib/auth";
+import type { Env } from "../types/env";
+import { sessions, sessionAttachments, sessionTemplates } from "@fisioflow/db";
+import { eq, and, desc, count, sql, or, ilike, isNull } from "drizzle-orm";
+import { withTenant } from "../lib/db-utils";
+import { invalidatePatientCache } from "../lib/ai-context-cache";
+import { processClinicalEmbedding } from "../lib/ai/embeddings";
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
@@ -14,19 +14,19 @@ const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
 /** Local: Converte SOAP para texto único para embedding */
 function extractSoapText(row: any): string {
-	const parts = [];
-	
-	const subjective = jsonbToText(row.subjective);
-	const objective = jsonbToText(row.objective);
-	const assessment = jsonbToText(row.assessment);
-	const plan = jsonbToText(row.plan);
+  const parts = [];
 
-	if (subjective) parts.push(`[Subjetivo]: ${subjective}`);
-	if (objective) parts.push(`[Objetivo]: ${objective}`);
-	if (assessment) parts.push(`[Avaliação]: ${assessment}`);
-	if (plan) parts.push(`[Plano]: ${plan}`);
+  const subjective = jsonbToText(row.subjective);
+  const objective = jsonbToText(row.objective);
+  const assessment = jsonbToText(row.assessment);
+  const plan = jsonbToText(row.plan);
 
-	return parts.join("\n\n");
+  if (subjective) parts.push(`[Subjetivo]: ${subjective}`);
+  if (objective) parts.push(`[Objetivo]: ${objective}`);
+  if (assessment) parts.push(`[Avaliação]: ${assessment}`);
+  if (plan) parts.push(`[Plano]: ${plan}`);
+
+  return parts.join("\n\n");
 }
 
 /** Verifica se uma string é um UUID válido */
@@ -37,17 +37,17 @@ function isValidUuid(val: string): boolean {
 
 /** Serializa um texto para JSONB no formato { text: "..." } */
 function textToJsonb(val: unknown): { text: string } | null {
-  if (val == null || val === '') return null;
+  if (val == null || val === "") return null;
   return { text: String(val) };
 }
 
 /** Extrai texto de um valor JSONB (suporta { text: "..." }, string JSON ou null) */
 function jsonbToText(val: unknown): string | undefined {
   if (val == null) return undefined;
-  if (typeof val === 'string') return val;
-  if (typeof val === 'object' && val !== null) {
+  if (typeof val === "string") return val;
+  if (typeof val === "object" && val !== null) {
     const obj = val as Record<string, unknown>;
-    if ('text' in obj) return obj.text != null ? String(obj.text) : undefined;
+    if ("text" in obj) return obj.text != null ? String(obj.text) : undefined;
     return JSON.stringify(val);
   }
   return undefined;
@@ -66,7 +66,7 @@ function rowToRecord(row: any) {
     objective: jsonbToText(row.objective),
     assessment: jsonbToText(row.assessment),
     plan: jsonbToText(row.plan),
-    status: (row.status as string) ?? 'draft',
+    status: (row.status as string) ?? "draft",
     pain_level: subj.painScale ?? undefined,
     pain_location: subj.painLocation ?? undefined,
     pain_character: subj.painCharacter ?? undefined,
@@ -75,8 +75,8 @@ function rowToRecord(row: any) {
     finalized_at: row.finalizedAt ? new Date(row.finalizedAt).toISOString() : undefined,
     finalized_by: row.finalizedBy ? String(row.finalizedBy) : undefined,
     record_date: row.date
-      ? new Date(row.date).toISOString().split('T')[0]
-      : new Date().toISOString().split('T')[0],
+      ? new Date(row.date).toISOString().split("T")[0]
+      : new Date().toISOString().split("T")[0],
     created_by: row.therapistId ? String(row.therapistId) : undefined,
     created_at: new Date(row.createdAt).toISOString(),
     updated_at: new Date(row.updatedAt).toISOString(),
@@ -85,21 +85,22 @@ function rowToRecord(row: any) {
 }
 
 // ===== LISTA =====
-app.get('/', requireAuth, async (c) => {
-  const user = c.get('user');
+app.get("/", requireAuth, async (c) => {
+  const user = c.get("user");
   const db = createDb(c.env);
-  const { patientId, status, appointmentId, limit = '20', offset = '0' } = c.req.query();
+  const { patientId, status, appointmentId, limit = "20", offset = "0" } = c.req.query();
 
-  if (!patientId) return c.json({ error: 'patientId é obrigatório' }, 400);
-  if (!isValidUuid(patientId)) return c.json({ error: 'patientId inválido' }, 400);
-  if (appointmentId && !isValidUuid(appointmentId)) return c.json({ error: 'appointmentId inválido' }, 400);
+  if (!patientId) return c.json({ error: "patientId é obrigatório" }, 400);
+  if (!isValidUuid(patientId)) return c.json({ error: "patientId inválido" }, 400);
+  if (appointmentId && !isValidUuid(appointmentId))
+    return c.json({ error: "appointmentId inválido" }, 400);
 
   const limitNum = Math.min(200, Math.max(1, parseInt(limit) || 20));
   const offsetNum = Math.max(0, parseInt(offset) || 0);
 
   try {
     const conditions: any[] = [
-      withTenant(sessions, user.organizationId, eq(sessions.patientId, patientId))
+      withTenant(sessions, user.organizationId, eq(sessions.patientId, patientId)),
     ];
 
     if (status) {
@@ -112,15 +113,14 @@ app.get('/', requireAuth, async (c) => {
     const whereClause = and(...conditions);
 
     const [dataRes, countRes] = await Promise.all([
-      db.select()
+      db
+        .select()
         .from(sessions)
         .where(whereClause)
         .orderBy(desc(sessions.date))
         .limit(limitNum)
         .offset(offsetNum),
-      db.select({ total: count() })
-        .from(sessions)
-        .where(whereClause)
+      db.select({ total: count() }).from(sessions).where(whereClause),
     ]);
 
     return c.json({
@@ -128,18 +128,18 @@ app.get('/', requireAuth, async (c) => {
       total: countRes[0]?.total ?? 0,
     });
   } catch (error: any) {
-    return c.json({ error: 'Erro ao listar sessões', details: error.message }, 500);
+    return c.json({ error: "Erro ao listar sessões", details: error.message }, 500);
   }
 });
 
 // ===== AUTOSAVE =====
-app.post('/autosave', requireAuth, async (c) => {
-  const user = c.get('user');
+app.post("/autosave", requireAuth, async (c) => {
+  const user = c.get("user");
   const db = createDb(c.env);
   const body = (await c.req.json()) as Record<string, any>;
 
-  const patientId = String(body.patient_id ?? '').trim();
-  if (!patientId) return c.json({ error: 'patient_id é obrigatório' }, 400);
+  const patientId = String(body.patient_id ?? "").trim();
+  if (!patientId) return c.json({ error: "patient_id é obrigatório" }, 400);
 
   const subjData = body.subjective != null ? textToJsonb(body.subjective) : undefined;
   if (subjData && (body.pain_level != null || body.pain_location || body.pain_character)) {
@@ -168,35 +168,38 @@ app.post('/autosave', requireAuth, async (c) => {
 
   const idToUpdate = body.recordId || body.id;
   if (idToUpdate) {
-    const res = await db.update(sessions)
+    const res = await db
+      .update(sessions)
       .set(buildUpdatePayload())
-      .where(
-        withTenant(sessions, user.organizationId, eq(sessions.id, idToUpdate))
-      )
+      .where(withTenant(sessions, user.organizationId, eq(sessions.id, idToUpdate)))
       .returning();
-    
+
     if (res.length) {
       return c.json({ data: { ...rowToRecord(res[0]), isNew: false } });
     }
   }
 
   if (body.appointment_id) {
-    const existing = await db.select({ id: sessions.id })
+    const existing = await db
+      .select({ id: sessions.id })
       .from(sessions)
-      .where(withTenant(
-        sessions,
-        user.organizationId,
-        eq(sessions.appointmentId, body.appointment_id),
-        eq(sessions.status, 'draft')
-      ))
+      .where(
+        withTenant(
+          sessions,
+          user.organizationId,
+          eq(sessions.appointmentId, body.appointment_id),
+          eq(sessions.status, "draft"),
+        ),
+      )
       .limit(1);
 
     if (existing.length) {
-      const res = await db.update(sessions)
+      const res = await db
+        .update(sessions)
         .set(buildUpdatePayload())
         .where(eq(sessions.id, existing[0].id))
         .returning();
-      
+
       if (res.length) {
         return c.json({ data: { ...rowToRecord(res[0]), isNew: false } });
       }
@@ -216,87 +219,87 @@ app.post('/autosave', requireAuth, async (c) => {
     objective: objData || null,
     assessment: assData || null,
     plan: planData || null,
-    status: 'draft',
+    status: "draft",
     lastAutoSaveAt: new Date(),
   };
 
-  const [newSession] = await db.insert(sessions)
-    .values(insertValues)
-    .returning();
+  const [newSession] = await db.insert(sessions).values(insertValues).returning();
 
   return c.json({ data: { ...rowToRecord(newSession), isNew: true } }, 201);
 });
 
 // ===== DETALHE =====
-app.get('/:id', requireAuth, async (c) => {
-  const user = c.get('user');
+app.get("/:id", requireAuth, async (c) => {
+  const user = c.get("user");
   const db = createDb(c.env);
-  const id = c.req.param('id');
-  if (!id) return c.json({ error: 'ID é obrigatório' }, 400);
-  if (!isValidUuid(id)) return c.json({ error: 'ID inválido' }, 400);
+  const id = c.req.param("id");
+  if (!id) return c.json({ error: "ID é obrigatório" }, 400);
+  if (!isValidUuid(id)) return c.json({ error: "ID inválido" }, 400);
 
-  const [row] = await db.select()
+  const [row] = await db
+    .select()
     .from(sessions)
-    .where(
-      withTenant(sessions, user.organizationId, eq(sessions.id, id))
-    )
+    .where(withTenant(sessions, user.organizationId, eq(sessions.id, id)))
     .limit(1);
 
-  if (!row) return c.json({ error: 'Sessão não encontrada' }, 404);
+  if (!row) return c.json({ error: "Sessão não encontrada" }, 404);
   return c.json({ data: rowToRecord(row) });
 });
 
 // ===== FINALIZAR =====
-app.post('/:id/finalize', requireAuth, async (c) => {
-  const user = c.get('user');
+app.post("/:id/finalize", requireAuth, async (c) => {
+  const user = c.get("user");
   const db = createDb(c.env);
-  const id = c.req.param('id');
-  if (!id) return c.json({ error: 'ID é obrigatório' }, 400);
-  if (!isValidUuid(id)) return c.json({ error: 'ID inválido' }, 400);
+  const id = c.req.param("id");
+  if (!id) return c.json({ error: "ID é obrigatório" }, 400);
+  if (!isValidUuid(id)) return c.json({ error: "ID inválido" }, 400);
 
-  const [row] = await db.update(sessions)
+  const [row] = await db
+    .update(sessions)
     .set({
-      status: 'finalized',
+      status: "finalized",
       finalizedAt: new Date(),
       finalizedBy: user.uid as any,
-      updatedAt: new Date()
+      updatedAt: new Date(),
     })
-    .where(withTenant(
-      sessions,
-      user.organizationId,
-      eq(sessions.id, id),
-      sql`${sessions.status} != 'finalized'`
-    ))
+    .where(
+      withTenant(
+        sessions,
+        user.organizationId,
+        eq(sessions.id, id),
+        sql`${sessions.status} != 'finalized'`,
+      ),
+    )
     .returning();
 
-  if (!row) return c.json({ error: 'Sessão não encontrada ou já finalizada' }, 404);
-  
+  if (!row) return c.json({ error: "Sessão não encontrada ou já finalizada" }, 404);
+
   if (row.patientId) {
     c.executionCtx.waitUntil(
-		Promise.all([
-			invalidatePatientCache(c.env, row.patientId),
-			processClinicalEmbedding(
-				c.env, 
-				user.organizationId, 
-				row.patientId, 
-				row.id, 
-				extractSoapText(row)
-			)
-		]).catch(() => {})
-	);
+      Promise.all([
+        invalidatePatientCache(c.env, row.patientId),
+        processClinicalEmbedding(
+          c.env,
+          user.organizationId,
+          row.patientId,
+          row.id,
+          extractSoapText(row),
+        ),
+      ]).catch(() => {}),
+    );
   }
   return c.json({ data: rowToRecord(row) });
 });
 
 // ===== CRIAR =====
-app.post('/', requireAuth, async (c) => {
-  const user = c.get('user');
+app.post("/", requireAuth, async (c) => {
+  const user = c.get("user");
   const db = createDb(c.env);
   const body = (await c.req.json()) as Record<string, any>;
 
-  const patientId = String(body.patient_id ?? '').trim();
-  if (!patientId) return c.json({ error: 'patient_id é obrigatório' }, 400);
-  if (!isValidUuid(patientId)) return c.json({ error: 'patient_id inválido' }, 400);
+  const patientId = String(body.patient_id ?? "").trim();
+  if (!patientId) return c.json({ error: "patient_id é obrigatório" }, 400);
+  if (!isValidUuid(patientId)) return c.json({ error: "patient_id inválido" }, 400);
 
   const recordDate = body.record_date ? new Date(String(body.record_date)) : new Date();
 
@@ -311,21 +314,28 @@ app.post('/', requireAuth, async (c) => {
     objective: textToJsonb(body.objective),
     assessment: textToJsonb(body.assessment),
     plan: textToJsonb(body.plan),
-    status: (body.status as any) ?? 'draft',
+    status: (body.status as any) ?? "draft",
   };
 
-  const [newSession] = await db.insert(sessions)
-    .values(insertValues)
-    .returning();
+  const [newSession] = await db.insert(sessions).values(insertValues).returning();
 
   // Indexar no D1 para timeline edge (fire-and-forget)
   if (c.env.DB) {
-    const preview = [body.subjective, body.assessment].filter(Boolean).join(' ').substring(0, 200);
+    const preview = [body.subjective, body.assessment].filter(Boolean).join(" ").substring(0, 200);
     c.executionCtx.waitUntil(
       c.env.DB.prepare(
         `INSERT OR REPLACE INTO evolution_index (id, patient_id, appointment_id, therapist_id, organization_id, preview_text, created_at, updated_at)
-         VALUES (?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))`
-      ).bind(newSession.id, patientId, body.appointment_id ?? null, user.uid, user.organizationId, preview).run()
+         VALUES (?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))`,
+      )
+        .bind(
+          newSession.id,
+          patientId,
+          body.appointment_id ?? null,
+          user.uid,
+          user.organizationId,
+          preview,
+        )
+        .run(),
     );
   }
 
@@ -335,45 +345,53 @@ app.post('/', requireAuth, async (c) => {
 });
 
 // ===== ATUALIZAR =====
-app.put('/:id', requireAuth, async (c) => {
-  const user = c.get('user');
+app.put("/:id", requireAuth, async (c) => {
+  const user = c.get("user");
   const db = createDb(c.env);
-  const id = c.req.param('id');
-  if (!id) return c.json({ error: 'ID é obrigatório' }, 400);
-  if (!isValidUuid(id)) return c.json({ error: 'ID inválido' }, 400);
+  const id = c.req.param("id");
+  if (!id) return c.json({ error: "ID é obrigatório" }, 400);
+  if (!isValidUuid(id)) return c.json({ error: "ID inválido" }, 400);
 
   const body = (await c.req.json()) as Record<string, any>;
 
   const updatePayload: any = {
-    updatedAt: new Date()
+    updatedAt: new Date(),
   };
 
-  if ('subjective' in body) updatePayload.subjective = textToJsonb(body.subjective);
-  if ('objective' in body) updatePayload.objective = textToJsonb(body.objective);
-  if ('assessment' in body) updatePayload.assessment = textToJsonb(body.assessment);
-  if ('plan' in body) updatePayload.plan = textToJsonb(body.plan);
+  if ("subjective" in body) updatePayload.subjective = textToJsonb(body.subjective);
+  if ("objective" in body) updatePayload.objective = textToJsonb(body.objective);
+  if ("assessment" in body) updatePayload.assessment = textToJsonb(body.assessment);
+  if ("plan" in body) updatePayload.plan = textToJsonb(body.plan);
   if (body.duration_minutes != null) updatePayload.duration = Number(body.duration_minutes);
   if (body.status) updatePayload.status = body.status as any;
 
-  const [updated] = await db.update(sessions)
+  const [updated] = await db
+    .update(sessions)
     .set(updatePayload)
-    .where(
-      withTenant(sessions, user.organizationId, eq(sessions.id, id))
-    )
+    .where(withTenant(sessions, user.organizationId, eq(sessions.id, id)))
     .returning();
 
-  if (!updated) return c.json({ error: 'Sessão não encontrada' }, 404);
+  if (!updated) return c.json({ error: "Sessão não encontrada" }, 404);
 
   // Atualizar índice no D1 (fire-and-forget) — usa INSERT OR REPLACE para garantir que
   // o registro existe mesmo que a sessão tenha sido criada antes da feature de indexação
   if (c.env.DB && (body.subjective || body.assessment)) {
-    const preview = [body.subjective, body.assessment].filter(Boolean).join(' ').substring(0, 200);
+    const preview = [body.subjective, body.assessment].filter(Boolean).join(" ").substring(0, 200);
     const patientIdForIndex = updated.patientId;
     c.executionCtx.waitUntil(
       c.env.DB.prepare(
         `INSERT OR REPLACE INTO evolution_index (id, patient_id, appointment_id, therapist_id, organization_id, preview_text, created_at, updated_at)
-         VALUES (?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))`
-      ).bind(id, patientIdForIndex, updated.appointmentId ?? null, user.uid, user.organizationId, preview).run()
+         VALUES (?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))`,
+      )
+        .bind(
+          id,
+          patientIdForIndex,
+          updated.appointmentId ?? null,
+          user.uid,
+          user.organizationId,
+          preview,
+        )
+        .run(),
     );
   }
 
@@ -385,27 +403,28 @@ app.put('/:id', requireAuth, async (c) => {
 });
 
 // ===== EXCLUIR =====
-app.delete('/:id', requireAuth, async (c) => {
-  const user = c.get('user');
+app.delete("/:id", requireAuth, async (c) => {
+  const user = c.get("user");
   const db = createDb(c.env);
-  const id = c.req.param('id');
-  if (!id) return c.json({ error: 'ID é obrigatório' }, 400);
-  if (!isValidUuid(id)) return c.json({ error: 'ID inválido' }, 400);
+  const id = c.req.param("id");
+  if (!id) return c.json({ error: "ID é obrigatório" }, 400);
+  if (!isValidUuid(id)) return c.json({ error: "ID inválido" }, 400);
 
-  const [existing] = await db.select({ status: sessions.status, patientId: sessions.patientId })
+  const [existing] = await db
+    .select({ status: sessions.status, patientId: sessions.patientId })
     .from(sessions)
     .where(and(eq(sessions.id, id), eq(sessions.organizationId, user.organizationId)))
     .limit(1);
 
-  if (!existing) return c.json({ error: 'Sessão não encontrada' }, 404);
-  if (existing.status === 'finalized') {
-    return c.json({ error: 'Não é possível excluir uma evolução finalizada' }, 409);
+  if (!existing) return c.json({ error: "Sessão não encontrada" }, 404);
+  if (existing.status === "finalized") {
+    return c.json({ error: "Não é possível excluir uma evolução finalizada" }, 409);
   }
 
-  await db.update(sessions).set({ deletedAt: new Date() })
-    .where(
-      withTenant(sessions, user.organizationId, eq(sessions.id, id))
-    );
+  await db
+    .update(sessions)
+    .set({ deletedAt: new Date() })
+    .where(withTenant(sessions, user.organizationId, eq(sessions.id, id)));
 
   if (existing.patientId) {
     c.executionCtx.waitUntil(invalidatePatientCache(c.env, existing.patientId).catch(() => {}));
@@ -415,34 +434,35 @@ app.delete('/:id', requireAuth, async (c) => {
 });
 
 // ===== TEMPLATES =====
-app.get('/templates', requireAuth, async (c) => {
-  const user = c.get('user');
+app.get("/templates", requireAuth, async (c) => {
+  const user = c.get("user");
   const db = createDb(c.env);
   const { search } = c.req.query();
 
   const conditions = [
     or(
       eq(sessionTemplates.organizationId, user.organizationId),
-      eq(sessionTemplates.isGlobal, true)
-    )
+      eq(sessionTemplates.isGlobal, true),
+    ),
   ];
 
   if (search) {
     conditions.push(
       or(
         ilike(sessionTemplates.name, `%${search}%`),
-        ilike(sessionTemplates.description, `%${search}%`)
-      )
+        ilike(sessionTemplates.description, `%${search}%`),
+      ),
     );
   }
 
-  const results = await db.select()
+  const results = await db
+    .select()
     .from(sessionTemplates)
     .where(and(...conditions))
     .orderBy(desc(sessionTemplates.createdAt));
 
   return c.json({
-    data: results.map(t => ({
+    data: results.map((t) => ({
       id: t.id,
       name: t.name,
       description: t.description,
@@ -452,17 +472,17 @@ app.get('/templates', requireAuth, async (c) => {
       plan: jsonbToText(t.plan),
       is_global: t.isGlobal,
       created_at: t.createdAt,
-      updated_at: t.updatedAt
-    }))
+      updated_at: t.updatedAt,
+    })),
   });
 });
 
-app.post('/templates', requireAuth, async (c) => {
-  const user = c.get('user');
+app.post("/templates", requireAuth, async (c) => {
+  const user = c.get("user");
   const db = createDb(c.env);
   const body = (await c.req.json()) as any;
 
-  if (!body.name) return c.json({ error: 'Nome é obrigatório' }, 400);
+  if (!body.name) return c.json({ error: "Nome é obrigatório" }, 400);
 
   const insertValues: any = {
     organizationId: user.organizationId,
@@ -476,21 +496,19 @@ app.post('/templates', requireAuth, async (c) => {
     isGlobal: body.is_global ?? false,
   };
 
-  const [newTemplate] = await db.insert(sessionTemplates)
-    .values(insertValues)
-    .returning();
+  const [newTemplate] = await db.insert(sessionTemplates).values(insertValues).returning();
 
   return c.json({ data: newTemplate }, 201);
 });
 
-app.put('/templates/:templateId', requireAuth, async (c) => {
-  const user = c.get('user');
+app.put("/templates/:templateId", requireAuth, async (c) => {
+  const user = c.get("user");
   const db = createDb(c.env);
   const { templateId } = c.req.param();
   const body = (await c.req.json()) as any;
 
   const updatePayload: any = {
-    updatedAt: new Date()
+    updatedAt: new Date(),
   };
 
   if (body.name !== undefined) updatePayload.name = body.name;
@@ -501,41 +519,55 @@ app.put('/templates/:templateId', requireAuth, async (c) => {
   if (body.plan !== undefined) updatePayload.plan = textToJsonb(body.plan);
   if (body.is_global !== undefined) updatePayload.isGlobal = body.is_global;
 
-  const [updated] = await db.update(sessionTemplates)
+  const [updated] = await db
+    .update(sessionTemplates)
     .set(updatePayload)
-    .where(and(eq(sessionTemplates.id, templateId), eq(sessionTemplates.organizationId, user.organizationId)))
+    .where(
+      and(
+        eq(sessionTemplates.id, templateId),
+        eq(sessionTemplates.organizationId, user.organizationId),
+      ),
+    )
     .returning();
 
-  if (!updated) return c.json({ error: 'Template não encontrado' }, 404);
+  if (!updated) return c.json({ error: "Template não encontrado" }, 404);
   return c.json({ data: updated });
 });
 
-app.delete('/templates/:templateId', requireAuth, async (c) => {
-  const user = c.get('user');
+app.delete("/templates/:templateId", requireAuth, async (c) => {
+  const user = c.get("user");
   const db = createDb(c.env);
   const { templateId } = c.req.param();
 
-  const [deleted] = await db.update(sessionTemplates).set({ deletedAt: new Date() })
-    .where(and(eq(sessionTemplates.id, templateId), eq(sessionTemplates.organizationId, user.organizationId)))
+  const [deleted] = await db
+    .update(sessionTemplates)
+    .set({ deletedAt: new Date() })
+    .where(
+      and(
+        eq(sessionTemplates.id, templateId),
+        eq(sessionTemplates.organizationId, user.organizationId),
+      ),
+    )
     .returning();
 
-  if (!deleted) return c.json({ error: 'Template não encontrado' }, 404);
+  if (!deleted) return c.json({ error: "Template não encontrado" }, 404);
   return c.json({ success: true });
 });
 
 // ===== ANEXOS =====
-app.get('/:id/attachments', requireAuth, async (c) => {
+app.get("/:id/attachments", requireAuth, async (c) => {
   const db = createDb(c.env);
-  const id = c.req.param('id');
-  if (!isValidUuid(id)) return c.json({ error: 'ID inválido' }, 400);
+  const id = c.req.param("id");
+  if (!isValidUuid(id)) return c.json({ error: "ID inválido" }, 400);
 
-  const results = await db.select()
+  const results = await db
+    .select()
     .from(sessionAttachments)
     .where(eq(sessionAttachments.sessionId, id))
     .orderBy(desc(sessionAttachments.uploadedAt));
 
   return c.json({
-    data: results.map(a => ({
+    data: results.map((a) => ({
       id: a.id,
       file_name: a.fileName,
       original_name: a.originalName,
@@ -546,66 +578,71 @@ app.get('/:id/attachments', requireAuth, async (c) => {
       category: a.category,
       size_bytes: a.sizeBytes,
       description: a.description,
-      uploaded_at: a.uploadedAt
-    }))
+      uploaded_at: a.uploadedAt,
+    })),
   });
 });
 
-app.post('/:id/attachments', requireAuth, async (c) => {
-  const user = c.get('user');
+app.post("/:id/attachments", requireAuth, async (c) => {
+  const user = c.get("user");
   const db = createDb(c.env);
-  const id = c.req.param('id');
-  if (!isValidUuid(id)) return c.json({ error: 'ID inválido' }, 400);
+  const id = c.req.param("id");
+  if (!isValidUuid(id)) return c.json({ error: "ID inválido" }, 400);
   const body = (await c.req.json()) as any;
 
-  if (!body.file_url) return c.json({ error: 'file_url é obrigatório' }, 400);
+  if (!body.file_url) return c.json({ error: "file_url é obrigatório" }, 400);
 
-  const [session] = await db.select({ patientId: sessions.patientId })
+  const [session] = await db
+    .select({ patientId: sessions.patientId })
     .from(sessions)
     .where(and(eq(sessions.id, id), eq(sessions.organizationId, user.organizationId)))
     .limit(1);
 
-  if (!session) return c.json({ error: 'Sessão não encontrada' }, 404);
+  if (!session) return c.json({ error: "Sessão não encontrada" }, 404);
 
   const fileTypeMap: Record<string, string> = {
-    'image/jpeg': 'image', 'image/png': 'image', 'image/gif': 'image', 'image/webp': 'image',
-    'application/pdf': 'pdf', 'video/mp4': 'video', 'video/webm': 'video',
+    "image/jpeg": "image",
+    "image/png": "image",
+    "image/gif": "image",
+    "image/webp": "image",
+    "application/pdf": "pdf",
+    "video/mp4": "video",
+    "video/webm": "video",
   };
-  const mime = String(body.mime_type ?? '');
-  const fileType = (fileTypeMap[mime] ?? 'other') as any;
+  const mime = String(body.mime_type ?? "");
+  const fileType = (fileTypeMap[mime] ?? "other") as any;
 
   const insertValues: any = {
     sessionId: id,
     patientId: session.patientId,
-    fileName: body.file_name || 'unnamed',
+    fileName: body.file_name || "unnamed",
     originalName: body.original_name || body.file_name || null,
     fileUrl: body.file_url,
     thumbnailUrl: body.thumbnail_url || null,
     fileType: fileType,
     mimeType: mime || null,
-    category: body.category || 'other',
+    category: body.category || "other",
     sizeBytes: body.size_bytes != null ? Number(body.size_bytes) : null,
     description: body.description || null,
-    uploadedBy: user.uid as any
+    uploadedBy: user.uid as any,
   };
 
-  const [newAttachment] = await db.insert(sessionAttachments)
-    .values(insertValues)
-    .returning();
+  const [newAttachment] = await db.insert(sessionAttachments).values(insertValues).returning();
 
   return c.json({ data: newAttachment }, 201);
 });
 
-app.delete('/:id/attachments/:attachmentId', requireAuth, async (c) => {
+app.delete("/:id/attachments/:attachmentId", requireAuth, async (c) => {
   const db = createDb(c.env);
-  const id = c.req.param('id');
-  const attachmentId = c.req.param('attachmentId');
+  const id = c.req.param("id");
+  const attachmentId = c.req.param("attachmentId");
 
-  const [deleted] = await db.delete(sessionAttachments)
+  const [deleted] = await db
+    .delete(sessionAttachments)
     .where(and(eq(sessionAttachments.id, attachmentId), eq(sessionAttachments.sessionId, id)))
     .returning();
 
-  if (!deleted) return c.json({ error: 'Anexo não encontrado' }, 404);
+  if (!deleted) return c.json({ error: "Anexo não encontrado" }, 404);
   return c.json({ success: true, file_url: deleted.fileUrl });
 });
 

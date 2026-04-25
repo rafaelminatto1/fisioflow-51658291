@@ -68,92 +68,80 @@ function arbitraryTemplate(): fc.Arbitrary<ExerciseTemplate> {
 
 describe("TemplateCard — testes de propriedade", () => {
   // Feature: exercise-templates-refactor, Property 3: Renderização de card contém todas as informações obrigatórias
-  it(
-    "Property 3: card renderiza nome, condição, exerciseCount e badge de tipo para qualquer template",
-    () => {
-      // Validates: Requirements 1.5
-      fc.assert(
-        fc.property(
-          arbitraryTemplate().filter((t) => t.conditionName !== null),
-          (template) => {
-            const { unmount, container } = render(
-              <TemplateCard
-                template={template}
-                isSelected={false}
-                onClick={() => {}}
-              />,
-            );
-
-            const q = within(container);
-
-            // Nome do template deve estar presente
-            const nameEl = q.getByTestId("template-name");
-            expect(nameEl.textContent?.trim()).toBe(template.name.trim());
-
-            // Condição clínica deve estar presente (quando não nula)
-            if (template.conditionName) {
-              const condEl = q.getByTestId("template-condition");
-              expect(condEl.textContent?.trim()).toBe(template.conditionName.trim());
-            }
-
-            // exerciseCount deve estar presente no texto do elemento com data-testid="exercise-count"
-            const countEl = q.getByTestId("exercise-count");
-            expect(countEl.textContent).toContain(String(template.exerciseCount));
-
-            // Badge de tipo deve estar presente
-            if (template.templateType === "system") {
-              expect(q.queryByText("Sistema")).toBeTruthy();
-            } else {
-              expect(q.queryByText("Personalizado")).toBeTruthy();
-            }
-
-            // Badge de evidência deve estar presente quando evidenceLevel não é nulo
-            if (template.evidenceLevel !== null) {
-              expect(q.queryByText(new RegExp(`EVIDÊNCIA\\s*${template.evidenceLevel}`, "i"))).toBeTruthy();
-            }
-
-            unmount();
-          },
-        ),
-        { numRuns: 100 },
-      );
-    },
-  );
-
-  // Feature: exercise-templates-refactor, Property 9: Badges distintos por tipo de template
-  it(
-    "Property 9: badge 'Sistema' aparece apenas para system e 'Personalizado' apenas para custom — nunca ambos",
-    () => {
-      // Validates: Requirements 5.1, 5.4
-      fc.assert(
-        fc.property(arbitraryTemplate(), (template) => {
+  it("Property 3: card renderiza nome, condição, exerciseCount e badge de tipo para qualquer template", () => {
+    // Validates: Requirements 1.5
+    fc.assert(
+      fc.property(
+        arbitraryTemplate().filter((t) => t.conditionName !== null),
+        (template) => {
           const { unmount, container } = render(
-            <TemplateCard
-              template={template}
-              isSelected={false}
-              onClick={() => {}}
-            />,
+            <TemplateCard template={template} isSelected={false} onClick={() => {}} />,
           );
 
           const q = within(container);
-          const sistemaBadge = q.queryByText("Sistema");
-          const personalizadoBadge = q.queryByText("Personalizado");
 
-          let result = true;
+          // Nome do template deve estar presente
+          const nameEl = q.getByTestId("template-name");
+          expect(nameEl.textContent?.trim()).toBe(template.name.trim());
 
+          // Condição clínica deve estar presente (quando não nula)
+          if (template.conditionName) {
+            const condEl = q.getByTestId("template-condition");
+            expect(condEl.textContent?.trim()).toBe(template.conditionName.trim());
+          }
+
+          // exerciseCount deve estar presente no texto do elemento com data-testid="exercise-count"
+          const countEl = q.getByTestId("exercise-count");
+          expect(countEl.textContent).toContain(String(template.exerciseCount));
+
+          // Badge de tipo deve estar presente
           if (template.templateType === "system") {
-            // Deve ter badge "Sistema" e NÃO ter "Personalizado"
-            if (!sistemaBadge || personalizadoBadge) result = false;
+            expect(q.queryByText("Sistema")).toBeTruthy();
           } else {
-            // Deve ter badge "Personalizado" e NÃO ter "Sistema"
-            if (!personalizadoBadge || sistemaBadge) result = false;
+            expect(q.queryByText("Personalizado")).toBeTruthy();
+          }
+
+          // Badge de evidência deve estar presente quando evidenceLevel não é nulo
+          if (template.evidenceLevel !== null) {
+            expect(
+              q.queryByText(new RegExp(`EVIDÊNCIA\\s*${template.evidenceLevel}`, "i")),
+            ).toBeTruthy();
           }
 
           unmount();
-          return result;
-        }),
-        { numRuns: 100 },
-      );
-    },
-  );
+        },
+      ),
+      { numRuns: 100 },
+    );
+  });
+
+  // Feature: exercise-templates-refactor, Property 9: Badges distintos por tipo de template
+  it("Property 9: badge 'Sistema' aparece apenas para system e 'Personalizado' apenas para custom — nunca ambos", () => {
+    // Validates: Requirements 5.1, 5.4
+    fc.assert(
+      fc.property(arbitraryTemplate(), (template) => {
+        const { unmount, container } = render(
+          <TemplateCard template={template} isSelected={false} onClick={() => {}} />,
+        );
+
+        const q = within(container);
+        const sistemaBadge = q.queryByText("Sistema");
+        const personalizadoBadge = q.queryByText("Personalizado");
+
+        let result = true;
+
+        if (template.templateType === "system") {
+          // Deve ter badge "Sistema" e NÃO ter "Personalizado"
+          if (!sistemaBadge || personalizadoBadge) result = false;
+        } else {
+          // Deve ter badge "Personalizado" e NÃO ter "Sistema"
+          if (!personalizadoBadge || sistemaBadge) result = false;
+        }
+
+        unmount();
+        return result;
+      }),
+      { numRuns: 100 },
+    );
+  });
 });

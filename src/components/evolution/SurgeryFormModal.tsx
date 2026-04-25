@@ -4,39 +4,32 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { cn } from "@/lib/utils";
 import {
-	Dialog,
-	DialogContent,
-	DialogDescription,
-	DialogHeader,
-	DialogTitle,
-	DialogFooter,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import {
-	Form,
-	FormControl,
-	FormField,
-	FormItem,
-	FormLabel,
-	FormMessage,
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
 } from "@/components/ui/form";
 import {
-	Select,
-	SelectContent,
-	SelectItem,
-	SelectTrigger,
-	SelectValue,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import {
-	Loader2,
-	Stethoscope,
-	Calendar,
-	User,
-	Building2,
-	AlertTriangle,
-} from "lucide-react";
+import { Loader2, Stethoscope, Calendar, User, Building2, AlertTriangle } from "lucide-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { SurgeryService } from "@/lib/services/surgeryService";
 import { SURGERY_TYPES, AFFECTED_SIDES } from "@/lib/constants/surgery";
@@ -44,480 +37,459 @@ import type { Surgery, SurgeryFormData } from "@/types/evolution";
 import { toast } from "sonner";
 
 const formSchema = z.object({
-	surgery_name: z.string().optional(),
-	surgery_date: z.string().min(1, "Data da cirurgia é obrigatória"),
-	affected_side: z.enum(["direito", "esquerdo", "bilateral", "nao_aplicavel"]),
-	surgeon_name: z.string().optional(),
-	hospital: z.string().optional(),
-	surgery_type: z.string().optional(),
-	notes: z.string().optional(),
-	complications: z.string().optional(),
+  surgery_name: z.string().optional(),
+  surgery_date: z.string().min(1, "Data da cirurgia é obrigatória"),
+  affected_side: z.enum(["direito", "esquerdo", "bilateral", "nao_aplicavel"]),
+  surgeon_name: z.string().optional(),
+  hospital: z.string().optional(),
+  surgery_type: z.string().optional(),
+  notes: z.string().optional(),
+  complications: z.string().optional(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
 
 interface SurgeryFormModalProps {
-	open: boolean;
-	onOpenChange: (open: boolean) => void;
-	patientId: string;
-	surgery?: Surgery | null;
-	onSuccess?: () => void;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  patientId: string;
+  surgery?: Surgery | null;
+  onSuccess?: () => void;
 }
 
 export const SurgeryFormModal: React.FC<SurgeryFormModalProps> = ({
-	open,
-	onOpenChange,
-	patientId,
-	surgery,
-	onSuccess,
+  open,
+  onOpenChange,
+  patientId,
+  surgery,
+  onSuccess,
 }) => {
-	const queryClient = useQueryClient();
-	const isEditing = !!surgery;
-	const [showOtherModal, setShowOtherModal] = React.useState(false);
-	const [newSurgeryType, setNewSurgeryType] = React.useState("");
+  const queryClient = useQueryClient();
+  const isEditing = !!surgery;
+  const [showOtherModal, setShowOtherModal] = React.useState(false);
+  const [newSurgeryType, setNewSurgeryType] = React.useState("");
 
-	const form = useForm<FormValues>({
-		resolver: async (data, context, options) => {
-			try {
-				return await zodResolver(formSchema)(data, context, options);
-			} catch (error) {
-				console.error("Zod Resolver Error:", error);
-				if (error instanceof z.ZodError) {
-					return {
-						values: {},
-						errors: error.issues.reduce((acc, curr) => {
-							const path = curr.path.join(".");
-							acc[path] = {
-								message: curr.message,
-								type: curr.code,
-							};
-							return acc;
-						}, {} as any),
-					};
-				}
-				return { values: {}, errors: {} };
-			}
-		},
-		defaultValues: {
-			surgery_name: "",
-			surgery_date: "",
-			affected_side: "nao_aplicavel",
-			surgeon_name: "",
-			hospital: "",
-			surgery_type: "",
-			notes: "",
-			complications: "",
-		},
-	});
+  const form = useForm<FormValues>({
+    resolver: async (data, context, options) => {
+      try {
+        return await zodResolver(formSchema)(data, context, options);
+      } catch (error) {
+        console.error("Zod Resolver Error:", error);
+        if (error instanceof z.ZodError) {
+          return {
+            values: {},
+            errors: error.issues.reduce((acc, curr) => {
+              const path = curr.path.join(".");
+              acc[path] = {
+                message: curr.message,
+                type: curr.code,
+              };
+              return acc;
+            }, {} as any),
+          };
+        }
+        return { values: {}, errors: {} };
+      }
+    },
+    defaultValues: {
+      surgery_name: "",
+      surgery_date: "",
+      affected_side: "nao_aplicavel",
+      surgeon_name: "",
+      hospital: "",
+      surgery_type: "",
+      notes: "",
+      complications: "",
+    },
+  });
 
-	const handleTypeChange = (val: string) => {
-		if (val === "outro") {
-			setShowOtherModal(true);
-		} else {
-			form.setValue("surgery_type", val);
-			// Opcionalmente preencher o nome da cirurgia com o label do tipo se estiver vazio
-			if (!form.getValues("surgery_name")) {
-				const label = SURGERY_TYPES.find((t) => t.value === val)?.label;
-				if (label) form.setValue("surgery_name", label);
-			}
-		}
-	};
+  const handleTypeChange = (val: string) => {
+    if (val === "outro") {
+      setShowOtherModal(true);
+    } else {
+      form.setValue("surgery_type", val);
+      // Opcionalmente preencher o nome da cirurgia com o label do tipo se estiver vazio
+      if (!form.getValues("surgery_name")) {
+        const label = SURGERY_TYPES.find((t) => t.value === val)?.label;
+        if (label) form.setValue("surgery_name", label);
+      }
+    }
+  };
 
-	const handleRegisterNewType = () => {
-		if (newSurgeryType.trim()) {
-			// Aqui poderíamos salvar em uma tabela de tipos customizados,
-			// mas por simplificação vamos apenas usar o texto no campo surgery_type
-			form.setValue("surgery_type", newSurgeryType);
-			if (!form.getValues("surgery_name")) {
-				form.setValue("surgery_name", newSurgeryType);
-			}
-			setShowOtherModal(false);
-			setNewSurgeryType("");
-		}
-	};
+  const handleRegisterNewType = () => {
+    if (newSurgeryType.trim()) {
+      // Aqui poderíamos salvar em uma tabela de tipos customizados,
+      // mas por simplificação vamos apenas usar o texto no campo surgery_type
+      form.setValue("surgery_type", newSurgeryType);
+      if (!form.getValues("surgery_name")) {
+        form.setValue("surgery_name", newSurgeryType);
+      }
+      setShowOtherModal(false);
+      setNewSurgeryType("");
+    }
+  };
 
-	useEffect(() => {
-		if (surgery) {
-			form.reset({
-				surgery_name: surgery.surgery_name || "",
-				surgery_date: surgery.surgery_date || "",
-				affected_side:
-					(surgery.affected_side as FormValues["affected_side"]) ||
-					"nao_aplicavel",
-				surgeon_name: surgery.surgeon_name || surgery.surgeon || "",
-				hospital: surgery.hospital || "",
-				surgery_type: surgery.surgery_type || "",
-				notes: surgery.notes || "",
-				complications: surgery.complications || "",
-			});
-		} else {
-			form.reset({
-				surgery_name: "",
-				surgery_date: "",
-				affected_side: "nao_aplicavel",
-				surgeon_name: "",
-				hospital: "",
-				surgery_type: "",
-				notes: "",
-				complications: "",
-			});
-		}
-	}, [surgery, form, open]);
+  useEffect(() => {
+    if (surgery) {
+      form.reset({
+        surgery_name: surgery.surgery_name || "",
+        surgery_date: surgery.surgery_date || "",
+        affected_side: (surgery.affected_side as FormValues["affected_side"]) || "nao_aplicavel",
+        surgeon_name: surgery.surgeon_name || surgery.surgeon || "",
+        hospital: surgery.hospital || "",
+        surgery_type: surgery.surgery_type || "",
+        notes: surgery.notes || "",
+        complications: surgery.complications || "",
+      });
+    } else {
+      form.reset({
+        surgery_name: "",
+        surgery_date: "",
+        affected_side: "nao_aplicavel",
+        surgeon_name: "",
+        hospital: "",
+        surgery_type: "",
+        notes: "",
+        complications: "",
+      });
+    }
+  }, [surgery, form, open]);
 
-	const createMutation = useMutation({
-		mutationFn: (data: SurgeryFormData) => SurgeryService.addSurgery(data),
-		onSuccess: () => {
-			queryClient.invalidateQueries({
-				queryKey: ["patient-surgeries", patientId],
-			});
-			toast.success("Cirurgia registrada com sucesso");
-			onOpenChange(false);
-			onSuccess?.();
-		},
-		onError: () => {
-			toast.error("Erro ao registrar cirurgia");
-		},
-	});
+  const createMutation = useMutation({
+    mutationFn: (data: SurgeryFormData) => SurgeryService.addSurgery(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["patient-surgeries", patientId],
+      });
+      toast.success("Cirurgia registrada com sucesso");
+      onOpenChange(false);
+      onSuccess?.();
+    },
+    onError: () => {
+      toast.error("Erro ao registrar cirurgia");
+    },
+  });
 
-	const updateMutation = useMutation({
-		mutationFn: ({
-			id,
-			data,
-		}: {
-			id: string;
-			data: Partial<SurgeryFormData>;
-		}) => SurgeryService.updateSurgery(id, { ...data, patient_id: patientId }),
-		onSuccess: () => {
-			queryClient.invalidateQueries({
-				queryKey: ["patient-surgeries", patientId],
-			});
-			toast.success("Cirurgia atualizada com sucesso");
-			onOpenChange(false);
-			onSuccess?.();
-		},
-		onError: () => {
-			toast.error("Erro ao atualizar cirurgia");
-		},
-	});
+  const updateMutation = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: Partial<SurgeryFormData> }) =>
+      SurgeryService.updateSurgery(id, { ...data, patient_id: patientId }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["patient-surgeries", patientId],
+      });
+      toast.success("Cirurgia atualizada com sucesso");
+      onOpenChange(false);
+      onSuccess?.();
+    },
+    onError: () => {
+      toast.error("Erro ao atualizar cirurgia");
+    },
+  });
 
-	const deleteMutation = useMutation({
-		mutationFn: (id: string) => SurgeryService.deleteSurgery(id, patientId),
-		onSuccess: () => {
-			queryClient.invalidateQueries({
-				queryKey: ["patient-surgeries", patientId],
-			});
-			toast.success("Cirurgia removida com sucesso");
-			onOpenChange(false);
-			onSuccess?.();
-		},
-		onError: () => {
-			toast.error("Erro ao remover cirurgia");
-		},
-	});
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => SurgeryService.deleteSurgery(id, patientId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["patient-surgeries", patientId],
+      });
+      toast.success("Cirurgia removida com sucesso");
+      onOpenChange(false);
+      onSuccess?.();
+    },
+    onError: () => {
+      toast.error("Erro ao remover cirurgia");
+    },
+  });
 
-	const onSubmit = (values: FormValues) => {
-		const data: SurgeryFormData = {
-			patient_id: patientId,
-			surgery_name:
-				values.surgery_name ||
-				values.surgery_type ||
-				"Cirurgia não especificada",
-			surgery_date: values.surgery_date,
-			affected_side: values.affected_side,
-			surgeon_name: values.surgeon_name || null,
-			hospital: values.hospital || null,
-			surgery_type: values.surgery_type || null,
-			notes: values.notes || null,
-			complications: values.complications || null,
-		};
+  const onSubmit = (values: FormValues) => {
+    const data: SurgeryFormData = {
+      patient_id: patientId,
+      surgery_name: values.surgery_name || values.surgery_type || "Cirurgia não especificada",
+      surgery_date: values.surgery_date,
+      affected_side: values.affected_side,
+      surgeon_name: values.surgeon_name || null,
+      hospital: values.hospital || null,
+      surgery_type: values.surgery_type || null,
+      notes: values.notes || null,
+      complications: values.complications || null,
+    };
 
-		if (isEditing && surgery) {
-			updateMutation.mutate({ id: surgery.id, data });
-		} else {
-			createMutation.mutate(data);
-		}
-	};
+    if (isEditing && surgery) {
+      updateMutation.mutate({ id: surgery.id, data });
+    } else {
+      createMutation.mutate(data);
+    }
+  };
 
-	const handleDelete = () => {
-		if (surgery && confirm("Tem certeza que deseja remover esta cirurgia?")) {
-			deleteMutation.mutate(surgery.id);
-		}
-	};
+  const handleDelete = () => {
+    if (surgery && confirm("Tem certeza que deseja remover esta cirurgia?")) {
+      deleteMutation.mutate(surgery.id);
+    }
+  };
 
-	const isPending =
-		createMutation.isPending ||
-		updateMutation.isPending ||
-		deleteMutation.isPending;
+  const isPending =
+    createMutation.isPending || updateMutation.isPending || deleteMutation.isPending;
 
-	return (
-		<>
-			<Dialog open={open} onOpenChange={onOpenChange}>
-				<DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
-					<DialogHeader>
-						<DialogTitle className="flex items-center gap-2">
-							<Stethoscope className="h-5 w-5 text-primary" />
-							{isEditing ? "Editar Cirurgia" : "Nova Cirurgia"}
-						</DialogTitle>
-						<DialogDescription>
-							Registre os detalhes da cirurgia do paciente para acompanhamento
-							da recuperação.
-						</DialogDescription>
-					</DialogHeader>
+  return (
+    <>
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Stethoscope className="h-5 w-5 text-primary" />
+              {isEditing ? "Editar Cirurgia" : "Nova Cirurgia"}
+            </DialogTitle>
+            <DialogDescription>
+              Registre os detalhes da cirurgia do paciente para acompanhamento da recuperação.
+            </DialogDescription>
+          </DialogHeader>
 
-					<Form {...form}>
-						<form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-							<div className="grid grid-cols-2 gap-4">
-								<FormField
-									control={form.control}
-									name="surgery_type"
-									render={({ field, fieldState }) => (
-										<FormItem className="col-span-2">
-											<FormLabel className={cn(fieldState.error && "text-destructive")}>
-												Tipo de Cirurgia
-											</FormLabel>
-											<Select
-												onValueChange={handleTypeChange}
-												value={field.value}
-											>
-												<FormControl>
-													<SelectTrigger className={cn(fieldState.error && "border-destructive focus:ring-destructive")}>
-														<SelectValue placeholder="Selecione o tipo..." />
-													</SelectTrigger>
-												</FormControl>
-												<SelectContent>
-													{SURGERY_TYPES.map((type) => (
-														<SelectItem key={type.value} value={type.value}>
-															{type.label}
-														</SelectItem>
-													))}
-												</SelectContent>
-											</Select>
-											<FormMessage />
-										</FormItem>
-									)}
-								/>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="surgery_type"
+                  render={({ field, fieldState }) => (
+                    <FormItem className="col-span-2">
+                      <FormLabel className={cn(fieldState.error && "text-destructive")}>
+                        Tipo de Cirurgia
+                      </FormLabel>
+                      <Select onValueChange={handleTypeChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger
+                            className={cn(
+                              fieldState.error && "border-destructive focus:ring-destructive",
+                            )}
+                          >
+                            <SelectValue placeholder="Selecione o tipo..." />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {SURGERY_TYPES.map((type) => (
+                            <SelectItem key={type.value} value={type.value}>
+                              {type.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-								<FormField
-									control={form.control}
-									name="surgery_name"
-									render={({ field, fieldState }) => (
-										<FormItem className="col-span-2">
-											<FormLabel className={cn(fieldState.error && "text-destructive")}>
-												Nome Personalizado (Opcional)
-											</FormLabel>
-											<FormControl>
-												<Input
-													placeholder="Ex: Artroscopia de Ombro"
-													{...field}
-													className={cn(fieldState.error && "border-destructive focus-visible:ring-destructive")}
-												/>
-											</FormControl>
-											<FormMessage />
-										</FormItem>
-									)}
-								/>
+                <FormField
+                  control={form.control}
+                  name="surgery_name"
+                  render={({ field, fieldState }) => (
+                    <FormItem className="col-span-2">
+                      <FormLabel className={cn(fieldState.error && "text-destructive")}>
+                        Nome Personalizado (Opcional)
+                      </FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="Ex: Artroscopia de Ombro"
+                          {...field}
+                          className={cn(
+                            fieldState.error && "border-destructive focus-visible:ring-destructive",
+                          )}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-								<FormField
-									control={form.control}
-									name="surgery_date"
-									render={({ field, fieldState }) => (
-										<FormItem>
-											<FormLabel 
-												className={cn(
-													"flex items-center gap-1",
-													fieldState.error && "text-destructive"
-												)}
-											>
-												<Calendar className="h-3 w-3" />
-												Data *
-											</FormLabel>
-											<FormControl>
-												<Input 
-													type="date" 
-													{...field} 
-													className={cn(
-														fieldState.error && "border-destructive focus-visible:ring-destructive"
-													)}
-												/>
-											</FormControl>
-											<FormMessage />
-										</FormItem>
-									)}
-								/>
+                <FormField
+                  control={form.control}
+                  name="surgery_date"
+                  render={({ field, fieldState }) => (
+                    <FormItem>
+                      <FormLabel
+                        className={cn(
+                          "flex items-center gap-1",
+                          fieldState.error && "text-destructive",
+                        )}
+                      >
+                        <Calendar className="h-3 w-3" />
+                        Data *
+                      </FormLabel>
+                      <FormControl>
+                        <Input
+                          type="date"
+                          {...field}
+                          className={cn(
+                            fieldState.error && "border-destructive focus-visible:ring-destructive",
+                          )}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-								<FormField
-									control={form.control}
-									name="affected_side"
-									render={({ field, fieldState }) => (
-										<FormItem>
-											<FormLabel className={cn(fieldState.error && "text-destructive")}>
-												Lado Afetado
-											</FormLabel>
-											<Select
-												onValueChange={field.onChange}
-												value={field.value}
-											>
-												<FormControl>
-													<SelectTrigger className={cn(fieldState.error && "border-destructive focus:ring-destructive")}>
-														<SelectValue />
-													</SelectTrigger>
-												</FormControl>
-												<SelectContent>
-													{AFFECTED_SIDES.map((side) => (
-														<SelectItem key={side.value} value={side.value}>
-															{side.label}
-														</SelectItem>
-													))}
-												</SelectContent>
-											</Select>
-											<FormMessage />
-										</FormItem>
-									)}
-								/>
+                <FormField
+                  control={form.control}
+                  name="affected_side"
+                  render={({ field, fieldState }) => (
+                    <FormItem>
+                      <FormLabel className={cn(fieldState.error && "text-destructive")}>
+                        Lado Afetado
+                      </FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger
+                            className={cn(
+                              fieldState.error && "border-destructive focus:ring-destructive",
+                            )}
+                          >
+                            <SelectValue />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {AFFECTED_SIDES.map((side) => (
+                            <SelectItem key={side.value} value={side.value}>
+                              {side.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-								<FormField
-									control={form.control}
-									name="surgeon_name"
-									render={({ field }) => (
-										<FormItem>
-											<FormLabel className="flex items-center gap-1">
-												<User className="h-3 w-3" />
-												Cirurgião
-											</FormLabel>
-											<FormControl>
-												<Input placeholder="Dr(a). Nome" {...field} />
-											</FormControl>
-											<FormMessage />
-										</FormItem>
-									)}
-								/>
+                <FormField
+                  control={form.control}
+                  name="surgeon_name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="flex items-center gap-1">
+                        <User className="h-3 w-3" />
+                        Cirurgião
+                      </FormLabel>
+                      <FormControl>
+                        <Input placeholder="Dr(a). Nome" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-								<FormField
-									control={form.control}
-									name="hospital"
-									render={({ field }) => (
-										<FormItem>
-											<FormLabel className="flex items-center gap-1">
-												<Building2 className="h-3 w-3" />
-												Hospital
-											</FormLabel>
-											<FormControl>
-												<Input placeholder="Clínica/Hospital" {...field} />
-											</FormControl>
-											<FormMessage />
-										</FormItem>
-									)}
-								/>
+                <FormField
+                  control={form.control}
+                  name="hospital"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="flex items-center gap-1">
+                        <Building2 className="h-3 w-3" />
+                        Hospital
+                      </FormLabel>
+                      <FormControl>
+                        <Input placeholder="Clínica/Hospital" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-								<FormField
-									control={form.control}
-									name="notes"
-									render={({ field }) => (
-										<FormItem className="col-span-2">
-											<FormLabel>Observações</FormLabel>
-											<FormControl>
-												<Textarea
-													placeholder="Detalhes adicionais..."
-													rows={2}
-													{...field}
-												/>
-											</FormControl>
-											<FormMessage />
-										</FormItem>
-									)}
-								/>
+                <FormField
+                  control={form.control}
+                  name="notes"
+                  render={({ field }) => (
+                    <FormItem className="col-span-2">
+                      <FormLabel>Observações</FormLabel>
+                      <FormControl>
+                        <Textarea placeholder="Detalhes adicionais..." rows={2} {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-								<FormField
-									control={form.control}
-									name="complications"
-									render={({ field }) => (
-										<FormItem className="col-span-2">
-											<FormLabel className="flex items-center gap-1 text-destructive">
-												<AlertTriangle className="h-3 w-3" />
-												Complicações
-											</FormLabel>
-											<FormControl>
-												<Textarea
-													placeholder="Registre complicações..."
-													rows={2}
-													{...field}
-												/>
-											</FormControl>
-											<FormMessage />
-										</FormItem>
-									)}
-								/>
-							</div>
+                <FormField
+                  control={form.control}
+                  name="complications"
+                  render={({ field }) => (
+                    <FormItem className="col-span-2">
+                      <FormLabel className="flex items-center gap-1 text-destructive">
+                        <AlertTriangle className="h-3 w-3" />
+                        Complicações
+                      </FormLabel>
+                      <FormControl>
+                        <Textarea placeholder="Registre complicações..." rows={2} {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
 
-							<DialogFooter className="gap-2">
-								{isEditing && (
-									<Button
-										type="button"
-										variant="destructive"
-										onClick={handleDelete}
-										disabled={isPending}
-									>
-										Excluir
-									</Button>
-								)}
-								<Button
-									type="button"
-									variant="outline"
-									onClick={() => onOpenChange(false)}
-								>
-									Cancelar
-								</Button>
-								<Button type="submit" disabled={isPending}>
-									{isPending ? (
-										<>
-											<Loader2 className="h-4 w-4 mr-2 animate-spin" />
-											Salvando...
-										</>
-									) : isEditing ? (
-										"Salvar Alterações"
-									) : (
-										"Registrar Cirurgia"
-									)}
-								</Button>
-							</DialogFooter>
-						</form>
-					</Form>
-				</DialogContent>
-			</Dialog>
+              <DialogFooter className="gap-2">
+                {isEditing && (
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    onClick={handleDelete}
+                    disabled={isPending}
+                  >
+                    Excluir
+                  </Button>
+                )}
+                <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+                  Cancelar
+                </Button>
+                <Button type="submit" disabled={isPending}>
+                  {isPending ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Salvando...
+                    </>
+                  ) : isEditing ? (
+                    "Salvar Alterações"
+                  ) : (
+                    "Registrar Cirurgia"
+                  )}
+                </Button>
+              </DialogFooter>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
 
-			<Dialog open={showOtherModal} onOpenChange={setShowOtherModal}>
-				<DialogContent className="sm:max-w-md">
-					<DialogHeader>
-						<DialogTitle>Outro Tipo de Cirurgia</DialogTitle>
-						<DialogDescription>
-							Digite o nome da cirurgia que não foi encontrada na lista.
-						</DialogDescription>
-					</DialogHeader>
-					<div className="space-y-4 py-4">
-						<FormItem>
-							<FormLabel>Nome da Cirurgia</FormLabel>
-							<Input
-								value={newSurgeryType}
-								onChange={(e) => setNewSurgeryType(e.target.value)}
-								placeholder="Ex: Reconstrução de tendão"
-								autoFocus
-								onKeyDown={(e) => {
-									if (e.key === "Enter") {
-										e.preventDefault();
-										handleRegisterNewType();
-									}
-								}}
-							/>
-						</FormItem>
-					</div>
-					<DialogFooter>
-						<Button variant="outline" onClick={() => setShowOtherModal(false)}>
-							Cancelar
-						</Button>
-						<Button onClick={handleRegisterNewType}>Confirmar</Button>
-					</DialogFooter>
-				</DialogContent>
-			</Dialog>
-		</>
-	);
+      <Dialog open={showOtherModal} onOpenChange={setShowOtherModal}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Outro Tipo de Cirurgia</DialogTitle>
+            <DialogDescription>
+              Digite o nome da cirurgia que não foi encontrada na lista.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <FormItem>
+              <FormLabel>Nome da Cirurgia</FormLabel>
+              <Input
+                value={newSurgeryType}
+                onChange={(e) => setNewSurgeryType(e.target.value)}
+                placeholder="Ex: Reconstrução de tendão"
+                autoFocus
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    handleRegisterNewType();
+                  }
+                }}
+              />
+            </FormItem>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowOtherModal(false)}>
+              Cancelar
+            </Button>
+            <Button onClick={handleRegisterNewType}>Confirmar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
 };

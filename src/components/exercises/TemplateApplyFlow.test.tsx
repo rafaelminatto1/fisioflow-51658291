@@ -148,19 +148,15 @@ function arbitraryTemplateItem(templateId: string): fc.Arbitrary<ExerciseTemplat
 }
 
 /** Generates a valid ISO date string (YYYY-MM-DD) */
-const arbitraryIsoDate = fc
-  .integer({ min: 2020, max: 2030 })
-  .chain((year) =>
-    fc
-      .integer({ min: 1, max: 12 })
-      .chain((month) =>
-        fc.integer({ min: 1, max: 28 }).map((day) => {
-          const mm = String(month).padStart(2, "0");
-          const dd = String(day).padStart(2, "0");
-          return `${year}-${mm}-${dd}`;
-        }),
-      ),
-  );
+const arbitraryIsoDate = fc.integer({ min: 2020, max: 2030 }).chain((year) =>
+  fc.integer({ min: 1, max: 12 }).chain((month) =>
+    fc.integer({ min: 1, max: 28 }).map((day) => {
+      const mm = String(month).padStart(2, "0");
+      const dd = String(day).padStart(2, "0");
+      return `${year}-${mm}-${dd}`;
+    }),
+  ),
+);
 
 /** Generates a valid UUID or undefined for surgeryId */
 const arbitrarySurgeryId = fc.option(fc.uuid(), { nil: undefined });
@@ -170,265 +166,233 @@ const arbitrarySurgeryId = fc.option(fc.uuid(), { nil: undefined });
 describe("TemplateApplyFlow — testes de propriedade", () => {
   // Feature: exercise-templates-refactor, Property 5: Aplicação de template cria plano com exercícios corretos
   describe("Property 5: payload de aplicação mapeia corretamente os exercícios do template", () => {
-    it(
-      "Property 5a: payload contém patientId e startDate para qualquer entrada válida",
-      () => {
-        // Validates: Requirements 3.5
-        fc.assert(
-          fc.property(
-            fc.uuid(), // patientId
-            arbitraryIsoDate, // startDate
-            arbitrarySurgeryId,
-            (patientId, startDate, surgeryId) => {
-              const payload = buildApplyPayload(patientId, startDate, surgeryId);
+    it("Property 5a: payload contém patientId e startDate para qualquer entrada válida", () => {
+      // Validates: Requirements 3.5
+      fc.assert(
+        fc.property(
+          fc.uuid(), // patientId
+          arbitraryIsoDate, // startDate
+          arbitrarySurgeryId,
+          (patientId, startDate, surgeryId) => {
+            const payload = buildApplyPayload(patientId, startDate, surgeryId);
 
-              return payload.patientId === patientId && payload.startDate === startDate;
-            },
-          ),
-          { numRuns: 100 },
-        );
-      },
-    );
+            return payload.patientId === patientId && payload.startDate === startDate;
+          },
+        ),
+        { numRuns: 100 },
+      );
+    });
 
-    it(
-      "Property 5b: surgeryId 'none' é omitido do payload (não enviado ao backend)",
-      () => {
-        // Validates: Requirements 3.5
-        fc.assert(
-          fc.property(
-            fc.uuid(),
-            arbitraryIsoDate,
-            (patientId, startDate) => {
-              const payload = buildApplyPayload(patientId, startDate, "none");
+    it("Property 5b: surgeryId 'none' é omitido do payload (não enviado ao backend)", () => {
+      // Validates: Requirements 3.5
+      fc.assert(
+        fc.property(fc.uuid(), arbitraryIsoDate, (patientId, startDate) => {
+          const payload = buildApplyPayload(patientId, startDate, "none");
 
-              // surgeryId "none" must NOT be forwarded to the API
-              return !("surgeryId" in payload);
-            },
-          ),
-          { numRuns: 100 },
-        );
-      },
-    );
+          // surgeryId "none" must NOT be forwarded to the API
+          return !("surgeryId" in payload);
+        }),
+        { numRuns: 100 },
+      );
+    });
 
-    it(
-      "Property 5c: surgeryId válido (UUID) é incluído no payload",
-      () => {
-        // Validates: Requirements 3.5
-        fc.assert(
-          fc.property(
-            fc.uuid(),
-            arbitraryIsoDate,
-            fc.uuid(), // valid surgeryId
-            (patientId, startDate, surgeryId) => {
-              const payload = buildApplyPayload(patientId, startDate, surgeryId);
+    it("Property 5c: surgeryId válido (UUID) é incluído no payload", () => {
+      // Validates: Requirements 3.5
+      fc.assert(
+        fc.property(
+          fc.uuid(),
+          arbitraryIsoDate,
+          fc.uuid(), // valid surgeryId
+          (patientId, startDate, surgeryId) => {
+            const payload = buildApplyPayload(patientId, startDate, surgeryId);
 
-              return payload.surgeryId === surgeryId;
-            },
-          ),
-          { numRuns: 100 },
-        );
-      },
-    );
+            return payload.surgeryId === surgeryId;
+          },
+        ),
+        { numRuns: 100 },
+      );
+    });
 
-    it(
-      "Property 5d: resposta de aplicação tem exerciseCount igual ao exerciseCount do template",
-      () => {
-        // Validates: Requirements 3.5
-        // For any template with N exercises, the apply response must report exactly N items
-        fc.assert(
-          fc.property(
-            arbitraryTemplate(),
-            fc.uuid(), // planId
-            fc.uuid(), // patientId in response
-            (template, planId, responsePatientId) => {
-              const mockResponse = {
-                planId,
-                patientId: responsePatientId,
-                exerciseCount: template.exerciseCount, // backend must return this
-              };
+    it("Property 5d: resposta de aplicação tem exerciseCount igual ao exerciseCount do template", () => {
+      // Validates: Requirements 3.5
+      // For any template with N exercises, the apply response must report exactly N items
+      fc.assert(
+        fc.property(
+          arbitraryTemplate(),
+          fc.uuid(), // planId
+          fc.uuid(), // patientId in response
+          (template, planId, responsePatientId) => {
+            const mockResponse = {
+              planId,
+              patientId: responsePatientId,
+              exerciseCount: template.exerciseCount, // backend must return this
+            };
 
-              return validateApplyResponse(template, mockResponse);
-            },
-          ),
-          { numRuns: 100 },
-        );
-      },
-    );
+            return validateApplyResponse(template, mockResponse);
+          },
+        ),
+        { numRuns: 100 },
+      );
+    });
 
-    it(
-      "Property 5e: itens do plano criado cobrem todos os exercise_ids do template original",
-      () => {
-        // Validates: Requirements 3.5
-        // For any template with N items, the plan must have exactly N items
-        // where each exercise_id matches one from the template
-        fc.assert(
-          fc.property(
-            fc.uuid().chain((templateId) =>
+    it("Property 5e: itens do plano criado cobrem todos os exercise_ids do template original", () => {
+      // Validates: Requirements 3.5
+      // For any template with N items, the plan must have exactly N items
+      // where each exercise_id matches one from the template
+      fc.assert(
+        fc.property(
+          fc
+            .uuid()
+            .chain((templateId) =>
               fc
                 .array(arbitraryTemplateItem(templateId), { minLength: 1, maxLength: 20 })
                 .map((items) => ({ templateId, items })),
             ),
-            ({ items }) => {
-              // Simulate what the backend does: copy each template item to a plan item
-              const planItems = items.map((item) => ({
-                exercise_id: item.exerciseId,
-              }));
+          ({ items }) => {
+            // Simulate what the backend does: copy each template item to a plan item
+            const planItems = items.map((item) => ({
+              exercise_id: item.exerciseId,
+            }));
 
-              return validatePlanItemsMatchTemplate(items, planItems);
-            },
-          ),
-          { numRuns: 100 },
-        );
-      },
-    );
+            return validatePlanItemsMatchTemplate(items, planItems);
+          },
+        ),
+        { numRuns: 100 },
+      );
+    });
 
-    it(
-      "Property 5f: plano com exerciseCount diferente do template é inválido",
-      () => {
-        // Validates: Requirements 3.5 (negative case)
-        fc.assert(
-          fc.property(
-            arbitraryTemplate().filter((t) => t.exerciseCount > 0),
-            fc.uuid(),
-            fc.uuid(),
-            (template, planId, responsePatientId) => {
-              // Response with wrong count must fail validation
-              const wrongResponse = {
-                planId,
-                patientId: responsePatientId,
-                exerciseCount: template.exerciseCount + 1, // intentionally wrong
-              };
+    it("Property 5f: plano com exerciseCount diferente do template é inválido", () => {
+      // Validates: Requirements 3.5 (negative case)
+      fc.assert(
+        fc.property(
+          arbitraryTemplate().filter((t) => t.exerciseCount > 0),
+          fc.uuid(),
+          fc.uuid(),
+          (template, planId, responsePatientId) => {
+            // Response with wrong count must fail validation
+            const wrongResponse = {
+              planId,
+              patientId: responsePatientId,
+              exerciseCount: template.exerciseCount + 1, // intentionally wrong
+            };
 
-              return !validateApplyResponse(template, wrongResponse);
-            },
-          ),
-          { numRuns: 100 },
-        );
-      },
-    );
+            return !validateApplyResponse(template, wrongResponse);
+          },
+        ),
+        { numRuns: 100 },
+      );
+    });
   });
 
   // Feature: exercise-templates-refactor, Property 10: Preservação de estado do formulário em caso de erro
   describe("Property 10: formulário preserva estado após erro de backend", () => {
-    it(
-      "Property 10a: em caso de erro, todos os campos do formulário mantêm seus valores anteriores",
-      () => {
-        // Validates: Requirements 3.7, 8.4
-        fc.assert(
-          fc.property(
-            // Generate arbitrary form state (patientId, startDate, optional surgeryId)
-            fc.record({
-              patientId: fc.uuid(),
-              startDate: arbitraryIsoDate,
-              surgeryId: fc.option(fc.uuid(), { nil: undefined }),
-              notes: fc.option(fc.string({ maxLength: 200 }), { nil: undefined }),
-            }),
-            (formValues) => {
-              const stateAfterError = formStateAfterError(formValues, true);
+    it("Property 10a: em caso de erro, todos os campos do formulário mantêm seus valores anteriores", () => {
+      // Validates: Requirements 3.7, 8.4
+      fc.assert(
+        fc.property(
+          // Generate arbitrary form state (patientId, startDate, optional surgeryId)
+          fc.record({
+            patientId: fc.uuid(),
+            startDate: arbitraryIsoDate,
+            surgeryId: fc.option(fc.uuid(), { nil: undefined }),
+            notes: fc.option(fc.string({ maxLength: 200 }), { nil: undefined }),
+          }),
+          (formValues) => {
+            const stateAfterError = formStateAfterError(formValues, true);
 
-              // All fields must be preserved exactly
-              return (
-                stateAfterError.patientId === formValues.patientId &&
-                stateAfterError.startDate === formValues.startDate &&
-                stateAfterError.surgeryId === formValues.surgeryId &&
-                stateAfterError.notes === formValues.notes
-              );
-            },
-          ),
-          { numRuns: 100 },
-        );
-      },
-    );
+            // All fields must be preserved exactly
+            return (
+              stateAfterError.patientId === formValues.patientId &&
+              stateAfterError.startDate === formValues.startDate &&
+              stateAfterError.surgeryId === formValues.surgeryId &&
+              stateAfterError.notes === formValues.notes
+            );
+          },
+        ),
+        { numRuns: 100 },
+      );
+    });
 
-    it(
-      "Property 10b: em caso de sucesso, o formulário é resetado (campos limpos)",
-      () => {
-        // Validates: Requirements 3.7 (inverse — success resets form)
-        fc.assert(
-          fc.property(
-            fc.record({
-              patientId: fc.uuid(),
-              startDate: arbitraryIsoDate,
-              surgeryId: fc.option(fc.uuid(), { nil: undefined }),
-              notes: fc.option(fc.string({ maxLength: 200 }), { nil: undefined }),
-            }),
-            (formValues) => {
-              const stateAfterSuccess = formStateAfterError(formValues, false);
+    it("Property 10b: em caso de sucesso, o formulário é resetado (campos limpos)", () => {
+      // Validates: Requirements 3.7 (inverse — success resets form)
+      fc.assert(
+        fc.property(
+          fc.record({
+            patientId: fc.uuid(),
+            startDate: arbitraryIsoDate,
+            surgeryId: fc.option(fc.uuid(), { nil: undefined }),
+            notes: fc.option(fc.string({ maxLength: 200 }), { nil: undefined }),
+          }),
+          (formValues) => {
+            const stateAfterSuccess = formStateAfterError(formValues, false);
 
-              // On success, form is reset — no original values remain
-              return Object.keys(stateAfterSuccess).length === 0;
-            },
-          ),
-          { numRuns: 100 },
-        );
-      },
-    );
+            // On success, form is reset — no original values remain
+            return Object.keys(stateAfterSuccess).length === 0;
+          },
+        ),
+        { numRuns: 100 },
+      );
+    });
 
-    it(
-      "Property 10c: onError handler não chama reset — Sheet permanece aberta com dados",
-      () => {
-        // Validates: Requirements 3.7, 8.4
-        // Tests the invariant: for any form state, error does NOT clear any field
-        fc.assert(
-          fc.property(
-            fc.record({
-              patientId: fc.uuid(),
-              startDate: arbitraryIsoDate,
-              surgeryId: fc.option(fc.uuid(), { nil: undefined }),
-              notes: fc.option(fc.string({ maxLength: 200 }), { nil: undefined }),
-            }),
-            fc.string({ minLength: 1, maxLength: 200 }), // error message
-            (formValues, _errorMessage) => {
-              // Simulate: error occurs, onError is called
-              // The component's onError does NOT call reset()
-              const stateAfterError = formStateAfterError(formValues, true);
+    it("Property 10c: onError handler não chama reset — Sheet permanece aberta com dados", () => {
+      // Validates: Requirements 3.7, 8.4
+      // Tests the invariant: for any form state, error does NOT clear any field
+      fc.assert(
+        fc.property(
+          fc.record({
+            patientId: fc.uuid(),
+            startDate: arbitraryIsoDate,
+            surgeryId: fc.option(fc.uuid(), { nil: undefined }),
+            notes: fc.option(fc.string({ maxLength: 200 }), { nil: undefined }),
+          }),
+          fc.string({ minLength: 1, maxLength: 200 }), // error message
+          (formValues, _errorMessage) => {
+            // Simulate: error occurs, onError is called
+            // The component's onError does NOT call reset()
+            const stateAfterError = formStateAfterError(formValues, true);
 
-              // Every key in the original form must still be present with the same value
-              return Object.entries(formValues).every(
-                ([key, value]) => (stateAfterError as Record<string, unknown>)[key] === value,
-              );
-            },
-          ),
-          { numRuns: 100 },
-        );
-      },
-    );
+            // Every key in the original form must still be present with the same value
+            return Object.entries(formValues).every(
+              ([key, value]) => (stateAfterError as Record<string, unknown>)[key] === value,
+            );
+          },
+        ),
+        { numRuns: 100 },
+      );
+    });
 
-    it(
-      "Property 10d: múltiplos erros consecutivos não degradam o estado do formulário",
-      () => {
-        // Validates: Requirements 3.7, 8.4
-        // After N consecutive errors, form state must still equal the original
-        fc.assert(
-          fc.property(
-            fc.record({
-              patientId: fc.uuid(),
-              startDate: arbitraryIsoDate,
-              surgeryId: fc.option(fc.uuid(), { nil: undefined }),
-              notes: fc.option(fc.string({ maxLength: 200 }), { nil: undefined }),
-            }),
-            fc.integer({ min: 1, max: 10 }), // number of consecutive errors
-            (formValues, errorCount) => {
-              let currentState = formValues;
+    it("Property 10d: múltiplos erros consecutivos não degradam o estado do formulário", () => {
+      // Validates: Requirements 3.7, 8.4
+      // After N consecutive errors, form state must still equal the original
+      fc.assert(
+        fc.property(
+          fc.record({
+            patientId: fc.uuid(),
+            startDate: arbitraryIsoDate,
+            surgeryId: fc.option(fc.uuid(), { nil: undefined }),
+            notes: fc.option(fc.string({ maxLength: 200 }), { nil: undefined }),
+          }),
+          fc.integer({ min: 1, max: 10 }), // number of consecutive errors
+          (formValues, errorCount) => {
+            let currentState = formValues;
 
-              // Simulate N consecutive errors
-              for (let i = 0; i < errorCount; i++) {
-                currentState = formStateAfterError(currentState, true);
-              }
+            // Simulate N consecutive errors
+            for (let i = 0; i < errorCount; i++) {
+              currentState = formStateAfterError(currentState, true);
+            }
 
-              // State must be identical to original after any number of errors
-              return (
-                currentState.patientId === formValues.patientId &&
-                currentState.startDate === formValues.startDate &&
-                currentState.surgeryId === formValues.surgeryId &&
-                currentState.notes === formValues.notes
-              );
-            },
-          ),
-          { numRuns: 100 },
-        );
-      },
-    );
+            // State must be identical to original after any number of errors
+            return (
+              currentState.patientId === formValues.patientId &&
+              currentState.startDate === formValues.startDate &&
+              currentState.surgeryId === formValues.surgeryId &&
+              currentState.notes === formValues.notes
+            );
+          },
+        ),
+        { numRuns: 100 },
+      );
+    });
   });
 });
 
@@ -601,25 +565,45 @@ describe("TemplateApplyFlow — testes unitários (task 11.3)", () => {
   // Validates: Requirements 3.7
   describe("formulário mantém dados após erro de API", () => {
     it("preserva patientId após erro", () => {
-      const state = { patientId: "patient-abc", startDate: "2024-06-01", surgeryId: undefined, notes: undefined };
+      const state = {
+        patientId: "patient-abc",
+        startDate: "2024-06-01",
+        surgeryId: undefined,
+        notes: undefined,
+      };
       const after = formStateAfterError(state, true);
       expect(after.patientId).toBe("patient-abc");
     });
 
     it("preserva startDate após erro", () => {
-      const state = { patientId: "patient-abc", startDate: "2024-06-01", surgeryId: undefined, notes: undefined };
+      const state = {
+        patientId: "patient-abc",
+        startDate: "2024-06-01",
+        surgeryId: undefined,
+        notes: undefined,
+      };
       const after = formStateAfterError(state, true);
       expect(after.startDate).toBe("2024-06-01");
     });
 
     it("preserva surgeryId após erro quando definido", () => {
-      const state = { patientId: "p-1", startDate: "2024-01-01", surgeryId: "surgery-xyz", notes: undefined };
+      const state = {
+        patientId: "p-1",
+        startDate: "2024-01-01",
+        surgeryId: "surgery-xyz",
+        notes: undefined,
+      };
       const after = formStateAfterError(state, true);
       expect(after.surgeryId).toBe("surgery-xyz");
     });
 
     it("preserva notes após erro quando definido", () => {
-      const state = { patientId: "p-1", startDate: "2024-01-01", surgeryId: undefined, notes: "Observação importante" };
+      const state = {
+        patientId: "p-1",
+        startDate: "2024-01-01",
+        surgeryId: undefined,
+        notes: "Observação importante",
+      };
       const after = formStateAfterError(state, true);
       expect(after.notes).toBe("Observação importante");
     });

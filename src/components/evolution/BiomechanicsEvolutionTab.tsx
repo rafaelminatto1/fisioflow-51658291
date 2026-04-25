@@ -5,10 +5,31 @@
 import React, { useState, useEffect } from "react";
 import { format, parseISO, subMonths } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Activity, Zap, AlignJustify, Layout, FileDown, ChevronDown, TrendingUp, TrendingDown, Minus, CalendarDays, AlertTriangle } from "lucide-react";
+import {
+  Activity,
+  Zap,
+  AlignJustify,
+  Layout,
+  FileDown,
+  ChevronDown,
+  TrendingUp,
+  TrendingDown,
+  Minus,
+  CalendarDays,
+  AlertTriangle,
+} from "lucide-react";
 import { motion } from "framer-motion";
 import {
-  ComposedChart, Bar, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, ReferenceLine,
+  ComposedChart,
+  Bar,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  Legend,
+  ReferenceLine,
 } from "recharts";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -39,9 +60,7 @@ export const BiomechanicsEvolutionTab: React.FC<BiomechanicsEvolutionTabProps> =
   const [sessions, setSessions] = useState<BiomechanicsSession[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [filterType, setFilterType] = useState<BiomechanicsData["type"] | "all">("all");
-  const [dateFrom, setDateFrom] = useState(() =>
-    format(subMonths(new Date(), 6), "yyyy-MM-dd"),
-  );
+  const [dateFrom, setDateFrom] = useState(() => format(subMonths(new Date(), 6), "yyyy-MM-dd"));
   const [dateTo, setDateTo] = useState(() => format(new Date(), "yyyy-MM-dd"));
   const [isExporting, setIsExporting] = useState(false);
 
@@ -72,7 +91,9 @@ export const BiomechanicsEvolutionTab: React.FC<BiomechanicsEvolutionTabProps> =
     .map((s) => {
       const bm = s.biomechanics_data!;
       return {
-        date: format(parseISO(s.record_date || s.created_at || bm.analyzedAt), "dd/MM/yy", { locale: ptBR }),
+        date: format(parseISO(s.record_date || s.created_at || bm.analyzedAt), "dd/MM/yy", {
+          locale: ptBR,
+        }),
         type: bm.type,
         asymmetry: bm.asymmetry ?? null,
         ...bm.metrics,
@@ -82,18 +103,14 @@ export const BiomechanicsEvolutionTab: React.FC<BiomechanicsEvolutionTabProps> =
   const handleExport = async () => {
     setIsExporting(true);
     try {
-      const { generateComparativeReport } = await import(
-        "@/utils/biomechanics-reports"
-      );
+      const { generateComparativeReport } = await import("@/utils/biomechanics-reports");
       const assessments: Assessment[] = sessions
         .filter((s) => s.biomechanics_data)
         .map((s) => ({
           date: new Date(s.record_date || s.created_at || Date.now()),
           type: s.biomechanics_data!.type as any,
           metrics: s.biomechanics_data!.metrics,
-          asymmetry: s.biomechanics_data!.asymmetry
-            ? String(s.biomechanics_data!.asymmetry)
-            : null,
+          asymmetry: s.biomechanics_data!.asymmetry ? String(s.biomechanics_data!.asymmetry) : null,
         }));
       await generateComparativeReport({ patientName, assessments });
     } finally {
@@ -159,7 +176,9 @@ export const BiomechanicsEvolutionTab: React.FC<BiomechanicsEvolutionTabProps> =
       {/* Loading */}
       {isLoading && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {[1, 2, 3].map((i) => <Skeleton key={i} className="h-40 rounded-2xl" />)}
+          {[1, 2, 3].map((i) => (
+            <Skeleton key={i} className="h-40 rounded-2xl" />
+          ))}
         </div>
       )}
 
@@ -173,7 +192,8 @@ export const BiomechanicsEvolutionTab: React.FC<BiomechanicsEvolutionTabProps> =
             <div className="text-center">
               <p className="font-bold text-muted-foreground">Nenhuma análise encontrada</p>
               <p className="text-sm text-muted-foreground/70 mt-1 max-w-sm">
-                As análises biomecânicas aparecerão aqui quando forem realizadas e salvas durante as sessões.
+                As análises biomecânicas aparecerão aqui quando forem realizadas e salvas durante as
+                sessões.
               </p>
             </div>
           </CardContent>
@@ -193,7 +213,10 @@ export const BiomechanicsEvolutionTab: React.FC<BiomechanicsEvolutionTabProps> =
             <ResponsiveContainer width="100%" height={280}>
               <ComposedChart data={chartData}>
                 <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                <XAxis dataKey="date" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} />
+                <XAxis
+                  dataKey="date"
+                  tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
+                />
                 <YAxis tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} />
                 <Tooltip
                   contentStyle={{
@@ -204,10 +227,34 @@ export const BiomechanicsEvolutionTab: React.FC<BiomechanicsEvolutionTabProps> =
                   }}
                 />
                 <Legend />
-                <ReferenceLine y={15} stroke="#ef4444" strokeDasharray="4 4" label={{ value: "Limiar Risco (15%)", fontSize: 10, fill: "#ef4444" }} />
-                <Bar dataKey="asymmetry" name="Assimetria (%)" fill="#f87171" radius={[4, 4, 0, 0]} />
-                <Line type="monotone" dataKey="cadence" name="Cadência" stroke="#60a5fa" strokeWidth={2} dot={{ r: 4 }} />
-                <Line type="monotone" dataKey="jumpHeight" name="Altura Salto (cm)" stroke="#34d399" strokeWidth={2} dot={{ r: 4 }} />
+                <ReferenceLine
+                  y={15}
+                  stroke="#ef4444"
+                  strokeDasharray="4 4"
+                  label={{ value: "Limiar Risco (15%)", fontSize: 10, fill: "#ef4444" }}
+                />
+                <Bar
+                  dataKey="asymmetry"
+                  name="Assimetria (%)"
+                  fill="#f87171"
+                  radius={[4, 4, 0, 0]}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="cadence"
+                  name="Cadência"
+                  stroke="#60a5fa"
+                  strokeWidth={2}
+                  dot={{ r: 4 }}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="jumpHeight"
+                  name="Altura Salto (cm)"
+                  stroke="#34d399"
+                  strokeWidth={2}
+                  dot={{ r: 4 }}
+                />
               </ComposedChart>
             </ResponsiveContainer>
           </CardContent>
@@ -247,7 +294,11 @@ export const BiomechanicsEvolutionTab: React.FC<BiomechanicsEvolutionTabProps> =
                         <div className="flex items-center gap-2 flex-wrap">
                           <span className="font-black text-sm">{meta.label}</span>
                           <span className="text-xs text-muted-foreground">
-                            {format(parseISO(s.record_date || s.created_at || bm.analyzedAt), "dd 'de' MMMM yyyy", { locale: ptBR })}
+                            {format(
+                              parseISO(s.record_date || s.created_at || bm.analyzedAt),
+                              "dd 'de' MMMM yyyy",
+                              { locale: ptBR },
+                            )}
                           </span>
                           {isHighRisk && (
                             <Badge className="bg-red-500/10 text-red-400 border-red-500/30 gap-1 text-[10px]">
@@ -261,7 +312,16 @@ export const BiomechanicsEvolutionTab: React.FC<BiomechanicsEvolutionTabProps> =
                             <div className="flex items-center gap-1.5">
                               {renderTrend(asymmetry)}
                               <span className="text-xs font-mono">
-                                Assimetria: <span className={isHighRisk ? "text-red-400 font-bold" : "text-emerald-400 font-bold"}>{Math.abs(asymmetry).toFixed(1)}%</span>
+                                Assimetria:{" "}
+                                <span
+                                  className={
+                                    isHighRisk
+                                      ? "text-red-400 font-bold"
+                                      : "text-emerald-400 font-bold"
+                                  }
+                                >
+                                  {Math.abs(asymmetry).toFixed(1)}%
+                                </span>
                               </span>
                             </div>
                           )}

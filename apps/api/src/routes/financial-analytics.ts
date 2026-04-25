@@ -1,12 +1,12 @@
-import { Hono } from 'hono';
-import { and, eq, gte, lte, sql } from 'drizzle-orm';
-import { appointments, patientPackages } from '@fisioflow/db';
-import { createDb, createPool, type DbPool } from '../lib/db';
-import { requireAuth, type AuthVariables } from '../lib/auth';
-import type { Env } from '../types/env';
+import { Hono } from "hono";
+import { and, eq, gte, lte, sql } from "drizzle-orm";
+import { appointments, patientPackages } from "@fisioflow/db";
+import { createDb, createPool, type DbPool } from "../lib/db";
+import { requireAuth, type AuthVariables } from "../lib/auth";
+import type { Env } from "../types/env";
 
 type FinancialApp = Hono<{ Bindings: Env; Variables: AuthVariables }>;
-type CommandCenterPeriod = 'daily' | 'weekly' | 'monthly' | 'all';
+type CommandCenterPeriod = "daily" | "weekly" | "monthly" | "all";
 type QueryRow = Record<string, unknown>;
 
 function addDays(date: Date, amount: number) {
@@ -23,20 +23,20 @@ function startOfDay(date: Date) {
 
 function toYmd(date: Date) {
   const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
   return `${year}-${month}-${day}`;
 }
 
 function resolvePeriod(period: string | undefined) {
   const normalized: CommandCenterPeriod =
-    period === 'daily' || period === 'weekly' || period === 'monthly' || period === 'all'
+    period === "daily" || period === "weekly" || period === "monthly" || period === "all"
       ? period
-      : 'monthly';
+      : "monthly";
 
   const now = startOfDay(new Date());
   const durationDays =
-    normalized === 'daily' ? 1 : normalized === 'weekly' ? 7 : normalized === 'monthly' ? 30 : 180;
+    normalized === "daily" ? 1 : normalized === "weekly" ? 7 : normalized === "monthly" ? 30 : 180;
 
   const start = addDays(now, -(durationDays - 1));
   const end = now;
@@ -46,13 +46,13 @@ function resolvePeriod(period: string | undefined) {
   return {
     key: normalized,
     label:
-      normalized === 'daily'
-        ? 'Hoje'
-        : normalized === 'weekly'
-          ? 'Últimos 7 dias'
-          : normalized === 'monthly'
-            ? 'Últimos 30 dias'
-            : 'Últimos 180 dias',
+      normalized === "daily"
+        ? "Hoje"
+        : normalized === "weekly"
+          ? "Últimos 7 dias"
+          : normalized === "monthly"
+            ? "Últimos 30 dias"
+            : "Últimos 180 dias",
     startDate: toYmd(start),
     endDate: toYmd(end),
     previousStartDate: toYmd(previousStart),
@@ -62,8 +62,8 @@ function resolvePeriod(period: string | undefined) {
 
 function toNumber(value: unknown) {
   if (value == null) return 0;
-  if (typeof value === 'number') return value;
-  if (typeof value === 'string') return Number(value) || 0;
+  if (typeof value === "number") return value;
+  if (typeof value === "string") return Number(value) || 0;
   return 0;
 }
 
@@ -115,57 +115,57 @@ function buildAlerts(input: {
     id: string;
     title: string;
     description: string;
-    tone: 'critical' | 'warning' | 'info';
+    tone: "critical" | "warning" | "info";
     href: string;
   }> = [];
 
   if (input.overdueReceivablesCount > 0) {
     alerts.push({
-      id: 'overdue-collections',
-      title: 'Cobranças vencidas exigem ação',
+      id: "overdue-collections",
+      title: "Cobranças vencidas exigem ação",
       description: `${input.overdueReceivablesCount} cobranças vencidas somam R$ ${input.overdueAmount.toFixed(2)}.`,
-      tone: 'critical',
-      href: '/financial?tab=collections',
+      tone: "critical",
+      href: "/financial?tab=collections",
     });
   }
 
   if (input.failedNfse > 0) {
     alerts.push({
-      id: 'nfse-errors',
-      title: 'Erros em emissão fiscal',
+      id: "nfse-errors",
+      title: "Erros em emissão fiscal",
       description: `${input.failedNfse} NFS-e com erro podem bloquear faturamento e fechamento.`,
-      tone: 'critical',
-      href: '/financial?tab=documents&documents=nfse',
+      tone: "critical",
+      href: "/financial?tab=documents&documents=nfse",
     });
   }
 
   if (input.pendingNfse > 0) {
     alerts.push({
-      id: 'nfse-pending',
-      title: 'Fila fiscal pendente',
+      id: "nfse-pending",
+      title: "Fila fiscal pendente",
       description: `${input.pendingNfse} documentos aguardam emissão ou autorização.`,
-      tone: 'warning',
-      href: '/financial?tab=documents&documents=nfse',
+      tone: "warning",
+      href: "/financial?tab=documents&documents=nfse",
     });
   }
 
   if (input.crmOverdueTasks > 0) {
     alerts.push({
-      id: 'crm-overdue',
-      title: 'CRM com follow-ups atrasados',
+      id: "crm-overdue",
+      title: "CRM com follow-ups atrasados",
       description: `${input.crmOverdueTasks} tarefas estão vencidas e afetam conversão de receita.`,
-      tone: 'warning',
-      href: '/crm',
+      tone: "warning",
+      href: "/crm",
     });
   }
 
   if (input.noShowRate >= 0.12) {
     alerts.push({
-      id: 'no-show',
-      title: 'No-show acima do saudável',
+      id: "no-show",
+      title: "No-show acima do saudável",
       description: `A taxa recente de faltas está em ${(input.noShowRate * 100).toFixed(1)}%.`,
-      tone: 'info',
-      href: '/agenda',
+      tone: "info",
+      href: "/agenda",
     });
   }
 
@@ -190,46 +190,50 @@ function buildSuggestions(input: {
 
   if (input.overdueReceivablesCount > 0) {
     suggestions.push({
-      id: 'prioritize-collections',
-      title: 'Priorize a régua de cobrança',
-      description: 'Ataque primeiro vencidos, depois os valores que vencem hoje, para destravar caixa mais rápido.',
-      href: '/financial?tab=collections',
+      id: "prioritize-collections",
+      title: "Priorize a régua de cobrança",
+      description:
+        "Ataque primeiro vencidos, depois os valores que vencem hoje, para destravar caixa mais rápido.",
+      href: "/financial?tab=collections",
     });
   }
 
   if (input.pendingPayables > input.projectedNext30Days) {
     suggestions.push({
-      id: 'protect-cash',
-      title: 'Proteja o caixa dos próximos 30 dias',
-      description: 'As saídas abertas superam a receita projetada. Reveja prazos e despesas antes do fechamento.',
-      href: '/financial?tab=cashflow',
+      id: "protect-cash",
+      title: "Proteja o caixa dos próximos 30 dias",
+      description:
+        "As saídas abertas superam a receita projetada. Reveja prazos e despesas antes do fechamento.",
+      href: "/financial?tab=cashflow",
     });
   }
 
   if (input.referralRedemptions === 0 && input.activePatients >= 20) {
     suggestions.push({
-      id: 'activate-referrals',
-      title: 'Ative indicação de pacientes',
-      description: 'A base já comporta um motor de referral e ainda não há conversões registradas no período.',
-      href: '/marketing/referral',
+      id: "activate-referrals",
+      title: "Ative indicação de pacientes",
+      description:
+        "A base já comporta um motor de referral e ainda não há conversões registradas no período.",
+      href: "/marketing/referral",
     });
   }
 
   if (input.hotLeads > 0) {
     suggestions.push({
-      id: 'hot-leads',
-      title: 'Aproxime CRM do faturamento',
+      id: "hot-leads",
+      title: "Aproxime CRM do faturamento",
       description: `${input.hotLeads} leads estão em estágio quente. Transforme follow-up em previsão de receita.`,
-      href: '/crm',
+      href: "/crm",
     });
   }
 
   if (input.pendingNfse > 0) {
     suggestions.push({
-      id: 'fiscal-queue',
-      title: 'Limpe a fila fiscal antes do fechamento',
-      description: 'Emitir NFS-e pendentes reduz atrito no fechamento e melhora rastreabilidade documental.',
-      href: '/financial?tab=documents&documents=nfse',
+      id: "fiscal-queue",
+      title: "Limpe a fila fiscal antes do fechamento",
+      description:
+        "Emitir NFS-e pendentes reduz atrito no fechamento e melhora rastreabilidade documental.",
+      href: "/financial?tab=documents&documents=nfse",
     });
   }
 
@@ -237,14 +241,14 @@ function buildSuggestions(input: {
 }
 
 export const registerFinancialAnalyticsRoutes = (app: FinancialApp) => {
-  app.get('/command-center', requireAuth, async (c) => {
-    const user = c.get('user');
-    const range = resolvePeriod(c.req.query('period'));
+  app.get("/command-center", requireAuth, async (c) => {
+    const user = c.get("user");
+    const range = resolvePeriod(c.req.query("period"));
     const pool = createPool(c.env);
 
     const transactionSummary = await queryFirst(
       pool,
-      'transaction-summary',
+      "transaction-summary",
       `SELECT
           COALESCE(SUM(CASE WHEN tipo = 'receita' AND COALESCE(status, 'pendente') IN ('pago', 'concluido') THEN valor ELSE 0 END), 0) AS realized_revenue,
           COALESCE(SUM(CASE WHEN tipo = 'despesa' AND COALESCE(status, 'pendente') IN ('pago', 'concluido') THEN valor ELSE 0 END), 0) AS realized_expenses,
@@ -267,7 +271,7 @@ export const registerFinancialAnalyticsRoutes = (app: FinancialApp) => {
 
     const previousRevenue = await queryFirst(
       pool,
-      'previous-revenue',
+      "previous-revenue",
       `SELECT
           COALESCE(SUM(CASE WHEN tipo = 'receita' AND COALESCE(status, 'pendente') IN ('pago', 'concluido') THEN valor ELSE 0 END), 0) AS realized_revenue
         FROM transacoes
@@ -287,7 +291,7 @@ export const registerFinancialAnalyticsRoutes = (app: FinancialApp) => {
       expense: string | number;
     }>(
       pool,
-      'cashflow',
+      "cashflow",
       `SELECT
           created_at::date::text AS bucket,
           TO_CHAR(created_at::date, 'DD/MM') AS label,
@@ -305,7 +309,7 @@ export const registerFinancialAnalyticsRoutes = (app: FinancialApp) => {
 
     const accountSummary = await queryFirst(
       pool,
-      'account-summary',
+      "account-summary",
       `SELECT
           COALESCE(SUM(CASE WHEN tipo IN ('receber', 'receita') AND status IN ('pendente', 'atrasado') THEN valor ELSE 0 END), 0) AS pending_receivables,
           COALESCE(SUM(CASE WHEN tipo IN ('pagar', 'despesa') AND status IN ('pendente', 'atrasado') THEN valor ELSE 0 END), 0) AS pending_payables,
@@ -344,7 +348,7 @@ export const registerFinancialAnalyticsRoutes = (app: FinancialApp) => {
       patient_name: string;
     }>(
       pool,
-      'top-accounts',
+      "top-accounts",
       `SELECT
           cf.id::text AS id,
           cf.tipo AS tipo,
@@ -384,7 +388,7 @@ export const registerFinancialAnalyticsRoutes = (app: FinancialApp) => {
       patient_name: string;
     }>(
       pool,
-      'today-collections',
+      "today-collections",
       `SELECT
           cf.id::text AS id,
           cf.tipo AS tipo,
@@ -418,7 +422,7 @@ export const registerFinancialAnalyticsRoutes = (app: FinancialApp) => {
       created_at: string;
     }>(
       pool,
-      'recent-transactions',
+      "recent-transactions",
       `SELECT
           id::text AS id,
           tipo,
@@ -437,7 +441,7 @@ export const registerFinancialAnalyticsRoutes = (app: FinancialApp) => {
 
     const appointmentMetrics = await queryFirst(
       pool,
-      'appointment-metrics',
+      "appointment-metrics",
       `SELECT
           COUNT(*) FILTER (WHERE status::text = 'atendido')::int AS completed_sessions,
           COALESCE(SUM(CASE WHEN status::text = 'atendido' THEN payment_amount ELSE 0 END), 0) AS completed_revenue,
@@ -465,7 +469,7 @@ export const registerFinancialAnalyticsRoutes = (app: FinancialApp) => {
 
     const packageInventory = await queryFirst(
       pool,
-      'package-inventory',
+      "package-inventory",
       `SELECT
           COALESCE(
             SUM(
@@ -486,7 +490,7 @@ export const registerFinancialAnalyticsRoutes = (app: FinancialApp) => {
 
     const scheduleMetrics = await queryFirst(
       pool,
-      'schedule-metrics',
+      "schedule-metrics",
       `SELECT
           COUNT(*) FILTER (
             WHERE date BETWEEN CURRENT_DATE AND CURRENT_DATE + INTERVAL '6 days'
@@ -532,7 +536,7 @@ export const registerFinancialAnalyticsRoutes = (app: FinancialApp) => {
 
     const noShowRateMetrics = await queryFirst(
       pool,
-      'no-show-rate',
+      "no-show-rate",
       `SELECT
           (
             COUNT(
@@ -557,7 +561,7 @@ export const registerFinancialAnalyticsRoutes = (app: FinancialApp) => {
 
     const patientSummary = await queryFirst(
       pool,
-      'patient-summary',
+      "patient-summary",
       `SELECT
           COUNT(*) FILTER (WHERE COALESCE(is_active, true) = true)::int AS active_patients,
           COUNT(*) FILTER (WHERE created_at::date BETWEEN $2::date AND $3::date)::int AS new_patients,
@@ -589,7 +593,7 @@ export const registerFinancialAnalyticsRoutes = (app: FinancialApp) => {
       missed_count: string | number;
     }>(
       pool,
-      'risk-patients',
+      "risk-patients",
       `WITH patient_receivables AS (
           SELECT
             patient_id,
@@ -646,7 +650,7 @@ export const registerFinancialAnalyticsRoutes = (app: FinancialApp) => {
 
     const crmSummary = await queryFirst(
       pool,
-      'crm-summary',
+      "crm-summary",
       `SELECT
           COUNT(*)::int AS total_leads,
           COUNT(*) FILTER (
@@ -667,7 +671,7 @@ export const registerFinancialAnalyticsRoutes = (app: FinancialApp) => {
 
     const crmTopStage = await queryFirst(
       pool,
-      'crm-top-stage',
+      "crm-top-stage",
       `SELECT
           COALESCE(estagio, 'Sem estágio') AS stage,
           COUNT(*)::int AS total
@@ -678,14 +682,14 @@ export const registerFinancialAnalyticsRoutes = (app: FinancialApp) => {
         LIMIT 1`,
       [user.organizationId],
       {
-        stage: 'Sem estágio',
+        stage: "Sem estágio",
         total: 0,
       },
     );
 
     const crmTasks = await queryFirst(
       pool,
-      'crm-tasks',
+      "crm-tasks",
       `SELECT
           COUNT(*) FILTER (
             WHERE LOWER(COALESCE(status, 'pendente')) NOT IN ('concluida', 'concluido', 'done')
@@ -705,7 +709,7 @@ export const registerFinancialAnalyticsRoutes = (app: FinancialApp) => {
 
     const crmCampaigns = await queryFirst(
       pool,
-      'crm-campaigns',
+      "crm-campaigns",
       `SELECT
           COUNT(*) FILTER (WHERE created_at::date BETWEEN $2::date AND $3::date)::int AS campaigns_in_period
         FROM crm_campanhas
@@ -718,7 +722,7 @@ export const registerFinancialAnalyticsRoutes = (app: FinancialApp) => {
 
     const marketingSummary = await queryFirst(
       pool,
-      'marketing-summary',
+      "marketing-summary",
       `SELECT
           COUNT(*) FILTER (WHERE enabled = true AND COALESCE(deleted, false) = false)::int AS recall_active
         FROM marketing_recall_campaigns
@@ -731,7 +735,7 @@ export const registerFinancialAnalyticsRoutes = (app: FinancialApp) => {
 
     const referralSummary = await queryFirst(
       pool,
-      'referral-summary',
+      "referral-summary",
       `SELECT
           COUNT(*)::int AS redemptions_in_period
         FROM referral_redemptions
@@ -745,7 +749,7 @@ export const registerFinancialAnalyticsRoutes = (app: FinancialApp) => {
 
     const documentsSummary = await queryFirst(
       pool,
-      'documents-summary',
+      "documents-summary",
       `SELECT
           COUNT(*) FILTER (
             WHERE status IN ('rascunho', 'enviado', 'emitida', 'pendente_revisao')
@@ -765,7 +769,7 @@ export const registerFinancialAnalyticsRoutes = (app: FinancialApp) => {
 
     const receiptsSummary = await queryFirst(
       pool,
-      'receipts-summary',
+      "receipts-summary",
       `SELECT
           COUNT(*) FILTER (WHERE created_at::date BETWEEN $2::date AND $3::date)::int AS receipts_in_period,
           COALESCE(MAX(numero_recibo), 0)::int AS last_receipt_number
@@ -787,7 +791,7 @@ export const registerFinancialAnalyticsRoutes = (app: FinancialApp) => {
       issued_at: string;
     }>(
       pool,
-      'recent-receipts',
+      "recent-receipts",
       `SELECT
           id::text AS id,
           'Recibo #' || LPAD(numero_recibo::text, 6, '0') AS title,
@@ -815,7 +819,7 @@ export const registerFinancialAnalyticsRoutes = (app: FinancialApp) => {
       issued_at: string;
     }>(
       pool,
-      'recent-nfse',
+      "recent-nfse",
       `SELECT
           id::text AS id,
           COALESCE(numero_nfse::text, numero_rps, 'Sem número') AS title,
@@ -846,24 +850,24 @@ export const registerFinancialAnalyticsRoutes = (app: FinancialApp) => {
     const estimatedMargin = realizedRevenue > 0 ? (netBalance / realizedRevenue) * 100 : 0;
     const recentDocuments = [
       ...recentReceipts.map((row) => ({
-        id: `receipt-${String(row.id ?? '')}`,
-        kind: 'receipt' as const,
-        title: String(row.title ?? 'Recibo'),
-        counterpart: String(row.counterpart ?? 'Recibo emitido'),
+        id: `receipt-${String(row.id ?? "")}`,
+        kind: "receipt" as const,
+        title: String(row.title ?? "Recibo"),
+        counterpart: String(row.counterpart ?? "Recibo emitido"),
         amount: toNumber(row.amount),
-        status: String(row.status ?? 'emitido'),
-        issuedAt: String(row.issued_at ?? ''),
-        href: '/financial?tab=documents&documents=receipts',
+        status: String(row.status ?? "emitido"),
+        issuedAt: String(row.issued_at ?? ""),
+        href: "/financial?tab=documents&documents=receipts",
       })),
       ...recentNfse.map((row) => ({
-        id: `nfse-${String(row.id ?? '')}`,
-        kind: 'nfse' as const,
-        title: `NFS-e ${String(row.title ?? 'Sem número')}`,
-        counterpart: String(row.counterpart ?? 'Tomador não informado'),
+        id: `nfse-${String(row.id ?? "")}`,
+        kind: "nfse" as const,
+        title: `NFS-e ${String(row.title ?? "Sem número")}`,
+        counterpart: String(row.counterpart ?? "Tomador não informado"),
         amount: toNumber(row.amount),
-        status: String(row.status ?? 'rascunho'),
-        issuedAt: String(row.issued_at ?? ''),
-        href: '/financial?tab=documents&documents=nfse',
+        status: String(row.status ?? "rascunho"),
+        issuedAt: String(row.issued_at ?? ""),
+        href: "/financial?tab=documents&documents=nfse",
       })),
     ]
       .sort((a, b) => new Date(b.issuedAt).getTime() - new Date(a.issuedAt).getTime())
@@ -876,8 +880,8 @@ export const registerFinancialAnalyticsRoutes = (app: FinancialApp) => {
       runningBalance += income - expense;
 
       return {
-        date: String(row.bucket ?? ''),
-        label: String(row.label ?? ''),
+        date: String(row.bucket ?? ""),
+        label: String(row.label ?? ""),
         income,
         expense,
         balance: runningBalance,
@@ -917,7 +921,8 @@ export const registerFinancialAnalyticsRoutes = (app: FinancialApp) => {
           averageTicket,
           estimatedMargin,
           collectionRate: toInt(transactionSummary.total_count)
-            ? (toInt(transactionSummary.settled_count) / toInt(transactionSummary.total_count)) * 100
+            ? (toInt(transactionSummary.settled_count) / toInt(transactionSummary.total_count)) *
+              100
             : 0,
           monthlyGrowth: percentChange(realizedRevenue, previousRealizedRevenue),
           activePatients: toInt(patientSummary.active_patients),
@@ -942,24 +947,24 @@ export const registerFinancialAnalyticsRoutes = (app: FinancialApp) => {
           overdueCount: toInt(accountSummary.overdue_receivables_count),
           dueTodayCount: toInt(accountSummary.due_today_count),
           topAccounts: topAccounts.map((row) => ({
-            id: String(row.id ?? ''),
-            tipo: String(row.tipo ?? 'receita'),
-            description: String(row.description ?? 'Sem descrição'),
-            status: String(row.status ?? 'pendente'),
+            id: String(row.id ?? ""),
+            tipo: String(row.tipo ?? "receita"),
+            description: String(row.description ?? "Sem descrição"),
+            status: String(row.status ?? "pendente"),
             amount: toNumber(row.amount),
-            dueDate: String(row.due_date ?? ''),
+            dueDate: String(row.due_date ?? ""),
             patientId: row.patient_id ? String(row.patient_id) : null,
-            patientName: String(row.patient_name ?? 'Sem vínculo de paciente'),
+            patientName: String(row.patient_name ?? "Sem vínculo de paciente"),
           })),
           todayCollections: todayCollections.map((row) => ({
-            id: String(row.id ?? ''),
-            tipo: String(row.tipo ?? 'receita'),
-            description: String(row.description ?? 'Sem descrição'),
-            status: String(row.status ?? 'pendente'),
+            id: String(row.id ?? ""),
+            tipo: String(row.tipo ?? "receita"),
+            description: String(row.description ?? "Sem descrição"),
+            status: String(row.status ?? "pendente"),
             amount: toNumber(row.amount),
-            dueDate: String(row.due_date ?? ''),
+            dueDate: String(row.due_date ?? ""),
             patientId: row.patient_id ? String(row.patient_id) : null,
-            patientName: String(row.patient_name ?? 'Sem vínculo de paciente'),
+            patientName: String(row.patient_name ?? "Sem vínculo de paciente"),
           })),
         },
         documents: {
@@ -975,9 +980,9 @@ export const registerFinancialAnalyticsRoutes = (app: FinancialApp) => {
             newPatients: toInt(patientSummary.new_patients),
             convertedPatients: toInt(patientSummary.converted_patients),
             riskPatients: riskPatients.map((row) => ({
-              id: String(row.id ?? ''),
-              fullName: String(row.full_name ?? 'Paciente'),
-              phone: String(row.phone ?? ''),
+              id: String(row.id ?? ""),
+              fullName: String(row.full_name ?? "Paciente"),
+              phone: String(row.phone ?? ""),
               lastAppointment: row.last_appointment ? String(row.last_appointment) : null,
               openAmount: toNumber(row.open_amount),
               missedCount: toInt(row.missed_count),
@@ -990,7 +995,7 @@ export const registerFinancialAnalyticsRoutes = (app: FinancialApp) => {
             openTasks: toInt(crmTasks.open_tasks),
             overdueTasks: toInt(crmTasks.overdue_tasks),
             topStage: {
-              name: String(crmTopStage.stage ?? 'Sem estágio'),
+              name: String(crmTopStage.stage ?? "Sem estágio"),
               total: toInt(crmTopStage.total),
             },
             campaignsInPeriod: toInt(crmCampaigns.campaigns_in_period),
@@ -1010,12 +1015,12 @@ export const registerFinancialAnalyticsRoutes = (app: FinancialApp) => {
           },
         },
         recentTransactions: recentTransactions.map((row) => ({
-          id: String(row.id ?? ''),
-          tipo: String(row.tipo ?? 'receita'),
-          description: String(row.description ?? 'Sem descrição'),
-          status: String(row.status ?? 'pendente'),
+          id: String(row.id ?? ""),
+          tipo: String(row.tipo ?? "receita"),
+          description: String(row.description ?? "Sem descrição"),
+          status: String(row.status ?? "pendente"),
           amount: toNumber(row.amount),
-          createdAt: String(row.created_at ?? ''),
+          createdAt: String(row.created_at ?? ""),
         })),
         recentDocuments,
         alerts,
@@ -1024,37 +1029,44 @@ export const registerFinancialAnalyticsRoutes = (app: FinancialApp) => {
     });
   });
 
-  app.get('/prediction', requireAuth, async (c) => {
-    const user = c.get('user');
+  app.get("/prediction", requireAuth, async (c) => {
+    const user = c.get("user");
     const db = createDb(c.env);
 
-    const [futureSchedule] = await db.select({
-      expectedRevenue: sql<number>`COALESCE(SUM(${appointments.paymentAmount}), 0)`,
-      sessionCount: sql<number>`COUNT(*)`
-    })
-    .from(appointments)
-    .where(and(
-      eq(appointments.organizationId, user.organizationId),
-      gte(appointments.date, sql`CURRENT_DATE`),
-      lte(appointments.date, sql`CURRENT_DATE + INTERVAL '30 days'`),
-      sql`${appointments.status}::text NOT IN (
+    const [futureSchedule] = await db
+      .select({
+        expectedRevenue: sql<number>`COALESCE(SUM(${appointments.paymentAmount}), 0)`,
+        sessionCount: sql<number>`COUNT(*)`,
+      })
+      .from(appointments)
+      .where(
+        and(
+          eq(appointments.organizationId, user.organizationId),
+          gte(appointments.date, sql`CURRENT_DATE`),
+          lte(appointments.date, sql`CURRENT_DATE + INTERVAL '30 days'`),
+          sql`${appointments.status}::text NOT IN (
         'cancelado', 'cancelled',
         'faltou', 'faltou_com_aviso', 'faltou_sem_aviso',
         'nao_atendido', 'nao_atendido_sem_cobranca', 'no_show'
-      )`
-    ));
+      )`,
+        ),
+      );
 
-    const [packagesBaseline] = await db.select({
-      inventoryValue: sql<number>`COALESCE(SUM(${patientPackages.remainingSessions} * (${patientPackages.price} / NULLIF(${patientPackages.totalSessions}, 0))), 0)`
-    })
-    .from(patientPackages)
-    .where(and(
-      eq(patientPackages.organizationId, user.organizationId),
-      eq(patientPackages.status, 'active')
-    ));
+    const [packagesBaseline] = await db
+      .select({
+        inventoryValue: sql<number>`COALESCE(SUM(${patientPackages.remainingSessions} * (${patientPackages.price} / NULLIF(${patientPackages.totalSessions}, 0))), 0)`,
+      })
+      .from(patientPackages)
+      .where(
+        and(
+          eq(patientPackages.organizationId, user.organizationId),
+          eq(patientPackages.status, "active"),
+        ),
+      );
 
-    const [noShowRate] = await db.select({
-      rate: sql<number>`(
+    const [noShowRate] = await db
+      .select({
+        rate: sql<number>`(
         COUNT(
           CASE
             WHEN ${appointments.status}::text IN (
@@ -1063,14 +1075,16 @@ export const registerFinancialAnalyticsRoutes = (app: FinancialApp) => {
             ) THEN 1
           END
         )::float / NULLIF(COUNT(*), 0)
-      )`
-    })
-    .from(appointments)
-    .where(and(
-      eq(appointments.organizationId, user.organizationId),
-      sql`${appointments.date} < CURRENT_DATE`,
-      sql`${appointments.date} >= CURRENT_DATE - INTERVAL '90 days'`
-    ));
+      )`,
+      })
+      .from(appointments)
+      .where(
+        and(
+          eq(appointments.organizationId, user.organizationId),
+          sql`${appointments.date} < CURRENT_DATE`,
+          sql`${appointments.date} >= CURRENT_DATE - INTERVAL '90 days'`,
+        ),
+      );
 
     const rawExpected = Number(futureSchedule?.expectedRevenue || 0);
     const rate = Number(noShowRate?.rate || 0.1);
@@ -1081,21 +1095,21 @@ export const registerFinancialAnalyticsRoutes = (app: FinancialApp) => {
           raw: rawExpected,
           adjusted: rawExpected * (1 - rate),
           sessions: Number(futureSchedule?.sessionCount || 0),
-          confidence: 0.85
+          confidence: 0.85,
         },
         inventory: {
-          packageValue: Number(packagesBaseline?.inventoryValue || 0)
+          packageValue: Number(packagesBaseline?.inventoryValue || 0),
         },
         historicalMetrics: {
-          noShowRate: rate
-        }
-      }
+          noShowRate: rate,
+        },
+      },
     });
   });
 
-  app.get('/card-mapping/:digits', requireAuth, async (c) => {
-    const user = c.get('user');
-    const digits = c.req.param('digits').replace(/\D/g, '').slice(-4);
+  app.get("/card-mapping/:digits", requireAuth, async (c) => {
+    const user = c.get("user");
+    const digits = c.req.param("digits").replace(/\D/g, "").slice(-4);
     if (digits.length !== 4) return c.json({ data: null });
 
     const pool = createPool(c.env);
@@ -1111,7 +1125,7 @@ export const registerFinancialAnalyticsRoutes = (app: FinancialApp) => {
       )`);
       const res = await pool.query(
         `SELECT patient_id, patient_name FROM card_patient_mappings WHERE organization_id = $1 AND card_digits = $2`,
-        [user.organizationId, digits]
+        [user.organizationId, digits],
       );
       return c.json({ data: res.rows[0] ?? null });
     } catch {
@@ -1119,13 +1133,19 @@ export const registerFinancialAnalyticsRoutes = (app: FinancialApp) => {
     }
   });
 
-  app.post('/card-mapping', requireAuth, async (c) => {
-    const user = c.get('user');
-    const body = await c.req.json() as { patientId: string; cardLastDigits: string; patientName?: string };
-    const digits = String(body.cardLastDigits ?? '').replace(/\D/g, '').slice(-4);
+  app.post("/card-mapping", requireAuth, async (c) => {
+    const user = c.get("user");
+    const body = (await c.req.json()) as {
+      patientId: string;
+      cardLastDigits: string;
+      patientName?: string;
+    };
+    const digits = String(body.cardLastDigits ?? "")
+      .replace(/\D/g, "")
+      .slice(-4);
 
     if (!body.patientId || digits.length !== 4) {
-      return c.json({ error: 'patientId e cardLastDigits (4 dígitos) são obrigatórios' }, 400);
+      return c.json({ error: "patientId e cardLastDigits (4 dígitos) são obrigatórios" }, 400);
     }
 
     const pool = createPool(c.env);
@@ -1134,11 +1154,11 @@ export const registerFinancialAnalyticsRoutes = (app: FinancialApp) => {
         `INSERT INTO card_patient_mappings (organization_id, card_digits, patient_id, patient_name)
          VALUES ($1, $2, $3, $4)
          ON CONFLICT (organization_id, card_digits) DO UPDATE SET patient_id = EXCLUDED.patient_id, patient_name = EXCLUDED.patient_name`,
-        [user.organizationId, digits, body.patientId, body.patientName ?? null]
+        [user.organizationId, digits, body.patientId, body.patientName ?? null],
       );
       return c.json({ ok: true });
     } catch (err: any) {
-      return c.json({ error: 'Erro ao salvar mapeamento', details: err.message }, 500);
+      return c.json({ error: "Erro ao salvar mapeamento", details: err.message }, 500);
     }
   });
 };

@@ -1,16 +1,16 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from "react";
 import {
   getBiometricStatus,
   authenticateBiometric,
   setBiometricEnabled,
   isBiometricEnabled as checkBiometricEnabled,
   getBiometricTypeName,
-} from '@/lib/biometrics';
+} from "@/lib/biometrics";
 
 export interface BiometricAuthState {
   isAvailable: boolean;
   isEnabled: boolean;
-  biometricType: 'face' | 'fingerprint' | 'none';
+  biometricType: "face" | "fingerprint" | "none";
   biometricTypeName: string;
   isLoading: boolean;
   error: string | null;
@@ -34,8 +34,8 @@ export function useBiometricAuth() {
   const [state, setState] = useState<BiometricAuthState>({
     isAvailable: false,
     isEnabled: false,
-    biometricType: 'none',
-    biometricTypeName: '',
+    biometricType: "none",
+    biometricTypeName: "",
     isLoading: true,
     error: null,
   });
@@ -66,40 +66,43 @@ export function useBiometricAuth() {
       setState({
         isAvailable: false,
         isEnabled: false,
-        biometricType: 'none',
-        biometricTypeName: '',
+        biometricType: "none",
+        biometricTypeName: "",
         isLoading: false,
-        error: error.message || 'Erro ao verificar biometria',
+        error: error.message || "Erro ao verificar biometria",
       });
     }
   };
 
-  const authenticate = useCallback(async (reason?: string): Promise<boolean> => {
-    if (!state.isAvailable) {
-      return false;
-    }
-
-    setState((prev) => ({ ...prev, error: null }));
-
-    try {
-      const success = await authenticateBiometric(reason);
-
-      if (!success) {
-        setState((prev) => ({
-          ...prev,
-          error: 'Autenticação biométrica falhou ou foi cancelada',
-        }));
+  const authenticate = useCallback(
+    async (reason?: string): Promise<boolean> => {
+      if (!state.isAvailable) {
+        return false;
       }
 
-      return success;
-    } catch (error: any) {
-      setState((prev) => ({
-        ...prev,
-        error: error.message || 'Erro na autenticação biométrica',
-      }));
-      return false;
-    }
-  }, [state.isAvailable]);
+      setState((prev) => ({ ...prev, error: null }));
+
+      try {
+        const success = await authenticateBiometric(reason);
+
+        if (!success) {
+          setState((prev) => ({
+            ...prev,
+            error: "Autenticação biométrica falhou ou foi cancelada",
+          }));
+        }
+
+        return success;
+      } catch (error: any) {
+        setState((prev) => ({
+          ...prev,
+          error: error.message || "Erro na autenticação biométrica",
+        }));
+        return false;
+      }
+    },
+    [state.isAvailable],
+  );
 
   const enable = useCallback(async () => {
     try {
@@ -108,7 +111,7 @@ export function useBiometricAuth() {
     } catch (error: any) {
       setState((prev) => ({
         ...prev,
-        error: error.message || 'Erro ao habilitar biometria',
+        error: error.message || "Erro ao habilitar biometria",
       }));
     }
   }, []);
@@ -120,7 +123,7 @@ export function useBiometricAuth() {
     } catch (error: any) {
       setState((prev) => ({
         ...prev,
-        error: error.message || 'Erro ao desabilitar biometria',
+        error: error.message || "Erro ao desabilitar biometria",
       }));
     }
   }, []);

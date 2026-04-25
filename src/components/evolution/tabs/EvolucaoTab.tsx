@@ -10,23 +10,19 @@
 import { EvolutionResponsiveLayout } from "@/components/evolution/EvolutionResponsiveLayout";
 
 interface EvolucaoTabProps {
-	alertsSection: React.ReactNode;
-	topSection: React.ReactNode;
-	mainGrid: React.ReactNode;
+  alertsSection: React.ReactNode;
+  topSection: React.ReactNode;
+  mainGrid: React.ReactNode;
 }
 
-export function EvolucaoTab({
-	alertsSection,
-	topSection,
-	mainGrid,
-}: EvolucaoTabProps) {
-	return (
-		<div className="mt-4">
-			<EvolutionResponsiveLayout
-				alertsSection={alertsSection}
-				topSection={topSection}
-				mainGrid={mainGrid}
-			/>
-		</div>
-	);
+export function EvolucaoTab({ alertsSection, topSection, mainGrid }: EvolucaoTabProps) {
+  return (
+    <div className="mt-4">
+      <EvolutionResponsiveLayout
+        alertsSection={alertsSection}
+        topSection={topSection}
+        mainGrid={mainGrid}
+      />
+    </div>
+  );
 }

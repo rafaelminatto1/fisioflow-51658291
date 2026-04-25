@@ -51,7 +51,7 @@ import { AgendaAutomationService } from "@/lib/services/AgendaAutomationService"
 import { EvolutionVersionToggle } from "./v2-improved/EvolutionVersionToggle";
 // V5 Pro Block Editor — O novo padrão unificado de alta performance.
 const V5ProBlockEditor = React.lazy(() =>
-  import("./V5ProBlockEditor").then((m) => ({ default: m.V5ProBlockEditor }))
+  import("./V5ProBlockEditor").then((m) => ({ default: m.V5ProBlockEditor })),
 );
 import { EvolutionSettingsModal, getEvolutionSettings } from "./EvolutionSettingsModal";
 import {
@@ -102,7 +102,7 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
   const [, setAppointmentLoadedFromApi] = useState(false);
   const [activeTab, setActiveTab] = useState("evolution");
   const [viewVersion, setViewVersion] = useState<"classic" | "v5-pro">(() => {
-    return (getEvolutionSettings().defaultViewVersion === "classic" ? "classic" : "v5-pro");
+    return getEvolutionSettings().defaultViewVersion === "classic" ? "classic" : "v5-pro";
   });
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
@@ -133,11 +133,11 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
   // Fisioterapeuta responsável (dropdown + CREFITO)
   const [selectedTherapistId, setSelectedTherapistId] = useState("");
   const { therapists } = useTherapists();
-  
+
   // Clinical Insights & Prescription State
   const [acceptedInsights, setAcceptedInsights] = useState<ActiveSuggestion[]>([]);
   const [dismissedInsightIds, setDismissedInsightIds] = useState<string[]>([]);
-  
+
   // Action Bridge - Conecta os dados do SOAP às sugestões
   // Mapeamos os campos do SOAP para o formato que o bridge entende
   const soapFieldsAsTemplate: any[] = [
@@ -152,18 +152,18 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
 
   const { suggestions, hasRedFlag: hasRedFlags } = useActionBridge(
     soapFieldsAsTemplate as any,
-    soapData as any
+    soapData as any,
   );
 
   const handleAcceptInsight = (insight: ActiveSuggestion) => {
-    setAcceptedInsights(prev => {
+    setAcceptedInsights((prev) => {
       // Evita duplicatas no rascunho
-      if (prev.find(i => i.ruleId === insight.ruleId)) return prev;
+      if (prev.find((i) => i.ruleId === insight.ruleId)) return prev;
       return [...prev, insight];
     });
     // Remove da lista de sugestões ativas ao aceitar
-    setDismissedInsightIds(prev => [...prev, insight.ruleId]);
-    
+    setDismissedInsightIds((prev) => [...prev, insight.ruleId]);
+
     toast({
       title: "Sugestão aceita",
       description: `${insight.ruleName} foi adicionado ao seu rascunho de prescrição.`,
@@ -171,31 +171,31 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
   };
 
   const handleDismissInsight = (id: string) => {
-    setDismissedInsightIds(prev => [...prev, id]);
+    setDismissedInsightIds((prev) => [...prev, id]);
   };
 
   const handleFinalizePrescription = (items: any[]) => {
     if (items.length === 0) return;
 
     // 1. O que vai para o texto do Plano (Protocolos, Orientações, Precauções)
-    const textualItems = items.filter(i => i.type !== 'exercise');
+    const textualItems = items.filter((i) => i.type !== "exercise");
     const prescriptionText = textualItems
-      .map(item => `[${item.type.toUpperCase()}] ${item.title}: ${item.description}`)
+      .map((item) => `[${item.type.toUpperCase()}] ${item.title}: ${item.description}`)
       .join("\n");
 
     if (prescriptionText) {
-      setSoapData(prev => ({
+      setSoapData((prev) => ({
         ...prev,
-        plan: prev.plan 
+        plan: prev.plan
           ? `${prev.plan}\n\n--- Orientações Automatizadas ---\n${prescriptionText}`
-          : `--- Orientações Automatizadas ---\n${prescriptionText}`
+          : `--- Orientações Automatizadas ---\n${prescriptionText}`,
       }));
     }
 
     // 2. O que vai para a lista estruturada de Exercícios
-    const exerciseItems = items.filter(i => i.type === 'exercise');
+    const exerciseItems = items.filter((i) => i.type === "exercise");
     if (exerciseItems.length > 0) {
-      const newExercises: SessionExercise[] = exerciseItems.map(item => ({
+      const newExercises: SessionExercise[] = exerciseItems.map((item) => ({
         id: Math.random().toString(36).substr(2, 9),
         exerciseId: item.action?.exerciseId || "",
         name: item.title,
@@ -206,15 +206,15 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
         observations: item.description,
       }));
 
-      setSessionExercises(prev => [...prev, ...newExercises]);
-      
+      setSessionExercises((prev) => [...prev, ...newExercises]);
+
       // Muda para a aba de exercícios para o usuário ver o que foi adicionado
       setActiveTab("exercises");
     }
 
     // Limpa o rascunho após finalizar
     setAcceptedInsights([]);
-    
+
     toast({
       title: "Prescrição Finalizada",
       description: `${exerciseItems.length} exercícios adicionados e orientações anexadas ao plano.`,
@@ -337,12 +337,13 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
 
         // Load patient related data
         if (currentPatientId) {
-          const [patientAppointmentsRes, surgeriesRes, pathologiesRes, goalsRes] = await Promise.all([
-            appointmentsApi.list({ patientId: currentPatientId, limit: 500 }),
-            patientsApi.surgeries(currentPatientId),
-            patientsApi.pathologies(currentPatientId),
-            goalsApi.list(currentPatientId),
-          ]);
+          const [patientAppointmentsRes, surgeriesRes, pathologiesRes, goalsRes] =
+            await Promise.all([
+              appointmentsApi.list({ patientId: currentPatientId, limit: 500 }),
+              patientsApi.surgeries(currentPatientId),
+              patientsApi.pathologies(currentPatientId),
+              goalsApi.list(currentPatientId),
+            ]);
 
           const completedStatuses = new Set(["completed", "concluido", "realizado", "atendido"]);
           const calculatedSessionNumber =
@@ -957,180 +958,184 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
 
       {/* Main Content */}
       <div className="p-4 h-[calc(100vh-80px)] overflow-hidden">
-        <Suspense fallback={
-          <div className="flex items-center justify-center h-full">
-            <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
-          </div>
-        }>
-        {viewVersion === "v5-pro" ? (
-          <div className="h-full overflow-y-auto">
-            <V5ProBlockEditor
-              initialContent={soapData.assessment}
-              soapData={soapData}
-              evolutionId={appointmentId}
-              patientId={patientId}
-              isSaving={isSaving}
-              isPro={true}
-              onSave={(content) => {
-                handleSoapChange({ ...soapData, assessment: content });
-                setTimeout(() => handleSave(), 100);
-              }}
-            />
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 h-full">
-            {/* Column 1: SOAP Form (30%) */}
-            <div className="lg:col-span-4 space-y-4">
-              <Card className="h-full">
-                <CardContent className="p-4">
-                  {patientId && (
-                    <SOAPFormPanel
-                      patientId={patientId}
-                      data={soapData}
-                      onChange={handleSoapChange}
-                      onSave={handleSave}
-                      isSaving={isSaving}
-                    />
-                  )}
-                </CardContent>
-              </Card>
+        <Suspense
+          fallback={
+            <div className="flex items-center justify-center h-full">
+              <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
             </div>
-
-            {/* Column 2: History & Surgeries (25%) */}
-            <div className="lg:col-span-3 space-y-4">
-              <ScrollArea className="h-[calc(100vh-120px)]">
-                <div className="space-y-4 pr-4">
-                  {/* Conduct Replication */}
-                  {patientId && (
-                    <ConductReplication
-                      patientId={patientId}
-                      onSelectConduct={handleSelectConduct}
-                    />
-                  )}
-
-                  {/* Session History */}
-                  {patientId && (
-                    <SessionHistoryPanel
-                      patientId={patientId}
-                      onReplicateConduct={handleReplicateConduct}
-                    />
-                  )}
-
-                  {/* Surgery Timeline */}
-                  {surgeries.length > 0 && <SurgeryTimeline surgeries={surgeries} />}
-                </div>
-              </ScrollArea>
+          }
+        >
+          {viewVersion === "v5-pro" ? (
+            <div className="h-full overflow-y-auto">
+              <V5ProBlockEditor
+                initialContent={soapData.assessment}
+                soapData={soapData}
+                evolutionId={appointmentId}
+                patientId={patientId}
+                isSaving={isSaving}
+                isPro={true}
+                onSave={(content) => {
+                  handleSoapChange({ ...soapData, assessment: content });
+                  setTimeout(() => handleSave(), 100);
+                }}
+              />
             </div>
-
-            {/* Column 3: Tests & Evolution (25%) */}
-            <div className="lg:col-span-3 space-y-4">
-              <ScrollArea className="h-[calc(100vh-120px)]">
-                <div className="space-y-4 pr-4">
-                  <Tabs
-                    value={activeTab}
-                    onValueChange={setActiveTab}
-                    aria-label="Painéis de evolução"
-                  >
-                    <TabsList className="w-full">
-                      <TabsTrigger value="evolution" className="flex-1">
-                        Evolução
-                      </TabsTrigger>
-                      <TabsTrigger value="exercises" className="flex-1">
-                        Exercícios
-                      </TabsTrigger>
-                      <TabsTrigger value="pathologies" className="flex-1">
-                        Patologias
-                      </TabsTrigger>
-                      <TabsTrigger value="insights" className="flex-1">
-                        ✨ Insights
-                      </TabsTrigger>
-                      <TabsTrigger value="biomechanics" className="flex-1">
-                        🦴 Biomec.
-                      </TabsTrigger>
-                    </TabsList>
-
-                    <TabsContent value="insights" className="mt-4">
-                      <ClinicalInsightsPanel 
-                        suggestions={suggestions}
-                        dismissedIds={dismissedInsightIds}
-                        onAccept={handleAcceptInsight}
-                        onDismiss={handleDismissInsight}
-                        hasRedFlags={hasRedFlags}
-                      />
-                    </TabsContent>
-
-                    <TabsContent value="exercises" className="mt-4">
-                      <SessionExercisesPanel
-                        exercises={sessionExercises}
-                        onChange={setSessionExercises}
-                      />
-                    </TabsContent>
-
-                    <TabsContent value="evolution" className="mt-4">
-                      {patientId && (
-                        <TestEvolutionPanel patientId={patientId} sessionNumber={sessionNumber} />
-                      )}
-                    </TabsContent>
-
-                    <TabsContent value="pathologies" className="mt-4">
-                      <SurgeryTimeline surgeries={surgeries as any} />
-                      {pathologies.length > 0 ? (
-                        <PathologyStatus pathologies={pathologies as any} />
-                      ) : (
-                        <div className="text-center py-8 text-muted-foreground">
-                          Nenhuma patologia registrada.
-                        </div>
-                      )}
-                    </TabsContent>
-
-                    <TabsContent value="insights" className="mt-4">
-                      {patientId && <MedicalReportSuggestions patientId={patientId} />}
-                    </TabsContent>
-
-                    <TabsContent value="biomechanics" className="mt-4">
-                      <BiomechanicsSessionTab
-                        sessionId={null}
-                        appointmentId={appointmentId || null}
-                        patientName={patient ? PatientHelpers.getName(patient as any) : "Paciente"}
-                      />
-                    </TabsContent>
-                  </Tabs>
-                </div>
-              </ScrollArea>
-            </div>
-
-            {/* Column 4: Patient Summary (20%) */}
-            <div className="lg:col-span-2">
-              <ScrollArea className="h-[calc(100vh-120px)]">
-                <div className="space-y-4 pr-4">
-                  {patient && (
-                    <>
-                      <ProtocolMilestonesAlert
+          ) : (
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 h-full">
+              {/* Column 1: SOAP Form (30%) */}
+              <div className="lg:col-span-4 space-y-4">
+                <Card className="h-full">
+                  <CardContent className="p-4">
+                    {patientId && (
+                      <SOAPFormPanel
                         patientId={patientId}
-                        surgeries={surgeries}
-                        pathologies={pathologies}
-                        onApplyMilestone={handleApplyMilestone}
+                        data={soapData}
+                        onChange={handleSoapChange}
+                        onSave={handleSave}
+                        isSaving={isSaving}
                       />
-                      <PatientSummaryPanel
-                        patient={patient as Patient}
-                        goals={goals}
-                        totalSessions={sessionNumber}
+                    )}
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Column 2: History & Surgeries (25%) */}
+              <div className="lg:col-span-3 space-y-4">
+                <ScrollArea className="h-[calc(100vh-120px)]">
+                  <div className="space-y-4 pr-4">
+                    {/* Conduct Replication */}
+                    {patientId && (
+                      <ConductReplication
+                        patientId={patientId}
+                        onSelectConduct={handleSelectConduct}
                       />
-                    </>
-                  )}
-                  {goals.length > 0 && <GoalsTracker goals={goals} />}
-                </div>
-              </ScrollArea>
+                    )}
+
+                    {/* Session History */}
+                    {patientId && (
+                      <SessionHistoryPanel
+                        patientId={patientId}
+                        onReplicateConduct={handleReplicateConduct}
+                      />
+                    )}
+
+                    {/* Surgery Timeline */}
+                    {surgeries.length > 0 && <SurgeryTimeline surgeries={surgeries} />}
+                  </div>
+                </ScrollArea>
+              </div>
+
+              {/* Column 3: Tests & Evolution (25%) */}
+              <div className="lg:col-span-3 space-y-4">
+                <ScrollArea className="h-[calc(100vh-120px)]">
+                  <div className="space-y-4 pr-4">
+                    <Tabs
+                      value={activeTab}
+                      onValueChange={setActiveTab}
+                      aria-label="Painéis de evolução"
+                    >
+                      <TabsList className="w-full">
+                        <TabsTrigger value="evolution" className="flex-1">
+                          Evolução
+                        </TabsTrigger>
+                        <TabsTrigger value="exercises" className="flex-1">
+                          Exercícios
+                        </TabsTrigger>
+                        <TabsTrigger value="pathologies" className="flex-1">
+                          Patologias
+                        </TabsTrigger>
+                        <TabsTrigger value="insights" className="flex-1">
+                          ✨ Insights
+                        </TabsTrigger>
+                        <TabsTrigger value="biomechanics" className="flex-1">
+                          🦴 Biomec.
+                        </TabsTrigger>
+                      </TabsList>
+
+                      <TabsContent value="insights" className="mt-4">
+                        <ClinicalInsightsPanel
+                          suggestions={suggestions}
+                          dismissedIds={dismissedInsightIds}
+                          onAccept={handleAcceptInsight}
+                          onDismiss={handleDismissInsight}
+                          hasRedFlags={hasRedFlags}
+                        />
+                      </TabsContent>
+
+                      <TabsContent value="exercises" className="mt-4">
+                        <SessionExercisesPanel
+                          exercises={sessionExercises}
+                          onChange={setSessionExercises}
+                        />
+                      </TabsContent>
+
+                      <TabsContent value="evolution" className="mt-4">
+                        {patientId && (
+                          <TestEvolutionPanel patientId={patientId} sessionNumber={sessionNumber} />
+                        )}
+                      </TabsContent>
+
+                      <TabsContent value="pathologies" className="mt-4">
+                        <SurgeryTimeline surgeries={surgeries as any} />
+                        {pathologies.length > 0 ? (
+                          <PathologyStatus pathologies={pathologies as any} />
+                        ) : (
+                          <div className="text-center py-8 text-muted-foreground">
+                            Nenhuma patologia registrada.
+                          </div>
+                        )}
+                      </TabsContent>
+
+                      <TabsContent value="insights" className="mt-4">
+                        {patientId && <MedicalReportSuggestions patientId={patientId} />}
+                      </TabsContent>
+
+                      <TabsContent value="biomechanics" className="mt-4">
+                        <BiomechanicsSessionTab
+                          sessionId={null}
+                          appointmentId={appointmentId || null}
+                          patientName={
+                            patient ? PatientHelpers.getName(patient as any) : "Paciente"
+                          }
+                        />
+                      </TabsContent>
+                    </Tabs>
+                  </div>
+                </ScrollArea>
+              </div>
+
+              {/* Column 4: Patient Summary (20%) */}
+              <div className="lg:col-span-2">
+                <ScrollArea className="h-[calc(100vh-120px)]">
+                  <div className="space-y-4 pr-4">
+                    {patient && (
+                      <>
+                        <ProtocolMilestonesAlert
+                          patientId={patientId}
+                          surgeries={surgeries}
+                          pathologies={pathologies}
+                          onApplyMilestone={handleApplyMilestone}
+                        />
+                        <PatientSummaryPanel
+                          patient={patient as Patient}
+                          goals={goals}
+                          totalSessions={sessionNumber}
+                        />
+                      </>
+                    )}
+                    {goals.length > 0 && <GoalsTracker goals={goals} />}
+                  </div>
+                </ScrollArea>
+              </div>
             </div>
-          </div>
-        )}
+          )}
         </Suspense>
       </div>
 
       {/* Prescription Worklist / Draft */}
-      <PrescriptionDraft 
+      <PrescriptionDraft
         items={acceptedInsights}
-        onRemove={(id) => setAcceptedInsights(prev => prev.filter(i => i.id !== id))}
+        onRemove={(id) => setAcceptedInsights((prev) => prev.filter((i) => i.id !== id))}
         onFinalize={handleFinalizePrescription}
       />
 

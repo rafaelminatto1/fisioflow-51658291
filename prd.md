@@ -2,13 +2,13 @@
 
 **Documento de Requisitos do Produto (v4.0.0 - Foco em Edge & Neon)**
 
-| Campo | Valor |
-|-------|--------|
-| Produto | FisioFlow |
-| Versão do documento | 4.0 |
-| Data | Abril 2026 |
-| Status | Produção Estável - Arquitetura Neon-Native |
-| Stakeholders | Gestão, equipe técnica, clínicas parceiras |
+| Campo               | Valor                                      |
+| ------------------- | ------------------------------------------ |
+| Produto             | FisioFlow                                  |
+| Versão do documento | 4.0                                        |
+| Data                | Abril 2026                                 |
+| Status              | Produção Estável - Arquitetura Neon-Native |
+| Stakeholders        | Gestão, equipe técnica, clínicas parceiras |
 
 ---
 
@@ -40,12 +40,12 @@ Modernizar a fisioterapia através de uma arquitetura resiliente, offline-first 
 
 ### 2.2 Métricas de Produto (KPIs)
 
-| Métrica | Meta | Tecnologia de Medição |
-|---------|------|------------------------|
-| Tempo de Carregamento (LCP) | < 1.2 s | Cloudflare Web Analytics |
-| Resposta de API (P95) | < 200 ms | Cloudflare Observability |
-| Uptime SLA | > 99,9% | Neon / Cloudflare Status |
-| Lighthouse Performance | ≥ 95 | CI Automated Audit |
+| Métrica                     | Meta     | Tecnologia de Medição    |
+| --------------------------- | -------- | ------------------------ |
+| Tempo de Carregamento (LCP) | < 1.2 s  | Cloudflare Web Analytics |
+| Resposta de API (P95)       | < 200 ms | Cloudflare Observability |
+| Uptime SLA                  | > 99,9%  | Neon / Cloudflare Status |
+| Lighthouse Performance      | ≥ 95     | CI Automated Audit       |
 
 ---
 
@@ -53,27 +53,27 @@ Modernizar a fisioterapia através de uma arquitetura resiliente, offline-first 
 
 O sistema utiliza **Neon Auth (Better Auth)** para autenticação e **Drizzle ORM** para autorização baseada em Roles.
 
-| Role | Acesso |
-|------|--------|
-| **admin** | Gestão total da organização, faturamento e usuários. |
-| **fisioterapeuta** | Agenda própria, prontuários, exercícios e avaliações. |
-| **recepcionista** | Agendamento, check-in, financeiro básico. |
-| **paciente** | Visualização de exercícios (App Mobile/PWA) e histórico. |
+| Role               | Acesso                                                   |
+| ------------------ | -------------------------------------------------------- |
+| **admin**          | Gestão total da organização, faturamento e usuários.     |
+| **fisioterapeuta** | Agenda própria, prontuários, exercícios e avaliações.    |
+| **recepcionista**  | Agendamento, check-in, financeiro básico.                |
+| **paciente**       | Visualização de exercícios (App Mobile/PWA) e histórico. |
 
 ---
 
 ## 4. Stack Técnica Consolidada (v4.0)
 
-| Camada | Tecnologia |
-|--------|------------|
-| **Runtime** | Node.js v20.12.0+ |
-| **Frontend** | React 19, Vite 8, Rolldown |
-| **Backend API** | Hono.js em Cloudflare Workers |
-| **Database** | Neon PostgreSQL (Serverless) |
-| **ORM** | Drizzle ORM |
-| **Auth** | Neon Auth (JWKS / Better Auth) |
-| **Deploy** | Cloudflare Pages (Front) / Workers (API) |
-| **Mobile** | Expo / React Native (Capacitor Sync) |
+| Camada          | Tecnologia                               |
+| --------------- | ---------------------------------------- |
+| **Runtime**     | Node.js v20.12.0+                        |
+| **Frontend**    | React 19, Vite 8, Rolldown               |
+| **Backend API** | Hono.js em Cloudflare Workers            |
+| **Database**    | Neon PostgreSQL (Serverless)             |
+| **ORM**         | Drizzle ORM                              |
+| **Auth**        | Neon Auth (JWKS / Better Auth)           |
+| **Deploy**      | Cloudflare Pages (Front) / Workers (API) |
+| **Mobile**      | Expo / React Native (Capacitor Sync)     |
 
 ---
 
@@ -85,4 +85,4 @@ O sistema utiliza **Neon Auth (Better Auth)** para autenticação e **Drizzle OR
 
 ---
 
-*FisioFlow — Excelência clínica através da engenharia de ponta.*
+_FisioFlow — Excelência clínica através da engenharia de ponta._

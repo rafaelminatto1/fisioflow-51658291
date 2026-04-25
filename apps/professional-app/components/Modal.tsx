@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   Modal as RNModal,
   View,
@@ -6,12 +6,12 @@ import {
   TouchableOpacity,
   StyleSheet,
   Dimensions,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
-import { useColors } from '@/hooks/useColorScheme';
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { Ionicons } from "@expo/vector-icons";
+import { useColors } from "@/hooks/useColorScheme";
 
-const { height: SCREEN_HEIGHT } = Dimensions.get('window');
+const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 
 interface Props {
   visible: boolean;
@@ -23,16 +23,11 @@ interface Props {
 
 export function Modal({ visible, onClose, title, children, hideCloseButton }: Props) {
   const colors = useColors();
-  const [,setModalHeight] = useState(SCREEN_HEIGHT * 0.7);
+  const [, setModalHeight] = useState(SCREEN_HEIGHT * 0.7);
 
   return (
-    <RNModal
-      visible={visible}
-      transparent
-      animationType="slide"
-      onRequestClose={onClose}
-    >
-      <SafeAreaView style={[styles.overlay, { backgroundColor: 'rgba(0,0,0,0.5)' }]} edges={[]}>
+    <RNModal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+      <SafeAreaView style={[styles.overlay, { backgroundColor: "rgba(0,0,0,0.5)" }]} edges={[]}>
         <View style={styles.container}>
           <View
             style={[styles.content, { backgroundColor: colors.background }]}
@@ -43,9 +38,7 @@ export function Modal({ visible, onClose, title, children, hideCloseButton }: Pr
           >
             {/* Header */}
             <View style={[styles.header, { borderBottomColor: colors.border }]}>
-              {title && (
-                <Text style={[styles.title, { color: colors.text }]}>{title}</Text>
-              )}
+              {title && <Text style={[styles.title, { color: colors.text }]}>{title}</Text>}
               {!hideCloseButton && (
                 <TouchableOpacity
                   style={[styles.closeButton, { backgroundColor: colors.surface }]}
@@ -68,11 +61,11 @@ export function Modal({ visible, onClose, title, children, hideCloseButton }: Pr
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    justifyContent: 'flex-end',
+    justifyContent: "flex-end",
   },
   container: {
     flex: 1,
-    justifyContent: 'center',
+    justifyContent: "center",
     padding: 16,
   },
   content: {
@@ -81,25 +74,25 @@ const styles = StyleSheet.create({
     maxHeight: SCREEN_HEIGHT * 0.8,
   },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     paddingHorizontal: 16,
     paddingVertical: 16,
     borderBottomWidth: 1,
   },
   title: {
     fontSize: 18,
-    fontWeight: '600',
+    fontWeight: "600",
     flex: 1,
-    textAlign: 'center',
+    textAlign: "center",
   },
   closeButton: {
     width: 32,
     height: 32,
     borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   body: {
     paddingHorizontal: 16,

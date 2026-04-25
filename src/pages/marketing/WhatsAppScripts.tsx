@@ -9,9 +9,9 @@ import { MainLayout } from "@/components/layout/MainLayout";
 import { WhatsAppScriptGenerator } from "@/components/marketing/WhatsAppScriptGenerator";
 
 export default function WhatsAppScriptsPage() {
-	return (
-		<MainLayout>
-			<WhatsAppScriptGenerator />
-		</MainLayout>
-	);
+  return (
+    <MainLayout>
+      <WhatsAppScriptGenerator />
+    </MainLayout>
+  );
 }

@@ -4,5 +4,5 @@ export interface AppSettings {
   appointmentReminders: boolean;
   autoPlayVideos: boolean;
   hapticFeedback: boolean;
-  theme: 'light' | 'dark' | 'auto';
+  theme: "light" | "dark" | "auto";
 }

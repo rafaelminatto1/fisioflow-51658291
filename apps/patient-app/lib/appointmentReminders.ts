@@ -1,8 +1,8 @@
-import { useEffect, useState } from 'react';
-import * as Notifications from 'expo-notifications';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { patientApi } from './api';
-import { log } from '@/lib/logger';
+import { useEffect, useState } from "react";
+import * as Notifications from "expo-notifications";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { patientApi } from "./api";
+import { log } from "@/lib/logger";
 
 export interface Appointment {
   id: string;
@@ -21,11 +21,11 @@ export interface AppointmentReminderConfig {
   }[];
 }
 
-export type AppointmentReminderType = '24h_before' | '1h_before' | 'day_of';
+export type AppointmentReminderType = "24h_before" | "1h_before" | "day_of";
 
 const STORAGE_KEYS = {
-  APPOINTMENT_REMINDERS: '@fisioflow_appointment_reminders',
-  SCHEDULED_REMINDERS: '@fisioflow_scheduled_appointment_reminders',
+  APPOINTMENT_REMINDERS: "@fisioflow_appointment_reminders",
+  SCHEDULED_REMINDERS: "@fisioflow_scheduled_appointment_reminders",
 };
 
 const DEFAULT_CONFIG: AppointmentReminderConfig = {
@@ -34,12 +34,7 @@ const DEFAULT_CONFIG: AppointmentReminderConfig = {
 };
 
 function parseAppointmentDate(raw: Record<string, unknown>): Date | null {
-  const primary =
-    raw.date ??
-    raw.appointment_date ??
-    raw.scheduled_at ??
-    raw.start_at ??
-    null;
+  const primary = raw.date ?? raw.appointment_date ?? raw.scheduled_at ?? raw.start_at ?? null;
 
   if (!primary) return null;
 
@@ -48,43 +43,39 @@ function parseAppointmentDate(raw: Record<string, unknown>): Date | null {
 }
 
 function parseAppointmentTime(raw: Record<string, unknown>, date: Date): string {
-  const explicit =
-    raw.time ??
-    raw.start_time ??
-    raw.scheduled_time ??
-    null;
+  const explicit = raw.time ?? raw.start_time ?? raw.scheduled_time ?? null;
 
-  if (typeof explicit === 'string' && explicit.trim()) {
+  if (typeof explicit === "string" && explicit.trim()) {
     return explicit.trim().slice(0, 5);
   }
 
-  return date.toLocaleTimeString('pt-BR', {
-    hour: '2-digit',
-    minute: '2-digit',
+  return date.toLocaleTimeString("pt-BR", {
+    hour: "2-digit",
+    minute: "2-digit",
   });
 }
 
 function normalizeAppointment(raw: unknown): Appointment | null {
-  if (!raw || typeof raw !== 'object') return null;
+  if (!raw || typeof raw !== "object") return null;
 
   const row = raw as Record<string, unknown>;
   const date = parseAppointmentDate(row);
   if (!date) return null;
 
   return {
-    id: String(row.id ?? ''),
+    id: String(row.id ?? ""),
     date,
     time: parseAppointmentTime(row, date),
-    type: typeof row.type === 'string' && row.type.trim() ? row.type.trim() : 'Consulta',
+    type: typeof row.type === "string" && row.type.trim() ? row.type.trim() : "Consulta",
     professionalName:
-      (typeof row.professional_name === 'string' && row.professional_name.trim()) ||
-      (typeof row.therapist_name === 'string' && row.therapist_name.trim()) ||
-      'Profissional',
+      (typeof row.professional_name === "string" && row.professional_name.trim()) ||
+      (typeof row.therapist_name === "string" && row.therapist_name.trim()) ||
+      "Profissional",
     professionalId:
-      typeof row.professional_id === 'string' && row.professional_id.trim()
+      typeof row.professional_id === "string" && row.professional_id.trim()
         ? row.professional_id.trim()
         : undefined,
-    notes: typeof row.notes === 'string' && row.notes.trim() ? row.notes.trim() : undefined,
+    notes: typeof row.notes === "string" && row.notes.trim() ? row.notes.trim() : undefined,
   };
 }
 
@@ -111,19 +102,16 @@ export class AppointmentReminders {
         this.config = JSON.parse(stored);
       }
     } catch (error) {
-      log.error('Error loading appointment reminder config:', error);
+      log.error("Error loading appointment reminder config:", error);
       this.config = DEFAULT_CONFIG;
     }
   }
 
   private async saveConfig(): Promise<void> {
     try {
-      await AsyncStorage.setItem(
-        STORAGE_KEYS.APPOINTMENT_REMINDERS,
-        JSON.stringify(this.config),
-      );
+      await AsyncStorage.setItem(STORAGE_KEYS.APPOINTMENT_REMINDERS, JSON.stringify(this.config));
     } catch (error) {
-      log.error('Error saving appointment reminder config:', error);
+      log.error("Error saving appointment reminder config:", error);
     }
   }
 
@@ -168,12 +156,9 @@ export class AppointmentReminders {
         }
       }
 
-      await AsyncStorage.setItem(
-        STORAGE_KEYS.SCHEDULED_REMINDERS,
-        JSON.stringify(scheduledIds),
-      );
+      await AsyncStorage.setItem(STORAGE_KEYS.SCHEDULED_REMINDERS, JSON.stringify(scheduledIds));
     } catch (error) {
-      log.error('Error syncing appointment reminders:', error);
+      log.error("Error syncing appointment reminders:", error);
     }
   }
 
@@ -189,10 +174,10 @@ export class AppointmentReminders {
         return null;
       }
 
-      let message = '';
+      let message = "";
       if (hoursBefore >= 24) {
         const days = Math.floor(hoursBefore / 24);
-        message = `Sua consulta de ${appointment.type} e em ${days} dia${days !== 1 ? 's' : ''}.`;
+        message = `Sua consulta de ${appointment.type} e em ${days} dia${days !== 1 ? "s" : ""}.`;
       } else if (hoursBefore === 1) {
         message = `Sua consulta de ${appointment.type} e em 1 hora.`;
       } else {
@@ -201,10 +186,10 @@ export class AppointmentReminders {
 
       return Notifications.scheduleNotificationAsync({
         content: {
-          title: 'Lembrete de Consulta',
+          title: "Lembrete de Consulta",
           body: `${message}\nCom ${appointment.professionalName} as ${appointment.time}.`,
           data: {
-            type: 'appointment_reminder',
+            type: "appointment_reminder",
             appointmentId: appointment.id,
           },
         },
@@ -214,7 +199,7 @@ export class AppointmentReminders {
         },
       });
     } catch (error) {
-      log.error('Error scheduling appointment reminder:', error);
+      log.error("Error scheduling appointment reminder:", error);
       return null;
     }
   }
@@ -229,21 +214,21 @@ export class AppointmentReminders {
 
       await AsyncStorage.removeItem(STORAGE_KEYS.SCHEDULED_REMINDERS);
     } catch (error) {
-      log.error('Error canceling appointment reminders:', error);
+      log.error("Error canceling appointment reminders:", error);
     }
   }
 
   async requestPermissions(): Promise<boolean> {
     try {
       const { status: existingStatus } = await Notifications.getPermissionsAsync();
-      if (existingStatus === 'granted') {
+      if (existingStatus === "granted") {
         return true;
       }
 
       const { status } = await Notifications.requestPermissionsAsync();
-      return status === 'granted';
+      return status === "granted";
     } catch (error) {
-      log.error('Error requesting notification permissions:', error);
+      log.error("Error requesting notification permissions:", error);
       return false;
     }
   }
@@ -260,7 +245,7 @@ export class AppointmentReminders {
       const ids = JSON.parse(storedIds) as string[];
       return allScheduled.filter((notification) => ids.includes(notification.identifier));
     } catch (error) {
-      log.error('Error getting scheduled appointment reminders:', error);
+      log.error("Error getting scheduled appointment reminders:", error);
       return [];
     }
   }
@@ -296,10 +281,10 @@ export async function createAppointmentReminder(
 
   return Notifications.scheduleNotificationAsync({
     content: {
-      title: 'Lembrete de Consulta',
+      title: "Lembrete de Consulta",
       body: `Sua consulta de ${appointment.type} e em ${hoursBefore} horas.\nCom ${appointment.professionalName} as ${appointment.time}.`,
       data: {
-        type: 'appointment_reminder',
+        type: "appointment_reminder",
         appointmentId: appointment.id,
       },
     },

@@ -8,12 +8,7 @@ import { TemplateApplyFlow } from "./TemplateApplyFlow";
 import { TemplateCreateFlow } from "./TemplateCreateFlow";
 import { Button } from "@/components/ui/button";
 import { LayoutTemplate, Sparkles, Plus } from "lucide-react";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import type { ExerciseTemplate } from "@/types/workers";
 
 // ─── Empty state CTA (shown when org has no custom templates) ─────────────────
@@ -35,11 +30,16 @@ function EmptyStateCTA({ onExploreSystem, onCreateFirst }: EmptyStateCTAProps) {
             Sua organização ainda não tem templates personalizados
           </p>
           <p className="text-sm text-muted-foreground max-w-sm">
-            Explore os templates do sistema como ponto de partida ou crie o seu próprio protocolo clínico personalizado.
+            Explore os templates do sistema como ponto de partida ou crie o seu próprio protocolo
+            clínico personalizado.
           </p>
         </div>
         <div className="flex flex-wrap gap-3 justify-center mt-2">
-          <Button variant="outline" onClick={onExploreSystem} className="gap-2 h-11 px-6 rounded-xl border-border">
+          <Button
+            variant="outline"
+            onClick={onExploreSystem}
+            className="gap-2 h-11 px-6 rounded-xl border-border"
+          >
             <Sparkles className="h-4 w-4 text-amber-500" />
             Explorar Templates do Sistema
           </Button>
@@ -128,19 +128,15 @@ export function TemplateManager() {
   const handleCreateFirst = () => openCreateFlow();
 
   // Source template for TemplateCreateFlow (customize mode)
-  const createFlowSourceTemplate: ExerciseTemplate | undefined =
-    createFlowSourceId
-      ? (templates.find((t) => t.id === createFlowSourceId) ?? undefined)
-      : undefined;
+  const createFlowSourceTemplate: ExerciseTemplate | undefined = createFlowSourceId
+    ? (templates.find((t) => t.id === createFlowSourceId) ?? undefined)
+    : undefined;
 
   return (
     <div className="h-full flex flex-col space-y-6">
       {/* Empty state CTA — shown above the list when no custom templates exist */}
       {!hasCustomTemplates && !loading && (
-        <EmptyStateCTA
-          onExploreSystem={handleExploreSystem}
-          onCreateFirst={handleCreateFirst}
-        />
+        <EmptyStateCTA onExploreSystem={handleExploreSystem} onCreateFirst={handleCreateFirst} />
       )}
 
       {/* Grid-view layout */}
@@ -159,8 +155,8 @@ export function TemplateManager() {
       </div>
 
       {/* ── Detail Drawer ── */}
-      <Sheet 
-        open={!!selectedTemplateId} 
+      <Sheet
+        open={!!selectedTemplateId}
         onOpenChange={(open) => {
           if (!open) setSelectedTemplate(null);
         }}
@@ -171,7 +167,7 @@ export function TemplateManager() {
               Detalhes do Template
             </SheetTitle>
           </SheetHeader>
-          
+
           <TemplateDetailPanel
             template={selectedTemplate}
             onApply={handleApply}
@@ -187,7 +183,9 @@ export function TemplateManager() {
         <TemplateApplyFlow
           template={selectedTemplate}
           open={applyFlowOpen}
-          onOpenChange={(open) => { if (!open) closeApplyFlow(); }}
+          onOpenChange={(open) => {
+            if (!open) closeApplyFlow();
+          }}
           onSuccess={() => {
             queryClient.invalidateQueries({ queryKey: ["exercise-plans"] });
           }}
@@ -196,7 +194,9 @@ export function TemplateManager() {
 
       <TemplateCreateFlow
         open={createFlowOpen}
-        onOpenChange={(open) => { if (!open) closeCreateFlow(); }}
+        onOpenChange={(open) => {
+          if (!open) closeCreateFlow();
+        }}
         sourceTemplate={createFlowSourceTemplate}
         onSuccess={() => {
           queryClient.invalidateQueries({ queryKey: ["templates"] });

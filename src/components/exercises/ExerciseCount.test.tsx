@@ -117,12 +117,10 @@ function arbitraryEmptyStore(): fc.Arbitrary<TemplateStore> {
 
 function arbitraryStoreWithItems(): fc.Arbitrary<TemplateStore> {
   return arbitraryTemplate().chain((template) =>
-    fc
-      .array(arbitraryTemplateItem(template.id), { minLength: 1, maxLength: 10 })
-      .map((items) => ({
-        template: { ...template, exerciseCount: items.length },
-        items,
-      })),
+    fc.array(arbitraryTemplateItem(template.id), { minLength: 1, maxLength: 10 }).map((items) => ({
+      template: { ...template, exerciseCount: items.length },
+      items,
+    })),
   );
 }
 
@@ -144,7 +142,10 @@ describe("Property 8: Contagem de exercícios é consistente com os items", () =
             exerciseId,
           };
           const next = addItem(store, item);
-          return next.template.exerciseCount === next.items.filter((i) => i.templateId === next.template.id).length;
+          return (
+            next.template.exerciseCount ===
+            next.items.filter((i) => i.templateId === next.template.id).length
+          );
         },
       ),
       { numRuns: 100 },
@@ -157,7 +158,10 @@ describe("Property 8: Contagem de exercícios é consistente com os items", () =
       fc.property(arbitraryStoreWithItems(), (store) => {
         const itemToRemove = store.items[0];
         const next = removeItem(store, itemToRemove.id);
-        return next.template.exerciseCount === next.items.filter((i) => i.templateId === next.template.id).length;
+        return (
+          next.template.exerciseCount ===
+          next.items.filter((i) => i.templateId === next.template.id).length
+        );
       }),
       { numRuns: 100 },
     );

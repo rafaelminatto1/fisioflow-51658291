@@ -8,6 +8,7 @@
 ## 1. Visão Geral
 
 Evolução tecnológica do FisioFlow com foco em:
+
 - **Modelo de IA configurável** com GLM-4.7-Flash (grátis) como padrão
 - **Evolução clínica por voz** (GLM-ASR + LLM)
 - **Visão multimodal** (GLM-5V-Turbo para fotos de postura, exames)
@@ -59,20 +60,21 @@ callAI({ model: 'glm-4.7-flash', task: 'soap' })
 
 ## 3. Modelos Disponíveis
 
-| Modelo | Provider | Input/1M | Output/1M | Capabilities | Default |
-|--------|----------|----------|-----------|-------------|---------|
-| GLM-4.7-Flash | Z.AI | **$0** | **$0** | chat, thinking | **SIM** |
-| GLM-5.1 | Z.AI | $1.40 | $4.40 | chat, thinking, function-calling | Não |
-| GLM-5V-Turbo | Z.AI | $1.20 | $4.00 | chat, vision, thinking | Não |
-| GLM-ASR-2512 | Z.AI | $0.03 | — | audio, transcription | Não |
-| Llama 3.3 70B | Workers AI | $0 | $0 | chat | Não |
-| Whisper | Workers AI | $0 | $0 | audio | Não |
-| BGE Embeddings | Workers AI | $0 | $0 | embeddings | Não |
-| GPT-4o | OpenAI | $2.50 | $10.00 | chat, vision | Não |
-| GPT-4o Mini | OpenAI | $0.15 | $0.60 | chat | Não |
-| Claude Sonnet 4 | Anthropic | $3.00 | $15.00 | chat, thinking | Não |
+| Modelo          | Provider   | Input/1M | Output/1M | Capabilities                     | Default |
+| --------------- | ---------- | -------- | --------- | -------------------------------- | ------- |
+| GLM-4.7-Flash   | Z.AI       | **$0**   | **$0**    | chat, thinking                   | **SIM** |
+| GLM-5.1         | Z.AI       | $1.40    | $4.40     | chat, thinking, function-calling | Não     |
+| GLM-5V-Turbo    | Z.AI       | $1.20    | $4.00     | chat, vision, thinking           | Não     |
+| GLM-ASR-2512    | Z.AI       | $0.03    | —         | audio, transcription             | Não     |
+| Llama 3.3 70B   | Workers AI | $0       | $0        | chat                             | Não     |
+| Whisper         | Workers AI | $0       | $0        | audio                            | Não     |
+| BGE Embeddings  | Workers AI | $0       | $0        | embeddings                       | Não     |
+| GPT-4o          | OpenAI     | $2.50    | $10.00    | chat, vision                     | Não     |
+| GPT-4o Mini     | OpenAI     | $0.15    | $0.60     | chat                             | Não     |
+| Claude Sonnet 4 | Anthropic  | $3.00    | $15.00    | chat, thinking                   | Não     |
 
 ### Z.AI API Details
+
 - **Base URL:** `https://api.z.ai/api/paas/v4/`
 - **Compatível com:** OpenAI SDK (drop-in replacement)
 - **Cached input:** GLM-5.1 = $0.26/1M (81% desconto)
@@ -84,18 +86,19 @@ callAI({ model: 'glm-4.7-flash', task: 'soap' })
 
 O AI Gateway é **GRÁTIS** (incluído no Workers Paid) e fica entre o Worker e o provedor de IA:
 
-| Recurso | Direto | Via AI Gateway |
-|---------|--------|---------------|
-| Custo gateway | $0 | $0 (grátis) |
-| Custo modelos | Preço cheio | Mesmo preço |
-| Cache | Não | **Sim** (economiza 30-50%) |
-| Fallback | Manual | **Automático** |
-| Rate limiting | Manual | **Nativo** |
-| Analytics | Nenhum | **Dashboard completo** |
-| Logs | Nenhum | **10M logs/gateway** |
-| DLP (mascarar dados) | Não | **Nativo** |
+| Recurso              | Direto      | Via AI Gateway             |
+| -------------------- | ----------- | -------------------------- |
+| Custo gateway        | $0          | $0 (grátis)                |
+| Custo modelos        | Preço cheio | Mesmo preço                |
+| Cache                | Não         | **Sim** (economiza 30-50%) |
+| Fallback             | Manual      | **Automático**             |
+| Rate limiting        | Manual      | **Nativo**                 |
+| Analytics            | Nenhum      | **Dashboard completo**     |
+| Logs                 | Nenhum      | **10M logs/gateway**       |
+| DLP (mascarar dados) | Não         | **Nativo**                 |
 
 ### Economia com Cache
+
 - Templates SOAP repetidos → cache hit instantâneo ($0)
 - Perguntas frequentes do chat → cache hit ($0)
 - Relatórios padrão → cache hit ($0)
@@ -167,81 +170,81 @@ INSERT INTO ai_models VALUES
 
 ### Sprint 1 — Fundação (Semana 1-2)
 
-| # | Tarefa | Arquivos | Esforço |
-|---|--------|----------|---------|
-| 1.1 | Migration `ai_config` + `ai_models` | `migrations/0052_ai_config.sql` | 2h |
-| 1.2 | Seed modelos | migration | 1h |
-| 1.3 | ModelRegistry central | `apps/api/src/lib/ai/modelRegistry.ts` | 4h |
-| 1.4 | Provider Z.AI | `apps/api/src/lib/ai/providers/zai.ts` | 4h |
-| 1.5 | callAI() unificado | `apps/api/src/lib/ai/callAI.ts` | 1 dia |
-| 1.6 | Rotas CRUD /api/ai/config | `apps/api/src/routes/ai-config.ts` | 4h |
-| 1.7 | Middleware aiModel | `apps/api/src/middleware/aiModel.ts` | 2h |
-| 1.8 | Frontend: Model selector | Componente React | 1 dia |
-| 1.9 | Secret ZAI_API_KEY | `wrangler secret put` | 5min |
+| #   | Tarefa                              | Arquivos                               | Esforço |
+| --- | ----------------------------------- | -------------------------------------- | ------- |
+| 1.1 | Migration `ai_config` + `ai_models` | `migrations/0052_ai_config.sql`        | 2h      |
+| 1.2 | Seed modelos                        | migration                              | 1h      |
+| 1.3 | ModelRegistry central               | `apps/api/src/lib/ai/modelRegistry.ts` | 4h      |
+| 1.4 | Provider Z.AI                       | `apps/api/src/lib/ai/providers/zai.ts` | 4h      |
+| 1.5 | callAI() unificado                  | `apps/api/src/lib/ai/callAI.ts`        | 1 dia   |
+| 1.6 | Rotas CRUD /api/ai/config           | `apps/api/src/routes/ai-config.ts`     | 4h      |
+| 1.7 | Middleware aiModel                  | `apps/api/src/middleware/aiModel.ts`   | 2h      |
+| 1.8 | Frontend: Model selector            | Componente React                       | 1 dia   |
+| 1.9 | Secret ZAI_API_KEY                  | `wrangler secret put`                  | 5min    |
 
 ### Sprint 2 — Migrar Chamadas Existentes (Semana 2-3)
 
-| # | Tarefa | Esforço |
-|---|--------|---------|
-| 2.1 | Migrar `ai.ts` → callAI() | 1 dia |
-| 2.2 | Migrar `ai-gemini-v2.ts` | 4h |
-| 2.3 | Migrar `ai-native.ts` via registry | 4h |
-| 2.4 | Migrar `ai-studio.ts` | 4h |
-| 2.5 | Migrar agents (PatientAgent, etc.) | 4h |
-| 2.6 | Gemini como provider legacy | 0h (já funciona) |
+| #   | Tarefa                             | Esforço          |
+| --- | ---------------------------------- | ---------------- |
+| 2.1 | Migrar `ai.ts` → callAI()          | 1 dia            |
+| 2.2 | Migrar `ai-gemini-v2.ts`           | 4h               |
+| 2.3 | Migrar `ai-native.ts` via registry | 4h               |
+| 2.4 | Migrar `ai-studio.ts`              | 4h               |
+| 2.5 | Migrar agents (PatientAgent, etc.) | 4h               |
+| 2.6 | Gemini como provider legacy        | 0h (já funciona) |
 
 ### Sprint 3 — Quick Actions PDF (Semana 3)
 
-| # | Tarefa | Esforço |
-|---|--------|---------|
-| 3.1 | Instalar `cloudflare` SDK | 30min |
-| 3.2 | Reescrever `pdf.ts` | 4h |
-| 3.3 | Atualizar `reportsPdf.ts` | 4h |
-| 3.4 | Headers/footers nativos | 2h |
-| 3.5 | Remover `@cloudflare/puppeteer` | 30min |
+| #   | Tarefa                          | Esforço |
+| --- | ------------------------------- | ------- |
+| 3.1 | Instalar `cloudflare` SDK       | 30min   |
+| 3.2 | Reescrever `pdf.ts`             | 4h      |
+| 3.3 | Atualizar `reportsPdf.ts`       | 4h      |
+| 3.4 | Headers/footers nativos         | 2h      |
+| 3.5 | Remover `@cloudflare/puppeteer` | 30min   |
 
 ### Sprint 4 — Evolução por Voz (Semana 4-5)
 
-| # | Tarefa | Esforço |
-|---|--------|---------|
-| 4.1 | POST /api/ai/transcribe (GLM-ASR) | 4h |
-| 4.2 | POST /api/ai/evolution/voice | 1 dia |
-| 4.3 | Pipeline: áudio → texto → SOAP | 4h |
-| 4.4 | Frontend: botão gravar | 1 dia |
-| 4.5 | Mobile (Expo) | 1 dia |
-| 4.6 | Fallback chain voz | 4h |
+| #   | Tarefa                            | Esforço |
+| --- | --------------------------------- | ------- |
+| 4.1 | POST /api/ai/transcribe (GLM-ASR) | 4h      |
+| 4.2 | POST /api/ai/evolution/voice      | 1 dia   |
+| 4.3 | Pipeline: áudio → texto → SOAP    | 4h      |
+| 4.4 | Frontend: botão gravar            | 1 dia   |
+| 4.5 | Mobile (Expo)                     | 1 dia   |
+| 4.6 | Fallback chain voz                | 4h      |
 
 ### Sprint 5 — Visão + toMarkdown (Semana 5-6)
 
-| # | Tarefa | Esforço |
-|---|--------|---------|
-| 5.1 | POST /api/ai/vision/analyze | 1 dia |
-| 5.2 | Análise de postura | 1 dia |
-| 5.3 | OCR documentos | 4h |
-| 5.4 | env.AI.toMarkdown() | 4h |
-| 5.5 | Frontend: upload + análise | 1 dia |
-| 5.6 | RAG documentos | 1 dia |
+| #   | Tarefa                      | Esforço |
+| --- | --------------------------- | ------- |
+| 5.1 | POST /api/ai/vision/analyze | 1 dia   |
+| 5.2 | Análise de postura          | 1 dia   |
+| 5.3 | OCR documentos              | 4h      |
+| 5.4 | env.AI.toMarkdown()         | 4h      |
+| 5.5 | Frontend: upload + análise  | 1 dia   |
+| 5.6 | RAG documentos              | 1 dia   |
 
 ### Sprint 6 — NFSe São Paulo (Semana 6-7)
 
-| # | Tarefa | Esforço |
-|---|--------|---------|
-| 6.1 | Instalar `fast-xml-parser` | 30min |
-| 6.2 | rpsBuilder.ts (XML ABRASF v2) | 1 dia |
-| 6.3 | nfseSPClient.ts (SOAP) | 1 dia |
-| 6.4 | Reescrever nfseWorkflow.ts | 4h |
-| 6.5 | Unificar schema → nfse_records | 4h |
-| 6.6 | DANFSe via Quick Actions | 4h |
-| 6.7 | Secrets NFSe | 30min |
+| #   | Tarefa                         | Esforço |
+| --- | ------------------------------ | ------- |
+| 6.1 | Instalar `fast-xml-parser`     | 30min   |
+| 6.2 | rpsBuilder.ts (XML ABRASF v2)  | 1 dia   |
+| 6.3 | nfseSPClient.ts (SOAP)         | 1 dia   |
+| 6.4 | Reescrever nfseWorkflow.ts     | 4h      |
+| 6.5 | Unificar schema → nfse_records | 4h      |
+| 6.6 | DANFSe via Quick Actions       | 4h      |
+| 6.7 | Secrets NFSe                   | 30min   |
 
 ### Sprint 7 — Dashboard + Custos (Semana 7-8)
 
-| # | Tarefa | Esforço |
-|---|--------|---------|
-| 7.1 | Dashboard custos IA | 1 dia |
-| 7.2 | Rate limiting por org | 2h |
-| 7.3 | Budget alerts | 4h |
-| 7.4 | Avaliar Agents SDK | 2 dias |
+| #   | Tarefa                | Esforço |
+| --- | --------------------- | ------- |
+| 7.1 | Dashboard custos IA   | 1 dia   |
+| 7.2 | Rate limiting por org | 2h      |
+| 7.3 | Budget alerts         | 4h      |
+| 7.4 | Avaliar Agents SDK    | 2 dias  |
 
 ---
 
@@ -249,35 +252,35 @@ INSERT INTO ai_models VALUES
 
 ### Cenário Conservador (GLM-4.7-Flash padrão + AI Gateway cache)
 
-| Item | Volume/mês | Custo |
-|------|-----------|-------|
-| GLM-4.7-Flash (chat, SOAP, análise) | ~50K requests | **$0** |
-| Workers AI (Whisper, embeddings) | incluído | **$0** |
-| GLM-ASR (voz) | ~200 transcrições | **~$0.50** |
-| GLM-5V-Turbo (visão) | ~100 análises | **~$3** |
-| Quick Actions PDF | ~3.000 | **$0** |
-| AI Gateway | — | **$0** |
-| **Total IA** | | **~$3.50/mês** |
+| Item                                | Volume/mês        | Custo          |
+| ----------------------------------- | ----------------- | -------------- |
+| GLM-4.7-Flash (chat, SOAP, análise) | ~50K requests     | **$0**         |
+| Workers AI (Whisper, embeddings)    | incluído          | **$0**         |
+| GLM-ASR (voz)                       | ~200 transcrições | **~$0.50**     |
+| GLM-5V-Turbo (visão)                | ~100 análises     | **~$3**        |
+| Quick Actions PDF                   | ~3.000            | **$0**         |
+| AI Gateway                          | —                 | **$0**         |
+| **Total IA**                        |                   | **~$3.50/mês** |
 
 ### Cenário com GLM-5.1 padrão
 
-| Item | Custo |
-|------|-------|
-| GLM-5.1 (tudo) | ~$30-50/mês |
-| GLM-ASR | ~$1/mês |
-| GLM-5V-Turbo | ~$6/mês |
-| **Total IA** | **~$37-57/mês** |
+| Item           | Custo           |
+| -------------- | --------------- |
+| GLM-5.1 (tudo) | ~$30-50/mês     |
+| GLM-ASR        | ~$1/mês         |
+| GLM-5V-Turbo   | ~$6/mês         |
+| **Total IA**   | **~$37-57/mês** |
 
 ### Custo Infraestrutura Cloudflare
 
-| Item | Custo |
-|------|-------|
-| Workers Paid | $5/mês |
-| R2 Storage | ~$0.20/mês |
-| Workers AI (grátis até limites) | $0 |
-| AI Gateway | $0 |
-| Browser Run Quick Actions | $0 |
-| **Total Infra** | **~$5.20/mês** |
+| Item                            | Custo          |
+| ------------------------------- | -------------- |
+| Workers Paid                    | $5/mês         |
+| R2 Storage                      | ~$0.20/mês     |
+| Workers AI (grátis até limites) | $0             |
+| AI Gateway                      | $0             |
+| Browser Run Quick Actions       | $0             |
+| **Total Infra**                 | **~$5.20/mês** |
 
 ### TOTAL MENSAL (cenário conservador): ~$8.70/mês
 
@@ -287,20 +290,21 @@ INSERT INTO ai_models VALUES
 
 ### O que o FisioFlow usa que PRECISA do Workers Paid ($5/mês):
 
-| Recurso | Free Plan | Paid Plan | Impacto se downgradar |
-|---------|-----------|-----------|----------------------|
-| **CPU time** | 10ms | 5 min | **APP QUEBRA** — queries SQL, IA, PDF geram >10ms |
-| **Requests** | 100K/dia | 10M/mês | Arriscado com crescimento |
-| **Worker size** | 3MB | 10MB | Fisioflow tem 85+ rotas, pode exceder 3MB |
-| **Browser Run** | 10 min/dia | Ilimitado | PDF gerados parariam após 10 min |
-| **Quick Actions** | 1 req/10s | 10 req/s | Muito lento para produção |
-| **Workflows** | 10ms CPU | 5 min CPU | 6 workflows ficariam inúteis |
-| **Subrequests** | 50/req | 10K/req | IA + DB + R2 em 1 request = >50 |
-| **AI Gateway logs** | 100K total | 10M/gateway | Sem observabilidade |
+| Recurso             | Free Plan  | Paid Plan   | Impacto se downgradar                             |
+| ------------------- | ---------- | ----------- | ------------------------------------------------- |
+| **CPU time**        | 10ms       | 5 min       | **APP QUEBRA** — queries SQL, IA, PDF geram >10ms |
+| **Requests**        | 100K/dia   | 10M/mês     | Arriscado com crescimento                         |
+| **Worker size**     | 3MB        | 10MB        | Fisioflow tem 85+ rotas, pode exceder 3MB         |
+| **Browser Run**     | 10 min/dia | Ilimitado   | PDF gerados parariam após 10 min                  |
+| **Quick Actions**   | 1 req/10s  | 10 req/s    | Muito lento para produção                         |
+| **Workflows**       | 10ms CPU   | 5 min CPU   | 6 workflows ficariam inúteis                      |
+| **Subrequests**     | 50/req     | 10K/req     | IA + DB + R2 em 1 request = >50                   |
+| **AI Gateway logs** | 100K total | 10M/gateway | Sem observabilidade                               |
 
 ### Veredito: **SIM, Workers Paid é indispensável**
 
 Os $5/mês do Workers Paid são o gasto mais eficiente possível:
+
 - Sem ele, o app **literalmente não funciona** (10ms CPU)
 - Inclui AI Gateway grátis ($0)
 - Inclui Workers AI grátis ($0)
@@ -311,13 +315,13 @@ Os $5/mês do Workers Paid são o gasto mais eficiente possível:
 
 ### Comparação: $5/mês Cloudflare vs alternativas
 
-| Provedor | Equivalente | Custo/mês |
-|----------|-------------|-----------|
-| AWS Lambda + API Gateway + S3 | Similar ao Workers + R2 | ~$20-50 |
-| Vercel Pro | Serverless functions | $20/mês |
-| Railway | Container hosting | $5-20/mês |
-| Render | Web service | $7+/mês |
-| **Cloudflare Workers Paid** | **Tudo incluso** | **$5/mês** |
+| Provedor                      | Equivalente             | Custo/mês  |
+| ----------------------------- | ----------------------- | ---------- |
+| AWS Lambda + API Gateway + S3 | Similar ao Workers + R2 | ~$20-50    |
+| Vercel Pro                    | Serverless functions    | $20/mês    |
+| Railway                       | Container hosting       | $5-20/mês  |
+| Render                        | Web service             | $7+/mês    |
+| **Cloudflare Workers Paid**   | **Tudo incluso**        | **$5/mês** |
 
 O Cloudflare Workers Paid é **10x mais barato** que qualquer alternativa equivalente.
 
@@ -325,17 +329,17 @@ O Cloudflare Workers Paid é **10x mais barato** que qualquer alternativa equiva
 
 ## 9. Funcionalidades por Modelo
 
-| Funcionalidade | Modelo Padrão | Quando Trocar |
-|---------------|--------------|---------------|
-| Chat IA geral | GLM-4.7-Flash (grátis) | GLM-5.1 para análises complexas |
-| Evolução SOAP | GLM-4.7-Flash (grátis) | GLM-5.1 para thinking mode |
-| Transcrição voz | GLM-ASR-2512 | Whisper (fallback edge) |
-| Análise visual | GLM-5V-Turbo | — |
-| Relatórios premium | GLM-4.7-Flash (grátis) | GLM-5.1 para mais profundidade |
-| Busca semântica/RAG | BGE Embeddings (grátis) | — |
-| toMarkdown | Workers AI (grátis) | — |
-| PDF | Quick Actions (grátis) | — |
-| NFSe XML | Sem IA | — |
+| Funcionalidade      | Modelo Padrão           | Quando Trocar                   |
+| ------------------- | ----------------------- | ------------------------------- |
+| Chat IA geral       | GLM-4.7-Flash (grátis)  | GLM-5.1 para análises complexas |
+| Evolução SOAP       | GLM-4.7-Flash (grátis)  | GLM-5.1 para thinking mode      |
+| Transcrição voz     | GLM-ASR-2512            | Whisper (fallback edge)         |
+| Análise visual      | GLM-5V-Turbo            | —                               |
+| Relatórios premium  | GLM-4.7-Flash (grátis)  | GLM-5.1 para mais profundidade  |
+| Busca semântica/RAG | BGE Embeddings (grátis) | —                               |
+| toMarkdown          | Workers AI (grátis)     | —                               |
+| PDF                 | Quick Actions (grátis)  | —                               |
+| NFSe XML            | Sem IA                  | —                               |
 
 ---
 

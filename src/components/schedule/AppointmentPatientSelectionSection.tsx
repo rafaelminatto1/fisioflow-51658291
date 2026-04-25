@@ -6,62 +6,62 @@ import type { Patient } from "@/types";
 import type { AppointmentFormData } from "@/types/appointment";
 
 interface AppointmentPatientSelectionSectionProps {
-	patients: Patient[];
-	isLoading: boolean;
-	disabled: boolean;
-	onCreateNew: (name: string) => void;
-	fallbackPatientName?: string;
-	fallbackDescription?: string;
-	inline?: boolean;
+  patients: Patient[];
+  isLoading: boolean;
+  disabled: boolean;
+  onCreateNew: (name: string) => void;
+  fallbackPatientName?: string;
+  fallbackDescription?: string;
+  inline?: boolean;
 }
 
 export function AppointmentPatientSelectionSection({
-	patients,
-	isLoading,
-	disabled,
-	onCreateNew,
-	fallbackPatientName,
-	fallbackDescription,
-	inline = false,
+  patients,
+  isLoading,
+  disabled,
+  onCreateNew,
+  fallbackPatientName,
+  fallbackDescription,
+  inline = false,
 }: AppointmentPatientSelectionSectionProps) {
-	const {
-		watch,
-		setValue,
-		formState: { errors },
-	} = useFormContext<AppointmentFormData>();
+  const {
+    watch,
+    setValue,
+    formState: { errors },
+  } = useFormContext<AppointmentFormData>();
 
-	return (
-		<div className="space-y-2">
-			{!inline && (
-				<Label className="text-xs sm:text-sm font-medium flex items-center gap-1.5">
-					<User className="h-3.5 w-3.5 text-primary" />
-					Paciente *
-				</Label>
-			)}
-			<PatientCombobox
-				patients={patients}
-				value={watch("patient_id")}
-				onValueChange={(value) =>
-					setValue("patient_id", value, {
-						shouldDirty: true,
-						shouldTouch: true,
-						shouldValidate: true,
-					})
-				}
-				onCreateNew={onCreateNew}
-				fallbackDisplayName={fallbackPatientName}
-				fallbackDescription={fallbackDescription}
-				disabled={disabled || isLoading}
-				inline={inline}
-				aria-invalid={!!errors.patient_id}
-				aria-describedby={errors.patient_id ? "patient-id-error" : undefined}
-			/>
+  return (
+    <div className="space-y-2">
+      {!inline && (
+        <Label className="text-xs sm:text-sm font-medium flex items-center gap-1.5">
+          <User className="h-3.5 w-3.5 text-primary" />
+          Paciente *
+        </Label>
+      )}
+      <PatientCombobox
+        patients={patients}
+        value={watch("patient_id")}
+        onValueChange={(value) =>
+          setValue("patient_id", value, {
+            shouldDirty: true,
+            shouldTouch: true,
+            shouldValidate: true,
+          })
+        }
+        onCreateNew={onCreateNew}
+        fallbackDisplayName={fallbackPatientName}
+        fallbackDescription={fallbackDescription}
+        disabled={disabled || isLoading}
+        inline={inline}
+        aria-invalid={!!errors.patient_id}
+        aria-describedby={errors.patient_id ? "patient-id-error" : undefined}
+      />
 
-			{errors.patient_id && (
-				<p id="patient-id-error" className="text-xs text-destructive">
-					{(errors.patient_id as { message?: string })?.message}
-				</p>
-			)}
-		</div>
-	);
+      {errors.patient_id && (
+        <p id="patient-id-error" className="text-xs text-destructive">
+          {(errors.patient_id as { message?: string })?.message}
+        </p>
+      )}
+    </div>
+  );
 }

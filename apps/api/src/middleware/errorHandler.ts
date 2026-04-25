@@ -1,15 +1,15 @@
-import { logToAxiom } from '../lib/axiom';
-import { QueryTimeoutError, DatabaseError } from '../lib/dbWrapper';
-import type { CustomContext } from './requestId';
+import { logToAxiom } from "../lib/axiom";
+import { QueryTimeoutError, DatabaseError } from "../lib/dbWrapper";
+import type { CustomContext } from "./requestId";
 
 export enum ErrorType {
-  DATABASE = 'DATABASE_ERROR',
-  TIMEOUT = 'TIMEOUT_ERROR',
-  AUTH = 'AUTH_ERROR',
-  VALIDATION = 'VALIDATION_ERROR',
-  NOT_FOUND = 'NOT_FOUND',
-  RATE_LIMIT = 'RATE_LIMIT',
-  INTERNAL = 'INTERNAL_ERROR',
+  DATABASE = "DATABASE_ERROR",
+  TIMEOUT = "TIMEOUT_ERROR",
+  AUTH = "AUTH_ERROR",
+  VALIDATION = "VALIDATION_ERROR",
+  NOT_FOUND = "NOT_FOUND",
+  RATE_LIMIT = "RATE_LIMIT",
+  INTERNAL = "INTERNAL_ERROR",
 }
 
 export interface AppError extends Error {
@@ -25,104 +25,85 @@ export class AppErrorImpl extends Error implements AppError {
   details?: any;
   requestId?: string;
 
-  constructor(
-    type: ErrorType,
-    message: string,
-    statusCode: number = 500,
-    details?: any
-  ) {
+  constructor(type: ErrorType, message: string, statusCode: number = 500, details?: any) {
     super(message);
     this.type = type;
     this.statusCode = statusCode;
     this.details = details;
-    this.name = 'AppError';
+    this.name = "AppError";
   }
 }
 
 export function classifyError(error: Error): AppError {
   if (error instanceof QueryTimeoutError) {
-    return new AppErrorImpl(
-      ErrorType.TIMEOUT,
-      'Database query timed out. Please try again.',
-      504,
-      {
-        timeout: error.timeout,
-        query: error.query,
-      }
-    );
+    return new AppErrorImpl(ErrorType.TIMEOUT, "Database query timed out. Please try again.", 504, {
+      timeout: error.timeout,
+      query: error.query,
+    });
   }
 
   if (error instanceof DatabaseError) {
     return new AppErrorImpl(
       ErrorType.DATABASE,
-      'Database operation failed. Please try again.',
+      "Database operation failed. Please try again.",
       500,
       {
         originalError: error.originalError.message,
         query: error.query,
-      }
+      },
     );
   }
 
-  if (error.message.includes('JWT') || error.message.includes('token')) {
-    return new AppErrorImpl(
-      ErrorType.AUTH,
-      'Authentication failed. Please log in again.',
-      401,
-      { reason: error.message }
-    );
+  if (error.message.includes("JWT") || error.message.includes("token")) {
+    return new AppErrorImpl(ErrorType.AUTH, "Authentication failed. Please log in again.", 401, {
+      reason: error.message,
+    });
   }
 
-  if (error.message.includes('not found') || error.message.includes('does not exist')) {
-    return new AppErrorImpl(
-      ErrorType.NOT_FOUND,
-      error.message,
-      404
-    );
+  if (error.message.includes("not found") || error.message.includes("does not exist")) {
+    return new AppErrorImpl(ErrorType.NOT_FOUND, error.message, 404);
   }
 
-  if (error.message.includes('validation') || error.message.includes('invalid')) {
-    return new AppErrorImpl(
-      ErrorType.VALIDATION,
-      error.message,
-      400
-    );
+  if (error.message.includes("validation") || error.message.includes("invalid")) {
+    return new AppErrorImpl(ErrorType.VALIDATION, error.message, 400);
   }
 
   // Erros do Neon/Hyperdrive que não foram capturados pelas classes específicas
-  if (error.message.includes('pool') || error.message.includes('connection')) {
+  if (error.message.includes("pool") || error.message.includes("connection")) {
     return new AppErrorImpl(
       ErrorType.TIMEOUT,
-      'Database connection pool exhausted. Please try again.',
+      "Database connection pool exhausted. Please try again.",
       503,
-      { originalError: error.message }
+      { originalError: error.message },
     );
   }
 
   return new AppErrorImpl(
     ErrorType.INTERNAL,
-    'An unexpected error occurred. Please try again.',
+    "An unexpected error occurred. Please try again.",
     500,
-    { originalError: error.message, stack: error.stack }
+    { originalError: error.message, stack: error.stack },
   );
 }
 
 export async function errorHandler(err: Error, c: CustomContext) {
-  const requestId = c.get('requestId') || 'unknown';
+  const requestId = c.get("requestId") || "unknown";
   const appError = classifyError(err);
   appError.requestId = requestId;
 
-  const requestOrigin = c.req.header('Origin');
-  
+  const requestOrigin = c.req.header("Origin");
+
   const allowedOrigins = (c.env as any).ALLOWED_ORIGINS
-    ? String((c.env as any).ALLOWED_ORIGINS).split(',').map((o: string) => o.trim())
+    ? String((c.env as any).ALLOWED_ORIGINS)
+        .split(",")
+        .map((o: string) => o.trim())
     : [];
-    
+
   const isAllowed = !requestOrigin || allowedOrigins.includes(requestOrigin);
   const origin = isAllowed && requestOrigin ? requestOrigin : allowedOrigins[0];
 
-  const isProduction = c.env.ENVIRONMENT === 'production';
-  const isDev = c.env.ENVIRONMENT === 'development';
+  const isProduction = c.env.ENVIRONMENT === "production";
+  const isDev = c.env.ENVIRONMENT === "development";
 
   const errorResponse: any = {
     error: appError.type,
@@ -146,14 +127,14 @@ export async function errorHandler(err: Error, c: CustomContext) {
 
     if (c.env.AXIOM_TOKEN) {
       logToAxiom(c.env, c.executionCtx, {
-        level: 'error',
+        level: "error",
         message: `[${appError.type}] ${appError.message}`,
         requestId,
         errorType: appError.type,
         statusCode: appError.statusCode,
         path: c.req.path,
         method: c.req.method,
-        userAgent: c.req.header('User-Agent'),
+        userAgent: c.req.header("User-Agent"),
         details: appError.details,
         stack: isProduction ? undefined : err.stack,
       });
@@ -161,8 +142,8 @@ export async function errorHandler(err: Error, c: CustomContext) {
   }
 
   return c.json(errorResponse, appError.statusCode as any, {
-    'Access-Control-Allow-Origin': origin,
-    'Access-Control-Allow-Credentials': 'true',
-    'X-Request-ID': requestId,
+    "Access-Control-Allow-Origin": origin,
+    "Access-Control-Allow-Credentials": "true",
+    "X-Request-ID": requestId,
   });
 }

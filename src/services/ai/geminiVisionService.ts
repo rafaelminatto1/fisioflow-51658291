@@ -1,20 +1,20 @@
 export interface VisionAnalysisResult {
-	text: string;
-	timestamp: string;
+  text: string;
+  timestamp: string;
 }
 
 export const analyzeWithGeminiVision = async (
-	_base64Image: string,
+  _base64Image: string,
 ): Promise<VisionAnalysisResult> => {
-	// Simulate API delay
-	await new Promise((resolve) => setTimeout(resolve, 2000));
+  // Simulate API delay
+  await new Promise((resolve) => setTimeout(resolve, 2000));
 
-	// In a real implementation, this would call the backend proxy to Gemini 1.5 Pro
-	// with the system prompt: "Act as a radiology assistant..."
+  // In a real implementation, this would call the backend proxy to Gemini 1.5 Pro
+  // with the system prompt: "Act as a radiology assistant..."
 
-	return {
-		timestamp: new Date().toISOString(),
-		text: `### Relatório Preliminar de IA
+  return {
+    timestamp: new Date().toISOString(),
+    text: `### Relatório Preliminar de IA
 **Ferramenta de Pesquisa - Não é um Diagnóstico Médico**
 
 #### Análise Visual
@@ -30,5 +30,5 @@ A imagem fornecida aparenta ser um exame de imagem (RX/CT) ou fotografia clínic
 > [!WARNING]
 > **Recomendação Clínica**: Este relatório é gerado automaticamente e pode conter alucinações. Consulte sempre o laudo oficial do radiologista e realize avaliação física presencial.
 `,
-	};
+  };
 };

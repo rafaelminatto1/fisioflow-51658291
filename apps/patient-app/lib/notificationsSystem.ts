@@ -1,11 +1,11 @@
-import { useEffect, useState } from 'react';
-import { Platform } from 'react-native';
-import * as Notifications from 'expo-notifications';
-import * as Device from 'expo-device';
-import Constants from 'expo-constants';
-import { authClient } from './neonAuth';
-import { notificationsApi } from './api';
-import { log } from '@/lib/logger';
+import { useEffect, useState } from "react";
+import { Platform } from "react-native";
+import * as Notifications from "expo-notifications";
+import * as Device from "expo-device";
+import Constants from "expo-constants";
+import { authClient } from "./neonAuth";
+import { notificationsApi } from "./api";
+import { log } from "@/lib/logger";
 
 export interface NotificationPermission {
   granted: boolean;
@@ -15,7 +15,7 @@ export interface NotificationPermission {
 
 export interface PushToken {
   token: string;
-  platform: 'ios' | 'android';
+  platform: "ios" | "android";
   appVersion: string;
   deviceName?: string;
   createdAt: Date;
@@ -48,13 +48,13 @@ async function getCurrentUserId(): Promise<string | null> {
 
 async function getExpoPushToken(): Promise<string | null> {
   if (!Device.isDevice) {
-    log.info('Push notifications only work on physical devices');
+    log.info("Push notifications only work on physical devices");
     return null;
   }
 
   const projectId = getExpoProjectId();
   if (!projectId) {
-    log.error('Expo projectId not found. Check app.json extra.eas.projectId.');
+    log.error("Expo projectId not found. Check app.json extra.eas.projectId.");
     return null;
   }
 
@@ -62,8 +62,8 @@ async function getExpoPushToken(): Promise<string | null> {
     const token = await Notifications.getExpoPushTokenAsync({ projectId });
     return token.data;
   } catch (error: any) {
-    if (error.message?.includes('Keychain access failed')) {
-      log.warn('Keychain error during push token registration. Skipping.');
+    if (error.message?.includes("Keychain access failed")) {
+      log.warn("Keychain error during push token registration. Skipping.");
       return null;
     }
     throw error;
@@ -74,25 +74,25 @@ export async function requestNotificationPermissions(): Promise<NotificationPerm
   const { status: existingStatus } = await Notifications.getPermissionsAsync();
   let finalStatus = existingStatus;
 
-  if (existingStatus !== 'granted') {
+  if (existingStatus !== "granted") {
     const { status } = await Notifications.requestPermissionsAsync();
     finalStatus = status;
   }
 
   return {
-    granted: finalStatus === 'granted',
-    canAskAgain: finalStatus !== 'denied' && finalStatus !== 'granted',
+    granted: finalStatus === "granted",
+    canAskAgain: finalStatus !== "denied" && finalStatus !== "granted",
     status: finalStatus,
   };
 }
 
 export async function registerPushToken(
   userId: string,
-  appVersion: string = '1.0.0',
+  appVersion: string = "1.0.0",
 ): Promise<string | null> {
   try {
     if (!userId) {
-      log.warn('Cannot register push token without userId');
+      log.warn("Cannot register push token without userId");
       return null;
     }
 
@@ -132,7 +132,7 @@ export async function registerPushToken(
     isRegistering = false;
     return token;
   } catch (error) {
-    log.error('Error registering push token:', error);
+    log.error("Error registering push token:", error);
     isRegistering = false;
     return null;
   }
@@ -141,9 +141,9 @@ export async function registerPushToken(
 export function useNotificationResponse() {
   useEffect(() => {
     const subscription = Notifications.addNotificationResponseReceivedListener((response) => {
-      log.info('Notification response:', response);
+      log.info("Notification response:", response);
       if (response.notification.request.content.data?.route) {
-        log.info('Navigate to:', response.notification.request.content.data.route);
+        log.info("Navigate to:", response.notification.request.content.data.route);
       }
     });
 
@@ -154,7 +154,7 @@ export function useNotificationResponse() {
 export function useNotificationReceived() {
   useEffect(() => {
     const subscription = Notifications.addNotificationReceivedListener((notification) => {
-      log.info('Notification received:', notification);
+      log.info("Notification received:", notification);
     });
 
     return () => subscription.remove();
@@ -173,8 +173,8 @@ export function usePatientNotifications() {
   useEffect(() => {
     Notifications.getPermissionsAsync().then(({ status }) => {
       setPermission({
-        granted: status === 'granted',
-        canAskAgain: status !== 'denied',
+        granted: status === "granted",
+        canAskAgain: status !== "denied",
         status,
       });
     });
@@ -213,39 +213,39 @@ export async function clearPushToken(userId: string): Promise<void> {
     if (!token) return;
 
     await notificationsApi.deactivateFcmToken(token);
-    log.info('Push token cleared');
+    log.info("Push token cleared");
   } catch (error) {
-    log.error('Error clearing push token:', error);
+    log.error("Error clearing push token:", error);
   }
 }
 
 export async function createNotificationChannel(): Promise<void> {
-  if (Platform.OS === 'android') {
-    await Notifications.setNotificationChannelAsync('default', {
-      name: 'default',
+  if (Platform.OS === "android") {
+    await Notifications.setNotificationChannelAsync("default", {
+      name: "default",
       importance: Notifications.AndroidImportance.HIGH,
       vibrationPattern: [0, 250, 250, 250],
-      lightColor: '#22c55e',
+      lightColor: "#22c55e",
     });
-    await Notifications.setNotificationChannelAsync('reminders', {
-      name: 'Lembretes de Exercícios',
+    await Notifications.setNotificationChannelAsync("reminders", {
+      name: "Lembretes de Exercícios",
       importance: Notifications.AndroidImportance.HIGH,
       vibrationPattern: [0, 250, 250, 250],
-      lightColor: '#22c55e',
+      lightColor: "#22c55e",
     });
-    await Notifications.setNotificationChannelAsync('appointments', {
-      name: 'Lembretes de Consultas',
+    await Notifications.setNotificationChannelAsync("appointments", {
+      name: "Lembretes de Consultas",
       importance: Notifications.AndroidImportance.HIGH,
       vibrationPattern: [0, 250, 250, 250],
-      lightColor: '#3b82f6',
+      lightColor: "#3b82f6",
     });
   }
 }
 
 export async function initializeNotifications(): Promise<void> {
-  const isExpoGo = Constants.executionEnvironment === 'storeClient';
+  const isExpoGo = Constants.executionEnvironment === "storeClient";
   if (isExpoGo) {
-    log.info('Notifications: Skipping native initialization in Expo Go');
+    log.info("Notifications: Skipping native initialization in Expo Go");
     return;
   }
 
@@ -302,12 +302,12 @@ export async function scheduleLocalNotification(notification: {
         title: notification.title,
         body: notification.body,
         data: notification.data || {},
-        sound: 'default',
+        sound: "default",
       },
       trigger: notification.trigger || null,
     });
   } catch (error) {
-    log.error('Error scheduling notification:', error);
+    log.error("Error scheduling notification:", error);
     throw error;
   }
 }
@@ -320,9 +320,9 @@ export async function scheduleAppointmentReminder(
   const reminderDate = new Date(appointmentDate.getTime() - 60 * 60 * 1000);
 
   return scheduleLocalNotification({
-    title: 'Lembrete de Agendamento',
+    title: "Lembrete de Agendamento",
     body: `Olá ${patientName}! Você tem uma sessão de fisioterapia em 1 hora.`,
-    data: { type: 'appointment', appointmentId },
+    data: { type: "appointment", appointmentId },
     trigger: {
       type: Notifications.SchedulableTriggerInputTypes.DATE,
       date: reminderDate,
@@ -332,11 +332,11 @@ export async function scheduleAppointmentReminder(
 
 export async function scheduleExerciseReminder(
   exerciseName: string,
-  frequency: 'daily' | 'weekly',
+  frequency: "daily" | "weekly",
   hour: number = 9,
 ): Promise<string> {
   const trigger: Notifications.NotificationTriggerInput =
-    frequency === 'daily'
+    frequency === "daily"
       ? {
           type: Notifications.SchedulableTriggerInputTypes.DAILY,
           hour,
@@ -350,9 +350,9 @@ export async function scheduleExerciseReminder(
         };
 
   return scheduleLocalNotification({
-    title: 'Lembrete de Exercício',
+    title: "Lembrete de Exercício",
     body: `Não se esqueça de fazer seus exercícios: ${exerciseName}`,
-    data: { type: 'exercise', exerciseName },
+    data: { type: "exercise", exerciseName },
     trigger,
   });
 }

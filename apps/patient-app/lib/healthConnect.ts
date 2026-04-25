@@ -12,21 +12,21 @@
  * @module lib/healthConnect
  */
 
-import { Platform } from 'react-native';
-import { useState, useEffect } from 'react';
-import { log } from '@/lib/logger';
+import { Platform } from "react-native";
+import { useState, useEffect } from "react";
+import { log } from "@/lib/logger";
 
 // Tipos de dados do Google Health Connect
 export type HealthConnectDataType =
-  | 'Steps'
-  | 'Distance'
-  | 'HeartRate'
-  | 'RestingHeartRate'
-  | 'ActiveCaloriesBurned'
-  | 'BasalCaloriesBurned'
-  | 'SleepSession'
-  | 'Weight'
-  | 'Height';
+  | "Steps"
+  | "Distance"
+  | "HeartRate"
+  | "RestingHeartRate"
+  | "ActiveCaloriesBurned"
+  | "BasalCaloriesBurned"
+  | "SleepSession"
+  | "Weight"
+  | "Height";
 
 /**
  * Dados de saúde importados
@@ -62,7 +62,7 @@ export class HealthConnectManager {
   private isInitialized: boolean = false;
 
   constructor() {
-    this.isAvailable = Platform.OS === 'android';
+    this.isAvailable = Platform.OS === "android";
   }
 
   /**
@@ -86,7 +86,7 @@ export class HealthConnectManager {
 
       // Simulação
       return true;
-    } catch  {
+    } catch {
       return false;
     }
   }
@@ -96,7 +96,7 @@ export class HealthConnectManager {
    */
   async initialize(): Promise<boolean> {
     if (!this.isAvailable) {
-      log.warn('Health Connect is only available on Android');
+      log.warn("Health Connect is only available on Android");
       return false;
     }
 
@@ -107,11 +107,11 @@ export class HealthConnectManager {
       // return true;
 
       // Simulação
-      log.info('Health Connect initialization (simulated)');
+      log.info("Health Connect initialization (simulated)");
       this.isInitialized = true;
       return true;
     } catch (error) {
-      log.error('Error initializing Health Connect:', error);
+      log.error("Error initializing Health Connect:", error);
       return false;
     }
   }
@@ -121,16 +121,16 @@ export class HealthConnectManager {
    */
   async openForInstallation(): Promise<void> {
     if (!this.isAvailable) {
-      throw new Error('Health Connect is only available on Android');
+      throw new Error("Health Connect is only available on Android");
     }
 
     try {
       // Em implementação real:
       // await HealthConnect.openHealthConnectSettings();
 
-      log.info('Opening Health Connect settings (simulated)');
+      log.info("Opening Health Connect settings (simulated)");
     } catch (error) {
-      log.error('Error opening Health Connect:', error);
+      log.error("Error opening Health Connect:", error);
     }
   }
 
@@ -158,7 +158,7 @@ export class HealthConnectManager {
       // Simulação
       return true;
     } catch (error) {
-      log.error('Error requesting Health Connect permissions:', error);
+      log.error("Error requesting Health Connect permissions:", error);
       return false;
     }
   }
@@ -195,7 +195,7 @@ export class HealthConnectManager {
       // Simulação para desenvolvimento
       return this.getMockHealthData();
     } catch (error) {
-      log.error('Error fetching health connect data:', error);
+      log.error("Error fetching health connect data:", error);
       return null;
     }
   }
@@ -222,7 +222,7 @@ export class HealthConnectManager {
 
       return this.getMockHealthData().steps || null;
     } catch (error) {
-      log.error('Error fetching steps:', error);
+      log.error("Error fetching steps:", error);
       return null;
     }
   }
@@ -245,7 +245,7 @@ export class HealthConnectManager {
 
       return null;
     } catch (error) {
-      log.error('Error fetching heart rate:', error);
+      log.error("Error fetching heart rate:", error);
       return null;
     }
   }
@@ -278,10 +278,10 @@ export class HealthConnectManager {
       // ]);
 
       // Simulação
-      log.info('Workout saved to Health Connect (simulated)');
+      log.info("Workout saved to Health Connect (simulated)");
       return true;
     } catch (error) {
-      log.error('Error saving workout:', error);
+      log.error("Error saving workout:", error);
       return false;
     }
   }
@@ -348,7 +348,7 @@ export function useHealthConnect() {
       const initialized = await manager.initialize();
       setIsAuthorized(initialized);
     } catch (error) {
-      log.error('Error initializing Health Connect:', error);
+      log.error("Error initializing Health Connect:", error);
     } finally {
       setLoading(false);
     }
@@ -384,7 +384,7 @@ export function useHealthConnect() {
       setHealthData(data);
       return data;
     } catch (error) {
-      log.error('Error fetching health data:', error);
+      log.error("Error fetching health data:", error);
       return null;
     } finally {
       setLoading(false);

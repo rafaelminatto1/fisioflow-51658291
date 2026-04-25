@@ -26,7 +26,7 @@ test.describe('Protocol Modal Theme Validation', () => {
     // 2. Check Stepper (Circle 1 should be active/primary)
     const firstStepCircle = modal.locator('div.rounded-full').first();
     await expect(firstStepCircle).toHaveClass(/bg-primary/);
-    
+
     // Check computed style of the circle to ensure it's not teal (#13ecc8)
     const bgColor = await firstStepCircle.evaluate((el) => window.getComputedStyle(el).backgroundColor);
     // Teal #13ecc8 is rgb(19, 236, 200)
@@ -35,7 +35,7 @@ test.describe('Protocol Modal Theme Validation', () => {
     // 3. Check "Continuar" button
     const nextBtn = modal.locator('button:has-text("Continuar")');
     await expect(nextBtn).toHaveClass(/bg-primary/);
-    
+
     const btnBgColor = await nextBtn.evaluate((el) => window.getComputedStyle(el).backgroundColor);
     expect(btnBgColor).not.toBe('rgb(19, 236, 200)');
 
@@ -53,11 +53,11 @@ test.describe('Protocol Modal Theme Validation', () => {
         const modal = page.locator('div[role="dialog"]');
         await expect(modal).toBeVisible();
         await expect(modal).toHaveClass(/bg-background/);
-        
+
         // Check "Confirmar" button
         const confirmBtn = modal.locator('button:has-text("Confirmar")');
         await expect(confirmBtn).toHaveClass(/bg-primary/);
-        
+
         await page.screenshot({ path: 'test-results/apply-protocol-modal-theme-check.png' });
     } else {
         console.log('No protocols found to test ApplyProtocolModal');

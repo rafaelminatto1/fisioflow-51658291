@@ -2,28 +2,33 @@
 
 import type { GetInfo, GetAnnotations } from "react-router/internal";
 
-type Module = typeof import("../ScheduleSettings.js")
+type Module = typeof import("../ScheduleSettings.js");
 
 type Info = GetInfo<{
-  file: "pages/ScheduleSettings.tsx",
-  module: Module
-}>
+  file: "pages/ScheduleSettings.tsx";
+  module: Module;
+}>;
 
-type Matches = [{
-  id: "root";
-  module: typeof import("../../root.js");
-}, {
-  id: "components/layout/InfrastructureLayout";
-  module: typeof import("../../components/layout/InfrastructureLayout.js");
-}, {
-  id: "components/layout/AppShellLayout";
-  module: typeof import("../../components/layout/AppShellLayout.js");
-}, {
-  id: "pages/ScheduleSettings";
-  module: typeof import("../ScheduleSettings.js");
-}];
+type Matches = [
+  {
+    id: "root";
+    module: typeof import("../../root.js");
+  },
+  {
+    id: "components/layout/InfrastructureLayout";
+    module: typeof import("../../components/layout/InfrastructureLayout.js");
+  },
+  {
+    id: "components/layout/AppShellLayout";
+    module: typeof import("../../components/layout/AppShellLayout.js");
+  },
+  {
+    id: "pages/ScheduleSettings";
+    module: typeof import("../ScheduleSettings.js");
+  },
+];
 
-type Annotations = GetAnnotations<Info & { module: Module, matches: Matches }, false>;
+type Annotations = GetAnnotations<Info & { module: Module; matches: Matches }, false>;
 
 export namespace Route {
   // links

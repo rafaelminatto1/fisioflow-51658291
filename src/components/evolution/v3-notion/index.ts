@@ -5,10 +5,7 @@
  */
 
 // Main Panel
-export {
-	NotionEvolutionPanel,
-	MemoizedNotionEvolutionPanel,
-} from "./NotionEvolutionPanel";
+export { NotionEvolutionPanel, MemoizedNotionEvolutionPanel } from "./NotionEvolutionPanel";
 
 // Section Components
 export { NotionSectionTitle } from "./NotionSectionTitle";
@@ -21,47 +18,44 @@ export { QuickPainSlider } from "./QuickPainSlider";
 export { TemplateSelector, type SOAPTemplate } from "./TemplateSelector";
 export { ExerciseQuickAdd, type Exercise } from "./ExerciseQuickAdd";
 export {
-	CompactSection,
-	MemoizedCompactSection,
-	CompactViewToggle,
-	useCompactView,
-	CompactViewProvider,
+  CompactSection,
+  MemoizedCompactSection,
+  CompactViewToggle,
+  useCompactView,
+  CompactViewProvider,
 } from "./CompactViewMode";
+export { StickySectionHeader, MemoizedStickySectionHeader } from "./StickySectionHeader";
 export {
-	StickySectionHeader,
-	MemoizedStickySectionHeader,
-} from "./StickySectionHeader";
-export {
-	ContextualSectionEmphasis,
-	MemoizedContextualSectionEmphasis,
-	useSectionEmphasisConfigs,
-	type EmphasisLevel,
-	type SectionEmphasisConfig,
+  ContextualSectionEmphasis,
+  MemoizedContextualSectionEmphasis,
+  useSectionEmphasisConfigs,
+  type EmphasisLevel,
+  type SectionEmphasisConfig,
 } from "./ContextualSectionEmphasis";
 export {
-	VirtualizedBlockRenderer,
-	MemoizedVirtualizedBlockRenderer,
-	createVirtualBlock,
-	type VirtualBlock,
+  VirtualizedBlockRenderer,
+  MemoizedVirtualizedBlockRenderer,
+  createVirtualBlock,
+  type VirtualBlock,
 } from "./VirtualizedBlockRenderer";
 export {
-	AdaptiveSectionCollapse,
-	MemoizedAdaptiveSectionCollapse,
+  AdaptiveSectionCollapse,
+  MemoizedAdaptiveSectionCollapse,
 } from "./AdaptiveSectionCollapse";
 export {
-	MobileBottomSheet,
-	useMobileSheet,
-	MobileSheetProvider,
-	MobileSheetWrapper,
-	ExerciseSheetWrapper,
-	MeasurementsSheetWrapper,
+  MobileBottomSheet,
+  useMobileSheet,
+  MobileSheetProvider,
+  MobileSheetWrapper,
+  ExerciseSheetWrapper,
+  MeasurementsSheetWrapper,
 } from "./MobileBottomSheet";
 export {
-	ProgressTrending,
-	CompactTrend,
-	useTrendData,
-	type TrendData,
-	type DataPoint,
+  ProgressTrending,
+  CompactTrend,
+  useTrendData,
+  type TrendData,
+  type DataPoint,
 } from "./ProgressTrending";
 
 // Rich Notion-style clinical templates

@@ -1,6 +1,6 @@
-import { S3Client, PutObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3';
-import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
-import type { Env } from '../../types/env';
+import { S3Client, PutObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import type { Env } from "../../types/env";
 
 /**
  * Cloudflare R2 Storage Service (S3 Compatible)
@@ -10,7 +10,7 @@ export class R2Service {
 
   constructor(private env: Env) {
     this.client = new S3Client({
-      region: 'auto',
+      region: "auto",
       endpoint: `https://${env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
       credentials: {
         accessKeyId: env.R2_ACCESS_KEY_ID,
@@ -22,7 +22,7 @@ export class R2Service {
   /**
    * Generates a presigned URL for uploading a recording
    */
-  async getUploadUrl(key: string, contentType = 'video/webm') {
+  async getUploadUrl(key: string, contentType = "video/webm") {
     const command = new PutObjectCommand({
       Bucket: this.env.MEDIA_BUCKET.toString(), // or name
       Key: key,

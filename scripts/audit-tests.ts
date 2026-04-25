@@ -1,18 +1,12 @@
-import { builtinClinicalTestsCatalog } from '../src/data/clinicalTestsCatalog';
+import { builtinClinicalTestsCatalog } from "../src/data/clinicalTestsCatalog";
 
-const requiredTestFields = [
-  'id',
-  'name',
-  'category',
-  'target_joint',
-  'sensitivity_specificity'
-];
+const requiredTestFields = ["id", "name", "category", "target_joint", "sensitivity_specificity"];
 
 console.log(`Auditing ${builtinClinicalTestsCatalog.length} clinical tests...`);
 
-builtinClinicalTestsCatalog.forEach(test => {
-  const missing = requiredTestFields.filter(field => !(field in test));
+builtinClinicalTestsCatalog.forEach((test) => {
+  const missing = requiredTestFields.filter((field) => !(field in test));
   if (missing.length > 0) {
-    console.log(`Test: ${test.name} (${test.id}) is missing: ${missing.join(', ')}`);
+    console.log(`Test: ${test.name} (${test.id}) is missing: ${missing.join(", ")}`);
   }
 });

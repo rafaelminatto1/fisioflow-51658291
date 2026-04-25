@@ -1,18 +1,18 @@
 /**
  * Biometric Setup Screen
  * Allows users to configure Face ID/Touch ID authentication with PIN fallback
- * 
+ *
  * Features:
  * - Detect available biometric type (Face ID or Touch ID)
  * - Show setup flow with explanation of benefits
  * - Offer PIN fallback setup (6 digits minimum)
  * - Store BiometricConfig via API
  * - Allow skip (can enable later in settings)
- * 
+ *
  * Requirements: 5.1, 5.2
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -21,28 +21,28 @@ import {
   ActivityIndicator,
   ScrollView,
   Alert,
-} from 'react-native';
-import { useRouter, useLocalSearchParams } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { biometricAuthService } from '@/lib/services/biometricAuthService';
-import { authApi } from '@/lib/auth-api';
-import type { BiometricType } from '@/types/auth';
+} from "react-native";
+import { useRouter, useLocalSearchParams } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { biometricAuthService } from "@/lib/services/biometricAuthService";
+import { authApi } from "@/lib/auth-api";
+import type { BiometricType } from "@/types/auth";
 
-type SetupStep = 'intro' | 'biometric' | 'pin' | 'complete';
+type SetupStep = "intro" | "biometric" | "pin" | "complete";
 
 export default function BiometricSetupScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
-  const mode = (params.mode as 'setup' | 'onboarding') || 'setup';
+  const mode = (params.mode as "setup" | "onboarding") || "setup";
 
-  const [currentStep, setCurrentStep] = useState<SetupStep>('intro');
-  const [biometricType, setBiometricType] = useState<BiometricType>('none');
+  const [currentStep, setCurrentStep] = useState<SetupStep>("intro");
+  const [biometricType, setBiometricType] = useState<BiometricType>("none");
   const [isAvailable, setIsAvailable] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [pin, setPin] = useState('');
-  const [confirmPin, setConfirmPin] = useState('');
-  const [,setShowPinSetup] = useState(false);
+  const [pin, setPin] = useState("");
+  const [confirmPin, setConfirmPin] = useState("");
+  const [, setShowPinSetup] = useState(false);
 
   /**
    * Check biometric availability on mount
@@ -60,17 +60,17 @@ export default function BiometricSetupScreen() {
       setIsAvailable(available);
 
       if (available) {
-        const config = await biometricAuthService.getConfig(''); // Empty string is fine just to get types
+        const config = await biometricAuthService.getConfig(""); // Empty string is fine just to get types
         const types = config.type;
-        let type: BiometricType = 'none';
-        if (types.includes(1)) type = 'touchId'; // FINGERPRINT
-        if (types.includes(2)) type = 'faceId'; // FACIAL_RECOGNITION
+        let type: BiometricType = "none";
+        if (types.includes(1)) type = "touchId"; // FINGERPRINT
+        if (types.includes(2)) type = "faceId"; // FACIAL_RECOGNITION
         setBiometricType(type);
       }
     } catch (error) {
-      console.error('Error checking biometric availability:', error);
+      console.error("Error checking biometric availability:", error);
       setIsAvailable(false);
-      setBiometricType('none');
+      setBiometricType("none");
     }
   };
 
@@ -79,12 +79,12 @@ export default function BiometricSetupScreen() {
    */
   const getBiometricIcon = (): keyof typeof Ionicons.glyphMap => {
     switch (biometricType) {
-      case 'faceId':
-        return 'scan';
-      case 'touchId':
-        return 'finger-print';
+      case "faceId":
+        return "scan";
+      case "touchId":
+        return "finger-print";
       default:
-        return 'lock-closed';
+        return "lock-closed";
     }
   };
 
@@ -93,12 +93,12 @@ export default function BiometricSetupScreen() {
    */
   const getBiometricName = (): string => {
     switch (biometricType) {
-      case 'faceId':
-        return 'Face ID';
-      case 'touchId':
-        return 'Touch ID';
+      case "faceId":
+        return "Face ID";
+      case "touchId":
+        return "Touch ID";
       default:
-        return 'Autenticação Biométrica';
+        return "Autenticação Biométrica";
     }
   };
 
@@ -114,7 +114,7 @@ export default function BiometricSetupScreen() {
     }
 
     if (!user) {
-      Alert.alert('Erro', 'Usuário não autenticado');
+      Alert.alert("Erro", "Usuário não autenticado");
       return;
     }
 
@@ -123,13 +123,13 @@ export default function BiometricSetupScreen() {
       // Test biometric authentication first
       const authenticated = await biometricAuthService.authenticate(
         user.id,
-        'Autentique para configurar a proteção biométrica'
+        "Autentique para configurar a proteção biométrica",
       );
 
       if (!authenticated) {
         Alert.alert(
-          'Autenticação Falhou',
-          'Não foi possível autenticar com biometria. Por favor, tente novamente.'
+          "Autenticação Falhou",
+          "Não foi possível autenticar com biometria. Por favor, tente novamente.",
         );
         setIsLoading(false);
         return;
@@ -139,13 +139,13 @@ export default function BiometricSetupScreen() {
       await biometricAuthService.enableBiometrics(user.id);
 
       // Move to PIN setup
-      setCurrentStep('pin');
+      setCurrentStep("pin");
       setShowPinSetup(true);
     } catch (error) {
-      console.error('Error setting up biometric:', error);
+      console.error("Error setting up biometric:", error);
       Alert.alert(
-        'Erro',
-        'Não foi possível configurar a autenticação biométrica. Por favor, tente novamente.'
+        "Erro",
+        "Não foi possível configurar a autenticação biométrica. Por favor, tente novamente.",
       );
     } finally {
       setIsLoading(false);
@@ -164,35 +164,35 @@ export default function BiometricSetupScreen() {
     }
 
     if (!user) {
-      Alert.alert('Erro', 'Usuário não autenticado');
+      Alert.alert("Erro", "Usuário não autenticado");
       return;
     }
 
     // Validate PIN
     if (pin.length < 6) {
-      Alert.alert('PIN Inválido', 'O PIN deve ter no mínimo 6 dígitos');
+      Alert.alert("PIN Inválido", "O PIN deve ter no mínimo 6 dígitos");
       return;
     }
 
     if (!/^\d+$/.test(pin)) {
-      Alert.alert('PIN Inválido', 'O PIN deve conter apenas números');
+      Alert.alert("PIN Inválido", "O PIN deve conter apenas números");
       return;
     }
 
     if (pin !== confirmPin) {
-      Alert.alert('PIN Inválido', 'Os PINs não coincidem. Por favor, tente novamente.');
-      setPin('');
-      setConfirmPin('');
+      Alert.alert("PIN Inválido", "Os PINs não coincidem. Por favor, tente novamente.");
+      setPin("");
+      setConfirmPin("");
       return;
     }
 
     setIsLoading(true);
     try {
       await biometricAuthService.enableBiometrics(user.id, pin);
-      setCurrentStep('complete');
+      setCurrentStep("complete");
     } catch (error) {
-      console.error('Error setting up PIN:', error);
-      Alert.alert('Erro', 'Não foi possível configurar o PIN. Por favor, tente novamente.');
+      console.error("Error setting up PIN:", error);
+      Alert.alert("Erro", "Não foi possível configurar o PIN. Por favor, tente novamente.");
     } finally {
       setIsLoading(false);
     }
@@ -202,7 +202,7 @@ export default function BiometricSetupScreen() {
    * Skip biometric setup
    */
   const skipSetup = () => {
-    if (mode === 'onboarding') {
+    if (mode === "onboarding") {
       // Return to onboarding flow
       router.back();
     } else {
@@ -215,7 +215,7 @@ export default function BiometricSetupScreen() {
    * Complete setup and navigate
    */
   const completeSetup = () => {
-    if (mode === 'onboarding') {
+    if (mode === "onboarding") {
       router.back();
     } else {
       router.back();
@@ -226,7 +226,7 @@ export default function BiometricSetupScreen() {
    * Use PIN fallback instead of biometric
    */
   const usePINOnly = () => {
-    setCurrentStep('pin');
+    setCurrentStep("pin");
     setShowPinSetup(true);
   };
 
@@ -281,12 +281,10 @@ export default function BiometricSetupScreen() {
         <>
           <TouchableOpacity
             style={styles.primaryButton}
-            onPress={() => setCurrentStep('biometric')}
+            onPress={() => setCurrentStep("biometric")}
             disabled={isLoading}
           >
-            <Text style={styles.primaryButtonText}>
-              Configurar {getBiometricName()}
-            </Text>
+            <Text style={styles.primaryButtonText}>Configurar {getBiometricName()}</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -298,11 +296,7 @@ export default function BiometricSetupScreen() {
           </TouchableOpacity>
         </>
       ) : (
-        <TouchableOpacity
-          style={styles.primaryButton}
-          onPress={usePINOnly}
-          disabled={isLoading}
-        >
+        <TouchableOpacity style={styles.primaryButton} onPress={usePINOnly} disabled={isLoading}>
           <Text style={styles.primaryButtonText}>Configurar PIN</Text>
         </TouchableOpacity>
       )}
@@ -361,11 +355,7 @@ export default function BiometricSetupScreen() {
         </View>
       </View>
 
-      <TouchableOpacity
-        style={styles.primaryButton}
-        onPress={setupBiometric}
-        disabled={isLoading}
-      >
+      <TouchableOpacity style={styles.primaryButton} onPress={setupBiometric} disabled={isLoading}>
         {isLoading ? (
           <ActivityIndicator color="#fff" />
         ) : (
@@ -375,7 +365,7 @@ export default function BiometricSetupScreen() {
 
       <TouchableOpacity
         style={styles.secondaryButton}
-        onPress={() => setCurrentStep('intro')}
+        onPress={() => setCurrentStep("intro")}
         disabled={isLoading}
       >
         <Text style={styles.secondaryButtonText}>Voltar</Text>
@@ -402,29 +392,18 @@ export default function BiometricSetupScreen() {
         <Text style={styles.pinLabel}>Digite seu PIN (mínimo 6 dígitos)</Text>
         <View style={styles.pinDotsContainer}>
           {[...Array(6)].map((_, index) => (
-            <View
-              key={index}
-              style={[
-                styles.pinDot,
-                pin.length > index && styles.pinDotFilled,
-              ]}
-            />
+            <View key={index} style={[styles.pinDot, pin.length > index && styles.pinDotFilled]} />
           ))}
         </View>
 
         {pin.length >= 6 && (
           <>
-            <Text style={[styles.pinLabel, styles.pinLabelSpacing]}>
-              Confirme seu PIN
-            </Text>
+            <Text style={[styles.pinLabel, styles.pinLabelSpacing]}>Confirme seu PIN</Text>
             <View style={styles.pinDotsContainer}>
               {[...Array(6)].map((_, index) => (
                 <View
                   key={index}
-                  style={[
-                    styles.pinDot,
-                    confirmPin.length > index && styles.pinDotFilled,
-                  ]}
+                  style={[styles.pinDot, confirmPin.length > index && styles.pinDotFilled]}
                 />
               ))}
             </View>
@@ -454,9 +433,9 @@ export default function BiometricSetupScreen() {
           style={styles.keypadButton}
           onPress={() => {
             if (pin.length < 6) {
-              setPin(pin + '0');
+              setPin(pin + "0");
             } else if (confirmPin.length < 6) {
-              setConfirmPin(confirmPin + '0');
+              setConfirmPin(confirmPin + "0");
             }
           }}
         >
@@ -477,11 +456,7 @@ export default function BiometricSetupScreen() {
       </View>
 
       {pin.length >= 6 && confirmPin.length >= 6 && (
-        <TouchableOpacity
-          style={styles.primaryButton}
-          onPress={setupPIN}
-          disabled={isLoading}
-        >
+        <TouchableOpacity style={styles.primaryButton} onPress={setupPIN} disabled={isLoading}>
           {isLoading ? (
             <ActivityIndicator color="#fff" />
           ) : (
@@ -508,12 +483,10 @@ export default function BiometricSetupScreen() {
       </Text>
 
       <View style={styles.summaryList}>
-        {isAvailable && biometricType !== 'none' && (
+        {isAvailable && biometricType !== "none" && (
           <View style={styles.summaryItem}>
             <Ionicons name="checkmark-circle" size={20} color="#10B981" />
-            <Text style={styles.summaryText}>
-              {getBiometricName()} ativado
-            </Text>
+            <Text style={styles.summaryText}>{getBiometricName()} ativado</Text>
           </View>
         )}
         <View style={styles.summaryItem}>
@@ -526,10 +499,7 @@ export default function BiometricSetupScreen() {
         </View>
       </View>
 
-      <TouchableOpacity
-        style={styles.primaryButton}
-        onPress={completeSetup}
-      >
+      <TouchableOpacity style={styles.primaryButton} onPress={completeSetup}>
         <Text style={styles.primaryButtonText}>Concluir</Text>
       </TouchableOpacity>
     </View>
@@ -540,13 +510,13 @@ export default function BiometricSetupScreen() {
    */
   const renderStep = () => {
     switch (currentStep) {
-      case 'intro':
+      case "intro":
         return renderIntro();
-      case 'biometric':
+      case "biometric":
         return renderBiometric();
-      case 'pin':
+      case "pin":
         return renderPIN();
-      case 'complete':
+      case "complete":
         return renderComplete();
       default:
         return null;
@@ -554,7 +524,7 @@ export default function BiometricSetupScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
+    <SafeAreaView style={styles.container} edges={["top", "bottom"]}>
       <ScrollView
         style={styles.content}
         contentContainerStyle={styles.contentContainer}
@@ -569,43 +539,43 @@ export default function BiometricSetupScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
   },
   content: {
     flex: 1,
   },
   contentContainer: {
     flexGrow: 1,
-    justifyContent: 'center',
+    justifyContent: "center",
     padding: 20,
   },
   stepContainer: {
-    alignItems: 'center',
+    alignItems: "center",
   },
   iconContainer: {
     marginBottom: 24,
   },
   title: {
     fontSize: 28,
-    fontWeight: '700',
-    color: '#1F2937',
-    textAlign: 'center',
+    fontWeight: "700",
+    color: "#1F2937",
+    textAlign: "center",
     marginBottom: 16,
   },
   description: {
     fontSize: 16,
     lineHeight: 24,
-    color: '#6B7280',
-    textAlign: 'center',
+    color: "#6B7280",
+    textAlign: "center",
     marginBottom: 24,
   },
   benefitsList: {
-    width: '100%',
+    width: "100%",
     marginBottom: 24,
   },
   benefitItem: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
+    flexDirection: "row",
+    alignItems: "flex-start",
     marginBottom: 20,
     paddingHorizontal: 8,
   },
@@ -615,22 +585,22 @@ const styles = StyleSheet.create({
   },
   benefitTitle: {
     fontSize: 16,
-    fontWeight: '600',
-    color: '#1F2937',
+    fontWeight: "600",
+    color: "#1F2937",
     marginBottom: 4,
   },
   benefitDescription: {
     fontSize: 14,
-    color: '#6B7280',
+    color: "#6B7280",
     lineHeight: 20,
   },
   instructionsList: {
-    width: '100%',
+    width: "100%",
     marginBottom: 24,
   },
   instructionItem: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
+    flexDirection: "row",
+    alignItems: "flex-start",
     marginBottom: 16,
     paddingHorizontal: 8,
   },
@@ -638,39 +608,39 @@ const styles = StyleSheet.create({
     width: 28,
     height: 28,
     borderRadius: 14,
-    backgroundColor: '#007AFF',
-    alignItems: 'center',
-    justifyContent: 'center',
+    backgroundColor: "#007AFF",
+    alignItems: "center",
+    justifyContent: "center",
   },
   stepNumberText: {
     fontSize: 14,
-    fontWeight: '600',
-    color: '#fff',
+    fontWeight: "600",
+    color: "#fff",
   },
   instructionText: {
     flex: 1,
     fontSize: 15,
-    color: '#374151',
+    color: "#374151",
     marginLeft: 12,
     lineHeight: 22,
   },
   pinInputContainer: {
-    width: '100%',
-    alignItems: 'center',
+    width: "100%",
+    alignItems: "center",
     marginBottom: 24,
   },
   pinLabel: {
     fontSize: 14,
-    fontWeight: '500',
-    color: '#6B7280',
+    fontWeight: "500",
+    color: "#6B7280",
     marginBottom: 12,
   },
   pinLabelSpacing: {
     marginTop: 24,
   },
   pinDotsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
+    flexDirection: "row",
+    justifyContent: "center",
     gap: 12,
   },
   pinDot: {
@@ -678,76 +648,76 @@ const styles = StyleSheet.create({
     height: 16,
     borderRadius: 8,
     borderWidth: 2,
-    borderColor: '#D1D5DB',
-    backgroundColor: 'transparent',
+    borderColor: "#D1D5DB",
+    backgroundColor: "transparent",
   },
   pinDotFilled: {
-    backgroundColor: '#007AFF',
-    borderColor: '#007AFF',
+    backgroundColor: "#007AFF",
+    borderColor: "#007AFF",
   },
   keypad: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    width: '100%',
+    flexDirection: "row",
+    flexWrap: "wrap",
+    width: "100%",
     maxWidth: 300,
     marginBottom: 24,
   },
   keypadButton: {
-    width: '33.33%',
+    width: "33.33%",
     aspectRatio: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     padding: 8,
   },
   keypadButtonText: {
     fontSize: 28,
-    fontWeight: '400',
-    color: '#1F2937',
+    fontWeight: "400",
+    color: "#1F2937",
   },
   summaryList: {
-    width: '100%',
+    width: "100%",
     marginBottom: 24,
   },
   summaryItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginBottom: 12,
     paddingHorizontal: 8,
   },
   summaryText: {
     fontSize: 15,
-    color: '#374151',
+    color: "#374151",
     marginLeft: 12,
   },
   primaryButton: {
-    width: '100%',
-    backgroundColor: '#007AFF',
+    width: "100%",
+    backgroundColor: "#007AFF",
     paddingVertical: 16,
     borderRadius: 12,
-    alignItems: 'center',
+    alignItems: "center",
     marginTop: 8,
     minHeight: 52,
-    justifyContent: 'center',
+    justifyContent: "center",
   },
   primaryButtonText: {
     fontSize: 16,
-    fontWeight: '600',
-    color: '#fff',
+    fontWeight: "600",
+    color: "#fff",
   },
   secondaryButton: {
-    width: '100%',
-    backgroundColor: 'transparent',
+    width: "100%",
+    backgroundColor: "transparent",
     paddingVertical: 16,
     borderRadius: 12,
-    alignItems: 'center',
+    alignItems: "center",
     marginTop: 12,
     minHeight: 52,
-    justifyContent: 'center',
+    justifyContent: "center",
   },
   secondaryButtonText: {
     fontSize: 16,
-    fontWeight: '600',
-    color: '#007AFF',
+    fontWeight: "600",
+    color: "#007AFF",
   },
   skipButton: {
     marginTop: 16,
@@ -755,13 +725,13 @@ const styles = StyleSheet.create({
   },
   skipButtonText: {
     fontSize: 14,
-    color: '#9CA3AF',
-    textAlign: 'center',
+    color: "#9CA3AF",
+    textAlign: "center",
   },
   note: {
     fontSize: 12,
-    color: '#9CA3AF',
-    textAlign: 'center',
+    color: "#9CA3AF",
+    textAlign: "center",
     marginTop: 8,
   },
 });

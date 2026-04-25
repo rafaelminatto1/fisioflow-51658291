@@ -3,52 +3,48 @@
  * Run: DATABASE_URL="..." npx tsx scripts/seed-dictionary.ts
  */
 
-import { neon } from '@neondatabase/serverless';
-import { drizzle } from 'drizzle-orm/neon-http';
-import { isNull } from 'drizzle-orm';
-import * as schema from '../src/server/db/schema';
-import { physioDictionary } from '../src/data/physioDictionary';
-import { exerciseDictionary } from '../src/data/exerciseDictionary';
-import { procedureDictionary } from '../src/data/procedureDictionary';
-import { diagnosticDictionary } from '../src/data/diagnosticDictionary';
-import { protocolDictionary } from '../src/data/protocolDictionary';
-import { equipmentDictionary } from '../src/data/equipmentDictionary';
+import { neon } from "@neondatabase/serverless";
+import { drizzle } from "drizzle-orm/neon-http";
+import { isNull } from "drizzle-orm";
+import * as schema from "../src/server/db/schema";
+import { physioDictionary } from "../src/data/physioDictionary";
+import { exerciseDictionary } from "../src/data/exerciseDictionary";
+import { procedureDictionary } from "../src/data/procedureDictionary";
+import { diagnosticDictionary } from "../src/data/diagnosticDictionary";
+import { protocolDictionary } from "../src/data/protocolDictionary";
+import { equipmentDictionary } from "../src/data/equipmentDictionary";
 
 const DATABASE_URL = process.env.DATABASE_URL;
-if (!DATABASE_URL) throw new Error('DATABASE_URL não definida');
+if (!DATABASE_URL) throw new Error("DATABASE_URL não definida");
 
 const sql = neon(DATABASE_URL);
 const db = drizzle(sql, { schema });
 
 const combinedDictionary = [
-	...physioDictionary, 
-	...exerciseDictionary,
-	...procedureDictionary,
-	...diagnosticDictionary,
-	...protocolDictionary,
-	...equipmentDictionary
+  ...physioDictionary,
+  ...exerciseDictionary,
+  ...procedureDictionary,
+  ...diagnosticDictionary,
+  ...protocolDictionary,
+  ...equipmentDictionary,
 ];
 
 function normalizeKey(value: string | null | undefined) {
-	return (value ?? '')
-		.normalize('NFD')
-		.replace(/[\u0300-\u036f]/g, '')
-		.toLowerCase()
-		.trim();
+  return (value ?? "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
 }
 
 function dictionaryKey(term: { pt: string; en: string; category: string }) {
-	return [
-		normalizeKey(term.pt),
-		normalizeKey(term.en),
-		normalizeKey(term.category),
-	].join('|');
+  return [normalizeKey(term.pt), normalizeKey(term.en), normalizeKey(term.category)].join("|");
 }
 
 async function seed() {
-  console.log('🌱 Iniciando seed do Dicionário Bilíngue...\n');
+  console.log("🌱 Iniciando seed do Dicionário Bilíngue...\n");
 
-  const localTerms = combinedDictionary.map(term => ({
+  const localTerms = combinedDictionary.map((term) => ({
     pt: term.pt,
     en: term.en,
     category: term.category,
@@ -61,7 +57,7 @@ async function seed() {
     updatedAt: new Date(),
   }));
 
-  const uniqueLocalTerms = new Map<string, typeof localTerms[number]>();
+  const uniqueLocalTerms = new Map<string, (typeof localTerms)[number]>();
   for (const term of localTerms) {
     uniqueLocalTerms.set(dictionaryKey(term), term);
   }
@@ -86,7 +82,7 @@ async function seed() {
   console.log(`📊 Preparando para inserir ${termsToInsert.length} termos novos...`);
 
   if (termsToInsert.length === 0) {
-    console.log('\n✅ Nenhum termo novo para inserir');
+    console.log("\n✅ Nenhum termo novo para inserir");
     return;
   }
 
@@ -101,7 +97,7 @@ async function seed() {
     console.log(`   ✅ Inseridos ${insertedCount}/${termsToInsert.length} termos...`);
   }
 
-  console.log('\n✅ SEED DO DICIONÁRIO CONCLUÍDO');
+  console.log("\n✅ SEED DO DICIONÁRIO CONCLUÍDO");
 }
 
 seed().catch(console.error);

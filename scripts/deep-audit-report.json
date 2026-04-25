@@ -12,9 +12,7 @@
         "Failed to load resource: the server responded with a status of 500 ()",
         "Failed to load resource: the server responded with a status of 500 ()"
       ],
-      "warnings": [
-        "⚠️ Poor LCP: 4548"
-      ],
+      "warnings": ["⚠️ Poor LCP: 4548"],
       "networkErrors": [
         {
           "type": "failed",
@@ -84,9 +82,7 @@
         "Failed to load resource: the server responded with a status of 500 ()",
         "Failed to load resource: the server responded with a status of 500 ()"
       ],
-      "warnings": [
-        "⚠️ Poor LCP: 4120"
-      ],
+      "warnings": ["⚠️ Poor LCP: 4120"],
       "networkErrors": [
         {
           "type": "failed",
@@ -130,9 +126,7 @@
       "path": "/agenda",
       "tabs": [],
       "errors": [],
-      "warnings": [
-        "⚠️ Slow page load: initial_load took 4560.69999999553ms"
-      ],
+      "warnings": ["⚠️ Slow page load: initial_load took 4560.69999999553ms"],
       "networkErrors": [
         {
           "type": "failed",
@@ -175,10 +169,7 @@
         "Failed to load resource: the server responded with a status of 500 ()",
         "Failed to load resource: the server responded with a status of 500 ()"
       ],
-      "warnings": [
-        "⚠️ Poor LCP: 5004",
-        "⚠️ Poor LCP: 8460"
-      ],
+      "warnings": ["⚠️ Poor LCP: 5004", "⚠️ Poor LCP: 8460"],
       "networkErrors": [
         {
           "type": "failed",
@@ -328,9 +319,7 @@
         "Failed to load resource: the server responded with a status of 500 ()",
         "Failed to load resource: the server responded with a status of 500 ()"
       ],
-      "warnings": [
-        "[PWA] Periodic Sync não pôde ser registrado: UnknownError: Unknown error."
-      ],
+      "warnings": ["[PWA] Periodic Sync não pôde ser registrado: UnknownError: Unknown error."],
       "networkErrors": [
         {
           "type": "failed",
@@ -479,9 +468,7 @@
         }
       ],
       "errors": [],
-      "warnings": [
-        "[PWA] Periodic Sync não pôde ser registrado: UnknownError: Unknown error."
-      ],
+      "warnings": ["[PWA] Periodic Sync não pôde ser registrado: UnknownError: Unknown error."],
       "networkErrors": [
         {
           "type": "failed",

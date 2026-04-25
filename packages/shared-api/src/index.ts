@@ -2,7 +2,7 @@
  * @fisioflow/shared-api — Shared types and API client
  */
 
-// We'll import from @fisioflow/db if it's set up correctly, 
+// We'll import from @fisioflow/db if it's set up correctly,
 // but for now, we'll define some base types.
 
 export interface ApiResponse<T> {
@@ -37,4 +37,4 @@ export interface Patient {
 }
 
 // Client
-export * from './client';
+export * from "./client";

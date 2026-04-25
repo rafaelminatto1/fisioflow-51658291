@@ -34,32 +34,32 @@ CONTEXTO:
  * Exercise recommendation prompt
  */
 export interface ExerciseRecommendationPromptInput {
-	patientProfile: {
-		age?: number;
-		gender?: string;
-		primaryComplaint?: string;
-		limitations?: string[];
-		goals?: string[];
-	};
-	clinicalContext?: {
-		diagnosis?: string;
-		pathology?: string;
-		phase?: "aguda" | "subaguda" | "cronica";
-		painLevel?: number; // 0-10
-	};
-	preferences?: {
-		availableEquipment?: string[];
-		sessionDuration?: number;
-		difficultyLevel?: "iniciante" | "intermediario" | "avancado";
-	};
+  patientProfile: {
+    age?: number;
+    gender?: string;
+    primaryComplaint?: string;
+    limitations?: string[];
+    goals?: string[];
+  };
+  clinicalContext?: {
+    diagnosis?: string;
+    pathology?: string;
+    phase?: "aguda" | "subaguda" | "cronica";
+    painLevel?: number; // 0-10
+  };
+  preferences?: {
+    availableEquipment?: string[];
+    sessionDuration?: number;
+    difficultyLevel?: "iniciante" | "intermediario" | "avancado";
+  };
 }
 
 export function createExerciseRecommendationPrompt(
-	input: ExerciseRecommendationPromptInput,
+  input: ExerciseRecommendationPromptInput,
 ): string {
-	const { patientProfile, clinicalContext, preferences } = input;
+  const { patientProfile, clinicalContext, preferences } = input;
 
-	return `
+  return `
 ${CLINICAL_SAFETY_GUIDELINES}
 
 TAREFA: Recomendar exercícios de fisioterapia adequados
@@ -102,26 +102,24 @@ Responda em português brasileiro, de forma estruturada e fácil de seguir.
  * Clinical analysis prompt
  */
 export interface ClinicalAnalysisPromptInput {
-	patientData: {
-		chiefComplaint?: string;
-		history?: string;
-		symptoms?: string[];
-		painHistory?: Array<{ date: string; level: number; location: string }>;
-		functionalLimitations?: string[];
-	};
-	evaluationResults?: {
-		rom?: Record<string, { value: string; normal: string }>;
-		muscleStrength?: Record<string, string>;
-		specialTests?: Array<{ name: string; result: string }>;
-	};
+  patientData: {
+    chiefComplaint?: string;
+    history?: string;
+    symptoms?: string[];
+    painHistory?: Array<{ date: string; level: number; location: string }>;
+    functionalLimitations?: string[];
+  };
+  evaluationResults?: {
+    rom?: Record<string, { value: string; normal: string }>;
+    muscleStrength?: Record<string, string>;
+    specialTests?: Array<{ name: string; result: string }>;
+  };
 }
 
-export function createClinicalAnalysisPrompt(
-	input: ClinicalAnalysisPromptInput,
-): string {
-	const { patientData, evaluationResults } = input;
+export function createClinicalAnalysisPrompt(input: ClinicalAnalysisPromptInput): string {
+  const { patientData, evaluationResults } = input;
 
-	return `
+  return `
 ${CLINICAL_SAFETY_GUIDELINES}
 
 TAREFA: Analisar dados clínicos e fornecer insights para fisioterapeuta
@@ -134,33 +132,30 @@ Limitações Funcionais: ${patientData.functionalLimitations?.join(", ") || "nen
 
 HISTÓRICO DE DOR:
 ${
-	patientData.painHistory
-		?.map((h) => `- ${h.date}: Nível ${h.level}/10 em ${h.location}`)
-		.join("\n") || "Nenhum registro"
+  patientData.painHistory
+    ?.map((h) => `- ${h.date}: Nível ${h.level}/10 em ${h.location}`)
+    .join("\n") || "Nenhum registro"
 }
 
 RESULTADOS DE AVALIAÇÃO:
 ADM (Amplitude de Movimento):
 ${
-	Object.entries(evaluationResults?.rom || {})
-		.map(
-			([joint, data]) => `- ${joint}: ${data.value} (normal: ${data.normal})`,
-		)
-		.join("\n") || "Nenhuma avaliação"
+  Object.entries(evaluationResults?.rom || {})
+    .map(([joint, data]) => `- ${joint}: ${data.value} (normal: ${data.normal})`)
+    .join("\n") || "Nenhuma avaliação"
 }
 
 Força Muscular:
 ${
-	Object.entries(evaluationResults?.muscleStrength || {})
-		.map(([muscle, grade]) => `- ${muscle}: ${grade}`)
-		.join("\n") || "Nenhuma avaliação"
+  Object.entries(evaluationResults?.muscleStrength || {})
+    .map(([muscle, grade]) => `- ${muscle}: ${grade}`)
+    .join("\n") || "Nenhuma avaliação"
 }
 
 Testes Especiais:
 ${
-	evaluationResults?.specialTests
-		?.map((t) => `- ${t.name}: ${t.result}`)
-		.join("\n") || "Nenhum teste"
+  evaluationResults?.specialTests?.map((t) => `- ${t.name}: ${t.result}`).join("\n") ||
+  "Nenhum teste"
 }
 
 INSTRUÇÕES:
@@ -178,31 +173,29 @@ NOTA: Esta é uma análise de suporte. O fisioterapeuta deve validar todas as co
  * Treatment planning prompt
  */
 export interface TreatmentPlanningPromptInput {
-	patientInfo: {
-		diagnosis?: string;
-		chronicity?: "aguda" | "subaguda" | "cronica";
-		primaryGoals?: string[];
-		secondaryGoals?: string[];
-	};
-	constraints: {
-		sessionFrequency?: number; // per week
-		treatmentDurationWeeks?: number;
-		availableResources?: string[];
-		timePerSession?: number;
-	};
-	progressSoFar?: {
-		sessionsCompleted?: number;
-		improvements?: string[];
-		challenges?: string[];
-	};
+  patientInfo: {
+    diagnosis?: string;
+    chronicity?: "aguda" | "subaguda" | "cronica";
+    primaryGoals?: string[];
+    secondaryGoals?: string[];
+  };
+  constraints: {
+    sessionFrequency?: number; // per week
+    treatmentDurationWeeks?: number;
+    availableResources?: string[];
+    timePerSession?: number;
+  };
+  progressSoFar?: {
+    sessionsCompleted?: number;
+    improvements?: string[];
+    challenges?: string[];
+  };
 }
 
-export function createTreatmentPlanningPrompt(
-	input: TreatmentPlanningPromptInput,
-): string {
-	const { patientInfo, constraints, progressSoFar } = input;
+export function createTreatmentPlanningPrompt(input: TreatmentPlanningPromptInput): string {
+  const { patientInfo, constraints, progressSoFar } = input;
 
-	return `
+  return `
 ${CLINICAL_SAFETY_GUIDELINES}
 
 TAREFA: Elaborar plano de tratamento fisioterapêutico
@@ -243,18 +236,16 @@ Responda de forma estruturada, com objetivos SMART (específicos, mensuráveis, 
  * Patient communication prompt
  */
 export interface PatientCommunicationPromptInput {
-	context: "education" | "motivation" | "reminder" | "clarification";
-	topic: string;
-	patientLevel: "leigo" | "conhecimento_basico" | "informado";
-	tone?: "formal" | "acolhedor" | "motivacional";
+  context: "education" | "motivation" | "reminder" | "clarification";
+  topic: string;
+  patientLevel: "leigo" | "conhecimento_basico" | "informado";
+  tone?: "formal" | "acolhedor" | "motivacional";
 }
 
-export function createPatientCommunicationPrompt(
-	input: PatientCommunicationPromptInput,
-): string {
-	const { context, topic, patientLevel, tone = "acolhedor" } = input;
+export function createPatientCommunicationPrompt(input: PatientCommunicationPromptInput): string {
+  const { context, topic, patientLevel, tone = "acolhedor" } = input;
 
-	return `
+  return `
 ${CLINICAL_SAFETY_GUIDELINES}
 
 TAREFA: Gerar comunicação para paciente
@@ -292,58 +283,56 @@ Responda em português brasileiro.
  * Progress analysis prompt
  */
 export interface ProgressAnalysisPromptInput {
-	progressData: {
-		initialAssessment?: Record<string, string | number>;
-		currentAssessment?: Record<string, string | number>;
-		sessionsData?: Array<{
-			date: string;
-			painLevel: number;
-			improvements: string[];
-			challenges: string[];
-		}>;
-	};
-	treatmentGoals?: string[];
-	timeline?: {
-		startDate?: string;
-		expectedEndDate?: string;
-		currentDate?: string;
-	};
+  progressData: {
+    initialAssessment?: Record<string, string | number>;
+    currentAssessment?: Record<string, string | number>;
+    sessionsData?: Array<{
+      date: string;
+      painLevel: number;
+      improvements: string[];
+      challenges: string[];
+    }>;
+  };
+  treatmentGoals?: string[];
+  timeline?: {
+    startDate?: string;
+    expectedEndDate?: string;
+    currentDate?: string;
+  };
 }
 
-export function createProgressAnalysisPrompt(
-	input: ProgressAnalysisPromptInput,
-): string {
-	const { progressData, treatmentGoals, timeline } = input;
+export function createProgressAnalysisPrompt(input: ProgressAnalysisPromptInput): string {
+  const { progressData, treatmentGoals, timeline } = input;
 
-	return `
+  return `
 ${CLINICAL_SAFETY_GUIDELINES}
 
 TAREFA: Analisar progresso do paciente em fisioterapia
 
 AVALIAÇÃO INICIAL:
 ${
-	Object.entries(progressData.initialAssessment || {})
-		.map(([key, value]) => `- ${key}: ${value}`)
-		.join("\n") || "Nenhuma avaliação inicial registrada"
+  Object.entries(progressData.initialAssessment || {})
+    .map(([key, value]) => `- ${key}: ${value}`)
+    .join("\n") || "Nenhuma avaliação inicial registrada"
 }
 
 AVALIAÇÃO ATUAL:
 ${
-	Object.entries(progressData.currentAssessment || {})
-		.map(([key, value]) => `- ${key}: ${value}`)
-		.join("\n") || "Nenhuma avaliação atual registrada"
+  Object.entries(progressData.currentAssessment || {})
+    .map(([key, value]) => `- ${key}: ${value}`)
+    .join("\n") || "Nenhuma avaliação atual registrada"
 }
 
 HISTÓRICO DE SESSÕES:
 ${
-	progressData.sessionsData
-		?.map(
-			(s) =>
-				`${s.date}: Dor ${s.painLevel}/10
+  progressData.sessionsData
+    ?.map(
+      (s) =>
+        `${s.date}: Dor ${s.painLevel}/10
    - Melhoras: ${s.improvements.join(", ") || "nenhuma"}
    - Desafios: ${s.challenges.join(", ") || "nenhum"}`,
-		)
-		.join("\n\n") || "Nenhuma sessão registrada"
+    )
+    .join("\n\n") || "Nenhuma sessão registrada"
 }
 
 OBJETIVOS DO TRATAMENTO:
@@ -371,21 +360,19 @@ Responda de forma analítica, com dados e insights acionáveis.
  * Quick suggestion prompt
  */
 export interface QuickSuggestionPromptInput {
-	query: string;
-	context: "exercicio" | "sintoma" | "orientacao_geral";
-	patientInfo?: {
-		age?: number;
-		condition?: string;
-		restrictions?: string[];
-	};
+  query: string;
+  context: "exercicio" | "sintoma" | "orientacao_geral";
+  patientInfo?: {
+    age?: number;
+    condition?: string;
+    restrictions?: string[];
+  };
 }
 
-export function createQuickSuggestionPrompt(
-	input: QuickSuggestionPromptInput,
-): string {
-	const { query, context, patientInfo } = input;
+export function createQuickSuggestionPrompt(input: QuickSuggestionPromptInput): string {
+  const { query, context, patientInfo } = input;
 
-	return `
+  return `
 ${CLINICAL_SAFETY_GUIDELINES}
 
 TAREFA: Fornecer sugestão rápida e concisa
@@ -395,13 +382,13 @@ PERGUNTA: ${query}
 
 INFORMAÇÕES DO PACIENTE:
 ${
-	patientInfo
-		? `
+  patientInfo
+    ? `
 Idade: ${patientInfo.age || "não informada"}
 Condição: ${patientInfo.condition || "não informada"}
 Restrições: ${patientInfo.restrictions?.join(", ") || "nenhuma"}
 `
-		: "Nenhuma informação adicional"
+    : "Nenhuma informação adicional"
 }
 
 INSTRUÇÕES:
@@ -419,55 +406,45 @@ Responda em português brasileiro.
  * Prompt builder factory
  */
 export class ClinicalPromptBuilder {
-	/**
-	 * Get prompt for feature category
-	 */
-	static getPrompt(category: AIFeatureCategory, input: unknown): string {
-		switch (category) {
-			case AIFeatureCategory.EXERCISE_RECOMMENDATION:
-				return createExerciseRecommendationPrompt(
-					input as ExerciseRecommendationPromptInput,
-				);
+  /**
+   * Get prompt for feature category
+   */
+  static getPrompt(category: AIFeatureCategory, input: unknown): string {
+    switch (category) {
+      case AIFeatureCategory.EXERCISE_RECOMMENDATION:
+        return createExerciseRecommendationPrompt(input as ExerciseRecommendationPromptInput);
 
-			case AIFeatureCategory.CLINICAL_ANALYSIS:
-				return createClinicalAnalysisPrompt(
-					input as ClinicalAnalysisPromptInput,
-				);
+      case AIFeatureCategory.CLINICAL_ANALYSIS:
+        return createClinicalAnalysisPrompt(input as ClinicalAnalysisPromptInput);
 
-			case AIFeatureCategory.TREATMENT_PLANNING:
-				return createTreatmentPlanningPrompt(
-					input as TreatmentPlanningPromptInput,
-				);
+      case AIFeatureCategory.TREATMENT_PLANNING:
+        return createTreatmentPlanningPrompt(input as TreatmentPlanningPromptInput);
 
-			case AIFeatureCategory.PATIENT_CHAT:
-				return createPatientCommunicationPrompt(
-					input as PatientCommunicationPromptInput,
-				);
+      case AIFeatureCategory.PATIENT_CHAT:
+        return createPatientCommunicationPrompt(input as PatientCommunicationPromptInput);
 
-			case AIFeatureCategory.PROGRESS_ANALYSIS:
-				return createProgressAnalysisPrompt(
-					input as ProgressAnalysisPromptInput,
-				);
+      case AIFeatureCategory.PROGRESS_ANALYSIS:
+        return createProgressAnalysisPrompt(input as ProgressAnalysisPromptInput);
 
-			case AIFeatureCategory.QUICK_SUGGESTIONS:
-				return createQuickSuggestionPrompt(input as QuickSuggestionPromptInput);
+      case AIFeatureCategory.QUICK_SUGGESTIONS:
+        return createQuickSuggestionPrompt(input as QuickSuggestionPromptInput);
 
-			default:
-				throw new Error(`Unsupported feature category: ${category}`);
-		}
-	}
+      default:
+        throw new Error(`Unsupported feature category: ${category}`);
+    }
+  }
 
-	/**
-	 * Get system prompt for category
-	 */
-	static getSystemPrompt(category: AIFeatureCategory): string {
-		return (
-			CLINICAL_SAFETY_GUIDELINES +
-			`
+  /**
+   * Get system prompt for category
+   */
+  static getSystemPrompt(category: AIFeatureCategory): string {
+    return (
+      CLINICAL_SAFETY_GUIDELINES +
+      `
 
 CATEGORIA: ${category.toUpperCase()}
 
 Responda sempre em português brasileiro, mantendo profissionalismo e empatia.`
-		);
-	}
+    );
+  }
 }

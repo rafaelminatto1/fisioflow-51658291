@@ -17,20 +17,20 @@ export { MeasurementsBlock } from "./MeasurementsBlock";
 export { YBalanceBlock } from "./YBalanceBlock";
 
 export type {
-	EvolutionV2Data,
-	ProcedureItem,
-	ProcedureCategory,
-	ExerciseV2Item,
-	ExerciseFeedback,
-	EvolutionVersion,
-	MeasurementItem,
-	MeasurementType,
-	ClinicalTest,
+  EvolutionV2Data,
+  ProcedureItem,
+  ProcedureCategory,
+  ExerciseV2Item,
+  ExerciseFeedback,
+  EvolutionVersion,
+  MeasurementItem,
+  MeasurementType,
+  ClinicalTest,
 } from "./types";
 
 export {
-	PROCEDURE_CATEGORY_LABELS,
-	COMMON_PROCEDURES,
-	MEASUREMENT_TYPES,
-	MEASUREMENT_TYPE_LABELS,
+  PROCEDURE_CATEGORY_LABELS,
+  COMMON_PROCEDURES,
+  MEASUREMENT_TYPES,
+  MEASUREMENT_TYPE_LABELS,
 } from "./types";

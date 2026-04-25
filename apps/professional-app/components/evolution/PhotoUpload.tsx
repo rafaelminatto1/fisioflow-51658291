@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState } from "react";
 import {
   View,
   Text,
@@ -8,10 +8,10 @@ import {
   ScrollView,
   Alert,
   ActivityIndicator,
-} from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import * as ImagePicker from 'expo-image-picker';
-import { useHaptics } from '@/hooks/useHaptics';
+} from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import * as ImagePicker from "expo-image-picker";
+import { useHaptics } from "@/hooks/useHaptics";
 
 interface PhotoUploadProps {
   photos: string[];
@@ -27,11 +27,11 @@ export function PhotoUpload({ photos, onPhotosChange, maxPhotos = 6, colors }: P
   const requestPermissions = async () => {
     const { status: cameraStatus } = await ImagePicker.requestCameraPermissionsAsync();
     const { status: libraryStatus } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    
-    if (cameraStatus !== 'granted' || libraryStatus !== 'granted') {
+
+    if (cameraStatus !== "granted" || libraryStatus !== "granted") {
       Alert.alert(
-        'Permissões Necessárias',
-        'Precisamos de permissão para acessar a câmera e galeria de fotos.'
+        "Permissões Necessárias",
+        "Precisamos de permissão para acessar a câmera e galeria de fotos.",
       );
       return false;
     }
@@ -40,10 +40,10 @@ export function PhotoUpload({ photos, onPhotosChange, maxPhotos = 6, colors }: P
 
   const pickImage = async (useCamera: boolean) => {
     medium();
-    
+
     if (photos.length >= maxPhotos) {
       hapticError();
-      Alert.alert('Limite Atingido', `Você pode adicionar no máximo ${maxPhotos} fotos.`);
+      Alert.alert("Limite Atingido", `Você pode adicionar no máximo ${maxPhotos} fotos.`);
       return;
     }
 
@@ -52,7 +52,7 @@ export function PhotoUpload({ photos, onPhotosChange, maxPhotos = 6, colors }: P
 
     try {
       setUploading(true);
-      
+
       const result = useCamera
         ? await ImagePicker.launchCameraAsync({
             mediaTypes: ImagePicker.MediaTypeOptions.Images,
@@ -69,15 +69,15 @@ export function PhotoUpload({ photos, onPhotosChange, maxPhotos = 6, colors }: P
           });
 
       if (!result.canceled) {
-        const newPhotos = result.assets.map(asset => asset.uri);
+        const newPhotos = result.assets.map((asset) => asset.uri);
         const updatedPhotos = [...photos, ...newPhotos].slice(0, maxPhotos);
         onPhotosChange(updatedPhotos);
         light();
       }
     } catch (error) {
       hapticError();
-      Alert.alert('Erro', 'Não foi possível adicionar a foto.');
-      console.error('Error picking image:', error);
+      Alert.alert("Erro", "Não foi possível adicionar a foto.");
+      console.error("Error picking image:", error);
     } finally {
       setUploading(false);
     }
@@ -85,22 +85,18 @@ export function PhotoUpload({ photos, onPhotosChange, maxPhotos = 6, colors }: P
 
   const removePhoto = (index: number) => {
     medium();
-    Alert.alert(
-      'Remover Foto',
-      'Deseja remover esta foto?',
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        {
-          text: 'Remover',
-          style: 'destructive',
-          onPress: () => {
-            const updatedPhotos = photos.filter((_, i) => i !== index);
-            onPhotosChange(updatedPhotos);
-            light();
-          },
+    Alert.alert("Remover Foto", "Deseja remover esta foto?", [
+      { text: "Cancelar", style: "cancel" },
+      {
+        text: "Remover",
+        style: "destructive",
+        onPress: () => {
+          const updatedPhotos = photos.filter((_, i) => i !== index);
+          onPhotosChange(updatedPhotos);
+          light();
         },
-      ]
-    );
+      },
+    ]);
   };
 
   return (
@@ -123,14 +119,14 @@ export function PhotoUpload({ photos, onPhotosChange, maxPhotos = 6, colors }: P
           {photos.map((photo, index) => (
             <View key={index} style={styles.photoContainer}>
               <Image source={{ uri: photo }} style={styles.photo} />
-                <TouchableOpacity
-                  style={[styles.removeButton, { backgroundColor: colors.error }]}
-                  onPress={() => removePhoto(index)}
-                  accessibilityLabel="Remover foto"
-                  accessibilityRole="button"
-                >
-                  <Ionicons name="close" size={16} color="#fff" />
-                </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.removeButton, { backgroundColor: colors.error }]}
+                onPress={() => removePhoto(index)}
+                accessibilityLabel="Remover foto"
+                accessibilityRole="button"
+              >
+                <Ionicons name="close" size={16} color="#fff" />
+              </TouchableOpacity>
             </View>
           ))}
         </ScrollView>
@@ -188,13 +184,13 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 8,
   },
   title: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
     flex: 1,
   },
   counter: {
@@ -207,7 +203,7 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   photoContainer: {
-    position: 'relative',
+    position: "relative",
   },
   photo: {
     width: 120,
@@ -215,35 +211,35 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   removeButton: {
-    position: 'absolute',
+    position: "absolute",
     top: 4,
     right: 4,
     width: 24,
     height: 24,
     borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   actions: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: 12,
   },
   actionButton: {
     flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     paddingVertical: 12,
     borderRadius: 8,
     gap: 8,
   },
   actionButtonText: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   hint: {
     fontSize: 12,
-    textAlign: 'center',
+    textAlign: "center",
   },
 });

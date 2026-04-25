@@ -181,7 +181,7 @@ test.describe('Pacientes - CRUD Completo', () => {
 
     await page.waitForTimeout(2000); // Dar tempo para renderizar
 
-    const isVisible = await createButton.isVisible().catch(() => false) || 
+    const isVisible = await createButton.isVisible().catch(() => false) ||
                       await emptyStateButton.isVisible().catch(() => false);
 
     if (isVisible) {
@@ -211,7 +211,7 @@ test.describe('Pacientes - CRUD Completo', () => {
     if (await statusFilter.isVisible({ timeout: 10000 })) {
       await statusFilter.click();
       await page.waitForTimeout(1000);
-      
+
       const option = page.locator('[role="option"]:has-text("Em Tratamento"), [role="menuitem"]:has-text("Em Tratamento")').first();
       if (await option.isVisible({ timeout: 5000 })) {
         await option.click();
@@ -228,7 +228,7 @@ test.describe('Pacientes - CRUD Completo', () => {
   test('deve visualizar detalhes do paciente', async ({ page }) => {
     await page.waitForTimeout(3000); // Esperar carregar dados
     const isEmpty = await page.locator('text=/Nenhum paciente|Comece adicionando/i').isVisible().catch(() => false);
-    
+
     if (isEmpty) {
       console.log('ℹ️ Lista vazia');
       return;

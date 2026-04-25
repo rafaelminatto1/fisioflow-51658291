@@ -2,15 +2,15 @@ import React from "react";
 import { View, StyleSheet, TouchableOpacity, Text } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import {
-	format,
-	addDays,
-	subDays,
-	startOfWeek,
-	endOfWeek,
-	addWeeks,
-	subWeeks,
-	addMonths,
-	subMonths,
+  format,
+  addDays,
+  subDays,
+  startOfWeek,
+  endOfWeek,
+  addWeeks,
+  subWeeks,
+  addMonths,
+  subMonths,
 } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useColors } from "@/hooks/useColorScheme";
@@ -22,179 +22,166 @@ import { AppointmentBase } from "@/types";
 export type ViewMode = "day" | "week" | "month";
 
 interface CalendarViewProps {
-	appointments: AppointmentBase[];
-	date: Date;
-	onDateChange: (date: Date) => void;
-	viewMode: ViewMode;
-	onViewModeChange: (mode: ViewMode) => void;
-	onReschedule?: (id: string, newDate: Date, time: string) => void;
-	onRescheduleRequest?: (
-		id: string,
-		newDate: Date,
-		time: string,
-		confirm: (confirm: boolean) => void,
-	) => void;
+  appointments: AppointmentBase[];
+  date: Date;
+  onDateChange: (date: Date) => void;
+  viewMode: ViewMode;
+  onViewModeChange: (mode: ViewMode) => void;
+  onReschedule?: (id: string, newDate: Date, time: string) => void;
+  onRescheduleRequest?: (
+    id: string,
+    newDate: Date,
+    time: string,
+    confirm: (confirm: boolean) => void,
+  ) => void;
 }
 
 export const CalendarView = ({
-	appointments,
-	date,
-	onDateChange,
-	viewMode,
-	onViewModeChange,
-	onReschedule,
-	onRescheduleRequest,
+  appointments,
+  date,
+  onDateChange,
+  viewMode,
+  onViewModeChange,
+  onReschedule,
+  onRescheduleRequest,
 }: CalendarViewProps) => {
-	const colors = useColors();
+  const colors = useColors();
 
-	const navigateDate = (direction: "prev" | "next") => {
-		if (viewMode === "day") {
-			onDateChange(direction === "prev" ? subDays(date, 1) : addDays(date, 1));
-		} else if (viewMode === "week") {
-			onDateChange(
-				direction === "prev" ? subWeeks(date, 1) : addWeeks(date, 1),
-			);
-		} else {
-			onDateChange(
-				direction === "prev" ? subMonths(date, 1) : addMonths(date, 1),
-			);
-		}
-	};
+  const navigateDate = (direction: "prev" | "next") => {
+    if (viewMode === "day") {
+      onDateChange(direction === "prev" ? subDays(date, 1) : addDays(date, 1));
+    } else if (viewMode === "week") {
+      onDateChange(direction === "prev" ? subWeeks(date, 1) : addWeeks(date, 1));
+    } else {
+      onDateChange(direction === "prev" ? subMonths(date, 1) : addMonths(date, 1));
+    }
+  };
 
-	const renderHeader = () => (
-		<View style={[styles.header, { borderBottomColor: colors.border }]}>
-			<View style={styles.navigation}>
-				<TouchableOpacity
-					onPress={() => navigateDate("prev")}
-					style={styles.navButton}
-				>
-					<Ionicons name="chevron-back" size={24} color={colors.primary} />
-				</TouchableOpacity>
-				<Text style={[styles.dateTitle, { color: colors.text }]}>
-					{viewMode === "day"
-						? format(date, "d 'de' MMMM", { locale: ptBR })
-						: viewMode === "week"
-							? `Semana ${format(startOfWeek(date, { weekStartsOn: 1 }), "d/MM")} - ${format(endOfWeek(date, { weekStartsOn: 1 }), "d/MM")}`
-							: format(date, "MMMM yyyy", { locale: ptBR })}
-				</Text>
-				<TouchableOpacity
-					onPress={() => navigateDate("next")}
-					style={styles.navButton}
-				>
-					<Ionicons name="chevron-forward" size={24} color={colors.primary} />
-				</TouchableOpacity>
-			</View>
+  const renderHeader = () => (
+    <View style={[styles.header, { borderBottomColor: colors.border }]}>
+      <View style={styles.navigation}>
+        <TouchableOpacity onPress={() => navigateDate("prev")} style={styles.navButton}>
+          <Ionicons name="chevron-back" size={24} color={colors.primary} />
+        </TouchableOpacity>
+        <Text style={[styles.dateTitle, { color: colors.text }]}>
+          {viewMode === "day"
+            ? format(date, "d 'de' MMMM", { locale: ptBR })
+            : viewMode === "week"
+              ? `Semana ${format(startOfWeek(date, { weekStartsOn: 1 }), "d/MM")} - ${format(endOfWeek(date, { weekStartsOn: 1 }), "d/MM")}`
+              : format(date, "MMMM yyyy", { locale: ptBR })}
+        </Text>
+        <TouchableOpacity onPress={() => navigateDate("next")} style={styles.navButton}>
+          <Ionicons name="chevron-forward" size={24} color={colors.primary} />
+        </TouchableOpacity>
+      </View>
 
-			<View
-				style={[
-					styles.viewSwitcher,
-					{ backgroundColor: colors.surface, borderColor: colors.border },
-				]}
-			>
-				{(["day", "week", "month"] as ViewMode[]).map((mode) => (
-					<TouchableOpacity
-						key={mode}
-						style={[
-							styles.switchButton,
-							viewMode === mode && { backgroundColor: colors.primary },
-						]}
-						onPress={() => onViewModeChange(mode)}
-					>
-						<Text
-							style={[
-								styles.switchText,
-								{ color: viewMode === mode ? "#fff" : colors.textSecondary },
-							]}
-						>
-							{mode === "day" ? "Dia" : mode === "week" ? "Semana" : "Mês"}
-						</Text>
-					</TouchableOpacity>
-				))}
-			</View>
-		</View>
-	);
+      <View
+        style={[
+          styles.viewSwitcher,
+          { backgroundColor: colors.surface, borderColor: colors.border },
+        ]}
+      >
+        {(["day", "week", "month"] as ViewMode[]).map((mode) => (
+          <TouchableOpacity
+            key={mode}
+            style={[styles.switchButton, viewMode === mode && { backgroundColor: colors.primary }]}
+            onPress={() => onViewModeChange(mode)}
+          >
+            <Text
+              style={[
+                styles.switchText,
+                { color: viewMode === mode ? "#fff" : colors.textSecondary },
+              ]}
+            >
+              {mode === "day" ? "Dia" : mode === "week" ? "Semana" : "Mês"}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+    </View>
+  );
 
-	return (
-		<View style={styles.container}>
-			{renderHeader()}
-			<View style={styles.content}>
-				{viewMode === "day" && (
-					<DayView
-						date={date}
-						appointments={appointments}
-						startHour={7}
-						endHour={22}
-						onReschedule={onReschedule}
-						onRescheduleRequest={onRescheduleRequest}
-					/>
-				)}
-				{viewMode === "week" && (
-					<WeekView
-						date={date}
-						appointments={appointments}
-						startHour={7}
-						endHour={22}
-						onReschedule={onReschedule}
-						onRescheduleRequest={onRescheduleRequest}
-					/>
-				)}
-				{viewMode === "month" && (
-					<MonthView
-						selectedDate={date}
-						onSelectDate={(newDate) => {
-							onDateChange(newDate);
-							onViewModeChange("day"); // Switch to day view when a date is selected in month view
-						}}
-						appointments={appointments}
-					/>
-				)}
-			</View>
-		</View>
-	);
+  return (
+    <View style={styles.container}>
+      {renderHeader()}
+      <View style={styles.content}>
+        {viewMode === "day" && (
+          <DayView
+            date={date}
+            appointments={appointments}
+            startHour={7}
+            endHour={22}
+            onReschedule={onReschedule}
+            onRescheduleRequest={onRescheduleRequest}
+          />
+        )}
+        {viewMode === "week" && (
+          <WeekView
+            date={date}
+            appointments={appointments}
+            startHour={7}
+            endHour={22}
+            onReschedule={onReschedule}
+            onRescheduleRequest={onRescheduleRequest}
+          />
+        )}
+        {viewMode === "month" && (
+          <MonthView
+            selectedDate={date}
+            onSelectDate={(newDate) => {
+              onDateChange(newDate);
+              onViewModeChange("day"); // Switch to day view when a date is selected in month view
+            }}
+            appointments={appointments}
+          />
+        )}
+      </View>
+    </View>
+  );
 };
 
 const styles = StyleSheet.create({
-	container: {
-		flex: 1,
-	},
-	header: {
-		padding: 12,
-		paddingBottom: 10,
-		borderBottomWidth: 1,
-	},
-	navigation: {
-		flexDirection: "row",
-		justifyContent: "space-between",
-		alignItems: "center",
-		marginBottom: 10,
-	},
-	navButton: {
-		padding: 6,
-	},
-	dateTitle: {
-		fontSize: 16,
-		fontWeight: "600",
-		textTransform: "capitalize",
-	},
-	viewSwitcher: {
-		flexDirection: "row",
-		borderRadius: 20,
-		borderWidth: 1,
-		overflow: "hidden",
-		padding: 3,
-	},
-	switchButton: {
-		flex: 1,
-		paddingVertical: 6,
-		paddingHorizontal: 8,
-		alignItems: "center",
-		borderRadius: 16,
-	},
-	switchText: {
-		fontSize: 12,
-		fontWeight: "600",
-	},
-	content: {
-		flex: 1,
-	},
+  container: {
+    flex: 1,
+  },
+  header: {
+    padding: 12,
+    paddingBottom: 10,
+    borderBottomWidth: 1,
+  },
+  navigation: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 10,
+  },
+  navButton: {
+    padding: 6,
+  },
+  dateTitle: {
+    fontSize: 16,
+    fontWeight: "600",
+    textTransform: "capitalize",
+  },
+  viewSwitcher: {
+    flexDirection: "row",
+    borderRadius: 20,
+    borderWidth: 1,
+    overflow: "hidden",
+    padding: 3,
+  },
+  switchButton: {
+    flex: 1,
+    paddingVertical: 6,
+    paddingHorizontal: 8,
+    alignItems: "center",
+    borderRadius: 16,
+  },
+  switchText: {
+    fontSize: 12,
+    fontWeight: "600",
+  },
+  content: {
+    flex: 1,
+  },
 });

@@ -7,70 +7,68 @@ import { getNeonAccessToken } from "@/lib/auth/neon-token";
 import { fisioLogger } from "@/lib/errors/logger";
 
 interface RequestOptions extends RequestInit {
-	data?: unknown;
-	token?: string;
+  data?: unknown;
+  token?: string;
 }
 
 class ApiClient {
-	/**
-	 * Realiza uma requisição autenticada
-	 */
-	async request<T>(url: string, options: RequestOptions = {}): Promise<T> {
-		const token = await getNeonAccessToken();
+  /**
+   * Realiza uma requisição autenticada
+   */
+  async request<T>(url: string, options: RequestOptions = {}): Promise<T> {
+    const token = await getNeonAccessToken();
 
-		const headers = new Headers(options.headers);
-		headers.set("Authorization", `Bearer ${token}`);
-		headers.set("Content-Type", "application/json");
+    const headers = new Headers(options.headers);
+    headers.set("Authorization", `Bearer ${token}`);
+    headers.set("Content-Type", "application/json");
 
-		const config: RequestInit = {
-			...options,
-			headers,
-		};
+    const config: RequestInit = {
+      ...options,
+      headers,
+    };
 
-		if (options.data) {
-			config.body = JSON.stringify(options.data);
-		}
+    if (options.data) {
+      config.body = JSON.stringify(options.data);
+    }
 
-		try {
-			const response = await fetch(url, config);
+    try {
+      const response = await fetch(url, config);
 
-			if (!response.ok) {
-				const errorData = await response.json().catch(() => ({}));
-				throw new Error(
-					errorData.error ||
-						errorData.message ||
-						`Erro na requisição: ${response.status}`,
-				);
-			}
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(
+          errorData.error || errorData.message || `Erro na requisição: ${response.status}`,
+        );
+      }
 
-			// Se for 204 No Content
-			if (response.status === 204) {
-				return {} as T;
-			}
+      // Se for 204 No Content
+      if (response.status === 204) {
+        return {} as T;
+      }
 
-			const data = await response.json();
-			return data as T;
-		} catch (error) {
-			fisioLogger.error(`Erro ao chamar ${url}`, error, "ApiClient");
-			throw error;
-		}
-	}
+      const data = await response.json();
+      return data as T;
+    } catch (error) {
+      fisioLogger.error(`Erro ao chamar ${url}`, error, "ApiClient");
+      throw error;
+    }
+  }
 
-	get<T>(url: string, options?: RequestOptions) {
-		return this.request<T>(url, { ...options, method: "GET" });
-	}
+  get<T>(url: string, options?: RequestOptions) {
+    return this.request<T>(url, { ...options, method: "GET" });
+  }
 
-	post<T>(url: string, data: unknown, options?: RequestOptions) {
-		return this.request<T>(url, { ...options, method: "POST", data });
-	}
+  post<T>(url: string, data: unknown, options?: RequestOptions) {
+    return this.request<T>(url, { ...options, method: "POST", data });
+  }
 
-	put<T>(url: string, data: unknown, options?: RequestOptions) {
-		return this.request<T>(url, { ...options, method: "PUT", data });
-	}
+  put<T>(url: string, data: unknown, options?: RequestOptions) {
+    return this.request<T>(url, { ...options, method: "PUT", data });
+  }
 
-	delete<T>(url: string, data?: unknown, options?: RequestOptions) {
-		return this.request<T>(url, { ...options, method: "DELETE", data });
-	}
+  delete<T>(url: string, data?: unknown, options?: RequestOptions) {
+    return this.request<T>(url, { ...options, method: "DELETE", data });
+  }
 }
 
 export const apiClient = new ApiClient();

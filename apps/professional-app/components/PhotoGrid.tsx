@@ -1,17 +1,9 @@
-import React from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  ScrollView,
-  Image,
-  Alert,
-} from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { useColors } from '@/hooks/useColorScheme';
-import { useCamera } from '@/hooks/useCamera';
-import { Modal } from './Modal';
+import React from "react";
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Image, Alert } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { useColors } from "@/hooks/useColorScheme";
+import { useCamera } from "@/hooks/useCamera";
+import { Modal } from "./Modal";
 
 interface Photo {
   uri: string;
@@ -34,7 +26,7 @@ export function PhotoGrid({
   editable = true,
 }: Props) {
   const colors = useColors();
-  const { pickFromGallery, takePhoto, } = useCamera();
+  const { pickFromGallery, takePhoto } = useCamera();
   const [showPhotoModal, setShowPhotoModal] = React.useState(false);
   const [previewPhoto, setPreviewPhoto] = React.useState<string | null>(null);
 
@@ -55,9 +47,9 @@ export function PhotoGrid({
   };
 
   const handleRemove = (id: string) => {
-    Alert.alert('Remover Foto', 'Deseja remover esta foto?', [
-      { text: 'Cancelar', style: 'cancel' },
-      { text: 'Remover', style: 'destructive', onPress: () => onRemovePhoto(id) },
+    Alert.alert("Remover Foto", "Deseja remover esta foto?", [
+      { text: "Cancelar", style: "cancel" },
+      { text: "Remover", style: "destructive", onPress: () => onRemovePhoto(id) },
     ]);
   };
 
@@ -94,9 +86,7 @@ export function PhotoGrid({
               onPress={() => setShowPhotoModal(true)}
             >
               <Ionicons name="camera-outline" size={28} color={colors.textSecondary} />
-              <Text style={[styles.addButtonText, { color: colors.textSecondary }]}>
-                Adicionar
-              </Text>
+              <Text style={[styles.addButtonText, { color: colors.textSecondary }]}>Adicionar</Text>
             </TouchableOpacity>
           )}
         </View>
@@ -114,9 +104,7 @@ export function PhotoGrid({
             onPress={handleTakePhoto}
           >
             <Ionicons name="camera" size={28} color={colors.primary} />
-            <Text style={[styles.photoOptionText, { color: colors.text }]}>
-              Câmera
-            </Text>
+            <Text style={[styles.photoOptionText, { color: colors.text }]}>Câmera</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -124,19 +112,13 @@ export function PhotoGrid({
             onPress={handlePickFromGallery}
           >
             <Ionicons name="images" size={28} color={colors.primary} />
-            <Text style={[styles.photoOptionText, { color: colors.text }]}>
-              Galeria
-            </Text>
+            <Text style={[styles.photoOptionText, { color: colors.text }]}>Galeria</Text>
           </TouchableOpacity>
         </View>
       </Modal>
 
       {/* Photo Preview Modal */}
-      <Modal
-        visible={!!previewPhoto}
-        onClose={() => setPreviewPhoto(null)}
-        hideCloseButton
-      >
+      <Modal visible={!!previewPhoto} onClose={() => setPreviewPhoto(null)} hideCloseButton>
         {previewPhoto && (
           <View style={styles.previewContainer}>
             <Image source={{ uri: previewPhoto }} style={styles.preview} resizeMode="contain" />
@@ -159,29 +141,29 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 14,
-    fontWeight: '500',
+    fontWeight: "500",
     marginBottom: 8,
   },
   grid: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: 8,
   },
   photoContainer: {
     width: 100,
     height: 100,
     borderRadius: 12,
-    overflow: 'hidden',
-    position: 'relative',
+    overflow: "hidden",
+    position: "relative",
   },
   photo: {
-    width: '100%',
-    height: '100%',
+    width: "100%",
+    height: "100%",
   },
   removeButton: {
-    position: 'absolute',
+    position: "absolute",
     top: 4,
     right: 4,
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    backgroundColor: "rgba(0,0,0,0.5)",
     borderRadius: 12,
   },
   addButton: {
@@ -189,47 +171,47 @@ const styles = StyleSheet.create({
     height: 100,
     borderRadius: 12,
     borderWidth: 2,
-    borderStyle: 'dashed',
-    alignItems: 'center',
-    justifyContent: 'center',
+    borderStyle: "dashed",
+    alignItems: "center",
+    justifyContent: "center",
     gap: 4,
   },
   addButtonText: {
     fontSize: 12,
   },
   photoOptions: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: 16,
     paddingVertical: 16,
   },
   photoOption: {
     flex: 1,
-    alignItems: 'center',
+    alignItems: "center",
     padding: 24,
     borderRadius: 12,
     gap: 12,
   },
   photoOptionText: {
     fontSize: 14,
-    fontWeight: '500',
+    fontWeight: "500",
   },
   previewContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   preview: {
-    width: '100%',
+    width: "100%",
     height: 300,
   },
   previewClose: {
-    position: 'absolute',
+    position: "absolute",
     top: 16,
     right: 16,
     width: 40,
     height: 40,
     borderRadius: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
 });

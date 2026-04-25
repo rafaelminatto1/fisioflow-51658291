@@ -1,9 +1,9 @@
 #!/usr/bin/env node
-import { readdir, stat } from 'node:fs/promises';
-import { join, relative } from 'node:path';
+import { readdir, stat } from "node:fs/promises";
+import { join, relative } from "node:path";
 
-const root = join(process.cwd(), 'node_modules', '.pnpm');
-const wasmSuffix = '.wasm';
+const root = join(process.cwd(), "node_modules", ".pnpm");
+const wasmSuffix = ".wasm";
 const entries = [];
 
 async function walk(dir) {
@@ -28,21 +28,21 @@ async function main() {
     if (!dirent.isDirectory()) {
       continue;
     }
-    if (!dirent.name.includes('cornerstonejs')) {
+    if (!dirent.name.includes("cornerstonejs")) {
       continue;
     }
     await walk(join(root, dirent.name));
   }
 
   if (!entries.length) {
-    console.log('No DICOM codec wasm files found.');
+    console.log("No DICOM codec wasm files found.");
     return;
   }
 
   const grouped = new Map();
   for (const entry of entries) {
-    const parts = entry.path.split('/');
-    const pkgDir = parts.slice(0, 3).join('/');
+    const parts = entry.path.split("/");
+    const pkgDir = parts.slice(0, 3).join("/");
     const list = grouped.get(pkgDir) ?? [];
     list.push(entry);
     grouped.set(pkgDir, list);

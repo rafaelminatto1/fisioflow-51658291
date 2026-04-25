@@ -10,12 +10,14 @@
 ## Frontend Stack
 
 ### Core Framework
+
 - **React**: 19.1.0
 - **React DOM**: 19.1.0
 - **React Router**: 6.30.1 for routing
 - **Vite**: Fast build tool with SWC for React
 
 ### UI & Styling
+
 - **UI Library**: shadcn/ui (Radix UI primitives)
 - **Styling**: Tailwind CSS 3.4.17
 - **Icons**: Lucide React 0.462.0
@@ -23,11 +25,13 @@
 - **Typography**: @tailwindcss/typography
 
 ### State Management
+
 - **Server State**: TanStack Query 5.90.17 (React Query)
 - **Client State**: Zustand 4.5.5
 - **Forms**: React Hook Form 7.61.1 + Zod 3.25.76 validation
 
 ### Mobile
+
 - **Framework**: React Native 0.76.9 + Expo 54.0.32
 - **Native Bridge**: Capacitor 8.0.0 (iOS/Android)
 - **Storage**: AsyncStorage 2.2.0
@@ -35,6 +39,7 @@
 ## Backend Stack
 
 ### Firebase Services
+
 - **Auth**: Firebase Auth with MFA (TOTP)
 - **Functions**: Cloud Functions Gen 2 (Node.js 20, TypeScript 5.7.2)
 - **Database**: Cloud SQL (PostgreSQL) + Firestore
@@ -42,12 +47,14 @@
 - **Hosting**: Firebase Hosting
 
 ### Database
+
 - **Primary**: Cloud SQL PostgreSQL (southamerica-east1)
 - **Real-time**: Firestore (cache + real-time sync)
 - **ORM**: Drizzle ORM 0.45.1
 - **Migrations**: Drizzle Kit 0.18.1
 
 ### External Integrations
+
 - **Real-time**: Ably 2.17.0
 - **AI/ML**: Google Vertex AI (Gemini 2.5 Flash-Lite)
 - **Payments**: Stripe 20.3.0
@@ -58,12 +65,14 @@
 ## Testing
 
 ### Test Frameworks
+
 - **Unit/Integration**: Vitest 3.2.4
 - **E2E**: Playwright 1.58.1
 - **Property-Based**: fast-check 4.5.3
 - **Testing Library**: @testing-library/react 16.3.1
 
 ### Test Commands
+
 ```bash
 # Unit tests
 pnpm test                    # Run in watch mode
@@ -89,6 +98,7 @@ pnpm test:db-constraints    # Database constraint analysis
 ## Development Commands
 
 ### Local Development
+
 ```bash
 # Install dependencies
 pnpm install
@@ -109,6 +119,7 @@ pnpm inngest:dev           # Start Inngest dev server
 ```
 
 ### Build & Preview
+
 ```bash
 # Production build
 pnpm build                 # Standard build
@@ -124,6 +135,7 @@ pnpm professional:build:prod # Professional app production
 ```
 
 ### Database
+
 ```bash
 # Drizzle ORM
 pnpm db:push               # Push schema changes
@@ -135,6 +147,7 @@ pnpm db:proxy              # Start Cloud SQL proxy
 ```
 
 ### Deployment
+
 ```bash
 # Firebase deployment
 pnpm deploy:web            # Deploy hosting only
@@ -146,6 +159,7 @@ pnpm deploy:failed-functions
 ```
 
 ### Code Quality
+
 ```bash
 # Linting
 pnpm lint                  # Check for issues
@@ -160,6 +174,7 @@ pnpm verify                # System health check
 ```
 
 ### Capacitor (Mobile)
+
 ```bash
 # iOS setup
 pnpm cap:ios               # Add iOS platform
@@ -169,6 +184,7 @@ pnpm cap:open:ios          # Open in Xcode
 ```
 
 ### Utilities
+
 ```bash
 # Type generation
 pnpm gen:types             # Generate TypeScript types from JSON schema
@@ -188,6 +204,7 @@ pnpm lighthouse            # Lighthouse audit
 ## Project Structure Conventions
 
 ### Path Aliases
+
 ```typescript
 @/*                        // src/*
 @fisioflow/shared-types    // packages/shared-types/src
@@ -198,6 +215,7 @@ pnpm lighthouse            # Lighthouse audit
 ```
 
 ### Import Preferences
+
 - Use `lodash-es` instead of `lodash` (tree-shakeable)
 - Prefer named imports over default imports
 - Use path aliases (@/) for internal imports
@@ -205,6 +223,7 @@ pnpm lighthouse            # Lighthouse audit
 ## Environment Variables
 
 ### Required for Development
+
 ```bash
 # Firebase
 VITE_FIREBASE_API_KEY
@@ -224,12 +243,14 @@ WHATSAPP_ACCESS_TOKEN      # WhatsApp Business
 ## Performance Optimizations
 
 ### Build Configuration
+
 - **Code Splitting**: Manual chunks for vendor libraries (react-core, firebase-vendor, ui-radix, charts, etc.)
 - **Compression**: Brotli compression enabled
 - **Source Maps**: Enabled for production debugging
 - **Tree Shaking**: Optimized with lodash-es and proper imports
 
 ### Runtime Optimizations
+
 - **Lazy Loading**: Route-based code splitting
 - **Image Optimization**: Responsive images with lazy loading
 - **Query Caching**: TanStack Query with persistence
@@ -238,6 +259,7 @@ WHATSAPP_ACCESS_TOKEN      # WhatsApp Business
 ## Security
 
 ### Headers (Firebase Hosting)
+
 - Strict-Transport-Security (HSTS)
 - X-Content-Type-Options: nosniff
 - X-Frame-Options: SAMEORIGIN
@@ -245,6 +267,7 @@ WHATSAPP_ACCESS_TOKEN      # WhatsApp Business
 - Referrer-Policy: strict-origin-when-cross-origin
 
 ### Authentication
+
 - Firebase Auth with JWT tokens
 - MFA support (TOTP)
 - Row Level Security (RLS) on Cloud SQL
@@ -253,12 +276,14 @@ WHATSAPP_ACCESS_TOKEN      # WhatsApp Business
 ## Monorepo Structure
 
 This is a pnpm workspace with multiple apps:
+
 - Root: Main web application
 - `apps/professional-ios`: Professional mobile app
 - `apps/patient-ios`: Patient mobile app (if exists)
 - `packages/*`: Shared packages
 
 Use workspace commands:
+
 ```bash
 pnpm --filter @fisioflow/professional-ios <command>
 ```

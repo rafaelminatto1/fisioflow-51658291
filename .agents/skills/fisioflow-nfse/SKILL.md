@@ -14,6 +14,7 @@ Brazilian electronic service invoice (Nota Fiscal de Serviços Eletrônica) inte
 NFS-e is the electronic service invoice mandated by Brazilian municipalities. Physiotherapy clinics classified as service providers under CNAE 8650-5/01 (or 8650-0/04 sub-activity) **must** emit NFS-e for every paid service session when the municipality requires it.
 
 Key facts for FisioFlow:
+
 - Emission is per-municipality — each city has its own web service (most follow ABRASF standard)
 - FisioFlow uses **Focus NFe** as the intermediary — they manage the digital certificate (A1) and handle SOAP communication with the municipality
 - The NFS-e lifecycle in FisioFlow: `rascunho` → `enviado` → `autorizado` | `erro` | `cancelado`
@@ -26,35 +27,34 @@ Key facts for FisioFlow:
 
 **Environment variables** (see `apps/api/src/types/env.ts:160-161`):
 
-| Variable | Description |
-|---|---|
-| `FOCUS_NFE_TOKEN` | API token from Focus NFe dashboard |
-| `FOCUS_NFE_ENVIRONMENT` | `"production"` or `"homologacao"` |
+| Variable                | Description                        |
+| ----------------------- | ---------------------------------- |
+| `FOCUS_NFE_TOKEN`       | API token from Focus NFe dashboard |
+| `FOCUS_NFE_ENVIRONMENT` | `"production"` or `"homologacao"`  |
 
 **Per-organization config** stored in `nfse_config` table (see migration `0035_nfse.sql`):
 
-| Field | Purpose |
-|---|---|
-| `cnpj` | Clinic CNPJ |
-| `inscricao_municipal` | Municipal registration |
-| `codigo_municipio` | IBGE city code (default `3550308` = São Paulo) |
-| `regime_tributario` | `1` = Simples Nacional, `3` = Normal |
-| `optante_simples` | Whether opted into Simples Nacional |
-| `aliquota_padrao` | Default ISS rate (e.g. `0.02` = 2%) |
-| `codigo_servico_padrao` | Default service code (e.g. `14.01`) |
-| `discriminacao_padrao` | Default service description text |
-| `ambiente` | `"homologacao"` or `"producao"` |
+| Field                   | Purpose                                        |
+| ----------------------- | ---------------------------------------------- |
+| `cnpj`                  | Clinic CNPJ                                    |
+| `inscricao_municipal`   | Municipal registration                         |
+| `codigo_municipio`      | IBGE city code (default `3550308` = São Paulo) |
+| `regime_tributario`     | `1` = Simples Nacional, `3` = Normal           |
+| `optante_simples`       | Whether opted into Simples Nacional            |
+| `aliquota_padrao`       | Default ISS rate (e.g. `0.02` = 2%)            |
+| `codigo_servico_padrao` | Default service code (e.g. `14.01`)            |
+| `discriminacao_padrao`  | Default service description text               |
+| `ambiente`              | `"homologacao"` or `"producao"`                |
 
 ### 2.2 Base URL and Authentication
 
 ```typescript
-const baseUrl = ambiente === 'producao'
-  ? 'https://api.focusnfe.com.br'
-  : 'https://homologacao.focusnfe.com.br';
+const baseUrl =
+  ambiente === "producao" ? "https://api.focusnfe.com.br" : "https://homologacao.focusnfe.com.br";
 
 const headers = {
-  'Content-Type': 'application/json',
-  'Authorization': `Basic ${btoa(`${token}:`)}`,
+  "Content-Type": "application/json",
+  Authorization: `Basic ${btoa(`${token}:`)}`,
 };
 ```
 
@@ -62,11 +62,11 @@ Authentication is HTTP Basic with the token as username and empty password.
 
 ### 2.3 Endpoints Used
 
-| Method | Path | Purpose |
-|---|---|---|
-| `POST` | `/v2/nfse?ref={ref}` | Emit NFS-e |
-| `GET` | `/v2/nfse/{ref}` | Consult status |
-| `DELETE` | `/v2/nfse/{ref}` | Cancel NFS-e |
+| Method   | Path                 | Purpose        |
+| -------- | -------------------- | -------------- |
+| `POST`   | `/v2/nfse?ref={ref}` | Emit NFS-e     |
+| `GET`    | `/v2/nfse/{ref}`     | Consult status |
+| `DELETE` | `/v2/nfse/{ref}`     | Cancel NFS-e   |
 
 ### 2.4 Emission Request Payload
 
@@ -80,21 +80,21 @@ const payload = {
   incentivador_cultural: cfg.incentivo_fiscal ? 1 : 2,
   status: 1,
   prestador: {
-    cnpj: cfg.cnpj.replace(/\D/g, ''),
+    cnpj: cfg.cnpj.replace(/\D/g, ""),
     inscricao_municipal: cfg.inscricao_municipal,
-    codigo_municipio: cfg.codigo_municipio ?? '3550308',
+    codigo_municipio: cfg.codigo_municipio ?? "3550308",
   },
   tomador: {
-    cpf: patientCpf.replace(/\D/g, ''),
+    cpf: patientCpf.replace(/\D/g, ""),
     razao_social: patientName,
     email: patientEmail,
   },
   itens: [
     {
-      discriminacao: 'Serviços de Fisioterapia',
+      discriminacao: "Serviços de Fisioterapia",
       valor_unitario: sessionValue,
       quantidade: 1,
-      item_lista_servico: cfg.codigo_servico_padrao ?? '14.01',
+      item_lista_servico: cfg.codigo_servico_padrao ?? "14.01",
       aliquota_iss: (cfg.aliquota_padrao ?? 0.02) * 100,
       iss_retido: false,
     },
@@ -103,7 +103,7 @@ const payload = {
 
 const ref = `fisioflow-${recordId}`;
 const response = await fetch(`${baseUrl}/v2/nfse?ref=${ref}`, {
-  method: 'POST',
+  method: "POST",
   headers,
   body: JSON.stringify(payload),
 });
@@ -115,7 +115,7 @@ Focus NFe may return the authorization immediately or require polling:
 
 ```typescript
 interface FocusNFSeResponse {
-  status: 'autorizado' | 'processando' | 'erro' | 'cancelado';
+  status: "autorizado" | "processando" | "erro" | "cancelado";
   numero?: string;
   codigo_verificacao?: string;
   caminho_danfe_nfse?: string;
@@ -149,14 +149,14 @@ async function pollNFSeStatus(
 
     if (!resp.ok) continue;
 
-    const data = await resp.json() as FocusNFSeResponse;
+    const data = (await resp.json()) as FocusNFSeResponse;
 
-    if (data.status === 'autorizado' || data.status === 'erro' || data.status === 'cancelado') {
+    if (data.status === "autorizado" || data.status === "erro" || data.status === "cancelado") {
       return data;
     }
   }
 
-  return { status: 'processando' };
+  return { status: "processando" };
 }
 ```
 
@@ -166,26 +166,27 @@ async function pollNFSeStatus(
 
 ### 3.1 CNAE Codes for Physiotherapy
 
-| CNAE | Description | When to use |
-|---|---|---|
-| `8650-5/01` | Atividades de atendimento hospitalar (includes physiotherapy) | General healthcare facility |
-| `8650-0/04` | Atividades de fisioterapia | Standalone physiotherapy clinic |
+| CNAE        | Description                                                   | When to use                     |
+| ----------- | ------------------------------------------------------------- | ------------------------------- |
+| `8650-5/01` | Atividades de atendimento hospitalar (includes physiotherapy) | General healthcare facility     |
+| `8650-0/04` | Atividades de fisioterapia                                    | Standalone physiotherapy clinic |
 
 The code `8650-0/04` is hardcoded in the RPS XML builder at `apps/api/src/routes/nfse.ts:182`.
 
 ### 3.2 Item da Lista de Serviços (LC 116/2003)
 
-| Code | Description | Typical ISS rate |
-|---|---|---|
-| `14.01` | Serviços de fisioterapia | 2–5% |
-| `14.02` | Serviços de medicina | — |
-| `14.04` | Serviços de enfermagem | — |
+| Code    | Description              | Typical ISS rate |
+| ------- | ------------------------ | ---------------- |
+| `14.01` | Serviços de fisioterapia | 2–5%             |
+| `14.02` | Serviços de medicina     | —                |
+| `14.04` | Serviços de enfermagem   | —                |
 
 FisioFlow defaults to `14.01` (see `nfse_config.codigo_servico_padrao`). This maps to **Art. 7º, Inciso XIV** of Lei Complementar 116/2003.
 
 ### 3.3 Municipality Codes
 
 The default IBGE code in FisioFlow is `3550308` (São Paulo/SP). ISS rates vary by municipality:
+
 - São Paulo: 2% (Simples Nacional) or 5% (Lucro Presumido)
 - Rio de Janeiro: 5%
 - Belo Horizonte: 3–5%
@@ -224,12 +225,8 @@ The `nfse_config.regime_tributario` field drives fiscal behavior:
 
 ```typescript
 const optanteSimples = cfg.optante_simples ? 1 : 2;
-const aliquota = cfg.optante_simples
-  ? cfg.aliquota_padrao
-  : actualMunicipalRate;
-const valorIss = cfg.optante_simples
-  ? 0
-  : Number((valorServico * aliquota).toFixed(2));
+const aliquota = cfg.optante_simples ? cfg.aliquota_padrao : actualMunicipalRate;
+const valorIss = cfg.optante_simples ? 0 : Number((valorServico * aliquota).toFixed(2));
 ```
 
 ---
@@ -276,7 +273,7 @@ POST /api/nfse/send/:id
 For automated emission after appointment completion, FisioFlow uses a Cloudflare Workflow (`apps/api/src/workflows/nfseWorkflow.ts`). This provides durable execution with automatic retries.
 
 ```typescript
-import { WorkflowEntrypoint, WorkflowStep, WorkflowEvent } from 'cloudflare:workers';
+import { WorkflowEntrypoint, WorkflowStep, WorkflowEvent } from "cloudflare:workers";
 
 export type NFSeParams = {
   appointmentId: string;
@@ -290,33 +287,51 @@ export type NFSeParams = {
 
 export class NFSeWorkflow extends WorkflowEntrypoint<Env, NFSeParams> {
   async run(event: WorkflowEvent<NFSeParams>, step: WorkflowStep) {
-    const { appointmentId, organizationId, patientName, patientCpf, serviceDescription, serviceValue } = event.payload;
+    const {
+      appointmentId,
+      organizationId,
+      patientName,
+      patientCpf,
+      serviceDescription,
+      serviceValue,
+    } = event.payload;
 
-    const rpsXml = await step.do('generate-rps-xml', async () => {
-      return buildRPSXml({ appointmentId, patientName, patientCpf, serviceDescription, serviceValue });
+    const rpsXml = await step.do("generate-rps-xml", async () => {
+      return buildRPSXml({
+        appointmentId,
+        patientName,
+        patientCpf,
+        serviceDescription,
+        serviceValue,
+      });
     });
 
-    const result = await step.do('send-to-focus-nfe', async () => {
+    const result = await step.do("send-to-focus-nfe", async () => {
       return sendViaFocusNfe(this.env, rpsXml, organizationId);
     });
 
-    await step.do('update-status', async () => {
+    await step.do("update-status", async () => {
       const pool = createPool(this.env);
       await pool.query(
         `UPDATE nfse_records SET status = $1, numero_nfse = $2, updated_at = NOW()
          WHERE appointment_id = $3 AND organization_id = $4`,
-        [result.status === 'autorizado' ? 'autorizado' : 'enviado', result.numero_nfse, appointmentId, organizationId],
+        [
+          result.status === "autorizado" ? "autorizado" : "enviado",
+          result.numero_nfse,
+          appointmentId,
+          organizationId,
+        ],
       );
     });
 
-    if (result.status !== 'autorizado') {
+    if (result.status !== "autorizado") {
       try {
-        const confirmation = await step.waitForEvent('nfse-confirmed', {
-          type: 'nfse-confirmation',
-          timeout: '30 minutes',
+        const confirmation = await step.waitForEvent("nfse-confirmed", {
+          type: "nfse-confirmation",
+          timeout: "30 minutes",
         });
 
-        await step.do('save-confirmed', async () => {
+        await step.do("save-confirmed", async () => {
           const pool = createPool(this.env);
           await pool.query(
             `UPDATE nfse_records SET status = 'autorizado', numero_nfse = $1, updated_at = NOW()
@@ -325,7 +340,7 @@ export class NFSeWorkflow extends WorkflowEntrypoint<Env, NFSeParams> {
           );
         });
       } catch {
-        await step.do('mark-pending', async () => {
+        await step.do("mark-pending", async () => {
           const pool = createPool(this.env);
           await pool.query(
             `UPDATE nfse_records SET status = 'pendente_revisao', updated_at = NOW()
@@ -347,11 +362,12 @@ Before emitting, validate:
 function validateForEmission(record: NFSeRecord, config: NFSeConfig): string[] {
   const errors: string[] = [];
 
-  if (!record.tomador_nome) errors.push('Tomador name is required');
-  if (!record.valor_servico || record.valor_servico <= 0) errors.push('Service value must be positive');
-  if (!config.cnpj) errors.push('Clinic CNPJ not configured');
-  if (!config.inscricao_municipal) errors.push('Municipal registration not configured');
-  if (!config.codigo_municipio) errors.push('Municipality code not configured');
+  if (!record.tomador_nome) errors.push("Tomador name is required");
+  if (!record.valor_servico || record.valor_servico <= 0)
+    errors.push("Service value must be positive");
+  if (!config.cnpj) errors.push("Clinic CNPJ not configured");
+  if (!config.inscricao_municipal) errors.push("Municipal registration not configured");
+  if (!config.codigo_municipio) errors.push("Municipality code not configured");
 
   return errors;
 }
@@ -363,16 +379,16 @@ After authorization, download the DANFSE PDF and store in R2:
 
 ```typescript
 async function downloadAndStorePdf(env: Env, record: NFSeRecord): Promise<string> {
-  if (!record.link_nfse) throw new Error('No NFS-e link available');
+  if (!record.link_nfse) throw new Error("No NFS-e link available");
 
   const pdfResp = await fetch(record.link_nfse);
   const pdfBuffer = await pdfResp.arrayBuffer();
 
   const key = `nfse/${record.organization_id}/${record.id}.pdf`;
   await env.R2_BUCKET.put(key, pdfBuffer, {
-    httpMetadata: { contentType: 'application/pdf' },
+    httpMetadata: { contentType: "application/pdf" },
     customMetadata: {
-      nfse_numero: record.numero_nfse ?? '',
+      nfse_numero: record.numero_nfse ?? "",
       organization_id: record.organization_id,
     },
   });
@@ -387,15 +403,15 @@ async function downloadAndStorePdf(env: Env, record: NFSeRecord): Promise<string
 
 ### 6.1 Common Rejection Reasons
 
-| Error | Cause | Resolution |
-|---|---|---|
-| `E150` — RPS já enviado | Duplicate RPS number | Generate new sequential number |
-| `E160` — Prestador não autorizado | CNPJ not registered with municipality | Register clinic with city hall |
-| `E179` — Tomador inválido | Invalid CPF/CNPJ | Validate patient document with check digit |
-| `E186` — Código de serviço inválido | Wrong `item_lista_servico` for municipality | Check municipal service code table |
-| `E200` — Alíquota divergente | ISS rate doesn't match municipality table | Update `aliquota_padrao` in config |
-| `E462` — Certificado expirado | Digital certificate expired | Renew via Focus NFe dashboard |
-| Timeout | Municipality web service down | Workflow retries automatically |
+| Error                               | Cause                                       | Resolution                                 |
+| ----------------------------------- | ------------------------------------------- | ------------------------------------------ |
+| `E150` — RPS já enviado             | Duplicate RPS number                        | Generate new sequential number             |
+| `E160` — Prestador não autorizado   | CNPJ not registered with municipality       | Register clinic with city hall             |
+| `E179` — Tomador inválido           | Invalid CPF/CNPJ                            | Validate patient document with check digit |
+| `E186` — Código de serviço inválido | Wrong `item_lista_servico` for municipality | Check municipal service code table         |
+| `E200` — Alíquota divergente        | ISS rate doesn't match municipality table   | Update `aliquota_padrao` in config         |
+| `E462` — Certificado expirado       | Digital certificate expired                 | Renew via Focus NFe dashboard              |
+| Timeout                             | Municipality web service down               | Workflow retries automatically             |
 
 ### 6.2 Error Handling Pattern
 
@@ -404,7 +420,7 @@ async function handleNFSeEmission(env: Env, recordId: string) {
   try {
     const result = await sendViaFocusNfe(env, record);
 
-    if (result.status === 'autorizado') {
+    if (result.status === "autorizado") {
       await pool.query(
         `UPDATE nfse_records SET status = 'autorizado', numero_nfse = $1,
                 codigo_verificacao = $2, link_nfse = $3, focus_nfe_ref = $4, updated_at = NOW()
@@ -414,7 +430,7 @@ async function handleNFSeEmission(env: Env, recordId: string) {
       return { success: true };
     }
 
-    if (result.status === 'erro') {
+    if (result.status === "erro") {
       await pool.query(
         `UPDATE nfse_records SET status = 'erro', erro_message = $1, focus_nfe_ref = $2, updated_at = NOW()
          WHERE id = $3`,
@@ -427,9 +443,9 @@ async function handleNFSeEmission(env: Env, recordId: string) {
       `UPDATE nfse_records SET status = 'enviado', focus_nfe_ref = $1, updated_at = NOW() WHERE id = $2`,
       [result.ref, recordId],
     );
-    return { success: true, status: 'processing' };
+    return { success: true, status: "processing" };
   } catch (err) {
-    console.error('[NFSe] Unhandled error:', err);
+    console.error("[NFSe] Unhandled error:", err);
     await pool.query(
       `UPDATE nfse_records SET status = 'erro', erro_message = $1, updated_at = NOW() WHERE id = $2`,
       [String(err), recordId],
@@ -575,15 +591,15 @@ const result = await pool.query(
 
 ## 8. Key Files
 
-| File | Purpose |
-|---|---|
-| `apps/api/src/routes/nfse.ts` | REST API routes — CRUD, emission, status check, cancel |
-| `apps/api/src/workflows/nfseWorkflow.ts` | Durable Cloudflare Workflow for automated emission |
-| `apps/api/src/lib/fiscal/NFSeService.ts` | Focus NFe API client class |
-| `apps/professional-app/lib/api/nfse.ts` | Frontend API client types and fetch functions |
-| `apps/professional-app/app/nfse-form.tsx` | Mobile NFS-e emission form (React Native) |
-| `apps/api/migrations/0035_nfse.sql` | Initial schema: `nfse_records` + `nfse_config` |
-| `apps/api/migrations/0038_nfse_focus_ref.sql` | Adds `focus_nfe_ref` column |
+| File                                          | Purpose                                                |
+| --------------------------------------------- | ------------------------------------------------------ |
+| `apps/api/src/routes/nfse.ts`                 | REST API routes — CRUD, emission, status check, cancel |
+| `apps/api/src/workflows/nfseWorkflow.ts`      | Durable Cloudflare Workflow for automated emission     |
+| `apps/api/src/lib/fiscal/NFSeService.ts`      | Focus NFe API client class                             |
+| `apps/professional-app/lib/api/nfse.ts`       | Frontend API client types and fetch functions          |
+| `apps/professional-app/app/nfse-form.tsx`     | Mobile NFS-e emission form (React Native)              |
+| `apps/api/migrations/0035_nfse.sql`           | Initial schema: `nfse_records` + `nfse_config`         |
+| `apps/api/migrations/0038_nfse_focus_ref.sql` | Adds `focus_nfe_ref` column                            |
 
 ---
 
@@ -594,13 +610,18 @@ const result = await pool.query(
 When `FOCUS_NFE_TOKEN` is not set and `ambiente === 'homologacao'`, the system simulates authorization:
 
 ```typescript
-if (!token && ambiente === 'homologacao') {
+if (!token && ambiente === "homologacao") {
   const numeroNfse = String(Date.now()).slice(-8);
-  const codigoVerificacao = crypto.randomUUID().replace(/-/g, '').slice(0, 8).toUpperCase();
+  const codigoVerificacao = crypto.randomUUID().replace(/-/g, "").slice(0, 8).toUpperCase();
   await pool.query(
     `UPDATE nfse_records SET status = 'autorizado', numero_nfse = $1,
             codigo_verificacao = $2, link_nfse = $3, updated_at = NOW() WHERE id = $4`,
-    [numeroNfse, codigoVerificacao, `https://nfe.prefeitura.sp.gov.br/...?nf=${numeroNfse}&c=${codigoVerificacao}`, id],
+    [
+      numeroNfse,
+      codigoVerificacao,
+      `https://nfe.prefeitura.sp.gov.br/...?nf=${numeroNfse}&c=${codigoVerificacao}`,
+      id,
+    ],
   );
 }
 ```

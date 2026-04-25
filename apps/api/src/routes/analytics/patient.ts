@@ -1,11 +1,11 @@
-import { requireAuth } from '../../lib/auth';
-import { createPool } from '../../lib/db';
-import { roundTo } from '../mlHelpers';
-import { asNumber, asString, hasTable, parseDate, type AnalyticsRouteApp } from './shared';
+import { requireAuth } from "../../lib/auth";
+import { createPool } from "../../lib/db";
+import { roundTo } from "../mlHelpers";
+import { asNumber, asString, hasTable, parseDate, type AnalyticsRouteApp } from "./shared";
 
 const mapTechniques = (value: unknown) => {
   if (Array.isArray(value)) return value.map((item) => String(item));
-  if (typeof value === 'string') {
+  if (typeof value === "string") {
     try {
       const parsed = JSON.parse(value);
       return Array.isArray(parsed) ? parsed.map((item) => String(item)) : [value];
@@ -45,27 +45,29 @@ const rowToSessionMetric = (row: Record<string, unknown>): Record<string, unknow
 });
 
 export const registerPatientAnalyticsRoutes = (app: AnalyticsRouteApp) => {
-  app.get('/intelligent-reports/:patientId', requireAuth, async (c) => {
+  app.get("/intelligent-reports/:patientId", requireAuth, async (c) => {
     const { patientId } = c.req.param();
-    const user = c.get('user');
+    const user = c.get("user");
     const pool = await createPool(c.env);
 
-    const reports = await pool.query(
-      `
+    const reports = await pool
+      .query(
+        `
         SELECT id, patient_id, report_type, report_content, date_range_start, date_range_end, created_at
         FROM generated_reports
         WHERE organization_id = $1 AND patient_id = $2
         ORDER BY created_at DESC
         LIMIT 10
       `,
-      [user.organizationId, patientId],
-    ).catch(() => ({ rows: [] as Array<Record<string, unknown>> }));
+        [user.organizationId, patientId],
+      )
+      .catch(() => ({ rows: [] as Array<Record<string, unknown>> }));
 
     return c.json({ data: reports.rows });
   });
 
-  app.post('/intelligent-reports', requireAuth, async (c) => {
-    const user = c.get('user');
+  app.post("/intelligent-reports", requireAuth, async (c) => {
+    const user = c.get("user");
     const pool = await createPool(c.env);
     const body = (await c.req.json()) as {
       patientId?: string;
@@ -74,14 +76,14 @@ export const registerPatientAnalyticsRoutes = (app: AnalyticsRouteApp) => {
     };
 
     if (!body.patientId) {
-      return c.json({ error: 'patientId e obrigatorio' }, 400);
+      return c.json({ error: "patientId e obrigatorio" }, 400);
     }
 
     const startDate =
       parseDate(body.dateRange?.start) ??
-      new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-    const endDate = parseDate(body.dateRange?.end) ?? new Date().toISOString().split('T')[0];
-    const reportType = body.reportType ?? 'evolution';
+      new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
+    const endDate = parseDate(body.dateRange?.end) ?? new Date().toISOString().split("T")[0];
+    const reportType = body.reportType ?? "evolution";
 
     const [patientRes, metricsRes, outcomesRes, goalsRes] = await Promise.all([
       pool.query(
@@ -128,7 +130,7 @@ export const registerPatientAnalyticsRoutes = (app: AnalyticsRouteApp) => {
 
     const patient = patientRes.rows[0];
     if (!patient) {
-      return c.json({ error: 'Paciente nao encontrado' }, 404);
+      return c.json({ error: "Paciente nao encontrado" }, 404);
     }
 
     const metrics = metricsRes.rows;
@@ -140,37 +142,34 @@ export const registerPatientAnalyticsRoutes = (app: AnalyticsRouteApp) => {
     const averagePainReduction =
       metrics.length > 0
         ? roundTo(
-            metrics.reduce((sum, row) => sum + Number(row.pain_reduction ?? 0), 0) /
-              metrics.length,
+            metrics.reduce((sum, row) => sum + Number(row.pain_reduction ?? 0), 0) / metrics.length,
             1,
           )
         : 0;
     const averageFunctionalImprovement =
       metrics.length > 0
         ? roundTo(
-            metrics.reduce(
-              (sum, row) => sum + Number(row.functional_improvement ?? 0),
-              0,
-            ) / metrics.length,
+            metrics.reduce((sum, row) => sum + Number(row.functional_improvement ?? 0), 0) /
+              metrics.length,
             1,
           )
         : 0;
 
     const reportLines = [
-      `# Relatorio Inteligente - ${patient.full_name ?? 'Paciente'}`,
-      '',
+      `# Relatorio Inteligente - ${patient.full_name ?? "Paciente"}`,
+      "",
       `**Tipo:** ${reportType}`,
       `**Periodo:** ${startDate} ate ${endDate}`,
-      `**Condicao principal:** ${patient.main_condition ?? 'Nao informada'}`,
-      '',
-      '## Resumo clinico',
+      `**Condicao principal:** ${patient.main_condition ?? "Nao informada"}`,
+      "",
+      "## Resumo clinico",
       `- Total de sessoes analisadas: ${metrics.length}`,
-      `- Dor inicial registrada: ${firstMetric?.pain_level_before ?? 'n/d'}`,
-      `- Dor final registrada: ${lastMetric?.pain_level_after ?? 'n/d'}`,
+      `- Dor inicial registrada: ${firstMetric?.pain_level_before ?? "n/d"}`,
+      `- Dor final registrada: ${lastMetric?.pain_level_after ?? "n/d"}`,
       `- Reducao media da dor: ${averagePainReduction}%`,
       `- Melhora funcional media: ${averageFunctionalImprovement}%`,
-      '',
-      '## Desfechos recentes',
+      "",
+      "## Desfechos recentes",
       ...(outcomes.length > 0
         ? outcomes
             .slice(0, 5)
@@ -178,9 +177,9 @@ export const registerPatientAnalyticsRoutes = (app: AnalyticsRouteApp) => {
               (row) =>
                 `- ${row.measure_name}: ${row.normalized_score ?? row.score} (${String(row.measurement_date).slice(0, 10)})`,
             )
-        : ['- Nenhuma medida de desfecho encontrada no periodo.']),
-      '',
-      '## Objetivos do tratamento',
+        : ["- Nenhuma medida de desfecho encontrada no periodo."]),
+      "",
+      "## Objetivos do tratamento",
       ...(goals.length > 0
         ? goals
             .slice(0, 5)
@@ -188,28 +187,30 @@ export const registerPatientAnalyticsRoutes = (app: AnalyticsRouteApp) => {
               (row) =>
                 `- ${row.goal_title}: status ${row.status}, progresso ${Number(row.progress_percentage ?? 0)}%`,
             )
-        : ['- Nenhum objetivo registrado.']),
-      '',
-      '## Recomendacoes',
+        : ["- Nenhum objetivo registrado."]),
+      "",
+      "## Recomendacoes",
       ...(averagePainReduction < 15
-        ? ['- Reavaliar adesao ao tratamento e frequencia das sessoes.']
-        : ['- Manter o plano atual, com foco em progressao funcional gradual.']),
+        ? ["- Reavaliar adesao ao tratamento e frequencia das sessoes."]
+        : ["- Manter o plano atual, com foco em progressao funcional gradual."]),
       ...(averageFunctionalImprovement < 10
-        ? ['- Considerar ajuste de exercicios domiciliares e metas semanais.']
-        : ['- Continuar monitorando os ganhos funcionais obtidos.']),
+        ? ["- Considerar ajuste de exercicios domiciliares e metas semanais."]
+        : ["- Continuar monitorando os ganhos funcionais obtidos."]),
     ];
 
-    const report = reportLines.join('\n');
+    const report = reportLines.join("\n");
 
-    if (await hasTable(pool, 'generated_reports')) {
-      await pool.query(
-        `
+    if (await hasTable(pool, "generated_reports")) {
+      await pool
+        .query(
+          `
           INSERT INTO generated_reports (
             organization_id, patient_id, report_type, report_content, date_range_start, date_range_end, created_by, created_at
           ) VALUES ($1,$2,$3,$4,$5,$6,$7,NOW())
         `,
-        [user.organizationId, body.patientId, reportType, report, startDate, endDate, user.uid],
-      ).catch(() => null);
+          [user.organizationId, body.patientId, reportType, report, startDate, endDate, user.uid],
+        )
+        .catch(() => null);
     }
 
     return c.json({
@@ -223,9 +224,9 @@ export const registerPatientAnalyticsRoutes = (app: AnalyticsRouteApp) => {
     });
   });
 
-  app.get('/patient-evolution/:patientId', requireAuth, async (c) => {
+  app.get("/patient-evolution/:patientId", requireAuth, async (c) => {
     const { patientId } = c.req.param();
-    const user = c.get('user');
+    const user = c.get("user");
     const pool = await createPool(c.env);
 
     const sessionsRes = await pool.query(
@@ -240,16 +241,16 @@ export const registerPatientAnalyticsRoutes = (app: AnalyticsRouteApp) => {
 
     const map = sessionsRes.rows.map((row) => ({
       id: row.started_at?.toISOString() ?? `${row.started_at}`,
-      date: row.started_at?.toISOString().split('T')[0] ?? '',
+      date: row.started_at?.toISOString().split("T")[0] ?? "",
       averageEva: Number(row.pain_level ?? 0),
     }));
 
     return c.json({ data: map });
   });
 
-  app.get('/patient-progress/:patientId', requireAuth, async (c) => {
+  app.get("/patient-progress/:patientId", requireAuth, async (c) => {
     const { patientId } = c.req.param();
-    const user = c.get('user');
+    const user = c.get("user");
     const pool = await createPool(c.env);
 
     const metricsRes = await pool.query(
@@ -328,9 +329,9 @@ export const registerPatientAnalyticsRoutes = (app: AnalyticsRouteApp) => {
     });
   });
 
-  app.get('/patient-lifecycle-events/:patientId', requireAuth, async (c) => {
+  app.get("/patient-lifecycle-events/:patientId", requireAuth, async (c) => {
     const { patientId } = c.req.param();
-    const user = c.get('user');
+    const user = c.get("user");
     const pool = await createPool(c.env);
 
     const eventsRes = await pool.query(
@@ -346,8 +347,8 @@ export const registerPatientAnalyticsRoutes = (app: AnalyticsRouteApp) => {
     return c.json({ data: eventsRes.rows });
   });
 
-  app.post('/patient-lifecycle-events', requireAuth, async (c) => {
-    const user = c.get('user');
+  app.post("/patient-lifecycle-events", requireAuth, async (c) => {
+    const user = c.get("user");
     const pool = await createPool(c.env);
     const body = (await c.req.json()) as {
       patient_id?: string;
@@ -357,16 +358,16 @@ export const registerPatientAnalyticsRoutes = (app: AnalyticsRouteApp) => {
     };
 
     if (!body.patient_id) {
-      return c.json({ error: 'patient_id é obrigatório' }, 400);
+      return c.json({ error: "patient_id é obrigatório" }, 400);
     }
 
     if (!body.event_type) {
-      return c.json({ error: 'event_type é obrigatório' }, 400);
+      return c.json({ error: "event_type é obrigatório" }, 400);
     }
 
     const eventDate = body.event_date
-      ? new Date(body.event_date).toISOString().split('T')[0]
-      : new Date().toISOString().split('T')[0];
+      ? new Date(body.event_date).toISOString().split("T")[0]
+      : new Date().toISOString().split("T")[0];
 
     const insertRes = await pool.query(
       `
@@ -382,32 +383,39 @@ export const registerPatientAnalyticsRoutes = (app: AnalyticsRouteApp) => {
         ) VALUES ($1, $2, $3, $4, $5, $6, NOW(), NOW())
         RETURNING id, event_type, event_date, notes, created_by, created_at
       `,
-      [body.patient_id, user.organizationId, body.event_type, eventDate, body.notes ?? null, user.uid],
+      [
+        body.patient_id,
+        user.organizationId,
+        body.event_type,
+        eventDate,
+        body.notes ?? null,
+        user.uid,
+      ],
     );
 
     return c.json({ data: insertRes.rows[0] });
   });
 
-  app.get('/patient-outcome-measures/:patientId', requireAuth, async (c) => {
+  app.get("/patient-outcome-measures/:patientId", requireAuth, async (c) => {
     const { patientId } = c.req.param();
-    const user = c.get('user');
+    const user = c.get("user");
     const pool = await createPool(c.env);
-    const measureType = c.req.query('measureType');
-    const limitValue = Number(c.req.query('limit') ?? 0);
+    const measureType = c.req.query("measureType");
+    const limitValue = Number(c.req.query("limit") ?? 0);
 
-    if (!(await hasTable(pool, 'patient_outcome_measures'))) {
+    if (!(await hasTable(pool, "patient_outcome_measures"))) {
       return c.json({ data: [] });
     }
 
     const params: Array<string | number> = [user.organizationId, patientId];
-    const conditions = ['organization_id = $1', 'patient_id = $2'];
+    const conditions = ["organization_id = $1", "patient_id = $2"];
 
     if (measureType) {
       params.push(measureType);
       conditions.push(`measure_type = $${params.length}`);
     }
 
-    let limitClause = '';
+    let limitClause = "";
     if (limitValue > 0) {
       params.push(Math.min(limitValue, 200));
       limitClause = `LIMIT $${params.length}`;
@@ -417,7 +425,7 @@ export const registerPatientAnalyticsRoutes = (app: AnalyticsRouteApp) => {
       `
         SELECT *
         FROM patient_outcome_measures
-        WHERE ${conditions.join(' AND ')}
+        WHERE ${conditions.join(" AND ")}
         ORDER BY measurement_date DESC, created_at DESC
         ${limitClause}
       `,
@@ -427,26 +435,26 @@ export const registerPatientAnalyticsRoutes = (app: AnalyticsRouteApp) => {
     return c.json({ data: rows.rows });
   });
 
-  app.post('/patient-outcome-measures', requireAuth, async (c) => {
-    const user = c.get('user');
+  app.post("/patient-outcome-measures", requireAuth, async (c) => {
+    const user = c.get("user");
     const pool = await createPool(c.env);
     const body = (await c.req.json()) as Record<string, unknown>;
 
-    if (!(await hasTable(pool, 'patient_outcome_measures'))) {
-      return c.json({ error: 'Schema de medidas de resultado indisponível' }, 501);
+    if (!(await hasTable(pool, "patient_outcome_measures"))) {
+      return c.json({ error: "Schema de medidas de resultado indisponível" }, 501);
     }
 
     const patientId = asString(body.patient_id);
     const measureType = asString(body.measure_type);
     const measureName = asString(body.measure_name);
 
-    if (!patientId) return c.json({ error: 'patient_id é obrigatório' }, 400);
-    if (!measureType) return c.json({ error: 'measure_type é obrigatório' }, 400);
-    if (!measureName) return c.json({ error: 'measure_name é obrigatório' }, 400);
-    if (asNumber(body.score) == null) return c.json({ error: 'score é obrigatório' }, 400);
+    if (!patientId) return c.json({ error: "patient_id é obrigatório" }, 400);
+    if (!measureType) return c.json({ error: "measure_type é obrigatório" }, 400);
+    if (!measureName) return c.json({ error: "measure_name é obrigatório" }, 400);
+    if (asNumber(body.score) == null) return c.json({ error: "score é obrigatório" }, 400);
 
     const measurementDate =
-      parseDate(asString(body.measurement_date)) ?? new Date().toISOString().split('T')[0];
+      parseDate(asString(body.measurement_date)) ?? new Date().toISOString().split("T")[0];
 
     const insertRes = await pool.query(
       `
@@ -478,14 +486,14 @@ export const registerPatientAnalyticsRoutes = (app: AnalyticsRouteApp) => {
     return c.json({ data: insertRes.rows[0] }, 201);
   });
 
-  app.get('/patient-session-metrics/:patientId', requireAuth, async (c) => {
+  app.get("/patient-session-metrics/:patientId", requireAuth, async (c) => {
     const { patientId } = c.req.param();
-    const user = c.get('user');
+    const user = c.get("user");
     const pool = await createPool(c.env);
-    const limitValue = Number(c.req.query('limit') ?? 0);
+    const limitValue = Number(c.req.query("limit") ?? 0);
 
     const params: Array<string | number> = [patientId, user.organizationId];
-    let limitClause = '';
+    let limitClause = "";
     if (limitValue > 0) {
       params.push(Math.min(limitValue, 200));
       limitClause = `LIMIT $${params.length}`;
@@ -505,8 +513,8 @@ export const registerPatientAnalyticsRoutes = (app: AnalyticsRouteApp) => {
     return c.json({ data: rows.rows.map(rowToSessionMetric) });
   });
 
-  app.post('/patient-session-metrics', requireAuth, async (c) => {
-    const user = c.get('user');
+  app.post("/patient-session-metrics", requireAuth, async (c) => {
+    const user = c.get("user");
     const pool = await createPool(c.env);
     const body = (await c.req.json()) as Record<string, unknown>;
     const sessionDate = body.session_date
@@ -555,15 +563,15 @@ export const registerPatientAnalyticsRoutes = (app: AnalyticsRouteApp) => {
     return c.json({ data: rowToSessionMetric(insertRes.rows[0]) });
   });
 
-  app.get('/patient-predictions/:patientId', requireAuth, async (c) => {
+  app.get("/patient-predictions/:patientId", requireAuth, async (c) => {
     const { patientId } = c.req.param();
-    const user = c.get('user');
+    const user = c.get("user");
     const pool = await createPool(c.env);
-    const predictionType = c.req.query('predictionType');
-    const limit = Number(c.req.query('limit') ?? 0) || 50;
+    const predictionType = c.req.query("predictionType");
+    const limit = Number(c.req.query("limit") ?? 0) || 50;
 
     const params: Array<string | number> = [user.organizationId, patientId];
-    let where = 'WHERE organization_id = $1 AND patient_id = $2';
+    let where = "WHERE organization_id = $1 AND patient_id = $2";
     if (predictionType) {
       params.push(predictionType);
       where += ` AND prediction_type = $${params.length}`;
@@ -590,23 +598,23 @@ export const registerPatientAnalyticsRoutes = (app: AnalyticsRouteApp) => {
     return c.json({ data: rows.rows });
   });
 
-  app.get('/patient-risk/:patientId', requireAuth, async (c) => {
+  app.get("/patient-risk/:patientId", requireAuth, async (c) => {
     const { patientId } = c.req.param();
     const pool = await createPool(c.env);
-    const riskRes = await pool.query('SELECT * FROM calculate_patient_risk($1)', [patientId]);
+    const riskRes = await pool.query("SELECT * FROM calculate_patient_risk($1)", [patientId]);
     return c.json({ data: riskRes.rows[0] ?? null });
   });
 
-  app.get('/patient-insights/:patientId', requireAuth, async (c) => {
+  app.get("/patient-insights/:patientId", requireAuth, async (c) => {
     const { patientId } = c.req.param();
-    const user = c.get('user');
+    const user = c.get("user");
     const pool = await createPool(c.env);
-    const includeAcknowledged = c.req.query('includeAcknowledged') === 'true';
+    const includeAcknowledged = c.req.query("includeAcknowledged") === "true";
 
     const params = [user.organizationId, patientId];
-    let where = 'WHERE organization_id = $1 AND patient_id = $2';
+    let where = "WHERE organization_id = $1 AND patient_id = $2";
     if (!includeAcknowledged) {
-      where += ' AND is_acknowledged = false';
+      where += " AND is_acknowledged = false";
     }
 
     const rows = await pool.query(
@@ -625,9 +633,9 @@ export const registerPatientAnalyticsRoutes = (app: AnalyticsRouteApp) => {
     return c.json({ data: rows.rows });
   });
 
-  app.patch('/patient-insights/:insightId/acknowledge', requireAuth, async (c) => {
+  app.patch("/patient-insights/:insightId/acknowledge", requireAuth, async (c) => {
     const { insightId } = c.req.param();
-    const user = c.get('user');
+    const user = c.get("user");
     const pool = await createPool(c.env);
 
     const res = await pool.query(
@@ -647,15 +655,15 @@ export const registerPatientAnalyticsRoutes = (app: AnalyticsRouteApp) => {
     );
 
     if (res.rows.length === 0) {
-      return c.json({ error: 'Insight não encontrado' }, 404);
+      return c.json({ error: "Insight não encontrado" }, 404);
     }
 
     return c.json({ data: res.rows[0] });
   });
 
-  app.get('/patient-goals/:patientId', requireAuth, async (c) => {
+  app.get("/patient-goals/:patientId", requireAuth, async (c) => {
     const { patientId } = c.req.param();
-    const user = c.get('user');
+    const user = c.get("user");
     const pool = await createPool(c.env);
 
     const rows = await pool.query(
@@ -671,8 +679,8 @@ export const registerPatientAnalyticsRoutes = (app: AnalyticsRouteApp) => {
     return c.json({ data: rows.rows });
   });
 
-  app.post('/patient-goals', requireAuth, async (c) => {
-    const user = c.get('user');
+  app.post("/patient-goals", requireAuth, async (c) => {
+    const user = c.get("user");
     const pool = await createPool(c.env);
     const body = (await c.req.json()) as Record<string, unknown>;
 
@@ -681,10 +689,10 @@ export const registerPatientAnalyticsRoutes = (app: AnalyticsRouteApp) => {
     const goalCategory = asString(body.goal_category);
     const status = asString(body.status);
 
-    if (!patientId) return c.json({ error: 'patient_id é obrigatório' }, 400);
-    if (!goalTitle) return c.json({ error: 'goal_title é obrigatório' }, 400);
-    if (!goalCategory) return c.json({ error: 'goal_category é obrigatório' }, 400);
-    if (!status) return c.json({ error: 'status é obrigatório' }, 400);
+    if (!patientId) return c.json({ error: "patient_id é obrigatório" }, 400);
+    if (!goalTitle) return c.json({ error: "goal_title é obrigatório" }, 400);
+    if (!goalCategory) return c.json({ error: "goal_category é obrigatório" }, 400);
+    if (!status) return c.json({ error: "status é obrigatório" }, 400);
 
     const insertRes = await pool.query(
       `
@@ -721,54 +729,57 @@ export const registerPatientAnalyticsRoutes = (app: AnalyticsRouteApp) => {
     return c.json({ data: insertRes.rows[0] });
   });
 
-  app.put('/patient-goals/:goalId', requireAuth, async (c) => {
+  app.put("/patient-goals/:goalId", requireAuth, async (c) => {
     const { goalId } = c.req.param();
-    const user = c.get('user');
+    const user = c.get("user");
     const pool = await createPool(c.env);
     const body = (await c.req.json()) as Record<string, unknown>;
 
     const allowedFields = [
-      'goal_title',
-      'goal_description',
-      'goal_category',
-      'target_value',
-      'current_value',
-      'initial_value',
-      'unit',
-      'target_date',
-      'status',
-      'progress_percentage',
-      'achieved_at',
-      'achievement_milestone',
-      'related_pathology',
-      'associated_plan_id',
+      "goal_title",
+      "goal_description",
+      "goal_category",
+      "target_value",
+      "current_value",
+      "initial_value",
+      "unit",
+      "target_date",
+      "status",
+      "progress_percentage",
+      "achieved_at",
+      "achievement_milestone",
+      "related_pathology",
+      "associated_plan_id",
     ] as const;
 
     const fieldValues: Record<string, string | number | null | undefined> = {
       goal_title: body.goal_title === undefined ? undefined : asString(body.goal_title),
       goal_description:
-        body.goal_description === undefined ? undefined : asString(body.goal_description) ?? null,
+        body.goal_description === undefined ? undefined : (asString(body.goal_description) ?? null),
       goal_category: body.goal_category === undefined ? undefined : asString(body.goal_category),
       target_value: body.target_value === undefined ? undefined : asNumber(body.target_value),
       current_value: body.current_value === undefined ? undefined : asNumber(body.current_value),
       initial_value: body.initial_value === undefined ? undefined : asNumber(body.initial_value),
-      unit: body.unit === undefined ? undefined : asString(body.unit) ?? null,
-      target_date: body.target_date === undefined ? undefined : asString(body.target_date) ?? null,
+      unit: body.unit === undefined ? undefined : (asString(body.unit) ?? null),
+      target_date:
+        body.target_date === undefined ? undefined : (asString(body.target_date) ?? null),
       status: body.status === undefined ? undefined : asString(body.status),
       progress_percentage:
         body.progress_percentage === undefined ? undefined : asNumber(body.progress_percentage),
       achieved_at:
-        body.achieved_at === undefined ? undefined : asString(body.achieved_at) ?? null,
+        body.achieved_at === undefined ? undefined : (asString(body.achieved_at) ?? null),
       achievement_milestone:
         body.achievement_milestone === undefined
           ? undefined
-          : asString(body.achievement_milestone) ?? null,
+          : (asString(body.achievement_milestone) ?? null),
       related_pathology:
-        body.related_pathology === undefined ? undefined : asString(body.related_pathology) ?? null,
+        body.related_pathology === undefined
+          ? undefined
+          : (asString(body.related_pathology) ?? null),
       associated_plan_id:
         body.associated_plan_id === undefined
           ? undefined
-          : asString(body.associated_plan_id) ?? null,
+          : (asString(body.associated_plan_id) ?? null),
     };
 
     const sets: string[] = [];
@@ -782,7 +793,7 @@ export const registerPatientAnalyticsRoutes = (app: AnalyticsRouteApp) => {
     });
 
     if (sets.length === 0) {
-      return c.json({ error: 'Nenhum campo para atualizar' }, 400);
+      return c.json({ error: "Nenhum campo para atualizar" }, 400);
     }
 
     params.push(goalId, user.organizationId);
@@ -790,7 +801,7 @@ export const registerPatientAnalyticsRoutes = (app: AnalyticsRouteApp) => {
     const res = await pool.query(
       `
         UPDATE patient_goal_tracking
-        SET ${sets.join(', ')}, updated_at = NOW()
+        SET ${sets.join(", ")}, updated_at = NOW()
         WHERE id = $${params.length - 1} AND organization_id = $${params.length}
         RETURNING *
       `,
@@ -798,15 +809,15 @@ export const registerPatientAnalyticsRoutes = (app: AnalyticsRouteApp) => {
     );
 
     if (res.rows.length === 0) {
-      return c.json({ error: 'Objetivo não encontrado' }, 404);
+      return c.json({ error: "Objetivo não encontrado" }, 404);
     }
 
     return c.json({ data: res.rows[0] });
   });
 
-  app.patch('/patient-goals/:goalId/complete', requireAuth, async (c) => {
+  app.patch("/patient-goals/:goalId/complete", requireAuth, async (c) => {
     const { goalId } = c.req.param();
-    const user = c.get('user');
+    const user = c.get("user");
     const pool = await createPool(c.env);
 
     const res = await pool.query(
@@ -822,20 +833,20 @@ export const registerPatientAnalyticsRoutes = (app: AnalyticsRouteApp) => {
     );
 
     if (res.rows.length === 0) {
-      return c.json({ error: 'Objetivo não encontrado' }, 404);
+      return c.json({ error: "Objetivo não encontrado" }, 404);
     }
 
     return c.json({ data: res.rows[0] });
   });
 
-  app.get('/clinical-benchmarks', requireAuth, async (c) => {
+  app.get("/clinical-benchmarks", requireAuth, async (c) => {
     const pool = await createPool(c.env);
-    const category = c.req.query('category');
+    const category = c.req.query("category");
     const params: Array<string> = [];
-    let where = '';
+    let where = "";
     if (category) {
       params.push(category);
-      where = 'WHERE benchmark_category = $1';
+      where = "WHERE benchmark_category = $1";
     }
 
     const rows = await pool.query(

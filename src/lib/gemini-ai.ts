@@ -9,38 +9,31 @@
  */
 
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import {
-	createServerOnlyFeatureError,
-	getServerOnlyEnv,
-} from "@/lib/config/server-only";
+import { createServerOnlyFeatureError, getServerOnlyEnv } from "@/lib/config/server-only";
 
 const apiKey =
-	getServerOnlyEnv("GOOGLE_GENERATIVE_AI_API_KEY") ||
-	getServerOnlyEnv("GOOGLE_AI_API_KEY") ||
-	"";
+  getServerOnlyEnv("GOOGLE_GENERATIVE_AI_API_KEY") || getServerOnlyEnv("GOOGLE_AI_API_KEY") || "";
 const genAI = new GoogleGenerativeAI(apiKey || "disabled");
 
 function ensureGeminiAccess() {
-	if (!apiKey) {
-		throw createServerOnlyFeatureError("Gemini direct access");
-	}
+  if (!apiKey) {
+    throw createServerOnlyFeatureError("Gemini direct access");
+  }
 }
 
 function createProtectedModel(model: string) {
-	const instance = genAI.getGenerativeModel({ model });
+  const instance = genAI.getGenerativeModel({ model });
 
-	return {
-		generateContent: async (...args: Parameters<typeof instance.generateContent>) => {
-			ensureGeminiAccess();
-			return instance.generateContent(...args);
-		},
-		generateContentStream: async (
-			...args: Parameters<typeof instance.generateContentStream>
-		) => {
-			ensureGeminiAccess();
-			return instance.generateContentStream(...args);
-		},
-	};
+  return {
+    generateContent: async (...args: Parameters<typeof instance.generateContent>) => {
+      ensureGeminiAccess();
+      return instance.generateContent(...args);
+    },
+    generateContentStream: async (...args: Parameters<typeof instance.generateContentStream>) => {
+      ensureGeminiAccess();
+      return instance.generateContentStream(...args);
+    },
+  };
 }
 
 // ============================================================================
@@ -68,23 +61,23 @@ export const proModel = createProtectedModel("gemini-2.5-pro");
  * Examples: exercise descriptions, general wellness tips
  */
 export async function generateQuickSuggestion(
-	prompt: string,
-	options?: {
-		temperature?: number;
-		maxTokens?: number;
-	},
+  prompt: string,
+  options?: {
+    temperature?: number;
+    maxTokens?: number;
+  },
 ): Promise<string> {
-	ensureGeminiAccess();
-	const result = await flashModel.generateContent({
-		contents: [{ role: "user", parts: [{ text: prompt }] }],
-		generationConfig: {
-			temperature: options?.temperature ?? 0.7,
-			maxOutputTokens: options?.maxTokens ?? 500,
-		},
-	});
+  ensureGeminiAccess();
+  const result = await flashModel.generateContent({
+    contents: [{ role: "user", parts: [{ text: prompt }] }],
+    generationConfig: {
+      temperature: options?.temperature ?? 0.7,
+      maxOutputTokens: options?.maxTokens ?? 500,
+    },
+  });
 
-	const response = result.response;
-	return response.text();
+  const response = result.response;
+  return response.text();
 }
 
 /**
@@ -92,12 +85,12 @@ export async function generateQuickSuggestion(
  * Use for: expanding exercise names into full descriptions
  */
 export async function expandExerciseDescription(exerciseName: string): Promise<{
-	description: string;
-	benefits: string[];
-	precautions: string[];
+  description: string;
+  benefits: string[];
+  precautions: string[];
 }> {
-	ensureGeminiAccess();
-	const prompt = `Como especialista em fisioterapia, forneça uma descrição detalhada do exercício "${exerciseName}".
+  ensureGeminiAccess();
+  const prompt = `Como especialista em fisioterapia, forneça uma descrição detalhada do exercício "${exerciseName}".
 
 Retorne um JSON com:
 - description: descrição clara e concisa
@@ -111,63 +104,60 @@ Formato JSON:
   "precautions": ["...", "..."]
 }`;
 
-	const result = await flashModel.generateContent({
-		contents: [{ role: "user", parts: [{ text: prompt }] }],
-		generationConfig: {
-			temperature: 0.3,
-			maxOutputTokens: 800,
-			responseMimeType: "application/json",
-		},
-	});
+  const result = await flashModel.generateContent({
+    contents: [{ role: "user", parts: [{ text: prompt }] }],
+    generationConfig: {
+      temperature: 0.3,
+      maxOutputTokens: 800,
+      responseMimeType: "application/json",
+    },
+  });
 
-	const response = result.response;
-	const text = response.text();
+  const response = result.response;
+  const text = response.text();
 
-	try {
-		return JSON.parse(text);
-	} catch {
-		// Fallback if JSON parsing fails
-		return {
-			description: text,
-			benefits: [],
-			precautions: [],
-		};
-	}
+  try {
+    return JSON.parse(text);
+  } catch {
+    // Fallback if JSON parsing fails
+    return {
+      description: text,
+      benefits: [],
+      precautions: [],
+    };
+  }
 }
 
 /**
  * Generate general wellness tips (non-clinical)
  * Use for: home care suggestions, general health tips
  */
-export async function generateWellnessTips(
-	topic: string,
-	count: number = 5,
-): Promise<string[]> {
-	ensureGeminiAccess();
-	const prompt = `Gere ${count} dicas de bem-estar sobre: ${topic}.
+export async function generateWellnessTips(topic: string, count: number = 5): Promise<string[]> {
+  ensureGeminiAccess();
+  const prompt = `Gere ${count} dicas de bem-estar sobre: ${topic}.
 
 Retorne um JSON array de strings com dicas práticas e acionáveis.
 
 Formato: ["dica 1", "dica 2", ...]`;
 
-	const result = await flashModel.generateContent({
-		contents: [{ role: "user", parts: [{ text: prompt }] }],
-		generationConfig: {
-			temperature: 0.8,
-			maxOutputTokens: 600,
-			responseMimeType: "application/json",
-		},
-	});
+  const result = await flashModel.generateContent({
+    contents: [{ role: "user", parts: [{ text: prompt }] }],
+    generationConfig: {
+      temperature: 0.8,
+      maxOutputTokens: 600,
+      responseMimeType: "application/json",
+    },
+  });
 
-	const response = result.response;
-	const text = response.text();
+  const response = result.response;
+  const text = response.text();
 
-	try {
-		return JSON.parse(text);
-	} catch {
-		// Fallback
-		return [text];
-	}
+  try {
+    return JSON.parse(text);
+  } catch {
+    // Fallback
+    return [text];
+  }
 }
 
 /**
@@ -175,32 +165,32 @@ Formato: ["dica 1", "dica 2", ...]`;
  * Use for: cleaning up user input, formatting notes
  */
 export async function formatText(
-	text: string,
-	style: "professional" | "casual" | "medical" = "professional",
+  text: string,
+  style: "professional" | "casual" | "medical" = "professional",
 ): Promise<string> {
-	ensureGeminiAccess();
-	const stylePrompts = {
-		professional: "Reformule o texto de forma profissional e clara",
-		casual: "Reformule o texto de forma amigável e acessível",
-		medical: "Reformule o texto usando terminologia médica apropriada",
-	};
+  ensureGeminiAccess();
+  const stylePrompts = {
+    professional: "Reformule o texto de forma profissional e clara",
+    casual: "Reformule o texto de forma amigável e acessível",
+    medical: "Reformule o texto usando terminologia médica apropriada",
+  };
 
-	const prompt = `${stylePrompts[style]}:
+  const prompt = `${stylePrompts[style]}:
 
 "${text}"
 
 Retorne apenas o texto reformulado, sem explicações adicionais.`;
 
-	const result = await flashModel.generateContent({
-		contents: [{ role: "user", parts: [{ text: prompt }] }],
-		generationConfig: {
-			temperature: 0.5,
-			maxOutputTokens: 500,
-		},
-	});
+  const result = await flashModel.generateContent({
+    contents: [{ role: "user", parts: [{ text: prompt }] }],
+    generationConfig: {
+      temperature: 0.5,
+      maxOutputTokens: 500,
+    },
+  });
 
-	const response = result.response;
-	return response.text();
+  const response = result.response;
+  return response.text();
 }
 
 /**
@@ -208,12 +198,12 @@ Retorne apenas o texto reformulado, sem explicações adicionais.`;
  * Use for: form field autocomplete, search suggestions
  */
 export async function getAutocompleteSuggestions(
-	partial: string,
-	context: string,
-	maxSuggestions: number = 5,
+  partial: string,
+  context: string,
+  maxSuggestions: number = 5,
 ): Promise<string[]> {
-	ensureGeminiAccess();
-	const prompt = `Complete a seguinte entrada no contexto de ${context}:
+  ensureGeminiAccess();
+  const prompt = `Complete a seguinte entrada no contexto de ${context}:
 
 Entrada parcial: "${partial}"
 
@@ -221,23 +211,23 @@ Retorne ${maxSuggestions} sugestões de completamento como um JSON array.
 
 Formato: ["sugestão 1", "sugestão 2", ...]`;
 
-	const result = await flashModel.generateContent({
-		contents: [{ role: "user", parts: [{ text: prompt }] }],
-		generationConfig: {
-			temperature: 0.6,
-			maxOutputTokens: 300,
-			responseMimeType: "application/json",
-		},
-	});
+  const result = await flashModel.generateContent({
+    contents: [{ role: "user", parts: [{ text: prompt }] }],
+    generationConfig: {
+      temperature: 0.6,
+      maxOutputTokens: 300,
+      responseMimeType: "application/json",
+    },
+  });
 
-	const response = result.response;
-	const text = response.text();
+  const response = result.response;
+  const text = response.text();
 
-	try {
-		return JSON.parse(text);
-	} catch {
-		return [];
-	}
+  try {
+    return JSON.parse(text);
+  } catch {
+    return [];
+  }
 }
 
 // ============================================================================
@@ -249,25 +239,25 @@ Formato: ["sugestão 1", "sugestão 2", ...]`;
  * Use for: chat interfaces, live text generation
  */
 export async function* streamGeneration(
-	prompt: string,
-	options?: {
-		temperature?: number;
-		maxTokens?: number;
-	},
+  prompt: string,
+  options?: {
+    temperature?: number;
+    maxTokens?: number;
+  },
 ): AsyncGenerator<string, void, unknown> {
-	ensureGeminiAccess();
-	const result = await flashModel.generateContentStream({
-		contents: [{ role: "user", parts: [{ text: prompt }] }],
-		generationConfig: {
-			temperature: options?.temperature ?? 0.7,
-			maxOutputTokens: options?.maxTokens ?? 1000,
-		},
-	});
+  ensureGeminiAccess();
+  const result = await flashModel.generateContentStream({
+    contents: [{ role: "user", parts: [{ text: prompt }] }],
+    generationConfig: {
+      temperature: options?.temperature ?? 0.7,
+      maxOutputTokens: options?.maxTokens ?? 1000,
+    },
+  });
 
-	for await (const chunk of result.stream) {
-		const text = chunk.text();
-		if (text) {
-			yield text;
-		}
-	}
+  for await (const chunk of result.stream) {
+    const text = chunk.text();
+    if (text) {
+      yield text;
+    }
+  }
 }

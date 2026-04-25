@@ -1,25 +1,25 @@
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Sparkles, 
-  ChevronRight, 
-  Activity, 
-  AlertTriangle, 
-  CheckCircle2, 
+import React, { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  Sparkles,
+  ChevronRight,
+  Activity,
+  AlertTriangle,
+  CheckCircle2,
   Lightbulb,
   ArrowRight,
   BookOpen,
   ClipboardList,
   ChevronDown,
-  Info
-} from 'lucide-react';
-import { clinicalReasoningRules, ActionRule } from '../../data/clinicalReasoningRules';
-import { protocolDictionary } from '../../data/protocolDictionary';
-import { exerciseDictionary } from '../../data/exerciseDictionary';
-import { Button } from '../ui/button';
-import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '../ui/card';
-import { Badge } from '../ui/badge';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
+  Info,
+} from "lucide-react";
+import { clinicalReasoningRules, ActionRule } from "../../data/clinicalReasoningRules";
+import { protocolDictionary } from "../../data/protocolDictionary";
+import { exerciseDictionary } from "../../data/exerciseDictionary";
+import { Button } from "../ui/button";
+import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "../ui/card";
+import { Badge } from "../ui/badge";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../ui/tooltip";
 
 interface ClinicalIntelligenceHubProps {
   evaluationData: Record<string, any>;
@@ -27,19 +27,19 @@ interface ClinicalIntelligenceHubProps {
   onApplyExercise?: (exerciseId: string) => void;
 }
 
-export const ClinicalIntelligenceHub: React.FC<ClinicalIntelligenceHubProps> = ({ 
+export const ClinicalIntelligenceHub: React.FC<ClinicalIntelligenceHubProps> = ({
   evaluationData,
   onApplyProtocol,
-  onApplyExercise
+  onApplyExercise,
 }) => {
   const [matches, setMatches] = useState<ActionRule[]>([]);
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   useEffect(() => {
-    const activeMatches = clinicalReasoningRules.filter(rule => {
+    const activeMatches = clinicalReasoningRules.filter((rule) => {
       const { condition } = rule;
-      
-      return condition.fieldLabels.some(label => {
+
+      return condition.fieldLabels.some((label) => {
         const value = evaluationData[label];
         if (!value) return false;
 
@@ -50,15 +50,15 @@ export const ClinicalIntelligenceHub: React.FC<ClinicalIntelligenceHubProps> = (
         if (condition.matchAny && condition.matchAny.includes(value)) return true;
 
         // Match range
-        if (typeof value === 'number') {
+        if (typeof value === "number") {
           if (condition.minValue !== undefined && value < condition.minValue) return false;
           if (condition.maxValue !== undefined && value > condition.maxValue) return false;
           return true;
         }
 
         // Partial match for strings (common in clinical notes)
-        if (typeof value === 'string' && condition.matchValue) {
-            return value.toLowerCase().includes(condition.matchValue.toLowerCase());
+        if (typeof value === "string" && condition.matchValue) {
+          return value.toLowerCase().includes(condition.matchValue.toLowerCase());
         }
 
         return false;
@@ -95,19 +95,26 @@ export const ClinicalIntelligenceHub: React.FC<ClinicalIntelligenceHubProps> = (
               transition={{ delay: index * 0.1 }}
             >
               <Card className="overflow-hidden border-l-4 border-l-blue-500 shadow-sm hover:shadow-md transition-shadow">
-                <CardHeader className="pb-2 cursor-pointer" onClick={() => setExpandedId(expandedId === rule.id ? null : rule.id)}>
+                <CardHeader
+                  className="pb-2 cursor-pointer"
+                  onClick={() => setExpandedId(expandedId === rule.id ? null : rule.id)}
+                >
                   <div className="flex items-start justify-between">
                     <div>
                       <CardTitle className="text-md font-bold flex items-center gap-2">
                         {rule.name}
-                        {rule.suggestions.some(s => s.priority === 'high') && (
-                          <Badge variant="destructive" className="text-[10px] h-4 px-1">ALTA PRIORIDADE</Badge>
+                        {rule.suggestions.some((s) => s.priority === "high") && (
+                          <Badge variant="destructive" className="text-[10px] h-4 px-1">
+                            ALTA PRIORIDADE
+                          </Badge>
                         )}
                       </CardTitle>
                       <p className="text-xs text-slate-500 mt-1">{rule.description}</p>
                     </div>
                     <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                      <ChevronDown className={`w-4 h-4 transition-transform ${expandedId === rule.id ? 'rotate-180' : ''}`} />
+                      <ChevronDown
+                        className={`w-4 h-4 transition-transform ${expandedId === rule.id ? "rotate-180" : ""}`}
+                      />
                     </Button>
                   </div>
                 </CardHeader>
@@ -115,15 +122,15 @@ export const ClinicalIntelligenceHub: React.FC<ClinicalIntelligenceHubProps> = (
                 <CardContent className="pb-3">
                   <div className="flex flex-wrap gap-2 mb-4">
                     {rule.suggestions.map((suggestion, sIdx) => (
-                      <Badge 
+                      <Badge
                         key={sIdx}
-                        variant={suggestion.type === 'alert' ? 'destructive' : 'secondary'}
+                        variant={suggestion.type === "alert" ? "destructive" : "secondary"}
                         className="flex items-center gap-1 py-1"
                       >
-                        {suggestion.type === 'protocol' && <ClipboardList className="w-3 h-3" />}
-                        {suggestion.type === 'exercise' && <Activity className="w-3 h-3" />}
-                        {suggestion.type === 'alert' && <AlertTriangle className="w-3 h-3" />}
-                        {suggestion.type === 'precaution' && <Info className="w-3 h-3" />}
+                        {suggestion.type === "protocol" && <ClipboardList className="w-3 h-3" />}
+                        {suggestion.type === "exercise" && <Activity className="w-3 h-3" />}
+                        {suggestion.type === "alert" && <AlertTriangle className="w-3 h-3" />}
+                        {suggestion.type === "precaution" && <Info className="w-3 h-3" />}
                         {suggestion.title}
                       </Badge>
                     ))}
@@ -133,7 +140,7 @@ export const ClinicalIntelligenceHub: React.FC<ClinicalIntelligenceHubProps> = (
                     {expandedId === rule.id && (
                       <motion.div
                         initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: 'auto', opacity: 1 }}
+                        animate={{ height: "auto", opacity: 1 }}
                         exit={{ height: 0, opacity: 0 }}
                         className="overflow-hidden"
                       >
@@ -149,27 +156,31 @@ export const ClinicalIntelligenceHub: React.FC<ClinicalIntelligenceHubProps> = (
 
                           <div className="space-y-3">
                             {rule.suggestions.map((suggestion, sIdx) => (
-                              <div 
+                              <div
                                 key={sIdx}
                                 className={`p-3 rounded-xl border-2 transition-all ${
-                                  suggestion.priority === 'high' 
-                                    ? 'border-red-100 bg-red-50/30 dark:border-red-900/30 dark:bg-red-950/20' 
-                                    : 'border-blue-50 bg-blue-50/20 dark:border-blue-900/20 dark:bg-blue-950/10'
+                                  suggestion.priority === "high"
+                                    ? "border-red-100 bg-red-50/30 dark:border-red-900/30 dark:bg-red-950/20"
+                                    : "border-blue-50 bg-blue-50/20 dark:border-blue-900/20 dark:bg-blue-950/10"
                                 }`}
                               >
                                 <div className="flex justify-between items-start mb-2">
                                   <h5 className="font-bold text-sm flex items-center gap-2">
-                                    {suggestion.type === 'alert' && <AlertTriangle className="w-4 h-4 text-red-500" />}
+                                    {suggestion.type === "alert" && (
+                                      <AlertTriangle className="w-4 h-4 text-red-500" />
+                                    )}
                                     {suggestion.title}
                                   </h5>
                                   {suggestion.id && (
-                                    <Button 
-                                      size="sm" 
-                                      variant="outline" 
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
                                       className="h-7 text-xs gap-1"
                                       onClick={() => {
-                                        if (suggestion.type === 'protocol' && onApplyProtocol) onApplyProtocol(suggestion.id!);
-                                        if (suggestion.type === 'exercise' && onApplyExercise) onApplyExercise(suggestion.id!);
+                                        if (suggestion.type === "protocol" && onApplyProtocol)
+                                          onApplyProtocol(suggestion.id!);
+                                        if (suggestion.type === "exercise" && onApplyExercise)
+                                          onApplyExercise(suggestion.id!);
                                       }}
                                     >
                                       Aplicar <ArrowRight className="w-3 h-3" />

@@ -21,7 +21,7 @@ export function getPasswordStrength(password: string): {
   color: string;
 } {
   if (password.length === 0) {
-    return { score: 0, label: '', color: '' };
+    return { score: 0, label: "", color: "" };
   }
 
   let score = 0;
@@ -42,8 +42,8 @@ export function getPasswordStrength(password: string): {
   // Normalize score to 0-4
   const normalizedScore = Math.min(score, 4);
 
-  const labels = ['', 'Fraca', 'Razoável', 'Boa', 'Forte'];
-  const colors = ['', '#EF4444', '#F59E0B', '#22C55E', '#15803D'];
+  const labels = ["", "Fraca", "Razoável", "Boa", "Forte"];
+  const colors = ["", "#EF4444", "#F59E0B", "#22C55E", "#15803D"];
 
   return {
     score: normalizedScore,
@@ -57,7 +57,7 @@ export function getPasswordStrength(password: string): {
  */
 export function isValidPhone(phone: string): boolean {
   // Remove non-digits
-  const cleanPhone = phone.replace(/\D/g, '');
+  const cleanPhone = phone.replace(/\D/g, "");
 
   // Brazilian phone: 10 or 11 digits (with DDD)
   return cleanPhone.length === 10 || cleanPhone.length === 11;
@@ -67,7 +67,7 @@ export function isValidPhone(phone: string): boolean {
  * Format Brazilian phone number
  */
 export function formatPhone(phone: string): string {
-  const cleanPhone = phone.replace(/\D/g, '');
+  const cleanPhone = phone.replace(/\D/g, "");
 
   if (cleanPhone.length === 11) {
     // (XX) XXXXX-XXXX
@@ -84,7 +84,7 @@ export function formatPhone(phone: string): string {
  * Validate CPF (Brazilian ID)
  */
 export function isValidCPF(cpf: string): boolean {
-  const cleanCPF = cpf.replace(/\D/g, '');
+  const cleanCPF = cpf.replace(/\D/g, "");
 
   if (cleanCPF.length !== 11 || /^(\d)\1+$/.test(cleanCPF)) {
     return false;
@@ -119,7 +119,7 @@ export function isValidCPF(cpf: string): boolean {
  * Format CPF
  */
 export function formatCPF(cpf: string): string {
-  const cleanCPF = cpf.replace(/\D/g, '');
+  const cleanCPF = cpf.replace(/\D/g, "");
 
   if (cleanCPF.length === 11) {
     return `${cleanCPF.slice(0, 3)}.${cleanCPF.slice(3, 6)}.${cleanCPF.slice(6, 9)}-${cleanCPF.slice(9)}`;
@@ -135,10 +135,7 @@ export function isValidName(name: string): boolean {
   const trimmedName = name.trim();
   const parts = trimmedName.split(/\s+/);
 
-  return (
-    parts.length >= 2 &&
-    parts.every(part => part.length >= 2)
-  );
+  return parts.length >= 2 && parts.every((part) => part.length >= 2);
 }
 
 /**
@@ -156,25 +153,25 @@ export function isValidDateOfBirth(dateOfBirth: Date): boolean {
  * Validation error messages in Portuguese
  */
 export const ValidationErrors = {
-  email: 'Email inválido',
-  emailRequired: 'Email é obrigatório',
-  passwordRequired: 'Senha é obrigatória',
-  passwordTooShort: 'Senha deve ter pelo menos 8 caracteres',
-  passwordWeak: 'Senha muito fraca, tente adicionar números, letras maiúsculas e símbolos',
-  nameRequired: 'Nome é obrigatório',
-  nameTooShort: 'Nome deve ter pelo menos 2 palavras com 2+ caracteres cada',
-  phoneRequired: 'Telefone é obrigatório',
-  phoneInvalid: 'Telefone inválido (formato: (XX) XXXXX-XXXX)',
-  cpfRequired: 'CPF é obrigatório',
-  cpfInvalid: 'CPF inválido',
-  dateRequired: 'Data de nascimento é obrigatória',
-  dateInvalid: 'Data de nascimento inválida',
-  dateTooYoung: 'Você deve ter pelo menos 13 anos para usar o app',
-  codeRequired: 'Código do profissional é obrigatório',
-  codeInvalid: 'Código inválido',
-  codeExpired: 'Código expirado',
-  codeAlreadyUsed: 'Código já utilizado',
-  general: 'Ocorreu um erro. Tente novamente.',
+  email: "Email inválido",
+  emailRequired: "Email é obrigatório",
+  passwordRequired: "Senha é obrigatória",
+  passwordTooShort: "Senha deve ter pelo menos 8 caracteres",
+  passwordWeak: "Senha muito fraca, tente adicionar números, letras maiúsculas e símbolos",
+  nameRequired: "Nome é obrigatório",
+  nameTooShort: "Nome deve ter pelo menos 2 palavras com 2+ caracteres cada",
+  phoneRequired: "Telefone é obrigatório",
+  phoneInvalid: "Telefone inválido (formato: (XX) XXXXX-XXXX)",
+  cpfRequired: "CPF é obrigatório",
+  cpfInvalid: "CPF inválido",
+  dateRequired: "Data de nascimento é obrigatória",
+  dateInvalid: "Data de nascimento inválida",
+  dateTooYoung: "Você deve ter pelo menos 13 anos para usar o app",
+  codeRequired: "Código do profissional é obrigatório",
+  codeInvalid: "Código inválido",
+  codeExpired: "Código expirado",
+  codeAlreadyUsed: "Código já utilizado",
+  general: "Ocorreu um erro. Tente novamente.",
 };
 
 /**
@@ -218,10 +215,10 @@ export function getPasswordRequirements(): {
   met: boolean;
 }[] {
   return [
-    { label: 'Pelo menos 8 caracteres', met: false },
-    { label: 'Letras maiúsculas e minúsculas', met: false },
-    { label: 'Pelo menos um número', met: false },
-    { label: 'Caracteres especiais (!@#$%)', met: false },
+    { label: "Pelo menos 8 caracteres", met: false },
+    { label: "Letras maiúsculas e minúsculas", met: false },
+    { label: "Pelo menos um número", met: false },
+    { label: "Caracteres especiais (!@#$%)", met: false },
   ];
 }
 
@@ -233,9 +230,12 @@ export function checkPasswordRequirements(password: string): {
   met: boolean;
 }[] {
   return [
-    { label: 'Pelo menos 8 caracteres', met: password.length >= 8 },
-    { label: 'Letras maiúsculas e minúsculas', met: /[a-z]/.test(password) && /[A-Z]/.test(password) },
-    { label: 'Pelo menos um número', met: /[0-9]/.test(password) },
-    { label: 'Caracteres especiais (!@#$%)', met: /[^a-zA-Z0-9]/.test(password) },
+    { label: "Pelo menos 8 caracteres", met: password.length >= 8 },
+    {
+      label: "Letras maiúsculas e minúsculas",
+      met: /[a-z]/.test(password) && /[A-Z]/.test(password),
+    },
+    { label: "Pelo menos um número", met: /[0-9]/.test(password) },
+    { label: "Caracteres especiais (!@#$%)", met: /[^a-zA-Z0-9]/.test(password) },
   ];
 }

@@ -22,28 +22,28 @@ mode = "smart"
 
 ### Bindings Summary
 
-| Binding | Type | Purpose |
-|---|---|---|
-| `HYPERDRIVE` | Hyperdrive | PostgreSQL connection pooling to Neon |
-| `MEDIA_BUCKET` | R2 Bucket | Media file storage |
-| `FISIOFLOW_CONFIG` | KV Namespace | Global configuration cache |
-| `DB` | D1 Database | `fisioflow-db` — evolution index, holidays |
-| `EDGE_CACHE` | D1 Database | `fisioflow-edge-cache` — rate limits, query cache |
-| `ANALYTICS` | Analytics Engine | `fisioflow_events` — observability |
-| `CLINICAL_KNOWLEDGE` | Vectorize Index | `fisioflow-clinical` — 768-dim cosine RAG |
-| `EVENTS_PIPELINE` | Pipeline | Data warehouse streaming to R2 |
-| `BACKGROUND_QUEUE` | Queue | Async task processing |
-| `ORGANIZATION_STATE` | Durable Object | Realtime WebSocket per org |
-| `PATIENT_AGENT` | Durable Object | Retention agent per patient |
-| `ASSESSMENT_LIVE_SESSION` | Durable Object | Live assessment WebSocket proxy |
-| `AI` | Workers AI | Model inference with gateway |
-| `BROWSER` | Browser Rendering | PDF generation |
-| `WORKFLOW_APPOINTMENT_REMINDER` | Workflow | D-3/D-1/D-0 reminders |
-| `WORKFLOW_PATIENT_ONBOARDING` | Workflow | LGPD + onboarding flow |
-| `WORKFLOW_NFSE` | Workflow | NFS-e emission |
-| `WORKFLOW_HEP_COMPLIANCE` | Workflow | Home exercise monitoring |
-| `WORKFLOW_DISCHARGE` | Workflow | Patient discharge + follow-up |
-| `WORKFLOW_REENGAGEMENT` | Workflow | Inactive patient re-engagement |
+| Binding                         | Type              | Purpose                                           |
+| ------------------------------- | ----------------- | ------------------------------------------------- |
+| `HYPERDRIVE`                    | Hyperdrive        | PostgreSQL connection pooling to Neon             |
+| `MEDIA_BUCKET`                  | R2 Bucket         | Media file storage                                |
+| `FISIOFLOW_CONFIG`              | KV Namespace      | Global configuration cache                        |
+| `DB`                            | D1 Database       | `fisioflow-db` — evolution index, holidays        |
+| `EDGE_CACHE`                    | D1 Database       | `fisioflow-edge-cache` — rate limits, query cache |
+| `ANALYTICS`                     | Analytics Engine  | `fisioflow_events` — observability                |
+| `CLINICAL_KNOWLEDGE`            | Vectorize Index   | `fisioflow-clinical` — 768-dim cosine RAG         |
+| `EVENTS_PIPELINE`               | Pipeline          | Data warehouse streaming to R2                    |
+| `BACKGROUND_QUEUE`              | Queue             | Async task processing                             |
+| `ORGANIZATION_STATE`            | Durable Object    | Realtime WebSocket per org                        |
+| `PATIENT_AGENT`                 | Durable Object    | Retention agent per patient                       |
+| `ASSESSMENT_LIVE_SESSION`       | Durable Object    | Live assessment WebSocket proxy                   |
+| `AI`                            | Workers AI        | Model inference with gateway                      |
+| `BROWSER`                       | Browser Rendering | PDF generation                                    |
+| `WORKFLOW_APPOINTMENT_REMINDER` | Workflow          | D-3/D-1/D-0 reminders                             |
+| `WORKFLOW_PATIENT_ONBOARDING`   | Workflow          | LGPD + onboarding flow                            |
+| `WORKFLOW_NFSE`                 | Workflow          | NFS-e emission                                    |
+| `WORKFLOW_HEP_COMPLIANCE`       | Workflow          | Home exercise monitoring                          |
+| `WORKFLOW_DISCHARGE`            | Workflow          | Patient discharge + follow-up                     |
+| `WORKFLOW_REENGAGEMENT`         | Workflow          | Inactive patient re-engagement                    |
 
 ### Routes and Domains
 
@@ -102,11 +102,11 @@ crons = [
 ]
 ```
 
-| Schedule (UTC) | BRT | Handler |
-|---|---|---|
-| `0 9 * * *` | 06:00 | DB prewarm (`pg_prewarm`), appointment reminders (email + WhatsApp), birthday checks, inactive patient detection |
-| `0 11 * * *` | 08:00 | DB cleanup (audit logs > 90 days), D1 rate limit cleanup |
-| `0 12 * * *` | 09:00 | Task due-date automations (notifications, label assignment, status changes) |
+| Schedule (UTC) | BRT   | Handler                                                                                                          |
+| -------------- | ----- | ---------------------------------------------------------------------------------------------------------------- |
+| `0 9 * * *`    | 06:00 | DB prewarm (`pg_prewarm`), appointment reminders (email + WhatsApp), birthday checks, inactive patient detection |
+| `0 11 * * *`   | 08:00 | DB cleanup (audit logs > 90 days), D1 rate limit cleanup                                                         |
+| `0 12 * * *`   | 09:00 | Task due-date automations (notifications, label assignment, status changes)                                      |
 
 ### Durable Object Migrations
 
@@ -152,23 +152,23 @@ Additional folders follow the pattern: `orgs/{orgId}/patients/{patientId}/{type}
 ### R2Service (S3-Compatible Presigned URLs)
 
 ```typescript
-import { R2Service } from './lib/storage/R2Service';
+import { R2Service } from "./lib/storage/R2Service";
 
 const r2 = new R2Service(env);
 
-const uploadUrl = await r2.getUploadUrl('orgs/org123/exams/scan.dcm', 'application/dicom');
+const uploadUrl = await r2.getUploadUrl("orgs/org123/exams/scan.dcm", "application/dicom");
 
-const downloadUrl = await r2.getDownloadUrl('recordings/apt456/1234567890.webm', 86400);
+const downloadUrl = await r2.getDownloadUrl("recordings/apt456/1234567890.webm", 86400);
 
-const recordingKey = r2.getRecordingKey('apt456');
+const recordingKey = r2.getRecordingKey("apt456");
 ```
 
 ### Direct Upload via Worker
 
 ```typescript
 await env.MEDIA_BUCKET.put(key, audioBuffer, {
-  httpMetadata: { contentType: 'audio/mpeg' },
-  customMetadata: { organizationId: orgId, generated: 'tts' },
+  httpMetadata: { contentType: "audio/mpeg" },
+  customMetadata: { organizationId: orgId, generated: "tts" },
 });
 ```
 
@@ -194,16 +194,20 @@ await env.MEDIA_BUCKET.put(key, audioBuffer, {
 ### Rate Limiting Pattern
 
 ```typescript
-import { rateLimit } from './middleware/rateLimit';
+import { rateLimit } from "./middleware/rateLimit";
 
-app.post('/api/ai/soap', rateLimit({ limit: 50, windowSeconds: 3600, endpoint: 'ai' }), handler);
+app.post("/api/ai/soap", rateLimit({ limit: 50, windowSeconds: 3600, endpoint: "ai" }), handler);
 
-app.post('/api/auth/login', rateLimit({
-  limit: 10,
-  windowSeconds: 900,
-  endpoint: 'auth',
-  keyFn: (c) => c.req.header('cf-connecting-ip') ?? 'unknown',
-}), handler);
+app.post(
+  "/api/auth/login",
+  rateLimit({
+    limit: 10,
+    windowSeconds: 900,
+    endpoint: "auth",
+    keyFn: (c) => c.req.header("cf-connecting-ip") ?? "unknown",
+  }),
+  handler,
+);
 ```
 
 D1 atomic upsert pattern:
@@ -220,7 +224,7 @@ Rate limit key format: `rl:{orgId|ip}:{endpoint}:{windowStart}`
 Cleanup via cron (`src/cron.ts`):
 
 ```typescript
-import { cleanupRateLimits } from './middleware/rateLimit';
+import { cleanupRateLimits } from "./middleware/rateLimit";
 const deleted = await cleanupRateLimits(env.EDGE_CACHE);
 ```
 
@@ -244,10 +248,10 @@ Staging: 1min cache, 15s SWR (`--max-age 60 --swr 15`).
 Usage via `createPool`:
 
 ```typescript
-import { createPool } from './lib/db';
+import { createPool } from "./lib/db";
 
 const pool = createPool(env);
-const result = await pool.query('SELECT * FROM patients WHERE id = $1', [patientId]);
+const result = await pool.query("SELECT * FROM patients WHERE id = $1", [patientId]);
 ```
 
 ## 5. Durable Objects
@@ -291,6 +295,7 @@ type RetentionState = {
 ```
 
 Callable RPCs:
+
 - `updateClinicalStatus({ painLevel?, missedSession?, name? })` — updates risk score, triggers draft generation if `action_needed`
 - `generateRetentionDraft()` — generates personalized WhatsApp message via Llama 3.1 8B
 - `dismissAction()` — resets state to monitoring
@@ -343,19 +348,19 @@ dead_letter_queue = "fisioflow-tasks-dlq"
 
 ```typescript
 type QueueTask =
-  | { type: 'SEND_WHATSAPP'; payload: WhatsAppQueuePayload }
-  | { type: 'R2_OBJECT_CREATED'; payload: R2NotificationPayload }
-  | { type: 'PROCESS_EXAM'; payload: ExamProcessPayload }
-  | { type: 'GENERATE_TTS'; payload: TTSPayload }
-  | { type: 'TRIGGER_WORKFLOW'; payload: WorkflowTriggerPayload }
-  | { type: 'PROCESS_BACKUP'; payload: Record<string, unknown> }
-  | { type: 'CLEANUP_LOGS'; payload: Record<string, unknown> }
+  | { type: "SEND_WHATSAPP"; payload: WhatsAppQueuePayload }
+  | { type: "R2_OBJECT_CREATED"; payload: R2NotificationPayload }
+  | { type: "PROCESS_EXAM"; payload: ExamProcessPayload }
+  | { type: "GENERATE_TTS"; payload: TTSPayload }
+  | { type: "TRIGGER_WORKFLOW"; payload: WorkflowTriggerPayload }
+  | { type: "PROCESS_BACKUP"; payload: Record<string, unknown> }
+  | { type: "CLEANUP_LOGS"; payload: Record<string, unknown> };
 ```
 
 ### Consumer Handler
 
 ```typescript
-import { handleQueue } from './queue';
+import { handleQueue } from "./queue";
 
 export default {
   queue: handleQueue,
@@ -363,6 +368,7 @@ export default {
 ```
 
 Processing flow:
+
 1. `SEND_WHATSAPP` — calls Meta WhatsApp Business API, logs to `whatsapp_messages` table, writes analytics
 2. `R2_OBJECT_CREATED` — detects file type, enqueues `PROCESS_EXAM` for images/audio
 3. `PROCESS_EXAM` — downloads from R2, runs AI (image analysis via Llama 4 Scout, audio transcription via Deepgram Nova-3), saves to `exam_ai_results`
@@ -393,6 +399,7 @@ Binding: `WORKFLOW_APPOINTMENT_REMINDER`, Class: `AppointmentReminderWorkflow`
 File: `src/workflows/appointmentReminder.ts`
 
 Sends WhatsApp reminders at 3 touchpoints:
+
 1. D-3: "Your appointment is in 3 days, please confirm"
 2. D-1: "Your appointment is tomorrow"
 3. D-0 (2h before): "Your appointment is in 2 hours"
@@ -402,7 +409,14 @@ Supports cancellation via `sendEvent('cancel')`. Each step uses `step.sleepUntil
 ```typescript
 await env.WORKFLOW_APPOINTMENT_REMINDER.create({
   id: `reminder-${appointmentId}`,
-  params: { appointmentId, patientPhone, patientName, therapistName, appointmentDate, organizationId },
+  params: {
+    appointmentId,
+    patientPhone,
+    patientName,
+    therapistName,
+    appointmentDate,
+    organizationId,
+  },
 });
 ```
 
@@ -435,6 +449,7 @@ Binding: `WORKFLOW_HEP_COMPLIANCE`, Class: `HEPComplianceWorkflow`
 File: `src/workflows/hepCompliance.ts`
 
 Weekly loop for `durationWeeks`:
+
 1. Sleep 7 days (except first iteration)
 2. Query `exercise_completions` for weekly adherence rate
 3. If < 60% → motivational WhatsApp message
@@ -458,6 +473,7 @@ Binding: `WORKFLOW_REENGAGEMENT`, Class: `PatientReengagementWorkflow`
 File: `src/workflows/reengagementWorkflow.ts`
 
 Progressive 3-attempt re-engagement:
+
 1. D+0: friendly "we miss you" message → `waitForEvent('appointment-booked', timeout: '7 days')`
 2. D+7: flexible scheduling offer → `waitForEvent('appointment-booked', timeout: '8 days')`
 3. D+15: escalate to human — creates high-priority task for reception + analytics event
@@ -478,7 +494,7 @@ Embedding model: `@cf/baai/bge-base-en-v1.5` (768 dimensions)
 ### Embedding Generation
 
 ```typescript
-import { generateEmbedding, generateTurboSketch } from './lib/ai-native';
+import { generateEmbedding, generateTurboSketch } from "./lib/ai-native";
 
 const embedding = await generateEmbedding(env, textContent);
 const sketch = generateTurboSketch(embedding);
@@ -515,28 +531,28 @@ Gateway URL: `https://gateway.ai.cloudflare.com/v1/32156f9a72a32d1ece28ab74bcd39
 All AI calls route through the gateway for logging, caching, and rate limiting:
 
 ```typescript
-import { runAi } from './lib/ai-native';
+import { runAi } from "./lib/ai-native";
 
 const response = await runAi(env, model, input, { cache: true, cacheTtl: 3600 });
 ```
 
 ### Model Routing
 
-| Model | Purpose | Cache |
-|---|---|---|
-| `@cf/deepgram/nova-3` | Audio transcription (pt-BR), fallback: `@cf/openai/whisper-large-v3-turbo` | Never |
-| `@cf/deepgram/aura-2-es` | Text-to-speech for exercise audio | 24h |
-| `@cf/meta/llama-3.3-70b-instruct-fp8-fast` | Clinical note summarization, SOAP notes | Never |
-| `@cf/meta/llama-3.1-8b-instruct` | Fast SOAP suggestions, retention drafts | Never |
-| `@cf/meta/llama-4-scout-17b-16e-instruct` | Clinical image analysis (multimodal vision) | Never |
-| `@cf/meta/llama-guard-3-8b` | Content moderation | 5min |
-| `@cf/baai/bge-base-en-v1.5` | Text embeddings for Vectorize | 24h |
-| `gemini-live-2.5-flash-preview` | Real-time live assessments via DO | Never |
+| Model                                      | Purpose                                                                    | Cache |
+| ------------------------------------------ | -------------------------------------------------------------------------- | ----- |
+| `@cf/deepgram/nova-3`                      | Audio transcription (pt-BR), fallback: `@cf/openai/whisper-large-v3-turbo` | Never |
+| `@cf/deepgram/aura-2-es`                   | Text-to-speech for exercise audio                                          | 24h   |
+| `@cf/meta/llama-3.3-70b-instruct-fp8-fast` | Clinical note summarization, SOAP notes                                    | Never |
+| `@cf/meta/llama-3.1-8b-instruct`           | Fast SOAP suggestions, retention drafts                                    | Never |
+| `@cf/meta/llama-4-scout-17b-16e-instruct`  | Clinical image analysis (multimodal vision)                                | Never |
+| `@cf/meta/llama-guard-3-8b`                | Content moderation                                                         | 5min  |
+| `@cf/baai/bge-base-en-v1.5`                | Text embeddings for Vectorize                                              | 24h   |
+| `gemini-live-2.5-flash-preview`            | Real-time live assessments via DO                                          | Never |
 
 ### Session Affinity (Prompt Caching)
 
 ```typescript
-await runAi(env, model, input, { sessionId: 'user-123-session' });
+await runAi(env, model, input, { sessionId: "user-123-session" });
 ```
 
 Sets `x-session-affinity` header to route to same GPU instance, maximizing prompt cache hits for multi-turn conversations.
@@ -546,9 +562,9 @@ Sets `x-session-affinity` header to route to same GPU instance, maximizing promp
 Available via `env.AI.autorag(indexName).aiSearch()`:
 
 ```typescript
-const results = await env.AI.autorag('fisioflow-knowledge').aiSearch({
+const results = await env.AI.autorag("fisioflow-knowledge").aiSearch({
   query: patientQuestion,
-  model: '@cf/meta/llama-3.3-70b-instruct-fp8-fast',
+  model: "@cf/meta/llama-3.3-70b-instruct-fp8-fast",
   rewrite_query: true,
   max_num_results: 5,
   ranking_options: { score_threshold: 0.7 },
@@ -631,14 +647,14 @@ wrangler dev --env staging
 Dataset: `fisioflow_events`
 
 ```typescript
-import { writeEvent } from './lib/analytics';
+import { writeEvent } from "./lib/analytics";
 
 writeEvent(env, {
-  route: '/api/appointments',
-  method: 'POST',
+  route: "/api/appointments",
+  method: "POST",
   status: 201,
   orgId: organizationId,
-  event: 'appointment_booked',
+  event: "appointment_booked",
   latencyMs: 150,
 });
 ```
@@ -664,7 +680,7 @@ pipeline = "701aff68d26e4c45a29f090389bcd4f2"
 Streams events to R2 as Iceberg format for data warehousing.
 
 ```typescript
-await env.EVENTS_PIPELINE?.send([{ event: 'patient_created', orgId, timestamp: Date.now() }]);
+await env.EVENTS_PIPELINE?.send([{ event: "patient_created", orgId, timestamp: Date.now() }]);
 ```
 
 ## KV (FISIOFLOW_CONFIG)
@@ -674,6 +690,6 @@ Namespace ID: `4284b33fa7ed40b6bc9c59b6041c03ed`
 Used for global configuration values, feature flags, and cached settings that rarely change.
 
 ```typescript
-await env.FISIOFLOW_CONFIG?.put('feature:ai-tutor', 'enabled');
-const flag = await env.FISIOFLOW_CONFIG?.get('feature:ai-tutor');
+await env.FISIOFLOW_CONFIG?.put("feature:ai-tutor", "enabled");
+const flag = await env.FISIOFLOW_CONFIG?.get("feature:ai-tutor");
 ```

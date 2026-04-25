@@ -6,28 +6,28 @@
  * PUT    /api/goals/:id
  * DELETE /api/goals/:id
  */
-import { Hono } from 'hono';
-import { createPool } from '../lib/db';
-import { requireAuth, type AuthVariables } from '../lib/auth';
-import type { Env } from '../types/env';
+import { Hono } from "hono";
+import { createPool } from "../lib/db";
+import { requireAuth, type AuthVariables } from "../lib/auth";
+import type { Env } from "../types/env";
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
 function trimmedString(value: unknown): string | undefined {
-  if (typeof value !== 'string') return undefined;
+  if (typeof value !== "string") return undefined;
   const normalized = value.trim();
   return normalized.length > 0 ? normalized : undefined;
 }
 
 function parseMetadata(value: unknown): Record<string, unknown> {
-  if (!value || typeof value !== 'object' || Array.isArray(value)) return {};
+  if (!value || typeof value !== "object" || Array.isArray(value)) return {};
   return { ...(value as Record<string, unknown>) };
 }
 
 function parseNumber(value: unknown): number | undefined {
-  if (typeof value === 'number' && Number.isFinite(value)) return value;
-  if (typeof value === 'string') {
-    const parsed = Number.parseFloat(value.trim().replace(',', '.'));
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  if (typeof value === "string") {
+    const parsed = Number.parseFloat(value.trim().replace(",", "."));
     if (Number.isFinite(parsed)) return parsed;
   }
   return undefined;
@@ -36,19 +36,19 @@ function parseNumber(value: unknown): number | undefined {
 function normalizeStatus(value: unknown): string | undefined {
   const normalized = trimmedString(value)?.toLowerCase();
   if (!normalized) return undefined;
-  if (['active', 'em_andamento', 'in_progress'].includes(normalized)) return 'em_andamento';
-  if (['completed', 'concluido', 'concluído', 'done'].includes(normalized)) return 'concluido';
-  if (['cancelled', 'canceled', 'cancelado'].includes(normalized)) return 'cancelado';
+  if (["active", "em_andamento", "in_progress"].includes(normalized)) return "em_andamento";
+  if (["completed", "concluido", "concluído", "done"].includes(normalized)) return "concluido";
+  if (["cancelled", "canceled", "cancelado"].includes(normalized)) return "cancelado";
   return normalized;
 }
 
 function normalizePriority(value: unknown): string | undefined {
   const normalized = trimmedString(value)?.toLowerCase();
   if (!normalized) return undefined;
-  if (['low', 'baixa'].includes(normalized)) return 'baixa';
-  if (['medium', 'media', 'média'].includes(normalized)) return 'media';
-  if (['high', 'alta'].includes(normalized)) return 'alta';
-  if (['critical', 'critica', 'crítica'].includes(normalized)) return 'critica';
+  if (["low", "baixa"].includes(normalized)) return "baixa";
+  if (["medium", "media", "média"].includes(normalized)) return "media";
+  if (["high", "alta"].includes(normalized)) return "alta";
+  if (["critical", "critica", "crítica"].includes(normalized)) return "critica";
   return normalized;
 }
 
@@ -56,10 +56,10 @@ function cleanupMetadata(metadata: Record<string, unknown>): Record<string, unkn
   return Object.fromEntries(Object.entries(metadata).filter(([, value]) => value !== undefined));
 }
 
-app.get('/', requireAuth, async (c) => {
-  const user = c.get('user');
+app.get("/", requireAuth, async (c) => {
+  const user = c.get("user");
   const { patientId } = c.req.query();
-  if (!patientId) return c.json({ error: 'patientId é obrigatório' }, 400);
+  if (!patientId) return c.json({ error: "patientId é obrigatório" }, 400);
   const db = createPool(c.env);
 
   const result = await db.query(
@@ -68,16 +68,20 @@ app.get('/', requireAuth, async (c) => {
      ORDER BY created_at DESC`,
     [patientId, user.organizationId],
   );
-  try { return c.json({ data: result.rows || result }); } catch { return c.json({ data: [] }); }
+  try {
+    return c.json({ data: result.rows || result });
+  } catch {
+    return c.json({ data: [] });
+  }
 });
 
-app.post('/', requireAuth, async (c) => {
-  const user = c.get('user');
+app.post("/", requireAuth, async (c) => {
+  const user = c.get("user");
   const body = (await c.req.json()) as Record<string, unknown>;
-  const db = createPool(c.env, 60_000, 'read');
+  const db = createPool(c.env, 60_000, "read");
 
-  const patientId = String(body.patient_id ?? '').trim();
-  if (!patientId) return c.json({ error: 'patient_id é obrigatório' }, 400);
+  const patientId = String(body.patient_id ?? "").trim();
+  if (!patientId) return c.json({ error: "patient_id é obrigatório" }, 400);
 
   const rawMetadata = parseMetadata(body.metadata);
   const goalTitle = trimmedString(body.goal_title ?? body.title);
@@ -86,20 +90,30 @@ app.post('/', requireAuth, async (c) => {
   const persistedDescription = goalTitle ?? legacyDescription ?? goalDescription;
 
   if (!persistedDescription) {
-    return c.json({ error: 'goal_title ou description é obrigatório' }, 400);
+    return c.json({ error: "goal_title ou description é obrigatório" }, 400);
   }
 
   const metadata = cleanupMetadata({
     ...rawMetadata,
     goal_title: goalTitle ?? legacyDescription ?? persistedDescription,
-    goal_description: body.goal_description !== undefined ? goalDescription ?? null : rawMetadata.goal_description,
-    category: body.category !== undefined ? trimmedString(body.category) ?? null : rawMetadata.category,
-    target_value: body.target_value !== undefined ? trimmedString(body.target_value) ?? null : rawMetadata.target_value,
-    current_value: body.current_value !== undefined ? trimmedString(body.current_value) ?? null : rawMetadata.current_value,
+    goal_description:
+      body.goal_description !== undefined
+        ? (goalDescription ?? null)
+        : rawMetadata.goal_description,
+    category:
+      body.category !== undefined ? (trimmedString(body.category) ?? null) : rawMetadata.category,
+    target_value:
+      body.target_value !== undefined
+        ? (trimmedString(body.target_value) ?? null)
+        : rawMetadata.target_value,
+    current_value:
+      body.current_value !== undefined
+        ? (trimmedString(body.current_value) ?? null)
+        : rawMetadata.current_value,
     current_progress:
       body.current_progress !== undefined
-        ? parseNumber(body.current_progress) ?? 0
-        : rawMetadata.current_progress ?? 0,
+        ? (parseNumber(body.current_progress) ?? 0)
+        : (rawMetadata.current_progress ?? 0),
   });
 
   const result = await db.query(
@@ -112,19 +126,19 @@ app.post('/', requireAuth, async (c) => {
       user.organizationId,
       persistedDescription,
       trimmedString(body.target_date) ?? null,
-      normalizeStatus(body.status) ?? 'em_andamento',
-      normalizePriority(body.priority) ?? 'media',
+      normalizeStatus(body.status) ?? "em_andamento",
+      normalizePriority(body.priority) ?? "media",
       JSON.stringify(metadata),
     ],
   );
   return c.json({ data: result.rows[0] }, 201);
 });
 
-app.put('/:id', requireAuth, async (c) => {
-  const user = c.get('user');
+app.put("/:id", requireAuth, async (c) => {
+  const user = c.get("user");
   const { id } = c.req.param();
   const body = (await c.req.json()) as Record<string, unknown>;
-  const db = createPool(c.env, 60_000, 'read');
+  const db = createPool(c.env, 60_000, "read");
 
   const current = await db.query(
     `SELECT * FROM patient_goals
@@ -132,12 +146,12 @@ app.put('/:id', requireAuth, async (c) => {
      LIMIT 1`,
     [id, user.organizationId],
   );
-  if (!current.rows.length) return c.json({ error: 'Meta não encontrada' }, 404);
+  if (!current.rows.length) return c.json({ error: "Meta não encontrada" }, 404);
 
   const currentRow = current.rows[0] as Record<string, unknown>;
   const currentMetadata = parseMetadata(currentRow.metadata);
 
-  const sets: string[] = ['updated_at = NOW()'];
+  const sets: string[] = ["updated_at = NOW()"];
   const params: unknown[] = [];
 
   const goalTitleProvided = body.goal_title !== undefined || body.title !== undefined;
@@ -150,16 +164,18 @@ app.put('/:id', requireAuth, async (c) => {
     : undefined;
 
   if (goalTitleProvided || legacyDescriptionProvided) {
-    params.push(nextGoalTitle ?? nextLegacyDescription ?? String(currentRow.description ?? '').trim());
+    params.push(
+      nextGoalTitle ?? nextLegacyDescription ?? String(currentRow.description ?? "").trim(),
+    );
     sets.push(`description = $${params.length}`);
   }
 
   if (body.status !== undefined) {
-    params.push(normalizeStatus(body.status) ?? String(currentRow.status ?? 'em_andamento'));
+    params.push(normalizeStatus(body.status) ?? String(currentRow.status ?? "em_andamento"));
     sets.push(`status = $${params.length}`);
   }
   if (body.priority !== undefined) {
-    params.push(normalizePriority(body.priority) ?? String(currentRow.priority ?? 'media'));
+    params.push(normalizePriority(body.priority) ?? String(currentRow.priority ?? "media"));
     sets.push(`priority = $${params.length}`);
   }
   if (body.target_date !== undefined) {
@@ -188,27 +204,30 @@ app.put('/:id', requireAuth, async (c) => {
       ...parseMetadata(body.metadata),
       goal_title:
         goalTitleProvided || legacyDescriptionProvided
-          ? nextGoalTitle ?? nextLegacyDescription ?? currentMetadata.goal_title ?? currentRow.description
+          ? (nextGoalTitle ??
+            nextLegacyDescription ??
+            currentMetadata.goal_title ??
+            currentRow.description)
           : currentMetadata.goal_title,
       goal_description:
         body.goal_description !== undefined
-          ? trimmedString(body.goal_description) ?? null
+          ? (trimmedString(body.goal_description) ?? null)
           : currentMetadata.goal_description,
       category:
         body.category !== undefined
-          ? trimmedString(body.category) ?? null
+          ? (trimmedString(body.category) ?? null)
           : currentMetadata.category,
       target_value:
         body.target_value !== undefined
-          ? trimmedString(body.target_value) ?? null
+          ? (trimmedString(body.target_value) ?? null)
           : currentMetadata.target_value,
       current_value:
         body.current_value !== undefined
-          ? trimmedString(body.current_value) ?? null
+          ? (trimmedString(body.current_value) ?? null)
           : currentMetadata.current_value,
       current_progress:
         body.current_progress !== undefined
-          ? parseNumber(body.current_progress) ?? 0
+          ? (parseNumber(body.current_progress) ?? 0)
           : currentMetadata.current_progress,
     });
 
@@ -218,7 +237,7 @@ app.put('/:id', requireAuth, async (c) => {
 
   params.push(id, user.organizationId);
   const result = await db.query(
-    `UPDATE patient_goals SET ${sets.join(', ')}
+    `UPDATE patient_goals SET ${sets.join(", ")}
      WHERE id = $${params.length - 1} AND organization_id = $${params.length}
      RETURNING *`,
     params,
@@ -226,18 +245,18 @@ app.put('/:id', requireAuth, async (c) => {
   return c.json({ data: result.rows[0] });
 });
 
-app.delete('/:id', requireAuth, async (c) => {
-  const user = c.get('user');
+app.delete("/:id", requireAuth, async (c) => {
+  const user = c.get("user");
   const { id } = c.req.param();
-  const db = createPool(c.env, 60_000, 'read');
+  const db = createPool(c.env, 60_000, "read");
 
   const check = await db.query(
-    'SELECT id FROM patient_goals WHERE id = $1 AND organization_id = $2',
+    "SELECT id FROM patient_goals WHERE id = $1 AND organization_id = $2",
     [id, user.organizationId],
   );
-  if (!check.rows.length) return c.json({ error: 'Meta não encontrada' }, 404);
+  if (!check.rows.length) return c.json({ error: "Meta não encontrada" }, 404);
 
-  await db.query('DELETE FROM patient_goals WHERE id = $1', [id]);
+  await db.query("DELETE FROM patient_goals WHERE id = $1", [id]);
   return c.json({ ok: true });
 });
 

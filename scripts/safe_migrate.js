@@ -1,59 +1,58 @@
-import pg from 'pg';
-import fs from 'fs';
+import pg from "pg";
+import fs from "fs";
 
 const { Client } = pg;
 
 async function run() {
-    const connectionString = process.env.DATABASE_URL;
-    if (!connectionString) {
-      console.error("DATABASE_URL environment variable is not defined.");
-      process.exit(1);
-    }
-    const client = new Client({
-        connectionString,
-    });
+  const connectionString = process.env.DATABASE_URL;
+  if (!connectionString) {
+    console.error("DATABASE_URL environment variable is not defined.");
+    process.exit(1);
+  }
+  const client = new Client({
+    connectionString,
+  });
 
-    try {
-        await client.connect();
-        console.log("Connected to database.");
+  try {
+    await client.connect();
+    console.log("Connected to database.");
 
-        const sqlContent = fs.readFileSync('drizzle/0002_short_taskmaster.sql', 'utf8');
-        const statements = sqlContent.split('--> statement-breakpoint');
+    const sqlContent = fs.readFileSync("drizzle/0002_short_taskmaster.sql", "utf8");
+    const statements = sqlContent.split("--> statement-breakpoint");
 
-        let success = 0;
-        let skipped = 0;
-        let failed = 0;
+    let success = 0;
+    let skipped = 0;
+    let failed = 0;
 
-        for (let stmt of statements) {
-            stmt = stmt.trim();
-            if (!stmt) continue;
+    for (let stmt of statements) {
+      stmt = stmt.trim();
+      if (!stmt) continue;
 
-            try {
-                await client.query(stmt);
-                success++;
-            } catch (err) {
-                const msg = err.message.toLowerCase();
-                if (msg.includes("already exists") || msg.includes("already a member")) {
-                    console.log(`Skipping (exists): ${stmt.substring(0, 50)}...`);
-                    skipped++;
-                } else {
-                    console.error(`Error in: ${stmt.substring(0, 100)}...`);
-                    console.error(err.message);
-                    failed++;
-                }
-            }
+      try {
+        await client.query(stmt);
+        success++;
+      } catch (err) {
+        const msg = err.message.toLowerCase();
+        if (msg.includes("already exists") || msg.includes("already a member")) {
+          console.log(`Skipping (exists): ${stmt.substring(0, 50)}...`);
+          skipped++;
+        } else {
+          console.error(`Error in: ${stmt.substring(0, 100)}...`);
+          console.error(err.message);
+          failed++;
         }
-
-        console.log("\n--- Migration Summary ---");
-        console.log(`Success: ${success}`);
-        console.log(`Skipped: ${skipped}`);
-        console.log(`Failed: ${failed}`);
-
-    } catch (err) {
-        console.error("Database connection error:", err);
-    } finally {
-        await client.end();
+      }
     }
+
+    console.log("\n--- Migration Summary ---");
+    console.log(`Success: ${success}`);
+    console.log(`Skipped: ${skipped}`);
+    console.log(`Failed: ${failed}`);
+  } catch (err) {
+    console.error("Database connection error:", err);
+  } finally {
+    await client.end();
+  }
 }
 
 run();

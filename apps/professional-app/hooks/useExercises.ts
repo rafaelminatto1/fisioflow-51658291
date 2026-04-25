@@ -1,6 +1,12 @@
-import { useInfiniteQuery, useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
-import { getExercises as apiGetExercises, createExercise as apiCreateExercise, updateExercise as apiUpdateExercise, deleteExercise as apiDeleteExercise, type ApiExercise } from '@/lib/api';
-import type { Exercise, ExerciseAssignment } from '@/types';
+import { useInfiniteQuery, useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
+import {
+  getExercises as apiGetExercises,
+  createExercise as apiCreateExercise,
+  updateExercise as apiUpdateExercise,
+  deleteExercise as apiDeleteExercise,
+  type ApiExercise,
+} from "@/lib/api";
+import type { Exercise, ExerciseAssignment } from "@/types";
 
 export interface UseExercisesLibraryOptions {
   category?: string;
@@ -17,10 +23,14 @@ function mapApiExercise(apiExercise: ApiExercise): Exercise {
   return {
     id: apiExercise.id,
     name: apiExercise.name,
-    description: apiExercise.description || '',
+    description: apiExercise.description || "",
     instructions: apiExercise.instructions || [],
-    category: apiExercise.category || 'Geral',
-    difficulty: (apiExercise.difficulty === 'iniciante' || apiExercise.difficulty === 'easy' ? 'easy' : apiExercise.difficulty === 'intermediario' || apiExercise.difficulty === 'medium' ? 'medium' : 'hard') as Exercise['difficulty'],
+    category: apiExercise.category || "Geral",
+    difficulty: (apiExercise.difficulty === "iniciante" || apiExercise.difficulty === "easy"
+      ? "easy"
+      : apiExercise.difficulty === "intermediario" || apiExercise.difficulty === "medium"
+        ? "medium"
+        : "hard") as Exercise["difficulty"],
     videoUrl: apiExercise.videoUrl,
     imageUrl: apiExercise.imageUrl,
     sets: apiExercise.sets,
@@ -33,14 +43,13 @@ function mapApiExercise(apiExercise: ApiExercise): Exercise {
   };
 }
 
-
 export function useExercisesLibrary(options?: UseExercisesLibraryOptions) {
   const query = useInfiniteQuery({
-    queryKey: ['exercises', 'library', options],
+    queryKey: ["exercises", "library", options],
     queryFn: async ({ pageParam = 1 }) => {
       const response = await apiGetExercises({
         ...options,
-        favorites: options?.favorites ? 'true' : undefined,
+        favorites: options?.favorites ? "true" : undefined,
         page: pageParam as number,
         limit: options?.limit || 20,
       });
@@ -70,12 +79,11 @@ export function useExercisesLibrary(options?: UseExercisesLibraryOptions) {
   };
 }
 
-
 export function useExerciseCreate() {
   const queryClient = useQueryClient();
 
   const createMutation = useMutation({
-    mutationFn: async (data: Omit<Exercise, 'id' | 'createdAt' | 'updatedAt'>) => {
+    mutationFn: async (data: Omit<Exercise, "id" | "createdAt" | "updatedAt">) => {
       const apiExercise = await apiCreateExercise({
         name: data.name,
         description: data.description,
@@ -93,7 +101,7 @@ export function useExerciseCreate() {
       return mapApiExercise(apiExercise);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['exercises'] });
+      queryClient.invalidateQueries({ queryKey: ["exercises"] });
     },
   });
 
@@ -126,7 +134,7 @@ export function useExerciseUpdate() {
       return mapApiExercise(apiExercise);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['exercises'] });
+      queryClient.invalidateQueries({ queryKey: ["exercises"] });
     },
   });
 
@@ -143,7 +151,7 @@ export function useExerciseDelete() {
   const deleteMutation = useMutation({
     mutationFn: (id: string) => apiDeleteExercise(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['exercises'] });
+      queryClient.invalidateQueries({ queryKey: ["exercises"] });
     },
   });
 
@@ -154,12 +162,16 @@ export function useExerciseDelete() {
   };
 }
 
-import { fetchApi } from '@/lib/api';
+import { fetchApi } from "@/lib/api";
 
-const assignExerciseToPatient = async (professionalId: string, patientId: string, assignment: any) => {
+const assignExerciseToPatient = async (
+  professionalId: string,
+  patientId: string,
+  assignment: any,
+) => {
   return fetchApi<any>(`/api/patients/${patientId}/exercises`, {
-    method: 'POST',
-    data: { ...assignment, professionalId }
+    method: "POST",
+    data: { ...assignment, professionalId },
   });
 };
 
@@ -176,10 +188,10 @@ export function usePatientExerciseAssignments() {
       assignment,
     }: {
       patientId: string;
-      assignment: Omit<ExerciseAssignment, 'id'>;
-    }) => assignExerciseToPatient('current-professional', patientId, assignment),
+      assignment: Omit<ExerciseAssignment, "id">;
+    }) => assignExerciseToPatient("current-professional", patientId, assignment),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['patientExercises'] });
+      queryClient.invalidateQueries({ queryKey: ["patientExercises"] });
     },
   });
 
@@ -191,7 +203,7 @@ export function usePatientExerciseAssignments() {
 
 export function usePatientExercises(patientId: string) {
   const exercises = useQuery({
-    queryKey: ['patientExercises', patientId],
+    queryKey: ["patientExercises", patientId],
     queryFn: () => getPatientExerciseAssignments(patientId),
     enabled: !!patientId,
     staleTime: 1000 * 60 * 5,

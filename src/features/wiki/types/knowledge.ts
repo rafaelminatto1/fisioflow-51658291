@@ -1,77 +1,77 @@
 export type EvidenceTier =
-	| "CPG" // Clinical Practice Guideline
-	| "Consensus"
-	| "SystematicReview"
-	| "RCT" // Randomized Controlled Trial
-	| "Protocol"
-	| "ExpertOpinion";
+  | "CPG" // Clinical Practice Guideline
+  | "Consensus"
+  | "SystematicReview"
+  | "RCT" // Randomized Controlled Trial
+  | "Protocol"
+  | "ExpertOpinion";
 
 export type KnowledgeStatus = "verified" | "pending" | "draft" | "archived";
 
 export type KnowledgeGroup =
-	| "Ortopedia"
-	| "Esportiva"
-	| "Pós-Operatório"
-	| "Preventiva"
-	| "Geriatria"
-	| "Neurologia";
+  | "Ortopedia"
+  | "Esportiva"
+  | "Pós-Operatório"
+  | "Preventiva"
+  | "Geriatria"
+  | "Neurologia";
 
 export interface KnowledgeAuthor {
-	name: string;
-	affiliation?: string;
+  name: string;
+  affiliation?: string;
 }
 
 export interface KnowledgeMetadata {
-	year: number;
-	authors: KnowledgeAuthor[];
-	journal?: string;
-	doi?: string;
-	publisher?: string;
+  year: number;
+  authors: KnowledgeAuthor[];
+  journal?: string;
+  doi?: string;
+  publisher?: string;
 }
 
 export interface KnowledgeArtifact {
-	id: string;
-	organizationId: string;
-	title: string;
-	type: "pdf" | "link" | "video" | "internal_doc";
-	url: string; // Storage URL or external link
+  id: string;
+  organizationId: string;
+  title: string;
+  type: "pdf" | "link" | "video" | "internal_doc";
+  url: string; // Storage URL or external link
 
-	// Categorization
-	group: KnowledgeGroup;
-	subgroup: string; // e.g., 'Joelho', 'LCA', 'Ombro'
-	tags: string[];
+  // Categorization
+  group: KnowledgeGroup;
+  subgroup: string; // e.g., 'Joelho', 'LCA', 'Ombro'
+  tags: string[];
 
-	// Clinical Value
-	evidenceLevel: EvidenceTier;
-	status: KnowledgeStatus;
+  // Clinical Value
+  evidenceLevel: EvidenceTier;
+  status: KnowledgeStatus;
 
-	// AI & Processing
-	summary?: string;
-	keyFindings?: string[];
-	clinicalImplications?: string[];
-	vectorStatus?: "pending" | "indexing" | "completed" | "error";
+  // AI & Processing
+  summary?: string;
+  keyFindings?: string[];
+  clinicalImplications?: string[];
+  vectorStatus?: "pending" | "indexing" | "completed" | "error";
 
-	// Metadata
-	metadata: KnowledgeMetadata;
+  // Metadata
+  metadata: KnowledgeMetadata;
 
-	// Stats
-	viewCount: number;
-	citationCount?: number; // Internal or external citations
+  // Stats
+  viewCount: number;
+  citationCount?: number; // Internal or external citations
 
-	// Bidirectional Linking
-	linkedExerciseIds?: string[]; // IDs from exerciseDictionary
+  // Bidirectional Linking
+  linkedExerciseIds?: string[]; // IDs from exerciseDictionary
 
-	createdAt: any; // Database Timestamp
-	updatedAt: any; // Database Timestamp
-	createdBy: string;
+  createdAt: any; // Database Timestamp
+  updatedAt: any; // Database Timestamp
+  createdBy: string;
 }
 
 export interface KnowledgeNote {
-	id: string;
-	artifactId: string;
-	userId: string;
-	content: string; // Markdown
-	pageRef?: number; // If PDF
-	highlightColor?: string;
-	createdAt: any;
+  id: string;
+  artifactId: string;
+  userId: string;
+  content: string; // Markdown
+  pageRef?: number; // If PDF
+  highlightColor?: string;
+  createdAt: any;
 }

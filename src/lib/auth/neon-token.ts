@@ -5,51 +5,51 @@ const JWT_SEGMENTS = 3;
 const SESSION_FETCH_TIMEOUT_MS = 5000;
 
 type SessionTokenData = {
-	session?: {
-		token?: string;
-		access_token?: string;
-	};
-	token?: string;
+  session?: {
+    token?: string;
+    access_token?: string;
+  };
+  token?: string;
 };
 
 type TokenCapableAuthClient = {
-	token?: () => Promise<{ data?: { token?: string } | null }>;
+  token?: () => Promise<{ data?: { token?: string } | null }>;
 };
 
 function looksLikeJwt(token: string): boolean {
-	return token.split(".").length === JWT_SEGMENTS;
+  return token.split(".").length === JWT_SEGMENTS;
 }
 
 function decodeJwtPayload(token: string): { exp?: number } | null {
-	try {
-		const payload = token.split(".")[1];
-		if (!payload) return null;
+  try {
+    const payload = token.split(".")[1];
+    if (!payload) return null;
 
-		let json: string;
-		if (typeof Buffer !== "undefined") {
-			// In Node.js (tests), use Buffer to handle base64url correctly
-			json = Buffer.from(payload, "base64url").toString("utf8");
-		} else {
-			// In browser, manually convert base64url to base64 and add padding
-			let base64 = payload.replace(/-/g, "+").replace(/_/g, "/");
-			const pad = base64.length % 4;
-			if (pad) {
-				base64 += "=".repeat(4 - pad);
-			}
-			json = atob(base64);
-		}
+    let json: string;
+    if (typeof Buffer !== "undefined") {
+      // In Node.js (tests), use Buffer to handle base64url correctly
+      json = Buffer.from(payload, "base64url").toString("utf8");
+    } else {
+      // In browser, manually convert base64url to base64 and add padding
+      let base64 = payload.replace(/-/g, "+").replace(/_/g, "/");
+      const pad = base64.length % 4;
+      if (pad) {
+        base64 += "=".repeat(4 - pad);
+      }
+      json = atob(base64);
+    }
 
-		return JSON.parse(json) as { exp?: number };
-	} catch {
-		return null;
-	}
+    return JSON.parse(json) as { exp?: number };
+  } catch {
+    return null;
+  }
 }
 
 function isExpired(token: string): boolean {
-	const payload = decodeJwtPayload(token);
-	if (!payload?.exp) return false;
-	const nowSeconds = Math.floor(Date.now() / 1000);
-	return payload.exp <= nowSeconds;
+  const payload = decodeJwtPayload(token);
+  if (!payload?.exp) return false;
+  const nowSeconds = Math.floor(Date.now() / 1000);
+  return payload.exp <= nowSeconds;
 }
 
 /** In-memory cache — evita chamar /token a cada request */
@@ -57,80 +57,77 @@ let cachedJwt: string | null = null;
 let cachedJwtExpiry = 0;
 
 function getCachedJwt(): string | null {
-	if (!cachedJwt) return null;
-	const nowSeconds = Math.floor(Date.now() / 1000);
-	// Buffer de 30 segundos antes do vencimento
-	if (cachedJwtExpiry > 0 && nowSeconds >= cachedJwtExpiry - 30) return null;
-	return cachedJwt;
+  if (!cachedJwt) return null;
+  const nowSeconds = Math.floor(Date.now() / 1000);
+  // Buffer de 30 segundos antes do vencimento
+  if (cachedJwtExpiry > 0 && nowSeconds >= cachedJwtExpiry - 30) return null;
+  return cachedJwt;
 }
 
 function setCachedJwt(token: string): void {
-	cachedJwt = token;
-	const payload = decodeJwtPayload(token);
-	cachedJwtExpiry = payload?.exp ?? 0;
+  cachedJwt = token;
+  const payload = decodeJwtPayload(token);
+  cachedJwtExpiry = payload?.exp ?? 0;
 }
 
 async function fetchJwtFromSdk(): Promise<string | null> {
-	// 1. Tenta o método recomendado .token() (disponível no SDK do Neon Auth / Better Auth)
-	try {
-		// NOTA: authClient é um Proxy. Não utilize `.call(authClient)` aqui,
-		// pois o Proxy intercepta chamadas internas (como fetchOptions)
-		// e constrói caminhos de API inválidos (ex: /fetch-options/method/to-upper-case).
-		const tokenClient = authClient as TokenCapableAuthClient;
-		if (typeof tokenClient.token === "function") {
-			const { data } = await tokenClient.token();
-			const token = data?.token;
-			if (typeof token === "string" && looksLikeJwt(token)) return token;
-		}
-	} catch  {
-		// Silently continue to next fallback
-	}
+  // 1. Tenta o método recomendado .token() (disponível no SDK do Neon Auth / Better Auth)
+  try {
+    // NOTA: authClient é um Proxy. Não utilize `.call(authClient)` aqui,
+    // pois o Proxy intercepta chamadas internas (como fetchOptions)
+    // e constrói caminhos de API inválidos (ex: /fetch-options/method/to-upper-case).
+    const tokenClient = authClient as TokenCapableAuthClient;
+    if (typeof tokenClient.token === "function") {
+      const { data } = await tokenClient.token();
+      const token = data?.token;
+      if (typeof token === "string" && looksLikeJwt(token)) return token;
+    }
+  } catch {
+    // Silently continue to next fallback
+  }
 
-	// 2. Tenta obter da sessão ativa
-	try {
-		const { data } = await authClient.getSession();
-		const sessionData = data as SessionTokenData | null | undefined;
-		const token =
-			sessionData?.session?.token ||
-			sessionData?.token ||
-			sessionData?.session?.access_token;
-		if (typeof token === "string" && looksLikeJwt(token)) return token;
-	} catch {
-		// Fallback below
-	}
+  // 2. Tenta obter da sessão ativa
+  try {
+    const { data } = await authClient.getSession();
+    const sessionData = data as SessionTokenData | null | undefined;
+    const token =
+      sessionData?.session?.token || sessionData?.token || sessionData?.session?.access_token;
+    if (typeof token === "string" && looksLikeJwt(token)) return token;
+  } catch {
+    // Fallback below
+  }
 
-	return null;
+  return null;
 }
 
 async function fetchJwtFromDirectSessionFetch(): Promise<string | null> {
-	const neonAuthUrl = getNeonAuthUrl();
-	if (!neonAuthUrl || typeof fetch !== "function") return null;
+  const neonAuthUrl = getNeonAuthUrl();
+  if (!neonAuthUrl || typeof fetch !== "function") return null;
 
-	const controller =
-		typeof AbortController !== "undefined" ? new AbortController() : null;
-	const timeoutId = controller
-		? globalThis.setTimeout(() => controller.abort(), SESSION_FETCH_TIMEOUT_MS)
-		: null;
+  const controller = typeof AbortController !== "undefined" ? new AbortController() : null;
+  const timeoutId = controller
+    ? globalThis.setTimeout(() => controller.abort(), SESSION_FETCH_TIMEOUT_MS)
+    : null;
 
-	try {
-		const response = await fetch(`${neonAuthUrl}/get-session`, {
-			method: "GET",
-			credentials: "include",
-			headers: {
-				Accept: "application/json",
-			},
-			signal: controller?.signal,
-		});
+  try {
+    const response = await fetch(`${neonAuthUrl}/get-session`, {
+      method: "GET",
+      credentials: "include",
+      headers: {
+        Accept: "application/json",
+      },
+      signal: controller?.signal,
+    });
 
-		const jwt = response.headers.get("set-auth-jwt");
-		return typeof jwt === "string" && looksLikeJwt(jwt) ? jwt : null;
-	} catch {
-		return null;
-	} finally {
-		if (timeoutId !== null) {
-			globalThis.clearTimeout(timeoutId);
-		}
-	}
+    const jwt = response.headers.get("set-auth-jwt");
+    return typeof jwt === "string" && looksLikeJwt(jwt) ? jwt : null;
+  } catch {
+    return null;
+  } finally {
+    if (timeoutId !== null) {
+      globalThis.clearTimeout(timeoutId);
+    }
+  }
 }
 
 /**
@@ -144,46 +141,42 @@ async function fetchJwtFromDirectSessionFetch(): Promise<string | null> {
  * existe, mas o token ainda não foi materializado para as chamadas da API.
  */
 async function fetchJwt(): Promise<string | null> {
-	const sdkJwt = await fetchJwtFromSdk();
-	if (sdkJwt) return sdkJwt;
+  const sdkJwt = await fetchJwtFromSdk();
+  if (sdkJwt) return sdkJwt;
 
-	return fetchJwtFromDirectSessionFetch();
+  return fetchJwtFromDirectSessionFetch();
 }
 
 export async function getNeonAccessToken(
-	options: { forceSessionReload?: boolean } = {},
+  options: { forceSessionReload?: boolean } = {},
 ): Promise<string> {
-	if (!isNeonAuthEnabled()) {
-		throw new Error(
-			"Neon Auth não está habilitado (VITE_NEON_AUTH_URL ausente).",
-		);
-	}
+  if (!isNeonAuthEnabled()) {
+    throw new Error("Neon Auth não está habilitado (VITE_NEON_AUTH_URL ausente).");
+  }
 
-	if (!options.forceSessionReload) {
-		const cached = getCachedJwt();
-		if (cached) return cached;
-	}
+  if (!options.forceSessionReload) {
+    const cached = getCachedJwt();
+    if (cached) return cached;
+  }
 
-	const jwt = await fetchJwt();
+  const jwt = await fetchJwt();
 
-	if (!jwt) {
-		throw new Error(
-			"Token JWT do Neon Auth indisponível. Certifique-se de estar logado.",
-		);
-	}
+  if (!jwt) {
+    throw new Error("Token JWT do Neon Auth indisponível. Certifique-se de estar logado.");
+  }
 
-	if (isExpired(jwt)) {
-		throw new Error("Token JWT do Neon Auth expirado. Faça login novamente.");
-	}
+  if (isExpired(jwt)) {
+    throw new Error("Token JWT do Neon Auth expirado. Faça login novamente.");
+  }
 
-	setCachedJwt(jwt);
-	return jwt;
+  setCachedJwt(jwt);
+  return jwt;
 }
 
 /** Limpa o cache — chamar após login bem-sucedido */
 export function invalidateNeonTokenCache(): void {
-	cachedJwt = null;
-	cachedJwtExpiry = 0;
+  cachedJwt = null;
+  cachedJwtExpiry = 0;
 }
 
 // Re-export para compatibilidade

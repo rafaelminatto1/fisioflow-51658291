@@ -1,38 +1,38 @@
-import { fetchApi } from '@/lib/api';
-import * as Device from 'expo-device';
-import { Platform } from 'react-native';
+import { fetchApi } from "@/lib/api";
+import * as Device from "expo-device";
+import { Platform } from "react-native";
 
 // Lazy import para evitar erros se expo-application não estiver instalado
 let Application: any = null;
 try {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
-  Application = require('expo-application');
-} catch  {
+  Application = require("expo-application");
+} catch {
   // expo-application não está instalado, usar fallback
 }
 
-export type AuditAction = 
-  | 'login'
-  | 'logout'
-  | 'view'
-  | 'create'
-  | 'update'
-  | 'delete'
-  | 'export'
-  | 'print'
-  | 'share';
+export type AuditAction =
+  | "login"
+  | "logout"
+  | "view"
+  | "create"
+  | "update"
+  | "delete"
+  | "export"
+  | "print"
+  | "share";
 
-export type ResourceType = 
-  | 'patient'
-  | 'evolution'
-  | 'appointment'
-  | 'financial'
-  | 'report'
-  | 'settings'
-  | 'auth'
-  | 'consent'
-  | 'policy'
-  | 'biometrics';
+export type ResourceType =
+  | "patient"
+  | "evolution"
+  | "appointment"
+  | "financial"
+  | "report"
+  | "settings"
+  | "auth"
+  | "consent"
+  | "policy"
+  | "biometrics";
 
 export interface AuditEvent {
   userId: string;
@@ -52,49 +52,49 @@ export interface AuditEvent {
 
 class AuditLogger {
   private async getDeviceInfo() {
-    let model = 'Unknown';
+    let model = "Unknown";
     try {
       // Device.modelName pode ser null em alguns casos
-      model = (await Device.modelName) || 'Unknown';
+      model = (await Device.modelName) || "Unknown";
     } catch {
-      model = Device.modelName || 'Unknown';
+      model = Device.modelName || "Unknown";
     }
-    
+
     return {
       os: Platform.OS,
       osVersion: Platform.Version.toString(),
       model,
-      appVersion: Application?.nativeApplicationVersion || '1.0.0',
+      appVersion: Application?.nativeApplicationVersion || "1.0.0",
     };
   }
 
-  async logEvent(event: Omit<AuditEvent, 'timestamp' | 'deviceInfo'>): Promise<void> {
+  async logEvent(event: Omit<AuditEvent, "timestamp" | "deviceInfo">): Promise<void> {
     try {
       const deviceInfo = await this.getDeviceInfo();
-      
+
       const fullEvent: AuditEvent = {
         ...event,
         timestamp: new Date().toISOString(),
         deviceInfo,
       };
 
-      await fetchApi('/api/audit-logs', {
-        method: 'POST',
-        data: fullEvent
+      await fetchApi("/api/audit-logs", {
+        method: "POST",
+        data: fullEvent,
       });
     } catch (error) {
-      console.error('[AuditLogger] Error logging event:', error);
+      console.error("[AuditLogger] Error logging event:", error);
       // Failsafe: don't crash the app if audit logging fails
     }
   }
 
   // Helper methods for common events
   async logPHIModification(
-    userId: string, 
-    action: 'create' | 'update' | 'delete', 
-    resourceType: ResourceType, 
-    resourceId: string, 
-    changes?: Record<string, any>
+    userId: string,
+    action: "create" | "update" | "delete",
+    resourceType: ResourceType,
+    resourceId: string,
+    changes?: Record<string, any>,
   ) {
     return this.logEvent({
       userId,
@@ -103,61 +103,61 @@ class AuditLogger {
       resourceId,
       details: {
         isPHI: true,
-        changes
-      }
+        changes,
+      },
     });
   }
 
   async logPHIAccess(
-    userId: string, 
-    resourceType: ResourceType, 
+    userId: string,
+    resourceType: ResourceType,
     resourceId: string,
-    purpose: string = 'treatment'
+    purpose: string = "treatment",
   ) {
     return this.logEvent({
       userId,
-      action: 'view',
+      action: "view",
       resourceType,
       resourceId,
       details: {
         isPHI: true,
-        purpose
-      }
+        purpose,
+      },
     });
   }
 
   async logLogin(userId: string) {
     return this.logEvent({
       userId,
-      action: 'login',
-      resourceType: 'auth'
+      action: "login",
+      resourceType: "auth",
     });
   }
 
   async logLogout(userId: string) {
     return this.logEvent({
       userId,
-      action: 'logout',
-      resourceType: 'auth'
+      action: "logout",
+      resourceType: "auth",
     });
   }
 
   async logExport(userId: string, resourceType: ResourceType, format: string) {
     return this.logEvent({
       userId,
-      action: 'export',
+      action: "export",
       resourceType,
-      details: { format }
+      details: { format },
     });
   }
 
   async query(options: { userId: string; limit?: number }) {
     try {
-      const data = await fetchApi<{ logs: any[] }>('/api/audit-logs', {
+      const data = await fetchApi<{ logs: any[] }>("/api/audit-logs", {
         params: {
           userId: options.userId,
-          limit: options.limit || 50
-        }
+          limit: options.limit || 50,
+        },
       });
       return data.logs || [];
     } catch {

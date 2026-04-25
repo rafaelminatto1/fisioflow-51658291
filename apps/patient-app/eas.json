@@ -35,8 +35,7 @@
     },
     "production": {
       "autoIncrement": true,
-      "ios": {
-      },
+      "ios": {},
       "env": {
         "APP_ENV": "production"
       }

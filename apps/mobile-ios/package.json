@@ -1,6 +1,7 @@
 {
   "name": "mobile-ios",
   "version": "1.0.0",
+  "private": true,
   "main": "index.js",
   "scripts": {
     "start": "expo start",
@@ -19,6 +20,5 @@
     "react-native-skia": "^0.0.1",
     "react-native-vision-camera": "^4.7.3",
     "recharts": "^2.15.4"
-  },
-  "private": true
+  }
 }

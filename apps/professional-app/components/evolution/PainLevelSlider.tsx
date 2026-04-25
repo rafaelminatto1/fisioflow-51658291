@@ -1,6 +1,6 @@
-import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
-import Slider from '@react-native-community/slider';
+import React from "react";
+import { View, Text, StyleSheet } from "react-native";
+import Slider from "@react-native-community/slider";
 
 interface PainLevelSliderProps {
   painLevel: number;
@@ -11,25 +11,23 @@ interface PainLevelSliderProps {
 export function PainLevelSlider({ painLevel, onValueChange, colors }: PainLevelSliderProps) {
   const getPainColor = (level: number) => {
     if (level === 0) return colors.textMuted;
-    if (level <= 3) return '#10B981'; // green
-    if (level <= 6) return '#F59E0B'; // yellow
-    return '#EF4444'; // red
+    if (level <= 3) return "#10B981"; // green
+    if (level <= 6) return "#F59E0B"; // yellow
+    return "#EF4444"; // red
   };
 
   const getPainLabel = (level: number) => {
-    if (level === 0) return 'Sem dor';
-    if (level <= 3) return 'Dor leve';
-    if (level <= 6) return 'Dor moderada';
-    return 'Dor intensa';
+    if (level === 0) return "Sem dor";
+    if (level <= 3) return "Dor leve";
+    if (level <= 6) return "Dor moderada";
+    return "Dor intensa";
   };
 
   return (
     <View style={[styles.container, { backgroundColor: colors.surface }]}>
       <Text style={[styles.label, { color: colors.text }]}>Nível de Dor</Text>
       <View style={styles.painDisplay}>
-        <Text style={[styles.painValue, { color: getPainColor(painLevel) }]}>
-          {painLevel}
-        </Text>
+        <Text style={[styles.painValue, { color: getPainColor(painLevel) }]}>{painLevel}</Text>
         <Text style={[styles.painLabel, { color: colors.textSecondary }]}>
           {getPainLabel(painLevel)}
         </Text>
@@ -61,28 +59,28 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
     marginBottom: 16,
   },
   painDisplay: {
-    alignItems: 'center',
+    alignItems: "center",
     marginBottom: 8,
   },
   painValue: {
     fontSize: 48,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   painLabel: {
     fontSize: 14,
     marginTop: 4,
   },
   slider: {
-    width: '100%',
+    width: "100%",
     height: 40,
   },
   scaleLabels: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    justifyContent: "space-between",
     paddingHorizontal: 4,
   },
   scaleLabel: {

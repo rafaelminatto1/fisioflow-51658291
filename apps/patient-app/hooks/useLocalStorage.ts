@@ -3,15 +3,15 @@
  * Sync state with AsyncStorage
  */
 
-import { useState, useEffect, useCallback } from 'react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useState, useEffect, useCallback } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export function useLocalStorage<T>(
   key: string,
-  initialValue: T
+  initialValue: T,
 ): [T, (value: T | ((val: T) => T)) => void, () => void] {
   const [storedValue, setStoredValue] = useState<T>(initialValue);
-  const [,setIsLoading] = useState(true);
+  const [, setIsLoading] = useState(true);
 
   // Load from storage on mount
   useEffect(() => {
@@ -39,7 +39,7 @@ export function useLocalStorage<T>(
         console.error(`Error saving to localStorage for key "${key}":`, error);
       }
     },
-    [key, storedValue]
+    [key, storedValue],
   );
 
   const removeValue = useCallback(() => {
@@ -60,7 +60,7 @@ export function useLocalStorage<T>(
 export function useSyncedLocalStorage<T>(
   key: string,
   initialValue: T,
-  remoteSource: () => Promise<T>
+  remoteSource: () => Promise<T>,
 ): [T, (value: T) => void, boolean, () => void] {
   const [localValue, setLocalValue] = useState<T>(initialValue);
   const [isSyncing, setIsSyncing] = useState(false);

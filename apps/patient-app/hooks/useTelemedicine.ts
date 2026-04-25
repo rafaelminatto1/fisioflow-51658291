@@ -1,6 +1,6 @@
-import { useState, useEffect, useCallback } from 'react';
-import { telemedicineApi } from '../lib/api';
-import { TelemedicineRoom } from '../types/api';
+import { useState, useEffect, useCallback } from "react";
+import { telemedicineApi } from "../lib/api";
+import { TelemedicineRoom } from "../types/api";
 
 export function useTelemedicine() {
   const [rooms, setRooms] = useState<TelemedicineRoom[]>([]);
@@ -15,8 +15,8 @@ export function useTelemedicine() {
       setRooms(data);
       setError(null);
     } catch (err) {
-      console.error('[useTelemedicine] Error fetching:', err);
-      setError('Erro ao carregar teleconsultas');
+      console.error("[useTelemedicine] Error fetching:", err);
+      setError("Erro ao carregar teleconsultas");
     } finally {
       setLoading(false);
     }
@@ -32,7 +32,7 @@ export function useTelemedicine() {
     fetchRooms();
   }, [fetchRooms]);
 
-  const activeRoom = rooms.find(r => r.status === 'ativo');
+  const activeRoom = rooms.find((r) => r.status === "ativo");
 
   return {
     rooms,

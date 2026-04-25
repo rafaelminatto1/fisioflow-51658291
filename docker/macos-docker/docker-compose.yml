@@ -32,9 +32,9 @@ services:
 
     # Portas
     ports:
-      - "${VNC_PORT:-8888}:8888"   # VNC Web (navegador)
+      - "${VNC_PORT:-8888}:8888" # VNC Web (navegador)
       - "${VNC_NATIVE:-5900}:5900" # VNC Nativo (Remmina/VNC Viewer)
-      - "8006:8006"                 # Interface web alternativa
+      - "8006:8006" # Interface web alternativa
 
     # Volumes
     volumes:

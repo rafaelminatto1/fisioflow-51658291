@@ -15,37 +15,26 @@ export { PageBreadcrumbs } from "./page-breadcrumbs";
 // Theme System (Fase 4: UX/UI Enhancements)
 // ============================================================================
 
-export {
-	ThemeProvider,
-	useTheme,
-	ThemeControls,
-	ThemeSettings,
-} from "./theme/ThemeProvider";
+export { ThemeProvider, useTheme, ThemeControls, ThemeSettings } from "./theme/ThemeProvider";
 export type {
-	ThemePreferences,
-	ColorScheme,
-	FontSize,
-	AnimationSpeed,
-	ThemeContextValue,
+  ThemePreferences,
+  ColorScheme,
+  FontSize,
+  AnimationSpeed,
+  ThemeContextValue,
 } from "./theme/ThemeProvider";
 
 // ============================================================================
 // Accessibility Components (Fase 4: UX/UI Enhancements)
 // ============================================================================
 
-export {
-	SkipLinks,
-	LiveRegion,
-	Announcement,
-	SrOnly,
-	FocusTrap,
-} from "./accessibility/SkipLinks";
+export { SkipLinks, LiveRegion, Announcement, SrOnly, FocusTrap } from "./accessibility/SkipLinks";
 export type {
-	SkipLink,
-	LiveRegionProps,
-	AnnouncementProps,
-	SrOnlyProps,
-	FocusTrapProps,
+  SkipLink,
+  LiveRegionProps,
+  AnnouncementProps,
+  SrOnlyProps,
+  FocusTrapProps,
 } from "./accessibility/SkipLinks";
 
 // ============================================================================
@@ -105,14 +94,7 @@ export type { EmptyStateVariant } from "./EmptyStateEnhanced";
 export { Button } from "./button";
 export { buttonVariants } from "@/lib/ui-variants";
 export { Calendar } from "./calendar";
-export {
-	Card,
-	CardHeader,
-	CardFooter,
-	CardTitle,
-	CardDescription,
-	CardContent,
-} from "./card";
+export { Card, CardHeader, CardFooter, CardTitle, CardDescription, CardContent } from "./card";
 export * from "./carousel";
 export * from "./chart";
 export { Checkbox } from "./checkbox";
@@ -120,16 +102,16 @@ export * from "./collapsible";
 export { Command } from "./command";
 export { ContextMenu } from "./context-menu";
 export {
-	Dialog,
-	DialogPortal,
-	DialogOverlay,
-	DialogTrigger,
-	DialogClose,
-	DialogContent,
-	DialogHeader,
-	DialogFooter,
-	DialogTitle,
-	DialogDescription,
+  Dialog,
+  DialogPortal,
+  DialogOverlay,
+  DialogTrigger,
+  DialogClose,
+  DialogContent,
+  DialogHeader,
+  DialogFooter,
+  DialogTitle,
+  DialogDescription,
 } from "./dialog";
 export * from "./drawer";
 export * from "./dropdown-menu";
@@ -156,14 +138,14 @@ export { OptimizedImage } from "./OptimizedImage";
 
 export { Switch } from "./switch";
 export {
-	Table,
-	TableHeader,
-	TableBody,
-	TableFooter,
-	TableHead,
-	TableRow,
-	TableCell,
-	TableCaption,
+  Table,
+  TableHeader,
+  TableBody,
+  TableFooter,
+  TableHead,
+  TableRow,
+  TableCell,
+  TableCaption,
 } from "./table";
 export { Tabs, TabsList, TabsTrigger, TabsContent } from "./tabs";
 export { Textarea } from "./textarea";

@@ -43,19 +43,14 @@ Todas as rotas devem garantir o isolamento por organização (`organizationId`).
 
 ```typescript
 // apps/api/src/routes/patients.ts
-app.get('/', requireAuth, async (c) => {
-  const user = c.get('user'); // Injetado pelo middleware de auth
+app.get("/", requireAuth, async (c) => {
+  const user = c.get("user"); // Injetado pelo middleware de auth
   const db = createDb(c.env);
 
   const result = await db
     .select()
     .from(patients)
-    .where(
-      and(
-        eq(patients.organizationId, user.organizationId),
-        isNull(patients.deletedAt)
-      )
-    );
+    .where(and(eq(patients.organizationId, user.organizationId), isNull(patients.deletedAt)));
 
   return c.json({ data: result });
 });
@@ -82,11 +77,11 @@ Utilizamos **TanStack Query (React Query)** para gerenciamento de estado assínc
 // Exemplo de fetcher centralizado
 export function usePatients() {
   return useQuery({
-    queryKey: ['patients'],
+    queryKey: ["patients"],
     queryFn: async () => {
-      const resp = await api.get('/api/patients');
+      const resp = await api.get("/api/patients");
       return resp.data;
-    }
+    },
   });
 }
 ```
@@ -121,5 +116,6 @@ CLOUDFLARE_API_TOKEN=...
 ```
 
 ---
+
 **Última Atualização:** Abril 2026
 **Responsável:** Antigravity AI Kit

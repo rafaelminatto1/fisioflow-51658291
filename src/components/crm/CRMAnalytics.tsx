@@ -2,360 +2,333 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import {
-	BarChart3,
-	TrendingUp,
-	Users,
-	Thermometer,
-	Target,
-	Clock,
-	AlertTriangle,
-	Award,
-	LineChart as LineChartIcon,
+  BarChart3,
+  TrendingUp,
+  Users,
+  Thermometer,
+  Target,
+  Clock,
+  AlertTriangle,
+  Award,
+  LineChart as LineChartIcon,
 } from "lucide-react";
 import {
-	LineChart,
-	Line,
-	XAxis,
-	YAxis,
-	CartesianGrid,
-	Tooltip,
-	ResponsiveContainer,
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
 } from "recharts";
 import { useCRMAnalytics, useNPSMetrics } from "@/hooks/useCRM";
 import { useLeadMetrics } from "@/hooks/useLeads";
 
 const ESTAGIOS_LABELS: Record<string, string> = {
-	aguardando: "Aguardando",
-	em_contato: "Em Contato",
-	avaliacao_agendada: "Avaliação Agendada",
-	avaliacao_realizada: "Avaliação Realizada",
-	efetivado: "Efetivado",
-	nao_efetivado: "Não Efetivado",
+  aguardando: "Aguardando",
+  em_contato: "Em Contato",
+  avaliacao_agendada: "Avaliação Agendada",
+  avaliacao_realizada: "Avaliação Realizada",
+  efetivado: "Efetivado",
+  nao_efetivado: "Não Efetivado",
 };
 
 const TEMPERATURA_COLORS: Record<string, string> = {
-	quente: "bg-rose-500",
-	morno: "bg-amber-500",
-	frio: "bg-blue-500",
+  quente: "bg-rose-500",
+  morno: "bg-amber-500",
+  frio: "bg-blue-500",
 };
 
 export function CRMAnalytics() {
-	const { data: analytics, isLoading } = useCRMAnalytics();
-	const { data: leadMetrics } = useLeadMetrics();
-	const { data: npsMetrics } = useNPSMetrics();
+  const { data: analytics, isLoading } = useCRMAnalytics();
+  const { data: leadMetrics } = useLeadMetrics();
+  const { data: npsMetrics } = useNPSMetrics();
 
-	if (isLoading || !analytics) {
-		return <div className="animate-pulse h-96 bg-muted rounded-lg" />;
-	}
+  if (isLoading || !analytics) {
+    return <div className="animate-pulse h-96 bg-muted rounded-lg" />;
+  }
 
-	const {
-		conversionBySource,
-		temperatureDistribution,
-		stageAnalysis,
-		coldLeads,
-		totalLeads,
-	} = analytics;
+  const { conversionBySource, temperatureDistribution, stageAnalysis, coldLeads, totalLeads } =
+    analytics;
 
-	// Simulação de dados de tendência (em um cenário real viria do hook)
-	const trendData = [
-		{ month: "Jan", rate: 12 },
-		{ month: "Fev", rate: 15 },
-		{ month: "Mar", rate: 18 },
-		{ month: "Abr", rate: 22 },
-		{ month: "Mai", rate: leadMetrics?.taxaConversao || 25 },
-	];
+  // Simulação de dados de tendência (em um cenário real viria do hook)
+  const trendData = [
+    { month: "Jan", rate: 12 },
+    { month: "Fev", rate: 15 },
+    { month: "Mar", rate: 18 },
+    { month: "Abr", rate: 22 },
+    { month: "Mai", rate: leadMetrics?.taxaConversao || 25 },
+  ];
 
-	return (
-		<div className="space-y-6">
-			<div className="flex items-center justify-between">
-				<h2 className="text-2xl font-bold flex items-center gap-2">
-					<BarChart3 className="h-6 w-6" />
-					Analytics do CRM
-				</h2>
-			</div>
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h2 className="text-2xl font-bold flex items-center gap-2">
+          <BarChart3 className="h-6 w-6" />
+          Analytics do CRM
+        </h2>
+      </div>
 
-			{/* KPIs Principais */}
-			<div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-				<Card className="bg-gradient-to-br from-primary/10 to-primary/5">
-					<CardContent className="pt-4">
-						<div className="flex items-center gap-3">
-							<div className="p-2 rounded-full bg-primary/20">
-								<Users className="h-5 w-5 text-primary" />
-							</div>
-							<div>
-								<div className="text-2xl font-bold">{totalLeads}</div>
-								<p className="text-sm text-muted-foreground">Total de Leads</p>
-							</div>
-						</div>
-					</CardContent>
-				</Card>
+      {/* KPIs Principais */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <Card className="bg-gradient-to-br from-primary/10 to-primary/5">
+          <CardContent className="pt-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-full bg-primary/20">
+                <Users className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <div className="text-2xl font-bold">{totalLeads}</div>
+                <p className="text-sm text-muted-foreground">Total de Leads</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
-				<Card className="bg-gradient-to-br from-emerald-500/10 to-emerald-500/5">
-					<CardContent className="pt-4">
-						<div className="flex items-center gap-3">
-							<div className="p-2 rounded-full bg-emerald-500/20">
-								<Target className="h-5 w-5 text-emerald-500" />
-							</div>
-							<div>
-								<div className="text-2xl font-bold text-emerald-600">
-									{leadMetrics?.taxaConversao}%
-								</div>
-								<p className="text-sm text-muted-foreground">
-									Taxa de Conversão
-								</p>
-							</div>
-						</div>
-					</CardContent>
-				</Card>
+        <Card className="bg-gradient-to-br from-emerald-500/10 to-emerald-500/5">
+          <CardContent className="pt-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-full bg-emerald-500/20">
+                <Target className="h-5 w-5 text-emerald-500" />
+              </div>
+              <div>
+                <div className="text-2xl font-bold text-emerald-600">
+                  {leadMetrics?.taxaConversao}%
+                </div>
+                <p className="text-sm text-muted-foreground">Taxa de Conversão</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
-				<Card className="bg-gradient-to-br from-amber-500/10 to-amber-500/5">
-					<CardContent className="pt-4">
-						<div className="flex items-center gap-3">
-							<div className="p-2 rounded-full bg-amber-500/20">
-								<AlertTriangle className="h-5 w-5 text-amber-500" />
-							</div>
-							<div>
-								<div className="text-2xl font-bold text-amber-600">
-									{coldLeads}
-								</div>
-								<p className="text-sm text-muted-foreground">
-									Leads Frios (7+ dias)
-								</p>
-							</div>
-						</div>
-					</CardContent>
-				</Card>
+        <Card className="bg-gradient-to-br from-amber-500/10 to-amber-500/5">
+          <CardContent className="pt-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-full bg-amber-500/20">
+                <AlertTriangle className="h-5 w-5 text-amber-500" />
+              </div>
+              <div>
+                <div className="text-2xl font-bold text-amber-600">{coldLeads}</div>
+                <p className="text-sm text-muted-foreground">Leads Frios (7+ dias)</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
-				<Card className="bg-gradient-to-br from-purple-500/10 to-purple-500/5">
-					<CardContent className="pt-4">
-						<div className="flex items-center gap-3">
-							<div className="p-2 rounded-full bg-purple-500/20">
-								<Award className="h-5 w-5 text-purple-500" />
-							</div>
-							<div>
-								<div className="text-2xl font-bold text-purple-600">
-									{npsMetrics?.nps || 0}
-								</div>
-								<p className="text-sm text-muted-foreground">NPS Score</p>
-							</div>
-						</div>
-					</CardContent>
-				</Card>
-			</div>
+        <Card className="bg-gradient-to-br from-purple-500/10 to-purple-500/5">
+          <CardContent className="pt-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-full bg-purple-500/20">
+                <Award className="h-5 w-5 text-purple-500" />
+              </div>
+              <div>
+                <div className="text-2xl font-bold text-purple-600">{npsMetrics?.nps || 0}</div>
+                <p className="text-sm text-muted-foreground">NPS Score</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
 
-			{/* Tendência de Conversão */}
-			<Card className="border-none shadow-premium-sm ring-1 ring-border/50 bg-background/50 backdrop-blur-sm overflow-hidden">
-				<CardHeader className="border-b border-border/40 bg-muted/20">
-					<CardTitle className="text-lg font-bold flex items-center gap-2">
-						<LineChartIcon className="h-5 w-5 text-primary" />
-						Tendência de Conversão (% de Efetivação)
-					</CardTitle>
-				</CardHeader>
-				<CardContent className="pt-6">
-					<div className="h-[300px] w-full">
-						<ResponsiveContainer width="100%" height="100%">
-							<LineChart data={trendData}>
-								<CartesianGrid strokeDasharray="3 3" vertical={false} strokeOpacity={0.1} />
-								<XAxis 
-									dataKey="month" 
-									axisLine={false} 
-									tickLine={false}
-									tick={{ fontSize: 12, fontWeight: 600, fill: 'hsl(var(--muted-foreground))' }}
-								/>
-								<YAxis 
-									axisLine={false} 
-									tickLine={false}
-									tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }}
-									unit="%"
-								/>
-								<Tooltip 
-									contentStyle={{ 
-										borderRadius: '16px', 
-										border: '1px solid hsl(var(--border))', 
-										boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)',
-										backgroundColor: 'hsl(var(--background))'
-									}}
-								/>
-								<Line 
-									type="monotone" 
-									dataKey="rate" 
-									stroke="hsl(var(--primary))" 
-									strokeWidth={4}
-									dot={{ r: 6, fill: "hsl(var(--primary))", strokeWidth: 2, stroke: "#fff" }}
-									activeDot={{ r: 8, strokeWidth: 0, fill: "hsl(var(--primary))" }}
-									name="Taxa de Conversão"
-									animationDuration={1500}
-								/>
-							</LineChart>
-						</ResponsiveContainer>
-					</div>
-				</CardContent>
-			</Card>
+      {/* Tendência de Conversão */}
+      <Card className="border-none shadow-premium-sm ring-1 ring-border/50 bg-background/50 backdrop-blur-sm overflow-hidden">
+        <CardHeader className="border-b border-border/40 bg-muted/20">
+          <CardTitle className="text-lg font-bold flex items-center gap-2">
+            <LineChartIcon className="h-5 w-5 text-primary" />
+            Tendência de Conversão (% de Efetivação)
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="pt-6">
+          <div className="h-[300px] w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={trendData}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} strokeOpacity={0.1} />
+                <XAxis
+                  dataKey="month"
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fontSize: 12, fontWeight: 600, fill: "hsl(var(--muted-foreground))" }}
+                />
+                <YAxis
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }}
+                  unit="%"
+                />
+                <Tooltip
+                  contentStyle={{
+                    borderRadius: "16px",
+                    border: "1px solid hsl(var(--border))",
+                    boxShadow: "0 10px 15px -3px rgba(0,0,0,0.1)",
+                    backgroundColor: "hsl(var(--background))",
+                  }}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="rate"
+                  stroke="hsl(var(--primary))"
+                  strokeWidth={4}
+                  dot={{ r: 6, fill: "hsl(var(--primary))", strokeWidth: 2, stroke: "#fff" }}
+                  activeDot={{ r: 8, strokeWidth: 0, fill: "hsl(var(--primary))" }}
+                  name="Taxa de Conversão"
+                  animationDuration={1500}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        </CardContent>
+      </Card>
 
-			<div className="grid md:grid-cols-2 gap-6">
-				{/* Conversão por Origem */}
-				<Card>
-					<CardHeader>
-						<CardTitle className="text-lg flex items-center gap-2">
-							<TrendingUp className="h-5 w-5" />
-							Conversão por Origem
-						</CardTitle>
-					</CardHeader>
-					<CardContent>
-						<div className="space-y-4">
-							{conversionBySource
-								.sort((a, b) => b.taxa - a.taxa)
-								.map((item) => (
-									<div key={item.origem} className="space-y-2">
-										<div className="flex items-center justify-between text-sm">
-											<span className="font-medium">{item.origem}</span>
-											<span className="text-muted-foreground">
-												{item.convertidos}/{item.total} ({item.taxa}%)
-											</span>
-										</div>
-										<Progress value={item.taxa} className="h-2" />
-									</div>
-								))}
-							{conversionBySource.length === 0 && (
-								<p className="text-muted-foreground text-center py-4">
-									Nenhum dado disponível
-								</p>
-							)}
-						</div>
-					</CardContent>
-				</Card>
+      <div className="grid md:grid-cols-2 gap-6">
+        {/* Conversão por Origem */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <TrendingUp className="h-5 w-5" />
+              Conversão por Origem
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {conversionBySource
+                .sort((a, b) => b.taxa - a.taxa)
+                .map((item) => (
+                  <div key={item.origem} className="space-y-2">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="font-medium">{item.origem}</span>
+                      <span className="text-muted-foreground">
+                        {item.convertidos}/{item.total} ({item.taxa}%)
+                      </span>
+                    </div>
+                    <Progress value={item.taxa} className="h-2" />
+                  </div>
+                ))}
+              {conversionBySource.length === 0 && (
+                <p className="text-muted-foreground text-center py-4">Nenhum dado disponível</p>
+              )}
+            </div>
+          </CardContent>
+        </Card>
 
-				{/* Temperatura dos Leads */}
-				<Card>
-					<CardHeader>
-						<CardTitle className="text-lg flex items-center gap-2">
-							<Thermometer className="h-5 w-5" />
-							Temperatura dos Leads
-						</CardTitle>
-					</CardHeader>
-					<CardContent>
-						<div className="space-y-4">
-							{Object.entries(temperatureDistribution).map(([temp, count]) => {
-								const percentage =
-									totalLeads > 0 ? Math.round((count / totalLeads) * 100) : 0;
-								const labels: Record<string, string> = {
-									quente: "Quente 🔥",
-									morno: "Morno ☀️",
-									frio: "Frio ❄️",
-								};
-								return (
-									<div key={temp} className="space-y-2">
-										<div className="flex items-center justify-between text-sm">
-											<span className="font-medium">
-												{labels[temp] || temp}
-											</span>
-											<span className="text-muted-foreground">
-												{count} leads ({percentage}%)
-											</span>
-										</div>
-										<div className="h-3 bg-muted rounded-full overflow-hidden">
-											<div
-												className={`h-full ${TEMPERATURA_COLORS[temp] || "bg-slate-500"} transition-all`}
-												style={{ width: `${percentage}%` }}
-											/>
-										</div>
-									</div>
-								);
-							})}
-						</div>
-					</CardContent>
-				</Card>
+        {/* Temperatura dos Leads */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Thermometer className="h-5 w-5" />
+              Temperatura dos Leads
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {Object.entries(temperatureDistribution).map(([temp, count]) => {
+                const percentage = totalLeads > 0 ? Math.round((count / totalLeads) * 100) : 0;
+                const labels: Record<string, string> = {
+                  quente: "Quente 🔥",
+                  morno: "Morno ☀️",
+                  frio: "Frio ❄️",
+                };
+                return (
+                  <div key={temp} className="space-y-2">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="font-medium">{labels[temp] || temp}</span>
+                      <span className="text-muted-foreground">
+                        {count} leads ({percentage}%)
+                      </span>
+                    </div>
+                    <div className="h-3 bg-muted rounded-full overflow-hidden">
+                      <div
+                        className={`h-full ${TEMPERATURA_COLORS[temp] || "bg-slate-500"} transition-all`}
+                        style={{ width: `${percentage}%` }}
+                      />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
 
-				{/* Leads por Estágio */}
-				<Card>
-					<CardHeader>
-						<CardTitle className="text-lg flex items-center gap-2">
-							<Clock className="h-5 w-5" />
-							Leads por Estágio
-						</CardTitle>
-					</CardHeader>
-					<CardContent>
-						<div className="space-y-3">
-							{stageAnalysis.map((item) => (
-								<div
-									key={item.estagio}
-									className="flex items-center justify-between p-2 bg-muted/50 rounded-lg"
-								>
-									<div className="flex items-center gap-2">
-										<Badge variant="outline">
-											{ESTAGIOS_LABELS[item.estagio] || item.estagio}
-										</Badge>
-										<span className="text-sm font-medium">
-											{item.count} leads
-										</span>
-									</div>
-									<div className="text-sm text-muted-foreground">
-										Score médio:{" "}
-										<span className="font-medium">{item.avgScore}</span>
-									</div>
-								</div>
-							))}
-						</div>
-					</CardContent>
-				</Card>
+        {/* Leads por Estágio */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Clock className="h-5 w-5" />
+              Leads por Estágio
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {stageAnalysis.map((item) => (
+                <div
+                  key={item.estagio}
+                  className="flex items-center justify-between p-2 bg-muted/50 rounded-lg"
+                >
+                  <div className="flex items-center gap-2">
+                    <Badge variant="outline">{ESTAGIOS_LABELS[item.estagio] || item.estagio}</Badge>
+                    <span className="text-sm font-medium">{item.count} leads</span>
+                  </div>
+                  <div className="text-sm text-muted-foreground">
+                    Score médio: <span className="font-medium">{item.avgScore}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
 
-				{/* NPS Breakdown */}
-				<Card>
-					<CardHeader>
-						<CardTitle className="text-lg flex items-center gap-2">
-							<Award className="h-5 w-5" />
-							NPS - Net Promoter Score
-						</CardTitle>
-					</CardHeader>
-					<CardContent>
-						{npsMetrics && npsMetrics.total > 0 ? (
-							<div className="space-y-4">
-								<div className="text-center py-4">
-									<div
-										className={`text-5xl font-bold ${npsMetrics.nps >= 50 ? "text-emerald-500" : npsMetrics.nps >= 0 ? "text-amber-500" : "text-rose-500"}`}
-									>
-										{npsMetrics.nps}
-									</div>
-									<p className="text-muted-foreground mt-1">
-										{npsMetrics.nps >= 70
-											? "Excelente!"
-											: npsMetrics.nps >= 50
-												? "Muito Bom"
-												: npsMetrics.nps >= 0
-													? "Bom"
-													: "Precisa Melhorar"}
-									</p>
-								</div>
-								<div className="grid grid-cols-3 gap-4 text-center">
-									<div className="p-3 bg-emerald-500/10 rounded-lg">
-										<div className="text-2xl font-bold text-emerald-600">
-											{npsMetrics.promotores}
-										</div>
-										<p className="text-xs text-muted-foreground">Promotores</p>
-									</div>
-									<div className="p-3 bg-amber-500/10 rounded-lg">
-										<div className="text-2xl font-bold text-amber-600">
-											{npsMetrics.neutros}
-										</div>
-										<p className="text-xs text-muted-foreground">Neutros</p>
-									</div>
-									<div className="p-3 bg-rose-500/10 rounded-lg">
-										<div className="text-2xl font-bold text-rose-600">
-											{npsMetrics.detratores}
-										</div>
-										<p className="text-xs text-muted-foreground">Detratores</p>
-									</div>
-								</div>
-							</div>
-						) : (
-							<div className="text-center py-8 text-muted-foreground">
-								<Award className="h-12 w-12 mx-auto mb-2 opacity-50" />
-								<p>Nenhuma pesquisa NPS realizada</p>
-							</div>
-						)}
-					</CardContent>
-				</Card>
-			</div>
-		</div>
-	);
+        {/* NPS Breakdown */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Award className="h-5 w-5" />
+              NPS - Net Promoter Score
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {npsMetrics && npsMetrics.total > 0 ? (
+              <div className="space-y-4">
+                <div className="text-center py-4">
+                  <div
+                    className={`text-5xl font-bold ${npsMetrics.nps >= 50 ? "text-emerald-500" : npsMetrics.nps >= 0 ? "text-amber-500" : "text-rose-500"}`}
+                  >
+                    {npsMetrics.nps}
+                  </div>
+                  <p className="text-muted-foreground mt-1">
+                    {npsMetrics.nps >= 70
+                      ? "Excelente!"
+                      : npsMetrics.nps >= 50
+                        ? "Muito Bom"
+                        : npsMetrics.nps >= 0
+                          ? "Bom"
+                          : "Precisa Melhorar"}
+                  </p>
+                </div>
+                <div className="grid grid-cols-3 gap-4 text-center">
+                  <div className="p-3 bg-emerald-500/10 rounded-lg">
+                    <div className="text-2xl font-bold text-emerald-600">
+                      {npsMetrics.promotores}
+                    </div>
+                    <p className="text-xs text-muted-foreground">Promotores</p>
+                  </div>
+                  <div className="p-3 bg-amber-500/10 rounded-lg">
+                    <div className="text-2xl font-bold text-amber-600">{npsMetrics.neutros}</div>
+                    <p className="text-xs text-muted-foreground">Neutros</p>
+                  </div>
+                  <div className="p-3 bg-rose-500/10 rounded-lg">
+                    <div className="text-2xl font-bold text-rose-600">{npsMetrics.detratores}</div>
+                    <p className="text-xs text-muted-foreground">Detratores</p>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="text-center py-8 text-muted-foreground">
+                <Award className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                <p>Nenhuma pesquisa NPS realizada</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
 }

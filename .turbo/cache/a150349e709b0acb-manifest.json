@@ -1,1 +1,11 @@
-{"files":{"packages/config/.turbo/turbo-lint.log":{"size":208,"mtime_nanos":1777007440763922093,"mode":436,"is_dir":false}},"order":["packages/config/.turbo/turbo-lint.log"]}
+{
+  "files": {
+    "packages/config/.turbo/turbo-lint.log": {
+      "size": 208,
+      "mtime_nanos": 1777007440763922093,
+      "mode": 436,
+      "is_dir": false
+    }
+  },
+  "order": ["packages/config/.turbo/turbo-lint.log"]
+}

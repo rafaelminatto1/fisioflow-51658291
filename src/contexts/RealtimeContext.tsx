@@ -10,32 +10,32 @@ import { useQueryClient } from "@tanstack/react-query";
 let _loggedRealtimeNoOrgId = false;
 
 export interface DashboardMetrics {
-	totalAppointments: number;
-	confirmedAppointments: number;
-	cancelledAppointments: number;
-	patientsInSession: number;
-	todayRevenue: number;
-	occupancyRate: number;
+  totalAppointments: number;
+  confirmedAppointments: number;
+  cancelledAppointments: number;
+  patientsInSession: number;
+  todayRevenue: number;
+  occupancyRate: number;
 }
 
 export interface Appointment {
-	id: string;
-	patient_name: string;
-	therapist_id: string;
-	start_time: string;
-	end_time?: string;
-	status: "confirmed" | "pending" | "cancelled";
-	type?: string;
+  id: string;
+  patient_name: string;
+  therapist_id: string;
+  start_time: string;
+  end_time?: string;
+  status: "confirmed" | "pending" | "cancelled";
+  type?: string;
 }
 
 interface RealtimeContextType {
-	appointments: Appointment[];
-	onlineUsers: Map<string, any>;
-	metrics: DashboardMetrics;
-	lastUpdate: number;
-	isSubscribed: boolean;
-	subscribeToAppointments: () => void;
-	updateMetrics: () => Promise<void>;
+  appointments: Appointment[];
+  onlineUsers: Map<string, any>;
+  metrics: DashboardMetrics;
+  lastUpdate: number;
+  isSubscribed: boolean;
+  subscribeToAppointments: () => void;
+  updateMetrics: () => Promise<void>;
 }
 
 // Criar o contexto (exportado para useRealtimeContext)
@@ -54,343 +54,297 @@ RealtimeContext.displayName = "RealtimeContext";
  * 4. Métricas calculadas em memória (sem queries adicionais)
  * 5. Cleanup adequado de channels
  */
-export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({
-	children,
-}) => {
-	const { profile } = useAuth();
-	const queryClient = useQueryClient();
-	const organizationId = profile?.organization_id;
-	const [appointments, setAppointments] = useState<Appointment[]>([]);
-	const [onlineUsers, setOnlineUsers] = useState<Map<string, any>>(new Map());
-	const [metrics, setMetrics] = useState<DashboardMetrics>({
-		totalAppointments: 0,
-		confirmedAppointments: 0,
-		cancelledAppointments: 0,
-		patientsInSession: 0,
-		todayRevenue: 0,
-		occupancyRate: 0,
-	});
-	const [lastUpdate, setLastUpdate] = useState(Date.now());
-	const [isSubscribed, setIsSubscribed] = useState(false);
-	const wsRef = useRef<WebSocket | null>(null);
-	const reconnectTimeoutRef = useRef<number | null>(null);
+export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { profile } = useAuth();
+  const queryClient = useQueryClient();
+  const organizationId = profile?.organization_id;
+  const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [onlineUsers, setOnlineUsers] = useState<Map<string, any>>(new Map());
+  const [metrics, setMetrics] = useState<DashboardMetrics>({
+    totalAppointments: 0,
+    confirmedAppointments: 0,
+    cancelledAppointments: 0,
+    patientsInSession: 0,
+    todayRevenue: 0,
+    occupancyRate: 0,
+  });
+  const [lastUpdate, setLastUpdate] = useState(Date.now());
+  const [isSubscribed, setIsSubscribed] = useState(false);
+  const wsRef = useRef<WebSocket | null>(null);
+  const reconnectTimeoutRef = useRef<number | null>(null);
 
-	/**
-	 * Atualizar métricas baseadas nos appointments atuais
-	 * Usa memoização interna para evitar recálculos desnecessários
-	 */
-	const updateMetrics = useCallback(async () => {
-		// Early return se não houver appointments
-		if (appointments.length === 0) {
-			setMetrics({
-				totalAppointments: 0,
-				confirmedAppointments: 0,
-				cancelledAppointments: 0,
-				patientsInSession: 0,
-				todayRevenue: 0,
-				occupancyRate: 0,
-			});
-			return;
-		}
+  /**
+   * Atualizar métricas baseadas nos appointments atuais
+   * Usa memoização interna para evitar recálculos desnecessários
+   */
+  const updateMetrics = useCallback(async () => {
+    // Early return se não houver appointments
+    if (appointments.length === 0) {
+      setMetrics({
+        totalAppointments: 0,
+        confirmedAppointments: 0,
+        cancelledAppointments: 0,
+        patientsInSession: 0,
+        todayRevenue: 0,
+        occupancyRate: 0,
+      });
+      return;
+    }
 
-		try {
-			// Calcular métricas em uma única passagem (O(n) em vez de O(n*5))
-			let confirmed = 0;
-			let cancelled = 0;
-			let revenue = 0;
-			
-			// Usando Temporal para data de hoje sem horas (comparação segura)
-			const today = Temporal.Now.plainDateISO();
-			const patientSet = new Set<string>();
+    try {
+      // Calcular métricas em uma única passagem (O(n) em vez de O(n*5))
+      let confirmed = 0;
+      let cancelled = 0;
+      let revenue = 0;
 
-			for (const a of appointments) {
-				if (a.status === "confirmed") {
-					confirmed++;
-					patientSet.add(a.patient_name);
+      // Usando Temporal para data de hoje sem horas (comparação segura)
+      const today = Temporal.Now.plainDateISO();
+      const patientSet = new Set<string>();
 
-					try {
-						// Converte start_time ISO para PlainDate para comparar com 'today'
-						const apptDate = Temporal.Instant.from(a.start_time)
-							.toZonedDateTimeISO(Temporal.Now.timeZoneId())
-							.toPlainDate();
-						
-						if (Temporal.PlainDate.compare(apptDate, today) >= 0 && a.type === "paid") {
-							revenue += 100;
-						}
-					} catch {
-						// Fallback silencioso se a data estiver malformada
-					}
-				} else if (a.status === "cancelled") {
-					cancelled++;
-				}
-			}
+      for (const a of appointments) {
+        if (a.status === "confirmed") {
+          confirmed++;
+          patientSet.add(a.patient_name);
 
-			const total = appointments.length;
-			const occupancyRate =
-				total > 0 ? Math.round((confirmed / total) * 100) : 0;
+          try {
+            // Converte start_time ISO para PlainDate para comparar com 'today'
+            const apptDate = Temporal.Instant.from(a.start_time)
+              .toZonedDateTimeISO(Temporal.Now.timeZoneId())
+              .toPlainDate();
 
-			setMetrics({
-				totalAppointments: total,
-				confirmedAppointments: confirmed,
-				cancelledAppointments: cancelled,
-				patientsInSession: patientSet.size,
-				todayRevenue: revenue,
-				occupancyRate,
-			});
-		} catch (error) {
-			logger.error(
-				"Realtime: Error in updateMetrics",
-				error,
-				"RealtimeContext",
-			);
-		}
-	}, [appointments]);
+            if (Temporal.PlainDate.compare(apptDate, today) >= 0 && a.type === "paid") {
+              revenue += 100;
+            }
+          } catch {
+            // Fallback silencioso se a data estiver malformada
+          }
+        } else if (a.status === "cancelled") {
+          cancelled++;
+        }
+      }
 
-	// Debounced appointments para evitar recálculos em mudanças rápidas
-	const debouncedAppointments = useDebounce(appointments, 300);
+      const total = appointments.length;
+      const occupancyRate = total > 0 ? Math.round((confirmed / total) * 100) : 0;
 
-	// Atualizar métricas quando appointments debounced mudar
-	useEffect(() => {
-		updateMetrics();
-	}, [updateMetrics, debouncedAppointments]);
+      setMetrics({
+        totalAppointments: total,
+        confirmedAppointments: confirmed,
+        cancelledAppointments: cancelled,
+        patientsInSession: patientSet.size,
+        todayRevenue: revenue,
+        occupancyRate,
+      });
+    } catch (error) {
+      logger.error("Realtime: Error in updateMetrics", error, "RealtimeContext");
+    }
+  }, [appointments]);
 
-	/**
-	 * Carregar appointments iniciais ao montar o provider
-	 * OTIMIZADO: Só carrega appointments futuros e dos últimos 7 dias
-	 */
-	const loadInitialAppointments = useCallback(async () => {
-		if (!organizationId) return;
+  // Debounced appointments para evitar recálculos em mudanças rápidas
+  const debouncedAppointments = useDebounce(appointments, 300);
 
-		try {
-			logger.debug(
-				"Realtime: Loading initial appointments via Functions",
-				{},
-				"RealtimeContext",
-			);
+  // Atualizar métricas quando appointments debounced mudar
+  useEffect(() => {
+    updateMetrics();
+  }, [updateMetrics, debouncedAppointments]);
 
-			const sevenDaysAgo = new Date();
-			sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-			const dateFrom = sevenDaysAgo.toISOString().split("T")[0];
+  /**
+   * Carregar appointments iniciais ao montar o provider
+   * OTIMIZADO: Só carrega appointments futuros e dos últimos 7 dias
+   */
+  const loadInitialAppointments = useCallback(async () => {
+    if (!organizationId) return;
 
-			const response = await appointmentsApi.list({
-				dateFrom,
-				limit: 100,
-			});
+    try {
+      logger.debug("Realtime: Loading initial appointments via Functions", {}, "RealtimeContext");
 
-			if (response.data) {
-				setAppointments(response.data as unknown as Appointment[]);
-				setLastUpdate(Date.now());
-				logger.debug(
-					`Realtime: Loaded ${response.data.length} initial appointments`,
-					{},
-					"RealtimeContext",
-				);
-			}
-		} catch (error) {
-			logger.error(
-				"Realtime: Error in loadInitialAppointments",
-				error,
-				"RealtimeContext",
-			);
-		}
-	}, [organizationId]);
+      const sevenDaysAgo = new Date();
+      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+      const dateFrom = sevenDaysAgo.toISOString().split("T")[0];
 
-	/**
-	 * Configura e gerencia a conexão WebSocket
-	 */
-	const connectWebSocket = useCallback(async () => {
-		if (!organizationId) return;
+      const response = await appointmentsApi.list({
+        dateFrom,
+        limit: 100,
+      });
 
-		try {
-			if (wsRef.current?.readyState === WebSocket.OPEN) return;
+      if (response.data) {
+        setAppointments(response.data as unknown as Appointment[]);
+        setLastUpdate(Date.now());
+        logger.debug(
+          `Realtime: Loaded ${response.data.length} initial appointments`,
+          {},
+          "RealtimeContext",
+        );
+      }
+    } catch (error) {
+      logger.error("Realtime: Error in loadInitialAppointments", error, "RealtimeContext");
+    }
+  }, [organizationId]);
 
-			const token = await getNeonAccessToken();
-			const baseUrl = getWorkersApiUrl().replace(/^http/, "ws");
-			const wsUrl = `${baseUrl}/api/realtime?token=${token}`;
+  /**
+   * Configura e gerencia a conexão WebSocket
+   */
+  const connectWebSocket = useCallback(async () => {
+    if (!organizationId) return;
 
-			logger.info(
-				"Realtime: Connecting to WebSocket...",
-				{ organizationId },
-				"RealtimeContext",
-			);
+    try {
+      if (wsRef.current?.readyState === WebSocket.OPEN) return;
 
-			const ws = new WebSocket(wsUrl);
-			wsRef.current = ws;
+      const token = await getNeonAccessToken();
+      const baseUrl = getWorkersApiUrl().replace(/^http/, "ws");
+      const wsUrl = `${baseUrl}/api/realtime?token=${token}`;
 
-			ws.onopen = () => {
-				logger.info(
-					"Realtime: WebSocket Connected",
-					{ organizationId },
-					"RealtimeContext",
-				);
-				setIsSubscribed(true);
-				if (reconnectTimeoutRef.current) {
-					window.clearTimeout(reconnectTimeoutRef.current);
-					reconnectTimeoutRef.current = null;
-				}
+      logger.info("Realtime: Connecting to WebSocket...", { organizationId }, "RealtimeContext");
 
-				// Broadcast presence
-				if (ws.readyState === WebSocket.OPEN) {
-					ws.send(
-						JSON.stringify({
-							type: "PRESENCE_UPDATE",
-							payload: {
-								userId: profile?.uid,
-								name: profile?.full_name || "Profissional",
-								role: profile?.role,
-								status: "online",
-							},
-						}),
-					);
-				}
+      const ws = new WebSocket(wsUrl);
+      wsRef.current = ws;
 
-				loadInitialAppointments();
-			};
+      ws.onopen = () => {
+        logger.info("Realtime: WebSocket Connected", { organizationId }, "RealtimeContext");
+        setIsSubscribed(true);
+        if (reconnectTimeoutRef.current) {
+          window.clearTimeout(reconnectTimeoutRef.current);
+          reconnectTimeoutRef.current = null;
+        }
 
-			ws.onmessage = (event) => {
-				try {
-					const data = JSON.parse(event.data);
-					logger.debug("Realtime: Message received", data, "RealtimeContext");
+        // Broadcast presence
+        if (ws.readyState === WebSocket.OPEN) {
+          ws.send(
+            JSON.stringify({
+              type: "PRESENCE_UPDATE",
+              payload: {
+                userId: profile?.uid,
+                name: profile?.full_name || "Profissional",
+                role: profile?.role,
+                status: "online",
+              },
+            }),
+          );
+        }
 
-					if (
-						data.type === "APPOINTMENT_UPDATED" ||
-						data.type === "REFRESH_DATA"
-					) {
-						loadInitialAppointments();
-						// Invalida via React Query de forma abrangente
-						import("@/utils/cacheInvalidation").then(({ invalidateAppointmentsComprehensive }) => {
-							invalidateAppointmentsComprehensive(queryClient, undefined, organizationId);
-						});
-					} else if (data.type === "NOTIFICATION_RECEIVED") {
-						queryClient.invalidateQueries({ queryKey: ["notifications"] });
-					} else if (data.type === "PRESENCE_UPDATE") {
-						setOnlineUsers((prev) => {
-							const next = new Map(prev);
-							if (data.payload.status === "offline") {
-								next.delete(data.payload.userId);
-							} else {
-								next.set(data.payload.userId, data.payload);
-							}
-							return next;
-						});
-					}
-				} catch (e) {
-					// Heartbeat or other non-json messages
-					if (event.data === "pong") return;
-					logger.error("Realtime: Error parsing message", e, "RealtimeContext");
-				}
-			};
+        loadInitialAppointments();
+      };
 
-			ws.onclose = (event) => {
-				setIsSubscribed(false);
-				wsRef.current = null;
-				logger.warn(
-					"Realtime: WebSocket Closed",
-					{ code: event.code },
-					"RealtimeContext",
-				);
+      ws.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          logger.debug("Realtime: Message received", data, "RealtimeContext");
 
-				if (event.code !== 1000) {
-					reconnectTimeoutRef.current = window.setTimeout(() => {
-						connectWebSocket();
-					}, 5000);
-				}
-			};
+          if (data.type === "APPOINTMENT_UPDATED" || data.type === "REFRESH_DATA") {
+            loadInitialAppointments();
+            // Invalida via React Query de forma abrangente
+            import("@/utils/cacheInvalidation").then(({ invalidateAppointmentsComprehensive }) => {
+              invalidateAppointmentsComprehensive(queryClient, undefined, organizationId);
+            });
+          } else if (data.type === "NOTIFICATION_RECEIVED") {
+            queryClient.invalidateQueries({ queryKey: ["notifications"] });
+          } else if (data.type === "PRESENCE_UPDATE") {
+            setOnlineUsers((prev) => {
+              const next = new Map(prev);
+              if (data.payload.status === "offline") {
+                next.delete(data.payload.userId);
+              } else {
+                next.set(data.payload.userId, data.payload);
+              }
+              return next;
+            });
+          }
+        } catch (e) {
+          // Heartbeat or other non-json messages
+          if (event.data === "pong") return;
+          logger.error("Realtime: Error parsing message", e, "RealtimeContext");
+        }
+      };
 
-			ws.onerror = (error) => {
-				logger.error("Realtime: WebSocket Error", error, "RealtimeContext");
-				ws.close();
-			};
+      ws.onclose = (event) => {
+        setIsSubscribed(false);
+        wsRef.current = null;
+        logger.warn("Realtime: WebSocket Closed", { code: event.code }, "RealtimeContext");
 
-			// Heartbeat
-			const heartbeat = setInterval(() => {
-				if (ws.readyState === WebSocket.OPEN) {
-					ws.send("ping");
-				} else {
-					clearInterval(heartbeat);
-				}
-			}, 30000);
-		} catch (error) {
-			logger.error(
-				"Realtime: Failed to connect WebSocket",
-				error,
-				"RealtimeContext",
-			);
-			reconnectTimeoutRef.current = window.setTimeout(() => {
-				connectWebSocket();
-			}, 10000);
-		}
-	}, [organizationId, loadInitialAppointments]);
+        if (event.code !== 1000) {
+          reconnectTimeoutRef.current = window.setTimeout(() => {
+            connectWebSocket();
+          }, 5000);
+        }
+      };
 
-	/**
-	 * Substitui o antigo polling pela conexão WebSocket
-	 */
-	const subscribeToAppointments = useCallback(() => {
-		if (!organizationId) {
-			if (!_loggedRealtimeNoOrgId) {
-				_loggedRealtimeNoOrgId = true;
-				logger.debug(
-					"Realtime: No organization_id, skipping subscription",
-					{},
-					"RealtimeContext",
-				);
-			}
-			return () => {};
-		}
+      ws.onerror = (error) => {
+        logger.error("Realtime: WebSocket Error", error, "RealtimeContext");
+        ws.close();
+      };
 
-		connectWebSocket();
+      // Heartbeat
+      const heartbeat = setInterval(() => {
+        if (ws.readyState === WebSocket.OPEN) {
+          ws.send("ping");
+        } else {
+          clearInterval(heartbeat);
+        }
+      }, 30000);
+    } catch (error) {
+      logger.error("Realtime: Failed to connect WebSocket", error, "RealtimeContext");
+      reconnectTimeoutRef.current = window.setTimeout(() => {
+        connectWebSocket();
+      }, 10000);
+    }
+  }, [organizationId, loadInitialAppointments]);
 
-		return () => {
-			logger.debug(
-				"Realtime: Stopping Realtime connection",
-				{ organizationId },
-				"RealtimeContext",
-			);
-			if (wsRef.current) {
-				wsRef.current.close(1000, "Provider unmounting");
-				wsRef.current = null;
-			}
-			if (reconnectTimeoutRef.current) {
-				window.clearTimeout(reconnectTimeoutRef.current);
-				reconnectTimeoutRef.current = null;
-			}
-		};
-	}, [organizationId, connectWebSocket]);
+  /**
+   * Substitui o antigo polling pela conexão WebSocket
+   */
+  const subscribeToAppointments = useCallback(() => {
+    if (!organizationId) {
+      if (!_loggedRealtimeNoOrgId) {
+        _loggedRealtimeNoOrgId = true;
+        logger.debug("Realtime: No organization_id, skipping subscription", {}, "RealtimeContext");
+      }
+      return () => {};
+    }
 
-	/**
-	 * Carregar appointments iniciais ao montar o provider
-	 * OTIMIZADO: Só carrega appointments futuros e dos últimos 7 dias
-	 */
-	useEffect(() => {
-		loadInitialAppointments();
-	}, [loadInitialAppointments]);
+    connectWebSocket();
 
-	/**
-	 * Setup realtime subscription quando o componente monta
-	 * Cleanup automático quando desmonta para evitar memory leaks
-	 */
-	useEffect(() => {
-		const unsubscribe = subscribeToAppointments();
-		return () => {
-			if (unsubscribe) {
-				unsubscribe();
-			}
-		};
-	}, [subscribeToAppointments]);
+    return () => {
+      logger.debug("Realtime: Stopping Realtime connection", { organizationId }, "RealtimeContext");
+      if (wsRef.current) {
+        wsRef.current.close(1000, "Provider unmounting");
+        wsRef.current = null;
+      }
+      if (reconnectTimeoutRef.current) {
+        window.clearTimeout(reconnectTimeoutRef.current);
+        reconnectTimeoutRef.current = null;
+      }
+    };
+  }, [organizationId, connectWebSocket]);
 
-	const value: RealtimeContextType = {
-		appointments,
-		onlineUsers,
-		metrics,
-		lastUpdate,
-		isSubscribed,
-		subscribeToAppointments,
-		updateMetrics,
-	};
+  /**
+   * Carregar appointments iniciais ao montar o provider
+   * OTIMIZADO: Só carrega appointments futuros e dos últimos 7 dias
+   */
+  useEffect(() => {
+    loadInitialAppointments();
+  }, [loadInitialAppointments]);
 
-	return (
-		<RealtimeContext.Provider value={value}>
-			{children}
-		</RealtimeContext.Provider>
-	);
+  /**
+   * Setup realtime subscription quando o componente monta
+   * Cleanup automático quando desmonta para evitar memory leaks
+   */
+  useEffect(() => {
+    const unsubscribe = subscribeToAppointments();
+    return () => {
+      if (unsubscribe) {
+        unsubscribe();
+      }
+    };
+  }, [subscribeToAppointments]);
+
+  const value: RealtimeContextType = {
+    appointments,
+    onlineUsers,
+    metrics,
+    lastUpdate,
+    isSubscribed,
+    subscribeToAppointments,
+    updateMetrics,
+  };
+
+  return <RealtimeContext.Provider value={value}>{children}</RealtimeContext.Provider>;
 };

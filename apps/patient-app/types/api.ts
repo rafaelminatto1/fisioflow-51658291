@@ -1,4 +1,4 @@
-import { User } from './auth';
+import { User } from "./auth";
 
 export interface ApiResponse<T = any> {
   success: boolean;
@@ -10,7 +10,7 @@ export interface ApiResponse<T = any> {
 export interface PatientProfile extends User {
   phone?: string;
   birthDate?: string;
-  gender?: 'male' | 'female' | 'other';
+  gender?: "male" | "female" | "other";
   goals?: string[];
   medicalHistory?: string;
   weight?: number;
@@ -48,7 +48,7 @@ export interface Appointment {
   date: string;
   time: string;
   type: string;
-  status: 'scheduled' | 'confirmed' | 'completed' | 'cancelled' | 'no_show';
+  status: "scheduled" | "confirmed" | "completed" | "cancelled" | "no_show";
   notes?: string;
   isGroup?: boolean;
   additionalNames?: string;
@@ -70,7 +70,7 @@ export interface Exercise {
   benefits?: string[];
   precautions?: string[];
   category?: string;
-  difficulty?: 'easy' | 'medium' | 'hard';
+  difficulty?: "easy" | "medium" | "hard";
   embeddingSketch?: string;
 }
 
@@ -92,7 +92,7 @@ export interface Notification {
   id: string;
   title: string;
   body: string;
-  type: 'appointment' | 'exercise' | 'message' | 'system';
+  type: "appointment" | "exercise" | "message" | "system";
   read: boolean;
   createdAt: string;
   data?: Record<string, any>;
@@ -167,8 +167,8 @@ export interface Message {
   content: string;
   created_at: string | Date | null;
   read_at?: string | Date | null;
-  status: 'sending' | 'sent' | 'delivered' | 'read' | 'failed';
-  type: 'text' | 'image' | 'video' | 'audio' | 'document';
+  status: "sending" | "sent" | "delivered" | "read" | "failed";
+  type: "text" | "image" | "video" | "audio" | "document";
   attachment_url?: string;
   attachment_name?: string;
 }
@@ -200,13 +200,13 @@ export interface Quest {
   title: string;
   description: string;
   xpReward: number;
-  status: 'available' | 'completed' | 'claimed';
+  status: "available" | "completed" | "claimed";
 }
 
 export interface TelemedicineRoom {
   id: string;
   room_code: string;
-  status: 'aguardando' | 'ativo' | 'encerrado';
+  status: "aguardando" | "ativo" | "encerrado";
   meeting_url?: string | null;
   started_at?: string | null;
   ended_at?: string | null;

@@ -1,13 +1,13 @@
-import * as LocalAuthentication from 'expo-local-authentication';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as LocalAuthentication from "expo-local-authentication";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
-const BIOMETRIC_ENABLED_KEY = '@fisioflow_biometric_enabled';
-const BIOMETRIC_LAST_USED_KEY = '@fisioflow_biometric_last_used';
+const BIOMETRIC_ENABLED_KEY = "@fisioflow_biometric_enabled";
+const BIOMETRIC_LAST_USED_KEY = "@fisioflow_biometric_last_used";
 
 export interface BiometricStatus {
   isAvailable: boolean;
   isEnrolled: boolean;
-  biometricType: 'face' | 'fingerprint' | 'none';
+  biometricType: "face" | "fingerprint" | "none";
   isEnabled: boolean;
 }
 
@@ -21,22 +21,22 @@ export async function getBiometricStatus(): Promise<BiometricStatus> {
       return {
         isAvailable: false,
         isEnrolled: false,
-        biometricType: 'none',
+        biometricType: "none",
         isEnabled: false,
       };
     }
 
     const enrolled = await LocalAuthentication.isEnrolledAsync();
-    const isEnabled = await AsyncStorage.getItem(BIOMETRIC_ENABLED_KEY) === 'true';
+    const isEnabled = (await AsyncStorage.getItem(BIOMETRIC_ENABLED_KEY)) === "true";
 
     // Determine biometric type
     const types = await LocalAuthentication.supportedAuthenticationTypesAsync();
-    let biometricType: 'face' | 'fingerprint' | 'none' = 'none';
+    let biometricType: "face" | "fingerprint" | "none" = "none";
 
     if (types.includes(LocalAuthentication.AuthenticationType.FACIAL_RECOGNITION)) {
-      biometricType = 'face';
+      biometricType = "face";
     } else if (types.includes(LocalAuthentication.AuthenticationType.FINGERPRINT)) {
-      biometricType = 'fingerprint';
+      biometricType = "fingerprint";
     }
 
     return {
@@ -46,11 +46,11 @@ export async function getBiometricStatus(): Promise<BiometricStatus> {
       isEnabled,
     };
   } catch (error) {
-    console.error('Error checking biometric status:', error);
+    console.error("Error checking biometric status:", error);
     return {
       isAvailable: false,
       isEnrolled: false,
-      biometricType: 'none',
+      biometricType: "none",
       isEnabled: false,
     };
   }
@@ -62,13 +62,13 @@ export async function getBiometricStatus(): Promise<BiometricStatus> {
  * @returns true se autenticou com sucesso
  */
 export async function authenticateBiometric(
-  reason: string = 'Autentique para acessar o FisioFlow'
+  reason: string = "Autentique para acessar o FisioFlow",
 ): Promise<boolean> {
   try {
     const result = await LocalAuthentication.authenticateAsync({
       promptMessage: reason,
-      fallbackLabel: 'Usar senha',
-      cancelLabel: 'Cancelar',
+      fallbackLabel: "Usar senha",
+      cancelLabel: "Cancelar",
       disableDeviceFallback: false,
     });
 
@@ -81,14 +81,14 @@ export async function authenticateBiometric(
     return false;
   } catch (error: any) {
     // User cancelled or authentication failed
-    if (error?.code === 'user_cancel') {
-      console.log('Biometric authentication cancelled by user');
-    } else if (error?.code === 'not_enrolled') {
-      console.log('No biometrics enrolled');
-    } else if (error?.code === 'lockout') {
-      console.log('Biometric lockout - too many attempts');
+    if (error?.code === "user_cancel") {
+      console.log("Biometric authentication cancelled by user");
+    } else if (error?.code === "not_enrolled") {
+      console.log("No biometrics enrolled");
+    } else if (error?.code === "lockout") {
+      console.log("Biometric lockout - too many attempts");
     } else {
-      console.error('Biometric authentication error:', error);
+      console.error("Biometric authentication error:", error);
     }
     return false;
   }
@@ -98,14 +98,14 @@ export async function authenticateBiometric(
  * Habilita ou desabilita login biométrico
  */
 export async function setBiometricEnabled(enabled: boolean): Promise<void> {
-  await AsyncStorage.setItem(BIOMETRIC_ENABLED_KEY, enabled ? 'true' : 'false');
+  await AsyncStorage.setItem(BIOMETRIC_ENABLED_KEY, enabled ? "true" : "false");
 }
 
 /**
  * Verifica se o login biométrico está habilitado
  */
 export async function isBiometricEnabled(): Promise<boolean> {
-  return (await AsyncStorage.getItem(BIOMETRIC_ENABLED_KEY)) === 'true';
+  return (await AsyncStorage.getItem(BIOMETRIC_ENABLED_KEY)) === "true";
 }
 
 /**
@@ -123,13 +123,13 @@ export async function getLastBiometricUse(): Promise<Date | null> {
 /**
  * Retorna o nome do tipo de biometria em português
  */
-export function getBiometricTypeName(type: 'face' | 'fingerprint' | 'none'): string {
+export function getBiometricTypeName(type: "face" | "fingerprint" | "none"): string {
   switch (type) {
-    case 'face':
-      return 'Face ID';
-    case 'fingerprint':
-      return 'Touch ID';
+    case "face":
+      return "Face ID";
+    case "fingerprint":
+      return "Touch ID";
     default:
-      return 'Biometria';
+      return "Biometria";
   }
 }
