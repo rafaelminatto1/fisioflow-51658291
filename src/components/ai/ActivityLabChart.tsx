@@ -148,10 +148,13 @@ export const ActivityLabChart: React.FC<ActivityLabChartProps> = ({
 									textTransform: "uppercase",
 									letterSpacing: "0.05em",
 								}}
-								// @ts-expect-error -- recharts v3 formatter type
-								formatter={(value: number) => [`${value.toFixed(2)} kg`, "Força"]}
-								// @ts-expect-error -- recharts v3 labelFormatter type
-								labelFormatter={(label: number) => `Tempo: ${label.toFixed(2)} s`}
+								formatter={(value: number | string) => [
+									`${typeof value === "number" ? value.toFixed(2) : value} kg`,
+									"Força",
+								]}
+								labelFormatter={(label: number | string) =>
+									`Tempo: ${typeof label === "number" ? label.toFixed(2) : label} s`
+								}
 							/>
 							<ReferenceLine
 								y={peakPoint.force}

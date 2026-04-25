@@ -703,12 +703,16 @@ export function PatientAnalyticsDashboard({
 													border: "1px solid hsl(var(--border))",
 													borderRadius: "8px",
 												}}
-												labelFormatter={(label) => {
+												labelFormatter={(label: string | number) => {
 													const item = allChartData.find(
 														(d) => d.date === label,
 													);
 													return item?.fullDate || label;
 												}}
+												formatter={(value: number | string) => [
+													typeof value === "number" ? value.toFixed(0) : value,
+													painChartData.length > 0 ? "Nível de Dor" : "Pontuação Funcional",
+												]}
 											/>
 											<Area
 												type="monotone"
@@ -844,11 +848,13 @@ export function PatientAnalyticsDashboard({
 											/>
 											<YAxis domain={[0, "dataMax + 10"]} className="text-xs" />
 											<Tooltip
-												labelFormatter={(v) =>
+												labelFormatter={(v: string | number) =>
 													format(new Date(v as string), "dd/MM/yyyy")
 												}
-												// @ts-expect-error -- recharts v3 formatter type
-												formatter={(value: number) => [value, "Nível de Dor"]}
+												formatter={(value: number | string) => [
+													typeof value === "number" ? value.toFixed(1) : value,
+													"Nível de Dor",
+												]}
 											/>
 											<Line
 												type="monotone"
@@ -905,12 +911,11 @@ export function PatientAnalyticsDashboard({
 											/>
 											<YAxis domain={[0, 100]} className="text-xs" />
 											<Tooltip
-												labelFormatter={(v) =>
+												labelFormatter={(v: string | number) =>
 													format(new Date(v as string), "dd/MM/yyyy")
 												}
-												// @ts-expect-error -- recharts v3 formatter type
-												formatter={(value: number) => [
-													value,
+												formatter={(value: number | string) => [
+													typeof value === "number" ? value.toFixed(1) : value,
 													"Score Funcional",
 												]}
 											/>

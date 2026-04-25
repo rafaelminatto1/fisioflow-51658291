@@ -163,6 +163,37 @@ const SOAP_SECTIONS = [
 	},
 ];
 
+interface SpeechRecognitionEvent extends Event {
+	results: SpeechRecognitionResultList;
+}
+
+interface SpeechRecognitionErrorEvent extends Event {
+	error: string;
+}
+
+interface SpeechRecognition extends EventTarget {
+	lang: string;
+	continuous: boolean;
+	interimResults: boolean;
+	onstart: () => void;
+	onend: () => void;
+	onerror: (event: SpeechRecognitionErrorEvent) => void;
+	onresult: (event: SpeechRecognitionEvent) => void;
+	start: () => void;
+	stop: () => void;
+}
+
+interface SpeechRecognitionConstructor {
+	new (): SpeechRecognition;
+}
+
+declare global {
+	interface Window {
+		SpeechRecognition?: SpeechRecognitionConstructor;
+		webkitSpeechRecognition?: SpeechRecognitionConstructor;
+	}
+}
+
 const SpeechToSOAPButton = ({
 	onTranscription,
 	disabled,
@@ -171,12 +202,11 @@ const SpeechToSOAPButton = ({
 	disabled?: boolean;
 }) => {
 	const [isListening, setIsListening] = useState(false);
-	const recognitionRef = useRef<any>(null);
+	const recognitionRef = useRef<SpeechRecognition | null>(null);
 
 	const startListening = useCallback(() => {
 		const SpeechRecognition =
-			(window as any).SpeechRecognition ||
-			(window as any).webkitSpeechRecognition;
+			window.SpeechRecognition || window.webkitSpeechRecognition;
 
 		if (!SpeechRecognition) {
 			toast.error("Seu navegador não suporta reconhecimento de voz.");
@@ -191,13 +221,13 @@ const SpeechToSOAPButton = ({
 
 			recognition.onstart = () => setIsListening(true);
 			recognition.onend = () => setIsListening(false);
-			recognition.onerror = (event: any) => {
+			recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
 				console.error("Speech recognition error", event.error);
 				setIsListening(false);
 				toast.error(`Erro na transcrição: ${event.error}`);
 			};
 
-			recognition.onresult = (event: any) => {
+			recognition.onresult = (event: SpeechRecognitionEvent) => {
 				const transcript = event.results[0][0].transcript;
 				if (transcript) {
 					onTranscription(transcript);

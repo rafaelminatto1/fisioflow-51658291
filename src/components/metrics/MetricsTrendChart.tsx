@@ -98,12 +98,11 @@ const MetricsTrendChart: React.FC<MetricsTrendChartProps> = ({
 								}
 							/>
 							<Tooltip
-								labelFormatter={(label, payload) =>
+								labelFormatter={(label: string | number, payload: any[]) =>
 									payload[0]?.payload.fullDate || label
 								}
-								// @ts-expect-error -- recharts v3 formatter type
-								formatter={(value: number) => [
-									value.toFixed(2),
+								formatter={(value: number | string) => [
+									typeof value === "number" ? value.toFixed(2) : value,
 									selectedMetricInfo?.label,
 								]}
 							/>

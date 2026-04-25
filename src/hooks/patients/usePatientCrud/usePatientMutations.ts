@@ -3,7 +3,7 @@ import { patientsApi } from "@/api/v2/patients";
 import { PatientService } from "@/services/patientService";
 import { toast } from "@/hooks/use-toast";
 import { fisioLogger as logger } from "@/lib/errors/logger";
-import { invalidatePatientsComprehensive } from "@/utils/cacheInvalidation";
+import { invalidatePatientCache } from "./usePatientCache";
 import {
 	sanitizeString,
 	sanitizeEmail,
@@ -89,7 +89,7 @@ export const useCreatePatient = () => {
 				{ id: data.id, name: firstName },
 				"useCreatePatient",
 			);
-			await invalidatePatientsComprehensive(queryClient);
+			await invalidatePatientCache(queryClient, data.id);
 			toast({
 				title: "Paciente cadastrado!",
 				description: `${data.full_name} foi adicionado com sucesso.`,
@@ -240,7 +240,7 @@ export const useUpdatePatient = () => {
 				{ id: data.id },
 				"useUpdatePatient",
 			);
-			await invalidatePatientsComprehensive(queryClient, data.id);
+			await invalidatePatientCache(queryClient, data.id);
 			toast({
 				title: "Paciente atualizado!",
 				description: `As informações de ${data.full_name} foram atualizadas.`,
@@ -269,7 +269,7 @@ export const useDeletePatient = () => {
 		},
 		onSuccess: async (_, id) => {
 			logger.info("Paciente arquivado com sucesso", { id }, "useDeletePatient");
-			await invalidatePatientsComprehensive(queryClient, id);
+			await invalidatePatientCache(queryClient, id);
 			toast.success("Paciente arquivado", {
 				description: "O paciente foi arquivado. Todos os dados foram preservados.",
 			});
@@ -305,7 +305,7 @@ export const useUpdatePatientStatus = () => {
 			return PatientService.mapToApp(response.data) as unknown as Patient;
 		},
 		onSuccess: async (data) => {
-			await invalidatePatientsComprehensive(queryClient, data.id);
+			await invalidatePatientCache(queryClient, data.id);
 			toast({
 				title: "Status atualizado",
 				description: `O status do paciente foi alterado para ${data.status}.`,

@@ -1,6 +1,21 @@
 import { useQuery, useInfiniteQuery } from "@tanstack/react-query";
 import { sessionsApi } from "@/api/v2";
-import { soapKeys, type SoapRecord } from "./types";
+import { soapKeys, type SoapRecord, type SoapRecordV2 } from "./types";
+import { toSoapRecordV2 } from "./mappers";
+
+export const useSoapRecordsV2 = (patientId: string) => {
+	return useQuery({
+		queryKey: ["soap-records-v2", patientId],
+		queryFn: async () => {
+			if (!patientId) return [];
+			const response = await sessionsApi.list({ patientId, limit: 50 });
+			return (response.data ?? []).map((record) =>
+				toSoapRecordV2(record as unknown as Record<string, unknown>),
+			);
+		},
+		enabled: !!patientId,
+	});
+};
 
 export const useSoapRecords = (patientId: string, limitValue = 10) => {
 	return useQuery({

@@ -7,17 +7,25 @@ import { Sparkles, ClipboardList, CheckSquare, ImageIcon, BookOpen } from "lucid
 import { Activity, Star } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+export interface Command {
+	id: string;
+	title: string;
+	icon: React.ElementType;
+	description: string;
+	command: (props: { editor: any; range: any }) => void;
+}
+
 export function getEvolutionSettings() {
   const STORAGE_KEY = 'fisioflow_evolution_settings';
   try {
     const item = window.localStorage.getItem(STORAGE_KEY);
-    return item ? { defaultView: 'notion', enableSuggestions: true, disabledCommands: [], commandOrder: [], ...JSON.parse(item) } : { defaultView: 'notion', enableSuggestions: true, disabledCommands: [], commandOrder: [] };
+    return item ? { defaultView: 'notion', enableSuggestions: true, disabledCommands: [] as string[], commandOrder: [] as string[], ...JSON.parse(item) } : { defaultView: 'notion', enableSuggestions: true, disabledCommands: [] as string[], commandOrder: [] as string[] };
   } catch (error) {
-    return { defaultView: 'notion', enableSuggestions: true, disabledCommands: [], commandOrder: [] };
+    return { defaultView: 'notion', enableSuggestions: true, disabledCommands: [] as string[], commandOrder: [] as string[] };
   }
 }
 
-const COMMANDS_REGISTRY: Record<string, any> = {
+const COMMANDS_REGISTRY: Record<string, Command> = {
 	ai: {
 		id: "ai",
 		title: "Assistente IA",
@@ -142,7 +150,7 @@ export const Commands = Extension.create({
 		return {
 			suggestion: {
 				char: "/",
-				command: ({ editor, range, props }: any) => {
+				command: ({ editor, range, props }: { editor: any, range: any, props: Command }) => {
 					props.command({ editor, range });
 				},
 			},
@@ -159,7 +167,7 @@ export const Commands = Extension.create({
 					const settings = getEvolutionSettings();
 
 					const availableCommands = Object.values(COMMANDS_REGISTRY).filter(
-						(cmd: any) => !settings.disabledCommands?.includes(cmd.id)
+						(cmd: Command) => !settings.disabledCommands?.includes(cmd.id)
 					);
 
 					// Sort by the defined order, or keep default
@@ -175,7 +183,7 @@ export const Commands = Extension.create({
 					}
 
 					return availableCommands
-						.filter((item: any) =>
+						.filter((item: Command) =>
 							item.title.toLowerCase().includes(query.toLowerCase()) || 
 							item.description.toLowerCase().includes(query.toLowerCase())
 						);
@@ -239,7 +247,15 @@ import React, {
 	useState,
 } from "react";
 
-const CommandList = forwardRef((props: any, ref) => {
+interface CommandListProps {
+	items: Command[];
+	command: (item: Command) => void;
+	editor: any;
+	range: any;
+	clientRect: (() => DOMRect) | null;
+}
+
+const CommandList = forwardRef<any, CommandListProps>((props, ref) => {
 	const [selectedIndex, setSelectedIndex] = useState(0);
 
 	const selectItem = (index: number) => {

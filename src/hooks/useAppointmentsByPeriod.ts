@@ -11,7 +11,7 @@
  * - Compatible with existing appointment infrastructure
  */
 
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, type QueryClient } from "@tanstack/react-query";
 import { AppointmentBase } from "@/types/appointment";
 import { fisioLogger as logger } from "@/lib/errors/logger";
 import { AppointmentService } from "@/services/appointmentService";
@@ -206,7 +206,7 @@ export function useAppointmentsByPeriod(
  * Helper to invalidate all period caches
  * Useful after creating, updating, or deleting appointments
  */
-export function invalidateAllPeriodCaches(queryClient: any) {
+export function invalidateAllPeriodCaches(queryClient: QueryClient) {
 	return queryClient.invalidateQueries({
 		queryKey: appointmentPeriodKeys.all,
 	});
@@ -216,7 +216,7 @@ export function invalidateAllPeriodCaches(queryClient: any) {
  * Helper to invalidate specific period cache
  * More efficient than invalidating all caches
  */
-export function invalidatePeriodCache(queryClient: any, query: PeriodQuery) {
+export function invalidatePeriodCache(queryClient: QueryClient, query: PeriodQuery) {
 	return queryClient.invalidateQueries({
 		queryKey: appointmentPeriodKeys.period(query),
 	});
