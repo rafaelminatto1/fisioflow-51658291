@@ -120,9 +120,11 @@ app.post('/index', requireAuth, async (c) => {
 
   if (body.type === 'exercises' || body.type === 'all') {
     const res = await pool.query(
-      `SELECT id, name, description, COALESCE(category, '') AS category FROM exercises
-       WHERE (is_public = true OR organization_id = $1)
-       ${body.ids?.length ? 'AND id = ANY($2::uuid[])' : ''}
+      `SELECT e.id, e.name, COALESCE(e.description, '') AS description, COALESCE(ec.name, '') AS category
+       FROM exercises e
+       LEFT JOIN exercise_categories ec ON ec.id = e.category_id
+       WHERE (e.is_public = true OR e.organization_id = $1)
+       ${body.ids?.length ? 'AND e.id = ANY($2::uuid[])' : ''}
        LIMIT 500`,
       body.ids?.length ? [user.organizationId, body.ids] : [user.organizationId],
     ) as unknown as { rows: { id: string; name: string; description: string; category: string }[] };
@@ -135,7 +137,7 @@ app.post('/index', requireAuth, async (c) => {
           content_type: 'exercises',
           entity_id: row.id,
           name: row.name,
-          description: row.description.substring(0, 500),
+          description: (row.description ?? '').substring(0, 500),
           category: row.category,
         },
       })),
