@@ -10,6 +10,11 @@ export type PaymentMethod = "cash" | "card" | "pix" | "transfer";
 export type UserRole = "admin" | "therapist" | "intern" | "patient";
 
 // Base Appointment interface
+/**
+ * @deprecated Use the canonical `Appointment` type from `@/types/index.ts` instead.
+ * This local type is specific to the agenda module and uses snake_case fields.
+ * It will be replaced by `AppointmentRow` from `@/types/workers.ts` in a future refactor.
+ */
 export interface Appointment {
   id: string;
   patient_id: string;
@@ -31,6 +36,11 @@ export interface Appointment {
 }
 
 // Extended Patient interface for agenda
+/**
+ * @deprecated Use the canonical `Patient` type from `@/types/index.ts` instead.
+ * This local type is specific to the agenda module and uses snake_case fields.
+ * It will be replaced by `PatientRow` from `@/types/workers.ts` in a future refactor.
+ */
 export interface Patient {
   id: string;
   name: string;

@@ -92,6 +92,8 @@ export type PatientId = string;
 export type AppointmentId = string;
 export type ExerciseId = string;
 export type OrganizationId = string;
+export type SessionId = string;
+export type TreatmentId = string;
 
 /**
  * Timestamp type
@@ -251,6 +253,29 @@ export interface FormState<T = unknown> {
   isValid: boolean;
   isDirty: boolean;
 }
+
+/**
+ * Service result wrapper — every service method returns this.
+ * Exactly one of `data` or `error` is non-null.
+ */
+export interface ServiceResult<T> {
+  data: T | null;
+  error: Error | null;
+}
+
+/**
+ * Domain validation result — returned by pure validation functions.
+ * Never throws; accumulates multiple errors.
+ */
+export interface ValidationResult {
+  valid: boolean;
+  errors: string[];
+}
+
+/**
+ * Map of field names to error messages
+ */
+export type ErrorMap = Record<string, string>;
 
 /**
  * Component loading state
