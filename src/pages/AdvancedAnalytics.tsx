@@ -294,10 +294,18 @@ function AdvancedAnalyticsContentInternal() {
             <TeamPerformance />
           </TabsContent>
 
+import { RetentionROI } from "@/components/analytics/RetentionROI";
+
+// ... (dentro de AdvancedAnalyticsContentInternal)
+
           <TabsContent
             value="predictive"
-            className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500"
+            className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500"
           >
+            <div className="space-y-4">
+              <h2 className="text-lg font-bold">Análise de Retenção & ROI</h2>
+              <RetentionROI />
+            </div>
             <PredictiveAnalytics />
           </TabsContent>
         </ErrorBoundary>
