@@ -50,6 +50,11 @@ export type AppointmentType =
   | "Liberação Miofascial";
 
 // Status conforme sistema ZenFisio (em português)
+/**
+ * @deprecated Use `AppointmentStatus` from `@/types/index.ts` instead.
+ * This local type uses Portuguese status values specific to the appointment.ts module.
+ * The canonical `AppointmentStatus` in `index.ts` is the authoritative definition.
+ */
 export type AppointmentStatus =
   | "agendado"
   | "atendido"
@@ -422,4 +427,8 @@ export interface AppointmentStatistics {
 }
 
 // Export the main Appointment interface for backward compatibility
+/**
+ * @deprecated Use the canonical `Appointment` type from `@/types/index.ts` instead.
+ * This alias points to `AppointmentBase` which is the local appointment.ts definition.
+ */
 export type Appointment = AppointmentBase;

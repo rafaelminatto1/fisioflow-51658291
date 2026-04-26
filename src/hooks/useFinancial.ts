@@ -3,12 +3,19 @@
  *
  * Simplified: uses financialApi.transacoes for all financial operations.
  * The legacy onSnapshot listener has been removed.
+ *
+ * @example
+ * ```tsx
+ * const { transactions, stats, createTransaction } = useFinancial();
+ * ```
  */
 
 import React, { useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { financialApi } from "@/api/v2/financial";
+import { QueryKeys } from "@/hooks/queryKeys";
+import { AppError } from "@/lib/errors/AppError";
 import type { Transacao } from "@/types/workers";
 
 export type Transaction = Transacao;
@@ -49,7 +56,7 @@ export const useFinancial = () => {
     isLoading,
     error,
   } = useQuery({
-    queryKey: ["transactions"],
+    queryKey: QueryKeys.financial.lists(),
     queryFn: async () => {
       const res = await financialApi.transacoes.list({ limit: 300 });
       return (res?.data ?? res ?? []) as Transaction[];
@@ -81,11 +88,15 @@ export const useFinancial = () => {
       return res?.data ?? res;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["transactions"] });
+      queryClient.invalidateQueries({ queryKey: QueryKeys.financial.all() });
       toast.success("Transação criada com sucesso");
     },
-    onError: (error: Error) => {
-      toast.error("Erro ao criar transação: " + error.message);
+    onError: (err: Error) => {
+      const appErr = AppError.from(err);
+      const msg = appErr.isOperational
+        ? `Erro de validação: ${appErr.message}`
+        : "Erro ao criar transação. Tente novamente.";
+      toast.error(msg);
     },
   });
 
@@ -95,11 +106,15 @@ export const useFinancial = () => {
       return res?.data ?? res;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["transactions"] });
+      queryClient.invalidateQueries({ queryKey: QueryKeys.financial.all() });
       toast.success("Transação atualizada com sucesso");
     },
-    onError: (error: Error) => {
-      toast.error("Erro ao atualizar transação: " + error.message);
+    onError: (err: Error) => {
+      const appErr = AppError.from(err);
+      const msg = appErr.isOperational
+        ? `Erro de validação: ${appErr.message}`
+        : "Erro ao atualizar transação. Tente novamente.";
+      toast.error(msg);
     },
   });
 
@@ -108,11 +123,15 @@ export const useFinancial = () => {
       await financialApi.transacoes.delete(id);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["transactions"] });
+      queryClient.invalidateQueries({ queryKey: QueryKeys.financial.all() });
       toast.success("Transação excluída com sucesso");
     },
-    onError: (error: Error) => {
-      toast.error("Erro ao excluir transação: " + error.message);
+    onError: (err: Error) => {
+      const appErr = AppError.from(err);
+      const msg = appErr.isOperational
+        ? `Erro de validação: ${appErr.message}`
+        : "Erro ao excluir transação. Tente novamente.";
+      toast.error(msg);
     },
   });
 
@@ -122,11 +141,15 @@ export const useFinancial = () => {
       return res?.data ?? res;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["transactions"] });
+      queryClient.invalidateQueries({ queryKey: QueryKeys.financial.all() });
       toast.success("Transação marcada como paga");
     },
-    onError: (error: Error) => {
-      toast.error("Erro ao marcar como paga: " + error.message);
+    onError: (err: Error) => {
+      const appErr = AppError.from(err);
+      const msg = appErr.isOperational
+        ? `Erro de validação: ${appErr.message}`
+        : "Erro ao marcar como paga. Tente novamente.";
+      toast.error(msg);
     },
   });
 
