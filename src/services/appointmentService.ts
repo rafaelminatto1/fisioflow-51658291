@@ -8,11 +8,16 @@ import {
   AppointmentStatus,
   AppointmentType,
 } from "@/types/appointment";
+import {
+  APPOINTMENT_STATUSES,
+  PAYMENT_STATUSES,
+} from "@/lib/constants";
 import { VerifiedAppointmentSchema } from "@/schemas/appointment";
 import { dateSchema, timeSchema } from "@/lib/validations/agenda";
 import { AppError } from "@/lib/errors/AppError";
 import { fisioLogger as logger } from "@/lib/errors/logger";
 import { checkAppointmentConflict } from "@/utils/appointmentValidation";
+import { validateAppointment } from "@/lib/validation";
 import { FinancialService } from "@/services/financialService";
 import { AgentIngestPayload, agentIngest } from "@/lib/debug/agentIngest";
 import type { AppointmentRow } from "@/types/workers";
@@ -151,13 +156,13 @@ export class AppointmentService {
             time: validData.start_time || validData.appointment_time || "00:00",
             duration: validData.duration || 60,
             type: (validData.type || "Fisioterapia") as AppointmentType,
-            status: (validData.status || "scheduled") as AppointmentStatus,
+            status: (validData.status || APPOINTMENT_STATUSES[0]) as AppointmentStatus,
             notes: validData.notes || "",
             createdAt: validData.created_at ? new Date(validData.created_at) : new Date(),
             updatedAt: validData.updated_at ? new Date(validData.updated_at) : new Date(),
             therapistId: validData.therapist_id ?? undefined,
             room: validData.room ?? undefined,
-            payment_status: validData.payment_status || "pending",
+            payment_status: validData.payment_status || PAYMENT_STATUSES[0],
             payment_method: item.payment_method ?? undefined,
             payment_amount: item.payment_amount ?? undefined,
             session_package_id: item.session_package_id ?? undefined,
@@ -254,6 +259,17 @@ export class AppointmentService {
       const timeValidation = timeSchema.safeParse(rawTime);
       if (!timeValidation.success) throw AppError.badRequest(`Horário inválido: ${rawTime}`);
 
+      // Domain validation (business invariants)
+      const domainValidation = validateAppointment({
+        date: rawDate,
+        duration: data.duration || 60,
+        time: rawTime || undefined,
+        isNew: true,
+      });
+      if (!domainValidation.valid) {
+        throw AppError.badRequest(domainValidation.errors.join("; "));
+      }
+
       const endTime = calculateEndTime(rawTime, data.duration || 60);
       const sessionType =
         data.type === "Fisioterapia" || data.type === "fisioterapia" ? "individual" : "group";
@@ -267,7 +283,7 @@ export class AppointmentService {
         endTime,
         type: sessionType,
         session_type: sessionType,
-        status: data.status || "scheduled",
+        status: data.status || APPOINTMENT_STATUSES[0],
         notes: data.notes || null,
         ignoreCapacity: data.ignoreCapacity || false,
       };
@@ -289,8 +305,12 @@ export class AppointmentService {
             timestamp: new Date().toISOString(),
           },
         });
-      } catch {
-        /* silent fail */
+      } catch (auditErr) {
+        logger.warn("Audit log failed for appointment creation", {
+          operation: "AppointmentService.createAppointment",
+          appointmentId: newAppointment.id,
+          error: auditErr instanceof Error ? auditErr.message : String(auditErr),
+        }, "AppointmentService");
       }
 
       // Helper to parse date string as local date (avoiding timezone issues)
@@ -400,6 +420,19 @@ export class AppointmentService {
         updateData.start_time = updateTime;
       }
 
+      // Domain validation (business invariants) — only validate fields that are being updated
+      if (updateDate !== undefined || updateDuration !== undefined || updateTime !== undefined) {
+        const domainValidation = validateAppointment({
+          date: updateDate || new Date(), // fallback to today if only duration/time changes
+          duration: updateDuration ?? 60,
+          time: updateTime || undefined,
+          isNew: false, // updates may target past dates
+        });
+        if (!domainValidation.valid) {
+          throw AppError.badRequest(domainValidation.errors.join("; "));
+        }
+      }
+
       const explicitEndTime = updates.end_time || updates.endTime;
       const derivedEndTime =
         updateTime && updateDuration !== undefined
@@ -445,8 +478,12 @@ export class AppointmentService {
             timestamp: new Date().toISOString(),
           },
         });
-      } catch {
-        /* silent fail */
+      } catch (auditErr) {
+        logger.warn("Audit log failed for appointment update", {
+          operation: "AppointmentService.updateAppointment",
+          appointmentId: id,
+          error: auditErr instanceof Error ? auditErr.message : String(auditErr),
+        }, "AppointmentService");
       }
 
       // #region agent log
@@ -505,8 +542,12 @@ export class AppointmentService {
           updatedAppointment.patientName = r.patient_name || r.patient?.full_name || "Desconhecido";
           updatedAppointment.phone = r.patient_phone || r.patient?.phone || "";
         }
-      } catch {
-        // Ignore silent refresh error
+      } catch (refreshErr) {
+        logger.warn("Failed to refresh appointment details after update", {
+          operation: "AppointmentService.updateAppointment",
+          appointmentId: id,
+          error: refreshErr instanceof Error ? refreshErr.message : String(refreshErr),
+        }, "AppointmentService");
       }
 
       // Sync Financial Transaction
@@ -555,8 +596,12 @@ export class AppointmentService {
               timestamp: new Date().toISOString(),
             },
           });
-        } catch {
-          /* silent fail */
+        } catch (auditErr) {
+          logger.warn("Audit log failed for appointment cancellation", {
+            operation: "AppointmentService.updateStatus",
+            appointmentId: id,
+            error: auditErr instanceof Error ? auditErr.message : String(auditErr),
+          }, "AppointmentService");
         }
         return result;
       }
@@ -569,8 +614,12 @@ export class AppointmentService {
           entity_id: id,
           metadata: { status, timestamp: new Date().toISOString() },
         });
-      } catch {
-        /* silent fail */
+      } catch (auditErr) {
+        logger.warn("Audit log failed for appointment status update", {
+          operation: "AppointmentService.updateStatus",
+          appointmentId: id,
+          error: auditErr instanceof Error ? auditErr.message : String(auditErr),
+        }, "AppointmentService");
       }
       return result.data;
     } catch (error) {
@@ -596,8 +645,12 @@ export class AppointmentService {
             timestamp: new Date().toISOString(),
           },
         });
-      } catch {
-        /* silent fail */
+      } catch (auditErr) {
+        logger.warn("Audit log failed for appointment cancellation", {
+          operation: "AppointmentService.cancelAppointment",
+          appointmentId: id,
+          error: auditErr instanceof Error ? auditErr.message : String(auditErr),
+        }, "AppointmentService");
       }
       return result;
     } catch (error) {
@@ -621,8 +674,12 @@ export class AppointmentService {
             timestamp: new Date().toISOString(),
           },
         });
-      } catch {
-        /* silent fail */
+      } catch (auditErr) {
+        logger.warn("Audit log failed for appointment deletion", {
+          operation: "AppointmentService.deleteAppointment",
+          appointmentId: id,
+          error: auditErr instanceof Error ? auditErr.message : String(auditErr),
+        }, "AppointmentService");
       }
     } catch (error) {
       throw AppError.from(error, "AppointmentService.deleteAppointment");

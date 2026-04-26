@@ -1,6 +1,8 @@
 import { financialApi } from "@/api/v2/financial";
 import { auditApi } from "@/api/v2";
 import { AppError } from "@/lib/errors/AppError";
+import { fisioLogger } from "@/lib/errors/logger";
+import { TRANSACTION_STATUSES } from "@/lib/constants";
 import type { Transacao } from "@/types/workers";
 
 export type Transaction = Transacao;
@@ -72,8 +74,8 @@ export class FinancialService {
    * Note: This logic is currently client-side but centralized here. Ideal for backend migration later.
    */
   static calculateStats(transactions: Transaction[]): FinancialStats {
-    const paidTransactions = transactions.filter((t) => t.status === "concluido");
-    const pendingTransactions = transactions.filter((t) => t.status === "pendente");
+    const paidTransactions = transactions.filter((t) => t.status === TRANSACTION_STATUSES[0]);
+    const pendingTransactions = transactions.filter((t) => t.status === TRANSACTION_STATUSES[1]);
 
     const totalRevenue = paidTransactions.reduce((acc, t) => acc + Number(t.valor), 0);
     const pendingPayments = pendingTransactions.reduce((acc, t) => acc + Number(t.valor), 0);
@@ -141,8 +143,12 @@ export class FinancialService {
             timestamp: new Date().toISOString(),
           },
         });
-      } catch {
-        /* silent fail */
+      } catch (auditErr) {
+        fisioLogger.warn("Audit log failed for transaction creation", {
+          operation: "FinancialService.createTransaction",
+          transactionId: newTransaction.id,
+          error: AppError.from(auditErr).message,
+        }, "FinancialService");
       }
 
       return newTransaction;
@@ -172,8 +178,12 @@ export class FinancialService {
             timestamp: new Date().toISOString(),
           },
         });
-      } catch {
-        /* silent fail */
+      } catch (auditErr) {
+        fisioLogger.warn("Audit log failed for transaction update", {
+          operation: "FinancialService.updateTransaction",
+          transactionId: id,
+          error: AppError.from(auditErr).message,
+        }, "FinancialService");
       }
 
       return updated;
@@ -197,8 +207,12 @@ export class FinancialService {
           entity_id: id,
           metadata: { timestamp: new Date().toISOString() },
         });
-      } catch {
-        /* silent fail */
+      } catch (auditErr) {
+        fisioLogger.warn("Audit log failed for transaction deletion", {
+          operation: "FinancialService.deleteTransaction",
+          transactionId: id,
+          error: AppError.from(auditErr).message,
+        }, "FinancialService");
       }
     } catch (error) {
       throw AppError.from(error, "FinancialService.deleteTransaction");
@@ -211,7 +225,7 @@ export class FinancialService {
   static async markAsPaid(id: string): Promise<Transaction> {
     try {
       const response = await financialApi.transacoes.update(id, {
-        status: "concluido",
+        status: TRANSACTION_STATUSES[0],
       });
       const updated = response.data as Transaction;
 
@@ -227,8 +241,12 @@ export class FinancialService {
             timestamp: new Date().toISOString(),
           },
         });
-      } catch {
-        /* silent fail */
+      } catch (auditErr) {
+        fisioLogger.warn("Audit log failed for transaction mark-as-paid", {
+          operation: "FinancialService.markAsPaid",
+          transactionId: id,
+          error: AppError.from(auditErr).message,
+        }, "FinancialService");
       }
 
       return updated;

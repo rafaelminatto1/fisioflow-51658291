@@ -6,6 +6,8 @@ import { exerciseService, type ExerciseFilters } from "@/services/exercises";
 import { exercisesApi } from "@/api/v2/exercises";
 import { useAuth } from "@/contexts/AuthContext";
 import { normalizePublicStorageUrl } from "@/lib/storage/public-url";
+import { QueryKeys } from "@/hooks/queryKeys";
+import { AppError } from "@/lib/errors/AppError";
 import type { Exercise as WorkersExercise } from "@/types/workers";
 import type { Exercise } from "@/types";
 import { toast } from "sonner";
@@ -46,7 +48,7 @@ export const useExerciseCategories = () => {
   const { initialized, loading: authLoading, user } = useAuth();
   const authReady = initialized && !authLoading && !!user;
   const { data, isLoading } = useQuery({
-    queryKey: ["exercise-categories"],
+    queryKey: QueryKeys.exercises.categories(),
     queryFn: () => exercisesApi.categories(),
     staleTime: 1000 * 60 * 30,
     enabled: authReady,
@@ -69,7 +71,7 @@ export const useWorkersExercises = (filters?: {
   const { categoryMap } = useExerciseCategories();
 
   const { data, isLoading, error, refetch } = useQuery({
-    queryKey: ["workers-exercises", filters],
+    queryKey: QueryKeys.exercises.lists(),
     queryFn: () => exercisesApi.list(filters),
     staleTime: 1000 * 60 * 5,
     enabled: authReady,
@@ -129,12 +131,13 @@ export const useExercises = (filters?: ExerciseFilters) => {
   const createMutation = useMutation({
     mutationFn: (data: Omit<Exercise, "id">) => exercisesApi.create(data as any),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["workers-exercises"] });
+      queryClient.invalidateQueries({ queryKey: QueryKeys.exercises.all() });
       toast.success("Exercício criado com sucesso");
     },
-    onError: (error: Error) => {
-      logger.error("Erro na criação de exercício", error, "useExercises");
-      toast.error("Erro ao criar exercício: " + error.message);
+    onError: (err: Error) => {
+      logger.error("Erro na criação de exercício", err, "useExercises");
+      const appErr = AppError.from(err);
+      toast.error(appErr.isOperational ? `Erro de validação: ${appErr.message}` : "Erro ao criar exercício. Tente novamente.");
     },
   });
 
@@ -142,24 +145,26 @@ export const useExercises = (filters?: ExerciseFilters) => {
     mutationFn: ({ id, ...data }: Partial<Exercise> & { id: string }) =>
       exercisesApi.update(id, data as any),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["workers-exercises"] });
+      queryClient.invalidateQueries({ queryKey: QueryKeys.exercises.all() });
       toast.success("Exercício atualizado com sucesso");
     },
-    onError: (error: Error) => {
-      logger.error("Erro na atualização de exercício", error, "useExercises");
-      toast.error("Erro ao atualizar exercício: " + error.message);
+    onError: (err: Error) => {
+      logger.error("Erro na atualização de exercício", err, "useExercises");
+      const appErr = AppError.from(err);
+      toast.error(appErr.isOperational ? `Erro de validação: ${appErr.message}` : "Erro ao atualizar exercício. Tente novamente.");
     },
   });
 
   const deleteMutation = useMutation({
     mutationFn: exercisesApi.delete,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["workers-exercises"] });
+      queryClient.invalidateQueries({ queryKey: QueryKeys.exercises.all() });
       toast.success("Exercício excluído com sucesso");
     },
-    onError: (error: Error) => {
-      logger.error("Erro na exclusão de exercício", error, "useExercises");
-      toast.error("Erro ao excluir exercício: " + error.message);
+    onError: (err: Error) => {
+      logger.error("Erro na exclusão de exercício", err, "useExercises");
+      const appErr = AppError.from(err);
+      toast.error(appErr.isOperational ? `Erro de validação: ${appErr.message}` : "Erro ao excluir exercício. Tente novamente.");
     },
   });
 
@@ -167,12 +172,13 @@ export const useExercises = (filters?: ExerciseFilters) => {
     mutationFn: ({ keepId, mergeIds }: { keepId: string; mergeIds: string[] }) =>
       exerciseService.mergeExercises(keepId, mergeIds),
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["workers-exercises"] });
+      queryClient.invalidateQueries({ queryKey: QueryKeys.exercises.all() });
       toast.success(`${data.deletedCount} exercício(s) unido(s) com sucesso`);
     },
-    onError: (error: Error) => {
-      logger.error("Erro ao unir exercícios", error, "useExercises");
-      toast.error("Erro ao unir exercícios: " + error.message);
+    onError: (err: Error) => {
+      logger.error("Erro ao unir exercícios", err, "useExercises");
+      const appErr = AppError.from(err);
+      toast.error(appErr.isOperational ? `Erro de validação: ${appErr.message}` : "Erro ao unir exercícios. Tente novamente.");
     },
   });
 
