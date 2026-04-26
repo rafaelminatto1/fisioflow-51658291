@@ -65,8 +65,8 @@ export default defineConfig({
   webServer: process.env.CI
     ? undefined
     : {
-        command: "tail -f /dev/null", // Dummy command that doesn't exit immediately
-        url: "http://localhost:4173",
+        command: "pnpm dev",
+        url: "http://localhost:5173",
         reuseExistingServer: true,
         timeout: 120000,
         env: {
