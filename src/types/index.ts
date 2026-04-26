@@ -40,6 +40,7 @@ export type {
   DateRange,
   FileUpload,
   ServiceResult,
+  ValidationResult,
   Dictionary,
   ErrorMap,
 } from "./common";
@@ -52,26 +53,50 @@ export * from "./api";
 // Component type definitions
 export * from "./components";
 
+// DB row types (snake_case) — used by service mappers and workers
+// Canonical DB row types: PatientRow, AppointmentRow, etc.
+// Note: Only exporting types that are not already defined in other type files.
+export type {
+  PatientRow,
+  AppointmentRow,
+  AppointmentPaymentStatus,
+  AppointmentsLastUpdated,
+  PatientStats,
+  TherapistSummary,
+  SessionRecord,
+  ExercisePlanRow,
+  ExercisePlanItemRow,
+} from "./workers";
+
 // Unified Appointment type that consolidates both camelCase and snake_case
 // This provides compatibility between database schema (snake_case) and app code (camelCase)
 export interface AppointmentUnified {
   // Primary fields
   id: string;
 
-  // Patient fields - both naming conventions supported
+  // Patient fields - canonical camelCase preferred
   patientId?: string;
+  /**
+   * @deprecated Use `patientId` instead. Kept for database/API compatibility.
+   */
   patient_id?: string;
   patientName?: string;
   patient?: {
     id: string;
     name: string;
-    full_name?: string; // Database field
+    /**
+     * @deprecated Use `name` instead. Kept for database/API compatibility.
+     */
+    full_name?: string;
     phone?: string;
     email?: string;
   };
 
   // Therapist fields
   therapistId?: string;
+  /**
+   * @deprecated Use `therapistId` instead. Kept for database/API compatibility.
+   */
   therapist_id?: string;
   therapist?: {
     id: string;
@@ -79,13 +104,21 @@ export interface AppointmentUnified {
     email?: string;
   };
 
-  // Date/Time fields - both naming conventions supported
-  date?: string; // Legacy format
-  appointment_date?: string; // Database format
-  time?: string; // Legacy format
-  appointment_time?: string; // Database format
-  start_time?: string; // New agenda format
-  end_time?: string; // New agenda format
+  // Date/Time fields - canonical camelCase preferred
+  /** Canonical camelCase date field */
+  date?: string;
+  /**
+   * @deprecated Use `date` instead. Kept for database/API compatibility.
+   */
+  appointment_date?: string;
+  /** Canonical camelCase time field */
+  time?: string;
+  /**
+   * @deprecated Use `time` instead. Kept for database/API compatibility.
+   */
+  appointment_time?: string;
+  start_time?: string;
+  end_time?: string;
   duration?: number;
 
   // Status fields
@@ -97,10 +130,16 @@ export interface AppointmentUnified {
   notes?: string;
   phone?: string;
 
-  // Timestamps
+  // Timestamps - canonical camelCase preferred
   createdAt?: string;
+  /**
+   * @deprecated Use `createdAt` instead. Kept for database/API compatibility.
+   */
   created_at?: string;
   updatedAt?: string;
+  /**
+   * @deprecated Use `updatedAt` instead. Kept for database/API compatibility.
+   */
   updated_at?: string;
 
   // Type for appointments
@@ -124,14 +163,24 @@ export type AppointmentStatus =
 
 export interface Patient {
   id: string;
+  /** Canonical camelCase name field */
   name: string;
-  full_name?: string; // Added for compatibility
+  /**
+   * @deprecated Use `name` instead. Kept for database/API compatibility.
+   * Will be removed in a future version once all consumers migrate to `name`.
+   */
+  full_name?: string;
   email?: string;
   phone?: string;
   cpf?: string;
   rg?: string;
+  /** Canonical camelCase birth date field (ISO 8601) */
   birthDate: string;
-  birth_date?: string; // Database compatibility
+  /**
+   * @deprecated Use `birthDate` instead. Kept for database/API compatibility.
+   * Will be removed in a future version once all consumers migrate to `birthDate`.
+   */
+  birth_date?: string;
   gender: "masculino" | "feminino" | "outro" | string;
   address?: string;
   city?: string;
@@ -140,7 +189,10 @@ export interface Patient {
 
   // Contact & Emergency
   emergencyContact?: string;
-  emergency_contact?: string; // Database compatibility
+  /**
+   * @deprecated Use `emergencyContact` instead. Kept for database/API compatibility.
+   */
+  emergency_contact?: string;
   emergencyContactRelationship?: string;
   emergency_phone?: string;
 
@@ -153,9 +205,15 @@ export interface Patient {
 
   // Insurance
   insurancePlan?: string;
-  health_insurance?: string; // Database compatibility
+  /**
+   * @deprecated Use `insurancePlan` instead. Kept for database/API compatibility.
+   */
+  health_insurance?: string;
   insuranceNumber?: string;
-  insurance_number?: string; // Database compatibility
+  /**
+   * @deprecated Use `insuranceNumber` instead. Kept for database/API compatibility.
+   */
+  insurance_number?: string;
   insuranceValidity?: string;
 
   // Demographics
@@ -175,22 +233,50 @@ export interface Patient {
   incomplete_registration?: boolean;
 
   // Retorno médico / médico assistente (vinculado ao paciente)
+  /**
+   * @deprecated Use `referringDoctorName` instead. Kept for database/API compatibility.
+   */
   referring_doctor_name?: string;
-  referringDoctorName?: string; // Alias
+  /** Canonical camelCase field for referring doctor name */
+  referringDoctorName?: string;
+  /**
+   * @deprecated Use `referringDoctorPhone` instead. Kept for database/API compatibility.
+   */
   referring_doctor_phone?: string;
-  referringDoctorPhone?: string; // Alias
-  medical_return_date?: string; // ISO date - data prevista do retorno ao médico
+  /** Canonical camelCase field for referring doctor phone */
+  referringDoctorPhone?: string;
+  /**
+   * @deprecated Use `medicalReturnDate` instead. Kept for database/API compatibility.
+   */
+  medical_return_date?: string;
+  /** Canonical camelCase field for medical return date (ISO date) */
   medicalReturnDate?: string;
   medical_return_period?: "manha" | "tarde" | "noite";
-  medical_report_done?: boolean; // relatório médico já foi feito
+  /**
+   * @deprecated Use `medicalReportDone` instead. Kept for database/API compatibility.
+   */
+  medical_report_done?: boolean;
+  /** Canonical camelCase field for medical report done status */
   medicalReportDone?: boolean;
-  medical_report_sent?: boolean; // relatório já foi enviado ao médico
+  /**
+   * @deprecated Use `medicalReportSent` instead. Kept for database/API compatibility.
+   */
+  medical_report_sent?: boolean;
+  /** Canonical camelCase field for medical report sent status */
   medicalReportSent?: boolean;
 
+  /** Canonical camelCase creation timestamp */
   createdAt: string;
-  created_at?: string; // Database compatibility
+  /**
+   * @deprecated Use `createdAt` instead. Kept for database/API compatibility.
+   */
+  created_at?: string;
+  /** Canonical camelCase update timestamp */
   updatedAt: string;
-  updated_at?: string; // Database compatibility
+  /**
+   * @deprecated Use `updatedAt` instead. Kept for database/API compatibility.
+   */
+  updated_at?: string;
 }
 
 export interface PatientDocument {
