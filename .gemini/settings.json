@@ -1,53 +1,25 @@
 {
   "mcpServers": {
-    "neon": {
-      "type": "http",
-      "url": "https://mcp.neon.tech/mcp"
-    },
     "exa": {
-      "httpUrl": "https://mcp.exa.ai/mcp"
-    },
-    "shadcn": {
-      "command": "node_modules/.bin/shadcn",
-      "args": ["mcp"]
-    },
-    "stripe": {
-      "httpUrl": "https://mcp.stripe.com/mcp"
-    },
-    "github": {
-      "httpUrl": "https://server.smithery.ai/smithery-ai/github/mcp"
-    },
-    "cloudflare-api": {
-      "httpUrl": "https://mcp.cloudflare.com/mcp",
-      "timeout": 600000
+      "command": "",
+      "args": [
+        "https://mcp.exa.ai/mcp"
+      ]
     },
     "context7": {
-      "httpUrl": "https://mcp.context7.com/mcp",
-      "headers": {
-        "CONTEXT7_API_KEY": "ctx7sk-ad94ba7f-5d88-47b6-9c00-a478dd2b5343"
-      }
-    },
-    "playwright": {
-      "command": "npx",
-      "args": ["-y", "@playwright/mcp@latest"],
-      "description": "Playwright MCP for browser automation and E2E testing"
-    },
-    "expo-mcp": {
-      "httpUrl": "https://mcp.expo.dev/mcp",
-      "description": "Expo MCP for React Native development",
-      "timeout": 600000
-    },
-    "react-native-mcp": {
-      "command": "node_modules/.bin/react-native-mcp-server",
-      "args": []
-    },
-    "chrome-devtools": {
-      "command": "npx",
-      "args": ["chrome-devtools-mcp@latest"]
+      "command": "",
+      "args": [
+        "https://mcp.context7.com/mcp",
+        "--headers",
+        "CONTEXT7_API_KEY=ctx7sk-ad94ba7f-5d88-47b6-9c00-a478dd2b5343"
+      ]
     },
     "pubmed": {
-      "url": "https://server.smithery.ai/pubmed/mcp",
-      "type": "http"
+      "command": "",
+      "args": [
+        "npx",
+        "-y,@cyanheads/pubmed-mcp-server@latest"
+      ]
     }
   },
   "ui": {
