@@ -474,8 +474,7 @@ export function ScheduleCalendar(props: ScheduleCalendarProps) {
             scrollTime="07:00:00"
             businessHours={fcBusinessHours}
             nowIndicator
-            allDaySlot
-            allDayText="Dia todo"
+            allDaySlot={false}
             dayMaxEvents={3}
             editable
             selectable
