@@ -28,7 +28,7 @@ import type { EventResizeDoneArg } from "@fullcalendar/interaction";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import { useEffect, useMemo, useRef, useState } from "react";
 
-import { useCardSize } from "@/hooks/useCardSize";
+import { useAgendaAppearance } from "@/hooks/useAgendaAppearance";
 import { useScheduleSettings } from "@/hooks/useScheduleSettings";
 import { useStatusConfig } from "@/hooks/useStatusConfig";
 import {
@@ -142,10 +142,11 @@ export function ScheduleCalendar(props: ScheduleCalendarProps) {
 
   const calendarRef = useRef<FullCalendar | null>(null);
   const { config: statusConfig } = useStatusConfig();
-  const { cssVariables } = useCardSize();
+  const { cssVariables, slotHeightPx, appearance } = useAgendaAppearance(viewType);
   const { businessHours: settingsHours, blockedTimes } = useScheduleSettings();
 
   const [quickViewAppointment, setQuickViewAppointment] = useState<RawAppointment | null>(null);
+  const [popoverAnchorRect, setPopoverAnchorRect] = useState<DOMRect | null>(null);
 
   useEffect(() => {
     console.log("[FisioFlow] ScheduleCalendar v1.0 - FullCalendar migration");
@@ -332,10 +333,15 @@ export function ScheduleCalendar(props: ScheduleCalendarProps) {
 
     const original = (info.event.extendedProps as { original: RawAppointment }).original;
 
+    // Guardamos o retângulo do elemento clicado para posicionar o popover
+    const rect = info.el.getBoundingClientRect();
+    setPopoverAnchorRect(rect);
+
     if (onEventClick) {
       onEventClick({ id: info.event.id });
-      return;
     }
+    
+    // Always set quick view for appointments if not in selection mode
     setQuickViewAppointment(original);
   };
 
@@ -436,6 +442,8 @@ export function ScheduleCalendar(props: ScheduleCalendarProps) {
       className="relative flex min-h-0 flex-1 flex-col overflow-hidden bg-slate-50/50 dark:bg-slate-950"
       style={cssVariables}
       data-selection-mode={selectionOn ? "true" : "false"}
+      data-agenda-density={appearance.cardSize}
+      data-agenda-view={viewType}
     >
       <ScheduleToolbar
         currentDate={currentDate}
@@ -495,23 +503,40 @@ export function ScheduleCalendar(props: ScheduleCalendarProps) {
         </div>
       </div>
 
-      {quickViewAppointment && (
+      {quickViewAppointment && popoverAnchorRect && (
         <AppointmentQuickView
           open={!!quickViewAppointment}
-          onOpenChange={(open) => !open && setQuickViewAppointment(null)}
+          onOpenChange={(open) => {
+            if (!open) {
+              setQuickViewAppointment(null);
+              setPopoverAnchorRect(null);
+            }
+          }}
           appointment={quickViewAppointment as never}
           onEdit={() => {
             const id = String(quickViewAppointment.id);
             setQuickViewAppointment(null);
+            setPopoverAnchorRect(null);
             onEditAppointment?.(id);
           }}
           onDelete={() => {
             const id = String(quickViewAppointment.id);
             setQuickViewAppointment(null);
+            setPopoverAnchorRect(null);
             onDeleteAppointment?.(id);
           }}
         >
-          <span />
+          <div
+            style={{
+              position: "fixed",
+              top: popoverAnchorRect.top,
+              left: popoverAnchorRect.left,
+              width: popoverAnchorRect.width,
+              height: popoverAnchorRect.height,
+              pointerEvents: "none",
+              zIndex: -1,
+            }}
+          />
         </AppointmentQuickView>
       )}
     </div>

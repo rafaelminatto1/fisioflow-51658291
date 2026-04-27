@@ -197,6 +197,7 @@ export function useAppointments(options?: UseAppointmentsOptions) {
     enabled: !!user,
     staleTime: 1000 * 60 * 2, // 2 minutes
     refetchInterval: options?.refetchInterval,
+    refetchOnMount: true,
     refetchOnWindowFocus: true,
   });
 
@@ -227,6 +228,10 @@ export function useAppointments(options?: UseAppointmentsOptions) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["appointments_v2"] });
+      queryClient.refetchQueries({ queryKey: ["appointments_v2"] });
+    },
+    onError: (error) => {
+      console.error("[useAppointments] Create error:", error);
     },
   });
 
@@ -266,6 +271,7 @@ export function useAppointments(options?: UseAppointmentsOptions) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["appointments_v2"] });
+      queryClient.refetchQueries({ queryKey: ["appointments_v2"] });
     },
   });
 
@@ -273,6 +279,7 @@ export function useAppointments(options?: UseAppointmentsOptions) {
     mutationFn: (id: string) => cancelAppointment(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["appointments_v2"] });
+      queryClient.refetchQueries({ queryKey: ["appointments_v2"] });
     },
   });
 

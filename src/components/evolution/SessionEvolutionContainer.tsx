@@ -299,7 +299,7 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
           if (patientIdFromApp) {
             currentPatientId = String(patientIdFromApp);
             setPatientId(currentPatientId);
-            if (!appointmentData.patient && loadedFromApi) {
+            if ((!appointmentData.patient || typeof appointmentData.patient !== 'object') && loadedFromApi) {
               try {
                 const apiPatient = await PatientService.getPatientById(currentPatientId);
                 if (apiPatient) {
@@ -314,6 +314,15 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
               } catch {
                 // segue sem bloquear a tela
               }
+            } else if (appointmentData.patient && typeof appointmentData.patient === 'object') {
+              const apiPatient = appointmentData.patient as any;
+              const { id: _ignored, ...patientData } = apiPatient;
+              setPatient({
+                id: apiPatient.id,
+                ...patientData,
+                full_name: apiPatient.name ?? (apiPatient as any).full_name,
+                patientName: apiPatient.name ?? (apiPatient as any).patientName,
+              });
             }
           }
 

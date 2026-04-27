@@ -133,3 +133,50 @@
 .sx__time-grid-event {
   padding: 0 !important;
 }
+
+/* ================================================================
+ * Aparência customizável da agenda (FullCalendar)
+ * Variáveis populadas por useAgendaAppearance(view):
+ *   --agenda-slot-height       altura por slot (px)
+ *   --agenda-card-opacity      0..1 (transparência dos cards)
+ *   --agenda-card-font-scale   tamanho da fonte do card
+ * ================================================================ */
+.fc .fc-timegrid-slot,
+.fc .fc-timegrid-slot-lane,
+.fc .fc-timegrid-slot-label {
+  height: var(--agenda-slot-height, 24px) !important;
+}
+
+/* Cards de evento herdam a opacidade configurada */
+.fc-event,
+.fc .fc-timegrid-event,
+.fc .fc-daygrid-event {
+  opacity: var(--agenda-card-opacity, 1) !important;
+}
+
+/* Em mês, garante mínima legibilidade respeitando densidade configurada */
+.fc .fc-daygrid-day-frame {
+  min-height: var(--agenda-slot-height, 24px) !important;
+}
+
+.fc .fc-daygrid-event {
+  font-size: var(--agenda-card-font-scale, 0.75rem);
+}
+
+/* Density helper aplicado pelo wrapper para o tamanho de card por view */
+[data-agenda-density="extra_small"] .fc-event-main {
+  padding: 1px 3px !important;
+  line-height: 1.05 !important;
+}
+[data-agenda-density="small"] .fc-event-main {
+  padding: 2px 4px !important;
+  line-height: 1.1 !important;
+}
+[data-agenda-density="medium"] .fc-event-main {
+  padding: 3px 6px !important;
+  line-height: 1.2 !important;
+}
+[data-agenda-density="large"] .fc-event-main {
+  padding: 5px 8px !important;
+  line-height: 1.3 !important;
+}
