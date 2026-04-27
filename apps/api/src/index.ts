@@ -112,7 +112,7 @@ function resolveCorsOrigin(origin: string | undefined, env: Env): string | undef
   if (allowedOrigins.length === 0) return undefined;
 
   if (allowedOrigins.includes("*")) {
-    return env.ENVIRONMENT === "production" ? undefined : origin;
+    return origin;
   }
 
   if (!origin) return undefined;
@@ -174,7 +174,27 @@ app.get("/api/health/db", async (c) => {
     const result = await sql("SELECT 1 as connection_test");
     return c.json({ status: "connected", rows: result.rows });
   } catch (error: any) {
-    return c.json({ status: "error", message: error.message }, 500);
+    console.error("[Health/DB] Connection Error:", error);
+    return c.json({ status: "error", message: error.message, stack: error.stack }, 500);
+  }
+});
+
+app.get("/api/debug/schema", async (c) => {
+  try {
+    const { neon } = await import("@neondatabase/serverless");
+    const url = c.env.DATABASE_URL || c.env.NEON_DATABASE_URL;
+    if (!url) throw new Error("DATABASE_URL not found");
+    
+    const sql = neon(url);
+    const rows = await sql`
+      SELECT column_name 
+      FROM information_schema.columns 
+      WHERE table_name = 'patients'
+      AND table_schema = 'public'
+    `;
+    return c.json({ columns: rows.map((r: any) => r.column_name) });
+  } catch (error: any) {
+    return c.json({ error: error.message }, 500);
   }
 });
 

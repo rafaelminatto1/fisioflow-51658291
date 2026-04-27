@@ -52,7 +52,8 @@ function cacheVerifiedToken(token: string, user: AuthUser | null): AuthUser | nu
 }
 
 export interface AuthUser {
-  uid: string;
+  uid: string; // Auth ID (Better Auth)
+  profileId?: string; // Profile UUID
   email?: string;
   organizationId: string;
   role?: string;
@@ -134,7 +135,7 @@ async function resolveAuthContext(
     let res = await withTimeout(
       sql(
         `
-        SELECT user_id, email, role, organization_id
+        SELECT id, user_id, email, role, organization_id
         FROM profiles
         WHERE user_id = $1
           AND organization_id IS NOT NULL
@@ -155,7 +156,7 @@ async function resolveAuthContext(
       const syncRes = await withTimeout(
         sql(
           `
-        SELECT user_id, email, role, organization_id
+        SELECT id, user_id, email, role, organization_id
         FROM profiles
         WHERE email = $1
           AND organization_id IS NOT NULL
@@ -188,7 +189,8 @@ async function resolveAuthContext(
 
     if (row?.organization_id) {
       return cacheResolvedAuthUser({
-        uid: candidate.uid,
+        uid: candidate.uid, // Better Auth ID
+        profileId: row.id, // Profile UUID
         email: row.email ?? candidate.email,
         organizationId: row.organization_id,
         role: row.role ?? candidate.role ?? "viewer",
@@ -210,6 +212,7 @@ async function resolveAuthContext(
   if (candidate.organizationId) {
     const resolvedFromCandidate = {
       uid: candidate.uid,
+      profileId: undefined,
       email: candidate.email,
       organizationId: candidate.organizationId,
       role: candidate.role ?? "viewer",
@@ -229,6 +232,7 @@ async function resolveAuthContext(
 
   return {
     uid: candidate.uid,
+    profileId: undefined,
     email: candidate.email,
     organizationId: DEFAULT_ORG_ID,
     role: candidate.role ?? "viewer",
