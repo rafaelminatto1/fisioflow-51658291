@@ -175,7 +175,7 @@ app.get("/me", requireAuth, async (c) => {
         SELECT
         ${buildProfileSelectList(columns)}
         FROM profiles
-        WHERE "${whereColumn}"::text = $1
+        WHERE "user_id" = $1
         LIMIT 1
       `,
       [user.uid],

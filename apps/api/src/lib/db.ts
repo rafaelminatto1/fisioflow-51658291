@@ -141,7 +141,7 @@ export function createDb(env: Env, _mode: "read" | "write" = "write"): FisioDb {
 
       try {
         const results = await baseSql.transaction([
-          baseSql.query(`SELECT set_config('app.org_id', $1, true)`, [orgId]),
+          baseSql.query(`SELECT set_config('app.org_id', $1, true)`, [orgId ?? ""]),
           baseSql.query(queryText, queryParams, queryOpts as any),
         ]);
 
@@ -161,12 +161,21 @@ export function createDb(env: Env, _mode: "read" | "write" = "write"): FisioDb {
 
         return result;
       } catch (dbErr: any) {
-        console.error(`[DB/Neon] Query Error: ${dbErr.message}`, {
-          queryText,
-          queryParams,
-          queryOpts,
+        const errorMsg = `Database Error: ${dbErr.message}${dbErr.detail ? ` (${dbErr.detail})` : ""}`;
+        console.error(`[DB/Neon] Query Error: ${errorMsg}`, {
+          queryText: queryText?.substring(0, 300),
+          queryParams: JSON.stringify(queryParams)?.substring(0, 300),
+          orgId,
+          errorCode: dbErr.code,
         });
-        throw dbErr;
+        
+        const enhancedError = new Error(errorMsg);
+        (enhancedError as any).code = dbErr.code;
+        (enhancedError as any).detail = dbErr.detail;
+        (enhancedError as any).hint = dbErr.hint;
+        (enhancedError as any).query = queryText;
+        (enhancedError as any).params = queryParams;
+        throw enhancedError;
       }
     },
   } as const;
