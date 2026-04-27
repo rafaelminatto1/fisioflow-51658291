@@ -29,7 +29,7 @@ export const TimeGrid = ({ startHour = 7, endHour = 22, rowHeight = 60 }: TimeGr
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
+    // flex: 1 removed to allow taking content height
   },
   row: {
     flexDirection: "row",
