@@ -57,7 +57,32 @@ app.get("/", requireAuth, async (c) => {
 
     if (dateFrom) conditions = and(conditions, gte(appointments.date, dateFrom))!;
     if (dateTo) conditions = and(conditions, lte(appointments.date, dateTo))!;
-    if (therapistId) conditions = and(conditions, eq(appointments.therapistId, therapistId))!;
+    if (therapistId) {
+      // Suporte tanto para Profile ID quanto Auth ID para garantir compatibilidade
+      // durante a transição e para registros legados.
+      try {
+        const profile = await db.query.profiles.findFirst({
+          where: (p, { or, eq, and }) =>
+            and(
+              eq(p.organizationId, organizationId),
+              or(eq(p.id, therapistId as any), eq(p.userId, therapistId)),
+            ),
+          columns: { id: true, userId: true },
+        });
+
+        if (profile) {
+          conditions = and(
+            conditions,
+            sql`(${appointments.therapistId} = ${profile.id} OR ${appointments.therapistId}::text = ${profile.userId})`,
+          )!;
+        } else {
+          conditions = and(conditions, eq(appointments.therapistId, therapistId))!;
+        }
+      } catch (err) {
+        console.error("[Appointments/List] Profile lookup failed:", err);
+        conditions = and(conditions, eq(appointments.therapistId, therapistId))!;
+      }
+    }
     if (patientId) conditions = and(conditions, eq(appointments.patientId, patientId))!;
     if (status) conditions = and(conditions, eq(appointments.status, status as any))!;
 
@@ -252,7 +277,7 @@ function toBoolean(value: unknown, fallback = false): boolean {
 app.post(
   "/",
   requireAuth,
-  rateLimit({ limit: 20, windowSeconds: 3600, endpoint: "appointments-create" }),
+  rateLimit({ limit: 500, windowSeconds: 3600, endpoint: "appointments-create" }),
   async (c) => {
     const user = c.get("user");
     const db = createDb(c.env, "write");
@@ -277,8 +302,8 @@ app.post(
       }
       durationMinutes = durationMinutes || 60;
 
-      // Sempre usa user.uid do JWT (confiável) como therapistId
-      const therapistId = user.uid;
+      // Sempre usa o ID de perfil vinculado ao usuário como therapistId
+      const therapistId = user.profileId || user.uid;
       const notes = body.notes ?? null;
       const type = normalizeAppointmentType(body.type ?? body.session_type);
       const status = normalizeStatus(body.status);

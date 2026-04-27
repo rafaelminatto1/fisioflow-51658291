@@ -1299,6 +1299,11 @@ app.post("/", async (c) => {
       .values(insertValues as any)
       .returning();
 
+    if (!patient) {
+      console.error("[Patients/Create] Insert failed - no patient returned from DB");
+      return c.json({ error: "Erro ao criar paciente: Nenhum dado retornado do banco." }, 500);
+    }
+
     // Inngest Event: Patient Created (Sequência de Boas-vindas)
     triggerInngestEvent(
       c.env,

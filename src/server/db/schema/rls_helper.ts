@@ -11,7 +11,9 @@ export function withOrganizationPolicy(tableName: string, organizationIdColumn: 
   return pgPolicy(`policy_${tableName}_isolation`, {
     for: "all",
     to: "authenticated",
-    using: sql`${organizationIdColumn} = (current_setting('app.org_id')::uuid)`,
+    // Use true as second arg so Postgres returns NULL instead of throwing when app.org_id is unset
+    using: sql`${organizationIdColumn} = (NULLIF(current_setting('app.org_id', true), '')::uuid)`,
+    withCheck: sql`${organizationIdColumn} = (NULLIF(current_setting('app.org_id', true), '')::uuid)`,
   });
 }
 
@@ -31,7 +33,8 @@ export function withPublicWriteOrganizationPolicy(tableName: string, organizatio
     pgPolicy(`policy_${tableName}_tenant_isolation`, {
       for: "all",
       to: "authenticated",
-      using: sql`${organizationIdColumn} = (current_setting('app.org_id')::uuid)`,
+      using: sql`${organizationIdColumn} = (NULLIF(current_setting('app.org_id', true), '')::uuid)`,
+      withCheck: sql`${organizationIdColumn} = (NULLIF(current_setting('app.org_id', true), '')::uuid)`,
     }),
   ];
 }
@@ -44,6 +47,7 @@ export function withPublicOrOrganizationPolicy(tableName: string, organizationId
   return pgPolicy(`policy_${tableName}_hybrid_isolation`, {
     for: "all",
     to: "authenticated",
-    using: sql`(${organizationIdColumn} IS NULL) OR (${organizationIdColumn} = (current_setting('app.org_id')::uuid))`,
+    using: sql`(${organizationIdColumn} IS NULL) OR (${organizationIdColumn} = (NULLIF(current_setting('app.org_id', true), '')::uuid))`,
+    withCheck: sql`(${organizationIdColumn} IS NULL) OR (${organizationIdColumn} = (NULLIF(current_setting('app.org_id', true), '')::uuid))`,
   });
 }

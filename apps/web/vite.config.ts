@@ -20,8 +20,7 @@ function htmlPlugin(appVersion: string, buildTime: string): any {
       return html
         .replace(/%APP_VERSION%/g, appVersion)
         .replace(/%BUILD_TIME%/g, buildTime)
-        .replace(/%CACHE_BUSTER%/g, buildTime)
-        .replace(/__CACHE_BUSTER__/g, buildTime);
+        .replace(/%CACHE_BUSTER%/g, buildTime);
     },
   };
 }

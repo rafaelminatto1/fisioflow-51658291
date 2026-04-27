@@ -57,16 +57,9 @@ export default function AgendaScreen() {
 
   const [viewMode, setViewMode] = useState<ViewMode>("day");
 
-  // Lógica para iniciar na segunda-feira se hoje for domingo
+  // Lógica para iniciar na data atual
   const getInitialDate = () => {
-    const now = new Date();
-    // 0 é domingo no JavaScript
-    if (now.getDay() === 0) {
-      const nextMonday = new Date(now);
-      nextMonday.setDate(now.getDate() + 1);
-      return nextMonday;
-    }
-    return now;
+    return new Date();
   };
 
   const [selectedDate, setSelectedDate] = useState(getInitialDate());
