@@ -149,8 +149,18 @@ export function useSchedulePageData(date: string, view: ViewType, filters?: Sche
         let dateFrom = date;
         let dateTo = date;
 
+        // Parse YYYY-MM-DD as local date (noon) to avoid UTC timezone shift
+        // BUG previo: `new Date("2026-04-27")` é UTC midnight; em BR (UTC-3) vira sáb 26/04 21:00,
+        // o que fazia getDay() retornar 0 (domingo) e o cálculo do início da semana ir para a semana ANTERIOR.
+        const parseLocalYMD = (s: string): Date => {
+          const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s);
+          if (!m) return new Date(s);
+          const [, y, mm, d] = m;
+          return new Date(Number(y), Number(mm) - 1, Number(d), 12, 0, 0);
+        };
+
         if (view === "week") {
-          const startOfWeek = new Date(date);
+          const startOfWeek = parseLocalYMD(date);
           // Ajustar para o início da semana (segunda-feira como no componente)
           const day = startOfWeek.getDay();
           const diff = startOfWeek.getDate() - day + (day === 0 ? -6 : 1);
@@ -162,10 +172,10 @@ export function useSchedulePageData(date: string, view: ViewType, filters?: Sche
           dateFrom = format(startOfWeek, "yyyy-MM-dd");
           dateTo = format(endOfWeek, "yyyy-MM-dd");
         } else if (view === "month") {
-          const startOfMonth = new Date(date);
+          const startOfMonth = parseLocalYMD(date);
           startOfMonth.setDate(1);
 
-          const endOfMonth = new Date(date);
+          const endOfMonth = parseLocalYMD(date);
           endOfMonth.setMonth(endOfMonth.getMonth() + 1);
           endOfMonth.setDate(0);
 
@@ -176,6 +186,7 @@ export function useSchedulePageData(date: string, view: ViewType, filters?: Sche
         const res = await appointmentsApi.list({
           dateFrom,
           dateTo,
+          limit: 500,
         });
 
         return (res?.data ?? [])
@@ -239,6 +250,7 @@ export function useSchedulePageData(date: string, view: ViewType, filters?: Sche
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: ["schedule-appointments"],
+        exact: false,
       });
       toast.success("Agendamento criado com sucesso");
     },
@@ -259,6 +271,7 @@ export function useSchedulePageData(date: string, view: ViewType, filters?: Sche
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: ["schedule-appointments"],
+        exact: false,
       });
       toast.success("Agendamento atualizado com sucesso");
     },
@@ -275,6 +288,7 @@ export function useSchedulePageData(date: string, view: ViewType, filters?: Sche
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: ["schedule-appointments"],
+        exact: false,
       });
       toast.success("Agendamento excluído com sucesso");
     },

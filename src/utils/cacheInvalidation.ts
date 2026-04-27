@@ -15,6 +15,7 @@ import { QueryClient } from "@tanstack/react-query";
 import { parseISO } from "date-fns";
 import { ViewType, calculatePeriodBounds, isDateInPeriod } from "./periodCalculations";
 import { appointmentPeriodKeys } from "@/hooks/useAppointmentsByPeriod";
+import { appointmentKeys } from "@/hooks/appointments/useAppointmentsData";
 import { fisioLogger as logger } from "@/lib/errors/logger";
 import { formatDateToLocalISO } from "@/utils/dateUtils";
 
@@ -41,19 +42,48 @@ export async function invalidateAppointmentsComprehensive(
   });
 
   const keysToInvalidate = [
+    appointmentKeys.list(organizationId),
     ["appointments_v2"],
-    ["schedule-appointments"],
     ["appointments", "period"],
     ["appointments"],
   ];
 
   // 1. Basic Invalidation for all known patterns
+  // Use exact: false to catch partial matches like ["schedule-appointments", "2026-04-27", ...]
+  // Use type: 'all' to invalidate ALL queries, not just active ones
   const invalidationPromises = keysToInvalidate.map((key) =>
     queryClient.invalidateQueries({
       queryKey: key,
       exact: false,
+      type: 'all',
     }),
   );
+  
+  // Also invalidate schedule-appointments with partial matching (array keys with date/view)
+  invalidationPromises.push(
+    queryClient.invalidateQueries({
+      queryKey: ['schedule-appointments'],
+      exact: false,
+      type: 'all',
+    }),
+  );
+
+  await Promise.all(invalidationPromises);
+
+  // CRITICAL: Reset ALL appointment queries to force fresh fetch
+  // This clears both memory cache AND persisted cache (PersistQueryClientProvider)
+  await queryClient.resetQueries({
+    queryKey: ['schedule-appointments'],
+    exact: false,
+  });
+  
+  // Reset all other appointment-related keys
+  for (const key of keysToInvalidate) {
+    await queryClient.resetQueries({
+      queryKey: key,
+      exact: false,
+    });
+  }
 
   // 2. If a specific date is provided, prioritize invalidating affected periods
   if (date) {
@@ -65,16 +95,18 @@ export async function invalidateAppointmentsComprehensive(
 
   await Promise.all(invalidationPromises);
 
-  // 3. Force refetch of active queries to ensure immediate UI update
+  // 3. Force refetch of ALL queries (not just active) to ensure immediate UI update
+  // Use exact: false to match partial keys and fetch all appointments queries
   await queryClient.refetchQueries({
-    type: "active",
+    exact: false,
     predicate: (query) => {
       const key = query.queryKey as any[];
       return (
         key[0] === "appointments_v2" ||
         key[0] === "schedule-appointments" ||
         (key[0] === "appointments" && key[1] === "period") ||
-        key[0] === "appointments"
+        key[0] === "appointments" ||
+        (Array.isArray(key) && key.includes("schedule-appointments"))
       );
     },
   });
