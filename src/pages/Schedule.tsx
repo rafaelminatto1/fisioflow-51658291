@@ -298,8 +298,9 @@ export default function Schedule() {
                     viewType={viewType}
                     onViewTypeChange={handleViewTypeChange}
                     onEventClick={(event) => {
-                      const appointment = appointments.find((a) => a.id === event.id);
-                      if (appointment) actions.handleAppointmentClick(appointment);
+                      // O popover agora é gerenciado internamente pelo ScheduleCalendar
+                      // para garantir o posicionamento correto via anchor rect.
+                      console.log("Event clicked:", event.id);
                     }}
                     onTimeSlotClick={handleTimeSlotClick}
                     onAppointmentReschedule={(id, start) => {

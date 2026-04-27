@@ -182,7 +182,7 @@ app.get("/api/health/db", async (c) => {
 app.get("/api/debug/schema", async (c) => {
   try {
     const { neon } = await import("@neondatabase/serverless");
-    const url = c.env.DATABASE_URL || c.env.NEON_DATABASE_URL;
+    const url = c.env.DATABASE_URL || (c.env as any).NEON_DATABASE_URL;
     if (!url) throw new Error("DATABASE_URL not found");
     
     const sql = neon(url);

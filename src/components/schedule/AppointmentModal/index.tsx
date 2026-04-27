@@ -29,6 +29,7 @@ export interface AppointmentModalProps {
   mode?: "create" | "edit" | "view";
   therapists?: TherapistOption[];
   patients?: Patient[];
+  onSuccess?: (appointment: AppointmentBase) => void;
 }
 
 const getAppointmentPatientName = (appointment?: any) =>
@@ -48,6 +49,7 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
   mode: initialMode = "create",
   therapists: externalTherapists = [],
   patients: externalPatients = [],
+  onSuccess,
 }) => {
   const isMobile = useIsMobile();
   const { user } = useAuth();
