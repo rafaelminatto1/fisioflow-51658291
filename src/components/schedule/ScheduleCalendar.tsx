@@ -44,6 +44,7 @@ import { getCalendarCardColors, normalizeStatus } from "./shared/appointment-sta
 import { AppointmentQuickView } from "./AppointmentQuickView";
 import { ScheduleToolbar } from "./ScheduleToolbar";
 import { ScheduleEventContent } from "./ScheduleEventContent";
+import { WeeklyScheduleSummary } from "./WeeklyScheduleSummary";
 
 type ViewType = "day" | "week" | "month";
 
@@ -62,7 +63,7 @@ const DEFAULT_SLOT_MAX = "21:00:00";
  * Kept loose because the page-level data layer still mixes snake_case
  * (start_time) and camelCase (patientName) fields.
  */
-interface RawAppointment {
+export interface RawAppointment {
   id: string;
   tempId?: string;
   date?: string | Date;
@@ -471,6 +472,9 @@ export function ScheduleCalendar(props: ScheduleCalendarProps) {
       />
 
       <div className="flex min-h-0 flex-1 flex-col p-1 md:p-2">
+        {viewType === "week" && (
+          <WeeklyScheduleSummary currentDate={currentDate} appointments={appointments} />
+        )}
         <div className="relative h-full w-full overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
           <FullCalendar
             ref={calendarRef}
