@@ -17,7 +17,7 @@
  * Mais eficiente que setTimeout para eventos de scroll
  */
 
-import { useMemo, useRef, useCallback, useState } from "react";
+import { useMemo, useRef, useCallback, useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { useDebouncedCallback } from "@/hooks/performance/useDebounce";
 
@@ -61,7 +61,9 @@ interface VirtualizedListProps<T> {
   /** Altura de cada item em pixels (pode ser função para alturas variáveis) */
   itemHeight: number | ((item: T, index: number) => number);
   /** Altura do container visível em pixels */
-  containerHeight: number;
+  containerHeight?: number;
+  /** Alias para altura do container. */
+  height?: number;
   /** Render function para cada item */
   renderItem: (item: T, index: number) => React.ReactNode;
   /** Key extractor para cada item */
@@ -80,29 +82,40 @@ interface VirtualizedListProps<T> {
   renderFooter?: () => React.ReactNode;
   /** Render function para item vazio */
   renderEmpty?: () => React.ReactNode;
+  /** Conteúdo do estado vazio */
+  emptyState?: React.ReactNode;
   /** Render function para loading */
   renderLoading?: () => React.ReactNode;
+  /** Conteúdo do loading indicator */
+  loadingIndicator?: React.ReactNode;
   /** Mostrar loading */
   isLoading?: boolean;
+  /** Alias para onEndReachedThreshold */
+  endReachedThreshold?: number;
 }
 
 export function VirtualizedList<T>({
   items,
   itemHeight,
   containerHeight,
+  height,
   renderItem,
   keyExtractor,
   overscan = 3,
   className,
   onEndReached,
-  onEndReachedThreshold = 200,
+  onEndReachedThreshold,
+  endReachedThreshold,
   renderHeader,
   renderFooter,
   renderEmpty,
+  emptyState,
   renderLoading,
+  loadingIndicator,
   isLoading = false,
 }: VirtualizedListProps<T>) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const listRef = useRef<HTMLDivElement>(null);
   const [scrollTop, setScrollTop] = useState(0);
 
   // Memoizar altura total e item heights com prefix sums O(1)
@@ -136,6 +149,11 @@ export function VirtualizedList<T>({
     };
   }, [items, itemHeight]);
 
+  const actualContainerHeight = containerHeight ?? height ?? 0;
+  const actualRenderEmpty = renderEmpty ? renderEmpty : emptyState ? () => emptyState : undefined;
+  const actualRenderLoading = renderLoading ? renderLoading : loadingIndicator ? () => loadingIndicator : undefined;
+  const actualEndReachedThreshold = onEndReachedThreshold ?? endReachedThreshold ?? 200;
+
   // Calcular itens visíveis
   const { visibleItems, _startIndex, _endIndex } = useMemo(() => {
     const getItemHeightLocal = (index: number) => itemHeights[index] || 50;
@@ -156,7 +174,7 @@ export function VirtualizedList<T>({
     let endNode = startNode;
     currentOffset = getItemOffset(startNode);
 
-    while (endNode < items.length && currentOffset < scrollTop + containerHeight) {
+    while (endNode < items.length && currentOffset < scrollTop + actualContainerHeight) {
       currentOffset += getItemHeightLocal(endNode);
       endNode++;
     }
@@ -180,7 +198,17 @@ export function VirtualizedList<T>({
       startIndex: startNode,
       endIndex: endNode,
     };
-  }, [items, itemHeights, scrollTop, containerHeight, overscan, getItemOffset]);
+  }, [items, itemHeights, scrollTop, actualContainerHeight, overscan, getItemOffset]);
+
+  useEffect(() => {
+    if (!listRef.current) return;
+
+    (listRef.current as any).scrollToIndex = (index: number) => {
+      if (!containerRef.current) return;
+      const clampedIndex = Math.max(0, Math.min(index, items.length - 1));
+      containerRef.current.scrollTop = getItemOffset(clampedIndex);
+    };
+  }, [getItemOffset, items.length]);
 
   // Handler de scroll otimizado com RAF-based throttle
   const throttledSetScrollTop = useScrollThrottle(setScrollTop, 16); // ~60fps
@@ -199,42 +227,43 @@ export function VirtualizedList<T>({
       if (onEndReached && !isLoading) {
         const scrollHeight = e.currentTarget.scrollHeight;
         const clientHeight = e.currentTarget.clientHeight;
-        if (scrollHeight - currentScrollTop - clientHeight < onEndReachedThreshold) {
+        if (scrollHeight - currentScrollTop - clientHeight < actualEndReachedThreshold) {
           if (onEndReached) {
             debouncedOnEndReached();
           }
         }
       }
     },
-    [throttledSetScrollTop, onEndReached, isLoading, onEndReachedThreshold, debouncedOnEndReached],
+    [throttledSetScrollTop, onEndReached, isLoading, actualEndReachedThreshold, debouncedOnEndReached],
   );
 
   // Estado vazio
   if (items.length === 0 && !isLoading) {
-    return renderEmpty ? (
+    return actualRenderEmpty ? (
       <div
         className={cn("flex items-center justify-center", className)}
-        style={{ height: containerHeight }}
+        style={{ height: actualContainerHeight }}
       >
-        {renderEmpty()}
+        {actualRenderEmpty()}
       </div>
     ) : null;
   }
 
   return (
-    <div className={className}>
+    <div ref={listRef} data-virtual-list className={className}>
       {renderHeader?.()}
 
       <div
         ref={containerRef}
         onScroll={handleScroll}
         className="overflow-auto"
-        style={{ height: containerHeight }}
+        style={{ height: actualContainerHeight }}
       >
         <div style={{ height: totalHeight, position: "relative" }}>
           {visibleItems.map(({ item, index, offset }) => (
             <div
               key={keyExtractor(item, index)}
+              data-virtual-index={index}
               style={{
                 position: "absolute",
                 top: offset,
@@ -248,7 +277,7 @@ export function VirtualizedList<T>({
           ))}
         </div>
 
-        {isLoading && renderLoading?.()}
+        {isLoading && actualRenderLoading?.()}
       </div>
 
       {renderFooter?.()}

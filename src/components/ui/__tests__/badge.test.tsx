@@ -9,9 +9,8 @@ describe("Badge", () => {
   });
 
   it("deve aplicar variant default", () => {
-    const { container } = render(<Badge>Default</Badge>);
-    const badge = container.querySelector('[class*="badge"]');
-    expect(badge).toBeInTheDocument();
+    render(<Badge>Default</Badge>);
+    expect(screen.getByText("Default")).toHaveClass("inline-flex");
   });
 
   it("deve aplicar variant secondary", () => {

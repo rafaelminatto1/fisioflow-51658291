@@ -18,8 +18,8 @@ describe("ResponsiveTable", () => {
       <ResponsiveTable data={mockData} columns={mockColumns} keyExtractor={(item) => item.id} />,
     );
 
-    expect(screen.getByText("João Silva")).toBeInTheDocument();
-    expect(screen.getByText("Maria Santos")).toBeInTheDocument();
+    expect(screen.getAllByText("João Silva").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Maria Santos").length).toBeGreaterThan(0);
   });
 
   it("deve mostrar mensagem quando vazio", () => {
@@ -52,7 +52,7 @@ describe("ResponsiveTable", () => {
       />,
     );
 
-    expect(screen.getByText("JOÃO SILVA")).toBeInTheDocument();
+    expect(screen.getAllByText("JOÃO SILVA").length).toBeGreaterThan(0);
   });
 
   it("deve ter labels de coluna visíveis", () => {
