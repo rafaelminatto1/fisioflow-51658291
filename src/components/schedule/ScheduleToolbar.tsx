@@ -12,13 +12,16 @@ import {
   ChevronRight,
   MoreVertical,
   Plus,
+  Search,
   Sparkles,
   Stethoscope,
+  X,
   Zap,
 } from "lucide-react";
 import React from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -29,6 +32,7 @@ import { SmartDatePicker } from "@/components/ui/smart-date-picker";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 import { AdvancedFilters } from "./AdvancedFilters";
+import type { TherapistSummary } from "@/types/workers";
 import { ScheduleConfigIconButton } from "./ScheduleConfigButton";
 
 export interface ScheduleToolbarProps {
@@ -46,6 +50,9 @@ export interface ScheduleToolbarProps {
   };
   onFiltersChange: (filters: { status: string[]; types: string[]; therapists: string[] }) => void;
   onClearFilters: () => void;
+  patientFilter: string;
+  onPatientFilterChange: (value: string) => void;
+  therapists?: TherapistSummary[];
   onCancelAllToday?: () => void;
 }
 
@@ -72,6 +79,9 @@ export const ScheduleToolbar: React.FC<ScheduleToolbarProps> = ({
   filters,
   onFiltersChange,
   onClearFilters,
+  patientFilter,
+  onPatientFilterChange,
+  therapists,
   onCancelAllToday: _onCancelAllToday,
 }) => {
   const isMobile = useIsMobile();
@@ -144,7 +154,7 @@ export const ScheduleToolbar: React.FC<ScheduleToolbarProps> = ({
   const DesktopToolbar = () => (
     <div className="flex items-center justify-between px-8 py-2 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 sticky top-0 z-40">
       {/* Left Group: Brand Logo (Stitch style: 'WORKBENCH' equivalent) */}
-      <div className="flex items-center gap-6">
+      <div className="flex flex-wrap items-center gap-6">
         <Link to="/agenda" className="flex items-center gap-2 hover:opacity-80 transition-all">
           <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center shadow-lg shadow-blue-500/20">
             <Stethoscope className="w-4 h-4 text-white" />
@@ -157,7 +167,7 @@ export const ScheduleToolbar: React.FC<ScheduleToolbarProps> = ({
         <div className="h-6 w-[1px] bg-slate-200 dark:bg-slate-800" />
 
         {/* Date Navigation Block */}
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <Button
             variant="outline"
             size="sm"
@@ -199,6 +209,29 @@ export const ScheduleToolbar: React.FC<ScheduleToolbarProps> = ({
 
         <div className="h-6 w-[1px] bg-slate-200 dark:bg-slate-800" />
 
+        <div className="relative min-w-[220px] max-w-[320px] flex-1">
+          <Input
+            value={patientFilter}
+            onChange={(event) => onPatientFilterChange(event.target.value)}
+            placeholder="Buscar paciente"
+            aria-label="Buscar paciente"
+            className="h-10 pr-10"
+          />
+          {patientFilter ? (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => onPatientFilterChange("")}
+              aria-label="Limpar busca de paciente"
+              className="absolute right-1 top-1/2 -translate-y-1/2"
+            >
+              <X className="w-4 h-4" />
+            </Button>
+          ) : (
+            <Search className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+          )}
+        </div>
+
         {renderViewSwitcher({
           activeClassName:
             "bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-sm ring-1 ring-slate-200 dark:ring-slate-700",
@@ -226,7 +259,12 @@ export const ScheduleToolbar: React.FC<ScheduleToolbarProps> = ({
         <div className="h-6 w-[1px] bg-slate-200 dark:bg-slate-800 mx-1" />
 
         <div className="flex items-center gap-1.5">
-          <AdvancedFilters filters={filters} onChange={onFiltersChange} onClear={onClearFilters} />
+          <AdvancedFilters
+            filters={filters}
+            onChange={onFiltersChange}
+            onClear={onClearFilters}
+            therapists={therapists}
+          />
 
           {/* Engrenagem Button (Prominent as requested) */}
           <ScheduleConfigIconButton className="h-9 w-9 rounded-full bg-slate-50 dark:bg-slate-900 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-blue-600 transition-all" />

@@ -39,6 +39,7 @@ import {
   toLocalISOString,
 } from "@/lib/schedule/time";
 import type { Tarefa } from "@/types/tarefas";
+import type { TherapistSummary } from "@/types/workers";
 import { getCalendarCardColors, normalizeStatus } from "./shared/appointment-status";
 import { AppointmentQuickView } from "./AppointmentQuickView";
 import { ScheduleToolbar } from "./ScheduleToolbar";
@@ -110,7 +111,7 @@ export interface ScheduleCalendarProps {
   totalAppointmentsCount?: number;
   patientFilter?: string;
   onPatientFilterChange?: (patient: string) => void;
-  therapists?: unknown[];
+  therapists?: TherapistSummary[];
 }
 
 export function ScheduleCalendar(props: ScheduleCalendarProps) {
@@ -136,6 +137,9 @@ export function ScheduleCalendar(props: ScheduleCalendarProps) {
     filters,
     onFiltersChange,
     onClearFilters,
+    patientFilter,
+    onPatientFilterChange,
+    therapists,
   } = props;
 
   const selectionOn = isSelectionMode ?? selectionMode ?? false;
@@ -456,6 +460,9 @@ export function ScheduleCalendar(props: ScheduleCalendarProps) {
         filters={filters || { status: [], types: [], therapists: [] }}
         onFiltersChange={onFiltersChange || (() => {})}
         onClearFilters={onClearFilters || (() => {})}
+        patientFilter={patientFilter || ""}
+        onPatientFilterChange={onPatientFilterChange || (() => {})}
+        therapists={therapists}
       />
 
       <div className="flex min-h-0 flex-1 flex-col p-1 md:p-2">

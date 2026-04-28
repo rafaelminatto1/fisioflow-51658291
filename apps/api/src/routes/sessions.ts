@@ -141,11 +141,12 @@ app.post("/autosave", requireAuth, async (c) => {
   const patientId = String(body.patient_id ?? "").trim();
   if (!patientId) return c.json({ error: "patient_id é obrigatório" }, 400);
 
-  const subjData = body.subjective != null ? textToJsonb(body.subjective) : undefined;
-  if (subjData && (body.pain_level != null || body.pain_location || body.pain_character)) {
-    (subjData as any).painScale = body.pain_level ?? null;
-    (subjData as any).painLocation = body.pain_location ?? null;
-    (subjData as any).painCharacter = body.pain_character ?? null;
+  let subjData: any = body.subjective != null ? textToJsonb(body.subjective) : undefined;
+  if (body.pain_level != null || body.pain_location || body.pain_character) {
+    subjData = subjData || {};
+    subjData.painScale = body.pain_level ?? null;
+    subjData.painLocation = body.pain_location ?? null;
+    subjData.painCharacter = body.pain_character ?? null;
   }
 
   const objData = body.objective != null ? textToJsonb(body.objective) : undefined;
@@ -303,6 +304,14 @@ app.post("/", requireAuth, async (c) => {
 
   const recordDate = body.record_date ? new Date(String(body.record_date)) : new Date();
 
+  let subjData = body.subjective != null ? textToJsonb(body.subjective) : {};
+  if (body.pain_level != null || body.pain_location || body.pain_character) {
+    subjData = subjData || {};
+    (subjData as any).painScale = body.pain_level ?? null;
+    (subjData as any).painLocation = body.pain_location ?? null;
+    (subjData as any).painCharacter = body.pain_character ?? null;
+  }
+
   const insertValues: any = {
     patientId,
     appointmentId: body.appointment_id || null,
@@ -310,7 +319,7 @@ app.post("/", requireAuth, async (c) => {
     organizationId: user.organizationId,
     date: recordDate,
     duration: body.duration_minutes != null ? Number(body.duration_minutes) : null,
-    subjective: textToJsonb(body.subjective),
+    subjective: subjData,
     objective: textToJsonb(body.objective),
     assessment: textToJsonb(body.assessment),
     plan: textToJsonb(body.plan),
@@ -358,7 +367,25 @@ app.put("/:id", requireAuth, async (c) => {
     updatedAt: new Date(),
   };
 
-  if ("subjective" in body) updatePayload.subjective = textToJsonb(body.subjective);
+  if ("subjective" in body || "pain_level" in body || "pain_location" in body || "pain_character" in body) {
+    const existing = await db
+      .select({ subjective: sessions.subjective })
+      .from(sessions)
+      .where(withTenant(sessions, user.organizationId, eq(sessions.id, id)))
+      .limit(1);
+
+    const subjData: any = (existing[0]?.subjective as any) || {};
+
+    if ("subjective" in body) {
+      subjData.text = String(body.subjective);
+    }
+    if ("pain_level" in body) subjData.painScale = body.pain_level;
+    if ("pain_location" in body) subjData.painLocation = body.pain_location;
+    if ("pain_character" in body) subjData.painCharacter = body.pain_character;
+
+    updatePayload.subjective = subjData;
+  }
+
   if ("objective" in body) updatePayload.objective = textToJsonb(body.objective);
   if ("assessment" in body) updatePayload.assessment = textToJsonb(body.assessment);
   if ("plan" in body) updatePayload.plan = textToJsonb(body.plan);
