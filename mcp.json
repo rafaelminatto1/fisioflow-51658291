@@ -53,14 +53,22 @@
     },
     "exa": {
       "type": "http",
-      "url": "https://mcp.exa.ai/mcp?exaApiKey=d12af1da-4c1d-4665-a952-2bdfa6283d11",
+      "url": "https://mcp.exa.ai/mcp?exaApiKey=REDACTED_EXA_API_KEY",
       "disabled": false
     },
     "context7": {
       "type": "http",
       "url": "https://mcp.context7.com/mcp",
       "headers": {
-        "CONTEXT7_API_KEY": "ctx7sk-ad94ba7f-5d88-47b6-9c00-a478dd2b5343"
+        "CONTEXT7_API_KEY": "REDACTED_CONTEXT7_API_KEY"
+      },
+      "disabled": false
+    },
+    "stitch": {
+      "type": "http",
+      "url": "https://stitch.googleapis.com/mcp",
+      "headers": {
+        "X-Goog-Api-Key": "REDACTED_STITCH_API_KEY"
       },
       "disabled": false
     }
