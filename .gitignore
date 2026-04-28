@@ -138,7 +138,6 @@ DE-FRAUDE_E_ESTELIONATO_*.pdf
 *.swo
 *~
 .claude/
-.firebase/
 
 # Logs
 lint_output.txt
@@ -210,10 +209,6 @@ iOSInjectionProject/
 iOSInjectionProject/
 
 # Firebase Service Account Keys (NEVER commit these!)
-*-firebase-admin.json
-firebase-admin*.json
-*fisioflow-firebase-admin.json
-*-firebase-adminsdk-*.json
 functions/service-account-key.json
 .env.yaml
 
@@ -225,7 +220,6 @@ console-errors-report.json
 
 # Local test scripts and temporary verification outputs
 .agent/*.txt
-get-firebase-token.js
 test-crud-production.sh
 test-crud-with-auth.cjs
 test-with-admin-sdk.cjs
