@@ -386,9 +386,14 @@ export function ScheduleCalendar(props: ScheduleCalendarProps) {
   const handleDatesSet = (arg: DatesSetArg) => {
     if (!onDateChange) return;
     const activeStart = arg.view.currentStart;
-    if (formatLocalDate(activeStart) !== formatLocalDate(currentDate)) {
-      onDateChange(activeStart);
-    }
+    const activeEnd = arg.view.currentEnd;
+    if (!activeStart || !activeEnd) return;
+    // Only sync URL when the user-selected date falls outside the displayed
+    // period. Without this guard we'd snap currentDate back to the period
+    // start (e.g. Monday) on every internal datesSet fire — which created an
+    // infinite loop bouncing the URL between two adjacent weeks.
+    if (currentDate >= activeStart && currentDate < activeEnd) return;
+    onDateChange(activeStart);
   };
 
   const renderEventContent = (arg: EventContentArg) => {
