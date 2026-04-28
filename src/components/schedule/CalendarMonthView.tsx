@@ -11,7 +11,7 @@ import {
   isToday,
 } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { AlertTriangle, Clock3 } from "lucide-react";
+import { AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Appointment } from "@/types/appointment";
 import { AppointmentQuickView } from "./AppointmentQuickView";
@@ -104,7 +104,7 @@ const CalendarMonthView = memo(
                     const timeA = a.time?.substring(0, 5) || "00:00";
                     const timeB = b.time?.substring(0, 5) || "00:00";
                     if (timeA !== timeB) return timeA.localeCompare(timeB);
-                    return a.patientName.localeCompare(b.patientName);
+                    return (a.patientName ?? "").localeCompare(b.patientName ?? "");
                   });
                   const isCurrentMonth = isSameMonth(day, currentDate);
                   const dayString = format(day, "dd/MM/yyyy");
@@ -186,12 +186,12 @@ const CalendarMonthView = memo(
                             >
                               <div
                                 className={cn(
-                                  "appointment-card rounded-xl px-2 py-2 text-white cursor-pointer shadow-sm backdrop-blur-sm transition-all duration-200 group/card border",
+                                  "appointment-card relative rounded-lg pl-2.5 pr-2 py-1.5 text-white cursor-pointer shadow-sm transition-all duration-200 group/card overflow-hidden",
                                   "hover:-translate-y-0.5 hover:shadow-md hover:z-10",
                                   getStatusColor(apt.status, isOverCapacity(apt)),
                                   isOverCapacity(apt) && "animate-pulse ring-1 ring-amber-400",
                                 )}
-                                title={`${apt.patientName} - ${apt.time}`}
+                                title={`${apt.patientName} • ${apt.time}${apt.type ? " • " + apt.type : ""}`}
                                 onPointerDownCapture={(e) => e.stopPropagation()}
                                 onClick={(e) => {
                                   e.stopPropagation();
@@ -201,28 +201,18 @@ const CalendarMonthView = memo(
                                 tabIndex={0}
                                 aria-label={`${apt.patientName} às ${apt.time} - ${apt.type || "Agendamento"}`}
                               >
-                                <div className="flex flex-col gap-1 min-w-0">
-                                  <div className="flex items-center justify-between gap-2">
-                                    <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-[0.08em] text-white/85">
-                                      <Clock3 className="h-3 w-3 shrink-0" />
-                                      {apt.time}
-                                    </span>
-                                    {isOverCapacity(apt) && (
-                                      <AlertTriangle
-                                        className="h-3.5 w-3.5 shrink-0 text-amber-200"
-                                        aria-label="Excedente"
-                                      />
-                                    )}
-                                  </div>
-
-                                  <span className="line-clamp-2 text-[11px] md:text-xs font-semibold leading-tight text-white drop-shadow-sm">
+                                <div className="flex items-center gap-2 min-w-0">
+                                  <span className="font-mono tabular-nums text-[10px] md:text-[11px] font-semibold text-white/95 leading-none shrink-0">
+                                    {apt.time?.substring(0, 5)}
+                                  </span>
+                                  <span className="truncate text-[11px] md:text-xs font-semibold leading-tight text-white">
                                     {apt.patientName}
                                   </span>
-
-                                  {apt.type && (
-                                    <span className="truncate text-[10px] text-white/75">
-                                      {apt.type}
-                                    </span>
+                                  {isOverCapacity(apt) && (
+                                    <AlertTriangle
+                                      className="ml-auto h-3 w-3 shrink-0 text-amber-100"
+                                      aria-label="Excedente"
+                                    />
                                   )}
                                 </div>
                               </div>
