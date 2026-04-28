@@ -543,13 +543,13 @@ export function registerClinicalResourceRoutes(app: ClinicalRouteApp) {
     const { ativo } = c.req.query();
 
     const conditions = [eq(evolutionTemplates.organizationId, user.organizationId)];
-    if (ativo !== undefined) conditions.push(eq(evolutionTemplates.isActive, ativo === "true"));
+    if (ativo !== undefined) conditions.push(eq(evolutionTemplates.ativo, ativo === "true"));
 
     const result = await db
       .select()
       .from(evolutionTemplates)
       .where(and(...conditions))
-      .orderBy(asc(sql`COALESCE(NULLIF(${evolutionTemplates.name}, ''), 'Template')`));
+      .orderBy(asc(sql`COALESCE(NULLIF(${evolutionTemplates.nome}, ''), 'Template')`));
 
     return c.json({ data: result.map((row) => normalizeEvolutionTemplateRow(row as any)) });
   });
@@ -592,14 +592,17 @@ export function registerClinicalResourceRoutes(app: ClinicalRouteApp) {
       .insert(evolutionTemplates)
       .values({
         organizationId: user.organizationId,
+        nome: name,
         name: name,
-        type: type,
+        tipo: type,
+        descricao: description,
         description: description,
+        conteudo: content,
         content: content,
         camposPadrao: camposPadrao,
         blocks: normalizeJsonArray(body.blocks ?? camposPadrao),
         tags: tags,
-        isActive: body.ativo !== false && body.is_active !== false,
+        ativo: body.ativo !== false && body.is_active !== false,
         createdBy: user.uid,
       })
       .returning();
@@ -618,16 +621,22 @@ export function registerClinicalResourceRoutes(app: ClinicalRouteApp) {
     };
 
     if (body.nome !== undefined || body.name !== undefined) {
-      updateData.name = String(body.nome ?? body.name ?? "");
+      const nameVal = String(body.nome ?? body.name ?? "");
+      updateData.nome = nameVal;
+      updateData.name = nameVal;
     }
     if (body.tipo !== undefined || body.type !== undefined) {
-      updateData.type = String(body.tipo ?? body.type);
+      updateData.tipo = String(body.tipo ?? body.type);
     }
     if (body.descricao !== undefined || body.description !== undefined) {
-      updateData.description = body.descricao ?? body.description ?? null;
+      const descVal = body.descricao ?? body.description ?? null;
+      updateData.descricao = descVal;
+      updateData.description = descVal;
     }
     if (body.conteudo !== undefined || body.content !== undefined) {
-      updateData.content = String(body.conteudo ?? body.content ?? "");
+      const contentVal = String(body.conteudo ?? body.content ?? "");
+      updateData.conteudo = contentVal;
+      updateData.content = contentVal;
     }
     if (body.campos_padrao !== undefined || body.blocks !== undefined) {
       const fieldsVal = normalizeJsonArray(body.campos_padrao ?? body.blocks);
@@ -636,7 +645,7 @@ export function registerClinicalResourceRoutes(app: ClinicalRouteApp) {
     }
     if (body.tags !== undefined) updateData.tags = normalizeTextArray(body.tags);
     if (body.ativo !== undefined || body.is_active !== undefined) {
-      updateData.isActive = body.ativo ?? body.is_active;
+      updateData.ativo = body.ativo ?? body.is_active;
     }
 
     const [result] = await db
