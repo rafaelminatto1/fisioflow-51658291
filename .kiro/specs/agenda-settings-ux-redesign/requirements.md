@@ -2,24 +2,32 @@
 
 ## Introduction
 
-O FisioFlow precisa de um redesenho completo da UX/UI da página `/agenda/settings` — a central de configurações da agenda clínica. O trabalho envolve três frentes simultâneas:
+O FisioFlow precisa de um redesenho completo da UX/UI da página `/agenda/settings` — a central de configurações da agenda clínica, implementada em `src/pages/ScheduleSettings.tsx`. O trabalho envolve três frentes simultâneas:
 
-1. **Completar a aparência por view**: o hook `useAgendaAppearance` já suporta configurações independentes por visualização (dia/semana/mês), mas a UI ainda não expõe esses controles por view.
+1. **Completar a aparência por view**: o hook `useAgendaAppearance` já suporta configurações independentes por visualização (dia/semana/mês), mas a UI (`ScheduleVisualTab`) ainda opera globalmente via `useCardSize`.
 2. **Redesenhar a arquitetura de abas**: as 6 abas atuais (Capacidade, Horários, Tipos de Atendimento, Políticas, Bloqueios, Aparência) precisam ser reavaliadas — algumas podem ser mescladas, reorganizadas ou promovidas a seções dentro de uma aba.
-3. **Migrar persistência**: as configurações de aparência vivem em `localStorage`; precisam ser persistidas no banco (Cloud SQL via Cloudflare Workers) para que o fisioterapeuta veja as mesmas configurações em qualquer dispositivo.
+3. **Migrar persistência**: as configurações de aparência vivem em `localStorage`; precisam ser persistidas no **Neon PostgreSQL** via **Cloudflare Workers API** (Hono) para que o fisioterapeuta veja as mesmas configurações em qualquer dispositivo.
 
 O resultado deve ser uma página de configurações coesa, rápida, visualmente polida e que reflita o padrão clínico/profissional do FisioFlow.
 
+### Stack relevante
+
+- **Frontend**: React 19 + React Router v7 + shadcn/ui + Tailwind CSS 4 (em `src/`)
+- **Backend**: Cloudflare Workers com Hono (`apps/api/src/routes/`)
+- **Banco**: Neon PostgreSQL serverless via Hyperdrive — ORM Drizzle (`packages/db/src/schema/`)
+- **Auth**: Neon Auth — JWT verificado via JWKS; `profileId` e `organizationId` extraídos pelo middleware `requireAuth` em `apps/api/src/lib/auth.ts`
+- **Testes**: Vitest + fast-check (property-based)
+
 ## Glossary
 
-- **Settings_Page**: A página `/agenda/settings` — ponto central de configuração da agenda.
+- **Settings_Page**: A página `/agenda/settings` — implementada em `src/pages/ScheduleSettings.tsx`.
 - **Appearance_Hook**: O hook `useAgendaAppearance(view)` em `src/hooks/useAgendaAppearance.ts`.
 - **View**: Uma das três visualizações da agenda — `day` (dia), `week` (semana) ou `month` (mês).
 - **View_Preset**: Conjunto de valores de aparência (cardSize, heightScale, fontScale, opacity) pré-definido para uma View específica.
 - **Global_Preset**: Conjunto de valores de aparência aplicado a todas as Views simultaneamente.
 - **Appearance_Profile**: O objeto `AgendaAppearanceState` que contém o perfil global e os overrides por View, persistido no banco.
 - **Settings_Tab**: Uma das seções navegáveis da Settings_Page (ex.: "Aparência", "Horários").
-- **Persistence_Layer**: O serviço responsável por salvar e carregar o Appearance_Profile no Cloud SQL via Cloudflare Workers API.
+- **Persistence_Layer**: O serviço responsável por salvar e carregar o Appearance_Profile no **Neon PostgreSQL** via **Cloudflare Workers API** (Hono).
 - **Optimistic_Update**: Atualização imediata da UI antes da confirmação do servidor, com rollback em caso de erro.
 - **CardSize**: Enum de densidade dos cards de evento — `extra_small`, `small`, `medium`, `large`.
 - **StatusColor**: Cor associada a um status de agendamento (ex.: agendado, confirmado, cancelado).
@@ -27,6 +35,7 @@ O resultado deve ser uma página de configurações coesa, rápida, visualmente 
 - **BlockedTime**: Período de indisponibilidade registrado na agenda.
 - **AppointmentType**: Tipo de atendimento com duração padrão e cor (ex.: Avaliação, Retorno).
 - **SchedulePolicy**: Regra de negócio da agenda (ex.: antecedência mínima de cancelamento, política de no-show).
+- **requireAuth**: Middleware Hono em `apps/api/src/lib/auth.ts` que verifica o JWT do Neon Auth e injeta `profileId`, `organizationId` e `role` no contexto da requisição.
 
 ---
 
@@ -74,14 +83,14 @@ O resultado deve ser uma página de configurações coesa, rápida, visualmente 
 
 #### Acceptance Criteria
 
-1. THE Persistence_Layer SHALL salvar o Appearance_Profile no Cloud SQL via endpoint da Cloudflare Workers API (`PUT /api/v1/user/agenda-appearance`).
+1. THE Persistence_Layer SHALL salvar o Appearance_Profile no **Neon PostgreSQL** via endpoint da Cloudflare Workers API (`PUT /api/v1/user/agenda-appearance`), implementado com Hono em `apps/api/src/routes/`.
 2. THE Persistence_Layer SHALL carregar o Appearance_Profile do servidor no mount inicial do Appearance_Hook via endpoint (`GET /api/v1/user/agenda-appearance`).
 3. WHEN o servidor retorna um Appearance_Profile, THE Appearance_Hook SHALL mesclar os dados do servidor com o estado local, priorizando o servidor.
 4. WHEN o usuário altera qualquer configuração de aparência, THE Persistence_Layer SHALL executar um Optimistic_Update: atualizar o estado local imediatamente e enviar a requisição ao servidor em background.
 5. IF a requisição de salvamento falhar, THEN THE Persistence_Layer SHALL reverter o estado local para o valor anterior e exibir uma notificação de erro via toast.
 6. THE Persistence_Layer SHALL aplicar debounce de 800ms nas escritas ao servidor para evitar requisições excessivas durante ajuste de sliders.
 7. WHEN o Appearance_Profile é carregado do servidor pela primeira vez, THE Appearance_Hook SHALL remover os dados legados do localStorage (`agenda_appearance_v2`, `agenda_card_size`, `agenda_card_height_multiplier`, `agenda_card_font_scale`, `agenda_card_opacity`).
-8. THE Persistence_Layer SHALL associar o Appearance_Profile ao `profileId` do usuário autenticado, garantindo isolamento multi-tenant por `organizationId`.
+8. THE Persistence_Layer SHALL associar o Appearance_Profile ao `profileId` do usuário autenticado (extraído do JWT Neon Auth pelo middleware `requireAuth`), garantindo isolamento multi-tenant por `organizationId`.
 9. IF o servidor estiver indisponível no carregamento inicial, THEN THE Appearance_Hook SHALL usar o Appearance_Profile do localStorage como fallback e exibir um indicador de modo offline.
 10. THE Persistence_Layer SHALL serializar e desserializar o Appearance_Profile em JSON; FOR ALL Appearance_Profiles válidos, serializar e depois desserializar SHALL produzir um objeto equivalente ao original (propriedade round-trip).
 

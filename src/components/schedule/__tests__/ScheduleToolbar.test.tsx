@@ -44,6 +44,8 @@ describe("ScheduleToolbar", () => {
           filters={{ status: [], types: [], therapists: [] }}
           onFiltersChange={vi.fn()}
           onClearFilters={vi.fn()}
+          patientFilter=""
+          onPatientFilterChange={vi.fn()}
         />
       </MemoryRouter>,
     );
@@ -72,6 +74,8 @@ describe("ScheduleToolbar", () => {
           filters={{ status: [], types: [], therapists: [] }}
           onFiltersChange={vi.fn()}
           onClearFilters={vi.fn()}
+          patientFilter=""
+          onPatientFilterChange={vi.fn()}
         />
       </MemoryRouter>,
     );
@@ -79,5 +83,34 @@ describe("ScheduleToolbar", () => {
     expect(screen.getByRole("button", { name: "Dia" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Semana" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Mês" })).toBeInTheDocument();
+  });
+
+  it("renders patient search and forwards changes", () => {
+    const onPatientFilterChange = vi.fn();
+
+    render(
+      <MemoryRouter>
+        <ScheduleToolbar
+          currentDate={new Date("2026-04-22T10:00:00")}
+          viewType="week"
+          onViewChange={vi.fn()}
+          onDateChange={vi.fn()}
+          isSelectionMode={false}
+          onToggleSelection={vi.fn()}
+          onCreateAppointment={vi.fn()}
+          filters={{ status: [], types: [], therapists: [] }}
+          onFiltersChange={vi.fn()}
+          onClearFilters={vi.fn()}
+          patientFilter=""
+          onPatientFilterChange={onPatientFilterChange}
+        />
+      </MemoryRouter>,
+    );
+
+    const input = screen.getByLabelText("Buscar paciente");
+    expect(input).toBeInTheDocument();
+
+    fireEvent.change(input, { target: { value: "João" } });
+    expect(onPatientFilterChange).toHaveBeenCalledWith("João");
   });
 });

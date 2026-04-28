@@ -10,7 +10,7 @@
     "fmt": "oxfmt",
     "fmt:check": "oxfmt --check",
     "test": "pnpm --filter fisioflow-web test",
-    "test:components": "vitest run src/components/**/*.test.tsx",
+    "test:components": "pnpm --dir apps/web exec vitest run --config vitest.config.ts src/components/**/*.test.tsx",
     "workers:type-check": "pnpm --filter @fisioflow/api type-check",
     "type-check": "pnpm --filter fisioflow-web type-check"
   },
