@@ -4,6 +4,7 @@ import { triggerInngestEvent } from "./lib/inngest-client";
 import { sendAppointmentReminderEmail } from "./lib/email";
 import type { WhatsAppQueuePayload } from "./queue";
 import { cleanupRateLimits } from "./middleware/rateLimit";
+import { runHealthMonitor } from "./lib/monitor";
 
 /**
  * Cloudflare Worker Cron Trigger Handler
@@ -23,6 +24,10 @@ export async function handleScheduled(event: ScheduledEvent, env: Env, ctx: Exec
     const _isBusinessHours = day >= 1 && day <= 5 && hour >= 7 && hour < 20;
 
     switch (cron) {
+      case "* * * * *": // A cada minuto — Health monitor (ntfy.sh push se API cair)
+        await runHealthMonitor(env);
+        break;
+
       case "0 9 * * *": // UTC 09h = BRT 06h — Lembretes + prewarm pós cold-start
         await prewarmDatabase(pool);
         await sendAppointmentReminders(pool, env, ctx);

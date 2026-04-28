@@ -167,7 +167,42 @@ app.use("*", requestIdMiddleware);
 app.use("*", (c, next) => analyticsMiddleware(c.env)(c, next));
 
 // ===== HEALTH & DB DIAGNOSTIC =====
-app.get("/api/health", (c) => c.json({ status: "ok", time: new Date().toISOString() }));
+
+// Liveness — resposta imediata, sem dependências externas
+app.get("/api/health", (c) =>
+  c.json({ status: "ok", time: new Date().toISOString(), env: c.env.ENVIRONMENT ?? "unknown" }),
+);
+
+// Readiness — verifica Neon DB + KV; usado por alertas de disponibilidade
+app.get("/api/health/ready", async (c) => {
+  const checks: Record<string, "ok" | "error"> = {};
+  let httpStatus = 200;
+
+  // Neon DB via Hyperdrive
+  try {
+    const sql = getRawSql(c.env);
+    await sql("SELECT 1");
+    checks.db = "ok";
+  } catch {
+    checks.db = "error";
+    httpStatus = 503;
+  }
+
+  // Cloudflare KV
+  try {
+    if (!c.env.FISIOFLOW_CONFIG) throw new Error("KV not bound");
+    await c.env.FISIOFLOW_CONFIG.get("__healthcheck__");
+    checks.kv = "ok";
+  } catch {
+    checks.kv = "error";
+    httpStatus = 503;
+  }
+
+  return c.json(
+    { status: httpStatus === 200 ? "ready" : "degraded", checks, time: new Date().toISOString() },
+    httpStatus as 200 | 503,
+  );
+});
 
 app.get("/api/health/db", async (c) => {
   try {
@@ -176,7 +211,7 @@ app.get("/api/health/db", async (c) => {
     return c.json({ status: "connected", rows: result.rows });
   } catch (error: any) {
     console.error("[Health/DB] Connection Error:", error);
-    return c.json({ status: "error", message: error.message, stack: error.stack }, 500);
+    return c.json({ status: "error", message: error.message }, 500);
   }
 });
 

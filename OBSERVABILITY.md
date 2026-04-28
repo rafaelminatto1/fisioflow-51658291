@@ -1,33 +1,111 @@
-OBSERVABILIDADE - FISIOFLOW
+# Observabilidade — FisioFlow
 
-Objetivo
-- Definir a estratégia de logs, métricas, tracing e health checks para visibilidade entre API/Workers, Web e Apps móveis.
+> Stack: Cloudflare Analytics Engine + Workers built-in logs  
+> Última revisão: 2026-04-28  
+> Dashboard operacional completo: `docs/OBSERVABILITY_DASHBOARD.md`
 
-Logs
-- Estrutura de log: JSON com campos obrigatórios: timestamp, level, service, tenant_id, user_id (quando disponível), request_id, operation, status_code, duration_ms, message.
-- Destino: stdout/arquivo local em dev; sink central (log streaming) em staging/prod (quando disponível).
-- Nível de log: DEBUG apenas em development; INFO/WARN/ERROR em staging/prod.
+---
 
-Metrics
-- Principais metrics: latency_api_p95, latency_api_p99, error_rate_5xx, requests_per_second (RPS).
-- Dashboards: API latency por endpoint, latência de DB, throughput por tenant.
+## Stack atual (sem Grafana/OTEL)
 
-Tracing
-- Suporte a tracing básico com correlação por request_id; propagação de trace_id/parent_id quando suportado pela stack (OpenTelemetry opcional).
-- Mapear spans para fluxos críticos (auth, agendamento, prontuários, prescrição).
+| Camada | Ferramenta | Status |
+|---|---|---|
+| Métricas e eventos | Cloudflare Analytics Engine | ✅ Ativo |
+| Logs de Workers | `[observability] enabled = true` (wrangler.toml) | ✅ Ativo |
+| Health checks | `/api/health` (liveness) + `/api/health/ready` (readiness) | ✅ Ativo |
+| Alertas | Cloudflare Notifications (3 alertas — configurar manualmente) | ⏳ Pendente configuração |
+| Tracing distribuído | Não implementado — não é necessário neste ciclo | — |
 
-Health e SLOs
-- Endpoints de liveness e readiness via /healthz; monitorar tempos de resposta e dependências externas.
-- SLOs iniciais: latência de API p95 < 300ms em produção para fluxos críticos; disponibilidade > 99.9%.
+---
 
-Operações e Gateways
-- Painéis de observabilidade (Grafana/Prometheus ou equivalente) para API, DB e fila de tasks.
-- Revisão de logs sensíveis e retenção de logs.
+## Analytics Engine — eventos instrumentados
 
-Roadmap de melhorias
-- Ativar tracing completo para as rotas mais sensíveis.
-- Harmonizar labels e metadados nos logs para facilitar filtragem.
-- Implementar alertas básicos (alta latência, erro 5xx, queda de disponibilidade).
+**Dataset:** `fisioflow_events`  
+**Helper:** `src/lib/analytics.ts` — `writeEvent()` + `analyticsMiddleware()`
 
-Responsáveis
-- Time de Observabilidade / SRE; canal de incidentes definido.
+| Campo | Conteúdo |
+|---|---|
+| `blob1` | Rota normalizada (ex: `/api/appointments/:id`) |
+| `blob2` | Método HTTP |
+| `blob3` | `organization_id` do usuário |
+| `blob4` | Tipo do evento (`request`, `whatsapp_sent`, `ai_call`) |
+| `double1` | Latência em ms |
+| `double2` | HTTP status code |
+| `double3` | Valor extra (tokens, etc.) |
+
+`analyticsMiddleware()` é aplicado globalmente no `apps/api/src/index.ts` — todos os requests são instrumentados automaticamente.
+
+---
+
+## Health checks
+
+### Liveness — `GET /api/health`
+
+Retorna `200` enquanto o Worker estiver de pé. Não verifica dependências.
+
+### Readiness — `GET /api/health/ready`
+
+Verifica DB (Neon/Hyperdrive) e KV (`FISIOFLOW_CONFIG`).
+
+```json
+// 200 — tudo ok
+{ "status": "ready", "checks": { "db": "ok", "kv": "ok" }, "time": "..." }
+
+// 503 — dependência degradada
+{ "status": "degraded", "checks": { "db": "error", "kv": "ok" }, "time": "..." }
+```
+
+---
+
+## SLOs definidos
+
+| Métrica | Alvo | Medição |
+|---|---|---|
+| Latência p95 (fluxos críticos) | < 300 ms | Analytics Engine Query #1 |
+| Taxa de erro 5xx | < 0,5% | Analytics Engine Query #2 |
+| Disponibilidade mensal | > 99,9% | Analytics Engine Query #4 |
+| Cold start Neon (p95) | < 3s | Latência de `/api/health/ready` após inatividade |
+
+---
+
+## Queries operacionais rápidas
+
+Ver queries SQL completas em `docs/OBSERVABILITY_DASHBOARD.md`.
+
+```bash
+# Executar query via cURL
+curl -X POST "https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT_ID}/analytics_engine/sql" \
+  -H "Authorization: Bearer ${CF_API_TOKEN}" \
+  -H "Content-Type: application/json" \
+  -d '{"query": "SELECT blob1, count() FROM fisioflow_events WHERE timestamp > NOW() - INTERVAL '\''1'\'' HOUR GROUP BY blob1 ORDER BY count() DESC LIMIT 10"}'
+
+# Durante incidente — rotas lentas (últimos 30 min)
+# Ver Query #5 em docs/OBSERVABILITY_DASHBOARD.md
+```
+
+---
+
+## Alertas a configurar (Cloudflare Dashboard → Notifications)
+
+| Alerta | Trigger | Janela |
+|---|---|---|
+| Workers alto erro | Error rate > 1% | 5 min |
+| Workers alta latência | P95 CPU > 50ms | 5 min |
+| Disponibilidade | Health check `/api/health/ready` != 200 | > 2 min |
+
+Setup detalhado em `docs/OBSERVABILITY_DASHBOARD.md`.
+
+---
+
+## Logs sensíveis — regras
+
+- Nunca logar `DATABASE_URL`, tokens JWT, CPF, dados de prontuário
+- Logar apenas: rota, método, status, latência, `organization_id` (nunca `user_id` em texto claro)
+- Stack traces de erros internos: apenas em `wrangler tail --env production` (nunca no response body)
+- Endpoint `/api/health/db` não expõe `stack` no response (removido na Fase 4)
+
+---
+
+## Baselining
+
+Execute as Queries #1 e #4 de `docs/OBSERVABILITY_DASHBOARD.md` durante 2 semanas antes de ajustar os thresholds dos alertas. Os SLOs acima são metas iniciais — calibrar com dados reais após 14 dias de produção estável.

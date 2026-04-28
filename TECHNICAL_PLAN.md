@@ -174,25 +174,30 @@ Este plano abrange exclusivamente a produção de artefatos de processo, configu
 
 **Objetivo:** Estabelecer a estrutura de CI/CD com gates mínimos, PR template, e ambiente de staging formalizado.
 
-| Item | Descrição |
-|---|---|
-| CI pipeline | GitHub Actions: lint + typecheck + `pnpm test` em PRs |
-| PR template | Campos: tipo (feature/fix/migration/docs), checklist de segurança, owner, issue relacionada |
-| Staging via Neon Branch | Criar Neon branch `staging` isolada da prod (`neon branches create --name staging`); connection string injetada via GitHub Secret. **Sem infraestrutura adicional — usa feature nativa do Neon.** |
-| Staging via Cloudflare Preview | Workers preview deployment via `wrangler deploy --env staging` (env já suportado no `wrangler.toml`). Pages usa deploy preview automático por PR. |
-| Secrets em CI | Auditoria de secrets no GitHub Actions; remover qualquer valor hardcoded |
-| ARCHITECTURE.md | Documento inicial descrevendo stack, fluxos críticos, dependências externas |
+> **Auditoria realizada em 2026-04-28:** O projeto já possuía CI/CD, staging, ARCHITECTURE.md e bateria de testes. Os gaps reais identificados e corrigidos estão marcados abaixo.
 
-> **D2 — Resolvido (2026-04-28):** Staging formal adiado. Estratégia: Neon Branch `staging` (DB) + Cloudflare Workers preview (API) + Cloudflare Pages preview (Web). Sem custo adicional; suficiente para validação de migrations e testes de integração.
+| Item | Status | Descrição |
+|---|---|---|
+| CI pipeline (lint + typecheck + build) | ✅ Já existia | `ci.yml` com jobs lint, type-check, build, deploy gates |
+| **Testes web no CI** | ✅ **Adicionado** | Job `test-web` rodando `pnpm --filter fisioflow-web test:unit` em todo PR |
+| **E2E smoke em PRs** | ✅ **Adicionado** | Job `e2e-smoke` com `--grep "@smoke"` para PRs (isolado do smoke-test de prod) |
+| **PR template** | ✅ **Adicionado** | `.github/PULL_REQUEST_TEMPLATE.md` com checklists de segurança, migration e DS |
+| Staging via Cloudflare (`env.staging`) | ✅ Já existia | `wrangler.toml` com `[env.staging]` completo (Hyperdrive staging, D1 staging, R2 staging) |
+| Staging via Neon Auth separado | ✅ Já existia | `ep-withered-glade-acrv7il7` (Neon Auth staging dedicado) |
+| ARCHITECTURE.md | ✅ Já existia | Com diagrama Mermaid e modelo de segurança |
+| **Scanner de segredos (trufflehog)** | ✅ **Adicionado** | Job `secret-scan` em `security-audit.yml` — bloqueia PRs com segredos verificados |
+| **`pnpm audit` bloqueante** | ✅ **Corrigido** | Removido `continue-on-error: true`; agora bloqueia em HIGH/CRITICAL (`--audit-level=high`) |
+| Testes API no CI | ✅ Já existia | Job `test-api` rodando 12 suites de teste dos Workers |
 
 **Owner:** Tech Lead  
 **Duração:** 2 semanas  
 **Exit Criteria:**
-- CI rodando em 100 % dos PRs novos com lint + typecheck + testes unitários.
-- PR template ativo no repositório.
-- Neon branch `staging` criada e connection string disponível em GitHub Secrets.
-- `wrangler.toml` com env `staging` configurado.
-- ARCHITECTURE.md com diagrama de alto nível publicado.
+- [x] CI com lint + typecheck + test-api + **test-web** passando em 100% dos PRs.
+- [x] PR template ativo com checklists de segurança, migration e design system.
+- [x] Scanner de segredos (trufflehog) ativo em PRs — bloqueia segredos verificados.
+- [x] `pnpm audit` bloqueante em HIGH/CRITICAL (não mais continue-on-error).
+- [x] `e2e-smoke` job configurado para PRs (ativa quando testes tiverem tag `@smoke`).
+- [ ] GitHub Secrets `STAGING_TEST_USER_EMAIL` / `STAGING_TEST_USER_PASSWORD` / `STAGING_BASE_URL` configurados no repositório.
 
 ---
 

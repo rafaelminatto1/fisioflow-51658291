@@ -18,6 +18,7 @@ export interface Env {
 
   // Variáveis de ambiente
   ENVIRONMENT: "production" | "staging" | "development";
+  MONITOR_NTFY_TOPIC?: string; // tópico ntfy.sh para alertas de health monitor
   DATABASE_URL?: string;
   NEON_URL?: string;
   ALLOWED_ORIGINS: string; // CSV: "https://a.com,https://b.com"
