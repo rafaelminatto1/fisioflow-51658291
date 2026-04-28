@@ -126,13 +126,32 @@ export function usePatientEvolutionState() {
   // ========== SYNC DRAFTS ==========
   useEffect(() => {
     if (!draftByAppointment || currentSoapRecordId !== undefined) return;
+    
+    // Sync SOAP fields
+    const subjective = draftByAppointment.subjective ?? "";
+    const objective = draftByAppointment.objective ?? "";
+    const assessment = draftByAppointment.assessment ?? "";
+    const plan = draftByAppointment.plan ?? "";
+
     setSoapData({
-      subjective: draftByAppointment.subjective ?? "",
-      objective: draftByAppointment.objective ?? "",
-      assessment: draftByAppointment.assessment ?? "",
-      plan: draftByAppointment.plan ?? "",
+      subjective,
+      objective,
+      assessment,
+      plan,
     });
-    if (draftByAppointment.pain_level !== undefined) {
+
+    // Sync V2-V5 data (mapping standard fields back)
+    setEvolutionV2Data((prev: any) => ({
+      ...prev,
+      patientReport: subjective,
+      evolutionText: objective,
+      observations: plan,
+      // Note: procedures are stored as a string in assessment in v2-texto,
+      // we don't parse them back to an array yet to avoid complexity,
+      // but at least the other main fields are restored.
+    }));
+
+    if (draftByAppointment.pain_level !== undefined && draftByAppointment.pain_level !== null) {
       setPainScale({
         level: draftByAppointment.pain_level,
         location: draftByAppointment.pain_location,

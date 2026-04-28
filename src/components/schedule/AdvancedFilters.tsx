@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { Filter, X, ChevronRight, SlidersHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -12,6 +12,7 @@ import {
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import type { TherapistSummary } from "@/types/workers";
 
 interface FilterOptions {
   status: string[];
@@ -23,6 +24,7 @@ interface AdvancedFiltersProps {
   filters: FilterOptions;
   onChange: (filters: FilterOptions) => void;
   onClear: () => void;
+  therapists?: TherapistSummary[];
   dateRange?: {
     from: string;
     to: string;
@@ -97,6 +99,7 @@ export const AdvancedFilters: React.FC<AdvancedFiltersProps> = ({
   filters,
   onChange,
   onClear,
+  therapists = [],
   dateRange,
   onDateRangeChange,
 }) => {
@@ -104,6 +107,11 @@ export const AdvancedFilters: React.FC<AdvancedFiltersProps> = ({
   const [isOpen, setIsOpen] = useState(false);
   const activeFiltersCount =
     filters.status.length + filters.types.length + filters.therapists.length;
+
+  const sortedTherapists = useMemo(
+    () => [...therapists].sort((a, b) => a.full_name.localeCompare(b.full_name)),
+    [therapists],
+  );
 
   const toggleFilter = (category: keyof FilterOptions, value: string) => {
     const current = filters[category];
@@ -276,6 +284,38 @@ export const AdvancedFilters: React.FC<AdvancedFiltersProps> = ({
                     );
                   })}
                 </div>
+              </div>
+
+              {/* Therapist Filters */}
+              <div className="space-y-4">
+                <h3 className="text-xs font-bold uppercase tracking-widest text-slate-400 flex items-center gap-2">
+                  <ChevronRight className="h-3.5 w-3.5" />
+                  Terapeutas
+                </h3>
+                {sortedTherapists.length === 0 ? (
+                  <p className="text-sm text-slate-500">Carregando terapeutas...</p>
+                ) : (
+                  <div className="flex flex-wrap gap-2">
+                    {sortedTherapists.map((therapist) => {
+                      const isActive = filters.therapists.includes(therapist.id);
+                      return (
+                        <button
+                          key={therapist.id}
+                          onClick={() => toggleFilter("therapists", therapist.id)}
+                          className={cn(
+                            "px-3 py-2 rounded-xl text-xs font-bold transition-all border flex items-center gap-2",
+                            isActive
+                              ? "bg-slate-900 text-white border-transparent shadow-md scale-105"
+                              : "bg-white border-slate-200 text-slate-600 hover:border-slate-300",
+                          )}
+                        >
+                          {therapist.full_name}
+                          {isActive && <X className="h-3 w-3 ml-1 opacity-70" />}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             </div>
           </ScrollArea>

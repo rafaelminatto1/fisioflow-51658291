@@ -29,10 +29,10 @@ export function useAutoSave<T>({
   const isSavingRef = useRef(false);
   const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
 
-  const save = useCallback(async () => {
+  const save = useCallback(async (dataToSave: T = data) => {
     if (isSavingRef.current || !enabled) return;
 
-    const currentData = JSON.stringify(data);
+    const currentData = JSON.stringify(dataToSave);
 
     // Não salvar se não mudou
     if (currentData === lastSavedRef.current) {
@@ -42,7 +42,7 @@ export function useAutoSave<T>({
 
     try {
       isSavingRef.current = true;
-      await onSave(data);
+      await onSave(dataToSave);
       lastSavedRef.current = currentData;
       lastSaveTimeRef.current = Date.now();
       const now = new Date();
@@ -70,6 +70,17 @@ export function useAutoSave<T>({
     }
   }, [data, onSave, enabled, toast, showToasts]);
 
+  // Keep refs for unmount save
+  const dataRef = useRef(data);
+  const onSaveRef = useRef(onSave);
+  const enabledRef = useRef(enabled);
+
+  useEffect(() => {
+    dataRef.current = data;
+    onSaveRef.current = onSave;
+    enabledRef.current = enabled;
+  }, [data, onSave, enabled]);
+
   // Efeito para save por inatividade
   useEffect(() => {
     if (!enabled) return;
@@ -90,6 +101,20 @@ export function useAutoSave<T>({
       }
     };
   }, [data, delay, enabled, save]);
+
+  // Final save on unmount
+  useEffect(() => {
+    return () => {
+      if (enabledRef.current) {
+        const currentData = JSON.stringify(dataRef.current);
+        if (currentData !== lastSavedRef.current) {
+          onSaveRef.current(dataRef.current).catch((error) => {
+            logger.error("Erro no auto-save (unmount)", error as Error, "useAutoSave");
+          });
+        }
+      }
+    };
+  }, []);
 
   // Efeito para save forçado periódico (maxDelay)
   useEffect(() => {

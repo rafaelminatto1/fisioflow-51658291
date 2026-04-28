@@ -130,8 +130,14 @@ const PatientEvolution = () => {
 
   // ========== AUTO-SAVE ==========
   const autoSaveData = useMemo(() => {
-    if (state.evolutionVersion === "v2-texto") {
-      return {
+    const isV1 = state.evolutionVersion === "v1-soap";
+    const isV2orV3 = state.evolutionVersion === "v2-texto" || state.evolutionVersion === "v3-notion";
+    
+    let content: any;
+    if (isV1) {
+      content = state.soapData;
+    } else if (isV2orV3) {
+      content = {
         subjective: state.evolutionV2Data.patientReport || "",
         objective: state.evolutionV2Data.evolutionText || "",
         assessment: state.evolutionV2Data.procedures
@@ -141,15 +147,33 @@ const PatientEvolution = () => {
           .join("\n"),
         plan: state.evolutionV2Data.observations || "",
       };
+    } else {
+      // v4 or v5
+      content = {
+        subjective: state.evolutionV2Data.patientReport || "",
+        objective: state.evolutionV2Data.evolutionText || "",
+        assessment: "",
+        plan: state.evolutionV2Data.observations || "",
+      };
     }
-    return state.soapData;
-  }, [state.evolutionVersion, state.evolutionV2Data, state.soapData]);
+
+    return {
+      ...content,
+      pain_level: state.painScale.level,
+      pain_location: state.painScale.location,
+      pain_character: state.painScale.character,
+    };
+  }, [state.evolutionVersion, state.evolutionV2Data, state.soapData, state.painScale]);
 
   const { lastSavedAt } = useAutoSave({
     data: autoSaveData,
     onSave: async (data) => {
       if (!state.patientId || !state.appointmentId) return;
-      if (!data.subjective && !data.objective && !data.assessment && !data.plan) return;
+      
+      const hasContent = !!(data.subjective || data.objective || data.assessment || data.plan);
+      const hasPain = data.pain_level !== undefined && data.pain_level !== null;
+
+      if (!hasContent && !hasPain) return;
 
       const record = await autoSaveMutation.mutateAsync({
         patient_id: state.patientId,

@@ -91,6 +91,7 @@ import { eventsRoutes as businessEventsRoutes } from "./routes/events";
 import aiSearchApp from "./routes/aiSearch";
 import { aiConfigRoutes } from "./routes/ai-config";
 import { aiClinicalSearchRoutes } from "./routes/ai-clinical-search";
+import { agendaAppearanceRoutes } from "./routes/agendaAppearance";
 import { verifyToken } from "./lib/auth";
 import { getRawSql } from "./lib/db";
 import { routeAgentRequest } from "agents";
@@ -302,6 +303,7 @@ const apiRoutes = [
   ["/api/ai-search", aiSearchApp],
   ["/api/ai-config", aiConfigRoutes],
   ["/api/ai-clinical-search", aiClinicalSearchRoutes],
+  ["/api/v1/user", agendaAppearanceRoutes],
 ] as const;
 
 apiRoutes.forEach(([path, router]) => {
