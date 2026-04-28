@@ -97,13 +97,54 @@ jobs:
           pnpm-version: ${{ env.PNPM_VERSION }}
       - run: pnpm --filter @fisioflow/api test:unit
 
+  validate-migrations:
+    name: Validate Migrations
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check migration naming and duplicates
+        run: bash scripts/check-migrations.sh
+
+  test-web:
+    name: Test Web (Unit)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          pnpm-version: ${{ env.PNPM_VERSION }}
+      - run: pnpm --filter fisioflow-web test:unit
+
+  e2e-smoke:
+    name: E2E Smoke (PR)
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          pnpm-version: ${{ env.PNPM_VERSION }}
+      - name: Install Playwright Browsers
+        run: pnpm exec playwright install --with-deps chromium
+      - name: Run E2E Smoke (staging)
+        run: pnpm --filter fisioflow-web test:e2e:ci --grep "@smoke"
+        env:
+          TEST_BASE_URL: ${{ vars.STAGING_BASE_URL || 'http://localhost:5173' }}
+          TEST_USER_EMAIL: ${{ secrets.STAGING_TEST_USER_EMAIL }}
+          TEST_USER_PASSWORD: ${{ secrets.STAGING_TEST_USER_PASSWORD }}
+
   # ──────────────────────────────────────────────
   # DEPLOY JOBS  (only on push to main, needs all CI jobs green)
   # ──────────────────────────────────────────────
   deploy-api:
     name: Deploy API (Workers)
     if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main'
-    needs: [lint, type-check, build, test-api]
+    needs: [lint, type-check, build, test-api, test-web, validate-migrations]
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -123,7 +164,7 @@ jobs:
   deploy-web:
     name: Deploy Web
     if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main'
-    needs: [lint, type-check, build, test-api]
+    needs: [lint, type-check, build, test-api, test-web]
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
