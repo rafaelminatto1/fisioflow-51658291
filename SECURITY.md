@@ -1,48 +1,124 @@
-SECURITY PLAN - FISIOFLOW (TECHNICAL)
+# Segurança — FisioFlow
 
-1. Visão Geral
-- Este documento descreve controle de segredos, gestão de acesso, proteção de dados e resposta a incidentes para o ecossistema FisioFlow (API, Web, Apps móveis).
-- A conduta de segurança é parte integrante do pipeline de entrega e deve ser utilizada por todas as equipes (backend, frontend, infra, dados).
+> Última revisão: 2026-04-28  
+> Runbook de incidentes: `RUNBOOK_INCIDENTS.md`  
+> Rotação de segredos: `PLAYBOOK_SECRETS_ROTATION.md`
 
-2. Gestão de Segredos
-- Segredos nunca devem ser codificados diretamente no código-fonte.
-- Armazenar segredos em fontes de configuração seguras (CI/CD secrets, Wrangler Secrets, Neon Secrets, Vault se disponível).
-- Em ambientes de CI, usar repositórios de secrets com rotação periódica e políticas de acesso mínimo.
-- Registrar apenas metadados de rotação em logs (sem valores de segredos).
-- Práticas recomendadas: usar variáveis de ambiente plenas, injetar via binding de ambiente no runtime, e evitar exposição em artefatos de build.
+---
 
-3. Controles de Acesso
-- Definir RBAC com roles claras: admin, dev, operator, user. Aplicar princípio do menor privilégio.
-- Multi-tenant RLs para dados sensíveis: garantir isolamento entre tenants no nível de DB (Row-Level Security) e nas APIs.
-- Autenticação/Autorização com Neon Auth, JWT/OIDC; manter políticas de expiração de tokens e refresh.
-- Auditoria de ações relevantes (criar/ler/atualizar/excluir) com registro de user_id, tenant_id, timestamp.
+## Stack de segurança atual
 
-4. Proteção de Dados
-- TLS em trânsito (TLS 1.2+), encriptação de dados em repouso no Neon (configurar at rest conforme provedor).
-- Política de minimização de dados: evitar coleta de dados desnecessários; aplicar masking/anonymization quando necessário para logs.
-- Controle de exposição de dados sensíveis na API (validação de input, tight schemas, validação de autorização).
-- Gerenciamento de backups de dados críticos com retenção definida e testes de restauração.
+| Controle | Implementação | Status |
+|---|---|---|
+| Autenticação | Neon Auth (JWT EdDSA / JWKS) | ✅ Ativo |
+| Autorização | RBAC por role + RLS Neon | ✅ Ativo |
+| SAST | CodeQL (`javascript-typescript`, `security-and-quality`) | ✅ CI ativo |
+| Secret scan | TruffleHog OSS `--only-verified` | ✅ CI ativo |
+| Dependency audit | `pnpm audit --audit-level=high` | ✅ CI bloqueante |
+| CORS | Validação contra `env.ALLOWED_ORIGINS` (CSV) | ✅ Ativo |
+| Rate limiting | D1 `fisioflow-edge-cache` (upsert atômico) | ✅ Ativo |
+| TLS | Cloudflare edge (1.2+) | ✅ Automático |
 
-5. Observabilidade e Segurança
-- Logs estruturados com campos padronizados: timestamp, level, service, tenant_id, user_id, request_id, operation, status_code, duration_ms, message.
-- Monitorar padrões de acesso suspeitos (falhas de autenticação, tentativas de bruce force) e acionar alertas.
-- Integrar com dashboards de segurança e auditoria (log centralizado, SIEM, se disponível).
-- Revisões periódicas de dependências para vulnerabilidades (SCA) e atualizações de libs/frameworks.
+---
 
-6. Conformidade e Incidentes
-- Manter Runbook de Resposta a Incidentes com contatos, steps, janelas de tempo para resposta inicial (T0) e investigação.
-- Práticas de auditoria: manter trilha de mudanças e acesso com imutabilidade quando possível.
-- Realizar exercícios simulados (tabletop) para validar planos de resposta.
+## RBAC — Roles definidos
 
-7. Boas Práticas
-- Integrar SAST/DAST no CI/CD; habilitar scanners de dependências para cada PR.
-- Evitar logging de dados sensíveis; usar logs mascarados quando necessário.
-- Configurar alertas de segurança com SLIs/SLOs apropriados.
-- Documentar decisões de segurança e manter revisão de código com checklist de segurança.
+| Role | Acesso |
+|---|---|
+| `admin` | Tudo — todas as rotas e dados |
+| `fisioterapeuta` | Dados clínicos (pacientes, sessões, agendamentos, prescrições) — **sem** CRM, marketing, financeiro |
+| `estagiario` | Mesmas permissões que fisioterapeuta (sem restrições adicionais neste ciclo) |
+| `paciente` | Apenas próprios dados e sessões — sem agendamento próprio ainda |
+| `viewer` | Fallback de segurança — acesso somente leitura mínimo |
 
-8. Responsáveis
-- Propriedade técnica: time de Segurança/DevOps. Responsavel pela manutenção deste documento e pela coordenação de incidentes.
-- Em caso de incidente, abrir ticket interno com logs relevantes, tempo de atividade e ações tomadas.
+**Implementação:** `apps/api/src/lib/auth.ts` — `requireAuth()` retorna 401 real (não 403 silencioso).  
+Role fallback = `'viewer'` (nunca `'admin'`).
 
-9. Notas Finais
-- Este documento deve ser revisado periodicamente (p.ex., a cada release principal) e atualizado conforme mudanças na arquitetura ou regressões de segurança.
+---
+
+## Row-Level Security (RLS)
+
+RLS ativo em todas as tabelas com dados de pacientes.  
+Migration: `0057_rls_complete.sql` — confirmada aplicada em produção.
+
+Tabelas protegidas: `appointments`, `sessions`, `patients`, `documents`, `exams`, `goals`, `exercise_plans`, `standardized_test_results`, e demais tabelas clínicas.
+
+**Verificar RLS em produção:**
+
+```sql
+-- Via Neon Console → SQL Editor
+SELECT tablename, rowsecurity
+FROM pg_tables
+WHERE schemaname = 'public' AND rowsecurity = true
+ORDER BY tablename;
+```
+
+---
+
+## Gestão de segredos
+
+**Inventário completo:** `PLAYBOOK_SECRETS_ROTATION.md`
+
+### Regras
+
+- Nunca commitar segredos — usar `wrangler secret put` para Workers, GitHub Secrets para CI
+- Arquivos `.dev.vars` e `.env` são gitignored — verificar com `git status` antes de commitar
+- Rotação a cada 90 dias (60 dias para `WHATSAPP_ACCESS_TOKEN`)
+- Após rotação: re-deploy do Worker afetado + verificar health check
+
+### Secrets do Worker (produção)
+
+```bash
+# Listar secrets configurados
+wrangler secret list --env production
+
+# Adicionar/rotacionar
+wrangler secret put DATABASE_URL --env production
+```
+
+---
+
+## CI — Gates de segurança
+
+Definidos em `.github/workflows/security-audit.yml`:
+
+| Job | O que faz | Falha = |
+|---|---|---|
+| `secret-scan` | TruffleHog `--only-verified` em todo o histórico | Bloqueia merge |
+| `dependency-audit` | `pnpm audit --audit-level=high` | Bloqueia merge |
+| `lint-and-typecheck` | `pnpm lint` + `pnpm type-check` | Bloqueia merge |
+| `analyze` (CodeQL) | SAST completo TypeScript | Alerta no GitHub Security |
+
+---
+
+## Proteção de dados (LGPD)
+
+- CPF, dados clínicos, prontuários: nunca em logs — mascarar sempre
+- TLS em trânsito: Cloudflare edge automático
+- Criptografia em repouso: Neon PostgreSQL (gerenciado pelo provedor)
+- Backups: PITR 7 dias configurado (`history_retention_seconds: 604800`)
+- Branch de produção protegido (`br-dawn-block-acf1bzzv`, `protected: true`)
+
+### Vazamento de dados — resposta imediata
+
+Ver `RUNBOOK_INCIDENTS.md` Cenário 5 e `PLAYBOOK_SECRETS_ROTATION.md` seção "Rotação de Emergência".
+
+Obrigações LGPD: notificar usuários afetados se dados clínicos foram expostos (Art. 48 LGPD — prazo de 2 dias úteis para notificação à ANPD).
+
+---
+
+## Webhook de autenticação
+
+`POST /api/webhooks/neon-auth` — verifica assinatura EdDSA antes de processar.  
+Cria perfil no evento `user.created`.
+
+---
+
+## Revisões periódicas
+
+| Frequência | Ação |
+|---|---|
+| A cada PR | CodeQL + TruffleHog + pnpm audit (automático) |
+| A cada 90 dias | Rotação de segredos (ver `PLAYBOOK_SECRETS_ROTATION.md`) |
+| A cada release principal | Revisão deste documento + atualização do inventário de secrets |
+| Anual | Revisar runbook + playbook de segredos e atualizar se necessário |

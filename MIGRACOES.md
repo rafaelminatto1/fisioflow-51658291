@@ -1,48 +1,118 @@
-MIGRACOES DO BANCO DE DADOS (MIGRATIONS)
+# Migrações de Banco de Dados — FisioFlow
 
-1. Objetivo
-- Garantir que mudanças de schema sejam seguras, reprodutíveis e auditáveis entre ambientes (dev, staging, prod).
-- Registrar, validar, aplicar e reverter migrations de forma controlada, com suporte a rollback.
+> Stack: Neon PostgreSQL + Drizzle ORM  
+> Última revisão: 2026-04-28  
+> Status detalhado de cada migration: `apps/api/migrations/MIGRATIONS_STATUS.md`
 
-2. Escopo
-- Migration scripts localizados em apps/api/migrations.
-- Abrange alterações de schema (ALTER/DROP/CREATE), alterações em índices, constraints e transformações de dados não destrutivas.
-- Não inclui alterações de dados sensíveis em código; utilize seeds ou scripts dedicados para dados de teste.
+---
 
-3. Convenções de nomenclatura
-- Arquivos de migrations devem seguir a convenção: <NNNN>_<descricao>.sql, onde NNNN é um número crescente.
-- Ex.: 0032_boards.sql, 0053_nfse_sp_direct.sql.
-- Cada migration pode conter apenas instrucoes de up (aplicar) e, opcionalmente, down (rollback).
+## Dois sistemas de migration
 
-4. Fluxo de migrations
-- Ordem de aplicação: migrations devem ser executadas na ordem crescente.
-- Ambiente alvo: dev -> staging -> prod; cada ambiente utiliza o pipeline de CI/CD para aplicar migrations com gating apropriado.
-- Validação pré-apply: validar dependências, integridade referencial e impacto de performance antes de aplicar.
-- Testes de migração: validar com um conjunto representativo de dados em staging; checar contagem de linhas, constraints, e índices.
-- Rollback: cada migration deve ter um rollback correspondente (down). Caso não exista rollback trivial, dispor de backup e uma estratégia de reversão manual.
-- Backups: realizar backup completo do esquema e dados relevantes antes de aplicar migrations em staging/prod.
-- Auditoria: registrar log de migrations com usuário, timestamp, versão aplicada e resultado.
+| Sistema | Localização | Ferramenta | Quando usar |
+|---|---|---|---|
+| Auto (Drizzle Kit) | `drizzle/` | `drizzle-kit generate` + `drizzle-kit migrate` | Schema Drizzle → SQL gerado automaticamente |
+| Manual SQL | `apps/api/migrations/` | Neon Console / SQL Runner | RLS, roles de DB, índices GIN, políticas de segurança |
 
-5. Pipeline de validação e rollout
-- Desenvolvimento: aplicar migrations localmente com dry-run sempre que disponível.
-- Staging: pipeline executa migrations com validação automática; falhas bloqueiam o deployment.
-- Produção: deployment controlado com aprovação; validar impacto em dashboards/observabilidade antes de liberar.
+Migrations manuais têm precedência operacional — são aplicadas primeiro e controlam políticas de acesso que o Drizzle não gerencia.
 
-6. Rollback e recuperação
-- Rollback automático: acionar o script down correspondente quando possível.
-- Rollback manual: se down não existir, restaurar a partir do backup e reexecutar migrations subsequentes com cuidado.
-- Plano de contingência documentado e acessível ao time.
+---
 
-7. Boas práticas
-- Manter migrations o mais idempotentes possível.
-- Evitar operações perigosas sem backup (por exemplo, truncar tabelas sem precaução).
-- Documentar mudanças significativas no schema e impacto de dados.
-- Atualizar este documento com mudanças relevantes.
+## Convenção de nomenclatura
 
-8. Responsáveis
-- Responsável técnico: time de Database/Infra.
-- Incidentes: registrar em ticket interno com logs de deploy.
+```
+NNNN_descricao_snake_case.sql         # migration de aplicação (up)
+NNNN_descricao_snake_case.down.sql    # rollback correspondente
+```
 
-9. Anexos
-- Caminho físico: apps/api/migrations
-- Scripts auxiliares: update_batch_*.sql, seeds, e utilitários de suporte.
+- `NNNN` é um número sequencial de 4 dígitos com incremento de 1
+- Nunca reutilizar um número (mesmo após remoção)
+- Gaps são permitidos (ex: 0041–0048 estão reservados para Drizzle auto-migrations)
+- Arquivo `.down.sql` obrigatório para todas as novas migrations
+
+**Validação automática:** `scripts/check-migrations.sh` — executado no CI como job `validate-migrations`
+
+---
+
+## Status atual (2026-04-28)
+
+Todas as 18 migrations manuais confirmadas aplicadas em produção via Neon MCP.  
+Ver tabela completa em `apps/api/migrations/MIGRATIONS_STATUS.md`.
+
+Últimas migrations:
+| Migration | Conteúdo | Prod |
+|---|---|---|
+| `0054_patient_directory_filters.sql` | Filtros de busca de pacientes | ✅ |
+| `0055_ensure_tarefas_projects.sql` | Tabela de projetos de tarefas | ✅ |
+| `0056_roles_rls_security.sql` | Role `app_runtime` + REVOKE público | ✅ |
+| `0057_rls_complete.sql` | RLS em tabelas clínicas críticas | ✅ |
+
+---
+
+## Como criar uma nova migration
+
+```bash
+# 1. Identificar o próximo número
+ls apps/api/migrations/*.sql | grep -v down | sort | tail -1
+# Saída ex: 0057_rls_complete.sql → próximo é 0058
+
+# 2. Criar os arquivos
+touch apps/api/migrations/0058_minha_feature.sql
+touch apps/api/migrations/0058_minha_feature.down.sql
+
+# 3. Escrever o up (idempotente quando possível)
+# Usar IF NOT EXISTS, IF EXISTS, CREATE OR REPLACE quando disponível
+
+# 4. Escrever o down
+# Inverso exato do up — DROP / REVERT
+
+# 5. Validar localmente
+bash scripts/check-migrations.sh
+
+# 6. Testar em staging (Neon branch)
+# Neon Console → Branch staging → SQL Editor → executar migration
+
+# 7. Abrir PR com checklist de migration preenchido
+```
+
+---
+
+## Fluxo de aplicação em produção
+
+```
+dev local → PR com check-migrations.sh passando
+         → staging (Neon branch ep-withered-glade-acrv7il7)
+         → review + aprovação
+         → prod (branch protegido br-dawn-block-acf1bzzv)
+```
+
+Nunca aplicar migration diretamente em prod sem testar em staging.
+
+---
+
+## Rollback de emergência
+
+```bash
+# 1. Identificar migration a reverter
+# 2. Verificar se existe .down.sql
+ls apps/api/migrations/NNNN_*.down.sql
+
+# 3. Executar via Neon Console → SQL Editor (prod)
+# Cole o conteúdo do .down.sql e execute
+
+# 4. Verificar integridade
+curl https://api-pro.moocafisio.com.br/api/health/ready
+
+# 5. Registrar no RUNBOOK_INCIDENTS.md
+```
+
+Se não existir `.down.sql`, usar PITR (Point-in-Time Recovery) do Neon — retenção de 7 dias configurada (`history_retention_seconds: 604800`).
+
+---
+
+## Boas práticas
+
+- Migrations devem ser **idempotentes** — usar `IF NOT EXISTS`, `CREATE OR REPLACE`
+- Operações em tabelas grandes (> 10k linhas): usar `ALTER TABLE ... ADD COLUMN ... DEFAULT NULL` primeiro, depois `UPDATE` em batch, depois `SET NOT NULL`
+- Nunca usar `DROP TABLE` sem backup confirmado
+- Documentar impacto no `MIGRATIONS_STATUS.md` após aplicação
+- Índices grandes: considerar `CREATE INDEX CONCURRENTLY` (não suportado em transações, usar fora de bloco BEGIN/COMMIT)

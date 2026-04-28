@@ -172,6 +172,9 @@ dead_letter_queue = "fisioflow-tasks-dlq"
 # ===== VARIÁVEIS DE AMBIENTE =====
 [vars]
 ENVIRONMENT = "production"
+# Tópico ntfy.sh para alertas de saúde da API (instale o app ntfy e assine este tópico)
+# App: https://ntfy.sh | iOS: App Store | Android: Play Store / F-Droid
+MONITOR_NTFY_TOPIC = "fisioflow-mon-rafael-prod"
 # Habilita transformações de imagem via URL no painel Cloudflare
 IMAGE_TRANSFORMATIONS = "enabled"
 R2_PUBLIC_URL = "https://media.moocafisio.com.br"
@@ -471,7 +474,8 @@ class_name = "PatientReengagementWorkflow"
 # ===== CRON TRIGGERS =====
 [triggers]
 crons = [
-  "0 9 * * *", # Diário às 06:00 BRT - Lembretes de Consultas (banco já acorda aqui)
+  "* * * * *",  # A cada minuto — Health monitor (notifica no ntfy.sh se API cair)
+  "0 9 * * *",  # Diário às 06:00 BRT - Lembretes de Consultas (banco já acorda aqui)
   "0 11 * * *", # Diário às 08:00 BRT - Relatórios e Limpeza (horário de expediente)
   "0 12 * * *", # Diário às 09:00 BRT - Automações de vencimento de tarefas
 ]
