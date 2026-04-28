@@ -164,7 +164,7 @@ export const protocolsApi = {
 export const exercisePlansApi = {
   list: (params: { patientId: string }) =>
     request<{ data: Array<Record<string, unknown>> }>(
-      `/api/clinical/exercise-plans?patientId=${encodeURIComponent(params.patientId)}`,
+      `/api/exercise-plans?patientId=${encodeURIComponent(params.patientId)}`,
     ),
   create: (data: {
     patient_id: string;
@@ -173,12 +173,12 @@ export const exercisePlansApi = {
     notes?: string;
     items: Array<Record<string, unknown>>;
   }) =>
-    request<{ data: Record<string, unknown> }>("/api/clinical/exercise-plans", {
+    request<{ data: Record<string, unknown> }>("/api/exercise-plans", {
       method: "POST",
       body: JSON.stringify(data),
     }),
   delete: (id: string) =>
-    request<{ ok: boolean }>(`/api/clinical/exercise-plans/${id}`, {
+    request<{ ok: boolean }>(`/api/exercise-plans/${id}`, {
       method: "DELETE",
     }),
 };
