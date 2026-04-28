@@ -28,7 +28,7 @@ import type { EventResizeDoneArg } from "@fullcalendar/interaction";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import { useEffect, useMemo, useRef, useState } from "react";
 
-import { useAgendaAppearance } from "@/hooks/useAgendaAppearance";
+import { useAgendaAppearancePersistence } from "@/hooks/useAgendaAppearancePersistence";
 import { useScheduleSettings } from "@/hooks/useScheduleSettings";
 import { useStatusConfig } from "@/hooks/useStatusConfig";
 import {
@@ -147,7 +147,7 @@ export function ScheduleCalendar(props: ScheduleCalendarProps) {
 
   const calendarRef = useRef<FullCalendar | null>(null);
   const { config: statusConfig } = useStatusConfig();
-  const { cssVariables, slotHeightPx, appearance } = useAgendaAppearance(viewType);
+  const { cssVariables, slotHeightPx, appearance } = useAgendaAppearancePersistence(viewType);
   const { businessHours: settingsHours, blockedTimes } = useScheduleSettings();
 
   const [quickViewAppointment, setQuickViewAppointment] = useState<RawAppointment | null>(null);
