@@ -102,12 +102,6 @@ const CalendarAppointmentCardBase = forwardRef<HTMLDivElement, CalendarAppointme
     const duration = appointment.duration || 60;
     const draggable = isDraggable && !selectionMode && !isTouch;
 
-    const handleMoveToToday = () => {
-      if (onAppointmentReschedule) {
-        onAppointmentReschedule(appointment, new Date(), appointment.time);
-      }
-    };
-
     const cardContent = (
       <AppointmentContextMenu
         appointment={appointment}
@@ -115,7 +109,6 @@ const CalendarAppointmentCardBase = forwardRef<HTMLDivElement, CalendarAppointme
         onEdit={() => onEditAppointment?.(appointment)}
         onDelete={() => onDeleteAppointment?.(appointment)}
         onDuplicate={() => onDuplicateAppointment?.(appointment)}
-        onMoveToToday={handleMoveToToday}
       >
         <AppointmentCard
           ref={ref}
@@ -188,9 +181,8 @@ const CalendarAppointmentCardBase = forwardRef<HTMLDivElement, CalendarAppointme
           style={{
             ...style,
             pointerEvents: isDragging && hideGhostWhenSiblings ? "none" : undefined,
-            borderRadius: "12px",
+            borderRadius: "10px",
             backgroundColor: (cardColors || {}).background || "transparent",
-            borderLeft: `3px solid ${(cardColors || {}).accent || "currentColor"}`,
             color: (cardColors || {}).text || "inherit",
           }}
           tabIndex={0}
