@@ -62,6 +62,13 @@ pnpm db:push
 - **Edge Security**: Verificação de tokens JWT via JWKS local nos Workers.
 - **Privacy First**: URLs assinadas para mídia no R2 e proibição de indexação SEO.
 
+## 🧭 Workflow de Especificação
+
+Este repositório agora usa GitHub Spec Kit para documentar novos recursos em `specs/`.
+- Arquivos principais: `constitution.md`, `specs/<feature>/spec.md`, `specs/<feature>/plan.md`, `specs/<feature>/tasks.md`
+- Comandos: `specify init --here`, `/speckit.constitution`, `/speckit.specify`, `/speckit.plan`, `/speckit.tasks`, `/speckit.analyze`, `/speckit.checklist`
+- Leia também `docs/guides/developer_guide.md` para mais detalhes.
+
 ---
 
 Desenvolvido para transformar a fisioterapia brasileira com tecnologia de ponta.

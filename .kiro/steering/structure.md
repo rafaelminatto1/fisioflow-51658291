@@ -1,343 +1,184 @@
-# FisioFlow Project Structure
+---
+inclusion: always
+---
 
-## Repository Layout
+# FisioFlow — Estrutura do Projeto
+
+## Layout do Monorepo (Turborepo + pnpm)
 
 ```
 fisioflow-51658291/
-├── .agent/                    # AI agent configuration & documentation
-│   ├── agents/               # Specialist agent definitions
-│   ├── skills/               # Domain-specific knowledge modules
-│   ├── docs/                 # Backend architecture docs
-│   ├── fluxos/               # Workflow documentation
-│   └── scripts/              # Automation scripts
-├── .kiro/                     # Kiro IDE configuration
-│   ├── settings/             # IDE settings (mcp.json)
-│   ├── specs/                # Feature specifications
-│   └── steering/             # Project steering rules (this file)
-├── apps/                      # Monorepo applications
-│   └── professional-ios/     # Professional mobile app (React Native + Expo)
-├── docs2026/                  # 2026 documentation
-├── e2e/                       # End-to-end tests (Playwright)
-├── functions/                 # Firebase Cloud Functions
-│   └── src/
-│       ├── api/              # Callable functions (patients, appointments, etc.)
-│       ├── ai/               # AI/ML functions (Gemini)
-│       ├── crons/            # Scheduled jobs
-│       ├── workflows/        # Background workflows
-│       ├── communications/   # WhatsApp, email
-│       ├── middleware/       # Auth, rate-limit, audit
-│       └── lib/              # Shared utilities
-├── packages/                  # Shared packages (if exists)
-│   ├── shared-types/         # TypeScript types
-│   ├── shared-api/           # API client
-│   ├── shared-constants/     # Constants
-│   └── shared-utils/         # Utilities
-├── scripts/                   # Build & deployment scripts
-├── src/                       # Main web application source
-│   ├── components/           # React components (organized by feature)
-│   ├── pages/                # Route pages
-│   ├── hooks/                # Custom React hooks
-│   ├── contexts/             # React contexts
-│   ├── lib/                  # Libraries & utilities
-│   ├── services/             # API services
-│   ├── stores/               # Zustand stores
-│   ├── types/                # TypeScript types
-│   ├── utils/                # Utility functions
-│   ├── integrations/         # External integrations (Firebase)
-│   └── tests/                # Test utilities
-├── supabase/migrations/       # SQL migrations (legacy)
-├── firebase.json              # Firebase configuration
-├── firestore.rules            # Firestore security rules
-├── firestore.indexes.json     # Firestore indexes
-├── storage.rules              # Storage security rules
-├── vite.config.ts             # Vite build configuration
-├── tailwind.config.ts         # Tailwind CSS configuration
-├── tsconfig.json              # TypeScript configuration
-└── package.json               # Root package.json
+├── apps/
+│   ├── api/                   # Cloudflare Workers API (Hono + Drizzle + Neon)
+│   ├── web/                   # Web app principal (React Router v7 + Vite)
+│   ├── mobile-ios/            # App mobile iOS (Capacitor)
+│   ├── professional-app/      # App profissional
+│   ├── patient-app/           # App paciente
+│   └── jules-bot/             # Bot Jules
+├── packages/
+│   ├── db/                    # Schema Drizzle ORM + tipos do banco
+│   ├── core/                  # Lógica de negócio compartilhada
+│   ├── ui/                    # Componentes shadcn/ui compartilhados
+│   ├── config/                # Configurações compartilhadas (tsconfig, etc.)
+│   └── shared-api/            # Cliente de API compartilhado
+├── .kiro/
+│   ├── specs/                 # Especificações de features
+│   └── steering/              # Regras de steering para IA (este arquivo)
+├── .agent/                    # Configuração de agentes IA e documentação
+├── package.json               # Root workspace (pnpm)
+└── turbo.json                 # Configuração Turborepo
 ```
 
-## Source Directory Organization
+## App Web (`apps/web/`)
 
-### Components (`src/components/`)
-
-Components are organized by feature domain, not by type:
+Framework: **React Router v7** (SSR/SPA híbrido) + Vite 8
 
 ```
-src/components/
-├── accessibility/         # Accessibility features
-├── admin/                # Admin-specific components
-├── ai/                   # AI assistant components
-├── appointments/         # Appointment scheduling
-├── auth/                 # Authentication UI
-├── dashboard/            # Dashboard widgets
-├── error-boundaries/     # Error handling
-├── evaluation/           # Clinical evaluations
-├── evolution/            # Patient evolution (SOAP)
-├── exercises/            # Exercise library
-├── financial/            # Financial management
-├── layout/               # Layout components (header, sidebar)
-├── modals/               # Modal dialogs
-├── notifications/        # Notification system
-├── pain-map/             # Pain mapping tool
-├── patient/              # Patient-specific components
-├── patients/             # Patient management
-├── reports/              # Report generation
-├── schedule/             # Calendar/schedule
-├── settings/             # Settings UI
-├── ui/                   # Base UI components (shadcn/ui)
-└── whatsapp/             # WhatsApp integration UI
+apps/web/
+├── src/
+│   ├── components/
+│   │   └── layout/            # Componentes de layout
+│   ├── pages/                 # Páginas por domínio (React Router file-based)
+│   │   ├── financeiro/
+│   │   └── patients/
+│   ├── lib/                   # Utilitários, auth client, api client
+│   ├── styles/                # CSS global
+│   ├── tests/ e test/         # Utilitários de teste
+│   ├── routes.ts              # Definição de rotas
+│   ├── root.tsx               # Root layout
+│   └── main.tsx               # Entry point
+├── vite.config.ts
+├── vitest.config.ts
+└── playwright.config.ts
 ```
 
-### Pages (`src/pages/`)
+> **Nota**: A maioria dos componentes React (schedule, settings, hooks, etc.) ainda vive em `src/` na raiz do monorepo (legado), sendo migrada gradualmente para `apps/web/src/`.
 
-Route-level components:
+## API Cloudflare Workers (`apps/api/`)
 
-```
-src/pages/
-├── admin/                # Admin pages
-├── analytics/            # Analytics dashboards
-├── cadastros/            # Registration pages
-├── configuracoes/        # Configuration pages
-├── dashboard/            # Dashboard pages
-├── financeiro/           # Financial pages
-├── patients/             # Patient pages
-├── public/               # Public pages (no auth)
-├── relatorios/           # Report pages
-├── settings/             # Settings pages
-├── Auth.tsx              # Login/signup
-├── Schedule.tsx          # Main schedule page
-├── Patients.tsx          # Patient list
-└── Index.tsx             # Landing page
-```
-
-### Hooks (`src/hooks/`)
-
-Custom React hooks organized by domain:
+Framework: **Hono** + **Drizzle ORM** + **Neon via Hyperdrive**
 
 ```
-src/hooks/
-├── accessibility/        # Accessibility hooks
-├── ai/                   # AI-related hooks
-├── calendar/             # Calendar hooks
-├── database/             # Database hooks
-├── error/                # Error handling hooks
-├── mobile/               # Mobile-specific hooks
-├── performance/          # Performance monitoring
-├── ui/                   # UI utility hooks
-├── useAuth.ts            # Authentication
-├── usePatients.ts        # Patient data
-├── useAppointments.tsx   # Appointments
-├── useExercises.ts       # Exercise library
-└── use-toast.ts          # Toast notifications
+apps/api/
+├── src/
+│   ├── routes/                # Handlers de rota Hono (agrupados por domínio)
+│   ├── middleware/            # Auth (JWT/JWKS), CORS, rate-limit
+│   ├── services/              # Lógica de negócio
+│   ├── schemas/               # Schemas Zod para validação de request/response
+│   ├── agents/                # Durable Object agents
+│   ├── workflows/             # Cloudflare Workflows (automações duráveis)
+│   ├── lib/                   # Utilitários (logger Axiom, etc.)
+│   ├── types/                 # Tipos TypeScript
+│   ├── index.ts               # Entry point Hono app
+│   ├── cron.ts                # Cron triggers
+│   └── queue.ts               # Queue consumer
+├── migrations/                # Migrations SQL (Drizzle Kit)
+├── wrangler.toml              # Configuração Cloudflare Workers
+└── package.json
 ```
 
-### Services (`src/services/`)
+### Bindings Cloudflare disponíveis no Worker
 
-API service layer:
+| Binding | Tipo | Uso |
+|---------|------|-----|
+| `HYPERDRIVE` | Hyperdrive | Conexão Neon PostgreSQL com pool |
+| `MEDIA_BUCKET` | R2 | Armazenamento de mídia/documentos |
+| `FISIOFLOW_CONFIG` | KV | Configurações globais em cache |
+| `DB` | D1 | Índice de evoluções, feriados |
+| `EDGE_CACHE` | D1 | Cache de queries, rate limiting |
+| `ANALYTICS` | Analytics Engine | Observabilidade de eventos |
+| `CLINICAL_KNOWLEDGE` | Vectorize | Base RAG clínica |
+| `EVENTS_PIPELINE` | Pipeline | Data warehouse → R2 |
+| `BACKGROUND_QUEUE` | Queue | Tarefas assíncronas |
+| `ORGANIZATION_STATE` | Durable Object | Estado real-time por org |
+| `PATIENT_AGENT` | Durable Object | Agente por paciente |
+| `AI` | Workers AI | Modelos de IA na edge |
 
-```
-src/services/
-├── ai/                   # AI service clients
-├── appointmentService.ts # Appointment CRUD
-├── patientService.ts     # Patient CRUD
-├── exercises.ts          # Exercise management
-├── financialService.ts   # Financial operations
-└── offlineSync.ts        # Offline synchronization
-```
-
-### Library (`src/lib/`)
-
-Shared utilities and configurations:
-
-```
-src/lib/
-├── firebase/             # Firebase initialization & config
-├── api/                  # API client utilities
-├── auth/                 # Auth utilities
-├── utils/                # General utilities
-├── validation/           # Validation schemas
-├── monitoring/           # Monitoring & logging
-├── performance/          # Performance utilities
-├── offline/              # Offline support
-├── skills/               # AI skills (if applicable)
-└── utils.ts              # Common utilities (cn, formatters)
-```
-
-### Types (`src/types/`)
-
-TypeScript type definitions:
+## Pacote de Banco de Dados (`packages/db/`)
 
 ```
-src/types/
-├── analysis/             # Analysis types
-├── appointment.ts        # Appointment types
-├── auth.ts               # Auth types
-├── patient.ts            # Patient types (if not in shared)
-├── evolution.ts          # Evolution/SOAP types
-├── gamification.ts       # Gamification types
-├── common.ts             # Common types
-└── index.ts              # Type exports
+packages/db/src/
+├── schema/                    # Tabelas Drizzle ORM (um arquivo por domínio)
+│   ├── index.ts               # Barrel de exports de todos os schemas
+│   ├── patients.ts
+│   ├── appointments.ts
+│   ├── userAgendaAppearance.ts
+│   └── ...
+└── index.ts                   # Export principal do pacote
 ```
 
-## Key Architectural Patterns
+- Importar como `@fisioflow/db` nos outros packages/apps
+- Schemas usam `pgTable` do `drizzle-orm/pg-core`
+- Migrations geradas com `drizzle-kit` em `apps/api/migrations/`
 
-### Component Organization
+## Convenções de Código
 
-- **Feature-based**: Components grouped by domain (appointments, patients, etc.)
-- **Atomic Design**: UI components in `src/components/ui/` follow atomic principles
-- **Colocation**: Tests, styles, and related files near components
+### Nomenclatura de Arquivos
 
-### Data Flow
+- **Componentes React**: PascalCase — `PatientCard.tsx`
+- **Hooks**: camelCase com prefixo `use` — `useAgendaAppearance.ts`
+- **Rotas Hono**: camelCase — `agendaAppearance.ts`
+- **Schemas Drizzle**: camelCase — `userAgendaAppearance.ts`
+- **Testes**: mesmo nome + `.test.ts(x)` — `PatientCard.test.tsx`
 
-- **Server State**: TanStack Query for API data (hooks in `src/hooks/`)
-- **Client State**: Zustand stores in `src/stores/`
-- **Context**: React Context for cross-cutting concerns (auth, theme)
-
-### API Layer
-
-- **Services**: Service layer in `src/services/` wraps Firebase callable functions
-- **Hooks**: Custom hooks consume services and provide React integration
-- **Types**: Shared types ensure type safety across layers
-
-### Routing
-
-- **React Router**: Defined in `src/routes.tsx`
-- **Protected Routes**: `ProtectedRoute` component wraps authenticated routes
-- **Lazy Loading**: Route-based code splitting for performance
-
-### Testing
-
-- **Unit Tests**: Colocated with source files (`*.test.ts`, `*.test.tsx`)
-- **E2E Tests**: In `e2e/` directory (Playwright)
-- **Test Utils**: Shared utilities in `src/tests/` and `src/test/`
-
-## Mobile App Structure (`apps/professional-ios/`)
-
-```
-apps/professional-ios/
-├── app/                   # Expo Router pages
-│   ├── (legal)/          # Legal screens (onboarding, terms)
-│   ├── (tabs)/           # Tab navigation screens
-│   └── _layout.tsx       # Root layout
-├── lib/                   # Shared libraries
-│   ├── services/         # Service layer
-│   └── utils/            # Utilities
-├── components/            # React Native components
-├── __tests__/            # Tests
-│   ├── properties/       # Property-based tests
-│   └── services/         # Service tests
-├── app.json              # Expo configuration
-└── package.json          # Mobile app dependencies
-```
-
-## Configuration Files
-
-### Root Level
-
-- `package.json`: Dependencies, scripts, pnpm workspace config
-- `vite.config.ts`: Build configuration, plugins, aliases
-- `tsconfig.json`: TypeScript compiler options
-- `tailwind.config.ts`: Tailwind CSS theme and plugins
-- `vitest.config.ts`: Test configuration
-- `firebase.json`: Firebase project configuration
-- `firestore.rules`: Firestore security rules
-- `storage.rules`: Storage security rules
-
-### Environment
-
-- `.env`: Local environment variables (gitignored)
-- `.env.example`: Template for required variables
-
-## Import Conventions
-
-### Path Aliases
+### Imports
 
 ```typescript
+// Path aliases (web app)
 import { Button } from "@/components/ui/button";
-import { useAuth } from "@/hooks/useAuth";
-import { PatientService } from "@/services/patientService";
-import type { Patient } from "@fisioflow/shared-types";
+import { useAuth } from "@/lib/auth";
+
+// Pacotes do workspace
+import { db } from "@fisioflow/db";
+import type { Patient } from "@fisioflow/core";
+
+// Preferir lodash-es (tree-shakeable)
+import { debounce } from "lodash-es";
 ```
 
-### Barrel Exports
+### Padrões de API (Hono)
 
-- Avoid deep imports where barrel exports exist
-- Use index files for cleaner imports
-- Example: `@/hooks` exports common hooks
+```typescript
+// Validação com @hono/zod-validator
+import { zValidator } from "@hono/zod-validator";
 
-## File Naming Conventions
+app.put("/api/v1/user/agenda-appearance",
+  authMiddleware,
+  zValidator("json", AgendaAppearanceSchema),
+  async (c) => {
+    const { profileId, organizationId } = c.get("auth");
+    // ...
+    return c.json({ data: result });
+  }
+);
+```
 
-### Components
+### Multi-tenant
 
-- **PascalCase**: `PatientCard.tsx`, `AppointmentList.tsx`
-- **Tests**: `PatientCard.test.tsx`
-- **Styles**: Inline with Tailwind (no separate CSS files)
+Toda query ao banco **deve** filtrar por `organizationId`:
 
-### Hooks
+```typescript
+const result = await db
+  .select()
+  .from(table)
+  .where(
+    and(
+      eq(table.organizationId, organizationId),
+      eq(table.profileId, profileId)
+    )
+  );
+```
 
-- **camelCase with 'use' prefix**: `usePatients.ts`, `useAuth.ts`
-- **Tests**: `usePatients.test.ts`
+## Testes
 
-### Services
+- **Unit/Integration**: Vitest (colocado junto ao source — `*.test.ts`)
+- **Property-Based**: fast-check 4.5.3 (tag obrigatória: `// Feature: X, Property N: ...`)
+- **E2E**: Playwright (`apps/web/playwright.config.ts`)
+- **Rodar testes web**: `pnpm --filter fisioflow-web test:unit`
+- **Rodar testes API**: `pnpm --filter @fisioflow/api test`
 
-- **camelCase**: `patientService.ts`, `appointmentService.ts`
-- **Tests**: `patientService.test.ts`
+## Linting e Formatação
 
-### Types
-
-- **camelCase**: `patient.ts`, `appointment.ts`
-- **Interfaces/Types**: PascalCase within files
-
-### Utilities
-
-- **camelCase**: `dateUtils.ts`, `formatters.ts`
-
-## Special Directories
-
-### `.agent/`
-
-Contains AI agent configuration, skills, and documentation. Not part of the runtime application.
-
-### `.kiro/`
-
-Kiro IDE configuration including specs, steering rules, and settings.
-
-### `docs2026/`
-
-Project documentation for 2026 roadmap and features.
-
-### `functions/`
-
-Firebase Cloud Functions (separate Node.js project with own package.json).
-
-### `e2e/`
-
-End-to-end tests using Playwright.
-
-## Multi-tenant Architecture
-
-### Organization Isolation
-
-- **Database**: Row Level Security (RLS) enforces organization_id filtering
-- **Firestore**: Security rules check organization membership
-- **Storage**: Bucket paths include organization_id
-- **Functions**: Middleware sets organization context from auth token
-
-### User Context
-
-Every authenticated request includes:
-
-- `userId`: Firebase Auth UID
-- `organizationId`: User's organization
-- `role`: User's role (admin, fisioterapeuta, etc.)
-- `profileId`: Profile ID in Cloud SQL
-
-## Code Organization Best Practices
-
-1. **Feature Folders**: Group related components, hooks, and services
-2. **Shared Code**: Extract to `src/lib/` or shared packages
-3. **Type Safety**: Use TypeScript strictly, avoid `any`
-4. **Barrel Exports**: Use index files for cleaner imports
-5. **Colocation**: Keep tests and related files near source
-6. **Lazy Loading**: Use React.lazy() for route-level code splitting
-7. **Naming**: Be descriptive and consistent with conventions
+- **Linter**: `oxlint` (não ESLint)
+- **Formatter**: `oxfmt`
+- Rodar: `pnpm lint` / `pnpm fmt`

@@ -65,3 +65,6 @@ export * from "./ai_studio";
 
 // Media & Gallery
 export * from "./media";
+
+// Agenda Appearance — per-user/org appearance profile (cloud sync)
+export * from "./userAgendaAppearance";
