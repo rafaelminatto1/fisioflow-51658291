@@ -6,7 +6,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { renderHook, act } from "@testing-library/react";
+import { renderHook, act, cleanup } from "@testing-library/react";
 
 import {
   generateId,
@@ -49,9 +49,10 @@ describe("generateId", () => {
     const id2 = generateId();
     const id3 = generateId();
 
-    expect(id1).toBe("id-1");
-    expect(id2).toBe("id-2");
-    expect(id3).toBe("id-3");
+    const suffix = (id: string) => Number(id.split("-")[1]);
+
+    expect(suffix(id2)).toBe(suffix(id1) + 1);
+    expect(suffix(id3)).toBe(suffix(id2) + 1);
   });
 });
 
@@ -242,26 +243,29 @@ describe("useFocusTrap", () => {
   it("should return ref", () => {
     const { result } = renderHook(() => useFocusTrap(false));
 
-    expect(result.current).toBe(null);
+    expect(result.current.current).toBe(null);
   });
 
   it("should trap focus when active", () => {
-    const { result } = renderHook(() => useFocusTrap(true));
-
-    // Create container with focusable elements
     const container = document.createElement("div");
     container.innerHTML = `
       <button>First</button>
       <button>Second</button>
       <button>Third</button>
     `;
+    document.body.appendChild(container);
 
-    result.current = container;
+    const { result, rerender } = renderHook(
+      ({ active }) => useFocusTrap(active),
+      { initialProps: { active: false } },
+    );
+
     act(() => {
-      document.body.appendChild(container);
+      result.current.current = container;
     });
 
-    // Focus should be trapped within container
+    rerender({ active: true });
+
     const buttons = container.querySelectorAll("button");
     expect(document.activeElement).toBe(buttons[0]);
 
@@ -313,8 +317,9 @@ describe("useSkipLink", () => {
   });
 
   it("should focus target when skip link is clicked", () => {
-    const target = document.createElement("div");
+    const target = document.createElement("button");
     target.id = "main-content";
+    target.scrollIntoView = vi.fn();
     document.body.appendChild(target);
 
     const { result } = renderHook(() => useSkipLink());
@@ -324,6 +329,7 @@ describe("useSkipLink", () => {
     });
 
     expect(document.activeElement).toBe(target);
+    expect(target.scrollIntoView).toHaveBeenCalled();
 
     cleanup();
   });

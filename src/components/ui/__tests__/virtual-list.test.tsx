@@ -94,13 +94,16 @@ describe("VirtualizedList", () => {
 
     const scrollContainer = container.querySelector(".overflow-auto") as HTMLElement;
     if (scrollContainer) {
-      // Simulate scrolling to bottom
       Object.defineProperty(scrollContainer, "scrollHeight", {
         value: 1000,
         writable: true,
       });
       Object.defineProperty(scrollContainer, "clientHeight", {
         value: 200,
+        writable: true,
+      });
+      Object.defineProperty(scrollContainer, "scrollTop", {
+        value: 900,
         writable: true,
       });
 

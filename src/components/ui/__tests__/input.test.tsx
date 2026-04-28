@@ -26,11 +26,13 @@ describe("Input", () => {
   });
 
   it("deve aceitar diferentes tipos", () => {
-    const { rerender } = render(<Input type="email" />);
+    const { rerender, container } = render(<Input type="email" />);
     expect(screen.getByRole("textbox")).toHaveAttribute("type", "email");
 
     rerender(<Input type="password" />);
-    expect(screen.getByLabelText("")).toHaveAttribute("type", "password");
+    const passwordInput = container.querySelector('input[type="password"]');
+    expect(passwordInput).toBeInTheDocument();
+    expect(passwordInput).toHaveAttribute("type", "password");
   });
 
   it("deve aplicar className customizado", () => {
