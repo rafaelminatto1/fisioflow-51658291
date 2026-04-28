@@ -1,37 +1,72 @@
-# FisioFlow Product Overview
+---
+inclusion: always
+---
 
-FisioFlow is a comprehensive clinic management system for physiotherapy practices, built with modern web technologies and Firebase backend infrastructure.
+# FisioFlow — Visão Geral do Produto
 
-## Core Purpose
+FisioFlow é um sistema completo de gestão para clínicas de fisioterapia, construído com stack moderna baseada em Cloudflare Workers + Neon PostgreSQL.
 
-A complete digital solution for physiotherapy clinics that handles patient management, appointment scheduling, electronic medical records (SOAP), exercise prescription, financial tracking, and clinical analytics.
+## Propósito
 
-## Key Features
+Solução digital para clínicas de fisioterapia que cobre gestão de pacientes, agendamento, prontuário eletrônico (SOAP), prescrição de exercícios, controle financeiro e analytics clínico.
 
-- **Patient Management**: Complete patient lifecycle with LGPD compliance, medical history, document uploads, and progress tracking
-- **Appointment System**: Advanced calendar with conflict detection, recurring appointments, WhatsApp notifications, and Google Calendar sync
-- **Electronic Medical Records**: SOAP notes with digital signatures, audit trails, and treatment session tracking
-- **Exercise Library**: Comprehensive exercise database with video support, prescription workflows, and progress monitoring
-- **Financial Management**: Transaction tracking, payment processing (Stripe), vouchers, and financial reporting
-- **Analytics & Reports**: Real-time dashboards, patient retention metrics, clinic performance analytics
-- **AI Features**: Exercise recommendations (Gemini AI), SOAP generation, clinical analysis, movement analysis
-- **Multi-tenant**: Organization-based isolation with role-based access control (RBAC)
+## Funcionalidades Principais
 
-## User Roles
+- **Gestão de Pacientes**: Ciclo completo com conformidade LGPD, histórico médico, uploads e acompanhamento de progresso
+- **Agenda**: Calendário avançado com detecção de conflitos, agendamentos recorrentes, notificações WhatsApp e sync Google Calendar
+- **Prontuário Eletrônico**: Notas SOAP com assinatura digital, trilha de auditoria e controle de sessões
+- **Biblioteca de Exercícios**: Base de exercícios com vídeos, prescrição e monitoramento de progresso
+- **Financeiro**: Transações, pagamentos (Stripe), vouchers e relatórios
+- **Analytics**: Dashboards em tempo real, métricas de retenção e performance da clínica
+- **IA**: Recomendação de exercícios (Gemini), geração de SOAP, análise clínica e de movimento
+- **Multi-tenant**: Isolamento por organização com controle de acesso baseado em roles (RBAC)
 
-- **Admin**: Full system access, user management, financial reports
-- **Fisioterapeuta**: Patient management, exercise prescription, SOAP records
-- **Estagiário**: Limited patient access, protocol viewing
-- **Recepcionista**: Appointment scheduling, reception tasks
-- **Paciente**: Self-service portal with exercise access and appointment history
+## Roles de Usuário
 
-## Target Users
+- **Admin**: Acesso total, gestão de usuários, relatórios financeiros
+- **Fisioterapeuta**: Gestão de pacientes, prescrição de exercícios, prontuários SOAP
+- **Estagiário**: Acesso limitado a pacientes, visualização de protocolos
+- **Recepcionista**: Agendamentos e tarefas de recepção
+- **Paciente**: Portal self-service com acesso a exercícios e histórico de consultas
 
-Brazilian physiotherapy clinics seeking to digitize operations, improve patient care quality, and maintain regulatory compliance (LGPD).
+## Público-Alvo
 
-## Platform
+Clínicas de fisioterapia brasileiras que buscam digitalizar operações, melhorar a qualidade do atendimento e manter conformidade regulatória (LGPD).
 
-- **Web Application**: React SPA hosted on Firebase Hosting
-- **Mobile Apps**: React Native (iOS/Android) with Expo and Capacitor
-- **Backend**: Firebase Cloud Functions (serverless)
-- **Database**: Cloud SQL (PostgreSQL) + Firestore for real-time features
+## Plataforma
+
+- **Web**: React SPA hospedada no Cloudflare Pages (`moocafisio.com.br`)
+- **Mobile**: Capacitor 8 (iOS/Android) embutido no app web
+- **API**: Cloudflare Workers com Hono (`api-pro.moocafisio.com.br`)
+- **Banco de Dados**: Neon PostgreSQL (serverless, região `sa-east-1`) via Hyperdrive
+- **Auth**: Neon Auth (JWT/JWKS) — **não usa Firebase**
+- **Storage**: Cloudflare R2 (`media.moocafisio.com.br`)
+
+## Arquitetura de Alto Nível
+
+```
+Browser/Mobile (React + Capacitor)
+        │
+        ▼
+Cloudflare Pages (frontend estático)
+        │
+        ▼ REST (Hono)
+Cloudflare Workers (apps/api)
+        │
+        ├── Neon PostgreSQL via Hyperdrive (dados relacionais)
+        ├── Cloudflare D1 (edge cache, rate limiting, índices)
+        ├── Cloudflare KV (config global)
+        ├── Cloudflare R2 (mídia/documentos)
+        ├── Cloudflare Durable Objects (estado real-time, agentes)
+        ├── Cloudflare Queues (tarefas assíncronas)
+        └── Cloudflare Workflows (automações duráveis multi-step)
+```
+
+## Convenções Críticas para IA
+
+- **Nunca sugerir Firebase** — o projeto não usa Firebase em nenhuma camada
+- **Auth é Neon Auth** — JWT verificado via JWKS no Worker; `profileId` e `organizationId` vêm do token
+- **ORM é Drizzle** — schemas em `packages/db/src/schema/`, migrations via `drizzle-kit`
+- **API é Hono** — rotas em `apps/api/src/`, validação com `@hono/zod-validator` + Zod
+- **Isolamento multi-tenant** — toda query deve filtrar por `organization_id`
+- **Linter é oxlint** — não ESLint; formatter é oxfmt

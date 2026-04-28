@@ -105,25 +105,43 @@ export function usePatientEvolutionHandlers({
       return;
     }
 
+    const isV1 = evolutionVersion === "v1-soap";
     const isV2orV3 = evolutionVersion === "v2-texto" || evolutionVersion === "v3-notion";
-    const saveData = isV2orV3
-      ? {
-          subjective: evolutionV2Data.patientReport || "",
-          objective: evolutionV2Data.evolutionText || "",
-          assessment: evolutionV2Data.procedures
-            .map(
-              (p: any) =>
-                `${p.completed ? "[x]" : "[ ]"} ${p.name}${p.notes ? ` - ${p.notes}` : ""}`,
-            )
-            .join("\n"),
-          plan: evolutionV2Data.observations || "",
-        }
-      : soapData;
+    const isV4orV5 = evolutionVersion === "v4-tiptap" || evolutionVersion === "v5-pro";
 
-    if (!saveData.subjective && !saveData.objective && !saveData.assessment && !saveData.plan) {
+    let saveData: any;
+    
+    if (isV1) {
+      saveData = soapData;
+    } else if (isV2orV3) {
+      saveData = {
+        subjective: evolutionV2Data.patientReport || "",
+        objective: evolutionV2Data.evolutionText || "",
+        assessment: evolutionV2Data.procedures
+          .map(
+            (p: any) =>
+              `${p.completed ? "[x]" : "[ ]"} ${p.name}${p.notes ? ` - ${p.notes}` : ""}`,
+          )
+          .join("\n"),
+        plan: evolutionV2Data.observations || "",
+      };
+    } else {
+      // v4 or v5 - unified editors usually map to objective or assessment
+      saveData = {
+        subjective: evolutionV2Data.patientReport || "",
+        objective: evolutionV2Data.evolutionText || "",
+        assessment: "",
+        plan: evolutionV2Data.observations || "",
+      };
+    }
+
+    const hasContent = !!(saveData.subjective || saveData.objective || saveData.assessment || saveData.plan);
+    const hasPain = painScale.level !== undefined && painScale.level !== null;
+
+    if (!hasContent && !hasPain) {
       toast({
         title: "Campos vazios",
-        description: "Preencha pelo menos um campo antes de salvar.",
+        description: "Preencha pelo menos um campo ou nível de dor antes de salvar.",
         variant: "destructive",
       });
       return;
