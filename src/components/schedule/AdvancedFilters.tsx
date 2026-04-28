@@ -109,7 +109,7 @@ export const AdvancedFilters: React.FC<AdvancedFiltersProps> = ({
     filters.status.length + filters.types.length + filters.therapists.length;
 
   const sortedTherapists = useMemo(
-    () => [...therapists].sort((a, b) => a.full_name.localeCompare(b.full_name)),
+    () => [...therapists].sort((a, b) => (a.full_name || '').localeCompare(b.full_name || '')),
     [therapists],
   );
 

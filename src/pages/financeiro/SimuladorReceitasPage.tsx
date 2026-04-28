@@ -118,7 +118,7 @@ export default function SimuladorReceitasPage() {
   // Cenário personalizado
   const fatorAumento = 1 + cenarioPersonalizado.aumento / 100;
   const receitaPersonalizada = totalReceitas * fatorAumento;
-  const receitaNovosAlunos = cenarioPersonalizados.novosAlunos * 150; // média de 150 por aluno
+  const receitaNovosAlunos = cenarioPersonalizado.novosAlunos * 150; // média de 150 por aluno
   const totalReceitasPersonalizado = receitaPersonalizada + receitaNovosAlunos;
   const lucroPersonalizado = totalReceitasPersonalizado - totalDespesas;
 
