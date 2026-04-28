@@ -72,6 +72,7 @@ export const exerciseMediaAttachments = pgTable(
     mediaId: uuid("media_id").references(() => mediaGallery.id, {
       onDelete: "set null",
     }),
+    organizationId: uuid("organization_id").notNull().references(() => organizations.id),
 
     // Campos denormalizados ou específicos da instância no exercício
     type: mediaTypeEnum("type").notNull(),
@@ -85,6 +86,7 @@ export const exerciseMediaAttachments = pgTable(
   (table) => ({
     exerciseIdx: index("idx_exercise_media_exercise_id").on(table.exerciseId),
     orderIdx: index("idx_exercise_media_order").on(table.orderIndex),
+    orgIdx: index("idx_exercise_media_organization_id").on(table.organizationId),
   }),
 );
 
