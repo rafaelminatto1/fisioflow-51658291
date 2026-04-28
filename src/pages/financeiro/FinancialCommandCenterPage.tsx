@@ -44,6 +44,7 @@ import { useToast } from "@/hooks/use-toast";
 import { type PeriodType, useFinancialPageData } from "@/hooks/useFinancialPage";
 import { useFinancialCommandCenter } from "@/hooks/useFinancialCommandCenter";
 import { cn, formatCurrency } from "@/lib/utils";
+import { AnalyticsFiltersProvider } from "@/contexts/AnalyticsFiltersContext";
 
 const PackagesManager = lazy(() =>
   import("@/components/financial/PackagesManager").then((m) => ({
@@ -859,7 +860,9 @@ const FinancialCommandCenterPage = () => {
 
               <TabsContent value="analytics">
                 <Suspense fallback={<PageShellFallback />}>
-                  <FinancialAnalytics />
+                  <AnalyticsFiltersProvider>
+                    <FinancialAnalytics />
+                  </AnalyticsFiltersProvider>
                 </Suspense>
               </TabsContent>
 

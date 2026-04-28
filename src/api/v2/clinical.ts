@@ -246,16 +246,18 @@ export const clinicalTestsApi = {
 };
 
 export const evolutionVersionsApi = {
-  list: (evolutionId: string) =>
-    request<{ data: any[] }>(`/api/clinical/evolutions/${evolutionId}/versions`),
-  create: (evolutionId: string, data: { content: string; change_reason?: string }) =>
-    request<{ data: any }>(`/api/clinical/evolutions/${evolutionId}/versions`, {
+  list: (soapRecordId: string) =>
+    request<{ data: any[] }>(
+      `/api/evolution-versions?soapRecordId=${encodeURIComponent(soapRecordId)}`,
+    ),
+  create: (data: {
+    soap_record_id: string;
+    change_type?: "auto" | "manual" | "restore";
+    content: Record<string, unknown>;
+  }) =>
+    request<{ data: any }>(`/api/evolution-versions`, {
       method: "POST",
       body: JSON.stringify(data),
-    }),
-  restore: (versionId: string) =>
-    request<{ data: any }>(`/api/clinical/evolutions/versions/${versionId}/restore`, {
-      method: "POST",
     }),
 };
 
