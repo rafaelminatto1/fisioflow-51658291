@@ -102,7 +102,8 @@ export function useAppointmentTypes() {
       return (res?.data ?? res) as ScheduleAppointmentType;
     },
     onSuccess: () => invalidate(),
-    onError: () => {
+    onError: (error) => {
+      console.error("Erro ao atualizar tipo de atendimento:", error);
       toast({ title: "Erro ao atualizar tipo de atendimento", variant: "destructive" });
     },
   });
@@ -182,7 +183,9 @@ export function useAppointmentTypes() {
     expandedId,
     isLoading,
     addType: addType.mutate,
-    updateType: updateType.mutate,
+    updateType: (id: string, data: Partial<AppointmentType>) => {
+      updateType.mutate({ id, data });
+    },
     removeType: removeType.mutate,
     toggleActive: (id: string) => {
       const current = types.find((t) => t.id === id);

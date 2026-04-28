@@ -14,14 +14,14 @@
     --fc-neutral-bg-color: hsl(var(--muted));
     --fc-neutral-text-color: hsl(var(--muted-foreground));
 
-    --fc-today-bg-color: hsl(var(--accent) / 0.35);
+    --fc-today-bg-color: hsl(var(--accent) / 0.25);
     --fc-now-indicator-color: hsl(var(--destructive));
 
     --fc-event-bg-color: hsl(var(--primary));
     --fc-event-border-color: hsl(var(--primary));
     --fc-event-text-color: hsl(var(--primary-foreground));
 
-    --fc-event-selected-overlay-color: hsl(var(--primary) / 0.15);
+    --fc-event-selected-overlay-color: hsl(var(--primary) / 0.2);
 
     --fc-button-bg-color: hsl(var(--secondary));
     --fc-button-border-color: hsl(var(--border));
@@ -31,10 +31,10 @@
     --fc-button-active-bg-color: hsl(var(--primary));
     --fc-button-active-border-color: hsl(var(--primary));
 
-    --fc-highlight-color: hsl(var(--primary) / 0.12);
-    --fc-non-business-color: hsl(var(--muted) / 0.5);
+    --fc-highlight-color: hsl(var(--primary) / 0.1);
+    --fc-non-business-color: hsl(var(--muted) / 0.4);
     --fc-bg-event-color: hsl(var(--destructive));
-    --fc-bg-event-opacity: 0.15;
+    --fc-bg-event-opacity: 0.12;
 
     --fc-event-min-height: var(--schedule-card-min-height, 28px);
 
@@ -48,53 +48,98 @@
   .fc .fc-timegrid-slot-label-cushion {
     color: hsl(var(--foreground));
     text-decoration: none;
+    font-weight: 500;
   }
 
   .fc .fc-timegrid-slot {
     height: var(--fc-event-min-height);
   }
 
+  /* Event styling — clean, modern, elevated */
   .fc .fc-event {
-    border-radius: 6px;
+    border-radius: 5px;
     font-size: 0.75rem;
     cursor: pointer;
     padding: 0;
+    transition: box-shadow 150ms ease-out, transform 150ms ease-out;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  }
+
+  .fc .fc-event:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    transform: translateY(-1px);
   }
 
   .fc .fc-event-main {
-    padding: 2px 4px;
+    padding: 3px 5px;
   }
 
   .fc .fc-event.fc-event-selected::after {
     background: var(--fc-event-selected-overlay-color);
   }
 
-  /* Background events (blocked times) — slightly stronger tint */
+  /* Background events (blocked times) — distinctly styled */
   .fc .fc-bg-event {
-    background: hsl(var(--destructive) / 0.12);
-    border-left: 3px solid hsl(var(--destructive));
+    background: hsl(var(--destructive) / 0.1);
+    border-left: 2.5px solid hsl(var(--destructive));
+    border-radius: 3px;
   }
   .fc .fc-bg-event .fc-event-title {
-    color: hsl(var(--destructive));
-    font-weight: 500;
+    color: hsl(var(--destructive) / 0.8);
+    font-weight: 600;
+    font-size: 0.7rem;
     padding: 2px 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
   }
 
-  /* Task events (allDay row) */
+  /* Task events (allDay row) — dashed border, less prominent */
   .fc .fc-event.fc-event-task {
-    background: hsl(var(--primary) / 0.12);
-    border: 1px dashed hsl(var(--primary));
-    color: hsl(var(--primary));
+    background: hsl(var(--primary) / 0.08);
+    border: 1.5px dashed hsl(var(--primary) / 0.5);
+    color: hsl(var(--primary) / 0.8);
+    border-radius: 4px;
   }
 
-  /* Group appointments — subtle ring */
+  /* Group appointments — ring indicator for visual distinction */
   .fc .fc-event.fc-event-group {
-    box-shadow: inset 0 0 0 1px hsl(var(--ring));
+    box-shadow:
+      0 1px 2px rgba(0, 0, 0, 0.04),
+      inset 0 0 0 1.5px hsl(var(--ring));
   }
 
-  /* Selection mode — dimmed unselected, bright selected */
+  .fc .fc-event.fc-event-group:hover {
+    box-shadow:
+      0 4px 12px rgba(0, 0, 0, 0.08),
+      inset 0 0 0 1.5px hsl(var(--ring));
+  }
+
+  /* Selection mode — muted unselected, highlighted selected */
   .fc[data-selection-mode="true"] .fc-event:not(.fc-event-selected-inline) {
-    opacity: 0.55;
+    opacity: 0.5;
+  }
+
+  .fc[data-selection-mode="true"] .fc-event.fc-event-selected-inline {
+    opacity: 1;
+    box-shadow:
+      0 0 0 2px hsl(var(--background)),
+      0 0 0 4px hsl(var(--primary));
+  }
+
+  /* Column header styling */
+  .fc .fc-col-header-cell {
+    padding: 0.5rem 0.25rem;
+    text-align: center;
+    vertical-align: middle;
+    font-size: 0.85rem;
+    font-weight: 600;
+  }
+
+  /* Today indicator line — more visible */
+  .fc .fc-now-indicator {
+    border-top: 2px solid hsl(var(--destructive));
+    pointer-events: none;
+    z-index: 4;
   }
 
   .fc-license-message {
