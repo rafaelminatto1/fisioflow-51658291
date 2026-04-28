@@ -1,7 +1,7 @@
 # Launch Checklist — FisioFlow
 
 > Gate de qualidade para próxima release de produção  
-> Versão: 1.0 | Data: 2026-04-28  
+> Versão: 1.1 | Data: 2026-04-28  
 > **Todos os itens devem estar ✅ antes de liberar para novos beta testers ou tráfego significativo**
 
 ---
