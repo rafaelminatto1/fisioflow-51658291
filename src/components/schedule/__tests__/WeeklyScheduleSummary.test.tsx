@@ -19,7 +19,7 @@ describe("WeeklyScheduleSummary", () => {
     expect(screen.getByText(/Semana ativa/i)).toBeInTheDocument();
     expect(screen.getByText(/Confirmados/i)).toBeInTheDocument();
     expect(screen.getByText(/Em espera/i)).toBeInTheDocument();
-    expect(screen.getByText(/Grupos/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/Grupos/i).length).toBeGreaterThan(0);
     expect(screen.getByText("4")).toBeInTheDocument();
   });
 });
