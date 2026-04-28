@@ -1,0 +1,40 @@
+ ▐▛███▜▌   Claude Code v2.1.121
+▝▜█████▛▘  Sonnet 4.6 · Claude Pro
+  ▘▘ ▝▝    ~/Documents/fisioflow/fisioflow-51658291
+
+✻ Conversation compacted (ctrl+o for history)
+
+  ⎿  Read LAUNCH_CHECKLIST.md (139 lines)
+  ⎿  Referenced file apps/api/src/index.ts
+  ⎿  Read apps/api/src/lib/monitor.ts (113 lines)
+  ⎿  Read apps/api/src/types/env.ts (193 lines)
+  ⎿  Referenced file apps/api/wrangler.toml
+
+● Let me check the failing workflow files.
+
+  Listed 1 directory (ctrl+o to expand)
+
+● Bash(gh run view 25080164404 --log-failed 2>&1 | head -100)
+  ⎿  Dependency Audit   Install pnpm    2026-04-28T22:07:04.1117876Z ##[group]Ru
+     pnpm/action-setup@v4
+     Dependency Audit   Install pnpm    2026-04-28T22:07:04.1118179Z with:
+     … +147 lines (ctrl+o to expand)
+
+
+
+● The root cause is clear. Let me also check the web unit test failure and the
+  TruffleHog error.
+
+● Bash(gh run view 25080164348 --log-failed 2>&1 | grep -A 30 "Test Web (Unit)")
+  ⎿  Test Web (Unit)    Run pnpm --filter fisioflow-web
+     test:unit  2026-04-28T22:
+     07:48.3537263Z ##[group]Run pnpm --filter fisioflow-web test:unit
+     Test Web (Unit)    Run pnpm --filter fisioflow-web
+     test:unit  2026-04-28T22:
+     … +422 lines (ctrl+o to expand)
+
+  Read 2 files, searched memories (ctrl+o to expand)
+  ⎿  You're out of extra usage · resets 10:10pm (America/Sao_Paulo)
+     /upgrade to increase your usage limit.
+
+✻ Sautéed for 6m 41s
