@@ -1,8 +1,8 @@
 import { test, expect } from '@playwright/test';
 
 // Credentials
-const loginEmail = 'REDACTED_EMAIL';
-const loginPassword = 'REDACTED';
+const loginEmail = 'rafael.minatto@yahoo.com.br';
+const loginPassword = 'Yukari30@';
 const prodUrl = 'https://www.moocafisio.com.br';
 
 test.describe('Validação de Produção - API de Sessões', () => {

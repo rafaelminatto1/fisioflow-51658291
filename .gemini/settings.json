@@ -1,0 +1,38 @@
+{
+  "mcpServers": {
+    "exa": {
+      "command": "",
+      "args": [
+        "https://mcp.exa.ai/mcp"
+      ]
+    },
+    "context7": {
+      "command": "",
+      "args": [
+        "https://mcp.context7.com/mcp",
+        "--headers",
+        "CONTEXT7_API_KEY=ctx7sk-ad94ba7f-5d88-47b6-9c00-a478dd2b5343"
+      ]
+    },
+    "pubmed": {
+      "command": "",
+      "args": [
+        "npx",
+        "-y,@cyanheads/pubmed-mcp-server@latest"
+      ]
+    }
+  },
+  "ui": {
+    "hideBanner": true,
+    "hideTips": true,
+    "showHomeDirectoryWarning": false,
+    "showCompatibilityWarnings": false
+  },
+  "general": {
+    "enableAutoUpdate": false,
+    "enableAutoUpdateNotification": false
+  },
+  "context": {
+    "discoveryMaxDirs": 50
+  }
+}

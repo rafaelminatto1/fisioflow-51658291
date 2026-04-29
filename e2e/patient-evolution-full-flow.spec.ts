@@ -13,8 +13,8 @@
 import { test, expect } from '@playwright/test';
 import { authenticateBrowserContext } from './helpers/neon-auth';
 
-const loginEmail = process.env.E2E_LOGIN_EMAIL || 'REDACTED_EMAIL';
-const loginPassword = process.env.E2E_LOGIN_PASSWORD || 'REDACTED';
+const loginEmail = process.env.E2E_LOGIN_EMAIL || 'rafael.minatto@yahoo.com.br';
+const loginPassword = process.env.E2E_LOGIN_PASSWORD || 'Yukari30@';
 
 test.describe('Patient Evolution - fluxo completo com preenchimento SOAP', () => {
   test.use({ storageState: { cookies: [], origins: [] } });

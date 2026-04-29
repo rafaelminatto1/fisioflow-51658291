@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 
-const loginEmail = 'REDACTED_EMAIL';
-const loginPassword = 'REDACTED';
+const loginEmail = 'rafael.minatto@yahoo.com.br';
+const loginPassword = 'Yukari30@';
 
 test.describe('Validação de Produção - Mooca Fisio V4.0', () => {
   test.use({ storageState: { cookies: [], origins: [] } });

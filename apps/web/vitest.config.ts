@@ -61,8 +61,6 @@ export default defineConfig({
       "e2e/**",
       "e2e-tests/**",
       "tests/**",
-      "apps/patient-app/**",
-      "apps/api/**",
     ],
 
     // Test timeouts

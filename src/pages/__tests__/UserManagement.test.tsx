@@ -24,7 +24,7 @@ vi.mock("@/components/layout/MainLayout", () => ({
 vi.mock("@/components/admin/MembersManager", () => ({
   MembersManager: () => (
     <div>
-      <div>REDACTED_EMAIL</div>
+      <div>rafael.minatto@yahoo.com.br</div>
       <div>Data inválida</div>
     </div>
   ),
@@ -40,7 +40,7 @@ describe("UserManagement", () => {
       users: [
         {
           id: "user-1",
-          email: "REDACTED_EMAIL",
+          email: "rafael.minatto@yahoo.com.br",
           full_name: "Rafael Minatto",
           roles: ["admin"],
           role: "admin",
@@ -58,7 +58,7 @@ describe("UserManagement", () => {
     render(<UserManagement />);
 
     expect(screen.getByText("Gerenciamento de Usuários")).toBeInTheDocument();
-    expect(screen.getByText("REDACTED_EMAIL")).toBeInTheDocument();
+    expect(screen.getByText("rafael.minatto@yahoo.com.br")).toBeInTheDocument();
     expect(screen.getByText("Data inválida")).toBeInTheDocument();
   });
 });
