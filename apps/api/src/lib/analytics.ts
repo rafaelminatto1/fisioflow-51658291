@@ -58,6 +58,12 @@ export function writeEvent(env: Env, data: EventData): void {
   }
 }
 
+export function normalizeAnalyticsRoute(pathname: string): string {
+  return pathname
+    .replace(/\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi, "/:id")
+    .replace(/\/\d+/g, "/:n");
+}
+
 /**
  * Middleware que instrumenta automaticamente todas as rotas Hono.
  * Registra rota, método, status e latência no Analytics Engine.
@@ -73,10 +79,7 @@ export function analyticsMiddleware(env: Env) {
     } finally {
       const latencyMs = Date.now() - start;
       const url = new URL(c.req.url);
-      // Normaliza path removendo IDs (UUIDs e números) para agrupamento correto
-      const route = url.pathname
-        .replace(/\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi, "/:id")
-        .replace(/\/\d+/g, "/:n");
+      const route = normalizeAnalyticsRoute(url.pathname);
 
       writeEvent(env, {
         route,

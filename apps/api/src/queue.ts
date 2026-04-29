@@ -61,6 +61,51 @@ export type QueueTask =
   | { type: "GENERATE_TTS"; payload: TTSPayload }
   | { type: "TRIGGER_WORKFLOW"; payload: WorkflowTriggerPayload };
 
+export type QueueTaskSummary = {
+  taskType: QueueTask["type"];
+  organizationId?: string;
+  entityRefs: Record<string, string>;
+  replayable: boolean;
+  idempotencyKey: string;
+};
+
+function getPayloadRecord(task: QueueTask): Record<string, unknown> {
+  return task.payload as Record<string, unknown>;
+}
+
+export function deriveQueueIdempotencyKey(task: QueueTask): string {
+  const payload = getPayloadRecord(task);
+  const organizationId = String(payload.organizationId ?? "global");
+  const entityId = String(
+    payload.appointmentId ??
+      payload.examId ??
+      payload.patientId ??
+      payload.r2Key ??
+      payload.workflowType ??
+      "unknown",
+  );
+
+  return `queue:${task.type}:${organizationId}:${entityId}`;
+}
+
+export function summarizeQueueTask(task: QueueTask): QueueTaskSummary {
+  const payload = getPayloadRecord(task);
+  const entityRefs: Record<string, string> = {};
+
+  for (const key of ["patientId", "appointmentId", "examId", "r2Key", "workflowType"]) {
+    const value = payload[key];
+    if (typeof value === "string" && value) entityRefs[key] = value;
+  }
+
+  return {
+    taskType: task.type,
+    organizationId: typeof payload.organizationId === "string" ? payload.organizationId : undefined,
+    entityRefs,
+    replayable: !["PROCESS_BACKUP", "CLEANUP_LOGS"].includes(task.type),
+    idempotencyKey: deriveQueueIdempotencyKey(task),
+  };
+}
+
 /**
  * Handler para o Cloudflare Queues.
  * Processa tarefas em segundo plano: WhatsApp, R2 events, AI, Workflows.

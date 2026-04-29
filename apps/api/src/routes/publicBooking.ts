@@ -1,12 +1,23 @@
 import { Hono } from "hono";
 import { createPool } from "../lib/db";
 import type { Env } from "../types/env";
+import { rateLimit } from "../middleware/rateLimit";
 import { turnstileVerify } from "../middleware/turnstile";
 
 const app = new Hono<{ Bindings: Env }>();
 
+const publicBookingRateLimit = rateLimit({
+  limit: 30,
+  windowSeconds: 900,
+  endpoint: "public-booking",
+  keyFn: (c) =>
+    c.req.header("CF-Connecting-IP") ??
+    c.req.header("X-Forwarded-For")?.split(",")[0].trim() ??
+    "unknown",
+});
+
 // Proteção anti-bot em todas as rotas de agendamento público
-app.use("*", turnstileVerify);
+app.use("*", publicBookingRateLimit, turnstileVerify);
 
 async function hasTable(pool: ReturnType<typeof createPool>, tableName: string): Promise<boolean> {
   const result = await pool.query(`SELECT to_regclass($1)::text AS table_name`, [

@@ -8,19 +8,19 @@ type AssetWorker = {
   fetch(request: Request, env: Env): Promise<Response>;
 };
 
-function getFileExtension(pathname: string): string | null {
+export function getFileExtension(pathname: string): string | null {
   const lastSegment = pathname.split("/").pop() ?? "";
   const lastDot = lastSegment.lastIndexOf(".");
   if (lastDot <= 0 || lastDot === lastSegment.length - 1) return null;
   return lastSegment.slice(lastDot + 1).toLowerCase();
 }
 
-function isAssetRequest(url: URL): boolean {
+export function isAssetRequest(url: URL): boolean {
   if (url.pathname.startsWith("/assets/")) return true;
   return getFileExtension(url.pathname) !== null;
 }
 
-function isSpaNavigation(request: Request, url: URL): boolean {
+export function isSpaNavigation(request: Request, url: URL): boolean {
   if (request.method !== "GET" && request.method !== "HEAD") return false;
   if (isAssetRequest(url)) return false;
   if (request.method === "HEAD") return true;
@@ -29,7 +29,7 @@ function isSpaNavigation(request: Request, url: URL): boolean {
   return accept.includes("text/html");
 }
 
-function getSpaIndexRequest(request: Request, origin: string): Request {
+export function getSpaIndexRequest(request: Request, origin: string): Request {
   const indexUrl = new URL("/", origin);
   return new Request(indexUrl.toString(), request);
 }
