@@ -261,6 +261,11 @@ index_name = "fisioflow-clinical"
 binding = "EVENTS_PIPELINE"
 pipeline = "701aff68d26e4c45a29f090389bcd4f2"
 
+# NFS-e São Paulo — mTLS binding (descomentar após upload do certificado ICP-Brasil)
+# [[env.production.mtls_certificates]]
+# binding = "NFSE_SP_CERT"
+# certificate_id = "<ID_DO_CERTIFICADO_UPLOAD>"
+
 [[env.production.workflows]]
 name = "appointment-reminder"
 binding = "WORKFLOW_APPOINTMENT_REMINDER"
