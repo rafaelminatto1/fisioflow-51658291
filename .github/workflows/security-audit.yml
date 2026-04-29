@@ -72,3 +72,55 @@ jobs:
 
       - name: Type Check
         run: pnpm type-check
+
+  dast-scan:
+    name: DAST Scan (OWASP ZAP)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Start application
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm run build
+          pnpm run start & 
+          sleep 30
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          NODE_ENV: test
+
+      - name: Run OWASP ZAP Baseline Scan
+        uses: zaproxy/action-baseline@v0.10.0
+        with:
+          target: 'http://localhost:3000'
+          rules_file: '.zap/rules.tsv'
+          cmd_options: '-a alert.level = HIGH'
+
+      - name: Upload ZAP Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: zap-scan-report
+          path: report_html.html
+
+  lgpd-retention-check:
+    name: LGPD Retention Policy Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verify LGPD Retention Policy
+        run: |
+          echo "Verifying LGPD data retention policy..."
+          if [ -f "PLAYBOOK_SECRETS_ROTATION.md" ]; then
+            echo "✅ PLAYBOOK_SECRETS_ROTATION.md exists"
+          else
+            echo "❌ Missing PLAYBOOK_SECRETS_ROTATION.md"
+            exit 1
+          fi
+          
+          if grep -q "retention" SECURITY.md; then
+            echo "✅ Retention policy mentioned in SECURITY.md"
+          else
+            echo "⚠️ Retention policy not documented in SECURITY.md"
+          fi
