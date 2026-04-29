@@ -2,6 +2,7 @@ import { createMiddleware } from "hono/factory";
 import type { Context } from "hono";
 import type { Env } from "../types/env";
 import type { AuthVariables } from "../lib/auth";
+import { writeEvent } from "../lib/analytics";
 
 type RateLimitOptions = {
   /** Max requests per window */
@@ -59,6 +60,14 @@ export function rateLimit(opts: RateLimitOptions) {
       if (count > opts.limit) {
         const retryAfter = Math.max(1, windowStart + windowSeconds - now);
         c.header("Retry-After", String(retryAfter));
+        writeEvent(c.env, {
+          route: new URL(c.req.url).pathname,
+          method: c.req.method,
+          status: 429,
+          orgId: c.get("user")?.organizationId,
+          event: `rate_limit:${opts.endpoint}`,
+          value: count,
+        });
         return c.json({ error: "Rate limit exceeded", retryAfter }, 429);
       }
     } catch (err) {

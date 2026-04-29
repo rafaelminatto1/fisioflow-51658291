@@ -1,6 +1,6 @@
 import type { Env } from "../types/env";
 
-const HEALTH_URL = "https://api-pro.moocafisio.com.br/api/health/ready";
+const DEFAULT_HEALTH_URL = "https://api-pro.moocafisio.com.br/api/health/ready";
 const RENOTIFY_INTERVAL_MS = 30 * 60 * 1000; // re-alerta a cada 30min se ainda estiver down
 const REQUEST_TIMEOUT_MS = 8_000;
 
@@ -33,7 +33,7 @@ function brTime(iso?: string | null): string {
 export async function runHealthMonitor(env: Env): Promise<void> {
   const kv = env.FISIOFLOW_CONFIG!;
   const topic = env.MONITOR_NTFY_TOPIC ?? "fisioflow-monitor";
-  const url = HEALTH_URL;
+  const url = env.MONITOR_HEALTH_URL ?? DEFAULT_HEALTH_URL;
 
   // --- 1. Verificar saúde ---
   let isHealthy = false;

@@ -107,6 +107,23 @@ describe("POST /api/auth/signup", () => {
     expect(res.status).toBe(400);
     expect(mockFetch).not.toHaveBeenCalled();
   });
+
+  it("exige Turnstile quando secret está configurado", async () => {
+    const app = await buildApp();
+    const res = await app.fetch(
+      makeRequest("POST", "/api/auth/signup", {
+        email: "new@example.com",
+        password: "secret123",
+      }),
+      { ...BASE_ENV, TURNSTILE_SECRET_KEY: "turnstile-secret" } as Env,
+    );
+
+    expect(res.status).toBe(400);
+    await expect(res.json()).resolves.toMatchObject({
+      error: "Token Turnstile obrigatório",
+    });
+    expect(mockFetch).not.toHaveBeenCalled();
+  });
 });
 
 describe("POST /api/auth/logout", () => {
@@ -162,6 +179,20 @@ describe("POST /api/auth/forgot-password", () => {
       BASE_ENV as Env,
     );
     expect(res.status).toBe(400);
+  });
+
+  it("exige Turnstile quando secret está configurado", async () => {
+    const app = await buildApp();
+    const res = await app.fetch(
+      makeRequest("POST", "/api/auth/forgot-password", { email: "test@example.com" }),
+      { ...BASE_ENV, TURNSTILE_SECRET_KEY: "turnstile-secret" } as Env,
+    );
+
+    expect(res.status).toBe(400);
+    await expect(res.json()).resolves.toMatchObject({
+      error: "Token Turnstile obrigatório",
+    });
+    expect(mockFetch).not.toHaveBeenCalled();
   });
 });
 

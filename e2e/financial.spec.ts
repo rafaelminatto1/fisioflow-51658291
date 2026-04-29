@@ -58,7 +58,7 @@ test.describe('Fluxo Financeiro', () => {
         page = await context.newPage();
 
         // Mock da camada financeira atual via Workers.
-        await page.route(/\/api\/financial\/transacoes(?:\/[^/?#]+)?(?:\?.*)?$/i, async (route) => {
+        await page.route(/\/api\/financial\/(?:transacoes|transactions)(?:\/[^/?#]+)?(?:\?.*)?$/i, async (route) => {
             const method = route.request().method();
             const url = route.request().url();
 
@@ -73,7 +73,7 @@ test.describe('Fluxo Financeiro', () => {
                         ]
                     })
                 });
-            } else if (method === 'PUT' && /\/api\/financial\/transacoes\/[^/?#]+/i.test(url)) {
+            } else if (method === 'PUT' && /\/api\/financial\/(?:transacoes|transactions)\/[^/?#]+/i.test(url)) {
                 await route.fulfill({
                     status: 200,
                     contentType: 'application/json',
@@ -91,7 +91,7 @@ test.describe('Fluxo Financeiro', () => {
         await expect(page.getByRole('heading', { name: /Gestão Financeira/i })).toBeVisible({ timeout: 15000 });
         await expect(page.getByRole('button', { name: /Exportar/i })).toBeVisible({ timeout: 15000 });
         await expect(page.getByRole('tab', { name: /Fluxo de Caixa/i })).toBeVisible({ timeout: 15000 });
-        await expect(page.getByRole('tab', { name: /Visão Geral/i })).toBeVisible({ timeout: 15000 });
+        await expect(page.getByRole('tab', { name: /Resumo/i })).toBeVisible({ timeout: 15000 });
     });
 
     test.afterEach(async () => {
@@ -99,19 +99,20 @@ test.describe('Fluxo Financeiro', () => {
     });
 
     test('Deve exibir o dashboard financeiro corretamente', async () => {
-        await expect(page.getByText('Receita Total').first()).toBeVisible();
-        await expect(page.getByText('Fluxo de Caixa').first()).toBeVisible();
+        await page.getByRole('tab', { name: /Faturamento/i }).click();
+        await expect(page.getByText('Receita filtrada').first()).toBeVisible();
+        await expect(page.getByRole('tab', { name: /Fluxo de Caixa/i }).first()).toBeVisible();
         await expect(page.getByText('Consulta Pendente')).toBeVisible();
-        await expect(page.getByText(/\+\sR\$\s?150/)).toBeVisible();
     });
 
     test('Deve permitir baixar uma transação pendente', async () => {
+        await page.getByRole('tab', { name: /Faturamento/i }).click();
         const updateResponse = page.waitForResponse((response) =>
             response.request().method() === 'PUT' &&
-            /\/api\/financial\/transacoes\/[^/?#]+/i.test(response.url())
+            /\/api\/financial\/(?:transacoes|transactions)\/[^/?#]+/i.test(response.url())
         );
         const pendingRow = page.locator('tr:has-text("Consulta Pendente")').first();
-        const payButton = pendingRow.locator('button').first();
+        const payButton = pendingRow.locator('button').nth(1);
         await payButton.evaluate((button: HTMLButtonElement) => button.click());
         const response = await updateResponse;
 

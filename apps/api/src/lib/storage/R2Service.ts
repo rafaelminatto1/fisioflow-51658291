@@ -5,6 +5,14 @@ import type { Env } from "../../types/env";
 /**
  * Cloudflare R2 Storage Service (S3 Compatible)
  */
+const DEFAULT_PROTECTED_URL_TTL_SECONDS = 900;
+const MAX_PROTECTED_URL_TTL_SECONDS = 3600;
+
+function clampProtectedUrlTtl(expiresIn: number): number {
+  if (!Number.isFinite(expiresIn) || expiresIn <= 0) return DEFAULT_PROTECTED_URL_TTL_SECONDS;
+  return Math.min(Math.floor(expiresIn), MAX_PROTECTED_URL_TTL_SECONDS);
+}
+
 export class R2Service {
   private client: S3Client;
 
@@ -35,15 +43,15 @@ export class R2Service {
   /**
    * Generates a signed URL for viewing/downloading an object
    * @param key The R2 object key
-   * @param expiresIn Expiration time in seconds (default 24h)
+   * @param expiresIn Expiration time in seconds (default 15min, max 1h for PHI-safe access)
    */
-  async getDownloadUrl(key: string, expiresIn = 86400) {
+  async getDownloadUrl(key: string, expiresIn = DEFAULT_PROTECTED_URL_TTL_SECONDS) {
     const command = new GetObjectCommand({
       Bucket: this.env.MEDIA_BUCKET.toString(),
       Key: key,
     });
 
-    return await getSignedUrl(this.client, command, { expiresIn });
+    return await getSignedUrl(this.client, command, { expiresIn: clampProtectedUrlTtl(expiresIn) });
   }
 
   /**

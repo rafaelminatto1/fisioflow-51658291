@@ -18,6 +18,7 @@ import {
   hasSPCertConfig,
 } from "../lib/nfseSPClient";
 import { generateAndSaveDanfse, getDanfsePresignedUrl, getDanfseR2Key } from "../lib/nfseDanfse";
+import { writeEvent } from "../lib/analytics";
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
@@ -304,6 +305,13 @@ app.post("/send/:id", requireAuth, async (c) => {
           console.error("[NFSe] Erro ao gerar DANFSe:", danfseErr);
         }
 
+        writeEvent(c.env, {
+          route: "/api/nfse/send/:id",
+          method: "POST",
+          status: 200,
+          orgId: user.organizationId,
+          event: "nfse_send_success",
+        });
         return c.json({ data: { id, ...result, link_danfse: updatedNfse.link_danfse } });
       }
 
@@ -313,6 +321,14 @@ app.post("/send/:id", requireAuth, async (c) => {
           [id],
         );
         const msgs = result.erros.map((e) => `${e.codigo}: ${e.descricao}`).join("; ");
+        writeEvent(c.env, {
+          route: "/api/nfse/send/:id",
+          method: "POST",
+          status: 422,
+          orgId: user.organizationId,
+          event: "nfse_send_rejected",
+          value: result.erros.length,
+        });
         return c.json({ error: `Prefeitura recusou: ${msgs}` }, 422);
       }
 
@@ -325,6 +341,13 @@ app.post("/send/:id", requireAuth, async (c) => {
       });
     } catch (err: any) {
       console.error("[NFSe] Erro envio SP:", err);
+      writeEvent(c.env, {
+        route: "/api/nfse/send/:id",
+        method: "POST",
+        status: 500,
+        orgId: user.organizationId,
+        event: "nfse_send_error",
+      });
       return c.json({ error: `Falha no envio: ${err.message}` }, 500);
     }
   }
@@ -357,6 +380,13 @@ app.post("/send/:id", requireAuth, async (c) => {
       }
     } catch (_) {}
 
+    writeEvent(c.env, {
+      route: "/api/nfse/send/:id",
+      method: "POST",
+      status: 200,
+      orgId: user.organizationId,
+      event: "nfse_send_homologation_simulated",
+    });
     return c.json({
       data: {
         id,
@@ -371,7 +401,8 @@ app.post("/send/:id", requireAuth, async (c) => {
 
   return c.json(
     {
-      error: "Certificado digital não configurado. Configure NFSE_SP_CERT para envio em produção.",
+      error:
+        "Certificado digital não configurado. Configure o binding NFSE_SP_CERT e os secrets NFSE_SP_CERT_PEM/NFSE_SP_KEY_PEM para envio em produção.",
     },
     422,
   );
@@ -383,7 +414,14 @@ app.post("/test/:id", requireAuth, async (c) => {
   const user = c.get("user");
   const { id } = c.req.param();
   if (!isUuid(id)) return c.json({ error: "ID inválido" }, 400);
-  if (!hasSPCertConfig(c.env)) return c.json({ error: "Certificado digital não configurado" }, 422);
+  if (!hasSPCertConfig(c.env))
+    return c.json(
+      {
+        error:
+          "Certificado digital não configurado. Configure NFSE_SP_CERT, NFSE_SP_CERT_PEM e NFSE_SP_KEY_PEM.",
+      },
+      422,
+    );
 
   const pool = createPool(c.env);
   const nfseResult = await pool.query(
@@ -437,7 +475,14 @@ app.get("/consulta-nfse/:id", requireAuth, async (c) => {
   const user = c.get("user");
   const { id } = c.req.param();
   if (!isUuid(id)) return c.json({ error: "ID inválido" }, 400);
-  if (!hasSPCertConfig(c.env)) return c.json({ error: "Certificado digital não configurado" }, 422);
+  if (!hasSPCertConfig(c.env))
+    return c.json(
+      {
+        error:
+          "Certificado digital não configurado. Configure NFSE_SP_CERT, NFSE_SP_CERT_PEM e NFSE_SP_KEY_PEM.",
+      },
+      422,
+    );
 
   const pool = createPool(c.env);
   const nfseResult = await pool.query(
@@ -470,7 +515,14 @@ app.get("/consulta-nfse/:id", requireAuth, async (c) => {
 
 app.get("/consulta-lote/:numeroLote", requireAuth, async (c) => {
   const { numeroLote } = c.req.param();
-  if (!hasSPCertConfig(c.env)) return c.json({ error: "Certificado digital não configurado" }, 422);
+  if (!hasSPCertConfig(c.env))
+    return c.json(
+      {
+        error:
+          "Certificado digital não configurado. Configure NFSE_SP_CERT, NFSE_SP_CERT_PEM e NFSE_SP_KEY_PEM.",
+      },
+      422,
+    );
 
   const user = c.get("user");
   const pool = createPool(c.env);
