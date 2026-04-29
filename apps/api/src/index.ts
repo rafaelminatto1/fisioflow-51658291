@@ -85,6 +85,7 @@ import { packagesRoutes } from "./routes/packages";
 import { announcementsRoutes } from "./routes/announcements";
 import { adminSeedTemplatesRoutes } from "./routes/admin/seed-templates";
 import { triggerDigitalTwinRoutes } from "./routes/admin/trigger-digital-twin";
+import { dlqReplayRoutes } from "./routes/admin/dlq-replay";
 import { searchRoutes } from "./routes/search";
 import { reportsPdfRoutes } from "./routes/reportsPdf";
 import { eventsRoutes as businessEventsRoutes } from "./routes/events";
@@ -332,6 +333,7 @@ const apiRoutes = [
   ["/api/packages", packagesRoutes],
   ["/api/announcements", announcementsRoutes],
   ["/api/admin/seed-templates", adminSeedTemplatesRoutes],
+  ["/api/admin/dlq", dlqReplayRoutes],
   ["/api/search", searchRoutes],
   ["/api/reports/pdf", reportsPdfRoutes],
   ["/api/events", businessEventsRoutes],

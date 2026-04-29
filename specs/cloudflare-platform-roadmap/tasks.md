@@ -157,8 +157,8 @@
 
 - [x] T048 [US5] Add idempotency key handling to replayable queue payloads in `apps/api/src/queue.ts`.
 - [x] T049 [US5] Add redacted task summary helper for operator views in `apps/api/src/queue.ts` or a new focused helper file.
-- [ ] T050 [US5] Implement an admin-only DLQ replay/status route under `apps/api/src/routes/admin/` if approved by the runbook.
-- [ ] T051 [US5] Emit audit/analytics events for replay attempts and outcomes.
+- [x] T050 [US5] Implement an admin-only DLQ replay/status route under `apps/api/src/routes/admin/` if approved by the runbook.
+- [x] T051 [US5] Emit audit/analytics events for replay attempts and outcomes.
 
 **Checkpoint**: DLQ replay is admin-only, redacted, audited, and tested in staging.
 
@@ -217,7 +217,7 @@
 ### Tests and Validation
 
 - [x] T064 [US8] Create `specs/cloudflare-platform-roadmap/ai-governance.md` covering gateway, models, indexes, limits, and fallback rules.
-- [ ] T065 [P] [US8] Add tests for AI route provider/gateway fallback behavior where existing route tests are present.
+- [x] T065 [P] [US8] Add tests for AI route provider/gateway fallback behavior where existing route tests are present.
 - [ ] T066 [US8] Run staging RAG evaluation against wiki/protocol/exercise samples and record results in `ai-governance.md`.
 
 ### Implementation
