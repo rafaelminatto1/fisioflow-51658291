@@ -1,0 +1,55 @@
+# OWASP ZAP Rules Configuration - FisioFlow
+# High/CRITICAL alerts will fail the build
+# Format: ID	NAME	SEVERITY	CONFIDENCE	ENABLED	DESCRIPTION
+
+10003	Authentication Request Identified	HIGH	HIGH	true	Check for authentication bypass
+10020	X-Frame-Options header scanner	MEDIUM	HIGH	true	Clickjacking protection
+10021	X-Content-Type-Options	MEDIUM	HIGH	true	Content sniffing protection
+10023	Information Disclosure	HIGH	HIGH	true	Data leakage
+10025	Information Disclosure	HIGH	HIGH	true	Data leakage in response
+10026	HTTP Parameter Override	MEDIUM	HIGH	true	Parameter tampering
+10027	Session ID in URL	HIGH	HIGH	true	Session fixation
+10028	Session ID in URL	HIGH	HIGH	true	Session fixation reissue
+10029	Cookie Poisoning	MEDIUM	HIGH	true	Cookie manipulation
+10030	User Controllable Charset	LOW	MEDIUM	false	Charset injection
+10031	User Controllable HTML Input	MEDIUM	HIGH	true	XSS risks
+10032	Viewstate Scanner	MEDIUM	HIGH	true	ASP.NET viewstate
+10033	Session Fixation	HIGH	HIGH	true	Session attack
+10034	Cross-Site Request Forgery	HIGH	HIGH	true	CSRF attacks
+10035	HTTP to HTTPS Insecure Transition	MEDIUM	HIGH	true	Mixed content
+10036	HTTP to HTTPS Insecure Transition	MEDIUM	HIGH	true	Insecure form submission
+10037	HTTP to HTTPS Insecure Transition	MEDIUM	HIGH	true	Insecure script loading
+10038	Content Security Policy	HIGH	HIGH	true	CSP missing
+10039	X-Backend-Server Header Information Leak	LOW	MEDIUM	false	Server info leak
+10040	Secure Pages Include Mixed Content	MEDIUM	HIGH	true	Mixed content
+10041	HTTP Strict Transport Security Header	HIGH	HIGH	true	HSTS missing
+10042	HTTP Strict Transport Security Header	MEDIUM	HIGH	true	HSTS misconfigured
+10043	HTTP Strict Transport Security Header	LOW	MEDIUM	false	HSTS not preloaded
+10044	HTTP Public Key Pinning	LOW	MEDIUM	false	HPKP deprecated
+10045	Include Self in Trustworth Domains	LOW	MEDIUM	false	CORS misconfiguration
+10046	Cross-Domain Misconfiguration	HIGH	HIGH	true	CORS open
+10047	Cross-Domain Misconfiguration	MEDIUM	HIGH	true	CORS liberal
+10048	Retrieve Embedded Devices	LOW	MEDIUM	false	IoT device scan
+10049	Retrieve Embedded Devices	LOW	MEDIUM	false	IoT device scan
+10050	Retrieve Embedded Devices	LOW	MEDIUM	false	IoT device scan
+10051	Retrieve Embedded Devices	LOW	MEDIUM	false	IoT device scan
+10052	Retrieve Embedded Devices	LOW	MEDIUM	false	IoT device scan
+10053	Relative Path Confusion	LOW	MEDIUM	false	Path traversal
+10054	Absolute Path Confusion	LOW	MEDIUM	false	Path traversal
+10055	Server Side Code Injection	HIGH	HIGH	true	Code injection
+10056	Server Side Code Injection	HIGH	HIGH	true	Code injection variant
+10057	Server Side Code Injection	HIGH	HIGH	true	Code injection variant
+10061	X-ChromeLogger-Data Header	MEDIUM	HIGH	true	Data leak via header
+10062	Character Encoding Weakness	POTENTIAL	HIGH	false	Encoding issues
+10063	Cookie Without SameSite Attribute	MEDIUM	HIGH	true	CSRF risk
+10094	Authentication Bypass via Header Manipulation	HIGH	HIGH	true	Auth bypass
+10095	Session Fixation via URL Parameter	HIGH	HIGH	true	Session attack
+10096	SQL Injection	HIGH	HIGH	true	SQLi
+10097	SQL Injection	HIGH	HIGH	true	SQLi variant
+10098	SQL Injection	HIGH	HIGH	true	SQLi variant
+10099	SQL Injection	HIGH	HIGH	true	SQLi variant
+10100	Backup File Disclosure	HIGH	HIGH	true	Backup exposure
+10101	Reverse Engineering	MEDIUM	HIGH	true	Client code analysis
+10102	Session Fixation via Session ID in URL	HIGH	HIGH	true	Session fixation
+10103	Session Fixation via Session ID in URL	HIGH	HIGH	true	Session fixation variant
+10104	Session Fixation via Session ID in URL	HIGH	HIGH	true	Session fixation variant
