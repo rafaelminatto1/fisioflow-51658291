@@ -35,7 +35,7 @@ export const PatientDeleteDialog: React.FC<PatientDeleteDialogProps> = ({
   const queryClient = useQueryClient();
   const { user, profile } = useAuth();
 
-  const isAdmin = user?.email === "REDACTED_EMAIL" || profile?.role === "admin";
+  const isAdmin = user?.email === "rafael.minatto@yahoo.com.br" || profile?.role === "admin";
 
   const handleAction = async () => {
     setIsArchiving(true);

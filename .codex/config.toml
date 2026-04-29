@@ -25,7 +25,7 @@ type = "http"
 url = "https://mcp.context7.com/mcp"
 
 [mcp_servers.context7.http_headers]
-"CONTEXT7_API_KEY" = "REDACTED"
+"CONTEXT7_API_KEY" = "ctx7sk-ad94ba7f-5d88-47b6-9c00-a478dd2b5343"
 
 [mcp_servers.playwright]
 enabled = false

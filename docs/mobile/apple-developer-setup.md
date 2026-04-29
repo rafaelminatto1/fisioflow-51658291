@@ -132,7 +132,7 @@ CSR é o único passo que tradicionalmente requer Mac (Keychain Access). Sem Mac
 2. **Linux openssl** local:
    ```bash
    openssl req -new -newkey rsa:2048 -nodes -keyout ios-distribution.key -out ios-distribution.csr \
-     -subj "/emailAddress=REDACTED_EMAIL/CN=Rafael Minatto/C=BR"
+     -subj "/emailAddress=rafael.minatto@yahoo.com.br/CN=Rafael Minatto/C=BR"
    ```
    Depois faz upload do `.csr` no Apple Developer e guarda o `.key` pra montar o `.p12`.
 

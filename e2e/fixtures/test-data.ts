@@ -1,13 +1,13 @@
 export const testUsers = {
   admin: {
-    email: process.env.E2E_LOGIN_EMAIL || "REDACTED_EMAIL",
-    password: process.env.E2E_LOGIN_PASSWORD || "REDACTED",
+    email: process.env.E2E_LOGIN_EMAIL || "rafael.minatto@yahoo.com.br",
+    password: process.env.E2E_LOGIN_PASSWORD || "Yukari30@",
     role: "admin",
     expectedOrganizationId: "00000000-0000-0000-0000-000000000001",
   },
   fisio: {
-    email: "REDACTED_EMAIL",
-    password: "REDACTED",
+    email: "rafael.minatto@yahoo.com.br",
+    password: "Yukari30@",
     role: "fisioterapeuta",
     expectedOrganizationId: "00000000-0000-0000-0000-000000000001",
   },
@@ -19,8 +19,8 @@ export const testUsers = {
   },
   // User for specialized tests
   rafael: {
-    email: "REDACTED_EMAIL",
-    password: "REDACTED",
+    email: "rafael.minatto@yahoo.com.br",
+    password: "Yukari30@",
     role: "professional",
     expectedOrganizationId: "00000000-0000-0000-0000-000000000001",
   },

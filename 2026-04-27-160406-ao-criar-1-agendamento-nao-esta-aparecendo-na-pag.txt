@@ -9,7 +9,7 @@
   alterado! e inicia atendumento desse agendamentos e preencha os campos de     
   evolução e delete todos esse agendamentos ! va analisano todas as ações e se  
   precisar já resolva e se tiver erros noconsole tamenm quero que arume !       
-  moocafisio.com.br REDACTED_EMAIL REDACTED  faça o deploy e      
+  moocafisio.com.br rafael.minatto@yahoo.com.br Yukari30@  faça o deploy e      
   valide em produção se tiver erros corrija e faça deploy e valide novamente    
   até nao ter mais erros pode uar cli do neon e do cploudflare pu pluhins ou    
   extensiosn                                                                    

@@ -3,8 +3,8 @@ import { test } from '@playwright/test';
 test.describe('FisioFlow - Validação Completa de Fluxo (moocafisio.com.br)', () => {
   const testPatientName = `BOT Teste ${Date.now()}`;
   const credentials = {
-    email: 'REDACTED_EMAIL',
-    pw: 'REDACTED'
+    email: 'rafael.minatto@yahoo.com.br',
+    pw: 'Yukari30@'
   };
 
   test('Deve realizar o ciclo de vida completo de Paciente e Agenda', async ({ page }) => {

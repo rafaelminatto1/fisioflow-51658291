@@ -1,0 +1,640 @@
+#!/usr/bin/env node
+/**
+ * Validação completa — Pacientes, Agendamentos, Financeiro e rotas críticas
+ */
+
+const API = "https://fisioflow-api.rafalegollas.workers.dev";
+const EMAIL = "rafael.minatto@yahoo.com.br";
+const PASSWORD = "Yukari30@";
+
+let passed = 0,
+  failed = 0;
+const ok = (msg) => {
+  passed++;
+  console.log(`  ✅ ${msg}`);
+};
+const fail = (msg) => {
+  failed++;
+  console.error(`  ❌ ${msg}`);
+};
+const info = (msg) => console.log(`\n🔷 ${msg}`);
+const skip = (msg) => console.log(`  ⏭  ${msg}`);
+
+function buildUniqueAppointmentSlot() {
+  const now = new Date();
+  const dayOffset = 14 + (now.getUTCDate() % 7);
+  const future = new Date(now.getTime() + dayOffset * 24 * 60 * 60 * 1000);
+  const slotSeed = Number(String(Date.now()).slice(-4));
+  const startHour = 8 + (slotSeed % 9);
+  const startMinute = (Math.floor(slotSeed / 10) % 4) * 15;
+  const endMinuteTotal = startHour * 60 + startMinute + 50;
+  const endHour = Math.floor(endMinuteTotal / 60);
+  const endMinute = endMinuteTotal % 60;
+
+  return {
+    date: future.toISOString().slice(0, 10),
+    startTime: `${String(startHour).padStart(2, "0")}:${String(startMinute).padStart(2, "0")}`,
+    endTime: `${String(endHour).padStart(2, "0")}:${String(endMinute).padStart(2, "0")}`,
+  };
+}
+
+async function getToken() {
+  const res = await fetch(`${API}/api/auth/login`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Origin: "https://www.moocafisio.com.br" },
+    body: JSON.stringify({ email: EMAIL, password: PASSWORD }),
+  });
+  const d = await res.json();
+  if (!res.ok || typeof d?.token !== "string" || d.token.split(".").length !== 3) {
+    throw new Error(`Login falhou: ${JSON.stringify(d)}`);
+  }
+  return d.token;
+}
+
+async function req(method, path, token, body) {
+  const requestInit = {
+    method,
+    headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+  };
+  if (body && method !== "GET") {
+    requestInit.body = JSON.stringify(body);
+  }
+  const res = await fetch(`${API}${path}`, requestInit);
+  let json;
+  try {
+    json = await res.json();
+  } catch {
+    json = {};
+  }
+  return { status: res.status, ok: res.ok, json };
+}
+
+async function suite(name, fn) {
+  info(name);
+  try {
+    await fn();
+  } catch (e) {
+    fail(`Suite "${name}" erro: ${e.message}`);
+  }
+}
+
+async function main() {
+  console.log("═".repeat(60));
+  console.log("  FisioFlow — Validação Completa do Sistema");
+  console.log(`  Usuário: ${EMAIL}`);
+  console.log("═".repeat(60));
+
+  info("Autenticação");
+  let token;
+  try {
+    token = await getToken();
+    ok("Login → token obtido");
+  } catch (e) {
+    fail(`Login: ${e.message}`);
+    return;
+  }
+
+  const h = await req("GET", "/api/health", token);
+  if (h.ok) {
+    ok(`Health → ${h.status}`);
+  } else {
+    fail(`Health → ${h.status}`);
+  }
+
+  // ── 1. PACIENTES ──────────────────────────────────────────────────────────
+  await suite("Pacientes — CRUD completo", async () => {
+    const ts = Date.now();
+    const list = await req("GET", "/api/patients?limit=5", token);
+    if (list.ok) {
+      ok(`LIST → ${list.status} — ${list.json?.data?.length ?? 0} registros`);
+    } else {
+      fail(`LIST → ${list.status}`);
+    }
+
+    const create = await req("POST", "/api/patients", token, {
+      full_name: `Paciente Teste ${ts}`,
+      email: `pt_${ts}@teste.com`,
+      phone: "11988887777",
+      status: "Inicial",
+    });
+    const pid = create.json?.data?.id;
+    if (create.status === 201 && pid) {
+      ok(`CREATE → 201 id=${pid}`);
+    } else {
+      fail(`CREATE → ${create.status}: ${JSON.stringify(create.json)}`);
+    }
+
+    if (pid) {
+      const read = await req("GET", `/api/patients/${pid}`, token);
+      if (read.ok) {
+        ok(`READ → ${read.status}`);
+      } else {
+        fail(`READ → ${read.status}`);
+      }
+
+      const upd = await req("PATCH", `/api/patients/${pid}`, token, {
+        full_name: `Paciente ${ts} EDIT`,
+        status: "Em tratamento",
+      });
+      if (upd.ok) {
+        ok(`UPDATE → ${upd.status} nome="${upd.json?.data?.name}"`);
+      } else {
+        fail(`UPDATE → ${upd.status}: ${JSON.stringify(upd.json)}`);
+      }
+
+      const del = await req("DELETE", `/api/patients/${pid}`, token);
+      if (del.ok) {
+        ok(`DELETE → ${del.status} (soft)`);
+      } else {
+        fail(`DELETE → ${del.status}`);
+      }
+    }
+  });
+
+  // ── 2. AGENDAMENTOS ───────────────────────────────────────────────────────
+  await suite("Agendamentos — CRUD completo", async () => {
+    const plist = await req("GET", "/api/patients?limit=1", token);
+    const patient = plist.json?.data?.[0];
+    if (!patient) {
+      skip("Sem paciente disponível");
+      return;
+    }
+    const slot = buildUniqueAppointmentSlot();
+
+    const list = await req("GET", "/api/appointments", token);
+    if (list.ok) {
+      ok(`LIST → ${list.status} — ${list.json?.data?.length ?? 0} registros`);
+    } else {
+      fail(`LIST → ${list.status}`);
+    }
+
+    const create = await req("POST", "/api/appointments", token, {
+      patientId: patient.id,
+      date: slot.date,
+      startTime: slot.startTime,
+      endTime: slot.endTime,
+    });
+    const aid = create.json?.data?.id;
+    if (create.status === 201 && aid) {
+      ok(`CREATE → 201 id=${aid}`);
+    } else {
+      fail(`CREATE → ${create.status}: ${JSON.stringify(create.json)}`);
+    }
+
+    if (aid) {
+      const read = await req("GET", `/api/appointments/${aid}`, token);
+      if (read.ok) {
+        ok(`READ → ${read.status} data="${read.json?.data?.date?.substring(0, 10)}"`);
+      } else {
+        fail(`READ → ${read.status}`);
+      }
+
+      const upd = await req("PATCH", `/api/appointments/${aid}`, token, {
+        status: "confirmed",
+        notes: "Validado",
+      });
+      if (upd.ok) {
+        ok(`UPDATE → ${upd.status} status="${upd.json?.data?.status}"`);
+      } else {
+        fail(`UPDATE → ${upd.status}: ${JSON.stringify(upd.json)}`);
+      }
+
+      const del = await req("DELETE", `/api/appointments/${aid}`, token);
+      if (del.ok) {
+        ok(`DELETE → ${del.status}`);
+      } else {
+        fail(`DELETE → ${del.status}`);
+      }
+    }
+  });
+
+  // ── 3. FINANCEIRO — Transações ────────────────────────────────────────────
+  await suite("Financeiro — Transações CRUD", async () => {
+    const ts = Date.now();
+    const list = await req("GET", "/api/financial/transacoes", token);
+    if (list.ok) {
+      ok(`LIST → ${list.status} — ${list.json?.data?.length ?? 0} registros`);
+    } else {
+      fail(`LIST → ${list.status}: ${JSON.stringify(list.json)}`);
+    }
+
+    const create = await req("POST", "/api/financial/transacoes", token, {
+      descricao: `Consulta ${ts}`,
+      valor: 150.0,
+      tipo: "receita",
+      status: "pendente",
+      data_transacao: "2026-05-10",
+    });
+    const tid = create.json?.data?.id;
+    if (create.status === 201 && tid) {
+      ok(`CREATE → 201 id=${tid}`);
+    } else {
+      fail(`CREATE → ${create.status}: ${JSON.stringify(create.json)}`);
+    }
+
+    if (tid) {
+      const upd = await req("PUT", `/api/financial/transacoes/${tid}`, token, {
+        descricao: `Consulta ${ts} EDIT`,
+        valor: 200.0,
+        tipo: "receita",
+        status: "pago",
+        data_transacao: "2026-05-10",
+      });
+      if (upd.ok) {
+        ok(`UPDATE → ${upd.status} valor="${upd.json?.data?.valor}"`);
+      } else {
+        fail(`UPDATE → ${upd.status}: ${JSON.stringify(upd.json)}`);
+      }
+
+      const del = await req("DELETE", `/api/financial/transacoes/${tid}`, token);
+      if (del.ok) {
+        ok(`DELETE → ${del.status}`);
+      } else {
+        fail(`DELETE → ${del.status}`);
+      }
+    }
+  });
+
+  // ── 4. FINANCEIRO — Contas ────────────────────────────────────────────────
+  await suite("Financeiro — Contas CRUD", async () => {
+    const ts = Date.now();
+    const list = await req("GET", "/api/financial/contas", token);
+    if (list.ok) {
+      ok(`LIST → ${list.status} — ${list.json?.data?.length ?? 0} registros`);
+    } else {
+      fail(`LIST → ${list.status}`);
+    }
+
+    // contas_financeiras: tipo = 'pagar' | 'receber'
+    const create = await req("POST", "/api/financial/contas", token, {
+      tipo: "receber",
+      valor: 300.0,
+      status: "pendente",
+      descricao: `Conta Teste ${ts}`,
+      data_vencimento: "2026-05-15",
+    });
+    const cid = create.json?.data?.id;
+    if (create.status === 201 && cid) {
+      ok(`CREATE → 201 id=${cid}`);
+    } else {
+      fail(`CREATE → ${create.status}: ${JSON.stringify(create.json)}`);
+    }
+
+    if (cid) {
+      const upd = await req("PUT", `/api/financial/contas/${cid}`, token, {
+        tipo: "receita",
+        valor: 400.0,
+        status: "pago",
+        descricao: `Conta Teste ${ts} EDIT`,
+      });
+      if (upd.ok) {
+        ok(`UPDATE → ${upd.status}`);
+      } else {
+        fail(`UPDATE → ${upd.status}: ${JSON.stringify(upd.json)}`);
+      }
+
+      const del = await req("DELETE", `/api/financial/contas/${cid}`, token);
+      if (del.ok) {
+        ok(`DELETE → ${del.status}`);
+      } else {
+        fail(`DELETE → ${del.status}`);
+      }
+    }
+  });
+
+  // ── 5. FINANCEIRO — Pagamentos ────────────────────────────────────────────
+  await suite("Financeiro — Pagamentos (list)", async () => {
+    const r = await req("GET", "/api/financial/pagamentos", token);
+    if (r.ok) {
+      ok(`LIST → ${r.status} — ${r.json?.data?.length ?? 0} registros`);
+    } else {
+      fail(`LIST → ${r.status}: ${JSON.stringify(r.json)}`);
+    }
+  });
+
+  // ── 6. EXERCÍCIOS ─────────────────────────────────────────────────────────
+  await suite("Exercícios — CRUD", async () => {
+    const ts = Date.now();
+    const cats = await req("GET", "/api/exercises/categories", token);
+    if (cats.ok) {
+      ok(`Categories → ${cats.status} — ${cats.json?.data?.length ?? 0}`);
+    } else {
+      fail(`Categories → ${cats.status}`);
+    }
+
+    const list = await req("GET", "/api/exercises", token);
+    if (list.ok) {
+      ok(`LIST → ${list.status} — ${list.json?.data?.length ?? 0}`);
+    } else {
+      fail(`LIST → ${list.status}`);
+    }
+
+    const catId = cats.json?.data?.[0]?.id;
+    if (!catId) {
+      skip("Sem categoria");
+      return;
+    }
+
+    const create = await req("POST", "/api/exercises", token, {
+      name: `Exercício ${ts}`,
+      description: "Validação",
+      category_id: catId,
+      difficulty: "iniciante",
+    });
+    const eid = create.json?.data?.id;
+    // aceita 200 ou 201 — rota retorna 200 em alguns casos
+    if (eid) {
+      ok(`CREATE → ${create.status} id=${eid}`);
+    } else {
+      fail(`CREATE → ${create.status}: ${JSON.stringify(create.json)}`);
+    }
+
+    if (eid) {
+      const upd = await req("PUT", `/api/exercises/${eid}`, token, {
+        name: `Exercício ${ts} EDIT`,
+        description: "Editado",
+        category_id: catId,
+        difficulty: "intermediario",
+      });
+      if (upd.ok) {
+        ok(`UPDATE → ${upd.status}`);
+      } else {
+        fail(`UPDATE → ${upd.status}: ${JSON.stringify(upd.json)}`);
+      }
+
+      const del = await req("DELETE", `/api/exercises/${eid}`, token);
+      if (del.ok) {
+        ok(`DELETE → ${del.status}`);
+      } else {
+        fail(`DELETE → ${del.status}`);
+      }
+    }
+  });
+
+  // ── 7. PROTOCOLOS ─────────────────────────────────────────────────────────
+  await suite("Protocolos — CRUD", async () => {
+    const ts = Date.now();
+    const list = await req("GET", "/api/protocols", token);
+    if (list.ok) {
+      ok(`LIST → ${list.status} — ${list.json?.data?.length ?? 0}`);
+    } else {
+      fail(`LIST → ${list.status}`);
+    }
+
+    const create = await req("POST", "/api/protocols", token, {
+      name: `Protocolo ${ts}`,
+      description: "Validação",
+      category: "geral",
+    });
+    const pid = create.json?.data?.id;
+    if (create.status === 201 && pid) {
+      ok(`CREATE → 201 id=${pid}`);
+    } else {
+      fail(`CREATE → ${create.status}: ${JSON.stringify(create.json)}`);
+    }
+
+    if (pid) {
+      const del = await req("DELETE", `/api/protocols/${pid}`, token);
+      if (del.ok) {
+        ok(`DELETE → ${del.status}`);
+      } else {
+        fail(`DELETE → ${del.status}`);
+      }
+    }
+  });
+
+  // ── 8. METAS ─────────────────────────────────────────────────────────────
+  await suite("Metas — CRUD", async () => {
+    const ts = Date.now();
+    const plist = await req("GET", "/api/patients?limit=1", token);
+    const patient = plist.json?.data?.[0];
+    if (!patient) {
+      skip("Sem paciente");
+      return;
+    }
+
+    // goals LIST requer patientId
+    const list = await req("GET", `/api/goals?patientId=${patient.id}`, token);
+    if (list.ok) {
+      ok(`LIST → ${list.status} — ${list.json?.data?.length ?? 0}`);
+    } else {
+      fail(`LIST → ${list.status}: ${JSON.stringify(list.json)}`);
+    }
+
+    const create = await req("POST", "/api/goals", token, {
+      patient_id: patient.id,
+      goal_title: `Meta ${ts}`,
+      description: `Meta ${ts}`,
+      target_date: "2026-06-01",
+    });
+    const gid = create.json?.data?.id;
+    if (create.status === 201 && gid) {
+      ok(`CREATE → 201 id=${gid}`);
+    } else {
+      fail(`CREATE → ${create.status}: ${JSON.stringify(create.json)}`);
+    }
+
+    if (gid) {
+      const upd = await req("PUT", `/api/goals/${gid}`, token, {
+        goal_title: `Meta ${ts} EDIT`,
+        description: "Atualizado",
+        status: "em_progresso",
+      });
+      if (upd.ok) {
+        ok(`UPDATE → ${upd.status}`);
+      } else {
+        fail(`UPDATE → ${upd.status}: ${JSON.stringify(upd.json)}`);
+      }
+
+      const del = await req("DELETE", `/api/goals/${gid}`, token);
+      if (del.ok) {
+        ok(`DELETE → ${del.status}`);
+      } else {
+        fail(`DELETE → ${del.status}`);
+      }
+    }
+  });
+
+  // ── 9. WIKI ───────────────────────────────────────────────────────────────
+  await suite("Wiki — CRUD", async () => {
+    const ts = Date.now();
+    const list = await req("GET", "/api/wiki", token);
+    if (list.ok) {
+      ok(`LIST → ${list.status} — ${list.json?.data?.length ?? 0}`);
+    } else {
+      fail(`LIST → ${list.status}`);
+    }
+
+    const create = await req("POST", "/api/wiki", token, {
+      title: `Wiki Teste ${ts}`,
+      content: "# Teste\nConteúdo de validação.",
+      category: "geral",
+    });
+    const wslug = create.json?.data?.slug;
+    const wid = create.json?.data?.id;
+    if (wslug || wid) {
+      ok(`CREATE → ${create.status} slug="${wslug}"`);
+    } else {
+      fail(`CREATE → ${create.status}: ${JSON.stringify(create.json)}`);
+    }
+
+    if (wslug) {
+      const upd = await req("PUT", `/api/wiki/${wslug}`, token, {
+        title: `Wiki Teste ${ts} EDIT`,
+        content: "# Editado",
+      });
+      if (upd.ok) {
+        ok(`UPDATE → ${upd.status}`);
+      } else {
+        fail(`UPDATE → ${upd.status}: ${JSON.stringify(upd.json)}`);
+      }
+
+      const del = await req("DELETE", `/api/wiki/${wslug}`, token);
+      if (del.ok) {
+        ok(`DELETE → ${del.status}`);
+      } else {
+        fail(`DELETE → ${del.status}`);
+      }
+    }
+  });
+
+  // ── 10. TAREFAS ───────────────────────────────────────────────────────────
+  await suite("Tarefas — CRUD", async () => {
+    const ts = Date.now();
+    const list = await req("GET", "/api/tarefas", token);
+    if (list.ok) {
+      ok(`LIST → ${list.status} — ${list.json?.data?.length ?? 0}`);
+    } else {
+      fail(`LIST → ${list.status}`);
+    }
+
+    // usa 'titulo' (campo DB), não 'title'
+    const create = await req("POST", "/api/tarefas", token, {
+      titulo: `Tarefa ${ts}`,
+      descricao: "Validação",
+      status: "A_FAZER",
+      prioridade: "MEDIA",
+      tipo: "TAREFA",
+    });
+    const tarid = create.json?.data?.id;
+    if (create.status === 201 && tarid) {
+      ok(`CREATE → 201 id=${tarid}`);
+    } else {
+      fail(`CREATE → ${create.status}: ${JSON.stringify(create.json)}`);
+    }
+
+    if (tarid) {
+      const upd = await req("PATCH", `/api/tarefas/${tarid}`, token, { status: "CONCLUIDA" });
+      if (upd.ok) {
+        ok(`UPDATE → ${upd.status}`);
+      } else {
+        fail(`UPDATE → ${upd.status}: ${JSON.stringify(upd.json)}`);
+      }
+
+      const del = await req("DELETE", `/api/tarefas/${tarid}`, token);
+      if (del.ok) {
+        ok(`DELETE → ${del.status}`);
+      } else {
+        fail(`DELETE → ${del.status}`);
+      }
+    }
+  });
+
+  // ── 11. EVOLUÇÕES (treatment-sessions + measurements) ────────────────────
+  await suite("Evoluções — list", async () => {
+    const plist = await req("GET", "/api/patients?limit=1", token);
+    const patient = plist.json?.data?.[0];
+    if (!patient) {
+      skip("Sem paciente");
+      return;
+    }
+
+    const r1 = await req("GET", `/api/evolution/treatment-sessions?patientId=${patient.id}`, token);
+    if (r1.ok) {
+      ok(`Sessions → ${r1.status} — ${r1.json?.data?.length ?? 0}`);
+    } else {
+      fail(`Sessions → ${r1.status}: ${JSON.stringify(r1.json)}`);
+    }
+
+    const r2 = await req("GET", `/api/evolution/measurements?patientId=${patient.id}`, token);
+    if (r2.ok) {
+      ok(`Measurements → ${r2.status} — ${r2.json?.data?.length ?? 0}`);
+    } else {
+      fail(`Measurements → ${r2.status}: ${JSON.stringify(r2.json)}`);
+    }
+  });
+
+  // ── 12. GAMIFICAÇÃO ───────────────────────────────────────────────────────
+  await suite("Gamificação — list", async () => {
+    const r = await req("GET", "/api/gamification/leaderboard", token);
+    if (r.ok) {
+      ok(`Leaderboard → ${r.status}`);
+    } else {
+      fail(`Leaderboard → ${r.status}: ${JSON.stringify(r.json)}`);
+    }
+
+    const plist = await req("GET", "/api/patients?limit=1", token);
+    const patient = plist.json?.data?.[0];
+    if (patient) {
+      const rp = await req("GET", `/api/gamification/profile/${patient.id}`, token);
+      if (rp.ok) {
+        ok(`Profile → ${rp.status}`);
+      } else {
+        fail(`Profile → ${rp.status}: ${JSON.stringify(rp.json)}`);
+      }
+    }
+  });
+
+  // ── 13. DOCUMENTOS ────────────────────────────────────────────────────────
+  await suite("Documentos — list (com patientId)", async () => {
+    const plist = await req("GET", "/api/patients?limit=1", token);
+    const patient = plist.json?.data?.[0];
+    if (!patient) {
+      skip("Sem paciente");
+      return;
+    }
+
+    const r = await req("GET", `/api/documents?patientId=${patient.id}`, token);
+    if (r.ok) {
+      ok(`LIST → ${r.status} — ${r.json?.data?.length ?? 0}`);
+    } else {
+      fail(`LIST → ${r.status}: ${JSON.stringify(r.json)}`);
+    }
+  });
+
+  // ── 14. PERFIL / ORGANIZAÇÃO ──────────────────────────────────────────────
+  await suite("Perfil e Organização", async () => {
+    const profile = await req("GET", "/api/profile/me", token);
+    const uid = profile.json?.data?.uid || profile.json?.uid || profile.json?.data?.id;
+    if (profile.ok) {
+      ok(`Profile → ${profile.status} uid="${uid}"`);
+    } else {
+      fail(`Profile → ${profile.status}: ${JSON.stringify(profile.json)}`);
+    }
+
+    const org = await req("GET", "/api/organizations/current", token);
+    const nome = org.json?.data?.name || org.json?.name;
+    if (org.ok) {
+      ok(`Organização → ${org.status} nome="${nome}"`);
+    } else {
+      fail(`Org → ${org.status}: ${JSON.stringify(org.json)}`);
+    }
+  });
+
+  // ── RESUMO ────────────────────────────────────────────────────────────────
+  const total = passed + failed;
+  console.log("\n" + "═".repeat(60));
+  console.log(`  Resultado: ${passed}/${total} testes passaram`);
+  if (failed > 0) {
+    console.log(`  ⚠️  ${failed} falha(s) — veja os ❌ acima`);
+    process.exitCode = 1;
+  } else {
+    console.log("  🎉  Todos os testes passaram!");
+  }
+  console.log("═".repeat(60));
+}
+
+main().catch((e) => {
+  console.error("Erro fatal:", e);
+  process.exit(1);
+});

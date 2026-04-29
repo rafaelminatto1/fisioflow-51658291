@@ -6,8 +6,8 @@ test('testar iniciar atendimento - debug', async ({ page }) => {
 
   // Fazer login
   await page.goto('http://localhost:8080/auth/login');
-  await page.fill('input[type="email"]', 'REDACTED_EMAIL');
-  await page.fill('input[type="password"]', 'REDACTED');
+  await page.fill('input[type="email"]', 'rafael.minatto@yahoo.com.br');
+  await page.fill('input[type="password"]', 'Yukari30@');
   await page.click('button[type="submit"]');
 
   // Esperar login completar

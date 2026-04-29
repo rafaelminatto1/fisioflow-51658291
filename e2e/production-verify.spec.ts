@@ -9,8 +9,8 @@ test.describe('Production Verification', () => {
     if (page.url().includes('/agenda')) {
       console.log('Already logged in');
     } else {
-      await page.fill('input[type="email"]', 'REDACTED_EMAIL');
-      await page.fill('input[type="password"]', 'REDACTED');
+      await page.fill('input[type="email"]', 'rafael.minatto@yahoo.com.br');
+      await page.fill('input[type="password"]', 'Yukari30@');
       await page.click('button:has-text("Entrar"), button[type="submit"]');
       await page.waitForURL('**/agenda**', { timeout: 30000 });
     }

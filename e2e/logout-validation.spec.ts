@@ -5,8 +5,8 @@
 import { test, expect } from '@playwright/test';
 
 const BASE = 'https://fisioflow.pages.dev';
-const EMAIL = 'REDACTED_EMAIL';
-const PASSWORD = 'REDACTED';
+const EMAIL = 'rafael.minatto@yahoo.com.br';
+const PASSWORD = 'Yukari30@';
 
 test.use({
   storageState: { cookies: [], origins: [] },

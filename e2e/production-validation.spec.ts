@@ -8,8 +8,8 @@ test.describe('Produção - Validação de Acesso FisioFlow 2026', () => {
 
     // 2. Preencher credenciais
     console.log('Preenchendo credenciais...');
-    await page.fill('input[type="email"]', 'REDACTED_EMAIL');
-    await page.fill('input[type="password"]', 'REDACTED');
+    await page.fill('input[type="email"]', 'rafael.minatto@yahoo.com.br');
+    await page.fill('input[type="password"]', 'Yukari30@');
 
     // 3. Clicar no botão de entrar
     console.log('Procurando botão de login...');
