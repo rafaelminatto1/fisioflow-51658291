@@ -10,9 +10,11 @@
 ## Current Execution Notes
 
 - Cloudflare staging Vectorize and Pipeline resources were created and bound.
-- API typecheck, API tests, web asset-worker unit test, web build, and Wrangler dry-runs passed.
+- API typecheck, API tests (129 pass), web asset-worker unit test, web build, and Wrangler dry-runs passed.
 - NFS-e mTLS upload/list is blocked by Cloudflare API token permission error `10000` for `/mtls_certificates`.
 - Production deploy was not executed; only dry-runs were performed.
+- T055/T056: Root wrangler.toml now uses `not_found_handling = "single-page-application"` natively; asset-worker simplified to only handle 404 → index.html fallback.
+- T061/T063: R2Service now enforces storage class metadata (contentClass, retentionClass, phi, organizationId, patientId) on upload and emits audit events for upload URL, download URL, and file upload operations.
 - Remaining unchecked tasks require either mTLS permission, staging business data/homologation credentials, a deliberate admin DLQ product decision, or broader AI/R2 lifecycle rollout approval.
 
 ## Phase 1: Setup and Inventory
@@ -100,7 +102,7 @@
 - [x] T027 [US3] Create `specs/cloudflare-platform-roadmap/route-protection-matrix.md` mapping route categories to required controls.
 - [x] T028 [P] [US3] Add tests for auth route rate-limit/Turnstile behavior in `apps/api/src/routes/__tests__/authProxy.test.ts` or adjacent tests.
 - [x] T029 [P] [US3] Add tests for public booking Turnstile behavior in the relevant route test file under `apps/api/src/routes/__tests__/`.
-- [ ] T030 [P] [US3] Add tests for AI route rate-limit behavior near existing `apps/api/src/routes/ai.ts` tests.
+- [x] T030 [P] [US3] Add tests for AI route rate-limit behavior near existing `apps/api/src/routes/ai.ts` tests.
 - [x] T031 [US3] Verify webhook signature failure behavior for WhatsApp/webhook routes.
 
 ### Implementation
@@ -148,7 +150,7 @@
 
 - [x] T044 [US5] Document DLQ task types, replay eligibility, and redaction rules in `specs/cloudflare-platform-roadmap/dlq-runbook.md`.
 - [x] T045 [P] [US5] Add queue handler tests for failed task classification in `apps/api/src/queue.ts` tests.
-- [ ] T046 [P] [US5] Add workflow trigger/status tests for `TRIGGER_WORKFLOW` payloads.
+- [x] T046 [P] [US5] Add workflow trigger/status tests for `TRIGGER_WORKFLOW` payloads.
 - [ ] T047 [US5] Force a staging queue failure and confirm message reaches staging DLQ.
 
 ### Implementation
@@ -176,8 +178,8 @@
 
 ### Implementation
 
-- [ ] T055 [US6] Update root `wrangler.toml` assets config to use native SPA handling or selective Worker-first routing if validation confirms equivalent behavior.
-- [ ] T056 [US6] Simplify `apps/web/src/asset-worker.ts` only if missing-asset 404 behavior is preserved.
+- [x] T055 [US6] Update root `wrangler.toml` assets config to use native SPA handling or selective Worker-first routing if validation confirms equivalent behavior.
+- [x] T056 [US6] Simplify `apps/web/src/asset-worker.ts` only if missing-asset 404 behavior is preserved.
 - [x] T057 [US6] Document asset routing decision in `provisioning-runbook.md`.
 
 **Checkpoint**: Asset behavior is faster/simpler without SPA regressions.
@@ -198,9 +200,9 @@
 
 ### Implementation
 
-- [ ] T061 [US7] Update R2 upload/download helpers to enforce storage class metadata and tenant scope.
+- [x] T061 [US7] Update R2 upload/download helpers to enforce storage class metadata and tenant scope.
 - [x] T062 [US7] Add lifecycle policy provisioning steps to `provisioning-runbook.md`.
-- [ ] T063 [US7] Emit audit events for protected file access and signed URL generation.
+- [x] T063 [US7] Emit audit events for protected file access and signed URL generation.
 
 **Checkpoint**: R2 governance is documented and enforced for new uploads.
 

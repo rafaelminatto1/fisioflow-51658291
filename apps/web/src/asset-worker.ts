@@ -20,34 +20,15 @@ export function isAssetRequest(url: URL): boolean {
   return getFileExtension(url.pathname) !== null;
 }
 
-export function isSpaNavigation(request: Request, url: URL): boolean {
-  if (request.method !== "GET" && request.method !== "HEAD") return false;
-  if (isAssetRequest(url)) return false;
-  if (request.method === "HEAD") return true;
-
-  const accept = request.headers.get("Accept") ?? "";
-  return accept.includes("text/html");
-}
-
-export function getSpaIndexRequest(request: Request, origin: string): Request {
-  const indexUrl = new URL("/", origin);
-  return new Request(indexUrl.toString(), request);
-}
-
 export default {
   async fetch(request, env) {
-    const url = new URL(request.url);
-    if (isSpaNavigation(request, url)) {
-      return env.ASSETS.fetch(getSpaIndexRequest(request, url.origin));
-    }
-
     const response = await env.ASSETS.fetch(request);
     if (response.status !== 404) return response;
 
-    if (isAssetRequest(url)) {
-      return response;
-    }
+    const url = new URL(request.url);
+    if (isAssetRequest(url)) return response;
 
-    return env.ASSETS.fetch(getSpaIndexRequest(request, url.origin));
+    const indexUrl = new URL("/", url.origin);
+    return env.ASSETS.fetch(new Request(indexUrl.toString(), request));
   },
 } satisfies AssetWorker;
