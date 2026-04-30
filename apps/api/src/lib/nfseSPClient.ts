@@ -279,6 +279,7 @@ async function buildRpsXml(
     `<DataEmissao>${dataEmissaoDate}</DataEmissao>`,
     `<StatusRPS>N</StatusRPS>`,
     `<TributacaoRPS>${escapeXml(p.tributacaoRps)}</TributacaoRPS>`,
+    `<ValorServicos>${p.valorServicos}</ValorServicos>`,
     `<ValorDeducoes>${p.valorDeducoes}</ValorDeducoes>`,
     `<ValorPIS>0</ValorPIS>`,
     `<ValorCOFINS>0</ValorCOFINS>`,
