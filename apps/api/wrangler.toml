@@ -61,10 +61,11 @@ binding = "CLINICAL_KNOWLEDGE"
 index_name = "fisioflow-clinical"
 
 # ===== AI SEARCH (RAG gerenciado — wiki, protocolos, exercícios) =====
-# Crie no dashboard: AI > AI Search > New Index
-# [[ai_search]]
-# binding = "AI_SEARCH"
-# instance_name = "fisioflow-knowledge"
+# ⚠️ AÇÃO MANUAL NECESSÁRIA: Crie a instância em dash.cloudflare.com > AI > AI Search
+# Nome: "fisioflow-knowledge" | Data source: R2 bucket "fisioflow-media"
+[[ai_search]]
+binding = "AI_SEARCH"
+instance_name = "fisioflow-knowledge"
 
 # ===== PIPELINES (Data warehouse → R2 JSON, open beta grátis) =====
 # Pipeline: fisioflow_events (id: 584a8a3054d1437686b35823f8476fde)
@@ -110,6 +111,21 @@ name = "patient-digital-twin"
 binding = "WORKFLOW_DIGITAL_TWIN"
 class_name = "PatientDigitalTwinWorkflow"
 
+[[workflows]]
+name = "wiki-sync"
+binding = "WORKFLOW_WIKI_SYNC"
+class_name = "WikiSyncWorkflow"
+
+[[workflows]]
+name = "knowledge-sync"
+binding = "WORKFLOW_KNOWLEDGE_SYNC"
+class_name = "KnowledgeSyncWorkflow"
+
+[[workflows]]
+name = "session-summary"
+binding = "WORKFLOW_SESSION_SUMMARY"
+class_name = "SessionSummaryWorkflow"
+
 # ===== DURABLE OBJECTS (Realtime State & Agents) =====
 # DO migration tags são imutáveis após deploy — nunca renomeie tags já aplicadas.
 # Para adicionar nova classe: append novo bloco com tag = "v{N+1}".
@@ -124,6 +140,10 @@ class_name = "PatientAgent"
 [[durable_objects.bindings]]
 name = "ASSESSMENT_LIVE_SESSION"
 class_name = "AssessmentLiveSession"
+
+[[durable_objects.bindings]]
+name = "CLINIC_AGENT"
+class_name = "ClinicAgent"
 
 
 # v1 adicionou OrganizationState (ver env.staging.migrations.v1 com new_classes)
@@ -149,6 +169,10 @@ new_classes = ["PatientAgent"]
 [[migrations]]
 tag = "v7"
 new_classes = ["AssessmentLiveSession"]
+
+[[migrations]]
+tag = "v8"
+new_classes = ["ClinicAgent"]
 
 # ===== AI & BROWSER RENDERING (Paid Plan) =====
 [ai]
@@ -261,10 +285,10 @@ index_name = "fisioflow-clinical"
 binding = "EVENTS_PIPELINE"
 pipeline = "701aff68d26e4c45a29f090389bcd4f2"
 
-# NFS-e São Paulo — mTLS binding (descomentar após upload do certificado ICP-Brasil)
-# [[env.production.mtls_certificates]]
-# binding = "NFSE_SP_CERT"
-# certificate_id = "<ID_DO_CERTIFICADO_UPLOAD>"
+# NFS-e São Paulo — mTLS binding (certificado ICP-Brasil e-CNPJ A1)
+[[env.production.mtls_certificates]]
+binding = "NFSE_SP_CERT"
+certificate_id = "20d19f67-72ea-4768-8df4-215eeabbbca6"
 
 [[env.production.workflows]]
 name = "appointment-reminder"
@@ -301,6 +325,21 @@ name = "patient-digital-twin"
 binding = "WORKFLOW_DIGITAL_TWIN"
 class_name = "PatientDigitalTwinWorkflow"
 
+[[env.production.workflows]]
+name = "wiki-sync"
+binding = "WORKFLOW_WIKI_SYNC"
+class_name = "WikiSyncWorkflow"
+
+[[env.production.workflows]]
+name = "knowledge-sync"
+binding = "WORKFLOW_KNOWLEDGE_SYNC"
+class_name = "KnowledgeSyncWorkflow"
+
+[[env.production.workflows]]
+name = "session-summary"
+binding = "WORKFLOW_SESSION_SUMMARY"
+class_name = "SessionSummaryWorkflow"
+
 [[env.production.hyperdrive]]
 binding = "HYPERDRIVE"
 id = "12b9fefcfbc04074a63342a9212e1b4f"
@@ -316,6 +355,7 @@ bindings = [
   { name = "ORGANIZATION_STATE", class_name = "OrganizationState" },
   { name = "PATIENT_AGENT", class_name = "PatientAgent" },
   { name = "ASSESSMENT_LIVE_SESSION", class_name = "AssessmentLiveSession" },
+  { name = "CLINIC_AGENT", class_name = "ClinicAgent" },
 ]
 
 [env.production.ai]
@@ -493,6 +533,11 @@ crons = [
   "0 9 * * *",  # Diário às 06:00 BRT - Lembretes de Consultas (banco já acorda aqui)
   "0 11 * * *", # Diário às 08:00 BRT - Relatórios e Limpeza (horário de expediente)
   "0 12 * * *", # Diário às 09:00 BRT - Automações de vencimento de tarefas
+  "0 5 * * *",  # Diário às 02:00 BRT - WikiSyncWorkflow (indexa páginas Wiki modificadas)
+  "0 6 * * 1",  # Segunda às 03:00 BRT - KnowledgeSyncWorkflow (protocolos + exercícios)
+  "30 10 * * *", # Diário às 07:30 BRT - ClinicAgent morning briefing
+  "30 21 * * *", # Diário às 18:30 BRT - ClinicAgent daily summary
+  "0 12 * * 1",  # Segunda às 09:00 BRT - ClinicAgent missing patients alert
 ]
 
 # ===== OBSERVABILIDADE =====

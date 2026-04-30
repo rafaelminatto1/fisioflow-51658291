@@ -93,6 +93,7 @@ import aiSearchApp from "./routes/aiSearch";
 import { aiConfigRoutes } from "./routes/ai-config";
 import { aiClinicalSearchRoutes } from "./routes/ai-clinical-search";
 import { agendaAppearanceRoutes } from "./routes/agendaAppearance";
+import { fisioBrainRoutes } from "./routes/fisiobrain";
 import { verifyToken } from "./lib/auth";
 import { getRawSql } from "./lib/db";
 import { routeAgentRequest } from "agents";
@@ -341,6 +342,7 @@ const apiRoutes = [
   ["/api/ai-config", aiConfigRoutes],
   ["/api/ai-clinical-search", aiClinicalSearchRoutes],
   ["/api/v1/user", agendaAppearanceRoutes],
+  ["/api/fisiobrain", fisioBrainRoutes],
 ] as const;
 
 apiRoutes.forEach(([path, router]) => {
@@ -372,6 +374,8 @@ import { handleQueue } from "./queue";
 export { OrganizationState } from "./lib/realtime";
 export { PatientAgent } from "./agents/PatientAgent";
 export { AssessmentLiveSession } from "./agents/AssessmentLiveSession";
+export { ClinicAgent } from "./agents/ClinicAgent";
+export { SessionSummaryWorkflow } from "./workflows/sessionSummary";
 export {
   AppointmentReminderWorkflow,
   PatientOnboardingWorkflow,
@@ -380,6 +384,8 @@ export {
   PatientDischargeWorkflow,
   PatientReengagementWorkflow,
   PatientDigitalTwinWorkflow,
+  WikiSyncWorkflow,
+  KnowledgeSyncWorkflow,
 } from "./workflows";
 
 // Hono RPC — exporta o tipo da app para type-safe client no frontend
