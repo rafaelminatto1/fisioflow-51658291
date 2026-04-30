@@ -296,6 +296,7 @@ async function buildRpsXml(
     `<FonteCargaTributaria>1</FonteCargaTributaria>`,
     `<CodigoCEI>0</CodigoCEI>`,
     `<MatriculaObra>0</MatriculaObra>`,
+    `<cLocPrestacao>${escapeXml(p.codigoMunicipio)}</cLocPrestacao>`,
     `<NumeroEncapsulamento>0</NumeroEncapsulamento>`,
     `<ValorTotalRecebido>${p.valorServicos}</ValorTotalRecebido>`,
     `<ValorFinalCobrado>${p.valorServicos}</ValorFinalCobrado>`,
@@ -303,7 +304,6 @@ async function buildRpsXml(
     `<ExigibilidadeSuspensa>0</ExigibilidadeSuspensa>`,
     `<PagamentoParceladoAntecipado>0</PagamentoParceladoAntecipado>`,
     `<NBS>${escapeXml(p.codigoNBS)}</NBS>`,
-    `<cLocPrestacao>${escapeXml(p.codigoMunicipio)}</cLocPrestacao>`,
     ...(isSimplesNacional 
       ? []
       : [`<IBSCBS>`, `<finNFSe>0</finNFSe>`, `<indFinal>0</indFinal>`, `<cIndOp>000000</cIndOp>`, `<indDest>0</indDest>`, `<valores>`, `<trib>`, `<gIBSCBS>`, `<cClassTrib>000000</cClassTrib>`, `</gIBSCBS>`, `</trib>`, `</valores>`, `</IBSCBS>`]
