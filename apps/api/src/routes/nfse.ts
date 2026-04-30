@@ -15,7 +15,9 @@ import {
   consultaNFe,
   consultaLote,
   cancelamentoNFe,
+  consultaCNPJ,
   hasSPCertConfig,
+  debugBuildXmlMessage,
 } from "../lib/nfseSPClient";
 import { generateAndSaveDanfse, getDanfsePresignedUrl, getDanfseR2Key } from "../lib/nfseDanfse";
 import { writeEvent } from "../lib/analytics";
@@ -29,22 +31,130 @@ function escapeXml(s: string): string {
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&apos;");
-}
+  }
 
-// ===== CONFIGURAÇÃO DO PRESTADOR =====
+// ===== DEBUG: Ver última assinatura gerada =====
+app.get("/debug-signature", async (c) => {
+  const lastSign = (globalThis as any).__lastSignString;
+  return c.json({ 
+    lastSignatureString: lastSign,
+    last15Chars: lastSign ? lastSign.slice(-15) : null 
+  });
+});
 
-app.get("/config", requireAuth, async (c) => {
-  const user = c.get("user");
-  const pool = createPool(c.env);
-  const result = await pool.query(
-    `SELECT id, organization_id, razao_social, cnpj_prestador AS cnpj, inscricao_municipal,
-		        municipio_codigo AS codigo_municipio, regime_tributario, optante_simples, tp_opcao_simples,
-		        incentivo_fiscal, aliquota_iss AS aliquota_padrao, codigo_servico_padrao, cnae,
-		        discriminacao_padrao, ambiente, created_at, updated_at
-		 FROM nfse_config WHERE organization_id = $1 LIMIT 1`,
-    [user.organizationId],
-  );
-  return c.json({ data: result.rows[0] ?? null });
+// ===== TESTE DE ENVIO RPS (sem autenticação) =====
+
+app.get("/test-rps", async (c) => {
+  const hasCert = !!c.env.NFSE_SP_CERT;
+  const hasCertPem = !!c.env.NFSE_SP_CERT_PEM;
+  const hasKeyPem = !!c.env.NFSE_SP_KEY_PEM;
+  
+  if (!hasSPCertConfig(c.env)) {
+    return c.json({ 
+      error: "Certificado não configurado", 
+      cert: hasCert, 
+      mtls: hasCert,
+      certPem: hasCertPem,
+      keyPem: hasKeyPem,
+    }, 422);
+  }
+
+  const { testeEnvioLoteRPS, consultaCNPJ } = await import("../lib/nfseSPClient");
+
+  try {
+    const rpsParams = {
+      numero: "777",
+      serie: "RPS",
+      tipo: "RPS",
+      dataEmissao: new Date().toISOString(),
+      cnpjPrestador: "54836577000167",
+      inscricaoMunicipal: "13534157",
+      tributacaoRps: "T",
+      codigoServico: "01401",
+      codigoCnae: "865004",
+      codigoNBS: "117240800",
+      discriminacao: "Sessao de fisioterapia - teste",
+      valorServicos: "100.00",
+      valorDeducoes: "0.00",
+      aliquota: "0.0200",
+      issRetido: false,
+      tomadorCpfCnpj: "11144477735",
+      tomadorInscricaoMunicipal: "",
+      tomadorRazaoSocial: "Paciente Teste",
+      tomadorEmail: "",
+      codigoMunicipio: "3550308",
+      isSimplesNacional: false,
+    };
+    
+    // Import the format function to see what it produces
+    const { formatValorSemDecimal } = await import("../lib/nfseSPClient");
+    const formattedValor = formatValorSemDecimal(rpsParams.valorServicos);
+    const formattedDed = formatValorSemDecimal(rpsParams.valorDeducoes);
+    
+    const tomadorDigits = (rpsParams.tomadorCpfCnpj || "").replace(/\D/g, "");
+    const indicadorCalc = tomadorDigits ? (tomadorDigits.length <= 11 ? "1" : "2") : "3";
+    const cpfCalc = indicadorCalc === "3" ? "" : tomadorDigits;
+    
+    const result = await envioRPS(c.env, rpsParams);
+
+    return c.json({
+      cert: true,
+      debug: {
+        tomadorDigits,
+        indicadorCalc,
+        cpfCalc,
+        codigoServico: rpsParams.codigoServico,
+        valorServicos: rpsParams.valorServicos,
+        formattedValor,
+        formattedDed,
+        expectedLast15: indicadorCalc + cpfCalc.padStart(14, "0"),
+      },
+      mtls: true,
+      success: result.success,
+      alertas: result.alertas,
+      erros: result.erros,
+    });
+  } catch (err: any) {
+    return c.json({ cert: true, mtls: false, error: err.message }, 502);
+  }
+});
+
+app.get("/debug-xml", async (c) => {
+  try {
+    const rpsParams = {
+      numero: "999",
+      serie: "RPS",
+      tipo: "RPS",
+      dataEmissao: new Date().toISOString(),
+      cnpjPrestador: "54836577000167",
+      inscricaoMunicipal: "13534157",
+      tributacaoRps: "T",
+      codigoServico: "01401",
+      codigoCnae: "865004",
+      codigoNBS: "117240800",
+      discriminacao: "Sessao de fisioterapia - debug",
+      valorServicos: "100.00",
+      valorDeducoes: "0.00",
+      aliquota: "0.0200",
+      issRetido: false,
+      tomadorCpfCnpj: "11144477735",
+      tomadorInscricaoMunicipal: "",
+      tomadorRazaoSocial: "Paciente Teste",
+      tomadorEmail: "",
+      codigoMunicipio: "3550308",
+      isSimplesNacional: true,
+    };
+    
+    const result = await debugBuildXmlMessage(c.env, rpsParams);
+    return c.json({
+      rpsXml: result.rpsXml,
+      innerXml: result.xml,
+      rpsXmlEnd: result.rpsXml.slice(-100),
+      innerXmlEnd: result.xml.slice(-100),
+    });
+  } catch (err: any) {
+    return c.json({ error: err.message }, 502);
+  }
 });
 
 app.put("/config", requireAuth, async (c) => {
@@ -137,6 +247,27 @@ app.get("/", requireAuth, async (c) => {
   );
 
   return c.json({ data: result.rows || [] });
+});
+
+app.get("/test-connection", async (c) => {
+  if (!hasSPCertConfig(c.env)) {
+    return c.json({ error: "Certificado não configurado", cert: false, mtls: false }, 422);
+  }
+
+  const { consultaCNPJ } = await import("../lib/nfseSPClient");
+
+  try {
+    const result = await consultaCNPJ(c.env, "54836577000167");
+    return c.json({
+      cert: true,
+      mtls: true,
+      success: result.success,
+      inscricoes: result.inscricoes,
+      erros: result.erros,
+    });
+  } catch (err: any) {
+    return c.json({ cert: true, mtls: false, error: err.message }, 502);
+  }
 });
 
 app.get("/:id", requireAuth, async (c) => {
@@ -260,23 +391,23 @@ app.post("/send/:id", requireAuth, async (c) => {
       const result = await envioRPS(c.env, {
         numero: nfse.numero_rps,
         serie: "RPS",
-        tipo: "1",
+        tipo: "RPS",
         dataEmissao: nfse.data_emissao,
         cnpjPrestador: nfse.cnpj?.replace(/\D/g, "") || "",
         inscricaoMunicipal: nfse.inscricao_municipal?.replace(/\D/g, "") || "",
-        codigoServico: nfse.codigo_servico_padrao ?? "14.01",
-        codigoCnae: nfse.cnae ?? "86500-4/04",
+        tributacaoRps: "T",
+        codigoServico: nfse.codigo_servico_padrao ?? "1401",
+        codigoCnae: nfse.cnae ?? "865004",
+        codigoNBS: "117240800",
         discriminacao: nfse.discriminacao,
         valorServicos: Number(nfse.valor_servico).toFixed(2),
         valorDeducoes: "0.00",
-        valorIss: Number(nfse.valor_iss).toFixed(2),
         aliquota: Number(nfse.aliquota_iss ?? nfse.aliquota_padrao ?? 0.02).toFixed(4),
-        issRetido: "2",
+        issRetido: false,
         tomadorCpfCnpj: nfse.tomador_cpf_cnpj?.replace(/\D/g, "") || "",
         tomadorInscricaoMunicipal: "",
         tomadorRazaoSocial: nfse.tomador_nome || "",
         tomadorEmail: nfse.tomador_email || "",
-        tpOpcaoSimples: nfse.tp_opcao_simples ?? 4,
         codigoMunicipio: nfse.codigo_municipio ?? "3550308",
       });
 
@@ -443,23 +574,23 @@ app.post("/test/:id", requireAuth, async (c) => {
     const result = await testeEnvioLoteRPS(c.env, {
       numero: nfse.numero_rps,
       serie: "RPS",
-      tipo: "1",
+      tipo: "RPS",
       dataEmissao: nfse.data_emissao,
       cnpjPrestador: nfse.cnpj_prestador?.replace(/\D/g, "") || "",
       inscricaoMunicipal: nfse.inscricao_municipal?.replace(/\D/g, "") || "",
-      codigoServico: nfse.codigo_servico ?? "14.01",
-      codigoCnae: nfse.cnae ?? "86500-4/04",
+      tributacaoRps: "T",
+      codigoServico: nfse.codigo_servico ?? "1401",
+      codigoCnae: nfse.cnae ?? "865004",
+      codigoNBS: "117240800",
       discriminacao: nfse.discriminacao,
       valorServicos: Number(nfse.valor_servico).toFixed(2),
       valorDeducoes: "0.00",
-      valorIss: Number(nfse.valor_iss).toFixed(2),
       aliquota: Number(nfse.aliquota_iss ?? 0.02).toFixed(4),
-      issRetido: "2",
+      issRetido: false,
       tomadorCpfCnpj: nfse.tomador_cpf_cnpj?.replace(/\D/g, "") || "",
       tomadorInscricaoMunicipal: "",
       tomadorRazaoSocial: nfse.tomador_nome || "",
       tomadorEmail: nfse.tomador_email || "",
-      tpOpcaoSimples: nfse.tp_opcao_simples ?? 4,
       codigoMunicipio: nfse.municipio_prestacao ?? "3550308",
     });
 
@@ -641,6 +772,85 @@ app.get("/danfse/:id", requireAuth, async (c) => {
 });
 
 // ===== DELETE LOCAL (sem cancelar na prefeitura) =====
+
+// ===== EMISSÃO EM LOTE =====
+
+app.post("/batch", requireAuth, async (c) => {
+  const user = c.get("user");
+  const body = (await c.req.json()) as {
+    start_date: string;
+    end_date: string;
+    dry_run?: boolean;
+  };
+
+  if (!body.start_date || !body.end_date) {
+    return c.json({ error: "start_date e end_date são obrigatórios (YYYY-MM-DD)" }, 400);
+  }
+
+  const pool = createPool(c.env);
+
+  // Find sessions in period without an NFS-e record
+  const sessionsResult = await pool.query(
+    `SELECT s.id, s.patient_id, s.date, p.full_name AS patient_name, p.phone AS patient_phone,
+            p.cpf AS patient_cpf
+     FROM sessions s
+     LEFT JOIN patients p ON p.id = s.patient_id
+     LEFT JOIN nfse_records nr ON nr.appointment_id = s.appointment_id
+       AND nr.organization_id = $1 AND nr.status != 'cancelado'
+     WHERE s.organization_id = $1
+       AND s.status = 'finalized'
+       AND s.date BETWEEN $2 AND $3
+       AND nr.id IS NULL
+     ORDER BY s.date ASC
+     LIMIT 100`,
+    [user.organizationId, body.start_date, body.end_date],
+  );
+
+  const sessions = sessionsResult.rows;
+
+  if (body.dry_run) {
+    return c.json({ data: { count: sessions.length, sessions } });
+  }
+
+  if (!sessions.length) {
+    return c.json({ data: { queued: 0, message: "Nenhuma sessão sem NFS-e no período." } });
+  }
+
+  // Queue each session for async NFS-e generation
+  const queued: string[] = [];
+  if (c.env.BACKGROUND_QUEUE) {
+    for (const session of sessions) {
+      await c.env.BACKGROUND_QUEUE.send({
+        type: "GENERATE_NFSE",
+        payload: {
+          sessionId: session.id,
+          patientId: session.patient_id,
+          patientName: session.patient_name,
+          patientCpf: session.patient_cpf,
+          patientPhone: session.patient_phone,
+          organizationId: user.organizationId,
+          date: session.date,
+        },
+      }).catch(() => {});
+      queued.push(session.id);
+    }
+  }
+
+  // Push notification to user when batch is kicked off
+  if (c.env.VAPID_PRIVATE_KEY) {
+    const { sendPushToUser } = await import("../lib/webpush");
+    c.executionCtx.waitUntil(
+      sendPushToUser(user.uid, {
+        title: `NFS-e em lote iniciada — ${queued.length} notas`,
+        body: `Período ${body.start_date} → ${body.end_date}. As notas serão processadas em segundo plano.`,
+        url: "/financeiro/nfse",
+        tag: "nfse-batch",
+      }, c.env).catch(() => {}),
+    );
+  }
+
+  return c.json({ data: { queued: queued.length, sessionIds: queued } });
+});
 
 app.delete("/:id", requireAuth, async (c) => {
   const user = c.get("user");
