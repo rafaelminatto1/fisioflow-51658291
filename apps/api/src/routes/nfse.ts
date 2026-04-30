@@ -83,7 +83,7 @@ app.get("/test-rps", async (c) => {
       tomadorRazaoSocial: "Paciente Teste",
       tomadorEmail: "",
       codigoMunicipio: "3550308",
-      isSimplesNacional: false,
+      isSimplesNacional: true,
     };
     
     // Import the format function to see what it produces
