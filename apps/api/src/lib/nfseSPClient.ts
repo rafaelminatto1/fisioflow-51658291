@@ -279,7 +279,6 @@ async function buildRpsXml(
     `<DataEmissao>${dataEmissaoDate}</DataEmissao>`,
     `<StatusRPS>N</StatusRPS>`,
     `<TributacaoRPS>${escapeXml(p.tributacaoRps)}</TributacaoRPS>`,
-    ...(isSimplesNacional ? [`<OpcaoSimples>4</OpcaoSimples>`] : []),
     `<ValorDeducoes>${p.valorDeducoes}</ValorDeducoes>`,
     `<ValorPIS>0</ValorPIS>`,
     `<ValorCOFINS>0</ValorCOFINS>`,
