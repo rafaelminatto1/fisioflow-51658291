@@ -481,6 +481,14 @@ app.put("/:slug", requireAuth, async (c) => {
     createdBy: user.uid,
   });
 
+  // Re-sync imediato no AI Search se a página foi publicada
+  if (updatedPage.isPublished && c.env.WORKFLOW_WIKI_SYNC) {
+    c.env.WORKFLOW_WIKI_SYNC.create({
+      id: `wiki-sync-page-${updatedPage.id}-v${nextVersion}`,
+      params: { triggerType: "publish", wikiPageId: updatedPage.id },
+    }).catch((err) => console.warn("[wiki PUT] WikiSync trigger failed:", err));
+  }
+
   return c.json({ data: updatedPage });
 });
 

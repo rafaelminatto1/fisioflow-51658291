@@ -93,17 +93,24 @@ export function useCreateSurvey() {
 
   return useMutation({
     mutationFn: async (data: CreateSurveyData) => {
-      if (!organizationId) throw new Error("Organização não encontrada");
+      // If no organizationId, we use the public endpoint which looks up the org from the patientId
+      if (!organizationId) {
+        const result = await satisfactionSurveysApi.createPublic(data as Record<string, unknown>);
+        return result.data as SatisfactionSurvey;
+      }
+      
       const result = await satisfactionSurveysApi.create(data as Record<string, unknown>);
       return result.data as SatisfactionSurvey;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ["satisfaction-surveys", organizationId],
-      });
-      queryClient.invalidateQueries({
-        queryKey: ["survey-stats", organizationId],
-      });
+      if (organizationId) {
+        queryClient.invalidateQueries({
+          queryKey: ["satisfaction-surveys", organizationId],
+        });
+        queryClient.invalidateQueries({
+          queryKey: ["survey-stats", organizationId],
+        });
+      }
       toast.success("Pesquisa de satisfação registrada");
     },
     onError: (error: unknown) => {

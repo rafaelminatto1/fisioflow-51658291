@@ -288,6 +288,20 @@ app.post("/:id/finalize", requireAuth, async (c) => {
         ),
       ]).catch(() => {}),
     );
+
+    // Trigger SessionSummaryWorkflow to generate SOAP summary and send WhatsApp
+    if (c.env.WORKFLOW_SESSION_SUMMARY) {
+      c.env.WORKFLOW_SESSION_SUMMARY.create({
+        id: `session-summary-${row.id}`,
+        params: {
+          sessionId: row.id,
+          patientId: row.patientId,
+          orgId: user.organizationId,
+        },
+      }).catch((err) => {
+        console.warn("[sessions/finalize] Could not start SessionSummaryWorkflow:", err?.message);
+      });
+    }
   }
   return c.json({ data: rowToRecord(row) });
 });

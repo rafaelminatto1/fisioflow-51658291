@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import { MainLayout } from "@/components/layout/MainLayout";
 import {
@@ -22,6 +23,7 @@ import {
   AlertTriangle,
   ArrowUpRight,
   X,
+  DollarSign,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -39,6 +41,21 @@ import { toast } from "sonner";
 
 export const IAStudio: React.FC = () => {
   const [activeTab, setActiveTab] = useState("dashboard");
+
+  const { data: usageData } = useQuery({
+    queryKey: ["ai-usage-weekly"],
+    queryFn: async () => {
+      const res = await fetch("/api/ai/usage/weekly");
+      if (!res.ok) return null;
+      return res.json() as Promise<{
+        totalCalls: number;
+        totalTokens: number;
+        avgLatencyMs: number;
+        fallbackCalls: number;
+      }>;
+    },
+    staleTime: 1000 * 60 * 5,
+  });
   const [isScribeOpen, setIsScribeOpen] = useState(false);
   const [isADMOpen, setIsADMOpen] = useState(false);
   const [isGaitOpen, setIsGaitOpen] = useState(false);
@@ -309,6 +326,44 @@ export const IAStudio: React.FC = () => {
                   <stat.icon className={cn("w-8 h-8 opacity-10", stat.color)} />
                 </Card>
               ))}
+
+              {/* Uso de IA — dados reais da tabela ai_usage */}
+              <Card className="border-none shadow-sm bg-white dark:bg-slate-900 rounded-2xl p-6">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest">
+                    Uso IA (7 dias)
+                  </span>
+                  <DollarSign className="w-4 h-4 text-violet-400 opacity-60" />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <span className="text-xl font-black tracking-tighter text-violet-500">
+                      {usageData?.totalCalls ?? "—"}
+                    </span>
+                    <span className="text-[10px] font-semibold text-slate-400 block">chamadas</span>
+                  </div>
+                  <div>
+                    <span className="text-xl font-black tracking-tighter text-indigo-500">
+                      {usageData?.totalTokens != null
+                        ? `${(usageData.totalTokens / 1000).toFixed(1)}k`
+                        : "—"}
+                    </span>
+                    <span className="text-[10px] font-semibold text-slate-400 block">tokens</span>
+                  </div>
+                  <div>
+                    <span className="text-xl font-black tracking-tighter text-slate-700 dark:text-slate-200">
+                      {usageData?.avgLatencyMs != null ? `${usageData.avgLatencyMs}ms` : "—"}
+                    </span>
+                    <span className="text-[10px] font-semibold text-slate-400 block">latência</span>
+                  </div>
+                  <div>
+                    <span className="text-xl font-black tracking-tighter text-amber-500">
+                      {usageData?.fallbackCalls ?? "—"}
+                    </span>
+                    <span className="text-[10px] font-semibold text-slate-400 block">fallbacks</span>
+                  </div>
+                </div>
+              </Card>
             </div>
           </aside>
         </div>

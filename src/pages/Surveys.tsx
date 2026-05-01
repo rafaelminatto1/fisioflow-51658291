@@ -1,9 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearchParams, useNavigate } from "react-router";
 import { MainLayout } from "@/components/layout/MainLayout";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Table,
@@ -23,7 +25,7 @@ import {
 } from "@/hooks/useSatisfactionSurveys";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Star, TrendingUp, Users, MessageSquare, Trash2, Search } from "lucide-react";
+import { Star, TrendingUp, Users, MessageSquare, Trash2, Search, CheckCircle2, Loader2 } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -34,11 +36,38 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { useAuth } from "@/contexts/AuthContext";
+import { getWorkersApiUrl } from "@/lib/api/config";
+import { toast } from "sonner";
+import logoImg from "@/assets/logo.png";
+
+import { NPSSurveyForm } from "@/components/surveys/NPSSurveyForm";
 
 export default function Surveys() {
+  const [searchParams] = useSearchParams();
+  const isPublicSurvey = searchParams.get("nps") === "1";
+  const patientId = searchParams.get("p");
+  const orgId = searchParams.get("org");
+  const userId = searchParams.get("user");
+  const { user, initialized, loading: authLoading } = useAuth();
+  const navigate = useNavigate();
+
   const [activeTab, setActiveTab] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
   const [deleteSurveyId, setDeleteSurveyId] = useState<string | null>(null);
+
+  // Public survey state
+  const [npsScore, setNpsScore] = useState<number | null>(null);
+  const [comment, setComment] = useState("");
+  const [submitted, setSubmitted] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  // Redirect to dashboard if trying to access dashboard but not authenticated
+  useEffect(() => {
+    if (!isPublicSurvey && initialized && !authLoading && !user) {
+      navigate("/auth/login?from=/surveys");
+    }
+  }, [isPublicSurvey, user, initialized, authLoading, navigate]);
 
   const filters = {
     responded: activeTab === "responded" ? true : activeTab === "pending" ? false : undefined,
@@ -47,6 +76,169 @@ export default function Surveys() {
   const { data: surveys = [], isLoading } = useSatisfactionSurveys(filters);
   const { data: stats, isLoading: statsLoading } = useSurveyStats();
   const deleteSurvey = useDeleteSurvey();
+
+  if (patientId) {
+    if (submitted) {
+      return (
+        <div className="min-h-[80vh] flex items-center justify-center p-4">
+          <Card className="w-full max-w-md text-center py-8">
+            <CardContent className="space-y-4">
+              <div className="flex justify-center">
+                <div className="h-16 w-16 rounded-full bg-emerald-100 flex items-center justify-center">
+                  <CheckCircle2 className="h-10 w-10 text-emerald-600" />
+                </div>
+              </div>
+              <h2 className="text-2xl font-bold">Obrigado pelo seu feedback!</h2>
+              <p className="text-muted-foreground">
+                Sua opinião é fundamental para continuarmos melhorando o FisioFlow.
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+      );
+    }
+
+    return (
+      <div className="min-h-[80vh] flex items-center justify-center p-4 bg-muted/30">
+        <div className="w-full max-w-2xl">
+          <div className="flex justify-center mb-6">
+            <img src={logoImg} alt="FisioFlow" className="h-10" onError={(e) => (e.currentTarget.style.display = 'none')} />
+          </div>
+          <NPSSurveyForm 
+            patientId={patientId} 
+            onComplete={() => setSubmitted(true)} 
+          />
+        </div>
+      </div>
+    );
+  }
+
+  if (isPublicSurvey) {
+    const handlePublicSubmit = async () => {
+      if (npsScore === null || !orgId) return;
+      setSaving(true);
+      try {
+        await fetch(`${getWorkersApiUrl()}/api/satisfaction-surveys/nps`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            org_id: orgId,
+            user_id: userId,
+            score: npsScore,
+            comment: comment.trim() || undefined,
+          }),
+        });
+        setSubmitted(true);
+      } catch {
+        toast.error("Erro ao enviar avaliação.");
+      } finally {
+        setSaving(false);
+      }
+    };
+
+    if (submitted) {
+      return (
+        <div className="min-h-[80vh] flex items-center justify-center p-4">
+          <Card className="w-full max-w-md text-center py-8">
+            <CardContent className="space-y-4">
+              <div className="flex justify-center">
+                <div className="h-16 w-16 rounded-full bg-emerald-100 flex items-center justify-center">
+                  <CheckCircle2 className="h-10 w-10 text-emerald-600" />
+                </div>
+              </div>
+              <h2 className="text-2xl font-bold">Obrigado pelo seu feedback!</h2>
+              <p className="text-muted-foreground">
+                Sua opinião é fundamental para continuarmos melhorando o FisioFlow.
+              </p>
+              <Button variant="outline" className="mt-4" onClick={() => navigate("/")}>
+                Ir para o Início
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      );
+    }
+
+    return (
+      <div className="min-h-[80vh] flex items-center justify-center p-4 bg-muted/30">
+        <Card className="w-full max-w-xl shadow-xl border-t-4 border-t-primary">
+          <CardHeader className="space-y-1">
+            <div className="flex justify-center mb-4">
+              <img src={logoImg} alt="FisioFlow" className="h-10" onError={(e) => (e.currentTarget.style.display = 'none')} />
+            </div>
+            <CardTitle className="text-2xl text-center">Como está sua experiência?</CardTitle>
+            <CardDescription className="text-center text-base">
+              De 0 a 10, o quanto você recomendaria o FisioFlow para um colega?
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-8 pb-8">
+            <div className="flex justify-between items-center gap-1 sm:gap-2">
+              {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((score) => (
+                <button
+                  key={score}
+                  onClick={() => setNpsScore(score)}
+                  className={`h-8 w-8 sm:h-12 sm:w-12 rounded-lg text-xs sm:text-lg font-bold transition-all transform hover:scale-110 ${
+                    npsScore === score
+                      ? "bg-primary text-primary-foreground shadow-lg ring-2 ring-primary ring-offset-2"
+                      : "bg-background border-2 hover:border-primary/50 hover:bg-muted"
+                  }`}
+                >
+                  {score}
+                </button>
+              ))}
+            </div>
+            
+            <div className="flex justify-between text-xs text-muted-foreground px-1">
+              <span>Nada provável</span>
+              <span>Extremamente provável</span>
+            </div>
+
+            <div className="space-y-2">
+              <p className="text-sm font-medium">Conte-nos mais (opcional):</p>
+              <Textarea
+                value={comment}
+                onChange={(e) => setComment(e.target.value)}
+                placeholder="O que você mais gosta? O que podemos melhorar?"
+                rows={4}
+                className="resize-none text-base"
+              />
+            </div>
+
+            <Button 
+              className="w-full text-lg py-6" 
+              size="lg" 
+              onClick={handlePublicSubmit}
+              disabled={npsScore === null || saving || !orgId}
+            >
+              {saving && <Loader2 className="mr-2 h-5 w-5 animate-spin" />}
+              Enviar Avaliação
+            </Button>
+            
+            {!orgId && (
+              <p className="text-destructive text-center text-sm font-medium">
+                Erro: Link inválido. Identificador da organização ausente.
+              </p>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // Dashboard View (only if authenticated)
+  if (authLoading || !user) {
+    return (
+      <MainLayout>
+        <div className="space-y-6">
+          <Skeleton className="h-12 w-1/3" />
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            {[1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-24 w-full" />)}
+          </div>
+          <Skeleton className="h-64 w-full" />
+        </div>
+      </MainLayout>
+    );
+  }
 
   const filteredSurveys = surveys.filter((survey) => {
     if (!searchTerm) return true;

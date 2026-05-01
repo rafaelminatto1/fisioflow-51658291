@@ -28,21 +28,50 @@ test.describe("@smoke — Saúde da API", () => {
   });
 });
 
-test.describe("@smoke — Login", () => {
-  test("página de login renderiza formulário", async ({ page }) => {
+test.describe("@smoke — Autenticado", () => {
+  const EMAIL = process.env.STAGING_TEST_USER_EMAIL || "admin@teste.com";
+  const PASSWORD = process.env.STAGING_TEST_USER_PASSWORD || "senha123";
+
+  test.beforeEach(async ({ page }) => {
     await page.goto(`${BASE}/auth`);
-    await expect(page.locator('input[type="email"]')).toBeVisible({ timeout: 10000 });
-    await expect(page.locator('input[type="password"]')).toBeVisible();
-    await expect(page.locator('button[type="submit"]')).toBeVisible();
+    await page.fill('input[type="email"]', EMAIL);
+    await page.fill('input[type="password"]', PASSWORD);
+    await page.click('button[type="submit"]');
+    await expect(page).toHaveURL(/dashboard/);
   });
 
-  test("login com credenciais inválidas exibe erro", async ({ page }) => {
-    await page.goto(`${BASE}/auth`);
-    await page.fill('input[type="email"]', "nao-existe@teste.com");
-    await page.fill('input[type="password"]', "senha-errada");
+  test("fluxo completo: paciente -> agendamento -> evolução", async ({ page }) => {
+    // 1. Criar Paciente
+    await page.goto(`${BASE}/pacientes`);
+    await page.click('button:has-text("Novo Paciente")');
+    const patientName = `Paciente Teste ${Date.now()}`;
+    await page.fill('input[name="full_name"]', patientName);
+    await page.fill('input[name="phone"]', "11999999999");
     await page.click('button[type="submit"]');
-    // Deve aparecer alguma mensagem de erro (toast, alert ou texto)
-    const erro = page.locator('[role="alert"], .text-destructive, [data-sonner-toast]').first();
-    await expect(erro).toBeVisible({ timeout: 8000 });
+    await expect(page.locator(`text=${patientName}`)).toBeVisible({ timeout: 10000 });
+
+    // 2. Criar Agendamento
+    await page.goto(`${BASE}/agenda`);
+    await page.click('button:has-text("Novo Agendamento")');
+    await page.fill('input[placeholder*="Buscar paciente"]', patientName);
+    await page.click(`text=${patientName}`);
+    await page.click('button:has-text("Confirmar Agendamento")');
+    await expect(page.locator(`text=${patientName}`)).toBeVisible();
+
+    // 3. Registrar Evolução SOAP
+    await page.click(`text=${patientName}`); // Abre o card na agenda
+    await page.click('button:has-text("Iniciar Atendimento")');
+    await page.fill('textarea[placeholder*="Subjetivo"]', "Paciente relata melhora.");
+    await page.fill('textarea[placeholder*="Objetivo"]', "ADM aumentada.");
+    await page.click('button:has-text("Finalizar Evolução")');
+    await expect(page.locator('text="Evolução salva com sucesso"')).toBeVisible();
+  });
+
+  test("logout remove acesso", async ({ page }) => {
+    await page.click('button[aria-label*="perfil"], .avatar-trigger');
+    await page.click('text="Sair"');
+    await expect(page).toHaveURL(/auth/);
+    await page.goto(`${BASE}/dashboard`);
+    await expect(page).toHaveURL(/auth/);
   });
 });

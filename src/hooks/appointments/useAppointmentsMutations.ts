@@ -15,6 +15,7 @@ import { isAppointmentConflictError } from "@/utils/appointmentErrors";
 import { invalidateAppointmentsComprehensive } from "@/utils/cacheInvalidation";
 import { requireUserOrganizationId } from "@/utils/userHelpers";
 import { parseUpdatesToAppointment } from "../appointmentOptimistic";
+import { parseLocalDate } from "@/lib/date-utils";
 import { appointmentPeriodKeys } from "../useAppointmentsByPeriod";
 import type { AppointmentsQueryResult } from "./useAppointmentsCache";
 import { appointmentKeys } from "./useAppointmentsData";
@@ -43,7 +44,7 @@ export function useCreateAppointment() {
         patientId: variables.patient_id,
         patientName: variables.patient_name || variables.patient_id || "",
         phone: "",
-        date: new Date(variables.appointment_date || Date.now()),
+        date: variables.appointment_date ? parseLocalDate(variables.appointment_date) : new Date(),
         time: variables.appointment_time || variables.start_time || "",
         duration: variables.duration || 60,
         type: variables.type || "Fisioterapia",

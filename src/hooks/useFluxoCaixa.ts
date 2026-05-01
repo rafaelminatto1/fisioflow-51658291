@@ -4,7 +4,8 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { financialApi, type Transacao } from "@/api/v2";
-import { formatDateToLocalISO, parseResponseDateOrNull } from "@/utils/dateUtils";
+import { parseResponseDateOrNull } from "@/utils/dateUtils";
+import { toLocalYMD } from "@/lib/date-utils";
 
 export interface MovimentacaoCaixa {
   id: string;
@@ -48,7 +49,7 @@ function normalizeMovimentacao(row: Transacao): MovimentacaoCaixa {
 
   return {
     id: row.id,
-    data: data ? formatDateToLocalISO(data) : null,
+    data: data ? toLocalYMD(data) : null,
     tipo: row.tipo as "entrada" | "saida",
     valor: Number(row.valor),
     descricao: row.descricao ?? "",

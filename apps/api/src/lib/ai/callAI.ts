@@ -7,6 +7,7 @@ import {
 } from "./modelRegistry";
 import { zaiChat, zaiVision, zaiTranscribe, type ZAIChatResult } from "./providers/zai";
 import { runAi } from "../ai-native";
+import { neon } from "@neondatabase/serverless";
 
 export type AITask =
   | "chat"
@@ -23,7 +24,15 @@ export type AITask =
   | "event-planning"
   | "fast-processing"
   | "treatment-assistant"
-  | "patient-360";
+  | "patient-360"
+  | "clinic-briefing"
+  | "clinic-summary"
+  | "whatsapp-reschedule"
+  | "session-summary"
+  | "hep-generation"
+  | "soap-review"
+  | "patient-simulator"
+  | "clinic-agent";
 
 export interface CallAIOptions {
   task: AITask;
@@ -105,11 +114,22 @@ export async function callAI(env: Env, opts: CallAIOptions): Promise<CallAIResul
         cacheTtl: opts.cacheTtl,
       });
 
+      const latencyMs = Date.now() - startTime;
+      persistAIUsage(env, {
+        orgId: opts.organizationId,
+        modelId,
+        provider: model.provider,
+        task: opts.task,
+        inputTokens: result.usage.inputTokens,
+        outputTokens: result.usage.outputTokens,
+        latencyMs,
+        wasFallback: modelId !== targetModel,
+      });
       return {
         ...result,
         provider: model.provider,
         wasFallback: modelId !== targetModel,
-        latencyMs: Date.now() - startTime,
+        latencyMs,
       };
     } catch (err) {
       lastError = err instanceof Error ? err : new Error(String(err));
@@ -307,6 +327,33 @@ async function executeProvider(
     }
     default:
       throw new Error(`Unsupported AI provider: ${provider}`);
+  }
+}
+
+function persistAIUsage(
+  env: Env,
+  usage: {
+    orgId?: string;
+    modelId: string;
+    provider: string;
+    task: string;
+    inputTokens: number;
+    outputTokens: number;
+    latencyMs: number;
+    wasFallback: boolean;
+  },
+): void {
+  const url = env.NEON_URL || env.HYPERDRIVE?.connectionString;
+  if (!url) return;
+  try {
+    const sql = neon(url);
+    sql`
+      INSERT INTO ai_usage (org_id, model_id, provider, task, input_tokens, output_tokens, latency_ms, was_fallback)
+      VALUES (${usage.orgId ?? null}, ${usage.modelId}, ${usage.provider}, ${usage.task},
+              ${usage.inputTokens}, ${usage.outputTokens}, ${usage.latencyMs}, ${usage.wasFallback})
+    `.catch(() => {});
+  } catch {
+    // non-critical — never block on usage tracking
   }
 }
 

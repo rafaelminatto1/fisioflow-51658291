@@ -41,46 +41,49 @@ export function ScheduleEventContent({
     text: "inherit",
   };
 
+  const typeLabel = isTask ? "Tarefa" : isGroup ? "Grupo" : "Consulta";
+
   return (
     <div
-      className="flex h-full w-full flex-col gap-1 overflow-hidden rounded-2xl border border-white/60 bg-gradient-to-br from-white/95 via-white/90 to-slate-50/80 p-3 shadow-lg shadow-slate-200/30 backdrop-blur-md transition-all duration-200 hover:scale-[1.02] hover:shadow-xl hover:shadow-slate-200/40 dark:border-slate-800/60 dark:from-slate-950/95 dark:via-slate-950/90 dark:to-slate-900/80 dark:shadow-slate-950/30 dark:hover:shadow-slate-950/40"
+      className="flex h-full w-full flex-col overflow-hidden rounded-xl border-l-4 border border-slate-200/40 p-2 shadow-sm transition-all duration-200 hover:shadow-md dark:border-slate-800/40"
       style={{
+        borderLeftColor: safeColors.accent,
+        backgroundColor: safeColors.background !== "transparent" ? safeColors.background : "rgba(255,255,255,0.95)",
         color: safeColors.text,
         opacity: isSelected ? 0.88 : 1,
-        fontSize: "var(--agenda-card-font-scale, 0.78rem)",
-        background: safeColors.background || "linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.9) 50%, rgba(248,250,252,0.8) 100%)",
       }}
     >
-      <div className="flex items-center gap-2">
-        <span
-          className="h-3 w-3 rounded-full shadow-sm"
-          style={{ background: safeColors.accent, boxShadow: `0 0 8px ${safeColors.accent}20` }}
-        />
-        <div className="min-w-0 text-[0.95rem] font-medium leading-tight text-slate-900 dark:text-white" style={{ fontFamily: 'var(--font-body, ui-sans-serif)' }}>
-          {title}
-        </div>
+      <div className="flex items-start justify-between mb-1.5">
+        <span 
+          className="text-[9px] font-black uppercase tracking-widest"
+          style={{ color: safeColors.accent }}
+        >
+          {typeLabel}
+        </span>
+        {!isAllDay && (
+          <div className="flex items-center gap-1 text-[10px] font-bold opacity-60">
+            <Clock className="h-3 w-3" aria-hidden />
+            <span>{timeText}</span>
+          </div>
+        )}
       </div>
 
-      {!isAllDay && (
-        <div className="flex flex-wrap items-center gap-2 text-[0.82rem] font-medium leading-none text-slate-600 dark:text-slate-300">
-          <span className="flex items-center gap-1 rounded-full bg-gradient-to-r from-slate-100 to-slate-200/80 px-2.5 py-1 text-slate-700 shadow-sm dark:from-slate-800 dark:to-slate-700 dark:text-slate-200">
-            <Clock className="h-3 w-3" aria-hidden />
-            {timeText}
-          </span>
-          {isGroup && (
-            <span
-              className="flex items-center gap-1 rounded-full bg-gradient-to-r from-indigo-100 to-indigo-200/80 px-2.5 py-1 text-indigo-700 shadow-sm dark:from-indigo-800 dark:to-indigo-700 dark:text-indigo-200"
-              title={`Grupo: ${groupCount} participantes`}
-            >
+      <p className="truncate text-[13px] font-bold leading-tight text-slate-900 dark:text-white" style={{ fontFamily: 'var(--font-display, Inter, sans-serif)' }}>
+        {title}
+      </p>
+
+      {(isGroup || isTask) && (
+        <div className="mt-1 flex items-center gap-1.5 text-[10px] font-semibold opacity-60">
+          {isGroup ? (
+            <>
               <Users className="h-3 w-3" aria-hidden />
-              {groupCount ?? "-"}
-            </span>
-          )}
-          {isTask && (
-            <span className="flex items-center gap-1 rounded-full bg-gradient-to-r from-amber-100 to-amber-200/80 px-2.5 py-1 text-amber-700 shadow-sm dark:from-amber-800 dark:to-amber-700 dark:text-amber-200">
+              <span>{groupCount} participantes</span>
+            </>
+          ) : (
+            <>
               <CheckCircle2 className="h-3 w-3" aria-hidden />
-              Tarefa
-            </span>
+              <span>Tarefa Clínica</span>
+            </>
           )}
         </div>
       )}

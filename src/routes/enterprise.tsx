@@ -348,14 +348,7 @@ export const enterpriseRoutes = (
     />
 
     {/* Misc */}
-    <Route
-      path="/surveys"
-      element={
-        <ProtectedRoute>
-          <Surveys />
-        </ProtectedRoute>
-      }
-    />
+    <Route path="/surveys" element={<Surveys />} />
     <Route
       path="/inventory"
       element={

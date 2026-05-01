@@ -73,4 +73,140 @@ app.get("/verify", async (c) => {
   return c.json({ data: { valid, signature: valid ? result.rows[0] : null } });
 });
 
+// POST /api/document-signatures/:id/send-for-signature
+// Generate signing token + send WhatsApp to patient
+app.post("/:id/send-for-signature", requireAuth, async (c) => {
+  const user = c.get("user");
+  const { id } = c.req.param();
+  const db = createPool(c.env);
+
+  const doc = await db.query(
+    `SELECT id, document_id, document_title, signer_name, signer_id FROM document_signatures WHERE id = $1 LIMIT 1`,
+    [id],
+  );
+  if (!doc.rows.length) return c.json({ error: "Documento não encontrado" }, 404);
+  const row = doc.rows[0] as Record<string, unknown>;
+
+  // Token expires in 48h
+  const tokenBytes = crypto.getRandomValues(new Uint8Array(32));
+  const token = Array.from(tokenBytes)
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+  const expiresAt = new Date(Date.now() + 48 * 60 * 60 * 1000);
+
+  await db.query(
+    `UPDATE document_signatures SET signing_token = $1, signing_token_expires_at = $2 WHERE id = $3`,
+    [token, expiresAt.toISOString(), id],
+  ).catch(async () => {
+    // Column might not exist yet — try adding it
+    await db.query(
+      `ALTER TABLE document_signatures ADD COLUMN IF NOT EXISTS signing_token TEXT,
+       ADD COLUMN IF NOT EXISTS signing_token_expires_at TIMESTAMPTZ`,
+    );
+    await db.query(
+      `UPDATE document_signatures SET signing_token = $1, signing_token_expires_at = $2 WHERE id = $3`,
+      [token, expiresAt.toISOString(), id],
+    );
+  });
+
+  const baseUrl = c.env.PAGES_URL ?? "https://fisioflow.pages.dev";
+  const signingUrl = `${baseUrl}/assinar/${token}`;
+
+  // Try sending via WhatsApp if patient has a phone on record
+  if (row.signer_id) {
+    const patientRes = await db.query(
+      `SELECT phone FROM patients WHERE id = $1 LIMIT 1`,
+      [row.signer_id],
+    ).catch(() => ({ rows: [] }));
+    const phone = (patientRes.rows[0] as any)?.phone;
+    if (phone) {
+      const { WhatsAppService } = await import("../lib/whatsapp");
+      const wa = new WhatsAppService(c.env);
+      await wa
+        .sendTextMessage(
+          phone,
+          `Olá${row.signer_name ? " " + row.signer_name : ""}! O documento "${row.document_title}" está aguardando sua assinatura eletrônica.\n\nAcesse o link para assinar: ${signingUrl}\n\n(Válido por 48 horas)`,
+        )
+        .catch(() => {});
+    }
+  }
+
+  return c.json({ data: { signingUrl, expiresAt: expiresAt.toISOString() } });
+});
+
+// GET /api/document-signatures/sign/:token — Public, no auth needed
+app.get("/sign/:token", async (c) => {
+  const { token } = c.req.param();
+  const db = createPool(c.env);
+
+  const result = await db.query(
+    `SELECT id, document_id, document_title, document_type, signer_name,
+            signing_token_expires_at, signed_at, signature_hash
+     FROM document_signatures WHERE signing_token = $1 LIMIT 1`,
+    [token],
+  ).catch(() => ({ rows: [] }));
+
+  if (!result.rows.length) return c.json({ error: "Link de assinatura inválido ou expirado" }, 404);
+  const row = result.rows[0] as Record<string, unknown>;
+
+  if (row.signed_at) {
+    return c.json({ error: "Documento já foi assinado", signedAt: row.signed_at }, 409);
+  }
+  if (row.signing_token_expires_at && new Date() > new Date(String(row.signing_token_expires_at))) {
+    return c.json({ error: "Link de assinatura expirado" }, 410);
+  }
+
+  return c.json({
+    data: {
+      id: row.id,
+      documentTitle: row.document_title,
+      documentType: row.document_type,
+      signerName: row.signer_name,
+    },
+  });
+});
+
+// POST /api/document-signatures/sign/:token/confirm — Patient confirms signature (public)
+app.post("/sign/:token/confirm", async (c) => {
+  const { token } = c.req.param();
+  const db = createPool(c.env);
+
+  const result = await db.query(
+    `SELECT id, document_id, document_title, signer_name, signing_token_expires_at, signed_at
+     FROM document_signatures WHERE signing_token = $1 LIMIT 1`,
+    [token],
+  ).catch(() => ({ rows: [] }));
+
+  if (!result.rows.length) return c.json({ error: "Link inválido ou expirado" }, 404);
+  const row = result.rows[0] as Record<string, unknown>;
+
+  if (row.signed_at) return c.json({ error: "Documento já assinado" }, 409);
+  if (row.signing_token_expires_at && new Date() > new Date(String(row.signing_token_expires_at))) {
+    return c.json({ error: "Link expirado" }, 410);
+  }
+
+  const ip = c.req.header("CF-Connecting-IP") ?? c.req.header("X-Forwarded-For") ?? "unknown";
+  const ua = c.req.header("User-Agent") ?? "unknown";
+  const now = new Date().toISOString();
+
+  // SHA-256 hash of document_id + signer + timestamp
+  const content = `${row.document_id}:${row.signer_name}:${now}`;
+  const hashBuffer = await crypto.subtle.digest(
+    "SHA-256",
+    new TextEncoder().encode(content),
+  );
+  const hash = Array.from(new Uint8Array(hashBuffer))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+
+  await db.query(
+    `UPDATE document_signatures
+     SET signed_at = $1, signature_hash = $2, ip_address = $3, user_agent = $4
+     WHERE id = $5`,
+    [now, hash, ip, ua, row.id],
+  );
+
+  return c.json({ success: true, data: { signedAt: now, hash } });
+});
+
 export { app as documentSignaturesRoutes };

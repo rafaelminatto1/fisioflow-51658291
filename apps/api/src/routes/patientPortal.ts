@@ -905,6 +905,86 @@ app.post("/exercises/:assignmentId/complete", async (c) => {
     ],
   );
 
+  // Award XP + update gamification profile when exercise is marked completed
+  if (completed) {
+    try {
+      const XP_PER_EXERCISE = 25;
+      const gProf = await pool.query(
+        `INSERT INTO patient_gamification
+           (patient_id, current_xp, level, current_streak, longest_streak,
+            total_points, last_activity_date, created_at, updated_at)
+         VALUES ($1, 0, 1, 0, 0, 0, NOW(), NOW(), NOW())
+         ON CONFLICT (patient_id) DO UPDATE SET updated_at = NOW()
+         RETURNING *`,
+        [data.patient_id],
+      );
+      const prof = gProf.rows[0];
+      const newTotal = (prof.total_points || 0) + XP_PER_EXERCISE;
+      const last = prof.last_activity_date ? new Date(prof.last_activity_date) : null;
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      let streak = prof.current_streak || 0;
+      if (last) {
+        last.setHours(0, 0, 0, 0);
+        const diff = Math.floor((today.getTime() - last.getTime()) / 86400000);
+        streak = diff === 1 ? streak + 1 : diff > 1 ? 1 : streak;
+      } else {
+        streak = 1;
+      }
+      const longest = Math.max(prof.longest_streak || 0, streak);
+      
+      let bonusXp = 0;
+      let badgeEarned: string | null = null;
+
+      if (streak === 7) {
+        bonusXp = 100;
+        badgeEarned = "Semana Perfeita";
+      } else if (streak === 30) {
+        bonusXp = 500;
+        badgeEarned = "Dedicação Total";
+      }
+
+      const finalTotal = newTotal + bonusXp;
+      const finalXpLevel = Math.floor(finalTotal / 1000) + 1;
+
+      await pool.query(
+        `UPDATE patient_gamification SET total_points=$1, current_xp=$1, level=$2,
+           current_streak=$3, longest_streak=$4, last_activity_date=NOW(), updated_at=NOW()
+         WHERE patient_id=$5`,
+        [finalTotal, finalXpLevel, streak, longest, data.patient_id],
+      );
+
+      await pool.query(
+        `INSERT INTO xp_transactions (patient_id, amount, reason, source, metadata, created_at)
+         VALUES ($1, $2, 'exercise_completed', 'patient_portal', $3::jsonb, NOW())`,
+        [data.patient_id, XP_PER_EXERCISE, JSON.stringify({ exercise_plan_item_id: assignmentId })],
+      );
+
+      if (bonusXp > 0) {
+        await pool.query(
+          `INSERT INTO xp_transactions (patient_id, amount, reason, source, metadata, created_at)
+           VALUES ($1, $2, 'streak_bonus', 'patient_portal', $3::jsonb, NOW())`,
+          [data.patient_id, bonusXp, JSON.stringify({ streak })],
+        );
+      }
+
+      if (badgeEarned) {
+        await pool.query(
+          `INSERT INTO achievements_log (patient_id, badge_name, earned_at)
+           VALUES ($1, $2, NOW()) ON CONFLICT DO NOTHING`,
+          [data.patient_id, badgeEarned],
+        );
+        await pool.query(
+          `UPDATE patient_gamification SET total_badges = total_badges + 1 WHERE patient_id = $1`,
+          [data.patient_id],
+        ).catch(() => {}); // total_badges column might not exist yet
+      }
+
+    } catch {
+      // XP failures are non-blocking
+    }
+  }
+
   return c.json({ success: true });
 });
 
@@ -1080,6 +1160,91 @@ app.get("/stats", async (c) => {
       totalMonths,
     },
   });
+});
+
+// GET /api/patient-portal/gamification — XP, level, streak, badges
+app.get("/gamification", async (c) => {
+  const user = c.get("user");
+  const pool = await createPool(c.env);
+
+  const context = await ensurePortalContext(pool, user);
+  const patientId = context.data.patient_id as string;
+  if (!patientId) return c.json({ error: "Paciente não encontrado" }, 404);
+
+  const gamRes = await pool.query(
+    `SELECT current_xp, level, current_streak, longest_streak, last_activity_date,
+            total_points, total_badges
+     FROM patient_gamification WHERE patient_id = $1 LIMIT 1`,
+    [patientId],
+  ).catch(() => ({ rows: [] }));
+
+  const gam = (gamRes.rows[0] ?? {}) as Record<string, unknown>;
+
+  // XP thresholds per level
+  const XP_LEVELS = [0, 100, 300, 600, 1000];
+  const currentXp = Number(gam.current_xp ?? 0);
+  const level = Number(gam.level ?? 1);
+  const nextThreshold = XP_LEVELS[Math.min(level, XP_LEVELS.length - 1)] ?? 9999;
+  const prevThreshold = XP_LEVELS[Math.max(level - 1, 0)] ?? 0;
+  const xpInLevel = currentXp - prevThreshold;
+  const xpNeeded = nextThreshold - prevThreshold;
+
+  const badgesRes = await pool.query(
+    `SELECT badge_name, earned_at FROM achievements_log WHERE patient_id = $1 ORDER BY earned_at DESC`,
+    [patientId],
+  ).catch(() => ({ rows: [] }));
+
+  return c.json({
+    data: {
+      currentXp,
+      level,
+      currentStreak: Number(gam.current_streak ?? 0),
+      longestStreak: Number(gam.longest_streak ?? 0),
+      lastActivityDate: gam.last_activity_date ?? null,
+      xpInLevel,
+      xpNeeded,
+      progressPercent: xpNeeded > 0 ? Math.round((xpInLevel / xpNeeded) * 100) : 100,
+      badges: badgesRes.rows,
+    },
+  });
+});
+
+// POST /api/patient-portal/proms — Record a PROM score (+5 XP)
+app.post("/proms", async (c) => {
+  const user = c.get("user");
+  const pool = await createPool(c.env);
+  const context = await ensurePortalContext(pool, user);
+  const patientId = context.data.patient_id as string;
+  if (!patientId) return c.json({ error: "Paciente não encontrado" }, 404);
+
+  const body = (await c.req.json()) as Record<string, unknown>;
+  const scale = String(body.scale ?? "").trim();
+  const score = Number(body.score ?? 0);
+  const notes = body.notes ? String(body.notes) : null;
+
+  if (!scale) return c.json({ error: "scale é obrigatório" }, 400);
+
+  await pool.query(
+    `INSERT INTO standardized_test_results
+       (patient_id, test_type, score, notes, administered_at, created_at)
+     VALUES ($1, $2, $3, $4, NOW(), NOW())`,
+    [patientId, scale, score, notes],
+  ).catch(() => {});
+
+  // Award XP for recording a PROM
+  await pool.query(
+    `INSERT INTO xp_transactions (patient_id, amount, source, description, created_at)
+     VALUES ($1, 5, 'proms', $2, NOW())`,
+    [patientId, `Registrou escala ${scale}`],
+  ).catch(() => {});
+
+  await pool.query(
+    `UPDATE patient_gamification SET current_xp = current_xp + 5, total_points = total_points + 5,
+     updated_at = NOW() WHERE patient_id = $1`,
+    [patientId],
+  ).catch(() => {});
+
+  return c.json({ success: true, data: { xpAwarded: 5 } }, 201);
 });
 
 export { app as patientPortalRoutes };

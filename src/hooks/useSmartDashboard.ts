@@ -11,15 +11,11 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   differenceInDays,
-  endOfWeek,
-  format,
   isValid,
   parseISO,
   startOfDay,
-  startOfMonth,
-  startOfWeek,
-  subDays,
   subMonths,
+  subDays,
 } from "date-fns";
 import { useMemo } from "react";
 import { innovationsApi } from "@/api/v2";
@@ -32,6 +28,15 @@ import { patientsApi } from "@/api/v2/patients";
 import { profileApi } from "@/api/v2/system";
 import { useAuth } from "@/hooks/useAuth";
 import { fisioLogger as logger } from "@/lib/errors/logger";
+import {
+  todayYMD,
+  toLocalYMD,
+  startOfLocalWeek,
+  endOfLocalWeek,
+  startOfLocalMonth,
+  subDaysFromYMD,
+  parseLocalDate,
+} from "@/lib/date-utils";
 import type {
   AppointmentRow,
   ContaFinanceira,
@@ -46,7 +51,6 @@ import type {
   StaffPerformanceMetric,
   PatientSelfAssessment,
 } from "@/types/workers";
-import { formatDateToLocalISO } from "@/utils/dateUtils";
 
 export type ViewMode = "today" | "week" | "month" | "custom";
 
@@ -78,7 +82,7 @@ const sumRevenue = (rows: ContaFinanceira[]) =>
 
 const isBirthdayToday = (birthDate: string | null | undefined): boolean => {
   if (!birthDate) return false;
-  const todayStr = format(new Date(), "MM-dd");
+  const todayStr = todayYMD().slice(5, 10);
   return birthDate.slice(5, 10) === todayStr;
 };
 
@@ -155,16 +159,14 @@ export function useSmartDashboardData(viewMode: ViewMode = "today") {
   const { organizationId } = useAuth();
 
   const now = useMemo(() => new Date(), []);
-  const todayStr = formatDateToLocalISO(now);
-  const startCurrentMonthDate = startOfMonth(now);
-  const startCurrentMonth = formatDateToLocalISO(startCurrentMonthDate);
-  const startLastMonthDate = startOfMonth(subMonths(now, 1));
-  const endLastMonthDate = subDays(startCurrentMonthDate, 1);
-  const thirtyDaysAgo = formatDateToLocalISO(subMonths(now, 1));
-  const weekStartDate = startOfWeek(now, { weekStartsOn: 1 });
-  const weekEndDate = endOfWeek(now, { weekStartsOn: 1 });
-  const weekStart = formatDateToLocalISO(weekStartDate);
-  const weekEnd = formatDateToLocalISO(weekEndDate);
+  const todayStr = todayYMD();
+  const startCurrentMonth = startOfLocalMonth(todayStr);
+  const startCurrentMonthDate = parseLocalDate(startCurrentMonth);
+  const startLastMonthDate = parseLocalDate(startOfLocalMonth(toLocalYMD(subMonths(now, 1))));
+  const endLastMonthDate = parseLocalDate(toLocalYMD(subDays(startCurrentMonthDate, 1)));
+  const thirtyDaysAgo = toLocalYMD(subMonths(now, 1));
+  const weekStart = startOfLocalWeek(todayStr);
+  const weekEnd = endOfLocalWeek(todayStr);
 
   const primaryDateFrom =
     viewMode === "week" ? weekStart : viewMode === "month" ? startCurrentMonth : todayStr;
@@ -513,7 +515,7 @@ export function useSmartDashboardData(viewMode: ViewMode = "today") {
     // Weekly trend
     const weekDays = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"];
     const tendenciaSemanal = weekDays.map((dia, i) => {
-      const dayStr = formatDateToLocalISO(subDays(weekEndDate, 6 - i));
+      const dayStr = subDaysFromYMD(weekEnd, 6 - i);
       const dayApts = appointmentsWeek.filter((a) => a.date && String(a.date).startsWith(dayStr));
       return {
         dia,

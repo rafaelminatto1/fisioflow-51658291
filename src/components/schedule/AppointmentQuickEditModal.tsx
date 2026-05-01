@@ -22,6 +22,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { appointmentsApi } from "@/api/v2";
+import { toLocalYMD } from "@/lib/date-utils";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -137,7 +138,7 @@ export const AppointmentQuickEditModal: React.FC<AppointmentQuickEditModalProps>
     queryKey: ["appointments-for-conflict", open, appointment?.date],
     queryFn: async () => {
       if (!appointment?.date) return [];
-      const appointmentDate = appointment.date.toISOString().split("T")[0];
+      const appointmentDate = toLocalYMD(appointment.date);
       const responses = await Promise.all(
         ["agendado", "presenca_confirmada", "atendido"].map((status) =>
           appointmentsApi.list({

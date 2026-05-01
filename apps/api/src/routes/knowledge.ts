@@ -862,4 +862,76 @@ app.get("/profiles", async (c) => {
   return c.json({ data });
 });
 
+// POST /api/knowledge/upload-paper — indexa um artigo científico PDF no AI Search
+app.post("/upload-paper", requireAuth, async (c) => {
+  const user = c.get("user");
+  const orgId = user.organizationId;
+
+  const formData = await c.req.formData().catch(() => null);
+  if (!formData) return c.json({ error: "multipart/form-data required" }, 400);
+
+  const file = formData.get("file") as File | null;
+  const title = String(formData.get("title") ?? "").trim();
+  const areaClinica = String(formData.get("area_clinica") ?? "").trim();
+
+  if (!file || file.type !== "application/pdf") {
+    return c.json({ error: "file must be a PDF" }, 400);
+  }
+  if (file.size > 4 * 1024 * 1024) {
+    return c.json({ error: "PDF must be ≤ 4 MB" }, 400);
+  }
+  if (!title) return c.json({ error: "title is required" }, 400);
+
+  const pool = await createPool(c.env);
+  const tableExists = await hasTable(pool, "knowledge_articles");
+
+  // 1. Salvar metadados no Neon
+  let articleId: string | null = null;
+  if (tableExists) {
+    try {
+      const res = await pool.query(
+        `INSERT INTO knowledge_articles
+           (organization_id, title, article_type, group, status, created_by, updated_by)
+         VALUES ($1, $2, 'pdf', $3, 'active', $4, $4)
+         RETURNING id`,
+        [orgId, title, areaClinica || "geral", user.uid],
+      );
+      articleId = String(res.rows[0]?.id ?? "");
+    } catch (err) {
+      if (!isMissingSchemaError(err)) throw err;
+    }
+  }
+
+  // 2. Indexar no AI Search (aguarda conclusão)
+  if (!c.env.AI_SEARCH) {
+    return c.json({
+      id: articleId ?? "no-db",
+      indexed: false,
+      note: "AI_SEARCH binding not configured — create instance in Cloudflare Dashboard",
+    });
+  }
+
+  const arrayBuffer = await file.arrayBuffer();
+  const filename = `papers/${orgId}/${articleId ?? Date.now()}_${file.name.replace(/\s/g, "_")}`;
+
+  let aiSearchId: string | null = null;
+  try {
+    const result = await c.env.AI_SEARCH.items.uploadAndPoll(filename, arrayBuffer, {
+      metadata: {
+        source: "paper",
+        title,
+        area_clinica: areaClinica,
+        org_id: orgId,
+        article_id: articleId ?? "",
+      },
+    });
+    aiSearchId = result.id;
+  } catch (err) {
+    console.error("[upload-paper] AI Search indexing failed:", err);
+    return c.json({ id: articleId ?? null, indexed: false, error: "AI Search indexing failed" }, 500);
+  }
+
+  return c.json({ id: articleId ?? aiSearchId, indexed: true, aiSearchId });
+});
+
 export { app as knowledgeRoutes };

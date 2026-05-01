@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 
 vi.mock("../../lib/db", () => ({
-  createPool: vi.fn(() => ({ query: vi.fn() })),
+  createPool: vi.fn(() => ({ query: vi.fn().mockResolvedValue({ rows: [] }) })),
 }));
 
 async function buildApp() {
@@ -28,13 +28,27 @@ function makeRequest(method: string, path: string, body?: unknown, headers?: Rec
 }
 
 describe("public booking protection", () => {
-  it("rejects requests without Turnstile token when secret is configured", async () => {
+  it("GET /booking/:slug does NOT require Turnstile (patients browse freely)", async () => {
     const app = await buildApp();
     const res = await app.fetch(
       makeRequest("GET", "/api/public-booking/booking/demo"),
       BASE_ENV as any,
     );
+    // No Turnstile → 404 (profile not found), not 400 (token missing)
+    expect(res.status).not.toBe(400);
+  });
 
+  it("POST /booking rejects without Turnstile token when secret is configured", async () => {
+    const app = await buildApp();
+    const res = await app.fetch(
+      makeRequest("POST", "/api/public-booking/booking", {
+        slug: "demo",
+        date: "2026-05-10",
+        time: "10:00",
+        patient: { name: "João", phone: "11999999999" },
+      }),
+      BASE_ENV as any,
+    );
     expect(res.status).toBe(400);
     await expect(res.json()).resolves.toMatchObject({
       error: "Token Turnstile obrigatório",
@@ -65,5 +79,35 @@ describe("public booking protection", () => {
       error: "Rate limit exceeded",
     });
   });
-});
 
+  it("POST /checkin returns 400 for missing or short token", async () => {
+    const app = await buildApp();
+    const res = await app.fetch(
+      makeRequest("POST", "/api/public-booking/checkin", { token: "" }),
+      BASE_ENV as any,
+    );
+    expect(res.status).toBe(400);
+    const body = await res.json() as any;
+    expect(body.error).toMatch(/Token/i);
+  });
+
+  it("POST /checkin returns 404 for unknown token", async () => {
+    const app = await buildApp();
+    const res = await app.fetch(
+      makeRequest("POST", "/api/public-booking/checkin", {
+        token: "a".repeat(64),
+      }),
+      BASE_ENV as any,
+    );
+    expect(res.status).toBe(404);
+  });
+
+  it("GET /booking/:slug/availability returns 400 for missing date", async () => {
+    const app = await buildApp();
+    const res = await app.fetch(
+      makeRequest("GET", "/api/public-booking/booking/demo/availability"),
+      BASE_ENV as any,
+    );
+    expect(res.status).toBe(400);
+  });
+});

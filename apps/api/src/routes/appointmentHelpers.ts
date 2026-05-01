@@ -1,7 +1,8 @@
 /**
- * appointmentHelpers — funções puras extraídas de appointments.ts.
- * Todas testáveis sem dependências de Hono, DB ou Workers runtime.
+ * appointmentHelpers — funções puras e helpers de capacidade extraídas de appointments.ts.
  */
+import { sql } from "drizzle-orm";
+import { isUuid } from "../lib/validators";
 
 export const STATUS_MAP: Record<string, string> = {
   // Canonical PT-BR enum values stored in the database (pass-through)
@@ -154,4 +155,136 @@ export function countsTowardCapacity(status: string): boolean {
     "nao_atendido_sem_cobranca",
     "remarcar",
   ].includes(normalized);
+}
+
+export async function getIntervalCapacity(
+  db: any,
+  organizationId: string,
+  date: string,
+  startTime: string,
+  endTime: string,
+): Promise<number> {
+  try {
+    const result = await db.execute(sql`
+      SELECT MIN(max_patients)::int AS capacity
+      FROM schedule_capacity
+      WHERE organization_id = ${organizationId}
+        AND day_of_week = EXTRACT(DOW FROM ${date}::date)
+        AND start_time < ${endTime}::time
+        AND end_time > ${startTime}::time
+    `);
+    const capacity = Number(result.rows?.[0]?.capacity ?? 1);
+    return Number.isFinite(capacity) && capacity > 0 ? capacity : 1;
+  } catch (error: any) {
+    if (error?.message?.includes("does not exist")) return 1;
+    throw error;
+  }
+}
+
+export async function getOverlappingAppointments(
+  db: any,
+  organizationId: string,
+  date: string,
+  startTime: string,
+  endTime: string,
+  excludeAppointmentId?: string,
+): Promise<Array<{ id: string; patientId: string; startTime: string; date: string }>> {
+  try {
+    const safeOrgId = isUuid(organizationId)
+      ? organizationId
+      : "00000000-0000-0000-0000-000000000000";
+    const result = await db.execute(sql`
+      SELECT id, patient_id AS "patientId", start_time AS "startTime", date
+      FROM appointments
+      WHERE organization_id = ${safeOrgId}::uuid
+        AND date = ${date}::date
+        AND status::text NOT IN (
+          'cancelado', 'cancelled',
+          'faltou', 'faltou_com_aviso', 'faltou_sem_aviso',
+          'nao_atendido', 'nao_atendido_sem_cobranca', 'no_show',
+          'remarcar', 'remarcado', 'rescheduled'
+        )
+        AND deleted_at IS NULL
+        AND start_time < ${endTime}::time
+        AND end_time > ${startTime}::time
+        ${excludeAppointmentId && isUuid(excludeAppointmentId) ? sql`AND id != ${excludeAppointmentId}::uuid` : sql``}
+      ORDER BY start_time ASC, created_at ASC
+    `);
+    return (result.rows || []) as any;
+  } catch (error: any) {
+    console.error("[getOverlappingAppointments] Query failed:", error.message);
+    if (error.message.includes("does not exist")) return [];
+    throw error;
+  }
+}
+
+export async function enforceCapacity(
+  db: any,
+  organizationId: string,
+  payload: {
+    date: string;
+    startTime: string;
+    endTime: string;
+    status: string;
+    ignoreCapacity?: boolean;
+    excludeAppointmentId?: string;
+    useLock?: boolean;
+  },
+) {
+  if (payload.ignoreCapacity || !countsTowardCapacity(payload.status)) return null;
+
+  const capacity = await getIntervalCapacity(
+    db,
+    organizationId,
+    payload.date,
+    payload.startTime,
+    payload.endTime,
+  );
+  const conflicts = await getOverlappingAppointments(
+    db,
+    organizationId,
+    payload.date,
+    payload.startTime,
+    payload.endTime,
+    payload.excludeAppointmentId,
+  );
+
+  if (conflicts.length < capacity) return null;
+
+  return {
+    error: "Capacidade do horário excedida para este intervalo.",
+    capacity,
+    total: conflicts.length + 1,
+    conflicts,
+  };
+}
+
+export function sanitizeInput(data: any): any {
+  if (data === null || data === undefined) return null;
+  if (typeof data === "string") {
+    const trimmed = data.trim();
+    if (trimmed === "" || trimmed === "null" || trimmed === "undefined") return null;
+    return trimmed;
+  }
+  if (Array.isArray(data)) return data.map(sanitizeInput);
+  if (typeof data === "object") {
+    return Object.fromEntries(Object.entries(data).map(([k, v]) => [k, sanitizeInput(v)]));
+  }
+  return data;
+}
+
+export function toPositiveInteger(value: unknown, fallback: number): number {
+  const parsed = Number.parseInt(String(value ?? ""), 10);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
+}
+
+export function toBoolean(value: unknown, fallback = false): boolean {
+  if (typeof value === "boolean") return value;
+  if (typeof value === "number") return value !== 0;
+  if (typeof value === "string") {
+    const normalized = value.trim().toLowerCase();
+    if (["true", "1", "yes", "sim"].includes(normalized)) return true;
+    if (["false", "0", "no", "nao", "não"].includes(normalized)) return false;
+  }
+  return fallback;
 }

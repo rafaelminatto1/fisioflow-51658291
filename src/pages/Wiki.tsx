@@ -58,6 +58,7 @@ import { WikiPageCard } from "@/features/wiki/components/WikiPageCard";
 import { KnowledgeArticleDialog } from "@/features/wiki/components/KnowledgeArticleDialog";
 import { PhysioDictionaryView } from "@/features/wiki/components/PhysioDictionaryView";
 import { AIHubView } from "@/features/wiki/components/AIHubView";
+import { ScientificPapersView } from "@/components/wiki/ScientificPapersView";
 import { bilingualFilter } from "@/lib/utils/bilingualSearch";
 import { getEvidenceTree, isEvidencePage } from "@/features/wiki/utils/evidenceTrails";
 
@@ -78,7 +79,7 @@ export default function WikiPage() {
 
   // Estados Locais
   const [activeView, setActiveView] = useState<
-    "dashboard" | "knowledge-hub" | "dictionary" | "page" | "ai-hub"
+    "dashboard" | "knowledge-hub" | "dictionary" | "page" | "ai-hub" | "papers"
   >((searchParams.get("view") as any) || "dashboard");
   const [searchQuery, setSearchQuery] = useState(searchParams.get("search") || "");
   const [isEditing, setIsEditing] = useState(false);
@@ -398,6 +399,10 @@ export default function WikiPage() {
             setActiveView("ai-hub");
             setSelectedPage(null);
           }}
+          onPapersSelect={() => {
+            setActiveView("papers");
+            setSelectedPage(null);
+          }}
           onTagSelect={handleTagSelect}
         />
 
@@ -438,6 +443,10 @@ export default function WikiPage() {
           ) : activeView === "ai-hub" ? (
             <div className="p-4 md:p-8 animate-in slide-in-from-bottom-4 duration-500">
               <AIHubView />
+            </div>
+          ) : activeView === "papers" ? (
+            <div className="p-4 md:p-8 animate-in slide-in-from-bottom-4 duration-500">
+              <ScientificPapersView />
             </div>
           ) : (
             <div className="p-4 sm:p-6 space-y-6 animate-in fade-in duration-500">

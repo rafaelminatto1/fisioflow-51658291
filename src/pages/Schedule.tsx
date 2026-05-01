@@ -30,6 +30,7 @@ import {
   type ScheduleViewType,
   parseScheduleViewParam,
 } from "@/lib/schedule/viewParams";
+import { parseLocalDate, todayYMD } from "@/lib/date-utils";
 
 import "@/styles/schedule.css";
 
@@ -39,9 +40,7 @@ export default function Schedule() {
   const dateParamRaw = searchParams.get("date");
   // Validate YYYY-MM-DD format
   const dateParam =
-    dateParamRaw && /^\d{4}-\d{2}-\d{2}$/.test(dateParamRaw)
-      ? dateParamRaw
-      : format(new Date(), "yyyy-MM-dd");
+    dateParamRaw && /^\d{4}-\d{2}-\d{2}$/.test(dateParamRaw) ? dateParamRaw : todayYMD();
 
   const viewParam = parseScheduleViewParam(searchParams.get("view")) as ViewType;
   const statusParam = searchParams.get("status")?.split(",").filter(Boolean) || [];
@@ -58,8 +57,7 @@ export default function Schedule() {
 
   const { appointments, therapists, patients, birthdaysToday, staffBirthdaysToday, tarefas } = data;
 
-  const [year, month, day] = dateParam.split("-").map(Number);
-  const currentDate = new Date(year, month - 1, day);
+  const currentDate = parseLocalDate(dateParam);
 
   const viewType = viewParam;
   const patientFilter = patientParam || "";
@@ -95,7 +93,7 @@ export default function Schedule() {
 
   const handleDateChange = (date: Date) => {
     const newParams = new URLSearchParams(searchParams);
-    newParams.set("date", format(date, "yyyy-MM-dd"));
+    newParams.set("date", toLocalYMD(date));
     setSearchParams(newParams, { replace: true });
   };
 
@@ -154,8 +152,7 @@ export default function Schedule() {
       const datePart = match[1];
       const timePart = match[2] || "";
 
-      const [year, month, day] = datePart.split("-").map(Number);
-      const date = new Date(year, month - 1, day);
+      const date = parseLocalDate(datePart);
       actions.handleTimeSlotClick(date, timePart);
     }
   };
@@ -308,8 +305,7 @@ export default function Schedule() {
                       if (!appointment) return;
                       const match = start.match(/^(\d{4}-\d{2}-\d{2})(?:[T\s](\d{2}:\d{2}))?/);
                       if (!match) return;
-                      const [y, m, d] = match[1].split("-").map(Number);
-                      const date = new Date(y, m - 1, d);
+                      const date = parseLocalDate(match[1]);
                       const timePart = match[2] || "";
                       actions.handleAppointmentReschedule(appointment, date, timePart);
                     }}

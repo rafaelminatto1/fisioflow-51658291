@@ -16,6 +16,7 @@ import {
   isNetworkError,
 } from "./appointmentHelpers";
 import { getFromCacheWithMetadata, type AppointmentsQueryResult } from "./useAppointmentsCache";
+import { todayYMD, subDaysFromYMD, addDaysToYMD } from "@/lib/date-utils";
 
 export const appointmentKeys = {
   all: ["appointments_v2"] as const,
@@ -49,9 +50,9 @@ async function fetchAppointments(
       };
     }
 
-    const now = Temporal.Now.plainDateISO();
-    const dateFrom = now.subtract({ days: 15 }).toString();
-    const dateTo = now.add({ days: 15 }).toString();
+    const today = todayYMD();
+    const dateFrom = subDaysFromYMD(today, 15);
+    const dateTo = addDaysToYMD(today, 15);
 
     const data = await retryWithBackoff(() =>
       withTimeout(

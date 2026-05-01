@@ -4,8 +4,9 @@ import type { Env } from "../types/env";
 import { rateLimit } from "../middleware/rateLimit";
 import { turnstileVerify } from "../middleware/turnstile";
 import { broadcastToOrg } from "../lib/realtime";
+import { requireAuth, type AuthVariables } from "../lib/auth";
 
-const app = new Hono<{ Bindings: Env }>();
+const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
 const bookingRateLimit = rateLimit({
   limit: 30,
@@ -186,11 +187,11 @@ app.post("/booking", bookingRateLimit, turnstileVerify, async (c) => {
     ],
   );
 
-  // Notify fisio org via push (fire-and-forget)
-  if (profile.organization_id && (c.env as any).VAPID_PRIVATE_KEY) {
-    const { sendPushToOrg } = await import("../lib/webpush");
-    c.executionCtx?.waitUntil?.(
-      sendPushToOrg(
+  const fire = async () => {
+    // Push para a clínica
+    if (profile.organization_id && (c.env as any).VAPID_PRIVATE_KEY) {
+      const { sendPushToOrg } = await import("../lib/webpush");
+      await sendPushToOrg(
         String(profile.organization_id),
         {
           title: "Novo agendamento via link público",
@@ -199,11 +200,84 @@ app.post("/booking", bookingRateLimit, turnstileVerify, async (c) => {
           tag: `booking-request-${insert.rows[0].id}`,
         },
         c.env,
-      ).catch(() => {}),
-    );
-  }
+      ).catch(() => {});
+    }
+    // WhatsApp de confirmação para o paciente
+    if (c.env.WHATSAPP_ACCESS_TOKEN && String(patient.phone).trim()) {
+      const { WhatsAppService } = await import("../lib/whatsapp");
+      const wa = new WhatsAppService(c.env);
+      const dateFormatted = new Date(requestedDate + "T12:00:00").toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "long" });
+      await wa.sendTextMessage(
+        String(patient.phone),
+        `Olá${String(patient.name) ? " " + String(patient.name).split(" ")[0] : ""}! ✅ Seu agendamento foi confirmado.\n\n📅 ${dateFormatted} às ${requestedTime} com ${profile.full_name ?? "seu fisioterapeuta"}.\n\nQualquer dúvida, entre em contato conosco.`,
+      ).catch(() => {});
+    }
+  };
+  c.executionCtx?.waitUntil?.(fire());
 
   return c.json({ data: insert.rows[0], success: true }, 201);
+});
+
+// GET /api/public-booking/requests — List booking requests (fisio management)
+app.get("/requests", requireAuth, async (c) => {
+  const user = c.get("user");
+  const { status, limit: limitStr } = c.req.query();
+  const pool = createPool(c.env);
+  const limit = Math.min(Number(limitStr) || 50, 200);
+
+  if (!(await hasTable(pool, "public_booking_requests")))
+    return c.json({ data: [] });
+
+  let sql = `SELECT id, patient_name, patient_phone, patient_email, notes,
+                    requested_date, requested_time, professional_name,
+                    status, created_at, updated_at
+             FROM public_booking_requests
+             WHERE profile_user_id = $1`;
+  const params: unknown[] = [user.uid];
+
+  if (status) {
+    sql += ` AND status = $2`;
+    params.push(status);
+  }
+  sql += ` ORDER BY created_at DESC LIMIT ${limit}`;
+
+  const result = await pool.query(sql, params);
+  return c.json({ data: result.rows });
+});
+
+// PATCH /api/public-booking/requests/:id — Accept or reject a booking request
+app.patch("/requests/:id", requireAuth, async (c) => {
+  const user = c.get("user");
+  const { id } = c.req.param();
+  const body = (await c.req.json()) as { status: "confirmed" | "rejected"; notes?: string };
+
+  if (!["confirmed", "rejected"].includes(body.status))
+    return c.json({ error: "status deve ser 'confirmed' ou 'rejected'" }, 400);
+
+  const pool = createPool(c.env);
+  const result = await pool.query(
+    `UPDATE public_booking_requests
+     SET status = $1, updated_at = NOW()
+     WHERE id = $2 AND profile_user_id = $3
+     RETURNING *`,
+    [body.status, id, user.uid],
+  );
+  if (!result.rowCount) return c.json({ error: "Solicitação não encontrada" }, 404);
+  const row = result.rows[0] as Record<string, unknown>;
+
+  // On confirm: send WhatsApp to patient
+  if (body.status === "confirmed" && c.env.WHATSAPP_ACCESS_TOKEN && row.patient_phone) {
+    const { WhatsAppService } = await import("../lib/whatsapp");
+    const wa = new WhatsAppService(c.env);
+    const dateFormatted = new Date(String(row.requested_date) + "T12:00:00")
+      .toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "long" });
+    await wa.sendTextMessage(
+      String(row.patient_phone),
+      `Olá${row.patient_name ? " " + String(row.patient_name).split(" ")[0] : ""}! ✅ Seu agendamento foi confirmado.\n\n📅 ${dateFormatted} às ${row.requested_time}.\n\nAguardamos você!`,
+    ).catch(() => {});
+  }
+
+  return c.json({ data: row });
 });
 
 // POST /api/public-booking/checkin — Patient scans QR and confirms presence

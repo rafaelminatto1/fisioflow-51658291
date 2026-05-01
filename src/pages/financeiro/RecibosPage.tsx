@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, Fragment } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -29,11 +29,12 @@ import {
   CustomModalBody,
   CustomModalFooter,
 } from "@/components/ui/custom-modal";
-import { FileText, Plus, Search, Eye, Settings, Loader2, BadgeCheck, Save } from "lucide-react";
+import { FileText, Plus, Search, Eye, Settings, Loader2, BadgeCheck, Save, MessageCircle, QrCode } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { ReciboPreview, ReciboPDF, ReciboData } from "@/components/financial/ReciboPDF";
+import { ReceiptGenerator } from "@/components/financial/ReceiptGenerator";
 import { ReceiptOCR } from "@/components/financial/ReceiptOCR";
 import { useRecibos, useCreateRecibo, valorPorExtenso } from "@/hooks/useRecibos";
 import { useOrganizations } from "@/hooks/useOrganizations";
@@ -73,6 +74,7 @@ export function RecibosContent({
   const [previewRecibo, setPreviewRecibo] = useState<ReciboData | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [activeTab, setActiveTab] = useState<"lista" | "criar" | "config">("lista");
+  const [expandedReciboId, setExpandedReciboId] = useState<string | null>(null);
 
   const [formData, setFormData] = useState({
     patient_id: "",
@@ -427,47 +429,74 @@ export function RecibosContent({
                           assinado: recibo.assinado,
                         };
                         return (
-                          <TableRow
-                            key={recibo.id}
-                            className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 border-slate-50 dark:border-slate-800/50"
-                          >
-                            <TableCell className="px-6 py-4">
-                              <Badge variant="outline" className="font-mono text-xs rounded-lg">
-                                #{recibo.numero_recibo.toString().padStart(6, "0")}
-                              </Badge>
-                            </TableCell>
-                            <TableCell className="px-6 py-4 text-xs font-medium text-slate-500">
-                              {format(new Date(recibo.data_emissao), "dd/MM/yyyy", {
-                                locale: ptBR,
-                              })}
-                            </TableCell>
-                            <TableCell className="px-6 py-4 max-w-xs truncate font-bold text-slate-700 dark:text-slate-300">
-                              {recibo.referente}
-                            </TableCell>
-                            <TableCell className="px-6 py-4 font-black text-slate-900 dark:text-white">
-                              R${" "}
-                              {recibo.valor.toLocaleString("pt-BR", {
-                                minimumFractionDigits: 2,
-                              })}
-                            </TableCell>
-                            <TableCell className="px-6 py-4 text-right">
-                              <div className="flex items-center justify-end gap-1">
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => setPreviewRecibo(reciboData)}
-                                  className="h-8 rounded-lg text-slate-400 hover:text-primary font-bold text-[10px] uppercase tracking-wider"
-                                >
-                                  <Eye className="h-3.5 w-3.5 mr-1.5" />
-                                  Ver
-                                </Button>
-                                <ReciboPDF
-                                  data={reciboData}
-                                  fileName={`recibo-${recibo.numero_recibo}`}
-                                />
-                              </div>
-                            </TableCell>
-                          </TableRow>
+                          <Fragment key={recibo.id}>
+                            <TableRow
+                              className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 border-slate-50 dark:border-slate-800/50"
+                            >
+                              <TableCell className="px-6 py-4">
+                                <Badge variant="outline" className="font-mono text-xs rounded-lg">
+                                  #{recibo.numero_recibo.toString().padStart(6, "0")}
+                                </Badge>
+                              </TableCell>
+                              <TableCell className="px-6 py-4 text-xs font-medium text-slate-500">
+                                {format(new Date(recibo.data_emissao), "dd/MM/yyyy", {
+                                  locale: ptBR,
+                                })}
+                              </TableCell>
+                              <TableCell className="px-6 py-4 max-w-xs truncate font-bold text-slate-700 dark:text-slate-300">
+                                {recibo.referente}
+                              </TableCell>
+                              <TableCell className="px-6 py-4 font-black text-slate-900 dark:text-white">
+                                R${" "}
+                                {recibo.valor.toLocaleString("pt-BR", {
+                                  minimumFractionDigits: 2,
+                                })}
+                              </TableCell>
+                              <TableCell className="px-6 py-4 text-right">
+                                <div className="flex items-center justify-end gap-1">
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => setPreviewRecibo(reciboData)}
+                                    className="h-8 rounded-lg text-slate-400 hover:text-primary font-bold text-[10px] uppercase tracking-wider"
+                                  >
+                                    <Eye className="h-3.5 w-3.5 mr-1.5" />
+                                    Ver
+                                  </Button>
+                                  <ReciboPDF
+                                    data={reciboData}
+                                    fileName={`recibo-${recibo.numero_recibo}`}
+                                  />
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() =>
+                                      setExpandedReciboId(
+                                        expandedReciboId === recibo.id ? null : recibo.id,
+                                      )
+                                    }
+                                    className="h-8 rounded-lg text-slate-400 hover:text-primary font-bold text-[10px] uppercase tracking-wider"
+                                    title="WhatsApp / Pix"
+                                  >
+                                    <MessageCircle className="h-3.5 w-3.5" />
+                                  </Button>
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                            {expandedReciboId === recibo.id && (
+                              <TableRow key={`${recibo.id}-expanded`}>
+                                <TableCell colSpan={5} className="px-6 pb-4 pt-0">
+                                  <ReceiptGenerator
+                                    reciboId={recibo.id}
+                                    reciboData={reciboData}
+                                    patientPhone={(recibo as any).patient_phone ?? undefined}
+                                    whatsappSentAt={(recibo as any).whatsapp_sent_at ?? null}
+                                    onWhatsappSent={() => setExpandedReciboId(null)}
+                                  />
+                                </TableCell>
+                              </TableRow>
+                            )}
+                          </Fragment>
                         );
                       })}
                     </TableBody>

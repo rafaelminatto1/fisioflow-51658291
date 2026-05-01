@@ -6,6 +6,9 @@ import type {
   PatientDischargeWorkflow,
   PatientReengagementWorkflow,
   PatientDigitalTwinWorkflow,
+  WikiSyncWorkflow,
+  KnowledgeSyncWorkflow,
+  SessionSummaryWorkflow,
 } from "../workflows";
 
 /**
@@ -23,6 +26,7 @@ export interface Env {
   DATABASE_URL?: string;
   NEON_URL?: string;
   ALLOWED_ORIGINS: string; // CSV: "https://a.com,https://b.com"
+  PAGES_URL?: string;
   GOOGLE_AI_API_KEY: string;
   GOOGLE_MAPS_API_KEY?: string;
   GOOGLE_CLIENT_ID?: string;
@@ -62,19 +66,40 @@ export interface Env {
   // Vectorize (busca semântica — exercícios, protocolos, wiki)
   CLINICAL_KNOWLEDGE?: VectorizeIndex;
 
-  // AI Search (RAG gerenciado — busca em linguagem natural)
+  // AI Search (RAG gerenciado — wiki, protocolos, artigos científicos)
+  // Bound via [[ai_search]] binding = "AI_SEARCH" instance_name = "fisioflow-knowledge"
   AI_SEARCH?: {
-    search(
-      query: string,
-      options?: { limit?: number; filter?: Record<string, string> },
-    ): Promise<{
-      results: Array<{
+    search(options: {
+      messages: Array<{ role: "user" | "assistant" | "system"; content: string }>;
+      limit?: number;
+      filters?: Record<string, string | string[]>;
+    }): Promise<{
+      response: string;
+      sources: Array<{
         id: string;
-        score: number;
+        filename: string;
         content: string;
-        metadata?: Record<string, string>;
+        metadata?: Record<string, unknown>;
+        score?: number;
       }>;
     }>;
+    items: {
+      uploadAndPoll(
+        filename: string,
+        content: ReadableStream | ArrayBuffer | Blob | string,
+        options?: { metadata?: Record<string, string> },
+      ): Promise<{ id: string; filename: string; status: string }>;
+      upload(
+        filename: string,
+        content: ReadableStream | ArrayBuffer | Blob | string,
+        options?: { metadata?: Record<string, string> },
+      ): Promise<{ id: string; filename: string; status: string }>;
+      delete(itemId: string): Promise<void>;
+      list(options?: {
+        limit?: number;
+        cursor?: string;
+      }): Promise<{ items: Array<{ id: string; filename: string; status: string }> }>;
+    };
   };
 
   // Pipelines (data warehouse → R2 Iceberg, open beta)
@@ -86,6 +111,7 @@ export interface Env {
   ORGANIZATION_STATE: DurableObjectNamespace;
   PATIENT_AGENT?: DurableObjectNamespace;
   ASSESSMENT_LIVE_SESSION?: DurableObjectNamespace;
+  CLINIC_AGENT?: DurableObjectNamespace;
 
   // Premium AI (opt-in): Gemini Live API para avaliações em tempo real
   GOOGLE_AI_PREMIUM_ENABLED?: string; // "true" para habilitar
@@ -98,6 +124,9 @@ export interface Env {
   WORKFLOW_DISCHARGE?: Workflow<PatientDischargeWorkflow>;
   WORKFLOW_REENGAGEMENT?: Workflow<PatientReengagementWorkflow>;
   WORKFLOW_DIGITAL_TWIN?: Workflow<PatientDigitalTwinWorkflow>;
+  WORKFLOW_WIKI_SYNC?: Workflow<WikiSyncWorkflow>;
+  WORKFLOW_KNOWLEDGE_SYNC?: Workflow<KnowledgeSyncWorkflow>;
+  WORKFLOW_SESSION_SUMMARY?: Workflow<SessionSummaryWorkflow>;
 
   // AI & Browser Rendering
   AI: {
@@ -175,6 +204,11 @@ export interface Env {
   // Cloudflare Turnstile (anti-bot para rotas públicas)
   TURNSTILE_SECRET_KEY?: string;
   TURNSTILE_SITE_KEY?: string;
+
+  // Web Push / VAPID
+  VAPID_PUBLIC_KEY?: string;
+  VAPID_PRIVATE_KEY?: string;
+  VAPID_SUBJECT?: string;
 }
 
 // Helper type para Workflow binding

@@ -53,6 +53,11 @@ export const appointmentsApi = {
       body: JSON.stringify(reason ? { reason } : {}),
     }),
   lastUpdated: () => request<{ data: AppointmentsLastUpdated }>("/api/appointments/last-updated"),
+  generateQrToken: (id: string) =>
+    request<{ data: { url: string; expiresAt: string } }>(`/api/appointments/${id}/qr-token`, {
+      method: "POST",
+      body: JSON.stringify({}),
+    }),
 };
 
 export const schedulingApi = {

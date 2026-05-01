@@ -2,6 +2,7 @@
 
 import { appointmentsApi } from "@/api/v2/appointments";
 import { auditApi } from "@/api/v2";
+import { parseLocalDate } from "@/lib/date-utils";
 import {
   AppointmentBase,
   AppointmentFormData,
@@ -237,7 +238,7 @@ export class AppointmentService {
       // Conflict Check
       if (existingAppointments.length > 0) {
         checkAppointmentConflict({
-          date: new Date(data.appointment_date),
+          date: parseLocalDate(data.appointment_date || ""),
           time: data.start_time || data.appointment_time || "",
           duration: data.duration || 60,
           appointments: existingAppointments,

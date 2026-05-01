@@ -5,8 +5,16 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
 import { useEffect } from "react";
-import { startOfMonth, subMonths, subDays, startOfWeek, endOfWeek } from "date-fns";
-import { formatDateToLocalISO } from "@/utils/dateUtils";
+import {
+  todayYMD,
+  toLocalYMD,
+  startOfLocalWeek,
+  endOfLocalWeek,
+  startOfLocalMonth,
+  subDaysFromYMD,
+  parseLocalDate,
+} from "@/lib/date-utils";
+import { subMonths, subDays } from "date-fns";
 import { fisioLogger as logger } from "@/lib/errors/logger";
 import { appointmentsApi } from "@/api/v2/appointments";
 import { financialApi } from "@/api/v2/financial";
@@ -125,17 +133,16 @@ export const useDashboardMetrics = (period: DashboardPeriod = "hoje") => {
     queryFn: async (): Promise<DashboardMetrics> => {
       if (!organizationId) throw new Error("Organization ID is required");
 
+      const today = todayYMD();
+      const startCurrentMonth = startOfLocalMonth(today);
+      const weekStart = startOfLocalWeek(today);
+      const weekEnd = endOfLocalWeek(today);
+
       const now = new Date();
-      const today = formatDateToLocalISO(now);
-      const startCurrentMonthDate = startOfMonth(now);
-      const startCurrentMonth = formatDateToLocalISO(startCurrentMonthDate);
-      const startLastMonthDate = startOfMonth(subMonths(now, 1));
-      const endLastMonthDate = subDays(startCurrentMonthDate, 1);
-      const thirtyDaysAgo = formatDateToLocalISO(subMonths(now, 1));
-      const weekStartDate = startOfWeek(now, { weekStartsOn: 1 });
-      const weekEndDate = endOfWeek(now, { weekStartsOn: 1 });
-      const weekStart = formatDateToLocalISO(weekStartDate);
-      const weekEnd = formatDateToLocalISO(weekEndDate);
+      const startCurrentMonthDate = parseLocalDate(startCurrentMonth);
+      const startLastMonthDate = parseLocalDate(startOfLocalMonth(toLocalYMD(subMonths(now, 1))));
+      const endLastMonthDate = parseLocalDate(toLocalYMD(subDays(startCurrentMonthDate, 1)));
+      const thirtyDaysAgo = toLocalYMD(subMonths(now, 1));
 
       // Adjust primary date range based on selected period
       const primaryDateFrom =
@@ -305,8 +312,7 @@ export const useDashboardMetrics = (period: DashboardPeriod = "hoje") => {
 
       const weekDays = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"];
       const tendenciaSemanal: WeeklyTrend[] = weekDays.map((dia, i) => {
-        const day = subDays(weekEndDate, 6 - i);
-        const dayStr = formatDateToLocalISO(day);
+        const dayStr = subDaysFromYMD(weekEnd, 6 - i);
         const dayApts = appointmentsWeek.filter((a) => safeDay(a.date) === dayStr);
 
         return {

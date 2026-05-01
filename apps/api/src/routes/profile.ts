@@ -543,4 +543,56 @@ app.put("/users/:id", requireAuth, async (c) => {
   }
 });
 
+// PATCH /api/profile/me/public — Update public profile fields (FisioLink)
+app.patch("/me/public", requireAuth, async (c) => {
+  const user = c.get("user");
+  const body = (await c.req.json()) as Record<string, unknown>;
+
+  const allowedFields = ["slug", "is_public", "specialty", "bio", "avatar_url", "public_services"];
+  const updates: Record<string, unknown> = {};
+  for (const field of allowedFields) {
+    if (Object.prototype.hasOwnProperty.call(body, field)) {
+      updates[field] = body[field];
+    }
+  }
+
+  if (Object.keys(updates).length === 0) {
+    return c.json({ error: "Nenhum campo válido para atualizar" }, 400);
+  }
+
+  if (updates.slug) {
+    const slug = String(updates.slug)
+      .toLowerCase()
+      .replace(/[^a-z0-9-]/g, "");
+    if (slug.length < 2 || slug.length > 100) {
+      return c.json({ error: "slug deve ter entre 2 e 100 caracteres" }, 400);
+    }
+    updates.slug = slug;
+  }
+
+  const pool = createPool(c.env);
+
+  if (updates.slug) {
+    const existing = await pool.query(
+      `SELECT user_id FROM profiles WHERE slug = $1 AND user_id != $2 LIMIT 1`,
+      [updates.slug, user.uid],
+    );
+    if (existing.rows.length) {
+      return c.json({ error: "Este slug já está em uso" }, 409);
+    }
+  }
+
+  const setClauses = Object.keys(updates)
+    .map((k, i) => `"${k}" = $${i + 2}`)
+    .join(", ");
+  const values = [user.uid, ...Object.values(updates)];
+
+  await pool.query(
+    `UPDATE profiles SET ${setClauses}, updated_at = NOW() WHERE user_id = $1`,
+    values,
+  );
+
+  return c.json({ success: true });
+});
+
 export { app as profileRoutes };

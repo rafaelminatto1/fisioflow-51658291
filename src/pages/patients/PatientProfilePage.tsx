@@ -16,6 +16,7 @@ import { PatientAnalyticsTab } from "@/components/patient/PatientAnalyticsTab";
 import { PatientDocumentsTab } from "@/components/patient/PatientDocumentsTab";
 import { PatientFinancialTab } from "@/components/patient/PatientFinancialTab";
 import { PatientGamificationTab } from "@/components/patient/PatientGamificationTab";
+import { PatientGamificationSummary } from "@/components/patients/PatientGamificationSummary";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { LoadingSkeleton } from "@/components/ui/loading-skeleton";
@@ -45,6 +46,9 @@ import { usePatientProfileOptimized, type ProfileTab } from "@/hooks/usePatientP
 import { usePatientEvolutionReport } from "@/hooks/usePatientEvolutionReport";
 import { useEvaluationForms } from "@/hooks/useEvaluationForms";
 import { FisioPredictIndicator } from "@/features/ia-studio/components/FisioPredictIndicator";
+import { Textarea } from "@/components/ui/textarea";
+import { getWorkersApiUrl } from "@/lib/api/config";
+import { Send, Loader2 } from "lucide-react";
 
 import {
   Dialog,
@@ -55,6 +59,9 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
+const LazyDigitalTwinPanel = lazy(() =>
+  import("@/components/patients/DigitalTwinPanel").then((m) => ({ default: m.DigitalTwinPanel })),
+);
 
 // Lazy loading para componentes de abas pesadas
 const LazyPatientDashboard360 = lazy(() =>
@@ -153,6 +160,8 @@ const OverviewTab = ({
         <LazyMetasCard patientId={patient.id} />
       </Suspense>
 
+      <PatientGamificationSummary patientId={patient.id} />
+
       {/* Clinical Evolution Insights */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
@@ -234,6 +243,7 @@ const PatientProfileContent = () => {
     "gamification",
     "documents",
     "tasks",
+    "evidence",
   ] as const;
   type TabValue = (typeof validTabs)[number];
 
@@ -263,6 +273,42 @@ const PatientProfileContent = () => {
   const [editingPatient, setEditingPatient] = useState<boolean>(false);
   const [evaluationModalOpen, setEvaluationModalOpen] = useState<boolean>(false);
   const [scheduleModalOpen, setScheduleModalOpen] = useState<boolean>(false);
+
+  // FisioBrain Evidence Tab state
+  const [evidenceQuery, setEvidenceQuery] = useState<string>("");
+  const [evidenceLoading, setEvidenceLoading] = useState(false);
+  const [evidenceResult, setEvidenceResult] = useState<{
+    answer: string;
+    sources: Array<{ id: string; title: string; source: string; excerpt: string }>;
+  } | null>(null);
+  const SOURCE_BADGE_MAP: Record<string, { label: string; className: string }> = {
+    paper: { label: "Artigo", className: "bg-violet-100 text-violet-700 border-violet-200" },
+    wiki: { label: "Wiki", className: "bg-blue-100 text-blue-700 border-blue-200" },
+    protocol: { label: "Protocolo", className: "bg-emerald-100 text-emerald-700 border-emerald-200" },
+    exercise: { label: "Exercício", className: "bg-amber-100 text-amber-700 border-amber-200" },
+  };
+  async function searchEvidence() {
+    if (!evidenceQuery.trim() || evidenceQuery.trim().length < 3) return;
+    setEvidenceLoading(true);
+    try {
+      const params = new URLSearchParams({ q: evidenceQuery.trim() });
+      const res = await fetch(`${getWorkersApiUrl()}/api/fisiobrain/search?${params}`);
+      const json = await res.json();
+      setEvidenceResult(json);
+    } catch {
+      // silent
+    } finally {
+      setEvidenceLoading(false);
+    }
+  }
+
+  // Pre-fill evidence query when tab becomes active and patient is loaded
+  useEffect(() => {
+    if (activeTab === "evidence" && patient && !evidenceQuery) {
+      const condition = (patient as any).main_condition || (patient as any).diagnosis || "";
+      if (condition) setEvidenceQuery(condition);
+    }
+  }, [activeTab, patient]);
 
   const { data: evaluationForms = [] } = useEvaluationForms();
 
@@ -487,6 +533,13 @@ const PatientProfileContent = () => {
                 <CheckSquare className="h-4 w-4" />
                 Tarefas
               </TabsTrigger>
+              <TabsTrigger
+                value="evidence"
+                className="data-[state=active]:border-violet-600 data-[state=active]:text-violet-600 rounded-none bg-transparent border-b-2 border-transparent px-0 py-2 text-sm font-semibold gap-2 transition-all"
+              >
+                <Brain className="h-4 w-4" />
+                Evidência
+              </TabsTrigger>
             </TabsList>
           </div>
 
@@ -534,6 +587,9 @@ const PatientProfileContent = () => {
                 birthDate={patient.birth_date}
                 condition={(patient as any).main_condition || "Não informada"}
               />
+              <Suspense fallback={null}>
+                <LazyDigitalTwinPanel patientId={id || ""} />
+              </Suspense>
             </TabsContent>
 
             <TabsContent
@@ -589,6 +645,77 @@ const PatientProfileContent = () => {
               className="mt-0 focus-visible:outline-none animate-in fade-in-50 duration-500 slide-in-from-bottom-2"
             >
               <PatientTasksPanel patientId={id || ""} />
+            </TabsContent>
+
+            <TabsContent
+              value="evidence"
+              className="mt-0 focus-visible:outline-none animate-in fade-in-50 duration-500 slide-in-from-bottom-2"
+            >
+              <div className="bg-white rounded-3xl p-6 border border-violet-100 shadow-sm">
+                <h3 className="text-lg font-bold flex items-center gap-2 text-violet-700 mb-4">
+                  <Brain className="h-5 w-5" />
+                  Evidência Clínica — FisioBrain
+                </h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Busque artigos científicos, protocolos e exercícios baseados no diagnóstico do paciente.
+                </p>
+                <div className="flex flex-col gap-3 max-w-2xl">
+                  <Textarea
+                    className="resize-none text-sm"
+                    rows={3}
+                    placeholder="Ex: lombalgia crônica, síndrome do impacto do ombro..."
+                    value={evidenceQuery}
+                    onChange={(e) => setEvidenceQuery(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
+                        e.preventDefault();
+                        searchEvidence();
+                      }
+                    }}
+                  />
+                  <Button
+                    className="gap-2 bg-violet-600 hover:bg-violet-700 text-white self-start"
+                    onClick={searchEvidence}
+                    disabled={evidenceLoading || evidenceQuery.trim().length < 3}
+                  >
+                    {evidenceLoading ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Send className="h-4 w-4" />
+                    )}
+                    {evidenceLoading ? "Buscando..." : "Buscar Evidência"}
+                  </Button>
+
+                  {evidenceResult && (
+                    <div className="flex flex-col gap-4 mt-2">
+                      {evidenceResult.answer && (
+                        <div className="rounded-xl border border-violet-200 bg-violet-50 p-4">
+                          <p className="text-sm text-violet-900 leading-relaxed">{evidenceResult.answer}</p>
+                        </div>
+                      )}
+                      {evidenceResult.sources.length > 0 && (
+                        <div className="flex flex-col gap-2">
+                          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Fontes</p>
+                          {evidenceResult.sources.map((src) => {
+                            const badge = SOURCE_BADGE_MAP[src.source] ?? { label: src.source, className: "bg-gray-100 text-gray-700 border-gray-200" };
+                            return (
+                              <div key={src.id} className="rounded-xl border p-3 bg-white flex flex-col gap-1">
+                                <div className="flex items-center gap-2">
+                                  <Badge className={`text-xs border ${badge.className}`}>{badge.label}</Badge>
+                                  <span className="text-sm font-medium">{src.title}</span>
+                                </div>
+                                {src.excerpt && (
+                                  <p className="text-xs text-muted-foreground line-clamp-2 mt-1">{src.excerpt}</p>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
             </TabsContent>
           </div>
         </Tabs>

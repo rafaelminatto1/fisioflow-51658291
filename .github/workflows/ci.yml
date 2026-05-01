@@ -40,22 +40,30 @@ env:
 # ──────────────────────────────────────────────
 jobs:
   lint:
-    name: Lint
+    name: Lint & Security Audit
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup
         with:
           node-version: ${{ env.NODE_VERSION }}
           pnpm-version: ${{ env.PNPM_VERSION }}
-      - run: pnpm --filter fisioflow-web lint
-      - run: pnpm --filter @fisioflow/api lint
+      - name: Lint
+        run: |
+          pnpm --filter fisioflow-web lint
+          pnpm --filter @fisioflow/api lint
+      - name: Security Audit
+        run: pnpm audit --audit-level high
 
   type-check:
     name: Type Check
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup
@@ -69,6 +77,8 @@ jobs:
     name: Build Web
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup
@@ -89,6 +99,8 @@ jobs:
     name: Test API (Workers)
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup
@@ -101,6 +113,8 @@ jobs:
     name: Validate Migrations
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v4
       - name: Check migration naming and duplicates
@@ -110,6 +124,8 @@ jobs:
     name: Test Web (Unit)
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup

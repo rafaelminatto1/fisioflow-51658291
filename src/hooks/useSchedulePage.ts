@@ -20,6 +20,7 @@ import type { Tarefa } from "@/types/tarefas";
 import { fisioLogger as logger } from "@/lib/errors/logger";
 import { AppointmentService } from "@/services/appointmentService";
 import { normalizeStatus } from "@/components/schedule/shared/appointment-status";
+import { parseLocalDate, todayYMD, toLocalYMD } from "@/lib/date-utils";
 
 import type { Appointment } from "@/types/appointment";
 import type { AppointmentRow, PatientRow, TherapistProfileRow } from "@/types/workers";
@@ -53,17 +54,12 @@ type ScheduleAppointmentRow = AppointmentRow & {
 
 const isBirthdayToday = (birthDate: string | null | undefined): boolean => {
   if (!birthDate) return false;
-  const todayStr = format(new Date(), "MM-dd");
+  const todayStr = todayYMD().slice(5, 10);
   return birthDate.slice(5, 10) === todayStr;
 };
 
 const parseAppointmentDate = (date: string): Date => {
-  if (/^\d{4}-\d{2}-\d{2}$/.test(date)) {
-    const [year, month, day] = date.split("-").map(Number);
-    return new Date(year, month - 1, day, 12, 0, 0);
-  }
-  const parsed = new Date(date);
-  return Number.isNaN(parsed.getTime()) ? new Date() : parsed;
+  return parseLocalDate(date);
 };
 
 const calculateDurationMinutes = (startTime?: string | null, endTime?: string | null): number => {
@@ -149,18 +145,8 @@ export function useSchedulePageData(date: string, view: ViewType, filters?: Sche
         let dateFrom = date;
         let dateTo = date;
 
-        // Parse YYYY-MM-DD as local date (noon) to avoid UTC timezone shift
-        // BUG previo: `new Date("2026-04-27")` é UTC midnight; em BR (UTC-3) vira sáb 26/04 21:00,
-        // o que fazia getDay() retornar 0 (domingo) e o cálculo do início da semana ir para a semana ANTERIOR.
-        const parseLocalYMD = (s: string): Date => {
-          const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s);
-          if (!m) return new Date(s);
-          const [, y, mm, d] = m;
-          return new Date(Number(y), Number(mm) - 1, Number(d), 12, 0, 0);
-        };
-
         if (view === "week") {
-          const startOfWeek = parseLocalYMD(date);
+          const startOfWeek = parseLocalDate(date);
           // Ajustar para o início da semana (segunda-feira como no componente)
           const day = startOfWeek.getDay();
           const diff = startOfWeek.getDate() - day + (day === 0 ? -6 : 1);
@@ -169,18 +155,18 @@ export function useSchedulePageData(date: string, view: ViewType, filters?: Sche
           const endOfWeek = new Date(startOfWeek);
           endOfWeek.setDate(startOfWeek.getDate() + 6);
 
-          dateFrom = format(startOfWeek, "yyyy-MM-dd");
-          dateTo = format(endOfWeek, "yyyy-MM-dd");
+          dateFrom = toLocalYMD(startOfWeek);
+          dateTo = toLocalYMD(endOfWeek);
         } else if (view === "month") {
-          const startOfMonth = parseLocalYMD(date);
+          const startOfMonth = parseLocalDate(date);
           startOfMonth.setDate(1);
 
-          const endOfMonth = parseLocalYMD(date);
+          const endOfMonth = parseLocalDate(date);
           endOfMonth.setMonth(endOfMonth.getMonth() + 1);
           endOfMonth.setDate(0);
 
-          dateFrom = format(startOfMonth, "yyyy-MM-dd");
-          dateTo = format(endOfMonth, "yyyy-MM-dd");
+          dateFrom = toLocalYMD(startOfMonth);
+          dateTo = toLocalYMD(endOfMonth);
         }
 
         const res = await appointmentsApi.list({

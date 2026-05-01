@@ -1,5 +1,6 @@
-import { callGemini } from "../../lib/ai-gemini";
-import { Env } from "../../types/env";
+import { z } from "zod";
+import { callAI } from "../../lib/ai/callAI";
+import type { Env } from "../../types/env";
 
 export interface SimulatorProfile {
   age: number;
@@ -14,6 +15,18 @@ export interface SimulationResult {
   internalThoughtProcess: string;
   safetyTriggered: boolean;
 }
+
+const SimulationSchema = z.object({
+  simulatedMessage: z.string(),
+  internalThoughtProcess: z.string(),
+  safetyTriggered: z.boolean(),
+});
+
+const FALLBACK: SimulationResult = {
+  simulatedMessage: "Desculpe, não consegui processar a resposta do simulador.",
+  internalThoughtProcess: "Fallback — AI unavailable.",
+  safetyTriggered: false,
+};
 
 export class PatientSimulatorAgent {
   constructor(private env: Env) {}
@@ -48,33 +61,35 @@ INSTRUCTIONS:
 2. If pain is > 7, the patient should express significant discomfort or reluctance.
 3. If motivation is low, the patient might make excuses or express doubt.
 4. Include an 'internalThoughtProcess' explaining why the simulator chose this response based on the profile.
-5. Set 'safetyTriggered' to true ONLY IF the AI Tutor's last message instructed the patient to do something that seems dangerous given their current high pain level, otherwise false.`;
+5. Set 'safetyTriggered' to true ONLY IF the AI Tutor's last message instructed the patient to do something that seems dangerous given their current high pain level, otherwise false.
 
-    const responseSchema = {
-      type: "object",
-      properties: {
-        simulatedMessage: { type: "string" },
-        internalThoughtProcess: { type: "string" },
-        safetyTriggered: { type: "boolean" },
-      },
-      required: ["simulatedMessage", "internalThoughtProcess", "safetyTriggered"],
-    };
+Retorne SOMENTE JSON válido neste formato:
+{
+  "simulatedMessage": "resposta do paciente",
+  "internalThoughtProcess": "raciocínio interno do simulador",
+  "safetyTriggered": false
+}`;
 
     try {
-      const resultText = await callGemini(
-        this.env.GOOGLE_AI_API_KEY,
+      const aiResult = await callAI(this.env, {
+        task: "patient-simulator",
         prompt,
-        "gemini-1.5-flash",
-        this.env.FISIOFLOW_AI_GATEWAY_URL,
-        this.env.FISIOFLOW_AI_GATEWAY_TOKEN,
-        "clinical",
-        responseSchema,
-      );
+        organizationId: "system",
+      });
 
-      return JSON.parse(resultText) as SimulationResult;
+      const jsonMatch = aiResult.content.match(/\{[\s\S]*\}/);
+      if (!jsonMatch) return FALLBACK;
+
+      const parsed = SimulationSchema.safeParse(JSON.parse(jsonMatch[0]));
+      if (!parsed.success) {
+        console.error("[PatientSimulatorAgent] Schema validation failed:", parsed.error.issues);
+        return FALLBACK;
+      }
+
+      return parsed.data;
     } catch (error) {
       console.error("[PatientSimulatorAgent] Error generating simulation:", error);
-      throw new Error("Failed to generate simulated patient response");
+      return FALLBACK;
     }
   }
 }

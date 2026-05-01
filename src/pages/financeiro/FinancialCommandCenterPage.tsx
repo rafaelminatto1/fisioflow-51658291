@@ -86,6 +86,11 @@ const CommissionsDashboard = lazy(() =>
     default: m.CommissionsDashboard,
   })),
 );
+const NfseBatchEmitter = lazy(() =>
+  import("@/components/financial/NfseBatchEmitter").then((m) => ({
+    default: m.NfseBatchEmitter,
+  })),
+);
 
 const MAIN_TABS = [
   "summary",
@@ -830,7 +835,10 @@ const FinancialCommandCenterPage = () => {
                 </Suspense>
               </TabsContent>
 
-              <TabsContent value="nfse">
+              <TabsContent value="nfse" className="space-y-4">
+                <Suspense fallback={null}>
+                  <NfseBatchEmitter />
+                </Suspense>
                 <Suspense fallback={<PageShellFallback />}>
                   <NFSeContent
                     autoOpenCreate={shouldAutoOpenNfse}

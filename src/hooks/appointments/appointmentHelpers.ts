@@ -5,6 +5,7 @@
 
 import { AppointmentBase } from "@/types/appointment";
 import { fisioLogger as logger } from "@/lib/errors/logger";
+import { parseLocalDate, toLocalYMD } from "@/lib/date-utils";
 
 export const EMERGENCY_CACHE_KEY = "fisioflow_appointments_emergency";
 export const EMERGENCY_CACHE_MAX_AGE = 1000 * 60 * 60 * 24 * 7; // 7 dias
@@ -50,7 +51,7 @@ export function saveEmergencyBackup(
       patientId: apt.patientId,
       patientName: apt.patientName,
       phone: apt.phone,
-      date: apt.date instanceof Date ? apt.date.toISOString() : apt.date,
+      date: apt.date instanceof Date ? toLocalYMD(apt.date) : apt.date,
       time: apt.time,
       duration: apt.duration,
       type: apt.type,
@@ -115,7 +116,7 @@ export function loadEmergencyBackup(organizationId?: string): EmergencyBackupRes
     const appointments: AppointmentBase[] = (backup.data || []).map(
       (apt: Record<string, unknown>) => ({
         ...apt,
-        date: apt.date ? new Date(apt.date as string) : new Date(),
+        date: apt.date ? parseLocalDate(String(apt.date)) : new Date(),
         createdAt: new Date(),
         updatedAt: new Date(),
       }),

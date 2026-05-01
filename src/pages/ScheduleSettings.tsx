@@ -4,16 +4,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   ArrowLeft,
   CalendarClock,
-  CalendarDays,
-  CalendarOff,
-  CalendarRange,
-  Calendar,
+  ChevronRight,
+  Gauge,
   Menu,
   Palette,
   Shield,
-  ChevronRight,
   Stethoscope,
-  WifiOff,
 } from "lucide-react";
 import { Link, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -25,86 +21,75 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/co
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
-import { useAgendaAppearancePersistence } from "@/hooks/useAgendaAppearancePersistence";
-import { GlobalPresetsPanel } from "@/components/schedule/settings/GlobalPresetsPanel";
-import { ViewAppearancePanel } from "@/components/schedule/settings/ViewAppearancePanel";
-import { StatusColorManager } from "@/components/schedule/settings/StatusColorManager";
-import { SettingsSectionCard } from "@/components/schedule/settings/shared/SettingsSectionCard";
-import { AccessibilitySection } from "@/components/schedule/settings/AccessibilitySection";
+
+// ─── Lazy-loaded tab components ────────────────────────────────────────────────
 
 const AgendaHorariosTab = lazy(() =>
   import("@/components/schedule/settings/tabs/AgendaHorariosTab").then((m) => ({
     default: m.AgendaHorariosTab,
   })),
 );
+
+const StatusAtendimentoTab = lazy(() =>
+  import("@/components/schedule/settings/tabs/StatusAtendimentoTab").then((m) => ({
+    default: m.StatusAtendimentoTab,
+  })),
+);
+
 const ScheduleAppointmentTypesTab = lazy(() =>
   import("@/components/schedule/settings/tabs/ScheduleAppointmentTypesTab").then((m) => ({
     default: m.ScheduleAppointmentTypesTab,
   })),
 );
-const SchedulePoliciesTab = lazy(() =>
-  import("@/components/schedule/settings/tabs/SchedulePoliciesTab").then((m) => ({
-    default: m.SchedulePoliciesTab,
-  })),
-);
-const ScheduleBlockedTab = lazy(() =>
-  import("@/components/schedule/settings/tabs/ScheduleBlockedTab").then((m) => ({
-    default: m.ScheduleBlockedTab,
+
+const PoliciesRulesTab = lazy(() =>
+  import("@/components/schedule/settings/tabs/PoliciesRulesTab").then((m) => ({
+    default: m.PoliciesRulesTab,
   })),
 );
 
-// ─── Tab definitions ──────────────────────────────────────────────────────────
+// ─── Tab definitions (4 tabs — Redesign v2) ───────────────────────────────────
 
 const scheduleSettingsTabs = [
   {
-    value: "visual",
-    label: "Aparência",
-    description: "Cards, cores e acessibilidade",
-    icon: Palette,
-    color: "text-pink-600 dark:text-pink-400",
-    activeBg: "bg-pink-50 dark:bg-pink-950/40",
-    activeBorder: "border-pink-500/70",
-    iconBg: "bg-pink-100 dark:bg-pink-900/40",
-  },
-  {
-    value: "agenda-horarios",
-    label: "Agenda & Horários",
-    description: "Capacidade, horários e janelas",
-    icon: CalendarClock,
+    value: "capacidade-horarios",
+    label: "Capacidade & Horários",
+    description: "Pacientes por horário e expediente",
+    icon: Gauge,
     color: "text-teal-600 dark:text-teal-400",
     activeBg: "bg-teal-50 dark:bg-teal-950/40",
     activeBorder: "border-teal-500/70",
     iconBg: "bg-teal-100 dark:bg-teal-900/40",
   },
   {
-    value: "appointment-types",
-    label: "Tipos de Atendimento",
-    description: "Avaliação, retorno, procedimentos",
-    icon: Stethoscope,
-    color: "text-violet-600 dark:text-violet-400",
-    activeBg: "bg-violet-50 dark:bg-violet-950/40",
-    activeBorder: "border-violet-500/70",
-    iconBg: "bg-violet-100 dark:bg-violet-900/40",
-  },
-  {
-    value: "policies",
-    label: "Políticas",
-    description: "Cancelamentos e lembretes",
-    icon: Shield,
+    value: "status",
+    label: "Status de Atendimento",
+    description: "Cores, nomes e fluxo de status",
+    icon: Palette,
     color: "text-amber-600 dark:text-amber-400",
     activeBg: "bg-amber-50 dark:bg-amber-950/40",
     activeBorder: "border-amber-500/70",
     iconBg: "bg-amber-100 dark:bg-amber-900/40",
   },
   {
-    value: "blocked",
-    label: "Bloqueios",
-    description: "Ausências e indisponibilidades",
-    icon: CalendarOff,
-    color: "text-red-600 dark:text-red-400",
-    activeBg: "bg-red-50 dark:bg-red-950/40",
-    activeBorder: "border-red-500/70",
-    iconBg: "bg-red-100 dark:bg-red-900/40",
+    value: "tipos-atendimento",
+    label: "Tipos de Atendimento",
+    description: "Avaliação, retorno, procedimentos",
+    icon: Stethoscope,
+    color: "text-blue-600 dark:text-blue-400",
+    activeBg: "bg-blue-50 dark:bg-blue-950/40",
+    activeBorder: "border-blue-500/70",
+    iconBg: "bg-blue-100 dark:bg-blue-900/40",
+  },
+  {
+    value: "politicas-regras",
+    label: "Políticas & Regras",
+    description: "Cancelamentos, bloqueios e lembretes",
+    icon: Shield,
+    color: "text-rose-600 dark:text-rose-400",
+    activeBg: "bg-rose-50 dark:bg-rose-950/40",
+    activeBorder: "border-rose-500/70",
+    iconBg: "bg-rose-100 dark:bg-rose-900/40",
   },
 ] as const;
 
@@ -113,6 +98,18 @@ type TabValue = (typeof scheduleSettingsTabs)[number]["value"];
 // ─── Valid tab values for URL sync ────────────────────────────────────────────
 
 export const VALID_TAB_IDS = scheduleSettingsTabs.map((t) => t.value) as TabValue[];
+
+// ─── Legacy tab → new tab mapping ────────────────────────────────────────────
+
+const LEGACY_TAB_REDIRECTS: Record<string, TabValue> = {
+  visual: "capacidade-horarios",
+  "agenda-horarios": "capacidade-horarios",
+  capacity: "capacidade-horarios",
+  hours: "capacidade-horarios",
+  "appointment-types": "tipos-atendimento",
+  policies: "politicas-regras",
+  blocked: "politicas-regras",
+};
 
 // ─── Pure helper functions (used in property tests) ──────────────────────────
 
@@ -154,14 +151,12 @@ export function setTabInUrl(
 interface SidebarNavProps {
   activeTab: TabValue;
   onTabChange: (v: TabValue) => void;
-  blockedCount: number;
   appointmentTypesCount: number;
 }
 
 function SidebarNav({
   activeTab,
   onTabChange: _onTabChange,
-  blockedCount,
   appointmentTypesCount,
 }: SidebarNavProps) {
   return (
@@ -170,13 +165,7 @@ function SidebarNav({
         const Icon = tab.icon;
         const isActive = activeTab === tab.value;
 
-        // Badge counts for specific tabs
-        const badgeCount =
-          tab.value === "blocked"
-            ? blockedCount
-            : tab.value === "appointment-types"
-              ? appointmentTypesCount
-              : 0;
+        const badgeCount = tab.value === "tipos-atendimento" ? appointmentTypesCount : 0;
 
         return (
           <TabsTrigger
@@ -244,53 +233,6 @@ function SidebarNav({
   );
 }
 
-// ─── Visual tab content ───────────────────────────────────────────────────────
-
-function VisualTabContent() {
-  const { isOffline, isSyncing } = useAgendaAppearancePersistence("day");
-
-  return (
-    <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
-      <div className="lg:col-span-8 flex flex-col gap-5">
-        {/* Offline banner */}
-        {isOffline && (
-          <div className="flex items-center gap-2 p-3 rounded-xl border border-amber-200 bg-amber-50 dark:border-amber-800/50 dark:bg-amber-950/20 text-amber-700 dark:text-amber-400 text-sm">
-            <WifiOff className="h-4 w-4 shrink-0" />
-            <span>Modo offline — configurações salvas localmente</span>
-          </div>
-        )}
-
-        {/* Loading indicator */}
-        {isSyncing && !isOffline && (
-          <div className="flex items-center gap-2 p-3 rounded-xl border border-blue-200 bg-blue-50 dark:border-blue-800/50 dark:bg-blue-950/20 text-blue-700 dark:text-blue-400 text-sm">
-            <span className="h-4 w-4 shrink-0 rounded-full border-2 border-blue-400 border-t-transparent animate-spin" />
-            <span>Sincronizando configurações...</span>
-          </div>
-        )}
-
-        <GlobalPresetsPanel />
-        <ViewAppearancePanel view="day" label="Dia" icon={CalendarDays} />
-        <ViewAppearancePanel view="week" label="Semana" icon={CalendarRange} />
-        <ViewAppearancePanel view="month" label="Mês" icon={Calendar} />
-        <AccessibilitySection />
-      </div>
-
-      <div className="lg:col-span-4">
-        <div className="lg:sticky lg:top-24">
-          <SettingsSectionCard
-            icon={<Palette className="h-4 w-4" />}
-            iconBg="bg-pink-100 dark:bg-pink-900/40 text-pink-600 dark:text-pink-400"
-            title="Cores de Status"
-            description="Personalize as cores por tipo de agendamento"
-          >
-            <StatusColorManager />
-          </SettingsSectionCard>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 // ─── Main page ────────────────────────────────────────────────────────────────
 
 export default function ScheduleSettings() {
@@ -300,21 +242,17 @@ export default function ScheduleSettings() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [sheetOpen, setSheetOpen] = useState(false);
 
-  // Legacy redirect: capacity/hours → agenda-horarios
-  const rawTab = searchParams.get("tab") ?? "visual";
+  // Resolve tab from URL with legacy redirect support
+  const rawTab = searchParams.get("tab") ?? "capacidade-horarios";
   const resolvedTab: TabValue =
-    rawTab === "capacity" || rawTab === "hours"
-      ? "agenda-horarios"
-      : VALID_TAB_IDS.includes(rawTab as TabValue)
-        ? (rawTab as TabValue)
-        : "visual";
+    LEGACY_TAB_REDIRECTS[rawTab] ??
+    (VALID_TAB_IDS.includes(rawTab as TabValue)
+      ? (rawTab as TabValue)
+      : "capacidade-horarios");
 
   const handleTabChange = useCallback(
     (value: string) => {
-      // Redirect legacy values
-      const target =
-        value === "capacity" || value === "hours" ? "agenda-horarios" : value;
-
+      const target = LEGACY_TAB_REDIRECTS[value] ?? value;
       setSearchParams(
         (prev) => {
           prev.set("tab", target);
@@ -328,13 +266,12 @@ export default function ScheduleSettings() {
   );
 
   const currentTabMeta = scheduleSettingsTabs.find((t) => t.value === resolvedTab);
-
-  const blockedCount = getBadgeCount(blockedTimes ?? []);
   const appointmentTypesCount = getBadgeCount(types);
 
   return (
     <MainLayout compactPadding>
       <div className="space-y-5">
+        {/* Header */}
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <Link to="/agenda">
@@ -347,7 +284,7 @@ export default function ScheduleSettings() {
               </Button>
             </Link>
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-teal-500 text-white shadow-sm">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-teal-500 to-blue-500 text-white shadow-sm">
                 <CalendarClock className="h-5 w-5" />
               </div>
               <div>
@@ -355,7 +292,7 @@ export default function ScheduleSettings() {
                   Configurações da Agenda
                 </h1>
                 <p className="mt-1 text-xs text-muted-foreground">
-                  Aparência, horários e políticas
+                  Capacidade, status e regras de agendamento
                 </p>
               </div>
             </div>
@@ -370,6 +307,7 @@ export default function ScheduleSettings() {
           </Button>
         </div>
 
+        {/* Tab Layout */}
         <Tabs
           value={resolvedTab}
           onValueChange={handleTabChange}
@@ -407,7 +345,6 @@ export default function ScheduleSettings() {
                     <SidebarNav
                       activeTab={resolvedTab}
                       onTabChange={handleTabChange}
-                      blockedCount={blockedCount}
                       appointmentTypesCount={appointmentTypesCount}
                     />
                   </TabsList>
@@ -419,12 +356,12 @@ export default function ScheduleSettings() {
               <SidebarNav
                 activeTab={resolvedTab}
                 onTabChange={handleTabChange}
-                blockedCount={blockedCount}
                 appointmentTypesCount={appointmentTypesCount}
               />
             </TabsList>
           )}
 
+          {/* Content Area */}
           <div
             className={cn(
               "rounded-2xl border bg-card shadow-sm min-h-[60vh] overflow-hidden",
@@ -453,24 +390,20 @@ export default function ScheduleSettings() {
 
             <div className="p-6">
               <Suspense fallback={<SettingsLoadingState />}>
-                <TabsContent value="visual" className="mt-0 focus-visible:outline-none">
-                  <VisualTabContent />
-                </TabsContent>
-
-                <TabsContent value="agenda-horarios" className="mt-0 focus-visible:outline-none">
+                <TabsContent value="capacidade-horarios" className="mt-0 focus-visible:outline-none">
                   <AgendaHorariosTab />
                 </TabsContent>
 
-                <TabsContent value="appointment-types" className="mt-0 focus-visible:outline-none">
+                <TabsContent value="status" className="mt-0 focus-visible:outline-none">
+                  <StatusAtendimentoTab />
+                </TabsContent>
+
+                <TabsContent value="tipos-atendimento" className="mt-0 focus-visible:outline-none">
                   <ScheduleAppointmentTypesTab />
                 </TabsContent>
 
-                <TabsContent value="policies" className="mt-0 focus-visible:outline-none">
-                  <SchedulePoliciesTab />
-                </TabsContent>
-
-                <TabsContent value="blocked" className="mt-0 focus-visible:outline-none">
-                  <ScheduleBlockedTab />
+                <TabsContent value="politicas-regras" className="mt-0 focus-visible:outline-none">
+                  <PoliciesRulesTab />
                 </TabsContent>
               </Suspense>
             </div>

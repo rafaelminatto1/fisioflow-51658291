@@ -45,6 +45,7 @@ import { AppointmentQuickView } from "./AppointmentQuickView";
 import { ScheduleToolbar } from "./ScheduleToolbar";
 import { ScheduleEventContent } from "./ScheduleEventContent";
 import { WeeklyScheduleSummary } from "./WeeklyScheduleSummary";
+import { parseLocalDT } from "@/lib/date-utils";
 
 type ViewType = "day" | "week" | "month";
 
@@ -231,11 +232,8 @@ export function ScheduleCalendar(props: ScheduleCalendarProps) {
       } else if (a.time && a.duration) {
         const startTime = String(a.time).slice(0, 5);
         startIso = toLocalISOString(rawDate, startTime);
-        const [h, m] = startTime.split(":").map(Number);
-        const startDate = new Date(rawDate + "T" + startTime + ":00");
+        const startDate = parseLocalDT(rawDate, startTime);
         const endDate = new Date(startDate.getTime() + a.duration * 60000);
-        void h;
-        void m;
         endIso = toLocalISOString(formatLocalDate(endDate), formatLocalTime(endDate));
       } else {
         continue;

@@ -27,9 +27,20 @@ import {
   ScanLine,
   Mic,
   RadioTower,
+  Brain,
+  Send,
+  BookOpen,
+  FlaskConical,
+  Dumbbell,
+  ScrollText,
+  X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { getWorkersApiUrl } from "@/lib/api/config";
 import { RichTextProvider, useRichTextContext } from "@/contexts/RichTextContext";
 import { RichTextToolbar } from "@/components/ui/RichTextToolbar";
 import { RichTextEditor } from "@/components/ui/RichTextEditor";
@@ -86,6 +97,48 @@ const NotionEvolutionPanel: React.FC<NotionEvolutionPanelProps> = ({
   evolutionId,
 }) => {
   const [showShortcutsModal, setShowShortcutsModal] = useState(false);
+  const [isFisioBrainOpen, setIsFisioBrainOpen] = useState(false);
+  const [fisioBrainQuery, setFisioBrainQuery] = useState("");
+  const [fisioBrainLoading, setFisioBrainLoading] = useState(false);
+  const [fisioBrainResult, setFisioBrainResult] = useState<{
+    answer: string;
+    sources: Array<{ id: string; title: string; source: string; excerpt: string }>;
+  } | null>(null);
+
+  const SOURCE_BADGES: Record<string, { label: string; className: string }> = {
+    paper: { label: "Artigo", className: "bg-violet-100 text-violet-700" },
+    wiki: { label: "Wiki", className: "bg-blue-100 text-blue-700" },
+    protocol: { label: "Protocolo", className: "bg-emerald-100 text-emerald-700" },
+    exercise: { label: "Exercício", className: "bg-amber-100 text-amber-700" },
+  };
+
+  async function searchFisioBrain() {
+    if (!fisioBrainQuery.trim() || fisioBrainQuery.trim().length < 3) return;
+    setFisioBrainLoading(true);
+    try {
+      const params = new URLSearchParams({ q: fisioBrainQuery.trim(), source: "protocol,paper" });
+      const res = await fetch(`${getWorkersApiUrl()}/api/fisiobrain/search?${params}`);
+      const data = await res.json();
+      setFisioBrainResult(data);
+    } catch {
+      // silent
+    } finally {
+      setFisioBrainLoading(false);
+    }
+  }
+
+  function openFisioBrain() {
+    const diagnosis = data.assessment?.replace(/<[^>]*>/g, "").trim() ?? "";
+    setFisioBrainQuery(diagnosis.slice(0, 200));
+    setFisioBrainResult(null);
+    setIsFisioBrainOpen(true);
+  }
+
+  function insertEvidenceInPlan(text: string) {
+    const current = (data.treatmentPlan ?? "").replace(/<p><\/p>$/, "");
+    onChange({ ...data, treatmentPlan: `${current}<p><em>Evidência: ${text}</em></p>` });
+    toast.success("Evidência inserida no Plano.");
+  }
   const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
 
   // Voice Scribe
@@ -597,6 +650,16 @@ const NotionEvolutionPanel: React.FC<NotionEvolutionPanelProps> = ({
             )}
             <span className="hidden sm:inline">IA</span>
           </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={openFisioBrain}
+            className="gap-2 text-violet-600 hover:bg-violet-50"
+            title="Buscar evidência clínica (FisioBrain)"
+          >
+            <Brain className="h-4 w-4" />
+            <span className="hidden sm:inline">Evidência</span>
+          </Button>
         </div>
       </header>
 
@@ -956,6 +1019,92 @@ const NotionEvolutionPanel: React.FC<NotionEvolutionPanelProps> = ({
           </div>
         </div>
       </div>
+
+      {/* FisioBrain Evidence Sheet */}
+      <Sheet open={isFisioBrainOpen} onOpenChange={setIsFisioBrainOpen}>
+        <SheetContent side="right" className="w-[420px] sm:w-[480px] flex flex-col gap-0 p-0">
+          <SheetHeader className="px-4 py-3 border-b">
+            <SheetTitle className="flex items-center gap-2 text-violet-700">
+              <Brain className="h-5 w-5" />
+              FisioBrain — Busca de Evidências
+            </SheetTitle>
+          </SheetHeader>
+          <div className="flex flex-col flex-1 overflow-hidden p-4 gap-3">
+            <div className="flex gap-2">
+              <Textarea
+                className="resize-none text-sm"
+                rows={3}
+                placeholder="Ex: lombalgia crônica, síndrome do impacto..."
+                value={fisioBrainQuery}
+                onChange={(e) => setFisioBrainQuery(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
+                    e.preventDefault();
+                    searchFisioBrain();
+                  }
+                }}
+              />
+            </div>
+            <Button
+              className="w-full gap-2 bg-violet-600 hover:bg-violet-700 text-white"
+              onClick={searchFisioBrain}
+              disabled={fisioBrainLoading || fisioBrainQuery.trim().length < 3}
+            >
+              {fisioBrainLoading ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Send className="h-4 w-4" />
+              )}
+              {fisioBrainLoading ? "Buscando..." : "Buscar Evidência"}
+            </Button>
+
+            {fisioBrainResult && (
+              <div className="flex flex-col gap-3 overflow-y-auto flex-1">
+                {fisioBrainResult.answer && (
+                  <div className="rounded-lg border border-violet-200 bg-violet-50 p-3">
+                    <p className="text-sm text-violet-900 leading-relaxed">{fisioBrainResult.answer}</p>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="mt-2 text-xs border-violet-300 text-violet-700 hover:bg-violet-100"
+                      onClick={() => insertEvidenceInPlan(fisioBrainResult.answer)}
+                    >
+                      Inserir no Plano
+                    </Button>
+                  </div>
+                )}
+                {fisioBrainResult.sources.length > 0 && (
+                  <div className="flex flex-col gap-2">
+                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Fontes</p>
+                    {fisioBrainResult.sources.map((src) => {
+                      const badge = SOURCE_BADGES[src.source] ?? { label: src.source, className: "bg-gray-100 text-gray-700" };
+                      return (
+                        <div key={src.id} className="rounded-md border p-3 bg-white flex flex-col gap-1">
+                          <div className="flex items-center gap-2">
+                            <Badge className={cn("text-xs", badge.className)}>{badge.label}</Badge>
+                            <span className="text-xs font-medium truncate">{src.title}</span>
+                          </div>
+                          {src.excerpt && (
+                            <p className="text-xs text-muted-foreground line-clamp-2">{src.excerpt}</p>
+                          )}
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="self-end text-xs h-6 px-2 text-violet-600 hover:bg-violet-50"
+                            onClick={() => insertEvidenceInPlan(`${src.title} (${badge.label})`)}
+                          >
+                            Inserir no Plano
+                          </Button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </SheetContent>
+      </Sheet>
 
       {showShortcutsModal && (
         <div

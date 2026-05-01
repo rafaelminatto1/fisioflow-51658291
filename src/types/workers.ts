@@ -940,6 +940,20 @@ export interface PublicBookingRequestResult {
   created_at: string;
 }
 
+export interface BookingRequest {
+  id: string;
+  patient_name: string;
+  patient_phone: string;
+  patient_email?: string | null;
+  notes?: string | null;
+  requested_date: string;
+  requested_time: string;
+  professional_name?: string | null;
+  status: "pending" | "confirmed" | "rejected";
+  created_at: string;
+  updated_at: string;
+}
+
 export interface ExerciseSessionRow {
   id: string;
   patient_id?: string;

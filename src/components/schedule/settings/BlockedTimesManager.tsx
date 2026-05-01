@@ -23,6 +23,7 @@ import {
 import { useScheduleSettings, type BlockedTime } from "@/hooks/useScheduleSettings";
 import { format, parseISO, isToday, isThisWeek, isAfter, differenceInDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { todayYMD } from "@/lib/date-utils";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -147,8 +148,8 @@ export function BlockedTimesManager({ filter = "all" }: BlockedTimesManagerProps
   const [newBlocked, setNewBlocked] = useState({
     title: "",
     reason: "",
-    start_date: format(new Date(), "yyyy-MM-dd"),
-    end_date: format(new Date(), "yyyy-MM-dd"),
+    start_date: todayYMD(),
+    end_date: todayYMD(),
     start_time: "",
     end_time: "",
     is_all_day: true,
@@ -214,8 +215,8 @@ export function BlockedTimesManager({ filter = "all" }: BlockedTimesManagerProps
     setNewBlocked({
       title: "",
       reason: "",
-      start_date: format(new Date(), "yyyy-MM-dd"),
-      end_date: format(new Date(), "yyyy-MM-dd"),
+      start_date: todayYMD(),
+      end_date: todayYMD(),
       start_time: "",
       end_time: "",
       is_all_day: true,
@@ -231,7 +232,7 @@ export function BlockedTimesManager({ filter = "all" }: BlockedTimesManagerProps
       ...newBlocked,
       title: template.title,
       reason: template.reason,
-      start_date: format(new Date(), "yyyy-MM-dd"),
+      start_date: todayYMD(),
       end_date: format(endDate, "yyyy-MM-dd"),
     });
   };

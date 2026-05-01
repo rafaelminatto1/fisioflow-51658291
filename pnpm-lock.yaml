@@ -556,6 +556,12 @@ importers:
       eslint:
         specifier: ^9.39.4
         version: 9.39.4(jiti@2.6.1)
+      fast-check:
+        specifier: ^4.5.3
+        version: 4.5.3
+      husky:
+        specifier: ^9.1.7
+        version: 9.1.7
       oxfmt:
         specifier: ^0.45.0
         version: 0.45.0
@@ -565,6 +571,9 @@ importers:
       tailwindcss:
         specifier: ^4.2.2
         version: 4.2.2
+      turbo:
+        specifier: ^2.8.20
+        version: 2.8.20
       typescript:
         specifier: ~5.7.3
         version: 5.7.3
@@ -14061,6 +14070,11 @@ packages:
   human-signals@8.0.1:
     resolution: {integrity: sha512-eKCa6bwnJhvxj14kZk5NCPc6Hb6BdsU9DZcOnmQKSnO1VKrfV0zCvtttPZUsBvjmNDn8rpcJfpwSYnHBjc95MQ==}
     engines: {node: '>=18.18.0'}
+
+  husky@9.1.7:
+    resolution: {integrity: sha512-5gs5ytaNjBrh5Ow3zrvdUUY+0VxIuWVL4i9irt6friV+BqdCfmV11CQTWMiBYWHbXhco+J1kHfTOUkePhCDvMA==}
+    engines: {node: '>=18'}
+    hasBin: true
 
   hyphen@1.14.1:
     resolution: {integrity: sha512-kvL8xYl5QMTh+LwohVN72ciOxC0OEV79IPdJSTwEXok9y9QHebXGdFgrED4sWfiax/ODx++CAMk3hMy4XPJPOw==}
@@ -31836,16 +31850,16 @@ snapshots:
       - utf-8-validate
       - vite
 
-  '@vitest/browser@4.1.5(msw@2.12.14(@types/node@25.6.0)(typescript@6.0.2))(vite@8.0.10(@types/node@25.6.0)(esbuild@0.25.12)(jiti@2.6.1)(terser@5.46.2)(tsx@4.21.0)(yaml@2.8.3))(vitest@4.1.5)':
+  '@vitest/browser@4.1.5(msw@2.12.14(@types/node@22.19.15)(typescript@5.9.3))(vite@8.0.10(@types/node@22.19.15)(esbuild@0.25.12)(jiti@2.6.1)(terser@5.46.2)(tsx@4.21.0)(yaml@2.8.3))(vitest@4.1.5)':
     dependencies:
       '@blazediff/core': 1.9.1
-      '@vitest/mocker': 4.1.5(msw@2.12.14(@types/node@25.6.0)(typescript@6.0.2))(vite@8.0.10(@types/node@25.6.0)(esbuild@0.25.12)(jiti@2.6.1)(terser@5.46.2)(tsx@4.21.0)(yaml@2.8.3))
+      '@vitest/mocker': 4.1.5(msw@2.12.14(@types/node@22.19.15)(typescript@5.9.3))(vite@8.0.10(@types/node@22.19.15)(esbuild@0.25.12)(jiti@2.6.1)(terser@5.46.2)(tsx@4.21.0)(yaml@2.8.3))
       '@vitest/utils': 4.1.5
       magic-string: 0.30.21
       pngjs: 7.0.0
       sirv: 3.0.2
       tinyrainbow: 3.1.0
-      vitest: 4.1.5(@opentelemetry/api@1.9.1)(@types/node@25.6.0)(@vitest/coverage-v8@4.1.5)(@vitest/ui@4.1.5)(jsdom@28.1.0(@noble/hashes@2.0.1))(msw@2.12.14(@types/node@25.6.0)(typescript@6.0.2))(vite@8.0.10(@types/node@25.6.0)(esbuild@0.25.12)(jiti@2.6.1)(terser@5.46.2)(tsx@4.21.0)(yaml@2.8.3))
+      vitest: 4.1.5(@opentelemetry/api@1.9.1)(@types/node@22.19.15)(@vitest/coverage-v8@4.1.5)(@vitest/ui@4.1.5)(jsdom@26.1.0)(msw@2.12.14(@types/node@22.19.15)(typescript@5.9.3))(vite@8.0.10(@types/node@22.19.15)(esbuild@0.25.12)(jiti@2.6.1)(terser@5.46.2)(tsx@4.21.0)(yaml@2.8.3))
       ws: 8.20.0
     transitivePeerDependencies:
       - bufferutil
@@ -31866,9 +31880,9 @@ snapshots:
       obug: 2.1.1
       std-env: 4.1.0
       tinyrainbow: 3.1.0
-      vitest: 4.1.5(@opentelemetry/api@1.9.1)(@types/node@25.6.0)(@vitest/coverage-v8@4.1.5)(@vitest/ui@4.1.5)(jsdom@28.1.0(@noble/hashes@2.0.1))(msw@2.12.14(@types/node@25.6.0)(typescript@6.0.2))(vite@8.0.10(@types/node@25.6.0)(esbuild@0.25.12)(jiti@2.6.1)(terser@5.46.2)(tsx@4.21.0)(yaml@2.8.3))
+      vitest: 4.1.5(@opentelemetry/api@1.9.1)(@types/node@22.19.15)(@vitest/coverage-v8@4.1.5)(@vitest/ui@4.1.5)(jsdom@26.1.0)(msw@2.12.14(@types/node@22.19.15)(typescript@5.9.3))(vite@8.0.10(@types/node@22.19.15)(esbuild@0.25.12)(jiti@2.6.1)(terser@5.46.2)(tsx@4.21.0)(yaml@2.8.3))
     optionalDependencies:
-      '@vitest/browser': 4.1.5(msw@2.12.14(@types/node@25.6.0)(typescript@6.0.2))(vite@8.0.10(@types/node@25.6.0)(esbuild@0.25.12)(jiti@2.6.1)(terser@5.46.2)(tsx@4.21.0)(yaml@2.8.3))(vitest@4.1.5)
+      '@vitest/browser': 4.1.5(msw@2.12.14(@types/node@22.19.15)(typescript@5.9.3))(vite@8.0.10(@types/node@22.19.15)(esbuild@0.25.12)(jiti@2.6.1)(terser@5.46.2)(tsx@4.21.0)(yaml@2.8.3))(vitest@4.1.5)
 
   '@vitest/expect@3.2.4':
     dependencies:
@@ -31913,7 +31927,6 @@ snapshots:
     optionalDependencies:
       msw: 2.12.14(@types/node@22.19.15)(typescript@5.9.3)
       vite: 8.0.10(@types/node@22.19.15)(esbuild@0.25.12)(jiti@2.6.1)(terser@5.46.2)(tsx@4.21.0)(yaml@2.8.3)
-    optional: true
 
   '@vitest/mocker@4.1.5(msw@2.12.14(@types/node@25.6.0)(typescript@6.0.2))(vite@8.0.10(@types/node@25.6.0)(esbuild@0.25.12)(jiti@2.6.1)(terser@5.46.2)(tsx@4.21.0)(yaml@2.8.3))':
     dependencies:
@@ -31971,7 +31984,7 @@ snapshots:
       sirv: 3.0.2
       tinyglobby: 0.2.16
       tinyrainbow: 3.1.0
-      vitest: 4.1.5(@opentelemetry/api@1.9.1)(@types/node@25.6.0)(@vitest/coverage-v8@4.1.5)(@vitest/ui@4.1.5)(jsdom@28.1.0(@noble/hashes@2.0.1))(msw@2.12.14(@types/node@25.6.0)(typescript@6.0.2))(vite@8.0.10(@types/node@25.6.0)(esbuild@0.25.12)(jiti@2.6.1)(terser@5.46.2)(tsx@4.21.0)(yaml@2.8.3))
+      vitest: 4.1.5(@opentelemetry/api@1.9.1)(@types/node@22.19.15)(@vitest/coverage-v8@4.1.5)(@vitest/ui@4.1.5)(jsdom@26.1.0)(msw@2.12.14(@types/node@22.19.15)(typescript@5.9.3))(vite@8.0.10(@types/node@22.19.15)(esbuild@0.25.12)(jiti@2.6.1)(terser@5.46.2)(tsx@4.21.0)(yaml@2.8.3))
 
   '@vitest/utils@3.2.4':
     dependencies:
@@ -36078,6 +36091,8 @@ snapshots:
   human-signals@2.1.0: {}
 
   human-signals@8.0.1: {}
+
+  husky@9.1.7: {}
 
   hyphen@1.14.1: {}
 
@@ -43990,7 +44005,6 @@ snapshots:
       jsdom: 26.1.0
     transitivePeerDependencies:
       - msw
-    optional: true
 
   vitest@4.1.5(@opentelemetry/api@1.9.1)(@types/node@25.6.0)(@vitest/coverage-v8@4.1.5)(@vitest/ui@4.1.5)(jsdom@28.1.0(@noble/hashes@2.0.1))(msw@2.12.14(@types/node@25.6.0)(typescript@6.0.2))(vite@8.0.10(@types/node@25.6.0)(esbuild@0.25.12)(jiti@2.6.1)(terser@5.46.2)(tsx@4.21.0)(yaml@2.8.3)):
     dependencies:

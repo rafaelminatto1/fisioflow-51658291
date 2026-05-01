@@ -5,7 +5,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { differenceInDays, subDays } from "date-fns";
-import { formatDateToLocalISO } from "@/utils/dateUtils";
+import { toLocalYMD } from "@/lib/date-utils";
 import { queryConfigs } from "@/lib/queryConfig";
 import { fisioLogger as logger } from "@/lib/errors/logger";
 import { useAuth } from "@/contexts/AuthContext";
@@ -114,8 +114,8 @@ function calculateStats(
 
 const fetchAppointmentsForRange = async (start: Date, end: Date, therapistId?: string) => {
   const res = await appointmentsApi.list({
-    dateFrom: formatDateToLocalISO(start),
-    dateTo: formatDateToLocalISO(end),
+    dateFrom: toLocalYMD(start),
+    dateTo: toLocalYMD(end),
     therapistId: therapistId === "all" ? undefined : therapistId,
     limit: 1000,
   });

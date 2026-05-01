@@ -20,8 +20,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useDashboardMetrics, type DashboardPeriod } from "@/hooks/useDashboardMetrics";
 import { appointmentsApi, type AppointmentRow } from "@/api/v2";
 import { useAuth } from "@/contexts/AuthContext";
-import { formatDateToLocalISO } from "@/utils/dateUtils";
-import { endOfWeek, startOfMonth, startOfWeek } from "date-fns";
+import { todayYMD, startOfLocalWeek, endOfLocalWeek, startOfLocalMonth } from "@/lib/date-utils";
 import { AIInsightsWidget } from "./AIInsightsWidget";
 import { ClinicalEfficacyDashboard } from "@/components/analytics/ClinicalEfficacyDashboard";
 import { EmptyStateEnhanced } from "@/components/ui/EmptyStateEnhanced";
@@ -137,17 +136,14 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ period = "hoje" 
     enabled: !!organizationId,
     staleTime: 1000 * 60 * 2,
     queryFn: async () => {
-      const now = new Date();
+      const today = todayYMD();
       const dateFrom =
         period === "semana"
-          ? formatDateToLocalISO(startOfWeek(now, { weekStartsOn: 1 }))
+          ? startOfLocalWeek(today)
           : period === "mes"
-            ? formatDateToLocalISO(startOfMonth(now))
-            : formatDateToLocalISO(now);
-      const dateTo =
-        period === "semana"
-          ? formatDateToLocalISO(endOfWeek(now, { weekStartsOn: 1 }))
-          : formatDateToLocalISO(now);
+            ? startOfLocalMonth(today)
+            : today;
+      const dateTo = period === "semana" ? endOfLocalWeek(today) : today;
       const response = await appointmentsApi.list({
         dateFrom,
         dateTo,

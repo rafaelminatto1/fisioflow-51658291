@@ -17,7 +17,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { PeriodQuery, calculateAdjacentPeriod } from "@/utils/periodCalculations";
 import { appointmentPeriodKeys } from "@/hooks/useAppointmentsByPeriod";
 import { AppointmentService } from "@/services/appointmentService";
-import { formatDateToLocalISO } from "@/utils/dateUtils";
+import { toLocalYMD } from "@/lib/date-utils";
 import { calculatePeriodBounds } from "@/utils/periodCalculations";
 import { fisioLogger as logger } from "@/lib/errors/logger";
 
@@ -72,8 +72,8 @@ async function fetchPeriodAppointments(query: PeriodQuery) {
   const bounds = calculatePeriodBounds(query);
 
   const appointments = await AppointmentService.fetchAppointments(query.organizationId, {
-    dateFrom: formatDateToLocalISO(bounds.startDate),
-    dateTo: formatDateToLocalISO(bounds.endDate),
+    dateFrom: toLocalYMD(bounds.startDate),
+    dateTo: toLocalYMD(bounds.endDate),
   });
 
   // Filter by therapist if specified

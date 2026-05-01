@@ -18,6 +18,7 @@ import {
   FileText,
   Languages,
   Activity,
+  BookOpen,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -95,6 +96,7 @@ interface WikiTopNavProps {
   onDashboardSelect?: () => void;
   onDictionarySelect?: () => void;
   onAIHubSelect?: () => void;
+  onPapersSelect?: () => void;
   onTagSelect?: (tag: string) => void;
 }
 
@@ -108,6 +110,7 @@ export function WikiTopNav({
   onDashboardSelect,
   onDictionarySelect,
   onAIHubSelect,
+  onPapersSelect,
   onTagSelect,
 }: WikiTopNavProps) {
   const [searchQuery, setSearchQuery] = React.useState("");
@@ -212,6 +215,17 @@ export function WikiTopNav({
             <Activity className="h-4 w-4 text-primary group-hover:animate-pulse" />
             <span className="hidden sm:inline text-slate-700 dark:text-slate-300 group-hover:text-primary transition-colors">
               AI Hub
+            </span>
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="gap-2 font-bold font-display rounded-xl transition-all duration-300 hover:bg-violet-50 dark:hover:bg-violet-900/20"
+            onClick={onPapersSelect}
+          >
+            <BookOpen className="h-4 w-4 text-violet-500" />
+            <span className="hidden sm:inline text-slate-700 dark:text-slate-300 hover:text-violet-600 transition-colors">
+              Artigos
             </span>
           </Button>
           <Button

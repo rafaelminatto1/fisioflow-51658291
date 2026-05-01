@@ -35,9 +35,8 @@ export const BookingPage = () => {
     notes: "",
   });
   const [bookingLoading, setBookingLoading] = useState(false);
-
-  // Mock available times for now - In real app, fetch from database based on availability
-  const availableTimes = ["08:00", "09:00", "10:00", "11:00", "14:00", "15:00", "16:00", "17:00"];
+  const [availableTimes, setAvailableTimes] = useState<string[]>([]);
+  const [availabilityLoading, setAvailabilityLoading] = useState(false);
 
   useEffect(() => {
     async function loadProfile() {
@@ -61,6 +60,16 @@ export const BookingPage = () => {
     }
     loadProfile();
   }, [slug, toast]);
+
+  useEffect(() => {
+    if (!selectedDate || !slug) { setAvailableTimes([]); return; }
+    const dateStr = format(selectedDate, "yyyy-MM-dd");
+    setAvailabilityLoading(true);
+    publicBookingApi.getAvailability(slug, dateStr)
+      .then((res) => setAvailableTimes((res as any).slots ?? []))
+      .catch(() => setAvailableTimes([]))
+      .finally(() => setAvailabilityLoading(false));
+  }, [selectedDate, slug]);
 
   const handleBooking = async () => {
     if (!profile || !selectedDate || !selectedTime) return;

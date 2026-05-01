@@ -13,12 +13,20 @@ import {
   calculateEndTime,
   isConflictError,
   countsTowardCapacity,
+  getIntervalCapacity,
+  getOverlappingAppointments,
+  enforceCapacity,
+  sanitizeInput,
+  toPositiveInteger,
+  toBoolean,
 } from "./appointmentHelpers";
 import { createDb } from "../lib/db";
 import { withTenant } from "../lib/db-utils";
 import { isUuid } from "../lib/validators";
 import { triggerInngestEvent } from "../lib/inngest-client";
 import { broadcastToOrg } from "../lib/realtime";
+import { sendPushToOrg } from "../lib/webpush";
+import { createPool } from "../lib/db";
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables & CustomVariables }>();
 
@@ -124,154 +132,6 @@ app.get("/", requireAuth, async (c) => {
     return c.json({ data: [] });
   }
 });
-
-async function getIntervalCapacity(
-  db: any,
-  organizationId: string,
-  date: string,
-  startTime: string,
-  endTime: string,
-  _useLock: boolean = false,
-): Promise<number> {
-  try {
-    // FOR UPDATE is not compatible with aggregate functions; capacity is read-only here
-    const result = await db.execute(sql`
-      SELECT MIN(max_patients)::int AS capacity
-      FROM schedule_capacity
-      WHERE organization_id = ${organizationId}
-        AND day_of_week = EXTRACT(DOW FROM ${date}::date)
-        AND start_time < ${endTime}::time
-        AND end_time > ${startTime}::time
-    `);
-
-    const capacity = Number(result.rows?.[0]?.capacity ?? 1);
-    return Number.isFinite(capacity) && capacity > 0 ? capacity : 1;
-  } catch (error: any) {
-    if (error?.message?.includes("does not exist")) {
-      return 1;
-    }
-    throw error;
-  }
-}
-
-async function getOverlappingAppointments(
-  db: any,
-  organizationId: string,
-  date: string,
-  startTime: string,
-  endTime: string,
-  excludeAppointmentId?: string,
-): Promise<Array<{ id: string; patientId: string; startTime: string; date: string }>> {
-  try {
-    // Usamos sql.raw para garantir que o Postgres receba os tipos corretos (time, date, uuid)
-    // e evitar falhas de inferência do driver HTTP do Neon.
-    // Guardamos o cast ::uuid para evitar erro se organizationId não for UUID válido
-    const safeOrgId = isUuid(organizationId)
-      ? organizationId
-      : "00000000-0000-0000-0000-000000000000";
-    const result = await db.execute(sql`
-      SELECT id, patient_id AS "patientId", start_time AS "startTime", date
-      FROM appointments
-      WHERE organization_id = ${safeOrgId}::uuid
-        AND date = ${date}::date
-        AND status::text NOT IN (
-          'cancelado', 'cancelled',
-          'faltou', 'faltou_com_aviso', 'faltou_sem_aviso',
-          'nao_atendido', 'nao_atendido_sem_cobranca', 'no_show',
-          'remarcar', 'remarcado', 'rescheduled'
-        )
-        AND deleted_at IS NULL
-        AND start_time < ${endTime}::time
-        AND end_time > ${startTime}::time
-        ${excludeAppointmentId && isUuid(excludeAppointmentId) ? sql`AND id != ${excludeAppointmentId}::uuid` : sql``}
-      ORDER BY start_time ASC, created_at ASC
-    `);
-
-    return (result.rows || []) as any;
-  } catch (error: any) {
-    console.error("[getOverlappingAppointments] Query failed:", error.message);
-    // Se a tabela não existir ou outro erro crítico, retornamos vazio para não travar o fluxo principal
-    // mas logamos o erro para auditoria.
-    if (error.message.includes("does not exist")) return [];
-    throw error;
-  }
-}
-
-async function enforceCapacity(
-  db: any,
-  organizationId: string,
-  payload: {
-    date: string;
-    startTime: string;
-    endTime: string;
-    status: string;
-    ignoreCapacity?: boolean;
-    excludeAppointmentId?: string;
-    useLock?: boolean;
-  },
-) {
-  if (payload.ignoreCapacity || !countsTowardCapacity(payload.status)) {
-    return null;
-  }
-
-  const capacity = await getIntervalCapacity(
-    db,
-    organizationId,
-    payload.date,
-    payload.startTime,
-    payload.endTime,
-    payload.useLock,
-  );
-  const conflicts = await getOverlappingAppointments(
-    db,
-    organizationId,
-    payload.date,
-    payload.startTime,
-    payload.endTime,
-    payload.excludeAppointmentId,
-  );
-
-  if (conflicts.length < capacity) {
-    return null;
-  }
-
-  return {
-    error: "Capacidade do horário excedida para este intervalo.",
-    capacity,
-    total: conflicts.length + 1,
-    conflicts,
-  };
-}
-
-function sanitizeInput(data: any): any {
-  if (data === null || data === undefined) return null;
-  if (typeof data === "string") {
-    const trimmed = data.trim();
-    if (trimmed === "" || trimmed === "null" || trimmed === "undefined") return null;
-    return trimmed;
-  }
-  if (Array.isArray(data)) return data.map(sanitizeInput);
-  if (typeof data === "object") {
-    return Object.fromEntries(Object.entries(data).map(([k, v]) => [k, sanitizeInput(v)]));
-  }
-  return data;
-}
-
-function toPositiveInteger(value: unknown, fallback: number): number {
-  const parsed = Number.parseInt(String(value ?? ""), 10);
-  return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
-}
-
-function toBoolean(value: unknown, fallback = false): boolean {
-  if (typeof value === "boolean") return value;
-  if (typeof value === "number") return value !== 0;
-  if (typeof value === "string") {
-    const normalized = value.trim().toLowerCase();
-    if (["true", "1", "yes", "sim"].includes(normalized)) return true;
-    if (["false", "0", "no", "nao", "não"].includes(normalized)) return false;
-  }
-  return fallback;
-}
 
 // 20 agendamentos criados por organização por hora
 app.post(
@@ -402,6 +262,18 @@ app.post(
         console.log("[Appointments/Create] Success! Row ID:", row.id);
         return { status: 201, data: { data: normalizeAppointmentRow(row) } };
       })(db);
+
+      if (response.status === 201) {
+        const row = (response.data as any).data;
+        c.executionCtx.waitUntil(
+          sendPushToOrg(user.organizationId, {
+            title: "Novo agendamento",
+            body: `${row.patient_name ?? "Paciente"} — ${row.appointment_date} às ${row.start_time}`,
+            url: "/agenda",
+            tag: `appointment-new-${row.id}`,
+          }, c.env).catch(() => {}),
+        );
+      }
 
       return c.json(response.data, response.status as any);
     } catch (error: any) {
@@ -793,6 +665,41 @@ app.delete("/:id", requireAuth, async (c) => {
   } catch (error: any) {
     return c.json({ error: "Erro ao excluir agendamento", details: error.message }, 500);
   }
+});
+
+// POST /api/appointments/:id/qr-token — Generate QR check-in token (fisio only, requires auth)
+app.post("/:id/qr-token", requireAuth, async (c) => {
+  const user = c.get("user");
+  const id = c.req.param("id");
+  if (!isUuid(id)) return c.json({ error: "ID inválido" }, 400);
+
+  const pool = createPool(c.env);
+
+  const appt = await pool.query(
+    `SELECT id, patient_id, appointment_date, start_time, organization_id
+     FROM appointments WHERE id = $1 AND organization_id = $2 AND deleted_at IS NULL LIMIT 1`,
+    [id, user.organizationId],
+  );
+  if (!appt.rows.length) return c.json({ error: "Agendamento não encontrado" }, 404);
+
+  // Generate a cryptographically random token
+  const tokenBytes = crypto.getRandomValues(new Uint8Array(32));
+  const token = Array.from(tokenBytes)
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+  const expiresAt = new Date(Date.now() + 2 * 60 * 60 * 1000); // 2 hours
+
+  await pool.query(
+    `UPDATE appointments
+     SET checkin_token = $1, checkin_token_expires_at = $2
+     WHERE id = $3 AND organization_id = $4`,
+    [token, expiresAt.toISOString(), id, user.organizationId],
+  );
+
+  const baseUrl = c.env.PAGES_URL ?? "https://fisioflow.pages.dev";
+  const url = `${baseUrl}/checkin?token=${token}`;
+
+  return c.json({ data: { url, expiresAt: expiresAt.toISOString() } });
 });
 
 export { app as appointmentsRoutes };

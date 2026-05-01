@@ -74,6 +74,67 @@ self.addEventListener("notificationclick", (event) => {
 });
 
 // ============================================================================
+// BACKGROUND SYNC — drains IndexedDB offline queue when connectivity returns
+// ============================================================================
+
+self.addEventListener("sync", (event: any) => {
+  if (event.tag === "fisioflow-sync") {
+    event.waitUntil(drainOfflineQueue());
+  }
+});
+
+async function drainOfflineQueue() {
+  const DB_NAME = "fisioflow-offline";
+  const STORE_NAME = "ops";
+
+  const db = await new Promise<IDBDatabase>((resolve, reject) => {
+    const req = indexedDB.open(DB_NAME, 1);
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+
+  const ops: any[] = await new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE_NAME, "readonly");
+    const req = tx.objectStore(STORE_NAME).getAll();
+    req.onsuccess = () => resolve(req.result ?? []);
+    req.onerror = () => reject(req.error);
+  });
+
+  const pending = ops.filter((op) => op.status === "pending");
+  if (!pending.length) return;
+
+  for (const op of pending) {
+    try {
+      const res = await fetch(op.url, {
+        method: op.method,
+        headers: { "Content-Type": "application/json" },
+        body: op.body ? JSON.stringify(op.body) : undefined,
+      });
+
+      if (res.ok) {
+        await new Promise<void>((resolve, reject) => {
+          const tx = db.transaction(STORE_NAME, "readwrite");
+          tx.objectStore(STORE_NAME).delete(op.id);
+          tx.oncomplete = () => resolve();
+          tx.onerror = () => reject(tx.error);
+        });
+      } else if (res.status < 500) {
+        // Client error — mark failed permanently (don't retry)
+        await new Promise<void>((resolve) => {
+          const tx = db.transaction(STORE_NAME, "readwrite");
+          tx.objectStore(STORE_NAME).put({ ...op, status: "failed", failReason: `HTTP ${res.status}` });
+          tx.oncomplete = () => resolve();
+          tx.onerror = () => resolve();
+        });
+      }
+      // 5xx → leave as pending, Background Sync will retry
+    } catch {
+      // Network error → leave as pending
+    }
+  }
+}
+
+// ============================================================================
 // PERIODIC BACKGROUND SYNC (V5 PRO)
 // ============================================================================
 

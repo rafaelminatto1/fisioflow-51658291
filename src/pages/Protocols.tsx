@@ -1,5 +1,5 @@
-import { Download, Filter, Grid3X3, List, PlusCircle, Search, SortAsc, Target } from "lucide-react";
-import { useState } from "react";
+import { Brain, Download, Filter, Grid3X3, List, Loader2, PlusCircle, Search, Send, SortAsc, Target } from "lucide-react";
+import { useEffect, useState } from "react";
 import MainLayout from "@/components/layout/MainLayout";
 import { NewProtocolModal } from "@/components/modals/NewProtocolModal";
 import { ProtocolCardEnhanced } from "@/components/protocols/ProtocolCardEnhanced";
@@ -34,6 +34,9 @@ import { useToast } from "@/hooks/use-toast";
 import { type ExerciseProtocol, useExerciseProtocols } from "@/hooks/useExerciseProtocols";
 import { useProtocolFilters } from "@/hooks/useProtocolFilters";
 import { cn } from "@/lib/utils";
+import { Badge } from "@/components/ui/badge";
+import { Textarea } from "@/components/ui/textarea";
+import { getWorkersApiUrl } from "@/lib/api/config";
 
 export default function Protocols() {
   const {
@@ -72,6 +75,45 @@ export default function Protocols() {
   const [editingProtocol, setEditingProtocol] = useState<ExerciseProtocol | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [favorites, setFavorites] = useState<string[]>([]);
+
+  // FisioBrain related evidence state
+  const [fbQuery, setFbQuery] = useState("");
+  const [fbLoading, setFbLoading] = useState(false);
+  const [fbResult, setFbResult] = useState<{
+    answer: string;
+    sources: Array<{ id: string; title: string; source: string; excerpt: string }>;
+  } | null>(null);
+
+  const FB_BADGES: Record<string, { label: string; cls: string }> = {
+    paper: { label: "Artigo", cls: "bg-violet-100 text-violet-700" },
+    wiki: { label: "Wiki", cls: "bg-blue-100 text-blue-700" },
+    protocol: { label: "Protocolo", cls: "bg-emerald-100 text-emerald-700" },
+    exercise: { label: "Exercício", cls: "bg-amber-100 text-amber-700" },
+  };
+
+  async function searchFB() {
+    if (!fbQuery.trim() || fbQuery.trim().length < 3) return;
+    setFbLoading(true);
+    try {
+      const params = new URLSearchParams({ q: fbQuery.trim() });
+      const res = await fetch(`${getWorkersApiUrl()}/api/fisiobrain/search?${params}`);
+      const json = await res.json();
+      setFbResult(json);
+    } catch {
+      // silent
+    } finally {
+      setFbLoading(false);
+    }
+  }
+
+  // Auto-search when a protocol is selected
+  useEffect(() => {
+    if (selectedProtocol) {
+      const q = selectedProtocol.name || "";
+      setFbQuery(q);
+      setFbResult(null);
+    }
+  }, [selectedProtocol?.id]);
 
   const handleFavorite = (id: string) => {
     setFavorites((prev) => (prev.includes(id) ? prev.filter((fid) => fid !== id) : [...prev, id]));
@@ -130,16 +172,78 @@ export default function Protocols() {
   if (selectedProtocol) {
     return (
       <MainLayout>
-        <div className="container mx-auto p-6 max-w-7xl space-y-8 pb-24 md:pb-12">
-          <ProtocolDetailView
-            protocol={selectedProtocol}
-            onBack={() => setSelectedProtocol(null)}
-            onEdit={() => {
-              setEditingProtocol(selectedProtocol);
-              setShowNewProtocolModal(true);
-            }}
-            onDelete={() => setDeleteId(selectedProtocol.id)}
-          />
+        <div className="container mx-auto p-6 max-w-7xl pb-24 md:pb-12">
+          <div className="grid grid-cols-1 xl:grid-cols-[1fr_320px] gap-6 items-start">
+            <div className="space-y-8">
+              <ProtocolDetailView
+                protocol={selectedProtocol}
+                onBack={() => setSelectedProtocol(null)}
+                onEdit={() => {
+                  setEditingProtocol(selectedProtocol);
+                  setShowNewProtocolModal(true);
+                }}
+                onDelete={() => setDeleteId(selectedProtocol.id)}
+              />
+            </div>
+
+            {/* FisioBrain Related Evidence Sidebar */}
+            <aside className="rounded-2xl border border-violet-200 bg-white shadow-sm p-4 flex flex-col gap-3 sticky top-4">
+              <div className="flex items-center gap-2 text-violet-700 font-semibold text-sm">
+                <Brain className="h-4 w-4" />
+                Protocolos Relacionados por IA
+              </div>
+              <div className="flex flex-col gap-2">
+                <Textarea
+                  className="resize-none text-xs"
+                  rows={2}
+                  value={fbQuery}
+                  onChange={(e) => setFbQuery(e.target.value)}
+                  placeholder="Termo de busca..."
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
+                      e.preventDefault();
+                      searchFB();
+                    }
+                  }}
+                />
+                <Button
+                  size="sm"
+                  className="gap-2 bg-violet-600 hover:bg-violet-700 text-white text-xs"
+                  onClick={searchFB}
+                  disabled={fbLoading || fbQuery.trim().length < 3}
+                >
+                  {fbLoading ? <Loader2 className="h-3 w-3 animate-spin" /> : <Send className="h-3 w-3" />}
+                  {fbLoading ? "Buscando..." : "Buscar"}
+                </Button>
+              </div>
+
+              {fbResult && (
+                <div className="flex flex-col gap-2 overflow-y-auto max-h-[60vh]">
+                  {fbResult.answer && (
+                    <p className="text-xs text-violet-900 bg-violet-50 rounded-lg p-2 leading-relaxed border border-violet-100">
+                      {fbResult.answer}
+                    </p>
+                  )}
+                  {fbResult.sources.map((src) => {
+                    const badge = FB_BADGES[src.source] ?? { label: src.source, cls: "bg-gray-100 text-gray-700" };
+                    const hasArticle = src.source === "paper";
+                    return (
+                      <div key={src.id} className="rounded-lg border p-2 bg-white flex flex-col gap-1 text-xs">
+                        <div className="flex items-start gap-1 flex-wrap">
+                          <Badge className={cn("text-[10px] px-1 py-0", badge.cls)}>{badge.label}</Badge>
+                          {hasArticle && (
+                            <Badge className="text-[10px] px-1 py-0 bg-violet-600 text-white">Baseado em evidência</Badge>
+                          )}
+                        </div>
+                        <p className="font-medium leading-snug">{src.title}</p>
+                        {src.excerpt && <p className="text-muted-foreground line-clamp-2">{src.excerpt}</p>}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </aside>
+          </div>
         </div>
 
         <NewProtocolModal

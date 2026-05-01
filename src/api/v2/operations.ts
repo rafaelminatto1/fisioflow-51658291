@@ -12,6 +12,7 @@ import type {
   PrecadastroToken,
   PublicBookingProfile,
   PublicBookingRequestResult,
+  BookingRequest,
 } from "@/types/workers";
 
 function withQuery(
@@ -255,7 +256,11 @@ export const reportsApi = {
 export const publicBookingApi = {
   getProfile: (slug: string) =>
     requestPublic<{ data: PublicBookingProfile }>(
-      `/api/public/booking/${encodeURIComponent(slug)}`,
+      `/api/public-booking/booking/${encodeURIComponent(slug)}`,
+    ),
+  getAvailability: (slug: string, date: string) =>
+    requestPublic<{ slots: string[]; bookedSlots: string[] }>(
+      `/api/public-booking/booking/${encodeURIComponent(slug)}/availability?date=${date}`,
     ),
   create: (data: {
     slug: string;
@@ -267,9 +272,22 @@ export const publicBookingApi = {
       phone: string;
       notes?: string;
     };
+    turnstileToken?: string;
   }) =>
-    requestPublic<{ data: PublicBookingRequestResult; success: boolean }>("/api/public/booking", {
-      method: "POST",
-      body: JSON.stringify(data),
+    requestPublic<{ data: PublicBookingRequestResult; success: boolean }>(
+      "/api/public-booking/booking",
+      {
+        method: "POST",
+        body: JSON.stringify({ ...data, "cf-turnstile-response": data.turnstileToken }),
+      },
+    ),
+  listRequests: (params?: { status?: string }) =>
+    request<{ data: BookingRequest[] }>(
+      `/api/public-booking/requests${params?.status ? `?status=${params.status}` : ""}`,
+    ),
+  updateRequest: (id: string, body: { status: "confirmed" | "rejected" }) =>
+    request<{ data: BookingRequest }>(`/api/public-booking/requests/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(body),
     }),
 };

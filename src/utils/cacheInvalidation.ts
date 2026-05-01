@@ -17,7 +17,7 @@ import { ViewType, calculatePeriodBounds, isDateInPeriod } from "./periodCalcula
 import { appointmentPeriodKeys } from "@/hooks/useAppointmentsByPeriod";
 import { appointmentKeys } from "@/hooks/appointments/useAppointmentsData";
 import { fisioLogger as logger } from "@/lib/errors/logger";
-import { formatDateToLocalISO } from "@/utils/dateUtils";
+import { toLocalYMD, parseLocalDate } from "@/lib/date-utils";
 
 /**
  * Invalidates all known appointment query keys to ensure consistency across the application.
@@ -87,7 +87,7 @@ export async function invalidateAppointmentsComprehensive(
 
   // 2. If a specific date is provided, prioritize invalidating affected periods
   if (date) {
-    const dateStr = typeof date === "string" ? date : formatDateToLocalISO(date);
+    const dateStr = typeof date === "string" ? date : toLocalYMD(date);
     if (organizationId) {
       invalidationPromises.push(invalidateAffectedPeriods(dateStr, queryClient, organizationId));
     }

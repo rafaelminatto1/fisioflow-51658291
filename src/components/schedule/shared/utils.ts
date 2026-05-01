@@ -116,7 +116,8 @@ export function isPastAppointment(date: string, time: string): boolean {
  * @returns True if appointment is today
  */
 export function isToday(date: string): boolean {
-  const today = new Date().toISOString().split("T")[0];
+  const d = new Date();
+  const today = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
   return date === today;
 }
 

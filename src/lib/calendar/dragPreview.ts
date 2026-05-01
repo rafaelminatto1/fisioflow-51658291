@@ -15,7 +15,8 @@
  */
 
 import { Appointment } from "@/types/appointment";
-import { formatDateToLocalISO, parseResponseDate } from "@/utils/dateUtils";
+import { toLocalYMD, parseLocalDate } from "@/lib/date-utils";
+import { parseResponseDate } from "@/utils/dateUtils";
 
 export interface AppointmentPreviewTarget {
   date: Date;
@@ -142,7 +143,7 @@ export const isSameAppointmentSlot = (
   if (!appointmentDate) return false;
 
   return (
-    formatDateToLocalISO(appointmentDate) === formatDateToLocalISO(target.date) &&
+    toLocalYMD(appointmentDate) === toLocalYMD(target.date) &&
     normalizePreviewTime(appointment.time) === normalizePreviewTime(target.time)
   );
 };
@@ -156,7 +157,7 @@ export const buildDragPreviewAppointments = (
     return appointments;
   }
 
-  const targetDate = formatDateToLocalISO(target.date) as Appointment["date"];
+  const targetDate = toLocalYMD(target.date) as Appointment["date"];
   const targetTime = normalizePreviewTime(target.time);
 
   return appointments.map((appointment) =>

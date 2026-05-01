@@ -4,6 +4,7 @@ import { requireAuth, type AuthVariables } from "../lib/auth";
 import { createPool, type DbRow } from "../lib/db";
 import { registerPatientAnalyticsRoutes } from "./analytics/patient";
 import { registerMlAnalyticsRoutes } from "./analytics/ml";
+import { digitalTwinRoutes } from "./analytics/digital-twin";
 import { hasTable, parseDate } from "./analytics/shared";
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
@@ -366,6 +367,7 @@ app.get("/pain-map", requireAuth, async (c) => {
 
 registerPatientAnalyticsRoutes(app);
 registerMlAnalyticsRoutes(app);
+app.route("/digital-twin", digitalTwinRoutes);
 
 app.get("/retention/risk", requireAuth, async (c) => {
   const user = c.get("user");

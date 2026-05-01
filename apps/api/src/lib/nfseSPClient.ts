@@ -43,6 +43,7 @@ export interface RpsParams {
   tomadorEmail: string;
   codigoMunicipio: string;
   isSimplesNacional?: boolean;
+  tpOpcaoSimples?: number;
 }
 
 export interface SPNfseResult {
@@ -268,7 +269,7 @@ async function buildRpsXml(
 
   const dataEmissaoDate = p.dataEmissao.slice(0, 10);
 
-  // Layout v1 order (versão 001 - manual página 10-13)
+  // Layout v2 order (versão 002 - obrigatório 2026)
   const rpsParts = [
     `<Assinatura>${escapeXml(assinatura)}</Assinatura>`,
     `<ChaveRPS>`,
@@ -299,12 +300,6 @@ async function buildRpsXml(
     `<MatriculaObra>0</MatriculaObra>`,
     `<cLocPrestacao>${escapeXml(p.codigoMunicipio)}</cLocPrestacao>`,
     `<NumeroEncapsulamento>0</NumeroEncapsulamento>`,
-    `<ValorTotalRecebido>${p.valorServicos}</ValorTotalRecebido>`,
-  ];
-
-  // IBSCBS apenas para layout v2 (não-Simples Nacional)
-  // ValorFinalCobrado NÃO existe no layout v1 (versão 001)
-  const ibscbsPart = isSimplesNacional ? [] : [
     `<IBSCBS>`,
     `<finNFSe>0</finNFSe>`,
     `<indFinal>0</indFinal>`,
@@ -317,10 +312,12 @@ async function buildRpsXml(
     `</gIBSCBS>`,
     `</trib>`,
     `</valores>`,
-    `</IBSCBS>`
+    `</IBSCBS>`,
+    `<ValorTotalRecebido>${p.valorServicos}</ValorTotalRecebido>`,
+    `<ValorFinalCobrado>${p.valorServicos}</ValorFinalCobrado>`,
   ];
 
-  return [...rpsParts, ...ibscbsPart].join("");
+  return rpsParts.join("");
 }
 
 async function buildEnvioRpsMessage(env: Env, rpsParams: RpsParams): Promise<string> {
@@ -330,8 +327,8 @@ async function buildEnvioRpsMessage(env: Env, rpsParams: RpsParams): Promise<str
   const tomadorDigits = (p.tomadorCpfCnpj || "").replace(/\D/g, "");
   const codigoServicoDigits = p.codigoServico.replace(/\D/g, "");
   const indicador = tomadorDigits ? (tomadorDigits.length <= 11 ? "1" : "2") : "3";
-  const isSimples = p.isSimplesNacional ?? false;
-  const schemaVersion = isSimples ? SCHEMA_VERSION_SIMPLES : SCHEMA_VERSION;
+  // Em 2026, forçar SCHEMA_VERSION = "2" mesmo para Simples Nacional
+  const schemaVersion = SCHEMA_VERSION;
   
   const assinatura = await signRps(
     {
@@ -375,7 +372,7 @@ async function buildEnvioRpsMessage(env: Env, rpsParams: RpsParams): Promise<str
       codigoNBS: p.codigoNBS,
     },
     assinatura,
-    isSimples,
+    p.isSimplesNacional ?? false,
   );
 
   const innerXml = [
@@ -392,8 +389,7 @@ export async function envioRPS(
   env: Env,
   rpsParams: RpsParams,
 ): Promise<SPNfseResult> {
-  const isSimples = rpsParams.isSimplesNacional ?? false;
-  const schemaVersion = isSimples ? SCHEMA_VERSION_SIMPLES : SCHEMA_VERSION;
+  const schemaVersion = SCHEMA_VERSION;
   const mensagem = await buildEnvioRpsMessage(env, rpsParams);
   const raw = await soapCall(env, "EnvioRPS", mensagem, schemaVersion);
   return parseNfseFromResponse(raw);
@@ -409,8 +405,7 @@ async function buildEnvioLoteRpsMessage(
   const tomadorDigits = (p.tomadorCpfCnpj || "").replace(/\D/g, "");
   const codigoServicoDigits = p.codigoServico.replace(/\D/g, "");
   const indicador = tomadorDigits ? (tomadorDigits.length <= 11 ? "1" : "2") : "3";
-  const isSimples = p.isSimplesNacional ?? false;
-  const schemaVersion = isSimples ? SCHEMA_VERSION_SIMPLES : SCHEMA_VERSION;
+  const schemaVersion = SCHEMA_VERSION;
 
   const assinatura = await signRps(
     {
@@ -454,7 +449,7 @@ async function buildEnvioLoteRpsMessage(
       codigoNBS: p.codigoNBS,
     },
     assinatura,
-    isSimples,
+    p.isSimplesNacional ?? false,
   );
 
   const today = new Date().toISOString().slice(0, 10);
@@ -480,7 +475,7 @@ export async function testeEnvioLoteRPS(
   rpsParams: RpsParams,
 ): Promise<SPNfseResult> {
   const mensagem = await buildEnvioLoteRpsMessage(env, rpsParams);
-  const schemaVersion = (rpsParams.isSimplesNacional ?? false) ? SCHEMA_VERSION_SIMPLES : SCHEMA_VERSION;
+  const schemaVersion = SCHEMA_VERSION;
   const raw = await soapCall(env, "TesteEnvioLoteRPS", mensagem, schemaVersion);
   const erros = parseErros(raw);
   if (erros.length > 0) {
@@ -545,7 +540,7 @@ export async function debugBuildXmlMessage(
   );
 
   const today = new Date().toISOString().slice(0, 10);
-  const schemaVersion = p.isSimplesNacional ? SCHEMA_VERSION_SIMPLES : SCHEMA_VERSION;
+  const schemaVersion = SCHEMA_VERSION;
 
   const innerXml = [
     `<Cabecalho xmlns="" Versao="${schemaVersion}">`,

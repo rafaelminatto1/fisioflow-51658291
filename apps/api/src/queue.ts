@@ -2,6 +2,7 @@ import type { Env } from "./types/env";
 import { createPool } from "./lib/db";
 import { writeEvent } from "./lib/analytics";
 import { transcribeAudio, analyzeClinicImage } from "./lib/ai-native";
+import { sendPushToUser, sendPushToOrg, type PushPayload } from "./lib/webpush";
 
 export type WhatsAppQueuePayload = {
   to: string;
@@ -52,14 +53,34 @@ export type WorkflowTriggerPayload = {
   organizationId: string;
 };
 
+type GenerateNFSePayload = {
+  sessionId: string;
+  patientId: string;
+  patientName: string;
+  patientCpf?: string;
+  patientPhone?: string;
+  organizationId: string;
+  date: string;
+};
+
 export type QueueTask =
   | { type: "SEND_WHATSAPP"; payload: WhatsAppQueuePayload }
+  | {
+      type: "SEND_PUSH";
+      payload: {
+        userId?: string;
+        orgId?: string;
+        payload: PushPayload;
+        organizationId: string;
+      };
+    }
   | { type: "PROCESS_BACKUP"; payload: Record<string, unknown> }
   | { type: "CLEANUP_LOGS"; payload: Record<string, unknown> }
   | { type: "R2_OBJECT_CREATED"; payload: R2NotificationPayload }
   | { type: "PROCESS_EXAM"; payload: ExamProcessPayload }
   | { type: "GENERATE_TTS"; payload: TTSPayload }
-  | { type: "TRIGGER_WORKFLOW"; payload: WorkflowTriggerPayload };
+  | { type: "TRIGGER_WORKFLOW"; payload: WorkflowTriggerPayload }
+  | { type: "GENERATE_NFSE"; payload: GenerateNFSePayload };
 
 export type QueueTaskSummary = {
   taskType: QueueTask["type"];
@@ -122,6 +143,14 @@ export async function handleQueue(batch: MessageBatch<QueueTask>, env: Env): Pro
           await processWhatsAppMessage(task.payload, env);
           break;
 
+        case "SEND_PUSH":
+          if (task.payload.userId) {
+            await sendPushToUser(task.payload.userId, task.payload.payload, env);
+          } else if (task.payload.orgId) {
+            await sendPushToOrg(task.payload.orgId, task.payload.payload, env);
+          }
+          break;
+
         case "R2_OBJECT_CREATED":
           await processR2Notification(task.payload, env);
           break;
@@ -136,6 +165,10 @@ export async function handleQueue(batch: MessageBatch<QueueTask>, env: Env): Pro
 
         case "TRIGGER_WORKFLOW":
           await triggerWorkflow(task.payload, env);
+          break;
+
+        case "GENERATE_NFSE":
+          await generateNFSeForSession(task.payload, env);
           break;
 
         case "PROCESS_BACKUP":
@@ -403,4 +436,68 @@ async function triggerWorkflow(payload: WorkflowTriggerPayload, env: Env): Promi
     method: "QUEUE",
     status: 200,
   });
+}
+
+// ===== NFS-e BATCH GENERATION =====
+
+async function generateNFSeForSession(
+  payload: {
+    sessionId: string;
+    patientId: string;
+    patientName: string;
+    patientCpf?: string;
+    patientPhone?: string;
+    organizationId: string;
+    date: string;
+  },
+  env: Env,
+): Promise<void> {
+  const url = env.NEON_URL || env.HYPERDRIVE?.connectionString;
+  if (!url) return;
+
+  const { neon } = await import("@neondatabase/serverless");
+  const sql = neon(url);
+
+  // Check if NFS-e config exists for the org
+  const cfgRows = await sql`
+    SELECT * FROM nfse_config WHERE organization_id = ${payload.organizationId} LIMIT 1
+  `.catch(() => [] as any[]);
+
+  if (!cfgRows?.length) {
+    console.warn(`[Queue/NFS-e] No config for org ${payload.organizationId}, skipping.`);
+    return;
+  }
+
+  const cfg = cfgRows[0];
+
+  // Get next RPS number
+  const seqRows = await sql`
+    SELECT COALESCE(MAX(CAST(numero_rps AS INTEGER)), 0) + 1 AS next_rps
+    FROM nfse_records WHERE organization_id = ${payload.organizationId}
+  `;
+  const numeroRps = String(seqRows[0]?.next_rps ?? 1);
+
+  const aliquota = Number(cfg.aliquota_iss ?? cfg.aliquota_padrao ?? 0.02);
+  const valorServico = Number(cfg.valor_padrao_servico ?? 150);
+  const valorIss = Number((valorServico * aliquota).toFixed(2));
+
+  await sql`
+    INSERT INTO nfse_records
+      (organization_id, patient_id, numero_rps, serie_rps, data_emissao,
+       valor_servico, aliquota_iss, valor_iss, codigo_servico, discriminacao,
+       tomador_nome, tomador_cpf_cnpj, status, created_at, updated_at)
+    VALUES (
+      ${payload.organizationId}, ${payload.patientId}, ${numeroRps}, 'RPS',
+      ${new Date().toISOString()}, ${valorServico}, ${aliquota}, ${valorIss},
+      ${cfg.codigo_servico_padrao ?? "14.01"},
+      ${"Sessão de fisioterapia - " + payload.date},
+      ${payload.patientName}, ${payload.patientCpf ?? null},
+      'rascunho', NOW(), NOW()
+    )
+    ON CONFLICT DO NOTHING
+  `.catch((err) => {
+    console.warn(`[Queue/NFS-e] Insert failed for session ${payload.sessionId}:`, err?.message);
+  });
+
+  console.log(`[Queue/NFS-e] Generated draft NFS-e for session ${payload.sessionId}`);
 }

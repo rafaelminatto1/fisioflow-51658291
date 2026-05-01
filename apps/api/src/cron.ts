@@ -47,6 +47,55 @@ export async function handleScheduled(event: ScheduledEvent, env: Env, ctx: Exec
         await processDueDateAutomations(pool);
         break;
 
+      case "0 5 * * *": // UTC 05h = BRT 02h — WikiSyncWorkflow (indexa páginas modificadas)
+        if (env.WORKFLOW_WIKI_SYNC) {
+          await env.WORKFLOW_WIKI_SYNC.create({
+            id: `wiki-sync-${new Date().toISOString().slice(0, 10)}`,
+            params: { triggerType: "cron" },
+          }).catch((err) => console.error("[Cron] WikiSync create failed:", err));
+        }
+        break;
+
+      case "0 6 * * 1": // UTC 06h Segunda = BRT 03h — KnowledgeSyncWorkflow
+        if (env.WORKFLOW_KNOWLEDGE_SYNC) {
+          await env.WORKFLOW_KNOWLEDGE_SYNC.create({
+            id: `knowledge-sync-${new Date().toISOString().slice(0, 10)}`,
+            params: { triggerType: "cron", syncTarget: "all" },
+          }).catch((err) => console.error("[Cron] KnowledgeSync create failed:", err));
+        }
+        break;
+
+      case "30 10 * * *": // UTC 10h30 = BRT 07h30 — ClinicAgent morning briefing
+        if (env.CLINIC_AGENT) {
+          const stub = env.CLINIC_AGENT.get(env.CLINIC_AGENT.idFromName("global"));
+          await (stub as any).runMorningBriefing().catch((err: unknown) =>
+            console.error("[Cron] ClinicAgent briefing failed:", err),
+          );
+        }
+        break;
+
+      case "30 21 * * *": // UTC 21h30 = BRT 18h30 — ClinicAgent daily summary
+        if (env.CLINIC_AGENT) {
+          const stub = env.CLINIC_AGENT.get(env.CLINIC_AGENT.idFromName("global"));
+          await (stub as any).runDailySummary().catch((err: unknown) =>
+            console.error("[Cron] ClinicAgent summary failed:", err),
+          );
+        }
+        break;
+
+      case "0 12 * * 1": // UTC 12h Segunda = BRT 09h — ClinicAgent missing patients alert
+        if (env.CLINIC_AGENT) {
+          const stub = env.CLINIC_AGENT.get(env.CLINIC_AGENT.idFromName("global"));
+          await (stub as any).checkMissingPatients().catch((err: unknown) =>
+            console.error("[Cron] ClinicAgent missing patients failed:", err),
+          );
+        }
+        break;
+
+      case "0 14 * * *": // UTC 14h = BRT 11h — NPS auto-trigger (7-day orgs)
+        await triggerNpsSurveys(pool, env);
+        break;
+
       default:
         console.warn(`[Cron] No handler defined for schedule: ${cron}`);
     }
@@ -163,6 +212,29 @@ async function sendAppointmentReminders(pool: any, env: Env, _ctx: ExecutionCont
     }
   }
   console.log(`[Cron] Sent ${emailSent} emails and ${whatsappSent} WhatsApp reminders.`);
+
+  // 3. Push notification summary to each organization
+  if (env.VAPID_PRIVATE_KEY && result.rows.length > 0) {
+    const { sendPushToOrg } = await import("./lib/webpush");
+    const orgGroups = new Map<string, typeof result.rows>();
+    for (const row of result.rows) {
+      const existing = orgGroups.get(row.organization_id) ?? [];
+      existing.push(row);
+      orgGroups.set(row.organization_id, existing);
+    }
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const dateStr = tomorrow.toLocaleDateString("pt-BR", { weekday: "long", day: "2-digit", month: "short" });
+    for (const [orgId, rows] of orgGroups) {
+      const first = rows[0];
+      await sendPushToOrg(orgId, {
+        title: `Agenda de amanhã — ${rows.length} sessão${rows.length > 1 ? "ões" : ""}`,
+        body: `${dateStr} · Primeiro: ${first.patient_name} às ${first.time?.substring(0, 5) ?? ""}`,
+        url: "/agenda",
+        tag: `reminder-summary-${tomorrow.toISOString().split("T")[0]}`,
+      }, env).catch(() => {});
+    }
+  }
 }
 
 async function performDatabaseCleanup(pool: any, _env: Env) {
@@ -286,6 +358,51 @@ async function processDueDateAutomations(pool: any) {
     console.log(`[Cron] due_date_approaching: checked ${tasksRes.rows.length} tasks.`);
   } catch (error) {
     console.error("[Cron] processDueDateAutomations error:", error);
+  }
+}
+
+async function triggerNpsSurveys(pool: any, env: Env) {
+  console.log("[Cron] Triggering NPS surveys for 7-day orgs...");
+  try {
+    // Find organizations that became active ~7 days ago and haven't received NPS yet
+    const result = await pool.query(`
+      SELECT o.id AS org_id, o.name, u.id AS user_id, u.email, p.phone AS user_phone
+      FROM organizations o
+      JOIN user_profiles u ON u.organization_id = o.id AND u.role = 'admin'
+      LEFT JOIN patients p ON p.id = u.patient_id
+      WHERE o.created_at BETWEEN NOW() - INTERVAL '8 days' AND NOW() - INTERVAL '6 days'
+        AND NOT EXISTS (
+          SELECT 1 FROM satisfaction_surveys ss
+          WHERE ss.organization_id = o.id
+            AND ss.responded_at > NOW() - INTERVAL '30 days'
+        )
+      LIMIT 50
+    `);
+
+    for (const row of result.rows) {
+      // Send WhatsApp NPS link if phone available
+      if (row.user_phone && env.BACKGROUND_QUEUE) {
+        const npsUrl = `${env.FRONTEND_URL ?? "https://moocafisio.com.br"}/surveys?nps=1&org=${row.org_id}`;
+        const messageText = `Olá! 👋 Já faz uma semana que você está usando o FisioFlow. Como foi sua experiência até agora?\n\nResposta rápida (0-10): ${npsUrl}`;
+        await env.BACKGROUND_QUEUE.send({
+          type: "SEND_WHATSAPP",
+          payload: {
+            to: row.user_phone,
+            templateName: "nps_survey",
+            languageCode: "pt_BR",
+            bodyParameters: [{ type: "text", text: messageText }],
+            organizationId: row.org_id,
+            patientId: row.user_id,
+            messageText,
+            appointmentId: "",
+          },
+        }).catch(() => {});
+      }
+    }
+
+    console.log(`[Cron] NPS surveys triggered for ${result.rows.length} org(s).`);
+  } catch (error) {
+    console.warn("[Cron] NPS trigger failed (non-critical):", error);
   }
 }
 

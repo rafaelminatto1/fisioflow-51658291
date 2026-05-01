@@ -6,42 +6,30 @@
  * enviar datas para o backend no formato YYYY-MM-DD.
  */
 
+import {
+  toLocalYMD,
+  parseLocalDate,
+  formatShortDate,
+} from "@/lib/date-utils";
+
 /**
  * Formata uma data para o formato ISO local (YYYY-MM-DD)
  * sem conversão para UTC.
- *
- * @example
- * const date = new Date('2026-01-08T10:00:00');
- * formatDateToLocalISO(date) // "2026-01-08"
  */
 export function formatDateToLocalISO(date: Date): string {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
+  return toLocalYMD(date);
 }
 
 /**
  * Formata uma data para exibição no formato brasileiro (DD/MM/YYYY)
  * sem conversão para UTC.
- *
- * @example
- * const date = new Date('2026-01-08T10:00:00');
- * formatDateToBrazilian(date) // "08/01/2026"
  */
 export function formatDateToBrazilian(date: Date): string {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${day}/${month}/${year}`;
+  return formatShortDate(toLocalYMD(date));
 }
 
 /**
  * Formata data e hora para exibição no formato brasileiro
- *
- * @example
- * const date = new Date('2026-01-08T14:30:00');
- * formatDateTimeToBrazilian(date) // "08/01/2026 às 14:30"
  */
 export function formatDateTimeToBrazilian(date: Date, time?: string): string {
   const dateStr = formatDateToBrazilian(date);
@@ -55,10 +43,6 @@ export function formatDateTimeToBrazilian(date: Date, time?: string): string {
 
 /**
  * Extrai componentes de data de forma segura (sem problemas de timezone)
- *
- * @example
- * const date = new Date('2026-01-08T10:00:00');
- * getLocalDateParts(date) // { year: 2026, month: 1, day: 8 }
  */
 export function getLocalDateParts(date: Date): {
   year: number;
@@ -75,14 +59,9 @@ export function getLocalDateParts(date: Date): {
 /**
  * Cria uma nova Date a partir do formato YYYY-MM-DD
  * interpretando como hora local (não UTC)
- *
- * @example
- * const date = parseDateFromLocalISO('2026-01-08');
- * date.getDate() // 8 (não 7 por causa de timezone)
  */
 export function parseDateFromLocalISO(dateString: string): Date {
-  const [year, month, day] = dateString.split("-").map(Number);
-  return new Date(year, month - 1, day);
+  return parseLocalDate(dateString);
 }
 
 /**

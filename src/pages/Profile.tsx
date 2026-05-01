@@ -7,6 +7,7 @@ import {
   Clock,
   Contrast,
   Edit,
+  Link2,
   Loader2,
   Mail,
   MapPin,
@@ -41,6 +42,7 @@ import { SecurityTab } from "@/components/settings/tabs/SecurityTab";
 import { ScheduleTab } from "@/components/settings/tabs/ScheduleTab";
 import { AccessibilityTab } from "@/components/settings/tabs/AccessibilityTab";
 import { OrganizationTab } from "@/components/settings/tabs/OrganizationTab";
+import { PublicProfileTab } from "@/components/settings/tabs/PublicProfileTab";
 import { useSettingsState } from "@/hooks/settings/useSettingsState";
 
 const NotificationPreferences = lazy(() =>
@@ -58,6 +60,7 @@ const TAB_LIST = [
   { value: "perfil", label: "Perfil", icon: User },
   { value: "notifications", label: "Notificações", icon: Bell },
   { value: "security", label: "Segurança", icon: Shield },
+  { value: "fisioblink", label: "FisioLink", icon: Link2 },
   { value: "agenda", label: "Agenda", icon: Clock },
   { value: "appearance", label: "Aparência", icon: Contrast },
 ] as const;
@@ -422,7 +425,7 @@ export const Profile = () => {
 
   const allTabs = isAdmin ? [...TAB_LIST.slice(0, 3), ADMIN_TAB, ...TAB_LIST.slice(3)] : TAB_LIST;
 
-  const colCount = isAdmin ? 6 : 5;
+  const colCount = isAdmin ? 7 : 6;
 
   return (
     <MainLayout>
@@ -484,6 +487,10 @@ export const Profile = () => {
               <OrganizationTab />
             </TabsContent>
           )}
+
+          <TabsContent value="fisioblink" className="space-y-6">
+            <PublicProfileTab />
+          </TabsContent>
 
           <TabsContent value="agenda" className="space-y-6">
             <ScheduleTab />

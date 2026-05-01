@@ -17,7 +17,7 @@ import { fisioLogger as logger } from "@/lib/errors/logger";
 import { AppointmentService } from "@/services/appointmentService";
 import { appointmentsCacheService } from "@/lib/offline/AppointmentsCacheService";
 import { PeriodQuery, calculatePeriodBounds, formatPeriodBounds } from "@/utils/periodCalculations";
-import { formatDateToLocalISO } from "@/utils/dateUtils";
+import { toLocalYMD } from "@/lib/date-utils";
 
 /**
  * Query key factory for period-based appointment queries
@@ -29,8 +29,8 @@ export const appointmentPeriodKeys = {
     return [
       ...appointmentPeriodKeys.all,
       query.viewType,
-      formatDateToLocalISO(bounds.startDate),
-      formatDateToLocalISO(bounds.endDate),
+      toLocalYMD(bounds.startDate),
+      toLocalYMD(bounds.endDate),
       query.organizationId,
       query.therapistId,
     ] as const;
@@ -43,8 +43,8 @@ export const appointmentPeriodKeys = {
 async function fetchAppointmentsByPeriod(query: PeriodQuery): Promise<AppointmentBase[]> {
   const timer = logger.startTimer("fetchAppointmentsByPeriod");
   const bounds = calculatePeriodBounds(query);
-  const dateFrom = formatDateToLocalISO(bounds.startDate);
-  const dateTo = formatDateToLocalISO(bounds.endDate);
+  const dateFrom = toLocalYMD(bounds.startDate);
+  const dateTo = toLocalYMD(bounds.endDate);
 
   logger.info(
     "Fetching appointments for period",
@@ -102,7 +102,7 @@ async function fetchAppointmentsByPeriod(query: PeriodQuery): Promise<Appointmen
 
       // Filter the cached ones for this specific period in memory
       const periodAppointments = cachedAppointments.filter((apt) => {
-        const aptDate = formatDateToLocalISO(apt.date);
+        const aptDate = toLocalYMD(apt.date);
         return aptDate >= dateFrom && aptDate <= dateTo;
       });
 

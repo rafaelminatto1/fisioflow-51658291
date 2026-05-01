@@ -1,12 +1,22 @@
-import { useEffect } from "react";
+import { useEffect, lazy, Suspense } from "react";
 import { Outlet, useLocation } from "react-router-dom";
 import { NetworkStatus } from "@/components/ui/network-status";
 import { SyncManager } from "@/components/sync/SyncManager";
+import { OfflineBanner } from "@/components/sync/OfflineBanner";
 import { TourGuide } from "@/components/system/TourGuide";
 import { VersionManager } from "@/components/system/VersionManager";
 import { WebVitalsIndicator } from "@/lib/monitoring/web-vitals";
 import { PosePreloadManager } from "@/components/ai/PosePreloadManager";
 import { AuthenticatedAppShell } from "@/components/app/AuthenticatedAppShell";
+import { useClinicSetupWizard } from "@/hooks/useClinicSetupWizard";
+import { useNpsPrompt } from "@/hooks/useNpsPrompt";
+import { NpsPrompt } from "@/components/feedback/NpsPrompt";
+
+const ClinicSetupWizard = lazy(() =>
+  import("@/components/onboarding/ClinicSetupWizard").then((m) => ({
+    default: m.ClinicSetupWizard,
+  })),
+);
 
 import { useNavigate } from "react-router-dom";
 import { fisioLogger as logger } from "@/lib/errors/logger";
@@ -47,6 +57,7 @@ const PUBLIC_BOOT_PATH_PREFIXES = [
   "/pre-cadastro",
   "/prescricoes/publica",
   "/agendar",
+  "/checkin",
 ];
 
 function isPublicBootPath(pathname: string): boolean {
@@ -80,6 +91,7 @@ export const InfrastructureLayout = () => {
     <>
       <NetworkStatus />
       {!isPublicRoute && <SyncManager />}
+      {!isPublicRoute && <OfflineBanner />}
       {!isPublicRoute && <TourGuide />}
       {!isPublicRoute && <NotificationInitializer />}
       {!isPublicRoute && <VersionManager />}
@@ -96,6 +108,22 @@ export const InfrastructureLayout = () => {
  * App Shell Layout
  * Wraps private routes with the Authenticated App Shell.
  */
+const SetupWizardPortal = () => {
+  const { open, dismiss } = useClinicSetupWizard();
+  if (!open) return null;
+  return (
+    <Suspense fallback={null}>
+      <ClinicSetupWizard open={open} onClose={dismiss} />
+    </Suspense>
+  );
+};
+
+const NpsPromptPortal = () => {
+  const { open, dismiss } = useNpsPrompt();
+  if (!open) return null;
+  return <NpsPrompt open={open} onDismiss={dismiss} />;
+};
+
 export const AppShellLayout = () => {
   const location = useLocation();
   const isPublicRoute = isPublicBootPath(location.pathname);
@@ -107,6 +135,8 @@ export const AppShellLayout = () => {
   return (
     <AuthenticatedAppShell>
       <Outlet />
+      <SetupWizardPortal />
+      <NpsPromptPortal />
     </AuthenticatedAppShell>
   );
 };

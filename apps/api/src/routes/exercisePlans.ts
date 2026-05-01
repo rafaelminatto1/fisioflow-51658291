@@ -2,6 +2,7 @@ import { Hono } from "hono";
 import { createPool } from "../lib/db";
 import { requireAuth, type AuthVariables } from "../lib/auth";
 import type { Env } from "../types/env";
+import { callAI } from "../lib/ai/callAI";
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
@@ -202,6 +203,91 @@ app.get("/:id/compliance", requireAuth, async (c) => {
       last14Days: last14,
     },
   });
+});
+
+// Generate HEP exercises with bibliographic evidence for a plan
+app.post("/:id/generate-hep", requireAuth, async (c) => {
+  const planId = c.req.param("id");
+  const db = await createPool(c.env);
+
+  // Fetch the plan with patient info
+  const planResult = await db.query(
+    `SELECT ep.*, p.main_condition, p.diagnosis
+     FROM exercise_plans ep
+     LEFT JOIN patients p ON p.id = ep.patient_id
+     WHERE ep.id = $1`,
+    [planId],
+  );
+  if (!planResult.rows.length) return c.json({ error: "Plan not found" }, 404);
+
+  const plan = planResult.rows[0];
+  const diagnosis = plan.main_condition || plan.diagnosis || plan.name || "";
+
+  // Query FisioBrain for supporting evidence
+  let evidenceContext = "";
+  let evidenceRefs: Array<{ title: string; source: string }> = [];
+  if (diagnosis && c.env.AI_SEARCH) {
+    try {
+      const searchRes = await c.env.AI_SEARCH.search({
+        messages: [
+          { role: "system", content: "You are a physiotherapy evidence search assistant." },
+          { role: "user", content: `exercises and protocols for: ${diagnosis}` },
+        ],
+      });
+      const sources = (searchRes as any).data || (searchRes as any).sources || [];
+      evidenceRefs = sources.slice(0, 3).map((s: any) => ({
+        title: s.title || s.filename || "Fonte clínica",
+        source: s.metadata?.source || "protocol",
+      }));
+      if (evidenceRefs.length) {
+        evidenceContext = `\n\nEvidências disponíveis:\n${evidenceRefs.map((r) => `- ${r.title} (${r.source})`).join("\n")}`;
+      }
+    } catch {
+      // non-critical
+    }
+  }
+
+  const prompt = `Você é um fisioterapeuta especialista. Gere um HEP (Home Exercise Program) para um paciente com: ${diagnosis || "condição não especificada"}.${evidenceContext}
+
+Retorne SOMENTE JSON válido neste formato:
+{
+  "exercises": [
+    {
+      "name": "nome do exercício",
+      "description": "descrição detalhada",
+      "sets": 3,
+      "repetitions": 10,
+      "duration_seconds": null,
+      "frequency": "diário",
+      "notes": "observações opcionais"
+    }
+  ],
+  "general_instructions": "instruções gerais",
+  "evidence_references": [{"title": "título", "source": "tipo"}]
+}
+
+Inclua 4-6 exercícios baseados em evidência. Use as referências fornecidas quando disponíveis.`;
+
+  const aiResult = await callAI(c.env, {
+    task: "hep-generation",
+    prompt,
+    organizationId: (c.get("user") as any)?.org_id,
+  });
+
+  let parsed: any = {};
+  try {
+    const jsonMatch = aiResult.content.match(/\{[\s\S]*\}/);
+    parsed = jsonMatch ? JSON.parse(jsonMatch[0]) : {};
+  } catch {
+    parsed = { exercises: [], general_instructions: aiResult.content };
+  }
+
+  // Merge evidence refs from FisioBrain if AI didn't include them
+  if (evidenceRefs.length && (!parsed.evidence_references || !parsed.evidence_references.length)) {
+    parsed.evidence_references = evidenceRefs;
+  }
+
+  return c.json({ data: parsed });
 });
 
 // Add item to plan

@@ -1,57 +1,78 @@
-import { callGemini } from "../../lib/ai-gemini";
-import { Env } from "../../types/env";
+import { z } from "zod";
+import { callAI } from "../../lib/ai/callAI";
+import type { Env } from "../../types/env";
 
 export interface SoapReviewResult {
   hasChanges: boolean;
-  score: number; // 0 to 100
+  score: number;
   suggestions: string[];
   improvedText: string | null;
 }
 
+const SoapReviewSchema = z.object({
+  hasChanges: z.boolean(),
+  score: z.number().min(0).max(100),
+  suggestions: z.array(z.string()),
+  improvedText: z.string().nullable().optional(),
+});
+
+const FALLBACK: SoapReviewResult = {
+  hasChanges: false,
+  score: 50,
+  suggestions: ["Não foi possível processar a revisão. Verifique o texto manualmente."],
+  improvedText: null,
+};
+
 export class SoapReviewAgent {
   constructor(private env: Env) {}
 
-  public async reviewSoapNote(text: string): Promise<SoapReviewResult> {
-    const prompt = `You are an expert Clinical Review Agent for physiotherapy SOAP notes.
-Analyze the following SOAP note draft provided by a physiotherapist.
+  async reviewSoapNote(text: string): Promise<SoapReviewResult> {
+    const prompt = `Você é um agente revisor clínico especialista em evoluções SOAP de fisioterapia.
+Analise o rascunho de evolução SOAP a seguir e retorne SOMENTE JSON válido neste formato:
+{
+  "hasChanges": true/false,
+  "score": 0-100,
+  "suggestions": ["sugestão 1", "sugestão 2"],
+  "improvedText": "texto melhorado ou null"
+}
 
-Your goal is to:
-1. Ensure the Subjective, Objective, Assessment, and Plan components are clear.
-2. Identify missing crucial objective data (e.g., pain scale, specific range of motion).
-3. Suggest standardization of clinical terminology.
-4. Provide a rewritten, improved version of the note if necessary.
+Critérios:
+1. Verifique se Subjetivo, Objetivo, Avaliação e Plano estão claros e completos.
+2. Identifique dados objetivos ausentes (escala de dor, ADM, testes específicos).
+3. Sugira padronização de terminologia clínica em PT-BR.
+4. Se o texto precisar de melhorias, forneça versão reescrita em improvedText; caso contrário null.
+5. Score 0-100 indica qualidade clínica (100 = excelente).
 
-SOAP NOTE DRAFT:
+EVOLUÇÃO SOAP:
 """
 ${text}
 """`;
 
-    const responseSchema = {
-      type: "object",
-      properties: {
-        hasChanges: { type: "boolean" },
-        score: { type: "number", description: "0-100 indicating quality" },
-        suggestions: { type: "array", items: { type: "string" } },
-        improvedText: { type: "string", nullable: true },
-      },
-      required: ["hasChanges", "score", "suggestions", "improvedText"],
-    };
-
     try {
-      const resultText = await callGemini(
-        this.env.GOOGLE_AI_API_KEY,
+      const aiResult = await callAI(this.env, {
+        task: "soap-review",
         prompt,
-        "gemini-1.5-flash",
-        this.env.FISIOFLOW_AI_GATEWAY_URL,
-        this.env.FISIOFLOW_AI_GATEWAY_TOKEN,
-        "clinical",
-        responseSchema,
-      );
+        organizationId: "system",
+      });
 
-      return JSON.parse(resultText) as SoapReviewResult;
+      const jsonMatch = aiResult.content.match(/\{[\s\S]*\}/);
+      if (!jsonMatch) return FALLBACK;
+
+      const parsed = SoapReviewSchema.safeParse(JSON.parse(jsonMatch[0]));
+      if (!parsed.success) {
+        console.error("[SoapReviewAgent] Schema validation failed:", parsed.error.issues);
+        return FALLBACK;
+      }
+
+      return {
+        hasChanges: parsed.data.hasChanges,
+        score: parsed.data.score,
+        suggestions: parsed.data.suggestions,
+        improvedText: parsed.data.improvedText ?? null,
+      };
     } catch (error) {
       console.error("[SoapReviewAgent] Error reviewing SOAP note:", error);
-      throw new Error("Failed to review SOAP note");
+      return FALLBACK;
     }
   }
 }

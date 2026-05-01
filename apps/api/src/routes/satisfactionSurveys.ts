@@ -2,6 +2,7 @@ import { Hono } from "hono";
 import { createPool } from "../lib/db";
 import { requireAuth, type AuthVariables } from "../lib/auth";
 import { isUuid } from "../lib/validators";
+import { rateLimit } from "../middleware/rateLimit";
 import type { Env } from "../types/env";
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
@@ -90,34 +91,39 @@ app.get("/stats", requireAuth, async (c) => {
   });
 });
 
-app.post("/", requireAuth, async (c) => {
-  const user = c.get("user");
-  const body = await c.req.json();
-  const db = await createPool(c.env);
+app.post(
+  "/",
+  requireAuth,
+  rateLimit({ endpoint: "surveys-create", limit: 100, windowSeconds: 3600 }),
+  async (c) => {
+    const user = c.get("user");
+    const body = await c.req.json();
+    const db = await createPool(c.env);
 
-  const result = await db.query(
-    `INSERT INTO satisfaction_surveys
+    const result = await db.query(
+      `INSERT INTO satisfaction_surveys
        (organization_id, patient_id, appointment_id, therapist_id, nps_score,
         q_care_quality, q_professionalism, q_facility_cleanliness, q_scheduling_ease,
         q_communication, comments, suggestions, responded_at)
      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12, NOW()) RETURNING *`,
-    [
-      user.organizationId,
-      body.patient_id,
-      body.appointment_id ?? null,
-      body.therapist_id ?? null,
-      body.nps_score ?? null,
-      body.q_care_quality ?? null,
-      body.q_professionalism ?? null,
-      body.q_facility_cleanliness ?? null,
-      body.q_scheduling_ease ?? null,
-      body.q_communication ?? null,
-      body.comments ?? null,
-      body.suggestions ?? null,
-    ],
-  );
-  return c.json({ data: result.rows[0] }, 201);
-});
+      [
+        user.organizationId,
+        body.patient_id,
+        body.appointment_id ?? null,
+        body.therapist_id ?? null,
+        body.nps_score ?? null,
+        body.q_care_quality ?? null,
+        body.q_professionalism ?? null,
+        body.q_facility_cleanliness ?? null,
+        body.q_scheduling_ease ?? null,
+        body.q_communication ?? null,
+        body.comments ?? null,
+        body.suggestions ?? null,
+      ],
+    );
+    return c.json({ data: result.rows[0] }, 201);
+  },
+);
 
 app.patch("/:id", requireAuth, async (c) => {
   const user = c.get("user");
@@ -169,5 +175,109 @@ app.delete("/:id", requireAuth, async (c) => {
   ]);
   return c.json({ ok: true });
 });
+
+// ===== PUBLIC ENDPOINTS (No auth required for patients/owners) =====
+
+app.post(
+  "/public",
+  rateLimit({
+    endpoint: "surveys-public",
+    limit: 10,
+    windowSeconds: 3600,
+    keyFn: (c) => c.req.header("cf-connecting-ip") ?? "unknown",
+  }),
+  async (c) => {
+    const body = await c.req.json();
+    const { patient_id } = body;
+
+    if (!patient_id) {
+      return c.json({ error: "patient_id é obrigatório" }, 400);
+    }
+
+    const db = await createPool(c.env);
+
+    // Lookup organization_id from patient_id
+    const patientRes = await db.query(
+      `SELECT organization_id FROM patients WHERE id = $1 LIMIT 1`,
+      [patient_id],
+    );
+
+    if (!patientRes.rows.length) {
+      return c.json({ error: "Paciente não encontrado" }, 404);
+    }
+
+    const organization_id = patientRes.rows[0].organization_id;
+
+    const result = await db.query(
+      `INSERT INTO satisfaction_surveys
+       (organization_id, patient_id, appointment_id, therapist_id, nps_score,
+        q_care_quality, q_professionalism, q_facility_cleanliness, q_scheduling_ease,
+        q_communication, comments, suggestions, responded_at)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12, NOW()) RETURNING *`,
+      [
+        organization_id,
+        patient_id,
+        body.appointment_id ?? null,
+        body.therapist_id ?? null,
+        body.nps_score ?? null,
+        body.q_care_quality ?? null,
+        body.q_professionalism ?? null,
+        body.q_facility_cleanliness ?? null,
+        body.q_scheduling_ease ?? null,
+        body.q_communication ?? null,
+        body.comments ?? null,
+        body.suggestions ?? null,
+      ],
+    );
+
+    return c.json({ data: result.rows[0] }, 201);
+  },
+);
+
+app.post(
+  "/nps",
+  rateLimit({
+    endpoint: "surveys-nps-inline",
+    limit: 10,
+    windowSeconds: 3600,
+    keyFn: (c) => c.req.header("cf-connecting-ip") ?? "unknown",
+  }),
+  async (c) => {
+    const body = (await c.req.json()) as {
+      org_id: string;
+      user_id?: string;
+      score: number;
+      comment?: string;
+    };
+
+    if (!body.org_id || typeof body.score !== "number" || body.score < 0 || body.score > 10) {
+      return c.json({ error: "org_id e score (0-10) são obrigatórios" }, 400);
+    }
+
+    const db = await createPool(c.env);
+
+    // Check for duplicate within last 30 days
+    if (body.user_id) {
+      const dup = await db.query(
+        `SELECT id FROM satisfaction_surveys
+       WHERE organization_id = $1 AND therapist_id = $2 AND responded_at > NOW() - INTERVAL '30 days'
+       LIMIT 1`,
+        [body.org_id, body.user_id],
+      );
+      if (dup.rows.length) {
+        return c.json({ data: { skipped: true } });
+      }
+    }
+
+    const result = await db.query(
+      `INSERT INTO satisfaction_surveys
+       (organization_id, therapist_id, nps_score, comments, responded_at)
+     VALUES ($1, $2, $3, $4, NOW()) RETURNING id, nps_score`,
+      [body.org_id, body.user_id ?? null, body.score, body.comment ?? null],
+    );
+
+    return c.json({ data: result.rows[0] }, 201);
+  },
+);
 
 export { app as satisfactionSurveysRoutes };

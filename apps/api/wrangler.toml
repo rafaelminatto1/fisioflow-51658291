@@ -207,6 +207,7 @@ R2_PUBLIC_URL = "https://media.moocafisio.com.br"
 TURNSTILE_SITE_KEY = "0x4AAAAAAC813j31sbl6IHX3"
 # CORS: domínio do frontend em Cloudflare Pages
 ALLOWED_ORIGINS = "https://moocafisio.com.br,https://www.moocafisio.com.br,https://minatto-fisio.pages.dev,https://fisioflow.pages.dev,https://minatto.moocafisio.com.br,https://media.moocafisio.com.br,http://localhost:5173,https://7d2bdf7d.fisioflow.pages.dev,https://fisioflow-web.rafalegollas.workers.dev,https://fisioflow-api.rafalegollas.workers.dev"
+PAGES_URL = "https://fisioflow.pages.dev"
 GOOGLE_MAPS_API_KEY = ""
 # Neon Auth JWT verification (obrigatório para rotas protegidas)
 # Ajuste para os valores reais do seu tenant Neon Auth.
@@ -399,6 +400,11 @@ TURNSTILE_SITE_KEY = "0x4AAAAAAC813j31sbl6IHX3"
 AXIOM_ORG_ID = "activity-dbyc"
 AXIOM_DATASET = "fisioflow-logs-staging"
 
+# NFS-e São Paulo — mTLS binding (staging)
+[[env.staging.mtls_certificates]]
+binding = "NFSE_SP_CERT"
+certificate_id = "20d19f67-72ea-4768-8df4-215eeabbbca6"
+
 # Inngest (Staging)
 # INNGEST_EVENT_KEY deve ser setado via: wrangler secret put INNGEST_EVENT_KEY --env staging
 
@@ -538,6 +544,7 @@ crons = [
   "30 10 * * *", # Diário às 07:30 BRT - ClinicAgent morning briefing
   "30 21 * * *", # Diário às 18:30 BRT - ClinicAgent daily summary
   "0 12 * * 1",  # Segunda às 09:00 BRT - ClinicAgent missing patients alert
+  "0 14 * * *",  # Diário às 11:00 BRT - NPS auto-trigger para orgs com 7 dias de uso
 ]
 
 # ===== OBSERVABILIDADE =====

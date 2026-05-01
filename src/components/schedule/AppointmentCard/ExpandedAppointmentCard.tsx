@@ -1,9 +1,13 @@
-import React from "react";
+import React, { lazy, Suspense, useState } from "react";
 import { motion } from "framer-motion";
-import { AlertCircle, Check, MessageSquare, ExternalLink } from "lucide-react";
+import { AlertCircle, Check, MessageSquare, ExternalLink, QrCode } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { AppointmentCardTime } from "./AppointmentCardTime";
 import { getStatusConfig } from "../shared";
+
+const LazyQRDialog = lazy(() =>
+  import("@/components/schedule/AppointmentQRCode").then((m) => ({ default: m.AppointmentQRCode })),
+);
 import {
   getRelativeTime,
   isAppointmentOngoing,
@@ -11,6 +15,7 @@ import {
   formatDuration,
 } from "../shared/utils";
 import type { Appointment } from "@/types/appointment";
+import { toLocalYMD } from "@/lib/date-utils";
 
 interface ExpandedAppointmentCardProps {
   appointment: Appointment;
@@ -29,12 +34,13 @@ export const ExpandedAppointmentCard: React.FC<ExpandedAppointmentCardProps> = (
   onStatusChange,
   onEdit,
 }) => {
+  const [showQR, setShowQR] = useState(false);
   const isOverbooked = !!appointment.isOverbooked;
   const statusConfig = getStatusConfig(appointment.status);
 
   const dateStr =
     appointment.date instanceof Date
-      ? appointment.date.toISOString().split("T")[0]
+      ? toLocalYMD(appointment.date)
       : (appointment.date ?? "");
 
   const ongoing = isAppointmentOngoing(dateStr, appointment.time, appointment.duration || 60);
@@ -120,6 +126,13 @@ export const ExpandedAppointmentCard: React.FC<ExpandedAppointmentCardProps> = (
               </button>
             )}
             <button
+              onClick={() => setShowQR(true)}
+              className="p-3 rounded-2xl bg-indigo-100 dark:bg-indigo-900 text-indigo-600 dark:text-indigo-300 hover:bg-indigo-200 dark:hover:bg-indigo-800 hover:scale-110 transition-all shadow-lg active:scale-95"
+              title="Check-in por QR Code"
+            >
+              <QrCode className="w-4 h-4" />
+            </button>
+            <button
               onClick={handleEditClick}
               className="p-3 rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 hover:scale-110 transition-all shadow-lg active:scale-95"
               title="Editar"
@@ -128,6 +141,16 @@ export const ExpandedAppointmentCard: React.FC<ExpandedAppointmentCardProps> = (
             </button>
           </div>
         </div>
+        {showQR && (
+          <Suspense fallback={null}>
+            <LazyQRDialog
+              appointmentId={appointment.id}
+              patientName={appointment.patientName || ""}
+              open={showQR}
+              onOpenChange={setShowQR}
+            />
+          </Suspense>
+        )}
 
         <div className="mb-12">
           <h3 className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white leading-[0.9] mb-4 tracking-tightest group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-300">

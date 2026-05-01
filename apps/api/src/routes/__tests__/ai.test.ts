@@ -181,3 +181,138 @@ describe("AI route rate limiting", () => {
     );
   });
 });
+
+// ============================================================================
+// #18 S4-T2 — Voice Assessment Endpoints Validation
+// ============================================================================
+
+vi.mock("../../services/ai/AssessmentRecordingService", () => ({
+  AssessmentRecordingService: class {
+    processRecording() {
+      return Promise.resolve({
+        form: {
+          chief_complaint: "Dor lombar",
+          pain_location: "Lombar",
+          pain_intensity: 7,
+          functional_limitations: ["Dificuldade ao sentar"],
+        },
+        transcript: "Paciente relata dor lombar há 3 dias",
+        patientContextUsed: false,
+      });
+    }
+    processTranscript() {
+      return Promise.resolve({
+        form: {
+          chief_complaint: "Dor no ombro",
+          pain_location: "Ombro direito",
+          pain_intensity: 5,
+          functional_limitations: ["Dificuldade ao levantar o braço"],
+        },
+        transcript: "Dor no ombro há 1 semana",
+        patientContextUsed: false,
+      });
+    }
+  },
+}));
+
+describe("Voice Assessment Endpoints (#18 S4-T2)", () => {
+  async function buildVoiceApp() {
+    const { Hono } = await import("hono");
+    const { aiRoutes } = await import("../../routes/ai");
+    const app = new Hono<any>();
+    app.use("/*", async (c, next) => {
+      c.set("user", mockUser);
+      await next();
+    });
+    app.route("/api/ai", aiRoutes);
+    return app;
+  }
+
+  it("POST /api/ai/assessment/recording — returns form and transcript on valid audio", async () => {
+    const app = await buildVoiceApp();
+    const env = makeUnderLimitEnv();
+
+    const res = await app.fetch(
+      new Request("http://localhost/api/ai/assessment/recording", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          audioBase64: "a".repeat(200),
+          patientId: undefined,
+        }),
+      }),
+      env,
+    );
+
+    expect(res.status).toBe(200);
+    const body = await res.json() as any;
+    expect(body.success).toBe(true);
+    expect(body.data).toBeDefined();
+    expect(body.transcript).toBe("Paciente relata dor lombar há 3 dias");
+  });
+
+  it("POST /api/ai/assessment/recording — returns 400 when audioBase64 missing", async () => {
+    const app = await buildVoiceApp();
+    const env = makeUnderLimitEnv();
+
+    const res = await app.fetch(
+      new Request("http://localhost/api/ai/assessment/recording", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({}),
+      }),
+      env,
+    );
+
+    expect(res.status).toBe(400);
+    const body = await res.json() as any;
+    expect(body.error).toMatch(/audioBase64/);
+  });
+
+  it("POST /api/ai/assessment/transcript — returns form on valid transcript text", async () => {
+    const app = await buildVoiceApp();
+    const env = makeUnderLimitEnv();
+
+    const res = await app.fetch(
+      new Request("http://localhost/api/ai/assessment/transcript", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ transcript: "Dor no ombro há 1 semana com limitação de movimento" }),
+      }),
+      env,
+    );
+
+    expect(res.status).toBe(200);
+    const body = await res.json() as any;
+    expect(body.success).toBe(true);
+    expect(body.data).toBeDefined();
+  });
+
+  it("POST /api/ai/assessment/transcript — returns 400 when transcript too short", async () => {
+    const app = await buildVoiceApp();
+    const env = makeUnderLimitEnv();
+
+    const res = await app.fetch(
+      new Request("http://localhost/api/ai/assessment/transcript", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ transcript: "curto" }),
+      }),
+      env,
+    );
+
+    expect(res.status).toBe(400);
+  });
+
+  it("GET /api/ai/assessment/live-ws — returns 403 when premium not enabled", async () => {
+    const app = await buildVoiceApp();
+    const env = { ...makeUnderLimitEnv(), GOOGLE_AI_PREMIUM_ENABLED: "false" };
+
+    const res = await app.fetch(
+      new Request("http://localhost/api/ai/assessment/live-ws?patientId=00000000-0000-0000-0000-000000000001"),
+      env,
+    );
+
+    expect(res.status).toBe(403);
+  });
+});

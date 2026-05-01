@@ -1,231 +1,123 @@
-/* Estética da Nova Agenda (ScheduleX) - Minimalista e Clínica */
-:root {
-  --font-display: 'Inter', 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  --font-body: 'Inter', 'SF Pro Text', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  --font-mono: 'JetBrains Mono', 'SF Mono', 'Monaco', 'Cascadia Code', monospace;
-}
-.calendar-scroll::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-
-.calendar-scroll::-webkit-scrollbar-track {
-  background: #f1f5f9;
-  border-radius: 10px;
-}
-
-.calendar-scroll::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
-  border-radius: 10px;
-}
-
-/* Header da Agenda - Solid White/High Contrast */
-.calendar-day-header {
-  background-color: #ffffff;
-  border-bottom: 1px solid #e2e8f0;
-  transition:
-    color 200ms,
-    background-color 200ms,
-    border-color 200ms;
-}
-
-.calendar-day-header.today {
-  background-color: rgba(239, 246, 255, 0.5);
-  border-bottom: 2px solid #2563eb;
-}
-
-/* Dark mode overrides */
-.dark .calendar-day-header {
-  background-color: #0f172a;
-  border-bottom-color: #1e293b;
-}
-
-.dark .calendar-day-header.today {
-  background-color: rgba(29, 78, 216, 0.1);
-}
-
-/* ScheduleX Internal Overrides - Clinical Look */
-.sx__calendar-wrapper {
-  --sx-color-primary: #2563eb;
-  --sx-color-on-primary: #ffffff;
-  --sx-color-background: #ffffff;
-  --sx-color-on-background: #0f172a;
-  --sx-color-neutral-variant: #f1f5f9;
-  --sx-color-border-subtle: #e2e8f0;
-  --sx-border-radius-lg: 12px;
-  border: none !important;
-  transition: none !important;
-  animation: none !important;
-}
-
-.sx__time-grid-day {
-  border-right: 1px solid #f1f5f9 !important;
-}
-
-.sx__time-row-line {
-  border-bottom: 1px solid #f1f5f9 !important;
-}
-
-/* Grid visibility for all hours */
-.ec-time-grid .ec-line {
-  display: block !important;
-  border-bottom: 1px solid #e2e8f0 !important; /* Base line visibility increased */
-  opacity: 1 !important;
-  visibility: visible !important;
-}
-
-/* Hide 15m and 45m marks for a cleaner look */
-.ec-time-grid .ec-line:nth-child(4n + 1),
-.ec-time-grid .ec-line:nth-child(4n + 3) {
-  border-bottom: none !important;
-  opacity: 0 !important;
-}
-
-/* 30m marks - visible dashed line */
-.ec-time-grid .ec-line:nth-child(4n + 2) {
-  border-bottom: 1px dashed #cbd5e1 !important; /* Increased visibility */
-}
-
-/* 00m marks (Full hours) - strong solid line */
-.ec-time-grid .ec-line:nth-child(4n) {
-  border-bottom: 2px solid #94a3b8 !important; /* Much more prominent */
-}
-
-/* Vertical column lines (Days) */
-.ec-day,
-.ec-header .ec-day {
-  border-right: 1px solid #cbd5e1 !important; /* Prominent vertical lines */
-}
-
-.ec-days {
-  border-left: none !important;
-}
-
-.sx__time-grid-hour-text {
-  font-weight: 700 !important;
-  color: #94a3b8 !important;
-  font-size: 10px !important;
-  text-transform: uppercase !important;
-  letter-spacing: -0.05em !important;
-}
-
-.sx__week-grid__day-header {
-  border-bottom: 1px solid #e2e8f0 !important;
-  background-color: #ffffff !important;
-  padding-top: 0.75rem !important;
-  padding-bottom: 0.75rem !important;
-}
-
-.sx__week-grid__day-header-date {
-  font-weight: 900 !important;
-  color: #0f172a !important;
-}
-
-.sx__week-grid__day-header-day {
-  font-size: 10px !important;
-  text-transform: uppercase !important;
-  font-weight: 700 !important;
-  letter-spacing: 0.1em !important;
-  color: #94a3b8 !important;
-}
-
-/* Remove internal shadows and blurs */
-.sx__event {
-  box-shadow: none !important;
-  border-radius: 6px !important;
-}
-
-.sx__time-grid-event {
-  padding: 0 !important;
-}
-
 /* ================================================================
- * Aparência customizável da agenda (FullCalendar)
- * Variáveis populadas por useAgendaAppearance(view):
- *   --agenda-slot-height       altura por slot (px)
- *   --agenda-card-opacity      0..1 (transparência dos cards)
- *   --agenda-card-font-scale   tamanho da fonte do card
+ * Clinical Sanctuary Aesthetic - Agenda (FullCalendar)
+ * Philosophy: No rigid grid lines, tonal layering, high density.
  * ================================================================ */
+
+/* 1. Global Calendar Container & Grid Removal */
+.fc {
+  --fc-border-color: transparent !important;
+  --fc-page-bg-color: transparent !important;
+  border: none !important;
+  font-family: 'Inter', sans-serif !important;
+}
+
+/* Remove all table borders from the grid */
+.fc-theme-standard td, 
+.fc-theme-standard th,
+.fc-theme-standard .fc-scrollgrid {
+  border: none !important;
+}
+
+/* 2. Slot & Header Height Optimization */
+:root {
+  --agenda-slot-height: 18px; /* High density slots */
+  --agenda-header-height: 42px;
+}
+
 .fc .fc-timegrid-slot,
 .fc .fc-timegrid-slot-lane,
 .fc .fc-timegrid-slot-label {
-  height: var(--agenda-slot-height, 24px) !important;
+  height: var(--agenda-slot-height) !important;
+  border: none !important;
 }
 
-/* Cards de evento herdam a opacidade configurada */
-.fc-event,
-.fc .fc-timegrid-event,
-.fc .fc-daygrid-event {
-  opacity: var(--agenda-card-opacity, 1) !important;
+/* Subtle tonal separator for full hours only */
+.fc .fc-timegrid-slot-minor {
+  border-top: none !important;
 }
 
-/* Em mês, garante mínima legibilidade respeitando densidade configurada */
-.fc .fc-daygrid-day-frame {
-  min-height: var(--agenda-slot-height, 24px) !important;
+.fc .fc-timegrid-slot:not(.fc-timegrid-slot-minor) {
+  border-top: 1px solid rgba(148, 163, 184, 0.05) !important; /* Extremely subtle */
 }
 
-.fc .fc-daygrid-event {
-  font-size: var(--agenda-card-font-scale, 0.75rem);
+/* 3. Header Customization (Tonal Header) */
+.fc .fc-col-header-cell {
+  background: rgba(248, 250, 252, 0.8) !important;
+  backdrop-filter: blur(8px);
+  border: none !important;
+  height: var(--agenda-header-height) !important;
 }
 
-/* Density helper aplicado pelo wrapper para o tamanho de card por view */
-[data-agenda-density="extra_small"] .fc-event-main {
-  padding: 1px 3px !important;
-  line-height: 1.05 !important;
-}
-[data-agenda-density="small"] .fc-event-main {
-  padding: 2px 4px !important;
-  line-height: 1.1 !important;
-}
-[data-agenda-density="medium"] .fc-event-main {
-  padding: 3px 6px !important;
-  line-height: 1.2 !important;
-}
-[data-agenda-density="large"] .fc-event-main {
-  padding: 5px 8px !important;
-  line-height: 1.3 !important;
+.fc .fc-col-header-cell-cushion {
+  font-family: 'Manrope', sans-serif !important;
+  font-size: 10px !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.1em !important;
+  font-weight: 800 !important;
+  color: #64748b !important;
+  padding: 8px 4px !important;
 }
 
-/* Weekly view enhancements */
-[data-agenda-view="week"] .fc .fc-timegrid-col-frame {
-  background: linear-gradient(180deg, rgba(239, 246, 255, 0.3) 0%, rgba(255, 255, 255, 0.1) 50%, rgba(248, 250, 252, 0.2) 100%) !important;
-  border-right: 1px solid rgba(148, 163, 184, 0.2) !important;
-}
-[data-agenda-view="week"] .fc .fc-col-header-cell-cushion {
+/* 4. Time Labels (Sidebar) */
+.fc .fc-timegrid-slot-label-cushion {
+  font-size: 10px !important;
   font-weight: 700 !important;
-  color: #0f172a !important;
-  font-family: var(--font-display) !important;
-}
-[data-agenda-view="week"] .fc .fc-daygrid-day.fc-day-today,
-[data-agenda-view="week"] .fc .fc-timegrid-col-frame.fc-non-business {
-  background: linear-gradient(180deg, rgba(59, 130, 246, 0.08) 0%, rgba(147, 197, 253, 0.04) 100%) !important;
+  color: #94a3b8 !important;
+  text-transform: uppercase !important;
+  letter-spacing: -0.02em !important;
 }
 
-/* Enhanced soft weekly event cards */
-.fc .fc-timegrid-event-harness .fc-v-event {
-  border-radius: 16px !important;
-  border: 1px solid rgba(148, 163, 184, 0.16) !important;
-  overflow: hidden !important;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08), 0 2px 4px rgba(0, 0, 0, 0.04) !important;
-  transition: all 0.2s ease-in-out !important;
+/* 5. Event Card Wrapper (Harness) - Override FC defaults */
+.fc .fc-timegrid-event-harness {
+  padding: 1px !important; /* Space between side-by-side events */
 }
 
-.fc .fc-timegrid-event-harness .fc-v-event:hover {
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12), 0 4px 8px rgba(0, 0, 0, 0.06) !important;
-  transform: translateY(-1px) !important;
+.fc .fc-v-event {
+  background: none !important;
+  border: none !important;
+  box-shadow: none !important;
+  filter: none !important;
 }
 
-.fc .fc-timegrid-event .fc-event-main {
+.fc .fc-event-main {
   padding: 0 !important;
+  border: none !important;
   background: transparent !important;
 }
 
-.fc .fc-daygrid-event {
-  border-radius: 14px !important;
-  border: 1px solid rgba(148, 163, 184, 0.14) !important;
-  background: rgba(255, 255, 255, 0.9) !important;
+/* 6. Current Time Indicator */
+.fc .fc-timegrid-now-indicator-line {
+  border-color: #0d9488 !important; /* Teal accent */
+  border-width: 2px !important;
 }
 
-.fc .fc-daygrid-event .fc-event-main {
-  padding: 0 !important;
+.fc .fc-timegrid-now-indicator-arrow {
+  border-left-color: #0d9488 !important;
 }
+
+/* 7. Column Shading (Tonal Layering) */
+.fc .fc-timegrid-col {
+  border-right: 1px solid rgba(148, 163, 184, 0.03) !important; /* Ghost line */
+}
+
+.fc .fc-day-today {
+  background: rgba(13, 148, 136, 0.02) !important; /* Ultra light teal for today */
+}
+
+/* Dark Mode Adjustments */
+.dark .fc .fc-col-header-cell {
+  background: rgba(15, 23, 42, 0.8) !important;
+}
+
+.dark .fc .fc-col-header-cell-cushion {
+  color: #94a3b8 !important;
+}
+
+.dark .fc .fc-timegrid-col {
+  border-right-color: rgba(148, 163, 184, 0.05) !important;
+}
+
+.dark .fc .fc-timegrid-slot:not(.fc-timegrid-slot-minor) {
+  border-top-color: rgba(148, 163, 184, 0.1) !important;
+}
+

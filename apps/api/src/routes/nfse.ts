@@ -409,6 +409,8 @@ app.post("/send/:id", requireAuth, async (c) => {
         tomadorRazaoSocial: nfse.tomador_nome || "",
         tomadorEmail: nfse.tomador_email || "",
         codigoMunicipio: nfse.codigo_municipio ?? "3550308",
+        isSimplesNacional: !!nfse.optante_simples,
+        tpOpcaoSimples: nfse.tp_opcao_simples,
       });
 
       if (result.success && result.numeroNfse) {
@@ -592,6 +594,8 @@ app.post("/test/:id", requireAuth, async (c) => {
       tomadorRazaoSocial: nfse.tomador_nome || "",
       tomadorEmail: nfse.tomador_email || "",
       codigoMunicipio: nfse.municipio_prestacao ?? "3550308",
+      isSimplesNacional: !!nfse.optante_simples,
+      tpOpcaoSimples: nfse.tp_opcao_simples,
     });
 
     return c.json({ data: result });

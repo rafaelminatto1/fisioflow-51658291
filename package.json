@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "turbo dev --filter=fisioflow-web --filter=@fisioflow/api",
+    "build": "turbo build",
     "lint": "oxlint --quiet",
     "lint:fix": "oxlint --fix",
     "fmt": "oxfmt",
@@ -12,7 +13,8 @@
     "test": "pnpm --filter fisioflow-web test",
     "test:components": "pnpm --dir apps/web exec vitest run --config vitest.config.ts src/components/**/*.test.tsx",
     "workers:type-check": "pnpm --filter @fisioflow/api type-check",
-    "type-check": "pnpm --filter fisioflow-web type-check"
+    "type-check": "pnpm --filter fisioflow-web type-check",
+    "prepare": "husky"
   },
   "dependencies": {
     "@ai-sdk/google": "^3.0.53",
@@ -190,9 +192,12 @@
     "drizzle-kit": "^0.31.10",
     "esbuild": "^0.25.12",
     "eslint": "^9.39.4",
+    "fast-check": "^4.5.3",
+    "husky": "^9.1.7",
     "oxfmt": "^0.45.0",
     "oxlint": "^1.60.0",
     "tailwindcss": "^4.2.2",
+    "turbo": "^2.8.20",
     "typescript": "~5.7.3",
     "typescript-eslint": "^8.24.1",
     "vite": "8.0.10",

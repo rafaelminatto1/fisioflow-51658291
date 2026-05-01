@@ -32,17 +32,21 @@ app.get("/", requireAuth, async (c) => {
   // Tenta AI Search primeiro (gerenciado, sem setup de embeddings manual)
   if (c.env.AI_SEARCH) {
     try {
-      const aiResults = await c.env.AI_SEARCH.search(q, {
+      const aiResults = await c.env.AI_SEARCH.search({
+        messages: [
+          { role: "system", content: "You are a physiotherapy knowledge assistant." },
+          { role: "user", content: q },
+        ],
         limit: limitNum,
-        filter: type !== "all" ? { content_type: type } : undefined,
+        ...(type !== "all" ? { filters: { source: type } } : {}),
       });
 
       return c.json({
-        results: aiResults.results.map((r) => ({
+        results: aiResults.sources.map((r) => ({
           id: r.id,
-          score: r.score,
+          score: r.score ?? 1,
           content: r.content,
-          type: r.metadata?.content_type ?? "unknown",
+          type: (r.metadata?.source as string) ?? "unknown",
           metadata: r.metadata,
         })),
         query: q,

@@ -20,7 +20,7 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from "recharts";
 import { SafeResponsiveContainer } from "@/components/charts/SafeResponsiveContainer";
-import { formatDateToLocalISO } from "@/utils/dateUtils";
+import { todayYMD, parseLocalDate } from "@/lib/date-utils";
 
 function formatMonthLabel(monthKey: string): string {
   const match = /^(\d{4})-(\d{2})$/.exec(monthKey.trim());
@@ -32,14 +32,14 @@ function formatMonthLabel(monthKey: string): string {
     return monthKey;
   }
 
-  const monthDate = new Date(year, month - 1, 1);
+  const monthDate = new Date(year, month - 1, 1, 12, 0, 0);
   return Number.isNaN(monthDate.getTime())
     ? monthKey
     : format(monthDate, "MMM/yy", { locale: ptBR });
 }
 
 export function FluxoCaixaContent() {
-  const [dataCaixa, setDataCaixa] = useState(() => formatDateToLocalISO(new Date()));
+  const [dataCaixa, setDataCaixa] = useState(() => todayYMD());
   const [periodoView, setPeriodoView] = useState<"mensal" | "diario">("mensal");
 
   const { data: fluxoMensal = [] } = useFluxoCaixaResumo();

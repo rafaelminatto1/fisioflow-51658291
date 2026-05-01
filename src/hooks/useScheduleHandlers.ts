@@ -4,8 +4,11 @@ import { toast } from "@/hooks/use-toast";
 import { AppointmentService } from "@/services/appointmentService";
 import { getUserOrganizationId } from "@/utils/userHelpers";
 import {
-  formatDateToLocalISO,
-  formatDateToBrazilian,
+  toLocalYMD,
+  formatShortDate,
+  parseLocalDate,
+} from "@/lib/date-utils";
+import {
   formatTime,
   roundDateToNextInterval,
   roundDateToNearestInterval,
@@ -120,7 +123,7 @@ export function useScheduleHandlers(
   const handleAppointmentReschedule = useCallback(
     async (appointment: Appointment, newDate: Date, newTime: string, ignoreCapacity?: boolean) => {
       try {
-        const formattedDate = formatDateToLocalISO(newDate);
+        const formattedDate = toLocalYMD(newDate);
         await rescheduleAppointmentMutation({
           appointmentId: appointment.id,
           appointment_date: formattedDate,
@@ -130,7 +133,7 @@ export function useScheduleHandlers(
         });
         toast({
           title: "✅ Reagendado com sucesso",
-          description: `Atendimento de ${appointment.patientName} movido para ${formatDateToBrazilian(newDate)} às ${newTime}.`,
+          description: `Atendimento de ${appointment.patientName} movido para ${formatShortDate(toLocalYMD(newDate))} às ${newTime}.`,
         });
         setRescheduleSuccessMessage("Reagendado com sucesso");
         setCapacityConfirmation(null); // Clear confirmation if it was open
@@ -222,7 +225,7 @@ export function useScheduleHandlers(
       setShowCancelAllTodayDialog(false);
       return;
     }
-    const dateStr = formatDateToLocalISO(currentDate);
+    const dateStr = toLocalYMD(currentDate);
     setIsCancellingAllToday(true);
     try {
       const { cancelled, errors } = await AppointmentService.cancelAllAppointmentsForDate(
@@ -243,7 +246,7 @@ export function useScheduleHandlers(
           description:
             cancelled === 0
               ? "Nenhum agendamento encontrado para esta data."
-              : `${cancelled} agendamento(s) de ${formatDateToBrazilian(currentDate)} cancelado(s).`,
+              : `${cancelled} agendamento(s) de ${formatShortDate(toLocalYMD(currentDate))} cancelado(s).`,
         });
       }
     } catch (err) {

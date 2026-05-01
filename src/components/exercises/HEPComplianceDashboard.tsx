@@ -1,10 +1,14 @@
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { request } from "@/api/v2";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
-import { CheckCircle2, XCircle, TrendingUp } from "lucide-react";
+import { Brain, CheckCircle2, Loader2, XCircle, TrendingUp } from "lucide-react";
+import { getWorkersApiUrl } from "@/lib/api/config";
+import { toast } from "sonner";
 
 interface ExercisePlan {
   id: string;
@@ -38,6 +42,86 @@ function ComplianceBar({ date, completed }: { date: string; completed: boolean }
         title={`${date}: ${completed ? "Realizado" : "Não realizado"}`}
       />
       <span className="text-[10px] text-muted-foreground">{label}</span>
+    </div>
+  );
+}
+
+interface HEPGeneratedExercise {
+  name: string;
+  description: string;
+  sets?: number;
+  repetitions?: number;
+  frequency?: string;
+  notes?: string;
+}
+
+interface HEPGeneratedResult {
+  exercises: HEPGeneratedExercise[];
+  general_instructions?: string;
+  evidence_references?: Array<{ title: string; source: string }>;
+}
+
+function HEPGenerateWithAI({ planId }: { planId: string }) {
+  const [loading, setLoading] = useState(false);
+  const [result, setResult] = useState<HEPGeneratedResult | null>(null);
+
+  async function generate() {
+    setLoading(true);
+    try {
+      const res = await fetch(`${getWorkersApiUrl()}/api/exercise-plans/${planId}/generate-hep`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      });
+      const json = await res.json();
+      setResult(json.data ?? null);
+    } catch {
+      toast.error("Erro ao gerar HEP com IA");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <div className="mt-3 border-t pt-3 flex flex-col gap-3">
+      <Button
+        size="sm"
+        variant="outline"
+        className="gap-2 text-violet-600 border-violet-200 hover:bg-violet-50 self-start text-xs"
+        onClick={generate}
+        disabled={loading}
+      >
+        {loading ? <Loader2 className="h-3 w-3 animate-spin" /> : <Brain className="h-3 w-3" />}
+        {loading ? "Gerando..." : "Gerar HEP com IA"}
+      </Button>
+
+      {result && (
+        <div className="flex flex-col gap-3 text-xs">
+          {result.exercises.map((ex, i) => (
+            <div key={i} className="rounded-lg border p-2 bg-violet-50/40">
+              <p className="font-semibold text-sm">{ex.name}</p>
+              {ex.description && <p className="text-muted-foreground mt-0.5">{ex.description}</p>}
+              <div className="flex gap-3 mt-1 flex-wrap text-muted-foreground">
+                {ex.sets && <span>{ex.sets} séries</span>}
+                {ex.repetitions && <span>{ex.repetitions} rep.</span>}
+                {ex.frequency && <span>{ex.frequency}</span>}
+              </div>
+            </div>
+          ))}
+          {result.evidence_references && result.evidence_references.length > 0 && (
+            <div className="rounded-lg border border-violet-200 bg-violet-50 p-2">
+              <p className="font-semibold text-violet-700 mb-1">Baseado em:</p>
+              {result.evidence_references.map((ref, i) => (
+                <p key={i} className="text-violet-600">
+                  • {ref.title} <span className="opacity-60">({ref.source})</span>
+                </p>
+              ))}
+            </div>
+          )}
+          {result.general_instructions && (
+            <p className="text-muted-foreground italic">{result.general_instructions}</p>
+          )}
+        </div>
+      )}
     </div>
   );
 }
@@ -82,6 +166,8 @@ function PlanComplianceCard({ planId }: { planId: string }) {
             <ComplianceBar key={day.date} date={day.date} completed={day.completed} />
           ))}
         </div>
+
+        <HEPGenerateWithAI planId={planId} />
       </CardContent>
     </Card>
   );

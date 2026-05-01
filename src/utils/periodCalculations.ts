@@ -8,6 +8,15 @@
  * within the visible time period.
  */
 
+import {
+  toLocalYMD,
+  parseLocalDate,
+  startOfLocalWeek,
+  endOfLocalWeek,
+  startOfLocalMonth,
+  endOfLocalMonth,
+} from "@/lib/date-utils";
+
 export type ViewType = "day" | "week" | "month";
 
 export interface PeriodQuery {
@@ -65,10 +74,11 @@ export function calculatePeriodBounds(query: PeriodQuery): PeriodBounds {
  * Calculates bounds for a single day (00:00:00 to 23:59:59)
  */
 function calculateDayBounds(date: Date): PeriodBounds {
-  const startDate = new Date(date);
+  const ymd = toLocalYMD(date);
+  const startDate = parseLocalDate(ymd);
   startDate.setHours(0, 0, 0, 0);
 
-  const endDate = new Date(date);
+  const endDate = parseLocalDate(ymd);
   endDate.setHours(23, 59, 59, 999);
 
   return { startDate, endDate };
@@ -79,18 +89,14 @@ function calculateDayBounds(date: Date): PeriodBounds {
  * Uses ISO week standard where Monday is the first day of the week
  */
 function calculateWeekBounds(date: Date): PeriodBounds {
-  const dayOfWeek = date.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+  const ymd = toLocalYMD(date);
+  const startStr = startOfLocalWeek(ymd);
+  const endStr = endOfLocalWeek(ymd);
 
-  // Calculate days to subtract to get to Monday
-  // If Sunday (0), go back 6 days; otherwise go back (dayOfWeek - 1) days
-  const daysToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
-
-  const startDate = new Date(date);
-  startDate.setDate(date.getDate() - daysToMonday);
+  const startDate = parseLocalDate(startStr);
   startDate.setHours(0, 0, 0, 0);
 
-  const endDate = new Date(startDate);
-  endDate.setDate(startDate.getDate() + 6); // Add 6 days to get to Sunday
+  const endDate = parseLocalDate(endStr);
   endDate.setHours(23, 59, 59, 999);
 
   return { startDate, endDate };
@@ -100,11 +106,14 @@ function calculateWeekBounds(date: Date): PeriodBounds {
  * Calculates bounds for a month (first to last day)
  */
 function calculateMonthBounds(date: Date): PeriodBounds {
-  const startDate = new Date(date.getFullYear(), date.getMonth(), 1);
+  const ymd = toLocalYMD(date);
+  const startStr = startOfLocalMonth(ymd);
+  const endStr = endOfLocalMonth(ymd);
+
+  const startDate = parseLocalDate(startStr);
   startDate.setHours(0, 0, 0, 0);
 
-  // Get last day of month by going to first day of next month and subtracting 1 day
-  const endDate = new Date(date.getFullYear(), date.getMonth() + 1, 0);
+  const endDate = parseLocalDate(endStr);
   endDate.setHours(23, 59, 59, 999);
 
   return { startDate, endDate };
