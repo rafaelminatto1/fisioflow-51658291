@@ -268,7 +268,8 @@ async function buildRpsXml(
 
   const dataEmissaoDate = p.dataEmissao.slice(0, 10);
 
-  return [
+  // Layout v1 order (versão 001 - manual página 10-13)
+  const rpsParts = [
     `<Assinatura>${escapeXml(assinatura)}</Assinatura>`,
     `<ChaveRPS>`,
     `<InscricaoPrestador>${escapeXml(p.inscricaoMunicipal)}</InscricaoPrestador>`,
@@ -299,16 +300,27 @@ async function buildRpsXml(
     `<cLocPrestacao>${escapeXml(p.codigoMunicipio)}</cLocPrestacao>`,
     `<NumeroEncapsulamento>0</NumeroEncapsulamento>`,
     `<ValorTotalRecebido>${p.valorServicos}</ValorTotalRecebido>`,
-    `<ValorFinalCobrado>${p.valorServicos}</ValorFinalCobrado>`,
-    `<ValorIPI>0</ValorIPI>`,
-    `<ExigibilidadeSuspensa>0</ExigibilidadeSuspensa>`,
-    `<PagamentoParceladoAntecipado>0</PagamentoParceladoAntecipado>`,
-    `<NBS>${escapeXml(p.codigoNBS)}</NBS>`,
-    ...(isSimplesNacional 
-      ? []
-      : [`<IBSCBS>`, `<finNFSe>0</finNFSe>`, `<indFinal>0</indFinal>`, `<cIndOp>000000</cIndOp>`, `<indDest>0</indDest>`, `<valores>`, `<trib>`, `<gIBSCBS>`, `<cClassTrib>000000</cClassTrib>`, `</gIBSCBS>`, `</trib>`, `</valores>`, `</IBSCBS>`]
-    ),
-  ].join("");
+  ];
+
+  // IBSCBS apenas para layout v2 (não-Simples Nacional)
+  // ValorFinalCobrado NÃO existe no layout v1 (versão 001)
+  const ibscbsPart = isSimplesNacional ? [] : [
+    `<IBSCBS>`,
+    `<finNFSe>0</finNFSe>`,
+    `<indFinal>0</indFinal>`,
+    `<cIndOp>000000</cIndOp>`,
+    `<indDest>0</indDest>`,
+    `<valores>`,
+    `<trib>`,
+    `<gIBSCBS>`,
+    `<cClassTrib>000000</cClassTrib>`,
+    `</gIBSCBS>`,
+    `</trib>`,
+    `</valores>`,
+    `</IBSCBS>`
+  ];
+
+  return [...rpsParts, ...ibscbsPart].join("");
 }
 
 async function buildEnvioRpsMessage(env: Env, rpsParams: RpsParams): Promise<string> {
