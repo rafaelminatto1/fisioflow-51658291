@@ -31,6 +31,7 @@ const SeedData = lazy(() => import("@/pages/SeedData"));
 const ErrorPage = lazy(() => import("@/pages/ErrorPage"));
 const NotFound = lazy(() => import("@/pages/NotFound"));
 const MasterDataHub = lazy(() => import("@/pages/cadastros/MasterDataHub"));
+const Surveys = lazy(() => import("@/pages/Surveys"));
 
 export const router = createBrowserRouter(
   createRoutesFromElements(
