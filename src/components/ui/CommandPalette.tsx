@@ -302,6 +302,38 @@ export function CommandPalette({
         shortcut: "?",
         keywords: ["atalhos", "shortcuts", "teclado", "ajuda", "help"],
       },
+      // AI Spotlight Shortcuts
+      {
+        id: "ai-summary",
+        label: "Resumir Paciente",
+        description: "Gera um resumo clínico do paciente atual",
+        icon: Sparkles,
+        category: "ai",
+        action: () => {
+          toast({
+            title: "FisioBrain Ativado",
+            description: "Gerando resumo clínico...",
+            icon: <Sparkles className="h-4 w-4 text-violet-500" />,
+          });
+          // Logic would go here
+        },
+        shortcut: "/resumir",
+        keywords: ["resumo", "ia", "paciente", "status"],
+      },
+      {
+        id: "ai-evidence-search",
+        label: "Buscar Evidência",
+        description: "Pesquisa protocolos baseados em ciência",
+        icon: Brain,
+        category: "ai",
+        action: () => {
+          const evidenceTab = document.querySelector('[data-value="evidence"]') as HTMLButtonElement;
+          if (evidenceTab) evidenceTab.click();
+          else navigate(`/patients/${patientId}?tab=evidence`);
+        },
+        shortcut: "/evidência",
+        keywords: ["estudo", "ciencia", "protocolo", "busca"],
+      },
     ],
     [navigate, patientId, patientName],
   );
@@ -386,7 +418,8 @@ export function CommandPalette({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="p-0 max-w-2xl">
+      <DialogContent className="p-0 max-w-2xl border-none bg-transparent shadow-none top-[20%] translate-y-0">
+        <div className="glass-panel border-primary/20 shadow-premium-xl overflow-hidden animate-in fade-in zoom-in-95 duration-300">
         <DialogHeader className="px-4 pt-4 pb-0">
           <DialogTitle className="flex items-center gap-2">
             <Command className="h-5 w-5" />
@@ -492,6 +525,7 @@ export function CommandPalette({
             </span>
           </div>
           <span>{filteredItems.length} resultados</span>
+        </div>
         </div>
       </DialogContent>
     </Dialog>

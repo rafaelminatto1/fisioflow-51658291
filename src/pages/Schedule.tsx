@@ -9,7 +9,8 @@
 
 import { format } from "date-fns";
 import { AlertTriangle, Cake, MessageCircle, Sparkles } from "lucide-react";
-import { Suspense, useEffect } from "react";
+import { Suspense, useEffect, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { Link, useSearchParams } from "react-router-dom";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { BulkActionsBar } from "@/components/schedule/BulkActionsBar";
@@ -218,7 +219,8 @@ export default function Schedule() {
         <div className="flex flex-col flex-1 relative min-h-0">
           {/* Action Banner: Birthdays & Reengagement */}
           {(birthdaysToday.length > 0 || staffBirthdaysToday.length > 0 || totalToReengage > 0) && (
-            <div className="gradient-brand-light px-6 py-3 border-b border-primary/20 flex items-center justify-between flex-shrink-0">
+            <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[45] w-full max-w-4xl px-4 pointer-events-none">
+              <div className="glass-panel border-primary/20 p-3 flex items-center justify-between pointer-events-auto animate-floating">
               <div className="flex items-center gap-6">
                 {(birthdaysToday.length > 0 || staffBirthdaysToday.length > 0) && (
                   <div className="flex items-center gap-2">
@@ -272,6 +274,7 @@ export default function Schedule() {
                     </Link>
                   </Button>
                 )}
+                </div>
               </div>
             </div>
           )}
@@ -280,10 +283,19 @@ export default function Schedule() {
             className="flex-1 flex flex-col min-w-0 min-h-0 bg-white dark:bg-slate-950"
             data-testid={isMobile ? "mobile-schedule-list" : "schedule-content"}
           >
-            <div className="flex-1 flex flex-col rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm relative min-h-0">
-              <Suspense
-                fallback={<CalendarSkeletonEnhanced viewType={viewType as CalendarViewType} />}
-              >
+            <div className="flex-1 flex flex-col rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm relative min-h-0 overflow-hidden">
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={`${viewType}-${dateParam}`}
+                  initial={{ opacity: 0, scale: 0.99 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 1.01 }}
+                  transition={{ duration: 0.3, ease: "easeInOut" }}
+                  className="h-full flex flex-col"
+                >
+                  <Suspense
+                    fallback={<CalendarSkeletonEnhanced viewType={viewType as CalendarViewType} />}
+                  >
                 {isNavigating && appointments.length === 0 ? (
                   <CalendarSkeletonEnhanced viewType={viewType as CalendarViewType} />
                 ) : (
@@ -332,7 +344,9 @@ export default function Schedule() {
                     therapists={therapists}
                   />
                 )}
-              </Suspense>
+                  </Suspense>
+                </motion.div>
+              </AnimatePresence>
             </div>
           </div>
         </div>

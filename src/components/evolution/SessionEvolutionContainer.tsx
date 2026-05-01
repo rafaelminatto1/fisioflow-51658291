@@ -982,19 +982,75 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
           }
         >
           {viewVersion === "v5-pro" ? (
-            <div className="h-full overflow-y-auto">
-              <V5ProBlockEditor
-                initialContent={soapData.assessment}
-                soapData={soapData}
-                evolutionId={appointmentId}
-                patientId={patientId}
-                isSaving={isSaving}
-                isPro={true}
-                onSave={(content) => {
-                  handleSoapChange({ ...soapData, assessment: content });
-                  setTimeout(() => handleSave(), 100);
-                }}
-              />
+            <div className="h-full overflow-hidden">
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 h-full pb-8">
+                {/* Lateral Esquerda: Insights e Resumo */}
+                <aside className="hidden lg:flex lg:col-span-3 flex-col gap-4 overflow-y-auto pr-2 custom-scrollbar">
+                  <div className="space-y-4">
+                    <section>
+                      <h3 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-3 flex items-center gap-2">
+                        <Sparkles className="w-3 h-3 text-violet-500" /> Insights Clínicos
+                      </h3>
+                      <ClinicalInsightsPanel
+                        suggestions={suggestions}
+                        dismissedIds={dismissedInsightIds}
+                        onAccept={handleAcceptInsight}
+                        onDismiss={handleDismissInsight}
+                        hasRedFlags={hasRedFlags}
+                      />
+                    </section>
+                    {patient && (
+                      <PatientSummaryPanel
+                        patient={patient as Patient}
+                        goals={goals}
+                        totalSessions={sessionNumber}
+                      />
+                    )}
+                  </div>
+                </aside>
+
+                {/* Centro: Editor de Blocos (Ocupa o espaço nobre) */}
+                <main className="col-span-1 lg:col-span-6 h-full overflow-y-auto px-1 custom-scrollbar">
+                  <V5ProBlockEditor
+                    initialContent={soapData.assessment}
+                    soapData={soapData}
+                    evolutionId={appointmentId}
+                    patientId={patientId}
+                    isSaving={isSaving}
+                    isPro={true}
+                    onSave={(content) => {
+                      handleSoapChange({ ...soapData, assessment: content });
+                      setTimeout(() => handleSave(), 100);
+                    }}
+                  />
+                </main>
+
+                {/* Lateral Direita: Histórico e Objetivos */}
+                <aside className="hidden lg:flex lg:col-span-3 flex-col gap-4 overflow-y-auto pl-2 custom-scrollbar">
+                  <div className="space-y-4">
+                    <section>
+                      <h3 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-3">
+                        Histórico Recente
+                      </h3>
+                      {patientId && (
+                        <SessionHistoryPanel
+                          patientId={patientId}
+                          onReplicateConduct={handleReplicateConduct}
+                          limit={3}
+                        />
+                      )}
+                    </section>
+                    {goals.length > 0 && (
+                      <section>
+                        <h3 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-3">
+                          Metas do Tratamento
+                        </h3>
+                        <GoalsTracker goals={goals} />
+                      </section>
+                    )}
+                  </div>
+                </aside>
+              </div>
             </div>
           ) : (
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 h-full">
@@ -1109,6 +1165,7 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
                       <TabsContent value="biomechanics" className="mt-4">
                         <BiomechanicsSessionTab
                           sessionId={null}
+                          patientId={patientId}
                           appointmentId={appointmentId || null}
                           patientName={
                             patient ? PatientHelpers.getName(patient as any) : "Paciente"

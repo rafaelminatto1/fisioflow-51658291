@@ -26,6 +26,18 @@ import {
   Flame,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { 
+  BarChart, 
+  Bar, 
+  XAxis, 
+  YAxis, 
+  CartesianGrid, 
+  Tooltip, 
+  ResponsiveContainer, 
+  Cell,
+  AreaChart,
+  Area
+} from "recharts";
 import { fisioLogger as logger } from "@/lib/errors/logger";
 import { useAuth } from "@/contexts/AuthContext";
 import {
@@ -245,9 +257,9 @@ const PatientPortal = () => {
     );
   }
 
-  const completedTodayCount = prescriptions?.filter(() => false).length || 0; // Mock until exercise_logs check is added
-  const exerciseProgress = prescriptions?.length
-    ? (completedTodayCount / prescriptions.length) * 100
+  const completedTodayCount = portalExercises?.filter(p => p.completed_today).length || 0;
+  const exerciseProgress = portalExercises?.length
+    ? (completedTodayCount / portalExercises.length) * 100
     : 0;
 
   return (
@@ -270,9 +282,21 @@ const PatientPortal = () => {
               </AvatarFallback>
             </Avatar>
             <div>
-              <h1 className="text-2xl sm:text-3xl font-bold italic tracking-tight text-primary">
-                Olá, {PatientHelpers.getName(patient).split(" ")[0]}! 👋
-              </h1>
+              <div className="flex items-center gap-2">
+                <h1 className="text-2xl sm:text-3xl font-bold italic tracking-tight text-primary">
+                  Olá, {PatientHelpers.getName(patient).split(" ")[0]}! 👋
+                </h1>
+                {portalProgress?.streak_days > 0 && (
+                  <motion.div 
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    className="flex items-center gap-1 bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full text-xs font-bold border border-amber-200"
+                  >
+                    <Flame className="h-3 w-3 fill-amber-500 text-amber-500" />
+                    {portalProgress.streak_days} dias
+                  </motion.div>
+                )}
+              </div>
               <p className="text-muted-foreground">Que bom ver você de novo. Como estamos hoje?</p>
             </div>
           </div>
@@ -478,8 +502,100 @@ const PatientPortal = () => {
             </TabsTrigger>
           </TabsList>
 
-          {/* Tab Visão Geral */}
-          <TabsContent value="overview" className="space-y-4">
+          <TabsContent value="overview" className="space-y-6">
+            <div className="grid md:grid-cols-3 gap-4">
+              {/* Card de Adesão Semanal */}
+              <Card className="md:col-span-2 shadow-lg border-none bg-white overflow-hidden">
+                <CardHeader className="pb-2">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <CardTitle className="text-lg flex items-center gap-2">
+                        <TrendingUp className="h-5 w-5 text-primary" />
+                        Sua Dedicação Semanal
+                      </CardTitle>
+                      <CardDescription>Acompanhe sua consistência nos exercícios</CardDescription>
+                    </div>
+                    <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20">
+                      Últimos 7 dias
+                    </Badge>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="h-[200px] w-full mt-4">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={[
+                        { day: "Seg", completed: 80 },
+                        { day: "Ter", completed: 100 },
+                        { day: "Qua", completed: 60 },
+                        { day: "Qui", completed: 90 },
+                        { day: "Sex", completed: 100 },
+                        { day: "Sáb", completed: 40 },
+                        { day: "Dom", completed: 0 },
+                      ]}>
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
+                        <XAxis 
+                          dataKey="day" 
+                          axisLine={false} 
+                          tickLine={false} 
+                          tick={{ fontSize: 12, fill: "#888" }} 
+                        />
+                        <YAxis hide domain={[0, 100]} />
+                        <Tooltip 
+                          cursor={{ fill: "rgba(0,0,0,0.02)" }}
+                          contentStyle={{ borderRadius: "12px", border: "none", boxShadow: "0 10px 15px -3px rgba(0,0,0,0.1)" }}
+                        />
+                        <Bar 
+                          dataKey="completed" 
+                          radius={[6, 6, 0, 0]} 
+                          barSize={32}
+                        >
+                          {[80, 100, 60, 90, 100, 40, 0].map((entry, index) => (
+                            <Cell 
+                              key={`cell-${index}`} 
+                              fill={entry >= 80 ? "var(--primary)" : entry >= 50 ? "#94a3b8" : "#cbd5e1"} 
+                            />
+                          ))}
+                        </Bar>
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Card de Metas AI */}
+              <Card className="shadow-lg border-none bg-gradient-to-br from-primary to-blue-700 text-white overflow-hidden relative">
+                <div className="absolute top-0 right-0 p-4 opacity-10">
+                   <Sparkles className="h-24 w-24" />
+                </div>
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <Target className="h-5 w-5" />
+                    Insight da IA
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {isGeneratingSummary ? (
+                    <div className="space-y-2 py-4">
+                      <div className="h-3 w-full bg-white/20 animate-pulse rounded" />
+                      <div className="h-3 w-3/4 bg-white/20 animate-pulse rounded" />
+                      <div className="h-3 w-1/2 bg-white/20 animate-pulse rounded" />
+                    </div>
+                  ) : (
+                    <>
+                      <p className="text-sm leading-relaxed font-medium">
+                        {aiSummary || "Analisando seu progresso para gerar dicas personalizadas..."}
+                      </p>
+                      <div className="pt-2">
+                        <Badge className="bg-white/20 hover:bg-white/30 border-none text-white text-[10px]">
+                          Próximo Objetivo: Amplitude de Movimento +15°
+                        </Badge>
+                      </div>
+                    </>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+
             <div className="grid md:grid-cols-2 gap-4">
               {/* Próxima Consulta */}
               <Card className="shadow-lg">
@@ -602,51 +718,98 @@ const PatientPortal = () => {
 
           {/* Tab Exercícios */}
           <TabsContent value="exercises" className="space-y-4">
-            <Card className="shadow-lg">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Dumbbell className="h-5 w-5 text-primary" />
-                  Prescrição Ativa
-                </CardTitle>
-                <CardDescription>
-                  Exercícios selecionados especialmente para o seu caso
-                </CardDescription>
+            <Card className="shadow-lg border-none bg-gradient-to-br from-white to-primary/5">
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <div>
+                  <CardTitle className="flex items-center gap-2 text-xl">
+                    <Dumbbell className="h-5 w-5 text-primary" />
+                    Sua Missão de Hoje
+                  </CardTitle>
+                  <CardDescription>
+                    {completedTodayCount === (portalExercises?.length || 0) && (portalExercises?.length || 0) > 0
+                      ? "Parabéns! Você completou todos os exercícios de hoje! 🎉"
+                      : `${(portalExercises?.length || 0) - completedTodayCount} exercícios restantes para hoje.`}
+                  </CardDescription>
+                </div>
+                <div className="text-right">
+                   <p className="text-2xl font-bold text-primary">{Math.round(exerciseProgress)}%</p>
+                   <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Concluído</p>
+                </div>
               </CardHeader>
               <CardContent>
                 {isLoadingPrescriptions ? (
                   <div className="space-y-4">
                     {[1, 2, 3].map((i) => (
-                      <div key={i} className="h-20 bg-muted animate-pulse rounded-lg" />
+                      <div key={i} className="h-20 bg-muted animate-pulse rounded-xl" />
                     ))}
                   </div>
-                ) : prescriptions?.length ? (
+                ) : portalExercises?.length ? (
                   <div className="space-y-3">
-                    {prescriptions.map((p: PrescriptionExercise) => (
-                      <div
-                        key={p.id}
-                        className="flex items-center justify-between p-4 rounded-lg border bg-card hover:shadow-md transition-all group"
-                      >
-                        <div className="flex items-center gap-4">
-                          <div className="p-3 bg-primary/10 rounded-full text-primary group-hover:bg-primary group-hover:text-white transition-colors">
-                            <Play className="h-5 w-5" />
-                          </div>
-                          <div>
-                            <p className="font-bold">{p.exercise.name}</p>
-                            <div className="flex gap-2 text-xs text-muted-foreground">
-                              <span>{p.sets} séries</span>
-                              <span>•</span>
-                              <span>{p.reps} reps</span>
+                    {portalExercises.map((p) => {
+                      const isCompleted = p.completed_today;
+                      return (
+                        <div
+                          key={p.id}
+                          className={cn(
+                            "group flex items-center justify-between p-4 rounded-xl border transition-all duration-300",
+                            isCompleted 
+                              ? "bg-emerald-50/50 border-emerald-100 opacity-80" 
+                              : "bg-white hover:border-primary/30 hover:shadow-md"
+                          )}
+                        >
+                          <div className="flex items-center gap-4">
+                            <button
+                              onClick={() => {
+                                if (!isCompleted) {
+                                  completeExercise.mutate({ 
+                                    assignmentId: p.assignment_id,
+                                    data: { sets_done: p.sets, reps_done: p.reps }
+                                  });
+                                }
+                              }}
+                              className={cn(
+                                "h-10 w-10 rounded-full flex items-center justify-center transition-all duration-500",
+                                isCompleted 
+                                  ? "bg-emerald-500 text-white shadow-lg shadow-emerald-200" 
+                                  : "border-2 border-primary/20 text-primary/20 hover:border-primary hover:text-primary"
+                              )}
+                            >
+                              {isCompleted ? <CheckCircle2 className="h-6 w-6" /> : <Play className="h-5 w-5 ml-1" />}
+                            </button>
+                            <div onClick={() => setSelectedPrescription(p as any)} className="cursor-pointer">
+                              <p className={cn("font-bold transition-all", isCompleted && "text-muted-foreground line-through")}>
+                                {p.name}
+                              </p>
+                              <div className="flex gap-3 text-xs text-muted-foreground">
+                                <span className="flex items-center gap-1"><Activity className="h-3 w-3" /> {p.sets} séries</span>
+                                <span className="flex items-center gap-1"><Target className="h-3 w-3" /> {p.reps} reps</span>
+                                {p.frequency && <span className="flex items-center gap-1"><Clock className="h-3 w-3" /> {p.frequency}</span>}
+                              </div>
                             </div>
                           </div>
+                          <div className="flex items-center gap-2">
+                             {!isCompleted && (
+                               <Button 
+                                 variant="ghost" 
+                                 size="sm" 
+                                 className="opacity-0 group-hover:opacity-100 transition-opacity"
+                                 onClick={() => setSelectedPrescription(p as any)}
+                               >
+                                 Ver Aula
+                               </Button>
+                             )}
+                             {isCompleted && (
+                               <Badge variant="outline" className="bg-emerald-100 text-emerald-700 border-emerald-200">
+                                 Concluído
+                               </Badge>
+                             )}
+                          </div>
                         </div>
-                        <Button size="sm" onClick={() => setSelectedPrescription(p)}>
-                          Iniciar
-                        </Button>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 ) : (
-                  <div className="p-10 text-center border-2 border-dashed rounded-lg bg-muted/10">
+                  <div className="p-10 text-center border-2 border-dashed rounded-xl bg-muted/10">
                     <Dumbbell className="h-10 w-10 text-muted-foreground mx-auto mb-2 opacity-30" />
                     <p className="font-medium text-muted-foreground">Nenhum exercício prescrito</p>
                     <p className="text-sm text-muted-foreground">

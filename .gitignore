@@ -267,3 +267,5 @@ mcp.json
 *.pfx
 *.p12
 playwright_output.txt
+up-leg-certificate.pfx
+*.pem

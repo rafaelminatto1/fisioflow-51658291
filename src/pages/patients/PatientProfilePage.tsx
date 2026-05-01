@@ -4,6 +4,7 @@
  */
 
 import React, { useState, useEffect, lazy, Suspense } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { ErrorBoundary } from "@/components/common/ErrorBoundary";
 import { MainLayout } from "@/components/layout/MainLayout";
@@ -460,8 +461,9 @@ const PatientProfileContent = () => {
           }}
           className="w-full"
         >
-          <div className="sticky top-0 z-20 bg-background/95 backdrop-blur-sm pb-1 pt-2 -mx-4 px-4 border-b border-blue-50">
-            <TabsList className="w-full justify-start h-auto p-0 bg-transparent overflow-x-auto flex-nowrap scrollbar-hide gap-6">
+          <div className="sticky top-0 z-20 bg-background/95 backdrop-blur-sm pb-1 pt-2 -mx-4 px-4 border-b border-blue-50/50 shadow-sm shadow-blue-500/5">
+            <div className="relative">
+              <TabsList className="w-full justify-start h-auto p-0 bg-transparent overflow-x-auto flex-nowrap scrollbar-hide gap-6 pr-12">
               <TabsTrigger
                 value="overview"
                 className="data-[state=active]:border-blue-600 data-[state=active]:text-blue-600 rounded-none bg-transparent border-b-2 border-transparent px-0 py-2 text-sm font-semibold transition-all"
@@ -541,9 +543,20 @@ const PatientProfileContent = () => {
                 Evidência
               </TabsTrigger>
             </TabsList>
+            {/* Visual indicator for horizontal scroll */}
+            <div className="absolute right-0 top-0 bottom-0 w-12 bg-gradient-to-l from-background to-transparent pointer-events-none md:hidden" />
           </div>
+        </div>
 
-          <div className="mt-6 min-h-[500px]">
+        <div className="mt-6 min-h-[500px]">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={activeTab}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.2 }}
+            >
             <TabsContent
               value="overview"
               className="mt-0 focus-visible:outline-none animate-in fade-in-50 duration-500 slide-in-from-bottom-2"
@@ -717,8 +730,10 @@ const PatientProfileContent = () => {
                 </div>
               </div>
             </TabsContent>
-          </div>
-        </Tabs>
+            </motion.div>
+          </AnimatePresence>
+        </div>
+      </Tabs>
 
         <EditPatientModal
           open={editingPatient}

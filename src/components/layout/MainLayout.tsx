@@ -110,7 +110,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
 
         <div className="flex-1 flex flex-col min-h-screen min-w-0 overflow-visible relative">
           {/* Decorative background for the whole content area */}
-          <div className="absolute inset-0 bg-gradient-to-br from-background via-accent/5 to-background pointer-events-none" />
+          <div className="absolute inset-0 bg-gradient-to-br from-background via-primary/5 to-accent/5 pointer-events-none animate-bg-gradient bg-[length:400%_400%]" />
 
           {/* Header Mobile */}
           <MobileHeader />
@@ -120,13 +120,13 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
             ? customHeader
             : !hideDefaultHeader && (
                 <header
-                  className="hidden md:flex h-10 gradient-brand-light backdrop-blur-md border-b border-primary/20 items-center justify-between px-6 z-40 transition-all duration-500"
+                  className="hidden md:flex h-12 glass-panel !rounded-none !border-x-0 !border-t-0 border-b border-primary/20 items-center justify-between px-6 z-40 transition-all duration-500"
                   data-testid="main-header"
                 >
                   <div className="flex items-center gap-6">
-                    <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-100/50 dark:bg-slate-800/50 border border-border/50">
-                      <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
-                      <span className="text-[10px] text-slate-600 dark:text-slate-400 font-black uppercase tracking-widest">
+                    <div className="flex items-center gap-2 px-3 py-1.5 rounded-full glass-panel border border-primary/20 animate-floating">
+                      <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_12px_rgba(16,185,129,0.8)]" />
+                      <span className="text-[10px] text-slate-600 dark:text-slate-300 font-black uppercase tracking-widest">
                         Real-time Active
                       </span>
                     </div>

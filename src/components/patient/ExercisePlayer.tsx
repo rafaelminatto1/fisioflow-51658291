@@ -14,12 +14,19 @@ import {
   AlertCircle,
   Sparkles,
   Video,
+  FileText,
+  ArrowRight,
+  Heart,
+  Dumbbell,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { PatientService } from "@/lib/services/PatientService";
 import { fisioLogger as logger } from "@/lib/errors/logger";
 import { ExerciseType } from "@/types/pose";
+import { motion, AnimatePresence } from "framer-motion";
+import { Slider } from "@/components/ui/slider";
+import { Badge } from "@/components/ui/badge";
 
 // Lazy load the AI screen to keep initial bundle small
 const ExerciseExecutionScreen = lazy(() =>
@@ -67,7 +74,8 @@ export function ExercisePlayer({
   const [isMuted, setIsMuted] = useState(false);
   const [progress, setProgress] = useState(0);
   const [feedback, setFeedback] = useState("");
-  const [difficulty, setDifficulty] = useState<number>(0);
+  const [difficulty, setDifficulty] = useState<number>(3); // Borg Scale (1-10)
+  const [painLevel, setPainLevel] = useState<number>(0); // Pain Level (0-10)
   const [aiMode, setAiMode] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
 
@@ -164,8 +172,13 @@ export function ExercisePlayer({
 
   const handleNext = async () => {
     try {
-      // Log completion
-      await PatientService.logExercise(patientId, prescription.id, String(difficulty), feedback);
+      // Log completion with extra qualitative data in notes/metrics
+      await PatientService.logExercise(
+        patientId, 
+        prescription.id, 
+        String(difficulty), 
+        `Pain: ${painLevel}/10. ${feedback}`
+      );
 
       if (isLastExercise) {
         onComplete();
@@ -408,43 +421,84 @@ export function ExercisePlayer({
               </div>
             )}
 
-            <div className="pt-4 border-t">
-              <h3 className="font-semibold mb-3">Feedback do Exercício</h3>
+            <div className="pt-4 border-t space-y-6">
+              <h3 className="font-semibold text-lg flex items-center gap-2">
+                <Heart className="h-5 w-5 text-red-500" />
+                Como você se sente?
+              </h3>
 
+              {/* Escala de Borg Visual */}
+              <div className="space-y-3">
+                <div className="flex justify-between items-end">
+                  <label className="text-sm font-bold text-muted-foreground uppercase tracking-wider">
+                    Esforço Percebido (Borg)
+                  </label>
+                  <Badge variant="outline" className={cn(
+                    "text-lg font-bold px-3 py-1",
+                    difficulty <= 3 ? "text-emerald-600 border-emerald-200 bg-emerald-50" :
+                    difficulty <= 7 ? "text-amber-600 border-amber-200 bg-amber-50" :
+                    "text-red-600 border-red-200 bg-red-50"
+                  )}>
+                    {difficulty}
+                  </Badge>
+                </div>
+                <div className="flex justify-between gap-1">
+                  {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((level) => (
+                    <motion.button
+                      key={level}
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}
+                      onClick={() => setDifficulty(level)}
+                      className={cn(
+                        "flex-1 h-10 rounded-lg flex items-center justify-center text-xs font-bold transition-all border",
+                        difficulty === level
+                          ? "bg-primary text-primary-foreground border-primary shadow-lg ring-2 ring-primary/20"
+                          : "bg-white hover:bg-muted border-slate-200"
+                      )}
+                    >
+                      {level}
+                    </motion.button>
+                  ))}
+                </div>
+                <div className="flex justify-between text-[10px] text-muted-foreground font-medium">
+                  <span>MUITO LEVE</span>
+                  <span>MODERADO</span>
+                  <span>EXAUSTIVO</span>
+                </div>
+              </div>
+
+              {/* Escala de Dor */}
               <div className="space-y-4">
-                <div>
-                  <label className="text-sm font-medium mb-2 block">Dificuldade</label>
-                  <div className="flex justify-between gap-1">
-                    {[1, 2, 3, 4, 5].map((level) => (
-                      <button
-                        key={level}
-                        onClick={() => setDifficulty(level)}
-                        className={cn(
-                          "h-8 w-8 rounded-full flex items-center justify-center text-sm font-bold transition-all border",
-                          difficulty === level
-                            ? "bg-primary text-primary-foreground border-primary scale-110 shadow-md"
-                            : "bg-background hover:bg-muted border-input",
-                        )}
-                      >
-                        {level}
-                      </button>
-                    ))}
-                  </div>
-                  <div className="flex justify-between text-xs text-muted-foreground mt-1">
-                    <span>Fácil</span>
-                    <span>Difícil</span>
-                  </div>
+                <div className="flex justify-between items-end">
+                  <label className="text-sm font-bold text-muted-foreground uppercase tracking-wider">
+                    Nível de Dor
+                  </label>
+                  <span className="text-2xl font-black text-slate-800">{painLevel}</span>
                 </div>
+                <Slider
+                  value={[painLevel]}
+                  max={10}
+                  step={1}
+                  onValueChange={([val]) => setPainLevel(val)}
+                  className="py-4"
+                />
+                <div className="flex justify-between text-[10px] text-muted-foreground font-medium">
+                  <span>SEM DOR</span>
+                  <span>DOR MODERADA</span>
+                  <span>PIOR DOR</span>
+                </div>
+              </div>
 
-                <div>
-                  <label className="text-sm font-medium mb-2 block">Anotações (Opcional)</label>
-                  <MagicTextarea
-                    placeholder="Sentiu dor ou desconforto?"
-                    value={feedback}
-                    onValueChange={(val) => setFeedback(val)}
-                    className="h-20 resize-none bg-muted/30 border-slate-200 focus:bg-background transition-all"
-                  />
-                </div>
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-muted-foreground uppercase tracking-wider block">
+                  Anotações Extras
+                </label>
+                <MagicTextarea
+                  placeholder="Ex: 'Senti um estalo no 3º set' ou 'Foi mais fácil que ontem'"
+                  value={feedback}
+                  onValueChange={(val) => setFeedback(val)}
+                  className="h-24 resize-none bg-slate-50/50 border-slate-200 focus:bg-white transition-all rounded-xl"
+                />
               </div>
             </div>
 

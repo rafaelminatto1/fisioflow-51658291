@@ -1,38 +1,5 @@
 {
-  "mcpServers": {
-    "exa": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "@exalabs/mcp-server-exa"
-      ],
-      "env": {
-        "EXA_API_KEY": "d12af1da-4c1d-4665-a952-2bdfa6283d11"
-      }
-    },
-    "context7": {
-      "command": "",
-      "args": [
-        "https://mcp.context7.com/mcp",
-        "--headers",
-        "CONTEXT7_API_KEY=ctx7sk-ad94ba7f-5d88-47b6-9c00-a478dd2b5343"
-      ]
-    },
-    "pubmed": {
-      "command": "",
-      "args": [
-        "npx",
-        "-y,@cyanheads/pubmed-mcp-server@latest"
-      ]
-    },
-    "devtools": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "@modelcontextprotocol/server-devtools"
-      ]
-    }
-  },
+  "mcpServers": {},
   "ui": {
     "hideBanner": true,
     "hideTips": true,

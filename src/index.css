@@ -150,31 +150,24 @@
       transform: scale(0.98);
     }
   }
-  @keyframes gauge-rotate {
+  @keyframes bg-gradient {
     0% {
-      transform: rotate(-90deg);
+      background-position: 0% 50%;
+    }
+    50% {
+      background-position: 100% 50%;
     }
     100% {
-      transform: rotate(90deg);
+      background-position: 0% 50%;
     }
   }
-  @keyframes stagger-in {
-    0% {
-      opacity: 0;
-      transform: translateY(20px);
-    }
-    100% {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-  @keyframes bounce-subtle {
+  @keyframes floating {
     0%,
     100% {
       transform: translateY(0);
     }
     50% {
-      transform: translateY(-4px);
+      transform: translateY(-5px);
     }
   }
 
@@ -185,6 +178,8 @@
   --animate-gauge-rotate: gauge-rotate 0.5s ease-out;
   --animate-stagger-in: stagger-in 0.4s ease-out;
   --animate-bounce-subtle: bounce-subtle 2s ease-in-out infinite;
+  --animate-bg-gradient: bg-gradient 15s ease infinite;
+  --animate-floating: floating 3s ease-in-out infinite;
 }
 
 @layer base {

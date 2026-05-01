@@ -13,6 +13,7 @@ import {
   CheckCircle2,
   Loader2,
   ChevronDown,
+  ArrowLeftRight,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -20,7 +21,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { biomechanicsApi, sessionsApi, type BiomechanicsData } from "@/api/v2";
 
-type StudioType = "gait" | "jump" | "posture" | "functional";
+type StudioType = "gait" | "jump" | "posture" | "functional" | "comparison";
 
 const GaitAnalysisStudio = lazy(() =>
   import("@/components/analysis/studios/GaitAnalysisStudio").then((m) => ({
@@ -40,6 +41,11 @@ const PostureAnalysisStudio = lazy(() =>
 const FunctionalAnalysisStudio = lazy(() =>
   import("@/components/analysis/studios/FunctionalAnalysisStudio").then((m) => ({
     default: m.FunctionalAnalysisStudio,
+  })),
+);
+const VisualComparisonStudio = lazy(() =>
+  import("@/components/analysis/studios/VisualComparisonStudio").then((m) => ({
+    default: m.VisualComparisonStudio,
   })),
 );
 
@@ -75,10 +81,18 @@ const STUDIO_CONFIG: Record<
     color: "text-indigo-400",
     bgColor: "bg-indigo-500/10 border-indigo-500/30",
   },
+  comparison: {
+    label: "Evolução Visual",
+    description: "Compare 2 sessões e veja o progresso (Delta)",
+    icon: ArrowLeftRight,
+    color: "text-rose-400",
+    bgColor: "bg-rose-500/10 border-rose-500/30",
+  },
 };
 
 interface BiomechanicsSessionTabProps {
-  sessionId: string | null; // Current session record ID (to save results to)
+  sessionId: string | null;
+  patientId: string;
   appointmentId: string | null;
   patientName: string;
   existingBiomechanics?: BiomechanicsData | null;
@@ -99,6 +113,7 @@ function StudioLoadingFallback({ label }: { label: string }) {
 
 export const BiomechanicsSessionTab: React.FC<BiomechanicsSessionTabProps> = ({
   sessionId,
+  patientId,
   appointmentId,
   patientName,
   existingBiomechanics,
@@ -196,6 +211,12 @@ export const BiomechanicsSessionTab: React.FC<BiomechanicsSessionTabProps> = ({
             <FunctionalAnalysisStudio onDataUpdate={handleStudioData} />
           </Suspense>
         );
+      case "comparison":
+        return (
+          <Suspense fallback={<StudioLoadingFallback label={selectedLabel} />}>
+            <VisualComparisonStudio patientId={patientId} onDataUpdate={handleStudioData} />
+          </Suspense>
+        );
       default:
         return null;
     }
@@ -220,7 +241,7 @@ export const BiomechanicsSessionTab: React.FC<BiomechanicsSessionTabProps> = ({
           )}
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
           {(Object.entries(STUDIO_CONFIG) as [StudioType, typeof STUDIO_CONFIG.gait][]).map(
             ([type, config]) => {
               const Icon = config.icon;

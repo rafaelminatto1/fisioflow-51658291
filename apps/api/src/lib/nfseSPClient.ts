@@ -1,12 +1,10 @@
 import type { Env } from "../types/env";
-import { signXmlEnveloped, signRps, extractCertB64 } from "./nfseXmlSigner";
+import { signXmlEnveloped, signRps } from "./nfseXmlSigner";
 
 const SP_WS_URL = "https://nfews.prefeitura.sp.gov.br/lotenfe.asmx";
 const NFE_NS = "http://www.prefeitura.sp.gov.br/nfe";
-const DSIG_NS = "http://www.w3.org/2000/09/xmldsig#";
 
 const SCHEMA_VERSION = "2";
-const SCHEMA_VERSION_SIMPLES = "1";
 
 const SOAP_ACTIONS: Record<string, string> = {
   EnvioRPS: "http://www.prefeitura.sp.gov.br/nfe/ws/envioRPS",
@@ -244,7 +242,7 @@ async function buildRpsXml(
     codigoNBS: string;
   },
   assinatura: string,
-  isSimplesNacional: boolean = false,
+  isSimplesNacional: boolean,
 ): Promise<string> {
   const issRetidoStr = p.issRetido ? "true" : "false";
   
@@ -252,55 +250,61 @@ async function buildRpsXml(
   if (p.tomadorCpfCnpj) {
     const digits = p.tomadorCpfCnpj.replace(/\D/g, "");
     if (digits.length <= 11) {
-      tomadorParts.push(`<CPFCNPJTomador><CPF>${escapeXml(digits)}</CPF></CPFCNPJTomador>`);
+      tomadorParts.push(`<CPFCNPJTomador xmlns=""><CPF>${escapeXml(digits)}</CPF></CPFCNPJTomador>`);
     } else {
-      tomadorParts.push(`<CPFCNPJTomador><CNPJ>${escapeXml(digits)}</CNPJ></CPFCNPJTomador>`);
+      tomadorParts.push(`<CPFCNPJTomador xmlns=""><CNPJ>${escapeXml(digits)}</CNPJ></CPFCNPJTomador>`);
     }
   }
   if (p.tomadorInscricaoMunicipal) {
-    tomadorParts.push(`<InscricaoMunicipalTomador>${escapeXml(p.tomadorInscricaoMunicipal)}</InscricaoMunicipalTomador>`);
+    tomadorParts.push(`<InscricaoMunicipalTomador xmlns="">${escapeXml(p.tomadorInscricaoMunicipal)}</InscricaoMunicipalTomador>`);
   }
   if (p.tomadorRazaoSocial) {
-    tomadorParts.push(`<RazaoSocialTomador>${escapeXml(p.tomadorRazaoSocial)}</RazaoSocialTomador>`);
+    tomadorParts.push(`<RazaoSocialTomador xmlns="">${escapeXml(p.tomadorRazaoSocial)}</RazaoSocialTomador>`);
   }
   if (p.tomadorEmail) {
-    tomadorParts.push(`<EmailTomador>${escapeXml(p.tomadorEmail)}</EmailTomador>`);
+    tomadorParts.push(`<EmailTomador xmlns="">${escapeXml(p.tomadorEmail)}</EmailTomador>`);
   }
 
   const dataEmissaoDate = p.dataEmissao.slice(0, 10);
 
-  // Layout v2 order (versão 002 - obrigatório 2026)
-  // Removendo ValorServicos do meio, pois o erro indica que ele não é esperado ali.
   const rpsParts = [
-    `<Assinatura>${escapeXml(assinatura)}</Assinatura>`,
-    `<ChaveRPS>`,
+    `<Assinatura xmlns="">${escapeXml(assinatura)}</Assinatura>`,
+    `<ChaveRPS xmlns="">`,
     `<InscricaoPrestador>${escapeXml(p.inscricaoMunicipal)}</InscricaoPrestador>`,
     `<SerieRPS>${escapeXml(p.serie)}</SerieRPS>`,
     `<NumeroRPS>${escapeXml(p.numero)}</NumeroRPS>`,
     `</ChaveRPS>`,
-    `<TipoRPS>${escapeXml(p.tipo)}</TipoRPS>`,
-    `<DataEmissao>${dataEmissaoDate}</DataEmissao>`,
-    `<StatusRPS>N</StatusRPS>`,
-    `<TributacaoRPS>${escapeXml(p.tributacaoRps)}</TributacaoRPS>`,
-    `<ValorDeducoes>${p.valorDeducoes}</ValorDeducoes>`,
-    `<ValorPIS>0</ValorPIS>`,
-    `<ValorCOFINS>0</ValorCOFINS>`,
-    `<ValorINSS>0</ValorINSS>`,
-    `<ValorIR>0</ValorIR>`,
-    `<ValorCSLL>0</ValorCSLL>`,
-    `<CodigoServico>${Math.round(Number(p.codigoServico.replace(/\D/g, "")))}</CodigoServico>`,
-    `<AliquotaServicos>${p.aliquota}</AliquotaServicos>`,
-    `<ISSRetido>${issRetidoStr}</ISSRetido>`,
+    `<TipoRPS xmlns="">${escapeXml(p.tipo)}</TipoRPS>`,
+    `<DataEmissao xmlns="">${dataEmissaoDate}</DataEmissao>`,
+    `<StatusRPS xmlns="">N</StatusRPS>`,
+    `<TributacaoRPS xmlns="">${escapeXml(p.tributacaoRps)}</TributacaoRPS>`,
+    `<ValorDeducoes xmlns="">${p.valorDeducoes}</ValorDeducoes>`,
+    `<ValorPIS xmlns="">0</ValorPIS>`,
+    `<ValorCOFINS xmlns="">0</ValorCOFINS>`,
+    `<ValorINSS xmlns="">0</ValorINSS>`,
+    `<ValorIR xmlns="">0</ValorIR>`,
+    `<ValorCSLL xmlns="">0</ValorCSLL>`,
+    `<CodigoServico xmlns="">${Math.round(Number(p.codigoServico.replace(/\D/g, "")))}</CodigoServico>`,
+    `<AliquotaServicos xmlns="">${p.aliquota}</AliquotaServicos>`,
+    `<ISSRetido xmlns="">${issRetidoStr}</ISSRetido>`,
     ...tomadorParts,
-    `<Discriminacao>${escapeXml(p.discriminacao)}</Discriminacao>`,
-    `<ValorCargaTributaria>0</ValorCargaTributaria>`,
-    `<PercentualCargaTributaria>0</PercentualCargaTributaria>`,
-    `<FonteCargaTributaria>1</FonteCargaTributaria>`,
-    `<CodigoCEI>0</CodigoCEI>`,
-    `<MatriculaObra>0</MatriculaObra>`,
-    `<cLocPrestacao>${escapeXml(p.codigoMunicipio)}</cLocPrestacao>`,
-    `<NumeroEncapsulamento>0</NumeroEncapsulamento>`,
-    `<IBSCBS>`,
+    `<Discriminacao xmlns="">${escapeXml(p.discriminacao)}</Discriminacao>`,
+    `<ValorCargaTributaria xmlns="">0</ValorCargaTributaria>`,
+    `<PercentualCargaTributaria xmlns="">0</PercentualCargaTributaria>`,
+    `<FonteCargaTributaria xmlns="">1</FonteCargaTributaria>`,
+    `<CodigoCEI xmlns="">0</CodigoCEI>`,
+    `<MatriculaObra xmlns="">0</MatriculaObra>`,
+    `<MunicipioPrestacao xmlns="">${escapeXml(p.codigoMunicipio)}</MunicipioPrestacao>`,
+    `<NumeroEncapsulamento xmlns="">0</NumeroEncapsulamento>`,
+    `<ValorTotalRecebido xmlns="">${p.valorServicos}</ValorTotalRecebido>`,
+    `<ValorInicialCobrado xmlns="">${p.valorServicos}</ValorInicialCobrado>`,
+    `<ValorMulta xmlns="">0</ValorMulta>`,
+    `<ValorJuros xmlns="">0</ValorJuros>`,
+    `<ValorIPI xmlns="">0</ValorIPI>`,
+    `<ExigibilidadeSuspensa xmlns="">1</ExigibilidadeSuspensa>`,
+    `<PagamentoParceladoAntecipado xmlns="">1</PagamentoParceladoAntecipado>`,
+    `<ValorFinalCobrado xmlns="">${p.valorServicos}</ValorFinalCobrado>`,
+    `<IBSCBS xmlns="">`,
     `<finNFSe>0</finNFSe>`,
     `<indFinal>0</indFinal>`,
     `<cIndOp>000000</cIndOp>`,
@@ -313,8 +317,6 @@ async function buildRpsXml(
     `</trib>`,
     `</valores>`,
     `</IBSCBS>`,
-    `<ValorTotalRecebido>${p.valorServicos}</ValorTotalRecebido>`,
-    `<ValorFinalCobrado>${p.valorServicos}</ValorFinalCobrado>`,
   ];
 
   return rpsParts.join("");
@@ -327,8 +329,6 @@ async function buildEnvioRpsMessage(env: Env, rpsParams: RpsParams): Promise<str
   const tomadorDigits = (p.tomadorCpfCnpj || "").replace(/\D/g, "");
   const codigoServicoDigits = p.codigoServico.replace(/\D/g, "");
   const indicador = tomadorDigits ? (tomadorDigits.length <= 11 ? "1" : "2") : "3";
-  // Em 2026, forçar SCHEMA_VERSION = "2" mesmo para Simples Nacional
-  const schemaVersion = SCHEMA_VERSION;
   
   const assinatura = await signRps(
     {
@@ -376,7 +376,7 @@ async function buildEnvioRpsMessage(env: Env, rpsParams: RpsParams): Promise<str
   );
 
   const innerXml = [
-    `<Cabecalho xmlns="" Versao="${schemaVersion}">`,
+    `<Cabecalho xmlns="" Versao="${SCHEMA_VERSION}">`,
     `<CPFCNPJRemetente><CNPJ>${escapeXml(cnpjDigits)}</CNPJ></CPFCNPJRemetente>`,
     `</Cabecalho>`,
     `<RPS xmlns="">${rpsXml}</RPS>`,
@@ -389,9 +389,8 @@ export async function envioRPS(
   env: Env,
   rpsParams: RpsParams,
 ): Promise<SPNfseResult> {
-  const schemaVersion = SCHEMA_VERSION;
   const mensagem = await buildEnvioRpsMessage(env, rpsParams);
-  const raw = await soapCall(env, "EnvioRPS", mensagem, schemaVersion);
+  const raw = await soapCall(env, "EnvioRPS", mensagem);
   return parseNfseFromResponse(raw);
 }
 
@@ -405,7 +404,6 @@ async function buildEnvioLoteRpsMessage(
   const tomadorDigits = (p.tomadorCpfCnpj || "").replace(/\D/g, "");
   const codigoServicoDigits = p.codigoServico.replace(/\D/g, "");
   const indicador = tomadorDigits ? (tomadorDigits.length <= 11 ? "1" : "2") : "3";
-  const schemaVersion = SCHEMA_VERSION;
 
   const assinatura = await signRps(
     {
@@ -455,7 +453,7 @@ async function buildEnvioLoteRpsMessage(
   const today = new Date().toISOString().slice(0, 10);
 
   const innerXml = [
-    `<Cabecalho xmlns="" Versao="${schemaVersion}">`,
+    `<Cabecalho xmlns="" Versao="${SCHEMA_VERSION}">`,
     `<CNPJRemetente><CNPJ>${escapeXml(cnpjDigits)}</CNPJ></CNPJRemetente>`,
     `<transacao>true</transacao>`,
     `<dtInicio>${today}</dtInicio>`,
@@ -475,8 +473,7 @@ export async function testeEnvioLoteRPS(
   rpsParams: RpsParams,
 ): Promise<SPNfseResult> {
   const mensagem = await buildEnvioLoteRpsMessage(env, rpsParams);
-  const schemaVersion = SCHEMA_VERSION;
-  const raw = await soapCall(env, "TesteEnvioLoteRPS", mensagem, schemaVersion);
+  const raw = await soapCall(env, "TesteEnvioLoteRPS", mensagem);
   const erros = parseErros(raw);
   if (erros.length > 0) {
     return { success: false, erros, alertas: parseAlertas(raw) };
@@ -540,10 +537,9 @@ export async function debugBuildXmlMessage(
   );
 
   const today = new Date().toISOString().slice(0, 10);
-  const schemaVersion = SCHEMA_VERSION;
 
   const innerXml = [
-    `<Cabecalho xmlns="" Versao="${schemaVersion}">`,
+    `<Cabecalho xmlns="" Versao="${SCHEMA_VERSION}">`,
     `<CPFCNPJRemetente><CNPJ>${escapeXml(cnpjDigits)}</CNPJ></CPFCNPJRemetente>`,
     `<transacao>true</transacao>`,
     `<dtInicio>${today}</dtInicio>`,

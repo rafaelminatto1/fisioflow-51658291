@@ -17,12 +17,45 @@ export const BiomechanicsComparison: React.FC<BiomechanicsComparisonProps> = ({
   compareAssessment,
 }) => {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
-      <AssessmentView assessment={baseAssessment} label="Base" />
-      <AssessmentView assessment={compareAssessment} label="Comparação" />
+    <div className="space-y-6 w-full">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <AssessmentView assessment={baseAssessment} label="Base (Anterior)" />
+        <AssessmentView assessment={compareAssessment} label="Comparação (Atual)" />
+      </div>
+      
+      {/* Delta Metrics Panel */}
+      <div className="bg-primary/5 rounded-3xl p-6 border border-primary/10">
+        <h4 className="text-sm font-black uppercase tracking-tight mb-4 flex items-center gap-2">
+          <TrendingUp className="h-4 w-4 text-primary" />
+          Análise de Evolução (Delta)
+        </h4>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {Object.entries(compareAssessment.analysisData.angles || {}).map(([name, currentVal]) => {
+            const baseVal = baseAssessment.analysisData.angles?.[name];
+            if (baseVal === undefined) return null;
+            
+            const delta = currentVal - baseVal;
+            const isImprovement = delta > 0; // Depende do contexto, mas geralmente +ADM é bom
+            
+            return (
+              <div key={name} className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-primary/5 shadow-sm">
+                <p className="text-[10px] text-muted-foreground uppercase font-bold">{name}</p>
+                <div className="flex items-baseline gap-2 mt-1">
+                  <span className="text-xl font-black">{currentVal.toFixed(1)}°</span>
+                  <span className={`text-xs font-bold ${delta === 0 ? 'text-slate-400' : isImprovement ? 'text-emerald-500' : 'text-rose-500'}`}>
+                    {delta > 0 ? '+' : ''}{delta.toFixed(1)}°
+                  </span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
     </div>
   );
 };
+
+import { TrendingUp } from "lucide-react";
 
 const AssessmentView: React.FC<{ assessment: BiomechanicsAssessment; label: string }> = ({
   assessment,
