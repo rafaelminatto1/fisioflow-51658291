@@ -62,10 +62,11 @@ index_name = "fisioflow-clinical"
 
 # ===== AI SEARCH (RAG gerenciado — wiki, protocolos, exercícios) =====
 # ⚠️ AÇÃO MANUAL NECESSÁRIA: Crie a instância em dash.cloudflare.com > AI > AI Search
-# Nome: "fisioflow-knowledge" | Data source: R2 bucket "fisioflow-media"
+# Nome: "fisioflow-rag" | Data source: R2 bucket "fisioflow-media"
 [[ai_search]]
 binding = "AI_SEARCH"
-instance_name = "fisioflow-knowledge"
+instance_name = "fisioflow-rag"
+
 
 # ===== PIPELINES (Data warehouse → R2 JSON, open beta grátis) =====
 # Pipeline: fisioflow_events (id: 584a8a3054d1437686b35823f8476fde)
@@ -252,6 +253,7 @@ NEON_AUTH_AUDIENCE = "https://ep-wandering-bonus-acj4zwvo.neonauth.sa-east-1.aws
 NEON_DATA_API_URL = "https://ep-wandering-bonus-acj4zwvo.apirest.sa-east-1.aws.neon.tech/neondb/rest/v1"
 AXIOM_ORG_ID = "activity-dbyc"
 AXIOM_DATASET = "fisioflow-logs"
+PAGES_URL = "https://fisioflow.pages.dev"
 FISIOFLOW_AI_GATEWAY_URL = "https://gateway.ai.cloudflare.com/v1/32156f9a72a32d1ece28ab74bcd398fb/fisioflow-gateway"
 # Turnstile (anti-bot) — sitekey pública, secret via wrangler secret put TURNSTILE_SECRET_KEY
 TURNSTILE_SITE_KEY = "0x4AAAAAAC813j31sbl6IHX3"
@@ -278,9 +280,9 @@ dataset = "fisioflow_events"
 binding = "CLINICAL_KNOWLEDGE"
 index_name = "fisioflow-clinical"
 
-# [[env.production.ai_search]]
-# binding = "AI_SEARCH"
-# instance_name = "fisioflow-knowledge"
+[[env.production.ai_search]]
+binding = "AI_SEARCH"
+instance_name = "fisioflow-rag"
 
 [[env.production.pipelines]]
 binding = "EVENTS_PIPELINE"

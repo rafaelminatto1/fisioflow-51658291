@@ -270,6 +270,7 @@ async function buildRpsXml(
   const dataEmissaoDate = p.dataEmissao.slice(0, 10);
 
   // Layout v2 order (versão 002 - obrigatório 2026)
+  // Removendo ValorServicos do meio, pois o erro indica que ele não é esperado ali.
   const rpsParts = [
     `<Assinatura>${escapeXml(assinatura)}</Assinatura>`,
     `<ChaveRPS>`,
@@ -281,7 +282,6 @@ async function buildRpsXml(
     `<DataEmissao>${dataEmissaoDate}</DataEmissao>`,
     `<StatusRPS>N</StatusRPS>`,
     `<TributacaoRPS>${escapeXml(p.tributacaoRps)}</TributacaoRPS>`,
-    `<ValorServicos>${p.valorServicos}</ValorServicos>`,
     `<ValorDeducoes>${p.valorDeducoes}</ValorDeducoes>`,
     `<ValorPIS>0</ValorPIS>`,
     `<ValorCOFINS>0</ValorCOFINS>`,
@@ -572,21 +572,21 @@ export async function consultaNFe(
 
   const filtroParts: string[] = [];
   if (params.numeroNfse) {
-    filtroParts.push(`<NumeroNFe>${escapeXml(params.numeroNfse)}</NumeroNFe>`);
+    filtroParts.push(`<NumeroNFe xmlns="">${escapeXml(params.numeroNfse)}</NumeroNFe>`);
   }
   if (params.codigoVerificacao) {
     filtroParts.push(
-      `<CodigoVerificacao>${escapeXml(params.codigoVerificacao)}</CodigoVerificacao>`,
+      `<CodigoVerificacao xmlns="">${escapeXml(params.codigoVerificacao)}</CodigoVerificacao>`,
     );
   }
   if (params.dataEmissaoInicio) {
     filtroParts.push(
-      `<DataEmissaoNFeInicial>${escapeXml(params.dataEmissaoInicio)}</DataEmissaoNFeInicial>`,
+      `<DataEmissaoNFeInicial xmlns="">${escapeXml(params.dataEmissaoInicio)}</DataEmissaoNFeInicial>`,
     );
   }
   if (params.dataEmissaoFim) {
     filtroParts.push(
-      `<DataEmissaoNFeFinal>${escapeXml(params.dataEmissaoFim)}</DataEmissaoNFeFinal>`,
+      `<DataEmissaoNFeFinal xmlns="">${escapeXml(params.dataEmissaoFim)}</DataEmissaoNFeFinal>`,
     );
   }
 
@@ -600,8 +600,8 @@ export async function consultaNFe(
     ...filtroParts,
   ].join("");
 
-  const mensagemXml = buildSoapEnvelope("ConsultaNFe", innerXml);
-  const raw = await soapCall(env, "ConsultaNFe", mensagemXml);
+  const signedXml = await buildSignedMessage(env, "PedidoConsultaNFe", innerXml);
+  const raw = await soapCall(env, "ConsultaNFe", signedXml);
   return parseNfseFromResponse(raw);
 }
 
@@ -624,8 +624,8 @@ export async function consultaLote(
     `<InscricaoPrestador xmlns="">${escapeXml(imDigits)}</InscricaoPrestador>`,
   ].join("");
 
-  const mensagemXml = buildSoapEnvelope("ConsultaLote", innerXml);
-  const raw = await soapCall(env, "ConsultaLote", mensagemXml);
+  const signedXml = await buildSignedMessage(env, "PedidoConsultaLote", innerXml);
+  const raw = await soapCall(env, "ConsultaLote", signedXml);
   return parseNfseFromResponse(raw);
 }
 
@@ -650,8 +650,8 @@ export async function cancelamentoNFe(
     `</ChaveNFe>`,
   ].join("");
 
-  const mensagemXml = buildSoapEnvelope("CancelamentoNFe", innerXml);
-  const raw = await soapCall(env, "CancelamentoNFe", mensagemXml);
+  const signedXml = await buildSignedMessage(env, "PedidoCancelamentoNFe", innerXml);
+  const raw = await soapCall(env, "CancelamentoNFe", signedXml);
   const erros = parseErros(raw);
   if (erros.length > 0) {
     return { success: false, erros };
@@ -676,8 +676,8 @@ export async function consultaCNPJ(
     `<CNPJContribuinte xmlns=""><CNPJ>${escapeXml(cnpjDigits)}</CNPJ></CNPJContribuinte>`,
   ].join("");
 
-  const mensagemXml = buildSoapEnvelope("ConsultaCNPJ", innerXml);
-  const raw = await soapCall(env, "ConsultaCNPJ", mensagemXml);
+  const signedXml = await buildSignedMessage(env, "PedidoConsultaCNPJ", innerXml);
+  const raw = await soapCall(env, "ConsultaCNPJ", signedXml);
 
   const erros = parseErros(raw);
   if (erros.length > 0) {

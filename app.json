@@ -1,0 +1,15 @@
+{
+  "expo": {
+    "extra": {
+      "eas": {
+        "projectId": "2e771971-1e82-4cb1-b221-c728f1b8aeb0"
+      }
+    },
+    "ios": {
+      "bundleIdentifier": "com.rafaelminatto.fisioflowmonorepo",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    }
+  }
+}

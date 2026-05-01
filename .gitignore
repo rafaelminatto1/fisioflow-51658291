@@ -261,3 +261,9 @@ iOSInjectionProject/
 # Screenshots
 fisioflow-screenshots/
 mcp.json
+
+# Certificados e chaves (armazenados no Cloudflare)
+*.pem
+*.pfx
+*.p12
+playwright_output.txt

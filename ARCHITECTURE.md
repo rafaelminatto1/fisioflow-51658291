@@ -13,6 +13,8 @@ A arquitetura do **FisioFlow** foi projetada para ser nativa da borda (Edge-Nati
 | **Auth**       | **Neon Auth (JWKS)**     | Gestão de identidade integrada com validação por chaves públicas. |
 | **Storage**    | **Cloudflare R2**        | Armazenamento de mídia (Vídeos/Imagens) via S3 API.               |
 | **Aceleração** | Cloudflare Hyperdrive    | Pooling de conexões PostgreSQL distribuído na borda.              |
+| **PDF Engine** | **Browser Rendering**    | Geração de documentos (Alta/Recibos) via Puppeteer nativo.        |
+| **Sync**       | **Background Sync**      | Sincronização offline robusta via Service Workers + IndexedDB.    |
 
 ## 📐 Diagrama de Arquitetura
 
@@ -31,11 +33,15 @@ graph TD
         CF_Hyperdrive --> Neon_DB[(Neon PostgreSQL)]
     end
 
+    subgraph "Specialized Services"
+        CF_Workers --> CF_Browser[Browser Rendering - Puppeteer]
+        CF_Workers --> CF_Queues[Cloudflare Queues - Background Tasks]
+    end
+
     subgraph "Media Storage"
         CF_Workers --> CF_R2[Cloudflare R2 Storage]
     end
 ```
-
 ## 🔐 Modelo de Segurança e Isolamento
 
 1.  **Isolamento de Tenant**: O sistema utiliza um padrão de **Multi-tenancy** no nível da aplicação. Todas as tabelas possuem `organizationId`, e o acesso é filtrado em tempo de execução pelo Drizzle ORM baseado no contexto do usuário autenticado.

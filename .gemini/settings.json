@@ -1,10 +1,14 @@
 {
   "mcpServers": {
     "exa": {
-      "command": "",
+      "command": "npx",
       "args": [
-        "https://mcp.exa.ai/mcp"
-      ]
+        "-y",
+        "@exalabs/mcp-server-exa"
+      ],
+      "env": {
+        "EXA_API_KEY": "d12af1da-4c1d-4665-a952-2bdfa6283d11"
+      }
     },
     "context7": {
       "command": "",
@@ -19,6 +23,13 @@
       "args": [
         "npx",
         "-y,@cyanheads/pubmed-mcp-server@latest"
+      ]
+    },
+    "devtools": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-devtools"
       ]
     }
   },

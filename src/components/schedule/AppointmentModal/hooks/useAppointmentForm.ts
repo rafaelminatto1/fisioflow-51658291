@@ -7,6 +7,7 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "@/hooks/use-toast";
 import { useOrganizations } from "@/hooks/useOrganizations";
 import { appointmentsApi } from "@/api/v2";
+import { todayYMD, toLocalYMD } from "@/lib/date-utils";
 
 import { useUsePackageSession } from "@/hooks/usePackages";
 import {
@@ -86,19 +87,19 @@ export const useAppointmentForm = ({
       defaults: { date?: Date; time?: string; patientId?: string },
     ): AppointmentFormData => {
       const normalizedApt = apt as AppointmentWithPatientFallback | null | undefined;
-      let formattedDate = format(new Date(), "yyyy-MM-dd");
+      let formattedDate = todayYMD();
       if (apt?.date) {
         if (typeof apt.date === "string") {
           if (/^\d{4}-\d{2}-\d{2}$/.test(apt.date)) {
             formattedDate = apt.date;
           } else {
-            formattedDate = format(parseISO(apt.date), "yyyy-MM-dd");
+            formattedDate = toLocalYMD(parseISO(apt.date));
           }
         } else if (apt.date instanceof Date) {
-          formattedDate = format(apt.date, "yyyy-MM-dd");
+          formattedDate = toLocalYMD(apt.date);
         }
       } else if (defaults.date) {
-        formattedDate = format(defaults.date, "yyyy-MM-dd");
+        formattedDate = toLocalYMD(defaults.date);
       }
 
       if (apt) {
@@ -118,7 +119,7 @@ export const useAppointmentForm = ({
           installments: apt.installments || 1,
           is_recurring: apt.is_recurring || false,
           recurring_until: apt.recurring_until
-            ? format(new Date(apt.recurring_until), "yyyy-MM-dd")
+            ? toLocalYMD(new Date(apt.recurring_until))
             : "",
           session_package_id: apt.session_package_id || "",
         };

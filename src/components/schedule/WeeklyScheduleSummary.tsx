@@ -35,19 +35,7 @@ export function WeeklyScheduleSummary({ currentDate, appointments }: WeeklySched
   return (
     <section className="mb-4 rounded-3xl border border-slate-200/60 bg-gradient-to-br from-white via-slate-50/50 to-slate-100/30 p-6 shadow-lg shadow-slate-200/20 backdrop-blur-xl transition-all duration-300 hover:shadow-xl hover:shadow-slate-200/30 dark:border-slate-800/60 dark:from-slate-950 dark:via-slate-900/50 dark:to-slate-800/30 dark:shadow-slate-950/20 dark:hover:shadow-slate-950/30">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-        <div className="min-w-0">
-          <p className="text-xs font-bold uppercase tracking-[0.3em] text-slate-500 dark:text-slate-400" style={{ fontFamily: 'var(--font-display, ui-sans-serif)' }}>
-            Visão Semanal
-          </p>
-          <h2 className="mt-3 text-3xl font-light text-slate-900 dark:text-white" style={{ fontFamily: 'var(--font-display, ui-sans-serif)' }}>
-            {format(weekStart, "dd 'de' MMM", { locale: ptBR })} — {format(weekEnd, "dd 'de' MMM yyyy", { locale: ptBR })}
-          </h2>
-          <p className="mt-3 max-w-2xl text-sm leading-relaxed text-slate-600 dark:text-slate-300">
-            Uma visão limpa e suave da semana com foco em compromissos, confirmações e grupos. O calendário abaixo foi otimizado para leitura rápida e elegante.
-          </p>
-        </div>
-
-        <div className="grid w-full gap-4 sm:grid-cols-2 lg:w-auto lg:grid-cols-4">
+          <div className="grid w-full gap-4 sm:grid-cols-2 lg:w-auto lg:grid-cols-4">
           <div className="group rounded-2xl border border-slate-200/80 bg-gradient-to-br from-white to-slate-50/50 px-5 py-4 text-sm text-slate-700 shadow-md shadow-slate-200/40 backdrop-blur-sm transition-all duration-200 hover:scale-105 hover:shadow-lg hover:shadow-slate-200/60 dark:border-slate-800/80 dark:from-slate-900 dark:to-slate-800/50 dark:text-slate-100 dark:shadow-slate-950/40 dark:hover:shadow-slate-950/60">
             <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
               <CalendarDays className="h-4 w-4" />
