@@ -81,6 +81,23 @@ export interface ScheduleCapacityConfig {
   updated_at?: string;
 }
 
+export interface ScheduleStatusSetting {
+  id: string;
+  organization_id?: string;
+  key: string;
+  label: string;
+  color: string;
+  bg_color: string;
+  border_color: string;
+  is_default: boolean;
+  is_active: boolean;
+  sort_order: number;
+  allowed_actions: string[];
+  counts_toward_capacity: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
 export interface ScheduleAppointmentType {
   id: string;
   organization_id?: string;
@@ -187,6 +204,28 @@ export const schedulingApi = {
           method: "PUT",
           body: JSON.stringify(data),
         }),
+    },
+    statuses: {
+      list: () =>
+        request<{ data: ScheduleStatusSetting[] }>("/api/scheduling/settings/statuses"),
+      create: (data: Record<string, unknown>) =>
+        request<{ data: ScheduleStatusSetting }>("/api/scheduling/settings/statuses", {
+          method: "POST",
+          body: JSON.stringify(data),
+        }),
+      update: (id: string, data: Record<string, unknown>) =>
+        request<{ data: ScheduleStatusSetting }>(
+          `/api/scheduling/settings/statuses/${encodeURIComponent(id)}`,
+          {
+            method: "PUT",
+            body: JSON.stringify(data),
+          },
+        ),
+      delete: (id: string) =>
+        request<{ success?: boolean; data?: ScheduleStatusSetting; deactivated?: boolean }>(
+          `/api/scheduling/settings/statuses/${encodeURIComponent(id)}`,
+          { method: "DELETE" },
+        ),
     },
     cancellationRules: {
       get: () =>

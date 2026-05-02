@@ -191,11 +191,184 @@ export const normalizeCapacityPayload = (body: Record<string, any>) => {
   if (!startTime || !endTime) {
     throw new Error("start_time e end_time são obrigatórios");
   }
-  if (Number.isNaN(maxPatients) || maxPatients < 1) {
+  if (Number.isNaN(maxPatients) || maxPatients < 1 || maxPatients > 20) {
     throw new Error("max_patients inválido");
+  }
+  if (startTime >= endTime) {
+    throw new Error("start_time deve ser anterior ao end_time");
   }
 
   return { dayOfWeek, startTime, endTime, maxPatients };
+};
+
+const HEX_COLOR_RE = /^#[0-9a-fA-F]{6}$/;
+const STATUS_KEY_RE = /^[a-z0-9_]{2,80}$/;
+
+export const DEFAULT_APPOINTMENT_STATUSES = [
+  {
+    key: "agendado",
+    label: "Agendado",
+    color: "#3b82f6",
+    bg_color: "#dbeafe",
+    border_color: "#3b82f6",
+    sort_order: 10,
+    allowed_actions: ["confirm", "cancel", "reschedule", "edit"],
+    counts_toward_capacity: true,
+  },
+  {
+    key: "presenca_confirmada",
+    label: "Presença confirmada",
+    color: "#1d4ed8",
+    bg_color: "#dbeafe",
+    border_color: "#1d4ed8",
+    sort_order: 20,
+    allowed_actions: ["start", "cancel", "reschedule", "edit"],
+    counts_toward_capacity: true,
+  },
+  {
+    key: "atendido",
+    label: "Atendido",
+    color: "#059669",
+    bg_color: "#d1fae5",
+    border_color: "#059669",
+    sort_order: 30,
+    allowed_actions: ["view", "payment", "evolution"],
+    counts_toward_capacity: true,
+  },
+  {
+    key: "avaliacao",
+    label: "Avaliação",
+    color: "#7c3aed",
+    bg_color: "#ede9fe",
+    border_color: "#7c3aed",
+    sort_order: 40,
+    allowed_actions: ["confirm", "cancel", "reschedule", "edit"],
+    counts_toward_capacity: true,
+  },
+  {
+    key: "faltou",
+    label: "Faltou",
+    color: "#dc2626",
+    bg_color: "#fee2e2",
+    border_color: "#dc2626",
+    sort_order: 50,
+    allowed_actions: ["view", "reschedule", "payment"],
+    counts_toward_capacity: false,
+  },
+  {
+    key: "faltou_com_aviso",
+    label: "Faltou com aviso",
+    color: "#0d9488",
+    bg_color: "#ccfbf1",
+    border_color: "#0d9488",
+    sort_order: 60,
+    allowed_actions: ["view", "reschedule"],
+    counts_toward_capacity: false,
+  },
+  {
+    key: "faltou_sem_aviso",
+    label: "Faltou sem aviso",
+    color: "#ea580c",
+    bg_color: "#ffedd5",
+    border_color: "#ea580c",
+    sort_order: 70,
+    allowed_actions: ["view", "reschedule", "payment"],
+    counts_toward_capacity: false,
+  },
+  {
+    key: "nao_atendido",
+    label: "Não atendido",
+    color: "#4b5563",
+    bg_color: "#e5e7eb",
+    border_color: "#4b5563",
+    sort_order: 80,
+    allowed_actions: ["view", "reschedule"],
+    counts_toward_capacity: false,
+  },
+  {
+    key: "nao_atendido_sem_cobranca",
+    label: "Não atendido sem cobrança",
+    color: "#64748b",
+    bg_color: "#e2e8f0",
+    border_color: "#64748b",
+    sort_order: 90,
+    allowed_actions: ["view", "reschedule"],
+    counts_toward_capacity: false,
+  },
+  {
+    key: "remarcar",
+    label: "Remarcar",
+    color: "#64748b",
+    bg_color: "#e2e8f0",
+    border_color: "#64748b",
+    sort_order: 100,
+    allowed_actions: ["reschedule", "cancel", "edit"],
+    counts_toward_capacity: false,
+  },
+  {
+    key: "cancelado",
+    label: "Cancelado",
+    color: "#0f172a",
+    bg_color: "#e2e8f0",
+    border_color: "#0f172a",
+    sort_order: 110,
+    allowed_actions: ["view", "reschedule"],
+    counts_toward_capacity: false,
+  },
+] as const;
+
+export const mapAppointmentStatusSettingRow = (row: Record<string, any>) => ({
+  id: String(row.id),
+  organization_id: row.organization_id,
+  key: String(row.key),
+  label: String(row.label),
+  color: String(row.color),
+  bg_color: String(row.bg_color),
+  border_color: String(row.border_color),
+  is_default: row.is_default === true,
+  is_active: row.is_active !== false,
+  sort_order: Number(row.sort_order ?? 0),
+  allowed_actions: parseStringArray(row.allowed_actions),
+  counts_toward_capacity: row.counts_toward_capacity !== false,
+  created_at: row.created_at,
+  updated_at: row.updated_at,
+});
+
+export const normalizeAppointmentStatusSettingPayload = (body: Record<string, any>) => {
+  const rawKey = String(body.key ?? body.label ?? "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim()
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "");
+  const key = String(body.key ?? rawKey).trim();
+  const label = String(body.label ?? "").trim();
+  const color = String(body.color ?? "#3b82f6").trim();
+  const bgColor = String(body.bg_color ?? body.bgColor ?? color).trim();
+  const borderColor = String(body.border_color ?? body.borderColor ?? color).trim();
+  const sortOrder = Number(body.sort_order ?? body.sortOrder ?? 999);
+  const allowedActions = parseStringArray(body.allowed_actions ?? body.allowedActions);
+  const countsTowardCapacity = body.counts_toward_capacity ?? body.countsTowardCapacity ?? true;
+  const isActive = body.is_active ?? body.isActive ?? true;
+
+  if (!STATUS_KEY_RE.test(key)) throw new Error("Chave de status inválida.");
+  if (!label || label.length > 120) throw new Error("Nome de status inválido.");
+  if (!HEX_COLOR_RE.test(color) || !HEX_COLOR_RE.test(bgColor) || !HEX_COLOR_RE.test(borderColor)) {
+    throw new Error("Cores devem estar em hexadecimal, exemplo #3b82f6.");
+  }
+
+  return {
+    key,
+    label,
+    color,
+    bgColor,
+    borderColor,
+    sortOrder: Number.isFinite(sortOrder) ? sortOrder : 999,
+    allowedActions: JSON.stringify(allowedActions),
+    countsTowardCapacity: Boolean(countsTowardCapacity),
+    isActive: Boolean(isActive),
+  };
 };
 
 export const mapWaitlistRow = (row: Record<string, any>) => ({

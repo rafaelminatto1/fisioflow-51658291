@@ -84,7 +84,8 @@ export function normalizeStatus(raw: string | undefined): string {
   if (!raw) return "agendado";
   const normalized = raw.toLowerCase().trim().replace(/\s+/g, "_");
   if (VALID_STATUSES.has(normalized)) return normalized;
-  return STATUS_MAP[normalized] ?? "agendado";
+  if (STATUS_MAP[normalized]) return STATUS_MAP[normalized];
+  return /^[a-z0-9_]{2,80}$/.test(normalized) ? normalized : "agendado";
 }
 
 export function normalizeAppointmentType(raw: string | undefined): string {
@@ -157,6 +158,28 @@ export function countsTowardCapacity(status: string): boolean {
   ].includes(normalized);
 }
 
+async function statusCountsTowardCapacity(
+  db: any,
+  organizationId: string,
+  status: string,
+): Promise<boolean> {
+  const normalized = normalizeStatus(status);
+  try {
+    const result = await db.execute(sql`
+      SELECT counts_toward_capacity
+      FROM appointment_status_settings
+      WHERE organization_id = ${organizationId}
+        AND key = ${normalized}
+      LIMIT 1
+    `);
+    const value = result.rows?.[0]?.counts_toward_capacity;
+    if (typeof value === "boolean") return value;
+  } catch (error: any) {
+    if (!String(error?.message ?? "").includes("does not exist")) throw error;
+  }
+  return countsTowardCapacity(normalized);
+}
+
 export async function getIntervalCapacity(
   db: any,
   organizationId: string,
@@ -204,6 +227,13 @@ export async function getOverlappingAppointments(
           'nao_atendido', 'nao_atendido_sem_cobranca', 'no_show',
           'remarcar', 'remarcado', 'rescheduled'
         )
+        AND NOT EXISTS (
+          SELECT 1
+          FROM appointment_status_settings ass
+          WHERE ass.organization_id = appointments.organization_id
+            AND ass.key = appointments.status::text
+            AND ass.counts_toward_capacity = FALSE
+        )
         AND deleted_at IS NULL
         AND start_time < ${endTime}::time
         AND end_time > ${startTime}::time
@@ -231,7 +261,12 @@ export async function enforceCapacity(
     useLock?: boolean;
   },
 ) {
-  if (payload.ignoreCapacity || !countsTowardCapacity(payload.status)) return null;
+  if (
+    payload.ignoreCapacity ||
+    !(await statusCountsTowardCapacity(db, organizationId, payload.status))
+  ) {
+    return null;
+  }
 
   const capacity = await getIntervalCapacity(
     db,

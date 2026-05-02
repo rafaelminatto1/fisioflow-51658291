@@ -67,7 +67,8 @@ export type AppointmentStatus =
   | "nao_atendido_sem_cobranca"
   | "presenca_confirmada"
   | "aguardando_confirmacao"
-  | "remarcar";
+  | "remarcar"
+  | (string & {});
 
 export interface EnhancedAppointment extends AppointmentBase {
   // Therapist assignment

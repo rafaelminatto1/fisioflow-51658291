@@ -24,6 +24,7 @@ import {
   pgEnum,
   numeric,
   index,
+  jsonb,
 } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { withOrganizationPolicy } from "./rls_helper";
@@ -81,7 +82,7 @@ export const appointments = pgTable(
     durationMinutes: integer("duration_minutes").default(60).notNull(), // 30, 60, 90
 
     // Status & Type
-    status: appointmentStatusEnum("status").default("agendado").notNull(),
+    status: varchar("status", { length: 80 }).default("agendado").notNull(),
     type: appointmentTypeEnum("type").default("session").notNull(),
 
     // Group Appointments - RF02.2
@@ -153,6 +154,35 @@ export const appointmentsRelations = relations(appointments, ({ one }) => ({
     references: [sessions.appointmentId],
   }),
 }));
+
+export const appointmentStatusSettings = pgTable(
+  "appointment_status_settings",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    organizationId: uuid("organization_id").notNull(),
+    key: varchar("key", { length: 80 }).notNull(),
+    label: varchar("label", { length: 120 }).notNull(),
+    color: varchar("color", { length: 20 }).default("#3b82f6").notNull(),
+    bgColor: varchar("bg_color", { length: 20 }).default("#dbeafe").notNull(),
+    borderColor: varchar("border_color", { length: 20 }).default("#3b82f6").notNull(),
+    isDefault: boolean("is_default").default(false).notNull(),
+    isActive: boolean("is_active").default(true).notNull(),
+    sortOrder: integer("sort_order").default(0).notNull(),
+    allowedActions: jsonb("allowed_actions").$type<string[]>().default([]).notNull(),
+    countsTowardCapacity: boolean("counts_toward_capacity").default(true).notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  },
+  (table) => [
+    index("idx_appointment_status_settings_org").on(table.organizationId),
+    index("idx_appointment_status_settings_org_active_sort").on(
+      table.organizationId,
+      table.isActive,
+      table.sortOrder,
+    ),
+    withOrganizationPolicy("appointment_status_settings", table.organizationId),
+  ],
+);
 
 // ===== ROOMS/RESOURCES =====
 export const rooms = pgTable(

@@ -40,11 +40,10 @@ import {
 } from "@/lib/schedule/time";
 import type { Tarefa } from "@/types/tarefas";
 import type { TherapistSummary } from "@/types/workers";
-import { getCalendarCardColors, normalizeStatus } from "./shared/appointment-status";
+import { normalizeStatus } from "./shared/appointment-status";
 import { AppointmentQuickView } from "./AppointmentQuickView";
 import { ScheduleToolbar } from "./ScheduleToolbar";
 import { ScheduleEventContent } from "./ScheduleEventContent";
-import { WeeklyScheduleSummary } from "./WeeklyScheduleSummary";
 import { parseLocalDT } from "@/lib/date-utils";
 
 type ViewType = "day" | "week" | "month";
@@ -147,7 +146,7 @@ export function ScheduleCalendar(props: ScheduleCalendarProps) {
   const selectionOn = isSelectionMode ?? selectionMode ?? false;
 
   const calendarRef = useRef<FullCalendar | null>(null);
-  const { config: statusConfig } = useStatusConfig();
+  const { statusConfig } = useStatusConfig();
   const { cssVariables, slotHeightPx, appearance } = useAgendaAppearancePersistence(viewType);
   const { businessHours: settingsHours, blockedTimes } = useScheduleSettings();
 
@@ -239,8 +238,10 @@ export function ScheduleCalendar(props: ScheduleCalendarProps) {
         continue;
       }
 
-      const statusKey = normalizeStatus(String(a.status || "agendado"));
-      const colors = getCalendarCardColors(statusKey, statusConfig);
+      const rawStatus = String(a.status || "agendado");
+      const statusKey = statusConfig[rawStatus] ? rawStatus : normalizeStatus(rawStatus);
+      const colors =
+        statusConfig[statusKey]?.calendarCardColors ?? statusConfig.agendado.calendarCardColors;
       const isGroup = Boolean(a.isGroup ?? a.is_group);
 
       apptEvents.push({
@@ -470,9 +471,6 @@ export function ScheduleCalendar(props: ScheduleCalendarProps) {
       />
 
       <div className="flex min-h-0 flex-1 flex-col p-1 md:p-2">
-        {viewType === "week" && (
-          <WeeklyScheduleSummary currentDate={currentDate} appointments={appointments} />
-        )}
         <div className="relative h-full w-full overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
           <FullCalendar
             ref={calendarRef}

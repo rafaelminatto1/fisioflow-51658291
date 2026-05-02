@@ -1,5 +1,22 @@
 {
-  "mcpServers": {},
+  "mcpServers": {
+    "cloudflare-api": {
+      "httpUrl": "https://mcp.cloudflare.com/mcp",
+      "timeout": 30000
+    },
+    "cloudflare-docs": {
+      "httpUrl": "https://docs.mcp.cloudflare.com/mcp",
+      "timeout": 30000
+    },
+    "cloudflare-agents-docs": {
+      "httpUrl": "https://agents.cloudflare.com/mcp",
+      "timeout": 30000
+    },
+    "cloudflare-bindings": {
+      "httpUrl": "https://bindings.mcp.cloudflare.com/mcp",
+      "timeout": 30000
+    }
+  },
   "ui": {
     "hideBanner": true,
     "hideTips": true,

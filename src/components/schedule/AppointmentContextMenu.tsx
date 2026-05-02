@@ -10,8 +10,7 @@ import {
   ContextMenuSubContent,
 } from "@/components/ui/context-menu";
 import { MessageSquare, Clock, Edit2, Trash2, Copy, ArrowRight } from "lucide-react";
-import { APPOINTMENT_STATUS_CONFIG, APPOINTMENT_STATUS_OPTIONS } from "./shared/appointment-status";
-import { cn } from "@/lib/utils";
+import { useStatusConfig } from "@/hooks/useStatusConfig";
 import type { Appointment } from "@/types/appointment";
 
 interface AppointmentContextMenuProps {
@@ -38,6 +37,8 @@ export const AppointmentContextMenu = ({
   ref?: React.Ref<HTMLElement>;
   [key: `data-${string}`]: unknown;
 }) => {
+  const { statusConfig, allStatuses } = useStatusConfig();
+
   const handleWhatsApp = () => {
     const phone = appointment.phone?.replace(/\D/g, "");
     if (phone) {
@@ -99,8 +100,8 @@ export const AppointmentContextMenu = ({
             <span>Alterar Status</span>
           </ContextMenuSubTrigger>
           <ContextMenuSubContent className="w-56 rounded-xl shadow-xl border-blue-100 bg-white/95 dark:bg-slate-900/95">
-            {APPOINTMENT_STATUS_OPTIONS.map((status) => {
-              const config = APPOINTMENT_STATUS_CONFIG[status];
+            {allStatuses.map((status) => {
+              const config = statusConfig[status] || statusConfig.agendado;
 
               return (
                 <ContextMenuItem
@@ -109,7 +110,8 @@ export const AppointmentContextMenu = ({
                   className="gap-2 focus:bg-slate-50 dark:focus:bg-slate-800"
                 >
                   <div
-                    className={cn("w-2 h-2 rounded-full", config.iconColor.replace("text-", "bg-"))}
+                    className="w-2 h-2 rounded-full"
+                    style={{ backgroundColor: (config as any).color }}
                   />
                   <span>{config.label}</span>
                 </ContextMenuItem>

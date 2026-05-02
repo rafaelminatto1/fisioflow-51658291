@@ -159,7 +159,8 @@ export type AppointmentStatus =
   | "Cancelado"
   | "Realizado"
   | "no_show"
-  | "in_progress";
+  | "in_progress"
+  | (string & {});
 
 export interface Patient {
   id: string;

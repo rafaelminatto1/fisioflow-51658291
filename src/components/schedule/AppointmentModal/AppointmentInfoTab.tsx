@@ -9,8 +9,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { MagicTextarea } from "@/components/ai/MagicTextarea";
-import { APPOINTMENT_STATUS_CONFIG } from "../shared/appointment-status";
 import { cn } from "@/lib/utils";
+import { useStatusConfig } from "@/hooks/useStatusConfig";
 import {
   formatTherapistLabel,
   THERAPIST_SELECT_NONE,
@@ -112,6 +112,7 @@ export const AppointmentInfoTab: React.FC<AppointmentInfoTabProps> = ({
   therapists,
   therapistsLoading,
 }) => {
+  const { statusConfig, allStatuses } = useStatusConfig();
   const { setValue, watch } = methods;
 
   const watchedPatientId = watch("patient_id");
@@ -278,19 +279,20 @@ export const AppointmentInfoTab: React.FC<AppointmentInfoTabProps> = ({
                   <SelectValue placeholder="Selecione o status" />
                 </SelectTrigger>
                 <SelectContent className="rounded-xl border-slate-200 shadow-xl max-h-[300px]">
-                  {Object.entries(APPOINTMENT_STATUS_CONFIG).map(([key, config]) => (
+                  {allStatuses.map((key) => {
+                    const config = statusConfig[key] || statusConfig.agendado;
+                    return (
                     <SelectItem key={key} value={key} className="text-sm py-2.5">
                       <div className="flex items-center gap-3">
                         <div
-                          className={cn(
-                            "h-2.5 w-2.5 rounded-full shrink-0 shadow-sm transition-transform group-hover:scale-125",
-                            config.iconColor.replace("text-", "bg-"),
-                          )}
+                          className="h-2.5 w-2.5 rounded-full shrink-0 shadow-sm transition-transform group-hover:scale-125"
+                          style={{ backgroundColor: (config as any).color }}
                         />
                         <span className="font-semibold text-slate-700">{config.label}</span>
                       </div>
                     </SelectItem>
-                  ))}
+                    );
+                  })}
                 </SelectContent>
               </Select>
             </div>

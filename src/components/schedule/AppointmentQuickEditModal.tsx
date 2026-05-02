@@ -57,6 +57,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useAppointmentActions } from "@/hooks/useAppointmentActions";
 import { useUpdateAppointment } from "@/hooks/useAppointments";
 import { useScheduleSettings } from "@/hooks/useScheduleSettings";
+import { useStatusConfig } from "@/hooks/useStatusConfig";
 import { formatTherapistLabel, THERAPIST_PLACEHOLDER, useTherapists } from "@/hooks/useTherapists";
 import { cn } from "@/lib/utils";
 import { PatientService } from "@/services/patientService";
@@ -64,16 +65,12 @@ import type { Appointment, AppointmentBase, AppointmentStatus } from "@/types/ap
 import { checkAppointmentConflict, formatTimeRange } from "@/utils/appointmentValidation";
 import { parseResponseDate } from "@/utils/dateUtils";
 
-import { APPOINTMENT_STATUS_CONFIG } from "./shared/appointment-status";
-
 interface AppointmentQuickEditModalProps {
   appointment: Appointment | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onDeleted?: () => void;
 }
-
-// Status labels e cores are now handled by APPOINTMENT_STATUS_CONFIG
 
 // Status que permitem iniciar atendimento
 const STARTABLE_STATUSES: Set<AppointmentStatus> = new Set([
@@ -116,6 +113,7 @@ export const AppointmentQuickEditModal: React.FC<AppointmentQuickEditModalProps>
 
   const { cancelAppointment, isCanceling } = useAppointmentActions();
   const { cancellationRules } = useScheduleSettings();
+  const { statusConfig: appointmentStatusConfig, allStatuses } = useStatusConfig();
   const { mutateAsync: updateAppointment, isPending: isSaving } = useUpdateAppointment();
 
   // States
@@ -307,7 +305,7 @@ export const AppointmentQuickEditModal: React.FC<AppointmentQuickEditModalProps>
   );
 
   const statusConfig =
-    APPOINTMENT_STATUS_CONFIG[formData.status] || APPOINTMENT_STATUS_CONFIG.agendado;
+    appointmentStatusConfig[formData.status] || appointmentStatusConfig.agendado;
 
   const effectiveCancellationRules = useMemo(
     () => ({
@@ -532,10 +530,12 @@ export const AppointmentQuickEditModal: React.FC<AppointmentQuickEditModalProps>
                 </div>
               </div>
               <Badge
-                className={cn(
-                  "text-white text-xs shrink-0",
-                  statusConfig.iconColor.replace("text-", "bg-"),
-                )}
+                className="text-xs shrink-0"
+                style={{
+                  color: (statusConfig as any).color,
+                  backgroundColor: (statusConfig as any).bgColor,
+                  borderColor: (statusConfig as any).borderColor,
+                }}
               >
                 {statusConfig.label}
               </Badge>
@@ -687,28 +687,27 @@ export const AppointmentQuickEditModal: React.FC<AppointmentQuickEditModalProps>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      {Object.entries(APPOINTMENT_STATUS_CONFIG).map(([value, config]) => (
+                      {allStatuses.map((value) => {
+                        const config = appointmentStatusConfig[value] || appointmentStatusConfig.agendado;
+                        return (
                         <SelectItem key={value} value={value}>
                           <div className="flex items-center gap-2">
                             <div
-                              className={cn(
-                                "w-2 h-2 rounded-full",
-                                config.iconColor.replace("text-", "bg-"),
-                              )}
+                              className="w-2 h-2 rounded-full"
+                              style={{ backgroundColor: config.color }}
                             />
                             {config.label}
                           </div>
                         </SelectItem>
-                      ))}
+                        );
+                      })}
                     </SelectContent>
                   </Select>
                 ) : (
                   <div className="flex items-center gap-2 py-2">
                     <div
-                      className={cn(
-                        "w-2.5 h-2.5 rounded-full",
-                        statusConfig.iconColor.replace("text-", "bg-"),
-                      )}
+                      className="w-2.5 h-2.5 rounded-full"
+                      style={{ backgroundColor: (statusConfig as any).color }}
                     />
                     <span className="text-sm font-medium">{statusConfig.label}</span>
                   </div>

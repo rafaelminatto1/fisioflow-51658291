@@ -59,7 +59,7 @@ import { WaitlistQuickAdd } from "./WaitlistQuickAdd";
 import { PaymentRegistrationModal } from "./PaymentRegistrationModal";
 import { Appointment } from "@/types/appointment";
 import { useAppointmentQuickViewLogic } from "./hooks/useAppointmentQuickViewLogic";
-import { getStatusConfig, APPOINTMENT_STATUS_OPTIONS } from "./shared/appointment-status";
+import { useStatusConfig } from "@/hooks/useStatusConfig";
 
 interface AppointmentQuickViewProps {
   appointment: Appointment;
@@ -113,7 +113,8 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
     isUpdatingStatus,
   } = logic;
 
-  const statusConfig = getStatusConfig(localStatus);
+  const { statusConfig: statusConfigMap, allStatuses } = useStatusConfig();
+  const statusConfig = statusConfigMap[localStatus] || statusConfigMap.agendado;
 
   const linkedPackage = useMemo(() => {
     if (!appointment.session_package_id) return null;
@@ -277,26 +278,22 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
                   <SelectValue>
                     <div className="flex items-center gap-1.5 truncate">
                       <div
-                        className={cn(
-                          "w-2 h-2 rounded-full shrink-0",
-                          statusConfig.iconColor.replace("text-", "bg-"),
-                        )}
+                        className="w-2 h-2 rounded-full shrink-0"
+                        style={{ backgroundColor: (statusConfig as any).color }}
                       />
                       <span className="truncate text-xs">{statusConfig.label}</span>
                     </div>
                   </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
-                  {APPOINTMENT_STATUS_OPTIONS.map((val) => {
-                    const cfg = getStatusConfig(val);
+                  {allStatuses.map((val) => {
+                    const cfg = statusConfigMap[val] || statusConfigMap.agendado;
                     return (
                       <SelectItem key={val} value={val}>
                         <div className="flex items-center gap-2">
                           <div
-                            className={cn(
-                              "w-2 h-2 rounded-full",
-                              cfg.iconColor.replace("text-", "bg-"),
-                            )}
+                            className="w-2 h-2 rounded-full"
+                            style={{ backgroundColor: (cfg as any).color }}
                           />
                           <span>{cfg.label}</span>
                         </div>

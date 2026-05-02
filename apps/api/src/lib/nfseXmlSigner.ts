@@ -153,7 +153,7 @@ export async function signRps(
   keyPem: string,
 ): Promise<string> {
   const parts = [
-    params.inscricaoMunicipal.padStart(12, "0"),
+    params.inscricaoMunicipal.padStart(8, "0"),
     params.serie.padEnd(5, " "),
     params.numero.padStart(12, "0"),
     params.dataEmissao.slice(0, 10).replace(/-/g, ""),

@@ -30,7 +30,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { useOrganizations } from "@/hooks/useOrganizations";
-import { financialApi, type NFSeRecord } from "@/api/v2";
+import { financialApi, type NFSeRecord, request } from "@/api/v2";
 import { MainLayout } from "@/components/layout/MainLayout";
 
 export interface NFSe extends NFSeRecord {
@@ -153,7 +153,7 @@ export function NFSeContent({ autoOpenCreate = false, onAutoOpenHandled }: NFSeC
   const [_searchTerm, _setSearchTerm] = useState("");
   const [_statusFilter, _setStatusFilter] = useState<string>("todos");
 
-  const [formData] = useState({
+  const [formData, setFormData] = useState({
     tipo: "entrada" as "entrada" | "saida",
     valor: "",
     data_prestacao: new Date().toISOString().split("T")[0],
@@ -187,25 +187,45 @@ export function NFSeContent({ autoOpenCreate = false, onAutoOpenHandled }: NFSeC
   const createNFSe = useMutation({
     mutationFn: async (data: typeof formData) => {
       if (!user || !organizationId) throw new Error("Auth fail");
-      const nfse = {
-        numero: Math.floor(Math.random() * 100000)
-          .toString()
-          .padStart(10, "0"),
-        serie: "1",
-        valor: parseFloat(data.valor),
-        data_emissao: new Date().toISOString(),
-        status: "emitida",
-      } as any;
-      const response = await financialApi.nfse.create(nfse);
-      return normalizeNFSe(response.data as NFSeRecord);
+      
+      const val = parseFloat(data.valor.replace(",", "."));
+      if (isNaN(val)) throw new Error("Valor inválido");
+
+      // 1. Gerar rascunho
+      const response = await request<any>("/api/nfse/generate", {
+        method: "POST",
+        body: JSON.stringify({
+          valor_servico: val,
+          discriminacao: data.servico_descricao || `Sessão de fisioterapia - ${data.destinatario_nome}`,
+          tomador_nome: data.destinatario_nome,
+          tomador_cpf_cnpj: data.destinatario_cpf_cnpj,
+        }),
+      });
+
+      const nfseId = response.data.id;
+
+      // 2. Enviar para PMSP
+      const sendResponse = await request<any>(`/api/nfse/send/${nfseId}`, {
+        method: "POST"
+      });
+
+      if (!sendResponse.data.success) {
+        const msg = sendResponse.data.erros?.[0]?.descricao || "Erro desconhecido na PMSP";
+        throw new Error(msg);
+      }
+
+      return normalizeNFSe(sendResponse.data.data as NFSeRecord);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: ["nfse-list", organizationId],
       });
-      toast.success("NFSe emitida!");
+      toast.success("NFSe emitida com sucesso!");
       setIsDialogOpen(false);
     },
+    onError: (err: any) => {
+      toast.error(err.message || "Erro ao emitir NFSe");
+    }
   });
 
   const getStatusBadge = (status: string) => {
@@ -333,17 +353,33 @@ export function NFSeContent({ autoOpenCreate = false, onAutoOpenHandled }: NFSeC
               <Label className="text-[10px] font-black uppercase text-slate-400">
                 Nome do Tomador
               </Label>
-              <Input className="rounded-xl h-11" placeholder="Nome completo ou Razão Social" />
+              <Input
+                className="rounded-xl h-11"
+                placeholder="Nome completo ou Razão Social"
+                value={formData.destinatario_nome}
+                onChange={(e) => setFormData({ ...formData, destinatario_nome: e.target.value })}
+              />
             </div>
             <div className="space-y-2">
               <Label className="text-[10px] font-black uppercase text-slate-400">CPF/CNPJ</Label>
-              <Input className="rounded-xl h-11" placeholder="000.000.000-00" />
+              <Input
+                className="rounded-xl h-11"
+                placeholder="000.000.000-00"
+                value={formData.destinatario_cpf_cnpj}
+                onChange={(e) => setFormData({ ...formData, destinatario_cpf_cnpj: e.target.value })}
+              />
             </div>
             <div className="space-y-2">
               <Label className="text-[10px] font-black uppercase text-slate-400">
                 Valor do Serviço (R$)
               </Label>
-              <Input type="number" className="rounded-xl h-11 font-black" placeholder="0,00" />
+              <Input
+                type="number"
+                className="rounded-xl h-11 font-black"
+                placeholder="0,00"
+                value={formData.valor}
+                onChange={(e) => setFormData({ ...formData, valor: e.target.value })}
+              />
             </div>
           </div>
           <DialogFooter>
@@ -356,9 +392,10 @@ export function NFSeContent({ autoOpenCreate = false, onAutoOpenHandled }: NFSeC
             </Button>
             <Button
               className="rounded-xl h-11 bg-slate-900 text-white"
-              onClick={() => createNFSe.mutate({} as any)}
+              onClick={() => createNFSe.mutate(formData)}
+              disabled={createNFSe.isPending}
             >
-              Emitir Nota Fiscal
+              {createNFSe.isPending ? "Emitindo..." : "Emitir Nota Fiscal"}
             </Button>
           </DialogFooter>
         </DialogContent>

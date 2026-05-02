@@ -26,6 +26,7 @@ export interface Env {
   DATABASE_URL?: string;
   NEON_URL?: string;
   ALLOWED_ORIGINS: string; // CSV: "https://a.com,https://b.com"
+  FRONTEND_URL?: string;
   PAGES_URL?: string;
   GOOGLE_AI_API_KEY: string;
   GOOGLE_MAPS_API_KEY?: string;

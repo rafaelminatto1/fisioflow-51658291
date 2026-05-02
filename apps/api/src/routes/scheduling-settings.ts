@@ -15,11 +15,41 @@ import {
   normalizeBlockedTimePayload,
   mapCapacityRow,
   normalizeCapacityPayload,
+  DEFAULT_APPOINTMENT_STATUSES,
+  mapAppointmentStatusSettingRow,
+  normalizeAppointmentStatusSettingPayload,
   mapBookingWindowRow,
   mapSlotConfigRow,
 } from "./scheduling-helpers";
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
+
+async function ensureDefaultAppointmentStatuses(pool: any, organizationId: string) {
+  for (const status of DEFAULT_APPOINTMENT_STATUSES) {
+    await pool.query(
+      `INSERT INTO appointment_status_settings (
+        organization_id, key, label, color, bg_color, border_color,
+        is_default, is_active, sort_order, allowed_actions, counts_toward_capacity
+      )
+      VALUES ($1, $2, $3, $4, $5, $6, TRUE, TRUE, $7, $8::jsonb, $9)
+      ON CONFLICT (organization_id, key)
+      DO UPDATE SET
+        is_default = TRUE,
+        updated_at = NOW()`,
+      [
+        organizationId,
+        status.key,
+        status.label,
+        status.color,
+        status.bg_color,
+        status.border_color,
+        status.sort_order,
+        JSON.stringify(status.allowed_actions),
+        status.counts_toward_capacity,
+      ],
+    );
+  }
+}
 
 async function handleUpsertBusinessHours(c: any) {
   const user = c.get("user");
@@ -441,6 +471,150 @@ app.delete("/capacity-config/:id", requireAuth, async (c) => {
   const { id } = c.req.param();
   try {
     await pool.query("DELETE FROM schedule_capacity WHERE id = $1 AND organization_id = $2", [
+      id,
+      user.organizationId,
+    ]);
+    return c.json({ success: true });
+  } catch (error: any) {
+    return c.json({ error: error.message }, 500);
+  }
+});
+
+// Appointment Status Settings
+app.get("/settings/statuses", requireAuth, async (c) => {
+  const user = c.get("user");
+  const pool = await createPool(c.env);
+  try {
+    await ensureDefaultAppointmentStatuses(pool, user.organizationId);
+    const result = await pool.query(
+      `SELECT *
+       FROM appointment_status_settings
+       WHERE organization_id = $1
+       ORDER BY sort_order ASC, label ASC`,
+      [user.organizationId],
+    );
+    return c.json({ data: result.rows.map(mapAppointmentStatusSettingRow) });
+  } catch (error: any) {
+    return c.json({ error: error.message }, 500);
+  }
+});
+
+app.post("/settings/statuses", requireAuth, async (c) => {
+  const user = c.get("user");
+  const pool = await createPool(c.env);
+  try {
+    const body = await c.req.json();
+    const normalized = normalizeAppointmentStatusSettingPayload(body);
+    const result = await pool.query(
+      `INSERT INTO appointment_status_settings (
+        organization_id, key, label, color, bg_color, border_color,
+        is_default, is_active, sort_order, allowed_actions, counts_toward_capacity
+      )
+      VALUES ($1, $2, $3, $4, $5, $6, FALSE, $7, $8, $9::jsonb, $10)
+      RETURNING *`,
+      [
+        user.organizationId,
+        normalized.key,
+        normalized.label,
+        normalized.color,
+        normalized.bgColor,
+        normalized.borderColor,
+        normalized.isActive,
+        normalized.sortOrder,
+        normalized.allowedActions,
+        normalized.countsTowardCapacity,
+      ],
+    );
+    return c.json({ data: mapAppointmentStatusSettingRow(result.rows[0]) }, 201);
+  } catch (error: any) {
+    const status = error?.code === "23505" ? 409 : 500;
+    return c.json({ error: error.message }, status);
+  }
+});
+
+app.put("/settings/statuses/:id", requireAuth, async (c) => {
+  const user = c.get("user");
+  const pool = await createPool(c.env);
+  const { id } = c.req.param();
+  try {
+    const current = await pool.query(
+      "SELECT * FROM appointment_status_settings WHERE id = $1 AND organization_id = $2 LIMIT 1",
+      [id, user.organizationId],
+    );
+    if (!current.rows[0]) return c.json({ error: "Status não encontrado" }, 404);
+
+    const body = await c.req.json();
+    const merged = {
+      ...current.rows[0],
+      ...body,
+      key: current.rows[0].is_default ? current.rows[0].key : body.key ?? current.rows[0].key,
+    };
+    const normalized = normalizeAppointmentStatusSettingPayload(merged);
+    const result = await pool.query(
+      `UPDATE appointment_status_settings
+       SET key = $1,
+           label = $2,
+           color = $3,
+           bg_color = $4,
+           border_color = $5,
+           is_active = $6,
+           sort_order = $7,
+           allowed_actions = $8::jsonb,
+           counts_toward_capacity = $9,
+           updated_at = NOW()
+       WHERE id = $10 AND organization_id = $11
+       RETURNING *`,
+      [
+        normalized.key,
+        normalized.label,
+        normalized.color,
+        normalized.bgColor,
+        normalized.borderColor,
+        normalized.isActive,
+        normalized.sortOrder,
+        normalized.allowedActions,
+        normalized.countsTowardCapacity,
+        id,
+        user.organizationId,
+      ],
+    );
+    return c.json({ data: mapAppointmentStatusSettingRow(result.rows[0]) });
+  } catch (error: any) {
+    const status = error?.code === "23505" ? 409 : 500;
+    return c.json({ error: error.message }, status);
+  }
+});
+
+app.delete("/settings/statuses/:id", requireAuth, async (c) => {
+  const user = c.get("user");
+  const pool = await createPool(c.env);
+  const { id } = c.req.param();
+  try {
+    const current = await pool.query(
+      "SELECT * FROM appointment_status_settings WHERE id = $1 AND organization_id = $2 LIMIT 1",
+      [id, user.organizationId],
+    );
+    if (!current.rows[0]) return c.json({ error: "Status não encontrado" }, 404);
+    if (current.rows[0].is_default) {
+      return c.json({ error: "Status padrão não pode ser excluído." }, 400);
+    }
+
+    const usage = await pool.query(
+      "SELECT COUNT(*)::int AS total FROM appointments WHERE organization_id = $1 AND status = $2",
+      [user.organizationId, current.rows[0].key],
+    );
+    if (Number(usage.rows[0]?.total ?? 0) > 0) {
+      const result = await pool.query(
+        `UPDATE appointment_status_settings
+         SET is_active = FALSE, updated_at = NOW()
+         WHERE id = $1 AND organization_id = $2
+         RETURNING *`,
+        [id, user.organizationId],
+      );
+      return c.json({ data: mapAppointmentStatusSettingRow(result.rows[0]), deactivated: true });
+    }
+
+    await pool.query("DELETE FROM appointment_status_settings WHERE id = $1 AND organization_id = $2", [
       id,
       user.organizationId,
     ]);

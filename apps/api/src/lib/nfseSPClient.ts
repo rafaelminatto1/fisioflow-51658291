@@ -4,7 +4,7 @@ import { signXmlEnveloped, signRps } from "./nfseXmlSigner";
 const SP_WS_URL = "https://nfews.prefeitura.sp.gov.br/lotenfe.asmx";
 const NFE_NS = "http://www.prefeitura.sp.gov.br/nfe";
 
-const SCHEMA_VERSION = "2";
+const SCHEMA_VERSION = "1";
 
 const SOAP_ACTIONS: Record<string, string> = {
   EnvioRPS: "http://www.prefeitura.sp.gov.br/nfe/ws/envioRPS",
@@ -250,73 +250,51 @@ async function buildRpsXml(
   if (p.tomadorCpfCnpj) {
     const digits = p.tomadorCpfCnpj.replace(/\D/g, "");
     if (digits.length <= 11) {
-      tomadorParts.push(`<CPFCNPJTomador xmlns=""><CPF>${escapeXml(digits)}</CPF></CPFCNPJTomador>`);
+      tomadorParts.push(`<CPFCNPJTomador><CPF>${escapeXml(digits)}</CPF></CPFCNPJTomador>`);
     } else {
-      tomadorParts.push(`<CPFCNPJTomador xmlns=""><CNPJ>${escapeXml(digits)}</CNPJ></CPFCNPJTomador>`);
+      tomadorParts.push(`<CPFCNPJTomador><CNPJ>${escapeXml(digits)}</CNPJ></CPFCNPJTomador>`);
     }
   }
   if (p.tomadorInscricaoMunicipal) {
-    tomadorParts.push(`<InscricaoMunicipalTomador xmlns="">${escapeXml(p.tomadorInscricaoMunicipal)}</InscricaoMunicipalTomador>`);
+    tomadorParts.push(`<InscricaoMunicipalTomador>${escapeXml(p.tomadorInscricaoMunicipal)}</InscricaoMunicipalTomador>`);
   }
   if (p.tomadorRazaoSocial) {
-    tomadorParts.push(`<RazaoSocialTomador xmlns="">${escapeXml(p.tomadorRazaoSocial)}</RazaoSocialTomador>`);
+    tomadorParts.push(`<RazaoSocialTomador>${escapeXml(p.tomadorRazaoSocial)}</RazaoSocialTomador>`);
   }
   if (p.tomadorEmail) {
-    tomadorParts.push(`<EmailTomador xmlns="">${escapeXml(p.tomadorEmail)}</EmailTomador>`);
+    tomadorParts.push(`<EmailTomador>${escapeXml(p.tomadorEmail)}</EmailTomador>`);
   }
 
   const dataEmissaoDate = p.dataEmissao.slice(0, 10);
 
   const rpsParts = [
-    `<Assinatura xmlns="">${escapeXml(assinatura)}</Assinatura>`,
-    `<ChaveRPS xmlns="">`,
+    `<Assinatura>${escapeXml(assinatura)}</Assinatura>`,
+    `<ChaveRPS>`,
     `<InscricaoPrestador>${escapeXml(p.inscricaoMunicipal)}</InscricaoPrestador>`,
     `<SerieRPS>${escapeXml(p.serie)}</SerieRPS>`,
     `<NumeroRPS>${escapeXml(p.numero)}</NumeroRPS>`,
     `</ChaveRPS>`,
-    `<TipoRPS xmlns="">${escapeXml(p.tipo)}</TipoRPS>`,
-    `<DataEmissao xmlns="">${dataEmissaoDate}</DataEmissao>`,
-    `<StatusRPS xmlns="">N</StatusRPS>`,
-    `<TributacaoRPS xmlns="">${escapeXml(p.tributacaoRps)}</TributacaoRPS>`,
-    `<ValorDeducoes xmlns="">${p.valorDeducoes}</ValorDeducoes>`,
-    `<ValorPIS xmlns="">0</ValorPIS>`,
-    `<ValorCOFINS xmlns="">0</ValorCOFINS>`,
-    `<ValorINSS xmlns="">0</ValorINSS>`,
-    `<ValorIR xmlns="">0</ValorIR>`,
-    `<ValorCSLL xmlns="">0</ValorCSLL>`,
-    `<CodigoServico xmlns="">${Math.round(Number(p.codigoServico.replace(/\D/g, "")))}</CodigoServico>`,
-    `<AliquotaServicos xmlns="">${p.aliquota}</AliquotaServicos>`,
-    `<ISSRetido xmlns="">${issRetidoStr}</ISSRetido>`,
+    `<TipoRPS>${escapeXml(p.tipo)}</TipoRPS>`,
+    `<DataEmissao>${dataEmissaoDate}</DataEmissao>`,
+    `<StatusRPS>N</StatusRPS>`,
+    `<TributacaoRPS>${escapeXml(p.tributacaoRps)}</TributacaoRPS>`,
+    `<ValorServicos>${p.valorServicos}</ValorServicos>`,
+    `<ValorDeducoes>${p.valorDeducoes}</ValorDeducoes>`,
+    `<ValorPIS>0</ValorPIS>`,
+    `<ValorCOFINS>0</ValorCOFINS>`,
+    `<ValorINSS>0</ValorINSS>`,
+    `<ValorIR>0</ValorIR>`,
+    `<ValorCSLL>0</ValorCSLL>`,
+    `<CodigoServico>${p.codigoServico}</CodigoServico>`,
+    `<AliquotaServicos>${p.aliquota}</AliquotaServicos>`,
+    `<ISSRetido>${issRetidoStr}</ISSRetido>`,
     ...tomadorParts,
-    `<Discriminacao xmlns="">${escapeXml(p.discriminacao)}</Discriminacao>`,
-    `<ValorCargaTributaria xmlns="">0</ValorCargaTributaria>`,
-    `<PercentualCargaTributaria xmlns="">0</PercentualCargaTributaria>`,
-    `<FonteCargaTributaria xmlns="">1</FonteCargaTributaria>`,
-    `<CodigoCEI xmlns="">0</CodigoCEI>`,
-    `<MatriculaObra xmlns="">0</MatriculaObra>`,
-    `<MunicipioPrestacao xmlns="">${escapeXml(p.codigoMunicipio)}</MunicipioPrestacao>`,
-    `<NumeroEncapsulamento xmlns="">0</NumeroEncapsulamento>`,
-    `<ValorTotalRecebido xmlns="">${p.valorServicos}</ValorTotalRecebido>`,
-    `<ValorInicialCobrado xmlns="">${p.valorServicos}</ValorInicialCobrado>`,
-    `<ValorMulta xmlns="">0</ValorMulta>`,
-    `<ValorJuros xmlns="">0</ValorJuros>`,
-    `<ValorIPI xmlns="">0</ValorIPI>`,
-    `<ExigibilidadeSuspensa xmlns="">1</ExigibilidadeSuspensa>`,
-    `<PagamentoParceladoAntecipado xmlns="">1</PagamentoParceladoAntecipado>`,
-    `<ValorFinalCobrado xmlns="">${p.valorServicos}</ValorFinalCobrado>`,
-    `<IBSCBS xmlns="">`,
-    `<finNFSe>0</finNFSe>`,
-    `<indFinal>0</indFinal>`,
-    `<cIndOp>000000</cIndOp>`,
-    `<indDest>0</indDest>`,
-    `<valores>`,
-    `<trib>`,
-    `<gIBSCBS>`,
-    `<cClassTrib>000000</cClassTrib>`,
-    `</gIBSCBS>`,
-    `</trib>`,
-    `</valores>`,
-    `</IBSCBS>`,
+    `<Discriminacao>${escapeXml(p.discriminacao)}</Discriminacao>`,
+    `<ValorCargaTributaria>0</ValorCargaTributaria>`,
+    `<PercentualCargaTributaria>0</PercentualCargaTributaria>`,
+    `<FonteCargaTributaria>1</FonteCargaTributaria>`,
+    `<CodigoCEI>0</CodigoCEI>`,
+    `<MatriculaObra>0</MatriculaObra>`,
   ];
 
   return rpsParts.join("");
@@ -341,7 +319,7 @@ async function buildEnvioRpsMessage(env: Env, rpsParams: RpsParams): Promise<str
       issRetido: p.issRetido ? "S" : "N",
       valorServicos: formatValorSemDecimal(p.valorServicos),
       valorDeducoes: formatValorSemDecimal(p.valorDeducoes),
-      codigoServico: padLeft(codigoServicoDigits, 5, "0"),
+      codigoServico: codigoServicoDigits,
       indicadorCpfCnpj: indicador,
       cpfCnpjTomador: indicador === "3" ? "" : tomadorDigits,
     },
@@ -416,7 +394,7 @@ async function buildEnvioLoteRpsMessage(
       issRetido: p.issRetido ? "S" : "N",
       valorServicos: formatValorSemDecimal(p.valorServicos),
       valorDeducoes: formatValorSemDecimal(p.valorDeducoes),
-      codigoServico: padLeft(codigoServicoDigits, 5, "0"),
+      codigoServico: codigoServicoDigits,
       indicadorCpfCnpj: indicador,
       cpfCnpjTomador: indicador === "3" ? "" : tomadorDigits,
     },
@@ -502,7 +480,7 @@ export async function debugBuildXmlMessage(
       issRetido: p.issRetido ? "S" : "N",
       valorServicos: formatValorSemDecimal(p.valorServicos),
       valorDeducoes: formatValorSemDecimal(p.valorDeducoes),
-      codigoServico: padLeft(codigoServicoDigits, 5, "0"),
+      codigoServico: codigoServicoDigits,
       indicadorCpfCnpj: tomadorDigits ? (tomadorDigits.length <= 11 ? "1" : "2") : "3",
       cpfCnpjTomador: tomadorDigits ? tomadorDigits : "",
     },
@@ -541,10 +519,6 @@ export async function debugBuildXmlMessage(
   const innerXml = [
     `<Cabecalho xmlns="" Versao="${SCHEMA_VERSION}">`,
     `<CPFCNPJRemetente><CNPJ>${escapeXml(cnpjDigits)}</CNPJ></CPFCNPJRemetente>`,
-    `<transacao>true</transacao>`,
-    `<dtInicio>${today}</dtInicio>`,
-    `<dtFim>${today}</dtFim>`,
-    `<QtdRPS>1</QtdRPS>`,
     `</Cabecalho>`,
     `<RPS xmlns="">${rpsXml}</RPS>`,
   ].join("");

@@ -319,8 +319,9 @@ export function normalizeStatus(status: string): string {
   // Default fallbacks
   if (s === "em_espera" || s === "atrasado") return "agendado";
 
-  // Já é um valor canônico ou desconhecido — tenta manter ou agendar
-  return APPOINTMENT_STATUS_CONFIG[s] ? s : "agendado";
+  // Já é um valor canônico ou uma chave customizada válida.
+  if (APPOINTMENT_STATUS_CONFIG[s]) return s;
+  return /^[a-z0-9_]{2,80}$/.test(s) ? s : "agendado";
 }
 
 /**
