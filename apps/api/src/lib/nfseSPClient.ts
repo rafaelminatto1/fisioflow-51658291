@@ -4,7 +4,14 @@ import { signXmlEnveloped, signRps } from "./nfseXmlSigner";
 const SP_WS_URL = "https://nfews.prefeitura.sp.gov.br/lotenfe.asmx";
 const NFE_NS = "http://www.prefeitura.sp.gov.br/nfe";
 
-const SCHEMA_VERSION = "1";
+/**
+ * Layout configuration for São Paulo NFS-e.
+ * For Simples Nacional, Layout 1 is mandatory as of 2026.
+ */
+export const NFSE_LAYOUTS = {
+  V1: "1",
+  V2: "2",
+} as const;
 
 const SOAP_ACTIONS: Record<string, string> = {
   EnvioRPS: "http://www.prefeitura.sp.gov.br/nfe/ws/envioRPS",
@@ -42,6 +49,7 @@ export interface RpsParams {
   codigoMunicipio: string;
   isSimplesNacional?: boolean;
   tpOpcaoSimples?: number;
+  layout?: keyof typeof NFSE_LAYOUTS;
 }
 
 export interface SPNfseResult {
@@ -61,6 +69,7 @@ export function hasSPCertConfig(env: Env): boolean {
 }
 
 function escapeXml(s: string): string {
+  if (!s) return "";
   return String(s)
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
@@ -70,13 +79,14 @@ function escapeXml(s: string): string {
 }
 
 function escapeXmlContent(s: string): string {
+  if (!s) return "";
   return String(s)
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;");
 }
 
-function buildSoapEnvelope(method: string, mensagemXml: string, schemaVersion: string = SCHEMA_VERSION): string {
+function buildSoapEnvelope(method: string, mensagemXml: string, schemaVersion: string): string {
   const escapedMsg = escapeXmlContent(mensagemXml);
   return [
     `<?xml version="1.0" encoding="UTF-8"?>`,
@@ -91,9 +101,14 @@ function buildSoapEnvelope(method: string, mensagemXml: string, schemaVersion: s
   ].join("");
 }
 
-async function soapCall(env: Env, method: string, mensagemXml: string, schemaVersion?: string): Promise<string> {
+async function soapCall(env: Env, method: string, mensagemXml: string, schemaVersion: string): Promise<string> {
   const soapXml = buildSoapEnvelope(method, mensagemXml, schemaVersion);
-  const fetchFn = env.NFSE_SP_CERT!.fetch.bind(env.NFSE_SP_CERT);
+  
+  if (!env.NFSE_SP_CERT) {
+    throw new Error("Certificado NFSE_SP_CERT não configurado no Cloudflare.");
+  }
+
+  const fetchFn = env.NFSE_SP_CERT.fetch.bind(env.NFSE_SP_CERT);
 
   const resp = await fetchFn(SP_WS_URL, {
     method: "POST",
@@ -106,10 +121,16 @@ async function soapCall(env: Env, method: string, mensagemXml: string, schemaVer
 
   if (!resp.ok) {
     const text = await resp.text();
+    // 520 errors sometimes happen on PMSP side during maintenance
+    if (resp.status === 520) {
+      throw new Error(`A prefeitura de São Paulo (PMSP) retornou um erro 520. Isso geralmente ocorre durante instabilidades momentâneas no servidor deles.`);
+    }
     throw new Error(`SP NFSe SOAP ${method} falhou (${resp.status}): ${text.slice(0, 500)}`);
   }
 
   const rawBody = await resp.text();
+  
+  // Extract content from RetornoXML
   const retornoMatch = rawBody.match(/<RetornoXML>([\s\S]*?)<\/RetornoXML>/i);
   if (retornoMatch) {
     return retornoMatch[1]
@@ -120,6 +141,7 @@ async function soapCall(env: Env, method: string, mensagemXml: string, schemaVer
       .replace(/&apos;/g, "'");
   }
 
+  // Handle SOAP Faults
   const faultMatch = rawBody.match(/<faultstring[^>]*>([\s\S]*?)<\/faultstring>/i);
   if (faultMatch) {
     throw new Error(`SP NFSe SOAP Fault: ${faultMatch[1].trim()}`);
@@ -136,10 +158,11 @@ function parseXmlValue(xml: string, tag: string): string | undefined {
 
 function parseErros(xml: string): Array<{ codigo: string; descricao: string }> {
   const erros: Array<{ codigo: string; descricao: string }> = [];
-  const erroBlocks = xml.split(/<Erro[^>]*>/i).slice(1);
-  for (const block of erroBlocks) {
-    const codigo = parseXmlValue(block, "Codigo") ?? "";
-    const descricao = parseXmlValue(block, "Descricao") ?? "";
+  // Split by <Erro> tag regardless of namespace
+  const blocks = xml.split(/<Erro[^>]*>/i).slice(1);
+  for (const block of blocks) {
+    const codigo = parseXmlValue(block, "Codigo") || parseXmlValue(block, "codigo") || "";
+    const descricao = parseXmlValue(block, "Descricao") || parseXmlValue(block, "descricao") || "";
     if (codigo || descricao) {
       erros.push({ codigo, descricao });
     }
@@ -149,10 +172,10 @@ function parseErros(xml: string): Array<{ codigo: string; descricao: string }> {
 
 function parseAlertas(xml: string): Array<{ codigo: string; descricao: string }> {
   const alertas: Array<{ codigo: string; descricao: string }> = [];
-  const alertaBlocks = xml.split(/<Alerta[^>]*>/i).slice(1);
-  for (const block of alertaBlocks) {
-    const codigo = parseXmlValue(block, "Codigo") ?? "";
-    const descricao = parseXmlValue(block, "Descricao") ?? "";
+  const blocks = xml.split(/<Alerta[^>]*>/i).slice(1);
+  for (const block of blocks) {
+    const codigo = parseXmlValue(block, "Codigo") || "";
+    const descricao = parseXmlValue(block, "Descricao") || "";
     if (codigo || descricao) {
       alertas.push({ codigo, descricao });
     }
@@ -187,11 +210,11 @@ function parseNfseFromResponse(xml: string): SPNfseResult {
 }
 
 export function padLeft(s: string, len: number, ch: string): string {
-  return s.padStart(len, ch);
+  return (s || "").padStart(len, ch);
 }
 
 export function formatValorSemDecimal(valor: string): string {
-  const num = Number(valor);
+  const num = Number(valor || 0);
   const semDecimal = Math.round(num * 100);
   return padLeft(String(semDecimal), 15, "0");
 }
@@ -215,36 +238,19 @@ async function buildSignedMessage(
     "",
   );
 
+  // Return without XML declaration for inclusion in SOAP MensagemXML
   return signedXml.replace(/<\?xml[^?]*\?>\s*/, "");
 }
 
+/**
+ * Builds the RPS XML parts following the mandatory order of the schema.
+ */
 async function buildRpsXml(
-  p: {
-    numero: string;
-    serie: string;
-    tipo: string;
-    dataEmissao: string;
-    inscricaoMunicipal: string;
-    cnpjPrestador: string;
-    tributacaoRps: string;
-    codigoServico: string;
-    aliquota: string;
-    issRetido: boolean;
-    valorServicos: string;
-    valorDeducoes: string;
-    codigoCnae: string;
-    discriminacao: string;
-    tomadorCpfCnpj: string;
-    tomadorInscricaoMunicipal: string;
-    tomadorRazaoSocial: string;
-    tomadorEmail: string;
-    codigoMunicipio: string;
-    codigoNBS: string;
-  },
+  p: RpsParams,
   assinatura: string,
-  isSimplesNacional: boolean,
 ): Promise<string> {
   const issRetidoStr = p.issRetido ? "true" : "false";
+  const layout = p.layout ?? "V1";
   
   const tomadorParts: string[] = [];
   if (p.tomadorCpfCnpj) {
@@ -267,7 +273,8 @@ async function buildRpsXml(
 
   const dataEmissaoDate = p.dataEmissao.slice(0, 10);
 
-  const rpsParts = [
+  // Common parts for both layouts
+  const headerParts = [
     `<Assinatura>${escapeXml(assinatura)}</Assinatura>`,
     `<ChaveRPS>`,
     `<InscricaoPrestador>${escapeXml(p.inscricaoMunicipal)}</InscricaoPrestador>`,
@@ -278,6 +285,9 @@ async function buildRpsXml(
     `<DataEmissao>${dataEmissaoDate}</DataEmissao>`,
     `<StatusRPS>N</StatusRPS>`,
     `<TributacaoRPS>${escapeXml(p.tributacaoRps)}</TributacaoRPS>`,
+  ];
+
+  const financialParts = [
     `<ValorServicos>${p.valorServicos}</ValorServicos>`,
     `<ValorDeducoes>${p.valorDeducoes}</ValorDeducoes>`,
     `<ValorPIS>0</ValorPIS>`,
@@ -288,20 +298,66 @@ async function buildRpsXml(
     `<CodigoServico>${p.codigoServico}</CodigoServico>`,
     `<AliquotaServicos>${p.aliquota}</AliquotaServicos>`,
     `<ISSRetido>${issRetidoStr}</ISSRetido>`,
-    ...tomadorParts,
-    `<Discriminacao>${escapeXml(p.discriminacao)}</Discriminacao>`,
-    `<ValorCargaTributaria>0</ValorCargaTributaria>`,
-    `<PercentualCargaTributaria>0</PercentualCargaTributaria>`,
-    `<FonteCargaTributaria>1</FonteCargaTributaria>`,
-    `<CodigoCEI>0</CodigoCEI>`,
-    `<MatriculaObra>0</MatriculaObra>`,
   ];
 
-  return rpsParts.join("");
+  const footerParts = [
+    ...tomadorParts,
+    `<Discriminacao>${escapeXml(p.discriminacao)}</Discriminacao>`,
+  ];
+
+  if (layout === "V1") {
+    // Layout 1 (Classic/Simples Nacional)
+    return [
+      ...headerParts,
+      ...financialParts,
+      ...footerParts,
+      `<ValorCargaTributaria>0</ValorCargaTributaria>`,
+      `<PercentualCargaTributaria>0</PercentualCargaTributaria>`,
+      `<FonteCargaTributaria>1</FonteCargaTributaria>`,
+      `<CodigoCEI>0</CodigoCEI>`,
+      `<MatriculaObra>0</MatriculaObra>`,
+      // Note: for layout 1, some services might require ValorTotalRecebido, but for 04391 it's forbidden.
+    ].join("");
+  } else {
+    // Layout 2 (2026+)
+    return [
+      ...headerParts,
+      ...financialParts,
+      ...footerParts,
+      `<ValorCargaTributaria>0</ValorCargaTributaria>`,
+      `<PercentualCargaTributaria>0</PercentualCargaTributaria>`,
+      `<FonteCargaTributaria>1</FonteCargaTributaria>`,
+      `<CodigoCEI>0</CodigoCEI>`,
+      `<MatriculaObra>0</MatriculaObra>`,
+      `<MunicipioPrestacao>${escapeXml(p.codigoMunicipio)}</MunicipioPrestacao>`,
+      `<NumeroEncapsulamento>0</NumeroEncapsulamento>`,
+      `<ValorTotalRecebido>${p.valorServicos}</ValorTotalRecebido>`,
+      `<ValorInicialCobrado>${p.valorServicos}</ValorInicialCobrado>`,
+      `<ValorMulta>0</ValorMulta>`,
+      `<ValorJuros>0</ValorJuros>`,
+      `<ValorIPI>0</ValorIPI>`,
+      `<ExigibilidadeSuspensa>1</ExigibilidadeSuspensa>`,
+      `<PagamentoParceladoAntecipado>1</PagamentoParceladoAntecipado>`,
+      `<NBS>${p.codigoNBS || "0"}</NBS>`,
+      `<cLocPrestacao>${escapeXml(p.codigoMunicipio)}</cLocPrestacao>`,
+      `<cPaisPrestacao>1058</cPaisPrestacao>`,
+      `<IBSCBS>`,
+      `<finNFSe>0</finNFSe>`,
+      `<indFinal>0</indFinal>`,
+      `<cIndOp>000000</cIndOp>`,
+      `<indDest>0</indDest>`,
+      `<valores><trib><gIBSCBS><cClassTrib>000000</cClassTrib></gIBSCBS></trib></valores>`,
+      `</IBSCBS>`,
+      `<ValorFinalCobrado>${p.valorServicos}</ValorFinalCobrado>`,
+    ].join("");
+  }
 }
 
-async function buildEnvioRpsMessage(env: Env, rpsParams: RpsParams): Promise<string> {
+async function prepareEmissionMessage(env: Env, rpsParams: RpsParams): Promise<{ innerXml: string; schemaVersion: string }> {
   const p = rpsParams;
+  const layout = p.layout ?? "V1";
+  const schemaVersion = NFSE_LAYOUTS[layout];
+  
   const cnpjDigits = p.cnpjPrestador.replace(/\D/g, "");
   const imDigits = p.inscricaoMunicipal.replace(/\D/g, "");
   const tomadorDigits = (p.tomadorCpfCnpj || "").replace(/\D/g, "");
@@ -319,211 +375,55 @@ async function buildEnvioRpsMessage(env: Env, rpsParams: RpsParams): Promise<str
       issRetido: p.issRetido ? "S" : "N",
       valorServicos: formatValorSemDecimal(p.valorServicos),
       valorDeducoes: formatValorSemDecimal(p.valorDeducoes),
-      codigoServico: codigoServicoDigits,
+      codigoServico: padLeft(codigoServicoDigits, 5, "0"),
       indicadorCpfCnpj: indicador,
       cpfCnpjTomador: indicador === "3" ? "" : tomadorDigits,
     },
     env.NFSE_SP_KEY_PEM!,
   );
 
-  const rpsXml = await buildRpsXml(
-    {
-      numero: p.numero,
-      serie: p.serie,
-      tipo: p.tipo,
-      dataEmissao: p.dataEmissao,
-      inscricaoMunicipal: imDigits,
-      cnpjPrestador: cnpjDigits,
-      tributacaoRps: p.tributacaoRps,
-      codigoServico: codigoServicoDigits,
-      aliquota: p.aliquota,
-      issRetido: p.issRetido,
-      valorServicos: p.valorServicos,
-      valorDeducoes: p.valorDeducoes,
-      codigoCnae: p.codigoCnae,
-      discriminacao: p.discriminacao,
-      tomadorCpfCnpj: p.tomadorCpfCnpj,
-      tomadorInscricaoMunicipal: p.tomadorInscricaoMunicipal,
-      tomadorRazaoSocial: p.tomadorRazaoSocial,
-      tomadorEmail: p.tomadorEmail,
-      codigoMunicipio: p.codigoMunicipio,
-      codigoNBS: p.codigoNBS,
-    },
-    assinatura,
-    p.isSimplesNacional ?? false,
-  );
+  const rpsXml = await buildRpsXml(p, assinatura);
 
   const innerXml = [
-    `<Cabecalho xmlns="" Versao="${SCHEMA_VERSION}">`,
+    `<Cabecalho xmlns="" Versao="${schemaVersion}">`,
     `<CPFCNPJRemetente><CNPJ>${escapeXml(cnpjDigits)}</CNPJ></CPFCNPJRemetente>`,
     `</Cabecalho>`,
     `<RPS xmlns="">${rpsXml}</RPS>`,
   ].join("");
 
-  return buildSignedMessage(env, "PedidoEnvioRPS", innerXml);
+  return { innerXml, schemaVersion };
 }
 
 export async function envioRPS(
   env: Env,
   rpsParams: RpsParams,
 ): Promise<SPNfseResult> {
-  const mensagem = await buildEnvioRpsMessage(env, rpsParams);
-  const raw = await soapCall(env, "EnvioRPS", mensagem);
+  const { innerXml, schemaVersion } = await prepareEmissionMessage(env, rpsParams);
+  const signed = await buildSignedMessage(env, "PedidoEnvioRPS", innerXml);
+  const raw = await soapCall(env, "EnvioRPS", signed, schemaVersion);
   return parseNfseFromResponse(raw);
-}
-
-async function buildEnvioLoteRpsMessage(
-  env: Env,
-  rpsParams: RpsParams,
-): Promise<string> {
-  const p = rpsParams;
-  const cnpjDigits = p.cnpjPrestador.replace(/\D/g, "");
-  const imDigits = p.inscricaoMunicipal.replace(/\D/g, "");
-  const tomadorDigits = (p.tomadorCpfCnpj || "").replace(/\D/g, "");
-  const codigoServicoDigits = p.codigoServico.replace(/\D/g, "");
-  const indicador = tomadorDigits ? (tomadorDigits.length <= 11 ? "1" : "2") : "3";
-
-  const assinatura = await signRps(
-    {
-      inscricaoMunicipal: imDigits,
-      serie: p.serie,
-      numero: p.numero,
-      dataEmissao: p.dataEmissao,
-      tributacao: p.tributacaoRps,
-      status: "N",
-      issRetido: p.issRetido ? "S" : "N",
-      valorServicos: formatValorSemDecimal(p.valorServicos),
-      valorDeducoes: formatValorSemDecimal(p.valorDeducoes),
-      codigoServico: codigoServicoDigits,
-      indicadorCpfCnpj: indicador,
-      cpfCnpjTomador: indicador === "3" ? "" : tomadorDigits,
-    },
-    env.NFSE_SP_KEY_PEM!,
-  );
-
-  const rpsXml = await buildRpsXml(
-    {
-      numero: p.numero,
-      serie: p.serie,
-      tipo: p.tipo,
-      dataEmissao: p.dataEmissao,
-      inscricaoMunicipal: imDigits,
-      cnpjPrestador: cnpjDigits,
-      tributacaoRps: p.tributacaoRps,
-      codigoServico: codigoServicoDigits,
-      aliquota: p.aliquota,
-      issRetido: p.issRetido,
-      valorServicos: p.valorServicos,
-      valorDeducoes: p.valorDeducoes,
-      codigoCnae: p.codigoCnae,
-      discriminacao: p.discriminacao,
-      tomadorCpfCnpj: p.tomadorCpfCnpj,
-      tomadorInscricaoMunicipal: p.tomadorInscricaoMunicipal,
-      tomadorRazaoSocial: p.tomadorRazaoSocial,
-      tomadorEmail: p.tomadorEmail,
-      codigoMunicipio: p.codigoMunicipio,
-      codigoNBS: p.codigoNBS,
-    },
-    assinatura,
-    p.isSimplesNacional ?? false,
-  );
-
-  const today = new Date().toISOString().slice(0, 10);
-
-  const innerXml = [
-    `<Cabecalho xmlns="" Versao="${SCHEMA_VERSION}">`,
-    `<CNPJRemetente><CNPJ>${escapeXml(cnpjDigits)}</CNPJ></CNPJRemetente>`,
-    `<transacao>true</transacao>`,
-    `<dtInicio>${today}</dtInicio>`,
-    `<dtFim>${today}</dtFim>`,
-    `<QtdRPS>1</QtdRPS>`,
-    `</Cabecalho>`,
-    `<LoteRPS xmlns="">`,
-    `<RPS>${rpsXml}</RPS>`,
-    `</LoteRPS>`,
-  ].join("");
-
-  return buildSignedMessage(env, "PedidoEnvioLoteRPS", innerXml);
 }
 
 export async function testeEnvioLoteRPS(
   env: Env,
   rpsParams: RpsParams,
 ): Promise<SPNfseResult> {
-  const mensagem = await buildEnvioLoteRpsMessage(env, rpsParams);
-  const raw = await soapCall(env, "TesteEnvioLoteRPS", mensagem);
+  const { innerXml, schemaVersion } = await prepareEmissionMessage(env, rpsParams);
+  // Add transacao/qtd for Lote
+  const today = new Date().toISOString().slice(0, 10);
+  const innerXmlLote = innerXml
+    .replace("</Cabecalho>", `<transacao>true</transacao><dtInicio>${today}</dtInicio><dtFim>${today}</dtFim><QtdRPS>1</QtdRPS></Cabecalho>`)
+    .replace("<RPS", "<LoteRPS><RPS")
+    .replace("</RPS>", "</RPS></LoteRPS>");
+
+  const signed = await buildSignedMessage(env, "PedidoEnvioLoteRPS", innerXmlLote);
+  const raw = await soapCall(env, "TesteEnvioLoteRPS", signed, schemaVersion);
+  
   const erros = parseErros(raw);
   if (erros.length > 0) {
     return { success: false, erros, alertas: parseAlertas(raw) };
   }
   return { success: true, alertas: parseAlertas(raw) };
-}
-
-export async function debugBuildXmlMessage(
-  env: Env,
-  rpsParams: RpsParams,
-): Promise<{ xml: string; rpsXml: string }> {
-  const p = rpsParams;
-  const cnpjDigits = p.cnpjPrestador.replace(/\D/g, "");
-  const imDigits = p.inscricaoMunicipal.replace(/\D/g, "");
-  const tomadorDigits = (p.tomadorCpfCnpj || "").replace(/\D/g, "");
-  const codigoServicoDigits = p.codigoServico.replace(/\D/g, "");
-  
-  const assinatura = await signRps(
-    {
-      inscricaoMunicipal: imDigits,
-      serie: p.serie,
-      numero: p.numero,
-      dataEmissao: p.dataEmissao,
-      tributacao: p.tributacaoRps,
-      status: "N",
-      issRetido: p.issRetido ? "S" : "N",
-      valorServicos: formatValorSemDecimal(p.valorServicos),
-      valorDeducoes: formatValorSemDecimal(p.valorDeducoes),
-      codigoServico: codigoServicoDigits,
-      indicadorCpfCnpj: tomadorDigits ? (tomadorDigits.length <= 11 ? "1" : "2") : "3",
-      cpfCnpjTomador: tomadorDigits ? tomadorDigits : "",
-    },
-    env.NFSE_SP_KEY_PEM!,
-  );
-
-  const rpsXml = await buildRpsXml(
-    {
-      numero: p.numero,
-      serie: p.serie,
-      tipo: p.tipo,
-      dataEmissao: p.dataEmissao,
-      inscricaoMunicipal: imDigits,
-      cnpjPrestador: cnpjDigits,
-      tributacaoRps: p.tributacaoRps,
-      codigoServico: codigoServicoDigits,
-      aliquota: p.aliquota,
-      issRetido: p.issRetido,
-      valorServicos: p.valorServicos,
-      valorDeducoes: p.valorDeducoes,
-      codigoCnae: p.codigoCnae,
-      discriminacao: p.discriminacao,
-      tomadorCpfCnpj: p.tomadorCpfCnpj,
-      tomadorInscricaoMunicipal: p.tomadorInscricaoMunicipal,
-      tomadorRazaoSocial: p.tomadorRazaoSocial,
-      tomadorEmail: p.tomadorEmail,
-      codigoMunicipio: p.codigoMunicipio,
-      codigoNBS: p.codigoNBS,
-    },
-    assinatura,
-    p.isSimplesNacional ?? false,
-  );
-
-  const today = new Date().toISOString().slice(0, 10);
-
-  const innerXml = [
-    `<Cabecalho xmlns="" Versao="${SCHEMA_VERSION}">`,
-    `<CPFCNPJRemetente><CNPJ>${escapeXml(cnpjDigits)}</CNPJ></CPFCNPJRemetente>`,
-    `</Cabecalho>`,
-    `<RPS xmlns="">${rpsXml}</RPS>`,
-  ].join("");
-
-  return { xml: innerXml, rpsXml };
 }
 
 export async function consultaNFe(
@@ -535,67 +435,39 @@ export async function consultaNFe(
     codigoVerificacao?: string;
     dataEmissaoInicio?: string;
     dataEmissaoFim?: string;
+    layout?: keyof typeof NFSE_LAYOUTS;
   },
 ): Promise<SPNfseResult> {
+  const schemaVersion = NFSE_LAYOUTS[params.layout ?? "V1"];
   const cnpjDigits = params.cnpjRemetente.replace(/\D/g, "");
   const imDigits = params.inscricaoMunicipal.replace(/\D/g, "");
 
   const filtroParts: string[] = [];
   if (params.numeroNfse) {
-    filtroParts.push(`<NumeroNFe xmlns="">${escapeXml(params.numeroNfse)}</NumeroNFe>`);
+    filtroParts.push(`<NumeroNFe>${escapeXml(params.numeroNfse)}</NumeroNFe>`);
   }
   if (params.codigoVerificacao) {
-    filtroParts.push(
-      `<CodigoVerificacao xmlns="">${escapeXml(params.codigoVerificacao)}</CodigoVerificacao>`,
-    );
+    filtroParts.push(`<CodigoVerificacao>${escapeXml(params.codigoVerificacao)}</CodigoVerificacao>`);
   }
   if (params.dataEmissaoInicio) {
-    filtroParts.push(
-      `<DataEmissaoNFeInicial xmlns="">${escapeXml(params.dataEmissaoInicio)}</DataEmissaoNFeInicial>`,
-    );
+    filtroParts.push(`<DataEmissaoNFeInicial>${escapeXml(params.dataEmissaoInicio)}</DataEmissaoNFeInicial>`);
   }
   if (params.dataEmissaoFim) {
-    filtroParts.push(
-      `<DataEmissaoNFeFinal xmlns="">${escapeXml(params.dataEmissaoFim)}</DataEmissaoNFeFinal>`,
-    );
+    filtroParts.push(`<DataEmissaoNFeFinal>${escapeXml(params.dataEmissaoFim)}</DataEmissaoNFeFinal>`);
   }
 
   const innerXml = [
-    `<Cabecalho xmlns="" Versao="${SCHEMA_VERSION}">`,
+    `<Cabecalho xmlns="" Versao="${schemaVersion}">`,
     `<CPFCNPJRemetente><CNPJ>${escapeXml(cnpjDigits)}</CNPJ></CPFCNPJRemetente>`,
     `</Cabecalho>`,
-    `<ChaveRPS xmlns="">`,
+    `<ChaveRPS>`,
     `<InscricaoPrestador>${escapeXml(imDigits)}</InscricaoPrestador>`,
     `</ChaveRPS>`,
     ...filtroParts,
   ].join("");
 
   const signedXml = await buildSignedMessage(env, "PedidoConsultaNFe", innerXml);
-  const raw = await soapCall(env, "ConsultaNFe", signedXml);
-  return parseNfseFromResponse(raw);
-}
-
-export async function consultaLote(
-  env: Env,
-  params: {
-    cnpjRemetente: string;
-    inscricaoMunicipal: string;
-    numeroLote: string;
-  },
-): Promise<SPNfseResult> {
-  const cnpjDigits = params.cnpjRemetente.replace(/\D/g, "");
-  const imDigits = params.inscricaoMunicipal.replace(/\D/g, "");
-
-  const innerXml = [
-    `<Cabecalho xmlns="" Versao="${SCHEMA_VERSION}">`,
-    `<CPFCNPJRemetente><CNPJ>${escapeXml(cnpjDigits)}</CNPJ></CPFCNPJRemetente>`,
-    `</Cabecalho>`,
-    `<NumeroLote xmlns="">${escapeXml(params.numeroLote)}</NumeroLote>`,
-    `<InscricaoPrestador xmlns="">${escapeXml(imDigits)}</InscricaoPrestador>`,
-  ].join("");
-
-  const signedXml = await buildSignedMessage(env, "PedidoConsultaLote", innerXml);
-  const raw = await soapCall(env, "ConsultaLote", signedXml);
+  const raw = await soapCall(env, "ConsultaNFe", signedXml, schemaVersion);
   return parseNfseFromResponse(raw);
 }
 
@@ -605,23 +477,25 @@ export async function cancelamentoNFe(
     cnpjRemetente: string;
     inscricaoMunicipal: string;
     numeroNfse: string;
+    layout?: keyof typeof NFSE_LAYOUTS;
   },
 ): Promise<SPNfseResult> {
+  const schemaVersion = NFSE_LAYOUTS[params.layout ?? "V1"];
   const cnpjDigits = params.cnpjRemetente.replace(/\D/g, "");
   const imDigits = params.inscricaoMunicipal.replace(/\D/g, "");
 
   const innerXml = [
-    `<Cabecalho xmlns="" Versao="${SCHEMA_VERSION}">`,
+    `<Cabecalho xmlns="" Versao="${schemaVersion}">`,
     `<CPFCNPJRemetente><CNPJ>${escapeXml(cnpjDigits)}</CNPJ></CPFCNPJRemetente>`,
     `</Cabecalho>`,
-    `<ChaveNFe xmlns="">`,
+    `<ChaveNFe>`,
     `<InscricaoPrestador>${escapeXml(imDigits)}</InscricaoPrestador>`,
     `<NumeroNFe>${escapeXml(params.numeroNfse)}</NumeroNFe>`,
     `</ChaveNFe>`,
   ].join("");
 
   const signedXml = await buildSignedMessage(env, "PedidoCancelamentoNFe", innerXml);
-  const raw = await soapCall(env, "CancelamentoNFe", signedXml);
+  const raw = await soapCall(env, "CancelamentoNFe", signedXml, schemaVersion);
   const erros = parseErros(raw);
   if (erros.length > 0) {
     return { success: false, erros };
@@ -638,16 +512,17 @@ export async function consultaCNPJ(
   }
 > {
   const cnpjDigits = cnpj.replace(/\D/g, "");
+  const schemaVersion = "1"; // Consultation usually works on v1
 
   const innerXml = [
-    `<Cabecalho xmlns="" Versao="${SCHEMA_VERSION}">`,
+    `<Cabecalho xmlns="" Versao="${schemaVersion}">`,
     `<CPFCNPJRemetente><CNPJ>${escapeXml(cnpjDigits)}</CNPJ></CPFCNPJRemetente>`,
     `</Cabecalho>`,
-    `<CNPJContribuinte xmlns=""><CNPJ>${escapeXml(cnpjDigits)}</CNPJ></CNPJContribuinte>`,
+    `<CNPJContribuinte><CNPJ>${escapeXml(cnpjDigits)}</CNPJ></CNPJContribuinte>`,
   ].join("");
 
   const signedXml = await buildSignedMessage(env, "PedidoConsultaCNPJ", innerXml);
-  const raw = await soapCall(env, "ConsultaCNPJ", signedXml);
+  const raw = await soapCall(env, "ConsultaCNPJ", signedXml, schemaVersion);
 
   const erros = parseErros(raw);
   if (erros.length > 0) {

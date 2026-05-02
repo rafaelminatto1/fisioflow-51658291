@@ -293,15 +293,15 @@ app.post("/generate", requireAuth, async (c) => {
     patient_id?: string;
     appointment_id?: string;
     valor_servico: number;
-    discriminacao: string;
+    discriminacao?: string;
     tomador_nome: string;
     tomador_cpf_cnpj?: string;
     tomador_email?: string;
     aliquota_iss?: number;
   };
 
-  if (!body.valor_servico || !body.discriminacao || !body.tomador_nome) {
-    return c.json({ error: "valor_servico, discriminacao e tomador_nome são obrigatórios" }, 400);
+  if (!body.valor_servico || !body.tomador_nome) {
+    return c.json({ error: "valor_servico e tomador_nome são obrigatórios" }, 400);
   }
 
   const pool = createPool(c.env);
@@ -327,8 +327,24 @@ app.post("/generate", requireAuth, async (c) => {
 
   const aliquota = body.aliquota_iss ?? Number(cfg.aliquota_iss ?? cfg.aliquota_padrao ?? 0.02);
   const valorIss = Number((body.valor_servico * aliquota).toFixed(2));
-  const dataEmissao = new Date().toISOString();
-  const tpOpcaoSimples = cfg.tp_opcao_simples ?? 4;
+  
+  // Horário de Brasília (UTC-3)
+  const dataEmissao = new Date(Date.now() - 3 * 3600000);
+
+  // Build default discrimination if not provided
+  let discriminacao = body.discriminacao;
+  if (!discriminacao) {
+    const dateStr = dataEmissao.toLocaleDateString("pt-BR");
+    discriminacao = `Paciente ${body.tomador_nome}`;
+    if (body.tomador_cpf_cnpj) {
+      const cleanCpf = body.tomador_cpf_cnpj.replace(/\D/g, "");
+      const formattedCpf = cleanCpf.replace(/^(\d{3})(\d{3})(\d{3})(\d{2})$/, "$1.$2.$3-$4");
+      discriminacao += `, CPF ${formattedCpf}`;
+    }
+    discriminacao += `, realizou sessão de fisioterapia no dia ${dateStr}.\n`;
+    discriminacao += `Efetuou o pagamento no valor de R$ ${body.valor_servico.toLocaleString("pt-BR", { minimumFractionDigits: 2 })} para a empresa ${cfg.razao_social || "Mooca Fisioterapia RA Ltda"}, CNPJ: ${cfg.cnpj_prestador || "54.836.577/0001-67"}.\n`;
+    discriminacao += `- Conforme Lei 12.741/2012, o percentual total de impostos incidentes neste serviço prestado é de aproximadamente 8,98%`;
+  }
 
   const result = await pool.query(
     `INSERT INTO nfse_records
@@ -342,19 +358,19 @@ app.post("/generate", requireAuth, async (c) => {
       body.patient_id && isUuid(body.patient_id) ? body.patient_id : null,
       body.appointment_id && isUuid(body.appointment_id) ? body.appointment_id : null,
       numeroRps,
-      dataEmissao,
+      dataEmissao.toISOString(),
       body.valor_servico,
       aliquota,
       valorIss,
-      cfg.codigo_servico_padrao ?? "14.01",
-      body.discriminacao,
+      cfg.codigo_servico_padrao ?? "04391",
+      discriminacao,
       body.tomador_nome,
-      body.tomador_cpf_cnpj ?? null,
-      body.tomador_email ?? null,
+      body.tomador_cpf_cnpj?.replace(/\D/g, "") || null,
+      body.tomador_email || null,
     ],
   );
 
-  return c.json({ data: result.rows[0] }, 201);
+  return c.json({ data: result.rows[0] });
 });
 
 // ===== ENVIO DIRETO — PREFEITURA DE SÃO PAULO =====
