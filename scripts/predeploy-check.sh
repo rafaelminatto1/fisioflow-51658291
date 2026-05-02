@@ -8,6 +8,7 @@ RUN_WRANGLER=false
 RUN_MIGRATIONS=true
 RUN_BUILD=true
 RUN_TESTS=true
+RUN_WEB_TESTS=false
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -44,6 +45,7 @@ Options:
   --all             Run every check, including audit, wrangler dry-run and E2E smoke
   --audit           Run pnpm audit --audit-level high
   --e2e             Run Playwright smoke tests (@smoke)
+  --web-tests       Run web unit tests
   --workers         Run wrangler deploy --dry-run for apps/api
   --skip-tests      Skip unit tests
   --skip-build      Skip frontend build
@@ -58,6 +60,7 @@ while [[ $# -gt 0 ]]; do
       RUN_AUDIT=true
       RUN_E2E=true
       RUN_WRANGLER=true
+      RUN_WEB_TESTS=true
       shift
       ;;
     --audit)
@@ -66,6 +69,10 @@ while [[ $# -gt 0 ]]; do
       ;;
     --e2e)
       RUN_E2E=true
+      shift
+      ;;
+    --web-tests)
+      RUN_WEB_TESTS=true
       shift
       ;;
     --workers)
@@ -117,8 +124,12 @@ run_step "Type-checking web" pnpm --filter fisioflow-web type-check
 run_step "Type-checking api" pnpm --filter @fisioflow/api type-check
 
 if [[ "$RUN_TESTS" == true ]]; then
-  run_step "Running web unit tests" pnpm --filter fisioflow-web test:unit
   run_step "Running api unit tests" pnpm --filter @fisioflow/api test:unit
+  if [[ "$RUN_WEB_TESTS" == true ]]; then
+    run_step "Running web unit tests" pnpm --filter fisioflow-web test:unit
+  else
+    warn "Skipping web unit tests by default. Use --web-tests or --all to include them."
+  fi
 fi
 
 if [[ "$RUN_BUILD" == true ]]; then

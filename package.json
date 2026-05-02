@@ -17,6 +17,12 @@
     "predeploy": "bash scripts/predeploy-check.sh",
     "predeploy:workers": "bash scripts/predeploy-check.sh --workers",
     "predeploy:all": "bash scripts/predeploy-check.sh --all",
+    "deploy:api:staging": "pnpm --dir apps/api exec wrangler deploy --env staging",
+    "deploy:api:production": "pnpm --dir apps/api exec wrangler deploy --env production",
+    "deploy:web:staging": "pnpm --filter fisioflow-web build && pnpm --dir apps/api exec wrangler deploy --config ../../wrangler.toml --env staging",
+    "deploy:web:production": "pnpm --filter fisioflow-web build && pnpm --dir apps/api exec wrangler deploy --config ../../wrangler.toml --env production",
+    "smoke:staging": "bash scripts/smoke-check.sh --web-url https://fisioflow-web-staging.rafalegollas.workers.dev --api-url https://fisioflow-api-staging.rafalegollas.workers.dev/api/health",
+    "smoke:production": "bash scripts/smoke-check.sh --web-url https://www.moocafisio.com.br --api-url https://api-pro.moocafisio.com.br/api/health",
     "prepare": "husky"
   },
   "dependencies": {

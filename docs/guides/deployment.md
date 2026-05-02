@@ -19,6 +19,31 @@ Este documento contém as instruções atualizadas para o deploy do FisioFlow us
 
 O projeto utiliza **Environments** do Cloudflare para separar Staging de Production sem duplicar projetos no dashboard.
 
+### Comandos principais
+
+```bash
+# Gate local antes de abrir PR ou deploy
+bash scripts/predeploy-check.sh
+
+# Dry-run / deploy da API
+pnpm --dir apps/api exec wrangler deploy --dry-run --env staging
+pnpm --dir apps/api exec wrangler deploy --env production
+
+# Build + deploy do Web Asset Worker
+pnpm deploy:web:staging
+pnpm deploy:web:production
+
+# Smoke tests pós-deploy
+pnpm smoke:staging
+pnpm smoke:production
+```
+
+### GitHub Actions
+
+- `pull_request` e `main` passam pelo gate de qualidade via `scripts/predeploy-check.sh`
+- `staging` dispara o workflow `Staging Deploy`
+- `main` mantém o deploy de produção e o smoke test final
+
 ### 1. Deploy da API (Backend)
 
 Localizado em `apps/api`.
@@ -33,14 +58,15 @@ cd apps/api && npx wrangler deploy --env production
 
 ### 2. Deploy do Frontend (Web)
 
-Localizado na raiz ou `apps/web`.
+O frontend é publicado como **Asset Worker** usando o `wrangler.toml` da raiz.
 
 ```bash
 # Build do projeto
-npm run build
+pnpm --filter fisioflow-web build
 
-# Deploy para Produção (Asset Worker)
-npx wrangler deploy
+# Deploy para Staging ou Produção
+pnpm deploy:web:staging
+pnpm deploy:web:production
 ```
 
 ## 🔧 Configuração de Ambientes
@@ -51,6 +77,11 @@ As variáveis de ambiente e segredos são gerenciados via `wrangler.toml` e `wra
 | :------------- | :----------------------------------------------- | :-------- |
 | **Production** | `api-pro.moocafisio.com.br`                      | Principal |
 | **Staging**    | `fisioflow-api-staging.rafalegollas.workers.dev` | Staging   |
+
+| Ambiente       | URL Web                                          |
+| :------------- | :----------------------------------------------- |
+| **Production** | `www.moocafisio.com.br`                          |
+| **Staging**    | `fisioflow-web-staging.rafalegollas.workers.dev` |
 
 ### Segredos Necessários
 

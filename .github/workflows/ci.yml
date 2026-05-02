@@ -42,10 +42,12 @@ env:
   NODE_VERSION: "22"
   PNPM_VERSION: "10.33.0"
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+  NODE_OPTIONS: "--max-old-space-size=8192"
   VITE_API_BASE_URL: ${{ vars.VITE_API_BASE_URL || 'https://api-pro.moocafisio.com.br/api' }}
   VITE_WORKERS_API_URL: ${{ vars.VITE_WORKERS_API_URL || 'https://api-pro.moocafisio.com.br' }}
   VITE_NEON_AUTH_URL: ${{ vars.VITE_NEON_AUTH_URL || 'https://ep-wandering-bonus-acj4zwvo.neonauth.sa-east-1.aws.neon.tech/neondb/auth' }}
   VITE_NEON_DATA_API_URL: ${{ vars.VITE_NEON_DATA_API_URL || '' }}
+  VITE_GOOGLE_AI_API_KEY: ${{ secrets.VITE_GOOGLE_AI_API_KEY || '' }}
 
 jobs:
   quality-gate:
@@ -62,33 +64,8 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           pnpm-version: ${{ env.PNPM_VERSION }}
 
-      - name: Lint web and API
-        run: |
-          pnpm --filter fisioflow-web lint
-          pnpm --filter @fisioflow/api lint
-
-      - name: Type-check web
-        run: pnpm --filter fisioflow-web type-check
-
-      - name: Type-check API
-        run: pnpm --filter @fisioflow/api type-check
-
-      - name: Validate migrations
-        run: bash scripts/check-migrations.sh
-
-      - name: Test API unit suite
-        run: pnpm --filter @fisioflow/api test:unit
-
-      - name: Build web assets
-        run: pnpm --filter fisioflow-web build
-        env:
-          NODE_OPTIONS: --max-old-space-size=8192
-          VITE_APP_ENV: production
-          VITE_API_BASE_URL: ${{ env.VITE_API_BASE_URL }}
-          VITE_WORKERS_API_URL: ${{ env.VITE_WORKERS_API_URL }}
-          VITE_NEON_AUTH_URL: ${{ env.VITE_NEON_AUTH_URL }}
-          VITE_NEON_DATA_API_URL: ${{ env.VITE_NEON_DATA_API_URL }}
-          VITE_GOOGLE_AI_API_KEY: ${{ secrets.VITE_GOOGLE_AI_API_KEY }}
+      - name: Run predeploy gate
+        run: bash scripts/predeploy-check.sh
 
       - name: Dependency audit advisory
         continue-on-error: true
@@ -160,8 +137,12 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - name: Check public web
-        run: curl -fsSIL https://fisioflow-web.rafalegollas.workers.dev
+      - uses: actions/checkout@v4
 
-      - name: Check API health
-        run: curl -fsS https://api-pro.moocafisio.com.br/api/health
+      - uses: ./.github/actions/setup
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          pnpm-version: ${{ env.PNPM_VERSION }}
+
+      - name: Run smoke checks
+        run: pnpm smoke:production

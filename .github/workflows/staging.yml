@@ -1,0 +1,84 @@
+name: Staging Deploy
+
+on:
+  push:
+    branches: [staging]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: staging-deploy-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: "22"
+  PNPM_VERSION: "10.33.0"
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+  NODE_OPTIONS: "--max-old-space-size=8192"
+  VITE_API_BASE_URL: ${{ vars.VITE_API_BASE_URL || 'https://fisioflow-api-staging.rafalegollas.workers.dev/api' }}
+  VITE_WORKERS_API_URL: ${{ vars.VITE_WORKERS_API_URL || 'https://fisioflow-api-staging.rafalegollas.workers.dev' }}
+  VITE_NEON_AUTH_URL: ${{ vars.VITE_NEON_AUTH_URL || 'https://ep-withered-glade-acrv7il7.neonauth.sa-east-1.aws.neon.tech/neondb/auth' }}
+  VITE_NEON_DATA_API_URL: ${{ vars.VITE_NEON_DATA_API_URL || '' }}
+  VITE_GOOGLE_AI_API_KEY: ${{ secrets.VITE_GOOGLE_AI_API_KEY || '' }}
+
+jobs:
+  quality-gate:
+    name: Quality Gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ./.github/actions/setup
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          pnpm-version: ${{ env.PNPM_VERSION }}
+
+      - name: Run predeploy gate
+        run: bash scripts/predeploy-check.sh
+
+  deploy-staging:
+    name: Deploy Staging
+    needs: [quality-gate]
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ./.github/actions/setup
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          pnpm-version: ${{ env.PNPM_VERSION }}
+
+      - name: Dry-run API deploy
+        run: pnpm --dir apps/api exec wrangler deploy --dry-run --env staging
+
+      - name: Deploy API
+        run: pnpm --dir apps/api exec wrangler deploy --env staging
+
+      - name: Build web assets
+        run: pnpm --filter fisioflow-web build
+        env:
+          GIT_COMMIT_SHA: ${{ github.sha }}
+          VITE_APP_VERSION: ${{ github.sha }}
+
+      - name: Deploy web
+        run: pnpm --dir apps/api exec wrangler deploy --config ../../wrangler.toml --env staging
+
+  smoke-test:
+    name: Smoke Test
+    needs: [deploy-staging]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ./.github/actions/setup
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          pnpm-version: ${{ env.PNPM_VERSION }}
+
+      - name: Run staging smoke checks
+        run: pnpm smoke:staging

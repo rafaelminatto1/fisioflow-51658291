@@ -17,6 +17,8 @@ bash scripts/predeploy-check.sh
 - `bash scripts/predeploy-check.sh --audit` para checar dependências com `pnpm audit --audit-level high`
 - `bash scripts/predeploy-check.sh --e2e` para rodar smoke tests do Playwright
 - `bash scripts/predeploy-check.sh --all` para rodar tudo
+- `pnpm smoke:staging` e `pnpm smoke:production` para validar os endpoints depois do deploy
+- `pnpm deploy:web:staging`, `pnpm deploy:web:production`, `pnpm deploy:api:staging`, `pnpm deploy:api:production` para comandos manuais reproduzíveis
 
 ---
 
