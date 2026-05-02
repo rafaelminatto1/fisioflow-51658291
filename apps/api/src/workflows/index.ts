@@ -5,7 +5,7 @@ export { PatientOnboardingWorkflow } from "./patientOnboarding";
 export type { PatientOnboardingParams } from "./patientOnboarding";
 
 export { NFSeWorkflow } from "./nfseWorkflow";
-export type { NFSeParams } from "./nfseWorkflow";
+export type { NFSeWorkflowParams } from "./nfseWorkflow";
 
 export { HEPComplianceWorkflow } from "./hepCompliance";
 export type { HEPComplianceParams } from "./hepCompliance";

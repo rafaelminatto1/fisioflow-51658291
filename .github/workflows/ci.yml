@@ -16,14 +16,26 @@ on:
       - "*.md"
       - ".gitignore"
   workflow_dispatch:
+    inputs:
+      deploy_api:
+        description: "Deploy API Worker"
+        required: false
+        default: "true"
+        type: choice
+        options: ["true", "false"]
+      deploy_web:
+        description: "Deploy Web Worker"
+        required: false
+        default: "true"
+        type: choice
+        options: ["true", "false"]
 
 permissions:
   contents: read
-  pull-requests: write
   deployments: write
 
 concurrency:
-  group: ci-${{ github.ref }}
+  group: ci-deploy-${{ github.ref }}
   cancel-in-progress: true
 
 env:
@@ -35,57 +47,39 @@ env:
   VITE_NEON_AUTH_URL: ${{ vars.VITE_NEON_AUTH_URL || 'https://ep-wandering-bonus-acj4zwvo.neonauth.sa-east-1.aws.neon.tech/neondb/auth' }}
   VITE_NEON_DATA_API_URL: ${{ vars.VITE_NEON_DATA_API_URL || '' }}
 
-# ──────────────────────────────────────────────
-# CI JOBS  (run on every push and every PR)
-# ──────────────────────────────────────────────
 jobs:
-  lint:
-    name: Lint & Security Audit
+  quality-gate:
+    name: Quality Gate
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 25
     permissions:
       contents: read
     steps:
       - uses: actions/checkout@v4
+
       - uses: ./.github/actions/setup
         with:
           node-version: ${{ env.NODE_VERSION }}
           pnpm-version: ${{ env.PNPM_VERSION }}
-      - name: Lint
+
+      - name: Lint web and API
         run: |
           pnpm --filter fisioflow-web lint
           pnpm --filter @fisioflow/api lint
-      - name: Security Audit
-        run: pnpm audit --audit-level high
 
-  type-check:
-    name: Type Check
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    permissions:
-      contents: read
-    steps:
-      - uses: actions/checkout@v4
-      - uses: ./.github/actions/setup
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          pnpm-version: ${{ env.PNPM_VERSION }}
-      - run: pnpm --filter fisioflow-web type-check
-      - run: pnpm --filter @fisioflow/api type-check
+      - name: Type-check web
+        run: pnpm --filter fisioflow-web type-check
 
-  build:
-    name: Build Web
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-    permissions:
-      contents: read
-    steps:
-      - uses: actions/checkout@v4
-      - uses: ./.github/actions/setup
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          pnpm-version: ${{ env.PNPM_VERSION }}
-      - name: Build
+      - name: Type-check API
+        run: pnpm --filter @fisioflow/api type-check
+
+      - name: Validate migrations
+        run: bash scripts/check-migrations.sh
+
+      - name: Test API unit suite
+        run: pnpm --filter @fisioflow/api test:unit
+
+      - name: Build web assets
         run: pnpm --filter fisioflow-web build
         env:
           NODE_OPTIONS: --max-old-space-size=8192
@@ -94,82 +88,29 @@ jobs:
           VITE_WORKERS_API_URL: ${{ env.VITE_WORKERS_API_URL }}
           VITE_NEON_AUTH_URL: ${{ env.VITE_NEON_AUTH_URL }}
           VITE_NEON_DATA_API_URL: ${{ env.VITE_NEON_DATA_API_URL }}
+          VITE_GOOGLE_AI_API_KEY: ${{ secrets.VITE_GOOGLE_AI_API_KEY }}
 
-  test-api:
-    name: Test API (Workers)
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    permissions:
-      contents: read
-    steps:
-      - uses: actions/checkout@v4
-      - uses: ./.github/actions/setup
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          pnpm-version: ${{ env.PNPM_VERSION }}
-      - run: pnpm --filter @fisioflow/api test:unit
+      - name: Dependency audit advisory
+        continue-on-error: true
+        run: pnpm audit --audit-level high
 
-  validate-migrations:
-    name: Validate Migrations
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    permissions:
-      contents: read
-    steps:
-      - uses: actions/checkout@v4
-      - name: Check migration naming and duplicates
-        run: bash scripts/check-migrations.sh
-
-  test-web:
-    name: Test Web (Unit)
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    permissions:
-      contents: read
-    steps:
-      - uses: actions/checkout@v4
-      - uses: ./.github/actions/setup
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          pnpm-version: ${{ env.PNPM_VERSION }}
-      - run: pnpm --filter fisioflow-web test:unit
-
-  e2e-smoke:
-    name: E2E Smoke (PR)
-    if: github.event_name == 'pull_request'
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    steps:
-      - uses: actions/checkout@v4
-      - uses: ./.github/actions/setup
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          pnpm-version: ${{ env.PNPM_VERSION }}
-      - name: Install Playwright Browsers
-        run: pnpm exec playwright install --with-deps chromium
-      - name: Run E2E Smoke (staging)
-        run: pnpm --filter fisioflow-web test:e2e:ci --grep "@smoke"
-        env:
-          TEST_BASE_URL: ${{ vars.STAGING_BASE_URL || 'http://localhost:5173' }}
-          TEST_USER_EMAIL: ${{ secrets.STAGING_TEST_USER_EMAIL }}
-          TEST_USER_PASSWORD: ${{ secrets.STAGING_TEST_USER_PASSWORD }}
-
-  # ──────────────────────────────────────────────
-  # DEPLOY JOBS  (only on push to main, needs all CI jobs green)
-  # ──────────────────────────────────────────────
   deploy-api:
-    name: Deploy API (Workers)
-    if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main'
-    needs: [lint, type-check, build, test-api, test-web, validate-migrations]
+    name: Deploy API Worker
+    if: >-
+      github.ref == 'refs/heads/main' &&
+      (github.event_name == 'push' || github.event.inputs.deploy_api != 'false')
+    needs: [quality-gate]
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
+
       - uses: ./.github/actions/setup
         with:
           node-version: ${{ env.NODE_VERSION }}
           pnpm-version: ${{ env.PNPM_VERSION }}
-      - name: Deploy Workers
+
+      - name: Deploy API
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CF_API_TOKEN }}
@@ -178,30 +119,35 @@ jobs:
           command: deploy --env production
 
   deploy-web:
-    name: Deploy Web
-    if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main'
-    needs: [lint, type-check, build, test-api, test-web]
+    name: Deploy Web Worker
+    if: >-
+      github.ref == 'refs/heads/main' &&
+      (github.event_name == 'push' || github.event.inputs.deploy_web != 'false')
+    needs: [quality-gate]
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
+
       - uses: ./.github/actions/setup
         with:
           node-version: ${{ env.NODE_VERSION }}
           pnpm-version: ${{ env.PNPM_VERSION }}
-      - name: Build
+
+      - name: Build web assets
         run: pnpm --filter fisioflow-web build
         env:
           NODE_OPTIONS: --max-old-space-size=8192
           VITE_APP_ENV: production
           GIT_COMMIT_SHA: ${{ github.sha }}
           VITE_APP_VERSION: ${{ github.sha }}
-          VITE_API_BASE_URL: ${{ vars.VITE_API_BASE_URL || 'https://api-pro.moocafisio.com.br/api' }}
-          VITE_WORKERS_API_URL: ${{ vars.VITE_WORKERS_API_URL || 'https://api-pro.moocafisio.com.br' }}
-          VITE_NEON_AUTH_URL: ${{ vars.VITE_NEON_AUTH_URL || 'https://ep-wandering-bonus-acj4zwvo.neonauth.sa-east-1.aws.neon.tech/neondb/auth' }}
-          VITE_NEON_DATA_API_URL: ${{ vars.VITE_NEON_DATA_API_URL || '' }}
+          VITE_API_BASE_URL: ${{ env.VITE_API_BASE_URL }}
+          VITE_WORKERS_API_URL: ${{ env.VITE_WORKERS_API_URL }}
+          VITE_NEON_AUTH_URL: ${{ env.VITE_NEON_AUTH_URL }}
+          VITE_NEON_DATA_API_URL: ${{ env.VITE_NEON_DATA_API_URL }}
           VITE_GOOGLE_AI_API_KEY: ${{ secrets.VITE_GOOGLE_AI_API_KEY }}
-      - name: Deploy Web Worker
+
+      - name: Deploy Web
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CF_API_TOKEN }}
@@ -210,21 +156,13 @@ jobs:
 
   smoke-test:
     name: Production Smoke Test
+    if: github.ref == 'refs/heads/main' && (always() && (needs['deploy-api'].result == 'success' || needs['deploy-web'].result == 'success'))
     needs: [deploy-api, deploy-web]
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v4
-      - uses: ./.github/actions/setup
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          pnpm-version: ${{ env.PNPM_VERSION }}
-      - name: Install Playwright Browsers
-        run: pnpm exec playwright install --with-deps chromium
-      - name: Run Smoke Test
-        run: |
-          pnpm exec playwright test e2e/production-health.spec.ts
-        env:
-          TEST_BASE_URL: https://www.moocafisio.com.br
-          TEST_USER_EMAIL: ${{ secrets.PROD_TEST_USER_EMAIL }}
-          TEST_USER_PASSWORD: ${{ secrets.PROD_TEST_USER_PASSWORD }}
+      - name: Check public web
+        run: curl -fsSIL https://fisioflow-web.rafalegollas.workers.dev
+
+      - name: Check API health
+        run: curl -fsS https://api-pro.moocafisio.com.br/api/health

@@ -398,8 +398,13 @@ app.post("/send/:id", requireAuth, async (c) => {
   }
 
   try {
+    const workflow = c.env.WORKFLOW_NFSE;
+    if (!workflow) {
+      return c.json({ error: "Workflow NFSe não configurado" }, 503);
+    }
+
     // Trigger Durable Workflow for robust emission
-    const workflow = await c.env.WORKFLOW_NFSE.create({
+    const run = await workflow.create({
       params: {
         nfseId: id,
         organizationId: user.organizationId,
@@ -408,13 +413,13 @@ app.post("/send/:id", requireAuth, async (c) => {
 
     await pool.query(
       `UPDATE nfse_records SET status = 'aguardando_prefeitura', workflow_id = $1 WHERE id = $2`,
-      [workflow.id, id]
+      [run.id, id]
     );
 
     return c.json({ 
       success: true, 
       message: "Emissão iniciada em segundo plano. O sistema tentará transmitir até que a prefeitura responda.",
-      workflowId: workflow.id 
+      workflowId: run.id
     });
   } catch (err: any) {
     console.error("[NFSe] Erro ao iniciar workflow:", err);
