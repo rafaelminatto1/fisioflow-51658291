@@ -15,6 +15,22 @@
     "cloudflare-bindings": {
       "httpUrl": "https://bindings.mcp.cloudflare.com/mcp",
       "timeout": 30000
+    },
+    "cloudflare-observability": {
+      "httpUrl": "https://observability.mcp.cloudflare.com/mcp",
+      "timeout": 30000
+    },
+    "cloudflare-ai-gateway": {
+      "httpUrl": "https://ai-gateway.mcp.cloudflare.com/mcp",
+      "timeout": 30000
+    },
+    "cloudflare-ai-search": {
+      "httpUrl": "https://autorag.mcp.cloudflare.com/mcp",
+      "timeout": 30000
+    },
+    "cloudflare-graphql": {
+      "httpUrl": "https://graphql.mcp.cloudflare.com/mcp",
+      "timeout": 30000
     }
   },
   "ui": {

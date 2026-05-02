@@ -175,9 +175,9 @@ export function NFSeContent({ autoOpenCreate = false, onAutoOpenHandled }: NFSeC
     queryKey: ["nfse-list", organizationId],
     queryFn: async () => {
       if (!organizationId) return [];
-      const response = await financialApi.nfse.list();
+      const response = await request<any>("/api/nfse");
       return (response.data ?? [])
-        .map((row) => normalizeNFSe(row as NFSeRecord))
+        .map((row) => normalizeNFSe(row))
         .sort((a, b) => b.data_emissao.localeCompare(a.data_emissao));
     },
     enabled: !!organizationId,
