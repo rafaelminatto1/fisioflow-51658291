@@ -1,6 +1,9 @@
 -- Appointment status settings per organization.
 -- Allows clinics to rename, recolor, activate/deactivate and add custom statuses.
 
+DROP INDEX IF EXISTS idx_appointments_stats;
+DROP INDEX IF EXISTS idx_appointments_time_conflict;
+
 ALTER TABLE appointments
   ALTER COLUMN status DROP DEFAULT;
 
@@ -38,6 +41,17 @@ CREATE INDEX IF NOT EXISTS idx_appointment_status_settings_org
 
 CREATE INDEX IF NOT EXISTS idx_appointment_status_settings_org_active_sort
   ON appointment_status_settings (organization_id, is_active, sort_order);
+
+CREATE INDEX IF NOT EXISTS idx_appointments_stats
+  ON appointments (organization_id, patient_id, date DESC, status)
+  WHERE (
+    status IN ('completed', 'scheduled', 'confirmed', 'realizado', 'agendado', 'confirmado')
+    OR status IS NULL
+  );
+
+CREATE INDEX IF NOT EXISTS idx_appointments_time_conflict
+  ON appointments (therapist_id, date, start_time, end_time)
+  WHERE status NOT IN ('cancelled', 'no_show', 'rescheduled', 'cancelado', 'faltou', 'remarcado');
 
 ALTER TABLE appointment_status_settings ENABLE ROW LEVEL SECURITY;
 ALTER TABLE appointment_status_settings FORCE ROW LEVEL SECURITY;

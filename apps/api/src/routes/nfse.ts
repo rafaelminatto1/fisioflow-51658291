@@ -388,7 +388,7 @@ app.post("/send/:id", requireAuth, async (c) => {
 
   if (hasSPCertConfig(c.env)) {
     try {
-      const result = await envioRPS(c.env, {
+      const rpsParams = {
         numero: nfse.numero_rps,
         serie: "RPS",
         tipo: "RPS",
@@ -411,7 +411,8 @@ app.post("/send/:id", requireAuth, async (c) => {
         codigoMunicipio: nfse.codigo_municipio ?? "3550308",
         isSimplesNacional: !!nfse.optante_simples,
         tpOpcaoSimples: nfse.tp_opcao_simples,
-      });
+      };
+      const result = await envioRPS(c.env, rpsParams);
 
       if (result.success && result.numeroNfse) {
         await pool.query(
