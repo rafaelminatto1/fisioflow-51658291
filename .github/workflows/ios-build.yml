@@ -4,17 +4,18 @@ on:
   workflow_dispatch:
     inputs:
       app:
-        description: 'App'
+        description: "App"
         required: true
-        default: 'professional-app'
+        default: "professional-app"
       profile:
-        description: 'Profile'
+        description: "Profile"
         required: true
-        default: 'development'
+        default: "development"
 
 env:
-  NODE_VERSION: '22'
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
+  NODE_VERSION: "22"
+  PNPM_VERSION: "10.33.0"
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
 
 jobs:
   build-ios:
@@ -29,7 +30,7 @@ jobs:
       - name: Setup environment
         uses: ./.github/actions/setup
         with:
-          pnpm-version: ${{ env.PNPM_VERSION || '10.33.0' }}
+          pnpm-version: ${{ env.PNPM_VERSION }}
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile --filter "@fisioflow/${{ inputs.app }}..."
@@ -44,14 +45,14 @@ jobs:
         working-directory: apps/${{ inputs.app }}/ios
         run: |
           cat >> Podfile << 'PODFILE_PATCH'
-post_install do |installer|
-  installer.pods_project.targets.each do |target|
-    target.build_configurations.each do |config|
-      config.build_settings['SWIFT_STRICT_CONCURRENCY'] = 'minimal'
-    end
-  end
-end
-PODFILE_PATCH
+          post_install do |installer|
+            installer.pods_project.targets.each do |target|
+              target.build_configurations.each do |config|
+                config.build_settings['SWIFT_STRICT_CONCURRENCY'] = 'minimal'
+              end
+            end
+          end
+          PODFILE_PATCH
 
       - name: Pod install
         working-directory: apps/${{ inputs.app }}/ios
