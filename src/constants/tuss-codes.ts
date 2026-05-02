@@ -37,6 +37,12 @@ export const TUSS_FISIO_LIST: TUSSCode[] = [
     description: "Recuperação funcional após cirurgias ortopédicas com complicações neurovasculares.",
     category: "fisioterapia",
   },
+  {
+    code: "31602185",
+    label: "TENS / Estimulação Elétrica",
+    description: "Estimulação elétrica transcutânea para alívio de dor e analgesia.",
+    category: "fisioterapia",
+  },
   
   // RPG
   {
