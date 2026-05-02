@@ -10,15 +10,21 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 
+import { TUSS_FISIO_LIST } from "@/constants/tuss-codes";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { Info, HelpCircle } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Dialog,
@@ -569,23 +575,55 @@ export function NFSeContent({ autoOpenCreate = false, onAutoOpenHandled }: { aut
                       2. Sessões Realizadas
                     </Label>
                     <div className="flex gap-4">
-                       <div className="flex items-center gap-2">
-                         <span className="text-[9px] font-bold text-slate-400">TUSS:</span>
-                         <Input 
-                           value={tussCode} 
-                           onChange={(e) => setTussCode(e.target.value)}
-                           className="h-6 w-24 text-[10px] font-bold rounded-lg bg-slate-50 border-none"
-                         />
+                       <div className="flex flex-col space-y-1">
+                         <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Código TUSS</span>
+                         <TooltipProvider>
+                           <Select value={tussCode} onValueChange={setTussCode}>
+                             <SelectTrigger className="h-10 w-48 text-[10px] font-bold rounded-xl bg-slate-50 border-none shadow-none ring-0">
+                               <SelectValue placeholder="Selecione o TUSS" />
+                             </SelectTrigger>
+                             <SelectContent className="rounded-2xl border-slate-100 shadow-2xl">
+                               {TUSS_FISIO_LIST.map((tuss) => (
+                                 <SelectItem 
+                                   key={tuss.code} 
+                                   value={tuss.code}
+                                   className="text-[10px] font-bold py-3 rounded-xl focus:bg-slate-50"
+                                 >
+                                   <div className="flex flex-col gap-1">
+                                     <div className="flex items-center gap-2">
+                                       <span className="text-slate-900">{tuss.code}</span>
+                                       <Badge variant="outline" className="text-[8px] font-black border-slate-100 bg-slate-50/50 uppercase">{tuss.category}</Badge>
+                                     </div>
+                                     <span className="text-slate-400 font-medium text-[9px] leading-tight">{tuss.label}</span>
+                                   </div>
+                                 </SelectItem>
+                               ))}
+                             </SelectContent>
+                           </Select>
+                         </TooltipProvider>
                        </div>
-                       <div className="flex items-center gap-2">
-                         <span className="text-[9px] font-bold text-slate-400">R$/Sessão:</span>
+
+                       <div className="flex flex-col space-y-1">
+                         <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">R$ / Sessão</span>
                          <Input 
                            type="number"
                            value={pricePerSession} 
                            onChange={(e) => setPricePerSession(e.target.value)}
-                           className="h-6 w-20 text-[10px] font-bold rounded-lg bg-slate-50 border-none"
+                           className="h-10 w-24 text-[10px] font-black rounded-xl bg-slate-50 border-none shadow-none ring-0"
                          />
                        </div>
+                    </div>
+                  </div>
+
+                  <div className="bg-emerald-50/50 p-4 rounded-2xl border border-emerald-100/50 flex items-start gap-3">
+                    <div className="p-1.5 rounded-lg bg-emerald-100 text-emerald-600 mt-0.5">
+                      <Info className="h-3 w-3" />
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-[10px] font-black text-emerald-700 uppercase tracking-widest">O que é este código?</p>
+                      <p className="text-[10px] font-medium text-emerald-600/80 leading-relaxed">
+                        {TUSS_FISIO_LIST.find(t => t.code === tussCode)?.description || "Código não identificado."}
+                      </p>
                     </div>
                   </div>
 
