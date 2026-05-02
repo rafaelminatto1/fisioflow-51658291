@@ -1,9 +1,9 @@
 /**
- * NFSe Page Content - Refined Experience
- * Built with premium design standards for Mooca Fisio.
+ * NFSe Page Content - Premium UX/UI Experience
+ * Built with superior design standards for Mooca Fisio.
  */
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -24,17 +24,9 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { Info, HelpCircle } from "lucide-react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
 import { 
+  Info, 
+  HelpCircle,
   FileText, 
   Plus, 
   Download, 
@@ -48,7 +40,11 @@ import {
   ShieldCheck,
   Search,
   Calendar,
-  Layers
+  Layers,
+  ArrowRight,
+  TrendingUp,
+  Zap,
+  Activity
 } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -82,6 +78,9 @@ export interface NFSe extends NFSeRecord {
     aliquota: number;
     valor_iss: number;
   };
+  tentativas_envio?: number;
+  ultimo_erro?: string;
+  workflow_id?: string;
 }
 
 function normalizeNFSe(row: any): NFSe {
@@ -158,6 +157,27 @@ const statusConfig: Record<string, { label: string; icon: any; color: string; bg
     bg: "bg-slate-50 dark:bg-slate-500/10" 
   },
 };
+
+function StatCard({ title, value, icon: Icon, color, trend }: { title: string, value: string, icon: any, color: string, trend?: string }) {
+  return (
+    <Card className="rounded-[2rem] border-none shadow-sm p-6 bg-white dark:bg-slate-900/50 flex flex-col justify-between hover:shadow-xl hover:shadow-slate-100 transition-all duration-500 group">
+      <div className="flex items-center justify-between">
+        <div className={cn("p-2.5 rounded-2xl bg-slate-50 dark:bg-slate-800 transition-colors group-hover:bg-slate-900 group-hover:text-white", color)}>
+          <Icon className="h-5 w-5" />
+        </div>
+        {trend && (
+          <span className="text-[10px] font-black text-emerald-500 bg-emerald-50 px-2 py-0.5 rounded-full uppercase tracking-widest">
+            {trend}
+          </span>
+        )}
+      </div>
+      <div className="mt-4">
+        <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">{title}</p>
+        <h4 className="text-2xl font-black tracking-tight text-slate-900 dark:text-white mt-1">{value}</h4>
+      </div>
+    </Card>
+  );
+}
 
 export function NFSeContent({ autoOpenCreate = false, onAutoOpenHandled }: { autoOpenCreate?: boolean; onAutoOpenHandled?: () => void } = {}) {
   const { currentOrganization: orgData } = useOrganizations();
@@ -271,6 +291,21 @@ export function NFSeContent({ autoOpenCreate = false, onAutoOpenHandled }: { aut
     enabled: !!organizationId,
   });
 
+  const stats = useMemo(() => {
+    const month = new Date().getMonth();
+    const thisMonth = nfses.filter(n => new Date(n.data_emissao).getMonth() === month);
+    const authorized = thisMonth.filter(n => n.status === 'autorizado');
+    const totalValue = authorized.reduce((acc, n) => acc + n.valor, 0);
+    const pending = nfses.filter(n => n.status === 'aguardando_prefeitura' || n.status === 'aguardando_internet').length;
+    
+    return {
+      monthlyValue: totalValue.toLocaleString("pt-BR", { minimumFractionDigits: 2 }),
+      monthlyCount: authorized.length,
+      pendingCount: pending,
+      successRate: nfses.length > 0 ? Math.round((nfses.filter(n => n.status === 'autorizado').length / nfses.filter(n => n.status !== 'rascunho').length) * 100) : 100
+    };
+  }, [nfses]);
+
   const createNFSe = useMutation({
     mutationFn: async (data: typeof formData) => {
       const val = parseFloat(data.valor.replace(",", "."));
@@ -290,24 +325,23 @@ export function NFSeContent({ autoOpenCreate = false, onAutoOpenHandled }: { aut
       const nfseId = response.data.id;
 
       if (!isOnline) {
-        toast.info("Você está offline. A nota foi salva como rascunho e será enviada assim que houver conexão.");
+        toast.info("Você está offline. A nota foi salva como rascunho.");
         return normalizeNFSe(response.data);
       }
 
       // 2. Enviar para PMSP (Workflow)
-      const sendResponse = await request<any>(`/api/nfse/send/${nfseId}`, {
-        method: "POST"
-      });
-
-      return normalizeNFSe(response.data); // Return draft, workflow handles the rest
+      await request<any>(`/api/nfse/send/${nfseId}`, { method: "POST" });
+      return normalizeNFSe(response.data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["nfse-list", organizationId] });
       toast.success("NFS-e gerada!", {
-        description: isOnline ? "A nota está sendo processada pela prefeitura em segundo plano." : "Salva localmente (Aguardando Internet)."
+        description: isOnline ? "Transmitindo para a prefeitura..." : "Aguardando conexão."
       });
       setIsDialogOpen(false);
       setFormData({ valor: "", destinatario_nome: "", destinatario_cpf_cnpj: "", servico_descricao: "" });
+      setSelectedPatientId(null);
+      setSelectedSessionIds([]);
     },
     onError: (err: any) => {
       toast.error("Falha ao gerar rascunho", { description: err.message });
@@ -323,8 +357,8 @@ export function NFSeContent({ autoOpenCreate = false, onAutoOpenHandled }: { aut
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["nfse-list", organizationId] });
-      toast.success("Nota Fiscal cancelada!", {
-        description: "A prefeitura confirmou o cancelamento e a contabilidade foi notificada."
+      toast.success("Cancelamento solicitado!", {
+        description: "A prefeitura foi notificada e processará o pedido."
       });
       setSelectedNFSe(null);
     },
@@ -334,525 +368,602 @@ export function NFSeContent({ autoOpenCreate = false, onAutoOpenHandled }: { aut
   });
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-700">
+    <div className="space-y-10 pb-20 animate-in fade-in slide-in-from-bottom-4 duration-1000">
       {/* HEADER SECTION */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
-        <div className="space-y-1">
-          <div className="flex items-center gap-2">
-            <div className="p-2 rounded-xl bg-slate-900 text-white shadow-black/20 shadow-lg">
-              <FileText className="h-5 w-5" />
-            </div>
-            <h2 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white">
-              Gestão Fiscal
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+        <div className="space-y-2">
+          <div className="flex items-center gap-3">
+            <motion.div 
+              whileHover={{ scale: 1.1, rotate: 5 }}
+              className="p-3 rounded-2xl bg-slate-900 text-white shadow-2xl shadow-slate-200 dark:shadow-none"
+            >
+              <FileText className="h-6 w-6" />
+            </motion.div>
+            <h2 className="text-4xl font-black tracking-tight text-slate-900 dark:text-white font-display">
+              Faturamento <span className="text-slate-400">Premium</span>
             </h2>
           </div>
-          <p className="text-slate-500 font-medium max-w-md">
-            Emissão de NFS-e simplificada e integrada diretamente com a prefeitura de São Paulo.
+          <p className="text-slate-500 font-medium max-w-md leading-relaxed">
+            Interface de alta performance para emissão e controle de NFS-e integrada à Nota do Milhão.
           </p>
         </div>
 
-        <Button 
-          onClick={() => setIsDialogOpen(true)} 
-          className="rounded-2xl h-14 px-8 bg-slate-900 hover:bg-slate-800 text-white shadow-xl shadow-slate-200 dark:shadow-none transition-all hover:scale-[1.02] active:scale-[0.98] group"
-        >
-          <Plus className="mr-2 h-5 w-5 transition-transform group-hover:rotate-90" />
-          <span className="font-bold tracking-tight">Nova Nota Fiscal</span>
-        </Button>
+        <motion.div whileHover={{ scale: 1.02 }} whileActive={{ scale: 0.98 }}>
+          <Button 
+            onClick={() => setIsDialogOpen(true)} 
+            className="rounded-[1.5rem] h-16 px-10 bg-slate-900 hover:bg-slate-800 text-white shadow-2xl shadow-slate-200 dark:shadow-none transition-all group border-none text-lg"
+          >
+            <Plus className="mr-2 h-6 w-6 transition-transform group-hover:rotate-90 duration-500" />
+            <span className="font-black tracking-tight">Nova Nota Fiscal</span>
+          </Button>
+        </motion.div>
+      </div>
+
+      {/* STATS OVERVIEW */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <StatCard 
+          title="Faturamento (Mês)" 
+          value={`R$ ${stats.monthlyValue}`} 
+          icon={TrendingUp} 
+          color="text-emerald-600" 
+          trend="+12%"
+        />
+        <StatCard 
+          title="Notas Emitidas" 
+          value={String(stats.monthlyCount)} 
+          icon={FileText} 
+          color="text-blue-600" 
+        />
+        <StatCard 
+          title="Em Processamento" 
+          value={String(stats.pendingCount)} 
+          icon={Activity} 
+          color="text-amber-600" 
+        />
+        <StatCard 
+          title="Taxa de Sucesso" 
+          value={`${stats.successRate}%`} 
+          icon={Zap} 
+          color="text-indigo-600" 
+        />
       </div>
 
       {/* TABS SECTION */}
       <Tabs value={activeTab} onValueChange={(v: any) => setActiveTab(v)} className="w-full">
-        <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-px">
-          <TabsList className="bg-transparent h-auto p-0 gap-8">
+        <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-px overflow-x-auto custom-scrollbar">
+          <TabsList className="bg-transparent h-auto p-0 gap-10">
             <TabsTrigger
               value="lista"
-              className="px-0 py-4 rounded-none border-b-2 border-transparent data-[state=active]:border-slate-900 data-[state=active]:bg-transparent font-bold text-sm text-slate-400 data-[state=active]:text-slate-900 transition-all uppercase tracking-widest"
+              className="px-0 py-6 rounded-none border-b-2 border-transparent data-[state=active]:border-slate-900 data-[state=active]:bg-transparent font-black text-xs text-slate-400 data-[state=active]:text-slate-900 transition-all uppercase tracking-[0.25em]"
             >
-              Histórico de Emissões
+              Histórico Digital
             </TabsTrigger>
             <TabsTrigger
               value="config"
-              className="px-0 py-4 rounded-none border-b-2 border-transparent data-[state=active]:border-slate-900 data-[state=active]:bg-transparent font-bold text-sm text-slate-400 data-[state=active]:text-slate-900 transition-all uppercase tracking-widest"
+              className="px-0 py-6 rounded-none border-b-2 border-transparent data-[state=active]:border-slate-900 data-[state=active]:bg-transparent font-black text-xs text-slate-400 data-[state=active]:text-slate-900 transition-all uppercase tracking-[0.25em]"
             >
-              Configuração Fiscal
+              Parâmetros Fiscais
             </TabsTrigger>
           </TabsList>
         </div>
 
-        <TabsContent value="lista" className="mt-8">
-          <div className="bg-white dark:bg-slate-900 rounded-[2rem] border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden">
-            <Table>
-              <TableHeader className="bg-slate-50/50 dark:bg-slate-800/30">
-                <TableRow className="border-none hover:bg-transparent">
-                  <TableHead className="px-8 py-5 font-black text-[10px] uppercase tracking-[0.2em] text-slate-400">Nº / Data</TableHead>
-                  <TableHead className="px-6 py-5 font-black text-[10px] uppercase tracking-[0.2em] text-slate-400">Tomador do Serviço</TableHead>
-                  <TableHead className="px-6 py-5 font-black text-[10px] uppercase tracking-[0.2em] text-slate-400">Valor Bruto</TableHead>
-                  <TableHead className="px-6 py-5 font-black text-[10px] uppercase tracking-[0.2em] text-slate-400">Status Prefeitura</TableHead>
-                  <TableHead className="px-8 py-5 text-right font-black text-[10px] uppercase tracking-[0.2em] text-slate-400">Ações</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {isLoading ? (
-                  <TableRow>
-                    <TableCell colSpan={5} className="text-center py-24">
-                      <div className="flex flex-col items-center gap-2">
-                        <Clock className="h-8 w-8 text-slate-200 animate-pulse" />
-                        <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Sincronizando notas...</p>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ) : nfses.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={5} className="text-center py-24 text-slate-400">
-                      <p className="text-sm font-medium">Nenhuma nota emitida ainda.</p>
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  nfses.map((nfse) => {
-                    const status = statusConfig[nfse.status] || statusConfig.rascunho;
-                    const StatusIcon = status.icon;
-                    return (
-                      <TableRow key={nfse.id} className="group border-slate-50 dark:border-slate-800/50 hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
-                        <TableCell className="px-8 py-6">
-                          <div className="flex flex-col gap-0.5">
-                            <span className="font-mono font-black text-slate-900 dark:text-white leading-none">
-                              {nfse.numero}
-                            </span>
-                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                              {new Date(nfse.data_emissao).toLocaleDateString("pt-BR")}
-                            </span>
-                          </div>
-                        </TableCell>
-                        <TableCell className="px-6 py-6">
-                          <div className="flex flex-col">
-                            <span className="font-bold text-slate-800 dark:text-slate-200 truncate max-w-[240px]">
-                              {nfse.destinatario.nome}
-                            </span>
-                            <span className="text-[10px] font-mono text-slate-400">
-                              {nfse.destinatario.cnpj_cpf}
-                            </span>
-                          </div>
-                        </TableCell>
-                        <TableCell className="px-6 py-6">
-                          <span className="font-black text-slate-900 dark:text-white">
-                            R$ {nfse.valor.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
-                          </span>
-                        </TableCell>
-                        <TableCell className="px-6 py-6">
-                          <div className={cn("inline-flex items-center gap-1.5 px-3 py-1 rounded-full", status.bg, status.color)}>
-                            <StatusIcon className="h-3 w-3" />
-                            <span className="text-[10px] font-black uppercase tracking-widest">{status.label}</span>
-                          </div>
-                        </TableCell>
-                        <TableCell className="px-8 py-6 text-right">
-                          <div className="flex justify-end gap-1">
-                            {nfse.link_nfse && (
-                              <Button 
-                                variant="ghost" 
-                                size="icon" 
-                                className="rounded-xl hover:bg-white dark:hover:bg-slate-800 hover:shadow-md transition-all group/btn"
-                                onClick={() => window.open(nfse.link_nfse, "_blank")}
-                                title="Visualizar Nota"
-                              >
-                                <ExternalLink className="h-4 w-4 text-slate-400 group-hover/btn:text-slate-900 dark:group-hover/btn:text-white" />
-                              </Button>
-                            )}
-                            <Button 
-                              variant="ghost" 
-                              size="icon" 
-                              className="rounded-xl hover:bg-white dark:hover:bg-slate-800 hover:shadow-md transition-all group/btn"
-                              onClick={() => setSelectedNFSe(nfse)}
-                              title="Detalhes"
-                            >
-                              <ChevronRight className="h-4 w-4 text-slate-400 group-hover/btn:text-slate-900 dark:group-hover/btn:text-white" />
-                            </Button>
+        <AnimatePresence mode="wait">
+          <TabsContent value="lista" className="mt-10 outline-none">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.5 }}
+              className="bg-white dark:bg-slate-900 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 shadow-xl shadow-slate-100/50 dark:shadow-none overflow-hidden"
+            >
+              <div className="p-8 border-b border-slate-50 dark:border-slate-800 flex justify-between items-center bg-slate-50/30">
+                 <h3 className="font-black text-xs uppercase tracking-[0.3em] text-slate-400">Fluxo de Documentos</h3>
+                 <div className="flex gap-2">
+                    <Button variant="ghost" size="sm" className="h-8 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-400">Filtrar</Button>
+                    <Button variant="ghost" size="sm" className="h-8 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-400">Exportar</Button>
+                 </div>
+              </div>
+              <ScrollArea className="max-h-[600px]">
+                <Table>
+                  <TableHeader className="bg-slate-50/50 dark:bg-slate-800/30 sticky top-0 z-10">
+                    <TableRow className="border-none hover:bg-transparent">
+                      <TableHead className="px-10 py-6 font-black text-[9px] uppercase tracking-[0.3em] text-slate-400">Nº / Emissão</TableHead>
+                      <TableHead className="px-8 py-6 font-black text-[9px] uppercase tracking-[0.3em] text-slate-400">Destinatário</TableHead>
+                      <TableHead className="px-8 py-6 font-black text-[9px] uppercase tracking-[0.3em] text-slate-400">Valor Bruto</TableHead>
+                      <TableHead className="px-8 py-6 font-black text-[9px] uppercase tracking-[0.3em] text-slate-400">Situação PMSP</TableHead>
+                      <TableHead className="px-10 py-6 text-right font-black text-[9px] uppercase tracking-[0.3em] text-slate-400">Ações</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {isLoading ? (
+                      <TableRow>
+                        <TableCell colSpan={5} className="text-center py-32">
+                          <div className="flex flex-col items-center gap-4">
+                            <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 2, ease: "linear" }}>
+                               <Clock className="h-10 w-10 text-slate-200" />
+                            </motion.div>
+                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">Sincronizando registros...</p>
                           </div>
                         </TableCell>
                       </TableRow>
-                    );
-                  })
-                )}
-              </TableBody>
-            </Table>
-          </div>
-        </TabsContent>
-
-        <TabsContent value="config">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <Card className="rounded-[2rem] border-none shadow-sm p-10 bg-slate-50 dark:bg-slate-900/50 flex flex-col items-center text-center space-y-6">
-              <div className="h-16 w-16 rounded-3xl bg-white dark:bg-slate-800 shadow-xl flex items-center justify-center">
-                <ShieldCheck className="h-8 w-8 text-slate-900 dark:text-white" />
-              </div>
-              <div className="space-y-2">
-                <h3 className="text-xl font-black tracking-tight">Configurações Fiscais</h3>
-                <p className="text-slate-500 max-w-sm font-medium text-xs">
-                  Sua conta está configurada para o município de São Paulo (Simples Nacional).
-                </p>
-              </div>
-              <div className="flex flex-wrap justify-center gap-3">
-                <Badge className="rounded-xl px-3 py-1 bg-white dark:bg-slate-800 text-slate-900 dark:text-white border-none shadow-sm font-bold text-[10px]">CNPJ: 54.836.577/0001-67</Badge>
-                <Badge className="rounded-xl px-3 py-1 bg-white dark:bg-slate-800 text-slate-900 dark:text-white border-none shadow-sm font-bold text-[10px]">Cod. Serviço: 04391</Badge>
-              </div>
-              <Button variant="outline" className="rounded-2xl h-12 px-6 font-bold border-slate-200">
-                Alterar Dados do Prestador
-              </Button>
-            </Card>
-
-            <Card className="rounded-[2rem] border-none shadow-sm p-10 bg-emerald-50 dark:bg-emerald-950/20 flex flex-col items-center text-center space-y-6 border border-emerald-100 dark:border-emerald-900/50">
-              <div className="h-16 w-16 rounded-3xl bg-white dark:bg-slate-800 shadow-xl flex items-center justify-center">
-                <ExternalLink className="h-8 w-8 text-emerald-600" />
-              </div>
-              <div className="space-y-2">
-                <h3 className="text-xl font-black tracking-tight">Automação Contabilidade</h3>
-                <p className="text-slate-500 max-w-sm font-medium text-xs">
-                  Envio automático de notas emitidas para a Contabilizei.
-                </p>
-              </div>
-              <div className="space-y-3 w-full max-w-xs">
-                <div className="p-3 rounded-xl bg-white/50 dark:bg-slate-800/50 text-left border border-emerald-100 dark:border-emerald-900">
-                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Email de Destino</p>
-                  <p className="text-sm font-bold text-slate-700 dark:text-slate-200">rafael.minatto@yahoo.com.br</p>
-                </div>
-                <div className="flex items-center justify-center gap-2">
-                  <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-                  <span className="text-[10px] font-black text-emerald-600 uppercase tracking-[0.2em]">Automação Ativa</span>
-                </div>
-              </div>
-              <Button className="rounded-2xl h-12 px-6 font-bold bg-emerald-600 hover:bg-emerald-700 text-white border-none">
-                Configurar Contabilizei
-              </Button>
-            </Card>
-          </div>
-        </TabsContent>
-      </Tabs>
-
-      {/* EMISSION DIALOG */}
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="rounded-[2.5rem] max-w-2xl p-0 overflow-hidden border-none shadow-2xl">
-          <div className="bg-slate-900 p-8 text-white">
-            <DialogHeader>
-              <div className="flex items-center gap-3 mb-2">
-                <div className="bg-white/10 p-2 rounded-xl backdrop-blur-sm">
-                  <FileText className="h-5 w-5 text-emerald-400" />
-                </div>
-                <DialogTitle className="text-2xl font-black tracking-tight">Emitir Nova NFS-e</DialogTitle>
-              </div>
-              <DialogDescription className="text-slate-400 font-medium">
-                Preencha os dados do paciente para gerar e transmitir a nota à prefeitura.
-              </DialogDescription>
-            </DialogHeader>
-          </div>
-
-          <div className="p-8 space-y-8 bg-white dark:bg-slate-900 max-h-[70vh] overflow-y-auto custom-scrollbar">
-            {/* 1. SELEÇÃO DE PACIENTE */}
-            <div className="space-y-3">
-              <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">
-                1. Selecionar Paciente
-              </Label>
-              <PatientCombobox 
-                onSelect={(patient) => {
-                  setSelectedPatientId(patient.id);
-                  setFormData(prev => ({
-                    ...prev,
-                    destinatario_nome: patient.name,
-                    destinatario_cpf_cnpj: patient.cpf || "",
-                  }));
-                  setSelectedSessionIds([]); // Reset sessions
-                }}
-              />
-            </div>
-
-            {selectedPatientId && (
-              <motion.div 
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="space-y-6"
-              >
-                {/* 2. CONFIGURAÇÃO DE SESSÕES */}
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between ml-1">
-                    <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
-                      2. Sessões Realizadas
-                    </Label>
-                    <div className="flex gap-4">
-                       <div className="flex flex-col space-y-1">
-                         <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Código TUSS</span>
-                         <TooltipProvider>
-                           <Select value={tussCode} onValueChange={setTussCode}>
-                             <SelectTrigger className="h-10 w-48 text-[10px] font-bold rounded-xl bg-slate-50 border-none shadow-none ring-0">
-                               <SelectValue placeholder="Selecione o TUSS" />
-                             </SelectTrigger>
-                             <SelectContent className="rounded-2xl border-slate-100 shadow-2xl">
-                               {TUSS_FISIO_LIST.map((tuss) => (
-                                 <SelectItem 
-                                   key={tuss.code} 
-                                   value={tuss.code}
-                                   className="text-[10px] font-bold py-3 rounded-xl focus:bg-slate-50"
-                                 >
-                                   <div className="flex flex-col gap-1">
-                                     <div className="flex items-center gap-2">
-                                       <span className="text-slate-900">{tuss.code}</span>
-                                       <Badge variant="outline" className="text-[8px] font-black border-slate-100 bg-slate-50/50 uppercase">{tuss.category}</Badge>
-                                     </div>
-                                     <span className="text-slate-400 font-medium text-[9px] leading-tight">{tuss.label}</span>
-                                   </div>
-                                 </SelectItem>
-                               ))}
-                             </SelectContent>
-                           </Select>
-                         </TooltipProvider>
-                       </div>
-
-                       <div className="flex flex-col space-y-1">
-                         <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">R$ / Sessão</span>
-                         <Input 
-                           type="number"
-                           value={pricePerSession} 
-                           onChange={(e) => setPricePerSession(e.target.value)}
-                           className="h-10 w-24 text-[10px] font-black rounded-xl bg-slate-50 border-none shadow-none ring-0"
-                         />
-                       </div>
-                    </div>
-                  </div>
-
-                  <div className="bg-emerald-50/50 p-4 rounded-2xl border border-emerald-100/50 flex items-start gap-3">
-                    <div className="p-1.5 rounded-lg bg-emerald-100 text-emerald-600 mt-0.5">
-                      <Info className="h-3 w-3" />
-                    </div>
-                    <div className="space-y-1">
-                      <p className="text-[10px] font-black text-emerald-700 uppercase tracking-widest">O que é este código?</p>
-                      <p className="text-[10px] font-medium text-emerald-600/80 leading-relaxed">
-                        {TUSS_FISIO_LIST.find(t => t.code === tussCode)?.description || "Código não identificado."}
-                      </p>
-                    </div>
-                  </div>
-
-                  <ScrollArea className="h-48 rounded-2xl border border-slate-100 dark:border-slate-800 p-4 bg-slate-50/30">
-                    {isLoadingSessions ? (
-                      <div className="flex items-center justify-center h-full gap-2 text-slate-400">
-                        <Clock className="h-4 w-4 animate-spin" />
-                        <span className="text-xs font-bold uppercase tracking-widest">Carregando sessões...</span>
-                      </div>
-                    ) : patientSessions.length === 0 ? (
-                      <div className="flex flex-col items-center justify-center h-full text-slate-400 py-8">
-                        <Calendar className="h-8 w-8 mb-2 opacity-20" />
-                        <span className="text-xs font-medium">Nenhuma sessão 'Atendida' encontrada.</span>
-                      </div>
+                    ) : nfses.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={5} className="text-center py-32 text-slate-400">
+                          <p className="text-sm font-bold opacity-30">Nenhum documento emitido nesta competência.</p>
+                        </TableCell>
+                      </TableRow>
                     ) : (
-                      <div className="grid grid-cols-1 gap-2">
-                        {patientSessions.map((session) => (
-                          <div 
-                            key={session.id}
-                            className={cn(
-                              "flex items-center justify-between p-3 rounded-xl transition-all cursor-pointer border border-transparent",
-                              selectedSessionIds.includes(session.id) 
-                                ? "bg-white dark:bg-slate-800 shadow-sm border-slate-200 dark:border-slate-700" 
-                                : "hover:bg-white/50 dark:hover:bg-slate-800/50"
-                            )}
-                            onClick={() => {
-                              setSelectedSessionIds(prev => 
-                                prev.includes(session.id) 
-                                  ? prev.filter(id => id !== session.id) 
-                                  : [...prev, session.id]
-                              );
-                            }}
+                      nfses.map((nfse, idx) => {
+                        const status = statusConfig[nfse.status] || statusConfig.rascunho;
+                        const StatusIcon = status.icon;
+                        return (
+                          <motion.tr 
+                            initial={{ opacity: 0, x: -10 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: idx * 0.05 }}
+                            key={nfse.id} 
+                            className="group border-slate-50 dark:border-slate-800/50 hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-all duration-300"
                           >
-                            <div className="flex items-center gap-3">
-                              <Checkbox 
-                                checked={selectedSessionIds.includes(session.id)}
-                                onCheckedChange={() => {}} // Handled by div click
-                                className="rounded-md border-slate-300"
-                              />
-                              <div className="flex flex-col">
-                                <span className="text-xs font-bold text-slate-700 dark:text-slate-200">
-                                  {new Date(session.date).toLocaleDateString("pt-BR", { weekday: 'long', day: '2-digit', month: 'long' })}
+                            <TableCell className="px-10 py-8">
+                              <div className="flex flex-col gap-1">
+                                <span className="font-mono font-black text-slate-900 dark:text-white text-lg tracking-tighter leading-none">
+                                  {nfse.numero}
                                 </span>
-                                <span className="text-[10px] font-medium text-slate-400 uppercase tracking-tighter">
-                                  {session.startTime} - {session.endTime}
+                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                                  {new Date(nfse.data_emissao).toLocaleDateString("pt-BR", { day: '2-digit', month: 'short', year: 'numeric' })}
                                 </span>
                               </div>
-                            </div>
-                            <Badge variant="outline" className="text-[9px] font-black border-slate-200 text-slate-400">
-                              {session.status}
-                            </Badge>
-                          </div>
-                        ))}
-                      </div>
+                            </TableCell>
+                            <TableCell className="px-8 py-8">
+                              <div className="flex flex-col">
+                                <span className="font-black text-slate-800 dark:text-slate-200 truncate max-w-[280px] tracking-tight">
+                                  {nfse.destinatario.nome}
+                                </span>
+                                <span className="text-[10px] font-mono font-medium text-slate-400 mt-1">
+                                  {nfse.destinatario.cnpj_cpf.replace(/^(\d{3})(\d{3})(\d{3})(\d{2})$/, "$1.$2.$3-$4")}
+                                </span>
+                              </div>
+                            </TableCell>
+                            <TableCell className="px-8 py-8">
+                              <span className="font-black text-slate-900 dark:text-white text-base">
+                                R$ {nfse.valor.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                              </span>
+                            </TableCell>
+                            <TableCell className="px-8 py-8">
+                              <div className={cn("inline-flex items-center gap-2 px-4 py-1.5 rounded-2xl shadow-sm border border-transparent transition-all group-hover:shadow-md", status.bg, status.color)}>
+                                <StatusIcon className={cn("h-3.5 w-3.5", nfse.status === 'aguardando_prefeitura' ? "animate-spin" : "")} />
+                                <span className="text-[10px] font-black uppercase tracking-[0.15em]">{status.label}</span>
+                              </div>
+                            </TableCell>
+                            <TableCell className="px-10 py-8 text-right">
+                              <div className="flex justify-end gap-2">
+                                {nfse.link_nfse && (
+                                  <Button 
+                                    variant="ghost" 
+                                    size="icon" 
+                                    className="h-10 w-10 rounded-2xl hover:bg-white dark:hover:bg-slate-800 hover:shadow-xl transition-all group/btn border border-transparent hover:border-slate-100"
+                                    onClick={() => window.open(nfse.link_nfse, "_blank")}
+                                  >
+                                    <ExternalLink className="h-4 w-4 text-slate-400 group-hover/btn:text-slate-900 dark:group-hover/btn:text-white" />
+                                  </Button>
+                                )}
+                                <Button 
+                                  variant="ghost" 
+                                  size="icon" 
+                                  className="h-10 w-10 rounded-2xl hover:bg-white dark:hover:bg-slate-800 hover:shadow-xl transition-all group/btn border border-transparent hover:border-slate-100"
+                                  onClick={() => setSelectedNFSe(nfse)}
+                                >
+                                  <ChevronRight className="h-5 w-5 text-slate-300 group-hover/btn:text-slate-900 dark:group-hover/btn:text-white group-hover/btn:translate-x-0.5 transition-all" />
+                                </Button>
+                              </div>
+                            </TableCell>
+                          </motion.tr>
+                        );
+                      })
                     )}
-                  </ScrollArea>
+                  </TableBody>
+                </Table>
+              </ScrollArea>
+            </motion.div>
+          </TabsContent>
+
+          <TabsContent value="config" className="mt-10 outline-none">
+            <motion.div 
+               initial={{ opacity: 0, scale: 0.98 }}
+               animate={{ opacity: 1, scale: 1 }}
+               className="grid grid-cols-1 md:grid-cols-2 gap-8"
+            >
+              <Card className="rounded-[3rem] border-none shadow-sm p-12 bg-slate-50 dark:bg-slate-900/50 flex flex-col items-center text-center space-y-8 border border-slate-100">
+                <div className="h-20 w-20 rounded-[2rem] bg-white dark:bg-slate-800 shadow-2xl flex items-center justify-center">
+                  <ShieldCheck className="h-10 w-10 text-slate-900 dark:text-white" />
                 </div>
+                <div className="space-y-3">
+                  <h3 className="text-2xl font-black tracking-tight font-display">Identidade Fiscal</h3>
+                  <p className="text-slate-500 max-w-sm font-medium leading-relaxed">
+                    Sua conta está operando sob as diretrizes tributárias de São Paulo (Simples Nacional).
+                  </p>
+                </div>
+                <div className="flex flex-wrap justify-center gap-4">
+                  <Badge className="rounded-2xl px-5 py-2 bg-white dark:bg-slate-800 text-slate-900 dark:text-white border-none shadow-sm font-black text-xs uppercase tracking-widest">CNPJ 54.836.577/0001-67</Badge>
+                  <Badge className="rounded-2xl px-5 py-2 bg-white dark:bg-slate-800 text-slate-900 dark:text-white border-none shadow-sm font-black text-xs uppercase tracking-widest">Serviço 04391</Badge>
+                </div>
+                <Button variant="outline" className="rounded-2xl h-14 px-8 font-black border-slate-200 hover:bg-slate-900 hover:text-white transition-all uppercase tracking-widest text-[10px]">
+                  Configurações do Prestador
+                </Button>
+              </Card>
 
-                {/* 3. REVISÃO DA NOTA */}
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between ml-1">
-                    <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
-                      3. Revisão e Detalhes
-                    </Label>
-                    <div className="flex items-center gap-2 cursor-pointer" onClick={() => setUseTemplate(!useTemplate)}>
-                       <span className={cn("text-[9px] font-black uppercase transition-colors", useTemplate ? "text-emerald-600" : "text-slate-400")}>
-                         Template Ativo
-                       </span>
-                       <div className={cn("w-6 h-3 rounded-full relative transition-colors", useTemplate ? "bg-emerald-500" : "bg-slate-300")}>
-                          <div className={cn("absolute top-0.5 w-2 h-2 rounded-full bg-white transition-all", useTemplate ? "left-3.5" : "left-0.5")} />
-                       </div>
-                    </div>
+              <Card className="rounded-[3rem] border-none shadow-sm p-12 bg-emerald-50 dark:bg-emerald-950/20 flex flex-col items-center text-center space-y-8 border border-emerald-100/50">
+                <div className="h-20 w-20 rounded-[2rem] bg-white dark:bg-slate-800 shadow-2xl flex items-center justify-center">
+                  <motion.div animate={{ scale: [1, 1.1, 1] }} transition={{ repeat: Infinity, duration: 3 }}>
+                    <ExternalLink className="h-10 w-10 text-emerald-600" />
+                  </motion.div>
+                </div>
+                <div className="space-y-3">
+                  <h3 className="text-2xl font-black tracking-tight font-display">Hub Contabilidade</h3>
+                  <p className="text-slate-500 max-w-sm font-medium leading-relaxed text-sm">
+                    Integração ativa com a <strong>Contabilizei</strong>. Cada nota emitida é enviada instantaneamente.
+                  </p>
+                </div>
+                <div className="space-y-4 w-full max-w-xs">
+                  <div className="p-5 rounded-2xl bg-white dark:bg-slate-800/80 text-left border border-emerald-100 dark:border-emerald-900 shadow-sm">
+                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.3em]">Canal de Entrega</p>
+                    <p className="text-sm font-black text-slate-700 dark:text-slate-200 mt-1">rafael.minatto@yahoo.com.br</p>
                   </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label className="text-[9px] font-bold text-slate-400 ml-1">Valor Total (R$)</Label>
-                      <div className="relative">
-                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-xs font-black text-slate-400">R$</span>
-                        <Input
-                          type="number"
-                          className="rounded-xl h-12 pl-10 bg-slate-50 dark:bg-slate-800 border-none font-black text-lg"
-                          value={formData.valor}
-                          onChange={(e) => setFormData({ ...formData, valor: e.target.value })}
-                        />
-                      </div>
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-[9px] font-bold text-slate-400 ml-1">Paciente</Label>
-                      <Input
-                        disabled
-                        className="rounded-xl h-12 bg-slate-50 dark:bg-slate-800 border-none font-bold text-slate-500"
-                        value={formData.destinatario_nome}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label className="text-[9px] font-bold text-slate-400 ml-1">Discriminação Final</Label>
-                    <Textarea
-                      className="rounded-2xl min-h-[140px] bg-slate-50 dark:bg-slate-800 border-none font-medium text-[11px] leading-relaxed resize-none p-4 custom-scrollbar"
-                      value={formData.servico_descricao}
-                      onChange={(e) => setFormData({ ...formData, servico_descricao: e.target.value })}
-                    />
+                  <div className="flex items-center justify-center gap-3">
+                    <div className="h-2.5 w-2.5 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)] animate-pulse" />
+                    <span className="text-[11px] font-black text-emerald-700 uppercase tracking-[0.25em]">Automação Full-time</span>
                   </div>
                 </div>
-              </motion.div>
-            )}
+                <Button className="rounded-2xl h-14 px-8 font-black bg-emerald-600 hover:bg-emerald-700 text-white shadow-xl shadow-emerald-200 dark:shadow-none transition-all uppercase tracking-widest text-[10px]">
+                  Painel de Integração
+                </Button>
+              </Card>
+            </motion.div>
+          </TabsContent>
+        </AnimatePresence>
+      </Tabs>
+
+      {/* EMISSION DIALOG - REDESIGNED FOR 2026 */}
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent className="rounded-[3rem] max-w-5xl p-0 overflow-hidden border-none shadow-[0_40px_100px_rgba(0,0,0,0.15)] flex flex-col md:flex-row h-[90vh] md:h-auto">
+          {/* LEFT: FORMS */}
+          <div className="flex-[1.5] flex flex-col bg-white dark:bg-slate-900">
+            <div className="bg-slate-900 p-10 text-white relative overflow-hidden">
+               <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/10 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl pointer-events-none" />
+               <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} className="relative z-10">
+                 <div className="flex items-center gap-3 mb-3">
+                   <div className="bg-emerald-500/20 p-2 rounded-xl backdrop-blur-md">
+                     <Zap className="h-5 w-5 text-emerald-400 fill-emerald-400" />
+                   </div>
+                   <h3 className="text-2xl font-black tracking-tight font-display italic">Mestre de Emissão</h3>
+                 </div>
+                 <p className="text-slate-400 font-medium text-sm max-w-md">
+                   Sincronize atendimentos e autorize notas fiscais em segundos com suporte à Reforma Tributária.
+                 </p>
+               </motion.div>
+            </div>
+
+            <ScrollArea className="flex-1 p-10 custom-scrollbar">
+              <div className="space-y-10">
+                {/* STEP 1 */}
+                <section className="space-y-5">
+                   <div className="flex items-center gap-3">
+                      <span className="h-7 w-7 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-[10px] font-black text-slate-400">01</span>
+                      <h4 className="text-xs font-black uppercase tracking-[0.2em] text-slate-400">Tomador do Serviço</h4>
+                   </div>
+                   <PatientCombobox 
+                    onSelect={(patient) => {
+                      setSelectedPatientId(patient.id);
+                      setFormData(prev => ({
+                        ...prev,
+                        destinatario_nome: patient.name,
+                        destinatario_cpf_cnpj: patient.cpf || "",
+                      }));
+                      setSelectedSessionIds([]);
+                    }}
+                  />
+                </section>
+
+                <AnimatePresence>
+                  {selectedPatientId && (
+                    <motion.div 
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="space-y-10"
+                    >
+                      {/* STEP 2 */}
+                      <section className="space-y-5">
+                         <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                               <span className="h-7 w-7 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-[10px] font-black text-slate-400">02</span>
+                               <h4 className="text-xs font-black uppercase tracking-[0.2em] text-slate-400">Sessões & Procedimento</h4>
+                            </div>
+                            <div className="flex items-center gap-4">
+                               <Select value={tussCode} onValueChange={setTussCode}>
+                                 <SelectTrigger className="h-9 w-40 text-[9px] font-black uppercase tracking-widest rounded-xl bg-slate-50 border-none shadow-none ring-0">
+                                   <SelectValue />
+                                 </SelectTrigger>
+                                 <SelectContent className="rounded-2xl border-slate-100 shadow-2xl">
+                                    {TUSS_FISIO_LIST.map((tuss) => (
+                                      <SelectItem key={tuss.code} value={tuss.code} className="text-[10px] font-bold py-3 rounded-xl focus:bg-slate-50">
+                                        {tuss.code} - {tuss.label}
+                                      </SelectItem>
+                                    ))}
+                                 </SelectContent>
+                               </Select>
+                            </div>
+                         </div>
+
+                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-48 overflow-y-auto pr-2 custom-scrollbar">
+                           {isLoadingSessions ? (
+                             Array(4).fill(0).map((_, i) => (
+                               <div key={i} className="h-14 rounded-2xl bg-slate-50 animate-pulse" />
+                             ))
+                           ) : patientSessions.length === 0 ? (
+                             <div className="col-span-full py-8 text-center bg-slate-50 rounded-3xl border border-dashed border-slate-200">
+                                <Calendar className="h-6 w-6 text-slate-300 mx-auto mb-2" />
+                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Nenhuma sessão atendida</p>
+                             </div>
+                           ) : (
+                             patientSessions.map((session) => (
+                               <motion.div 
+                                 whileHover={{ scale: 1.02 }}
+                                 key={session.id}
+                                 onClick={() => {
+                                   setSelectedSessionIds(prev => 
+                                     prev.includes(session.id) ? prev.filter(id => id !== session.id) : [...prev, session.id]
+                                   );
+                                 }}
+                                 className={cn(
+                                   "p-4 rounded-2xl cursor-pointer border-2 transition-all flex items-center justify-between",
+                                   selectedSessionIds.includes(session.id) 
+                                     ? "bg-emerald-50 border-emerald-500 shadow-md shadow-emerald-100" 
+                                     : "bg-slate-50 border-transparent grayscale opacity-60 hover:grayscale-0 hover:opacity-100"
+                                 )}
+                               >
+                                  <div className="flex flex-col">
+                                    <span className="text-[10px] font-black text-slate-800 uppercase tracking-tight">
+                                      {new Date(session.date).toLocaleDateString("pt-BR", { day: '2-digit', month: 'short' })}
+                                    </span>
+                                    <span className="text-[9px] font-bold text-slate-400 uppercase">{session.startTime}</span>
+                                  </div>
+                                  <div className={cn("h-5 w-5 rounded-full flex items-center justify-center transition-colors", selectedSessionIds.includes(session.id) ? "bg-emerald-500 text-white" : "bg-slate-200")}>
+                                     {selectedSessionIds.includes(session.id) && <CheckCircle2 className="h-3 w-3" />}
+                                  </div>
+                               </motion.div>
+                             ))
+                           )}
+                         </div>
+                      </section>
+
+                      {/* STEP 3 */}
+                      <section className="space-y-5">
+                         <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                               <span className="h-7 w-7 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-[10px] font-black text-slate-400">03</span>
+                               <h4 className="text-xs font-black uppercase tracking-[0.2em] text-slate-400">Valores & Revisão</h4>
+                            </div>
+                            <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-slate-100 text-slate-500 cursor-pointer hover:bg-slate-200 transition-colors" onClick={() => setUseTemplate(!useTemplate)}>
+                               <span className="text-[9px] font-black uppercase tracking-widest">{useTemplate ? 'Auto' : 'Manual'}</span>
+                            </div>
+                         </div>
+
+                         <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                              <Label className="text-[9px] font-black uppercase tracking-widest text-slate-400 ml-1">Valor Unitário</Label>
+                              <div className="relative">
+                                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[10px] font-black text-slate-400">R$</span>
+                                <Input
+                                  type="number"
+                                  className="rounded-xl h-12 pl-10 bg-slate-50 border-none font-black text-base focus-visible:ring-emerald-500"
+                                  value={pricePerSession}
+                                  onChange={(e) => setPricePerSession(e.target.value)}
+                                />
+                              </div>
+                            </div>
+                            <div className="space-y-2">
+                              <Label className="text-[9px] font-black uppercase tracking-widest text-slate-400 ml-1">Total da Nota</Label>
+                              <div className="relative">
+                                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[10px] font-black text-slate-400">R$</span>
+                                <Input
+                                  type="number"
+                                  className="rounded-xl h-12 pl-10 bg-slate-50 border-none font-black text-base text-slate-900"
+                                  value={formData.valor}
+                                  onChange={(e) => setFormData(p => ({ ...p, valor: e.target.value }))}
+                                />
+                              </div>
+                            </div>
+                         </div>
+
+                         <div className="space-y-2">
+                           <Label className="text-[9px] font-black uppercase tracking-widest text-slate-400 ml-1">Discriminação detalhada</Label>
+                           <Textarea
+                             className="rounded-2xl min-h-[140px] bg-slate-50 border-none font-medium text-[11px] leading-relaxed resize-none p-5 custom-scrollbar focus-visible:ring-emerald-500"
+                             value={formData.servico_descricao}
+                             onChange={(e) => setFormData(p => ({ ...p, servico_descricao: e.target.value }))}
+                           />
+                         </div>
+                      </section>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            </ScrollArea>
+
+            <DialogFooter className="p-8 border-t border-slate-50 dark:border-slate-800 bg-slate-50/30 flex items-center justify-between gap-4">
+                <Button variant="ghost" className="rounded-2xl h-14 px-8 font-black text-slate-400 uppercase tracking-widest text-[10px]" onClick={() => setIsDialogOpen(false)}>
+                  Descartar
+                </Button>
+                <Button 
+                  className="rounded-2xl h-14 px-12 bg-slate-900 hover:bg-slate-800 text-white shadow-2xl shadow-slate-200 dark:shadow-none transition-all font-black uppercase tracking-[0.2em] text-[10px] active:scale-95"
+                  onClick={() => createNFSe.mutate(formData)}
+                  disabled={createNFSe.isPending || !formData.valor || !formData.destinatario_nome}
+                >
+                  {createNFSe.isPending ? "Processando..." : "Autorizar Transmissão"}
+                </Button>
+            </DialogFooter>
           </div>
 
-          <DialogFooter className="p-8 bg-slate-50 dark:bg-slate-950/50 flex flex-col-reverse sm:flex-row gap-3">
-            <Button
-              variant="ghost"
-              className="rounded-2xl h-14 flex-1 font-bold text-slate-500"
-              onClick={() => setIsDialogOpen(false)}
-            >
-              Cancelar
-            </Button>
-            <Button
-              className="rounded-2xl h-14 flex-[2] bg-slate-900 hover:bg-slate-800 text-white shadow-xl shadow-slate-200 dark:shadow-none transition-all font-black text-lg"
-              onClick={() => createNFSe.mutate(formData)}
-              disabled={createNFSe.isPending || !formData.valor || !formData.destinatario_nome}
-            >
-              {createNFSe.isPending ? (
-                <div className="flex items-center gap-2">
-                  <Clock className="h-5 w-5 animate-spin" />
-                  <span>Transmitindo...</span>
+          {/* RIGHT: PREVIEW (DESKTOP) */}
+          <div className="hidden lg:flex flex-1 bg-slate-50 dark:bg-slate-950/50 p-12 border-l border-slate-100 dark:border-slate-800 flex-col items-center justify-center relative overflow-hidden">
+             <div className="absolute top-10 left-10 p-2 rounded-xl bg-white/80 backdrop-blur-md shadow-sm border border-slate-100">
+               <Eye className="h-4 w-4 text-slate-400" />
+             </div>
+             
+             <motion.div 
+               layout
+               className="w-full max-w-sm aspect-[3/4] bg-white dark:bg-slate-900 shadow-[0_50px_100px_rgba(0,0,0,0.1)] rounded-sm p-8 flex flex-col gap-6 relative"
+             >
+                <div className="flex justify-between items-start">
+                   <div className="space-y-1">
+                      <div className="w-16 h-3 bg-slate-900 dark:bg-slate-100 rounded-full opacity-20" />
+                      <div className="w-24 h-2 bg-slate-900 dark:bg-slate-100 rounded-full opacity-10" />
+                   </div>
+                   <div className="text-right space-y-1">
+                      <p className="text-[8px] font-black text-slate-300 uppercase tracking-widest">NFS-e Digital</p>
+                      <p className="text-xs font-mono font-black italic">PROVISÓRIA</p>
+                   </div>
                 </div>
-              ) : (
-                "Autorizar Nota"
-              )}
-            </Button>
-          </DialogFooter>
+
+                <div className="h-px bg-slate-100 dark:bg-slate-800" />
+
+                <div className="space-y-4 flex-1">
+                   <div className="space-y-2">
+                      <p className="text-[7px] font-black text-slate-400 uppercase tracking-widest">Prestador</p>
+                      <p className="text-[10px] font-black leading-none">MOOCA FISIOTERAPIA RA LTDA</p>
+                   </div>
+                   <div className="space-y-2">
+                      <p className="text-[7px] font-black text-slate-400 uppercase tracking-widest">Tomador</p>
+                      <p className="text-[10px] font-black leading-none truncate">{formData.destinatario_nome || "Aguardando seleção..."}</p>
+                   </div>
+                   <div className="space-y-2 pt-4">
+                      <p className="text-[7px] font-black text-slate-400 uppercase tracking-widest">Discriminação</p>
+                      <div className="space-y-1">
+                         <div className="w-full h-1.5 bg-slate-50 dark:bg-slate-800 rounded-full" />
+                         <div className="w-full h-1.5 bg-slate-50 dark:bg-slate-800 rounded-full" />
+                         <div className="w-2/3 h-1.5 bg-slate-50 dark:bg-slate-800 rounded-full" />
+                      </div>
+                   </div>
+                </div>
+
+                <div className="mt-auto pt-6 border-t border-slate-100 dark:border-slate-800 space-y-3">
+                   <div className="flex justify-between items-end">
+                      <p className="text-[7px] font-black text-slate-400 uppercase tracking-widest">Valor Total</p>
+                      <p className="text-2xl font-black italic tracking-tighter leading-none">R$ {parseFloat(formData.valor || "0").toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</p>
+                   </div>
+                </div>
+                
+                {/* STAMP */}
+                <div className="absolute bottom-10 right-10 w-16 h-16 border-4 border-slate-100 dark:border-slate-800 rounded-full flex items-center justify-center rotate-[-15deg] opacity-20">
+                   <p className="text-[8px] font-black uppercase text-center">FisioFlow<br/>Verified</p>
+                </div>
+             </motion.div>
+             
+             <p className="mt-8 text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">Pré-visualização em tempo real</p>
+          </div>
         </DialogContent>
       </Dialog>
 
       {/* VIEW DETAILS DIALOG */}
       <Dialog open={!!selectedNFSe} onOpenChange={(o) => !o && setSelectedNFSe(null)}>
-        <DialogContent className="rounded-[2.5rem] max-w-lg p-10">
+        <DialogContent className="rounded-[3rem] max-w-lg p-0 overflow-hidden border-none shadow-2xl">
           {selectedNFSe && (
-            <div className="space-y-8">
-              <div className="text-center space-y-2">
-                <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">NFS-e Eletrônica</p>
-                <h3 className="text-4xl font-black tracking-tighter italic">Nº {selectedNFSe.numero}</h3>
-                <div className="flex justify-center mt-2">
-                   <div className={cn("inline-flex items-center gap-1.5 px-3 py-1 rounded-full", statusConfig[selectedNFSe.status]?.bg, statusConfig[selectedNFSe.status]?.color)}>
-                      <span className="text-[10px] font-black uppercase tracking-widest">{statusConfig[selectedNFSe.status]?.label}</span>
-                   </div>
-                </div>
-                {(selectedNFSe as any).ultimo_erro && selectedNFSe.status === "falhou" && (
-                  <div className="mt-4 p-4 rounded-2xl bg-red-50 text-red-600 text-xs font-bold leading-relaxed border border-red-100">
-                    <p className="uppercase tracking-widest text-[9px] mb-1 opacity-60">Motivo da Rejeição</p>
-                    {(selectedNFSe as any).ultimo_erro}
+            <div className="flex flex-col h-full bg-white dark:bg-slate-900">
+               <div className="bg-slate-50 dark:bg-slate-800/50 p-12 text-center relative">
+                  <div className="absolute top-6 left-1/2 -translate-x-1/2">
+                    <div className={cn("inline-flex items-center gap-2 px-5 py-1.5 rounded-full shadow-sm font-black uppercase tracking-[0.2em] text-[10px]", statusConfig[selectedNFSe.status]?.bg, statusConfig[selectedNFSe.status]?.color)}>
+                        {statusConfig[selectedNFSe.status]?.label}
+                    </div>
                   </div>
-                )}
-                {selectedNFSe.status === "aguardando_prefeitura" && (
-                  <p className="text-[10px] font-bold text-blue-500 uppercase tracking-widest animate-pulse mt-2">
-                    Transmitindo para a PMSP...
-                  </p>
-                )}
-              </div>
-
-              <div className="grid grid-cols-2 gap-8 border-y border-slate-100 dark:border-slate-800 py-8">
-                <div className="space-y-1">
-                  <p className="text-[9px] font-black uppercase text-slate-400 tracking-widest">Data de Emissão</p>
-                  <p className="font-bold">{new Date(selectedNFSe.data_emissao).toLocaleString("pt-BR")}</p>
-                </div>
-                <div className="space-y-1 text-right">
-                  <p className="text-[9px] font-black uppercase text-slate-400 tracking-widest">Código Verif.</p>
-                  <p className="font-mono font-bold">{selectedNFSe.codigo_verificacao || "---"}</p>
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                <div className="p-5 rounded-2xl bg-slate-50 dark:bg-slate-800/50 space-y-1">
-                  <p className="text-[9px] font-black uppercase text-slate-400 tracking-widest">Tomador</p>
-                  <p className="font-black text-slate-900 dark:text-white leading-tight">{selectedNFSe.destinatario.nome}</p>
-                  <p className="text-xs font-mono text-slate-500">{selectedNFSe.destinatario.cnpj_cpf}</p>
-                </div>
-
-                <div className="p-6 rounded-3xl bg-slate-900 text-white space-y-4 shadow-xl">
-                  <div className="flex justify-between items-center text-sm font-medium text-slate-400">
-                    <span>Valor do Serviço</span>
-                    <span className="text-white font-bold">R$ {selectedNFSe.valor.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
+                  
+                  <div className="mt-4 space-y-2">
+                    <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">Nota Fiscal Eletrônica</p>
+                    <h3 className="text-5xl font-black tracking-tighter italic text-slate-900 dark:text-white">Nº {selectedNFSe.numero}</h3>
                   </div>
-                  <div className="flex justify-between items-center text-sm font-medium text-slate-400">
-                    <span>ISS Retido</span>
-                    <span className="text-white font-bold">Não</span>
-                  </div>
-                  <div className="pt-4 border-t border-white/10 flex justify-between items-end">
-                    <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400">Total Líquido</span>
-                    <span className="text-3xl font-black leading-none">R$ {selectedNFSe.valor.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
-                  </div>
-                </div>
-              </div>
 
-              <div className="grid grid-cols-2 gap-3 pt-4">
-                <Button 
-                  variant="outline" 
-                  className="rounded-2xl h-14 font-bold border-slate-200 dark:border-slate-800"
-                  onClick={() => selectedNFSe.link_nfse && window.open(selectedNFSe.link_nfse, "_blank")}
-                >
-                  <Printer className="mr-2 h-4 w-4" />
-                  Imprimir
-                </Button>
-                {selectedNFSe.status !== "cancelado" && selectedNFSe.status !== "rascunho" ? (
+                  {selectedNFSe.status === 'falhou' && selectedNFSe.ultimo_erro && (
+                    <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="mt-6 p-5 rounded-2xl bg-red-50 dark:bg-red-950/20 text-red-600 border border-red-100 dark:border-red-900/50 text-[11px] font-bold leading-relaxed">
+                       <p className="uppercase tracking-widest text-[9px] mb-2 opacity-50 flex items-center justify-center gap-1"><AlertCircle className="h-3 w-3" /> Erro na Transmissão</p>
+                       {selectedNFSe.ultimo_erro}
+                    </motion.div>
+                  )}
+               </div>
+
+               <div className="p-10 space-y-8 flex-1">
+                  <div className="grid grid-cols-2 gap-10">
+                     <div className="space-y-1">
+                        <p className="text-[9px] font-black uppercase text-slate-400 tracking-[0.2em]">Data de Emissão</p>
+                        <p className="font-bold text-slate-700 dark:text-slate-200">{new Date(selectedNFSe.data_emissao).toLocaleString("pt-BR")}</p>
+                     </div>
+                     <div className="space-y-1 text-right">
+                        <p className="text-[9px] font-black uppercase text-slate-400 tracking-[0.2em]">Cód. Verificação</p>
+                        <p className="font-mono font-bold text-slate-900 dark:text-white uppercase">{selectedNFSe.codigo_verificacao || "Pendente"}</p>
+                     </div>
+                  </div>
+
+                  <div className="space-y-5">
+                    <div className="p-6 rounded-2xl bg-slate-50 dark:bg-slate-800/30 border border-slate-100 dark:border-slate-800">
+                        <p className="text-[9px] font-black uppercase text-slate-400 tracking-[0.2em] mb-2">Tomador</p>
+                        <p className="font-black text-slate-900 dark:text-white text-lg tracking-tight">{selectedNFSe.destinatario.nome}</p>
+                        <p className="text-xs font-mono font-medium text-slate-500 mt-0.5">{selectedNFSe.destinatario.cnpj_cpf}</p>
+                    </div>
+
+                    <div className="p-8 rounded-[2rem] bg-slate-900 text-white shadow-2xl relative overflow-hidden">
+                       <div className="absolute top-0 right-0 p-4 opacity-10">
+                          <Activity className="h-20 w-20" />
+                       </div>
+                       <div className="space-y-4 relative z-10">
+                          <div className="flex justify-between items-center text-xs font-black uppercase tracking-widest text-slate-400">
+                            <span>Valor dos Serviços</span>
+                            <span className="text-white">R$ {selectedNFSe.valor.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
+                          </div>
+                          <div className="flex justify-between items-center text-xs font-black uppercase tracking-widest text-slate-400">
+                            <span>Impostos Detidos</span>
+                            <span className="text-white">Isento / Simples</span>
+                          </div>
+                          <div className="pt-6 border-t border-white/10 flex justify-between items-end">
+                            <span className="text-[10px] font-black uppercase tracking-[0.3em] text-emerald-400">Total Líquido</span>
+                            <span className="text-4xl font-black tracking-tighter italic leading-none">R$ {selectedNFSe.valor.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
+                          </div>
+                       </div>
+                    </div>
+                  </div>
+               </div>
+
+               <div className="p-10 pt-0 grid grid-cols-2 gap-4">
                   <Button 
-                    variant="destructive"
-                    className="rounded-2xl h-14 font-black bg-red-50 text-red-600 border-none hover:bg-red-100 shadow-none transition-all"
-                    onClick={() => {
-                      if (confirm("Tem certeza que deseja cancelar esta nota fiscal? Esta ação é irreversível e notificará a contabilidade.")) {
-                        cancelNFSe.mutate(selectedNFSe.id);
-                      }
-                    }}
-                    disabled={cancelNFSe.isPending}
+                    variant="outline" 
+                    className="rounded-2xl h-16 font-black uppercase tracking-widest text-[10px] border-slate-100 dark:border-slate-800"
+                    onClick={() => selectedNFSe.link_nfse && window.open(selectedNFSe.link_nfse, "_blank")}
                   >
-                    {cancelNFSe.isPending ? "Cancelando..." : "Cancelar Nota"}
+                    <Printer className="mr-2 h-4 w-4" />
+                    Imprimir
                   </Button>
-                ) : (
-                  <Button 
-                    className="rounded-2xl h-14 font-black bg-slate-900 text-white"
-                    onClick={() => selectedNFSe.link_danfse && window.open(selectedNFSe.link_danfse, "_blank")}
-                    disabled={!selectedNFSe.link_danfse}
-                  >
-                    <Download className="mr-2 h-4 w-4" />
-                    PDF Original
-                  </Button>
-                )}
-              </div>
+                  {selectedNFSe.status !== "cancelado" && selectedNFSe.status !== "rascunho" && selectedNFSe.status !== 'falhou' ? (
+                    <Button 
+                      variant="destructive"
+                      className="rounded-2xl h-16 font-black uppercase tracking-widest text-[10px] bg-red-50 text-red-600 border-none hover:bg-red-100 shadow-none"
+                      onClick={() => {
+                        if (confirm("Tem certeza que deseja cancelar esta nota fiscal? Esta ação notificará a contabilidade automaticamente.")) {
+                          cancelNFSe.mutate(selectedNFSe.id);
+                        }
+                      }}
+                      disabled={cancelNFSe.isPending}
+                    >
+                      {cancelNFSe.isPending ? "Cancelando..." : "Cancelar Nota"}
+                    </Button>
+                  ) : (
+                    <Button 
+                      className="rounded-2xl h-16 font-black uppercase tracking-widest text-[10px] bg-slate-900 text-white"
+                      onClick={() => selectedNFSe.link_danfse && window.open(selectedNFSe.link_danfse, "_blank")}
+                      disabled={!selectedNFSe.link_danfse}
+                    >
+                      <Download className="mr-2 h-4 w-4" />
+                      PDF Original
+                    </Button>
+                  )}
+               </div>
             </div>
           )}
         </DialogContent>
@@ -864,7 +975,7 @@ export function NFSeContent({ autoOpenCreate = false, onAutoOpenHandled }: { aut
 export default function NFSePage() {
   return (
     <MainLayout>
-      <div className="p-6 md:p-12 max-w-7xl mx-auto">
+      <div className="p-6 md:p-12 lg:p-20 max-w-screen-2xl mx-auto">
         <NFSeContent />
       </div>
     </MainLayout>
