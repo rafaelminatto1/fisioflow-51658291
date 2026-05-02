@@ -367,24 +367,51 @@ export function NFSeContent({ autoOpenCreate = false, onAutoOpenHandled }: { aut
         </TabsContent>
 
         <TabsContent value="config">
-          <Card className="rounded-[2rem] border-none shadow-sm p-12 bg-slate-50 dark:bg-slate-900/50 flex flex-col items-center text-center space-y-6">
-            <div className="h-16 w-16 rounded-3xl bg-white dark:bg-slate-800 shadow-xl flex items-center justify-center">
-              <ShieldCheck className="h-8 w-8 text-slate-900 dark:text-white" />
-            </div>
-            <div className="space-y-2">
-              <h3 className="text-xl font-black tracking-tight">Configurações Fiscais Ativas</h3>
-              <p className="text-slate-500 max-w-sm font-medium">
-                Sua conta está configurada para o município de São Paulo (Simples Nacional).
-              </p>
-            </div>
-            <div className="flex gap-4">
-               <Badge className="rounded-xl px-4 py-1.5 bg-white dark:bg-slate-800 text-slate-900 dark:text-white border-none shadow-sm font-bold">CNPJ: 54.836.577/0001-67</Badge>
-               <Badge className="rounded-xl px-4 py-1.5 bg-white dark:bg-slate-800 text-slate-900 dark:text-white border-none shadow-sm font-bold">Cod. Serviço: 04391</Badge>
-            </div>
-            <Button variant="outline" className="rounded-2xl h-12 px-6 font-bold border-slate-200">
-              Alterar Dados do Prestador
-            </Button>
-          </Card>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <Card className="rounded-[2rem] border-none shadow-sm p-10 bg-slate-50 dark:bg-slate-900/50 flex flex-col items-center text-center space-y-6">
+              <div className="h-16 w-16 rounded-3xl bg-white dark:bg-slate-800 shadow-xl flex items-center justify-center">
+                <ShieldCheck className="h-8 w-8 text-slate-900 dark:text-white" />
+              </div>
+              <div className="space-y-2">
+                <h3 className="text-xl font-black tracking-tight">Configurações Fiscais</h3>
+                <p className="text-slate-500 max-w-sm font-medium text-xs">
+                  Sua conta está configurada para o município de São Paulo (Simples Nacional).
+                </p>
+              </div>
+              <div className="flex flex-wrap justify-center gap-3">
+                <Badge className="rounded-xl px-3 py-1 bg-white dark:bg-slate-800 text-slate-900 dark:text-white border-none shadow-sm font-bold text-[10px]">CNPJ: 54.836.577/0001-67</Badge>
+                <Badge className="rounded-xl px-3 py-1 bg-white dark:bg-slate-800 text-slate-900 dark:text-white border-none shadow-sm font-bold text-[10px]">Cod. Serviço: 04391</Badge>
+              </div>
+              <Button variant="outline" className="rounded-2xl h-12 px-6 font-bold border-slate-200">
+                Alterar Dados do Prestador
+              </Button>
+            </Card>
+
+            <Card className="rounded-[2rem] border-none shadow-sm p-10 bg-emerald-50 dark:bg-emerald-950/20 flex flex-col items-center text-center space-y-6 border border-emerald-100 dark:border-emerald-900/50">
+              <div className="h-16 w-16 rounded-3xl bg-white dark:bg-slate-800 shadow-xl flex items-center justify-center">
+                <ExternalLink className="h-8 w-8 text-emerald-600" />
+              </div>
+              <div className="space-y-2">
+                <h3 className="text-xl font-black tracking-tight">Automação Contabilidade</h3>
+                <p className="text-slate-500 max-w-sm font-medium text-xs">
+                  Envio automático de notas emitidas para a Contabilizei.
+                </p>
+              </div>
+              <div className="space-y-3 w-full max-w-xs">
+                <div className="p-3 rounded-xl bg-white/50 dark:bg-slate-800/50 text-left border border-emerald-100 dark:border-emerald-900">
+                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Email de Destino</p>
+                  <p className="text-sm font-bold text-slate-700 dark:text-slate-200">rafael.minatto@yahoo.com.br</p>
+                </div>
+                <div className="flex items-center justify-center gap-2">
+                  <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                  <span className="text-[10px] font-black text-emerald-600 uppercase tracking-[0.2em]">Automação Ativa</span>
+                </div>
+              </div>
+              <Button className="rounded-2xl h-12 px-6 font-bold bg-emerald-600 hover:bg-emerald-700 text-white border-none">
+                Configurar Contabilizei
+              </Button>
+            </Card>
+          </div>
         </TabsContent>
       </Tabs>
 

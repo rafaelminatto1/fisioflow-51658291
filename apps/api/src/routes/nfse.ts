@@ -21,6 +21,7 @@ import {
 } from "../lib/nfseSPClient";
 import { generateAndSaveDanfse, getDanfsePresignedUrl, getDanfseR2Key } from "../lib/nfseDanfse";
 import { writeEvent } from "../lib/analytics";
+import { sendNfseToAccounting } from "../lib/email";
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
@@ -176,6 +177,8 @@ app.put("/config", requireAuth, async (c) => {
     { apiKey: "cnae", column: "cnae" },
     { apiKey: "discriminacao_padrao", column: "discriminacao_padrao" },
     { apiKey: "ambiente", column: "ambiente" },
+    { apiKey: "contabilidade_email", column: "contabilidade_email" },
+    { apiKey: "contabilidade_automacao_ativa", column: "contabilidade_automacao_ativa" },
   ];
 
   const sets: string[] = ["updated_at = NOW()"];
@@ -238,7 +241,8 @@ app.get("/", requireAuth, async (c) => {
   const result = await pool.query(
     `SELECT id, patient_id, appointment_id, numero_nfse, numero_rps, serie_rps,
 		        data_emissao, valor_servico, aliquota_iss, valor_iss, status,
-		        codigo_verificacao, link_nfse, link_danfse, tomador_nome, created_at
+		        codigo_verificacao, link_nfse, link_danfse, tomador_nome, created_at,
+            enviado_contabilidade_at
 		 FROM nfse_records
 		 WHERE ${conditions.join(" AND ")}
 		 ORDER BY data_emissao DESC
@@ -383,15 +387,15 @@ app.post("/send/:id", requireAuth, async (c) => {
   const pool = createPool(c.env);
   const nfseResult = await pool.query(
     `SELECT n.*, cfg.cnpj_prestador AS cnpj, cfg.inscricao_municipal, cfg.municipio_codigo AS codigo_municipio,
-		        cfg.optante_simples, cfg.tp_opcao_simples, cfg.incentivo_fiscal,
-		        cfg.aliquota_iss AS aliquota_padrao, cfg.codigo_servico_padrao, cfg.cnae,
-		        cfg.razao_social, cfg.ambiente
-		 FROM nfse_records n
-		 JOIN nfse_config cfg ON cfg.organization_id = n.organization_id
-		 WHERE n.id = $1 AND n.organization_id = $2 LIMIT 1`,
+  cfg.optante_simples, cfg.tp_opcao_simples, cfg.incentivo_fiscal,
+  cfg.aliquota_iss AS aliquota_padrao, cfg.codigo_servico_padrao, cfg.cnae,
+  cfg.razao_social, cfg.ambiente,
+          cfg.contabilidade_email, cfg.contabilidade_automacao_ativa
+  FROM nfse_records n
+  JOIN nfse_config cfg ON cfg.organization_id = n.organization_id
+  WHERE n.id = $1 AND n.organization_id = $2 LIMIT 1`,
     [id, user.organizationId],
   );
-
   if (!nfseResult.rows.length)
     return c.json({ error: "NFS-e não encontrada ou configuração pendente" }, 404);
 
@@ -438,6 +442,27 @@ app.post("/send/:id", requireAuth, async (c) => {
 					 WHERE id = $4`,
           [result.numeroNfse, result.codigoVerificacao, result.linkNfse, id],
         );
+
+        // --- AUTOMAÇÃO CONTABILIDADE (Contabilizei) ---
+        if (nfse.contabilidade_automacao_ativa && nfse.contabilidade_email) {
+          try {
+            await sendNfseToAccounting(c.env, nfse.contabilidade_email, {
+              numeroNfse: result.numeroNfse,
+              tomadorNome: nfse.tomador_nome,
+              valor: Number(nfse.valor_servico),
+              linkNfse: result.linkNfse || "",
+              razaoSocialPrestador: nfse.razao_social || "FisioFlow Client",
+            });
+            await pool.query(
+              `UPDATE nfse_records SET enviado_contabilidade_at = NOW() WHERE id = $1`,
+              [id]
+            );
+            console.log(`[NFSe] Enviada para contabilidade: ${nfse.contabilidade_email}`);
+          } catch (mailErr) {
+            console.error("[NFSe] Falha ao enviar para contabilidade:", mailErr);
+          }
+        }
+        // ---------------------------------------------
 
         const updated = await pool.query(`SELECT * FROM nfse_records WHERE id = $1`, [id]);
         const updatedNfse = updated.rows[0];

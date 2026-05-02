@@ -69,6 +69,10 @@ Este repositório agora usa GitHub Spec Kit para documentar novos recursos em `s
 - Comandos: `specify init --here`, `/speckit.constitution`, `/speckit.specify`, `/speckit.plan`, `/speckit.tasks`, `/speckit.analyze`, `/speckit.checklist`
 - Leia também `docs/guides/developer_guide.md` para mais detalhes.
 
+## 🤖 Tooling AI
+
+O playbook operacional de MCPs e skills está em `docs/operations/AI_TOOLING_PLAYBOOK.md`.
+
 ---
 
 Desenvolvido para transformar a fisioterapia brasileira com tecnologia de ponta.

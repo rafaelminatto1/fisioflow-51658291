@@ -141,6 +141,19 @@ O FisioFlow agora inclui integração com GitHub Spec Kit para apoiar o desenvol
 4. Gere tarefas com `/speckit.tasks`.
 5. Opcionalmente, rode `/speckit.analyze` e `/speckit.checklist` antes da implementação.
 
+## 8. Tooling AI e MCP
+
+O trabalho assistido por Gemini/Codex neste repositório deve seguir o playbook em `docs/operations/AI_TOOLING_PLAYBOOK.md`.
+
+### Regras práticas
+
+- Use `cloudflare-docs` e `cloudflare-agents-docs` antes de assumir sintaxe de Cloudflare.
+- Use `wrangler` para validar qualquer mudança em Workers, bindings, queues, D1, R2 ou Hyperdrive.
+- Use `agents-sdk` e `durable-objects` para automações com estado e servidores MCP internos.
+- Use `web-perf` quando a alteração puder afetar LCP, CLS, TBT ou navegação do frontend.
+- Use `vercel-react-best-practices` e `vercel-react-native-skills` para mudanças de UI.
+- Use `cloudflare-observability`, `cloudflare-ai-gateway`, `cloudflare-ai-search` e `cloudflare-graphql` para diagnóstico e consultas de stack Cloudflare.
+
 ### Exemplos de prompts no chat
 
 - Para iniciar uma nova funcionalidade:
