@@ -503,6 +503,40 @@ export async function cancelamentoNFe(
   return { success: true };
 }
 
+export async function consultaLote(
+  env: Env,
+  params: {
+    cnpjRemetente: string;
+    inscricaoMunicipal: string;
+    numeroLote: string;
+    layout?: keyof typeof NFSE_LAYOUTS;
+  },
+): Promise<SPNfseResult> {
+  const schemaVersion = NFSE_LAYOUTS[params.layout ?? "V1"];
+  const cnpjDigits = params.cnpjRemetente.replace(/\D/g, "");
+  const imDigits = params.inscricaoMunicipal.replace(/\D/g, "");
+
+  const innerXml = [
+    `<Cabecalho xmlns="" Versao="${schemaVersion}">`,
+    `<CPFCNPJRemetente><CNPJ>${escapeXml(cnpjDigits)}</CNPJ></CPFCNPJRemetente>`,
+    `</Cabecalho>`,
+    `<NumeroLote>${escapeXml(params.numeroLote)}</NumeroLote>`,
+    `<InscricaoPrestador>${escapeXml(imDigits)}</InscricaoPrestador>`,
+  ].join("");
+
+  const signedXml = await buildSignedMessage(env, "PedidoConsultaLote", innerXml);
+  const raw = await soapCall(env, "ConsultaLote", signedXml, schemaVersion);
+  return parseNfseFromResponse(raw);
+}
+
+export async function debugBuildXmlMessage(
+  env: Env,
+  rpsParams: RpsParams,
+): Promise<{ xml: string; rpsXml: string }> {
+  const { innerXml } = await prepareEmissionMessage(env, rpsParams);
+  return { xml: innerXml, rpsXml: "" };
+}
+
 export async function consultaCNPJ(
   env: Env,
   cnpj: string,

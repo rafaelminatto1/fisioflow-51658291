@@ -162,7 +162,7 @@ export function NFSeContent({ autoOpenCreate = false, onAutoOpenHandled }: { aut
       const today = new Date().toLocaleDateString("pt-BR");
       const valorStr = formData.valor ? ` no valor de R$ ${parseFloat(formData.valor).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}` : "";
       
-      const template = `Paciente ${formData.destinatario_nome || "[NOME]"}, realizou sessão de fisioterapia no dia ${today}.${valorStr}.\n\n- Conforme Lei 12.741/2012, o percentual total de impostos incidentes neste serviço prestado é de aproximadamente 8,98%`;
+      const template = `Paciente ${formData.destinatario_nome || "[NOME]"}, realizou sessão de fisioterapia no dia ${today}${valorStr}.\n\n- Conforme Lei 12.741/2012, o percentual total de impostos incidentes neste serviço prestado é de aproximadamente 8,98%`;
       setFormData(prev => ({ ...prev, servico_descricao: template }));
     }
   }, [formData.destinatario_nome, formData.valor]);
