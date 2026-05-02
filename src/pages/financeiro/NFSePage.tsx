@@ -53,34 +53,33 @@ export interface NFSe extends NFSeRecord {
   };
 }
 
-function normalizeNFSe(row: NFSeRecord): NFSe {
+function normalizeNFSe(row: any): NFSe {
   return {
     ...row,
+    id: row.id,
+    numero: row.numero_nfse || row.numero_rps || "---",
+    data_emissao: row.data_emissao || row.created_at,
+    valor: Number(row.valor_servico || row.valor || 0),
+    status: row.status || "rascunho",
     destinatario: {
-      nome: String((row.destinatario as Record<string, unknown> | undefined)?.nome ?? ""),
-      cnpj_cpf: String((row.destinatario as Record<string, unknown> | undefined)?.cnpj_cpf ?? ""),
-      endereco:
-        ((row.destinatario as Record<string, unknown> | undefined)?.endereco as
-          | string
-          | undefined) ?? undefined,
+      nome: String(row.tomador_nome || row.destinatario?.nome || ""),
+      cnpj_cpf: String(row.tomador_cpf_cnpj || row.destinatario?.cnpj_cpf || ""),
+      endereco: row.tomador_endereco || row.destinatario?.endereco,
     },
     prestador: {
-      nome: String((row.prestador as Record<string, unknown> | undefined)?.nome ?? ""),
-      cnpj: String((row.prestador as Record<string, unknown> | undefined)?.cnpj ?? ""),
-      inscricao_municipal:
-        ((row.prestador as Record<string, unknown> | undefined)?.inscricao_municipal as
-          | string
-          | undefined) ?? undefined,
+      nome: String(row.razao_social || row.prestador?.nome || ""),
+      cnpj: String(row.cnpj || row.prestador?.cnpj || ""),
+      inscricao_municipal: row.inscricao_municipal || row.prestador?.inscricao_municipal,
     },
     servico: {
-      descricao: String((row.servico as Record<string, unknown> | undefined)?.descricao ?? ""),
-      codigo_cnae: String((row.servico as Record<string, unknown> | undefined)?.codigo_cnae ?? ""),
-      codigo_tributario: String(
-        (row.servico as Record<string, unknown> | undefined)?.codigo_tributario ?? "",
-      ),
-      aliquota: Number((row.servico as Record<string, unknown> | undefined)?.aliquota ?? 0),
-      valor_iss: Number((row.servico as Record<string, unknown> | undefined)?.valor_iss ?? 0),
+      descricao: String(row.discriminacao || row.servico?.descricao || ""),
+      codigo_cnae: String(row.cnae || row.servico?.codigo_cnae || ""),
+      codigo_tributario: String(row.codigo_servico || row.servico?.codigo_tributario || ""),
+      aliquota: Number(row.aliquota_iss || row.servico?.aliquota || 0),
+      valor_iss: Number(row.valor_iss || row.servico?.valor_iss || 0),
     },
+    link_nfse: row.link_nfse,
+    link_danfse: row.link_danfse,
   };
 }
 
