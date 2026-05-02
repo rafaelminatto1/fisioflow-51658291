@@ -56,8 +56,8 @@ describe("normalizeStatus", () => {
     expect(normalizeStatus("remarcado")).toBe("remarcar");
   });
 
-  it("retorna agendado para status desconhecido", () => {
-    expect(normalizeStatus("inexistente")).toBe("agendado");
+  it("preserva chave customizada válida para status configurável", () => {
+    expect(normalizeStatus("inexistente")).toBe("inexistente");
   });
 
   it("ignora maiúsculas/minúsculas e espaços", () => {

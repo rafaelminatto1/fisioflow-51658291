@@ -20,7 +20,7 @@ export function WeeklyScheduleSummary({ currentDate, appointments }: WeeklySched
 
   const totalAppointments = appointments.length;
   const confirmedAppointments = appointments.filter(
-    (appt) => normalizeStatus(String(appt.status || "agendado")) === "confirmado",
+    (appt) => normalizeStatus(String(appt.status || "agendado")) === "presenca_confirmada",
   ).length;
   const pendingAppointments = appointments.filter(
     (appt) => normalizeStatus(String(appt.status || "agendado")) === "agendado",

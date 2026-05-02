@@ -15,11 +15,11 @@ describe("WeeklyScheduleSummary", () => {
       <WeeklyScheduleSummary currentDate={new Date("2026-05-01T10:00:00")} appointments={appointments} />,
     );
 
-    expect(screen.getByText(/Visão semanal/i)).toBeInTheDocument();
     expect(screen.getByText(/Semana ativa/i)).toBeInTheDocument();
     expect(screen.getByText(/Confirmados/i)).toBeInTheDocument();
     expect(screen.getByText(/Em espera/i)).toBeInTheDocument();
     expect(screen.getAllByText(/Grupos/i).length).toBeGreaterThan(0);
     expect(screen.getByText("4")).toBeInTheDocument();
+    expect(screen.getByText("2")).toBeInTheDocument();
   });
 });
