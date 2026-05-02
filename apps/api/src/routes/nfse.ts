@@ -21,7 +21,7 @@ import {
 } from "../lib/nfseSPClient";
 import { generateAndSaveDanfse, getDanfsePresignedUrl, getDanfseR2Key } from "../lib/nfseDanfse";
 import { writeEvent } from "../lib/analytics";
-import { sendNfseToAccounting } from "../lib/email";
+import { sendNfseToAccounting, sendNfseCancellationToAccounting } from "../lib/email";
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
@@ -386,201 +386,40 @@ app.post("/send/:id", requireAuth, async (c) => {
 
   const pool = createPool(c.env);
   const nfseResult = await pool.query(
-    `SELECT n.*, cfg.cnpj_prestador AS cnpj, cfg.inscricao_municipal, cfg.municipio_codigo AS codigo_municipio,
-  cfg.optante_simples, cfg.tp_opcao_simples, cfg.incentivo_fiscal,
-  cfg.aliquota_iss AS aliquota_padrao, cfg.codigo_servico_padrao, cfg.cnae,
-  cfg.razao_social, cfg.ambiente,
-          cfg.contabilidade_email, cfg.contabilidade_automacao_ativa
-  FROM nfse_records n
-  JOIN nfse_config cfg ON cfg.organization_id = n.organization_id
-  WHERE n.id = $1 AND n.organization_id = $2 LIMIT 1`,
+    `SELECT status FROM nfse_records WHERE id = $1 AND organization_id = $2 LIMIT 1`,
     [id, user.organizationId],
   );
   if (!nfseResult.rows.length)
-    return c.json({ error: "NFS-e não encontrada ou configuração pendente" }, 404);
+    return c.json({ error: "NFS-e não encontrada" }, 404);
 
   const nfse = nfseResult.rows[0];
-  if (nfse.status !== "rascunho") {
+  if (nfse.status !== "rascunho" && nfse.status !== "falhou") {
     return c.json({ error: `NFS-e não pode ser enviada no status "${nfse.status}"` }, 422);
   }
 
-  const ambiente = (nfse.ambiente ?? "homologacao") as "homologacao" | "producao";
-
-  if (hasSPCertConfig(c.env)) {
-    try {
-      const rpsParams = {
-        numero: nfse.numero_rps,
-        serie: "RPS",
-        tipo: "RPS",
-        dataEmissao: new Date(nfse.data_emissao).toISOString(),
-        cnpjPrestador: nfse.cnpj?.replace(/\D/g, "") || "",
-        inscricaoMunicipal: nfse.inscricao_municipal?.replace(/\D/g, "") || "",
-        tributacaoRps: "T",
-        codigoServico: "04391",
-        codigoCnae: nfse.cnae ?? "865004",
-        codigoNBS: "117240800",
-        discriminacao: nfse.discriminacao,
-        valorServicos: Number(nfse.valor_servico).toFixed(2),
-        valorDeducoes: "0.00",
-        aliquota: Number(nfse.aliquota_iss ?? nfse.aliquota_padrao ?? 0.02).toFixed(4),
-        issRetido: false,
-        tomadorCpfCnpj: nfse.tomador_cpf_cnpj?.replace(/\D/g, "") || "",
-        tomadorInscricaoMunicipal: "",
-        tomadorRazaoSocial: nfse.tomador_nome || "",
-        tomadorEmail: nfse.tomador_email || "",
-        codigoMunicipio: nfse.codigo_municipio ?? "3550308",
-        isSimplesNacional: !!nfse.optante_simples,
-        tpOpcaoSimples: nfse.tp_opcao_simples,
-      };
-      const result = await envioRPS(c.env, rpsParams);
-
-      if (result.success && result.numeroNfse) {
-        await pool.query(
-          `UPDATE nfse_records
-					 SET status = 'autorizado', numero_nfse = $1, codigo_verificacao = $2,
-					     link_nfse = $3, updated_at = NOW()
-					 WHERE id = $4`,
-          [result.numeroNfse, result.codigoVerificacao, result.linkNfse, id],
-        );
-
-        // --- AUTOMAÇÃO CONTABILIDADE (Contabilizei) ---
-        if (nfse.contabilidade_automacao_ativa && nfse.contabilidade_email) {
-          try {
-            await sendNfseToAccounting(c.env, nfse.contabilidade_email, {
-              numeroNfse: result.numeroNfse,
-              tomadorNome: nfse.tomador_nome,
-              valor: Number(nfse.valor_servico),
-              linkNfse: result.linkNfse || "",
-              razaoSocialPrestador: nfse.razao_social || "FisioFlow Client",
-            });
-            await pool.query(
-              `UPDATE nfse_records SET enviado_contabilidade_at = NOW() WHERE id = $1`,
-              [id]
-            );
-            console.log(`[NFSe] Enviada para contabilidade: ${nfse.contabilidade_email}`);
-          } catch (mailErr) {
-            console.error("[NFSe] Falha ao enviar para contabilidade:", mailErr);
-          }
-        }
-        // ---------------------------------------------
-
-        const updated = await pool.query(`SELECT * FROM nfse_records WHERE id = $1`, [id]);
-        const updatedNfse = updated.rows[0];
-
-        try {
-          const danfseUrl = await generateAndSaveDanfse(c.env, updatedNfse, nfse);
-          if (danfseUrl) {
-            await pool.query(`UPDATE nfse_records SET link_danfse = $1 WHERE id = $2`, [
-              danfseUrl,
-              id,
-            ]);
-            updatedNfse.link_danfse = danfseUrl;
-          }
-        } catch (danfseErr) {
-          console.error("[NFSe] Erro ao gerar DANFSe:", danfseErr);
-        }
-
-        writeEvent(c.env, {
-          route: "/api/nfse/send/:id",
-          method: "POST",
-          status: 200,
-          orgId: user.organizationId,
-          event: "nfse_send_success",
-        });
-        return c.json({ data: { id, ...result, link_danfse: updatedNfse.link_danfse } });
+  try {
+    // Trigger Durable Workflow for robust emission
+    const workflow = await c.env.WORKFLOW_NFSE.create({
+      params: {
+        nfseId: id,
+        organizationId: user.organizationId,
       }
+    });
 
-      if (result.erros && result.erros.length > 0) {
-        await pool.query(
-          `UPDATE nfse_records SET status = 'erro', updated_at = NOW() WHERE id = $1`,
-          [id],
-        );
-        const msgs = result.erros.map((e) => `${e.codigo}: ${e.descricao}`).join("; ");
-        writeEvent(c.env, {
-          route: "/api/nfse/send/:id",
-          method: "POST",
-          status: 422,
-          orgId: user.organizationId,
-          event: "nfse_send_rejected",
-          value: result.erros.length,
-        });
-        return c.json({ error: `Prefeitura recusou: ${msgs}` }, 422);
-      }
-
-      await pool.query(
-        `UPDATE nfse_records SET status = 'enviado', updated_at = NOW() WHERE id = $1`,
-        [id],
-      );
-      return c.json({
-        data: { id, status: "enviado", message: "NFS-e enviada — aguardando processamento" },
-      });
-    } catch (err: any) {
-      console.error("[NFSe] Erro envio SP:", err);
-      writeEvent(c.env, {
-        route: "/api/nfse/send/:id",
-        method: "POST",
-        status: 500,
-        orgId: user.organizationId,
-        event: "nfse_send_error",
-      });
-      return c.json({ error: `Falha no envio: ${err.message}` }, 500);
-    }
-  }
-
-  // Sem certificado → simulação homologação
-  if (ambiente === "homologacao") {
-    const numeroNfse = String(Date.now()).slice(-8);
-    const codigoVerificacao = crypto.randomUUID().replace(/-/g, "").slice(0, 8).toUpperCase();
     await pool.query(
-      `UPDATE nfse_records
-			 SET status = 'autorizado', numero_nfse = $1, codigo_verificacao = $2,
-			     link_nfse = $3, updated_at = NOW()
-			 WHERE id = $4`,
-      [
-        numeroNfse,
-        codigoVerificacao,
-        `https://nfe.prefeitura.sp.gov.br/contribuinte/notaprint.aspx?nf=${numeroNfse}&c=${codigoVerificacao}`,
-        id,
-      ],
+      `UPDATE nfse_records SET status = 'aguardando_prefeitura', workflow_id = $1 WHERE id = $2`,
+      [workflow.id, id]
     );
 
-    const updated = await pool.query(`SELECT * FROM nfse_records WHERE id = $1`, [id]);
-    const updatedNfse = updated.rows[0];
-
-    try {
-      const danfseUrl = await generateAndSaveDanfse(c.env, updatedNfse, nfse);
-      if (danfseUrl) {
-        await pool.query(`UPDATE nfse_records SET link_danfse = $1 WHERE id = $2`, [danfseUrl, id]);
-        updatedNfse.link_danfse = danfseUrl;
-      }
-    } catch (_) {}
-
-    writeEvent(c.env, {
-      route: "/api/nfse/send/:id",
-      method: "POST",
-      status: 200,
-      orgId: user.organizationId,
-      event: "nfse_send_homologation_simulated",
+    return c.json({ 
+      success: true, 
+      message: "Emissão iniciada em segundo plano. O sistema tentará transmitir até que a prefeitura responda.",
+      workflowId: workflow.id 
     });
-    return c.json({
-      data: {
-        id,
-        status: "autorizado",
-        numero_nfse: numeroNfse,
-        codigo_verificacao: codigoVerificacao,
-        ambiente: "homologacao (simulado)",
-        link_danfse: updatedNfse.link_danfse,
-      },
-    });
+  } catch (err: any) {
+    console.error("[NFSe] Erro ao iniciar workflow:", err);
+    return c.json({ error: `Falha ao iniciar processo: ${err.message}` }, 500);
   }
-
-  return c.json(
-    {
-      error:
-        "Certificado digital não configurado. Configure o binding NFSE_SP_CERT e os secrets NFSE_SP_CERT_PEM/NFSE_SP_KEY_PEM para envio em produção.",
-    },
-    422,
-  );
 });
 
 // ===== TESTE DE ENVIO (valida sem gerar nota) =====
@@ -733,7 +572,9 @@ app.post("/cancel/:id", requireAuth, async (c) => {
 
   const pool = createPool(c.env);
   const nfseResult = await pool.query(
-    `SELECT n.*, cfg.cnpj_prestador AS cnpj, cfg.inscricao_municipal FROM nfse_records n
+    `SELECT n.*, cfg.cnpj_prestador AS cnpj, cfg.inscricao_municipal, cfg.razao_social,
+            cfg.contabilidade_email, cfg.contabilidade_automacao_ativa
+		 FROM nfse_records n
 		 JOIN nfse_config cfg ON cfg.organization_id = n.organization_id
 		 WHERE n.id = $1 AND n.organization_id = $2 LIMIT 1`,
     [id, user.organizationId],
@@ -768,6 +609,21 @@ app.post("/cancel/:id", requireAuth, async (c) => {
     `UPDATE nfse_records SET status = 'cancelado', updated_at = NOW() WHERE id = $1`,
     [id],
   );
+
+  // --- AUTOMAÇÃO CONTABILIDADE (Cancelamento) ---
+  if (nfse.contabilidade_automacao_ativa && nfse.contabilidade_email) {
+    try {
+      await sendNfseCancellationToAccounting(c.env, nfse.contabilidade_email, {
+        numeroNfse: nfse.numero_nfse,
+        tomadorNome: nfse.tomador_nome,
+        valor: Number(nfse.valor_servico),
+        razaoSocialPrestador: nfse.razao_social || "FisioFlow Client",
+      });
+      console.log(`[NFSe] Cancelamento enviado para contabilidade: ${nfse.contabilidade_email}`);
+    } catch (mailErr) {
+      console.error("[NFSe] Falha ao notificar cancelamento para contabilidade:", mailErr);
+    }
+  }
 
   return c.json({ data: { id, status: "cancelado" } });
 });

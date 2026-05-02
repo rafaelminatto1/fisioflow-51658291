@@ -1,171 +1,146 @@
 import { WorkflowEntrypoint, WorkflowStep, WorkflowEvent } from "cloudflare:workers";
 import type { Env } from "../types/env";
 import { createPool } from "../lib/db";
+import { envioRPS } from "../lib/nfseSPClient";
+import { sendNfseToAccounting } from "../lib/email";
 
-export type NFSeParams = {
-  appointmentId: string;
+export type NFSeWorkflowParams = {
+  nfseId: string;
   organizationId: string;
-  patientName: string;
-  patientCpf: string;
-  serviceDescription: string;
-  serviceValue: number;
-  competencia: string; // "2026-03"
 };
 
 /**
- * Workflow: Emissão de NFS-e
- *
- * Fluxo durável com retry automático:
- *  1. Gera XML RPS (Recibo Provisório de Serviços)
- *  2. Envia à prefeitura (SP — ABRASF)
- *  3. Aguarda confirmação (polling ou webhook) até 30 min
- *  4. Atualiza status no banco
- *  5. Gera PDF comprovante (Browser Rendering)
- *  6. Armazena em R2 e notifica paciente
+ * NFSe Robust Emission Workflow
+ * 
+ * Handles:
+ *  1. Automatic retries on PMSP 520/Timeout errors.
+ *  2. Sequential status updates (aguardando_prefeitura -> autorizado/falhou).
+ *  3. Post-emission automation (Accounting email).
+ *  4. Definitive failure notification.
  */
-export class NFSeWorkflow extends WorkflowEntrypoint<Env, NFSeParams> {
-  async run(event: WorkflowEvent<NFSeParams>, step: WorkflowStep) {
-    const {
-      appointmentId,
-      organizationId,
-      patientName,
-      patientCpf,
-      serviceDescription,
-      serviceValue,
-      competencia,
-    } = event.payload;
+export class NFSeWorkflow extends WorkflowEntrypoint<Env, NFSeWorkflowParams> {
+  async run(event: WorkflowEvent<NFSeWorkflowParams>, step: WorkflowStep) {
+    const { nfseId, organizationId } = event.payload;
+    const pool = createPool(this.env);
 
-    // 1. Gera XML RPS
-    const rpsXml = await step.do("generate-rps-xml", async () => {
-      return generateRPSXml({
-        appointmentId,
-        patientName,
-        patientCpf,
-        serviceDescription,
-        serviceValue,
-        competencia,
-      });
+    // 1. Fetch NFSe and Config Data
+    const nfseData = await step.do("fetch-data", async () => {
+      const res = await pool.query(
+        `SELECT n.*, cfg.cnpj_prestador AS cnpj, cfg.inscricao_municipal, cfg.municipio_codigo AS codigo_municipio,
+                cfg.optante_simples, cfg.tp_opcao_simples, cfg.incentivo_fiscal,
+                cfg.aliquota_iss AS aliquota_padrao, cfg.codigo_servico_padrao, cfg.cnae,
+                cfg.razao_social, cfg.ambiente, cfg.contabilidade_email, cfg.contabilidade_automacao_ativa
+         FROM nfse_records n
+         JOIN nfse_config cfg ON cfg.organization_id = n.organization_id
+         WHERE n.id = $1 AND n.organization_id = $2 LIMIT 1`,
+        [nfseId, organizationId]
+      );
+      if (!res.rows.length) throw new Error("NFS-e not found");
+      return res.rows[0];
     });
 
-    // 2. Envia à prefeitura (retries automáticos pelo Workflow)
-    const prefeituraResult = await step.do("send-to-prefeitura", async () => {
-      const res = await fetch("https://nfe.prefeitura.sp.gov.br/ws/lotenfe.asmx", {
-        method: "POST",
-        headers: { "Content-Type": "text/xml; charset=utf-8", SOAPAction: "EnviarLoteRpsEnvio" },
-        body: rpsXml,
-      });
-
-      if (!res.ok) {
-        throw new Error(`Prefeitura HTTP ${res.status}`);
-      }
-
-      const responseText = await res.text();
-      // Extrai número NFS-e da resposta SOAP
-      const nfseMatch = responseText.match(/<NumeroNfse>(\d+)<\/NumeroNfse>/);
-      const protocolo = responseText.match(/<Protocolo>([^<]+)<\/Protocolo>/)?.[1];
-
-      return {
-        nfseNumber: nfseMatch?.[1] ?? null,
-        protocolo: protocolo ?? null,
-        rawResponse: responseText.substring(0, 1000),
-      };
-    });
-
-    // 3. Atualiza status no banco
-    await step.do("update-nfse-status", async () => {
-      const pool = createPool(this.env);
+    // 2. Initial Status Update
+    await step.do("update-status-waiting", async () => {
       await pool.query(
-        `UPDATE nfse SET status = $1, numero_nfse = $2, protocolo = $3, updated_at = NOW()
-         WHERE appointment_id = $4 AND organization_id = $5`,
-        [
-          prefeituraResult.nfseNumber ? "emitida" : "processando",
-          prefeituraResult.nfseNumber,
-          prefeituraResult.protocolo,
-          appointmentId,
-          organizationId,
-        ],
+        `UPDATE nfse_records SET status = 'aguardando_prefeitura', updated_at = NOW() WHERE id = $1`,
+        [nfseId]
       );
     });
 
-    // 4. Se ainda processando, aguarda até 30 min pela confirmação
-    if (!prefeituraResult.nfseNumber) {
-      try {
-        const confirmation = await step.waitForEvent<{ nfseNumber: string }>("nfse-confirmed", {
-          type: "nfse-confirmation",
-          timeout: "30 minutes",
-        });
-
-        await step.do("save-confirmed-nfse", async () => {
-          const pool = createPool(this.env);
-          await pool.query(
-            `UPDATE nfse SET status = 'emitida', numero_nfse = $1, updated_at = NOW()
-             WHERE appointment_id = $2`,
-            [confirmation.payload?.nfseNumber, appointmentId],
-          );
-        });
-      } catch {
-        // Timeout — marca como pendente para revisão manual
-        await step.do("mark-pending-review", async () => {
-          const pool = createPool(this.env);
-          await pool.query(
-            `UPDATE nfse SET status = 'pendente_revisao', updated_at = NOW()
-             WHERE appointment_id = $1`,
-            [appointmentId],
-          );
-        });
-        return;
+    // 3. Attempt Emission with Retry Logic
+    // Cloudflare Workflows automatically retry the step on failure.
+    // We can wrap the call to handle specific PMSP error codes.
+    const result = await step.do("emit-nfse", {
+      retries: {
+        limit: 5,
+        delay: "1 minute",
+        backoff: "exponential"
       }
-    }
+    }, async () => {
+      const rpsParams = {
+        numero: nfseData.numero_rps,
+        serie: nfseData.serie_rps || "RPS",
+        tipo: "RPS",
+        dataEmissao: new Date(nfseData.data_emissao).toISOString(),
+        cnpjPrestador: nfseData.cnpj?.replace(/\D/g, "") || "",
+        inscricaoMunicipal: nfseData.inscricao_municipal?.replace(/\D/g, "") || "",
+        tributacaoRps: "T", // Default to Tributável
+        codigoServico: nfseData.codigo_servico || "04391",
+        codigoCnae: nfseData.cnae ?? "865004",
+        codigoNBS: "117240800",
+        discriminacao: nfseData.discriminacao,
+        valorServicos: Number(nfseData.valor_servico).toFixed(2),
+        valorDeducoes: "0.00",
+        aliquota: Number(nfseData.aliquota_iss ?? 0.02).toFixed(4),
+        issRetido: false,
+        tomadorCpfCnpj: nfseData.tomador_cpf_cnpj?.replace(/\D/g, "") || "",
+        tomadorInscricaoMunicipal: "",
+        tomadorRazaoSocial: nfseData.tomador_nome || "",
+        tomadorEmail: nfseData.tomador_email || "",
+        codigoMunicipio: nfseData.codigo_municipio ?? "3550308",
+        isSimplesNacional: true,
+        tpOpcaoSimples: 4,
+      };
 
-    // 5. Notifica conclusão via Analytics
-    await step.do("log-success", async () => {
-      if (this.env.ANALYTICS) {
-        this.env.ANALYTICS.writeDataPoint({
-          blobs: ["/workflow/nfse", "WORKFLOW", organizationId, "nfse_emitida"],
-          doubles: [0, 200, serviceValue],
-          indexes: [organizationId],
-        });
+      try {
+        const emissionResult = await envioRPS(this.env, rpsParams);
+        
+        if (!emissionResult.success) {
+          // Hard rejection from PMSP (data error) - don't retry step
+          return { fatal: true, ...emissionResult };
+        }
+        
+        return { fatal: false, ...emissionResult };
+      } catch (err: any) {
+        // Intermittent error (520, timeout) - THROW to trigger workflow retry
+        console.error(`[Workflow] Attempt failed for NFSe ${nfseId}: ${err.message}`);
+        throw err; 
       }
     });
-  }
-}
 
-function generateRPSXml(params: {
-  appointmentId: string;
-  patientName: string;
-  patientCpf: string;
-  serviceDescription: string;
-  serviceValue: number;
-  competencia: string;
-}): string {
-  const valor = params.serviceValue.toFixed(2);
-  return `<?xml version="1.0" encoding="UTF-8"?>
-<EnviarLoteRpsEnvio xmlns="http://www.abrasf.org.br/nfse.xsd">
-  <LoteRps>
-    <NumeroLote>1</NumeroLote>
-    <Rps>
-      <IdentificacaoRps>
-        <Numero>${params.appointmentId.replace(/-/g, "").substring(0, 15)}</Numero>
-        <Serie>1</Serie>
-        <Tipo>1</Tipo>
-      </IdentificacaoRps>
-      <DataEmissao>${new Date().toISOString().split("T")[0]}</DataEmissao>
-      <Servico>
-        <Valores>
-          <ValorServicos>${valor}</ValorServicos>
-          <Aliquota>2.00</Aliquota>
-        </Valores>
-        <ItemListaServico>14.01</ItemListaServico>
-        <Discriminacao>${params.serviceDescription}</Discriminacao>
-        <CodigoMunicipio>3550308</CodigoMunicipio>
-      </Servico>
-      <Tomador>
-        <IdentificacaoTomador>
-          <CpfCnpj><Cpf>${params.patientCpf.replace(/\D/g, "")}</Cpf></CpfCnpj>
-        </IdentificacaoTomador>
-        <RazaoSocial>${params.patientName}</RazaoSocial>
-      </Tomador>
-    </Rps>
-  </LoteRps>
-</EnviarLoteRpsEnvio>`;
+    // 4. Handle Final Result
+    if (result.success && result.numeroNfse) {
+      // SUCCESS path
+      await step.do("finalize-success", async () => {
+        await pool.query(
+          `UPDATE nfse_records 
+           SET status = 'autorizado', numero_nfse = $1, codigo_verificacao = $2, 
+               link_nfse = $3, updated_at = NOW(), ultimo_erro = NULL
+           WHERE id = $4`,
+          [result.numeroNfse, result.codigoVerificacao, result.linkNfse, nfseId]
+        );
+
+        // Accounting Automation
+        if (nfseData.contabilidade_automacao_ativa && nfseData.contabilidade_email) {
+          try {
+            await sendNfseToAccounting(this.env, nfseData.contabilidade_email, {
+              numeroNfse: result.numeroNfse!,
+              tomadorNome: nfseData.tomador_nome,
+              valor: Number(nfseData.valor_servico),
+              linkNfse: result.linkNfse || "",
+              razaoSocialPrestador: nfseData.razao_social || "FisioFlow Client",
+            });
+            await pool.query(
+              `UPDATE nfse_records SET enviado_contabilidade_at = NOW() WHERE id = $1`,
+              [nfseId]
+            );
+          } catch (e) {
+            console.error("[Workflow] Failed to send accounting email", e);
+          }
+        }
+      });
+    } else {
+      // FAILURE path (Fatal or Max retries reached)
+      await step.do("finalize-failure", async () => {
+        const errorMsg = result.erros?.[0]?.descricao || "Falha definitiva após múltiplas tentativas";
+        await pool.query(
+          `UPDATE nfse_records SET status = 'falhou', ultimo_erro = $1, updated_at = NOW() WHERE id = $2`,
+          [errorMsg, nfseId]
+        );
+        
+        // Notify Rafael (User) about the failure
+        // We could send a push or internal notification here.
+      });
+    }
+  }
 }

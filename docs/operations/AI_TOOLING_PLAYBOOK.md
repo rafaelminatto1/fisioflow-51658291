@@ -100,6 +100,11 @@ pnpm type-check
 pnpm test
 pnpm --filter @fisioflow/api test
 pnpm --filter fisioflow-web test:unit
+
+# Predeploy
+bash scripts/predeploy-check.sh
+bash scripts/predeploy-check.sh --workers
+bash scripts/predeploy-check.sh --all
 ```
 
 ---

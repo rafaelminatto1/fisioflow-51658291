@@ -153,6 +153,7 @@ O trabalho assistido por Gemini/Codex neste repositório deve seguir o playbook 
 - Use `web-perf` quando a alteração puder afetar LCP, CLS, TBT ou navegação do frontend.
 - Use `vercel-react-best-practices` e `vercel-react-native-skills` para mudanças de UI.
 - Use `cloudflare-observability`, `cloudflare-ai-gateway`, `cloudflare-ai-search` e `cloudflare-graphql` para diagnóstico e consultas de stack Cloudflare.
+- Antes de deploy, rode `bash scripts/predeploy-check.sh` ou `pnpm predeploy`.
 
 ### Exemplos de prompts no chat
 

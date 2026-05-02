@@ -119,6 +119,18 @@ const statusConfig: Record<string, { label: string; icon: any; color: string; bg
     color: "text-amber-600", 
     bg: "bg-amber-50 dark:bg-amber-500/10" 
   },
+  aguardando_prefeitura: { 
+    label: "Aguardando Prefeitura", 
+    icon: Clock, 
+    color: "text-blue-600", 
+    bg: "bg-blue-50 dark:bg-blue-500/10" 
+  },
+  aguardando_internet: { 
+    label: "Aguardando Internet", 
+    icon: ShieldCheck, 
+    color: "text-slate-600", 
+    bg: "bg-slate-50 dark:bg-slate-500/10" 
+  },
   falhou: { 
     label: "Falhou", 
     icon: AlertCircle, 
@@ -141,6 +153,18 @@ export function NFSeContent({ autoOpenCreate = false, onAutoOpenHandled }: { aut
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<"lista" | "config">("lista");
   const [selectedNFSe, setSelectedNFSe] = useState<NFSe | null>(null);
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
+
+  useEffect(() => {
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
+    return () => {
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
+    };
+  }, []);
 
   const [formData, setFormData] = useState({
     valor: "",
@@ -197,28 +221,47 @@ export function NFSeContent({ autoOpenCreate = false, onAutoOpenHandled }: { aut
 
       const nfseId = response.data.id;
 
-      // 2. Enviar para PMSP
+      if (!isOnline) {
+        toast.info("Você está offline. A nota foi salva como rascunho e será enviada assim que houver conexão.");
+        return normalizeNFSe(response.data);
+      }
+
+      // 2. Enviar para PMSP (Workflow)
       const sendResponse = await request<any>(`/api/nfse/send/${nfseId}`, {
         method: "POST"
       });
 
-      if (!sendResponse.data.success) {
-        const msg = sendResponse.data.erros?.[0]?.descricao || "Erro desconhecido na PMSP";
-        throw new Error(msg);
-      }
-
-      return normalizeNFSe(sendResponse.data.data);
+      return normalizeNFSe(response.data); // Return draft, workflow handles the rest
     },
-    onSuccess: (data) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["nfse-list", organizationId] });
-      toast.success("Nota Fiscal emitida com sucesso!", {
-        description: `Nota nº ${data.numero} autorizada pela prefeitura.`
+      toast.success("NFS-e gerada!", {
+        description: isOnline ? "A nota está sendo processada pela prefeitura em segundo plano." : "Salva localmente (Aguardando Internet)."
       });
       setIsDialogOpen(false);
       setFormData({ valor: "", destinatario_nome: "", destinatario_cpf_cnpj: "", servico_descricao: "" });
     },
     onError: (err: any) => {
-      toast.error("Falha na emissão", { description: err.message });
+      toast.error("Falha ao gerar rascunho", { description: err.message });
+    }
+  });
+
+  const cancelNFSe = useMutation({
+    mutationFn: async (id: string) => {
+      const response = await request<any>(`/api/nfse/cancel/${id}`, {
+        method: "POST"
+      });
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["nfse-list", organizationId] });
+      toast.success("Nota Fiscal cancelada!", {
+        description: "A prefeitura confirmou o cancelamento e a contabilidade foi notificada."
+      });
+      setSelectedNFSe(null);
+    },
+    onError: (err: any) => {
+      toast.error("Falha no cancelamento", { description: err.message });
     }
   });
 
@@ -517,8 +560,21 @@ export function NFSeContent({ autoOpenCreate = false, onAutoOpenHandled }: { aut
                 <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">NFS-e Eletrônica</p>
                 <h3 className="text-4xl font-black tracking-tighter italic">Nº {selectedNFSe.numero}</h3>
                 <div className="flex justify-center mt-2">
-                   <Badge className="bg-emerald-50 text-emerald-600 border-none font-black uppercase tracking-widest text-[9px] px-3">Autorizada</Badge>
+                   <div className={cn("inline-flex items-center gap-1.5 px-3 py-1 rounded-full", statusConfig[selectedNFSe.status]?.bg, statusConfig[selectedNFSe.status]?.color)}>
+                      <span className="text-[10px] font-black uppercase tracking-widest">{statusConfig[selectedNFSe.status]?.label}</span>
+                   </div>
                 </div>
+                {(selectedNFSe as any).ultimo_erro && selectedNFSe.status === "falhou" && (
+                  <div className="mt-4 p-4 rounded-2xl bg-red-50 text-red-600 text-xs font-bold leading-relaxed border border-red-100">
+                    <p className="uppercase tracking-widest text-[9px] mb-1 opacity-60">Motivo da Rejeição</p>
+                    {(selectedNFSe as any).ultimo_erro}
+                  </div>
+                )}
+                {selectedNFSe.status === "aguardando_prefeitura" && (
+                  <p className="text-[10px] font-bold text-blue-500 uppercase tracking-widest animate-pulse mt-2">
+                    Transmitindo para a PMSP...
+                  </p>
+                )}
               </div>
 
               <div className="grid grid-cols-2 gap-8 border-y border-slate-100 dark:border-slate-800 py-8">
@@ -564,14 +620,29 @@ export function NFSeContent({ autoOpenCreate = false, onAutoOpenHandled }: { aut
                   <Printer className="mr-2 h-4 w-4" />
                   Imprimir
                 </Button>
-                <Button 
-                  className="rounded-2xl h-14 font-black bg-slate-900 text-white"
-                  onClick={() => selectedNFSe.link_danfse && window.open(selectedNFSe.link_danfse, "_blank")}
-                  disabled={!selectedNFSe.link_danfse}
-                >
-                  <Download className="mr-2 h-4 w-4" />
-                  PDF Original
-                </Button>
+                {selectedNFSe.status !== "cancelado" && selectedNFSe.status !== "rascunho" ? (
+                  <Button 
+                    variant="destructive"
+                    className="rounded-2xl h-14 font-black bg-red-50 text-red-600 border-none hover:bg-red-100 shadow-none transition-all"
+                    onClick={() => {
+                      if (confirm("Tem certeza que deseja cancelar esta nota fiscal? Esta ação é irreversível e notificará a contabilidade.")) {
+                        cancelNFSe.mutate(selectedNFSe.id);
+                      }
+                    }}
+                    disabled={cancelNFSe.isPending}
+                  >
+                    {cancelNFSe.isPending ? "Cancelando..." : "Cancelar Nota"}
+                  </Button>
+                ) : (
+                  <Button 
+                    className="rounded-2xl h-14 font-black bg-slate-900 text-white"
+                    onClick={() => selectedNFSe.link_danfse && window.open(selectedNFSe.link_danfse, "_blank")}
+                    disabled={!selectedNFSe.link_danfse}
+                  >
+                    <Download className="mr-2 h-4 w-4" />
+                    PDF Original
+                  </Button>
+                )}
               </div>
             </div>
           )}

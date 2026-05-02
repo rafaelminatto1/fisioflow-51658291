@@ -487,11 +487,14 @@ export async function cancelamentoNFe(
   const innerXml = [
     `<Cabecalho xmlns="" Versao="${schemaVersion}">`,
     `<CPFCNPJRemetente><CNPJ>${escapeXml(cnpjDigits)}</CNPJ></CPFCNPJRemetente>`,
+    `<transacao>true</transacao>`,
     `</Cabecalho>`,
+    `<Detalhe xmlns="">`,
     `<ChaveNFe>`,
     `<InscricaoPrestador>${escapeXml(imDigits)}</InscricaoPrestador>`,
     `<NumeroNFe>${escapeXml(params.numeroNfse)}</NumeroNFe>`,
     `</ChaveNFe>`,
+    `</Detalhe>`,
   ].join("");
 
   const signedXml = await buildSignedMessage(env, "PedidoCancelamentoNFe", innerXml);

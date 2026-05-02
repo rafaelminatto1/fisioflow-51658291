@@ -72,6 +72,7 @@ Este repositório agora usa GitHub Spec Kit para documentar novos recursos em `s
 ## 🤖 Tooling AI
 
 O playbook operacional de MCPs e skills está em `docs/operations/AI_TOOLING_PLAYBOOK.md`.
+O comando local de validação antes de deploy é `pnpm predeploy`.
 
 ---
 

@@ -74,6 +74,48 @@ export async function sendNfseToAccounting(
   });
 }
 
+export async function sendNfseCancellationToAccounting(
+  env: Env,
+  to: string,
+  data: { 
+    numeroNfse: string;
+    tomadorNome: string;
+    valor: number;
+    razaoSocialPrestador: string;
+  },
+) {
+  const resend = createResend(env);
+  if (!resend) return;
+  
+  await resend.emails.send({
+    from: FROM(env),
+    to,
+    subject: `[CANCELAMENTO NFS-e] Nota Cancelada - ${data.razaoSocialPrestador} - NF nº ${data.numeroNfse}`,
+    html: `
+      <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #fee2e2; padding: 20px; border-radius: 10px;">
+        <h2 style="color: #991b1b;">NFS-e Cancelada</h2>
+        <p>Prezada contabilidade,</p>
+        <p>Informamos que uma Nota Fiscal de Serviço foi <strong>CANCELADA</strong> no sistema FisioFlow.</p>
+        
+        <div style="background: #fef2f2; padding: 15px; border-radius: 8px; margin: 20px 0; border: 1px solid #fecaca;">
+          <p style="margin: 5px 0;"><strong>Prestador:</strong> ${data.razaoSocialPrestador}</p>
+          <p style="margin: 5px 0;"><strong>Número da Nota Cancelada:</strong> ${data.numeroNfse}</p>
+          <p style="margin: 5px 0;"><strong>Tomador:</strong> ${data.tomadorNome}</p>
+          <p style="margin: 5px 0;"><strong>Valor Estornado:</strong> R$ ${data.valor.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</p>
+        </div>
+
+        <p style="color: #666; font-size: 14px;">
+          Por favor, procedam com os ajustes necessários em seus registros contábeis.
+        </p>
+        
+        <p style="margin-top: 40px; font-size: 12px; color: #999; border-top: 1px solid #eee; pt-20px;">
+          Este é um envio automático do sistema FisioFlow.
+        </p>
+      </div>
+    `,
+  });
+}
+
 export async function sendTestEmail(env: Env, to: string) {
   const resend = createResend(env);
   if (!resend) throw new Error("RESEND_API_KEY não configurado");
