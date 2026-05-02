@@ -57,6 +57,12 @@ export class NFSeWorkflow extends WorkflowEntrypoint<Env, NFSeWorkflowParams> {
         backoff: "exponential"
       }
     }, async () => {
+      // Increment attempt counter
+      await pool.query(
+        `UPDATE nfse_records SET tentativas_envio = tentativas_envio + 1 WHERE id = $1`,
+        [nfseId]
+      );
+
       const rpsParams = {
         numero: nfseData.numero_rps,
         serie: nfseData.serie_rps || "RPS",

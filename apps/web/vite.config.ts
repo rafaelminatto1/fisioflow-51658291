@@ -12,15 +12,20 @@ import checker from "vite-plugin-checker";
 
 const repoRoot = path.resolve(__dirname, "../..");
 
+function replaceToken(html: string, token: string, value: string): string {
+  return html.replace(new RegExp(token, "g"), () => value);
+}
+
 function htmlPlugin(appVersion: string, buildTime: string): any {
   return {
     name: "html-transform",
     apply: "build",
     transformIndexHtml(html: string) {
-      return html
-        .replace(/%APP_VERSION%/g, appVersion)
-        .replace(/%BUILD_TIME%/g, buildTime)
-        .replace(/%CACHE_BUSTER%/g, buildTime);
+      return replaceToken(
+        replaceToken(replaceToken(html, "%APP_VERSION%", appVersion), "%BUILD_TIME%", buildTime),
+        "%CACHE_BUSTER%",
+        buildTime,
+      );
     },
   };
 }

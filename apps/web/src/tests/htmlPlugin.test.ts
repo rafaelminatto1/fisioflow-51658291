@@ -18,17 +18,21 @@ import * as fc from "fast-check";
 // Local copies of the transform logic (no import from vite.config.ts)
 // ---------------------------------------------------------------------------
 
+function replaceToken(html: string, token: string, value: string): string {
+  return html.replace(new RegExp(token, "g"), () => value);
+}
+
 /** 2.1 — Buggy implementation: replaces __CACHE_BUSTER__ globally, including in JS */
 function transformIndexHtmlBuggy(
   html: string,
   appVersion: string,
   buildTime: string,
 ): string {
-  return html
-    .replace(/%APP_VERSION%/g, appVersion)
-    .replace(/%BUILD_TIME%/g, buildTime)
-    .replace(/%CACHE_BUSTER%/g, buildTime)
-    .replace(/__CACHE_BUSTER__/g, buildTime); // ← BUG
+  return replaceToken(
+    replaceToken(replaceToken(replaceToken(html, "%APP_VERSION%", appVersion), "%BUILD_TIME%", buildTime), "%CACHE_BUSTER%", buildTime),
+    "__CACHE_BUSTER__",
+    buildTime,
+  ); // ← BUG
 }
 
 /** 2.1 — Fixed implementation: __CACHE_BUSTER__ in JS is intentionally NOT replaced */
@@ -37,10 +41,11 @@ function transformIndexHtmlFixed(
   appVersion: string,
   buildTime: string,
 ): string {
-  return html
-    .replace(/%APP_VERSION%/g, appVersion)
-    .replace(/%BUILD_TIME%/g, buildTime)
-    .replace(/%CACHE_BUSTER%/g, buildTime);
+  return replaceToken(
+    replaceToken(replaceToken(html, "%APP_VERSION%", appVersion), "%BUILD_TIME%", buildTime),
+    "%CACHE_BUSTER%",
+    buildTime,
+  );
   // __CACHE_BUSTER__ intentionally NOT replaced
 }
 
@@ -183,6 +188,7 @@ describe("Property-Based Tests", () => {
         // Fixed and buggy must agree (no __CACHE_BUSTER__ in this HTML)
         expect(result).toBe(transformIndexHtmlBuggy(html, appVersion, "0"));
       }),
+      { verbose: true },
     );
   });
 

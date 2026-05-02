@@ -242,7 +242,7 @@ app.get("/", requireAuth, async (c) => {
     `SELECT id, patient_id, appointment_id, numero_nfse, numero_rps, serie_rps,
 		        data_emissao, valor_servico, aliquota_iss, valor_iss, status,
 		        codigo_verificacao, link_nfse, link_danfse, tomador_nome, created_at,
-            enviado_contabilidade_at
+            enviado_contabilidade_at, tentativas_envio, ultimo_erro, workflow_id
 		 FROM nfse_records
 		 WHERE ${conditions.join(" AND ")}
 		 ORDER BY data_emissao DESC

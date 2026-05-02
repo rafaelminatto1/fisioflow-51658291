@@ -39,16 +39,24 @@ import {
   Clock, 
   ExternalLink,
   ChevronRight,
-  ShieldCheck
+  ShieldCheck,
+  Search,
+  Calendar,
+  Layers
 } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { useOrganizations } from "@/hooks/useOrganizations";
 import { type NFSeRecord, request } from "@/api/v2";
+import { appointmentsApi } from "@/api/v2/appointments";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { PatientCombobox } from "@/components/ui/patient-combobox";
+import { Checkbox } from "@/components/ui/checkbox";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import type { AppointmentRow } from "@/types/workers";
 
 export interface NFSe extends NFSeRecord {
   destinatario: {
@@ -155,6 +163,12 @@ export function NFSeContent({ autoOpenCreate = false, onAutoOpenHandled }: { aut
   const [selectedNFSe, setSelectedNFSe] = useState<NFSe | null>(null);
   const [isOnline, setIsOnline] = useState(navigator.onLine);
 
+  const [selectedPatientId, setSelectedPatientId] = useState<string | null>(null);
+  const [selectedSessionIds, setSelectedSessionIds] = useState<string[]>([]);
+  const [tussCode, setTussCode] = useState("50000144");
+  const [pricePerSession, setPricePerSession] = useState("170.00");
+  const [useTemplate, setUseTemplate] = useState(true);
+
   useEffect(() => {
     const handleOnline = () => setIsOnline(true);
     const handleOffline = () => setIsOnline(false);
@@ -173,6 +187,21 @@ export function NFSeContent({ autoOpenCreate = false, onAutoOpenHandled }: { aut
     servico_descricao: "",
   });
 
+  // Fetch patient sessions
+  const { data: patientSessions = [], isLoading: isLoadingSessions } = useQuery({
+    queryKey: ["patient-sessions", selectedPatientId],
+    queryFn: async () => {
+      if (!selectedPatientId) return [];
+      const res = await appointmentsApi.list({ 
+        patientId: selectedPatientId,
+        status: "atendido",
+        limit: 50 
+      });
+      return res.data || [];
+    },
+    enabled: !!selectedPatientId && isDialogOpen,
+  });
+
   useEffect(() => {
     if (autoOpenCreate) {
       setIsDialogOpen(true);
@@ -180,16 +209,49 @@ export function NFSeContent({ autoOpenCreate = false, onAutoOpenHandled }: { aut
     }
   }, [autoOpenCreate, onAutoOpenHandled]);
 
-  // Update discrimination template when name or value changes
+  // Update description and value when sessions, patient or TUSS change
   useEffect(() => {
-    if (!formData.servico_descricao || formData.servico_descricao.includes("Paciente")) {
-      const today = new Date().toLocaleDateString("pt-BR");
-      const valorStr = formData.valor ? ` no valor de R$ ${parseFloat(formData.valor).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}` : "";
+    if (!formData.destinatario_nome || !useTemplate) return;
+
+    const today = new Date().toLocaleDateString("pt-BR");
+    const selectedSessions = patientSessions.filter(s => selectedSessionIds.includes(s.id));
+    const count = selectedSessions.length;
+    
+    if (count > 0) {
+      // Multiple or Single selected sessions from list
+      const dates = selectedSessions
+        .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+        .map(s => {
+          const d = new Date(s.date).toLocaleDateString("pt-BR");
+          return `${d} (realizou o código TUSS: ${tussCode})`;
+        });
+
+      const totalVal = (count * parseFloat(pricePerSession)).toFixed(2);
       
+      let desc = `Paciente ${formData.destinatario_nome}, CPF ${formData.destinatario_cpf_cnpj || "[CPF]"}, realizou ${count} sessão${count > 1 ? "es" : ""} de fisioterapia musculoesquelética nos dias `;
+      
+      if (count === 1) {
+        desc += dates[0];
+      } else {
+        const lastDate = dates.pop();
+        desc += dates.join(", ") + " e " + lastDate;
+      }
+      
+      desc += `.\n\nEfetuou o pagamento no valor de R$ ${parseFloat(totalVal).toLocaleString("pt-BR", { minimumFractionDigits: 2 })} correspondentes a R$ ${parseFloat(pricePerSession).toLocaleString("pt-BR", { minimumFractionDigits: 2 })} de cada sessão para a empresa Mooca Fisioterapia RA Ltda, CNPJ: 54.836.577/0001-67.\n\n- Conforme Lei 12.741/2012, o percentual total de impostos incidentes neste serviço prestado é de aproximadamente 8,98%`;
+
+      setFormData(prev => ({ 
+        ...prev, 
+        servico_descricao: desc,
+        valor: totalVal
+      }));
+    } else {
+      // Default template for manual entry
+      const valParsed = parseFloat(formData.valor || "0");
+      const valorStr = valParsed > 0 ? ` no valor de R$ ${valParsed.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}` : "";
       const template = `Paciente ${formData.destinatario_nome || "[NOME]"}, realizou sessão de fisioterapia no dia ${today}${valorStr}.\n\n- Conforme Lei 12.741/2012, o percentual total de impostos incidentes neste serviço prestado é de aproximadamente 8,98%`;
       setFormData(prev => ({ ...prev, servico_descricao: template }));
     }
-  }, [formData.destinatario_nome, formData.valor]);
+  }, [formData.destinatario_nome, selectedSessionIds, tussCode, pricePerSession, patientSessions, useTemplate]);
 
   const { data: nfses = [], isLoading } = useQuery({
     queryKey: ["nfse-list", organizationId],
@@ -475,54 +537,163 @@ export function NFSeContent({ autoOpenCreate = false, onAutoOpenHandled }: { aut
             </DialogHeader>
           </div>
 
-          <div className="p-8 space-y-6 bg-white dark:bg-slate-900">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Paciente / Razão Social</Label>
-                <Input
-                  className="rounded-2xl h-14 bg-slate-50 dark:bg-slate-800 border-none focus-visible:ring-2 focus-visible:ring-slate-900 font-bold"
-                  placeholder="Nome do Tomador"
-                  value={formData.destinatario_nome}
-                  onChange={(e) => setFormData({ ...formData, destinatario_nome: e.target.value })}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">CPF ou CNPJ</Label>
-                <Input
-                  className="rounded-2xl h-14 bg-slate-50 dark:bg-slate-800 border-none focus-visible:ring-2 focus-visible:ring-slate-900 font-mono font-bold"
-                  placeholder="000.000.000-00"
-                  value={formData.destinatario_cpf_cnpj}
-                  onChange={(e) => setFormData({ ...formData, destinatario_cpf_cnpj: e.target.value })}
-                />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Valor Total do Serviço (R$)</Label>
-              <div className="relative">
-                <span className="absolute left-5 top-1/2 -translate-y-1/2 font-black text-slate-400">R$</span>
-                <Input
-                  type="number"
-                  className="rounded-2xl h-16 pl-12 bg-slate-50 dark:bg-slate-800 border-none focus-visible:ring-2 focus-visible:ring-slate-900 text-2xl font-black"
-                  placeholder="0,00"
-                  value={formData.valor}
-                  onChange={(e) => setFormData({ ...formData, valor: e.target.value })}
-                />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Discriminação dos Serviços</Label>
-              <Textarea
-                className="rounded-2xl min-h-[120px] bg-slate-50 dark:bg-slate-800 border-none focus-visible:ring-2 focus-visible:ring-slate-900 font-medium leading-relaxed resize-none p-5"
-                placeholder="Detalhes do atendimento..."
-                value={formData.servico_descricao}
-                onChange={(e) => setFormData({ ...formData, servico_descricao: e.target.value })}
+          <div className="p-8 space-y-8 bg-white dark:bg-slate-900 max-h-[70vh] overflow-y-auto custom-scrollbar">
+            {/* 1. SELEÇÃO DE PACIENTE */}
+            <div className="space-y-3">
+              <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">
+                1. Selecionar Paciente
+              </Label>
+              <PatientCombobox 
+                onSelect={(patient) => {
+                  setSelectedPatientId(patient.id);
+                  setFormData(prev => ({
+                    ...prev,
+                    destinatario_nome: patient.name,
+                    destinatario_cpf_cnpj: patient.cpf || "",
+                  }));
+                  setSelectedSessionIds([]); // Reset sessions
+                }}
               />
-              <p className="text-[9px] text-slate-400 font-bold uppercase tracking-tight italic ml-1">
-                * O código de serviço será automaticamente 04391 - Fisioterapia.
-              </p>
             </div>
+
+            {selectedPatientId && (
+              <motion.div 
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="space-y-6"
+              >
+                {/* 2. CONFIGURAÇÃO DE SESSÕES */}
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between ml-1">
+                    <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
+                      2. Sessões Realizadas
+                    </Label>
+                    <div className="flex gap-4">
+                       <div className="flex items-center gap-2">
+                         <span className="text-[9px] font-bold text-slate-400">TUSS:</span>
+                         <Input 
+                           value={tussCode} 
+                           onChange={(e) => setTussCode(e.target.value)}
+                           className="h-6 w-24 text-[10px] font-bold rounded-lg bg-slate-50 border-none"
+                         />
+                       </div>
+                       <div className="flex items-center gap-2">
+                         <span className="text-[9px] font-bold text-slate-400">R$/Sessão:</span>
+                         <Input 
+                           type="number"
+                           value={pricePerSession} 
+                           onChange={(e) => setPricePerSession(e.target.value)}
+                           className="h-6 w-20 text-[10px] font-bold rounded-lg bg-slate-50 border-none"
+                         />
+                       </div>
+                    </div>
+                  </div>
+
+                  <ScrollArea className="h-48 rounded-2xl border border-slate-100 dark:border-slate-800 p-4 bg-slate-50/30">
+                    {isLoadingSessions ? (
+                      <div className="flex items-center justify-center h-full gap-2 text-slate-400">
+                        <Clock className="h-4 w-4 animate-spin" />
+                        <span className="text-xs font-bold uppercase tracking-widest">Carregando sessões...</span>
+                      </div>
+                    ) : patientSessions.length === 0 ? (
+                      <div className="flex flex-col items-center justify-center h-full text-slate-400 py-8">
+                        <Calendar className="h-8 w-8 mb-2 opacity-20" />
+                        <span className="text-xs font-medium">Nenhuma sessão 'Atendida' encontrada.</span>
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-1 gap-2">
+                        {patientSessions.map((session) => (
+                          <div 
+                            key={session.id}
+                            className={cn(
+                              "flex items-center justify-between p-3 rounded-xl transition-all cursor-pointer border border-transparent",
+                              selectedSessionIds.includes(session.id) 
+                                ? "bg-white dark:bg-slate-800 shadow-sm border-slate-200 dark:border-slate-700" 
+                                : "hover:bg-white/50 dark:hover:bg-slate-800/50"
+                            )}
+                            onClick={() => {
+                              setSelectedSessionIds(prev => 
+                                prev.includes(session.id) 
+                                  ? prev.filter(id => id !== session.id) 
+                                  : [...prev, session.id]
+                              );
+                            }}
+                          >
+                            <div className="flex items-center gap-3">
+                              <Checkbox 
+                                checked={selectedSessionIds.includes(session.id)}
+                                onCheckedChange={() => {}} // Handled by div click
+                                className="rounded-md border-slate-300"
+                              />
+                              <div className="flex flex-col">
+                                <span className="text-xs font-bold text-slate-700 dark:text-slate-200">
+                                  {new Date(session.date).toLocaleDateString("pt-BR", { weekday: 'long', day: '2-digit', month: 'long' })}
+                                </span>
+                                <span className="text-[10px] font-medium text-slate-400 uppercase tracking-tighter">
+                                  {session.startTime} - {session.endTime}
+                                </span>
+                              </div>
+                            </div>
+                            <Badge variant="outline" className="text-[9px] font-black border-slate-200 text-slate-400">
+                              {session.status}
+                            </Badge>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </ScrollArea>
+                </div>
+
+                {/* 3. REVISÃO DA NOTA */}
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between ml-1">
+                    <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
+                      3. Revisão e Detalhes
+                    </Label>
+                    <div className="flex items-center gap-2 cursor-pointer" onClick={() => setUseTemplate(!useTemplate)}>
+                       <span className={cn("text-[9px] font-black uppercase transition-colors", useTemplate ? "text-emerald-600" : "text-slate-400")}>
+                         Template Ativo
+                       </span>
+                       <div className={cn("w-6 h-3 rounded-full relative transition-colors", useTemplate ? "bg-emerald-500" : "bg-slate-300")}>
+                          <div className={cn("absolute top-0.5 w-2 h-2 rounded-full bg-white transition-all", useTemplate ? "left-3.5" : "left-0.5")} />
+                       </div>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label className="text-[9px] font-bold text-slate-400 ml-1">Valor Total (R$)</Label>
+                      <div className="relative">
+                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-xs font-black text-slate-400">R$</span>
+                        <Input
+                          type="number"
+                          className="rounded-xl h-12 pl-10 bg-slate-50 dark:bg-slate-800 border-none font-black text-lg"
+                          value={formData.valor}
+                          onChange={(e) => setFormData({ ...formData, valor: e.target.value })}
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-[9px] font-bold text-slate-400 ml-1">Paciente</Label>
+                      <Input
+                        disabled
+                        className="rounded-xl h-12 bg-slate-50 dark:bg-slate-800 border-none font-bold text-slate-500"
+                        value={formData.destinatario_nome}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-[9px] font-bold text-slate-400 ml-1">Discriminação Final</Label>
+                    <Textarea
+                      className="rounded-2xl min-h-[140px] bg-slate-50 dark:bg-slate-800 border-none font-medium text-[11px] leading-relaxed resize-none p-4 custom-scrollbar"
+                      value={formData.servico_descricao}
+                      onChange={(e) => setFormData({ ...formData, servico_descricao: e.target.value })}
+                    />
+                  </div>
+                </div>
+              </motion.div>
+            )}
           </div>
 
           <DialogFooter className="p-8 bg-slate-50 dark:bg-slate-950/50 flex flex-col-reverse sm:flex-row gap-3">

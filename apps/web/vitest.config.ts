@@ -39,7 +39,11 @@ export default defineConfig({
     css: true,
 
     // Include patterns
-    include: ["**/*.{test,spec}.{ts,tsx}"],
+    include: [
+      "src/**/*.{test,spec}.{ts,tsx}",
+      "apps/web/**/*.{test,spec}.{ts,tsx}",
+      "packages/**/*.{test,spec}.{ts,tsx}",
+    ],
 
     // Reporters
     reporters: ["default", "json", "verbose"],
@@ -57,6 +61,11 @@ export default defineConfig({
       ".idea/",
       ".git/",
       ".cache/",
+      "apps/api/**",
+      "apps/patient-app/**",
+      "apps/professional-app/**",
+      "apps/jules-bot/**",
+      "apps/vinext-poc/**",
       "functions/**",
       "e2e/**",
       "e2e-tests/**",
