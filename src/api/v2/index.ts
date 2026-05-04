@@ -75,3 +75,4 @@ export type {
   Protocol,
 } from "@/types/workers";
 export * from "./messaging";
+export * from "./groups";

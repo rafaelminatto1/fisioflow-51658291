@@ -63,6 +63,9 @@ const FormasPagamentoPage = lazy(
 const ConveniosPage = lazy(
   () => import(/* webpackChunkName: "cadastros-convenios" */ "@/pages/cadastros/ConveniosPage"),
 );
+const GroupsPage = lazy(
+  () => import(/* webpackChunkName: "cadastros-groups" */ "@/pages/cadastros/GroupsPage"),
+);
 
 export const cadastrosRoutes = (
   <>
@@ -170,6 +173,14 @@ export const cadastrosRoutes = (
       element={
         <ProtectedRoute>
           <ConveniosPage />
+        </ProtectedRoute>
+      }
+    />
+    <Route
+      path="/cadastros/turmas"
+      element={
+        <ProtectedRoute>
+          <GroupsPage />
         </ProtectedRoute>
       }
     />
