@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { useSmartDashboardData } from "@/hooks/useSmartDashboard";
 import { BentoDashboard } from "@/components/dashboard/BentoDashboard";
 import { ClinicHealthKPIs } from "@/components/dashboard/ClinicHealthKPIs";
+import { AtRiskPatientsAlert } from "@/components/dashboard/AtRiskPatientsAlert";
+import { OverduePaymentsAlert } from "@/components/dashboard/OverduePaymentsAlert";
 import { cn } from "@/lib/utils";
 
 type ViewMode = "today" | "week";
@@ -69,6 +71,10 @@ export function SmartDashboardContent() {
       )}
 
       <ClinicHealthKPIs />
+
+      <AtRiskPatientsAlert />
+
+      <OverduePaymentsAlert />
 
       <BentoDashboard viewMode={viewMode} />
     </div>

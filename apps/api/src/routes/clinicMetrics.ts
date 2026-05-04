@@ -137,4 +137,86 @@ app.get("/kpis", requireAuth, async (c) => {
   });
 });
 
+// GET /api/clinic-metrics/overdue-payments
+app.get("/overdue-payments", requireAuth, async (c) => {
+  const user = c.get("user");
+  const pool = createPool(c.env);
+
+  const result = await pool.query(
+    `SELECT
+       p.id AS patient_id,
+       p.full_name,
+       p.phone,
+       p.whatsapp,
+       COUNT(a.id)::int AS overdue_count,
+       COALESCE(SUM(a.payment_amount), 0)::numeric AS overdue_total,
+       MIN(a.date)::text AS oldest_overdue_date
+     FROM appointments a
+     INNER JOIN patients p ON p.id = a.patient_id
+     WHERE a.organization_id = $1
+       AND a.status::text IN ('atendido','avaliacao')
+       AND a.payment_status::text = 'pending'
+       AND a.payment_amount > 0
+       AND a.date < CURRENT_DATE
+       AND a.deleted_at IS NULL
+       AND p.deleted_at IS NULL
+     GROUP BY p.id, p.full_name, p.phone, p.whatsapp
+     ORDER BY overdue_total DESC
+     LIMIT 20`,
+    [user.organizationId],
+  );
+
+  const totalResult = await pool.query(
+    `SELECT
+       COUNT(*)::int AS total_appointments,
+       COALESCE(SUM(payment_amount), 0)::numeric AS total_overdue
+     FROM appointments
+     WHERE organization_id = $1
+       AND status::text IN ('atendido','avaliacao')
+       AND payment_status::text = 'pending'
+       AND payment_amount > 0
+       AND date < CURRENT_DATE
+       AND deleted_at IS NULL`,
+    [user.organizationId],
+  );
+
+  return c.json({
+    data: {
+      patients: result.rows,
+      summary: totalResult.rows[0] ?? { total_appointments: 0, total_overdue: 0 },
+    },
+  });
+});
+
+// GET /api/clinic-metrics/at-risk-patients
+app.get("/at-risk-patients", requireAuth, async (c) => {
+  const user = c.get("user");
+  const pool = createPool(c.env);
+
+  const result = await pool.query(
+    `SELECT
+       p.id,
+       p.full_name,
+       p.phone,
+       p.whatsapp,
+       MAX(a.date)::text AS last_appointment_date,
+       (CURRENT_DATE - MAX(a.date)::date)::int AS days_since_last_session
+     FROM patients p
+     INNER JOIN appointments a ON a.patient_id = p.id
+     WHERE p.organization_id = $1
+       AND a.organization_id = $1
+       AND a.status::text IN ('atendido','avaliacao')
+       AND a.deleted_at IS NULL
+       AND p.deleted_at IS NULL
+     GROUP BY p.id, p.full_name, p.phone, p.whatsapp
+     HAVING MAX(a.date) < (CURRENT_DATE - INTERVAL '14 days')
+       AND MAX(a.date) >= (CURRENT_DATE - INTERVAL '90 days')
+     ORDER BY MAX(a.date) ASC
+     LIMIT 20`,
+    [user.organizationId],
+  );
+
+  return c.json({ data: result.rows });
+});
+
 export { app as clinicMetricsRoutes };
