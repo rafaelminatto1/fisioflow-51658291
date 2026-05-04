@@ -248,10 +248,10 @@ app.get("/financial", requireAuth, async (c) => {
   }
 
   const sessionsRes = await pool.query<SessionRow>(
-    `SELECT therapist_id, status, started_at
+    `SELECT therapist_id, status, date AS started_at
      FROM sessions
      WHERE organization_id = $1
-       AND started_at BETWEEN $2::timestamp AND $3::timestamp`,
+       AND date BETWEEN $2::timestamp AND $3::timestamp`,
     [user.organizationId, `${startDate}T00:00:00`, `${endDate}T23:59:59`],
   );
 

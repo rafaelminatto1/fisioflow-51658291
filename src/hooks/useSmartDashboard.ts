@@ -618,7 +618,7 @@ export function useSmartDashboardData(viewMode: ViewMode = "today") {
     startLastMonthDate,
     endLastMonthDate,
     now,
-    weekEndDate,
+    weekEnd,
   ]);
 
   const isLoading =

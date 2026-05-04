@@ -2,6 +2,7 @@ import { request } from "@/api/v2/base";
 import { unwrapData, unwrapList } from "@/lib/api/unwrapData";
 
 const BASE = "/api/whatsapp/inbox";
+const AUTOMATIONS_BASE = "/api/whatsapp";
 
 export interface ConversationFilters {
   status?: string;
@@ -608,14 +609,14 @@ export async function createQuickReply(data: Omit<QuickReply, "id">) {
 }
 
 export async function fetchAutomationRules() {
-  const res = await request<{ data: AutomationRule[] } | AutomationRule[]>(`${BASE}/automations`);
+  const res = await request<{ data: AutomationRule[] } | AutomationRule[]>(`${AUTOMATIONS_BASE}/automations`);
   return Array.isArray(res) ? res : (unwrapData(res));
 }
 
 export async function createAutomationRule(
   data: Omit<AutomationRule, "id" | "createdAt" | "updatedAt">,
 ) {
-  const res = await request<{ data: AutomationRule } | AutomationRule>(`${BASE}/automations`, {
+  const res = await request<{ data: AutomationRule } | AutomationRule>(`${AUTOMATIONS_BASE}/automations`, {
     method: "POST",
     body: JSON.stringify(data),
   });
@@ -624,7 +625,7 @@ export async function createAutomationRule(
 
 export async function updateAutomationRule(id: string, data: Partial<AutomationRule>) {
   const res = await request<{ data: AutomationRule } | AutomationRule>(
-    `${BASE}/automations/${id}`,
+    `${AUTOMATIONS_BASE}/automations/${id}`,
     {
       method: "PUT",
       body: JSON.stringify(data),
@@ -634,7 +635,7 @@ export async function updateAutomationRule(id: string, data: Partial<AutomationR
 }
 
 export async function deleteAutomationRule(id: string) {
-  return request<void>(`${BASE}/automations/${id}`, {
+  return request<void>(`${AUTOMATIONS_BASE}/automations/${id}`, {
     method: "DELETE",
   });
 }

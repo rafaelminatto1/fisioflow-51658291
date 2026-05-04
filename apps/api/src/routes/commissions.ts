@@ -19,18 +19,19 @@ app.get("/summary", requireAuth, async (c) => {
   const periodStart = `${year}-${mon}-01`;
   const periodEnd = new Date(Number(year), Number(mon), 0).toISOString().split("T")[0]; // último dia do mês
 
-  // Busca sessões por terapeuta no período + taxa de comissão configurada
+  // Busca sessões SOAP por terapeuta no período + taxa de comissão configurada
+  // sessions.appointment_id é UUID; appointments não tem coluna price → payment_amount
   const result = await pool.query(
     `
     SELECT
       s.therapist_id,
       COUNT(s.id) AS total_sessions,
-      COALESCE(SUM(a.price), 0) AS total_revenue,
+      COALESCE(SUM(a.payment_amount), 0) AS total_revenue,
       COALESCE(tc.commission_rate, 40.00) AS commission_rate,
-      COALESCE(SUM(a.price) * COALESCE(tc.commission_rate, 40.00) / 100, 0) AS commission_amount,
+      COALESCE(SUM(a.payment_amount) * COALESCE(tc.commission_rate, 40.00) / 100, 0) AS commission_amount,
       COALESCE(
         (SELECT status FROM commission_payouts cp
-         WHERE cp.organization_id = $1 AND cp.therapist_id = s.therapist_id
+         WHERE cp.organization_id = $1 AND cp.therapist_id::text = s.therapist_id::text
            AND cp.period_start = $2::date AND cp.period_end = $3::date
          LIMIT 1), 'pendente'
       ) AS payout_status
@@ -38,13 +39,13 @@ app.get("/summary", requireAuth, async (c) => {
     LEFT JOIN appointments a ON a.id = s.appointment_id
     LEFT JOIN LATERAL (
       SELECT commission_rate FROM therapist_commissions
-      WHERE organization_id = $1 AND therapist_id = s.therapist_id
+      WHERE organization_id = $1 AND therapist_id = s.therapist_id::text
         AND effective_from <= $2::date
       ORDER BY effective_from DESC LIMIT 1
     ) tc ON TRUE
     WHERE s.organization_id = $1
-      AND s.created_at >= $2::timestamptz
-      AND s.created_at < ($3::date + INTERVAL '1 day')::timestamptz
+      AND s.date >= $2::timestamp
+      AND s.date < ($3::date + INTERVAL '1 day')::timestamp
     GROUP BY s.therapist_id, tc.commission_rate
     ORDER BY total_revenue DESC
     `,
