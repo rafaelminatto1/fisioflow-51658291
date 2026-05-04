@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useSmartDashboardData } from "@/hooks/useSmartDashboard";
 import { BentoDashboard } from "@/components/dashboard/BentoDashboard";
+import { ClinicHealthKPIs } from "@/components/dashboard/ClinicHealthKPIs";
 import { cn } from "@/lib/utils";
 
 type ViewMode = "today" | "week";
@@ -66,6 +67,8 @@ export function SmartDashboardContent() {
           <ArrowUpRight className="h-5 w-5 text-muted-foreground/30 group-hover:text-primary transition-colors mr-2" />
         </div>
       )}
+
+      <ClinicHealthKPIs />
 
       <BentoDashboard viewMode={viewMode} />
     </div>

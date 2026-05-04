@@ -94,6 +94,7 @@ import { aiConfigRoutes } from "./routes/ai-config";
 import { aiClinicalSearchRoutes } from "./routes/ai-clinical-search";
 import { agendaAppearanceRoutes } from "./routes/agendaAppearance";
 import { fisioBrainRoutes } from "./routes/fisiobrain";
+import { clinicMetricsRoutes } from "./routes/clinicMetrics";
 import { verifyToken } from "./lib/auth";
 import { getRawSql } from "./lib/db";
 import { routeAgentRequest } from "agents";
@@ -329,6 +330,7 @@ const apiRoutes = [
   ["/api/messaging", messagingRoutes],
   ["/api/boards", boardsRoutes],
   ["/api/standardized-tests", standardizedTestsRoutes],
+  ["/api/clinic-metrics", clinicMetricsRoutes],
   ["/api/commissions", commissionsRoutes],
   ["/api/nfse", nfseRoutes],
   ["/api/packages", packagesRoutes],
