@@ -219,4 +219,99 @@ app.get("/at-risk-patients", requireAuth, async (c) => {
   return c.json({ data: result.rows });
 });
 
+// GET /api/clinic-metrics/packages-expiring
+app.get("/packages-expiring", requireAuth, async (c) => {
+  const user = c.get("user");
+  const pool = createPool(c.env);
+
+  const result = await pool.query(
+    `SELECT
+       pp.id,
+       pp.patient_id,
+       p.full_name AS patient_name,
+       p.phone,
+       p.whatsapp,
+       pp.name AS package_name,
+       pp.remaining_sessions,
+       pp.total_sessions,
+       pp.expires_at::text AS expires_at,
+       (pp.expires_at::date - CURRENT_DATE)::int AS days_until_expiry,
+       CASE
+         WHEN pp.remaining_sessions <= 0 THEN 'zero'
+         WHEN pp.remaining_sessions <= 2 THEN 'low'
+         WHEN pp.expires_at::date <= CURRENT_DATE + 7 THEN 'expiring_soon'
+         ELSE 'ok'
+       END AS alert_type
+     FROM patient_packages pp
+     INNER JOIN patients p ON p.id = pp.patient_id
+     WHERE pp.organization_id = $1
+       AND pp.status::text = 'active'
+       AND pp.deleted_at IS NULL
+       AND p.deleted_at IS NULL
+       AND (
+         pp.remaining_sessions <= 2
+         OR pp.expires_at::date <= CURRENT_DATE + 7
+       )
+     ORDER BY pp.remaining_sessions ASC, pp.expires_at ASC
+     LIMIT 20`,
+    [user.organizationId],
+  );
+
+  return c.json({ data: result.rows });
+});
+
+// GET /api/clinic-metrics/revenue-forecast
+app.get("/revenue-forecast", requireAuth, async (c) => {
+  const user = c.get("user");
+  const pool = createPool(c.env);
+
+  // Upcoming scheduled appointments this month × avg ticket (last 30 days)
+  const [upcoming, avgTicket] = await Promise.all([
+    pool.query(
+      `SELECT
+         COUNT(*)::int AS upcoming_count,
+         TO_CHAR(date, 'YYYY-MM-DD') AS day,
+         COUNT(*)::int AS count_by_day
+       FROM appointments
+       WHERE organization_id = $1
+         AND date >= CURRENT_DATE
+         AND date <= DATE_TRUNC('month', CURRENT_DATE) + INTERVAL '1 month - 1 day'
+         AND status::text IN ('agendado', 'presenca_confirmada', 'scheduled', 'confirmed')
+         AND deleted_at IS NULL
+       GROUP BY date
+       ORDER BY date ASC`,
+      [user.organizationId],
+    ),
+    pool.query(
+      `SELECT
+         COALESCE(AVG(payment_amount) FILTER (WHERE payment_amount > 0), 0)::numeric AS avg_ticket,
+         COALESCE(SUM(payment_amount) FILTER (WHERE payment_amount > 0), 0)::numeric AS realized_revenue
+       FROM appointments
+       WHERE organization_id = $1
+         AND date >= DATE_TRUNC('month', CURRENT_DATE)
+         AND date < CURRENT_DATE
+         AND status::text IN ('atendido', 'avaliacao')
+         AND deleted_at IS NULL`,
+      [user.organizationId],
+    ),
+  ]);
+
+  const upcomingCount = upcoming.rows.reduce((s: number, r: any) => s + Number(r.count_by_day), 0);
+  const avgT = Number(avgTicket.rows[0]?.avg_ticket ?? 0);
+  const realized = Number(avgTicket.rows[0]?.realized_revenue ?? 0);
+  const forecast = Math.round(avgT * upcomingCount * 100) / 100;
+  const total = Math.round((realized + forecast) * 100) / 100;
+
+  return c.json({
+    data: {
+      upcoming_appointments: upcomingCount,
+      avg_ticket: Math.round(avgT * 100) / 100,
+      realized_revenue_mtd: realized,
+      forecast_remaining: forecast,
+      total_month_estimate: total,
+      by_day: upcoming.rows,
+    },
+  });
+});
+
 export { app as clinicMetricsRoutes };
