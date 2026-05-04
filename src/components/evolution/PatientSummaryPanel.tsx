@@ -10,6 +10,7 @@ import { format, differenceInYears } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { GoalCountdown } from "./GoalCountdown";
 import { TreatmentDurationCard } from "./TreatmentDurationCard";
+import { WearableDataWidget } from "./WearableDataWidget";
 import type { PatientGoal } from "@/types/evolution";
 import { PatientHelpers } from "@/types";
 import { EngagementService, type EngagementStatus } from "@/lib/services/EngagementService";
@@ -173,6 +174,9 @@ export const PatientSummaryPanel: React.FC<PatientSummaryPanelProps> = ({
 
             {/* Treatment Duration */}
             {firstSessionDate && <TreatmentDurationCard firstSessionDate={firstSessionDate} />}
+
+            {/* Wearables */}
+            <WearableDataWidget patientId={patient.id} />
 
             {/* Quick Metrics */}
             <div className="grid grid-cols-2 gap-2">

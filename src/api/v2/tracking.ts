@@ -73,6 +73,25 @@ export const treatmentCyclesApi = {
     }),
 };
 
+export type WearableSummaryItem = {
+  source: string;
+  data_type: string;
+  value: number;
+  unit: string;
+  timestamp: string;
+};
+
+export type WearableIntegration = {
+  provider: string;
+  connected_at: string;
+  last_synced_at: string | null;
+};
+
+export type WearablePatientSummary = {
+  readings: WearableSummaryItem[];
+  integrations: WearableIntegration[];
+};
+
 export const wearablesApi = {
   list: (params?: { patientId?: string; dataType?: string; source?: string; limit?: number }) =>
     request<{ data: Array<Record<string, unknown>> }>(withQuery("/api/wearables", params)),
@@ -86,4 +105,6 @@ export const wearablesApi = {
       method: "POST",
       body: JSON.stringify({ entries }),
     }),
+  getPatientSummary: (patientId: string) =>
+    request<WearablePatientSummary>(`/api/wearables/patient/${encodeURIComponent(patientId)}/summary`),
 };

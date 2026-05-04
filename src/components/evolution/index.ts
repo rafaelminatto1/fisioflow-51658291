@@ -27,6 +27,9 @@ export {
   useEvolutionCallbacks,
 } from "./OptimizedEvolutionComponents";
 
+// Wearable data widget (clinical view)
+export { WearableDataWidget } from "./WearableDataWidget";
+
 // Suspense boundaries otimizados
 export {
   CriticalDataBoundary,

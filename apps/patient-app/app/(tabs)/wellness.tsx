@@ -18,12 +18,14 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
+import { router } from "expo-router";
 import { useColors } from "@/hooks/useColorScheme";
 import { Card } from "@/components";
 import { Spacing } from "@/constants/spacing";
 import { useHealthConnect, getTodayStepsHealthConnect } from "@/lib/healthConnect";
 import { useHealthKit, getTodaySteps } from "@/lib/healthkit";
 import { log } from "@/lib/logger";
+import { wearablesApi, type WearableReading } from "@/lib/api";
 
 export default function WellnessScreen() {
   const colors = useColors();
@@ -64,11 +66,22 @@ export default function WellnessScreen() {
     loadHealthData();
   }, []);
 
+  const syncToBackend = async (readings: WearableReading[]) => {
+    if (readings.length === 0) return;
+    try {
+      await wearablesApi.sync(readings);
+    } catch (err) {
+      log.warn("Wearable sync to backend failed (non-fatal):", err);
+    }
+  };
+
   const loadHealthData = async () => {
     setSyncing(true);
 
     try {
       setPermissionDenied(false);
+      const now = new Date().toISOString();
+
       if (isIOS && healthKitAvailable) {
         await initializeHealthKit();
         if (!healthKitAuthorized) {
@@ -87,13 +100,30 @@ export default function WellnessScreen() {
         }
         const data = await getHealthKitTodayData();
         if (data) {
-          setSteps(data.steps ?? 0);
-          setHeartRate(data.heartRate ?? data.restingHeartRate ?? null);
-          setCalories(data.activeEnergy ?? 0);
-          setDistance(typeof data.distance === "number" ? Math.round(data.distance) : null);
-          setSleepHours(
-            typeof data.sleep?.asleep === "number" ? Math.round(data.sleep.asleep * 10) / 10 : null,
-          );
+          const stepsVal = data.steps ?? 0;
+          const hrVal = data.heartRate ?? data.restingHeartRate ?? null;
+          const calVal = data.activeEnergy ?? 0;
+          const distVal = typeof data.distance === "number" ? Math.round(data.distance) : null;
+          const sleepVal =
+            typeof data.sleep?.asleep === "number"
+              ? Math.round(data.sleep.asleep * 10) / 10
+              : null;
+
+          setSteps(stepsVal);
+          setHeartRate(hrVal);
+          setCalories(calVal);
+          setDistance(distVal);
+          setSleepHours(sleepVal);
+
+          const readings: WearableReading[] = [
+            { source: "apple_health", data_type: "steps", value: stepsVal, unit: "count", timestamp: now },
+            { source: "apple_health", data_type: "active_calories", value: calVal, unit: "kcal", timestamp: now },
+          ];
+          if (hrVal !== null) readings.push({ source: "apple_health", data_type: "heart_rate", value: hrVal, unit: "bpm", timestamp: now });
+          if (distVal !== null) readings.push({ source: "apple_health", data_type: "distance", value: distVal, unit: "m", timestamp: now });
+          if (sleepVal !== null) readings.push({ source: "apple_health", data_type: "sleep_hours", value: sleepVal, unit: "h", timestamp: now });
+
+          await syncToBackend(readings);
         }
       } else if (isAndroid && healthConnectAvailable) {
         await initializeHealthConnect();
@@ -117,15 +147,30 @@ export default function WellnessScreen() {
         }
         const data = await getHealthConnectTodayData();
         if (data) {
-          setSteps(data.steps ?? 0);
-          setHeartRate(data.heartRate ?? data.restingHeartRate ?? null);
-          setCalories(data.activeCalories ?? 0);
-          setDistance(typeof data.distance === "number" ? Math.round(data.distance) : null);
-          setSleepHours(
+          const stepsVal = data.steps ?? 0;
+          const hrVal = data.heartRate ?? data.restingHeartRate ?? null;
+          const calVal = data.activeCalories ?? 0;
+          const distVal = typeof data.distance === "number" ? Math.round(data.distance) : null;
+          const sleepVal =
             typeof data.sleep?.duration === "number"
               ? Math.round(data.sleep.duration * 10) / 10
-              : null,
-          );
+              : null;
+
+          setSteps(stepsVal);
+          setHeartRate(hrVal);
+          setCalories(calVal);
+          setDistance(distVal);
+          setSleepHours(sleepVal);
+
+          const readings: WearableReading[] = [
+            { source: "health_connect", data_type: "steps", value: stepsVal, unit: "count", timestamp: now },
+            { source: "health_connect", data_type: "active_calories", value: calVal, unit: "kcal", timestamp: now },
+          ];
+          if (hrVal !== null) readings.push({ source: "health_connect", data_type: "heart_rate", value: hrVal, unit: "bpm", timestamp: now });
+          if (distVal !== null) readings.push({ source: "health_connect", data_type: "distance", value: distVal, unit: "m", timestamp: now });
+          if (sleepVal !== null) readings.push({ source: "health_connect", data_type: "sleep_hours", value: sleepVal, unit: "h", timestamp: now });
+
+          await syncToBackend(readings);
         }
       } else {
         // Dados mockados para Expo Go ou outros
@@ -248,6 +293,16 @@ export default function WellnessScreen() {
               )}
             </TouchableOpacity>
           )}
+          <TouchableOpacity
+            style={[styles.integrationsButton, { borderColor: colors.border }]}
+            onPress={() => router.push("/profile/integrations" as any)}
+          >
+            <Ionicons name="hardware-chip-outline" size={16} color={colors.primary} />
+            <Text style={[styles.integrationsButtonText, { color: colors.primary }]}>
+              Gerenciar Integrações (Garmin, Strava, Oura)
+            </Text>
+            <Ionicons name="chevron-forward" size={14} color={colors.primary} />
+          </TouchableOpacity>
         </Card>
 
         {/* Steps Card */}
@@ -536,6 +591,21 @@ const styles = StyleSheet.create({
   },
   connectIcon: {
     marginRight: 2,
+  },
+  integrationsButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: 10,
+    borderWidth: 1,
+    marginTop: 8,
+  },
+  integrationsButtonText: {
+    flex: 1,
+    fontSize: 13,
+    fontWeight: "500",
   },
   stepsCard: {
     padding: Spacing.card,

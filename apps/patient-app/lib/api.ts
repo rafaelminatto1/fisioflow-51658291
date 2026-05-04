@@ -365,3 +365,27 @@ export const telemedicineApi = {
 export function getApiBaseUrl() {
   return API_BASE_URL;
 }
+
+// ============================================================
+// WEARABLES API
+// ============================================================
+
+export type WearableReading = {
+  source: string;
+  data_type: string;
+  value: number;
+  unit: string;
+  timestamp: string;
+  metadata?: Record<string, unknown>;
+};
+
+export const wearablesApi = {
+  sync: (readings: WearableReading[]) =>
+    api.post<{ synced: number }>("/api/wearables/sync", { readings }),
+  getIntegrations: () =>
+    api.get<{ provider: string; connected_at: string; last_synced_at: string | null }[]>(
+      "/api/wearables/integrations",
+    ),
+  disconnectProvider: (provider: string) =>
+    api.delete<{ success: boolean }>(`/api/wearables/integrations/${provider}`),
+};

@@ -210,6 +210,15 @@ export interface Env {
   VAPID_PUBLIC_KEY?: string;
   VAPID_PRIVATE_KEY?: string;
   VAPID_SUBJECT?: string;
+
+  // Wearable OAuth
+  GARMIN_CLIENT_ID?: string;
+  GARMIN_CLIENT_SECRET?: string;
+  STRAVA_CLIENT_ID?: string;
+  STRAVA_CLIENT_SECRET?: string;
+  OURA_CLIENT_ID?: string;
+  OURA_CLIENT_SECRET?: string;
+  WEARABLE_OAUTH_REDIRECT_BASE?: string; // e.g. https://app.moocafisio.com.br
 }
 
 // Helper type para Workflow binding
