@@ -10,44 +10,43 @@ import { runHealthMonitor } from "./lib/monitor";
  * Cloudflare Worker Cron Trigger Handler
  */
 export async function handleScheduled(event: ScheduledEvent, env: Env, ctx: ExecutionContext) {
-  const pool = createPool(env);
   const cron = event.cron;
 
   console.log(`[Cron] Executing job: ${cron} at ${new Date().toISOString()}`);
 
   try {
-    const now = new Date();
-    const day = now.getUTCDay(); // 0-6 (Sunday is 0)
-    const hour = now.getUTCHours() - 3; // Ajuste para Horário de Brasília (BRT)
-
-    // Business Hours check: Monday to Friday, 7 AM to 8 PM (20h)
-    const _isBusinessHours = day >= 1 && day <= 5 && hour >= 7 && hour < 20;
-
     switch (cron) {
-      case "* * * * *": // A cada minuto — Health monitor (ntfy.sh push se API cair)
+      case "*/5 * * * *": // A cada 5 minutos — Health monitor leve, sem acordar Neon
         await runHealthMonitor(env);
         break;
 
-      case "0 9 * * *": // UTC 09h = BRT 06h — Lembretes + prewarm pós cold-start
+      case "0 9 * * *": { // UTC 09h = BRT 06h — Lembretes + prewarm pós cold-start
+        const pool = createPool(env);
         await prewarmDatabase(pool);
         await sendAppointmentReminders(pool, env, ctx);
         await processBirthdays(pool, env, ctx);
         await processInactivePatients(pool, env, ctx);
+        await processRecallCampaigns(pool, env, ctx);
         break;
+      }
 
-      case "0 11 * * *": // UTC 11h = BRT 08h — Manutenção em horário de expediente
+      case "0 11 * * *": { // UTC 11h = BRT 08h — Manutenção em horário de expediente
+        const pool = createPool(env);
         await performDatabaseCleanup(pool, env);
         if (env.EDGE_CACHE) {
           const deleted = await cleanupRateLimits(env.EDGE_CACHE);
           console.log(`[Cron] D1 rate_limits cleanup: ${deleted} rows deleted.`);
         }
         break;
+      }
 
-      case "0 12 * * *": // UTC 12h = BRT 09h — Automações por vencimento de tarefa
+      case "0 12 * * *": { // UTC 12h = BRT 09h — Automações por vencimento de tarefa
+        const pool = createPool(env);
         await processDueDateAutomations(pool);
         break;
+      }
 
-      case "0 5 * * *": // UTC 05h = BRT 02h — WikiSyncWorkflow (indexa páginas modificadas)
+      case "0 10 * * *": // UTC 10h = BRT 07h — WikiSyncWorkflow na abertura da clínica
         if (env.WORKFLOW_WIKI_SYNC) {
           await env.WORKFLOW_WIKI_SYNC.create({
             id: `wiki-sync-${new Date().toISOString().slice(0, 10)}`,
@@ -56,7 +55,7 @@ export async function handleScheduled(event: ScheduledEvent, env: Env, ctx: Exec
         }
         break;
 
-      case "0 6 * * 1": // UTC 06h Segunda = BRT 03h — KnowledgeSyncWorkflow
+      case "10 10 * * 1": // UTC 10h10 Segunda = BRT 07h10 — KnowledgeSyncWorkflow
         if (env.WORKFLOW_KNOWLEDGE_SYNC) {
           await env.WORKFLOW_KNOWLEDGE_SYNC.create({
             id: `knowledge-sync-${new Date().toISOString().slice(0, 10)}`,
@@ -92,9 +91,11 @@ export async function handleScheduled(event: ScheduledEvent, env: Env, ctx: Exec
         }
         break;
 
-      case "0 14 * * *": // UTC 14h = BRT 11h — NPS auto-trigger (7-day orgs)
+      case "0 14 * * *": { // UTC 14h = BRT 11h — NPS auto-trigger (7-day orgs)
+        const pool = createPool(env);
         await triggerNpsSurveys(pool, env);
         break;
+      }
 
       default:
         console.warn(`[Cron] No handler defined for schedule: ${cron}`);
@@ -422,5 +423,66 @@ async function prewarmDatabase(pool: any) {
     console.log("[Cron] Database cache prewarmed successfully.");
   } catch (error) {
     console.warn("[Cron] Prewarm failed (non-critical):", error);
+  }
+}
+
+async function processRecallCampaigns(pool: any, env: Env, ctx: ExecutionContext) {
+  console.log("[Cron] Processing recall campaigns...");
+  try {
+    // Load active recall campaigns per organization
+    const campaigns = await pool.query(`
+      SELECT id, organization_id, name, days_without_visit, message_template
+      FROM marketing_recall_campaigns
+      WHERE enabled = true AND deleted = false
+    `);
+
+    let sent = 0;
+    for (const campaign of campaigns.rows) {
+      // Find patients whose last completed appointment is exactly at the threshold (±1 day window)
+      const patients = await pool.query(
+        `SELECT
+           p.id, p.full_name, p.phone, p.whatsapp,
+           MAX(a.date)::text AS last_appointment_date,
+           MAX(a.notes) AS last_condition
+         FROM patients p
+         INNER JOIN appointments a ON a.patient_id = p.id
+         WHERE p.organization_id = $1
+           AND a.organization_id = $1
+           AND a.status::text IN ('atendido','avaliacao')
+           AND a.deleted_at IS NULL
+           AND p.deleted_at IS NULL
+         GROUP BY p.id, p.full_name, p.phone, p.whatsapp
+         HAVING CURRENT_DATE - MAX(a.date)::date BETWEEN $2 AND ($2 + 1)`,
+        [campaign.organization_id, campaign.days_without_visit],
+      );
+
+      for (const patient of patients.rows) {
+        const phone = patient.whatsapp || patient.phone;
+        if (!phone || !env.BACKGROUND_QUEUE) continue;
+
+        const firstName = patient.full_name.split(" ")[0];
+        const message = (campaign.message_template as string)
+          .replace(/\{\{nome\}\}/gi, firstName)
+          .replace(/\{\{name\}\}/gi, firstName);
+
+        const queuePayload: WhatsAppQueuePayload = {
+          to: phone,
+          templateName: "recall_paciente",
+          languageCode: "pt_BR",
+          bodyParameters: [{ type: "text", text: firstName }],
+          organizationId: campaign.organization_id,
+          patientId: patient.id,
+          messageText: message,
+          appointmentId: "",
+        };
+
+        await env.BACKGROUND_QUEUE.send(queuePayload);
+        sent++;
+      }
+    }
+
+    console.log(`[Cron] Recall campaigns: ${sent} WhatsApp messages queued.`);
+  } catch (error) {
+    console.warn("[Cron] Recall campaigns failed (non-critical):", error);
   }
 }
