@@ -24,15 +24,17 @@ export async function handleScheduled(event: ScheduledEvent, env: Env, ctx: Exec
         const pool = createPool(env);
         await prewarmDatabase(pool);
         await sendAppointmentReminders(pool, env, ctx);
+        await send48hConfirmationRequests(pool, env);
         await processBirthdays(pool, env, ctx);
         await processInactivePatients(pool, env, ctx);
         await processRecallCampaigns(pool, env, ctx);
         break;
       }
 
-      case "0 11 * * *": { // UTC 11h = BRT 08h — Manutenção em horário de expediente
+      case "0 11 * * *": { // UTC 11h = BRT 08h — Manutenção + lembrete same-day não confirmados
         const pool = createPool(env);
         await performDatabaseCleanup(pool, env);
+        await sendSameDayUnconfirmedReminders(pool, env);
         if (env.EDGE_CACHE) {
           const deleted = await cleanupRateLimits(env.EDGE_CACHE);
           console.log(`[Cron] D1 rate_limits cleanup: ${deleted} rows deleted.`);
@@ -484,5 +486,134 @@ async function processRecallCampaigns(pool: any, env: Env, ctx: ExecutionContext
     console.log(`[Cron] Recall campaigns: ${sent} WhatsApp messages queued.`);
   } catch (error) {
     console.warn("[Cron] Recall campaigns failed (non-critical):", error);
+  }
+}
+
+async function send48hConfirmationRequests(pool: any, env: Env) {
+  console.log("[Cron] Sending 48h confirmation requests...");
+  try {
+    // Appointments 2 days from now that haven't had a confirmation request sent yet
+    const result = await pool.query(`
+      SELECT
+        a.id,
+        a.organization_id,
+        a.patient_id,
+        a.start_time::text AS time,
+        TO_CHAR(a.date, 'DD/MM/YYYY') AS formatted_date,
+        p.full_name AS patient_name,
+        p.phone AS patient_phone,
+        prof.full_name AS therapist_name
+      FROM appointments a
+      JOIN patients p ON p.id = a.patient_id
+      LEFT JOIN profiles prof ON prof.user_id = a.therapist_id::uuid
+      WHERE a.date = CURRENT_DATE + INTERVAL '2 days'
+        AND a.status::text IN ('agendado', 'scheduled')
+        AND a.confirmed_at IS NULL
+        AND a.reminder_sent_at IS NULL
+        AND a.deleted_at IS NULL
+    `);
+
+    let sent = 0;
+    for (const row of result.rows) {
+      if (!row.patient_phone || !env.BACKGROUND_QUEUE) continue;
+
+      const timeStr = row.time?.substring(0, 5) ?? "";
+      const therapistStr = row.therapist_name || "sua fisioterapeuta";
+      const firstName = (row.patient_name as string).split(" ")[0];
+
+      const message =
+        `Olá, ${firstName}! 👋\n\n` +
+        `Você tem uma sessão agendada para *${row.formatted_date}* às *${timeStr}* com *${therapistStr}*.\n\n` +
+        `Por favor, confirme sua presença respondendo:\n` +
+        `✅ *SIM* para confirmar\n` +
+        `❌ *CANCELAR* para desmarcar\n\n` +
+        `_Responda nessa mesma conversa._`;
+
+      const queuePayload: WhatsAppQueuePayload = {
+        to: row.patient_phone,
+        templateName: "confirmacao_sessao",
+        languageCode: "pt_BR",
+        bodyParameters: [
+          { type: "text", text: firstName },
+          { type: "text", text: row.formatted_date },
+          { type: "text", text: timeStr },
+          { type: "text", text: therapistStr },
+        ],
+        organizationId: row.organization_id,
+        patientId: row.patient_id,
+        messageText: message,
+        appointmentId: row.id,
+      };
+
+      await env.BACKGROUND_QUEUE.send(queuePayload);
+
+      await pool.query(
+        `UPDATE appointments SET reminder_sent_at = NOW(), updated_at = NOW() WHERE id = $1::uuid`,
+        [row.id],
+      );
+
+      sent++;
+    }
+
+    console.log(`[Cron] 48h confirmations: ${sent} messages queued.`);
+  } catch (error) {
+    console.warn("[Cron] 48h confirmation requests failed (non-critical):", error);
+  }
+}
+
+async function sendSameDayUnconfirmedReminders(pool: any, env: Env) {
+  console.log("[Cron] Sending same-day unconfirmed reminders...");
+  try {
+    const result = await pool.query(`
+      SELECT
+        a.id,
+        a.organization_id,
+        a.patient_id,
+        a.start_time::text AS time,
+        TO_CHAR(a.date, 'DD/MM/YYYY') AS formatted_date,
+        p.full_name AS patient_name,
+        p.phone AS patient_phone,
+        prof.full_name AS therapist_name
+      FROM appointments a
+      JOIN patients p ON p.id = a.patient_id
+      LEFT JOIN profiles prof ON prof.user_id = a.therapist_id::uuid
+      WHERE a.date = CURRENT_DATE
+        AND a.status::text IN ('agendado', 'scheduled')
+        AND a.confirmed_at IS NULL
+        AND a.deleted_at IS NULL
+    `);
+
+    let sent = 0;
+    for (const row of result.rows) {
+      if (!row.patient_phone || !env.BACKGROUND_QUEUE) continue;
+
+      const timeStr = row.time?.substring(0, 5) ?? "";
+      const firstName = (row.patient_name as string).split(" ")[0];
+
+      const message =
+        `Oi, ${firstName}! Só passando para lembrar da sua sessão *hoje* às *${timeStr}*. ` +
+        `Te esperamos! Se não puder vir, responda *CANCELAR*.`;
+
+      const queuePayload: WhatsAppQueuePayload = {
+        to: row.patient_phone,
+        templateName: "lembrete_dia_sessao",
+        languageCode: "pt_BR",
+        bodyParameters: [
+          { type: "text", text: firstName },
+          { type: "text", text: timeStr },
+        ],
+        organizationId: row.organization_id,
+        patientId: row.patient_id,
+        messageText: message,
+        appointmentId: row.id,
+      };
+
+      await env.BACKGROUND_QUEUE.send(queuePayload);
+      sent++;
+    }
+
+    console.log(`[Cron] Same-day unconfirmed reminders: ${sent} messages queued.`);
+  } catch (error) {
+    console.warn("[Cron] Same-day reminders failed (non-critical):", error);
   }
 }

@@ -280,7 +280,7 @@ async function handleMessage(
       route: `type:${messageType}`,
     });
 
-    // Intent handlers — appointment actions come first; fallback to task creation
+    // Intent handlers — appointment actions come first; fallback to concierge/task creation
     if (messageType === "text" && content.length > 2 && contact?.id) {
       const contactCtx = {
         id: String(contact.id),
@@ -288,13 +288,21 @@ async function handleMessage(
         patient_id: (contact.patient_id as string | null) ?? null,
         wa_id: contact.wa_id as string,
       };
-      maybeHandleAppointmentIntent(pool, env, orgId, contactCtx, content)
-        .then((handled) => {
-          if (!handled) {
-            return maybeCreateTaskFromIntent(pool, orgId, contactCtx, content);
-          }
-        })
-        .catch(() => null);
+
+      if (contactCtx.patient_id) {
+        // Known patient — handle appointment intents first, then task creation
+        maybeHandleAppointmentIntent(pool, env, orgId, contactCtx, content)
+          .then((handled) => {
+            if (!handled) {
+              return maybeCreateTaskFromIntent(pool, orgId, contactCtx, content);
+            }
+          })
+          .catch(() => null);
+      } else {
+        // Unknown contact — AI Concierge greeting for new potential patients
+        maybeSendConciergeGreeting(pool, env, orgId, contactCtx, conversation.id, content)
+          .catch(() => null);
+      }
     }
   } catch (err) {
     console.error("[WhatsApp Webhook] handleMessage error:", err);
@@ -585,6 +593,112 @@ async function maybeHandleAppointmentIntent(
   }
 
   return false;
+}
+
+// Tracks which wa_ids already got the concierge greeting (in-memory, per worker instance)
+const conciergeGreetedThisSession = new Set<string>();
+
+const CONCIERGE_SCHEDULE_PATTERN =
+  /\b(agendar|agendamento|consulta|marcar|avalia[çc][ãa]o|sessão|sessao|horário|horario|atendimento)\b/i;
+const CONCIERGE_INFO_PATTERN =
+  /\b(informação|informacao|info|dúvida|duvida|preço|preco|valor|plano|convenio|funciona)\b/i;
+const CONCIERGE_URGENT_PATTERN =
+  /\b(urgente|emergência|emergencia|socorro|dor forte|muito dor|dor intensa)\b/i;
+
+async function maybeSendConciergeGreeting(
+  pool: any,
+  env: Env,
+  orgId: string,
+  contact: WebhookContact,
+  conversationId: string,
+  text: string,
+): Promise<void> {
+  const waId = contact.wa_id;
+
+  // Only send greeting once per session per contact to avoid spam
+  if (conciergeGreetedThisSession.has(waId)) return;
+
+  // Check if we already greeted this contact in DB (last 24h)
+  const recentGreeting = await pool.query(
+    `SELECT id FROM wa_messages
+     WHERE conversation_id = $1::uuid
+       AND direction = 'outbound'
+       AND created_at > NOW() - INTERVAL '24 hours'
+     LIMIT 1`,
+    [conversationId],
+  );
+  if (recentGreeting.rows.length > 0) return;
+
+  conciergeGreetedThisSession.add(waId);
+
+  const whatsapp = new WhatsAppService(env);
+  const displayName = contact.display_name ?? "você";
+  const firstName = displayName.split(" ")[0];
+
+  let reply: string;
+
+  if (CONCIERGE_URGENT_PATTERN.test(text)) {
+    reply =
+      `Olá, ${firstName}! 👋 Recebemos sua mensagem sobre uma situação urgente.\n\n` +
+      `Nossa equipe será notificada imediatamente. Em breve entraremos em contato.\n\n` +
+      `Se precisar de ajuda médica de emergência, acione o SAMU: *192*.`;
+    // Create urgent task for team
+    await pool.query(
+      `INSERT INTO tarefas (organization_id, created_by, titulo, descricao, status, prioridade, tipo,
+         order_index, tags, label_ids, checklists, attachments, task_references, dependencies,
+         requires_acknowledgment, acknowledgments)
+       VALUES ($1, 'whatsapp_bot', $2, $3, 'A_FAZER', 'URGENTE', 'TAREFA',
+         0, '{}', '{}', '[]', '[]', '[]', '[]', true, '[]')`,
+      [
+        orgId,
+        `🚨 Mensagem urgente — novo contato WhatsApp (${waId})`,
+        `Novo paciente relatou situação urgente:\n\n"${text.slice(0, 500)}"`,
+      ],
+    );
+  } else if (CONCIERGE_SCHEDULE_PATTERN.test(text)) {
+    reply =
+      `Olá, ${firstName}! 👋 Tudo bem?\n\n` +
+      `Que bom que quer agendar com a gente! 😊\n\n` +
+      `Para reservar seu horário, preciso de algumas informações:\n` +
+      `1️⃣ Seu *nome completo*\n` +
+      `2️⃣ Qual é a sua *queixa principal* (ex: dor lombar, reabilitação pós-cirurgia)\n` +
+      `3️⃣ Possui *plano de saúde*? Se sim, qual?\n\n` +
+      `Nossa equipe confirmará o agendamento em breve! 🗓️`;
+    // Create scheduling task
+    await pool.query(
+      `INSERT INTO tarefas (organization_id, created_by, titulo, descricao, status, prioridade, tipo,
+         order_index, tags, label_ids, checklists, attachments, task_references, dependencies,
+         requires_acknowledgment, acknowledgments)
+       VALUES ($1, 'whatsapp_bot', $2, $3, 'A_FAZER', 'ALTA', 'TAREFA',
+         0, '{}', '{}', '[]', '[]', '[]', '[]', false, '[]')`,
+      [
+        orgId,
+        `Solicitação de agendamento — novo paciente (${waId})`,
+        `Novo paciente quer agendar uma avaliação:\n\n"${text.slice(0, 500)}"`,
+      ],
+    );
+  } else if (CONCIERGE_INFO_PATTERN.test(text)) {
+    reply =
+      `Olá, ${firstName}! 👋\n\n` +
+      `Obrigado pelo contato! Aqui é a clínica. 😊\n\n` +
+      `Posso te ajudar com:\n` +
+      `📅 *Agendar* uma avaliação\n` +
+      `💬 *Informações* sobre tratamentos e valores\n` +
+      `📋 *Tirar dúvidas* sobre fisioterapia\n\n` +
+      `O que você precisa?`;
+  } else {
+    reply =
+      `Olá, ${firstName}! 👋 Bem-vindo(a)!\n\n` +
+      `Aqui é a clínica de fisioterapia. Como posso te ajudar?\n\n` +
+      `📅 Quer *agendar* uma sessão?\n` +
+      `❓ Tem alguma *dúvida* sobre tratamentos?\n` +
+      `📞 Prefere que a equipe te *ligue*?\n\n` +
+      `Responda com uma das opções acima ou descreva o que precisa. 😊`;
+  }
+
+  await whatsapp.sendTextMessage(waId, reply);
+
+  writeEvent(env, { orgId, event: "whatsapp_concierge_greeted" });
 }
 
 async function maybeCreateTaskFromIntent(
