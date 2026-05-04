@@ -83,6 +83,7 @@ import { commissionsRoutes } from "./routes/commissions";
 import { nfseRoutes } from "./routes/nfse";
 import { packagesRoutes } from "./routes/packages";
 import { groupsRoutes } from "./routes/groups";
+import { staffSchedulesRoutes } from "./routes/staffSchedules";
 import { announcementsRoutes } from "./routes/announcements";
 import { adminSeedTemplatesRoutes } from "./routes/admin/seed-templates";
 import { triggerDigitalTwinRoutes } from "./routes/admin/trigger-digital-twin";
@@ -336,6 +337,7 @@ const apiRoutes = [
   ["/api/nfse", nfseRoutes],
   ["/api/packages", packagesRoutes],
   ["/api/groups", groupsRoutes],
+  ["/api/staff-schedules", staffSchedulesRoutes],
   ["/api/announcements", announcementsRoutes],
   ["/api/admin/seed-templates", adminSeedTemplatesRoutes],
   ["/api/admin/dlq", dlqReplayRoutes],

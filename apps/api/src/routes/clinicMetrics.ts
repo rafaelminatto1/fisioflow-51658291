@@ -314,4 +314,64 @@ app.get("/revenue-forecast", requireAuth, async (c) => {
   });
 });
 
+// GET /api/clinic-metrics/team-performance?month=2026-05
+app.get("/team-performance", requireAuth, async (c) => {
+  const user = c.get("user");
+  const pool = createPool(c.env);
+
+  const rawMonth = c.req.query("month");
+  const month = rawMonth && /^\d{4}-\d{2}$/.test(rawMonth) ? rawMonth : null;
+  const now = new Date();
+  const year = month ? month.split("-")[0] : String(now.getFullYear());
+  const mon = month ? month.split("-")[1] : String(now.getMonth() + 1).padStart(2, "0");
+  const periodStart = `${year}-${mon}-01`;
+  const periodEnd = new Date(Number(year), Number(mon), 0).toISOString().split("T")[0];
+
+  const result = await pool.query(
+    `SELECT
+       a.therapist_id::text AS therapist_id,
+       COALESCE(pr.full_name, 'Desconhecido') AS therapist_name,
+       COALESCE(pr.avatar_url, '') AS avatar_url,
+       COUNT(*) FILTER (WHERE a.status::text IN ('agendado','presenca_confirmada','scheduled','confirmed','atendido','avaliacao','faltou','faltou_com_aviso','faltou_sem_aviso','nao_atendido','nao_atendido_sem_cobranca','cancelado','cancelado_paciente','cancelado_clinica'))::int AS total_slots,
+       COUNT(*) FILTER (WHERE a.status::text IN ('atendido','avaliacao'))::int AS completed,
+       COUNT(*) FILTER (WHERE a.status::text IN ('faltou','faltou_com_aviso','faltou_sem_aviso','nao_atendido','nao_atendido_sem_cobranca'))::int AS no_show,
+       COUNT(*) FILTER (WHERE a.status::text IN ('cancelado','cancelado_paciente','cancelado_clinica'))::int AS cancelled,
+       COALESCE(SUM(a.payment_amount) FILTER (WHERE a.status::text IN ('atendido','avaliacao') AND a.payment_amount > 0), 0)::numeric AS revenue,
+       COALESCE(AVG(a.payment_amount) FILTER (WHERE a.status::text IN ('atendido','avaliacao') AND a.payment_amount > 0), 0)::numeric AS avg_ticket,
+       COUNT(DISTINCT a.patient_id) FILTER (WHERE a.status::text IN ('atendido','avaliacao'))::int AS unique_patients
+     FROM appointments a
+     LEFT JOIN profiles pr ON pr.user_id = a.therapist_id::uuid
+     WHERE a.organization_id = $1
+       AND a.date >= $2::date
+       AND a.date <= $3::date
+       AND a.therapist_id IS NOT NULL
+       AND a.deleted_at IS NULL
+     GROUP BY a.therapist_id, pr.full_name, pr.avatar_url
+     ORDER BY revenue DESC`,
+    [user.organizationId, periodStart, periodEnd],
+  );
+
+  const rows = result.rows.map((r: any) => {
+    const attended = Number(r.completed) + Number(r.no_show) + Number(r.cancelled);
+    const occupancy = attended > 0 ? Math.round((r.completed / attended) * 100 * 10) / 10 : 0;
+    const noShowRate = attended > 0 ? Math.round((r.no_show / attended) * 100 * 10) / 10 : 0;
+    return {
+      therapist_id: r.therapist_id,
+      therapist_name: r.therapist_name,
+      avatar_url: r.avatar_url || null,
+      completed: Number(r.completed),
+      no_show: Number(r.no_show),
+      cancelled: Number(r.cancelled),
+      total_slots: Number(r.total_slots),
+      occupancy_rate: occupancy,
+      no_show_rate: noShowRate,
+      revenue: Math.round(Number(r.revenue) * 100) / 100,
+      avg_ticket: Math.round(Number(r.avg_ticket) * 100) / 100,
+      unique_patients: Number(r.unique_patients),
+    };
+  });
+
+  return c.json({ data: { period: { start: periodStart, end: periodEnd }, therapists: rows } });
+});
+
 export { app as clinicMetricsRoutes };
