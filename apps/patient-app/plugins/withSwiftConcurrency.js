@@ -1,9 +1,10 @@
 /**
- * Config plugin que injeta SWIFT_STRICT_CONCURRENCY = minimal no Podfile gerado
- * pelo expo prebuild. Necessário porque Xcode 16.4+ usa Swift 6 strict concurrency
- * por padrão, o que quebra expo-modules-core e outros pods escritos para Swift 5.x.
+ * Config plugin that injects SWIFT_STRICT_CONCURRENCY = minimal into the existing
+ * post_install block of the Podfile. Necessary because Xcode 16.4+ uses Swift 6
+ * strict concurrency by default, breaking expo-modules-core and other Swift 5.x pods.
  *
- * Appenda um segundo post_install block — CocoaPods executa todos em sequência.
+ * Injects inside the EXISTING post_install block (instead of appending a new one)
+ * because CocoaPods does not support multiple post_install blocks.
  */
 const { withDangerousMod } = require("@expo/config-plugins");
 const fs = require("fs");
@@ -22,23 +23,31 @@ module.exports = function withSwiftConcurrency(config) {
       let podfile = fs.readFileSync(podfilePath, "utf8");
 
       if (podfile.includes("SWIFT_STRICT_CONCURRENCY")) {
-        // Já aplicado — nada a fazer
         return config;
       }
 
-      const hook = `
-# Fix: Xcode 16.4 / Swift 6 strict concurrency quebra expo-modules-core.
-# Define SWIFT_STRICT_CONCURRENCY = minimal para todos os pods (comportamento Swift 5.x).
-post_install do |installer|
-  installer.pods_project.targets.each do |target|
-    target.build_configurations.each do |config|
-      config.build_settings['SWIFT_STRICT_CONCURRENCY'] = 'minimal'
-    end
-  end
-end
-`;
+      const injection = [
+        "",
+        "  # Fix: Xcode 16.4 / Swift 6 strict concurrency breaks expo-modules-core.",
+        "  installer.pods_project.targets.each do |target|",
+        "    target.build_configurations.each do |config|",
+        "      config.build_settings['SWIFT_STRICT_CONCURRENCY'] = 'minimal'",
+        "    end",
+        "  end",
+      ].join("\n");
 
-      fs.writeFileSync(podfilePath, podfile + hook);
+      // Inject inside the existing post_install block (first occurrence)
+      if (/^post_install do \|installer\|/m.test(podfile)) {
+        podfile = podfile.replace(
+          /^(post_install do \|installer\|)/m,
+          `$1${injection}`
+        );
+      } else {
+        // No post_install block at all — add one
+        podfile += `\npost_install do |installer|\n${injection}\nend\n`;
+      }
+
+      fs.writeFileSync(podfilePath, podfile);
       return config;
     },
   ]);
