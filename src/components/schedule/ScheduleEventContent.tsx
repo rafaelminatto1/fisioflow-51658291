@@ -1,4 +1,4 @@
-import { Clock, Users, CheckCircle2 } from "lucide-react";
+import { Clock, Users, CheckCircle2, AlertTriangle } from "lucide-react";
 
 export interface ScheduleEventColors {
   background: string;
@@ -15,6 +15,7 @@ export interface ScheduleEventContentProps {
   isTask: boolean;
   colors: ScheduleEventColors;
   isSelected: boolean;
+  hasHighPain?: boolean;
 }
 
 /**
@@ -34,6 +35,7 @@ export function ScheduleEventContent({
   isTask,
   colors,
   isSelected,
+  hasHighPain,
 }: ScheduleEventContentProps) {
   const safeColors = colors || {
     background: "transparent",
@@ -55,10 +57,16 @@ export function ScheduleEventContent({
     >
       <div className="flex items-start justify-between mb-1.5">
         <span 
-          className="text-[9px] font-black uppercase tracking-widest"
+          className="text-[9px] font-black uppercase tracking-widest flex flex-wrap gap-1"
           style={{ color: safeColors.accent }}
         >
           {typeLabel}
+          {hasHighPain && (
+            <span className="flex items-center gap-0.5 bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-400 px-1 rounded shadow-sm ml-1" title="Paciente relatou dor alta recentemente (>7)">
+              <AlertTriangle className="h-2.5 w-2.5" />
+              Dor Alta
+            </span>
+          )}
         </span>
         {!isAllDay && (
           <div className="flex items-center gap-1 text-[10px] font-bold opacity-60">

@@ -9,9 +9,11 @@
 
 import { format } from "date-fns";
 import { AlertTriangle, Cake, MessageCircle, Sparkles } from "lucide-react";
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useEffect, useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useQueries } from "@tanstack/react-query";
 import { Link, useSearchParams } from "react-router-dom";
+import { PatientService } from "@/lib/services/PatientService";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { BulkActionsBar } from "@/components/schedule/BulkActionsBar";
 import { ScheduleCalendar } from "@/components/schedule/ScheduleCalendar";
@@ -59,6 +61,36 @@ export default function Schedule() {
   const { appointments, therapists, patients, birthdaysToday, staffBirthdaysToday, tarefas } = data;
 
   const currentDate = parseLocalDate(dateParam);
+
+  // === INJEÇÃO DE FLAGS CLÍNICAS (DOR ALTA) ===
+  const uniquePatientIds = useMemo(() => {
+    return Array.from(new Set(appointments.map((a: any) => a.patient_id || a.patientId).filter(Boolean))) as string[];
+  }, [appointments]);
+
+  const painQueries = useQueries({
+    queries: uniquePatientIds.map(id => ({
+      queryKey: ['painRecords', id],
+      queryFn: () => PatientService.getPainRecords(id),
+      staleTime: 5 * 60 * 1000,
+    }))
+  });
+
+  const enrichedAppointments = useMemo(() => {
+    const highPainMap = new Map<string, boolean>();
+    painQueries.forEach((q, index) => {
+      if (q.data) {
+        // Verifica dor alta (>7) nos registros recentes
+        const hasHigh = q.data.some(record => record.level > 7);
+        highPainMap.set(uniquePatientIds[index], hasHigh);
+      }
+    });
+
+    return appointments.map((a: any) => ({
+      ...a,
+      has_high_pain_alert: highPainMap.get(a.patient_id || a.patientId) || false
+    }));
+  }, [appointments, painQueries, uniquePatientIds]);
+  // ===========================================
 
   const viewType = viewParam;
   const patientFilter = patientParam || "";
@@ -300,7 +332,7 @@ export default function Schedule() {
                   <CalendarSkeletonEnhanced viewType={viewType as CalendarViewType} />
                 ) : (
                   <ScheduleCalendar
-                    appointments={appointments as never}
+                    appointments={enrichedAppointments as never}
                     tarefas={tarefas ?? []}
                     currentDate={currentDate}
                     onDateChange={handleDateChange}

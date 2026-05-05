@@ -76,9 +76,11 @@ export interface RawAppointment {
   patientName?: string;
   therapist_id?: string;
   isGroup?: boolean;
+  isGroup?: boolean;
   is_group?: boolean;
   currentParticipants?: number;
   current_participants?: number;
+  has_high_pain_alert?: boolean;
   [k: string]: unknown;
 }
 
@@ -261,6 +263,7 @@ export function ScheduleCalendar(props: ScheduleCalendarProps) {
           statusKey,
           isGroup,
           groupCount: Number(a.currentParticipants ?? a.current_participants ?? 0),
+          hasHighPain: Boolean(a.has_high_pain_alert),
         },
       });
     }
@@ -402,6 +405,7 @@ export function ScheduleCalendar(props: ScheduleCalendarProps) {
       colors?: { background: string; accent: string; text: string };
       isGroup?: boolean;
       groupCount?: number;
+      hasHighPain?: boolean;
     };
 
     const kind = props._kind;
@@ -440,6 +444,7 @@ export function ScheduleCalendar(props: ScheduleCalendarProps) {
         isTask={false}
         colors={colors}
         isSelected={selectionOn && !!selectedIds?.has(arg.event.id)}
+        hasHighPain={props.hasHighPain}
       />
     );
   };
