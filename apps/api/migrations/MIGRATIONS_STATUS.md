@@ -38,12 +38,22 @@
 | `0055_ensure_tarefas_projects.sql` | Garante tabelas tarefas/projects | ✅ | ✅ | ✅ | Confirmado: tabelas `projects`, `tarefas` presentes. Renomeado 2026-04-28 |
 | `0056_roles_rls_security.sql` | Roles `app_runtime` + RLS segurança | ✅ | ✅ | ✅ | Confirmado: role `app_runtime` presente em `pg_roles`. Renomeado 2026-04-28 |
 | `0057_rls_complete.sql` | RLS completo para todas as tabelas | ✅ | ✅ | ✅ | Confirmado: políticas `org_isolation_*` em ~80 tabelas. Renomeado 2026-04-28 |
+| `0058_public_profile.sql` | slug + is_public em profiles; checkin_token em appointments | ✅ | ✅ | ✅ | Aplicada 2026-05-05 via Neon MCP |
+| `0059_patient_streaks_gamification.sql` | Tabela `patient_streaks`; colunas source+metadata em xp_transactions | ✅ | ✅ | ✅ | Aplicada 2026-05-05 via Neon MCP |
+| `0061_ai_usage.sql` | Tabela `ai_usage_logs` | ✅ | ✅ | ✅ | Confirmado: tabela presente |
+| `0062_user_agenda_appearance.sql` | Tabela `user_agenda_appearance` | ✅ | ✅ | ✅ | Confirmado: tabela presente |
+| `0063_appointment_status_settings.sql` | Tabela `appointment_status_settings` | ✅ | ✅ | ✅ | Confirmado: tabela presente |
+| `0064_nfse_accounting.sql` | Colunas contabilidade em nfse_config; enviado_contabilidade_at em nfse_records | ✅ | ✅ | ❌ | Aplicada 2026-05-05 via Neon MCP |
+| `0065_nfse_robustness.sql` | tentativas_envio, ultimo_erro, workflow_id em nfse_records | ✅ | ✅ | ❌ | Aplicada 2026-05-05 via Neon MCP |
+| `0066_groups.sql` | Tabelas `group_sessions`, `group_enrollments`, `group_waitlist` | ✅ | ✅ | ✅ | Confirmado: tabelas presentes |
+| `0067_staff_schedules.sql` | Tabela `staff_schedules` | ✅ | ✅ | ❌ | Confirmado: tabela presente |
+| `0068_wearable_oauth.sql` | Tabela `wearable_oauth_tokens` | ✅ | ✅ | ❌ | Confirmado: tabela presente |
 
 ---
 
-## Status Resumido (Auditoria via Neon MCP — 2026-04-28)
+## Status Resumido (Auditoria via Neon MCP — 2026-05-05)
 
-**Todas as 18 migrations confirmadas como aplicadas em produção.** Verificação realizada via queries diretas ao Neon PostgreSQL.
+**Todas as 29 migrations confirmadas como aplicadas em produção.** Última verificação 2026-05-05 via queries diretas ao Neon PostgreSQL.
 
 | Área | Status |
 |---|---|
