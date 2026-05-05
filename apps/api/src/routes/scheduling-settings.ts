@@ -24,6 +24,84 @@ import {
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
+type ScheduleCacheResource =
+  | "business-hours"
+  | "cancellation-rules"
+  | "notification-settings"
+  | "capacity-config"
+  | "appointment-statuses"
+  | "booking-window"
+  | "slot-config";
+
+const SCHEDULE_CACHE_VERSION = "v1";
+const BUSINESS_HOURS_TTL_SECONDS = 15 * 60;
+const CLOSED_HOURS_TTL_SECONDS = 8 * 60 * 60;
+
+function getSchedulingCacheTtlSeconds(now = new Date()): number {
+  const brHour = (now.getUTCHours() - 3 + 24) % 24;
+  return brHour >= 22 || brHour < 6 ? CLOSED_HOURS_TTL_SECONDS : BUSINESS_HOURS_TTL_SECONDS;
+}
+
+function scheduleCacheKey(organizationId: string, resource: ScheduleCacheResource): string {
+  return `schedule-settings:${SCHEDULE_CACHE_VERSION}:${resource}:${organizationId}`;
+}
+
+async function readThroughScheduleCache<T>(
+  env: Env,
+  organizationId: string,
+  resource: ScheduleCacheResource,
+  load: () => Promise<T>,
+): Promise<T> {
+  const d1 = env.EDGE_CACHE || env.DB;
+  const key = scheduleCacheKey(organizationId, resource);
+
+  if (!d1) return await load();
+
+  try {
+    const cached = await d1
+      .prepare("SELECT value, expires_at FROM query_cache WHERE id = ?")
+      .bind(key)
+      .first<{ value: string; expires_at: number }>();
+
+    if (cached && cached.expires_at > Date.now()) {
+      return JSON.parse(cached.value) as T;
+    }
+  } catch (error) {
+    console.warn(`[Schedule Cache] read miss for ${key}:`, error);
+  }
+
+  const value = await load();
+
+  try {
+    await d1
+      .prepare("INSERT OR REPLACE INTO query_cache (id, value, expires_at) VALUES (?, ?, ?)")
+      .bind(key, JSON.stringify(value), Date.now() + getSchedulingCacheTtlSeconds() * 1000)
+      .run();
+  } catch (error) {
+    console.warn(`[Schedule Cache] write failed for ${key}:`, error);
+  }
+
+  return value;
+}
+
+async function invalidateScheduleCache(
+  env: Env,
+  organizationId: string,
+  ...resources: ScheduleCacheResource[]
+): Promise<void> {
+  const d1 = env.EDGE_CACHE || env.DB;
+  if (!d1) return;
+
+  await Promise.allSettled(
+    resources.map((resource) =>
+      d1
+        .prepare("DELETE FROM query_cache WHERE id = ?")
+        .bind(scheduleCacheKey(organizationId, resource))
+        .run(),
+    ),
+  );
+}
+
 async function ensureDefaultAppointmentStatuses(pool: any, organizationId: string) {
   for (const status of DEFAULT_APPOINTMENT_STATUSES) {
     await pool.query(
@@ -94,15 +172,7 @@ async function handleUpsertBusinessHours(c: any) {
     );
     const results = res.rows.map(mapBusinessHourRow);
 
-    const d1 = c.env.EDGE_CACHE || c.env.DB;
-    if (d1) {
-      const cacheKey = `business-hours:${user.organizationId}`;
-      await d1
-        .prepare("DELETE FROM query_cache WHERE id = ?")
-        .bind(cacheKey)
-        .run()
-        .catch(() => {});
-    }
+    await invalidateScheduleCache(c.env, user.organizationId, "business-hours");
 
     return c.json({ data: results });
   } catch (error: any) {
@@ -148,6 +218,8 @@ async function handleUpsertCancellationRules(c: any) {
       RETURNING *`,
       params,
     );
+
+    await invalidateScheduleCache(c.env, user.organizationId, "cancellation-rules");
 
     return c.json({ data: mapCancellationRuleRow(res.rows[0]) });
   } catch (error: any) {
@@ -201,6 +273,8 @@ async function handleUpsertNotificationSettings(c: any) {
       params,
     );
 
+    await invalidateScheduleCache(c.env, user.organizationId, "notification-settings");
+
     return c.json({ data: mapNotificationSettingsRow(res.rows[0]) });
   } catch (error: any) {
     return c.json({ error: error.message }, 500);
@@ -225,6 +299,7 @@ const handleUpsertBookingWindow = async (c: any) => {
        RETURNING *`,
       [user.organizationId, minAdvance, maxAdvance, sameDay, online],
     );
+    await invalidateScheduleCache(c.env, user.organizationId, "booking-window");
     return c.json({ data: mapBookingWindowRow(result.rows[0]) });
   } catch (error: any) {
     return c.json({ error: error.message }, 500);
@@ -251,6 +326,7 @@ const handleUpsertSlotConfig = async (c: any) => {
        RETURNING *`,
       [user.organizationId, interval, alignment],
     );
+    await invalidateScheduleCache(c.env, user.organizationId, "slot-config");
     return c.json({ data: mapSlotConfigRow(result.rows[0]) });
   } catch (error: any) {
     return c.json({ error: error.message }, 500);
@@ -260,13 +336,16 @@ const handleUpsertSlotConfig = async (c: any) => {
 // Business Hours
 app.get("/settings/business-hours", requireAuth, async (c) => {
   const user = c.get("user");
-  const pool = await createPool(c.env);
   try {
-    const result = await pool.query(
-      "SELECT * FROM business_hours WHERE organization_id = $1 ORDER BY day_of_week ASC",
-      [user.organizationId],
-    );
-    return c.json({ data: result.rows.map(mapBusinessHourRow) });
+    const data = await readThroughScheduleCache(c.env, user.organizationId, "business-hours", async () => {
+      const pool = await createPool(c.env);
+      const result = await pool.query(
+        "SELECT * FROM business_hours WHERE organization_id = $1 ORDER BY day_of_week ASC",
+        [user.organizationId],
+      );
+      return result.rows.map(mapBusinessHourRow);
+    });
+    return c.json({ data });
   } catch {
     return c.json(emptyData());
   }
@@ -342,13 +421,16 @@ app.delete("/settings/blocked-times/:id", requireAuth, async (c) => {
 // Cancellation Rules
 app.get("/settings/cancellation-rules", requireAuth, async (c) => {
   const user = c.get("user");
-  const pool = await createPool(c.env);
   try {
-    const result = await pool.query(
-      "SELECT * FROM cancellation_rules WHERE organization_id = $1 LIMIT 1",
-      [user.organizationId],
-    );
-    return c.json({ data: result.rows[0] ? mapCancellationRuleRow(result.rows[0]) : null });
+    const data = await readThroughScheduleCache(c.env, user.organizationId, "cancellation-rules", async () => {
+      const pool = await createPool(c.env);
+      const result = await pool.query(
+        "SELECT * FROM cancellation_rules WHERE organization_id = $1 LIMIT 1",
+        [user.organizationId],
+      );
+      return result.rows[0] ? mapCancellationRuleRow(result.rows[0]) : null;
+    });
+    return c.json({ data });
   } catch {
     return c.json(emptyObject());
   }
@@ -360,13 +442,21 @@ app.put("/settings/cancellation-rules", requireAuth, handleUpsertCancellationRul
 // Notification Settings
 app.get("/settings/notification-settings", requireAuth, async (c) => {
   const user = c.get("user");
-  const pool = await createPool(c.env);
   try {
-    const result = await pool.query(
-      "SELECT * FROM scheduling_notification_settings WHERE organization_id = $1 LIMIT 1",
-      [user.organizationId],
+    const data = await readThroughScheduleCache(
+      c.env,
+      user.organizationId,
+      "notification-settings",
+      async () => {
+        const pool = await createPool(c.env);
+        const result = await pool.query(
+          "SELECT * FROM scheduling_notification_settings WHERE organization_id = $1 LIMIT 1",
+          [user.organizationId],
+        );
+        return result.rows[0] ? mapNotificationSettingsRow(result.rows[0]) : null;
+      },
     );
-    return c.json({ data: result.rows[0] ? mapNotificationSettingsRow(result.rows[0]) : null });
+    return c.json({ data });
   } catch {
     return c.json(emptyObject());
   }
@@ -378,13 +468,16 @@ app.put("/settings/notification-settings", requireAuth, handleUpsertNotification
 // Capacity Config
 app.get("/capacity-config", requireAuth, async (c) => {
   const user = c.get("user");
-  const pool = await createPool(c.env);
   try {
-    const result = await pool.query(
-      "SELECT * FROM schedule_capacity WHERE organization_id = $1 ORDER BY day_of_week ASC, start_time ASC",
-      [user.organizationId],
-    );
-    return c.json({ data: result.rows.map(mapCapacityRow) });
+    const data = await readThroughScheduleCache(c.env, user.organizationId, "capacity-config", async () => {
+      const pool = await createPool(c.env);
+      const result = await pool.query(
+        "SELECT * FROM schedule_capacity WHERE organization_id = $1 ORDER BY day_of_week ASC, start_time ASC",
+        [user.organizationId],
+      );
+      return result.rows.map(mapCapacityRow);
+    });
+    return c.json({ data });
   } catch {
     return c.json(emptyData());
   }
@@ -414,6 +507,8 @@ app.post("/capacity-config", requireAuth, async (c) => {
       );
       results.push(mapCapacityRow(res.rows[0]));
     }
+
+    await invalidateScheduleCache(c.env, user.organizationId, "capacity-config");
 
     return c.json({ data: results });
   } catch (error: any) {
@@ -459,6 +554,8 @@ app.put("/capacity-config/:id", requireAuth, async (c) => {
       ],
     );
 
+    await invalidateScheduleCache(c.env, user.organizationId, "capacity-config");
+
     return c.json({ data: mapCapacityRow(res.rows[0]) });
   } catch (error: any) {
     return c.json({ error: error.message }, 500);
@@ -474,6 +571,7 @@ app.delete("/capacity-config/:id", requireAuth, async (c) => {
       id,
       user.organizationId,
     ]);
+    await invalidateScheduleCache(c.env, user.organizationId, "capacity-config");
     return c.json({ success: true });
   } catch (error: any) {
     return c.json({ error: error.message }, 500);
@@ -483,17 +581,20 @@ app.delete("/capacity-config/:id", requireAuth, async (c) => {
 // Appointment Status Settings
 app.get("/settings/statuses", requireAuth, async (c) => {
   const user = c.get("user");
-  const pool = await createPool(c.env);
   try {
-    await ensureDefaultAppointmentStatuses(pool, user.organizationId);
-    const result = await pool.query(
-      `SELECT *
-       FROM appointment_status_settings
-       WHERE organization_id = $1
-       ORDER BY sort_order ASC, label ASC`,
-      [user.organizationId],
-    );
-    return c.json({ data: result.rows.map(mapAppointmentStatusSettingRow) });
+    const data = await readThroughScheduleCache(c.env, user.organizationId, "appointment-statuses", async () => {
+      const pool = await createPool(c.env);
+      await ensureDefaultAppointmentStatuses(pool, user.organizationId);
+      const result = await pool.query(
+        `SELECT *
+         FROM appointment_status_settings
+         WHERE organization_id = $1
+         ORDER BY sort_order ASC, label ASC`,
+        [user.organizationId],
+      );
+      return result.rows.map(mapAppointmentStatusSettingRow);
+    });
+    return c.json({ data });
   } catch (error: any) {
     return c.json({ error: error.message }, 500);
   }
@@ -525,6 +626,7 @@ app.post("/settings/statuses", requireAuth, async (c) => {
         normalized.countsTowardCapacity,
       ],
     );
+    await invalidateScheduleCache(c.env, user.organizationId, "appointment-statuses");
     return c.json({ data: mapAppointmentStatusSettingRow(result.rows[0]) }, 201);
   } catch (error: any) {
     const status = error?.code === "23505" ? 409 : 500;
@@ -578,6 +680,7 @@ app.put("/settings/statuses/:id", requireAuth, async (c) => {
         user.organizationId,
       ],
     );
+    await invalidateScheduleCache(c.env, user.organizationId, "appointment-statuses");
     return c.json({ data: mapAppointmentStatusSettingRow(result.rows[0]) });
   } catch (error: any) {
     const status = error?.code === "23505" ? 409 : 500;
@@ -611,6 +714,7 @@ app.delete("/settings/statuses/:id", requireAuth, async (c) => {
          RETURNING *`,
         [id, user.organizationId],
       );
+      await invalidateScheduleCache(c.env, user.organizationId, "appointment-statuses");
       return c.json({ data: mapAppointmentStatusSettingRow(result.rows[0]), deactivated: true });
     }
 
@@ -618,6 +722,7 @@ app.delete("/settings/statuses/:id", requireAuth, async (c) => {
       id,
       user.organizationId,
     ]);
+    await invalidateScheduleCache(c.env, user.organizationId, "appointment-statuses");
     return c.json({ success: true });
   } catch (error: any) {
     return c.json({ error: error.message }, 500);
@@ -627,13 +732,16 @@ app.delete("/settings/statuses/:id", requireAuth, async (c) => {
 // Booking Window
 app.get("/settings/booking-window", requireAuth, async (c) => {
   const user = c.get("user");
-  const pool = await createPool(c.env);
   try {
-    const result = await pool.query(
-      "SELECT * FROM schedule_booking_window WHERE organization_id = $1 LIMIT 1",
-      [user.organizationId],
-    );
-    return c.json({ data: result.rows[0] ? mapBookingWindowRow(result.rows[0]) : null });
+    const data = await readThroughScheduleCache(c.env, user.organizationId, "booking-window", async () => {
+      const pool = await createPool(c.env);
+      const result = await pool.query(
+        "SELECT * FROM schedule_booking_window WHERE organization_id = $1 LIMIT 1",
+        [user.organizationId],
+      );
+      return result.rows[0] ? mapBookingWindowRow(result.rows[0]) : null;
+    });
+    return c.json({ data });
   } catch {
     return c.json(emptyObject());
   }
@@ -645,13 +753,16 @@ app.put("/settings/booking-window", requireAuth, handleUpsertBookingWindow);
 // Slot Config
 app.get("/settings/slot-config", requireAuth, async (c) => {
   const user = c.get("user");
-  const pool = await createPool(c.env);
   try {
-    const result = await pool.query(
-      "SELECT * FROM schedule_slot_config WHERE organization_id = $1 LIMIT 1",
-      [user.organizationId],
-    );
-    return c.json({ data: result.rows[0] ? mapSlotConfigRow(result.rows[0]) : null });
+    const data = await readThroughScheduleCache(c.env, user.organizationId, "slot-config", async () => {
+      const pool = await createPool(c.env);
+      const result = await pool.query(
+        "SELECT * FROM schedule_slot_config WHERE organization_id = $1 LIMIT 1",
+        [user.organizationId],
+      );
+      return result.rows[0] ? mapSlotConfigRow(result.rows[0]) : null;
+    });
+    return c.json({ data });
   } catch {
     return c.json(emptyObject());
   }
