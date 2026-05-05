@@ -374,4 +374,76 @@ app.get("/team-performance", requireAuth, async (c) => {
   return c.json({ data: { period: { start: periodStart, end: periodEnd }, therapists: rows } });
 });
 
+// GET /api/clinic-metrics/churn?month=2026-05
+// Returns monthly churn: patients who had sessions in M-1 but NOT in M
+app.get("/churn", requireAuth, async (c) => {
+  const user = c.get("user");
+  const pool = createPool(c.env);
+
+  const rawMonth = c.req.query("month");
+  const base = rawMonth && /^\d{4}-\d{2}$/.test(rawMonth)
+    ? new Date(rawMonth + "-01")
+    : new Date();
+
+  const curYear = base.getFullYear();
+  const curMon = base.getMonth() + 1;
+  const prevMon = curMon === 1 ? 12 : curMon - 1;
+  const prevYear = curMon === 1 ? curYear - 1 : curYear;
+
+  const curStart = `${curYear}-${String(curMon).padStart(2, "0")}-01`;
+  const curEnd = new Date(curYear, curMon, 0).toISOString().split("T")[0];
+  const prevStart = `${prevYear}-${String(prevMon).padStart(2, "0")}-01`;
+  const prevEnd = new Date(prevYear, prevMon, 0).toISOString().split("T")[0];
+
+  const result = await pool.query(
+    `WITH prev_patients AS (
+       SELECT DISTINCT a.patient_id, p.full_name, p.phone
+       FROM appointments a
+       JOIN patients p ON p.id = a.patient_id
+       WHERE a.organization_id = $1
+         AND a.date >= $2 AND a.date <= $3
+         AND a.status::text IN ('atendido','avaliacao')
+         AND a.deleted_at IS NULL
+     ),
+     cur_patients AS (
+       SELECT DISTINCT patient_id
+       FROM appointments
+       WHERE organization_id = $1
+         AND date >= $4 AND date <= $5
+         AND status::text IN ('atendido','avaliacao','agendado','presenca_confirmada')
+         AND deleted_at IS NULL
+     ),
+     churned AS (
+       SELECT pp.patient_id, pp.full_name, pp.phone
+       FROM prev_patients pp
+       WHERE pp.patient_id NOT IN (SELECT patient_id FROM cur_patients)
+     )
+     SELECT
+       (SELECT COUNT(*)::int FROM prev_patients) AS active_prev_month,
+       (SELECT COUNT(*)::int FROM churned) AS churned_count,
+       json_agg(json_build_object(
+         'patient_id', c.patient_id,
+         'name', c.full_name,
+         'phone', c.phone
+       ) ORDER BY c.full_name) AS churned_patients
+     FROM churned c`,
+    [user.organizationId, prevStart, prevEnd, curStart, curEnd],
+  );
+
+  const row = result.rows[0] ?? {};
+  const activePrev = Number(row.active_prev_month ?? 0);
+  const churnedCount = Number(row.churned_count ?? 0);
+  const churnRate = activePrev > 0 ? Math.round((churnedCount / activePrev) * 1000) / 10 : 0;
+
+  return c.json({
+    data: {
+      period: { current: { start: curStart, end: curEnd }, previous: { start: prevStart, end: prevEnd } },
+      activePrevMonth: activePrev,
+      churnedCount,
+      churnRate,
+      churnedPatients: row.churned_patients ?? [],
+    },
+  });
+});
+
 export { app as clinicMetricsRoutes };

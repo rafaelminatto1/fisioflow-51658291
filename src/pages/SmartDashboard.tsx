@@ -10,6 +10,7 @@ import { OverduePaymentsAlert } from "@/components/dashboard/OverduePaymentsAler
 import { PackagesExpiringAlert } from "@/components/dashboard/PackagesExpiringAlert";
 import { RevenueForecastCard } from "@/components/dashboard/RevenueForecastCard";
 import { TeamPerformanceKPIs } from "@/components/dashboard/TeamPerformanceKPIs";
+import { ChurnReportCard } from "@/components/dashboard/ChurnReportCard";
 import { cn } from "@/lib/utils";
 
 type ViewMode = "today" | "week";
@@ -84,6 +85,7 @@ export function SmartDashboardContent() {
       <RevenueForecastCard />
 
       <TeamPerformanceKPIs />
+      <ChurnReportCard />
 
       <BentoDashboard viewMode={viewMode} />
     </div>
