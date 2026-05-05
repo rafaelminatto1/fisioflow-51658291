@@ -288,7 +288,7 @@ app.get("/referrals/stats", requireAuth, async (c) => {
   const pool = await createPool(c.env);
   const user = c.get("user");
 
-  const [codesRes, redemptionsRes] = await Promise.all([
+  const [codesRes, redemptionsRes, topReferrersRes] = await Promise.all([
     pool.query(
       `SELECT COUNT(*)::int AS total_codes,
               COUNT(*) FILTER (
@@ -304,6 +304,21 @@ app.get("/referrals/stats", requireAuth, async (c) => {
         WHERE organization_id = $1`,
       [user.organizationId],
     ),
+    pool.query(
+      `SELECT rc.patient_id,
+              p.full_name,
+              COUNT(rr.id)::int AS referral_count,
+              SUM(rc.uses)::int AS total_uses
+         FROM referral_codes rc
+         LEFT JOIN referral_redemptions rr ON rr.referral_code_id = rc.id
+         LEFT JOIN patients p ON p.id = rc.patient_id
+        WHERE rc.organization_id = $1
+        GROUP BY rc.patient_id, p.full_name
+        HAVING SUM(rc.uses) > 0
+        ORDER BY referral_count DESC, total_uses DESC
+        LIMIT 10`,
+      [user.organizationId],
+    ),
   ]);
 
   return c.json({
@@ -312,7 +327,12 @@ app.get("/referrals/stats", requireAuth, async (c) => {
       activeCodes: codesRes.rows[0]?.active_codes ?? 0,
       totalRedemptions: redemptionsRes.rows[0]?.total_redemptions ?? 0,
       pendingRewards: 0,
-      topReferrers: [],
+      topReferrers: topReferrersRes.rows.map((r: any) => ({
+        patientId: r.patient_id,
+        name: r.full_name ?? "Paciente",
+        referralCount: r.referral_count,
+        totalUses: r.total_uses,
+      })),
     },
   });
 });
