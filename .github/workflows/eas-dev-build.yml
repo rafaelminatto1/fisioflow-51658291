@@ -19,8 +19,8 @@ on:
       profile:
         description: "Perfil de build"
         type: choice
-        options: [development, preview, production]
-        default: development
+        options: [development, development:simulator, preview, production]
+        default: development:simulator
 
 concurrency:
   group: eas-build-${{ github.ref }}-${{ inputs.platform || 'ios' }}
@@ -28,7 +28,7 @@ concurrency:
 
 jobs:
   build:
-    name: EAS Build (${{ inputs.platform || 'ios' }} / ${{ inputs.profile || 'development' }})
+    name: EAS Build (${{ inputs.platform || 'ios' }} / ${{ inputs.profile || 'development:simulator' }})
     runs-on: ubuntu-latest
     timeout-minutes: 60
 
@@ -58,7 +58,7 @@ jobs:
         working-directory: apps/patient-app
         run: |
           PLATFORM="${{ inputs.platform || 'ios' }}"
-          PROFILE="${{ inputs.profile || 'development' }}"
+          PROFILE="${{ inputs.profile || 'development:simulator' }}"
 
           if [ "$PLATFORM" = "all" ]; then
             eas build --platform all --profile "$PROFILE" --non-interactive
@@ -66,20 +66,24 @@ jobs:
             eas build --platform "$PLATFORM" --profile "$PROFILE" --non-interactive
           fi
 
-      # Para o perfil "development": imprime o link de instalação OTA
-      # O link aparece no output do EAS e fica disponível em expo.dev/accounts/rafaelminatto
+      # Para perfis "development" e "development:simulator": imprime instruções
       - name: Print install instructions
-        if: ${{ (inputs.profile || 'development') == 'development' }}
+        if: ${{ startsWith(inputs.profile || 'development:simulator', 'development') }}
         run: |
           echo ""
           echo "========================================================"
           echo "  BUILD CONCLUÍDO — Como instalar no celular:"
           echo ""
-          echo "  iOS:"
+          echo "  iOS (perfil 'development' — device):"
           echo "  1. Acesse https://expo.dev/accounts/rafaelminatto/projects/fisioflow-patient/builds"
           echo "  2. Clique no build mais recente"
           echo "  3. Escaneie o QR code com a câmera do iPhone"
           echo "     (instala via OTA — sem precisar da App Store)"
+          echo ""
+          echo "  iOS (perfil 'development:simulator'):"
+          echo "  1. Baixe o .tar.gz do build no link acima"
+          echo "  2. xcrun simctl install booted FisioFlowPaciente.app"
+          echo "  3. xcrun simctl launch booted com.fisioflow.patients"
           echo ""
           echo "  Android:"
           echo "  1. Mesmo link acima"
