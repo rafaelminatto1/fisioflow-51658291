@@ -27,7 +27,9 @@
         "NSPhotoLibraryUsageDescription": "Permitir acesso a galeria para selecionar fotos",
         "NSMicrophoneUsageDescription": "Permitir acesso ao microfone para gravar videos de exercicios",
         "NSCalendarsUsageDescription": "O FisioFlow precisa de acesso ao seu calendário para sincronizar suas sessões de fisioterapia automaticamente.",
-        "NSRemindersUsageDescription": "O FisioFlow precisa de acesso aos seus lembretes para avisar sobre o horário das suas sessões."
+        "NSRemindersUsageDescription": "O FisioFlow precisa de acesso aos seus lembretes para avisar sobre o horário das suas sessões.",
+        "NSHealthShareUsageDescription": "O FisioFlow acessa seus dados de saúde (passos, batimentos, sono) para compartilhar com seu fisioterapeuta e acompanhar sua evolução clínica.",
+        "NSHealthUpdateUsageDescription": "O FisioFlow não grava dados no app Saúde."
       },
       "config": {
         "usesNonExemptEncryption": false
@@ -39,10 +41,15 @@
         "backgroundColor": "#0D9488"
       },
       "package": "com.fisioflow.patient",
+      "versionCode": 1,
       "edgeToEdgeEnabled": true,
       "permissions": [
         "android.permission.READ_CALENDAR",
-        "android.permission.WRITE_CALENDAR"
+        "android.permission.WRITE_CALENDAR",
+        "android.permission.health.READ_STEPS",
+        "android.permission.health.READ_HEART_RATE",
+        "android.permission.health.READ_DISTANCE",
+        "android.permission.health.READ_SLEEP"
       ]
     },
     "plugins": [

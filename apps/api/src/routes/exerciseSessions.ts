@@ -2,6 +2,7 @@ import { Hono } from "hono";
 import { createPool } from "../lib/db";
 import { requireAuth, type AuthVariables } from "../lib/auth";
 import type { Env } from "../types/env";
+import { notifyHEPMilestone } from "../lib/push";
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
@@ -71,7 +72,45 @@ app.post("/", requireAuth, async (c) => {
     ],
   );
 
-  return c.json({ data: result.rows[0] }, 201);
+  const session = result.rows[0];
+
+  // Fire push milestone when patient completes an exercise (non-fatal)
+  if (completed && patient_id) {
+    const db2 = db; // reuse pool
+    Promise.resolve().then(async () => {
+      try {
+        // Count consecutive days with at least one completed session
+        const streakResult = await db2.query(
+          `WITH daily AS (
+             SELECT DATE(created_at) AS d
+             FROM exercise_sessions
+             WHERE patient_id = $1 AND completed = true
+             GROUP BY DATE(created_at)
+             ORDER BY d DESC
+           ),
+           numbered AS (
+             SELECT d, ROW_NUMBER() OVER (ORDER BY d DESC) AS rn
+             FROM daily
+           )
+           SELECT COUNT(*) AS streak_days
+           FROM numbered
+           WHERE d = CURRENT_DATE - CAST((rn - 1) AS integer)`,
+          [patient_id],
+        );
+        const streakDays = parseInt(streakResult.rows[0]?.streak_days ?? "0");
+        // Notify on milestones: 1st, 3rd, 7th, 14th, 30th day streak
+        const milestones = [1, 3, 7, 14, 30];
+        if (milestones.includes(streakDays)) {
+          const exerciseName = session.exercise_type ?? "exercício";
+          await notifyHEPMilestone(c.env, db2, patient_id, { exerciseName, streakDays });
+        }
+      } catch (_err) {
+        // non-critical
+      }
+    });
+  }
+
+  return c.json({ data: session }, 201);
 });
 
 // GET /api/exercise-sessions/stats/:patientId

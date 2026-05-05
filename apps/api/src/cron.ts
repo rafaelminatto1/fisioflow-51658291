@@ -5,6 +5,7 @@ import { sendAppointmentReminderEmail } from "./lib/email";
 import type { WhatsAppQueuePayload } from "./queue";
 import { cleanupRateLimits } from "./middleware/rateLimit";
 import { runHealthMonitor } from "./lib/monitor";
+import { notifyPatientAppointment } from "./lib/push";
 
 /**
  * Cloudflare Worker Cron Trigger Handler
@@ -547,6 +548,14 @@ async function send48hConfirmationRequests(pool: any, env: Env) {
 
       await env.BACKGROUND_QUEUE.send(queuePayload);
 
+      // Also send push notification (non-fatal)
+      notifyPatientAppointment(env, pool, row.patient_id, {
+        appointmentId: row.id,
+        datetime: `${row.formatted_date} às ${timeStr}`,
+        therapistName: row.therapist_name,
+        type: "reminder_48h",
+      }).catch((err) => console.warn("[Cron] Push 48h failed:", err));
+
       await pool.query(
         `UPDATE appointments SET reminder_sent_at = NOW(), updated_at = NOW() WHERE id = $1::uuid`,
         [row.id],
@@ -609,6 +618,15 @@ async function sendSameDayUnconfirmedReminders(pool: any, env: Env) {
       };
 
       await env.BACKGROUND_QUEUE.send(queuePayload);
+
+      // Push notification alongside WhatsApp (non-fatal)
+      notifyPatientAppointment(env, pool, row.patient_id, {
+        appointmentId: row.id,
+        datetime: `hoje às ${timeStr}`,
+        therapistName: row.therapist_name,
+        type: "reminder_2h",
+      }).catch((err) => console.warn("[Cron] Push same-day failed:", err));
+
       sent++;
     }
 

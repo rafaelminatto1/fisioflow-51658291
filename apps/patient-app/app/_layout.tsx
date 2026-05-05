@@ -3,10 +3,11 @@
 import { useEffect } from "react";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import { View, ActivityIndicator, StyleSheet, LogBox } from "react-native";
+import { View, ActivityIndicator, StyleSheet, LogBox, Linking } from "react-native";
 import { useAuthStore } from "@/store/auth";
 import { useColors, useColorScheme } from "@/hooks/useColorScheme";
-import { initializeNotifications } from "@/lib/notificationsSystem";
+import { initializeNotifications, useNotificationResponse } from "@/lib/notificationsSystem";
+import { router } from "expo-router";
 import * as Sentry from "@sentry/react-native";
 import { ToastContainer, ErrorBoundary } from "@/components";
 import * as SplashScreen from "expo-splash-screen";
@@ -27,10 +28,26 @@ LogBox.ignoreLogs([
 
 SplashScreen.preventAutoHideAsync();
 
+function handleDeepLink(url: string | null) {
+  if (!url) return;
+  try {
+    const parsed = new URL(url);
+    // fisioflow://agendar/clinica-slug → /book-appointment?slug=...
+    const match = parsed.pathname.match(/^\/agendar\/([^/]+)$/);
+    if (match) {
+      router.push({ pathname: "/book-appointment", params: { slug: match[1] } });
+    }
+  } catch (_) {
+    // ignore malformed URLs
+  }
+}
+
 export default function RootLayout() {
   const colors = useColors();
   const colorScheme = useColorScheme();
   const { isLoading, initialize } = useAuthStore();
+
+  useNotificationResponse();
 
   useEffect(() => {
     const unsubscribe = initialize();
@@ -38,7 +55,14 @@ export default function RootLayout() {
     // Initialize notifications system
     initializeNotifications();
 
-    return () => unsubscribe();
+    // Handle deep links
+    Linking.getInitialURL().then(handleDeepLink);
+    const linkSub = Linking.addEventListener("url", (e) => handleDeepLink(e.url));
+
+    return () => {
+      unsubscribe();
+      linkSub.remove();
+    };
   }, [initialize]);
 
   useEffect(() => {
