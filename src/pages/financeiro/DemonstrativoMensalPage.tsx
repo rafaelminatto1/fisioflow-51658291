@@ -30,7 +30,19 @@ import {
 } from "lucide-react";
 import { format, subMonths, startOfMonth, endOfMonth } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Tooltip, ResponsiveContainer, Cell, PieChart as RechartsPieChart, Pie } from "recharts";
+import {
+  Tooltip,
+  ResponsiveContainer,
+  Cell,
+  PieChart as RechartsPieChart,
+  Pie,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Legend,
+} from "recharts";
 import { useQuery } from "@tanstack/react-query";
 import { appointmentsApi, financialApi, type ContaFinanceira, type Transacao } from "@/api/v2";
 import { useOrganizations } from "@/hooks/useOrganizations";
@@ -234,6 +246,65 @@ export default function DemonstrativoMensalPage() {
       ? ((demoData.saldo - demoMesAnterior.saldo) / Math.abs(demoMesAnterior.saldo || 1)) * 100
       : 0;
 
+  // 6-month historical comparison
+  const { data: historicoData } = useQuery({
+    queryKey: ["demonstrativo-historico", organizationId, anoSelecionado, mesSelecionado],
+    queryFn: async () => {
+      const base = new Date(parseInt(anoSelecionado), parseInt(mesSelecionado) - 1, 1);
+      const results = await Promise.all(
+        Array.from({ length: 6 }, (_, i) => {
+          const d = subMonths(base, 5 - i);
+          return financialApi.transacoes
+            .list({
+              dateFrom: format(startOfMonth(d), "yyyy-MM-dd"),
+              dateTo: format(endOfMonth(d), "yyyy-MM-dd"),
+              limit: 1000,
+            })
+            .then((res) => {
+              const movs = (res?.data ?? []) as Array<{ tipo: string; valor: string | number }>;
+              return {
+                mes: format(d, "MMM/yy", { locale: ptBR }),
+                entradas: movs.filter((m) => m.tipo === "entrada").reduce((s, m) => s + Number(m.valor), 0),
+                saidas: movs.filter((m) => m.tipo === "saida").reduce((s, m) => s + Number(m.valor), 0),
+              };
+            });
+        }),
+      );
+      return results;
+    },
+    enabled: !!organizationId,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const exportarCSV = () => {
+    if (!demoData) return;
+    const allCats = new Set([
+      ...Object.keys(demoData.entradasPorCategoria),
+      ...Object.keys(demoData.saidasPorCategoria),
+    ]);
+    const rows = [
+      ["Período", demoData.periodo],
+      [],
+      ["Categoria", "Entradas (R$)", "Saídas (R$)"],
+      ...Array.from(allCats).map((cat) => [
+        cat,
+        (demoData.entradasPorCategoria[cat] ?? 0).toFixed(2),
+        (demoData.saidasPorCategoria[cat] ?? 0).toFixed(2),
+      ]),
+      [],
+      ["TOTAL", demoData.entradas.toFixed(2), demoData.saidas.toFixed(2)],
+      ["SALDO", "", demoData.saldo.toFixed(2)],
+    ];
+    const csv = rows.map((r) => r.map((c) => `"${c}"`).join(",")).join("\n");
+    const blob = new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `demonstrativo-${anoSelecionado}-${mesSelecionado}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   const exportarPDF = () => {
     window.print();
   };
@@ -275,6 +346,10 @@ export default function DemonstrativoMensalPage() {
                 ))}
               </SelectContent>
             </Select>
+            <Button variant="outline" onClick={exportarCSV} disabled={!demoData}>
+              <Download className="h-4 w-4 mr-2" />
+              Exportar CSV
+            </Button>
             <Button variant="outline" onClick={exportarPDF}>
               <Download className="h-4 w-4 mr-2" />
               Exportar PDF
@@ -390,6 +465,59 @@ export default function DemonstrativoMensalPage() {
                 </CardContent>
               </Card>
             </div>
+
+            {/* Revenue funnel: Receita → Impostos estimados → Lucro líquido */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-sm flex items-center gap-2">
+                  <Target className="h-4 w-4 text-primary" />
+                  Funil de Resultado (Estimativa)
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {[
+                    { label: "Receita Bruta", value: demoData.entradas, color: "bg-green-500" },
+                    { label: "Impostos estimados (6% ISS + IRPJ simples)", value: demoData.entradas * 0.06, color: "bg-yellow-400", deduct: true },
+                    { label: "Custos fixos estimados (Saídas)", value: demoData.saidas, color: "bg-red-400", deduct: true },
+                    { label: "Lucro Líquido Estimado", value: demoData.entradas * 0.94 - demoData.saidas, color: demoData.entradas * 0.94 - demoData.saidas >= 0 ? "bg-emerald-600" : "bg-red-600", highlight: true },
+                  ].map(({ label, value, color, deduct, highlight }) => (
+                    <div key={label} className={`flex items-center justify-between p-3 rounded-lg ${highlight ? "bg-muted/80 font-bold" : "bg-muted/40"}`}>
+                      <div className="flex items-center gap-2">
+                        <div className={`w-3 h-3 rounded-full ${color}`} />
+                        <span className="text-sm">{label}</span>
+                      </div>
+                      <span className={`font-mono text-sm ${deduct ? "text-red-600" : highlight ? "text-primary" : "text-green-600"}`}>
+                        {deduct ? "- " : ""}R$ {Math.abs(value).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+                <p className="text-xs text-muted-foreground mt-3">* Impostos baseados em estimativa do Simples Nacional. Consulte seu contador.</p>
+              </CardContent>
+            </Card>
+
+            {/* Histórico 6 meses */}
+            {historicoData && historicoData.length > 0 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-sm">Histórico 6 Meses</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ResponsiveContainer width="100%" height={200}>
+                    <BarChart data={historicoData} barSize={18}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+                      <XAxis dataKey="mes" tick={{ fontSize: 11 }} />
+                      <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} />
+                      <Tooltip formatter={(v: number) => `R$ ${v.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`} />
+                      <Legend iconSize={10} />
+                      <Bar dataKey="entradas" name="Entradas" fill="#22c55e" radius={[4, 4, 0, 0]} />
+                      <Bar dataKey="saidas" name="Saídas" fill="#ef4444" radius={[4, 4, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </CardContent>
+              </Card>
+            )}
 
             {/* Gráficos */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
