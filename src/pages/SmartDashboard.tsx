@@ -11,6 +11,7 @@ import { PackagesExpiringAlert } from "@/components/dashboard/PackagesExpiringAl
 import { RevenueForecastCard } from "@/components/dashboard/RevenueForecastCard";
 import { TeamPerformanceKPIs } from "@/components/dashboard/TeamPerformanceKPIs";
 import { ChurnReportCard } from "@/components/dashboard/ChurnReportCard";
+import { SetupChecklist } from "@/components/dashboard/SetupChecklist";
 import { cn } from "@/lib/utils";
 
 type ViewMode = "today" | "week";
@@ -73,6 +74,8 @@ export function SmartDashboardContent() {
           <ArrowUpRight className="h-5 w-5 text-muted-foreground/30 group-hover:text-primary transition-colors mr-2" />
         </div>
       )}
+
+      <SetupChecklist />
 
       <ClinicHealthKPIs />
 
