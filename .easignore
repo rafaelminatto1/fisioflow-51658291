@@ -9,39 +9,38 @@ yarn.lock
 package-lock.json
 npm-shrinkwrap.json
 
-# --- Outras apps do monorepo (não usadas no build EAS de uma app específica) ---
-apps/web/
-apps/api/
-apps/jules-bot/
-apps/vinext-poc/
-apps/mobile-ios/
-apps/vinext/
+# --- Outras apps do monorepo (nao usadas no build EAS do patient-app) ---
+/apps/web
+/apps/api
+/apps/jules-bot
+/apps/vinext-poc
+/apps/mobile-ios
+/apps/vinext
 
 # --- Pacotes e UI ---
-packages/ui/dist
-packages/ui/node_modules
-packages/ui/.next
-packages/jules/
+/packages/ui/dist
+/packages/ui/node_modules
+/packages/ui/.next
+/packages/jules
 
 # --- Artefatos de teste e logs ---
-e2e/
-playwright/
-playwright-profile/
-playwright-profile-auto/
-playwright-report/
-test-results/
-coverage/
-testsprite_tests/
-*.log
+/e2e
+/playwright
+/playwright-profile
+/playwright-profile-auto
+/playwright-report
+/test-results
+/coverage
+/testsprite_tests
 tail.log
 
-# --- Builds e temporários ---
+# --- Builds e temporarios ---
 .expo
-dist
-build
-.turbo
-.vscode
-.idea
+/dist
+/build
+/.turbo
+/.vscode
+/.idea
 *.swp
 *.swo
 *~
@@ -49,37 +48,36 @@ build
 *.ipa
 *.apk
 
-# --- Documentação e assets pesados ---
-docs/
-docs2026/
-logo/
-homebrew/
-temp-avif-conversion/
-temp-webp-conversion/
+# --- Documentacao e assets pesados ---
+/docs
+/docs2026
+/logo
+/homebrew
+/temp-avif-conversion
+/temp-webp-conversion
 all_exercises.json
 all_images.txt
 used_images.txt
 
 # --- Cloudflare / Backend ---
-cloudflare-worker/
-workers/
-functions/
-drizzle/
-schemas/
-.neon/
-.genkit/
+/cloudflare-worker
+/workers
+/functions
+/drizzle
+/schemas
+/.neon
+/.genkit
 
 # --- Scripts e ferramentas ---
-scripts/
-scratch/
-homebrew/
-.opencode/
-.gemini/
-.claude/
-.cursor/
-.trae/
-.jules/
-.kiro/
+/scripts
+/scratch
+/.opencode
+/.gemini
+/.claude
+/.cursor
+/.trae
+/.jules
+/.kiro
 mcp.json
 .mcp.json
 skills-lock.json

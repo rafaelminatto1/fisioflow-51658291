@@ -1,0 +1,21 @@
+name: Dev Builds — Patient App
+
+on:
+  push:
+    branches: ["main"]
+    paths: ["apps/patient-app/**", ".easignore"]
+
+jobs:
+  ios_simulator:
+    name: iOS Simulator
+    type: build
+    params:
+      platform: ios
+      profile: development:simulator
+
+  android_dev:
+    name: Android APK
+    type: build
+    params:
+      platform: android
+      profile: development

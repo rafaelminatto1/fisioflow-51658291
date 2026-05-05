@@ -1,13 +1,14 @@
-name: EAS Dev Build — Patient App
+name: EAS Build — Patient App
 
-# Roda quando:
-#  1. Push em main com mudanças no patient-app (build automático)
-#  2. Manualmente via Actions tab (escolhe plataforma e perfil)
+# Triggers:
+#  1. Push em main com mudanças no patient-app → simulator automático
+#  2. workflow_dispatch → escolha livre de plataforma + perfil
 on:
   push:
     branches: [main]
     paths:
       - "apps/patient-app/**"
+      - ".easignore"
       - ".github/workflows/eas-dev-build.yml"
   workflow_dispatch:
     inputs:
@@ -19,24 +20,28 @@ on:
       profile:
         description: "Perfil de build"
         type: choice
-        options: [development, development:simulator, preview, production]
+        options:
+          - development:simulator
+          - development
+          - preview
+          - testflight
+          - production
         default: development:simulator
 
 concurrency:
-  group: eas-build-${{ github.ref }}-${{ inputs.platform || 'ios' }}
+  group: eas-build-${{ github.ref }}-${{ inputs.platform || 'ios' }}-${{ inputs.profile || 'development:simulator' }}
   cancel-in-progress: true
 
 jobs:
   build:
     name: EAS Build (${{ inputs.platform || 'ios' }} / ${{ inputs.profile || 'development:simulator' }})
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 90
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # Versão lida automaticamente do campo "packageManager" no package.json raiz
       - uses: pnpm/action-setup@v4
 
       - uses: actions/setup-node@v4
@@ -47,7 +52,6 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      # expo-github-action: instala EAS CLI + autentica com EXPO_TOKEN
       - name: Setup EAS
         uses: expo/expo-github-action@v8
         with:
@@ -66,30 +70,28 @@ jobs:
             eas build --platform "$PLATFORM" --profile "$PROFILE" --non-interactive
           fi
 
-      # Para perfis "development" e "development:simulator": imprime instruções
       - name: Print install instructions
         if: ${{ startsWith(inputs.profile || 'development:simulator', 'development') }}
         run: |
           echo ""
           echo "========================================================"
-          echo "  BUILD CONCLUÍDO — Como instalar no celular:"
+          echo "  BUILD CONCLUIDO — Como instalar:"
           echo ""
-          echo "  iOS (perfil 'development' — device):"
-          echo "  1. Acesse https://expo.dev/accounts/rafaelminatto/projects/fisioflow-patient/builds"
-          echo "  2. Clique no build mais recente"
-          echo "  3. Escaneie o QR code com a câmera do iPhone"
-          echo "     (instala via OTA — sem precisar da App Store)"
+          echo "  Acesse: https://expo.dev/accounts/rafaelminatto/projects/fisioflow-patient/builds"
           echo ""
-          echo "  iOS (perfil 'development:simulator'):"
-          echo "  1. Baixe o .tar.gz do build no link acima"
+          echo "  iOS Simulator (development:simulator):"
+          echo "  1. Baixe o .tar.gz do build"
           echo "  2. xcrun simctl install booted FisioFlowPaciente.app"
           echo "  3. xcrun simctl launch booted com.fisioflow.patients"
           echo ""
-          echo "  Android:"
-          echo "  1. Mesmo link acima"
-          echo "  2. Baixe o APK direto"
+          echo "  iPhone fisico (development):"
+          echo "  1. Abra o link do build no iPhone"
+          echo "  2. Instala direto via OTA (sem App Store)"
+          echo "  Obs: precisa ter o UDID registrado via: eas device:create"
           echo ""
-          echo "  Depois de instalado:"
-          echo "  Rode 'pnpm --dir apps/patient-app start:dev-client'"
-          echo "  O app conecta ao seu servidor local via LAN automaticamente."
+          echo "  Android:"
+          echo "  1. Baixe o APK do link acima"
+          echo "  2. Instale com: adb install *.apk"
+          echo ""
+          echo "  Apos instalar: pnpm --dir apps/patient-app start:dev-client"
           echo "========================================================"
