@@ -269,3 +269,4 @@ mcp.json
 playwright_output.txt
 up-leg-certificate.pfx
 *.pem
+e2e/.auth/session.json

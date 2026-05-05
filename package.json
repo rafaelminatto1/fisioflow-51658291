@@ -23,6 +23,14 @@
     "deploy:web:production": "pnpm --filter fisioflow-web build && bash scripts/cloudflare-env.sh pnpm --dir apps/api exec wrangler deploy --config ../../wrangler.toml --env production",
     "smoke:staging": "bash scripts/smoke-check.sh --web-url https://fisioflow-web-staging.rafalegollas.workers.dev --api-url https://fisioflow-api-staging.rafalegollas.workers.dev/api/health",
     "smoke:production": "bash scripts/smoke-check.sh --web-url https://www.moocafisio.com.br --api-url https://api-pro.moocafisio.com.br/api/health",
+    "mobile:build:ios": "bash scripts/mobile-build.sh build:ios",
+    "mobile:build:android": "bash scripts/mobile-build.sh build:android",
+    "mobile:submit:ios": "bash scripts/mobile-build.sh submit:ios",
+    "mobile:submit:android": "bash scripts/mobile-build.sh submit:android",
+    "mobile:release": "bash scripts/mobile-build.sh release",
+    "mobile:onboard": "node scripts/mobile-onboard-patients.mjs",
+    "e2e": "cd e2e && npx playwright test",
+    "e2e:report": "cd e2e && npx playwright show-report",
     "prepare": "husky"
   },
   "dependencies": {

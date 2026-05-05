@@ -39,11 +39,20 @@ export const nfseApi = {
 
   config: () => request<{ data: unknown }>("/api/nfse/config"),
 
+  updateConfig: (data: Record<string, unknown>) =>
+    request<{ data: unknown }>("/api/nfse/config", {
+      method: "PUT",
+      body: JSON.stringify(data),
+    }),
+
+  /** @deprecated use updateConfig */
   saveConfig: (data: Record<string, unknown>) =>
     request<{ data: unknown }>("/api/nfse/config", {
       method: "PUT",
       body: JSON.stringify(data),
     }),
+
+  testConnection: () => request<{ data: { success: boolean; error?: string } }>("/api/nfse/test-connection"),
 
   generate: (data: Record<string, unknown>) =>
     request<{ data: unknown }>("/api/nfse/generate", {
