@@ -11,9 +11,12 @@ import {
   Target,
   TrendingUp,
   Video,
+  DollarSign,
+  Edit3,
+  Check,
 } from "lucide-react";
 import type React from "react";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { crmApi, type GoogleBusinessReviewRecord, integrationsApi, marketingApi } from "@/api/v2";
 import { MainLayout } from "@/components/layout/MainLayout";
@@ -22,10 +25,131 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
+import { Input } from "@/components/ui/input";
 import { ReviewsContent } from "./Reviews";
 import { ROICalculatorContent } from "./ROI";
 
 type GoogleReview = GoogleBusinessReviewRecord;
+
+const CAC_STORAGE_KEY = "fisioflow_cac_channels";
+
+const DEFAULT_CHANNELS = [
+  { id: "google_ads", label: "Google Ads", spend: 0, newPatients: 0 },
+  { id: "whatsapp_organic", label: "WhatsApp Orgânico", spend: 0, newPatients: 0 },
+  { id: "referral", label: "Indicação", spend: 0, newPatients: 0 },
+  { id: "instagram", label: "Instagram/Redes", spend: 0, newPatients: 0 },
+  { id: "seo_organic", label: "Busca Orgânica", spend: 0, newPatients: 0 },
+];
+
+type CACChannel = typeof DEFAULT_CHANNELS[number];
+
+function CACByChannelCard() {
+  const [channels, setChannels] = useState<CACChannel[]>(() => {
+    try {
+      const saved = localStorage.getItem(CAC_STORAGE_KEY);
+      return saved ? JSON.parse(saved) : DEFAULT_CHANNELS;
+    } catch {
+      return DEFAULT_CHANNELS;
+    }
+  });
+  const [editing, setEditing] = useState<string | null>(null);
+
+  const save = useCallback((updated: CACChannel[]) => {
+    setChannels(updated);
+    localStorage.setItem(CAC_STORAGE_KEY, JSON.stringify(updated));
+  }, []);
+
+  const updateChannel = (id: string, field: "spend" | "newPatients", raw: string) => {
+    const value = parseFloat(raw.replace(",", ".")) || 0;
+    save(channels.map((ch) => (ch.id === id ? { ...ch, [field]: value } : ch)));
+  };
+
+  const totalSpend = channels.reduce((s, c) => s + c.spend, 0);
+  const totalPatients = channels.reduce((s, c) => s + c.newPatients, 0);
+
+  return (
+    <Card>
+      <CardHeader className="pb-2">
+        <CardTitle className="text-sm flex items-center gap-2">
+          <DollarSign className="h-4 w-4 text-primary" />
+          CAC por Canal de Aquisição
+          <span className="text-xs text-muted-foreground font-normal ml-1">(mês atual)</span>
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-2">
+          <div className="grid grid-cols-[1fr_90px_90px_70px] gap-2 text-xs text-muted-foreground px-1 pb-1 border-b">
+            <span>Canal</span>
+            <span className="text-right">Gasto (R$)</span>
+            <span className="text-right">Pacientes</span>
+            <span className="text-right">CAC</span>
+          </div>
+          {channels.map((ch) => {
+            const cac = ch.newPatients > 0 ? ch.spend / ch.newPatients : null;
+            const isEditing = editing === ch.id;
+            return (
+              <div
+                key={ch.id}
+                className="grid grid-cols-[1fr_90px_90px_70px] gap-2 items-center py-1 px-1 rounded hover:bg-muted/40 group"
+              >
+                <span className="text-xs font-medium truncate">{ch.label}</span>
+                {isEditing ? (
+                  <>
+                    <Input
+                      type="number"
+                      min={0}
+                      defaultValue={ch.spend || ""}
+                      className="h-6 text-xs text-right px-1"
+                      onChange={(e) => updateChannel(ch.id, "spend", e.target.value)}
+                    />
+                    <Input
+                      type="number"
+                      min={0}
+                      defaultValue={ch.newPatients || ""}
+                      className="h-6 text-xs text-right px-1"
+                      onChange={(e) => updateChannel(ch.id, "newPatients", e.target.value)}
+                    />
+                    <button
+                      className="flex justify-end text-green-600"
+                      onClick={() => setEditing(null)}
+                    >
+                      <Check className="h-3.5 w-3.5" />
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <span className="text-xs text-right">{ch.spend > 0 ? `R$ ${ch.spend.toLocaleString("pt-BR")}` : "-"}</span>
+                    <span className="text-xs text-right">{ch.newPatients > 0 ? ch.newPatients : "-"}</span>
+                    <div className="flex justify-end items-center gap-1">
+                      <span className={cn("text-xs font-mono", cac === null ? "text-muted-foreground" : cac < 200 ? "text-green-600" : cac < 500 ? "text-yellow-600" : "text-red-600")}>
+                        {cac !== null ? `R$${cac.toFixed(0)}` : "-"}
+                      </span>
+                      <button
+                        className="opacity-0 group-hover:opacity-100 transition-opacity"
+                        onClick={() => setEditing(ch.id)}
+                      >
+                        <Edit3 className="h-3 w-3 text-muted-foreground" />
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
+            );
+          })}
+          <div className="grid grid-cols-[1fr_90px_90px_70px] gap-2 text-xs font-semibold border-t pt-2 px-1">
+            <span>Total</span>
+            <span className="text-right">R$ {totalSpend.toLocaleString("pt-BR")}</span>
+            <span className="text-right">{totalPatients}</span>
+            <span className={cn("text-right font-mono", totalPatients > 0 && totalSpend / totalPatients < 300 ? "text-green-600" : "text-amber-600")}>
+              {totalPatients > 0 ? `R$${(totalSpend / totalPatients).toFixed(0)}` : "-"}
+            </span>
+          </div>
+        </div>
+        <p className="text-[10px] text-muted-foreground mt-2">Clique no lápis de cada linha para editar. Dados salvos localmente.</p>
+      </CardContent>
+    </Card>
+  );
+}
 
 interface MarketingMetrics {
   totalReviews: number;
@@ -295,6 +419,8 @@ export default function MarketingDashboard() {
             </div>
 
             <div className="grid gap-6 md:grid-cols-2">
+              <CACByChannelCard />
+
               <Card>
                 <CardHeader>
                   <CardTitle className="text-sm flex items-center gap-2">
