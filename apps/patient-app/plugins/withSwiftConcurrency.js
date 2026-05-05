@@ -5,6 +5,9 @@
  *
  * Injects inside the EXISTING post_install block (instead of appending a new one)
  * because CocoaPods does not support multiple post_install blocks.
+ *
+ * Uses a flexible regex that matches any post_install do line regardless of
+ * the block variable name or surrounding whitespace.
  */
 const { withDangerousMod } = require("@expo/config-plugins");
 const fs = require("fs");
@@ -27,24 +30,24 @@ module.exports = function withSwiftConcurrency(config) {
       }
 
       const injection = [
-        "",
         "  # Fix: Xcode 16.4 / Swift 6 strict concurrency breaks expo-modules-core.",
         "  installer.pods_project.targets.each do |target|",
         "    target.build_configurations.each do |config|",
         "      config.build_settings['SWIFT_STRICT_CONCURRENCY'] = 'minimal'",
         "    end",
         "  end",
+        "",
       ].join("\n");
 
-      // Inject inside the existing post_install block (first occurrence)
-      if (/^post_install do \|installer\|/m.test(podfile)) {
-        podfile = podfile.replace(
-          /^(post_install do \|installer\|)/m,
-          `$1${injection}`
-        );
+      // Flexible regex: matches any "post_install do ..." opening line and captures
+      // through the trailing newline so we can inject content immediately after it.
+      const postInstallRegex = /(post_install\s+do\b[^\n]*\n)/;
+
+      if (postInstallRegex.test(podfile)) {
+        podfile = podfile.replace(postInstallRegex, `$1${injection}`);
       } else {
-        // No post_install block at all — add one
-        podfile += `\npost_install do |installer|\n${injection}\nend\n`;
+        // No post_install block found at all — add one.
+        podfile += `\npost_install do |installer|\n${injection}end\n`;
       }
 
       fs.writeFileSync(podfilePath, podfile);
