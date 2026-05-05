@@ -61,6 +61,12 @@ export interface PortalStats {
   days_in_treatment: number;
 }
 
+export interface PortalExerciseHistory {
+  date: string; // YYYY-MM-DD
+  completed: number; // Percentage 0-100 or count
+  total_assigned: number;
+}
+
 export interface PortalProfile {
   id: string;
   name: string;
@@ -139,5 +145,10 @@ export const patientPortalApi = {
   async getStats(): Promise<PortalStats> {
     const res = await request<{ data: PortalStats }>("/api/patient-portal/stats");
     return res.data;
+  },
+
+  async getExerciseHistory(): Promise<PortalExerciseHistory[]> {
+    const res = await request<{ data: PortalExerciseHistory[] }>("/api/patient-portal/exercises/history");
+    return res.data ?? [];
   },
 };

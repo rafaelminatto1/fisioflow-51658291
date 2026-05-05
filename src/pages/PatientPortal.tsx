@@ -46,6 +46,7 @@ import {
   usePortalNotifications,
   usePortalAppointmentActions,
   usePortalExercises,
+  usePortalExerciseHistory,
 } from "@/hooks/usePatientPortal";
 
 // Lazy load PatientGamification (594KB) - só carrega quando a tab é acessada
@@ -111,7 +112,7 @@ const PatientPortal = () => {
 
   // Portal-specific hooks (dedicated /api/patient-portal/* endpoints)
   const { data: portalStats } = usePortalStats();
-  const { data: portalProgress } = usePortalProgress();
+  const { data: portalProgress, isLoading: isLoadingProgress } = usePortalProgress();
   const {
     data: portalNotifications,
     markRead,
@@ -119,7 +120,8 @@ const PatientPortal = () => {
     unreadCount,
   } = usePortalNotifications();
   const { confirm: confirmApt, cancel: cancelApt } = usePortalAppointmentActions();
-  const { data: portalExercises, complete: completeExercise } = usePortalExercises();
+  const { data: portalExercises, isLoading: isLoadingExercises, complete: completeExercise } = usePortalExercises();
+  const { data: weeklyAdhesion } = usePortalExerciseHistory(patient?.id);
 
   // Fetch patient data linked to the profile
   const { data: patient, isLoading: isLoadingPatient } = useQuery({
@@ -523,13 +525,13 @@ const PatientPortal = () => {
                 <CardContent>
                   <div className="h-[200px] w-full mt-4">
                     <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={[
-                        { day: "Seg", completed: 80 },
-                        { day: "Ter", completed: 100 },
-                        { day: "Qua", completed: 60 },
-                        { day: "Qui", completed: 90 },
-                        { day: "Sex", completed: 100 },
-                        { day: "Sáb", completed: 40 },
+                      <BarChart data={weeklyAdhesion || [
+                        { day: "Seg", completed: 0 },
+                        { day: "Ter", completed: 0 },
+                        { day: "Qua", completed: 0 },
+                        { day: "Qui", completed: 0 },
+                        { day: "Sex", completed: 0 },
+                        { day: "Sáb", completed: 0 },
                         { day: "Dom", completed: 0 },
                       ]}>
                         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />

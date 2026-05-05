@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { BiomechanicsAssessment } from "@/api/v2/biomechanics";
 import { AnalyticalVideoPlayer } from "./video/AnalyticalVideoPlayer";
 import { BiomechanicsOverlay } from "./canvas/BiomechanicsOverlay";
@@ -6,6 +6,9 @@ import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { Layers, TrendingUp } from "lucide-react";
 
 interface BiomechanicsComparisonProps {
   baseAssessment: BiomechanicsAssessment;
@@ -16,12 +19,45 @@ export const BiomechanicsComparison: React.FC<BiomechanicsComparisonProps> = ({
   baseAssessment,
   compareAssessment,
 }) => {
+  const [isGhostMode, setIsGhostMode] = useState(false);
+
   return (
     <div className="space-y-6 w-full">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <AssessmentView assessment={baseAssessment} label="Base (Anterior)" />
-        <AssessmentView assessment={compareAssessment} label="Comparação (Atual)" />
+      <div className="flex items-center justify-between bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200/50 shadow-sm">
+        <h3 className="font-bold flex items-center gap-2 text-sm">
+          <Layers className="w-4 h-4 text-primary" />
+          Modo de Visualização
+        </h3>
+        <div className="flex items-center gap-3">
+          <Label htmlFor="ghost-mode" className={`font-semibold text-xs cursor-pointer ${!isGhostMode ? 'text-primary' : 'text-muted-foreground'}`}>Lado a Lado</Label>
+          <Switch id="ghost-mode" checked={isGhostMode} onCheckedChange={setIsGhostMode} />
+          <Label htmlFor="ghost-mode" className={`font-semibold text-xs cursor-pointer ${isGhostMode ? 'text-primary' : 'text-muted-foreground'}`}>Ghost Mode (Sobreposição)</Label>
+        </div>
       </div>
+
+      {isGhostMode ? (
+        <div className="relative w-full aspect-[4/3] md:aspect-video bg-black rounded-xl overflow-hidden border-2 border-primary/20 shadow-lg group">
+           <div className="absolute inset-0">
+             <GhostAssessmentView assessment={baseAssessment} />
+           </div>
+           {/* Mix-blend-screen clareia o fundo sobreposto e destaca a diferença. Opacidade em 65% para manter a base visível */}
+           <div className="absolute inset-0 z-10 pointer-events-none mix-blend-screen opacity-[0.65] transition-opacity duration-300 group-hover:opacity-80">
+             <GhostAssessmentView assessment={compareAssessment} />
+           </div>
+           
+           <div className="absolute top-4 left-4 z-20">
+              <Badge variant="outline" className="bg-black/60 text-white backdrop-blur-sm border-white/20">Base (Anterior)</Badge>
+           </div>
+           <div className="absolute top-4 right-4 z-20">
+              <Badge className="bg-primary/90 text-white backdrop-blur-sm shadow-md">Comparação (Atual)</Badge>
+           </div>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <AssessmentView assessment={baseAssessment} label="Base (Anterior)" />
+          <AssessmentView assessment={compareAssessment} label="Comparação (Atual)" />
+        </div>
+      )}
       
       {/* Delta Metrics Panel */}
       <div className="bg-primary/5 rounded-3xl p-6 border border-primary/10">
@@ -54,8 +90,6 @@ export const BiomechanicsComparison: React.FC<BiomechanicsComparisonProps> = ({
     </div>
   );
 };
-
-import { TrendingUp } from "lucide-react";
 
 const AssessmentView: React.FC<{ assessment: BiomechanicsAssessment; label: string }> = ({
   assessment,
@@ -108,5 +142,33 @@ const AssessmentView: React.FC<{ assessment: BiomechanicsAssessment; label: stri
         </div>
       </div>
     </Card>
+  );
+};
+
+const GhostAssessmentView: React.FC<{ assessment: BiomechanicsAssessment }> = ({ assessment }) => {
+  const isVideo = assessment.mediaUrl.endsWith(".mp4");
+  return (
+    <div className="w-full h-full relative">
+      {isVideo ? (
+        <AnalyticalVideoPlayer src={assessment.mediaUrl} showAnalysis={true} />
+      ) : (
+        <div className="relative w-full h-full flex items-center justify-center">
+          <img
+            src={assessment.mediaUrl}
+            className="w-full h-full object-contain"
+            alt="Static analysis"
+          />
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+            <BiomechanicsOverlay
+              landmarks={assessment.analysisData.landmarks || []}
+              width={400}
+              height={533}
+              showSkeleton={true}
+              showAngles={true}
+            />
+          </div>
+        </div>
+      )}
+    </div>
   );
 };
