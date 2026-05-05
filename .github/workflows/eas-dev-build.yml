@@ -1,0 +1,92 @@
+name: EAS Dev Build — Patient App
+
+# Roda quando:
+#  1. Push em main com mudanças no patient-app (build automático)
+#  2. Manualmente via Actions tab (escolhe plataforma e perfil)
+on:
+  push:
+    branches: [main]
+    paths:
+      - "apps/patient-app/**"
+      - ".github/workflows/eas-dev-build.yml"
+  workflow_dispatch:
+    inputs:
+      platform:
+        description: "Plataforma"
+        type: choice
+        options: [ios, android, all]
+        default: ios
+      profile:
+        description: "Perfil de build"
+        type: choice
+        options: [development, preview, production]
+        default: development
+
+concurrency:
+  group: eas-build-${{ github.ref }}-${{ inputs.platform || 'ios' }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: EAS Build (${{ inputs.platform || 'ios' }} / ${{ inputs.profile || 'development' }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: "10.33.0"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # expo-github-action: instala EAS CLI + autentica com EXPO_TOKEN
+      - name: Setup EAS
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Build via EAS
+        working-directory: apps/patient-app
+        run: |
+          PLATFORM="${{ inputs.platform || 'ios' }}"
+          PROFILE="${{ inputs.profile || 'development' }}"
+
+          if [ "$PLATFORM" = "all" ]; then
+            eas build --platform all --profile "$PROFILE" --non-interactive
+          else
+            eas build --platform "$PLATFORM" --profile "$PROFILE" --non-interactive
+          fi
+
+      # Para o perfil "development": imprime o link de instalação OTA
+      # O link aparece no output do EAS e fica disponível em expo.dev/accounts/rafaelminatto
+      - name: Print install instructions
+        if: ${{ (inputs.profile || 'development') == 'development' }}
+        run: |
+          echo ""
+          echo "========================================================"
+          echo "  BUILD CONCLUÍDO — Como instalar no celular:"
+          echo ""
+          echo "  iOS:"
+          echo "  1. Acesse https://expo.dev/accounts/rafaelminatto/projects/fisioflow-patient/builds"
+          echo "  2. Clique no build mais recente"
+          echo "  3. Escaneie o QR code com a câmera do iPhone"
+          echo "     (instala via OTA — sem precisar da App Store)"
+          echo ""
+          echo "  Android:"
+          echo "  1. Mesmo link acima"
+          echo "  2. Baixe o APK direto"
+          echo ""
+          echo "  Depois de instalado:"
+          echo "  Rode 'pnpm --dir apps/patient-app start:dev-client'"
+          echo "  O app conecta ao seu servidor local via LAN automaticamente."
+          echo "========================================================"
