@@ -1,6 +1,6 @@
 import type { Env } from "../types/env";
 
-const DEFAULT_HEALTH_URL = "https://api-pro.moocafisio.com.br/api/health/ready";
+const DEFAULT_HEALTH_URL = "https://api-pro.moocafisio.com.br/api/health";
 const RENOTIFY_INTERVAL_MS = 30 * 60 * 1000; // re-alerta a cada 30min se ainda estiver down
 const REQUEST_TIMEOUT_MS = 8_000;
 

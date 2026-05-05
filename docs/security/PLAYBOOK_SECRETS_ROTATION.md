@@ -23,7 +23,7 @@
 |---|---|---|---|
 | `DATABASE_URL` | Neon PostgreSQL | `apps/api` | 90 dias ou se comprometido |
 | `NEON_AUTH_JWKS_URL` | Neon Auth | `apps/api` | Raro (muda só se endpoint mudar) |
-| `CF_API_TOKEN` | Cloudflare API | CI/CD | 90 dias |
+| `CF_API_TOKEN` | Cloudflare API | CI/CD, `.env.cloudflare.local` | 90 dias |
 | `AXIOM_TOKEN` | Axiom Logging | `apps/api` | 90 dias |
 | `TURNSTILE_SECRET_KEY` | Cloudflare Turnstile | `apps/api` | 90 dias |
 | `INNGEST_EVENT_KEY` | Inngest | `apps/api` | 90 dias |
@@ -76,7 +76,7 @@ curl https://api-pro.moocafisio.com.br/api/health/ready
 # 2. Revogar token antigo na mesma tela
 # 3. Atualizar no GitHub:
 #    Repo → Settings → Secrets → Actions → CF_API_TOKEN → Update
-# 4. Atualizar localmente em ~/.cloudflare/credentials (se usar CLI)
+# 4. Atualizar localmente em `.env.cloudflare.local` ou via `wrangler login` (se usar CLI)
 # 5. Testar CI: acionar workflow_dispatch no GitHub Actions
 ```
 

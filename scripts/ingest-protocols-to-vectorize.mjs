@@ -5,7 +5,7 @@
  * embeddings vetoriais para busca semântica (RAG) no Cloudflare Vectorize.
  */
 
-import "dotenv/config";
+import "./load-cloudflare-env.mjs";
 import { Client } from "pg";
 
 // Configurações Cloudflare

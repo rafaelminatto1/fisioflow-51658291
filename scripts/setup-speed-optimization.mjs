@@ -5,7 +5,7 @@
  * Tiered Cache, specifically triggering tests from São Paulo, Brazil.
  */
 
-import "dotenv/config";
+import "./load-cloudflare-env.mjs";
 
 const CF_ZONE_ID = "a5467f4c307c538e13154c97802788e4"; // moocafisio.com.br
 const CF_API_TOKEN = process.env.CLOUDFLARE_API_TOKEN;

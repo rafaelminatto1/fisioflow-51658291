@@ -142,10 +142,7 @@ fi
 
 if [[ "$RUN_WRANGLER" == true ]]; then
   log "Running wrangler dry-run for apps/api"
-  (
-    cd apps/api
-    pnpm exec wrangler deploy --dry-run --env production
-  )
+  bash scripts/cloudflare-env.sh pnpm --dir apps/api exec wrangler deploy --dry-run --env production
   success "Wrangler dry-run for apps/api"
 fi
 
