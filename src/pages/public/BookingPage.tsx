@@ -2,7 +2,7 @@
  * Booking Page - Migrated to Neon/Workers
  */
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { publicBookingApi, type PublicBookingProfile } from "@/api/v2";
 import { Button } from "@/components/ui/button";
@@ -37,6 +37,7 @@ export const BookingPage = () => {
   const [bookingLoading, setBookingLoading] = useState(false);
   const [availableTimes, setAvailableTimes] = useState<string[]>([]);
   const [availabilityLoading, setAvailabilityLoading] = useState(false);
+  const ldJsonRef = useRef<HTMLScriptElement | null>(null);
 
   useEffect(() => {
     async function loadProfile() {
@@ -60,6 +61,62 @@ export const BookingPage = () => {
     }
     loadProfile();
   }, [slug, toast]);
+
+  // SEO: dynamic title + JSON-LD structured data
+  useEffect(() => {
+    if (!profile) return;
+
+    const clinicName = (profile as any).clinic_name ?? profile.full_name;
+    const specialty = profile.specialty ?? "Fisioterapia";
+    const city = (profile as any).city ?? "";
+
+    document.title = `Agendar Consulta — ${clinicName} | ${specialty}${city ? ` em ${city}` : ""}`;
+
+    // OG meta tags
+    const setMeta = (name: string, content: string, property?: boolean) => {
+      const attr = property ? "property" : "name";
+      let el = document.querySelector(`meta[${attr}="${name}"]`) as HTMLMetaElement | null;
+      if (!el) {
+        el = document.createElement("meta");
+        el.setAttribute(attr, name);
+        document.head.appendChild(el);
+      }
+      el.content = content;
+    };
+
+    setMeta("description", `Agende sua sessão de ${specialty} com ${profile.full_name}${city ? ` em ${city}` : ""}. Atendimento online e presencial.`);
+    setMeta("og:title", `Agendar com ${profile.full_name}`, true);
+    setMeta("og:description", `Fisioterapia ${specialty}${city ? ` em ${city}` : ""} — agendamento online`, true);
+    if (profile.avatar_url) setMeta("og:image", profile.avatar_url, true);
+    setMeta("og:type", "website", true);
+    setMeta("robots", "index, follow");
+
+    // JSON-LD: MedicalOrganization + Physician
+    const ld = {
+      "@context": "https://schema.org",
+      "@type": ["Physician", "LocalBusiness"],
+      name: clinicName,
+      description: profile.bio ?? `Fisioterapia — ${specialty}`,
+      ...(city ? { address: { "@type": "PostalAddress", addressLocality: city, addressCountry: "BR" } } : {}),
+      ...(profile.avatar_url ? { image: profile.avatar_url } : {}),
+      medicalSpecialty: specialty,
+      availableService: { "@type": "MedicalTherapy", name: specialty },
+      url: window.location.href,
+    };
+
+    if (!ldJsonRef.current) {
+      ldJsonRef.current = document.createElement("script");
+      ldJsonRef.current.type = "application/ld+json";
+      document.head.appendChild(ldJsonRef.current);
+    }
+    ldJsonRef.current.textContent = JSON.stringify(ld);
+
+    return () => {
+      document.title = "FisioFlow";
+      ldJsonRef.current?.remove();
+      ldJsonRef.current = null;
+    };
+  }, [profile]);
 
   useEffect(() => {
     if (!selectedDate || !slug) { setAvailableTimes([]); return; }
@@ -184,6 +241,15 @@ export const BookingPage = () => {
                     {!selectedDate ? (
                       <p className="text-muted-foreground text-sm">
                         Selecione uma data para ver os horários.
+                      </p>
+                    ) : availabilityLoading ? (
+                      <div className="flex items-center gap-2 text-muted-foreground text-sm">
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        Buscando horários...
+                      </div>
+                    ) : availableTimes.length === 0 ? (
+                      <p className="text-muted-foreground text-sm">
+                        Nenhum horário disponível nesta data. Escolha outro dia.
                       </p>
                     ) : (
                       <div className="grid grid-cols-3 gap-2">
