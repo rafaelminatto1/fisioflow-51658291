@@ -1,0 +1,105 @@
+name: EAS Build — Professional App
+
+# Triggers:
+#  1. Push em main com mudanças no professional-app → preview automático iOS
+#  2. workflow_dispatch → escolha livre de plataforma + perfil
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "apps/professional-app/**"
+      - ".github/workflows/eas-professional-build.yml"
+  workflow_dispatch:
+    inputs:
+      platform:
+        description: "Plataforma"
+        type: choice
+        options: [ios, android, all]
+        default: ios
+      profile:
+        description: "Perfil de build"
+        type: choice
+        options:
+          - development
+          - preview
+          - testflight
+          - production
+        default: preview
+
+concurrency:
+  group: eas-pro-${{ github.ref }}-${{ inputs.platform || 'ios' }}-${{ inputs.profile || 'preview' }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: EAS Build Pro (${{ inputs.platform || 'ios' }} / ${{ inputs.profile || 'preview' }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Setup EAS
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Build via EAS
+        working-directory: apps/professional-app
+        run: |
+          PLATFORM="${{ inputs.platform || 'ios' }}"
+          PROFILE="${{ inputs.profile || 'preview' }}"
+
+          if [ "$PLATFORM" = "all" ]; then
+            eas build --platform all --profile "$PROFILE" --non-interactive
+          else
+            eas build --platform "$PLATFORM" --profile "$PROFILE" --non-interactive
+          fi
+
+      - name: Submit to TestFlight
+        if: ${{ inputs.profile == 'testflight' && (inputs.platform == 'ios' || inputs.platform == '') }}
+        working-directory: apps/professional-app
+        run: eas submit --platform ios --profile production --non-interactive --latest
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Resumo do build
+        if: always()
+        run: |
+          echo ""
+          echo "========================================================"
+          echo "  BUILD CONCLUIDO — FisioFlow Pro"
+          echo ""
+          echo "  Painel EAS: https://expo.dev/accounts/rafaelminatto/projects/fisioflow-pro/builds"
+          echo ""
+          echo "  Perfil: ${{ inputs.profile || 'preview' }}"
+          echo ""
+          if [ "${{ inputs.profile || 'preview' }}" = "development" ]; then
+            echo "  Para instalar no iPhone físico:"
+            echo "  1. Acesse o link do build no painel EAS"
+            echo "  2. Instala via OTA (precisa ter UDID registrado)"
+            echo "     eas device:create --platform ios"
+            echo ""
+          elif [ "${{ inputs.profile || 'preview' }}" = "testflight" ]; then
+            echo "  Build enviado ao TestFlight automaticamente."
+            echo "  App Store Connect: https://appstoreconnect.apple.com"
+            echo ""
+          elif [ "${{ inputs.profile || 'preview' }}" = "production" ]; then
+            echo "  Para submeter manualmente à App Store:"
+            echo "  eas submit --platform ios --profile production --latest"
+            echo ""
+          fi
+          echo "========================================================"

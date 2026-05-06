@@ -36,6 +36,22 @@
         "disabled": true
       }
     },
+    "testflight": {
+      "distribution": "internal",
+      "channel": "production",
+      "ios": {
+        "autoIncrement": true
+      },
+      "credentialsSource": "remote",
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://api-pro.moocafisio.com.br",
+        "EXPO_PUBLIC_NEON_AUTH_URL": "https://ep-wandering-bonus-acj4zwvo.neonauth.sa-east-1.aws.neon.tech/neondb/auth",
+        "EXPO_PUBLIC_EXPO_PROJECT_ID": "ca7042a7-03d4-4731-b4e5-6f5de3b48300"
+      },
+      "cache": {
+        "disabled": true
+      }
+    },
     "production": {
       "node": "22.11.0",
       "channel": "production",
