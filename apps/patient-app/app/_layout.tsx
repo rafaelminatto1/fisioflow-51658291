@@ -35,9 +35,9 @@ function handleDeepLink(url: string | null) {
     // fisioflow://agendar/clinica-slug → /book-appointment?slug=...
     const match = parsed.pathname.match(/^\/agendar\/([^/]+)$/);
     if (match) {
-      router.push({ pathname: "/book-appointment", params: { slug: match[1] } });
+      router.push({ pathname: "/book-appointment" as never, params: { slug: match[1] } });
     }
-  } catch (_) {
+  } catch {
     // ignore malformed URLs
   }
 }

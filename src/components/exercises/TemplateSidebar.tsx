@@ -48,7 +48,7 @@ const DIFFICULTY_OPTIONS = [
   { id: "avancado", label: "Avançado" },
 ];
 
-const PHASE_OPTIONS = [
+const _PHASE_OPTIONS = [
   { id: "fase_aguda", label: "Fase Aguda" },
   { id: "fase_subaguda", label: "Fase Subaguda" },
   { id: "remodelacao", label: "Remodelação" },

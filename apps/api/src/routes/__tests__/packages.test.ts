@@ -2,7 +2,7 @@
  * Testes unitários para /api/packages
  * Foca em validações de entrada (sem banco real)
  */
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect } from "vitest";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 

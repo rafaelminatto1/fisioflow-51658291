@@ -1,5 +1,5 @@
 import { requireAuth } from "../../lib/auth";
-import { createPool, getRawSql, type DbRow } from "../../lib/db";
+import { createPool } from "../../lib/db";
 import { determineOutcomeCategory, getAgeGroup, hashPatientId, roundTo } from "../mlHelpers";
 import { parseDate, type AnalyticsRouteApp } from "./shared";
 

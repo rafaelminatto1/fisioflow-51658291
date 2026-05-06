@@ -6,7 +6,6 @@ import {
   isConflictError,
   countsTowardCapacity,
   sanitizeAppointmentRow,
-  STATUS_MAP,
 } from "../appointmentHelpers";
 
 describe("calculateEndTime", () => {

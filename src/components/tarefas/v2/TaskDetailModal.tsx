@@ -163,7 +163,7 @@ export function TaskDetailModal({ open, onOpenChange, tarefa, teamMembers }: Tas
   const { data: allTarefas } = useTarefas();
 
   // Board labels context (provided by KanbanFull or empty outside board context)
-  const { labels: boardLabels, labelsMap } = useBoardLabels();
+  const { labels: boardLabels } = useBoardLabels();
   const boardId = tarefa?.board_id;
 
   // Checklist templates

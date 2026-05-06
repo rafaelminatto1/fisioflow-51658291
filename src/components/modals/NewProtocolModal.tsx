@@ -14,7 +14,6 @@ import {
   Loader2,
   Search,
   BookOpen,
-  ExternalLink,
   Link2,
   FileText,
   ChevronDown,

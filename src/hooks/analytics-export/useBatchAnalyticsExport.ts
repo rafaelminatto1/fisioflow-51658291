@@ -7,7 +7,7 @@ import { patientsApi } from "@/services/api/patients";
 import { analyticsApi } from "@/services/api/analytics";
 import type { PatientGoalTracking } from "@/types/clinical";
 import type { AnalyticsExportData, ExportFormat, BatchExportOptions } from "./types";
-import { sanitizeFileName, downloadBlob, loadExcelApi, getRiskInfo } from "./utils";
+import { downloadBlob, loadExcelApi, getRiskInfo } from "./utils";
 
 export function useBatchAnalyticsExport() {
   const [progress, setProgress] = useState(0);

@@ -1,5 +1,5 @@
 import type { Env } from "../../types/env";
-import { getRawSql, type DbRow } from "../../lib/db";
+import { getRawSql } from "../../lib/db";
 
 export type AIProvider = "zai" | "workers-ai" | "openai" | "anthropic" | "gemini";
 

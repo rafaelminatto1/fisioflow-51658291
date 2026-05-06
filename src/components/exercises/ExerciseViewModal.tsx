@@ -107,7 +107,7 @@ export function ExerciseViewModal({
   const handlePrint = () => {
     try {
       window.print();
-    } catch (error) {
+    } catch {
       toast({
         title: "Erro ao imprimir",
         description: "Não foi possível abrir o diálogo de impressão.",

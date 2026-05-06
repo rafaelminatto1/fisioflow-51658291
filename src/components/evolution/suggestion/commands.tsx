@@ -33,7 +33,7 @@ export function getEvolutionSettings() {
           disabledCommands: [] as string[],
           commandOrder: [] as string[],
         };
-  } catch (error) {
+  } catch {
     return {
       defaultView: "notion",
       enableSuggestions: true,

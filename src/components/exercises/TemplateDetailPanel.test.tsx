@@ -111,7 +111,7 @@ describe("TemplateDetailPanel — testes de propriedade", () => {
         const q = within(container);
         const customizeBtn = q.queryByRole("button", { name: /personalizar/i });
         const editBtn = q.queryByRole("button", { name: /editar/i });
-        const deleteDialogBtn =
+        const _deleteDialogBtn =
           container.querySelector("[data-testid='delete-trigger']") ||
           q.queryByRole("button", { name: /confirmar exclusão/i });
 

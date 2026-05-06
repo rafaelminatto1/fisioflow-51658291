@@ -89,7 +89,7 @@ export function TemplateManager() {
   const rawTemplates = data?.data ?? [];
   const templates: ExerciseTemplate[] = rawTemplates;
 
-  const { data: detailData, isLoading: detailLoading } = useQuery({
+  const { data: detailData } = useQuery({
     queryKey: ["template-detail", selectedTemplateId],
     queryFn: () => templatesApi.get(selectedTemplateId!),
     enabled: !!selectedTemplateId,

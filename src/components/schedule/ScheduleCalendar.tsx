@@ -149,7 +149,7 @@ export function ScheduleCalendar(props: ScheduleCalendarProps) {
 
   const calendarRef = useRef<FullCalendar | null>(null);
   const { statusConfig } = useStatusConfig();
-  const { cssVariables, slotHeightPx, appearance } = useAgendaAppearancePersistence(viewType);
+  const { cssVariables, slotHeightPx: _slotHeightPx, appearance } = useAgendaAppearancePersistence(viewType);
   const { businessHours: settingsHours, blockedTimes } = useScheduleSettings();
 
   const [quickViewAppointment, setQuickViewAppointment] = useState<RawAppointment | null>(null);

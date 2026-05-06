@@ -15,7 +15,7 @@ import { withTenant } from "../lib/db-utils";
 import type { Env } from "../types/env";
 import { registerClinicalResourceRoutes } from "./clinical/resources";
 import { patientGoals, patientPathologies } from "@fisioflow/db";
-import { eq, sql, desc } from "drizzle-orm";
+import { sql, desc } from "drizzle-orm";
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 

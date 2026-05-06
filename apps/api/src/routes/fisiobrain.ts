@@ -80,7 +80,7 @@ app.get("/search", async (c) => {
       return {
         id: s.id,
         title: String(meta.title ?? s.filename ?? s.id),
-        source: (String(meta.source ?? "wiki") as FisioBrainSource["source"]) ?? "wiki",
+        source: (String(meta.source ?? "wiki") as FisioBrainSource["source"]),
         excerpt: s.content?.slice(0, 300) ?? "",
         score: s.score,
         metadata: meta,

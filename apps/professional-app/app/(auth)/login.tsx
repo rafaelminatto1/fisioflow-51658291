@@ -20,7 +20,7 @@ import { useColors } from "@/hooks/useColorScheme";
 import { useAuthStore } from "@/store/auth";
 import { useBiometricAuth } from "@/hooks/useBiometricAuth";
 import { ERROR_MESSAGES } from "@/constants/errorMessages";
-import { authApi } from "@/lib/auth-api";
+
 
 export default function LoginScreen() {
   const colors = useColors();

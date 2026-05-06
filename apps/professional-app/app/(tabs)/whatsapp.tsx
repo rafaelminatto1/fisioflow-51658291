@@ -69,7 +69,7 @@ function formatRelativeTime(dateStr?: string): string {
     }
 
     return format(date, "dd/MM");
-  } catch (e) {
+  } catch {
     return "";
   }
 }

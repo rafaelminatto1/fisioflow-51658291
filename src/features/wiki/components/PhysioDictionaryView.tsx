@@ -9,7 +9,7 @@ import { useDictionary, DictionaryTerm } from "@/hooks/useDictionary";
 import { DictionaryTermModal } from "./DictionaryTermModal";
 import { ProtocolDetailView } from "./ProtocolDetailView";
 import { protocolDictionary, ProtocolEntry } from "@/data/protocolDictionary";
-import { exerciseDictionary } from "@/data/exerciseDictionary";
+
 import { ExerciseViewModal } from "@/components/exercises/ExerciseViewModal";
 import { useExercises } from "@/hooks/useExercises";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";

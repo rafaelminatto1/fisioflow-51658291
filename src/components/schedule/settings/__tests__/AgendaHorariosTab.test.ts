@@ -79,7 +79,7 @@ const fcDateYYYYMMDD = fc
 const fcNonEmptyString = fc.string({ minLength: 1, maxLength: 100 });
 
 /** Generates a BlockedTime-like object */
-const fcBlockedTime = fc.record({
+const _fcBlockedTime = fc.record({
   id: fc.uuid(),
   title: fc.option(fcNonEmptyString, { nil: undefined }),
   start_date: fc.option(fcDateYYYYMMDD, { nil: undefined }),

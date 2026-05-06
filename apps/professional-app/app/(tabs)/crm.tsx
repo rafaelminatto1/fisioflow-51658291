@@ -2,7 +2,6 @@ import { Ionicons } from "@expo/vector-icons";
 import { memo, useMemo, useState } from "react";
 import {
   ActionSheetIOS,
-  ActivityIndicator,
   Alert,
   Platform,
   RefreshControl,

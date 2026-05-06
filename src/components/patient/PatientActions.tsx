@@ -26,7 +26,7 @@ import { PatientEditModal } from "./PatientEditModal";
 import { PatientDeleteDialog } from "./PatientDeleteDialog";
 import { toast } from "@/hooks/use-toast";
 import type { PatientRow as Patient } from "@/types/workers";
-import { cn } from "@/lib/utils";
+
 
 interface PatientActionsProps {
   patient: Patient;

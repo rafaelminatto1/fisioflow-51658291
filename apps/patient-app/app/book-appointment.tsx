@@ -12,17 +12,17 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useColors } from "@/hooks/useColorScheme";
-import { Card, Button } from "@/components";
+import { Button } from "@/components";
 import { Spacing } from "@/constants/spacing";
 import { format, addDays, startOfToday } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { patientPortalApi } from "@/api/v2/patientPortal";
+import { patientApi } from "@/lib/api";
 
 type Therapist = {
   id: string;
   name: string;
-  email: string | null;
-  role: string;
+  email?: string | null;
+  role?: string;
 };
 
 export default function BookAppointmentScreen() {
@@ -34,14 +34,14 @@ export default function BookAppointmentScreen() {
   const [isLoadingTherapists, setIsLoadingTherapists] = useState(true);
 
   const [selectedTherapist, setSelectedTherapist] = useState<Therapist | null>(null);
-  
+
   // Dates for step 2
   const today = startOfToday();
   const [selectedDate, setSelectedDate] = useState<Date>(today);
   const [availableSlots, setAvailableSlots] = useState<string[]>([]);
   const [isLoadingSlots, setIsLoadingSlots] = useState(false);
   const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
-  
+
   const [isBooking, setIsBooking] = useState(false);
 
   // Generate next 14 days
@@ -50,13 +50,13 @@ export default function BookAppointmentScreen() {
   useEffect(() => {
     async function fetchTherapists() {
       try {
-        const data = await patientPortalApi.getTherapists();
+        const data = await patientApi.getTherapists();
         setTherapists(data);
         if (data.length === 1) {
           setSelectedTherapist(data[0]);
           setStep(2);
         }
-      } catch (error) {
+      } catch {
         Alert.alert("Erro", "Não foi possível carregar os profissionais.");
       } finally {
         setIsLoadingTherapists(false);
@@ -76,9 +76,9 @@ export default function BookAppointmentScreen() {
     setSelectedSlot(null);
     try {
       const dateStr = format(date, "yyyy-MM-dd");
-      const slots = await patientPortalApi.getAvailableSlots(therapistId, dateStr);
+      const slots = await patientApi.getAvailableSlots(therapistId, dateStr);
       setAvailableSlots(slots);
-    } catch (error) {
+    } catch {
       Alert.alert("Erro", "Não foi possível carregar os horários.");
     } finally {
       setIsLoadingSlots(false);
@@ -90,17 +90,17 @@ export default function BookAppointmentScreen() {
 
     setIsBooking(true);
     try {
-      await patientPortalApi.bookAppointment({
+      await patientApi.bookAppointment({
         therapist_id: selectedTherapist.id,
         date: format(selectedDate, "yyyy-MM-dd"),
         time: selectedSlot,
         type: "session",
       });
-      
+
       Alert.alert("Sucesso", "Consulta agendada com sucesso!", [
-        { text: "OK", onPress: () => router.back() }
+        { text: "OK", onPress: () => router.back() },
       ]);
-    } catch (error) {
+    } catch {
       Alert.alert("Erro", "Não foi possível realizar o agendamento. Tente novamente.");
     } finally {
       setIsBooking(false);
@@ -109,13 +109,16 @@ export default function BookAppointmentScreen() {
 
   const renderHeader = () => (
     <View style={styles.header}>
-      <TouchableOpacity onPress={() => {
-        if (step === 2 && therapists.length > 1) {
-          setStep(1);
-        } else {
-          router.back();
-        }
-      }} style={styles.backButton}>
+      <TouchableOpacity
+        onPress={() => {
+          if (step === 2 && therapists.length > 1) {
+            setStep(1);
+          } else {
+            router.back();
+          }
+        }}
+        style={styles.backButton}
+      >
         <Ionicons name="arrow-back" size={24} color={colors.text} />
       </TouchableOpacity>
       <Text style={[styles.headerTitle, { color: colors.text }]}>Novo Agendamento</Text>
@@ -125,7 +128,10 @@ export default function BookAppointmentScreen() {
 
   if (isLoadingTherapists) {
     return (
-      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={["top"]}>
+      <SafeAreaView
+        style={[styles.container, { backgroundColor: colors.background }]}
+        edges={["top"]}
+      >
         {renderHeader()}
         <View style={styles.centerContainer}>
           <ActivityIndicator size="large" color={colors.primary} />
@@ -135,39 +141,49 @@ export default function BookAppointmentScreen() {
   }
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={["top"]}>
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: colors.background }]}
+      edges={["top"]}
+    >
       {renderHeader()}
 
       <ScrollView contentContainerStyle={styles.content}>
         {step === 1 && (
           <View>
-            <Text style={[styles.sectionTitle, { color: colors.text }]}>Selecione o Profissional</Text>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>
+              Selecione o Profissional
+            </Text>
             {therapists.length === 0 ? (
               <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
                 Nenhum profissional disponível.
               </Text>
             ) : (
-              therapists.map(t => (
+              therapists.map((t) => (
                 <TouchableOpacity
                   key={t.id}
                   style={[
                     styles.therapistCard,
                     { backgroundColor: colors.surface, borderColor: colors.border },
-                    selectedTherapist?.id === t.id && { borderColor: colors.primary, borderWidth: 2 }
+                    selectedTherapist?.id === t.id && {
+                      borderColor: colors.primary,
+                      borderWidth: 2,
+                    },
                   ]}
                   onPress={() => {
                     setSelectedTherapist(t);
                     setStep(2);
                   }}
                 >
-                  <View style={[styles.avatar, { backgroundColor: colors.primary + '20' }]}>
+                  <View style={[styles.avatar, { backgroundColor: colors.primary + "20" }]}>
                     <Text style={[styles.avatarText, { color: colors.primary }]}>
                       {t.name.charAt(0).toUpperCase()}
                     </Text>
                   </View>
                   <View style={styles.therapistInfo}>
                     <Text style={[styles.therapistName, { color: colors.text }]}>{t.name}</Text>
-                    <Text style={[styles.therapistRole, { color: colors.textSecondary }]}>Fisioterapeuta</Text>
+                    <Text style={[styles.therapistRole, { color: colors.textSecondary }]}>
+                      Fisioterapeuta
+                    </Text>
                   </View>
                   <Ionicons name="chevron-forward" size={20} color={colors.textSecondary} />
                 </TouchableOpacity>
@@ -187,7 +203,11 @@ export default function BookAppointmentScreen() {
               )}
             </View>
 
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.datesScroll}>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.datesScroll}
+            >
               {dates.map((date, idx) => {
                 const isSelected = date.getTime() === selectedDate.getTime();
                 return (
@@ -196,20 +216,27 @@ export default function BookAppointmentScreen() {
                     style={[
                       styles.dateCard,
                       { backgroundColor: colors.surface, borderColor: colors.border },
-                      isSelected && { backgroundColor: colors.primary, borderColor: colors.primary }
+                      isSelected && {
+                        backgroundColor: colors.primary,
+                        borderColor: colors.primary,
+                      },
                     ]}
                     onPress={() => setSelectedDate(date)}
                   >
-                    <Text style={[
-                      styles.dateDayName, 
-                      { color: isSelected ? "#FFFFFF" : colors.textSecondary }
-                    ]}>
+                    <Text
+                      style={[
+                        styles.dateDayName,
+                        { color: isSelected ? "#FFFFFF" : colors.textSecondary },
+                      ]}
+                    >
                       {format(date, "EEE", { locale: ptBR }).toUpperCase()}
                     </Text>
-                    <Text style={[
-                      styles.dateDayNumber, 
-                      { color: isSelected ? "#FFFFFF" : colors.text }
-                    ]}>
+                    <Text
+                      style={[
+                        styles.dateDayNumber,
+                        { color: isSelected ? "#FFFFFF" : colors.text },
+                      ]}
+                    >
                       {format(date, "d")}
                     </Text>
                   </TouchableOpacity>
@@ -217,8 +244,10 @@ export default function BookAppointmentScreen() {
               })}
             </ScrollView>
 
-            <Text style={[styles.sectionTitle, { color: colors.text, marginTop: Spacing.xl }]}>Horários Disponíveis</Text>
-            
+            <Text style={[styles.sectionTitle, { color: colors.text, marginTop: Spacing.xl }]}>
+              Horários Disponíveis
+            </Text>
+
             {isLoadingSlots ? (
               <ActivityIndicator size="small" color={colors.primary} style={{ marginTop: 24 }} />
             ) : availableSlots.length === 0 ? (
@@ -227,20 +256,25 @@ export default function BookAppointmentScreen() {
               </Text>
             ) : (
               <View style={styles.slotsGrid}>
-                {availableSlots.map(slot => (
+                {availableSlots.map((slot) => (
                   <TouchableOpacity
                     key={slot}
                     style={[
                       styles.slotCard,
                       { backgroundColor: colors.surface, borderColor: colors.border },
-                      selectedSlot === slot && { backgroundColor: colors.primary, borderColor: colors.primary }
+                      selectedSlot === slot && {
+                        backgroundColor: colors.primary,
+                        borderColor: colors.primary,
+                      },
                     ]}
                     onPress={() => setSelectedSlot(slot)}
                   >
-                    <Text style={[
-                      styles.slotText,
-                      { color: selectedSlot === slot ? "#FFFFFF" : colors.text }
-                    ]}>
+                    <Text
+                      style={[
+                        styles.slotText,
+                        { color: selectedSlot === slot ? "#FFFFFF" : colors.text },
+                      ]}
+                    >
                       {slot}
                     </Text>
                   </TouchableOpacity>

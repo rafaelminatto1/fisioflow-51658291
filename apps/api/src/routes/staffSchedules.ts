@@ -6,7 +6,7 @@ import type { Env } from "../types/env";
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
-const WEEKDAYS = ["domingo", "segunda", "terca", "quarta", "quinta", "sexta", "sabado"];
+const _WEEKDAYS = ["domingo", "segunda", "terca", "quarta", "quinta", "sexta", "sabado"];
 
 // GET /api/staff-schedules — all staff weekly schedules + upcoming blocks
 app.get("/", requireAuth, async (c) => {

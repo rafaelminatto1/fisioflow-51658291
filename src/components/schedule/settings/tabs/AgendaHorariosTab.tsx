@@ -18,7 +18,7 @@ import { useScheduleCapacity } from "@/hooks/useScheduleCapacity";
  * 4. Configurações de Slots (SlotConfigurationSettings)
  */
 export function AgendaHorariosTab() {
-  const [isAddRuleOpen, setIsAddRuleOpen] = useState(false);
+  const [_isAddRuleOpen, setIsAddRuleOpen] = useState(false);
   const { capacities } = useScheduleCapacity();
 
   const totalVagasDia = useMemo(

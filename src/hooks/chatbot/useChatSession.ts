@@ -84,7 +84,7 @@ export function useChatSession() {
       setMessages((prev) => [...prev, botMessage]);
       if (botResponse.quickReplies) setQuickReplies(botResponse.quickReplies);
       if (botResponse.requiresHumanHandoff) setHumanHandoffRequested(true);
-    } catch (error) {
+    } catch {
       const errorMessage: ChatMessage = {
         id: `msg-${Date.now()}-error`,
         content: "Desculpe, ocorreu um erro. Tente novamente em alguns instantes.",

@@ -112,7 +112,7 @@ export function ChatPanel({
       });
       toast.success("Template enviado com sucesso");
       await onMessageSent?.();
-    } catch (error) {
+    } catch {
       toast.error("Erro ao enviar template");
     } finally {
       setSending(false);

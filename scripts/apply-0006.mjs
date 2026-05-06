@@ -1,6 +1,6 @@
 import pg from "pg";
 import fs from "fs";
-import path from "path";
+import _path from "path";
 
 const dbUrl = process.env.DATABASE_URL;
 if (!dbUrl) {

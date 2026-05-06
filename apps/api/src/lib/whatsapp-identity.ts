@@ -1,5 +1,4 @@
 import { createPool } from "./db";
-import type { Env } from "../types/env";
 
 type Pool = ReturnType<typeof createPool>;
 

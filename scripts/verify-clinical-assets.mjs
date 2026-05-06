@@ -1,5 +1,5 @@
 import fs from "fs";
-import path from "path";
+import _path from "path";
 
 const CATALOG_PATH = "src/data/clinicalTestsCatalog.ts";
 const ASSETS_DIR = "public/clinical-tests/illustrations";

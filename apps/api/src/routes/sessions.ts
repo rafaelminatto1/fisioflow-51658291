@@ -3,7 +3,7 @@ import { createDb } from "../lib/db";
 import { requireAuth, type AuthVariables } from "../lib/auth";
 import type { Env } from "../types/env";
 import { sessions, sessionAttachments, sessionTemplates } from "@fisioflow/db";
-import { eq, and, desc, count, sql, or, ilike, isNull } from "drizzle-orm";
+import { eq, and, desc, count, sql, or, ilike } from "drizzle-orm";
 import { withTenant } from "../lib/db-utils";
 import { invalidatePatientCache } from "../lib/ai-context-cache";
 import { processClinicalEmbedding } from "../lib/ai/embeddings";

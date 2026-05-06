@@ -1,4 +1,3 @@
-import { type Env } from "../src/types/env";
 
 /**
  * Neon DB Branch Management Script

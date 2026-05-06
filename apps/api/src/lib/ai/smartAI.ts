@@ -4,7 +4,6 @@ import {
   callAI,
   callAIStructured,
   type AITask,
-  type CallAIOptions,
   type CallAIResult,
 } from "./callAI";
 import { z } from "zod";

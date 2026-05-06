@@ -24,7 +24,7 @@ import { toast } from "sonner";
 import { PatientService } from "@/lib/services/PatientService";
 import { fisioLogger as logger } from "@/lib/errors/logger";
 import { ExerciseType } from "@/types/pose";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { Slider } from "@/components/ui/slider";
 import { Badge } from "@/components/ui/badge";
 

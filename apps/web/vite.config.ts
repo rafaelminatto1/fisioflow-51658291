@@ -95,7 +95,7 @@ export default defineConfig(({ mode }) => {
         srcDir: "src",
         filename: "service-worker.ts",
         registerType: "autoUpdate",
-        injectRegister: "auto",
+        injectRegister: null,
         manifest: {
           name: "FisioFlow - Plataforma de Fisioterapia Digital",
           short_name: "FisioFlow",

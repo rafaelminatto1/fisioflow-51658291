@@ -118,18 +118,18 @@ export default function SimuladorReceitasPage() {
   // Cenário personalizado
   const fatorAumento = 1 + cenarioPersonalizado.aumento / 100;
   const receitaPersonalizada = totalReceitas * fatorAumento;
-  const receitaNovosAlunos = cenarioPersonalizado.novosAlunos * 150; // média de 150 por aluno
+  const receitaNovosAlunos = cenarioPersonalizado.novosAlunos * 150;
   const totalReceitasPersonalizado = receitaPersonalizada + receitaNovosAlunos;
   const lucroPersonalizado = totalReceitasPersonalizado - totalDespesas;
 
   // Cálculo de atingimento de meta
   const metaAtingida = lucroAtual >= metaLucro;
   const diferencaMeta = metaLucro - lucroAtual;
-  const percentualMeta = (lucroAtual / metaLucro) * 100;
+  const percentualMeta = metaLucro > 0 ? (lucroAtual / metaLucro) * 100 : 0;
 
   // Horas ocupadas (assumindo média de 1h por atendimento)
   const totalAtendimentos = receitasFixas.reduce((acc, r) => acc + r.quantidade, 0);
-  const taxaOcupacao = (totalAtendimentos / horasDisponiveis) * 100;
+  const taxaOcupacao = horasDisponiveis > 0 ? (totalAtendimentos / horasDisponiveis) * 100 : 0;
 
   const adicionarReceita = () => {
     if (!novaReceita.nome || !novaReceita.valor || !novaReceita.quantidade) return;
@@ -539,7 +539,7 @@ export default function SimuladorReceitasPage() {
                     <Label className="text-sm">Ticket Médio</Label>
                     <span className="font-semibold">
                       R${" "}
-                      {(totalReceitas / totalAtendimentos).toLocaleString("pt-BR", {
+                      {(totalAtendimentos > 0 ? totalReceitas / totalAtendimentos : 0).toLocaleString("pt-BR", {
                         minimumFractionDigits: 2,
                       })}
                     </span>
@@ -548,7 +548,7 @@ export default function SimuladorReceitasPage() {
                     <Label className="text-sm">Lucro por Hora</Label>
                     <span className="font-semibold">
                       R${" "}
-                      {(lucroAtual / horasDisponiveis).toLocaleString("pt-BR", {
+                      {(horasDisponiveis > 0 ? lucroAtual / horasDisponiveis : 0).toLocaleString("pt-BR", {
                         minimumFractionDigits: 2,
                       })}
                     </span>

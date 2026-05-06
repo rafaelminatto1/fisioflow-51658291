@@ -27,6 +27,13 @@ interface RequestOptions extends RequestInit {
   params?: Record<string, string | number | boolean | undefined | null>;
 }
 
+type AppointmentBookingPayload = {
+  therapist_id: string;
+  date: string;
+  time: string;
+  type: string;
+};
+
 type PatientSessionResponse = {
   data?: {
     session?: {
@@ -204,6 +211,16 @@ export const patientApi = {
     api.post<{ success: boolean }>(`${PATIENT_PORTAL_PREFIX}/appointments/${id}/cancel`, {
       reason,
     }),
+  getAvailableSlots: async (therapistId: string, date: string): Promise<string[]> => {
+    const response = await api.get<string[] | { data?: string[]; slots?: string[] }>(
+      `${PATIENT_PORTAL_PREFIX}/appointments/availability`,
+      { therapist_id: therapistId, date },
+    );
+    if (Array.isArray(response)) return response;
+    return response.data ?? response.slots ?? [];
+  },
+  bookAppointment: (data: AppointmentBookingPayload) =>
+    api.post<{ success: boolean }>(`${PATIENT_PORTAL_PREFIX}/appointments`, data),
   getExercises: async (): Promise<ExerciseAssignment[]> => {
     const response = await api.get<any[]>(`${PATIENT_PORTAL_PREFIX}/exercises`);
     return response.map((e) => Mappers.exerciseAssignment(e));

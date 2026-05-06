@@ -22,7 +22,7 @@ test('update saturday and check console errors', async ({ page }) => {
         try {
             const body = await response.json();
             consoleLogs.push(`BODY: ${JSON.stringify(body)}`);
-        } catch (_e) {}
+        } catch {}
     }
   });
 

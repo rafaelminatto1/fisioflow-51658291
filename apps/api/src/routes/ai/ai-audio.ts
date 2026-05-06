@@ -185,7 +185,7 @@ app.post("/voice/evolution", async (c) => {
     });
 
     return c.json({ success: true, transcript, soapData });
-  } catch (_error) {
+  } catch {
     return c.json({ success: true, transcript, soapData: buildSoapFromText(transcript) });
   }
 });

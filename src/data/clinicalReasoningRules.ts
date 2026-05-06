@@ -1,4 +1,3 @@
-import { physioDictionary } from "./physioDictionary";
 
 export interface ActionRule {
   id: string;

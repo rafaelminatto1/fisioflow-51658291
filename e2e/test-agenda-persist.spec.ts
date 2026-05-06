@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test } from '@playwright/test';
 
 test('update saturday to 07:00-13:00 final validation', async ({ page }) => {
   await page.goto('https://www.moocafisio.com.br/auth/login');

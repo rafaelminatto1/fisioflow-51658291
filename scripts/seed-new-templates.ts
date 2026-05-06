@@ -1,7 +1,7 @@
 import "dotenv/config";
 import { neon } from "@neondatabase/serverless";
 import { drizzle } from "drizzle-orm/neon-http";
-import { exerciseTemplates, exerciseTemplateItems } from "../src/server/db/schema/templates";
+import { exerciseTemplates } from "../src/server/db/schema/templates";
 
 async function main() {
   if (!process.env.DATABASE_URL) {

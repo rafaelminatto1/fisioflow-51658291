@@ -26,7 +26,7 @@ async function checkIntegrity() {
     let brokenCount = 0;
     for (const ex of localExercises) {
       const relativePath = ex.image_url.replace(/^\//, ""); // remove leading slash
-      const fullPath = path.join(
+      const _fullPath = path.join(
         process.cwd(),
         "public",
         relativePath.replace("exercises/", "exercises/"),

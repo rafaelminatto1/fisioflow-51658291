@@ -142,7 +142,7 @@ export class TurboQuant {
    */
   static get LUT(): number[][] {
     if (this._LUT) return this._LUT;
-    this._LUT = Array.from({ length: 16 }, () => new Array(16).fill(0));
+    this._LUT = Array.from({ length: 16 }, () => Array.from({ length: 16 }, () => 0));
 
     const reconstructPq = (n: number) => LLOYD_MAX_CENTROIDS[n & 0x07];
     const qjlSign = (n: number) => ((n & 0x08) !== 0 ? 1 : -1);

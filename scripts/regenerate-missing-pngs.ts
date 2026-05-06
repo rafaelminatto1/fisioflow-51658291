@@ -4,7 +4,7 @@ import { drizzle } from "drizzle-orm/neon-http";
 import { exercises } from "../src/server/db/schema/exercises.ts";
 import { eq } from "drizzle-orm";
 import fs from "fs";
-import path from "path";
+import _path from "path";
 import dotenv from "dotenv";
 import sharp from "sharp";
 

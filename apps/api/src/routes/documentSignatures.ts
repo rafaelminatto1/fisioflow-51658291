@@ -76,7 +76,6 @@ app.get("/verify", async (c) => {
 // POST /api/document-signatures/:id/send-for-signature
 // Generate signing token + send WhatsApp to patient
 app.post("/:id/send-for-signature", requireAuth, async (c) => {
-  const user = c.get("user");
   const { id } = c.req.param();
   const db = createPool(c.env);
 

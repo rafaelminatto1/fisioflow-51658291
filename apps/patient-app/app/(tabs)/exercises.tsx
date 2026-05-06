@@ -28,7 +28,7 @@ import { GamificationService } from "@/services/GamificationService";
 import { useExercises, useCompleteExercise } from "@/hooks/useExercises";
 import { ExerciseAssignment } from "@/types/api";
 import { log } from "@/lib/logger";
-import { performTextOfflineSearch, findSimilarOffline } from "@/lib/semanticSearch";
+import { findSimilarOffline } from "@/lib/semanticSearch";
 
 export default function ExercisesScreen() {
   const colors = useColors();

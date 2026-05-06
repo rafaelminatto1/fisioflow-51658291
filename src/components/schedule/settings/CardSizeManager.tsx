@@ -4,7 +4,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
 import { useCardSize } from "@/hooks/useCardSize";
-import { CARD_SIZE_CONFIGS, DEFAULT_CARD_SIZE } from "@/lib/config/agenda";
+import { DEFAULT_CARD_SIZE } from "@/lib/config/agenda";
 import { cn } from "@/lib/utils";
 import { Minimize, Maximize, Frame, Square, RotateCcw, Clock, Type } from "lucide-react";
 import type { CardSize } from "@/types/agenda";

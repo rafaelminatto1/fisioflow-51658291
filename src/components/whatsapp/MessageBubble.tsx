@@ -1,6 +1,6 @@
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { StickyNote, MoreVertical, Edit3, Trash2, XCircle } from "lucide-react";
+import { StickyNote, MoreVertical, Edit3, Trash2 } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,

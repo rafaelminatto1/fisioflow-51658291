@@ -6,7 +6,6 @@ import {
   callGeminiThinking,
   callGeminiStructured as callGeminiStructuredOriginal,
 } from "../ai-gemini-v2";
-import { callGemini } from "../ai-gemini";
 
 type ThinkingResult = { text: string; thoughts?: string; usageMetadata?: Record<string, any> };
 

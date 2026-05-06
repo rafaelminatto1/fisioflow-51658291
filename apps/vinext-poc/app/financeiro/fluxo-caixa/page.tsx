@@ -1,12 +1,28 @@
-import { db } from "../../lib/db";
-import { getAuthSession } from "../../lib/auth";
-import { transacoes } from "@fisioflow/db";
+import { db } from "../../../lib/db";
+import { getAuthSession } from "../../../lib/auth";
+import { transactions } from "@fisioflow/db";
 import { eq, desc } from "drizzle-orm";
-import { Card, CardContent, CardHeader, CardTitle } from "@fisioflow/ui";
 import { TrendingUp, TrendingDown, DollarSign, Calendar, LineChart } from "lucide-react";
-import { FluxoCaixaChart } from "../../components/financeiro/FluxoCaixaChart";
+import { FluxoCaixaChart } from "../../../components/financeiro/FluxoCaixaChart";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import type { ReactNode } from "react";
+
+function Card({ className = "", children }: { className?: string; children: ReactNode }) {
+  return <section className={className}>{children}</section>;
+}
+
+function CardHeader({ className = "", children }: { className?: string; children: ReactNode }) {
+  return <div className={className}>{children}</div>;
+}
+
+function CardTitle({ className = "", children }: { className?: string; children: ReactNode }) {
+  return <h2 className={className}>{children}</h2>;
+}
+
+function CardContent({ className = "", children }: { className?: string; children: ReactNode }) {
+  return <div className={className}>{children}</div>;
+}
 
 function formatMonthLabel(monthKey: string): string {
   const [year, month] = monthKey.split("-").map(Number);
@@ -20,10 +36,14 @@ export default async function FluxoCaixaPage() {
     return <div className="p-8 text-center">Não autorizado. Por favor, faça login.</div>;
   }
 
+  if (!session.organizationId) {
+    return <div className="p-8 text-center">Organização não encontrada na sessão.</div>;
+  }
+
   // 1. Fetch Transações (Direct DB Access + Multi-tenancy)
-  const data = await db.query.transacoes.findMany({
-    where: eq(transacoes.organizationId, session.organizationId),
-    orderBy: [desc(transacoes.createdAt)],
+  const data = await db.query.transactions.findMany({
+    where: eq(transactions.organizationId, session.organizationId),
+    orderBy: [desc(transactions.createdAt)],
     limit: 1000,
   });
 
@@ -35,10 +55,10 @@ export default async function FluxoCaixaPage() {
 
   data.forEach((t) => {
     const mes = t.createdAt.toISOString().slice(0, 7);
-    const valor = Number(t.valor);
+    const valor = Number(t.amount);
     const existing = grouped.get(mes) || { mes, entradas: 0, saidas: 0, saldo: 0 };
 
-    if (t.tipo === "receita") {
+    if (t.type === "receita") {
       existing.entradas += valor;
     } else {
       // 'despesa' e outros tipos são saídas

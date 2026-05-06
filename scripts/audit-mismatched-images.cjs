@@ -1,6 +1,6 @@
 const { Client } = require("pg");
 const fs = require("fs");
-const path = require("path");
+const _path = require("path");
 
 const DATABASE_URL = process.env.DATABASE_URL;
 const TARGET_DIR = "public/exercises/illustrations/";

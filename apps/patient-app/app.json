@@ -77,7 +77,10 @@
       },
       "eas": {
         "projectId": "3dc7141f-4e97-4c2c-b4aa-959888a0e810"
-      }
+      },
+      "privacyPolicyUrl": "https://www.moocafisio.com.br/privacidade.html",
+      "marketingUrl": "https://www.moocafisio.com.br",
+      "supportUrl": "https://www.moocafisio.com.br/termos.html"
     },
     "owner": "rafaelminatto",
     "updates": {

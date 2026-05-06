@@ -104,7 +104,7 @@ app.post("/", requireAuth, async (c) => {
           const exerciseName = session.exercise_type ?? "exercício";
           await notifyHEPMilestone(c.env, db2, patient_id, { exerciseName, streakDays });
         }
-      } catch (_err) {
+      } catch {
         // non-critical
       }
     });

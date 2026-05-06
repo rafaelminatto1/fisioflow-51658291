@@ -5,7 +5,6 @@ import { clinicalReferences } from "@/data/clinicalReferences";
 import { physioDictionary } from "@/data/physioDictionary";
 import { ChevronRight, BookOpen, CheckCircle2, Camera, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { motion } from "framer-motion";
 
 interface InstructionProps {
   testId: string;

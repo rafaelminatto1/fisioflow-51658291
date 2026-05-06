@@ -18,7 +18,6 @@ import {
   FileText,
   Search,
   Sparkles,
-  Image as ImageIcon,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Commands } from "./suggestion/commands";

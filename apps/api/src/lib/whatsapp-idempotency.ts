@@ -44,7 +44,7 @@ export async function isDuplicate(d1: D1Database, metaMessageId: string): Promis
 export async function markProcessed(
   d1: D1Database,
   metaMessageId: string,
-  ttlMs: number = DEFAULT_TTL_MS,
+  _ttlMs: number = DEFAULT_TTL_MS,
 ): Promise<void> {
   try {
     await ensureTable(d1);

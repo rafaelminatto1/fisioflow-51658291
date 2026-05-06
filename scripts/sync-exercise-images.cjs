@@ -20,7 +20,7 @@ async function sync() {
     console.log(`📂 Encontrados ${files.length} arquivos AVIF.`);
 
     let updatedCount = 0;
-    let skippedCount = 0;
+    let _skippedCount = 0;
     let notFoundCount = 0;
 
     for (const file of files) {

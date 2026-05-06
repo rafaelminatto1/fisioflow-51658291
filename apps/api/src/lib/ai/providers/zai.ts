@@ -43,7 +43,7 @@ function createClient(env: Env, cacheKey?: string, cacheTtl?: number): OpenAI {
   });
 }
 
-const THINKING_BUDGETS: Record<ThinkingLevel, number> = {
+const _THINKING_BUDGETS: Record<ThinkingLevel, number> = {
   MINIMAL: 0,
   LOW: 512,
   MEDIUM: 1024,

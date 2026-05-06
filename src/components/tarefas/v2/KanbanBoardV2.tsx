@@ -183,7 +183,7 @@ export function KanbanBoardV2({
       // Pending checklist filter
       if (filters.has_pending_checklist) {
         const allItems = t.checklists?.flatMap((c) => c.items ?? []) ?? [];
-        const hasPending = allItems.length > 0 && allItems.some((i) => !i.checked);
+        const hasPending = allItems.some((i) => !i.checked);
         if (!hasPending) return false;
       }
 

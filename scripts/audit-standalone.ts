@@ -44,7 +44,7 @@ async function runAudit() {
   try {
     await page.waitForURL((url) => !url.pathname.includes("/auth"), { timeout: 15000 });
     console.log("✅ Login successful");
-  } catch (e) {
+  } catch {
     console.error("❌ Login failed or timed out");
     await browser.close();
     process.exit(1);

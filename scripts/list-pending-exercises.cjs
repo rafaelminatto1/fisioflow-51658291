@@ -25,7 +25,7 @@ async function run() {
 
     for (const ex of exercises) {
       // Se o image_url não contiver a slug (ou parte significativa dela), consideramos pendente de ilustração exclusiva
-      const slugBase = ex.slug.split("-")[0]; // Simplificação para checagem rápida
+      const _slugBase = ex.slug.split("-")[0]; // Simplificação para checagem rápida
       if (!ex.image_url || !ex.image_url.includes(ex.slug)) {
         pending.push(ex);
       }
