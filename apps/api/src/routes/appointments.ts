@@ -266,7 +266,7 @@ app.post(
         c.executionCtx.waitUntil(
           sendPushToOrg(user.organizationId, {
             title: "Novo agendamento",
-            body: `${row.patient_name ?? "Paciente"} — ${row.appointment_date} às ${row.start_time}`,
+            body: `${row.patient_name ?? "Paciente"} — ${row.date ?? row.appointment_date} às ${row.start_time}`,
             url: "/agenda",
             tag: `appointment-new-${row.id}`,
           }, c.env).catch(() => {}),
