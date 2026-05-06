@@ -2,7 +2,7 @@ import { neon } from "@neondatabase/serverless";
 import { drizzle } from "drizzle-orm/neon-http";
 import * as schema from "../src/server/db/schema/clinical";
 import { builtinClinicalTestsCatalog } from "../src/data/clinicalTestsCatalog";
-import { eq, sql } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import dotenv from "dotenv";
 
 dotenv.config();

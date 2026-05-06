@@ -11,7 +11,6 @@ import {
   Plus,
   Calendar,
   Settings,
-  HelpCircle,
   Receipt,
   Activity,
   BookOpen,

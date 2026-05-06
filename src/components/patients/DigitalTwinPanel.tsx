@@ -1,8 +1,7 @@
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { Badge } from "@/components/ui/badge";
-import { Sparkles, TrendingUp, AlertTriangle, CheckCircle2 } from "lucide-react";
+import { Sparkles, TrendingUp, CheckCircle2 } from "lucide-react";
 import {
   LineChart,
   Line,
@@ -18,7 +17,7 @@ interface DigitalTwinProps {
   patientId: string;
 }
 
-export function DigitalTwinPanel({ patientId }: DigitalTwinProps) {
+export function DigitalTwinPanel({ patientId: _patientId }: DigitalTwinProps) {
   // In a real implementation, this would use a hook like useDigitalTwin(patientId)
   // For now, we use simulated data based on the PRD specification
   

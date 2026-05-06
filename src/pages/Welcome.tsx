@@ -1,16 +1,11 @@
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
-  Heart,
   Activity,
   Brain,
-  Users,
   Calendar,
-  BarChart3,
-  ArrowRight,
-  Star,
   Shield,
   Zap,
 } from "lucide-react";

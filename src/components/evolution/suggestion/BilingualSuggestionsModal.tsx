@@ -2,14 +2,12 @@ import React, { useState, useEffect, useRef } from "react";
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Search, BookOpen, Stethoscope, Activity, ArrowRight, Loader2 } from "lucide-react";
-import { expandSearchQuery, normalizeForSearch } from "@/lib/utils/bilingualSearch";
-import { physioDictionary, PhysioDictionaryEntry } from "@/data/physioDictionary";
+import { PhysioDictionaryEntry } from "@/data/physioDictionary";
 import { useBilingualSearch } from "@/hooks/useBilingualSearch";
 
 interface BilingualSuggestionsModalProps {

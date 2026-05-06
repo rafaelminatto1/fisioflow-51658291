@@ -1,6 +1,6 @@
 import { useQuery, useInfiniteQuery } from "@tanstack/react-query";
 import { sessionsApi } from "@/api/v2";
-import { soapKeys, type SoapRecord, type SoapRecordV2 } from "./types";
+import { soapKeys, type SoapRecord } from "./types";
 import { toSoapRecordV2 } from "./mappers";
 
 export const useSoapRecordsV2 = (patientId: string) => {

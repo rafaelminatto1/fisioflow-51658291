@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence } from "framer-motion";
 import { Sparkles, XCircle } from "lucide-react";
 import { useActionBridge } from "@/hooks/useActionBridge";
 import { TemplateField } from "@/components/evaluation";

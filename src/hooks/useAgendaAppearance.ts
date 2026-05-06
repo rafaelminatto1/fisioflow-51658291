@@ -205,9 +205,9 @@ export function useAgendaAppearance(view: AgendaView = "day"): UseAgendaAppearan
   const applyToAllViews = useCallback((patch: Partial<AgendaViewAppearance>) => {
     setState((prev) => ({
       ...prev,
-      day: { ...(prev.day ?? {}), ...patch },
-      week: { ...(prev.week ?? {}), ...patch },
-      month: { ...(prev.month ?? {}), ...patch },
+      day: { ...prev.day, ...patch },
+      week: { ...prev.week, ...patch },
+      month: { ...prev.month, ...patch },
     }));
   }, []);
 

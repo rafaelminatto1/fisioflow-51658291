@@ -63,8 +63,8 @@ export const LazyAppointmentModal = memo(
     mode,
     therapists,
     patients,
-    onSave,
-    onDelete,
+    onSave: _onSave,
+    onDelete: _onDelete,
     className,
     preloadOnHover = true,
   }: LazyAppointmentModalProps) => {

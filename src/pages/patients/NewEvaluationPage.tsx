@@ -578,7 +578,7 @@ export default function NewEvaluationPage() {
                         <div className="lg:col-span-4 sticky top-24 hidden lg:block print:hidden">
                           <EvaluationActionBridge
                             suggestions={suggestions}
-                            onProtocolSelect={(id) => {
+                            onProtocolSelect={(_id) => {
                               toast({
                                 title: "Protocolo Sugerido",
                                 description:

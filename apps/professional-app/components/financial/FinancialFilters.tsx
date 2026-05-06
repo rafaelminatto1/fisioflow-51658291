@@ -17,12 +17,10 @@ import {
   subDays,
   startOfMonth,
   endOfMonth,
-  startOfWeek,
-  endOfWeek,
   subMonths,
 } from "date-fns";
 
-const { width: SCREEN_WIDTH } = Dimensions.get("window");
+const { width: _SCREEN_WIDTH } = Dimensions.get("window");
 
 export type DatePeriod = "today" | "week" | "month" | "thisMonth" | "lastMonth" | "custom";
 
@@ -48,7 +46,7 @@ export function FinancialFilters({
 }: FinancialFiltersProps) {
   const colors = useColors();
   const [showDateModal, setShowDateModal] = useState(false);
-  const [tempDateRange, setTempDateRange] = useState<{
+  const [tempDateRange, _setTempDateRange] = useState<{
     start: Date;
     end: Date;
   }>({
@@ -99,7 +97,7 @@ export function FinancialFilters({
     { label: "Convênio", value: "insurance" },
   ];
 
-  const CATEGORIES = [
+  const _CATEGORIES = [
     { label: "Todas", value: "" },
     { label: "Avaliação", value: "avaliacao" },
     { label: "Terapia", value: "terapia" },

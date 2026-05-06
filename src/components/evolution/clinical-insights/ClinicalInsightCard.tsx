@@ -1,7 +1,6 @@
 import React from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { Lightbulb, AlertTriangle, ShieldAlert, Check, X, Info } from "lucide-react";
-import { ActionRule } from "@/data/clinicalReasoningRules";
 
 interface ClinicalInsightCardProps {
   type: "protocol" | "exercise" | "precaution" | "alert";

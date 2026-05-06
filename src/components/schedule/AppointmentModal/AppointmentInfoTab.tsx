@@ -21,7 +21,7 @@ import { type AppointmentFormData } from "@/types/appointment";
 import { AppointmentDateTimeSection } from "../AppointmentDateTimeSection";
 import { AppointmentPatientSelectionSection } from "../AppointmentPatientSelectionSection";
 import { AppointmentPaymentTab } from "../AppointmentPaymentTab";
-import { Briefcase, MessageSquare, Info, User, ChevronRight } from "lucide-react";
+import { Briefcase, MessageSquare, Info, User } from "lucide-react";
 
 interface AppointmentInfoTabProps {
   methods: UseFormReturn<AppointmentFormData>;

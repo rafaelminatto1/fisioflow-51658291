@@ -20,23 +20,19 @@ import {
   Plus,
   Sparkles,
   CheckCircle2,
-  XCircle,
-  BarChart3,
   Target,
   Flame,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { 
-  BarChart, 
-  Bar, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
-  ResponsiveContainer, 
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
   Cell,
-  AreaChart,
-  Area
 } from "recharts";
 import { fisioLogger as logger } from "@/lib/errors/logger";
 import { useAuth } from "@/contexts/AuthContext";
@@ -112,15 +108,15 @@ const PatientPortal = () => {
 
   // Portal-specific hooks (dedicated /api/patient-portal/* endpoints)
   const { data: portalStats } = usePortalStats();
-  const { data: portalProgress, isLoading: isLoadingProgress } = usePortalProgress();
+  const { data: portalProgress, isLoading: _isLoadingProgress } = usePortalProgress();
   const {
     data: portalNotifications,
     markRead,
     markAllRead,
     unreadCount,
   } = usePortalNotifications();
-  const { confirm: confirmApt, cancel: cancelApt } = usePortalAppointmentActions();
-  const { data: portalExercises, isLoading: isLoadingExercises, complete: completeExercise } = usePortalExercises();
+  const { confirm: _confirmApt, cancel: _cancelApt } = usePortalAppointmentActions();
+  const { data: portalExercises, isLoading: _isLoadingExercises, complete: completeExercise } = usePortalExercises();
   const { data: weeklyAdhesion } = usePortalExerciseHistory(patient?.id);
 
   // Fetch patient data linked to the profile

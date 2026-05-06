@@ -237,18 +237,10 @@ export const EvolutionHeader = memo(
   }: EvolutionHeaderProps) => {
     const showFirstEvolution = previousEvolutionsCount === 0;
     const navigate = useNavigate();
-    const selectedTherapist = selectedTherapistId
+    const _selectedTherapist = selectedTherapistId
       ? getTherapistById(therapists, selectedTherapistId)
       : null;
-    const showTherapistFallback = Boolean(selectedTherapistId && !selectedTherapist);
-    const sessionStartDate = getSessionStartDate(appointment);
-
-    const appointmentDateLabel = sessionStartDate
-      ? format(sessionStartDate, "dd/MM HH:mm", { locale: ptBR })
-      : "";
-    const sessionStartLabel = sessionStartDate
-      ? format(sessionStartDate, "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })
-      : "";
+    const _sessionStartDate = getSessionStartDate(appointment);
 
     const sessionNumber = evolutionStats.totalEvolutions + 1;
     const patientAvatar = (patient as Patient & { avatar_url?: string })?.avatar_url;

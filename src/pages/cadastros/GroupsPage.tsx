@@ -8,7 +8,6 @@ import {
   ChevronRight,
   Edit2,
   Trash2,
-  UserPlus,
   UserMinus,
   Clock,
   MapPin,
@@ -19,7 +18,7 @@ import {
   RefreshCw,
 } from "lucide-react";
 import { MainLayout } from "@/components/layout/MainLayout";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -313,7 +312,7 @@ function ClassFormModal({
 
 function CheckinModal({
   session,
-  classId,
+  classId: _classId,
   onClose,
 }: {
   session: GroupSession;

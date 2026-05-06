@@ -30,7 +30,7 @@ interface AIScribeModalProps {
 export const AIScribeModal: React.FC<AIScribeModalProps> = ({ open, onOpenChange, onApply }) => {
   const {
     voiceState,
-    transcribedText,
+    transcribedText: _transcribedText,
     soapFields,
     error,
     isRecording,

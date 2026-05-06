@@ -13,7 +13,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { router, useFocusEffect } from "expo-router";
 import { useColors } from "@/hooks/useColorScheme";
 import { useHaptics } from "@/hooks/useHaptics";
-import { Card, SyncStatus, Skeleton, CardSkeleton } from "@/components";
+import { Card, SyncStatus, Skeleton } from "@/components";
 import { useSyncStatus } from "@/hooks/useSyncStatus";
 import { getConversations, ApiConversation } from "@/lib/api";
 import { format } from "date-fns";

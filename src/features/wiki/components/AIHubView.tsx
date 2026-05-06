@@ -1,8 +1,7 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
@@ -14,7 +13,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
-  Activity,
   MessageSquare,
   Stethoscope,
   Send,
@@ -28,7 +26,6 @@ import {
   ScrollText,
   Dumbbell,
   History,
-  X,
   FileText,
   Upload,
 } from "lucide-react";

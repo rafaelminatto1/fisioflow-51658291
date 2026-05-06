@@ -1,5 +1,5 @@
 import React from "react";
-import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
+import { View, Text, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useColors } from "@/hooks/useColorScheme";
 import { Button } from "@/components";
@@ -22,7 +22,7 @@ export function EmptyState({
   description,
   actionLabel,
   onAction,
-  illustration = "minimal",
+  illustration: _illustration = "minimal",
   variant = "default",
 }: EmptyStateProps) {
   const colors = useColors();
@@ -95,7 +95,7 @@ export function EmptyStateWithIllustration({
   description,
   actionLabel,
   onAction,
-  illustration = "minimal",
+  illustration: _illustration = "minimal",
 }: EmptyStateWithIllustrationProps) {
   const colors = useColors();
 

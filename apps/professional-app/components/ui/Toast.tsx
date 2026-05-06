@@ -19,7 +19,7 @@ export interface ToastProps {
 }
 
 export function Toast({
-  id,
+  id: _id,
   title,
   description,
   variant = "default",

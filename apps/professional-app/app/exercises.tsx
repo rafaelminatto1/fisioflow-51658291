@@ -1,4 +1,4 @@
-import { useMemo, useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef } from "react";
 import {
   View,
   Text,
@@ -17,7 +17,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, router } from "expo-router";
 import { useColors } from "@/hooks/useColorScheme";
-import { Card, Button, Modal } from "@/components";
+import { Button, Modal } from "@/components";
 import { useExercisesLibrary, usePatientExerciseAssignments } from "@/hooks";
 import { useExerciseFavorites } from "@/hooks/useExerciseFavorites";
 import { useHaptics } from "@/hooks/useHaptics";
@@ -27,9 +27,6 @@ import type { Exercise } from "@/types";
 
 import {
   BODY_PARTS,
-  EQUIPMENT,
-  CATEGORIES,
-  DIFFICULTY_LEVELS,
 } from "@/lib/constants/exerciseConstants";
 
 const DIFFICULTY_OPTIONS = [
@@ -68,8 +65,8 @@ export default function ExercisesScreen() {
   const [selectedExercise, setSelectedExercise] = useState<Exercise | null>(null);
   const [showAssignModal, setShowAssignModal] = useState(false);
   const [previewExercise, setPreviewExercise] = useState<Exercise | null>(null);
-  const previewScale = useRef(new Animated.Value(0.8)).current;
-  const previewOpacity = useRef(new Animated.Value(0)).current;
+  const _previewScale = useRef(new Animated.Value(0.8)).current;
+  const _previewOpacity = useRef(new Animated.Value(0)).current;
 
   // Modal State
   const [sets, setSets] = useState("3");

@@ -14,7 +14,7 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { usePatientSurgeries } from "@/hooks/usePatientEvolution";
 import { SurgeryFormModal } from "@/components/evolution/SurgeryFormModal";
-import { getSurgeryTypeLabel, getAffectedSideAbbreviation } from "@/lib/constants/surgery";
+import { getSurgeryTypeLabel } from "@/lib/constants/surgery";
 import type { Surgery } from "@/types/evolution";
 
 function formatTimeSinceSurgery(surgeryDate: string): string {
@@ -133,7 +133,7 @@ export const SurgeriesCard = memo(function SurgeriesCard({
                   {surgeries.map((s: Surgery) => {
                     const surgeryDate = s.surgery_date;
                     const surgeryType = s.surgery_type;
-                    const affectedSide = s.affected_side;
+                    const _affectedSide = s.affected_side;
                     const timeSince = surgeryDate ? formatTimeSinceSurgery(surgeryDate) : "—";
 
                     return (

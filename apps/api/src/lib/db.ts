@@ -1,6 +1,6 @@
-import { neon, type NeonQueryFunction } from "@neondatabase/serverless";
+import { neon } from "@neondatabase/serverless";
 import { drizzle as drizzleHttp } from "drizzle-orm/neon-http";
-import { Pool } from "pg";
+import { Client } from "pg";
 import { type PgDatabase } from "drizzle-orm/pg-core";
 import * as schema from "@fisioflow/db";
 import type { Env } from "../types/env";
@@ -8,9 +8,6 @@ import { wrapQueryWithTimeout, DEFAULT_TIMEOUTS } from "./dbWrapper";
 import { AsyncLocalStorage } from "node:async_hooks";
 
 const rlsContext = new AsyncLocalStorage<string>();
-
-// Singleton pool to reuse across requests in the same isolate
-let globalPool: Pool | null = null;
 
 export type DbRow = any;
 
@@ -72,21 +69,29 @@ function isTcpConnection(env: Env, mode: "read" | "write" = "write"): boolean {
   return false;
 }
 
-function getGlobalPool(env: Env): Pool {
-  const url = getUrl(env, "write");
-  if (globalPool) return globalPool;
-
-  const pool = new Pool({
-    connectionString: url,
-    max: 20,
-    idleTimeoutMillis: 10000,
+function createPgClient(env: Env, mode: "read" | "write" = "write"): Client {
+  return new Client({
+    connectionString: getUrl(env, mode),
     connectionTimeoutMillis: 15000,
-    // Otimização de latência TCP
-    keepAlive: true,
+    keepAlive: false,
   });
+}
 
-  globalPool = pool;
-  return pool;
+function normalizeQueryArgs(
+  textOrStrings: string | TemplateStringsArray,
+  paramsOrValues: any[],
+): { text: string; params: any[] } {
+  if (typeof textOrStrings === "string") {
+    return { text: textOrStrings, params: paramsOrValues[0] ?? [] };
+  }
+
+  let text = textOrStrings[0];
+  const params: any[] = [];
+  for (let i = 0; i < paramsOrValues.length; i++) {
+    text += `$${i + 1}${textOrStrings[i + 1]}`;
+    params.push(paramsOrValues[i]);
+  }
+  return { text, params };
 }
 
 export async function queryWithCache<T>(
@@ -192,19 +197,19 @@ export async function withRls<T>(
   const url = getUrl(env, mode);
 
   if (mode === "write" && isTcpConnection(env, mode)) {
-    const pool = getGlobalPool(env);
-    const client = await pool.connect();
+    const client = createPgClient(env, mode);
     try {
+      await client.connect();
       await client.query(`SELECT set_config('app.org_id', $1, true)`, [organizationId]);
       return await fn(client);
     } finally {
-      client.release();
+      await client.end().catch(() => {});
     }
   }
 
   const sql = neon(url);
   // Neon transaction returns values for each query
-  const results = await (sql as any).transaction([
+  await (sql as any).transaction([
     (sql as any).query(`SELECT set_config('app.org_id', $1, true)`, [organizationId]),
     // This is a bit tricky because fn(sql) expects the sql client itself
   ]);
@@ -222,29 +227,16 @@ export function createPool(
   const orgId = getOrgContext();
 
   if (mode === "write" && isTcpConnection(env, mode)) {
-    const pool = getGlobalPool(env);
-
     const queryProxy = async <Row extends DbRow = any>(
       textOrStrings: string | TemplateStringsArray,
       ...paramsOrValues: any[]
     ): Promise<DbQueryResult<Row>> => {
-      let text = "";
-      let params: any[] = [];
-
-      if (typeof textOrStrings === "string") {
-        text = textOrStrings;
-        params = paramsOrValues[0] ?? [];
-      } else {
-        text = textOrStrings[0];
-        for (let i = 0; i < paramsOrValues.length; i++) {
-          text += `$${i + 1}${textOrStrings[i + 1]}`;
-          params.push(paramsOrValues[i]);
-        }
-      }
+      const { text, params } = normalizeQueryArgs(textOrStrings, paramsOrValues);
 
       const executeQuery = async () => {
-        const client = await pool.connect();
+        const client = createPgClient(env, mode);
         try {
+          await client.connect();
           const effectiveOrgId = getOrgContext() || orgId;
           if (effectiveOrgId) {
             await client.query(`SELECT set_config('app.org_id', $1, true)`, [effectiveOrgId]);
@@ -257,7 +249,7 @@ export function createPool(
             command: res.command,
           } as DbQueryResult<Row>;
         } finally {
-          client.release();
+          await client.end().catch(() => {});
         }
       };
 
@@ -269,8 +261,9 @@ export function createPool(
     return {
       query: wrappedQuery,
       transaction: async (queries: { text: string; values?: any[] }[]) => {
-        const client = await pool.connect();
+        const client = createPgClient(env, mode);
         try {
+          await client.connect();
           await client.query("BEGIN");
           const effectiveOrgId = getOrgContext() || orgId;
           if (effectiveOrgId) {
@@ -287,10 +280,10 @@ export function createPool(
           await client.query("ROLLBACK");
           throw error;
         } finally {
-          client.release();
+          await client.end().catch(() => {});
         }
       },
-      end: () => pool.end(),
+      end: async () => {},
     };
   }
 
@@ -342,28 +335,15 @@ export function getRawSql(env: Env, mode: "read" | "write" = "read"): DbQuery {
   const orgId = getOrgContext();
 
   if (isTcpConnection(env, mode)) {
-    const pool = getGlobalPool(env);
-
     const processQuery = async <Row extends DbRow = DbRow>(
       textOrStrings: string | TemplateStringsArray,
       ...paramsOrValues: any[]
     ): Promise<DbQueryResult<Row>> => {
-      let text = "";
-      let params: any[] = [];
+      const { text, params } = normalizeQueryArgs(textOrStrings, paramsOrValues);
 
-      if (typeof textOrStrings === "string") {
-        text = textOrStrings;
-        params = paramsOrValues[0] ?? [];
-      } else {
-        text = textOrStrings[0];
-        for (let i = 0; i < paramsOrValues.length; i++) {
-          text += `$${i + 1}${textOrStrings[i + 1]}`;
-          params.push(paramsOrValues[i]);
-        }
-      }
-
-      const client = await pool.connect();
+      const client = createPgClient(env, mode);
       try {
+        await client.connect();
         const effectiveOrgId = getOrgContext() ?? orgId;
         if (effectiveOrgId) {
           await client.query(`SELECT set_config('app.org_id', $1, true)`, [effectiveOrgId]);
@@ -377,7 +357,7 @@ export function getRawSql(env: Env, mode: "read" | "write" = "read"): DbQuery {
           command: res.command,
         } as DbQueryResult<Row>;
       } finally {
-        client.release();
+        await client.end().catch(() => {});
       }
     };
 

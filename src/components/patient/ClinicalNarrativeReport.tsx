@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { BookOpen, FileText, UserCircle, ExternalLink } from "lucide-react";
 
@@ -11,7 +10,7 @@ interface ClinicalNarrativeReportProps {
 
 export const ClinicalNarrativeReport = ({
   patientName,
-  sessions,
+  sessions: _sessions,
 }: ClinicalNarrativeReportProps) => {
   const [viewMode, setViewMode] = useState<"doctor" | "patient">("doctor");
 

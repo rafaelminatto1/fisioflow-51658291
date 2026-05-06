@@ -1,4 +1,4 @@
-import { format, endOfWeek, startOfWeek } from "date-fns";
+import { endOfWeek, startOfWeek } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { CalendarDays, CheckCircle2, Clock3, Users } from "lucide-react";
 import { normalizeStatus } from "./shared/appointment-status";
@@ -15,8 +15,8 @@ interface WeeklyScheduleSummaryProps {
 }
 
 export function WeeklyScheduleSummary({ currentDate, appointments }: WeeklyScheduleSummaryProps) {
-  const weekStart = startOfWeek(currentDate, { locale: ptBR });
-  const weekEnd = endOfWeek(currentDate, { locale: ptBR });
+  const _weekStart = startOfWeek(currentDate, { locale: ptBR });
+  const _weekEnd = endOfWeek(currentDate, { locale: ptBR });
 
   const totalAppointments = appointments.length;
   const confirmedAppointments = appointments.filter(
@@ -25,7 +25,7 @@ export function WeeklyScheduleSummary({ currentDate, appointments }: WeeklySched
   const pendingAppointments = appointments.filter(
     (appt) => normalizeStatus(String(appt.status || "agendado")) === "agendado",
   ).length;
-  const cancelledAppointments = appointments.filter(
+  const _cancelledAppointments = appointments.filter(
     (appt) => normalizeStatus(String(appt.status || "agendado")) === "cancelado",
   ).length;
   const groupAppointments = appointments.filter(

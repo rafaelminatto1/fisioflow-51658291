@@ -60,12 +60,7 @@ import { getBestImageUrl } from "@/lib/imageUtils";
 
 import { useDebounce } from "@/hooks/performance/useDebounce";
 import { fisioLogger as logger } from "@/lib/errors/logger";
-import { normalizeText } from "@/lib/utils/string";
-import {
-  expandSearchQuery,
-  normalizeForSearch,
-  bilingualFilter,
-} from "@/lib/utils/bilingualSearch";
+import { bilingualFilter } from "@/lib/utils/bilingualSearch";
 
 interface ExerciseLibraryProps {
   onSelectExercise?: (exercise: Exercise) => void;

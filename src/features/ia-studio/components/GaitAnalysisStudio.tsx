@@ -7,14 +7,11 @@ import {
   Play,
   Pause,
   RotateCcw,
-  Zap,
-  ChevronLeft,
   Save,
   LayoutGrid,
   Crosshair,
   Share2,
   Eye,
-  Clock,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -46,7 +43,7 @@ export const GaitAnalysisStudio: React.FC<GaitAnalysisStudioProps> = ({ isOpen, 
   });
 
   const videoRef = useRef<HTMLVideoElement>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const _canvasRef = useRef<HTMLCanvasElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const poseRef = useRef<any>(null);
 

@@ -8,7 +8,6 @@ import { Badge } from "@/components/ui/badge";
 import { 
   History, 
   ArrowLeftRight, 
-  CheckCircle2, 
   Calendar,
   Sparkles,
   TrendingUp,
@@ -25,7 +24,7 @@ interface VisualComparisonStudioProps {
 
 export const VisualComparisonStudio: React.FC<VisualComparisonStudioProps> = ({
   patientId,
-  onDataUpdate,
+  onDataUpdate: _onDataUpdate,
 }) => {
   const [assessments, setAssessments] = useState<BiomechanicsAssessment[]>([]);
   const [isLoading, setIsLoading] = useState(true);

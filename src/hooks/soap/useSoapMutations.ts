@@ -6,7 +6,6 @@ import {
   SoapOperationError,
   type CreateSoapRecordData,
   type SoapRecord,
-  type SoapRecordV2,
 } from "./types";
 import { invalidateSoapCache } from "./useSoapCache";
 import { toSoapRecordV2 } from "./mappers";

@@ -1,4 +1,4 @@
-import { fetchApi, cleanRequestData } from "./client";
+import { fetchApi } from "./client";
 import type { ApiResponse, ApiPatient } from "@/types/api";
 
 export async function getPatients(

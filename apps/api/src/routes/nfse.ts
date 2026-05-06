@@ -15,17 +15,15 @@ import {
   consultaNFe,
   consultaLote,
   cancelamentoNFe,
-  consultaCNPJ,
   hasSPCertConfig,
   debugBuildXmlMessage,
 } from "../lib/nfseSPClient";
 import { generateAndSaveDanfse, getDanfsePresignedUrl, getDanfseR2Key } from "../lib/nfseDanfse";
-import { writeEvent } from "../lib/analytics";
-import { sendNfseToAccounting, sendNfseCancellationToAccounting } from "../lib/email";
+import { sendNfseCancellationToAccounting } from "../lib/email";
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
-function escapeXml(s: string): string {
+function _escapeXml(s: string): string {
   return String(s)
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
@@ -60,7 +58,7 @@ app.get("/test-rps", async (c) => {
     }, 422);
   }
 
-  const { testeEnvioLoteRPS, consultaCNPJ } = await import("../lib/nfseSPClient");
+  await import("../lib/nfseSPClient");
 
   try {
     const rpsParams = {

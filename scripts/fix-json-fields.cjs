@@ -15,7 +15,7 @@ function fixJsonArrayString(str) {
     // Test parsing to confirm it's valid JSON
     JSON.parse(fixed);
     return fixed;
-  } catch (e) {
+  } catch {
     return null;
   }
 }
@@ -37,7 +37,7 @@ async function run() {
         try {
           if (typeof val === "string") JSON.parse(val);
           return val;
-        } catch (e) {
+        } catch {
           const fixed = fixJsonArrayString(val);
           if (fixed) {
             needsUpdate = true;

@@ -6,7 +6,7 @@ import { router } from "expo-router";
 import { useColors } from "@/hooks/useColorScheme";
 import { useAuthStore } from "@/store/auth";
 import { useHaptics } from "@/hooks/useHaptics";
-import { Button, SyncStatus } from "@/components";
+import { SyncStatus } from "@/components";
 import { useSyncStatus } from "@/hooks/useSyncStatus";
 import { useQuery } from "@tanstack/react-query";
 import { getDashboardStats } from "@/lib/api";
@@ -42,7 +42,7 @@ export default function ProfileScreen() {
     },
   });
 
-  const averageRating: number | null = (() => {
+  const _averageRating: number | null = (() => {
     const surveys: any[] = surveysData?.data ?? [];
     if (surveys.length < 5) return null;
     const total = surveys.reduce((sum: number, s: any) => sum + (s.score ?? s.rating ?? 0), 0);

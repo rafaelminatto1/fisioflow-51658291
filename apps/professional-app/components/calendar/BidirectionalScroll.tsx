@@ -1,5 +1,5 @@
 import React from "react";
-import { View, StyleSheet, useWindowDimensions } from "react-native";
+import { View, StyleSheet } from "react-native";
 import { Gesture, GestureDetector, GestureHandlerRootView } from "react-native-gesture-handler";
 import Animated, {
   useSharedValue,

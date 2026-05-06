@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { ChevronLeft, ChevronRight, Play, Maximize2 } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "./button";
 import { cn } from "@/lib/utils";
 import { OptimizedImage } from "./OptimizedImage";

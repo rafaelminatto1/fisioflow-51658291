@@ -2,7 +2,7 @@ import { neon } from "@neondatabase/serverless";
 import { drizzle } from "drizzle-orm/neon-http";
 import { exerciseTemplates, exerciseTemplateItems } from "../src/server/db/schema/templates";
 import { exercises } from "../src/server/db/schema/exercises";
-import { eq, ilike, or } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 
 async function main() {
   const sql = neon(process.env.DATABASE_URL!);

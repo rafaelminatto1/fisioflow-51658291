@@ -5,17 +5,8 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Cake, Gift, Phone, Mail, Search } from "lucide-react";
+import { Gift, Phone, Mail, Search } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { patientsApi, type PatientRow } from "@/api/v2";
 import { MainLayout } from "@/components/layout/MainLayout";

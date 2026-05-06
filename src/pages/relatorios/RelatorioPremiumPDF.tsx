@@ -1,6 +1,6 @@
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Document, Page, StyleSheet, Text, View, Link, Font, Image } from "@react-pdf/renderer";
+import { Document, Page, StyleSheet, Text, View, Link, Image } from "@react-pdf/renderer";
 import { formatClinicalText } from "@/lib/evolution/formatters";
 
 // Premium Styles

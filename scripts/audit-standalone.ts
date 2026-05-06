@@ -1,4 +1,4 @@
-import { chromium, type Page, type ConsoleMessage } from "playwright";
+import { chromium, type ConsoleMessage } from "playwright";
 import * as fs from "fs";
 import * as path from "path";
 import dotenv from "dotenv";

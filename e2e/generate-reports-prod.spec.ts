@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test } from '@playwright/test';
 import fs from 'fs';
 import path from 'path';
 
@@ -28,7 +28,7 @@ test('Geração de Pacientes e Relatórios Científicos em Produção', async ({
      // Simularemos a inserção via scripts nativos do app para estabilidade (API injection via UI)
      await page.evaluate(async (nome) => {
         // Encontraremos o token de autorização
-        const token = localStorage.getItem('auth-token') || localStorage.getItem('supabase.auth.token') || sessionStorage.getItem('token');
+        const _token = localStorage.getItem('auth-token') || localStorage.getItem('supabase.auth.token') || sessionStorage.getItem('token');
 
         // Simulação rápida da requisição de salvar paciente para garantir que temos os 10 (E2E robusto)
         console.log('Registrando...', nome);

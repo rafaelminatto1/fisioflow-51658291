@@ -101,10 +101,19 @@ import { verifyToken } from "./lib/auth";
 import { getRawSql } from "./lib/db";
 import { routeAgentRequest } from "agents";
 import { analyticsMiddleware } from "./lib/analytics";
+import { logToAxiom } from "./lib/axiom";
 
 import { cors } from "hono/cors";
 
 const app = new Hono<{ Bindings: Env; Variables: CustomVariables }>();
+
+function isSensitiveScannerPath(pathname: string): boolean {
+  return pathname === "/.git" || pathname.startsWith("/.git/");
+}
+
+function isSuspiciousRootProbe(pathname: string, method: string): boolean {
+  return pathname === "/" && method === "GET";
+}
 
 function parseAllowedOrigins(value?: string): string[] {
   return (value ?? "")
@@ -435,15 +444,66 @@ async function handleRealtimeWS(request: Request, env: Env): Promise<Response> {
 
 export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
+    const pathname = new URL(request.url).pathname;
+    const method = request.method;
+    const cf = request.cf as any;
+    const botManagement = cf?.botManagement as
+      | { score?: number; verifiedBot?: boolean }
+      | undefined;
+
+    const requestContext = {
+      requestId: request.headers.get("X-Request-ID") ?? crypto.randomUUID(),
+      userAgent: request.headers.get("User-Agent") ?? undefined,
+      referer: request.headers.get("Referer") ?? undefined,
+      ip: request.headers.get("CF-Connecting-IP") ?? undefined,
+      cfRay: request.headers.get("CF-Ray") ?? undefined,
+      country: cf?.country ?? undefined,
+      colo: cf?.colo ?? undefined,
+      asn: cf?.asn ?? undefined,
+      asOrganization: cf?.asOrganization ?? undefined,
+      botScore: botManagement?.score ?? undefined,
+      verifiedBot: botManagement?.verifiedBot ?? undefined,
+    };
+
+    if (isSensitiveScannerPath(pathname)) {
+      ctx.waitUntil(
+        logToAxiom(env, ctx, {
+          level: "warn",
+          message: "blocked_sensitive_scanner_path",
+          event: "blocked_scanner",
+          path: pathname,
+          method,
+          ...requestContext,
+        }),
+      );
+      return new Response("Forbidden", {
+        status: 403,
+        headers: {
+          "Content-Type": "text/plain; charset=UTF-8",
+          "Cache-Control": "no-store",
+        },
+      });
+    }
+
+    if (isSuspiciousRootProbe(pathname, method)) {
+      ctx.waitUntil(
+        logToAxiom(env, ctx, {
+          level: "info",
+          message: "root_probe",
+          event: "root_probe",
+          path: pathname,
+          method,
+          ...requestContext,
+        }),
+      );
+    }
+
     // 1. Roteamento de Agentes (Cloudflare Agents SDK) - Intercepta /agents/*
     const agentResponse = await routeAgentRequest(request, env);
     if (agentResponse) return agentResponse;
 
     // WebSocket upgrades: bypass Hono middleware (evita corrupção da resposta 101)
-    if (
-      request.headers.get("Upgrade") === "websocket" &&
-      new URL(request.url).pathname === "/api/realtime"
-    ) {
+    if (request.headers.get("Upgrade") === "websocket" && pathname === "/api/realtime") {
       return handleRealtimeWS(request, env);
     }
     return app.fetch(request, env, ctx);

@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test } from '@playwright/test';
 
 test('update saturday and check console errors', async ({ page }) => {
   const consoleLogs: any[] = [];
@@ -22,7 +22,7 @@ test('update saturday and check console errors', async ({ page }) => {
         try {
             const body = await response.json();
             consoleLogs.push(`BODY: ${JSON.stringify(body)}`);
-        } catch (e) {}
+        } catch (_e) {}
     }
   });
 

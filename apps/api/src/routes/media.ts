@@ -2,11 +2,11 @@ import { Hono } from "hono";
 import { v4 as uuidv4 } from "uuid";
 import { S3Client, PutObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
-import { eq, and, desc, sql } from "drizzle-orm";
+import { eq, and, desc } from "drizzle-orm";
 import { requireAuth, type AuthVariables } from "../lib/auth";
-import { createDb, createPool } from "../lib/db";
+import { createDb } from "../lib/db";
 import type { Env } from "../types/env";
-import { mediaGallery, exerciseMediaAttachments, mediaTypeEnum } from "@fisioflow/db";
+import { mediaGallery, exerciseMediaAttachments } from "@fisioflow/db";
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
@@ -31,11 +31,6 @@ app.get("/gallery", requireAuth, async (c) => {
     const user = c.get("user");
     const folder = c.req.query("folder");
     const type = c.req.query("type");
-
-    let query = db
-      .select()
-      .from(mediaGallery)
-      .where(eq(mediaGallery.organizationId, user.organizationId));
 
     const filters = [eq(mediaGallery.organizationId, user.organizationId)];
     if (folder) filters.push(eq(mediaGallery.folder, folder));

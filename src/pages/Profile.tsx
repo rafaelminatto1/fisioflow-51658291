@@ -2,7 +2,6 @@ import { format as formatDateFns, isValid, parseISO } from "date-fns";
 import {
   Bell,
   Building2,
-  Calendar,
   Camera,
   Clock,
   Contrast,
@@ -13,12 +12,11 @@ import {
   MapPin,
   Phone,
   Save,
-  Settings,
   Shield,
   User,
 } from "lucide-react";
 import React, { lazy, Suspense, useEffect, useState } from "react";
-import { useSearchParams, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
@@ -74,7 +72,7 @@ const ADMIN_TAB = {
 function ProfileContent() {
   const queryClient = useQueryClient();
   const { user, updateProfile: updateAuthProfile } = useAuth();
-  const { isAdmin } = usePermissions();
+  const { isAdmin: _isAdmin } = usePermissions();
 
   const { data: profileRes, isLoading } = useQuery({
     queryKey: ["profile-me"],

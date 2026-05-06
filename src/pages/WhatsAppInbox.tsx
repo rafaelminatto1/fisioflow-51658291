@@ -1,9 +1,6 @@
 import {
-  Activity,
   AlarmClock,
-  AlertTriangle,
   ArrowRightLeft,
-  Calendar,
   CalendarCheck,
   ChevronDown,
   Filter,
@@ -99,7 +96,7 @@ export default function WhatsAppInboxPage() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [bulkMode, setBulkMode] = useState(false);
   const [selectedConvIds, setSelectedConvIds] = useState<Set<string>>(new Set());
-  const [bulkAssigning, setBulkAssigning] = useState(false);
+  const [bulkAssigning, _setBulkAssigning] = useState(false);
   const [showSnoozeDialog, setShowSnoozeDialog] = useState(false);
   const [showNewConversationDialog, setShowNewConversationDialog] = useState(false);
   const [contactSearch, setContactSearch] = useState("");
@@ -116,11 +113,11 @@ export default function WhatsAppInboxPage() {
   const [showConfirmationsModal, setShowConfirmationsModal] = useState(false);
   const [metrics, setMetrics] = useState<any>(null);
 
-  const [showAddNumberDialog, setShowAddNumberDialog] = useState(false);
-  const [selectedPatientForNumber, setSelectedPatientForNumber] = useState<Contact | null>(null);
-  const [newPhoneNumber, setNewPhoneNumber] = useState("");
-  const [showAttachToPatientDialog, setShowAttachToPatientDialog] = useState(false);
-  const [manualPhoneNumber, setManualPhoneNumber] = useState("");
+  const [_showAddNumberDialog, setShowAddNumberDialog] = useState(false);
+  const [_selectedPatientForNumber, setSelectedPatientForNumber] = useState<Contact | null>(null);
+  const [_newPhoneNumber, _setNewPhoneNumber] = useState("");
+  const [_showAttachToPatientDialog, setShowAttachToPatientDialog] = useState(false);
+  const [_manualPhoneNumber, setManualPhoneNumber] = useState("");
 
   useEffect(() => {
     fetchMetrics()
@@ -217,14 +214,14 @@ export default function WhatsAppInboxPage() {
       setShowNewConversationDialog(false);
       setContactSearch("");
       await refetch();
-    } catch (error) {
+    } catch {
       toast.error("Erro ao abrir conversa");
     } finally {
       setCreatingConversationId(null);
     }
   };
 
-  const handleCreateWithNumber = async (phone: string, patientId?: string) => {
+  const _handleCreateWithNumber = async (phone: string, patientId?: string) => {
     try {
       const conv = await findOrCreateConversation(phone, patientId);
       setSelectedId(conv.id);
@@ -232,7 +229,7 @@ export default function WhatsAppInboxPage() {
       setShowAttachToPatientDialog(false);
       setContactSearch("");
       await refetch();
-    } catch (error) {
+    } catch {
       toast.error("Erro ao iniciar conversa");
     }
   };
@@ -244,7 +241,7 @@ export default function WhatsAppInboxPage() {
       setShowAssignDialog(false);
       toast.success("Conversa atribuída");
       await Promise.all([refetch(), refetchConversation()]);
-    } catch (error) {
+    } catch {
       toast.error("Erro ao atribuir conversa");
     }
   };
@@ -256,7 +253,7 @@ export default function WhatsAppInboxPage() {
       setShowTransferDialog(false);
       toast.success("Conversa transferida");
       await Promise.all([refetch(), refetchConversation()]);
-    } catch (error) {
+    } catch {
       toast.error("Erro ao transferir conversa");
     }
   };
@@ -267,7 +264,7 @@ export default function WhatsAppInboxPage() {
       await updatePriority(selectedId, priority);
       toast.success("Prioridade atualizada");
       await Promise.all([refetch(), refetchConversation()]);
-    } catch (error) {
+    } catch {
       toast.error("Erro ao atualizar prioridade");
     }
   };
@@ -280,12 +277,12 @@ export default function WhatsAppInboxPage() {
       setSelectedId(null);
       toast.success(`Conversa adiada por ${hours}h`);
       await refetch();
-    } catch (error) {
+    } catch {
       toast.error("Erro ao adiar conversa");
     }
   };
 
-  const handleBulkAction = async (action: "resolve" | "close") => {
+  const handleBulkAction = async (_action: "resolve" | "close") => {
     // Bulk action implementation...
   };
 
@@ -299,10 +296,10 @@ export default function WhatsAppInboxPage() {
   };
 
   const handleSendConfirmation = async (
-    phone: string,
-    patientName: string,
-    date: string,
-    time: string,
+    _phone: string,
+    _patientName: string,
+    _date: string,
+    _time: string,
   ) => {
     // Confirmation implementation...
   };

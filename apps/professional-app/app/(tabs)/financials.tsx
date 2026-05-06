@@ -30,14 +30,6 @@ import { format } from "date-fns";
 import { useHaptics } from "@/hooks/useHaptics";
 import { useQueryClient } from "@tanstack/react-query";
 
-const PAYMENT_METHOD_LABELS: Record<string, string> = {
-  credit_card: "Cartão de Crédito",
-  debit_card: "Cartão de Débito",
-  pix: "Pix",
-  cash: "Dinheiro",
-  bank_transfer: "Transferência",
-  insurance: "Convênio",
-};
 
 export default function FinancialsScreen() {
   const colors = useColors();
@@ -162,7 +154,7 @@ export default function FinancialsScreen() {
       success();
       queryClient.invalidateQueries({ queryKey: ["allFinancialRecords"] });
       Alert.alert("Sucesso", "Registro excluído com sucesso!");
-    } catch (err) {
+    } catch {
       hapticError();
       Alert.alert("Erro", "Falha ao excluir registro.");
     }

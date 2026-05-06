@@ -2,22 +2,18 @@ import React, { useState } from "react";
 import {
   FileText,
   Sparkles,
-  ChevronRight,
   Save,
-  X,
   Loader2,
-  Eye,
-  CheckCircle2,
   RotateCcw,
 } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { iaStudioApi } from "@/api/v2";
 import { toast } from "sonner";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { PDFDownloadLink } from "@react-pdf/renderer";
 import { RelatorioPremiumPDF } from "@/pages/relatorios/RelatorioPremiumPDF";
 
@@ -47,7 +43,7 @@ export const PremiumReportGenerator: React.FC<PremiumReportGeneratorProps> = ({
         setReportData(res.data);
         toast.success("Relatório gerado com inteligência artificial!");
       }
-    } catch (err) {
+    } catch {
       toast.error("Erro ao gerar relatório. Tente novamente.");
     } finally {
       setIsGenerating(true); // Manter true para simular progresso visual no preview se necessário

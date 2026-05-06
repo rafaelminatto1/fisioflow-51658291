@@ -13,8 +13,6 @@ import {
   calculateEndTime,
   isConflictError,
   countsTowardCapacity,
-  getIntervalCapacity,
-  getOverlappingAppointments,
   enforceCapacity,
   sanitizeInput,
   toPositiveInteger,

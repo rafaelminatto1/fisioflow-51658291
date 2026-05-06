@@ -2,24 +2,18 @@ import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Sparkles,
-  ChevronRight,
   Activity,
   AlertTriangle,
-  CheckCircle2,
   Lightbulb,
   ArrowRight,
-  BookOpen,
   ClipboardList,
   ChevronDown,
   Info,
 } from "lucide-react";
 import { clinicalReasoningRules, ActionRule } from "../../data/clinicalReasoningRules";
-import { protocolDictionary } from "../../data/protocolDictionary";
-import { exerciseDictionary } from "../../data/exerciseDictionary";
 import { Button } from "../ui/button";
-import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "../ui/card";
+import { Card, CardHeader, CardTitle, CardContent } from "../ui/card";
 import { Badge } from "../ui/badge";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../ui/tooltip";
 
 interface ClinicalIntelligenceHubProps {
   evaluationData: Record<string, any>;

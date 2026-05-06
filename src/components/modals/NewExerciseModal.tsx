@@ -73,7 +73,6 @@ type ExerciseExtended = Exercise & {
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { knowledgeBase } from "@/data/knowledgeBase";
 import { MediaGalleryModal } from "../media/MediaGalleryModal";
-import { useExerciseMedia } from "@/hooks/useMediaGallery";
 import {
   DndContext,
   closestCenter,
@@ -87,12 +86,10 @@ import {
   arrayMove,
   SortableContext,
   sortableKeyboardCoordinates,
-  verticalListSortingStrategy,
   horizontalListSortingStrategy,
   useSortable,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { ExerciseMediaCarousel } from "../ui/ExerciseMediaCarousel";
 
 const exerciseSchema = z.object({
   name: z.string().min(3, "Nome deve ter pelo menos 3 caracteres"),
@@ -223,19 +220,19 @@ export function NewExerciseModal({
   exercise,
   isLoading: isSaving,
 }: ExerciseModalProps) {
-  const [isAnalyzing, setIsAnalyzing] = React.useState(false);
+  const [_isAnalyzing, setIsAnalyzing] = React.useState(false);
   const [isUploading, setIsUploading] = React.useState(false);
   const [uploadProgress, setUploadProgress] = React.useState(0);
   const [imageFile, setImageFile] = React.useState<File | null>(null);
   const [videoFile, setVideoFile] = React.useState<File | null>(null);
-  const [imagePreview, setImagePreview] = React.useState<string | null>(null);
-  const [videoPreview, setVideoPreview] = React.useState<string | null>(null);
+  const [_imagePreview, setImagePreview] = React.useState<string | null>(null);
+  const [_videoPreview, setVideoPreview] = React.useState<string | null>(null);
 
   const imageInputRef = React.useRef<HTMLInputElement>(null);
-  const videoInputRef = React.useRef<HTMLInputElement>(null);
+  const _videoInputRef = React.useRef<HTMLInputElement>(null);
 
   const [isGalleryOpen, setIsGalleryOpen] = React.useState(false);
-  const [activeMediaTab, setActiveMediaTab] = React.useState<"view" | "edit">("view");
+  const [_activeMediaTab, _setActiveMediaTab] = React.useState<"view" | "edit">("view");
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -350,7 +347,7 @@ export function NewExerciseModal({
     }
   }, [exercise, form, replace]);
 
-  const handleAnalyzeImage = async () => {
+  const _handleAnalyzeImage = async () => {
     const imageUrl = form.getValues("image_url");
     if (!imageUrl) {
       toast({
@@ -389,7 +386,7 @@ export function NewExerciseModal({
     }
   };
 
-  const handleFileChange = (
+  const _handleFileChange = (
     event: React.ChangeEvent<HTMLInputElement>,
     type: "image" | "video",
   ) => {
@@ -431,17 +428,17 @@ export function NewExerciseModal({
     setUploadProgress(10);
 
     try {
-      let finalImageUrl = data.image_url;
-      let finalVideoUrl = data.video_url;
+      let _finalImageUrl = data.image_url;
+      let _finalVideoUrl = data.video_url;
 
       if (imageFile) {
         setUploadProgress(20);
-        finalImageUrl = await uploadFile(imageFile, "exercise-images");
+        _finalImageUrl = await uploadFile(imageFile, "exercise-images");
       }
 
       if (videoFile) {
         setUploadProgress(imageFile ? 50 : 30);
-        finalVideoUrl = await uploadFile(videoFile, "exercise-videos");
+        _finalVideoUrl = await uploadFile(videoFile, "exercise-videos");
       }
 
       setUploadProgress(90);

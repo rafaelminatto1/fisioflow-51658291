@@ -8,10 +8,7 @@ import {
   Plus,
   Edit2,
   Trash2,
-  X,
-  Check,
 } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -91,7 +88,6 @@ export function PatientFinancialTab({ patientId, appointments }: PatientFinancia
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const patientTransactions = useMemo(() => {
-    const apptIds = new Set(appointments.map((a) => a.id));
     const fromAppointments = appointments.map((tx) => ({
       id: tx.id,
       descricao: `Sessão ${format(parseResponseDate(tx.appointment_date), "dd/MM/yyyy")}`,
@@ -181,7 +177,7 @@ export function PatientFinancialTab({ patientId, appointments }: PatientFinancia
       setDialogOpen(false);
       setFormData(initialFormData);
       setEditingTransaction(null);
-    } catch (error) {
+    } catch {
       toast.error("Erro ao salvar transação");
     } finally {
       setIsSubmitting(false);

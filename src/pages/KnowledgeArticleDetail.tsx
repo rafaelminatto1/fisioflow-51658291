@@ -11,7 +11,6 @@ import {
   Layout,
   Calendar,
   User,
-  Hash,
   Bookmark,
   Clock,
   Share2,
@@ -23,7 +22,7 @@ import {
 } from "lucide-react";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -60,7 +59,7 @@ export default function KnowledgeArticleDetail() {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
   const [isStudyModeOpen, setIsStudyModeOpen] = useState(false);
-  const [activeAttachmentType, setActiveAttachmentType] = useState<
+  const [_activeAttachmentType, setActiveAttachmentType] = useState<
     "document" | "presentation" | null
   >(null);
 
@@ -93,7 +92,7 @@ export default function KnowledgeArticleDetail() {
     try {
       await new Promise((resolve) => setTimeout(resolve, 2000));
       toast.success("Insights refinados com sucesso!", { id: toastId });
-    } catch (error) {
+    } catch {
       toast.error("Erro ao processar insights.", { id: toastId });
     } finally {
       setIsGeneratingSummary(false);

@@ -34,7 +34,6 @@ import { MedicalReturnCard } from "@/components/evolution/MedicalReturnCard";
 import { SurgeriesCard } from "@/components/evolution/SurgeriesCard";
 import { EvolutionSummaryCard } from "@/components/evolution/EvolutionSummaryCard";
 import { MetasCard } from "@/components/evolution/MetasCard";
-import { CardGrid } from "@/components/layout/ResponsiveGridLayout";
 import { EvolutionGridContainer } from "@/components/evolution/EvolutionResponsiveLayout";
 import { ComponentErrorBoundary } from "@/components/error";
 import { ApplyTemplateModal } from "@/components/exercises/ApplyTemplateModal";

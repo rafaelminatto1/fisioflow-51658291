@@ -1,5 +1,5 @@
-import { test, expect } from "@playwright/test";
-import { format, subDays, addDays } from "date-fns";
+import { test } from "@playwright/test";
+import { format, subDays } from "date-fns";
 
 /**
  * Script de Geração de Dados em Massa para Produção
@@ -8,8 +8,8 @@ import { format, subDays, addDays } from "date-fns";
  */
 
 // Credenciais (Preferencialmente vindas de variáveis de ambiente no setup global)
-const EMAIL = "rafael.minatto@yahoo.com.br";
-const PASSWORD = "Yukari30@";
+const _EMAIL = "rafael.minatto@yahoo.com.br";
+const _PASSWORD = "Yukari30@";
 
 // 10 perfis realistas de pacientes brasileiros
 const PATIENTS = [

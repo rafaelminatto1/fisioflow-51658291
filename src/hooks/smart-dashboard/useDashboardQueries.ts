@@ -13,14 +13,9 @@ import {
   TherapistSummary,
   AppointmentRow,
   ContaFinanceira,
-  Pagamento,
   GamificationStats,
   AtRiskPatient,
   DashboardResponse,
-  PatientPrediction,
-  RevenueForecast,
-  StaffPerformanceMetric,
-  PatientSelfAssessment,
 } from "@/types/workers";
 import { ViewMode } from "./types";
 

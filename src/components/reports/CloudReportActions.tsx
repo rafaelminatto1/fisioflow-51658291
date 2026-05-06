@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Cloud, Share2, Copy, Check, ExternalLink, Loader2 } from "lucide-react";
+import { Cloud, Share2, Check, ExternalLink, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { reportsApi } from "@/api/v2";
 import { toast } from "sonner";

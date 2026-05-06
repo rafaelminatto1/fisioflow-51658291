@@ -57,10 +57,10 @@ async function rsaSha1Sign(key: CryptoKey, data: string): Promise<ArrayBuffer> {
 }
 
 function sortAttributes(xml: string): string {
-  return xml.replace(/<([a-zA-Z0-9_:]+)((?:\s+[a-zA-Z_:][a-zA-Z0-9_.:-]*(?:\s*=\s*(?:\"[^\"]*\"|'[^']*'))?)*)\s*(\/?)>/g,
+  return xml.replace(/<([a-zA-Z0-9_:]+)((?:\s+[a-zA-Z_:][a-zA-Z0-9_.:-]*(?:\s*=\s*(?:"[^"]*"|'[^']*'))?)*)\s*(\/?)>/g,
     (_match, name: string, attrs: string, selfClose: string) => {
       if (!attrs.trim()) return `<${name}${selfClose}>`;
-      const attrRegex = /\s+([a-zA-Z_:][a-zA-Z0-9_.:-]*)\s*=\s*(\"[^\"]*\"|'[^']*')/g;
+      const attrRegex = /\s+([a-zA-Z_:][a-zA-Z0-9_.:-]*)\s*=\s*("[^"]*"|'[^']*')/g;
       const nsAttrs: [string, string][] = [];
       const otherAttrs: [string, string][] = [];
       let m: RegExpExecArray | null = attrRegex.exec(attrs);

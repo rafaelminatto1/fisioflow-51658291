@@ -8,7 +8,6 @@ import {
   pgEnum,
   index,
   numeric,
-  integer,
 } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { withOrganizationPolicy } from "./rls_helper";

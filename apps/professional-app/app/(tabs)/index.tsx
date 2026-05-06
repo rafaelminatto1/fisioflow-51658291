@@ -11,7 +11,7 @@ import { useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
-import { format, addHours, isBefore } from "date-fns";
+import { addHours, isBefore } from "date-fns";
 import { useColors } from "@/hooks/useColorScheme";
 import { useAuthStore } from "@/store/auth";
 import { Card, Skeleton, SummaryCardSkeleton } from "@/components";

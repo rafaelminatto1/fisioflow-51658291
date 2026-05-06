@@ -486,7 +486,7 @@ export default function ExerciseFormScreen() {
   const [tags, setTags] = useState<string[]>([]);
   const [bodyParts, setBodyParts] = useState<string[]>([]);
   const [equipment, setEquipment] = useState<string[]>([]);
-  const [tagInput, setTagInput] = useState("");
+  const [_tagInput, _setTagInput] = useState("");
 
   const [showCategoriesModal, setShowCategoriesModal] = useState(false);
   const [showBodyPartsModal, setShowBodyPartsModal] = useState(false);

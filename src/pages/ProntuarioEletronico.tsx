@@ -7,7 +7,7 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { MainLayout } from "@/components/layout/MainLayout";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -105,9 +105,9 @@ function useSessionSignatures(sessionId: string) {
 
 function SessionCard({
   session,
-  patientName,
-  therapistName,
-  clinicName,
+  patientName: _patientName,
+  therapistName: _therapistName,
+  clinicName: _clinicName,
   onSelect,
   isSelected,
 }: {

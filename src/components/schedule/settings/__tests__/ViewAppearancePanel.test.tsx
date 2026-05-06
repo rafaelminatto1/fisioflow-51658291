@@ -86,9 +86,9 @@ function applyToAllViews(
 ): AgendaAppearanceState {
   return {
     ...state,
-    day: { ...(state.day ?? {}), ...patch },
-    week: { ...(state.week ?? {}), ...patch },
-    month: { ...(state.month ?? {}), ...patch },
+    day: { ...state.day, ...patch },
+    week: { ...state.week, ...patch },
+    month: { ...state.month, ...patch },
   };
 }
 
@@ -283,9 +283,9 @@ describe("Property 2: Propagação de applyToAllViews", () => {
           // Set up initial state with cardSize overrides
           const stateWithOverrides: AgendaAppearanceState = {
             ...state,
-            day: { ...(state.day ?? {}), cardSize: "large" },
-            week: { ...(state.week ?? {}), cardSize: "small" },
-            month: { ...(state.month ?? {}), cardSize: "extra_small" },
+            day: { ...state.day, cardSize: "large" },
+            week: { ...state.week, cardSize: "small" },
+            month: { ...state.month, cardSize: "extra_small" },
           };
 
           const newState = applyToAllViews(stateWithOverrides, patch);

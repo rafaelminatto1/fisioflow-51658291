@@ -60,7 +60,6 @@ interface RiskFactorEntry {
 const ensureArray = <T>(value: unknown): T[] => (Array.isArray(value) ? (value as T[]) : []);
 
 type MilestoneRecord = RecoveryPrediction["milestones"][number];
-type RiskFactorRecord = RecoveryPrediction["riskFactors"][number];
 
 const mapPredictionToRecoveryPrediction = (
   prediction: PatientPrediction &
@@ -91,16 +90,12 @@ const mapPredictionToRecoveryPrediction = (
       Number(prediction.predicted_value ?? 0),
   };
 
-  const rawMilestones = (prediction.milestones ||
-    (prediction as Record<string, any>).milestones) as unknown;
-  const rawRiskFactors = (prediction.risk_factors ||
-    (prediction as Record<string, any>).risk_factors) as unknown;
-  const rawTreatment = (prediction.treatment_recommendations ||
-    (prediction as Record<string, any>).treatment_recommendations) as
+  const rawMilestones = prediction.milestones as unknown;
+  const rawRiskFactors = prediction.risk_factors as unknown;
+  const rawTreatment = prediction.treatment_recommendations as
     | Record<string, any>
     | undefined;
-  const rawSimilarCases = (prediction.similar_cases ||
-    (prediction as Record<string, any>).similar_cases) as Record<string, any> | undefined;
+  const rawSimilarCases = prediction.similar_cases as Record<string, any> | undefined;
 
   return {
     patientId: prediction.patient_id,

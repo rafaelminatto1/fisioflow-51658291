@@ -1,5 +1,5 @@
 const fs = require("fs");
-const path = require("path");
+const _path = require("path");
 
 // REMOTE_EXERCISES received from DB query
 const remoteExercises = [
@@ -135,7 +135,7 @@ remoteExercises.forEach((ex) => {
 
   // Strategy 3: Manual overrides for known mismatches
   if (!match) {
-    if (ex.slug === "gato-camelo") match = "cat-cow-gato-camelo.avif" || "gato-vaca.avif";
+    if (ex.slug === "gato-camelo") match = "cat-cow-gato-camelo.avif";
     if (ex.slug === "prancha-abdominal-plank") match = "prancha-abdominal.avif";
     if (ex.slug === "side-plank-prancha-lateral") match = "prancha-lateral.avif";
     if (ex.slug === "perdigueiro-bird-dog") match = "bird-dog.avif";

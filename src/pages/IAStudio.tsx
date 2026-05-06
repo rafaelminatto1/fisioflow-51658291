@@ -3,31 +3,20 @@ import { useQuery } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import { MainLayout } from "@/components/layout/MainLayout";
 import {
-  Mic,
   Activity,
-  MessageSquare,
   TrendingUp,
   Zap,
   ChevronRight,
   ShieldCheck,
-  Lock,
-  User,
-  MonitorPlay,
-  FileText,
-  BrainCircuit,
-  AlertCircle,
-  ArrowRight,
   Bot,
   Target,
-  Sparkles,
   AlertTriangle,
   ArrowUpRight,
   X,
   DollarSign,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
 import { ScribeDrawer } from "@/features/ia-studio/components/ScribeDrawer";
 import { FisioADM } from "@/features/ia-studio/components/FisioADM";
 import { FisioRetention } from "@/features/ia-studio/components/FisioRetention";

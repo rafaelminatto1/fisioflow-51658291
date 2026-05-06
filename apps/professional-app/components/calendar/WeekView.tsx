@@ -1,9 +1,9 @@
-import React, { useState, useRef, useMemo, useEffect } from "react";
+import React, { useState, useMemo } from "react";
 import { View, Text, StyleSheet, TouchableOpacity, useWindowDimensions } from "react-native";
 import { useColors } from "@/hooks/useColorScheme";
 import { AppointmentBase } from "@/types";
 import { router } from "expo-router";
-import { format, startOfWeek, addDays, isSameDay, differenceInDays } from "date-fns";
+import { format, startOfWeek, addDays, isSameDay } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { DraggableAptCard } from "./DraggableAptCard";
 import { getTimeParts } from "./utils";
@@ -40,7 +40,7 @@ export const WeekView = ({
   const colors = useColors();
 
   const dayWidth = (screenWidth - TIME_LABEL_WIDTH_LOCAL) / DAYS_VISIBLE;
-  const [scrollEnabled, setScrollEnabled] = useState(true);
+  const [_scrollEnabled, setScrollEnabled] = useState(true);
 
   const weekStart = startOfWeek(date, { weekStartsOn: 1 });
 

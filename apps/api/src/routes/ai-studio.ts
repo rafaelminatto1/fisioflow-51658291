@@ -1,9 +1,8 @@
 import { Hono } from "hono";
-import { eq, and } from "drizzle-orm";
+import { sql } from "drizzle-orm";
 import { createDb } from "../lib/db";
 import { requireAuth } from "../lib/auth";
 import { clinicalScribeLogs } from "@fisioflow/db";
-import { sql } from "drizzle-orm";
 import type { Env } from "../types/env";
 
 const app = new Hono<{ Bindings: Env }>();
@@ -199,7 +198,6 @@ app.get("/predict/discharge/:patientId", requireAuth, async (c) => {
  * Gera síntese clínica dual (médico/paciente) baseada em destaques
  */
 app.post("/reports/synthesize", requireAuth, async (c) => {
-  const user = c.get("user");
   const body = await c.req.json();
   const { patientId, highlights } = body;
 

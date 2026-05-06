@@ -12,9 +12,6 @@ import {
   FileText,
   Plus,
   Edit2,
-  Phone,
-  CheckCircle2,
-  AlertCircle,
   RefreshCw,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -23,7 +20,6 @@ import { usePatientMedicalReturns } from "@/hooks/usePatientEvolution";
 import { MedicalReturnFormModal } from "@/components/evolution/MedicalReturnFormModal";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
-import { fisioLogger as logger } from "@/lib/errors/logger";
 import type { Patient } from "@/types";
 import type { MedicalReturn } from "@/types/evolution";
 import { cn } from "@/lib/utils";
@@ -36,7 +32,7 @@ interface MedicalReturnCardProps {
 }
 
 export const MedicalReturnCard = memo(function MedicalReturnCard({
-  patient,
+  patient: _patient,
   patientId,
   onPatientUpdated,
   defaultCollapsed = false,
@@ -47,7 +43,7 @@ export const MedicalReturnCard = memo(function MedicalReturnCard({
     isLoading,
     error,
     refetch,
-    isFetching,
+    isFetching: _isFetching,
   } = usePatientMedicalReturns(patientId || "");
   const [modalOpen, setModalOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(defaultCollapsed);

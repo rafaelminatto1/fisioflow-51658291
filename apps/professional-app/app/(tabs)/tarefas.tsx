@@ -7,7 +7,6 @@ import {
   RefreshControl,
   StyleSheet,
   ScrollView,
-  ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
@@ -33,7 +32,7 @@ const FILTER_OPTIONS: { label: string; value: FilterOption }[] = [
 ];
 
 function TarefaCardSkeleton() {
-  const colors = useColors();
+  const _colors = useColors();
   return (
     <Card style={{ borderRadius: 12, padding: 14, marginBottom: 10 }}>
       <View
@@ -69,7 +68,7 @@ function KanbanSkeleton() {
   const colors = useColors();
   return (
     <View style={styles.kanbanSkeletonContainer}>
-      {["Backlog", "A Fazer", "Em Progresso"].map((col, i) => (
+      {["Backlog", "A Fazer", "Em Progresso"].map((col, _i) => (
         <View key={col} style={[styles.kanbanSkeletonCol, { backgroundColor: colors.surface }]}>
           <View style={{ paddingHorizontal: 10, paddingTop: 12, paddingBottom: 8 }}>
             <Text

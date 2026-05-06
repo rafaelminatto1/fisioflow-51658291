@@ -2,20 +2,12 @@
  * Testes unitários para /api/packages
  * Foca em validações de entrada (sem banco real)
  */
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { Hono } from "hono";
+import { describe, it, expect, vi } from "vitest";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 /** Monta uma resposta de pool com rows configuráveis */
-function makePool(rows: unknown[] = []) {
-  return {
-    query: vi.fn().mockResolvedValue({ rows }),
-  };
-}
-
-/** Stub de user autenticado */
-const stubUser = { id: "user-1", organizationId: "org-1", uid: "user-1" };
+const _stubUser = { id: "user-1", organizationId: "org-1", uid: "user-1" };
 
 // ─── Testes de validators ─────────────────────────────────────────────────────
 

@@ -7,20 +7,12 @@ import {
   Plus,
   Image as ImageIcon,
   Video as VideoIcon,
-  X,
-  Upload,
-  MoreVertical,
-  Check,
   Trash2,
-  ChevronRight,
-  ExternalLink,
 } from "lucide-react";
 import {
   CustomModal,
   CustomModalHeader,
   CustomModalTitle,
-  CustomModalBody,
-  CustomModalFooter,
 } from "../ui/custom-modal";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
@@ -45,7 +37,7 @@ export function MediaGalleryModal({
   onOpenChange,
   onSelect,
   initialFolder = "Exercícios",
-  allowedTypes = ["image", "video", "youtube"],
+  allowedTypes: _allowedTypes = ["image", "video", "youtube"],
 }: MediaGalleryModalProps) {
   const { media, folders, loading, fetchGallery, fetchFolders, saveToGallery, deleteFromGallery } =
     useMediaGallery();
@@ -81,7 +73,7 @@ export function MediaGalleryModal({
       setYoutubeTitle("");
       setActiveTab("gallery");
       toast.success("Vídeo adicionado à galeria");
-    } catch (error) {
+    } catch {
       toast.error("Erro ao adicionar vídeo");
     }
   };

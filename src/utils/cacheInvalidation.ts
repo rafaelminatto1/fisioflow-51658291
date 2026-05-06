@@ -17,7 +17,7 @@ import { ViewType, calculatePeriodBounds, isDateInPeriod } from "./periodCalcula
 import { appointmentPeriodKeys } from "@/hooks/useAppointmentsByPeriod";
 import { appointmentKeys } from "@/hooks/appointments/useAppointmentsData";
 import { fisioLogger as logger } from "@/lib/errors/logger";
-import { toLocalYMD, parseLocalDate } from "@/lib/date-utils";
+import { toLocalYMD } from "@/lib/date-utils";
 
 /**
  * Invalidates all known appointment query keys to ensure consistency across the application.

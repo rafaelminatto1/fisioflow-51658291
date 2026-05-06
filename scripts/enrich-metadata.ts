@@ -1,6 +1,6 @@
 import { exerciseDictionary } from "../src/data/exerciseDictionary";
-import * as fs from "fs";
-import * as path from "path";
+import * as _fs from "fs";
+import * as _path from "path";
 
 // This script will generate the updated code for exerciseDictionary.ts
 // by enriching exercises with clinical metadata based on heuristics.

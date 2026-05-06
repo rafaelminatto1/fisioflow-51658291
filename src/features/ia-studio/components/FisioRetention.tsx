@@ -6,10 +6,9 @@ import {
   AlertTriangle,
   ArrowUpRight,
   Clock,
-  Send,
   CheckCircle2,
 } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -49,7 +48,7 @@ export const FisioRetention: React.FC<FisioRetentionProps> = ({ compact }) => {
   if (compact) {
     return (
       <div className="divide-y divide-slate-100 dark:divide-slate-800">
-        {patients.slice(0, 5).map((p, idx) => (
+        {patients.slice(0, 5).map((p, _idx) => (
           <div
             key={p.id}
             className="p-4 hover:bg-slate-50 dark:hover:bg-slate-900/50 transition-colors flex items-center justify-between group"

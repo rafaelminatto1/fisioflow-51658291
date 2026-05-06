@@ -1,5 +1,4 @@
-import { useState } from "react";
-import { Users, TrendingUp, ArrowUpRight } from "lucide-react";
+import { Users, ArrowUpRight } from "lucide-react";
 import { useNavigate } from "react-router";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";

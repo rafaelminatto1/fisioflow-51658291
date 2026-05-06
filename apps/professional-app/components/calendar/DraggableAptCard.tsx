@@ -139,7 +139,7 @@ export const DraggableAptCard = ({
   const snapPx = (SNAP_MINUTES / 60) * hourHeight;
   const maxTop = (endHour - startHour) * hourHeight - apt.height;
   const cardColors = getCardColors(apt, colors.primary);
-  const displayTime = formatAppointmentTime(apt.time, apt.date);
+  const _displayTime = formatAppointmentTime(apt.time, apt.date);
   const titleLines = isTiny ? 1 : 2;
 
   const currentColumnIndex = allDays.findIndex((d) => isSameDay(d, targetDay));

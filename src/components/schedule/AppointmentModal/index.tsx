@@ -49,7 +49,7 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
   mode: initialMode = "create",
   therapists: externalTherapists = [],
   patients: externalPatients = [],
-  onSuccess,
+  onSuccess: _onSuccess,
 }) => {
   const isMobile = useIsMobile();
   const { user } = useAuth();

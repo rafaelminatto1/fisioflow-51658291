@@ -26,14 +26,8 @@ import {
   Paperclip,
   ScanLine,
   Mic,
-  RadioTower,
   Brain,
   Send,
-  BookOpen,
-  FlaskConical,
-  Dumbbell,
-  ScrollText,
-  X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
@@ -606,7 +600,7 @@ const NotionEvolutionPanel: React.FC<NotionEvolutionPanelProps> = ({
             size="sm"
             onClick={handleVoiceToggle}
             disabled={voiceScribe.voiceState === "transcribing" || disabled}
-            className={`gap-2 ${voiceScribe.voiceState === "recording" ? "" : "text-primary hover:bg-primary/5"}`}
+            className={`gap-2 ${voiceScribe.voiceState === "recording" ? "pr-3" : "text-primary hover:bg-primary/5"}`}
             title={
               voiceScribe.voiceState === "idle"
                 ? "Iniciar Voice Scribe (SOAP por voz)"
@@ -622,7 +616,18 @@ const NotionEvolutionPanel: React.FC<NotionEvolutionPanelProps> = ({
             {voiceScribe.voiceState === "transcribing" ? (
               <Loader2 className="h-4 w-4 animate-spin" />
             ) : voiceScribe.voiceState === "recording" ? (
-              <RadioTower className="h-4 w-4 animate-pulse" />
+              <span className="flex items-end gap-[2px] h-4">
+                {[1, 2, 3, 4].map((i) => (
+                  <span
+                    key={i}
+                    className="w-[3px] rounded-full bg-current"
+                    style={{
+                      animation: `voiceWave 0.9s ease-in-out ${i * 0.15}s infinite alternate`,
+                      height: `${[40, 80, 60, 90][i - 1]}%`,
+                    }}
+                  />
+                ))}
+              </span>
             ) : (
               <Mic className="h-4 w-4" />
             )}

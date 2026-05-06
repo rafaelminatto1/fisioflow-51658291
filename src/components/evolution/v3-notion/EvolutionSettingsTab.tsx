@@ -5,7 +5,6 @@ import {
   SlidersHorizontal,
   EyeOff,
   LayoutTemplate,
-  MessageSquarePlus,
 } from "lucide-react";
 
 // Hardcoded available commands for now.

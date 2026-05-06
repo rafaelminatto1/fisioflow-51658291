@@ -4,8 +4,7 @@ import { fisioLogger as logger } from "@/lib/errors/logger";
 import type { 
   OfflineStorageOptions, 
   SyncResult, 
-  StorageQuota, 
-  OFFLINE_ACTION_TYPES 
+  StorageQuota,
 } from "./types";
 import { getDB } from "./database";
 import { isCacheExpired, generateActionId, canRetryAction } from "./utils";

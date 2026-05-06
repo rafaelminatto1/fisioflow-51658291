@@ -42,7 +42,7 @@ const QUERY_KEY = "schedule-appointment-types";
 
 export function useAppointmentTypes() {
   const { toast } = useToast();
-  const { user, profile } = useAuth();
+  const { user: _user, profile } = useAuth();
   const queryClient = useQueryClient();
   const [expandedId, setExpandedId] = useState<string | null>(null);
 

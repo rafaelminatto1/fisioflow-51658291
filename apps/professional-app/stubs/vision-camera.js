@@ -2,9 +2,7 @@
 // O módulo nativo está excluído do autolinking neste build.
 // Componentes que usam a câmera devem verificar disponibilidade antes de usar.
 
-const { View, Text } = require("react-native");
-
-const Camera = (props) => null;
+const Camera = (_props) => null;
 Camera.getAvailableCameraDevices = () => [];
 Camera.getCameraPermissionStatus = async () => "not-determined";
 Camera.requestCameraPermission = async () => "denied";

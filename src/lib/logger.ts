@@ -14,7 +14,7 @@ interface LogPayload {
   [key: string]: unknown;
 }
 
-function formatMessage(level: LogLevel, context: string, message: string, data?: LogPayload): string {
+function formatMessage(level: LogLevel, context: string, message: string, _data?: LogPayload): string {
   return `[${level.toUpperCase()}] [${context}] ${message}`;
 }
 

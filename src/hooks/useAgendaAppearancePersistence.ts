@@ -87,15 +87,15 @@ export function mergeAppearanceState(
     // If server has undefined for a view, keep local (server hasn't set it)
     day:
       serverProfile.day !== undefined
-        ? { ...(localState.day ?? {}), ...serverProfile.day }
+        ? { ...localState.day, ...serverProfile.day }
         : localState.day,
     week:
       serverProfile.week !== undefined
-        ? { ...(localState.week ?? {}), ...serverProfile.week }
+        ? { ...localState.week, ...serverProfile.week }
         : localState.week,
     month:
       serverProfile.month !== undefined
-        ? { ...(localState.month ?? {}), ...serverProfile.month }
+        ? { ...localState.month, ...serverProfile.month }
         : localState.month,
   };
 }

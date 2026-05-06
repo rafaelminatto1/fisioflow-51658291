@@ -33,7 +33,7 @@ export function useLeads() {
       );
       return { previousLeads };
     },
-    onError: (_err, { id }, context) => {
+    onError: (_err, { id: _id }, context) => {
       if (context?.previousLeads) {
         queryClient.setQueryData(["leads"], context.previousLeads);
       }

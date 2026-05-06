@@ -1,12 +1,10 @@
 import React from "react";
-import { View, Text, StyleSheet, TouchableOpacity, Image, Dimensions } from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity, Dimensions } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { LinearGradient } from "expo-linear-gradient";
 import { useColors } from "@/hooks/useColorScheme";
 import { Avatar } from "@/components/ui/Avatar";
-import { Badge } from "@/components/ui/Badge";
 
-const { width } = Dimensions.get("window");
+const { width: _width } = Dimensions.get("window");
 
 interface ProfileHeaderProps {
   name?: string;
@@ -28,7 +26,7 @@ export function ProfileHeader({
   avatar,
   role = "Fisioterapeuta",
   onAvatarPress,
-  onSettingsPress,
+  onSettingsPress: _onSettingsPress,
   stats,
 }: ProfileHeaderProps) {
   const colors = useColors();

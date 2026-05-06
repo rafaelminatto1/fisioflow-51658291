@@ -15,7 +15,7 @@
  */
 
 import { Appointment } from "@/types/appointment";
-import { toLocalYMD, parseLocalDate } from "@/lib/date-utils";
+import { toLocalYMD } from "@/lib/date-utils";
 import { parseResponseDate } from "@/utils/dateUtils";
 
 export interface AppointmentPreviewTarget {

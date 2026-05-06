@@ -85,12 +85,12 @@ const LazyMetasCard = lazy(() =>
     default: m.MetasCard,
   })),
 );
-const LazyProgressAnalysisCard = lazy(() =>
+const _LazyProgressAnalysisCard = lazy(() =>
   import("@/components/patient/ProgressAnalysisCard").then((m) => ({
     default: m.ProgressAnalysisCard,
   })),
 );
-const LazyPatientEvolutionDashboard = lazy(() =>
+const _LazyPatientEvolutionDashboard = lazy(() =>
   import("@/components/patient/PatientEvolutionDashboard").then((m) => ({
     default: m.PatientEvolutionDashboard,
   })),
@@ -117,7 +117,7 @@ const OverviewTab = ({
 }) => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { data: evolutionData } = usePatientEvolutionReport(patient.id);
+  const { data: _evolutionData } = usePatientEvolutionReport(patient.id);
 
   return (
     <div className="space-y-6">
@@ -196,7 +196,7 @@ const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12
 export const PatientProfilePage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
+  const [_searchParams] = useSearchParams();
 
   // Validação de UUID
   const isIdValid = id && id !== "undefined" && UUID_REGEX.test(id);

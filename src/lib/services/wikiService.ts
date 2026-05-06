@@ -134,8 +134,8 @@ export const wikiService = {
   },
 
   async syncClinicalTestsToWiki(
-    organizationId: string,
-    userId: string,
+    _organizationId: string,
+    _userId: string,
   ): Promise<{ created: number; updated: number }> {
     try {
       // This would ideally be a call to a backend endpoint

@@ -81,7 +81,7 @@ export function CloudReportActions({
         url: res.url,
         title: `Relatório - ${patientName}`,
       });
-    } catch (err: any) {
+    } catch {
       setIsSharing(false);
       error();
       Alert.alert("Erro", "Falha ao gerar link de compartilhamento.");

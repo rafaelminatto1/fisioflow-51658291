@@ -7,7 +7,7 @@
 
 import { neon } from "@neondatabase/serverless";
 import { drizzle } from "drizzle-orm/neon-http";
-import { eq, isNull, or } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import * as schema from "../../src/server/db/schema";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { clinicalTestTemplates } from "../../src/server/db/schema";

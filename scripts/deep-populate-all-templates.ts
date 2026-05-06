@@ -13,9 +13,9 @@ async function main() {
   const allTemplates = await db.select().from(exerciseTemplates);
   const allEx = await db.select().from(exercises);
 
-  const getEx = (name: string) =>
+  const _getEx = (name: string) =>
     allEx.find((e) => e.name.toLowerCase().includes(name.toLowerCase()));
-  const searchEx = (name: string, limit = 3) =>
+  const _searchEx = (name: string, limit = 3) =>
     allEx.filter((e) => e.name.toLowerCase().includes(name.toLowerCase())).slice(0, limit);
 
   for (const t of allTemplates) {

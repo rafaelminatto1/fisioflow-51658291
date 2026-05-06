@@ -230,7 +230,7 @@ export default function BiomechanicsScreen() {
 
     const result = visionResults[0]; // Take first person detected
     const points = result.points3d || result.landmarks || {};
-    const is3d = result.is3d;
+    const _is3d = result.is3d;
 
     // MediaPipe index mapping (33 landmarks)
     const landmarks: PoseLandmark[] = Array(33)
@@ -277,12 +277,12 @@ export default function BiomechanicsScreen() {
     return landmarks;
   }, []);
 
-  const frameProcessor = useFrameProcessor(
+  const _frameProcessor = useFrameProcessor(
     (frame) => {
       "worklet";
       runAtTargetFps(30, () => {
         "worklet";
-        const results = detectPose(frame);
+        const _results = detectPose(frame);
         // Since mapVisionToPoseLandmarks is not a worklet, we need to pass data back to JS
         // In Vision Camera v4/Worklets-Core, we use runOnJS
       });

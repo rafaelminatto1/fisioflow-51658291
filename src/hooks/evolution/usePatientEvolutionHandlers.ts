@@ -107,7 +107,7 @@ export function usePatientEvolutionHandlers({
 
     const isV1 = evolutionVersion === "v1-soap";
     const isV2orV3 = evolutionVersion === "v2-texto" || evolutionVersion === "v3-notion";
-    const isV4orV5 = evolutionVersion === "v4-tiptap" || evolutionVersion === "v5-pro";
+    const _isV4orV5 = evolutionVersion === "v4-tiptap" || evolutionVersion === "v5-pro";
 
     let saveData: any;
     

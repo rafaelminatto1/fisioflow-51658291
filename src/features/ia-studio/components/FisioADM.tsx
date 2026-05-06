@@ -7,7 +7,6 @@ import {
   Zap,
   Activity,
   RefreshCw,
-  ChevronLeft,
   Save,
   Maximize2,
   Target,

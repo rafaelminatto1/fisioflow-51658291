@@ -313,3 +313,8 @@
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background: #cbd5e1;
 }
+
+@keyframes voiceWave {
+  from { transform: scaleY(0.3); opacity: 0.7; }
+  to   { transform: scaleY(1);   opacity: 1; }
+}

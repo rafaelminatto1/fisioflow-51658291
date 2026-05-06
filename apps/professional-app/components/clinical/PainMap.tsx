@@ -9,7 +9,7 @@ import {
   Pressable,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import Svg, { G, Path, Circle, Rect } from "react-native-svg";
+import Svg, { G, Path, Circle } from "react-native-svg";
 import { useColors } from "@/hooks/useColorScheme";
 import { useHaptics } from "@/hooks/useHaptics";
 
@@ -472,7 +472,7 @@ function IntensityPicker({
   onDismiss: () => void;
   colors: ReturnType<typeof useColors>;
 }) {
-  const { selection, medium } = useHaptics();
+  const { selection } = useHaptics();
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onDismiss}>
       <Pressable style={styles.modalOverlay} onPress={onDismiss}>

@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from "react";
-import { Point2D, calculateAngle, POSE_LANDMARKS } from "@/utils/geometry";
+import { calculateAngle, POSE_LANDMARKS } from "@/utils/geometry";
 
 interface BioVisionOverlayProps {
   landmarks: any[];

@@ -3,18 +3,15 @@ import {
   CheckCircle2,
   ChevronRight,
   Dumbbell,
-  Stethoscope,
   Clock,
   Target,
   BookOpen,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { ProtocolEntry } from "@/data/protocolDictionary";
 import { exerciseDictionary } from "@/data/exerciseDictionary";
 import { physioDictionary } from "@/data/physioDictionary";
-import { cn } from "@/lib/utils";
 
 interface ProtocolDetailViewProps {
   protocol: ProtocolEntry;

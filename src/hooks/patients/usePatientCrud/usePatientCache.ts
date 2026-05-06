@@ -1,5 +1,4 @@
 import type { QueryClient } from "@tanstack/react-query";
-import { patientKeys } from "@/hooks/queryKeys";
 
 /**
  * Patient Cache Invalidation Logic

@@ -33,7 +33,7 @@ import { ExerciseBlockWidget } from "@/components/evolution/ExerciseBlockWidget"
 import { HomeCareWidget } from "@/components/evolution/HomeCareWidget";
 import { SessionExercise } from "@/components/evolution/SessionExercisesPanel";
 import { SessionImageUpload } from "@/components/evolution/SessionImageUpload";
-import { formatClinicalSummary, tryParseJSON } from "@/lib/evolution/formatters";
+import { formatClinicalSummary } from "@/lib/evolution/formatters";
 
 // ============================================================================================
 // TYPES & INTERFACES

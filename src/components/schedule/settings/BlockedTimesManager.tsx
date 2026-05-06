@@ -18,7 +18,6 @@ import {
   GraduationCap,
   Wrench,
   User,
-  Pencil,
 } from "lucide-react";
 import { useScheduleSettings, type BlockedTime } from "@/hooks/useScheduleSettings";
 import { format, parseISO, isToday, isThisWeek, isAfter, differenceInDays } from "date-fns";

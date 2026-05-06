@@ -16,8 +16,7 @@ import { Badge } from "@/components/ui/badge";
 import { usePatientGoals, useCompleteGoal } from "@/hooks/usePatientEvolution";
 import { MetaFormModal } from "./MetaFormModal";
 import type { PatientGoal } from "@/types/evolution";
-import { format, parseISO, isPast, isToday } from "date-fns";
-import { ptBR } from "date-fns/locale";
+import { parseISO, isPast, isToday } from "date-fns";
 import { formatDetailedDuration } from "@/utils/dateUtils";
 
 interface MetasCardProps {

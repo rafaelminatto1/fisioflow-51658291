@@ -255,7 +255,7 @@ app.post("/fast-processing", async (c) => {
       temperature: 0.2,
     });
     return c.json({ data: { result: parsed.result } });
-  } catch (_error) {
+  } catch {
     // Basic fallback
     const result = await callGemini(
       c.env.GOOGLE_AI_API_KEY,
@@ -435,7 +435,7 @@ app.post("/form-suggestions", async (c) => {
       temperature: 0.5,
     });
     return c.json({ data: { suggestions: parsed.suggestions } });
-  } catch (_error) {
+  } catch {
     return c.json({
       data: {
         suggestions: buildFormSuggestions(context).map((s) => ({

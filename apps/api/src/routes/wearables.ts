@@ -189,7 +189,7 @@ app.get("/oauth/garmin/start", requireAuth, async (c) => {
 
   const { patient_id } = c.req.query();
   const redirectBase = c.env.WEARABLE_OAUTH_REDIRECT_BASE ?? "https://app.moocafisio.com.br";
-  const redirectUri = `${redirectBase}/api/wearables/oauth/garmin/callback`;
+  const _redirectUri = `${redirectBase}/api/wearables/oauth/garmin/callback`;
   const state = btoa(JSON.stringify({ patient_id, org: c.get("user").organizationId }));
 
   // Garmin uses OAuth 1.0a — for OAuth 2.0-like flow, redirect to request token endpoint
@@ -384,7 +384,7 @@ app.post("/sync-provider", requireAuth, async (c) => {
       fetch(`https://api.ouraring.com/v2/usercollection/heartrate?start_datetime=${since}T00:00:00`, { headers: { Authorization: `Bearer ${access_token}` } }),
     ]);
     const sleepData = await sleepRes.json() as any;
-    const hrData = await hrRes.json() as any;
+    const _hrData = await hrRes.json() as any;
 
     for (const s of sleepData?.data ?? []) {
       const entries = [

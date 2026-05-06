@@ -3,8 +3,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Bot,
   X,
-  MessageSquare,
-  Sparkles,
   Send,
   User,
   FileText,
@@ -20,7 +18,6 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
-import { toast } from "sonner";
 
 interface AgentHubProps {
   isOpen: boolean;

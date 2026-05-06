@@ -29,7 +29,7 @@ import {
   CustomModalBody,
   CustomModalFooter,
 } from "@/components/ui/custom-modal";
-import { FileText, Plus, Search, Eye, Settings, Loader2, BadgeCheck, Save, MessageCircle, QrCode } from "lucide-react";
+import { FileText, Plus, Search, Eye, Settings, Loader2, BadgeCheck, Save, MessageCircle } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -69,7 +69,7 @@ export function RecibosContent({
 }: RecibosContentProps = {}) {
   const { user } = useAuth();
   const isMobile = useIsMobile();
-  const { currentOrganization: orgData } = useOrganizations();
+  const { currentOrganization: _orgData } = useOrganizations();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [previewRecibo, setPreviewRecibo] = useState<ReciboData | null>(null);
   const [searchTerm, setSearchTerm] = useState("");

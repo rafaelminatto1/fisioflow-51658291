@@ -16,7 +16,7 @@
 import { Component, ReactNode } from "react";
 import { AlertCircle, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { fisioLogger as logger } from "@/lib/errors/logger";
 
 export interface ComponentErrorBoundaryProps {

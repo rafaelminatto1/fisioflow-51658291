@@ -67,7 +67,6 @@ import { BiomechanicsSessionTab } from "./BiomechanicsSessionTab";
 import { ClinicalInsightsPanel } from "./clinical-insights/ClinicalInsightsPanel";
 import { PrescriptionDraft } from "./clinical-insights/PrescriptionDraft";
 import { useActionBridge, type ActiveSuggestion } from "@/hooks/useActionBridge";
-import { AnimatePresence } from "framer-motion";
 
 interface SessionEvolutionContainerProps {
   appointmentId?: string;
@@ -769,7 +768,7 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
     }
   };
 
-  const handleAutoSaveDraft = async (draftData: {
+  const _handleAutoSaveDraft = async (draftData: {
     patientReport?: string;
     evolutionText?: string;
     homeCareExercises?: string;

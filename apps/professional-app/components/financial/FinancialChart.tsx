@@ -30,7 +30,7 @@ export function FinancialChart({
   }
 
   const maxValue = Math.max(...data.map((d) => d.value));
-  const minValue = Math.min(...data.map((d) => d.value));
+  const _minValue = Math.min(...data.map((d) => d.value));
   const avgValue = data.reduce((acc, d) => acc + d.value, 0) / data.length;
 
   const formatValue = (value: number) => {
@@ -40,7 +40,7 @@ export function FinancialChart({
     return `R$ ${value.toFixed(0)}`;
   };
 
-  const chartData = data.map((item, index) => ({
+  const chartData = data.map((item, _index) => ({
     value: item.value,
     label: item.label || item.date,
     dataPointText: formatValue(item.value),

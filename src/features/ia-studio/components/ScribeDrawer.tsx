@@ -3,15 +3,11 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Mic,
   X,
-  Zap,
   Save,
-  CheckCircle2,
-  AlertCircle,
   Volume2,
   BrainCircuit,
   Loader2,
   FileText,
-  Upload,
   Sparkles,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -70,7 +66,7 @@ export const ScribeDrawer: React.FC<ScribeDrawerProps> = ({ isOpen, onClose, pat
       mediaRecorder.start();
       setIsRecording(true);
       setActiveSection(section);
-    } catch (err) {
+    } catch {
       toast.error("Microfone não autorizado.");
     }
   };
@@ -97,7 +93,7 @@ export const ScribeDrawer: React.FC<ScribeDrawerProps> = ({ isOpen, onClose, pat
         setTranscription((prev) => ({ ...prev, [section]: response.formattedText }));
         toast.success(`Seção ${section} refinada pela IA!`);
       }
-    } catch (err) {
+    } catch {
       toast.error("Falha no refino da IA.");
     } finally {
       setIsProcessing(false);

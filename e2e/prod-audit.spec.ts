@@ -6,15 +6,15 @@
  *   BASE_URL=https://moocafisio.com.br npx playwright test scripts/prod-audit.spec.ts --reporter=list
  */
 
-import { test, expect, type Page, type ConsoleMessage } from "@playwright/test";
+import { test, type Page, type ConsoleMessage } from "@playwright/test";
 import * as fs from "fs";
 import * as path from "path";
 
 // ─── Config ─────────────────────────────────────────────────────────────────
 
 const BASE_URL = "https://moocafisio.com.br";
-const EMAIL = "rafael.minatto@yahoo.com.br";
-const PASSWORD = "Yukari30@";
+const _EMAIL = "rafael.minatto@yahoo.com.br";
+const _PASSWORD = "Yukari30@";
 const REPORT_PATH = path.resolve(
   process.cwd(),
   "scripts/prod-audit-report.json"
@@ -135,7 +135,7 @@ async function getPerformanceMetrics(
 
     const fcp =
       paint.find((p) => p.name === "first-contentful-paint")?.startTime ?? 0;
-    const lcp = 0; // Would need PerformanceObserver - captured separately
+    const _lcp = 0; // Would need PerformanceObserver - captured separately
 
     return {
       domContentLoaded: Math.round(

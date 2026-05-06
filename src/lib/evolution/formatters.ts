@@ -26,7 +26,7 @@ export const tryParseJSON = (text: string | undefined): any | null => {
   if (trimmed.startsWith("{") && trimmed.endsWith("}")) {
     try {
       return JSON.parse(trimmed);
-    } catch (e) {
+    } catch {
       return null;
     }
   }

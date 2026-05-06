@@ -4,8 +4,8 @@ import { authenticateBrowserContext } from './helpers/neon-auth';
 import type { Page } from '@playwright/test';
 
 // Seletores baseados na análise do código fonte
-const EMAIL_INPUT_SELECTOR = 'input[name="email"], #login-email';
-const PASSWORD_INPUT_SELECTOR = 'input[name="password"], #login-password';
+const _EMAIL_INPUT_SELECTOR = 'input[name="email"], #login-email';
+const _PASSWORD_INPUT_SELECTOR = 'input[name="password"], #login-password';
 
 async function authenticatePage(page: Page) {
   // Proxy para a API de produção: permite contornar CORS nos testes E2E injetando o header nas respostas

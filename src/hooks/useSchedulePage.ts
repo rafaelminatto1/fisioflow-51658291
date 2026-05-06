@@ -8,7 +8,6 @@
  */
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { format } from "date-fns";
 import { useMemo } from "react";
 import { toast } from "sonner";
 import { appointmentsApi } from "@/api/v2/appointments";

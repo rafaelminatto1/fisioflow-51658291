@@ -1,15 +1,11 @@
 import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Activity,
-  ChevronRight,
   AlertCircle,
   Info,
   ShieldAlert,
   BookOpenCheck,
   Dumbbell,
-  ExternalLink,
-  Plus,
   Sparkles,
   Lightbulb,
   ArrowRight,

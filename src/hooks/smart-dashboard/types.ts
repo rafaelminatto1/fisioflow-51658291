@@ -1,8 +1,6 @@
 import {
   AppointmentRow,
-  ContaFinanceira,
   DashboardResponse,
-  Pagamento,
   PatientRow,
   TherapistSummary,
   GamificationStats,

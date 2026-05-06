@@ -28,7 +28,7 @@ function FullScreenImageModal({
   visible,
   uri,
   onClose,
-  colors,
+  colors: _colors,
 }: {
   visible: boolean;
   uri: string | null;

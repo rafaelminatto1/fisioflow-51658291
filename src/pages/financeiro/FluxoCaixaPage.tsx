@@ -20,7 +20,7 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from "recharts";
 import { SafeResponsiveContainer } from "@/components/charts/SafeResponsiveContainer";
-import { todayYMD, parseLocalDate } from "@/lib/date-utils";
+import { todayYMD } from "@/lib/date-utils";
 
 function formatMonthLabel(monthKey: string): string {
   const match = /^(\d{4})-(\d{2})$/.exec(monthKey.trim());

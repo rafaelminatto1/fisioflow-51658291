@@ -213,3 +213,40 @@ Observacao operacional: o `CLOUDFLARE_API_TOKEN` atual nao tem permissao `ai-sea
 ```bash
 env -u CLOUDFLARE_API_TOKEN wrangler deploy --env production
 ```
+
+## Revisao em 2026-05-05
+
+Ao reavaliar os contadores do Neon em 2026-05-05 12:13 BRT, o compute ja estava limitado a `0.25 / 0.25`, mas os contadores ainda tinham subido mais do que o esperado durante a noite. A investigacao mostrou dois pontos de risco:
+
+- O Hyperdrive estava apontando para o host `-pooler` do Neon. Para Hyperdrive + Neon, a documentacao da Cloudflare recomenda usar a connection string sem pooling no Neon, porque o Hyperdrive ja faz pooling.
+- `apps/api/src/lib/db.ts` mantinha um `pg.Pool` global no Worker. A documentacao de Hyperdrive recomenda criar o cliente dentro do handler/invocacao, pois o pooling de origem ja e responsabilidade do Hyperdrive.
+
+Correcoes aplicadas:
+
+- Hyperdrive `fisioflow-neon` atualizado para o host direto `ep-wandering-bonus-acj4zwvo.sa-east-1.aws.neon.tech`.
+- `origin_connection_limit` reduzido de `20` para `5`.
+- `sslmode=require` mantido.
+- `apps/api/src/lib/db.ts` deixou de usar `pg.Pool` global e passou a criar/encerrar `pg.Client` por query/transacao TCP.
+- API publicada novamente em producao.
+- Versao publicada: `627820e5-51aa-4194-b49d-5b8a8cd1419d`.
+- Smoke tests:
+  - `GET /api/health`: `ok`
+  - `GET /api/health/ready`: `ready`, com `db=ok` e `kv=ok`
+
+Para avaliar o efeito real, comparar `cpu_used_sec`/`compute_time_seconds` no dia seguinte, sem chamar endpoints de readiness fora do horario.
+
+## Protecao extra aplicada em 2026-05-05
+
+- `/.git` e `/.git/*` agora respondem `403 Forbidden` no Worker, antes de chegar ao Hono.
+- A rota raiz `/` nao tem handler explicito na API e responde `404 Not Found`.
+- A request `GET /` vista no Analytics Engine parece ser um acesso de bot/probe ou visita ao dominio raiz da API, nao uma rota funcional do produto.
+
+## Identificacao de bots
+
+Nao foi possivel atribuir o probe a Codex, Cloudflare ou GitHub com os dados historicos disponiveis. O que foi feito para a proxima ocorrencia:
+
+- Registrar `User-Agent`, `Referer`, `CF-Connecting-IP`, `CF-Ray`, `asn`, `asOrganization`, `country`, `colo`.
+- Registrar `request.cf.botManagement.score` e `verifiedBot` quando Cloudflare disponibilizar esses campos.
+- Manter bloqueio de `/.git/*` no edge.
+
+Se o valor vier de um verificador conhecido, o `asOrganization` e o `User-Agent` tendem a denunciar rapidamente a origem. Se vier de bot verificado, `request.cf.botManagement.verifiedBot` ou um `botScore` alto ajudam a confirmar. Sem isso, o melhor classificador continua sendo `asn + user-agent + padrao de repeticao + horario`.

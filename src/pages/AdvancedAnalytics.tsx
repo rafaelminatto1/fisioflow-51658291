@@ -27,7 +27,7 @@ import { ErrorBoundary } from "react-error-boundary";
 import { MainLayout } from "@/components/layout/MainLayout";
 
 function ErrorFallback({
-  error,
+  error: _error,
   resetErrorBoundary,
 }: {
   error: Error;

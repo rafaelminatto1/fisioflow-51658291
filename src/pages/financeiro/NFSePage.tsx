@@ -23,8 +23,6 @@ import {
   DialogContent,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { Badge } from "@/components/ui/badge";
-
 import { TUSS_FISIO_LIST } from "@/constants/tuss-codes";
 import {
   Select,
@@ -34,36 +32,23 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { 
-  Info, 
-  HelpCircle,
-  FileText, 
-  Plus, 
-  Download, 
-  Eye, 
-  Printer, 
-  CheckCircle2, 
-  AlertCircle, 
-  Clock, 
+  FileText,
+  Plus,
+  Download,
+  Eye,
+  Printer,
+  CheckCircle2,
+  AlertCircle,
+  Clock,
   ExternalLink,
   ChevronRight,
   ShieldCheck,
-  Search,
-  Calendar,
-  Layers,
-  ArrowRight,
   TrendingUp,
   Zap,
   Activity
 } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { useAuth } from "@/contexts/AuthContext";
 import { useOrganizations } from "@/hooks/useOrganizations";
 import { type NFSeRecord, request } from "@/api/v2";
 import { appointmentsApi } from "@/api/v2/appointments";
@@ -71,9 +56,8 @@ import { MainLayout } from "@/components/layout/MainLayout";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { PatientCombobox } from "@/components/ui/patient-combobox";
-import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import type { AppointmentRow } from "@/types/workers";
+import { NfseWizard } from "@/components/financial/NfseWizard";
 
 export interface NFSe extends NFSeRecord {
   destinatario: {
@@ -583,57 +567,7 @@ export function NFSeContent({ autoOpenCreate = false, onAutoOpenHandled }: { aut
           </TabsContent>
 
           <TabsContent value="config" className="mt-10 outline-none">
-            <motion.div 
-               initial={{ opacity: 0, scale: 0.98 }}
-               animate={{ opacity: 1, scale: 1 }}
-               className="grid grid-cols-1 md:grid-cols-2 gap-8"
-            >
-              <Card className="rounded-[3rem] border-none shadow-sm p-12 bg-slate-50 dark:bg-slate-900/50 flex flex-col items-center text-center space-y-8 border border-slate-100">
-                <div className="h-20 w-20 rounded-[2rem] bg-white dark:bg-slate-800 shadow-2xl flex items-center justify-center">
-                  <ShieldCheck className="h-10 w-10 text-slate-900 dark:text-white" />
-                </div>
-                <div className="space-y-3">
-                  <h3 className="text-2xl font-black tracking-tight font-display">Identidade Fiscal</h3>
-                  <p className="text-slate-500 max-w-sm font-medium leading-relaxed">
-                    Sua conta está operando sob as diretrizes tributárias de São Paulo (Simples Nacional).
-                  </p>
-                </div>
-                <div className="flex flex-wrap justify-center gap-4">
-                  <Badge className="rounded-2xl px-5 py-2 bg-white dark:bg-slate-800 text-slate-900 dark:text-white border-none shadow-sm font-black text-xs uppercase tracking-widest">CNPJ 54.836.577/0001-67</Badge>
-                  <Badge className="rounded-2xl px-5 py-2 bg-white dark:bg-slate-800 text-slate-900 dark:text-white border-none shadow-sm font-black text-xs uppercase tracking-widest">Serviço 04391</Badge>
-                </div>
-                <Button variant="outline" className="rounded-2xl h-14 px-8 font-black border-slate-200 hover:bg-slate-900 hover:text-white transition-all uppercase tracking-widest text-[10px]">
-                  Configurações do Prestador
-                </Button>
-              </Card>
-
-              <Card className="rounded-[3rem] border-none shadow-sm p-12 bg-emerald-50 dark:bg-emerald-950/20 flex flex-col items-center text-center space-y-8 border border-emerald-100/50">
-                <div className="h-20 w-20 rounded-[2rem] bg-white dark:bg-slate-800 shadow-2xl flex items-center justify-center">
-                  <motion.div animate={{ scale: [1, 1.1, 1] }} transition={{ repeat: Infinity, duration: 3 }}>
-                    <ExternalLink className="h-10 w-10 text-emerald-600" />
-                  </motion.div>
-                </div>
-                <div className="space-y-3">
-                  <h3 className="text-2xl font-black tracking-tight font-display">Hub Contabilidade</h3>
-                  <p className="text-slate-500 max-w-sm font-medium leading-relaxed text-sm">
-                    Integração ativa com a <strong>Contabilizei</strong>. Cada nota emitida é enviada instantaneamente.
-                  </p>
-                </div>
-                <div className="space-y-4 w-full max-w-xs">
-                  <div className="p-5 rounded-2xl bg-white dark:bg-slate-800/80 text-left border border-emerald-100 dark:border-emerald-900 shadow-sm">
-                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.3em]">Canal de Entrega</p>
-                    <p className="text-sm font-black text-slate-700 dark:text-slate-200 mt-1">rafael.minatto@yahoo.com.br</p>
-                  </div>
-                  <div className="flex items-center justify-center gap-3">
-                    <div className="h-2.5 w-2.5 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)] animate-pulse" />
-                    <span className="text-[11px] font-black text-emerald-700 uppercase tracking-[0.25em]">Automação Full-time</span>
-                  </div>
-                </div>
-                <Button className="rounded-2xl h-14 px-8 font-black bg-emerald-600 hover:bg-emerald-700 text-white shadow-xl shadow-emerald-200 dark:shadow-none transition-all uppercase tracking-widest text-[10px]">
-                  Painel de Integração
-                </Button>
-              </Card>
-            </motion.div>
+             <NfseWizard />
           </TabsContent>
         </AnimatePresence>
       </Tabs>

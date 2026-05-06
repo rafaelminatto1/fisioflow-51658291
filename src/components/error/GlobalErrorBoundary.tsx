@@ -8,7 +8,6 @@
 import React, { Component, ErrorInfo, ReactNode } from "react";
 import { handleChunkError } from "@/utils/chunkError";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { AlertCircle, Home, RefreshCw } from "lucide-react";
 import { NetworkErrorFallback } from "./NetworkErrorFallback";
 

@@ -1,8 +1,8 @@
 import { WorkflowEntrypoint, WorkflowStep, WorkflowEvent } from "cloudflare:workers";
 import type { Env } from "../types/env";
 import { getRawSql, createDb } from "../lib/db";
-import { sessions, patients, patientLongitudinalSummary } from "@fisioflow/db";
-import { eq, and, desc, sql } from "drizzle-orm";
+import { patients } from "@fisioflow/db";
+import { eq } from "drizzle-orm";
 
 /**
  * Workflow: Patient Digital Twin Analysis

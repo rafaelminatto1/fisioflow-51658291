@@ -33,7 +33,7 @@ function useUnreadBadge() {
 
 export default function TabsLayout() {
   const colors = useColors();
-  const isIPad = Platform.OS === "ios" && Platform.isPad;
+  const _isIPad = Platform.OS === "ios" && Platform.isPad;
   const unreadCount = useUnreadBadge();
 
   return (
