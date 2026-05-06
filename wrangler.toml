@@ -1,7 +1,8 @@
-# FisioFlow Web - Frontend Assets Worker
+# FisioFlow Web - Frontend via Workers Assets (NOT Cloudflare Pages)
+# Deploy: wrangler deploy --env production  (nunca usar "wrangler pages deploy")
 name = "fisioflow-web"
 main = "apps/web/src/asset-worker.ts"
-compatibility_date = "2026-03-25"
+compatibility_date = "2026-05-06"
 assets = { directory = "./apps/web/dist", binding = "ASSETS", not_found_handling = "single-page-application" }
 
 [observability]
