@@ -20,6 +20,7 @@ import { PatientAnalytics } from "@/components/analytics/PatientAnalytics";
 import { FinancialAnalytics } from "@/components/analytics/FinancialAnalytics";
 import { TeamPerformance } from "@/components/analytics/TeamPerformance";
 import { PredictiveAnalytics } from "@/components/analytics/PredictiveAnalytics";
+import { RetentionROI } from "@/components/analytics/RetentionROI";
 import { AnalyticsFiltersProvider } from "@/contexts/AnalyticsFiltersContext";
 import { AnalyticsFilters } from "@/components/analytics/AnalyticsFilters";
 import { formatCurrency } from "@/lib/utils";
@@ -293,10 +294,6 @@ function AdvancedAnalyticsContentInternal() {
           >
             <TeamPerformance />
           </TabsContent>
-
-import { RetentionROI } from "@/components/analytics/RetentionROI";
-
-// ... (dentro de AdvancedAnalyticsContentInternal)
 
           <TabsContent
             value="predictive"
