@@ -26,6 +26,7 @@ import { ClinicalEfficacyDashboard } from "@/components/analytics/ClinicalEffica
 import { EmptyStateEnhanced } from "@/components/ui/EmptyStateEnhanced";
 import { LazyWidget } from "./LazyWidget";
 import { EventosStatsWidget } from "@/components/eventos/EventosStatsWidget";
+import { FeatureAdoptionBanner } from "./FeatureAdoptionBanner";
 import { cn } from "@/lib/utils";
 
 interface AdminDashboardProps {
@@ -262,6 +263,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ period = "hoje" 
           </div>
         </section>
       )}
+
+      {/* ── 1b. Feature Adoption Nudges ── */}
+      <FeatureAdoptionBanner />
 
       {/* ── 2. Agenda + Atalhos ── */}
       <section aria-label="Agenda e atalhos">

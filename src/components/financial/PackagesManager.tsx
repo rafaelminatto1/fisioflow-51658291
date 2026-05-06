@@ -30,6 +30,7 @@ import {
   DollarSign,
   Save,
   Loader2,
+  Zap,
 } from "lucide-react";
 import {
   useSessionPackages,
@@ -57,6 +58,36 @@ const initialFormData: PackageFormData = {
   validity_days: 90,
 };
 
+const QUICK_TEMPLATES: Array<PackageFormData & { label: string; color: string }> = [
+  {
+    label: "Mais popular",
+    name: "10 Sessões – Fisioterapia Ortopédica",
+    description: "Pacote padrão para tratamentos ortopédicos e pós-cirúrgicos.",
+    sessions_count: 10,
+    price: 800,
+    validity_days: 90,
+    color: "emerald",
+  },
+  {
+    label: "Pilates",
+    name: "20 Sessões – Pilates Clínico",
+    description: "Ideal para pilates clínico e reabilitação funcional em grupo.",
+    sessions_count: 20,
+    price: 1400,
+    validity_days: 120,
+    color: "blue",
+  },
+  {
+    label: "Avaliação",
+    name: "Avaliação + 5 Sessões",
+    description: "Avaliação inicial + 5 sessões de tratamento.",
+    sessions_count: 5,
+    price: 550,
+    validity_days: 60,
+    color: "violet",
+  },
+];
+
 export function PackagesManager() {
   const isMobile = useIsMobile();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -68,7 +99,7 @@ export function PackagesManager() {
   const updatePackage = useUpdatePackage();
   const deactivatePackage = useDeactivatePackage();
 
-  const handleOpenDialog = (pkg?: SessionPackage) => {
+  const handleOpenDialog = (pkg?: SessionPackage, template?: PackageFormData) => {
     if (pkg) {
       setEditingPackage(pkg);
       setFormData({
@@ -80,7 +111,7 @@ export function PackagesManager() {
       });
     } else {
       setEditingPackage(null);
-      setFormData(initialFormData);
+      setFormData(template ?? initialFormData);
     }
     setIsDialogOpen(true);
   };
@@ -194,12 +225,71 @@ export function PackagesManager() {
               <Loader2 className="w-8 h-8 text-primary animate-spin" />
             </div>
           ) : packages.length === 0 ? (
-            <div className="text-center py-12 text-muted-foreground">
-              <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Package className="h-8 w-8 text-slate-300" />
+            <div className="px-6 py-10 space-y-6">
+              <div className="text-center">
+                <div className="w-14 h-14 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-3">
+                  <Package className="h-7 w-7 text-primary" />
+                </div>
+                <p className="font-semibold text-slate-700">Nenhum pacote cadastrado ainda</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Comece com um dos modelos abaixo ou crie do zero
+                </p>
               </div>
-              <p className="font-medium">Nenhum pacote cadastrado</p>
-              <p className="text-xs">Crie seu primeiro pacote clicando no botão acima</p>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                {QUICK_TEMPLATES.map((tpl) => (
+                  <button
+                    key={tpl.name}
+                    onClick={() => handleOpenDialog(undefined, tpl)}
+                    className={cn(
+                      "text-left p-4 rounded-xl border-2 border-dashed transition-all hover:shadow-sm group",
+                      tpl.color === "emerald" && "border-emerald-200 hover:border-emerald-400 hover:bg-emerald-50/50",
+                      tpl.color === "blue" && "border-blue-200 hover:border-blue-400 hover:bg-blue-50/50",
+                      tpl.color === "violet" && "border-violet-200 hover:border-violet-400 hover:bg-violet-50/50",
+                    )}
+                  >
+                    <div className="flex items-start justify-between mb-2">
+                      <span className={cn(
+                        "text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full",
+                        tpl.color === "emerald" && "bg-emerald-100 text-emerald-700",
+                        tpl.color === "blue" && "bg-blue-100 text-blue-700",
+                        tpl.color === "violet" && "bg-violet-100 text-violet-700",
+                      )}>
+                        {tpl.label}
+                      </span>
+                      <Zap className={cn(
+                        "h-3.5 w-3.5 opacity-0 group-hover:opacity-100 transition-opacity",
+                        tpl.color === "emerald" && "text-emerald-500",
+                        tpl.color === "blue" && "text-blue-500",
+                        tpl.color === "violet" && "text-violet-500",
+                      )} />
+                    </div>
+                    <p className="text-sm font-semibold text-slate-700 leading-snug mb-1">{tpl.name}</p>
+                    <p className="text-xs text-slate-400 line-clamp-2">{tpl.description}</p>
+                    <div className="flex items-center gap-3 mt-3 text-xs text-slate-500">
+                      <span className="flex items-center gap-1">
+                        <Users className="h-3 w-3" />{tpl.sessions_count} sessões
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <DollarSign className="h-3 w-3" />{formatCurrency(tpl.price)}
+                      </span>
+                    </div>
+                  </button>
+                ))}
+              </div>
+
+              <div className="flex items-center gap-3">
+                <div className="flex-1 border-t border-slate-100" />
+                <span className="text-xs text-slate-400">ou</span>
+                <div className="flex-1 border-t border-slate-100" />
+              </div>
+
+              <div className="text-center">
+                <Button variant="outline" size="sm" onClick={() => handleOpenDialog()} className="rounded-xl gap-2">
+                  <Plus className="h-3.5 w-3.5" />
+                  Criar pacote personalizado
+                </Button>
+              </div>
             </div>
           ) : (
             <div className="overflow-x-auto">

@@ -156,6 +156,34 @@ app.get("/debug-xml", async (c) => {
   }
 });
 
+app.get("/config", requireAuth, async (c) => {
+  const user = c.get("user");
+  const pool = createPool(c.env);
+  const result = await pool.query(
+    `SELECT
+       id, organization_id,
+       razao_social,
+       cnpj_prestador AS cnpj,
+       inscricao_municipal,
+       municipio_codigo AS codigo_municipio,
+       regime_tributario,
+       optante_simples,
+       tp_opcao_simples,
+       incentivo_fiscal,
+       aliquota_iss AS aliquota_padrao,
+       codigo_servico_padrao AS codigo_servico,
+       cnae,
+       discriminacao_padrao,
+       ambiente,
+       contabilidade_email,
+       contabilidade_automacao_ativa,
+       updated_at
+     FROM nfse_config WHERE organization_id = $1 LIMIT 1`,
+    [user.organizationId],
+  );
+  return c.json({ data: result.rows[0] ?? null });
+});
+
 app.put("/config", requireAuth, async (c) => {
   const user = c.get("user");
   const body = (await c.req.json()) as Record<string, unknown>;

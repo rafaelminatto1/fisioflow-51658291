@@ -7,6 +7,7 @@ import { MainLayout } from "@/components/layout/MainLayout";
 import { IncompleteRegistrationAlert } from "@/components/dashboard/IncompleteRegistrationAlert";
 import { RealtimeActivityFeed } from "@/components/dashboard/RealtimeActivityFeed";
 import { DashboardNotificationWidget } from "@/components/dashboard/DashboardNotificationWidget";
+import { SetupChecklist } from "@/components/dashboard/SetupChecklist";
 import { AnalyticsFiltersProvider } from "@/contexts/AnalyticsFiltersContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserProfile } from "@/hooks/useUserProfile";
@@ -174,6 +175,7 @@ const Index = () => {
         {/* ── Main content ── */}
         <AnalyticsFiltersProvider>
           <IncompleteRegistrationAlert />
+          {profile?.role !== "paciente" && <SetupChecklist />}
 
           <div
             className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_300px]"

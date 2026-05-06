@@ -25,13 +25,6 @@ const ITEMS: ChecklistItem[] = [
     cta: "Ir para Agenda",
   },
   {
-    id: "services",
-    label: "Cadastre seus serviços",
-    description: "Adicione os serviços que você oferece e seus preços",
-    route: "/cadastros/servicos",
-    cta: "Cadastrar Serviços",
-  },
-  {
     id: "patients",
     label: "Adicione seus pacientes",
     description: "Importe ou cadastre seus pacientes no sistema",
@@ -41,16 +34,23 @@ const ITEMS: ChecklistItem[] = [
   {
     id: "whatsapp",
     label: "Configure o WhatsApp",
-    description: "Conecte o WhatsApp para lembretes automáticos",
+    description: "Lembretes automáticos 48h e no dia da sessão",
     route: "/whatsapp/automations",
     cta: "Configurar WhatsApp",
   },
   {
-    id: "payment",
-    label: "Configure formas de pagamento",
-    description: "Adicione as formas de pagamento que você aceita",
-    route: "/cadastros/formas-pagamento",
-    cta: "Formas de Pagamento",
+    id: "packages",
+    label: "Crie pacotes de sessão",
+    description: "Venda tratamentos completos e aumente o ticket médio",
+    route: "/financeiro/contas",
+    cta: "Criar Pacotes",
+  },
+  {
+    id: "nfse",
+    label: "Ative a emissão de NFS-e",
+    description: "Emita notas fiscais diretamente pelo sistema",
+    route: "/financeiro/nfse",
+    cta: "Configurar NFS-e",
   },
 ];
 

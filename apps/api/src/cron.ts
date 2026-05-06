@@ -166,7 +166,7 @@ async function sendAppointmentReminders(pool: any, env: Env, _ctx: ExecutionCont
       prof.full_name AS therapist_name
     FROM appointments a
     JOIN patients p ON p.id = a.patient_id
-    LEFT JOIN profiles prof ON prof.user_id = a.therapist_id
+    LEFT JOIN profiles prof ON prof.user_id = a.therapist_id::uuid
     WHERE a.date = CURRENT_DATE + INTERVAL '1 day'
       AND a.status NOT IN ('cancelado', 'faltou')
   `);
@@ -429,7 +429,7 @@ async function prewarmDatabase(pool: any) {
   }
 }
 
-async function processRecallCampaigns(pool: any, env: Env, ctx: ExecutionContext) {
+async function processRecallCampaigns(pool: any, env: Env, _ctx: ExecutionContext) {
   console.log("[Cron] Processing recall campaigns...");
   try {
     // Load active recall campaigns per organization
@@ -479,7 +479,7 @@ async function processRecallCampaigns(pool: any, env: Env, ctx: ExecutionContext
           appointmentId: "",
         };
 
-        await env.BACKGROUND_QUEUE.send(queuePayload);
+        await env.BACKGROUND_QUEUE.send({ type: "SEND_WHATSAPP", payload: queuePayload });
         sent++;
       }
     }
@@ -546,7 +546,7 @@ async function send48hConfirmationRequests(pool: any, env: Env) {
         appointmentId: row.id,
       };
 
-      await env.BACKGROUND_QUEUE.send(queuePayload);
+      await env.BACKGROUND_QUEUE.send({ type: "SEND_WHATSAPP", payload: queuePayload });
 
       // Also send push notification (non-fatal)
       notifyPatientAppointment(env, pool, row.patient_id, {
@@ -589,6 +589,7 @@ async function sendSameDayUnconfirmedReminders(pool: any, env: Env) {
       WHERE a.date = CURRENT_DATE
         AND a.status::text IN ('agendado', 'scheduled')
         AND a.confirmed_at IS NULL
+        AND a.reminder_sent_at IS NULL
         AND a.deleted_at IS NULL
     `);
 
@@ -617,7 +618,7 @@ async function sendSameDayUnconfirmedReminders(pool: any, env: Env) {
         appointmentId: row.id,
       };
 
-      await env.BACKGROUND_QUEUE.send(queuePayload);
+      await env.BACKGROUND_QUEUE.send({ type: "SEND_WHATSAPP", payload: queuePayload });
 
       // Push notification alongside WhatsApp (non-fatal)
       notifyPatientAppointment(env, pool, row.patient_id, {
@@ -626,6 +627,11 @@ async function sendSameDayUnconfirmedReminders(pool: any, env: Env) {
         therapistName: row.therapist_name,
         type: "reminder_2h",
       }).catch((err) => console.warn("[Cron] Push same-day failed:", err));
+
+      await pool.query(
+        `UPDATE appointments SET reminder_sent_at = NOW(), updated_at = NOW() WHERE id = $1::uuid`,
+        [row.id],
+      );
 
       sent++;
     }

@@ -1,5 +1,5 @@
 import type { Env } from "./types/env";
-import { createPool } from "./lib/db";
+import { createPool, createPoolForOrg } from "./lib/db";
 import { writeEvent } from "./lib/analytics";
 import { transcribeAudio, analyzeClinicImage } from "./lib/ai-native";
 import { sendPushToUser, sendPushToOrg, type PushPayload } from "./lib/webpush";
@@ -222,26 +222,31 @@ async function processWhatsAppMessage(payload: WhatsAppQueuePayload, env: Env): 
     throw new Error(`WhatsApp API error ${metaRes.status}: ${err?.error?.message ?? "unknown"}`);
   }
 
-  const pool = createPool(env);
-  await pool.query(
-    `INSERT INTO whatsapp_messages (
-      organization_id, patient_id, from_phone, to_phone, message, type, status, metadata, created_at, updated_at
-    ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,NOW(),NOW())`,
-    [
-      payload.organizationId,
-      payload.patientId,
-      "clinic",
-      payload.to,
-      payload.messageText,
-      "template",
-      "sent",
-      JSON.stringify({
-        appointment_id: payload.appointmentId,
-        template_key: payload.templateName,
-        via_queue: true,
-      }),
-    ],
-  );
+  // Log the message — non-fatal: WhatsApp was already sent, don't let a log failure trigger a retry
+  try {
+    const pool = await createPoolForOrg(env, payload.organizationId);
+    await pool.query(
+      `INSERT INTO whatsapp_messages (
+        organization_id, patient_id, from_phone, to_phone, message, type, status, metadata, created_at, updated_at
+      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,NOW(),NOW())`,
+      [
+        payload.organizationId,
+        payload.patientId,
+        "clinic",
+        payload.to,
+        payload.messageText,
+        "template",
+        "sent",
+        JSON.stringify({
+          appointment_id: payload.appointmentId,
+          template_key: payload.templateName,
+          via_queue: true,
+        }),
+      ],
+    );
+  } catch (logErr) {
+    console.warn("[Queue/WhatsApp] Failed to log message (non-fatal):", logErr);
+  }
 
   writeEvent(env, {
     event: "whatsapp_sent",

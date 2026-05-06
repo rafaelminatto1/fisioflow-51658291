@@ -45,7 +45,8 @@ import {
   ShieldCheck,
   TrendingUp,
   Zap,
-  Activity
+  Activity,
+  Settings,
 } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -58,6 +59,7 @@ import { cn } from "@/lib/utils";
 import { PatientCombobox } from "@/components/ui/patient-combobox";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { NfseWizard } from "@/components/financial/NfseWizard";
+import { useNFSeConfig } from "@/hooks/useNFSe";
 
 export interface NFSe extends NFSeRecord {
   destinatario: {
@@ -183,6 +185,9 @@ export function NFSeContent({ autoOpenCreate = false, onAutoOpenHandled }: { aut
   const organizationId = orgData?.id;
   const queryClient = useQueryClient();
   
+  const { data: configData, isLoading: isLoadingConfig } = useNFSeConfig();
+  const hasConfig = !isLoadingConfig && configData?.data != null;
+
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<"lista" | "config">("lista");
   const [selectedNFSe, setSelectedNFSe] = useState<NFSe | null>(null);
@@ -301,7 +306,11 @@ export function NFSeContent({ autoOpenCreate = false, onAutoOpenHandled }: { aut
       monthlyValue: totalValue.toLocaleString("pt-BR", { minimumFractionDigits: 2 }),
       monthlyCount: authorized.length,
       pendingCount: pending,
-      successRate: nfses.length > 0 ? Math.round((nfses.filter(n => n.status === 'autorizado').length / nfses.filter(n => n.status !== 'rascunho').length) * 100) : 100
+      successRate: (() => {
+        const sent = nfses.filter(n => n.status !== 'rascunho').length;
+        if (sent === 0) return 100;
+        return Math.round((nfses.filter(n => n.status === 'autorizado').length / sent) * 100);
+      })()
     };
   }, [nfses]);
 
@@ -397,6 +406,29 @@ export function NFSeContent({ autoOpenCreate = false, onAutoOpenHandled }: { aut
           </Button>
         </motion.div>
       </div>
+
+      {/* BANNER: config não preenchida */}
+      {!isLoadingConfig && !hasConfig && (
+        <div className="flex items-start gap-4 rounded-2xl border-2 border-dashed border-amber-300 bg-amber-50/70 dark:border-amber-700 dark:bg-amber-950/30 p-5">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-amber-100 dark:bg-amber-900/50 text-amber-600 dark:text-amber-400 mt-0.5">
+            <Settings className="h-4.5 w-4.5" />
+          </div>
+          <div className="flex-1 space-y-1.5">
+            <p className="text-sm font-bold text-amber-800 dark:text-amber-300">Configure o emissor antes de emitir notas</p>
+            <p className="text-xs text-amber-700/80 dark:text-amber-400/80">
+              Preencha CNPJ, inscrição municipal e certificado digital. Leva menos de 5 minutos com o assistente passo a passo.
+            </p>
+          </div>
+          <Button
+            size="sm"
+            variant="outline"
+            className="shrink-0 rounded-xl border-amber-300 bg-amber-100 hover:bg-amber-200 text-amber-800 dark:border-amber-700 dark:bg-amber-900/50 dark:text-amber-300 text-xs font-bold"
+            onClick={() => setActiveTab("config")}
+          >
+            Configurar agora
+          </Button>
+        </div>
+      )}
 
       {/* STATS OVERVIEW */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
