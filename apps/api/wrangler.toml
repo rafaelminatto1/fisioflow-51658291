@@ -61,9 +61,11 @@ binding = "CLINICAL_KNOWLEDGE"
 index_name = "fisioflow-clinical"
 
 # ===== AI SEARCH (RAG gerenciado — wiki, protocolos, exercícios) =====
-[[ai_search]]
-binding = "AI_SEARCH"
-instance_name = "fisioflow-rag"
+# Requer "ai search update" permission no API token ou plano Workers AI Search.
+# O código tem guards (if !c.env.AI_SEARCH) para funcionar sem o binding.
+# [[ai_search]]
+# binding = "AI_SEARCH"
+# instance_name = "fisioflow-rag"
 
 # ===== PIPELINES (Data warehouse → R2 JSON, open beta grátis) =====
 # Pipeline: fisioflow_events (id: 584a8a3054d1437686b35823f8476fde)
@@ -277,9 +279,9 @@ dataset = "fisioflow_events"
 binding = "CLINICAL_KNOWLEDGE"
 index_name = "fisioflow-clinical"
 
-[[env.production.ai_search]]
-binding = "AI_SEARCH"
-instance_name = "fisioflow-rag"
+# [[env.production.ai_search]]
+# binding = "AI_SEARCH"
+# instance_name = "fisioflow-rag"
 
 [[env.production.pipelines]]
 binding = "EVENTS_PIPELINE"
@@ -496,9 +498,9 @@ dataset = "fisioflow_events_staging"
 binding = "CLINICAL_KNOWLEDGE"
 index_name = "fisioflow-clinical-staging"
 
-[[env.staging.ai_search]]
-binding = "AI_SEARCH"
-instance_name = "fisioflow-rag"
+# [[env.staging.ai_search]]
+# binding = "AI_SEARCH"
+# instance_name = "fisioflow-rag"
 
 # Staging Pipelines: binding uses the staging stream ID, not the production stream.
 [[env.staging.pipelines]]
