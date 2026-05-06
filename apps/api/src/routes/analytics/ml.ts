@@ -33,7 +33,7 @@ export const registerMlAnalyticsRoutes = (app: AnalyticsRouteApp) => {
     const pool = await createPool(c.env);
     const salt = c.env.ML_SALT ?? c.env.VITE_ML_SALT ?? "fisioflow-ml-salt";
 
-    interface PatientRow extends DbRow {
+    interface PatientRow {
       birth_date: string | Date | null;
       gender: string | null;
       created_at: string | Date | null;
@@ -53,7 +53,7 @@ export const registerMlAnalyticsRoutes = (app: AnalyticsRouteApp) => {
     }
 
     const patient = patientRes.rows[0];
-    interface MetricRow extends DbRow {
+    interface MetricRow {
       pain_level_before: number | null;
       pain_level_after: number | null;
       functional_score_before: number | null;
