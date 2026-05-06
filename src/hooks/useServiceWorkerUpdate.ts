@@ -44,7 +44,7 @@ export function useServiceWorkerUpdate() {
     const registerSW = async () => {
       try {
         // Criar instância do Workbox
-        const wb = new Workbox("/sw.js", {
+        const wb = new Workbox("/service-worker.js", {
           type: "classic",
         });
 

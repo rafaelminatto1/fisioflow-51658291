@@ -1,5 +1,7 @@
 import { test, expect } from '@playwright/test';
 
+test.use({ serviceWorkers: 'allow' });
+
 test.describe('PWA Tests', () => {
   test('deve ter manifest.json válido', async ({ page }) => {
     await page.goto('/');
@@ -207,7 +209,7 @@ test.describe('PWA Tests', () => {
     console.log(`\n📦 Recursos cacheados: ${cachedUrls.length}`);
 
     // Verificar recursos críticos
-    const criticalResources = ['/', '/manifest.json', '/sw.js'];
+    const criticalResources = ['/', '/manifest.json', '/service-worker.js'];
     const cachedCritical = criticalResources.filter(url =>
       cachedUrls.some(cached => cached.includes(url))
     );

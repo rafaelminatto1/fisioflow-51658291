@@ -9,6 +9,46 @@ import { registerSW } from "virtual:pwa-register";
 
 import { handleChunkError } from "@/utils/chunkError";
 
+const SERVICE_WORKER_URL = "/service-worker.js";
+const SERVICE_WORKER_UPDATE_INTERVAL_MS = 60 * 60 * 1000;
+
+function isWorkboxWaitingRegistrationError(error: unknown): boolean {
+  const message = error instanceof Error ? error.message : String(error);
+  return message.includes("reading 'waiting'") || message.includes('reading "waiting"');
+}
+
+async function getCurrentServiceWorkerRegistration(): Promise<
+  ServiceWorkerRegistration | undefined
+> {
+  return (
+    (await navigator.serviceWorker.getRegistration(SERVICE_WORKER_URL)) ||
+    (await navigator.serviceWorker.getRegistration())
+  );
+}
+
+async function registerServiceWorkerFallback(): Promise<ServiceWorkerRegistration> {
+  const existingRegistration = await getCurrentServiceWorkerRegistration();
+  if (existingRegistration) return existingRegistration;
+
+  return navigator.serviceWorker.register(SERVICE_WORKER_URL, { scope: "/" });
+}
+
+async function registerPeriodicWikiSync(registration: ServiceWorkerRegistration): Promise<void> {
+  if (!("periodicSync" in registration)) return;
+
+  try {
+    await (registration as any).periodicSync.register("wiki-sync", {
+      minInterval: 24 * 60 * 60 * 1000, // 24 horas
+    });
+    console.log("[PWA] Periodic Sync registrado: wiki-sync");
+  } catch (err: any) {
+    // Silencia erro de permissão negada (comum se não estiver instalado como PWA)
+    if (err?.name !== "NotAllowedError") {
+      console.warn("[PWA] Periodic Sync não pôde ser registrado:", err);
+    }
+  }
+}
+
 // 3. MONITORAMENTO DE ERROS DE BUNDLE (VITE 8)
 window.addEventListener("error", (event) => {
   handleChunkError(event.error ?? event.message, "window.error");
@@ -29,6 +69,16 @@ createRoot(container).render(<App />);
 // 5. REGISTRO DE SERVICE WORKER (PWA)
 if ("serviceWorker" in navigator && import.meta.env.PROD) {
   let updateSW: ((reloadPage?: boolean) => Promise<void>) | undefined;
+  let updateCheckInterval: ReturnType<typeof setInterval> | undefined;
+
+  const scheduleUpdateChecks = (registration: ServiceWorkerRegistration) => {
+    if (updateCheckInterval) return;
+
+    updateCheckInterval = setInterval(() => {
+      console.log("[PWA] Verificando atualizações em segundo plano...");
+      void registration.update();
+    }, SERVICE_WORKER_UPDATE_INTERVAL_MS);
+  };
 
   updateSW = registerSW({
     immediate: true,
@@ -44,36 +94,32 @@ if ("serviceWorker" in navigator && import.meta.env.PROD) {
       console.log("[PWA] Service Worker registrado:", swUrl);
       // Força verificação de update a cada hora
       if (r) {
-        setInterval(
-          () => {
-            console.log("[PWA] Verificando atualizações em segundo plano...");
-            r.update();
-          },
-          60 * 60 * 1000,
-        );
+        scheduleUpdateChecks(r);
       }
     },
     onRegisterError(error) {
+      if (isWorkboxWaitingRegistrationError(error)) {
+        void registerServiceWorkerFallback()
+          .then((registration) => {
+            console.warn(
+              "[PWA] Registro via Workbox retornou estado inconsistente; mantendo registro ativo.",
+              error,
+            );
+            scheduleUpdateChecks(registration);
+            return registerPeriodicWikiSync(registration);
+          })
+          .catch((fallbackError) => {
+            console.error("[PWA] Erro no registro do Service Worker:", fallbackError);
+          });
+        return;
+      }
+
       console.error("[PWA] Erro no registro do Service Worker:", error);
     },
   });
 
   // Registro de Periodic Sync (V5 Pro)
-  navigator.serviceWorker.ready.then(async (registration) => {
-    if ("periodicSync" in registration) {
-      try {
-        await (registration as any).periodicSync.register("wiki-sync", {
-          minInterval: 24 * 60 * 60 * 1000, // 24 horas
-        });
-        console.log("[PWA] Periodic Sync registrado: wiki-sync");
-      } catch (err: any) {
-        // Silencia erro de permissão negada (comum se não estiver instalado como PWA)
-        if (err?.name !== "NotAllowedError") {
-          console.warn("[PWA] Periodic Sync não pôde ser registrado:", err);
-        }
-      }
-    }
-  });
+  void navigator.serviceWorker.ready.then(registerPeriodicWikiSync);
 }
 
 // Inicialização de serviços secundários após o render inicial para TBT zero

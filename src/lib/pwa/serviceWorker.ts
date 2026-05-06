@@ -13,7 +13,7 @@ export async function ensureServiceWorkerRegistration(): Promise<ServiceWorkerRe
   if (!canUseServiceWorker()) return null;
 
   const existingRegistration =
-    (await navigator.serviceWorker.getRegistration("/sw.js")) ||
+    (await navigator.serviceWorker.getRegistration("/service-worker.js")) ||
     (await navigator.serviceWorker.getRegistration());
 
   if (existingRegistration) {
@@ -21,7 +21,9 @@ export async function ensureServiceWorkerRegistration(): Promise<ServiceWorkerRe
   }
 
   try {
-    const registration = await navigator.serviceWorker.register("/sw.js");
+    const registration = await navigator.serviceWorker.register("/service-worker.js", {
+      scope: "/",
+    });
     logger.info(
       "Service Worker registrado com sucesso",
       { scope: registration.scope },

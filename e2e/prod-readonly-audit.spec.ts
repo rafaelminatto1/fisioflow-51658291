@@ -4,6 +4,8 @@ const BASE_URL = process.env.PROD_BASE_URL ?? "https://moocafisio.com.br";
 const EMAIL = process.env.TEST_USER_EMAIL ?? "";
 const PASSWORD = process.env.TEST_USER_PASSWORD ?? "";
 
+test.use({ serviceWorkers: "allow" });
+
 const ROUTES = [
   "/dashboard",
   "/agenda",
@@ -80,10 +82,16 @@ test("production read-only route audit", async ({ page }) => {
   await page.goto(`${BASE_URL}/auth/login`, { waitUntil: "domcontentloaded" });
   await page.fill('input[type="email"], input[name="email"], #login-email', EMAIL);
   await page.fill('input[type="password"], input[name="password"], #login-password', PASSWORD);
-  await page.locator('button[type="submit"], button:has-text("Entrar"), button:has-text("Acessar")').first().click();
-  await page.waitForURL((url) => !url.pathname.includes("/auth") && !url.pathname.includes("/login"), {
-    timeout: 30000,
-  });
+  await page
+    .locator('button[type="submit"], button:has-text("Entrar"), button:has-text("Acessar")')
+    .first()
+    .click();
+  await page.waitForURL(
+    (url) => !url.pathname.includes("/auth") && !url.pathname.includes("/login"),
+    {
+      timeout: 30000,
+    },
+  );
 
   for (const route of ROUTES) {
     listeners.consoleErrors.length = 0;

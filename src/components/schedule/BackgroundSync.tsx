@@ -341,7 +341,7 @@ export const registerSyncServiceWorker = async () => {
   if ("serviceWorker" in navigator) {
     try {
       const registration =
-        (await navigator.serviceWorker.getRegistration("/sw.js")) ||
+        (await navigator.serviceWorker.getRegistration("/service-worker.js")) ||
         (await navigator.serviceWorker.getRegistration());
       console.log("Service Worker ready:", registration);
 
