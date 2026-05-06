@@ -53,6 +53,30 @@ function jsonbToText(val: unknown): string | undefined {
   return undefined;
 }
 
+type DbSessionStatus = "draft" | "finalized" | "cancelled";
+
+const SESSION_STATUS_ALIASES: Record<string, DbSessionStatus> = {
+  draft: "draft",
+  rascunho: "draft",
+  finalized: "finalized",
+  finalizado: "finalized",
+  completed: "finalized",
+  complete: "finalized",
+  concluido: "finalized",
+  "concluído": "finalized",
+  signed: "finalized",
+  cancelled: "cancelled",
+  canceled: "cancelled",
+  cancelado: "cancelled",
+  cancelada: "cancelled",
+};
+
+function normalizeSessionStatusInput(value: unknown): DbSessionStatus | null | undefined {
+  if (value == null || value === "") return undefined;
+  if (typeof value !== "string") return null;
+  return SESSION_STATUS_ALIASES[value.trim().toLowerCase()] ?? null;
+}
+
 /** Mapeia linha do Drizzle (camelCase) para o formato SoapRecord do frontend (snake_case) */
 function rowToRecord(row: any) {
   const subj = (row.subjective as any) || {};
@@ -317,6 +341,8 @@ app.post("/", requireAuth, async (c) => {
   if (!isValidUuid(patientId)) return c.json({ error: "patient_id inválido" }, 400);
 
   const recordDate = body.record_date ? new Date(String(body.record_date)) : new Date();
+  const status = normalizeSessionStatusInput(body.status);
+  if (status === null) return c.json({ error: "Status inválido" }, 400);
 
   let subjData = body.subjective != null ? textToJsonb(body.subjective) : {};
   if (body.pain_level != null || body.pain_location || body.pain_character) {
@@ -337,7 +363,9 @@ app.post("/", requireAuth, async (c) => {
     objective: textToJsonb(body.objective),
     assessment: textToJsonb(body.assessment),
     plan: textToJsonb(body.plan),
-    status: (body.status as any) ?? "draft",
+    status: (status as any) ?? "draft",
+    finalizedAt: status === "finalized" ? new Date() : null,
+    finalizedBy: status === "finalized" && isValidUuid(user.uid) ? user.uid : null,
   };
 
   const [newSession] = await db.insert(sessions).values(insertValues).returning();
@@ -404,7 +432,17 @@ app.put("/:id", requireAuth, async (c) => {
   if ("assessment" in body) updatePayload.assessment = textToJsonb(body.assessment);
   if ("plan" in body) updatePayload.plan = textToJsonb(body.plan);
   if (body.duration_minutes != null) updatePayload.duration = Number(body.duration_minutes);
-  if (body.status) updatePayload.status = body.status as any;
+  if ("status" in body) {
+    const status = normalizeSessionStatusInput(body.status);
+    if (status === null) return c.json({ error: "Status inválido" }, 400);
+    if (status !== undefined) {
+      updatePayload.status = status as any;
+      if (status === "finalized") {
+        updatePayload.finalizedAt = new Date();
+        updatePayload.finalizedBy = isValidUuid(user.uid) ? user.uid : null;
+      }
+    }
+  }
 
   const [updated] = await db
     .update(sessions)
