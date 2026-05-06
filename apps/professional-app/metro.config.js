@@ -2,8 +2,10 @@ const { getDefaultConfig } = require("expo/metro-config");
 const path = require("path");
 
 const projectRoot = __dirname;
-const monorepoRoot = path.resolve(projectRoot, "../..");
 
+// SDK 52+ auto-detects the monorepo root via package.json workspaces.
+// Do NOT manually set watchFolders or nodeModulesPaths — it causes Metro
+// to treat the monorepo root as the project root, breaking expo-router/entry resolution.
 const config = getDefaultConfig(projectRoot);
 
 // Extensões nativas primeiro para resolução correta no iOS/Android
@@ -37,21 +39,12 @@ config.resolver.blockList = [
   /node_modules\/sharp\/.*/,
 ];
 
-// pnpm monorepo: watchFolders inclui apps/ e packages/ da raiz (obrigatório para EAS)
-config.watchFolders = [
-  path.resolve(monorepoRoot, "apps"),
-  path.resolve(monorepoRoot, "packages"),
-];
-
-// pnpm monorepo: resolve a partir do node_modules do app primeiro, depois da raiz
-config.resolver.nodeModulesPaths = [
-  path.resolve(projectRoot, "node_modules"),
-  path.resolve(monorepoRoot, "node_modules"),
-];
-
-// Segue symlinks do pnpm e respeita package.json exports
+// Segue symlinks do pnpm
 config.resolver.unstable_enableSymlinks = true;
-config.resolver.unstable_enablePackageExports = true;
+
+// Package exports desabilitado: expo-router não tem campo exports e o
+// modo strict bloqueia o acesso a expo-router/entry como deep import.
+config.resolver.unstable_enablePackageExports = false;
 
 config.server.port = 8081;
 
