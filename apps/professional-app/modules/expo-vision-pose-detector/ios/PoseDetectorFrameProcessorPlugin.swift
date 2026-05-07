@@ -16,20 +16,21 @@ public class PoseDetectorFrameProcessorPlugin: FrameProcessorPlugin {
 
         guard let observations = request.results else { return [] }
 
-        // Explicit type avoids Swift 6 ambiguity with SwiftUI Gesture.map
-        let mapped: [[String: Any]] = observations.map { obs in
+        // Explicit obs type required — Swift 6 won't infer element type without it
+        let mapped: [[String: Any]] = observations.map { (obs: VNHumanBodyPose3DObservation) in
           var pts: [String: Any] = [:]
-          // availableJointNames is a property, not a method
+          // availableJointNames is a property (not a method)
           for jointName in obs.availableJointNames {
             if let pt = try? obs.recognizedPoint(jointName) {
+              // localPosition is simd_float4x4; translation is in column 3
               pts[jointName.rawValue.rawValue] = [
-                "x": Double(pt.localPosition.x),
-                "y": Double(pt.localPosition.y),
-                "z": Double(pt.localPosition.z),
-                "confidence": Double(pt.confidence)
+                "x": Double(pt.localPosition.columns.3.x),
+                "y": Double(pt.localPosition.columns.3.y),
+                "z": Double(pt.localPosition.columns.3.z)
               ]
             }
           }
+          // confidence belongs to the observation, not individual joints
           return [
             "points3d": pts,
             "confidence": Double(obs.confidence),
@@ -44,7 +45,7 @@ public class PoseDetectorFrameProcessorPlugin: FrameProcessorPlugin {
 
         guard let observations = request.results else { return [] }
 
-        let mapped: [[String: Any]] = observations.map { obs in
+        let mapped: [[String: Any]] = observations.map { (obs: VNHumanBodyPoseObservation) in
           var landmarks: [String: Any] = [:]
           if let recognized = try? obs.recognizedPoints(.all) {
             for (key, pt) in recognized {
