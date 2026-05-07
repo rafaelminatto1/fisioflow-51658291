@@ -6,8 +6,9 @@ module.exports = function (api) {
     plugins: [
       ["babel-plugin-react-compiler", { target: "19" }],
       "react-native-reanimated/plugin",
-      "react-native-vision-camera/plugin",
+      "react-native-worklets-core/plugin",
     ],
+
 
   };
 };
