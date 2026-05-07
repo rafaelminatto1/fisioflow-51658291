@@ -76,7 +76,7 @@ jobs:
 
       # ─── Dependências ─────────────────────────────────────────────────────────
       - name: Instalar dependências (pnpm)
-        run: pnpm install --no-frozen-lockfile
+        run: pnpm install --frozen-lockfile --filter "@fisioflow/professional-app..." --filter "@fisioflow/core" --filter "."
 
       # ─── EAS CLI ──────────────────────────────────────────────────────────────
       - name: Setup EAS CLI
@@ -90,6 +90,8 @@ jobs:
         working-directory: apps/professional-app
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+          FASTLANE_XCODEBUILD_SETTINGS_RETRIES: "10"
+          FASTLANE_XCODEBUILD_SETTINGS_TIMEOUT: "600"
         run: |
           echo "Perfil: $PROFILE"
           echo "Xcode: $(xcodebuild -version | head -1)"
