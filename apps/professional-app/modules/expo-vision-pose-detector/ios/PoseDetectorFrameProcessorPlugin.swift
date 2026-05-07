@@ -14,13 +14,14 @@ public class PoseDetectorFrameProcessorPlugin: FrameProcessorPlugin {
         let request = VNDetectHumanBodyPose3DRequest()
         try requestHandler.perform([request])
 
-        guard let results = request.results else { return [] }
+        guard let observations = request.results else { return [] }
 
-        return results.map { obs -> [String: Any] in
+        // Explicit type avoids Swift 6 ambiguity with SwiftUI Gesture.map
+        let mapped: [[String: Any]] = observations.map { obs in
           var pts: [String: Any] = [:]
-          for jointName in obs.availableJointNames() {
+          // availableJointNames is a property, not a method
+          for jointName in obs.availableJointNames {
             if let pt = try? obs.recognizedPoint(jointName) {
-              // localPosition is simd_float3 (position relative to parent joint)
               pts[jointName.rawValue.rawValue] = [
                 "x": Double(pt.localPosition.x),
                 "y": Double(pt.localPosition.y),
@@ -35,14 +36,15 @@ public class PoseDetectorFrameProcessorPlugin: FrameProcessorPlugin {
             "is3d": true
           ]
         }
+        return mapped
       } else {
         // Fallback 2D for iOS < 17
         let request = VNDetectHumanBodyPoseRequest()
         try requestHandler.perform([request])
 
-        guard let results = request.results else { return [] }
+        guard let observations = request.results else { return [] }
 
-        return results.map { obs -> [String: Any] in
+        let mapped: [[String: Any]] = observations.map { obs in
           var landmarks: [String: Any] = [:]
           if let recognized = try? obs.recognizedPoints(.all) {
             for (key, pt) in recognized {
@@ -59,6 +61,7 @@ public class PoseDetectorFrameProcessorPlugin: FrameProcessorPlugin {
             "is3d": false
           ]
         }
+        return mapped
       }
     } catch {
       return nil
