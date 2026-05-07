@@ -3,6 +3,10 @@ import VisionCamera
 
 @objc(PoseDetectorFrameProcessorPlugin)
 public class PoseDetectorFrameProcessorPlugin: FrameProcessorPlugin {
+  public override init(proxy: VisionCameraProxyHolder, options: [AnyHashable: Any]?) {
+    super.init(proxy: proxy, options: options)
+  }
+
   public override func callback(_ frame: Frame, withArguments arguments: [AnyHashable: Any]?) -> Any? {
     // VisionCamera v4: frame.buffer is CMSampleBuffer (non-optional)
     guard let pixelBuffer = CMSampleBufferGetImageBuffer(frame.buffer) else { return nil }
