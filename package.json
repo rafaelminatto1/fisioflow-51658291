@@ -268,7 +268,10 @@
       "@xmldom/xmldom": "^0.8.13",
       "ajv": "^8.18.0",
       "immutable": "^3.8.3",
-      "svelte": "^5.53.5"
+      "svelte": "^5.53.5",
+      "expo-modules-core": "55.0.25",
+      "expo-constants": "~55.0.16",
+      "expo-keep-awake": "~55.0.14"
     }
   }
 }
