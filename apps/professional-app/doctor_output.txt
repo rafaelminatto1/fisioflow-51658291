@@ -1,0 +1,4 @@
+env: load .env
+env: export EXPO_PUBLIC_API_URL EXPO_PUBLIC_EXPO_PROJECT_ID EXPO_PUBLIC_LIVEKIT_URL EXPO_PUBLIC_NEON_AUTH_URL EXPO_PUBLIC_SENTRY_DSN SENTRY_AUTH_TOKEN
+Running 18 checks on your project...
+18/18 checks passed. No issues detected!

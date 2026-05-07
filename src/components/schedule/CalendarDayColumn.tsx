@@ -255,13 +255,13 @@ export const DayColumn = memo(
               );
               const hasOverlap = stackCount > 1;
               // Gap fixo em px entre cards (incluindo a margem lateral externa)
-              const GAP_PX = 3;
-              const EDGE_PX = 4; // margem da borda da coluna quando sem overlap
+              const GAP_PX = 4;
+              const EDGE_PX = 6; // margem da borda da coluna quando sem overlap
               // Cada card ocupa (100% / stackCount), descontando o gap entre cards
               // width = (100% / count) - gap total distribuído por card
               // left = (index * 100% / count) + offset de borda
               const widthCalc = hasOverlap
-                ? `calc(${100 / stackCount}% - ${GAP_PX + 1}px)`
+                ? `calc(${100 / stackCount}% - ${GAP_PX + 2}px)`
                 : `calc(100% - ${EDGE_PX * 2}px)`;
               const leftCalc = hasOverlap
                 ? `calc(${stackIndex * (100 / stackCount)}% + ${GAP_PX}px)`

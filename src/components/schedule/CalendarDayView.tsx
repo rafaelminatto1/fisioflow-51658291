@@ -282,8 +282,8 @@ const CalendarDayView = memo(
                 );
                 const hasOverlap = stackCount > 1;
 
-                const widthPercent = hasOverlap ? 96 / stackCount : 94;
-                const leftOffset = hasOverlap ? stackIndex * (96 / stackCount) + 2 : 3;
+                const widthPercent = hasOverlap ? 94 / stackCount : 94;
+                const leftOffset = hasOverlap ? stackIndex * (95 / stackCount) + 2.5 : 3;
 
                 const duration = apt.duration ?? DEFAULT_APPOINTMENT_DURATION_MINUTES;
                 const heightMobile = Math.max(

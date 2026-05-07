@@ -262,7 +262,10 @@ export function getOverlapStackPosition(
 
     const durA = a.duration || DEFAULT_APPOINTMENT_DURATION_MINUTES;
     const durB = b.duration || DEFAULT_APPOINTMENT_DURATION_MINUTES;
-    return durB - durA; // Mais longos primeiro
+    if (durA !== durB) return durB - durA; // Mais longos primeiro
+
+    // Desempate por ID para garantir ordenação estável (evita stacking em chamadas repetidas)
+    return String(a.id).localeCompare(String(b.id));
   });
 
   // 3. Atribuir cada agendamento a uma coluna onde não haja sobreposição
