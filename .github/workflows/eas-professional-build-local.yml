@@ -1,0 +1,109 @@
+name: iOS Build Local — Professional App (macOS)
+
+# Build iOS no runner macOS do GitHub Actions usando eas build --local.
+# Não consome quota de builds do EAS cloud — o Xcode roda no próprio runner.
+#
+# Triggers:
+#  1. workflow_dispatch → disparo manual com escolha de perfil
+#  2. push em main com mudanças no professional-app → preview automático
+
+on:
+  workflow_dispatch:
+    inputs:
+      profile:
+        description: "Perfil de build"
+        type: choice
+        options:
+          - preview
+          - testflight
+          - production
+        default: preview
+  push:
+    branches: [main]
+    paths:
+      - "apps/professional-app/**"
+      - ".github/workflows/eas-professional-build-local.yml"
+
+concurrency:
+  group: ios-local-pro-${{ github.ref }}-${{ inputs.profile || 'preview' }}
+  cancel-in-progress: true
+
+jobs:
+  build-ios:
+    name: iOS Local Build (${{ inputs.profile || 'preview' }})
+    runs-on: macos-latest
+    timeout-minutes: 90
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "pnpm"
+
+      - name: Instalar dependências
+        run: pnpm install --frozen-lockfile
+
+      - name: Setup EAS CLI
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Verificar CocoaPods
+        run: pod --version
+
+      - name: Build iOS local (eas build --local)
+        working-directory: apps/professional-app
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: |
+          PROFILE="${{ inputs.profile || 'preview' }}"
+          echo "Iniciando build iOS local com perfil: $PROFILE"
+          eas build \
+            --platform ios \
+            --profile "$PROFILE" \
+            --local \
+            --non-interactive \
+            --output "${{ github.workspace }}/build.ipa"
+
+      - name: Upload .ipa como artefato
+        uses: actions/upload-artifact@v4
+        with:
+          name: fisioflow-pro-ios-${{ inputs.profile || 'preview' }}-${{ github.run_number }}
+          path: build.ipa
+          retention-days: 14
+
+      - name: Submeter ao TestFlight
+        if: ${{ (inputs.profile == 'testflight' || inputs.profile == 'production') }}
+        working-directory: apps/professional-app
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: |
+          eas submit \
+            --platform ios \
+            --non-interactive \
+            --path "${{ github.workspace }}/build.ipa"
+
+      - name: Resumo
+        if: always()
+        run: |
+          echo ""
+          echo "========================================================"
+          echo "  iOS LOCAL BUILD — FisioFlow Pro"
+          echo "  Perfil : ${{ inputs.profile || 'preview' }}"
+          echo "  Runner : ${{ runner.os }} / ${{ runner.arch }}"
+          echo ""
+          if [ -f "${{ github.workspace }}/build.ipa" ]; then
+            SIZE=$(du -sh "${{ github.workspace }}/build.ipa" | cut -f1)
+            echo "  .ipa gerado: $SIZE"
+            echo "  Artefato disponível na aba Actions > Artifacts"
+          else
+            echo "  .ipa NAO gerado — verificar logs acima"
+          fi
+          echo "========================================================"

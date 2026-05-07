@@ -4,12 +4,8 @@ name: EAS Build — Professional App
 #  1. Push em main com mudanças no professional-app → preview automático iOS
 #  2. workflow_dispatch → escolha livre de plataforma + perfil
 
+# DESABILITADO: usa EAS cloud (consome quota). Use eas-professional-build-local.yml.
 on:
-  push:
-    branches: [main]
-    paths:
-      - "apps/professional-app/**"
-      - ".github/workflows/eas-professional-build.yml"
   workflow_dispatch:
     inputs:
       platform:
