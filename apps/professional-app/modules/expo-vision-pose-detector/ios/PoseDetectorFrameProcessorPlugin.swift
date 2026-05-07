@@ -4,9 +4,10 @@ import VisionCamera
 @objc(PoseDetectorFrameProcessorPlugin)
 public class PoseDetectorFrameProcessorPlugin: FrameProcessorPlugin {
   public override func callback(_ frame: Frame, withArguments arguments: [AnyHashable: Any]?) -> Any? {
-    guard let buffer = frame.buffer else { return nil }
-    
-    let requestHandler = VNImageRequestHandler(cvPixelBuffer: buffer, options: [:])
+    // VisionCamera v4: frame.buffer is CMSampleBuffer (non-optional); get CVPixelBuffer via CMSampleBufferGetImageBuffer
+    guard let pixelBuffer = CMSampleBufferGetImageBuffer(frame.buffer) else { return nil }
+
+    let requestHandler = VNImageRequestHandler(cvPixelBuffer: pixelBuffer, options: [:])
     
     do {
       if #available(iOS 17.0, *) {
@@ -17,7 +18,7 @@ public class PoseDetectorFrameProcessorPlugin: FrameProcessorPlugin {
         
         return results.map { obs -> [String: Any] in
           var pts: [String: Any] = [:]
-          if let recognized = try? obs.cameraRelativePoints() {
+          if let recognized = try? obs.cameraRelativePoints(for: .all) {
             for (key, pt) in recognized {
               pts[key.rawValue.rawValue] = [
                 "x": Double(pt.position.x),

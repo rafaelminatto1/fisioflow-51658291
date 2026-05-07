@@ -33,7 +33,7 @@ public class ExpoVisionPoseDetectorModule: Module {
         try requestHandler.perform([request])
         let results = (request.results ?? []).map { obs -> [String: Any] in
           var pts: [String: Any] = [:]
-          if let recognized = try? obs.cameraRelativePoints() {
+          if let recognized = try? obs.cameraRelativePoints(for: .all) {
             for (key, pt) in recognized {
               pts[key.rawValue.rawValue] = [
                 "x": Double(pt.position.x),
