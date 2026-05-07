@@ -5,12 +5,10 @@ public class ExpoVisionPoseDetectorModule: Module {
   public func definition() -> ModuleDefinition {
     Name("ExpoVisionPoseDetector")
 
-    // Mantém a função 2D para compatibilidade com o que já criamos
     AsyncFunction("detectPoseAsync") { (imageUrl: String, promise: Promise) in
       self.processPose(imageUrl: imageUrl, is3D: false, promise: promise)
     }
 
-    // Adiciona a função 3D avançada
     AsyncFunction("detectPose3DAsync") { (imageUrl: String, promise: Promise) in
       self.processPose(imageUrl: imageUrl, is3D: true, promise: promise)
     }
@@ -26,19 +24,20 @@ public class ExpoVisionPoseDetectorModule: Module {
     }
 
     let requestHandler = VNImageRequestHandler(cgImage: cgImage, options: [:])
-    
+
     do {
       if is3D, #available(iOS 17.0, *) {
         let request = VNDetectHumanBodyPose3DRequest()
         try requestHandler.perform([request])
         let results = (request.results ?? []).map { obs -> [String: Any] in
           var pts: [String: Any] = [:]
-          if let recognized = try? obs.cameraRelativePoints(for: .all) {
-            for (key, pt) in recognized {
-              pts[key.rawValue.rawValue] = [
-                "x": Double(pt.position.x),
-                "y": Double(pt.position.y),
-                "z": Double(pt.position.z)
+          for jointName in obs.availableJointNames() {
+            if let pt = try? obs.recognizedPoint(jointName) {
+              // localPosition is simd_float3 (position relative to parent joint)
+              pts[jointName.rawValue.rawValue] = [
+                "x": Double(pt.localPosition.x),
+                "y": Double(pt.localPosition.y),
+                "z": Double(pt.localPosition.z)
               ]
             }
           }
