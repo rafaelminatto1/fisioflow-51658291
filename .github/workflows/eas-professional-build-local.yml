@@ -38,6 +38,13 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      # Xcode 16.4 quebra react-native-safe-area-context@5.0.0 (C++ compile error).
+      # Xcode 16.2 é a versão estável e testada para React Native 0.81.x.
+      - name: Selecionar Xcode 16.2
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: "16.2"
+
       - uses: pnpm/action-setup@v4
 
       - name: Setup Node.js
@@ -55,8 +62,10 @@ jobs:
           eas-version: latest
           token: ${{ secrets.EXPO_TOKEN }}
 
-      - name: Verificar CocoaPods
-        run: pod --version
+      - name: Verificar versões (Xcode / CocoaPods)
+        run: |
+          xcodebuild -version
+          pod --version
 
       - name: Build iOS local (eas build --local)
         working-directory: apps/professional-app
