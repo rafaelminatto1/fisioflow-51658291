@@ -28,6 +28,8 @@ on:
     paths:
       - "apps/professional-app/**"
       - ".github/workflows/eas-professional-build-local.yml"
+      - "package.json"
+      - "pnpm-lock.yaml"
 
 concurrency:
   group: ios-local-pro-${{ github.ref }}-${{ inputs.profile || 'preview' }}
