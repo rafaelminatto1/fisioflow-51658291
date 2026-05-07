@@ -35,6 +35,8 @@ concurrency:
 
 env:
   PROFILE: ${{ inputs.profile || 'preview' }}
+  EXPO_USE_SYMLINKS: "1"
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
 
 jobs:
   build-ios:

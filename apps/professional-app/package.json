@@ -98,9 +98,7 @@
       ]
     },
     "install": {
-      "exclude": [
-        "@sentry/react-native"
-      ]
+      "exclude": []
     },
     "doctor": {
       "reactNativeDirectoryCheck": {
