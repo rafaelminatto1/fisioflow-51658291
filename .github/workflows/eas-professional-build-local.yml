@@ -1,12 +1,12 @@
 name: iOS Build Local — Professional App
 
-# Build iOS no runner macos-14 (M1 / Xcode 15.4) usando eas build --local.
+# Build iOS no runner macos-26 (Apple Silicon / Xcode 26.2) usando eas build --local.
 # Não consome quota de builds do EAS cloud.
 #
-# Por que macos-14?
-#   • Xcode 15.4 é o default — compatível com RN 0.81 (mínimo: Xcode 15.4)
-#   • Xcode 16.x (macos-15) tem bug no Clang 16 que quebra react-native-safe-area-context
-#   • Runner M1 (arm64) = compilação ARM64 nativa, mais rápida para iOS
+# Por que macos-26?
+#   • Xcode 26.2 é o default — obrigatório para Expo SDK 55 / RN 0.83
+#   • Runner Apple Silicon (arm64) = compilação nativa rápida
+#   • macos-14 (Xcode 15.4) é incompatível com SDK 55 e será descontinuado em nov/2026
 #
 # Triggers:
 #   1. workflow_dispatch — disparo manual com escolha de perfil
@@ -38,8 +38,8 @@ env:
 
 jobs:
   build-ios:
-    name: iOS ${{ inputs.profile || 'preview' }} (macos-14 / Xcode 15.4)
-    runs-on: macos-14        # M1 arm64 — Xcode 15.4 default, compatível com RN 0.81
+    name: iOS ${{ inputs.profile || 'preview' }} (macos-26 / Xcode 26.2)
+    runs-on: macos-26        # Apple Silicon arm64 — Xcode 26.2 default, obrigatório para SDK 55
     timeout-minutes: 90
 
     steps:
@@ -86,9 +86,6 @@ jobs:
         working-directory: apps/professional-app
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
-          # RN 0.81: binários pré-compilados para reduzir tempo de compilação
-          RCT_USE_PREBUILT_RNCORE: "1"
-          RCT_USE_RN_DEP: "1"
         run: |
           echo "Perfil: $PROFILE"
           echo "Xcode: $(xcodebuild -version | head -1)"
@@ -128,7 +125,8 @@ jobs:
           echo "========================================================"
           echo "  iOS LOCAL BUILD — FisioFlow Pro"
           echo "  Perfil  : $PROFILE"
-          echo "  Runner  : ${{ runner.os }} ${{ runner.arch }} (macos-14)"
+          echo "  Runner  : ${{ runner.os }} ${{ runner.arch }} (macos-26 / Xcode 26.2)"
+          echo "  Expo    : SDK 55"
           echo "  Commit  : ${{ github.sha }}"
           if [ -f "${{ github.workspace }}/build.ipa" ]; then
             SIZE=$(du -sh "${{ github.workspace }}/build.ipa" | cut -f1)

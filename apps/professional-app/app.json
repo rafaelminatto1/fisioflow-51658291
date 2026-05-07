@@ -43,8 +43,7 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#1E40AF"
       },
-      "package": "com.fisioflow.professional",
-      "edgeToEdgeEnabled": true
+      "package": "com.fisioflow.professional"
     },
     "web": {
       "bundler": "metro",
@@ -91,12 +90,13 @@
           "organization": "activity-fisioterapia-rg"
         }
       ],
-      "expo-audio"
+      "expo-audio",
+      "expo-asset",
+      "expo-sharing"
     ],
     "experiments": {
       "typedRoutes": true
     },
-    "newArchEnabled": true,
     "extra": {
       "router": {
         "origin": false

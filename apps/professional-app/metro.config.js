@@ -39,12 +39,8 @@ config.resolver.blockList = [
   /node_modules\/sharp\/.*/,
 ];
 
-// Segue symlinks do pnpm
-config.resolver.unstable_enableSymlinks = true;
-
-// Package exports desabilitado: expo-router não tem campo exports e o
-// modo strict bloqueia o acesso a expo-router/entry como deep import.
-config.resolver.unstable_enablePackageExports = false;
+// Package exports habilitado: necessário para SDK 55 / expo-router v55 / Neon
+config.resolver.unstable_enablePackageExports = true;
 
 config.server.port = 8081;
 
