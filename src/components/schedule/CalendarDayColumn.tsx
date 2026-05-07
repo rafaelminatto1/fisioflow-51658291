@@ -248,14 +248,24 @@ export const DayColumn = memo(
                 return null;
               }
 
-              // Layout lateral: appointments que se sobrepõem no tempo (ex.: 08:30 e 09:00) dividem a largura
+              // Layout lateral: appointments que se sobrepõem no tempo dividem a largura
               const { index: stackIndex, count: stackCount } = getOverlapStackPosition(
                 appointments,
                 apt,
               );
               const hasOverlap = stackCount > 1;
-              const widthPercent = hasOverlap ? 100 / stackCount - 2 : 100; // ~1% margem entre cards
-              const leftPercent = hasOverlap ? stackIndex * (100 / stackCount) + 1 : 0;
+              // Gap fixo em px entre cards (incluindo a margem lateral externa)
+              const GAP_PX = 3;
+              const EDGE_PX = 4; // margem da borda da coluna quando sem overlap
+              // Cada card ocupa (100% / stackCount), descontando o gap entre cards
+              // width = (100% / count) - gap total distribuído por card
+              // left = (index * 100% / count) + offset de borda
+              const widthCalc = hasOverlap
+                ? `calc(${100 / stackCount}% - ${GAP_PX + 1}px)`
+                : `calc(100% - ${EDGE_PX * 2}px)`;
+              const leftCalc = hasOverlap
+                ? `calc(${stackIndex * (100 / stackCount)}% + ${GAP_PX}px)`
+                : `${EDGE_PX}px`;
 
               // Altura e posição baseada na duração: 48px/slot mobile, 60px/slot desktop (cada slot = 30min)
               const duration = apt.duration || 60;
@@ -295,8 +305,8 @@ export const DayColumn = memo(
                     {
                       top: `${topMobile}px`,
                       height: `${heightMobile}px`,
-                      left: hasOverlap ? `${leftPercent}%` : "4px",
-                      width: hasOverlap ? `${widthPercent}%` : "calc(100% - 8px)",
+                      left: leftCalc,
+                      width: widthCalc,
                       ["--top-desktop" as string]: `${topDesktop}px`,
                       ["--height-desktop" as string]: `${heightDesktop}px`,
                       zIndex: hasOverlap ? 10 + stackIndex : undefined,

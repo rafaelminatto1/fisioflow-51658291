@@ -24,10 +24,12 @@ import {
   BarChart3,
   FolderOpen,
   Command,
+  Brain,
   type LucideIcon,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import { toast } from "@/hooks/use-toast";
 import { normalizeText } from "@/lib/utils/string";
 import { APP_ROUTES, patientRoutes } from "@/lib/routing/appRoutes";
 
@@ -313,7 +315,6 @@ export function CommandPalette({
           toast({
             title: "FisioBrain Ativado",
             description: "Gerando resumo clínico...",
-            icon: <Sparkles className="h-4 w-4 text-violet-500" />,
           });
           // Logic would go here
         },
