@@ -76,7 +76,7 @@ jobs:
 
       # ─── Dependências ─────────────────────────────────────────────────────────
       - name: Instalar dependências (pnpm)
-        run: pnpm install --frozen-lockfile
+        run: pnpm install --no-frozen-lockfile
 
       # ─── EAS CLI ──────────────────────────────────────────────────────────────
       - name: Setup EAS CLI

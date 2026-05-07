@@ -21,6 +21,7 @@ import {
   useCameraFormat,
   useFrameProcessor,
   runAtTargetFps,
+  runOnJS,
 } from "react-native-vision-camera";
 import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
@@ -262,9 +263,6 @@ export default function BiomechanicsScreen() {
     for (const [key, idx] of Object.entries(mapping)) {
       const pt = points[key];
       if (pt) {
-        // Apply coordinate space transformation if needed
-        // For 3D Vision landmarks, they are camera-relative.
-        // For 2D they are normalized 0-1.
         landmarks[idx] = {
           x: pt.x,
           y: pt.y,
@@ -277,22 +275,6 @@ export default function BiomechanicsScreen() {
     return landmarks;
   }, []);
 
-  const _frameProcessor = useFrameProcessor(
-    (frame) => {
-      "worklet";
-      runAtTargetFps(30, () => {
-        "worklet";
-        const _results = detectPose(frame);
-        // Since mapVisionToPoseLandmarks is not a worklet, we need to pass data back to JS
-        // In Vision Camera v4/Worklets-Core, we use runOnJS
-      });
-    },
-    [detectPose],
-  );
-
-  // Update landmarks from native plugin
-  // Actually, we should use a simpler approach for the demo:
-  // expose the setter and call it via runOnJS
   const updatePose = useCallback(
     (visionResults: any[]) => {
       const lms = mapVisionToPoseLandmarks(visionResults);
@@ -308,7 +290,6 @@ export default function BiomechanicsScreen() {
         "worklet";
         const results = detectPose(frame);
         if (results && results.length > 0) {
-          // @ts-ignore - runOnJS is injected by worklets
           runOnJS(updatePose)(results);
         }
       });
