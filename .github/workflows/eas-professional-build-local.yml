@@ -1,11 +1,16 @@
-name: iOS Build Local — Professional App (macOS)
+name: iOS Build Local — Professional App
 
-# Build iOS no runner macOS do GitHub Actions usando eas build --local.
-# Não consome quota de builds do EAS cloud — o Xcode roda no próprio runner.
+# Build iOS no runner macos-14 (M1 / Xcode 15.4) usando eas build --local.
+# Não consome quota de builds do EAS cloud.
+#
+# Por que macos-14?
+#   • Xcode 15.4 é o default — compatível com RN 0.81 (mínimo: Xcode 15.4)
+#   • Xcode 16.x (macos-15) tem bug no Clang 16 que quebra react-native-safe-area-context
+#   • Runner M1 (arm64) = compilação ARM64 nativa, mais rápida para iOS
 #
 # Triggers:
-#  1. workflow_dispatch → disparo manual com escolha de perfil
-#  2. push em main com mudanças no professional-app → preview automático
+#   1. workflow_dispatch — disparo manual com escolha de perfil
+#   2. push em main com mudanças no professional-app
 
 on:
   workflow_dispatch:
@@ -28,52 +33,65 @@ concurrency:
   group: ios-local-pro-${{ github.ref }}-${{ inputs.profile || 'preview' }}
   cancel-in-progress: true
 
+env:
+  PROFILE: ${{ inputs.profile || 'preview' }}
+
 jobs:
   build-ios:
-    name: iOS Local Build (${{ inputs.profile || 'preview' }})
-    runs-on: macos-latest
+    name: iOS ${{ inputs.profile || 'preview' }} (macos-14 / Xcode 15.4)
+    runs-on: macos-14        # M1 arm64 — Xcode 15.4 default, compatível com RN 0.81
     timeout-minutes: 90
 
     steps:
+      # ─── Checkout ────────────────────────────────────────────────────────────
       - name: Checkout
         uses: actions/checkout@v4
 
-      # Xcode 16.4 quebra react-native-safe-area-context@5.0.0 (C++ compile error).
-      # Xcode 16.2 é a versão estável e testada para React Native 0.81.x.
-      - name: Selecionar Xcode 16.2
-        uses: maxim-lobanov/setup-xcode@v1
-        with:
-          xcode-version: "16.2"
+      # ─── Ambiente ────────────────────────────────────────────────────────────
+      - name: Versões do ambiente
+        run: |
+          xcodebuild -version
+          pod --version
+          sw_vers
 
       - uses: pnpm/action-setup@v4
 
-      - name: Setup Node.js
+      - name: Setup Node.js 22
         uses: actions/setup-node@v4
         with:
           node-version: "22"
           cache: "pnpm"
 
-      - name: Instalar dependências
+      # ─── Cache pnpm store ─────────────────────────────────────────────────────
+      - name: Cache pnpm store
+        uses: actions/cache@v4
+        with:
+          path: ~/.pnpm-store
+          key: pnpm-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: pnpm-${{ runner.os }}-
+
+      # ─── Dependências ─────────────────────────────────────────────────────────
+      - name: Instalar dependências (pnpm)
         run: pnpm install --frozen-lockfile
 
+      # ─── EAS CLI ──────────────────────────────────────────────────────────────
       - name: Setup EAS CLI
         uses: expo/expo-github-action@v8
         with:
           eas-version: latest
           token: ${{ secrets.EXPO_TOKEN }}
 
-      - name: Verificar versões (Xcode / CocoaPods)
-        run: |
-          xcodebuild -version
-          pod --version
-
+      # ─── Build local iOS ──────────────────────────────────────────────────────
       - name: Build iOS local (eas build --local)
         working-directory: apps/professional-app
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+          # RN 0.81: binários pré-compilados para reduzir tempo de compilação
+          RCT_USE_PREBUILT_RNCORE: "1"
+          RCT_USE_RN_DEP: "1"
         run: |
-          PROFILE="${{ inputs.profile || 'preview' }}"
-          echo "Iniciando build iOS local com perfil: $PROFILE"
+          echo "Perfil: $PROFILE"
+          echo "Xcode: $(xcodebuild -version | head -1)"
           eas build \
             --platform ios \
             --profile "$PROFILE" \
@@ -81,15 +99,18 @@ jobs:
             --non-interactive \
             --output "${{ github.workspace }}/build.ipa"
 
-      - name: Upload .ipa como artefato
+      # ─── Artefato ─────────────────────────────────────────────────────────────
+      - name: Upload .ipa
+        if: success()
         uses: actions/upload-artifact@v4
         with:
-          name: fisioflow-pro-ios-${{ inputs.profile || 'preview' }}-${{ github.run_number }}
+          name: fisioflow-pro-${{ env.PROFILE }}-${{ github.run_number }}
           path: build.ipa
           retention-days: 14
 
+      # ─── TestFlight ───────────────────────────────────────────────────────────
       - name: Submeter ao TestFlight
-        if: ${{ (inputs.profile == 'testflight' || inputs.profile == 'production') }}
+        if: ${{ success() && (env.PROFILE == 'testflight' || env.PROFILE == 'production') }}
         working-directory: apps/professional-app
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
@@ -99,20 +120,21 @@ jobs:
             --non-interactive \
             --path "${{ github.workspace }}/build.ipa"
 
+      # ─── Resumo ───────────────────────────────────────────────────────────────
       - name: Resumo
         if: always()
         run: |
           echo ""
           echo "========================================================"
           echo "  iOS LOCAL BUILD — FisioFlow Pro"
-          echo "  Perfil : ${{ inputs.profile || 'preview' }}"
-          echo "  Runner : ${{ runner.os }} / ${{ runner.arch }}"
-          echo ""
+          echo "  Perfil  : $PROFILE"
+          echo "  Runner  : ${{ runner.os }} ${{ runner.arch }} (macos-14)"
+          echo "  Commit  : ${{ github.sha }}"
           if [ -f "${{ github.workspace }}/build.ipa" ]; then
             SIZE=$(du -sh "${{ github.workspace }}/build.ipa" | cut -f1)
-            echo "  .ipa gerado: $SIZE"
-            echo "  Artefato disponível na aba Actions > Artifacts"
+            echo "  .ipa    : $SIZE ✅"
+            echo "  Artefato disponível em: Actions → Artifacts"
           else
-            echo "  .ipa NAO gerado — verificar logs acima"
+            echo "  .ipa    : NÃO GERADO ❌ — ver logs acima"
           fi
           echo "========================================================"
