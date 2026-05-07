@@ -2,4 +2,6 @@
 #import <VisionCamera/FrameProcessorPlugin.h>
 #import <VisionCamera/FrameProcessorPluginRegistry.h>
 
-VISION_EXPORT_FRAME_PROCESSOR(PoseDetectorFrameProcessorPlugin, detectPose)
+@class PoseDetectorFrameProcessorPlugin;
+
+VISION_EXPORT_SWIFT_FRAME_PROCESSOR(PoseDetectorFrameProcessorPlugin, detectPose)
