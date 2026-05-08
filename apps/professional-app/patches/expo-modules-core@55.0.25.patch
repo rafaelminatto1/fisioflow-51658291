@@ -27,3 +27,21 @@ index 0000000000000000000000000000000000000000..4a5f1c9e7a2b45dd9724bbe6e6e1a22d
 +@end
 +
 +#endif /* EXEventEmitter_h */
+diff --git a/ios/EXLegacyExpoViewProtocol.h b/ios/EXLegacyExpoViewProtocol.h
+new file mode 100644
+index 0000000000000000000000000000000000000000..c8ac3e559481ad8fb9e2e443bb65e01372ce9e4c
+--- /dev/null
++++ b/ios/EXLegacyExpoViewProtocol.h
+@@ -0,0 +1,12 @@
++// EXLegacyExpoViewProtocol.h — Compatibility stub for expo-modules-core@55.x
++// Allows expo-av@16.x to compile by providing the missing protocol.
++
++#ifndef EXLegacyExpoViewProtocol_h
++#define EXLegacyExpoViewProtocol_h
++
++#import <Foundation/Foundation.h>
++
++@protocol EXLegacyExpoViewProtocol <NSObject>
++@end
++
++#endif /* EXLegacyExpoViewProtocol_h */
