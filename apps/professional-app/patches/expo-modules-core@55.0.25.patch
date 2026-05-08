@@ -79,3 +79,23 @@ index 7412ee7..b5e4820 100644
 +#ifndef EXFatal
 +#define EXFatal(error) @throw [NSException exceptionWithName:@"ExpoFatalException" reason:[error localizedDescription] userInfo:nil]
 +#endif
+diff --git a/ios/EXDefines.h b/ios/EXDefines.h
+index 7412ee7..19f26b0 100644
+--- a/ios/EXDefines.h
++++ b/ios/EXDefines.h
+@@ -93,3 +93,15 @@ typedef struct EXModuleInfo {
+ typedef void (^EXDirectEventBlock)(NSDictionary *body);
+ typedef void (NS_SWIFT_SENDABLE ^EXPromiseResolveBlock)(id result);
+ typedef void (NS_SWIFT_SENDABLE ^EXPromiseRejectBlock)(NSString *code, NSString *message, NSError *error);
++
++#ifndef EXLogInfo
++#define EXLogInfo(...) NSLog(@"[INFO] " __VA_ARGS__)
++#endif
++
++#ifndef EXLogWarn
++#define EXLogWarn(...) NSLog(@"[WARN] " __VA_ARGS__)
++#endif
++
++#ifndef EXLogError
++#define EXLogError(...) NSLog(@"[ERROR] " __VA_ARGS__)
++#endif
