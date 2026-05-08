@@ -1,142 +1,29 @@
-diff --git a/ios/EXAppLifecycleListener.h b/ios/EXAppLifecycleListener.h
+diff --git a/ios/EXEventEmitter.h b/ios/EXEventEmitter.h
 new file mode 100644
-index 0000000000000000000000000000000000000000..36be7c326ab428cfd5021410fda57ef69de29a51
+index 0000000000000000000000000000000000000000..4a5f1c9e7a2b45dd9724bbe6e6e1a22d711a8a72
 --- /dev/null
-+++ b/ios/EXAppLifecycleListener.h
-@@ -0,0 +1,17 @@
-+// Copyright © 2018 650 Industries. All rights reserved.
++++ b/ios/EXEventEmitter.h
+@@ -0,0 +1,23 @@
++// EXEventEmitter.h — Compatibility stub for expo-modules-core@55.x
++// The EXEventEmitter protocol was removed in SDK 55; this stub
++// allows expo-av@16.x (which still references it) to compile.
++// expo-av's EXAV class adopts this protocol, but since SDK 55
++// no longer enforces it, the stub simply marks the conformance.
++
++#ifndef EXEventEmitter_h
++#define EXEventEmitter_h
 +
 +#import <Foundation/Foundation.h>
 +
-+// Utility protocol helping modules to register with specific platform adapter
-+// for application lifecycle events.
++@protocol EXEventEmitter <NSObject>
 +
-+@protocol EXAppLifecycleListener <NSObject>
-+
-+- (void)onAppBackgrounded;
-+- (void)onAppForegrounded;
++- (NSArray<NSString *> *)supportedEvents;
++- (void)startObserving;
++- (void)stopObserving;
 +
 +@optional
-+- (void)onAppContentDidAppear;
-+- (void)onAppContentWillReload;
++- (NSDictionary *)constantsToExport;
 +
 +@end
-diff --git a/ios/EXAppLifecycleService.h b/ios/EXAppLifecycleService.h
-new file mode 100644
-index 0000000000000000000000000000000000000000..c895670c98a78262c5db7f255d6e85bd76b7e9bf
---- /dev/null
-+++ b/ios/EXAppLifecycleService.h
-@@ -0,0 +1,14 @@
-+// Copyright © 2018 650 Industries. All rights reserved.
 +
-+#import <Foundation/Foundation.h>
-+
-+#import <ExpoModulesCore/EXAppLifecycleListener.h>
-+
-+@protocol EXAppLifecycleService <NSObject>
-+
-+- (void)registerAppLifecycleListener:(id<EXAppLifecycleListener>)listener;
-+- (void)unregisterAppLifecycleListener:(id<EXAppLifecycleListener>)listener;
-+- (void)setAppStateToBackground;
-+- (void)setAppStateToForeground;
-+
-+@end
-diff --git a/ios/EXInternalModule.h b/ios/EXInternalModule.h
-new file mode 100644
-index 0000000000000000000000000000000000000000..693a4729242266700ddbdf21fee3d001abe4b861
---- /dev/null
-+++ b/ios/EXInternalModule.h
-@@ -0,0 +1,15 @@
-+// Copyright © 2018 650 Industries. All rights reserved.
-+
-+#import <Foundation/Foundation.h>
-+
-+// Register a class implementing this protocol in EXModuleClasses
-+// of EXModuleRegistryProvider (macros defined in EXDefines.h should help you)
-+// to make the module available under any of `exportedInterfaces`
-+// via EXModuleRegistry.
-+
-+@protocol EXInternalModule <NSObject>
-+
-+- (instancetype)init;
-++ (const NSArray<Protocol *> *)exportedInterfaces;
-+
-+@end
-diff --git a/ios/EXJavaScriptContextProvider.h b/ios/EXJavaScriptContextProvider.h
-new file mode 100644
-index 0000000000000000000000000000000000000000..e3c521777360140ad3c2d239eca5eb1f6368b168
---- /dev/null
-+++ b/ios/EXJavaScriptContextProvider.h
-@@ -0,0 +1,11 @@
-+// Copyright © 2018 650 Industries. All rights reserved.
-+
-+#import <Foundation/Foundation.h>
-+#import <JavaScriptCore/JavaScriptCore.h>
-+
-+@protocol EXJavaScriptContextProvider <NSObject>
-+
-+- (JSGlobalContextRef)javaScriptContextRef;
-+- (void *)javaScriptRuntimePointer;
-+
-+@end
-diff --git a/ios/EXModuleRegistryConsumer.h b/ios/EXModuleRegistryConsumer.h
-new file mode 100644
-index 0000000000000000000000000000000000000000..76d7e6dfe3ea518501f968ba522ee1ad6f700661
---- /dev/null
-+++ b/ios/EXModuleRegistryConsumer.h
-@@ -0,0 +1,15 @@
-+// Copyright © 2018 650 Industries. All rights reserved.
-+
-+#import <Foundation/Foundation.h>
-+
-+#import <ExpoModulesCore/EXModuleRegistry.h>
-+
-+// Implement this protocol in any module registered
-+// in EXModuleRegistry to receive an instance of the module registry
-+// when it's initialized (ready to provide references to other modules).
-+
-+@protocol EXModuleRegistryConsumer <NSObject>
-+
-+- (void)setModuleRegistry:(nonnull EXModuleRegistry *)moduleRegistry;
-+
-+@end
-diff --git a/ios/EXUIManager.h b/ios/EXUIManager.h
-new file mode 100644
-index 0000000000000000000000000000000000000000..00b994ab7099cb748e17264d5d37c8cc5fe1789f
---- /dev/null
-+++ b/ios/EXUIManager.h
-@@ -0,0 +1,17 @@
-+// Copyright © 2018 650 Industries. All rights reserved.
-+
-+#import <Foundation/Foundation.h>
-+
-+#import <ExpoModulesCore/Platform.h>
-+
-+@protocol EXUIManager <NSObject>
-+
-+- (void)addUIBlock:(void (^)(NSDictionary<id, UIView *> *))block;
-+- (void)addUIBlock:(void (^)(id))block forView:(id)viewId ofClass:(Class)klass;
-+- (void)addUIBlock:(void (^)(id))block forView:(id)viewId implementingProtocol:(Protocol *)protocol;
-+- (void)executeUIBlock:(void (^)(NSDictionary<id, UIView *> *))block;
-+- (void)executeUIBlock:(void (^)(id))block forView:(id)viewId ofClass:(Class)klass;
-+- (void)executeUIBlock:(void (^)(id))block forView:(id)viewId implementingProtocol:(Protocol *)protocol;
-+- (void)dispatchOnClientThread:(dispatch_block_t)block;
-+
-+@end
-diff --git a/ios/EXUtilitiesInterface.h b/ios/EXUtilitiesInterface.h
-new file mode 100644
-index 0000000000000000000000000000000000000000..e3744d79a9f41fb05ea1a13f231b51224ecc3f18
---- /dev/null
-+++ b/ios/EXUtilitiesInterface.h
-@@ -0,0 +1,11 @@
-+// Copyright 2015-present 650 Industries. All rights reserved.
-+
-+#import <ExpoModulesCore/Platform.h>
-+
-+@protocol EXUtilitiesInterface
-+
-+- (nullable NSDictionary *)launchOptions;
-+
-+- (nullable UIViewController *)currentViewController;
-+
-+@end
++#endif /* EXEventEmitter_h */
