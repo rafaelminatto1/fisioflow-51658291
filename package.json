@@ -274,6 +274,9 @@
       "expo-modules-core": "55.0.25",
       "expo-constants": "55.0.16",
       "expo-keep-awake": "55.0.8"
+    },
+    "patchedDependencies": {
+      "expo-modules-core@55.0.25": "apps/professional-app/patches/expo-modules-core@55.0.25.patch"
     }
   }
 }
