@@ -101,12 +101,7 @@ export function useLazyCamera() {
   return useLazyModule(() => import("expo-camera").then((m) => m.Camera), "expo-camera");
 }
 
-/**
- * Hook para carregar o módulo de áudio sob demanda
- */
-export function useLazyAudio() {
-  return useLazyModule(() => import("expo-av").then((m) => m.Audio), "expo-av");
-}
+
 
 /**
  * Hook para carregar o módulo de localização sob demanda
@@ -159,7 +154,6 @@ export async function preloadPostLoginModules(): Promise<void> {
 export default {
   useLazyModule,
   useLazyCamera,
-  useLazyAudio,
   useLazyLocation,
   useLazyMediaLibrary,
   useLazyCalendars,
