@@ -10,20 +10,20 @@ Pod::Spec.new do |s|
   s.license        = 'MIT'
   s.author         = 'FisioFlow'
   s.homepage       = 'https://fisioflow.com.br'
-  s.platform       = :ios, "15.1"
-  s.swift_version  = '5.4'
+  s.platform       = :ios, '15.1'
+  s.swift_version  = '5.9'
   s.source         = { git: '' }
   s.static_framework = false
 
   s.dependency 'ExpoModulesCore'
-  s.dependency 'VisionCamera'
-  s.dependency 'react-native-worklets-core'
 
+  # Vision framework is linked automatically via system frameworks
+  s.frameworks     = 'Vision', 'AVFoundation'
 
   s.pod_target_xcconfig = {
-    'DEFINES_MODULE' => 'YES',
-    'SWIFT_COMPILATION_MODE' => 'wholemodule'
+    'DEFINES_MODULE'          => 'YES',
+    'SWIFT_COMPILATION_MODE'  => 'wholemodule'
   }
 
-  s.source_files = "ios/**/*.{h,m,swift}"
+  s.source_files = 'ios/**/*.{h,m,swift}'
 end
