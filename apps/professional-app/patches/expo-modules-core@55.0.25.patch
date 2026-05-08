@@ -27,6 +27,24 @@ index 0000000000000000000000000000000000000000..4a5f1c9e7a2b45dd9724bbe6e6e1a22d
 +@end
 +
 +#endif /* EXEventEmitter_h */
+diff --git a/ios/EXEventEmitterService.h b/ios/EXEventEmitterService.h
+new file mode 100644
+index 0000000000000000000000000000000000000000..ea909ea8245c274838683839a880d2cfac2ee499
+--- /dev/null
++++ b/ios/EXEventEmitterService.h
+@@ -0,0 +1,12 @@
++// EXEventEmitterService.h — Compatibility stub for expo-modules-core@55.x
++// Allows expo-av@16.x to compile by providing the missing protocol.
++
++#ifndef EXEventEmitterService_h
++#define EXEventEmitterService_h
++
++#import <Foundation/Foundation.h>
++
++@protocol EXEventEmitterService <NSObject>
++@end
++
++#endif /* EXEventEmitterService_h */
 diff --git a/ios/EXLegacyExpoViewProtocol.h b/ios/EXLegacyExpoViewProtocol.h
 new file mode 100644
 index 0000000000000000000000000000000000000000..c8ac3e559481ad8fb9e2e443bb65e01372ce9e4c
@@ -45,3 +63,19 @@ index 0000000000000000000000000000000000000000..c8ac3e559481ad8fb9e2e443bb65e013
 +@end
 +
 +#endif /* EXLegacyExpoViewProtocol_h */
+diff --git a/ios/EXDefines.h b/ios/EXDefines.h
+index 7412ee7..b5e4820 100644
+--- a/ios/EXDefines.h
++++ b/ios/EXDefines.h
+@@ -93,3 +93,11 @@ typedef struct EXModuleInfo {
+ typedef void (^EXDirectEventBlock)(NSDictionary *body);
+ typedef void (NS_SWIFT_SENDABLE ^EXPromiseResolveBlock)(id result);
+ typedef void (NS_SWIFT_SENDABLE ^EXPromiseRejectBlock)(NSString *code, NSString *message, NSError *error);
++
++#ifndef EXErrorWithMessage
++#define EXErrorWithMessage(msg) [NSError errorWithDomain:@"ExpoError" code:1 userInfo:@{ NSLocalizedDescriptionKey: msg }]
++#endif
++
++#ifndef EXFatal
++#define EXFatal(error) @throw [NSException exceptionWithName:@"ExpoFatalException" reason:[error localizedDescription] userInfo:nil]
++#endif
