@@ -1,18 +1,12 @@
-import { useState } from "react";
 import {
-  TrendingUp,
-  TrendingDown,
   AlertTriangle,
-  Users,
   Calendar,
   DollarSign,
-  Target,
+  Users,
   Activity,
   Info,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
@@ -91,47 +85,16 @@ function KPICard({ label, value, light = "green", icon, hint, sub }: KPICardProp
   );
 }
 
-const CAC_STORAGE_KEY = "fisioflow_cac_manual";
-
 export function ClinicHealthKPIs() {
   const { data: kpis, isLoading } = useClinicHealthKPIs();
-  const [cacInput, setCacInput] = useState<string>(() => {
-    return localStorage.getItem(CAC_STORAGE_KEY) ?? "";
-  });
-
-  const cac = parseFloat(cacInput.replace(",", ".")) || 0;
-
-  const handleCacChange = (val: string) => {
-    setCacInput(val);
-    if (val) localStorage.setItem(CAC_STORAGE_KEY, val);
-    else localStorage.removeItem(CAC_STORAGE_KEY);
-  };
-
-  const ltv = kpis?.ltv_estimate ?? 0;
-  const ltvcac = cac > 0 && ltv > 0 ? Math.round((ltv / cac) * 10) / 10 : null;
-  const payback = cac > 0 && (kpis?.avg_ticket ?? 0) > 0
-    ? Math.round((cac / (kpis!.avg_ticket * (kpis!.avg_sessions_per_patient_6m / 6))) * 10) / 10
-    : null;
-
-  const ltvcacLight: TrafficLight = ltvcac === null ? "yellow"
-    : ltvcac >= 3 ? "green"
-    : ltvcac >= 1 ? "yellow"
-    : "red";
 
   if (isLoading) {
     return (
-      <Card className="border-0 shadow-none bg-transparent">
-        <CardHeader className="pb-3 px-0">
-          <Skeleton className="h-5 w-48" />
-        </CardHeader>
-        <CardContent className="px-0">
-          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3">
-            {Array.from({ length: 7 }).map((_, i) => (
-              <Skeleton key={i} className="h-24 rounded-2xl" />
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-4 gap-3">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <Skeleton key={i} className="h-32 rounded-2xl" />
+        ))}
+      </div>
     );
   }
 
@@ -142,20 +105,20 @@ export function ClinicHealthKPIs() {
   const ticketLight = semaphore(kpis.avg_ticket, 150, 80);
 
   return (
-    <Card className="border border-border/50 shadow-sm bg-card/80 backdrop-blur-sm">
-      <CardHeader className="pb-3">
+    <Card className="border border-border/50 shadow-sm bg-card/80 backdrop-blur-sm rounded-[2.5rem]">
+      <CardHeader className="pb-3 px-8 pt-8">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-sm font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+          <CardTitle className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 flex items-center gap-2">
             <Activity className="h-4 w-4 text-primary" />
-            Saúde do Negócio
+            Métricas Operacionais
           </CardTitle>
           <span className="text-[11px] text-muted-foreground font-medium">
             {new Date(kpis.period.start + "T12:00:00").toLocaleString("pt-BR", { month: "long", year: "numeric" })}
           </span>
         </div>
       </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-3">
+      <CardContent className="p-8 pt-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <KPICard
             label="Ocupação"
             value={`${fmt(kpis.occupancy_rate, 1)}%`}
@@ -181,58 +144,13 @@ export function ClinicHealthKPIs() {
             sub={`${kpis.appointments.completed} sessões pagas`}
           />
           <KPICard
-            label="LTV Estimado"
-            value={ltv > 0 ? fmtBRL(ltv) : "—"}
-            light={ltv > 0 ? "green" : "yellow"}
-            icon={<TrendingUp className="h-4 w-4" />}
-            hint="Valor estimado por paciente: média de sessões em 6 meses × 2 ciclos anuais × ticket médio"
-            sub={`~${fmt(kpis.avg_sessions_per_patient_6m, 1)} sessões/paciente em 6m`}
-          />
-          <KPICard
             label="Pacientes Ativos"
             value={fmt(kpis.active_patients)}
             light={kpis.active_patients > 0 ? "green" : "yellow"}
             icon={<Users className="h-4 w-4" />}
             hint="Pacientes com ao menos 1 sessão nos últimos 60 dias"
-            sub={kpis.at_risk_patients > 0 ? `${kpis.at_risk_patients} em risco` : undefined}
+            sub={kpis.at_risk_patients > 0 ? `${kpis.at_risk_patients} em risco` : "Base estável"}
           />
-          <KPICard
-            label="LTV:CAC"
-            value={ltvcac !== null ? `${ltvcac}:1` : "—"}
-            light={ltvcacLight}
-            icon={ltvcacLight === "green" ? <TrendingUp className="h-4 w-4" /> : <TrendingDown className="h-4 w-4" />}
-            hint="Razão entre LTV estimado e CAC mensal. Meta: ≥3:1 (verde), 1-3:1 (amarelo), <1:1 (vermelho)"
-            sub={cac > 0 ? `CAC: ${fmtBRL(cac)}` : "Informe o CAC abaixo"}
-          />
-          <KPICard
-            label="Payback"
-            value={payback !== null ? `${fmt(payback, 1)} meses` : "—"}
-            light={payback === null ? "yellow" : payback <= 6 ? "green" : payback <= 12 ? "yellow" : "red"}
-            icon={<Target className="h-4 w-4" />}
-            hint="Meses para recuperar o CAC com a receita mensal média por paciente. Meta: ≤6 meses"
-            sub={cac > 0 ? undefined : "Informe o CAC abaixo"}
-          />
-        </div>
-
-        {/* CAC input */}
-        <div className="flex items-end gap-3 pt-1 border-t border-border/40">
-          <div className="flex-1 max-w-[200px]">
-            <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1.5 block">
-              CAC Mensal (R$)
-            </Label>
-            <Input
-              type="number"
-              min="0"
-              step="10"
-              placeholder="Ex: 500"
-              value={cacInput}
-              onChange={(e) => handleCacChange(e.target.value)}
-              className="h-8 text-sm font-semibold"
-            />
-          </div>
-          <p className="text-[11px] text-muted-foreground pb-1.5 leading-snug max-w-[300px]">
-            Soma dos gastos com marketing e vendas no mês. Usado para calcular LTV:CAC e Payback.
-          </p>
         </div>
       </CardContent>
     </Card>

@@ -12,7 +12,9 @@ import { RevenueForecastCard } from "@/components/dashboard/RevenueForecastCard"
 import { TeamPerformanceKPIs } from "@/components/dashboard/TeamPerformanceKPIs";
 import { ChurnReportCard } from "@/components/dashboard/ChurnReportCard";
 import { SetupChecklist } from "@/components/dashboard/SetupChecklist";
+import { BusinessIntelligenceKPIs } from "@/components/dashboard/BusinessIntelligenceKPIs";
 import { cn } from "@/lib/utils";
+import { motion } from "framer-motion";
 
 type ViewMode = "today" | "week";
 
@@ -75,7 +77,14 @@ export function SmartDashboardContent() {
         </div>
       )}
 
-      <SetupChecklist />
+
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8, delay: 0.1 }}
+      >
+        <BusinessIntelligenceKPIs />
+      </motion.div>
 
       <ClinicHealthKPIs />
 
