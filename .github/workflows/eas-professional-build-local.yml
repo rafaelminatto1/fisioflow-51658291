@@ -92,6 +92,8 @@ jobs:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
           FASTLANE_XCODEBUILD_SETTINGS_RETRIES: "10"
           FASTLANE_XCODEBUILD_SETTINGS_TIMEOUT: "600"
+          SENTRY_DISABLE_AUTO_UPLOAD: "true"
+          SENTRY_ALLOW_FAILURE: "true"
         run: |
           echo "Perfil: $PROFILE"
           echo "Xcode: $(xcodebuild -version | head -1)"
