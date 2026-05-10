@@ -1,3 +1,5 @@
+import { Hono } from "hono";
+import type { Env } from "../types/env";
 import { requireAuth, type AuthVariables } from "../lib/auth";
 import { requirePatientAuth, type PatientUser } from "../lib/auth/patientAuth";
 import { createPool } from "../lib/db";
