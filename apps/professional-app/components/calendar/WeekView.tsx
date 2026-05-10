@@ -188,36 +188,84 @@ export const WeekView = ({
                   ))}
 
                   {/* Appointments */}
-                  {getAppointmentsForDay(day).map((apt) => {
-                    const { hour, minutes } = getTimeParts(apt.time, apt.date);
-                    if (hour < startHour || hour > endHour) return null;
+                  {(() => {
+                    // Filter and map basic positions
+                    const dayApts = getAppointmentsForDay(day)
+                      .map((apt) => {
+                        const { hour, minutes } = getTimeParts(apt.time, apt.date);
+                        if (hour < startHour || hour > endHour) return null;
 
-                    const top = (hour - startHour) * HOUR_HEIGHT + (minutes / 60) * HOUR_HEIGHT;
-                    const height = (apt.duration / 60) * HOUR_HEIGHT;
-                    const aptWithPos = { ...apt, top, height };
+                        const top = (hour - startHour) * HOUR_HEIGHT + (minutes / 60) * HOUR_HEIGHT;
+                        const height = (apt.duration / 60) * HOUR_HEIGHT;
+                        return { ...apt, top, height };
+                      })
+                      .filter(Boolean) as Array<AppointmentBase & { top: number; height: number }>;
 
-                    return (
-                      <DraggableAptCard
-                        key={apt.id}
-                        apt={aptWithPos}
-                        pos={{ left: 2, width: dayWidth - 4 }}
-                        startHour={startHour}
-                        endHour={endHour}
-                        hourHeight={HOUR_HEIGHT}
-                        targetDay={day}
-                        allDays={days}
-                        columnWidth={dayWidth}
-                        onReschedule={onReschedule}
-                        onRescheduleRequest={onRescheduleRequest}
-                        onScrollEnable={setScrollEnabled}
-                        colors={{
-                          primary: colors.primary,
-                          textSecondary: colors.textSecondary,
-                        }}
-                        onPress={() => router.push(`/appointment-form?id=${apt.id}` as any)}
-                      />
-                    );
-                  })}
+                    // Detect overlaps
+                    const groups: Array<Array<{ top: number; height: number; id: string; index: number }>> = [];
+                    dayApts.forEach((apt, index) => {
+                      const aptWithIndex = { ...apt, index };
+                      let addedToGroup = false;
+
+                      for (const group of groups) {
+                        const overlapsWithGroup = group.some((existing) => {
+                          const aptEnd = apt.top + apt.height;
+                          const existingEnd = existing.top + existing.height;
+                          return !(aptEnd <= existing.top + 2 || apt.top >= existingEnd - 2);
+                        });
+
+                        if (overlapsWithGroup) {
+                          group.push(aptWithIndex);
+                          addedToGroup = true;
+                          break;
+                        }
+                      }
+                      if (!addedToGroup) groups.push([aptWithIndex]);
+                    });
+
+                    // Calculate positioning
+                    const positioning = new Map<string, { left: number; width: number }>();
+                    const availableWidth = dayWidth - 4; // 2px margin each side
+                    groups.forEach((group) => {
+                      const groupSize = group.length;
+                      group.forEach((apt, indexInGroup) => {
+                        const widthPerItem = availableWidth / groupSize;
+                        const leftPosition = widthPerItem * indexInGroup + 2;
+                        const gap = 4;
+                        positioning.set(apt.id, {
+                          left: leftPosition + (indexInGroup > 0 ? gap / 2 : 0),
+                          width: widthPerItem - (groupSize > 1 ? gap : 0),
+                        });
+                      });
+                    });
+
+                    // Render
+                    return dayApts.map((aptWithPos) => {
+                      const pos = positioning.get(aptWithPos.id) || { left: 2, width: dayWidth - 4 };
+
+                      return (
+                        <DraggableAptCard
+                          key={aptWithPos.id}
+                          apt={aptWithPos}
+                          pos={pos}
+                          startHour={startHour}
+                          endHour={endHour}
+                          hourHeight={HOUR_HEIGHT}
+                          targetDay={day}
+                          allDays={days}
+                          columnWidth={dayWidth}
+                          onReschedule={onReschedule}
+                          onRescheduleRequest={onRescheduleRequest}
+                          onScrollEnable={setScrollEnabled}
+                          colors={{
+                            primary: colors.primary,
+                            textSecondary: colors.textSecondary,
+                          }}
+                          onPress={() => router.push(`/appointment-form?id=${aptWithPos.id}` as any)}
+                        />
+                      );
+                    });
+                  })()}
                 </View>
               ))}
             </View>

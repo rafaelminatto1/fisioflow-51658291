@@ -86,6 +86,7 @@ interface EvolutionHeaderProps {
   toggleInsights: () => void;
   onShowTemplateModal: () => void;
   onShowKeyboardHelp: () => void;
+  onShowAIScribe: () => void;
   therapists?: TherapistOption[];
   selectedTherapistId?: string;
   onTherapistChange?: (therapistId: string) => void;
@@ -221,6 +222,7 @@ export const EvolutionHeader = memo(
     toggleInsights,
     onShowTemplateModal,
     onShowKeyboardHelp,
+    onShowAIScribe,
     therapists = [],
     selectedTherapistId = "",
     onTherapistChange,
@@ -302,6 +304,17 @@ export const EvolutionHeader = memo(
           {/* Ações primárias */}
           <div className="flex items-center gap-3 shrink-0">
             {showFirstEvolution && <FirstEvolutionBadge />}
+            <Button
+              onClick={onShowAIScribe}
+              size="sm"
+              variant="outline"
+              className="h-10 px-4 bg-blue-50 hover:bg-blue-100 border-blue-200 text-blue-700 text-xs font-black transition-all group relative overflow-hidden"
+            >
+              <div className="absolute inset-0 bg-gradient-to-r from-blue-400/10 to-indigo-400/10 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
+              <Mic className="h-3.5 w-3.5 mr-2 animate-pulse text-blue-600" />
+              <span className="uppercase tracking-widest">Voice Scribe</span>
+              <Badge className="ml-2 bg-blue-600 text-white text-[9px] px-1 py-0 border-0 h-4">IA</Badge>
+            </Button>
             <Button
               onClick={onSave}
               size="sm"

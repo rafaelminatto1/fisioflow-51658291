@@ -22,6 +22,7 @@ export * from "./patients";
 export * from "./scheduling";
 export * from "./system";
 export * from "./tracking";
+export * from "./clinicMetrics";
 
 // export { biomechanicsApi, type BiomechanicsData } from "./clinical"; // Replaced by the module above
 

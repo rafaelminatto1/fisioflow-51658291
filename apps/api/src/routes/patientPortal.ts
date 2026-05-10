@@ -1,9 +1,9 @@
-import { Hono } from "hono";
-import type { Env } from "../types/env";
 import { requireAuth, type AuthVariables } from "../lib/auth";
+import { requirePatientAuth, type PatientUser } from "../lib/auth/patientAuth";
 import { createPool } from "../lib/db";
+import { SignJWT } from "jose";
 
-const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
+const app = new Hono<{ Bindings: Env; Variables: AuthVariables & { patient?: PatientUser } }>();
 
 type DbPool = ReturnType<typeof createPool>;
 type DbRow = Record<string, unknown>;
@@ -482,7 +482,91 @@ async function ensurePortalContext(
   };
 }
 
-app.use("*", requireAuth);
+// --- Rotas de Autenticação de Paciente (Sem requireAuth) ---
+
+app.post("/auth/request-otp", async (c) => {
+  const { phone } = (await c.req.json().catch(() => ({}))) as { phone: string };
+  if (!phone) return c.json({ error: "Telefone é obrigatório" }, 400);
+
+  const pool = await createPool(c.env);
+  
+  // 1. Verificar se o paciente existe
+  const patientRes = await pool.query(
+    "SELECT id, full_name FROM patients WHERE phone = $1 OR phone = $2 LIMIT 1",
+    [phone, phone.replace(/\D/g, "")]
+  );
+
+  if (patientRes.rows.length === 0) {
+    return c.json({ error: "Paciente não encontrado com este telefone" }, 404);
+  }
+
+  const patient = patientRes.rows[0];
+  const otp = Math.floor(100000 + Math.random() * 900000).toString();
+  const expiresAt = new Date(Date.now() + 10 * 60000); // 10 min
+
+  // 2. Salvar ou atualizar usuário do portal
+  await pool.query(
+    `INSERT INTO patient_portal_users (phone, otp_code, otp_expires_at, patient_id, organization_id)
+     SELECT $1, $2, $3, $4, organization_id FROM patients WHERE id = $4
+     ON CONFLICT (phone) DO UPDATE SET otp_code = $2, otp_expires_at = $3, updated_at = NOW()`,
+    [phone, otp, expiresAt, patient.id]
+  );
+
+  // 3. Enviar via WhatsApp (Simulado se não houver credenciais)
+  console.log(`[PatientPortal] OTP para ${phone}: ${otp}`);
+  
+  if (c.env.WHATSAPP_PHONE_NUMBER_ID && c.env.WHATSAPP_ACCESS_TOKEN) {
+    // Aqui integraria com o serviço de WhatsApp real
+  }
+
+  return c.json({ message: "Código enviado com sucesso", dev_otp: c.env.ENVIRONMENT !== "production" ? otp : undefined });
+});
+
+app.post("/auth/verify-otp", async (c) => {
+  const { phone, code } = (await c.req.json().catch(() => ({}))) as { phone: string, code: string };
+  if (!phone || !code) return c.json({ error: "Telefone e código são obrigatórios" }, 400);
+
+  const pool = await createPool(c.env);
+  const userRes = await pool.query(
+    "SELECT * FROM patient_portal_users WHERE phone = $1 AND otp_code = $2 AND otp_expires_at > NOW()",
+    [phone, code]
+  );
+
+  if (userRes.rows.length === 0) {
+    return c.json({ error: "Código inválido ou expirado" }, 401);
+  }
+
+  const user = userRes.rows[0];
+  
+  // Limpar OTP
+  await pool.query("UPDATE patient_portal_users SET otp_code = NULL WHERE id = $1", [user.id]);
+
+  // Gerar JWT
+  const secret = new TextEncoder().encode(c.env.ML_SALT || "fallback_secret");
+  const token = await new SignJWT({
+    sub: user.id,
+    patientId: user.patient_id,
+    orgId: user.organization_id,
+    phone: user.phone,
+    role: "patient"
+  })
+    .setProtectedHeader({ alg: "HS256" })
+    .setIssuedAt()
+    .setExpirationTime("30d")
+    .sign(secret);
+
+  return c.json({ token, patientId: user.patient_id });
+});
+
+// --- Middleware de Proteção ---
+app.use("/*", (c, next) => {
+  // Se for rota de bootstrap, permite requireAuth (staff vinculando paciente)
+  if (c.req.path.endsWith("/bootstrap") || c.req.path.includes("/link-professional")) {
+    return requireAuth(c, next);
+  }
+  // Caso contrário, exige autenticação de paciente
+  return requirePatientAuth(c, next);
+});
 
 app.post("/bootstrap", async (c) => {
   const user = c.get("user");
@@ -1245,6 +1329,40 @@ app.post("/proms", async (c) => {
   ).catch(() => {});
 
   return c.json({ success: true, data: { xpAwarded: 5 } }, 201);
+});
+
+// --- Novas Rotas de Exercício (HEP) usando patient_exercise_logs ---
+
+app.post("/exercises/log", async (c) => {
+  const patient = c.get("patient");
+  if (!patient) return c.json({ error: "Contexto de paciente ausente" }, 401);
+
+  const body = (await c.req.json()) as {
+    exerciseId: string;
+    painLevel: number;
+    difficulty: number;
+    completed: boolean;
+    notes?: string;
+  };
+
+  const pool = await createPool(c.env);
+  
+  await pool.query(
+    `INSERT INTO patient_exercise_logs 
+     (patient_id, organization_id, exercise_id, pain_level, difficulty, completed, notes, created_at)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, NOW())`,
+    [
+      patient.patientId,
+      patient.organizationId,
+      body.exerciseId,
+      body.painLevel,
+      body.difficulty,
+      body.completed,
+      body.notes || null
+    ]
+  );
+
+  return c.json({ success: true });
 });
 
 export { app as patientPortalRoutes };

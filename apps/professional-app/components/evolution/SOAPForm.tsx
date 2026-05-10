@@ -77,6 +77,7 @@ export function SOAPForm({
             multiline
             numberOfLines={4}
             textAlignVertical="top"
+            scrollEnabled={false}
           />
         </View>
       ))}

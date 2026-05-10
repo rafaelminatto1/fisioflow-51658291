@@ -1,0 +1,30 @@
+{
+  "name": "@fisioflow/ai-gateway",
+  "version": "1.0.0",
+  "private": true,
+  "description": "FisioFlow AI Gateway — Intelligent Router for LLMs",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy --env production",
+    "deploy:staging": "wrangler deploy --env staging",
+    "lint": "oxlint --quiet",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@fisioflow/db": "workspace:*",
+    "@hono/zod-validator": "^0.7.6",
+    "drizzle-orm": "^0.45.1",
+    "hono": "^4.12.15",
+    "jose": "^5.10.0",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20260424.1",
+    "typescript": "^6.0.2",
+    "wrangler": "4.88.0"
+  },
+  "engines": {
+    "node": ">=22.12.0",
+    "pnpm": ">=10.0.0"
+  }
+}

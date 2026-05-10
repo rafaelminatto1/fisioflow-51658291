@@ -21,6 +21,7 @@ import { useHaptics } from "@/hooks/useHaptics";
 import { useDashboardStats } from "@/hooks/useDashboard";
 import { useProtocols } from "@/hooks/useProtocols";
 import { useExercisesLibrary } from "@/hooks/useExercises";
+import { useTelemedicine } from "@/hooks/useTelemedicine";
 import { formatAppointmentTime } from "@/components/calendar/utils";
 
 function DashboardSkeleton() {
@@ -99,7 +100,8 @@ export default function DashboardScreen() {
     error: patientsError,
   } = usePatients({ limit: 5 });
   const { protocols } = useProtocols();
-  const { data: exercises } = useExercisesLibrary();
+  const { data: exercises = [] } = useExercisesLibrary();
+  const { rooms: teleRooms } = useTelemedicine();
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -342,9 +344,9 @@ export default function DashboardScreen() {
                     <Ionicons name="fitness" size={22} color={colors.success} />
                   </View>
                   <View>
-                    <Text style={[styles.gridTitle, { color: colors.text }]}>Biblioteca</Text>
+                    <Text style={[styles.gridTitle, { color: colors.text }]}>Exercícios</Text>
                     <Text style={[styles.gridSub, { color: colors.textSecondary }]}>
-                      {exercises.length} itens
+                      {exercises.length} itens na biblio.
                     </Text>
                   </View>
                 </TouchableOpacity>
@@ -389,12 +391,14 @@ export default function DashboardScreen() {
                   activeOpacity={0.7}
                 >
                   <View style={[styles.gridIcon, { backgroundColor: "#10B98112" }]}>
-                    <Ionicons name="chatbubbles" size={22} color="#10B981" />
+                    <Ionicons name="videocam" size={22} color="#10B981" />
                   </View>
                   <View>
                     <Text style={[styles.gridTitle, { color: colors.text }]}>Teleconsulta</Text>
                     <Text style={[styles.gridSub, { color: colors.textSecondary }]}>
-                      Chat & Vídeo
+                      {teleRooms.filter((r) => r.status !== "ended").length > 0
+                        ? `${teleRooms.filter((r) => r.status !== "ended").length} salas ativas`
+                        : "Vídeo & Chat"}
                     </Text>
                   </View>
                 </TouchableOpacity>
@@ -419,7 +423,7 @@ export default function DashboardScreen() {
                   <View>
                     <Text style={[styles.gridTitle, { color: colors.text }]}>Ranking</Text>
                     <Text style={[styles.gridSub, { color: colors.textSecondary }]}>
-                      Sua posição: 1º
+                      Ver placar da clínica
                     </Text>
                   </View>
                 </TouchableOpacity>
@@ -502,7 +506,7 @@ export default function DashboardScreen() {
                 Exercícios em Destaque
               </Text>
               <TouchableOpacity onPress={() => router.push("/exercises")} style={styles.seeAllBtn}>
-                <Text style={[styles.seeAll, { color: colors.primary }]}>Biblioteca</Text>
+                <Text style={[styles.seeAll, { color: colors.primary }]}>Ver todos</Text>
                 <Ionicons
                   name="arrow-forward"
                   size={14}

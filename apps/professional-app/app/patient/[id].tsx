@@ -432,6 +432,52 @@ export default function PatientDetailScreen() {
                 )}
               </Card>
 
+              {(patient as any).insurance?.provider && (
+                <Card
+                  style={[
+                    styles.infoCard,
+                    {
+                      backgroundColor: colors.surface + "B0",
+                      borderColor: colors.border + "40",
+                      borderWidth: 1.2,
+                    },
+                  ]}
+                >
+                  <View style={styles.infoCardHeader}>
+                    <Ionicons name="shield-outline" size={20} color={colors.primary} />
+                    <Text style={[styles.infoSectionTitle, { color: colors.text }]}>
+                      Convênio (Reembolso)
+                    </Text>
+                  </View>
+                  <View style={styles.infoRow}>
+                    <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>
+                      Operadora:
+                    </Text>
+                    <Text style={[styles.infoValue, { color: colors.text }]}>
+                      {(patient as any).insurance.provider}
+                    </Text>
+                  </View>
+                  {(patient as any).insurance.plan && (
+                    <View style={styles.infoRow}>
+                      <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>Plano:</Text>
+                      <Text style={[styles.infoValue, { color: colors.text }]}>
+                        {(patient as any).insurance.plan}
+                      </Text>
+                    </View>
+                  )}
+                  {(patient as any).insurance.cardNumber && (
+                    <View style={styles.infoRow}>
+                      <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>
+                        Carteirinha:
+                      </Text>
+                      <Text style={[styles.infoValue, { color: colors.text }]}>
+                        {(patient as any).insurance.cardNumber}
+                      </Text>
+                    </View>
+                  )}
+                </Card>
+              )}
+
               {patient?.notes && (
                 <Card
                   style={[

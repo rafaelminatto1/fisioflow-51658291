@@ -2,11 +2,12 @@ import { Hono } from "hono";
 import { createDb } from "../lib/db";
 import { requireAuth, type AuthVariables } from "../lib/auth";
 import type { Env } from "../types/env";
-import { sessions, sessionAttachments, sessionTemplates } from "@fisioflow/db";
+import { sessions, sessionAttachments, sessionTemplates, patients } from "@fisioflow/db";
 import { eq, and, desc, count, sql, or, ilike } from "drizzle-orm";
 import { withTenant } from "../lib/db-utils";
 import { invalidatePatientCache } from "../lib/ai-context-cache";
 import { processClinicalEmbedding } from "../lib/ai/embeddings";
+import { triggerFiscalCycleNotification } from "../lib/fiscal/notificationTrigger";
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
@@ -326,6 +327,46 @@ app.post("/:id/finalize", requireAuth, async (c) => {
         console.warn("[sessions/finalize] Could not start SessionSummaryWorkflow:", err?.message);
       });
     }
+
+    // New: Fiscal Notification Trigger (on every 10th session)
+    c.executionCtx.waitUntil(
+      (async () => {
+        try {
+          // Count finalized sessions for this patient
+          const [countResult] = await db
+            .select({ total: count() })
+            .from(sessions)
+            .where(
+              and(
+                eq(sessions.patientId, row.patientId!),
+                eq(sessions.status, "finalized"),
+                eq(sessions.organizationId, user.organizationId as any),
+              ),
+            );
+
+          const total = Number(countResult?.total || 0);
+
+          if (total > 0 && total % 10 === 0) {
+            // Get patient name for the notification
+            const [patientRow] = await db
+              .select({ fullName: patients.fullName })
+              .from(patients)
+              .where(eq(patients.id, row.patientId!))
+              .limit(1);
+
+            await triggerFiscalCycleNotification(
+              c.env,
+              user.organizationId,
+              row.patientId!,
+              patientRow?.fullName || "Paciente",
+              total,
+            );
+          }
+        } catch (err) {
+          console.error("[FiscalTrigger] Failed to process milestone check:", err);
+        }
+      })(),
+    );
   }
   return c.json({ data: rowToRecord(row) });
 });

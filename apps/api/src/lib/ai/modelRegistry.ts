@@ -1,7 +1,7 @@
 import type { Env } from "../../types/env";
 import { getRawSql } from "../../lib/db";
 
-export type AIProvider = "zai" | "workers-ai" | "openai" | "anthropic" | "gemini";
+export type AIProvider = "zai" | "workers-ai" | "openai" | "anthropic" | "gemini" | "gateway";
 
 export type AICapability =
   | "chat"
@@ -196,18 +196,32 @@ const MODEL_DEFINITIONS: AIModelDefinition[] = [
     sortOrder: 7,
   },
   {
-    id: "gemini-3-flash",
-    provider: "gemini",
-    displayName: "Gemini 3 Flash (Legacy)",
-    description: "Google Gemini. Já configurado.",
-    capabilities: ["chat", "thinking"],
+    id: "gemini-1.5-flash",
+    provider: "gateway",
+    displayName: "Gemini 1.5 Flash (via Gateway)",
+    description: "Google Gemini via FisioFlow Gateway.",
+    capabilities: ["chat", "thinking", "vision"],
     inputCostPer1m: 0,
     outputCostPer1m: 0,
     cachedCostPer1m: 0,
     contextLength: 1000000,
     isFree: true,
+    isDefault: true,
+    sortOrder: 0,
+  },
+  {
+    id: "ollama-llama-3",
+    provider: "gateway",
+    displayName: "Llama 3 (Ollama Local)",
+    description: "Modelo local via FisioFlow Gateway.",
+    capabilities: ["chat"],
+    inputCostPer1m: 0,
+    outputCostPer1m: 0,
+    cachedCostPer1m: 0,
+    contextLength: 8192,
+    isFree: true,
     isDefault: false,
-    sortOrder: 8,
+    sortOrder: 6,
   },
 ];
 

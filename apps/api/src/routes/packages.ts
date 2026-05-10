@@ -3,6 +3,7 @@ import { createPool } from "../lib/db";
 import { requireAuth, type AuthVariables } from "../lib/auth";
 import { isUuid } from "../lib/validators";
 import type { Env } from "../types/env";
+import { triggerPackageRenewalNotification } from "../lib/fiscal/packageRenewalTrigger";
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
@@ -155,6 +156,7 @@ app.get("/patient/:patientId", requireAuth, async (c) => {
     `SELECT pp.*, sp.name AS package_name, sp.total_sessions AS package_total_sessions
      FROM patient_packages pp
      JOIN session_packages sp ON sp.id = pp.package_id
+     JOIN patients p ON p.id = pp.patient_id
      WHERE pp.patient_id = $1 AND pp.organization_id = $2
      ORDER BY pp.purchase_date DESC`,
     [patientId, user.organizationId],
@@ -229,7 +231,11 @@ app.post("/patient-package/:id/use", requireAuth, async (c) => {
 
   // Verificar pacote
   const pkgResult = await pool.query(
-    `SELECT id, remaining_sessions, status, expiry_date FROM patient_packages WHERE id = $1 AND organization_id = $2`,
+    `SELECT pp.id, pp.remaining_sessions, pp.status, pp.expiry_date, pp.patient_id, p.full_name as patient_name, sp.name as package_name
+     FROM patient_packages pp
+     JOIN patients p ON p.id = pp.patient_id
+     JOIN session_packages sp ON sp.id = pp.package_id
+     WHERE pp.id = $1 AND pp.organization_id = $2`,
     [id, user.organizationId],
   );
   if (!pkgResult.rows.length) return c.json({ error: "Pacote não encontrado" }, 404);
@@ -262,7 +268,23 @@ app.post("/patient-package/:id/use", requireAuth, async (c) => {
     [id],
   );
 
-  return c.json({ data: updateResult.rows[0] });
+  const updatedPkg = updateResult.rows[0];
+
+  // Renewal Gate Logic: Trigger alert on penultimate session (remaining = 1)
+  if (updatedPkg.remaining_sessions === 1) {
+    c.executionCtx.waitUntil(
+      triggerPackageRenewalNotification(
+        c.env,
+        user.organizationId,
+        updatedPkg.patient_id,
+        pkg.patient_name,
+        1,
+        pkg.package_name
+      ).catch(err => console.error("[Packages/Use] Renewal trigger failed:", err))
+    );
+  }
+
+  return c.json({ data: updatedPkg });
 });
 
 // GET /api/packages/stats — resumo geral da org

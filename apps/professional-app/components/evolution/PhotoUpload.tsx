@@ -8,10 +8,12 @@ import {
   ScrollView,
   Alert,
   ActivityIndicator,
+  Modal,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import { useHaptics } from "@/hooks/useHaptics";
+import { ImageEditor } from "./ImageEditor";
 
 interface PhotoUploadProps {
   photos: string[];
@@ -23,6 +25,8 @@ interface PhotoUploadProps {
 export function PhotoUpload({ photos, onPhotosChange, maxPhotos = 6, colors }: PhotoUploadProps) {
   const { light, medium, error: hapticError } = useHaptics();
   const [uploading, setUploading] = useState(false);
+  const [editingUri, setEditingUri] = useState<string | null>(null);
+  const [editIndex, setEditIndex] = useState<number | null>(null);
 
   const requestPermissions = async () => {
     const { status: cameraStatus } = await ImagePicker.requestCameraPermissionsAsync();
@@ -69,9 +73,9 @@ export function PhotoUpload({ photos, onPhotosChange, maxPhotos = 6, colors }: P
           });
 
       if (!result.canceled) {
-        const newPhotos = result.assets.map((asset) => asset.uri);
-        const updatedPhotos = [...photos, ...newPhotos].slice(0, maxPhotos);
-        onPhotosChange(updatedPhotos);
+        const uri = result.assets[0].uri;
+        setEditingUri(uri);
+        setEditIndex(null); // Nova foto
         light();
       }
     } catch (error) {
@@ -81,6 +85,26 @@ export function PhotoUpload({ photos, onPhotosChange, maxPhotos = 6, colors }: P
     } finally {
       setUploading(false);
     }
+  };
+
+  const handleEditExisting = (index: number) => {
+    setEditingUri(photos[index]);
+    setEditIndex(index);
+  };
+
+  const onSaveEdited = (newUri: string) => {
+    if (editIndex !== null) {
+      // Editando existente
+      const updated = [...photos];
+      updated[editIndex] = newUri;
+      onPhotosChange(updated);
+    } else {
+      // Nova foto
+      onPhotosChange([...photos, newUri].slice(0, maxPhotos));
+    }
+    setEditingUri(null);
+    setEditIndex(null);
+    light();
   };
 
   const removePhoto = (index: number) => {
@@ -118,7 +142,12 @@ export function PhotoUpload({ photos, onPhotosChange, maxPhotos = 6, colors }: P
         >
           {photos.map((photo, index) => (
             <View key={index} style={styles.photoContainer}>
-              <Image source={{ uri: photo }} style={styles.photo} />
+              <TouchableOpacity onPress={() => handleEditExisting(index)}>
+                <Image source={{ uri: photo }} style={styles.photo} />
+                <View style={[styles.editBadge, { backgroundColor: colors.primary }]}>
+                  <Ionicons name="pencil" size={12} color="#fff" />
+                </View>
+              </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.removeButton, { backgroundColor: colors.error }]}
                 onPress={() => removePhoto(index)}
@@ -131,6 +160,16 @@ export function PhotoUpload({ photos, onPhotosChange, maxPhotos = 6, colors }: P
           ))}
         </ScrollView>
       )}
+
+      <Modal visible={!!editingUri} animationType="slide" transparent={false}>
+        {editingUri && (
+          <ImageEditor
+            uri={editingUri}
+            onSave={onSaveEdited}
+            onCancel={() => setEditingUri(null)}
+          />
+        )}
+      </Modal>
 
       {photos.length < maxPhotos && (
         <View style={styles.actions}>
@@ -212,13 +251,26 @@ const styles = StyleSheet.create({
   },
   removeButton: {
     position: "absolute",
-    top: 4,
-    right: 4,
+    top: -8,
+    right: -8,
     width: 24,
     height: 24,
     borderRadius: 12,
     alignItems: "center",
     justifyContent: "center",
+    zIndex: 10,
+  },
+  editBadge: {
+    position: "absolute",
+    bottom: 4,
+    right: 4,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 2,
+    borderColor: "#fff",
   },
   actions: {
     flexDirection: "row",

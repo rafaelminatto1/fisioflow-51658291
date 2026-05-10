@@ -60,6 +60,9 @@ export * from "./whatsapp-inbox";
 // Pre-cadastro (Digital Admission)
 export * from "./precadastro";
 
+// Patient Portal (Authentication & Adherence)
+export * from "./portal";
+
 // AI Studio Features
 export * from "./ai_studio";
 

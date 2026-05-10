@@ -63,6 +63,24 @@ const DEFAULT_TEMPLATES = [
     category: "waitlist",
     status: "ativo",
   },
+  {
+    id: "recibo_gerado",
+    name: "Recibo Gerado",
+    template_key: "recibo_gerado",
+    content: "Ola {{name}}, seu recibo no valor de {{amount}} referente a sessao de {{date}} ja esta disponivel. Link: {{link}}",
+    variables: ["name", "amount", "date", "link"],
+    category: "utility",
+    status: "ativo",
+  },
+  {
+    id: "nfse_gerada",
+    name: "Nota Fiscal Gerada",
+    template_key: "nfse_gerada",
+    content: "Ola {{name}}, sua nota fiscal (NFS-e) ja foi emitida. Valor: {{amount}}. Voce pode baixa-la aqui: {{link}}",
+    variables: ["name", "amount", "link"],
+    category: "utility",
+    status: "ativo",
+  },
 ] as const;
 
 function getStoredTemplates(settings: Record<string, unknown>) {

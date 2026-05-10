@@ -1,0 +1,123 @@
+iOS preview (macos-26 / Xcode 26.2)	UNKNOWN STEP	2026-05-07T23:20:01.6985930Z [RUN_FASTLANE] › Packaging expo-sensors Pods/ExpoSensors » libExpoSensors.a
+iOS preview (macos-26 / Xcode 26.2)	UNKNOWN STEP	2026-05-07T23:20:01.7088330Z [RUN_FASTLANE] › Packaging expo-secure-store Pods/ExpoSecureStore » libExpoSecureStore.a
+iOS preview (macos-26 / Xcode 26.2)	UNKNOWN STEP	2026-05-07T23:20:01.7190930Z [RUN_FASTLANE] › Packaging expo-router Pods/ExpoRouter » libExpoRouter.a
+iOS preview (macos-26 / Xcode 26.2)	UNKNOWN STEP	2026-05-07T23:20:01.7292010Z [RUN_FASTLANE] › Packaging expo-print Pods/ExpoPrint » libExpoPrint.a
+iOS preview (macos-26 / Xcode 26.2)	UNKNOWN STEP	2026-05-07T23:20:01.7393260Z [RUN_FASTLANE] › Packaging expo-location Pods/ExpoLocation » libExpoLocation.a
+iOS preview (macos-26 / Xcode 26.2)	UNKNOWN STEP	2026-05-07T23:20:01.7494570Z [RUN_FASTLANE] › Compiling expo-local-authentication Pods/ExpoLocalAuthentication » ExpoLocalAuthentication-dummy.m
+iOS preview (macos-26 / Xcode 26.2)	UNKNOWN STEP	2026-05-07T23:20:01.7595160Z [RUN_FASTLANE] › Compiling expo-linking Pods/ExpoLinking » ExpoLinking-dummy.m
+iOS preview (macos-26 / Xcode 26.2)	UNKNOWN STEP	2026-05-07T23:20:01.7697130Z [RUN_FASTLANE] › Packaging expo-local-authentication Pods/ExpoLocalAuthentication » libExpoLocalAuthentication.a
+iOS preview (macos-26 / Xcode 26.2)	UNKNOWN STEP	2026-05-07T23:20:01.7810060Z [RUN_FASTLANE] › Executing expo-vision-pose-detector Pods/expo-vision-pose-detector » Copy generated compatibility header
+iOS preview (macos-26 / Xcode 26.2)	UNKNOWN STEP	2026-05-07T23:20:01.7920390Z [RUN_FASTLANE] › Executing expo-symbols Pods/ExpoSymbols » Copy generated compatibility header
+iOS preview (macos-26 / Xcode 26.2)	UNKNOWN STEP	2026-05-07T23:20:01.7927740Z [RUN_FASTLANE] › Executing expo-splash-screen Pods/ExpoSplashScreen » Copy generated compatibility header
+iOS preview (macos-26 / Xcode 26.2)	UNKNOWN STEP	2026-05-07T23:20:01.7937700Z [RUN_FASTLANE] › Executing expo-sharing Pods/ExpoSharing » Copy generated compatibility header
+iOS preview (macos-26 / Xcode 26.2)	UNKNOWN STEP	2026-05-07T23:20:01.7938790Z [RUN_FASTLANE] › Executing expo-sensors Pods/ExpoSensors » Copy generated compatibility header
+iOS preview (macos-26 / Xcode 26.2)	UNKNOWN STEP	2026-05-07T23:20:01.7939750Z [RUN_FASTLANE] › Executing expo-secure-store Pods/ExpoSecureStore » Copy generated compatibility header
+iOS preview (macos-26 / Xcode 26.2)	UNKNOWN STEP	2026-05-07T23:20:01.7940800Z [RUN_FASTLANE] › Executing expo-router Pods/ExpoRouter » Copy generated compatibility header
+iOS preview (macos-26 / Xcode 26.2)	UNKNOWN STEP	2026-05-07T23:20:01.7941590Z [RUN_FASTLANE] › Executing expo-print Pods/ExpoPrint » Copy generated compatibility header
+iOS preview (macos-26 / Xcode 26.2)	UNKNOWN STEP	2026-05-07T23:20:01.7942340Z [RUN_FASTLANE] › Executing expo-location Pods/ExpoLocation » Copy generated compatibility header
+iOS preview (macos-26 / Xcode 26.2)	UNKNOWN STEP	2026-05-07T23:20:01.7943980Z [RUN_FASTLANE] › Executing expo-local-authentication Pods/ExpoLocalAuthentication » Copy generated compatibility header
+iOS preview (macos-26 / Xcode 26.2)	UNKNOWN STEP	2026-05-07T23:20:01.7944760Z [RUN_FASTLANE] › Packaging expo-linking Pods/ExpoLinking » libExpoLinking.a
+iOS preview (macos-26 / Xcode 26.2)	UNKNOWN STEP	2026-05-07T23:20:05.1084420Z [RUN_FASTLANE] › Compiling expo-keep-awake Pods/ExpoKeepAwake » ExpoKeepAwake-dummy.m
+iOS preview (macos-26 / Xcode 26.2)	UNKNOWN STEP	2026-05-07T23:20:05.1187250Z [RUN_FASTLANE] › Packaging expo-keep-awake Pods/ExpoKeepAwake » libExpoKeepAwake.a
+iOS preview (macos-26 / Xcode 26.2)	UNKNOWN STEP	2026-05-07T23:20:05.1291100Z [RUN_FASTLANE] › Compiling expo-notifications Pods/ExpoNotifications » ExpoNotifications-dummy.m
+iOS preview (macos-26 / Xcode 26.2)	UNKNOWN STEP	2026-05-07T23:20:05.1400730Z [RUN_FASTLANE] › Packaging expo-notifications Pods/ExpoNotifications » libExpoNotifications.a
+iOS preview (macos-26 / Xcode 26.2)	UNKNOWN STEP	2026-05-07T23:20:05.1539550Z [RUN_FASTLANE] › Executing expo-notifications Pods/ExpoNotifications » Copy generated compatibility header
+iOS preview (macos-26 / Xcode 26.2)	UNKNOWN STEP	2026-05-07T23:20:05.1650430Z [RUN_FASTLANE] › Executing expo-linking Pods/ExpoLinking » Copy generated compatibility header
+iOS preview (macos-26 / Xcode 26.2)	UNKNOWN STEP	2026-05-07T23:20:05.1960240Z [RUN_FASTLANE] › Executing expo-keep-awake Pods/ExpoKeepAwake » Copy generated compatibility header
+iOS preview (macos-26 / Xcode 26.2)	UNKNOWN STEP	2026-05-07T23:20:16.8469770Z [RUN_FASTLANE] › Compiling expo-image-picker Pods/ExpoImagePicker » ExpoImagePicker-dummy.m
+iOS preview (macos-26 / Xcode 26.2)	UNKNOWN STEP	2026-05-07T23:20:16.8883250Z [RUN_FASTLANE] › Packaging expo-image-picker Pods/ExpoImagePicker » libExpoImagePicker.a
+iOS preview (macos-26 / Xcode 26.2)	UNKNOWN STEP	2026-05-07T23:20:16.8985670Z [RUN_FASTLANE] › Executing expo-image-picker Pods/ExpoImagePicker » Copy generated compatibility header
+iOS preview (macos-26 / Xcode 26.2)	UNKNOWN STEP	2026-05-07T23:20:16.9205720Z [RUN_FASTLANE] › Compiling expo-haptics Pods/ExpoHaptics » ExpoHaptics-dummy.m
+iOS preview (macos-26 / Xcode 26.2)	UNKNOWN STEP	2026-05-07T23:20:16.9307800Z [RUN_FASTLANE] › Packaging expo-haptics Pods/ExpoHaptics » libExpoHaptics.a
+iOS preview (macos-26 / Xcode 26.2)	UNKNOWN STEP	2026-05-07T23:20:16.9383650Z [RUN_FASTLANE] › Executing expo-haptics Pods/ExpoHaptics » Copy generated compatibility header
+iOS preview (macos-26 / Xcode 26.2)	UNKNOWN STEP	2026-05-07T23:20:17.0063480Z [RUN_FASTLANE] › Compiling expo-glass-effect Pods/ExpoGlassEffect » ExpoGlassEffect-dummy.m
+iOS preview (macos-26 / Xcode 26.2)	UNKNOWN STEP	2026-05-07T23:20:17.1208030Z [RUN_FASTLANE] › Packaging expo-glass-effect Pods/ExpoGlassEffect » libExpoGlassEffect.a
+iOS preview (macos-26 / Xcode 26.2)	UNKNOWN STEP	2026-05-07T23:20:17.1348690Z [RUN_FASTLANE] › Compiling expo-font Pods/ExpoFont » ExpoFont-dummy.m
+iOS preview (macos-26 / Xcode 26.2)	UNKNOWN STEP	2026-05-07T23:20:17.1374470Z [RUN_FASTLANE] › Packaging expo-font Pods/ExpoFont » libExpoFont.a
+iOS preview (macos-26 / Xcode 26.2)	UNKNOWN STEP	2026-05-07T23:20:17.1519860Z [RUN_FASTLANE] › Executing expo-glass-effect Pods/ExpoGlassEffect » Copy generated compatibility header
+iOS preview (macos-26 / Xcode 26.2)	UNKNOWN STEP	2026-05-07T23:20:17.1641560Z [RUN_FASTLANE] › Executing expo-font Pods/ExpoFont » Copy generated compatibility header
+iOS preview (macos-26 / Xcode 26.2)	UNKNOWN STEP	2026-05-07T23:20:17.1701450Z [RUN_FASTLANE] › Compiling expo-device Pods/ExpoDevice » ExpoDevice-dummy.m
+iOS preview (macos-26 / Xcode 26.2)	UNKNOWN STEP	2026-05-07T23:20:17.1805410Z [RUN_FASTLANE] › Packaging expo-device Pods/ExpoDevice » libExpoDevice.a
+iOS preview (macos-26 / Xcode 26.2)	UNKNOWN STEP	2026-05-07T23:20:17.1906830Z [RUN_FASTLANE] › Compiling expo-file-system Pods/ExpoFileSystem » NSData+EXFileSystem.m
+iOS preview (macos-26 / Xcode 26.2)	UNKNOWN STEP	2026-05-07T23:20:17.2008530Z [RUN_FASTLANE] › Compiling expo-file-system Pods/ExpoFileSystem » ExpoFileSystem-dummy.m
+iOS preview (macos-26 / Xcode 26.2)	UNKNOWN STEP	2026-05-07T23:20:17.2116320Z [RUN_FASTLANE] › Compiling expo-file-system Pods/ExpoFileSystem » EXTaskHandlersManager.m
+iOS preview (macos-26 / Xcode 26.2)	UNKNOWN STEP	2026-05-07T23:20:17.2213070Z [RUN_FASTLANE] › Compiling expo-file-system Pods/ExpoFileSystem » EXSessionUploadTaskDelegate.m
+iOS preview (macos-26 / Xcode 26.2)	UNKNOWN STEP	2026-05-07T23:20:17.2315180Z [RUN_FASTLANE] › Compiling expo-file-system Pods/ExpoFileSystem » EXSessionTaskDispatcher.m
+iOS preview (macos-26 / Xcode 26.2)	UNKNOWN STEP	2026-05-07T23:20:17.2340960Z [RUN_FASTLANE] › Compiling expo-file-system Pods/ExpoFileSystem » EXSessionTaskDelegate.m
+iOS preview (macos-26 / Xcode 26.2)	UNKNOWN STEP	2026-05-07T23:20:17.2617670Z [RUN_FASTLANE] › Compiling expo-file-system Pods/ExpoFileSystem » EXSessionResumableDownloadTaskDelegate.m
+iOS preview (macos-26 / Xcode 26.2)	UNKNOWN STEP	2026-05-07T23:20:17.2813480Z [RUN_FASTLANE] › Compiling expo-file-system Pods/ExpoFileSystem » EXSessionHandler.m
+iOS preview (macos-26 / Xcode 26.2)	UNKNOWN STEP	2026-05-07T23:20:17.2842240Z [RUN_FASTLANE] › Compiling expo-file-system Pods/ExpoFileSystem » EXSessionDownloadTaskDelegate.m
+iOS preview (macos-26 / Xcode 26.2)	UNKNOWN STEP	2026-05-07T23:20:17.2847000Z [RUN_FASTLANE] › Compiling expo-file-system Pods/ExpoFileSystem » EXSessionCancelableUploadTaskDelegate.m
+iOS preview (macos-26 / Xcode 26.2)	UNKNOWN STEP	2026-05-07T23:20:17.3036970Z [RUN_FASTLANE] › Compiling expo-file-system Pods/ExpoFileSystem » EXFileSystemLocalFileHandler.m
+iOS preview (macos-26 / Xcode 26.2)	UNKNOWN STEP	2026-05-07T23:20:17.3181520Z [RUN_FASTLANE] › Executing expo-device Pods/ExpoDevice » Copy generated compatibility header
+iOS preview (macos-26 / Xcode 26.2)	UNKNOWN STEP	2026-05-07T23:20:17.3305830Z [RUN_FASTLANE] › Compiling expo-file-system Pods/ExpoFileSystem » EXFileSystemAssetLibraryHandler.m
+iOS preview (macos-26 / Xcode 26.2)	UNKNOWN STEP	2026-05-07T23:20:17.3428420Z [RUN_FASTLANE] › Packaging expo-file-system Pods/ExpoFileSystem » libExpoFileSystem.a
+iOS preview (macos-26 / Xcode 26.2)	UNKNOWN STEP	2026-05-07T23:20:17.3550300Z [RUN_FASTLANE] › Executing expo-file-system Pods/ExpoFileSystem » Copy generated compatibility header
+iOS preview (macos-26 / Xcode 26.2)	UNKNOWN STEP	2026-05-07T23:20:17.3658210Z [RUN_FASTLANE] › Compiling expo-camera Pods/ExpoCamera » ExpoCamera-dummy.m
+iOS preview (macos-26 / Xcode 26.2)	UNKNOWN STEP	2026-05-07T23:20:17.3766320Z [RUN_FASTLANE] › Packaging expo-camera Pods/ExpoCamera » libExpoCamera.a
+iOS preview (macos-26 / Xcode 26.2)	UNKNOWN STEP	2026-05-07T23:20:17.3875860Z [RUN_FASTLANE] › Executing expo-camera Pods/ExpoCamera » Copy generated compatibility header
+iOS preview (macos-26 / Xcode 26.2)	UNKNOWN STEP	2026-05-07T23:20:18.1065440Z [RUN_FASTLANE] › Executing expo-constants Pods/EXConstants » [CP-User] Generate app.config for prebuilt Constants.manifest
+iOS preview (macos-26 / Xcode 26.2)	UNKNOWN STEP	2026-05-07T23:20:18.4697210Z [RUN_FASTLANE] 
+iOS preview (macos-26 / Xcode 26.2)	UNKNOWN STEP	2026-05-07T23:20:18.4804700Z ❌  (../../node_modules/expo-av/ios/EXAV/EXAV.h:10:9)
+iOS preview (macos-26 / Xcode 26.2)	UNKNOWN STEP	2026-05-07T23:20:18.4900790Z 
+iOS preview (macos-26 / Xcode 26.2)	UNKNOWN STEP	2026-05-07T23:20:18.5001670Z    8 | #import <ExpoModulesCore/EXAppLifecycleListener.h>
+iOS preview (macos-26 / Xcode 26.2)	UNKNOWN STEP	2026-05-07T23:20:18.5102760Z    9 | #import <ExpoModulesCore/EXExportedModule.h>
+iOS preview (macos-26 / Xcode 26.2)	UNKNOWN STEP	2026-05-07T23:20:18.5204140Z > 10 | #import <ExpoModulesCore/EXEventEmitter.h>
+iOS preview (macos-26 / Xcode 26.2)	UNKNOWN STEP	2026-05-07T23:20:18.5305220Z      |         ^ 'ExpoModulesCore/EXEventEmitter.h' file not found
+iOS preview (macos-26 / Xcode 26.2)	UNKNOWN STEP	2026-05-07T23:20:18.5406190Z   11 | #import <EXAV/EXAVObject.h>
+iOS preview (macos-26 / Xcode 26.2)	UNKNOWN STEP	2026-05-07T23:20:18.5412980Z   12 |
+iOS preview (macos-26 / Xcode 26.2)	UNKNOWN STEP	2026-05-07T23:20:18.5413370Z   13 | typedef NS_OPTIONS(NSUInteger, EXAudioInterruptionMode)
+iOS preview (macos-26 / Xcode 26.2)	UNKNOWN STEP	2026-05-07T23:20:18.5413770Z 
+iOS preview (macos-26 / Xcode 26.2)	UNKNOWN STEP	2026-05-07T23:20:18.5414430Z [RUN_FASTLANE] ⚠️  Script has ambiguous dependencies causing it to run on every build.
+iOS preview (macos-26 / Xcode 26.2)	UNKNOWN STEP	2026-05-07T23:20:18.5415560Z    To fix, go to: Xcode » FisioFlowPro/FisioFlowPro » Build Phases » '[Expo Dev Launcher] Strip Local Network Keys for Release'
+iOS preview (macos-26 / Xcode 26.2)	UNKNOWN STEP	2026-05-07T23:20:18.5416820Z    Either: Uncheck "Based on dependency analysis", or select output files to trigger the script
+iOS preview (macos-26 / Xcode 26.2)	UNKNOWN STEP	2026-05-07T23:20:18.5417290Z 
+iOS preview (macos-26 / Xcode 26.2)	UNKNOWN STEP	2026-05-07T23:20:18.5417850Z [RUN_FASTLANE] ⚠️  Script has ambiguous dependencies causing it to run on every build.
+iOS preview (macos-26 / Xcode 26.2)	UNKNOWN STEP	2026-05-07T23:20:18.5418650Z    To fix, go to: Xcode » FisioFlowPro/FisioFlowPro » Build Phases » 'Upload Debug Symbols to Sentry'
+iOS preview (macos-26 / Xcode 26.2)	UNKNOWN STEP	2026-05-07T23:20:18.5419380Z    Either: Uncheck "Based on dependency analysis", or select output files to trigger the script
+iOS preview (macos-26 / Xcode 26.2)	UNKNOWN STEP	2026-05-07T23:20:18.5419840Z 
+iOS preview (macos-26 / Xcode 26.2)	UNKNOWN STEP	2026-05-07T23:20:18.5420460Z [RUN_FASTLANE] ⚠️  Pods/SDWebImage-SDWebImage: iOS@9.0 deployment version mismatch, expected >= 2.0 <= 26.2.99
+iOS preview (macos-26 / Xcode 26.2)	UNKNOWN STEP	2026-05-07T23:20:18.5421190Z [RUN_FASTLANE] ▸ ** ARCHIVE FAILED **
+iOS preview (macos-26 / Xcode 26.2)	UNKNOWN STEP	2026-05-07T23:20:18.5421820Z [RUN_FASTLANE] ▸ The following build commands failed:
+iOS preview (macos-26 / Xcode 26.2)	UNKNOWN STEP	2026-05-07T23:20:18.5424390Z [RUN_FASTLANE] ▸ 	SwiftCompile normal arm64 Compiling\ ExpoVideoView.swift,\ VideoViewModule.swift /var/folders/dy/3g4vbvsx7lx51x77m3_b20cc0000gn/T/eas-build-local-nodejs/056f1aaa-a1b0-4504-bddf-dc534449c4fc/build/node_modules/expo-av/ios/EXAV/ExpoVideoView.swift /var/folders/dy/3g4vbvsx7lx51x77m3_b20cc0000gn/T/eas-build-local-nodejs/056f1aaa-a1b0-4504-bddf-dc534449c4fc/build/node_modules/expo-av/ios/EXAV/Video/VideoViewModule.swift (in target 'EXAV' from project 'Pods')
+iOS preview (macos-26 / Xcode 26.2)	UNKNOWN STEP	2026-05-07T23:20:18.5427120Z [RUN_FASTLANE] ▸ 	CompileSwift normal arm64 (in target 'EXAV' from project 'Pods')
+iOS preview (macos-26 / Xcode 26.2)	UNKNOWN STEP	2026-05-07T23:20:18.5427820Z [RUN_FASTLANE] ▸ 	Archiving workspace FisioFlowPro with scheme FisioFlowPro
+iOS preview (macos-26 / Xcode 26.2)	UNKNOWN STEP	2026-05-07T23:20:18.5428460Z [RUN_FASTLANE] ▸ (3 failures)
+iOS preview (macos-26 / Xcode 26.2)	UNKNOWN STEP	2026-05-07T23:20:19.3349780Z [RUN_FASTLANE] Exit status: 65
+iOS preview (macos-26 / Xcode 26.2)	UNKNOWN STEP	2026-05-07T23:20:19.3791030Z [RUN_FASTLANE] 
+iOS preview (macos-26 / Xcode 26.2)	UNKNOWN STEP	2026-05-07T23:20:19.3792930Z [RUN_FASTLANE] Maybe the error shown is caused by using the wrong version of Xcode
+iOS preview (macos-26 / Xcode 26.2)	UNKNOWN STEP	2026-05-07T23:20:19.3794460Z [RUN_FASTLANE] Found multiple versions of Xcode in '/Applications/'
+iOS preview (macos-26 / Xcode 26.2)	UNKNOWN STEP	2026-05-07T23:20:19.3796070Z [RUN_FASTLANE] Make sure you selected the right version for your project
+iOS preview (macos-26 / Xcode 26.2)	UNKNOWN STEP	2026-05-07T23:20:19.3797320Z [RUN_FASTLANE] This build process was executed using '/Applications/Xcode_26.2.app'
+iOS preview (macos-26 / Xcode 26.2)	UNKNOWN STEP	2026-05-07T23:20:19.3798170Z [RUN_FASTLANE] If you want to update your Xcode path, either
+iOS preview (macos-26 / Xcode 26.2)	UNKNOWN STEP	2026-05-07T23:20:19.3798550Z [RUN_FASTLANE] 
+iOS preview (macos-26 / Xcode 26.2)	UNKNOWN STEP	2026-05-07T23:20:19.3798980Z [RUN_FASTLANE] - Specify the Xcode version in your Fastfile
+iOS preview (macos-26 / Xcode 26.2)	UNKNOWN STEP	2026-05-07T23:20:19.3799880Z [RUN_FASTLANE] ▸ xcversion(version: "8.1") # Selects Xcode 8.1.0
+iOS preview (macos-26 / Xcode 26.2)	UNKNOWN STEP	2026-05-07T23:20:19.3800280Z [RUN_FASTLANE] 
+iOS preview (macos-26 / Xcode 26.2)	UNKNOWN STEP	2026-05-07T23:20:19.3800790Z [RUN_FASTLANE] - Specify an absolute path to your Xcode installation in your Fastfile
+iOS preview (macos-26 / Xcode 26.2)	UNKNOWN STEP	2026-05-07T23:20:19.3801620Z [RUN_FASTLANE] ▸ xcode_select "/Applications/Xcode8.app"
+iOS preview (macos-26 / Xcode 26.2)	UNKNOWN STEP	2026-05-07T23:20:19.3802150Z [RUN_FASTLANE] - Manually update the path using
+iOS preview (macos-26 / Xcode 26.2)	UNKNOWN STEP	2026-05-07T23:20:19.3802770Z [RUN_FASTLANE] ▸ sudo xcode-select -s /Applications/Xcode.app
+iOS preview (macos-26 / Xcode 26.2)	UNKNOWN STEP	2026-05-07T23:20:19.3803430Z [RUN_FASTLANE] 
+iOS preview (macos-26 / Xcode 26.2)	UNKNOWN STEP	2026-05-07T23:20:19.3919570Z [RUN_FASTLANE] 
+iOS preview (macos-26 / Xcode 26.2)	UNKNOWN STEP	2026-05-07T23:20:19.4021500Z [RUN_FASTLANE] [!] Error building the application - see the log above
+iOS preview (macos-26 / Xcode 26.2)	UNKNOWN STEP	2026-05-07T23:20:19.4022060Z [RUN_FASTLANE] +--------------------------------------------+
+iOS preview (macos-26 / Xcode 26.2)	UNKNOWN STEP	2026-05-07T23:20:19.4044350Z [RUN_FASTLANE] |             Build environment              |
+iOS preview (macos-26 / Xcode 26.2)	UNKNOWN STEP	2026-05-07T23:20:19.4045040Z [RUN_FASTLANE] +-------------+------------------------------+
+iOS preview (macos-26 / Xcode 26.2)	UNKNOWN STEP	2026-05-07T23:20:19.4045660Z [RUN_FASTLANE] | xcode_path  | /Applications/Xcode_26.2.app |
+iOS preview (macos-26 / Xcode 26.2)	UNKNOWN STEP	2026-05-07T23:20:19.4047290Z [RUN_FASTLANE] | gym_version | 2.233.0                      |
+iOS preview (macos-26 / Xcode 26.2)	UNKNOWN STEP	2026-05-07T23:20:19.4047910Z [RUN_FASTLANE] | sdk         | iPhoneOS26.2.sdk             |
+iOS preview (macos-26 / Xcode 26.2)	UNKNOWN STEP	2026-05-07T23:20:19.4048580Z [RUN_FASTLANE] +-------------+------------------------------+
+iOS preview (macos-26 / Xcode 26.2)	UNKNOWN STEP	2026-05-07T23:20:19.4049010Z [RUN_FASTLANE] 
+iOS preview (macos-26 / Xcode 26.2)	UNKNOWN STEP	2026-05-07T23:20:19.4049670Z [RUN_FASTLANE] Looks like fastlane ran into a build/archive error with your project
+iOS preview (macos-26 / Xcode 26.2)	UNKNOWN STEP	2026-05-07T23:20:19.4050410Z [RUN_FASTLANE] It's hard to tell what's causing the error, so we wrote some guides on how
+iOS preview (macos-26 / Xcode 26.2)	UNKNOWN STEP	2026-05-07T23:20:19.4051900Z [RUN_FASTLANE] to troubleshoot build and signing issues: https://docs.fastlane.tools/codesigning/getting-started/
+iOS preview (macos-26 / Xcode 26.2)	UNKNOWN STEP	2026-05-07T23:20:19.4052910Z [RUN_FASTLANE] Before submitting an issue on GitHub, please follow the guide above and make
+iOS preview (macos-26 / Xcode 26.2)	UNKNOWN STEP	2026-05-07T23:20:19.4053550Z [RUN_FASTLANE] sure your project is set up correctly.
+iOS preview (macos-26 / Xcode 26.2)	UNKNOWN STEP	2026-05-07T23:20:19.4054200Z [RUN_FASTLANE] fastlane uses `xcodebuild` commands to generate your binary, you can see the
+iOS preview (macos-26 / Xcode 26.2)	UNKNOWN STEP	2026-05-07T23:20:19.4054960Z [RUN_FASTLANE] the full commands printed out in yellow in the above log.
+iOS preview (macos-26 / Xcode 26.2)	UNKNOWN STEP	2026-05-07T23:20:19.4055790Z [RUN_FASTLANE] Make sure to inspect the output above, as usually you'll find more error information there
+iOS preview (macos-26 / Xcode 26.2)	UNKNOWN STEP	2026-05-07T23:20:19.4056430Z [RUN_FASTLANE] 
+iOS preview (macos-26 / Xcode 26.2)	UNKNOWN STEP	2026-05-07T23:20:19.5526390Z [RUN_FASTLANE] Error: The "Run fastlane" step failed because of an error in the Xcode build process. We automatically detected following errors in your Xcode build logs:
+iOS preview (macos-26 / Xcode 26.2)	UNKNOWN STEP	2026-05-07T23:20:19.5527250Z - 'ExpoModulesCore/EXEventEmitter.h' file not found
+iOS preview (macos-26 / Xcode 26.2)	UNKNOWN STEP	2026-05-07T23:20:19.5528010Z - could not build Objective-C module 'EXAV'

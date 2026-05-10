@@ -80,6 +80,7 @@ export default function AppointmentFormScreen() {
 
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
+  const [showAdvanced, setShowAdvanced] = useState(false);
   const [sessionValueRaw, setSessionValueRaw] = useState("");
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [isPaid, setIsPaid] = useState(false);
@@ -452,7 +453,7 @@ export default function AppointmentFormScreen() {
         />
         {errors.patientId && <Text style={styles.errorText}>{errors.patientId.message}</Text>}
 
-        <View style={[styles.sectionDivider, { backgroundColor: colors.border }]} />
+        {/* No divider here to save space */}
 
         <View style={styles.row}>
           <View style={styles.col}>
@@ -575,51 +576,57 @@ export default function AppointmentFormScreen() {
         </View>
 
         {/* Type Selector */}
-        <Controller
-          control={control}
-          name="type"
-          render={({ field: { value, onChange } }) => (
-            <OptionSelector
-              label="Tipo de Atendimento"
-              value={value}
-              options={APPOINTMENT_TYPES.map((t) => ({ label: t, value: t }))}
-              onSelect={onChange}
-            />
-          )}
-        />
-
-        <View style={[styles.sectionDivider, { backgroundColor: colors.border }]} />
-
-        <View style={styles.row}>
-          <View style={styles.col}>
+        {showAdvanced && (
+          <>
             <Controller
               control={control}
-              name="duration"
+              name="type"
               render={({ field: { value, onChange } }) => (
                 <OptionSelector
-                  label="Duração"
+                  label="Tipo de Atendimento"
                   value={value}
-                  options={DURATIONS.map((d) => ({ label: `${d} min`, value: d }))}
+                  options={APPOINTMENT_TYPES.map((t) => ({ label: t, value: t }))}
                   onSelect={onChange}
                 />
               )}
             />
+
+            <View style={[styles.sectionDivider, { backgroundColor: colors.border }]} />
+          </>
+        )}
+
+        {showAdvanced && (
+          <View style={styles.row}>
+            <View style={styles.col}>
+              <Controller
+                control={control}
+                name="duration"
+                render={({ field: { value, onChange } }) => (
+                  <OptionSelector
+                    label="Duração"
+                    value={value}
+                    options={DURATIONS.map((d) => ({ label: `${d} min`, value: d }))}
+                    onSelect={onChange}
+                  />
+                )}
+              />
+            </View>
+            <View style={styles.col}>
+              <Controller
+                control={control}
+                name="status"
+                render={({ field: { value, onChange } }) => (
+                  <OptionSelector
+                    label="Status"
+                    value={value}
+                    options={STATUS_OPTIONS}
+                    onSelect={onChange}
+                  />
+                )}
+              />
+            </View>
           </View>
-          <View style={styles.col}>
-            <Controller
-              control={control}
-              name="status"
-              render={({ field: { value, onChange } }) => (
-                <OptionSelector
-                  label="Status"
-                  value={value}
-                  options={STATUS_OPTIONS}
-                  onSelect={onChange}
-                />
-              )}
-            />
-          </View>
-        </View>
+        )}
 
         <View style={[styles.sectionDivider, { backgroundColor: colors.border }]} />
 
@@ -684,21 +691,36 @@ export default function AppointmentFormScreen() {
 
         <View style={[styles.sectionDivider, { backgroundColor: colors.border }]} />
 
-        <Text style={[styles.label, { color: colors.textSecondary }]}>Observações</Text>
-        <Controller
-          control={control}
-          name="notes"
-          render={({ field: { value, onChange } }) => (
-            <Input
-              placeholder="Observações sobre o atendimento..."
-              value={value}
-              onChangeText={onChange}
-              multiline
-              numberOfLines={3}
-              style={{ minHeight: 80 }}
+        {showAdvanced && (
+          <>
+            <Text style={[styles.label, { color: colors.textSecondary }]}>Observações</Text>
+            <Controller
+              control={control}
+              name="notes"
+              render={({ field: { value, onChange } }) => (
+                <Input
+                  placeholder="Observações sobre o atendimento..."
+                  value={value}
+                  onChangeText={onChange}
+                  multiline
+                  numberOfLines={3}
+                  style={{ minHeight: 80 }}
+                />
+              )}
             />
-          )}
-        />
+            <View style={{ height: 16 }} />
+          </>
+        )}
+
+        <TouchableOpacity 
+          style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", paddingVertical: 12, marginBottom: 16 }}
+          onPress={() => setShowAdvanced(!showAdvanced)}
+        >
+          <Ionicons name={showAdvanced ? "chevron-up" : "chevron-down"} size={20} color={colors.primary} />
+          <Text style={{ color: colors.primary, fontWeight: "600", marginLeft: 8 }}>
+            {showAdvanced ? "Ocultar opções adicionais" : "Mostrar opções adicionais"}
+          </Text>
+        </TouchableOpacity>
 
         {/* Botão de criar — apenas para novo agendamento. Edição salva via prompt ao voltar. */}
         {!isEditing && (
@@ -893,17 +915,17 @@ const styles = StyleSheet.create({
   },
   title: { fontSize: 20, fontWeight: "700" },
   content: { flex: 1, padding: 20, gap: 4 },
-  label: { fontSize: 14, fontWeight: "600", marginBottom: 8 },
-  row: { flexDirection: "row", gap: 16 },
+  label: { fontSize: 13, fontWeight: "600", marginBottom: 4 },
+  row: { flexDirection: "row", gap: 12 },
   col: { flex: 1 },
   pickerButton: {
     flexDirection: "row",
     alignItems: "center",
-    height: 56,
+    height: 48,
     borderWidth: 1,
-    borderRadius: 14,
-    paddingHorizontal: 16,
-    marginBottom: 16,
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    marginBottom: 12,
   },
   pickerText: {
     marginLeft: 8,

@@ -1,0 +1,19 @@
+diff --git a/ios/EXAV/EXAV.h b/ios/EXAV/EXAV.h
+index 42a79e1183530a18ea5b515700755bd6560ac2a8..762b072bc04c07feb066aa80f9c16685ceee256e 100644
+--- a/ios/EXAV/EXAV.h
++++ b/ios/EXAV/EXAV.h
+@@ -4,10 +4,10 @@
+ 
+ #import <React/RCTBridgeModule.h>
+ 
+-#import <ExpoModulesCore/EXModuleRegistryConsumer.h>
+-#import <ExpoModulesCore/EXAppLifecycleListener.h>
+-#import <ExpoModulesCore/EXExportedModule.h>
+-#import <ExpoModulesCore/EXEventEmitter.h>
++#import "EXModuleRegistryConsumer.h"
++#import "EXAppLifecycleListener.h"
++#import "EXExportedModule.h"
++#import "EXEventEmitter.h"
+ #import <EXAV/EXAVObject.h>
+ 
+ typedef NS_OPTIONS(NSUInteger, EXAudioInterruptionMode)

@@ -1,4 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
+import { format, addDays, isWeekend, isMonday, isWednesday, isFriday, parseISO } from "date-fns";
+import { ptBR } from "date-fns/locale";
 import {
   View,
   Text,
@@ -19,6 +21,8 @@ import { useColors } from "@/hooks/useColorScheme";
 import { useHaptics } from "@/hooks/useHaptics";
 import { useGenerateNFSe } from "@/hooks/useNFSe";
 import { usePatients } from "@/hooks/usePatients";
+import { sendWhatsAppTemplate } from "@/lib/api";
+import { generateReimbursementReportPDF } from "@/lib/services/pdfGenerator";
 
 export default function NFSeForm() {
   const colors = useColors();
@@ -35,6 +39,55 @@ export default function NFSeForm() {
   const [tomadorNome, setTomadorNome] = useState("");
   const [tomadorCpf, setTomadorCpf] = useState("");
   const [showPatientPicker, setShowPatientPicker] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
+
+  // Estados Reembolso Inteligente
+  const [usePlannedSessions, setUsePlannedSessions] = useState(false);
+  const [sessionsCount, setSessionsCount] = useState("10");
+  const [plannedStartDate, setPlannedStartDate] = useState(format(new Date(), "yyyy-MM-dd"));
+  const [tussCode, setTussCode] = useState("50000160");
+  const [clinicalFocus, setClinicalFocus] = useState("Reabilitação ortopédica, pós-operatório e esportivo");
+  const [medicalReferralDate, setMedicalReferralDate] = useState(format(new Date(), "yyyy-MM-dd"));
+
+  const calculateDates = (start: string, count: number) => {
+    let dates: Date[] = [];
+    let current = parseISO(start);
+    while (dates.length < count) {
+      if (!isWeekend(current) && (isMonday(current) || isWednesday(current) || isFriday(current))) {
+        dates.push(new Date(current));
+      }
+      current = addDays(current, 1);
+    }
+    return dates;
+  };
+
+  useEffect(() => {
+    if (patientId) {
+      const patient = patients.find((p) => p.id === patientId);
+      if (patient) {
+        const insurance = (patient as any).insurance;
+        let info = "";
+
+        if (usePlannedSessions) {
+          const count = parseInt(sessionsCount) || 0;
+          const dates = calculateDates(plannedStartDate, count);
+          const formattedDates = dates.map((d) => format(d, "dd/MM/yyyy")).join(", ");
+
+          info = `Paciente ${patient.name} CPF de número ${patient.document || "---"} realizou ${count} sessões de fisioterapia musculoesquelética nos dias ${formattedDates} (realizou o código TUSS: ${tussCode} ). E efetuou o pagamento no valor de ${getDisplayValor()} para a empresa Mooca Fisioterapia RA Ltda, CNPJ: 54.836.577/0001-67, Rua Manuel Vieira de Sousa, 166 – Mooca – São Paulo – CEP: 03124-110. Conselho: CREFITO-3 – Nome: Amanda Hitomi Notoya Minatto – Número do conselho: 215954 – F SP – Telefone: (11) 93433-5858.`;
+        } else {
+          info = "Serviços de Fisioterapia";
+          if (insurance?.provider) {
+            info += `\n\n[PARA FINS DE REEMBOLSO]\nConvênio: ${insurance.provider}`;
+            if (insurance.plan) info += ` | Plano: ${insurance.plan}`;
+            if (insurance.cardNumber) info += ` | Carteirinha: ${insurance.cardNumber}`;
+          }
+        }
+        setDiscriminacao(info);
+      }
+    } else {
+      setDiscriminacao("Serviços de Fisioterapia");
+    }
+  }, [patientId, patients, usePlannedSessions, sessionsCount, plannedStartDate, tussCode, valorServico]);
 
   const getDisplayValor = () => {
     if (!valorServico) return "";
@@ -53,6 +106,17 @@ export default function NFSeForm() {
     }
     if (!discriminacao.trim()) {
       Alert.alert("Erro", "Informe a discriminação do serviço.");
+      return false;
+    }
+    if (usePlannedSessions && medicalReferralDate && plannedStartDate < medicalReferralDate) {
+      Alert.alert(
+        "Atenção com as Datas",
+        "A data de início das sessões deve ser posterior à data do pedido médico para garantir o reembolso. Deseja prosseguir mesmo assim?",
+        [
+          { text: "Cancelar", style: "cancel" },
+          { text: "Sim, prosseguir", style: "destructive", onPress: () => handleSubmit() }
+        ]
+      );
       return false;
     }
     return true;
@@ -75,8 +139,46 @@ export default function NFSeForm() {
         tomador_cpf_cnpj: tomadorCpf.replace(/\D/g, "") || undefined,
       });
       success();
+
+      // Envio automático via WhatsApp
+      if (patientId) {
+        const patient = patients.find((p) => p.id === patientId);
+        if (patient?.phone) {
+          sendWhatsAppTemplate({
+            patient_id: patientId,
+            template_key: "nfse_gerada",
+            variables: {
+              name: patient.name.split(" ")[0],
+              amount: new Intl.NumberFormat("pt-BR", {
+                style: "currency",
+                currency: "BRL",
+              }).format(parseFloat(valorServico) / 100),
+              link: record.link_nfse || "Disponível no seu e-mail",
+            },
+          }).catch((e) => console.error("Erro ao enviar WhatsApp NFS-e:", e));
+        }
+      }
+
       Alert.alert("NFS-e gerada!", `RPS nº ${record.numero_rps}\nStatus: ${record.status}`, [
-        { text: "OK", onPress: () => router.back() },
+        { 
+          text: "Gerar Relatório de Reembolso", 
+          onPress: async () => {
+            const patient = patients.find((p) => p.id === patientId);
+            if (patient) {
+              const count = parseInt(sessionsCount) || 1;
+              const dates = calculateDates(plannedStartDate, count);
+              await generateReimbursementReportPDF(patient as any, {
+                sessionsCount: count,
+                startDate: dates[0].toISOString(),
+                endDate: dates[dates.length - 1].toISOString(),
+                tussCode,
+                clinicalFocus
+              });
+            }
+            router.back();
+          }
+        },
+        { text: "Apenas OK", onPress: () => router.back() },
       ]);
     } catch (e: any) {
       hapticError();
@@ -113,6 +215,128 @@ export default function NFSeForm() {
             <Text style={[styles.infoText, { color: "#92400E" }]}>
               A NFS-e será gerada com as configurações da sua clínica cadastradas no painel web.
             </Text>
+          </View>
+
+          {/* Toggle Reembolso Especial */}
+          <View
+            style={[
+              styles.card,
+              { backgroundColor: colors.surface, borderColor: colors.border, marginBottom: 16 },
+            ]}
+          >
+            <View style={styles.cardHeader}>
+              <View style={styles.cardTitleContainer}>
+                <Ionicons name="sparkles-outline" size={18} color={colors.primary} />
+                <Text style={[styles.cardTitle, { color: colors.text }]}>Reembolso Inteligente</Text>
+              </View>
+              <TouchableOpacity
+                onPress={() => {
+                  light();
+                  setUsePlannedSessions(!usePlannedSessions);
+                }}
+              >
+                <Ionicons
+                  name={usePlannedSessions ? "toggle" : "toggle-outline"}
+                  size={32}
+                  color={usePlannedSessions ? colors.primary : colors.textMuted}
+                />
+              </TouchableOpacity>
+            </View>
+
+            {usePlannedSessions && (
+              <View style={styles.cardBody}>
+                <Text style={[styles.label, { marginTop: 0, color: colors.text }]}>
+                  Cód. TUSS Padrão
+                </Text>
+                <TextInput
+                  style={[
+                    styles.input,
+                    {
+                      backgroundColor: colors.background,
+                      borderColor: colors.border,
+                      color: colors.text,
+                    },
+                  ]}
+                  value={tussCode}
+                  onChangeText={setTussCode}
+                  keyboardType="numeric"
+                />
+
+                <View style={{ flexDirection: "row", gap: 12, marginTop: 12 }}>
+                  <View style={{ flex: 1 }}>
+                    <Text style={[styles.label, { marginTop: 0, color: colors.text }]}>Sessões</Text>
+                    <TextInput
+                      style={[
+                        styles.input,
+                        {
+                          backgroundColor: colors.background,
+                          borderColor: colors.border,
+                          color: colors.text,
+                        },
+                      ]}
+                      value={sessionsCount}
+                      onChangeText={setSessionsCount}
+                      keyboardType="numeric"
+                    />
+                  </View>
+                  <View style={{ flex: 1.5 }}>
+                    <Text style={[styles.label, { marginTop: 0, color: colors.text }]}>
+                      Início (AAAA-MM-DD)
+                    </Text>
+                    <TextInput
+                      style={[
+                        styles.input,
+                        {
+                          backgroundColor: colors.background,
+                          borderColor: colors.border,
+                          color: colors.text,
+                        },
+                      ]}
+                      value={plannedStartDate}
+                      onChangeText={setPlannedStartDate}
+                      placeholder="Ex: 2024-05-10"
+                    />
+                  </View>
+                </View>
+
+                <Text style={[styles.label, { marginTop: 12, color: colors.text }]}>
+                  Data do Pedido Médico (AAAA-MM-DD)
+                </Text>
+                <TextInput
+                  style={[
+                    styles.input,
+                    {
+                      backgroundColor: colors.background,
+                      borderColor: colors.border,
+                      color: colors.text,
+                    },
+                  ]}
+                  value={medicalReferralDate}
+                  onChangeText={setMedicalReferralDate}
+                  placeholder="Data que consta no encaminhamento"
+                />
+                
+                <Text style={[styles.label, { marginTop: 12, color: colors.text }]}>
+                  Foco Clínico
+                </Text>
+                <TextInput
+                  style={[
+                    styles.input,
+                    {
+                      backgroundColor: colors.background,
+                      borderColor: colors.border,
+                      color: colors.text,
+                    },
+                  ]}
+                  value={clinicalFocus}
+                  onChangeText={setClinicalFocus}
+                />
+                
+                <Text style={[styles.hint, { color: colors.textMuted }]}>
+                  * As datas serão geradas 3x por semana (Seg/Qua/Sex) em dias úteis.
+                </Text>
+              </View>
+            )}
           </View>
 
           {/* Paciente */}
@@ -325,4 +549,34 @@ const styles = StyleSheet.create({
     borderBottomWidth: StyleSheet.hairlineWidth,
   },
   patientItemText: { fontSize: 15 },
+  card: {
+    borderWidth: 1,
+    borderRadius: 12,
+    overflow: "hidden",
+  },
+  cardHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    padding: 14,
+  },
+  cardTitleContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  cardTitle: {
+    fontSize: 15,
+    fontWeight: "700",
+  },
+  cardBody: {
+    padding: 14,
+    paddingTop: 0,
+    borderTopWidth: 0,
+  },
+  hint: {
+    fontSize: 11,
+    marginTop: 8,
+    fontStyle: "italic",
+  },
 });

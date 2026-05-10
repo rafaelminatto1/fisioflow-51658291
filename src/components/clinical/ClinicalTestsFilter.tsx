@@ -24,10 +24,10 @@ function FilterChip({
     <button
       type="button"
       onClick={onClick}
-      className={`rounded-full border px-4 py-2 text-sm font-medium transition-all ${
+      className={`rounded-full border px-4 py-2 text-sm font-semibold transition-all ${
         active
-          ? "border-teal-200 bg-teal-50 text-teal-700 shadow-sm"
-          : "border-slate-200 bg-white text-slate-600 hover:border-teal-200 hover:text-teal-700"
+          ? "border-teal-600 bg-teal-600 text-white shadow-lg ring-2 ring-teal-600/30 scale-105"
+          : "border-slate-300 bg-white text-slate-700 hover:border-slate-400 hover:bg-slate-50 shadow-sm"
       }`}
     >
       {label}

@@ -29,6 +29,8 @@ import { TransactionListSkeleton } from "@/components/ui/Skeleton";
 import { format } from "date-fns";
 import { useHaptics } from "@/hooks/useHaptics";
 import { useQueryClient } from "@tanstack/react-query";
+import { generateReceiptPDF } from "@/lib/services/pdfGenerator";
+import { getPatientById, sendWhatsAppTemplate } from "@/lib/api";
 
 
 export default function FinancialsScreen() {
@@ -37,7 +39,7 @@ export default function FinancialsScreen() {
   const { light, medium, success, error: hapticError } = useHaptics();
   const queryClient = useQueryClient();
 
-  const [activeTab, setActiveTab] = useState<"transactions" | "nfse" | "receipts">("transactions");
+  const [activeTab, setActiveTab] = useState<"transactions" | "nfse">("transactions");
   const [filters, setFilters] = useState<FinancialFiltersType>({
     status: "all",
     datePeriod: "month",
@@ -48,6 +50,7 @@ export default function FinancialsScreen() {
 
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
   const [recordToDelete, setRecordToDelete] = useState<any>(null);
+  const [isGeneratingReceipt, setIsGeneratingReceipt] = useState<string | null>(null);
 
   const queryOptions = useMemo(() => {
     const dateRange = filters.customDateRange || getDateRange(filters.datePeriod);
@@ -259,29 +262,7 @@ export default function FinancialsScreen() {
             NFS-e
           </Text>
         </TouchableOpacity>
-        <TouchableOpacity
-          style={[
-            styles.tab,
-            activeTab === "receipts" && styles.activeTab,
-            activeTab === "receipts" && { borderBottomColor: colors.primary },
-          ]}
-          onPress={() => {
-            light();
-            setActiveTab("receipts");
-          }}
-        >
-          <Text
-            style={[
-              styles.tabText,
-              {
-                color: activeTab === "receipts" ? colors.primary : colors.textSecondary,
-              },
-              activeTab === "receipts" && styles.activeTabText,
-            ]}
-          >
-            Recibos
-          </Text>
-        </TouchableOpacity>
+
       </View>
 
       <ScrollView
@@ -366,9 +347,45 @@ export default function FinancialsScreen() {
                     status={record.payment_status}
                     onEdit={() => handleEdit(record)}
                     onDelete={(e) => handleDeletePress(record, e)}
-                    onReceipt={(e) => {
+                    onReceipt={async (e) => {
                       e?.stopPropagation();
                       light();
+                      try {
+                        setIsGeneratingReceipt(record.id);
+                        const patient = await getPatientById(record.patient_id);
+                        await generateReceiptPDF(
+                          patient as any,
+                          {
+                            amount: record.final_value,
+                            date: record.session_date,
+                            description: record.notes || "Sessão de Fisioterapia",
+                            paymentMethod: record.payment_method,
+                          }
+                        );
+                        success();
+
+                        // Envio automático via WhatsApp
+                        if (patient.phone) {
+                          sendWhatsAppTemplate({
+                            patient_id: patient.id,
+                            template_key: "recibo_gerado",
+                            variables: {
+                              name: patient.full_name.split(" ")[0],
+                              amount: new Intl.NumberFormat("pt-BR", {
+                                style: "currency",
+                                currency: "BRL",
+                              }).format(record.final_value),
+                              date: format(new Date(record.session_date), "dd/MM/yyyy"),
+                              link: "Disponível no seu Portal do Paciente",
+                            },
+                          }).catch((e) => console.error("Erro ao enviar WhatsApp:", e));
+                        }
+                      } catch (err) {
+                        hapticError();
+                        Alert.alert("Erro", "Não foi possível gerar o recibo.");
+                      } finally {
+                        setIsGeneratingReceipt(null);
+                      }
                     }}
                   />
                 ))
@@ -390,7 +407,7 @@ export default function FinancialsScreen() {
               )}
             </View>
           </>
-        ) : activeTab === "nfse" ? (
+        ) : (
           <View style={styles.listSection}>
             {isLoadingNFSe ? (
               <TransactionListSkeleton count={3} />
@@ -464,16 +481,8 @@ export default function FinancialsScreen() {
               ))
             )}
           </View>
-        ) : (
-          <View style={styles.listSection}>
-            <EmptyStateFinancial
-              title="Nenhum recibo emitido"
-              description="Os recibos emitidos aparecerão aqui."
-              illustration="receipts"
-              variant="initial"
-            />
-          </View>
         )}
+
         <View style={{ height: 100 }} />
       </ScrollView>
 
@@ -553,6 +562,18 @@ const styles = StyleSheet.create({
   },
   activeTabText: {
     fontWeight: "700",
+  },
+  soonBadge: {
+    paddingHorizontal: 5,
+    paddingVertical: 2,
+    borderRadius: 6,
+    marginLeft: 4,
+  },
+  soonText: {
+    fontSize: 9,
+    fontWeight: "700",
+    textTransform: "uppercase",
+    letterSpacing: 0.3,
   },
   scroll: {
     flex: 1,

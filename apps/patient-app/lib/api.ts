@@ -405,4 +405,8 @@ export const wearablesApi = {
     ),
   disconnectProvider: (provider: string) =>
     api.delete<{ success: boolean }>(`/api/wearables/integrations/${provider}`),
+  getRtmStatus: (patientId: string) =>
+    api.get<any>(`/api/wearables/rtm/status/${patientId}`),
+  syncMilestones: (patientId: string) =>
+    api.post<any>("/api/wearables/rtm/milestones/sync", { patientId }),
 };

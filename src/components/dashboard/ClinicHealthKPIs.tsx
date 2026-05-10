@@ -1,158 +1,145 @@
-import {
-  AlertTriangle,
-  Calendar,
-  DollarSign,
-  Users,
-  Activity,
-  Info,
+import React, { memo } from "react";
+import { 
+  TrendingUp, 
+  Users, 
+  DollarSign, 
+  Target, 
+  Clock, 
+  ArrowUpRight,
+  ShieldCheck,
+  Zap
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { cn } from "@/lib/utils";
 import { useClinicHealthKPIs } from "@/hooks/useClinicHealthKPIs";
+import { cn } from "@/lib/utils";
 
-const fmt = (n: number, decimals = 0) =>
-  n.toLocaleString("pt-BR", { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
-
-const fmtBRL = (n: number) =>
-  n.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-
-type TrafficLight = "green" | "yellow" | "red";
-
-function semaphore(value: number, good: number, warn: number, inverted = false): TrafficLight {
-  if (!inverted) {
-    if (value >= good) return "green";
-    if (value >= warn) return "yellow";
-    return "red";
-  }
-  if (value <= good) return "green";
-  if (value <= warn) return "yellow";
-  return "red";
+interface MetricCardProps {
+  title: string;
+  value: string | number;
+  subtitle: string;
+  icon: React.ElementType;
+  trend?: {
+    value: string;
+    isPositive: boolean;
+  };
+  color?: "primary" | "emerald" | "amber" | "sky";
 }
 
-const lightClass: Record<TrafficLight, string> = {
-  green: "text-emerald-500",
-  yellow: "text-amber-500",
-  red: "text-red-500",
-};
+const MetricCard = memo(({ title, value, subtitle, icon: Icon, trend, color = "primary" }: MetricCardProps) => {
+  const colorStyles = {
+    primary: "bg-primary/10 text-primary border-primary/20",
+    emerald: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20",
+    amber: "bg-amber-500/10 text-amber-600 border-amber-500/20",
+    sky: "bg-sky-500/10 text-sky-600 border-sky-500/20",
+  };
 
-const lightBg: Record<TrafficLight, string> = {
-  green: "bg-emerald-50 border-emerald-200 dark:bg-emerald-950/30 dark:border-emerald-800",
-  yellow: "bg-amber-50 border-amber-200 dark:bg-amber-950/30 dark:border-amber-800",
-  red: "bg-red-50 border-red-200 dark:bg-red-950/30 dark:border-red-800",
-};
-
-interface KPICardProps {
-  label: string;
-  value: string;
-  light?: TrafficLight;
-  icon: React.ReactNode;
-  hint?: string;
-  sub?: string;
-}
-
-function KPICard({ label, value, light = "green", icon, hint, sub }: KPICardProps) {
   return (
-    <div className={cn("rounded-2xl border p-4 flex flex-col gap-2 transition-all", lightBg[light])}>
-      <div className="flex items-center justify-between">
-        <span className="text-xs font-black uppercase tracking-widest text-muted-foreground">
-          {label}
-        </span>
-        <div className="flex items-center gap-1.5">
-          {hint && (
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Info className="h-3.5 w-3.5 text-muted-foreground/50 cursor-help" />
-                </TooltipTrigger>
-                <TooltipContent side="top" className="max-w-[220px] text-xs">
-                  {hint}
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          )}
-          <div className={cn("h-7 w-7 rounded-xl flex items-center justify-center", lightClass[light])}>
-            {icon}
+    <Card className="overflow-hidden rounded-[2rem] border-border/60 bg-background/80 shadow-sm backdrop-blur-xl transition-all hover:shadow-md hover:border-primary/20">
+      <CardContent className="p-6">
+        <div className="flex items-start justify-between">
+          <div className={cn("p-3 rounded-2xl border", colorStyles[color])}>
+            <Icon className="h-5 w-5" />
           </div>
+          {trend && (
+            <Badge variant="outline" className={cn(
+              "text-[10px] font-bold uppercase tracking-wider",
+              trend.isPositive ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20" : "bg-amber-500/10 text-amber-600 border-amber-500/20"
+            )}>
+              {trend.value}
+            </Badge>
+          )}
         </div>
-      </div>
-      <p className={cn("text-2xl font-black tracking-tight font-display", lightClass[light])}>
-        {value}
-      </p>
-      {sub && <p className="text-[11px] text-muted-foreground font-medium">{sub}</p>}
-    </div>
+        
+        <div className="mt-4 space-y-1">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+            {title}
+          </p>
+          <h3 className="text-2xl font-bold tracking-tight text-foreground">
+            {value}
+          </h3>
+          <p className="text-xs text-muted-foreground leading-relaxed">
+            {subtitle}
+          </p>
+        </div>
+      </CardContent>
+    </Card>
   );
-}
+});
 
-export function ClinicHealthKPIs() {
+MetricCard.displayName = "MetricCard";
+
+export const ClinicHealthKPIs: React.FC = () => {
   const { data: kpis, isLoading } = useClinicHealthKPIs();
 
   if (isLoading) {
     return (
-      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-4 gap-3">
-        {Array.from({ length: 4 }).map((_, i) => (
-          <Skeleton key={i} className="h-32 rounded-2xl" />
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {[1, 2, 3, 4].map((i) => (
+          <Skeleton key={i} className="h-44 rounded-[2rem]" />
         ))}
       </div>
     );
   }
 
-  if (!kpis) return null;
-
-  const occupancyLight = semaphore(kpis.occupancy_rate, 75, 50);
-  const noShowLight = semaphore(kpis.no_show_rate, 10, 20, true);
-  const ticketLight = semaphore(kpis.avg_ticket, 150, 80);
+  const formatCurrency = (val: number) => 
+    new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(val);
 
   return (
-    <Card className="border border-border/50 shadow-sm bg-card/80 backdrop-blur-sm rounded-[2.5rem]">
-      <CardHeader className="pb-3 px-8 pt-8">
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 flex items-center gap-2">
-            <Activity className="h-4 w-4 text-primary" />
-            Métricas Operacionais
-          </CardTitle>
-          <span className="text-[11px] text-muted-foreground font-medium">
-            {new Date(kpis.period.start + "T12:00:00").toLocaleString("pt-BR", { month: "long", year: "numeric" })}
-          </span>
+    <div className="space-y-6">
+      <div className="flex items-center justify-between gap-4">
+        <div>
+          <h2 className="text-lg font-bold tracking-tight flex items-center gap-2">
+            <ShieldCheck className="h-5 w-5 text-primary" />
+            Saúde do Negócio (BI)
+          </h2>
+          <p className="text-xs text-muted-foreground">
+            Indicadores de crescimento e eficiência de aquisição.
+          </p>
         </div>
-      </CardHeader>
-      <CardContent className="p-8 pt-4">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <KPICard
-            label="Ocupação"
-            value={`${fmt(kpis.occupancy_rate, 1)}%`}
-            light={occupancyLight}
-            icon={<Calendar className="h-4 w-4" />}
-            hint="Agendamentos realizados ÷ (realizados + faltas + cancelados). Meta: ≥75%"
-            sub={`${kpis.appointments.completed} de ${kpis.appointments.completed + kpis.appointments.no_show + kpis.appointments.cancelled} slots`}
-          />
-          <KPICard
-            label="No-show"
-            value={`${fmt(kpis.no_show_rate, 1)}%`}
-            light={noShowLight}
-            icon={<AlertTriangle className="h-4 w-4" />}
-            hint="Taxa de faltas sobre agendamentos concluídos. Meta: <15%"
-            sub={`${kpis.appointments.no_show} faltas no mês`}
-          />
-          <KPICard
-            label="Ticket Médio"
-            value={fmtBRL(kpis.avg_ticket)}
-            light={ticketLight}
-            icon={<DollarSign className="h-4 w-4" />}
-            hint="Valor médio pago por sessão realizada no período"
-            sub={`${kpis.appointments.completed} sessões pagas`}
-          />
-          <KPICard
-            label="Pacientes Ativos"
-            value={fmt(kpis.active_patients)}
-            light={kpis.active_patients > 0 ? "green" : "yellow"}
-            icon={<Users className="h-4 w-4" />}
-            hint="Pacientes com ao menos 1 sessão nos últimos 60 dias"
-            sub={kpis.at_risk_patients > 0 ? `${kpis.at_risk_patients} em risco` : "Base estável"}
-          />
-        </div>
-      </CardContent>
-    </Card>
+        <Badge variant="secondary" className="bg-primary/5 text-primary border-primary/10">
+          Atualizado em tempo real
+        </Badge>
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <MetricCard
+          title="CAC"
+          value={formatCurrency(kpis?.cac || 0)}
+          subtitle={`${kpis?.new_patients || 0} novos pacientes com R$ ${kpis?.marketing_spend?.toLocaleString("pt-BR") || 0} em ads.`}
+          icon={Target}
+          color="amber"
+          trend={{ value: "Benchmark: < R$ 150", isPositive: (kpis?.cac || 0) < 150 }}
+        />
+
+        <MetricCard
+          title="LTV Estimado"
+          value={formatCurrency(kpis?.ltv_estimate || 0)}
+          subtitle="Valor bruto projetado por paciente em 12 meses."
+          icon={TrendingUp}
+          color="emerald"
+          trend={{ value: `ROI: ${kpis?.ltv_cac_ratio || 0}x`, isPositive: (kpis?.ltv_cac_ratio || 0) > 3 }}
+        />
+
+        <MetricCard
+          title="Payback"
+          value={`${kpis?.payback || 0} meses`}
+          subtitle="Tempo médio para recuperar o custo de aquisição."
+          icon={Clock}
+          color="primary"
+          trend={{ value: "Ideal: < 3 meses", isPositive: (kpis?.payback || 0) <= 3 }}
+        />
+
+        <MetricCard
+          title="Eficiência (LTV/CAC)"
+          value={`${kpis?.ltv_cac_ratio || 0}x`}
+          subtitle="Sustentabilidade: Cada R$ 1 investido retorna este valor."
+          icon={Zap}
+          color="sky"
+          trend={{ value: "Escalável", isPositive: (kpis?.ltv_cac_ratio || 0) > 3 }}
+        />
+      </div>
+    </div>
   );
-}
+};

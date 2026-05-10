@@ -105,4 +105,5 @@ export type { ApiHEPComplianceData } from "./hep";
 
 export { checkPatientNameDuplicate } from "./utils";
 export { reportsApi } from "./reports";
+export { biomechanicsApi } from "./biomechanics";
 export type { PdfReportRequest, PdfReportResponse } from "./reports";

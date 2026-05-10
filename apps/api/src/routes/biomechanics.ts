@@ -105,4 +105,94 @@ app.get("/:id", requireAuth, async (c) => {
   return c.json({ data: assessment });
 });
 
+// POST /api/biomechanics/:id/sign — Lock and sign the assessment
+app.post("/:id/sign", requireAuth, async (c) => {
+  const user = c.get("user");
+  const id = c.req.param("id");
+  const db = await createDb(c.env);
+
+  // Check if already signed
+  const [assessment] = await db
+    .select()
+    .from(biomechanicsAssessments)
+    .where(
+      and(
+        eq(biomechanicsAssessments.id, id),
+        eq(biomechanicsAssessments.organizationId, user.organizationId),
+      ),
+    );
+
+  if (!assessment) return c.json({ error: "Avaliação não encontrada" }, 404);
+  if (assessment.status === 'signed') return c.json({ error: "Avaliação já está assinada" }, 409);
+
+  const ip = c.req.header("CF-Connecting-IP") ?? "unknown";
+  const now = new Date().toISOString();
+  
+  // Create Signature Metadata (Simulating ICP-Brasil)
+  const signatureMetadata = {
+    signerId: user.uid,
+    signerName: user.name || "Therapist",
+    timestamp: now,
+    ip,
+    userAgent: c.req.header("User-Agent") || "unknown",
+    // SHA-256 of the assessment content to ensure integrity
+    contentHash: await crypto.subtle.digest(
+      "SHA-256",
+      new TextEncoder().encode(JSON.stringify(assessment.analysisData))
+    ).then(b => Array.from(new Uint8Array(b)).map(x => x.toString(16).padStart(2, "0")).join(""))
+  };
+
+  const [updated] = await db
+    .update(biomechanicsAssessments)
+    .set({
+      status: 'signed',
+      analysisData: {
+        ...(assessment.analysisData as object),
+        _signature: signatureMetadata
+      },
+      updatedAt: new Date(),
+    })
+    .where(eq(biomechanicsAssessments.id, id))
+    .returning();
+
+  return c.json({ success: true, data: updated });
+});
+
+// GET /api/biomechanics/:id/verify — Verify the integrity of a signed report
+app.get("/:id/verify", async (c) => {
+  const id = c.req.param("id");
+  const db = await createDb(c.env);
+
+  const [assessment] = await db
+    .select()
+    .from(biomechanicsAssessments)
+    .where(eq(biomechanicsAssessments.id, id));
+
+  if (!assessment) return c.json({ error: "Relatório não encontrado" }, 404);
+  if (assessment.status !== 'signed') return c.json({ valid: false, error: "Relatório não está assinado" });
+
+  const analysisData = assessment.analysisData as any;
+  const signature = analysisData?._signature;
+
+  if (!signature) return c.json({ valid: false, error: "Metadados de assinatura ausentes" });
+
+  // Re-calculate hash to verify integrity
+  const dataToHash = { ...analysisData };
+  delete dataToHash._signature;
+
+  const currentHash = await crypto.subtle.digest(
+    "SHA-256",
+    new TextEncoder().encode(JSON.stringify(dataToHash))
+  ).then(b => Array.from(new Uint8Array(b)).map(x => x.toString(16).padStart(2, "0")).join(""));
+
+  const isValid = currentHash === signature.contentHash;
+
+  return c.json({
+    valid: isValid,
+    signer: signature.signerName,
+    signedAt: signature.timestamp,
+    integrityStatus: isValid ? "verified" : "compromised"
+  });
+});
+
 export { app as biomechanicsRoutes };

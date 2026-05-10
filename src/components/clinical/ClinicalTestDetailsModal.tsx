@@ -10,6 +10,7 @@ import {
   Info,
   Link2,
   PlayCircle,
+  Sparkles,
   ThumbsUp,
   Trash2,
   X,
@@ -91,8 +92,8 @@ export function ClinicalTestDetailsModal({
 
   if (!test) return null;
 
-  const primaryImage = test.image_url || test.media_urls?.[0] || null;
-  const evidenceResources = test.evidence_resources ?? [];
+  const primaryImage = test?.image_url || test?.media_urls?.[0] || null;
+  const evidenceResources = test?.evidence_resources ?? [];
 
   const handleDownloadPDF = async () => {
     try {

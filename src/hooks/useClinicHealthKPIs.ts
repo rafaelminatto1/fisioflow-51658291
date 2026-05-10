@@ -1,34 +1,21 @@
 import { useQuery } from "@tanstack/react-query";
-import { request } from "@/api/v2";
+import { useAuth } from "@/contexts/AuthContext";
+import { clinicMetricsApi, type ClinicKPIs } from "@/api/v2/clinicMetrics";
+import { format } from "date-fns";
 
-export interface ClinicKPIs {
-  period: { start: string; end: string };
-  appointments: {
-    total: number;
-    completed: number;
-    no_show: number;
-    cancelled: number;
-    upcoming: number;
-  };
-  occupancy_rate: number;
-  no_show_rate: number;
-  cancellation_rate: number;
-  avg_ticket: number;
-  total_revenue: number;
-  active_patients: number;
-  at_risk_patients: number;
-  ltv_estimate: number;
-  avg_sessions_per_patient_6m: number;
-}
+export const useClinicHealthKPIs = (month?: string) => {
+  const { organizationId } = useAuth();
+  
+  // Default to current month if not provided (YYYY-MM)
+  const targetMonth = month || format(new Date(), "yyyy-MM");
 
-export function useClinicHealthKPIs(month?: string) {
-  const params = month ? `?month=${month}` : "";
-  return useQuery<ClinicKPIs>({
-    queryKey: ["clinic-health-kpis", month ?? "current"],
+  return useQuery({
+    queryKey: ["clinic-health-kpis", organizationId, targetMonth],
     queryFn: async () => {
-      const res = await request<{ data: ClinicKPIs }>(`/api/clinic-metrics/kpis${params}`);
-      return (res as { data: ClinicKPIs }).data;
+      const response = await clinicMetricsApi.getKPIs({ month: targetMonth });
+      return response.data;
     },
-    staleTime: 5 * 60 * 1000,
+    enabled: !!organizationId,
+    staleTime: 1000 * 60 * 10, // 10 minutes
   });
-}
+};

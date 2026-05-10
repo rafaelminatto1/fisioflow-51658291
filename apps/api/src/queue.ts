@@ -171,13 +171,32 @@ export async function handleQueue(batch: MessageBatch<QueueTask>, env: Env): Pro
           await generateNFSeForSession(task.payload, env);
           break;
 
+        // Event-driven triggers (from triggerInngestEvent)
+        case "appointment.created":
+          await handleAppointmentCreated(task.data, env);
+          break;
+
+        case "patient.inactive":
+          await handlePatientInactive(task.data, env);
+          break;
+
+        case "patient.birthday":
+          await handlePatientBirthday(task.data, env);
+          break;
+
         case "PROCESS_BACKUP":
         case "CLEANUP_LOGS":
           console.log(`[Queue] Task ${task.type} acknowledged (no-op placeholder)`);
           break;
 
         default:
-          console.warn(`[Queue] Unknown task type`);
+          // Se for um evento desconhecido mas tiver data, logamos para debug
+          if ((task as any).data) {
+            console.warn(`[Queue] Unknown event type: ${task.type}`);
+          } else {
+            console.warn(`[Queue] Unknown task type: ${task.type}`);
+          }
+          break;
       }
 
       message.ack();
@@ -505,4 +524,70 @@ async function generateNFSeForSession(
   });
 
   console.log(`[Queue/NFS-e] Generated draft NFS-e for session ${payload.sessionId}`);
+}
+
+// ===== EVENT HANDLERS =====
+
+async function handleAppointmentCreated(data: any, env: Env) {
+  const { appointmentId, patientId, patientName, patientPhone, date, startTime, organizationId } = data;
+  if (!patientPhone) return;
+
+  const firstName = patientName?.split(" ")[0] || "Paciente";
+  const formattedDate = new Date(date).toLocaleDateString("pt-BR");
+  const time = startTime?.substring(0, 5) || "";
+
+  const messageText = `Olá, ${firstName}! 👋 Seu agendamento no FisioFlow foi confirmado para o dia ${formattedDate} às ${time}. Até lá!`;
+
+  await processWhatsAppMessage({
+    to: patientPhone,
+    templateName: "confirmacao_agendamento", // Template para envio imediato
+    languageCode: "pt_BR",
+    bodyParameters: [
+      { type: "text", text: firstName },
+      { type: "text", text: formattedDate },
+      { type: "text", text: time }
+    ],
+    organizationId,
+    patientId,
+    messageText,
+    appointmentId
+  }, env);
+}
+
+async function handlePatientInactive(data: any, env: Env) {
+  const { patientId, name, phone, organizationId } = data;
+  
+  if (env.WORKFLOW_REENGAGEMENT) {
+    // Inicia o workflow de reengajamento progressivo
+    await env.WORKFLOW_REENGAGEMENT.create({
+      id: `reengage-${patientId}-${new Date().toISOString().slice(0, 10)}`,
+      params: {
+        patientId,
+        patientName: name,
+        patientPhone: phone,
+        organizationId,
+        therapistName: "seu fisioterapeuta",
+        daysSinceLastAppointment: 15
+      }
+    });
+  }
+}
+
+async function handlePatientBirthday(data: any, env: Env) {
+  const { patientId, name, phone, organizationId } = data;
+  if (!phone) return;
+
+  const firstName = name?.split(" ")[0] || "Paciente";
+  const messageText = `Parabéns, ${firstName}! 🎂 O FisioFlow te deseja um dia incrível e muita saúde!`;
+
+  await processWhatsAppMessage({
+    to: phone,
+    templateName: "parabens_paciente",
+    languageCode: "pt_BR",
+    bodyParameters: [{ type: "text", text: firstName }],
+    organizationId,
+    patientId,
+    messageText,
+    appointmentId: ""
+  }, env);
 }

@@ -29,6 +29,9 @@ interface FormData {
   diagnosis: string;
   notes: string;
   status: Patient["status"];
+  insuranceProvider: string;
+  insurancePlan: string;
+  insuranceCard: string;
 }
 
 interface FormErrors {
@@ -106,6 +109,9 @@ export default function PatientFormScreen() {
     diagnosis: "",
     notes: "",
     status: "active",
+    insuranceProvider: "",
+    insurancePlan: "",
+    insuranceCard: "",
   });
   const [formErrors, setFormErrors] = useState<FormErrors>({});
 
@@ -130,6 +136,9 @@ export default function PatientFormScreen() {
       diagnosis: "",
       notes: patient.observations ?? "",
       status: patient.is_active === false ? "inactive" : "active",
+      insuranceProvider: (patient as any).insurance?.provider ?? "",
+      insurancePlan: (patient as any).insurance?.plan ?? "",
+      insuranceCard: (patient as any).insurance?.cardNumber ?? "",
     });
   }, [patient]);
 
@@ -184,6 +193,11 @@ export default function PatientFormScreen() {
       diagnosis: formData.diagnosis.trim() || undefined,
       notes: formData.notes.trim() || undefined,
       status: formData.status,
+      insurance: {
+        provider: formData.insuranceProvider.trim() || undefined,
+        plan: formData.insurancePlan.trim() || undefined,
+        cardNumber: formData.insuranceCard.trim() || undefined,
+      },
     };
 
     try {
@@ -327,6 +341,35 @@ export default function PatientFormScreen() {
               placeholder="Observações adicionais"
               multiline
               numberOfLines={4}
+            />
+          </Card>
+
+          <Card style={styles.sectionCard} padding="sm">
+            <View style={styles.sectionHeader}>
+              <Ionicons name="shield-outline" size={20} color={colors.primary} />
+              <Text style={[styles.sectionTitle, { color: colors.text }]}>Convênio (Para Reembolso)</Text>
+            </View>
+            <Text style={[styles.fieldHint, { color: colors.textSecondary, marginBottom: 12 }]}>
+              O FisioFlow não atende convênios diretamente. Registre os dados apenas para auxiliar o paciente no processo de reembolso.
+            </Text>
+
+            <Input
+              label="Operadora"
+              value={formData.insuranceProvider}
+              onChangeText={(value) => updateField("insuranceProvider", value)}
+              placeholder="Ex: Bradesco, SulAmérica, Unimed..."
+            />
+            <Input
+              label="Plano"
+              value={formData.insurancePlan}
+              onChangeText={(value) => updateField("insurancePlan", value)}
+              placeholder="Ex: Especial 100, Plus, Nacional..."
+            />
+            <Input
+              label="Nº da Carteirinha"
+              value={formData.insuranceCard}
+              onChangeText={(value) => updateField("insuranceCard", value)}
+              placeholder="0000 0000 0000 0000"
             />
           </Card>
 

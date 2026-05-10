@@ -414,4 +414,96 @@ app.post("/sync-provider", requireAuth, async (c) => {
   return c.json({ data: { synced } });
 });
 
+// ─── Remote Therapeutic Monitoring (RTM) ──────────────────────────────────────
+
+// GET /api/wearables/rtm/status/:patientId — Activity Score and Trends
+app.get("/rtm/status/:patientId", requireAuth, async (c) => {
+  const user = c.get("user");
+  const { patientId } = c.req.param();
+  const db = createPool(c.env);
+
+  // Get current week volume vs previous week
+  const currentWeek = await db.query(
+    `SELECT data_type, SUM(value) as total, unit
+     FROM wearable_data
+     WHERE patient_id = $1 AND organization_id = $2
+       AND timestamp >= NOW() - INTERVAL '7 days'
+     GROUP BY data_type, unit`,
+    [patientId, user.organizationId]
+  );
+
+  const prevWeek = await db.query(
+    `SELECT data_type, SUM(value) as total, unit
+     FROM wearable_data
+     WHERE patient_id = $1 AND organization_id = $2
+       AND timestamp BETWEEN NOW() - INTERVAL '14 days' AND NOW() - INTERVAL '7 days'
+     GROUP BY data_type, unit`,
+    [patientId, user.organizationId]
+  );
+
+  // Simple Score Calculation (0-100)
+  // Base meta: 50k steps/week, 150min activity/week
+  let score = 50;
+  const steps = currentWeek.rows.find(r => r.data_type === 'steps')?.total || 0;
+  if (steps > 0) score = Math.min(100, Math.round((Number(steps) / 50000) * 100));
+
+  return c.json({
+    data: {
+      score,
+      trends: {
+        current: currentWeek.rows,
+        previous: prevWeek.rows
+      },
+      status: score > 70 ? 'active' : (score > 30 ? 'moderate' : 'low')
+    }
+  });
+});
+
+// POST /api/wearables/rtm/milestones/sync — Check and register achievements
+app.post("/rtm/milestones/sync", requireAuth, async (c) => {
+  const user = c.get("user");
+  const { patientId } = await c.req.json<{ patientId: string }>();
+  const db = createPool(c.env);
+
+  // Check for 100k total steps milestone
+  const totalSteps = await db.query(
+    `SELECT SUM(value) as total FROM wearable_data 
+     WHERE patient_id = $1 AND data_type = 'steps'`,
+    [patientId]
+  );
+
+  const total = Number(totalSteps.rows[0]?.total || 0);
+  let milestoneReached = null;
+
+  if (total >= 100000) {
+    const exists = await db.query(
+      `SELECT id FROM patient_achievements WHERE patient_id = $1 AND type = 'steps_100k'`,
+      [patientId]
+    );
+    if (exists.rows.length === 0) {
+      milestoneReached = "steps_100k";
+      await db.query(
+        `INSERT INTO patient_achievements (patient_id, organization_id, type, title, metadata)
+         VALUES ($1, $2, 'steps_100k', 'Caminhante de Elite (100k passos)', $3)`,
+        [patientId, user.organizationId, JSON.stringify({ total_steps: total })]
+      );
+
+      // Trigger Celebration Workflow
+      if (c.env.WORKFLOW_WEARABLE_ACTIVITY) {
+        await c.env.WORKFLOW_WEARABLE_ACTIVITY.create({
+          id: `milestone-${patientId}-${Date.now()}`,
+          params: {
+            patientId,
+            organizationId: user.organizationId,
+            alertType: 'milestone_reached',
+            milestoneTitle: 'Caminhante de Elite (100k passos)'
+          }
+        });
+      }
+    }
+  }
+
+  return c.json({ data: { totalSteps: total, milestoneReached } });
+});
+
 export { app as wearablesRoutes };

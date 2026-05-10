@@ -232,7 +232,7 @@ export default function TarefasScreen() {
 
       {viewMode === "list" ? (
         <>
-          <View style={styles.filtersSection}>
+          <View style={[styles.filtersSection, { backgroundColor: colors.background }]}>
             <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
@@ -406,7 +406,7 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   filtersSection: {
-    backgroundColor: "#fff",
+    // Dynamic background for the filter bar
   },
   filtersScroll: { maxHeight: 54 },
   filtersContent: {
@@ -417,10 +417,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   filterPill: {
-    paddingHorizontal: 14,
-    paddingVertical: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
     borderRadius: 12,
     borderWidth: 1,
+    minHeight: 40,
+    justifyContent: "center",
   },
   filterPillText: { fontSize: 13, fontWeight: "600" },
   listContent: { paddingHorizontal: 16, paddingTop: 4, paddingBottom: 40 },

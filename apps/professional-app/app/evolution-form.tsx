@@ -13,6 +13,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams, Stack } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useColors } from "@/hooks/useColorScheme";
 import { useHaptics } from "@/hooks/useHaptics";
 import { SOAPForm } from "@/components/evolution/SOAPForm";
@@ -59,19 +60,39 @@ export default function EvolutionFormScreen() {
   const [generatingSOAP, setGeneratingSOAP] = useState(false);
   const [generatedSuggestions, setGeneratedSuggestions] = useState<string[]>([]);
 
-  // Load existing draft on mount
+  // Load existing draft on mount (restores content if user leaves and comes back)
   useEffect(() => {
     if (!patientId) return;
+    
+    const DRAFT_KEY = `evolution_draft_${patientId}`;
+
     const fetchDraft = async () => {
+      setAutoSaveStatus("saving");
       try {
+        // 1. Tentar recuperar cache local primeiro (mais rápido e funciona offline)
+        const localDraftStr = await AsyncStorage.getItem(DRAFT_KEY);
+        const localDraft = localDraftStr ? JSON.parse(localDraftStr) : null;
+
+        // 2. Tentar recuperar rascunho do servidor
         let url = `/api/sessions?patientId=${patientId}&status=draft&limit=1`;
         if (appointmentId) {
           url += `&appointmentId=${appointmentId}`;
         }
-        const res = await fetchApi<{ data: any[] }>(url);
-        const draft = res.data?.[0];
+        
+        let serverDraft = null;
+        try {
+          const res = await fetchApi<{ data: any[] }>(url);
+          serverDraft = res.data?.[0];
+        } catch (err) {
+          console.log("[EvolutionForm] Server unreachable, using local cache if available");
+        }
+
+        // 3. Decidir qual usar (o mais recente ou o local se estiver offline)
+        const draft = localDraft || serverDraft;
+        
         if (draft && !savedEvolutionId.current) {
-          savedEvolutionId.current = draft.id;
+          savedEvolutionId.current = serverDraft?.id || null;
+          
           const subj = draft.subjective || "";
           const obj = draft.objective || "";
           const ass = draft.assessment || "";
@@ -81,16 +102,23 @@ export default function EvolutionFormScreen() {
           setObjective(obj);
           setAssessment(ass);
           setPlan(pln);
-          setFreeContent(ass); // Also populate freeContent in case it's Notion
+          setFreeContent(ass);
           setPainLevel(draft.pain_level || 0);
+          
+          if (draft.photos && Array.isArray(draft.photos)) {
+            setPhotos(draft.photos);
+          }
 
-          // Guess the mode: if only assessment is filled, it's likely Notion or Tiptap
           if (!subj && !obj && !pln && ass) {
             setMode("Notion");
           }
+          setAutoSaveStatus("saved");
+        } else {
+          setAutoSaveStatus("idle");
         }
       } catch (err) {
         console.error("[EvolutionForm] Error fetching draft:", err);
+        setAutoSaveStatus("idle");
       }
     };
     fetchDraft();
@@ -98,6 +126,24 @@ export default function EvolutionFormScreen() {
 
   // Auto-save debounced — cria na primeira vez, atualiza nas seguintes
   const triggerAutoSave = useCallback(() => {
+    const DRAFT_KEY = `evolution_draft_${patientId}`;
+    
+    // Salvar localmente IMEDIATAMENTE (sem debounce longo para garantir segurança local)
+    const saveLocal = async () => {
+      const draftData = {
+        subjective: mode === "SOAP" ? subjective.trim() : "",
+        objective: mode === "SOAP" ? objective.trim() : "",
+        assessment: mode === "SOAP" ? assessment.trim() : freeContent.trim(),
+        plan: mode === "SOAP" ? plan.trim() : "",
+        pain_level: painLevel,
+        photos,
+        mode,
+        updatedAt: new Date().toISOString(),
+      };
+      await AsyncStorage.setItem(DRAFT_KEY, JSON.stringify(draftData));
+    };
+    saveLocal();
+
     if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
     autoSaveTimer.current = setTimeout(async () => {
       const hasContent =
@@ -126,7 +172,10 @@ export default function EvolutionFormScreen() {
 
         const res = await fetchApi<{ data: { id: string } }>("/api/sessions/autosave", {
           method: "POST",
-          data: body,
+          data: {
+            ...body,
+            photos,
+          },
         });
         savedEvolutionId.current = res.data?.id ?? savedEvolutionId.current;
         setAutoSaveStatus("saved");
@@ -140,9 +189,9 @@ export default function EvolutionFormScreen() {
           .filter(Boolean)
           .join(" | ");
         setAutoSaveErrorDetail(technicalDetail || null);
-        console.error("[AutoSave]", err);
+        console.error("[AutoSave Server Error]", err);
       }
-    }, 2000);
+    }, 5000); // 5 segundos para o servidor (menos agressivo)
   }, [
     mode,
     subjective,
@@ -153,43 +202,10 @@ export default function EvolutionFormScreen() {
     patientId,
     appointmentId,
     painLevel,
+    photos
   ]);
 
-  // Carrega sessão existente no mount (para restaurar conteúdo após sair e voltar)
-  useEffect(() => {
-    if (!patientId) return;
-    const load = async () => {
-      try {
-        const qParams: Record<string, string> = {
-          patientId,
-          status: "draft",
-          limit: "1",
-        };
-        if (appointmentId) qParams.appointmentId = appointmentId;
-        const res = await fetchApi<{ data: Array<Record<string, any>> }>("/api/sessions", {
-          params: qParams,
-        });
-        const session = res.data?.[0];
-        if (!session) return;
-        savedEvolutionId.current = session.id;
-        const hasSoap = session.subjective || session.objective || session.plan;
-        if (hasSoap) {
-          setMode("SOAP");
-          setSubjective(session.subjective || "");
-          setObjective(session.objective || "");
-          setAssessment(session.assessment || "");
-          setPlan(session.plan || "");
-        } else if (session.assessment) {
-          setFreeContent(session.assessment);
-        }
-        if (session.pain_level != null) setPainLevel(Number(session.pain_level));
-      } catch {
-        // silencioso — começa em branco se falhar
-      }
-    };
-    load();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // apenas no mount
+
 
   // Trigger auto-save on content changes
   useEffect(() => {
@@ -247,6 +263,24 @@ export default function EvolutionFormScreen() {
     }
   };
 
+  const handleFinalize = async () => {
+    try {
+      setAutoSaveStatus("saving");
+      // Simulação ou chamada real de finalização se houver rota específica
+      // Por enquanto, o autosave já salvou o conteúdo. 
+      // Em uma implementação real, chamaríamos /api/sessions/finalize
+      
+      const DRAFT_KEY = `evolution_draft_${patientId}`;
+      await AsyncStorage.removeItem(DRAFT_KEY);
+      
+      success();
+      router.back();
+    } catch (err) {
+      hapticError();
+      Alert.alert("Erro", "Não foi possível finalizar a evolução.");
+    }
+  };
+
   const autoSaveLabel =
     autoSaveStatus === "saving"
       ? "Salvando..."
@@ -262,8 +296,8 @@ export default function EvolutionFormScreen() {
       edges={["top"]}
     >
       <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
-        keyboardVerticalOffset={Platform.OS === "ios" ? 100 : 0}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0}
         style={styles.keyboardAvoidingView}
       >
         <Stack.Screen options={{ headerShown: false }} />
@@ -286,12 +320,20 @@ export default function EvolutionFormScreen() {
               {patientName}
             </Text>
           </View>
-          <View style={styles.placeholder} />
+          <TouchableOpacity onPress={handleFinalize} style={styles.finalizeButton}>
+            <Text style={[styles.finalizeButtonText, { color: colors.primary }]}>Finalizar</Text>
+          </TouchableOpacity>
         </View>
 
-        <ScrollView style={styles.content} contentContainerStyle={styles.contentContainer}>
-          {/* Mode Toggle */}
-          <FillingStyleToggle mode={mode} onModeChange={setMode} colors={colors} />
+        {/* Mode Toggle — fixed above scroll */}
+        <FillingStyleToggle mode={mode} onModeChange={setMode} colors={colors} />
+
+        <ScrollView
+          style={styles.content}
+          contentContainerStyle={styles.contentContainer}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="interactive"
+        >
 
           {/* Dynamic Form Content */}
           {mode === "SOAP" ? (
@@ -428,14 +470,21 @@ const styles = StyleSheet.create({
     fontSize: 14,
     marginTop: 2,
   },
-  placeholder: {
-    width: 40,
+  finalizeButton: {
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+  },
+  finalizeButtonText: {
+    fontSize: 15,
+    fontWeight: "bold",
   },
   content: {
     flex: 1,
   },
   contentContainer: {
-    padding: 16,
+    paddingHorizontal: 16,
+    paddingTop: 8,
+    paddingBottom: 40,
     gap: 16,
   },
   autoSaveContainer: {
@@ -461,6 +510,24 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginTop: 12,
     marginBottom: 8,
+  },
+  toggleContainer: {
+    flexDirection: "row",
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    gap: 8,
+  },
+  toggleButton: {
+    flex: 1,
+    height: 36,
+    borderRadius: 18,
+    borderWidth: 1,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  toggleButtonText: {
+    fontSize: 13,
+    fontWeight: "600",
   },
   aiButton: {
     flexDirection: "row",

@@ -24,7 +24,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useColors } from "@/hooks/useColorScheme";
 import { useAuthStore } from "@/store/auth";
 import { useGamification } from "@/hooks/useGamification";
-import { Card, NotificationPermissionModal, SyncIndicator, LinearProgress } from "@/components";
+import { Card, NotificationPermissionModal, SyncIndicator, LinearProgress, RTMDashboardWidget } from "@/components";
 import { Spacing } from "@/constants/spacing";
 import * as Notifications from "expo-notifications";
 import { useExercises } from "@/hooks/useExercises";
@@ -231,6 +231,9 @@ export default function DashboardScreen() {
             Faltam {xpRemaining} XP para o próximo nível
           </Text>
         </View>
+        
+        {/* RTM Activity Widget */}
+        <RTMDashboardWidget />
 
         {isLoading ? (
           <View style={styles.loadingContainer}>

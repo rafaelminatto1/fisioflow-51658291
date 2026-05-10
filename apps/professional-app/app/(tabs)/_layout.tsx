@@ -75,16 +75,7 @@ export default function TabsLayout() {
           ),
         }}
       />
-      <Tabs.Screen
-        name="communications"
-        options={{
-          title: "Comunicações",
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="chatbubbles-outline" size={size} color={color} />
-          ),
-          tabBarBadge: unreadCount > 0 ? unreadCount : undefined,
-        }}
-      />
+      <Tabs.Screen name="communications" options={{ href: null }} />
       <Tabs.Screen
         name="menu"
         options={{

@@ -782,6 +782,26 @@ export const registerFinancialAnalyticsRoutes = (app: FinancialApp) => {
       },
     );
 
+    const aiSummary = await queryFirst(
+      pool,
+      "ai-summary",
+      `SELECT
+          COUNT(*)::int as total_requests,
+          COALESCE(SUM(total_tokens), 0)::int as total_tokens,
+          COALESCE(AVG(latency_ms), 0)::float as avg_latency,
+          COALESCE(SUM(CASE WHEN provider = 'gateway' THEN total_tokens ELSE 0 END), 0)::int as gateway_tokens
+        FROM ai_usage
+        WHERE organization_id = $1
+          AND created_at::date BETWEEN $2::date AND $3::date`,
+      [user.organizationId, range.startDate, range.endDate],
+      {
+        total_requests: 0,
+        total_tokens: 0,
+        avg_latency: 0,
+        gateway_tokens: 0,
+      },
+    );
+
     const recentReceipts = await queryRows<{
       id: string;
       title: string;
@@ -1012,6 +1032,13 @@ export const registerFinancialAnalyticsRoutes = (app: FinancialApp) => {
             scheduledNext30Days: toInt(scheduleMetrics.scheduled_next_30d),
             expectedRevenueNext30Days: toNumber(scheduleMetrics.expected_revenue_next_30d),
             noShowRate90d: noShowRate,
+          },
+          ai: {
+            totalRequests: toInt(aiSummary.total_requests),
+            totalTokens: toInt(aiSummary.total_tokens),
+            avgLatency: toNumber(aiSummary.avg_latency),
+            gatewayTokens: toInt(aiSummary.gateway_tokens),
+            approximateCostBrl: (toInt(aiSummary.total_tokens) / 1000) * 0.01, // Estimação R$ 0.01 por 1k tokens
           },
         },
         recentTransactions: recentTransactions.map((row) => ({

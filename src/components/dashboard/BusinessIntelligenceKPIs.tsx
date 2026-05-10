@@ -48,32 +48,47 @@ export function BusinessIntelligenceKPIs() {
     return "bg-red-50 border-red-100 dark:bg-red-950/20 dark:border-red-900/50";
   };
 
+  // ROI Progress (Assuming 12 months as a standard benchmark for full ROI in health clinics)
+  const paybackProgress = paybackMonths ? Math.min(100, (paybackMonths / 12) * 100) : 0;
+
   return (
-    <Card className="rounded-[2.5rem] border-none shadow-premium-lg bg-white dark:bg-slate-950 overflow-hidden group">
-      <CardHeader className="p-8 pb-4">
+    <Card className="rounded-[2.5rem] border-none shadow-[0_32px_120px_-50px_rgba(0,0,0,0.3)] bg-white dark:bg-slate-950 overflow-hidden group relative">
+      {/* Decorative element */}
+      <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl -mr-32 -mt-32 pointer-events-none" />
+      
+      <CardHeader className="p-8 pb-4 relative">
         <div className="flex items-center justify-between">
           <div className="space-y-1">
-            <p className="font-display text-[10px] font-black uppercase tracking-[0.2em] text-primary mb-1">
-              Business Intelligence
-            </p>
+            <div className="flex items-center gap-2 mb-1">
+              <Badge className="rounded-full bg-primary/10 text-primary border-none text-[9px] font-black uppercase tracking-widest px-3">
+                Real-time BI
+              </Badge>
+              {ltvCacRatio && ltvCacRatio >= 3 && (
+                <Badge className="rounded-full bg-emerald-500/10 text-emerald-600 border-none text-[9px] font-black uppercase tracking-widest px-3">
+                  Alta Performance
+                </Badge>
+              )}
+            </div>
             <CardTitle className="font-display text-3xl font-black tracking-tighter text-slate-900 dark:text-white flex items-center gap-3">
               <BarChart3 className="h-8 w-8 text-primary" />
-              Lucratividade da Clínica
+              Saúde do Negócio
             </CardTitle>
           </div>
-          <div className="text-right">
-            <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Período Analisado</p>
-            <p className="text-sm font-bold text-slate-900 dark:text-white">Últimos 6 meses</p>
+          <div className="text-right hidden md:block">
+            <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Score de Crescimento</p>
+            <p className="text-2xl font-black text-primary">
+              {ltvCacRatio ? (Math.min(100, (ltvCacRatio / 5) * 100)).toFixed(0) : "0"}%
+            </p>
           </div>
         </div>
       </CardHeader>
       
-      <CardContent className="p-8 pt-4 space-y-8">
+      <CardContent className="p-8 pt-4 space-y-8 relative">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* LTV Card */}
           <motion.div 
-            whileHover={{ y: -5 }}
-            className="p-6 rounded-[2rem] bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-800 space-y-4"
+            whileHover={{ y: -5, scale: 1.02 }}
+            className="p-6 rounded-[2rem] bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-800 space-y-4 shadow-sm"
           >
             <div className="flex items-center justify-between">
               <div className="p-3 rounded-2xl bg-white dark:bg-slate-800 shadow-sm">
@@ -91,21 +106,28 @@ export function BusinessIntelligenceKPIs() {
               </TooltipProvider>
             </div>
             <div>
-              <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">LTV Estimado</p>
+              <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">LTV (Paciente)</p>
               <h4 className="text-3xl font-black tracking-tighter text-slate-900 dark:text-white">
                 {isLoading ? "..." : fmtBRL(kpis?.ltv_estimate || 0)}
               </h4>
-              <p className="text-[10px] font-bold text-emerald-600 mt-1 flex items-center gap-1">
+              <div className="mt-4 h-1.5 w-full bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden">
+                <motion.div 
+                  initial={{ width: 0 }}
+                  animate={{ width: "70%" }}
+                  className="h-full bg-emerald-500"
+                />
+              </div>
+              <p className="text-[10px] font-bold text-emerald-600 mt-2 flex items-center gap-1 uppercase">
                 <Activity className="h-3 w-3" />
-                Baseado em {fmt(kpis?.avg_sessions_per_patient_6m || 0)} sessões/ciclo
+                Ciclo de {fmt(kpis?.avg_sessions_per_patient_6m || 0)} sessões
               </p>
             </div>
           </motion.div>
 
           {/* LTV:CAC Ratio */}
           <motion.div 
-            whileHover={{ y: -5 }}
-            className={cn("p-6 rounded-[2rem] border transition-colors space-y-4", getStatusBg(ltvCacRatio))}
+            whileHover={{ y: -5, scale: 1.02 }}
+            className={cn("p-6 rounded-[2rem] border transition-all space-y-4 shadow-sm", getStatusBg(ltvCacRatio))}
           >
             <div className="flex items-center justify-between">
               <div className="p-3 rounded-2xl bg-white dark:bg-slate-800 shadow-sm">
@@ -127,20 +149,27 @@ export function BusinessIntelligenceKPIs() {
               </TooltipProvider>
             </div>
             <div>
-              <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Eficiência (LTV:CAC)</p>
+              <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Eficiência LTV:CAC</p>
               <h4 className={cn("text-3xl font-black tracking-tighter", getStatusColor(ltvCacRatio))}>
                 {ltvCacRatio ? `${fmt(ltvCacRatio)}:1` : "N/A"}
               </h4>
-              <p className="text-[10px] font-bold text-slate-500 mt-1 uppercase tracking-wider">
-                {ltvCacRatio && ltvCacRatio >= 3 ? "Excelente Performance" : "Ajuste Necessário"}
+              <div className="mt-4 h-1.5 w-full bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden">
+                <motion.div 
+                  initial={{ width: 0 }}
+                  animate={{ width: ltvCacRatio ? `${Math.min(100, (ltvCacRatio/6)*100)}%` : 0 }}
+                  className={cn("h-full", ltvCacRatio && ltvCacRatio >= 3 ? "bg-emerald-500" : "bg-amber-500")}
+                />
+              </div>
+              <p className="text-[10px] font-bold text-slate-500 mt-2 uppercase tracking-wider">
+                {ltvCacRatio && ltvCacRatio >= 3 ? "Retorno Exponencial" : "Aumentar Ticket Médio"}
               </p>
             </div>
           </motion.div>
 
           {/* Payback Card */}
           <motion.div 
-            whileHover={{ y: -5 }}
-            className="p-6 rounded-[2rem] bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-800 space-y-4"
+            whileHover={{ y: -5, scale: 1.02 }}
+            className="p-6 rounded-[2rem] bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-800 space-y-4 shadow-sm"
           >
             <div className="flex items-center justify-between">
               <div className="p-3 rounded-2xl bg-white dark:bg-slate-800 shadow-sm">
@@ -158,12 +187,19 @@ export function BusinessIntelligenceKPIs() {
               </TooltipProvider>
             </div>
             <div>
-              <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Payback Médio</p>
+              <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Tempo de Payback</p>
               <h4 className="text-3xl font-black tracking-tighter text-slate-900 dark:text-white">
                 {paybackMonths ? `${fmt(paybackMonths, 1)} meses` : "N/A"}
               </h4>
-              <p className="text-[10px] font-bold text-slate-500 mt-1 uppercase tracking-wider">
-                Retorno do Investimento
+              <div className="mt-4 h-1.5 w-full bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden">
+                <motion.div 
+                  initial={{ width: 0 }}
+                  animate={{ width: `${paybackProgress}%` }}
+                  className={cn("h-full", paybackMonths && paybackMonths <= 3 ? "bg-emerald-500" : "bg-primary")}
+                />
+              </div>
+              <p className="text-[10px] font-bold text-slate-500 mt-2 uppercase tracking-wider">
+                Breakeven do Investimento
               </p>
             </div>
           </motion.div>
@@ -172,35 +208,35 @@ export function BusinessIntelligenceKPIs() {
         {/* CAC Management Footer */}
         <div className="pt-8 border-t border-slate-100 dark:border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="flex items-start gap-4">
-            <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary shrink-0">
-              <DollarSign className="h-5 w-5" />
+            <div className="h-12 w-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary shrink-0 shadow-inner">
+              <DollarSign className="h-6 w-6" />
             </div>
             <div>
-              <p className="text-sm font-bold text-slate-900 dark:text-white">Custo de Aquisição de Pacientes (CAC)</p>
+              <p className="text-sm font-black text-slate-900 dark:text-white">Custo de Aquisição (CAC)</p>
               <p className="text-[11px] text-slate-500 font-medium max-w-sm leading-relaxed">
-                Insira o total investido em marketing e vendas no mês atual para recalcular as métricas de BI em tempo real.
+                Atualize o investimento mensal em marketing para recalcular seu ROI.
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 bg-slate-50 dark:bg-slate-900 p-2 rounded-2xl border border-slate-100 dark:border-slate-800">
             <div className="relative">
-              <span className="absolute left-3 top-2.5 text-xs font-black text-slate-400">R$</span>
+              <span className="absolute left-3 top-3 text-[10px] font-black text-slate-400">R$</span>
               <Input 
                 type="text"
                 placeholder="0.00"
                 value={localCac}
                 onChange={(e) => setLocalCac(e.target.value)}
-                className="pl-10 rounded-xl h-11 w-32 font-bold border-slate-200 dark:border-slate-800"
+                className="pl-9 rounded-xl h-11 w-32 font-black border-none bg-transparent focus-visible:ring-0 text-lg"
               />
             </div>
             <Button 
               onClick={handleSave} 
               disabled={isLoading}
-              className="rounded-xl h-11 px-6 bg-slate-900 text-white hover:bg-slate-800 font-bold gap-2 shadow-lg"
+              className="rounded-xl h-11 px-6 bg-primary text-white hover:bg-primary/90 font-black gap-2 shadow-premium"
             >
               {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-              Salvar CAC
+              Atualizar
             </Button>
           </div>
         </div>
@@ -208,3 +244,4 @@ export function BusinessIntelligenceKPIs() {
     </Card>
   );
 }
+

@@ -166,7 +166,11 @@ export function ClinicalTestFormModal({
     if (test) {
       setFormData({
         ...test,
-        fields_definition: Array.isArray(test.fields_definition) ? test.fields_definition : [],
+        fields_definition: Array.isArray(test.fields_definition) 
+          ? test.fields_definition 
+          : typeof test.fields_definition === 'string'
+            ? JSON.parse(test.fields_definition)
+            : [],
         layout_type: test.layout_type ?? undefined,
         image_url: test.image_url ?? "",
         initial_position_image_url: test.initial_position_image_url ?? "",

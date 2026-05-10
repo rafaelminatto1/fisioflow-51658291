@@ -420,14 +420,16 @@ const styles = StyleSheet.create({
     flexWrap: "wrap",
   },
   smallChip: {
-    paddingHorizontal: 10,
-    paddingVertical: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
     borderRadius: 16,
     borderWidth: 1,
+    minHeight: 38,
+    justifyContent: "center",
   },
   smallChipText: {
-    fontSize: 12,
-    fontWeight: "500",
+    fontSize: 13,
+    fontWeight: "600",
   },
   modalOverlay: {
     flex: 1,

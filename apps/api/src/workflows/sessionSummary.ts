@@ -39,7 +39,9 @@ export class SessionSummaryWorkflow extends WorkflowEntrypoint<Env, SessionSumma
     const sessionData = await step.do("fetch-session", async () => {
       const rows = await sql`
         SELECT
-          s.subjective, s.objective, s.assessment, s.plan,
+          s.subjective->>'notes' as subjective,
+          s.assessment->>'notes' as assessment,
+          s.plan->>'notes' as plan,
           p.full_name AS patient_name,
           p.phone AS patient_phone
         FROM sessions s
@@ -73,16 +75,21 @@ export class SessionSummaryWorkflow extends WorkflowEntrypoint<Env, SessionSumma
         .filter(Boolean)
         .join("\n");
 
-      const prompt = `Você é um fisioterapeuta. Resuma a consulta abaixo para o paciente em linguagem simples e acolhedora.
+      const prompt = `Você é um assistente de fisioterapia de alto nível. Sua tarefa é criar um resumo acolhedor e profissional para o paciente, baseado no registro SOAP da sessão.
 
 SOAP da sessão:
 ${soapText}
 
-Retorne SOMENTE JSON válido:
+Instruções:
+1. "summary_paciente": Explique em 2-3 frases simples o que foi trabalhado hoje e a evolução observada. Use um tom encorajador.
+2. "proximos_passos": Liste as recomendações principais (ex: gelo, repouso, cuidados).
+3. "exercicios_casa": Liste os exercícios específicos para o paciente fazer em casa. Se não houver, use null.
+
+Retorne SOMENTE JSON válido no formato:
 {
-  "summary_paciente": "resumo em 2-3 frases simples para o paciente entender",
-  "proximos_passos": "o que o paciente deve fazer até a próxima consulta",
-  "exercicios_casa": "exercícios domiciliares se houver, ou null"
+  "summary_paciente": "...",
+  "proximos_passos": "...",
+  "exercicios_casa": "..."
 }`;
 
       const result = await callAI(this.env, {

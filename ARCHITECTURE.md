@@ -1,6 +1,6 @@
-# 🏗️ FisioFlow - System Architecture (v4.0.0 - 2026)
-
 A arquitetura do **FisioFlow** foi projetada para ser nativa da borda (Edge-Native), utilizando a infraestrutura global da Cloudflare e o escalonamento serverless do Neon PostgreSQL.
+
+As diretrizes operacionais e restrições do sistema estão documentadas em [Regras de Negócio (BUSINESS_RULES.md)](file:///home/rafael/Documents/fisioflow/fisioflow-51658291/BUSINESS_RULES.md).
 
 ## 🚀 Tecnologias Principais
 

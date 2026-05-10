@@ -39,12 +39,12 @@ import { type ExerciseProtocol } from "@/hooks/useExerciseProtocols";
 
 interface Milestone {
   week: number;
-  description: string;
+  title: string;
 }
 
 interface Restriction {
-  week_start: number;
-  week_end?: number;
+  weekStart: number;
+  weekEnd?: number;
   description: string;
 }
 
@@ -120,10 +120,17 @@ export const NewProtocolModal: React.FC<NewProtocolModalProps> = ({
         condition_name: protocol.condition_name || "",
         weeks_total: protocol.weeks_total || 12,
         milestones: Array.isArray(protocol.milestones)
-          ? (protocol.milestones as Milestone[])
+          ? protocol.milestones.map((m: any) => ({
+              week: m.week,
+              title: m.title || m.description || "",
+            }))
           : [],
         restrictions: Array.isArray(protocol.restrictions)
-          ? (protocol.restrictions as Restriction[])
+          ? protocol.restrictions.map((r: any) => ({
+              weekStart: r.weekStart || r.week_start || 0,
+              weekEnd: r.weekEnd || r.week_end || 0,
+              description: r.description || "",
+            }))
           : [],
         evidence_level: protocol.evidence_level || "B",
         wiki_page_id: protocol.wiki_page_id || "",
@@ -173,7 +180,7 @@ export const NewProtocolModal: React.FC<NewProtocolModalProps> = ({
   const addMilestone = () => {
     setFormData((prev) => ({
       ...prev,
-      milestones: [...prev.milestones, { week: prev.milestones.length + 1, description: "" }],
+      milestones: [...prev.milestones, { week: prev.milestones.length + 1, title: "" }],
     }));
   };
 
@@ -193,7 +200,7 @@ export const NewProtocolModal: React.FC<NewProtocolModalProps> = ({
   const addRestriction = () => {
     setFormData((prev) => ({
       ...prev,
-      restrictions: [...prev.restrictions, { week_start: 1, week_end: 4, description: "" }],
+      restrictions: [...prev.restrictions, { weekStart: 1, weekEnd: 4, description: "" }],
     }));
   };
 
@@ -695,10 +702,10 @@ export const NewProtocolModal: React.FC<NewProtocolModalProps> = ({
                           </div>
                           <div className="flex-1">
                             <Input
-                              placeholder="Descrição do marco..."
+                              placeholder="Título do marco..."
                               className="p-2 h-9 text-xs"
-                              value={m.description}
-                              onChange={(e) => updateMilestone(idx, "description", e.target.value)}
+                              value={m.title}
+                              onChange={(e) => updateMilestone(idx, "title", e.target.value)}
                             />
                           </div>
                           <Button
@@ -746,18 +753,18 @@ export const NewProtocolModal: React.FC<NewProtocolModalProps> = ({
                             <Input
                               type="number"
                               className="p-2 h-9 text-xs font-mono"
-                              value={r.week_start}
+                              value={r.weekStart}
                               onChange={(e) =>
-                                updateRestriction(idx, "week_start", parseInt(e.target.value) || 0)
+                                updateRestriction(idx, "weekStart", parseInt(e.target.value) || 0)
                               }
                             />
                             <span className="text-muted-foreground/30 self-center">/</span>
                             <Input
                               type="number"
                               className="p-2 h-9 text-xs font-mono"
-                              value={r.week_end}
+                              value={r.weekEnd}
                               onChange={(e) =>
-                                updateRestriction(idx, "week_end", parseInt(e.target.value) || 0)
+                                updateRestriction(idx, "weekEnd", parseInt(e.target.value) || 0)
                               }
                             />
                           </div>

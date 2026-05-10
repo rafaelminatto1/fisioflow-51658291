@@ -56,10 +56,21 @@ app.get("/treatment-sessions", requireAuth, async (c) => {
   const limitValue = Math.min(Math.max(Number(c.req.query("limit") ?? 20), 1), 200);
   const rows = await pool.query(
     `
-      SELECT *
-      FROM treatment_sessions
+      SELECT
+        id, patient_id, appointment_id, therapist_id, organization_id,
+        date as session_date,
+        subjective->>'notes' as subjective,
+        objective,
+        assessment->>'notes' as assessment,
+        plan->>'notes' as plan,
+        plan->>'nextSessionGoals' as next_session_goals,
+        plan->>'orientations' as observations,
+        plan->'exercises' as exercises_performed,
+        (subjective->>'painScale')::int as pain_level_before,
+        created_at, updated_at
+      FROM sessions
       WHERE patient_id = $1 AND organization_id = $2
-      ORDER BY session_date DESC, created_at DESC
+      ORDER BY date DESC, created_at DESC
       LIMIT $3
     `,
     [patientId, user.organizationId, limitValue],
@@ -182,138 +193,117 @@ app.post("/treatment-sessions", requireAuth, async (c) => {
   const pool = await createPool(c.env);
   const body = (await c.req.json()) as Record<string, unknown>;
   const patientId = String(body.patient_id ?? "").trim();
-  // appointment_id é opcional — evolução pode ser standalone (sem agendamento)
   const appointmentId = body.appointment_id ? String(body.appointment_id).trim() : null;
   const therapistId = String(body.therapist_id ?? user.uid).trim();
 
   if (!patientId) return c.json({ error: "patient_id é obrigatório" }, 400);
 
   const sessionDate = parseIsoDate(body.session_date) ?? new Date().toISOString().split("T")[0];
-  const objectiveJson = jsonSerialize(body.objective);
+
+  // Map to new schema (JSONB)
+  const subjective = jsonSerialize({
+    notes: body.subjective ? String(body.subjective) : undefined,
+    painScale: body.pain_level_before != null ? Number(body.pain_level_before) : undefined,
+  });
+  const objective = jsonSerialize(body.objective);
+  const assessment = jsonSerialize({
+    notes: body.assessment ? String(body.assessment) : undefined,
+  });
+  const plan = jsonSerialize({
+    notes: body.plan ? String(body.plan) : undefined,
+    orientations: body.observations ? String(body.observations) : undefined,
+    exercises: body.exercises_performed,
+    nextSessionGoals: body.next_session_goals,
+  });
 
   let result;
 
-  // Se tem appointment_id: upsert por appointment (1 sessão por agendamento)
-  if (appointmentId) {
-    const values = [
-      patientId,
-      therapistId || user.uid,
-      appointmentId,
-      sessionDate,
-      body.subjective ? String(body.subjective) : null,
-      objectiveJson,
-      body.assessment ? String(body.assessment) : null,
-      body.plan ? String(body.plan) : null,
-      body.observations ? String(body.observations) : null,
-      jsonSerialize(body.exercises_performed) ?? "[]",
-      Number(body.pain_level_before ?? 0),
-      Number(body.pain_level_after ?? 0),
-      user.organizationId,
-    ];
+  const values = [
+    patientId,
+    therapistId,
+    appointmentId,
+    sessionDate,
+    subjective,
+    objective,
+    assessment,
+    plan,
+    user.organizationId,
+    "finalized", // Status set to finalized on create for simplicity in this migration
+  ];
 
-    const existing = await pool.query(
-      `SELECT id FROM treatment_sessions WHERE appointment_id = $1 AND organization_id = $2 LIMIT 1`,
-      [appointmentId, user.organizationId],
-    );
+  const existing = appointmentId
+    ? await pool.query(
+        `SELECT id FROM sessions WHERE appointment_id = $1 AND organization_id = $2 LIMIT 1`,
+        [appointmentId, user.organizationId],
+      )
+    : { rows: [] };
 
-    if (existing.rows.length) {
-      const row = await pool.query(
-        `
-          UPDATE treatment_sessions SET
-            patient_id         = $1,
-            therapist_id       = $2,
-            session_date       = $4,
-            subjective         = $5,
-            objective          = $6::jsonb,
-            assessment         = $7,
-            plan               = $8,
-            observations       = $9,
-            exercises_performed = $10::jsonb,
-            pain_level_before  = $11,
-            pain_level_after   = $12,
-            updated_at         = NOW()
-          WHERE id = $13
-          RETURNING *
-        `,
-        [...values.slice(0, 12), existing.rows[0].id],
-      );
-      result = row;
-    } else {
-      const row = await pool.query(
-        `
-          INSERT INTO treatment_sessions (
-            patient_id, therapist_id, appointment_id, session_date,
-            subjective, objective, assessment, plan, observations,
-            exercises_performed, pain_level_before, pain_level_after, organization_id
-          ) VALUES ($1, $2, $3, $4, $5, $6::jsonb, $7, $8, $9, $10::jsonb, $11, $12, $13)
-          RETURNING *
-        `,
-        values,
-      );
-      result = row;
-
-      // --- AUTOMATION: Create Medical Report Task ---
-      try {
-        // 1. Get patient name
-        const patientRes = await pool.query(
-          `SELECT full_name FROM patients WHERE id = $1 LIMIT 1`,
-          [patientId],
-        );
-        const patientName = patientRes.rows[0]?.full_name || "Desconhecido";
-
-        // 2. Create Task in tarefas table
-        await pool.query(
-          `INSERT INTO tarefas (
-           organization_id, created_by, responsavel_id,
-           titulo, descricao, status, prioridade, tipo, data_vencimento,
-           requires_acknowledgment, tags, checklists, attachments, task_references, dependencies, acknowledgments
-         )
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW() + INTERVAL '2 days', $9, '{}'::text[], '[]'::jsonb, '[]'::jsonb, '[]'::jsonb, '[]'::jsonb, '[]'::jsonb)`,
-          [
-            user.organizationId,
-            user.uid,
-            therapistId || user.uid,
-            `Relatório Médico - ${patientName}`,
-            "Gerar relatório médico detalhado baseado na última evolução clínica.",
-            "A_FAZER",
-            "ALTA",
-            "TAREFA",
-            true,
-          ],
-        );
-      } catch (e) {
-        console.error("Error creating automated medical report task:", e);
-      }
-      // --- END AUTOMATION ---
-    }
-  } else {
-    // Sem appointment_id: sempre INSERT (evolução standalone)
-    const row = await pool.query(
+  if (existing.rows.length) {
+    result = await pool.query(
       `
-        INSERT INTO treatment_sessions (
-          patient_id, therapist_id, session_date,
-          subjective, objective, assessment, plan, observations,
-          exercises_performed, pain_level_before, pain_level_after, organization_id, appointment_id
-        ) VALUES ($1, $2, $3, $4, $5::jsonb, $6, $7, $8, $9::jsonb, $10, $11, $12, $13)
+        UPDATE sessions SET
+          patient_id      = $1,
+          therapist_id    = $2,
+          date            = $4,
+          subjective      = $5::jsonb,
+          objective       = $6::jsonb,
+          assessment      = $7::jsonb,
+          plan            = $8::jsonb,
+          status          = $10,
+          updated_at      = NOW()
+        WHERE id = $11
         RETURNING *
       `,
-      [
-        patientId,
-        therapistId || user.uid,
-        sessionDate,
-        body.subjective ? String(body.subjective) : null,
-        objectiveJson,
-        body.assessment ? String(body.assessment) : null,
-        body.plan ? String(body.plan) : null,
-        body.observations ? String(body.observations) : null,
-        jsonSerialize(body.exercises_performed) ?? "[]",
-        Number(body.pain_level_before ?? 0),
-        Number(body.pain_level_after ?? 0),
-        user.organizationId,
-        null, // explicitly pass NULL for appointment_id
-      ],
+      [...values, existing.rows[0].id],
     );
-    result = row;
+  } else {
+    result = await pool.query(
+      `
+        INSERT INTO sessions (
+          patient_id, therapist_id, appointment_id, date,
+          subjective, objective, assessment, plan, organization_id, status
+        ) VALUES ($1, $2, $3, $4, $5::jsonb, $6::jsonb, $7::jsonb, $8::jsonb, $9, $10)
+        RETURNING *
+      `,
+      values,
+    );
+
+    // --- AUTOMATION: Create Medical Report Task ---
+    try {
+      const patientRes = await pool.query(`SELECT full_name FROM patients WHERE id = $1 LIMIT 1`, [
+        patientId,
+      ]);
+      const patientName = patientRes.rows[0]?.full_name || "Desconhecido";
+
+      await pool.query(
+        `INSERT INTO tarefas (organization_id, created_by, responsavel_id, titulo, descricao, status, prioridade, tipo, data_vencimento)
+         VALUES ($1, $2, $3, $4, $5, 'A_FAZER', 'ALTA', 'TAREFA', NOW() + INTERVAL '2 days')`,
+        [
+          user.organizationId,
+          user.uid,
+          therapistId,
+          `Relatório Médico - ${patientName}`,
+          "Gerar relatório médico detalhado baseado na última evolução clínica.",
+        ],
+      );
+    } catch (e) {
+      console.error("Error creating automation task:", e);
+    }
+  }
+
+  // --- TRIGGER AI WORKFLOW ---
+  if (c.env.WORKFLOW_SESSION_SUMMARY) {
+    try {
+      await c.env.WORKFLOW_SESSION_SUMMARY.create({
+        params: {
+          sessionId: result.rows[0].id,
+          patientId,
+          orgId: user.organizationId,
+        },
+      });
+    } catch (e) {
+      console.error("Error triggering SessionSummaryWorkflow:", e);
+    }
   }
 
   return c.json({ data: mapTreatmentSession(result.rows[0]) });

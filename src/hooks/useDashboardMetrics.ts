@@ -57,6 +57,13 @@ export interface DashboardMetrics {
   agendamentosSemana: number;
   cancelamentosSemana: number;
   periodLabel: string;
+  // Health Metrics (BI)
+  cac?: number;
+  ltv_estimate?: number;
+  payback?: number;
+  marketing_spend?: number;
+  ltv_cac_ratio?: number;
+  new_patients_period?: number;
 }
 
 const isCompletedStatus = (status: unknown): boolean => {

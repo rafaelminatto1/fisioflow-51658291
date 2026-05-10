@@ -123,8 +123,8 @@ export function NotionForm({ content, onChangeContent, colors }: NotionFormProps
         value={content}
         onChangeText={handleTextChange}
         multiline
-        autoFocus
         textAlignVertical="top"
+        scrollEnabled={false}
       />
 
       <SlashMenu

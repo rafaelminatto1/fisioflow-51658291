@@ -123,7 +123,7 @@ export async function callAI(env: Env, opts: CallAIOptions): Promise<CallAIResul
         inputTokens: result.usage.inputTokens,
         outputTokens: result.usage.outputTokens,
         latencyMs,
-        wasFallback: modelId !== targetModel,
+        status: 200,
       });
       return {
         ...result,
@@ -325,6 +325,40 @@ async function executeProvider(
         model: modelId,
       };
     }
+    case "gateway": {
+      const gatewayUrl = env.FISIOFLOW_AI_GATEWAY_URL;
+      if (!gatewayUrl) throw new Error("FISIOFLOW_AI_GATEWAY_URL not configured");
+
+      const response = await fetch(`${gatewayUrl}/v1/chat/completions`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          // Em um worker, o token precisaria ser injetado ou repassado.
+          // Aqui assumimos que o gateway aceita chamadas autenticadas via segredo se for interno,
+          // ou repassa o JWT do usuário se disponível no contexto.
+        },
+        body: JSON.stringify({
+          model: modelId,
+          messages: opts.messages,
+          temperature: opts.temperature,
+          max_tokens: opts.maxTokens,
+        }),
+      });
+
+      const data = (await response.json()) as any;
+      if (!response.ok) throw new Error(data.error || "Gateway request failed");
+
+      // O gateway Cloudflare ou nosso custom segue o formato OpenAI
+      return {
+        content: data.choices?.[0]?.message?.content || data.candidates?.[0]?.content?.parts?.[0]?.text || "",
+        usage: {
+          inputTokens: data.usage?.prompt_tokens || data.usageMetadata?.promptTokenCount || 0,
+          outputTokens: data.usage?.completion_tokens || data.usageMetadata?.candidatesTokenCount || 0,
+          cachedTokens: 0,
+        },
+        model: modelId,
+      };
+    }
     default:
       throw new Error(`Unsupported AI provider: ${provider}`);
   }
@@ -340,7 +374,7 @@ function persistAIUsage(
     inputTokens: number;
     outputTokens: number;
     latencyMs: number;
-    wasFallback: boolean;
+    status: number;
   },
 ): void {
   const url = env.NEON_URL || env.HYPERDRIVE?.connectionString;
@@ -348,12 +382,12 @@ function persistAIUsage(
   try {
     const sql = neon(url);
     sql`
-      INSERT INTO ai_usage (org_id, model_id, provider, task, input_tokens, output_tokens, latency_ms, was_fallback)
-      VALUES (${usage.orgId ?? null}, ${usage.modelId}, ${usage.provider}, ${usage.task},
-              ${usage.inputTokens}, ${usage.outputTokens}, ${usage.latencyMs}, ${usage.wasFallback})
+      INSERT INTO ai_usage (organization_id, model, provider, prompt_tokens, completion_tokens, total_tokens, latency_ms, status)
+      VALUES (${usage.orgId ?? null}, ${usage.modelId}, ${usage.provider},
+              ${usage.inputTokens}, ${usage.outputTokens}, ${usage.inputTokens + usage.outputTokens}, ${usage.latencyMs}, ${usage.status})
     `.catch(() => {});
   } catch {
-    // non-critical — never block on usage tracking
+    // non-critical
   }
 }
 

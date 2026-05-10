@@ -1,0 +1,38 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "fisioflow-ai-gateway",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-03-25",
+  "compatibility_flags": ["nodejs_compat"],
+  "observability": {
+    "enabled": true
+  },
+  "placement": {
+    "mode": "smart"
+  },
+  "vars": {
+    "ENVIRONMENT": "production",
+    "OLLAMA_ENDPOINT": "http://localhost:11434", // Default, should be overwritten by secrets
+    "GOOGLE_AI_URL": "https://generativelanguage.googleapis.com/v1beta/models"
+  },
+  "hyperdrive": [
+    {
+      "binding": "HYPERDRIVE",
+      "id": "12b9fefcfbc04074a63342a9212e1b4f"
+    }
+  ],
+  "env": {
+    "staging": {
+      "vars": {
+        "ENVIRONMENT": "staging",
+        "OLLAMA_ENDPOINT": "https://ollama-staging.moocafisio.com.br"
+      },
+      "hyperdrive": [
+        {
+          "binding": "HYPERDRIVE",
+          "id": "37189eb42d314a0a8fd0e169a2b27ad1"
+        }
+      ]
+    }
+  }
+}

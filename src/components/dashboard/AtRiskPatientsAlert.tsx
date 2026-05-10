@@ -1,11 +1,13 @@
-import { MessageCircle, UserX, ChevronDown, ChevronUp } from "lucide-react";
+import { MessageCircle, UserX, ChevronDown, ChevronUp, Sparkles, Loader2 } from "lucide-react";
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { request } from "@/api/v2";
+import { RetentionAutomationService } from "@/services/marketing/retentionAutomation";
+import { useToast } from "@/hooks/use-toast";
 
 interface AtRiskPatient {
   id: string;
@@ -41,6 +43,29 @@ function buildWhatsAppUrl(patient: AtRiskPatient): string | null {
 export function AtRiskPatientsAlert() {
   const { data: patients, isLoading } = useAtRiskPatients();
   const [expanded, setExpanded] = useState(false);
+  const [isAutomating, setIsAutomating] = useState(false);
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  const handleAutomate = async () => {
+    setIsAutomating(true);
+    const result = await RetentionAutomationService.automateAtRiskReengagement();
+    setIsAutomating(false);
+    
+    if (result.success) {
+      toast({
+        title: "Automação disparada!",
+        description: result.message,
+      });
+      queryClient.invalidateQueries({ queryKey: ["at-risk-patients"] });
+    } else {
+      toast({
+        title: "Falha na automação",
+        description: result.message,
+        variant: "destructive",
+      });
+    }
+  };
 
   if (isLoading) {
     return (
@@ -64,20 +89,36 @@ export function AtRiskPatientsAlert() {
   const visible = expanded ? patients : patients.slice(0, 3);
 
   return (
-    <Card className="border border-amber-200 dark:border-amber-800 bg-amber-50/50 dark:bg-amber-950/20 shadow-sm">
+    <Card className="border border-amber-200 dark:border-amber-800 bg-amber-50/50 dark:bg-amber-950/20 shadow-sm overflow-hidden">
       <CardHeader className="pb-3">
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-sm font-black uppercase tracking-widest text-amber-700 dark:text-amber-400 flex items-center gap-2">
-            <UserX className="h-4 w-4" />
-            Pacientes em Risco de Abandono
-            <Badge className="bg-amber-500 text-white text-[10px] px-1.5 py-0 border-0">
-              {patients.length}
-            </Badge>
-          </CardTitle>
-          <span className="text-[11px] text-muted-foreground font-medium">
-            Sem sessão há ≥ 14 dias
-          </span>
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex items-center gap-2">
+            <CardTitle className="text-sm font-black uppercase tracking-widest text-amber-700 dark:text-amber-400 flex items-center gap-2">
+              <UserX className="h-4 w-4" />
+              Risco de Abandono
+              <Badge className="bg-amber-500 text-white text-[10px] px-1.5 py-0 border-0">
+                {patients.length}
+              </Badge>
+            </CardTitle>
+          </div>
+          
+          <Button 
+            size="sm" 
+            onClick={handleAutomate}
+            disabled={isAutomating}
+            className="h-8 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-black text-[10px] uppercase tracking-wider gap-2 shadow-sm"
+          >
+            {isAutomating ? (
+              <Loader2 className="h-3 w-3 animate-spin" />
+            ) : (
+              <Sparkles className="h-3 w-3" />
+            )}
+            Automação Smart
+          </Button>
         </div>
+        <p className="text-[10px] text-amber-600/70 font-bold mt-1 uppercase">
+          Pacientes sem sessão há ≥ 14 dias
+        </p>
       </CardHeader>
       <CardContent className="space-y-2">
         {visible.map((p) => {
@@ -140,3 +181,4 @@ export function AtRiskPatientsAlert() {
     </Card>
   );
 }
+

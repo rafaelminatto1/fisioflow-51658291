@@ -20,7 +20,7 @@ app.get("/kpis", requireAuth, async (c) => {
   const periodStart = `${year}-${mon}-01`;
   const periodEnd = new Date(Number(year), Number(mon), 0).toISOString().split("T")[0];
 
-  const [apptStats, ticketStats, patientStats, ltmStats] = await Promise.all([
+  const [apptStats, ticketStats, patientStats, ltmStats, newPatientStats, marketingStats] = await Promise.all([
     // Appointment breakdown for the month
     pool.query(
       `SELECT
@@ -81,12 +81,36 @@ app.get("/kpis", requireAuth, async (c) => {
          AND deleted_at IS NULL`,
       [user.organizationId],
     ),
+
+    // New patients in the period
+    pool.query(
+      `SELECT COUNT(*)::int AS count
+       FROM patients
+       WHERE organization_id = $1
+         AND created_at >= $2::date AND created_at <= $3::date
+         AND deleted_at IS NULL`,
+      [user.organizationId, periodStart, periodEnd],
+    ),
+
+    // Marketing spend in the period
+    pool.query(
+      `SELECT COALESCE(SUM(valor), 0)::numeric AS spend
+       FROM transacoes
+       WHERE organization_id = $1
+         AND created_at >= $2::date AND created_at <= $3::date
+         AND tipo = 'despesa'
+         AND (categoria = 'Marketing' OR dre_categoria = 'Marketing')
+         AND deleted_at IS NULL`,
+      [user.organizationId, periodStart, periodEnd],
+    ),
   ]);
 
   const appt = apptStats.rows[0] ?? {};
   const ticket = ticketStats.rows[0] ?? {};
   const patients = patientStats.rows[0] ?? {};
   const ltm = ltmStats.rows[0] ?? {};
+  const newPatients = Number(newPatientStats.rows[0]?.count ?? 0);
+  const marketingSpend = Number(marketingStats.rows[0]?.spend ?? 0);
 
   const total = Number(appt.total ?? 0);
   const completed = Number(appt.completed ?? 0);
@@ -114,6 +138,17 @@ app.get("/kpis", requireAuth, async (c) => {
   // Annualized: ×2 for 12 months
   const ltv = Math.round(avgSessionsPerPatient6m * 2 * avgTicket6m * 100) / 100;
 
+  // CAC calculation
+  const cac = newPatients > 0 ? Math.round((marketingSpend / newPatients) * 100) / 100 : 0;
+
+  // Payback period (months)
+  // Assuming 70% contribution margin and monthly revenue from LTV
+  const monthlyRevenuePerPatient = ltv / 12;
+  const payback =
+    monthlyRevenuePerPatient > 0
+      ? Math.round((cac / (monthlyRevenuePerPatient * 0.7)) * 10) / 10
+      : 0;
+
   return c.json({
     data: {
       period: { start: periodStart, end: periodEnd },
@@ -132,9 +167,15 @@ app.get("/kpis", requireAuth, async (c) => {
       active_patients: activePatients,
       at_risk_patients: Number(patients.at_risk_patients ?? 0),
       ltv_estimate: ltv,
+      cac,
+      payback,
+      new_patients: newPatients,
+      marketing_spend: marketingSpend,
+      ltv_cac_ratio: cac > 0 ? Math.round((ltv / cac) * 10) / 10 : 0,
       avg_sessions_per_patient_6m: Math.round(avgSessionsPerPatient6m * 10) / 10,
     },
   });
+
 });
 
 // GET /api/clinic-metrics/overdue-payments

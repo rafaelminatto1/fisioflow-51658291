@@ -22,3 +22,17 @@ export const clinicalScribeLogs = pgTable("clinical_scribe_logs", {
   consentSource: varchar("consent_source", { length: 50 }).default("verbal_confirmed_by_therapist"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
+
+export const aiUsage = pgTable("ai_usage", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  organizationId: uuid("organization_id").references(() => organizations.id),
+  userId: uuid("user_id").references(() => profiles.userId),
+  model: varchar("model", { length: 100 }).notNull(),
+  provider: varchar("provider", { length: 50 }).notNull(), // google, ollama, openai, etc.
+  promptTokens: integer("prompt_tokens").default(0),
+  completionTokens: integer("completion_tokens").default(0),
+  totalTokens: integer("total_tokens").default(0),
+  latencyMs: integer("latency_ms"),
+  status: integer("status").default(200),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});

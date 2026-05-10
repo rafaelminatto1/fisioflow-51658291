@@ -1,5 +1,5 @@
 import { useState, useCallback, useMemo } from "react";
-import { View, StyleSheet, TouchableOpacity, Alert } from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity, Alert } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
@@ -180,6 +180,24 @@ export default function AgendaScreen() {
       style={[styles.container, { backgroundColor: colors.background }]}
       edges={["top", "left", "right"]}
     >
+      <View style={styles.header}>
+        <View style={styles.headerTitleContainer}>
+          <Ionicons name="calendar" size={24} color={colors.primary} />
+          <Text style={[styles.headerTitle, { color: colors.text }]}>Minha Agenda</Text>
+        </View>
+        <TouchableOpacity
+          onPress={() => {
+            light();
+            router.push("/(settings)/working-hours" as any);
+          }}
+          style={styles.headerButton}
+          accessibilityRole="button"
+          accessibilityLabel="Configurações da agenda"
+        >
+          <Ionicons name="settings-outline" size={24} color={colors.primary} />
+        </TouchableOpacity>
+      </View>
+
       {showLoading ? (
         <AgendaSkeleton />
       ) : (
@@ -214,6 +232,26 @@ export default function AgendaScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
+  header: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+  },
+  headerTitleContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  headerTitle: {
+    fontSize: 22,
+    fontWeight: "700",
+  },
+  headerButton: {
+    padding: 8,
+    marginRight: -8,
+  },
   fab: {
     position: "absolute",
     right: 24,

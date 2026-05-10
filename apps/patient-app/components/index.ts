@@ -34,3 +34,4 @@ export {
   type PainMapProps,
   type PainMapSummaryProps,
 } from "./PainMap";
+export { RTMDashboardWidget } from "./RTMDashboardWidget";

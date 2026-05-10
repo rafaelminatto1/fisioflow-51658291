@@ -1411,5 +1411,20 @@ export async function checkPatientNameDuplicate(
   return { duplicateExists: response.data?.duplicateExists || false };
 }
 
+export async function sendWhatsAppTemplate(data: {
+  patient_id: string;
+  template_key: string;
+  variables: Record<string, string>;
+  appointment_id?: string;
+}): Promise<{ success: boolean; content?: string; messageId?: string }> {
+  return fetchApi<{ success: boolean; content?: string; messageId?: string }>(
+    "/api/whatsapp/send-template",
+    {
+      method: "POST",
+      data,
+    },
+  );
+}
+
 export { reportsApi } from "./api/reports";
 export type { PdfReportRequest, PdfReportResponse } from "./api/reports";

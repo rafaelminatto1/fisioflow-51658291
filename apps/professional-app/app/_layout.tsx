@@ -156,11 +156,8 @@ function RootLayoutContent() {
           name="evolution-form"
           options={{
             title: "Evolução",
-            presentation: "formSheet",
-            sheetAllowedDetents: [0.85, 1],
-            sheetInitialDetentIndex: 0,
-            sheetGrabberVisible: true,
-            sheetCornerRadius: 20,
+            headerBackTitle: "Voltar",
+            headerShown: false,
           }}
         />
         <Stack.Screen

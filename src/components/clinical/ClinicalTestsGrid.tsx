@@ -124,9 +124,9 @@ export function ClinicalTestsGrid({
             <div className="space-y-4 p-5">
               <div className="flex items-center justify-between gap-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
                 <span>{test.target_joint || "Sem região"}</span>
-                <span className="inline-flex items-center gap-1 text-teal-700">
-                  Ver detalhes
-                  <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
+                <span className="inline-flex items-center gap-1.5 text-teal-600 font-bold">
+                  Explorar
+                  <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
                 </span>
               </div>
 
@@ -139,15 +139,15 @@ export function ClinicalTestsGrid({
                 ) : null}
               </div>
 
-              <p className="line-clamp-3 min-h-[4.5rem] text-sm leading-6 text-slate-600">
+              <p className="line-clamp-2 min-h-[3rem] text-sm leading-relaxed text-slate-500">
                 {test.purpose || "Sem objetivo clínico cadastrado."}
               </p>
 
-              <div className="flex flex-wrap gap-2 border-t border-slate-100 pt-4">
+              <div className="flex flex-wrap gap-1.5 pt-2">
                 {(test.tags ?? []).slice(0, 3).map((tag) => (
                   <span
                     key={tag}
-                    className="rounded-full bg-slate-50 px-3 py-1 text-[11px] font-medium text-slate-500"
+                    className="rounded-lg bg-slate-100 px-2.5 py-1 text-[10px] font-semibold text-slate-500 border border-slate-200/50"
                   >
                     #{tag}
                   </span>

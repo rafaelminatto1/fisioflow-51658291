@@ -5,6 +5,8 @@ import {
   CalendarDays,
   ChevronRight,
   ClipboardList,
+  Clock,
+  Coins,
   FileSpreadsheet,
   HeartPulse,
   LineChart,
@@ -15,6 +17,7 @@ import {
   TrendingUp,
   Users,
   Wallet,
+  Zap,
 } from "lucide-react";
 import type { ComponentType } from "react";
 import { Link } from "react-router-dom";
@@ -635,7 +638,7 @@ export function FinancialCommandCenterSummary({
         </div>
       </div>
 
-      <div className="grid gap-4 xl:grid-cols-[1.05fr_1.05fr_0.9fr]">
+      <div className="grid gap-4 xl:grid-cols-4">
         <Card className="rounded-[28px] border-white/70 bg-white/90 shadow-[0_24px_70px_-52px_rgba(15,23,42,0.45)] dark:border-slate-800/80 dark:bg-slate-950/70">
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center gap-2 text-base font-black text-slate-950 dark:text-white">
@@ -748,6 +751,71 @@ export function FinancialCommandCenterSummary({
                   <Link to={APP_ROUTES.AGENDA}>Ver agenda</Link>
                 </Button>
               </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="rounded-[28px] border-white/70 bg-white/90 shadow-[0_24px_70px_-52px_rgba(15,23,42,0.45)] dark:border-slate-800/80 dark:bg-slate-950/70">
+          <CardHeader className="pb-2">
+            <CardTitle className="flex items-center gap-2 text-base font-black text-slate-950 dark:text-white">
+              <Sparkles className="h-4 w-4 text-primary" />
+              Inteligência Clínica
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="rounded-2xl bg-indigo-500/8 p-4">
+                <p className="text-[10px] font-black uppercase tracking-[0.22em] text-indigo-700/70 dark:text-indigo-300/70">
+                  Total de Requisições
+                </p>
+                <p className="mt-2 text-2xl font-black text-slate-950 dark:text-white">
+                  {data.integrations.ai.totalRequests}
+                </p>
+                <div className="mt-1 flex items-center gap-1 text-xs text-slate-500 dark:text-slate-400">
+                  <Clock className="h-3 w-3" />
+                  {data.integrations.ai.avgLatency.toFixed(0)}ms latência média
+                </div>
+              </div>
+              <div className="rounded-2xl bg-amber-500/8 p-4">
+                <p className="text-[10px] font-black uppercase tracking-[0.22em] text-amber-700/70 dark:text-amber-300/70">
+                  Tokens Consumidos
+                </p>
+                <p className="mt-2 text-2xl font-black text-slate-950 dark:text-white">
+                  {(data.integrations.ai.totalTokens / 1000).toFixed(1)}k
+                </p>
+                <div className="mt-1 flex items-center gap-1 text-xs text-slate-500 dark:text-slate-400">
+                  <Zap className="h-3 w-3" />
+                  {((data.integrations.ai.gatewayTokens / data.integrations.ai.totalTokens) * 100 || 0).toFixed(0)}% via Gateway
+                </div>
+              </div>
+            </div>
+
+            <div className="rounded-2xl border border-emerald-100 bg-emerald-50/80 p-4 dark:border-emerald-900/40 dark:bg-emerald-950/20">
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <div className="rounded-full bg-emerald-500/10 p-2 text-emerald-600">
+                    <Coins className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-bold text-slate-950 dark:text-white">
+                      Investimento Estimado
+                    </p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">
+                      Custo aproximado em IA para o período
+                    </p>
+                  </div>
+                </div>
+                <p className="text-lg font-black text-emerald-600">
+                  {formatCurrency(data.integrations.ai.approximateCostBrl)}
+                </p>
+              </div>
+            </div>
+
+            <div className="rounded-2xl border border-slate-100 bg-slate-50/80 p-4 dark:border-slate-800 dark:bg-slate-900/60">
+              <p className="text-xs leading-relaxed text-slate-500 dark:text-slate-400">
+                A FisioFlow utiliza modelos de alta performance para resumos SOAP e triagem,
+                otimizando o tempo clínico do terapeuta em até 15 min por sessão.
+              </p>
             </div>
           </CardContent>
         </Card>

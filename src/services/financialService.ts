@@ -4,6 +4,7 @@ import { AppError } from "@/lib/errors/AppError";
 import { fisioLogger } from "@/lib/errors/logger";
 import { TRANSACTION_STATUSES } from "@/lib/constants";
 import type { Transacao } from "@/types/workers";
+import { PaybackAutomationService } from "./marketing/paybackAutomation";
 
 export type Transaction = Transacao;
 
@@ -227,7 +228,7 @@ export class FinancialService {
       const response = await financialApi.transacoes.update(id, {
         status: TRANSACTION_STATUSES[0],
       });
-      const updated = response.data as Transaction;
+      const updated = response.data as Transaction & { patientId?: string };
 
       // Log de auditoria: Pagamento Confirmado
       try {
@@ -249,6 +250,13 @@ export class FinancialService {
         }, "FinancialService");
       }
 
+      // NOVO: Gatilho de Automação de Payback (ROI)
+      if (updated.tipo === "receita" && updated.patientId) {
+        PaybackAutomationService.processPatientPayback(updated.patientId).catch(err => {
+          fisioLogger.error("Failed to process payback automation", err, "FinancialService");
+        });
+      }
+
       return updated;
     } catch (error) {
       throw AppError.from(error, "FinancialService.markAsPaid");
@@ -268,14 +276,15 @@ export class FinancialService {
   }
 
   /**
-   * Find a transaction by appointment ID stored in metadata
+   * Calculate Lifetime Value (LTV) for a specific patient
    */
-  static async findTransactionByAppointmentId(appointmentId: string): Promise<Transaction | null> {
+  static async getPatientLTV(patientId: string): Promise<number> {
     try {
-      const response = await financialApi.findByAppointment(appointmentId);
-      return (response.data as Transaction | null) ?? null;
+      const response = await financialApi.transacoes.list({ patientId, status: TRANSACTION_STATUSES[0] });
+      const paidTransactions = response.data || [];
+      return paidTransactions.reduce((acc: number, t: any) => acc + Number(t.valor), 0);
     } catch (error) {
-      throw AppError.from(error, "FinancialService.findTransactionByAppointmentId");
+      throw AppError.from(error, "FinancialService.getPatientLTV");
     }
   }
 }

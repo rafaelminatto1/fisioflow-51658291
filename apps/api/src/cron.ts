@@ -100,6 +100,12 @@ export async function handleScheduled(event: ScheduledEvent, env: Env, ctx: Exec
         break;
       }
 
+      case "0 15 * * *": { // UTC 15h = BRT 12h — RTM Wearable Alerts
+        const pool = createPool(env);
+        await processWearableRTMAlerts(pool, env);
+        break;
+      }
+
       default:
         console.warn(`[Cron] No handler defined for schedule: ${cron}`);
     }
@@ -143,11 +149,27 @@ async function processInactivePatients(db: any, env: Env, ctx: ExecutionContext)
   `);
 
   for (const row of result.rows) {
+    // 1. Inngest event (legacy/analytics)
     await triggerInngestEvent(env, ctx, "patient.inactive", {
       patientId: row.id,
       name: row.full_name,
       phone: row.phone,
     });
+
+    // 2. Cloudflare Workflows (New Durable Automation)
+    if (env.WORKFLOW_REENGAGEMENT) {
+      await env.WORKFLOW_REENGAGEMENT.create({
+        id: `reengage-${row.id}-${new Date().toISOString().slice(0, 10)}`,
+        params: {
+          patientId: row.id,
+          patientName: row.full_name,
+          patientPhone: row.phone,
+          organizationId: row.organization_id,
+          therapistName: "seu fisioterapeuta", // Could be dynamic if we join with last appointment therapist
+          daysSinceLastAppointment: 15
+        }
+      }).catch(err => console.error(`[Cron] Workflow Reengagement failed for ${row.id}:`, err));
+    }
   }
 }
 
@@ -639,5 +661,55 @@ async function sendSameDayUnconfirmedReminders(pool: any, env: Env) {
     console.log(`[Cron] Same-day unconfirmed reminders: ${sent} messages queued.`);
   } catch (error) {
     console.warn("[Cron] Same-day reminders failed (non-critical):", error);
+  }
+}
+async function processWearableRTMAlerts(pool: any, env: Env) {
+  console.log("[Cron] Processing Wearable RTM Alerts...");
+  try {
+    // Find patients with active wearable integrations
+    const result = await pool.query(`
+      SELECT DISTINCT p.id, p.organization_id, p.full_name
+      FROM patients p
+      INNER JOIN wearable_data wd ON wd.patient_id = p.id
+      WHERE p.is_active = true
+        AND wd.timestamp >= NOW() - INTERVAL '14 days'
+    `);
+
+    for (const row of result.rows) {
+      const patientId = row.id;
+      const orgId = row.organization_id;
+
+      // Calculate current week vs previous week steps
+      const activity = await pool.query(`
+        SELECT 
+          SUM(value) FILTER (WHERE timestamp >= NOW() - INTERVAL '7 days') as current_steps,
+          SUM(value) FILTER (WHERE timestamp BETWEEN NOW() - INTERVAL '14 days' AND NOW() - INTERVAL '7 days') as prev_steps
+        FROM wearable_data
+        WHERE patient_id = $1 AND data_type = 'steps'
+      `, [patientId]);
+
+      const current = Number(activity.rows[0]?.current_steps || 0);
+      const prev = Number(activity.rows[0]?.prev_steps || 0);
+
+      // Alert if drop is > 30% and baseline was > 10k steps
+      if (prev > 10000 && (current / prev < 0.7)) {
+        if (env.WORKFLOW_WEARABLE_ACTIVITY) {
+          await env.WORKFLOW_WEARABLE_ACTIVITY.create({
+            id: `rtm-alert-${patientId}-${new Date().toISOString().slice(0, 10)}`,
+            params: {
+              patientId,
+              organizationId: orgId,
+              alertType: 'low_activity',
+              metricType: 'Passos (Steps)',
+              currentValue: current,
+              baselineValue: prev
+            }
+          }).catch(() => {});
+        }
+      }
+    }
+    console.log(`[Cron] Wearable RTM Alerts: checked ${result.rows.length} patients.`);
+  } catch (error) {
+    console.error("[Cron] processWearableRTMAlerts failed:", error);
   }
 }

@@ -162,6 +162,13 @@ export interface FinancialCommandCenterData {
       expectedRevenueNext30Days: number;
       noShowRate90d: number;
     };
+    ai: {
+      totalRequests: number;
+      totalTokens: number;
+      avgLatency: number;
+      gatewayTokens: number;
+      approximateCostBrl: number;
+    };
   };
   recentTransactions: Array<{
     id: string;

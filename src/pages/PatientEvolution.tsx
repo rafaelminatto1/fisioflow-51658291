@@ -469,6 +469,7 @@ const PatientEvolution = () => {
             toggleInsights={() => state.setShowInsights(!state.showInsights)}
             onShowTemplateModal={() => state.setShowApplyTemplate(true)}
             onShowKeyboardHelp={() => state.setShowKeyboardHelp(true)}
+            onShowAIScribe={() => state.setShowAIScribe(true)}
             previousEvolutionsCount={state.previousEvolutions.length}
             tabsConfig={[
               {
