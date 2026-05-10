@@ -1,5 +1,5 @@
 import { request } from "@/api/v2";
-import { fisioLogger } from "@/lib/logger";
+import { logger } from "@/lib/logger";
 
 export interface RetentionEngagementResult {
   success: boolean;
@@ -14,7 +14,7 @@ export class RetentionAutomationService {
    */
   static async automateAtRiskReengagement(): Promise<RetentionEngagementResult> {
     try {
-      fisioLogger.info("Starting automated at-risk patient re-engagement", {}, "RetentionAutomation");
+      logger.info("RetentionAutomation", "Starting automated at-risk patient re-engagement");
       
       // 1. Fetch at-risk patients from the specific BI endpoint
       const res = await request<{ data: any[] }>("/api/clinic-metrics/at-risk-patients");
@@ -27,7 +27,7 @@ export class RetentionAutomationService {
       // 2. In a real scenario, we'd loop and send via WhatsApp API or trigger a backend queue.
       // For now, we simulate the bulk trigger.
       
-      fisioLogger.info(`Found ${patients.length} at-risk patients. Triggering automated messaging.`, { count: patients.length }, "RetentionAutomation");
+      logger.info("RetentionAutomation", `Found ${patients.length} at-risk patients. Triggering automated messaging.`, { count: patients.length });
 
       // Simulate a small delay for the "Edge processing"
       await new Promise(resolve => setTimeout(resolve, 1500));
@@ -38,7 +38,7 @@ export class RetentionAutomationService {
         count: patients.length
       };
     } catch (error) {
-      fisioLogger.error("Failed to automate retention re-engagement", error, "RetentionAutomation");
+      logger.error("RetentionAutomation", "Failed to automate retention re-engagement", error);
       return {
         success: false,
         message: "Ocorreu um erro ao processar a automação de retenção.",

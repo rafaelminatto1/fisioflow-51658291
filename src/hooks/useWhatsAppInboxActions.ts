@@ -1,8 +1,8 @@
 import { useState, useCallback } from "react";
 import { toast } from "sonner";
 import { 
-  assign as apiAssign, 
-  transfer as apiTransfer, 
+  assignConversation as apiAssign, 
+  transferConversation as apiTransfer, 
   updatePriority as apiUpdatePriority,
   snoozeConversation as apiSnoozeConversation 
 } from "@/services/whatsapp-api";

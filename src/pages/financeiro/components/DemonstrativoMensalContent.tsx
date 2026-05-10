@@ -11,10 +11,10 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
 import { useDemonstrativoMensalLogic } from "@/hooks/useDemonstrativoMensalLogic";
-import { DemonstrativoKPIs } from "./components/DemonstrativoKPIs";
-import { RevenueFunnel } from "./components/RevenueFunnel";
-import { FinancialCharts } from "./components/FinancialCharts";
-import { CategorySummaryTable } from "./components/CategorySummaryTable";
+import { DemonstrativoKPIs } from "./DemonstrativoKPIs";
+import { RevenueFunnel } from "./RevenueFunnel";
+import { FinancialCharts } from "./FinancialCharts";
+import { CategorySummaryTable } from "./CategorySummaryTable";
 
 export function DemonstrativoMensalContent() {
   const {
