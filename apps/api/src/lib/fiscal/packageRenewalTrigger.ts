@@ -1,5 +1,5 @@
 import type { Env } from "../../types/env";
-import { broadcastToOrganization } from "../realtime";
+import { broadcastToOrg } from "../realtime";
 
 /**
  * Dispara notificação de renovação de pacote quando o paciente atinge a penúltima sessão.
@@ -20,7 +20,7 @@ export async function triggerPackageRenewalNotification(
     : `Lembrete: O pacote "${packageName}" de ${patientName} está chegando ao fim (${remainingSessions} sessões restantes).`;
 
   // 1. Notificação em Tempo Real para os Admins/Fisioterapeutas online
-  await broadcastToOrganization(env, organizationId, {
+  await broadcastToOrg(env, organizationId, {
     type: "PACKAGE_RENEWAL_ALERT",
     payload: {
       patientId,
