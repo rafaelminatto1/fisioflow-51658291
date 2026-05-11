@@ -12,7 +12,7 @@ import {
 import { lazy, Suspense } from "react";
 import { TransactionModal } from "@/components/financial";
 import { FinancialCommandCenterSummary } from "@/components/financial/command-center/FinancialCommandCenterSummary";
-import { MainLayout } from "@/components/layout/MainLayout";
+import { PageLayout, PageContainer, PageHeader } from "@/components/layout/PageLayout";
 import { EmptyState } from "@/components/ui";
 import {
   AlertDialog,
@@ -80,107 +80,93 @@ const FinancialCommandCenterPage = () => {
   const { transactions, stats, commandCenter } = data;
 
   return (
-    <MainLayout>
-      <div className="container mx-auto max-w-7xl space-y-6 px-4 py-6 md:px-6 md:py-8">
-        {/* Header Section */}
-        <Card className="rounded-[30px] border-primary/10 bg-[linear-gradient(135deg,rgba(255,255,255,0.98),rgba(246,249,255,0.95),rgba(241,251,246,0.9))] shadow-[0_28px_80px_-60px_rgba(37,99,235,0.42)] dark:border-primary/20 dark:bg-[linear-gradient(135deg,rgba(15,23,42,0.92),rgba(17,24,39,0.9),rgba(6,78,59,0.18))]">
-          <CardContent className="space-y-4 p-5 md:p-6">
-            <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
-              <div className="space-y-2">
-                <Badge className="w-fit rounded-full bg-white/85 px-3 py-1 text-[10px] font-black uppercase tracking-[0.2em] text-slate-700 shadow-sm dark:bg-slate-900/70 dark:text-slate-200">
-                  Command Center Financeiro
-                </Badge>
-                <div className="space-y-1">
-                  <h1 className="text-2xl font-black tracking-tight text-slate-950 dark:text-white md:text-3xl">
-                    Gestão Financeira
-                  </h1>
-                  <p className="max-w-3xl text-sm text-slate-600 dark:text-slate-300">
-                    Visão unificada de caixa, cobrança, documentos e performance conectada a
-                    pacientes, CRM, marketing e agenda.
-                  </p>
-                </div>
-              </div>
+    <PageLayout>
+      <PageHeader
+        title="Gestão Financeira"
+        description="Visão unificada de caixa, cobrança, documentos e performance conectada a pacientes, CRM, marketing e agenda."
+        icon={LayoutDashboard}
+        breadcrumb={[{ label: "Financeiro", href: "/financeiro" }]}
+        actions={
+          <div className="flex flex-wrap items-center gap-2">
+            <Select value={state.period} onValueChange={actions.handlePeriodChange}>
+              <SelectTrigger className="h-10 w-[160px] rounded-2xl border-white/80 bg-white/70 shadow-sm dark:border-slate-800/80 dark:bg-slate-950/60">
+                <SelectValue placeholder="Período" />
+              </SelectTrigger>
+              <SelectContent className="rounded-2xl">
+                <SelectItem value="daily">Hoje</SelectItem>
+                <SelectItem value="weekly">Últimos 7 dias</SelectItem>
+                <SelectItem value="monthly">Últimos 30 dias</SelectItem>
+                <SelectItem value="all">Últimos 180 dias</SelectItem>
+              </SelectContent>
+            </Select>
 
-              <div className="flex flex-wrap items-center gap-2">
-                <Select value={state.period} onValueChange={actions.handlePeriodChange}>
-                  <SelectTrigger className="h-10 w-[180px] rounded-2xl border-white/80 bg-white/70 shadow-sm dark:border-slate-800/80 dark:bg-slate-950/60">
-                    <SelectValue placeholder="Período" />
-                  </SelectTrigger>
-                  <SelectContent className="rounded-2xl">
-                    <SelectItem value="daily">Hoje</SelectItem>
-                    <SelectItem value="weekly">Últimos 7 dias</SelectItem>
-                    <SelectItem value="monthly">Últimos 30 dias</SelectItem>
-                    <SelectItem value="all">Últimos 180 dias</SelectItem>
-                  </SelectContent>
-                </Select>
+            <Button
+              onClick={actions.handleExport}
+              variant="outline"
+              className="h-10 rounded-2xl border-white/80 bg-white/70 px-4 font-bold shadow-sm dark:border-slate-800/80 dark:bg-slate-950/60"
+              disabled={transactions.length === 0 || state.isExporting}
+            >
+              <Download className="mr-2 h-4 w-4" />
+              Exportar
+            </Button>
+            <Button
+              onClick={() => actions.handleOpenTransactionModal("receita")}
+              className="h-10 rounded-2xl px-5 font-bold shadow-sm bg-brand-blue hover:bg-brand-blue/90"
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              Nova transação
+            </Button>
+          </div>
+        }
+      >
+        <div className="flex flex-wrap gap-2 mt-4">
+          <Button
+            variant="outline"
+            className="h-9 rounded-full border-brand-blue/20 bg-brand-blue/5 text-brand-blue font-bold hover:bg-brand-blue/10"
+            onClick={() => actions.updateQueryParams({ tab: "collections", collections: "receivables" })}
+          >
+            <HandCoins className="mr-2 h-4 w-4" />
+            Cobrar paciente
+          </Button>
+          <Button
+            variant="outline"
+            className="h-9 rounded-full border-brand-blue/20 bg-brand-blue/5 text-brand-blue font-bold hover:bg-brand-blue/10"
+            onClick={() => actions.updateQueryParams({ tab: "documents", documents: "receipts", receiptAction: "new" })}
+          >
+            <Receipt className="mr-2 h-4 w-4" />
+            Emitir recibo
+          </Button>
+          <Button
+            variant="outline"
+            className="h-9 rounded-full border-brand-blue/20 bg-brand-blue/5 text-brand-blue font-bold hover:bg-brand-blue/10"
+            onClick={() => actions.updateQueryParams({ tab: "documents", documents: "nfse", nfseAction: "new" })}
+          >
+            <FileText className="mr-2 h-4 w-4" />
+            Emitir NFS-e
+          </Button>
+          <Button
+            variant="outline"
+            className="h-9 rounded-full border-brand-blue/20 bg-brand-blue/5 text-brand-blue font-bold hover:bg-brand-blue/10"
+            onClick={() => actions.handleOpenTransactionModal("despesa")}
+          >
+            <Wallet className="mr-2 h-4 w-4" />
+            Registrar despesa
+          </Button>
+        </div>
+      </PageHeader>
 
-                <Button
-                  onClick={actions.handleExport}
-                  variant="outline"
-                  className="h-10 rounded-2xl border-white/80 bg-white/70 px-4 font-bold shadow-sm dark:border-slate-800/80 dark:bg-slate-950/60"
-                  disabled={transactions.length === 0 || state.isExporting}
-                >
-                  <Download className="mr-2 h-4 w-4" />
-                  Exportar
-                </Button>
-                <Button
-                  onClick={() => actions.handleOpenTransactionModal("receita")}
-                  className="h-10 rounded-2xl px-5 font-bold shadow-sm"
-                >
-                  <Plus className="mr-2 h-4 w-4" />
-                  Nova transação
-                </Button>
-              </div>
-            </div>
-
-            {/* Quick Actions */}
-            <div className="flex flex-wrap gap-2">
-              <Button
-                variant="outline"
-                className="h-10 rounded-2xl border-white/80 bg-white/70 font-bold dark:border-slate-800/80 dark:bg-slate-950/50"
-                onClick={() => actions.updateQueryParams({ tab: "collections", collections: "receivables" })}
-              >
-                <HandCoins className="mr-2 h-4 w-4" />
-                Cobrar paciente
-              </Button>
-              <Button
-                variant="outline"
-                className="h-10 rounded-2xl border-white/80 bg-white/70 font-bold dark:border-slate-800/80 dark:bg-slate-950/50"
-                onClick={() => actions.updateQueryParams({ tab: "documents", documents: "receipts", receiptAction: "new" })}
-              >
-                <Receipt className="mr-2 h-4 w-4" />
-                Emitir recibo
-              </Button>
-              <Button
-                variant="outline"
-                className="h-10 rounded-2xl border-white/80 bg-white/70 font-bold dark:border-slate-800/80 dark:bg-slate-950/50"
-                onClick={() => actions.updateQueryParams({ tab: "documents", documents: "nfse", nfseAction: "new" })}
-              >
-                <FileText className="mr-2 h-4 w-4" />
-                Emitir NFS-e
-              </Button>
-              <Button
-                variant="outline"
-                className="h-10 rounded-2xl border-white/80 bg-white/70 font-bold dark:border-slate-800/80 dark:bg-slate-950/50"
-                onClick={() => actions.handleOpenTransactionModal("despesa")}
-              >
-                <Wallet className="mr-2 h-4 w-4" />
-                Registrar despesa
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+      <PageContainer>
 
         <Tabs value={state.activeTab} onValueChange={actions.handleMainTabChange} className="space-y-6">
-          <div className="sticky top-14 z-20 rounded-[28px] border border-white/80 bg-white/85 p-2 shadow-[0_20px_60px_-48px_rgba(15,23,42,0.45)] backdrop-blur-xl dark:border-slate-800/80 dark:bg-slate-950/80">
-            <TabsList className="flex h-auto w-full flex-wrap justify-start gap-2 bg-transparent p-0">
-              <TabsTrigger value="summary" className="rounded-2xl px-4 py-2.5 font-bold"><LayoutDashboard className="mr-2 h-4 w-4" />Resumo</TabsTrigger>
-              <TabsTrigger value="collections" className="rounded-2xl px-4 py-2.5 font-bold"><HandCoins className="mr-2 h-4 w-4" />Cobrança</TabsTrigger>
-              <TabsTrigger value="cashflow" className="rounded-2xl px-4 py-2.5 font-bold"><LineChart className="mr-2 h-4 w-4" />Fluxo de Caixa</TabsTrigger>
-              <TabsTrigger value="billing" className="rounded-2xl px-4 py-2.5 font-bold"><Wallet className="mr-2 h-4 w-4" />Faturamento</TabsTrigger>
-              <TabsTrigger value="documents" className="rounded-2xl px-4 py-2.5 font-bold"><FileText className="mr-2 h-4 w-4" />Documentos</TabsTrigger>
-              <TabsTrigger value="performance" className="rounded-2xl px-4 py-2.5 font-bold"><BarChart3 className="mr-2 h-4 w-4" />Performance</TabsTrigger>
-              <TabsTrigger value="commissions" className="rounded-2xl px-4 py-2.5 font-bold"><Receipt className="mr-2 h-4 w-4" />Comissões</TabsTrigger>
+          <div className="sticky top-14 z-20 rounded-[28px] border border-white/80 bg-white/85 p-1.5 shadow-premium backdrop-blur-xl dark:border-slate-800/80 dark:bg-slate-950/80">
+            <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1 bg-transparent p-0">
+              <TabsTrigger value="summary" className="rounded-2xl px-4 py-2 text-xs font-bold uppercase tracking-wider data-[state=active]:bg-brand-blue data-[state=active]:text-white"><LayoutDashboard className="mr-2 h-4 w-4" />Resumo</TabsTrigger>
+              <TabsTrigger value="collections" className="rounded-2xl px-4 py-2 text-xs font-bold uppercase tracking-wider data-[state=active]:bg-brand-blue data-[state=active]:text-white"><HandCoins className="mr-2 h-4 w-4" />Cobrança</TabsTrigger>
+              <TabsTrigger value="cashflow" className="rounded-2xl px-4 py-2 text-xs font-bold uppercase tracking-wider data-[state=active]:bg-brand-blue data-[state=active]:text-white"><LineChart className="mr-2 h-4 w-4" />Fluxo de Caixa</TabsTrigger>
+              <TabsTrigger value="billing" className="rounded-2xl px-4 py-2 text-xs font-bold uppercase tracking-wider data-[state=active]:bg-brand-blue data-[state=active]:text-white"><Wallet className="mr-2 h-4 w-4" />Faturamento</TabsTrigger>
+              <TabsTrigger value="documents" className="rounded-2xl px-4 py-2 text-xs font-bold uppercase tracking-wider data-[state=active]:bg-brand-blue data-[state=active]:text-white"><FileText className="mr-2 h-4 w-4" />Documentos</TabsTrigger>
+              <TabsTrigger value="performance" className="rounded-2xl px-4 py-2 text-xs font-bold uppercase tracking-wider data-[state=active]:bg-brand-blue data-[state=active]:text-white"><BarChart3 className="mr-2 h-4 w-4" />Performance</TabsTrigger>
+              <TabsTrigger value="commissions" className="rounded-2xl px-4 py-2 text-xs font-bold uppercase tracking-wider data-[state=active]:bg-brand-blue data-[state=active]:text-white"><Receipt className="mr-2 h-4 w-4" />Comissões</TabsTrigger>
             </TabsList>
           </div>
 
@@ -308,7 +294,7 @@ const FinancialCommandCenterPage = () => {
             <Suspense fallback={<PageShellFallback />}><CommissionsDashboard /></Suspense>
           </TabsContent>
         </Tabs>
-      </div>
+      </PageContainer>
 
       <TransactionModal
         open={state.isModalOpen}
@@ -327,11 +313,11 @@ const FinancialCommandCenterPage = () => {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={actions.handleDelete}>Excluir</AlertDialogAction>
+            <AlertDialogAction onClick={actions.handleDelete} className="bg-red-500 hover:bg-red-600">Excluir</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </MainLayout>
+    </PageLayout>
   );
 };
 

@@ -1,9 +1,11 @@
-import { Cake, Filter, Users } from "lucide-react";
+import { Cake, Filter, Users, Plus, Download, LayoutDashboard } from "lucide-react";
 import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { LazyComponent } from "@/components/common/LazyComponent";
 import { IncompleteRegistrationAlert } from "@/components/dashboard/IncompleteRegistrationAlert";
-import { MainLayout } from "@/components/layout/MainLayout";
+import { PageLayout } from "@/components/layout/PageLayout";
+import { PageHeader } from "@/components/layout/PageHeader";
+import { PageContainer } from "@/components/layout/PageContainer";
 import {
   countActiveFilters,
   PatientAdvancedFilters,
@@ -216,138 +218,153 @@ const Patients = () => {
   }, [filtersState, updateSearchParams]);
 
   return (
-    <MainLayout>
-      <div className="mx-auto max-w-7xl space-y-8 pb-20 md:pb-8" data-testid="patients-page">
-        <PatientsPageHeader
-          stats={headerStats}
-          onNewPatient={() => updateSearchParams({ modal: "create" })}
-          onExport={() => exportPatients(patients, {})}
-          onToggleAnalytics={() =>
-            updateSearchParams({
-              analytics: showAnalytics ? undefined : "true",
-            })
-          }
-          showAnalytics={showAnalytics}
-          searchTerm={searchTerm}
-          onSearchChange={setSearchTerm}
-          statusFilter={filtersState.status}
-          onStatusFilterChange={(value) => updateSearchParams({ status: value })}
-          pathologyFilter={filtersState.condition}
-          onPathologyFilterChange={(value) => updateSearchParams({ condition: value })}
-          pathologyOptions={facets.pathologies}
-          pathologyStatusFilter={filtersState.pathologyStatus}
-          onPathologyStatusFilterChange={(value) => updateSearchParams({ pathologyStatus: value })}
-          paymentModelFilter={filtersState.paymentModel}
-          onPaymentModelFilterChange={(value) => updateSearchParams({ paymentModel: value })}
-          financialStatusFilter={filtersState.financialStatus}
-          onFinancialStatusFilterChange={(value) => updateSearchParams({ financialStatus: value })}
-          sortBy={filtersState.sortBy}
-          onSortByChange={(value) => updateSearchParams({ sortBy: value })}
-          activeAdvancedFiltersCount={activeAdvancedFiltersCount}
-          totalFilteredLabel={
-            hasActiveFilters ? `${totalCount} paciente(s) encontrados` : undefined
-          }
-          onClearAllFilters={handleClearAllFilters}
-          hasActiveFilters={hasActiveFilters}
-          classificationFilter={filtersState.classification}
-          onClassificationFilterChange={handleClassificationToggle}
-          activeFilterChips={activeFilterChips}
-        >
-          <Popover>
-            <PopoverTrigger asChild>
+    <PageLayout>
+      <PageContainer className="pb-20" data-testid="patients-page">
+        <PageHeader 
+          title="Gestão de Pacientes" 
+          subtitle="Visualize e gerencie a base clínica e operacional"
+          icon={Users}
+          actions={
+            <div className="flex items-center gap-2">
               <Button
                 variant="outline"
-                size="icon"
-                className={cn(
-                  "h-14 w-14 rounded-[1.2rem] border-slate-200/80 bg-white/90 backdrop-blur-md dark:border-slate-800 dark:bg-slate-950/60",
-                  activeAdvancedFiltersCount > 0 && "border-primary/30 bg-primary/5 text-primary",
-                )}
-                title="Filtros avançados"
+                onClick={() => exportPatients(patients, {})}
+                className="h-11 rounded-xl border-slate-200 dark:border-slate-800 font-black uppercase tracking-wider text-[10px]"
               >
-                <div className="relative">
-                  <Filter className="h-5 w-5" />
-                  {activeAdvancedFiltersCount > 0 && (
-                    <span className="absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-white">
-                      {activeAdvancedFiltersCount}
-                    </span>
-                  )}
-                </div>
+                <Download className="mr-2 h-4 w-4" />
+                Exportar
               </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-[380px] rounded-[1.75rem] p-4" align="end">
-              <PatientAdvancedFilters
-                currentFilters={{
-                  hasSurgery: filtersState.hasSurgery,
-                  pathologyStatus: filtersState.pathologyStatus,
-                  pathologies: filtersState.pathologies,
-                  careProfiles: filtersState.careProfiles,
-                  sports: filtersState.sports,
-                  therapyFocuses: filtersState.therapyFocuses,
-                  paymentModel: filtersState.paymentModel,
-                  financialStatus: filtersState.financialStatus,
-                  origin: filtersState.origin,
-                  partnerCompany: filtersState.partnerCompany,
-                }}
-                onFilterChange={(nextFilters) => updateSearchParams(nextFilters)}
-                activeFiltersCount={activeAdvancedFiltersCount}
-                onClearFilters={() =>
-                  updateSearchParams({
-                    hasSurgery: undefined,
-                    pathologyStatus: "all",
-                    pathologies: [],
-                    careProfiles: [],
-                    sports: [],
-                    therapyFocuses: [],
-                    paymentModel: "all",
-                    financialStatus: "all",
-                    origin: "all",
-                    partnerCompany: "all",
-                  })
-                }
-                facets={facets}
-              />
-            </PopoverContent>
-          </Popover>
-        </PatientsPageHeader>
+              <Button
+                onClick={() => updateSearchParams({ modal: "create" })}
+                className="h-11 rounded-xl bg-primary text-primary-foreground font-black uppercase tracking-wider text-[10px]"
+              >
+                <Plus className="mr-2 h-4 w-4" />
+                Novo Paciente
+              </Button>
+            </div>
+          }
+        />
 
-        <div className="space-y-8">
+        <div className="space-y-8 mt-8">
+          <PatientsPageHeader
+            stats={headerStats}
+            onNewPatient={() => updateSearchParams({ modal: "create" })}
+            onExport={() => exportPatients(patients, {})}
+            onToggleAnalytics={() =>
+              updateSearchParams({
+                analytics: showAnalytics ? undefined : "true",
+              })
+            }
+            showAnalytics={showAnalytics}
+            searchTerm={searchTerm}
+            onSearchChange={setSearchTerm}
+            statusFilter={filtersState.status}
+            onStatusFilterChange={(value) => updateSearchParams({ status: value })}
+            pathologyFilter={filtersState.condition}
+            onPathologyFilterChange={(value) => updateSearchParams({ condition: value })}
+            pathologyOptions={facets.pathologies}
+            pathologyStatusFilter={filtersState.pathologyStatus}
+            onPathologyStatusFilterChange={(value) => updateSearchParams({ pathologyStatus: value })}
+            paymentModelFilter={filtersState.paymentModel}
+            onPaymentModelFilterChange={(value) => updateSearchParams({ paymentModel: value })}
+            financialStatusFilter={filtersState.financialStatus}
+            onFinancialStatusFilterChange={(value) => updateSearchParams({ financialStatus: value })}
+            sortBy={filtersState.sortBy}
+            onSortByChange={(value) => updateSearchParams({ sortBy: value })}
+            activeAdvancedFiltersCount={activeAdvancedFiltersCount}
+            totalFilteredLabel={
+              hasActiveFilters ? `${totalCount} paciente(s) encontrados` : undefined
+            }
+            onClearAllFilters={handleClearAllFilters}
+            hasActiveFilters={hasActiveFilters}
+            classificationFilter={filtersState.classification}
+            onClassificationFilterChange={handleClassificationToggle}
+            activeFilterChips={activeFilterChips}
+            isSimplified
+          >
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className={cn(
+                    "h-14 w-14 rounded-2xl border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900",
+                    activeAdvancedFiltersCount > 0 && "border-primary text-primary bg-primary/5",
+                  )}
+                >
+                  <Filter className="h-5 w-5" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-[380px] rounded-[1.75rem] p-4 shadow-2xl" align="end">
+                <PatientAdvancedFilters
+                  currentFilters={{
+                    hasSurgery: filtersState.hasSurgery,
+                    pathologyStatus: filtersState.pathologyStatus,
+                    pathologies: filtersState.pathologies,
+                    careProfiles: filtersState.careProfiles,
+                    sports: filtersState.sports,
+                    therapyFocuses: filtersState.therapyFocuses,
+                    paymentModel: filtersState.paymentModel,
+                    financialStatus: filtersState.financialStatus,
+                    origin: filtersState.origin,
+                    partnerCompany: filtersState.partnerCompany,
+                  }}
+                  onFilterChange={(nextFilters) => updateSearchParams(nextFilters)}
+                  activeFiltersCount={activeAdvancedFiltersCount}
+                  onClearFilters={() =>
+                    updateSearchParams({
+                      hasSurgery: undefined,
+                      pathologyStatus: "all",
+                      pathologies: [],
+                      careProfiles: [],
+                      sports: [],
+                      therapyFocuses: [],
+                      paymentModel: "all",
+                      financialStatus: "all",
+                      origin: "all",
+                      partnerCompany: "all",
+                    })
+                  }
+                  facets={facets}
+                />
+              </PopoverContent>
+            </Popover>
+          </PatientsPageHeader>
+
           <Tabs
             value={activeTab}
             onValueChange={(value) => updateSearchParams({ tab: value })}
             className="w-full"
           >
             <div className="flex flex-col items-start justify-between gap-6 lg:flex-row lg:items-center">
-              <div className="rounded-[1.75rem] border border-white/50 bg-white/70 p-1.5 shadow-sm backdrop-blur-xl dark:border-slate-800/70 dark:bg-slate-950/40">
-                <TabsList className="h-14 gap-1 bg-transparent p-0">
+              <div className="premium-glass p-1.5 rounded-2xl border-primary/10">
+                <TabsList className="h-12 bg-transparent p-0 gap-1">
                   <TabsTrigger
                     value="list"
-                    className="rounded-[1.25rem] px-8 text-[11px] font-black uppercase tracking-[0.18em] data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm dark:data-[state=active]:bg-slate-900"
+                    className="rounded-xl px-6 text-[10px] font-black uppercase tracking-wider data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
                   >
+                    <LayoutDashboard className="mr-2 h-3.5 w-3.5" />
                     Cockpit Clínico
                   </TabsTrigger>
                   <TabsTrigger
                     value="birthdays"
-                    className="rounded-[1.25rem] px-8 text-[11px] font-black uppercase tracking-[0.18em] data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm dark:data-[state=active]:bg-slate-900"
+                    className="rounded-xl px-6 text-[10px] font-black uppercase tracking-wider data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
                   >
-                    <Cake className="mr-2 h-4 w-4 text-pink-500" />
+                    <Cake className="mr-2 h-3.5 w-3.5" />
                     Aniversariantes
                   </TabsTrigger>
                 </TabsList>
               </div>
 
-              <div className="rounded-[1.35rem] border border-white/50 bg-white/70 px-5 py-3 text-[11px] font-black uppercase tracking-[0.2em] text-slate-500 shadow-sm backdrop-blur-xl dark:border-slate-800/70 dark:bg-slate-950/40 dark:text-slate-300">
-                <span className="text-primary">{totalCount}</span> pacientes nesta visão
+              <div className="px-5 py-2.5 rounded-2xl premium-glass border-primary/5 text-[10px] font-black uppercase tracking-widest text-slate-500">
+                <span className="text-primary font-black">{totalCount}</span> pacientes encontrados
               </div>
             </div>
 
-            <TabsContent value="list" className="mt-0 space-y-8">
+            <TabsContent value="list" className="mt-8 space-y-8">
               {showAnalytics && (
-                <div className="rounded-[2rem] border border-white/40 bg-white/60 p-3 backdrop-blur-xl dark:border-slate-800/70 dark:bg-slate-950/35">
-                  <LazyComponent
-                    placeholder={
-                      <div className="h-[240px] w-full animate-pulse rounded-[1.5rem] bg-muted/20" />
-                    }
-                  >
+                <div className="bento-card p-4 bg-primary/5 border-primary/10">
+                  <LazyComponent placeholder={<div className="h-[240px] w-full animate-pulse rounded-2xl bg-slate-200 dark:bg-slate-800" />}>
                     <PatientAnalytics
                       totalPatients={totalCount}
                       classificationStats={{
@@ -368,49 +385,33 @@ const Patients = () => {
               <IncompleteRegistrationAlert />
 
               {isLoading && patients.length === 0 ? (
-                <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+                <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
                   {Array.from({ length: 6 }).map((_, index) => (
-                    <div
-                      key={index}
-                      className="h-[260px] animate-pulse rounded-[2rem] border border-border/20 bg-muted/20"
-                    />
+                    <div key={index} className="h-64 animate-pulse rounded-3xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800" />
                   ))}
                 </div>
               ) : patients.length === 0 ? (
-                <div className="py-20">
+                <div className="py-20 bento-card">
                   <EmptyState
                     icon={Users}
-                    title={
-                      hasActiveFilters ? "Nenhum paciente encontrado" : "Nenhum paciente cadastrado"
-                    }
-                    description={
-                      hasActiveFilters
-                        ? "Ajuste os filtros clínicos, operacionais ou financeiros para ampliar a busca."
-                        : "Sua base ainda está vazia. Cadastre o primeiro paciente para começar."
-                    }
+                    title={hasActiveFilters ? "Nenhum paciente encontrado" : "Nenhum paciente cadastrado"}
+                    description={hasActiveFilters ? "Ajuste os filtros clínicos para ampliar a busca." : "Comece cadastrando seu primeiro paciente."}
                     action={
                       hasActiveFilters
-                        ? {
-                            label: "Limpar filtros",
-                            onClick: handleClearAllFilters,
-                          }
-                        : {
-                            label: "Cadastrar paciente",
-                            onClick: () => updateSearchParams({ modal: "create" }),
-                          }
+                        ? { label: "Limpar filtros", onClick: handleClearAllFilters }
+                        : { label: "Cadastrar paciente", onClick: () => updateSearchParams({ modal: "create" }) }
                     }
                   />
                 </div>
               ) : (
                 <div className="space-y-8">
-                  <div className="grid grid-cols-1 gap-6 xl:grid-cols-2" data-testid="patient-list">
+                  <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
                     {patients.map((patient) => (
                       <PatientListItem
                         key={patient.id}
                         patient={patient}
                         onClick={() => {
-                          const UUID_REGEX =
-                            /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+                          const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
                           if (patient.id && UUID_REGEX.test(patient.id)) {
                             navigate(patientRoutes.profile(patient.id));
                           }
@@ -420,44 +421,27 @@ const Patients = () => {
                   </div>
 
                   {pagination.totalPages > 1 && (
-                    <div className="flex flex-col items-center justify-between gap-4 border-t border-border/20 pt-6 sm:flex-row">
-                      <p className="text-[11px] font-semibold text-muted-foreground">
-                        Exibindo{" "}
-                        {Math.min(pagination.currentPage * pagination.pageSize, totalCount)} de{" "}
-                        {totalCount} pacientes
+                    <div className="flex flex-col items-center justify-between gap-4 py-6 border-t border-slate-200 dark:border-slate-800 sm:flex-row">
+                      <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+                        Página {pagination.currentPage} de {pagination.totalPages}
                       </p>
                       <Pagination className="mx-0 w-auto">
                         <PaginationContent className="gap-2">
                           <PaginationItem>
                             <PaginationPrevious
-                              onClick={() =>
-                                updateSearchParams({
-                                  page: String(pagination.currentPage - 1),
-                                })
-                              }
-                              className={cn(
-                                "rounded-xl",
-                                pagination.currentPage <= 1 && "pointer-events-none opacity-40",
-                              )}
+                              onClick={() => updateSearchParams({ page: String(pagination.currentPage - 1) })}
+                              className={cn("rounded-xl border-slate-200 dark:border-slate-800", pagination.currentPage <= 1 && "pointer-events-none opacity-40")}
                             />
                           </PaginationItem>
                           <PaginationItem>
-                            <div className="rounded-xl border border-border/30 px-4 py-2 text-sm font-bold">
-                              {pagination.currentPage} / {pagination.totalPages}
+                            <div className="rounded-xl border border-primary/20 bg-primary/5 px-4 py-2 text-xs font-black text-primary">
+                              {pagination.currentPage}
                             </div>
                           </PaginationItem>
                           <PaginationItem>
                             <PaginationNext
-                              onClick={() =>
-                                updateSearchParams({
-                                  page: String(pagination.currentPage + 1),
-                                })
-                              }
-                              className={cn(
-                                "rounded-xl",
-                                pagination.currentPage >= pagination.totalPages &&
-                                  "pointer-events-none opacity-40",
-                              )}
+                              onClick={() => updateSearchParams({ page: String(pagination.currentPage + 1) })}
+                              className={cn("rounded-xl border-slate-200 dark:border-slate-800", pagination.currentPage >= pagination.totalPages && "pointer-events-none opacity-40")}
                             />
                           </PaginationItem>
                         </PaginationContent>
@@ -468,20 +452,20 @@ const Patients = () => {
               )}
             </TabsContent>
 
-            <TabsContent value="birthdays" className="mt-0">
-              <div className="overflow-hidden rounded-[2rem] border border-white/40 bg-white/60 p-3 backdrop-blur-xl dark:border-slate-800/70 dark:bg-slate-950/35">
+            <TabsContent value="birthdays" className="mt-8">
+              <div className="bento-card overflow-hidden">
                 <AniversariantesContent />
               </div>
             </TabsContent>
           </Tabs>
         </div>
-      </div>
 
-      <PatientCreateModal
-        open={isNewPatientModalOpen}
-        onOpenChange={(open) => updateSearchParams({ modal: open ? "create" : undefined })}
-      />
-    </MainLayout>
+        <PatientCreateModal
+          open={isNewPatientModalOpen}
+          onOpenChange={(open) => updateSearchParams({ modal: open ? "create" : undefined })}
+        />
+      </PageContainer>
+    </PageLayout>
   );
 };
 

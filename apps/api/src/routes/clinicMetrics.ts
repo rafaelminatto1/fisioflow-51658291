@@ -241,18 +241,27 @@ app.get("/at-risk-patients", requireAuth, async (c) => {
        p.phone,
        p.whatsapp,
        MAX(a.date)::text AS last_appointment_date,
-       (CURRENT_DATE - MAX(a.date)::date)::int AS days_since_last_session
+       (CURRENT_DATE - MAX(a.date)::date)::int AS days_since_last_session,
+       pap.dropout_risk,
+       pap.suggested_action
      FROM patients p
      INNER JOIN appointments a ON a.patient_id = p.id
+     LEFT JOIN LATERAL (
+       SELECT dropout_risk, suggested_action 
+       FROM patient_adherence_predictions 
+       WHERE patient_id = p.id 
+       ORDER BY prediction_date DESC 
+       LIMIT 1
+     ) pap ON true
      WHERE p.organization_id = $1
        AND a.organization_id = $1
        AND a.status::text IN ('atendido','avaliacao')
        AND a.deleted_at IS NULL
        AND p.deleted_at IS NULL
-     GROUP BY p.id, p.full_name, p.phone, p.whatsapp
+     GROUP BY p.id, p.full_name, p.phone, p.whatsapp, pap.dropout_risk, pap.suggested_action
      HAVING MAX(a.date) < (CURRENT_DATE - INTERVAL '14 days')
        AND MAX(a.date) >= (CURRENT_DATE - INTERVAL '90 days')
-     ORDER BY MAX(a.date) ASC
+     ORDER BY COALESCE(pap.dropout_risk, 0) DESC, MAX(a.date) ASC
      LIMIT 20`,
     [user.organizationId],
   );

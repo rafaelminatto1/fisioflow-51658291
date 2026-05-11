@@ -8,7 +8,7 @@ import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { Search, Plus, FileText, Star, History, Library } from "lucide-react";
 
-import { MainLayout } from "@/components/layout/MainLayout";
+import { PageLayout, PageContainer, PageHeader } from "@/components/layout/PageLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -363,8 +363,8 @@ export default function WikiPage() {
   // Renderização Condicional: Editor
   if (isEditing) {
     return (
-      <MainLayout>
-        <div className="h-screen flex flex-col">
+      <PageLayout>
+        <div className="h-[calc(100vh-80px)] flex flex-col">
           <WikiEditor
             page={selectedPage}
             draft={draftPage}
@@ -375,39 +375,74 @@ export default function WikiPage() {
             onSave={onSavePage}
           />
         </div>
-      </MainLayout>
+      </PageLayout>
     );
   }
 
   // Renderização Principal
   return (
-    <MainLayout>
-      <div className="h-full flex flex-col overflow-hidden">
-        <WikiTopNav
-          pages={pages}
-          categories={categories}
-          selectedPageId={selectedPage?.id}
-          onPageSelect={handlePageSelect}
-          onCreatePage={handleCreatePage}
-          onDashboardSelect={handleDashboardSelect}
-          onKnowledgeHubSelect={handleKnowledgeHubSelect}
-          onDictionarySelect={() => {
-            setActiveView("dictionary");
-            setSelectedPage(null);
-          }}
-          onAIHubSelect={() => {
-            setActiveView("ai-hub");
-            setSelectedPage(null);
-          }}
-          onPapersSelect={() => {
-            setActiveView("papers");
-            setSelectedPage(null);
-          }}
-          onTagSelect={handleTagSelect}
-        />
+    <PageLayout>
+      <PageHeader
+        title="Wiki & Documentação"
+        description="Central de conhecimento e triagem de documentação clínica."
+        icon={Library}
+        breadcrumb={[{ label: "Wiki", href: "/wiki" }]}
+        actions={
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="rounded-2xl font-bold border-brand-blue/20 text-brand-blue hover:bg-brand-blue/5"
+              disabled={syncing}
+              onClick={async () => {
+                if (!currentOrganizationId || !currentUserId) return;
+                const promise = wikiService.syncClinicalTestsToWiki(
+                  currentOrganizationId,
+                  currentUserId,
+                );
+                toast.promise(promise, {
+                  loading: "Sincronizando inteligência clínica...",
+                  success: (data) =>
+                    `Inteligência atualizada: ${data.created} criados, ${data.updated} atualizados.`,
+                  error: "Erro ao sincronizar inteligência clínica.",
+                });
+              }}
+            >
+              <History className={`h-4 w-4 mr-2 ${syncing ? "animate-spin" : ""}`} />
+              Sincronizar
+            </Button>
+            <Button onClick={handleCreatePage} size="sm" className="h-10 rounded-2xl px-5 font-bold shadow-sm bg-brand-blue hover:bg-brand-blue/90">
+              <Plus className="h-4 w-4 mr-2" /> Nova Página
+            </Button>
+          </div>
+        }
+      />
 
-        <div className="flex-1 overflow-y-auto custom-scrollbar">
-          {activeView === "page" && selectedPage ? (
+      <WikiTopNav
+        pages={pages}
+        categories={categories}
+        selectedPageId={selectedPage?.id}
+        onPageSelect={handlePageSelect}
+        onCreatePage={handleCreatePage}
+        onDashboardSelect={handleDashboardSelect}
+        onKnowledgeHubSelect={handleKnowledgeHubSelect}
+        onDictionarySelect={() => {
+          setActiveView("dictionary");
+          setSelectedPage(null);
+        }}
+        onAIHubSelect={() => {
+          setActiveView("ai-hub");
+          setSelectedPage(null);
+        }}
+        onPapersSelect={() => {
+          setActiveView("papers");
+          setSelectedPage(null);
+        }}
+        onTagSelect={handleTagSelect}
+      />
+
+      <PageContainer>
+        {activeView === "page" && selectedPage ? (
             <div className="animate-in fade-in duration-300 h-full">
               <WikiPageViewer
                 page={selectedPage}
@@ -416,7 +451,7 @@ export default function WikiPage() {
               />
             </div>
           ) : activeView === "knowledge-hub" ? (
-            <div className="p-4 md:p-8 animate-in slide-in-from-bottom-4 duration-500">
+            <div className="animate-in slide-in-from-bottom-4 duration-500">
               <KnowledgeHubView
                 knowledgeStats={knowledgeStats}
                 knowledgeGroupsFiltered={knowledgeGroupsFiltered}
@@ -441,65 +476,15 @@ export default function WikiPage() {
           ) : activeView === "dictionary" ? (
             <PhysioDictionaryView />
           ) : activeView === "ai-hub" ? (
-            <div className="p-4 md:p-8 animate-in slide-in-from-bottom-4 duration-500">
+            <div className="animate-in slide-in-from-bottom-4 duration-500">
               <AIHubView />
             </div>
           ) : activeView === "papers" ? (
-            <div className="p-4 md:p-8 animate-in slide-in-from-bottom-4 duration-500">
+            <div className="animate-in slide-in-from-bottom-4 duration-500">
               <ScientificPapersView />
             </div>
           ) : (
-            <div className="p-4 sm:p-6 space-y-6 animate-in fade-in duration-500">
-              {/* Compact header */}
-              <div className="flex items-center justify-between gap-3">
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className="h-9 w-9 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
-                    <Library className="h-4 w-4 text-primary" />
-                  </div>
-                  <div className="min-w-0">
-                    <h1 className="text-base sm:text-lg font-semibold leading-tight">
-                      Wiki & Documentação
-                    </h1>
-                    <p className="text-xs text-muted-foreground mt-0.5">
-                      Central de conhecimento e triagem de documentação clínica.
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-muted/30 border border-border/50 text-[10px] font-medium text-muted-foreground">
-                    <div
-                      className={`h-1.5 w-1.5 rounded-full ${syncing ? "bg-amber-500 animate-pulse" : "bg-emerald-500"}`}
-                    />
-                    {syncing ? "Sincronizando..." : "Wiki Offline Sync Ativo"}
-                  </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="gap-1.5 flex-shrink-0"
-                    disabled={syncing}
-                    onClick={async () => {
-                      if (!currentOrganizationId || !currentUserId) return;
-                      const promise = wikiService.syncClinicalTestsToWiki(
-                        currentOrganizationId,
-                        currentUserId,
-                      );
-                      toast.promise(promise, {
-                        loading: "Sincronizando inteligência clínica...",
-                        success: (data) =>
-                          `Inteligência atualizada: ${data.created} criados, ${data.updated} atualizados.`,
-                        error: "Erro ao sincronizar inteligência clínica.",
-                      });
-                    }}
-                  >
-                    <History className={`h-4 w-4 ${syncing ? "animate-spin" : ""}`} />
-                    Sincronizar Inteligência
-                  </Button>
-                  <Button onClick={handleCreatePage} size="sm" className="gap-1.5 flex-shrink-0">
-                    <Plus className="h-4 w-4" /> Nova Página
-                  </Button>
-                </div>
-              </div>
-
+            <div className="space-y-6 animate-in fade-in duration-500">
               {evidenceTree.root && (
                 <section className="space-y-6">
                   <div className="flex items-center gap-2 border-b pb-2">
@@ -750,8 +735,7 @@ export default function WikiPage() {
               </section>
             </div>
           )}
-        </div>
-      </div>
+        </PageContainer>
 
       {/* Modals */}
       <Dialog open={isTemplateDialogOpen} onOpenChange={setIsTemplateDialogOpen}>
@@ -900,12 +884,14 @@ export default function WikiPage() {
         </DialogContent>
       </Dialog>
 
+
+
       <KnowledgeArticleDialog
         open={isArticleDialogOpen}
         onOpenChange={setIsArticleDialogOpen}
         article={editingArticle}
         onSave={handleSaveArticle}
       />
-    </MainLayout>
+    </PageLayout>
   );
 }

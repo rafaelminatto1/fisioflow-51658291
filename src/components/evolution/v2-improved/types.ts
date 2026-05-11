@@ -7,6 +7,7 @@ export interface EvolutionV2Data {
   sessionDate: string;
   sessionNumber?: number;
   totalSessions?: number;
+  therapistRole?: string;
 
   // Patient report
   patientReport: string;
@@ -35,6 +36,12 @@ export interface EvolutionV2Data {
 
   // Measurements (clinical tests, vitals, etc.)
   measurements?: MeasurementItem[];
+
+  // Audit / Control
+  status?: "draft" | "under_review" | "finalized" | "cancelled";
+  isEdited?: boolean;
+  lastEditedBy?: string;
+  editReason?: string;
 }
 
 export interface ProcedureItem {

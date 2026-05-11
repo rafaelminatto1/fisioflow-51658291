@@ -7,7 +7,7 @@ import { lazy, Suspense, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { AlertTriangle } from "lucide-react";
 
-import { MainLayout } from "@/components/layout/MainLayout";
+import { PageLayout, PageContainer } from "@/components/layout/PageLayout";
 import { APP_ROUTES } from "@/lib/routing/appRoutes";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
@@ -89,8 +89,8 @@ const LazyNotionEvolutionPanelV3 = lazy(() =>
   })),
 );
 const LazyNotionEvolutionEditor = lazy(() =>
-  import("@/components/evolution/V5ProBlockEditor").then((m) => ({
-    default: m.V5ProBlockEditor,
+  import("@/components/evolution/unified/UnifiedEvolutionEditor").then((m) => ({
+    default: m.UnifiedEvolutionEditor,
   })),
 );
 const LazyEvolutionDraggableGrid = lazy(() =>
@@ -352,9 +352,6 @@ const PatientEvolution = () => {
               handlers.handleSave();
             }}
             isSaving={autoSaveMutation.isPending}
-            soapData={state.soapData}
-            onAiAssist={() => state.setActiveTab("assistente")}
-            isPro={state.evolutionVersion === "v5-pro"}
           />
         </Suspense>
       );
@@ -409,15 +406,15 @@ const PatientEvolution = () => {
 
   if (state.dataLoading)
     return (
-      <MainLayout>
+      <PageLayout>
         <div className="flex items-center justify-center h-[50vh]">
-          <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+          <div className="w-12 h-12 border-4 border-brand-blue border-t-transparent rounded-full animate-spin" />
         </div>
-      </MainLayout>
+      </PageLayout>
     );
   if (!state.appointment || !state.patient)
     return (
-      <MainLayout>
+      <PageLayout>
         <div className="text-center p-10">
           <AlertTriangle className="mx-auto h-12 w-12 text-destructive" />
           <p>Dados não encontrados.</p>
@@ -425,7 +422,7 @@ const PatientEvolution = () => {
             Voltar
           </Button>
         </div>
-      </MainLayout>
+      </PageLayout>
     );
 
   const pendingRequiredMeasurements =
@@ -443,174 +440,178 @@ const PatientEvolution = () => {
 
   return (
     <ComponentErrorBoundary componentName="PatientEvolution">
-      <MainLayout maxWidth="full" compactPadding>
-        <div className="space-y-5 animate-fade-in pb-8">
-          <EvolutionHeader
-            patient={state.patient as any}
-            appointment={state.appointment as any}
-            evolutionStats={evolutionStats}
-            treatmentDuration={treatmentDuration}
-            onSave={handlers.handleSave}
-            onComplete={handlers.handleCompleteSession}
-            isSaving={handlers.isSaving}
-            isCompleting={handlers.isCompleting}
-            autoSaveEnabled={state.autoSaveEnabled}
-            toggleAutoSave={() => state.setAutoSaveEnabled(!state.autoSaveEnabled)}
-            lastSavedAt={lastSavedAt}
-            activeTab={state.activeTab}
-            onTabChange={(v) => state.setActiveTab(v as EvolutionTab)}
-            evolutionVersion={state.evolutionVersion}
-            onVersionChange={state.setEvolutionVersion}
-            onRestoreVersion={handlers.handleRestoreVersion}
-            therapists={state.therapists}
-            selectedTherapistId={state.selectedTherapistId}
-            onTherapistChange={state.setSelectedTherapistId}
-            showInsights={state.showInsights}
-            toggleInsights={() => state.setShowInsights(!state.showInsights)}
-            onShowTemplateModal={() => state.setShowApplyTemplate(true)}
-            onShowKeyboardHelp={() => state.setShowKeyboardHelp(true)}
-            onShowAIScribe={() => state.setShowAIScribe(true)}
-            previousEvolutionsCount={state.previousEvolutions.length}
-            tabsConfig={[
-              {
-                value: "evolucao",
-                label: "Evolução",
-                shortLabel: "Evol",
-                icon: FileText,
-                description: "Evolução clínica",
-              },
-              {
-                value: "avaliacao",
-                label: "Avaliação",
-                shortLabel: "Aval",
-                icon: Activity,
-                description: "Testes e medições",
-              },
-              {
-                value: "tratamento",
-                label: "Tratamento",
-                shortLabel: "Trat",
-                icon: Layers,
-                description: "Condutas e intervenções",
-              },
-              {
-                value: "historico",
-                label: "Histórico",
-                shortLabel: "Hist",
-                icon: History,
-                description: "Sessões anteriores",
-              },
-              {
-                value: "assistente",
-                label: "Assistente",
-                shortLabel: "IA",
-                icon: Bot,
-                description: "Assistente de IA",
-              },
-              {
-                value: "configuracoes",
-                label: "Ajustes",
-                shortLabel: "Ajustes",
-                icon: SettingsIcon,
-                description: "Configurações da Evolução",
-              },
-            ]}
-          />
+      <PageLayout compactHeader>
+        <PageContainer>
+          <div className="space-y-5 animate-fade-in pb-8">
+            <EvolutionHeader
+              patient={state.patient as any}
+              appointment={state.appointment as any}
+              evolutionStats={evolutionStats}
+              treatmentDuration={treatmentDuration}
+              onSave={handlers.handleSave}
+              onComplete={handlers.handleCompleteSession}
+              isSaving={handlers.isSaving}
+              isCompleting={handlers.isCompleting}
+              autoSaveEnabled={state.autoSaveEnabled}
+              toggleAutoSave={() => state.setAutoSaveEnabled(!state.autoSaveEnabled)}
+              lastSavedAt={lastSavedAt}
+              activeTab={state.activeTab}
+              onTabChange={(v) => state.setActiveTab(v as EvolutionTab)}
+              evolutionVersion={state.evolutionVersion}
+              onVersionChange={state.setEvolutionVersion}
+              onRestoreVersion={handlers.handleRestoreVersion}
+              therapists={state.therapists}
+              selectedTherapistId={state.selectedTherapistId}
+              onTherapistChange={state.setSelectedTherapistId}
+              showInsights={state.showInsights}
+              toggleInsights={() => state.setShowInsights(!state.setShowInsights)}
+              onShowTemplateModal={() => state.setShowApplyTemplate(true)}
+              onShowKeyboardHelp={() => state.setShowKeyboardHelp(true)}
+              onShowAIScribe={() => state.setShowAIScribe(true)}
+              previousEvolutionsCount={state.previousEvolutions.length}
+              isEdited={state.isEdited}
+              tabsConfig={[
+                {
+                  value: "evolucao",
+                  label: "Evolução",
+                  shortLabel: "Evol",
+                  icon: FileText,
+                  description: "Evolução clínica",
+                },
+                {
+                  value: "avaliacao",
+                  label: "Avaliação",
+                  shortLabel: "Aval",
+                  icon: Activity,
+                  description: "Testes e medições",
+                },
+                {
+                  value: "tratamento",
+                  label: "Tratamento",
+                  shortLabel: "Trat",
+                  icon: Layers,
+                  description: "Condutas e intervenções",
+                },
+                {
+                  value: "historico",
+                  label: "Histórico",
+                  shortLabel: "Hist",
+                  icon: History,
+                  description: "Sessões anteriores",
+                },
+                {
+                  value: "assistente",
+                  label: "Assistente",
+                  shortLabel: "IA",
+                  icon: Bot,
+                  description: "Assistente de IA",
+                },
+                {
+                  value: "configuracoes",
+                  label: "Ajustes",
+                  shortLabel: "Ajustes",
+                  icon: SettingsIcon,
+                  description: "Configurações da Evolução",
+                },
+              ]}
+            />
 
-          <Tabs
-            value={state.activeTab}
-            onValueChange={(v) => state.setActiveTab(v as EvolutionTab)}
-            className="w-full pb-20"
-          >
-            <TabsContent value="evolucao" className="mt-0">
-              <Suspense fallback={<LoadingSkeleton />}>
-                <LazyEvolucaoTab
-                  alertsSection={alertsSectionContent}
-                  topSection={state.showInsights ? topSectionContent : null}
-                  mainGrid={mainGridContent}
-                />
-              </Suspense>
-            </TabsContent>
-            <TabsContent value="avaliacao">
-              <Suspense fallback={<LoadingSkeleton />}>
-                <LazyAvaliacaoTab
-                  patientId={state.patientId!}
-                  appointmentId={state.appointmentId!}
-                  todayMeasurements={state.measurements}
-                  requiredMeasurements={state.requiredMeasurements}
-                  pendingRequiredMeasurements={pendingRequiredMeasurements}
-                  measurementsByType={measurementsByType}
-                />
-              </Suspense>
-            </TabsContent>
-            <TabsContent value="tratamento">
-              <Suspense fallback={<LoadingSkeleton />}>
-                <LazyTratamentoTab
-                  sessionExercises={state.sessionExercises}
-                  onExercisesChange={state.setSessionExercises}
-                  patientId={state.patientId!}
-                  goals={state.goals}
-                  pathologies={state.pathologies}
-                />
-              </Suspense>
-            </TabsContent>
-            <TabsContent value="historico">
-              <Suspense fallback={<LoadingSkeleton />}>
-                <LazyHistoricoTab
-                  patientId={state.patientId!}
-                  previousEvolutions={state.previousEvolutions}
-                  onCopyEvolution={handlers.handleCopyPreviousEvolution}
-                  surgeries={state.surgeries.map((s: any) => ({
-                    ...s,
-                    name: s.surgery_name,
-                    date: s.surgery_date,
-                  }))}
-                  showComparison={state.showComparison}
-                  onToggleComparison={() => state.setShowComparison(!state.showComparison)}
-                />
-              </Suspense>
-            </TabsContent>
-            <TabsContent value="assistente">
-              <Suspense fallback={<LoadingSkeleton />}>
-                <LazyAssistenteTab
-                  patientId={state.patientId!}
-                  patientName={PatientHelpers.getName(state.patient)}
-                  onApplyToSoap={(f, c) => {
-                    state.setSoapData((prev: any) => ({
-                      ...prev,
-                      [f]: prev[f] + c,
-                    }));
-                    state.setActiveTab("evolucao");
-                  }}
-                />
-              </Suspense>
-            </TabsContent>
-            <TabsContent value="escalas">
-              <Suspense fallback={<LoadingSkeleton />}>
-                {state.patientId && (
-                  <div className="p-4">
-                    <LazyPROMsDashboard
-                      patientId={state.patientId}
-                      sessionId={state.appointmentId ?? undefined}
-                    />
-                  </div>
-                )}
-              </Suspense>
-            </TabsContent>
-            <TabsContent value="configuracoes" className="mt-0 p-4">
-              <Suspense fallback={<LoadingSkeleton />}>
-                <LazyEvolutionSettingsTab />
-              </Suspense>
-            </TabsContent>
-          </Tabs>
+            <Tabs
+              value={state.activeTab}
+              onValueChange={(v) => state.setActiveTab(v as EvolutionTab)}
+              className="w-full pb-20"
+            >
+              {/* ... tabs content ... */}
+              <TabsContent value="evolucao" className="mt-0">
+                <Suspense fallback={<LoadingSkeleton />}>
+                  <LazyEvolucaoTab
+                    alertsSection={alertsSectionContent}
+                    topSection={state.showInsights ? topSectionContent : null}
+                    mainGrid={mainGridContent}
+                  />
+                </Suspense>
+              </TabsContent>
+              <TabsContent value="avaliacao">
+                <Suspense fallback={<LoadingSkeleton />}>
+                  <LazyAvaliacaoTab
+                    patientId={state.patientId!}
+                    appointmentId={state.appointmentId!}
+                    todayMeasurements={state.measurements}
+                    requiredMeasurements={state.requiredMeasurements}
+                    pendingRequiredMeasurements={pendingRequiredMeasurements}
+                    measurementsByType={measurementsByType}
+                  />
+                </Suspense>
+              </TabsContent>
+              <TabsContent value="tratamento">
+                <Suspense fallback={<LoadingSkeleton />}>
+                  <LazyTratamentoTab
+                    sessionExercises={state.sessionExercises}
+                    onExercisesChange={state.setSessionExercises}
+                    patientId={state.patientId!}
+                    goals={state.goals}
+                    pathologies={state.pathologies}
+                  />
+                </Suspense>
+              </TabsContent>
+              <TabsContent value="historico">
+                <Suspense fallback={<LoadingSkeleton />}>
+                  <LazyHistoricoTab
+                    patientId={state.patientId!}
+                    previousEvolutions={state.previousEvolutions}
+                    onCopyEvolution={handlers.handleCopyPreviousEvolution}
+                    surgeries={state.surgeries.map((s: any) => ({
+                      ...s,
+                      name: s.surgery_name,
+                      date: s.surgery_date,
+                    }))}
+                    showComparison={state.showComparison}
+                    onToggleComparison={() => state.setShowComparison(!state.showComparison)}
+                  />
+                </Suspense>
+              </TabsContent>
+              <TabsContent value="assistente">
+                <Suspense fallback={<LoadingSkeleton />}>
+                  <LazyAssistenteTab
+                    patientId={state.patientId!}
+                    patientName={PatientHelpers.getName(state.patient)}
+                    onApplyToSoap={(f, c) => {
+                      state.setSoapData((prev: any) => ({
+                        ...prev,
+                        [f]: prev[f] + c,
+                      }));
+                      state.setActiveTab("evolucao");
+                    }}
+                  />
+                </Suspense>
+              </TabsContent>
+              <TabsContent value="escalas">
+                <Suspense fallback={<LoadingSkeleton />}>
+                  {state.patientId && (
+                    <div className="p-4">
+                      <LazyPROMsDashboard
+                        patientId={state.patientId}
+                        sessionId={state.appointmentId ?? undefined}
+                      />
+                    </div>
+                  )}
+                </Suspense>
+              </TabsContent>
+              <TabsContent value="configuracoes" className="mt-0 p-4">
+                <Suspense fallback={<LoadingSkeleton />}>
+                  <LazyEvolutionSettingsTab />
+                </Suspense>
+              </TabsContent>
+            </Tabs>
 
-          <FloatingActionBar
-            onSave={handlers.handleSave}
-            onComplete={handlers.handleCompleteSession}
-            onExportPDF={handlers.handleExportPDF}
-            onGenerateNFSe={() => navigate("/financial")}
-            isSaving={handlers.isSaving}
-          />
+            <FloatingActionBar
+              onSave={handlers.handleSave}
+              onComplete={handlers.handleCompleteSession}
+              onExportPDF={handlers.handleExportPDF}
+              onGenerateNFSe={() => navigate("/financial")}
+              isSaving={handlers.isSaving}
+            />
+          </div>
           {state.showApplyTemplate && (
             <ApplyTemplateModal
               open={state.showApplyTemplate}
@@ -637,8 +638,8 @@ const PatientEvolution = () => {
               }));
             }}
           />
-        </div>
-      </MainLayout>
+        </PageContainer>
+      </PageLayout>
     </ComponentErrorBoundary>
   );
 };

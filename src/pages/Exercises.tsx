@@ -1,6 +1,6 @@
 import { useState, useMemo, useCallback, lazy, Suspense, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
-import { MainLayout } from "@/components/layout/MainLayout";
+import { PageLayout, PageContainer, PageHeader } from "@/components/layout/PageLayout";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -237,79 +237,76 @@ export default function Exercises() {
   const exerciseAIPatient = useMemo(() => toExerciseAIPatient(selectedPatient), [selectedPatient]);
 
   return (
-    <MainLayout>
-      <div className="space-y-3 pb-20 md:pb-0 animate-fade-in">
-        {/* Compact Page Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div className="flex items-center gap-3 min-w-0">
-            <div className="h-9 w-9 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
-              <Dumbbell className="h-4 w-4 text-primary" />
+    <PageLayout>
+      <PageHeader
+        title="Biblioteca de Exercícios"
+        description="Gerencie protocolos, templates e vídeos demonstrativos para prescrição clínica."
+        icon={Dumbbell}
+        breadcrumb={[{ label: "Exercícios", href: "/exercicios" }]}
+        actions={
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="rounded-2xl font-bold border-brand-blue/20 text-brand-blue hover:bg-brand-blue/5"
+              onClick={handleUploadClick}
+            >
+              <Video className="h-4 w-4 mr-2" />
+              Upload Vídeo
+            </Button>
+            <Button
+              size="sm"
+              className="h-10 rounded-2xl px-5 font-bold shadow-sm bg-brand-blue hover:bg-brand-blue/90"
+              onClick={handleNewExercise}
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Novo Exercício
+            </Button>
+          </div>
+        }
+      >
+        {!isLoading && (
+          <div className="flex items-center gap-4 mt-2 overflow-x-auto pb-1 no-scrollbar">
+            <div className="flex items-center gap-1.5 whitespace-nowrap">
+              <span className="h-2 w-2 rounded-full bg-brand-blue" />
+              <span className="text-xs font-medium text-slate-600">
+                <span className="text-slate-900">{exercises.length}</span> Exercícios
+              </span>
             </div>
-            <div className="min-w-0">
-              <h1
-                className="text-base sm:text-lg font-semibold leading-tight"
-                data-testid="exercise-library-title"
-              >
-                Biblioteca de Exercícios
-              </h1>
-              {isLoading ? (
-                <Skeleton className="h-3.5 w-48 mt-1" />
-              ) : (
-                <div className="flex items-center gap-2 text-xs text-muted-foreground flex-wrap mt-0.5">
-                  <span>
-                    <span className="font-medium text-foreground">{exercises.length}</span>{" "}
-                    exercícios
-                  </span>
-                  <span className="text-border">·</span>
-                  <span>
-                    <span className="font-medium text-emerald-600">
-                      {exercisesWithVideo.length}
-                    </span>{" "}
-                    com vídeo ({videoPercentage}%)
-                  </span>
-                  <span className="text-border hidden sm:inline">·</span>
-                  <span className="hidden sm:inline">
-                    <span className="font-medium text-blue-600">{templates.length}</span> templates
-                  </span>
-                  <span className="text-border hidden sm:inline">·</span>
-                  <span className="hidden sm:inline">
-                    <span className="font-medium text-amber-600">{protocols.length}</span>{" "}
-                    protocolos
-                  </span>
-                </div>
-              )}
+            <div className="flex items-center gap-1.5 whitespace-nowrap">
+              <span className="h-2 w-2 rounded-full bg-emerald-500" />
+              <span className="text-xs font-medium text-slate-600">
+                <span className="text-slate-900">{exercisesWithVideo.length}</span> Com Vídeo
+              </span>
+            </div>
+            <div className="flex items-center gap-1.5 whitespace-nowrap">
+              <span className="h-2 w-2 rounded-full bg-blue-500" />
+              <span className="text-xs font-medium text-slate-600">
+                <span className="text-slate-900">{templates.length}</span> Templates
+              </span>
+            </div>
+            <div className="flex items-center gap-1.5 whitespace-nowrap">
+              <span className="h-2 w-2 rounded-full bg-amber-500" />
+              <span className="text-xs font-medium text-slate-600">
+                <span className="text-slate-900">{protocols.length}</span> Protocolos
+              </span>
             </div>
           </div>
+        )}
+      </PageHeader>
 
-          {(activeTab === "library" || activeTab === "videos") && (
-            <div className="flex gap-2 flex-shrink-0">
-              <Button
-                onClick={handleNewExercise}
-                size="sm"
-                className="gap-1.5 shadow-sm shadow-primary/20"
-              >
-                <Plus className="h-4 w-4" />
-                <span>Novo Exercício</span>
-              </Button>
-              <Button onClick={handleUploadClick} variant="outline" size="sm" className="gap-1.5">
-                <Video className="h-4 w-4" />
-                <span className="hidden xs:inline">Upload Vídeo</span>
-                <span className="xs:hidden">Upload</span>
-              </Button>
-            </div>
-          )}
-        </div>
+      <PageContainer>
 
         {/* Main Content Tabs - Mobile Optimized */}
         <Card className="overflow-visible border-none bg-transparent shadow-none">
           <Tabs value={activeTab} onValueChange={handleTabChange}>
             <div className="border-b bg-background/95 backdrop-blur-sm rounded-t-xl overflow-hidden">
-              <TabsList className="w-full justify-start rounded-none border-0 bg-transparent h-12 sm:h-14 p-0">
-                <TabsTrigger
-                  value="library"
-                  data-testid="tab-library"
-                  className="gap-1.5 sm:gap-2 h-full rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-3 sm:px-4 md:px-6 text-xs sm:text-sm"
-                >
+          <TabsList className="bg-slate-100 p-1 rounded-xl mb-4 h-12 sm:h-14">
+            <TabsTrigger
+              value="library"
+              data-testid="tab-library"
+              className="gap-1.5 sm:gap-2 h-full rounded-lg data-[state=active]:bg-white data-[state=active]:text-brand-blue data-[state=active]:shadow-sm px-3 sm:px-4 md:px-6 text-xs sm:text-sm"
+            >
                   <BookOpen className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                   <span className="hidden xs:inline">Biblioteca</span>
                   <Badge
@@ -321,7 +318,7 @@ export default function Exercises() {
                 </TabsTrigger>
                 <TabsTrigger
                   value="videos"
-                  className="gap-1.5 sm:gap-2 h-full rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-3 sm:px-4 md:px-6 text-xs sm:text-sm"
+                  className="gap-1.5 sm:gap-2 h-full rounded-lg data-[state=active]:bg-white data-[state=active]:text-brand-blue data-[state=active]:shadow-sm px-3 sm:px-4 md:px-6 text-xs sm:text-sm"
                 >
                   <Video className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                   <span className="hidden xs:inline">Mídias</span>
@@ -329,7 +326,7 @@ export default function Exercises() {
                 <TabsTrigger
                   value="templates"
                   data-testid="tab-templates"
-                  className="gap-1.5 sm:gap-2 h-full rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-3 sm:px-4 md:px-6 text-xs sm:text-sm"
+                  className="gap-1.5 sm:gap-2 h-full rounded-lg data-[state=active]:bg-white data-[state=active]:text-brand-blue data-[state=active]:shadow-sm px-3 sm:px-4 md:px-6 text-xs sm:text-sm"
                 >
                   <FileText className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                   <span className="hidden xs:inline">Templates</span>
@@ -343,7 +340,7 @@ export default function Exercises() {
                 <TabsTrigger
                   value="protocols"
                   data-testid="tab-protocols"
-                  className="gap-1.5 sm:gap-2 h-full rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-3 sm:px-4 md:px-6 text-xs sm:text-sm"
+                  className="gap-1.5 sm:gap-2 h-full rounded-lg data-[state=active]:bg-white data-[state=active]:text-brand-blue data-[state=active]:shadow-sm px-3 sm:px-4 md:px-6 text-xs sm:text-sm"
                 >
                   <Target className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                   <span className="hidden xs:inline">Protocolos</span>
@@ -356,9 +353,9 @@ export default function Exercises() {
                 </TabsTrigger>
                 <TabsTrigger
                   value="ai"
-                  className="gap-1.5 sm:gap-2 h-full rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-3 sm:px-4 md:px-6 text-xs sm:text-sm bg-gradient-to-r from-cyan-500/10 to-teal-500/10 hover:from-cyan-500/20 hover:to-teal-500/20"
+                  className="gap-1.5 sm:gap-2 h-full rounded-lg data-[state=active]:bg-white data-[state=active]:text-brand-blue data-[state=active]:shadow-sm px-3 sm:px-4 md:px-6 text-xs sm:text-sm group"
                 >
-                  <Sparkles className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-cyan-600" />
+                  <Sparkles className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-cyan-600 group-data-[state=active]:animate-pulse" />
                   <span className="hidden xs:inline">IA Assistente</span>
                   <Badge
                     variant="secondary"
@@ -369,7 +366,7 @@ export default function Exercises() {
                 </TabsTrigger>
                 <TabsTrigger
                   value="analytics"
-                  className="gap-1.5 sm:gap-2 h-full rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-3 sm:px-4 md:px-6 text-xs sm:text-sm"
+                  className="gap-1.5 sm:gap-2 h-full rounded-lg data-[state=active]:bg-white data-[state=active]:text-brand-blue data-[state=active]:shadow-sm px-3 sm:px-4 md:px-6 text-xs sm:text-sm"
                 >
                   <Activity className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                   <span className="hidden xs:inline">Analytics</span>
@@ -451,7 +448,6 @@ export default function Exercises() {
             </TabsContent>
           </Tabs>
         </Card>
-      </div>
 
       <Suspense fallback={null}>
         <NewExerciseModal
@@ -472,6 +468,7 @@ export default function Exercises() {
           }}
         />
       </Suspense>
-    </MainLayout>
+      </PageContainer>
+    </PageLayout>
   );
 }

@@ -8,6 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { request } from "@/api/v2";
 import { RetentionAutomationService } from "@/services/marketing/retentionAutomation";
 import { useToast } from "@/hooks/use-toast";
+import { cn } from "@/lib/utils";
 
 interface AtRiskPatient {
   id: string;
@@ -16,6 +17,8 @@ interface AtRiskPatient {
   whatsapp: string | null;
   last_appointment_date: string;
   days_since_last_session: number;
+  dropout_risk?: number;
+  suggested_action?: string;
 }
 
 function useAtRiskPatients() {
@@ -128,8 +131,23 @@ export function AtRiskPatientsAlert() {
               key={p.id}
               className="flex items-center justify-between gap-3 rounded-xl bg-white dark:bg-zinc-900 border border-amber-100 dark:border-amber-900 px-4 py-2.5"
             >
-              <div className="min-w-0">
-                <p className="text-sm font-bold truncate">{p.full_name}</p>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2 mb-0.5">
+                  <p className="text-sm font-bold truncate">{p.full_name}</p>
+                  {p.dropout_risk !== undefined && (
+                    <Badge 
+                      variant="outline" 
+                      className={cn(
+                        "text-[9px] px-1.5 py-0 border-0",
+                        p.dropout_risk > 70 ? "bg-red-100 text-red-700" : 
+                        p.dropout_risk > 40 ? "bg-amber-100 text-amber-700" : 
+                        "bg-emerald-100 text-emerald-700"
+                      )}
+                    >
+                      {p.dropout_risk}% Risco
+                    </Badge>
+                  )}
+                </div>
                 <p className="text-[11px] text-muted-foreground">
                   Última sessão:{" "}
                   {new Date(p.last_appointment_date + "T12:00:00").toLocaleDateString("pt-BR")}{" "}
@@ -137,6 +155,11 @@ export function AtRiskPatientsAlert() {
                     ({p.days_since_last_session} dias)
                   </span>
                 </p>
+                {p.suggested_action && (
+                  <p className="text-[10px] text-amber-700/80 dark:text-amber-400/80 font-medium italic mt-1 leading-tight line-clamp-1">
+                    Sugestão IA: {p.suggested_action}
+                  </p>
+                )}
               </div>
               {waUrl ? (
                 <Button

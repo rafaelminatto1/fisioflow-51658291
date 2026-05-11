@@ -106,6 +106,9 @@ function rowToRecord(row: any) {
     created_at: new Date(row.createdAt).toISOString(),
     updated_at: new Date(row.updatedAt).toISOString(),
     signed_at: row.finalizedAt ? new Date(row.finalizedAt).toISOString() : undefined,
+    is_edited: row.isEdited,
+    last_edited_by: row.lastEditedBy ? String(row.lastEditedBy) : undefined,
+    edit_reason: row.editReason ?? undefined,
   };
 }
 
@@ -194,9 +197,22 @@ app.post("/autosave", requireAuth, async (c) => {
 
   const idToUpdate = body.recordId || body.id;
   if (idToUpdate) {
+    // Check if finalized before update to set isEdited flag
+    const [existingSession] = await db
+      .select({ status: sessions.status })
+      .from(sessions)
+      .where(withTenant(sessions, user.organizationId, eq(sessions.id, idToUpdate)))
+      .limit(1);
+
+    const payload = buildUpdatePayload();
+    if (existingSession?.status === "finalized") {
+      payload.isEdited = true;
+      payload.lastEditedBy = user.uid as any;
+    }
+
     const res = await db
       .update(sessions)
-      .set(buildUpdatePayload())
+      .set(payload)
       .where(withTenant(sessions, user.organizationId, eq(sessions.id, idToUpdate)))
       .returning();
 
@@ -483,6 +499,18 @@ app.put("/:id", requireAuth, async (c) => {
         updatePayload.finalizedBy = isValidUuid(user.uid) ? user.uid : null;
       }
     }
+  }
+
+  // Check if finalized before update to set isEdited flag
+  const [existingSession] = await db
+    .select({ status: sessions.status })
+    .from(sessions)
+    .where(withTenant(sessions, user.organizationId, eq(sessions.id, id)))
+    .limit(1);
+
+  if (existingSession?.status === "finalized" && !("status" in body && body.status === "finalized")) {
+    updatePayload.isEdited = true;
+    updatePayload.lastEditedBy = user.uid as any;
   }
 
   const [updated] = await db

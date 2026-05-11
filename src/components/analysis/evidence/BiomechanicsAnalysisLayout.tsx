@@ -3,13 +3,14 @@ import type { LucideIcon } from "lucide-react";
 import { ArrowLeft, FileText } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
-import { MainLayout } from "@/components/layout/MainLayout";
+import { PageLayout, PageContainer, PageHeader } from "@/components/layout/PageLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { biomechanicsProtocols } from "@/data/biomechanicsEvidence";
 import { BiomechanicsEvidencePanel } from "./BiomechanicsEvidencePanel";
 import { BiomechanicsProtocolGuidePanel } from "./BiomechanicsProtocolGuidePanel";
 import { BiomechanicsTemplateLibraryPanel } from "./BiomechanicsTemplateLibraryPanel";
+import { MedicalDisclaimer } from "@/components/clinical/MedicalDisclaimer";
 import type { BiomechanicsEvidenceMode } from "@/data/biomechanicsEvidence";
 
 interface BiomechanicsAnalysisLayoutProps {
@@ -35,66 +36,53 @@ export function BiomechanicsAnalysisLayout({
   const protocol = biomechanicsProtocols[mode];
 
   return (
-    <MainLayout>
-      <div className="min-h-screen bg-background/50 pb-20">
-        <div className="sticky top-0 z-30 border-b bg-background/95 px-6 py-4 backdrop-blur">
-          <div className="mx-auto flex max-w-7xl items-center justify-between">
-            <div className="flex items-center gap-4">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => navigate("/clinical/biomechanics")}
-              >
-                <ArrowLeft className="h-5 w-5" />
-              </Button>
-              <div
-                className={`flex h-10 w-10 items-center justify-center rounded-xl border ${iconBgClassName}`}
-              >
-                <Icon className={`h-5 w-5 ${iconClassName}`} />
-              </div>
-              <div>
-                <h1 className="text-xl font-black uppercase tracking-tighter text-foreground">
-                  {title}
-                </h1>
-                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-                  {subtitle}
-                </p>
-              </div>
-            </div>
-            <Button variant="outline" size="sm" className="gap-2">
-              <FileText className="h-4 w-4" />
-              Relatório
-            </Button>
-          </div>
-        </div>
+    <PageLayout>
+      <PageHeader
+        title={title}
+        description={subtitle}
+        icon={Icon}
+        breadcrumb={[
+          { label: "Biomecânica", href: "/clinical/biomechanics" },
+          { label: title, href: "#" },
+        ]}
+        actions={
+          <Button variant="outline" size="sm" className="gap-2 rounded-2xl font-bold border-brand-blue/20 text-brand-blue">
+            <FileText className="h-4 w-4" />
+            Relatório
+          </Button>
+        }
+      />
 
-        <div className="mx-auto grid max-w-7xl gap-6 px-4 py-8 xl:grid-cols-[minmax(0,1fr)_360px]">
-          <div className="space-y-6 min-h-[calc(100vh-140px)]">
+      <PageContainer>
+        <MedicalDisclaimer className="mb-6" />
+        
+        <div className="grid grid-cols-1 xl:grid-cols-[1fr_360px] gap-6">
+          <div className="space-y-6">
             <div className="grid gap-4 md:grid-cols-3">
-              <Card className="border-slate-200/70 shadow-sm">
-                <CardContent className="space-y-2 p-4">
+              <Card className="border-none shadow-sm bg-white">
+                <CardContent className="space-y-2 p-5">
                   <p className="text-[10px] font-black uppercase tracking-widest text-emerald-600">
                     Preparação rápida
                   </p>
-                  <p className="text-sm font-medium text-foreground">
+                  <p className="text-sm font-medium text-slate-700">
                     {protocol.preparationChecklist[0]}
                   </p>
                 </CardContent>
               </Card>
-              <Card className="border-slate-200/70 shadow-sm">
-                <CardContent className="space-y-2 p-4">
+              <Card className="border-none shadow-sm bg-white">
+                <CardContent className="space-y-2 p-5">
                   <p className="text-[10px] font-black uppercase tracking-widest text-sky-600">
                     Captura recomendada
                   </p>
-                  <p className="text-sm font-medium text-foreground">{protocol.captureAngles[0]}</p>
+                  <p className="text-sm font-medium text-slate-700">{protocol.captureAngles[0]}</p>
                 </CardContent>
               </Card>
-              <Card className="border-slate-200/70 shadow-sm">
-                <CardContent className="space-y-2 p-4">
+              <Card className="border-none shadow-sm bg-white">
+                <CardContent className="space-y-2 p-5">
                   <p className="text-[10px] font-black uppercase tracking-widest text-amber-600">
                     Saída principal
                   </p>
-                  <p className="text-sm font-medium text-foreground">
+                  <p className="text-sm font-medium text-slate-700">
                     {protocol.measuredOutputs[0]}
                   </p>
                 </CardContent>
@@ -102,13 +90,14 @@ export function BiomechanicsAnalysisLayout({
             </div>
             {children}
           </div>
-          <div className="space-y-6 xl:sticky xl:top-28 xl:self-start">
+          
+          <div className="space-y-6 lg:sticky lg:top-6 lg:self-start">
             <BiomechanicsProtocolGuidePanel mode={mode} />
             <BiomechanicsTemplateLibraryPanel mode={mode} />
             <BiomechanicsEvidencePanel mode={mode} />
           </div>
         </div>
-      </div>
-    </MainLayout>
+      </PageContainer>
+    </PageLayout>
   );
 }

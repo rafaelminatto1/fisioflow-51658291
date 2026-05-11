@@ -50,8 +50,12 @@ export const formatClinicalSummary = (
           displayValue = value
             .map((item: any) => {
               if (typeof item === "object" && item !== null) {
-                if (item.name && item.value) {
+                if (item.name && item.value !== undefined) {
                   return `${item.name}: ${item.value}${item.unit ? " " + item.unit : ""}`;
+                }
+                // Handle pain scale objects inside arrays
+                if (item.level !== undefined) {
+                   return `Nível ${item.level}${item.location ? ` em ${item.location}` : ""}`;
                 }
                 return JSON.stringify(item);
               }
@@ -59,7 +63,20 @@ export const formatClinicalSummary = (
             })
             .join(", ");
         } else if (typeof value === "object" && value !== null) {
-          displayValue = JSON.stringify(value);
+          // Handle specific clinical objects
+          const obj = value as any;
+          if (obj.level !== undefined) {
+            displayValue = `Nível ${obj.level}${obj.location ? ` em ${obj.location}` : ""}${
+              obj.character ? ` (${obj.character})` : ""
+            }`;
+          } else if (obj.value !== undefined) {
+            displayValue = `${obj.value}${obj.unit ? " " + obj.unit : ""}`;
+          } else {
+            // Last resort: format as key-value pairs if it's a simple object
+            displayValue = Object.entries(obj)
+              .map(([k, v]) => `${clinicalLabels[k] || k}: ${v}`)
+              .join(", ");
+          }
         } else {
           displayValue = String(value);
         }

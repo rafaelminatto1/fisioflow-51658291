@@ -13,7 +13,7 @@
     "@fisioflow/ui": "workspace:*",
     "@neondatabase/serverless": "^1.0.2",
     "date-fns": "^4.1.0",
-    "drizzle-orm": "^0.40.0",
+    "drizzle-orm": "^0.45.2",
     "jose": "^6.0.0",
     "lucide-react": "^0.479.0",
     "pg": "^8.13.3",
@@ -29,5 +29,10 @@
     "react-server-dom-webpack": "^19.2.4",
     "vinext": "latest",
     "vite": "^8.0.10"
-  }
+  },
+  "engines": {
+    "node": ">=22.12.0",
+    "pnpm": ">=11.0.0"
+  },
+  "packageManager": "pnpm@11.0.9+sha512.34ce82e6780233cf9cad8685029a8f81d2e06196c5a9bad98879f7424940c6817c4e4524fb7d38b8553ceed48b9758b8ebaf1abd3600c232c4c8cf7366086f38"
 }

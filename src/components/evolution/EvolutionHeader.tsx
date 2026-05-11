@@ -19,10 +19,6 @@ import {
   Brain,
   X,
 } from "lucide-react";
-import { EvolutionVersionToggle } from "./v2/EvolutionVersionToggle";
-import type { EvolutionVersion } from "./v2/types";
-import { EvolutionVersionHistoryTrigger } from "./EvolutionVersionHistory";
-import type { EvolutionVersion as SoapEvolutionVersion } from "@/hooks/evolution/useEvolutionVersionHistory";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
@@ -103,6 +99,7 @@ interface EvolutionHeaderProps {
   // Version history snapshots (Notion/Evernote-inspired)
   soapRecordId?: string;
   onRestoreVersion?: (content: SoapEvolutionVersion["content"]) => void;
+  isEdited?: boolean;
 }
 
 function getPatientInitials(patient: Patient): string {
@@ -236,6 +233,7 @@ export const EvolutionHeader = memo(
     onVersionChange,
     soapRecordId,
     onRestoreVersion,
+    isEdited,
   }: EvolutionHeaderProps) => {
     const showFirstEvolution = previousEvolutionsCount === 0;
     const navigate = useNavigate();
@@ -279,9 +277,14 @@ export const EvolutionHeader = memo(
                   <h1 className="text-xl font-extrabold tracking-tight text-slate-800">
                     {PatientHelpers.getName(patient)}
                   </h1>
-                  <Badge className="text-[10px] px-2 py-0.5 shrink-0 bg-primary/5 border-primary/10 text-primary font-black uppercase tracking-wider">
+                  <Badge className="text-[10px] px-2 py-0.5 shrink-0 bg-brand-blue/10 border-brand-blue/20 text-brand-blue font-black uppercase tracking-wider rounded-lg">
                     Sessão #{sessionNumber}
                   </Badge>
+                  {appointment.is_edited && (
+                    <Badge variant="outline" className="text-[9px] px-2 py-0.5 shrink-0 bg-amber-50 border-amber-200 text-amber-600 font-bold uppercase tracking-tight rounded-lg flex items-center gap-1">
+                      <Clock className="h-2.5 w-2.5" /> Editado
+                    </Badge>
+                  )}
                 </div>
                 <div className="flex items-center gap-3 mt-1 text-xs text-slate-500 font-medium flex-wrap">
                   {appointment?.appointment_date && (
@@ -293,7 +296,7 @@ export const EvolutionHeader = memo(
                     </span>
                   )}
                   <span className="flex items-center gap-1.5">
-                    <FileText className="h-3.5 w-3.5 text-primary/60" />
+                    <FileText className="h-3.5 w-3.5 text-brand-blue/60" />
                     {treatmentDuration}
                   </span>
                 </div>
@@ -308,12 +311,12 @@ export const EvolutionHeader = memo(
               onClick={onShowAIScribe}
               size="sm"
               variant="outline"
-              className="h-10 px-4 bg-blue-50 hover:bg-blue-100 border-blue-200 text-blue-700 text-xs font-black transition-all group relative overflow-hidden"
+              className="h-10 px-4 bg-brand-blue/10 hover:bg-brand-blue/20 border-brand-blue/20 text-brand-blue text-xs font-black transition-all group relative overflow-hidden"
             >
-              <div className="absolute inset-0 bg-gradient-to-r from-blue-400/10 to-indigo-400/10 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
-              <Mic className="h-3.5 w-3.5 mr-2 animate-pulse text-blue-600" />
+              <div className="absolute inset-0 bg-gradient-to-r from-brand-blue/20 to-brand-blue/5 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
+              <Mic className="h-3.5 w-3.5 mr-2 animate-pulse text-brand-blue" />
               <span className="uppercase tracking-widest">Voice Scribe</span>
-              <Badge className="ml-2 bg-blue-600 text-white text-[9px] px-1 py-0 border-0 h-4">IA</Badge>
+              <Badge className="ml-2 bg-brand-blue text-white text-[9px] px-1 py-0 border-0 h-4">IA</Badge>
             </Button>
             <Button
               onClick={onSave}
@@ -335,7 +338,7 @@ export const EvolutionHeader = memo(
               onClick={onComplete}
               size="sm"
               disabled={isSaving || isCompleting}
-              className="h-10 px-6 bg-primary hover:bg-primary/90 text-white shadow-md shadow-primary/20 font-bold text-xs uppercase tracking-widest transition-all"
+              className="h-10 px-6 bg-brand-blue hover:bg-brand-blue/90 text-white shadow-md shadow-brand-blue/20 font-bold text-xs uppercase tracking-widest transition-all rounded-2xl"
             >
               {isCompleting ? (
                 <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -373,7 +376,7 @@ export const EvolutionHeader = memo(
                     className={cn(
                       "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md px-4 py-1.5 text-xs font-bold transition-all",
                       isActive
-                        ? "bg-white text-primary shadow-sm ring-1 ring-slate-200"
+                        ? "bg-white text-brand-blue shadow-sm ring-1 ring-brand-blue/10"
                         : "text-slate-500 hover:text-slate-800",
                     )}
                   >

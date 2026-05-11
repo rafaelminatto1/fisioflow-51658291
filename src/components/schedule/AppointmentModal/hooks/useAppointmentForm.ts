@@ -7,7 +7,7 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "@/hooks/use-toast";
 import { useOrganizations } from "@/hooks/useOrganizations";
 import { appointmentsApi } from "@/api/v2";
-import { todayYMD, toLocalYMD } from "@/lib/date-utils";
+import { todayYMD, toLocalYMD, getAdjustedTodayYMD } from "@/lib/date-utils";
 
 import { useUsePackageSession } from "@/hooks/usePackages";
 import {
@@ -87,7 +87,7 @@ export const useAppointmentForm = ({
       defaults: { date?: Date; time?: string; patientId?: string },
     ): AppointmentFormData => {
       const normalizedApt = apt as AppointmentWithPatientFallback | null | undefined;
-      let formattedDate = todayYMD();
+      let formattedDate = getAdjustedTodayYMD();
       if (apt?.date) {
         if (typeof apt.date === "string") {
           if (/^\d{4}-\d{2}-\d{2}$/.test(apt.date)) {

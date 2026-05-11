@@ -48,11 +48,7 @@ import { PatientService } from "@/lib/services/PatientService";
 import { useQueryClient } from "@tanstack/react-query";
 import { soapKeys } from "@/hooks/useSoapRecords";
 import { AgendaAutomationService } from "@/lib/services/AgendaAutomationService";
-import { EvolutionVersionToggle } from "./v2-improved/EvolutionVersionToggle";
-// V5 Pro Block Editor — O novo padrão unificado de alta performance.
-const V5ProBlockEditor = React.lazy(() =>
-  import("./V5ProBlockEditor").then((m) => ({ default: m.V5ProBlockEditor })),
-);
+import { UnifiedEvolutionEditor } from "./unified/UnifiedEvolutionEditor";
 import { EvolutionSettingsModal, getEvolutionSettings } from "./EvolutionSettingsModal";
 import {
   appointmentsApi,
@@ -883,10 +879,7 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
             <div>
               <div className="flex items-center gap-3">
                 <h1 className="text-xl font-semibold">Evolução de Sessão</h1>
-                <EvolutionVersionToggle
-                  version={viewVersion === "classic" ? "v1-soap" : "v4-tiptap"}
-                  onToggle={(v) => setViewVersion(v === "v1-soap" ? "classic" : "v5-pro")}
-                />
+                {/* Unified Editor */}
                 <Button
                   variant="ghost"
                   size="icon"
@@ -1010,13 +1003,11 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
 
                 {/* Centro: Editor de Blocos (Ocupa o espaço nobre) */}
                 <main className="col-span-1 lg:col-span-6 h-full overflow-y-auto px-1 custom-scrollbar">
-                  <V5ProBlockEditor
+                  <UnifiedEvolutionEditor
                     initialContent={soapData.assessment}
-                    soapData={soapData}
                     evolutionId={appointmentId}
                     patientId={patientId}
                     isSaving={isSaving}
-                    isPro={true}
                     onSave={(content) => {
                       handleSoapChange({ ...soapData, assessment: content });
                       setTimeout(() => handleSave(), 100);

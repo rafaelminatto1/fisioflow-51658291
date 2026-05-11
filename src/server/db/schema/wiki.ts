@@ -120,11 +120,14 @@ export const wikiDictionary = pgTable(
   "wiki_dictionary",
   {
     id: uuid("id").primaryKey().defaultRandom(),
-    name: varchar("name", { length: 500 }).notNull(),
+    pt: varchar("pt", { length: 500 }).notNull(),
+    en: varchar("en", { length: 500 }).notNull(),
     category: varchar("category", { length: 100 }).notNull(), // muscle, joint, etc.
     subcategory: varchar("subcategory", { length: 200 }),
-    aliases: text("aliases").array().default([]),
-    description: text("description"),
+    aliasesPt: text("aliases_pt").array().default([]),
+    aliasesEn: text("aliases_en").array().default([]),
+    descriptionPt: text("description_pt"),
+    descriptionEn: text("description_en"),
 
     // Controle de acesso e organização
     organizationId: uuid("organization_id"), // null = termo global do sistema

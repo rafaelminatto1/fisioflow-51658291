@@ -26,13 +26,15 @@ import {
   Paperclip,
   ScanLine,
   Mic,
-  Brain,
+  Brain as BrainIcon,
   Send,
+  AlertCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 import { getWorkersApiUrl } from "@/lib/api/config";
 import { RichTextProvider, useRichTextContext } from "@/contexts/RichTextContext";
@@ -293,7 +295,23 @@ const NotionEvolutionPanel: React.FC<NotionEvolutionPanelProps> = ({
     field: K,
     value: EvolutionV2Data[K],
   ) => {
-    onChange({ ...data, [field]: value });
+    const newData = { ...data, [field]: value };
+
+    // Auto-update report when pain level changes (selectors + human language)
+    if (field === "painLevel" && typeof value === "number") {
+      const painText = `Relata dor nível ${value}/10${data.painLocation ? ` em ${data.painLocation}` : ""}.`;
+
+      // Only auto-fill if empty or if it only contains an old pain level message
+      const currentReport = (data.patientReport || "").replace(/<[^>]*>/g, "").trim();
+      const isPainOnly =
+        !currentReport || /^Relata dor nível \d+\/10( em [^.]+)?\.$/.test(currentReport);
+
+      if (isPainOnly) {
+        newData.patientReport = `<p>${painText}</p>`;
+      }
+    }
+
+    onChange(newData);
   };
 
   useEffect(() => {
@@ -658,12 +676,41 @@ const NotionEvolutionPanel: React.FC<NotionEvolutionPanelProps> = ({
           <Button
             variant="ghost"
             size="sm"
-            onClick={openFisioBrain}
-            className="gap-2 text-violet-600 hover:bg-violet-50"
-            title="Buscar evidência clínica (FisioBrain)"
+            onClick={() => setShowEvidenceSearch(true)}
+            className="gap-2 text-primary hover:bg-primary/5"
+            title="Buscar evidência científica"
           >
-            <Brain className="h-4 w-4" />
+            <BrainIcon className="h-4 w-4" />
             <span className="hidden sm:inline">Evidência</span>
+          </Button>
+
+          <Separator orientation="vertical" className="h-6 mx-1 hidden sm:block" />
+
+          <Button
+            size="sm"
+            onClick={onSave}
+            disabled={isSaving || disabled}
+            className={cn(
+              "gap-2 font-black uppercase tracking-widest text-[10px] h-8 px-4 shadow-sm transition-all duration-300",
+              data.therapistRole === "estagiario" 
+                ? "bg-amber-600 hover:bg-amber-700 text-white" 
+                : "bg-primary hover:bg-primary/90 text-white"
+            )}
+          >
+            {isSaving ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : data.therapistRole === "estagiario" ? (
+                <CheckSquare className="h-4 w-4" />
+            ) : (
+              <CheckCircle2 className="h-4 w-4" />
+            )}
+            <span>
+              {isSaving 
+                ? "Processando" 
+                : data.therapistRole === "estagiario" 
+                  ? "Enviar Revisão" 
+                  : "Assinar"}
+            </span>
           </Button>
         </div>
       </header>
@@ -684,11 +731,39 @@ const NotionEvolutionPanel: React.FC<NotionEvolutionPanelProps> = ({
               {/* Header: Patient Evolution */}
               <div className="flex items-baseline mb-12 group gap-4">
                 <div className="flex-1">
-                  <h1 className="font-bold text-[#37352f] leading-tight text-4xl tracking-tight">
-                    Evolução Clínica
-                  </h1>
+                  <div className="flex items-center gap-3">
+                    <h1 className="font-bold text-[#37352f] leading-tight text-4xl tracking-tight">
+                      Evolução Clínica
+                    </h1>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest hidden sm:inline">
+                        {localSaveLabel}
+                      </span>
+                      {data.status === "under_review" && (
+                        <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200 text-[9px] font-black uppercase px-2 h-5 animate-pulse">
+                          Em Revisão
+                        </Badge>
+                      )}
+                      {data.status === "finalized" && (
+                        <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200 text-[9px] font-black uppercase px-2 h-5">
+                          Finalizado
+                        </Badge>
+                      )}
+                      {data.isEdited && (
+                        <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 text-[9px] font-black uppercase px-2 h-5">
+                          Editado
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
                   <p className="text-xs text-muted-foreground mt-2">
-                    Use “/” para inserir blocos, tabelas, callouts e mídias.
+                    {data.isEdited ? (
+                      <span className="text-amber-600 font-medium italic">
+                        Esta evolução foi alterada após a assinatura original.
+                      </span>
+                    ) : (
+                      "Use “/” para inserir blocos, tabelas, callouts e mídias."
+                    )}
                   </p>
                 </div>
               </div>

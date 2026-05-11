@@ -88,6 +88,25 @@ export function todayYMD(): string {
 }
 
 /**
+ * Get the "agenda today" date.
+ * If it's Sunday, return Monday (next week).
+ */
+export function getAdjustedToday(): Date {
+  const d = new Date();
+  if (d.getDay() === 0) {
+    return addDays(d, 1);
+  }
+  return d;
+}
+
+/**
+ * Get the "agenda today" string in YYYY-MM-DD.
+ */
+export function getAdjustedTodayYMD(): string {
+  return toLocalYMD(getAdjustedToday());
+}
+
+/**
  * Check if a YYYY-MM-DD string represents today.
  */
 export function isToday(ymd: string): boolean {

@@ -32,6 +32,7 @@ import { appointments } from "./appointments";
 
 export const sessionStatusEnum = pgEnum("session_status", [
   "draft", // Auto-saved, not finalized
+  "under_review", // Intern finalized, awaiting supervisor
   "finalized", // Completed and signed
   "cancelled", // Session cancelled
 ]);
@@ -184,6 +185,11 @@ export const sessions = pgTable(
     activityLabNotes: text("notes"),
 
     deletedAt: timestamp("deleted_at"),
+
+    // Audit/Change Control
+    isEdited: boolean("is_edited").default(false).notNull(),
+    lastEditedBy: uuid("last_edited_by"),
+    editReason: text("edit_reason"),
 
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),

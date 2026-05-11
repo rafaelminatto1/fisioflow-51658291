@@ -1,5 +1,5 @@
 import React, { Suspense, lazy, useState } from "react";
-import { MainLayout } from "@/components/layout/MainLayout";
+import { PageLayout, PageContainer, PageHeader } from "@/components/layout/PageLayout";
 import { AssessmentInstruction } from "@/components/clinical/AssessmentInstruction";
 import {
   Video,
@@ -19,6 +19,9 @@ import { Card, CardContent } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { biomechanicsProtocols } from "@/data/biomechanicsEvidence";
+import { MedicalDisclaimer } from "@/components/clinical/MedicalDisclaimer";
+
+// ... rest of component ...
 
 const ServerSideVideoAnalyzer = lazy(() =>
   import("@/components/analysis/video/ServerSideVideoAnalyzer").then((module) => ({
@@ -50,8 +53,8 @@ export default function BiomechanicsAnalysisPage() {
       title: "Performance de Salto",
       subtitle: "CMJ / My Jump",
       icon: Zap,
-      color: "text-blue-500",
-      bg: "bg-blue-500/10",
+      color: "text-brand-blue",
+      bg: "bg-brand-blue/10",
       reference: "Bosco + My Jump",
       description: "Altura de salto, tempo de voo, potência e comparação entre tentativas.",
       route: "/clinical/biomechanics/jump",
@@ -311,44 +314,32 @@ export default function BiomechanicsAnalysisPage() {
   };
 
   return (
-    <MainLayout>
-      <div className="min-h-screen bg-background/50 pb-20">
-        <div className="sticky top-0 z-30 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b px-6 py-4 print:hidden">
-          <div className="max-w-7xl mx-auto flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="h-12 w-12 rounded-2xl bg-primary/10 flex items-center justify-center border border-primary/20 shadow-inner">
-                <BarChart3 className="h-6 w-6 text-primary" />
-              </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <h1 className="text-2xl font-black text-foreground tracking-tighter">
-                    BIOMECHANICS LAB
-                  </h1>
-                  <Badge className="bg-primary text-white font-black text-[10px] px-2 py-0.5">
-                    V3 KINOVEA ENGINE
-                  </Badge>
-                </div>
-                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-2">
-                  <span className="h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse" />
-                  Sistema de Suporte à Decisão Clínica Ativo
-                </p>
-              </div>
-            </div>
-            {activeView !== "hub" && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setActiveTab("hub")}
-                className="font-bold text-xs uppercase"
-              >
-                Menu Principal
-              </Button>
-            )}
+    <PageLayout>
+      <PageHeader
+        title="Laboratório de Biomecânica"
+        description="Análise avançada de movimento assistida por IA e Visão Computacional."
+        icon={BarChart3}
+        breadcrumb={[{ label: "Biomecânica", href: "/clinical/biomechanics" }]}
+        actions={
+          <div className="flex items-center gap-2">
+             <Badge className="bg-brand-blue text-white font-black text-[10px] px-2 py-1 rounded-lg">
+               V3 KINOVEA ENGINE
+             </Badge>
           </div>
-        </div>
+        }
+      >
+         <div className="flex items-center gap-2 mt-2">
+            <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+              Sistema de Suporte à Decisão Clínica Ativo
+            </span>
+         </div>
+      </PageHeader>
 
-        <div className="max-w-7xl mx-auto px-4 py-8">{renderContent()}</div>
-      </div>
-    </MainLayout>
+      <PageContainer>
+        <MedicalDisclaimer className="mb-6" />
+        {renderContent()}
+      </PageContainer>
+    </PageLayout>
   );
 }

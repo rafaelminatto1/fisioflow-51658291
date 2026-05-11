@@ -30,6 +30,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { SmartDatePicker } from "@/components/ui/smart-date-picker";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { getAdjustedToday } from "@/lib/date-utils";
 import { cn } from "@/lib/utils";
 import { AdvancedFilters } from "./AdvancedFilters";
 import type { TherapistSummary } from "@/types/workers";
@@ -171,7 +172,7 @@ export const ScheduleToolbar: React.FC<ScheduleToolbarProps> = ({
           <Button
             variant="outline"
             size="sm"
-            onClick={() => onDateChange(new Date())}
+            onClick={() => onDateChange(getAdjustedToday())}
             className="h-8 px-3 rounded-lg font-bold text-[10px] uppercase tracking-widest border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-900"
           >
             Hoje
@@ -318,7 +319,7 @@ export const ScheduleToolbar: React.FC<ScheduleToolbarProps> = ({
           <Button
             variant="outline"
             size="sm"
-            onClick={() => onDateChange(new Date())}
+            onClick={() => onDateChange(getAdjustedToday())}
             className="h-8 px-3 rounded-lg font-bold text-[10px] uppercase tracking-widest border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400"
           >
             Hoje

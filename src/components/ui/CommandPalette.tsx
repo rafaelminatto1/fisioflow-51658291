@@ -24,7 +24,7 @@ import {
   BarChart3,
   FolderOpen,
   Command,
-  Brain,
+  Brain as BrainIcon,
   type LucideIcon,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -325,7 +325,7 @@ export function CommandPalette({
         id: "ai-evidence-search",
         label: "Buscar Evidência",
         description: "Pesquisa protocolos baseados em ciência",
-        icon: Brain,
+        icon: BrainIcon,
         category: "ai",
         action: () => {
           const evidenceTab = document.querySelector('[data-value="evidence"]') as HTMLButtonElement;

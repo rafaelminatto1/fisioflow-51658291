@@ -144,6 +144,8 @@ export interface AppointmentUnified {
 
   // Type for appointments
   type?: "Consulta Inicial" | "Fisioterapia" | "Reavaliação" | "Consulta de Retorno";
+
+  is_edited?: boolean;
 }
 
 export type AppointmentStatus =

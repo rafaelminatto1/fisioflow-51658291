@@ -13,6 +13,7 @@ import { useSessionExercises } from "@/hooks/useSessionExercises";
 import { useDraftSoapRecordByAppointment } from "@/hooks/useSoapRecords";
 import type { EvolutionVersion, EvolutionV2Data } from "@/components/evolution/v2/types";
 import type { PainScaleData } from "@/pages/PatientEvolution";
+import { formatClinicalText } from "@/lib/evolution/formatters";
 
 export function usePatientEvolutionState() {
   const { appointmentId } = useParams<{ appointmentId: string }>();
@@ -128,10 +129,10 @@ export function usePatientEvolutionState() {
     if (!draftByAppointment || currentSoapRecordId !== undefined) return;
     
     // Sync SOAP fields
-    const subjective = draftByAppointment.subjective ?? "";
-    const objective = draftByAppointment.objective ?? "";
-    const assessment = draftByAppointment.assessment ?? "";
-    const plan = draftByAppointment.plan ?? "";
+    const subjective = formatClinicalText(draftByAppointment.subjective ?? "");
+    const objective = formatClinicalText(draftByAppointment.objective ?? "");
+    const assessment = formatClinicalText(draftByAppointment.assessment ?? "");
+    const plan = formatClinicalText(draftByAppointment.plan ?? "");
 
     setSoapData({
       subjective,
@@ -170,6 +171,13 @@ export function usePatientEvolutionState() {
       setSessionExercises(lastSession.exercises_performed as any[]);
     }
   }, [lastSession, sessionExercises.length, isLoadingLastSession]);
+
+  const isEdited =
+    draftByAppointment?.updated_at &&
+    draftByAppointment?.created_at &&
+    new Date(draftByAppointment.updated_at).getTime() -
+      new Date(draftByAppointment.created_at).getTime() >
+      60000; // More than 1 minute difference
 
   return {
     appointmentId,
@@ -224,5 +232,6 @@ export function usePatientEvolutionState() {
     therapists,
     evolutionTemplates,
     user,
+    isEdited,
   };
 }

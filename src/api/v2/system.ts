@@ -278,4 +278,8 @@ export const profileApi = {
       method: "PUT",
       body: JSON.stringify(data),
     }),
+  deleteMe: () =>
+    request<{ success: boolean; message: string }>("/api/profile/me", {
+      method: "DELETE",
+    }),
 };

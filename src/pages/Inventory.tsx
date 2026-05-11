@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { MainLayout } from "@/components/layout/MainLayout";
+import { PageLayout, PageContainer, PageHeader } from "@/components/layout/PageLayout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -196,22 +196,26 @@ export default function Inventory() {
   };
 
   return (
-    <MainLayout>
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold flex items-center gap-2">
-              <Package className="h-8 w-8" />
-              Controle de Estoque
-            </h1>
-            <p className="text-muted-foreground mt-1">Gerencie o inventário da clínica</p>
-          </div>
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={() => setIsMovementDialogOpen(true)}>
+    <PageLayout>
+      <PageHeader
+        title="Controle de Estoque"
+        description="Gerencie o inventário, suprimentos e equipamentos da clínica."
+        icon={Package}
+        breadcrumb={[{ label: "Estoque", href: "/estoque" }]}
+        actions={
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="rounded-2xl font-bold border-brand-blue/20 text-brand-blue hover:bg-brand-blue/5"
+              onClick={() => setIsMovementDialogOpen(true)}
+            >
               <History className="h-4 w-4 mr-2" />
               Movimentação
             </Button>
             <Button
+              size="sm"
+              className="h-10 rounded-2xl px-5 font-bold shadow-sm bg-brand-blue hover:bg-brand-blue/90"
               onClick={() => {
                 resetItemForm();
                 setSelectedItem(null);
@@ -222,61 +226,73 @@ export default function Inventory() {
               Novo Item
             </Button>
           </div>
-        </div>
+        }
+      />
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-2 text-muted-foreground">
-                <Package className="h-4 w-4" />
-                <span className="text-sm">Total de Itens</span>
+      <PageContainer>
+        {/* Bento Grid Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+          <Card className="border-none shadow-sm bg-white overflow-hidden group">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between mb-2">
+                <div className="p-2 rounded-xl bg-brand-blue/10 text-brand-blue group-hover:scale-110 transition-transform">
+                  <Package className="h-5 w-5" />
+                </div>
+                <Badge variant="secondary" className="bg-brand-blue/5 text-brand-blue border-none">Total</Badge>
               </div>
-              <p className="text-2xl font-bold mt-1">{inventory.length}</p>
+              <p className="text-3xl font-bold text-slate-900">{inventory.length}</p>
+              <p className="text-sm text-slate-500 mt-1">Itens catalogados</p>
             </CardContent>
           </Card>
 
-          <Card className={lowStockItems.length > 0 ? "border-amber-500/50" : ""}>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-2 text-amber-500">
-                <AlertTriangle className="h-4 w-4" />
-                <span className="text-sm">Estoque Baixo</span>
+          <Card className={`border-none shadow-sm overflow-hidden group ${lowStockItems.length > 0 ? "bg-amber-50" : "bg-white"}`}>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between mb-2">
+                <div className={`p-2 rounded-xl ${lowStockItems.length > 0 ? "bg-amber-100 text-amber-600" : "bg-slate-100 text-slate-500"} group-hover:scale-110 transition-transform`}>
+                  <AlertTriangle className="h-5 w-5" />
+                </div>
+                {lowStockItems.length > 0 && (
+                  <Badge variant="secondary" className="bg-amber-100 text-amber-700 border-none animate-pulse">Crítico</Badge>
+                )}
               </div>
-              <p className="text-2xl font-bold mt-1">{lowStockItems.length}</p>
+              <p className={`text-3xl font-bold ${lowStockItems.length > 0 ? "text-amber-700" : "text-slate-900"}`}>{lowStockItems.length}</p>
+              <p className="text-sm text-slate-500 mt-1">Itens em falta</p>
             </CardContent>
           </Card>
 
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-2 text-muted-foreground">
-                <ArrowUpCircle className="h-4 w-4 text-emerald-500" />
-                <span className="text-sm">Valor Total</span>
+          <Card className="border-none shadow-sm bg-white overflow-hidden group">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between mb-2">
+                <div className="p-2 rounded-xl bg-emerald-100 text-emerald-600 group-hover:scale-110 transition-transform">
+                  <ArrowUpCircle className="h-5 w-5" />
+                </div>
+                <Badge variant="secondary" className="bg-emerald-50 text-emerald-700 border-none">Ativos</Badge>
               </div>
-              <p className="text-2xl font-bold mt-1">
-                R${" "}
-                {totalValue.toLocaleString("pt-BR", {
-                  minimumFractionDigits: 2,
-                })}
+              <p className="text-3xl font-bold text-slate-900">
+                R$ {totalValue.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
               </p>
+              <p className="text-sm text-slate-500 mt-1">Valor do patrimônio</p>
             </CardContent>
           </Card>
 
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-2 text-muted-foreground">
-                <Filter className="h-4 w-4" />
-                <span className="text-sm">Categorias</span>
+          <Card className="border-none shadow-sm bg-white overflow-hidden group">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between mb-2">
+                <div className="p-2 rounded-xl bg-slate-100 text-slate-600 group-hover:scale-110 transition-transform">
+                  <Filter className="h-5 w-5" />
+                </div>
               </div>
-              <p className="text-2xl font-bold mt-1">{uniqueCategoriesCount}</p>
+              <p className="text-3xl font-bold text-slate-900">{uniqueCategoriesCount}</p>
+              <p className="text-sm text-slate-500 mt-1">Categorias ativas</p>
             </CardContent>
           </Card>
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList>
-            <TabsTrigger value="items">Itens</TabsTrigger>
-            <TabsTrigger value="movements">Movimentações</TabsTrigger>
-            <TabsTrigger value="alerts">Alertas</TabsTrigger>
+          <TabsList className="bg-slate-100 p-1 rounded-xl mb-4">
+            <TabsTrigger value="items" className="rounded-lg data-[state=active]:bg-white data-[state=active]:text-brand-blue data-[state=active]:shadow-sm">Itens</TabsTrigger>
+            <TabsTrigger value="movements" className="rounded-lg data-[state=active]:bg-white data-[state=active]:text-brand-blue data-[state=active]:shadow-sm">Movimentações</TabsTrigger>
+            <TabsTrigger value="alerts" className="rounded-lg data-[state=active]:bg-white data-[state=active]:text-brand-blue data-[state=active]:shadow-sm">Alertas</TabsTrigger>
           </TabsList>
 
           <TabsContent value="items" className="space-y-4">
@@ -704,7 +720,7 @@ export default function Inventory() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
-      </div>
-    </MainLayout>
+      </PageContainer>
+    </PageLayout>
   );
 }

@@ -21,7 +21,8 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 import { profileApi } from "@/api/v2/system";
-import { MainLayout } from "@/components/layout/MainLayout";
+import { PageLayout, PageContainer } from "@/components/layout/PageLayout";
+import { PageHeader } from "@/components/layout/PageHeader";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -410,6 +411,55 @@ function ProfileContent() {
               </Button>
             </div>
           )}
+
+          <Separator className="my-6" />
+          
+          <div className="rounded-2xl border border-red-200 bg-red-50/30 dark:bg-red-950/10 p-6 space-y-4">
+            <div className="flex items-start gap-4">
+              <div className="h-10 w-10 rounded-xl bg-red-100 dark:bg-red-900/30 flex items-center justify-center text-red-600 shrink-0">
+                <Shield className="h-5 w-5" />
+              </div>
+              <div>
+                <h3 className="text-sm font-bold text-red-800 dark:text-red-400 uppercase tracking-wider">
+                  Zona de Perigo
+                </h3>
+                <p className="text-xs text-red-700/70 dark:text-red-400/60 font-medium">
+                  Ações irreversíveis relacionadas à sua conta
+                </p>
+              </div>
+            </div>
+
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-2">
+              <div className="space-y-1">
+                <p className="text-sm font-bold">Excluir Conta</p>
+                <p className="text-xs text-muted-foreground leading-relaxed max-w-md">
+                  Ao excluir sua conta, seu acesso ao sistema será revogado imediatamente. 
+                  <span className="block mt-1 font-semibold text-red-600/80">
+                    Importante: Conforme a Lei nº 13.787/2018 e LGPD, seus registros clínicos (evoluções, exames e dados de saúde) serão mantidos em arquivo digital seguro por um período de 20 anos.
+                  </span>
+                </p>
+              </div>
+              <Button 
+                variant="destructive" 
+                size="sm"
+                className="font-bold uppercase tracking-widest text-[10px] h-9 px-6"
+                onClick={() => {
+                  if (window.confirm("Tem certeza que deseja solicitar a exclusão da sua conta? Seu acesso será revogado, mas seus dados clínicos serão mantidos por 20 anos para fins legais.")) {
+                    toast.promise(profileApi.deleteMe(), {
+                      loading: "Processando solicitação...",
+                      success: () => {
+                        setTimeout(() => window.location.href = "/login", 2000);
+                        return "Solicitação enviada. Você será desconectado.";
+                      },
+                      error: "Erro ao processar solicitação.",
+                    });
+                  }
+                }}
+              >
+                Excluir Conta
+              </Button>
+            </div>
+          </div>
         </CardContent>
       </Card>
     </div>
@@ -426,79 +476,75 @@ export const Profile = () => {
   const colCount = isAdmin ? 7 : 6;
 
   return (
-    <MainLayout>
-      <div className="space-y-6 animate-fade-in">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
-              <User className="w-6 h-6" />
-              Meu Perfil
-            </h1>
-            <p className="text-muted-foreground text-sm">
-              Gerencie suas informações, preferências e configurações
-            </p>
-          </div>
-        </div>
+    <PageLayout>
+      <PageContainer>
+        <PageHeader
+          title="Minha Conta"
+          subtitle="Gerencie suas informações, preferências e configurações"
+          icon={User}
+        />
 
-        <Tabs value={state.activeTab} onValueChange={state.handleTabChange} className="space-y-6">
-          <TabsList className={`grid w-full grid-cols-${colCount} h-10`}>
-            {allTabs.map((tab) => (
-              <TabsTrigger
-                key={tab.value}
-                value={tab.value}
-                className="flex items-center gap-1.5 text-xs"
-              >
-                <tab.icon className="w-4 h-4" />
-                <span className="hidden sm:inline">{tab.label}</span>
-              </TabsTrigger>
-            ))}
-          </TabsList>
+        <div className="mt-8 space-y-6 animate-fade-in">
+          <Tabs value={state.activeTab} onValueChange={state.handleTabChange} className="space-y-6">
+            <TabsList className={`grid w-full grid-cols-${colCount} h-12 bg-muted/50 rounded-xl p-1`}>
+              {allTabs.map((tab) => (
+                <TabsTrigger
+                  key={tab.value}
+                  value={tab.value}
+                  className="flex items-center gap-2 text-xs rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm"
+                >
+                  <tab.icon className="w-4 h-4" />
+                  <span className="hidden sm:inline">{tab.label}</span>
+                </TabsTrigger>
+              ))}
+            </TabsList>
 
-          <TabsContent value="perfil" className="space-y-6">
-            <ProfileContent />
-          </TabsContent>
-
-          <TabsContent value="notifications" className="space-y-6">
-            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-              <Suspense fallback={<Skeleton className="h-[400px] w-full" />}>
-                <NotificationPreferences />
-              </Suspense>
-              <Suspense fallback={<Skeleton className="h-[400px] w-full" />}>
-                <NotificationHistory />
-              </Suspense>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="security" className="space-y-6">
-            <SecurityTab
-              isAdmin={state.isAdmin}
-              user={state.user}
-              mfa={state.mfa}
-              password={state.password}
-              navigate={navigate}
-              onInvite={() => state.setInviteModalOpen(true)}
-            />
-          </TabsContent>
-
-          {isAdmin && (
-            <TabsContent value="clinic" className="space-y-6">
-              <OrganizationTab />
+            <TabsContent value="perfil" className="space-y-6 mt-6">
+              <ProfileContent />
             </TabsContent>
-          )}
 
-          <TabsContent value="fisioblink" className="space-y-6">
-            <PublicProfileTab />
-          </TabsContent>
+            <TabsContent value="notifications" className="space-y-6">
+              <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                <Suspense fallback={<Skeleton className="h-[400px] w-full" />}>
+                  <NotificationPreferences />
+                </Suspense>
+                <Suspense fallback={<Skeleton className="h-[400px] w-full" />}>
+                  <NotificationHistory />
+                </Suspense>
+              </div>
+            </TabsContent>
 
-          <TabsContent value="agenda" className="space-y-6">
-            <ScheduleTab />
-          </TabsContent>
+            <TabsContent value="security" className="space-y-6">
+              <SecurityTab
+                isAdmin={state.isAdmin}
+                user={state.user}
+                mfa={state.mfa}
+                password={state.password}
+                navigate={navigate}
+                onInvite={() => state.setInviteModalOpen(true)}
+              />
+            </TabsContent>
 
-          <TabsContent value="appearance" className="space-y-6">
-            <AccessibilityTab />
-          </TabsContent>
-        </Tabs>
-      </div>
-    </MainLayout>
+            {isAdmin && (
+              <TabsContent value="clinic" className="space-y-6">
+                <OrganizationTab />
+              </TabsContent>
+            )}
+
+            <TabsContent value="fisioblink" className="space-y-6">
+              <PublicProfileTab />
+            </TabsContent>
+
+            <TabsContent value="agenda" className="space-y-6">
+              <ScheduleTab />
+            </TabsContent>
+
+            <TabsContent value="appearance" className="space-y-6">
+              <AccessibilityTab />
+            </TabsContent>
+          </Tabs>
+        </div>
+      </PageContainer>
+    </PageLayout>
   );
 };

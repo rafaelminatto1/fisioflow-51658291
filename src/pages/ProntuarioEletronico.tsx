@@ -6,7 +6,8 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { MainLayout } from "@/components/layout/MainLayout";
+import { PageLayout, PageContainer } from "@/components/layout/PageLayout";
+import { PageHeader } from "@/components/layout/PageHeader";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -122,7 +123,11 @@ function SessionCard({
 
   return (
     <button
-      className={`w-full text-left p-3 rounded-xl border transition-colors hover:border-primary/50 ${isSelected ? "border-primary bg-primary/5" : "border-border"}`}
+      className={`w-full text-left p-3 rounded-xl border transition-all duration-200 group ${
+        isSelected 
+          ? "border-brand-blue bg-brand-blue/10 shadow-sm" 
+          : "border-border hover:border-brand-blue/50 hover:bg-muted/30"
+      }`}
       onClick={onSelect}
     >
       <div className="flex items-center justify-between gap-2">
@@ -295,11 +300,11 @@ function SessionDetail({
               className={cn(
                 "space-y-1 rounded-xl border p-3 transition-colors",
                 highlightSection === f.key
-                  ? "border-primary/40 bg-primary/5 shadow-sm"
+                  ? "border-brand-blue/40 bg-brand-blue/5 shadow-sm"
                   : "border-border/40 bg-background",
               )}
             >
-              <p className="text-xs font-bold text-primary uppercase tracking-wider">
+              <p className="text-xs font-bold text-brand-blue uppercase tracking-wider">
                 {f.sectionTitle}
               </p>
               <div className="rounded-lg bg-muted/30 p-3 text-sm whitespace-pre-wrap leading-relaxed">
@@ -391,39 +396,22 @@ export default function ProntuarioEletronico() {
   };
 
   return (
-    <MainLayout compactPadding>
-      <div className="p-4 space-y-4">
-        {/* Header */}
-        <div className="flex items-center gap-3">
-          <Button variant="ghost" size="sm" onClick={() => navigate(-1)} className="gap-1.5">
-            <ArrowLeft className="h-4 w-4" />
-            Voltar
-          </Button>
-          <div className="flex items-center gap-2">
-            <div className="p-2 bg-primary/10 rounded-xl">
-              <FileText className="h-5 w-5 text-primary" />
-            </div>
-            <div>
-              <h1 className="text-lg font-bold">Prontuário Eletrônico</h1>
-              {patientLoading ? (
-                <Skeleton className="h-4 w-32 mt-0.5" />
-              ) : (
-                <p className="text-xs text-muted-foreground flex items-center gap-1">
-                  <User className="h-3 w-3" />
-                  {patientName}
-                </p>
-              )}
-            </div>
-          </div>
-          <div className="ml-auto flex items-center gap-2">
-            <Badge variant="outline" className="rounded-lg gap-1 text-[10px]">
-              <Shield className="h-3 w-3" />
-              Prontuário Protegido
+    <PageLayout compactHeader>
+      <PageContainer>
+        <PageHeader
+          title="Prontuário Eletrônico"
+          subtitle={patientLoading ? "Carregando..." : patientName}
+          icon={FileText}
+          backButton
+          actions={
+            <Badge variant="outline" className="rounded-lg gap-1.5 py-1.5 px-3 border-brand-blue/20 bg-brand-blue/5 text-brand-blue">
+              <Shield className="h-3.5 w-3.5" />
+              <span className="font-bold uppercase tracking-wider text-[10px]">Protegido por Criptografia</span>
             </Badge>
-          </div>
-        </div>
+          }
+        />
 
-        <div className="grid lg:grid-cols-[280px_1fr] gap-4">
+        <div className="mt-8 grid lg:grid-cols-[280px_1fr] gap-6">
           {/* Session list sidebar */}
           <div className="space-y-2">
             <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
@@ -482,7 +470,7 @@ export default function ProntuarioEletronico() {
             </CardContent>
           </Card>
         </div>
-      </div>
-    </MainLayout>
+      </PageContainer>
+    </PageLayout>
   );
 }

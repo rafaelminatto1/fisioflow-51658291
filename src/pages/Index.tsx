@@ -3,7 +3,7 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Calendar, Download, Settings as SettingsIcon } from "lucide-react";
 import { toast } from "sonner";
-import { MainLayout } from "@/components/layout/MainLayout";
+import { PageLayout, PageContainer } from "@/components/layout/PageLayout";
 import { IncompleteRegistrationAlert } from "@/components/dashboard/IncompleteRegistrationAlert";
 import { RealtimeActivityFeed } from "@/components/dashboard/RealtimeActivityFeed";
 import { DashboardNotificationWidget } from "@/components/dashboard/DashboardNotificationWidget";
@@ -91,14 +91,14 @@ const Index = () => {
   const selectedPeriodLabel = periodOptions.find((o) => o.value === periodFilter)?.label ?? "Hoje";
 
   return (
-    <MainLayout showBreadcrumbs={false}>
+    <PageLayout showBreadcrumbs={false}>
       {/* Ambient gradient blobs */}
       <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden" aria-hidden>
-        <div className="absolute left-[-10%] top-[-8%] h-[36%] w-[36%] rounded-full bg-primary/5 blur-[120px]" />
-        <div className="absolute bottom-[12%] right-[-6%] h-[28%] w-[28%] rounded-full bg-sky-500/5 blur-[100px]" />
+        <div className="absolute left-[-10%] top-[-8%] h-[36%] w-[36%] rounded-full bg-brand-blue/5 blur-[120px]" />
+        <div className="absolute bottom-[12%] right-[-6%] h-[28%] w-[28%] rounded-full bg-sky-400/5 blur-[100px]" />
       </div>
 
-      <div
+      <PageContainer
         className="relative z-10 space-y-5 animate-fade-in pb-16 md:pb-10"
         data-testid="dashboard-page"
       >
@@ -110,7 +110,7 @@ const Index = () => {
           {/* Identity */}
           <div className="flex items-center gap-3">
             <div className="relative shrink-0">
-              <Avatar className="h-9 w-9 ring-2 ring-primary/20 ring-offset-2 ring-offset-background">
+              <Avatar className="h-9 w-9 ring-2 ring-brand-blue/20 ring-offset-2 ring-offset-background">
                 <AvatarImage src={profile?.avatar_url || ""} alt={displayName} />
                 <AvatarFallback className="bg-gradient-to-br from-slate-900 to-slate-700 text-xs font-black text-white">
                   {initials}
@@ -126,7 +126,7 @@ const Index = () => {
                 <Calendar className="h-3 w-3 shrink-0" />
                 <span>{format(new Date(), "EEE, d 'de' MMM", { locale: ptBR })}</span>
                 <span className="text-border mx-0.5">·</span>
-                <span className="text-primary font-medium">{selectedPeriodLabel}</span>
+                <span className="text-brand-blue font-medium">{selectedPeriodLabel}</span>
               </p>
             </div>
           </div>
@@ -191,8 +191,8 @@ const Index = () => {
             </aside>
           </div>
         </AnalyticsFiltersProvider>
-      </div>
-    </MainLayout>
+      </PageContainer>
+    </PageLayout>
   );
 };
 

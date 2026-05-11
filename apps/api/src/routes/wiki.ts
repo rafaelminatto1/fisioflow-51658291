@@ -53,7 +53,10 @@ app.get("/dictionary", async (c) => {
   // Se tiver busca, filtra por PT, EN ou Aliases usando unaccent para ignorar acentos
   if (q) {
     conditions.push(
-      sql`(${searchFilter(wikiDictionary.name, q)} OR EXISTS (SELECT 1 FROM unnest(${wikiDictionary.aliases}) AS a WHERE ${searchFilter(sql`a`, q)}))`,
+      sql`(${searchFilter(wikiDictionary.pt, q)} 
+           OR ${searchFilter(wikiDictionary.en, q)}
+           OR EXISTS (SELECT 1 FROM unnest(${wikiDictionary.aliasesPt}) AS a WHERE ${searchFilter(sql`a`, q)})
+           OR EXISTS (SELECT 1 FROM unnest(${wikiDictionary.aliasesEn}) AS a WHERE ${searchFilter(sql`a`, q)}))`,
     );
   }
 
@@ -65,7 +68,7 @@ app.get("/dictionary", async (c) => {
     .select()
     .from(wikiDictionary)
     .where(and(...conditions))
-    .orderBy(wikiDictionary.name);
+    .orderBy(wikiDictionary.pt);
 
   return c.json({ data: rows });
 });
@@ -78,11 +81,16 @@ app.post("/dictionary", requireAuth, async (c) => {
   const [row] = await db
     .insert(wikiDictionary)
     .values({
-      name: body.pt ?? body.name,
-      description: body.descriptionPt ?? body.description ?? null,
-      aliases: body.aliasesPt ?? body.aliases ?? [],
+      pt: body.pt,
+      en: body.en,
+      descriptionPt: body.descriptionPt ?? null,
+      descriptionEn: body.descriptionEn ?? null,
+      aliasesPt: body.aliasesPt ?? [],
+      aliasesEn: body.aliasesEn ?? [],
       category: body.category ?? "geral",
+      subcategory: body.subcategory ?? null,
       organizationId: user.organizationId,
+      isGlobal: body.isGlobal ?? false,
       createdBy: user.uid,
       updatedAt: new Date(),
     })
@@ -104,10 +112,15 @@ app.put("/dictionary/:id", requireAuth, async (c) => {
   const [row] = await db
     .update(wikiDictionary)
     .set({
-      name: body.pt ?? body.name ?? undefined,
-      description: body.descriptionPt ?? body.description ?? undefined,
-      aliases: body.aliasesPt ?? body.aliases ?? undefined,
+      pt: body.pt ?? undefined,
+      en: body.en ?? undefined,
+      descriptionPt: body.descriptionPt ?? undefined,
+      descriptionEn: body.descriptionEn ?? undefined,
+      aliasesPt: body.aliasesPt ?? undefined,
+      aliasesEn: body.aliasesEn ?? undefined,
       category: body.category ?? undefined,
+      subcategory: body.subcategory ?? undefined,
+      isGlobal: body.isGlobal ?? undefined,
       updatedBy: user.uid,
       updatedAt: new Date(),
     })

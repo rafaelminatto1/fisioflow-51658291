@@ -71,3 +71,9 @@ export * from "./media";
 
 // Agenda Appearance — per-user/org appearance profile (cloud sync)
 export * from "./userAgendaAppearance";
+
+// Audit & Compliance (LGPD)
+export * from "./audit";
+
+// Business Intelligence & Predictive Analytics
+export * from "./analytics";
