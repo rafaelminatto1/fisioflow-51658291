@@ -48,6 +48,7 @@ import { EvidenceTab } from "@/components/patient/EvidenceTab";
 import { usePatientProfileOptimized, type ProfileTab } from "@/hooks/usePatientProfileOptimized";
 import { usePatientEvolutionReport } from "@/hooks/usePatientEvolutionReport";
 import { useEvaluationForms } from "@/hooks/useEvaluationForms";
+import { Patient360ChatDrawer } from "@/features/ia-studio/components/Patient360ChatDrawer";
 import { FisioPredictIndicator } from "@/features/ia-studio/components/FisioPredictIndicator";
 import { Textarea } from "@/components/ui/textarea";
 import { getWorkersApiUrl } from "@/lib/api/config";
@@ -191,6 +192,7 @@ const PatientProfileContent = () => {
   const [editingPatient, setEditingPatient] = useState<boolean>(false);
   const [evaluationModalOpen, setEvaluationModalOpen] = useState<boolean>(false);
   const [scheduleModalOpen, setScheduleModalOpen] = useState<boolean>(false);
+  const [isChatOpen, setIsChatOpen] = useState<boolean>(false);
 
   const { data: evaluationForms = [] } = useEvaluationForms();
 
@@ -319,6 +321,15 @@ const PatientProfileContent = () => {
           onEdit={() => setEditingPatient(true)}
           onEvaluate={handleStartEvaluation}
           onSchedule={() => setScheduleModalOpen(true)}
+          onAskAI={() => setIsChatOpen(true)}
+        />
+
+        {/* Chat IA Contextual 360° */}
+        <Patient360ChatDrawer
+          open={isChatOpen}
+          onOpenChange={setIsChatOpen}
+          patientId={id || ""}
+          patientName={patientName}
         />
 
         {/* Modal de Agendamento Rápido */}

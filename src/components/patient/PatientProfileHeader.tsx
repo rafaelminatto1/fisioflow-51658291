@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import type { Patient } from "@/types";
 import {
   ArrowLeft,
+  Brain,
   Calendar as CalendarIcon,
   ClipboardList,
   Edit,
@@ -27,6 +28,7 @@ interface PatientProfileHeaderProps {
   onEdit: () => void;
   onEvaluate: () => void;
   onSchedule: () => void;
+  onAskAI?: () => void;
 }
 
 function getPatientAge(birthDate: string): number {
@@ -46,6 +48,7 @@ export function PatientProfileHeader({
   onEdit,
   onEvaluate,
   onSchedule,
+  onAskAI,
 }: PatientProfileHeaderProps) {
   const status = patient.status;
   const isActiveStatus = status === "active" || status === "Em Tratamento";
@@ -111,6 +114,15 @@ export function PatientProfileHeader({
           </div>
 
           <div className="flex flex-wrap gap-2 w-full md:w-auto">
+            <Button
+              onClick={onAskAI}
+              variant="default"
+              size="sm"
+              className="flex-1 md:flex-none gap-2 bg-indigo-600 text-white hover:bg-indigo-700 transition-all shadow-premium-md font-bold"
+            >
+              <Brain className="h-4 w-4" />
+              Chat IA
+            </Button>
             <Button
               onClick={onOpenPremiumReport}
               variant="default"
