@@ -395,16 +395,9 @@ export function CapacityRulesList() {
   }
 
   return (
-    <div className="bg-card rounded-xl shadow-sm border border-border/60 overflow-hidden">
-      <div className="px-5 py-4 border-b flex justify-between items-center">
-        <h3 className="text-sm font-medium text-foreground">Regras Ativas</h3>
-        <Badge variant="secondary" className="text-xs">
-          {capacities.length} configuração{capacities.length !== 1 ? "ões" : ""}
-        </Badge>
-      </div>
-
+    <div>
       {authError && (
-        <div className="px-5 py-3">
+        <div className="mb-3">
           <Alert variant="destructive">
             <Info className="h-4 w-4" />
             <AlertTitle>Erro de Autenticação</AlertTitle>
@@ -413,7 +406,7 @@ export function CapacityRulesList() {
         </div>
       )}
 
-      <div className="divide-y divide-border">
+      <div className="divide-y divide-border rounded-xl border border-border/60 overflow-hidden">
         {capacityGroups.map((group) => {
           const groupKey = group.ids.join(",");
           const displayValue = editingCapacityValue[groupKey] ?? group.max_patients;
@@ -516,7 +509,7 @@ export function CapacityRulesList() {
         })}
       </div>
 
-      <div className="p-4 border-t">
+      <div className="p-4 border-t bg-card">
         {isAdding ? (
           <CapacityForm
             title="Nova Regra"

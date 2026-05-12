@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
-import { AlertCircle, Edit3, Eye, Loader2, Palette, Plus, Trash2 } from "lucide-react";
+import { Activity, AlertCircle, Edit3, Eye, ListChecks, Loader2, Palette, Plus, Trash2 } from "lucide-react";
+import { SettingsSectionCard } from "@/components/schedule/settings/shared/SettingsSectionCard";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
   AlertDialog,
@@ -202,19 +203,26 @@ export function StatusAtendimentoTab() {
 
   return (
     <div className="space-y-5">
-      <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        {[
-          ["Status cadastrados", stats.total],
-          ["Ativos", stats.active],
-          ["Personalizados", stats.custom],
-          ["Contam capacidade", stats.capacity],
-        ].map(([label, value]) => (
-          <div key={label} className="rounded-lg border bg-card p-4">
-            <p className="text-xs font-medium text-muted-foreground">{label}</p>
-            <p className="mt-2 text-2xl font-semibold tracking-tight">{value}</p>
-          </div>
-        ))}
-      </section>
+      <SettingsSectionCard
+        icon={<Activity className="h-4 w-4" />}
+        iconBg="bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400"
+        title="Resumo dos Status"
+        description="Visão geral da configuração atual"
+      >
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          {[
+            ["Status cadastrados", stats.total],
+            ["Ativos", stats.active],
+            ["Personalizados", stats.custom],
+            ["Contam capacidade", stats.capacity],
+          ].map(([label, value]) => (
+            <div key={label} className="rounded-xl border bg-muted/30 p-4">
+              <p className="text-xs font-medium text-muted-foreground">{label}</p>
+              <p className="mt-2 text-2xl font-semibold tracking-tight">{value}</p>
+            </div>
+          ))}
+        </div>
+      </SettingsSectionCard>
 
       {error && (
         <Alert variant="destructive">
@@ -224,21 +232,19 @@ export function StatusAtendimentoTab() {
         </Alert>
       )}
 
-      <section className="rounded-xl border bg-card">
-        <div className="flex flex-col gap-3 border-b p-4 md:flex-row md:items-center md:justify-between">
-          <div>
-            <h2 className="text-base font-semibold">Status de atendimento</h2>
-            <p className="text-sm text-muted-foreground">
-              Controle nomes, cores, ativação e capacidade dos status usados na agenda.
-            </p>
-          </div>
-          <Button onClick={openCreate} className="gap-2">
+      <SettingsSectionCard
+        icon={<ListChecks className="h-4 w-4" />}
+        iconBg="bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400"
+        title="Status de Atendimento"
+        description="Controle nomes, cores, ativação e capacidade dos status usados na agenda."
+        action={
+          <Button onClick={openCreate} className="gap-2 shrink-0" size="sm">
             <Plus className="h-4 w-4" />
             Novo status
           </Button>
-        </div>
-
-        <div className="overflow-x-auto">
+        }
+      >
+        <div className="overflow-x-auto -mx-5 -mb-5">
           <Table>
             <TableHeader>
               <TableRow>
@@ -338,7 +344,7 @@ export function StatusAtendimentoTab() {
             </TableBody>
           </Table>
         </div>
-      </section>
+      </SettingsSectionCard>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="sm:max-w-2xl">
