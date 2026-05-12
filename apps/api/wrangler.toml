@@ -213,8 +213,8 @@ R2_PUBLIC_URL = "https://media.moocafisio.com.br"
 # Turnstile (anti-bot para rotas públicas) — sitekey pública, secret via wrangler secret put
 TURNSTILE_SITE_KEY = "0x4AAAAAAC813j31sbl6IHX3"
 # CORS: origens permitidas (Pages e workers ativos — remover se projeto for desativado)
-ALLOWED_ORIGINS = "https://moocafisio.com.br,https://www.moocafisio.com.br,https://fisioflow.pages.dev,https://media.moocafisio.com.br,http://localhost:5173,https://fisioflow-web.rafalegollas.workers.dev"
-PAGES_URL = "https://fisioflow.pages.dev"
+ALLOWED_ORIGINS = "https://moocafisio.com.br,https://www.moocafisio.com.br,https://media.moocafisio.com.br,http://localhost:5173,https://fisioflow-web.rafalegollas.workers.dev"
+PAGES_URL = "https://moocafisio.com.br"
 GOOGLE_MAPS_API_KEY = ""
 # Neon Auth JWT verification (obrigatório para rotas protegidas)
 # Ajuste para os valores reais do seu tenant Neon Auth.
@@ -250,7 +250,7 @@ MONITOR_AI_GATEWAY_URL = "https://fisioflow-ai-gateway.rafalegollas.workers.dev/
 IMAGE_TRANSFORMATIONS = "enabled"
 GOOGLE_AI_PREMIUM_ENABLED = "false"
 R2_PUBLIC_URL = "https://media.moocafisio.com.br"
-ALLOWED_ORIGINS = "https://moocafisio.com.br,https://www.moocafisio.com.br,https://fisioflow.pages.dev,https://media.moocafisio.com.br,http://localhost:5173,https://fisioflow-web.rafalegollas.workers.dev"
+ALLOWED_ORIGINS = "https://moocafisio.com.br,https://www.moocafisio.com.br,https://media.moocafisio.com.br,http://localhost:5173,https://fisioflow-web.rafalegollas.workers.dev"
 GOOGLE_MAPS_API_KEY = ""
 NEON_AUTH_URL = "https://ep-wandering-bonus-acj4zwvo.neonauth.sa-east-1.aws.neon.tech/neondb/auth"
 NEON_AUTH_JWKS_URL = "https://ep-wandering-bonus-acj4zwvo.neonauth.sa-east-1.aws.neon.tech/neondb/auth/.well-known/jwks.json"
@@ -260,7 +260,7 @@ NEON_AUTH_AUDIENCE = "https://ep-wandering-bonus-acj4zwvo.neonauth.sa-east-1.aws
 NEON_DATA_API_URL = "https://ep-wandering-bonus-acj4zwvo.apirest.sa-east-1.aws.neon.tech/neondb/rest/v1"
 AXIOM_ORG_ID = "activity-dbyc"
 AXIOM_DATASET = "fisioflow-logs"
-PAGES_URL = "https://fisioflow.pages.dev"
+PAGES_URL = "https://moocafisio.com.br"
 FISIOFLOW_AI_GATEWAY_URL = "https://gateway.ai.cloudflare.com/v1/32156f9a72a32d1ece28ab74bcd398fb/fisioflow-gateway"
 # Turnstile (anti-bot) — sitekey pública, secret via wrangler secret put TURNSTILE_SECRET_KEY
 TURNSTILE_SITE_KEY = "0x4AAAAAAC813j31sbl6IHX3"
