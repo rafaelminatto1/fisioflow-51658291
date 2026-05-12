@@ -244,6 +244,48 @@ aiSearchApp.get("/exercises", requireAuth, async (c) => {
   }
 });
 
+// ─── Recomendador Automático de Condutas (Vectorize) ─────────────────────────
+
+aiSearchApp.get("/recommend", requireAuth, async (c) => {
+  const condition = c.req.query("condition");
+  if (!condition) return c.json({ error: "A condição clínica (condition) é obrigatória" }, 400);
+
+  try {
+    console.log(`[Vectorize] Generating clinical recommendations for: "${condition}"`);
+
+    // 1. Gerar embedding para a condição clínica
+    const aiResponse: any = await c.env.AI.run("@cf/baai/bge-m3", {
+      text: [condition],
+    });
+    const vector = aiResponse.data[0];
+
+    // 2. Buscar Protocolos na Wiki
+    const wikiMatches = await c.env.CLINICAL_KNOWLEDGE.query(vector, {
+      topK: 3,
+      namespace: "wiki",
+      returnMetadata: true,
+    });
+
+    // 3. Buscar Exercícios Sugeridos
+    const exerciseMatches = await c.env.CLINICAL_KNOWLEDGE.query(vector, {
+      topK: 5,
+      namespace: "exercises",
+      returnMetadata: true,
+    });
+
+    return c.json({
+      condition,
+      recommendations: {
+        protocols: wikiMatches.matches.map((m: any) => ({ id: m.id, score: m.score, ...m.metadata })),
+        exercises: exerciseMatches.matches.map((m: any) => ({ id: m.id, score: m.score, ...m.metadata })),
+      }
+    });
+  } catch (error: any) {
+    console.error("[Vectorize] Recommend error:", error);
+    return c.json({ error: "Falha ao gerar recomendações clínicas" }, 500);
+  }
+});
+
 // ─── Sync Exercícios → Vectorize ─────────────────────────────────────────────
 
 aiSearchApp.post("/exercises/sync", requireAuth, async (c) => {
