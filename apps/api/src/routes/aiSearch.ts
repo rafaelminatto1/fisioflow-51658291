@@ -189,16 +189,36 @@ aiSearchApp.post("/sync", requireAuth, async (c) => {
   }
 });
 
-// ─── Busca Semântica de Exercícios (Vectorize) ──────────────────────────────
+// ─── Busca Semântica de Exercícios com Dicionário Clínico (Vectorize) ────────
 
 aiSearchApp.get("/exercises", requireAuth, async (c) => {
   const query = c.req.query("q");
   if (!query) return c.json({ error: "query é obrigatória" }, 400);
 
   try {
-    // 1. Gerar embedding para a busca
+    // 0. Expansão de Dicionário Clínico (Ontologia via Llama 3)
+    let expandedQuery = query;
+    try {
+      const expansion: any = await c.env.AI.run("@cf/meta/llama-3.1-8b-instruct", {
+        messages: [
+          { 
+            role: "system", 
+            content: "Você é um dicionário clínico de fisioterapia. Dada uma queixa, termo leigo ou objetivo, retorne uma lista de 3 a 5 termos clínicos, sinônimos técnicos, patologias ou músculos/articulações relacionados, separados por vírgula. Não escreva frases, introduções ou explicações. APENAS os termos." 
+          },
+          { role: "user", content: query }
+        ],
+      });
+      if (expansion.response) {
+        expandedQuery = `${query}, ${expansion.response}`;
+        console.log(`[Vectorize] Query expanded from "${query}" to "${expandedQuery}"`);
+      }
+    } catch (e) {
+      console.warn("[Vectorize] Dictionary expansion failed, using raw query", e);
+    }
+
+    // 1. Gerar embedding para a busca expandida
     const aiResponse: any = await c.env.AI.run("@cf/baai/bge-m3", {
-      text: [query],
+      text: [expandedQuery],
     });
     const vector = aiResponse.data[0];
 
@@ -211,6 +231,7 @@ aiSearchApp.get("/exercises", requireAuth, async (c) => {
 
     return c.json({
       query,
+      expandedQuery,
       data: matches.matches.map((m: any) => ({
         id: m.id,
         score: m.score,
@@ -265,6 +286,50 @@ aiSearchApp.post("/exercises/sync", requireAuth, async (c) => {
   } catch (error: any) {
     console.error("[Vectorize] Sync error:", error);
     return c.json({ error: "Falha na sincronização de vetores" }, 500);
+  }
+});
+
+// ─── Sync Wiki → Vectorize ───────────────────────────────────────────────────
+
+aiSearchApp.post("/wiki/sync", requireAuth, async (c) => {
+  const pool = createPool(c.env);
+  
+  try {
+    const res = await pool.query(`
+      SELECT wp.id, wp.title, wp.content, wc.name as category
+      FROM wiki_pages wp
+      LEFT JOIN wiki_categories wc ON wc.id = wp.category_id
+      WHERE wp.is_public = true AND wp.deleted_at IS NULL
+    `);
+
+    console.log(`[Vectorize] Syncing ${res.rows.length} wiki pages...`);
+
+    for (const row of res.rows) {
+      const textToEmbed = `
+        Título: ${row.title}
+        Categoria: ${row.category || "Geral"}
+        Conteúdo: ${row.content || ""}
+      `.trim().substring(0, 8000);
+
+      const aiResponse: any = await c.env.AI.run("@cf/baai/bge-m3", {
+        text: [textToEmbed],
+      });
+
+      await c.env.CLINICAL_KNOWLEDGE.upsert([{
+        id: row.id,
+        values: aiResponse.data[0],
+        namespace: "wiki",
+        metadata: {
+          title: row.title,
+          category: row.category || "wiki"
+        }
+      }]);
+    }
+
+    return c.json({ success: true, count: res.rows.length });
+  } catch (error: any) {
+    console.error("[Vectorize] Wiki Sync error:", error);
+    return c.json({ error: "Falha na sincronização da wiki no Vectorize" }, 500);
   }
 });
 
