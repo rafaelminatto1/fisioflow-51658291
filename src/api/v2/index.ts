@@ -77,3 +77,4 @@ export type {
 } from "@/types/workers";
 export * from "./messaging";
 export * from "./groups";
+export * from "./patientMedia";

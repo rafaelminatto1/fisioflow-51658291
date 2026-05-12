@@ -12,7 +12,7 @@
 
 import { useCallback } from "react";
 import type { CardSize } from "@/types/agenda";
-import { useAgendaAppearance } from "./useAgendaAppearance";
+import { useAgendaAppearancePersistence } from "./useAgendaAppearancePersistence";
 
 export function useCardSize() {
   const {
@@ -22,7 +22,7 @@ export function useCardSize() {
     cssVariables,
     applyToAllViews,
     resetAll,
-  } = useAgendaAppearance("day");
+  } = useAgendaAppearancePersistence("day");
 
   const setCardSize = useCallback(
     (size: CardSize) => applyToAllViews({ cardSize: size }),

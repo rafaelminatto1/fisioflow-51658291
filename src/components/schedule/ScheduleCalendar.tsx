@@ -149,11 +149,19 @@ export function ScheduleCalendar(props: ScheduleCalendarProps) {
 
   const calendarRef = useRef<FullCalendar | null>(null);
   const { statusConfig } = useStatusConfig();
-  const { cssVariables, slotHeightPx: _slotHeightPx, appearance } = useAgendaAppearancePersistence(viewType);
+  const { cssVariables, slotHeightPx, appearance } = useAgendaAppearancePersistence(viewType);
   const { businessHours: settingsHours, blockedTimes } = useScheduleSettings();
 
   const [quickViewAppointment, setQuickViewAppointment] = useState<RawAppointment | null>(null);
   const [popoverAnchorRect, setPopoverAnchorRect] = useState<DOMRect | null>(null);
+
+  // Sync calendar size when density/height variables change
+  useEffect(() => {
+    const api = calendarRef.current?.getApi();
+    if (api) {
+      api.updateSize();
+    }
+  }, [slotHeightPx, appearance.cardSize]);
 
   useEffect(() => {
     console.log("[FisioFlow] ScheduleCalendar v1.0 - FullCalendar migration");
@@ -501,6 +509,7 @@ export function ScheduleCalendar(props: ScheduleCalendarProps) {
             nowIndicator
             allDaySlot={false}
             dayMaxEvents={3}
+            slotEventOverlap={false}
             editable
             selectable
             selectMirror

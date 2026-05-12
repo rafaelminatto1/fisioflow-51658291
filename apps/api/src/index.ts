@@ -18,6 +18,7 @@ import { authRoutes } from "./routes/auth";
 import { documentsRoutes } from "./routes/documents";
 import { examsRoutes } from "./routes/exams";
 import { medicalRequestsRoutes } from "./routes/medicalRequests";
+import { patientMediaRoutes } from "./routes/patientMedia";
 import { goalsRoutes } from "./routes/goals";
 import { profileRoutes } from "./routes/profile";
 import { doctorsRoutes } from "./routes/doctors";
@@ -279,6 +280,7 @@ const apiRoutes = [
   ["/api/documents", documentsRoutes],
   ["/api/exams", examsRoutes],
   ["/api/medical-requests", medicalRequestsRoutes],
+  ["/api/patient-media", patientMediaRoutes],
   ["/api/goals", goalsRoutes],
   ["/api/profile", profileRoutes],
   ["/api/doctors", doctorsRoutes],

@@ -36,7 +36,7 @@ import { EvolutionSummaryCard } from "@/components/evolution/EvolutionSummaryCar
 import { MetasCard } from "@/components/evolution/MetasCard";
 import { EvolutionGridContainer } from "@/components/evolution/EvolutionResponsiveLayout";
 import { ComponentErrorBoundary } from "@/components/error";
-import { ApplyTemplateModal } from "@/components/exercises/ApplyTemplateModal";
+import { ApplyTemplateModal } from "@/components/evolution/modals/ApplyTemplateModal";
 
 import type { EvolutionTab } from "@/hooks/evolution/useEvolutionDataOptimized";
 
@@ -612,14 +612,23 @@ const PatientEvolution = () => {
               isSaving={handlers.isSaving}
             />
           </div>
-          {state.showApplyTemplate && (
-            <ApplyTemplateModal
-              open={state.showApplyTemplate}
-              onOpenChange={state.setShowApplyTemplate}
-              patientId={state.patientId!}
-              patientName={PatientHelpers.getName(state.patient)}
-            />
-          )}
+          <ApplyTemplateModal
+            open={state.showApplyTemplate}
+            onOpenChange={state.setShowApplyTemplate}
+            onApply={(content) => {
+              if (state.evolutionVersion === "v4-unified" || state.evolutionVersion === "v5-pro") {
+                state.setSoapData((prev: any) => ({
+                  ...prev,
+                  subjective: prev.subjective + "\n" + content,
+                }));
+              } else {
+                state.setEvolutionV2Data((prev: any) => ({
+                  ...prev,
+                  observations: prev.observations + "\n" + content.replace(/<[^>]*>/g, ""),
+                }));
+              }
+            }}
+          />
           <EvolutionKeyboardShortcuts
             open={state.showKeyboardHelp}
             onOpenChange={state.setShowKeyboardHelp}

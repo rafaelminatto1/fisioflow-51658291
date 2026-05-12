@@ -31,6 +31,16 @@ id = "12b9fefcfbc04074a63342a9212e1b4f"
 binding = "MEDIA_BUCKET"
 bucket_name = "fisioflow-media"
 
+# Exames, fotos clínicas e vídeos — PRIVADO (sem domínio público, presigned URLs)
+[[r2_buckets]]
+binding = "EXAMS_BUCKET"
+bucket_name = "fisioflow-exams"
+
+# ===== CLOUDFLARE IMAGES API (resize, WebP/AVIF, watermark, thumbnail) =====
+# Disponível no Workers Paid. Transforma imagens diretamente de streams R2.
+[images]
+binding = "IMAGES"
+
 # ===== KV NAMESPACES (Global Cache) =====
 [[kv_namespaces]]
 binding = "FISIOFLOW_CONFIG"
@@ -60,9 +70,10 @@ dataset = "fisioflow_events"
 binding = "CLINICAL_KNOWLEDGE"
 index_name = "fisioflow-clinical"
 
-# ===== AI SEARCH (RAG gerenciado — wiki, protocolos, exercícios) =====
-# Requer "ai search update" permission no API token ou plano Workers AI Search.
-# O código tem guards (if !c.env.AI_SEARCH) para funcionar sem o binding.
+# ===== AI SEARCH (RAG gerenciado — diretrizes clínicas, PDFs, artigos) =====
+# AutoRAG: chunks, embeds e indexa documentos automaticamente (1024 dims).
+# Busca via env.AI.autorag("fisioflow-rag") — sem binding dedicado (requer permissão enterprise).
+# Upload de docs via CF REST API (POST /api/ai-search/sync) usando CF_API_TOKEN secret.
 # [[ai_search]]
 # binding = "AI_SEARCH"
 # instance_name = "fisioflow-rag"
@@ -354,6 +365,10 @@ id = "12b9fefcfbc04074a63342a9212e1b4f"
 binding = "MEDIA_BUCKET"
 bucket_name = "fisioflow-media"
 
+[[env.production.r2_buckets]]
+binding = "EXAMS_BUCKET"
+bucket_name = "fisioflow-exams"
+
 [env.production.durable_objects]
 bindings = [
   { name = "ORGANIZATION_STATE", class_name = "OrganizationState" },
@@ -425,6 +440,10 @@ id = "37189eb42d314a0a8fd0e169a2b27ad1"
 [[env.staging.r2_buckets]]
 binding = "MEDIA_BUCKET"
 bucket_name = "fisioflow-media-staging"
+
+[[env.staging.r2_buckets]]
+binding = "EXAMS_BUCKET"
+bucket_name = "fisioflow-exams-staging"
 
 [env.staging.durable_objects]
 bindings = [

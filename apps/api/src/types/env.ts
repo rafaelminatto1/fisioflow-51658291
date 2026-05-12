@@ -47,12 +47,30 @@ export interface Env {
   FISIOFLOW_AI_GATEWAY_TOKEN?: string;
   INNGEST_SIGNING_KEY?: string;
 
+  // Cloudflare Images API (transform, resize, WebP/AVIF, watermark)
+  IMAGES?: {
+    input(
+      stream: ReadableStream | ArrayBuffer | Blob,
+    ): {
+      transform(options: {
+        width?: number; height?: number; fit?: "scale-down" | "contain" | "cover" | "crop" | "pad";
+        quality?: number; format?: string; blur?: number; rotate?: 0 | 90 | 180 | 270;
+        brightness?: number; contrast?: number; saturation?: number;
+        trim?: { top?: number; right?: number; bottom?: number; left?: number };
+      }): ReturnType<Env["IMAGES"]>["input"] extends (...args: any[]) => infer R ? R : any;
+      draw(layer: any, options?: { opacity?: number; repeat?: boolean; top?: number; left?: number; bottom?: number; right?: number }): any;
+      output(options: { format?: "image/avif" | "image/webp" | "image/jpeg" | "image/png"; quality?: number }): Promise<{ response(): Response }>;
+    };
+  };
+
   // Cloudflare R2 Config
   MEDIA_BUCKET: R2Bucket;
+  EXAMS_BUCKET?: R2Bucket; // fisioflow-exams: exames, fotos, vídeos clínicos (privado)
   R2_ACCOUNT_ID: string;
   R2_ACCESS_KEY_ID: string;
   R2_SECRET_ACCESS_KEY: string;
   R2_PUBLIC_URL: string;
+  R2_EXAMS_BUCKET_NAME?: string; // "fisioflow-exams" (default se não definido)
 
   // Cloudflare D1
   DB?: D1Database; // fisioflow-db: evolution_index, feriados_nacionais

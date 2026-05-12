@@ -42,6 +42,8 @@ export type EvolutionTab =
   | "tratamento"
   | "historico"
   | "assistente"
+  | "escalas"
+  | "midia"
   | "configuracoes";
 export type LoadStrategy = "critical" | "tab-based" | "full";
 

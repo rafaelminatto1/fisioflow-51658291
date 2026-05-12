@@ -69,7 +69,7 @@
 
 /* 5. Event Card Wrapper (Harness) - Override FC defaults */
 .fc .fc-timegrid-event-harness {
-  padding: 1px !important; /* Space between side-by-side events */
+  padding: 2px !important; /* Margens entre cards paralelos */
 }
 
 .fc .fc-v-event {
@@ -77,12 +77,16 @@
   border: none !important;
   box-shadow: none !important;
   filter: none !important;
+  border-radius: 12px !important;
 }
 
+/* Garante que o conteúdo interno ocupe todo o espaço com a nova margem */
 .fc .fc-event-main {
   padding: 0 !important;
   border: none !important;
   background: transparent !important;
+  height: 100% !important;
+  width: 100% !important;
 }
 
 /* 6. Current Time Indicator */

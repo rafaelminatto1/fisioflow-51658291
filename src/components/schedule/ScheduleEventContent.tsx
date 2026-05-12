@@ -76,7 +76,15 @@ export function ScheduleEventContent({
         )}
       </div>
 
-      <p className="truncate text-[13px] font-bold leading-tight text-slate-900 dark:text-white" style={{ fontFamily: 'var(--font-display, Inter, sans-serif)' }}>
+      <p 
+        className="text-[13px] font-bold leading-tight text-slate-900 dark:text-white break-words overflow-hidden" 
+        style={{ 
+          fontFamily: 'var(--font-display, Inter, sans-serif)',
+          display: '-webkit-box',
+          WebkitLineClamp: 2,
+          WebkitBoxOrient: 'vertical',
+        }}
+      >
         {title}
       </p>
 

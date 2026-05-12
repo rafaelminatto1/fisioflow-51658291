@@ -38,18 +38,18 @@ const STORAGE_KEY = "agenda_appearance_v2";
 
 const DEFAULT_GLOBAL: AgendaViewAppearance = {
   cardSize: DEFAULT_CARD_SIZE,
-  heightScale: 6,
+  heightScale: 4,
   fontScale: 5,
   opacity: 100,
 };
 
 const VIEW_DEFAULT_OVERRIDES: Record<AgendaView, Partial<AgendaViewAppearance>> = {
-  // Dia: mais espaço/legibilidade por padrão
-  day: { cardSize: "medium", heightScale: 7, fontScale: 6 },
-  // Semana: equilíbrio
-  week: { cardSize: "small", heightScale: 5, fontScale: 5 },
+  // Dia: equilíbrio para caber mais horas (24px por hora aprox. com scale 3)
+  day: { cardSize: "medium", heightScale: 3, fontScale: 5 },
+  // Semana: mais compacto para ver a semana toda
+  week: { cardSize: "small", heightScale: 2, fontScale: 5 },
   // Mês: super compacto (pílulas)
-  month: { cardSize: "extra_small", heightScale: 3, fontScale: 4 },
+  month: { cardSize: "extra_small", heightScale: 2, fontScale: 4 },
 };
 
 const LEGACY_KEYS = {
@@ -97,7 +97,17 @@ function loadState(): AgendaAppearanceState {
 
 function persist(state: AgendaAppearanceState) {
   if (typeof window === "undefined") return;
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  const serialized = JSON.stringify(state);
+  localStorage.setItem(STORAGE_KEY, serialized);
+
+  // Dispara evento de storage para sincronizar outras instâncias do hook
+  // na MESMA janela (o browser nativamente só dispara para outras janelas/abas)
+  window.dispatchEvent(
+    new StorageEvent("storage", {
+      key: STORAGE_KEY,
+      newValue: serialized,
+    }),
+  );
 }
 
 function effectiveForView(state: AgendaAppearanceState, view: AgendaView): AgendaViewAppearance {
@@ -119,8 +129,11 @@ function fontPercentageFromScale(scale: number): number {
 }
 
 function slotHeightPxFromScale(scale: number): number {
-  // 0 -> 12px, 5 -> 24px, 10 -> 48px (linear)
-  const multiplier = 0.5 + (clamp(scale, 0, 10) / 10) * 1.5; // 0.5x .. 2.0x
+  // 0 -> 10px, 5 -> 24px, 10 -> 48px
+  // Aumentamos o range para permitir slots ainda mais compactos (8px no mínimo)
+  // 0 -> 8px, 5 -> 24px, 10 -> 48px
+  if (scale <= 0) return 8;
+  const multiplier = 0.33 + (clamp(scale, 0, 10) / 10) * 1.67; // 0.33x (8px) .. 2.0x (48px)
   return Math.round(24 * multiplier);
 }
 
@@ -232,10 +245,14 @@ export function useAgendaAppearance(view: AgendaView = "day"): UseAgendaAppearan
         // Vars consumidas pelos cards de evento
         "--agenda-card-font-scale": `${fontPercentage}%`,
         "--agenda-card-opacity": `${appearance.opacity / 100}`,
+        
         // Var consumida pelo slot do FullCalendar (timegrid) e outros locais
         "--agenda-slot-height": `${slotHeightPx}px`,
-        // Override direto do FullCalendar (timegrid + daygrid) — garante propagação
+        
+        // Overrides diretos do FullCalendar (timegrid + daygrid) — garante propagação
         "--fc-timegrid-slot-height": `${slotHeightPx}px`,
+        "--fc-event-min-height": `${slotHeightPx}px`,
+        "--schedule-card-min-height": `${slotHeightPx}px`,
         "--fc-daygrid-event-min-height": `${Math.round(slotHeightPx * 0.85)}px`,
       }) as React.CSSProperties,
     [fontPercentage, slotHeightPx, appearance.opacity],
