@@ -46,4 +46,22 @@ export const iaStudioApi = {
         body: JSON.stringify({ patientId, highlights }),
       },
     ),
+
+  generateProtocol: (condition: string, sessionCount: number = 10) =>
+    request<{
+      success: boolean;
+      data: {
+        title: string;
+        objective: string;
+        phases: Array<{
+          name: string;
+          description: string;
+          sessions: string;
+          exercises: string[];
+        }>;
+      };
+    }>("/api/ia-studio/generate-protocol", {
+      method: "POST",
+      body: JSON.stringify({ condition, sessionCount }),
+    }),
 };

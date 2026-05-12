@@ -2,6 +2,7 @@ import { Brain, Download, Filter, Grid3X3, List, Loader2, PlusCircle, Search, Se
 import { useEffect, useState } from "react";
 import MainLayout from "@/components/layout/MainLayout";
 import { NewProtocolModal } from "@/components/modals/NewProtocolModal";
+import { AIProtocolGenerator } from "@/components/protocols/AIProtocolGenerator";
 import { ProtocolCardEnhanced } from "@/components/protocols/ProtocolCardEnhanced";
 import { ProtocolDetailView } from "@/components/protocols/ProtocolDetailView";
 import {
@@ -72,6 +73,7 @@ export default function Protocols() {
 
   const [selectedProtocol, setSelectedProtocol] = useState<ExerciseProtocol | null>(null);
   const [showNewProtocolModal, setShowNewProtocolModal] = useState(false);
+  const [showAIGenerator, setShowAIGenerator] = useState(false);
   const [editingProtocol, setEditingProtocol] = useState<ExerciseProtocol | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [favorites, setFavorites] = useState<string[]>([]);
@@ -294,6 +296,14 @@ export default function Protocols() {
               <span className="hidden sm:inline">Exportar</span>
             </Button>
             <Button
+              variant="outline"
+              onClick={() => setShowAIGenerator(true)}
+              className="gap-2 border-brand-blue text-brand-blue hover:bg-brand-blue/5"
+            >
+              <Brain className="h-4 w-4" />
+              <span className="hidden sm:inline">Gerar com IA</span>
+            </Button>
+            <Button
               onClick={() => {
                 setEditingProtocol(null);
                 setShowNewProtocolModal(true);
@@ -305,6 +315,11 @@ export default function Protocols() {
             </Button>
           </div>
         </div>
+
+        <AIProtocolGenerator
+          open={showAIGenerator}
+          onOpenChange={setShowAIGenerator}
+        />
 
         {/* Search and Filters Area */}
         <div className="space-y-6">

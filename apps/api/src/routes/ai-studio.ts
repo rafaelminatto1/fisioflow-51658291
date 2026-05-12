@@ -217,4 +217,56 @@ Retorne APENAS JSON puro neste formato exato:
   }
 });
 
+/**
+ * POST /api/ia-studio/generate-protocol
+ * Gera um protocolo de tratamento estruturado baseado na condição do paciente.
+ */
+app.post("/generate-protocol", requireAuth, async (c) => {
+  const body = (await c.req.json().catch(() => ({}))) as any;
+  const { condition, sessionCount = 10 } = body;
+
+  if (!condition) return c.json({ error: "Condição clínica é obrigatória" }, 400);
+
+  try {
+    const { runThinkingModel } = await import("../lib/ai-native");
+
+    const prompt = `
+      Você é um especialista em reabilitação física e fisioterapia baseada em evidências.
+      Sua tarefa é gerar um protocolo de tratamento estruturado de ${sessionCount} sessões para a condição: "${condition}".
+
+      O protocolo deve ser dividido em FASES (ex: Inflamatória, Remodelagem, Retorno ao Esporte).
+      Para cada fase, sugira os objetivos e uma lista de 3 a 5 exercícios/técnicas.
+
+      Retorne APENAS JSON puro neste formato:
+      {
+        "title": "Protocolo de Reabilitação para ${condition}",
+        "objective": "<objetivo geral do tratamento>",
+        "phases": [
+          {
+            "name": "<nome da fase>",
+            "description": "<foco clínico da fase>",
+            "sessions": "Sessões 1-4",
+            "exercises": ["Exercício 1", "Exercício 2", "Exercício 3"]
+          }
+        ]
+      }
+    `.trim();
+
+    const result = await runThinkingModel(c.env, {
+      prompt,
+      model: "gemini-1.5-flash",
+      temperature: 0.4,
+      responseFormat: "json",
+    });
+
+    const jsonMatch = result.content.match(/\{[\s\S]*\}/);
+    const data = JSON.parse(jsonMatch?.[0] ?? result.content);
+
+    return c.json({ success: true, data });
+  } catch (error: any) {
+    console.error("[AI-Studio] Erro ao gerar protocolo:", error);
+    return c.json({ error: "Falha ao gerar protocolo inteligente" }, 500);
+  }
+});
+
 export { app as aiStudioRoutes };
