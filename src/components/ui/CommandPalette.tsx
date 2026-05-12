@@ -25,6 +25,9 @@ import {
   FolderOpen,
   Command,
   Brain as BrainIcon,
+  Loader2,
+  Dumbbell,
+  BookOpen,
   type LucideIcon,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -32,6 +35,8 @@ import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
 import { normalizeText } from "@/lib/utils/string";
 import { APP_ROUTES, patientRoutes } from "@/lib/routing/appRoutes";
+import { request } from "@/api/v2/base";
+import { useDebounce } from "@/hooks/performance/useDebounce";
 
 interface CommandItem {
   id: string;
@@ -42,6 +47,7 @@ interface CommandItem {
   action: () => void;
   shortcut?: string;
   keywords?: string[];
+  score?: number;
 }
 
 interface CommandPaletteProps {
@@ -57,6 +63,7 @@ const CATEGORIES = {
   patient: { label: "Paciente", icon: Users },
   clinical: { label: "Clínico", icon: Activity },
   ai: { label: "Inteligência Artificial", icon: Sparkles },
+  "clinical-results": { label: "Resultados Clínicos (IA)", icon: BrainIcon },
 };
 
 export function CommandPalette({
@@ -68,9 +75,13 @@ export function CommandPalette({
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedIndex, setSelectedIndex] = useState(0);
+  const [clinicalResults, setClinicalResults] = useState<CommandItem[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+
+  const debouncedQuery = useDebounce(searchQuery, 300);
 
   // Command items available in the context
-  const commandItems = useMemo(
+  const staticItems = useMemo(
     (): CommandItem[] => [
       // Navigation
       {
@@ -339,25 +350,61 @@ export function CommandPalette({
     [navigate, patientId, patientName],
   );
 
-  // Filter items based on search query
-  const filteredItems = useMemo(() => {
-    if (!searchQuery.trim()) {
-      return commandItems;
+  // Fetch clinical results from AI Search
+  useEffect(() => {
+    if (!open || debouncedQuery.length < 3) {
+      setClinicalResults([]);
+      return;
     }
 
-    const searchTerm = normalizeText(searchQuery);
-    return commandItems.filter((item) => {
-      const matchLabel = normalizeText(item.label).includes(searchTerm);
-      const matchDescription = item.description
-        ? normalizeText(item.description).includes(searchTerm)
-        : false;
-      const matchKeywords = item.keywords?.some((keyword) =>
-        normalizeText(keyword).includes(searchTerm),
-      );
+    const fetchClinicalData = async () => {
+      setIsSearching(true);
+      try {
+        const res = await request<{ data: any[] }>(`/api/ai-search/unified?q=${encodeURIComponent(debouncedQuery)}`);
+        
+        const mappedResults: CommandItem[] = res.data.map((item: any) => ({
+          id: `ai-${item.type}-${item.id}`,
+          label: item.title,
+          description: item.type === "patient" ? item.description : (item.category || "Conteúdo Clínico"),
+          icon: item.type === "exercise" ? Dumbbell : (item.type === "wiki" ? BookOpen : Users),
+          category: "clinical-results",
+          action: () => {
+            if (item.type === "patient") navigate(`/pacientes/${item.id}`);
+            else if (item.type === "wiki") navigate(`/wiki?id=${item.id}`);
+            else if (item.type === "exercise") navigate(`/exercicios/${item.id}`);
+          }
+        }));
 
-      return matchLabel || matchDescription || matchKeywords;
-    });
-  }, [commandItems, searchQuery]);
+        setClinicalResults(mappedResults);
+      } catch (err) {
+        console.error("Clinical search failed", err);
+      } finally {
+        setIsSearching(false);
+      }
+    };
+
+    fetchClinicalData();
+  }, [debouncedQuery, open, navigate]);
+
+  // Filter items based on search query
+  const filteredItems = useMemo(() => {
+    const staticFiltered = !searchQuery.trim()
+      ? staticItems
+      : staticItems.filter((item) => {
+          const searchTerm = normalizeText(searchQuery);
+          const matchLabel = normalizeText(item.label).includes(searchTerm);
+          const matchDescription = item.description
+            ? normalizeText(item.description).includes(searchTerm)
+            : false;
+          const matchKeywords = item.keywords?.some((keyword) =>
+            normalizeText(keyword).includes(searchTerm),
+          );
+
+          return matchLabel || matchDescription || matchKeywords;
+        });
+
+    return [...staticFiltered, ...clinicalResults];
+  }, [staticItems, clinicalResults, searchQuery]);
 
   // Group items by category
   const groupedItems = useMemo(() => {
@@ -432,9 +479,13 @@ export function CommandPalette({
         </DialogHeader>
 
         <div className="flex items-center px-4 py-2 border-b">
-          <Search className="h-4 w-4 mr-2 text-muted-foreground shrink-0" />
+          {isSearching ? (
+            <Loader2 className="h-4 w-4 mr-2 text-primary animate-spin shrink-0" />
+          ) : (
+            <Search className="h-4 w-4 mr-2 text-muted-foreground shrink-0" />
+          )}
           <Input
-            placeholder="Buscar comandos, pacientes, ações..."
+            placeholder="Buscar comandos, pacientes, exercícios (IA)..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="border-0 focus-visible:ring-0 h-9"

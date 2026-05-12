@@ -8,6 +8,7 @@ import type { Env } from "../types/env";
 import { verifyMetaSignature } from "./whatsapp";
 import { WhatsAppService } from "../lib/whatsapp";
 import { writeEvent } from "../lib/analytics";
+import { AIConciergeService } from "../services/ai-concierge";
 
 const app = new Hono<{ Bindings: Env }>();
 
@@ -631,74 +632,50 @@ async function maybeSendConciergeGreeting(
 
   conciergeGreetedThisSession.add(waId);
 
+  // 1. Get recent history for context
+  const historyRes = await pool.query(
+    `SELECT role, content FROM wa_messages 
+     WHERE conversation_id = $1::uuid 
+     ORDER BY created_at DESC LIMIT 5`,
+    [conversationId]
+  );
+  const history = historyRes.rows.reverse().map((r: any) => ({
+    role: r.role === 'inbound' ? 'user' : 'assistant',
+    content: r.content
+  }));
+
+  // 2. Process with AI Concierge (includes Wiki search)
+  const concierge = await AIConciergeService.processMessage(env, orgId, text, history);
+
   const whatsapp = new WhatsAppService(env);
-  const displayName = contact.display_name ?? "você";
-  const firstName = displayName.split(" ")[0];
+  await whatsapp.sendTextMessage(waId, concierge.reply);
 
-  let reply: string;
+  // 3. Automated Task Creation based on Intent
+  if (concierge.intent !== 'other') {
+    const priority = concierge.intent === 'urgent' ? 'URGENTE' : 'ALTA';
+    const titleMap = {
+      scheduling: "Solicitação de Agendamento (IA)",
+      information: "Dúvida sobre Tratamento (IA)",
+      urgent: "🚨 URGÊNCIA CLÍNICA (IA)",
+    };
 
-  if (CONCIERGE_URGENT_PATTERN.test(text)) {
-    reply =
-      `Olá, ${firstName}! 👋 Recebemos sua mensagem sobre uma situação urgente.\n\n` +
-      `Nossa equipe será notificada imediatamente. Em breve entraremos em contato.\n\n` +
-      `Se precisar de ajuda médica de emergência, acione o SAMU: *192*.`;
-    // Create urgent task for team
     await pool.query(
       `INSERT INTO tarefas (organization_id, created_by, titulo, descricao, status, prioridade, tipo,
          order_index, tags, label_ids, checklists, attachments, task_references, dependencies,
          requires_acknowledgment, acknowledgments)
-       VALUES ($1, 'whatsapp_bot', $2, $3, 'A_FAZER', 'URGENTE', 'TAREFA',
-         0, '{}', '{}', '[]', '[]', '[]', '[]', true, '[]')`,
+       VALUES ($1, 'ai_concierge', $2, $3, 'A_FAZER', $4, 'TAREFA',
+         0, '{}', '{}', '[]', '[]', '[]', '[]', $5, '[]')`,
       [
         orgId,
-        `🚨 Mensagem urgente — novo contato WhatsApp (${waId})`,
-        `Novo paciente relatou situação urgente:\n\n"${text.slice(0, 500)}"`,
+        `${titleMap[concierge.intent as keyof typeof titleMap] || "Contato IA"} — ${waId}`,
+        `IA detectou intenção de ${concierge.intent}.\n\nDados extraídos: ${JSON.stringify(concierge.patientData)}\n\nMensagem original: "${text.slice(0, 500)}"`,
+        priority,
+        concierge.intent === 'urgent'
       ],
     );
-  } else if (CONCIERGE_SCHEDULE_PATTERN.test(text)) {
-    reply =
-      `Olá, ${firstName}! 👋 Tudo bem?\n\n` +
-      `Que bom que quer agendar com a gente! 😊\n\n` +
-      `Para reservar seu horário, preciso de algumas informações:\n` +
-      `1️⃣ Seu *nome completo*\n` +
-      `2️⃣ Qual é a sua *queixa principal* (ex: dor lombar, reabilitação pós-cirurgia)\n` +
-      `3️⃣ Possui *plano de saúde*? Se sim, qual?\n\n` +
-      `Nossa equipe confirmará o agendamento em breve! 🗓️`;
-    // Create scheduling task
-    await pool.query(
-      `INSERT INTO tarefas (organization_id, created_by, titulo, descricao, status, prioridade, tipo,
-         order_index, tags, label_ids, checklists, attachments, task_references, dependencies,
-         requires_acknowledgment, acknowledgments)
-       VALUES ($1, 'whatsapp_bot', $2, $3, 'A_FAZER', 'ALTA', 'TAREFA',
-         0, '{}', '{}', '[]', '[]', '[]', '[]', false, '[]')`,
-      [
-        orgId,
-        `Solicitação de agendamento — novo paciente (${waId})`,
-        `Novo paciente quer agendar uma avaliação:\n\n"${text.slice(0, 500)}"`,
-      ],
-    );
-  } else if (CONCIERGE_INFO_PATTERN.test(text)) {
-    reply =
-      `Olá, ${firstName}! 👋\n\n` +
-      `Obrigado pelo contato! Aqui é a clínica. 😊\n\n` +
-      `Posso te ajudar com:\n` +
-      `📅 *Agendar* uma avaliação\n` +
-      `💬 *Informações* sobre tratamentos e valores\n` +
-      `📋 *Tirar dúvidas* sobre fisioterapia\n\n` +
-      `O que você precisa?`;
-  } else {
-    reply =
-      `Olá, ${firstName}! 👋 Bem-vindo(a)!\n\n` +
-      `Aqui é a clínica de fisioterapia. Como posso te ajudar?\n\n` +
-      `📅 Quer *agendar* uma sessão?\n` +
-      `❓ Tem alguma *dúvida* sobre tratamentos?\n` +
-      `📞 Prefere que a equipe te *ligue*?\n\n` +
-      `Responda com uma das opções acima ou descreva o que precisa. 😊`;
   }
 
-  await whatsapp.sendTextMessage(waId, reply);
-
-  writeEvent(env, { orgId, event: "whatsapp_concierge_greeted" });
+  writeEvent(env, { orgId, event: "whatsapp_concierge_ai_greeted" });
 }
 
 async function maybeCreateTaskFromIntent(

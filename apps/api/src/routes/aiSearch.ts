@@ -379,6 +379,70 @@ aiSearchApp.post("/wiki/sync", requireAuth, async (c) => {
   }
 });
 
+// ─── Busca Unificada Global (Omnisearch) ───────────────────────────────────
+
+aiSearchApp.get("/unified", requireAuth, async (c) => {
+  const query = c.req.query("q");
+  if (!query || query.length < 3) return c.json({ data: [] });
+
+  try {
+    const { generateEmbedding } = await import("../lib/ai-native");
+    const vector = await generateEmbedding(c.env, query);
+
+    // 1. Buscar Exercícios e Wiki no Vectorize em paralelo
+    const [exerciseMatches, wikiMatches] = await Promise.all([
+      c.env.CLINICAL_KNOWLEDGE.query(vector, { topK: 5, namespace: "exercises", returnMetadata: true }),
+      c.env.CLINICAL_KNOWLEDGE.query(vector, { topK: 3, namespace: "wiki", returnMetadata: true })
+    ]);
+
+    // 2. Buscar Pacientes Similares no Neon (pgvector)
+    const sql = getRawSql(c.env, "read");
+    const user = c.get("user");
+    
+    const patientMatches = await sql`
+      SELECT 
+        p.id, p.full_name as name, ce.content_summary as summary,
+        1 - (ce.embedding <=> ${vector}::vector) as similarity
+      FROM clinical_embeddings ce
+      JOIN patients p ON p.id = ce.patient_id
+      WHERE ce.organization_id = ${user.organizationId}::uuid
+      ORDER BY ce.embedding <=> ${vector}::vector
+      LIMIT 3
+    `;
+
+    const results = [
+      ...exerciseMatches.matches.map((m: any) => ({
+        id: m.id,
+        type: "exercise",
+        title: m.metadata.name,
+        score: m.score,
+      })),
+      ...wikiMatches.matches.map((m: any) => ({
+        id: m.id,
+        type: "wiki",
+        title: m.metadata.title,
+        category: m.metadata.category,
+        score: m.score,
+      })),
+      ...patientMatches.rows.map((p: any) => ({
+        id: p.id,
+        type: "patient",
+        title: p.name,
+        description: p.summary,
+        score: p.similarity,
+      }))
+    ];
+
+    return c.json({ 
+      query,
+      data: results.sort((a, b) => b.score - a.score) 
+    });
+  } catch (error: any) {
+    console.error("[Omnisearch] Error:", error);
+    return c.json({ error: "Falha na busca unificada" }, 500);
+  }
+});
+
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function getCfApi(env: Env) {
