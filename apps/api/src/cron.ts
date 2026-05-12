@@ -6,6 +6,7 @@ import type { WhatsAppQueuePayload } from "./queue";
 import { cleanupRateLimits } from "./middleware/rateLimit";
 import { runHealthMonitor } from "./lib/monitor";
 import { notifyPatientAppointment } from "./lib/push";
+import { RTMAlertsService } from "./services/rtm-alerts";
 
 /**
  * Cloudflare Worker Cron Trigger Handler
@@ -102,6 +103,13 @@ export async function handleScheduled(event: ScheduledEvent, env: Env, ctx: Exec
 
       case "0 15 * * *": { // UTC 15h = BRT 12h — RTM Wearable Alerts
         const pool = createPool(env);
+        
+        // 1. Process Clinical Proactive Alerts (Pain spikes, compliance drops)
+        console.log("[Cron] Processing RTM Clinical Alerts...");
+        const clinicalAlerts = await RTMAlertsService.processDailyAlerts(env, "00000000-0000-0000-0000-000000000001");
+        console.log(`[Cron] RTM Clinical Alerts: triggered ${clinicalAlerts} alerts.`);
+
+        // 2. Original wearable analysis
         await processWearableRTMAlerts(pool, env);
         break;
       }
