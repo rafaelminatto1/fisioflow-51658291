@@ -330,6 +330,86 @@ app.get("/oauth/oura/callback", async (c) => {
   }
 });
 
+// ─── Google Fit OAuth ─────────────────────────────────────────────────────────
+
+app.get("/oauth/google_fit/start", requireAuth, async (c) => {
+  const clientId = c.env.GOOGLE_CLIENT_ID;
+  if (!clientId) return c.json({ error: "Google Fit não configurado" }, 503);
+
+  const { patient_id } = c.req.query();
+  const user = c.get("user");
+  const redirectBase = c.env.WEARABLE_OAUTH_REDIRECT_BASE ?? "https://app.moocafisio.com.br";
+  const redirectUri = encodeURIComponent(`${redirectBase}/api/wearables/oauth/google_fit/callback`);
+  const state = btoa(JSON.stringify({ patient_id, org: user.organizationId }));
+  
+  // Scopes for Google Fit
+  const scopes = [
+    "https://www.googleapis.com/auth/fitness.activity.read",
+    "https://www.googleapis.com/auth/fitness.body.read",
+    "https://www.googleapis.com/auth/fitness.heart_rate.read",
+    "https://www.googleapis.com/auth/fitness.sleep.read"
+  ].join(" ");
+
+  const authUrl =
+    `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}` +
+    `&redirect_uri=${redirectUri}&response_type=code&access_type=offline` +
+    `&scope=${encodeURIComponent(scopes)}&state=${state}&prompt=consent`;
+
+  return c.json({ data: { url: authUrl } });
+});
+
+app.get("/oauth/google_fit/callback", async (c) => {
+  const { code, state, error } = c.req.query();
+  const redirectBase = c.env.WEARABLE_OAUTH_REDIRECT_BASE ?? "https://app.moocafisio.com.br";
+
+  if (error || !code || !state) {
+    return Response.redirect(`${redirectBase}/portal/integrations?error=google_fit_denied`, 302);
+  }
+
+  try {
+    const { patient_id, org } = JSON.parse(atob(state));
+    const clientId = c.env.GOOGLE_CLIENT_ID!;
+    const clientSecret = c.env.GOOGLE_CLIENT_SECRET!;
+    const redirectUri = `${redirectBase}/api/wearables/oauth/google_fit/callback`;
+
+    const tokenRes = await fetch("https://oauth2.googleapis.com/token", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        client_id: clientId,
+        client_secret: clientSecret,
+        code,
+        grant_type: "authorization_code",
+        redirect_uri: redirectUri
+      }),
+    });
+    const tokenData = await tokenRes.json() as any;
+
+    if (!tokenData.access_token) {
+      return Response.redirect(`${redirectBase}/portal/integrations?error=google_fit_token`, 302);
+    }
+
+    const db = createPool(c.env);
+    await db.query(
+      `INSERT INTO wearable_oauth_tokens
+         (organization_id, patient_id, provider, access_token, refresh_token, token_expires_at)
+       VALUES ($1, $2, 'google_fit', $3, $4, $5)
+       ON CONFLICT (patient_id, provider) DO UPDATE SET
+         access_token = EXCLUDED.access_token,
+         refresh_token = COALESCE(EXCLUDED.refresh_token, wearable_oauth_tokens.refresh_token),
+         token_expires_at = EXCLUDED.token_expires_at,
+         is_active = true,
+         connected_at = NOW()`,
+      [org, patient_id, tokenData.access_token, tokenData.refresh_token ?? null,
+       tokenData.expires_in ? new Date(Date.now() + tokenData.expires_in * 1000).toISOString() : null],
+    );
+
+    return Response.redirect(`${redirectBase}/portal/integrations?connected=google_fit`, 302);
+  } catch {
+    return Response.redirect(`${redirectBase}/portal/integrations?error=google_fit_error`, 302);
+  }
+});
+
 // ─── Pull latest data from connected providers ────────────────────────────────
 
 app.post("/sync-provider", requireAuth, async (c) => {
@@ -401,6 +481,44 @@ app.post("/sync-provider", requireAuth, async (c) => {
           [user.organizationId, patient_id, e.data_type, e.value, e.unit, s.bedtime_start, JSON.stringify({ sleep_id: s.id })],
         );
         synced++;
+      }
+    }
+  } else if (provider === "google_fit") {
+    // Google Fit REST API sync for steps and heart rate
+    const startTimeMillis = Date.now() - 7 * 86400 * 1000;
+    const endTimeMillis = Date.now();
+    const syncRes = await fetch("https://www.googleapis.com/fitness/v1/users/me/dataset:aggregate", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${access_token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        aggregateBy: [
+          { dataTypeName: "com.google.step_count.delta" },
+          { dataTypeName: "com.google.heart_rate.summary" }
+        ],
+        bucketByTime: { durationMillis: 86400000 }, // Daily buckets
+        startTimeMillis,
+        endTimeMillis
+      })
+    });
+
+    const fitData = await syncRes.json() as any;
+    for (const bucket of fitData.bucket ?? []) {
+      const date = new Date(Number(bucket.startTimeMillis)).toISOString();
+      for (const dataset of bucket.dataset ?? []) {
+        for (const point of dataset.point ?? []) {
+          if (dataset.dataSourceId.includes("step_count")) {
+            const steps = point.value[0].intVal;
+            await db.query(
+              `INSERT INTO wearable_data (organization_id, patient_id, source, data_type, value, unit, timestamp)
+               VALUES ($1, $2, 'google_fit', 'steps', $3, 'count', $4) ON CONFLICT DO NOTHING`,
+              [user.organizationId, patient_id, steps, date]
+            );
+            synced++;
+          }
+        }
       }
     }
   }

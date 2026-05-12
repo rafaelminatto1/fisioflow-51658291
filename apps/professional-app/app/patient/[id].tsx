@@ -28,6 +28,7 @@ import { AIExerciseHistoryCard } from "@/components/ai/AIExerciseHistoryCard";
 import { PainProgressChart } from "@/components/patient/PainProgressChart";
 import { CloudReportActions } from "@/components/patient/CloudReportActions";
 import { SemanticRecommenderMobileWidget } from "@/components/patient/SemanticRecommenderMobileWidget";
+import { WearablesSummaryWidget } from "@/components/patient/WearablesSummaryWidget";
 import { generateEvolutionPDF } from "@/lib/services/pdfGenerator";
 import {
   usePatientFinancialRecords,
@@ -394,6 +395,9 @@ export default function PatientDetailScreen() {
                   </View>
                 )}
               </Card>
+
+              {/* Monitoramento de Wearables */}
+              <WearablesSummaryWidget patientId={id || ""} />
 
               <Card
                 style={[

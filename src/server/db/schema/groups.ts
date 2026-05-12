@@ -11,8 +11,7 @@ import {
   index,
 } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
-import { organizations } from "./organizations";
-import { profiles } from "./appointments"; // Assumindo que profiles (therapists) estão aqui
+import { organizations, profiles } from "./organizations";
 import { patients } from "./patients";
 
 /** Enums for Group Management */

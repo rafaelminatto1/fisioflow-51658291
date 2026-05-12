@@ -26,9 +26,19 @@ import { useHealthConnect, getTodayStepsHealthConnect } from "@/lib/healthConnec
 import { useHealthKit, getTodaySteps } from "@/lib/healthkit";
 import { log } from "@/lib/logger";
 import { wearablesApi, type WearableReading } from "@/lib/api";
+import { useQuery } from "@tanstack/react-query";
+import { useAuthStore } from "@/store/auth";
 
 export default function WellnessScreen() {
   const colors = useColors();
+  const { user } = useAuthStore();
+
+  // Buscar tendências reais do backend (RTM)
+  const { data: rtmData, refetch: refetchRtm } = useQuery({
+    queryKey: ["rtm-status", user?.patientId],
+    queryFn: () => wearablesApi.getRtmStatus(user?.patientId || ""),
+    enabled: !!user?.patientId,
+  });
 
   // HealthKit (iOS) hooks
   const {
@@ -70,6 +80,7 @@ export default function WellnessScreen() {
     if (readings.length === 0) return;
     try {
       await wearablesApi.sync(readings);
+      refetchRtm(); // Atualiza as tendências após o sync
     } catch (err) {
       log.warn("Wearable sync to backend failed (non-fatal):", err);
     }
@@ -219,6 +230,8 @@ export default function WellnessScreen() {
     return "#f97316";
   };
 
+  const weeklyTrend = rtmData?.data?.trends?.current || [];
+
   return (
     <SafeAreaView
       style={[styles.container, { backgroundColor: colors.background }]}
@@ -336,72 +349,6 @@ export default function WellnessScreen() {
           </View>
         </Card>
 
-        {/* Permission Denied Banner */}
-        {permissionDenied && (
-          <Card style={{ padding: 16 }}>
-            <View style={{ flexDirection: "row", gap: 12, alignItems: "center" }}>
-              <Ionicons name="lock-closed" size={22} color={colors.warning} />
-              <View style={{ flex: 1 }}>
-                <Text
-                  style={[
-                    { fontSize: 14, fontWeight: "600", marginBottom: 4 },
-                    { color: colors.text },
-                  ]}
-                >
-                  Permissão Negada
-                </Text>
-                <Text style={[{ fontSize: 12 }, { color: colors.textSecondary }]}>
-                  Ative o acesso aos dados de saúde nas configurações do dispositivo.
-                </Text>
-              </View>
-            </View>
-            <TouchableOpacity
-              style={[
-                {
-                  marginTop: 12,
-                  paddingVertical: 8,
-                  paddingHorizontal: 16,
-                  borderRadius: 8,
-                  alignItems: "center",
-                },
-                { backgroundColor: colors.primary },
-              ]}
-              onPress={handleOpenSettings}
-            >
-              <Text style={{ color: "#FFF", fontWeight: "600", fontSize: 13 }}>
-                Abrir Configurações
-              </Text>
-            </TouchableOpacity>
-          </Card>
-        )}
-
-        {/* Loading skeleton */}
-        {syncing && !steps && (
-          <View style={{ gap: 12 }}>
-            {[1, 2].map((i) => (
-              <Card key={i} style={{ padding: 16, opacity: 0.5 }}>
-                <View
-                  style={{
-                    height: 20,
-                    backgroundColor: colors.border,
-                    borderRadius: 4,
-                    width: "60%",
-                  }}
-                />
-                <View
-                  style={{
-                    height: 36,
-                    backgroundColor: colors.border,
-                    borderRadius: 4,
-                    width: "40%",
-                    marginTop: 8,
-                  }}
-                />
-              </Card>
-            ))}
-          </View>
-        )}
-
         {/* Metrics Grid */}
         <View style={styles.metricsGrid}>
           {/* Heart Rate */}
@@ -433,78 +380,43 @@ export default function WellnessScreen() {
               </Text>
             </View>
           </Card>
-
-          {/* Distance */}
-          <Card style={styles.metricCard}>
-            <View
-              style={[
-                styles.metricIcon,
-                {
-                  backgroundColor: colors.primaryLight ?? colors.primary + "20",
-                },
-              ]}
-            >
-              <Ionicons name="walk" size={22} color={colors.primary} />
-            </View>
-            <View style={styles.metricInfo}>
-              <Text style={[styles.metricLabel, { color: colors.textSecondary }]}>Distância</Text>
-              <Text style={[styles.metricValue, { color: colors.text }]}>
-                {distance !== null ? `${(distance / 1000).toFixed(1)} km` : "--"}
-              </Text>
-            </View>
-          </Card>
-
-          {/* Sleep */}
-          <Card style={styles.metricCard}>
-            <View style={[styles.metricIcon, { backgroundColor: "#818cf820" }]}>
-              <Ionicons name="moon" size={22} color="#818cf8" />
-            </View>
-            <View style={styles.metricInfo}>
-              <Text style={[styles.metricLabel, { color: colors.textSecondary }]}>Sono</Text>
-              <Text style={[styles.metricValue, { color: colors.text }]}>
-                {sleepHours !== null ? `${sleepHours}h` : "--"}
-              </Text>
-            </View>
-          </Card>
         </View>
 
         {/* Weekly Summary */}
         <Card style={styles.summaryCard}>
           <View style={styles.summaryHeader}>
             <Ionicons name="stats-chart" size={20} color={colors.primary} />
-            <Text style={[styles.summaryTitle, { color: colors.text }]}>Resumo Semanal</Text>
+            <Text style={[styles.summaryTitle, { color: colors.text }]}>Tendência de Atividade</Text>
           </View>
           <View style={styles.weeklyData}>
-            {["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"].map((day, _index) => {
-              // Mock data for weekly view
-              const daySteps = Math.floor(Math.random() * 8000) + 4000;
-              const percentage = Math.min((daySteps / 10000) * 100, 100);
-
-              return (
-                <View key={day} style={styles.dayColumn}>
-                  <Text style={[styles.dayLabel, { color: colors.textSecondary }]}>{day}</Text>
-                  <View style={[styles.dayBar, { backgroundColor: colors.border }]}>
-                    <View
-                      style={[
-                        styles.dayBarFill,
-                        {
-                          backgroundColor:
-                            percentage >= 100
-                              ? colors.success
-                              : percentage >= 50
-                                ? colors.warning
-                                : colors.error,
-                          height: `${percentage}%`,
-                        },
-                      ]}
-                    />
+            {weeklyTrend.length > 0 ? (
+               weeklyTrend.filter((t: any) => t.data_type === 'steps').map((day: any, index: number) => {
+                const percentage = Math.min((Number(day.total) / 10000) * 100, 100);
+                return (
+                  <View key={index} style={styles.dayColumn}>
+                    <Text style={[styles.dayLabel, { color: colors.textSecondary }]}>Dia {index + 1}</Text>
+                    <View style={[styles.dayBar, { backgroundColor: colors.border }]}>
+                      <View
+                        style={[
+                          styles.dayBarFill,
+                          {
+                            backgroundColor: percentage >= 100 ? colors.success : colors.warning,
+                            height: `${percentage}%`,
+                          },
+                        ]}
+                      />
+                    </View>
+                    <Text style={[styles.dayValue, { color: colors.text }]}>
+                      {(Number(day.total) / 1000).toFixed(1)}k
+                    </Text>
                   </View>
-                  <Text style={[styles.dayValue, { color: colors.text }]}>
-                    {(daySteps / 1000).toFixed(1)}k
-                  </Text>
-                </View>
-              );
-            })}
+                );
+              })
+            ) : (
+              <Text style={{ fontSize: 12, color: colors.textSecondary, textAlign: 'center', width: '100%' }}>
+                Sincronize seus dados para ver tendências.
+              </Text>
+            )}
           </View>
         </Card>
 
