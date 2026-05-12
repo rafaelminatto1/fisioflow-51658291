@@ -35,9 +35,9 @@ export default function WellnessScreen() {
 
   // Buscar tendências reais do backend (RTM)
   const { data: rtmData, refetch: refetchRtm } = useQuery({
-    queryKey: ["rtm-status", user?.patientId],
-    queryFn: () => wearablesApi.getRtmStatus(user?.patientId || ""),
-    enabled: !!user?.patientId,
+    queryKey: ["rtm-status", user?.id],
+    queryFn: () => wearablesApi.getRtmStatus(user?.id || ""),
+    enabled: !!user?.id,
   });
 
   // HealthKit (iOS) hooks

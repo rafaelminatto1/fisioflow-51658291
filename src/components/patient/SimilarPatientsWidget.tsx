@@ -2,7 +2,13 @@ import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { request } from "@/api/v2/base";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Users, UserPlus, ArrowRight, Activity } from "lucide-react";
+import { Users, UserPlus, ArrowRight, Activity, Info } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
@@ -47,6 +53,18 @@ export const SimilarPatientsWidget: React.FC<SimilarPatientsWidgetProps> = ({ pa
         <div className="flex items-center gap-2 text-primary">
           <Users className="h-4 w-4" />
           <CardTitle className="text-sm font-bold uppercase tracking-wider">Casos Similares (Benchmarking)</CardTitle>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Info className="h-3 w-3 text-slate-400 cursor-help" />
+              </TooltipTrigger>
+              <TooltipContent className="max-w-xs bg-slate-900 text-white border-slate-800 p-4 rounded-xl shadow-2xl">
+                <p className="text-xs leading-relaxed">
+                  Utilizamos busca vetorial de alta performance (Neon pgvector) para encontrar correlações entre diagnósticos e evoluções de diferentes pacientes.
+                </p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         </div>
         <CardDescription className="text-[10px]">
           Pacientes com evolução clínica e diagnósticos correlacionados via IA.

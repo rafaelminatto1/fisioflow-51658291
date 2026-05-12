@@ -6,7 +6,7 @@
 
 ---
 
-## Itens concluídos neste ciclo (Sprints 1–13)
+## Itens concluídos neste ciclo (Sprints 1–16)
 
 | Item | Fase | Entregável |
 |---|---|---|
@@ -23,7 +23,10 @@
 | **Patient Digital Twin** | IA | Predição de alta e risco de abandono (Trajetória) |
 | **Chat com Exames (RAG)** | IA | Conversa inteligente com laudos PDF via Vectorize |
 | **Disaster Recovery** | Infra | Neon branching + R2 cross-region (ENAM) |
+| **Programa de Indicação (MGM)** | Mkt | Landing page e widget mobile para indicação premiada |
+| **BI Avançado (Cohorts/Churn)** | BI | Heatmaps de retenção e lista ativa de possíveis evasões |
 | **Metadados de Lançamento** | Mobile | ASO e descrições otimizadas para App Store/Google Play |
+| **Golden Path E2E (IA)** | Hardening | Testes de Omnisearch, Digital Twin e SOAP no Playwright |
 
 ---
 

@@ -221,8 +221,8 @@ export default function ProfileScreen() {
           <Button
             title="Compartilhar Convite"
             onPress={handleShareReferral}
-            variant="default"
-            size="small"
+            variant="primary"
+            size="sm"
             style={styles.shareButton}
           />
         </Card>

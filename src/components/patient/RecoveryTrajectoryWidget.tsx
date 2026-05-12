@@ -2,7 +2,13 @@ import React from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
 import { request } from "@/api/v2/base";
-import { TrendingUp, Clock, AlertTriangle, CheckCircle2, History } from "lucide-react";
+import { TrendingUp, Clock, AlertTriangle, CheckCircle2, History, Info } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 
 interface DigitalTwinData {
@@ -42,6 +48,18 @@ export const RecoveryTrajectoryWidget: React.FC<RecoveryTrajectoryWidgetProps> =
           <div className="flex items-center gap-2">
             <History className="h-4 w-4 text-indigo-400" />
             <CardTitle className="text-sm font-black uppercase tracking-widest">Trajetória Preditiva (Gêmeo Digital)</CardTitle>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Info className="h-3 w-3 text-slate-500 cursor-help" />
+                </TooltipTrigger>
+                <TooltipContent className="max-w-xs bg-slate-900 text-white border-slate-800 p-4 rounded-xl shadow-2xl">
+                  <p className="text-xs leading-relaxed">
+                    A IA analisa a aderência, evolução da dor e dados de wearables para prever o tempo de recuperação baseado em protocolos de evidência científica.
+                  </p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           </div>
           <div className={cn(
             "px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-tighter",

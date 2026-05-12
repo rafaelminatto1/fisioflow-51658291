@@ -5,7 +5,6 @@ import { useColors } from "@/hooks/useColorScheme";
 import { useQuery } from "@tanstack/react-query";
 import { patientApi } from "@/lib/api";
 import { Ionicons } from "@expo/vector-icons";
-import { cn } from "@/lib/utils";
 
 export const RecoveryTrajectoryMobileWidget = () => {
   const colors = useColors();
@@ -27,6 +26,8 @@ export const RecoveryTrajectoryMobileWidget = () => {
   const data = twinResponse;
   if (!data || !data.predicted_recovery_weeks) return null;
 
+  const adherence = Math.round(parseFloat(data.adherence_score) || 0);
+
   return (
     <Card style={[styles.container, { backgroundColor: colors.surface + "B0", borderColor: colors.primary + "30", borderWidth: 1 }]}>
       <View style={styles.header}>
@@ -47,7 +48,7 @@ export const RecoveryTrajectoryMobileWidget = () => {
 
         <View style={styles.statBox}>
           <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Aderência</Text>
-          <Text style={[styles.statValue, { color: "#22c55e" }]}>{Math.round(parseFloat(data.adherence_score))}%</Text>
+          <Text style={[styles.statValue, { color: "#22c55e" }]}>{adherence}%</Text>
         </View>
       </View>
 
@@ -58,7 +59,7 @@ export const RecoveryTrajectoryMobileWidget = () => {
                 styles.progressBarFill, 
                 { 
                   backgroundColor: colors.primary,
-                  width: `${Math.round(parseFloat(data.adherence_score))}%` 
+                  width: `${adherence}%` 
                 }
               ]} 
             />

@@ -485,6 +485,7 @@ export function CommandPalette({
             <Search className="h-4 w-4 mr-2 text-muted-foreground shrink-0" />
           )}
           <Input
+            data-testid="omnisearch-input"
             placeholder="Buscar comandos, pacientes, exercícios (IA)..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
