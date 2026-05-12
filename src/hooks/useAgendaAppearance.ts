@@ -163,13 +163,20 @@ export interface UseAgendaAppearanceResult {
 export function useAgendaAppearance(view: AgendaView = "day"): UseAgendaAppearanceResult {
   const [state, setState] = useState<AgendaAppearanceState>(() => loadState());
 
-  // Sync entre abas
+  // Sync entre abas (e instâncias na mesma aba via applyStateViaStorage).
+  // Usa setState funcional com comparação JSON para evitar re-render quando
+  // o evento foi disparado pela própria instância (persist loop).
   useEffect(() => {
     const onStorage = (e: StorageEvent) => {
       if (e.key !== STORAGE_KEY || !e.newValue) return;
       try {
         const next = JSON.parse(e.newValue) as AgendaAppearanceState;
-        if (next && next.global) setState(next);
+        if (next?.global) {
+          setState((prev) => {
+            if (JSON.stringify(prev) === e.newValue) return prev;
+            return next;
+          });
+        }
       } catch {
         /* ignore */
       }

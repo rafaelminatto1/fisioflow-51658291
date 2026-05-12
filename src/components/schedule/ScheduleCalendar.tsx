@@ -76,7 +76,6 @@ export interface RawAppointment {
   patientName?: string;
   therapist_id?: string;
   isGroup?: boolean;
-  isGroup?: boolean;
   is_group?: boolean;
   currentParticipants?: number;
   current_participants?: number;
