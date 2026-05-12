@@ -55,8 +55,8 @@ export default function WhatsAppInboxPage() {
   // Fetch Team Data when needed
   useEffect(() => {
     if (showAssignDialog || showTransferDialog) {
-      organizationMembersApi.list().then(res => setTeamMembers(res.data));
-      fetchAgentsWorkload().then(setAgentsWorkload);
+      organizationMembersApi.list().then(res => setTeamMembers(res.data)).catch(() => {});
+      fetchAgentsWorkload().then(setAgentsWorkload).catch(() => {});
     }
   }, [showAssignDialog, showTransferDialog]);
 

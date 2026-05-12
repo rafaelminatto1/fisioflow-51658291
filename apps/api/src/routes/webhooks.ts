@@ -26,17 +26,24 @@ interface JwkKey {
   x?: string;
 }
 
-let jwksCache: { keys: JwkKey[] } | null = null;
+// Promise singleton evita fetches simultâneos (race condition em Workers)
+let jwksCachePromise: Promise<{ keys: JwkKey[] }> | null = null;
 let jwksCacheTime = 0;
 const JWKS_CACHE_TTL_MS = 5 * 60 * 1000; // 5 min
 
 async function getJwks(jwksUrl: string): Promise<{ keys: JwkKey[] }> {
-  if (jwksCache && Date.now() - jwksCacheTime < JWKS_CACHE_TTL_MS) return jwksCache;
-  const res = await fetch(jwksUrl);
-  if (!res.ok) throw new Error(`JWKS fetch falhou: ${res.status}`);
-  jwksCache = (await res.json()) as { keys: JwkKey[] };
+  if (jwksCachePromise && Date.now() - jwksCacheTime < JWKS_CACHE_TTL_MS) {
+    return jwksCachePromise;
+  }
   jwksCacheTime = Date.now();
-  return jwksCache;
+  jwksCachePromise = fetch(jwksUrl).then((res) => {
+    if (!res.ok) throw new Error(`JWKS fetch falhou: ${res.status}`);
+    return res.json() as Promise<{ keys: JwkKey[] }>;
+  }).catch((err) => {
+    jwksCachePromise = null; // permite retry no próximo request
+    throw err;
+  });
+  return jwksCachePromise;
 }
 
 async function verifyWebhookSignature(

@@ -41,7 +41,7 @@ export function OfflineBanner() {
   useEffect(() => {
     const handler = (event: MessageEvent) => {
       if (event.data?.type === "SYNC_COMPLETE") {
-        pendingCount().then(setPending);
+        pendingCount().then(setPending).catch(() => {});
         setJustSynced(true);
         setTimeout(() => setJustSynced(false), 3000);
       }

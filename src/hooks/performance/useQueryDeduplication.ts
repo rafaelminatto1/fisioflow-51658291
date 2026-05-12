@@ -72,11 +72,12 @@ class QueryDeduplicationManager {
 // Instância global do gerenciador
 const dedupManager = new QueryDeduplicationManager();
 
-// Limpeza periódica de cache antigo
-if (typeof window !== "undefined") {
+// Limpeza periódica de cache antigo — intervalo inicializado uma única vez
+if (typeof window !== "undefined" && !(globalThis as Record<string, unknown>).__dedupCleanupStarted) {
+  (globalThis as Record<string, unknown>).__dedupCleanupStarted = true;
   setInterval(() => {
     dedupManager.clearOldCache();
-  }, 30000); // A cada 30 segundos
+  }, 30000);
 }
 
 /**
@@ -236,17 +237,14 @@ export function useDeduplicationStats() {
     };
   }, []);
 
-  // Atualizar stats a cada segundo (apenas para debug)
-  // Em produção, remova este useEffect
-  if (process.env.NODE_ENV === "development") {
-    // eslint-disable-next-line react-hooks/rules-of-hooks
-    const [, forceUpdate] = useState(0);
-    // eslint-disable-next-line react-hooks/rules-of-hooks
-    useEffect(() => {
-      const interval = setInterval(() => forceUpdate((s) => s + 1), 1000);
-      return () => clearInterval(interval);
-    }, []);
-  }
+  // Atualizar stats a cada segundo (apenas para debug).
+  // Hooks são chamados incondicionalmente — Rules of Hooks.
+  const [, forceUpdate] = useState(0);
+  useEffect(() => {
+    if (process.env.NODE_ENV !== "development") return;
+    const interval = setInterval(() => forceUpdate((s) => s + 1), 1000);
+    return () => clearInterval(interval);
+  }, []);
 
   return stats;
 }

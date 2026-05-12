@@ -213,7 +213,7 @@ app.post("/booking", bookingRateLimit, turnstileVerify, async (c) => {
       ).catch(() => {});
     }
   };
-  c.executionCtx?.waitUntil?.(fire());
+  c.executionCtx?.waitUntil?.(fire().catch((err) => console.error("[PublicBooking] notification error:", err)));
 
   return c.json({ data: insert.rows[0], success: true }, 201);
 });

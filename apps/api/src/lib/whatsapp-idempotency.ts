@@ -1,23 +1,25 @@
 const DEFAULT_TTL_MS = 5 * 60 * 1000;
 
-let tableEnsured = false;
+// Promise singleton: garante que apenas um CREATE TABLE corre por isolate,
+// eliminando race condition quando múltiplos requests chegam ao mesmo tempo.
+let tableInitPromise: Promise<void> | null = null;
 
 async function ensureTable(d1: D1Database) {
-  if (tableEnsured) return;
-  try {
-    await d1
-      .prepare(
-        `CREATE TABLE IF NOT EXISTS wa_dedup (
+  if (tableInitPromise) return tableInitPromise;
+  tableInitPromise = d1
+    .prepare(
+      `CREATE TABLE IF NOT EXISTS wa_dedup (
         key TEXT PRIMARY KEY,
         created_at INTEGER NOT NULL
       )`,
-      )
-      .run();
-    tableEnsured = true;
-  } catch (error) {
-    console.error("[whatsapp-idempotency] ensureTable error:", error);
-    tableEnsured = false;
-  }
+    )
+    .run()
+    .then(() => {})
+    .catch((error) => {
+      console.error("[whatsapp-idempotency] ensureTable error:", error);
+      tableInitPromise = null; // permite retry se falhar
+    });
+  return tableInitPromise;
 }
 
 export async function isDuplicate(d1: D1Database, metaMessageId: string): Promise<boolean> {

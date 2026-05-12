@@ -90,7 +90,9 @@ export const PatientSummaryPanel: React.FC<PatientSummaryPanelProps> = ({
 
   React.useEffect(() => {
     if (patient.id) {
-      EngagementService.getPatientEngagement(patient.id).then(setEngagement);
+      EngagementService.getPatientEngagement(patient.id)
+        .then(setEngagement)
+        .catch(() => setEngagement(null));
     }
   }, [patient.id]);
 

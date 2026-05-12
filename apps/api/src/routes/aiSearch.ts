@@ -192,6 +192,7 @@ aiSearchApp.post("/sync", requireAuth, async (c) => {
 // ─── Busca Semântica de Exercícios com Dicionário Clínico (Vectorize) ────────
 
 aiSearchApp.get("/exercises", requireAuth, async (c) => {
+  if (!c.env.CLINICAL_KNOWLEDGE) return c.json({ error: "Vectorize não configurado" }, 503);
   const query = c.req.query("q");
   if (!query) return c.json({ error: "query é obrigatória" }, 400);
 
@@ -247,6 +248,7 @@ aiSearchApp.get("/exercises", requireAuth, async (c) => {
 // ─── Recomendador Automático de Condutas (Vectorize) ─────────────────────────
 
 aiSearchApp.get("/recommend", requireAuth, async (c) => {
+  if (!c.env.CLINICAL_KNOWLEDGE) return c.json({ error: "Vectorize não configurado" }, 503);
   const condition = c.req.query("condition");
   if (!condition) return c.json({ error: "A condição clínica (condition) é obrigatória" }, 400);
 
@@ -289,6 +291,7 @@ aiSearchApp.get("/recommend", requireAuth, async (c) => {
 // ─── Sync Exercícios → Vectorize ─────────────────────────────────────────────
 
 aiSearchApp.post("/exercises/sync", requireAuth, async (c) => {
+  if (!c.env.CLINICAL_KNOWLEDGE) return c.json({ error: "Vectorize não configurado" }, 503);
   const pool = createPool(c.env);
   
   try {
@@ -334,6 +337,7 @@ aiSearchApp.post("/exercises/sync", requireAuth, async (c) => {
 // ─── Sync Wiki → Vectorize ───────────────────────────────────────────────────
 
 aiSearchApp.post("/wiki/sync", requireAuth, async (c) => {
+  if (!c.env.CLINICAL_KNOWLEDGE) return c.json({ error: "Vectorize não configurado" }, 503);
   const pool = createPool(c.env);
   
   try {
