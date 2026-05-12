@@ -482,17 +482,17 @@ export const V5ProBlockEditor: React.FC<V5ProBlockEditorProps> = ({
       <AIScribeModal
         open={showScribe}
         onOpenChange={setShowScribe}
+        patientId={patientId}
         onApply={(soap) => {
           const content = `
-						<h2 class="text-blue-600 dark:text-blue-400 border-b pb-1">Subjetivo (AI Scribe)</h2><p>${soap.subjective}</p>
-						<h2 class="text-blue-600 dark:text-blue-400 border-b pb-1">Objetivo (AI Scribe)</h2><p>${soap.objective}</p>
-						<h2 class="text-blue-600 dark:text-blue-400 border-b pb-1">Avaliação (AI Scribe)</h2><p>${soap.assessment}</p>
-						<h2 class="text-blue-600 dark:text-blue-400 border-b pb-1">Plano (AI Scribe)</h2><p>${soap.plan}</p>
-					`;
+            <h2 class="text-blue-600 dark:text-blue-400 border-b pb-1">Subjetivo (AI Scribe)</h2><p>${soap.subjective}</p>
+            <h2 class="text-blue-600 dark:text-blue-400 border-b pb-1">Objetivo (AI Scribe)</h2><p>${soap.objective}</p>
+            <h2 class="text-blue-600 dark:text-blue-400 border-b pb-1">Avaliação (AI Scribe)</h2><p>${soap.assessment}</p>
+            <h2 class="text-blue-600 dark:text-blue-400 border-b pb-1">Plano (AI Scribe)</h2><p>${soap.plan}</p>
+          `;
           editor?.chain().focus().insertContent(content).run();
         }}
       />
-
       {editingImage && (
         <Suspense
           fallback={

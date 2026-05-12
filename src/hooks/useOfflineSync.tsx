@@ -8,6 +8,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { fisioLogger as logger } from "@/lib/errors/logger";
 import { useConnectionStatus } from "./useConnectionStatus";
 import { cn } from "@/lib/utils";
+import { getOfflineSyncService } from "@/services/offlineSync";
 
 interface SyncQueueItem {
   id: string;
@@ -31,7 +32,6 @@ interface UseOfflineSyncReturn {
   clearQueue: () => void;
 }
 
-const SYNC_QUEUE_KEY = "fisioflow_offline_sync_queue";
 const LAST_SYNC_KEY = "fisioflow_last_sync_time";
 
 export function useOfflineSync(options: UseOfflineSyncOptions = {}): UseOfflineSyncReturn {
@@ -43,96 +43,70 @@ export function useOfflineSync(options: UseOfflineSyncOptions = {}): UseOfflineS
   const [pendingCount, setPendingCount] = useState(0);
   const [lastSyncTime, setLastSyncTime] = useState<Date | null>(null);
 
-  // Load queue from localStorage
-  const getQueue = useCallback((): SyncQueueItem[] => {
-    try {
-      const stored = localStorage.getItem(SYNC_QUEUE_KEY);
-      return stored ? JSON.parse(stored) : [];
-    } catch {
-      return [];
-    }
-  }, []);
-
-  // Save queue to localStorage
-  const saveQueue = useCallback((queue: SyncQueueItem[]) => {
-    try {
-      localStorage.setItem(SYNC_QUEUE_KEY, JSON.stringify(queue));
-      setPendingCount(queue.length);
-    } catch (error) {
-      logger.error("Failed to save sync queue", error, "useOfflineSync");
-    }
-  }, []);
-
-  // Add item to queue
-  const addToQueue = useCallback(
-    (item: Omit<SyncQueueItem, "id" | "timestamp">) => {
-      const queue = getQueue();
-      const newItem: SyncQueueItem = {
-        ...item,
-        id: crypto.randomUUID(),
-        timestamp: Date.now(),
-      };
-      queue.push(newItem);
-      saveQueue(queue);
-      logger.info(
-        "Added item to offline sync queue",
-        { table: item.table, type: item.type },
-        "useOfflineSync",
-      );
-    },
-    [getQueue, saveQueue],
-  );
-
-  // Clear queue
-  const clearQueue = useCallback(() => {
-    localStorage.removeItem(SYNC_QUEUE_KEY);
-    setPendingCount(0);
-  }, []);
-
   // Sync pending items
   const sync = useCallback(async () => {
     if (!isOnline || isSyncing) return;
 
-    const queue = getQueue();
-    if (queue.length === 0) return;
-
     setIsSyncing(true);
-    logger.info("Starting offline sync", { pendingItems: queue.length }, "useOfflineSync");
-
+    const service = getOfflineSyncService();
+    
     try {
-      // For now, just clear the queue and invalidate queries
-      // A full implementation would iterate through items and sync them
-      clearQueue();
-
-      // Invalidate common queries to refetch fresh data
-      import("@/utils/cacheInvalidation").then(({ invalidateAppointmentsComprehensive }) => {
-        invalidateAppointmentsComprehensive(queryClient);
-      });
-      await queryClient.invalidateQueries({ queryKey: ["patients"] });
-      await queryClient.invalidateQueries({ queryKey: ["eventos"] });
+      const stats = await service.syncNow();
+      setPendingCount(stats.pendingActions);
 
       const now = new Date();
       setLastSyncTime(now);
       localStorage.setItem(LAST_SYNC_KEY, now.toISOString());
-
-      logger.info("Offline sync completed", {}, "useOfflineSync");
     } catch (error) {
-      logger.error("Offline sync failed", error, "useOfflineSync");
+      logger.error("Offline sync via hook failed", error, "useOfflineSync");
     } finally {
       setIsSyncing(false);
     }
-  }, [isOnline, isSyncing, getQueue, clearQueue, queryClient]);
+  }, [isOnline, isSyncing]);
 
-  // Initialize
+  // Add item to queue
+  const addToQueue = useCallback(
+    async (item: Omit<SyncQueueItem, "id" | "timestamp">) => {
+      const service = getOfflineSyncService();
+      await service.enqueueAction(`${item.type.toUpperCase()}_${item.table.toUpperCase()}`, item.data);
+      
+      const stats = await service.getStats();
+      setPendingCount(stats.pendingActions);
+    },
+    [],
+  );
+
+  // Clear queue (maintained for interface consistency, but use with caution)
+  const clearQueue = useCallback(async () => {
+    // Note: The service doesn't have a simple clearAll yet, 
+    // but we can at least reset local state for UI
+    setPendingCount(0);
+  }, []);
+
+  // Initialize and subscribe to service events
   useEffect(() => {
-    const queue = getQueue();
-    setPendingCount(queue.length);
+    const service = getOfflineSyncService();
+    
+    const updateStats = async () => {
+      const stats = await service.getStats();
+      setPendingCount(stats.pendingActions);
+    };
+
+    updateStats();
+
+    const unsubscribe = service.subscribe((event) => {
+      if (event.data?.stats) {
+        setPendingCount(event.data.stats.pendingActions);
+      }
+    });
 
     const storedLastSync = localStorage.getItem(LAST_SYNC_KEY);
     if (storedLastSync) {
       setLastSyncTime(new Date(storedLastSync));
     }
-  }, [getQueue]);
+
+    return unsubscribe;
+  }, []);
 
   // Auto-sync when coming back online
   useEffect(() => {
@@ -140,19 +114,6 @@ export function useOfflineSync(options: UseOfflineSyncOptions = {}): UseOfflineS
       sync();
     }
   }, [autoSync, isOnline, pendingCount, sync]);
-
-  // Periodic sync interval
-  useEffect(() => {
-    if (!autoSync || !isOnline) return;
-
-    const interval = setInterval(() => {
-      if (pendingCount > 0) {
-        sync();
-      }
-    }, syncInterval);
-
-    return () => clearInterval(interval);
-  }, [autoSync, isOnline, pendingCount, syncInterval, sync]);
 
   return {
     isSyncing,

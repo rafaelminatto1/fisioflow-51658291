@@ -34,7 +34,6 @@
           "UIInterfaceOrientationLandscapeRight"
         ]
       },
-      "deploymentTarget": "15.1",
       "config": {
         "usesNonExemptEncryption": false
       }

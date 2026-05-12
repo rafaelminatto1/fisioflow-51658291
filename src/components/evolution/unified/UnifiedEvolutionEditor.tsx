@@ -338,6 +338,7 @@ export const UnifiedEvolutionEditor: React.FC<UnifiedEvolutionEditorProps> = ({
       <AIScribeModal
         open={showScribe}
         onOpenChange={setShowScribe}
+        patientId={patientId}
         onApply={(soap) => {
           const content = `
             <h2 class="text-blue-600 dark:text-blue-400 border-b pb-1">Subjetivo (AI Scribe)</h2><p>${soap.subjective}</p>

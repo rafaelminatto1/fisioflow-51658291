@@ -23,6 +23,16 @@ app.post("/scribe/process", requireAuth, async (c) => {
   const db = await createDb(c.env);
 
   try {
+    // Buscar contexto do paciente para o prompt
+    const patientData = await db.execute(sql`
+      SELECT full_name, main_condition FROM patients 
+      WHERE id = ${patientId} AND organization_id = ${user.organizationId}
+    `);
+    const patient = patientData.rows[0] as any;
+    const patientContext = patient 
+      ? `Paciente: ${patient.full_name}, Condição: ${patient.main_condition || 'Não informada'}`
+      : "Contexto do paciente não disponível";
+
     const audioBuffer = Uint8Array.from(atob(audioBase64), (c) => c.charCodeAt(0));
 
     console.log("[AI-Studio] Transcrevendo áudio com Whisper...");
@@ -42,18 +52,22 @@ app.post("/scribe/process", requireAuth, async (c) => {
       }[section as "S" | "O" | "A" | "P"] || section;
 
     const prompt = `
-      Você é um assistente de fisioterapia especializado em documentação clínica SOAP.
-      Sua tarefa é converter o texto transcrito de um ditado de voz em um parágrafo profissional,
-      usando terminologia técnica precisa da fisioterapia brasileira.
+      Você é um assistente de fisioterapia de elite, especializado em documentação clínica SOAP e análise cinemática.
+      Sua tarefa é converter o texto bruto de um ditado ambiente em um parágrafo técnico profissional.
 
-      Seção Atual: ${sectionName}
-      Texto Transcrito: "${rawText}"
+      CONTEXTO CLÍNICO:
+      ${patientContext}
 
-      Regras:
-      1. Use terminologia clínica (ex: use 'ADM' em vez de 'movimento', 'algia' em vez de 'dor').
-      2. Mantenha o tom profissional e conciso.
-      3. Não adicione informações que não estavam no ditado.
-      4. Retorne APENAS o texto refinado, sem introduções ou explicações.
+      SEÇÃO SOAP ALVO: ${sectionName}
+      TEXTO BRUTO TRANSCRITO: "${rawText}"
+
+      DIRETRIZES DE OURO:
+      1. Use terminologia clínica avançada (ex: 'algia' em vez de 'dor', 'amplitude de movimento' ou 'ADM', 'hipertonia', 'disfunção biomecânica').
+      2. Mantenha o texto extremamente conciso e focado em fatos clínicos.
+      3. Corrija erros gramaticais e de concordância típicos de transcrição de áudio.
+      4. Se o texto mencionar medições (ângulos, repetições), formate-as de maneira clara.
+      5. NÃO invente fatos. Se o áudio for confuso, priorize o que está claro.
+      6. Retorne APENAS o parágrafo refinado, sem introduções ("Aqui está...", "Com base em...") ou conclusões.
     `;
 
     const refinement: any = await c.env.AI.run("@cf/meta/llama-3.1-70b-instruct", {

@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-import "@/styles/premium-utilities.css";
 import { useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

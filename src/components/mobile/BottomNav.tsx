@@ -7,7 +7,6 @@
  */
 
 import React, { useState, useCallback } from "react";
-import "@/styles/mobile-utilities.css";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Home, Calendar, Users, FileText, Settings, Dumbbell } from "lucide-react";
 import { cn } from "@/lib/utils";

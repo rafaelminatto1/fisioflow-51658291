@@ -77,4 +77,4 @@ app.get("/business-kpis", async (c) => {
   return c.json({ data: metrics[0] || null });
 });
 
-export default app;
+export { app as analyticsRoutes };

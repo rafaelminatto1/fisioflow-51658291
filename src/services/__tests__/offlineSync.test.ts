@@ -11,6 +11,7 @@ const {
   evolutionSessionsUpsertMock,
   goalsUpdateMock,
   patientsUpdateMock,
+  requestMock,
 } = vi.hoisted(() => ({
   appointmentsCreateMock: vi.fn().mockResolvedValue({ data: {} }),
   appointmentsUpdateMock: vi.fn().mockResolvedValue({ data: {} }),
@@ -19,6 +20,7 @@ const {
   evolutionSessionsUpsertMock: vi.fn().mockResolvedValue({ data: {} }),
   goalsUpdateMock: vi.fn().mockResolvedValue({ data: {} }),
   patientsUpdateMock: vi.fn().mockResolvedValue({ data: {} }),
+  requestMock: vi.fn().mockResolvedValue({ ok: true }),
 }));
 
 vi.mock("@/api/v2", () => ({
@@ -34,6 +36,10 @@ vi.mock("@/api/v2", () => ({
   goalsApi: { update: goalsUpdateMock },
   patientsApi: { update: patientsUpdateMock },
   exercisesApi: {},
+}));
+
+vi.mock("@/api/v2/base", () => ({
+  request: requestMock,
 }));
 
 vi.mock("@/lib/errors/logger", () => ({
@@ -136,6 +142,45 @@ describe("OfflineSyncService", () => {
         retryCount: 0,
       });
       expect(goalsUpdateMock).toHaveBeenCalledWith("456", payload);
+    });
+
+    it("maps API_REQUEST correctly using generic request", async () => {
+      const payload = { url: "/api/custom", method: "POST", body: JSON.stringify({ a: 1 }) };
+      
+      // @ts-ignore
+      await service.executeAction({
+        id: "1",
+        action: ACTION_TYPES.API_REQUEST,
+        payload,
+        timestamp: Date.now(),
+        synced: false,
+        retryCount: 0,
+      });
+
+      expect(requestMock).toHaveBeenCalledWith(payload.url, {
+        method: payload.method,
+        body: payload.body,
+      });
+    });
+  });
+
+  describe("enqueueAction", () => {
+    it("adds an action to the database", async () => {
+      const actionType = "TEST_ACTION";
+      const payload = { foo: "bar" };
+      
+      const id = await service.enqueueAction(actionType, payload);
+      expect(id).toBeDefined();
+      expect(typeof id).toBe("string");
+
+      const db = await getDB();
+      const action = await db.get("offline_actions", id);
+      expect(action).toMatchObject({
+        action: actionType,
+        payload,
+        synced: false,
+        retryCount: 0
+      });
     });
   });
 

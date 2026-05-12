@@ -15,8 +15,8 @@
 - `durable-objects`
 - `agents-sdk`
 - `web-perf`
-- `vercel-react-best-practices`
-- `vercel-react-native-skills`
+- `react-best-practices` (UI e Performance)
+- `react-native-skills` (Mobile e Expo)
 - `web-design-guidelines`
 
 ### MCPs configurados no Gemini CLI
@@ -44,9 +44,9 @@ Use a ferramenta mais próxima do problema antes de inventar processo manual.
 | Observabilidade, queries, rotas lentas, eventos | `cloudflare-observability` | `cloudflare-graphql` |
 | AI Gateway, roteamento e custo de chamadas | `cloudflare-ai-gateway` | `cloudflare-api` |
 | RAG, AutoRAG, fontes e busca semântica | `cloudflare-ai-search` | `cloudflare-bindings` |
-| Análise de performance web | `web-perf` | `vercel-react-best-practices` |
-| Frontend React/Vite/Next | `vercel-react-best-practices` | `web-design-guidelines` |
-| Mobile React Native / Expo | `vercel-react-native-skills` | `web-design-guidelines` |
+| Análise de performance web | `web-perf` | `react-best-practices` |
+| Frontend React/Vite/Next | `react-best-practices` | `web-design-guidelines` |
+| Mobile React Native / Expo | `react-native-skills` | `web-design-guidelines` |
 | Ajustes de interface e UX de páginas novas | `web-design-guidelines` | `web-perf` |
 
 ---
@@ -63,14 +63,14 @@ Use a ferramenta mais próxima do problema antes de inventar processo manual.
 
 ### Frontend web
 
-1. Consultar `vercel-react-best-practices`.
+1. Consultar as skills de melhores práticas de UI e performance.
 2. Se houver risco de regressão visual ou de performance, consultar `web-perf`.
 3. Implementar com foco em consistência com o design system local.
 4. Validar com testes e, quando relevante, Playwright.
 
 ### Mobile
 
-1. Consultar `vercel-react-native-skills`.
+1. Consultar as skills de melhores práticas de mobile.
 2. Evitar soluções que dependam de web-only APIs.
 3. Validar navegação, estado offline e compatibilidade com a base existente.
 

@@ -1,3 +1,4 @@
+import React, { forwardRef, useEffect, useImperativeHandle, useState } from "react";
 import { Extension } from "@tiptap/core";
 import Suggestion from "@tiptap/suggestion";
 import { ReactRenderer } from "@tiptap/react";
@@ -256,7 +257,6 @@ export const Commands = Extension.create({
   },
 });
 
-import React, { forwardRef, useEffect, useImperativeHandle, useState } from "react";
 
 interface CommandListProps {
   items: Command[];

@@ -117,7 +117,7 @@ function checkFrontendVars(): { missing: string[]; invalid: string[]; valid: str
   const invalid: string[] = [];
   const valid: string[] = [];
 
-  console.log("\n📦 Variáveis de Frontend (Vercel):\n");
+  console.log("\n📦 Variáveis de Frontend (Cloudflare):\n");
 
   for (const envVar of FRONTEND_VARS) {
     const value = process.env[envVar.name];

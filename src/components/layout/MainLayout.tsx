@@ -3,8 +3,6 @@
  */
 
 import type React from "react";
-import "@/styles/premium-utilities.css";
-import "@/styles/mobile-utilities.css";
 import { Bell, ChevronDown, LogOut, User } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";

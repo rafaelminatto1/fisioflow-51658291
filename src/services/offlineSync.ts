@@ -123,6 +123,7 @@ export const ACTION_TYPES = {
   CREATE_APPOINTMENT: "CREATE_APPOINTMENT",
   UPDATE_APPOINTMENT: "UPDATE_APPOINTMENT",
   DELETE_APPOINTMENT: "DELETE_APPOINTMENT",
+  API_REQUEST: "API_REQUEST",
 } as const;
 
 // ============================================================================
@@ -203,6 +204,34 @@ class OfflineSyncService {
       logger.warn("Background sync not available, using polling fallback", error, "offlineSync");
       this.startPeriodicSync();
     }
+  }
+
+  // ========================================================================
+  // QUEUE METHODS
+  // ========================================================================
+
+  /**
+   * Enqueues an action for offline synchronization
+   */
+  public async enqueueAction(actionType: string, payload: unknown): Promise<string> {
+    const db = await getDB();
+    const id = crypto.randomUUID();
+    
+    const action: QueuedAction = {
+      id,
+      action: actionType,
+      payload,
+      timestamp: Date.now(),
+      synced: false,
+      retryCount: 0,
+    };
+
+    await db.add("offline_actions", action);
+    
+    logger.info(`Action ${actionType} enqueued for sync`, { id }, "offlineSync");
+    this.notifyListeners();
+    
+    return id;
   }
 
   // ========================================================================
@@ -414,6 +443,15 @@ class OfflineSyncService {
     const { action: actionType, payload } = action;
 
     switch (actionType) {
+      case ACTION_TYPES.API_REQUEST: {
+        const { url, method, body } = payload as { url: string; method: string; body: string };
+        const { request } = await import("@/api/v2/base");
+        await request(url, {
+          method,
+          body,
+        });
+        break;
+      }
       case ACTION_TYPES.CREATE_SESSION_METRICS:
         await evolutionApi.measurements.create(payload as any);
         break;
@@ -894,5 +932,13 @@ export function useOfflineSync(config?: SyncConfig) {
 // ============================================================================
 // EXPORTS
 // ============================================================================
+
+/**
+ * Helper function to enqueue an action for offline sync
+ */
+export async function enqueueAction(actionType: string, payload: unknown): Promise<string> {
+  const service = getOfflineSyncService();
+  return service.enqueueAction(actionType, payload);
+}
 
 export { OfflineSyncService };

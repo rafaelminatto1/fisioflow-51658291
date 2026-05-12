@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const getWorkersApiUrlMock = vi.fn();
 const getNeonAccessTokenMock = vi.fn();
+const enqueueActionMock = vi.fn();
 
 vi.mock("@/lib/api/config", () => ({
   getWorkersApiUrl: () => getWorkersApiUrlMock(),
@@ -11,6 +12,13 @@ vi.mock("@/lib/auth/neon-token", () => ({
   getNeonAccessToken: (...args: unknown[]) => getNeonAccessTokenMock(...args),
 }));
 
+vi.mock("@/services/offlineSync", () => ({
+  getOfflineSyncService: vi.fn().mockReturnValue({
+    enqueueAction: (...args: any[]) => enqueueActionMock(...args)
+  }),
+  enqueueAction: (...args: any[]) => enqueueActionMock(...args)
+}));
+
 describe("api v2 base request", () => {
   beforeEach(() => {
     vi.resetModules();
@@ -18,6 +26,7 @@ describe("api v2 base request", () => {
     getWorkersApiUrlMock.mockReturnValue("https://workers.example.com");
     getNeonAccessTokenMock.mockResolvedValue("jwt-token");
     vi.stubGlobal("fetch", vi.fn());
+    vi.stubGlobal("navigator", { onLine: true });
   });
 
   afterEach(() => {
@@ -111,8 +120,8 @@ describe("api v2 base request", () => {
     const { request } = await import("../base");
 
     const result = await request<Blob>("/api/reports/file");
-    expect(typeof result.size).toBe("number");
-    expect(result.type).toBe("application/pdf");
+    expect(typeof (result as any).size).toBe("number");
+    expect((result as any).type).toBe("application/pdf");
   });
 
   it("requestPublic não envia Authorization e falha com erro útil", async () => {
@@ -135,5 +144,24 @@ describe("api v2 base request", () => {
         },
       }),
     );
+  });
+
+  it("intercepta erro de rede em POST quando offline e enfileira ação", async () => {
+    // Simular offline
+    vi.stubGlobal("navigator", { onLine: false });
+    
+    // Simular falha de rede
+    vi.mocked(fetch).mockRejectedValue(new TypeError("Failed to fetch"));
+
+    const { request } = await import("../base");
+
+    const payload = { title: "New Event" };
+    const result = await request("/api/events", {
+      method: "POST",
+      body: JSON.stringify(payload)
+    });
+
+    // Deve retornar sucesso simulado
+    expect(result).toEqual({ success: true, offline: true });
   });
 });

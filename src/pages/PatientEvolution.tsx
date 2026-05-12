@@ -628,6 +628,7 @@ const PatientEvolution = () => {
           <AIScribeModal
             open={state.showAIScribe}
             onOpenChange={state.setShowAIScribe}
+            patientId={state.patientId}
             onApply={(soap) => {
               state.setSoapData((prev: any) => ({
                 ...prev,

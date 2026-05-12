@@ -90,66 +90,66 @@ export default defineConfig(({ mode }) => {
       }),
       mockMobileModules(),
       htmlPlugin(appVersion, buildTime),
-      VitePWA({
-        strategies: "injectManifest",
-        srcDir: "src",
-        filename: "service-worker.ts",
-        registerType: "autoUpdate",
-        injectRegister: null,
-        manifest: {
-          name: "FisioFlow - Plataforma de Fisioterapia Digital",
-          short_name: "FisioFlow",
-          description: "Sistema completo de gestão para fisioterapeutas",
-          theme_color: "#0ea5e9",
-          background_color: "#ffffff",
-          display: "standalone",
-          orientation: "portrait-primary",
-          scope: "/",
-          start_url: "/",
-          icons: [
-            {
-              src: "/icons/badge-72x72.svg",
-              sizes: "72x72",
-              type: "image/svg+xml",
-              purpose: "any",
-            },
-            {
-              src: "/icons/icon-192x192.svg",
-              sizes: "192x192",
-              type: "image/svg+xml",
-              purpose: "any",
-            },
-            {
-              src: "/icons/icon-512x512.svg",
-              sizes: "512x512",
-              type: "image/svg+xml",
-              purpose: "any",
-            },
-          ],
-        },
-        injectManifest: {
-          globPatterns: ["**/*.{js,css,html,ico,png,svg,avif,woff2}"],
-          maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
-        },
-        devOptions: {
-          enabled: false,
-          type: "module",
-        },
-      }),
+      // VitePWA({
+      //   strategies: "injectManifest",
+      //   srcDir: "src",
+      //   filename: "service-worker.ts",
+      //   registerType: "autoUpdate",
+      //   injectRegister: null,
+      //   manifest: {
+      //     name: "FisioFlow - Plataforma de Fisioterapia Digital",
+      //     short_name: "FisioFlow",
+      //     description: "Sistema completo de gestão para fisioterapeutas",
+      //     theme_color: "#0ea5e9",
+      //     background_color: "#ffffff",
+      //     display: "standalone",
+      //     orientation: "portrait-primary",
+      //     scope: "/",
+      //     start_url: "/",
+      //     icons: [
+      //       {
+      //         src: "/icons/badge-72x72.svg",
+      //         sizes: "72x72",
+      //         type: "image/svg+xml",
+      //         purpose: "any",
+      //       },
+      //       {
+      //         src: "/icons/icon-192x192.svg",
+      //         sizes: "192x192",
+      //         type: "image/svg+xml",
+      //         purpose: "any",
+      //       },
+      //       {
+      //         src: "/icons/icon-512x512.svg",
+      //         sizes: "512x512",
+      //         type: "image/svg+xml",
+      //         purpose: "any",
+      //       },
+      //     ],
+      //   },
+      //   injectManifest: {
+      //     globPatterns: ["**/*.{js,css,html,ico,png,svg,avif,woff2}"],
+      //     maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
+      //   },
+      //   devOptions: {
+      //     enabled: false,
+      //     type: "module",
+      //   },
+      // }),
       Icons({
         compiler: "jsx",
         autoInstall: true,
       }),
-      enableImageOptimizer &&
-        ViteImageOptimizer({
-          png: { quality: 80 },
-          jpeg: { quality: 75 },
-          webp: { lossy: true, quality: 80 },
-          avif: { lossy: true, quality: 70 },
-          svg: {
-            plugins: [{ name: "removeViewBox", active: false }, { name: "sortAttrs" }],
-          },
-        }),
+      // enableImageOptimizer &&
+      //   ViteImageOptimizer({
+      //     png: { quality: 80 },
+      //     jpeg: { quality: 75 },
+      //     webp: { lossy: true, quality: 80 },
+      //     avif: { lossy: true, quality: 70 },
+      //     svg: {
+      //       plugins: [{ name: "removeViewBox", active: false }, { name: "sortAttrs" }],
+      //     },
+      //   }),
       !isProduction && Inspect(),
       !isProduction &&
         checker({

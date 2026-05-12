@@ -153,7 +153,7 @@ O trabalho assistido por Gemini/Codex neste repositório deve seguir o playbook 
 - Use `wrangler` para validar qualquer mudança em Workers, bindings, queues, D1, R2 ou Hyperdrive.
 - Use `agents-sdk` e `durable-objects` para automações com estado e servidores MCP internos.
 - Use `web-perf` quando a alteração puder afetar LCP, CLS, TBT ou navegação do frontend.
-- Use `vercel-react-best-practices` e `vercel-react-native-skills` para mudanças de UI.
+- Use as skills de melhores práticas de UI e performance para mudanças no frontend e mobile.
 - Use `cloudflare-observability`, `cloudflare-ai-gateway`, `cloudflare-ai-search` e `cloudflare-graphql` para diagnóstico e consultas de stack Cloudflare.
 - Antes de deploy, rode `bash scripts/predeploy-check.sh` ou `pnpm predeploy`.
 

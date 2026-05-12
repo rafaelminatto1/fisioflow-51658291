@@ -25,9 +25,10 @@ interface AIScribeModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onApply: (soap: SoapFields) => void;
+  patientId?: string;
 }
 
-export const AIScribeModal: React.FC<AIScribeModalProps> = ({ open, onOpenChange, onApply }) => {
+export const AIScribeModal: React.FC<AIScribeModalProps> = ({ open, onOpenChange, onApply, patientId }) => {
   const {
     voiceState,
     transcribedText: _transcribedText,
@@ -61,7 +62,7 @@ export const AIScribeModal: React.FC<AIScribeModalProps> = ({ open, onOpenChange
   };
 
   const handleStop = async () => {
-    const result = await stopAndTranscribe();
+    const result = await stopAndTranscribe(patientId);
     if (result) {
       toast.success("Evolução gerada com sucesso!");
     }

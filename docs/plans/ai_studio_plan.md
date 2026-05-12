@@ -270,7 +270,7 @@ Desenvolver o **FisioFlow AI Studio**, um sistema revolucionário de gestão par
 
 #### Sprint 10 (Semanas 19-20)
 
-- [ ] Deploy em produção (Vercel)
+- [ ] Deploy em produção (Cloudflare)
 - [ ] Monitoramento completo
 - [ ] Backup e disaster recovery
 - [ ] Treinamento de usuários
@@ -329,12 +329,12 @@ Desenvolver o **FisioFlow AI Studio**, um sistema revolucionário de gestão par
 
 ```json
 {
-  "deploy": "Vercel + Railway",
-  "database": "Neon PostgreSQL",
+  "deploy": "Cloudflare Pages + Workers",
+  "database": "Neon PostgreSQL (sa-east-1)",
   "cache": "Upstash Redis",
-  "storage": "AWS S3",
-  "cdn": "CloudFront",
-  "monitoring": "Vercel Analytics + Sentry",
+  "storage": "Cloudflare R2",
+  "cdn": "Cloudflare",
+  "monitoring": "Cloudflare Web Analytics + Sentry",
   "backup": "Automated daily backups"
 }
 ```
@@ -545,16 +545,16 @@ CREATE INDEX idx_payments_due_date ON payments(due_date);
 
 #### Desenvolvimento (5 meses)
 
-- **Vercel Pro**: $20/mês × 5 = $100
+- **Cloudflare Workers Paid**: $5/mês × 5 = $25
 - **Neon PostgreSQL**: $25/mês × 5 = $125
-- **AWS S3/CloudFront**: $50/mês × 5 = $250
+- **Cloudflare R2**: $5/mês × 5 = $25
 - **Sentry**: $26/mês × 5 = $130
 - **OpenAI API**: $200/mês × 5 = $1.000
 - **WhatsApp Business API**: $100/mês × 5 = $500
 - **Twilio**: $50/mês × 5 = $250
 - **Stripe**: 2.9% das transações
 
-**Total Infraestrutura**: ~$2.355 (R$ 12.000)
+**Total Infraestrutura**: ~$2.055 (R$ 10.500)
 
 ### 8.3 Licenças e Integrações
 

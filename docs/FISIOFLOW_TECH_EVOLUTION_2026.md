@@ -318,7 +318,7 @@ Os $5/mês do Workers Paid são o gasto mais eficiente possível:
 | Provedor                      | Equivalente             | Custo/mês  |
 | ----------------------------- | ----------------------- | ---------- |
 | AWS Lambda + API Gateway + S3 | Similar ao Workers + R2 | ~$20-50    |
-| Vercel Pro                    | Serverless functions    | $20/mês    |
+| Cloudflare Workers Paid      | Edge functions         | $5/mês     |
 | Railway                       | Container hosting       | $5-20/mês  |
 | Render                        | Web service             | $7+/mês    |
 | **Cloudflare Workers Paid**   | **Tudo incluso**        | **$5/mês** |

@@ -14,7 +14,8 @@ export const evaluationTemplates = pgTable(
 
     title: varchar("title", { length: 200 }).notNull(),
     description: text("description"),
-    aliases: text("aliases").array(),
+    aliasesPt: text("aliases_pt").array(),
+    aliasesEn: text("aliases_en").array(),
     dictionary_id: text("dictionary_id"),
 
     // Categorization
