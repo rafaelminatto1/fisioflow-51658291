@@ -27,6 +27,7 @@ import { useAIExerciseHistory } from "@/hooks/useAIExerciseHistory";
 import { AIExerciseHistoryCard } from "@/components/ai/AIExerciseHistoryCard";
 import { PainProgressChart } from "@/components/patient/PainProgressChart";
 import { CloudReportActions } from "@/components/patient/CloudReportActions";
+import { SemanticRecommenderMobileWidget } from "@/components/patient/SemanticRecommenderMobileWidget";
 import { generateEvolutionPDF } from "@/lib/services/pdfGenerator";
 import {
   usePatientFinancialRecords,
@@ -431,6 +432,9 @@ export default function PatientDetailScreen() {
                   </View>
                 )}
               </Card>
+
+              {/* Inteligência Clínica Ativa (Recomendador Semântico) */}
+              <SemanticRecommenderMobileWidget condition={patient?.condition} />
 
               {(patient as any).insurance?.provider && (
                 <Card
