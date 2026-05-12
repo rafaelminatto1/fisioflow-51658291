@@ -1,11 +1,10 @@
-import { AlertTriangle, Cake, MessageCircle, Sparkles, Calendar as CalendarIcon } from "lucide-react";
+import { AlertTriangle, Cake, MessageCircle, Sparkles } from "lucide-react";
 import { Suspense, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useQueries } from "@tanstack/react-query";
 import { Link, useSearchParams } from "react-router-dom";
 import { PatientService } from "@/lib/services/PatientService";
 import { PageLayout } from "@/components/layout/PageLayout";
-import { PageHeader } from "@/components/layout/PageHeader";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { BulkActionsBar } from "@/components/schedule/BulkActionsBar";
 import { ScheduleCalendar } from "@/components/schedule/ScheduleCalendar";
@@ -180,21 +179,7 @@ export default function Schedule() {
 
   return (
     <PageLayout showFooter={false}>
-      <PageContainer maxWidth="full" className="h-[calc(100vh-140px)] flex flex-col gap-6">
-        <PageHeader 
-          title="Agenda Clínica" 
-          subtitle="Gerencie seus atendimentos e horários"
-          icon={CalendarIcon}
-          actions={
-            <Button 
-              onClick={() => actions.handleCreateAppointment()}
-              className="bg-primary text-primary-foreground font-black uppercase tracking-tighter rounded-xl"
-            >
-              Novo Agendamento
-            </Button>
-          }
-        />
-
+      <PageContainer maxWidth="full" className="h-[calc(100vh-64px)] flex flex-col">
         <div className="flex-1 flex flex-col min-h-0 relative">
           {/* Action Banner: Birthdays & Reengagement */}
           {(birthdaysToday.length > 0 || staffBirthdaysToday.length > 0 || totalToReengage > 0) && (
@@ -260,7 +245,7 @@ export default function Schedule() {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="h-full"
+                className="h-full flex flex-col"
               >
                 <Suspense fallback={<CalendarSkeletonEnhanced viewType={viewType as CalendarViewType} />}>
                   {isNavigating ? (
