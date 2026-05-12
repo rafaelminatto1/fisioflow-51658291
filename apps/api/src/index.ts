@@ -98,6 +98,7 @@ import { aiClinicalSearchRoutes } from "./routes/ai-clinical-search";
 import { agendaAppearanceRoutes } from "./routes/agendaAppearance";
 import { fisioBrainRoutes } from "./routes/fisiobrain";
 import { clinicMetricsRoutes } from "./routes/clinicMetrics";
+import { groupsRoutes } from "./routes/groups";
 import { verifyToken } from "./lib/auth";
 import { getRawSql } from "./lib/db";
 import { routeAgentRequest } from "agents";
@@ -361,6 +362,7 @@ const apiRoutes = [
   ["/api/v1/user", agendaAppearanceRoutes],
   ["/api/fisiobrain", fisioBrainRoutes],
   ["/api/clinic-metrics", clinicMetricsRoutes],
+  ["/api/groups", groupsRoutes],
 ] as const;
 
 apiRoutes.forEach(([path, router]) => {

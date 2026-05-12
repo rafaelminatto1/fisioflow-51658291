@@ -77,3 +77,6 @@ export * from "./audit";
 
 // Business Intelligence & Predictive Analytics
 export * from "./analytics";
+
+// Group Classes & Pilates Management (Sprint 7)
+export * from "./groups";

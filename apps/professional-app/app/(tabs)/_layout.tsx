@@ -75,6 +75,15 @@ export default function TabsLayout() {
           ),
         }}
       />
+      <Tabs.Screen
+        name="groups"
+        options={{
+          title: "Turmas",
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="layers-outline" size={size} color={color} />
+          ),
+        }}
+      />
       <Tabs.Screen name="communications" options={{ href: null }} />
       <Tabs.Screen
         name="menu"
