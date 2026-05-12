@@ -102,8 +102,8 @@ export async function handleScheduled(event: ScheduledEvent, env: Env, ctx: Exec
       }
 
       case "0 13 * * *": { // UTC 13h = BRT 10h — Anti-Churn (Reativação e Pacotes)
-        const pool = createPool(env);
-        await processAntiChurnAutomations(pool, env);
+        // Placeholder: anti-churn automations (patient reactivation) are handled by Workflows
+        console.log("[Cron] Anti-churn automations — delegated to WORKFLOW_REENGAGEMENT");
         break;
       }
 
