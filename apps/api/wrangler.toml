@@ -36,11 +36,6 @@ bucket_name = "fisioflow-media"
 binding = "EXAMS_BUCKET"
 bucket_name = "fisioflow-exams"
 
-# ===== CLOUDFLARE IMAGES API (resize, WebP/AVIF, watermark, thumbnail) =====
-# Disponível no Workers Paid. Transforma imagens diretamente de streams R2.
-[images]
-binding = "IMAGES"
-
 # ===== KV NAMESPACES (Global Cache) =====
 [[kv_namespaces]]
 binding = "FISIOFLOW_CONFIG"
@@ -380,6 +375,9 @@ bindings = [
 [env.production.ai]
 binding = "AI"
 
+[env.production.images]
+binding = "IMAGES"
+
 [env.production.browser]
 binding = "BROWSER"
 
@@ -483,6 +481,9 @@ new_classes = ["ClinicAgent"]
 
 [env.staging.ai]
 binding = "AI"
+
+[env.staging.images]
+binding = "IMAGES"
 
 [env.staging.browser]
 binding = "BROWSER"
