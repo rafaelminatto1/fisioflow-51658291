@@ -1308,6 +1308,29 @@ app.get("/referral", async (c) => {
   return c.json({ data: referral });
 });
 
+app.get("/digital-twin", async (c) => {
+  const user = c.get("user");
+  const pool = await createPool(c.env);
+  const context = await ensurePortalContext(pool, user);
+  const patientId = context.data.patient_id;
+
+  if (!patientId) return c.json({ error: "Paciente não encontrado" }, 404);
+
+  const result = await pool.query(
+    `SELECT 
+      adherence_score, 
+      ai_risk_level, 
+      predicted_recovery_weeks, 
+      confidence_score, 
+      last_ai_assessment_at 
+     FROM patient_longitudinal_summary 
+     WHERE patient_id = $1`,
+    [patientId]
+  );
+
+  return c.json({ data: result.rows[0] || null });
+});
+
 // GET /api/patient-portal/gamification — XP, level, streak, badges
 app.get("/gamification", async (c) => {
   const user = c.get("user");

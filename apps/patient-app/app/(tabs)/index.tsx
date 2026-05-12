@@ -25,6 +25,7 @@ import { useColors } from "@/hooks/useColorScheme";
 import { useAuthStore } from "@/store/auth";
 import { useGamification } from "@/hooks/useGamification";
 import { Card, NotificationPermissionModal, SyncIndicator, LinearProgress, RTMDashboardWidget, GamificationDashboard } from "@/components";
+import { RecoveryTrajectoryMobileWidget } from "@/components/RecoveryTrajectoryWidget";
 import { Spacing } from "@/constants/spacing";
 import * as Notifications from "expo-notifications";
 import { useExercises } from "@/hooks/useExercises";
@@ -220,6 +221,9 @@ export default function DashboardScreen() {
         
         {/* RTM Activity Widget */}
         <RTMDashboardWidget />
+
+        {/* Trajetória de Recuperação (Digital Twin) */}
+        <RecoveryTrajectoryMobileWidget />
 
         {isLoading ? (
           <View style={styles.loadingContainer}>
