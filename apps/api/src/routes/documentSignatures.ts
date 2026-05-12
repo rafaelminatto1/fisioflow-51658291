@@ -108,7 +108,7 @@ app.post("/:id/send-for-signature", requireAuth, async (c) => {
     );
   });
 
-  const baseUrl = c.env.PAGES_URL ?? "https://fisioflow.pages.dev";
+  const baseUrl = c.env.PAGES_URL ?? "https://moocafisio.com.br";
   const signingUrl = `${baseUrl}/assinar/${token}`;
 
   // Try sending via WhatsApp if patient has a phone on record

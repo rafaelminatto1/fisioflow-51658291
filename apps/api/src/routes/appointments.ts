@@ -713,7 +713,7 @@ app.post("/:id/qr-token", requireAuth, async (c) => {
     [token, expiresAt.toISOString(), id, user.organizationId],
   );
 
-  const baseUrl = c.env.PAGES_URL ?? "https://fisioflow.pages.dev";
+  const baseUrl = c.env.PAGES_URL ?? "https://moocafisio.com.br";
   const url = `${baseUrl}/checkin?token=${token}`;
 
   return c.json({ data: { url, expiresAt: expiresAt.toISOString() } });
