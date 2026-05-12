@@ -137,4 +137,103 @@ app.get("/patients/:id/digital-twin", requireAuth, async (c) => {
   }
 });
 
+/**
+ * GET /api/clinic-metrics/cohorts
+ * Análise de Cohort: Retenção de pacientes agrupados por mês de início.
+ */
+app.get("/cohorts", requireAuth, async (c) => {
+  const user = c.get("user");
+  const pool = createPool(c.env);
+
+  try {
+    const result = await pool.query(
+      `WITH patient_start AS (
+        SELECT 
+          id as patient_id,
+          date_trunc('month', created_at) as cohort_month
+        FROM patients
+        WHERE organization_id = $1 AND deleted_at IS NULL
+      ),
+      patient_activity AS (
+        SELECT 
+          patient_id,
+          date_trunc('month', date) as activity_month
+        FROM appointments
+        WHERE organization_id = $1 AND status IN ('confirmed', 'completed', 'realizado')
+        GROUP BY patient_id, activity_month
+      ),
+      cohort_size AS (
+        SELECT cohort_month, COUNT(*) as size
+        FROM patient_start
+        GROUP BY cohort_month
+      ),
+      retention_data AS (
+        SELECT 
+          s.cohort_month,
+          EXTRACT(YEAR FROM a.activity_month - s.cohort_month) * 12 + EXTRACT(MONTH FROM a.activity_month - s.cohort_month) as month_number,
+          COUNT(DISTINCT a.patient_id) as retained_patients
+        FROM patient_start s
+        JOIN patient_activity a ON a.patient_id = s.patient_id
+        WHERE a.activity_month >= s.cohort_month
+        GROUP BY s.cohort_month, month_number
+      )
+      SELECT 
+        r.cohort_month,
+        cs.size as cohort_size,
+        r.month_number,
+        r.retained_patients,
+        (r.retained_patients::float / cs.size) * 100 as retention_rate
+      FROM retention_data r
+      JOIN cohort_size cs ON cs.cohort_month = r.cohort_month
+      ORDER BY r.cohort_month DESC, r.month_number ASC`,
+      [user.organizationId]
+    );
+
+    return c.json({ data: result.rows });
+  } catch (error) {
+    console.error("[Metrics] Cohort error:", error);
+    return c.json({ error: "Failed to calculate cohorts" }, 500);
+  }
+});
+
+/**
+ * GET /api/clinic-metrics/churn
+ * Relatório de Churn: Pacientes que pararam de frequentar a clínica.
+ */
+app.get("/churn", requireAuth, async (c) => {
+  const user = c.get("user");
+  const pool = createPool(c.env);
+
+  try {
+    const result = await pool.query(
+      `WITH last_activity AS (
+        SELECT 
+          patient_id,
+          MAX(date) as last_session_date
+        FROM appointments
+        WHERE organization_id = $1 AND status IN ('confirmed', 'completed', 'realizado')
+        GROUP BY patient_id
+      )
+      SELECT 
+        p.id,
+        p.full_name,
+        la.last_session_date,
+        CURRENT_DATE - la.last_session_date::date as days_inactive
+      FROM patients p
+      JOIN last_activity la ON la.patient_id = p.id
+      WHERE p.organization_id = $1
+        AND p.deleted_at IS NULL
+        AND la.last_session_date < CURRENT_DATE - INTERVAL '30 days'
+        AND p.status != 'alta'
+      ORDER BY la.last_session_date DESC`,
+      [user.organizationId]
+    );
+
+    return c.json({ data: result.rows });
+  } catch (error) {
+    console.error("[Metrics] Churn error:", error);
+    return c.json({ error: "Failed to calculate churn" }, 500);
+  }
+});
+
 export { app as clinicMetricsRoutes };

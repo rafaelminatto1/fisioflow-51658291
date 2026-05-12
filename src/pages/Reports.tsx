@@ -23,6 +23,8 @@ const AdvancedReportGenerator = lazy(() =>
   })),
 );
 const AdvancedAnalytics = lazy(() => import("@/components/analytics/AdvancedAnalytics"));
+const CohortAnalysis = lazy(() => import("@/components/analytics/CohortAnalysis").then(m => ({ default: m.CohortAnalysis })));
+const ChurnReport = lazy(() => import("@/components/analytics/ChurnReport").then(m => ({ default: m.ChurnReport })));
 const ClinicAIInsights = lazy(() =>
   import("@/components/reports/ClinicAIInsights").then((m) => ({
     default: m.ClinicAIInsights,
@@ -272,7 +274,7 @@ const Reports = () => {
 
         {/* Main Content */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 sm:space-y-6">
-          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 h-auto">
+          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-5 h-auto">
             <TabsTrigger value="templates" className="text-xs sm:text-sm py-2">
               <span className="hidden sm:inline">Modelos de Relatório</span>
               <span className="sm:hidden">Modelos</span>
@@ -280,6 +282,9 @@ const Reports = () => {
             <TabsTrigger value="advanced" className="text-xs sm:text-sm py-2">
               <span className="hidden sm:inline">Gerador Avançado</span>
               <span className="sm:hidden">Avançado</span>
+            </TabsTrigger>
+            <TabsTrigger value="strategic" className="text-xs sm:text-sm py-2">
+              BI Estratégico
             </TabsTrigger>
             <TabsTrigger value="recent" className="text-xs sm:text-sm py-2">
               <span className="hidden sm:inline">Relatórios Recentes</span>
@@ -289,6 +294,13 @@ const Reports = () => {
               Analytics
             </TabsTrigger>
           </TabsList>
+
+          <TabsContent value="strategic" className="space-y-8">
+            <Suspense fallback={<Card className="h-96 animate-pulse bg-muted/30" />}>
+              <CohortAnalysis />
+              <ChurnReport />
+            </Suspense>
+          </TabsContent>
 
           <TabsContent value="advanced" className="space-y-6">
             <Suspense
