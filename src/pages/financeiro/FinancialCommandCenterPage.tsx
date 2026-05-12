@@ -75,6 +75,9 @@ const CommissionsDashboard = lazy(() =>
 const ClinicalValueDashboard = lazy(() =>
   import("@/components/analytics/ClinicalValueDashboard").then((m) => ({ default: m.ClinicalValueDashboard })),
 );
+const LTVMaximizerWidget = lazy(() =>
+  import("@/components/marketing/LTVMaximizerWidget").then((m) => ({ default: m.LTVMaximizerWidget })),
+);
 const TeamPerformanceDashboard = lazy(() =>
   import("@/components/analytics/TeamPerformanceDashboard").then((m) => ({ default: m.TeamPerformanceDashboard })),
 );
@@ -288,7 +291,14 @@ const FinancialCommandCenterPage = () => {
                 <TabsTrigger value="dre" className="rounded-2xl px-4 py-2 font-bold">DRE</TabsTrigger>
               </TabsList>
               <TabsContent value="analytics">
-                <Suspense fallback={<PageShellFallback />}><AnalyticsFiltersProvider><FinancialAnalytics /></AnalyticsFiltersProvider></Suspense>
+                <Suspense fallback={<PageShellFallback />}>
+                  <AnalyticsFiltersProvider>
+                    <div className="space-y-8">
+                      <LTVMaximizerWidget />
+                      <FinancialAnalytics />
+                    </div>
+                  </AnalyticsFiltersProvider>
+                </Suspense>
               </TabsContent>
               <TabsContent value="team">
                 <Suspense fallback={<PageShellFallback />}><TeamPerformanceDashboard /></Suspense>

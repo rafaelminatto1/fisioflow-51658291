@@ -716,6 +716,67 @@ app.get("/roi", requireAuth, async (c) => {
   return c.json({ data: { totalLeads, convertedLeads } });
 });
 
+// ─── LTV Maximizer & Predictive Marketing (Sprint 13) ────────────────────────
+
+app.get("/ltv-maximizer/opportunities", requireAuth, async (c) => {
+  const user = c.get("user");
+  const pool = await createPool(c.env);
+
+  try {
+    const opportunities = await pool.query(
+      `WITH package_status AS (
+        SELECT 
+          p.id as patient_id,
+          p.full_name,
+          pk.id as package_id,
+          pk.title as package_title,
+          pk.remaining_sessions,
+          pk.total_sessions,
+          ls.predicted_recovery_weeks,
+          ls.adherence_score
+        FROM patients p
+        JOIN patient_packages pk ON pk.patient_id = p.id
+        LEFT JOIN patient_longitudinal_summary ls ON ls.patient_id = p.id
+        WHERE p.organization_id = $1
+          AND pk.status = 'active'
+          AND pk.remaining_sessions <= 2
+          AND p.deleted_at IS NULL
+      )
+      SELECT * FROM package_status
+      ORDER BY remaining_sessions ASC`,
+      [user.organizationId]
+    );
+
+    const { runThinkingModel } = await import("../lib/ai-native");
+
+    const enrichedOpportunities = await Promise.all(opportunities.rows.map(async (opp: any) => {
+      // Usar IA para gerar um pitch personalizado
+      const prompt = `Gere uma sugestão de mensagem curta e acolhedora para o paciente ${opp.full_name}. 
+      Ele está com apenas ${opp.remaining_sessions} sessões sobrando de um pacote de ${opp.total_sessions}.
+      Sua aderência clínica é de ${opp.adherence_score}%. 
+      
+      Objetivo: Sugerir um "Plano de Manutenção Preventiva" ou "Renovação de Ciclo" para consolidar os ganhos.
+      Seja profissional, clínico e motivador.`;
+
+      const aiPitch = await runThinkingModel(c.env, {
+        prompt,
+        model: "gemini-1.5-flash",
+        temperature: 0.7
+      });
+
+      return {
+        ...opp,
+        ai_suggestion: aiPitch.content
+      };
+    }));
+
+    return c.json({ data: enrichedOpportunities });
+  } catch (error) {
+    console.error("[Marketing/LTV] Error:", error);
+    return c.json({ error: "Failed to fetch LTV opportunities" }, 500);
+  }
+});
+
 app.get("/public/fisiolink/:slug", async (c) => {
   const pool = await createPool(c.env);
   const { slug } = c.req.param();
