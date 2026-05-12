@@ -1,0 +1,360 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"/>
+<title>Comparação de Sessões — FisioFlow Pro</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&display=swap"/>
+<link rel="stylesheet" href="../../colors_and_type.css"/>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<style>
+  body { margin: 0; background: #0d1117; min-height: 100vh; display:flex; align-items:center; justify-content:center; padding: 24px; font-family: var(--font-sans); }
+  .pad { width: 1280px; height: 880px; background: hsl(var(--background)); border-radius: 24px; overflow: hidden; box-shadow: 0 0 0 10px #111, 0 0 0 12px #2a2d35, 0 40px 80px rgba(0,0,0,0.6); display: grid; grid-template-rows: 56px 64px 1fr; }
+
+  .topbar { display:flex; align-items:center; padding: 0 20px; border-bottom: 1px solid hsl(var(--border)); gap: 16px; }
+  .brand { display:flex; align-items:center; gap: 10px; padding-right: 16px; border-right: 1px solid hsl(var(--border)); height: 100%; }
+  .brand img { width: 32px; height: 32px; }
+  .brand strong { font-size: 13px; font-weight: 700; }
+  .brand .sub { font-size: 9px; font-weight: 700; letter-spacing: 0.12em; color: hsl(var(--primary)); }
+  .crumbs { display:flex; gap: 8px; align-items: center; font-size: 13px; color: hsl(var(--muted-foreground)); }
+  .crumbs a { color: hsl(var(--muted-foreground)); text-decoration: none; }
+  .crumbs strong { color: hsl(var(--foreground)); font-weight: 600; }
+  .topbar-right { margin-left: auto; display:flex; gap: 8px; align-items: center; }
+  .iconbtn { width: 36px; height: 36px; border-radius: 10px; background: transparent; border: 1px solid transparent; color: hsl(var(--muted-foreground)); display:flex; align-items:center; justify-content:center; }
+  .avatar { width: 32px; height: 32px; border-radius:50%; background: hsl(211 100% 92%); color: hsl(211 100% 30%); display:flex; align-items:center; justify-content:center; font-weight:700; font-size:12px; }
+
+  /* compare bar */
+  .compare-bar { display:flex; align-items:center; padding: 0 20px; gap: 16px; border-bottom: 1px solid hsl(var(--border)); background: hsl(var(--muted) / .4); }
+  .session-chip { display:flex; align-items:center; gap: 10px; padding: 8px 14px; border-radius: 12px; background: hsl(var(--card)); border: 1px solid hsl(var(--border)); }
+  .session-chip.before { border-left: 3px solid hsl(220 9% 60%); }
+  .session-chip.after  { border-left: 3px solid hsl(var(--primary)); }
+  .session-chip .meta { display:flex; flex-direction: column; gap: 1px; }
+  .session-chip .meta .l { font-size: 9px; font-weight: 700; letter-spacing: 0.08em; color: hsl(var(--muted-foreground)); text-transform: uppercase; }
+  .session-chip .meta .v { font-size: 13px; font-weight: 700; }
+  .session-chip .meta .sub { font-size: 11px; color: hsl(var(--muted-foreground)); font-weight: 500; }
+  .vs { font-size: 11px; font-weight: 800; letter-spacing: 0.1em; color: hsl(var(--muted-foreground)); }
+  .gap-pill { padding: 4px 10px; border-radius: 999px; background: hsl(158 64% 92%); color: hsl(158 64% 25%); font-size: 11px; font-weight: 700; display:flex; align-items:center; gap: 4px; }
+  .ctx-actions { margin-left: auto; display:flex; gap: 8px; }
+  .btn { display:inline-flex; align-items:center; gap:6px; padding: 8px 14px; border-radius: 10px; font-size: 13px; font-weight: 600; border: 1px solid hsl(var(--border)); background: hsl(var(--card)); cursor:pointer; color: hsl(var(--foreground)); }
+  .btn.primary { background: hsl(var(--primary)); color: white; border-color: hsl(var(--primary)); }
+  .btn-ghost { background: transparent; border-color: transparent; }
+
+  /* main split */
+  .main { display: grid; grid-template-columns: 1fr 1fr 340px; min-height: 0; }
+  .stage { display: flex; flex-direction: column; min-height: 0; border-right: 1px solid hsl(var(--border)); }
+  .stage-head { display:flex; align-items:center; padding: 10px 16px; background: hsl(var(--muted) / .5); border-bottom: 1px solid hsl(var(--border)); gap: 10px; }
+  .stage-tag { padding: 3px 9px; border-radius: 999px; font-size: 10px; font-weight: 800; letter-spacing: 0.08em; }
+  .stage.before .stage-tag { background: hsl(220 14% 90%); color: hsl(220 39% 25%); }
+  .stage.after  .stage-tag { background: hsl(var(--primary) / .12); color: hsl(var(--primary)); }
+  .stage-head .date { font-size: 13px; font-weight: 700; }
+  .stage-head .sess { font-size: 11px; color: hsl(var(--muted-foreground)); font-weight: 600; }
+  .stage-head .pain { margin-left: auto; font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 6px; }
+  .pain.high { background: hsl(0 84% 95%); color: hsl(0 70% 35%); }
+  .pain.mid  { background: hsl(28 92% 95%); color: hsl(25 70% 30%); }
+  .pain.low  { background: hsl(158 64% 92%); color: hsl(158 64% 25%); }
+
+  .video { position: relative; flex: 1; background: linear-gradient(180deg, #0a0f1a, #1a2030); min-height: 0; }
+  .stage.before .video { background: linear-gradient(180deg, #1a1f2a, #252b38); filter: grayscale(.2); }
+  .athlete { position:absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); height: 78%; }
+  .joint-label { position:absolute; padding: 3px 8px; border-radius: 6px; font-size: 10px; font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .jl-primary { background: hsl(var(--primary)); color: white; }
+  .jl-warn { background: hsl(45 93% 50%); color: hsl(35 70% 20%); }
+  .jl-crit { background: hsl(0 72% 50%); color: white; }
+  .jl-ok { background: hsl(158 64% 42%); color: white; }
+  .jl-mute { background: rgba(255,255,255,.18); color: white; backdrop-filter: blur(4px); }
+
+  .video-controls { padding: 10px 14px; display:flex; align-items:center; gap: 10px; background: rgba(0,0,0,.5); color: white; }
+  .play { width: 32px; height: 32px; border-radius: 50%; background: white; color: hsl(var(--primary)); border: none; display:flex; align-items:center; justify-content:center; }
+  .scrubber { flex: 1; height: 4px; background: rgba(255,255,255,.2); border-radius: 999px; position:relative; }
+  .scrub-fill { height: 100%; background: white; border-radius: 999px; }
+  .stage.before .scrub-fill { width: 42%; background: hsl(220 9% 70%); }
+  .stage.after  .scrub-fill { width: 42%; background: white; }
+  .timecode { font-size: 11px; font-variant-numeric: tabular-nums; font-weight: 600; }
+  .sync-pill { position: absolute; bottom: 56px; left: 50%; transform: translateX(-50%); padding: 4px 10px; border-radius: 999px; background: hsl(var(--primary)); color: white; font-size: 10px; font-weight: 800; letter-spacing: 0.06em; display:flex; align-items:center; gap: 6px; box-shadow: 0 4px 14px rgba(0,0,0,.4); }
+
+  /* readouts under each video */
+  .readouts { padding: 12px 16px; background: hsl(var(--card)); display:grid; grid-template-columns: repeat(4, 1fr); gap: 8px; border-top: 1px solid hsl(var(--border)); }
+  .ro { padding: 8px 10px; background: hsl(var(--muted) / .5); border-radius: 10px; }
+  .ro .l { font-size: 9px; font-weight: 700; color: hsl(var(--muted-foreground)); letter-spacing: 0.06em; text-transform: uppercase; }
+  .ro .v { font-size: 18px; font-weight: 700; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; margin-top: 1px; }
+  .ro.crit .v { color: hsl(0 72% 45%); }
+  .ro.warn .v { color: hsl(35 92% 35%); }
+  .ro.ok .v   { color: hsl(158 64% 30%); }
+
+  /* right side */
+  .side { display: flex; flex-direction: column; min-height: 0; background: hsl(var(--background)); }
+  .side-head { padding: 12px 16px; border-bottom: 1px solid hsl(var(--border)); }
+  .side-head h3 { font-size: 13px; font-weight: 700; }
+  .side-head .sub { font-size: 11px; color: hsl(var(--muted-foreground)); margin-top: 1px; }
+  .side-scroll { flex: 1; overflow-y: auto; padding: 14px 16px; display:flex; flex-direction:column; gap: 16px; }
+
+  .panel-title { font-size: 11px; font-weight: 700; color: hsl(var(--muted-foreground)); letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 8px; }
+
+  /* delta cards */
+  .delta-grid { display:flex; flex-direction:column; gap: 8px; }
+  .delta-row { display:grid; grid-template-columns: 1fr auto auto auto; gap: 10px; padding: 10px 12px; background: hsl(var(--card)); border: 1px solid hsl(var(--border)); border-radius: 10px; align-items: center; }
+  .delta-row .name { font-size: 12px; font-weight: 600; }
+  .delta-row .name .sub { font-size: 10px; color: hsl(var(--muted-foreground)); font-weight: 500; display: block; }
+  .delta-row .num { font-size: 13px; font-weight: 700; font-variant-numeric: tabular-nums; text-align: right; min-width: 40px; }
+  .delta-row .num.before { color: hsl(220 9% 50%); }
+  .delta-row .num.after { color: hsl(var(--foreground)); }
+  .delta-row .change { font-size: 11px; font-weight: 800; padding: 3px 7px; border-radius: 5px; font-variant-numeric: tabular-nums; min-width: 42px; text-align:center; }
+  .change.up { background: hsl(158 64% 92%); color: hsl(158 64% 25%); }
+  .change.dn { background: hsl(0 84% 95%); color: hsl(0 70% 35%); }
+  .change.neu { background: hsl(220 14% 92%); color: hsl(220 9% 35%); }
+
+  /* mini chart */
+  .mini { background: hsl(var(--card)); border: 1px solid hsl(var(--border)); border-radius: 10px; padding: 12px; }
+  .mini h5 { font-size: 12px; font-weight: 700; margin-bottom: 6px; }
+  .mini .legend { display:flex; gap: 10px; font-size: 10px; color: hsl(var(--muted-foreground)); font-weight: 600; margin-bottom: 6px; }
+  .legend-dot { display:inline-block; width: 8px; height: 2px; border-radius: 1px; margin-right: 4px; vertical-align: middle; }
+
+  /* summary verdict */
+  .verdict { padding: 12px; border-radius: 12px; background: linear-gradient(135deg, hsl(158 64% 95%), hsl(158 64% 88%)); border: 1px solid hsl(158 64% 75%); }
+  .verdict .head { display:flex; align-items:center; gap: 6px; font-size: 12px; font-weight: 800; color: hsl(158 64% 20%); }
+  .verdict .body { font-size: 12px; line-height: 1.45; color: hsl(158 64% 18%); margin-top: 6px; }
+  .verdict ul { margin: 4px 0 0 0; padding-left: 16px; font-size: 11px; line-height: 1.5; color: hsl(158 64% 22%); }
+</style>
+</head>
+<body>
+<div class="pad">
+
+  <div class="topbar">
+    <div class="brand">
+      <img src="../../assets/activity-logo.svg" alt=""/>
+      <div><strong>FisioFlow</strong><div class="sub">PRO</div></div>
+    </div>
+    <div class="crumbs">
+      <a href="#">Pacientes</a>
+      <i data-lucide="chevron-right" style="width:14px;height:14px;"></i>
+      <a href="#">Carla Ferreira</a>
+      <i data-lucide="chevron-right" style="width:14px;height:14px;"></i>
+      <strong>Comparar sessões</strong>
+    </div>
+    <div class="topbar-right">
+      <button class="iconbtn"><i data-lucide="search" style="width:18px;height:18px;"></i></button>
+      <button class="iconbtn"><i data-lucide="bell" style="width:18px;height:18px;"></i></button>
+      <div class="avatar">RM</div>
+    </div>
+  </div>
+
+  <div class="compare-bar">
+    <div class="session-chip before">
+      <i data-lucide="film" style="width:18px;height:18px;color:hsl(220 9% 50%);"></i>
+      <div class="meta">
+        <span class="l">ANTES · S03</span>
+        <span class="v">17 mar · 2026</span>
+        <span class="sub">Avaliação inicial · Dr. Rafael</span>
+      </div>
+    </div>
+    <span class="vs">VS</span>
+    <div class="session-chip after">
+      <i data-lucide="film" style="width:18px;height:18px;color:hsl(var(--primary));"></i>
+      <div class="meta">
+        <span class="l">DEPOIS · S12</span>
+        <span class="v">12 mai · 2026</span>
+        <span class="sub">Reavaliação · Dr. Rafael</span>
+      </div>
+    </div>
+    <span class="gap-pill"><i data-lucide="calendar" style="width:11px;height:11px;"></i> 8 semanas · 9 sessões</span>
+    <div class="ctx-actions">
+      <button class="btn btn-ghost"><i data-lucide="share-2" style="width:14px;height:14px;"></i> Compartilhar</button>
+      <button class="btn"><i data-lucide="file-text" style="width:14px;height:14px;"></i> Gerar relatório</button>
+      <button class="btn primary"><i data-lucide="play" style="width:14px;height:14px;"></i> Sincronizar play</button>
+    </div>
+  </div>
+
+  <div class="main">
+
+    <!-- BEFORE -->
+    <div class="stage before">
+      <div class="stage-head">
+        <span class="stage-tag">ANTES · 17 MAR</span>
+        <span class="date">Agachamento</span>
+        <span class="sess">Tentativa 3/5 · 0.5×</span>
+        <span class="pain pain high">Dor 6/10</span>
+      </div>
+      <div class="video">
+        <!-- silhouette: limited depth, more trunk lean, knee valgus -->
+        <svg class="athlete" viewBox="0 0 200 400" fill="none" stroke="#cbd5e1" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="100" cy="42" r="18" fill="#94a3b8" stroke="none"/>
+          <path d="M100 62 Q112 95 128 130 Q138 155 138 175" stroke="#94a3b8"/>
+          <ellipse cx="138" cy="180" rx="14" ry="9" fill="#94a3b8" stroke="none"/>
+          <path d="M138 185 Q120 215 100 230" stroke="#94a3b8"/>
+          <path d="M100 230 Q105 270 122 310" stroke="#94a3b8"/>
+          <path d="M118 310 Q126 326 148 322" stroke="#94a3b8" stroke-width="6"/>
+          <path d="M108 100 Q150 105 168 88" stroke="#94a3b8"/>
+        </svg>
+
+        <div class="joint-label jl-warn" style="left:14%; top:38%;">Tronco 48° flexão ⚠</div>
+        <div class="joint-label jl-crit" style="left:18%; top:60%;">Joelho 78° (raso) ⚠</div>
+        <div class="joint-label jl-warn" style="left:62%; top:64%;">Valgo +18°</div>
+        <div class="joint-label jl-mute" style="left:60%; top:80%;">Tornozelo 18°</div>
+
+        <div class="sync-pill"><i data-lucide="link" style="width:11px;height:11px;"></i> SYNC 00:04.21</div>
+      </div>
+      <div class="video-controls">
+        <button class="play"><i data-lucide="play" style="width:16px;height:16px;margin-left:2px;"></i></button>
+        <span class="timecode">00:04.21 / 00:11.40</span>
+        <div class="scrubber"><div class="scrub-fill"></div></div>
+      </div>
+      <div class="readouts">
+        <div class="ro crit"><div class="l">ROM joelho</div><div class="v">78°</div></div>
+        <div class="ro warn"><div class="l">Tronco</div><div class="v">48°</div></div>
+        <div class="ro crit"><div class="l">Valgo dir</div><div class="v">+18°</div></div>
+        <div class="ro warn"><div class="l">Simetria</div><div class="v">71%</div></div>
+      </div>
+    </div>
+
+    <!-- AFTER -->
+    <div class="stage after">
+      <div class="stage-head">
+        <span class="stage-tag">DEPOIS · 12 MAI</span>
+        <span class="date">Agachamento</span>
+        <span class="sess">Tentativa 3/5 · 0.5×</span>
+        <span class="pain pain mid">Dor 3/10</span>
+      </div>
+      <div class="video">
+        <!-- silhouette: deeper, less trunk lean, better alignment -->
+        <svg class="athlete" viewBox="0 0 200 400" fill="none" stroke="#cbd5e1" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="100" cy="40" r="18" fill="#cbd5e1" stroke="none"/>
+          <path d="M100 60 Q105 95 115 130 Q120 155 118 175" stroke="#cbd5e1"/>
+          <ellipse cx="118" cy="180" rx="14" ry="9" fill="#cbd5e1" stroke="none"/>
+          <path d="M118 185 Q105 220 80 240" stroke="#cbd5e1"/>
+          <path d="M80 240 Q90 280 110 320" stroke="#cbd5e1"/>
+          <path d="M108 320 Q115 335 135 332" stroke="#cbd5e1" stroke-width="6"/>
+          <path d="M105 100 Q140 110 160 95" stroke="#cbd5e1"/>
+        </svg>
+
+        <div class="joint-label jl-primary" style="left:54%; top:18%;">Tronco 32° flexão</div>
+        <div class="joint-label jl-ok" style="left:14%; top:62%;">Joelho 92° ✓</div>
+        <div class="joint-label jl-warn" style="left:60%; top:64%;">Valgo +14°</div>
+        <div class="joint-label jl-ok" style="left:60%; top:80%;">Tornozelo 24° ✓</div>
+
+        <div class="sync-pill"><i data-lucide="link" style="width:11px;height:11px;"></i> SYNC 00:04.21</div>
+      </div>
+      <div class="video-controls">
+        <button class="play"><i data-lucide="play" style="width:16px;height:16px;margin-left:2px;"></i></button>
+        <span class="timecode">00:04.21 / 00:10.05</span>
+        <div class="scrubber"><div class="scrub-fill"></div></div>
+      </div>
+      <div class="readouts">
+        <div class="ro ok"><div class="l">ROM joelho</div><div class="v">118°</div></div>
+        <div class="ro ok"><div class="l">Tronco</div><div class="v">32°</div></div>
+        <div class="ro warn"><div class="l">Valgo dir</div><div class="v">+14°</div></div>
+        <div class="ro ok"><div class="l">Simetria</div><div class="v">84%</div></div>
+      </div>
+    </div>
+
+    <!-- RIGHT: delta panel -->
+    <div class="side">
+      <div class="side-head">
+        <h3>Evolução em 8 semanas</h3>
+        <div class="sub">Diferença entre S03 (avaliação) e S12 (atual)</div>
+      </div>
+      <div class="side-scroll">
+
+        <div class="verdict">
+          <div class="head"><i data-lucide="trending-up" style="width:14px;height:14px;"></i> Evolução positiva geral</div>
+          <div class="body">Ganho expressivo de ROM e redução de dor. Persiste valgo dinâmico moderado à direita — manter fortalecimento de glúteo médio.</div>
+        </div>
+
+        <div>
+          <div class="panel-title">Métricas principais</div>
+          <div class="delta-grid">
+            <div class="delta-row">
+              <div class="name">ROM joelho<span class="sub">flexão · agachamento</span></div>
+              <div class="num before">78°</div>
+              <div class="num after">118°</div>
+              <div class="change up">+40°</div>
+            </div>
+            <div class="delta-row">
+              <div class="name">Inclinação do tronco<span class="sub">menor = melhor</span></div>
+              <div class="num before">48°</div>
+              <div class="num after">32°</div>
+              <div class="change up">−16°</div>
+            </div>
+            <div class="delta-row">
+              <div class="name">Valgo dinâmico (D)<span class="sub">menor = melhor</span></div>
+              <div class="num before">+18°</div>
+              <div class="num after">+14°</div>
+              <div class="change up">−4°</div>
+            </div>
+            <div class="delta-row">
+              <div class="name">Simetria L/R<span class="sub">distribuição de carga</span></div>
+              <div class="num before">71%</div>
+              <div class="num after">84%</div>
+              <div class="change up">+13 p.p.</div>
+            </div>
+            <div class="delta-row">
+              <div class="name">Dorsiflexão (D)<span class="sub">tornozelo</span></div>
+              <div class="num before">18°</div>
+              <div class="num after">24°</div>
+              <div class="change up">+6°</div>
+            </div>
+            <div class="delta-row">
+              <div class="name">Dor (VAS)<span class="sub">pico durante exec.</span></div>
+              <div class="num before">6</div>
+              <div class="num after">3</div>
+              <div class="change up">−3</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="mini">
+          <h5>Curva do joelho</h5>
+          <div class="legend">
+            <span><span class="legend-dot" style="background:hsl(220 9% 60%);"></span>17 mar</span>
+            <span><span class="legend-dot" style="background:hsl(var(--primary));"></span>12 mai</span>
+            <span><span class="legend-dot" style="background:hsl(var(--muted-foreground));opacity:.5;"></span>90°</span>
+          </div>
+          <svg viewBox="0 0 280 100" preserveAspectRatio="none" style="width:100%;height:100px;">
+            <g stroke="hsl(220 13% 91%)" stroke-width="1">
+              <line x1="0" y1="20" x2="280" y2="20"/>
+              <line x1="0" y1="50" x2="280" y2="50"/>
+              <line x1="0" y1="80" x2="280" y2="80"/>
+            </g>
+            <line x1="0" y1="55" x2="280" y2="55" stroke="hsl(220 9% 46%)" stroke-width="1" stroke-dasharray="3 3" opacity="0.5"/>
+            <!-- before curve: shallow -->
+            <path d="M 5 25 Q 60 30 100 60 T 180 62 T 275 30" fill="none" stroke="hsl(220 9% 60%)" stroke-width="2.5" stroke-linecap="round"/>
+            <!-- after curve: deep -->
+            <path d="M 5 22 Q 60 22 100 50 T 180 85 T 275 25" fill="none" stroke="hsl(var(--primary))" stroke-width="2.5" stroke-linecap="round"/>
+          </svg>
+        </div>
+
+        <div class="mini">
+          <h5>Dor — últimas 9 sessões</h5>
+          <svg viewBox="0 0 280 70" preserveAspectRatio="none" style="width:100%;height:70px;">
+            <g fill="hsl(var(--primary))">
+              <rect x="6" y="10" width="22" height="55" rx="3" opacity="0.85"/>
+              <rect x="36" y="15" width="22" height="50" rx="3" opacity="0.8"/>
+              <rect x="66" y="22" width="22" height="43" rx="3" opacity="0.75"/>
+              <rect x="96" y="28" width="22" height="37" rx="3" opacity="0.7"/>
+              <rect x="126" y="30" width="22" height="35" rx="3" opacity="0.65"/>
+              <rect x="156" y="34" width="22" height="31" rx="3" opacity="0.6"/>
+              <rect x="186" y="38" width="22" height="27" rx="3" opacity="0.55"/>
+              <rect x="216" y="40" width="22" height="25" rx="3" opacity="0.5"/>
+              <rect x="246" y="42" width="22" height="23" rx="3" opacity="0.45"/>
+            </g>
+            <g font-family="Nunito" font-size="8" font-weight="700" fill="hsl(220 9% 46%)">
+              <text x="11" y="62">S3</text>
+              <text x="221" y="62">S11</text>
+              <text x="251" y="62">S12</text>
+            </g>
+            <g font-family="Nunito" font-size="9" font-weight="700" fill="white">
+              <text x="14" y="28">6</text>
+              <text x="254" y="56">3</text>
+            </g>
+          </svg>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  if (window.lucide && window.lucide.createIcons) window.lucide.createIcons();
+</script>
+</body>
+</html>

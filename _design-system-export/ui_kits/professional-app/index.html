@@ -1,0 +1,418 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"/>
+<title>Análise Biomecânica — FisioFlow Pro</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&display=swap"/>
+<link rel="stylesheet" href="../../colors_and_type.css"/>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<style>
+  body { margin: 0; background: #0d1117; min-height: 100vh; display:flex; align-items:center; justify-content:center; padding: 24px; font-family: var(--font-sans); }
+  .pad { width: 1280px; height: 880px; background: hsl(var(--background)); border-radius: 24px; overflow: hidden; box-shadow: 0 0 0 10px #111, 0 0 0 12px #2a2d35, 0 40px 80px rgba(0,0,0,0.6); display: grid; grid-template-rows: 56px 64px 1fr; }
+
+  /* --- topbar --- */
+  .topbar { display:flex; align-items:center; padding: 0 20px; border-bottom: 1px solid hsl(var(--border)); gap: 16px; }
+  .brand { display:flex; align-items:center; gap: 10px; padding-right: 16px; border-right: 1px solid hsl(var(--border)); height: 100%; }
+  .brand-mark { width: 32px; height: 32px; }
+  .brand-name { display:flex; flex-direction:column; }
+  .brand-name strong { font-size: 13px; font-weight: 700; letter-spacing: -0.01em; }
+  .brand-name .sub { font-size: 9px; font-weight: 700; letter-spacing: 0.12em; color: hsl(var(--primary)); }
+  .crumbs { display:flex; gap: 8px; align-items: center; font-size: 13px; color: hsl(var(--muted-foreground)); }
+  .crumbs a { color: hsl(var(--muted-foreground)); text-decoration: none; }
+  .crumbs strong { color: hsl(var(--foreground)); font-weight: 600; }
+  .crumbs i { color: hsl(var(--muted-foreground) / .5); }
+  .topbar-right { margin-left: auto; display:flex; gap: 8px; align-items: center; }
+  .iconbtn { width: 36px; height: 36px; border-radius: 10px; background: transparent; border: 1px solid transparent; color: hsl(var(--muted-foreground)); display:flex; align-items:center; justify-content:center; cursor:pointer; }
+  .iconbtn:hover { background: hsl(var(--secondary)); }
+  .avatar { width: 32px; height: 32px; border-radius:50%; background: hsl(211 100% 92%); color: hsl(211 100% 30%); display:flex; align-items:center; justify-content:center; font-weight:700; font-size:12px; }
+
+  /* --- patient context --- */
+  .patient-bar { display:flex; align-items:center; padding: 0 20px; gap: 16px; border-bottom: 1px solid hsl(var(--border)); background: hsl(var(--muted) / .4); }
+  .patient-avatar { width: 44px; height: 44px; border-radius:50%; background: linear-gradient(135deg, hsl(211 100% 60%), hsl(211 100% 40%)); color: white; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:15px; }
+  .patient-info { display:flex; flex-direction:column; gap: 2px; }
+  .patient-info .name { font-size: 16px; font-weight: 700; letter-spacing: -0.01em; }
+  .patient-info .meta { font-size: 11px; color: hsl(var(--muted-foreground)); font-weight: 500; }
+  .pill { display:inline-flex; align-items:center; gap:6px; padding: 4px 10px; border-radius: 999px; background: hsl(var(--card)); border: 1px solid hsl(var(--border)); font-size: 11px; font-weight: 600; }
+  .pill.diagnosis { background: hsl(28 92% 95%); border-color: hsl(28 92% 85%); color: hsl(25 70% 30%); }
+  .pill.session { background: hsl(211 100% 95%); border-color: hsl(211 100% 88%); color: hsl(211 100% 30%); }
+  .pill.alert { background: hsl(0 84% 95%); border-color: hsl(0 84% 88%); color: hsl(0 70% 35%); }
+  .ctx-actions { margin-left: auto; display:flex; gap: 8px; }
+  .btn { display:inline-flex; align-items:center; gap:6px; padding: 8px 14px; border-radius: 10px; font-size: 13px; font-weight: 600; border: 1px solid hsl(var(--border)); background: hsl(var(--card)); cursor:pointer; color: hsl(var(--foreground)); }
+  .btn.primary { background: hsl(var(--primary)); color: white; border-color: hsl(var(--primary)); box-shadow: var(--shadow-glow-primary); }
+  .btn.primary:hover { background: hsl(211 100% 48%); }
+  .btn-ghost { background: transparent; border-color: transparent; }
+  .btn-ghost:hover { background: hsl(var(--secondary)); }
+
+  /* --- main grid --- */
+  .main { display: grid; grid-template-columns: 1fr 380px; min-height: 0; }
+  .stage { display:grid; grid-template-rows: 1fr 220px; min-height: 0; border-right: 1px solid hsl(var(--border)); }
+  .video { position: relative; background: linear-gradient(180deg, #0a0f1a, #1a2030); overflow: hidden; }
+  .video-tag { position:absolute; top: 14px; left: 14px; padding: 4px 10px; border-radius: 999px; background: rgba(0,0,0,0.5); color: white; font-size: 10px; font-weight: 700; letter-spacing: 0.08em; backdrop-filter: blur(8px); display:flex; align-items:center; gap: 6px; }
+  .rec-dot { width: 7px; height: 7px; border-radius: 50%; background: #ef4444; box-shadow: 0 0 8px #ef4444; animation: pulse 2s ease-in-out infinite; }
+  @keyframes pulse { 50% { opacity: .5; } }
+  .video-side-toggle { position:absolute; top: 14px; right: 14px; display:flex; background: rgba(0,0,0,.5); border-radius: 10px; padding: 2px; backdrop-filter: blur(8px); }
+  .video-side-toggle button { padding: 6px 12px; background: transparent; border: none; color: rgba(255,255,255,.6); font-size: 11px; font-weight: 700; border-radius: 8px; cursor: pointer; letter-spacing: 0.04em; }
+  .video-side-toggle button.is-active { background: rgba(255,255,255,.15); color: white; }
+
+  /* athlete silhouette */
+  .athlete { position:absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); height: 75%; }
+
+  /* joint angle overlays */
+  .joint { position: absolute; }
+  .joint .arc { stroke: hsl(var(--primary)); stroke-width: 2.5; fill: hsl(var(--primary) / .15); }
+  .joint .label { position:absolute; padding: 3px 8px; border-radius: 6px; font-size: 11px; font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .joint .label.primary { background: hsl(var(--primary)); color: white; }
+  .joint .label.warn { background: hsl(45 93% 50%); color: hsl(35 70% 20%); }
+  .joint .label.ok { background: hsl(158 64% 42%); color: white; }
+  .joint .label.crit { background: hsl(0 72% 50%); color: white; }
+
+  .video-controls { position:absolute; bottom: 0; left: 0; right: 0; padding: 16px 20px; background: linear-gradient(transparent, rgba(0,0,0,.7)); display:flex; align-items:center; gap: 14px; color: white; }
+  .play { width: 44px; height: 44px; border-radius: 50%; background: white; color: hsl(var(--primary)); border: none; display:flex; align-items:center; justify-content:center; cursor:pointer; }
+  .scrubber { flex: 1; height: 4px; background: rgba(255,255,255,.2); border-radius: 999px; position:relative; }
+  .scrub-fill { width: 42%; height: 100%; background: white; border-radius: 999px; }
+  .scrub-handle { position:absolute; left: 42%; top: 50%; transform: translate(-50%, -50%); width: 14px; height: 14px; border-radius: 50%; background: white; box-shadow: 0 2px 6px rgba(0,0,0,.3); }
+  .scrub-mark { position:absolute; top: -3px; width: 2px; height: 10px; background: hsl(var(--primary)); border-radius: 1px; }
+  .timecode { font-size: 12px; font-variant-numeric: tabular-nums; font-weight: 600; color: rgba(255,255,255,.85); }
+  .control-btn { background: rgba(255,255,255,.12); border: none; color: white; width: 36px; height: 36px; border-radius: 8px; display:flex; align-items:center; justify-content:center; cursor:pointer; }
+  .speed { padding: 6px 10px; background: rgba(255,255,255,.12); border-radius: 8px; font-size: 11px; font-weight: 700; font-variant-numeric: tabular-nums; }
+
+  /* --- chart panel below video --- */
+  .chart-panel { border-top: 1px solid hsl(var(--border)); padding: 14px 20px; display: grid; grid-template-rows: auto 1fr; gap: 10px; background: hsl(var(--card)); }
+  .chart-head { display:flex; align-items:center; justify-content:space-between; }
+  .chart-head h3 { font-size: 13px; font-weight: 700; letter-spacing: -0.01em; }
+  .chart-tabs { display:flex; gap: 4px; background: hsl(var(--muted)); padding: 3px; border-radius: 8px; }
+  .chart-tabs button { padding: 5px 10px; background: transparent; border: none; font-size: 11px; font-weight: 600; border-radius: 6px; cursor: pointer; color: hsl(var(--muted-foreground)); }
+  .chart-tabs button.is-active { background: hsl(var(--card)); color: hsl(var(--foreground)); box-shadow: 0 1px 2px rgba(0,0,0,.05); }
+  .chart-legend { display:flex; gap: 14px; font-size: 11px; color: hsl(var(--muted-foreground)); font-weight: 600; }
+  .legend-dot { display:inline-block; width: 10px; height: 2px; border-radius: 1px; margin-right: 5px; vertical-align: middle; }
+  .chart-area { position: relative; }
+  .chart-area svg { width: 100%; height: 100%; }
+
+  /* --- right panel --- */
+  .side { display: flex; flex-direction: column; min-height: 0; }
+  .side-tabs { display:flex; padding: 12px 16px 0; gap: 4px; border-bottom: 1px solid hsl(var(--border)); }
+  .side-tab { padding: 8px 12px; font-size: 12px; font-weight: 600; color: hsl(var(--muted-foreground)); border-bottom: 2px solid transparent; cursor:pointer; margin-bottom: -1px; }
+  .side-tab.is-active { color: hsl(var(--primary)); border-color: hsl(var(--primary)); }
+  .side-scroll { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 16px; }
+
+  .panel-title { display:flex; align-items:center; justify-content:space-between; margin-bottom: 8px; }
+  .panel-title h4 { font-size: 12px; font-weight: 700; color: hsl(var(--muted-foreground)); letter-spacing: 0.06em; text-transform: uppercase; }
+
+  /* ROM table */
+  .rom-table { display: grid; grid-template-columns: 1fr auto auto auto; gap: 0; background: hsl(var(--card)); border: 1px solid hsl(var(--border)); border-radius: 12px; overflow: hidden; }
+  .rom-table .h { font-size: 10px; font-weight: 700; color: hsl(var(--muted-foreground)); letter-spacing: 0.06em; text-transform: uppercase; padding: 8px 10px; background: hsl(var(--muted) / .6); border-bottom: 1px solid hsl(var(--border)); }
+  .rom-table .h.r { text-align: right; }
+  .rom-table .cell { padding: 10px; font-size: 12px; font-weight: 600; border-bottom: 1px solid hsl(var(--border)); }
+  .rom-table .cell:nth-last-child(-n+4) { border-bottom: none; }
+  .rom-table .cell.r { text-align: right; font-variant-numeric: tabular-nums; }
+  .rom-table .joint-name { display:flex; flex-direction: column; gap: 1px; }
+  .rom-table .joint-name .small { font-size: 10px; font-weight: 500; color: hsl(var(--muted-foreground)); }
+  .delta-up { color: hsl(158 64% 35%); }
+  .delta-down { color: hsl(0 72% 45%); }
+
+  /* metric grid */
+  .metric-grid { display:grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .metric { padding: 12px; background: hsl(var(--card)); border: 1px solid hsl(var(--border)); border-radius: 12px; }
+  .metric .l { font-size: 10px; font-weight: 700; color: hsl(var(--muted-foreground)); letter-spacing: 0.06em; text-transform: uppercase; }
+  .metric .v { font-size: 22px; font-weight: 700; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; margin-top: 2px; }
+  .metric .d { font-size: 10px; font-weight: 600; margin-top: 2px; display:flex; align-items: center; gap: 3px; }
+  .metric.ok .v { color: hsl(158 64% 30%); }
+  .metric.warn .v { color: hsl(35 92% 35%); }
+
+  /* notes */
+  .notes-list { display:flex; flex-direction: column; gap: 8px; }
+  .note { padding: 10px 12px; background: hsl(var(--card)); border: 1px solid hsl(var(--border)); border-radius: 12px; display:flex; gap: 10px; align-items: flex-start; cursor: pointer; }
+  .note:hover { border-color: hsl(var(--primary) / .4); }
+  .note-time { font-size: 11px; font-weight: 700; color: hsl(var(--primary)); font-variant-numeric: tabular-nums; flex-shrink: 0; padding-top: 1px; }
+  .note-body { font-size: 12px; line-height: 1.4; }
+  .note-body .tag { display:inline-flex; padding: 1px 6px; border-radius: 4px; font-size: 10px; font-weight: 700; margin-right: 4px; }
+  .tag.k { background: hsl(45 93% 90%); color: hsl(35 70% 30%); }
+  .tag.r { background: hsl(0 84% 95%); color: hsl(0 70% 35%); }
+  .tag.g { background: hsl(158 64% 92%); color: hsl(158 64% 25%); }
+
+  .add-note { display:flex; gap: 8px; }
+  .add-note input { flex: 1; padding: 9px 12px; border-radius: 10px; border: 1px solid hsl(var(--border)); font-size: 12px; font-family: inherit; background: hsl(var(--card)); }
+  .add-note input:focus { outline: none; border-color: hsl(var(--primary)); box-shadow: 0 0 0 3px hsl(var(--primary) / .12); }
+</style>
+</head>
+<body>
+<div class="pad">
+
+  <!-- topbar -->
+  <div class="topbar">
+    <div class="brand">
+      <img class="brand-mark" src="../../assets/activity-logo.svg" alt="Activity"/>
+      <div class="brand-name"><strong>FisioFlow</strong><span class="sub">PRO</span></div>
+    </div>
+    <div class="crumbs">
+      <a href="#">Pacientes</a>
+      <i data-lucide="chevron-right" style="width:14px;height:14px;"></i>
+      <a href="#">Carla Ferreira</a>
+      <i data-lucide="chevron-right" style="width:14px;height:14px;"></i>
+      <strong>Análise — Agachamento (12/05)</strong>
+    </div>
+    <div class="topbar-right">
+      <button class="iconbtn"><i data-lucide="search" style="width:18px;height:18px;"></i></button>
+      <button class="iconbtn"><i data-lucide="bell" style="width:18px;height:18px;"></i></button>
+      <div class="avatar">RM</div>
+    </div>
+  </div>
+
+  <!-- patient context -->
+  <div class="patient-bar">
+    <div class="patient-avatar">CF</div>
+    <div class="patient-info">
+      <span class="name">Carla Ferreira <span style="font-size:12px;font-weight:500;color:hsl(var(--muted-foreground));">· 34 anos · ♀</span></span>
+      <span class="meta">Sessão 12 de 20 · Dr. Rafael Minatto · Iniciada às 14:30</span>
+    </div>
+    <span class="pill diagnosis"><i data-lucide="activity" style="width:12px;height:12px;"></i> Condromalácia patelar G2</span>
+    <span class="pill session"><i data-lucide="calendar" style="width:12px;height:12px;"></i> Reavaliação biomecânica</span>
+    <span class="pill alert"><i data-lucide="alert-triangle" style="width:12px;height:12px;"></i> Dor pico 6/10</span>
+    <div class="ctx-actions">
+      <button class="btn btn-ghost"><i data-lucide="share-2" style="width:14px;height:14px;"></i> Exportar</button>
+      <button class="btn"><i data-lucide="layers" style="width:14px;height:14px;"></i> Comparar sessões</button>
+      <button class="btn primary"><i data-lucide="save" style="width:14px;height:14px;"></i> Salvar análise</button>
+    </div>
+  </div>
+
+  <!-- main -->
+  <div class="main">
+    <!-- stage: video + chart -->
+    <div class="stage">
+
+      <!-- video -->
+      <div class="video">
+        <div class="video-tag"><span class="rec-dot"></span> AGACHAMENTO · TENTATIVA 3/5</div>
+        <div class="video-side-toggle">
+          <button>FRONTAL</button>
+          <button class="is-active">SAGITAL</button>
+          <button>POSTERIOR</button>
+        </div>
+
+        <!-- silhouette of athlete in squat (sagittal view) -->
+        <svg class="athlete" viewBox="0 0 200 400" fill="none" stroke="#cbd5e1" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+          <!-- head -->
+          <circle cx="100" cy="40" r="18" fill="#cbd5e1" stroke="none"/>
+          <!-- torso (leaning forward in squat) -->
+          <path d="M100 60 Q105 95 115 130 Q120 155 118 175" stroke="#cbd5e1"/>
+          <!-- pelvis -->
+          <ellipse cx="118" cy="180" rx="14" ry="9" fill="#cbd5e1" stroke="none"/>
+          <!-- thigh (going down/back) -->
+          <path d="M118 185 Q105 220 80 240" stroke="#cbd5e1"/>
+          <!-- shin (going down/forward) -->
+          <path d="M80 240 Q90 280 110 320" stroke="#cbd5e1"/>
+          <!-- foot -->
+          <path d="M108 320 Q115 335 135 332" stroke="#cbd5e1" stroke-width="6"/>
+          <!-- arm forward -->
+          <path d="M105 100 Q140 110 160 95" stroke="#cbd5e1"/>
+        </svg>
+
+        <!-- joint angle overlays -->
+        <!-- hip angle -->
+        <div class="joint" style="left:46%; top:42%;">
+          <svg width="60" height="60" viewBox="0 0 60 60">
+            <path class="arc" d="M 10 30 A 20 20 0 0 1 45 50" />
+          </svg>
+          <div class="label primary" style="position:absolute; top: -6px; left: 56px;">
+            Quadril 78°
+          </div>
+        </div>
+        <!-- knee angle (warn — valgo) -->
+        <div class="joint" style="left:34%; top:62%;">
+          <svg width="60" height="60" viewBox="0 0 60 60">
+            <path class="arc" d="M 10 10 A 25 25 0 0 1 50 35" style="stroke: hsl(45 93% 50%); fill: hsl(45 93% 50% / .15);"/>
+          </svg>
+          <div class="label warn" style="position:absolute; top: 24px; left: -110px;">
+            Joelho 92° ⚠
+          </div>
+        </div>
+        <!-- ankle angle -->
+        <div class="joint" style="left:48%; top:80%;">
+          <svg width="50" height="50" viewBox="0 0 50 50">
+            <path class="arc" d="M 5 25 A 20 20 0 0 1 40 35" style="stroke: hsl(158 64% 42%); fill: hsl(158 64% 42% / .15);"/>
+          </svg>
+          <div class="label ok" style="position:absolute; top: 14px; left: 50px;">
+            Tornozelo 24°
+          </div>
+        </div>
+        <!-- trunk inclination -->
+        <div class="joint" style="left:54%; top:18%;">
+          <div class="label primary">Tronco 32° flexão</div>
+        </div>
+
+        <!-- controls -->
+        <div class="video-controls">
+          <button class="play"><i data-lucide="play" style="width:22px;height:22px;margin-left:2px;"></i></button>
+          <button class="control-btn"><i data-lucide="rewind" style="width:16px;height:16px;"></i></button>
+          <button class="control-btn"><i data-lucide="fast-forward" style="width:16px;height:16px;"></i></button>
+          <span class="timecode">00:04.21 / 00:10.05</span>
+          <div class="scrubber">
+            <div class="scrub-fill"></div>
+            <div class="scrub-mark" style="left: 15%;"></div>
+            <div class="scrub-mark" style="left: 42%; background: hsl(45 93% 50%);"></div>
+            <div class="scrub-mark" style="left: 68%;"></div>
+            <div class="scrub-handle"></div>
+          </div>
+          <div class="speed">0.5×</div>
+          <button class="control-btn"><i data-lucide="maximize-2" style="width:16px;height:16px;"></i></button>
+        </div>
+      </div>
+
+      <!-- chart panel -->
+      <div class="chart-panel">
+        <div class="chart-head">
+          <div style="display:flex;gap:14px;align-items:center;">
+            <h3>Ângulo do joelho ao longo do movimento</h3>
+            <div class="chart-legend">
+              <span><span class="legend-dot" style="background: hsl(var(--primary));"></span>Esquerdo</span>
+              <span><span class="legend-dot" style="background: hsl(158 64% 42%);"></span>Direito</span>
+              <span><span class="legend-dot" style="background: hsl(var(--muted-foreground)); opacity: .5; border-top: 1px dashed;"></span>Referência (90°)</span>
+            </div>
+          </div>
+          <div class="chart-tabs">
+            <button>Joelho</button>
+            <button class="is-active">Comparação L/R</button>
+            <button>Cadeira</button>
+            <button>Tronco</button>
+          </div>
+        </div>
+        <div class="chart-area">
+          <svg viewBox="0 0 800 140" preserveAspectRatio="none">
+            <!-- grid -->
+            <g stroke="hsl(220 13% 91%)" stroke-width="1">
+              <line x1="0" y1="20" x2="800" y2="20"/>
+              <line x1="0" y1="55" x2="800" y2="55"/>
+              <line x1="0" y1="90" x2="800" y2="90"/>
+              <line x1="0" y1="125" x2="800" y2="125"/>
+            </g>
+            <!-- y labels -->
+            <g font-family="Nunito" font-size="10" font-weight="600" fill="hsl(220 9% 46%)">
+              <text x="4" y="24">160°</text>
+              <text x="4" y="59">120°</text>
+              <text x="4" y="94">80°</text>
+              <text x="4" y="128">40°</text>
+            </g>
+            <!-- reference 90° dashed -->
+            <line x1="40" y1="80" x2="795" y2="80" stroke="hsl(220 9% 46%)" stroke-width="1" stroke-dasharray="4 4" opacity="0.5"/>
+            <text x="760" y="76" font-family="Nunito" font-size="9" font-weight="700" fill="hsl(220 9% 46%)">90°</text>
+            <!-- left knee curve (blue) -->
+            <path d="M 40 22 Q 120 22 180 50 T 320 95 T 440 100 T 560 65 T 720 28 L 795 22"
+                  fill="none" stroke="hsl(var(--primary))" stroke-width="2.5" stroke-linecap="round"/>
+            <!-- right knee curve (teal) - smaller ROM -->
+            <path d="M 40 28 Q 120 28 180 55 T 320 85 T 440 88 T 560 60 T 720 30 L 795 26"
+                  fill="none" stroke="hsl(158 64% 42%)" stroke-width="2.5" stroke-linecap="round"/>
+            <!-- area between -->
+            <path d="M 40 22 Q 120 22 180 50 T 320 95 T 440 100 T 560 65 T 720 28 L 795 22 L 795 26 L 720 30 Q 560 60 440 88 T 320 85 T 180 55 Q 120 28 40 28 Z"
+                  fill="hsl(var(--primary) / 0.06)"/>
+            <!-- marker -->
+            <line x1="336" y1="0" x2="336" y2="135" stroke="hsl(var(--primary))" stroke-width="1.5" stroke-dasharray="3 3"/>
+            <circle cx="336" cy="96" r="4" fill="hsl(var(--primary))"/>
+            <text x="344" y="105" font-family="Nunito" font-size="10" font-weight="700" fill="hsl(var(--primary))">92°</text>
+          </svg>
+        </div>
+      </div>
+    </div>
+
+    <!-- right side -->
+    <div class="side">
+      <div class="side-tabs">
+        <div class="side-tab is-active">Medidas</div>
+        <div class="side-tab">Notas (4)</div>
+        <div class="side-tab">Plano</div>
+      </div>
+      <div class="side-scroll">
+
+        <!-- KPI grid -->
+        <div>
+          <div class="panel-title"><h4>Métricas da sessão</h4><span style="font-size:10px;color:hsl(var(--muted-foreground));">vs. última sessão</span></div>
+          <div class="metric-grid">
+            <div class="metric ok">
+              <div class="l">ROM joelho</div>
+              <div class="v">118°</div>
+              <div class="d delta-up"><i data-lucide="trending-up" style="width:11px;height:11px;"></i> +6° vs 112°</div>
+            </div>
+            <div class="metric warn">
+              <div class="l">Valgo dinâmico</div>
+              <div class="v">+14°</div>
+              <div class="d delta-down"><i data-lucide="trending-down" style="width:11px;height:11px;"></i> +3° pior</div>
+            </div>
+            <div class="metric">
+              <div class="l">Simetria L/R</div>
+              <div class="v">84%</div>
+              <div class="d delta-up"><i data-lucide="trending-up" style="width:11px;height:11px;"></i> +6 p.p.</div>
+            </div>
+            <div class="metric">
+              <div class="l">Dor (VAS)</div>
+              <div class="v">3/10</div>
+              <div class="d delta-up"><i data-lucide="trending-down" style="width:11px;height:11px;color:hsl(158 64% 35%);"></i> -2 vs 5</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ROM Table -->
+        <div>
+          <div class="panel-title"><h4>Goniometria · agachamento</h4><i data-lucide="more-horizontal" style="width:16px;height:16px;color:hsl(var(--muted-foreground));"></i></div>
+          <div class="rom-table">
+            <div class="h">Articulação</div>
+            <div class="h r">Esq</div>
+            <div class="h r">Dir</div>
+            <div class="h r">Δ</div>
+
+            <div class="cell joint-name">Quadril<span class="small">flexão</span></div>
+            <div class="cell r">95°</div>
+            <div class="cell r">98°</div>
+            <div class="cell r delta-up">+3°</div>
+
+            <div class="cell joint-name">Joelho<span class="small">flexão</span></div>
+            <div class="cell r">118°</div>
+            <div class="cell r">112°</div>
+            <div class="cell r delta-down">−6°</div>
+
+            <div class="cell joint-name">Tornozelo<span class="small">dorsiflexão</span></div>
+            <div class="cell r">24°</div>
+            <div class="cell r">22°</div>
+            <div class="cell r delta-down">−2°</div>
+
+            <div class="cell joint-name">Tronco<span class="small">inclinação</span></div>
+            <div class="cell r" style="grid-column: span 3;">32° (anterior)</div>
+          </div>
+        </div>
+
+        <!-- Notes -->
+        <div>
+          <div class="panel-title"><h4>Marcadores do vídeo</h4><span style="font-size:10px;color:hsl(var(--primary));font-weight:700;cursor:pointer;">+ Adicionar</span></div>
+          <div class="notes-list">
+            <div class="note">
+              <div class="note-time">00:01.5</div>
+              <div class="note-body"><span class="tag g">início</span>Postura inicial OK, pés alinhados, distribuição simétrica de peso.</div>
+            </div>
+            <div class="note">
+              <div class="note-time">00:04.2</div>
+              <div class="note-body"><span class="tag k">key</span>Valgo dinâmico do joelho direito no descenso. Compensação com inclinação do tronco.</div>
+            </div>
+            <div class="note">
+              <div class="note-time">00:05.1</div>
+              <div class="note-body"><span class="tag r">dor</span>Paciente relata pinçada na patela direita ao chegar em 90°.</div>
+            </div>
+            <div class="note">
+              <div class="note-time">00:08.7</div>
+              <div class="note-body"><span class="tag g">subida</span>Retorno simétrico, ativação adequada de glúteo médio bilateral.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="add-note">
+          <input placeholder="Adicionar nota no momento atual (00:04.21)..."/>
+          <button class="btn primary" style="padding: 9px 12px;"><i data-lucide="plus" style="width:14px;height:14px;"></i></button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  if (window.lucide && window.lucide.createIcons) window.lucide.createIcons();
+</script>
+</body>
+</html>

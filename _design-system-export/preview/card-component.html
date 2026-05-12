@@ -1,0 +1,21 @@
+<!doctype html><html><head><meta charset="utf-8"><link rel="stylesheet" href="card.css"><title>Card Component</title></head>
+<body>
+<div style="display:flex;gap:12px;">
+  <div style="flex:1;background:hsl(var(--card));border:1px solid hsl(var(--border));border-radius:16px;padding:20px;">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+      <div style="width:36px;height:36px;border-radius:50%;background:hsl(211 100% 96%);color:hsl(211 100% 35%);display:flex;align-items:center;justify-content:center;font-weight:600;font-size:13px;">JS</div>
+      <div>
+        <div style="font-weight:600;font-size:14px;">João Silva</div>
+        <div style="font-size:12px;color:hsl(var(--muted-foreground));">Última sessão há 3 dias</div>
+      </div>
+    </div>
+    <div style="font-size:13px;color:hsl(var(--muted-foreground));margin-bottom:14px;">Protocolo: Reabilitação ombro direito · Sessão 8 de 12</div>
+    <button class="btn btn-outline btn-sm">Ver prontuário</button>
+  </div>
+  <div style="flex:1;background:hsl(var(--card));border:1px solid hsl(var(--border));border-radius:16px;padding:20px;box-shadow:var(--shadow-md);transform:translateY(-1px);">
+    <div class="eyebrow" style="margin-bottom:6px;">HOVER STATE</div>
+    <div style="font-weight:600;font-size:14px;margin-bottom:6px;">Card elevado</div>
+    <div style="font-size:12px;color:hsl(var(--muted-foreground));">shadow-md + translateY(-1px). Sem scale, sem ornament.</div>
+  </div>
+</div>
+</body></html>

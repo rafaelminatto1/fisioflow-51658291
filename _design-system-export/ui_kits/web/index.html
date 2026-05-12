@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"/>
+<title>FisioFlow Clínica — UI Kit</title>
+<link rel="stylesheet" href="kit.css"/>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel" src="ui.jsx"></script>
+<script type="text/babel" src="Sidebar.jsx"></script>
+<script type="text/babel" src="PageHeader.jsx"></script>
+<script type="text/babel" src="AgendaView.jsx"></script>
+<script type="text/babel" src="PatientList.jsx"></script>
+<script type="text/babel" src="ExerciseLibrary.jsx"></script>
+<script type="text/babel" src="Login.jsx"></script>
+<script type="text/babel">
+const { Icon, Button } = window.FZ;
+
+const App = () => {
+  const [route, setRoute] = React.useState('login');
+
+  React.useEffect(() => {
+    if (window.lucide && window.lucide.createIcons) {
+      window.lucide.createIcons();
+    }
+  });
+
+  if (route === 'login') {
+    return <Login onLogin={() => setRoute('agenda')} />;
+  }
+
+  const screens = {
+    agenda: {
+      title: 'Agenda da semana',
+      meta: <span><strong>12 de maio de 2026</strong> · Semana 19 · 6 dias · 14 consultas</span>,
+      alert: '5 pacientes sem retorno',
+      actions: <>
+        <Button variant="outline" size="sm"><Icon name="settings" size={14}/> Filtros</Button>
+        <Button variant="ghost" size="icon"><Icon name="settings" size={14}/></Button>
+        <Button variant="default" data-screen-label="agendar-btn"><Icon name="plus" size={14}/> Agendar</Button>
+      </>,
+      body: <AgendaView />,
+    },
+    pacientes: {
+      title: 'Pacientes',
+      meta: <span><strong>248</strong> ativos · <strong>12</strong> novos esta semana · <strong>3</strong> em pausa</span>,
+      actions: null,
+      body: <PatientList />,
+    },
+    exercicios: {
+      title: 'Biblioteca de Exercícios',
+      meta: <span><strong>351</strong> exercícios · <strong>211</strong> com vídeo (60%) · <strong>50</strong> templates · <strong>55</strong> protocolos</span>,
+      actions: <>
+        <Button variant="default" size="sm"><Icon name="plus" size={14}/> Novo Exercício</Button>
+        <Button variant="outline" size="sm"><Icon name="upload" size={14}/> Upload Vídeo</Button>
+      </>,
+      body: <ExerciseLibrary />,
+    },
+  };
+
+  const scr = screens[route] || screens.agenda;
+
+  return (
+    <div className="fz-shell" data-screen-label={`01 ${route}`}>
+      <Sidebar active={route} onNavigate={(id) => screens[id] ? setRoute(id) : null} />
+      <div className="fz-content">
+        <PageHeader title={scr.title} meta={scr.meta} actions={scr.actions} alert={scr.alert}/>
+        <div className="fz-content-body" style={{paddingTop:16}}>
+          {scr.body}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>

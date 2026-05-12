@@ -189,6 +189,85 @@ aiSearchApp.post("/sync", requireAuth, async (c) => {
   }
 });
 
+// ─── Busca Semântica de Exercícios (Vectorize) ──────────────────────────────
+
+aiSearchApp.get("/exercises", requireAuth, async (c) => {
+  const query = c.req.query("q");
+  if (!query) return c.json({ error: "query é obrigatória" }, 400);
+
+  try {
+    // 1. Gerar embedding para a busca
+    const aiResponse: any = await c.env.AI.run("@cf/baai/bge-m3", {
+      text: [query],
+    });
+    const vector = aiResponse.data[0];
+
+    // 2. Buscar no Vectorize
+    const matches = await c.env.CLINICAL_KNOWLEDGE.query(vector, {
+      topK: 10,
+      namespace: "exercises",
+      returnMetadata: true,
+    });
+
+    return c.json({
+      query,
+      data: matches.matches.map((m: any) => ({
+        id: m.id,
+        score: m.score,
+        ...m.metadata,
+      })),
+    });
+  } catch (error: any) {
+    console.error("[Vectorize] Search error:", error);
+    return c.json({ error: "Falha na busca semântica" }, 500);
+  }
+});
+
+// ─── Sync Exercícios → Vectorize ─────────────────────────────────────────────
+
+aiSearchApp.post("/exercises/sync", requireAuth, async (c) => {
+  const pool = createPool(c.env);
+  
+  try {
+    const res = await pool.query(`
+      SELECT id, name, description, instructions, muscles_primary, muscles_secondary, body_parts
+      FROM exercises 
+      WHERE is_public = true AND deleted_at IS NULL
+    `);
+
+    console.log(`[Vectorize] Syncing ${res.rows.length} exercises...`);
+
+    for (const row of res.rows) {
+      const textToEmbed = `
+        Nome: ${row.name}
+        Descrição: ${row.description || ""}
+        Instruções: ${row.instructions || ""}
+        Músculos: ${(row.muscles_primary || []).join(", ")}
+        Regiões: ${(row.body_parts || []).join(", ")}
+      `.trim();
+
+      const aiResponse: any = await c.env.AI.run("@cf/baai/bge-m3", {
+        text: [textToEmbed],
+      });
+
+      await c.env.CLINICAL_KNOWLEDGE.upsert([{
+        id: row.id,
+        values: aiResponse.data[0],
+        namespace: "exercises",
+        metadata: {
+          name: row.name,
+          category: "exercise"
+        }
+      }]);
+    }
+
+    return c.json({ success: true, count: res.rows.length });
+  } catch (error: any) {
+    console.error("[Vectorize] Sync error:", error);
+    return c.json({ error: "Falha na sincronização de vetores" }, 500);
+  }
+});
+
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function getCfApi(env: Env) {
