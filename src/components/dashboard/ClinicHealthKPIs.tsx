@@ -1,145 +1,184 @@
-import React, { memo } from "react";
+import React from "react";
+import { View, Text, StyleSheet, ScrollView } from "react-native";
+import { Card } from "@/components";
+import { useQuery } from "@tanstack/react-query";
+import { fetchApi } from "@/lib/api";
+import { useColors } from "@/hooks/useColorScheme";
 import { 
-  TrendingUp, 
   Users, 
-  DollarSign, 
-  Target, 
-  Clock, 
+  Calendar, 
+  TrendingUp, 
+  AlertCircle, 
+  HandCoins,
   ArrowUpRight,
-  ShieldCheck,
-  Zap
-} from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
-import { useClinicHealthKPIs } from "@/hooks/useClinicHealthKPIs";
-import { cn } from "@/lib/utils";
+  ArrowDownRight
+} from "lucide-react-native";
 
-interface MetricCardProps {
-  title: string;
-  value: string | number;
-  subtitle: string;
-  icon: React.ElementType;
-  trend?: {
-    value: string;
-    isPositive: boolean;
-  };
-  color?: "primary" | "emerald" | "amber" | "sky";
+export interface ClinicKPIs {
+  occupancy: { booked: number; capacity: number };
+  noShow: { count: number; total: number };
+  financial: { totalRevenue: number; avgTicket: number };
+  clinical: { avgSessions: number };
 }
 
-const MetricCard = memo(({ title, value, subtitle, icon: Icon, trend, color = "primary" }: MetricCardProps) => {
-  const colorStyles = {
-    primary: "bg-primary/10 text-primary border-primary/20",
-    emerald: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20",
-    amber: "bg-amber-500/10 text-amber-600 border-amber-500/20",
-    sky: "bg-sky-500/10 text-sky-600 border-sky-500/20",
-  };
-
-  return (
-    <Card className="overflow-hidden rounded-[2rem] border-border/60 bg-background/80 shadow-sm backdrop-blur-xl transition-all hover:shadow-md hover:border-primary/20">
-      <CardContent className="p-6">
-        <div className="flex items-start justify-between">
-          <div className={cn("p-3 rounded-2xl border", colorStyles[color])}>
-            <Icon className="h-5 w-5" />
-          </div>
-          {trend && (
-            <Badge variant="outline" className={cn(
-              "text-[10px] font-bold uppercase tracking-wider",
-              trend.isPositive ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20" : "bg-amber-500/10 text-amber-600 border-amber-500/20"
-            )}>
-              {trend.value}
-            </Badge>
-          )}
-        </div>
-        
-        <div className="mt-4 space-y-1">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-            {title}
-          </p>
-          <h3 className="text-2xl font-bold tracking-tight text-foreground">
-            {value}
-          </h3>
-          <p className="text-xs text-muted-foreground leading-relaxed">
-            {subtitle}
-          </p>
-        </div>
-      </CardContent>
-    </Card>
-  );
-});
-
-MetricCard.displayName = "MetricCard";
-
 export const ClinicHealthKPIs: React.FC = () => {
-  const { data: kpis, isLoading } = useClinicHealthKPIs();
+  const colors = useColors();
 
-  if (isLoading) {
-    return (
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {[1, 2, 3, 4].map((i) => (
-          <Skeleton key={i} className="h-44 rounded-[2rem]" />
-        ))}
-      </div>
-    );
+  const { data: kpis, isLoading } = useQuery({
+    queryKey: ["clinic-kpis"],
+    queryFn: async () => {
+      const res = await fetchApi<{ data: ClinicKPIs }>("/api/clinic-metrics/kpis");
+      return res.data;
+    },
+    staleTime: 1000 * 60 * 10, // 10 mins
+  });
+
+  if (isLoading || !kpis) {
+    return null;
   }
 
-  const formatCurrency = (val: number) => 
-    new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(val);
+  const occupancyRate = (kpis.occupancy.booked / kpis.occupancy.capacity) * 100;
+  const noShowRate = (kpis.noShow.count / kpis.noShow.total) * 100;
+  
+  // Cálculo simplificado de LTV para o dashboard: Ticket Médio * Média de sessões
+  const estimatedLtv = kpis.financial.avgTicket * kpis.clinical.avgSessions;
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between gap-4">
-        <div>
-          <h2 className="text-lg font-bold tracking-tight flex items-center gap-2">
-            <ShieldCheck className="h-5 w-5 text-primary" />
-            Saúde do Negócio (BI)
-          </h2>
-          <p className="text-xs text-muted-foreground">
-            Indicadores de crescimento e eficiência de aquisição.
-          </p>
-        </div>
-        <Badge variant="secondary" className="bg-primary/5 text-primary border-primary/10">
-          Atualizado em tempo real
-        </Badge>
-      </div>
+    <View style={styles.container}>
+      <View style={styles.header}>
+        <Text style={[styles.title, { color: colors.text }]}>Saúde do Negócio</Text>
+        <Text style={[styles.sub, { color: colors.textSecondary }]}>Métricas reais da Mooca Fisio</Text>
+      </View>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <MetricCard
-          title="CAC"
-          value={formatCurrency(kpis?.cac || 0)}
-          subtitle={`${kpis?.new_patients || 0} novos pacientes com R$ ${kpis?.marketing_spend?.toLocaleString("pt-BR") || 0} em ads.`}
-          icon={Target}
-          color="amber"
-          trend={{ value: "Benchmark: < R$ 150", isPositive: (kpis?.cac || 0) < 150 }}
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.scroll}>
+        {/* KPI: Ocupação */}
+        <KPIItem 
+          label="OCUPAÇÃO" 
+          value={`${occupancyRate.toFixed(1)}%`} 
+          sub={`${kpis.occupancy.booked} agendamentos`}
+          icon={Calendar}
+          status={occupancyRate > 75 ? "good" : occupancyRate > 50 ? "warning" : "bad"}
+          color="#3b82f6"
         />
 
-        <MetricCard
-          title="LTV Estimado"
-          value={formatCurrency(kpis?.ltv_estimate || 0)}
-          subtitle="Valor bruto projetado por paciente em 12 meses."
+        {/* KPI: No-Show */}
+        <KPIItem 
+          label="FALTAS (90D)" 
+          value={`${noShowRate.toFixed(1)}%`} 
+          sub={`${kpis.noShow.count} no-shows`}
+          icon={AlertCircle}
+          status={noShowRate < 12 ? "good" : noShowRate < 20 ? "warning" : "bad"}
+          color="#ef4444"
+        />
+
+        {/* KPI: LTV Estimado */}
+        <KPIItem 
+          label="LTV MÉDIO" 
+          value={`R$ ${estimatedLtv.toFixed(0)}`} 
+          sub={`Base: ${kpis.clinical.avgSessions.toFixed(1)} sessões`}
           icon={TrendingUp}
-          color="emerald"
-          trend={{ value: `ROI: ${kpis?.ltv_cac_ratio || 0}x`, isPositive: (kpis?.ltv_cac_ratio || 0) > 3 }}
+          status={estimatedLtv > 2000 ? "good" : estimatedLtv > 1000 ? "warning" : "bad"}
+          color="#10b981"
         />
 
-        <MetricCard
-          title="Payback"
-          value={`${kpis?.payback || 0} meses`}
-          subtitle="Tempo médio para recuperar o custo de aquisição."
-          icon={Clock}
-          color="primary"
-          trend={{ value: "Ideal: < 3 meses", isPositive: (kpis?.payback || 0) <= 3 }}
+        {/* KPI: Receita Mês */}
+        <KPIItem 
+          label="RECEITA MÊS" 
+          value={`R$ ${(kpis.financial.totalRevenue / 1000).toFixed(1)}k`} 
+          sub="Total realizado"
+          icon={HandCoins}
+          status="neutral"
+          color="#8b5cf6"
         />
-
-        <MetricCard
-          title="Eficiência (LTV/CAC)"
-          value={`${kpis?.ltv_cac_ratio || 0}x`}
-          subtitle="Sustentabilidade: Cada R$ 1 investido retorna este valor."
-          icon={Zap}
-          color="sky"
-          trend={{ value: "Escalável", isPositive: (kpis?.ltv_cac_ratio || 0) > 3 }}
-        />
-      </div>
-    </div>
+      </ScrollView>
+    </View>
   );
 };
+
+const KPIItem = ({ label, value, sub, icon: Icon, status, color }: any) => {
+  const colors = useColors();
+  
+  const statusColor = status === "good" ? "#10b981" : status === "warning" ? "#fbbf24" : status === "bad" ? "#ef4444" : colors.textSecondary;
+
+  return (
+    <Card style={styles.card}>
+      <View style={styles.cardHeader}>
+        <Text style={[styles.label, { color: colors.textSecondary }]}>{label}</Text>
+        <Icon size={14} color={color} />
+      </View>
+      
+      <Text style={[styles.value, { color: colors.text }]}>{value}</Text>
+      
+      <View style={styles.cardFooter}>
+        <Text style={[styles.subValue, { color: colors.textSecondary }]} numberOfLines={1}>{sub}</Text>
+        {status !== "neutral" && (
+          <View style={[styles.statusDot, { backgroundColor: statusColor }]} />
+        )}
+      </View>
+    </Card>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: {
+    marginVertical: 16,
+  },
+  header: {
+    paddingHorizontal: 20,
+    marginBottom: 12,
+  },
+  title: {
+    fontSize: 16,
+    fontWeight: "900",
+    letterSpacing: -0.5,
+  },
+  sub: {
+    fontSize: 11,
+    fontWeight: "600",
+  },
+  scroll: {
+    paddingLeft: 20,
+    paddingRight: 10,
+    gap: 12,
+  },
+  card: {
+    width: 160,
+    padding: 14,
+    borderRadius: 20,
+    borderWidth: 1.5,
+    borderColor: "rgba(255,255,255,0.1)",
+  },
+  cardHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 8,
+  },
+  label: {
+    fontSize: 9,
+    fontWeight: "900",
+    letterSpacing: 1,
+  },
+  value: {
+    fontSize: 22,
+    fontWeight: "900",
+    fontVariant: ["tabular-nums"],
+  },
+  cardFooter: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginTop: 6,
+  },
+  subValue: {
+    fontSize: 9,
+    fontWeight: "700",
+    flex: 1,
+  },
+  statusDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    marginLeft: 6,
+  }
+});

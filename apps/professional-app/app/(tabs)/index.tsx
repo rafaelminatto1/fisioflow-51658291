@@ -16,6 +16,7 @@ import { useColors } from "@/hooks/useColorScheme";
 import { useAuthStore } from "@/store/auth";
 import { Card, Skeleton, SummaryCardSkeleton } from "@/components";
 import { ProactiveRiskDashboard } from "@/components/biomechanics/ProactiveRiskDashboard";
+import { ClinicHealthKPIs } from "@/components/dashboard/ClinicHealthKPIs";
 import { useAppointments } from "@/hooks/useAppointments";
 import { usePatients } from "@/hooks/usePatients";
 import { useHaptics } from "@/hooks/useHaptics";
@@ -282,6 +283,9 @@ export default function DashboardScreen() {
                 </Card>
               ))}
             </View>
+
+            {/* Business Health KPIs (Sprint 2) */}
+            <ClinicHealthKPIs />
 
             <View style={styles.quickActions}>
               {/* Hero Feature Card */}

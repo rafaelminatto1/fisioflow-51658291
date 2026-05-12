@@ -358,6 +358,7 @@ const apiRoutes = [
   ["/api/ai-clinical-search", aiClinicalSearchRoutes],
   ["/api/v1/user", agendaAppearanceRoutes],
   ["/api/fisiobrain", fisioBrainRoutes],
+  ["/api/clinic-metrics", clinicMetricsRoutes],
 ] as const;
 
 apiRoutes.forEach(([path, router]) => {

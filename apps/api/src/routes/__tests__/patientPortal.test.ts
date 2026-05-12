@@ -18,6 +18,23 @@ vi.mock("../../lib/auth", () => ({
   }),
 }));
 
+vi.mock("../../lib/auth/patientAuth", () => ({
+  requirePatientAuth: vi.fn(async (c: any, next: any) => {
+    const patientUser = {
+      uid: "user-portal-001",
+      id: "user-portal-001",
+      patientId: "patient-001",
+      organizationId: "org-test-001",
+      role: "patient",
+      email: "portal@example.com",
+      phone: "+5511999999999",
+    };
+    c.set("patient", patientUser);
+    c.set("user", patientUser);
+    await next();
+  }),
+}));
+
 async function buildApp() {
   const { Hono } = await import("hono");
   const { patientPortalRoutes } = await import("../patientPortal");
