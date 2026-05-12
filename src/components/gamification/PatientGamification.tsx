@@ -13,6 +13,8 @@ import {
   Plus,
   Loader2,
   Lock,
+  Map,
+  History,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useGamification, type Achievement } from "@/hooks/useGamification";
@@ -329,7 +331,7 @@ export function PatientGamification({ patientId }: PatientGamificationProps) {
 
           <div className="space-y-4">
             <h3 className="text-lg font-bold flex items-center gap-2 px-1">
-              <Icons.Map className="h-5 w-5 text-primary" />
+              <Map className="h-5 w-5 text-primary" />
               Sua Jornada
             </h3>
             <JourneyMap totalSessions={totalSessions} currentLevel={currentLevel} />
@@ -416,7 +418,7 @@ export function PatientGamification({ patientId }: PatientGamificationProps) {
         <Card className="border-none shadow-none bg-transparent mt-8">
           <CardHeader className="px-0 pt-0 pb-2">
             <CardTitle className="text-lg flex items-center gap-2">
-              <Icons.History className="h-5 w-5 text-muted-foreground/70" />
+              <History className="h-5 w-5 text-muted-foreground/70" />
               Histórico Recente
             </CardTitle>
           </CardHeader>
