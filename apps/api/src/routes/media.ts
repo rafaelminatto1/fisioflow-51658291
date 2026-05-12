@@ -192,6 +192,66 @@ app.delete("/exercise/attachment/:id", requireAuth, async (c) => {
   }
 });
 
+// ===== IMAGEM OTIMIZADA VIA CLOUDFLARE IMAGES API =====
+// GET /api/media/image/{key}?w=400&h=400&fit=cover&q=85
+// Lê do MEDIA_BUCKET (público) e transforma inline — WebP/AVIF automático por Accept header.
+// Usado pelo OptimizedImage component para thumbnails de exercícios e galeria.
+
+app.get("/image/*", requireAuth, async (c) => {
+  const r2Key = c.req.path.replace(/^.*\/image\//, "");
+  if (!r2Key) return c.json({ error: "Chave inválida" }, 400);
+
+  const bucket = c.env.MEDIA_BUCKET;
+  const object = await bucket.get(r2Key);
+  if (!object) return c.json({ error: "Arquivo não encontrado" }, 404);
+
+  const mime = object.httpMetadata?.contentType ?? "application/octet-stream";
+  const isImage = mime.startsWith("image/");
+
+  if (!isImage || !c.env.IMAGES) {
+    const headers = new Headers();
+    headers.set("Content-Type", mime);
+    headers.set("Cache-Control", "public, max-age=86400");
+    return new Response(object.body, { headers });
+  }
+
+  const w = parseInt(c.req.query("w") ?? "0") || undefined;
+  const h = parseInt(c.req.query("h") ?? "0") || undefined;
+  const fit = (c.req.query("fit") ?? "cover") as "cover" | "contain" | "scale-down";
+  const q = parseInt(c.req.query("q") ?? "85");
+  const blur = parseInt(c.req.query("blur") ?? "0") || undefined;
+
+  const accept = c.req.header("Accept") ?? "";
+  const outFormat: "image/avif" | "image/webp" | "image/jpeg" = /image\/avif/.test(accept)
+    ? "image/avif"
+    : /image\/webp/.test(accept)
+      ? "image/webp"
+      : "image/jpeg";
+
+  try {
+    const transformOpts: Record<string, unknown> = { fit, quality: q };
+    if (w) transformOpts.width = w;
+    if (h) transformOpts.height = h;
+    if (blur) transformOpts.blur = blur;
+
+    const transformed = await (c.env.IMAGES as any)
+      .input(object.body as ReadableStream)
+      .transform(transformOpts)
+      .output({ format: outFormat, quality: q });
+
+    const res = transformed.response();
+    res.headers.set("Cache-Control", "public, max-age=86400, s-maxage=604800");
+    res.headers.set("Vary", "Accept");
+    return res;
+  } catch {
+    const headers = new Headers();
+    headers.set("Content-Type", mime);
+    headers.set("Cache-Control", "public, max-age=3600");
+    const obj2 = await bucket.get(r2Key);
+    return new Response(obj2?.body ?? null, { headers });
+  }
+});
+
 // ===== ROTA DE UPLOAD LEGADA (Pre-Signed URL) =====
 app.post("/upload-url", requireAuth, async (c) => {
   try {

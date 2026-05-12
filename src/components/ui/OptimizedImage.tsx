@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect, ImgHTMLAttributes, useMemo } from "react";
 import { cn } from "@/lib/utils";
 import { fisioLogger as logger } from "@/lib/errors/logger";
+import { getWorkersApiUrl } from "@/lib/api/config";
 
 interface OptimizedImageProps extends Omit<ImgHTMLAttributes<HTMLImageElement>, "src"> {
   src: string;
@@ -51,13 +52,22 @@ function getOptimizedUrl(src: string, options: { width?: number; quality?: numbe
   }
 
   const { width = 800, quality = 85 } = options;
-  const workerUrl = "https://r2-worker.rafalegollas.workers.dev/cdn-cgi/image";
 
+  // Extract R2 key from public media.moocafisio.com.br URLs and route through
+  // the main API's /api/media/image/* which uses the Cloudflare IMAGES binding.
   try {
-    const encodedSrc = encodeURIComponent(
-      src.startsWith("/") ? `${window.location.origin}${src}` : src,
-    );
-    return `${workerUrl}/width=${width},quality=${quality},format=auto/${encodedSrc}`;
+    const r2Domain = "media.moocafisio.com.br";
+    if (src.includes(r2Domain)) {
+      const url = new URL(src);
+      const key = url.pathname.replace(/^\//, "");
+      const apiBase = getWorkersApiUrl();
+      const params = new URLSearchParams();
+      if (width) params.set("w", String(width));
+      if (quality !== 85) params.set("q", String(quality));
+      params.set("fit", "cover");
+      return `${apiBase}/api/media/image/${key}?${params}`;
+    }
+    return src;
   } catch {
     return src;
   }

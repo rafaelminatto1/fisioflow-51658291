@@ -14,7 +14,7 @@ import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { LoadingSkeleton } from "@/components/ui/loading-skeleton";
 import { useCommandPalette } from "@/hooks/ui/useCommandPalette";
 import { PatientHelpers } from "@/types";
-import { FileText, Activity, Layers, History, Bot, Settings as SettingsIcon } from "lucide-react";
+import { FileText, Activity, Layers, History, Bot, Settings as SettingsIcon, Camera } from "lucide-react";
 
 // Hooks Modulares
 import { usePatientEvolutionState } from "@/hooks/evolution/usePatientEvolutionState";
@@ -74,6 +74,11 @@ const LazyPROMsDashboard = lazy(() =>
 const LazyEvolutionSettingsTab = lazy(() =>
   import("@/components/evolution/v3-notion/EvolutionSettingsTab").then((m) => ({
     default: m.EvolutionSettingsTab,
+  })),
+);
+const LazyPatientMediaGallery = lazy(() =>
+  import("@/components/patient/PatientMediaGallery").then((m) => ({
+    default: m.PatientMediaGallery,
   })),
 );
 
@@ -507,6 +512,13 @@ const PatientEvolution = () => {
                   description: "Assistente de IA",
                 },
                 {
+                  value: "midia",
+                  label: "Mídia",
+                  shortLabel: "Mídia",
+                  icon: Camera,
+                  description: "Fotos, vídeos e pedidos médicos",
+                },
+                {
                   value: "configuracoes",
                   label: "Ajustes",
                   shortLabel: "Ajustes",
@@ -594,6 +606,13 @@ const PatientEvolution = () => {
                         sessionId={state.appointmentId ?? undefined}
                       />
                     </div>
+                  )}
+                </Suspense>
+              </TabsContent>
+              <TabsContent value="midia">
+                <Suspense fallback={<LoadingSkeleton />}>
+                  {state.patientId && (
+                    <LazyPatientMediaGallery patientId={state.patientId} />
                   )}
                 </Suspense>
               </TabsContent>

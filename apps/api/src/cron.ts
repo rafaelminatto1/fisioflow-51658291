@@ -101,7 +101,13 @@ export async function handleScheduled(event: ScheduledEvent, env: Env, ctx: Exec
         break;
       }
 
-      case "0 15 * * *": { // UTC 15h = BRT 12h — RTM Wearable Alerts
+      case "0 13 * * *": { // UTC 13h = BRT 10h — Anti-Churn (Reativação e Pacotes)
+        const pool = createPool(env);
+        await processAntiChurnAutomations(pool, env);
+        break;
+      }
+
+      case "0 15 * * *": { // UTC 15h = BRT 12h — RTM Clinical Alerts
         const pool = createPool(env);
         
         // 1. Process Clinical Proactive Alerts (Pain spikes, compliance drops)

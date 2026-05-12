@@ -37,14 +37,14 @@ export type * from "./integrations";
 export * from "./ui";
 export * from "./ui/theme";
 export * from "./ui/accessibility";
-export * from "./ui/responsive";
+export * from "./responsive";
 
 // ============================================================================
 // Other Component Categories
 // ============================================================================
 
 export * from "./charts";
-export * from "./clinical";
+// export * from "./clinical"; // Disabled: missing index.ts
 export * from "./dashboard";
 export * from "./evaluation";
 export * from "./evolution";
