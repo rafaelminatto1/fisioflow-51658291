@@ -34,6 +34,18 @@ export class AppointmentReminderWorkflow extends WorkflowEntrypoint<
       organizationId,
     } = event.payload;
 
+    // Passo 0: Analisar Risco de No-Show (IA)
+    const riskProfile = await step.do("analyze-no-show-risk", async () => {
+      const { getRawSql } = await import("../lib/db");
+      const sql = getRawSql(this.env, "read");
+      const res = await sql`
+        SELECT ai_risk_level, adherence_score 
+        FROM patient_longitudinal_summary 
+        WHERE patient_id = (SELECT patient_id FROM appointments WHERE id = ${appointmentId}::uuid)
+      `;
+      return (res.rows[0] as { ai_risk_level: string; adherence_score: number }) || { ai_risk_level: "low", adherence_score: 100 };
+    });
+
     const apptTime = new Date(appointmentDate).getTime();
     const now = Date.now();
 
@@ -44,7 +56,7 @@ export class AppointmentReminderWorkflow extends WorkflowEntrypoint<
     }
 
     await step.do("send-d3-reminder", async () => {
-      await this.sendReminder(patientPhone, patientName, therapistName, appointmentDate, 3);
+      await this.sendReminder(patientPhone, patientName, therapistName, appointmentDate, 3, riskProfile.ai_risk_level);
       await this.logReminder(appointmentId, organizationId, "d3");
     });
 
@@ -55,7 +67,7 @@ export class AppointmentReminderWorkflow extends WorkflowEntrypoint<
     }
 
     await step.do("send-d1-reminder", async () => {
-      await this.sendReminder(patientPhone, patientName, therapistName, appointmentDate, 1);
+      await this.sendReminder(patientPhone, patientName, therapistName, appointmentDate, 1, riskProfile.ai_risk_level);
       await this.logReminder(appointmentId, organizationId, "d1");
     });
 
@@ -66,7 +78,7 @@ export class AppointmentReminderWorkflow extends WorkflowEntrypoint<
     }
 
     await step.do("send-d0-reminder", async () => {
-      await this.sendReminder(patientPhone, patientName, therapistName, appointmentDate, 0);
+      await this.sendReminder(patientPhone, patientName, therapistName, appointmentDate, 0, riskProfile.ai_risk_level);
       await this.logReminder(appointmentId, organizationId, "d0");
     });
   }
@@ -77,6 +89,7 @@ export class AppointmentReminderWorkflow extends WorkflowEntrypoint<
     therapistName: string,
     appointmentDate: string,
     daysAhead: number,
+    riskLevel: string = "low",
   ) {
     if (!this.env.WHATSAPP_PHONE_NUMBER_ID || !this.env.WHATSAPP_ACCESS_TOKEN) return;
 
@@ -88,10 +101,26 @@ export class AppointmentReminderWorkflow extends WorkflowEntrypoint<
       minute: "2-digit",
     });
 
-    const msg =
+    let msg =
       daysAhead === 0
         ? `Olá ${patientName}! Sua consulta com ${therapistName} é em 2 horas (${dateStr}). Te esperamos! 🏥`
         : `Olá ${patientName}! Lembrete: sua consulta com ${therapistName} é ${daysAhead === 1 ? "amanhã" : "em 3 dias"} (${dateStr}). Confirme sua presença respondendo SIM.`;
+
+    // Se o risco for alto/médio, usamos IA para gerar um lembrete mais persuasivo
+    if (riskLevel === "high" || riskLevel === "medium") {
+      try {
+        const prompt = `Gere uma mensagem de lembrete de WhatsApp curta e motivadora para um paciente de fisioterapia que tem alta probabilidade de faltar. 
+        Nome: ${patientName}, Data: ${dateStr}, Profissional: ${therapistName}. 
+        O tom deve ser acolhedor mas reforçar a importância da continuidade para a recuperação. Máximo 200 caracteres.`;
+
+        const aiResponse = await this.env.AI.run("@cf/google/gemini-1.5-flash", {
+          prompt,
+        });
+        msg = (aiResponse as any).response || msg;
+      } catch (e) {
+        console.warn("[Reminder/AI] Failed to generate AI message, using default", e);
+      }
+    }
 
     await fetch(`https://graph.facebook.com/v21.0/${this.env.WHATSAPP_PHONE_NUMBER_ID}/messages`, {
       method: "POST",

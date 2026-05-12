@@ -25,6 +25,8 @@
 | **Disaster Recovery** | Infra | Neon branching + R2 cross-region (ENAM) |
 | **Programa de Indicação (MGM)** | Mkt | Landing page e widget mobile para indicação premiada |
 | **BI Avançado (Cohorts/Churn)** | BI | Heatmaps de retenção e lista ativa de possíveis evasões |
+| **Predição de No-Show (IA)** | Clínica | Lembretes WhatsApp personalizados conforme risco do paciente |
+| **Dashboard de Recepção (TV)** | Operação | Painel em tempo real via D1 para sala de espera |
 | **Metadados de Lançamento** | Mobile | ASO e descrições otimizadas para App Store/Google Play |
 | **Golden Path E2E (IA)** | Hardening | Testes de Omnisearch, Digital Twin e SOAP no Playwright |
 

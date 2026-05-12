@@ -132,4 +132,31 @@ app.post("/checkin", requireAuth, async (c) => {
   }
 });
 
+/**
+ * GET /api/groups/live-status
+ * Retorna os check-ins recentes da D1 para exibição na TV da recepção.
+ */
+app.get("/live-status", requireAuth, async (c) => {
+  const user = c.get("user");
+  if (!c.env.DB) return c.json({ error: "D1 não configurada" }, 503);
+
+  try {
+    const results = await c.env.DB.prepare(
+      `SELECT lc.*, p.full_name as patient_name, gc.name as class_name
+       FROM live_checkins lc
+       JOIN group_enrollments ge ON ge.id = lc.enrollment_id
+       JOIN patients p ON p.id = ge.patient_id
+       JOIN group_classes gc ON gc.id = ge.class_id
+       WHERE lc.org_id = ?
+       ORDER BY lc.timestamp DESC
+       LIMIT 10`
+    ).bind(user.organizationId).all();
+
+    return c.json({ data: results.results });
+  } catch (error: any) {
+    console.error("[Groups/Live] Error:", error);
+    return c.json({ error: "Falha ao buscar status em tempo real" }, 500);
+  }
+});
+
 export { app as groupsRoutes };

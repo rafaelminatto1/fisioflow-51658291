@@ -22,6 +22,9 @@ const FeedbackPreCadastro = lazy(
 const ReferralLanding = lazy(
   () => import(/* webpackChunkName: "referral-landing" */ "@/pages/public/ReferralLanding"),
 );
+const WaitingRoomTV = lazy(
+  () => import(/* webpackChunkName: "waiting-room-tv" */ "@/pages/public/WaitingRoomTV"),
+);
 
 export const authRoutes = (
   <>
@@ -30,6 +33,7 @@ export const authRoutes = (
     <Route path="/auth" element={<Auth />} />
     <Route path="/auth/login" element={<Auth />} />
     <Route path="/indicacao/:code" element={<ReferralLanding />} />
+    <Route path="/tv/recepcao" element={<WaitingRoomTV />} />
     <Route
       path="/pending-approval"
       element={

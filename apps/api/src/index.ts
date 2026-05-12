@@ -98,7 +98,6 @@ import { aiClinicalSearchRoutes } from "./routes/ai-clinical-search";
 import { agendaAppearanceRoutes } from "./routes/agendaAppearance";
 import { fisioBrainRoutes } from "./routes/fisiobrain";
 import { clinicMetricsRoutes } from "./routes/clinicMetrics";
-import { groupsRoutes } from "./routes/groups";
 import { enterpriseRoutes } from "./routes/enterprise-bi";
 import { verifyToken } from "./lib/auth";
 import { getRawSql } from "./lib/db";
