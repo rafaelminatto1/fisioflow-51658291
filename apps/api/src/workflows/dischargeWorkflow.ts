@@ -33,12 +33,50 @@ export class PatientDischargeWorkflow extends WorkflowEntrypoint<Env, PatientDis
       dischargeSummary,
     } = event.payload;
 
-    // 1. Mensagem de alta + pesquisa de satisfação imediata
-    await step.do("send-discharge-message", async () => {
-      await this.sendWhatsApp(
-        patientPhone,
-        `${patientName}, parabéns pela sua alta! 🎉\n\nFoi um prazer acompanhar sua recuperação. Para nos ajudar a melhorar, responda nossa pesquisa rápida:\nhttps://moocafisio.com.br/satisfacao?p=${patientId}\n\n${therapistName} e toda a equipe desejam muito sucesso! 💪`,
-      );
+    // 1. Gerar e enviar História de Sucesso (IA)
+    await step.do("generate-success-story", async () => {
+      try {
+        const { runThinkingModel } = await import("../lib/ai-native");
+        const pool = createPool(this.env);
+        
+        // Coleta histórico para a IA
+        const history = await pool.query(
+          `SELECT subjective, assessment, date FROM sessions WHERE patient_id = $1 ORDER BY date ASC`,
+          [patientId]
+        );
+
+        const prompt = `
+          Você é um assistente de alta humanizado. 
+          Gere uma mensagem de "História de Sucesso" curta e emocionante para o paciente ${patientName}.
+          Ele está recebendo alta hoje da fisioterapia com ${therapistName}.
+          
+          HISTÓRICO:
+          ${JSON.stringify(history.rows)}
+
+          Diretrizes:
+          - Destaque a superação (ex: como ele chegou e como está saindo).
+          - Use um tom inspirador.
+          - Responda em Português Brasileiro.
+          - Máximo 400 caracteres.
+        `.trim();
+
+        const aiStory = await runThinkingModel(this.env, {
+          prompt,
+          model: "gemini-1.5-flash",
+          temperature: 0.7
+        });
+
+        await this.sendWhatsApp(
+          patientPhone,
+          `🏆 *SUA HISTÓRIA DE SUCESSO:*\n\n${aiStory.content}\n\n${patientName}, parabéns pela sua jornada! 🎉 Para nos ajudar a melhorar, responda nossa pesquisa rápida:\nhttps://moocafisio.com.br/satisfacao?p=${patientId}`
+        );
+      } catch (e) {
+        console.warn("[Discharge/AI] Success story failed, sending default", e);
+        await this.sendWhatsApp(
+          patientPhone,
+          `${patientName}, parabéns pela sua alta! 🎉\n\nFoi um prazer acompanhar sua recuperação. Responda nossa pesquisa rápida:\nhttps://moocafisio.com.br/satisfacao?p=${patientId}`
+        );
+      }
     });
 
     // 2. Aguarda 7 dias → verifica resposta da pesquisa

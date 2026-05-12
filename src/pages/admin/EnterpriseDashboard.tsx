@@ -3,8 +3,9 @@ import { MainLayout } from "@/components/layout/MainLayout";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
 import { request } from "@/api/v2/base";
-import { Map, Building2, TrendingUp, Users, DollarSign, LayoutDashboard } from "lucide-react";
+import { Map, Building2, TrendingUp, Users, DollarSign, LayoutDashboard, Sparkles, Loader2 } from "lucide-react";
 import { formatCurrency } from "@/lib/utils/format";
+import { Button } from "@/components/ui/button";
 
 interface RegionalMetric {
   clinic_name: string;
@@ -14,6 +15,9 @@ interface RegionalMetric {
 }
 
 export default function EnterpriseDashboard() {
+  const [isAuditing, setIsAuditing] = React.useState(false);
+  const [auditResult, setAuditResult] = React.useState<string | null>(null);
+
   const { data: regionalData, isLoading } = useQuery({
     queryKey: ["regional-summary"],
     queryFn: () => request<{ data: RegionalMetric[] }>("/api/enterprise/regional-summary"),
@@ -26,18 +30,58 @@ export default function EnterpriseDashboard() {
 
   const clinics = regionalData?.data || [];
 
+  const runRegionalAudit = async () => {
+    setIsAuditing(true);
+    try {
+      const res = await request<{ data: { summary: string } }>("/api/enterprise/regional-audit");
+      setAuditResult(res.data.summary);
+    } catch (err) {
+      console.error("Audit failed", err);
+    } finally {
+      setIsAuditing(false);
+    }
+  };
+
   return (
     <MainLayout title="Dashboard Regional (Enterprise)">
       <div className="max-w-7xl mx-auto px-4 py-8 space-y-8">
-        <div className="flex items-center gap-3">
-          <div className="p-3 rounded-2xl bg-indigo-600 text-white shadow-lg shadow-indigo-200">
-            <Map className="h-6 w-6" />
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="p-3 rounded-2xl bg-indigo-600 text-white shadow-lg shadow-indigo-200">
+              <Map className="h-6 w-6" />
+            </div>
+            <div>
+              <h1 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white">Regional São Paulo</h1>
+              <p className="text-slate-500 font-medium">Gestão centralizada de múltiplas unidades</p>
+            </div>
           </div>
-          <div>
-            <h1 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white">Regional São Paulo</h1>
-            <p className="text-slate-500 font-medium">Gestão centralizada de múltiplas unidades</p>
-          </div>
+
+          <Button 
+            onClick={runRegionalAudit} 
+            disabled={isAuditing}
+            className="rounded-xl h-12 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 shadow-lg shadow-indigo-200 border-none px-6 gap-2"
+          >
+            {isAuditing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+            {isAuditing ? "Auditando Regional..." : "Auditoria Inteligente (IA)"}
+          </Button>
         </div>
+
+        {/* AI Audit Result */}
+        {auditResult && (
+          <Card className="border-none shadow-premium bg-indigo-50/50 dark:bg-indigo-950/20 animate-in fade-in slide-in-from-top-4 duration-500">
+            <CardHeader className="pb-2">
+              <div className="flex items-center gap-2 text-indigo-600 dark:text-indigo-400">
+                <Sparkles className="h-4 w-4" />
+                <CardTitle className="text-sm font-black uppercase tracking-widest">Relatório Estratégico Regional</CardTitle>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm leading-relaxed text-slate-700 dark:text-slate-200 whitespace-pre-wrap">
+                {auditResult}
+              </p>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Global Regional KPIs */}
         <div className="grid gap-6 md:grid-cols-3">

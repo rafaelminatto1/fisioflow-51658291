@@ -16,7 +16,7 @@ import { Card, SyncIndicator } from "@/components";
 import { Spacing } from "@/constants/spacing";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { useAppointments } from "@/hooks/useAppointments";
+import { useAppointments, useConfirmAppointment } from "@/hooks/useAppointments";
 import { Appointment } from "@/types/api";
 
 export default function AppointmentsScreen() {
@@ -25,6 +25,7 @@ export default function AppointmentsScreen() {
   const [selectedTab, setSelectedTab] = useState<"upcoming" | "past">("upcoming");
 
   const { data: appointments = [], isLoading, isRefetching, refetch } = useAppointments();
+  const confirmMutation = useConfirmAppointment();
 
   const onRefresh = async () => {
     await refetch();
@@ -95,6 +96,8 @@ export default function AppointmentsScreen() {
 
   const renderAppointment = (appointment: Appointment) => {
     const appointmentDate = new Date(appointment.date);
+    const canConfirm = appointment.status === "scheduled";
+
     return (
       <Card key={appointment.id} style={styles.appointmentCard}>
         <View style={styles.appointmentHeader}>
@@ -155,6 +158,30 @@ export default function AppointmentsScreen() {
               {appointment.notes}
             </Text>
           </View>
+        )}
+
+        {canConfirm && selectedTab === "upcoming" && (
+          <TouchableOpacity
+            style={[styles.confirmButton, { backgroundColor: colors.success }]}
+            onPress={async () => {
+              try {
+                await confirmMutation.mutateAsync(appointment.id);
+                refetch();
+              } catch (err) {
+                // Handled
+              }
+            }}
+            disabled={confirmMutation.isPending}
+          >
+            {confirmMutation.isPending ? (
+              <ActivityIndicator size="small" color="#FFF" />
+            ) : (
+              <>
+                <Ionicons name="checkmark-circle" size={18} color="#FFF" />
+                <Text style={styles.confirmButtonText}>Confirmar Presença</Text>
+              </>
+            )}
+          </TouchableOpacity>
         )}
       </Card>
     );
@@ -355,6 +382,20 @@ const styles = StyleSheet.create({
   notesText: {
     flex: 1,
     fontSize: 12,
+  },
+  confirmButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 16,
+    paddingVertical: 12,
+    borderRadius: 12,
+    gap: 8,
+  },
+  confirmButtonText: {
+    color: "#FFFFFF",
+    fontWeight: "bold",
+    fontSize: 14,
   },
   emptyState: {
     alignItems: "center",

@@ -30,7 +30,7 @@ import { ClinicalAISnapshotMobile } from "@/components/ClinicalAISnapshotMobile"
 import { Spacing } from "@/constants/spacing";
 import * as Notifications from "expo-notifications";
 import { useExercises } from "@/hooks/useExercises";
-import { useAppointments } from "@/hooks/useAppointments";
+import { useAppointments, useConfirmAppointment } from "@/hooks/useAppointments";
 import { useTelemedicine } from "@/hooks/useTelemedicine";
 import { Linking } from "react-native";
 import { GamificationService } from "@/services/GamificationService";
@@ -87,7 +87,8 @@ export default function DashboardScreen() {
     isLoading: gamificationLoading,
   } = useGamification();
   const { data: exercises = [], isLoading: exercisesLoading } = useExercises();
-  const { data: upcomingAppointments = [], isLoading: appointmentsLoading } = useAppointments(true);
+  const { data: upcomingAppointments = [], isLoading: appointmentsLoading, refetch: refetchAppointments } = useAppointments(true);
+  const confirmMutation = useConfirmAppointment();
   const { activeRoom } = useTelemedicine();
 
   const [showNotificationPrompt, setShowNotificationPrompt] = useState(false);
@@ -422,6 +423,20 @@ export default function DashboardScreen() {
                     >
                       {nextAppointment.type} com {nextAppointment.professionalName}
                     </Text>
+
+                    {nextAppointment.status === "scheduled" && (
+                      <TouchableOpacity
+                        style={[styles.dashConfirmButton, { backgroundColor: colors.success }]}
+                        onPress={async () => {
+                          await confirmMutation.mutateAsync(nextAppointment.id);
+                          refetchAppointments();
+                        }}
+                        disabled={confirmMutation.isPending}
+                      >
+                        <Ionicons name="checkmark-circle" size={14} color="#FFF" />
+                        <Text style={styles.dashConfirmButtonText}>Confirmar Agora</Text>
+                      </TouchableOpacity>
+                    )}
                   </View>
                 </View>
               </Card>
@@ -824,6 +839,21 @@ const styles = StyleSheet.create({
   },
   appointmentDetails: {
     fontSize: 14,
+  },
+  dashConfirmButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 10,
+    paddingVertical: 8,
+    borderRadius: 10,
+    gap: 6,
+  },
+  dashConfirmButtonText: {
+    color: "#FFFFFF",
+    fontWeight: "800",
+    fontSize: 11,
+    textTransform: "uppercase",
   },
   quickActionsGrid: {
     flexDirection: "row",

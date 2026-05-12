@@ -190,4 +190,56 @@ app.post("/voice/evolution", async (c) => {
   }
 });
 
+app.post("/voice/task", async (c) => {
+  const user = c.get("user");
+  const formData = await c.req.parseBody();
+  const audioFile = formData["audio"] as File | undefined;
+
+  if (!audioFile) return c.json({ error: "Arquivo de áudio obrigatório" }, 400);
+
+  try {
+    const audioBuffer = await audioFile.arrayBuffer();
+    const transcript = await smartTranscribe(c.env, audioBuffer, "pt");
+
+    const { runThinkingModel } = await import("../../lib/ai-native");
+
+    const prompt = `
+      Converta esta nota de voz de um fisioterapeuta em uma tarefa estruturada para o time administrativo.
+      NOTA DE VOZ: "${transcript}"
+
+      Retorne APENAS um JSON:
+      {
+        "title": "Título curto e claro",
+        "description": "Explicação detalhada da tarefa",
+        "priority": "BAIXA | MEDIA | ALTA | URGENTE"
+      }
+    `.trim();
+
+    const aiRes = await runThinkingModel(c.env, {
+      prompt,
+      model: "gemini-1.5-flash",
+      temperature: 0.2,
+      responseFormat: "json"
+    });
+
+    const jsonMatch = aiRes.content.match(/\{[\s\S]*\}/);
+    const taskData = JSON.parse(jsonMatch?.[0] ?? aiRes.content);
+
+    const { createPool } = await import("../../lib/db");
+    const pool = createPool(c.env);
+
+    const result = await pool.query(
+      `INSERT INTO tarefas (organization_id, created_by, titulo, descricao, prioridade, status, tipo, order_index)
+       VALUES ($1, $2, $3, $4, $5, 'A_FAZER', 'TAREFA', 0)
+       RETURNING id`,
+      [user.organizationId, user.uid, taskData.title, taskData.description, taskData.priority]
+    );
+
+    return c.json({ success: true, taskId: result.rows[0].id, transcript, taskData });
+  } catch (error: any) {
+    console.error("[Voice/Task] Error:", error);
+    return c.json({ error: "Falha ao processar comando de voz" }, 500);
+  }
+});
+
 export { app as aiAudioRoutes };

@@ -87,28 +87,41 @@ export async function handleScheduled(event: ScheduledEvent, env: Env, ctx: Exec
 
       case "30 10 * * *": // UTC 10h30 = BRT 07h30 — ClinicAgent morning briefing
         if (env.CLINIC_AGENT) {
-          const stub = env.CLINIC_AGENT.get(env.CLINIC_AGENT.idFromName("global"));
-          await (stub as any).runMorningBriefing().catch((err: unknown) =>
-            console.error("[Cron] ClinicAgent briefing failed:", err),
-          );
+          const pool = createPool(env);
+          const orgs = await pool.query("SELECT id FROM organizations WHERE is_active = true");
+          for (const org of orgs.rows) {
+            const stub = env.CLINIC_AGENT.get(env.CLINIC_AGENT.idFromName(org.id));
+            await (stub as any).setOrgId({ orgId: org.id }).catch(() => {});
+            await (stub as any).runMorningBriefing().catch((err: unknown) =>
+              console.error(`[Cron] ClinicAgent briefing failed for org ${org.id}:`, err),
+            );
+          }
         }
         break;
 
       case "30 21 * * *": // UTC 21h30 = BRT 18h30 — ClinicAgent daily summary
         if (env.CLINIC_AGENT) {
-          const stub = env.CLINIC_AGENT.get(env.CLINIC_AGENT.idFromName("global"));
-          await (stub as any).runDailySummary().catch((err: unknown) =>
-            console.error("[Cron] ClinicAgent summary failed:", err),
-          );
+          const pool = createPool(env);
+          const orgs = await pool.query("SELECT id FROM organizations WHERE is_active = true");
+          for (const org of orgs.rows) {
+            const stub = env.CLINIC_AGENT.get(env.CLINIC_AGENT.idFromName(org.id));
+            await (stub as any).runDailySummary().catch((err: unknown) =>
+              console.error(`[Cron] ClinicAgent summary failed for org ${org.id}:`, err),
+            );
+          }
         }
         break;
 
       case "0 12 * * 1": // UTC 12h Segunda = BRT 09h — ClinicAgent missing patients alert
         if (env.CLINIC_AGENT) {
-          const stub = env.CLINIC_AGENT.get(env.CLINIC_AGENT.idFromName("global"));
-          await (stub as any).checkMissingPatients().catch((err: unknown) =>
-            console.error("[Cron] ClinicAgent missing patients failed:", err),
-          );
+          const pool = createPool(env);
+          const orgs = await pool.query("SELECT id FROM organizations WHERE is_active = true");
+          for (const org of orgs.rows) {
+            const stub = env.CLINIC_AGENT.get(env.CLINIC_AGENT.idFromName(org.id));
+            await (stub as any).checkMissingPatients().catch((err: unknown) =>
+              console.error(`[Cron] ClinicAgent missing patients failed for org ${org.id}:`, err),
+            );
+          }
         }
         break;
 
@@ -127,10 +140,15 @@ export async function handleScheduled(event: ScheduledEvent, env: Env, ctx: Exec
       case "0 15 * * *": { // UTC 15h = BRT 12h — RTM Clinical Alerts
         const pool = createPool(env);
         
-        // 1. Process Clinical Proactive Alerts (Pain spikes, compliance drops)
-        console.log("[Cron] Processing RTM Clinical Alerts...");
-        const clinicalAlerts = await RTMAlertsService.processDailyAlerts(env, "00000000-0000-0000-0000-000000000001");
-        console.log(`[Cron] RTM Clinical Alerts: triggered ${clinicalAlerts} alerts.`);
+        // 1. Process Clinical Proactive Alerts for ALL organizations
+        console.log("[Cron] Processing RTM Clinical Alerts for all orgs...");
+        const orgs = await pool.query("SELECT id FROM organizations WHERE is_active = true");
+        for (const org of orgs.rows) {
+          const clinicalAlerts = await RTMAlertsService.processDailyAlerts(env, org.id);
+          if (clinicalAlerts > 0) {
+            console.log(`[Cron] RTM Clinical Alerts: triggered ${clinicalAlerts} alerts for org ${org.id}.`);
+          }
+        }
 
         // 2. Original wearable analysis
         await processWearableRTMAlerts(pool, env);

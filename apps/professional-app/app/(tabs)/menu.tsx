@@ -79,6 +79,14 @@ const MENU_ITEMS: MenuItem[] = [
     description: "Perfil, notificações e LGPD",
     color: "#64748B",
   },
+  {
+    id: "voice-task",
+    title: "Tarefa via Voz",
+    icon: "mic-outline",
+    route: "/(app)/voice-task",
+    description: "Crie tarefas administrativas falando",
+    color: "#4F46E5",
+  },
 ];
 
 export default function MenuScreen() {
