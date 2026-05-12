@@ -10,6 +10,7 @@ import { FisioPredictIndicator } from "@/features/ia-studio/components/FisioPred
 import { PatientGamificationSummary } from "@/components/patients/PatientGamificationSummary";
 import { SemanticRecommenderWidget } from "./SemanticRecommenderWidget";
 import { SimilarPatientsWidget } from "./SimilarPatientsWidget";
+import { RecoveryTrajectoryWidget } from "./RecoveryTrajectoryWidget";
 
 const LazyPatientDashboard360 = lazy(() =>
   import("@/components/patient/dashboard/PatientDashboard360").then((m) => ({
@@ -79,6 +80,7 @@ export const OverviewTab = ({
         <div className="space-y-4">
           <FisioPredictIndicator patientId={patient.id} />
           <SimilarPatientsWidget patientId={patient.id} />
+          <RecoveryTrajectoryWidget patientId={patient.id} />
         </div>
         <SemanticRecommenderWidget condition={(patient as any).main_condition || "Não informada"} />
       </div>

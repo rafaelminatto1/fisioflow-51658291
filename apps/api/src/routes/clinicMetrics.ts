@@ -114,4 +114,27 @@ app.get("/team-performance", requireAuth, async (c) => {
   }
 });
 
+/**
+ * GET /api/clinic-metrics/patients/:id/digital-twin
+ * Retorna as predições e métricas de trajetória do paciente.
+ */
+app.get("/patients/:id/digital-twin", requireAuth, async (c) => {
+  const patientId = c.req.param("id");
+  const user = c.get("user");
+  const pool = createPool(c.env);
+
+  try {
+    const result = await pool.query(
+      `SELECT * FROM patient_longitudinal_summary 
+       WHERE patient_id = $1 AND organization_id = $2`,
+      [patientId, user.organizationId]
+    );
+
+    return c.json({ data: result.rows[0] || null });
+  } catch (error) {
+    console.error("[Metrics] Digital Twin error:", error);
+    return c.json({ error: "Failed to fetch digital twin data" }, 500);
+  }
+});
+
 export { app as clinicMetricsRoutes };

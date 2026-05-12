@@ -56,38 +56,70 @@ export class PatientDigitalTwinWorkflow extends WorkflowEntrypoint<Env, { patien
       return "stable";
     });
 
-    // Passo 3: Gerar Predição de Risco via Gemini
-    const riskAssessment = await step.do("ai-risk-prediction", async () => {
-      const prompt = `Analise os dados deste paciente de fisioterapia:
+    // Passo 3: Analisar Volume de Atividade (Wearables)
+    const activityVolume = await step.do("analyze-activity", async () => {
+      const db = getRawSql(this.env, "read");
+      const stats = await db`
+				SELECT AVG(value) as avg_steps
+				FROM wearable_data
+				WHERE patient_id = ${patientId}::uuid
+				  AND data_type = 'steps'
+				  AND timestamp > NOW() - INTERVAL '30 days'
+			`;
+      return Number(stats.rows[0]?.avg_steps || 0);
+    });
+
+    // Passo 4: Gerar Predição de Trajetória e Recuperação via Gemini
+    const trajectory = await step.do("ai-trajectory-prediction", async () => {
+      const sql = getRawSql(this.env, "read");
+      const patientRes = await sql`SELECT condition, diagnosis FROM patients WHERE id = ${patientId}::uuid`;
+      const patient = patientRes.rows[0];
+
+      const prompt = `Você é um especialista em prognóstico clínico de fisioterapia.
+			Analise este paciente (Gêmeo Digital):
+			- Diagnóstico: ${patient?.diagnosis || "Não informado"}
+			- Condição: ${patient?.condition || "Não informada"}
 			- Aderência às sessões: ${adherence}%
 			- Tendência de dor: ${painTrend}
+			- Média de passos diários (Wearable): ${activityVolume}
 
-			Classifique o risco de abandono do tratamento em: low, medium, high.
-			Responda apenas a palavra da classificação.`;
+			Com base em protocolos de reabilitação padrão ouro, preveja:
+			1. Nível de Risco de Abandono (low, medium, high)
+			2. Semanas estimadas para a alta (número inteiro)
+			3. Score de Confiança da predição (0-100)
+
+			Retorne APENAS um JSON: {"risk": "...", "recoveryWeeks": 12, "confidence": 85}`;
 
       const response = await this.env.AI.run("@cf/google/gemini-1.5-flash", {
         prompt,
       });
 
-      return (response as any).response.toLowerCase().includes("high")
-        ? "high"
-        : (response as any).response.toLowerCase().includes("medium")
-          ? "medium"
-          : "low";
+      try {
+        const jsonMatch = (response as any).response.match(/\{[\s\S]*\}/);
+        return JSON.parse(jsonMatch?.[0] ?? (response as any).response);
+      } catch (e) {
+        return { risk: "low", recoveryWeeks: 8, confidence: 50 };
+      }
     });
 
-    // Passo 4: Persistir no Digital Twin (Neon)
+    // Passo 5: Persistir no Digital Twin (Neon)
     await step.do("save-to-digital-twin", async () => {
       const sql = getRawSql(this.env, "write");
       await sql`
 				INSERT INTO patient_longitudinal_summary (
-					organization_id, patient_id, adherence_score, ai_risk_level, last_ai_assessment_at, updated_at
+					organization_id, patient_id, adherence_score, ai_risk_level, 
+          predicted_recovery_weeks, confidence_score,
+          last_ai_assessment_at, updated_at
 				) VALUES (
-					${organizationId}::uuid, ${patientId}::uuid, ${adherence}, ${riskAssessment}, NOW(), NOW()
+					${organizationId}::uuid, ${patientId}::uuid, ${adherence}, ${trajectory.risk}, 
+          ${trajectory.recoveryWeeks}, ${trajectory.confidence},
+          NOW(), NOW()
 				)
 				ON CONFLICT (patient_id) DO UPDATE SET
 					adherence_score = EXCLUDED.adherence_score,
 					ai_risk_level = EXCLUDED.ai_risk_level,
+          predicted_recovery_weeks = EXCLUDED.predicted_recovery_weeks,
+          confidence_score = EXCLUDED.confidence_score,
 					last_ai_assessment_at = NOW(),
 					updated_at = NOW();
 			`;
