@@ -81,6 +81,9 @@ const LTVMaximizerWidget = lazy(() =>
 const TeamPerformanceDashboard = lazy(() =>
   import("@/components/analytics/TeamPerformanceDashboard").then((m) => ({ default: m.TeamPerformanceDashboard })),
 );
+const ReimbursementInsights = lazy(() =>
+  import("@/components/financial/ReimbursementInsights").then((m) => ({ default: m.ReimbursementInsights })),
+);
 const NfseBatchEmitter = lazy(() =>
   import("@/components/financial/NfseBatchEmitter").then((m) => ({ default: m.NfseBatchEmitter })),
 );
@@ -287,6 +290,7 @@ const FinancialCommandCenterPage = () => {
               <TabsList className="flex h-auto flex-wrap justify-start gap-2 rounded-[24px] bg-white/80 p-2 dark:bg-slate-950/70">
                 <TabsTrigger value="analytics" className="rounded-2xl px-4 py-2 font-bold">Painel</TabsTrigger>
                 <TabsTrigger value="team" className="rounded-2xl px-4 py-2 font-bold">Equipe</TabsTrigger>
+                <TabsTrigger value="insurances" className="rounded-2xl px-4 py-2 font-bold">Convênios</TabsTrigger>
                 <TabsTrigger value="raiox" className="rounded-2xl px-4 py-2 font-bold">Raio-X Mensal</TabsTrigger>
                 <TabsTrigger value="dre" className="rounded-2xl px-4 py-2 font-bold">DRE</TabsTrigger>
               </TabsList>
@@ -302,6 +306,9 @@ const FinancialCommandCenterPage = () => {
               </TabsContent>
               <TabsContent value="team">
                 <Suspense fallback={<PageShellFallback />}><TeamPerformanceDashboard /></Suspense>
+              </TabsContent>
+              <TabsContent value="insurances">
+                <Suspense fallback={<PageShellFallback />}><ReimbursementInsights /></Suspense>
               </TabsContent>
               <TabsContent value="raiox">
                 <Suspense fallback={<PageShellFallback />}><DemonstrativoMensalContent /></Suspense>

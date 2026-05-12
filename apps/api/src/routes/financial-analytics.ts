@@ -1117,6 +1117,70 @@ export const registerFinancialAnalyticsRoutes = (app: FinancialApp) => {
     }
   });
 
+  /**
+   * GET /api/financial-analytics/reimbursement-patterns
+   * Analisa padrões de reembolso e sugere otimização de faturamento.
+   */
+  app.get("/reimbursement-patterns", requireAuth, async (c) => {
+    const user = c.get("user");
+    const pool = createPool(c.env);
+
+    try {
+      // 1. Agregar dados de pagamentos por convênio e procedimento (extraído do metadata)
+      const patterns = await pool.query(
+        `SELECT 
+          hi.name as insurance_name,
+          p.metadata->>'procedure_name' as procedure,
+          AVG(p.amount) as avg_reimbursement,
+          COUNT(*) as volume,
+          MAX(p.paid_at) as last_payment
+        FROM payments p
+        JOIN health_insurances hi ON hi.id = p.metadata->>'insurance_id'::uuid
+        WHERE p.organization_id = $1
+          AND p.payment_method = 'reembolso'
+        GROUP BY hi.name, p.metadata->>'procedure_name'
+        ORDER BY avg_reimbursement DESC`,
+        [user.organizationId]
+      );
+
+      const { runThinkingModel } = await import("../lib/ai-native");
+
+      // 2. Usar IA para gerar recomendações estratégicas
+      const prompt = `
+        Você é um consultor de faturamento hospitalar em São Paulo.
+        Analise estes padrões de reembolso de uma clínica de fisioterapia:
+        ${JSON.stringify(patterns.rows)}
+
+        Sugira:
+        1. Quais convênios priorizar para reabilitação intensiva.
+        2. Alertas de procedimentos que estão pagando abaixo da média do mercado de SP (Mooca/Jardins).
+        3. Dicas de preenchimento de guias para maximizar o sucesso do reembolso.
+
+        Retorne um JSON: { "analysis": "...", "suggestions": ["...", "..."], "topPerformers": ["...", "..."] }
+      `.trim();
+
+      const aiAnalysis = await runThinkingModel(c.env, {
+        prompt,
+        model: "gemini-1.5-flash",
+        temperature: 0.3,
+        responseFormat: "json"
+      });
+
+      const jsonMatch = aiAnalysis.content.match(/\{[\s\S]*\}/);
+      const data = JSON.parse(jsonMatch?.[0] ?? aiAnalysis.content);
+
+      return c.json({
+        data: {
+          patterns: patterns.rows,
+          aiInsights: data
+        }
+      });
+    } catch (error) {
+      console.error("[FinancialAnalytics] Reimbursement patterns error:", error);
+      return c.json({ error: "Failed to analyze reimbursement patterns" }, 500);
+    }
+  });
+
   app.get("/prediction", requireAuth, async (c) => {
     const user = c.get("user");
     const db = createDb(c.env);

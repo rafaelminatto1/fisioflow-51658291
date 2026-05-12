@@ -120,9 +120,22 @@ const CalendarSettings = lazy(
   () =>
     import(/* webpackChunkName: "settings-calendar" */ "@/pages/configuracoes/CalendarSettings"),
 );
+const EnterpriseDashboard = lazy(
+  () => import(/* webpackChunkName: "enterprise-dashboard" */ "@/pages/admin/EnterpriseDashboard"),
+);
 
 export const enterpriseRoutes = (
   <>
+    {/* Enterprise Management */}
+    <Route
+      path="/regional"
+      element={
+        <ProtectedRoute>
+          <EnterpriseDashboard />
+        </ProtectedRoute>
+      }
+    />
+
     {/* Tasks / Boards */}
     <Route path="/tarefas" element={<Navigate to="/boards" replace />} />
     <Route path="/tarefas-v2" element={<Navigate to="/boards" replace />} />
