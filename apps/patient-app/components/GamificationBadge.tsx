@@ -30,7 +30,7 @@ export const GamificationBadge: React.FC<GamificationBadgeProps> = ({
             width: size,
             height: size,
             borderRadius: size / 2,
-            backgroundColor: isLocked ? colors.surfaceVariant : colors.primary + "15",
+            backgroundColor: isLocked ? colors.background : colors.primary + "15",
             borderColor: isLocked ? colors.border : colors.primary,
           },
         ]}

@@ -255,6 +255,71 @@ app.post("/document/rag-ingest", async (c) => {
   }
 });
 
+app.post("/document/chat", async (c) => {
+  const body = (await c.req.json().catch(() => ({}))) as Record<string, unknown>;
+  const documentId = String(body.documentId ?? "");
+  const message = String(body.message ?? "");
+
+  if (!documentId || !message) {
+    return c.json({ error: "documentId e message são obrigatórios" }, 400);
+  }
+
+  if (!c.env.CLINICAL_KNOWLEDGE) {
+    return c.json({ error: "Vectorize não configurado" }, 503);
+  }
+
+  try {
+    const { generateEmbedding, runThinkingModel } = await import("../../lib/ai-native");
+
+    // 1. Gerar embedding da pergunta
+    const queryVector = await generateEmbedding(c.env, message);
+
+    // 2. Buscar chunks relevantes no Vectorize
+    // Filtramos por documentId via metadata (Vectorize suporta filtragem básica)
+    const matches = await c.env.CLINICAL_KNOWLEDGE.query(queryVector, {
+      topK: 5,
+      returnMetadata: true,
+      filter: { documentId: { $eq: documentId } }
+    });
+
+    const context = matches.matches
+      .map((m: any) => m.metadata?.text)
+      .filter(Boolean)
+      .join("\n\n");
+
+    if (!context) {
+      return c.json({ error: "Nenhum contexto encontrado para este documento. Verifique se ele foi indexado corretamente." }, 404);
+    }
+
+    // 3. Gerar resposta com Gemini usando o contexto extraído
+    const prompt = `
+      Você é um assistente especializado em análise de exames clínicos de fisioterapia.
+      Responda à pergunta do terapeuta baseando-se EXCLUSIVAMENTE no contexto do exame fornecido abaixo.
+      Se a informação não estiver no contexto, diga que não encontrou essa informação específica no laudo.
+
+      CONTEXTO DO EXAME:
+      ${context}
+
+      PERGUNTA: ${message}
+    `;
+
+    const result = await runThinkingModel(c.env, {
+      prompt,
+      model: "gemini-3-flash-preview",
+      thinkingLevel: "MEDIUM"
+    });
+
+    return c.json({ 
+      success: true, 
+      answer: result.text,
+      sources: matches.matches.length 
+    });
+  } catch (error: any) {
+    console.error("[AI/DocChat] Error:", error);
+    return c.json({ error: "Falha ao processar chat com documento", details: error.message }, 500);
+  }
+});
+
 // ─── Receipt OCR — vision extraction via Gemini ──────────────────────────────
 app.post("/receipt-ocr", async (c) => {
   if (!c.env.GOOGLE_AI_API_KEY) {

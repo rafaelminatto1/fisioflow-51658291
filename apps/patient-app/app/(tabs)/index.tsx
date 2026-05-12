@@ -199,7 +199,7 @@ export default function DashboardScreen() {
               style={[styles.levelBadge, { backgroundColor: colors.primary }]}
               onPress={() => router.push("/(tabs)/profile")}
             >
-              <Text style={styles.levelText}>Lvl {currentLevel}</Text>
+              <Text style={styles.levelText}>Lvl {profile?.level || 1}</Text>
             </TouchableOpacity>
             <TouchableOpacity onPress={() => router.push("/(tabs)/profile")}>
               {user?.avatarUrl ? (

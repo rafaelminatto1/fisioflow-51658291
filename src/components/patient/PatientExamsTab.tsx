@@ -20,10 +20,11 @@ import {
   DialogTrigger,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { Plus, Calendar, Paperclip, X, Trash2, Microscope } from "lucide-react";
+import { Plus, Calendar, Paperclip, X, Trash2, Microscope, Brain } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { FileViewer } from "@/components/common/FileViewer";
+import { ClinicalDocumentChat } from "./ClinicalDocumentChat";
 
 interface PatientExamsTabProps {
   patientId?: string | null;
@@ -39,6 +40,7 @@ const EXAM_TYPES = [
 export const PatientExamsTab: React.FC<PatientExamsTabProps> = ({ patientId }) => {
   const { exams, isLoading, addExam, deleteExam } = usePatientExams(patientId);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [chatExam, setChatExam] = useState<{ id: string; title: string } | null>(null);
   const [formData, setFormData] = useState({
     title: "",
     date: new Date().toISOString().split("T")[0],
@@ -265,11 +267,32 @@ export const PatientExamsTab: React.FC<PatientExamsTabProps> = ({ patientId }) =
                   <p className="text-sm text-foreground/80 mb-4 line-clamp-2">{exam.description}</p>
                 )}
 
+                <div className="flex gap-2 mb-4">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex-1 rounded-xl border-indigo-100 bg-indigo-50/30 text-indigo-600 hover:bg-indigo-50 hover:text-indigo-700"
+                    onClick={() => setChatExam({ id: exam.id, title: exam.title })}
+                  >
+                    <Brain className="w-4 h-4 mr-2" />
+                    IA Chat
+                  </Button>
+                </div>
+
                 <FileViewer files={exam.files || []} bucketName="patient-exams" />
               </CardContent>
             </Card>
           ))}
         </div>
+      )}
+
+      {chatExam && (
+        <ClinicalDocumentChat
+          open={!!chatExam}
+          onOpenChange={(open) => !open && setChatExam(null)}
+          documentId={chatExam.id}
+          documentTitle={chatExam.title}
+        />
       )}
     </div>
   );

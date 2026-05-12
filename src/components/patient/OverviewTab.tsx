@@ -9,6 +9,7 @@ import { usePatientEvolutionReport } from "@/hooks/usePatientEvolutionReport";
 import { FisioPredictIndicator } from "@/features/ia-studio/components/FisioPredictIndicator";
 import { PatientGamificationSummary } from "@/components/patients/PatientGamificationSummary";
 import { SemanticRecommenderWidget } from "./SemanticRecommenderWidget";
+import { SimilarPatientsWidget } from "./SimilarPatientsWidget";
 
 const LazyPatientDashboard360 = lazy(() =>
   import("@/components/patient/dashboard/PatientDashboard360").then((m) => ({
@@ -73,9 +74,12 @@ export const OverviewTab = ({
         />
       </Suspense>
 
-      {/* AI Predictive Analytics */}
+      {/* AI Predictive Analytics & Clinical Knowledge */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <FisioPredictIndicator patientId={patient.id} />
+        <div className="space-y-4">
+          <FisioPredictIndicator patientId={patient.id} />
+          <SimilarPatientsWidget patientId={patient.id} />
+        </div>
         <SemanticRecommenderWidget condition={(patient as any).main_condition || "Não informada"} />
       </div>
 

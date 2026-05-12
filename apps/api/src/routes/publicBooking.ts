@@ -123,99 +123,16 @@ app.get("/booking/:slug/availability", bookingRateLimit, async (c) => {
 
 // POST /api/public-booking/booking — Create booking request (Turnstile required)
 app.post("/booking", bookingRateLimit, turnstileVerify, async (c) => {
+  // Feature disabled per user request: "por enquanto nao quero que paciente agendem seus horaios"
+  return c.json({ 
+    error: "O agendamento online está temporariamente desativado. Entre em contato com a clínica para marcar sua sessão.",
+    code: "FEATURE_DISABLED"
+  }, 403);
+
+  /* Logic preserved for future implementation:
   const pool = createPool(c.env);
-  const body = (await c.req.json()) as Record<string, unknown>;
-  const slug = String(body.slug ?? "").trim();
-  const requestedDate = String(body.date ?? "").slice(0, 10);
-  const requestedTime = String(body.time ?? "").trim();
-  const patient = (body.patient && typeof body.patient === "object" ? body.patient : {}) as Record<
-    string,
-    unknown
-  >;
-
-  if (!slug || !requestedDate || !requestedTime) {
-    return c.json({ error: "slug, date e time são obrigatórios" }, 400);
-  }
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(requestedDate) || isNaN(Date.parse(requestedDate))) {
-    return c.json({ error: "date deve estar no formato YYYY-MM-DD" }, 400);
-  }
-  if (!/^\d{2}:\d{2}$/.test(requestedTime)) {
-    return c.json({ error: "time deve estar no formato HH:MM" }, 400);
-  }
-  if (
-    !patient.name ||
-    !String(patient.name).trim() ||
-    !patient.phone ||
-    !String(patient.phone).trim()
-  ) {
-    return c.json({ error: "Nome e telefone são obrigatórios" }, 400);
-  }
-
-  if (!(await hasTable(pool, "profiles")))
-    return c.json({ error: "Perfis públicos indisponíveis" }, 404);
-  if (!(await hasTable(pool, "public_booking_requests"))) {
-    return c.json({ error: "Agendamento público indisponível" }, 501);
-  }
-
-  const profileResult = await pool.query(
-    `SELECT id, user_id, organization_id, full_name, slug FROM profiles WHERE slug = $1 LIMIT 1`,
-    [slug],
-  );
-  if (!profileResult.rows.length) return c.json({ error: "Perfil não encontrado" }, 404);
-  const profile = profileResult.rows[0] as Record<string, unknown>;
-
-  const insert = await pool.query(
-    `INSERT INTO public_booking_requests (
-        organization_id, profile_id, profile_user_id, slug, professional_name,
-        requested_date, requested_time,
-        patient_name, patient_phone, patient_email, notes,
-        status, created_at, updated_at
-      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,'pending',NOW(),NOW())
-      RETURNING id, status, created_at`,
-    [
-      profile.organization_id ?? null,
-      profile.id ?? null,
-      profile.user_id ?? null,
-      slug,
-      profile.full_name ?? null,
-      requestedDate,
-      requestedTime,
-      String(patient.name),
-      String(patient.phone),
-      patient.email ? String(patient.email) : null,
-      patient.notes ? String(patient.notes) : null,
-    ],
-  );
-
-  const fire = async () => {
-    // Push para a clínica
-    if (profile.organization_id && (c.env as any).VAPID_PRIVATE_KEY) {
-      const { sendPushToOrg } = await import("../lib/webpush");
-      await sendPushToOrg(
-        String(profile.organization_id),
-        {
-          title: "Novo agendamento via link público",
-          body: `${String(patient.name)} — ${requestedDate} às ${requestedTime}`,
-          url: "/agenda",
-          tag: `booking-request-${insert.rows[0].id}`,
-        },
-        c.env,
-      ).catch(() => {});
-    }
-    // WhatsApp de confirmação para o paciente
-    if (c.env.WHATSAPP_ACCESS_TOKEN && String(patient.phone).trim()) {
-      const { WhatsAppService } = await import("../lib/whatsapp");
-      const wa = new WhatsAppService(c.env);
-      const dateFormatted = new Date(requestedDate + "T12:00:00").toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "long" });
-      await wa.sendTextMessage(
-        String(patient.phone),
-        `Olá${String(patient.name) ? " " + String(patient.name).split(" ")[0] : ""}! ✅ Seu agendamento foi confirmado.\n\n📅 ${dateFormatted} às ${requestedTime} com ${profile.full_name ?? "seu fisioterapeuta"}.\n\nQualquer dúvida, entre em contato conosco.`,
-      ).catch(() => {});
-    }
-  };
-  c.executionCtx?.waitUntil?.(fire().catch((err) => console.error("[PublicBooking] notification error:", err)));
-
-  return c.json({ data: insert.rows[0], success: true }, 201);
+  ... rest of code ...
+  */
 });
 
 // GET /api/public-booking/requests — List booking requests (fisio management)

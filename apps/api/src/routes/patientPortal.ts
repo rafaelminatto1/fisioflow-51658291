@@ -686,6 +686,7 @@ app.post("/link-professional", async (c) => {
 
 app.get("/appointments", async (c) => {
   const user = c.get("user");
+  const upcoming = c.req.query("upcoming") === "true";
   const pool = await createPool(c.env);
   const { data } = await ensurePortalContext(pool, user);
 
@@ -693,7 +694,16 @@ app.get("/appointments", async (c) => {
     return c.json({ data: [] });
   }
 
-  const upcoming = c.req.query("upcoming") === "true";
+  // 1. Tentar carregar do Cache KV (apenas para upcoming=true que é o padrão do app)
+  const cacheKey = `portal:appointments:${data.patient_id}:${upcoming}`;
+  if (c.env.FISIOFLOW_CONFIG) {
+    const cached = await c.env.FISIOFLOW_CONFIG.get(cacheKey, "json");
+    if (cached) {
+      console.log(`[KV Cache] Hit for appointments: ${cacheKey}`);
+      return c.json({ data: cached, source: "edge_cache" });
+    }
+  }
+
   const params: unknown[] = [data.patient_id, user.organizationId];
   const filters = ["a.patient_id = $1", "a.organization_id = $2"];
 
@@ -721,9 +731,6 @@ app.get("/appointments", async (c) => {
     params,
   );
 
-  // Cache de Consultas: 1 min na borda, revalidação em background (stale-while-revalidate)
-  c.header("Cache-Control", "public, max-age=60, stale-while-revalidate=30");
-
   const appointments = result.rows.map((row) => ({
     id: String((row as DbRow).id ?? ""),
     patient_id: trimmedString((row as DbRow).patient_id) ?? data.patient_id,
@@ -743,7 +750,15 @@ app.get("/appointments", async (c) => {
       : new Date().toISOString(),
   }));
 
-  return c.json({ data: appointments });
+  // 2. Salvar no Cache KV por 15 minutos
+  if (c.env.FISIOFLOW_CONFIG) {
+    await c.env.FISIOFLOW_CONFIG.put(cacheKey, JSON.stringify(appointments), { expirationTtl: 900 });
+  }
+
+  // Cache de Consultas HTTP: 1 min na borda, revalidação em background (stale-while-revalidate)
+  c.header("Cache-Control", "public, max-age=60, stale-while-revalidate=30");
+
+  return c.json({ data: appointments, source: "db" });
 });
 
 app.post("/appointments/:id/confirm", async (c) => {
@@ -768,6 +783,12 @@ app.post("/appointments/:id/confirm", async (c) => {
     `,
     [id, data.patient_id, user.organizationId],
   );
+
+  // Invalida o cache KV
+  if (c.env.FISIOFLOW_CONFIG) {
+    await c.env.FISIOFLOW_CONFIG.delete(`portal:appointments:${data.patient_id}:true`);
+    await c.env.FISIOFLOW_CONFIG.delete(`portal:appointments:${data.patient_id}:false`);
+  }
 
   return c.json({ success: true });
 });
@@ -795,6 +816,12 @@ app.post("/appointments/:id/cancel", async (c) => {
     `,
     [body.reason ?? null, id, data.patient_id, user.organizationId],
   );
+
+  // Invalida o cache KV
+  if (c.env.FISIOFLOW_CONFIG) {
+    await c.env.FISIOFLOW_CONFIG.delete(`portal:appointments:${data.patient_id}:true`);
+    await c.env.FISIOFLOW_CONFIG.delete(`portal:appointments:${data.patient_id}:false`);
+  }
 
   return c.json({ success: true });
 });
