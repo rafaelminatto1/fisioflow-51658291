@@ -59,28 +59,58 @@ app.get("/kpis", requireAuth, async (c) => {
       [user.organizationId]
     );
 
-    const stats = {
-      occupancy: {
-        booked: Number(occupancyRes.rows[0].booked_slots || 0),
-        capacity: Number(occupancyRes.rows[0].estimated_capacity_monthly || 1), // Evitar divisão por zero
-      },
-      noShow: {
-        count: Number(noShowRes.rows[0].no_shows || 0),
-        total: Number(noShowRes.rows[0].total_appointments || 1),
-      },
-      financial: {
-        totalRevenue: Number(revenueRes.rows[0].total_revenue || 0),
-        avgTicket: Number(revenueRes.rows[0].avg_ticket || 0),
-      },
-      clinical: {
-        avgSessions: Number(ltvRes.rows[0].avg_sessions_per_patient || 0),
-      }
-    };
-
     return c.json({ data: stats });
   } catch (error) {
     console.error("[Metrics] Error calculating KPIs:", error);
     return c.json({ error: "Failed to calculate business metrics" }, 500);
+  }
+});
+
+/**
+ * GET /api/clinic-metrics/team-performance
+ * Calcula faturamento, ocupação e taxa de comparecimento por profissional.
+ */
+app.get("/team-performance", requireAuth, async (c) => {
+  const user = c.get("user");
+  const pool = createPool(c.env);
+
+  try {
+    const result = await pool.query(
+      `WITH professional_stats AS (
+        SELECT 
+          p.id as therapist_id,
+          p.full_name,
+          COUNT(a.id) as total_appointments,
+          COUNT(a.id) filter (where a.status in ('confirmed', 'completed', 'realizado')) as completed_count,
+          COUNT(a.id) filter (where a.status = 'no_show') as no_show_count
+        FROM profiles p
+        LEFT JOIN appointments a ON a.therapist_id = p.id
+        WHERE p.organization_id = $1 AND p.role = 'therapist'
+          AND (a.date >= date_trunc('month', CURRENT_DATE) OR a.id IS NULL)
+        GROUP BY p.id, p.full_name
+      ),
+      professional_revenue AS (
+        SELECT 
+          therapist_id,
+          SUM(valor) as revenue
+        FROM pagamentos
+        WHERE organization_id = $1
+          AND created_at >= date_trunc('month', CURRENT_DATE)
+        GROUP BY therapist_id
+      )
+      SELECT 
+        s.*,
+        COALESCE(r.revenue, 0) as monthly_revenue
+      FROM professional_stats s
+      LEFT JOIN professional_revenue r ON r.therapist_id = s.therapist_id
+      ORDER BY monthly_revenue DESC`,
+      [user.organizationId]
+    );
+
+    return c.json({ data: result.rows });
+  } catch (error) {
+    console.error("[Metrics] Team Performance error:", error);
+    return c.json({ error: "Failed to calculate team performance" }, 500);
   }
 });
 
