@@ -131,7 +131,7 @@ app.post("/:id/sign", requireAuth, async (c) => {
   // Create Signature Metadata (Simulating ICP-Brasil)
   const signatureMetadata = {
     signerId: user.uid,
-    signerName: user.name || "Therapist",
+    signerName: user.email || "Therapist",
     timestamp: now,
     ip,
     userAgent: c.req.header("User-Agent") || "unknown",
@@ -149,7 +149,7 @@ app.post("/:id/sign", requireAuth, async (c) => {
       analysisData: {
         ...(assessment.analysisData as object),
         _signature: signatureMetadata
-      },
+      } as any,
       updatedAt: new Date(),
     })
     .where(eq(biomechanicsAssessments.id, id))

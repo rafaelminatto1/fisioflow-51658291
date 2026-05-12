@@ -46,7 +46,7 @@ app.post("/dictate", requireAuth, async (c) => {
     // Usamos o modelRegistry via callAI para escolher o melhor modelo de chat (Llama 3.1 8b ou 70b)
     const refinementResult = await callAI(c.env, {
       task: "fast-processing",
-      organizationId: c.get("organizationId"),
+      organizationId: c.get("user")?.organizationId,
       systemInstruction: `Você é um assistente de transcrição médica. 
 Sua tarefa é limpar o texto de um ditado clínico de fisioterapia.
 1. Corrija a pontuação e gramática.

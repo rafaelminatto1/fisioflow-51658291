@@ -567,7 +567,7 @@ app.use("/*", (c, next) => {
     return requireAuth(c, next);
   }
   // Caso contrário, exige autenticação de paciente
-  return requirePatientAuth(c, next);
+  return requirePatientAuth(c as any, next);
 });
 
 app.post("/bootstrap", async (c) => {

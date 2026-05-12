@@ -489,8 +489,9 @@ app.post("/rtm/milestones/sync", requireAuth, async (c) => {
       );
 
       // Trigger Celebration Workflow
-      if (c.env.WORKFLOW_WEARABLE_ACTIVITY) {
-        await c.env.WORKFLOW_WEARABLE_ACTIVITY.create({
+      const wearableWorkflow = (c.env as any).WORKFLOW_WEARABLE_ACTIVITY;
+      if (wearableWorkflow) {
+        await wearableWorkflow.create({
           id: `milestone-${patientId}-${Date.now()}`,
           params: {
             patientId,

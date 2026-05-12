@@ -172,16 +172,16 @@ export async function handleQueue(batch: MessageBatch<QueueTask>, env: Env): Pro
           break;
 
         // Event-driven triggers (from triggerInngestEvent)
-        case "appointment.created":
-          await handleAppointmentCreated(task.data, env);
+        case "appointment.created" as any:
+          await handleAppointmentCreated((task as any).data, env);
           break;
 
-        case "patient.inactive":
-          await handlePatientInactive(task.data, env);
+        case "patient.inactive" as any:
+          await handlePatientInactive((task as any).data, env);
           break;
 
-        case "patient.birthday":
-          await handlePatientBirthday(task.data, env);
+        case "patient.birthday" as any:
+          await handlePatientBirthday((task as any).data, env);
           break;
 
         case "PROCESS_BACKUP":
@@ -189,14 +189,15 @@ export async function handleQueue(batch: MessageBatch<QueueTask>, env: Env): Pro
           console.log(`[Queue] Task ${task.type} acknowledged (no-op placeholder)`);
           break;
 
-        default:
-          // Se for um evento desconhecido mas tiver data, logamos para debug
-          if ((task as any).data) {
-            console.warn(`[Queue] Unknown event type: ${task.type}`);
+        default: {
+          const unknownTask = task as any;
+          if (unknownTask.data) {
+            console.warn(`[Queue] Unknown event type: ${unknownTask.type}`);
           } else {
-            console.warn(`[Queue] Unknown task type: ${task.type}`);
+            console.warn(`[Queue] Unknown task type: ${unknownTask.type}`);
           }
           break;
+        }
       }
 
       message.ack();

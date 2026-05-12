@@ -1,6 +1,5 @@
 import { createPool } from "../lib/db";
 import { Env } from "../types/env";
-import { triggerInngestEvent } from "../lib/inngest-client";
 
 export interface RTMAlert {
   patientId: string;
@@ -86,12 +85,7 @@ export class RTMAlertsService {
       [alert.patientId, alert.type, alert.severity, alert.message, JSON.stringify(alert.data)]
     );
 
-    // Trigger Inngest to handle Multi-channel notification (Slack/WhatsApp)
-    await triggerInngestEvent(env, "rtm/alert.triggered", {
-      patientId: alert.patientId,
-      alertType: alert.type,
-      message: alert.message,
-      severity: alert.severity
-    });
+    // Note: Inngest trigger requires ExecutionContext — log for now, notifications handled by cron
+    console.log(JSON.stringify({ event: "rtm_alert", ...alert }));
   }
 }

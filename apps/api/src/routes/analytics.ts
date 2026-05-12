@@ -22,7 +22,7 @@ app.get("/at-risk-patients", async (c) => {
   const results = await db
     .select({
       id: patients.id,
-      name: patients.name,
+      name: patients.fullName,
       risk: patientAdherencePredictions.dropoutRisk,
       factors: patientAdherencePredictions.riskFactors,
       suggestion: patientAdherencePredictions.suggestedAction,

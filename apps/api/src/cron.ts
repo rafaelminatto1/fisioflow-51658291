@@ -701,8 +701,9 @@ async function processWearableRTMAlerts(pool: any, env: Env) {
 
       // Alert if drop is > 30% and baseline was > 10k steps
       if (prev > 10000 && (current / prev < 0.7)) {
-        if (env.WORKFLOW_WEARABLE_ACTIVITY) {
-          await env.WORKFLOW_WEARABLE_ACTIVITY.create({
+        const wearableWorkflow = (env as any).WORKFLOW_WEARABLE_ACTIVITY;
+        if (wearableWorkflow) {
+          await wearableWorkflow.create({
             id: `rtm-alert-${patientId}-${new Date().toISOString().slice(0, 10)}`,
             params: {
               patientId,
