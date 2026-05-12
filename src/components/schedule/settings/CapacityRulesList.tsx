@@ -395,9 +395,9 @@ export function CapacityRulesList() {
   }
 
   return (
-    <div>
+    <div className="-mx-5 -mb-5">
       {authError && (
-        <div className="mb-3">
+        <div className="px-5 pb-3">
           <Alert variant="destructive">
             <Info className="h-4 w-4" />
             <AlertTitle>Erro de Autenticação</AlertTitle>
@@ -406,7 +406,7 @@ export function CapacityRulesList() {
         </div>
       )}
 
-      <div className="divide-y divide-border rounded-xl border border-border/60 overflow-hidden">
+      <div className="border-t divide-y divide-border overflow-hidden">
         {capacityGroups.map((group) => {
           const groupKey = group.ids.join(",");
           const displayValue = editingCapacityValue[groupKey] ?? group.max_patients;
@@ -509,7 +509,7 @@ export function CapacityRulesList() {
         })}
       </div>
 
-      <div className="p-4 border-t bg-card">
+      <div className="px-5 py-3 border-t bg-muted/20">
         {isAdding ? (
           <CapacityForm
             title="Nova Regra"

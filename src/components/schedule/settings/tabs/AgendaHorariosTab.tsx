@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useMemo } from "react";
 import { Clock, Gauge, Users } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { SettingsSectionCard } from "@/components/schedule/settings/shared/SettingsSectionCard";
@@ -8,7 +8,6 @@ import { SlotConfigurationSettings } from "@/components/schedule/settings/SlotCo
 import { useScheduleCapacity } from "@/hooks/useScheduleCapacity";
 
 export function AgendaHorariosTab() {
-  const [_isAddRuleOpen, setIsAddRuleOpen] = useState(false);
   const { capacities } = useScheduleCapacity();
 
   const totalVagasDia = useMemo(

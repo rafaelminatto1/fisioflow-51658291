@@ -4,6 +4,7 @@ import {
   ArrowLeft,
   Bell,
   CalendarClock,
+  CalendarOff,
   Clock,
   Gauge,
   LayoutGrid,
@@ -22,6 +23,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SettingsLoadingState } from "@/components/schedule/settings/shared/SettingsLoadingState";
+import { SettingsSectionCard } from "@/components/schedule/settings/shared/SettingsSectionCard";
 import { BusinessHoursManager } from "@/components/schedule/settings/BusinessHoursManager";
 import { CapacityRulesList } from "@/components/schedule/settings/CapacityRulesList";
 import { SlotConfigurationSettings } from "@/components/schedule/settings/SlotConfigurationSettings";
@@ -251,11 +253,12 @@ function OverviewPanel() {
       </div>
 
       <div className="grid gap-4 xl:grid-cols-[1.2fr_0.8fr]">
-        <section className="rounded-xl border bg-card p-5">
-          <div className="mb-4 flex items-center gap-2">
-            <CalendarClock className="h-4 w-4 text-teal-600" />
-            <h2 className="text-base font-semibold">Mapa semanal</h2>
-          </div>
+        <SettingsSectionCard
+          icon={<CalendarClock className="h-4 w-4" />}
+          iconBg="bg-teal-100 dark:bg-teal-900/40 text-teal-600 dark:text-teal-400"
+          title="Mapa semanal"
+          description="Visão dos dias e horários de funcionamento"
+        >
           <div className="grid gap-2">
             {businessHours.length > 0 ? (
               businessHours.map((hour) => (
@@ -278,7 +281,7 @@ function OverviewPanel() {
                 </div>
               ))
             ) : (
-              <div className="rounded-lg border border-dashed p-6 text-center">
+              <div className="rounded-xl border border-dashed p-6 text-center">
                 <p className="text-sm font-medium">Nenhum expediente salvo</p>
                 <p className="mt-1 text-xs text-muted-foreground">
                   Configure os dias e horários na aba Horários.
@@ -286,13 +289,14 @@ function OverviewPanel() {
               </div>
             )}
           </div>
-        </section>
+        </SettingsSectionCard>
 
-        <section className="rounded-xl border bg-card p-5">
-          <div className="mb-4 flex items-center gap-2">
-            <Bell className="h-4 w-4 text-teal-600" />
-            <h2 className="text-base font-semibold">Pronto para uso</h2>
-          </div>
+        <SettingsSectionCard
+          icon={<Bell className="h-4 w-4" />}
+          iconBg="bg-sky-100 dark:bg-sky-900/40 text-sky-600 dark:text-sky-400"
+          title="Pronto para uso"
+          description="Status de configuração da clínica"
+        >
           <div className="space-y-3">
             {[
               ["Horários de atendimento", openDays > 0],
@@ -307,7 +311,7 @@ function OverviewPanel() {
               </div>
             ))}
           </div>
-        </section>
+        </SettingsSectionCard>
       </div>
     </div>
   );
@@ -426,13 +430,27 @@ export default function ScheduleSettings() {
                   <OverviewPanel />
                 </TabsContent>
                 <TabsContent value="horarios" className="m-0 focus-visible:outline-none">
-                  <BusinessHoursManager />
-                  <div className="mt-5">
+                  <div className="space-y-5">
+                    <SettingsSectionCard
+                      icon={<Clock className="h-4 w-4" />}
+                      iconBg="bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400"
+                      title="Horários de Funcionamento"
+                      description="Configure os dias e horários de atendimento da clínica"
+                    >
+                      <BusinessHoursManager />
+                    </SettingsSectionCard>
                     <SlotConfigurationSettings />
                   </div>
                 </TabsContent>
                 <TabsContent value="capacidade" className="m-0 focus-visible:outline-none">
-                  <CapacityRulesList />
+                  <SettingsSectionCard
+                    icon={<Gauge className="h-4 w-4" />}
+                    iconBg="bg-teal-100 dark:bg-teal-900/40 text-teal-600 dark:text-teal-400"
+                    title="Capacidade de Atendimento"
+                    description="Regras de capacidade por faixa horária"
+                  >
+                    <CapacityRulesList />
+                  </SettingsSectionCard>
                 </TabsContent>
                 <TabsContent value="status" className="m-0 focus-visible:outline-none">
                   <StatusAtendimentoTab />
@@ -441,7 +459,14 @@ export default function ScheduleSettings() {
                   <ScheduleAppointmentTypesTab />
                 </TabsContent>
                 <TabsContent value="bloqueios" className="m-0 focus-visible:outline-none">
-                  <BlockedTimesManager />
+                  <SettingsSectionCard
+                    icon={<CalendarOff className="h-4 w-4" />}
+                    iconBg="bg-orange-100 dark:bg-orange-900/40 text-orange-600 dark:text-orange-400"
+                    title="Bloqueios de Agenda"
+                    description="Feriados, recessos e indisponibilidades"
+                  >
+                    <BlockedTimesManager />
+                  </SettingsSectionCard>
                 </TabsContent>
                 <TabsContent value="politicas" className="m-0 focus-visible:outline-none">
                   <PoliciesRulesTab />
