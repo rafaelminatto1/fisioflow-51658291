@@ -73,6 +73,58 @@ export class RTMAlertsService {
       alertsTriggered++;
     }
 
+    // 3. AI Anomaly Detection (Predictive Clinical Guard)
+    const activePatients = await db.query(
+      `SELECT id, full_name FROM patients WHERE organization_id = $1 AND status = 'ativo'`,
+      [organizationId]
+    );
+
+    for (const patient of activePatients.rows) {
+      const recentData = await db.query(
+        `SELECT data_type, value, timestamp FROM wearable_data 
+         WHERE patient_id = $1 AND timestamp >= NOW() - INTERVAL '7 days'
+         ORDER BY timestamp ASC`,
+        [patient.id]
+      );
+
+      if (recentData.rows.length > 5) {
+        try {
+          const { runThinkingModel } = await import("../lib/ai-native");
+          const prompt = `
+            Você é um assistente de monitoramento remoto de pacientes (RTM).
+            Analise os dados desta última semana do paciente ${patient.full_name}:
+            ${JSON.stringify(recentData.rows)}
+
+            Identifique se há alguma anomalia preocupante (ex: picos de FC em repouso, queda na qualidade do sono, ou inatividade total repentina).
+            Responda APENAS um JSON: {"anomalyDetected": true/false, "severity": "low/medium/high", "reason": "..."}
+          `.trim();
+
+          const aiResponse = await runThinkingModel(env, {
+            prompt,
+            model: "gemini-1.5-flash",
+            temperature: 0.1,
+            responseFormat: "json"
+          });
+
+          const jsonMatch = aiResponse.content.match(/\{[\s\S]*\}/);
+          const analysis = JSON.parse(jsonMatch?.[0] ?? aiResponse.content);
+
+          if (analysis.anomalyDetected) {
+            await this.triggerAlert(env, {
+              patientId: patient.id,
+              type: "low_activity", // Generico para anomalia
+              severity: analysis.severity,
+              message: `IA: ${analysis.reason}`,
+              data: { ai_analysis: analysis }
+            });
+            alertsTriggered++;
+          }
+        } catch (e) {
+          console.warn(`[RTM/AI] Failed to analyze patient ${patient.id}`, e);
+        }
+      }
+    }
+
     return alertsTriggered;
   }
 

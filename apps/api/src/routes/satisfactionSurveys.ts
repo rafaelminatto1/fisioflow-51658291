@@ -208,12 +208,43 @@ app.post(
 
     const organization_id = patientRes.rows[0].organization_id;
 
+    // 1. Analisar sentimento via IA se houver comentários
+    let aiSentiment = null;
+    let aiSummary = null;
+    let aiUrgency = false;
+
+    if (body.comments || body.suggestions) {
+      try {
+        const { runThinkingModel } = await import("../lib/ai-native");
+        const feedback = `Comentários: ${body.comments || ""} | Sugestões: ${body.suggestions || ""}`;
+        
+        const aiResponse = await runThinkingModel(c.env, {
+          prompt: `Analise este feedback de um paciente de fisioterapia: "${feedback}". 
+          Classifique o sentimento em 'positive', 'neutral' ou 'negative'. 
+          Resuma em 1 frase curta. 
+          Indique se há urgência de resposta (ex: reclamação grave). 
+          Retorne JSON: {"sentiment": "...", "summary": "...", "urgent": true/false}`,
+          model: "gemini-1.5-flash",
+          responseFormat: "json"
+        });
+
+        const jsonMatch = aiResponse.content.match(/\{[\s\S]*\}/);
+        const analysis = JSON.parse(jsonMatch?.[0] ?? aiResponse.content);
+        aiSentiment = analysis.sentiment;
+        aiSummary = analysis.summary;
+        aiUrgency = analysis.urgent;
+      } catch (e) {
+        console.warn("[Surveys/AI] Sentiment analysis failed", e);
+      }
+    }
+
     const result = await db.query(
       `INSERT INTO satisfaction_surveys
        (organization_id, patient_id, appointment_id, therapist_id, nps_score,
         q_care_quality, q_professionalism, q_facility_cleanliness, q_scheduling_ease,
-        q_communication, comments, suggestions, responded_at)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12, NOW()) RETURNING *`,
+        q_communication, comments, suggestions, responded_at,
+        ai_sentiment, ai_summary, ai_urgency_alert)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12, NOW(), $13, $14, $15) RETURNING *`,
       [
         organization_id,
         patient_id,
@@ -227,6 +258,9 @@ app.post(
         body.q_communication ?? null,
         body.comments ?? null,
         body.suggestions ?? null,
+        aiSentiment,
+        aiSummary,
+        aiUrgency
       ],
     );
 

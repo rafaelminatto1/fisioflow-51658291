@@ -27,6 +27,8 @@
 | **BI Avançado (Cohorts/Churn)** | BI | Heatmaps de retenção e lista ativa de possíveis evasões |
 | **Predição de No-Show (IA)** | Clínica | Lembretes WhatsApp personalizados conforme risco do paciente |
 | **Dashboard de Recepção (TV)** | Operação | Painel em tempo real via D1 para sala de espera |
+| **AI Anomaly Detection (RTM)** | Clínica | Monitoramento proativo de wearables com alertas de risco |
+| **Resumo de Telemedicina (IA)** | Clínica | Resumos estruturados (SOAP) de sessões virtuais |
 | **Metadados de Lançamento** | Mobile | ASO e descrições otimizadas para App Store/Google Play |
 | **Golden Path E2E (IA)** | Hardening | Testes de Omnisearch, Digital Twin e SOAP no Playwright |
 

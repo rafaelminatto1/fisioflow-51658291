@@ -194,8 +194,36 @@ Retorne SOMENTE JSON válido no formato:
             },
           }).catch(() => {});
         }
+
+        // Milestone: Billing Alert for Admins (Every 10 sessions)
+        if (totalSessions % 10 === 0 && totalSessions > 0) {
+          const billingMessage = `🚨 [FATURAMENTO] O paciente ${sessionData.patient_name} completou ${totalSessions} sessões. Por favor, verifique a emissão da NFS-e de renovação ou cobrança de ciclo.`;
+          
+          await this.env.BACKGROUND_QUEUE!.send({
+            type: "INTERNAL_NOTIFICATION",
+            payload: {
+              title: "Gatilho de Faturamento (10 sessões)",
+              body: billingMessage,
+              organizationId: orgId,
+              type: "billing",
+              metadata: { patientId, sessionCount: totalSessions }
+            }
+          }).catch(() => {});
+        }
       });
     }
+
+    // Step 6: Trigger Digital Twin recalculation
+    await step.do("trigger-digital-twin", async () => {
+      if (this.env.WORKFLOW_DIGITAL_TWIN) {
+        await this.env.WORKFLOW_DIGITAL_TWIN.create({
+          id: `twin-${patientId}-${Date.now()}`,
+          params: { patientId },
+        }).catch((err) => {
+          console.warn("[SessionSummaryWorkflow] Digital Twin trigger failed:", err?.message);
+        });
+      }
+    });
 
     return { ok: true, sessionId, patientName: sessionData.patient_name };
   }

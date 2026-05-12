@@ -31,7 +31,38 @@ export class ClinicAgent extends Agent<Env, ClinicState> {
   @callable()
   async runMorningBriefing() {
     const orgId = this.state.orgId;
-    const prompt = `Você é um assistente de clínica de fisioterapia. Gere um briefing matinal conciso para a equipe clínica da organização ${orgId || "atual"}. Inclua: lembretes de consultas do dia, pacientes em risco de abandono, e prioridades. Máximo 150 palavras. Responda em português.`;
+
+    // 1. Buscar dados de risco (Digital Twin) e renovação (LTV)
+    let aiContext = "";
+    try {
+      const { neon } = await import("@neondatabase/serverless");
+      const url = this.env.NEON_URL || this.env.HYPERDRIVE?.connectionString;
+      if (url) {
+        const sql = neon(url);
+        const [risks, renewals] = await Promise.all([
+          sql`SELECT p.full_name, ls.ai_risk_level FROM patient_longitudinal_summary ls JOIN patients p ON p.id = ls.patient_id WHERE ls.organization_id = ${orgId} AND ls.ai_risk_level = 'high' LIMIT 3`,
+          sql`SELECT p.full_name, pk.remaining_sessions FROM patient_packages pk JOIN patients p ON p.id = pk.patient_id WHERE pk.organization_id = ${orgId} AND pk.status = 'active' AND pk.remaining_sessions <= 2 LIMIT 3`
+        ]);
+        
+        aiContext = `
+          PACIENTES EM RISCO (Digital Twin): ${risks.map(r => r.full_name).join(", ")}
+          RENOVAÇÕES PENDENTES (LTV): ${renewals.map(r => `${r.full_name} (${r.remaining_sessions} sessões)`).join(", ")}
+        `;
+      }
+    } catch (e) {
+      console.warn("[ClinicAgent] Context fetch failed:", e);
+    }
+
+    const prompt = `
+      Você é o Gerente de Operações da clínica de fisioterapia. 
+      Gere um briefing matinal conciso para a equipe.
+      
+      CONTEXTO IA:
+      ${aiContext}
+
+      Inclua: prioridades de reativação de pacientes em risco, lembrete de renovação de pacotes e motivação para o dia. 
+      Máximo 150 palavras. Responda em português.
+    `;
 
     const result = await callAI(this.env, {
       task: "clinic-briefing",

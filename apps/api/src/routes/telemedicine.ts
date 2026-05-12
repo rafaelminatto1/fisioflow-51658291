@@ -409,6 +409,68 @@ app.post("/livekit-token", requireAuth, async (c) => {
       role,
     },
   });
+  });
+
+  /**
+  * POST /api/telemedicine/rooms/:id/summary
+  * Gera um resumo clínico da sessão de telemedicina.
+  */
+  app.post("/rooms/:id/summary", requireAuth, async (c) => {
+  const user = c.get("user");
+  const { id } = c.req.param();
+  const body = (await c.req.json().catch(() => ({}))) as { transcript?: string; notes?: string };
+  const pool = await createPool(c.env);
+
+  try {
+    const roomRes = await pool.query(
+      "SELECT tr.*, p.full_name as patient_name FROM telemedicine_rooms tr JOIN patients p ON p.id = tr.patient_id WHERE tr.id = $1 AND tr.organization_id = $2",
+      [id, user.organizationId]
+    );
+    const room = roomRes.rows[0];
+    if (!room) return c.json({ error: "Sala não encontrada" }, 404);
+
+    const contentToAnalyze = body.transcript || body.notes || room.notas || "";
+    if (!contentToAnalyze) return c.json({ error: "Nenhum conteúdo para resumir" }, 400);
+
+    const { runThinkingModel } = await import("../lib/ai-native");
+
+    const prompt = `
+      Você é um assistente de telemedicina.
+      Analise o seguinte conteúdo de uma sessão de fisioterapia com o paciente ${room.patient_name}:
+
+      CONTEÚDO:
+      ${contentToAnalyze}
+
+      Gere um resumo estruturado seguindo o padrão SOAP:
+      - Subjetivo: Queixas e relatos do paciente.
+      - Objetivo: Observações visuais (mobilidade, dor relatada).
+      - Avaliação: Sua conclusão técnica sobre a sessão.
+      - Plano: Próximos passos e exercícios.
+
+      Retorne APENAS um JSON: {"summary": "...", "soap_suggestion": {"s": "...", "o": "...", "a": "...", "p": "..."}}
+    `.trim();
+
+    const aiResponse = await runThinkingModel(c.env, {
+      prompt,
+      model: "gemini-1.5-flash",
+      temperature: 0.2,
+      responseFormat: "json"
+    });
+
+    const jsonMatch = aiResponse.content.match(/\{[\s\S]*\}/);
+    const summary = JSON.parse(jsonMatch?.[0] ?? aiResponse.content);
+
+    // Salvar o resumo nas notas da sala
+    await pool.query(
+      "UPDATE telemedicine_rooms SET notas = $1, updated_at = NOW() WHERE id = $2",
+      [summary.summary, id]
+    );
+
+    return c.json({ success: true, data: summary });
+  } catch (error: any) {
+    console.error("[Telemedicine/Summary] Error:", error);
+    return c.json({ error: "Falha ao gerar resumo da sessão" }, 500);
+  }
 });
 
 export { app as telemedicineRoutes };

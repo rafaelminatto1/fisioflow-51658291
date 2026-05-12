@@ -295,4 +295,57 @@ app.get("/patients/:id/ai-snapshot", requireAuth, async (c) => {
   }
 });
 
+/**
+ * GET /api/clinic-metrics/protocol-efficacy
+ * Compara a eficácia dos protocolos clínicos (sessões médias até a melhora).
+ */
+app.get("/protocol-efficacy", requireAuth, async (c) => {
+  const user = c.get("user");
+  const pool = createPool(c.env);
+
+  try {
+    const result = await pool.query(
+      `WITH session_pain AS (
+        SELECT 
+          s.patient_id,
+          p.protocol_id,
+          ep.name as protocol_name,
+          s.date,
+          (s.subjective->>'pain_level')::int as pain,
+          ROW_NUMBER() OVER(PARTITION BY s.patient_id, p.protocol_id ORDER BY s.date ASC) as session_num
+        FROM sessions s
+        JOIN patient_protocols p ON p.patient_id = s.patient_id
+        JOIN exercise_protocols ep ON ep.id = p.protocol_id
+        WHERE s.organization_id = $1 
+          AND s.subjective->>'pain_level' IS NOT NULL
+      ),
+      improvement_milestones AS (
+        SELECT 
+          protocol_id,
+          protocol_name,
+          patient_id,
+          MIN(session_num) as sessions_to_improvement
+        FROM session_pain
+        WHERE pain <= 3
+        GROUP BY protocol_id, protocol_name, patient_id
+      )
+      SELECT 
+        protocol_id,
+        protocol_name,
+        COUNT(DISTINCT patient_id) as total_patients,
+        AVG(sessions_to_improvement)::numeric(5,1) as avg_sessions_to_goal
+      FROM improvement_milestones
+      GROUP BY protocol_id, protocol_name
+      HAVING COUNT(DISTINCT patient_id) >= 2
+      ORDER BY avg_sessions_to_goal ASC`,
+      [user.organizationId]
+    );
+
+    return c.json({ data: result.rows });
+  } catch (error) {
+    console.error("[Metrics] Protocol Efficacy error:", error);
+    return c.json({ error: "Failed to calculate protocol efficacy" }, 500);
+  }
+});
+
 export { app as clinicMetricsRoutes };

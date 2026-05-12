@@ -523,6 +523,19 @@ export default function ProtocolsScreen() {
                     <Text style={[styles.catalogDescription, { color: colors.textSecondary }]}>
                       {test.description}
                     </Text>
+                    <TouchableOpacity
+                      style={[styles.aiVerifyButton, { borderColor: colors.primary }]}
+                      onPress={() => {
+                        medium();
+                        router.push({
+                          pathname: "/clinical-test-ai",
+                          params: { testId: test.id, testName: test.title }
+                        } as any);
+                      }}
+                    >
+                      <Ionicons name="scan-outline" size={14} color={colors.primary} />
+                      <Text style={[styles.aiVerifyButtonText, { color: colors.primary }]}>Verificar com IA</Text>
+                    </TouchableOpacity>
                   </View>
                 ))}
               </View>
@@ -706,6 +719,21 @@ const styles = StyleSheet.create({
     gap: 5,
   },
   applyButtonText: { color: "#fff", fontSize: 13, fontWeight: "600" },
+  aiVerifyButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingVertical: 6,
+    marginTop: 4,
+  },
+  aiVerifyButtonText: {
+    fontSize: 11,
+    fontWeight: "bold",
+    textTransform: "uppercase",
+  },
   // Test card
   testsHeader: { gap: 12, marginBottom: 12 },
   scalesHeader: { marginBottom: 8 },
