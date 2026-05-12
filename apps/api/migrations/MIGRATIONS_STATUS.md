@@ -1,6 +1,6 @@
 # Status das Migrations — FisioFlow
 
-> Atualizado em: 2026-04-28  
+> Atualizado em: 2026-05-12  
 > Responsável: Tech Lead  
 > Path: `apps/api/migrations/` (migrations manuais de feature — distinto do `/drizzle/` gerenciado pelo Drizzle Kit)
 
@@ -49,6 +49,8 @@
 | `0067_staff_schedules.sql` | Tabela `staff_schedules` | ✅ | ✅ | ❌ | Confirmado: tabela presente |
 | `0068_wearable_oauth.sql` | Tabela `wearable_oauth_tokens` | ✅ | ✅ | ❌ | Confirmado: tabela presente |
 | `0069_session_package_templates.sql` | Templates padrão de pacotes de sessão | ⏳ | ⏳ | ❌ | Novo: Dados de seed para impulsionar adoção |
+| `0070_clinical_evolution_templates.sql` | Templates de evolução clínica | ✅ | ✅ | ❌ | Confirmado: tabela presente em prod |
+| `0071_patient_media.sql` | Tabelas `patient_photos`, `patient_videos`, `medical_requests` + RLS | ✅ | ✅ | ❌ | Confirmado 2026-05-12 via psql — tabelas e índices presentes |
 
 ---
 

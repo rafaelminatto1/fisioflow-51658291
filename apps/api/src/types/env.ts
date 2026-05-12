@@ -166,6 +166,10 @@ export interface Env {
   // Queues
   BACKGROUND_QUEUE: Queue;
 
+  // Cloudflare REST API (AutoRAG document management via CF REST API)
+  CF_API_TOKEN?: string;
+  CF_ACCOUNT_ID?: string;
+
   // Axiom Logging Configuration
   AXIOM_TOKEN?: string;
   AXIOM_ORG_ID?: string;

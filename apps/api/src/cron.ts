@@ -7,6 +7,8 @@ import { cleanupRateLimits } from "./middleware/rateLimit";
 import { runHealthMonitor } from "./lib/monitor";
 import { notifyPatientAppointment } from "./lib/push";
 import { RTMAlertsService } from "./services/rtm-alerts";
+import { syncAutoRAGContent } from "./routes/aiSearch";
+import { syncVectorizeIndex } from "./lib/vectorizeSync";
 
 /**
  * Cloudflare Worker Cron Trigger Handler
@@ -59,14 +61,29 @@ export async function handleScheduled(event: ScheduledEvent, env: Env, ctx: Exec
         }
         break;
 
-      case "10 10 * * 1": // UTC 10h10 Segunda = BRT 07h10 — KnowledgeSyncWorkflow
+      case "10 10 * * 1": { // UTC 10h10 Segunda = BRT 07h10 — KnowledgeSync + AutoRAG + Vectorize
         if (env.WORKFLOW_KNOWLEDGE_SYNC) {
           await env.WORKFLOW_KNOWLEDGE_SYNC.create({
             id: `knowledge-sync-${new Date().toISOString().slice(0, 10)}`,
             params: { triggerType: "cron", syncTarget: "all" },
           }).catch((err) => console.error("[Cron] KnowledgeSync create failed:", err));
         }
+
+        // AutoRAG: upload exercícios, protocolos e wiki como markdown para busca semântica com LLM
+        if (env.CF_API_TOKEN && env.CF_ACCOUNT_ID) {
+          syncAutoRAGContent(env).then((indexed) => {
+            console.log("[Cron] AutoRAG sync complete:", JSON.stringify(indexed));
+          }).catch((err) => console.error("[Cron] AutoRAG sync failed:", err));
+        }
+
+        // Vectorize: gera embeddings e popula o índice fisioflow-clinical para busca por similaridade
+        if (env.CLINICAL_KNOWLEDGE) {
+          syncVectorizeIndex(env).then(({ indexed, skipped }) => {
+            console.log(`[Cron] Vectorize sync complete — indexed: ${indexed}, skipped: ${skipped}`);
+          }).catch((err) => console.error("[Cron] Vectorize sync failed:", err));
+        }
         break;
+      }
 
       case "30 10 * * *": // UTC 10h30 = BRT 07h30 — ClinicAgent morning briefing
         if (env.CLINIC_AGENT) {

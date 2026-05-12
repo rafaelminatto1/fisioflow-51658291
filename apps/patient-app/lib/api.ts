@@ -428,6 +428,17 @@ export type WearableReading = {
   metadata?: Record<string, unknown>;
 };
 
+export const patientMediaApi = {
+  getPhotos: () =>
+    api.get<any[]>(`${PATIENT_PORTAL_PREFIX}/media/photos`),
+  getMedicalRequests: () =>
+    api.get<any[]>(`${PATIENT_PORTAL_PREFIX}/media/medical-requests`),
+  getAccessUrl: (r2Key: string) =>
+    api.get<{ url: string; expiresIn: number }>(
+      `${PATIENT_PORTAL_PREFIX}/media/access-url/${r2Key}`,
+    ),
+};
+
 export const wearablesApi = {
   sync: (readings: WearableReading[]) =>
     api.post<{ synced: number }>("/api/wearables/sync", { readings }),

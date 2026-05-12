@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { Camera, Video, FileText, Plus, Trash2, Play, Download, Eye, X, Upload } from "lucide-react";
+import React, { useState, useRef, useCallback } from "react";
+import { Camera, Video, FileText, Plus, Trash2, Play, Download, Eye, X, Upload, SplitSquareHorizontal } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -49,6 +49,89 @@ import {
   useDeleteMedicalRequest,
   useMediaAccessUrl,
 } from "@/hooks/usePatientMedia";
+
+// ─── Before/After comparison slider ──────────────────────────────────────────
+
+function BeforeAfterSlider({
+  beforeUrl,
+  afterUrl,
+  beforeLabel = "Antes",
+  afterLabel = "Depois",
+}: {
+  beforeUrl: string;
+  afterUrl: string;
+  beforeLabel?: string;
+  afterLabel?: string;
+}) {
+  const [pos, setPos] = useState(50); // 0–100 percentage
+  const containerRef = useRef<HTMLDivElement>(null);
+  const dragging = useRef(false);
+
+  const updatePos = useCallback((clientX: number) => {
+    const el = containerRef.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    const pct = Math.min(100, Math.max(0, ((clientX - rect.left) / rect.width) * 100));
+    setPos(pct);
+  }, []);
+
+  const onPointerDown = useCallback((e: React.PointerEvent) => {
+    dragging.current = true;
+    (e.target as HTMLElement).setPointerCapture(e.pointerId);
+    updatePos(e.clientX);
+  }, [updatePos]);
+
+  const onPointerMove = useCallback((e: React.PointerEvent) => {
+    if (!dragging.current) return;
+    updatePos(e.clientX);
+  }, [updatePos]);
+
+  const onPointerUp = useCallback(() => {
+    dragging.current = false;
+  }, []);
+
+  return (
+    <div
+      ref={containerRef}
+      className="relative w-full overflow-hidden rounded-lg select-none cursor-col-resize"
+      style={{ touchAction: "none" }}
+    >
+      {/* After (bottom layer) */}
+      <img src={afterUrl} alt={afterLabel} className="w-full h-full object-contain block" draggable={false} />
+
+      {/* Before (clipped overlay) */}
+      <div
+        className="absolute inset-0 overflow-hidden"
+        style={{ clipPath: `inset(0 ${100 - pos}% 0 0)` }}
+      >
+        <img src={beforeUrl} alt={beforeLabel} className="w-full h-full object-contain block" draggable={false} />
+      </div>
+
+      {/* Drag handle */}
+      <div
+        className="absolute inset-y-0 z-10 flex items-center justify-center"
+        style={{ left: `${pos}%`, transform: "translateX(-50%)" }}
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={onPointerUp}
+        onPointerCancel={onPointerUp}
+      >
+        <div className="w-0.5 h-full bg-white/80 shadow-md" />
+        <div className="absolute h-8 w-8 rounded-full bg-white shadow-lg border flex items-center justify-center">
+          <SplitSquareHorizontal className="w-4 h-4 text-gray-700" />
+        </div>
+      </div>
+
+      {/* Labels */}
+      <span className="pointer-events-none absolute top-2 left-2 rounded-sm bg-black/50 px-1.5 py-0.5 text-xs font-medium text-white">
+        {beforeLabel}
+      </span>
+      <span className="pointer-events-none absolute top-2 right-2 rounded-sm bg-black/50 px-1.5 py-0.5 text-xs font-medium text-white">
+        {afterLabel}
+      </span>
+    </div>
+  );
+}
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
@@ -661,6 +744,7 @@ export function PatientMediaGallery({ patientId }: PatientMediaGalleryProps) {
   const [uploadPhotoOpen, setUploadPhotoOpen] = useState(false);
   const [uploadVideoOpen, setUploadVideoOpen] = useState(false);
   const [createRequestOpen, setCreateRequestOpen] = useState(false);
+  const [compareOpen, setCompareOpen] = useState(false);
 
   const { data: photos = [], isLoading: loadingPhotos } = usePatientPhotos(patientId);
   const { data: videos = [], isLoading: loadingVideos } = usePatientVideos(patientId);
@@ -700,9 +784,16 @@ export function PatientMediaGallery({ patientId }: PatientMediaGalleryProps) {
           </TabsList>
 
           {activeSection === "photos" && (
-            <Button size="sm" onClick={() => setUploadPhotoOpen(true)}>
-              <Plus className="w-4 h-4 mr-1" /> Foto
-            </Button>
+            <div className="flex items-center gap-2">
+              {photos.some((p) => p.photo_type === "before") && photos.some((p) => p.photo_type === "after") && (
+                <Button size="sm" variant="outline" onClick={() => setCompareOpen(true)}>
+                  <SplitSquareHorizontal className="w-4 h-4 mr-1" /> Comparar
+                </Button>
+              )}
+              <Button size="sm" onClick={() => setUploadPhotoOpen(true)}>
+                <Plus className="w-4 h-4 mr-1" /> Foto
+              </Button>
+            </div>
           )}
           {activeSection === "videos" && (
             <Button size="sm" onClick={() => setUploadVideoOpen(true)}>
@@ -803,6 +894,34 @@ export function PatientMediaGallery({ patientId }: PatientMediaGalleryProps) {
       <UploadPhotoModal patientId={patientId} open={uploadPhotoOpen} onOpenChange={setUploadPhotoOpen} />
       <UploadVideoModal patientId={patientId} open={uploadVideoOpen} onOpenChange={setUploadVideoOpen} />
       <CreateMedicalRequestModal patientId={patientId} open={createRequestOpen} onOpenChange={setCreateRequestOpen} />
+
+      {/* Before/After comparison dialog */}
+      {(() => {
+        const beforePhotos = photos.filter((p) => p.photo_type === "before");
+        const afterPhotos = photos.filter((p) => p.photo_type === "after");
+        const before = beforePhotos[beforePhotos.length - 1];
+        const after = afterPhotos[afterPhotos.length - 1];
+        if (!before || !after) return null;
+        return (
+          <Dialog open={compareOpen} onOpenChange={setCompareOpen}>
+            <DialogContent className="max-w-3xl p-4" aria-describedby={undefined}>
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2 text-base">
+                  <SplitSquareHorizontal className="w-4 h-4 text-primary" />
+                  Comparação Antes / Depois
+                </DialogTitle>
+              </DialogHeader>
+              <BeforeAfterSlider
+                beforeUrl={getImageServeUrl(before.r2_key, { w: 1000, fit: "contain", q: 90 })}
+                afterUrl={getImageServeUrl(after.r2_key, { w: 1000, fit: "contain", q: 90 })}
+              />
+              <p className="text-xs text-center text-muted-foreground pt-1">
+                Arraste o divisor para comparar as fotos
+              </p>
+            </DialogContent>
+          </Dialog>
+        );
+      })()}
     </div>
   );
 }

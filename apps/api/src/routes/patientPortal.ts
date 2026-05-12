@@ -4,6 +4,8 @@ import { requireAuth, type AuthVariables } from "../lib/auth";
 import { requirePatientAuth, type PatientUser } from "../lib/auth/patientAuth";
 import { createPool } from "../lib/db";
 import { SignJWT } from "jose";
+import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables & { patient?: PatientUser } }>();
 
@@ -1365,6 +1367,68 @@ app.post("/exercises/log", async (c) => {
   );
 
   return c.json({ success: true });
+});
+
+// ─── Media routes: paciente visualiza suas próprias fotos e pedidos médicos ───
+
+app.get("/media/photos", async (c) => {
+  const user = c.get("user");
+  const pool = await createPool(c.env);
+  const context = await ensurePortalContext(pool, user);
+  const patientId = context.data.patient_id as string;
+  if (!patientId) return c.json({ error: "Paciente não encontrado" }, 404);
+
+  const res = await pool.query(
+    `SELECT id, r2_key, thumbnail_url, photo_type, body_region, notes, taken_at, created_at
+     FROM patient_photos WHERE patient_id = $1 ORDER BY taken_at DESC NULLS LAST, created_at DESC LIMIT 100`,
+    [patientId],
+  ).catch(() => ({ rows: [] }));
+
+  return c.json({ data: res.rows });
+});
+
+app.get("/media/medical-requests", async (c) => {
+  const user = c.get("user");
+  const pool = await createPool(c.env);
+  const context = await ensurePortalContext(pool, user);
+  const patientId = context.data.patient_id as string;
+  if (!patientId) return c.json({ error: "Paciente não encontrado" }, 404);
+
+  const res = await pool.query(
+    `SELECT id, request_type, title, requested_by, scheduled_date, completed_date,
+            status, notes, file_r2_key, created_at
+     FROM medical_requests WHERE patient_id = $1 ORDER BY created_at DESC LIMIT 50`,
+    [patientId],
+  ).catch(() => ({ rows: [] }));
+
+  return c.json({ data: res.rows });
+});
+
+// Gera presigned GET URL para um arquivo privado do paciente (fotos + exames)
+app.get("/media/access-url/*", async (c) => {
+  const user = c.get("user");
+  const pool = await createPool(c.env);
+  const context = await ensurePortalContext(pool, user);
+  const patientId = context.data.patient_id as string;
+  if (!patientId) return c.json({ error: "Paciente não encontrado" }, 404);
+
+  const r2Key = c.req.path.replace(/^.*\/media\/access-url\//, "");
+  if (!r2Key) return c.json({ error: "r2Key é obrigatório" }, 400);
+
+  const orgId = String((context.data as Record<string, unknown>).organization_id ?? user.organizationId ?? "");
+  if (!r2Key.startsWith(`${orgId}/${patientId}/`)) {
+    return c.json({ error: "Acesso negado" }, 403);
+  }
+
+  const examsBucket = c.env.R2_EXAMS_BUCKET_NAME ?? "fisioflow-exams";
+  const s3 = new S3Client({
+    region: "auto",
+    endpoint: `https://${c.env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
+    credentials: { accessKeyId: c.env.R2_ACCESS_KEY_ID, secretAccessKey: c.env.R2_SECRET_ACCESS_KEY },
+  });
+  const cmd = new GetObjectCommand({ Bucket: examsBucket, Key: r2Key });
+  const url = await getSignedUrl(s3, cmd, { expiresIn: 900 });
+  return c.json({ url, expiresIn: 900 });
 });
 
 export { app as patientPortalRoutes };

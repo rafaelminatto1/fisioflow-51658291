@@ -14,6 +14,7 @@ import {
   Clock,
   ListChecks,
   Bone,
+  PlayCircle,
 } from "lucide-react";
 import { useCreateStandardizedTest } from "@/hooks/useStandardizedTests";
 import { VasForm } from "./VasForm";
@@ -35,6 +36,8 @@ interface ScaleInfo {
   icon: React.ReactNode;
   badgeColor: string;
   region: string;
+  /** URL do vídeo de demonstração (YouTube embed ou URL direta) */
+  demoVideoUrl?: string;
 }
 
 const SCALES: ScaleInfo[] = [
@@ -47,6 +50,7 @@ const SCALES: ScaleInfo[] = [
     icon: <Activity className="h-5 w-5 text-blue-500" />,
     badgeColor: "bg-blue-100 text-blue-800",
     region: "Dor geral",
+    demoVideoUrl: "https://www.youtube.com/embed/C9bvnDLJaFY",
   },
   {
     key: "PSFS",
@@ -171,6 +175,7 @@ export function PROMSelector({
   defaultScale,
 }: PROMSelectorProps) {
   const [selectedScale, setSelectedScale] = useState<ScaleKey | null>(defaultScale ?? null);
+  const [demoScale, setDemoScale] = useState<ScaleInfo | null>(null);
   const { mutateAsync: createTest, isPending } = useCreateStandardizedTest();
 
   const handleSave = async (score: number, responses: Record<string, unknown>) => {
@@ -232,6 +237,7 @@ export function PROMSelector({
   };
 
   return (
+    <>
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent
         className="max-w-2xl max-h-[90vh] overflow-y-auto"
@@ -265,35 +271,55 @@ export function PROMSelector({
             </p>
             <div className="grid gap-2.5 sm:grid-cols-2">
               {SCALES.map((scale) => (
-                <button
-                  key={scale.key}
-                  type="button"
-                  onClick={() => setSelectedScale(scale.key)}
-                  className="flex items-start gap-3 rounded-lg border p-3.5 text-left transition-all hover:border-primary/50 hover:bg-primary/5 hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                >
-                  <div className="mt-0.5 shrink-0">{scale.icon}</div>
-                  <div className="flex-1 min-w-0 space-y-1">
-                    <div className="flex items-center gap-1.5 flex-wrap">
-                      <span className="text-sm font-semibold">{scale.name}</span>
-                      <Badge className={`${scale.badgeColor} text-[10px] py-0`}>
-                        {scale.region}
-                      </Badge>
+                <div key={scale.key} className="relative group">
+                  <button
+                    type="button"
+                    onClick={() => setSelectedScale(scale.key)}
+                    className="w-full flex items-start gap-3 rounded-lg border p-3.5 text-left transition-all hover:border-primary/50 hover:bg-primary/5 hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  >
+                    <div className="mt-0.5 shrink-0">{scale.icon}</div>
+                    <div className="flex-1 min-w-0 space-y-1">
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <span className="text-sm font-semibold">{scale.name}</span>
+                        <Badge className={`${scale.badgeColor} text-[10px] py-0`}>
+                          {scale.region}
+                        </Badge>
+                      </div>
+                      <p className="text-xs text-muted-foreground leading-snug">
+                        {scale.description}
+                      </p>
+                      <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                        <span className="flex items-center gap-1">
+                          <ListChecks className="h-3 w-3" />
+                          {scale.items}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <Clock className="h-3 w-3" />
+                          {scale.time}
+                        </span>
+                        {scale.demoVideoUrl && (
+                          <span className="flex items-center gap-1 text-primary/70">
+                            <PlayCircle className="h-3 w-3" />
+                            Demo
+                          </span>
+                        )}
+                      </div>
                     </div>
-                    <p className="text-xs text-muted-foreground leading-snug">
-                      {scale.description}
-                    </p>
-                    <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                      <span className="flex items-center gap-1">
-                        <ListChecks className="h-3 w-3" />
-                        {scale.items}
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <Clock className="h-3 w-3" />
-                        {scale.time}
-                      </span>
-                    </div>
-                  </div>
-                </button>
+                  </button>
+                  {scale.demoVideoUrl && (
+                    <button
+                      type="button"
+                      title="Ver demonstração em vídeo"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setDemoScale(scale);
+                      }}
+                      className="absolute top-2 right-2 p-1 rounded-md opacity-0 group-hover:opacity-100 transition-opacity text-primary hover:bg-primary/10"
+                    >
+                      <PlayCircle className="h-4 w-4" />
+                    </button>
+                  )}
+                </div>
               ))}
             </div>
           </div>
@@ -302,5 +328,29 @@ export function PROMSelector({
         )}
       </DialogContent>
     </Dialog>
+
+    {/* Demo video dialog */}
+    <Dialog open={!!demoScale} onOpenChange={() => setDemoScale(null)}>
+      <DialogContent className="max-w-2xl" aria-describedby={undefined}>
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <PlayCircle className="h-5 w-5 text-primary" />
+            Demonstração — {demoScale?.name}
+          </DialogTitle>
+        </DialogHeader>
+        {demoScale?.demoVideoUrl && (
+          <div className="aspect-video w-full overflow-hidden rounded-lg bg-black">
+            <iframe
+              src={demoScale.demoVideoUrl}
+              title={`Demonstração ${demoScale.name}`}
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+              className="h-full w-full"
+            />
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
+    </>
   );
 }

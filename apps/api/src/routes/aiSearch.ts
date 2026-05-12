@@ -80,25 +80,24 @@ aiSearchApp.delete("/items/:id", requireAuth, async (c) => {
 
 // ─── Sync em batch: exercícios + protocolos + wiki → AutoRAG ─────────────────
 // Seguro re-executar. Cada item vira um markdown rico para melhor recuperação.
+// Exportado para uso direto no cron (sem camada HTTP).
 
-aiSearchApp.post("/sync", requireAuth, async (c) => {
-  const api = getCfApi(c.env);
-  if (!api) return c.json({ error: "CF_API_TOKEN e CF_ACCOUNT_ID são necessários" }, 503);
+export async function syncAutoRAGContent(
+  env: Env,
+  types: Array<"exercises" | "protocols" | "wiki"> = ["exercises", "protocols", "wiki"],
+): Promise<Record<string, number>> {
+  const api = getCfApi(env);
+  if (!api) throw new Error("CF_API_TOKEN e CF_ACCOUNT_ID são necessários para AutoRAG sync");
 
-  const body = (await c.req.json().catch(() => ({}))) as {
-    types?: Array<"exercises" | "protocols" | "wiki">;
-  };
-  const types = body.types ?? ["exercises", "protocols", "wiki"];
-  const pool = createPool(c.env);
+  const pool = createPool(env);
   const results: Record<string, number> = {};
 
-  async function uploadDoc(filename: string, markdown: string, source: string): Promise<void> {
+  async function uploadDoc(filename: string, markdown: string): Promise<void> {
     const form = new FormData();
     form.append("file", new Blob([markdown], { type: "text/markdown" }), filename);
     await api!(`/autorag/rags/${AUTORAG_NAME}/files`, { method: "POST", body: form });
   }
 
-  // ── Exercícios ──────────────────────────────────────────────────────────────
   if (types.includes("exercises")) {
     const res = await pool.query<{
       id: string; name: string; description: string | null;
@@ -116,12 +115,11 @@ aiSearchApp.post("/sync", requireAuth, async (c) => {
        WHERE e.is_public = true
        LIMIT 500`,
     );
-
     let count = 0;
     for (let i = 0; i < res.rows.length; i += 5) {
       await Promise.all(
         res.rows.slice(i, i + 5).map((row) =>
-          uploadDoc(`exercise-${row.id}.md`, buildExerciseDoc(row), "exercises"),
+          uploadDoc(`exercise-${row.id}.md`, buildExerciseDoc(row)),
         ),
       );
       count += Math.min(5, res.rows.length - i);
@@ -129,7 +127,6 @@ aiSearchApp.post("/sync", requireAuth, async (c) => {
     results.exercises = count;
   }
 
-  // ── Protocolos ─────────────────────────────────────────────────────────────
   if (types.includes("protocols")) {
     const res = await pool.query<{
       id: string; name: string; description: string | null;
@@ -143,12 +140,11 @@ aiSearchApp.post("/sync", requireAuth, async (c) => {
        WHERE is_public = true
        LIMIT 300`,
     );
-
     let count = 0;
     for (let i = 0; i < res.rows.length; i += 5) {
       await Promise.all(
         res.rows.slice(i, i + 5).map((row) =>
-          uploadDoc(`protocol-${row.id}.md`, buildProtocolDoc(row), "protocols"),
+          uploadDoc(`protocol-${row.id}.md`, buildProtocolDoc(row)),
         ),
       );
       count += Math.min(5, res.rows.length - i);
@@ -156,7 +152,6 @@ aiSearchApp.post("/sync", requireAuth, async (c) => {
     results.protocols = count;
   }
 
-  // ── Wiki ────────────────────────────────────────────────────────────────────
   if (types.includes("wiki")) {
     const res = await pool.query<{
       id: string; title: string; content: string | null; category: string | null;
@@ -167,12 +162,11 @@ aiSearchApp.post("/sync", requireAuth, async (c) => {
        WHERE wp.is_public = true
        LIMIT 200`,
     );
-
     let count = 0;
     for (let i = 0; i < res.rows.length; i += 5) {
       await Promise.all(
         res.rows.slice(i, i + 5).map((row) =>
-          uploadDoc(`wiki-${row.id}.md`, buildWikiDoc(row), "wiki"),
+          uploadDoc(`wiki-${row.id}.md`, buildWikiDoc(row)),
         ),
       );
       count += Math.min(5, res.rows.length - i);
@@ -180,7 +174,19 @@ aiSearchApp.post("/sync", requireAuth, async (c) => {
     results.wiki = count;
   }
 
-  return c.json({ success: true, indexed: results });
+  return results;
+}
+
+aiSearchApp.post("/sync", requireAuth, async (c) => {
+  const body = (await c.req.json().catch(() => ({}))) as {
+    types?: Array<"exercises" | "protocols" | "wiki">;
+  };
+  try {
+    const results = await syncAutoRAGContent(c.env, body.types);
+    return c.json({ success: true, indexed: results });
+  } catch (err: any) {
+    return c.json({ error: err.message }, 503);
+  }
 });
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────

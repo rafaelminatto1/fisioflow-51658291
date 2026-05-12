@@ -402,6 +402,13 @@ export default defineConfig(({ mode }) => {
                 test: /node_modules\/@sentry/,
                 priority: 16,
               },
+              // @neondatabase/neon-js — SDK de auth (inclui jose + @noble). Isolado para
+              // não inflar o vendor-react chunk nem bloquear LCP com código de auth.
+              {
+                name: "vendor-neon-auth",
+                test: /node_modules\/(@neondatabase|@noble\/hashes|@noble\/curves|@panva\/hkdf|uuid|@auth)/,
+                priority: 15.7,
+              },
               // react-filerobot-image-editor — lazy loaded, só entra quando usuário edita imagem
               {
                 name: "vendor-image-editor",

@@ -20,5 +20,21 @@ syncBuiltinESMExports();
 
 process.argv = [process.argv[0], "vinext", "build", ...process.argv.slice(2)];
 
-const cliPath = fs.realpathSync(path.resolve(process.cwd(), "node_modules/vinext/dist/cli.js"));
+// Resolve vinext from local node_modules first, then fall back to monorepo root hoisted location
+function resolveVinextCli() {
+  const candidates = [
+    path.resolve(process.cwd(), "node_modules/vinext/dist/cli.js"),
+    path.resolve(process.cwd(), "../../node_modules/vinext/dist/cli.js"),
+  ];
+  for (const candidate of candidates) {
+    try {
+      return fs.realpathSync(candidate);
+    } catch {
+      // try next
+    }
+  }
+  throw new Error(`vinext cli not found. Tried:\n${candidates.join("\n")}`);
+}
+
+const cliPath = resolveVinextCli();
 await import(pathToFileURL(cliPath).href);
