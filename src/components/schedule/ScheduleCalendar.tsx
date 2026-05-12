@@ -483,7 +483,7 @@ export function ScheduleCalendar(props: ScheduleCalendarProps) {
       />
 
       <div className="flex min-h-0 flex-1 flex-col p-1 md:p-2">
-        <div className="relative h-full w-full overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+        <div className="relative w-full overflow-y-auto overflow-x-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900" style={{ maxHeight: "calc(100vh - 200px)" }}>
           <FullCalendar
             ref={calendarRef}
             plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
@@ -514,8 +514,7 @@ export function ScheduleCalendar(props: ScheduleCalendarProps) {
             selectMirror
             snapDuration="00:15:00"
             longPressDelay={250}
-            expandRows
-            height="100%"
+            height="auto"
             events={events}
             eventContent={renderEventContent}
             dateClick={handleDateClick}

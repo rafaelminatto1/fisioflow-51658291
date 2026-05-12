@@ -23,7 +23,7 @@ export function AgendaVisualConfiguration() {
     heightMultiplier,
   } = useCardSize();
 
-  const hasChanges = heightScale !== 6 || fontScale !== 5 || opacity !== 100;
+  const hasChanges = heightScale !== 1 || fontScale !== 5 || opacity !== 100;
 
   return (
     <div className="space-y-8 py-4">

@@ -38,18 +38,18 @@ const STORAGE_KEY = "agenda_appearance_v2";
 
 const DEFAULT_GLOBAL: AgendaViewAppearance = {
   cardSize: DEFAULT_CARD_SIZE,
-  heightScale: 4,
+  heightScale: 1,
   fontScale: 5,
   opacity: 100,
 };
 
 const VIEW_DEFAULT_OVERRIDES: Record<AgendaView, Partial<AgendaViewAppearance>> = {
-  // Dia: equilíbrio para caber mais horas (24px por hora aprox. com scale 3)
-  day: { cardSize: "medium", heightScale: 3, fontScale: 5 },
-  // Semana: mais compacto para ver a semana toda
-  week: { cardSize: "small", heightScale: 2, fontScale: 5 },
-  // Mês: super compacto (pílulas)
-  month: { cardSize: "extra_small", heightScale: 2, fontScale: 4 },
+  // Dia: slots compactos para caber 7h-21h sem scroll
+  day: { cardSize: "medium", heightScale: 1, fontScale: 5 },
+  // Semana: compacto para ver a semana toda (7h-21h = 56 slots × 12px = 672px)
+  week: { cardSize: "small", heightScale: 1, fontScale: 5 },
+  // Mês: pílulas
+  month: { cardSize: "extra_small", heightScale: 1, fontScale: 4 },
 };
 
 const LEGACY_KEYS = {

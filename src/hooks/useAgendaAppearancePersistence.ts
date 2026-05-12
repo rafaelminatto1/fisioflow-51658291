@@ -57,7 +57,6 @@ export interface UseAgendaAppearancePersistenceResult extends UseAgendaAppearanc
 export const AGENDA_APPEARANCE_QUERY_KEY = ["agenda-appearance"] as const;
 
 const LEGACY_KEYS_TO_REMOVE = [
-  "agenda_appearance_v2",
   "agenda_card_size",
   "agenda_card_height_multiplier",
   "agenda_card_font_scale",

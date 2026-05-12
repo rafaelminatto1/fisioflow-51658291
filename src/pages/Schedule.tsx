@@ -179,7 +179,7 @@ export default function Schedule() {
 
   return (
     <PageLayout showFooter={false}>
-      <PageContainer maxWidth="full" className="h-[calc(100vh-64px)] flex flex-col">
+      <PageContainer maxWidth="full" noPadding className="h-[calc(100vh-64px)] flex flex-col px-2 md:px-3">
         <div className="flex-1 flex flex-col min-h-0 relative">
           {/* Action Banner: Birthdays & Reengagement */}
           {(birthdaysToday.length > 0 || staffBirthdaysToday.length > 0 || totalToReengage > 0) && (

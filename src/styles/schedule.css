@@ -20,7 +20,7 @@
 
 /* 2. Slot & Header Height Optimization */
 :root {
-  --agenda-slot-height: 18px; /* High density slots */
+  --agenda-slot-height: 12px; /* Compact: 14h × 56 slots × 12px = 672px fits 7h-21h */
   --agenda-header-height: 42px;
 }
 
