@@ -420,6 +420,28 @@ export function PackagesManager() {
         </CustomModalHeader>
 
         <CustomModalBody className="p-0 sm:p-0">
+          {!editingPackage && (
+            <div className="px-6 py-4 bg-slate-50/80 border-b border-slate-100">
+              <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-3">Modelos Sugeridos</p>
+              <div className="flex flex-wrap gap-2">
+                {QUICK_TEMPLATES.map((tpl) => (
+                  <button
+                    key={tpl.name}
+                    onClick={() => setFormData(tpl)}
+                    className={cn(
+                      "px-3 py-1.5 rounded-full border border-dashed text-[11px] font-bold transition-all hover:shadow-sm",
+                      tpl.color === "emerald" && "border-emerald-200 bg-emerald-50 text-emerald-700",
+                      tpl.color === "blue" && "border-blue-200 bg-blue-50 text-blue-700",
+                      tpl.color === "violet" && "border-violet-200 bg-violet-50 text-violet-700",
+                    )}
+                  >
+                    {tpl.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
           <div className="px-6 py-4 space-y-4">
             <div className="space-y-2">
               <Label htmlFor="pkg-name" className="font-bold text-xs">

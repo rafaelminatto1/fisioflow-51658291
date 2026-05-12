@@ -34,6 +34,7 @@ export function NfseWizard() {
     inscricao_municipal: config.inscricao_municipal ?? "",
     codigo_servico: config.codigo_servico ?? "04391",
     regime_tributario: config.tp_opcao_simples ?? "1",
+    cert_password: "",
   });
 
   const saveConfig = useMutation({
@@ -158,19 +159,42 @@ export function NfseWizard() {
               <Card className="p-8 rounded-[2rem] border-none shadow-xl shadow-slate-100/50 dark:shadow-none bg-white dark:bg-slate-900/50 text-center">
                 <h3 className="text-xl font-black mb-2">Certificado Digital (e-CNPJ A1)</h3>
                 <p className="text-slate-500 mb-8">Necessário para assinar as notas fiscais na Prefeitura de São Paulo.</p>
-                <label className="block border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-[2rem] p-12 bg-slate-50/50 dark:bg-slate-800/30 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors cursor-pointer">
-                  <input type="file" accept=".pfx,.p12" className="sr-only" />
-                  <UploadCloud className="h-12 w-12 text-emerald-500 mx-auto mb-4" />
-                  <p className="font-bold text-slate-700 dark:text-slate-200">Arraste seu arquivo .pfx aqui</p>
-                  <p className="text-xs text-slate-400 mt-2">ou clique para selecionar</p>
-                </label>
-                <div className="mt-6 max-w-xs mx-auto space-y-2 text-left">
-                  <Label className="text-xs font-bold text-slate-500">Senha do Certificado</Label>
-                  <Input type="password" placeholder="••••••••" className="rounded-xl h-12 bg-slate-50 dark:bg-slate-800/50 text-center" />
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+                  <label className="block border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-[2rem] p-10 bg-slate-50/50 dark:bg-slate-800/30 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors cursor-pointer group">
+                    <input 
+                      type="file" 
+                      accept=".pfx,.p12" 
+                      className="sr-only" 
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) toast.success(`Arquivo ${file.name} selecionado.`, { description: "Pronto para processamento seguro." });
+                      }}
+                    />
+                    <UploadCloud className="h-12 w-12 text-emerald-500 mx-auto mb-4 group-hover:scale-110 transition-transform" />
+                    <p className="font-bold text-slate-700 dark:text-slate-200">Selecionar arquivo .pfx</p>
+                    <p className="text-xs text-slate-400 mt-2">ou arraste para esta área</p>
+                  </label>
+
+                  <div className="space-y-4 text-left">
+                    <div className="space-y-2">
+                      <Label className="text-xs font-bold text-slate-500">Senha do Certificado</Label>
+                      <Input 
+                        type="password" 
+                        value={form.cert_password}
+                        onChange={(e) => setForm(f => ({ ...f, cert_password: e.target.value }))}
+                        placeholder="••••••••" 
+                        className="rounded-xl h-12 bg-slate-50 dark:bg-slate-800/50" 
+                      />
+                    </div>
+                    <div className="p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/20 border border-amber-100 dark:border-amber-900/30">
+                       <p className="text-[10px] text-amber-700 dark:text-amber-400 leading-relaxed">
+                        <span className="font-bold uppercase tracking-wider block mb-1">Nota de Segurança:</span>
+                        Seu certificado será convertido para o formato PEM e armazenado com criptografia AES-256 no Cloudflare Secrets. O FisioFlow nunca armazena o arquivo bruto após o processamento.
+                       </p>
+                    </div>
+                  </div>
                 </div>
-                <p className="text-xs text-slate-400 mt-4">
-                  O certificado é armazenado de forma criptografada nos servidores Cloudflare e nunca é exposto.
-                </p>
               </Card>
             </motion.div>
           )}

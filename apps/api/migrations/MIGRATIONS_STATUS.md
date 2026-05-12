@@ -48,6 +48,7 @@
 | `0066_groups.sql` | Tabelas `group_sessions`, `group_enrollments`, `group_waitlist` | ✅ | ✅ | ✅ | Confirmado: tabelas presentes |
 | `0067_staff_schedules.sql` | Tabela `staff_schedules` | ✅ | ✅ | ❌ | Confirmado: tabela presente |
 | `0068_wearable_oauth.sql` | Tabela `wearable_oauth_tokens` | ✅ | ✅ | ❌ | Confirmado: tabela presente |
+| `0069_session_package_templates.sql` | Templates padrão de pacotes de sessão | ⏳ | ⏳ | ❌ | Novo: Dados de seed para impulsionar adoção |
 
 ---
 

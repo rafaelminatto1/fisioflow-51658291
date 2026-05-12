@@ -2,6 +2,7 @@
   "expo": {
     "name": "FisioFlow Pro",
     "slug": "fisioflow-pro",
+    "privacy": "public",
     "version": "1.0.0",
     "orientation": "default",
     "icon": "./assets/icon.png",

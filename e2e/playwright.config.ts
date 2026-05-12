@@ -1,26 +1,28 @@
-import { defineConfig, devices } from '@playwright/test';
+import { defineConfig, devices } from "@playwright/test";
 
+/**
+ * Playwright Configuration for FisioFlow E2E Tests
+ */
 export default defineConfig({
-  testDir: './flows',
-  fullyParallel: false,
+  testDir: "./flows",
+  fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
-  workers: 1,
-  reporter: process.env.CI ? 'github' : 'html',
+  workers: process.env.CI ? 1 : undefined,
+  reporter: "html",
+  globalSetup: "./global-setup.ts",
   use: {
-    baseURL: process.env.E2E_BASE_URL || 'https://staging.fisioflow-web.pages.dev',
-    trace: 'on-first-retry',
-    screenshot: 'only-on-failure',
+    baseURL: process.env.PLAYWRIGHT_BASE_URL || "https://app.moocafisio.com.br",
+    storageState: "e2e/state.json",
+    trace: "on-first-retry",
+    video: "on-first-retry",
+    screenshot: "only-on-failure",
   },
+
   projects: [
-    { name: 'setup', testMatch: /.*\.setup\.ts/ },
     {
-      name: 'chromium',
-      use: {
-        ...devices['Desktop Chrome'],
-        storageState: 'e2e/.auth/session.json',
-      },
-      dependencies: ['setup'],
+      name: "chromium",
+      use: { ...devices["Desktop Chrome"] },
     },
   ],
 });
