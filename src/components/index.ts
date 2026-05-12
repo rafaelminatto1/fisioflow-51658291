@@ -44,7 +44,7 @@ export * from "./responsive";
 // ============================================================================
 
 export * from "./charts";
-// export * from "./clinical"; // Disabled: missing index.ts
+export * from "./clinical";
 export * from "./dashboard";
 export * from "./evaluation";
 export * from "./evolution";
