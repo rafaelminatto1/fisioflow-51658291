@@ -7,6 +7,7 @@ import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/comp
 import { useAudioRecorder } from "@/hooks/useAudioRecorder";
 import { aiApi } from "@/api/v2";
 import { BilingualSuggestionsModal } from "../evolution/suggestion/BilingualSuggestionsModal";
+import { toast } from "sonner";
 
 interface MagicTextareaProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {
   value: string;
@@ -43,35 +44,59 @@ export function MagicTextarea({
     if (isRecording) {
       // Parar e Transcrever
       setLoading(true);
+      const toastId = toast.loading("Processando áudio...");
       try {
         const audioBlob = await stopRecording();
+        
+        // Verifica se o áudio tem tamanho mínimo
+        if (audioBlob.size < 1000) {
+          toast.error("Áudio muito curto. Tente falar um pouco mais.", { id: toastId });
+          setLoading(false);
+          return;
+        }
+
         const audioBase64 = await blobToBase64(audioBlob);
 
         const result = await aiApi.transcribeAudio({
           audio: audioBase64,
           mimeType: audioBlob.type || "audio/webm",
         });
+        
         const transcription = result.data.transcription;
-        if (transcription) {
+        if (transcription && transcription.trim()) {
           // Adiciona ao texto existente ou substitui
           const newValue = value ? `${value} ${transcription}` : transcription;
           onValueChange(newValue);
+          toast.success("Transcrição concluída!", { id: toastId });
+        } else {
+          toast.warning("Não foi possível detectar fala no áudio.", { id: toastId });
         }
       } catch (error) {
         console.error("Transcription Error:", error);
+        toast.error("Erro ao transcrever áudio. Tente novamente.", { id: toastId });
       } finally {
         setLoading(false);
       }
     } else {
       // Iniciar
-      await startRecording();
+      try {
+        await startRecording();
+        toast.info("Gravando... Clique no botão vermelho para parar.", { duration: 3000 });
+      } catch (error) {
+        console.error("Mic Permission Error:", error);
+        toast.error("Erro ao acessar microfone. Verifique as permissões do navegador.");
+      }
     }
   };
 
   const handleMagicFix = async () => {
-    if (!value || value.length < 5) return;
+    if (!value || value.length < 5) {
+      toast.warning("Escreva algo primeiro para refinar.");
+      return;
+    }
 
     setLoading(true);
+    const toastId = toast.loading("IA refinando seu texto...");
     try {
       const result = await aiApi.fastProcessing({
         text: value,
@@ -80,9 +105,11 @@ export function MagicTextarea({
       const correctedText = result.data.result;
       if (correctedText) {
         onValueChange(correctedText);
+        toast.success("Texto refinado com sucesso!", { id: toastId });
       }
     } catch (error) {
       console.error("Groq AI Error:", error);
+      toast.error("Erro ao processar texto com IA.", { id: toastId });
     } finally {
       setLoading(false);
     }
@@ -122,7 +149,7 @@ export function MagicTextarea({
         {...props}
       />
 
-      <div className="absolute bottom-2 right-2 flex gap-1.5 p-1 rounded-full bg-white/40 backdrop-blur-sm border border-white/20 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-1 group-hover:translate-y-0">
+      <div className="absolute bottom-2 right-2 flex gap-1.5 p-1 rounded-full bg-white/60 backdrop-blur-md border border-slate-200/50 shadow-sm transition-all duration-300">
         <TooltipProvider>
           {/* Botão de Microfone */}
           {showMic && (
@@ -139,9 +166,15 @@ export function MagicTextarea({
                       : "hover:bg-blue-50 text-blue-600 hover:text-blue-700",
                   )}
                   onClick={handleMicClick}
-                  disabled={loading && !isRecording}
+                  disabled={loading}
                 >
-                  {isRecording ? <StopCircle className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+                  {loading && !isRecording ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : isRecording ? (
+                    <StopCircle className="h-4 w-4" />
+                  ) : (
+                    <Mic className="h-4 w-4" />
+                  )}
                 </Button>
               </TooltipTrigger>
               <TooltipContent side="top">
