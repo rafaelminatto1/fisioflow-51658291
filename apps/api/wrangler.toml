@@ -200,13 +200,14 @@ ENVIRONMENT = "production"
 # App: https://ntfy.sh | iOS: App Store | Android: Play Store / F-Droid
 MONITOR_NTFY_TOPIC = "fisioflow-mon-rafael-prod"
 MONITOR_HEALTH_URL = "https://api-pro.moocafisio.com.br/api/health"
+MONITOR_AI_GATEWAY_URL = "https://fisioflow-ai-gateway.rafalegollas.workers.dev/health"
 # Habilita transformações de imagem via URL no painel Cloudflare
 IMAGE_TRANSFORMATIONS = "enabled"
 R2_PUBLIC_URL = "https://media.moocafisio.com.br"
 # Turnstile (anti-bot para rotas públicas) — sitekey pública, secret via wrangler secret put
 TURNSTILE_SITE_KEY = "0x4AAAAAAC813j31sbl6IHX3"
-# CORS: domínio do frontend em Cloudflare Pages
-ALLOWED_ORIGINS = "https://moocafisio.com.br,https://www.moocafisio.com.br,https://minatto-fisio.pages.dev,https://fisioflow.pages.dev,https://minatto.moocafisio.com.br,https://media.moocafisio.com.br,http://localhost:5173,https://7d2bdf7d.fisioflow.pages.dev,https://fisioflow-web.rafalegollas.workers.dev,https://fisioflow-api.rafalegollas.workers.dev"
+# CORS: origens permitidas (Pages e workers ativos — remover se projeto for desativado)
+ALLOWED_ORIGINS = "https://moocafisio.com.br,https://www.moocafisio.com.br,https://fisioflow.pages.dev,https://media.moocafisio.com.br,http://localhost:5173,https://fisioflow-web.rafalegollas.workers.dev"
 PAGES_URL = "https://fisioflow.pages.dev"
 GOOGLE_MAPS_API_KEY = ""
 # Neon Auth JWT verification (obrigatório para rotas protegidas)
@@ -239,10 +240,11 @@ name = "fisioflow-api"
 ENVIRONMENT = "production"
 MONITOR_HEALTH_URL = "https://api-pro.moocafisio.com.br/api/health"
 MONITOR_NTFY_TOPIC = "fisioflow-mon-rafael-prod"
+MONITOR_AI_GATEWAY_URL = "https://fisioflow-ai-gateway.rafalegollas.workers.dev/health"
 IMAGE_TRANSFORMATIONS = "enabled"
 GOOGLE_AI_PREMIUM_ENABLED = "false"
 R2_PUBLIC_URL = "https://media.moocafisio.com.br"
-ALLOWED_ORIGINS = "https://moocafisio.com.br,https://www.moocafisio.com.br,https://minatto-fisio.pages.dev,https://fisioflow.pages.dev,https://minatto-moocafisio.com.br,https://media.moocafisio.com.br,http://localhost:5173,https://7d2bdf7d.fisioflow.pages.dev,https://fisioflow-web.rafalegollas.workers.dev,https://fisioflow-api.rafalegollas.workers.dev"
+ALLOWED_ORIGINS = "https://moocafisio.com.br,https://www.moocafisio.com.br,https://fisioflow.pages.dev,https://media.moocafisio.com.br,http://localhost:5173,https://fisioflow-web.rafalegollas.workers.dev"
 GOOGLE_MAPS_API_KEY = ""
 NEON_AUTH_URL = "https://ep-wandering-bonus-acj4zwvo.neonauth.sa-east-1.aws.neon.tech/neondb/auth"
 NEON_AUTH_JWKS_URL = "https://ep-wandering-bonus-acj4zwvo.neonauth.sa-east-1.aws.neon.tech/neondb/auth/.well-known/jwks.json"

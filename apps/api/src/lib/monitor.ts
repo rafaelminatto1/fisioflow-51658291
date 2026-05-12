@@ -1,7 +1,7 @@
 import type { Env } from "../types/env";
 
 const DEFAULT_HEALTH_URL = "https://api-pro.moocafisio.com.br/api/health";
-const RENOTIFY_INTERVAL_MS = 30 * 60 * 1000; // re-alerta a cada 30min se ainda estiver down
+const RENOTIFY_INTERVAL_MS = 30 * 60 * 1000;
 const REQUEST_TIMEOUT_MS = 8_000;
 
 async function notify(topic: string, title: string, body: string, priority: "urgent" | "high" | "default") {
@@ -30,30 +30,27 @@ function brTime(iso?: string | null): string {
   return d.toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" });
 }
 
-export async function runHealthMonitor(env: Env): Promise<void> {
-  const kv = env.FISIOFLOW_CONFIG!;
-  const topic = env.MONITOR_NTFY_TOPIC ?? "fisioflow-monitor";
-  const url = env.MONITOR_HEALTH_URL ?? DEFAULT_HEALTH_URL;
-
-  // --- 1. Verificar saúde ---
-  let isHealthy = false;
-  let statusCode = 0;
-  let latencyMs = 0;
-
+async function pingUrl(url: string): Promise<{ healthy: boolean; status: number; latencyMs: number }> {
   try {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
     const t0 = Date.now();
     const res = await fetch(url, { signal: controller.signal });
     clearTimeout(timer);
-    latencyMs = Date.now() - t0;
-    statusCode = res.status;
-    isHealthy = res.status === 200;
+    return { healthy: res.status === 200, status: res.status, latencyMs: Date.now() - t0 };
   } catch {
-    isHealthy = false;
+    return { healthy: false, status: 0, latencyMs: 0 };
   }
+}
 
-  // --- 2. Ler estado anterior do KV ---
+export async function runHealthMonitor(env: Env): Promise<void> {
+  const kv = env.FISIOFLOW_CONFIG!;
+  const topic = env.MONITOR_NTFY_TOPIC ?? "fisioflow-monitor";
+  const apiUrl = env.MONITOR_HEALTH_URL ?? DEFAULT_HEALTH_URL;
+
+  // --- Verificar API principal ---
+  const { healthy: isHealthy, status: statusCode, latencyMs } = await pingUrl(apiUrl);
+
   const [lastStatus, downSince, lastNotifyStr] = await Promise.all([
     kv.get("monitor:status"),
     kv.get("monitor:down_since"),
@@ -64,10 +61,8 @@ export async function runHealthMonitor(env: Env): Promise<void> {
   const lastNotifyAt = lastNotifyStr ? parseInt(lastNotifyStr, 10) : 0;
   const wasOk = !lastStatus || lastStatus === "ok";
 
-  // --- 3. Reagir à mudança de estado ---
   if (!isHealthy) {
     if (wasOk) {
-      // Transição ok → down: primeiro alerta
       await Promise.all([
         kv.put("monitor:status", "down"),
         kv.put("monitor:down_since", new Date().toISOString()),
@@ -76,24 +71,22 @@ export async function runHealthMonitor(env: Env): Promise<void> {
       await notify(
         topic,
         "🚨 FisioFlow API FORA DO AR",
-        `Status: ${statusCode || "timeout (>8s)"}\nURL: ${url}\nHora: ${brTime()}`,
+        `Status: ${statusCode || "timeout (>8s)"}\nURL: ${apiUrl}\nHora: ${brTime()}`,
         "urgent",
       );
       console.error(`[Monitor] API DOWN — status=${statusCode}`);
     } else if (now - lastNotifyAt > RENOTIFY_INTERVAL_MS) {
-      // Ainda down — re-notifica a cada 30min para não esquecermos
       await kv.put("monitor:last_notify_at", String(now));
       await notify(
         topic,
         "⚠️ FisioFlow API AINDA FORA",
-        `Fora desde: ${brTime(downSince)}\nStatus: ${statusCode || "timeout"}\nURL: ${url}`,
+        `Fora desde: ${brTime(downSince)}\nStatus: ${statusCode || "timeout"}\nURL: ${apiUrl}`,
         "high",
       );
       console.warn(`[Monitor] API still down since ${downSince}`);
     }
   } else {
     if (!wasOk) {
-      // Transição down → ok: alerta de recuperação
       await Promise.all([
         kv.put("monitor:status", "ok"),
         kv.delete("monitor:down_since"),
@@ -107,6 +100,27 @@ export async function runHealthMonitor(env: Env): Promise<void> {
       );
       console.log(`[Monitor] API recovered — latency=${latencyMs}ms`);
     }
-    // Se já estava ok: silencioso — sem log de spam
+  }
+
+  // --- Verificar AI Gateway (sem state tracking, alerta simples) ---
+  const aiGatewayUrl = (env as any).MONITOR_AI_GATEWAY_URL as string | undefined;
+  if (aiGatewayUrl) {
+    const { healthy: gwHealthy, status: gwStatus } = await pingUrl(aiGatewayUrl);
+    if (!gwHealthy) {
+      const lastGwNotifyStr = await kv.get("monitor:ai_gateway_last_notify");
+      const lastGwNotify = lastGwNotifyStr ? parseInt(lastGwNotifyStr, 10) : 0;
+      if (now - lastGwNotify > RENOTIFY_INTERVAL_MS) {
+        await kv.put("monitor:ai_gateway_last_notify", String(now));
+        await notify(
+          topic,
+          "⚠️ FisioFlow AI Gateway FORA",
+          `Status: ${gwStatus || "timeout"}\nURL: ${aiGatewayUrl}\nHora: ${brTime()}`,
+          "high",
+        );
+        console.warn(`[Monitor] AI Gateway down — status=${gwStatus}`);
+      }
+    } else {
+      await kv.delete("monitor:ai_gateway_last_notify");
+    }
   }
 }
