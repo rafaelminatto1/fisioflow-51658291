@@ -40,7 +40,7 @@ const PRESETS: ViewPreset[] = [
     icon: Zap,
     color: "text-amber-600 dark:text-amber-400",
     activeBg: "bg-amber-50 dark:bg-amber-950/40 border-amber-400",
-    config: { cardSize: "extra_small", heightScale: 2, opacity: 100 },
+    config: { cardSize: "extra_small", heightScale: 1, opacity: 100 },
   },
   {
     id: "balanced",
@@ -49,7 +49,7 @@ const PRESETS: ViewPreset[] = [
     icon: Monitor,
     color: "text-blue-600 dark:text-blue-400",
     activeBg: "bg-blue-50 dark:bg-blue-950/40 border-blue-400",
-    config: { cardSize: "medium", heightScale: 5, opacity: 100 },
+    config: { cardSize: "medium", heightScale: 3, opacity: 100 },
   },
   {
     id: "comfortable",
@@ -58,7 +58,7 @@ const PRESETS: ViewPreset[] = [
     icon: SunMedium,
     color: "text-teal-600 dark:text-teal-400",
     activeBg: "bg-teal-50 dark:bg-teal-950/40 border-teal-400",
-    config: { cardSize: "large", heightScale: 8, opacity: 100 },
+    config: { cardSize: "large", heightScale: 5, opacity: 100 },
   },
   {
     id: "layered",
@@ -67,7 +67,7 @@ const PRESETS: ViewPreset[] = [
     icon: Layers,
     color: "text-sky-600 dark:text-sky-400",
     activeBg: "bg-sky-50 dark:bg-sky-950/40 border-sky-400",
-    config: { cardSize: "medium", heightScale: 6, opacity: 60 },
+    config: { cardSize: "medium", heightScale: 3, opacity: 60 },
   },
 ];
 
