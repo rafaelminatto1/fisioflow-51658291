@@ -2,8 +2,7 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "fisioflow-ai-gateway",
   "main": "src/index.ts",
-  "compatibility_date": "2026-03-25",
-  "compatibility_flags": ["nodejs_compat"],
+  "compatibility_date": "2026-05-12",
   "observability": {
     "enabled": true
   },
@@ -12,27 +11,27 @@
   },
   "vars": {
     "ENVIRONMENT": "production",
-    "OLLAMA_ENDPOINT": "http://localhost:11434", // Default, should be overwritten by secrets
-    "GOOGLE_AI_URL": "https://generativelanguage.googleapis.com/v1beta/models"
+    "ALLOWED_ORIGINS": "https://moocafisio.com.br,https://www.moocafisio.com.br,https://fisioflow.pages.dev,http://localhost:5173",
+    "GOOGLE_AI_URL": "https://generativelanguage.googleapis.com/v1beta/models",
+    "OLLAMA_ENDPOINT": "https://ollama.moocafisio.com.br"
   },
-  "hyperdrive": [
-    {
-      "binding": "HYPERDRIVE",
-      "id": "12b9fefcfbc04074a63342a9212e1b4f"
-    }
-  ],
   "env": {
     "staging": {
       "vars": {
         "ENVIRONMENT": "staging",
+        "ALLOWED_ORIGINS": "https://fisioflow-web-staging.rafalegollas.workers.dev,http://localhost:5173",
+        "GOOGLE_AI_URL": "https://generativelanguage.googleapis.com/v1beta/models",
         "OLLAMA_ENDPOINT": "https://ollama-staging.moocafisio.com.br"
-      },
-      "hyperdrive": [
-        {
-          "binding": "HYPERDRIVE",
-          "id": "37189eb42d314a0a8fd0e169a2b27ad1"
-        }
-      ]
+      }
+    },
+    "production": {
+      "name": "fisioflow-ai-gateway",
+      "vars": {
+        "ENVIRONMENT": "production",
+        "ALLOWED_ORIGINS": "https://moocafisio.com.br,https://www.moocafisio.com.br,https://fisioflow.pages.dev,http://localhost:5173",
+        "GOOGLE_AI_URL": "https://generativelanguage.googleapis.com/v1beta/models",
+        "OLLAMA_ENDPOINT": "https://ollama.moocafisio.com.br"
+      }
     }
   }
 }

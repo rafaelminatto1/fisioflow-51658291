@@ -28,6 +28,7 @@ import { patientApi } from "@/lib/api";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import * as Haptics from "expo-haptics";
+import { GamificationService } from "@/services/GamificationService";
 import { log } from "@/lib/logger";
 
 interface ExerciseDetail {
@@ -142,6 +143,7 @@ export default function ExerciseDetailScreen() {
       });
 
       if (newCompletedState) {
+        await GamificationService.awardExerciseCompletion(user.id, exerciseId);
         Alert.alert("Parabéns!", "Exercício marcado como completo! 💪");
       }
     } catch (error) {

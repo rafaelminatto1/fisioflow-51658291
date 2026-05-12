@@ -23,6 +23,7 @@ Estabelecer prazos claros de retenção, arquivamento e eliminação de dados pe
 | **Dados de Terceiros** | Contatos de emergência, responsáveis | Art. 5º, III |
 | **Dados Técnicos** | Logs de acesso, IPs, user-agents | Art. 5º, III |
 | **Dados Financeiros** | Pagamentos, planos, notas fiscals (NFS-e) | Art. 5º, III |
+| **Inteligência Clínica** | Áudios (Scribe), Landmarks Biomecânicos | Art. 5º, IV |
 
 ---
 
@@ -34,6 +35,8 @@ Estabelecer prazos claros de retenção, arquivamento e eliminação de dados pe
 |---|---|---|---|
 | **Prontuários Eletrônicos** | **20 anos** após última consulta | Art. 16, CFM Resolução 2.306/2022 | Arquivamento digital seguro |
 | **Evoluções de Sessão** | **20 anos** | Art. 16, CFM | Arquivamento |
+| **Áudios Brutos (Scribe)** | **30 dias** | Art. 15, I | Exclusão (manter apenas texto refinado) |
+| **Snapshots Biomecânicos** | **20 anos** (como parte do prontuário) | Art. 16, CFM | Arquivamento |
 | **Exames e Laudos** | **20 anos** | Art. 16, CFM | Arquivamento |
 | **Agendamentos (Histórico)** | **5 anos** | Art. 15 | Anonimização |
 | **Faturas e Pagamentos** | **10 anos** | Art. 16, Código Civil | Arquivamento fiscal |

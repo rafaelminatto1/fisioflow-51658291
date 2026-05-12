@@ -24,13 +24,14 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useColors } from "@/hooks/useColorScheme";
 import { useAuthStore } from "@/store/auth";
 import { useGamification } from "@/hooks/useGamification";
-import { Card, NotificationPermissionModal, SyncIndicator, LinearProgress, RTMDashboardWidget } from "@/components";
+import { Card, NotificationPermissionModal, SyncIndicator, LinearProgress, RTMDashboardWidget, GamificationDashboard } from "@/components";
 import { Spacing } from "@/constants/spacing";
 import * as Notifications from "expo-notifications";
 import { useExercises } from "@/hooks/useExercises";
 import { useAppointments } from "@/hooks/useAppointments";
 import { useTelemedicine } from "@/hooks/useTelemedicine";
 import { Linking } from "react-native";
+import { GamificationService } from "@/services/GamificationService";
 
 const SCREEN_PADDING = Spacing.screen;
 const CARD_GAP = Spacing.gap;
@@ -80,10 +81,7 @@ export default function DashboardScreen() {
   const colors = useColors();
   const { user } = useAuthStore();
   const {
-    currentLevel,
-    currentXp,
-    xpPerLevel,
-    progressPercentage,
+    profile,
     isLoading: gamificationLoading,
   } = useGamification();
   const { data: exercises = [], isLoading: exercisesLoading } = useExercises();
@@ -91,6 +89,12 @@ export default function DashboardScreen() {
   const { activeRoom } = useTelemedicine();
 
   const [showNotificationPrompt, setShowNotificationPrompt] = useState(false);
+
+  useEffect(() => {
+    if (user?.id) {
+      GamificationService.awardDailyLogin(user.id);
+    }
+  }, [user?.id]);
 
   useEffect(() => {
     // Check if notification prompt was already shown
@@ -129,8 +133,7 @@ export default function DashboardScreen() {
   const completedCount = exercises.filter((e) => e.completed).length;
   const totalCount = exercises.length;
   const progress = totalCount > 0 ? (completedCount / totalCount) * 100 : 0;
-  const xpRemaining = Math.max(xpPerLevel - currentXp, 0);
-  const streak = 0; // Temporário - viria do perfil gamificado se implementado na API
+  const streak = profile?.streak || 0;
 
   const getNextAppointmentLabel = () => {
     if (!nextAppointment) return null;
@@ -212,25 +215,8 @@ export default function DashboardScreen() {
           </View>
         </View>
 
-        {/* Level Progress Bar */}
-        <View style={styles.xpContainer}>
-          <View style={styles.xpHeader}>
-            <Text style={[styles.xpLabel, { color: colors.textSecondary }]}>
-              Progresso do Nível
-            </Text>
-            <Text style={[styles.xpValue, { color: colors.text }]}>
-              {currentXp}/{xpPerLevel} XP
-            </Text>
-          </View>
-          <LinearProgress
-            progress={progressPercentage / 100}
-            color={colors.primary}
-            style={styles.xpBar}
-          />
-          <Text style={[styles.xpHint, { color: colors.textSecondary }]}>
-            Faltam {xpRemaining} XP para o próximo nível
-          </Text>
-        </View>
+        {/* Gamification & Progress */}
+        <GamificationDashboard />
         
         {/* RTM Activity Widget */}
         <RTMDashboardWidget />

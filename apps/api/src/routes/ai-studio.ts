@@ -30,12 +30,12 @@ app.post("/scribe/process", requireAuth, async (c) => {
     `);
     const patient = patientData.rows[0] as any;
     const patientContext = patient 
-      ? `Paciente: ${patient.full_name}, Condição: ${patient.main_condition || 'Não informada'}`
+      ? `Paciente: [REDACTED], Condição: ${patient.main_condition || 'Não informada'}`
       : "Contexto do paciente não disponível";
 
     const audioBuffer = Uint8Array.from(atob(audioBase64), (c) => c.charCodeAt(0));
 
-    console.log("[AI-Studio] Transcrevendo áudio com Whisper...");
+    console.log(`[AI-Studio] Transcrevendo áudio para paciente ${patientId} (Scribe)...`);
     const transcription: any = await c.env.AI.run("@cf/openai/whisper-large-v3-turbo", {
       audio: [...audioBuffer],
     });

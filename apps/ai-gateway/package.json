@@ -11,12 +11,8 @@
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
-    "@fisioflow/db": "workspace:*",
-    "@hono/zod-validator": "^0.7.6",
-    "drizzle-orm": "^0.45.2",
     "hono": "^4.12.15",
-    "jose": "^5.10.0",
-    "zod": "^4.3.6"
+    "jose": "^5.10.0"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20260504.1",

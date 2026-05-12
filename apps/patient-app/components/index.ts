@@ -35,3 +35,5 @@ export {
   type PainMapSummaryProps,
 } from "./PainMap";
 export { RTMDashboardWidget } from "./RTMDashboardWidget";
+export { GamificationBadge } from "./GamificationBadge";
+export { GamificationDashboard } from "./GamificationDashboard";
