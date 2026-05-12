@@ -104,6 +104,22 @@ pids/
 .claude/
 .agent/
 .playwright-mcp/
+.playwright/
+
+# === AI tools local state (not project code) ===
+.kiro/
+.codex/
+.genkit/
+.stitch-designs/
+.agents/
+.superpowers/
+.jules/
+.zap/
+_design-system-export/
+skills-lock.json
+
+# === TypeScript build cache ===
+*.tsbuildinfo
 
 # === OS generated ===
 .DS_Store
