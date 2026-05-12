@@ -67,7 +67,7 @@ describe("patientApi route contracts", () => {
     await patientApi.getProfile();
 
     expect(global.fetch).toHaveBeenCalledWith(
-      "https://api-paciente.moocafisio.com.br/api/patient-portal/profile",
+      "https://api.moocafisio.com.br/api/patient-portal/profile",
       expect.objectContaining({
         method: "GET",
         headers: expect.any(Headers),
@@ -81,7 +81,7 @@ describe("patientApi route contracts", () => {
     await patientApi.confirmAppointment("appt-123");
 
     expect(global.fetch).toHaveBeenCalledWith(
-      "https://api-paciente.moocafisio.com.br/api/patient-portal/appointments/appt-123/confirm",
+      "https://api.moocafisio.com.br/api/patient-portal/appointments/appt-123/confirm",
       expect.objectContaining({
         method: "POST",
         body: JSON.stringify({}),
@@ -95,7 +95,7 @@ describe("patientApi route contracts", () => {
     await patientApi.getAppointments(true);
 
     expect(global.fetch).toHaveBeenCalledWith(
-      "https://api-paciente.moocafisio.com.br/api/patient-portal/appointments?upcoming=true",
+      "https://api.moocafisio.com.br/api/patient-portal/appointments?upcoming=true",
       expect.objectContaining({
         method: "GET",
       }),

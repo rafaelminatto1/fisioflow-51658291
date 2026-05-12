@@ -12,7 +12,8 @@ export type OperationType =
   | "submit_feedback"
   | "book_appointment"
   | "cancel_appointment"
-  | "link_professional";
+  | "link_professional"
+  | "api_request";
 
 export interface QueuedOperation {
   id: string;
@@ -181,6 +182,17 @@ class OfflineManager {
       case "link_professional":
         await patientApi.linkProfessional(operation.data.professionalId);
         break;
+      case "api_request": {
+        const { endpoint, method, body } = operation.data;
+        const { api } = await import("./api");
+        switch (method) {
+          case "POST": await api.post(endpoint, body); break;
+          case "PATCH": await api.patch(endpoint, body); break;
+          case "PUT": await api.put(endpoint, body); break;
+          case "DELETE": await api.delete(endpoint); break;
+        }
+        break;
+      }
       default:
         throw new Error(`Unknown operation type: ${operation.type}`);
     }

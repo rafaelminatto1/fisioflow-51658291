@@ -1,5 +1,6 @@
 import { authClient } from "./neonAuth";
 import { log } from "./logger";
+import { getOfflineManager } from "./offlineManager";
 import {
   PatientProfile,
   Therapist,
@@ -132,6 +133,37 @@ export const api = {
 
       return extractPayload<T>(json);
     } catch (error) {
+      const method = options.method || "GET";
+
+      // Interceptar erro de rede para mutações quando offline
+      if (
+        method !== "GET" &&
+        (error instanceof TypeError || (error as Error).message.includes("Failed to fetch"))
+      ) {
+        log.warn("OFFLINE_INTERCEPT", `Queuing ${method} ${endpoint} due to network error`);
+
+        try {
+          const offlineManager = getOfflineManager();
+          const session = (await authClient.getSession()) as any;
+          const userId = session?.data?.session?.user?.id || "anonymous";
+
+          await offlineManager.queueOperation(
+            "api_request",
+            {
+              endpoint,
+              method,
+              body: options.body ? JSON.parse(options.body as string) : undefined,
+            },
+            userId,
+          );
+
+          // Retornar sucesso simulado
+          return { success: true, offline: true } as unknown as T;
+        } catch (queueError) {
+          log.error("OFFLINE_INTERCEPT", "Failed to queue operation", queueError);
+        }
+      }
+
       log.error("API_REQUEST", `Error in ${endpoint}`, error);
       throw error;
     }
