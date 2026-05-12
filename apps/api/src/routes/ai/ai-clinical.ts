@@ -595,6 +595,27 @@ Retorne APENAS o JSON, sem markdown.
     const jsonMatch = result.content.match(/\{[\s\S]*\}/);
     const data = JSON.parse(jsonMatch?.[0] ?? result.content);
 
+    // Persistir revisão no banco de dados para auditoria (Background)
+    const { createPool } = await import("../../lib/db");
+    const pool = createPool(c.env);
+    const sessionId = body.sessionId;
+
+    c.executionCtx.waitUntil(
+      pool.query(
+        `INSERT INTO ai_peer_reviews (organization_id, session_id, therapist_id, quality_score, insights, missing_tests, suggestions)
+         VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+        [
+          user.organizationId,
+          sessionId ?? null,
+          user.uid,
+          data.score,
+          JSON.stringify(data.insights),
+          JSON.stringify(data.missingTests),
+          JSON.stringify(data.suggestedExercises),
+        ],
+      ).catch(e => console.error("[AI/PeerReview] Persistence failed", e))
+    );
+
     return c.json({ success: true, data });
   } catch (error: any) {
     console.error("[ai/peer-review]", error);

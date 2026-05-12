@@ -348,4 +348,34 @@ app.get("/protocol-efficacy", requireAuth, async (c) => {
   }
 });
 
+/**
+ * GET /api/clinic-metrics/clinical-quality
+ * Dashboard de qualidade clínica: scores médios de SOAP por terapeuta.
+ */
+app.get("/clinical-quality", requireAuth, async (c) => {
+  const user = c.get("user");
+  const pool = createPool(c.env);
+
+  try {
+    const result = await pool.query(
+      `SELECT 
+        p.full_name,
+        AVG(apr.quality_score)::numeric(5,1) as avg_quality,
+        COUNT(apr.id) as reviews_count,
+        (SELECT COUNT(*) FROM sessions WHERE organization_id = $1 AND therapist_id = p.id) as total_sessions
+       FROM profiles p
+       JOIN ai_peer_reviews apr ON apr.therapist_id = p.id
+       WHERE p.organization_id = $1 AND p.role = 'therapist'
+       GROUP BY p.id, p.full_name
+       ORDER BY avg_quality DESC`,
+      [user.organizationId]
+    );
+
+    return c.json({ data: result.rows });
+  } catch (error) {
+    console.error("[Metrics] Clinical Quality error:", error);
+    return c.json({ error: "Failed to calculate clinical quality" }, 500);
+  }
+});
+
 export { app as clinicMetricsRoutes };
