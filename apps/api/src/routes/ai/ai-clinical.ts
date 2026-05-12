@@ -478,4 +478,128 @@ app.get("/usage/weekly", async (c) => {
   }
 });
 
+/**
+ * POST /api/ai/summarize-patient
+ * Gera resumo clínico de um paciente a partir de dados de sessões/SOAP.
+ * Usado por useAiSummarizer.ts no dashboard profissional.
+ */
+app.post("/summarize-patient", async (c) => {
+  const user = c.get("user");
+  const body = await c.req.json();
+  const { patientId, soapNotes, sessions, condition } = body as {
+    patientId?: string;
+    soapNotes?: string;
+    sessions?: number;
+    condition?: string;
+  };
+
+  let clinicalContext = soapNotes ?? "";
+
+  if (!clinicalContext && patientId) {
+    try {
+      const url = c.env.NEON_URL || c.env.HYPERDRIVE?.connectionString;
+      if (url) {
+        const { neon } = await import("@neondatabase/serverless");
+        const sql = neon(url);
+        const rows = await sql`
+          SELECT s.subjective, s.objective, s.assessment, s.plan, s.session_date
+          FROM sessions s
+          JOIN appointments a ON s.appointment_id = a.id
+          WHERE a.patient_id = ${patientId}
+            AND a.organization_id = ${user.organizationId}
+          ORDER BY s.session_date DESC
+          LIMIT 5
+        `;
+        if (rows.length) {
+          clinicalContext = rows
+            .map(
+              (r: any) =>
+                `[${r.session_date}] S: ${r.subjective} | O: ${r.objective} | A: ${r.assessment} | P: ${r.plan}`,
+            )
+            .join("\n");
+        }
+      }
+    } catch {
+      // proceed with empty context
+    }
+  }
+
+  if (!clinicalContext) {
+    return c.json({ error: "Dados clínicos insuficientes para resumo" }, 422);
+  }
+
+  try {
+    const { summarizeClinicalNote } = await import("../../lib/ai-native");
+    const contextHeader = [
+      condition ? `Condição principal: ${condition}` : "",
+      sessions != null ? `Total de sessões: ${sessions}` : "",
+      "Últimas evoluções SOAP:",
+    ]
+      .filter(Boolean)
+      .join("\n");
+
+    const summary = await summarizeClinicalNote(c.env, `${contextHeader}\n\n${clinicalContext}`);
+    return c.json({ success: true, data: { summary } });
+  } catch (error: any) {
+    console.error("[ai/summarize-patient]", error);
+    return c.json({ error: "Falha ao gerar resumo", details: error.message }, 500);
+  }
+});
+
+/**
+ * POST /api/ai/peer-review
+ * Revisão peer de nota SOAP: score de qualidade + insights clínicos.
+ * Usado por usePeerReview.ts no dashboard profissional.
+ */
+app.post("/peer-review", async (c) => {
+  const user = c.get("user");
+  const body = await c.req.json();
+  const { subjective = "", objective = "", assessment = "", plan = "" } = body as Record<
+    string,
+    string
+  >;
+
+  if (!subjective && !objective && !assessment && !plan) {
+    return c.json({ error: "Nota SOAP vazia" }, 422);
+  }
+
+  try {
+    const { callAI } = await import("../../lib/ai/callAI");
+    const result = await callAI(c.env, {
+      task: "soap-review",
+      organizationId: user.organizationId,
+      systemInstruction:
+        "Você é um fisioterapeuta sênior avaliando a qualidade de notas clínicas SOAP. Responda sempre em JSON válido.",
+      prompt: `
+Avalie a seguinte nota SOAP de fisioterapia e retorne um JSON com este formato exato:
+{
+  "score": <número de 0 a 100 representando qualidade geral>,
+  "insights": [<lista de pontos fortes e observações em até 4 frases curtas>],
+  "missingTests": [<testes ou escalas ausentes que seriam relevantes, ex: "EVA", "PSFS", "ADM de ombro">],
+  "suggestedExercises": [<até 3 sugestões de exercícios ou condutas baseadas no P>]
+}
+
+NOTA SOAP:
+S (Subjetivo): ${subjective}
+O (Objetivo): ${objective}
+A (Avaliação): ${assessment}
+P (Plano): ${plan}
+
+Retorne APENAS o JSON, sem markdown.
+      `.trim(),
+      responseFormat: "json",
+      temperature: 0.2,
+      maxTokens: 600,
+    });
+
+    const jsonMatch = result.content.match(/\{[\s\S]*\}/);
+    const data = JSON.parse(jsonMatch?.[0] ?? result.content);
+
+    return c.json({ success: true, data });
+  } catch (error: any) {
+    console.error("[ai/peer-review]", error);
+    return c.json({ error: "Falha na revisão peer", details: error.message }, 500);
+  }
+});
+
 export { app as aiClinicalRoutes };

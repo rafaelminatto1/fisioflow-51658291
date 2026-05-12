@@ -3,13 +3,16 @@ import { sql } from "drizzle-orm";
 import { createDb } from "../lib/db";
 import { requireAuth } from "../lib/auth";
 import { clinicalScribeLogs } from "@fisioflow/db";
+import { transcribeAudio } from "../lib/ai-native";
+import { callAI } from "../lib/ai/callAI";
 import type { Env } from "../types/env";
 
 const app = new Hono<{ Bindings: Env }>();
 
 /**
  * POST /api/ia-studio/scribe/process
- * Processa áudio do escriba e gera texto formatado
+ * Processa áudio do escriba e gera texto formatado.
+ * Usa Deepgram Nova-3 → Whisper fallback via AI Gateway (runAi).
  */
 app.post("/scribe/process", requireAuth, async (c) => {
   const user = c.get("user");
@@ -23,61 +26,46 @@ app.post("/scribe/process", requireAuth, async (c) => {
   const db = await createDb(c.env);
 
   try {
-    // Buscar contexto do paciente para o prompt
     const patientData = await db.execute(sql`
-      SELECT full_name, main_condition FROM patients 
+      SELECT main_condition FROM patients
       WHERE id = ${patientId} AND organization_id = ${user.organizationId}
     `);
     const patient = patientData.rows[0] as any;
-    const patientContext = patient 
-      ? `Paciente: [REDACTED], Condição: ${patient.main_condition || 'Não informada'}`
-      : "Contexto do paciente não disponível";
+    const condition = patient?.main_condition || "não informada";
 
-    const audioBuffer = Uint8Array.from(atob(audioBase64), (c) => c.charCodeAt(0));
-
-    console.log(`[AI-Studio] Transcrevendo áudio para paciente ${patientId} (Scribe)...`);
-    const transcription: any = await c.env.AI.run("@cf/openai/whisper-large-v3-turbo", {
-      audio: [...audioBuffer],
-    });
-
-    const rawText = transcription.text;
-    if (!rawText) throw new Error("Falha na transcrição");
+    const rawText = await transcribeAudio(c.env, audioBase64);
+    if (!rawText) return c.json({ error: "Falha na transcrição" }, 422);
 
     const sectionName =
-      {
+      ({
         S: "Subjetivo (Queixas e Histórico)",
         O: "Objetivo (Medições e Exames)",
         A: "Avaliação (Raciocínio Clínico)",
         P: "Plano (Condutas e Próximos Passos)",
-      }[section as "S" | "O" | "A" | "P"] || section;
+      } as Record<string, string>)[section] ?? section;
 
-    const prompt = `
-      Você é um assistente de fisioterapia de elite, especializado em documentação clínica SOAP e análise cinemática.
-      Sua tarefa é converter o texto bruto de um ditado ambiente em um parágrafo técnico profissional.
+    const result = await callAI(c.env, {
+      task: "soap",
+      systemInstruction:
+        "Você é um redator de prontuários de fisioterapia experiente. Retorne APENAS o parágrafo refinado, sem introduções ou conclusões.",
+      prompt: `
+Contexto clínico: Condição: ${condition}
+Seção SOAP alvo: ${sectionName}
+Texto bruto transcrito: "${rawText}"
 
-      CONTEXTO CLÍNICO:
-      ${patientContext}
-
-      SEÇÃO SOAP ALVO: ${sectionName}
-      TEXTO BRUTO TRANSCRITO: "${rawText}"
-
-      DIRETRIZES DE OURO:
-      1. Use terminologia clínica avançada (ex: 'algia' em vez de 'dor', 'amplitude de movimento' ou 'ADM', 'hipertonia', 'disfunção biomecânica').
-      2. Mantenha o texto extremamente conciso e focado em fatos clínicos.
-      3. Corrija erros gramaticais e de concordância típicos de transcrição de áudio.
-      4. Se o texto mencionar medições (ângulos, repetições), formate-as de maneira clara.
-      5. NÃO invente fatos. Se o áudio for confuso, priorize o que está claro.
-      6. Retorne APENAS o parágrafo refinado, sem introduções ("Aqui está...", "Com base em...") ou conclusões.
-    `;
-
-    const refinement: any = await c.env.AI.run("@cf/meta/llama-3.1-70b-instruct", {
-      messages: [
-        { role: "system", content: "Você é um redator de prontuários de fisioterapia experiente." },
-        { role: "user", content: prompt },
-      ],
+Diretrizes:
+1. Use terminologia clínica avançada (ADM, algia, hipertonia, disfunção biomecânica).
+2. Mantenha texto conciso e focado em fatos clínicos.
+3. Corrija erros gramaticais típicos de transcrição.
+4. Formate medições claramente (ângulos, repetições).
+5. NÃO invente fatos.
+      `.trim(),
+      temperature: 0.15,
+      maxTokens: 512,
+      organizationId: user.organizationId,
     });
 
-    const formattedText = refinement.response;
+    const formattedText = result.content;
 
     await db.insert(clinicalScribeLogs).values({
       organizationId: user.organizationId,
@@ -86,23 +74,13 @@ app.post("/scribe/process", requireAuth, async (c) => {
       section,
       rawText,
       formattedText,
-      tokensUsed: 0,
+      tokensUsed: result.usage.inputTokens + result.usage.outputTokens,
     });
 
-    return c.json({
-      success: true,
-      rawText,
-      formattedText,
-    });
+    return c.json({ success: true, rawText, formattedText });
   } catch (error: any) {
     console.error("[AI-Studio] Erro no processamento do escriba:", error);
-    return c.json(
-      {
-        error: "Erro ao processar áudio",
-        details: error.message,
-      },
-      500,
-    );
+    return c.json({ error: "Erro ao processar áudio", details: error.message }, 500);
   }
 });
 
@@ -114,7 +92,7 @@ app.get("/retention/at-risk", requireAuth, async (c) => {
   const db = await createDb(c.env);
 
   try {
-    const query = sql`
+    const result = await db.execute(sql`
       SELECT p.id, p.full_name as "fullName", p.phone, p.status,
              MAX(a.date) as "lastSession"
       FROM patients p
@@ -130,13 +108,12 @@ app.get("/retention/at-risk", requireAuth, async (c) => {
       HAVING MAX(a.date) < CURRENT_DATE - INTERVAL '10 days'
       ORDER BY MAX(a.date) DESC
       LIMIT 10
-    `;
-
-    const result = await db.execute(query);
+    `);
 
     const data = result.rows.map((row: any) => {
-      const lastDate = new Date(row.lastSession);
-      const daysAbsent = Math.floor((Date.now() - lastDate.getTime()) / (1000 * 60 * 60 * 24));
+      const daysAbsent = Math.floor(
+        (Date.now() - new Date(row.lastSession).getTime()) / (1000 * 60 * 60 * 24),
+      );
       return {
         ...row,
         riskScore: Math.min(95, 40 + daysAbsent),
@@ -182,17 +159,13 @@ app.get("/predict/discharge/:patientId", requireAuth, async (c) => {
     if (condition.includes("pos-op") || condition.includes("cirurgia")) baseSessions = 30;
     if (condition.includes("coluna") || condition.includes("hernia")) baseSessions = 24;
 
-    const predictedTotal = baseSessions;
-    const remaining = Math.max(1, predictedTotal - currentSessions);
-    const progress = Math.min(98, Math.floor((currentSessions / predictedTotal) * 100));
-
     return c.json({
       data: {
         patientId,
-        predictedTotal,
+        predictedTotal: baseSessions,
         currentSessions,
-        remainingSessions: remaining,
-        progressPercentage: progress,
+        remainingSessions: Math.max(1, baseSessions - currentSessions),
+        progressPercentage: Math.min(98, Math.floor((currentSessions / baseSessions) * 100)),
         confidence: 0.85,
         factors: [
           "Histórico de adesão: Alto",
@@ -209,7 +182,7 @@ app.get("/predict/discharge/:patientId", requireAuth, async (c) => {
 
 /**
  * POST /api/ia-studio/reports/synthesize
- * Gera síntese clínica dual (médico/paciente) baseada em destaques
+ * Gera síntese clínica dual (médico/paciente) com Llama via AI Gateway.
  */
 app.post("/reports/synthesize", requireAuth, async (c) => {
   const body = await c.req.json();
@@ -220,41 +193,24 @@ app.post("/reports/synthesize", requireAuth, async (c) => {
   }
 
   try {
-    console.log("[AI-Studio] Gerando síntese de relatório com Llama 3.1...");
+    const result = await callAI(c.env, {
+      task: "report",
+      systemInstruction: "Você é um especialista em comunicação clínica de fisioterapia.",
+      prompt: `
+Gere um relatório de evolução dual baseado nos destaques clínicos: "${highlights}"
 
-    const prompt = `
-      Você é um assistente de fisioterapia de alto nível.
-      Gere um relatório de evolução dual para o paciente baseado nos seguintes destaques clínicos:
-      "${highlights}"
-
-      O resultado deve ser um objeto JSON com dois campos:
-      1. "medico": Uma síntese técnica, formal, usando terminologia acadêmica da fisioterapia para o médico solicitante.
-      2. "paciente": Uma mensagem motivadora, clara, em linguagem humanizada, focando nas conquistas do paciente.
-
-      Regras:
-      - Tom profissional para o médico.
-      - Tom encorajador para o paciente.
-      - Retorne APENAS o JSON puro.
-    `;
-
-    const result: any = await c.env.AI.run("@cf/meta/llama-3.1-70b-instruct", {
-      messages: [
-        { role: "system", content: "Você é um especialista em comunicação clínica." },
-        { role: "user", content: prompt },
-      ],
+Retorne APENAS JSON puro neste formato exato:
+{"medico":"<síntese técnica formal em terminologia fisioterapêutica>","paciente":"<mensagem motivadora em linguagem humanizada focada nas conquistas>"}
+      `.trim(),
+      responseFormat: "json",
+      temperature: 0.3,
+      maxTokens: 800,
     });
 
-    // Extrair JSON da resposta da IA (caso venha com markdown)
-    let content = result.response;
-    const jsonMatch = content.match(/\{[\s\S]*\}/);
-    if (jsonMatch) content = jsonMatch[0];
+    const jsonMatch = result.content.match(/\{[\s\S]*\}/);
+    const data = JSON.parse(jsonMatch?.[0] ?? result.content);
 
-    const data = JSON.parse(content);
-
-    return c.json({
-      success: true,
-      data,
-    });
+    return c.json({ success: true, data });
   } catch (error: any) {
     console.error("[AI-Studio] Erro na síntese de relatório:", error);
     return c.json({ error: "Erro ao gerar síntese" }, 500);
