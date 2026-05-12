@@ -46,15 +46,16 @@ app.get("/kpis", requireAuth, async (c) => {
       [user.organizationId]
     );
 
-    // 4. LTV Base (Simplificado: Ticket Médio * Média de sessões por paciente)
+    // 4. LTV Base (Refinado: Pacientes com pelo menos 2 sessões para filtrar 'one-timers')
     const ltvRes = await pool.query(
       `WITH patient_sessions AS (
         SELECT patient_id, COUNT(*) as session_count
         FROM patient_session_metrics
         WHERE organization_id = $1
         GROUP BY patient_id
+        HAVING COUNT(*) >= 2
       )
-      SELECT AVG(session_count) as avg_sessions_per_patient FROM patient_sessions`,
+      SELECT COALESCE(AVG(session_count), 0) as avg_sessions_per_patient FROM patient_sessions`,
       [user.organizationId]
     );
 

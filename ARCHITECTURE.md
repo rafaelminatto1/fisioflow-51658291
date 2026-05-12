@@ -14,15 +14,23 @@ As diretrizes operacionais e restrições do sistema estão documentadas em [Reg
 | **Storage**    | **Cloudflare R2**        | Armazenamento de mídia (Vídeos/Imagens) via S3 API.               |
 | **Aceleração** | Cloudflare Hyperdrive    | Pooling de conexões PostgreSQL distribuído na borda.              |
 | **PDF Engine** | **Browser Rendering**    | Geração de documentos (Alta/Recibos) via Puppeteer nativo.        |
-| **Sync**       | **Background Sync**      | Sincronização offline robusta via Service Workers + IndexedDB.    |
+| **Sync**       | **Background Sync**      | Sincronização offline robusta via IndexedDB (Pro) e AsyncStorage. |
+| **IA Studio**  | **Google/Meta/Vision**   | IA Generativa (SOAP) e Visão Computacional (Cinemática).          |
+| **Resiliência**| **Geographical DR**      | Backup Neon Branching + R2 Cross-region (SP -> ENAM).             |
 
 ## 📐 Diagrama de Arquitetura
 
 ```mermaid
 graph TD
     User((Paciente/Fisio)) --> CF_Edge[Cloudflare Edge / WAF]
-    CF_Edge --> CF_Pages[Cloudflare Pages - Frontend]
+    CF_Edge --> CF_Assets[Cloudflare Assets - Frontend]
     CF_Edge --> CF_Workers[Cloudflare Workers - API]
+
+    subgraph "Inteligência Artificial (AI Studio)"
+        CF_Workers --> CF_AI[Cloudflare Workers AI - Whisper/Llama]
+        CF_Workers --> AI_Gateway[AI Gateway - Gemini 1.5 Flash]
+        CF_AI --> Vision[Vision Framework - Cinematic Analysis]
+    end
 
     subgraph "Auth & Security"
         CF_Workers --> Neon_Auth[Neon Auth / JWKS Verification]
@@ -30,16 +38,13 @@ graph TD
 
     subgraph "Data Persistence"
         CF_Workers --> CF_Hyperdrive[Cloudflare Hyperdrive]
-        CF_Hyperdrive --> Neon_DB[(Neon PostgreSQL)]
+        CF_Hyperdrive --> Neon_DB[(Neon PostgreSQL SP)]
+        Neon_DB -.-> Neon_DR[(Neon Branching DR)]
     end
 
-    subgraph "Specialized Services"
-        CF_Workers --> CF_Browser[Browser Rendering - Puppeteer]
-        CF_Workers --> CF_Queues[Cloudflare Queues - Background Tasks]
-    end
-
-    subgraph "Media Storage"
-        CF_Workers --> CF_R2[Cloudflare R2 Storage]
+    subgraph "Storage & Recovery"
+        CF_Workers --> CF_R2[Cloudflare R2 SP]
+        CF_R2 -.-> CF_R2_DR[Cloudflare R2 DR - North America]
     end
 ```
 ## 🔐 Modelo de Segurança e Isolamento

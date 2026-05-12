@@ -95,10 +95,12 @@ export async function request<T>(path: string, options: RequestInit = {}): Promi
     ) {
       console.warn(`[API] Offline detectado. Enfileirando ${method} ${path}`);
       
-      const offlineService = getOfflineSyncService();
-      // Criamos uma ação genérica que será processada depois
-      // Como não temos o ID da ação aqui, usamos o path/metodo como identificador
-      const { enqueueAction } = await import("@/services/offlineSync"); // Assumindo export futuro
+      const { enqueueAction } = await import("@/services/offlineSync");
+      await enqueueAction("API_REQUEST", {
+        url: path,
+        method,
+        body: options.body,
+      });
       
       // Simular retorno de sucesso para o hook não quebrar
       return { success: true, offline: true } as unknown as T;
