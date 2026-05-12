@@ -11,6 +11,7 @@ import { PatientGamificationSummary } from "@/components/patients/PatientGamific
 import { SemanticRecommenderWidget } from "./SemanticRecommenderWidget";
 import { SimilarPatientsWidget } from "./SimilarPatientsWidget";
 import { RecoveryTrajectoryWidget } from "./RecoveryTrajectoryWidget";
+import { ClinicalAISnapshot } from "./ClinicalAISnapshot";
 
 const LazyPatientDashboard360 = lazy(() =>
   import("@/components/patient/dashboard/PatientDashboard360").then((m) => ({
@@ -74,6 +75,9 @@ export const OverviewTab = ({
           onAction={() => {}}
         />
       </Suspense>
+
+      {/* AI Clinical Snapshot - Executive View */}
+      <ClinicalAISnapshot patientId={patient.id} />
 
       {/* AI Predictive Analytics & Clinical Knowledge */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">

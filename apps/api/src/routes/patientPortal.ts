@@ -1331,6 +1331,59 @@ app.get("/digital-twin", async (c) => {
   return c.json({ data: result.rows[0] || null });
 });
 
+app.get("/ai-snapshot", async (c) => {
+  const user = c.get("user");
+  const pool = await createPool(c.env);
+  const context = await ensurePortalContext(pool, user);
+  const patientId = context.data.patient_id;
+
+  if (!patientId) return c.json({ error: "Paciente não encontrado" }, 404);
+
+  // Re-utiliza a mesma lógica do clinicMetrics para manter consistência
+  const history = await pool.query(
+    `SELECT s.content, s.date, s.subjective, s.assessment, s.objective, s.plan
+     FROM sessions s
+     WHERE s.patient_id = $1 AND s.organization_id = $2
+     ORDER BY s.date DESC
+     LIMIT 10`,
+    [patientId, user.organizationId]
+  );
+
+  if (history.rows.length === 0) {
+    return c.json({ data: { mainStatus: "Seu histórico clínico está sendo processado." } });
+  }
+
+  const { runThinkingModel } = await import("../lib/ai-native");
+
+  const prompt = `
+    Você é o assistente de saúde virtual do paciente. 
+    Resuma as últimas 10 sessões de fisioterapia dele de forma motivadora e clara.
+    
+    EVOLUÇÕES:
+    ${JSON.stringify(history.rows)}
+
+    FORMATO DE SAÍDA (Retorne APENAS JSON puro):
+    {
+      "mainStatus": "Resumo motivador do estado atual",
+      "keyWins": ["Sua conquista 1", "Sua conquista 2"],
+      "remainingChallenges": ["Próximo foco 1", "Próximo foco 2"],
+      "clinicalRisk": "low | medium | high"
+    }
+  `.trim();
+
+  const result = await runThinkingModel(c.env, {
+    prompt,
+    model: "gemini-1.5-flash",
+    temperature: 0.2,
+    responseFormat: "json"
+  });
+
+  const jsonMatch = result.content.match(/\{[\s\S]*\}/);
+  const data = JSON.parse(jsonMatch?.[0] ?? result.content);
+
+  return c.json({ data });
+});
+
 // GET /api/patient-portal/gamification — XP, level, streak, badges
 app.get("/gamification", async (c) => {
   const user = c.get("user");

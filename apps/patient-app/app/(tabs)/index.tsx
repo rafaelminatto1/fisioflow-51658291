@@ -26,6 +26,7 @@ import { useAuthStore } from "@/store/auth";
 import { useGamification } from "@/hooks/useGamification";
 import { Card, NotificationPermissionModal, SyncIndicator, LinearProgress, RTMDashboardWidget, GamificationDashboard } from "@/components";
 import { RecoveryTrajectoryMobileWidget } from "@/components/RecoveryTrajectoryWidget";
+import { ClinicalAISnapshotMobile } from "@/components/ClinicalAISnapshotMobile";
 import { Spacing } from "@/constants/spacing";
 import * as Notifications from "expo-notifications";
 import { useExercises } from "@/hooks/useExercises";
@@ -224,6 +225,9 @@ export default function DashboardScreen() {
 
         {/* Trajetória de Recuperação (Digital Twin) */}
         <RecoveryTrajectoryMobileWidget />
+
+        {/* Resumo Executivo IA */}
+        <ClinicalAISnapshotMobile />
 
         {isLoading ? (
           <View style={styles.loadingContainer}>

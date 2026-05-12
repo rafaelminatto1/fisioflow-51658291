@@ -236,4 +236,63 @@ app.get("/churn", requireAuth, async (c) => {
   }
 });
 
+/**
+ * GET /api/clinic-metrics/patients/:id/ai-snapshot
+ * Gera um resumo executivo da jornada clínica do paciente via IA.
+ */
+app.get("/patients/:id/ai-snapshot", requireAuth, async (c) => {
+  const patientId = c.req.param("id");
+  const user = c.get("user");
+  const pool = createPool(c.env);
+
+  try {
+    // 1. Coletar dados clínicos recentes (últimas 10 evoluções)
+    const history = await pool.query(
+      `SELECT s.content, s.date, s.subjective, s.assessment, s.objective, s.plan
+       FROM sessions s
+       WHERE s.patient_id = $1 AND s.organization_id = $2
+       ORDER BY s.date DESC
+       LIMIT 10`,
+      [patientId, user.organizationId]
+    );
+
+    if (history.rows.length === 0) {
+      return c.json({ data: { mainStatus: "Sem histórico clínico suficiente para gerar snapshot." } });
+    }
+
+    const { runThinkingModel } = await import("../lib/ai-native");
+
+    const prompt = `
+      Você é um fisioterapeuta sênior em São Paulo. 
+      Sua tarefa é ler estas últimas 10 evoluções clínicas de um paciente e gerar um snapshot executivo para o time clínico.
+      
+      EVOLUÇÕES:
+      ${JSON.stringify(history.rows)}
+
+      FORMATO DE SAÍDA (Retorne APENAS JSON puro):
+      {
+        "mainStatus": "Resumo em 1 frase do estado atual e evolução",
+        "keyWins": ["Ganho clínico 1", "Ganho clínico 2"],
+        "remainingChallenges": ["Desafio 1", "Desafio 2"],
+        "clinicalRisk": "low | medium | high"
+      }
+    `.trim();
+
+    const result = await runThinkingModel(c.env, {
+      prompt,
+      model: "gemini-1.5-flash",
+      temperature: 0.2,
+      responseFormat: "json"
+    });
+
+    const jsonMatch = result.content.match(/\{[\s\S]*\}/);
+    const data = JSON.parse(jsonMatch?.[0] ?? result.content);
+
+    return c.json({ data });
+  } catch (error) {
+    console.error("[Metrics] AI Snapshot error:", error);
+    return c.json({ error: "Failed to generate AI snapshot" }, 500);
+  }
+});
+
 export { app as clinicMetricsRoutes };

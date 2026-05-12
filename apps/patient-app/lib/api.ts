@@ -290,6 +290,8 @@ export const patientApi = {
     api.get<any>(`${PATIENT_PORTAL_PREFIX}/referral`),
   getDigitalTwin: (): Promise<any> =>
     api.get<any>(`${PATIENT_PORTAL_PREFIX}/digital-twin`),
+  getAiSnapshot: (): Promise<any> =>
+    api.get<any>(`${PATIENT_PORTAL_PREFIX}/ai-snapshot`),
 };
 
 export const gamificationApi = {
