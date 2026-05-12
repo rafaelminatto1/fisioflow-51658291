@@ -1277,6 +1277,37 @@ app.get("/stats", async (c) => {
   });
 });
 
+app.get("/referral", async (c) => {
+  const user = c.get("user");
+  const pool = await createPool(c.env);
+  const context = await ensurePortalContext(pool, user);
+  const patientId = context.data.patient_id;
+
+  if (!patientId) return c.json({ error: "Paciente não encontrado" }, 404);
+
+  const result = await pool.query(
+    `SELECT code, reward_value FROM referral_codes 
+     WHERE patient_id = $1 
+     ORDER BY created_at DESC LIMIT 1`,
+    [patientId]
+  );
+
+  let referral = (result.rows[0] as any) || null;
+
+  if (!referral) {
+    const code = `FISIO${Math.random().toString(36).substring(2, 7).toUpperCase()}`;
+    const insert = await pool.query(
+      `INSERT INTO referral_codes (patient_id, organization_id, code, reward_type, reward_value)
+       VALUES ($1, $2, $3, 'discount', 10)
+       RETURNING code, reward_value`,
+      [patientId, user.organizationId, code]
+    );
+    referral = insert.rows[0];
+  }
+
+  return c.json({ data: referral });
+});
+
 // GET /api/patient-portal/gamification — XP, level, streak, badges
 app.get("/gamification", async (c) => {
   const user = c.get("user");

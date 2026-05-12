@@ -13,12 +13,15 @@ import {
   Text,
   TouchableOpacity,
   View,
+  Platform,
+  Share,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Button, Card } from "@/components";
 import { Spacing } from "@/constants/spacing";
 import { useColors } from "@/hooks/useColorScheme";
 import { useExerciseStats } from "@/hooks/useExercises";
+import { useReferral } from "@/hooks/useReferral";
 import { APP_VERSION } from "@/lib/constants";
 import { log } from "@/lib/logger";
 import { usePatientNotifications } from "@/lib/notificationsSystem";
@@ -36,6 +39,7 @@ export default function ProfileScreen() {
   const [loadingNotifications, setLoadingNotifications] = useState(true);
 
   const { data: stats, isLoading: loadingStats } = useExerciseStats();
+  const { data: referral, isLoading: loadingReferral } = useReferral();
   const { requestPermission } = usePatientNotifications();
 
   const checkNotificationStatus = useCallback(async () => {
@@ -49,7 +53,6 @@ export default function ProfileScreen() {
     }
   }, []);
 
-  // Check notification permission status on mount
   useEffect(() => {
     checkNotificationStatus();
   }, [checkNotificationStatus]);
@@ -73,6 +76,20 @@ export default function ProfileScreen() {
         },
       },
     ]);
+  };
+
+  const handleShareReferral = async () => {
+    if (!referral?.code) return;
+    const message = `Use meu código *${referral.code}* e ganhe ${referral.reward_value}% de desconto na sua primeira avaliação na Mooca Fisio! 🎁\n\nLink: https://app.moocafisio.com.br/indicacao/${referral.code}`;
+    
+    try {
+      await Share.share({
+        message,
+        title: "Indicar Amigo",
+      });
+    } catch (error) {
+      log.error("Share failed", error);
+    }
   };
 
   const handleToggleNotifications = async (value: boolean) => {
@@ -179,17 +196,36 @@ export default function ProfileScreen() {
             )}
             <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Exercícios</Text>
           </Card>
-          <Card style={styles.statCard}>
-            {loadingStats ? (
-              <ActivityIndicator size="small" color={colors.warning} />
-            ) : (
-              <Text style={[styles.statValue, { color: colors.warning }]}>
-                {stats?.totalMonths || 0}
-              </Text>
-            )}
-            <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Meses</Text>
-          </Card>
         </View>
+
+        {/* Referral Program Card */}
+        <Card style={[styles.referralCard, { backgroundColor: colors.primary + "10", borderColor: colors.primary + "30" }]}>
+          <View style={styles.referralHeader}>
+            <View style={[styles.referralIcon, { backgroundColor: colors.primary }]}>
+              <Ionicons name="gift" size={24} color="#FFFFFF" />
+            </View>
+            <View style={styles.referralTextContainer}>
+              <Text style={[styles.referralTitle, { color: colors.text }]}>Indique um Amigo</Text>
+              <Text style={[styles.referralSubtitle, { color: colors.textSecondary }]}>Ganhe benefícios na renovação</Text>
+            </View>
+          </View>
+
+          <View style={[styles.codeContainer, { backgroundColor: colors.background }]}>
+            {loadingReferral ? (
+              <ActivityIndicator size="small" color={colors.primary} />
+            ) : (
+              <Text style={[styles.referralCode, { color: colors.primary }]}>{referral?.code}</Text>
+            )}
+          </View>
+
+          <Button
+            title="Compartilhar Convite"
+            onPress={handleShareReferral}
+            variant="default"
+            size="small"
+            style={styles.shareButton}
+          />
+        </Card>
 
         {/* Notification Settings Card */}
         <Card style={styles.settingsCard}>
@@ -328,6 +364,49 @@ const styles = StyleSheet.create({
   },
   statLabel: {
     fontSize: 12,
+  },
+  referralCard: {
+    padding: Spacing.card,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderRadius: 24,
+  },
+  referralHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 16,
+  },
+  referralIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 14,
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 12,
+  },
+  referralTextContainer: {
+    flex: 1,
+  },
+  referralTitle: {
+    fontSize: 16,
+    fontWeight: "bold",
+  },
+  referralSubtitle: {
+    fontSize: 12,
+  },
+  codeContainer: {
+    paddingVertical: 12,
+    alignItems: "center",
+    borderRadius: 16,
+    marginBottom: 16,
+  },
+  referralCode: {
+    fontSize: 28,
+    fontWeight: "900",
+    letterSpacing: 4,
+  },
+  shareButton: {
+    borderRadius: 12,
   },
   settingsCard: {
     marginBottom: 20,

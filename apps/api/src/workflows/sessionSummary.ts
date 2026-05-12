@@ -150,6 +150,51 @@ Retorne SOMENTE JSON válido no formato:
           console.warn("[SessionSummaryWorkflow] WhatsApp queue failed:", err?.message);
         });
       });
+
+      // Step 5: Check milestones and request referral
+      await step.do("check-referral-milestone", async () => {
+        const countRes = await sql`
+          SELECT COUNT(*)::int as total
+          FROM sessions
+          WHERE patient_id = ${patientId}
+        `;
+        const totalSessions = countRes[0]?.total || 0;
+
+        // Milestone: 10 sessions
+        if (totalSessions === 10) {
+          // Get or create referral code
+          const codeRes = await sql`
+            SELECT code FROM referral_codes 
+            WHERE patient_id = ${patientId} 
+            ORDER BY created_at DESC LIMIT 1
+          `;
+          
+          let code = codeRes[0]?.code;
+          if (!code) {
+            code = `FISIO${Math.random().toString(36).substring(2, 7).toUpperCase()}`;
+            await sql`
+              INSERT INTO referral_codes (patient_id, organization_id, code, reward_type, reward_value)
+              VALUES (${patientId}, ${orgId}, ${code}, 'discount', 10)
+            `;
+          }
+
+          const referralMessage = `Parabéns, ${sessionData.patient_name}! 🎉 Você completou 10 sessões conosco!\n\nEstamos adorando sua evolução. Sabia que você pode ajudar um amigo e ainda ganhar benefícios? Compartilhe seu código de indicação *${code}* com alguém. Se essa pessoa começar o tratamento, vocês dois ganham 10% de desconto na próxima renovação! 🎁`;
+
+          await this.env.BACKGROUND_QUEUE!.send({
+            type: "SEND_WHATSAPP",
+            payload: {
+              to: sessionData.patient_phone!,
+              templateName: "referral_request",
+              languageCode: "pt_BR",
+              bodyParameters: [{ type: "text", text: referralMessage }],
+              organizationId: orgId,
+              patientId,
+              messageText: referralMessage,
+              appointmentId: "",
+            },
+          }).catch(() => {});
+        }
+      });
     }
 
     return { ok: true, sessionId, patientName: sessionData.patient_name };

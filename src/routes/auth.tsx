@@ -19,6 +19,9 @@ const PreCadastro = lazy(
 const FeedbackPreCadastro = lazy(
   () => import(/* webpackChunkName: "feedback-pre-cadastro" */ "@/pages/FeedbackPreCadastro"),
 );
+const ReferralLanding = lazy(
+  () => import(/* webpackChunkName: "referral-landing" */ "@/pages/public/ReferralLanding"),
+);
 
 export const authRoutes = (
   <>
@@ -26,6 +29,7 @@ export const authRoutes = (
     <Route path="/welcome" element={<Welcome />} />
     <Route path="/auth" element={<Auth />} />
     <Route path="/auth/login" element={<Auth />} />
+    <Route path="/indicacao/:code" element={<ReferralLanding />} />
     <Route
       path="/pending-approval"
       element={

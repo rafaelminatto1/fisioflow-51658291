@@ -286,6 +286,8 @@ export const patientApi = {
     };
   },
   getStats: (): Promise<PatientStats> => api.get<PatientStats>(`${PATIENT_PORTAL_PREFIX}/stats`),
+  getReferralCode: (): Promise<{ code: string; reward_value: number }> =>
+    api.get<any>(`${PATIENT_PORTAL_PREFIX}/referral`),
 };
 
 export const gamificationApi = {
