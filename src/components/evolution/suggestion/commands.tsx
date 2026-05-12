@@ -109,6 +109,16 @@ const COMMANDS_REGISTRY: Record<string, Command> = {
       window.dispatchEvent(new CustomEvent("tiptap-sugestoes-open"));
     },
   },
+  recomendar: {
+    id: "recomendar",
+    title: "Sugerir Condutas (IA)",
+    icon: Sparkles,
+    description: "Recomenda exercícios e protocolos com base no diagnóstico",
+    command: ({ editor, range }: any) => {
+      editor.chain().focus().deleteRange(range).run();
+      window.dispatchEvent(new CustomEvent("tiptap-recomendar"));
+    },
+  },
   scribe: {
     id: "scribe",
     title: "AI Scribe (Ambiente)",

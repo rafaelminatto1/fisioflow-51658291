@@ -137,6 +137,53 @@ export const V5ProBlockEditor: React.FC<V5ProBlockEditorProps> = ({
     return () => window.removeEventListener("tiptap-ai-assist", handleAiEvent);
   }, [onAiAssist]);
 
+  // Listener para Recomendador Semântico
+  useEffect(() => {
+    const handleRecomendarEvent = async () => {
+      if (!editor) return;
+      toast.loading("Buscando recomendações na base clínica...", { id: "recomendar-toast" });
+      
+      try {
+        // Extrair texto atual do editor para buscar contexto
+        const text = editor.getText();
+        // Usar as últimas 200 palavras para contexto (ou a condição do paciente se tivermos, mas aqui pegamos do texto digitado)
+        const contextQuery = text.slice(-1000) || "reabilitação fisioterapia";
+
+        const { requestPublic } = await import("@/api/v2/base");
+        const res = await requestPublic<{ recommendations: { protocols: any[], exercises: any[] } }>(
+          `/api/ai-search/recommend?condition=${encodeURIComponent(contextQuery)}`
+        );
+
+        let content = `<h3 class="text-indigo-600 dark:text-indigo-400">Sugestões Clínicas (IA)</h3>`;
+        
+        if (res.recommendations.protocols?.length) {
+          content += `<p><strong>Protocolos Wiki:</strong><ul>`;
+          res.recommendations.protocols.slice(0, 2).forEach(p => {
+            content += `<li>${p.title} (${p.category})</li>`;
+          });
+          content += `</ul></p>`;
+        }
+        
+        if (res.recommendations.exercises?.length) {
+          content += `<p><strong>Exercícios Sugeridos:</strong><ul data-type="taskList">`;
+          res.recommendations.exercises.slice(0, 3).forEach(e => {
+            content += `<li data-checked="false">${e.name}</li>`;
+          });
+          content += `</ul></p>`;
+        }
+
+        editor.chain().focus().insertContent(content).run();
+        toast.success("Sugestões inseridas com sucesso!", { id: "recomendar-toast" });
+      } catch (error) {
+        console.error("Falha ao buscar recomendações", error);
+        toast.error("Não foi possível buscar recomendações no momento.", { id: "recomendar-toast" });
+      }
+    };
+
+    window.addEventListener("tiptap-recomendar", handleRecomendarEvent);
+    return () => window.removeEventListener("tiptap-recomendar", handleRecomendarEvent);
+  }, [editor]);
+
   // Migração de SOAP para Tiptap Blocks
   useEffect(() => {
     if (editor && (!editor.getHTML() || editor?.getHTML() === "<p></p>")) {
