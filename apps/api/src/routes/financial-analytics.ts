@@ -1056,6 +1056,67 @@ export const registerFinancialAnalyticsRoutes = (app: FinancialApp) => {
     });
   });
 
+  app.get("/dre", requireAuth, async (c) => {
+    const user = c.get("user");
+    const pool = createPool(c.env);
+    const { month, year } = c.req.query();
+    
+    const targetDate = month && year 
+      ? `${year}-${String(month).padStart(2, '0')}-01`
+      : toYmd(startOfDay(new Date()));
+
+    try {
+      const dreResult = await queryFirst(
+        pool,
+        "dre-report",
+        `WITH monthly_data AS (
+          SELECT 
+            tipo,
+            COALESCE(SUM(valor), 0) as total,
+            COALESCE(jsonb_object_agg(categoria, sub_total) FILTER (WHERE categoria IS NOT NULL), '{}') as details
+          FROM (
+            SELECT tipo, categoria, SUM(valor) as sub_total
+            FROM transacoes
+            WHERE organization_id = $1
+              AND deleted_at IS NULL
+              AND date_trunc('month', created_at) = date_trunc('month', $2::date)
+            GROUP BY tipo, categoria
+          ) s
+          GROUP BY tipo
+        )
+        SELECT 
+          COALESCE((SELECT total FROM monthly_data WHERE tipo = 'receita'), 0) as gross_revenue,
+          COALESCE((SELECT total FROM monthly_data WHERE tipo = 'despesa'), 0) as total_expenses,
+          COALESCE((SELECT details FROM monthly_data WHERE tipo = 'receita'), '{}') as revenue_details,
+          COALESCE((SELECT details FROM monthly_data WHERE tipo = 'despesa'), '{}') as expense_details`,
+        [user.organizationId, targetDate],
+        { gross_revenue: 0, total_expenses: 0, revenue_details: {}, expense_details: {} }
+      );
+
+      const grossRevenue = toNumber(dreResult.gross_revenue);
+      const totalExpenses = toNumber(dreResult.total_expenses);
+      const netProfit = grossRevenue - totalExpenses;
+      const margin = grossRevenue > 0 ? (netProfit / grossRevenue) * 100 : 0;
+
+      return c.json({
+        data: {
+          period: targetDate,
+          report: {
+            grossRevenue,
+            totalExpenses,
+            netProfit,
+            margin,
+            revenueDetails: dreResult.revenue_details,
+            expenseDetails: dreResult.expense_details
+          }
+        }
+      });
+    } catch (error) {
+      console.error("[FinancialAnalytics] DRE error:", error);
+      return c.json({ error: "Failed to generate DRE" }, 500);
+    }
+  });
+
   app.get("/prediction", requireAuth, async (c) => {
     const user = c.get("user");
     const db = createDb(c.env);
