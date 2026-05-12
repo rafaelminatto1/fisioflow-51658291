@@ -49,18 +49,7 @@ export interface Env {
 
   // Cloudflare Images API (transform, resize, WebP/AVIF, watermark)
   IMAGES?: {
-    input(
-      stream: ReadableStream | ArrayBuffer | Blob,
-    ): {
-      transform(options: {
-        width?: number; height?: number; fit?: "scale-down" | "contain" | "cover" | "crop" | "pad";
-        quality?: number; format?: string; blur?: number; rotate?: 0 | 90 | 180 | 270;
-        brightness?: number; contrast?: number; saturation?: number;
-        trim?: { top?: number; right?: number; bottom?: number; left?: number };
-      }): ReturnType<Env["IMAGES"]>["input"] extends (...args: any[]) => infer R ? R : any;
-      draw(layer: any, options?: { opacity?: number; repeat?: boolean; top?: number; left?: number; bottom?: number; right?: number }): any;
-      output(options: { format?: "image/avif" | "image/webp" | "image/jpeg" | "image/png"; quality?: number }): Promise<{ response(): Response }>;
-    };
+    input(stream: ReadableStream | ArrayBuffer | Blob): ImageInput;
   };
 
   // Cloudflare R2 Config
@@ -253,3 +242,34 @@ type WorkflowInstance = {
   resume(): Promise<void>;
   terminate(): Promise<void>;
 };
+
+export interface ImageInput {
+  transform(options: {
+    width?: number;
+    height?: number;
+    fit?: "scale-down" | "contain" | "cover" | "crop" | "pad";
+    quality?: number;
+    format?: string;
+    blur?: number;
+    rotate?: 0 | 90 | 180 | 270;
+    brightness?: number;
+    contrast?: number;
+    saturation?: number;
+    trim?: { top?: number; right?: number; bottom?: number; left?: number };
+  }): ImageInput;
+  draw(
+    layer: any,
+    options?: {
+      opacity?: number;
+      repeat?: boolean;
+      top?: number;
+      left?: number;
+      bottom?: number;
+      right?: number;
+    },
+  ): ImageInput;
+  output(options: {
+    format?: "image/avif" | "image/webp" | "image/jpeg" | "image/png";
+    quality?: number;
+  }): Promise<{ response(): Response }>;
+}
