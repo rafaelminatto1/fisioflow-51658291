@@ -69,7 +69,12 @@
 
 /* 5. Event Card Wrapper (Harness) - Override FC defaults */
 .fc .fc-timegrid-event-harness {
-  padding: 2px !important; /* Margens entre cards paralelos */
+  padding: 2px 4px !important; /* 4px horizontal gap between side-by-side cards */
+}
+
+/* Extra inset so adjacent overlapping cards never touch */
+.fc .fc-timegrid-event-harness-inset {
+  padding: 2px 4px !important;
 }
 
 .fc .fc-v-event {
@@ -87,6 +92,17 @@
   background: transparent !important;
   height: 100% !important;
   width: 100% !important;
+}
+
+/* Patient name: wrap into up to 2 lines, never truncate on a single line */
+.fc-event-patient-name {
+  display: -webkit-box !important;
+  -webkit-line-clamp: 2 !important;
+  -webkit-box-orient: vertical !important;
+  overflow: hidden !important;
+  overflow-wrap: break-word !important;
+  word-break: break-word !important;
+  white-space: normal !important;
 }
 
 /* 6. Current Time Indicator */

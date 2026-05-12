@@ -76,14 +76,9 @@ export function ScheduleEventContent({
         )}
       </div>
 
-      <p 
-        className="text-[13px] font-bold leading-tight text-slate-900 dark:text-white break-words overflow-hidden" 
-        style={{ 
-          fontFamily: 'var(--font-display, Inter, sans-serif)',
-          display: '-webkit-box',
-          WebkitLineClamp: 2,
-          WebkitBoxOrient: 'vertical',
-        }}
+      <p
+        className="fc-event-patient-name text-[13px] font-bold leading-tight text-slate-900 dark:text-white min-w-0"
+        style={{ fontFamily: 'var(--font-display, Inter, sans-serif)' }}
       >
         {title}
       </p>
