@@ -30,7 +30,23 @@
 1. **Queue:** Verificar fila de DLQ (Dead Letter Queue) no Cloudflare dashboard.
 2. **Credenciais:** Validar `WHATSAPP_ACCESS_TOKEN` no Meta Business Suite.
 
-## 4. Rotação de Segredos
+## 4. Recuperação de Desastre Regional (DR)
+Caso a região **São Paulo (sa-east-1)** sofra uma queda total:
+
+### 1. Banco de Dados (Reserva Geográfica)
+- O Neon DB mantém snapshots diários via `scripts/neon-backup.ts`.
+- **Ação:** Identificar o ID da branch de backup mais recente (`backup-YYYY-MM-DD-HHmm`).
+- **Comando:** No console Neon, promova esta branch para `main` ou aponte a connection string do Worker para o endpoint desta branch.
+
+### 2. Mídia e Arquivos (R2 DR)
+- Os arquivos estão replicados no bucket `fisioflow-media-dr`.
+- **Ação:** No `wrangler.toml`, altere o binding `MEDIA_BUCKET` para apontar para `fisioflow-media-dr`.
+
+### 3. Redirecionamento de Tráfego
+- O Cloudflare redirecionará automaticamente para o nó mais próximo disponível.
+- Se o Worker principal em SP falhar, o deploy em outras regiões (edge) assumirá a carga conectando-se ao banco de backup.
+
+## 5. Rotação de Segredos
 - Em caso de vazamento de `.env` ou `.dev.vars`, rodar script de rotação e atualizar `wrangler secret put` imediatamente.
 
 ## 5. Comunicação com Clientes

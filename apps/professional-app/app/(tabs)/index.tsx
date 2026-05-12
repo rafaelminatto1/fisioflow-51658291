@@ -15,6 +15,7 @@ import { addHours, isBefore } from "date-fns";
 import { useColors } from "@/hooks/useColorScheme";
 import { useAuthStore } from "@/store/auth";
 import { Card, Skeleton, SummaryCardSkeleton } from "@/components";
+import { ProactiveRiskDashboard } from "@/components/biomechanics/ProactiveRiskDashboard";
 import { useAppointments } from "@/hooks/useAppointments";
 import { usePatients } from "@/hooks/usePatients";
 import { useHaptics } from "@/hooks/useHaptics";
@@ -323,6 +324,9 @@ export default function DashboardScreen() {
                   <Ionicons name="chevron-forward" size={24} color="rgba(255,255,255,0.8)" />
                 </View>
               </TouchableOpacity>
+
+              {/* Proactive Clinical Alerts (RTM) */}
+              <ProactiveRiskDashboard />
 
               {/* Grid Actions */}
               <View style={styles.quickActionsGrid}>

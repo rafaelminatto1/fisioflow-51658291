@@ -1,5 +1,6 @@
 import {
   BarChart3,
+  Brain,
   Download,
   FileText,
   HandCoins,
@@ -70,6 +71,9 @@ const DemonstrativoMensalContent = lazy(() =>
 );
 const CommissionsDashboard = lazy(() =>
   import("@/components/financial/CommissionsDashboard").then((m) => ({ default: m.CommissionsDashboard })),
+);
+const ClinicalValueDashboard = lazy(() =>
+  import("@/components/analytics/ClinicalValueDashboard").then((m) => ({ default: m.ClinicalValueDashboard })),
 );
 const NfseBatchEmitter = lazy(() =>
   import("@/components/financial/NfseBatchEmitter").then((m) => ({ default: m.NfseBatchEmitter })),
@@ -166,6 +170,7 @@ const FinancialCommandCenterPage = () => {
               <TabsTrigger value="billing" className="rounded-2xl px-4 py-2 text-xs font-bold uppercase tracking-wider data-[state=active]:bg-brand-blue data-[state=active]:text-white"><Wallet className="mr-2 h-4 w-4" />Faturamento</TabsTrigger>
               <TabsTrigger value="documents" className="rounded-2xl px-4 py-2 text-xs font-bold uppercase tracking-wider data-[state=active]:bg-brand-blue data-[state=active]:text-white"><FileText className="mr-2 h-4 w-4" />Documentos</TabsTrigger>
               <TabsTrigger value="performance" className="rounded-2xl px-4 py-2 text-xs font-bold uppercase tracking-wider data-[state=active]:bg-brand-blue data-[state=active]:text-white"><BarChart3 className="mr-2 h-4 w-4" />Performance</TabsTrigger>
+              <TabsTrigger value="clinical-bi" className="rounded-2xl px-4 py-2 text-xs font-bold uppercase tracking-wider data-[state=active]:bg-brand-blue data-[state=active]:text-white"><Brain className="mr-2 h-4 w-4" />Inteligência Clínica</TabsTrigger>
               <TabsTrigger value="commissions" className="rounded-2xl px-4 py-2 text-xs font-bold uppercase tracking-wider data-[state=active]:bg-brand-blue data-[state=active]:text-white"><Receipt className="mr-2 h-4 w-4" />Comissões</TabsTrigger>
             </TabsList>
           </div>
@@ -292,6 +297,21 @@ const FinancialCommandCenterPage = () => {
 
           <TabsContent value="commissions">
             <Suspense fallback={<PageShellFallback />}><CommissionsDashboard /></Suspense>
+          </TabsContent>
+
+          <TabsContent value="clinical-bi">
+            <Suspense fallback={<PageShellFallback />}>
+              <div className="space-y-6">
+                <div className="rounded-[2rem] bg-gradient-to-br from-brand-blue to-indigo-600 p-8 text-white shadow-xl">
+                  <h2 className="text-2xl font-black mb-2">Clinical Business Intelligence</h2>
+                  <p className="text-blue-100 max-w-2xl text-sm">
+                    Análise estratégica correlacionando desfechos clínicos (IA Studio & RTM) com performance financeira (LTV). 
+                    Identifique os protocolos mais rentáveis e pacientes com risco de abandono.
+                  </p>
+                </div>
+                <ClinicalValueDashboard />
+              </div>
+            </Suspense>
           </TabsContent>
         </Tabs>
       </PageContainer>

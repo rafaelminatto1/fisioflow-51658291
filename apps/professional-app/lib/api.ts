@@ -1426,5 +1426,37 @@ export async function sendWhatsAppTemplate(data: {
   );
 }
 
+// ============================================================
+// CLINICAL ALERTS API (RTM)
+// ============================================================
+
+export interface ApiClinicalAlert {
+  id: string;
+  patient_id: string;
+  patient_name?: string;
+  type: "pain_spike" | "compliance_drop" | "low_activity";
+  severity: "low" | "medium" | "high";
+  message: string;
+  data: any;
+  status: "pending" | "resolved" | "dismissed";
+  created_at: string;
+}
+
+export async function getClinicalAlerts(params?: {
+  status?: "pending" | "resolved";
+  severity?: "high" | "medium";
+}): Promise<ApiClinicalAlert[]> {
+  const response = await fetchApi<ApiResponse<ApiClinicalAlert[]>>("/api/clinical/alerts", {
+    params,
+  });
+  return response.data || [];
+}
+
+export async function resolveClinicalAlert(id: string): Promise<{ success: boolean }> {
+  return fetchApi<{ success: boolean }>(`/api/clinical/alerts/${id}/resolve`, {
+    method: "POST",
+  });
+}
+
 export { reportsApi } from "./api/reports";
 export type { PdfReportRequest, PdfReportResponse } from "./api/reports";
