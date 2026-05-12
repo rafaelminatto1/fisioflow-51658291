@@ -1173,4 +1173,60 @@ export function registerClinicalResourceRoutes(app: ClinicalRouteApp) {
 
     return c.json({ ok: true });
   });
+
+  /**
+   * POST /api/clinical/verify-test
+   * Valida a execução de um teste clínico (ex: Lachman, Thomas) usando dados de visão.
+   */
+  app.post("/verify-test", requireAuth, async (c) => {
+    const user = c.get("user");
+    const body = (await c.req.json()) as Record<string, any>;
+    const { test_id, pose_data, patient_id } = body;
+
+    if (!test_id || !pose_data) {
+      return c.json({ error: "test_id e pose_data são obrigatórios" }, 400);
+    }
+
+    try {
+      const { runThinkingModel } = await import("../../lib/ai-native");
+
+      // Heurística Básica: Se for um teste de joelho (ex: Lachman)
+      // O PoseData contém as articulações detectadas pelo HUD mobile.
+      
+      const prompt = `
+        Você é um auditor clínico de fisioterapia.
+        Analise a execução deste teste clínico (ID: ${test_id}):
+        
+        DADOS DE VISÃO (Ângulos e Coordenadas):
+        ${JSON.stringify(pose_data)}
+        
+        CRITÉRIOS DE QUALIDADE:
+        - Lachman: Flexão de joelho entre 20-30 graus.
+        - Thomas Test: Coxa deve encostar na maca.
+        
+        Retorne um JSON com a validação:
+        {
+          "isValid": true/false,
+          "feedback": "...",
+          "qualityScore": 0-100,
+          "detectedAngles": { "knee": 25, ... }
+        }
+      `.trim();
+
+      const result = await runThinkingModel(c.env, {
+        prompt,
+        model: "gemini-1.5-flash",
+        temperature: 0.2,
+        responseFormat: "json"
+      });
+
+      const jsonMatch = result.content.match(/\{[\s\S]*\}/);
+      const validation = JSON.parse(jsonMatch?.[0] ?? result.content);
+
+      return c.json({ success: true, data: validation });
+    } catch (error: any) {
+      console.error("[Clinical/Verify] Error:", error);
+      return c.json({ error: "Falha na validação inteligente do teste" }, 500);
+    }
+  });
 }
