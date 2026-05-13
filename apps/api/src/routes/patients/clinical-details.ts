@@ -597,9 +597,9 @@ export function registerPatientClinicalDetailRoutes(app: PatientRouteApp) {
         INSERT INTO patient_pathologies (
           patient_id,
           organization_id,
-          pathology_name,
-          cid_code,
-          diagnosis_date,
+          name,
+          icd_code,
+          diagnosed_at,
           severity,
           affected_region,
           status,
@@ -614,7 +614,7 @@ export function registerPatientClinicalDetailRoutes(app: PatientRouteApp) {
           $2::uuid,
           $3,
           $4,
-          $5::date,
+          $5::timestamptz,
           $6,
           $7,
           COALESCE($8, 'ativo'),
@@ -654,9 +654,9 @@ export function registerPatientClinicalDetailRoutes(app: PatientRouteApp) {
       `
         UPDATE patient_pathologies
         SET
-          pathology_name = COALESCE($1, pathology_name),
-          cid_code = COALESCE($2, cid_code),
-          diagnosis_date = COALESCE($3::date, diagnosis_date),
+          name = COALESCE($1, name),
+          icd_code = COALESCE($2, icd_code),
+          diagnosed_at = COALESCE($3::date, diagnosed_at),
           severity = COALESCE($4, severity),
           affected_region = COALESCE($5, affected_region),
           status = COALESCE($6, status),

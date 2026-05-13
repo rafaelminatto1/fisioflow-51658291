@@ -179,6 +179,7 @@ export function usePatientEvolutionHandlers({
         patient_id: patientId,
         appointment_id: appointmentId,
         recordId: currentSoapRecordId,
+        ...(selectedTherapistId ? { therapist_id: selectedTherapistId } : {}),
         ...saveData,
         pain_level: painScale.level,
         pain_location: painScale.location,
@@ -203,7 +204,8 @@ export function usePatientEvolutionHandlers({
         ).catch(() => {});
       }
 
-      const therapistId = selectedTherapistId || appointment?.therapist_id;
+      const therapistId =
+        selectedTherapistId || appointment?.therapist_id || appointment?.therapistId;
       if (therapistId) {
         await evolutionApi.treatmentSessions.upsert({
           patient_id: patientId,

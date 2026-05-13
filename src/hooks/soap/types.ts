@@ -64,6 +64,7 @@ export interface SoapRecord {
 export interface CreateSoapRecordData {
   patient_id: string;
   appointment_id?: string;
+  therapist_id?: string;
   subjective?: string;
   objective?: string;
   assessment?: string;

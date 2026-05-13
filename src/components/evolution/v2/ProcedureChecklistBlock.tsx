@@ -5,7 +5,7 @@
  * smooth animations, and professional visual design.
  */
 import React, { useState, useMemo, useCallback, useRef } from "react";
-import { CheckSquare, Plus, X, Zap, MessageSquare, Sparkles, MoreVertical } from "lucide-react";
+import { CheckSquare, Plus, X, Zap, MessageSquare, Sparkles, MoreVertical, Library } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -199,8 +199,8 @@ export const ProcedureChecklistBlock: React.FC<ProcedureChecklistBlockProps> = (
                   disabled={disabled}
                   className="gap-1.5 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-500/10 rounded-lg"
                 >
-                  <Plus className="h-3.5 w-3.5" />
-                  <span className="hidden sm:inline text-xs font-medium">Adicionar</span>
+                  <Library className="h-3.5 w-3.5" />
+                  <span className="hidden sm:inline text-xs font-medium">Biblioteca</span>
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-[380px] p-0" align="end">

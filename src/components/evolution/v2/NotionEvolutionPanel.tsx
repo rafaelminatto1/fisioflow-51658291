@@ -35,6 +35,7 @@ import { PainLevelBlock } from "./PainLevelBlock";
 import { HomeCareBlock } from "./HomeCareBlock";
 import { AttachmentsBlock } from "./AttachmentsBlock";
 import { MeasurementsBlock } from "./MeasurementsBlock";
+import { CombinedInterventionBlock } from "./CombinedInterventionBlock";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -443,160 +444,152 @@ export const NotionEvolutionPanel: React.FC<NotionEvolutionPanelProps> = ({
       </div>
 
       {/* Blocks */}
+      {/* Blocks - Refactored Layout */}
       <CardContent className="flex-1 overflow-y-auto p-5 space-y-6 custom-scrollbar">
-        {/* Block 1: EVA + Main Evolution Text - Side by Side */}
-        <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(0,2.5fr)] gap-5 items-stretch animate-in fade-in-0 slide-in-from-top-3 duration-300 delay-100">
-          {/* Pain Level (EVA) */}
+        {/* ROW 1: EVA (Red) + Observations (Yellow) */}
+        <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)] gap-5 items-stretch animate-in fade-in-0 slide-in-from-top-3 duration-300 delay-100">
+          {/* Pain Level (EVA) - Item Vermelho */}
           <PainLevelBlock
             painLevel={data.painLevel}
             painLocation={data.painLocation}
             onPainLevelChange={(level) => handleFieldChange("painLevel", level)}
             onPainLocationChange={(location) => handleFieldChange("painLocation", location)}
             disabled={disabled}
+            className="border-red-500/20 bg-red-50/30 dark:bg-red-950/10"
           />
 
-          {/* Main Evolution Text - Moved here to fill space instead of therapist info */}
+          {/* Observations - Item Amarelo */}
           <TextBlock
-            icon={<FileText className="h-4 w-4 text-violet-600" />}
-            iconBg="bg-violet-500/10 border border-violet-500/20"
-            title="Texto de Evolução"
-            placeholder={`Descreva a evolução da sessão livremente...\n\nExemplo: Paciente apresentou melhora da ADM em flexão...`}
-            hint="Texto principal da evolução clínica atual"
-            value={data.evolutionText}
-            onValueChange={(val) => handleFieldChange("evolutionText", val)}
+            icon={<StickyNote className="h-4 w-4 text-amber-600" />}
+            iconBg="bg-amber-500/10 border border-amber-500/20"
+            title="Observações Clínicas"
+            placeholder="Orientações gerais, encaminhamentos, cuidados e notas da sessão..."
+            hint="Informações adicionais e orientações para o paciente"
+            value={data.observations}
+            onValueChange={(val) => handleFieldChange("observations", val)}
             disabled={disabled}
-            rows={8}
-            accentColor="violet"
-            className="h-full"
+            rows={6}
+            accentColor="amber"
+            className="h-full border-amber-500/20 bg-amber-50/20 dark:bg-amber-950/5"
           />
         </div>
 
-        {/* Block 2: Evolution History */}
-        <Card className="border-border/40 bg-muted/5 overflow-hidden animate-in fade-in-0 slide-in-from-top-4 duration-300 delay-150">
-          <CardHeader className="py-3.5 px-4 border-b border-border/40 flex flex-row items-center justify-between bg-gradient-to-r from-muted/50 to-transparent">
-            <CardTitle className="text-sm font-bold flex items-center gap-2 text-foreground/80">
-              <History className="h-4 w-4 text-primary" />
-              Histórico Recente de Evoluções
-            </CardTitle>
-            <Badge variant="outline" className="text-[10px] bg-background">
-              {previousEvolutions.length} sessões anteriores
-            </Badge>
-          </CardHeader>
-          <CardContent className="p-4">
-            {previousEvolutions.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-6 text-center text-muted-foreground">
-                <FileText className="h-10 w-10 opacity-20 mb-2" />
-                <p className="text-xs italic">
-                  Nenhuma evolução anterior encontrada para este paciente.
-                </p>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                  {previousEvolutions.slice(0, historyLimit).map((ev, idx) => (
-                    <HistoryItem
-                      key={ev.id || idx}
-                      evolution={ev}
-                      index={idx}
-                      total={previousEvolutions.length}
-                    />
-                  ))}
+        {/* ROW 2: Evolution History (Blue) - Full Width */}
+        <div className="animate-in fade-in-0 slide-in-from-top-4 duration-300 delay-150">
+          <Card className="border-blue-500/30 bg-blue-50/10 dark:bg-blue-950/5 overflow-hidden">
+            <CardHeader className="py-3.5 px-4 border-b border-blue-500/20 flex flex-row items-center justify-between bg-gradient-to-r from-blue-500/10 to-transparent">
+              <CardTitle className="text-sm font-bold flex items-center gap-2 text-blue-800 dark:text-blue-300">
+                <History className="h-4 w-4" />
+                Histórico de Evoluções
+              </CardTitle>
+              <Badge variant="outline" className="text-[10px] border-blue-500/30 text-blue-700 bg-white dark:bg-background">
+                {previousEvolutions.length} sessões anteriores
+              </Badge>
+            </CardHeader>
+            <CardContent className="p-4">
+              {previousEvolutions.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-6 text-center text-muted-foreground">
+                  <FileText className="h-10 w-10 opacity-20 mb-2" />
+                  <p className="text-xs italic">Nenhuma evolução anterior encontrada.</p>
                 </div>
-
-                {historyLimit < previousEvolutions.length && (
-                  <div className="flex justify-center pt-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() =>
-                        setHistoryLimit((prev) => Math.min(prev + 3, previousEvolutions.length))
-                      }
-                      className="h-8 px-4 text-[11px] font-black uppercase tracking-widest border-primary/20 hover:bg-primary/5 hover:border-primary/40 transition-all"
-                    >
-                      Carregar mais evoluções
-                    </Button>
+              ) : (
+                <div className="space-y-3">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    {previousEvolutions.slice(0, historyLimit).map((ev, idx) => (
+                      <HistoryItem
+                        key={ev.id || idx}
+                        evolution={ev}
+                        index={idx}
+                        total={previousEvolutions.length}
+                      />
+                    ))}
                   </div>
-                )}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Block 3: Patient Report */}
-        <div className="animate-in fade-in-0 slide-in-from-top-4 duration-300 delay-200">
-          <TextBlock
-            icon={<MessageCircle className="h-4 w-4 text-sky-600" />}
-            iconBg="bg-sky-500/10 border border-sky-500/20"
-            title="Relato do Paciente"
-            placeholder="O que o paciente relatou? Como se sente desde a última sessão? Mudanças na dor, medicação, sono..."
-            hint="Relato verbal do paciente sobre sua condição atual"
-            value={data.patientReport}
-            onValueChange={(val) => handleFieldChange("patientReport", val)}
-            disabled={disabled}
-            rows={4}
-            accentColor="sky"
-          />
+                  {historyLimit < previousEvolutions.length && (
+                    <div className="flex justify-center pt-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setHistoryLimit((prev) => Math.min(prev + 3, previousEvolutions.length))}
+                        className="h-8 px-4 text-[11px] font-bold uppercase border-blue-500/30 text-blue-600 hover:bg-blue-50"
+                      >
+                        Ver mais sessões
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </div>
 
-        <Separator className="my-1 opacity-50" />
-
-        {/* Block 5, 6 & 6.5: Procedures | Exercises | Measurements - 3 columns */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 animate-in fade-in-0 slide-in-from-top-5 duration-300 delay-200">
-          <ProcedureChecklistBlock
+        {/* ROW 3: Combined Intervention (Green) + Measurements (Pink) */}
+        <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)] gap-5 animate-in fade-in-0 slide-in-from-top-5 duration-300 delay-200">
+          {/* Combined Procedures + Exercises (Item Verde) */}
+          <CombinedInterventionBlock
             procedures={data.procedures}
-            onChange={(procs) => handleFieldChange("procedures", procs)}
-            disabled={disabled}
-          />
-
-          <ExerciseBlockV2
+            onProceduresChange={(procs) => handleFieldChange("procedures", procs)}
             exercises={data.exercises}
-            onChange={(exs) => handleFieldChange("exercises", exs)}
+            onExercisesChange={(exs) => handleFieldChange("exercises", exs)}
             disabled={disabled}
           />
 
+          {/* Measurements (Item Rosa) */}
           <MeasurementsBlock
             measurements={data.measurements || []}
             onChange={(meas) => handleFieldChange("measurements", meas)}
             disabled={disabled}
+            className="border-pink-500/20 bg-pink-50/20 dark:bg-pink-950/5"
           />
         </div>
 
-        <Separator className="my-1 opacity-50" />
-
-        {/* Block 7: Observations, Home Care, Attachments - 3 columns */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 animate-in fade-in-0 slide-in-from-top-8 duration-300 animate-delay-7 pb-4">
-          {/* Observations */}
-          <TextBlock
-            icon={<StickyNote className="h-4 w-4 text-amber-600" />}
-            iconBg="bg-amber-500/10 border border-amber-500/20"
-            title="Observações"
-            placeholder="Orientações gerais, encaminhamentos, cuidados..."
-            hint="Informações adicionais e orientações"
-            value={data.observations}
-            onValueChange={(val) => handleFieldChange("observations", val)}
-            disabled={disabled}
-            rows={4}
-            className="h-full"
-            accentColor="amber"
-          />
-
-          {/* Home Care Exercises */}
+        {/* ROW 4: Home Care (Gray) + Attachments (Black) */}
+        <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)] gap-5 animate-in fade-in-0 slide-in-from-top-6 duration-300 delay-250 pb-4">
+          {/* Home Care Exercises (Item Cinza) */}
           <HomeCareBlock
             value={data.homeCareExercises || ""}
             onChange={(val) => handleFieldChange("homeCareExercises", val)}
             disabled={disabled}
-            className="h-full"
+            className="h-full border-slate-500/20 bg-slate-50/30 dark:bg-slate-900/10"
           />
 
-          {/* Attachments */}
+          {/* Attachments (Item Preto) */}
           <AttachmentsBlock
             patientId={data.therapistName}
             value={data.attachments || []}
             onChange={(val) => handleFieldChange("attachments", val)}
             disabled={disabled}
-            className="h-full"
+            className="h-full border-zinc-800/20 bg-zinc-50/50 dark:bg-zinc-900/20"
           />
         </div>
+
+        {/* Optional: Evolution Text (Hidden or accessible if needed, but following layout strictly) */}
+        <details className="text-[10px] text-muted-foreground opacity-30 hover:opacity-100 cursor-pointer transition-opacity">
+          <summary>Campos adicionais (Texto de Evolução / Relato)</summary>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
+            <TextBlock
+              icon={<MessageCircle className="h-3 w-3" />}
+              iconBg="bg-muted"
+              title="Relato"
+              placeholder="Relato do paciente..."
+              hint="Relato verbal"
+              value={data.patientReport}
+              onValueChange={(val) => handleFieldChange("patientReport", val)}
+              disabled={disabled}
+              rows={2}
+            />
+            <TextBlock
+              icon={<FileText className="h-3 w-3" />}
+              iconBg="bg-muted"
+              title="Texto"
+              placeholder="Evolução livre..."
+              hint="Texto principal"
+              value={data.evolutionText}
+              onValueChange={(val) => handleFieldChange("evolutionText", val)}
+              disabled={disabled}
+              rows={2}
+            />
+          </div>
+        </details>
 
         {/* Save button (when not using auto-save) */}
         {onSave && (

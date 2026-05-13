@@ -6,9 +6,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Clock, CheckCircle2, Loader2, RefreshCw, UserX } from "lucide-react";
+import { Clock, CheckCircle2, Loader2, RefreshCw } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import type { UserRole } from "@/types/auth";
@@ -36,6 +35,7 @@ export default function PendingUsersPage() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [selectedRoles, setSelectedRoles] = useState<Record<string, UserRole[]>>({});
+  const [approvingId, setApprovingId] = useState<string | null>(null);
 
   const { data, isLoading, refetch } = useQuery({
     queryKey: ["admin", "pending-users"],
@@ -47,10 +47,12 @@ export default function PendingUsersPage() {
 
   const approveMutation = useMutation({
     mutationFn: async ({ profileId, roles }: { profileId: string; roles: UserRole[] }) => {
+      setApprovingId(profileId);
       const primaryRole = roles.includes("admin") ? "admin" : roles[0];
       await pendingUsersApi.approve(profileId, primaryRole, roles);
     },
     onSuccess: (_, { profileId }) => {
+      setApprovingId(null);
       toast({ title: "Usuário aprovado", description: "Acesso liberado com sucesso." });
       queryClient.invalidateQueries({ queryKey: ["admin", "pending-users"] });
       setSelectedRoles((prev) => {
@@ -60,6 +62,7 @@ export default function PendingUsersPage() {
       });
     },
     onError: () => {
+      setApprovingId(null);
       toast({ title: "Erro", description: "Não foi possível aprovar o usuário.", variant: "destructive" });
     },
   });
@@ -114,6 +117,7 @@ export default function PendingUsersPage() {
             {pendingUsers.map((u) => {
               const chosenRoles = selectedRoles[u.id] ?? [];
               const canApprove = chosenRoles.length > 0;
+              const isApproving = approvingId === u.id;
 
               return (
                 <Card key={u.id} className="border-amber-200/60">
@@ -184,13 +188,13 @@ export default function PendingUsersPage() {
                         </div>
                         <Button
                           size="sm"
-                          disabled={!canApprove || approveMutation.isPending}
+                          disabled={!canApprove || isApproving}
                           onClick={() =>
                             approveMutation.mutate({ profileId: u.id, roles: chosenRoles })
                           }
                           className="bg-emerald-600 hover:bg-emerald-700 text-white shrink-0"
                         >
-                          {approveMutation.isPending ? (
+                          {isApproving ? (
                             <Loader2 className="h-3.5 w-3.5 animate-spin" />
                           ) : (
                             <CheckCircle2 className="h-3.5 w-3.5" />

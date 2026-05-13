@@ -149,7 +149,28 @@ export function usePatientEvolutionState() {
       });
     }
     setCurrentSoapRecordId(draftByAppointment.id);
+
+    const draftTherapistId =
+      draftByAppointment.created_by ||
+      (draftByAppointment as { therapist_id?: string }).therapist_id;
+    if (draftTherapistId) {
+      setSelectedTherapistId(draftTherapistId);
+    }
   }, [draftByAppointment, currentSoapRecordId]);
+
+  useEffect(() => {
+    if (appointment && !selectedTherapistId && !draftByAppointment) {
+      const normalizedAppointment = appointment as {
+        therapist_id?: string | null;
+        therapistId?: string | null;
+      };
+      const apptTherapistId =
+        normalizedAppointment.therapist_id ?? normalizedAppointment.therapistId;
+      if (apptTherapistId) {
+        setSelectedTherapistId(String(apptTherapistId));
+      }
+    }
+  }, [appointment, selectedTherapistId, draftByAppointment]);
 
   useEffect(() => {
     if (

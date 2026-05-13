@@ -27,7 +27,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 import { exercisesApi } from "@/api/v2";
 import { useQueryClient } from "@tanstack/react-query";
-import { QueryKeys } from "@/lib/queryKeys";
+import { QueryKeys } from "@/hooks/queryKeys";
 
 const quickExerciseSchema = z.object({
   name: z.string().min(3, "Nome deve ter pelo menos 3 caracteres"),

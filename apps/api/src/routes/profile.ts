@@ -614,7 +614,7 @@ app.delete("/me", requireAuth, async (c) => {
   try {
     // 1. Log the deletion request in audit_logs
     await pool.query(
-      `INSERT INTO audit_logs (organization_id, user_id, action, entity_type, entity_id, details)
+      `INSERT INTO audit_logs (organization_id, user_id, action, entity_type, entity_id, metadata)
        VALUES ($1, $2, 'ACCOUNT_DELETION_REQUESTED', 'profile', $2, $3)`,
       [user.organizationId, user.uid, JSON.stringify({ 
         reason: "User requested account deletion via App/Profile",

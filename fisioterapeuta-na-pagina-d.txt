@@ -1,0 +1,178 @@
+ ▐▛███▜▌   Claude Code v2.1.140
+▝▜█████▛▘  Sonnet 4.6 · Claude Pro
+  ▘▘ ▝▝    ~/Documents/fisioflow/fisioflow-51658291
+
+❯ [Image #1] ao escolher fisioterapeuta na pagina de evolução , nao fica salvo
+  ⎿  [Image #1]
+
+● Vou investigar o componente de seleção de fisioterapeuta na página de
+  evolução.
+
+  Searched for 3 patterns (ctrl+o to expand)
+
+● Bash(find /home/rafael/Documents/fisioflow/fisioflow-51658291/src -name
+      "*.tsx" | xargs grep -l "Escolher
+      fisioterapeuta\|TherapistPicker\|fisioterapeuta.*dropdown"…)
+  ⎿  Error: Exit code 123
+
+  Searched for 16 patterns, read 7 files (ctrl+o to expand)
+
+● Let me check the DB schema and the auto-save mutation to understand the full
+  flow.
+
+  Searched for 9 patterns, read 2 files (ctrl+o to expand)
+
+● Bash(find /home/rafael/Documents/fisioflow/fisioflow-51658291/packages/db
+      -name "*.ts" | xargs grep -l "therapistId\|sessions" 2>/dev/null | head
+      -5)
+  ⎿  /home/rafael/Documents/fisioflow/fisioflow-51658291/packages/db/src/__
+     tests__/schema.test.ts
+     /home/rafael/Documents/fisioflow/fisioflow-51658291/packages/db/node_m
+     … +5 lines (ctrl+o to expand)
+
+  Searched for 1 pattern (ctrl+o to expand)
+
+● Bash(find /home/rafael/Documents/fisioflow/fisioflow-51658291/apps/api -name
+      "*.ts" | xargs grep -l "sessions\|therapistId" 2>/dev/null | head -10)
+  ⎿  /home/rafael/Documents/fisioflow/fisioflow-51658291/apps/api/src/index
+     .ts
+     /home/rafael/Documents/fisioflow/fisioflow-51658291/apps/api/src/cron.
+     … +16 lines (ctrl+o to expand)
+
+  Read 1 file (ctrl+o to expand)
+
+● Now I have the full picture. The bug is in 4 places:
+
+  1. autosave endpoint never persists therapist_id from the body
+  2. handleSave never passes therapist_id to the mutation
+  3. The CreateSoapRecordData type doesn't have therapist_id
+  4. Draft restore in state hook doesn't rehydrate selectedTherapistId
+
+  Let me fix all of them:
+
+  Read 1 file (ctrl+o to expand)
+
+● Update(src/hooks/soap/types.ts)
+  ⎿  Added 1 line
+      64  export interface CreateSoapRecordData {
+      65    patient_id: string;
+      66    appointment_id?: string;
+      67 +  therapist_id?: string;
+      68    subjective?: string;
+      69    objective?: string;
+      70    assessment?: string;
+
+● Now add therapist_id to the autosave mutation payload in handleSave:
+
+  Read 1 file (ctrl+o to expand)
+
+● Update(src/hooks/evolution/usePatientEvolutionHandlers.ts)
+  ⎿  Added 1 line
+      179          patient_id: patientId,
+      180          appointment_id: appointmentId,
+      181          recordId: currentSoapRecordId,
+      182 +        ...(selectedTherapistId ? { therapist_id: selectedTher
+          +apistId } : {}),
+      183          ...saveData,
+      184          pain_level: painScale.level,
+      185          pain_location: painScale.location,
+
+● Now fix the autosave endpoint to handle therapist_id from body:
+
+● Update(apps/api/src/routes/sessions.ts)
+  ⎿  Added 3 lines
+      192      if (assData !== undefined) payload.assessment = assData;
+      193      if (planData !== undefined) payload.plan = planData;
+      194      if (durationNum !== undefined) payload.duration = duration
+           Num;
+      195 +    if (body.therapist_id && isValidUuid(String(body.therapist
+          +_id))) {
+      196 +      payload.therapistId = String(body.therapist_id);
+      197 +    }
+      198      return payload;
+      199    };
+      200
+
+● Now fix the CREATE path in autosave to use body.therapist_id when provided:
+
+  Read 1 file (ctrl+o to expand)
+
+● Update(apps/api/src/routes/sessions.ts)  ⎿  Added 3 lines, removed 1 line
+      256    const insertValues: any = {
+      257      patientId,
+      258      appointmentId: body.appointment_id || null,
+      259 -    therapistId: isValidUuid(user.uid) ? user.uid : (null as a
+          -ny),
+      259 +    therapistId: (body.therapist_id && isValidUuid(String(body
+          +.therapist_id)))
+      260 +      ? String(body.therapist_id)
+      261 +      : isValidUuid(user.uid) ? user.uid : (null as any),
+      262      organizationId: user.organizationId,
+      263      date: recordDate,
+      264      duration: durationNum || null,
+
+● Now fix the state hook to rehydrate selectedTherapistId from the saved draft:
+
+● Update(src/hooks/evolution/usePatientEvolutionState.ts)
+  ⎿  Added 4 lines
+      149        });
+      150      }
+      151      setCurrentSoapRecordId(draftByAppointment.id);
+      152 +
+      153 +    if (draftByAppointment.created_by) {
+      154 +      setSelectedTherapistId(draftByAppointment.created_by);
+      155 +    }
+      156    }, [draftByAppointment, currentSoapRecordId]);
+      157
+      158    useEffect(() => {
+
+● Now let me verify the SoapRecord type has created_by exposed so the draft
+  restore works:
+
+  Searched for 1 pattern, read 1 file (ctrl+o to expand)
+
+● The SoapRecord has created_by?: string (line 57 in types.ts) and the API maps
+  therapistId → created_by, so draft restore will correctly rehydrate
+  selectedTherapistId.
+
+  Let me also verify that the usePatientEvolutionState.ts initialization has an
+  effect to set selectedTherapistId from the appointment's therapist when no
+  draft exists (common case when opening a fresh session):
+
+  Searched for 2 patterns (ctrl+o to expand)
+
+● There's no initialization from the appointment object either. Let me add a
+  pre-population effect so when the appointment loads, the therapist is
+  pre-selected:
+
+  Read 1 file (ctrl+o to expand)
+
+● Update(src/hooks/evolution/usePatientEvolutionState.ts)
+  ⎿  Added 9 lines
+      156    }, [draftByAppointment, currentSoapRecordId]);
+      157
+      158    useEffect(() => {
+      159 +    if (appointment && !selectedTherapistId && !draftByAppoint
+          +ment) {
+      160 +      const apptTherapistId = (appointment as any).therapist_i
+          +d;
+      161 +      if (apptTherapistId) {
+      162 +        setSelectedTherapistId(String(apptTherapistId));
+      163 +      }
+      164 +    }
+      165 +  }, [appointment, selectedTherapistId, draftByAppointment]);
+      166 +
+      167 +  useEffect(() => {
+      168      if (
+      169        lastSession?.exercises_performed &&
+      170        sessionExercises.length === 0 &&
+
+● Now let me verify the changes look correct:
+
+● Bash(pnpm tsc --noEmit -p tsconfig.json 2>&1 | grep -E "error
+      TS|usePatientEvolution|useSoapRecords|sessions.ts" | head -20)
+  ⎿  (No output)
+  ⎿  You're out of extra usage · resets 2:40pm (America/Sao_Paulo)
+     /upgrade to increase your usage limit.
+
+✻ Baked for 4m 14s
