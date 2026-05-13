@@ -443,6 +443,69 @@ aiSearchApp.get("/unified", requireAuth, async (c) => {
   }
 });
 
+/**
+ * GET /api/ai-search/education
+ * Retorna dicas de educação em saúde personalizadas baseadas no contexto do paciente.
+ */
+aiSearchApp.get("/education", async (c) => {
+  const patientId = c.req.query("patientId");
+  if (!patientId) return c.json({ error: "patientId é obrigatório" }, 400);
+
+  try {
+    const pool = createPool(c.env);
+    const { getRawSql } = await import("../lib/db");
+    const sql = getRawSql(c.env, "read");
+
+    // 1. Obter diagnóstico e condição do paciente
+    const patientRes = await sql`SELECT condition, diagnosis FROM patients WHERE id = ${patientId}::uuid`;
+    const patient = patientRes.rows[0];
+    if (!patient) return c.json({ error: "Paciente não encontrado" }, 404);
+
+    // 2. Buscar conteúdo relevante na Wiki via Vectorize
+    const { generateEmbedding } = await import("../lib/ai-native");
+    const query = `dicas de saúde e orientações para ${patient.condition} ${patient.diagnosis}`;
+    const vector = await generateEmbedding(c.env, query);
+
+    const wikiMatches = await c.env.CLINICAL_KNOWLEDGE.query(vector, {
+      topK: 2,
+      namespace: "wiki",
+      returnMetadata: true,
+    });
+
+    const context = wikiMatches.matches
+      .map((m: any) => m.metadata.text || m.metadata.title)
+      .join("\n\n");
+
+    // 3. Usar IA para sintetizar dicas curtas e motivadoras
+    const { runThinkingModel } = await import("../lib/ai-native");
+    const prompt = `
+      Você é um assistente de educação em saúde para pacientes de fisioterapia.
+      Com base na condição do paciente (${patient.condition}) e nas diretrizes da clínica abaixo:
+      
+      DIRETRIZES:
+      ${context || "Fisioterapia baseada em movimento, consistência e educação postural."}
+
+      Gere 3 dicas curtas, práticas e motivadoras para o paciente fazer em casa.
+      Responda APENAS um JSON: {"tips": ["dica 1", "dica 2", "dica 3"]}
+    `.trim();
+
+    const aiRes = await runThinkingModel(c.env, {
+      prompt,
+      model: "gemini-1.5-flash",
+      temperature: 0.7,
+      responseFormat: "json"
+    });
+
+    const jsonMatch = aiRes.content.match(/\{[\s\S]*\}/);
+    const data = JSON.parse(jsonMatch?.[0] ?? aiRes.content);
+
+    return c.json({ data: data.tips });
+  } catch (error: any) {
+    console.error("[AI/Education] Error:", error);
+    return c.json({ error: "Falha ao gerar dicas de saúde" }, 500);
+  }
+});
+
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function getCfApi(env: Env) {

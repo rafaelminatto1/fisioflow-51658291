@@ -27,6 +27,7 @@ import { useGamification } from "@/hooks/useGamification";
 import { Card, NotificationPermissionModal, SyncIndicator, LinearProgress, RTMDashboardWidget, GamificationDashboard } from "@/components";
 import { RecoveryTrajectoryMobileWidget } from "@/components/RecoveryTrajectoryWidget";
 import { ClinicalAISnapshotMobile } from "@/components/ClinicalAISnapshotMobile";
+import { AIEducationHub } from "@/components/AIEducationHub";
 import { Spacing } from "@/constants/spacing";
 import * as Notifications from "expo-notifications";
 import { useExercises } from "@/hooks/useExercises";
@@ -229,6 +230,9 @@ export default function DashboardScreen() {
 
         {/* Resumo Executivo IA */}
         <ClinicalAISnapshotMobile />
+
+        {/* Hub de Educação em Saúde IA */}
+        <AIEducationHub />
 
         {isLoading ? (
           <View style={styles.loadingContainer}>
