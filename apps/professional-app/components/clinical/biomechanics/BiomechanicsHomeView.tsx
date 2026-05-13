@@ -1,6 +1,6 @@
 import React from "react";
-import { StyleSheet, View, Text, ScrollView, TouchableOpacity, Image } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
+import { StyleSheet, View, Text, ScrollView, TouchableOpacity } from "react-native";
+import { User, ChevronRight, Video, Image as ImageIcon, Activity } from "lucide-react-native";
 import { ANALYSIS_TYPES, AnalysisType, AnalysisMode } from "../../../types/biomechanics";
 import { useColors } from "../../../hooks/useColorScheme";
 import { Card } from "../../Card";
@@ -23,7 +23,7 @@ export const BiomechanicsHomeView: React.FC<BiomechanicsHomeViewProps> = ({
       <TouchableOpacity style={styles.patientCard} onPress={onSelectPatient}>
         <View style={styles.patientInfo}>
           <View style={[styles.avatarPlaceholder, { backgroundColor: colors.primary + "15" }]}>
-            <Ionicons name="person" size={24} color={colors.primary} />
+            <User size={24} color={colors.primary} />
           </View>
           <View>
             <Text style={[styles.patientName, { color: colors.text }]}>
@@ -34,7 +34,7 @@ export const BiomechanicsHomeView: React.FC<BiomechanicsHomeViewProps> = ({
             </Text>
           </View>
         </View>
-        <Ionicons name="chevron-forward" size={20} color={colors.textMuted} />
+        <ChevronRight size={20} color={colors.textMuted} />
       </TouchableOpacity>
 
       <Text style={[styles.sectionTitle, { color: colors.text }]}>Análise Biomecânica</Text>
@@ -48,7 +48,7 @@ export const BiomechanicsHomeView: React.FC<BiomechanicsHomeViewProps> = ({
             onPress={() => onStartAnalysis(type.id, "live")}
           >
             <View style={[styles.iconContainer, { backgroundColor: colors.primary + "10" }]}>
-              <Ionicons name={type.icon} size={28} color={colors.primary} />
+              <Activity size={28} color={colors.primary} />
             </View>
             <Text style={[styles.typeLabel, { color: colors.text }]}>{type.label}</Text>
             <Text style={[styles.typeDesc, { color: colors.textSecondary }]}>{type.description}</Text>
@@ -63,14 +63,14 @@ export const BiomechanicsHomeView: React.FC<BiomechanicsHomeViewProps> = ({
             style={[styles.secondaryOption, { backgroundColor: colors.surface, borderColor: colors.border }]}
             onPress={() => onStartAnalysis("postura", "video")}
           >
-            <Ionicons name="videocam" size={20} color={colors.textSecondary} />
+            <Video size={20} color={colors.textSecondary} />
             <Text style={[styles.optionText, { color: colors.textSecondary }]}>Analisar Vídeo</Text>
           </TouchableOpacity>
           <TouchableOpacity 
             style={[styles.secondaryOption, { backgroundColor: colors.surface, borderColor: colors.border }]}
             onPress={() => onStartAnalysis("postura", "photo")}
           >
-            <Ionicons name="image" size={20} color={colors.textSecondary} />
+            <ImageIcon size={20} color={colors.textSecondary} />
             <Text style={[styles.optionText, { color: colors.textSecondary }]}>Analisar Foto</Text>
           </TouchableOpacity>
         </View>

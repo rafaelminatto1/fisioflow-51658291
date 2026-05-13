@@ -19,21 +19,21 @@ interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
 const Card = React.forwardRef<HTMLDivElement, CardProps>(
   ({ className, variant = "default", premiumHover = false, ...props }, ref) => {
     const variantClasses: Record<CardVariant, string> = {
-      default: "bg-card text-card-foreground border border-border/40 shadow-sm",
-      brand: "gradient-brand text-primary-foreground border-none shadow-premium-sm",
-      success: "gradient-success text-white border-none shadow-premium-sm",
-      warm: "gradient-warm text-white border-none shadow-premium-sm",
-      dark: "gradient-dark text-white border-none shadow-premium-sm",
-      neon: "gradient-neon text-white border-none shadow-premium-md",
-      glass: "gradient-glass backdrop-blur-xl border border-white/20 shadow-premium-md",
-      "accent-teal": "gradient-accent-teal text-white border-none shadow-premium-sm",
+      default: "bg-card text-card-foreground border border-border ",
+      brand: "gradient-brand text-primary-foreground border-none ",
+      success: "gradient-success text-white border-none ",
+      warm: "gradient-warm text-white border-none ",
+      dark: "gradient-dark text-white border-none ",
+      neon: "gradient-neon text-white border-none ",
+      glass: "gradient-glass backdrop-blur-xl border border-white/20 ",
+      "accent-teal": "gradient-accent-teal text-white border-none ",
     };
 
     return (
       <div
         ref={ref}
         className={cn(
-          "rounded-xl transition-all duration-500",
+          "rounded-[16px] transition-all duration-500",
           premiumHover && "card-premium-hover",
           variantClasses[variant],
           className,

@@ -3,7 +3,7 @@ import { StyleSheet, View, Text, TouchableOpacity, Dimensions, Image } from "rea
 import { Camera, useCameraDevice, useFrameProcessor } from "react-native-vision-camera";
 import { detectPose, Pose } from "expo-vision-pose-detector";
 import { runOnJS } from "react-native-reanimated";
-import { Ionicons } from "@expo/vector-icons";
+import { X } from "lucide-react-native";
 import { BlurView } from "expo-blur";
 import { mapVisionToPoseLandmarks } from "../../../utils/pose-utils";
 import { PoseOverlay } from "./PoseOverlay";
@@ -105,7 +105,7 @@ export const BiomechanicsCameraView: React.FC<BiomechanicsCameraViewProps> = ({
       {/* Overlays e Controles */}
       <View style={styles.overlay}>
         <TouchableOpacity style={styles.closeButton} onPress={onClose}>
-          <Ionicons name="close" size={32} color="white" />
+          <X size={32} color="white" />
         </TouchableOpacity>
 
         <View style={styles.bottomControls}>
