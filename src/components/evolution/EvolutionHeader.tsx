@@ -235,11 +235,11 @@ export const EvolutionHeader = memo(
     onTabChange,
     pendingRequiredMeasurements = 0,
     upcomingGoalsCount = 0,
-    evolutionVersion = "v1-soap",
-    onVersionChange,
+    evolutionVersion: _evolutionVersion = "v1-soap",
+    onVersionChange: _onVersionChange,
     soapRecordId,
     onRestoreVersion,
-    isEdited,
+    isEdited: _isEdited,
   }: EvolutionHeaderProps) => {
     const showFirstEvolution = previousEvolutionsCount === 0;
     const navigate = useNavigate();

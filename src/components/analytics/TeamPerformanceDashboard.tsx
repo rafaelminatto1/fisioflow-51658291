@@ -13,7 +13,6 @@ import {
   Legend,
   Cell,
 } from "recharts";
-import { Users, TrendingUp, DollarSign, Clock, UserCheck } from "lucide-react";
 
 interface ProfessionalMetric {
   therapist_id: string;

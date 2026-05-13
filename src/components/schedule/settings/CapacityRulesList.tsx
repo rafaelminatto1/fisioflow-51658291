@@ -6,7 +6,6 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Trash2, Plus, Minus, Loader2, CheckCircle2, Info, Copy, Pencil, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { cn } from "@/lib/utils";
 
@@ -243,7 +242,6 @@ const DAY_KEY_TO_NUM: Record<string, number> = {
 
 export function CapacityRulesList() {
   const {
-    capacities,
     capacityGroups,
     isLoading,
     createMultipleCapacities,

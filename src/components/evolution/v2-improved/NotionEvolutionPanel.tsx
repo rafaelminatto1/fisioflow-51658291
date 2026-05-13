@@ -26,8 +26,8 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { RichTextBlock } from "./RichTextBlock";
 import { EvolutionHeaderBlock } from "./EvolutionHeaderBlock";
-import { ProcedureChecklistBlock } from "./ProcedureChecklistBlock";
-import { ExerciseBlockV2 } from "./ExerciseBlockV2";
+import { EvolutionBlockV3 } from "../v3-unified/EvolutionBlockV3";
+import { EvolutionItemV3 } from "../v3-unified/types";
 import { PainLevelBlock } from "./PainLevelBlock";
 import { HomeCareBlock } from "./HomeCareBlock";
 import { AttachmentsBlock } from "./AttachmentsBlock";
@@ -59,12 +59,51 @@ export const NotionEvolutionPanel: React.FC<NotionEvolutionPanelProps> = ({
   patientId,
   evolutionId,
 }) => {
+  // Migration logic (run once if unifiedItems is empty but legacy items exist)
+  React.useEffect(() => {
+    if ((!data.unifiedItems || data.unifiedItems.length === 0) && (data.procedures?.length > 0 || data.exercises?.length > 0)) {
+      const migratedItems: EvolutionItemV3[] = [];
+      
+      // Add procedures
+      if (data.procedures?.length > 0) {
+        data.procedures.forEach(p => {
+          migratedItems.push({
+            id: p.id,
+            name: p.name,
+            completed: p.completed,
+            type: "procedure",
+            notes: p.notes,
+            intensity: p.intensity,
+            category: p.category
+          });
+        });
+      }
+      
+      // Add exercises
+      if (data.exercises?.length > 0) {
+        data.exercises.forEach(e => {
+          migratedItems.push({
+            id: e.id,
+            name: e.name,
+            completed: e.completed,
+            type: "exercise",
+            prescription: e.prescription,
+            patientFeedback: e.patientFeedback?.notes || "",
+            difficulty: e.difficulty
+          });
+        });
+      }
+      
+      if (migratedItems.length > 0) {
+        onChange({ ...data, unifiedItems: migratedItems });
+      }
+    }
+  }, []); // Run on mount
   // Calculate completion
   const filledBlocks = [
     data.patientReport?.trim(),
     data.evolutionText?.trim(),
-    data.procedures?.length > 0,
-    data.exercises?.length > 0,
+    (data.unifiedItems && data.unifiedItems.length > 0) || (data.procedures?.length > 0) || (data.exercises?.length > 0),
     data.painLevel !== undefined,
     data.measurements && data.measurements.length > 0,
     data.observations?.trim() ||
@@ -211,17 +250,11 @@ export const NotionEvolutionPanel: React.FC<NotionEvolutionPanelProps> = ({
 
         {/* Removed Separator */}
 
-        {/* Block 5: Procedures Checklist */}
-        <ProcedureChecklistBlock
-          procedures={data.procedures}
-          onChange={(procs) => handleFieldChange("procedures", procs)}
-          disabled={disabled}
-        />
-
-        {/* Block 6: Exercises */}
-        <ExerciseBlockV2
-          exercises={data.exercises}
-          onChange={(exs) => handleFieldChange("exercises", exs)}
+        {/* Block 5: Unified Evolution Block (Procedures & Exercises) */}
+        <EvolutionBlockV3
+          items={data.unifiedItems || []}
+          onChange={(items) => handleFieldChange("unifiedItems", items)}
+          type="unified"
           disabled={disabled}
         />
 

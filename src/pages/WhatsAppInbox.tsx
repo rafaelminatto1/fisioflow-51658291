@@ -11,7 +11,6 @@ import {
 } from "@/services/whatsapp-api";
 
 // WhatsApp Components & Hooks
-import { MetricsStrip } from "@/components/whatsapp/MetricsStrip";
 import { BroadcastModal } from "@/components/whatsapp/BroadcastModal";
 import { ConfirmationsModal } from "@/components/whatsapp/ConfirmationsModal";
 import { ConversationDetailPanel } from "@/components/whatsapp/ConversationDetailPanel";

@@ -1,4 +1,4 @@
-// Evolution V2 Types - Notion/Evernote style block-based evolution
+import { EvolutionItemV3 } from "../v3-unified/types";
 
 export interface EvolutionV2Data {
   // Header (auto-filled)
@@ -20,6 +20,9 @@ export interface EvolutionV2Data {
 
   // Exercises with status tracking
   exercises: ExerciseV2Item[];
+
+  // Unified items (Procedures + Exercises in sequence)
+  unifiedItems?: EvolutionItemV3[];
 
   // Observations (general notes)
   observations: string;

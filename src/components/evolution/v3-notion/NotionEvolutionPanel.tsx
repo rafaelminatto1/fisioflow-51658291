@@ -28,7 +28,6 @@ import {
   Mic,
   Brain as BrainIcon,
   Send,
-  AlertCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
@@ -121,13 +120,6 @@ const NotionEvolutionPanel: React.FC<NotionEvolutionPanelProps> = ({
     } finally {
       setFisioBrainLoading(false);
     }
-  }
-
-  function openFisioBrain() {
-    const diagnosis = data.assessment?.replace(/<[^>]*>/g, "").trim() ?? "";
-    setFisioBrainQuery(diagnosis.slice(0, 200));
-    setFisioBrainResult(null);
-    setIsFisioBrainOpen(true);
   }
 
   function insertEvidenceInPlan(text: string) {
