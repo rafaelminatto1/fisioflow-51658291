@@ -78,3 +78,4 @@ export type {
 export * from "./messaging";
 export * from "./groups";
 export * from "./patientMedia";
+export { packagesApi, type SessionPackage, type PatientPackage, type PackageStats } from "./packages";

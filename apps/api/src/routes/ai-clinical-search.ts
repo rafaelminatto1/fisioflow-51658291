@@ -89,11 +89,11 @@ app.get("/patients/:id/similar", requireAuth, async (c) => {
       LIMIT 1
     `;
 
-    if (!sourceEmbedding.length || !sourceEmbedding[0].embedding) {
+    if (!sourceEmbedding.rows.length || !sourceEmbedding.rows[0].embedding) {
       return c.json({ data: [] }); // Sem dados suficientes para comparar
     }
 
-    const vector = sourceEmbedding[0].embedding;
+    const vector = sourceEmbedding.rows[0].embedding;
 
     // Buscamos os pacientes mais próximos (excluindo o próprio paciente)
     const results = await sql`

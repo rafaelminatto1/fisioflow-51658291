@@ -232,6 +232,54 @@ export async function generateEmbedding(env: Env, text: string): Promise<number[
   return ((response as any).data?.[0] ?? []) as number[];
 }
 
+export interface ThinkingModelInput {
+  prompt: string;
+  model?: string;
+  temperature?: number;
+  responseFormat?: "json" | "text";
+  thinkingLevel?: "LOW" | "MEDIUM" | "HIGH";
+}
+
+export interface ThinkingModelResult {
+  content: string;
+  /** Alias for content — some callers use result.text */
+  text: string;
+  model: string;
+}
+
+/**
+ * Executa um modelo de linguagem generativo com interface simplificada.
+ * Wrapper sobre Workers AI para tasks de raciocínio e geração de texto.
+ * Usa llama-3.3-70b por padrão; aceita qualquer modelo Workers AI ou partner.
+ */
+export async function runThinkingModel(
+  env: Env,
+  opts: ThinkingModelInput,
+): Promise<ThinkingModelResult> {
+  const modelId = opts.model ?? "@cf/meta/llama-3.3-70b-instruct-fp8-fast";
+
+  const systemContent = opts.responseFormat === "json"
+    ? "Responda APENAS com JSON válido, sem markdown, sem explicações adicionais."
+    : "Você é um assistente especializado em fisioterapia e reabilitação.";
+
+  const response = await runAi(
+    env,
+    modelId,
+    {
+      messages: [
+        { role: "system", content: systemContent },
+        { role: "user", content: opts.prompt },
+      ],
+      ...(opts.temperature !== undefined && { temperature: opts.temperature }),
+      max_tokens: 2048,
+    },
+    { cache: false },
+  );
+
+  const content = ((response as any).response as string) ?? "";
+  return { content, text: content, model: modelId };
+}
+
 /**
  * Gera um sketch TurboQuant comprimido (hex string) a partir de um vetor de embedding.
  * Útil para armazenamento ultra-eficiente e busca offline.

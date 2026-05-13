@@ -1,7 +1,7 @@
 import { Hono } from "hono";
 import type { Env } from "../types/env";
 import { requireAuth, type AuthVariables } from "../lib/auth";
-import { createPool } from "../lib/db";
+import { createPool, getRawSql } from "../lib/db";
 
 const AUTORAG_NAME = "fisioflow-rag";
 
@@ -384,6 +384,7 @@ aiSearchApp.post("/wiki/sync", requireAuth, async (c) => {
 aiSearchApp.get("/unified", requireAuth, async (c) => {
   const query = c.req.query("q");
   if (!query || query.length < 3) return c.json({ data: [] });
+  if (!c.env.CLINICAL_KNOWLEDGE) return c.json({ error: "Vectorize não configurado" }, 503);
 
   try {
     const { generateEmbedding } = await import("../lib/ai-native");
@@ -450,6 +451,7 @@ aiSearchApp.get("/unified", requireAuth, async (c) => {
 aiSearchApp.get("/education", async (c) => {
   const patientId = c.req.query("patientId");
   if (!patientId) return c.json({ error: "patientId é obrigatório" }, 400);
+  if (!c.env.CLINICAL_KNOWLEDGE) return c.json({ error: "Vectorize não configurado" }, 503);
 
   try {
     const pool = createPool(c.env);

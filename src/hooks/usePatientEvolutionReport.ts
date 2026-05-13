@@ -6,6 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 import {
   clinicalApi,
   evolutionApi,
+  packagesApi,
   profileApi,
   sessionsApi,
   type PainMap,
@@ -24,10 +25,16 @@ const fetchEvolutionMeasurements = async (patientId: string) => {
   }>;
 };
 
-const fetchPrescribedSessions = async (_patientId: string) => {
-  // TODO: Replace this placeholder with a Workers call (e.g., financial summary)
-  // that returns the current package balance for the patient.
-  return 0;
+const fetchPrescribedSessions = async (patientId: string): Promise<number> => {
+  try {
+    const res = await packagesApi.patientPackages(patientId);
+    const packages = res?.data ?? [];
+    return packages
+      .filter((p) => p.status === "ativo")
+      .reduce((sum, p) => sum + (p.remaining_sessions ?? 0), 0);
+  } catch {
+    return 0;
+  }
 };
 
 export interface PatientEvolutionData {

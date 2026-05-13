@@ -30,13 +30,13 @@ export class AIConciergeService {
     let clinicalContext = "";
     try {
       const vector = await generateEmbedding(env, message);
-      const wikiMatches = await env.CLINICAL_KNOWLEDGE.query(vector, {
+      const wikiMatches = await env.CLINICAL_KNOWLEDGE?.query(vector, {
         topK: 2,
         namespace: "wiki",
         returnMetadata: true,
       });
       
-      clinicalContext = wikiMatches.matches
+      clinicalContext = (wikiMatches?.matches ?? [])
         .map((m: any) => `${m.metadata.title}: ${m.metadata.text || ""}`)
         .join("\n\n");
     } catch (e) {

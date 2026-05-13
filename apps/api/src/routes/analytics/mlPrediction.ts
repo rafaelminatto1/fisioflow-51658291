@@ -1,11 +1,10 @@
-// @ts-nocheck — TODO: patientPredictions table not yet in @fisioflow/db schema
 import { Hono } from "hono";
 import { requireAuth, type AuthVariables } from "../../lib/auth";
-import { createPool, createDb } from "../../lib/db";
+import { createPool } from "../../lib/db";
 import type { Env } from "../../types/env";
 import { callAIStructured } from "../../lib/ai/callAI";
 import { z } from "zod";
-import { eq, desc, and } from "drizzle-orm";
+import { isUuid } from "../../lib/validators";
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
@@ -20,11 +19,12 @@ const RecoveryPredictionSchema = z.object({
 
 app.get("/recovery-prediction/:patientId", requireAuth, async (c) => {
   const { patientId } = c.req.param();
+  if (!isUuid(patientId)) return c.json({ error: "ID inválido" }, 400);
+
   const user = c.get("user");
-  const pool = await createPool(c.env);
+  const pool = createPool(c.env);
 
   try {
-    // 1. Coleta de dados multidimensionais do paciente
     const [patientRes, metricsRes, appointmentsRes, pathologiesRes, exercisesRes] = await Promise.all([
       pool.query("SELECT * FROM patients WHERE id = $1 AND organization_id = $2", [patientId, user.organizationId]),
       pool.query(
@@ -39,7 +39,7 @@ app.get("/recovery-prediction/:patientId", requireAuth, async (c) => {
       pool.query(
         "SELECT count(*) as total, count(*) FILTER (WHERE completed = true) as completed FROM exercise_sessions WHERE patient_id = $1 AND created_at > NOW() - INTERVAL '30 days'",
         [patientId]
-      )
+      ),
     ]);
 
     if (patientRes.rows.length === 0) {
@@ -52,28 +52,29 @@ app.get("/recovery-prediction/:patientId", requireAuth, async (c) => {
     const pathologies = pathologiesRes.rows;
     const exerciseStats = exercisesRes.rows[0];
 
-    // 2. Preparação do contexto para a IA
     const context = {
       patient: {
-        age: patient.birth_date ? new Date().getFullYear() - new Date(patient.birth_date).getFullYear() : "N/A",
+        age: patient.birth_date
+          ? new Date().getFullYear() - new Date(patient.birth_date).getFullYear()
+          : "N/A",
         gender: patient.gender,
       },
-      pathologies: pathologies.map(p => ({ name: p.name, status: p.status })),
-      recent_metrics: metrics.map(m => ({
+      pathologies: pathologies.map((p: any) => ({ name: p.name, status: p.status })),
+      recent_metrics: metrics.map((m: any) => ({
         date: m.session_date,
         pain_before: m.pain_level_before,
         pain_after: m.pain_level_after,
-        functional_score: m.functional_score_after
+        functional_score: m.functional_score_after,
       })),
       attendance: {
         total: appointments.length,
-        completed: appointments.filter(a => a.status === 'atendido').length,
-        missed: appointments.filter(a => ['faltou', 'no_show'].includes(a.status)).length,
+        completed: appointments.filter((a: any) => a.status === "atendido").length,
+        missed: appointments.filter((a: any) => ["faltou", "no_show"].includes(a.status)).length,
       },
-      home_exercise_compliance: exerciseStats.total > 0 ? (exerciseStats.completed / exerciseStats.total) : 0
+      home_exercise_compliance:
+        exerciseStats.total > 0 ? exerciseStats.completed / exerciseStats.total : 0,
     };
 
-    // 3. Chamada da IA preditiva (Llama 3.1 8b para velocidade e estrutura)
     const prediction = await callAIStructured(c.env, {
       task: "analysis",
       organizationId: user.organizationId,
@@ -89,7 +90,6 @@ Seja realista e conservador em suas estimativas.`,
       prompt: `Analise os seguintes dados do paciente:\n${JSON.stringify(context, null, 2)}`,
     });
 
-    // 4. Persistência da predição para histórico (Opcional, mas recomendado para o dashboard)
     await pool.query(
       `INSERT INTO patient_predictions (
         patient_id, organization_id, prediction_type, predicted_value, predicted_class,
@@ -98,9 +98,13 @@ Seja realista e conservador em suas estimativas.`,
       [
         patientId,
         user.organizationId,
-        'recovery_velocity',
+        "recovery_velocity",
         prediction.data.recovery_velocity,
-        prediction.data.recovery_velocity > 0.7 ? 'fast' : (prediction.data.recovery_velocity > 0.4 ? 'moderate' : 'slow'),
+        prediction.data.recovery_velocity > 0.7
+          ? "fast"
+          : prediction.data.recovery_velocity > 0.4
+            ? "moderate"
+            : "slow",
         prediction.data.confidence_score,
         prediction.data.key_limiting_factors,
         prediction.data.recommendations,
@@ -112,34 +116,30 @@ Seja realista e conservador em suas estimativas.`,
       prediction: prediction.data,
       metadata: {
         model: prediction.model,
-        latencyMs: prediction.latencyMs
-      }
+        latencyMs: prediction.latencyMs,
+      },
     });
-
-  } catch (error: any) {
-    console.error("[RecoveryPrediction] Error:", error);
-    return c.json({ error: "Erro ao gerar predição de recuperação", details: error.message }, 500);
+  } catch (error: unknown) {
+    const msg = error instanceof Error ? error.message : "Erro desconhecido";
+    return c.json({ error: "Erro ao gerar predição de recuperação", details: msg }, 500);
   }
 });
 
-// GET /api/analytics/ml/recovery-prediction/history/:patientId — Timeline of predictions
 app.get("/history/:patientId", requireAuth, async (c) => {
   const user = c.get("user");
   const { patientId } = c.req.param();
-  const db = await createDb(c.env);
+  if (!isUuid(patientId)) return c.json({ error: "ID inválido" }, 400);
 
-  const history = await db
-    .select()
-    .from(patientPredictions)
-    .where(
-      and(
-        eq(patientPredictions.patientId, patientId),
-        eq(patientPredictions.organizationId, user.organizationId)
-      )
-    )
-    .orderBy(desc(patientPredictions.createdAt));
+  const pool = createPool(c.env);
 
-  return c.json({ data: history });
+  const result = await pool.query(
+    `SELECT * FROM patient_predictions
+     WHERE patient_id = $1 AND organization_id = $2
+     ORDER BY created_at DESC`,
+    [patientId, user.organizationId]
+  );
+
+  return c.json({ data: result.rows });
 });
 
 export { app as mlPredictionRoutes };
