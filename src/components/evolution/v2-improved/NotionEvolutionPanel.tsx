@@ -26,7 +26,7 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { RichTextBlock } from "./RichTextBlock";
 import { EvolutionHeaderBlock } from "./EvolutionHeaderBlock";
-import { ProcedureChecklistBlockV3 as ProcedureChecklistBlock } from "./ProcedureChecklistBlockV3";
+import { ProcedureChecklistBlock } from "./ProcedureChecklistBlock";
 import { ExerciseBlockV2 } from "./ExerciseBlockV2";
 import { PainLevelBlock } from "./PainLevelBlock";
 import { HomeCareBlock } from "./HomeCareBlock";
