@@ -281,7 +281,7 @@ async function resolveJwtCandidate(env: Env, token: string): Promise<AuthUser | 
 
   const jwks = getJwks(jwksUrl);
   const verifyOptions: Parameters<typeof jwtVerify>[2] = {
-    clockTolerance: "10m",
+    clockTolerance: "2m",
   };
   if (env.NEON_AUTH_ISSUER) {
     verifyOptions.issuer = env.NEON_AUTH_ISSUER;
@@ -462,22 +462,32 @@ export async function verifyToken<E extends { Bindings: Env }>(
     if (env.NEON_AUTH_URL) {
       try {
         const origin = getPreferredAuthOrigin(env);
-        const sessionRes = await fetch(`${env.NEON_AUTH_URL}/get-session`, {
-          headers: {
-            Accept: "application/json",
-            Authorization: `Bearer ${token}`,
-            ...(sessionCookieValue
-              ? { Cookie: `__Secure-neon-auth.session_token=${sessionCookieValue}` }
-              : {}),
-            Origin: origin,
-          },
-        });
-        if (sessionRes.ok) {
-          const sessionData = (await sessionRes.json()) as any;
-          const candidate = getSessionCandidate(sessionData);
-          if (candidate) {
-            return cacheVerifiedToken(token, await resolveAuthContext(env, candidate));
+        const fallbackController = new AbortController();
+        const fallbackTimeoutId = setTimeout(
+          () => fallbackController.abort("auth-jwt-fallback-timeout"),
+          AUTH_GET_SESSION_TIMEOUT_MS,
+        );
+        try {
+          const sessionRes = await fetch(`${env.NEON_AUTH_URL}/get-session`, {
+            headers: {
+              Accept: "application/json",
+              Authorization: `Bearer ${token}`,
+              ...(sessionCookieValue
+                ? { Cookie: `__Secure-neon-auth.session_token=${sessionCookieValue}` }
+                : {}),
+              Origin: origin,
+            },
+            signal: fallbackController.signal,
+          });
+          if (sessionRes.ok) {
+            const sessionData = (await sessionRes.json()) as any;
+            const candidate = getSessionCandidate(sessionData);
+            if (candidate) {
+              return cacheVerifiedToken(token, await resolveAuthContext(env, candidate));
+            }
           }
+        } finally {
+          clearTimeout(fallbackTimeoutId);
         }
       } catch (sessionErr) {
         console.error(

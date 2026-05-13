@@ -155,7 +155,7 @@ export const adminRoutes = (
     <Route
       path="/security-settings"
       element={
-        <ProtectedRoute>
+        <ProtectedRoute allowedRoles={["admin"]}>
           <SecuritySettings />
         </ProtectedRoute>
       }
@@ -163,7 +163,7 @@ export const adminRoutes = (
     <Route
       path="/security-monitoring"
       element={
-        <ProtectedRoute>
+        <ProtectedRoute allowedRoles={["admin"]}>
           <SecurityMonitoring />
         </ProtectedRoute>
       }
@@ -183,7 +183,7 @@ export const adminRoutes = (
     <Route
       path="/analytics"
       element={
-        <ProtectedRoute>
+        <ProtectedRoute allowedRoles={["admin", "fisioterapeuta"]}>
           <AdvancedAnalytics />
         </ProtectedRoute>
       }

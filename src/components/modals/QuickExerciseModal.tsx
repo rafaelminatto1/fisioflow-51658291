@@ -55,7 +55,7 @@ const QuickExerciseModalComponent: React.FC<QuickExerciseModalProps> = ({
 }) => {
   const isMobile = useIsMobile();
   const queryClient = useQueryClient();
-  const { isCreating } = useExercises();
+  useExercises(); // mantém cache quente para invalidação
 
   const {
     register,
@@ -99,7 +99,8 @@ const QuickExerciseModalComponent: React.FC<QuickExerciseModalProps> = ({
       if (data.difficulty) payload.difficulty = data.difficulty;
       if (data.description) payload.description = data.description;
 
-      const created = await exercisesApi.create(payload as any);
+      const res = await exercisesApi.create(payload as any);
+      const created = res.data;
       queryClient.invalidateQueries({ queryKey: QueryKeys.exercises.all() });
       toast.success("Exercício cadastrado com sucesso!");
       onSuccess?.({
@@ -116,7 +117,7 @@ const QuickExerciseModalComponent: React.FC<QuickExerciseModalProps> = ({
     }
   };
 
-  const isLoading = isSubmitting || isCreating;
+  const isLoading = isSubmitting;
 
   return (
     <CustomModal

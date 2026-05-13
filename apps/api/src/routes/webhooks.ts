@@ -108,10 +108,11 @@ app.post("/neon-auth", async (c) => {
   const rawBody = await c.req.text();
 
   // Verificar assinatura EdDSA
+  // Headers é um objeto Fetch API — Object.entries() retorna [] nele; usar forEach()
   const headers: Record<string, string> = {};
-  for (const [key, value] of Object.entries(c.req.raw.headers)) {
-    headers[key.toLowerCase()] = value as string;
-  }
+  c.req.raw.headers.forEach((value, key) => {
+    headers[key.toLowerCase()] = value;
+  });
 
   const isValid = await verifyWebhookSignature(rawBody, headers, jwksUrl);
   if (!isValid) {
@@ -135,7 +136,10 @@ app.post("/neon-auth", async (c) => {
       return c.json({ ok: true }); // Ignora eventos sem dados do usuário
     }
 
-    const userName = user.name || user.email.split("@")[0] || "Usuário";
+    const escHtml = (s: string) =>
+      s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+    const userName = escHtml(user.name || user.email.split("@")[0] || "Usuário");
+    const safeEmail = escHtml(user.email);
     try {
       const pool = createPool(c.env);
       // Cria perfil com role='pending' — admin deve aprovar antes de liberar acesso
@@ -169,7 +173,7 @@ app.post("/neon-auth", async (c) => {
                 <p style="color:#374151;margin-top:0;">Um novo usuário se cadastrou no FisioFlow e aguarda sua aprovação para ter acesso ao sistema.</p>
                 <table style="width:100%;border-collapse:collapse;margin:16px 0;">
                   <tr><td style="padding:8px;background:#f9fafb;font-weight:600;color:#6b7280;width:120px;">Nome</td><td style="padding:8px;border-bottom:1px solid #f3f4f6;">${userName}</td></tr>
-                  <tr><td style="padding:8px;background:#f9fafb;font-weight:600;color:#6b7280;">Email</td><td style="padding:8px;border-bottom:1px solid #f3f4f6;">${user.email}</td></tr>
+                  <tr><td style="padding:8px;background:#f9fafb;font-weight:600;color:#6b7280;">Email</td><td style="padding:8px;border-bottom:1px solid #f3f4f6;">${safeEmail}</td></tr>
                   <tr><td style="padding:8px;background:#f9fafb;font-weight:600;color:#6b7280;">Data</td><td style="padding:8px;">${new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}</td></tr>
                 </table>
                 <p style="color:#374151;">Acesse o painel administrativo para definir o papel deste usuário e liberar o acesso:</p>
