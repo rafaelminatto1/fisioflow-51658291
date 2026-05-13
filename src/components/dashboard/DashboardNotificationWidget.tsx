@@ -20,6 +20,8 @@ import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import type { Notification } from "@/api/v2";
 
+import { withIconErrorBoundary } from "@/components/error/IconErrorBoundary";
+
 const NOTIFICATION_ICONS: Record<string, React.ElementType> = {
   appointment: Calendar,
   payment: DollarSign,
@@ -47,7 +49,8 @@ function NotificationItem({
   n: Notification;
   onMarkRead: (id: string) => void;
 }) {
-  const Icon = NOTIFICATION_ICONS[n.type] ?? Info;
+  const RawIcon = NOTIFICATION_ICONS[n.type] ?? Info;
+  const Icon = withIconErrorBoundary(RawIcon);
   const colorClass =
     NOTIFICATION_COLORS[n.type] ??
     "bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400";

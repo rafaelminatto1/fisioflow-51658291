@@ -23,8 +23,9 @@ import {
 import { useDashboardWidgets } from "@/hooks/useDashboardWidgets";
 import { useAnalyticsSummary } from "@/hooks/useAnalyticsSummary";
 import { cn } from "@/lib/utils";
+import { withIconErrorBoundary } from "@/components/error/IconErrorBoundary";
 
-const widgetIcons = {
+const widgetIcons: Record<string, React.ElementType> = {
   "appointments-today": Calendar,
   "revenue-month": DollarSign,
   "patients-active": Users,
@@ -136,7 +137,8 @@ export function CustomizableDashboard() {
 
                 <div className="max-h-[60vh] space-y-4 overflow-y-auto">
                   {widgets.map((widget) => {
-                    const Icon = widgetIcons[widget.type] || Activity;
+                    const RawIcon = widgetIcons[widget.type] || Activity;
+                    const Icon = withIconErrorBoundary(RawIcon);
 
                     return (
                       <div

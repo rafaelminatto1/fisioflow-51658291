@@ -17,6 +17,7 @@ import {
   Zap,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
+import { withIconErrorBoundary } from "@/components/error/IconErrorBoundary";
 
 export const GAMIFICATION_ICON_MAP: Record<string, LucideIcon> = {
   Award,
@@ -37,7 +38,10 @@ export const GAMIFICATION_ICON_MAP: Record<string, LucideIcon> = {
   Zap,
 };
 
-export function getGamificationIcon(name: string | undefined, fallback: LucideIcon): LucideIcon {
-  if (!name) return fallback;
-  return GAMIFICATION_ICON_MAP[name] || fallback;
+export function getGamificationIcon(
+  name: string | undefined,
+  fallback: LucideIcon,
+): React.ComponentType<any> {
+  const IconComponent = name && GAMIFICATION_ICON_MAP[name] ? GAMIFICATION_ICON_MAP[name] : fallback;
+  return withIconErrorBoundary(IconComponent);
 }
