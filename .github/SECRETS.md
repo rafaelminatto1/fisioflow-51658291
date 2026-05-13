@@ -12,6 +12,8 @@ Configure em: **Settings → Secrets and variables → Actions**
 | `CF_ACCOUNT_ID`          | Cloudflare Account ID                                        | ✅ Deploy   |
 | `NEON_API_KEY`           | Neon API Key (para criar/deletar branches de preview em PRs) | PRs         |
 | `VITE_GOOGLE_AI_API_KEY` | Google AI / Gemini API Key (AI features)                     | Deploy      |
+| `STAGING_TEST_USER_EMAIL`| E-mail de teste para a suíte E2E do Playwright               | ✅ E2E Tests|
+| `STAGING_TEST_USER_PASSWORD`| Senha do usuário de teste E2E do Playwright               | ✅ E2E Tests|
 
 ## Variables (valores públicos)
 
@@ -20,6 +22,7 @@ Configure em: **Settings → Secrets and variables → Actions**
 | `NEON_PROJECT_ID`        | `purple-union-72678311`                                                            | ID do projeto Neon        |
 | `VITE_NEON_AUTH_URL`     | `https://ep-wandering-bonus-acj4zwvo.neonauth.sa-east-1.aws.neon.tech/neondb/auth` | Neon Auth URL             |
 | `VITE_NEON_DATA_API_URL` | _(URL do Data API Neon, se habilitado)_                                            | Neon Data API (PostgREST) |
+| `STAGING_BASE_URL`       | `https://staging.moocafisio.com.br`                                                | URL do ambiente Staging E2E|
 
 ## Como obter CF_API_TOKEN
 
