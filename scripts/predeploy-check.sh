@@ -151,6 +151,7 @@ if [[ "$RUN_E2E" == true ]]; then
     warn "TEST_BASE_URL is not set. Using local default http://127.0.0.1:5173"
   fi
   run_step "Running Playwright smoke tests" pnpm --filter fisioflow-web test:e2e:ci --grep "@smoke"
+  run_step "Running Resilience smoke tests" pnpm test:resilience
 fi
 
 success "Predeploy checks complete"

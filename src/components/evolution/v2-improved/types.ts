@@ -49,6 +49,7 @@ export interface ProcedureItem {
   name: string;
   completed: boolean;
   notes?: string;
+  intensity?: string;
   category?: ProcedureCategory;
 }
 

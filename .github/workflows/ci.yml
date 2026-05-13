@@ -65,7 +65,7 @@ jobs:
           pnpm-version: ${{ env.PNPM_VERSION }}
 
       - name: Run predeploy gate
-        run: bash scripts/predeploy-check.sh
+        run: bash scripts/predeploy-check.sh --e2e
 
       - name: Dependency audit advisory
         continue-on-error: true

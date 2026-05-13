@@ -14,10 +14,11 @@
  */
 
 import { Component, ReactNode } from "react";
-import { AlertCircle, RefreshCw } from "lucide-react";
+import { AlertCircle, RefreshCw, Home } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { fisioLogger as logger } from "@/lib/errors/logger";
+import { getRandomFisioMessage } from "./funnyMessages";
 
 export interface ComponentErrorBoundaryProps {
   children: ReactNode;
@@ -32,6 +33,7 @@ export interface ComponentErrorBoundaryProps {
 interface ComponentErrorBoundaryState {
   hasError: boolean;
   error: Error | null;
+  funnyMessage: { title: string; description: string };
 }
 
 /**
@@ -47,10 +49,11 @@ export class ComponentErrorBoundary extends Component<
     this.state = {
       hasError: false,
       error: null,
+      funnyMessage: getRandomFisioMessage(),
     };
   }
 
-  static getDerivedStateFromError(error: Error): ComponentErrorBoundaryState {
+  static getDerivedStateFromError(error: Error): Partial<ComponentErrorBoundaryState> {
     return {
       hasError: true,
       error,
@@ -84,12 +87,20 @@ export class ComponentErrorBoundary extends Component<
     this.setState({
       hasError: false,
       error: null,
+      funnyMessage: getRandomFisioMessage(),
     });
+  };
+
+  /**
+   * Volta para a tela inicial
+   */
+  handleGoHome = (): void => {
+    window.location.href = "/";
   };
 
   render(): ReactNode {
     const { children, fallback, componentName } = this.props;
-    const { hasError, error } = this.state;
+    const { hasError, error, funnyMessage } = this.state;
 
     if (!hasError) {
       return children;
@@ -122,7 +133,7 @@ export class ComponentErrorBoundary extends Component<
             </div>
 
             <h3 className="text-2xl md:text-3xl font-black text-slate-900 dark:text-white mb-3 tracking-tight">
-              Ops! Algo deu errado no componente
+              {funnyMessage.title}
               {componentName && (
                 <span className="block text-destructive mt-1 text-xl opacity-90 uppercase tracking-widest font-bold">
                   {componentName}
@@ -131,25 +142,34 @@ export class ComponentErrorBoundary extends Component<
             </h3>
 
             <p className="text-slate-500 dark:text-slate-400 max-w-md mx-auto mb-8 leading-relaxed font-medium">
-              Identificamos uma pequena instabilidade ao carregar este recurso. Nossa equipe técnica
-              já foi notificada para resolver isso.
+              {funnyMessage.description}
             </p>
 
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 w-full">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 w-full max-w-2xl">
               <Button
                 onClick={this.handleReset}
-                className="h-14 px-8 rounded-2xl bg-destructive hover:bg-destructive/90 text-white font-bold shadow-lg shadow-destructive/20 gap-3 transition-all active:scale-95 w-full sm:w-auto"
+                className="h-14 px-4 rounded-2xl bg-destructive hover:bg-destructive/90 text-white font-bold shadow-lg shadow-destructive/20 gap-2 transition-all active:scale-95"
               >
                 <RefreshCw className="h-5 w-5" />
-                Tentar Novamente
+                <span className="truncate">Tentar Novamente</span>
               </Button>
 
               <Button
                 variant="outline"
                 onClick={() => window.location.reload()}
-                className="h-14 px-8 rounded-2xl border-destructive/20 hover:bg-destructive/5 font-bold gap-3 transition-all active:scale-95 w-full sm:w-auto"
+                className="h-14 px-4 rounded-2xl border-destructive/20 hover:bg-destructive/5 font-bold gap-2 transition-all active:scale-95"
               >
-                Recarregar Página
+                <RefreshCw className="h-5 w-5 rotate-90" />
+                <span className="truncate">Recarregar</span>
+              </Button>
+
+              <Button
+                variant="secondary"
+                onClick={this.handleGoHome}
+                className="h-14 px-4 rounded-2xl bg-primary/10 hover:bg-primary/20 text-primary font-bold gap-2 transition-all active:scale-95"
+              >
+                <Home className="h-5 w-5" />
+                <span className="truncate">Ir ao Início</span>
               </Button>
             </div>
 

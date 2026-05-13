@@ -10,6 +10,7 @@ export { EvolutionHeaderBlock } from "./EvolutionHeaderBlock";
 export { EvolutionVersionToggle } from "./EvolutionVersionToggle";
 export { PainLevelBlock } from "./PainLevelBlock";
 export { ProcedureChecklistBlock } from "./ProcedureChecklistBlock";
+export { ProcedureChecklistBlockV3 } from "./ProcedureChecklistBlockV3";
 export { ExerciseBlockV2 } from "./ExerciseBlockV2";
 export { HomeCareBlock } from "./HomeCareBlock";
 export { AttachmentsBlock } from "./AttachmentsBlock";
