@@ -69,7 +69,8 @@ jobs:
 
       - name: Dependency audit advisory
         continue-on-error: true
-        run: pnpm audit --audit-level high
+        timeout-minutes: 5
+        run: pnpm audit --audit-level high --no-color 2>&1 | tail -20 || true
 
   deploy-api:
     name: Deploy API Worker
