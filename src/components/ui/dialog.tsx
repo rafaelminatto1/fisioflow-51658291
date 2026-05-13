@@ -93,9 +93,9 @@ const DialogContent = React.forwardRef<
           : ({ "aria-describedby": undefined } as const);
 
     const variantClasses = {
-      default: "border bg-background p-6 shadow-lg shadow-premium-sm",
-      glass: "gradient-glass backdrop-blur-2xl border border-white/20 p-6 shadow-premium-md",
-      dark: "gradient-dark border-none p-6 shadow-premium-lg",
+      default: "border bg-background p-6 shadow-lg ",
+      glass: "gradient-glass backdrop-blur-2xl border border-white/20 p-6 ",
+      dark: "gradient-dark border-none p-6 ",
     };
 
     return (
@@ -105,7 +105,7 @@ const DialogContent = React.forwardRef<
           <DialogPrimitive.Content
             ref={ref}
             className={cn(
-              "pointer-events-auto relative z-50 grid w-full max-w-lg duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 sm:rounded-lg will-change-[transform,opacity] max-h-[85vh] overflow-hidden motion-reduce:animate-none motion-reduce:duration-0",
+              "pointer-events-auto relative z-50 grid w-full max-w-lg duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 sm:rounded-[16px] will-change-[transform,opacity] max-h-[85vh] overflow-hidden motion-reduce:animate-none motion-reduce:duration-0",
               "max-h-[calc(100dvh-2rem)] md:max-h-[85vh]",
               premium && "card-premium-hover",
               variantClasses[variant],

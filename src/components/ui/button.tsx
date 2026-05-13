@@ -33,7 +33,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
           buttonVariants({ variant, size, className }),
           premium && "magnetic-button",
           glow && "glow-on-hover",
-          magnetic && "transition-transform duration-300 transform hover:scale-105",
+
         )}
         ref={ref}
         {...props}
