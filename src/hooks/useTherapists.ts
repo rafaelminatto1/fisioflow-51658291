@@ -18,24 +18,18 @@ export const THERAPIST_SELECT_NONE = "__none__" as const;
 /** Placeholder exibido no dropdown de fisioterapeuta */
 export const THERAPIST_PLACEHOLDER = "Escolher fisioterapeuta";
 
-const THERAPISTS_QUERY_KEY = ["therapists"] as const;
+export const THERAPISTS_QUERY_KEY = ["therapists"] as const;
 
 async function fetchTherapists(): Promise<TherapistOption[]> {
-  try {
-    const res = await profileApi.listTherapists();
-    const list = (res?.data ?? []) as TherapistOption[];
-
-    const mappedList = list.map((t) => ({
+  const res = await profileApi.listTherapists();
+  const list = (res?.data ?? []) as TherapistOption[];
+  return list
+    .map((t) => ({
       id: String(t.id),
       name: String(t.name ?? "Sem nome").trim(),
       crefito: t.crefito ? String(t.crefito).trim() : undefined,
-    }));
-
-    return mappedList.sort((a, b) => a.name.localeCompare(b.name, "pt-BR"));
-  } catch (error) {
-    console.error("Error fetching therapists", error);
-    return [];
-  }
+    }))
+    .sort((a, b) => a.name.localeCompare(b.name, "pt-BR"));
 }
 
 export function useTherapists() {

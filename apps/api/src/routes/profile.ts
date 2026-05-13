@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import { type AuthVariables, requireAuth } from "../lib/auth";
-import { createDb, createPool } from "../lib/db";
+import { createPool } from "../lib/db";
 import type { Env } from "../types/env";
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
@@ -157,7 +157,7 @@ app.get("/me", requireAuth, async (c) => {
     user_id: user.uid,
     email: user.email ?? null,
     full_name: user.email?.split("@")[0] ?? "Usuário",
-    role: user.role ?? "admin",
+    role: user.role ?? "viewer",
     organization_id: user.organizationId,
     email_verified: false,
   };
@@ -297,7 +297,7 @@ app.put("/me", requireAuth, async (c) => {
             user.uid,
             user.email ?? null,
             fullName || user.email?.split("@")[0] || "Usuário",
-            user.role ?? "admin",
+            user.role ?? "viewer",
             user.organizationId,
             birthDateValue,
           ];
@@ -474,6 +474,11 @@ app.put("/users/:id", requireAuth, async (c) => {
       paramIndex++;
     }
 
+    const isAdmin = currentUser.role === "admin" || currentUser.roles?.includes("admin");
+    if (organizationUpdate.length > 0 && !isAdmin) {
+      return c.json({ error: "Apenas administradores podem atualizar dados da clínica" }, 403);
+    }
+
     if (organizationUpdate.length > 0) {
       const orgIdResult = await pool.query(
         `SELECT organization_id FROM profiles WHERE user_id = $1`,
@@ -573,27 +578,32 @@ app.patch("/me/public", requireAuth, async (c) => {
 
   const pool = createPool(c.env);
 
-  if (updates.slug) {
-    const existing = await pool.query(
-      `SELECT user_id FROM profiles WHERE slug = $1 AND user_id != $2 LIMIT 1`,
-      [updates.slug, user.uid],
-    );
-    if (existing.rows.length) {
-      return c.json({ error: "Este slug já está em uso" }, 409);
+  try {
+    if (updates.slug) {
+      const existing = await pool.query(
+        `SELECT user_id FROM profiles WHERE slug = $1 AND user_id != $2 LIMIT 1`,
+        [updates.slug, user.uid],
+      );
+      if (existing.rows.length) {
+        return c.json({ error: "Este slug já está em uso" }, 409);
+      }
     }
+
+    const setClauses = Object.keys(updates)
+      .map((k, i) => `"${k}" = $${i + 2}`)
+      .join(", ");
+    const values = [user.uid, ...Object.values(updates)];
+
+    await pool.query(
+      `UPDATE profiles SET ${setClauses}, updated_at = NOW() WHERE user_id = $1`,
+      values,
+    );
+
+    return c.json({ success: true });
+  } catch (error) {
+    console.error("[Profile/Public] error:", error);
+    return c.json({ error: "Erro ao atualizar perfil público." }, 500);
   }
-
-  const setClauses = Object.keys(updates)
-    .map((k, i) => `"${k}" = $${i + 2}`)
-    .join(", ");
-  const values = [user.uid, ...Object.values(updates)];
-
-  await pool.query(
-    `UPDATE profiles SET ${setClauses}, updated_at = NOW() WHERE user_id = $1`,
-    values,
-  );
-
-  return c.json({ success: true });
 });
 
 // DELETE /api/profile/me — Request account deletion (Apple 5.1.1 Compliance)
@@ -667,13 +677,18 @@ app.post("/admin/approve/:profileId", requireAuth, async (c) => {
     return c.json({ error: "Acesso negado" }, 403);
   }
   const profileId = c.req.param("profileId");
+  const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  if (!profileId || !UUID_RE.test(profileId)) return c.json({ error: "profileId inválido" }, 400);
+
   const { role, roles } = await c.req.json<{ role: string; roles?: string[] }>();
 
   if (!role) return c.json({ error: "role é obrigatório" }, 400);
   const allowedRoles = ["admin", "fisioterapeuta", "estagiario", "paciente", "parceiro", "recepcionista"];
   if (!allowedRoles.includes(role)) return c.json({ error: "role inválido" }, 400);
 
-  const finalRoles = roles?.filter((r) => allowedRoles.includes(r)) ?? [role];
+  const filteredRoles = roles?.filter((r) => allowedRoles.includes(r));
+  const finalRoles = filteredRoles?.length ? filteredRoles : [role];
+  if (!finalRoles.length) return c.json({ error: "roles inválidos" }, 400);
 
   const pool = createPool(c.env);
   try {
