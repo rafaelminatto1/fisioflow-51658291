@@ -1,0 +1,40 @@
+# FisioFlow — Sistema de Gestão para Clínicas de Fisioterapia
+
+> Plataforma SaaS para gestão clínica, agenda, evoluções e financeiro de clínicas de fisioterapia.
+
+## Produto
+
+FisioFlow é um sistema de gestão clínica desenvolvido para fisioterapeutas e clínicas de fisioterapia no Brasil. Oferece agenda inteligente, evoluções SOAP automatizadas com IA, controle financeiro, NF-e, portal do paciente e biofeedback.
+
+## Funcionalidades principais
+
+- Agenda inteligente com drag-and-drop e controle de capacidade
+- Evoluções clínicas (SOAP, texto livre, formato Notion)
+- Prontuário eletrônico do paciente
+- Controle financeiro e emissão de NF-e (ABRASF)
+- Portal do paciente com exercícios e HEP (Home Exercise Program)
+- IA Studio: geração de evoluções, sugestões clínicas e análise por voz
+- Wiki clínica e base de conhecimento
+- Boards Kanban para gestão de tarefas
+- Telemedicina integrada via LiveKit
+- Relatórios e analytics clínicos
+
+## Stack técnica
+
+- Frontend: React 19 + Vite + TypeScript + Tailwind CSS v4
+- Backend: Cloudflare Workers (Hono) + Neon PostgreSQL
+- Auth: Neon Auth (Better Auth)
+- Storage: Cloudflare R2
+- Hospedagem: Cloudflare Pages + Workers
+
+## Público-alvo
+
+Fisioterapeutas, estagiários, recepcionistas e clínicas de fisioterapia no Brasil.
+
+## URL da aplicação
+
+https://moocafisio.com.br
+
+## Contato
+
+Para informações sobre o produto: suporte@moocafisio.com.br

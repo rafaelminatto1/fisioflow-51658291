@@ -67,7 +67,7 @@ export const RescheduleConfirmDialog: React.FC<RescheduleConfirmDialogProps> = (
               <AlertDialogTitle className="text-2xl font-black tracking-tight text-slate-900 dark:text-white">
                 Confirmar Reagendamento
               </AlertDialogTitle>
-              <p className="text-sm font-bold text-primary/60 uppercase tracking-[0.2em] leading-none">
+              <p className="text-sm font-bold text-primary/80 uppercase tracking-[0.2em] leading-none">
                 {appointment.patientName}
               </p>
             </div>
@@ -142,7 +142,7 @@ export const RescheduleConfirmDialog: React.FC<RescheduleConfirmDialogProps> = (
                     <span className="font-black text-primary text-sm">
                       {safeFormat(newDate, "dd 'de' MMMM")}
                     </span>
-                    <span className="text-primary/50 text-[10px] font-bold uppercase tracking-wider">
+                    <span className="text-primary/80 text-[10px] font-bold uppercase tracking-wider">
                       {safeFormat(newDate, "yyyy")}
                     </span>
                   </div>

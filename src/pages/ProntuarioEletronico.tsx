@@ -13,13 +13,11 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
-  ArrowLeft,
   FileText,
   Download,
   PenLine,
   CheckCircle,
   Calendar,
-  User,
   Shield,
   Printer,
 } from "lucide-react";
@@ -349,7 +347,7 @@ function SessionDetail({
 
 export default function ProntuarioEletronico() {
   const { patientId } = useParams<{ patientId: string }>();
-  const navigate = useNavigate();
+  const _navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { profile } = useAuth();
 

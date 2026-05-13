@@ -12,7 +12,6 @@ import {
   CartesianGrid,
   Legend,
 } from "recharts";
-import { ptBR } from "date-fns/locale";
 import type { DemonstrativoData, HistoricoItem } from "@/hooks/useDemonstrativoMensalLogic";
 
 interface Props {

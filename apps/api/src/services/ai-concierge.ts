@@ -1,6 +1,5 @@
 import { Env } from "../types/env";
 import { runAi, generateEmbedding } from "../lib/ai-native";
-import { createPool } from "../lib/db";
 
 export interface ConciergeResponse {
   reply: string;

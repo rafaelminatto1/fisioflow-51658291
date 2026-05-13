@@ -344,7 +344,7 @@ export function Sidebar() {
                   <span className="text-xl font-black tracking-tighter text-foreground">
                     FisioFlow
                   </span>
-                  <span className="text-[10px] font-bold text-primary/60 uppercase tracking-[0.2em] leading-none">
+                  <span className="text-[10px] font-bold text-primary/80 uppercase tracking-[0.2em] leading-none">
                     Mooca Fisio
                   </span>
                 </div>

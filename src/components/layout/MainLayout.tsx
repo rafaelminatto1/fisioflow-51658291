@@ -149,6 +149,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
                       <Button
                         variant="ghost"
                         size="icon"
+                        aria-label="Notificações"
                         className="rounded-full h-10 w-10 text-slate-500 hover:text-primary transition-all duration-300 relative magnetic-button glow-on-hover"
                       >
                         <Bell className="w-5 h-5" />

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { MessageSquare, Search, Loader2, User, Plus } from "lucide-react";
+import { MessageSquare, Loader2, User, Plus } from "lucide-react";
 import {
   Dialog,
   DialogContent,

@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
-import { clinicMetricsApi, type ClinicKPIs } from "@/api/v2/clinicMetrics";
+import { clinicMetricsApi } from "@/api/v2/clinicMetrics";
 import { format } from "date-fns";
 
 export const useClinicHealthKPIs = (month?: string) => {

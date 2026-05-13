@@ -386,7 +386,7 @@ export function TemplateDetailPanel({
                             <div className="flex items-center gap-2.5 px-3 py-1.5 rounded-xl bg-primary/[0.03] border border-primary/10 transition-colors group-hover:bg-primary/5">
                               <RotateCcw className="h-3.5 w-3.5 text-primary" />
                               <div className="flex flex-col leading-none">
-                                <span className="text-[8px] font-black uppercase text-primary/60 tracking-widest mb-0.5">
+                                <span className="text-[8px] font-black uppercase text-primary/80 tracking-widest mb-0.5">
                                   Séries
                                 </span>
                                 <span className="text-sm font-black text-primary">{item.sets}</span>

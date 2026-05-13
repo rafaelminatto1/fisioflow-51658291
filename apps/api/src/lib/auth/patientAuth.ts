@@ -1,8 +1,8 @@
-import { Context, MiddlewareHandler } from "hono";
+import { MiddlewareHandler } from "hono";
 import { getCookie } from "hono/cookie";
 import { jwtVerify, createRemoteJWKSet } from "jose";
 import type { Env } from "../../types/env";
-import { getRawSql, runWithOrg } from "../db";
+import { runWithOrg } from "../db";
 
 export interface PatientUser {
   id: string; // patient_portal_users.id

@@ -2,9 +2,8 @@ import React from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
 import { request } from "@/api/v2/base";
-import { TrendingUp, MessageSquare, Zap, Target, RefreshCw } from "lucide-react";
+import { TrendingUp, MessageSquare, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { toast } from "sonner";
 
 interface LTVOpportunity {
   patient_id: string;

@@ -39,7 +39,7 @@ export const UnifiedEvolutionEditor: React.FC<UnifiedEvolutionEditorProps> = ({
 }) => {
   const [syncStatus, setSyncStatus] = useState<"idle" | "saving" | "saved">("idle");
   const [ydoc] = useState(() => new Y.Doc());
-  const [provider, setProvider] = useState<IndexeddbPersistence | null>(null);
+  const [_provider, setProvider] = useState<IndexeddbPersistence | null>(null);
   
   const [isUploading, setIsUploading] = useState(false);
   const [editingImage, setEditingImage] = useState<File | null>(null);
