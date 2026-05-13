@@ -5,6 +5,47 @@ import type { Env } from "../types/env";
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
+type LiveCheckinRow = {
+  id: string;
+  org_id: string;
+  enrollment_id: string;
+  status: string;
+  timestamp: number;
+};
+
+type LiveCheckinDetailsRow = {
+  enrollment_id: string;
+  patient_name: string | null;
+  class_name: string | null;
+};
+
+let liveCheckinsTableReady = false;
+
+async function ensureLiveCheckinsTable(db: D1Database) {
+  if (liveCheckinsTableReady) return;
+
+  await db
+    .prepare(
+      `CREATE TABLE IF NOT EXISTS live_checkins (
+        id TEXT PRIMARY KEY,
+        org_id TEXT NOT NULL,
+        enrollment_id TEXT NOT NULL,
+        status TEXT NOT NULL,
+        timestamp INTEGER NOT NULL
+      )`
+    )
+    .run();
+
+  await db
+    .prepare(
+      `CREATE INDEX IF NOT EXISTS idx_live_checkins_org_timestamp
+       ON live_checkins (org_id, timestamp DESC)`
+    )
+    .run();
+
+  liveCheckinsTableReady = true;
+}
+
 /**
  * GET /api/groups/classes
  * Lista todas as turmas da organização
@@ -120,9 +161,14 @@ app.post("/checkin", requireAuth, async (c) => {
 
     // 2. Se D1 estiver disponível, espelhar para consulta rápida "Live Room"
     if (c.env.DB) {
-      await c.env.DB.prepare(
-        "INSERT INTO live_checkins (id, org_id, enrollment_id, status, timestamp) VALUES (?, ?, ?, ?, ?)"
-      ).bind(result.rows[0].id, user.organizationId, enrollmentId, status, Date.now()).run();
+      try {
+        await ensureLiveCheckinsTable(c.env.DB);
+        await c.env.DB.prepare(
+          "INSERT INTO live_checkins (id, org_id, enrollment_id, status, timestamp) VALUES (?, ?, ?, ?, ?)"
+        ).bind(result.rows[0].id, user.organizationId, enrollmentId, status, Date.now()).run();
+      } catch (d1Error) {
+        console.warn("[Groups] D1 live checkin mirror failed:", d1Error);
+      }
     }
 
     return c.json({ data: result.rows[0] });
@@ -141,18 +187,50 @@ app.get("/live-status", requireAuth, async (c) => {
   if (!c.env.DB) return c.json({ error: "D1 não configurada" }, 503);
 
   try {
+    await ensureLiveCheckinsTable(c.env.DB);
+
     const results = await c.env.DB.prepare(
-      `SELECT lc.*, p.full_name as patient_name, gc.name as class_name
-       FROM live_checkins lc
-       JOIN group_enrollments ge ON ge.id = lc.enrollment_id
+      `SELECT id, org_id, enrollment_id, status, timestamp
+       FROM live_checkins
+       WHERE org_id = ?
+       ORDER BY timestamp DESC
+       LIMIT 10`
+    ).bind(user.organizationId).all<LiveCheckinRow>();
+
+    const liveCheckins = results.results ?? [];
+    const enrollmentIds = [...new Set(liveCheckins.map((row) => row.enrollment_id))];
+
+    if (enrollmentIds.length === 0) {
+      return c.json({ data: [] });
+    }
+
+    const pool = createPool(c.env);
+    const placeholders = enrollmentIds.map((_, index) => `$${index + 2}`).join(", ");
+    const details = await pool.query<LiveCheckinDetailsRow>(
+      `SELECT ge.id as enrollment_id, p.full_name as patient_name, gc.name as class_name
+       FROM group_enrollments ge
        JOIN patients p ON p.id = ge.patient_id
        JOIN group_classes gc ON gc.id = ge.class_id
-       WHERE lc.org_id = ?
-       ORDER BY lc.timestamp DESC
-       LIMIT 10`
-    ).bind(user.organizationId).all();
+       WHERE ge.organization_id = $1
+         AND ge.id IN (${placeholders})`,
+      [user.organizationId, ...enrollmentIds]
+    );
 
-    return c.json({ data: results.results });
+    const detailsByEnrollmentId = new Map(
+      details.rows.map((row) => [row.enrollment_id, row])
+    );
+
+    const data = liveCheckins.map((row) => {
+      const detail = detailsByEnrollmentId.get(row.enrollment_id);
+
+      return {
+        ...row,
+        patient_name: detail?.patient_name ?? null,
+        class_name: detail?.class_name ?? null,
+      };
+    });
+
+    return c.json({ data });
   } catch (error: any) {
     console.error("[Groups/Live] Error:", error);
     return c.json({ error: "Falha ao buscar status em tempo real" }, 500);
