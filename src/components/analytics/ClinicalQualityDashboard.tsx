@@ -11,7 +11,7 @@ import {
   Radar,
   Tooltip,
 } from "recharts";
-import { ShieldCheck, MessageCircle, AlertCircle, TrendingUp } from "lucide-react";
+import { ShieldCheck, AlertCircle } from "lucide-react";
 
 interface QualityMetric {
   full_name: string;

@@ -9,7 +9,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Brain, Send, User, Loader2, Bot, Sparkles, X } from "lucide-react";
+import { Brain, Send, User, Loader2, Bot, Sparkles } from "lucide-react";
 import { request } from "@/api/v2/base";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
