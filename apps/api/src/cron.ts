@@ -125,9 +125,10 @@ export async function handleScheduled(event: ScheduledEvent, env: Env, ctx: Exec
         }
         break;
 
-      case "0 14 * * *": { // UTC 14h = BRT 11h — NPS auto-trigger (7-day orgs)
+      case "0 14 * * *": { // UTC 14h = BRT 11h — NPS auto-trigger (Orgs & Patients)
         const pool = createPool(env);
         await triggerNpsSurveys(pool, env);
+        await triggerPatientNpsSurveys(pool, env);
         break;
       }
 
@@ -478,6 +479,59 @@ async function triggerNpsSurveys(pool: any, env: Env) {
     console.log(`[Cron] NPS surveys triggered for ${result.rows.length} org(s).`);
   } catch (error) {
     console.warn("[Cron] NPS trigger failed (non-critical):", error);
+  }
+}
+
+/**
+ * Dispara pesquisas NPS para pacientes 7 dias após a sua primeira sessão.
+ */
+async function triggerPatientNpsSurveys(pool: any, env: Env) {
+  console.log("[Cron] Triggering NPS surveys for patients (7-day post-first-session)...");
+  try {
+    const result = await pool.query(`
+      WITH first_sessions AS (
+        SELECT patient_id, MIN(date) as first_date
+        FROM appointments
+        WHERE status IN ('confirmed', 'completed', 'realizado', 'presenca_confirmada')
+        GROUP BY patient_id
+      )
+      SELECT p.id as patient_id, p.full_name, p.phone, p.organization_id
+      FROM patients p
+      JOIN first_sessions fs ON fs.patient_id = p.id
+      WHERE fs.first_date = CURRENT_DATE - INTERVAL '7 days'
+        AND p.deleted_at IS NULL
+        AND NOT EXISTS (
+          SELECT 1 FROM satisfaction_surveys ss
+          WHERE ss.patient_id = p.id
+            AND ss.responded_at > NOW() - INTERVAL '6 months'
+        )
+      LIMIT 100
+    `);
+
+    for (const row of result.rows) {
+      if (row.phone && env.BACKGROUND_QUEUE) {
+        const npsUrl = `${env.FRONTEND_URL ?? "https://moocafisio.com.br"}/satisfacao?p=${row.patient_id}`;
+        const messageText = `Olá, ${row.full_name.split(' ')[0]}! 👋 Já faz uma semana desde sua primeira sessão na clínica. Como foi sua experiência?\n\nLeve 1 minuto para nos avaliar: ${npsUrl}`;
+        
+        await env.BACKGROUND_QUEUE.send({
+          type: "SEND_WHATSAPP",
+          payload: {
+            to: row.phone,
+            templateName: "patient_nps",
+            languageCode: "pt_BR",
+            bodyParameters: [{ type: "text", text: messageText }],
+            organizationId: row.organization_id,
+            patientId: row.patient_id,
+            messageText,
+            appointmentId: "",
+          },
+        }).catch(() => {});
+      }
+    }
+
+    console.log(`[Cron] Patient NPS triggered for ${result.rows.length} patients.`);
+  } catch (error) {
+    console.warn("[Cron] Patient NPS trigger failed:", error);
   }
 }
 

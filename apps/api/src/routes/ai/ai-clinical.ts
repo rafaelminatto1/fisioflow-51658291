@@ -623,4 +623,66 @@ Retorne APENAS o JSON, sem markdown.
   }
 });
 
+/**
+ * GET /api/ai/medical-report/outcome
+ * Gera um relatório de desfecho clínico (resumo de ciclo) para o médico.
+ */
+app.get("/medical-report/outcome", async (c) => {
+  const user = c.get("user");
+  const patientId = c.req.query("patientId");
+
+  if (!isUuid(patientId)) return c.json({ error: "patientId inválido" }, 400);
+
+  try {
+    const { getRawSql } = await import("../../lib/db");
+    const sql = getRawSql(c.env, "read");
+
+    // 1. Buscar histórico consolidado
+    const [patientData, sessions] = await Promise.all([
+      sql`SELECT full_name, diagnosis, condition FROM patients WHERE id = ${patientId}::uuid`,
+      sql`SELECT session_date, subjective, assessment, plan FROM sessions WHERE patient_id = ${patientId}::uuid ORDER BY session_date ASC LIMIT 20`
+    ]);
+
+    if (!patientData.rows.length || !sessions.rows.length) {
+      return c.json({ error: "Dados insuficientes para gerar relatório" }, 422);
+    }
+
+    const { runThinkingModel } = await import("../../lib/ai-native");
+
+    const prompt = `
+      Você é um fisioterapeuta sênior redigindo um relatório de desfecho clínico para um médico ortopedista.
+      PACIENTE: ${patientData.rows[0].full_name}
+      DIAGNÓSTICO: ${patientData.rows[0].diagnosis}
+      
+      HISTÓRICO DE EVOLUÇÕES:
+      ${JSON.stringify(sessions.rows)}
+
+      Sua tarefa é sintetizar este tratamento em um relatório executivo de 1 página.
+      ESTRUTURA REQUERIDA (JSON):
+      {
+        "executiveSummary": "Resumo profissional de 2-3 frases sobre a evolução global.",
+        "functionalGains": ["Ganho 1", "Ganho 2"],
+        "painEvolution": "Descrição da evolução do quadro álgico.",
+        "finalRecommendation": "Sugestão para o médico (ex: manter atividades, alta, ou retorno para reavaliação)."
+      }
+      Mantenha um tom técnico, respeitoso e baseado em evidências.
+    `.trim();
+
+    const aiReport = await runThinkingModel(c.env, {
+      prompt,
+      model: "gemini-1.5-flash",
+      temperature: 0.2,
+      responseFormat: "json"
+    });
+
+    const jsonMatch = aiReport.content.match(/\{[\s\S]*\}/);
+    const data = JSON.parse(jsonMatch?.[0] ?? aiReport.content);
+
+    return c.json({ success: true, data });
+  } catch (error: any) {
+    console.error("[ai/medical-report]", error);
+    return c.json({ error: "Falha ao gerar relatório médico", details: error.message }, 500);
+  }
+});
+
 export { app as aiClinicalRoutes };

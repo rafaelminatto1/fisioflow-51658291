@@ -14,6 +14,7 @@ import {
   MapPin,
   Phone,
   Sparkles,
+  Stethoscope,
 } from "lucide-react";
 import { format } from "date-fns";
 
@@ -29,6 +30,7 @@ interface PatientProfileHeaderProps {
   onEvaluate: () => void;
   onSchedule: () => void;
   onAskAI?: () => void;
+  onOpenMedicalReport?: () => void;
 }
 
 function getPatientAge(birthDate: string): number {
@@ -49,6 +51,7 @@ export function PatientProfileHeader({
   onEvaluate,
   onSchedule,
   onAskAI,
+  onOpenMedicalReport,
 }: PatientProfileHeaderProps) {
   const status = patient.status;
   const isActiveStatus = status === "active" || status === "Em Tratamento";
@@ -122,6 +125,15 @@ export function PatientProfileHeader({
             >
               <Brain className="h-4 w-4" />
               Chat IA
+            </Button>
+            <Button
+              onClick={onOpenMedicalReport}
+              variant="outline"
+              size="sm"
+              className="flex-1 md:flex-none gap-2 border-slate-200 text-slate-700 hover:bg-slate-50 transition-colors shadow-sm font-bold"
+            >
+              <Stethoscope className="h-4 w-4 text-indigo-600" />
+              Laudo Médico (IA)
             </Button>
             <Button
               onClick={onOpenPremiumReport}

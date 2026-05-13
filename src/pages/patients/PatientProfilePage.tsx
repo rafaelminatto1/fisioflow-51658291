@@ -9,6 +9,7 @@ import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { ErrorBoundary } from "@/components/common/ErrorBoundary";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { PatientHelpers, Patient } from "@/types";
+import { request } from "@/api/v2/base";
 import { APP_ROUTES, patientRoutes } from "@/lib/routing/appRoutes";
 import { PatientProfileHeader } from "@/components/patient/PatientProfileHeader";
 import { PersonalDataTab } from "@/components/patient/PersonalDataTab";
@@ -43,6 +44,7 @@ import { toast } from "sonner";
 import { fisioLogger as logger } from "@/lib/errors/logger";
 import { OverviewTab } from "@/components/patient/OverviewTab";
 import { EvidenceTab } from "@/components/patient/EvidenceTab";
+import { AIMedicalReportModal } from "@/components/patient/AIMedicalReportModal";
 
 // Hooks Otimizados
 import { usePatientProfileOptimized, type ProfileTab } from "@/hooks/usePatientProfileOptimized";
@@ -193,6 +195,8 @@ const PatientProfileContent = () => {
   const [evaluationModalOpen, setEvaluationModalOpen] = useState<boolean>(false);
   const [scheduleModalOpen, setScheduleModalOpen] = useState<boolean>(false);
   const [isChatOpen, setIsChatOpen] = useState<boolean>(false);
+  const [isMedicalReportOpen, setIsMedicalReportOpen] = useState<boolean>(false);
+  const [generatedMedicalReport, setGeneratedMedicalReport] = useState<any>(null);
 
   const { data: evaluationForms = [] } = useEvaluationForms();
 
@@ -307,28 +311,56 @@ const PatientProfileContent = () => {
     .substring(0, 2)
     .toUpperCase();
 
-  return (
-    <MainLayout>
-      <div className="space-y-6 pb-20 fade-in relative">
-        <PatientProfileHeader
-          patient={patient as any}
-          patientName={patientName}
-          initials={initials}
-          onBack={() => navigate(APP_ROUTES.PATIENTS)}
-          onOpenReport={() => navigate(`/patient-evolution-report/${id}`)}
-          onOpenPremiumReport={handleExportPremium}
-          onOpenProntuario={() => navigate(`/prontuario/${id}`)}
-          onEdit={() => setEditingPatient(true)}
-          onEvaluate={handleStartEvaluation}
-          onSchedule={() => setScheduleModalOpen(true)}
-          onAskAI={() => setIsChatOpen(true)}
-        />
+  const handleOpenMedicalReport = async () => {
+    if (!id) return;
+    toast.loading("IA está sintetizando o laudo médico de desfecho...", { id: "medical-report" });
 
+    try {
+      const res = await request<{ success: boolean; data: any }>(
+        `/api/ai/medical-report/outcome?patientId=${id}`,
+      );
+      setGeneratedMedicalReport(res.data);
+      setIsMedicalReportOpen(true);
+      toast.success("Laudo gerado com sucesso!", { id: "medical-report" });
+    } catch (err) {
+      console.error("Failed to generate medical report", err);
+      toast.error("Falha ao gerar laudo médico.", { id: "medical-report" });
+    }
+  };
+
+  const handleAskAI = () => {
+    setIsChatOpen(true);
+  };
+
+    return (
+      <MainLayout>
+        <div className="space-y-6 pb-20 fade-in relative">
+          <PatientProfileHeader
+            patient={patient as any}
+            patientName={patientName}
+            initials={initials}
+            onBack={() => navigate(APP_ROUTES.PATIENTS)}
+            onOpenReport={() => navigate(`/patient-evolution-report/${id}`)}
+            onOpenPremiumReport={handleExportPremium}
+            onOpenProntuario={() => navigate(`/prontuario/${id}`)}
+            onEdit={() => setEditingPatient(true)}
+            onEvaluate={handleStartEvaluation}
+            onSchedule={() => setScheduleModalOpen(true)}
+            onAskAI={handleAskAI}
+            onOpenMedicalReport={handleOpenMedicalReport}
+          />
         {/* Chat IA Contextual 360° */}
         <Patient360ChatDrawer
           open={isChatOpen}
           onOpenChange={setIsChatOpen}
           patientId={id || ""}
+          patientName={patientName}
+        />
+
+        <AIMedicalReportModal
+          open={isMedicalReportOpen}
+          onOpenChange={setIsMedicalReportOpen}
+          report={generatedMedicalReport}
           patientName={patientName}
         />
 
