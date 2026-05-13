@@ -1084,10 +1084,26 @@ app.post("/exercises/:assignmentId/complete", async (c) => {
       }
 
       if (badgeEarned) {
+        const achievement = await pool.query(
+          `INSERT INTO achievements (code, title, description, xp_reward, category, organization_id)
+           VALUES ($1, $2, $3, $4, 'streak', $5)
+           ON CONFLICT (code) DO UPDATE
+             SET title = EXCLUDED.title,
+                 description = EXCLUDED.description,
+                 xp_reward = EXCLUDED.xp_reward
+           RETURNING id`,
+          [
+            badgeEarned.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, "_"),
+            badgeEarned,
+            `Conquista desbloqueada por sequência de ${streak} dias`,
+            bonusXp,
+            user.organizationId,
+          ],
+        );
         await pool.query(
-          `INSERT INTO achievements_log (patient_id, badge_name, earned_at)
-           VALUES ($1, $2, NOW()) ON CONFLICT DO NOTHING`,
-          [data.patient_id, badgeEarned],
+          `INSERT INTO achievements_log (patient_id, achievement_id, achievement_title, unlocked_at, xp_reward, organization_id)
+           VALUES ($1, $2, $3, NOW(), $4, $5) ON CONFLICT DO NOTHING`,
+          [data.patient_id, achievement.rows[0]?.id, badgeEarned, bonusXp, user.organizationId],
         );
         await pool.query(
           `UPDATE patient_gamification SET total_badges = total_badges + 1 WHERE patient_id = $1`,
@@ -1412,7 +1428,10 @@ app.get("/gamification", async (c) => {
   const xpNeeded = nextThreshold - prevThreshold;
 
   const badgesRes = await pool.query(
-    `SELECT badge_name, earned_at FROM achievements_log WHERE patient_id = $1 ORDER BY earned_at DESC`,
+    `SELECT achievement_title AS badge_name, unlocked_at AS earned_at
+     FROM achievements_log
+     WHERE patient_id = $1
+     ORDER BY unlocked_at DESC`,
     [patientId],
   ).catch(() => ({ rows: [] }));
 
@@ -1448,16 +1467,17 @@ app.post("/proms", async (c) => {
 
   await pool.query(
     `INSERT INTO standardized_test_results
-       (patient_id, test_type, score, notes, administered_at, created_at)
-     VALUES ($1, $2, $3, $4, NOW(), NOW())`,
-    [patientId, scale, score, notes],
+       (organization_id, patient_id, test_type, test_name, scale_name, score, max_score,
+        interpretation, answers, responses, applied_at, applied_by, notes, created_by, created_at, updated_at)
+     VALUES ($1, $2, $3, $4, $4, $5, $5, NULL, '{}'::jsonb, '{}'::jsonb, NOW(), $6, $7, $6, NOW(), NOW())`,
+    [user.organizationId, patientId, scale.toLowerCase(), scale.toUpperCase(), score, user.uid, notes],
   ).catch(() => {});
 
   // Award XP for recording a PROM
   await pool.query(
-    `INSERT INTO xp_transactions (patient_id, amount, source, description, created_at)
-     VALUES ($1, 5, 'proms', $2, NOW())`,
-    [patientId, `Registrou escala ${scale}`],
+    `INSERT INTO xp_transactions (organization_id, patient_id, amount, reason, source, description, created_at)
+     VALUES ($1, $2, 5, 'prom_recorded', 'proms', $3, NOW())`,
+    [user.organizationId, patientId, `Registrou escala ${scale}`],
   ).catch(() => {});
 
   await pool.query(

@@ -155,10 +155,10 @@ app.get("/patient/:patientId", requireAuth, async (c) => {
   const result = await pool.query(
     `SELECT pp.*, sp.name AS package_name, sp.total_sessions AS package_total_sessions
      FROM patient_packages pp
-     JOIN session_packages sp ON sp.id = pp.package_id
+     JOIN session_packages sp ON sp.id = COALESCE(pp.package_id, pp.package_template_id)
      JOIN patients p ON p.id = pp.patient_id
      WHERE pp.patient_id = $1 AND pp.organization_id = $2
-     ORDER BY pp.purchase_date DESC`,
+     ORDER BY COALESCE(pp.purchase_date, pp.purchased_at) DESC`,
     [patientId, user.organizationId],
   );
 
@@ -234,7 +234,7 @@ app.post("/patient-package/:id/use", requireAuth, async (c) => {
     `SELECT pp.id, pp.remaining_sessions, pp.status, pp.expiry_date, pp.patient_id, p.full_name as patient_name, sp.name as package_name
      FROM patient_packages pp
      JOIN patients p ON p.id = pp.patient_id
-     JOIN session_packages sp ON sp.id = pp.package_id
+     JOIN session_packages sp ON sp.id = COALESCE(pp.package_id, pp.package_template_id)
      WHERE pp.id = $1 AND pp.organization_id = $2`,
     [id, user.organizationId],
   );
@@ -297,7 +297,7 @@ app.get("/stats", requireAuth, async (c) => {
        COUNT(*) FILTER (WHERE status = 'ativo') AS active_packages,
        COUNT(*) FILTER (WHERE status = 'esgotado') AS exhausted_packages,
        COALESCE(SUM(remaining_sessions) FILTER (WHERE status = 'ativo'), 0) AS total_remaining_sessions,
-       COALESCE(SUM(amount_paid), 0) AS total_revenue,
+       COALESCE(SUM(COALESCE(amount_paid, price)), 0) AS total_revenue,
        COUNT(DISTINCT patient_id) AS patients_with_packages
      FROM patient_packages
      WHERE organization_id = $1`,

@@ -53,11 +53,15 @@ export const useAppointmentData = (
       );
 
       // Map to AppointmentUnified (or compatible) structure
+      const therapistId = (data.therapist_id || data.therapistId) as string | undefined;
+
       return {
         ...data,
         id: data.id,
         patientId: (data.patient_id || data.patientId) as string,
         patient_id: (data.patient_id || data.patientId) as string,
+        therapistId,
+        therapist_id: therapistId,
         patientName: (data.patient?.full_name || data.patient?.name) as string,
         date: (data.appointment_date || data.date) as string,
         time: (data.appointment_time || data.time) as string,

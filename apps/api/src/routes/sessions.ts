@@ -192,6 +192,9 @@ app.post("/autosave", requireAuth, async (c) => {
     if (assData !== undefined) payload.assessment = assData;
     if (planData !== undefined) payload.plan = planData;
     if (durationNum !== undefined) payload.duration = durationNum;
+    if (body.therapist_id && isValidUuid(String(body.therapist_id))) {
+      payload.therapistId = String(body.therapist_id);
+    }
     return payload;
   };
 
@@ -253,7 +256,9 @@ app.post("/autosave", requireAuth, async (c) => {
   const insertValues: any = {
     patientId,
     appointmentId: body.appointment_id || null,
-    therapistId: isValidUuid(user.uid) ? user.uid : (null as any),
+    therapistId: (body.therapist_id && isValidUuid(String(body.therapist_id)))
+      ? String(body.therapist_id)
+      : isValidUuid(user.uid) ? user.uid : (null as any),
     organizationId: user.organizationId,
     date: recordDate,
     duration: durationNum || null,

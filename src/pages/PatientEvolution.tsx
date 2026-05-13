@@ -163,11 +163,18 @@ const PatientEvolution = () => {
 
     return {
       ...content,
+      ...(state.selectedTherapistId ? { therapist_id: state.selectedTherapistId } : {}),
       pain_level: state.painScale.level,
       pain_location: state.painScale.location,
       pain_character: state.painScale.character,
     };
-  }, [state.evolutionVersion, state.evolutionV2Data, state.soapData, state.painScale]);
+  }, [
+    state.evolutionVersion,
+    state.evolutionV2Data,
+    state.soapData,
+    state.selectedTherapistId,
+    state.painScale,
+  ]);
 
   const { lastSavedAt } = useAutoSave({
     data: autoSaveData,

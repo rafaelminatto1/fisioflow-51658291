@@ -1725,7 +1725,7 @@ app.post("/:id/forget", async (c) => {
 
     // Audit log — imutável para prova de conformidade LGPD
     await db.execute(sql`
-			INSERT INTO audit_log (organization_id, user_id, action, resource_type, resource_id, metadata, created_at)
+			INSERT INTO audit_logs (organization_id, user_id, action, entity_type, entity_id, metadata, created_at)
 			VALUES (
 				${user.organizationId}::uuid,
 				${user.uid},

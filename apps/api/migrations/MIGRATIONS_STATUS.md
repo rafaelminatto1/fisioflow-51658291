@@ -51,6 +51,7 @@
 | `0069_session_package_templates.sql` | Templates padrão de pacotes de sessão | ⏳ | ⏳ | ❌ | Novo: Dados de seed para impulsionar adoção |
 | `0070_clinical_evolution_templates.sql` | Templates de evolução clínica | ✅ | ✅ | ❌ | Confirmado: tabela presente em prod |
 | `0071_patient_media.sql` | Tabelas `patient_photos`, `patient_videos`, `medical_requests` + RLS | ✅ | ✅ | ❌ | Confirmado 2026-05-12 via psql — tabelas e índices presentes |
+| `0080_fix_schema_mismatches.sql` | Corrige divergências de schema usadas por rotas Workers | ✅ | ✅ | ✅ | Aplicada 2026-05-13 via psql; idempotente, vários objetos já existiam |
 
 ---
 

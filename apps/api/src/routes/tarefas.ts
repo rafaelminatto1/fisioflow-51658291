@@ -364,11 +364,21 @@ app.patch("/:id", requireAuth, async (c) => {
     // Award XP when task is completed (gamification — non-blocking)
     if (taskBefore?.status !== "CONCLUIDO" && taskAfter.status === "CONCLUIDO") {
       const completedBy = (taskAfter.responsavel_id ?? user.uid) as string;
-      db.query(
-        `INSERT INTO xp_transactions (organization_id, patient_id, user_id, type, points, description, reference_id, reference_type)
-         VALUES ($1, NULL, $2, 'task_completed', 10, 'Tarefa concluída', $3, 'tarefa')
+      const linkedPatientId =
+        taskAfter.linked_entity_type === "patient" && isUuid(String(taskAfter.linked_entity_id ?? ""))
+          ? String(taskAfter.linked_entity_id)
+          : null;
+
+      if (linkedPatientId) db.query(
+        `INSERT INTO xp_transactions (organization_id, patient_id, amount, reason, description, source, metadata, created_by)
+         VALUES ($1, $2, 10, 'task_completed', 'Tarefa concluída', 'tarefa', $3::jsonb, $4)
          ON CONFLICT DO NOTHING`,
-        [user.organizationId, completedBy, id],
+        [
+          user.organizationId,
+          linkedPatientId,
+          jsonSerialize({ task_id: id }),
+          isUuid(completedBy) ? completedBy : null,
+        ],
       ).catch(() => null);
     }
 

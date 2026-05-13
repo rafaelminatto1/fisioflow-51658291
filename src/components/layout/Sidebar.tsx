@@ -247,6 +247,10 @@ export function Sidebar() {
   const [configuracoesOpen, setConfiguracoesOpen] = useState(false);
   const location = useLocation();
   const { toast } = useToast();
+  const { profile: sidebarProfile } = useAuth();
+  const isAdmin =
+    sidebarProfile?.role === "admin" ||
+    (Array.isArray((sidebarProfile as any)?.roles) && (sidebarProfile as any).roles.includes("admin"));
 
   const { preloadRoute } = useNavPreload();
 
@@ -589,7 +593,7 @@ export function Sidebar() {
                   })}
                 </CollapsibleContent>
               </Collapsible>
-              <Collapsible open={adminOpen} onOpenChange={setAdminOpen}>
+              {isAdmin && <Collapsible open={adminOpen} onOpenChange={setAdminOpen}>
                 <CollapsibleTrigger asChild>
                   <button
                     className={cn(
@@ -634,7 +638,7 @@ export function Sidebar() {
                     </Link>
                   ))}
                 </CollapsibleContent>
-              </Collapsible>
+              </Collapsible>}
             </SidebarSection>
           </div>
         </ScrollArea>
