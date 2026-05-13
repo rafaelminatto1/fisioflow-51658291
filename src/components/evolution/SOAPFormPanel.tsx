@@ -409,24 +409,6 @@ export const SOAPFormPanel: React.FC<SOAPFormPanelProps> = ({
           {showReplication && (
             <ConductReplication patientId={patientId} onSelectConduct={handleSelectConduct} />
           )}
-
-          <div className="flex-1" />
-
-          {onSave && (
-            <Button onClick={onSave} disabled={disabled || isSaving}>
-              {isSaving ? (
-                <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Salvando...
-                </>
-              ) : (
-                <>
-                  <Save className="h-4 w-4 mr-2" />
-                  Salvar Evolução
-                </>
-              )}
-            </Button>
-          )}
         </div>
       </CardContent>
 

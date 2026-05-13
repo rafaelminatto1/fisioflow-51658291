@@ -93,7 +93,7 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
 
   const [patient, setPatient] = useState<Patient | null>(null);
 
-  const [, setAppointment] = useState<AppointmentUnified | null>(null);
+  const [appointment, setAppointment] = useState<AppointmentUnified | null>(null);
   const [, setAppointmentLoadedFromApi] = useState(false);
   const [activeTab, setActiveTab] = useState("evolution");
   const [viewVersion, setViewVersion] = useState<"classic" | "v5-pro">(() => {
@@ -472,6 +472,23 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
   const handleSoapChange = (data: typeof soapData) => {
     setSoapData(data);
   };
+
+  // Debounced auto-save effect
+  useEffect(() => {
+    if (isLoading || isSaving) return;
+
+    // Don't auto-save if all fields are empty
+    if (!soapData.subjective?.trim() && !soapData.objective?.trim() && !soapData.assessment?.trim() && !soapData.plan?.trim()) {
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      handleSave();
+    }, 3000); // Auto-save after 3 seconds of inactivity
+
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [soapData, sessionExercises]);
 
   const handleSelectConduct = (conduct: string) => {
     setSoapData((prev) => ({ ...prev, plan: conduct || "" }) as any);
@@ -890,9 +907,22 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
                 </Button>
               </div>
               {patient && (
-                <p className="text-sm text-muted-foreground">
-                  {PatientHelpers.getName(patient)} • Sessão #{sessionNumber}
-                </p>
+                <div className="flex flex-col">
+                  <p className="text-sm font-medium text-slate-900">
+                    {PatientHelpers.getName(patient)}
+                  </p>
+                  <p className="text-[10px] text-muted-foreground flex items-center gap-1">
+                    Sessão #{sessionNumber}
+                    {appointment && (
+                      <>
+                        <span className="mx-1">•</span>
+                        <span>
+                          {new Date(appointment.date).toLocaleDateString("pt-BR")} às {appointment.start_time || appointment.startTime}
+                        </span>
+                      </>
+                    )}
+                  </p>
+                </div>
               )}
               {therapists.length > 0 && (
                 <div className="flex flex-wrap items-center gap-2 mt-2">
@@ -942,15 +972,7 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
             )}
             <Button variant="outline" onClick={handleClose}>
               <X className="h-4 w-4 mr-2" />
-              Cancelar
-            </Button>
-            <Button onClick={handleSave} disabled={isSaving}>
-              {isSaving ? (
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-              ) : (
-                <Save className="h-4 w-4 mr-2" />
-              )}
-              Salvar Evolução
+              Sair
             </Button>
           </div>
         </div>

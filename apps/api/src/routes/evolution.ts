@@ -66,7 +66,8 @@ app.get("/treatment-sessions", requireAuth, async (c) => {
         plan->>'nextSessionGoals' as next_session_goals,
         plan->>'orientations' as observations,
         plan->'exercises' as exercises_performed,
-        (subjective->>'painScale')::int as pain_level_before,
+        NULLIF(subjective->>'painScale', '')::int as pain_level_before,
+        NULLIF(plan->>'painScaleAfter', '')::int as pain_level_after,
         created_at, updated_at
       FROM sessions
       WHERE patient_id = $1 AND organization_id = $2
@@ -214,6 +215,7 @@ app.post("/treatment-sessions", requireAuth, async (c) => {
     orientations: body.observations ? String(body.observations) : undefined,
     exercises: body.exercises_performed,
     nextSessionGoals: body.next_session_goals,
+    painScaleAfter: body.pain_level_after != null ? Number(body.pain_level_after) : undefined,
   });
 
   let result;
@@ -317,37 +319,58 @@ app.patch("/treatment-sessions/:id", requireAuth, async (c) => {
   const body = (await c.req.json()) as Record<string, unknown>;
 
   const existing = await pool.query(
-    `SELECT id FROM treatment_sessions WHERE id = $1 AND organization_id = $2 LIMIT 1`,
+    `SELECT id, subjective, objective, assessment, plan FROM sessions WHERE id = $1 AND organization_id = $2 LIMIT 1`,
     [id, user.organizationId],
   );
   if (!existing.rows.length) return c.json({ error: "Sessão não encontrada" }, 404);
 
+  const session = existing.rows[0];
   const sessionDate = parseIsoDate(body.session_date ?? body.date);
-  const objectiveJson = jsonSerialize(body.objective);
+
+  // Merge JSONB fields if they are provided in the body
+  let subjective = session.subjective || {};
+  if (body.subjective !== undefined || body.pain_level_before !== undefined) {
+    subjective = {
+      ...subjective,
+      ...(body.subjective !== undefined ? { notes: String(body.subjective) } : {}),
+      ...(body.pain_level_before !== undefined ? { painScale: Number(body.pain_level_before) } : {}),
+    };
+  }
+
+  let assessment = session.assessment || {};
+  if (body.assessment !== undefined) {
+    assessment = { ...assessment, notes: String(body.assessment) };
+  }
+
+  let plan = session.plan || {};
+  if (body.plan !== undefined || body.observations !== undefined || body.pain_level_after !== undefined) {
+    plan = {
+      ...plan,
+      ...(body.plan !== undefined ? { notes: String(body.plan) } : {}),
+      ...(body.observations !== undefined ? { orientations: String(body.observations) } : {}),
+      ...(body.pain_level_after !== undefined ? { painScaleAfter: Number(body.pain_level_after) } : {}),
+    };
+  }
+
+  const objective = body.objective !== undefined ? body.objective : session.objective;
 
   const row = await pool.query(
     `
-      UPDATE treatment_sessions SET
-        subjective          = COALESCE($1, subjective),
-        objective           = COALESCE($2::jsonb, objective),
-        assessment          = COALESCE($3, assessment),
-        plan                = COALESCE($4, plan),
-        observations        = COALESCE($5, observations),
-        pain_level_before   = COALESCE($6, pain_level_before),
-        pain_level_after    = COALESCE($7, pain_level_after),
-        session_date        = COALESCE($8, session_date),
+      UPDATE sessions SET
+        subjective          = $1::jsonb,
+        objective           = $2::jsonb,
+        assessment          = $3::jsonb,
+        plan                = $4::jsonb,
+        date                = COALESCE($5, date),
         updated_at          = NOW()
-      WHERE id = $9
+      WHERE id = $6
       RETURNING *
     `,
     [
-      body.subjective != null ? String(body.subjective) : null,
-      objectiveJson,
-      body.assessment != null ? String(body.assessment) : null,
-      body.plan != null ? String(body.plan) : null,
-      body.observations != null ? String(body.observations) : null,
-      body.pain_level_before != null ? Number(body.pain_level_before) : null,
-      body.pain_level_after != null ? Number(body.pain_level_after) : null,
+      jsonSerialize(subjective),
+      jsonSerialize(objective),
+      jsonSerialize(assessment),
+      jsonSerialize(plan),
       sessionDate,
       id,
     ],
