@@ -135,3 +135,14 @@ export const feriadosApi = {
       method: "DELETE",
     }),
 };
+
+export const pendingUsersApi = {
+  list: () => request<{ data: any[] }>("/api/profile/admin/pending"),
+
+  approve: (profileId: string, role: string, roles?: string[]) =>
+    request<{ ok: boolean }>(`/api/profile/admin/approve/${profileId}`, {
+      method: "POST",
+      body: JSON.stringify({ role, roles: roles ?? [role] }),
+    }),
+};
+

@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from "react";
-import { Search, Plus, Dumbbell } from "lucide-react";
+import { Search, Plus, Dumbbell, PlusCircle } from "lucide-react";
 import { useExercises, type Exercise } from "@/hooks/useExercises";
 import { cn } from "@/lib/utils";
 import { withImageParams } from "@/lib/storageProxy";
@@ -17,16 +17,19 @@ import { Button } from "@/components/ui/button";
 
 interface ExerciseAutocompleteProps {
   onSelect: (exercise: Exercise) => void;
+  onCreateNew?: (searchTerm: string) => void;
   className?: string;
 }
 
 export const ExerciseAutocomplete: React.FC<ExerciseAutocompleteProps> = ({
   onSelect,
+  onCreateNew,
   className,
 }) => {
   const [open, setOpen] = useState(false);
   const { exercises } = useExercises();
   const [searchValue, setSearchValue] = useState("");
+  const canCreateNew = typeof onCreateNew === "function";
 
   const filteredExercises = useMemo(() => {
     if (!searchValue) return exercises.slice(0, 10);
@@ -57,7 +60,27 @@ export const ExerciseAutocomplete: React.FC<ExerciseAutocompleteProps> = ({
             onValueChange={setSearchValue}
           />
           <CommandList>
-            <CommandEmpty>Nenhum exercício encontrado.</CommandEmpty>
+            <CommandEmpty>
+              <div className="py-2 text-center space-y-3">
+                <p className="text-sm text-muted-foreground">Nenhum exercício encontrado.</p>
+                {canCreateNew && searchValue.trim().length >= 2 && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="gap-2 border-dashed border-primary/40 text-primary hover:border-primary hover:bg-primary/5"
+                    onClick={() => {
+                      onCreateNew!(searchValue.trim());
+                      setOpen(false);
+                      setSearchValue("");
+                    }}
+                  >
+                    <PlusCircle className="h-4 w-4" />
+                    Cadastrar &quot;{searchValue.trim()}&quot;
+                  </Button>
+                )}
+              </div>
+            </CommandEmpty>
             <CommandGroup>
               {filteredExercises.map((exercise) => (
                 <CommandItem
@@ -99,6 +122,24 @@ export const ExerciseAutocomplete: React.FC<ExerciseAutocompleteProps> = ({
                 </CommandItem>
               ))}
             </CommandGroup>
+            {canCreateNew && searchValue.trim().length >= 2 && filteredExercises.length > 0 && (
+              <div className="border-t p-2">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="w-full gap-2 text-primary hover:text-primary hover:bg-primary/5 justify-start"
+                  onClick={() => {
+                    onCreateNew!(searchValue.trim());
+                    setOpen(false);
+                    setSearchValue("");
+                  }}
+                >
+                  <PlusCircle className="h-4 w-4" />
+                  Cadastrar &quot;{searchValue.trim()}&quot; como novo exercício
+                </Button>
+              </div>
+            )}
           </CommandList>
         </Command>
       </PopoverContent>

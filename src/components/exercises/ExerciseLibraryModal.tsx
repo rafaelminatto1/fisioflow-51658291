@@ -39,16 +39,20 @@ export const ExerciseLibraryModal: React.FC<ExerciseLibraryModalProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="fixed left-[50%] top-[50%] z-50 !-translate-x-1/2 !-translate-y-1/2 w-full max-w-7xl max-h-[85vh] overflow-y-auto shadow-2xl rounded-xl border border-border/40 bg-background/95 backdrop-blur-xl">
-        <DialogHeader>
-          <DialogTitle>Biblioteca de Exercícios</DialogTitle>
+      <DialogContent className="fixed left-[50%] top-[50%] z-50 !-translate-x-1/2 !-translate-y-1/2 w-[96vw] max-w-none h-[92vh] flex flex-col shadow-2xl rounded-2xl border border-border/40 bg-background p-0 overflow-hidden">
+        <DialogHeader className="px-6 pt-5 pb-3 border-b shrink-0">
+          <DialogTitle className="text-lg font-bold flex items-center gap-2">
+            Biblioteca de Exercícios
+          </DialogTitle>
         </DialogHeader>
-        <ExerciseLibrary
-          onSelectExercise={handleSelectExercise}
-          onEditExercise={() => {}} // Not needed in this context
-          selectionMode={true}
-          addedExerciseIds={allAddedIds}
-        />
+        <div className="flex-1 overflow-y-auto">
+          <ExerciseLibrary
+            onSelectExercise={handleSelectExercise}
+            onEditExercise={() => {}}
+            selectionMode={true}
+            addedExerciseIds={allAddedIds}
+          />
+        </div>
       </DialogContent>
     </Dialog>
   );

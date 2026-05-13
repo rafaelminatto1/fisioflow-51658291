@@ -227,6 +227,15 @@ export function usePatientEvolutionHandlers({
   };
 
   const handleCompleteSession = async () => {
+    if (!selectedTherapistId) {
+      toast({
+        title: "Fisioterapeuta obrigatório",
+        description: "Selecione o fisioterapeuta responsável antes de concluir o atendimento.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     const isV2orV3 = evolutionVersion === "v2-texto" || evolutionVersion === "v3-notion";
     const hasContent = isV2orV3
       ? evolutionV2Data.patientReport ||

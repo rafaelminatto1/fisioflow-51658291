@@ -14,6 +14,7 @@
 import { Hono } from "hono";
 import type { Env } from "../types/env";
 import { createPool } from "../lib/db";
+import { createResend } from "../lib/email";
 
 const app = new Hono<{ Bindings: Env }>();
 
@@ -134,19 +135,56 @@ app.post("/neon-auth", async (c) => {
       return c.json({ ok: true }); // Ignora eventos sem dados do usuário
     }
 
+    const userName = user.name || user.email.split("@")[0] || "Usuário";
     try {
-      const pool = await createPool(c.env);
-      // Upsert do perfil: cria se não existir, ignora se já existir
+      const pool = createPool(c.env);
+      // Cria perfil com role='pending' — admin deve aprovar antes de liberar acesso
       await pool.query(
-        `INSERT INTO profiles (id, user_id, full_name, role, organization_id, created_at, updated_at)
-         VALUES (gen_random_uuid(), $1, $2, 'fisioterapeuta', '00000000-0000-0000-0000-000000000001', NOW(), NOW())
+        `INSERT INTO profiles (id, user_id, full_name, email, role, roles, organization_id, created_at, updated_at)
+         VALUES (gen_random_uuid(), $1, $2, $3, 'pending', ARRAY['pending'], '00000000-0000-0000-0000-000000000001', NOW(), NOW())
          ON CONFLICT (user_id) DO NOTHING`,
-        [user.id, user.name || user.email.split("@")[0] || "Usuário"],
+        [user.id, userName, user.email],
       );
-      console.log(`[Webhook] Perfil criado para user ${user.id} (${user.email})`);
+      console.log(`[Webhook] Perfil pendente criado para user ${user.id} (${user.email})`);
     } catch (err: any) {
-      // Não retornar erro — evento non-blocking, Neon Auth não vai retentar
       console.error("[Webhook] Erro ao criar perfil:", err.message);
+    }
+
+    // Notifica admin por email (non-blocking)
+    try {
+      const resend = createResend(c.env);
+      if (resend) {
+        const adminEmail = c.env.ADMIN_NOTIFICATION_EMAIL ?? "rafael.minatto@yahoo.com.br";
+        const from = c.env.RESEND_FROM_EMAIL ?? "FisioFlow <noreply@moocafisio.com.br>";
+        await resend.emails.send({
+          from,
+          to: adminEmail,
+          subject: `[FisioFlow] Novo cadastro aguardando aprovação: ${userName}`,
+          html: `
+            <div style="font-family:sans-serif;max-width:600px;margin:0 auto;border:1px solid #e5e7eb;border-radius:10px;overflow:hidden;">
+              <div style="background:#2563eb;padding:20px 24px;">
+                <h2 style="color:#fff;margin:0;font-size:18px;">Novo Cadastro Pendente</h2>
+              </div>
+              <div style="padding:24px;">
+                <p style="color:#374151;margin-top:0;">Um novo usuário se cadastrou no FisioFlow e aguarda sua aprovação para ter acesso ao sistema.</p>
+                <table style="width:100%;border-collapse:collapse;margin:16px 0;">
+                  <tr><td style="padding:8px;background:#f9fafb;font-weight:600;color:#6b7280;width:120px;">Nome</td><td style="padding:8px;border-bottom:1px solid #f3f4f6;">${userName}</td></tr>
+                  <tr><td style="padding:8px;background:#f9fafb;font-weight:600;color:#6b7280;">Email</td><td style="padding:8px;border-bottom:1px solid #f3f4f6;">${user.email}</td></tr>
+                  <tr><td style="padding:8px;background:#f9fafb;font-weight:600;color:#6b7280;">Data</td><td style="padding:8px;">${new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}</td></tr>
+                </table>
+                <p style="color:#374151;">Acesse o painel administrativo para definir o papel deste usuário e liberar o acesso:</p>
+                <a href="https://fisioflow.pages.dev/admin/usuarios-pendentes" style="display:inline-block;background:#2563eb;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;margin-top:8px;">Aprovar Usuário</a>
+              </div>
+              <div style="padding:16px 24px;background:#f9fafb;border-top:1px solid #e5e7eb;">
+                <p style="color:#9ca3af;font-size:12px;margin:0;">FisioFlow — Sistema de Gestão de Fisioterapia</p>
+              </div>
+            </div>
+          `,
+        });
+        console.log(`[Webhook] Email de notificação enviado para ${adminEmail}`);
+      }
+    } catch (emailErr: any) {
+      console.warn("[Webhook] Falha ao enviar email de notificação:", emailErr.message);
     }
 
     return c.json({ ok: true });

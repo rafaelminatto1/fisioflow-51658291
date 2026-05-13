@@ -31,28 +31,10 @@ async function fetchTherapists(): Promise<TherapistOption[]> {
       crefito: t.crefito ? String(t.crefito).trim() : undefined,
     }));
 
-    // Sempre incluir o perfil padrão solicitado
-    const hasDefault = mappedList.some(
-      (t) => t.name.toLowerCase().includes("rafael minatto") || t.id === "default-rafael",
-    );
-    if (!hasDefault) {
-      mappedList.push({
-        id: "default-rafael",
-        name: "Rafael Minatto",
-        crefito: "000000-F", // Placeholder, o usuário não forneceu
-      });
-    }
-
     return mappedList.sort((a, b) => a.name.localeCompare(b.name, "pt-BR"));
   } catch (error) {
-    console.error("Error fetching therapists, using default", error);
-    return [
-      {
-        id: "default-rafael",
-        name: "Rafael Minatto",
-        crefito: "000000-F",
-      },
-    ];
+    console.error("Error fetching therapists", error);
+    return [];
   }
 }
 
