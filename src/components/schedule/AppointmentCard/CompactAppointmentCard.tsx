@@ -82,6 +82,7 @@ export const CompactAppointmentCard: React.FC<CompactAppointmentCardProps> = ({
           variant="secondary"
           className="h-7 w-7 rounded-full shadow-lg bg-emerald-500 hover:bg-emerald-600 text-white border-none"
           onClick={handleWhatsApp}
+          aria-label="Enviar WhatsApp"
           title="WhatsApp"
         >
           <MessageSquare className="h-3.5 w-3.5" />
@@ -92,6 +93,7 @@ export const CompactAppointmentCard: React.FC<CompactAppointmentCardProps> = ({
             variant="secondary"
             className="h-7 w-7 rounded-full shadow-lg bg-blue-600 hover:bg-blue-700 text-white border-none"
             onClick={handleQuickCheckIn}
+            aria-label="Finalizar atendimento"
             title="Finalizar"
           >
             <Check className="h-3.5 w-3.5" />
@@ -102,6 +104,7 @@ export const CompactAppointmentCard: React.FC<CompactAppointmentCardProps> = ({
           variant="secondary"
           className="h-7 w-7 rounded-full shadow-lg bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-none"
           onClick={handleEditClick}
+          aria-label="Editar agendamento"
           title="Editar"
         >
           <Edit2 className="h-3.5 w-3.5" />
