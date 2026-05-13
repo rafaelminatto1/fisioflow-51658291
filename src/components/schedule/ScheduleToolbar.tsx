@@ -329,6 +329,7 @@ export const ScheduleToolbar: React.FC<ScheduleToolbarProps> = ({
             variant="ghost"
             size="icon"
             onClick={() => handleNavigate("prev")}
+            aria-label="Período anterior"
             className="h-9 w-9 rounded-xl border border-slate-200 dark:border-slate-800"
           >
             <ChevronLeft className="w-5 h-5" />
