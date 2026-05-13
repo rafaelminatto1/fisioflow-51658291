@@ -129,7 +129,7 @@ export function WikiPageViewerContent({
       {page.clinical_metadata && Object.keys(page.clinical_metadata).length > 0 && (
         <div className="mb-8 grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="bg-primary/5 border border-primary/10 rounded-xl p-4 flex flex-col justify-center shadow-sm">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-primary/60 mb-1">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-primary/80 mb-1">
               Alvo RPE (Borg)
             </p>
             <p className="text-2xl font-black text-primary">
@@ -137,7 +137,7 @@ export function WikiPageViewerContent({
             </p>
           </div>
           <div className="bg-primary/5 border border-primary/10 rounded-xl p-4 flex flex-col justify-center shadow-sm">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-primary/60 mb-1">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-primary/80 mb-1">
               Regra de Progressão
             </p>
             <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">
@@ -145,7 +145,7 @@ export function WikiPageViewerContent({
             </p>
           </div>
           <div className="bg-primary/5 border border-primary/10 rounded-xl p-4 flex flex-col justify-center shadow-sm">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-primary/60 mb-1">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-primary/80 mb-1">
               Evidência Científica
             </p>
             <div className="flex items-center gap-2">

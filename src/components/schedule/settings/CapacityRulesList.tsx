@@ -118,7 +118,7 @@ function CapacityForm({
     <div className="rounded-xl border bg-muted/40 p-4 space-y-4">
       <div className="flex items-center justify-between">
         <p className="text-sm font-semibold">{title}</p>
-        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={onCancel}>
+        <Button variant="ghost" size="icon" aria-label="Cancelar" className="h-7 w-7" onClick={onCancel}>
           <X className="h-3.5 w-3.5" />
         </Button>
       </div>

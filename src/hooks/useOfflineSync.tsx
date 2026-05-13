@@ -35,8 +35,8 @@ interface UseOfflineSyncReturn {
 const LAST_SYNC_KEY = "fisioflow_last_sync_time";
 
 export function useOfflineSync(options: UseOfflineSyncOptions = {}): UseOfflineSyncReturn {
-  const { autoSync = true, syncInterval = 30000 } = options;
-  const queryClient = useQueryClient();
+  const { autoSync = true, syncInterval: _syncInterval = 30000 } = options;
+  const _queryClient = useQueryClient();
   const { isOnline } = useConnectionStatus();
 
   const [isSyncing, setIsSyncing] = useState(false);

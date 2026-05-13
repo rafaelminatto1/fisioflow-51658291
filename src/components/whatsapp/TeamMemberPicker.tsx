@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from "react";
-import { UserPlus, ArrowRightLeft, Search, Loader2 } from "lucide-react";
+import { UserPlus, ArrowRightLeft } from "lucide-react";
 import {
   Dialog,
   DialogContent,

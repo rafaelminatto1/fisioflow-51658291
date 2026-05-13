@@ -210,7 +210,7 @@ function StatusColorEditor({
               </Button>
             )}
             {isCustom && onEdit && (
-              <Button variant="ghost" size="icon" onClick={onEdit} className="h-7 w-7">
+              <Button variant="ghost" size="icon" aria-label="Editar" onClick={onEdit} className="h-7 w-7">
                 <Pencil className="w-3 h-3" />
               </Button>
             )}

@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import type { LucideIcon } from "lucide-react";
-import { ArrowLeft, FileText } from "lucide-react";
+import { FileText } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 import { PageLayout, PageContainer, PageHeader } from "@/components/layout/PageLayout";
@@ -28,11 +28,11 @@ export function BiomechanicsAnalysisLayout({
   title,
   subtitle,
   icon: Icon,
-  iconClassName,
-  iconBgClassName,
+  iconClassName: _iconClassName,
+  iconBgClassName: _iconBgClassName,
   children,
 }: BiomechanicsAnalysisLayoutProps) {
-  const navigate = useNavigate();
+  const _navigate = useNavigate();
   const protocol = biomechanicsProtocols[mode];
 
   return (
