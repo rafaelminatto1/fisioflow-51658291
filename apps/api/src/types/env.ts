@@ -192,6 +192,7 @@ export interface Env {
   // Resend (Email)
   RESEND_API_KEY?: string;
   RESEND_FROM_EMAIL?: string;
+  ADMIN_NOTIFICATION_EMAIL?: string;
 
   // Stripe
   STRIPE_SECRET_KEY?: string;

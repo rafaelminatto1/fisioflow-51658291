@@ -38,6 +38,7 @@ export interface Profile {
   organization_id?: string;
   slug?: string;
   role: UserRole;
+  roles?: UserRole[];
   phone?: string;
   crefito?: string;
   specialties?: string[];

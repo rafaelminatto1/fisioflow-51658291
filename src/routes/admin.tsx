@@ -34,6 +34,10 @@ const ProfessionalManagement = lazy(
     import(/* webpackChunkName: "admin-professionals" */ "@/pages/admin/ProfessionalManagement"),
 );
 
+const PendingUsersPage = lazy(
+  () => import(/* webpackChunkName: "admin-pending" */ "@/pages/admin/PendingUsersPage"),
+);
+
 // Goals Admin
 const GoalProfileListPage = lazy(
   () => import(/* webpackChunkName: "goals-list" */ "@/pages/admin/goals/GoalProfileListPage"),
@@ -135,6 +139,14 @@ export const adminRoutes = (
       element={
         <ProtectedRoute allowedRoles={["admin"]}>
           <ProfessionalManagement />
+        </ProtectedRoute>
+      }
+    />
+    <Route
+      path="/admin/usuarios-pendentes"
+      element={
+        <ProtectedRoute allowedRoles={["admin"]}>
+          <PendingUsersPage />
         </ProtectedRoute>
       }
     />

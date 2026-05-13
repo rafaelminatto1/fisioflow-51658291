@@ -112,8 +112,12 @@ export function ProtectedRoute({
     );
   }
 
-  // Handle PENDING users
-  if (profile?.role === "pending" && location.pathname !== "/pending-approval") {
+  // Handle PENDING users — block access until admin approves
+  const isPending =
+    profile?.role === "pending" ||
+    (profile?.roles?.length === 1 && profile.roles[0] === "pending") ||
+    (profile?.roles?.length === 0 && profile?.role === "pending");
+  if (isPending && location.pathname !== "/pending-approval") {
     return <Navigate to="/pending-approval" replace />;
   }
 
@@ -122,8 +126,14 @@ export function ProtectedRoute({
     return <>{children}</>;
   }
 
-  // Check role-based access (only if profile exists and roles are specified)
-  if (allowedRoles.length > 0 && profile && role && !allowedRoles.includes(role)) {
+  // Multi-role check: user passes if any of their roles is in allowedRoles
+  const userRoles: UserRole[] = profile?.roles?.length
+    ? (profile.roles as UserRole[])
+    : role
+      ? [role]
+      : [];
+
+  if (allowedRoles.length > 0 && profile && !userRoles.some((r) => allowedRoles.includes(r))) {
     return (
       <div className="min-h-screen flex items-center justify-center p-4">
         <div className="text-center max-w-md">

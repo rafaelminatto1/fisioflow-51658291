@@ -41,6 +41,8 @@ import {
   Move,
   Calculator,
   MessageCircle,
+  Clock,
+  TrendingUp,
 } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useAuth } from "@/contexts/AuthContext";
@@ -174,6 +176,7 @@ const adminSubmenu = [
   { icon: BarChart3, label: "Analytics", href: "/admin/analytics" },
   { icon: Building2, label: "Regional (Enterprise)", href: "/regional" },
   { icon: Users, label: "Usuários", href: "/admin/users" },
+  { icon: Clock, label: "Pendentes de Aprovação", href: "/admin/usuarios-pendentes" },
   { icon: Shield, label: "Segurança", href: "/admin/security" },
   { icon: FileText, label: "Logs de Auditoria", href: "/admin/audit-logs" },
   { icon: Mail, label: "Convites", href: "/admin/invitations" },

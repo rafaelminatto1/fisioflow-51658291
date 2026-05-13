@@ -13,6 +13,7 @@ const PROFILE_SELECT_COLUMNS = [
   "full_name",
   "phone",
   "role",
+  "roles",
   "crefito",
   "specialties",
   "bio",
@@ -131,6 +132,7 @@ function buildProfileSelectList(columns: ProfileColumnMap): string {
     buildFullNameSelect(columns),
     selectColumnOrNull(columns, "phone", "text"),
     selectColumnOrNull(columns, "role", "text"),
+    hasProfileColumn(columns, "roles") ? `"roles"` : `NULL::text[] AS "roles"`,
     selectColumnOrNull(columns, "crefito", "text"),
     ...buildSpecialtySelects(columns),
     selectColumnOrNull(columns, "bio", "text"),
@@ -205,25 +207,24 @@ app.get("/me", requireAuth, async (c) => {
 
 app.get("/therapists", requireAuth, async (c) => {
   const user = c.get("user");
-  const db = createDb(c.env, "read");
+  const pool = createPool(c.env);
   try {
-    const therapists = await db.query.profiles.findMany({
-      where: (profiles, { and, eq, inArray }) =>
-        and(
-          eq(profiles.organizationId, user.organizationId),
-          inArray(profiles.role, ["admin", "fisioterapeuta"]),
-        ),
-      columns: {
-        id: true,
-        fullName: true,
-      },
-    });
+    // Include users whose primary role is fisioterapeuta OR who have fisioterapeuta in their roles array (multi-role support)
+    const result = await pool.query(
+      `SELECT id, COALESCE(NULLIF(full_name,''), NULLIF(name,''), split_part(email,'@',1), 'Sem nome') AS name, crefito
+       FROM profiles
+       WHERE organization_id = $1
+         AND (role = 'fisioterapeuta' OR ('fisioterapeuta' = ANY(roles) AND roles IS NOT NULL))
+         AND (is_active IS NULL OR is_active = true)
+       ORDER BY name ASC`,
+      [user.organizationId],
+    );
 
     return c.json({
-      data: therapists.map((t) => ({ id: t.id, name: t.fullName })),
+      data: result.rows.map((t: any) => ({ id: String(t.id), name: String(t.name), crefito: t.crefito ?? undefined })),
     });
   } catch (error) {
-    console.error("[Profile/Therapists] Drizzle error:", error);
+    console.error("[Profile/Therapists] error:", error);
     return c.json({ data: [] });
   }
 });
@@ -633,6 +634,57 @@ app.delete("/me", requireAuth, async (c) => {
   } catch (error) {
     console.error("[Profile/Delete] error:", error);
     return c.json({ error: "Erro ao processar exclusão de conta." }, 500);
+  }
+});
+
+// ===== ADMIN: Gerenciamento de usuários pendentes =====
+
+app.get("/admin/pending", requireAuth, async (c) => {
+  const caller = c.get("user");
+  if (caller.role !== "admin" && !caller.roles?.includes("admin")) {
+    return c.json({ error: "Acesso negado" }, 403);
+  }
+  const pool = createPool(c.env);
+  try {
+    const result = await pool.query(
+      `SELECT id, user_id, COALESCE(NULLIF(full_name,''), NULLIF(name,''), split_part(email,'@',1)) AS full_name, email, role, roles, created_at
+       FROM profiles
+       WHERE (role = 'pending' OR 'pending' = ANY(roles))
+         AND organization_id = $1
+       ORDER BY created_at DESC`,
+      [caller.organizationId],
+    );
+    return c.json({ data: result.rows });
+  } catch (error) {
+    console.error("[Profile/Admin/Pending] error:", error);
+    return c.json({ data: [] });
+  }
+});
+
+app.post("/admin/approve/:profileId", requireAuth, async (c) => {
+  const caller = c.get("user");
+  if (caller.role !== "admin" && !caller.roles?.includes("admin")) {
+    return c.json({ error: "Acesso negado" }, 403);
+  }
+  const profileId = c.req.param("profileId");
+  const { role, roles } = await c.req.json<{ role: string; roles?: string[] }>();
+
+  if (!role) return c.json({ error: "role é obrigatório" }, 400);
+  const allowedRoles = ["admin", "fisioterapeuta", "estagiario", "paciente", "parceiro", "recepcionista"];
+  if (!allowedRoles.includes(role)) return c.json({ error: "role inválido" }, 400);
+
+  const finalRoles = roles?.filter((r) => allowedRoles.includes(r)) ?? [role];
+
+  const pool = createPool(c.env);
+  try {
+    await pool.query(
+      `UPDATE profiles SET role = $1, roles = $2, updated_at = NOW() WHERE id = $3 AND organization_id = $4`,
+      [role, finalRoles, profileId, caller.organizationId],
+    );
+    return c.json({ ok: true });
+  } catch (error) {
+    console.error("[Profile/Admin/Approve] error:", error);
+    return c.json({ error: "Erro ao aprovar usuário" }, 500);
   }
 });
 

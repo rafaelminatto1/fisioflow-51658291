@@ -57,6 +57,7 @@ export interface AuthUser {
   email?: string;
   organizationId: string;
   role?: string;
+  roles?: string[];
 }
 
 export type AuthVariables = { user: AuthUser; requestId?: string };
@@ -135,7 +136,7 @@ async function resolveAuthContext(
     let res = await withTimeout(
       sql(
         `
-        SELECT id, user_id, email, role, organization_id
+        SELECT id, user_id, email, role, roles, organization_id
         FROM profiles
         WHERE user_id = $1
           AND organization_id IS NOT NULL
@@ -156,7 +157,7 @@ async function resolveAuthContext(
       const syncRes = await withTimeout(
         sql(
           `
-        SELECT id, user_id, email, role, organization_id
+        SELECT id, user_id, email, role, roles, organization_id
         FROM profiles
         WHERE email = $1
           AND organization_id IS NOT NULL
@@ -194,6 +195,7 @@ async function resolveAuthContext(
         email: row.email ?? candidate.email,
         organizationId: row.organization_id,
         role: row.role ?? candidate.role ?? "viewer",
+        roles: Array.isArray(row.roles) ? row.roles : undefined,
       });
     }
   } catch (error) {

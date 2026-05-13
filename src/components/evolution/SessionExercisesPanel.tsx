@@ -10,6 +10,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { ExerciseAutocomplete } from "./ExerciseAutocomplete";
 import { ExerciseLibraryModal } from "../exercises/ExerciseLibraryModal";
+import { QuickExerciseModal } from "@/components/modals/QuickExerciseModal";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { OptimizedImage } from "@/components/ui/OptimizedImage";
 import { getImageUrlCandidates } from "@/lib/imageUtils";
@@ -39,6 +40,8 @@ export const SessionExercisesPanel: React.FC<SessionExercisesPanelProps> = ({
 }) => {
   const { exercises: _availableExercises } = useExercises();
   const [isLibraryOpen, setIsLibraryOpen] = useState(false);
+  const [isQuickExerciseOpen, setIsQuickExerciseOpen] = useState(false);
+  const [suggestedExerciseName, setSuggestedExerciseName] = useState("");
 
   const generateSessionId = () => {
     if (typeof crypto !== "undefined" && crypto.randomUUID) {
@@ -90,7 +93,13 @@ export const SessionExercisesPanel: React.FC<SessionExercisesPanelProps> = ({
           <Label className="text-xs font-medium mb-1.5 block text-muted-foreground ml-1">
             Adicionar Exercício
           </Label>
-          <ExerciseAutocomplete onSelect={handleAddExercise} />
+          <ExerciseAutocomplete
+            onSelect={handleAddExercise}
+            onCreateNew={(searchTerm) => {
+              setSuggestedExerciseName(searchTerm);
+              setIsQuickExerciseOpen(true);
+            }}
+          />
         </div>
 
         <TooltipProvider>
@@ -304,6 +313,21 @@ export const SessionExercisesPanel: React.FC<SessionExercisesPanelProps> = ({
         open={isLibraryOpen}
         onOpenChange={setIsLibraryOpen}
         onSelectExercise={handleAddExercise}
+      />
+
+      <QuickExerciseModal
+        open={isQuickExerciseOpen}
+        onOpenChange={setIsQuickExerciseOpen}
+        suggestedName={suggestedExerciseName}
+        onSuccess={(created) => {
+          handleAddExercise({
+            id: created.id,
+            name: created.name,
+            category: created.category,
+            sets: created.sets,
+            repetitions: created.repetitions,
+          } as Exercise);
+        }}
       />
     </div>
   );
