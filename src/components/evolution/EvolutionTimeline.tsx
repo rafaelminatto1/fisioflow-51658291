@@ -1406,7 +1406,7 @@ export const EvolutionTimeline: React.FC<EvolutionTimelineProps> = ({
                                                                 key={item.label}
                                                                 className="flex gap-1.5"
                                                               >
-                                                                <span className="font-semibold text-[10px] uppercase opacity-70 min-w-[50px]">
+                                                                <span className="font-semibold text-[10px] uppercase opacity-90 min-w-[50px]">
                                                                   {item.label}:
                                                                 </span>
                                                                 <span className="line-clamp-2">

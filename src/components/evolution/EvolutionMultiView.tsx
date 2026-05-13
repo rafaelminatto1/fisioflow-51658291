@@ -406,7 +406,7 @@ const GalleryView: React.FC<GalleryViewProps> = ({ evolutions }) => {
       >
         <Camera className="h-14 w-14 mb-4 opacity-20" />
         <p className="text-base font-medium">Nenhuma foto encontrada</p>
-        <p className="text-sm mt-1 opacity-70 text-center max-w-xs">
+        <p className="text-sm mt-1 opacity-90 text-center max-w-xs">
           Evolucao sem fotos — adicione imagens nas sessoes para visualizalas aqui
         </p>
       </motion.div>

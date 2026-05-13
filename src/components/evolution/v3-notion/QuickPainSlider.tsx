@@ -121,7 +121,7 @@ export const QuickPainSlider: React.FC<QuickPainSliderProps> = ({
               <Icon
                 className={cn(
                   "mx-auto mt-1 h-3.5 w-3.5 transition-all",
-                  isActive ? "text-slate-700 opacity-100" : "text-slate-300 opacity-70",
+                  isActive ? "text-slate-700 opacity-100" : "text-slate-300 opacity-90",
                 )}
               />
             </button>

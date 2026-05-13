@@ -224,7 +224,7 @@ export function ProcedureChecklistBlock({
                         className={cn(
                           "text-sm font-medium transition-all duration-500 truncate",
                           procedure.completed 
-                            ? "text-muted-foreground/60 line-through decoration-emerald-500/50 decoration-2" 
+                            ? "text-muted-foreground/80 line-through decoration-emerald-500/50 decoration-2" 
                             : "text-foreground"
                         )}
                       >
@@ -239,7 +239,7 @@ export function ProcedureChecklistBlock({
                             procedure.category === "eletroterapia" ? "bg-amber-500" :
                             "bg-slate-400"
                           )} />
-                          <span className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground/60">
+                          <span className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground/80">
                             {PROCEDURE_CATEGORY_LABELS[procedure.category]}
                           </span>
                         </div>
@@ -353,7 +353,7 @@ export function ProcedureChecklistBlock({
               className="absolute bottom-full mb-3 left-0 right-0 p-2 bg-black/80 backdrop-blur-2xl border border-white/10 rounded-2xl shadow-2xl z-50 overflow-hidden"
             >
               <div className="px-3 py-2 border-b border-white/5 flex items-center justify-between">
-                <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">Sugestões Inteligentes</span>
+                <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/80">Sugestões Inteligentes</span>
                 <Sparkles className="w-3 h-3 text-primary/50" />
               </div>
               <div className="mt-1">

@@ -122,7 +122,7 @@ export const HomeCareBlock: React.FC<HomeCareBlockProps> = ({
     <div className={cn("relative transition-all duration-300 group", className)}>
       {/* Header */}
       <div className="relative">
-        <div className="flex items-center justify-between px-2 py-1.5 opacity-70 group-hover:opacity-100 transition-opacity">
+        <div className="flex items-center justify-between px-2 py-1.5 opacity-90 group-hover:opacity-100 transition-opacity">
           <div className="flex items-center gap-2.5">
             <div className="p-1.5 rounded-lg bg-gradient-to-br from-violet-500/10 to-violet-500/5 border border-violet-500/20">
               <Home className="h-4 w-4 text-violet-500" />
@@ -154,7 +154,7 @@ export const HomeCareBlock: React.FC<HomeCareBlockProps> = ({
               <Home className="h-7 w-7 opacity-30" />
             </div>
             <p className="text-sm font-medium">Nenhum exercício para casa</p>
-            <p className="text-xs mt-1.5 opacity-70">
+            <p className="text-xs mt-1.5 opacity-90">
               Adicione exercícios que o paciente deve fazer em casa
             </p>
           </div>
