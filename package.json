@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "bash scripts/cloudflare-env.sh turbo dev --filter=fisioflow-web --filter=@fisioflow/api",
     "build": "turbo build",
-    "lint": "oxlint --quiet",
+    "lint": "oxlint --max-warnings=175",
     "lint:fix": "oxlint --fix",
     "fmt": "oxfmt",
     "fmt:check": "oxfmt --check",

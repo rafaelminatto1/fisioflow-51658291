@@ -1,50 +1,35 @@
 import { test, expect } from '@playwright/test';
 
-test.describe('NFS-e — Golden Path', () => {
-  test('página NFS-e carrega sem Error Boundary', async ({ page }) => {
-    await page.goto('/financeiro/nfse');
-    await page.waitForLoadState('networkidle');
+const TEST_EMAIL = process.env.STAGING_TEST_USER_EMAIL || 'test@moocafisio.com.br';
+const TEST_PASS = process.env.STAGING_TEST_USER_PASSWORD || '123456';
 
-    await expect(page).not.toHaveURL(/\/login/);
-
-    // Não deve mostrar o error boundary
-    const errorBoundary = page.locator('text=/ROTA EM RECUPERAÇÃO|Something went wrong/i').first();
-    await expect(errorBoundary).not.toBeVisible({ timeout: 5000 });
-
-    // Deve ter algum conteúdo da página
-    const content = page.locator('[data-testid="nfse-page"], table, .nfse').first();
-    await expect(content).toBeVisible({ timeout: 15000 });
+test.describe('FisioFlow E2E - Faturamento & NFS-e', () => {
+  
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/login');
+    await page.getByPlaceholder(/email/i).fill(TEST_EMAIL);
+    await page.getByPlaceholder(/senha/i).fill(TEST_PASS);
+    await page.getByRole('button', { name: /entrar/i }).click();
+    await expect(page.getByText(/Dashboard/i).first()).toBeVisible({ timeout: 15000 });
   });
 
-  test('lista de notas carrega (pode estar vazia)', async ({ page }) => {
-    await page.goto('/financeiro/nfse');
-    await page.waitForLoadState('networkidle');
+  test('Deve conseguir emitir uma Nota Fiscal de Serviço (NFS-e)', async ({ page }) => {
+    // Navega para o Financeiro Hub -> Aba NFS-e
+    await page.getByRole('button', { name: /Financeiro/i }).click();
+    await page.getByRole('tab', { name: /NFS-e/i }).click();
+    
+    // Clica em Nova Nota
+    await page.getByRole('button', { name: /Emitir Nota/i }).click();
 
-    // Estado vazio ou tabela com dados — ambos são válidos
-    const hasTable = page.locator('table, [data-testid="nfse-list"]').first();
-    const hasEmpty = page.locator('text=/nenhuma nota|sem notas|emitir/i').first();
+    // Preenche os dados da nota
+    await page.getByLabel(/Paciente/i).fill('Paciente E2E NFS-e');
+    await page.getByLabel(/Valor/i).fill('150,00');
+    await page.getByLabel(/Descrição/i).fill('Sessão de Fisioterapia Ortopédica (Teste E2E)');
+    
+    // Emite
+    await page.getByRole('button', { name: /Emitir NFS-e/i }).click();
 
-    const tableVisible = await hasTable.isVisible({ timeout: 10000 }).catch(() => false);
-    const emptyVisible = await hasEmpty.isVisible({ timeout: 3000 }).catch(() => false);
-    expect(tableVisible || emptyVisible).toBe(true);
-  });
-
-  test('wizard de configuração NFS-e abre e tem 4 etapas', async ({ page }) => {
-    await page.goto('/financeiro/nfse');
-    await page.waitForLoadState('networkidle');
-
-    // Procura botão de configuração ou a aba de parâmetros
-    const configBtn = page.getByRole('tab', { name: /parâmetros|configuração/i })
-      .or(page.getByRole('button', { name: /configurar|parâmetros/i })).first();
-
-    if (await configBtn.isVisible({ timeout: 5000 })) {
-      await configBtn.click();
-      await page.waitForLoadState('networkidle');
-
-      // Wizard deve ter indicador de steps
-      const steps = page.locator('[class*="step"], [data-step]');
-      const stepCount = await steps.count();
-      expect(stepCount).toBeGreaterThanOrEqual(1);
-    }
+    // Verifica se a nota aparece como Em Processamento ou Autorizada
+    await expect(page.getByText(/Nota gerada com sucesso/i)).toBeVisible();
   });
 });
