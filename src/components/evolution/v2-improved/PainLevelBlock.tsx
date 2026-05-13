@@ -127,6 +127,7 @@ export const PainLevelBlock: React.FC<PainLevelBlockProps> = ({
               value={painLevel}
               onChange={handleSliderChange}
               disabled={disabled}
+              aria-label="Nível de dor (0-10)"
               className={cn(
                 "absolute inset-0 w-full h-full opacity-0 cursor-pointer",
                 disabled && "cursor-not-allowed",

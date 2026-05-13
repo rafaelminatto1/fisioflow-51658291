@@ -128,7 +128,7 @@ export const MedicalReturnCard = memo(function MedicalReturnCard({
                 medicalReturns.length > 0 ? "text-primary" : "text-slate-400",
               )}
             />
-            <CardTitle className="text-sm font-semibold text-slate-700 flex items-center gap-2">
+            <CardTitle as="h2" className="text-sm font-semibold text-slate-700 flex items-center gap-2">
               Retorno Médico
               {medicalReturns.length > 0 && (
                 <Badge

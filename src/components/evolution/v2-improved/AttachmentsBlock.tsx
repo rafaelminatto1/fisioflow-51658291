@@ -227,7 +227,7 @@ export const AttachmentsBlock: React.FC<AttachmentsBlockProps> = ({
                 <Paperclip className="h-7 w-7 opacity-30" />
               </div>
               <p className="text-sm font-medium">Nenhum anexo</p>
-              <p className="text-xs mt-1.5 opacity-70">
+              <p className="text-xs mt-1.5 opacity-90">
                 Adicione fotos, documentos ou outros arquivos
               </p>
             </div>
@@ -262,6 +262,7 @@ export const AttachmentsBlock: React.FC<AttachmentsBlockProps> = ({
                         <button
                           className="p-1.5 rounded-lg hover:bg-muted transition-colors"
                           title="Visualizar"
+                          aria-label="Visualizar anexo"
                         >
                           <Eye className="h-3.5 w-3.5 text-muted-foreground" />
                         </button>
@@ -271,6 +272,7 @@ export const AttachmentsBlock: React.FC<AttachmentsBlockProps> = ({
                         disabled={disabled}
                         className="p-1.5 rounded-lg hover:bg-destructive/10 opacity-0 group-hover:opacity-100 transition-all"
                         title="Remover"
+                        aria-label="Remover anexo"
                       >
                         <X className="h-3.5 w-3.5 text-muted-foreground hover:text-destructive" />
                       </button>

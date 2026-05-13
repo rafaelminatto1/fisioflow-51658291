@@ -382,7 +382,7 @@ export function Sidebar() {
           <div className="px-4 mb-2">
             <button
               onClick={() => document.dispatchEvent(new CustomEvent("open-command-palette"))}
-              aria-label="Abrir busca global"
+              aria-label="Buscar paciente... (⌘K)"
               data-testid="open-global-search"
               className="w-full h-10 px-3 rounded-xl bg-muted/50 border border-border/50 flex items-center justify-between group hover:bg-primary/5 hover:border-primary/20 transition-all"
             >

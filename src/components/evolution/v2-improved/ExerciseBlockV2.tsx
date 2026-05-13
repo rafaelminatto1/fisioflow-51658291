@@ -157,7 +157,7 @@ export const ExerciseBlockV2: React.FC<ExerciseBlockV2Props> = ({
               <Dumbbell className="h-5 w-5 text-slate-300" />
             </div>
             <p className="text-sm font-medium">Nenhum exercício adicionado</p>
-            <p className="text-xs mt-1.5 opacity-70">
+            <p className="text-xs mt-1.5 opacity-90">
               Use "Biblioteca" ou digite abaixo (Enter para adicionar, Tab para autocomplete)
             </p>
           </div>

@@ -414,7 +414,7 @@ export const EvolutionHeader = memo(
                 value={selectedTherapistId || THERAPIST_SELECT_NONE}
                 onValueChange={(v) => onTherapistChange(v === THERAPIST_SELECT_NONE ? "" : v)}
               >
-                <SelectTrigger className="h-9 w-[180px] text-xs font-bold bg-white/50 border-slate-200 shadow-none hover:border-primary/30 transition-all text-slate-600">
+                <SelectTrigger aria-label="Selecionar fisioterapeuta" className="h-9 w-[180px] text-xs font-bold bg-white/50 border-slate-200 shadow-none hover:border-primary/30 transition-all text-slate-600">
                   <div className="flex items-center gap-2 truncate">
                     <UserCog className="h-3.5 w-3.5 text-primary/60 shrink-0" />
                     <SelectValue placeholder={THERAPIST_PLACEHOLDER} />

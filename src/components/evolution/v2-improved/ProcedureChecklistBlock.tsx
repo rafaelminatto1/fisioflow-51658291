@@ -188,7 +188,7 @@ export const ProcedureChecklistBlock: React.FC<ProcedureChecklistBlockProps> = (
                 <Zap className="h-5 w-5 text-slate-300" />
               </div>
               <p className="text-sm font-medium">Nenhum procedimento adicionado</p>
-              <p className="text-xs mt-1.5 opacity-70">Use o botão "Adicionar" ou digite abaixo</p>
+              <p className="text-xs mt-1.5 opacity-90">Use o botão "Adicionar" ou digite abaixo</p>
             </div>
           ) : (
             <div className="space-y-1">
@@ -447,7 +447,7 @@ const ProcedureRow: React.FC<{
         {/* Actions dropdown */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button className="p-1 rounded-lg hover:bg-muted opacity-0 group-hover:opacity-100 transition-all">
+            <button className="p-1 rounded-lg hover:bg-muted opacity-0 group-hover:opacity-100 transition-all" aria-label="Mais opções">
               <MoreVertical className="h-4 w-4 text-muted-foreground" />
             </button>
           </DropdownMenuTrigger>
