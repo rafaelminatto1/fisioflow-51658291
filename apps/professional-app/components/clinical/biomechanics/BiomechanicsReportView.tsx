@@ -348,7 +348,7 @@ const styles = StyleSheet.create({
     alignItems: "flex-start",
     marginBottom: 24,
     borderBottomWidth: 2,
-    borderBottomColor: "#3b82f6",
+    borderBottomColor: "#0080FF",
     paddingBottom: 16,
   },
   signatureHeaderBanner: {
@@ -374,7 +374,7 @@ const styles = StyleSheet.create({
   brandTitle: {
     fontSize: 24,
     fontWeight: "900",
-    color: "#3b82f6",
+    color: "#0080FF",
     letterSpacing: 1,
   },
   brandSubtitle: {
@@ -406,7 +406,7 @@ const styles = StyleSheet.create({
     padding: 16,
     borderRadius: 16,
     borderLeftWidth: 4,
-    borderLeftColor: "#3b82f6",
+    borderLeftColor: "#0080FF",
   },
   obsContentSigned: {
     borderLeftColor: "#10b981",
@@ -480,7 +480,7 @@ const styles = StyleSheet.create({
   footerUrl: {
     fontSize: 10,
     fontWeight: "bold",
-    color: "#3b82f6",
+    color: "#0080FF",
     marginTop: 4,
   },
   actionsContainer: {
