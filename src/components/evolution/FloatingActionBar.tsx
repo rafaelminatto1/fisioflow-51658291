@@ -98,6 +98,7 @@ export const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
                   variant="ghost"
                   size="icon"
                   onClick={onShowKeyboardHelp}
+                  aria-label="Atalhos de teclado"
                   className="hidden md:flex h-8 w-8 text-slate-400 hover:text-primary transition-colors"
                 >
                   <Keyboard className="h-4 w-4" />
