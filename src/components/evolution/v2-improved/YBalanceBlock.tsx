@@ -233,7 +233,7 @@ export const YBalanceBlock: React.FC<YBalanceBlockProps> = ({
               onMouseLeave={() => setHoveredDirection(null)}
             >
               {/* Short label */}
-              <span className="text-[10px] font-bold uppercase tracking-wider opacity-70">
+              <span className="text-[10px] font-bold uppercase tracking-wider opacity-90">
                 {dir.shortLabel}
               </span>
 

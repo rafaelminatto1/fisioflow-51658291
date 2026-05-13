@@ -257,7 +257,7 @@ export const ProcedureChecklistBlock: React.FC<ProcedureChecklistBlockProps> = (
                 <Zap className="h-7 w-7 opacity-30" />
               </div>
               <p className="text-sm font-medium">Nenhum procedimento adicionado</p>
-              <p className="text-xs mt-1.5 opacity-70">Use o botão "Adicionar" ou digite abaixo</p>
+              <p className="text-xs mt-1.5 opacity-90">Use o botão "Adicionar" ou digite abaixo</p>
             </div>
           ) : (
             <div className="space-y-1">

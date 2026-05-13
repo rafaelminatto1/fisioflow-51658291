@@ -61,7 +61,7 @@ export const TreatmentDurationCard: React.FC<TreatmentDurationCardProps> = ({
         </Badge>
       </div>
       <p className="font-semibold text-sm">{formatDuration()}</p>
-      <div className="flex items-center gap-1 mt-1 text-[10px] opacity-70">
+      <div className="flex items-center gap-1 mt-1 text-[10px] opacity-90">
         <Calendar className="h-3 w-3" />
         Desde {firstSessionDate.toLocaleDateString("pt-BR")}
       </div>

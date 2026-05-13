@@ -169,7 +169,7 @@ export const MeasurementsBlock: React.FC<MeasurementsBlockProps> = ({
                 <Ruler className="h-5 w-5 text-slate-300" />
               </div>
               <p className="text-sm font-medium">Nenhuma medição adicionada</p>
-              <p className="text-xs mt-1.5 opacity-70">Use o botão "Adicionar" para registrar</p>
+              <p className="text-xs mt-1.5 opacity-90">Use o botão "Adicionar" para registrar</p>
             </div>
           ) : (
             measurements.map((measurement, index) => (
@@ -328,7 +328,7 @@ const MeasurementCard: React.FC<{
           <button
             className={cn(
               "p-1 rounded-lg hover:bg-muted transition-all",
-              "text-muted-foreground/60 hover:text-muted-foreground",
+              "text-muted-foreground/80 hover:text-muted-foreground",
             )}
           >
             {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
@@ -426,7 +426,7 @@ const MeasurementCard: React.FC<{
                             <Icon className={cn("h-3 w-3", field.color)} />
                             {field.shortLabel}
                           </span>
-                          <span className="text-[10px] text-muted-foreground/60 lowercase">
+                          <span className="text-[10px] text-muted-foreground/80 lowercase">
                             {field.unit}
                           </span>
                         </Label>
@@ -480,7 +480,7 @@ const MeasurementCard: React.FC<{
               <Label className="text-[11px] font-semibold text-muted-foreground uppercase flex items-center gap-1.5">
                 <Info className="h-3 w-3" />
                 Anotações
-                <span className="text-muted-foreground/60 font-normal lowercase">(opcional)</span>
+                <span className="text-muted-foreground/80 font-normal lowercase">(opcional)</span>
               </Label>
               <textarea
                 value={measurement.notes}
