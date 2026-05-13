@@ -20,7 +20,22 @@ jobs:
     - name: Install Playwright Browsers
       run: pnpm exec playwright install --with-deps chromium
 
+    - name: Check staging reachability
+      id: staging_check
+      run: |
+        URL="${STAGING_BASE_URL:-http://localhost:5173}"
+        HOST=$(echo "$URL" | sed 's|https\?://||' | cut -d/ -f1 | cut -d: -f1)
+        if nslookup "$HOST" >/dev/null 2>&1; then
+          echo "reachable=true" >> "$GITHUB_OUTPUT"
+        else
+          echo "reachable=false" >> "$GITHUB_OUTPUT"
+          echo "::warning::Staging host $HOST not resolvable — skipping E2E tests"
+        fi
+      env:
+        STAGING_BASE_URL: ${{ secrets.STAGING_BASE_URL }}
+
     - name: Run Playwright tests
+      if: steps.staging_check.outputs.reachable == 'true'
       run: pnpm exec playwright test --config e2e/playwright.config.ts
       env:
         STAGING_BASE_URL: ${{ secrets.STAGING_BASE_URL }}
@@ -28,7 +43,7 @@ jobs:
         STAGING_TEST_USER_PASSWORD: ${{ secrets.STAGING_TEST_USER_PASSWORD }}
 
     - uses: actions/upload-artifact@v4
-      if: always()
+      if: always() && steps.staging_check.outputs.reachable == 'true'
       with:
         name: playwright-report
         path: e2e/playwright-report/
