@@ -84,6 +84,7 @@ import { commissionsRoutes } from "./routes/commissions";
 import { nfseRoutes } from "./routes/nfse";
 import { packagesRoutes } from "./routes/packages";
 import { groupsRoutes } from "./routes/groups";
+import { inventoryRoutes } from "./routes/inventory";
 import { staffSchedulesRoutes } from "./routes/staffSchedules";
 import { announcementsRoutes } from "./routes/announcements";
 import { adminSeedTemplatesRoutes } from "./routes/admin/seed-templates";
@@ -349,6 +350,7 @@ const apiRoutes = [
   ["/api/nfse", nfseRoutes],
   ["/api/packages", packagesRoutes],
   ["/api/groups", groupsRoutes],
+  ["/api/inventory", inventoryRoutes],
   ["/api/staff-schedules", staffSchedulesRoutes],
   ["/api/announcements", announcementsRoutes],
   ["/api/admin/seed-templates", adminSeedTemplatesRoutes],

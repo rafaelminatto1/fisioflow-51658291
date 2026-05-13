@@ -27,6 +27,8 @@ import { EmptyStateEnhanced } from "@/components/ui/EmptyStateEnhanced";
 import { LazyWidget } from "./LazyWidget";
 import { EventosStatsWidget } from "@/components/eventos/EventosStatsWidget";
 import { ClinicHealthKPIs } from "./ClinicHealthKPIs";
+import { ClinicalAlertsWidget } from "./ClinicalAlertsWidget";
+import { InventoryAlertsWidget } from "./InventoryAlertsWidget";
 import { FeatureAdoptionBanner } from "./FeatureAdoptionBanner";
 import { cn } from "@/lib/utils";
 
@@ -267,7 +269,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ period = "hoje" 
 
       {/* ── 1c. Business Health Metrics (BI) ── */}
       <section aria-label="Saúde do Negócio">
-        <ClinicHealthKPIs />
+        <div className="grid gap-5 xl:grid-cols-[2fr_1fr]">
+          <ClinicHealthKPIs />
+          <ClinicalAlertsWidget />
+        </div>
       </section>
 
       {/* ── 1b. Feature Adoption Nudges ── */}
@@ -571,31 +576,35 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ period = "hoje" 
         <div className="grid gap-5 xl:grid-cols-[minmax(0,1.3fr)_minmax(320px,0.7fr)]">
           <AIInsightsWidget metrics={metrics} />
 
-          <Card className="rounded-[2rem] border-border/60 bg-background/80 shadow-sm backdrop-blur-xl">
-            <CardHeader className="border-b border-border/60 pb-4">
-              <div className="flex items-center justify-between gap-3">
-                <div>
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-primary/75">
-                    Sinais operacionais
-                  </p>
-                  <CardTitle className="mt-1 text-lg font-semibold">
-                    Eventos e ritmo da operação
-                  </CardTitle>
+          <div className="space-y-5">
+            <ClinicalAlertsWidget />
+            <InventoryAlertsWidget />
+            <Card className="rounded-[2rem] border-border/60 bg-background/80 shadow-sm backdrop-blur-xl">
+              <CardHeader className="border-b border-border/60 pb-4">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-primary/75">
+                      Sinais operacionais
+                    </p>
+                    <CardTitle className="mt-1 text-lg font-semibold">
+                      Eventos e ritmo da operação
+                    </CardTitle>
+                  </div>
+                  <Badge
+                    variant="outline"
+                    className="border-primary/15 bg-primary/5 text-primary shrink-0"
+                  >
+                    {metrics?.periodLabel ?? "Hoje"}
+                  </Badge>
                 </div>
-                <Badge
-                  variant="outline"
-                  className="border-primary/15 bg-primary/5 text-primary shrink-0"
-                >
-                  {metrics?.periodLabel ?? "Hoje"}
-                </Badge>
-              </div>
-            </CardHeader>
-            <CardContent className="p-5">
-              <LazyWidget height={168}>
-                <EventosStatsWidget />
-              </LazyWidget>
-            </CardContent>
-          </Card>
+              </CardHeader>
+              <CardContent className="p-5">
+                <LazyWidget height={168}>
+                  <EventosStatsWidget />
+                </LazyWidget>
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </section>
     </div>

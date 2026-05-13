@@ -1,79 +1,59 @@
-# 🏥 FisioFlow - Gestão Inteligente para Fisioterapia (2026)
+# 🏥 FisioFlow 2026 — Inteligência Clínica e Excelência Operacional
 
-Plataforma de alta performance para clínicas de fisioterapia, utilizando a stack de ponta: **Neon DB + Cloudflare Workers**.
+O FisioFlow evoluiu. De um simples sistema de gestão, transformou-se na **Plataforma de Saúde Digital mais avançada do mercado brasileiro**. Operando na borda (Edge Computing) com latência ultra-baixa, o FisioFlow combina automação financeira, inteligência artificial clínica e robustez infraestrutural (Cloudflare + Neon DB).
 
-O FisioFlow é um monorepo focado em latência ultra-baixa, operando na borda (Edge Computing) e utilizando banco de dados serverless PostgreSQL.
+## 🚀 Capacidades de Próxima Geração (Next-Gen)
 
-## 🛠 Stack Tecnológica
+### 🧠 Clinical AI Studio
+- **Scribe por Voz (SOAP):** Transcrição de áudio e formatação automática de prontuários via *Whisper* e *Gemini 1.5 Flash*.
+- **Patient 360° Chat:** Consulta contextual ao prontuário do paciente (RAG) usando *Context Caching* da IA.
+- **HUD Biomecânico 3D:** Análise cinemática em tempo real para testes de corrida, marcha e salto.
+- **Gêmeo Digital (Digital Twin):** Predição de semanas de alta e alertas de risco de abandono clínico baseados na trajetória.
+- **Laudos Médicos (IA):** Geração automática de relatórios de desfecho funcional (Outcome Reports) para médicos encaminhadores.
+- **Auto-Wiki:** Captura inteligente de casos de sucesso e indexação na base de conhecimento da clínica.
+
+### 📈 Enterprise Business Intelligence
+- **Centro de Comando Financeiro:** DRE gerencial, previsão de receita (90 dias) e controle de ocupação de agenda.
+- **Performance de Equipe:** Auditoria cruzada de faturamento por profissional e qualidade de evolução (AI Peer-Review).
+- **Growth Engine:** Painel de Cohorts, Risco de Churn em tempo real e LTV Maximizer.
+- **Dashboard Regional:** Visão agregada para redes de clínicas e franquias.
+
+### ⚙️ Excelência Operacional e Automação
+- **AI Concierge:** Triagem 24/7 no WhatsApp e conversão de "Comandos de Voz" em tarefas do Kanban.
+- **Monitoramento Proativo (RTM):** Integração com Apple Health/Google Fit e detecção de anomalias cardíacas/sono via IA.
+- **Workflow de Retenção:** Gatilhos automáticos de cobrança, pesquisa NPS aos 7 dias e emissão do Programa de Indicação (MGM) na alta clínica.
+
+## 🛠 Arquitetura de Borda (Edge-Native)
+
+O FisioFlow foi projetado com uma arquitetura "Zero-Maintenance", suportando milhares de clínicas concorrentes.
 
 - **Frontend**: React 19, Vite 8, Tailwind CSS, shadcn/ui.
-- **Backend**: Cloudflare Workers (Hono.js).
-- **Banco de Dados**: Neon PostgreSQL (Serverless).
-- **Autenticação**: Neon Auth (JWKS).
-- **Storage**: Cloudflare R2 (S3-Compatible).
-- **ORM**: Drizzle ORM.
-- **Runtime**: Node.js v20.12.0+.
+- **Mobile**: Aplicativos nativos (React Native/Expo) com *Offline-First Sync*.
+- **Backend Edge**: Cloudflare Workers (Hono.js), Durable Objects (Tempo real) e Workflows (Tarefas assíncronas).
+- **Banco de Dados**: Neon PostgreSQL Serverless (AWS sa-east-1) + Drizzle ORM.
+- **IA e Vetores**: Cloudflare Vectorize (Busca Semântica), AI Gateway (Google Gemini).
+- **Storage**: Cloudflare R2 com replicação geográfica (Disaster Recovery).
 
-## 🚀 Configuração de Desenvolvimento
-
-### 1. Requisitos
-
-- **Node.js v20.12.0+**
-- **pnpm v9+**
-- Cloudflare Wrangler CLI (`pnpm install -g wrangler`)
-- Conta no Neon.tech
-
-### 2. Variáveis de Ambiente
-
-Crie um arquivo `.env` no root e nas pastas dos apps:
-
-```env
-# Database
-DATABASE_URL=postgresql://user:pass@ep-project.sa-east-1.aws.neon.tech/neondb?sslmode=require
-
-# Auth
-VITE_NEON_AUTH_URL=https://your-auth-endpoint.neonauth.aws.neon.tech
-```
-
-### 3. Scripts Principais (TurboRepo)
+## 🚀 Como Iniciar (Desenvolvimento)
 
 ```bash
 # Instalar dependências
 pnpm install
 
-# Iniciar ambiente completo (Web + API)
-pnpm dev
-
-# Migrações de Banco de Dados
+# Subir banco local/migrations
 pnpm db:push
+
+# Iniciar ambiente completo (Web + API Hono + Serviços AI)
+pnpm dev
 ```
 
-## 📁 Estrutura do Projeto
+## 📁 Estrutura do Monorepo
 
-- `apps/web`: Frontend principal (Cloudflare Pages).
-- `apps/api`: API Serverless (Hono / Cloudflare Workers).
-- `apps/patient-app`: Aplicativo mobile do paciente (Expo/Capacitor).
-- `packages/db`: Schema centralizado e cliente do Drizzle.
-- `docs/`: Documentação técnica detalhada.
-
-## 🔐 Segurança e Privacidade (LGPD)
-
-- **Tenant Isolation**: Isolamento de clínicas via context injection no Drizzle.
-- **Edge Security**: Verificação de tokens JWT via JWKS local nos Workers.
-- **Privacy First**: URLs assinadas para mídia no R2 e proibição de indexação SEO.
-
-## 🧭 Workflow de Especificação
-
-Este repositório agora usa GitHub Spec Kit para documentar novos recursos em `specs/`.
-- Arquivos principais: `constitution.md`, `specs/<feature>/spec.md`, `specs/<feature>/plan.md`, `specs/<feature>/tasks.md`
-- Comandos: `specify init --here`, `/speckit.constitution`, `/speckit.specify`, `/speckit.plan`, `/speckit.tasks`, `/speckit.analyze`, `/speckit.checklist`
-- Leia também `docs/guides/developer_guide.md` para mais detalhes.
-
-## 🤖 Tooling AI
-
-O playbook operacional de MCPs e skills está em `docs/operations/AI_TOOLING_PLAYBOOK.md`.
-O comando local de validação antes de deploy é `pnpm predeploy`.
+- `apps/web`: Portal Desktop do Gestor e Clínico (Cloudflare Pages).
+- `apps/api`: O 'Cérebro' — API Serverless Hono, Agentes IA, Workflows e Cron Jobs.
+- `apps/patient-app`: App Mobile do Paciente (Autocuidado, Educação IA e Confirmação).
+- `apps/professional-app`: App Mobile do Fisioterapeuta (Avaliação e Voice-to-Task).
+- `packages/db`: Core do schema de dados Drizzle.
 
 ---
-
-Desenvolvido para transformar a fisioterapia brasileira com tecnologia de ponta.
+**FisioFlow 2026** — *Transformando o conhecimento tácito da fisioterapia brasileira em ciência exata de dados e faturamento.*

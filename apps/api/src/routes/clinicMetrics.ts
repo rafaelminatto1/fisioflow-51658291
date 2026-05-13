@@ -396,4 +396,31 @@ app.get("/clinical-quality", requireAuth, async (c) => {
   }
 });
 
+/**
+ * GET /api/clinic-metrics/clinical-alerts
+ * Lista todos os alertas pendentes de monitoramento (RTM/IA).
+ */
+app.get("/clinical-alerts", requireAuth, async (c) => {
+  const user = c.get("user");
+  const pool = createPool(c.env);
+
+  try {
+    const result = await pool.query(
+      `SELECT 
+        ca.*,
+        p.full_name as patient_name
+       FROM clinical_alerts ca
+       JOIN patients p ON p.id = ca.patient_id
+       WHERE p.organization_id = $1 AND ca.status = 'pending'
+       ORDER BY ca.created_at DESC`,
+      [user.organizationId]
+    );
+
+    return c.json({ data: result.rows });
+  } catch (error) {
+    console.error("[Metrics] Clinical Alerts error:", error);
+    return c.json({ error: "Failed to fetch clinical alerts" }, 500);
+  }
+});
+
 export { app as clinicMetricsRoutes };

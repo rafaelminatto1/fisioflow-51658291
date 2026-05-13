@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, ActivityIndicator } from "react-native";
 import { Card } from "@/components";
 import { useColors } from "@/hooks/useColorScheme";
 import { useQuery } from "@tanstack/react-query";
-import { fetchApi } from "@/lib/api";
+import { api } from "@/lib/api";
 import { Ionicons } from "@expo/vector-icons";
 import { useAuthStore } from "@/store/auth";
 
@@ -13,7 +13,7 @@ export const AIEducationHub = () => {
 
   const { data: tipsResponse, isLoading } = useQuery({
     queryKey: ["patient-education-tips", user?.id],
-    queryFn: () => fetchApi<string[]>(`/api/ai-search/education?patientId=${user?.id}`),
+    queryFn: () => api.request<{ data: string[] }>(`/api/ai-search/education?patientId=${user?.id}`),
     enabled: !!user?.id,
     staleTime: 1000 * 60 * 60 * 24, // 24h
   });
@@ -39,7 +39,7 @@ export const AIEducationHub = () => {
       </View>
 
       <View style={styles.list}>
-        {tips.map((tip, i) => (
+        {tips.map((tip: string, i: number) => (
           <View key={i} style={styles.item}>
             <Ionicons name="checkmark-circle" size={16} color="#4F46E5" style={styles.itemIcon} />
             <Text style={[styles.itemText, { color: "#312E81" }]}>{tip}</Text>

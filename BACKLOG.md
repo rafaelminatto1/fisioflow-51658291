@@ -29,6 +29,17 @@
 | **Dashboard de Recepção (TV)** | Operação | Painel em tempo real via D1 para sala de espera |
 | **AI Anomaly Detection (RTM)** | Clínica | Monitoramento proativo de wearables com alertas de risco |
 | **Resumo de Telemedicina (IA)** | Clínica | Resumos estruturados (SOAP) de sessões virtuais |
+| **História de Sucesso (IA)** | Clínica | Relatório motivacional ao receber alta clínica |
+| **Patient 360° Chat** | Clínica | RAG completo com contexto de evolução, exames e wearables |
+| **Laudos Médicos (IA)** | Médica | Resumo executivo de desfecho funcional para o médico |
+| **Dashboard de Qualidade** | Clínica | Auditoria de excelência clínica via AI Peer-Review |
+| **Auto-Wiki** | Gestão | Captura automática de casos de sucesso na base de conhecimento |
+| **Previsão de Receita** | BI | Projeção preditiva (90 dias) baseada em ciclos IA e no-show |
+| **Dashboard Regional** | BI | Visão macro (Enterprise) para redes e franquias |
+| **NPS Sentiment Analysis** | BI | Categorização de feedback (Positivo/Neutro/Negativo) via IA |
+| **Comando de Voz (Voice-Task)**| Operação | Criação de tarefas admin por voz no App do Fisioterapeuta |
+| **Estoque Inteligente** | Operação | Monitoramento de itens clínicos com alerta de reposição |
+| **Multi-tenant Hardening** | Infra | Isolamento absoluto de Cron Jobs e Agentes IA |
 | **Metadados de Lançamento** | Mobile | ASO e descrições otimizadas para App Store/Google Play |
 | **Golden Path E2E (IA)** | Hardening | Testes de Omnisearch, Digital Twin e SOAP no Playwright |
 
