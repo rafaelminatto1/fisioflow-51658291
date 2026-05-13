@@ -10,12 +10,11 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Brain, Wand2, Loader2, Sparkles, CheckCircle2, ChevronRight } from "lucide-react";
+import { Brain, Wand2, Loader2, Sparkles, CheckCircle2 } from "lucide-react";
 import { iaStudioApi } from "@/api/v2/iaStudio";
 import { useExerciseProtocols } from "@/hooks/useExerciseProtocols";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
-import { cn } from "@/lib/utils";
 
 interface AIProtocolGeneratorProps {
   open: boolean;

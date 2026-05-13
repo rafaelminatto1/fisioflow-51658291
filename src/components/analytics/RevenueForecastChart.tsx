@@ -11,7 +11,7 @@ import {
   CartesianGrid,
   Tooltip,
 } from "recharts";
-import { TrendingUp, DollarSign, Calendar, Sparkles } from "lucide-react";
+import { TrendingUp, Sparkles } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 
 export function RevenueForecastChart() {
