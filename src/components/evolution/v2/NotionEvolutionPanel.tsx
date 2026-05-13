@@ -314,7 +314,7 @@ const TextBlock: React.FC<{
             onBlur={() => setIsFocused(false)}
           />
         </div>
-        <p className="text-[11px] text-muted-foreground/60 mt-2 flex items-center gap-1">
+        <p className="text-[11px] text-muted-foreground/80 mt-2 flex items-center gap-1">
           <Sparkles className="h-3 w-3" />
           {hint}
         </p>

@@ -234,7 +234,7 @@ export const AttachmentsBlock: React.FC<AttachmentsBlockProps> = ({
                 <Paperclip className="h-7 w-7 opacity-30" />
               </div>
               <p className="text-sm font-medium">Nenhum anexo</p>
-              <p className="text-xs mt-1.5 opacity-70">
+              <p className="text-xs mt-1.5 opacity-90">
                 Adicione fotos, documentos ou outros arquivos
               </p>
             </div>

@@ -900,7 +900,7 @@ const ProceduresBlock: React.FC<{
               <Zap className="h-7 w-7 opacity-30" />
             </div>
             <p className="text-sm font-medium">Nenhum procedimento adicionado</p>
-            <p className="text-xs mt-1.5 opacity-70">Use o botão "Adicionar" ou digite abaixo</p>
+            <p className="text-xs mt-1.5 opacity-90">Use o botão "Adicionar" ou digite abaixo</p>
           </div>
         ) : (
           <div className="space-y-1">
@@ -1152,7 +1152,7 @@ const ExercisesBlock: React.FC<{
               <Dumbbell className="h-7 w-7 opacity-30" />
             </div>
             <p className="text-sm font-medium">Nenhum exercício adicionado</p>
-            <p className="text-xs mt-1.5 opacity-70">Digite abaixo e Enter para adicionar</p>
+            <p className="text-xs mt-1.5 opacity-90">Digite abaixo e Enter para adicionar</p>
           </div>
         ) : (
           <div className="space-y-1.5">

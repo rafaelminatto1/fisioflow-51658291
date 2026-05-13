@@ -124,7 +124,7 @@ export const NotionEvolutionPanel: React.FC<NotionEvolutionPanelProps> = ({
               >
                 <CheckCircle2 className="h-3 w-3" />
                 <div className="flex flex-col items-start leading-tight">
-                  <span className="text-[9px] opacity-70">Salvo às</span>
+                  <span className="text-[9px] opacity-90">Salvo às</span>
                   <span className="text-[10px] font-medium">
                     {lastSaved.toLocaleTimeString("pt-BR", {
                       hour: "2-digit",

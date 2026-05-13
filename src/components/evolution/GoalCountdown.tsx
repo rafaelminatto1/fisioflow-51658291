@@ -115,7 +115,7 @@ export const GoalCountdown: React.FC<GoalCountdownProps> = ({ goal, compact = fa
           <div className="flex-1 min-w-0">
             <p className="font-medium text-xs truncate">{goal.goal_title}</p>
             {goal.target_value && (
-              <p className="text-[10px] opacity-70 flex items-center gap-1">
+              <p className="text-[10px] opacity-90 flex items-center gap-1">
                 <TrendingUp className="h-2.5 w-2.5" />
                 Meta: {goal.target_value}
               </p>
@@ -154,7 +154,7 @@ export const GoalCountdown: React.FC<GoalCountdownProps> = ({ goal, compact = fa
       {goal.status === "em_andamento" && (
         <div className="space-y-2">
           <div className="flex items-center justify-between text-sm">
-            <span className="opacity-70">Progresso</span>
+            <span className="opacity-90">Progresso</span>
             <span className="font-semibold">{goal.current_progress}%</span>
           </div>
           <Progress value={goal.current_progress} className="h-2" />
@@ -168,7 +168,7 @@ export const GoalCountdown: React.FC<GoalCountdownProps> = ({ goal, compact = fa
         </div>
 
         {goal.target_date && (
-          <span className="text-xs opacity-70">
+          <span className="text-xs opacity-90">
             {format(new Date(goal.target_date), "dd 'de' MMM", {
               locale: ptBR,
             })}

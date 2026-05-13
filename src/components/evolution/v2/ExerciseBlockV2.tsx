@@ -341,7 +341,7 @@ export const ExerciseBlockV2: React.FC<ExerciseBlockV2Props> = ({
               <Dumbbell className="h-7 w-7 opacity-30" />
             </div>
             <p className="text-sm font-medium">Nenhum exercício adicionado</p>
-            <p className="text-xs mt-1.5 opacity-70">
+            <p className="text-xs mt-1.5 opacity-90">
               Use "Biblioteca" ou digite abaixo (Enter para adicionar, Tab para autocomplete)
             </p>
           </div>

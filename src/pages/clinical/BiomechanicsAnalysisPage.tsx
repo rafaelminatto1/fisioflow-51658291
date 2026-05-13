@@ -127,7 +127,7 @@ export default function BiomechanicsAnalysisPage() {
                 </div>
                 <div className="p-8 space-y-3 bg-gradient-to-b from-transparent to-slate-950/50">
                   <div>
-                    <p className="text-[10px] font-black uppercase text-primary/60 tracking-[0.2em] mb-1">
+                    <p className="text-[10px] font-black uppercase text-primary/80 tracking-[0.2em] mb-1">
                       {cat.subtitle}
                     </p>
                     <h3 className="text-2xl font-black tracking-tighter text-white">{cat.title}</h3>
