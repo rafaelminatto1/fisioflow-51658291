@@ -356,11 +356,22 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
               goalsApi.list(currentPatientId),
             ]);
 
+          const sortedApts = (patientAppointmentsRes.data ?? []).sort((a, b) => {
+            const dateA = new Date(a.appointment_date || a.date || 0).getTime();
+            const dateB = new Date(b.appointment_date || b.date || 0).getTime();
+            if (dateA !== dateB) return dateA - dateB;
+            const timeA = a.appointment_time || a.start_time || a.startTime || "";
+            const timeB = b.appointment_time || b.start_time || b.startTime || "";
+            return timeA.localeCompare(timeB);
+          });
+
           const completedStatuses = new Set(["completed", "concluido", "realizado", "atendido"]);
-          const calculatedSessionNumber =
+          const index = sortedApts.findIndex((a) => a.id === appointmentId);
+          const calculatedSessionNumber = index !== -1 ? index + 1 :
             (patientAppointmentsRes.data ?? []).filter((appointment) =>
               completedStatuses.has(String(appointment.status ?? "").toLowerCase()),
             ).length + 1;
+          
           setSessionNumber(calculatedSessionNumber);
           setSurgeries(
             (surgeriesRes.data ?? []).map((row) => ({

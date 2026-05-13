@@ -4,7 +4,7 @@ import { SessionEvolutionContainer } from "@/components/evolution/SessionEvoluti
 
 const SessionEvolutionPage: React.FC = () => {
   return (
-    <MainLayout>
+    <MainLayout fullWidth compactPadding>
       <SessionEvolutionContainer mode="page" />
     </MainLayout>
   );
