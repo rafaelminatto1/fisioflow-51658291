@@ -10,6 +10,7 @@ import { handleChunkError } from "@/utils/chunkError";
 import { Button } from "@/components/ui/button";
 import { AlertCircle, Home, RefreshCw } from "lucide-react";
 import { NetworkErrorFallback } from "./NetworkErrorFallback";
+import { getRandomFisioMessage } from "./funnyMessages";
 
 type WindowWithOptionalSentry = Window & {
   Sentry?: {
@@ -27,6 +28,7 @@ interface State {
   hasError: boolean;
   error: Error | null;
   errorInfo: ErrorInfo | null;
+  funnyMessage: { title: string; description: string };
 }
 
 export class GlobalErrorBoundary extends Component<Props, State> {
@@ -36,6 +38,7 @@ export class GlobalErrorBoundary extends Component<Props, State> {
       hasError: false,
       error: null,
       errorInfo: null,
+      funnyMessage: getRandomFisioMessage(),
     };
   }
 
@@ -83,6 +86,7 @@ export class GlobalErrorBoundary extends Component<Props, State> {
       hasError: false,
       error: null,
       errorInfo: null,
+      funnyMessage: getRandomFisioMessage(),
     });
   };
 
@@ -91,6 +95,8 @@ export class GlobalErrorBoundary extends Component<Props, State> {
   };
 
   render(): ReactNode {
+    const { funnyMessage } = this.state;
+
     if (this.state.hasError) {
       // Custom fallback
       if (this.props.fallback) {
@@ -139,12 +145,11 @@ export class GlobalErrorBoundary extends Component<Props, State> {
                 </div>
 
                 <h1 className="text-4xl md:text-5xl font-black text-white mb-6 tracking-tight leading-none">
-                  Instabilidade no <span className="text-destructive">Sistema</span>
+                  {funnyMessage.title}
                 </h1>
 
                 <p className="text-slate-400 text-lg md:text-xl max-w-lg mx-auto mb-12 leading-relaxed">
-                  Ops! Encontramos um erro inesperado. Nossa equipe de engenharia já foi notificada
-                  e está trabalhando para restaurar a normalidade.
+                  {funnyMessage.description}
                 </p>
 
                 <div className="flex flex-col sm:flex-row items-center justify-center gap-6 w-full max-w-md">

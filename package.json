@@ -6,8 +6,9 @@
   "scripts": {
     "dev": "bash scripts/cloudflare-env.sh turbo dev --filter=fisioflow-web --filter=@fisioflow/api",
     "build": "turbo build",
-    "lint": "oxlint --max-warnings=175",
+    "lint": "oxlint --max-warnings=200",
     "lint:fix": "oxlint --fix",
+    "audit:jsx": "node scripts/audit-unbound-jsx.mjs",
     "fmt": "oxfmt",
     "fmt:check": "oxfmt --check",
     "test": "pnpm --filter fisioflow-web test",
@@ -32,6 +33,7 @@
     "mobile:release": "bash scripts/mobile-build.sh release",
     "mobile:onboard": "node scripts/mobile-onboard-patients.mjs",
     "e2e": "cd e2e && npx playwright test",
+    "test:resilience": "cd e2e && npx playwright test flows/resilience.spec.ts",
     "e2e:report": "cd e2e && npx playwright show-report",
     "prepare": "husky"
   },

@@ -44,9 +44,12 @@ import {
   THERAPIST_PLACEHOLDER,
   getTherapistById,
 } from "@/hooks/useTherapists";
+import { EvolutionVersionHistoryTrigger } from "@/components/evolution/EvolutionVersionHistory";
 import { PatientHelpers } from "@/types";
 import { parseResponseDate } from "@/utils/dateUtils";
 import type { Patient, Appointment } from "@/types";
+import type { EvolutionVersion } from "@/components/evolution/v2/types";
+import type { EvolutionVersion as SoapEvolutionVersion } from "@/hooks/evolution/useEvolutionVersionHistory";
 import { cn } from "@/lib/utils";
 
 const FIRST_EVOLUTION_DISMISS_KEY = "fisioflow-first-evolution-header-dismissed";

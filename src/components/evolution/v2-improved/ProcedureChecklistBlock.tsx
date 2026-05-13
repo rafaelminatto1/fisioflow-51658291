@@ -4,11 +4,15 @@
  * Enhanced procedures checklist with better UX,
  * smooth animations, and professional visual design.
  */
-import React, { useState, useCallback, useRef } from "react";
-import { CheckSquare, Plus, X, Zap, MessageSquare, Sparkles, MoreVertical } from "lucide-react";
+import React, { useState, useCallback, useRef, useEffect } from "react";
+import { Plus, Trash2, Search, CheckCircle2, Circle, Zap, Keyboard, Trophy, X, MessageSquare, Sparkles, MoreVertical, CheckSquare } from "lucide-react";
+import confetti from "canvas-confetti";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Progress } from "@/components/ui/progress";
 import {
   Dialog,
   DialogContent,
@@ -25,7 +29,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { cn } from "@/lib/utils";
 import { type ProcedureItem, type ProcedureCategory, PROCEDURE_CATEGORY_LABELS } from "./types";
 
 import {
@@ -66,15 +69,46 @@ export const ProcedureChecklistBlock: React.FC<ProcedureChecklistBlockProps> = (
   disabled = false,
   className,
 }) => {
-  const [, setShowAutocomplete] = useState(false);
+  const [showAutocomplete, setShowAutocomplete] = useState(false);
   const [quickAddValue, setQuickAddValue] = useState("");
   const quickAddRef = useRef<HTMLInputElement>(null);
+  const [hasTriggeredConfetti, setHasTriggeredConfetti] = useState(false);
 
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [newProcName, setNewProcName] = useState("");
   const [newProcCategory, setNewProcCategory] = useState<ProcedureCategory>("outro");
 
   const completedCount = procedures.filter((p) => p.completed).length;
+  const isAllCompleted = procedures.length > 0 && completedCount === procedures.length;
+
+  // Trigger confetti on 100% completion
+  useEffect(() => {
+    if (isAllCompleted && !hasTriggeredConfetti && !disabled) {
+      confetti({
+        particleCount: 150,
+        spread: 70,
+        origin: { y: 0.6 },
+        colors: ["#3b82f6", "#2dd4bf", "#6366f1", "#10b981"],
+      });
+      setHasTriggeredConfetti(true);
+    } else if (!isAllCompleted) {
+      setHasTriggeredConfetti(false);
+    }
+  }, [isAllCompleted, hasTriggeredConfetti, disabled]);
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Focus search with "/" if not in an input
+      if (e.key === "/" && document.activeElement?.tagName !== "INPUT" && document.activeElement?.tagName !== "TEXTAREA") {
+        e.preventDefault();
+        quickAddRef.current?.focus();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
 
   const handleToggle = useCallback(
     (id: string) => {
@@ -112,6 +146,13 @@ export const ProcedureChecklistBlock: React.FC<ProcedureChecklistBlockProps> = (
       }
     },
     [quickAddValue, handleAddProcedure],
+  );
+
+  const handleUpdateIntensity = useCallback(
+    (id: string, intensity: string) => {
+      onChange(procedures.map((p) => (p.id === id ? { ...p, intensity } : p)));
+    },
+    [procedures, onChange],
   );
 
   const handleUpdateNotes = useCallback(
@@ -152,32 +193,38 @@ export const ProcedureChecklistBlock: React.FC<ProcedureChecklistBlockProps> = (
           ) : (
             <div className="space-y-1">
               {procedures.map((proc, index) => (
-                <ProcedureRow
-                  key={proc.id}
-                  procedure={proc}
-                  onToggle={handleToggle}
-                  onRemove={handleRemove}
-                  onUpdateNotes={handleUpdateNotes}
-                  disabled={disabled}
-                  index={index}
-                />
+                  <ProcedureRow
+                    key={proc.id}
+                    procedure={proc}
+                    onToggle={handleToggle}
+                    onRemove={handleRemove}
+                    onUpdateNotes={handleUpdateNotes}
+                    onUpdateIntensity={handleUpdateIntensity}
+                    disabled={disabled}
+                    index={index}
+                  />
               ))}
             </div>
           )}
 
           {/* Quick add input */}
           <div className="mt-3">
-            <div className="relative">
+            <div className="relative group">
               <Plus className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/40" />
               <Input
                 ref={quickAddRef}
                 value={quickAddValue}
                 onChange={(e) => setQuickAddValue(e.target.value)}
                 onKeyDown={handleQuickAdd}
-                placeholder="Digite um procedimento e pressione Enter..."
+                placeholder="Digite um procedimento e pressione Enter... (Atalho: /)"
                 disabled={disabled}
                 className="h-9 pl-10 pr-4 text-sm border-transparent hover:bg-slate-50 focus:bg-white focus:ring-1 focus:ring-slate-200 focus:shadow-sm rounded-md transition-all duration-200"
               />
+              <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                <kbd className="hidden sm:inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100">
+                  <span className="text-xs">/</span>
+                </kbd>
+              </div>
             </div>
             {quickAddValue.trim() && (
               <Button
@@ -198,20 +245,43 @@ export const ProcedureChecklistBlock: React.FC<ProcedureChecklistBlockProps> = (
 
         {/* Progress bar - Enhanced */}
         {procedures.length > 0 && (
-          <div className="px-4 pb-3">
-            <div className="flex items-center justify-between text-[10px] text-muted-foreground mb-1.5">
-              <span>Progresso</span>
-              <span>{Math.round((completedCount / procedures.length) * 100)}%</span>
-            </div>
-            <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
-              <div
-                className="h-full bg-gradient-to-r from-emerald-400 to-emerald-600 transition-all duration-500 ease-out rounded-full"
-                style={{
-                  width: `${procedures.length > 0 ? (completedCount / procedures.length) * 100 : 0}%`,
-                }}
-              />
-            </div>
+          <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2">
+          <div className={cn(
+            "p-1.5 rounded-lg transition-colors duration-300",
+            isAllCompleted ? "bg-emerald-100 text-emerald-600" : "bg-slate-100 text-slate-500"
+          )}>
+            {isAllCompleted ? <Trophy className="h-4 w-4" /> : <CheckCircle2 className="h-4 w-4" />}
           </div>
+          <div>
+            <h3 className="text-sm font-semibold text-slate-800">Procedimentos & Intervenções</h3>
+            <p className="text-[10px] text-slate-400 font-medium">Acompanhamento clínico em tempo real</p>
+          </div>
+        </div>
+        <div className="flex flex-col items-end">
+          <div className="flex items-center gap-1.5 mb-1">
+            <span className={cn(
+              "text-xs font-bold transition-colors duration-300",
+              isAllCompleted ? "text-emerald-600" : "text-slate-700"
+            )}>
+              {completedCount}/{procedures.length}
+            </span>
+            <span className="text-[10px] text-slate-400 font-medium">concluídos</span>
+          </div>
+          <div className="w-24 h-1.5 bg-slate-100 rounded-full overflow-hidden relative">
+            <div
+              className={cn(
+                "h-full transition-all duration-500 ease-out rounded-full relative z-10",
+                isAllCompleted ? "bg-emerald-500" : "bg-blue-500"
+              )}
+              style={{ width: `${(completedCount / Math.max(1, procedures.length)) * 100}%` }}
+            />
+            {isAllCompleted && (
+              <div className="absolute inset-0 bg-emerald-400/30 animate-shimmer z-20" />
+            )}
+          </div>
+        </div>
+      </div>
         )}
       </div>
 
@@ -297,9 +367,10 @@ const ProcedureRow: React.FC<{
   onToggle: (id: string) => void;
   onRemove: (id: string) => void;
   onUpdateNotes: (id: string, notes: string) => void;
+  onUpdateIntensity: (id: string, intensity: string) => void;
   disabled: boolean;
   index: number;
-}> = React.memo(({ procedure, onToggle, onRemove, onUpdateNotes, disabled, index: _index }) => {
+}> = React.memo(({ procedure, onToggle, onRemove, onUpdateNotes, onUpdateIntensity, disabled, index: _index }) => {
   const [showNotes, setShowNotes] = useState(false);
   const [isRemoving, setIsRemoving] = useState(false);
 
@@ -356,13 +427,22 @@ const ProcedureRow: React.FC<{
           </Badge>
         )}
 
-        {/* Notes indicator */}
-        {procedure.notes && (
-          <Badge variant="secondary" className="text-[10px] h-6 px-2 gap-1 rounded-full">
-            <MessageSquare className="h-2.5 w-2.5" />
-            nota
-          </Badge>
-        )}
+        {/* Status indicators */}
+        <div className="flex items-center gap-1">
+          {procedure.notes && (
+            <Badge variant="secondary" className="text-[10px] h-6 px-2 gap-1 rounded-full">
+              <MessageSquare className="h-2.5 w-2.5" />
+              nota
+            </Badge>
+          )}
+
+          {procedure.intensity && (
+            <Badge variant="outline" className="text-[10px] h-6 px-2 gap-1 rounded-full bg-yellow-50 text-yellow-700 border-yellow-200">
+              <Zap className="h-2.5 w-2.5" />
+              {procedure.intensity}
+            </Badge>
+          )}
+        </div>
 
         {/* Actions dropdown */}
         <DropdownMenu>
@@ -387,16 +467,33 @@ const ProcedureRow: React.FC<{
         </DropdownMenu>
       </div>
 
-      {/* Notes area with animation */}
-      {showNotes && (
-        <div className="px-4 pb-3 animate-in slide-in-from-top-2 duration-200">
-          <Input
-            value={procedure.notes || ""}
-            onChange={(e) => onUpdateNotes(procedure.id, e.target.value)}
-            placeholder="Adicione detalhes: região, parâmetros, tempo, observações..."
-            className="h-8 text-xs border-dashed rounded-lg"
-            disabled={disabled}
-          />
+      {/* Intensity and Notes area */}
+      {(procedure.category === "laser" || procedure.category === "ultrassom" || showNotes) && (
+        <div className="px-3 pb-3 flex flex-col gap-2 animate-in slide-in-from-top-2 duration-200">
+          {(procedure.category === "laser" || procedure.category === "ultrassom") && (
+            <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5 px-2 py-1 rounded bg-slate-100/50 border border-slate-200/50 w-full max-w-[200px]">
+                <Zap className="h-3 w-3 text-yellow-500" />
+                <input
+                  value={procedure.intensity || ""}
+                  onChange={(e) => onUpdateIntensity(procedure.id, e.target.value)}
+                  placeholder="Intensidade (ex: 2.0 J/cm²)"
+                  className="bg-transparent border-none text-[10px] outline-none w-full placeholder:text-muted-foreground/50"
+                  disabled={disabled}
+                />
+              </div>
+            </div>
+          )}
+
+          {showNotes && (
+            <Input
+              value={procedure.notes || ""}
+              onChange={(e) => onUpdateNotes(procedure.id, e.target.value)}
+              placeholder="Adicione detalhes: região, parâmetros, tempo, observações..."
+              className="h-8 text-xs border-dashed rounded-lg"
+              disabled={disabled}
+            />
+          )}
         </div>
       )}
     </div>

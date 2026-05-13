@@ -451,9 +451,9 @@ const PatientEvolution = () => {
   }, {});
 
   return (
-    <ComponentErrorBoundary componentName="PatientEvolution">
-      <PageLayout compactHeader>
-        <PageContainer>
+    <PageLayout compactHeader>
+      <PageContainer>
+        <ComponentErrorBoundary componentName="PatientEvolution">
           <div className="space-y-5 animate-fade-in pb-8">
             <EvolutionHeader
               patient={state.patient as any}
@@ -471,12 +471,13 @@ const PatientEvolution = () => {
               onTabChange={(v) => state.setActiveTab(v as EvolutionTab)}
               evolutionVersion={state.evolutionVersion}
               onVersionChange={state.setEvolutionVersion}
+              soapRecordId={state.currentSoapRecordId}
               onRestoreVersion={handlers.handleRestoreVersion}
               therapists={state.therapists}
               selectedTherapistId={state.selectedTherapistId}
               onTherapistChange={state.setSelectedTherapistId}
               showInsights={state.showInsights}
-              toggleInsights={() => state.setShowInsights(!state.setShowInsights)}
+              toggleInsights={() => state.setShowInsights(!state.showInsights)}
               onShowTemplateModal={() => state.setShowApplyTemplate(true)}
               onShowKeyboardHelp={() => state.setShowKeyboardHelp(true)}
               onShowAIScribe={() => state.setShowAIScribe(true)}
@@ -674,9 +675,9 @@ const PatientEvolution = () => {
               }));
             }}
           />
-        </PageContainer>
-      </PageLayout>
-    </ComponentErrorBoundary>
+        </ComponentErrorBoundary>
+      </PageContainer>
+    </PageLayout>
   );
 };
 
