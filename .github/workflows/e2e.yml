@@ -18,7 +18,7 @@ jobs:
         node-version: "22"
       
     - name: Install Playwright Browsers
-      run: pnpm exec playwright install --with-deps chromium --config e2e/playwright.config.ts
+      run: pnpm exec playwright install --with-deps chromium
 
     - name: Run Playwright tests
       run: pnpm exec playwright test --config e2e/playwright.config.ts
