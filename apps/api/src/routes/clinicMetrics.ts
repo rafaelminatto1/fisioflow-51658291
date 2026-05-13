@@ -59,6 +59,24 @@ app.get("/kpis", requireAuth, async (c) => {
       [user.organizationId]
     );
 
+    const stats = {
+      occupancy: {
+        booked: Number(occupancyRes.rows[0].booked_slots || 0),
+        capacity: Number(occupancyRes.rows[0].estimated_capacity_monthly || 1),
+      },
+      noShow: {
+        count: Number(noShowRes.rows[0].no_shows || 0),
+        total: Number(noShowRes.rows[0].total_appointments || 1),
+      },
+      financial: {
+        totalRevenue: Number(revenueRes.rows[0].total_revenue || 0),
+        avgTicket: Number(revenueRes.rows[0].avg_ticket || 0),
+      },
+      clinical: {
+        avgSessions: Number(ltvRes.rows[0].avg_sessions_per_patient || 0),
+      }
+    };
+
     return c.json({ data: stats });
   } catch (error) {
     console.error("[Metrics] Error calculating KPIs:", error);
