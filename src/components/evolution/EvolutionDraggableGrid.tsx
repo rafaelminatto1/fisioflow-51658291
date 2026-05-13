@@ -199,6 +199,7 @@ const SOAPSectionWidget = React.memo(
                     className="h-8 w-8 rounded-xl hover:bg-primary/10 transition-colors"
                     onClick={() => onAISuggest(section.key)}
                     disabled={disabled}
+                    aria-label="Sugestão de IA"
                   >
                     <Sparkles className="h-3.5 w-3.5 text-primary" />
                   </Button>
@@ -216,6 +217,7 @@ const SOAPSectionWidget = React.memo(
                     className="h-8 w-8 rounded-xl hover:bg-slate-100 transition-colors"
                     onClick={() => onCopyLast(section.key)}
                     disabled={disabled}
+                    aria-label="Copiar da última sessão"
                   >
                     <Copy className="h-3.5 w-3.5 text-slate-400" />
                   </Button>
@@ -376,6 +378,7 @@ export const EvolutionDraggableGrid: React.FC<EvolutionDraggableGridProps> = ({
                   variant="ghost"
                   size="icon"
                   className="h-8 w-8 rounded-xl"
+                  aria-label={showPainDetails ? "Ocultar detalhes de dor" : "Ver detalhes de dor"}
                   onClick={() => setShowPainDetails(!showPainDetails)}
                 >
                   {showPainDetails ? (
