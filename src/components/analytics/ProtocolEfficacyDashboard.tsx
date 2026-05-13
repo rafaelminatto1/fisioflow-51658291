@@ -12,7 +12,7 @@ import {
   Tooltip,
   Cell,
 } from "recharts";
-import { Activity, Trophy, Zap } from "lucide-react";
+import { Trophy } from "lucide-react";
 
 interface ProtocolMetric {
   protocol_id: string;

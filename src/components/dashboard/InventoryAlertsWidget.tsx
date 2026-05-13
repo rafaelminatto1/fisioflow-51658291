@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { useQuery } from "@tanstack/react-query";
 import { request } from "@/api/v2/base";
 import { Package, AlertTriangle, RefreshCw } from "lucide-react";
-import { cn } from "@/lib/utils";
+
 
 interface InventoryItem {
   id: string;

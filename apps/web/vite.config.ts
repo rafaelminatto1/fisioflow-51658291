@@ -4,9 +4,7 @@ import react from "@vitejs/plugin-react";
 import path from "path";
 import { visualizer } from "rollup-plugin-visualizer";
 import { defineConfig } from "vite";
-import { VitePWA } from "vite-plugin-pwa";
 import Icons from "unplugin-icons/vite";
-import { ViteImageOptimizer } from "vite-plugin-image-optimizer";
 import Inspect from "vite-plugin-inspect";
 import checker from "vite-plugin-checker";
 
@@ -65,7 +63,6 @@ function mockMobileModules() {
 export default defineConfig(({ mode }) => {
   const isProduction = mode === "production";
   const isAnalyze = process.env.ANALYZE === "true";
-  const enableImageOptimizer = process.env.ENABLE_IMAGE_OPTIMIZER === "1";
   const buildTime = Date.now().toString();
   const VERSION_SUFFIX = "-v2.6.0-vite8.0.9-tsconfigPaths";
   const appVersion =

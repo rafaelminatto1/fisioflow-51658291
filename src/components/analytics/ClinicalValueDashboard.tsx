@@ -14,9 +14,7 @@ import {
   Cell,
   BarChart,
   Bar,
-  Legend,
 } from "recharts";
-import { formatCurrency } from "@/lib/utils";
 import { Brain, TrendingUp, Users, AlertTriangle } from "lucide-react";
 
 interface ClinicalROI {

@@ -35,7 +35,7 @@ export const UnifiedEvolutionEditor: React.FC<UnifiedEvolutionEditorProps> = ({
   patientId,
   initialContent = "",
   onSave,
-  isSaving = false,
+  isSaving: _isSaving = false,
 }) => {
   const [syncStatus, setSyncStatus] = useState<"idle" | "saving" | "saved">("idle");
   const [ydoc] = useState(() => new Y.Doc());
@@ -171,7 +171,7 @@ export const UnifiedEvolutionEditor: React.FC<UnifiedEvolutionEditorProps> = ({
     };
   }, [uploadToCloudflareR2]);
 
-  const handleSave = () => {
+  const _handleSave = () => {
     if (!editor) return;
     const html = editor.getHTML();
     if (onSave) onSave(html);

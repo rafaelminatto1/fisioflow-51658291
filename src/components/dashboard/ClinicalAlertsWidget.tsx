@@ -2,7 +2,7 @@ import React from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
 import { request } from "@/api/v2/base";
-import { AlertCircle, Bell, User, CheckCircle2, XCircle } from "lucide-react";
+import { AlertCircle, Bell, CheckCircle2 } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";

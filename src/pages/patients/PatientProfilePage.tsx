@@ -18,7 +18,6 @@ import { PatientAnalyticsTab } from "@/components/patient/PatientAnalyticsTab";
 import { PatientDocumentsTab } from "@/components/patient/PatientDocumentsTab";
 import { PatientFinancialTab } from "@/components/patient/PatientFinancialTab";
 import { PatientGamificationTab } from "@/components/patient/PatientGamificationTab";
-import { PatientGamificationSummary } from "@/components/patients/PatientGamificationSummary";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { LoadingSkeleton } from "@/components/ui/loading-skeleton";
@@ -47,14 +46,10 @@ import { EvidenceTab } from "@/components/patient/EvidenceTab";
 import { AIMedicalReportModal } from "@/components/patient/AIMedicalReportModal";
 
 // Hooks Otimizados
-import { usePatientProfileOptimized, type ProfileTab } from "@/hooks/usePatientProfileOptimized";
+import { usePatientProfileOptimized } from "@/hooks/usePatientProfileOptimized";
 import { usePatientEvolutionReport } from "@/hooks/usePatientEvolutionReport";
 import { useEvaluationForms } from "@/hooks/useEvaluationForms";
 import { Patient360ChatDrawer } from "@/features/ia-studio/components/Patient360ChatDrawer";
-import { FisioPredictIndicator } from "@/features/ia-studio/components/FisioPredictIndicator";
-import { Textarea } from "@/components/ui/textarea";
-import { getWorkersApiUrl } from "@/lib/api/config";
-import { Send, Loader2 } from "lucide-react";
 
 import {
   Dialog,
@@ -70,26 +65,6 @@ const LazyDigitalTwinPanel = lazy(() =>
 );
 
 // Lazy loading para componentes de abas pesadas
-const LazyPatientDashboard360 = lazy(() =>
-  import("@/components/patient/dashboard/PatientDashboard360").then((m) => ({
-    default: m.PatientDashboard360,
-  })),
-);
-const LazyMedicalReturnCard = lazy(() =>
-  import("@/components/evolution/MedicalReturnCard").then((m) => ({
-    default: m.MedicalReturnCard,
-  })),
-);
-const LazySurgeriesCard = lazy(() =>
-  import("@/components/evolution/SurgeriesCard").then((m) => ({
-    default: m.SurgeriesCard,
-  })),
-);
-const LazyMetasCard = lazy(() =>
-  import("@/components/evolution/MetasCard").then((m) => ({
-    default: m.MetasCard,
-  })),
-);
 const _LazyProgressAnalysisCard = lazy(() =>
   import("@/components/patient/ProgressAnalysisCard").then((m) => ({
     default: m.ProgressAnalysisCard,
