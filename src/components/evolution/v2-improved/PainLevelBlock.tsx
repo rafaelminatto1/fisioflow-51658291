@@ -37,27 +37,27 @@ const getPainColor = (
   if (level === 0)
     return {
       bg: "bg-emerald-500",
-      text: "text-emerald-600",
+      text: "text-emerald-700",
       border: "border-emerald-500",
       gradient: "from-emerald-400 to-emerald-600",
     };
   if (level <= 3)
     return {
       bg: "bg-lime-500",
-      text: "text-lime-600",
+      text: "text-lime-700",
       border: "border-lime-500",
       gradient: "from-lime-400 to-lime-600",
     };
   if (level <= 6)
     return {
       bg: "bg-amber-500",
-      text: "text-amber-600",
+      text: "text-amber-700",
       border: "border-amber-500",
       gradient: "from-amber-400 to-amber-600",
     };
   return {
     bg: "bg-rose-500",
-    text: "text-rose-600",
+    text: "text-rose-700",
     border: "border-rose-500",
     gradient: "from-rose-400 to-rose-600",
   };
