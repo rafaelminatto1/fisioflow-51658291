@@ -541,7 +541,7 @@ function getCfApi(env: Env) {
       ...init,
       headers: {
         Authorization: `Bearer ${token}`,
-        ...(init?.headers ?? {}),
+        ...init?.headers,
       },
     });
 }

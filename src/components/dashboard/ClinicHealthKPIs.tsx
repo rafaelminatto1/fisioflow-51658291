@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { useQuery } from "@tanstack/react-query";
 import { request } from "@/api/v2/base";
 import { Activity, Users, TrendingUp, DollarSign, Calendar, Target, ShieldCheck } from "lucide-react";
-import { formatCurrency } from "@/lib/utils/format";
+import { formatCurrency } from "@/lib/utils";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
 

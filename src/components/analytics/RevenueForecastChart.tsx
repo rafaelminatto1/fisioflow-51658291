@@ -12,7 +12,7 @@ import {
   Tooltip,
 } from "recharts";
 import { TrendingUp, DollarSign, Calendar, Sparkles } from "lucide-react";
-import { formatCurrency } from "@/lib/utils/format";
+import { formatCurrency } from "@/lib/utils";
 
 export function RevenueForecastChart() {
   const { data: forecastRes, isLoading } = useQuery({

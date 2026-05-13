@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { useQuery } from "@tanstack/react-query";
 import { request } from "@/api/v2/base";
 import { Map, Building2, TrendingUp, Users, DollarSign, LayoutDashboard, Sparkles, Loader2 } from "lucide-react";
-import { formatCurrency } from "@/lib/utils/format";
+import { formatCurrency } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
 interface RegionalMetric {
