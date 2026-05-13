@@ -2,7 +2,7 @@ import React from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
 import { request } from "@/api/v2/base";
-import { Sparkles, TrendingUp, AlertCircle, CheckCircle2, DollarSign } from "lucide-react";
+import { Sparkles, CheckCircle2 } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 
 interface ReimbursementPattern {

@@ -1,8 +1,8 @@
 import React from "react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardDescription } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
 import { request } from "@/api/v2/base";
-import { Activity, Users, TrendingUp, DollarSign, Calendar, Target, ShieldCheck } from "lucide-react";
+import { Users, DollarSign, Calendar, ShieldCheck } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";

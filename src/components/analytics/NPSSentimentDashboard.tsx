@@ -1,8 +1,8 @@
 import React from "react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
 import { request } from "@/api/v2/base";
-import { Smile, Meh, Frown, MessageCircle, AlertCircle } from "lucide-react";
+import { Smile, Meh, Frown, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface NPSSurvey {

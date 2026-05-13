@@ -5,14 +5,12 @@
  * smooth animations, and professional visual design.
  */
 import React, { useState, useCallback, useRef, useEffect } from "react";
-import { Plus, Trash2, Search, CheckCircle2, Circle, Zap, Keyboard, Trophy, X, MessageSquare, Sparkles, MoreVertical, CheckSquare } from "lucide-react";
+import { Plus, CheckCircle2, Zap, Trophy, X, MessageSquare, Sparkles, MoreVertical, CheckSquare } from "lucide-react";
 import confetti from "canvas-confetti";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Progress } from "@/components/ui/progress";
 import {
   Dialog,
   DialogContent,
@@ -69,7 +67,7 @@ export const ProcedureChecklistBlock: React.FC<ProcedureChecklistBlockProps> = (
   disabled = false,
   className,
 }) => {
-  const [showAutocomplete, setShowAutocomplete] = useState(false);
+  const [_showAutocomplete, setShowAutocomplete] = useState(false);
   const [quickAddValue, setQuickAddValue] = useState("");
   const quickAddRef = useRef<HTMLInputElement>(null);
   const [hasTriggeredConfetti, setHasTriggeredConfetti] = useState(false);

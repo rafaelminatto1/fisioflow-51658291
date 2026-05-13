@@ -26,11 +26,8 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 import { MagicTextarea } from "@/components/ai/MagicTextarea";
 import { cn } from "@/lib/utils";
-import { ProcedureChecklistBlock } from "./ProcedureChecklistBlock";
-import { ExerciseBlockV2 } from "./ExerciseBlockV2";
 import { PainLevelBlock } from "./PainLevelBlock";
 import { HomeCareBlock } from "./HomeCareBlock";
 import { AttachmentsBlock } from "./AttachmentsBlock";

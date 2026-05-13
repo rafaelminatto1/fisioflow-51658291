@@ -1,8 +1,8 @@
 import React from "react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
 import { request } from "@/api/v2/base";
-import { TrendingUp, Clock, AlertTriangle, CheckCircle2, History, Info } from "lucide-react";
+import { CheckCircle2, History, Info } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,

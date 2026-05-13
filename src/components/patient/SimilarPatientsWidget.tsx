@@ -2,14 +2,13 @@ import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { request } from "@/api/v2/base";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Users, UserPlus, ArrowRight, Activity, Info } from "lucide-react";
+import { Users, ArrowRight, Info } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
