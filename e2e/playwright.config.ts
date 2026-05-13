@@ -1,6 +1,9 @@
 import { defineConfig, devices } from '@playwright/test';
 import dotenv from 'dotenv';
 import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // Carrega as variáveis de ambiente locais (se existir)
 dotenv.config({ path: path.resolve(__dirname, '../.env') });
