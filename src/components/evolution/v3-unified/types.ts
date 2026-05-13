@@ -1,5 +1,3 @@
-import { LucideIcon } from "lucide-react";
-
 export type EvolutionItemType = "procedure" | "exercise";
 
 export interface EvolutionItemV3 {

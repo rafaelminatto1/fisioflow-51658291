@@ -20,7 +20,7 @@ export default function WaitingRoomTV() {
     return () => clearInterval(timer);
   }, []);
 
-  const { data: liveData, isLoading } = useQuery({
+  const { data: liveData } = useQuery({
     queryKey: ["live-checkins-tv"],
     queryFn: () => requestPublic<{ data: LiveCheckin[] }>("/api/groups/live-status"),
     refetchInterval: 5000, // Refresh a cada 5 segundos para TV

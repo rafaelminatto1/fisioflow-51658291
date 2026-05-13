@@ -31,7 +31,7 @@ export function RecibosContent({ autoOpenCreate = false, onAutoOpenHandled }: { 
   
   const [activeTab, setActiveTab] = useState<"lista" | "criar" | "config">("lista");
   const [previewRecibo, setPreviewRecibo] = useState<ReciboData | null>(null);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [_isDialogOpen, _setIsDialogOpen] = useState(false);
 
   const [receiptConfig, setReceiptConfig] = useState({
     custom_issuer_name: "",

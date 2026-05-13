@@ -7,7 +7,7 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "@/hooks/use-toast";
 import { useOrganizations } from "@/hooks/useOrganizations";
 import { appointmentsApi } from "@/api/v2";
-import { todayYMD, toLocalYMD, getAdjustedTodayYMD } from "@/lib/date-utils";
+import { toLocalYMD, getAdjustedTodayYMD } from "@/lib/date-utils";
 
 import { useUsePackageSession } from "@/hooks/usePackages";
 import {

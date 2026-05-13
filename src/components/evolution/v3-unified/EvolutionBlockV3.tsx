@@ -1,8 +1,7 @@
-import React, { useState, useCallback, useMemo } from "react";
-import { 
-  CheckCircle2, 
-  Plus, 
-  Trash2, 
+import React, { useState } from "react";
+import {
+  Plus,
+  Trash2,
   ChevronDown, 
   ChevronUp, 
   Activity, 
@@ -58,7 +57,7 @@ export const EvolutionBlockV3: React.FC<EvolutionBlockV3Props> = ({
   title,
   icon,
   iconBg,
-  accentColor = "primary",
+  accentColor: _accentColor = "primary",
   placeholder,
   disabled = false,
   className
