@@ -222,14 +222,6 @@ export const UnifiedEvolutionEditor: React.FC<UnifiedEvolutionEditorProps> = ({
           >
             <Search className="w-3 h-3" /> BUSCAR (CMD+K)
           </button>
-          <button 
-            className="flex items-center gap-2 px-6 py-2.5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-xl font-black text-xs uppercase tracking-widest hover:scale-[1.02] active:scale-95 transition-all shadow-xl shadow-slate-900/20 disabled:opacity-50" 
-            onClick={handleSave} 
-            disabled={isSaving || isUploading}
-          >
-            {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
-            {isSaving ? "SALVANDO..." : "FINALIZAR"}
-          </button>
         </div>
       </div>
 
