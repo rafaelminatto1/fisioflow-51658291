@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useLocation } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { appointmentsApi } from "@/api/v2";
 import { useAuth } from "@/hooks/useAuth";
 import { useTherapists } from "@/hooks/useTherapists";
 import { useEvolutionTemplates } from "@/hooks/useEvolutionTemplates";
@@ -91,12 +93,21 @@ export function usePatientEvolutionState() {
     medicalReturns,
     invalidateData,
     isLoadingTabData,
+    // Add appointments query
   } = useEvolutionDataOptimized({
     patientId: patientId || "",
     activeTab,
     loadStrategy: "tab-based",
     prefetchNextTab: false,
   });
+
+  const { data: allAppointmentsResponse } = useQuery({
+    queryKey: ["patient-appointments-all", patientId],
+    queryFn: () => appointmentsApi.list({ patientId: patientId || "", limit: 1000 }),
+    enabled: !!patientId,
+  });
+
+  const allAppointments = allAppointmentsResponse?.data || [];
 
   usePrefetchStrategy({
     patientId: patientId || "",
@@ -243,5 +254,6 @@ export function usePatientEvolutionState() {
     evolutionTemplates,
     user,
     isEdited,
+    allAppointments,
   };
 }

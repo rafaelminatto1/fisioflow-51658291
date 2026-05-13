@@ -178,7 +178,7 @@ export const UnifiedEvolutionEditor: React.FC<UnifiedEvolutionEditorProps> = ({
   };
 
   return (
-    <div className="flex flex-col w-full max-w-5xl mx-auto bg-white dark:bg-slate-950 rounded-2xl shadow-premium-lg border border-slate-200 dark:border-slate-800 overflow-hidden transition-all duration-300">
+    <div className="flex flex-col w-full max-w-full mx-auto bg-white dark:bg-slate-950 rounded-2xl shadow-premium-lg border border-slate-200 dark:border-slate-800 overflow-hidden transition-all duration-300">
       <div className="flex flex-col sm:flex-row justify-between items-center px-6 py-4 bg-slate-50/50 dark:bg-slate-900/50 border-b border-slate-200 dark:border-slate-800 gap-4">
         <div className="flex items-center gap-3">
           <div className="p-2 bg-blue-600 rounded-xl shadow-lg shadow-blue-500/30">

@@ -1,0 +1,45 @@
+# FisioFlow — Sistema de Gestão para Clínicas de Fisioterapia
+
+> Plataforma SaaS para gestão clínica, agenda, evoluções e financeiro de clínicas de fisioterapia no Brasil.
+
+FisioFlow é um sistema de gestão clínica desenvolvido para fisioterapeutas e clínicas de fisioterapia no Brasil. Oferece agenda inteligente, evoluções SOAP automatizadas com IA, controle financeiro, NF-e, portal do paciente e biofeedback.
+
+## Funcionalidades principais
+
+- Agenda inteligente com drag-and-drop e controle de capacidade por sala
+- Evoluções clínicas: SOAP, texto livre e formato Notion com IA integrada
+- Prontuário eletrônico do paciente com histórico completo
+- Controle financeiro e emissão de NF-e (ABRASF)
+- Portal do paciente com exercícios e HEP (Home Exercise Program)
+- IA Studio: geração de evoluções, sugestões clínicas e análise por voz
+- Wiki clínica e base de conhecimento colaborativo
+- Boards Kanban para gestão de tarefas internas
+- Telemedicina integrada via LiveKit
+- Relatórios e analytics clínicos avançados
+- Sistema de gamificação para engajamento de pacientes
+
+## Acesso
+
+- [Dashboard principal](https://www.moocafisio.com.br/dashboard)
+- [Agenda](https://www.moocafisio.com.br/agenda)
+- [Prontuários](https://www.moocafisio.com.br/patients)
+- [Financeiro](https://www.moocafisio.com.br/financeiro)
+- [Wiki Clínica](https://www.moocafisio.com.br/wiki)
+- [IA Studio](https://www.moocafisio.com.br/ia-studio)
+- [Relatórios](https://www.moocafisio.com.br/reports)
+
+## Stack técnica
+
+- Frontend: React 19 + Vite + TypeScript + Tailwind CSS v4
+- Backend: Cloudflare Workers (Hono) + Neon PostgreSQL
+- Auth: Neon Auth (Better Auth)
+- Storage: Cloudflare R2
+- Hospedagem: Cloudflare Pages + Workers
+
+## Público-alvo
+
+Fisioterapeutas, estagiários, recepcionistas e clínicas de fisioterapia no Brasil.
+
+## Contato
+
+Para informações sobre o produto: suporte@moocafisio.com.br

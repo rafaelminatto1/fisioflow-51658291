@@ -310,10 +310,29 @@ const PatientEvolution = () => {
     ],
   );
 
+  const sessionNumber = useMemo(() => {
+    if (!state.appointment || !state.allAppointments?.length) {
+      return state.previousEvolutions.length + 1;
+    }
+
+    const sortedApts = [...state.allAppointments].sort((a, b) => {
+      const dateA = new Date(a.appointment_date || a.date || 0).getTime();
+      const dateB = new Date(b.appointment_date || b.date || 0).getTime();
+      if (dateA !== dateB) return dateA - dateB;
+      
+      const timeA = a.appointment_time || a.start_time || a.startTime || "";
+      const timeB = b.appointment_time || b.start_time || b.startTime || "";
+      return timeA.localeCompare(timeB);
+    });
+
+    const index = sortedApts.findIndex((a: any) => a.id === state.appointmentId);
+    return index !== -1 ? index + 1 : state.previousEvolutions.length + 1;
+  }, [state.appointment, state.allAppointments, state.appointmentId, state.previousEvolutions.length]);
+
   const treatmentDuration = useMemo(() => {
-    if (state.previousEvolutions.length === 0) return "Primeira sessão";
-    return `${state.previousEvolutions.length + 1}ª sessão`;
-  }, [state.previousEvolutions.length]);
+    if (sessionNumber === 1) return "Primeira sessão";
+    return `${sessionNumber}ª sessão`;
+  }, [sessionNumber]);
 
   const topSectionContent = useMemo(
     () => (
@@ -451,8 +470,8 @@ const PatientEvolution = () => {
   }, {});
 
   return (
-    <PageLayout compactHeader>
-      <PageContainer>
+    <PageLayout compactHeader fullWidth>
+      <PageContainer maxWidth="full" noPadding className="px-3 md:px-5 pt-0">
         <ComponentErrorBoundary componentName="PatientEvolution">
           <div className="space-y-5 animate-fade-in pb-8">
             <EvolutionHeader
@@ -460,6 +479,7 @@ const PatientEvolution = () => {
               appointment={state.appointment as any}
               evolutionStats={evolutionStats}
               treatmentDuration={treatmentDuration}
+              sessionNumber={sessionNumber}
               onSave={handlers.handleSave}
               onComplete={handlers.handleCompleteSession}
               isSaving={handlers.isSaving}

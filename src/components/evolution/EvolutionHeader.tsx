@@ -91,6 +91,7 @@ interface EvolutionHeaderProps {
   selectedTherapistId?: string;
   onTherapistChange?: (therapistId: string) => void;
   previousEvolutionsCount?: number;
+  sessionNumber?: number;
   // Props das abas
   tabsConfig?: TabConfig[];
   activeTab?: string;
@@ -228,6 +229,7 @@ export const EvolutionHeader = memo(
     selectedTherapistId = "",
     onTherapistChange,
     previousEvolutionsCount = 0,
+    sessionNumber: propSessionNumber,
     tabsConfig = [],
     activeTab = "",
     onTabChange,
@@ -246,7 +248,7 @@ export const EvolutionHeader = memo(
       : null;
     const _sessionStartDate = getSessionStartDate(appointment);
 
-    const sessionNumber = evolutionStats.totalEvolutions + 1;
+    const sessionNumber = propSessionNumber ?? (evolutionStats.totalEvolutions + 1);
     const patientAvatar = (patient as Patient & { avatar_url?: string })?.avatar_url;
 
     return (
