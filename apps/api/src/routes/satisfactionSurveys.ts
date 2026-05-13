@@ -314,4 +314,38 @@ app.post(
   },
 );
 
+/**
+ * GET /api/satisfaction-surveys/latest-feedbacks
+ * Lista os últimos feedbacks de NPS com análise de sentimento IA.
+ */
+app.get("/latest-feedbacks", requireAuth, async (c) => {
+  const user = c.get("user");
+  const pool = createPool(c.env);
+
+  try {
+    const result = await pool.query(
+      `SELECT 
+        ss.id,
+        p.full_name as patient_name,
+        ss.nps_score,
+        ss.comments,
+        ss.ai_sentiment,
+        ss.ai_summary,
+        ss.ai_urgency_alert,
+        ss.responded_at
+       FROM satisfaction_surveys ss
+       LEFT JOIN patients p ON p.id = ss.patient_id
+       WHERE ss.organization_id = $1
+       ORDER BY ss.responded_at DESC
+       LIMIT 20`,
+      [user.organizationId]
+    );
+
+    return c.json({ data: result.rows });
+  } catch (error) {
+    console.error("[Surveys/Latest] Error:", error);
+    return c.json({ error: "Failed to fetch feedbacks" }, 500);
+  }
+});
+
 export { app as satisfactionSurveysRoutes };

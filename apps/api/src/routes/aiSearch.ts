@@ -508,6 +508,29 @@ aiSearchApp.get("/education", async (c) => {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
+export async function surgicalSyncWiki(env: Env, row: { id: string, title: string, content: string, category: string }) {
+  if (!env.CLINICAL_KNOWLEDGE) return;
+  
+  const textToEmbed = `
+    Título: ${row.title}
+    Categoria: ${row.category || "Geral"}
+    Conteúdo: ${row.content || ""}
+  `.trim().substring(0, 8000);
+
+  const { generateEmbedding } = await import("../lib/ai-native");
+  const vector = await generateEmbedding(env, textToEmbed);
+
+  await env.CLINICAL_KNOWLEDGE.upsert([{
+    id: row.id,
+    values: vector,
+    namespace: "wiki",
+    metadata: {
+      title: row.title,
+      category: row.category || "wiki"
+    }
+  }]);
+}
+
 function getCfApi(env: Env) {
   const token = (env as any).CF_API_TOKEN as string | undefined;
   const accountId = (env as any).CF_ACCOUNT_ID as string | undefined;

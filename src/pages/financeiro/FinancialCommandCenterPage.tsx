@@ -78,6 +78,9 @@ const ClinicalValueDashboard = lazy(() =>
 const LTVMaximizerWidget = lazy(() =>
   import("@/components/marketing/LTVMaximizerWidget").then((m) => ({ default: m.LTVMaximizerWidget })),
 );
+const RevenueForecastChart = lazy(() =>
+  import("@/components/analytics/RevenueForecastChart").then((m) => ({ default: m.RevenueForecastChart })),
+);
 const TeamPerformanceDashboard = lazy(() =>
   import("@/components/analytics/TeamPerformanceDashboard").then((m) => ({ default: m.TeamPerformanceDashboard })),
 );
@@ -299,6 +302,7 @@ const FinancialCommandCenterPage = () => {
                   <AnalyticsFiltersProvider>
                     <div className="space-y-8">
                       <LTVMaximizerWidget />
+                      <RevenueForecastChart />
                       <FinancialAnalytics />
                     </div>
                   </AnalyticsFiltersProvider>

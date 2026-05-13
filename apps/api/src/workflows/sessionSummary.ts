@@ -225,6 +225,60 @@ Retorne SOMENTE JSON válido no formato:
       }
     });
 
+    // Step 7: Analyze for Clinic Wiki (Knowledge Capture)
+    await step.do("analyze-for-wiki", async () => {
+      try {
+        const { runThinkingModel } = await import("../lib/ai-native");
+        const prompt = `
+          Analise esta evolução clínica (SOAP) do paciente ${sessionData.patient_name}:
+          S: ${sessionData.subjective}
+          O: ${sessionData.objective}
+          A: ${sessionData.assessment}
+          P: ${sessionData.plan}
+
+          Este caso apresenta um insight clínico único, uma conduta rara de sucesso ou um aprendizado que deveria ser compartilhado com a equipe na Wiki da clínica?
+          Se SIM, gere um rascunho de artigo clínico (JSON).
+          Se NÃO, retorne {"worthCapturing": false}.
+
+          FORMATO SE SIM:
+          {
+            "worthCapturing": true,
+            "title": "Caso Clínico: [Título]",
+            "content": "[Markdown rico com descrição do caso, conduta e resultado]",
+            "category": "Estudos de Caso"
+          }
+        `.trim();
+
+        const aiWiki = await runThinkingModel(this.env, {
+          prompt,
+          model: "gemini-1.5-flash",
+          temperature: 0.3,
+          responseFormat: "json"
+        });
+
+        const jsonMatch = aiWiki.content.match(/\{[\s\S]*\}/);
+        const data = JSON.parse(jsonMatch?.[0] ?? aiWiki.content);
+
+        if (data.worthCapturing) {
+          const { surgicalSyncWiki } = await import("../routes/aiSearch");
+          
+          // Salvar na tabela wiki_pages (rascunho)
+          const wikiId = crypto.randomUUID();
+          await sql`
+            INSERT INTO wiki_pages (id, organization_id, title, content, is_public, created_by)
+            VALUES (${wikiId}::uuid, ${orgId}::uuid, ${data.title}, ${data.content}, false, 'ai_autocapture')
+          `;
+
+          // Indexar no Vectorize
+          await surgicalSyncWiki(this.env, { id: wikiId, ...data });
+
+          console.log(`[Auto-Wiki] Captured unique clinical insight for org ${orgId}`);
+        }
+      } catch (e) {
+        console.warn("[SessionSummaryWorkflow] Wiki capture failed:", e);
+      }
+    });
+
     return { ok: true, sessionId, patientName: sessionData.patient_name };
   }
 }

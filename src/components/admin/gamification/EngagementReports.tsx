@@ -28,6 +28,7 @@ import { useGamificationAdmin } from "@/hooks/useGamificationAdmin";
 import { useEngagementData } from "@/hooks/useLeaderboard";
 import { exportAtRiskPatientsToCSV } from "@/utils/gamificationExport";
 import { LoadingSkeleton } from "@/components/ui/loading-skeleton";
+import { NPSSentimentDashboard } from "@/components/analytics/NPSSentimentDashboard";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -118,6 +119,7 @@ export const EngagementReports: React.FC = () => {
 
   return (
     <div className="space-y-6">
+      <NPSSentimentDashboard />
       {/* Key Metrics */}
       <div className="grid gap-4 md:gap-5 grid-cols-2 lg:grid-cols-4">
         <Card>

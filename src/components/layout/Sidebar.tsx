@@ -172,6 +172,7 @@ const operacionalMenuItems = [
 
 const adminSubmenu = [
   { icon: BarChart3, label: "Analytics", href: "/admin/analytics" },
+  { icon: Building2, label: "Regional (Enterprise)", href: "/regional" },
   { icon: Users, label: "Usuários", href: "/admin/users" },
   { icon: Shield, label: "Segurança", href: "/admin/security" },
   { icon: FileText, label: "Logs de Auditoria", href: "/admin/audit-logs" },
@@ -185,6 +186,11 @@ const adminSubmenu = [
 
 const financeiroSubmenu = [
   { icon: DollarSign, label: "Financeiro Hub", href: APP_ROUTES.FINANCIAL },
+  {
+    icon: TrendingUp,
+    label: "Previsão de Receita (IA)",
+    href: `${APP_ROUTES.FINANCIAL}?tab=analytics`,
+  },
   {
     icon: Receipt,
     label: "Faturamento e Recibos",
