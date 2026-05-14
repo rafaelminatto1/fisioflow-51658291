@@ -15,7 +15,31 @@ import { useSessionExercises } from "@/hooks/useSessionExercises";
 import { useDraftSoapRecordByAppointment } from "@/hooks/useSoapRecords";
 import type { EvolutionVersion, EvolutionV2Data } from "@/components/evolution/v2/types";
 import type { PainScaleData } from "@/pages/PatientEvolution";
-import { formatClinicalText } from "@/lib/evolution/formatters";
+import type {
+  ProcedureItem,
+  ExerciseItem,
+  MeasurementItem,
+  HomeExerciseItem,
+} from "@/types/evolution";
+
+/** Modelo canônico da evolução (texto livre + estruturados). */
+export interface EvolutionData {
+  observacao: string;
+  painScale: number | null;
+  procedures: ProcedureItem[];
+  exercises: ExerciseItem[];
+  measurements: MeasurementItem[];
+  homeExercises: HomeExerciseItem[];
+}
+
+const emptyEvolutionData = (): EvolutionData => ({
+  observacao: "",
+  painScale: null,
+  procedures: [],
+  exercises: [],
+  measurements: [],
+  homeExercises: [],
+});
 
 export function usePatientEvolutionState() {
   const { appointmentId } = useParams<{ appointmentId: string }>();
@@ -44,6 +68,9 @@ export function usePatientEvolutionState() {
 
   // ========== DATA STATE ==========
   const [currentSoapRecordId, setCurrentSoapRecordId] = useState<string | undefined>();
+  // Canonical state (modelo único do sistema)
+  const [evolutionData, setEvolutionData] = useState<EvolutionData>(emptyEvolutionData);
+  // Legacy mirrors — kept transitorily for components não refatorados (Fase 3 limpa).
   const [soapData, setSoapData] = useState({
     subjective: "",
     objective: "",
@@ -127,37 +154,45 @@ export function usePatientEvolutionState() {
   // ========== SYNC DRAFTS ==========
   useEffect(() => {
     if (!draftByAppointment || currentSoapRecordId !== undefined) return;
-    
-    // Sync SOAP fields
-    const subjective = formatClinicalText(draftByAppointment.subjective ?? "");
-    const objective = formatClinicalText(draftByAppointment.objective ?? "");
-    const assessment = formatClinicalText(draftByAppointment.assessment ?? "");
-    const plan = formatClinicalText(draftByAppointment.plan ?? "");
 
-    setSoapData({
-      subjective,
-      objective,
-      assessment,
-      plan,
+    const observacao = draftByAppointment.observacao ?? "";
+    const painScaleValue =
+      draftByAppointment.pain_scale ?? draftByAppointment.pain_level ?? null;
+
+    setEvolutionData({
+      observacao,
+      painScale: painScaleValue,
+      procedures: Array.isArray(draftByAppointment.procedures)
+        ? (draftByAppointment.procedures as ProcedureItem[])
+        : [],
+      exercises: Array.isArray(draftByAppointment.exercises)
+        ? (draftByAppointment.exercises as ExerciseItem[])
+        : [],
+      measurements: Array.isArray(draftByAppointment.measurements)
+        ? (draftByAppointment.measurements as MeasurementItem[])
+        : [],
+      homeExercises: Array.isArray(draftByAppointment.home_exercises)
+        ? (draftByAppointment.home_exercises as HomeExerciseItem[])
+        : [],
     });
 
-    // Sync V2-V5 data (mapping standard fields back)
+    // Legacy mirrors (apenas para consumidores não refatorados).
+    setSoapData({ subjective: "", objective: "", assessment: "", plan: "" });
     setEvolutionV2Data((prev: any) => ({
       ...prev,
-      patientReport: subjective,
-      evolutionText: objective,
-      observations: plan,
-      // Note: procedures are stored as a string in assessment in v2-texto,
-      // we don't parse them back to an array yet to avoid complexity,
-      // but at least the other main fields are restored.
+      patientReport: "",
+      evolutionText: "",
+      observations: observacao,
+      procedures: Array.isArray(draftByAppointment.procedures)
+        ? draftByAppointment.procedures
+        : prev.procedures,
+      exercises: Array.isArray(draftByAppointment.exercises)
+        ? draftByAppointment.exercises
+        : prev.exercises,
     }));
 
-    if (draftByAppointment.pain_level !== undefined && draftByAppointment.pain_level !== null) {
-      setPainScale({
-        level: draftByAppointment.pain_level,
-        location: draftByAppointment.pain_location,
-        character: draftByAppointment.pain_character,
-      });
+    if (painScaleValue != null) {
+      setPainScale({ level: painScaleValue });
     }
     setCurrentSoapRecordId(draftByAppointment.id);
 
@@ -226,6 +261,10 @@ export function usePatientEvolutionState() {
     setShowAIScribe,
     selectedTherapistId,
     setSelectedTherapistId,
+    // Canonical evolution model
+    evolutionData,
+    setEvolutionData,
+    // Legacy mirrors (Fase 3 elimina)
     soapData,
     setSoapData,
     painScale,

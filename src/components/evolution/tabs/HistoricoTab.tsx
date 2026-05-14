@@ -31,10 +31,12 @@ interface Evolution {
   record_date?: string;
   date?: string;
   created_at: string;
-  subjective?: string;
-  objective?: string;
-  assessment?: string;
-  plan?: string;
+  observacao?: string;
+  pain_scale?: number | null;
+  procedures?: unknown[];
+  exercises?: unknown[];
+  measurements?: unknown[];
+  home_exercises?: unknown[];
 }
 
 interface HistoricoTabProps {

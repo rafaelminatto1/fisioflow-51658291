@@ -31,24 +31,13 @@ export {
 } from "./exercises";
 
 // ============================================================================
-// SOAP Assistant with Voice
+// SOAP Assistant (DEPRECATED) — mantido só para tipos legados; a transcrição
+// de voz agora produz texto direto para a observação (ver hooks/useVoiceScribe).
 // ============================================================================
 
 export {
-  // Main class
-  SOAPAssistant,
-  // Factory functions
-  createSOAPAssistant,
-  getSOAPAssistant,
-  // Utility functions
-  formatSOAPToRecord,
-  calculatePatientAge,
-  buildPatientSOAPContext,
-  // Types
   type PatientSOAPContext,
   type TranscriptionResult,
-  type SOAPSection,
-  type SOAPGenerationResult,
   type SOAPGenerationResponse,
   type VoiceTranscriptionOptions,
 } from "./soap-assistant";

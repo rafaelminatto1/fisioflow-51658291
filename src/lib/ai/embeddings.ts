@@ -89,25 +89,50 @@ export function findMostSimilar(
 }
 
 /**
- * Gera embedding para evolução SOAP
+ * Gera embedding para evolução clínica (texto livre + dados estruturados).
+ *
+ * Indexa a observação inteira (texto principal) somada a um resumo
+ * estruturado de dor / procedimentos / exercícios, permitindo busca
+ * semântica que reflita tanto a narrativa quanto os dados objetivos.
  */
-export async function generateSOAPEmbedding(evolution: {
-  subjective?: string;
-  objective?: string;
-  assessment?: string;
-  plan?: string;
+export async function generateEvolutionEmbedding(evolution: {
+  observacao?: string;
+  pain_scale?: number | null;
+  procedures?: Array<{ name?: string; notes?: string }>;
+  exercises?: Array<{ name?: string; prescription?: string }>;
+  measurements?: Array<{ name?: string; value?: number; unit?: string }>;
 }): Promise<number[]> {
-  const text = [
-    evolution.subjective || "",
-    evolution.objective || "",
-    evolution.assessment || "",
-    evolution.plan || "",
-  ]
-    .filter(Boolean)
-    .join("\n");
+  const stripHtml = (html: string) =>
+    html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
 
-  return generateEmbedding(text);
+  const sections: string[] = [];
+  if (evolution.observacao) sections.push(stripHtml(evolution.observacao));
+  if (evolution.pain_scale != null) sections.push(`EVA: ${evolution.pain_scale}/10`);
+  if (evolution.procedures?.length) {
+    sections.push(
+      `Procedimentos: ${evolution.procedures.map((p) => p.name).filter(Boolean).join(", ")}`,
+    );
+  }
+  if (evolution.exercises?.length) {
+    sections.push(
+      `Exercícios: ${evolution.exercises
+        .map((e) => [e.name, e.prescription].filter(Boolean).join(" "))
+        .join(", ")}`,
+    );
+  }
+  if (evolution.measurements?.length) {
+    sections.push(
+      `Medições: ${evolution.measurements
+        .map((m) => [m.name, m.value, m.unit].filter(Boolean).join(" "))
+        .join(", ")}`,
+    );
+  }
+
+  return generateEmbedding(sections.filter(Boolean).join("\n"));
 }
+
+/** @deprecated SOAP foi removido. Use {@link generateEvolutionEmbedding}. */
+export const generateSOAPEmbedding = generateEvolutionEmbedding;
 
 /**
  * Gera embedding para paciente (contexto clínico)

@@ -18,12 +18,25 @@ export interface EvolutionVersion {
   savedBy: string;
   changeType: "auto" | "manual" | "restore";
   content: {
+    observacao?: string;
+    pain_scale?: number | null;
+    procedures?: unknown[];
+    exercises?: unknown[];
+    measurements?: unknown[];
+    home_exercises?: unknown[];
+    /** @deprecated mantido para versões antigas. */
     subjective?: string;
+    /** @deprecated */
     objective?: string;
+    /** @deprecated */
     assessment?: string;
+    /** @deprecated */
     plan?: string;
+    /** @deprecated use pain_scale. */
     pain_level?: number;
+    /** @deprecated */
     evolution_notes?: string;
+    /** @deprecated */
     v2_data?: Record<string, unknown>;
   };
 }

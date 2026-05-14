@@ -11,21 +11,17 @@ import { useEvolutionVersionHistory } from "@/hooks/evolution/useEvolutionVersio
 import { evolutionApi } from "@/api/v2/clinical";
 import { fisioLogger as logger } from "@/lib/errors/logger";
 import { PatientHelpers } from "@/types";
-import type { EvolutionV2Data } from "@/components/evolution/v2/types";
+import type { EvolutionData } from "./usePatientEvolutionState";
+
+import { stripHtml } from "@/lib/utils/stripHtml";
 
 export function usePatientEvolutionHandlers({
   patientId,
   appointmentId,
   patient,
   appointment,
-  soapData,
-  setSoapData,
-  painScale,
-  setPainScale,
-  sessionExercises,
-  evolutionVersion,
-  setEvolutionV2Data,
-  evolutionV2Data,
+  evolutionData,
+  setEvolutionData,
   currentSoapRecordId,
   setCurrentSoapRecordId,
   previousEvolutions,
@@ -44,53 +40,51 @@ export function usePatientEvolutionHandlers({
   const autoSaveMutation = useAutoSaveSoapRecord();
   const { saveVersionForRecord } = useEvolutionVersionHistory(currentSoapRecordId);
 
+  const current: EvolutionData = evolutionData ?? {
+    observacao: "",
+    painScale: null,
+    procedures: [],
+    exercises: [],
+    measurements: [],
+    homeExercises: [],
+  };
+
   const handleCopyPreviousEvolution = useCallback(
     (evolution: any) => {
-      setSoapData({
-        subjective: evolution.subjective || "",
-        objective: evolution.objective || "",
-        assessment: evolution.assessment || "",
-        plan: evolution.plan || "",
+      setEvolutionData?.({
+        observacao: evolution.observacao ?? "",
+        painScale: evolution.pain_scale ?? null,
+        procedures: Array.isArray(evolution.procedures) ? evolution.procedures : [],
+        exercises: Array.isArray(evolution.exercises) ? evolution.exercises : [],
+        measurements: Array.isArray(evolution.measurements) ? evolution.measurements : [],
+        homeExercises: Array.isArray(evolution.home_exercises) ? evolution.home_exercises : [],
       });
-
-      if (evolution.pain_level !== undefined) {
-        setPainScale({
-          level: evolution.pain_level,
-          location: evolution.pain_location,
-          character: evolution.pain_character,
-        });
-      }
-
       toast({
         title: "Evolução copiada",
         description: "Os dados da evolução anterior foram copiados.",
       });
     },
-    [setSoapData, setPainScale, toast],
+    [setEvolutionData, toast],
   );
 
   const handleRestoreVersion = useCallback(
     (content: any) => {
-      if (evolutionVersion === "v1-soap") {
-        setSoapData({
-          subjective: content.subjective || "",
-          objective: content.objective || "",
-          assessment: content.assessment || "",
-          plan: content.plan || "",
-        });
-      } else if (evolutionVersion === "v2-texto" && content.v2_data) {
-        setEvolutionV2Data(content.v2_data as EvolutionV2Data);
-      }
-      if (content.pain_level !== undefined) {
-        setPainScale((prev: any) => ({ ...prev, level: content.pain_level! }));
-      }
+      if (!setEvolutionData) return;
+      setEvolutionData({
+        observacao: content.observacao ?? content.body ?? "",
+        painScale: content.pain_scale ?? content.painScale ?? null,
+        procedures: Array.isArray(content.procedures) ? content.procedures : [],
+        exercises: Array.isArray(content.exercises) ? content.exercises : [],
+        measurements: Array.isArray(content.measurements) ? content.measurements : [],
+        homeExercises: Array.isArray(content.home_exercises) ? content.home_exercises : [],
+      });
     },
-    [evolutionVersion, setSoapData, setEvolutionV2Data, setPainScale],
+    [setEvolutionData],
   );
 
   const handleSave = async () => {
-    const pendingCriticalTests = requiredMeasurements.filter((req: any) => {
-      const hasMeasurementToday = todayMeasurements.some(
+    const pendingCriticalTests = (requiredMeasurements ?? []).filter((req: any) => {
+      const hasMeasurementToday = (todayMeasurements ?? []).some(
         (m: any) => m.measurement_name === req.measurement_name,
       );
       return req.alert_level === "high" && !hasMeasurementToday;
@@ -105,43 +99,18 @@ export function usePatientEvolutionHandlers({
       return;
     }
 
-    const isV1 = evolutionVersion === "v1-soap";
-    const isV2orV3 = evolutionVersion === "v2-texto" || evolutionVersion === "v3-notion";
-    const _isV4orV5 = evolutionVersion === "v4-tiptap" || evolutionVersion === "v5-pro";
+    const hasObservation = !!stripHtml(current.observacao || "");
+    const hasStructured =
+      current.procedures.length > 0 ||
+      current.exercises.length > 0 ||
+      current.measurements.length > 0 ||
+      current.homeExercises.length > 0;
+    const hasPain = current.painScale != null;
 
-    let saveData: any;
-    
-    if (isV1) {
-      saveData = soapData;
-    } else if (isV2orV3) {
-      saveData = {
-        subjective: evolutionV2Data.patientReport || "",
-        objective: evolutionV2Data.evolutionText || "",
-        assessment: evolutionV2Data.procedures
-          .map(
-            (p: any) =>
-              `${p.completed ? "[x]" : "[ ]"} ${p.name}${p.notes ? ` - ${p.notes}` : ""}`,
-          )
-          .join("\n"),
-        plan: evolutionV2Data.observations || "",
-      };
-    } else {
-      // v4 or v5 - unified editors usually map to objective or assessment
-      saveData = {
-        subjective: evolutionV2Data.patientReport || "",
-        objective: evolutionV2Data.evolutionText || "",
-        assessment: "",
-        plan: evolutionV2Data.observations || "",
-      };
-    }
-
-    const hasContent = !!(saveData.subjective || saveData.objective || saveData.assessment || saveData.plan);
-    const hasPain = painScale.level !== undefined && painScale.level !== null;
-
-    if (!hasContent && !hasPain) {
+    if (!hasObservation && !hasStructured && !hasPain) {
       toast({
         title: "Campos vazios",
-        description: "Preencha pelo menos um campo ou nível de dor antes de salvar.",
+        description: "Escreva a observação, registre a dor ou adicione procedimentos/exercícios.",
         variant: "destructive",
       });
       return;
@@ -149,56 +118,31 @@ export function usePatientEvolutionHandlers({
 
     if (!patientId) return;
 
-    const exercisesToSave = isV2orV3
-      ? evolutionV2Data.exercises.map((ex: any) => ({
-          id: ex.id,
-          exerciseId: ex.exerciseId || ex.id,
-          name: ex.name,
-          sets: parseInt(ex.prescription.split("x")[0]) || 3,
-          repetitions: parseInt(ex.prescription.split("x")[1]) || 10,
-          completed: ex.completed,
-          observations:
-            [
-              ex.observations,
-              ex.patientFeedback?.pain ? "DOR" : "",
-              ex.patientFeedback?.fatigue ? "FADIGA" : "",
-              ex.patientFeedback?.difficultyPerforming ? "DIFICULDADE" : "",
-              ex.patientFeedback?.notes,
-            ]
-              .filter(Boolean)
-              .join(" | ") || "",
-          weight: "",
-          image_url: ex.image_url,
-          thumbnail_url: ex.thumbnail_url,
-          video_url: ex.video_url,
-        }))
-      : sessionExercises;
-
     try {
       const record = await autoSaveMutation.mutateAsync({
         patient_id: patientId,
         appointment_id: appointmentId,
         recordId: currentSoapRecordId,
         ...(selectedTherapistId ? { therapist_id: selectedTherapistId } : {}),
-        ...saveData,
-        pain_level: painScale.level,
-        pain_location: painScale.location,
-        pain_character: painScale.character,
+        observacao: current.observacao,
+        pain_scale: current.painScale,
+        procedures: current.procedures,
+        exercises: current.exercises,
+        measurements: current.measurements,
+        home_exercises: current.homeExercises,
       });
 
       if (record?.id) {
-        setCurrentSoapRecordId(record.id);
+        setCurrentSoapRecordId?.(record.id);
         saveVersionForRecord(
           record.id,
           {
-            subjective: saveData.subjective,
-            objective: saveData.objective,
-            assessment: saveData.assessment,
-            plan: saveData.plan,
-            pain_level: painScale.level,
-            ...(isV2orV3 && {
-              v2_data: evolutionV2Data as unknown as Record<string, unknown>,
-            }),
+            observacao: current.observacao,
+            pain_scale: current.painScale,
+            procedures: current.procedures,
+            exercises: current.exercises,
+            measurements: current.measurements,
+            home_exercises: current.homeExercises,
           },
           "manual",
         ).catch(() => {});
@@ -207,16 +151,18 @@ export function usePatientEvolutionHandlers({
       const therapistId =
         selectedTherapistId || appointment?.therapist_id || appointment?.therapistId;
       if (therapistId) {
-        await evolutionApi.treatmentSessions.upsert({
-          patient_id: patientId,
-          therapist_id: String(therapistId),
-          appointment_id: appointmentId,
-          session_date: new Date().toISOString(),
-          observations: saveData.assessment || "",
-          exercises_performed: exercisesToSave,
-          pain_level_before: painScale.level,
-          pain_level_after: painScale.level,
-        });
+        await evolutionApi.treatmentSessions
+          .upsert({
+            patient_id: patientId,
+            therapist_id: String(therapistId),
+            appointment_id: appointmentId,
+            session_date: new Date().toISOString(),
+            observations: stripHtml(current.observacao || ""),
+            exercises_performed: current.exercises,
+            pain_level_before: current.painScale ?? undefined,
+            pain_level_after: current.painScale ?? undefined,
+          })
+          .catch(() => {});
       }
     } catch (error) {
       toast({
@@ -238,19 +184,15 @@ export function usePatientEvolutionHandlers({
       return;
     }
 
-    const isV2orV3 = evolutionVersion === "v2-texto" || evolutionVersion === "v3-notion";
-    const hasContent = isV2orV3
-      ? evolutionV2Data.patientReport ||
-        evolutionV2Data.evolutionText ||
-        evolutionV2Data.procedures.length > 0
-      : soapData.subjective || soapData.objective || soapData.assessment || soapData.plan;
+    const hasContent =
+      stripHtml(current.observacao || "").length > 0 ||
+      current.procedures.length > 0 ||
+      current.exercises.length > 0;
 
     if (!hasContent) {
       toast({
         title: "Complete a evolução",
-        description: isV2orV3
-          ? "Preencha o texto de evolução antes de concluir o atendimento."
-          : "Preencha os campos SOAP antes de concluir o atendimento.",
+        description: "Preencha a observação clínica antes de concluir o atendimento.",
         variant: "destructive",
       });
       return;
@@ -294,6 +236,16 @@ export function usePatientEvolutionHandlers({
     }
 
     try {
+      const proceduresList = current.procedures
+        .map((p) => `<li>${p.completed ? "✓ " : "• "}${p.name}${p.notes ? ` — ${p.notes}` : ""}</li>`)
+        .join("");
+      const exercisesList = current.exercises
+        .map((e) => `<li>${e.name}${e.prescription ? ` — ${e.prescription}` : ""}</li>`)
+        .join("");
+      const homeList = current.homeExercises
+        .map((e) => `<li>${e.name}${e.prescription ? ` — ${e.prescription}` : ""}</li>`)
+        .join("");
+
       const htmlContent = `
         <div style="padding: 20px; font-family: sans-serif;">
           <h1 style="color: #2563eb; text-align: center; border-bottom: 2px solid #2563eb; padding-bottom: 10px;">Evolução Clínica de Fisioterapia</h1>
@@ -309,24 +261,25 @@ export function usePatientEvolutionHandlers({
           </section>
 
           <section style="margin-top: 20px;">
-            <h3 style="background: #f3f4f6; padding: 8px; border-radius: 4px; border-left: 4px solid #2563eb;">Registro Atual (${format(new Date(), "dd/MM/yyyy")})</h3>
-            <div style="margin-bottom: 15px; border: 1px solid #e5e7eb; padding: 15px; border-radius: 8px;">
-              <p style="margin-bottom: 8px;"><strong>Subjetivo (S):</strong> ${soapData.subjective || "Não informado"}</p>
-              <p style="margin-bottom: 8px;"><strong>Objetivo (O):</strong> ${soapData.objective || "Não informado"}</p>
-              <p style="margin-bottom: 8px;"><strong>Avaliação (A):</strong> ${soapData.assessment || "Não informado"}</p>
-              <p><strong>Plano (P):</strong> ${soapData.plan || "Não informado"}</p>
+            <h3 style="background: #f3f4f6; padding: 8px; border-radius: 4px; border-left: 4px solid #2563eb;">Sessão de ${format(new Date(), "dd/MM/yyyy")}</h3>
+            <div style="border: 1px solid #e5e7eb; padding: 15px; border-radius: 8px;">
+              <p><strong>Dor (EVA):</strong> ${current.painScale ?? "—"}/10</p>
+              <div style="margin-top: 10px;">${current.observacao || "<em>Sem observação</em>"}</div>
+              ${proceduresList ? `<h4>Procedimentos realizados</h4><ul>${proceduresList}</ul>` : ""}
+              ${exercisesList ? `<h4>Exercícios na sessão</h4><ul>${exercisesList}</ul>` : ""}
+              ${homeList ? `<h4>Exercícios para casa</h4><ul>${homeList}</ul>` : ""}
             </div>
           </section>
 
           <section style="margin-top: 20px;">
             <h3 style="background: #f3f4f6; padding: 8px; border-radius: 4px; border-left: 4px solid #2563eb;">Histórico de Sessões</h3>
-            ${previousEvolutions
+            ${(previousEvolutions ?? [])
               .slice(0, 5)
               .map(
                 (ev: any) => `
               <div style="border-bottom: 1px solid #f3f4f6; padding: 10px 0;">
                 <p style="font-size: 12px; color: #666; font-weight: bold;">Sessão em ${format(new Date(ev.created_at), "dd/MM/yyyy")}</p>
-                <p style="font-size: 14px; margin-top: 4px;">${ev.assessment || "Sem descrição clínica."}</p>
+                <p style="font-size: 14px; margin-top: 4px;">${stripHtml(ev.observacao || "").slice(0, 240) || "Sem registro."}</p>
               </div>
             `,
               )
@@ -363,6 +316,6 @@ export function usePatientEvolutionHandlers({
     handleCompleteSession,
     handleExportPDF,
     isSaving: autoSaveMutation.isPending,
-    isCompleting: completeAppointment.isPending,
+    isCompleting: false,
   };
 }

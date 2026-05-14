@@ -62,21 +62,19 @@ export function SemanticSearch({
         patientId,
       });
 
-      const formatted: SearchResult[] = searchResults.map((r) => ({
-        evolutionId: r.evolutionId,
-        date: r.evolution.date,
-        patientName: r.evolution.patientName || "Paciente",
-        patientId: r.evolution.patientId,
-        soap: [
-          r.evolution.subjective && `S: ${r.evolution.subjective}`,
-          r.evolution.objective && `O: ${r.evolution.objective}`,
-          r.evolution.assessment && `A: ${r.evolution.assessment}`,
-          r.evolution.plan && `P: ${r.evolution.plan}`,
-        ]
-          .filter(Boolean)
-          .join("\n"),
-        similarity: r.similarity,
-      }));
+      const formatted: SearchResult[] = searchResults.map((r) => {
+        const ev = r.evolution as any;
+        const observacao = ev.observacao || "";
+        const plain = observacao.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+        return {
+          evolutionId: r.evolutionId,
+          date: r.evolution.date,
+          patientName: r.evolution.patientName || "Paciente",
+          patientId: r.evolution.patientId,
+          soap: plain || "Sem observação",
+          similarity: r.similarity,
+        };
+      });
 
       setResults(formatted);
       logger.info(`[SemanticSearch] ${formatted.length} resultados para "${debouncedQuery}"`);

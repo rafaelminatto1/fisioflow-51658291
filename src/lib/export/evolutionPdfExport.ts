@@ -18,10 +18,10 @@ interface SessionData {
   observations: string;
   therapist: string;
   duration: number;
-  subjective?: string;
-  objective?: string;
-  assessment?: string;
-  plan?: string;
+  observacao?: string;
+  painScale?: number | null;
+  procedures?: Array<{ name?: string; notes?: string }>;
+  exercises?: Array<{ name?: string; prescription?: string }>;
 }
 
 interface EvolutionMetrics {
@@ -191,24 +191,30 @@ export const generateEvolutionPDF = (
   doc.text("📅 Histórico de Sessões", 20, yPos);
   yPos += 8;
 
-  const sessionTableData = sessions.map((s, i) => [
-    `#${sessions.length - i}`,
-    format(new Date(s.date), "dd/MM/yyyy"),
-    s.painLevel.toString(),
-    [
-      s.subjective ? `S: ${formatClinicalText(s.subjective)}` : null,
-      s.objective ? `O: ${formatClinicalText(s.objective)}` : null,
-      s.assessment ? `A: ${formatClinicalText(s.assessment)}` : null,
-      s.plan ? `P: ${formatClinicalText(s.plan)}` : null,
-      s.observations && !s.subjective ? `Obs: ${formatClinicalText(s.observations)}` : null,
-    ]
-      .filter(Boolean)
-      .join("\n"),
-  ]);
+  const stripHtml = (html: string) =>
+    html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+
+  const sessionTableData = sessions.map((s, i) => {
+    const obsText = s.observacao ? stripHtml(s.observacao) : s.observations || "";
+    const procText = s.procedures?.length
+      ? `\nProc.: ${s.procedures.map((p) => p.name).filter(Boolean).join(", ")}`
+      : "";
+    const exText = s.exercises?.length
+      ? `\nExerc.: ${s.exercises
+          .map((e) => [e.name, e.prescription].filter(Boolean).join(" "))
+          .join(", ")}`
+      : "";
+    return [
+      `#${sessions.length - i}`,
+      format(new Date(s.date), "dd/MM/yyyy"),
+      (s.painScale ?? s.painLevel ?? "—").toString(),
+      `${obsText}${procText}${exText}`.trim() || "—",
+    ];
+  });
 
   autoTable(doc, {
     startY: yPos,
-    head: [["Nº", "Data", "Dor", "Evolução SOAP / Conduta"]],
+    head: [["Nº", "Data", "EVA", "Observação / Conduta"]],
     body: sessionTableData,
     theme: "grid",
     headStyles: { fillColor: primaryColor, textColor: 255, fontSize: 10 },

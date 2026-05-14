@@ -141,11 +141,11 @@ export const Mappers = {
     return {
       id: data.id,
       date: data.date,
-      subjective: data.subjective,
-      objective: data.objective,
-      assessment: data.assessment,
-      plan: data.plan,
-      painLevel: data.pain_level,
+      observacao: data.observacao ?? "",
+      painScale: data.pain_scale ?? data.pain_level ?? null,
+      procedures: Array.isArray(data.procedures) ? data.procedures : [],
+      exercises: Array.isArray(data.exercises) ? data.exercises : [],
+      homeExercises: Array.isArray(data.home_exercises) ? data.home_exercises : [],
       sessionNumber: data.session_number,
       professionalName: data.professional_name,
     };
