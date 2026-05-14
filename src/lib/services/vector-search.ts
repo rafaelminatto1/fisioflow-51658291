@@ -6,7 +6,11 @@
  */
 
 import { logger } from "@/lib/errors/logger";
-import { generateEmbedding, generateSOAPEmbedding, cosineSimilarity } from "@/lib/ai/embeddings";
+import {
+  generateEmbedding,
+  generateEvolutionEmbedding,
+  cosineSimilarity,
+} from "@/lib/ai/embeddings";
 import { withPerformanceTrace } from "@/lib/monitoring/performance";
 import type { Evolution } from "@/types/clinical";
 import { sessionsApi } from "@/api/v2";
@@ -33,13 +37,14 @@ function toEvolution(
     id: session.id,
     patientId: session.patient_id,
     organizationId: undefined,
-    subjective: session.subjective,
-    objective: session.objective,
-    assessment: session.assessment,
-    plan: session.plan,
+    observacao: (session as any).observacao ?? "",
+    painScale: (session as any).pain_scale ?? null,
+    procedures: (session as any).procedures ?? [],
+    exercises: (session as any).exercises ?? [],
+    measurements: (session as any).measurements ?? [],
     createdAt: session.created_at,
     updatedAt: session.updated_at,
-  } as Evolution;
+  } as unknown as Evolution;
 }
 
 export async function findSimilarEvolutions(
@@ -64,11 +69,10 @@ export async function findSimilarEvolutions(
 
       for (const session of sessions) {
         const evolution = toEvolution(session);
-        const text = [session.subjective, session.objective, session.assessment, session.plan]
-          .filter(Boolean)
-          .join("\n");
-        if (!text) continue;
-        const embedding = await generateEmbedding(text);
+        const observacao = (session as any).observacao || "";
+        const plainText = observacao.replace(/<[^>]+>/g, " ").trim();
+        if (!plainText) continue;
+        const embedding = await generateEmbedding(plainText);
         const similarity = cosineSimilarity(queryEmbedding, embedding);
         if (similarity >= minSimilarity) {
           results.push({ evolution, similarity, evolutionId: session.id });
@@ -87,7 +91,13 @@ export async function indexEvolution(
   evolutionId: string,
   evolution: Partial<Evolution>,
 ): Promise<void> {
-  const embedding = await generateSOAPEmbedding(evolution);
+  const embedding = await generateEvolutionEmbedding({
+    observacao: (evolution as any).observacao,
+    pain_scale: (evolution as any).painScale,
+    procedures: (evolution as any).procedures,
+    exercises: (evolution as any).exercises,
+    measurements: (evolution as any).measurements,
+  });
   indexedEmbeddings.set(evolutionId, { embedding, evolution });
 }
 
