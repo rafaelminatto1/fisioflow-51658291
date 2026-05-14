@@ -1,7 +1,13 @@
 /**
  * RAG (Retrieval-Augmented Generation) para Sugestões Clínicas
  *
- * Combina busca vetorial com LLM para gerar sugestões baseadas em histórico
+ * Reescrito após migração SOAP → observação livre (Maio 2026):
+ * o contexto agora é montado a partir de `observacao` (texto livre) +
+ * estruturados (EVA, procedimentos, exercícios, medições). Não há mais
+ * blocos S/O/A/P.
+ *
+ * @module lib/ai/rag-clinical
+ * @version 2.0.0
  */
 
 import { flashModel, proModel } from "@/lib/gemini-ai";
@@ -12,21 +18,38 @@ import {
   indexEvolution,
   type VectorSearchResult,
 } from "@/lib/services/vector-search";
-import type { Evolution, Patient } from "@/types/clinical";
+import type {
+  ProcedureItem,
+  ExerciseItem,
+  MeasurementItem,
+} from "@/types/evolution";
 
-/**
- * Contexto clínico para geração de sugestões
- */
+/** Evolução clínica (shape comum usado por retrieval/prompt). */
+export interface RagEvolution {
+  id?: string;
+  date?: string;
+  observacao?: string;
+  painScale?: number | null;
+  procedures?: ProcedureItem[];
+  exercises?: ExerciseItem[];
+  measurements?: MeasurementItem[];
+}
+
+/** Paciente em forma mínima para contexto. */
+export interface RagPatient {
+  id: string;
+  name: string;
+  age?: number;
+  diagnosis?: string[];
+}
+
 export interface ClinicalContext {
-  patient: Patient;
-  currentEvolution?: Evolution;
-  recentEvolutions: Evolution[];
+  patient: RagPatient;
+  currentEvolution?: RagEvolution;
+  recentEvolutions: RagEvolution[];
   similarCases: VectorSearchResult[];
 }
 
-/**
- * Sugestão clínica gerada
- */
 export interface ClinicalSuggestion {
   treatment: string;
   exercises: Array<{
@@ -46,70 +69,94 @@ export interface ClinicalSuggestion {
   confidence: "low" | "medium" | "high";
 }
 
+// ============================================================================
+// HELPERS
+// ============================================================================
+
+function stripHtml(html: string): string {
+  return html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+}
+
+function evolutionToText(ev: Partial<RagEvolution>, maxObsChars = 400): string {
+  const obs = stripHtml(ev.observacao || "").slice(0, maxObsChars);
+  const eva = ev.painScale != null ? `EVA ${ev.painScale}/10` : null;
+  const procs = ev.procedures?.length
+    ? `Procedimentos: ${ev.procedures.map((p) => p.name).filter(Boolean).join(", ")}`
+    : null;
+  const exs = ev.exercises?.length
+    ? `Exercícios: ${ev.exercises.map((e) => e.name).filter(Boolean).join(", ")}`
+    : null;
+  return [obs, eva, procs, exs].filter(Boolean).join("\n");
+}
+
+function evolutionToQueryText(ev: Partial<RagEvolution>): string {
+  return [
+    stripHtml(ev.observacao || ""),
+    ev.painScale != null ? `dor ${ev.painScale}/10` : "",
+    (ev.procedures || []).map((p) => p.name).filter(Boolean).join(" "),
+    (ev.exercises || []).map((e) => e.name).filter(Boolean).join(" "),
+  ]
+    .filter(Boolean)
+    .join("\n");
+}
+
+// ============================================================================
+// PUBLIC API
+// ============================================================================
+
 /**
- * Busca casos similares e gera sugestões de tratamento
- *
- * @param patientId ID do paciente
- * @param currentEvolution Evolução atual (opcional)
- * @returns Sugestões clínicas
+ * Busca casos similares e gera sugestão de tratamento.
  */
 export async function generateTreatmentSuggestion(
   patientId: string,
-  currentEvolution?: Partial<Evolution>,
+  currentEvolution?: Partial<RagEvolution>,
 ): Promise<ClinicalSuggestion | null> {
   return withPerformanceTrace("rag_treatment_suggestion", async () => {
     try {
-      // 1. Buscar contexto do paciente
       const context = await buildClinicalContext(patientId, currentEvolution);
 
       if (context.similarCases.length === 0) {
-        logger.info(`[RAG] Nenhum caso similar encontrado para paciente ${patientId}`);
+        logger.info(
+          `[RAG] Nenhum caso similar encontrado para paciente ${patientId}`,
+          undefined,
+          "rag-clinical",
+        );
         return null;
       }
 
-      // 2. Gerar sugestão usando RAG
       return await generateSuggestionWithContext(context);
     } catch (error) {
-      logger.error(`[RAG] Erro ao gerar sugestão para paciente ${patientId}:`, error);
+      logger.error(
+        `[RAG] Erro ao gerar sugestão para paciente ${patientId}:`,
+        error,
+        "rag-clinical",
+      );
       return null;
     }
   });
 }
 
-/**
- * Constrói contexto clínico do paciente
- */
 async function buildClinicalContext(
   patientId: string,
-  currentEvolution?: Partial<Evolution>,
+  currentEvolution?: Partial<RagEvolution>,
 ): Promise<ClinicalContext> {
-  // Buscar paciente (mock - implementar busca real)
-  const patient = {} as Patient;
+  // TODO: integrar com patientsApi para obter dados reais.
+  const patient: RagPatient = { id: patientId, name: "" };
+  const recentEvolutions: RagEvolution[] = [];
 
-  // Buscar evoluções recentes
-  const recentEvolutions: Evolution[] = []; // Mock
+  const evolution = currentEvolution || (recentEvolutions[0] as RagEvolution | undefined);
 
-  // Se não tem evolução atual, usar a mais recente
-  const evolution = currentEvolution || (recentEvolutions[0] as Evolution);
-
-  // Buscar casos similares
   let similarCases: VectorSearchResult[] = [];
 
   if (evolution) {
-    const queryText = [
-      evolution.subjective || "",
-      evolution.objective || "",
-      evolution.assessment || "",
-      evolution.plan || "",
-    ]
-      .filter(Boolean)
-      .join("\n");
-
-    similarCases = await findSimilarEvolutions(queryText, {
-      limit: 5,
-      minSimilarity: 0.7,
-      patientId: patientId, // Incluir histórico do próprio paciente
-    });
+    const queryText = evolutionToQueryText(evolution);
+    if (queryText) {
+      similarCases = await findSimilarEvolutions(queryText, {
+        limit: 5,
+        minSimilarity: 0.7,
+        patientId,
+      });
+    }
   }
 
   return {
@@ -120,62 +167,53 @@ async function buildClinicalContext(
   };
 }
 
-/**
- * Gera sugestão com contexto usando RAG
- */
 async function generateSuggestionWithContext(
   context: ClinicalContext,
-): Promise<ClinicalSuggestion> {
+): Promise<ClinicalSuggestion | null> {
   return traceAIOperation("gemini-2.5-flash", "rag_suggestion", async () => {
-    // Preparar contexto
     const similarCasesText = context.similarCases
-      .map((c, i) =>
-        `
-Caso Similar #${i + 1} (similaridade: ${(c.similarity * 100).toFixed(0)}%):
-Data: ${c.evolution.date}
-Subjetivo: ${c.evolution.subjective || "N/A"}
-Objetivo: ${c.evolution.objective || "N/A"}
-Avaliação: ${c.evolution.assessment || "N/A"}
-Plano: ${c.evolution.plan || "N/A"}
-      `.trim(),
-      )
+      .map((c, i) => {
+        const evo = (c.evolution as unknown) as RagEvolution;
+        return `
+Caso similar #${i + 1} (similaridade: ${(c.similarity * 100).toFixed(0)}%)
+Data: ${evo.date ?? "—"}
+${evolutionToText(evo)}
+        `.trim();
+      })
       .join("\n\n");
 
     const recentEvolutionsText = context.recentEvolutions
       .slice(-3)
-      .map((e, i) =>
-        `
-Evolução Recente #${i + 1} (${e.date}):
-${e.subjective || ""}
-${e.assessment || ""}
-      `.trim(),
+      .map(
+        (e, i) =>
+          `
+Evolução recente #${i + 1} (${e.date ?? "—"})
+${evolutionToText(e, 250)}
+        `.trim(),
       )
       .join("\n\n");
 
+    const currentText = context.currentEvolution
+      ? `
+## Evolução atual
+${evolutionToText(context.currentEvolution)}
+`.trim()
+      : "";
+
     const prompt = `
-Você é um assistente clínico especializado em fisioterapia. Com base nos casos abaixo, sugira um tratamento.
+Você é um assistente clínico especializado em fisioterapia. Com base nos casos abaixo, sugira um plano de tratamento.
 
-# Caso Atual
-Paciente: ${context.patient.name}
-Idade: ${context.patient.age || "N/A"}
-Diagnósticos: ${context.patient.diagnosis?.join(", ") || "N/A"}
+## Paciente
+- Nome: ${context.patient.name || "—"}
+- Idade: ${context.patient.age ?? "N/A"}
+- Diagnósticos: ${context.patient.diagnosis?.join(", ") || "N/A"}
 
-${
-  context.currentEvolution
-    ? `
-Evolução Atual:
-Subjetivo: ${context.currentEvolution.subjective || "N/A"}
-Objetivo: ${context.currentEvolution.objective || "N/A"}
-Avaliação: ${context.currentEvolution.assessment || "N/A"}
-`
-    : "# Evoluções Recentes do Paciente"
-}
-${recentEvolutionsText}
+${currentText || `## Evoluções recentes do paciente\n${recentEvolutionsText}`}
 
-# Casos Similares (Histórico de Tratamentos que Funcionaram)
+## Casos similares (histórico de tratamentos que funcionaram)
 ${similarCasesText}
 
-# Instruções
+## Instruções
 Com base nos casos similares acima, sugira:
 1. Um plano de tratamento específico
 2. 3-5 exercícios com nome, descrição, séries, repetições e justificativa
@@ -185,64 +223,54 @@ Com base nos casos similares acima, sugira:
 
 Responda em JSON com esta estrutura:
 {
-  "treatment": "descrição do tratamento",
+  "treatment": "...",
   "exercises": [
-    {
-      "name": "nome do exercício",
-      "description": "descrição detalhada",
-      "sets": 3,
-      "reps": 10,
-      "rationale": "justificativa baseada nos casos similares"
-    }
+    { "name": "...", "description": "...", "sets": 3, "reps": 10, "rationale": "..." }
   ],
-  "precautions": ["precaução 1", "precaução 2"],
-  "expectedOutcomes": ["resultado 1", "resultado 2"],
+  "precautions": ["..."],
+  "expectedOutcomes": ["..."],
   "confidence": "high"
 }
 
-IMPORTANTE: Baseie suas sugestões APENAS nos casos similares apresentados. Não invente informações.
+IMPORTANTE: baseie suas sugestões APENAS nos casos similares apresentados. Não invente informações.
 `.trim();
 
-    // Gerar resposta
     const result = await proModel.generateContent({
       contents: [{ role: "user", parts: [{ text: prompt }] }],
-      generationConfig: {
-        temperature: 0.7,
-        maxOutputTokens: 2000,
-      },
+      generationConfig: { temperature: 0.7, maxOutputTokens: 2000 },
     });
 
-    const response = result.response;
-    const text = response.text();
-
-    // Extrair JSON
+    const text = result.response.text();
     const jsonMatch = text.match(/```json\n([\s\S]*?)\n```/) || text.match(/\{[\s\S]*\}/);
 
     if (!jsonMatch) {
-      logger.error("[RAG] Resposta não contém JSON válido:", text);
+      logger.error("[RAG] Resposta não contém JSON válido:", text, "rag-clinical");
       return null;
     }
 
     const suggestion = JSON.parse(jsonMatch[1] || jsonMatch[0]) as ClinicalSuggestion;
 
-    // Adicionar referências aos casos similares
-    suggestion.references = context.similarCases.slice(0, 3).map((c) => ({
-      evolutionId: c.evolutionId,
-      date: c.evolution.date,
-      summary: `${c.evolution.assessment || "Sem avaliação"} (similaridade: ${(c.similarity * 100).toFixed(0)}%)`,
-    }));
+    suggestion.references = context.similarCases.slice(0, 3).map((c) => {
+      const evo = (c.evolution as unknown) as RagEvolution;
+      const snippet = stripHtml(evo.observacao || "").slice(0, 120) || "Sem observação";
+      return {
+        evolutionId: c.evolutionId,
+        date: evo.date ?? "",
+        summary: `${snippet} (similaridade: ${(c.similarity * 100).toFixed(0)}%)`,
+      };
+    });
 
-    logger.info(`[RAG] Sugestão gerada com confiança ${suggestion.confidence}`);
+    logger.info(
+      `[RAG] Sugestão gerada com confiança ${suggestion.confidence}`,
+      undefined,
+      "rag-clinical",
+    );
     return suggestion;
   });
 }
 
 /**
- * Gera sugestão de exercícios baseada em diagnóstico
- *
- * @param diagnosis Diagnóstico do paciente
- * @param symptoms Sintomas atuais
- * @returns Lista de exercícios sugeridos
+ * Sugere exercícios a partir de diagnóstico (sem contexto RAG).
  */
 export async function suggestExercisesByDiagnosis(
   diagnosis: string,
@@ -256,81 +284,68 @@ Diagnóstico: ${diagnosis}
 ${symptoms ? `Sintomas: ${symptoms.join(", ")}` : ""}
 
 Para cada exercício, forneça:
-- name: nome do exercício
-- description: descrição detalhada de como executar
-- sets: número de séries (default 3)
-- reps: número de repetições (default 10)
-- rationale: por que este exercício ajuda
+- name, description, sets (default 3), reps (default 10), rationale.
 
 Responda em JSON array.
 `.trim();
 
     const result = await flashModel.generateContent(prompt);
     const text = result.response.text();
-
     const jsonMatch = text.match(/```json\n([\s\S]*?)\n```/) || text.match(/\[[\s\S]*\]/);
 
     if (!jsonMatch) {
-      logger.error("[RAG] Resposta de exercícios não contém JSON válido:", text);
+      logger.error(
+        "[RAG] Resposta de exercícios não contém JSON válido:",
+        text,
+        "rag-clinical",
+      );
       return [];
     }
 
-    const exercises = JSON.parse(jsonMatch[1] || jsonMatch[0]);
-    return exercises;
+    return JSON.parse(jsonMatch[1] || jsonMatch[0]);
   });
 }
 
 /**
- * Analisa evolução e sugere melhorias no plano
+ * Analisa uma evolução e sugere melhorias no plano.
  *
- * @param evolutionId ID da evolução
- * @returns Análise e sugestões
+ * O caller deve passar a evolução completa — a função não busca no DB.
  */
-export async function analyzeEvolutionAndSuggest(evolutionId: string): Promise<{
+export async function analyzeEvolutionAndSuggest(
+  evolution: RagEvolution,
+): Promise<{
   analysis: string;
   suggestions: string[];
   considerations: string[];
 } | null> {
   return withPerformanceTrace("rag_evolution_analysis", async () => {
     try {
-      // Buscar evolução (mock - implementar busca real)
-      const evolution = {} as Evolution;
+      const queryText = evolutionToQueryText(evolution);
+      if (!queryText) return null;
 
-      // Buscar evoluções anteriores do mesmo paciente
-      // const previousEvolutions = await ...
-
-      // Buscar casos similares
-      const similarCases = await findSimilarEvolutions(
-        [evolution.subjective, evolution.assessment].filter(Boolean).join("\n"),
-        { limit: 5, minSimilarity: 0.6 },
-      );
+      const similarCases = await findSimilarEvolutions(queryText, {
+        limit: 5,
+        minSimilarity: 0.6,
+      });
 
       if (similarCases.length === 0) {
         return null;
       }
 
-      // Gerar análise
       const prompt = `
 Analise esta evolução de fisioterapia e sugira melhorias:
 
-# Evolução Atual
-Data: ${evolution.date}
-Subjetivo: ${evolution.subjective || "N/A"}
-Objetivo: ${evolution.objective || "N/A"}
-Avaliação: ${evolution.assessment || "N/A"}
-Plano: ${evolution.plan || "N/A"}
+## Evolução atual
+Data: ${evolution.date ?? "—"}
+${evolutionToText(evolution)}
 
-# Casos Similares
+## Casos similares
 ${similarCases
-  .map(
-    (c, i) => `
-Caso #${i + 1} (${c.evolution.date}):
-Avaliação: ${c.evolution.assessment}
-Plano: ${c.evolution.plan}
-Similaridade: ${(c.similarity * 100).toFixed(0)}%
-`,
-  )
-  .join("\n")}
+  .map((c, i) => {
+    const evo = (c.evolution as unknown) as RagEvolution;
+    return `Caso #${i + 1} (${evo.date ?? "—"}, similaridade ${(c.similarity * 100).toFixed(0)}%)\n${evolutionToText(evo, 250)}`;
+  })
+  .join("\n\n")}
 
 Forneça:
 1. Uma análise breve da evolução atual
@@ -339,70 +354,57 @@ Forneça:
 
 Responda em JSON:
 {
-  "analysis": "análise da evolução",
-  "suggestions": ["sugestão 1", "sugestão 2"],
-  "considerations": ["consideração 1", "consideração 2"]
+  "analysis": "...",
+  "suggestions": ["..."],
+  "considerations": ["..."]
 }
 `.trim();
 
       const result = await flashModel.generateContent(prompt);
       const text = result.response.text();
-
       const jsonMatch = text.match(/```json\n([\s\S]*?)\n```/) || text.match(/\{[\s\S]*\}/);
 
-      if (!jsonMatch) {
-        return null;
-      }
+      if (!jsonMatch) return null;
 
       return JSON.parse(jsonMatch[1] || jsonMatch[0]);
     } catch (error) {
-      logger.error(`[RAG] Erro ao analisar evolução ${evolutionId}:`, error);
+      logger.error("[RAG] Erro ao analisar evolução:", error, "rag-clinical");
       return null;
     }
   });
 }
 
-/**
- * Indexa evolução automaticamente após criação/edição
- */
+/** Indexa evolução automaticamente após criação/edição. */
 export async function autoIndexEvolution(
   evolutionId: string,
-  evolution: Partial<Evolution>,
+  evolution: Partial<RagEvolution>,
 ): Promise<void> {
   try {
-    await indexEvolution(evolutionId, evolution);
-    logger.info(`[RAG] Evolução ${evolutionId} indexada automaticamente`);
+    await indexEvolution(evolutionId, evolution as never);
+    logger.info(
+      `[RAG] Evolução ${evolutionId} indexada automaticamente`,
+      undefined,
+      "rag-clinical",
+    );
   } catch (error) {
-    logger.error(`[RAG] Erro ao auto-indexar evolução ${evolutionId}:`, error);
+    logger.error(`[RAG] Erro ao auto-indexar evolução ${evolutionId}:`, error, "rag-clinical");
   }
 }
 
-/**
- * Chat RAG - Perguntas e respostas sobre o paciente
- *
- * @param patientId ID do paciente
- * @param question Pergunta do profissional
- * @returns Resposta baseada no contexto do paciente
- */
+/** Chat RAG sobre o paciente (placeholder: contexto completo é responsabilidade do caller). */
 export async function ragChatAboutPatient(
   patientId: string,
   question: string,
+  contextSummary?: string,
 ): Promise<string | null> {
   return traceAIOperation("gemini-2.5-flash", "rag_chat", async () => {
     try {
-      // Buscar evoluções do paciente para contexto
-      // const evolutions = await ...
-
-      // Buscar contexto relevante baseado na pergunta
-      // const relevantContext = await findSimilarEvolutions(question, { patientId });
-
-      // Gerar resposta
       const prompt = `
 Pergunta: ${question}
 
-# Contexto do Paciente
+## Contexto do paciente
 ID: ${patientId}
-[Inserir contexto completo do paciente aqui]
+${contextSummary || "(sem contexto fornecido)"}
 
 Baseado no contexto acima, responda à pergunta de forma clara e concisa.
 Se a pergunta não puder ser respondida com o contexto disponível, diga que não há informações suficientes.
@@ -411,7 +413,11 @@ Se a pergunta não puder ser respondida com o contexto disponível, diga que nã
       const result = await flashModel.generateContent(prompt);
       return result.response.text();
     } catch (error) {
-      logger.error(`[RAG] Erro no chat RAG para paciente ${patientId}:`, error);
+      logger.error(
+        `[RAG] Erro no chat RAG para paciente ${patientId}:`,
+        error,
+        "rag-clinical",
+      );
       return null;
     }
   });
