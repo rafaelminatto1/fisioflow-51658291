@@ -79,23 +79,23 @@ export function mergeAppearanceState(
   serverProfile: AgendaAppearanceState,
   localState: AgendaAppearanceState,
 ): AgendaAppearanceState {
+  const safeServer = serverProfile || { global: {} as any };
+  const safeLocal = localState || { global: {} as any };
+
   return {
-    // Server global wins over local global
-    global: { ...localState.global, ...serverProfile.global },
-    // For per-view overrides: if server has a value for the view, server wins
-    // If server has undefined for a view, keep local (server hasn't set it)
+    global: { ...safeLocal.global, ...safeServer.global },
     day:
-      serverProfile.day !== undefined
-        ? { ...localState.day, ...serverProfile.day }
-        : localState.day,
+      safeServer.day !== undefined
+        ? { ...safeLocal.day, ...safeServer.day }
+        : safeLocal.day,
     week:
-      serverProfile.week !== undefined
-        ? { ...localState.week, ...serverProfile.week }
-        : localState.week,
+      safeServer.week !== undefined
+        ? { ...safeLocal.week, ...safeServer.week }
+        : safeLocal.week,
     month:
-      serverProfile.month !== undefined
-        ? { ...localState.month, ...serverProfile.month }
-        : localState.month,
+      safeServer.month !== undefined
+        ? { ...safeLocal.month, ...safeServer.month }
+        : safeLocal.month,
   };
 }
 
