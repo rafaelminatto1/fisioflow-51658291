@@ -10,8 +10,6 @@ import {
   ChevronRight,
   Copy,
   Calendar,
-  User,
-  Activity,
   FileText,
   Loader2,
 } from "lucide-react";
@@ -19,19 +17,29 @@ import { format, formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useSoapRecords } from "@/hooks/useSoapRecords";
 import { cn } from "@/lib/utils";
-import { formatClinicalText } from "@/lib/evolution/formatters";
+import type {
+  ProcedureItem,
+  ExerciseItem,
+  MeasurementItem,
+  HomeExerciseItem,
+} from "@/types/evolution";
 
 interface SessionHistoryPanelProps {
   patientId: string;
   onReplicateConduct?: (conduct: {
-    plan?: string;
-    subjective?: string;
-    objective?: string;
-    assessment?: string;
+    observacao?: string;
+    pain_scale?: number | null;
+    procedures?: ProcedureItem[];
+    exercises?: ExerciseItem[];
+    measurements?: MeasurementItem[];
+    home_exercises?: HomeExerciseItem[];
   }) => void;
   onSelectSession?: (sessionId: string) => void;
   maxItems?: number;
 }
+
+const stripHtml = (html: string) =>
+  html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
 
 export const SessionHistoryPanel: React.FC<SessionHistoryPanelProps> = ({
   patientId,
@@ -102,8 +110,11 @@ export const SessionHistoryPanel: React.FC<SessionHistoryPanelProps> = ({
               {records.map((record, index) => {
                 const isExpanded = expandedIds.has(record.id);
                 const recordDate = new Date(record.record_date);
+                const obsText = stripHtml(record.observacao || "");
                 const hasContent =
-                  record.subjective || record.objective || record.assessment || record.plan;
+                  obsText.length > 0 ||
+                  (record.procedures?.length ?? 0) > 0 ||
+                  (record.exercises?.length ?? 0) > 0;
 
                 return (
                   <Collapsible
@@ -157,12 +168,16 @@ export const SessionHistoryPanel: React.FC<SessionHistoryPanelProps> = ({
                             </div>
 
                             {!isExpanded && hasContent && (
-                              <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
-                                {truncateText(
-                                  record.subjective || record.objective || record.plan || "",
-                                  80,
+                              <div className="flex items-center gap-2 mt-1">
+                                {record.pain_scale != null && (
+                                  <Badge variant="outline" className="text-[10px] px-1 py-0">
+                                    EVA {record.pain_scale}/10
+                                  </Badge>
                                 )}
-                              </p>
+                                <p className="text-xs text-muted-foreground line-clamp-1 flex-1">
+                                  {truncateText(obsText, 100)}
+                                </p>
+                              </div>
                             )}
                           </div>
                         </button>
@@ -170,49 +185,57 @@ export const SessionHistoryPanel: React.FC<SessionHistoryPanelProps> = ({
 
                       <CollapsibleContent>
                         <div className="px-3 pb-3 pt-1 space-y-3">
-                          {record.subjective && (
-                            <div className="space-y-1">
-                              <p className="text-xs font-medium text-blue-500 flex items-center gap-1">
-                                <User className="h-3 w-3" />
-                                Subjetivo
-                              </p>
-                              <p className="text-xs text-muted-foreground bg-muted/50 p-2 rounded">
-                                {formatClinicalText(record.subjective)}
-                              </p>
+                          {record.pain_scale != null && (
+                            <div className="flex items-center gap-2">
+                              <Badge variant="secondary" className="text-xs">
+                                EVA {record.pain_scale}/10
+                              </Badge>
                             </div>
                           )}
 
-                          {record.objective && (
+                          {obsText && (
                             <div className="space-y-1">
-                              <p className="text-xs font-medium text-green-500 flex items-center gap-1">
-                                <Activity className="h-3 w-3" />
-                                Objetivo
-                              </p>
-                              <p className="text-xs text-muted-foreground bg-muted/50 p-2 rounded">
-                                {formatClinicalText(record.objective)}
-                              </p>
+                              <p className="text-xs font-medium text-amber-600">Observação clínica</p>
+                              <div
+                                className="text-xs text-muted-foreground bg-muted/50 p-2 rounded prose prose-sm max-w-none"
+                                // O backend já sanitiza HTML; o TipTap só emite tags seguras.
+                                dangerouslySetInnerHTML={{ __html: record.observacao || "" }}
+                              />
                             </div>
                           )}
 
-                          {record.assessment && (
+                          {record.procedures && record.procedures.length > 0 && (
                             <div className="space-y-1">
-                              <p className="text-xs font-medium text-purple-500">Avaliação</p>
-                              <p className="text-xs text-muted-foreground bg-muted/50 p-2 rounded">
-                                {formatClinicalText(record.assessment)}
+                              <p className="text-xs font-medium text-emerald-600">
+                                Procedimentos ({record.procedures.length})
                               </p>
+                              <ul className="text-xs text-muted-foreground bg-muted/50 p-2 rounded list-disc pl-4">
+                                {record.procedures.map((p) => (
+                                  <li key={p.id}>
+                                    {p.name}
+                                    {p.notes ? ` — ${p.notes}` : ""}
+                                  </li>
+                                ))}
+                              </ul>
                             </div>
                           )}
 
-                          {record.plan && (
+                          {record.exercises && record.exercises.length > 0 && (
                             <div className="space-y-1">
-                              <p className="text-xs font-medium text-amber-500">Plano</p>
-                              <p className="text-xs text-muted-foreground bg-muted/50 p-2 rounded">
-                                {formatClinicalText(record.plan)}
+                              <p className="text-xs font-medium text-emerald-600">
+                                Exercícios ({record.exercises.length})
                               </p>
+                              <ul className="text-xs text-muted-foreground bg-muted/50 p-2 rounded list-disc pl-4">
+                                {record.exercises.map((e) => (
+                                  <li key={e.id}>
+                                    {e.name}
+                                    {e.prescription ? ` — ${e.prescription}` : ""}
+                                  </li>
+                                ))}
+                              </ul>
                             </div>
                           )}
 
-                          {/* Only Plan button logic changed to callback usage */}
                           {onReplicateConduct && (
                             <Button
                               size="sm"
@@ -221,10 +244,12 @@ export const SessionHistoryPanel: React.FC<SessionHistoryPanelProps> = ({
                               onClick={(e) => {
                                 e.stopPropagation();
                                 onReplicateConduct({
-                                  plan: record.plan || undefined,
-                                  subjective: record.subjective || undefined,
-                                  objective: record.objective || undefined,
-                                  assessment: record.assessment || undefined,
+                                  observacao: record.observacao,
+                                  pain_scale: record.pain_scale,
+                                  procedures: record.procedures,
+                                  exercises: record.exercises,
+                                  measurements: record.measurements,
+                                  home_exercises: record.home_exercises,
                                 });
                               }}
                             >

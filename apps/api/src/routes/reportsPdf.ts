@@ -301,14 +301,62 @@ function buildHtml(req: PdfRequest): string {
 function buildContent(req: PdfRequest): string {
   const d = req.data as Record<string, string>;
 
+  const renderList = (items: unknown, fmt: (x: any) => string) => {
+    if (!Array.isArray(items) || items.length === 0) return "";
+    return `<ul style="margin:4px 0 0 18px;padding:0;">${items
+      .map((it) => `<li>${fmt(it)}</li>`)
+      .join("")}</ul>`;
+  };
+
   switch (req.type) {
-    case "soap":
+    case "soap": {
+      // Modelo único: observação livre + estruturados.
+      const dAny = req.data as Record<string, unknown>;
+      const observacao = typeof dAny.observacao === "string" ? dAny.observacao : "—";
+      const painScale = (dAny.pain_scale ?? dAny.pain_level) as number | null | undefined;
       return `
-        <div class="section"><div class="section-title">S — Subjetivo</div><div class="section-body">${d.subjective ?? "—"}</div></div>
-        <div class="section"><div class="section-title">O — Objetivo</div><div class="section-body">${d.objective ?? "—"}</div></div>
-        <div class="section"><div class="section-title">A — Avaliação</div><div class="section-body">${d.assessment ?? "—"}</div></div>
-        <div class="section"><div class="section-title">P — Plano</div><div class="section-body">${d.plan ?? "—"}</div></div>
-        ${d.pain_level ? `<div class="section"><div class="section-title">Escala de Dor (EVA)</div><div class="section-body">${d.pain_level}/10 — ${d.pain_location ?? ""}</div></div>` : ""}`;
+        <div class="section"><div class="section-title">Observação clínica</div><div class="section-body">${observacao}</div></div>
+        ${
+          painScale != null
+            ? `<div class="section"><div class="section-title">Escala de dor (EVA)</div><div class="section-body">${painScale}/10</div></div>`
+            : ""
+        }
+        ${
+          Array.isArray(dAny.procedures) && dAny.procedures.length
+            ? `<div class="section"><div class="section-title">Procedimentos realizados</div><div class="section-body">${renderList(
+                dAny.procedures,
+                (p: any) => `${p.name ?? ""}${p.notes ? ` — ${p.notes}` : ""}`,
+              )}</div></div>`
+            : ""
+        }
+        ${
+          Array.isArray(dAny.exercises) && dAny.exercises.length
+            ? `<div class="section"><div class="section-title">Exercícios na sessão</div><div class="section-body">${renderList(
+                dAny.exercises,
+                (e: any) =>
+                  `${e.name ?? ""}${e.prescription ? ` — ${e.prescription}` : ""}`,
+              )}</div></div>`
+            : ""
+        }
+        ${
+          Array.isArray(dAny.measurements) && dAny.measurements.length
+            ? `<div class="section"><div class="section-title">Medições</div><div class="section-body">${renderList(
+                dAny.measurements,
+                (m: any) =>
+                  `${m.name ?? ""}: ${m.value ?? "—"}${m.unit ?? ""}${m.side ? ` (${m.side})` : ""}`,
+              )}</div></div>`
+            : ""
+        }
+        ${
+          Array.isArray(dAny.home_exercises) && dAny.home_exercises.length
+            ? `<div class="section"><div class="section-title">Exercícios para casa</div><div class="section-body">${renderList(
+                dAny.home_exercises,
+                (e: any) =>
+                  `${e.name ?? ""}${e.prescription ? ` — ${e.prescription}` : ""}${e.frequency ? ` (${e.frequency})` : ""}`,
+              )}</div></div>`
+            : ""
+        }`;
+    }
 
     case "progress":
       return `
