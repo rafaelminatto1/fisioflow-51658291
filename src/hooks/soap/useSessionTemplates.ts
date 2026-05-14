@@ -23,10 +23,8 @@ export const useCreateSessionTemplate = () => {
       const res = await sessionTemplatesApi.create({
         name: template.name,
         description: template.description,
-        subjective: template.subjective as string | undefined,
-        objective: template.objective as string | undefined,
-        assessment: template.assessment as string | undefined,
-        plan: template.plan as string | undefined,
+        category: template.category ?? null,
+        body_html: template.body_html ?? "",
         is_global: template.is_global,
       });
       return res.data as SessionTemplate;

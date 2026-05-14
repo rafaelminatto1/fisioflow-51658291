@@ -215,15 +215,15 @@ const SessionDetailsModal: React.FC<{
     const mDateObj = new Date(m.measured_at);
     return isValid(mDateObj) && mDateObj.toISOString().split("T")[0] === sessionDate;
   });
-  const sessionAttachments = attachments.filter((a) => a.soap_record_id === session.id);
+  const sessionAttachments = attachments.filter(
+    (a) => (a as any).soap_record_id === session.id || (a as any).session_id === session.id,
+  );
 
-  // Contar campos SOAP preenchidos
-  const soapFieldsCount = [
-    session.subjective,
-    session.objective,
-    session.assessment,
-    session.plan,
-  ].filter(Boolean).length;
+  const stripHtml = (html: string) =>
+    html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+  const observacaoText = stripHtml((session as any).observacao || "");
+  const hasObservacao = observacaoText.length > 0;
+  const painScale = (session as any).pain_scale ?? (session as any).pain_level ?? null;
 
   // Função para exportar sessão como texto
   const handleExportSession = () => {
@@ -231,23 +231,10 @@ const SessionDetailsModal: React.FC<{
 SESSÃO ${session.session_number || "?"} - ${safeFormat(session.created_at, "dd/MM/yyyy")}
 ${"=".repeat(50)}
 
-ESCALA DE DOR (EVA): ${session.pain_level !== undefined ? `${session.pain_level}/10` : "N/A"}
-${session.pain_location ? `Localização: ${session.pain_location}` : ""}
-${session.pain_character ? `Característica: ${session.pain_character}` : ""}
+ESCALA DE DOR (EVA): ${painScale != null ? `${painScale}/10` : "N/A"}
 
-REGISTRO SOAP
-
-SUBJETIVO:
-${session.subjective || "Não preenchido"}
-
-OBJETIVO:
-${session.objective || "Não preenchido"}
-
-AVALIAÇÃO:
-${session.assessment || "Não preenchido"}
-
-PLANO:
-${session.plan || "Não preenchido"}
+OBSERVAÇÃO CLÍNICA:
+${observacaoText || "Não preenchida"}
 
 EXERCÍCIOS (${sessionExercises.length}):
 ${
@@ -324,7 +311,9 @@ ${
               </Badge>
               <div className="flex items-center gap-1.5">
                 <FileText className="h-3.5 w-3.5 text-muted-foreground" />
-                <span className="text-muted-foreground">{soapFieldsCount}/4 campos SOAP</span>
+                <span className="text-muted-foreground">
+                  {hasObservacao ? "Observação registrada" : "Sem observação"}
+                </span>
               </div>
             </div>
           </DialogHeader>
@@ -422,90 +411,26 @@ ${
                             {session.pain_level}/10
                           </Badge>
                         </div>
-                        {session.pain_location && (
-                          <div className="flex items-center gap-2 text-sm mt-2">
-                            <span className="text-muted-foreground">Localização:</span>
-                            <span className="font-medium">{session.pain_location}</span>
-                          </div>
-                        )}
-                        {session.pain_character && (
-                          <div className="flex items-center gap-2 text-sm">
-                            <span className="text-muted-foreground">Característica:</span>
-                            <span className="font-medium">{session.pain_character}</span>
-                          </div>
-                        )}
                       </div>
                     )}
 
-                    {/* Resumo SOAP */}
-                    <div className="space-y-3">
-                      <h3 className="font-semibold text-sm flex items-center gap-2">
-                        <FileText className="h-4 w-4" />
-                        Resumo do Registro SOAP
-                      </h3>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        {session.subjective && (
-                          <div className="bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-xl p-3">
-                            <div className="flex items-center gap-2 mb-1.5">
-                              <div className="w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center">
-                                <span className="text-[10px] font-bold text-white">S</span>
-                              </div>
-                              <span className="font-semibold text-xs text-blue-700 dark:text-blue-300">
-                                Subjetivo
-                              </span>
-                            </div>
-                            <p className="text-xs line-clamp-3">
-                              {formatClinicalText(session.subjective)}
-                            </p>
-                          </div>
-                        )}
-                        {session.objective && (
-                          <div className="bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 rounded-xl p-3">
-                            <div className="flex items-center gap-2 mb-1.5">
-                              <div className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center">
-                                <span className="text-[10px] font-bold text-white">O</span>
-                              </div>
-                              <span className="font-semibold text-xs text-green-700 dark:text-green-300">
-                                Objetivo
-                              </span>
-                            </div>
-                            <p className="text-xs line-clamp-3">
-                              {formatClinicalText(session.objective)}
-                            </p>
-                          </div>
-                        )}
-                        {session.assessment && (
-                          <div className="bg-purple-50 dark:bg-purple-950/20 border border-purple-200 dark:border-purple-800 rounded-xl p-3">
-                            <div className="flex items-center gap-2 mb-1.5">
-                              <div className="w-5 h-5 rounded-full bg-purple-500 flex items-center justify-center">
-                                <span className="text-[10px] font-bold text-white">A</span>
-                              </div>
-                              <span className="font-semibold text-xs text-purple-700 dark:text-purple-300">
-                                Avaliação
-                              </span>
-                            </div>
-                            <p className="text-xs line-clamp-3">
-                              {formatClinicalText(session.assessment)}
-                            </p>
-                          </div>
-                        )}
-                        {session.plan && (
-                          <div className="bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 rounded-xl p-3">
-                            <div className="flex items-center gap-2 mb-1.5">
-                              <div className="w-5 h-5 rounded-full bg-amber-500 flex items-center justify-center">
-                                <span className="text-[10px] font-bold text-white">P</span>
-                              </div>
-                              <span className="font-semibold text-xs text-amber-700 dark:text-amber-300">
-                                Plano
-                              </span>
-                            </div>
-                            <p className="text-xs line-clamp-3">
-                              {formatClinicalText(session.plan)}
-                            </p>
-                          </div>
-                        )}
+                    {/* Observação clínica (texto livre) */}
+                    {hasObservacao && (
+                      <div className="space-y-3">
+                        <h3 className="font-semibold text-sm flex items-center gap-2">
+                          <FileText className="h-4 w-4" />
+                          Observação clínica
+                        </h3>
+                        <div className="bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 rounded-xl p-4">
+                          <div
+                            className="text-sm prose prose-sm max-w-none dark:prose-invert"
+                            dangerouslySetInnerHTML={{
+                              __html: (session as any).observacao || "",
+                            }}
+                          />
+                        </div>
                       </div>
-                    </div>
+                    )}
 
                     {/* Quick Stats */}
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -541,68 +466,22 @@ ${
                   </>
                 )}
 
-                {/* Tab: SOAP Completo */}
+                {/* Tab: Observação completa */}
                 {activeTab === "soap" && (
                   <div className="space-y-4">
-                    {session.subjective && (
-                      <div className="bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-2xl p-4">
-                        <div className="flex items-center gap-2 mb-2">
-                          <div className="w-7 h-7 rounded-full bg-blue-500 flex items-center justify-center">
-                            <span className="text-xs font-bold text-white">S</span>
-                          </div>
-                          <span className="font-semibold text-blue-700 dark:text-blue-300 text-sm">
-                            Subjetivo
-                          </span>
-                        </div>
-                        <p className="text-sm whitespace-pre-wrap leading-relaxed">
-                          {formatClinicalText(session.subjective)}
-                        </p>
-                      </div>
-                    )}
-                    {session.objective && (
-                      <div className="bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 rounded-2xl p-4">
-                        <div className="flex items-center gap-2 mb-2">
-                          <div className="w-7 h-7 rounded-full bg-green-500 flex items-center justify-center">
-                            <span className="text-xs font-bold text-white">O</span>
-                          </div>
-                          <span className="font-semibold text-green-700 dark:text-green-300 text-sm">
-                            Objetivo
-                          </span>
-                        </div>
-                        <p className="text-sm whitespace-pre-wrap leading-relaxed">
-                          {formatClinicalText(session.objective)}
-                        </p>
-                      </div>
-                    )}
-                    {session.assessment && (
-                      <div className="bg-purple-50 dark:bg-purple-950/20 border border-purple-200 dark:border-purple-800 rounded-2xl p-4">
-                        <div className="flex items-center gap-2 mb-2">
-                          <div className="w-7 h-7 rounded-full bg-purple-500 flex items-center justify-center">
-                            <span className="text-xs font-bold text-white">A</span>
-                          </div>
-                          <span className="font-semibold text-purple-700 dark:text-purple-300 text-sm">
-                            Avaliação
-                          </span>
-                        </div>
-                        <p className="text-sm whitespace-pre-wrap leading-relaxed">
-                          {formatClinicalText(session.assessment)}
-                        </p>
-                      </div>
-                    )}
-                    {session.plan && (
+                    {hasObservacao ? (
                       <div className="bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 rounded-2xl p-4">
-                        <div className="flex items-center gap-2 mb-2">
-                          <div className="w-7 h-7 rounded-full bg-amber-500 flex items-center justify-center">
-                            <span className="text-xs font-bold text-white">P</span>
-                          </div>
-                          <span className="font-semibold text-amber-700 dark:text-amber-300 text-sm">
-                            Plano
-                          </span>
-                        </div>
-                        <p className="text-sm whitespace-pre-wrap leading-relaxed">
-                          {formatClinicalText(session.plan)}
-                        </p>
+                        <div
+                          className="text-sm prose prose-sm max-w-none dark:prose-invert"
+                          dangerouslySetInnerHTML={{
+                            __html: (session as any).observacao || "",
+                          }}
+                        />
                       </div>
+                    ) : (
+                      <p className="text-sm text-muted-foreground text-center py-8">
+                        Sem observação registrada nesta sessão.
+                      </p>
                     )}
                   </div>
                 )}

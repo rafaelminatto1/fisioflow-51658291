@@ -34,15 +34,14 @@ const mapTreatmentSession = (row: Record<string, unknown>) => ({
   therapist_id: row.therapist_id,
   appointment_id: row.appointment_id,
   session_date: row.session_date,
-  subjective: row.subjective,
-  objective: row.objective,
-  assessment: row.assessment,
-  plan: row.plan,
-  observations: row.observations,
-  exercises_performed: row.exercises_performed,
-  pain_level_before: row.pain_level_before,
-  pain_level_after: row.pain_level_after,
-  next_session_goals: row.next_session_goals,
+  observacao: row.observacao ?? "",
+  observacao_preview: row.observacao_preview ?? "",
+  pain_scale: row.pain_scale,
+  procedures: row.procedures ?? [],
+  exercises: row.exercises ?? [],
+  measurements: row.measurements ?? [],
+  home_exercises: row.home_exercises ?? [],
+  status: row.status,
   created_at: row.created_at,
   updated_at: row.updated_at,
 });
@@ -59,18 +58,17 @@ app.get("/treatment-sessions", requireAuth, async (c) => {
       SELECT
         id, patient_id, appointment_id, therapist_id, organization_id,
         date as session_date,
-        subjective->>'notes' as subjective,
-        objective,
-        assessment->>'notes' as assessment,
-        plan->>'notes' as plan,
-        plan->>'nextSessionGoals' as next_session_goals,
-        plan->>'orientations' as observations,
-        plan->'exercises' as exercises_performed,
-        NULLIF(subjective->>'painScale', '')::int as pain_level_before,
-        NULLIF(plan->>'painScaleAfter', '')::int as pain_level_after,
+        observacao,
+        LEFT(regexp_replace(coalesce(observacao,''), E'<[^>]+>', ' ', 'g'), 240) AS observacao_preview,
+        pain_scale,
+        procedures,
+        exercises,
+        measurements,
+        home_exercises,
+        status,
         created_at, updated_at
       FROM sessions
-      WHERE patient_id = $1 AND organization_id = $2
+      WHERE patient_id = $1 AND organization_id = $2 AND deleted_at IS NULL
       ORDER BY date DESC, created_at DESC
       LIMIT $3
     `,

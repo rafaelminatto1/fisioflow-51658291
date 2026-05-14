@@ -73,17 +73,18 @@ function addFooter(doc: jsPDF, page: number, totalPages: number) {
 
 // ─── 1. Evolução SOAP ───────────────────────────────────────────────────────
 
-export interface SoapEvolution {
+export interface EvolutionDocument {
   id: string;
   date: string;
   therapist_name?: string;
   patient_name?: string;
   clinic_name?: string;
-  subjective?: string;
-  objective?: string;
-  assessment?: string;
-  plan?: string;
-  pain_level?: number;
+  observacao?: string;
+  pain_scale?: number | null;
+  procedures?: Array<{ name?: string; notes?: string }>;
+  exercises?: Array<{ name?: string; prescription?: string }>;
+  home_exercises?: Array<{ name?: string; prescription?: string; frequency?: string }>;
+  measurements?: Array<{ name?: string; value?: number; unit?: string; side?: string }>;
   goals?: string;
   diagnosis?: string;
   session_number?: number;
@@ -93,7 +94,13 @@ export interface SoapEvolution {
   signed_at?: string;
 }
 
-export function generateSoapPDF(evolution: SoapEvolution): void {
+/** @deprecated use EvolutionDocument */
+export type SoapEvolution = EvolutionDocument;
+
+const stripHtml = (html: string) =>
+  html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+
+export function generateSoapPDF(evolution: EvolutionDocument): void {
   const doc = new jsPDF({ unit: "mm", format: "a4" });
   const pw = doc.internal.pageSize.getWidth();
   let y = addClinicHeader(doc, evolution.clinic_name);
@@ -101,7 +108,7 @@ export function generateSoapPDF(evolution: SoapEvolution): void {
   // Título
   doc.setFontSize(13);
   doc.setFont("helvetica", "bold");
-  doc.text("Evolução Clínica — Nota SOAP", pw / 2, y, { align: "center" });
+  doc.text("Evolução Clínica", pw / 2, y, { align: "center" });
   y += 8;
 
   // Informações do atendimento
@@ -118,39 +125,72 @@ export function generateSoapPDF(evolution: SoapEvolution): void {
   y = addField(doc, "Terapeuta", evolution.therapist_name ?? "—", 14, y, 80);
   if (evolution.session_number)
     y = addField(doc, "Sessão nº", String(evolution.session_number), 14, y, 80);
-  if (evolution.pain_level !== undefined)
-    y = addField(doc, "Nível de dor (EVA)", `${evolution.pain_level}/10`, 14, y, 80);
+  if (evolution.pain_scale != null)
+    y = addField(doc, "Nível de dor (EVA)", `${evolution.pain_scale}/10`, 14, y, 80);
   y += 4;
 
-  // SOAP
-  if (evolution.subjective) {
-    y = addSectionTitle(doc, "S — Subjetivo", y);
+  // Observação clínica (texto livre)
+  if (evolution.observacao) {
+    y = addSectionTitle(doc, "Observação clínica", y);
     doc.setFontSize(9);
-    const lines = doc.splitTextToSize(evolution.subjective, pw - 28);
+    const text = stripHtml(evolution.observacao);
+    const lines = doc.splitTextToSize(text, pw - 28);
     doc.text(lines, 14, y);
     y += lines.length * 5 + 4;
   }
 
-  if (evolution.objective) {
-    y = addSectionTitle(doc, "O — Objetivo", y);
+  // Procedimentos realizados
+  if (evolution.procedures?.length) {
+    y = addSectionTitle(doc, "Procedimentos realizados", y);
     doc.setFontSize(9);
-    const lines = doc.splitTextToSize(evolution.objective, pw - 28);
+    const text = evolution.procedures
+      .map((p) => `• ${p.name}${p.notes ? ` — ${p.notes}` : ""}`)
+      .join("\n");
+    const lines = doc.splitTextToSize(text, pw - 28);
     doc.text(lines, 14, y);
     y += lines.length * 5 + 4;
   }
 
-  if (evolution.assessment) {
-    y = addSectionTitle(doc, "A — Avaliação", y);
+  // Exercícios prescritos na sessão
+  if (evolution.exercises?.length) {
+    y = addSectionTitle(doc, "Exercícios prescritos na sessão", y);
     doc.setFontSize(9);
-    const lines = doc.splitTextToSize(evolution.assessment, pw - 28);
+    const text = evolution.exercises
+      .map((e) => `• ${e.name}${e.prescription ? ` — ${e.prescription}` : ""}`)
+      .join("\n");
+    const lines = doc.splitTextToSize(text, pw - 28);
     doc.text(lines, 14, y);
     y += lines.length * 5 + 4;
   }
 
-  if (evolution.plan) {
-    y = addSectionTitle(doc, "P — Plano", y);
+  // Medições
+  if (evolution.measurements?.length) {
+    y = addSectionTitle(doc, "Medições", y);
     doc.setFontSize(9);
-    const lines = doc.splitTextToSize(evolution.plan, pw - 28);
+    const text = evolution.measurements
+      .map(
+        (m) =>
+          `• ${m.name}: ${m.value ?? "—"}${m.unit ?? ""}${m.side ? ` (${m.side})` : ""}`,
+      )
+      .join("\n");
+    const lines = doc.splitTextToSize(text, pw - 28);
+    doc.text(lines, 14, y);
+    y += lines.length * 5 + 4;
+  }
+
+  // Exercícios para casa
+  if (evolution.home_exercises?.length) {
+    y = addSectionTitle(doc, "Exercícios para casa", y);
+    doc.setFontSize(9);
+    const text = evolution.home_exercises
+      .map(
+        (e) =>
+          `• ${e.name}${e.prescription ? ` — ${e.prescription}` : ""}${
+            e.frequency ? ` (${e.frequency})` : ""
+          }`,
+      )
+      .join("\n");
+    const lines = doc.splitTextToSize(text, pw - 28);
     doc.text(lines, 14, y);
     y += lines.length * 5 + 6;
   }

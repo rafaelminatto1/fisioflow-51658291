@@ -22,6 +22,7 @@ import { usePatientEvolutionHandlers } from "@/hooks/evolution/usePatientEvoluti
 import { useEvolutionShortcuts } from "@/hooks/evolution/useEvolutionShortcuts";
 import { useAutoSave } from "@/hooks/useAutoSave";
 import { useAutoSaveSoapRecord } from "@/hooks/useSoapRecords";
+import { stripHtml } from "@/lib/utils/stripHtml";
 
 // Componentes
 import { EvolutionHeader } from "@/components/evolution/EvolutionHeader";
@@ -34,7 +35,6 @@ import { MedicalReturnCard } from "@/components/evolution/MedicalReturnCard";
 import { SurgeriesCard } from "@/components/evolution/SurgeriesCard";
 import { EvolutionSummaryCard } from "@/components/evolution/EvolutionSummaryCard";
 import { MetasCard } from "@/components/evolution/MetasCard";
-import { EvolutionGridContainer } from "@/components/evolution/EvolutionResponsiveLayout";
 import { ComponentErrorBoundary } from "@/components/error";
 import { ApplyTemplateModal } from "@/components/evolution/modals/ApplyTemplateModal";
 
@@ -82,25 +82,10 @@ const LazyPatientMediaGallery = lazy(() =>
   })),
 );
 
-// Lazy editors
-const LazyNotionEvolutionPanel = lazy(() =>
-  import("@/components/evolution/v2/NotionEvolutionPanel").then((m) => ({
-    default: m.NotionEvolutionPanel,
-  })),
-);
-const LazyNotionEvolutionPanelV3 = lazy(() =>
-  import("@/components/evolution/v3-notion/NotionEvolutionPanel").then((m) => ({
-    default: m.NotionEvolutionPanel,
-  })),
-);
-const LazyNotionEvolutionEditor = lazy(() =>
-  import("@/components/evolution/unified/UnifiedEvolutionEditor").then((m) => ({
-    default: m.UnifiedEvolutionEditor,
-  })),
-);
-const LazyEvolutionDraggableGrid = lazy(() =>
-  import("@/components/evolution/EvolutionDraggableGrid").then((m) => ({
-    default: m.EvolutionDraggableGrid,
+// Lazy editor (modo único — texto livre com layout em grid)
+const LazyLiveTextEvolution = lazy(() =>
+  import("@/components/evolution/live-text/LiveTextEvolution").then((m) => ({
+    default: m.LiveTextEvolution,
   })),
 );
 
@@ -133,56 +118,31 @@ const PatientEvolution = () => {
   }, []);
 
   // ========== AUTO-SAVE ==========
-  const autoSaveData = useMemo(() => {
-    const isV1 = state.evolutionVersion === "v1-soap";
-    const isV2orV3 = state.evolutionVersion === "v2-texto" || state.evolutionVersion === "v3-notion";
-    
-    let content: any;
-    if (isV1) {
-      content = state.soapData;
-    } else if (isV2orV3) {
-      content = {
-        subjective: state.evolutionV2Data.patientReport || "",
-        objective: state.evolutionV2Data.evolutionText || "",
-        assessment: state.evolutionV2Data.procedures
-          .map(
-            (p: any) => `${p.completed ? "[x]" : "[ ]"} ${p.name}${p.notes ? ` - ${p.notes}` : ""}`,
-          )
-          .join("\n"),
-        plan: state.evolutionV2Data.observations || "",
-      };
-    } else {
-      // v4 or v5
-      content = {
-        subjective: state.evolutionV2Data.patientReport || "",
-        objective: state.evolutionV2Data.evolutionText || "",
-        assessment: "",
-        plan: state.evolutionV2Data.observations || "",
-      };
-    }
-
-    return {
-      ...content,
+  const autoSaveData = useMemo(
+    () => ({
+      observacao: state.evolutionData.observacao,
+      pain_scale: state.evolutionData.painScale,
+      procedures: state.evolutionData.procedures,
+      exercises: state.evolutionData.exercises,
+      measurements: state.evolutionData.measurements,
+      home_exercises: state.evolutionData.homeExercises,
       ...(state.selectedTherapistId ? { therapist_id: state.selectedTherapistId } : {}),
-      pain_level: state.painScale.level,
-      pain_location: state.painScale.location,
-      pain_character: state.painScale.character,
-    };
-  }, [
-    state.evolutionVersion,
-    state.evolutionV2Data,
-    state.soapData,
-    state.selectedTherapistId,
-    state.painScale,
-  ]);
+    }),
+    [state.evolutionData, state.selectedTherapistId],
+  );
 
   const { lastSavedAt } = useAutoSave({
     data: autoSaveData,
     onSave: async (data) => {
       if (!state.patientId || !state.appointmentId) return;
-      
-      const hasContent = !!(data.subjective || data.objective || data.assessment || data.plan);
-      const hasPain = data.pain_level !== undefined && data.pain_level !== null;
+
+      const obsText = stripHtml(data.observacao || "");
+      const hasContent =
+        obsText.length > 0 ||
+        (data.procedures && data.procedures.length > 0) ||
+        (data.exercises && data.exercises.length > 0) ||
+        (data.measurements && data.measurements.length > 0);
+      const hasPain = data.pain_scale != null;
 
       if (!hasContent && !hasPain) return;
 
@@ -191,7 +151,7 @@ const PatientEvolution = () => {
         appointment_id: state.appointmentId,
         recordId: state.currentSoapRecordId,
         ...data,
-      });
+      } as any);
 
       if (record?.id && record.id !== state.currentSoapRecordId) {
         state.setCurrentSoapRecordId(record.id);
@@ -201,21 +161,15 @@ const PatientEvolution = () => {
     enabled: state.autoSaveEnabled && !autoSaveMutation.isPending,
   });
 
-  // Shortcurs
+  // Shortcurs (atalhos focam blocos do novo layout único)
   useEvolutionShortcuts(
     handlers.handleSave,
     handlers.handleCompleteSession,
     (section) => {
-      if (["subjective", "objective", "assessment", "plan"].includes(section)) {
-        state.setActiveTab("evolucao");
-        setTimeout(() => {
-          const el = document.getElementById(section);
-          el?.scrollIntoView({ behavior: "smooth", block: "center" });
-          el?.focus();
-        }, 100);
-      } else if (section === "measurements") state.setActiveTab("avaliacao");
+      if (section === "measurements") state.setActiveTab("avaliacao");
       else if (section === "history") state.setActiveTab("historico");
       else if (section === "ai") state.setActiveTab("assistente");
+      else state.setActiveTab("evolucao");
     },
     () => state.setShowKeyboardHelp(true),
     () => state.setShowApplyTemplate(true),
@@ -368,72 +322,26 @@ const PatientEvolution = () => {
   );
 
   const mainGridContent = useMemo(() => {
-    if (state.evolutionVersion === "v5-pro" || state.evolutionVersion === "v4-tiptap") {
-      return (
-        <Suspense fallback={<LoadingSkeleton type="card" />}>
-          <LazyNotionEvolutionEditor
-            initialContent={state.evolutionV2Data.evolutionText || ""}
-            evolutionId={state.currentSoapRecordId || state.appointmentId}
-            patientId={state.patientId}
-            onSave={(content) => {
-              state.setEvolutionV2Data((prev: any) => ({
-                ...prev,
-                evolutionText: content,
-              }));
-              handlers.handleSave();
-            }}
-            isSaving={autoSaveMutation.isPending}
-          />
-        </Suspense>
-      );
-    }
-    if (state.evolutionVersion === "v3-notion") {
-      return (
-        <Suspense fallback={<LoadingSkeleton type="card" />}>
-          <LazyNotionEvolutionPanelV3
-            data={state.evolutionV2Data}
-            onChange={state.setEvolutionV2Data}
-            isSaving={autoSaveMutation.isPending}
-            autoSaveEnabled={state.autoSaveEnabled}
-            lastSaved={lastSavedAt}
-          />
-        </Suspense>
-      );
-    }
-    if (state.evolutionVersion === "v2-texto") {
-      return (
-        <Suspense fallback={<LoadingSkeleton type="card" />}>
-          <LazyNotionEvolutionPanel
-            data={state.evolutionV2Data}
-            onChange={state.setEvolutionV2Data}
-            isSaving={autoSaveMutation.isPending}
-            autoSaveEnabled={state.autoSaveEnabled}
-            lastSaved={lastSavedAt}
-            previousEvolutions={state.previousEvolutions}
-          />
-        </Suspense>
-      );
-    }
     return (
-      <EvolutionGridContainer>
-        <Suspense fallback={<LoadingSkeleton type="card" />}>
-          <LazyEvolutionDraggableGrid
-            soapData={state.soapData}
-            onSoapChange={state.setSoapData}
-            painScaleData={state.painScale}
-            onPainScaleChange={state.setPainScale}
-            onAISuggest={() => state.setActiveTab("assistente")}
-            patientId={state.patientId}
-            patientPhone={state.patient?.phone}
-            exercises={state.sessionExercises}
-            onExercisesChange={state.setSessionExercises}
-            previousEvolutions={state.previousEvolutions}
-            onCopyLastEvolution={handlers.handleCopyPreviousEvolution}
-          />
-        </Suspense>
-      </EvolutionGridContainer>
+      <Suspense fallback={<LoadingSkeleton type="card" />}>
+        <LazyLiveTextEvolution
+          data={state.evolutionData}
+          onChange={state.setEvolutionData}
+          patientId={state.patientId}
+          evolutionId={state.currentSoapRecordId}
+          previousEvolutions={state.previousEvolutions as any}
+          homeExercisesText={(state.evolutionV2Data as any).homeCareExercises || ""}
+          onHomeExercisesTextChange={(text) =>
+            state.setEvolutionV2Data((prev: any) => ({ ...prev, homeCareExercises: text }))
+          }
+          attachments={(state.evolutionV2Data as any).attachments || []}
+          onAttachmentsChange={(urls) =>
+            state.setEvolutionV2Data((prev: any) => ({ ...prev, attachments: urls }))
+          }
+        />
+      </Suspense>
     );
-  }, [state, handlers, autoSaveMutation.isPending, lastSavedAt]);
+  }, [state, autoSaveMutation.isPending, lastSavedAt]);
 
   if (state.dataLoading)
     return (
@@ -615,10 +523,10 @@ const PatientEvolution = () => {
                   <LazyAssistenteTab
                     patientId={state.patientId!}
                     patientName={PatientHelpers.getName(state.patient)}
-                    onApplyToSoap={(f, c) => {
-                      state.setSoapData((prev: any) => ({
+                    onApplyToSoap={(_f, content) => {
+                      state.setEvolutionData((prev) => ({
                         ...prev,
-                        [f]: prev[f] + c,
+                        observacao: (prev.observacao || "") + (content || ""),
                       }));
                       state.setActiveTab("evolucao");
                     }}
@@ -663,17 +571,10 @@ const PatientEvolution = () => {
             open={state.showApplyTemplate}
             onOpenChange={state.setShowApplyTemplate}
             onApply={(content) => {
-              if (state.evolutionVersion === "v4-unified" || state.evolutionVersion === "v5-pro") {
-                state.setSoapData((prev: any) => ({
-                  ...prev,
-                  subjective: prev.subjective + "\n" + content,
-                }));
-              } else {
-                state.setEvolutionV2Data((prev: any) => ({
-                  ...prev,
-                  observations: prev.observations + "\n" + content.replace(/<[^>]*>/g, ""),
-                }));
-              }
+              state.setEvolutionData((prev) => ({
+                ...prev,
+                observacao: (prev.observacao || "") + content,
+              }));
             }}
           />
           <EvolutionKeyboardShortcuts

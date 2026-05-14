@@ -39,7 +39,7 @@ export class AdherencePredictor {
     const factors: string[] = [];
 
     const painLevels = recentSessions
-      .map((s) => s.subjective?.painScale)
+      .map((s) => (s as any).painScale)
       .filter((p): p is number => p != null);
 
     if (painLevels.length >= 2) {

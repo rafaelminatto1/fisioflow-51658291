@@ -9,7 +9,8 @@ export { PainEvolutionChart } from "./PainEvolutionChart";
 export { PainMapHistory } from "./PainMapHistory";
 export { PainMapManager } from "./PainMapManager";
 export { FloatingActionBar } from "./FloatingActionBar";
-export { SOAPAccordion, type SOAPData } from "./SOAPAccordion";
+// SOAPAccordion removido (modelo SOAP descontinuado).
+// Para edição clínica use LiveTextEvolution em ./live-text/LiveTextEvolution.
 export { PainScaleWidget } from "./PainScaleWidget";
 export { type PainScaleData } from "@/lib/evolution/painScale";
 

@@ -13,21 +13,9 @@ const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
 // ===== HELPERS =====
 
-/** Local: Converte SOAP para texto único para embedding */
-function extractSoapText(row: any): string {
-  const parts = [];
-
-  const subjective = jsonbToText(row.subjective);
-  const objective = jsonbToText(row.objective);
-  const assessment = jsonbToText(row.assessment);
-  const plan = jsonbToText(row.plan);
-
-  if (subjective) parts.push(`[Subjetivo]: ${subjective}`);
-  if (objective) parts.push(`[Objetivo]: ${objective}`);
-  if (assessment) parts.push(`[Avaliação]: ${assessment}`);
-  if (plan) parts.push(`[Plano]: ${plan}`);
-
-  return parts.join("\n\n");
+/** Texto único para embedding/IA (observação clínica) */
+function extractEvolutionText(row: any): string {
+  return typeof row.observacao === "string" ? row.observacao : "";
 }
 
 /** Verifica se uma string é um UUID válido */
@@ -36,22 +24,26 @@ function isValidUuid(val: string): boolean {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(val);
 }
 
-/** Serializa um texto para JSONB no formato { text: "..." } */
-function textToJsonb(val: unknown): { text: string } | null {
-  if (val == null || val === "") return null;
-  return { text: String(val) };
+/** Coerção segura de array para JSONB (procedures/exercises/measurements/homeExercises) */
+function toJsonArray(val: unknown): any[] | undefined {
+  if (val === undefined) return undefined;
+  if (val === null) return [];
+  return Array.isArray(val) ? val : [];
 }
 
-/** Extrai texto de um valor JSONB (suporta { text: "..." }, string JSON ou null) */
-function jsonbToText(val: unknown): string | undefined {
-  if (val == null) return undefined;
-  if (typeof val === "string") return val;
-  if (typeof val === "object" && val !== null) {
-    const obj = val as Record<string, unknown>;
-    if ("text" in obj) return obj.text != null ? String(obj.text) : undefined;
-    return JSON.stringify(val);
-  }
-  return undefined;
+/** Coerção segura de pain_scale (0-10) */
+function toPainScale(val: unknown): number | null | undefined {
+  if (val === undefined) return undefined;
+  if (val === null || val === "") return null;
+  const n = Number(val);
+  if (Number.isNaN(n)) return null;
+  return Math.max(0, Math.min(10, Math.round(n)));
+}
+
+/** Plain-text snippet a partir do HTML da observação (para preview/timeline) */
+function observacaoPreview(html: unknown, max = 200): string {
+  if (typeof html !== "string" || !html) return "";
+  return html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim().slice(0, max);
 }
 
 type DbSessionStatus = "draft" | "finalized" | "cancelled";
@@ -78,23 +70,20 @@ function normalizeSessionStatusInput(value: unknown): DbSessionStatus | null | u
   return SESSION_STATUS_ALIASES[value.trim().toLowerCase()] ?? null;
 }
 
-/** Mapeia linha do Drizzle (camelCase) para o formato SoapRecord do frontend (snake_case) */
+/** Mapeia linha do Drizzle (camelCase) para o shape do frontend (snake_case) */
 function rowToRecord(row: any) {
-  const subj = (row.subjective as any) || {};
-
   return {
     id: row.id,
     patient_id: row.patientId,
     appointment_id: row.appointmentId ?? undefined,
     session_number: row.sessionNumber != null ? Number(row.sessionNumber) : undefined,
-    subjective: jsonbToText(row.subjective),
-    objective: jsonbToText(row.objective),
-    assessment: jsonbToText(row.assessment),
-    plan: jsonbToText(row.plan),
+    observacao: typeof row.observacao === "string" ? row.observacao : "",
+    pain_scale: row.painScale ?? null,
+    procedures: Array.isArray(row.procedures) ? row.procedures : [],
+    exercises: Array.isArray(row.exercises) ? row.exercises : [],
+    measurements: Array.isArray(row.measurements) ? row.measurements : [],
+    home_exercises: Array.isArray(row.homeExercises) ? row.homeExercises : [],
     status: (row.status as string) ?? "draft",
-    pain_level: subj.painScale ?? undefined,
-    pain_location: subj.painLocation ?? undefined,
-    pain_character: subj.painCharacter ?? undefined,
     duration_minutes: row.duration ?? undefined,
     last_auto_save_at: row.lastAutoSaveAt ? new Date(row.lastAutoSaveAt).toISOString() : undefined,
     finalized_at: row.finalizedAt ? new Date(row.finalizedAt).toISOString() : undefined,
@@ -169,17 +158,12 @@ app.post("/autosave", requireAuth, async (c) => {
   const patientId = String(body.patient_id ?? "").trim();
   if (!patientId) return c.json({ error: "patient_id é obrigatório" }, 400);
 
-  let subjData: any = body.subjective != null ? textToJsonb(body.subjective) : undefined;
-  if (body.pain_level != null || body.pain_location || body.pain_character) {
-    subjData = subjData || {};
-    subjData.painScale = body.pain_level ?? null;
-    subjData.painLocation = body.pain_location ?? null;
-    subjData.painCharacter = body.pain_character ?? null;
-  }
-
-  const objData = body.objective != null ? textToJsonb(body.objective) : undefined;
-  const assData = body.assessment != null ? textToJsonb(body.assessment) : undefined;
-  const planData = body.plan != null ? textToJsonb(body.plan) : undefined;
+  const observacao = typeof body.observacao === "string" ? body.observacao : undefined;
+  const painScale = toPainScale(body.pain_scale);
+  const procedures = toJsonArray(body.procedures);
+  const exercises = toJsonArray(body.exercises);
+  const measurements = toJsonArray(body.measurements);
+  const homeExercises = toJsonArray(body.home_exercises);
   const durationNum = body.duration_minutes != null ? Number(body.duration_minutes) : undefined;
 
   const buildUpdatePayload = () => {
@@ -187,10 +171,12 @@ app.post("/autosave", requireAuth, async (c) => {
       lastAutoSaveAt: new Date(),
       updatedAt: new Date(),
     };
-    if (subjData !== undefined) payload.subjective = subjData;
-    if (objData !== undefined) payload.objective = objData;
-    if (assData !== undefined) payload.assessment = assData;
-    if (planData !== undefined) payload.plan = planData;
+    if (observacao !== undefined) payload.observacao = observacao;
+    if (painScale !== undefined) payload.painScale = painScale;
+    if (procedures !== undefined) payload.procedures = procedures;
+    if (exercises !== undefined) payload.exercises = exercises;
+    if (measurements !== undefined) payload.measurements = measurements;
+    if (homeExercises !== undefined) payload.homeExercises = homeExercises;
     if (durationNum !== undefined) payload.duration = durationNum;
     if (body.therapist_id && isValidUuid(String(body.therapist_id))) {
       payload.therapistId = String(body.therapist_id);
@@ -262,10 +248,12 @@ app.post("/autosave", requireAuth, async (c) => {
     organizationId: user.organizationId,
     date: recordDate,
     duration: durationNum || null,
-    subjective: subjData || null,
-    objective: objData || null,
-    assessment: assData || null,
-    plan: planData || null,
+    observacao: observacao ?? null,
+    painScale: painScale ?? null,
+    procedures: procedures ?? [],
+    exercises: exercises ?? [],
+    measurements: measurements ?? [],
+    homeExercises: homeExercises ?? [],
     status: "draft",
     lastAutoSaveAt: new Date(),
   };
@@ -330,7 +318,7 @@ app.post("/:id/finalize", requireAuth, async (c) => {
           user.organizationId,
           row.patientId,
           row.id,
-          extractSoapText(row),
+          extractEvolutionText(row),
         ),
       ]).catch(() => {}),
     );
@@ -406,14 +394,6 @@ app.post("/", requireAuth, async (c) => {
   const status = normalizeSessionStatusInput(body.status);
   if (status === null) return c.json({ error: "Status inválido" }, 400);
 
-  let subjData = body.subjective != null ? textToJsonb(body.subjective) : {};
-  if (body.pain_level != null || body.pain_location || body.pain_character) {
-    subjData = subjData || {};
-    (subjData as any).painScale = body.pain_level ?? null;
-    (subjData as any).painLocation = body.pain_location ?? null;
-    (subjData as any).painCharacter = body.pain_character ?? null;
-  }
-
   const insertValues: any = {
     patientId,
     appointmentId: body.appointment_id || null,
@@ -421,10 +401,12 @@ app.post("/", requireAuth, async (c) => {
     organizationId: user.organizationId,
     date: recordDate,
     duration: body.duration_minutes != null ? Number(body.duration_minutes) : null,
-    subjective: subjData,
-    objective: textToJsonb(body.objective),
-    assessment: textToJsonb(body.assessment),
-    plan: textToJsonb(body.plan),
+    observacao: typeof body.observacao === "string" ? body.observacao : null,
+    painScale: toPainScale(body.pain_scale) ?? null,
+    procedures: toJsonArray(body.procedures) ?? [],
+    exercises: toJsonArray(body.exercises) ?? [],
+    measurements: toJsonArray(body.measurements) ?? [],
+    homeExercises: toJsonArray(body.home_exercises) ?? [],
     status: (status as any) ?? "draft",
     finalizedAt: status === "finalized" ? new Date() : null,
     finalizedBy: status === "finalized" && isValidUuid(user.uid) ? user.uid : null,
@@ -434,7 +416,7 @@ app.post("/", requireAuth, async (c) => {
 
   // Indexar no D1 para timeline edge (fire-and-forget)
   if (c.env.DB) {
-    const preview = [body.subjective, body.assessment].filter(Boolean).join(" ").substring(0, 200);
+    const preview = observacaoPreview(body.observacao);
     c.executionCtx.waitUntil(
       c.env.DB.prepare(
         `INSERT OR REPLACE INTO evolution_index (id, patient_id, appointment_id, therapist_id, organization_id, preview_text, created_at, updated_at)
@@ -471,28 +453,16 @@ app.put("/:id", requireAuth, async (c) => {
     updatedAt: new Date(),
   };
 
-  if ("subjective" in body || "pain_level" in body || "pain_location" in body || "pain_character" in body) {
-    const existing = await db
-      .select({ subjective: sessions.subjective })
-      .from(sessions)
-      .where(withTenant(sessions, user.organizationId, eq(sessions.id, id)))
-      .limit(1);
-
-    const subjData: any = (existing[0]?.subjective as any) || {};
-
-    if ("subjective" in body) {
-      subjData.text = String(body.subjective);
-    }
-    if ("pain_level" in body) subjData.painScale = body.pain_level;
-    if ("pain_location" in body) subjData.painLocation = body.pain_location;
-    if ("pain_character" in body) subjData.painCharacter = body.pain_character;
-
-    updatePayload.subjective = subjData;
+  if ("observacao" in body) {
+    updatePayload.observacao = typeof body.observacao === "string" ? body.observacao : null;
   }
-
-  if ("objective" in body) updatePayload.objective = textToJsonb(body.objective);
-  if ("assessment" in body) updatePayload.assessment = textToJsonb(body.assessment);
-  if ("plan" in body) updatePayload.plan = textToJsonb(body.plan);
+  if ("pain_scale" in body) {
+    updatePayload.painScale = toPainScale(body.pain_scale) ?? null;
+  }
+  if ("procedures" in body) updatePayload.procedures = toJsonArray(body.procedures) ?? [];
+  if ("exercises" in body) updatePayload.exercises = toJsonArray(body.exercises) ?? [];
+  if ("measurements" in body) updatePayload.measurements = toJsonArray(body.measurements) ?? [];
+  if ("home_exercises" in body) updatePayload.homeExercises = toJsonArray(body.home_exercises) ?? [];
   if (body.duration_minutes != null) updatePayload.duration = Number(body.duration_minutes);
   if ("status" in body) {
     const status = normalizeSessionStatusInput(body.status);
@@ -526,10 +496,9 @@ app.put("/:id", requireAuth, async (c) => {
 
   if (!updated) return c.json({ error: "Sessão não encontrada" }, 404);
 
-  // Atualizar índice no D1 (fire-and-forget) — usa INSERT OR REPLACE para garantir que
-  // o registro existe mesmo que a sessão tenha sido criada antes da feature de indexação
-  if (c.env.DB && (body.subjective || body.assessment)) {
-    const preview = [body.subjective, body.assessment].filter(Boolean).join(" ").substring(0, 200);
+  // Atualizar índice no D1 (fire-and-forget)
+  if (c.env.DB && "observacao" in body) {
+    const preview = observacaoPreview(body.observacao);
     const patientIdForIndex = updated.patientId;
     c.executionCtx.waitUntil(
       c.env.DB.prepare(
@@ -619,10 +588,8 @@ app.get("/templates", requireAuth, async (c) => {
       id: t.id,
       name: t.name,
       description: t.description,
-      subjective: jsonbToText(t.subjective),
-      objective: jsonbToText(t.objective),
-      assessment: jsonbToText(t.assessment),
-      plan: jsonbToText(t.plan),
+      category: t.category ?? null,
+      body_html: t.bodyHtml ?? "",
       is_global: t.isGlobal,
       created_at: t.createdAt,
       updated_at: t.updatedAt,
@@ -642,10 +609,8 @@ app.post("/templates", requireAuth, async (c) => {
     therapistId: user.uid as any,
     name: body.name,
     description: body.description || null,
-    subjective: textToJsonb(body.subjective),
-    objective: textToJsonb(body.objective),
-    assessment: textToJsonb(body.assessment),
-    plan: textToJsonb(body.plan),
+    category: body.category || null,
+    bodyHtml: typeof body.body_html === "string" ? body.body_html : null,
     isGlobal: body.is_global ?? false,
   };
 
@@ -666,10 +631,8 @@ app.put("/templates/:templateId", requireAuth, async (c) => {
 
   if (body.name !== undefined) updatePayload.name = body.name;
   if (body.description !== undefined) updatePayload.description = body.description;
-  if (body.subjective !== undefined) updatePayload.subjective = textToJsonb(body.subjective);
-  if (body.objective !== undefined) updatePayload.objective = textToJsonb(body.objective);
-  if (body.assessment !== undefined) updatePayload.assessment = textToJsonb(body.assessment);
-  if (body.plan !== undefined) updatePayload.plan = textToJsonb(body.plan);
+  if (body.category !== undefined) updatePayload.category = body.category;
+  if (body.body_html !== undefined) updatePayload.bodyHtml = body.body_html;
   if (body.is_global !== undefined) updatePayload.isGlobal = body.is_global;
 
   const [updated] = await db

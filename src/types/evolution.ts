@@ -113,18 +113,64 @@ export interface TestStatistics {
   improvement_percentage: number;
 }
 
+export interface ProcedureItem {
+  id: string;
+  name: string;
+  completed?: boolean;
+  intensity?: number;
+  notes?: string;
+  category?: string;
+  durationMinutes?: number;
+}
+
+export interface ExerciseItem {
+  id: string;
+  exerciseId?: string;
+  name: string;
+  prescription?: string;
+  sets?: number;
+  reps?: number;
+  duration?: string;
+  completed?: boolean;
+  patientFeedback?: string;
+  notes?: string;
+}
+
+export interface MeasurementItem {
+  id: string;
+  name: string;
+  value: number;
+  unit: string;
+  side?: "left" | "right" | "bilateral";
+  previousValue?: number;
+  notes?: string;
+}
+
+export interface HomeExerciseItem {
+  id: string;
+  exerciseId?: string;
+  name: string;
+  prescription?: string;
+  sets?: number;
+  reps?: number;
+  frequency?: string;
+  notes?: string;
+}
+
+/** Evolução clínica em texto livre (modelo único do sistema). */
 export interface SessionEvolution {
   id: string;
   session_id: string;
   patient_id: string;
   session_date: string;
   session_number: number;
-  subjective: string;
-  objective: string;
-  assessment: string;
-  plan: string;
-  pain_level?: number;
-  evolution_notes?: string;
+  observacao: string;
+  pain_scale: number | null;
+  procedures: ProcedureItem[];
+  exercises: ExerciseItem[];
+  measurements: MeasurementItem[];
+  home_exercises: HomeExerciseItem[];
+  status: "draft" | "under_review" | "finalized" | "cancelled";
   test_results?: TestResult[];
   created_by: string;
   created_at: string;
@@ -207,17 +253,13 @@ export type TimelineEventData =
 export interface SessionEventData {
   sessionId: string;
   appointmentId?: string;
-  soap: {
-    subjective?: string;
-    objective?: Record<string, unknown>;
-    assessment?: string;
-    plan?: Record<string, unknown>;
-  };
-  vitalSigns?: VitalSigns;
-  exercises?: SessionExerciseData[];
-  measurements?: MeasurementData[];
+  observacao: string;
+  painScale?: number | null;
+  procedures?: ProcedureItem[];
+  exercises?: ExerciseItem[];
+  measurements?: MeasurementItem[];
+  homeExercises?: HomeExerciseItem[];
   attachments?: AttachmentData[];
-  painLevel?: number;
   sessionNumber: number;
   createdBy: string;
   signedAt?: Date;
