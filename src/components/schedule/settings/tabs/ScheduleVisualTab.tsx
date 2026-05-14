@@ -32,15 +32,16 @@ interface ViewPreset {
   description: string;
   icon: typeof Zap;
   color: string;
+  iconBg: string;
   activeBg: string;
   config: { cardSize: CardSize; heightScale: number; opacity: number };
 }
 
-const PRESETS: (ViewPreset & { iconBg: string })[] = [
+const PRESETS: ViewPreset[] = [
   {
     id: "productive",
     name: "Ultra-Fino",
-    description: "Slots de 4-8px",
+    description: "Máximo slots",
     icon: Zap,
     color: "text-amber-600 dark:text-amber-400",
     iconBg: "bg-amber-100 dark:bg-amber-900/40",
@@ -50,7 +51,7 @@ const PRESETS: (ViewPreset & { iconBg: string })[] = [
   {
     id: "balanced",
     name: "Sem Scroll",
-    description: "Foca no 07-21h",
+    description: "07h às 21h",
     icon: Monitor,
     color: "text-blue-600 dark:text-blue-400",
     iconBg: "bg-blue-100 dark:bg-blue-900/40",
@@ -60,7 +61,7 @@ const PRESETS: (ViewPreset & { iconBg: string })[] = [
   {
     id: "comfortable",
     name: "Conforto",
-    description: "Mais leitura",
+    description: "Leitura fácil",
     icon: SunMedium,
     color: "text-teal-600 dark:text-teal-400",
     iconBg: "bg-teal-100 dark:bg-teal-900/40",
@@ -70,7 +71,7 @@ const PRESETS: (ViewPreset & { iconBg: string })[] = [
   {
     id: "layered",
     name: "Glass",
-    description: "Vitreous",
+    description: "Estilo vítreo",
     icon: Layers,
     color: "text-sky-600 dark:text-sky-400",
     iconBg: "bg-sky-100 dark:bg-sky-900/40",
@@ -89,7 +90,7 @@ function PresetsGrid() {
   const { cardSize, setCardSize, heightScale, setHeightScale, setOpacity } = useCardSize();
   const [appliedPreset, setAppliedPreset] = useState<string | null>(null);
 
-  const applyPreset = (preset: typeof PRESETS[0]) => {
+  const applyPreset = (preset: ViewPreset) => {
     setCardSize(preset.config.cardSize);
     setHeightScale(preset.config.heightScale);
     setOpacity(preset.config.opacity);
