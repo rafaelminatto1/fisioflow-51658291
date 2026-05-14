@@ -1,14 +1,14 @@
-import { useState, useCallback, useEffect, useMemo } from \"react\";
-import { useAuth } from \"@neondatabase/auth\";
-import { AgendaView, AgendaViewAppearance, AgendaViewSettings } from \"@/types/agenda\";
-import { useAgendaAppearancePersistence } from \"./useAgendaAppearancePersistence\";
+import { useState, useCallback, useEffect, useMemo } from "react";
+import { useAuth } from "@neondatabase/auth";
+import { AgendaView, AgendaViewAppearance, AgendaViewSettings } from "@/types/agenda";
+import { useAgendaAppearancePersistence } from "./useAgendaAppearancePersistence";
 
 /**
  * DEFAULT_GLOBAL
  * Configurações que servem de fallback para qualquer view.
  */
 const DEFAULT_GLOBAL: AgendaViewAppearance = {
-  cardSize: \"medium\",
+  cardSize: "medium",
   heightScale: 1, // 0..10 -> mapeia para pixels via slotHeightPxFromScale
   fontScale: 5,   // 1..10 -> mapeia para porcentagem (ex: 80% .. 120%)
   opacity: 100,   // 0..100
@@ -20,11 +20,11 @@ const DEFAULT_GLOBAL: AgendaViewAppearance = {
  */
 const VIEW_DEFAULT_OVERRIDES: Record<AgendaView, Partial<AgendaViewAppearance>> = {
   // Dia: Ajustado para caber 07h-21h em telas padrão (~600px de área útil)
-  day: { cardSize: \"medium\", heightScale: 2, fontScale: 5 },
+  day: { cardSize: "medium", heightScale: 2, fontScale: 5 },
   // Semana: Mais compacto para evitar scroll lateral e vertical
-  week: { cardSize: \"small\", heightScale: 1, fontScale: 4 },
+  week: { cardSize: "small", heightScale: 1, fontScale: 4 },
   // Mês: Visual de pílulas
-  month: { cardSize: \"extra_small\", heightScale: 1, fontScale: 4 },
+  month: { cardSize: "extra_small", heightScale: 1, fontScale: 4 },
 };
 
 export type AppearanceActions = {
@@ -120,11 +120,11 @@ export function useAgendaAppearance(view: AgendaView) {
 
   const cssVariables = useMemo(() => {
     return {
-      \"--agenda-card-opacity\": `${effectiveForView.opacity / 100}`,
-      \"--agenda-slot-height\": `${slotHeightPx}px`,
-      \"--agenda-font-scale\": `${fontPercentage / 100}`,
+      "--agenda-card-opacity": `${effectiveForView.opacity / 100}`,
+      "--agenda-slot-height": `${slotHeightPx}px`,
+      "--agenda-font-scale": `${fontPercentage / 100}`,
       // Injeta também variáveis padrão do FullCalendar se necessário
-      \"--fc-timegrid-slot-height\": `${slotHeightPx}px`,
+      "--fc-timegrid-slot-height": `${slotHeightPx}px`,
     } as React.CSSProperties;
   }, [effectiveForView, slotHeightPx, fontPercentage]);
 
