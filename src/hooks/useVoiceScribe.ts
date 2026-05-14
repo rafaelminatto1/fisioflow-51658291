@@ -1,11 +1,10 @@
 /**
- * useVoiceScribe — orquestra gravação de voz → transcrição → SOAP
+ * useVoiceScribe — gravação de voz → transcrição → texto livre da observação.
  *
  * Fluxo:
  * 1. startRecording() — inicia captura via MediaRecorder
- * 2. stopAndTranscribe() — para, converte para base64, envia para Workers AI Whisper
- * 3. O texto transcrito é enviado ao endpoint /api/ai/transcribe-session para gerar SOAP
- * 4. Retorna { subjective, objective, assessment, plan }
+ * 2. stopAndTranscribe() — para, envia para Workers AI Whisper
+ * 3. Retorna { observacao: string } pronto para concatenar à observação clínica
  */
 
 import { useState, useCallback } from "react";
@@ -14,6 +13,11 @@ import { iaStudioApi } from "@/api/v2/iaStudio";
 
 export type VoiceScribeState = "idle" | "recording" | "transcribing" | "done" | "error";
 
+export interface VoiceTranscriptionResult {
+  observacao: string;
+}
+
+/** @deprecated mantido para consumidores legados — usar `VoiceTranscriptionResult`. */
 export interface SoapFields {
   subjective: string;
   objective: string;
@@ -24,11 +28,13 @@ export interface SoapFields {
 export interface UseVoiceScribeResult {
   voiceState: VoiceScribeState;
   transcribedText: string;
+  result: VoiceTranscriptionResult | null;
+  /** @deprecated use `result`. */
   soapFields: SoapFields | null;
   error: string | null;
   isRecording: boolean;
   startRecording: () => Promise<void>;
-  stopAndTranscribe: (patientId?: string) => Promise<SoapFields | null>;
+  stopAndTranscribe: (patientId?: string) => Promise<VoiceTranscriptionResult | null>;
   reset: () => void;
 }
 
@@ -37,7 +43,6 @@ async function blobToBase64(blob: Blob): Promise<string> {
     const reader = new FileReader();
     reader.onloadend = () => {
       const result = reader.result as string;
-      // Remove the data URL prefix (e.g. "data:audio/webm;base64,")
       const base64 = result.split(",")[1];
       resolve(base64);
     };
@@ -50,12 +55,12 @@ export function useVoiceScribe(): UseVoiceScribeResult {
   const { isRecording, startRecording: startAudio, stopRecording } = useAudioRecorder();
   const [voiceState, setVoiceState] = useState<VoiceScribeState>("idle");
   const [transcribedText, setTranscribedText] = useState("");
-  const [soapFields, setSoapFields] = useState<SoapFields | null>(null);
+  const [result, setResult] = useState<VoiceTranscriptionResult | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const startRecording = useCallback(async () => {
     setError(null);
-    setSoapFields(null);
+    setResult(null);
     setTranscribedText("");
     try {
       await startAudio();
@@ -66,61 +71,56 @@ export function useVoiceScribe(): UseVoiceScribeResult {
     }
   }, [startAudio]);
 
-  const stopAndTranscribe = useCallback(async (patientId: string = "general"): Promise<SoapFields | null> => {
-    if (!isRecording) return null;
+  const stopAndTranscribe = useCallback(
+    async (patientId: string = "general"): Promise<VoiceTranscriptionResult | null> => {
+      if (!isRecording) return null;
 
-    setVoiceState("transcribing");
-    try {
-      const audioBlob = await stopRecording();
-      const audioBase64 = await blobToBase64(audioBlob);
+      setVoiceState("transcribing");
+      try {
+        const audioBlob = await stopRecording();
+        const audioBase64 = await blobToBase64(audioBlob);
 
-      // 1. Transcrever e Refinar áudio → texto especializado por seção
-      const scribeRes = await iaStudioApi.processScribeAudio(
-        patientId,
-        "S", // Defaulting to Subjective for general transcription
-        audioBase64
-      );
+        const scribeRes = await iaStudioApi.processScribeAudio(patientId, "S", audioBase64);
+        const text = (scribeRes.formattedText || scribeRes.rawText || "").trim();
 
-      const text = scribeRes.formattedText || scribeRes.rawText || "";
-      setTranscribedText(text);
+        setTranscribedText(text);
 
-      if (!text.trim()) {
-        setError("Não foi possível processar a inteligência clínica. Tente novamente.");
+        if (!text) {
+          setError("Não foi possível processar o áudio. Tente novamente.");
+          setVoiceState("error");
+          return null;
+        }
+
+        const out: VoiceTranscriptionResult = { observacao: text };
+        setResult(out);
+        setVoiceState("done");
+        return out;
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : "Erro ao transcrever";
+        setError(msg);
         setVoiceState("error");
         return null;
       }
-
-      // 2. Texto → Objeto SOAP completo
-      // Nota: O endpoint de processScribeAudio já retorna texto refinado.
-      // Se precisarmos de um SOAP completo de um áudio longo, usamos o synthesizeReport ou similar.
-      const soap: SoapFields = {
-        subjective: text,
-        objective: "Medições observadas durante a sessão...",
-        assessment: "Evolução clínica compatível com o quadro...",
-        plan: "Manter conduta fisioterapêutica.",
-      };
-      
-      setSoapFields(soap);
-      setVoiceState("done");
-      return soap;
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : "Erro ao transcrever";
-      setError(msg);
-      setVoiceState("error");
-      return null;
-    }
-  }, [isRecording, stopRecording]);
+    },
+    [isRecording, stopRecording],
+  );
 
   const reset = useCallback(() => {
     setVoiceState("idle");
     setTranscribedText("");
-    setSoapFields(null);
+    setResult(null);
     setError(null);
   }, []);
+
+  // Back-compat: monta um pseudo-SOAP onde tudo cai em `subjective`.
+  const soapFields: SoapFields | null = result
+    ? { subjective: result.observacao, objective: "", assessment: "", plan: "" }
+    : null;
 
   return {
     voiceState,
     transcribedText,
+    result,
     soapFields,
     error,
     isRecording,

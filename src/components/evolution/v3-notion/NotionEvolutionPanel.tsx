@@ -136,31 +136,17 @@ const NotionEvolutionPanel: React.FC<NotionEvolutionPanelProps> = ({
     if (voiceScribe.voiceState === "idle") {
       await voiceScribe.startRecording();
     } else if (voiceScribe.voiceState === "recording") {
-      const soap = await voiceScribe.stopAndTranscribe();
-      if (soap) {
-        const populated: string[] = [];
-        if (soap.subjective) populated.push("Subjetivo");
-        if (soap.objective || soap.assessment || soap.plan) populated.push("Evolução");
-
+      const out = await voiceScribe.stopAndTranscribe();
+      if (out?.observacao) {
+        const previousObs = (data as any).observacao || data.observations || "";
+        const merged = previousObs
+          ? `${previousObs}<p>${out.observacao}</p>`
+          : `<p>${out.observacao}</p>`;
         onChange({
           ...data,
-          ...(soap.subjective ? { patientReport: soap.subjective } : {}),
-          ...(soap.objective || soap.assessment || soap.plan
-            ? {
-                evolutionText: [
-                  soap.objective && `<p><strong>Objetivo:</strong> ${soap.objective}</p>`,
-                  soap.assessment && `<p><strong>Avaliação:</strong> ${soap.assessment}</p>`,
-                  soap.plan && `<p><strong>Plano:</strong> ${soap.plan}</p>`,
-                ]
-                  .filter(Boolean)
-                  .join(""),
-              }
-            : {}),
+          observations: merged,
         });
-
-        if (populated.length) {
-          toast.success(`Voice Scribe preencheu: ${populated.join(", ")}`);
-        }
+        toast.success("Voice Scribe adicionou texto à observação");
         voiceScribe.reset();
       }
     } else if (voiceScribe.voiceState === "error") {
