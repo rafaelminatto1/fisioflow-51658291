@@ -1,5 +1,12 @@
 import { useState, useCallback, useEffect, useMemo } from "react";
-import { AgendaView, AgendaViewAppearance, AgendaViewSettings } from "@/types/agenda";
+import { AgendaView, AgendaViewAppearance } from "@/types/agenda";
+
+interface AgendaAppearanceState {
+  global: AgendaViewAppearance;
+  day?: Partial<AgendaViewAppearance>;
+  week?: Partial<AgendaViewAppearance>;
+  month?: Partial<AgendaViewAppearance>;
+}
 
 const DEFAULT_GLOBAL: AgendaViewAppearance = {
   cardSize: "medium",
@@ -9,19 +16,19 @@ const DEFAULT_GLOBAL: AgendaViewAppearance = {
 };
 
 const VIEW_DEFAULT_OVERRIDES: Record<AgendaView, Partial<AgendaViewAppearance>> = {
-  day: { heightScale: 2 }, 
-  week: { heightScale: 1, fontScale: 4 }, 
+  day: { heightScale: 2 },
+  week: { heightScale: 1, fontScale: 4 },
   month: { cardSize: "extra_small", heightScale: 1, fontScale: 4 },
 };
 
 export function useAgendaAppearance(view: AgendaView) {
-  const [state, setState] = useState<AgendaViewSettings>(() => {
-    if (typeof window === "undefined") return { global: DEFAULT_GLOBAL, overrides: {} };
+  const [state, setState] = useState<AgendaAppearanceState>(() => {
+    if (typeof window === "undefined") return { global: DEFAULT_GLOBAL };
     const saved = localStorage.getItem("agenda_appearance_v2");
     try {
-      return saved ? JSON.parse(saved) : { global: DEFAULT_GLOBAL, overrides: {} };
+      return saved ? JSON.parse(saved) : { global: DEFAULT_GLOBAL };
     } catch (e) {
-      return { global: DEFAULT_GLOBAL, overrides: {} };
+      return { global: DEFAULT_GLOBAL };
     }
   });
 
@@ -30,27 +37,22 @@ export function useAgendaAppearance(view: AgendaView) {
       if (e.key === "agenda_appearance_v2" && e.newValue) {
         try {
           setState(JSON.parse(e.newValue));
-        } catch (err) {
-          // ignore
-        }
+        } catch (err) {}
       }
     };
     window.addEventListener("storage", handler);
     return () => window.removeEventListener("storage", handler);
   }, []);
 
-  const save = useCallback((newState: AgendaViewSettings) => {
+  const save = useCallback((newState: AgendaAppearanceState) => {
     setState(newState);
     localStorage.setItem("agenda_appearance_v2", JSON.stringify(newState));
-    window.dispatchEvent(new StorageEvent("storage", { 
-      key: "agenda_appearance_v2", 
-      newValue: JSON.stringify(newState) 
-    }));
+    window.dispatchEvent(new StorageEvent("storage", { key: "agenda_appearance_v2", newValue: JSON.stringify(newState) }));
   }, []);
 
   const effectiveForView = useMemo(() => {
-    const userOverride = state.overrides[view] || {};
-    const hasUserOverride = userOverride && Object.keys(userOverride).length > 0;
+    const userOverride = state[view] || {};
+    const hasUserOverride = Object.keys(userOverride).length > 0;
     const presetForView = hasUserOverride ? {} : VIEW_DEFAULT_OVERRIDES[view];
 
     return {
@@ -76,14 +78,15 @@ export function useAgendaAppearance(view: AgendaView) {
       "--agenda-font-scale": `${fontPercentage / 100}`,
       "--fc-timegrid-slot-height": `${slotHeightPx}px`,
     } as React.CSSProperties,
-    setCardSize: (val: any) => save({ ...state, overrides: { ...state.overrides, [view]: { ...(state.overrides[view] || {}), cardSize: val } } }),
-    setHeightScale: (val: number) => save({ ...state, overrides: { ...state.overrides, [view]: { ...(state.overrides[view] || {}), heightScale: val } } }),
-    setFontScale: (val: number) => save({ ...state, overrides: { ...state.overrides, [view]: { ...(state.overrides[view] || {}), fontScale: val } } }),
-    setOpacity: (val: number) => save({ ...state, overrides: { ...state.overrides, [view]: { ...(state.overrides[view] || {}), opacity: val } } }),
-    setAll: (patch: any) => save({ ...state, overrides: { ...state.overrides, [view]: { ...(state.overrides[view] || {}), ...patch } } }),
-    applyToAllViews: (patch: any) => save({ ...state, global: { ...state.global, ...patch }, overrides: {} }),
-    resetView: () => save({ ...state, overrides: { ...state.overrides, [view]: {} } }),
-    resetAll: () => save({ global: DEFAULT_GLOBAL, overrides: {} }),
+    setCardSize: (val: any) => save({ ...state, [view]: { ...(state[view] || {}), cardSize: val } }),
+    setHeightScale: (val: number) => save({ ...state, [view]: { ...(state[view] || {}), heightScale: val } }),
+    setFontScale: (val: number) => save({ ...state, [view]: { ...(state[view] || {}), fontScale: val } }),
+    setOpacity: (val: number) => save({ ...state, [view]: { ...(state[view] || {}), opacity: val } }),
+    setAll: (patch: any) => save({ ...state, [view]: { ...(state[view] || {}), ...patch } }),
+    applyToAllViews: (patch: any) => save({ ...state, global: { ...state.global, ...patch } }),
+    resetView: () => save({ ...state, [view]: {} }),
+    resetAll: () => save({ global: DEFAULT_GLOBAL }),
+    hasOverrideForView: !!state[view] && Object.keys(state[view] || {}).length > 0
   };
 }
 
