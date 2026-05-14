@@ -160,8 +160,8 @@ export function usePatientEvolutionHandlers({
             session_date: new Date().toISOString(),
             observations: stripHtml(current.observacao || ""),
             exercises_performed: current.exercises,
-            pain_level_before: current.painScale,
-            pain_level_after: current.painScale,
+            pain_level_before: current.painScale ?? undefined,
+            pain_level_after: current.painScale ?? undefined,
           })
           .catch(() => {});
       }
@@ -317,6 +317,6 @@ export function usePatientEvolutionHandlers({
     handleCompleteSession,
     handleExportPDF,
     isSaving: autoSaveMutation.isPending,
-    isCompleting: completeAppointment.isPending,
+    isCompleting: false,
   };
 }
