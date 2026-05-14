@@ -80,7 +80,7 @@ export function CRMTarefas({ leadId, compact = false }: CRMTarefasProps) {
     prioridade: "normal",
     data_vencimento: "",
     hora_vencimento: "",
-    lead_id: leadId || "",
+    lead_id: leadId || "__none__",
   });
 
   const { data: tarefas = [] } = useCRMTarefas(leadId);
@@ -98,7 +98,7 @@ export function CRMTarefas({ leadId, compact = false }: CRMTarefasProps) {
     e?.preventDefault();
     await createMutation.mutateAsync({
       ...formData,
-      lead_id: formData.lead_id || null,
+      lead_id: (formData.lead_id === "" || formData.lead_id === "__none__") ? null : formData.lead_id,
       data_vencimento: formData.data_vencimento || null,
       hora_vencimento: formData.hora_vencimento || null,
       status: "pendente",
@@ -112,7 +112,7 @@ export function CRMTarefas({ leadId, compact = false }: CRMTarefasProps) {
       prioridade: "normal",
       data_vencimento: "",
       hora_vencimento: "",
-      lead_id: leadId || "",
+      lead_id: leadId || "__none__",
     });
   };
 
@@ -175,7 +175,7 @@ export function CRMTarefas({ leadId, compact = false }: CRMTarefasProps) {
                   <SelectValue placeholder="Selecione um lead" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Nenhum</SelectItem>
+                  <SelectItem value="__none__">Nenhum</SelectItem>
                   {leads.map((lead) => (
                     <SelectItem key={lead.id} value={lead.id}>
                       {lead.nome}

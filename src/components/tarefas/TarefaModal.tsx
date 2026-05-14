@@ -122,7 +122,7 @@ export function TarefaModal({
       data_vencimento: null,
       start_date: null,
       tags: [],
-      project_id: defaultProjectId || "",
+      project_id: defaultProjectId || "__none__",
       parent_id: null,
       checklist: [],
       attachments: [],
@@ -160,14 +160,14 @@ export function TarefaModal({
         data_vencimento: tarefa.data_vencimento ? new Date(tarefa.data_vencimento) : null,
         start_date: tarefa.start_date ? new Date(tarefa.start_date) : null,
         tags: tarefa.tags || [],
-        project_id: tarefa.project_id || defaultProjectId || "",
+        project_id: tarefa.project_id || "__none__",
         parent_id: tarefa.parent_id || null,
         checklist: tarefa.checklist || [],
         attachments: tarefa.attachments || [],
         dependencies: tarefa.dependencies || [],
-      });
-    } else {
-      form.reset({
+        });
+        } else {
+        form.reset({
         titulo: "",
         descricao: "",
         status: defaultStatus,
@@ -175,13 +175,13 @@ export function TarefaModal({
         data_vencimento: null,
         start_date: null,
         tags: [],
-        project_id: defaultProjectId || "",
+        project_id: defaultProjectId || "__none__",
         parent_id: null,
         checklist: [],
         attachments: [],
         dependencies: [],
-      });
-    }
+        });
+        }
   }, [tarefa, defaultStatus, defaultProjectId, form]);
 
   const handleAddTag = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -223,7 +223,7 @@ export function TarefaModal({
         await updateTarefa.mutateAsync({
           id: tarefa.id,
           ...data,
-          project_id: data.project_id || null,
+          project_id: (data.project_id === "" || data.project_id === "__none__") ? null : data.project_id,
           data_vencimento: data.data_vencimento?.toISOString().split("T")[0],
           start_date: data.start_date?.toISOString().split("T")[0],
           parent_id: data.parent_id,
@@ -233,7 +233,7 @@ export function TarefaModal({
         await createTarefa.mutateAsync({
           ...data,
           order_index: defaultOrderIndex,
-          project_id: data.project_id || null,
+          project_id: (data.project_id === "" || data.project_id === "__none__") ? null : data.project_id,
           data_vencimento: data.data_vencimento?.toISOString().split("T")[0],
           start_date: data.start_date?.toISOString().split("T")[0],
           parent_id: data.parent_id,
@@ -284,14 +284,14 @@ export function TarefaModal({
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Projeto</FormLabel>
-                          <Select onValueChange={field.onChange} value={field.value || ""}>
+                          <Select onValueChange={field.onChange} value={field.value || "__none__"}>
                             <FormControl>
                               <SelectTrigger>
                                 <SelectValue placeholder="Selecione um projeto (opcional)" />
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              <SelectItem value="">Nenhum</SelectItem>
+                              <SelectItem value="__none__">Nenhum</SelectItem>
                               {projects?.map((p) => (
                                 <SelectItem key={p.id} value={p.id}>
                                   {p.title}

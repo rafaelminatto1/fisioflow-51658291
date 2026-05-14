@@ -61,7 +61,7 @@ export default function WhatsAppIntegration() {
     recipient: "",
     recipient_name: "",
     message: "",
-    template_id: "",
+    template_id: "none",
     schedule_type: "imediato" as "imediato" | "agendado",
     scheduled_date: "",
     scheduled_time: "",
@@ -121,7 +121,7 @@ export default function WhatsAppIntegration() {
     await sendMessage.mutateAsync({
       recipient: formData.recipient,
       message: formData.message,
-      templateId: formData.template_id || undefined,
+      templateId: (formData.template_id === "" || formData.template_id === "none") ? undefined : formData.template_id,
     });
 
     setIsDialogOpen(false);
@@ -129,7 +129,7 @@ export default function WhatsAppIntegration() {
       recipient: "",
       recipient_name: "",
       message: "",
-      template_id: "",
+      template_id: "none",
       schedule_type: "imediato",
       scheduled_date: "",
       scheduled_time: "",
@@ -549,7 +549,7 @@ export default function WhatsAppIntegration() {
                   <SelectValue placeholder="Selecione um template" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Sem template</SelectItem>
+                  <SelectItem value="none">Sem template</SelectItem>
                   <SelectItem value="confirmacao">Confirmação de Agendamento</SelectItem>
                   <SelectItem value="lembrete">Lembrete de Sessão</SelectItem>
                   <SelectItem value="boas_vindas">Boas-vindas</SelectItem>

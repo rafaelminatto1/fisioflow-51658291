@@ -1,9 +1,13 @@
+require("dotenv").config();
 const { neon } = require("@neondatabase/serverless");
 const fs = require("fs");
 const path = require("path");
 
-const DATABASE_URL =
-  "postgresql://neondb_owner:REDACTED-NEON-PASSWORD@ep-wandering-bonus-acj4zwvo-pooler.sa-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require&uselibpqcompat=true";
+const DATABASE_URL = process.env.DATABASE_URL;
+if (!DATABASE_URL) {
+  console.error("❌ ERROR: DATABASE_URL is not set in the environment.");
+  process.exit(1);
+}
 const TARGET_DIR = path.join(process.cwd(), "public/exercises/illustrations");
 
 async function sync() {

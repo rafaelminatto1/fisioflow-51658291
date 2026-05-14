@@ -315,7 +315,7 @@ export default function MarketingDashboard() {
   if (loading) {
     return (
       <MainLayout>
-        <div className="p-6 max-w-7xl mx-auto">
+        <div className="w-full p-4 sm:p-6">
           <div className="flex items-center justify-center h-64">
             <div className="flex flex-col items-center gap-4">
               <Activity className="h-8 w-8 animate-pulse text-primary" />
@@ -329,7 +329,7 @@ export default function MarketingDashboard() {
 
   return (
     <MainLayout>
-      <div className="p-6 max-w-7xl mx-auto space-y-6">
+      <div className="w-full p-4 sm:p-6 space-y-6">
         <div className="gradient-brand-light rounded-3xl p-8 border border-primary/20 card-premium-hover">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>

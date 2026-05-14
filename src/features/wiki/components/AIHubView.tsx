@@ -86,7 +86,7 @@ const SOURCE_FILTERS = [
 ];
 
 const AREAS_CLINICAS = [
-  { value: "", label: "Todas as áreas" },
+  { value: "all", label: "Todas as áreas" },
   { value: "Ortopedia", label: "Ortopedia" },
   { value: "Neurologia", label: "Neurologia" },
   { value: "Respiratória", label: "Respiratória" },
@@ -99,7 +99,7 @@ const AREAS_CLINICAS = [
 function FisioBrainChat() {
   const [query, setQuery] = useState("");
   const [sourceFilter, setSourceFilter] = useState("all");
-  const [areaFilter, setAreaFilter] = useState("");
+  const [areaFilter, setAreaFilter] = useState("all");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<FisioBrainResult | null>(null);
   const [history, setHistory] = useState<SearchHistoryItem[]>([]);
@@ -111,7 +111,7 @@ function FisioBrainChat() {
     try {
       const params = new URLSearchParams({ q: query.trim() });
       if (sourceFilter !== "all") params.append("source", sourceFilter);
-      if (areaFilter) params.append("area", areaFilter);
+      if (areaFilter && areaFilter !== "all") params.append("area", areaFilter);
 
       const res = await fetch(`${getWorkersApiUrl()}/api/fisiobrain/search?${params}`);
       const data: FisioBrainResult = await res.json();

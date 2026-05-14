@@ -113,7 +113,7 @@ export default function BoardsHome() {
 
   if (isLoading) {
     return (
-      <div className="mx-auto max-w-7xl space-y-6 px-4 py-6 sm:px-6 lg:px-8">
+      <div className="w-full space-y-6 px-4 py-6 sm:px-6 lg:px-8">
         <LoadingSkeleton type="card" className="h-[220px] rounded-[32px]" />
         <div className="grid gap-6 xl:grid-cols-[280px_minmax(0,1fr)]">
           <LoadingSkeleton type="card" className="h-[460px] rounded-[28px]" />
@@ -129,7 +129,7 @@ export default function BoardsHome() {
 
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,rgba(148,163,184,0.12),transparent_28%),linear-gradient(180deg,rgba(248,250,252,0.96),rgba(248,250,252,1))]">
-      <div className="mx-auto max-w-7xl space-y-6 px-4 py-6 sm:px-6 lg:px-8">
+      <div className="w-full space-y-6 px-4 py-6 sm:px-6 lg:px-8">
         <section className="overflow-hidden rounded-[32px] border border-slate-800/70 bg-[linear-gradient(135deg,#0f172a,#111827,#1e293b)] text-white shadow-2xl">
           <div className="grid gap-8 px-6 py-7 sm:px-8 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-end">
             <div className="space-y-6">

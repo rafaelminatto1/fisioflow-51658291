@@ -863,7 +863,34 @@ export function ExerciseLibrary({
       {/* Library Grid */}
       <div className="rounded-xl border bg-background/50 backdrop-blur-sm relative min-h-[400px]">
         {filteredExercises.length === 0 ? (
-          <EmptyState icon={Dumbbell} title="Nenhum exercício" />
+          <div className="flex flex-col items-center justify-center p-8 text-center min-h-[400px]">
+            <Dumbbell className="h-12 w-12 text-muted-foreground mb-4 opacity-20" />
+            <h3 className="text-lg font-semibold mb-2">
+              {debouncedSearchTerm
+                ? `Exercício "${debouncedSearchTerm}" não encontrado`
+                : "Nenhum exercício encontrado"}
+            </h3>
+            <p className="text-muted-foreground max-w-sm mb-6">
+              {debouncedSearchTerm
+                ? "Deseja cadastrar este exercício na sua biblioteca ou receber sugestões de substituição da IA?"
+                : "Tente ajustar seus filtros ou cadastre um novo exercício."}
+            </p>
+            <div className="flex gap-3 flex-wrap justify-center">
+              <Button
+                onClick={() => onEditExercise({ id: "", name: debouncedSearchTerm } as any)}
+                className="gap-2"
+              >
+                <Plus className="h-4 w-4" />
+                Cadastrar Novo
+              </Button>
+              {debouncedSearchTerm && (
+                <Button variant="outline" className="gap-2 text-primary border-primary/20 hover:bg-primary/5">
+                  <Search className="h-4 w-4" />
+                  Sugestões da IA
+                </Button>
+              )}
+            </div>
+          </div>
         ) : viewMode === "grid" ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-2">
             {filteredExercises.map((exercise, index) => (

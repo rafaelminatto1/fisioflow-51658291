@@ -237,7 +237,7 @@ export default function Exercises() {
   const exerciseAIPatient = useMemo(() => toExerciseAIPatient(selectedPatient), [selectedPatient]);
 
   return (
-    <PageLayout>
+    <PageLayout fullWidth compactHeader>
       <PageHeader
         title="Biblioteca de Exercícios"
         description="Gerencie protocolos, templates e vídeos demonstrativos para prescrição clínica."
@@ -295,7 +295,7 @@ export default function Exercises() {
         )}
       </PageHeader>
 
-      <PageContainer>
+      <PageContainer maxWidth="full">
 
         {/* Main Content Tabs - Mobile Optimized */}
         <Card className="overflow-visible border-none bg-transparent shadow-none">

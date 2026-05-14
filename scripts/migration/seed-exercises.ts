@@ -22,6 +22,7 @@ const pool = new Pool({
 // Tipos
 interface Exercise {
   name: string;
+  name_en?: string;
   slug: string;
   category: string;
   description: string;
@@ -35,6 +36,8 @@ interface Exercise {
   precautions?: string;
   benefits?: string;
   tags: string[];
+  image_url?: string;
+  image_variants?: string[];
 }
 
 /**
@@ -88,14 +91,16 @@ async function syncCategories(exercises: Exercise[]): Promise<Map<string, string
 async function insertExercise(exercise: Exercise, categoryId: string): Promise<string> {
   const query = `
     INSERT INTO exercises (
-      name, slug, category_id, description, instructions,
+      name, name_en, slug, dictionary_id, category_id, description, instructions,
       muscles_primary, equipment, difficulty, duration_seconds,
       sets_recommended, reps_recommended, precautions,
-      benefits, tags, is_active, is_public, updated_at
+      benefits, tags, image_url, image_variants, is_active, is_public, updated_at
     )
-    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, NOW())
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, NOW())
     ON CONFLICT (slug) DO UPDATE SET
       name = EXCLUDED.name,
+      name_en = EXCLUDED.name_en,
+      dictionary_id = EXCLUDED.dictionary_id,
       category_id = EXCLUDED.category_id,
       description = EXCLUDED.description,
       instructions = EXCLUDED.instructions,
@@ -108,6 +113,8 @@ async function insertExercise(exercise: Exercise, categoryId: string): Promise<s
       precautions = EXCLUDED.precautions,
       benefits = EXCLUDED.benefits,
       tags = EXCLUDED.tags,
+      image_url = EXCLUDED.image_url,
+      image_variants = EXCLUDED.image_variants,
       updated_at = NOW()
     RETURNING id
   `;
@@ -120,12 +127,14 @@ async function insertExercise(exercise: Exercise, categoryId: string): Promise<s
 
   const values = [
     exercise.name,
+    exercise.name_en || null,
     exercise.slug,
+    exercise.slug.startsWith("exd-") ? exercise.slug : null,
     categoryId,
     exercise.description,
-    exercise.instructions.join("\n"), // O schema espera text, provavelmente markdown
-    exercise.muscles, // Array
-    [exercise.equipment].filter((e) => e !== "nenhum"), // Array
+    exercise.instructions.join("\n"),
+    exercise.muscles,
+    [exercise.equipment].filter((e) => e !== "nenhum"),
     difficultyMap[exercise.difficulty] || "iniciante",
     exercise.duration_seconds || null,
     exercise.sets_recommended || null,
@@ -133,6 +142,8 @@ async function insertExercise(exercise: Exercise, categoryId: string): Promise<s
     exercise.precautions || null,
     exercise.benefits || null,
     exercise.tags,
+    exercise.image_url || null,
+    exercise.image_variants || [],
     true, // is_active
     true, // is_public
   ];
@@ -188,6 +199,11 @@ async function main(): Promise<void> {
   try {
     await pool.query("SELECT 1");
     console.log("✅ Banco de dados conectado\n");
+
+    console.log("🛠️ Verificando esquema do banco...");
+    await pool.query("ALTER TABLE exercises ADD COLUMN IF NOT EXISTS name_en TEXT;");
+    await pool.query("ALTER TABLE exercises ADD COLUMN IF NOT EXISTS image_variants TEXT[];");
+
     await seedExercises();
   } catch (error) {
     console.error("❌ Erro fatal:", error);

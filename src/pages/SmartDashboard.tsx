@@ -51,8 +51,8 @@ export function SmartDashboardContent() {
   );
 
   return (
-    <PageLayout showFooter={false}>
-      <PageContainer>
+    <PageLayout showFooter={false} fullWidth compactHeader>
+      <PageContainer maxWidth="full">
         <PageHeader 
           title="Fisio Intelligence" 
           subtitle="Acompanhe a saúde da sua clínica em tempo real"
