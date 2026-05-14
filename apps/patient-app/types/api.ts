@@ -101,13 +101,23 @@ export interface Notification {
 export interface Evolution {
   id: string;
   date: string;
-  subjective: string;
-  objective: string;
-  assessment: string;
-  plan: string;
-  painLevel: number;
+  observacao: string;
+  painScale: number | null;
+  procedures?: Array<{ id: string; name: string; notes?: string }>;
+  exercises?: Array<{ id: string; name: string; prescription?: string }>;
+  homeExercises?: Array<{ id: string; name: string; prescription?: string; frequency?: string }>;
   sessionNumber: number;
   professionalName: string;
+  /** @deprecated SOAP removido. */
+  subjective?: string;
+  /** @deprecated */
+  objective?: string;
+  /** @deprecated */
+  assessment?: string;
+  /** @deprecated */
+  plan?: string;
+  /** @deprecated use painScale. */
+  painLevel?: number;
 }
 
 export interface ProgressReport {

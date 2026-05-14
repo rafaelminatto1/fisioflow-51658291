@@ -100,13 +100,28 @@ export interface ApiEvolution {
   therapist_id: string;
   appointment_id?: string;
   date: string;
-  subjective?: string;
-  objective?: string;
-  assessment?: string;
-  plan?: string;
-  pain_level?: number;
+  // Canonical (texto livre + estruturados)
+  observacao?: string;
+  pain_scale?: number | null;
+  procedures?: unknown[];
+  exercises?: unknown[];
+  measurements?: unknown[];
+  home_exercises?: unknown[];
   attachments?: string[];
+  // Legados (mantidos transitoriamente)
+  /** @deprecated */
+  subjective?: string;
+  /** @deprecated */
+  objective?: string;
+  /** @deprecated */
+  assessment?: string;
+  /** @deprecated */
+  plan?: string;
+  /** @deprecated use `pain_scale`. */
+  pain_level?: number;
+  /** @deprecated */
   observations?: string;
+  /** @deprecated use `exercises`. */
   exercises_performed?: unknown[];
   pain_level_before?: number;
   pain_level_after?: number;

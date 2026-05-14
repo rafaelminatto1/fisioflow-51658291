@@ -122,16 +122,27 @@ export interface Evolution {
   patientId: string;
   professionalId: string;
   date?: Date;
-  subjective?: string;
-  objective?: string;
-  assessment?: string;
-  plan?: string;
-  notes?: string;
-  painLevel?: number;
+  // Canonical (modelo único — texto livre)
+  observacao?: string;
+  painScale?: number | null;
+  procedures?: Array<{ id: string; name: string; notes?: string; completed?: boolean }>;
   exercises?: any[];
+  measurements?: Array<{ id: string; name: string; value: number; unit: string }>;
+  homeExercises?: Array<{ id: string; name: string; prescription?: string }>;
   attachments?: string[];
+  notes?: string;
   createdAt?: Date;
   updatedAt?: Date;
+  /** @deprecated SOAP removido. */
+  subjective?: string;
+  /** @deprecated */
+  objective?: string;
+  /** @deprecated */
+  assessment?: string;
+  /** @deprecated */
+  plan?: string;
+  /** @deprecated use painScale. */
+  painLevel?: number;
 }
 // Exercise Assignment types
 export interface ExerciseAssignment {
