@@ -215,6 +215,7 @@ const ControlSection = memo(
         <div className="px-1">
           <Slider
             value={[value]}
+            min={0}
             max={max}
             step={step}
             onValueChange={onChange}
