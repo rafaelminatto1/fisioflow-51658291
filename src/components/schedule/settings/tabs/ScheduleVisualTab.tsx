@@ -36,40 +36,44 @@ interface ViewPreset {
   config: { cardSize: CardSize; heightScale: number; opacity: number };
 }
 
-const PRESETS: ViewPreset[] = [
+const PRESETS: (ViewPreset & { iconBg: string })[] = [
   {
     id: "productive",
-    name: "Produtivo",
-    description: "Máximo de info",
+    name: "Ultra-Fino",
+    description: "Slots de 4-8px",
     icon: Zap,
     color: "text-amber-600 dark:text-amber-400",
+    iconBg: "bg-amber-100 dark:bg-amber-900/40",
     activeBg: "bg-amber-50 dark:bg-amber-950/40 border-amber-400",
-    config: { cardSize: "extra_small", heightScale: 1, opacity: 100 },
+    config: { cardSize: "extra_small", heightScale: 0, opacity: 100 },
   },
   {
     id: "balanced",
-    name: "Equilíbrio",
-    description: "Padrão ideal",
+    name: "Sem Scroll",
+    description: "Foca no 07-21h",
     icon: Monitor,
     color: "text-blue-600 dark:text-blue-400",
+    iconBg: "bg-blue-100 dark:bg-blue-900/40",
     activeBg: "bg-blue-50 dark:bg-blue-950/40 border-blue-400",
-    config: { cardSize: "medium", heightScale: 3, opacity: 100 },
+    config: { cardSize: "medium", heightScale: 2, opacity: 100 },
   },
   {
     id: "comfortable",
     name: "Conforto",
-    description: "Leitura fácil",
+    description: "Mais leitura",
     icon: SunMedium,
     color: "text-teal-600 dark:text-teal-400",
+    iconBg: "bg-teal-100 dark:bg-teal-900/40",
     activeBg: "bg-teal-50 dark:bg-teal-950/40 border-teal-400",
     config: { cardSize: "large", heightScale: 5, opacity: 100 },
   },
   {
     id: "layered",
     name: "Glass",
-    description: "Estilo vítreo",
+    description: "Vitreous",
     icon: Layers,
     color: "text-sky-600 dark:text-sky-400",
+    iconBg: "bg-sky-100 dark:bg-sky-900/40",
     activeBg: "bg-sky-50 dark:bg-sky-950/40 border-sky-400",
     config: { cardSize: "medium", heightScale: 3, opacity: 60 },
   },
@@ -85,7 +89,7 @@ function PresetsGrid() {
   const { cardSize, setCardSize, heightScale, setHeightScale, setOpacity } = useCardSize();
   const [appliedPreset, setAppliedPreset] = useState<string | null>(null);
 
-  const applyPreset = (preset: ViewPreset) => {
+  const applyPreset = (preset: typeof PRESETS[0]) => {
     setCardSize(preset.config.cardSize);
     setHeightScale(preset.config.heightScale);
     setOpacity(preset.config.opacity);
@@ -117,7 +121,7 @@ function PresetsGrid() {
               className={cn(
                 "flex items-center justify-center w-12 h-12 rounded-2xl transition-all duration-500 shadow-sm group-hover:scale-110",
                 isActive
-                  ? `${preset.color.replace("text-", "bg-").replace("-600", "-100").replace("-400", "-900/40")} ${preset.color}`
+                  ? `${preset.iconBg} ${preset.color}`
                   : "bg-slate-100 dark:bg-slate-800 text-slate-400 group-hover:text-slate-600",
               )}
             >
