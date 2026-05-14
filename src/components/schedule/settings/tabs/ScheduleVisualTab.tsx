@@ -41,7 +41,7 @@ const PRESETS: ViewPreset[] = [
   {
     id: "productive",
     name: "Ultra-Fino",
-    description: "Máximo slots",
+    description: "Máximo slots (4px)",
     icon: Zap,
     color: "text-amber-600 dark:text-amber-400",
     iconBg: "bg-amber-100 dark:bg-amber-900/40",
@@ -51,12 +51,12 @@ const PRESETS: ViewPreset[] = [
   {
     id: "balanced",
     name: "Sem Scroll",
-    description: "07h às 21h",
+    description: "Foca no 07-21h",
     icon: Monitor,
     color: "text-blue-600 dark:text-blue-400",
     iconBg: "bg-blue-100 dark:bg-blue-900/40",
     activeBg: "bg-blue-50 dark:bg-blue-950/40 border-blue-400",
-    config: { cardSize: "medium", heightScale: 2, opacity: 100 },
+    config: { cardSize: "medium", heightScale: 1, opacity: 100 },
   },
   {
     id: "comfortable",

@@ -26,7 +26,8 @@ export function useAgendaAppearance(view: AgendaView) {
     if (typeof window === "undefined") return { global: DEFAULT_GLOBAL };
     const saved = localStorage.getItem("agenda_appearance_v2");
     try {
-      return saved ? JSON.parse(saved) : { global: DEFAULT_GLOBAL };
+      if (!saved || saved === "undefined") return { global: DEFAULT_GLOBAL };
+      return JSON.parse(saved);
     } catch (e) {
       return { global: DEFAULT_GLOBAL };
     }
