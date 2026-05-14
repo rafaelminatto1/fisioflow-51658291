@@ -13,8 +13,7 @@ import { fisioLogger as logger } from "@/lib/errors/logger";
 import { PatientHelpers } from "@/types";
 import type { EvolutionData } from "./usePatientEvolutionState";
 
-const stripHtml = (html: string) =>
-  html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+import { stripHtml } from "@/lib/utils/stripHtml";
 
 export function usePatientEvolutionHandlers({
   patientId,

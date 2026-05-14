@@ -22,6 +22,7 @@ import { usePatientEvolutionHandlers } from "@/hooks/evolution/usePatientEvoluti
 import { useEvolutionShortcuts } from "@/hooks/evolution/useEvolutionShortcuts";
 import { useAutoSave } from "@/hooks/useAutoSave";
 import { useAutoSaveSoapRecord } from "@/hooks/useSoapRecords";
+import { stripHtml } from "@/lib/utils/stripHtml";
 
 // Componentes
 import { EvolutionHeader } from "@/components/evolution/EvolutionHeader";
@@ -135,7 +136,7 @@ const PatientEvolution = () => {
     onSave: async (data) => {
       if (!state.patientId || !state.appointmentId) return;
 
-      const obsText = (data.observacao || "").replace(/<[^>]+>/g, "").trim();
+      const obsText = stripHtml(data.observacao || "");
       const hasContent =
         obsText.length > 0 ||
         (data.procedures && data.procedures.length > 0) ||
