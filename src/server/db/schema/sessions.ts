@@ -1,13 +1,14 @@
 /**
- * Sessions Schema - RF01.3 Evolução de Sessão (SOAP)
+ * Sessions Schema - Evolução em texto livre (observação única)
  *
  * Features:
- * - SOAP structured notes with detailed fields
+ * - Campo `observacao` (TEXT/HTML) como evolução principal
+ * - Estruturados ao lado: pain_scale (EVA 0-10), procedures, exercises,
+ *   measurements, home_exercises (todos JSONB)
  * - Auto-save support (draft status)
  * - Session numbering for patient
- * - File attachments (RF01.4)
- * - Replicate previous conduct
- * - Pain scale (EVA 0-10)
+ * - File attachments
+ * - Replicate previous conduct (templates por body_html)
  */
 
 // ===== ENUMS =====
@@ -20,6 +21,7 @@ import {
   jsonb,
   pgEnum,
   integer,
+  smallint,
   boolean,
   varchar,
   index,
@@ -58,85 +60,73 @@ export const sessions = pgTable(
     date: timestamp("date").defaultNow().notNull(),
     duration: integer("duration_minutes"), // Actual session duration
 
-    // ===== SOAP Structure - RF01.3 =====
+    // ===== Evolução em texto livre =====
 
-    // S (Subjetivo): Queixas do paciente, relato de dor, evolução percebida
-    subjective: jsonb("subjective").$type<{
-      complaints?: string; // Queixas do paciente
-      painScale?: number; // EVA (0-10)
-      painLocation?: string; // Where is the pain
-      painCharacter?: string; // Type of pain (burning, throbbing, etc)
-      perceivedEvolution?: string; // Patient's perception of progress
-      sleepQuality?: "good" | "regular" | "poor";
-      medicationChanges?: string;
-      notes?: string;
-    }>(),
+    // Observação clínica principal (HTML do TipTap)
+    observacao: text("observacao"),
 
-    // O (Objetivo): Avaliação física, medições, escala EVA
-    objective: jsonb("objective").$type<{
-      vitalSigns?: {
-        bloodPressure?: string; // e.g., "120/80"
-        heartRate?: number;
-        temperature?: number;
-        oxygenSaturation?: number;
-      };
-      physicalExam?: string; // General observations
-      // Measurements with comparison to previous
-      measurements?: Array<{
-        name: string; // e.g., "Knee flexion ROM"
-        value: number;
-        unit: string; // e.g., "degrees", "cm"
-        previousValue?: number;
-        normal?: number;
-      }>;
-      // Special Tests - Required alerts (e.g., post-op LCA requires ADM)
-      specialTests?: Array<{
+    // EVA (escala visual analógica de dor) 0–10
+    painScale: smallint("pain_scale"),
+
+    // Procedimentos realizados na sessão
+    procedures: jsonb("procedures")
+      .$type<Array<{
+        id: string;
         name: string;
-        result: "positive" | "negative";
+        completed?: boolean;
+        intensity?: number;
         notes?: string;
-      }>;
-      muscleStrength?: Record<string, number>; // 0-5 scale
-      edema?: {
-        present: boolean;
-        location?: string;
-        grade?: number; // 1-4+
-      };
-      wounds?: string;
-      notes?: string;
-    }>(),
+        category?: string;
+        durationMinutes?: number;
+      }>>()
+      .notNull()
+      .default([]),
 
-    // A (Avaliação): Diagnóstico fisioterapêutico, análise da evolução
-    assessment: jsonb("assessment").$type<{
-      diagnosis?: string; // Fisio diagnosis
-      icd10?: string;
-      evolutionAnalysis?: string; // How patient is progressing
-      prognosis?: "excellent" | "good" | "guarded" | "poor";
-      goalsProgress?: Array<{
-        goalId?: string;
-        status?: "on_track" | "behind" | "achieved";
-        notes?: string;
-      }>;
-      notes?: string;
-    }>(),
-
-    // P (Plano): Conduta terapêutica, exercícios, orientações
-    plan: jsonb("plan").$type<{
-      conduct?: string; // Therapeutic conduct
-      techniques?: string[]; // Techniques used
-      exercises?: Array<{
+    // Exercícios prescritos na sessão (executados em consultório)
+    exercises: jsonb("exercises")
+      .$type<Array<{
+        id: string;
+        exerciseId?: string;
         name: string;
+        prescription?: string; // séries x reps x carga
         sets?: number;
         reps?: number;
         duration?: string;
+        completed?: boolean;
+        patientFeedback?: string;
         notes?: string;
-      }>;
-      orientations?: string; // Patient instructions
-      homeExercises?: string; // Home program
-      nextSessionGoals?: string;
-      nextSessionDate?: string;
-      referrals?: string; // If referring to other specialists
-      notes?: string;
-    }>(),
+      }>>()
+      .notNull()
+      .default([]),
+
+    // Medições/testes específicos coletados na sessão
+    measurements: jsonb("measurements")
+      .$type<Array<{
+        id: string;
+        name: string; // ex.: "Flexão de joelho"
+        value: number;
+        unit: string; // graus, cm, kg
+        side?: "left" | "right" | "bilateral";
+        previousValue?: number;
+        notes?: string;
+      }>>()
+      .notNull()
+      .default([]),
+
+    // Programa de exercícios para casa (HEP) prescrito nesta sessão
+    homeExercises: jsonb("home_exercises")
+      .$type<Array<{
+        id: string;
+        exerciseId?: string;
+        name: string;
+        prescription?: string;
+        sets?: number;
+        reps?: number;
+        frequency?: string; // ex.: "2x/dia"
+        notes?: string;
+      }>>()
+      .notNull()
+      .default([]),
 
     // Status & Auto-save
     status: sessionStatusEnum("status").default("draft").notNull(),
@@ -284,12 +274,10 @@ export const sessionTemplates = pgTable(
 
     name: varchar("name", { length: 200 }).notNull(),
     description: text("description"),
+    category: varchar("category", { length: 50 }),
 
-    // Template SOAP content
-    subjective: jsonb("subjective"),
-    objective: jsonb("objective"),
-    assessment: jsonb("assessment"),
-    plan: jsonb("plan"),
+    // Conteúdo do template (HTML do TipTap), aplicado direto no editor de observação
+    bodyHtml: text("body_html"),
 
     isGlobal: boolean("is_global").default(false), // Available to all therapists
 

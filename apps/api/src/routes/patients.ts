@@ -1555,12 +1555,8 @@ app.get("/:id/timeline", async (c) => {
       .limit(50);
 
     const evolutions = sessionRows.map((row) => {
-      const subjective = jsonbTextToString(row.subjective);
-      const objective = jsonbTextToString(row.objective);
-      const assessment = jsonbTextToString(row.assessment);
-      const plan = jsonbTextToString(row.plan);
-      const bodyPreview =
-        [subjective, objective, assessment, plan].filter(Boolean).join("\n\n") || undefined;
+      const observacao = typeof row.observacao === "string" ? row.observacao : "";
+      const preview = observacao.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
 
       return {
         id: row.id,
@@ -1570,11 +1566,13 @@ app.get("/:id/timeline", async (c) => {
         created_at: new Date(row.createdAt).toISOString(),
         appointment_id: row.appointmentId ?? undefined,
         record_date: row.date ? new Date(row.date).toISOString().split("T")[0] : undefined,
-        subjective,
-        objective,
-        assessment,
-        plan,
-        body: bodyPreview,
+        observacao,
+        pain_scale: row.painScale ?? null,
+        procedures: Array.isArray(row.procedures) ? row.procedures : [],
+        exercises: Array.isArray(row.exercises) ? row.exercises : [],
+        measurements: Array.isArray(row.measurements) ? row.measurements : [],
+        home_exercises: Array.isArray(row.homeExercises) ? row.homeExercises : [],
+        body: preview || undefined,
       };
     });
 
