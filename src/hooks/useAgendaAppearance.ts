@@ -16,7 +16,7 @@ const DEFAULT_GLOBAL: AgendaViewAppearance = {
 };
 
 const VIEW_DEFAULT_OVERRIDES: Record<AgendaView, Partial<AgendaViewAppearance>> = {
-  day: { heightScale: 2 },
+  day: { heightScale: 1 }, 
   week: { heightScale: 1, fontScale: 4 },
   month: { cardSize: "extra_small", heightScale: 1, fontScale: 4 },
 };
@@ -84,14 +84,19 @@ export function useAgendaAppearance(view: AgendaView) {
     setFontScale: (val: number) => save({ ...state, [view]: { ...(state[view] || {}), fontScale: val } }),
     setOpacity: (val: number) => save({ ...state, [view]: { ...(state[view] || {}), opacity: val } }),
     setAll: (patch: any) => save({ ...state, [view]: { ...(state[view] || {}), ...patch } }),
-    applyToAllViews: (patch: any) => save({ ...state, global: { ...state.global, ...patch } }),
+    applyToAllViews: (patch: any) => save({ 
+      global: { ...state.global, ...patch },
+      day: {},
+      week: {},
+      month: {}
+    }),
     resetView: () => save({ ...state, [view]: {} }),
-    resetAll: () => save({ global: DEFAULT_GLOBAL }),
+    resetAll: () => save({ global: DEFAULT_GLOBAL, day: {}, week: {}, month: {} }),
     hasOverrideForView: !!state[view] && Object.keys(state[view] || {}).length > 0
   };
 }
 
-function slotHeightPxFromScale(scale: number): number {
+export function slotHeightPxFromScale(scale: number): number {
   if (scale <= 0) return 4;
   const multiplier = 0.16 + (Math.max(0, Math.min(10, scale)) / 10) * 2.34;
   return Math.round(24 * multiplier);

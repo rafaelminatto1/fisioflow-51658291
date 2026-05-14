@@ -73,7 +73,7 @@ export function AgendaVisualConfiguration() {
           value={heightScale}
           max={10}
           onChange={(val) => setHeightScale(val[0])}
-          renderValue={`${Math.round(24 * heightMultiplier)}px`}
+          renderValue={`${Math.round(24 * (0.16 + (heightScale / 10) * 2.34))}px`}
           accent="teal"
         />
 
