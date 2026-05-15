@@ -395,6 +395,7 @@ const PatientEvolution = () => {
           patientId={state.patientId}
           evolutionId={state.currentSoapRecordId}
           lastSaved={lastSavedAt}
+          onNavigateToHistorico={() => state.setActiveTab("historico")}
         />
       </Suspense>
     );
