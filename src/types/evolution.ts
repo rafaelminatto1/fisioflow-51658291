@@ -117,6 +117,7 @@ export interface ProcedureItem {
   id: string;
   name: string;
   completed?: boolean;
+  sequenceOrder?: number;
   intensity?: number;
   notes?: string;
   category?: string;
@@ -132,6 +133,7 @@ export interface ExerciseItem {
   reps?: number;
   duration?: string;
   completed?: boolean;
+  sequenceOrder?: number;
   patientFeedback?: string;
   notes?: string;
 }

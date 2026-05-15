@@ -3,7 +3,7 @@
  * Optimized with modular hooks and components for better maintainability.
  */
 
-import { lazy, Suspense, useMemo, useEffect } from "react";
+import { lazy, Suspense, useMemo, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { AlertTriangle } from "lucide-react";
 
@@ -98,6 +98,7 @@ const LazyNotionEvolutionPanel = lazy(() =>
 );
 
 import { preloadEditorChunks } from "@/lib/evolution/preloadEditors";
+import type { EvolutionV2Data } from "@/components/evolution/v2-improved/types";
 
 export interface PainScaleData {
   level: number;
@@ -111,6 +112,56 @@ const PatientEvolution = () => {
   const state = usePatientEvolutionState();
   const handlers = usePatientEvolutionHandlers(state);
   const autoSaveMutation = useAutoSaveSoapRecord();
+
+  const handleEvolutionV2Change = useCallback(
+    (next: EvolutionV2Data) => {
+      state.setEvolutionV2Data(next);
+
+      const orderedItems = [...(next.unifiedItems || [])].sort(
+        (a, b) => (a.order ?? 0) - (b.order ?? 0),
+      );
+
+      const usesUnifiedItems = Array.isArray(next.unifiedItems);
+      const procedures = usesUnifiedItems
+        ? orderedItems
+            .map((item, index) => ({ item, sequenceOrder: index + 1 }))
+            .filter(({ item }) => item.type === "procedure")
+            .map(({ item, sequenceOrder }) => ({
+              id: item.id,
+              name: item.name,
+              completed: item.completed,
+              sequenceOrder,
+              notes: item.notes,
+              category: item.category,
+              intensity: item.intensity as any,
+            }))
+        : next.procedures;
+
+      const exercises = usesUnifiedItems
+        ? orderedItems
+            .map((item, index) => ({ item, sequenceOrder: index + 1 }))
+            .filter(({ item }) => item.type === "exercise")
+            .map(({ item, sequenceOrder }) => ({
+              id: item.id,
+              name: item.name,
+              completed: item.completed,
+              sequenceOrder,
+              prescription: item.prescription,
+              patientFeedback: item.patientFeedback,
+            }))
+        : next.exercises;
+
+      state.setEvolutionData((prev) => ({
+        ...prev,
+        observacao: next.evolutionText || next.observations || prev.observacao,
+        painScale: next.painLevel ?? prev.painScale,
+        procedures: procedures as any,
+        exercises: exercises as any,
+        measurements: (next.measurements as any) || prev.measurements,
+      }));
+    },
+    [state],
+  );
 
   // Preload all editor chunks during idle time so tab switching is instant
   useEffect(() => {
@@ -339,11 +390,10 @@ const PatientEvolution = () => {
       <Suspense fallback={<LoadingSkeleton type="card" />}>
         <LazyNotionEvolutionPanel
           data={state.evolutionV2Data}
-          onChange={state.setEvolutionV2Data}
+          onChange={handleEvolutionV2Change}
           patientId={state.patientId}
           evolutionId={state.currentSoapRecordId}
-          isEdited={state.isEdited}
-          lastSavedAt={lastSavedAt}
+          lastSaved={lastSavedAt}
         />
       </Suspense>
     );
