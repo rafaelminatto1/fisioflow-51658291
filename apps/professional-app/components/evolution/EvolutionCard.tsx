@@ -1,6 +1,7 @@
 import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { stripHtml } from "@/lib/utils/stripHtml";
 
 export interface EvolutionCardProps {
   date: string;
@@ -19,16 +20,6 @@ export interface EvolutionCardProps {
   onClick?: () => void;
   compact?: boolean;
   style?: any;
-}
-
-function stripHtml(html: string): string {
-  let prev = "";
-  let s = html;
-  while (s !== prev) {
-    prev = s;
-    s = s.replace(/<[^>]*>/g, "");
-  }
-  return s.replace(/\s+/g, " ").trim();
 }
 
 export const EvolutionCard = React.forwardRef<View, EvolutionCardProps>(

@@ -42,8 +42,7 @@
 
 /* 3. Header Customization (Tonal Header) */
 .fc .fc-col-header-cell {
-  background: rgba(248, 250, 252, 0.8) !important;
-  backdrop-filter: blur(8px);
+  background: #f8fafc !important;
   border: none !important;
   height: var(--agenda-header-height) !important;
 }
@@ -126,7 +125,7 @@
 
 /* Dark Mode Adjustments */
 .dark .fc .fc-col-header-cell {
-  background: rgba(15, 23, 42, 0.8) !important;
+  background: #0f172a !important;
 }
 
 .dark .fc .fc-col-header-cell-cushion {

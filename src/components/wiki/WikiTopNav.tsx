@@ -173,7 +173,7 @@ export function WikiTopNav({
   }, [generalPages]);
 
   return (
-    <div className="w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-30">
+    <div className="w-full border-b bg-background sticky top-0 z-30">
       <div className="flex h-14 items-center gap-4 px-4">
         {/* Main Nav Items */}
         <div className="flex items-center gap-2">
