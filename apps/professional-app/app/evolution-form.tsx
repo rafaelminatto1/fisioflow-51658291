@@ -16,13 +16,44 @@ import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useColors } from "@/hooks/useColorScheme";
 import { useHaptics } from "@/hooks/useHaptics";
-import { SOAPForm } from "@/components/evolution/SOAPForm";
+import { ObservacaoForm } from "@/components/evolution/ObservacaoForm";
+import { EvolutionChipList, type ChipItem } from "@/components/evolution/EvolutionChipList";
 import { PainLevelSlider } from "@/components/evolution/PainLevelSlider";
 import { PhotoUpload } from "@/components/evolution/PhotoUpload";
-import { FillingStyleToggle, FillingMode } from "@/components/evolution/FillingStyleToggle";
-import { NotionForm } from "@/components/evolution/NotionForm";
-import { TiptapForm } from "@/components/evolution/TiptapForm";
 import { fetchApi } from "@/lib/api";
+
+type StructuredItem = ChipItem;
+
+function arrayToChips(items: any[] | undefined, extractDetail?: (item: any) => string | undefined): StructuredItem[] {
+  if (!Array.isArray(items)) return [];
+  return items
+    .map((item, idx) => {
+      if (!item) return null;
+      const id = typeof item.id === "string" && item.id ? item.id : `legacy_${idx}`;
+      const name = typeof item.name === "string" ? item.name : "";
+      if (!name) return null;
+      const detail = extractDetail ? extractDetail(item) : undefined;
+      return { id, name, detail };
+    })
+    .filter(Boolean) as StructuredItem[];
+}
+
+function chipsToProcedures(chips: StructuredItem[]) {
+  return chips.map((c) => ({ id: c.id, name: c.name, notes: c.detail }));
+}
+
+function chipsToExercises(chips: StructuredItem[]) {
+  return chips.map((c) => ({ id: c.id, name: c.name, prescription: c.detail }));
+}
+
+function chipsToMeasurements(chips: StructuredItem[]) {
+  // detail é livre (ex.: "120º" ou "5kg"); guardamos como `unit` + value 0 placeholder.
+  return chips.map((c) => ({ id: c.id, name: c.name, unit: c.detail ?? "", value: 0 }));
+}
+
+function chipsToHomeExercises(chips: StructuredItem[]) {
+  return chips.map((c) => ({ id: c.id, name: c.name, frequency: c.detail }));
+}
 
 export default function EvolutionFormScreen() {
   const colors = useColors();
@@ -38,14 +69,13 @@ export default function EvolutionFormScreen() {
 
   const { success, error: hapticError } = useHaptics();
 
-  // Form state
-  const [mode, setMode] = useState<FillingMode>("SOAP");
-  const [subjective, setSubjective] = useState("");
-  const [objective, setObjective] = useState("");
-  const [assessment, setAssessment] = useState("");
-  const [plan, setPlan] = useState("");
-  const [freeContent, setFreeContent] = useState("");
+  // Form state — modelo único (observação livre + estruturados)
+  const [observacao, setObservacao] = useState("");
   const [painLevel, setPainLevel] = useState(0);
+  const [procedures, setProcedures] = useState<StructuredItem[]>([]);
+  const [exercises, setExercises] = useState<StructuredItem[]>([]);
+  const [measurements, setMeasurements] = useState<StructuredItem[]>([]);
+  const [homeExercises, setHomeExercises] = useState<StructuredItem[]>([]);
   const [photos, setPhotos] = useState<string[]>([]);
 
   // Auto-save state
@@ -57,29 +87,23 @@ export default function EvolutionFormScreen() {
   const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // AI Generation state
-  const [generatingSOAP, setGeneratingSOAP] = useState(false);
-  const [generatedSuggestions, setGeneratedSuggestions] = useState<string[]>([]);
+  const [generatingAi, setGeneratingAi] = useState(false);
 
-  // Load existing draft on mount (restores content if user leaves and comes back)
+  // Carregar rascunho (servidor + local)
   useEffect(() => {
     if (!patientId) return;
-    
+
     const DRAFT_KEY = `evolution_draft_${patientId}`;
 
     const fetchDraft = async () => {
       setAutoSaveStatus("saving");
       try {
-        // 1. Tentar recuperar cache local primeiro (mais rápido e funciona offline)
         const localDraftStr = await AsyncStorage.getItem(DRAFT_KEY);
         const localDraft = localDraftStr ? JSON.parse(localDraftStr) : null;
 
-        // 2. Tentar recuperar rascunho do servidor
+        let serverDraft: any = null;
         let url = `/api/sessions?patientId=${patientId}&status=draft&limit=1`;
-        if (appointmentId) {
-          url += `&appointmentId=${appointmentId}`;
-        }
-        
-        let serverDraft = null;
+        if (appointmentId) url += `&appointmentId=${appointmentId}`;
         try {
           const res = await fetchApi<{ data: any[] }>(url);
           serverDraft = res.data?.[0];
@@ -87,31 +111,34 @@ export default function EvolutionFormScreen() {
           console.log("[EvolutionForm] Server unreachable, using local cache if available");
         }
 
-        // 3. Decidir qual usar (o mais recente ou o local se estiver offline)
-        const draft = localDraft || serverDraft;
-        
+        const draft = serverDraft || localDraft;
         if (draft && !savedEvolutionId.current) {
           savedEvolutionId.current = serverDraft?.id || null;
-          
-          const subj = draft.subjective || "";
-          const obj = draft.objective || "";
-          const ass = draft.assessment || "";
-          const pln = draft.plan || "";
 
-          setSubjective(subj);
-          setObjective(obj);
-          setAssessment(ass);
-          setPlan(pln);
-          setFreeContent(ass);
-          setPainLevel(draft.pain_level || 0);
-          
-          if (draft.photos && Array.isArray(draft.photos)) {
-            setPhotos(draft.photos);
-          }
+          // Compat: aceita tanto shape novo (observacao) quanto legacy (assessment)
+          const obs =
+            (typeof draft.observacao === "string" && draft.observacao) ||
+            [draft.subjective, draft.objective, draft.assessment, draft.plan]
+              .filter(Boolean)
+              .join("\n\n") ||
+            "";
 
-          if (!subj && !obj && !pln && ass) {
-            setMode("Notion");
-          }
+          setObservacao(obs);
+          setPainLevel(Number(draft.pain_scale ?? draft.pain_level ?? 0));
+          setProcedures(arrayToChips(draft.procedures, (it) => it.notes));
+          setExercises(
+            arrayToChips(draft.exercises, (it) => it.prescription || it.notes),
+          );
+          setMeasurements(
+            arrayToChips(draft.measurements, (it) => (it.unit ? String(it.unit) : undefined)),
+          );
+          setHomeExercises(
+            arrayToChips(draft.home_exercises, (it) => it.frequency || it.prescription),
+          );
+
+          if (Array.isArray(draft.photos)) setPhotos(draft.photos);
+          if (Array.isArray(draft.attachments)) setPhotos(draft.attachments);
+
           setAutoSaveStatus("saved");
         } else {
           setAutoSaveStatus("idle");
@@ -124,32 +151,38 @@ export default function EvolutionFormScreen() {
     fetchDraft();
   }, [patientId, appointmentId]);
 
-  // Auto-save debounced — cria na primeira vez, atualiza nas seguintes
+  // Auto-save debounced — local imediato, servidor a cada 5s
   const triggerAutoSave = useCallback(() => {
     const DRAFT_KEY = `evolution_draft_${patientId}`;
-    
-    // Salvar localmente IMEDIATAMENTE (sem debounce longo para garantir segurança local)
+
     const saveLocal = async () => {
       const draftData = {
-        subjective: mode === "SOAP" ? subjective.trim() : "",
-        objective: mode === "SOAP" ? objective.trim() : "",
-        assessment: mode === "SOAP" ? assessment.trim() : freeContent.trim(),
-        plan: mode === "SOAP" ? plan.trim() : "",
-        pain_level: painLevel,
+        observacao: observacao.trim(),
+        pain_scale: painLevel,
+        procedures: chipsToProcedures(procedures),
+        exercises: chipsToExercises(exercises),
+        measurements: chipsToMeasurements(measurements),
+        home_exercises: chipsToHomeExercises(homeExercises),
         photos,
-        mode,
         updatedAt: new Date().toISOString(),
       };
-      await AsyncStorage.setItem(DRAFT_KEY, JSON.stringify(draftData));
+      try {
+        await AsyncStorage.setItem(DRAFT_KEY, JSON.stringify(draftData));
+      } catch (err) {
+        console.warn("[EvolutionForm] Local save failed", err);
+      }
     };
     saveLocal();
 
     if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
     autoSaveTimer.current = setTimeout(async () => {
       const hasContent =
-        mode === "SOAP"
-          ? subjective.trim() || objective.trim() || assessment.trim() || plan.trim()
-          : freeContent.trim();
+        observacao.trim() ||
+        procedures.length ||
+        exercises.length ||
+        measurements.length ||
+        homeExercises.length ||
+        painLevel > 0;
       if (!hasContent || !patientId) return;
 
       setAutoSaveStatus("saving");
@@ -159,23 +192,18 @@ export default function EvolutionFormScreen() {
           patient_id: patientId,
           appointment_id: appointmentId ?? null,
           record_date: new Date().toISOString().split("T")[0],
-          subjective: mode === "SOAP" ? subjective.trim() : "",
-          objective: mode === "SOAP" ? objective.trim() : "",
-          assessment: mode === "SOAP" ? assessment.trim() : freeContent.trim(),
-          plan: mode === "SOAP" ? plan.trim() : "",
-          pain_level: painLevel,
+          observacao: observacao.trim(),
+          pain_scale: painLevel,
+          procedures: chipsToProcedures(procedures),
+          exercises: chipsToExercises(exercises),
+          measurements: chipsToMeasurements(measurements),
+          home_exercises: chipsToHomeExercises(homeExercises),
         };
-
-        if (savedEvolutionId.current) {
-          body.recordId = savedEvolutionId.current;
-        }
+        if (savedEvolutionId.current) body.recordId = savedEvolutionId.current;
 
         const res = await fetchApi<{ data: { id: string } }>("/api/sessions/autosave", {
           method: "POST",
-          data: {
-            ...body,
-            photos,
-          },
+          data: { ...body, photos },
         });
         savedEvolutionId.current = res.data?.id ?? savedEvolutionId.current;
         setAutoSaveStatus("saved");
@@ -191,43 +219,19 @@ export default function EvolutionFormScreen() {
         setAutoSaveErrorDetail(technicalDetail || null);
         console.error("[AutoSave Server Error]", err);
       }
-    }, 5000); // 5 segundos para o servidor (menos agressivo)
-  }, [
-    mode,
-    subjective,
-    objective,
-    assessment,
-    plan,
-    freeContent,
-    patientId,
-    appointmentId,
-    painLevel,
-    photos
-  ]);
+    }, 5000);
+  }, [observacao, painLevel, procedures, exercises, measurements, homeExercises, photos, patientId, appointmentId]);
 
-
-
-  // Trigger auto-save on content changes
   useEffect(() => {
     triggerAutoSave();
     return () => {
       if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
     };
-  }, [
-    subjective,
-    objective,
-    assessment,
-    plan,
-    freeContent,
-    painLevel,
-    photos,
-    mode,
-    triggerAutoSave,
-  ]);
+  }, [triggerAutoSave]);
 
-  // Generate SOAP with AI — calls real Workers AI endpoint
+  // Gerar com IA — endpoint mantém compat com o backend novo (observação narrativa)
   const handleGenerateWithAI = async () => {
-    setGeneratingSOAP(true);
+    setGeneratingAi(true);
     try {
       const data = await fetchApi<any>("/api/ai/soap-suggestions", {
         method: "POST",
@@ -235,44 +239,32 @@ export default function EvolutionFormScreen() {
           patientId,
           appointmentId,
           painLevel,
-          mode,
-          context: mode === "SOAP" ? { subjective, objective, assessment, plan } : { freeContent },
+          mode: "Observacao",
+          context: { observacao, procedures: chipsToProcedures(procedures) },
         },
       });
-
-      if (mode === "SOAP" && data.soap) {
-        setSubjective(data.soap.subjective || subjective);
-        setObjective(data.soap.objective || objective);
-        setAssessment(data.soap.assessment || assessment);
-        setPlan(data.soap.plan || plan);
-      } else if (data.freeText) {
-        setFreeContent(data.freeText);
+      const generated =
+        (typeof data?.observacao === "string" && data.observacao) ||
+        (typeof data?.freeText === "string" && data.freeText) ||
+        "";
+      if (generated) {
+        setObservacao((prev) => (prev ? `${prev}\n\n${generated}` : generated));
       }
-
-      if (data.suggestions?.length) {
-        setGeneratedSuggestions(data.suggestions);
-      }
-
       success();
-      Alert.alert("Sucesso", "Evolução gerada com IA!", [{ text: "OK" }]);
+      Alert.alert("Sucesso", "Sugestão gerada com IA!");
     } catch (err: any) {
       hapticError();
-      Alert.alert("Erro", err.message || "Não foi possível gerar com IA");
+      Alert.alert("Erro", err?.message ?? "Não foi possível gerar com IA");
     } finally {
-      setGeneratingSOAP(false);
+      setGeneratingAi(false);
     }
   };
 
   const handleFinalize = async () => {
     try {
       setAutoSaveStatus("saving");
-      // Simulação ou chamada real de finalização se houver rota específica
-      // Por enquanto, o autosave já salvou o conteúdo. 
-      // Em uma implementação real, chamaríamos /api/sessions/finalize
-      
       const DRAFT_KEY = `evolution_draft_${patientId}`;
       await AsyncStorage.removeItem(DRAFT_KEY);
-      
       success();
       router.back();
     } catch (err) {
@@ -291,24 +283,18 @@ export default function EvolutionFormScreen() {
           : "";
 
   return (
-    <SafeAreaView
-      style={[styles.container, { backgroundColor: colors.background }]}
-      edges={["top"]}
-    >
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={["top"]}>
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0}
         style={styles.keyboardAvoidingView}
       >
         <Stack.Screen options={{ headerShown: false }} />
-        {/* Header */}
+
         <View
           style={[
             styles.header,
-            {
-              backgroundColor: colors.surface,
-              borderBottomColor: colors.border,
-            },
+            { backgroundColor: colors.surface, borderBottomColor: colors.border },
           ]}
         >
           <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
@@ -325,49 +311,77 @@ export default function EvolutionFormScreen() {
           </TouchableOpacity>
         </View>
 
-        {/* Mode Toggle — fixed above scroll */}
-        <FillingStyleToggle mode={mode} onModeChange={setMode} colors={colors} />
-
         <ScrollView
           style={styles.content}
           contentContainerStyle={styles.contentContainer}
           keyboardShouldPersistTaps="handled"
           keyboardDismissMode="interactive"
         >
-
-          {/* Dynamic Form Content */}
-          {mode === "SOAP" ? (
-            <SOAPForm
-              subjective={subjective}
-              objective={objective}
-              assessment={assessment}
-              plan={plan}
-              onChangeSubjective={setSubjective}
-              onChangeObjective={setObjective}
-              onChangeAssessment={setAssessment}
-              onChangePlan={setPlan}
-              colors={colors}
-            />
-          ) : mode === "Notion" ? (
-            <NotionForm content={freeContent} onChangeContent={setFreeContent} colors={colors} />
-          ) : (
-            <TiptapForm content={freeContent} onChangeContent={setFreeContent} colors={colors} />
-          )}
-
-          {/* Pain Level */}
+          {/* 🔴 EVA */}
           <PainLevelSlider painLevel={painLevel} onValueChange={setPainLevel} colors={colors} />
 
-          {/* Photo Upload */}
+          {/* 🟡 Observação clínica */}
+          <ObservacaoForm value={observacao} onChange={setObservacao} colors={colors} />
+
+          {/* 🟢 Procedimentos */}
+          <EvolutionChipList
+            title="Procedimentos"
+            icon="medkit-outline"
+            accent="#16a34a"
+            items={procedures}
+            onChange={setProcedures}
+            colors={colors}
+            withDetail
+            detailPlaceholder="Notas"
+          />
+
+          {/* 🟢 Exercícios em sessão */}
+          <EvolutionChipList
+            title="Exercícios (sessão)"
+            icon="barbell-outline"
+            accent="#0ea5e9"
+            items={exercises}
+            onChange={setExercises}
+            colors={colors}
+            withDetail
+            detailPlaceholder="3x10"
+          />
+
+          {/* 🟣 Medições */}
+          <EvolutionChipList
+            title="Medições"
+            icon="speedometer-outline"
+            accent="#db2777"
+            items={measurements}
+            onChange={setMeasurements}
+            colors={colors}
+            withDetail
+            detailPlaceholder="Valor / unidade"
+          />
+
+          {/* ⚪ Exercícios para casa (HEP) */}
+          <EvolutionChipList
+            title="Exercícios para Casa"
+            icon="home-outline"
+            accent="#6b7280"
+            items={homeExercises}
+            onChange={setHomeExercises}
+            colors={colors}
+            withDetail
+            detailPlaceholder="2x/dia"
+          />
+
+          {/* ⚫ Anexos / fotos */}
           <PhotoUpload photos={photos} onPhotosChange={setPhotos} colors={colors} />
 
-          {/* AI Generation Button */}
+          {/* IA */}
           <View style={styles.aiButtonContainer}>
             <TouchableOpacity
               style={styles.aiButton}
               onPress={handleGenerateWithAI}
-              disabled={generatingSOAP}
+              disabled={generatingAi}
             >
-              {generatingSOAP ? (
+              {generatingAi ? (
                 <ActivityIndicator color="#fff" />
               ) : (
                 <>
@@ -376,29 +390,8 @@ export default function EvolutionFormScreen() {
                 </>
               )}
             </TouchableOpacity>
-            {generatedSuggestions.length > 0 && (
-              <View style={styles.suggestionsContainer}>
-                <Text style={styles.suggestionsLabel}>Sugestões:</Text>
-                {generatedSuggestions.map((suggestion, index) => (
-                  <TouchableOpacity
-                    key={index}
-                    style={styles.suggestionItem}
-                    onPress={() => {
-                      if (mode === "SOAP") {
-                        setSubjective(subjective + " " + suggestion);
-                      } else {
-                        setFreeContent(freeContent + "\n• " + suggestion);
-                      }
-                    }}
-                  >
-                    <Text style={styles.suggestionText}>• {suggestion}</Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            )}
           </View>
 
-          {/* Auto-save status indicator */}
           {autoSaveLabel ? (
             <View style={styles.autoSaveContainer}>
               <View style={styles.autoSaveRow}>
@@ -441,12 +434,8 @@ export default function EvolutionFormScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  keyboardAvoidingView: {
-    flex: 1,
-  },
+  container: { flex: 1 },
+  keyboardAvoidingView: { flex: 1 },
   header: {
     flexDirection: "row",
     alignItems: "center",
@@ -455,113 +444,28 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderBottomWidth: 1,
   },
-  backButton: {
-    padding: 8,
-  },
-  headerCenter: {
-    flex: 1,
-    alignItems: "center",
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: "600",
-  },
-  headerSubtitle: {
-    fontSize: 14,
-    marginTop: 2,
-  },
-  finalizeButton: {
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-  },
-  finalizeButtonText: {
-    fontSize: 15,
-    fontWeight: "bold",
-  },
-  content: {
-    flex: 1,
-  },
-  contentContainer: {
-    paddingHorizontal: 16,
-    paddingTop: 8,
-    paddingBottom: 40,
-    gap: 16,
-  },
-  autoSaveContainer: {
-    alignItems: "center",
-    paddingVertical: 12,
-    gap: 4,
-  },
-  autoSaveRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 6,
-  },
-  autoSaveText: {
-    fontSize: 13,
-  },
-  autoSaveErrorDetail: {
-    fontSize: 12,
-    textAlign: "center",
-    paddingHorizontal: 12,
-  },
-  aiButtonContainer: {
-    alignItems: "center",
-    marginTop: 12,
-    marginBottom: 8,
-  },
-  toggleContainer: {
-    flexDirection: "row",
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    gap: 8,
-  },
-  toggleButton: {
-    flex: 1,
-    height: 36,
-    borderRadius: 18,
-    borderWidth: 1,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  toggleButtonText: {
-    fontSize: 13,
-    fontWeight: "600",
-  },
+  backButton: { padding: 8 },
+  headerCenter: { flex: 1, alignItems: "center" },
+  headerTitle: { fontSize: 18, fontWeight: "600" },
+  headerSubtitle: { fontSize: 14, marginTop: 2 },
+  finalizeButton: { paddingVertical: 6, paddingHorizontal: 12 },
+  finalizeButtonText: { fontSize: 15, fontWeight: "bold" },
+  content: { flex: 1 },
+  contentContainer: { paddingHorizontal: 16, paddingTop: 8, paddingBottom: 40, gap: 16 },
+  aiButtonContainer: { alignItems: "center", marginTop: 4 },
   aiButton: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     padding: 12,
     borderRadius: 8,
-    backgroundColor: "#06b6d4", // Cyan 500 (Brand Primary)
+    backgroundColor: "#06b6d4",
     gap: 8,
+    paddingHorizontal: 24,
   },
-  aiButtonText: {
-    color: "#fff",
-    fontSize: 14,
-    fontWeight: "600",
-  },
-  suggestionsContainer: {
-    marginTop: 8,
-    backgroundColor: "rgba(6, 182, 212, 0.1)",
-    borderRadius: 8,
-    padding: 12,
-  },
-  suggestionsLabel: {
-    fontSize: 12,
-    fontWeight: "600",
-    color: "#6B7280",
-    marginBottom: 8,
-  },
-  suggestionItem: {
-    padding: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: "rgba(6, 182, 212, 0.1)",
-  },
-  suggestionText: {
-    fontSize: 14,
-    color: "#475569",
-  },
+  aiButtonText: { color: "#fff", fontSize: 14, fontWeight: "600" },
+  autoSaveContainer: { alignItems: "center", paddingVertical: 12, gap: 4 },
+  autoSaveRow: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6 },
+  autoSaveText: { fontSize: 13 },
+  autoSaveErrorDetail: { fontSize: 12, textAlign: "center", paddingHorizontal: 12 },
 });

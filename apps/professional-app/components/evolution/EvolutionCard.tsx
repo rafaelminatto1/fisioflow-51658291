@@ -5,15 +5,30 @@ import { Ionicons } from "@expo/vector-icons";
 export interface EvolutionCardProps {
   date: string;
   therapistName: string;
+  /** Texto principal — observação clínica (HTML será limpo na exibição). */
+  observacao?: string;
+  /** Aliases legados, usados como fallback se `observacao` estiver vazio. */
   subjective?: string;
-  objective?: string;
   assessment?: string;
-  plan?: string;
   sessionNumber?: number;
+  /** Aceita tanto pain_scale quanto o legado pain_level. */
+  painScale?: number | null;
   painLevel?: number;
+  proceduresCount?: number;
+  exercisesCount?: number;
   onClick?: () => void;
   compact?: boolean;
   style?: any;
+}
+
+function stripHtml(html: string): string {
+  let prev = "";
+  let s = html;
+  while (s !== prev) {
+    prev = s;
+    s = s.replace(/<[^>]*>/g, "");
+  }
+  return s.replace(/\s+/g, " ").trim();
 }
 
 export const EvolutionCard = React.forwardRef<View, EvolutionCardProps>(
@@ -21,12 +36,14 @@ export const EvolutionCard = React.forwardRef<View, EvolutionCardProps>(
     {
       date,
       therapistName,
+      observacao,
       subjective,
-      objective: _objective,
       assessment,
-      plan: _plan,
       sessionNumber,
+      painScale,
       painLevel,
+      proceduresCount,
+      exercisesCount,
       onClick,
       compact = false,
       style,
@@ -34,18 +51,22 @@ export const EvolutionCard = React.forwardRef<View, EvolutionCardProps>(
     },
     ref,
   ) => {
-    // Map pain level to colors
+    const pain = painScale ?? painLevel ?? null;
+
     const getPainColor = (level: number) => {
-      if (level > 7) return "#ef4444"; // red-500
-      if (level > 3) return "#f59e0b"; // amber-500
-      return "#22c55e"; // green-500
+      if (level > 7) return "#ef4444";
+      if (level > 3) return "#f59e0b";
+      return "#22c55e";
     };
 
     const getPainBg = (level: number) => {
-      if (level > 7) return "#fee2e2"; // red-500/10
-      if (level > 3) return "#fef3c7"; // amber-500/10
-      return "#dcfce7"; // green-500/10
+      if (level > 7) return "#fee2e2";
+      if (level > 3) return "#fef3c7";
+      return "#dcfce7";
     };
+
+    const previewRaw = observacao || subjective || assessment || "";
+    const preview = previewRaw ? stripHtml(previewRaw) : "";
 
     return (
       <TouchableOpacity
@@ -59,36 +80,38 @@ export const EvolutionCard = React.forwardRef<View, EvolutionCardProps>(
           <View style={styles.dateContainer}>
             <Ionicons name="calendar-outline" size={14} color="#64748b" />
             <Text style={styles.dateText}>{date}</Text>
-            {sessionNumber && <Text style={styles.sessionText}>• Sessão #{sessionNumber}</Text>}
+            {sessionNumber ? (
+              <Text style={styles.sessionText}>• Sessão #{sessionNumber}</Text>
+            ) : null}
           </View>
-          {painLevel !== undefined && (
-            <View style={[styles.badge, { backgroundColor: getPainBg(painLevel) }]}>
-              <Text style={[styles.badgeText, { color: getPainColor(painLevel) }]}>
-                Dor: {painLevel}/10
+          {pain != null ? (
+            <View style={[styles.badge, { backgroundColor: getPainBg(pain) }]}>
+              <Text style={[styles.badgeText, { color: getPainColor(pain) }]}>
+                EVA: {pain}/10
               </Text>
             </View>
-          )}
+          ) : null}
         </View>
 
-        <View style={styles.content}>
-          {subjective && (
-            <View style={styles.section}>
-              <Text style={styles.label}>SUBJETIVO</Text>
-              <Text style={styles.text} numberOfLines={2}>
-                {subjective}
-              </Text>
-            </View>
-          )}
+        {preview ? (
+          <View style={styles.content}>
+            <Text style={styles.label}>OBSERVAÇÃO</Text>
+            <Text style={styles.text} numberOfLines={compact ? 2 : 3}>
+              {preview}
+            </Text>
+          </View>
+        ) : null}
 
-          {!compact && assessment && (
-            <View style={styles.section}>
-              <Text style={styles.label}>AVALIAÇÃO</Text>
-              <Text style={styles.text} numberOfLines={2}>
-                {assessment}
-              </Text>
-            </View>
-          )}
-        </View>
+        {(proceduresCount || exercisesCount) && !compact ? (
+          <View style={styles.countsRow}>
+            {proceduresCount ? (
+              <Text style={styles.countText}>{proceduresCount} procedimentos</Text>
+            ) : null}
+            {exercisesCount ? (
+              <Text style={styles.countText}>{exercisesCount} exercícios</Text>
+            ) : null}
+          </View>
+        ) : null}
 
         <View style={styles.footer}>
           <Ionicons name="person-outline" size={12} color="#94a3b8" />
@@ -110,47 +133,20 @@ const styles = StyleSheet.create({
     overflow: "hidden",
     marginBottom: 8,
   },
-  compact: {
-    padding: 12,
-  },
-  normal: {
-    padding: 16,
-  },
+  compact: { padding: 12 },
+  normal: { padding: 16 },
   header: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     marginBottom: 12,
   },
-  dateContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-  },
-  dateText: {
-    fontSize: 14,
-    fontWeight: "500",
-    color: "#0f172a",
-  },
-  sessionText: {
-    fontSize: 12,
-    color: "#64748b",
-  },
-  badge: {
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 12,
-  },
-  badgeText: {
-    fontSize: 10,
-    fontWeight: "700",
-  },
-  content: {
-    gap: 8,
-  },
-  section: {
-    gap: 4,
-  },
+  dateContainer: { flexDirection: "row", alignItems: "center", gap: 8 },
+  dateText: { fontSize: 14, fontWeight: "500", color: "#0f172a" },
+  sessionText: { fontSize: 12, color: "#64748b" },
+  badge: { paddingHorizontal: 8, paddingVertical: 2, borderRadius: 12 },
+  badgeText: { fontSize: 10, fontWeight: "700" },
+  content: { gap: 4 },
   label: {
     fontSize: 10,
     fontWeight: "600",
@@ -158,11 +154,9 @@ const styles = StyleSheet.create({
     textTransform: "uppercase",
     letterSpacing: 0.5,
   },
-  text: {
-    fontSize: 14,
-    color: "#64748b",
-    lineHeight: 20,
-  },
+  text: { fontSize: 14, color: "#64748b", lineHeight: 20 },
+  countsRow: { flexDirection: "row", gap: 12, marginTop: 8 },
+  countText: { fontSize: 12, color: "#94a3b8" },
   footer: {
     marginTop: 12,
     paddingTop: 12,
@@ -172,8 +166,5 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 8,
   },
-  footerText: {
-    fontSize: 12,
-    color: "#94a3b8",
-  },
+  footerText: { fontSize: 12, color: "#94a3b8" },
 });

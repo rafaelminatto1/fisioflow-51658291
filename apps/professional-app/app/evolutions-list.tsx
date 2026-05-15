@@ -29,28 +29,17 @@ function getPainColor(level: number): string {
   return "#EF4444";
 }
 
-/** Returns 'SOAP' if the record has any SOAP-specific field filled, else 'Livre' */
-function detectMode(e: Evolution): "SOAP" | "Notion" | "Tiptap" | "Livre" {
-  if (e.subjective || e.objective || e.plan) return "SOAP";
-  return "Livre";
+function stripHtml(html: string): string {
+  let prev = "";
+  let s = html;
+  while (s !== prev) {
+    prev = s;
+    s = s.replace(/<[^>]*>/g, "");
+  }
+  return s.replace(/\s+/g, " ").trim();
 }
 
 // ─── sub-components ─────────────────────────────────────────────────────────
-
-function ModeBadge({ mode, colors }: { mode: ReturnType<typeof detectMode>; colors: any }) {
-  const modeStyles: Record<string, { bg: string; color: string }> = {
-    SOAP: { bg: colors.primary + "20", color: colors.primary },
-    Notion: { bg: "#F59E0B20", color: "#F59E0B" },
-    Tiptap: { bg: "#8B5CF620", color: "#8B5CF6" },
-    Livre: { bg: "#6B728020", color: "#6B7280" },
-  };
-  const s = modeStyles[mode] ?? modeStyles.Livre;
-  return (
-    <View style={[styles.modeBadge, { backgroundColor: s.bg }]}>
-      <Text style={[styles.modeBadgeText, { color: s.color }]}>{mode}</Text>
-    </View>
-  );
-}
 
 interface EvolutionCardItemProps {
   evolution: Evolution;
@@ -75,14 +64,20 @@ function EvolutionCardItem({
   light,
   medium,
 }: EvolutionCardItemProps) {
-  const mode = detectMode(evolution);
-
   const formattedDate = evolution.date
     ? format(new Date(evolution.date), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })
     : "Data não disponível";
 
-  const preview =
-    mode === "SOAP" ? evolution.subjective || evolution.assessment : evolution.assessment;
+  const pain = evolution.painScale ?? evolution.painLevel ?? null;
+  const previewRaw =
+    evolution.observacao ||
+    [evolution.subjective, evolution.objective, evolution.assessment, evolution.plan]
+      .filter(Boolean)
+      .join("\n") ||
+    "";
+  const preview = previewRaw ? stripHtml(previewRaw) : "";
+  const proceduresCount = Array.isArray(evolution.procedures) ? evolution.procedures.length : 0;
+  const exercisesCount = Array.isArray(evolution.exercises) ? evolution.exercises.length : 0;
 
   return (
     <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
@@ -95,62 +90,37 @@ function EvolutionCardItem({
             <Text style={[styles.cardSessionNum, { color: colors.textMuted }]}>#{index}</Text>
           </View>
           <View style={styles.cardHeaderRight}>
-            {evolution.painLevel !== undefined && evolution.painLevel > 0 && (
+            {pain != null && pain > 0 ? (
               <View
-                style={[
-                  styles.painBadge,
-                  { backgroundColor: getPainColor(evolution.painLevel) + "20" },
-                ]}
+                style={[styles.painBadge, { backgroundColor: getPainColor(pain) + "20" }]}
               >
-                <Text style={[styles.painBadgeText, { color: getPainColor(evolution.painLevel) }]}>
-                  Dor: {evolution.painLevel}
+                <Text style={[styles.painBadgeText, { color: getPainColor(pain) }]}>
+                  EVA: {pain}
                 </Text>
               </View>
-            )}
-            <ModeBadge mode={mode} colors={colors} />
+            ) : null}
           </View>
         </View>
 
-        {/* ── Preview content ── */}
-        {mode === "SOAP" ? (
-          <View style={styles.soapPreview}>
-            {evolution.subjective ? (
-              <View style={styles.soapRow}>
-                <Text style={[styles.soapKey, { color: colors.primary }]}>S</Text>
-                <Text style={[styles.soapValue, { color: colors.textSecondary }]} numberOfLines={1}>
-                  {evolution.subjective}
-                </Text>
-              </View>
-            ) : null}
-            {evolution.objective ? (
-              <View style={styles.soapRow}>
-                <Text style={[styles.soapKey, { color: colors.primary }]}>O</Text>
-                <Text style={[styles.soapValue, { color: colors.textSecondary }]} numberOfLines={1}>
-                  {evolution.objective}
-                </Text>
-              </View>
-            ) : null}
-            {evolution.assessment ? (
-              <View style={styles.soapRow}>
-                <Text style={[styles.soapKey, { color: colors.primary }]}>A</Text>
-                <Text style={[styles.soapValue, { color: colors.textSecondary }]} numberOfLines={1}>
-                  {evolution.assessment}
-                </Text>
-              </View>
-            ) : null}
-            {evolution.plan ? (
-              <View style={styles.soapRow}>
-                <Text style={[styles.soapKey, { color: colors.primary }]}>P</Text>
-                <Text style={[styles.soapValue, { color: colors.textSecondary }]} numberOfLines={1}>
-                  {evolution.plan}
-                </Text>
-              </View>
-            ) : null}
-          </View>
-        ) : preview ? (
+        {preview ? (
           <Text style={[styles.freePreview, { color: colors.textSecondary }]} numberOfLines={3}>
             {preview}
           </Text>
+        ) : null}
+
+        {proceduresCount + exercisesCount > 0 ? (
+          <View style={styles.countsRow}>
+            {proceduresCount ? (
+              <Text style={[styles.countChip, { color: colors.textMuted }]}>
+                {proceduresCount} procedimentos
+              </Text>
+            ) : null}
+            {exercisesCount ? (
+              <Text style={[styles.countChip, { color: colors.textMuted }]}>
+                {exercisesCount} exercícios
+              </Text>
+            ) : null}
+          </View>
         ) : null}
       </TouchableOpacity>
 
@@ -341,7 +311,7 @@ export default function EvolutionsListScreen() {
   const painData = evolutions
     .slice(0, 10)
     .reverse()
-    .map((e) => e.painLevel || 0);
+    .map((e) => e.painScale ?? e.painLevel ?? 0);
 
   const handleDuplicate = (evolution: Evolution) => {
     Alert.alert(
@@ -594,10 +564,8 @@ const styles = StyleSheet.create({
   modeBadgeText: { fontSize: 11, fontWeight: "700" },
 
   // SOAP preview
-  soapPreview: { gap: 4 },
-  soapRow: { flexDirection: "row", alignItems: "flex-start", gap: 8 },
-  soapKey: { fontSize: 12, fontWeight: "800", width: 14 },
-  soapValue: { fontSize: 13, flex: 1, lineHeight: 18 },
+  countsRow: { flexDirection: "row", gap: 12, marginTop: 8 },
+  countChip: { fontSize: 12 },
 
   // Notion/free preview
   freePreview: { fontSize: 13, lineHeight: 20 },
