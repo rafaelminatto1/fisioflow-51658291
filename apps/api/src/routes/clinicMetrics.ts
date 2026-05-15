@@ -264,9 +264,10 @@ app.get("/patients/:id/ai-snapshot", requireAuth, async (c) => {
   const pool = createPool(c.env);
 
   try {
-    // 1. Coletar dados clínicos recentes (últimas 10 evoluções)
+    // 1. Coletar dados clínicos recentes (últimas 10 evoluções).
+    // Modelo pós-migração: observacao + pain_scale + estruturados JSONB.
     const history = await pool.query(
-      `SELECT s.content, s.date, s.subjective, s.assessment, s.objective, s.plan
+      `SELECT s.date, s.observacao, s.pain_scale, s.procedures, s.exercises, s.measurements, s.home_exercises
        FROM sessions s
        WHERE s.patient_id = $1 AND s.organization_id = $2
        ORDER BY s.date DESC
@@ -324,18 +325,18 @@ app.get("/protocol-efficacy", requireAuth, async (c) => {
   try {
     const result = await pool.query(
       `WITH session_pain AS (
-        SELECT 
+        SELECT
           s.patient_id,
           p.protocol_id,
           ep.name as protocol_name,
           s.date,
-          (s.subjective->>'pain_level')::int as pain,
+          s.pain_scale::int as pain,
           ROW_NUMBER() OVER(PARTITION BY s.patient_id, p.protocol_id ORDER BY s.date ASC) as session_num
         FROM sessions s
         JOIN patient_protocols p ON p.patient_id = s.patient_id
         JOIN exercise_protocols ep ON ep.id = p.protocol_id
-        WHERE s.organization_id = $1 
-          AND s.subjective->>'pain_level' IS NOT NULL
+        WHERE s.organization_id = $1
+          AND s.pain_scale IS NOT NULL
       ),
       improvement_milestones AS (
         SELECT 

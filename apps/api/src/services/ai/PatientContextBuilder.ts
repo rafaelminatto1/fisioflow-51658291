@@ -276,34 +276,38 @@ function renderPatientContextXml(input: RenderInput): string {
   if (input.sessions.length > 0) {
     lines.push(`  <clinical_history sessions="${input.sessions.length}">`);
     for (const s of input.sessions) {
-      lines.push(
-        `    <session date="${xmlEscape(toIso(s.date))}" number="${xmlEscape(String(s.sessionNumber ?? ""))}" status="${xmlEscape(s.status ?? "")}">`,
-      );
-      const subj = extractSoapText(s.subjective, [
-        "complaints",
-        "painScale",
-        "painLocation",
-        "perceivedEvolution",
-        "notes",
-      ]);
-      if (subj) lines.push(`      <subjective>${xmlEscape(subj)}</subjective>`);
-      const obj = extractSoapText(s.objective, ["physicalExam", "notes"]);
-      if (obj) lines.push(`      <objective>${xmlEscape(obj)}</objective>`);
-      const assess = extractSoapText(s.assessment, [
-        "diagnosis",
-        "evolutionAnalysis",
-        "prognosis",
-        "notes",
-      ]);
-      if (assess) lines.push(`      <assessment>${xmlEscape(assess)}</assessment>`);
-      const plan = extractSoapText(s.plan, [
-        "conduct",
-        "orientations",
-        "homeExercises",
-        "nextSessionGoals",
-        "notes",
-      ]);
-      if (plan) lines.push(`      <plan>${xmlEscape(plan)}</plan>`);
+      const attrs = [
+        `date="${xmlEscape(toIso(s.date))}"`,
+        `number="${xmlEscape(String(s.sessionNumber ?? ""))}"`,
+        `status="${xmlEscape(s.status ?? "")}"`,
+        s.painScale != null ? `pain_scale="${xmlEscape(String(s.painScale))}"` : null,
+      ]
+        .filter(Boolean)
+        .join(" ");
+      lines.push(`    <session ${attrs}>`);
+
+      // Observação clínica narrativa (modelo único pós PR #71)
+      const obs = typeof s.observacao === "string" ? s.observacao.trim() : "";
+      if (obs) lines.push(`      <observacao>${xmlEscape(obs)}</observacao>`);
+
+      // Estruturados (procedures / exercises / measurements / home_exercises)
+      const renderList = (label: string, arr: any, fields: string[]) => {
+        if (!Array.isArray(arr) || arr.length === 0) return;
+        lines.push(`      <${label}>`);
+        for (const item of arr) {
+          const pieces = fields
+            .map((f) => (item?.[f] != null && item[f] !== "" ? `${f}=${item[f]}` : null))
+            .filter(Boolean)
+            .join(" | ");
+          if (pieces) lines.push(`        <item>${xmlEscape(pieces)}</item>`);
+        }
+        lines.push(`      </${label}>`);
+      };
+      renderList("procedures", s.procedures, ["name", "intensity", "notes"]);
+      renderList("exercises", s.exercises, ["name", "prescription", "patientFeedback"]);
+      renderList("measurements", s.measurements, ["name", "value", "unit", "side"]);
+      renderList("home_exercises", s.homeExercises, ["name", "prescription", "frequency"]);
+
       lines.push("    </session>");
     }
     lines.push("  </clinical_history>");
