@@ -1,5 +1,17 @@
 import React, { useState, useRef, useCallback } from "react";
-import { Camera, Video, FileText, Plus, Trash2, Play, Download, Eye, X, Upload, SplitSquareHorizontal } from "lucide-react";
+import {
+  Camera,
+  Video,
+  FileText,
+  Plus,
+  Trash2,
+  Play,
+  Download,
+  Eye,
+  X,
+  Upload,
+  SplitSquareHorizontal,
+} from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -35,7 +47,12 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
-import { getImageServeUrl, type PatientPhoto, type PatientVideo, type MedicalRequest } from "@/api/v2/patientMedia";
+import {
+  getImageServeUrl,
+  type PatientPhoto,
+  type PatientVideo,
+  type MedicalRequest,
+} from "@/api/v2/patientMedia";
 import {
   usePatientPhotos,
   useUploadPatientPhoto,
@@ -75,16 +92,22 @@ function BeforeAfterSlider({
     setPos(pct);
   }, []);
 
-  const onPointerDown = useCallback((e: React.PointerEvent) => {
-    dragging.current = true;
-    (e.target as HTMLElement).setPointerCapture(e.pointerId);
-    updatePos(e.clientX);
-  }, [updatePos]);
+  const onPointerDown = useCallback(
+    (e: React.PointerEvent) => {
+      dragging.current = true;
+      (e.target as HTMLElement).setPointerCapture(e.pointerId);
+      updatePos(e.clientX);
+    },
+    [updatePos],
+  );
 
-  const onPointerMove = useCallback((e: React.PointerEvent) => {
-    if (!dragging.current) return;
-    updatePos(e.clientX);
-  }, [updatePos]);
+  const onPointerMove = useCallback(
+    (e: React.PointerEvent) => {
+      if (!dragging.current) return;
+      updatePos(e.clientX);
+    },
+    [updatePos],
+  );
 
   const onPointerUp = useCallback(() => {
     dragging.current = false;
@@ -97,14 +120,24 @@ function BeforeAfterSlider({
       style={{ touchAction: "none" }}
     >
       {/* After (bottom layer) */}
-      <img src={afterUrl} alt={afterLabel} className="w-full h-full object-contain block" draggable={false} />
+      <img
+        src={afterUrl}
+        alt={afterLabel}
+        className="w-full h-full object-contain block"
+        draggable={false}
+      />
 
       {/* Before (clipped overlay) */}
       <div
         className="absolute inset-0 overflow-hidden"
         style={{ clipPath: `inset(0 ${100 - pos}% 0 0)` }}
       >
-        <img src={beforeUrl} alt={beforeLabel} className="w-full h-full object-contain block" draggable={false} />
+        <img
+          src={beforeUrl}
+          alt={beforeLabel}
+          className="w-full h-full object-contain block"
+          draggable={false}
+        />
       </div>
 
       {/* Drag handle */}
@@ -135,13 +168,7 @@ function BeforeAfterSlider({
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
-function PhotoCard({
-  photo,
-  onDelete,
-}: {
-  photo: PatientPhoto;
-  onDelete: (id: string) => void;
-}) {
+function PhotoCard({ photo, onDelete }: { photo: PatientPhoto; onDelete: (id: string) => void }) {
   const [lightbox, setLightbox] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
 
@@ -168,8 +195,10 @@ function PhotoCard({
 
   return (
     <>
-      <div className="group relative aspect-square rounded-lg overflow-hidden bg-muted cursor-pointer border hover:border-primary transition-colors"
-        onClick={() => setLightbox(true)}>
+      <div
+        className="group relative aspect-square rounded-lg overflow-hidden bg-muted cursor-pointer border hover:border-primary transition-colors"
+        onClick={() => setLightbox(true)}
+      >
         <img
           src={thumbUrl}
           alt={photo.file_name ?? "Foto do paciente"}
@@ -179,14 +208,19 @@ function PhotoCard({
         <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center">
           <Eye className="w-6 h-6 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
         </div>
-        <Badge className={`absolute top-2 left-2 text-xs px-1.5 py-0.5 ${PHOTO_TYPE_COLORS[photo.photo_type]}`}>
+        <Badge
+          className={`absolute top-2 left-2 text-xs px-1.5 py-0.5 ${PHOTO_TYPE_COLORS[photo.photo_type]}`}
+        >
           {PHOTO_TYPE_LABELS[photo.photo_type]}
         </Badge>
         <Button
           variant="ghost"
           size="icon"
           className="absolute top-1 right-1 h-7 w-7 text-white bg-black/40 hover:bg-red-500 opacity-0 group-hover:opacity-100 transition-all"
-          onClick={(e) => { e.stopPropagation(); setConfirmDelete(true); }}
+          onClick={(e) => {
+            e.stopPropagation();
+            setConfirmDelete(true);
+          }}
         >
           <Trash2 className="w-3.5 h-3.5" />
         </Button>
@@ -207,10 +241,18 @@ function PhotoCard({
           >
             <X className="w-5 h-5" />
           </Button>
-          <img src={fullUrl} alt={photo.file_name ?? "Foto"} className="w-full max-h-[80vh] object-contain rounded" />
+          <img
+            src={fullUrl}
+            alt={photo.file_name ?? "Foto"}
+            className="w-full max-h-[80vh] object-contain rounded"
+          />
           <div className="flex items-center gap-3 px-2 pb-1">
-            <Badge className={`text-xs ${PHOTO_TYPE_COLORS[photo.photo_type]}`}>{PHOTO_TYPE_LABELS[photo.photo_type]}</Badge>
-            {photo.body_region && <span className="text-xs text-gray-400">{photo.body_region}</span>}
+            <Badge className={`text-xs ${PHOTO_TYPE_COLORS[photo.photo_type]}`}>
+              {PHOTO_TYPE_LABELS[photo.photo_type]}
+            </Badge>
+            {photo.body_region && (
+              <span className="text-xs text-gray-400">{photo.body_region}</span>
+            )}
             {photo.notes && <span className="text-xs text-gray-300 ml-auto">{photo.notes}</span>}
             <span className="text-xs text-gray-500 ml-auto">
               {format(new Date(photo.created_at), "dd/MM/yyyy", { locale: ptBR })}
@@ -227,7 +269,10 @@ function PhotoCard({
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={() => onDelete(photo.id)} className="bg-destructive hover:bg-destructive/90">
+            <AlertDialogAction
+              onClick={() => onDelete(photo.id)}
+              className="bg-destructive hover:bg-destructive/90"
+            >
               Remover
             </AlertDialogAction>
           </AlertDialogFooter>
@@ -237,13 +282,7 @@ function PhotoCard({
   );
 }
 
-function VideoCard({
-  video,
-  onDelete,
-}: {
-  video: PatientVideo;
-  onDelete: (id: string) => void;
-}) {
+function VideoCard({ video, onDelete }: { video: PatientVideo; onDelete: (id: string) => void }) {
   const [playing, setPlaying] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const { data: videoUrl } = useMediaAccessUrl(video.r2_key, playing);
@@ -276,7 +315,11 @@ function VideoCard({
           onClick={() => setPlaying(true)}
         >
           {thumbUrl ? (
-            <img src={thumbUrl} alt={video.file_name ?? "Vídeo"} className="w-full h-full object-cover opacity-80" />
+            <img
+              src={thumbUrl}
+              alt={video.file_name ?? "Vídeo"}
+              className="w-full h-full object-cover opacity-80"
+            />
           ) : (
             <Video className="w-8 h-8 text-white/50" />
           )}
@@ -287,7 +330,8 @@ function VideoCard({
           </div>
           {video.duration_seconds && (
             <span className="absolute bottom-2 right-2 text-xs bg-black/70 text-white px-1.5 py-0.5 rounded">
-              {Math.floor(video.duration_seconds / 60)}:{String(video.duration_seconds % 60).padStart(2, "0")}
+              {Math.floor(video.duration_seconds / 60)}:
+              {String(video.duration_seconds % 60).padStart(2, "0")}
             </span>
           )}
         </div>
@@ -295,7 +339,9 @@ function VideoCard({
           <Badge className={`text-xs shrink-0 ${STATUS_COLORS[video.status]}`}>
             {VIDEO_TYPE_LABELS[video.video_type]}
           </Badge>
-          <span className="text-xs text-muted-foreground truncate flex-1">{video.file_name ?? "Vídeo"}</span>
+          <span className="text-xs text-muted-foreground truncate flex-1">
+            {video.file_name ?? "Vídeo"}
+          </span>
           <Button
             variant="ghost"
             size="icon"
@@ -335,7 +381,10 @@ function VideoCard({
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={() => onDelete(video.id)} className="bg-destructive hover:bg-destructive/90">
+            <AlertDialogAction
+              onClick={() => onDelete(video.id)}
+              className="bg-destructive hover:bg-destructive/90"
+            >
               Remover
             </AlertDialogAction>
           </AlertDialogFooter>
@@ -377,7 +426,9 @@ function MedicalRequestCard({
         <CardContent className="p-4 space-y-3">
           <div className="flex items-start justify-between gap-2">
             <div className="flex-1 min-w-0">
-              <p className="font-medium text-sm truncate">{req.title ?? TYPE_LABELS[req.request_type]}</p>
+              <p className="font-medium text-sm truncate">
+                {req.title ?? TYPE_LABELS[req.request_type]}
+              </p>
               <p className="text-xs text-muted-foreground">{TYPE_LABELS[req.request_type]}</p>
             </div>
             <div className="flex items-center gap-1 shrink-0">
@@ -385,13 +436,21 @@ function MedicalRequestCard({
                 value={req.status}
                 onValueChange={(v) => onStatusChange(req.id, v as MedicalRequest["status"])}
               >
-                <SelectTrigger className={`h-6 text-xs border-0 px-2 py-0 w-auto ${STATUS_CONFIG[req.status].color}`}>
+                <SelectTrigger
+                  className={`h-6 text-xs border-0 px-2 py-0 w-auto ${STATUS_CONFIG[req.status].color}`}
+                >
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="pending" className="text-xs">Pendente</SelectItem>
-                  <SelectItem value="scheduled" className="text-xs">Agendado</SelectItem>
-                  <SelectItem value="done" className="text-xs">Realizado</SelectItem>
+                  <SelectItem value="pending" className="text-xs">
+                    Pendente
+                  </SelectItem>
+                  <SelectItem value="scheduled" className="text-xs">
+                    Agendado
+                  </SelectItem>
+                  <SelectItem value="done" className="text-xs">
+                    Realizado
+                  </SelectItem>
                 </SelectContent>
               </Select>
               <Button
@@ -408,7 +467,11 @@ function MedicalRequestCard({
           {req.notes && <p className="text-xs text-muted-foreground line-clamp-2">{req.notes}</p>}
 
           <div className="flex items-center justify-between text-xs text-muted-foreground">
-            <span>{req.request_date ? format(new Date(req.request_date), "dd/MM/yyyy", { locale: ptBR }) : "—"}</span>
+            <span>
+              {req.request_date
+                ? format(new Date(req.request_date), "dd/MM/yyyy", { locale: ptBR })
+                : "—"}
+            </span>
             {req.requested_by && <span className="truncate ml-2">Dr. {req.requested_by}</span>}
           </div>
 
@@ -434,7 +497,10 @@ function MedicalRequestCard({
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={() => onDelete(req.id)} className="bg-destructive hover:bg-destructive/90">
+            <AlertDialogAction
+              onClick={() => onDelete(req.id)}
+              className="bg-destructive hover:bg-destructive/90"
+            >
               Remover
             </AlertDialogAction>
           </AlertDialogFooter>
@@ -469,7 +535,11 @@ function UploadPhotoModal({
 
   const handleSubmit = async () => {
     if (!file) return;
-    await upload.mutateAsync({ file, photoType, metadata: { body_region: bodyRegion || null, notes: notes || null } });
+    await upload.mutateAsync({
+      file,
+      photoType,
+      metadata: { body_region: bodyRegion || null, notes: notes || null },
+    });
     onOpenChange(false);
     setFile(null);
     setPreview(null);
@@ -480,7 +550,9 @@ function UploadPhotoModal({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
-        <DialogHeader><DialogTitle>Adicionar Foto</DialogTitle></DialogHeader>
+        <DialogHeader>
+          <DialogTitle>Adicionar Foto</DialogTitle>
+        </DialogHeader>
         <div className="space-y-4">
           <div
             className="border-2 border-dashed rounded-lg h-48 flex items-center justify-center cursor-pointer hover:bg-muted/50 relative overflow-hidden"
@@ -505,8 +577,13 @@ function UploadPhotoModal({
 
           <div className="space-y-1">
             <Label>Tipo</Label>
-            <Select value={photoType} onValueChange={(v) => setPhotoType(v as PatientPhoto["photo_type"])}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
+            <Select
+              value={photoType}
+              onValueChange={(v) => setPhotoType(v as PatientPhoto["photo_type"])}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
               <SelectContent>
                 <SelectItem value="before">Antes</SelectItem>
                 <SelectItem value="after">Depois</SelectItem>
@@ -520,16 +597,27 @@ function UploadPhotoModal({
 
           <div className="space-y-1">
             <Label>Região do Corpo</Label>
-            <Input placeholder="Ex: Ombro direito, Joelho" value={bodyRegion} onChange={(e) => setBodyRegion(e.target.value)} />
+            <Input
+              placeholder="Ex: Ombro direito, Joelho"
+              value={bodyRegion}
+              onChange={(e) => setBodyRegion(e.target.value)}
+            />
           </div>
 
           <div className="space-y-1">
             <Label>Observações</Label>
-            <Textarea placeholder="Notas adicionais..." value={notes} onChange={(e) => setNotes(e.target.value)} rows={2} />
+            <Textarea
+              placeholder="Notas adicionais..."
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              rows={2}
+            />
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            Cancelar
+          </Button>
           <Button onClick={handleSubmit} disabled={!file || upload.isPending}>
             {upload.isPending ? "Enviando..." : "Salvar"}
           </Button>
@@ -564,7 +652,9 @@ function UploadVideoModal({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
-        <DialogHeader><DialogTitle>Adicionar Vídeo</DialogTitle></DialogHeader>
+        <DialogHeader>
+          <DialogTitle>Adicionar Vídeo</DialogTitle>
+        </DialogHeader>
         <div className="space-y-4">
           <div
             className="border-2 border-dashed rounded-lg h-32 flex items-center justify-center cursor-pointer hover:bg-muted/50"
@@ -595,8 +685,13 @@ function UploadVideoModal({
 
           <div className="space-y-1">
             <Label>Tipo</Label>
-            <Select value={videoType} onValueChange={(v) => setVideoType(v as PatientVideo["video_type"])}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
+            <Select
+              value={videoType}
+              onValueChange={(v) => setVideoType(v as PatientVideo["video_type"])}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
               <SelectContent>
                 <SelectItem value="gait">Marcha</SelectItem>
                 <SelectItem value="biomechanics">Biomecânica</SelectItem>
@@ -611,11 +706,18 @@ function UploadVideoModal({
 
           <div className="space-y-1">
             <Label>Observações</Label>
-            <Textarea placeholder="Notas adicionais..." value={notes} onChange={(e) => setNotes(e.target.value)} rows={2} />
+            <Textarea
+              placeholder="Notas adicionais..."
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              rows={2}
+            />
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            Cancelar
+          </Button>
           <Button onClick={handleSubmit} disabled={!file || upload.isPending}>
             {upload.isPending ? "Enviando..." : "Salvar"}
           </Button>
@@ -664,12 +766,19 @@ function CreateMedicalRequestModal({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
-        <DialogHeader><DialogTitle>Novo Pedido Médico</DialogTitle></DialogHeader>
+        <DialogHeader>
+          <DialogTitle>Novo Pedido Médico</DialogTitle>
+        </DialogHeader>
         <div className="space-y-4">
           <div className="space-y-1">
             <Label>Tipo</Label>
-            <Select value={requestType} onValueChange={(v) => setRequestType(v as MedicalRequest["request_type"])}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
+            <Select
+              value={requestType}
+              onValueChange={(v) => setRequestType(v as MedicalRequest["request_type"])}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
               <SelectContent>
                 <SelectItem value="exam_request">Pedido de Exame</SelectItem>
                 <SelectItem value="referral">Encaminhamento</SelectItem>
@@ -682,23 +791,40 @@ function CreateMedicalRequestModal({
 
           <div className="space-y-1">
             <Label>Título</Label>
-            <Input placeholder="Ex: Raio-X coluna lombar" value={title} onChange={(e) => setTitle(e.target.value)} />
+            <Input
+              placeholder="Ex: Raio-X coluna lombar"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+            />
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
               <Label>Data</Label>
-              <Input type="date" value={requestDate} onChange={(e) => setRequestDate(e.target.value)} />
+              <Input
+                type="date"
+                value={requestDate}
+                onChange={(e) => setRequestDate(e.target.value)}
+              />
             </div>
             <div className="space-y-1">
               <Label>Solicitado por</Label>
-              <Input placeholder="Nome do médico" value={requestedBy} onChange={(e) => setRequestedBy(e.target.value)} />
+              <Input
+                placeholder="Nome do médico"
+                value={requestedBy}
+                onChange={(e) => setRequestedBy(e.target.value)}
+              />
             </div>
           </div>
 
           <div className="space-y-1">
             <Label>Observações</Label>
-            <Textarea placeholder="Detalhes adicionais..." value={notes} onChange={(e) => setNotes(e.target.value)} rows={2} />
+            <Textarea
+              placeholder="Detalhes adicionais..."
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              rows={2}
+            />
           </div>
 
           <div className="space-y-1">
@@ -708,9 +834,15 @@ function CreateMedicalRequestModal({
               onClick={() => document.getElementById("request-file-input")?.click()}
             >
               {file ? (
-                <span className="flex items-center gap-2"><FileText className="w-4 h-4 text-primary" />{file.name}</span>
+                <span className="flex items-center gap-2">
+                  <FileText className="w-4 h-4 text-primary" />
+                  {file.name}
+                </span>
               ) : (
-                <span className="flex items-center gap-2"><Upload className="w-4 h-4" />Anexar arquivo (opcional)</span>
+                <span className="flex items-center gap-2">
+                  <Upload className="w-4 h-4" />
+                  Anexar arquivo (opcional)
+                </span>
               )}
               <input
                 id="request-file-input"
@@ -723,7 +855,9 @@ function CreateMedicalRequestModal({
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            Cancelar
+          </Button>
           <Button onClick={handleSubmit} disabled={create.isPending}>
             {create.isPending ? "Salvando..." : "Salvar"}
           </Button>
@@ -764,32 +898,39 @@ export function PatientMediaGallery({ patientId }: PatientMediaGalleryProps) {
               <Camera className="w-3.5 h-3.5" />
               Fotos
               {photos.length > 0 && (
-                <Badge variant="secondary" className="h-4 px-1 text-xs ml-1">{photos.length}</Badge>
+                <Badge variant="secondary" className="h-4 px-1 text-xs ml-1">
+                  {photos.length}
+                </Badge>
               )}
             </TabsTrigger>
             <TabsTrigger value="videos" className="gap-1.5 text-sm">
               <Video className="w-3.5 h-3.5" />
               Vídeos
               {videos.length > 0 && (
-                <Badge variant="secondary" className="h-4 px-1 text-xs ml-1">{videos.length}</Badge>
+                <Badge variant="secondary" className="h-4 px-1 text-xs ml-1">
+                  {videos.length}
+                </Badge>
               )}
             </TabsTrigger>
             <TabsTrigger value="requests" className="gap-1.5 text-sm">
               <FileText className="w-3.5 h-3.5" />
               Pedidos
               {requests.length > 0 && (
-                <Badge variant="secondary" className="h-4 px-1 text-xs ml-1">{requests.length}</Badge>
+                <Badge variant="secondary" className="h-4 px-1 text-xs ml-1">
+                  {requests.length}
+                </Badge>
               )}
             </TabsTrigger>
           </TabsList>
 
           {activeSection === "photos" && (
             <div className="flex items-center gap-2">
-              {photos.some((p) => p.photo_type === "before") && photos.some((p) => p.photo_type === "after") && (
-                <Button size="sm" variant="outline" onClick={() => setCompareOpen(true)}>
-                  <SplitSquareHorizontal className="w-4 h-4 mr-1" /> Comparar
-                </Button>
-              )}
+              {photos.some((p) => p.photo_type === "before") &&
+                photos.some((p) => p.photo_type === "after") && (
+                  <Button size="sm" variant="outline" onClick={() => setCompareOpen(true)}>
+                    <SplitSquareHorizontal className="w-4 h-4 mr-1" /> Comparar
+                  </Button>
+                )}
               <Button size="sm" onClick={() => setUploadPhotoOpen(true)}>
                 <Plus className="w-4 h-4 mr-1" /> Foto
               </Button>
@@ -891,9 +1032,21 @@ export function PatientMediaGallery({ patientId }: PatientMediaGalleryProps) {
         </TabsContent>
       </Tabs>
 
-      <UploadPhotoModal patientId={patientId} open={uploadPhotoOpen} onOpenChange={setUploadPhotoOpen} />
-      <UploadVideoModal patientId={patientId} open={uploadVideoOpen} onOpenChange={setUploadVideoOpen} />
-      <CreateMedicalRequestModal patientId={patientId} open={createRequestOpen} onOpenChange={setCreateRequestOpen} />
+      <UploadPhotoModal
+        patientId={patientId}
+        open={uploadPhotoOpen}
+        onOpenChange={setUploadPhotoOpen}
+      />
+      <UploadVideoModal
+        patientId={patientId}
+        open={uploadVideoOpen}
+        onOpenChange={setUploadVideoOpen}
+      />
+      <CreateMedicalRequestModal
+        patientId={patientId}
+        open={createRequestOpen}
+        onOpenChange={setCreateRequestOpen}
+      />
 
       {/* Before/After comparison dialog */}
       {(() => {

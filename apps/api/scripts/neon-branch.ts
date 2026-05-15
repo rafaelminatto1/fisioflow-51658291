@@ -1,4 +1,3 @@
-
 /**
  * Neon DB Branch Management Script
  *

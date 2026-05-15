@@ -36,18 +36,18 @@
 
 Use a ferramenta mais próxima do problema antes de inventar processo manual.
 
-| Tarefa | Ferramenta principal | Complementos |
-|---|---|---|
-| Cloudflare Workers, R2, D1, Queues, Hyperdrive, Wrangler | `wrangler` + `cloudflare` | `workers-best-practices` |
-| Agents, Durable Objects, workflows, MCP server interno | `agents-sdk` + `durable-objects` | `cloudflare-agents-docs` |
-| Consultar docs Cloudflare atualizadas | `cloudflare-docs` | `cloudflare-api`, `cloudflare-bindings` |
-| Observabilidade, queries, rotas lentas, eventos | `cloudflare-observability` | `cloudflare-graphql` |
-| AI Gateway, roteamento e custo de chamadas | `cloudflare-ai-gateway` | `cloudflare-api` |
-| RAG, AutoRAG, fontes e busca semântica | `cloudflare-ai-search` | `cloudflare-bindings` |
-| Análise de performance web | `web-perf` | `react-best-practices` |
-| Frontend React/Vite/Next | `react-best-practices` | `web-design-guidelines` |
-| Mobile React Native / Expo | `react-native-skills` | `web-design-guidelines` |
-| Ajustes de interface e UX de páginas novas | `web-design-guidelines` | `web-perf` |
+| Tarefa                                                   | Ferramenta principal             | Complementos                            |
+| -------------------------------------------------------- | -------------------------------- | --------------------------------------- |
+| Cloudflare Workers, R2, D1, Queues, Hyperdrive, Wrangler | `wrangler` + `cloudflare`        | `workers-best-practices`                |
+| Agents, Durable Objects, workflows, MCP server interno   | `agents-sdk` + `durable-objects` | `cloudflare-agents-docs`                |
+| Consultar docs Cloudflare atualizadas                    | `cloudflare-docs`                | `cloudflare-api`, `cloudflare-bindings` |
+| Observabilidade, queries, rotas lentas, eventos          | `cloudflare-observability`       | `cloudflare-graphql`                    |
+| AI Gateway, roteamento e custo de chamadas               | `cloudflare-ai-gateway`          | `cloudflare-api`                        |
+| RAG, AutoRAG, fontes e busca semântica                   | `cloudflare-ai-search`           | `cloudflare-bindings`                   |
+| Análise de performance web                               | `web-perf`                       | `react-best-practices`                  |
+| Frontend React/Vite/Next                                 | `react-best-practices`           | `web-design-guidelines`                 |
+| Mobile React Native / Expo                               | `react-native-skills`            | `web-design-guidelines`                 |
+| Ajustes de interface e UX de páginas novas               | `web-design-guidelines`          | `web-perf`                              |
 
 ---
 

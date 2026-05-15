@@ -25,9 +25,13 @@ function useAdoptionData() {
         request<{ data: unknown[] }>("/api/nfse"),
       ]);
       const packageCount =
-        pkgRes.status === "fulfilled" ? ((pkgRes.value as { data: unknown[] }).data?.length ?? 0) : null;
+        pkgRes.status === "fulfilled"
+          ? ((pkgRes.value as { data: unknown[] }).data?.length ?? 0)
+          : null;
       const nfseCount =
-        nfseRes.status === "fulfilled" ? ((nfseRes.value as { data: unknown[] }).data?.length ?? 0) : null;
+        nfseRes.status === "fulfilled"
+          ? ((nfseRes.value as { data: unknown[] }).data?.length ?? 0)
+          : null;
       return { packageCount, nfseCount };
     },
     staleTime: 5 * 60 * 1000,
@@ -97,15 +101,19 @@ export function FeatureAdoptionBanner() {
             key={nudge.id}
             className={cn(
               "relative flex items-start gap-3 rounded-2xl border p-4 pr-10",
-              nudge.color === "blue" && "border-blue-200 bg-blue-50/60 dark:border-blue-800 dark:bg-blue-950/30",
-              nudge.color === "amber" && "border-amber-200 bg-amber-50/60 dark:border-amber-800 dark:bg-amber-950/30",
+              nudge.color === "blue" &&
+                "border-blue-200 bg-blue-50/60 dark:border-blue-800 dark:bg-blue-950/30",
+              nudge.color === "amber" &&
+                "border-amber-200 bg-amber-50/60 dark:border-amber-800 dark:bg-amber-950/30",
             )}
           >
             <div
               className={cn(
                 "mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl",
-                nudge.color === "blue" && "bg-blue-100 text-blue-600 dark:bg-blue-900/50 dark:text-blue-400",
-                nudge.color === "amber" && "bg-amber-100 text-amber-600 dark:bg-amber-900/50 dark:text-amber-400",
+                nudge.color === "blue" &&
+                  "bg-blue-100 text-blue-600 dark:bg-blue-900/50 dark:text-blue-400",
+                nudge.color === "amber" &&
+                  "bg-amber-100 text-amber-600 dark:bg-amber-900/50 dark:text-amber-400",
               )}
             >
               <Icon className="h-4 w-4" />
@@ -125,8 +133,10 @@ export function FeatureAdoptionBanner() {
                 variant="secondary"
                 className={cn(
                   "h-7 rounded-lg text-xs gap-1.5 font-semibold",
-                  nudge.color === "blue" && "bg-blue-100 hover:bg-blue-200 text-blue-700 dark:bg-blue-900/50 dark:hover:bg-blue-900 dark:text-blue-300",
-                  nudge.color === "amber" && "bg-amber-100 hover:bg-amber-200 text-amber-700 dark:bg-amber-900/50 dark:hover:bg-amber-900 dark:text-amber-300",
+                  nudge.color === "blue" &&
+                    "bg-blue-100 hover:bg-blue-200 text-blue-700 dark:bg-blue-900/50 dark:hover:bg-blue-900 dark:text-blue-300",
+                  nudge.color === "amber" &&
+                    "bg-amber-100 hover:bg-amber-200 text-amber-700 dark:bg-amber-900/50 dark:hover:bg-amber-900 dark:text-amber-300",
                 )}
                 onClick={() => navigate(nudge.route)}
               >

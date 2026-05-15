@@ -18,7 +18,7 @@ export function CategorySummaryTable({ demoData }: Props) {
     new Set([
       ...Object.keys(demoData.entradasPorCategoria),
       ...Object.keys(demoData.saidasPorCategoria),
-    ])
+    ]),
   );
 
   return (
@@ -54,10 +54,7 @@ export function CategorySummaryTable({ demoData }: Props) {
                       : "-"}
                   </TableCell>
                   <TableCell className="text-right">
-                    {demoData.entradas > 0
-                      ? ((entrada / demoData.entradas) * 100).toFixed(1)
-                      : 0}
-                    %
+                    {demoData.entradas > 0 ? ((entrada / demoData.entradas) * 100).toFixed(1) : 0}%
                   </TableCell>
                 </TableRow>
               );

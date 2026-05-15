@@ -237,7 +237,9 @@ export function usePatientEvolutionHandlers({
 
     try {
       const proceduresList = current.procedures
-        .map((p) => `<li>${p.completed ? "✓ " : "• "}${p.name}${p.notes ? ` — ${p.notes}` : ""}</li>`)
+        .map(
+          (p) => `<li>${p.completed ? "✓ " : "• "}${p.name}${p.notes ? ` — ${p.notes}` : ""}</li>`,
+        )
         .join("");
       const exercisesList = current.exercises
         .map((e) => `<li>${e.name}${e.prescription ? ` — ${e.prescription}` : ""}</li>`)

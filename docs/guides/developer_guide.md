@@ -122,12 +122,14 @@ CLOUDFLARE_ACCOUNT_ID=...
 O FisioFlow agora inclui integração com GitHub Spec Kit para apoiar o desenvolvimento orientado por especificações.
 
 ### Arquivos principais
+
 - `constitution.md`: princípios e políticas globais do projeto.
 - `specs/<feature>/spec.md`: especificação da feature com histórias de usuário e critérios de aceitação.
 - `specs/<feature>/plan.md`: plano de implementação técnico para a feature.
 - `specs/<feature>/tasks.md`: lista de tarefas acionáveis organizadas por prioridade.
 
 ### Comandos principais
+
 - `specify init --here`: inicializa o Spec Kit no repositório existente.
 - `/speckit.constitution`: gera ou atualiza a constituição do projeto.
 - `/speckit.specify`: cria a especificação de uma feature.
@@ -137,6 +139,7 @@ O FisioFlow agora inclui integração com GitHub Spec Kit para apoiar o desenvol
 - `/speckit.checklist`: produz checklist de qualidade para revisão.
 
 ### Como usar
+
 1. Crie um diretório de feature em `specs/<feature>/`.
 2. Execute `/speckit.specify` com a descrição do recurso.
 3. Use `/speckit.plan` para converter a spec em decisões técnicas.
@@ -175,6 +178,7 @@ O trabalho assistido por Gemini/Codex neste repositório deve seguir o playbook 
   `/speckit.checklist`
 
 ### Como escrever o prompt corretamente
+
 - Seja específico sobre a camada que você quer criar: `page`, `feature`, `API endpoint`, `component`, `integration`.
 - Mencione a stack do FisioFlow quando precisar: `React 19`, `Next.js 16`, `Hono`, `Drizzle`, `Neon`, `Capacitor`.
 - Diga o objetivo do usuário e a métrica de sucesso, por exemplo: `allow therapists to send follow-up reminders quickly`.

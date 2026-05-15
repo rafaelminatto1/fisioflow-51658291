@@ -165,9 +165,9 @@ export function TarefaModal({
         checklist: tarefa.checklist || [],
         attachments: tarefa.attachments || [],
         dependencies: tarefa.dependencies || [],
-        });
-        } else {
-        form.reset({
+      });
+    } else {
+      form.reset({
         titulo: "",
         descricao: "",
         status: defaultStatus,
@@ -180,8 +180,8 @@ export function TarefaModal({
         checklist: [],
         attachments: [],
         dependencies: [],
-        });
-        }
+      });
+    }
   }, [tarefa, defaultStatus, defaultProjectId, form]);
 
   const handleAddTag = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -223,7 +223,8 @@ export function TarefaModal({
         await updateTarefa.mutateAsync({
           id: tarefa.id,
           ...data,
-          project_id: (data.project_id === "" || data.project_id === "__none__") ? null : data.project_id,
+          project_id:
+            data.project_id === "" || data.project_id === "__none__" ? null : data.project_id,
           data_vencimento: data.data_vencimento?.toISOString().split("T")[0],
           start_date: data.start_date?.toISOString().split("T")[0],
           parent_id: data.parent_id,
@@ -233,7 +234,8 @@ export function TarefaModal({
         await createTarefa.mutateAsync({
           ...data,
           order_index: defaultOrderIndex,
-          project_id: (data.project_id === "" || data.project_id === "__none__") ? null : data.project_id,
+          project_id:
+            data.project_id === "" || data.project_id === "__none__" ? null : data.project_id,
           data_vencimento: data.data_vencimento?.toISOString().split("T")[0],
           start_date: data.start_date?.toISOString().split("T")[0],
           parent_id: data.parent_id,

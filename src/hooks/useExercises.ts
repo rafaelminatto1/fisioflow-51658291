@@ -137,7 +137,11 @@ export const useExercises = (filters?: ExerciseFilters) => {
     onError: (err: Error) => {
       logger.error("Erro na criação de exercício", err, "useExercises");
       const appErr = AppError.from(err);
-      toast.error(appErr.isOperational ? `Erro de validação: ${appErr.message}` : "Erro ao criar exercício. Tente novamente.");
+      toast.error(
+        appErr.isOperational
+          ? `Erro de validação: ${appErr.message}`
+          : "Erro ao criar exercício. Tente novamente.",
+      );
     },
   });
 
@@ -151,7 +155,11 @@ export const useExercises = (filters?: ExerciseFilters) => {
     onError: (err: Error) => {
       logger.error("Erro na atualização de exercício", err, "useExercises");
       const appErr = AppError.from(err);
-      toast.error(appErr.isOperational ? `Erro de validação: ${appErr.message}` : "Erro ao atualizar exercício. Tente novamente.");
+      toast.error(
+        appErr.isOperational
+          ? `Erro de validação: ${appErr.message}`
+          : "Erro ao atualizar exercício. Tente novamente.",
+      );
     },
   });
 
@@ -164,7 +172,11 @@ export const useExercises = (filters?: ExerciseFilters) => {
     onError: (err: Error) => {
       logger.error("Erro na exclusão de exercício", err, "useExercises");
       const appErr = AppError.from(err);
-      toast.error(appErr.isOperational ? `Erro de validação: ${appErr.message}` : "Erro ao excluir exercício. Tente novamente.");
+      toast.error(
+        appErr.isOperational
+          ? `Erro de validação: ${appErr.message}`
+          : "Erro ao excluir exercício. Tente novamente.",
+      );
     },
   });
 
@@ -178,7 +190,11 @@ export const useExercises = (filters?: ExerciseFilters) => {
     onError: (err: Error) => {
       logger.error("Erro ao unir exercícios", err, "useExercises");
       const appErr = AppError.from(err);
-      toast.error(appErr.isOperational ? `Erro de validação: ${appErr.message}` : "Erro ao unir exercícios. Tente novamente.");
+      toast.error(
+        appErr.isOperational
+          ? `Erro de validação: ${appErr.message}`
+          : "Erro ao unir exercícios. Tente novamente.",
+      );
     },
   });
 

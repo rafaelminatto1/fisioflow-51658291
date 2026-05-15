@@ -460,7 +460,7 @@ export function DoctorFormModal({
               />
             </div>
 
-            <DialogFooter className="sticky bottom-0 z-10 pt-4 border-t border-border/50 flex items-center gap-3 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/85">
+            <DialogFooter className="sticky bottom-0 z-10 pt-4 border-t border-border/50 flex items-center gap-3 bg-background">
               <Button
                 type="button"
                 variant="ghost"

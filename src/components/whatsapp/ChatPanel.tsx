@@ -362,7 +362,7 @@ export function ChatPanel({
         }}
       ></div>
 
-      <div className="h-16 border-b px-5 flex items-center justify-between shrink-0 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 z-10 shadow-sm">
+      <div className="h-16 border-b px-5 flex items-center justify-between shrink-0 bg-background z-10 shadow-sm">
         <div className="flex items-center gap-3">
           <Avatar className="h-10 w-10 border shadow-sm">
             <AvatarFallback className="text-sm bg-primary/10 text-primary font-medium">

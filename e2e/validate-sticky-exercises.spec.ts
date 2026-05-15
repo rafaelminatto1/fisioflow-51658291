@@ -13,7 +13,9 @@ test.describe("Production Validation - Sticky Exercise Filters", () => {
 
     await page.fill('input[name="email"], #login-email', loginEmail);
     await page.fill('input[name="password"], #login-password', loginPassword);
-    await page.click('button:has-text("Entrar"), button:has-text("Acessar"), button[type="submit"]');
+    await page.click(
+      'button:has-text("Entrar"), button:has-text("Acessar"), button[type="submit"]',
+    );
 
     await expect.poll(() => page.url(), { timeout: 60000 }).not.toContain("/auth");
     console.log("[Test] Logged in!");
@@ -34,7 +36,9 @@ test.describe("Production Validation - Sticky Exercise Filters", () => {
     const scrolledTabsBox = await tabsContainer.boundingBox();
     const scrolledSearchBox = await searchContainer.boundingBox();
 
-    console.log(`[Scrolled] Tabs viewport top: ${scrolledTabsBox?.y}, Search viewport top: ${scrolledSearchBox?.y}`);
+    console.log(
+      `[Scrolled] Tabs viewport top: ${scrolledTabsBox?.y}, Search viewport top: ${scrolledSearchBox?.y}`,
+    );
 
     if (scrolledTabsBox) {
       expect(scrolledTabsBox.y).toBeGreaterThanOrEqual(30);
@@ -50,8 +54,13 @@ test.describe("Production Validation - Sticky Exercise Filters", () => {
       throw new Error("Search container not found or not visible");
     }
 
-    console.log("✅ Validation successful: Filters and tabs remain STICKY and VISIBLE in production!");
+    console.log(
+      "✅ Validation successful: Filters and tabs remain STICKY and VISIBLE in production!",
+    );
 
-    await page.screenshot({ path: "test-results/sticky-production-validation.png", fullPage: false });
+    await page.screenshot({
+      path: "test-results/sticky-production-validation.png",
+      fullPage: false,
+    });
   });
 });

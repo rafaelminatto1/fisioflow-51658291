@@ -78,8 +78,7 @@ export default function IntegrationsPage() {
     loadIntegrations();
   }, [loadIntegrations]);
 
-  const getConnected = (provider: string) =>
-    integrations.find((i) => i.provider === provider);
+  const getConnected = (provider: string) => integrations.find((i) => i.provider === provider);
 
   const handleConnect = async (provider: string) => {
     if (provider === "garmin") {
@@ -144,9 +143,15 @@ export default function IntegrationsPage() {
   };
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={["top", "left", "right"]}>
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: colors.background }]}
+      edges={["top", "left", "right"]}
+    >
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+        <TouchableOpacity
+          onPress={() => router.back()}
+          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+        >
           <Ionicons name="arrow-back" size={24} color={colors.text} />
         </TouchableOpacity>
         <Text style={[styles.title, { color: colors.text }]}>Integrações</Text>
@@ -155,7 +160,8 @@ export default function IntegrationsPage() {
 
       <ScrollView contentContainerStyle={styles.content}>
         <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>
-          Conecte seus dispositivos para que seu fisioterapeuta possa acompanhar sua evolução com dados reais de atividade.
+          Conecte seus dispositivos para que seu fisioterapeuta possa acompanhar sua evolução com
+          dados reais de atividade.
         </Text>
 
         {loading ? (
@@ -172,13 +178,17 @@ export default function IntegrationsPage() {
                     <Ionicons name={provider.icon} size={24} color={provider.color} />
                   </View>
                   <View style={styles.providerInfo}>
-                    <Text style={[styles.providerName, { color: colors.text }]}>{provider.name}</Text>
+                    <Text style={[styles.providerName, { color: colors.text }]}>
+                      {provider.name}
+                    </Text>
                     <Text style={[styles.providerDesc, { color: colors.textSecondary }]}>
                       {provider.description}
                     </Text>
                   </View>
                   {connected ? (
-                    <View style={[styles.connectedBadge, { backgroundColor: colors.success + "20" }]}>
+                    <View
+                      style={[styles.connectedBadge, { backgroundColor: colors.success + "20" }]}
+                    >
                       <Ionicons name="checkmark-circle" size={16} color={colors.success} />
                       <Text style={[styles.connectedText, { color: colors.success }]}>Ativo</Text>
                     </View>
@@ -187,15 +197,21 @@ export default function IntegrationsPage() {
 
                 <View style={styles.dataTypes}>
                   {provider.dataTypes.map((dt) => (
-                    <View key={dt} style={[styles.dataTypeBadge, { backgroundColor: colors.surface }]}>
-                      <Text style={[styles.dataTypeText, { color: colors.textSecondary }]}>{dt}</Text>
+                    <View
+                      key={dt}
+                      style={[styles.dataTypeBadge, { backgroundColor: colors.surface }]}
+                    >
+                      <Text style={[styles.dataTypeText, { color: colors.textSecondary }]}>
+                        {dt}
+                      </Text>
                     </View>
                   ))}
                 </View>
 
                 {connected && (
                   <Text style={[styles.syncInfo, { color: colors.textSecondary }]}>
-                    Conectado em {formatDate(connected.connected_at)} · Último sync: {formatDate(connected.last_synced_at)}
+                    Conectado em {formatDate(connected.connected_at)} · Último sync:{" "}
+                    {formatDate(connected.last_synced_at)}
                   </Text>
                 )}
 
@@ -241,7 +257,8 @@ export default function IntegrationsPage() {
         <View style={[styles.infoBox, { backgroundColor: colors.surface }]}>
           <Ionicons name="shield-checkmark-outline" size={18} color={colors.info} />
           <Text style={[styles.infoText, { color: colors.textSecondary }]}>
-            Seus dados de saúde são compartilhados apenas com seu fisioterapeuta e utilizados exclusivamente para acompanhamento clínico.
+            Seus dados de saúde são compartilhados apenas com seu fisioterapeuta e utilizados
+            exclusivamente para acompanhamento clínico.
           </Text>
         </View>
       </ScrollView>

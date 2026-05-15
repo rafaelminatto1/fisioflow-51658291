@@ -20,7 +20,15 @@ import {
 import { ViewMode } from "./types";
 
 export function useDashboardQueries(organizationId: string | null, dates: any, viewMode: ViewMode) {
-  const { todayStr, thirtyDaysAgo, weekStart, weekEnd, startCurrentMonth, primaryDateFrom, primaryDateTo } = dates;
+  const {
+    todayStr,
+    thirtyDaysAgo,
+    weekStart,
+    weekEnd,
+    startCurrentMonth,
+    primaryDateFrom,
+    primaryDateTo,
+  } = dates;
 
   const patientsQuery = useQuery({
     queryKey: ["dashboard-patients"],

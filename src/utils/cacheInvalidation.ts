@@ -55,16 +55,16 @@ export async function invalidateAppointmentsComprehensive(
     queryClient.invalidateQueries({
       queryKey: key,
       exact: false,
-      type: 'all',
+      type: "all",
     }),
   );
-  
+
   // Also invalidate schedule-appointments with partial matching (array keys with date/view)
   invalidationPromises.push(
     queryClient.invalidateQueries({
-      queryKey: ['schedule-appointments'],
+      queryKey: ["schedule-appointments"],
       exact: false,
-      type: 'all',
+      type: "all",
     }),
   );
 
@@ -73,10 +73,10 @@ export async function invalidateAppointmentsComprehensive(
   // CRITICAL: Reset ALL appointment queries to force fresh fetch
   // This clears both memory cache AND persisted cache (PersistQueryClientProvider)
   await queryClient.resetQueries({
-    queryKey: ['schedule-appointments'],
+    queryKey: ["schedule-appointments"],
     exact: false,
   });
-  
+
   // Reset all other appointment-related keys
   for (const key of keysToInvalidate) {
     await queryClient.resetQueries({

@@ -25,9 +25,7 @@ import { useDebounce } from "@/hooks/useDebounce";
 import { SkeletonExercise } from "@/components/SkeletonExercise";
 import type { Exercise } from "@/types";
 
-import {
-  BODY_PARTS,
-} from "@/lib/constants/exerciseConstants";
+import { BODY_PARTS } from "@/lib/constants/exerciseConstants";
 
 const DIFFICULTY_OPTIONS = [
   { label: "Todas", value: null },

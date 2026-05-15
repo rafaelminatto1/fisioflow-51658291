@@ -13,8 +13,7 @@ export const buttonVariants = cva(
         secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80",
         ghost: "hover:bg-accent hover:text-accent-foreground",
         link: "underline-offset-4 hover:underline text-primary",
-        medical:
-          "bg-gradient-primary text-primary-foreground hover:bg-gradient-primary/90 ",
+        medical: "bg-gradient-primary text-primary-foreground hover:bg-gradient-primary/90 ",
         brand: "gradient-brand text-white hover:bg-primary/90 ",
         success: "gradient-success text-white hover:bg-primary/90 ",
         warm: "gradient-warm text-white hover:bg-primary/90 ",

@@ -95,7 +95,9 @@ export function CaixaDiarioView({ dataCaixa, setDataCaixa, caixaDiario }: Props)
                   <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">
                     {forma}
                   </p>
-                  <p className={`text-lg font-black ${valor >= 0 ? "text-emerald-600" : "text-red-600"}`}>
+                  <p
+                    className={`text-lg font-black ${valor >= 0 ? "text-emerald-600" : "text-red-600"}`}
+                  >
                     R$ {valor.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
                   </p>
                 </div>

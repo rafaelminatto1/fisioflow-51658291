@@ -56,13 +56,11 @@
   }
 }
 
-/* Glass Card */
+/* Solid Card (No Glassmorphism) */
 .premium-card {
   position: relative;
   z-index: 10;
-  background: var(--glass-bg);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
+  background: rgba(15, 23, 42, 0.95);
   border: 1px solid var(--glass-border);
   border-radius: 32px;
   padding: 3rem;

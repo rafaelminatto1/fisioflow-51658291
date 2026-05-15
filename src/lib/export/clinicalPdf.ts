@@ -166,10 +166,7 @@ export function generateSoapPDF(evolution: EvolutionDocument): void {
     y = addSectionTitle(doc, "Medições", y);
     doc.setFontSize(9);
     const text = evolution.measurements
-      .map(
-        (m) =>
-          `• ${m.name}: ${m.value ?? "—"}${m.unit ?? ""}${m.side ? ` (${m.side})` : ""}`,
-      )
+      .map((m) => `• ${m.name}: ${m.value ?? "—"}${m.unit ?? ""}${m.side ? ` (${m.side})` : ""}`)
       .join("\n");
     const lines = doc.splitTextToSize(text, pw - 28);
     doc.text(lines, 14, y);

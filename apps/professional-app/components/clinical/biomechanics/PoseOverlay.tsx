@@ -1,7 +1,13 @@
 import React from "react";
 import { StyleSheet, View, Dimensions } from "react-native";
 import Svg, { Line, Circle, Polyline, G, Rect, Text as SvgText } from "react-native-svg";
-import { Landmark, calculateAngle, getAngleStatus, calculateVerticalAngle, calculateSymmetry } from "../../../utils/pose-utils";
+import {
+  Landmark,
+  calculateAngle,
+  getAngleStatus,
+  calculateVerticalAngle,
+  calculateSymmetry,
+} from "../../../utils/pose-utils";
 import { REFERENCE_ANGLES } from "../../../types/biomechanics";
 
 interface PoseOverlayProps {
@@ -37,11 +43,11 @@ export const PoseOverlay: React.FC<PoseOverlayProps> = ({ pose, width, height, p
 
   const renderPath = (jointKey: string, points: { x: number; y: number }[]) => {
     if (points.length < 2) return null;
-    
+
     return (
       <Polyline
         key={`path-${jointKey}`}
-        points={points.map(p => `${p.x * width},${p.y * height}`).join(" ")}
+        points={points.map((p) => `${p.x * width},${p.y * height}`).join(" ")}
         fill="none"
         stroke="#fbbf24"
         strokeWidth="2"
@@ -114,7 +120,7 @@ export const PoseOverlay: React.FC<PoseOverlayProps> = ({ pose, width, height, p
     const ref = REFERENCE_ANGLES[label] || { reference: 0, tolerance: 5 };
     const status = getAngleStatus(angle, ref.reference, ref.tolerance);
     const color = STATUS_COLORS[status];
-    
+
     const x = xNorm * width;
     const y = yNorm * height;
 
@@ -174,19 +180,17 @@ export const PoseOverlay: React.FC<PoseOverlayProps> = ({ pose, width, height, p
     <View style={StyleSheet.absoluteFill} pointerEvents="none">
       <Svg style={StyleSheet.absoluteFill}>
         {/* Rastreio de Trajetória */}
-        {pathHistory && Object.entries(pathHistory).map(([key, points]) => 
-          renderPath(key, points)
-        )}
+        {pathHistory && Object.entries(pathHistory).map(([key, points]) => renderPath(key, points))}
 
         {renderSymmetry()}
 
         {CONNECTIONS.map(([from, to]) => renderConnection(from, to))}
         {Object.keys(pose).map((key) => renderJoint(key))}
-        
+
         {/* Ângulos Críticos */}
         {renderAngle("leftHip", "leftKnee", "leftAnkle", "joelho_flex")}
         {renderAngle("rightHip", "rightKnee", "rightAnkle", "joelho_flex")}
-        
+
         {/* Inclinação de Tronco (Vertical) */}
         {renderVerticalAngle("leftShoulder", "leftHip", "tronco_inclinacao")}
       </Svg>

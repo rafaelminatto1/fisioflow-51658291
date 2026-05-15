@@ -240,7 +240,9 @@ export function ReciboForm({
                   type="checkbox"
                   id="usar-clinica"
                   checked={formData.usar_dados_clinica}
-                  onChange={(e) => setFormData({ ...formData, usar_dados_clinica: e.target.checked })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, usar_dados_clinica: e.target.checked })
+                  }
                   className="h-4 w-4 rounded border-slate-300 text-primary"
                 />
                 <Label
@@ -251,7 +253,10 @@ export function ReciboForm({
                 </Label>
               </div>
               <p className="text-[10px] text-slate-400 font-medium truncate mt-1">
-                Emissor: {formData.usar_dados_clinica ? clinicaConfig?.org?.name || "Clínica" : clinicaConfig?.profile?.full_name}
+                Emissor:{" "}
+                {formData.usar_dados_clinica
+                  ? clinicaConfig?.org?.name || "Clínica"
+                  : clinicaConfig?.profile?.full_name}
               </p>
             </div>
           </div>
@@ -262,7 +267,11 @@ export function ReciboForm({
               disabled={isSubmitting}
               className="flex-1 rounded-xl h-12 bg-slate-900 text-white hover:bg-slate-800 dark:bg-white dark:text-slate-900 shadow-xl font-bold uppercase tracking-wider gap-2"
             >
-              {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <BadgeCheck className="h-5 w-5" />}
+              {isSubmitting ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <BadgeCheck className="h-5 w-5" />
+              )}
               Emitir Recibo Oficial
             </Button>
           </div>

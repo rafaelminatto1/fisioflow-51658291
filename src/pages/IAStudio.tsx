@@ -349,7 +349,9 @@ export const IAStudio: React.FC = () => {
                     <span className="text-xl font-black tracking-tighter text-amber-500">
                       {usageData?.fallbackCalls ?? "—"}
                     </span>
-                    <span className="text-[10px] font-semibold text-slate-400 block">fallbacks</span>
+                    <span className="text-[10px] font-semibold text-slate-400 block">
+                      fallbacks
+                    </span>
                   </div>
                 </div>
               </Card>

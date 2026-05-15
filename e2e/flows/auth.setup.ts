@@ -1,15 +1,15 @@
-import { test as setup } from '@playwright/test';
-import path from 'path';
+import { test as setup } from "@playwright/test";
+import path from "path";
 
-const SESSION_FILE = path.join(__dirname, '../.auth/session.json');
+const SESSION_FILE = path.join(__dirname, "../.auth/session.json");
 
 // Executa uma vez antes de todos os testes para reusar a sessão autenticada.
-setup('authenticate', async ({ page }) => {
-  const email = process.env.E2E_EMAIL || 'rafael.minatto@yahoo.com.br';
-  const password = process.env.E2E_PASSWORD || 'Yukari30@';
+setup("authenticate", async ({ page }) => {
+  const email = process.env.E2E_EMAIL || "rafael.minatto@yahoo.com.br";
+  const password = process.env.E2E_PASSWORD || "Yukari30@";
 
-  await page.goto('/login');
-  await page.waitForLoadState('networkidle');
+  await page.goto("/login");
+  await page.waitForLoadState("networkidle");
 
   await page.fill('input[type="email"]', email);
   await page.fill('input[type="password"]', password);

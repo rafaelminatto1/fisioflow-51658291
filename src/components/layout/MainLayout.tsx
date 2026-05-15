@@ -3,7 +3,7 @@
  */
 
 import type React from "react";
-import { Bell, ChevronDown, LogOut, User } from "lucide-react";
+import { Bell, ChevronDown, LogOut, User, AlertTriangle } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { SkipLinks } from "@/components/accessibility/SkipLinks";
@@ -24,6 +24,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
 import { useUserProfile } from "@/hooks/useUserProfile";
+import { usePatientReengagement } from "@/hooks/usePatientReengagement";
 import { cn } from "@/lib/utils";
 import { BottomNavigation } from "./BottomNavigation";
 import { MobileHeader } from "./MobileHeader";
@@ -55,6 +56,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
   hideDefaultHeader = false,
 }) => {
   const { profile, loading, getDisplayName, getInitials } = useUserProfile();
+  const { totalToReengage } = usePatientReengagement();
   const { signOut } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -132,8 +134,24 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
                     <div className="h-4 w-px bg-border/40" />
 
                     {showBreadcrumbs && (
-                      <div className="animate-fade-in">
+                      <div className="animate-fade-in flex items-center">
                         <PageBreadcrumbs customLabels={customBreadcrumbLabels} />
+                      </div>
+                    )}
+
+                    {totalToReengage > 0 && (
+                      <div className="flex items-center">
+                        <div className="h-4 w-px bg-border/40 mr-4" />
+                        <Link
+                          to="/marketing/dashboard"
+                          className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/20 hover:bg-amber-500/20 transition-colors animate-fade-in"
+                          title="Ir para dashboard de marketing"
+                        >
+                          <AlertTriangle className="h-3.5 w-3.5 text-amber-500" />
+                          <span className="text-[10px] font-black text-amber-600 dark:text-amber-500 uppercase tracking-widest">
+                            {totalToReengage} pacientes sem retorno
+                          </span>
+                        </Link>
                       </div>
                     )}
                   </div>

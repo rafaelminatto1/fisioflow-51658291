@@ -712,11 +712,21 @@ export default function AppointmentFormScreen() {
           </>
         )}
 
-        <TouchableOpacity 
-          style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", paddingVertical: 12, marginBottom: 16 }}
+        <TouchableOpacity
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "center",
+            paddingVertical: 12,
+            marginBottom: 16,
+          }}
           onPress={() => setShowAdvanced(!showAdvanced)}
         >
-          <Ionicons name={showAdvanced ? "chevron-up" : "chevron-down"} size={20} color={colors.primary} />
+          <Ionicons
+            name={showAdvanced ? "chevron-up" : "chevron-down"}
+            size={20}
+            color={colors.primary}
+          />
           <Text style={{ color: colors.primary, fontWeight: "600", marginLeft: 8 }}>
             {showAdvanced ? "Ocultar opções adicionais" : "Mostrar opções adicionais"}
           </Text>

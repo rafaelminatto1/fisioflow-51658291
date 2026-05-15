@@ -31,14 +31,14 @@ export default function WhatsAppInboxPage() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [bulkMode, setBulkMode] = useState(false);
   const [selectedConvIds, setSelectedConvIds] = useState<Set<string>>(new Set());
-  
+
   // Modals Visibility
   const [showNewConversation, setShowNewConversation] = useState(false);
   const [showAssignDialog, setShowAssignDialog] = useState(false);
   const [showTransferDialog, setShowTransferDialog] = useState(false);
   const [showBroadcastModal, setShowBroadcastModal] = useState(false);
   const [showConfirmationsModal, setShowConfirmationsModal] = useState(false);
-  
+
   // Data for Modals
   const [teamMembers, setTeamMembers] = useState<any[]>([]);
   const [agentsWorkload, setAgentsWorkload] = useState<any[]>([]);
@@ -47,32 +47,51 @@ export default function WhatsAppInboxPage() {
 
   // Initial Fetch
   useEffect(() => {
-    fetchMetrics().then(setMetrics).catch(() => {});
-    fetchTags().then(setAllTags).catch(() => {});
+    fetchMetrics()
+      .then(setMetrics)
+      .catch(() => {});
+    fetchTags()
+      .then(setAllTags)
+      .catch(() => {});
   }, []);
 
   // Fetch Team Data when needed
   useEffect(() => {
     if (showAssignDialog || showTransferDialog) {
-      organizationMembersApi.list().then(res => setTeamMembers(res.data)).catch(() => {});
-      fetchAgentsWorkload().then(setAgentsWorkload).catch(() => {});
+      organizationMembersApi
+        .list()
+        .then((res) => setTeamMembers(res.data))
+        .catch(() => {});
+      fetchAgentsWorkload()
+        .then(setAgentsWorkload)
+        .catch(() => {});
     }
   }, [showAssignDialog, showTransferDialog]);
 
   // Inbox Query
-  const inboxFilters = useMemo(() => ({
-    status: statusFilter === "all" ? undefined : statusFilter === "mine" ? undefined : statusFilter,
-    assignedTo: statusFilter === "mine" ? "me" : undefined,
-    priority: priorityFilter,
-    search: search || undefined,
-    tagId: tagFilter,
-  }), [statusFilter, priorityFilter, search, tagFilter]);
+  const inboxFilters = useMemo(
+    () => ({
+      status:
+        statusFilter === "all" ? undefined : statusFilter === "mine" ? undefined : statusFilter,
+      assignedTo: statusFilter === "mine" ? "me" : undefined,
+      priority: priorityFilter,
+      search: search || undefined,
+      tagId: tagFilter,
+    }),
+    [statusFilter, priorityFilter, search, tagFilter],
+  );
 
   const { conversations, loading, pagination, refetch } = useWhatsAppInbox(inboxFilters);
-  const { conversation, addNote, updateStatus, refetch: refetchConv } = useWhatsAppConversation(selectedId);
-  
+  const {
+    conversation,
+    addNote,
+    updateStatus,
+    refetch: refetchConv,
+  } = useWhatsAppConversation(selectedId);
+
   // Custom Actions Hook
-  const { handleAssign, handleTransfer, handlePriorityChange, handleSnooze } = useWhatsAppInboxActions(refetch, refetchConv);
+  const { handleAssign, handleTransfer, handlePriorityChange, handleSnooze } =
+    useWhatsAppInboxActions(refetch, refetchConv);
 
   return (
     <MainLayout title="WhatsApp Inbox">
@@ -96,7 +115,8 @@ export default function WhatsAppInboxPage() {
           selectedConvIds={selectedConvIds}
           onToggleBulkSelect={(id) => {
             const next = new Set(selectedConvIds);
-            if (next.has(id)) next.delete(id); else next.add(id);
+            if (next.has(id)) next.delete(id);
+            else next.add(id);
             setSelectedConvIds(next);
           }}
           onShowBroadcast={() => setShowBroadcastModal(true)}
@@ -115,19 +135,36 @@ export default function WhatsAppInboxPage() {
           quickReplyText={quickReplyText}
           onQuickReplyUsed={() => setQuickReplyText(null)}
           onMessageSent={refetch}
-          onConversationDeleted={() => { setSelectedId(null); refetch(); }}
+          onConversationDeleted={() => {
+            setSelectedId(null);
+            refetch();
+          }}
         />
 
-        <div className={`transition-all duration-300 border-l bg-background shrink-0 flex flex-col z-20 ${conversation ? "w-[320px]" : "w-0 overflow-hidden border-none"}`}>
+        <div
+          className={`transition-all duration-300 border-l bg-background shrink-0 flex flex-col z-20 ${conversation ? "w-[320px]" : "w-0 overflow-hidden border-none"}`}
+        >
           {conversation && (
             <ConversationDetailPanel
               conversation={conversation}
               onAssign={() => setShowAssignDialog(true)}
               onTransfer={() => setShowTransferDialog(true)}
-              onResolve={async () => { await updateStatus("resolved"); await Promise.all([refetch(), refetchConv()]); }}
-              onClose={async () => { await updateStatus("closed"); await Promise.all([refetch(), refetchConv()]); }}
-              onAddTag={async (tagId) => { await addTags(conversation.id, [tagId]); await Promise.all([refetch(), refetchConv()]); }}
-              onRemoveTag={async (tagId) => { await apiRemoveTag(conversation.id, tagId); await Promise.all([refetch(), refetchConv()]); }}
+              onResolve={async () => {
+                await updateStatus("resolved");
+                await Promise.all([refetch(), refetchConv()]);
+              }}
+              onClose={async () => {
+                await updateStatus("closed");
+                await Promise.all([refetch(), refetchConv()]);
+              }}
+              onAddTag={async (tagId) => {
+                await addTags(conversation.id, [tagId]);
+                await Promise.all([refetch(), refetchConv()]);
+              }}
+              onRemoveTag={async (tagId) => {
+                await apiRemoveTag(conversation.id, tagId);
+                await Promise.all([refetch(), refetchConv()]);
+              }}
               onQuickReply={setQuickReplyText}
               onPriorityChange={(p) => handlePriorityChange(conversation.id, p)}
               onSnooze={() => handleSnooze(conversation.id, 24)}
@@ -139,7 +176,10 @@ export default function WhatsAppInboxPage() {
       <NewConversationDialog
         open={showNewConversation}
         onOpenChange={setShowNewConversation}
-        onConversationCreated={(id) => { setSelectedId(id); refetch(); }}
+        onConversationCreated={(id) => {
+          setSelectedId(id);
+          refetch();
+        }}
       />
 
       <TeamMemberPicker
@@ -149,7 +189,10 @@ export default function WhatsAppInboxPage() {
         icon="assign"
         members={teamMembers}
         agentsWorkload={agentsWorkload}
-        onSelect={(userId) => { if (selectedId) handleAssign(selectedId, userId); setShowAssignDialog(false); }}
+        onSelect={(userId) => {
+          if (selectedId) handleAssign(selectedId, userId);
+          setShowAssignDialog(false);
+        }}
       />
 
       <TeamMemberPicker
@@ -158,7 +201,10 @@ export default function WhatsAppInboxPage() {
         title="Transferir conversa"
         icon="transfer"
         members={teamMembers}
-        onSelect={(userId) => { if (selectedId) handleTransfer(selectedId, userId); setShowTransferDialog(false); }}
+        onSelect={(userId) => {
+          if (selectedId) handleTransfer(selectedId, userId);
+          setShowTransferDialog(false);
+        }}
       />
 
       <BroadcastModal open={showBroadcastModal} onOpenChange={setShowBroadcastModal} />

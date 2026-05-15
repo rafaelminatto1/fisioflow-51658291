@@ -145,11 +145,15 @@ export class FinancialService {
           },
         });
       } catch (auditErr) {
-        fisioLogger.warn("Audit log failed for transaction creation", {
-          operation: "FinancialService.createTransaction",
-          transactionId: newTransaction.id,
-          error: AppError.from(auditErr).message,
-        }, "FinancialService");
+        fisioLogger.warn(
+          "Audit log failed for transaction creation",
+          {
+            operation: "FinancialService.createTransaction",
+            transactionId: newTransaction.id,
+            error: AppError.from(auditErr).message,
+          },
+          "FinancialService",
+        );
       }
 
       return newTransaction;
@@ -180,11 +184,15 @@ export class FinancialService {
           },
         });
       } catch (auditErr) {
-        fisioLogger.warn("Audit log failed for transaction update", {
-          operation: "FinancialService.updateTransaction",
-          transactionId: id,
-          error: AppError.from(auditErr).message,
-        }, "FinancialService");
+        fisioLogger.warn(
+          "Audit log failed for transaction update",
+          {
+            operation: "FinancialService.updateTransaction",
+            transactionId: id,
+            error: AppError.from(auditErr).message,
+          },
+          "FinancialService",
+        );
       }
 
       return updated;
@@ -209,11 +217,15 @@ export class FinancialService {
           metadata: { timestamp: new Date().toISOString() },
         });
       } catch (auditErr) {
-        fisioLogger.warn("Audit log failed for transaction deletion", {
-          operation: "FinancialService.deleteTransaction",
-          transactionId: id,
-          error: AppError.from(auditErr).message,
-        }, "FinancialService");
+        fisioLogger.warn(
+          "Audit log failed for transaction deletion",
+          {
+            operation: "FinancialService.deleteTransaction",
+            transactionId: id,
+            error: AppError.from(auditErr).message,
+          },
+          "FinancialService",
+        );
       }
     } catch (error) {
       throw AppError.from(error, "FinancialService.deleteTransaction");
@@ -243,16 +255,20 @@ export class FinancialService {
           },
         });
       } catch (auditErr) {
-        fisioLogger.warn("Audit log failed for transaction mark-as-paid", {
-          operation: "FinancialService.markAsPaid",
-          transactionId: id,
-          error: AppError.from(auditErr).message,
-        }, "FinancialService");
+        fisioLogger.warn(
+          "Audit log failed for transaction mark-as-paid",
+          {
+            operation: "FinancialService.markAsPaid",
+            transactionId: id,
+            error: AppError.from(auditErr).message,
+          },
+          "FinancialService",
+        );
       }
 
       // NOVO: Gatilho de Automação de Payback (ROI)
       if (updated.tipo === "receita" && updated.patientId) {
-        PaybackAutomationService.processPatientPayback(updated.patientId).catch(err => {
+        PaybackAutomationService.processPatientPayback(updated.patientId).catch((err) => {
           fisioLogger.error("Failed to process payback automation", err, "FinancialService");
         });
       }
@@ -280,7 +296,10 @@ export class FinancialService {
    */
   static async getPatientLTV(patientId: string): Promise<number> {
     try {
-      const response = await financialApi.transacoes.list({ patientId, status: TRANSACTION_STATUSES[0] });
+      const response = await financialApi.transacoes.list({
+        patientId,
+        status: TRANSACTION_STATUSES[0],
+      });
       const paidTransactions = response.data || [];
       return paidTransactions.reduce((acc: number, t: any) => acc + Number(t.valor), 0);
     } catch (error) {

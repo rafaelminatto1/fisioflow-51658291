@@ -29,7 +29,7 @@ export function useRTM() {
 
   const fetchRtmStatus = useCallback(async () => {
     if (!user?.id) return;
-    
+
     setIsLoading(true);
     try {
       const status = await wearablesApi.getRtmStatus(user.id);
@@ -45,7 +45,7 @@ export function useRTM() {
 
   const syncMilestones = useCallback(async () => {
     if (!user?.id) return;
-    
+
     try {
       await wearablesApi.syncMilestones(user.id);
       await fetchRtmStatus();

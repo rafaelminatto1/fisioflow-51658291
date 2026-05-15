@@ -17,7 +17,7 @@
 import { useMemo, useState } from "react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { Library, Activity, Dumbbell } from "lucide-react";
+import { Library, Activity, Dumbbell, ListOrdered } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -30,6 +30,7 @@ import { HomeCareBlock } from "@/components/evolution/v2-improved/HomeCareBlock"
 import { AttachmentsBlock } from "@/components/evolution/v2-improved/AttachmentsBlock";
 import { ExerciseLibraryModal } from "@/components/exercises/ExerciseLibraryModal";
 import { stripHtml } from "@/lib/utils/stripHtml";
+import { normalizeInterventionSequence, SessionSequenceBlock } from "./SessionSequenceBlock";
 
 import type { EvolutionData } from "@/hooks/evolution/usePatientEvolutionState";
 
@@ -71,16 +72,14 @@ export function LiveTextEvolution({
   onAttachmentsChange,
   disabled = false,
 }: LiveTextEvolutionProps) {
-  const [groupTab, setGroupTab] = useState<"procedures" | "exercises">("procedures");
+  const [groupTab, setGroupTab] = useState<"sequence" | "procedures" | "exercises">("sequence");
   const [libraryOpen, setLibraryOpen] = useState(false);
 
   const previousItems = useMemo(
     () =>
       previousEvolutions.slice(0, 8).map((ev) => {
         const dateStr = ev.created_at || ev.record_date;
-        const dateLabel = dateStr
-          ? format(new Date(dateStr), "dd/MM/yy", { locale: ptBR })
-          : "—";
+        const dateLabel = dateStr ? format(new Date(dateStr), "dd/MM/yy", { locale: ptBR }) : "—";
         const preview = stripHtml(ev.observacao || ev.subjective || ev.assessment || "").slice(
           0,
           120,
@@ -95,12 +94,22 @@ export function LiveTextEvolution({
     [previousEvolutions],
   );
 
-  const handleProceduresChange = (procedures: any[]) =>
-    onChange({ ...data, procedures });
-  const handleExercisesChange = (exercises: any[]) =>
-    onChange({ ...data, exercises });
-  const handleMeasurementsChange = (measurements: any[]) =>
-    onChange({ ...data, measurements });
+  const handleProceduresChange = (procedures: any[]) => {
+    onChange({
+      ...data,
+      ...normalizeInterventionSequence(procedures, data.exercises),
+    });
+  };
+  const handleExercisesChange = (exercises: any[]) => {
+    onChange({
+      ...data,
+      ...normalizeInterventionSequence(data.procedures, exercises),
+    });
+  };
+  const handleInterventionSequenceChange = (next: { procedures: any[]; exercises: any[] }) => {
+    onChange({ ...data, procedures: next.procedures, exercises: next.exercises });
+  };
+  const handleMeasurementsChange = (measurements: any[]) => onChange({ ...data, measurements });
 
   const handleSelectFromLibrary = (exercise: any) => {
     const newItem = {
@@ -116,8 +125,11 @@ export function LiveTextEvolution({
       thumbnail_url: exercise.thumbnail_url ?? exercise.thumbnailUrl,
       video_url: exercise.video_url ?? exercise.videoUrl,
     };
-    if (groupTab === "exercises") {
-      onChange({ ...data, exercises: [...data.exercises, newItem as any] });
+    if (groupTab !== "procedures") {
+      onChange({
+        ...data,
+        ...normalizeInterventionSequence(data.procedures, [...data.exercises, newItem as any]),
+      });
     } else {
       const newProc = {
         id: newItem.id,
@@ -125,7 +137,10 @@ export function LiveTextEvolution({
         completed: false,
         category: "outro" as const,
       };
-      onChange({ ...data, procedures: [...data.procedures, newProc as any] });
+      onChange({
+        ...data,
+        ...normalizeInterventionSequence([...data.procedures, newProc as any], data.exercises),
+      });
     }
     setLibraryOpen(false);
   };
@@ -158,8 +173,7 @@ export function LiveTextEvolution({
         className="col-span-12 md:col-span-9 rounded-xl border-2 border-amber-200 bg-amber-50 dark:border-amber-900 dark:bg-amber-950 p-3 min-h-[180px]"
       >
         <header className="flex items-center gap-2 mb-2 text-sm font-semibold text-amber-800 dark:text-amber-200">
-          <span className="inline-block w-2 h-2 rounded-full bg-amber-500" /> Observações
-          clínicas
+          <span className="inline-block w-2 h-2 rounded-full bg-amber-500" /> Observações clínicas
         </header>
         <RichTextBlock
           placeholder="Descreva o que o paciente relatou e o que foi feito na sessão…"
@@ -176,8 +190,7 @@ export function LiveTextEvolution({
         className="col-span-12 rounded-xl border-2 border-blue-200 bg-blue-50 dark:border-blue-900 dark:bg-blue-950 p-3"
       >
         <header className="flex items-center gap-2 mb-2 text-sm font-semibold text-blue-700 dark:text-blue-300">
-          <span className="inline-block w-2 h-2 rounded-full bg-blue-500" /> Histórico de
-          evoluções
+          <span className="inline-block w-2 h-2 rounded-full bg-blue-500" /> Histórico de evoluções
           <span className="ml-auto text-xs font-normal text-muted-foreground">
             {previousEvolutions.length} sessões
           </span>
@@ -213,13 +226,14 @@ export function LiveTextEvolution({
         aria-label="Procedimentos e exercícios"
         className="col-span-12 md:col-span-7 rounded-xl border-2 border-emerald-200 bg-emerald-50 dark:border-emerald-900 dark:bg-emerald-950 p-3"
       >
-        <Tabs
-          value={groupTab}
-          onValueChange={(v) => setGroupTab(v as typeof groupTab)}
-        >
+        <Tabs value={groupTab} onValueChange={(v) => setGroupTab(v as typeof groupTab)}>
           <div className="flex items-center gap-2 mb-3 flex-wrap">
             <span className="inline-block w-2 h-2 rounded-full bg-emerald-500" />
             <TabsList className="bg-emerald-100 dark:bg-emerald-900">
+              <TabsTrigger value="sequence" className="gap-1">
+                <ListOrdered className="w-3 h-3" /> Sequência (
+                {data.procedures.length + data.exercises.length})
+              </TabsTrigger>
               <TabsTrigger value="procedures" className="gap-1">
                 <Activity className="w-3 h-3" /> Procedimentos ({data.procedures.length})
               </TabsTrigger>
@@ -237,6 +251,14 @@ export function LiveTextEvolution({
               <Library className="w-4 h-4 mr-1" /> Biblioteca
             </Button>
           </div>
+          <TabsContent value="sequence" className="mt-0">
+            <SessionSequenceBlock
+              procedures={data.procedures}
+              exercises={data.exercises}
+              onChange={handleInterventionSequenceChange}
+              disabled={disabled}
+            />
+          </TabsContent>
           <TabsContent value="procedures" className="mt-0">
             <ProcedureChecklistBlock
               procedures={data.procedures as any}
@@ -275,8 +297,7 @@ export function LiveTextEvolution({
         className="col-span-12 md:col-span-7 rounded-xl border-2 border-slate-300 bg-slate-50 dark:border-slate-700 dark:bg-slate-900 p-3"
       >
         <header className="flex items-center gap-2 mb-2 text-sm font-semibold text-slate-700 dark:text-slate-300">
-          <span className="inline-block w-2 h-2 rounded-full bg-slate-500" /> Exercícios para
-          casa
+          <span className="inline-block w-2 h-2 rounded-full bg-slate-500" /> Exercícios para casa
         </header>
         <HomeCareBlock
           value={homeExercisesText}

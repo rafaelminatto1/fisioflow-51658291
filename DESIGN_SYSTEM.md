@@ -10,61 +10,61 @@
 
 ### Semânticos (HSL — referenciados como `hsl(var(--token))`)
 
-| Token CSS | Light (H S% L%) | Dark (H S% L%) | Uso |
-|---|---|---|---|
-| `--background` | 210 20% 98% | 222.2 47.4% 7% | Fundo da página |
-| `--foreground` | 224 71.4% 4.1% | 210 40% 98% | Texto principal |
-| `--card` | 0 0% 100% | 222.2 47.4% 9% | Superfície de cards |
-| `--card-foreground` | 224 71.4% 4.1% | 210 40% 98% | Texto em cards |
-| `--popover` | 0 0% 100% | 222.2 47.4% 9% | Popovers e dropdowns |
-| `--popover-foreground` | 224 71.4% 4.1% | 210 40% 98% | Texto em popovers |
-| `--primary` | 211 100% 50% | 211 100% 50% | Ação principal (azul FisioFlow) |
-| `--primary-foreground` | 210 20% 98% | 210 20% 98% | Texto sobre primary |
-| `--secondary` | 220 14.3% 95.9% | 217.2 32.6% 17.5% | Ação secundária |
-| `--secondary-foreground` | 220.9 39.3% 11% | 210 40% 98% | Texto sobre secondary |
-| `--muted` | 220 14.3% 95.9% | 217.2 32.6% 17.5% | Elementos discretos |
-| `--muted-foreground` | 220 8.9% 46.1% | 215 20.2% 65.1% | Texto placeholder/hint |
-| `--accent` | 158 64% 52% | 158 64% 52% | Acento teal (verde clínico) |
-| `--accent-foreground` | 220.9 39.3% 11% | 210 40% 98% | Texto sobre accent |
-| `--destructive` | 0 84.2% 60.2% | 0 62.8% 30.6% | Erro / ação destrutiva |
-| `--destructive-foreground` | 210 20% 98% | 210 40% 98% | Texto sobre destructive |
-| `--border` | 220 13% 91% | 217.2 32.6% 17.5% | Bordas padrão |
-| `--input` | 220 13% 91% | 217.2 32.6% 17.5% | Borda de inputs |
-| `--ring` | 211 100% 50% | 211 100% 50% | Focus ring |
+| Token CSS                  | Light (H S% L%) | Dark (H S% L%)    | Uso                             |
+| -------------------------- | --------------- | ----------------- | ------------------------------- |
+| `--background`             | 210 20% 98%     | 222.2 47.4% 7%    | Fundo da página                 |
+| `--foreground`             | 224 71.4% 4.1%  | 210 40% 98%       | Texto principal                 |
+| `--card`                   | 0 0% 100%       | 222.2 47.4% 9%    | Superfície de cards             |
+| `--card-foreground`        | 224 71.4% 4.1%  | 210 40% 98%       | Texto em cards                  |
+| `--popover`                | 0 0% 100%       | 222.2 47.4% 9%    | Popovers e dropdowns            |
+| `--popover-foreground`     | 224 71.4% 4.1%  | 210 40% 98%       | Texto em popovers               |
+| `--primary`                | 211 100% 50%    | 211 100% 50%      | Ação principal (azul FisioFlow) |
+| `--primary-foreground`     | 210 20% 98%     | 210 20% 98%       | Texto sobre primary             |
+| `--secondary`              | 220 14.3% 95.9% | 217.2 32.6% 17.5% | Ação secundária                 |
+| `--secondary-foreground`   | 220.9 39.3% 11% | 210 40% 98%       | Texto sobre secondary           |
+| `--muted`                  | 220 14.3% 95.9% | 217.2 32.6% 17.5% | Elementos discretos             |
+| `--muted-foreground`       | 220 8.9% 46.1%  | 215 20.2% 65.1%   | Texto placeholder/hint          |
+| `--accent`                 | 158 64% 52%     | 158 64% 52%       | Acento teal (verde clínico)     |
+| `--accent-foreground`      | 220.9 39.3% 11% | 210 40% 98%       | Texto sobre accent              |
+| `--destructive`            | 0 84.2% 60.2%   | 0 62.8% 30.6%     | Erro / ação destrutiva          |
+| `--destructive-foreground` | 210 20% 98%     | 210 40% 98%       | Texto sobre destructive         |
+| `--border`                 | 220 13% 91%     | 217.2 32.6% 17.5% | Bordas padrão                   |
+| `--input`                  | 220 13% 91%     | 217.2 32.6% 17.5% | Borda de inputs                 |
+| `--ring`                   | 211 100% 50%    | 211 100% 50%      | Focus ring                      |
 
 ### Sidebar
 
-| Token CSS | Light | Dark |
-|---|---|---|
-| `--sidebar-background` | 0 0% 100% | — |
-| `--sidebar-foreground` | 222.2 47.4% 11.2% | — |
-| `--sidebar-primary` | 210 90% 51% | — |
-| `--sidebar-accent` | 220 13% 95% | — |
-| `--sidebar-border` | 220 13% 91% | — |
+| Token CSS              | Light             | Dark |
+| ---------------------- | ----------------- | ---- |
+| `--sidebar-background` | 0 0% 100%         | —    |
+| `--sidebar-foreground` | 222.2 47.4% 11.2% | —    |
+| `--sidebar-primary`    | 210 90% 51%       | —    |
+| `--sidebar-accent`     | 220 13% 95%       | —    |
+| `--sidebar-border`     | 220 13% 91%       | —    |
 
 ### Domínio — Pain Map
 
-| Token | Hex | Significado |
-|---|---|---|
-| `--color-pain-0` | `#9ca3af` | Sem dor |
-| `--color-pain-1` | `#bef264` | Mínima |
-| `--color-pain-3` | `#fde047` | Leve |
-| `--color-pain-5` | `#fdba74` | Moderada |
-| `--color-pain-7` | `#f87171` | Intensa |
-| `--color-pain-10` | `#7f1d1d` | Insuportável |
-| `--color-pain-gauge-low` | `#22c55e` | Faixa verde |
-| `--color-pain-gauge-med` | `#eab308` | Faixa amarela |
-| `--color-pain-gauge-high` | `#ef4444` | Faixa vermelha |
-| `--color-pain-gauge-severe` | `#7f1d1d` | Faixa crítica |
+| Token                       | Hex       | Significado    |
+| --------------------------- | --------- | -------------- |
+| `--color-pain-0`            | `#9ca3af` | Sem dor        |
+| `--color-pain-1`            | `#bef264` | Mínima         |
+| `--color-pain-3`            | `#fde047` | Leve           |
+| `--color-pain-5`            | `#fdba74` | Moderada       |
+| `--color-pain-7`            | `#f87171` | Intensa        |
+| `--color-pain-10`           | `#7f1d1d` | Insuportável   |
+| `--color-pain-gauge-low`    | `#22c55e` | Faixa verde    |
+| `--color-pain-gauge-med`    | `#eab308` | Faixa amarela  |
+| `--color-pain-gauge-high`   | `#ef4444` | Faixa vermelha |
+| `--color-pain-gauge-severe` | `#7f1d1d` | Faixa crítica  |
 
 ### Domínio — Status de Agendamento
 
-| Token | Hex | Estado |
-|---|---|---|
+| Token                      | Hex       | Estado     |
+| -------------------------- | --------- | ---------- |
 | `--color-status-confirmed` | `#10b981` | Confirmado |
-| `--color-status-pending` | `#f59e0b` | Pendente |
-| `--color-status-cancelled` | `#ef4444` | Cancelado |
-| `--color-status-completed` | `#3b82f6` | Realizado |
+| `--color-status-pending`   | `#f59e0b` | Pendente   |
+| `--color-status-cancelled` | `#ef4444` | Cancelado  |
+| `--color-status-completed` | `#3b82f6` | Realizado  |
 
 ### Como usar as cores
 
@@ -84,10 +84,10 @@
 
 ## 2. Tipografia
 
-| Token | Valor | Uso |
-|---|---|---|
-| `--font-sans` | `"Noto Sans", Inter, ui-sans-serif` | Corpo de texto, labels, UI |
-| `--font-display` | `"Figtree", Outfit, ui-sans-serif` | Headings (h1–h6) |
+| Token            | Valor                               | Uso                        |
+| ---------------- | ----------------------------------- | -------------------------- |
+| `--font-sans`    | `"Noto Sans", Inter, ui-sans-serif` | Corpo de texto, labels, UI |
+| `--font-display` | `"Figtree", Outfit, ui-sans-serif`  | Headings (h1–h6)           |
 
 ```tsx
 // Headings usam font-display automaticamente via @layer base
@@ -99,12 +99,12 @@
 
 ## 3. Border Radius
 
-| Token | Valor calculado | Uso |
-|---|---|---|
-| `--radius` | `1rem` (16px) | Base — padrão global |
-| `--radius-lg` | `var(--radius)` → 16px | Cards, modais |
-| `--radius-md` | `calc(var(--radius) - 2px)` → 14px | Inputs, selects |
-| `--radius-sm` | `calc(var(--radius) - 4px)` → 12px | Badges, chips |
+| Token         | Valor calculado                    | Uso                  |
+| ------------- | ---------------------------------- | -------------------- |
+| `--radius`    | `1rem` (16px)                      | Base — padrão global |
+| `--radius-lg` | `var(--radius)` → 16px             | Cards, modais        |
+| `--radius-md` | `calc(var(--radius) - 2px)` → 14px | Inputs, selects      |
+| `--radius-sm` | `calc(var(--radius) - 4px)` → 12px | Badges, chips        |
 
 ```tsx
 <div className="rounded-lg" />  // 16px
@@ -116,28 +116,28 @@
 
 ## 4. Breakpoints
 
-| Token | px | Uso |
-|---|---|---|
-| `iphone` | 390px | iPhone padrão |
-| `iphone-max` | 430px | iPhone Pro Max |
-| `xs` | 480px | Extra small |
-| `sm` | 640px | Tablet pequeno |
-| `ipad` | 834px | iPad |
-| `md` | 768px | Tablet |
-| `ipad-pro` | 1024px | iPad Pro |
-| `lg` | 1024px | Desktop |
-| `xl` | 1280px | Desktop largo |
-| `2xl` | 1536px | Ultra wide |
+| Token        | px     | Uso            |
+| ------------ | ------ | -------------- |
+| `iphone`     | 390px  | iPhone padrão  |
+| `iphone-max` | 430px  | iPhone Pro Max |
+| `xs`         | 480px  | Extra small    |
+| `sm`         | 640px  | Tablet pequeno |
+| `ipad`       | 834px  | iPad           |
+| `md`         | 768px  | Tablet         |
+| `ipad-pro`   | 1024px | iPad Pro       |
+| `lg`         | 1024px | Desktop        |
+| `xl`         | 1280px | Desktop largo  |
+| `2xl`        | 1536px | Ultra wide     |
 
 ---
 
 ## 5. Glassmorphism (utilitários)
 
-| Classe / Var | Valor | Uso |
-|---|---|---|
-| `.glass-panel` | `rgba(255,255,255,0.7)` + blur(12px) + border rgba(255,255,255,0.2) | Painéis principais |
-| `.glass-card` | `rgba(255,255,255,0.4)` + blur(4px) | Cards hover |
-| `.dark .glass-panel` | `rgba(15,23,42,0.7)` | Dark mode automático |
+| Classe / Var         | Valor                                                               | Uso                  |
+| -------------------- | ------------------------------------------------------------------- | -------------------- |
+| `.glass-panel`       | `rgba(255,255,255,0.7)` + blur(12px) + border rgba(255,255,255,0.2) | Painéis principais   |
+| `.glass-card`        | `rgba(255,255,255,0.4)` + blur(4px)                                 | Cards hover          |
+| `.dark .glass-panel` | `rgba(15,23,42,0.7)`                                                | Dark mode automático |
 
 ```tsx
 <div className="glass-panel p-6">...</div>
@@ -147,14 +147,14 @@
 
 ## 6. Animações
 
-| Token | Duração | Uso |
-|---|---|---|
-| `accordion-down/up` | 0.2s ease-out | Accordion Radix |
-| `wiggle` | 0.5s ease-in-out | Gamificação, alertas |
-| `pulse-ring` | 1.5s infinite | Indicadores live/online |
-| `pulse-subtle` | 2s infinite | Loading states suaves |
-| `stagger-in` | 0.4s ease-out | Entrada de listas |
-| `bounce-subtle` | 2s ease-in-out infinite | CTAs |
+| Token               | Duração                 | Uso                     |
+| ------------------- | ----------------------- | ----------------------- |
+| `accordion-down/up` | 0.2s ease-out           | Accordion Radix         |
+| `wiggle`            | 0.5s ease-in-out        | Gamificação, alertas    |
+| `pulse-ring`        | 1.5s infinite           | Indicadores live/online |
+| `pulse-subtle`      | 2s infinite             | Loading states suaves   |
+| `stagger-in`        | 0.4s ease-out           | Entrada de listas       |
+| `bounce-subtle`     | 2s ease-in-out infinite | CTAs                    |
 
 ```tsx
 <div className="animate-pulse-subtle" />
@@ -173,26 +173,26 @@
 **Arquivo:** `src/components/ui/button.tsx`  
 **Props extras:** `magnetic`, `glow`, `premium`
 
-| Variant | Uso |
-|---|---|
-| `default` | Ação primária (azul) |
-| `destructive` | Exclusão, ação crítica |
-| `outline` | Ação secundária com borda |
-| `secondary` | Ação de baixa ênfase |
-| `ghost` | Ação inline sem background |
-| `link` | Navegação textual |
-| `medical` | Fluxos clínicos (gradient) |
-| `brand` | Marketing, onboarding |
-| `success` | Confirmação, concluído |
-| `warm` | Alertas positivos |
-| `neon` | Gamificação, CTAs especiais |
+| Variant       | Uso                         |
+| ------------- | --------------------------- |
+| `default`     | Ação primária (azul)        |
+| `destructive` | Exclusão, ação crítica      |
+| `outline`     | Ação secundária com borda   |
+| `secondary`   | Ação de baixa ênfase        |
+| `ghost`       | Ação inline sem background  |
+| `link`        | Navegação textual           |
+| `medical`     | Fluxos clínicos (gradient)  |
+| `brand`       | Marketing, onboarding       |
+| `success`     | Confirmação, concluído      |
+| `warm`        | Alertas positivos           |
+| `neon`        | Gamificação, CTAs especiais |
 
-| Size | px altura |
-|---|---|
-| `sm` | 36px |
-| `default` | 40px |
-| `lg` | 44px |
-| `icon` | 40×40px |
+| Size      | px altura |
+| --------- | --------- |
+| `sm`      | 36px      |
+| `default` | 40px      |
+| `lg`      | 44px      |
+| `icon`    | 40×40px   |
 
 **ARIA:** `disabled` nativo + `aria-busy` para loading states  
 **Responsivo:** `size="sm"` em mobile, `size="default"` em desktop
@@ -210,12 +210,12 @@
 
 **Arquivo:** `src/components/ui/badge.tsx`
 
-| Variant | Uso |
-|---|---|
-| `default` | Status geral (primary bg) |
-| `secondary` | Info de baixa ênfase |
-| `destructive` | Erro, urgente |
-| `outline` | Tag sem fill |
+| Variant       | Uso                       |
+| ------------- | ------------------------- |
+| `default`     | Status geral (primary bg) |
+| `secondary`   | Info de baixa ênfase      |
+| `destructive` | Erro, urgente             |
+| `outline`     | Tag sem fill              |
 
 ```tsx
 <Badge variant="default">Ativo</Badge>
@@ -277,7 +277,9 @@
     render={({ field }) => (
       <FormItem>
         <FormLabel>CPF</FormLabel>
-        <FormControl><Input {...field} /></FormControl>
+        <FormControl>
+          <Input {...field} />
+        </FormControl>
         <FormMessage />
       </FormItem>
     )}
@@ -397,7 +399,9 @@ Animação via `accordion-down/up` keyframes. `type="single"` ou `type="multiple
 ```tsx
 <Tooltip>
   <TooltipTrigger asChild>
-    <Button variant="ghost" size="icon"><Info className="size-4" /></Button>
+    <Button variant="ghost" size="icon">
+      <Info className="size-4" />
+    </Button>
   </TooltipTrigger>
   <TooltipContent>Informação adicional</TooltipContent>
 </Tooltip>
@@ -413,7 +417,9 @@ Usar para menus de contexto e ações de linha em tabelas.
 ```tsx
 <DropdownMenu>
   <DropdownMenuTrigger asChild>
-    <Button variant="ghost" size="icon"><MoreHorizontal className="size-4" /></Button>
+    <Button variant="ghost" size="icon">
+      <MoreHorizontal className="size-4" />
+    </Button>
   </DropdownMenuTrigger>
   <DropdownMenuContent align="end">
     <DropdownMenuItem>Editar</DropdownMenuItem>
@@ -432,7 +438,9 @@ Painel lateral (drawer) — preferir para formulários de edição em mobile.
 
 ```tsx
 <Sheet>
-  <SheetTrigger asChild><Button>Editar paciente</Button></SheetTrigger>
+  <SheetTrigger asChild>
+    <Button>Editar paciente</Button>
+  </SheetTrigger>
   <SheetContent side="right">
     <SheetHeader>
       <SheetTitle>Editar Paciente</SheetTitle>
@@ -493,12 +501,16 @@ Em mobile use `<ResponsiveTable>` que colapsa para cards.
 Usar durante `isLoading` de queries TanStack. Nunca mostrar spinner global.
 
 ```tsx
-{isLoading ? (
-  <div className="space-y-2">
-    <Skeleton className="h-4 w-[200px]" />
-    <Skeleton className="h-4 w-[160px]" />
-  </div>
-) : <Content />}
+{
+  isLoading ? (
+    <div className="space-y-2">
+      <Skeleton className="h-4 w-[200px]" />
+      <Skeleton className="h-4 w-[160px]" />
+    </div>
+  ) : (
+    <Content />
+  );
+}
 ```
 
 ---
@@ -574,10 +586,10 @@ Usar para filtros, pickers e ações contextuais sem bloquear o fluxo.
 
 ```tsx
 <Popover>
-  <PopoverTrigger asChild><Button variant="outline">Filtros</Button></PopoverTrigger>
-  <PopoverContent className="w-80">
-    {/* filtros */}
-  </PopoverContent>
+  <PopoverTrigger asChild>
+    <Button variant="outline">Filtros</Button>
+  </PopoverTrigger>
+  <PopoverContent className="w-80">{/* filtros */}</PopoverContent>
 </Popover>
 ```
 
@@ -589,12 +601,7 @@ Usar para filtros, pickers e ações contextuais sem bloquear o fluxo.
 Wrapper sobre `react-day-picker`. Emparelhar com `Popover` para date pickers.
 
 ```tsx
-<Calendar
-  mode="single"
-  selected={date}
-  onSelect={setDate}
-  className="rounded-md border"
-/>
+<Calendar mode="single" selected={date} onSelect={setDate} className="rounded-md border" />
 ```
 
 ---
@@ -626,9 +633,13 @@ Base para buscas com filtro. Usado internamente no `CommandPalette.tsx`.
 ```tsx
 <Breadcrumb>
   <BreadcrumbList>
-    <BreadcrumbItem><BreadcrumbLink href="/dashboard">Dashboard</BreadcrumbLink></BreadcrumbItem>
+    <BreadcrumbItem>
+      <BreadcrumbLink href="/dashboard">Dashboard</BreadcrumbLink>
+    </BreadcrumbItem>
     <BreadcrumbSeparator />
-    <BreadcrumbItem><BreadcrumbPage>Pacientes</BreadcrumbPage></BreadcrumbItem>
+    <BreadcrumbItem>
+      <BreadcrumbPage>Pacientes</BreadcrumbPage>
+    </BreadcrumbItem>
   </BreadcrumbList>
 </Breadcrumb>
 ```
@@ -691,15 +702,15 @@ Usar `src/components/ui/empty-state.tsx` (base) ou `EmptyStateEnhanced.tsx` (com
 
 ## 9. Acessibilidade
 
-| Regra | Como aplicar |
-|---|---|
-| Contraste mínimo 4.5:1 | Usar tokens semânticos (não hardcoded) |
-| Focus ring visível | `focus-visible:ring-2 focus-visible:ring-ring` (padrão nos componentes) |
-| Labels em todos os inputs | `<Label htmlFor="id">` + `id` no input |
-| Imagens | `alt` descritivo ou `alt=""` + `aria-hidden="true"` em decorativas |
-| Botões icon-only | `aria-label` explícito |
-| Modais | Radix gerencia `aria-modal`, `role="dialog"`, foco ao abrir/fechar |
-| Skip link | `src/components/ui/accessibility/SkipLinks.tsx` no layout raiz |
+| Regra                     | Como aplicar                                                            |
+| ------------------------- | ----------------------------------------------------------------------- |
+| Contraste mínimo 4.5:1    | Usar tokens semânticos (não hardcoded)                                  |
+| Focus ring visível        | `focus-visible:ring-2 focus-visible:ring-ring` (padrão nos componentes) |
+| Labels em todos os inputs | `<Label htmlFor="id">` + `id` no input                                  |
+| Imagens                   | `alt` descritivo ou `alt=""` + `aria-hidden="true"` em decorativas      |
+| Botões icon-only          | `aria-label` explícito                                                  |
+| Modais                    | Radix gerencia `aria-modal`, `role="dialog"`, foco ao abrir/fechar      |
+| Skip link                 | `src/components/ui/accessibility/SkipLinks.tsx` no layout raiz          |
 
 ---
 

@@ -21,11 +21,13 @@ export function CohortAnalysis() {
   });
 
   if (isLoading) {
-    return <div className="h-96 flex items-center justify-center">Gerando análise de cohort...</div>;
+    return (
+      <div className="h-96 flex items-center justify-center">Gerando análise de cohort...</div>
+    );
   }
 
   const rawData = cohortResponse?.data || [];
-  
+
   // Transformar dados para o formato de matriz (meses x retenção)
   const cohorts: Record<string, { size: number; months: Record<number, number> }> = {};
   const maxMonths = 6; // Mostrar até 6 meses de retenção
@@ -52,8 +54,12 @@ export function CohortAnalysis() {
   return (
     <Card className="border-none shadow-premium bg-white dark:bg-slate-900/50 overflow-hidden">
       <CardHeader>
-        <CardTitle className="text-lg font-black tracking-tight">Análise de Cohort (Retenção)</CardTitle>
-        <CardDescription>Percentual de pacientes que continuam ativos após o primeiro mês</CardDescription>
+        <CardTitle className="text-lg font-black tracking-tight">
+          Análise de Cohort (Retenção)
+        </CardTitle>
+        <CardDescription>
+          Percentual de pacientes que continuam ativos após o primeiro mês
+        </CardDescription>
       </CardHeader>
       <CardContent className="p-0 overflow-x-auto">
         <table className="w-full text-center border-collapse">
@@ -62,7 +68,9 @@ export function CohortAnalysis() {
               <th className="px-6 py-4 text-left">Mês de Início</th>
               <th className="px-4 py-4">Qtd</th>
               {[...Array(maxMonths + 1)].map((_, i) => (
-                <th key={i} className="px-4 py-4">Mês {i}</th>
+                <th key={i} className="px-4 py-4">
+                  Mês {i}
+                </th>
               ))}
             </tr>
           </thead>
@@ -75,9 +83,15 @@ export function CohortAnalysis() {
                 <td className="px-4 py-4 text-xs font-medium text-slate-500">{data.size}</td>
                 {[...Array(maxMonths + 1)].map((_, i) => {
                   const rate = data.months[i];
-                  if (rate === undefined) return <td key={i} className="px-4 py-4 bg-slate-50/30 dark:bg-slate-800/10"></td>;
+                  if (rate === undefined)
+                    return (
+                      <td key={i} className="px-4 py-4 bg-slate-50/30 dark:bg-slate-800/10"></td>
+                    );
                   return (
-                    <td key={i} className={`px-4 py-4 text-xs font-black transition-colors ${getHeatmapColor(rate)}`}>
+                    <td
+                      key={i}
+                      className={`px-4 py-4 text-xs font-black transition-colors ${getHeatmapColor(rate)}`}
+                    >
                       {rate.toFixed(0)}%
                     </td>
                   );

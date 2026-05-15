@@ -67,7 +67,9 @@ export const useAppointmentData = (
         time: (data.appointment_time || data.time) as string,
         // Ensure patient is passed through and mapped if present
         patient: data.patient ? mapPatientDBToApp(data.patient) : undefined,
-        is_edited: data.updated_at && data.created_at && 
+        is_edited:
+          data.updated_at &&
+          data.created_at &&
           new Date(data.updated_at).getTime() - new Date(data.created_at).getTime() > 60000,
       } as unknown as AppointmentUnified;
     },

@@ -37,13 +37,15 @@ async function getJwks(jwksUrl: string): Promise<{ keys: JwkKey[] }> {
     return jwksCachePromise;
   }
   jwksCacheTime = Date.now();
-  jwksCachePromise = fetch(jwksUrl).then((res) => {
-    if (!res.ok) throw new Error(`JWKS fetch falhou: ${res.status}`);
-    return res.json() as Promise<{ keys: JwkKey[] }>;
-  }).catch((err) => {
-    jwksCachePromise = null; // permite retry no próximo request
-    throw err;
-  });
+  jwksCachePromise = fetch(jwksUrl)
+    .then((res) => {
+      if (!res.ok) throw new Error(`JWKS fetch falhou: ${res.status}`);
+      return res.json() as Promise<{ keys: JwkKey[] }>;
+    })
+    .catch((err) => {
+      jwksCachePromise = null; // permite retry no próximo request
+      throw err;
+    });
   return jwksCachePromise;
 }
 

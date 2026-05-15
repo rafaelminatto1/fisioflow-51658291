@@ -32,7 +32,6 @@ import { useQueryClient } from "@tanstack/react-query";
 import { generateReceiptPDF } from "@/lib/services/pdfGenerator";
 import { getPatientById, sendWhatsAppTemplate } from "@/lib/api";
 
-
 export default function FinancialsScreen() {
   const colors = useColors();
   const router = useRouter();
@@ -262,7 +261,6 @@ export default function FinancialsScreen() {
             NFS-e
           </Text>
         </TouchableOpacity>
-
       </View>
 
       <ScrollView
@@ -353,15 +351,12 @@ export default function FinancialsScreen() {
                       try {
                         setIsGeneratingReceipt(record.id);
                         const patient = await getPatientById(record.patient_id);
-                        await generateReceiptPDF(
-                          patient as any,
-                          {
-                            amount: record.final_value,
-                            date: record.session_date,
-                            description: record.notes || "Sessão de Fisioterapia",
-                            paymentMethod: record.payment_method,
-                          }
-                        );
+                        await generateReceiptPDF(patient as any, {
+                          amount: record.final_value,
+                          date: record.session_date,
+                          description: record.notes || "Sessão de Fisioterapia",
+                          paymentMethod: record.payment_method,
+                        });
                         success();
 
                         // Envio automático via WhatsApp

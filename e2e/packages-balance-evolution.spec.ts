@@ -77,7 +77,10 @@ test.describe("Saldo de pacotes na Evolução do Paciente", () => {
         .or(page.getByText(/sessões restantes.*8/i))
         .or(page.locator('[data-testid="remaining-sessions"]'));
 
-      const isVisible = await sessionCount.first().isVisible().catch(() => false);
+      const isVisible = await sessionCount
+        .first()
+        .isVisible()
+        .catch(() => false);
       if (isVisible) {
         await expect(sessionCount.first()).toBeVisible();
       }

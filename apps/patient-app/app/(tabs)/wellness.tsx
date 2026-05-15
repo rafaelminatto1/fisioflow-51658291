@@ -116,9 +116,7 @@ export default function WellnessScreen() {
           const calVal = data.activeEnergy ?? 0;
           const distVal = typeof data.distance === "number" ? Math.round(data.distance) : null;
           const sleepVal =
-            typeof data.sleep?.asleep === "number"
-              ? Math.round(data.sleep.asleep * 10) / 10
-              : null;
+            typeof data.sleep?.asleep === "number" ? Math.round(data.sleep.asleep * 10) / 10 : null;
 
           setSteps(stepsVal);
           setHeartRate(hrVal);
@@ -127,12 +125,45 @@ export default function WellnessScreen() {
           setSleepHours(sleepVal);
 
           const readings: WearableReading[] = [
-            { source: "apple_health", data_type: "steps", value: stepsVal, unit: "count", timestamp: now },
-            { source: "apple_health", data_type: "active_calories", value: calVal, unit: "kcal", timestamp: now },
+            {
+              source: "apple_health",
+              data_type: "steps",
+              value: stepsVal,
+              unit: "count",
+              timestamp: now,
+            },
+            {
+              source: "apple_health",
+              data_type: "active_calories",
+              value: calVal,
+              unit: "kcal",
+              timestamp: now,
+            },
           ];
-          if (hrVal !== null) readings.push({ source: "apple_health", data_type: "heart_rate", value: hrVal, unit: "bpm", timestamp: now });
-          if (distVal !== null) readings.push({ source: "apple_health", data_type: "distance", value: distVal, unit: "m", timestamp: now });
-          if (sleepVal !== null) readings.push({ source: "apple_health", data_type: "sleep_hours", value: sleepVal, unit: "h", timestamp: now });
+          if (hrVal !== null)
+            readings.push({
+              source: "apple_health",
+              data_type: "heart_rate",
+              value: hrVal,
+              unit: "bpm",
+              timestamp: now,
+            });
+          if (distVal !== null)
+            readings.push({
+              source: "apple_health",
+              data_type: "distance",
+              value: distVal,
+              unit: "m",
+              timestamp: now,
+            });
+          if (sleepVal !== null)
+            readings.push({
+              source: "apple_health",
+              data_type: "sleep_hours",
+              value: sleepVal,
+              unit: "h",
+              timestamp: now,
+            });
 
           await syncToBackend(readings);
         }
@@ -174,12 +205,45 @@ export default function WellnessScreen() {
           setSleepHours(sleepVal);
 
           const readings: WearableReading[] = [
-            { source: "health_connect", data_type: "steps", value: stepsVal, unit: "count", timestamp: now },
-            { source: "health_connect", data_type: "active_calories", value: calVal, unit: "kcal", timestamp: now },
+            {
+              source: "health_connect",
+              data_type: "steps",
+              value: stepsVal,
+              unit: "count",
+              timestamp: now,
+            },
+            {
+              source: "health_connect",
+              data_type: "active_calories",
+              value: calVal,
+              unit: "kcal",
+              timestamp: now,
+            },
           ];
-          if (hrVal !== null) readings.push({ source: "health_connect", data_type: "heart_rate", value: hrVal, unit: "bpm", timestamp: now });
-          if (distVal !== null) readings.push({ source: "health_connect", data_type: "distance", value: distVal, unit: "m", timestamp: now });
-          if (sleepVal !== null) readings.push({ source: "health_connect", data_type: "sleep_hours", value: sleepVal, unit: "h", timestamp: now });
+          if (hrVal !== null)
+            readings.push({
+              source: "health_connect",
+              data_type: "heart_rate",
+              value: hrVal,
+              unit: "bpm",
+              timestamp: now,
+            });
+          if (distVal !== null)
+            readings.push({
+              source: "health_connect",
+              data_type: "distance",
+              value: distVal,
+              unit: "m",
+              timestamp: now,
+            });
+          if (sleepVal !== null)
+            readings.push({
+              source: "health_connect",
+              data_type: "sleep_hours",
+              value: sleepVal,
+              unit: "h",
+              timestamp: now,
+            });
 
           await syncToBackend(readings);
         }
@@ -386,34 +450,47 @@ export default function WellnessScreen() {
         <Card style={styles.summaryCard}>
           <View style={styles.summaryHeader}>
             <Ionicons name="stats-chart" size={20} color={colors.primary} />
-            <Text style={[styles.summaryTitle, { color: colors.text }]}>Tendência de Atividade</Text>
+            <Text style={[styles.summaryTitle, { color: colors.text }]}>
+              Tendência de Atividade
+            </Text>
           </View>
           <View style={styles.weeklyData}>
             {weeklyTrend.length > 0 ? (
-               weeklyTrend.filter((t: any) => t.data_type === 'steps').map((day: any, index: number) => {
-                const percentage = Math.min((Number(day.total) / 10000) * 100, 100);
-                return (
-                  <View key={index} style={styles.dayColumn}>
-                    <Text style={[styles.dayLabel, { color: colors.textSecondary }]}>Dia {index + 1}</Text>
-                    <View style={[styles.dayBar, { backgroundColor: colors.border }]}>
-                      <View
-                        style={[
-                          styles.dayBarFill,
-                          {
-                            backgroundColor: percentage >= 100 ? colors.success : colors.warning,
-                            height: `${percentage}%`,
-                          },
-                        ]}
-                      />
+              weeklyTrend
+                .filter((t: any) => t.data_type === "steps")
+                .map((day: any, index: number) => {
+                  const percentage = Math.min((Number(day.total) / 10000) * 100, 100);
+                  return (
+                    <View key={index} style={styles.dayColumn}>
+                      <Text style={[styles.dayLabel, { color: colors.textSecondary }]}>
+                        Dia {index + 1}
+                      </Text>
+                      <View style={[styles.dayBar, { backgroundColor: colors.border }]}>
+                        <View
+                          style={[
+                            styles.dayBarFill,
+                            {
+                              backgroundColor: percentage >= 100 ? colors.success : colors.warning,
+                              height: `${percentage}%`,
+                            },
+                          ]}
+                        />
+                      </View>
+                      <Text style={[styles.dayValue, { color: colors.text }]}>
+                        {(Number(day.total) / 1000).toFixed(1)}k
+                      </Text>
                     </View>
-                    <Text style={[styles.dayValue, { color: colors.text }]}>
-                      {(Number(day.total) / 1000).toFixed(1)}k
-                    </Text>
-                  </View>
-                );
-              })
+                  );
+                })
             ) : (
-              <Text style={{ fontSize: 12, color: colors.textSecondary, textAlign: 'center', width: '100%' }}>
+              <Text
+                style={{
+                  fontSize: 12,
+                  color: colors.textSecondary,
+                  textAlign: "center",
+                  width: "100%",
+                }}
+              >
                 Sincronize seus dados para ver tendências.
               </Text>
             )}

@@ -79,7 +79,9 @@ describe("isConflictError", () => {
 
   it("detecta conflito por mensagem da constraint", () => {
     expect(isConflictError({ message: "no_overlapping_therapist_appointments" })).toBe(true);
-    expect(isConflictError({ message: "duplicate key value violates unique constraint" })).toBe(true);
+    expect(isConflictError({ message: "duplicate key value violates unique constraint" })).toBe(
+      true,
+    );
   });
 
   it("não detecta conflito em erros genéricos", () => {

@@ -106,12 +106,7 @@ export function ReceiptGenerator({
       </CardHeader>
       <CardContent className="space-y-3">
         <div className="flex flex-wrap gap-2">
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={handleDownloadPdf}
-            disabled={generatingPdf}
-          >
+          <Button size="sm" variant="outline" onClick={handleDownloadPdf} disabled={generatingPdf}>
             {generatingPdf ? (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             ) : (
@@ -137,12 +132,7 @@ export function ReceiptGenerator({
           )}
 
           {!pixCode && (
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={handleLoadPix}
-              disabled={loadingPix}
-            >
+            <Button size="sm" variant="outline" onClick={handleLoadPix} disabled={loadingPix}>
               {loadingPix ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               ) : (

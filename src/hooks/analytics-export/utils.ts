@@ -30,7 +30,7 @@ export function getSuccessLevel(value: number): string {
 
 export function downloadBlob(blob: Blob, filename: string): void {
   if (typeof window === "undefined") return;
-  
+
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;

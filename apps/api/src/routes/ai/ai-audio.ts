@@ -265,7 +265,7 @@ app.post("/voice/task", async (c) => {
       prompt,
       model: "gemini-1.5-flash",
       temperature: 0.2,
-      responseFormat: "json"
+      responseFormat: "json",
     });
 
     const jsonMatch = aiRes.content.match(/\{[\s\S]*\}/);
@@ -278,7 +278,7 @@ app.post("/voice/task", async (c) => {
       `INSERT INTO tarefas (organization_id, created_by, titulo, descricao, prioridade, status, tipo, order_index)
        VALUES ($1, $2, $3, $4, $5, 'A_FAZER', 'TAREFA', 0)
        RETURNING id`,
-      [user.organizationId, user.uid, taskData.title, taskData.description, taskData.priority]
+      [user.organizationId, user.uid, taskData.title, taskData.description, taskData.priority],
     );
 
     return c.json({ success: true, taskId: result.rows[0].id, transcript, taskData });

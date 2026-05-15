@@ -17,7 +17,7 @@ export function calculateAngle(a: Point3D, b: Point3D, c: Point3D): number {
   const cosTheta = dot / (mag1 * mag2);
   // Clamp to avoid floating point errors out of range [-1, 1]
   const clampedCos = Math.max(-1, Math.min(1, cosTheta));
-  
+
   const radians = Math.acos(clampedCos);
   return (radians * 180) / Math.PI;
 }
@@ -27,14 +27,13 @@ export function calculateAngle(a: Point3D, b: Point3D, c: Point3D): number {
  */
 export const JointAngles = {
   /** Knee flexion/extension */
-  knee: (hip: Point3D, knee: Point3D, ankle: Point3D) => 
-    calculateAngle(hip, knee, ankle),
-    
+  knee: (hip: Point3D, knee: Point3D, ankle: Point3D) => calculateAngle(hip, knee, ankle),
+
   /** Hip flexion/extension (against vertical) */
   hipFlexion: (shoulder: Point3D, hip: Point3D, knee: Point3D) =>
     calculateAngle(shoulder, hip, knee),
 
   /** Elbow flexion/extension */
   elbow: (shoulder: Point3D, elbow: Point3D, wrist: Point3D) =>
-    calculateAngle(shoulder, elbow, wrist)
+    calculateAngle(shoulder, elbow, wrist),
 };

@@ -1,4 +1,11 @@
-import { ArrowUpRight, Stethoscope, LayoutDashboard, Calendar, Users, TrendingUp } from "lucide-react";
+import {
+  ArrowUpRight,
+  Stethoscope,
+  LayoutDashboard,
+  Calendar,
+  Users,
+  TrendingUp,
+} from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -53,8 +60,8 @@ export function SmartDashboardContent() {
   return (
     <PageLayout showFooter={false} fullWidth compactHeader>
       <PageContainer maxWidth="full">
-        <PageHeader 
-          title="Fisio Intelligence" 
+        <PageHeader
+          title="Fisio Intelligence"
           subtitle="Acompanhe a saúde da sua clínica em tempo real"
           icon={LayoutDashboard}
           actions={dashboardActions}
@@ -80,8 +87,11 @@ export function SmartDashboardContent() {
                   </Badge>
                 </h3>
                 <p className="text-sm text-muted-foreground font-medium mt-1">
-                  {medicalReturnsUpcoming.length} pacientes possuem retornos médicos nos próximos 14 dias. 
-                  <span className="text-primary ml-1 font-black underline decoration-2 underline-offset-4">Gerar documentação agora</span>
+                  {medicalReturnsUpcoming.length} pacientes possuem retornos médicos nos próximos 14
+                  dias.
+                  <span className="text-primary ml-1 font-black underline decoration-2 underline-offset-4">
+                    Gerar documentação agora
+                  </span>
                 </p>
               </div>
               <ArrowUpRight className="h-8 w-8 text-muted-foreground/30 group-hover:text-primary group-hover:translate-x-1 group-hover:-translate-y-1 transition-all duration-500 md:ml-auto" />
@@ -92,9 +102,11 @@ export function SmartDashboardContent() {
           <section className="space-y-6">
             <div className="flex items-center gap-2 mb-2">
               <TrendingUp className="w-5 h-5 text-primary" />
-              <h2 className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground">Performance Financeira & BI</h2>
+              <h2 className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground">
+                Performance Financeira & BI
+              </h2>
             </div>
-            
+
             <div className="grid grid-cols-1 gap-6">
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
@@ -110,9 +122,11 @@ export function SmartDashboardContent() {
           <section className="space-y-6">
             <div className="flex items-center gap-2 mb-2">
               <Users className="w-5 h-5 text-primary" />
-              <h2 className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground">Gestão Clínica & Equipe</h2>
+              <h2 className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground">
+                Gestão Clínica & Equipe
+              </h2>
             </div>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               <ClinicHealthKPIs />
               <TeamPerformanceKPIs />
@@ -124,9 +138,11 @@ export function SmartDashboardContent() {
           <section className="space-y-6">
             <div className="flex items-center gap-2 mb-2">
               <Calendar className="w-5 h-5 text-primary" />
-              <h2 className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground">Alertas & Retenção</h2>
+              <h2 className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground">
+                Alertas & Retenção
+              </h2>
             </div>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <AtRiskPatientsAlert />
               <OverduePaymentsAlert />

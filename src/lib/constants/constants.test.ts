@@ -19,13 +19,7 @@ import {
   getAppointmentStatusLabel,
   type AppointmentStatus,
 } from "./appointments";
-import {
-  USER_ROLES,
-  USER_ROLE_LABELS,
-  isUserRole,
-  getUserRoleLabel,
-  type UserRole,
-} from "./users";
+import { USER_ROLES, USER_ROLE_LABELS, isUserRole, getUserRoleLabel, type UserRole } from "./users";
 import {
   PAYMENT_STATUSES,
   PAYMENT_STATUS_LABELS,

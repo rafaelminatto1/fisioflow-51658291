@@ -197,6 +197,19 @@ export const StringFormatter = {
   },
 
   /**
+   * Remove HTML tags from string (idempotent)
+   */
+  stripHtml(html: string): string {
+    let prev = "";
+    let s = html;
+    while (s !== prev) {
+      prev = s;
+      s = s.replace(/<[^>]*>/g, "");
+    }
+    return s.replace(/\s+/g, " ").trim();
+  },
+
+  /**
    * Get initials from name
    */
   initials(name: string, maxInitials: number = 2): string {

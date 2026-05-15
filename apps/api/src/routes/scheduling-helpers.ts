@@ -458,7 +458,9 @@ export const generateRecurringOccurrences = (row: Record<string, any>, limit = 2
   const recurrenceType = String(series.recurrence_type ?? "weekly");
   const recurrenceInterval = Math.max(1, Number(series.recurrence_interval ?? 1) || 1);
   const recurrenceDays = Array.isArray(series.recurrence_days_of_week)
-    ? series.recurrence_days_of_week.map((day: any) => Number(day)).filter((day: number) => !Number.isNaN(day))
+    ? series.recurrence_days_of_week
+        .map((day: any) => Number(day))
+        .filter((day: number) => !Number.isNaN(day))
     : [];
   const start = new Date(`${appointmentDate}T00:00:00.000Z`);
   const results: Array<Record<string, any>> = [];

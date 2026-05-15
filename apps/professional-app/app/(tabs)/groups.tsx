@@ -1,5 +1,12 @@
 import React, { useState } from "react";
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  FlatList,
+  TouchableOpacity,
+  ActivityIndicator,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useColors } from "@/hooks/useColorScheme";
 import { useQuery } from "@tanstack/react-query";
@@ -15,7 +22,11 @@ export default function GroupsScreen() {
   const colors = useColors();
   const [refreshing, setRefreshing] = useState(false);
 
-  const { data: classesData, isLoading, refetch } = useQuery({
+  const {
+    data: classesData,
+    isLoading,
+    refetch,
+  } = useQuery({
     queryKey: ["group-classes"],
     queryFn: () => fetchApi<any[]>("/api/groups/classes"),
   });
@@ -41,7 +52,7 @@ export default function GroupsScreen() {
           </Text>
         </View>
       </View>
-      
+
       <View style={styles.therapistRow}>
         <Ionicons name="person-outline" size={14} color={colors.textSecondary} />
         <Text style={[styles.therapistName, { color: colors.textSecondary }]}>
@@ -49,9 +60,11 @@ export default function GroupsScreen() {
         </Text>
       </View>
 
-      <TouchableOpacity 
+      <TouchableOpacity
         style={[styles.checkInButton, { backgroundColor: colors.primary }]}
-        onPress={() => { /* Navegar para check-in da turma */ }}
+        onPress={() => {
+          /* Navegar para check-in da turma */
+        }}
       >
         <Text style={styles.checkInButtonText}>Fazer Check-in</Text>
         <Ionicons name="qr-code-outline" size={18} color="white" />
@@ -60,21 +73,29 @@ export default function GroupsScreen() {
   );
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={["top"]}>
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: colors.background }]}
+      edges={["top"]}
+    >
       <Header title="Turmas e Pilates" showBackButton={false} />
-      
+
       <View style={styles.content}>
         <View style={styles.summaryCard}>
           <View style={styles.summaryItem}>
             <Text style={[styles.summaryValue, { color: colors.text }]}>
               {classesData?.data?.length || 0}
             </Text>
-            <Text style={[styles.summaryLabel, { color: colors.textSecondary }]}>Turmas Ativas</Text>
+            <Text style={[styles.summaryLabel, { color: colors.textSecondary }]}>
+              Turmas Ativas
+            </Text>
           </View>
           <View style={[styles.summaryDivider, { backgroundColor: colors.border }]} />
           <View style={styles.summaryItem}>
             <Text style={[styles.summaryValue, { color: colors.primary }]}>
-              {classesData?.data?.reduce((acc: number, curr: any) => acc + Number(curr.enrolled_count), 0) || 0}
+              {classesData?.data?.reduce(
+                (acc: number, curr: any) => acc + Number(curr.enrolled_count),
+                0,
+              ) || 0}
             </Text>
             <Text style={[styles.summaryLabel, { color: colors.textSecondary }]}>Alunos Total</Text>
           </View>
@@ -97,7 +118,9 @@ export default function GroupsScreen() {
                   Nenhuma turma cadastrada.
                 </Text>
                 <TouchableOpacity style={[styles.createButton, { borderColor: colors.primary }]}>
-                  <Text style={[styles.createButtonText, { color: colors.primary }]}>Criar Primeira Turma</Text>
+                  <Text style={[styles.createButtonText, { color: colors.primary }]}>
+                    Criar Primeira Turma
+                  </Text>
                 </TouchableOpacity>
               </View>
             }
@@ -215,5 +238,5 @@ const styles = StyleSheet.create({
   },
   createButtonText: {
     fontWeight: "bold",
-  }
+  },
 });

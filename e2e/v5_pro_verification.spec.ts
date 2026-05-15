@@ -23,8 +23,8 @@ test.describe("V5 Pro Feature Verification", () => {
               id: "session-e2e",
               userId: TEST_USER_ID,
               expiresAt: new Date(Date.now() + 3600000).toISOString(),
-            }
-          }
+            },
+          },
         }),
       });
     });
@@ -72,7 +72,7 @@ test.describe("V5 Pro Feature Verification", () => {
               id: "patient-1",
               full_name: "Paciente Teste V5",
               status: "active",
-            }
+            },
           ],
         }),
       });
@@ -113,7 +113,7 @@ test.describe("V5 Pro Feature Verification", () => {
     await page.waitForLoadState("networkidle");
 
     // Verificar se o botão de sincronização está presente
-    const syncButton = page.locator("button:has-text(\"Sincronizar\"), button:has-text(\"Sync\")");
+    const syncButton = page.locator('button:has-text("Sincronizar"), button:has-text("Sync")');
     await expect(syncButton).toBeVisible();
 
     // Clicar no botão

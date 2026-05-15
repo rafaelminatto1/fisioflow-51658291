@@ -205,13 +205,14 @@ app.get("/:id/pix-qr", requireAuth, async (c) => {
     for (const char of str) {
       crc ^= char.charCodeAt(0) << 8;
       for (let i = 0; i < 8; i++) {
-        crc = (crc & 0x8000) ? ((crc << 1) ^ 0x1021) : (crc << 1);
+        crc = crc & 0x8000 ? (crc << 1) ^ 0x1021 : crc << 1;
       }
     }
-    return ((crc & 0xffff).toString(16).toUpperCase().padStart(4, "0"));
+    return (crc & 0xffff).toString(16).toUpperCase().padStart(4, "0");
   }
 
-  const merchantAccountInfo = pixField("00", "BR.GOV.BCB.PIX") + pixField("01", pixKey) + pixField("02", desc);
+  const merchantAccountInfo =
+    pixField("00", "BR.GOV.BCB.PIX") + pixField("01", pixKey) + pixField("02", desc);
   const payload =
     pixField("00", "01") +
     pixField("26", merchantAccountInfo) +

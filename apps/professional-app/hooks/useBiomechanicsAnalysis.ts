@@ -2,12 +2,19 @@ import { useState, useCallback, useRef } from "react";
 import { Alert } from "react-native";
 import { usePatients } from "./usePatients";
 import { useHaptics } from "./useHaptics";
-import { AnalysisMode, AnalysisType, AnalysisResult, REFERENCE_ANGLES } from "../types/biomechanics";
+import {
+  AnalysisMode,
+  AnalysisType,
+  AnalysisResult,
+  REFERENCE_ANGLES,
+} from "../types/biomechanics";
 import { calculateAngle, getAngleStatus } from "../utils/pose-utils";
 import * as ImagePicker from "expo-image-picker";
 
 export const useBiomechanicsAnalysis = () => {
-  const [currentStep, setCurrentStep] = useState<"home" | "capture" | "analysis" | "report">("home");
+  const [currentStep, setCurrentStep] = useState<"home" | "capture" | "analysis" | "report">(
+    "home",
+  );
   const [analysisMode, setAnalysisMode] = useState<AnalysisMode>("live");
   const [analysisType, setAnalysisType] = useState<AnalysisType | null>(null);
   const [selectedPatient, setSelectedPatient] = useState<any>(null);
@@ -15,7 +22,7 @@ export const useBiomechanicsAnalysis = () => {
   const [capturedMedia, setCapturedMedia] = useState<string | null>(null);
   const [ghostMedia, setGhostMedia] = useState<string | null>(null); // Mídia de referência para sobreposição
   const [analysisResults, setAnalysisResults] = useState<AnalysisResult | null>(null);
-  
+
   const haptics = useHaptics();
   const { patients } = usePatients();
 
@@ -23,30 +30,39 @@ export const useBiomechanicsAnalysis = () => {
   const currentPose = useRef<any>(null);
   const sessionPoses = useRef<any[]>([]); // Armazena as poses durante a gravação
 
-  const startAnalysis = useCallback((type: AnalysisType, mode: AnalysisMode = "live") => {
-    if (!selectedPatient) {
-      Alert.alert("Atenção", "Selecione um paciente antes de iniciar a análise.");
-      return;
-    }
-    setAnalysisType(type);
-    setAnalysisMode(mode);
-    
-    if (mode === "live") {
-      setCurrentStep("capture");
-    } else {
-      handleMediaSelection(mode);
-    }
-  }, [selectedPatient]);
+  const startAnalysis = useCallback(
+    (type: AnalysisType, mode: AnalysisMode = "live") => {
+      if (!selectedPatient) {
+        Alert.alert("Atenção", "Selecione um paciente antes de iniciar a análise.");
+        return;
+      }
+      setAnalysisType(type);
+      setAnalysisMode(mode);
+
+      if (mode === "live") {
+        setCurrentStep("capture");
+      } else {
+        handleMediaSelection(mode);
+      }
+    },
+    [selectedPatient],
+  );
 
   const handleMediaSelection = async (mode: AnalysisMode) => {
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permission.granted) {
-      Alert.alert("Permissão necessária", "Precisamos de acesso à sua galeria para analisar vídeos/fotos.");
+      Alert.alert(
+        "Permissão necessária",
+        "Precisamos de acesso à sua galeria para analisar vídeos/fotos.",
+      );
       return;
     }
 
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: mode === "video" ? ImagePicker.MediaTypeOptions.Videos : ImagePicker.MediaTypeOptions.Images,
+      mediaTypes:
+        mode === "video"
+          ? ImagePicker.MediaTypeOptions.Videos
+          : ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
       quality: 1,
     });
@@ -57,10 +73,13 @@ export const useBiomechanicsAnalysis = () => {
     }
   };
 
-  const setAsGhost = useCallback((uri: string | null) => {
-    setGhostMedia(uri);
-    haptics.impact("light");
-  }, [haptics]);
+  const setAsGhost = useCallback(
+    (uri: string | null) => {
+      setGhostMedia(uri);
+      haptics.impact("light");
+    },
+    [haptics],
+  );
 
   const toggleRecording = useCallback(() => {
     if (isRecording) {
@@ -88,22 +107,22 @@ export const useBiomechanicsAnalysis = () => {
     const results: any[] = [];
     const symmetries: any[] = [];
 
-    jointConfigs.forEach(config => {
+    jointConfigs.forEach((config) => {
       let leftAngle = 0;
       let rightAngle = 0;
 
-      config.sides.forEach(side => {
+      config.sides.forEach((side) => {
         const p1Key = `${side}${config.joints[0]}`;
         const p2Key = `${side}${config.joints[1]}`;
         const p3Key = `${side}${config.joints[2]}`;
 
         let maxAngle = 0;
-        
-        sessionPoses.current.forEach(pose => {
+
+        sessionPoses.current.forEach((pose) => {
           const p1 = pose[p1Key];
           const p2 = pose[p2Key];
           const p3 = pose[p3Key];
-          
+
           if (p1?.score > 0.5 && p2?.score > 0.5 && p3?.score > 0.5) {
             const angle = calculateAngle(p1, p2, p3);
             if (angle > maxAngle) maxAngle = angle;
@@ -119,7 +138,7 @@ export const useBiomechanicsAnalysis = () => {
             joint: `${ref.label} (${side === "left" ? "E" : "D"})`,
             angle: maxAngle,
             reference: ref.reference,
-            status: getAngleStatus(maxAngle, ref.reference, ref.tolerance)
+            status: getAngleStatus(maxAngle, ref.reference, ref.tolerance),
           });
         }
       });
@@ -133,24 +152,31 @@ export const useBiomechanicsAnalysis = () => {
         symmetries.push({
           joint: ref.label,
           diff: Number(diff.toFixed(1)),
-          percentage: Number(percentage.toFixed(1))
+          percentage: Number(percentage.toFixed(1)),
         });
       }
     });
 
     // Gerar trajetórias para o relatório
     const trajectories: Record<string, { x: number; y: number }[]> = {};
-    const jointsToTrack = ["leftAnkle", "rightAnkle", "leftKnee", "rightKnee", "leftHip", "rightHip"];
-    
-    jointsToTrack.forEach(joint => {
+    const jointsToTrack = [
+      "leftAnkle",
+      "rightAnkle",
+      "leftKnee",
+      "rightKnee",
+      "leftHip",
+      "rightHip",
+    ];
+
+    jointsToTrack.forEach((joint) => {
       trajectories[joint] = sessionPoses.current
-        .map(pose => ({ 
-          x: pose[`${joint}`]?.x, 
+        .map((pose) => ({
+          x: pose[`${joint}`]?.x,
           y: pose[`${joint}`]?.y,
-          score: pose[`${joint}`]?.score
+          score: pose[`${joint}`]?.score,
         }))
-        .filter(p => p.score > 0.5)
-        .map(p => ({ x: p.x, y: p.y }));
+        .filter((p) => p.score > 0.5)
+        .map((p) => ({ x: p.x, y: p.y }));
     });
 
     setAnalysisResults({
@@ -166,13 +192,16 @@ export const useBiomechanicsAnalysis = () => {
     setCurrentStep("report");
   };
 
-  const saveReferencePose = useCallback((pose: any) => {
-    currentPose.current = pose;
-    if (isRecording) {
-      sessionPoses.current.push(pose);
-    }
-    haptics.selection();
-  }, [haptics, isRecording]);
+  const saveReferencePose = useCallback(
+    (pose: any) => {
+      currentPose.current = pose;
+      if (isRecording) {
+        sessionPoses.current.push(pose);
+      }
+      haptics.selection();
+    },
+    [haptics, isRecording],
+  );
 
   const resetAnalysis = useCallback(() => {
     setCurrentStep("home");

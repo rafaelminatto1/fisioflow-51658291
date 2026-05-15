@@ -3,15 +3,8 @@ import { useSearchParams } from "react-router-dom";
 import { toast } from "@/hooks/use-toast";
 import { AppointmentService } from "@/services/appointmentService";
 import { getUserOrganizationId } from "@/utils/userHelpers";
-import {
-  toLocalYMD,
-  formatShortDate,
-} from "@/lib/date-utils";
-import {
-  formatTime,
-  roundDateToNextInterval,
-  roundDateToNearestInterval,
-} from "@/utils/dateUtils";
+import { toLocalYMD, formatShortDate } from "@/lib/date-utils";
+import { formatTime, roundDateToNextInterval, roundDateToNearestInterval } from "@/utils/dateUtils";
 import {
   isAppointmentConflictError,
   APPOINTMENT_CONFLICT_TITLE,

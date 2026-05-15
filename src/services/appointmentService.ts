@@ -9,10 +9,7 @@ import {
   AppointmentStatus,
   AppointmentType,
 } from "@/types/appointment";
-import {
-  APPOINTMENT_STATUSES,
-  PAYMENT_STATUSES,
-} from "@/lib/constants";
+import { APPOINTMENT_STATUSES, PAYMENT_STATUSES } from "@/lib/constants";
 import { VerifiedAppointmentSchema } from "@/schemas/appointment";
 import { dateSchema, timeSchema } from "@/lib/validations/agenda";
 import { AppError } from "@/lib/errors/AppError";
@@ -307,11 +304,15 @@ export class AppointmentService {
           },
         });
       } catch (auditErr) {
-        logger.warn("Audit log failed for appointment creation", {
-          operation: "AppointmentService.createAppointment",
-          appointmentId: newAppointment.id,
-          error: auditErr instanceof Error ? auditErr.message : String(auditErr),
-        }, "AppointmentService");
+        logger.warn(
+          "Audit log failed for appointment creation",
+          {
+            operation: "AppointmentService.createAppointment",
+            appointmentId: newAppointment.id,
+            error: auditErr instanceof Error ? auditErr.message : String(auditErr),
+          },
+          "AppointmentService",
+        );
       }
 
       // Helper to parse date string as local date (avoiding timezone issues)
@@ -480,11 +481,15 @@ export class AppointmentService {
           },
         });
       } catch (auditErr) {
-        logger.warn("Audit log failed for appointment update", {
-          operation: "AppointmentService.updateAppointment",
-          appointmentId: id,
-          error: auditErr instanceof Error ? auditErr.message : String(auditErr),
-        }, "AppointmentService");
+        logger.warn(
+          "Audit log failed for appointment update",
+          {
+            operation: "AppointmentService.updateAppointment",
+            appointmentId: id,
+            error: auditErr instanceof Error ? auditErr.message : String(auditErr),
+          },
+          "AppointmentService",
+        );
       }
 
       // #region agent log
@@ -544,11 +549,15 @@ export class AppointmentService {
           updatedAppointment.phone = r.patient_phone || r.patient?.phone || "";
         }
       } catch (refreshErr) {
-        logger.warn("Failed to refresh appointment details after update", {
-          operation: "AppointmentService.updateAppointment",
-          appointmentId: id,
-          error: refreshErr instanceof Error ? refreshErr.message : String(refreshErr),
-        }, "AppointmentService");
+        logger.warn(
+          "Failed to refresh appointment details after update",
+          {
+            operation: "AppointmentService.updateAppointment",
+            appointmentId: id,
+            error: refreshErr instanceof Error ? refreshErr.message : String(refreshErr),
+          },
+          "AppointmentService",
+        );
       }
 
       // Sync Financial Transaction
@@ -598,11 +607,15 @@ export class AppointmentService {
             },
           });
         } catch (auditErr) {
-          logger.warn("Audit log failed for appointment cancellation", {
-            operation: "AppointmentService.updateStatus",
-            appointmentId: id,
-            error: auditErr instanceof Error ? auditErr.message : String(auditErr),
-          }, "AppointmentService");
+          logger.warn(
+            "Audit log failed for appointment cancellation",
+            {
+              operation: "AppointmentService.updateStatus",
+              appointmentId: id,
+              error: auditErr instanceof Error ? auditErr.message : String(auditErr),
+            },
+            "AppointmentService",
+          );
         }
         return result;
       }
@@ -616,11 +629,15 @@ export class AppointmentService {
           metadata: { status, timestamp: new Date().toISOString() },
         });
       } catch (auditErr) {
-        logger.warn("Audit log failed for appointment status update", {
-          operation: "AppointmentService.updateStatus",
-          appointmentId: id,
-          error: auditErr instanceof Error ? auditErr.message : String(auditErr),
-        }, "AppointmentService");
+        logger.warn(
+          "Audit log failed for appointment status update",
+          {
+            operation: "AppointmentService.updateStatus",
+            appointmentId: id,
+            error: auditErr instanceof Error ? auditErr.message : String(auditErr),
+          },
+          "AppointmentService",
+        );
       }
       return result.data;
     } catch (error) {
@@ -647,11 +664,15 @@ export class AppointmentService {
           },
         });
       } catch (auditErr) {
-        logger.warn("Audit log failed for appointment cancellation", {
-          operation: "AppointmentService.cancelAppointment",
-          appointmentId: id,
-          error: auditErr instanceof Error ? auditErr.message : String(auditErr),
-        }, "AppointmentService");
+        logger.warn(
+          "Audit log failed for appointment cancellation",
+          {
+            operation: "AppointmentService.cancelAppointment",
+            appointmentId: id,
+            error: auditErr instanceof Error ? auditErr.message : String(auditErr),
+          },
+          "AppointmentService",
+        );
       }
       return result;
     } catch (error) {
@@ -676,11 +697,15 @@ export class AppointmentService {
           },
         });
       } catch (auditErr) {
-        logger.warn("Audit log failed for appointment deletion", {
-          operation: "AppointmentService.deleteAppointment",
-          appointmentId: id,
-          error: auditErr instanceof Error ? auditErr.message : String(auditErr),
-        }, "AppointmentService");
+        logger.warn(
+          "Audit log failed for appointment deletion",
+          {
+            operation: "AppointmentService.deleteAppointment",
+            appointmentId: id,
+            error: auditErr instanceof Error ? auditErr.message : String(auditErr),
+          },
+          "AppointmentService",
+        );
       }
     } catch (error) {
       throw AppError.from(error, "AppointmentService.deleteAppointment");

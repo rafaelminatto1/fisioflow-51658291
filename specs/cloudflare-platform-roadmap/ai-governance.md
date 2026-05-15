@@ -5,13 +5,13 @@
 
 ## Current Resources
 
-| Resource | Environment | Notes |
-|----------|-------------|-------|
-| `FISIOFLOW_AI_GATEWAY_URL` | Production | Configured in Wrangler vars |
-| `FISIOFLOW_AI_GATEWAY_URL` staging variant | Staging | Configured in Wrangler vars |
-| `fisioflow-clinical` | Production Vectorize | 768 dimensions, cosine |
-| `fisioflow-clinical-staging` | Staging Vectorize | Created 2026-04-28 |
-| `ai-search-fisioflow-rag` | Account Vectorize/AI Search managed | 1024 dimensions; evaluate before production use |
+| Resource                                   | Environment                         | Notes                                           |
+| ------------------------------------------ | ----------------------------------- | ----------------------------------------------- |
+| `FISIOFLOW_AI_GATEWAY_URL`                 | Production                          | Configured in Wrangler vars                     |
+| `FISIOFLOW_AI_GATEWAY_URL` staging variant | Staging                             | Configured in Wrangler vars                     |
+| `fisioflow-clinical`                       | Production Vectorize                | 768 dimensions, cosine                          |
+| `fisioflow-clinical-staging`               | Staging Vectorize                   | Created 2026-04-28                              |
+| `ai-search-fisioflow-rag`                  | Account Vectorize/AI Search managed | 1024 dimensions; evaluate before production use |
 
 ## Required Controls
 
@@ -24,11 +24,11 @@
 
 ## Evaluation Slices
 
-| Slice | Dataset | Success Measure |
-|-------|---------|-----------------|
-| Exercise search | Curated exercises | Relevant result in top 5 |
-| Protocol search | Clinical protocols | Correct protocol family in top 5 |
-| Wiki search | Internal wiki pages | Source page appears in top 5 |
+| Slice           | Dataset                   | Success Measure                             |
+| --------------- | ------------------------- | ------------------------------------------- |
+| Exercise search | Curated exercises         | Relevant result in top 5                    |
+| Protocol search | Clinical protocols        | Correct protocol family in top 5            |
+| Wiki search     | Internal wiki pages       | Source page appears in top 5                |
 | SOAP assistance | Redacted clinical samples | No invented diagnosis; includes uncertainty |
 
 ## Rollout Gates
@@ -38,4 +38,3 @@
 3. Per-org usage/rate limits confirmed.
 4. Redacted evaluation set passes minimum quality.
 5. Production rollout has fallback behavior and monitoring.
-

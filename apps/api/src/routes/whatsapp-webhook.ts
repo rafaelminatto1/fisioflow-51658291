@@ -301,8 +301,9 @@ async function handleMessage(
           .catch(() => null);
       } else {
         // Unknown contact — AI Concierge greeting for new potential patients
-        maybeSendConciergeGreeting(pool, env, orgId, contactCtx, conversation.id, content)
-          .catch(() => null);
+        maybeSendConciergeGreeting(pool, env, orgId, contactCtx, conversation.id, content).catch(
+          () => null,
+        );
       }
     }
   } catch (err) {
@@ -637,11 +638,11 @@ async function maybeSendConciergeGreeting(
     `SELECT role, content FROM wa_messages 
      WHERE conversation_id = $1::uuid 
      ORDER BY created_at DESC LIMIT 5`,
-    [conversationId]
+    [conversationId],
   );
   const history = historyRes.rows.reverse().map((r: any) => ({
-    role: r.role === 'inbound' ? 'user' : 'assistant',
-    content: r.content
+    role: r.role === "inbound" ? "user" : "assistant",
+    content: r.content,
   }));
 
   // 2. Process with AI Concierge (includes Wiki search)
@@ -651,8 +652,8 @@ async function maybeSendConciergeGreeting(
   await whatsapp.sendTextMessage(waId, concierge.reply);
 
   // 3. Automated Task Creation based on Intent
-  if (concierge.intent !== 'other') {
-    const priority = concierge.intent === 'urgent' ? 'URGENTE' : 'ALTA';
+  if (concierge.intent !== "other") {
+    const priority = concierge.intent === "urgent" ? "URGENTE" : "ALTA";
     const titleMap = {
       scheduling: "Solicitação de Agendamento (IA)",
       information: "Dúvida sobre Tratamento (IA)",
@@ -670,7 +671,7 @@ async function maybeSendConciergeGreeting(
         `${titleMap[concierge.intent as keyof typeof titleMap] || "Contato IA"} — ${waId}`,
         `IA detectou intenção de ${concierge.intent}.\n\nDados extraídos: ${JSON.stringify(concierge.patientData)}\n\nMensagem original: "${text.slice(0, 500)}"`,
         priority,
-        concierge.intent === 'urgent'
+        concierge.intent === "urgent",
       ],
     );
   }

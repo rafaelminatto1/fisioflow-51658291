@@ -10,43 +10,48 @@
 
 O FisioFlow possui uma base de segurança sólida, mas foi identificada **exposição massiva de credenciais** em arquivos rastreados no git:
 
-| Métrica | Quantidade |
-|---|---|
-| Arquivos com senha hardcoded (`REDACTED`) | **26+ arquivos** |
-| Commits com senha no histórico | **142 commits** |
-| Commits com Exa API key | **11 commits** |
-| Commits com Context7 API key | **5 commits** |
-| Commits com email admin exposto | **180 commits** |
-| API keys expostas em arquivos de config | **5 arquivos** (Exa, Context7, Stitch) |
-| URLs de produção expostas | **50+ arquivos .mjs** |
+| Métrica                                   | Quantidade                             |
+| ----------------------------------------- | -------------------------------------- |
+| Arquivos com senha hardcoded (`REDACTED`) | **26+ arquivos**                       |
+| Commits com senha no histórico            | **142 commits**                        |
+| Commits com Exa API key                   | **11 commits**                         |
+| Commits com Context7 API key              | **5 commits**                          |
+| Commits com email admin exposto           | **180 commits**                        |
+| API keys expostas em arquivos de config   | **5 arquivos** (Exa, Context7, Stitch) |
+| URLs de produção expostas                 | **50+ arquivos .mjs**                  |
 
 ---
 
 ## ✅ PONTOS FORTES DE SEGURANÇA (Confirmados)
 
 ### 1. CI/CD de Segurança Robusto
+
 - ✅ TruffleHog OSS com `--only-verified` ativo e bloqueante em PRs
 - ✅ `pnpm audit --audit-level=high` bloqueante em CI
 - ✅ CodeQL SAST configurado para TypeScript
 - ✅ Todos os gates de segurança bloqueiam merge
 
 ### 2. Autenticação e Autorização
+
 - ✅ Neon Auth (JWT EdDSA / JWKS) implementado
 - ✅ RBAC por role com fallback para `'viewer'`
 - ✅ `requireAuth()` retorna 401 real
 - ✅ Webhook de autenticação com verificação EdDSA
 
 ### 3. Proteção de Dados
+
 - ✅ TLS 1.3+ via Cloudflare
 - ✅ Criptografia AES-256 (Neon PostgreSQL)
 - ✅ Isolamento multi-tenant via `organizationId`
 - ✅ Dados sensíveis mascarados em logs
 
 ### 4. Row-Level Security (RLS)
+
 - ✅ RLS ativo em todas as tabelas de pacientes
 - ✅ Migration `0057_rls_complete.sql` aplicada
 
 ### 5. Gestão de Segredos
+
 - ✅ Uso de `wrangler secret put` e GitHub Secrets
 - ✅ `.dev.vars` e `.env` no `.gitignore`
 - ✅ Rotação a cada 90 dias documentada
@@ -59,26 +64,26 @@ O FisioFlow possui uma base de segurança sólida, mas foi identificada **exposi
 
 **Senha exposta:** `REDACTED` (senha do admin `REDACTED_EMAIL`)
 
-| Localização | Arquivos Afetados | Status Atual |
-|---|---|---|
-| `test-*.mjs` (raiz) | 6 arquivos | ✅ Removidos do tracking |
-| `TESTES-APAGAR/*.mjs` | 9 arquivos | ✅ Removidos do tracking |
-| `scripts/*.mjs` | 8 arquivos | ✅ Removidos do tracking |
-| `e2e/create-one.mjs` | 1 arquivo | ✅ Removido do tracking |
-| `scratch/debug-wiki.mjs` | 1 arquivo | ✅ Removido do tracking |
-| `generate-reports.mjs` | 1 arquivo | ✅ Removido do tracking |
+| Localização              | Arquivos Afetados | Status Atual             |
+| ------------------------ | ----------------- | ------------------------ |
+| `test-*.mjs` (raiz)      | 6 arquivos        | ✅ Removidos do tracking |
+| `TESTES-APAGAR/*.mjs`    | 9 arquivos        | ✅ Removidos do tracking |
+| `scripts/*.mjs`          | 8 arquivos        | ✅ Removidos do tracking |
+| `e2e/create-one.mjs`     | 1 arquivo         | ✅ Removido do tracking  |
+| `scratch/debug-wiki.mjs` | 1 arquivo         | ✅ Removido do tracking  |
+| `generate-reports.mjs`   | 1 arquivo         | ✅ Removido do tracking  |
 
 **Impacto:** Acesso não autorizado ao sistema se as credenciais forem descobertas.
 
 ### CRÍTICO 2: API Keys Expostas em Arquivos de Configuração
 
-| Arquivo | Chave Exposta | Status |
-|---|---|---|
-| `opencode.json` | Exa: `REDACTED` | ✅ Removido do tracking |
-| `opencode.json` | Context7: `REDACTED` | ✅ Removido do tracking |
-| `.cursor/mcp.json` | Exa + Context7 keys | ✅ Removido do tracking |
-| `mcp.json` | Exa + Context7 + Stitch keys | ✅ Removido do tracking |
-| `.gemini/settings.json` | Context7 key | ✅ Removido do tracking |
+| Arquivo                 | Chave Exposta                | Status                  |
+| ----------------------- | ---------------------------- | ----------------------- |
+| `opencode.json`         | Exa: `REDACTED`              | ✅ Removido do tracking |
+| `opencode.json`         | Context7: `REDACTED`         | ✅ Removido do tracking |
+| `.cursor/mcp.json`      | Exa + Context7 keys          | ✅ Removido do tracking |
+| `mcp.json`              | Exa + Context7 + Stitch keys | ✅ Removido do tracking |
+| `.gemini/settings.json` | Context7 key                 | ✅ Removido do tracking |
 
 **Impacto:** Uso indevido de serviços pagos, possível acesso a dados externos.
 
@@ -106,6 +111,7 @@ O FisioFlow possui uma base de segurança sólida, mas foi identificada **exposi
 ### FASE 1: Ações Urgentes ✅ CONCLUÍDA (2026-04-29)
 
 #### ✅ Concluído:
+
 1. **`.gitignore` reescrito** — adicionadas regras para:
    - `opencode.json`, `.cursor/mcp.json`, `.gemini/settings.json`, `mcp.json`
    - `test-*.mjs`, `generate-reports.mjs`, `e2e/*.mjs`
@@ -122,6 +128,7 @@ O FisioFlow possui uma base de segurança sólida, mas foi identificada **exposi
 #### 🔴 PENDENTE (Ação Manual):
 
 1. **Rotacionar TODAS as credenciais comprometidas:**
+
    ```
    SENHA: Alterar "REDACTED" no Neon Auth IMEDIATAMENTE
    EXA API KEY: Regenerar em https://exa.ai
@@ -161,6 +168,7 @@ git push --force --tags
 ```
 
 **Pré-requisitos:**
+
 - Backup completo do repositório
 - Comunicar todos os colaboradores
 - Repositório deve estar privado
@@ -169,15 +177,15 @@ git push --force --tags
 
 ### FASE 3: Melhorias Contínuas (1-3 meses)
 
-| Ação | Prazo | Prioridade |
-|---|---|---|
-| Pre-commit hook com TruffleHog local | Semana 1 | Alta |
-| DAST (OWASP ZAP) no CI | Semana 2 | Média |
-| Política formal de retenção LGPD (D9) | Semana 2 | Alta |
-| Teste de penetração | Mês 1 | Média |
-| SIEM + detecção de anomalias | Mês 1-2 | Média |
-| Criptografia aplicação-level | Mês 2-3 | Baixa |
-| Programa Bug Bounty | Mês 3 | Baixa |
+| Ação                                  | Prazo    | Prioridade |
+| ------------------------------------- | -------- | ---------- |
+| Pre-commit hook com TruffleHog local  | Semana 1 | Alta       |
+| DAST (OWASP ZAP) no CI                | Semana 2 | Média      |
+| Política formal de retenção LGPD (D9) | Semana 2 | Alta       |
+| Teste de penetração                   | Mês 1    | Média      |
+| SIEM + detecção de anomalias          | Mês 1-2  | Média      |
+| Criptografia aplicação-level          | Mês 2-3  | Baixa      |
+| Programa Bug Bounty                   | Mês 3    | Baixa      |
 
 ---
 
@@ -207,13 +215,13 @@ testsprite.config.prod.json
 
 ## 📈 COMPARAÇÃO COM MELHORES PRÁTICAS
 
-| Área | Status Atual | Melhor Prática | Gap |
-|---|---|---|---|
-| Gerenciamento de Segredos | Excelente (após Fase 1) | Vault + rotação automática | OK para escala |
-| Teste de Segurança | Bom (SAST/DAST básico) | Pentest regular | Melhorar com DAST |
-| Proteção de Dados | Excelente | Tokenização + campo a campo | Considerar para dados sensíveis |
-| Monitoramento | Bom (logs estruturados) | SIEM + UEBA | Melhorar detecção anomalias |
-| Resposta a Incidentes | Documentado | Playbooks testados | Exercícios trimestrais |
+| Área                      | Status Atual            | Melhor Prática              | Gap                             |
+| ------------------------- | ----------------------- | --------------------------- | ------------------------------- |
+| Gerenciamento de Segredos | Excelente (após Fase 1) | Vault + rotação automática  | OK para escala                  |
+| Teste de Segurança        | Bom (SAST/DAST básico)  | Pentest regular             | Melhorar com DAST               |
+| Proteção de Dados         | Excelente               | Tokenização + campo a campo | Considerar para dados sensíveis |
+| Monitoramento             | Bom (logs estruturados) | SIEM + UEBA                 | Melhorar detecção anomalias     |
+| Resposta a Incidentes     | Documentado             | Playbooks testados          | Exercícios trimestrais          |
 
 ---
 
@@ -239,6 +247,7 @@ testsprite.config.prod.json
    - [ ] Verificar se repositório é privado
 
 2. **VERIFICAR RESULTADO DA FASE 1:**
+
    ```bash
    git status
    # Confirmar que arquivos vulneráveis não estão mais no index
@@ -253,11 +262,13 @@ testsprite.config.prod.json
 ## 📝 NOTAS DE IMPLEMENTAÇÃO
 
 **Arquivos removidos do tracking (git rm --cached):**
+
 - Permanecem no disco local (não foram apagados)
 - Estão agora cobertos pelo `.gitignore` atualizado
 - Não serão incluídos em futuros commits
 
 **Scripts que ainda usam env vars (legítimos):**
+
 - `scripts/validate-biomechanics-flow.mjs` — ✅ Já usa `process.env.E2E_LOGIN_PASSWORD`
 - `scripts/check-console-errors-local.mjs` — ⚠️ Usa fallback hardcoded (removido do tracking)
 

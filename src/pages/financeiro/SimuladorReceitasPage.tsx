@@ -539,7 +539,10 @@ export default function SimuladorReceitasPage() {
                     <Label className="text-sm">Ticket Médio</Label>
                     <span className="font-semibold">
                       R${" "}
-                      {(totalAtendimentos > 0 ? totalReceitas / totalAtendimentos : 0).toLocaleString("pt-BR", {
+                      {(totalAtendimentos > 0
+                        ? totalReceitas / totalAtendimentos
+                        : 0
+                      ).toLocaleString("pt-BR", {
                         minimumFractionDigits: 2,
                       })}
                     </span>
@@ -548,9 +551,12 @@ export default function SimuladorReceitasPage() {
                     <Label className="text-sm">Lucro por Hora</Label>
                     <span className="font-semibold">
                       R${" "}
-                      {(horasDisponiveis > 0 ? lucroAtual / horasDisponiveis : 0).toLocaleString("pt-BR", {
-                        minimumFractionDigits: 2,
-                      })}
+                      {(horasDisponiveis > 0 ? lucroAtual / horasDisponiveis : 0).toLocaleString(
+                        "pt-BR",
+                        {
+                          minimumFractionDigits: 2,
+                        },
+                      )}
                     </span>
                   </div>
                 </div>

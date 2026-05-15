@@ -255,10 +255,9 @@ describe("useFocusTrap", () => {
     `;
     document.body.appendChild(container);
 
-    const { result, rerender } = renderHook(
-      ({ active }) => useFocusTrap(active),
-      { initialProps: { active: false } },
-    );
+    const { result, rerender } = renderHook(({ active }) => useFocusTrap(active), {
+      initialProps: { active: false },
+    });
 
     act(() => {
       result.current.current = container;

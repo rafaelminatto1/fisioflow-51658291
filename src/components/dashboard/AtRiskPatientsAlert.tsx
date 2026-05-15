@@ -54,7 +54,7 @@ export function AtRiskPatientsAlert() {
     setIsAutomating(true);
     const result = await RetentionAutomationService.automateAtRiskReengagement();
     setIsAutomating(false);
-    
+
     if (result.success) {
       toast({
         title: "Automação disparada!",
@@ -104,9 +104,9 @@ export function AtRiskPatientsAlert() {
               </Badge>
             </CardTitle>
           </div>
-          
-          <Button 
-            size="sm" 
+
+          <Button
+            size="sm"
             onClick={handleAutomate}
             disabled={isAutomating}
             className="h-8 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-black text-[10px] uppercase tracking-wider gap-2 shadow-sm"
@@ -135,13 +135,15 @@ export function AtRiskPatientsAlert() {
                 <div className="flex items-center gap-2 mb-0.5">
                   <p className="text-sm font-bold truncate">{p.full_name}</p>
                   {p.dropout_risk !== undefined && (
-                    <Badge 
-                      variant="outline" 
+                    <Badge
+                      variant="outline"
                       className={cn(
                         "text-[9px] px-1.5 py-0 border-0",
-                        p.dropout_risk > 70 ? "bg-red-100 text-red-700" : 
-                        p.dropout_risk > 40 ? "bg-amber-100 text-amber-700" : 
-                        "bg-emerald-100 text-emerald-700"
+                        p.dropout_risk > 70
+                          ? "bg-red-100 text-red-700"
+                          : p.dropout_risk > 40
+                            ? "bg-amber-100 text-amber-700"
+                            : "bg-emerald-100 text-emerald-700",
                       )}
                     >
                       {p.dropout_risk}% Risco
@@ -204,4 +206,3 @@ export function AtRiskPatientsAlert() {
     </Card>
   );
 }
-

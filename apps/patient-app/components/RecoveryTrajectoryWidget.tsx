@@ -29,7 +29,16 @@ export const RecoveryTrajectoryMobileWidget = () => {
   const adherence = Math.round(parseFloat(data.adherence_score) || 0);
 
   return (
-    <Card style={[styles.container, { backgroundColor: colors.surface + "B0", borderColor: colors.primary + "30", borderWidth: 1 }]}>
+    <Card
+      style={[
+        styles.container,
+        {
+          backgroundColor: colors.surface + "B0",
+          borderColor: colors.primary + "30",
+          borderWidth: 1,
+        },
+      ]}
+    >
       <View style={styles.header}>
         <Ionicons name="analytics" size={20} color={colors.primary} />
         <Text style={[styles.title, { color: colors.text }]}>Sua Trajetória de Recuperação</Text>
@@ -39,7 +48,9 @@ export const RecoveryTrajectoryMobileWidget = () => {
         <View style={styles.statBox}>
           <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Previsão de Alta</Text>
           <View style={styles.valueRow}>
-            <Text style={[styles.statValue, { color: colors.primary }]}>{data.predicted_recovery_weeks}</Text>
+            <Text style={[styles.statValue, { color: colors.primary }]}>
+              {data.predicted_recovery_weeks}
+            </Text>
             <Text style={[styles.statUnit, { color: colors.textSecondary }]}> semanas</Text>
           </View>
         </View>
@@ -53,20 +64,20 @@ export const RecoveryTrajectoryMobileWidget = () => {
       </View>
 
       <View style={styles.progressContainer}>
-         <View style={[styles.progressBarBg, { backgroundColor: colors.border }]}>
-            <View 
-              style={[
-                styles.progressBarFill, 
-                { 
-                  backgroundColor: colors.primary,
-                  width: `${adherence}%` 
-                }
-              ]} 
-            />
-         </View>
-         <Text style={[styles.helperText, { color: colors.textMuted }]}>
-            Continue assim! Seu progresso está acima da média para sua condição.
-         </Text>
+        <View style={[styles.progressBarBg, { backgroundColor: colors.border }]}>
+          <View
+            style={[
+              styles.progressBarFill,
+              {
+                backgroundColor: colors.primary,
+                width: `${adherence}%`,
+              },
+            ]}
+          />
+        </View>
+        <Text style={[styles.helperText, { color: colors.textMuted }]}>
+          Continue assim! Seu progresso está acima da média para sua condição.
+        </Text>
       </View>
     </Card>
   );
@@ -139,5 +150,5 @@ const styles = StyleSheet.create({
     lineHeight: 16,
     fontStyle: "italic",
     textAlign: "center",
-  }
+  },
 });

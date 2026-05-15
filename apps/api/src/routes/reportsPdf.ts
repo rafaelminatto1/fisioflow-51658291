@@ -333,8 +333,7 @@ function buildContent(req: PdfRequest): string {
           Array.isArray(dAny.exercises) && dAny.exercises.length
             ? `<div class="section"><div class="section-title">Exercícios na sessão</div><div class="section-body">${renderList(
                 dAny.exercises,
-                (e: any) =>
-                  `${e.name ?? ""}${e.prescription ? ` — ${e.prescription}` : ""}`,
+                (e: any) => `${e.name ?? ""}${e.prescription ? ` — ${e.prescription}` : ""}`,
               )}</div></div>`
             : ""
         }

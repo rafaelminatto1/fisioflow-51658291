@@ -67,7 +67,8 @@ const GroupsPage = lazy(
   () => import(/* webpackChunkName: "cadastros-groups" */ "@/pages/cadastros/GroupsPage"),
 );
 const StaffSchedulesPage = lazy(
-  () => import(/* webpackChunkName: "cadastros-schedules" */ "@/pages/cadastros/StaffSchedulesPage"),
+  () =>
+    import(/* webpackChunkName: "cadastros-schedules" */ "@/pages/cadastros/StaffSchedulesPage"),
 );
 
 export const cadastrosRoutes = (

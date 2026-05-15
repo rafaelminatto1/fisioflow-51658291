@@ -928,7 +928,10 @@ app.post("/upload-paper", requireAuth, async (c) => {
     aiSearchId = result.id;
   } catch (err) {
     console.error("[upload-paper] AI Search indexing failed:", err);
-    return c.json({ id: articleId ?? null, indexed: false, error: "AI Search indexing failed" }, 500);
+    return c.json(
+      { id: articleId ?? null, indexed: false, error: "AI Search indexing failed" },
+      500,
+    );
   }
 
   return c.json({ id: articleId ?? aiSearchId, indexed: true, aiSearchId });

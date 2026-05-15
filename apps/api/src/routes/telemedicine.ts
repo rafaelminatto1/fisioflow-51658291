@@ -409,13 +409,13 @@ app.post("/livekit-token", requireAuth, async (c) => {
       role,
     },
   });
-  });
+});
 
-  /**
-  * POST /api/telemedicine/rooms/:id/summary
-  * Gera um resumo clínico da sessão de telemedicina.
-  */
-  app.post("/rooms/:id/summary", requireAuth, async (c) => {
+/**
+ * POST /api/telemedicine/rooms/:id/summary
+ * Gera um resumo clínico da sessão de telemedicina.
+ */
+app.post("/rooms/:id/summary", requireAuth, async (c) => {
   const user = c.get("user");
   const { id } = c.req.param();
   const body = (await c.req.json().catch(() => ({}))) as { transcript?: string; notes?: string };
@@ -424,7 +424,7 @@ app.post("/livekit-token", requireAuth, async (c) => {
   try {
     const roomRes = await pool.query(
       "SELECT tr.*, p.full_name as patient_name FROM telemedicine_rooms tr JOIN patients p ON p.id = tr.patient_id WHERE tr.id = $1 AND tr.organization_id = $2",
-      [id, user.organizationId]
+      [id, user.organizationId],
     );
     const room = roomRes.rows[0];
     if (!room) return c.json({ error: "Sala não encontrada" }, 404);
@@ -454,17 +454,17 @@ app.post("/livekit-token", requireAuth, async (c) => {
       prompt,
       model: "gemini-1.5-flash",
       temperature: 0.2,
-      responseFormat: "json"
+      responseFormat: "json",
     });
 
     const jsonMatch = aiResponse.content.match(/\{[\s\S]*\}/);
     const summary = JSON.parse(jsonMatch?.[0] ?? aiResponse.content);
 
     // Salvar o resumo nas notas da sala
-    await pool.query(
-      "UPDATE telemedicine_rooms SET notas = $1, updated_at = NOW() WHERE id = $2",
-      [summary.summary, id]
-    );
+    await pool.query("UPDATE telemedicine_rooms SET notas = $1, updated_at = NOW() WHERE id = $2", [
+      summary.summary,
+      id,
+    ]);
 
     return c.json({ success: true, data: summary });
   } catch (error: any) {

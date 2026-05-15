@@ -1,23 +1,23 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { 
-  CheckCircle2, 
-  Circle, 
-  Plus, 
-  Trash2, 
-  Search, 
-  GripVertical, 
+import {
+  CheckCircle2,
+  Circle,
+  Plus,
+  Trash2,
+  Search,
+  GripVertical,
   Sparkles,
-  ChevronRight
+  ChevronRight,
 } from "lucide-react";
 import { motion, AnimatePresence, Reorder } from "framer-motion";
 import confetti from "canvas-confetti";
-import { 
-  ProcedureItem, 
-  ProcedureCategory, 
-  PROCEDURE_CATEGORY_LABELS, 
-  COMMON_PROCEDURES 
+import {
+  ProcedureItem,
+  ProcedureCategory,
+  PROCEDURE_CATEGORY_LABELS,
+  COMMON_PROCEDURES,
 } from "../v2-improved/types";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -29,22 +29,67 @@ interface ProcedureChecklistBlockProps {
   onChange: (procedures: ProcedureItem[]) => void;
 }
 
-const CATEGORY_COLORS: Record<ProcedureCategory, { bg: string; text: string; border: string; glow: string }> = {
-  liberacao_miofascial: { bg: "bg-emerald-500/10", text: "text-emerald-500", border: "border-emerald-500/20", glow: "shadow-emerald-500/20" },
-  mobilizacao: { bg: "bg-blue-500/10", text: "text-blue-500", border: "border-blue-500/20", glow: "shadow-blue-500/20" },
-  eletroterapia: { bg: "bg-amber-500/10", text: "text-amber-500", border: "border-amber-500/20", glow: "shadow-amber-500/20" },
-  laser: { bg: "bg-rose-500/10", text: "text-rose-500", border: "border-rose-500/20", glow: "shadow-rose-500/20" },
-  ultrassom: { bg: "bg-cyan-500/10", text: "text-cyan-500", border: "border-cyan-500/20", glow: "shadow-cyan-500/20" },
-  crioterapia: { bg: "bg-sky-500/10", text: "text-sky-500", border: "border-sky-500/20", glow: "shadow-sky-500/20" },
-  termoterapia: { bg: "bg-orange-500/10", text: "text-orange-500", border: "border-orange-500/20", glow: "shadow-orange-500/20" },
-  bandagem: { bg: "bg-teal-500/10", text: "text-teal-500", border: "border-teal-500/20", glow: "shadow-teal-500/20" },
-  outro: { bg: "bg-slate-500/10", text: "text-slate-500", border: "border-slate-500/20", glow: "shadow-slate-500/20" },
+const CATEGORY_COLORS: Record<
+  ProcedureCategory,
+  { bg: string; text: string; border: string; glow: string }
+> = {
+  liberacao_miofascial: {
+    bg: "bg-emerald-500/10",
+    text: "text-emerald-500",
+    border: "border-emerald-500/20",
+    glow: "shadow-emerald-500/20",
+  },
+  mobilizacao: {
+    bg: "bg-blue-500/10",
+    text: "text-blue-500",
+    border: "border-blue-500/20",
+    glow: "shadow-blue-500/20",
+  },
+  eletroterapia: {
+    bg: "bg-amber-500/10",
+    text: "text-amber-500",
+    border: "border-amber-500/20",
+    glow: "shadow-amber-500/20",
+  },
+  laser: {
+    bg: "bg-rose-500/10",
+    text: "text-rose-500",
+    border: "border-rose-500/20",
+    glow: "shadow-rose-500/20",
+  },
+  ultrassom: {
+    bg: "bg-cyan-500/10",
+    text: "text-cyan-500",
+    border: "border-cyan-500/20",
+    glow: "shadow-cyan-500/20",
+  },
+  crioterapia: {
+    bg: "bg-sky-500/10",
+    text: "text-sky-500",
+    border: "border-sky-500/20",
+    glow: "shadow-sky-500/20",
+  },
+  termoterapia: {
+    bg: "bg-orange-500/10",
+    text: "text-orange-500",
+    border: "border-orange-500/20",
+    glow: "shadow-orange-500/20",
+  },
+  bandagem: {
+    bg: "bg-teal-500/10",
+    text: "text-teal-500",
+    border: "border-teal-500/20",
+    glow: "shadow-teal-500/20",
+  },
+  outro: {
+    bg: "bg-slate-500/10",
+    text: "text-slate-500",
+    border: "border-slate-500/20",
+    glow: "shadow-slate-500/20",
+  },
 };
 
-export function ProcedureChecklistBlock({
-  procedures,
-  onChange,
-}: ProcedureChecklistBlockProps) {
+export function ProcedureChecklistBlock({ procedures, onChange }: ProcedureChecklistBlockProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [suggestionIndex, setSuggestionIndex] = useState(-1);
@@ -55,7 +100,12 @@ export function ProcedureChecklistBlock({
   // Keyboard shortcut: '/' to focus search
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "/" && !isFocused && document.activeElement?.tagName !== "INPUT" && document.activeElement?.tagName !== "TEXTAREA") {
+      if (
+        e.key === "/" &&
+        !isFocused &&
+        document.activeElement?.tagName !== "INPUT" &&
+        document.activeElement?.tagName !== "TEXTAREA"
+      ) {
         e.preventDefault();
         inputRef.current?.focus();
       }
@@ -99,7 +149,7 @@ export function ProcedureChecklistBlock({
 
   const toggleProcedure = (id: string) => {
     const newProcedures = procedures.map((p) =>
-      p.id === id ? { ...p, completed: !p.completed } : p
+      p.id === id ? { ...p, completed: !p.completed } : p,
     );
     onChange(newProcedures);
   };
@@ -112,7 +162,7 @@ export function ProcedureChecklistBlock({
     const newProcedure: ProcedureItem = {
       id: Math.random().toString(36).substring(7),
       name,
-      completed: true, 
+      completed: true,
       category,
     };
     onChange([...procedures, newProcedure]);
@@ -123,7 +173,7 @@ export function ProcedureChecklistBlock({
   const filteredSuggestions = COMMON_PROCEDURES.filter(
     (p) =>
       p.name.toLowerCase().includes(searchTerm.toLowerCase()) &&
-      !procedures.some((existing) => existing.name === p.name)
+      !procedures.some((existing) => existing.name === p.name),
   ).slice(0, 5);
 
   const onReorder = (newOrder: ProcedureItem[]) => {
@@ -166,12 +216,7 @@ export function ProcedureChecklistBlock({
 
       {/* Procedures List */}
       <div className="relative">
-        <Reorder.Group 
-          axis="y" 
-          values={procedures} 
-          onReorder={onReorder}
-          className="space-y-3"
-        >
+        <Reorder.Group axis="y" values={procedures} onReorder={onReorder} className="space-y-3">
           <AnimatePresence mode="popLayout">
             {procedures.map((procedure) => {
               return (
@@ -185,10 +230,10 @@ export function ProcedureChecklistBlock({
                   className={cn(
                     "group relative flex items-center gap-3 p-4 rounded-2xl transition-all duration-300",
                     "border border-white/5 backdrop-blur-md",
-                    procedure.completed 
-                      ? "bg-white/5 shadow-inner" 
+                    procedure.completed
+                      ? "bg-white/5 shadow-inner"
                       : "bg-white/10 shadow-lg hover:shadow-primary/5 hover:border-primary/20",
-                    "cursor-default"
+                    "cursor-default",
                   )}
                 >
                   <button
@@ -223,22 +268,27 @@ export function ProcedureChecklistBlock({
                       <span
                         className={cn(
                           "text-sm font-medium transition-all duration-500 truncate",
-                          procedure.completed 
-                            ? "text-muted-foreground/80 line-through decoration-emerald-500/50 decoration-2" 
-                            : "text-foreground"
+                          procedure.completed
+                            ? "text-muted-foreground/80 line-through decoration-emerald-500/50 decoration-2"
+                            : "text-foreground",
                         )}
                       >
                         {procedure.name}
                       </span>
                       {procedure.category && (
                         <div className="flex items-center gap-1.5 mt-1">
-                          <span className={cn(
-                            "w-1.5 h-1.5 rounded-full",
-                            procedure.category === "liberacao_miofascial" ? "bg-emerald-500" :
-                            procedure.category === "mobilizacao" ? "bg-blue-500" :
-                            procedure.category === "eletroterapia" ? "bg-amber-500" :
-                            "bg-slate-400"
-                          )} />
+                          <span
+                            className={cn(
+                              "w-1.5 h-1.5 rounded-full",
+                              procedure.category === "liberacao_miofascial"
+                                ? "bg-emerald-500"
+                                : procedure.category === "mobilizacao"
+                                  ? "bg-blue-500"
+                                  : procedure.category === "eletroterapia"
+                                    ? "bg-amber-500"
+                                    : "bg-slate-400",
+                            )}
+                          />
                           <span className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground/80">
                             {PROCEDURE_CATEGORY_LABELS[procedure.category]}
                           </span>
@@ -266,7 +316,7 @@ export function ProcedureChecklistBlock({
           </AnimatePresence>
 
           {procedures.length === 0 && (
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               className="flex flex-col items-center justify-center py-12 px-4 rounded-3xl border-2 border-dashed border-white/5 bg-white/5"
@@ -284,19 +334,21 @@ export function ProcedureChecklistBlock({
 
       {/* Smart Input Area */}
       <div className="relative pt-4">
-        <div 
+        <div
           className={cn(
             "relative flex items-center gap-2 p-2 rounded-2xl transition-all duration-500",
             "border-2 backdrop-blur-xl shadow-2xl",
-            isFocused 
-              ? "bg-white/15 border-primary/40 ring-4 ring-primary/10 shadow-primary/10" 
-              : "bg-white/5 border-white/10"
+            isFocused
+              ? "bg-white/15 border-primary/40 ring-4 ring-primary/10 shadow-primary/10"
+              : "bg-white/5 border-white/10",
           )}
         >
-          <Search className={cn(
-            "w-5 h-5 ml-2 transition-colors duration-300",
-            isFocused ? "text-primary" : "text-muted-foreground"
-          )} />
+          <Search
+            className={cn(
+              "w-5 h-5 ml-2 transition-colors duration-300",
+              isFocused ? "text-primary" : "text-muted-foreground",
+            )}
+          />
           <Input
             ref={inputRef}
             placeholder="Adicionar procedimento (ex: TENS, Liberação...)"
@@ -316,16 +368,21 @@ export function ProcedureChecklistBlock({
             onKeyDown={(e) => {
               if (e.key === "Enter") {
                 if (suggestionIndex >= 0 && filteredSuggestions[suggestionIndex]) {
-                  addProcedure(filteredSuggestions[suggestionIndex].name, filteredSuggestions[suggestionIndex].category);
+                  addProcedure(
+                    filteredSuggestions[suggestionIndex].name,
+                    filteredSuggestions[suggestionIndex].category,
+                  );
                 } else if (searchTerm.trim()) {
                   addProcedure(searchTerm.trim());
                 }
               } else if (e.key === "ArrowDown") {
                 e.preventDefault();
-                setSuggestionIndex(prev => (prev < filteredSuggestions.length - 1 ? prev + 1 : prev));
+                setSuggestionIndex((prev) =>
+                  prev < filteredSuggestions.length - 1 ? prev + 1 : prev,
+                );
               } else if (e.key === "ArrowUp") {
                 e.preventDefault();
-                setSuggestionIndex(prev => (prev > 0 ? prev - 1 : prev));
+                setSuggestionIndex((prev) => (prev > 0 ? prev - 1 : prev));
               } else if (e.key === "Escape") {
                 setShowSuggestions(false);
               }
@@ -345,57 +402,78 @@ export function ProcedureChecklistBlock({
 
         {/* Suggestions Popover */}
         <AnimatePresence>
-          {showSuggestions && (searchTerm.trim() || isFocused) && filteredSuggestions.length > 0 && (
-            <motion.div
-              initial={{ opacity: 0, y: 10, scale: 0.95 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 5, scale: 0.98 }}
-              className="absolute bottom-full mb-3 left-0 right-0 p-2 bg-black/80 backdrop-blur-2xl border border-white/10 rounded-2xl shadow-2xl z-50 overflow-hidden"
-            >
-              <div className="px-3 py-2 border-b border-white/5 flex items-center justify-between">
-                <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/80">Sugestões Inteligentes</span>
-                <Sparkles className="w-3 h-3 text-primary/50" />
-              </div>
-              <div className="mt-1">
-                {filteredSuggestions.map((suggestion, idx) => {
-                  const catConfig = CATEGORY_COLORS[suggestion.category];
-                  return (
-                    <button
-                      key={idx}
-                      onClick={() => addProcedure(suggestion.name, suggestion.category)}
-                      onMouseEnter={() => setSuggestionIndex(idx)}
-                      className={cn(
-                        "w-full flex items-center justify-between p-3 rounded-xl transition-all group text-left",
-                        suggestionIndex === idx ? "bg-white/15" : "hover:bg-white/10"
-                      )}
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className={cn("p-1.5 rounded-lg border", catConfig.bg, catConfig.border)}>
-                           <ChevronRight className={cn("w-3 h-3", catConfig.text)} />
+          {showSuggestions &&
+            (searchTerm.trim() || isFocused) &&
+            filteredSuggestions.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 5, scale: 0.98 }}
+                className="absolute bottom-full mb-3 left-0 right-0 p-2 bg-black/80 backdrop-blur-2xl border border-white/10 rounded-2xl shadow-2xl z-50 overflow-hidden"
+              >
+                <div className="px-3 py-2 border-b border-white/5 flex items-center justify-between">
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/80">
+                    Sugestões Inteligentes
+                  </span>
+                  <Sparkles className="w-3 h-3 text-primary/50" />
+                </div>
+                <div className="mt-1">
+                  {filteredSuggestions.map((suggestion, idx) => {
+                    const catConfig = CATEGORY_COLORS[suggestion.category];
+                    return (
+                      <button
+                        key={idx}
+                        onClick={() => addProcedure(suggestion.name, suggestion.category)}
+                        onMouseEnter={() => setSuggestionIndex(idx)}
+                        className={cn(
+                          "w-full flex items-center justify-between p-3 rounded-xl transition-all group text-left",
+                          suggestionIndex === idx ? "bg-white/15" : "hover:bg-white/10",
+                        )}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div
+                            className={cn(
+                              "p-1.5 rounded-lg border",
+                              catConfig.bg,
+                              catConfig.border,
+                            )}
+                          >
+                            <ChevronRight className={cn("w-3 h-3", catConfig.text)} />
+                          </div>
+                          <span
+                            className={cn(
+                              "text-sm font-medium transition-colors",
+                              suggestionIndex === idx ? "text-primary" : "group-hover:text-primary",
+                            )}
+                          >
+                            {suggestion.name}
+                          </span>
                         </div>
-                        <span className={cn(
-                          "text-sm font-medium transition-colors",
-                          suggestionIndex === idx ? "text-primary" : "group-hover:text-primary"
-                        )}>
-                          {suggestion.name}
-                        </span>
-                      </div>
-                      <Badge variant="outline" className={cn("text-[9px] uppercase border-white/10 bg-transparent", catConfig.text)}>
-                        {PROCEDURE_CATEGORY_LABELS[suggestion.category]}
-                      </Badge>
-                    </button>
-                  );
-                })}
-              </div>
-            </motion.div>
-          )}
+                        <Badge
+                          variant="outline"
+                          className={cn(
+                            "text-[9px] uppercase border-white/10 bg-transparent",
+                            catConfig.text,
+                          )}
+                        >
+                          {PROCEDURE_CATEGORY_LABELS[suggestion.category]}
+                        </Badge>
+                      </button>
+                    );
+                  })}
+                </div>
+              </motion.div>
+            )}
         </AnimatePresence>
       </div>
 
       {/* Quick Tips */}
       <div className="flex items-center justify-center gap-4 text-[10px] text-muted-foreground/40 font-medium uppercase tracking-tighter">
         <div className="flex items-center gap-1">
-          <kbd className="px-1.5 py-0.5 rounded border border-white/10 bg-white/5 font-sans"> / </kbd>
+          <kbd className="px-1.5 py-0.5 rounded border border-white/10 bg-white/5 font-sans">
+            {" "}
+            /{" "}
+          </kbd>
           <span>para focar</span>
         </div>
         <div className="w-1 h-1 rounded-full bg-white/5" />

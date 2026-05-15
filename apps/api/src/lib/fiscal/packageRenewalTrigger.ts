@@ -11,13 +11,16 @@ export async function triggerPackageRenewalNotification(
   patientId: string,
   patientName: string,
   remainingSessions: number,
-  packageName: string
+  packageName: string,
 ) {
-  console.log(`[RenewalGate] Triggering notification for ${patientName} (${remainingSessions} sessions left)`);
+  console.log(
+    `[RenewalGate] Triggering notification for ${patientName} (${remainingSessions} sessions left)`,
+  );
 
-  const message = remainingSessions === 1 
-    ? `Atenção: O paciente ${patientName} tem apenas 1 sessão restante no pacote "${packageName}". Sugerimos abordar a renovação hoje.`
-    : `Lembrete: O pacote "${packageName}" de ${patientName} está chegando ao fim (${remainingSessions} sessões restantes).`;
+  const message =
+    remainingSessions === 1
+      ? `Atenção: O paciente ${patientName} tem apenas 1 sessão restante no pacote "${packageName}". Sugerimos abordar a renovação hoje.`
+      : `Lembrete: O pacote "${packageName}" de ${patientName} está chegando ao fim (${remainingSessions} sessões restantes).`;
 
   // 1. Notificação em Tempo Real para os Admins/Fisioterapeutas online
   await broadcastToOrg(env, organizationId, {
@@ -30,7 +33,7 @@ export async function triggerPackageRenewalNotification(
       message,
       severity: remainingSessions === 1 ? "high" : "medium",
     },
-  }).catch(err => console.error("[RenewalGate] WebSocket broadcast failed:", err));
+  }).catch((err) => console.error("[RenewalGate] WebSocket broadcast failed:", err));
 
   // 2. Log de Analytics para acompanhamento de métricas de conversão
   if (env.ANALYTICS) {

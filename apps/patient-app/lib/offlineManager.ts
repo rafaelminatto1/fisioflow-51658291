@@ -186,10 +186,18 @@ class OfflineManager {
         const { endpoint, method, body } = operation.data;
         const { api } = await import("./api");
         switch (method) {
-          case "POST": await api.post(endpoint, body); break;
-          case "PATCH": await api.patch(endpoint, body); break;
-          case "PUT": await api.put(endpoint, body); break;
-          case "DELETE": await api.delete(endpoint); break;
+          case "POST":
+            await api.post(endpoint, body);
+            break;
+          case "PATCH":
+            await api.patch(endpoint, body);
+            break;
+          case "PUT":
+            await api.put(endpoint, body);
+            break;
+          case "DELETE":
+            await api.delete(endpoint);
+            break;
         }
         break;
       }

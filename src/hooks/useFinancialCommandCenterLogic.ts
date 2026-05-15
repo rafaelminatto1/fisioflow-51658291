@@ -6,7 +6,15 @@ import { useToast } from "@/hooks/use-toast";
 import type { Transaction } from "@/hooks/useFinancial";
 
 // Type definitions for the dashboard structure
-const MAIN_TABS = ["summary", "collections", "cashflow", "billing", "documents", "performance", "commissions"] as const;
+const MAIN_TABS = [
+  "summary",
+  "collections",
+  "cashflow",
+  "billing",
+  "documents",
+  "performance",
+  "commissions",
+] as const;
 const COLLECTIONS_SUBVIEWS = ["receivables", "packages"] as const;
 const BILLING_SUBVIEWS = ["operations", "payables"] as const;
 const DOCUMENTS_SUBVIEWS = ["receipts", "nfse"] as const;
@@ -39,24 +47,28 @@ export function useFinancialCommandCenterLogic() {
   // State parsing from URL
   const period = parsePeriod(searchParams.get("period"));
   const activeTab = parseMainTab(searchParams.get("tab"));
-  
-  const collectionsSubview = (searchParams.get("collections") as CollectionsSubview) || "receivables";
+
+  const collectionsSubview =
+    (searchParams.get("collections") as CollectionsSubview) || "receivables";
   const billingSubview = (searchParams.get("billing") as BillingSubview) || "operations";
   const documentsSubview = (searchParams.get("documents") as DocumentsSubview) || "receipts";
   const performanceSubview = (searchParams.get("performance") as PerformanceSubview) || "analytics";
-  
+
   const shouldAutoOpenReceipt = searchParams.get("receiptAction") === "new";
   const shouldAutoOpenNfse = searchParams.get("nfseAction") === "new";
 
   // Data fetching
   const { data: pageData, mutations, isLoading: isSubmitting } = useFinancialPageData(period);
-  const { data: commandCenter, isLoading: isLoadingCommandCenter } = useFinancialCommandCenter(period);
+  const { data: commandCenter, isLoading: isLoadingCommandCenter } =
+    useFinancialCommandCenter(period);
   const { transactions, stats } = pageData;
 
   // Local UI state
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
-  const [modalDefaultTipo, setModalDefaultTipo] = useState<"receita" | "despesa" | "pagamento" | "recebimento">("receita");
+  const [modalDefaultTipo, setModalDefaultTipo] = useState<
+    "receita" | "despesa" | "pagamento" | "recebimento"
+  >("receita");
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [isExporting, setIsExporting] = useState(false);
 
@@ -76,7 +88,9 @@ export function useFinancialCommandCenterLogic() {
   const handleMainTabChange = (value: string) => updateQueryParams({ tab: value });
   const handlePeriodChange = (value: string) => updateQueryParams({ period: value });
 
-  const handleOpenTransactionModal = (defaultTipo: "receita" | "despesa" | "pagamento" | "recebimento" = "receita") => {
+  const handleOpenTransactionModal = (
+    defaultTipo: "receita" | "despesa" | "pagamento" | "recebimento" = "receita",
+  ) => {
     setModalDefaultTipo(defaultTipo);
     setEditingTransaction(null);
     setIsModalOpen(true);
@@ -114,19 +128,27 @@ export function useFinancialCommandCenterLogic() {
         paidCount: stats.paidCount,
         totalCount: stats.totalCount,
         averageTicket: stats.averageTicket,
-        transactions: transactions.map(t => ({
+        transactions: transactions.map((t) => ({
           id: t.id,
           tipo: t.tipo,
           descricao: t.descricao || "",
           valor: Number(t.valor),
           status: t.status,
           data_vencimento: t.created_at,
-          data_pagamento: t.status === "concluido" || t.status === "pago" ? t.updated_at : undefined,
+          data_pagamento:
+            t.status === "concluido" || t.status === "pago" ? t.updated_at : undefined,
         })),
       });
-      toast({ title: "Exportação concluída", description: "O relatório financeiro foi gerado com sucesso." });
+      toast({
+        title: "Exportação concluída",
+        description: "O relatório financeiro foi gerado com sucesso.",
+      });
     } catch {
-      toast({ title: "Erro na exportação", description: "Não foi possível gerar o relatório.", variant: "destructive" });
+      toast({
+        title: "Erro na exportação",
+        description: "Não foi possível gerar o relatório.",
+        variant: "destructive",
+      });
     } finally {
       setIsExporting(false);
     }
@@ -147,12 +169,12 @@ export function useFinancialCommandCenterLogic() {
       modalDefaultTipo,
       deleteId,
       isExporting,
-      isLoading: isLoadingCommandCenter || isSubmitting
+      isLoading: isLoadingCommandCenter || isSubmitting,
     },
     data: {
       transactions,
       stats,
-      commandCenter
+      commandCenter,
     },
     actions: {
       setIsModalOpen,
@@ -169,7 +191,7 @@ export function useFinancialCommandCenterLogic() {
       clearActionParams: (...keys: string[]) => {
         const updates = Object.fromEntries(keys.map((key) => [key, null]));
         updateQueryParams(updates);
-      }
-    }
+      },
+    },
   };
 }

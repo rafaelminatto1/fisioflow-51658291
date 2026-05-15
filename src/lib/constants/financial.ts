@@ -13,13 +13,7 @@
 /**
  * Canonical payment status values — matches the `payment_status` column in the database.
  */
-export const PAYMENT_STATUSES = [
-  "pending",
-  "paid",
-  "partial",
-  "cancelled",
-  "refunded",
-] as const;
+export const PAYMENT_STATUSES = ["pending", "paid", "partial", "cancelled", "refunded"] as const;
 
 /**
  * Derived literal union type for payment statuses.

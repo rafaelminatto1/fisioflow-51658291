@@ -49,11 +49,11 @@ export function ImageEditor({ uri, onSave, onCancel }: ImageEditorProps) {
   const [tool, setTool] = useState<"pen" | "arrow" | "text" | "marker" | "crop">("pen");
   const [imageSize, setImageSize] = useState({ width: 0, height: 0 });
   const [currentUri, setCurrentUri] = useState(uri);
-  
+
   // Crop state
   const [cropRect, setCropRect] = useState({ x: 50, y: 50, width: 200, height: 200 });
   const [isCropping, setIsCropping] = useState(false);
-  
+
   // Estados para o Modal de Texto
   const [isTextModalVisible, setIsTextModalVisible] = useState(false);
   const [tempText, setTempText] = useState("");
@@ -88,10 +88,10 @@ export function ImageEditor({ uri, onSave, onCancel }: ImageEditorProps) {
         if (tool === "text") return;
         const { locationX, locationY } = evt.nativeEvent;
         if (tool === "crop") {
-          setCropRect(prev => ({
+          setCropRect((prev) => ({
             ...prev,
             width: Math.max(50, locationX - prev.x),
-            height: Math.max(50, locationY - prev.y)
+            height: Math.max(50, locationY - prev.y),
           }));
           return;
         }
@@ -103,30 +103,30 @@ export function ImageEditor({ uri, onSave, onCancel }: ImageEditorProps) {
         if (currentPath.length > 0) {
           setPaths((prev) => [
             ...prev,
-            { 
-              points: currentPath, 
-              color, 
-              width: tool === "marker" ? 15 : 3, 
+            {
+              points: currentPath,
+              color,
+              width: tool === "marker" ? 15 : 3,
               type: tool === "arrow" ? "arrow" : "path",
-              opacity: tool === "marker" ? 0.4 : 1
+              opacity: tool === "marker" ? 0.4 : 1,
             },
           ]);
           setCurrentPath([]);
         }
       },
-    })
+    }),
   ).current;
 
   const handleAddText = () => {
     if (tempText.trim() && textPosition) {
       setPaths((prev) => [
         ...prev,
-        { 
-          points: [textPosition], 
-          color, 
-          width: 20, 
-          type: "text", 
-          text: tempText 
+        {
+          points: [textPosition],
+          color,
+          width: 20,
+          type: "text",
+          text: tempText,
         },
       ]);
     }
@@ -140,38 +140,40 @@ export function ImageEditor({ uri, onSave, onCancel }: ImageEditorProps) {
   };
 
   const rotateImage = async () => {
-    const result = await ImageManipulator.manipulateAsync(
-      currentUri,
-      [{ rotate: 90 }],
-      { compress: 0.9, format: ImageManipulator.SaveFormat.JPEG }
-    );
+    const result = await ImageManipulator.manipulateAsync(currentUri, [{ rotate: 90 }], {
+      compress: 0.9,
+      format: ImageManipulator.SaveFormat.JPEG,
+    });
     setCurrentUri(result.uri);
   };
 
   const confirmCrop = async () => {
     try {
       // Obter dimensões reais da imagem para o mapeamento
-      const { width: realW, height: realH } = await new Promise<{width: number, height: number}>(resolve => {
-        Image.getSize(currentUri, (w, h) => resolve({width: w, height: h}));
-      });
+      const { width: realW, height: realH } = await new Promise<{ width: number; height: number }>(
+        (resolve) => {
+          Image.getSize(currentUri, (w, h) => resolve({ width: w, height: h }));
+        },
+      );
 
       const scaleX = realW / imageSize.width;
       const scaleY = realH / imageSize.height;
 
-      const cropActions = [{
-        crop: {
-          originX: cropRect.x * scaleX,
-          originY: cropRect.y * scaleY,
-          width: cropRect.width * scaleX,
-          height: cropRect.height * scaleY,
-        }
-      }];
+      const cropActions = [
+        {
+          crop: {
+            originX: cropRect.x * scaleX,
+            originY: cropRect.y * scaleY,
+            width: cropRect.width * scaleX,
+            height: cropRect.height * scaleY,
+          },
+        },
+      ];
 
-      const result = await ImageManipulator.manipulateAsync(
-        currentUri,
-        cropActions,
-        { compress: 0.9, format: ImageManipulator.SaveFormat.JPEG }
-      );
+      const result = await ImageManipulator.manipulateAsync(currentUri, cropActions, {
+        compress: 0.9,
+        format: ImageManipulator.SaveFormat.JPEG,
+      });
 
       setCurrentUri(result.uri);
       setTool("pen"); // Voltar para a caneta após o crop
@@ -207,10 +209,7 @@ export function ImageEditor({ uri, onSave, onCancel }: ImageEditorProps) {
         <ViewShot
           ref={viewShotRef}
           options={{ format: "jpg", quality: 0.9 }}
-          style={[
-            styles.imageWrapper,
-            { width: imageSize.width, height: imageSize.height },
-          ]}
+          style={[styles.imageWrapper, { width: imageSize.width, height: imageSize.height }]}
           {...panResponder.panHandlers}
         >
           <Image
@@ -337,13 +336,13 @@ export function ImageEditor({ uri, onSave, onCancel }: ImageEditorProps) {
               autoFocus
             />
             <View style={styles.modalButtons}>
-              <TouchableOpacity 
+              <TouchableOpacity
                 onPress={() => setIsTextModalVisible(false)}
                 style={styles.modalBtn}
               >
                 <Text style={{ color: "#666" }}>Cancelar</Text>
               </TouchableOpacity>
-              <TouchableOpacity 
+              <TouchableOpacity
                 onPress={handleAddText}
                 style={[styles.modalBtn, { backgroundColor: "#6366f1" }]}
               >
@@ -372,7 +371,11 @@ export function ImageEditor({ uri, onSave, onCancel }: ImageEditorProps) {
             onPress={() => setTool("arrow")}
             style={[styles.toolBtn, tool === "arrow" && styles.activeTool]}
           >
-            <Ionicons name="arrow-forward" size={24} color={tool === "arrow" ? colors.primary : "#fff"} />
+            <Ionicons
+              name="arrow-forward"
+              size={24}
+              color={tool === "arrow" ? colors.primary : "#fff"}
+            />
           </TouchableOpacity>
           <TouchableOpacity
             onPress={() => setTool("text")}
@@ -386,10 +389,7 @@ export function ImageEditor({ uri, onSave, onCancel }: ImageEditorProps) {
           >
             <Ionicons name="crop" size={24} color={tool === "crop" ? colors.primary : "#fff"} />
           </TouchableOpacity>
-          <TouchableOpacity
-            onPress={rotateImage}
-            style={styles.toolBtn}
-          >
+          <TouchableOpacity onPress={rotateImage} style={styles.toolBtn}>
             <Ionicons name="refresh" size={24} color="#fff" />
           </TouchableOpacity>
           <TouchableOpacity onPress={undo} style={styles.toolBtn}>
@@ -411,7 +411,6 @@ export function ImageEditor({ uri, onSave, onCancel }: ImageEditorProps) {
           ))}
         </View>
       </View>
-
     </SafeAreaView>
   );
 }

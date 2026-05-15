@@ -212,8 +212,12 @@ describe("AppointmentResponseSchema — unit tests", () => {
   });
 
   it("accepts pain_level 0 and 10", () => {
-    expect(AppointmentResponseSchema.safeParse({ ...validAppointment, pain_level: 0 }).success).toBe(true);
-    expect(AppointmentResponseSchema.safeParse({ ...validAppointment, pain_level: 10 }).success).toBe(true);
+    expect(
+      AppointmentResponseSchema.safeParse({ ...validAppointment, pain_level: 0 }).success,
+    ).toBe(true);
+    expect(
+      AppointmentResponseSchema.safeParse({ ...validAppointment, pain_level: 10 }).success,
+    ).toBe(true);
   });
 
   it("accepts extra fields (passthrough)", () => {
@@ -307,11 +311,13 @@ describe("Property 5: Zod schema round-trip consistency", () => {
 
   // Use a simple valid email that Zod's strict validator accepts
   const validEmailArb = fc.option(
-    fc.tuple(
-      fc.stringMatching(/^[a-z][a-z0-9]{0,10}$/),
-      fc.stringMatching(/^[a-z][a-z0-9]{0,10}$/),
-      fc.constantFrom("com", "org", "net", "io"),
-    ).map(([user, domain, tld]) => `${user}@${domain}.${tld}`),
+    fc
+      .tuple(
+        fc.stringMatching(/^[a-z][a-z0-9]{0,10}$/),
+        fc.stringMatching(/^[a-z][a-z0-9]{0,10}$/),
+        fc.constantFrom("com", "org", "net", "io"),
+      )
+      .map(([user, domain, tld]) => `${user}@${domain}.${tld}`),
     { nil: null },
   );
 

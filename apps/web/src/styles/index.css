@@ -87,8 +87,9 @@
   --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.04);
   --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.08), 0 1px 2px -1px rgb(0 0 0 / 0.06);
   --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.08), 0 2px 4px -2px rgb(0 0 0 / 0.06);
-  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.10), 0 4px 6px -4px rgb(0 0 0 / 0.05);
-  --shadow-popover: 0 10px 38px -10px rgba(22,23,24,0.35), 0 10px 20px -15px rgba(22,23,24,0.2);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.05);
+  --shadow-popover:
+    0 10px 38px -10px rgba(22, 23, 24, 0.35), 0 10px 20px -15px rgba(22, 23, 24, 0.2);
   --shadow-glow-primary: 0 0 0 4px hsl(211 100% 50% / 0.15);
 
   /* Border Radius */
@@ -253,7 +254,11 @@
     font-family: var(--font-display);
   }
 
-  .tabular-nums, table, .num { font-variant-numeric: tabular-nums; }
+  .tabular-nums,
+  table,
+  .num {
+    font-variant-numeric: tabular-nums;
+  }
 }
 
 /* Custom Utilities outside @theme */
@@ -274,8 +279,12 @@
   -webkit-backdrop-filter: blur(4px);
 }
 
-.dark .glass-panel { background: rgba(15, 23, 42, 0.7); }
-.dark .glass-card  { background: rgba(15, 23, 42, 0.4); }
+.dark .glass-panel {
+  background: rgba(15, 23, 42, 0.7);
+}
+.dark .glass-card {
+  background: rgba(15, 23, 42, 0.4);
+}
 
 /* ScheduleX Specific overrides */
 .sx__calendar-wrapper {
@@ -310,6 +319,12 @@
 }
 
 @keyframes voiceWave {
-  from { transform: scaleY(0.3); opacity: 0.7; }
-  to   { transform: scaleY(1);   opacity: 1; }
+  from {
+    transform: scaleY(0.3);
+    opacity: 0.7;
+  }
+  to {
+    transform: scaleY(1);
+    opacity: 1;
+  }
 }

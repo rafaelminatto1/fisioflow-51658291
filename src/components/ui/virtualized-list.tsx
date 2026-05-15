@@ -151,7 +151,11 @@ export function VirtualizedList<T>({
 
   const actualContainerHeight = containerHeight ?? height ?? 0;
   const actualRenderEmpty = renderEmpty ? renderEmpty : emptyState ? () => emptyState : undefined;
-  const actualRenderLoading = renderLoading ? renderLoading : loadingIndicator ? () => loadingIndicator : undefined;
+  const actualRenderLoading = renderLoading
+    ? renderLoading
+    : loadingIndicator
+      ? () => loadingIndicator
+      : undefined;
   const actualEndReachedThreshold = onEndReachedThreshold ?? endReachedThreshold ?? 200;
 
   // Calcular itens visíveis
@@ -234,7 +238,13 @@ export function VirtualizedList<T>({
         }
       }
     },
-    [throttledSetScrollTop, onEndReached, isLoading, actualEndReachedThreshold, debouncedOnEndReached],
+    [
+      throttledSetScrollTop,
+      onEndReached,
+      isLoading,
+      actualEndReachedThreshold,
+      debouncedOnEndReached,
+    ],
   );
 
   // Estado vazio

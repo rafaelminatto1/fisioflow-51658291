@@ -1,7 +1,17 @@
 import { useState, useEffect } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Link2, Eye, Plus, Trash2, Loader2, Save, CheckCircle2, XCircle, Clock } from "lucide-react";
+import {
+  Link2,
+  Eye,
+  Plus,
+  Trash2,
+  Loader2,
+  Save,
+  CheckCircle2,
+  XCircle,
+  Clock,
+} from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -84,11 +94,14 @@ export function PublicProfileTab() {
   });
 
   const checkSlug = async (slug: string) => {
-    if (!slug || slug.length < 2) { setSlugAvailable(null); return; }
+    if (!slug || slug.length < 2) {
+      setSlugAvailable(null);
+      return;
+    }
     setCheckingSlug(true);
     try {
       const res = await fetch(`/api/public-booking/booking/${encodeURIComponent(slug)}`);
-      const data = await res.json() as any;
+      const data = (await res.json()) as any;
       // If the profile found is the current user's, slug is "available" (it's theirs)
       setSlugAvailable(res.status === 404 || data.data?.user_id === profile.user_id);
     } catch {
@@ -118,13 +131,16 @@ export function PublicProfileTab() {
   const updateService = (id: string, field: keyof PublicService, value: string | number) => {
     setForm((f) => ({
       ...f,
-      public_services: f.public_services.map((s) =>
-        s.id === id ? { ...s, [field]: value } : s,
-      ),
+      public_services: f.public_services.map((s) => (s.id === id ? { ...s, [field]: value } : s)),
     }));
   };
 
-  if (isLoading) return <div className="flex justify-center py-8"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>;
+  if (isLoading)
+    return (
+      <div className="flex justify-center py-8">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      </div>
+    );
 
   const publicUrl = form.slug ? `${PAGES_URL}/agendar/${form.slug}` : null;
 
@@ -171,7 +187,10 @@ export function PublicProfileTab() {
                 variant="ghost"
                 size="icon"
                 className="h-7 w-7 shrink-0"
-                onClick={() => { navigator.clipboard.writeText(publicUrl); toast.success("Link copiado!"); }}
+                onClick={() => {
+                  navigator.clipboard.writeText(publicUrl);
+                  toast.success("Link copiado!");
+                }}
               >
                 <Eye className="h-3.5 w-3.5" />
               </Button>
@@ -204,9 +223,15 @@ export function PublicProfileTab() {
                 className="rounded-l-none"
               />
             </div>
-            {checkingSlug && <p className="text-xs text-muted-foreground">Verificando disponibilidade...</p>}
-            {!checkingSlug && slugAvailable === true && <p className="text-xs text-green-600">Link disponível ✓</p>}
-            {!checkingSlug && slugAvailable === false && <p className="text-xs text-destructive">Link já está em uso</p>}
+            {checkingSlug && (
+              <p className="text-xs text-muted-foreground">Verificando disponibilidade...</p>
+            )}
+            {!checkingSlug && slugAvailable === true && (
+              <p className="text-xs text-green-600">Link disponível ✓</p>
+            )}
+            {!checkingSlug && slugAvailable === false && (
+              <p className="text-xs text-destructive">Link já está em uso</p>
+            )}
           </div>
 
           <div className="space-y-2">
@@ -291,7 +316,11 @@ export function PublicProfileTab() {
           disabled={saveMutation.isPending}
           className="gap-2"
         >
-          {saveMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+          {saveMutation.isPending ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <Save className="h-4 w-4" />
+          )}
           Salvar Perfil Público
         </Button>
       </div>
@@ -323,7 +352,11 @@ function BookingRequestsPanel() {
   const requests: BookingRequest[] = (data as any)?.data ?? [];
 
   const formatDate = (ymd: string) =>
-    new Date(ymd + "T12:00:00").toLocaleDateString("pt-BR", { weekday: "short", day: "2-digit", month: "short" });
+    new Date(ymd + "T12:00:00").toLocaleDateString("pt-BR", {
+      weekday: "short",
+      day: "2-digit",
+      month: "short",
+    });
 
   return (
     <Card>
@@ -332,7 +365,9 @@ function BookingRequestsPanel() {
           <Clock className="h-4 w-4" />
           Solicitações de Agendamento Pendentes
           {requests.length > 0 && (
-            <Badge variant="destructive" className="ml-1">{requests.length}</Badge>
+            <Badge variant="destructive" className="ml-1">
+              {requests.length}
+            </Badge>
           )}
         </CardTitle>
         <CardDescription>
@@ -352,14 +387,19 @@ function BookingRequestsPanel() {
         )}
         <div className="space-y-3">
           {requests.map((req) => (
-            <div key={req.id} className="flex items-start justify-between gap-4 p-3 rounded-lg border bg-amber-50/30 border-amber-100">
+            <div
+              key={req.id}
+              className="flex items-start justify-between gap-4 p-3 rounded-lg border bg-amber-50/30 border-amber-100"
+            >
               <div className="space-y-0.5 min-w-0">
                 <p className="font-medium text-sm truncate">{req.patient_name}</p>
                 <p className="text-xs text-muted-foreground">{req.patient_phone}</p>
                 <p className="text-xs font-medium text-blue-700">
                   {formatDate(req.requested_date)} às {req.requested_time}
                 </p>
-                {req.notes && <p className="text-xs text-muted-foreground italic truncate">{req.notes}</p>}
+                {req.notes && (
+                  <p className="text-xs text-muted-foreground italic truncate">{req.notes}</p>
+                )}
               </div>
               <div className="flex gap-2 shrink-0">
                 <Button

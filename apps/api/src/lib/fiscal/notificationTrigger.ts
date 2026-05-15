@@ -33,8 +33,16 @@ export async function triggerFiscalCycleNotification(
       type: "FISCAL_MILESTONE",
       actions: [
         { label: "Emitir NF", url: `/api/nfse/generate?patientId=${patientId}` },
-        { label: "Criar Tarefa", url: `/api/tasks`, method: "POST", body: { titulo: `Emitir NF: ${patientName} (${sessionCount} sessões)`, patient_id: patientId } }
-      ]
+        {
+          label: "Criar Tarefa",
+          url: `/api/tasks`,
+          method: "POST",
+          body: {
+            titulo: `Emitir NF: ${patientName} (${sessionCount} sessões)`,
+            patient_id: patientId,
+          },
+        },
+      ],
     };
 
     // 2. Insert notifications for all admins
@@ -57,7 +65,9 @@ export async function triggerFiscalCycleNotification(
       });
     }
 
-    console.log(`[FiscalTrigger] Notification sent to ${admins.length} admins for patient ${patientId}`);
+    console.log(
+      `[FiscalTrigger] Notification sent to ${admins.length} admins for patient ${patientId}`,
+    );
   } catch (error) {
     console.error("[FiscalTrigger] Error triggering notification:", error);
   }

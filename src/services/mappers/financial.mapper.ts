@@ -48,8 +48,10 @@ export function mapPatientFinancialRow(row: Record<string, unknown>): PatientFin
     partnership_id: (row["partnership_id"] as string | undefined) ?? undefined,
     partnership: (row["partnership"] as PatientFinancialRecord["partnership"]) ?? undefined,
     final_value: Number(row["final_value"]) || 0,
-    payment_method: (row["payment_method"] as PatientFinancialRecord["payment_method"]) ?? undefined,
-    payment_status: (row["payment_status"] as PatientFinancialRecord["payment_status"]) ?? "pending",
+    payment_method:
+      (row["payment_method"] as PatientFinancialRecord["payment_method"]) ?? undefined,
+    payment_status:
+      (row["payment_status"] as PatientFinancialRecord["payment_status"]) ?? "pending",
     paid_amount: Number(row["paid_amount"]) || 0,
     paid_date: (row["paid_date"] as string | undefined) ?? undefined,
     notes: (row["notes"] as string | undefined) ?? undefined,

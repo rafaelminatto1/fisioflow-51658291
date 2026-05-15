@@ -33,7 +33,6 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
           buttonVariants({ variant, size, className }),
           premium && "magnetic-button",
           glow && "glow-on-hover",
-
         )}
         ref={ref}
         {...props}

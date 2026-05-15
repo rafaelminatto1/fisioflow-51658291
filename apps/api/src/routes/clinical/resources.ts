@@ -1192,7 +1192,7 @@ export function registerClinicalResourceRoutes(app: ClinicalRouteApp) {
 
       // Heurística Básica: Se for um teste de joelho (ex: Lachman)
       // O PoseData contém as articulações detectadas pelo HUD mobile.
-      
+
       const prompt = `
         Você é um auditor clínico de fisioterapia.
         Analise a execução deste teste clínico (ID: ${test_id}):
@@ -1217,7 +1217,7 @@ export function registerClinicalResourceRoutes(app: ClinicalRouteApp) {
         prompt,
         model: "gemini-1.5-flash",
         temperature: 0.2,
-        responseFormat: "json"
+        responseFormat: "json",
       });
 
       const jsonMatch = result.content.match(/\{[\s\S]*\}/);

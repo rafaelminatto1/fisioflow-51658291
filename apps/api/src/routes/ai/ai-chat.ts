@@ -493,7 +493,9 @@ app.post("/executive-summary", async (c) => {
 app.post("/soap-suggestions", async (c) => {
   const body = (await c.req.json().catch(() => ({}))) as Record<string, unknown>;
   const context =
-    body.context && typeof body.context === "object" ? (body.context as Record<string, unknown>) : {};
+    body.context && typeof body.context === "object"
+      ? (body.context as Record<string, unknown>)
+      : {};
 
   const partial = safeText(context.observacao);
   const proceduresArr = Array.isArray(context.procedures) ? (context.procedures as any[]) : [];

@@ -15,14 +15,8 @@ import type { CardSize } from "@/types/agenda";
 import { useAgendaAppearancePersistence } from "./useAgendaAppearancePersistence";
 
 export function useCardSize() {
-  const {
-    appearance,
-    fontPercentage,
-    slotHeightPx,
-    cssVariables,
-    applyToAllViews,
-    resetAll,
-  } = useAgendaAppearancePersistence("day");
+  const { appearance, fontPercentage, slotHeightPx, cssVariables, applyToAllViews, resetAll } =
+    useAgendaAppearancePersistence("day");
 
   const setCardSize = useCallback(
     (size: CardSize) => applyToAllViews({ cardSize: size }),

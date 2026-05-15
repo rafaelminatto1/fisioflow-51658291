@@ -43,8 +43,8 @@ export const ClinicalTestVerifierCamera: React.FC<ClinicalTestVerifierCameraProp
       if (res.data?.isValid) {
         setFeedback(res.data.feedback);
         if (res.data.qualityScore > 90) {
-           // Trava o resultado se estiver perfeito
-           onValidationComplete(res.data);
+          // Trava o resultado se estiver perfeito
+          onValidationComplete(res.data);
         }
       } else {
         setFeedback(`⚠️ ${res.data.feedback}`);
@@ -75,7 +75,12 @@ export const ClinicalTestVerifierCamera: React.FC<ClinicalTestVerifierCameraProp
     }
   }, []);
 
-  if (!device) return <View style={styles.error}><Text>Câmera não disponível</Text></View>;
+  if (!device)
+    return (
+      <View style={styles.error}>
+        <Text>Câmera não disponível</Text>
+      </View>
+    );
 
   return (
     <View style={styles.container}>
@@ -100,7 +105,9 @@ export const ClinicalTestVerifierCamera: React.FC<ClinicalTestVerifierCameraProp
 
         <View style={styles.bottomFeedback}>
           <BlurView intensity={80} style={styles.feedbackCard}>
-            {isValidating && <ActivityIndicator size="small" color="#0EA5E9" style={{ marginBottom: 8 }} />}
+            {isValidating && (
+              <ActivityIndicator size="small" color="#0EA5E9" style={{ marginBottom: 8 }} />
+            )}
             <Text style={styles.feedbackText}>{feedback}</Text>
           </BlurView>
         </View>
@@ -118,5 +125,5 @@ const styles = StyleSheet.create({
   title: { color: "white", fontSize: 16, fontWeight: "900", textTransform: "uppercase" },
   bottomFeedback: { marginBottom: 40 },
   feedbackCard: { padding: 20, borderRadius: 20, alignItems: "center", overflow: "hidden" },
-  feedbackText: { color: "white", fontSize: 14, fontWeight: "bold", textAlign: "center" }
+  feedbackText: { color: "white", fontSize: 14, fontWeight: "bold", textAlign: "center" },
 });

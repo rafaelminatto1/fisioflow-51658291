@@ -1,8 +1,8 @@
-import { AlertTriangle, Cake, MessageCircle, Sparkles } from "lucide-react";
+import { Cake, Sparkles } from "lucide-react";
 import { Suspense, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useQueries } from "@tanstack/react-query";
-import { Link, useSearchParams } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
 import { PatientService } from "@/lib/services/PatientService";
 import { PageLayout } from "@/components/layout/PageLayout";
 import { PageContainer } from "@/components/layout/PageContainer";
@@ -14,7 +14,6 @@ import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useBirthdayNotification } from "@/hooks/useBirthdayNotification";
 import { useBulkActions } from "@/hooks/useBulkActions";
-import { usePatientReengagement } from "@/hooks/usePatientReengagement";
 import { useScheduleHandlers } from "@/hooks/useScheduleHandlers";
 import { useSchedulePageData, type ViewType } from "@/hooks/useSchedulePage";
 import type { ViewType as CalendarViewType } from "@/hooks/useScheduleState";
@@ -22,20 +21,29 @@ import { KEYBOARD_SHORTCUTS } from "@/lib/calendar/constants";
 import {
   updateScheduleViewSearchParams,
   type ScheduleViewType,
-  parseScheduleViewParam,
 } from "@/lib/schedule/viewParams";
-import { parseLocalDate, todayYMD, getAdjustedToday, getAdjustedTodayYMD, toLocalYMD } from "@/lib/date-utils";
+import {
+  parseLocalDate,
+  getAdjustedToday,
+  getAdjustedTodayYMD,
+  toLocalYMD,
+} from "@/lib/date-utils";
 
 import "@/styles/schedule.css";
 
 export default function Schedule() {
   const [searchParams, setSearchParams] = useSearchParams();
+  const isMobile = useIsMobile();
 
   const dateParamRaw = searchParams.get("date");
   const dateParam =
     dateParamRaw && /^\d{4}-\d{2}-\d{2}$/.test(dateParamRaw) ? dateParamRaw : getAdjustedTodayYMD();
 
-  const viewParam = parseScheduleViewParam(searchParams.get("view")) as ViewType;
+  const rawViewParam = searchParams.get("view");
+  const viewParam = (rawViewParam === "day" || rawViewParam === "week" || rawViewParam === "month") 
+    ? (rawViewParam as ViewType) 
+    : (isMobile ? "day" : "week");
+  
   const statusParam = searchParams.get("status")?.split(",").filter(Boolean) || [];
   const typesParam = searchParams.get("types")?.split(",").filter(Boolean) || [];
   const therapistsParam = searchParams.get("therapists")?.split(",").filter(Boolean) || [];
@@ -52,29 +60,31 @@ export default function Schedule() {
   const currentDate = parseLocalDate(dateParam);
 
   const uniquePatientIds = useMemo(() => {
-    return Array.from(new Set(appointments.map((a: any) => a.patient_id || a.patientId).filter(Boolean))) as string[];
+    return Array.from(
+      new Set(appointments.map((a: any) => a.patient_id || a.patientId).filter(Boolean)),
+    ) as string[];
   }, [appointments]);
 
   const painQueries = useQueries({
-    queries: uniquePatientIds.map(id => ({
-      queryKey: ['painRecords', id],
+    queries: uniquePatientIds.map((id) => ({
+      queryKey: ["painRecords", id],
       queryFn: () => PatientService.getPainRecords(id),
       staleTime: 5 * 60 * 1000,
-    }))
+    })),
   });
 
   const enrichedAppointments = useMemo(() => {
     const highPainMap = new Map<string, boolean>();
     painQueries.forEach((q, index) => {
       if (q.data) {
-        const hasHigh = q.data.some(record => record.level > 7);
+        const hasHigh = q.data.some((record) => record.level > 7);
         highPainMap.set(uniquePatientIds[index], hasHigh);
       }
     });
 
     return appointments.map((a: any) => ({
       ...a,
-      has_high_pain_alert: highPainMap.get(a.patient_id || a.patientId) || false
+      has_high_pain_alert: highPainMap.get(a.patient_id || a.patientId) || false,
     }));
   }, [appointments, painQueries, uniquePatientIds]);
 
@@ -88,8 +98,6 @@ export default function Schedule() {
 
   const isNavigating = isLoading && appointments.length === 0;
   const { sendBirthdayMessage, isSending } = useBirthdayNotification();
-  const { totalToReengage } = usePatientReengagement();
-  const isMobile = useIsMobile();
 
   const {
     selectedIds,
@@ -126,7 +134,8 @@ export default function Schedule() {
     else newParams.delete("status");
     if (newFilters.types?.length > 0) newParams.set("types", newFilters.types.join(","));
     else newParams.delete("types");
-    if (newFilters.therapists?.length > 0) newParams.set("therapists", newFilters.therapists.join(","));
+    if (newFilters.therapists?.length > 0)
+      newParams.set("therapists", newFilters.therapists.join(","));
     else newParams.delete("therapists");
     setSearchParams(newParams, { replace: true });
   };
@@ -140,7 +149,7 @@ export default function Schedule() {
 
   const clearFilters = () => {
     const newParams = new URLSearchParams(searchParams);
-    ["status", "types", "therapists", "patient"].forEach(p => newParams.delete(p));
+    ["status", "types", "therapists", "patient"].forEach((p) => newParams.delete(p));
     setSearchParams(newParams, { replace: true });
   };
 
@@ -156,21 +165,49 @@ export default function Schedule() {
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement || e.target instanceof HTMLSelectElement) return;
-      const isModalActive = modals.isModalOpen || modals.showKeyboardShortcuts || modals.quickEditAppointment;
+      if (
+        e.target instanceof HTMLInputElement ||
+        e.target instanceof HTMLTextAreaElement ||
+        e.target instanceof HTMLSelectElement
+      )
+        return;
+      const isModalActive =
+        modals.isModalOpen || modals.showKeyboardShortcuts || modals.quickEditAppointment;
       if (isModalActive && e.key !== "Escape") return;
       const key = e.key.toLowerCase();
       switch (key) {
-        case "a": e.preventDefault(); toggleSelectionMode(); break;
-        case KEYBOARD_SHORTCUTS.NEW_APPOINTMENT: e.preventDefault(); actions.handleCreateAppointment(); break;
-        case KEYBOARD_SHORTCUTS.SEARCH: e.preventDefault(); document.querySelector<HTMLInputElement>('input[aria-label*="paciente"]')?.focus(); break;
-        case KEYBOARD_SHORTCUTS.DAY_VIEW: handleViewTypeChange("day"); break;
-        case KEYBOARD_SHORTCUTS.WEEK_VIEW: handleViewTypeChange("week"); break;
-        case KEYBOARD_SHORTCUTS.MONTH_VIEW: handleViewTypeChange("month"); break;
-        case KEYBOARD_SHORTCUTS.TODAY: handleDateChange(getAdjustedToday()); break;
+        case "a":
+          e.preventDefault();
+          toggleSelectionMode();
+          break;
+        case KEYBOARD_SHORTCUTS.NEW_APPOINTMENT:
+          e.preventDefault();
+          actions.handleCreateAppointment();
+          break;
+        case KEYBOARD_SHORTCUTS.SEARCH:
+          e.preventDefault();
+          document.querySelector<HTMLInputElement>('input[aria-label*="paciente"]')?.focus();
+          break;
+        case KEYBOARD_SHORTCUTS.DAY_VIEW:
+          handleViewTypeChange("day");
+          break;
+        case KEYBOARD_SHORTCUTS.WEEK_VIEW:
+          handleViewTypeChange("week");
+          break;
+        case KEYBOARD_SHORTCUTS.MONTH_VIEW:
+          handleViewTypeChange("month");
+          break;
+        case KEYBOARD_SHORTCUTS.TODAY:
+          handleDateChange(getAdjustedToday());
+          break;
         case KEYBOARD_SHORTCUTS.HELP:
-        case KEYBOARD_SHORTCUTS.HELP_ALT: e.preventDefault(); modals.setShowKeyboardShortcuts(true); break;
-        case "escape": if (modals.showKeyboardShortcuts) modals.setShowKeyboardShortcuts(false); break;
+        case KEYBOARD_SHORTCUTS.HELP_ALT:
+          e.preventDefault();
+          modals.setShowKeyboardShortcuts(true);
+          break;
+        case "escape":
+          if (modals.showKeyboardShortcuts) modals.setShowKeyboardShortcuts(false);
+          break;
       }
     };
     window.addEventListener("keydown", handleKeyDown);
@@ -179,11 +216,15 @@ export default function Schedule() {
 
   return (
     <PageLayout showFooter={false}>
-      <PageContainer maxWidth="full" noPadding className="h-[calc(100vh-64px)] flex flex-col px-2 md:px-3">
+      <PageContainer
+        maxWidth="full"
+        noPadding
+        className="h-[calc(100vh-64px)] flex flex-col px-2 md:px-3"
+      >
         <div className="flex-1 flex flex-col min-h-0 relative">
-          {/* Action Banner: Birthdays & Reengagement */}
-          {(birthdaysToday.length > 0 || staffBirthdaysToday.length > 0 || totalToReengage > 0) && (
-            <motion.div 
+          {/* Action Banner: Birthdays */}
+          {(birthdaysToday.length > 0 || staffBirthdaysToday.length > 0) && (
+            <motion.div
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
               className="absolute top-0 left-1/2 -translate-x-1/2 z-[45] w-full max-w-4xl px-4 pointer-events-none"
@@ -195,15 +236,9 @@ export default function Schedule() {
                       <Cake className="h-4 w-4 text-primary" />
                       <p className="text-[11px] font-bold text-slate-700 dark:text-slate-300">
                         <span className="text-primary uppercase tracking-wider">Aniversários:</span>{" "}
-                        {[...birthdaysToday, ...staffBirthdaysToday].map(p => p.full_name).join(", ")}
-                      </p>
-                    </div>
-                  )}
-                  {totalToReengage > 0 && (
-                    <div className="flex items-center gap-2 border-l border-slate-200 dark:border-slate-800 pl-6">
-                      <AlertTriangle className="h-4 w-4 text-amber-500" />
-                      <p className="text-[11px] font-bold text-slate-700 dark:text-slate-300">
-                        <span className="text-amber-500 uppercase tracking-wider">{totalToReengage} pacientes</span> sem retorno
+                        {[...birthdaysToday, ...staffBirthdaysToday]
+                          .map((p) => p.full_name)
+                          .join(", ")}
                       </p>
                     </div>
                   )}
@@ -213,24 +248,13 @@ export default function Schedule() {
                     <Button
                       size="sm"
                       className="h-8 text-[10px] font-black uppercase bg-primary text-primary-foreground rounded-lg"
-                      onClick={() => birthdaysToday.forEach(p => sendBirthdayMessage(p.id, p.phone || ""))}
+                      onClick={() =>
+                        birthdaysToday.forEach((p) => sendBirthdayMessage(p.id, p.phone || ""))
+                      }
                       disabled={isSending}
                     >
                       <Sparkles className="h-3.5 w-3.5 mr-2" />
                       Parabéns
-                    </Button>
-                  )}
-                  {totalToReengage > 0 && (
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="h-8 text-[10px] font-black uppercase border-primary text-primary rounded-lg"
-                      asChild
-                    >
-                      <Link to="/marketing/dashboard">
-                        <MessageCircle className="h-3.5 w-3.5 mr-2" />
-                        Reengajar
-                      </Link>
                     </Button>
                   )}
                 </div>
@@ -247,7 +271,9 @@ export default function Schedule() {
                 exit={{ opacity: 0 }}
                 className="h-full flex flex-col"
               >
-                <Suspense fallback={<CalendarSkeletonEnhanced viewType={viewType as CalendarViewType} />}>
+                <Suspense
+                  fallback={<CalendarSkeletonEnhanced viewType={viewType as CalendarViewType} />}
+                >
                   {isNavigating ? (
                     <CalendarSkeletonEnhanced viewType={viewType as CalendarViewType} />
                   ) : (
@@ -260,17 +286,22 @@ export default function Schedule() {
                       onViewTypeChange={handleViewTypeChange}
                       onTimeSlotClick={handleTimeSlotClick}
                       onAppointmentReschedule={(id, start) => {
-                        const appointment = appointments.find(a => a.id === id);
+                        const appointment = appointments.find((a) => a.id === id);
                         if (!appointment) return;
                         const match = start.match(/^(\d{4}-\d{2}-\d{2})(?:[T\s](\d{2}:\d{2}))?/);
-                        if (match) actions.handleAppointmentReschedule(appointment, parseLocalDate(match[1]), match[2] || "");
+                        if (match)
+                          actions.handleAppointmentReschedule(
+                            appointment,
+                            parseLocalDate(match[1]),
+                            match[2] || "",
+                          );
                       }}
-                      onEditAppointment={id => {
-                        const appointment = appointments.find(a => a.id === id);
+                      onEditAppointment={(id) => {
+                        const appointment = appointments.find((a) => a.id === id);
                         if (appointment) actions.handleEditAppointment(appointment);
                       }}
-                      onDeleteAppointment={id => {
-                        const appointment = appointments.find(a => a.id === id);
+                      onDeleteAppointment={(id) => {
+                        const appointment = appointments.find((a) => a.id === id);
                         if (appointment) actions.handleDeleteAppointment(appointment);
                       }}
                       onStatusChange={actions.handleUpdateStatus}

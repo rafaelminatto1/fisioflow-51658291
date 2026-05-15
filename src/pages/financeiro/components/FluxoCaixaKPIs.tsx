@@ -22,8 +22,7 @@ export function FluxoCaixaKPIs({ stats }: Props) {
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-black text-emerald-600">
-            R${" "}
-            {stats.totalEntradas.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+            R$ {stats.totalEntradas.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
           </div>
         </CardContent>
       </Card>
@@ -36,8 +35,7 @@ export function FluxoCaixaKPIs({ stats }: Props) {
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-black text-red-600">
-            R${" "}
-            {stats.totalSaidas.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+            R$ {stats.totalSaidas.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
           </div>
         </CardContent>
       </Card>

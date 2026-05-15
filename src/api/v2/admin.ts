@@ -145,4 +145,3 @@ export const pendingUsersApi = {
       body: JSON.stringify({ role, roles: roles ?? [role] }),
     }),
 };
-

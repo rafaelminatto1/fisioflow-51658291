@@ -124,10 +124,14 @@ app.get("/booking/:slug/availability", bookingRateLimit, async (c) => {
 // POST /api/public-booking/booking — Create booking request (Turnstile required)
 app.post("/booking", bookingRateLimit, turnstileVerify, async (c) => {
   // Feature disabled per user request: "por enquanto nao quero que paciente agendem seus horaios"
-  return c.json({ 
-    error: "O agendamento online está temporariamente desativado. Entre em contato com a clínica para marcar sua sessão.",
-    code: "FEATURE_DISABLED"
-  }, 403);
+  return c.json(
+    {
+      error:
+        "O agendamento online está temporariamente desativado. Entre em contato com a clínica para marcar sua sessão.",
+      code: "FEATURE_DISABLED",
+    },
+    403,
+  );
 
   /* Logic preserved for future implementation:
   const pool = createPool(c.env);
@@ -142,8 +146,7 @@ app.get("/requests", requireAuth, async (c) => {
   const pool = createPool(c.env);
   const limit = Math.min(Number(limitStr) || 50, 200);
 
-  if (!(await hasTable(pool, "public_booking_requests")))
-    return c.json({ data: [] });
+  if (!(await hasTable(pool, "public_booking_requests"))) return c.json({ data: [] });
 
   let sql = `SELECT id, patient_name, patient_phone, patient_email, notes,
                     requested_date, requested_time, professional_name,
@@ -186,12 +189,16 @@ app.patch("/requests/:id", requireAuth, async (c) => {
   if (body.status === "confirmed" && c.env.WHATSAPP_ACCESS_TOKEN && row.patient_phone) {
     const { WhatsAppService } = await import("../lib/whatsapp");
     const wa = new WhatsAppService(c.env);
-    const dateFormatted = new Date(String(row.requested_date) + "T12:00:00")
-      .toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "long" });
-    await wa.sendTextMessage(
-      String(row.patient_phone),
-      `Olá${row.patient_name ? " " + String(row.patient_name).split(" ")[0] : ""}! ✅ Seu agendamento foi confirmado.\n\n📅 ${dateFormatted} às ${row.requested_time}.\n\nAguardamos você!`,
-    ).catch(() => {});
+    const dateFormatted = new Date(String(row.requested_date) + "T12:00:00").toLocaleDateString(
+      "pt-BR",
+      { weekday: "long", day: "numeric", month: "long" },
+    );
+    await wa
+      .sendTextMessage(
+        String(row.patient_phone),
+        `Olá${row.patient_name ? " " + String(row.patient_name).split(" ")[0] : ""}! ✅ Seu agendamento foi confirmado.\n\n📅 ${dateFormatted} às ${row.requested_time}.\n\nAguardamos você!`,
+      )
+      .catch(() => {});
   }
 
   return c.json({ data: row });

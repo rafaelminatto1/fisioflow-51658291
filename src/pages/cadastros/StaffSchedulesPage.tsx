@@ -27,7 +27,15 @@ import { toast } from "@/hooks/use-toast";
 import { request } from "@/api/v2";
 
 const WEEKDAYS = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
-const WEEKDAYS_FULL = ["Domingo", "Segunda-feira", "Terça-feira", "Quarta-feira", "Quinta-feira", "Sexta-feira", "Sábado"];
+const WEEKDAYS_FULL = [
+  "Domingo",
+  "Segunda-feira",
+  "Terça-feira",
+  "Quarta-feira",
+  "Quinta-feira",
+  "Sexta-feira",
+  "Sábado",
+];
 const BLOCK_REASONS: Record<string, string> = {
   folga: "Folga",
   ferias: "Férias",
@@ -35,22 +43,48 @@ const BLOCK_REASONS: Record<string, string> = {
   outro: "Outro",
 };
 
-interface Member { therapist_id: string; full_name: string; role: string }
-interface ScheduleSlot { id: string; therapist_id: string; weekday: number; start_time: string; end_time: string }
-interface Block { id: string; therapist_id: string; therapist_name: string; block_date: string; start_time?: string; end_time?: string; reason: string; notes?: string }
+interface Member {
+  therapist_id: string;
+  full_name: string;
+  role: string;
+}
+interface ScheduleSlot {
+  id: string;
+  therapist_id: string;
+  weekday: number;
+  start_time: string;
+  end_time: string;
+}
+interface Block {
+  id: string;
+  therapist_id: string;
+  therapist_name: string;
+  block_date: string;
+  start_time?: string;
+  end_time?: string;
+  reason: string;
+  notes?: string;
+}
 
 function useStaffSchedules() {
   return useQuery<{ members: Member[]; schedules: ScheduleSlot[]; blocks: Block[] }>({
     queryKey: ["staff-schedules"],
     queryFn: async () => {
-      const res = await request<{ data: { members: Member[]; schedules: ScheduleSlot[]; blocks: Block[] } }>("/api/staff-schedules");
+      const res = await request<{
+        data: { members: Member[]; schedules: ScheduleSlot[]; blocks: Block[] };
+      }>("/api/staff-schedules");
       return (res as any).data;
     },
   });
 }
 
 function initials(name: string) {
-  return name.split(" ").slice(0, 2).map((n) => n[0]).join("").toUpperCase();
+  return name
+    .split(" ")
+    .slice(0, 2)
+    .map((n) => n[0])
+    .join("")
+    .toUpperCase();
 }
 
 // ─── Weekly Schedule Editor ────────────────────────────────────────────────────
@@ -62,17 +96,25 @@ function WeeklyScheduleEditor({
 }: {
   member: Member;
   slots: ScheduleSlot[];
-  onSave: (therapistId: string, schedules: { weekday: number; start_time: string; end_time: string }[]) => void;
+  onSave: (
+    therapistId: string,
+    schedules: { weekday: number; start_time: string; end_time: string }[],
+  ) => void;
 }) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState<{ weekday: number; start_time: string; end_time: string }[]>(
-    slots.map((s) => ({ weekday: s.weekday, start_time: s.start_time.substring(0, 5), end_time: s.end_time.substring(0, 5) })),
+    slots.map((s) => ({
+      weekday: s.weekday,
+      start_time: s.start_time.substring(0, 5),
+      end_time: s.end_time.substring(0, 5),
+    })),
   );
 
-  const addSlot = () => setDraft((d) => [...d, { weekday: 1, start_time: "08:00", end_time: "17:00" }]);
+  const addSlot = () =>
+    setDraft((d) => [...d, { weekday: 1, start_time: "08:00", end_time: "17:00" }]);
   const removeSlot = (i: number) => setDraft((d) => d.filter((_, idx) => idx !== i));
   const update = (i: number, key: string, val: string | number) =>
-    setDraft((d) => d.map((s, idx) => idx === i ? { ...s, [key]: val } : s));
+    setDraft((d) => d.map((s, idx) => (idx === i ? { ...s, [key]: val } : s)));
 
   if (!editing) {
     return (
@@ -82,7 +124,9 @@ function WeeklyScheduleEditor({
         title="Clique para editar"
       >
         {slots.length === 0 ? (
-          <span className="text-xs text-muted-foreground italic">Sem horário definido — clique para configurar</span>
+          <span className="text-xs text-muted-foreground italic">
+            Sem horário definido — clique para configurar
+          </span>
         ) : (
           slots.map((s, i) => (
             <Badge key={i} variant="secondary" className="text-[10px]">
@@ -103,13 +147,32 @@ function WeeklyScheduleEditor({
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {WEEKDAYS_FULL.map((d, idx) => <SelectItem key={idx} value={String(idx)}>{d}</SelectItem>)}
+              {WEEKDAYS_FULL.map((d, idx) => (
+                <SelectItem key={idx} value={String(idx)}>
+                  {d}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
-          <Input type="time" value={s.start_time} onChange={(e) => update(i, "start_time", e.target.value)} className="h-8 text-xs w-24" />
+          <Input
+            type="time"
+            value={s.start_time}
+            onChange={(e) => update(i, "start_time", e.target.value)}
+            className="h-8 text-xs w-24"
+          />
           <span className="text-xs text-muted-foreground">até</span>
-          <Input type="time" value={s.end_time} onChange={(e) => update(i, "end_time", e.target.value)} className="h-8 text-xs w-24" />
-          <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0 text-destructive" onClick={() => removeSlot(i)}>
+          <Input
+            type="time"
+            value={s.end_time}
+            onChange={(e) => update(i, "end_time", e.target.value)}
+            className="h-8 text-xs w-24"
+          />
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 shrink-0 text-destructive"
+            onClick={() => removeSlot(i)}
+          >
             <Trash2 className="h-3.5 w-3.5" />
           </Button>
         </div>
@@ -119,8 +182,17 @@ function WeeklyScheduleEditor({
           <Plus className="h-3 w-3 mr-1" /> Adicionar horário
         </Button>
         <div className="ml-auto flex gap-1.5">
-          <Button variant="ghost" size="sm" className="h-7" onClick={() => setEditing(false)}>Cancelar</Button>
-          <Button size="sm" className="h-7" onClick={() => { onSave(member.therapist_id, draft); setEditing(false); }}>
+          <Button variant="ghost" size="sm" className="h-7" onClick={() => setEditing(false)}>
+            Cancelar
+          </Button>
+          <Button
+            size="sm"
+            className="h-7"
+            onClick={() => {
+              onSave(member.therapist_id, draft);
+              setEditing(false);
+            }}
+          >
             Salvar
           </Button>
         </div>
@@ -138,7 +210,14 @@ function AddBlockModal({
 }: {
   members: Member[];
   onClose: () => void;
-  onAdd: (block: { therapist_id: string; block_date: string; reason: string; notes?: string; start_time?: string; end_time?: string }) => void;
+  onAdd: (block: {
+    therapist_id: string;
+    block_date: string;
+    reason: string;
+    notes?: string;
+    start_time?: string;
+    end_time?: string;
+  }) => void;
 }) {
   const [therapistId, setTherapistId] = useState(members[0]?.therapist_id ?? "");
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
@@ -149,8 +228,18 @@ function AddBlockModal({
   const [endTime, setEndTime] = useState("18:00");
 
   const handleSubmit = () => {
-    if (!therapistId || !date) { toast({ title: "Preencha todos os campos", variant: "destructive" }); return; }
-    onAdd({ therapist_id: therapistId, block_date: date, reason, notes: notes || undefined, start_time: allDay ? undefined : startTime, end_time: allDay ? undefined : endTime });
+    if (!therapistId || !date) {
+      toast({ title: "Preencha todos os campos", variant: "destructive" });
+      return;
+    }
+    onAdd({
+      therapist_id: therapistId,
+      block_date: date,
+      reason,
+      notes: notes || undefined,
+      start_time: allDay ? undefined : startTime,
+      end_time: allDay ? undefined : endTime,
+    });
   };
 
   return (
@@ -163,48 +252,89 @@ function AddBlockModal({
           <div>
             <Label className="text-xs font-bold uppercase">Profissional</Label>
             <Select value={therapistId} onValueChange={setTherapistId}>
-              <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+              <SelectTrigger className="mt-1">
+                <SelectValue />
+              </SelectTrigger>
               <SelectContent>
-                {members.map((m) => <SelectItem key={m.therapist_id} value={m.therapist_id}>{m.full_name}</SelectItem>)}
+                {members.map((m) => (
+                  <SelectItem key={m.therapist_id} value={m.therapist_id}>
+                    {m.full_name}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
           <div>
             <Label className="text-xs font-bold uppercase">Data</Label>
-            <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="mt-1" />
+            <Input
+              type="date"
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+              className="mt-1"
+            />
           </div>
           <div>
             <Label className="text-xs font-bold uppercase">Motivo</Label>
             <Select value={reason} onValueChange={setReason}>
-              <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+              <SelectTrigger className="mt-1">
+                <SelectValue />
+              </SelectTrigger>
               <SelectContent>
-                {Object.entries(BLOCK_REASONS).map(([v, l]) => <SelectItem key={v} value={v}>{l}</SelectItem>)}
+                {Object.entries(BLOCK_REASONS).map(([v, l]) => (
+                  <SelectItem key={v} value={v}>
+                    {l}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
           <div className="flex items-center gap-2">
-            <input type="checkbox" id="allDay" checked={allDay} onChange={(e) => setAllDay(e.target.checked)} />
-            <Label htmlFor="allDay" className="text-sm cursor-pointer">Dia inteiro</Label>
+            <input
+              type="checkbox"
+              id="allDay"
+              checked={allDay}
+              onChange={(e) => setAllDay(e.target.checked)}
+            />
+            <Label htmlFor="allDay" className="text-sm cursor-pointer">
+              Dia inteiro
+            </Label>
           </div>
           {!allDay && (
             <div className="grid grid-cols-2 gap-2">
               <div>
                 <Label className="text-xs font-bold uppercase">Início</Label>
-                <Input type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)} className="mt-1" />
+                <Input
+                  type="time"
+                  value={startTime}
+                  onChange={(e) => setStartTime(e.target.value)}
+                  className="mt-1"
+                />
               </div>
               <div>
                 <Label className="text-xs font-bold uppercase">Fim</Label>
-                <Input type="time" value={endTime} onChange={(e) => setEndTime(e.target.value)} className="mt-1" />
+                <Input
+                  type="time"
+                  value={endTime}
+                  onChange={(e) => setEndTime(e.target.value)}
+                  className="mt-1"
+                />
               </div>
             </div>
           )}
           <div>
             <Label className="text-xs font-bold uppercase">Observação</Label>
-            <Input value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Opcional" className="mt-1" />
+            <Input
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              placeholder="Opcional"
+              className="mt-1"
+            />
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={onClose}>Cancelar</Button>
+          <Button variant="outline" onClick={onClose}>
+            Cancelar
+          </Button>
           <Button onClick={handleSubmit}>Adicionar</Button>
         </DialogFooter>
       </DialogContent>
@@ -220,8 +350,17 @@ export default function StaffSchedulesPage() {
   const [blockModalOpen, setBlockModalOpen] = useState(false);
 
   const saveWeekly = useMutation({
-    mutationFn: ({ therapistId, schedules }: { therapistId: string; schedules: { weekday: number; start_time: string; end_time: string }[] }) =>
-      request(`/api/staff-schedules/${therapistId}/weekly`, { method: "PUT", body: JSON.stringify({ schedules }) }),
+    mutationFn: ({
+      therapistId,
+      schedules,
+    }: {
+      therapistId: string;
+      schedules: { weekday: number; start_time: string; end_time: string }[];
+    }) =>
+      request(`/api/staff-schedules/${therapistId}/weekly`, {
+        method: "PUT",
+        body: JSON.stringify({ schedules }),
+      }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["staff-schedules"] });
       toast({ title: "Escala salva" });
@@ -229,7 +368,8 @@ export default function StaffSchedulesPage() {
   });
 
   const addBlock = useMutation({
-    mutationFn: (block: any) => request("/api/staff-schedules/blocks", { method: "POST", body: JSON.stringify(block) }),
+    mutationFn: (block: any) =>
+      request("/api/staff-schedules/blocks", { method: "POST", body: JSON.stringify(block) }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["staff-schedules"] });
       setBlockModalOpen(false);
@@ -277,7 +417,9 @@ export default function StaffSchedulesPage() {
             {isLoading ? (
               [1, 2, 3].map((i) => <Skeleton key={i} className="h-16 rounded-xl" />)
             ) : members.length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-4">Nenhum profissional encontrado</p>
+              <p className="text-sm text-muted-foreground text-center py-4">
+                Nenhum profissional encontrado
+              </p>
             ) : (
               members.map((m) => (
                 <div key={m.therapist_id} className="flex items-start gap-4">
@@ -296,7 +438,9 @@ export default function StaffSchedulesPage() {
                     <WeeklyScheduleEditor
                       member={m}
                       slots={slotsByTherapist(m.therapist_id)}
-                      onSave={(therapistId, scheds) => saveWeekly.mutate({ therapistId, schedules: scheds })}
+                      onSave={(therapistId, scheds) =>
+                        saveWeekly.mutate({ therapistId, schedules: scheds })
+                      }
                     />
                   </div>
                 </div>
@@ -315,20 +459,33 @@ export default function StaffSchedulesPage() {
           </CardHeader>
           <CardContent>
             {isLoading ? (
-              <div className="space-y-2">{[1, 2].map((i) => <Skeleton key={i} className="h-12 rounded-xl" />)}</div>
+              <div className="space-y-2">
+                {[1, 2].map((i) => (
+                  <Skeleton key={i} className="h-12 rounded-xl" />
+                ))}
+              </div>
             ) : blocks.length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-6">Nenhum bloqueio programado</p>
+              <p className="text-sm text-muted-foreground text-center py-6">
+                Nenhum bloqueio programado
+              </p>
             ) : (
               <div className="space-y-2">
                 {blocks.map((b) => (
-                  <div key={b.id} className="flex items-center justify-between px-4 py-2.5 rounded-xl border border-border/50 bg-card">
+                  <div
+                    key={b.id}
+                    className="flex items-center justify-between px-4 py-2.5 rounded-xl border border-border/50 bg-card"
+                  >
                     <div className="flex items-center gap-3">
                       <div className="flex items-center gap-1.5 w-32">
                         <User className="h-3.5 w-3.5 text-muted-foreground" />
                         <span className="text-xs font-semibold truncate">{b.therapist_name}</span>
                       </div>
                       <span className="text-sm font-bold">
-                        {new Date(b.block_date + "T12:00:00").toLocaleDateString("pt-BR", { weekday: "short", day: "2-digit", month: "2-digit" })}
+                        {new Date(b.block_date + "T12:00:00").toLocaleDateString("pt-BR", {
+                          weekday: "short",
+                          day: "2-digit",
+                          month: "2-digit",
+                        })}
                       </span>
                       {b.start_time ? (
                         <span className="text-xs text-muted-foreground">
@@ -340,7 +497,9 @@ export default function StaffSchedulesPage() {
                       <Badge variant="outline" className="text-[10px]">
                         {BLOCK_REASONS[b.reason] ?? b.reason}
                       </Badge>
-                      {b.notes && <span className="text-xs text-muted-foreground italic">{b.notes}</span>}
+                      {b.notes && (
+                        <span className="text-xs text-muted-foreground italic">{b.notes}</span>
+                      )}
                     </div>
                     <Button
                       variant="ghost"

@@ -17,14 +17,32 @@ app.get("/", requireAuth, async (c) => {
   const params: unknown[] = [user.organizationId];
   let idx = 2;
 
-  if (patientId) { sql += ` AND patient_id = $${idx++}`; params.push(patientId); }
-  if (dataType) { sql += ` AND data_type = $${idx++}`; params.push(dataType); }
-  if (source) { sql += ` AND source = $${idx++}`; params.push(source); }
-  if (from) { sql += ` AND timestamp >= $${idx++}`; params.push(from); }
-  if (to) { sql += ` AND timestamp <= $${idx++}`; params.push(to); }
+  if (patientId) {
+    sql += ` AND patient_id = $${idx++}`;
+    params.push(patientId);
+  }
+  if (dataType) {
+    sql += ` AND data_type = $${idx++}`;
+    params.push(dataType);
+  }
+  if (source) {
+    sql += ` AND source = $${idx++}`;
+    params.push(source);
+  }
+  if (from) {
+    sql += ` AND timestamp >= $${idx++}`;
+    params.push(from);
+  }
+  if (to) {
+    sql += ` AND timestamp <= $${idx++}`;
+    params.push(to);
+  }
 
   sql += " ORDER BY timestamp DESC";
-  if (limit) { sql += ` LIMIT $${idx++}`; params.push(Number(limit)); }
+  if (limit) {
+    sql += ` LIMIT $${idx++}`;
+    params.push(Number(limit));
+  }
 
   const result = await db.query(sql, params);
   return c.json({ data: result.rows });
@@ -74,8 +92,13 @@ app.post("/", requireAuth, async (c) => {
     `INSERT INTO wearable_data (organization_id, patient_id, source, data_type, value, unit, timestamp, metadata)
      VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *`,
     [
-      user.organizationId, body.patient_id, body.source, body.data_type,
-      body.value, body.unit ?? null, body.timestamp ?? new Date().toISOString(),
+      user.organizationId,
+      body.patient_id,
+      body.source,
+      body.data_type,
+      body.value,
+      body.unit ?? null,
+      body.timestamp ?? new Date().toISOString(),
       body.metadata ? JSON.stringify(body.metadata) : null,
     ],
   );
@@ -110,8 +133,13 @@ app.post("/sync", requireAuth, async (c) => {
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
        ON CONFLICT DO NOTHING`,
       [
-        user.organizationId, patient_id, e.source, e.data_type,
-        e.value, e.unit ?? null, e.timestamp,
+        user.organizationId,
+        patient_id,
+        e.source,
+        e.data_type,
+        e.value,
+        e.unit ?? null,
+        e.timestamp,
         e.metadata ? JSON.stringify(e.metadata) : null,
       ],
     );
@@ -140,7 +168,15 @@ app.post("/bulk", requireAuth, async (c) => {
       db.query(
         `INSERT INTO wearable_data (organization_id, patient_id, source, data_type, value, unit, timestamp)
          VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING *`,
-        [user.organizationId, e.patient_id, e.source, e.data_type, e.value, e.unit ?? null, e.timestamp ?? new Date().toISOString()],
+        [
+          user.organizationId,
+          e.patient_id,
+          e.source,
+          e.data_type,
+          e.value,
+          e.unit ?? null,
+          e.timestamp ?? new Date().toISOString(),
+        ],
       ),
     ),
   );
@@ -196,7 +232,12 @@ app.get("/oauth/garmin/start", requireAuth, async (c) => {
   // Using Garmin Connect API v1 OAuth
   const authUrl = `https://connect.garmin.com/oauthConfirm?oauth_token=REQUEST_TOKEN&state=${state}`;
 
-  return c.json({ data: { url: authUrl, note: "Garmin uses OAuth 1.0a — requires server-side request token first" } });
+  return c.json({
+    data: {
+      url: authUrl,
+      note: "Garmin uses OAuth 1.0a — requires server-side request token first",
+    },
+  });
 });
 
 // ─── Strava OAuth ────────────────────────────────────────────────────────────
@@ -236,9 +277,14 @@ app.get("/oauth/strava/callback", async (c) => {
     const tokenRes = await fetch("https://www.strava.com/oauth/token", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ client_id: clientId, client_secret: clientSecret, code, grant_type: "authorization_code" }),
+      body: JSON.stringify({
+        client_id: clientId,
+        client_secret: clientSecret,
+        code,
+        grant_type: "authorization_code",
+      }),
     });
-    const tokenData = await tokenRes.json() as any;
+    const tokenData = (await tokenRes.json()) as any;
 
     if (!tokenData.access_token) {
       return Response.redirect(`${redirectBase}/portal/integrations?error=strava_token`, 302);
@@ -255,9 +301,14 @@ app.get("/oauth/strava/callback", async (c) => {
          token_expires_at = EXCLUDED.token_expires_at,
          is_active = true,
          connected_at = NOW()`,
-      [org, patient_id, tokenData.access_token, tokenData.refresh_token ?? null,
-       tokenData.expires_at ? new Date(tokenData.expires_at * 1000).toISOString() : null,
-       String(tokenData.athlete?.id ?? "")],
+      [
+        org,
+        patient_id,
+        tokenData.access_token,
+        tokenData.refresh_token ?? null,
+        tokenData.expires_at ? new Date(tokenData.expires_at * 1000).toISOString() : null,
+        String(tokenData.athlete?.id ?? ""),
+      ],
     );
 
     return Response.redirect(`${redirectBase}/portal/integrations?connected=strava`, 302);
@@ -303,9 +354,15 @@ app.get("/oauth/oura/callback", async (c) => {
     const tokenRes = await fetch("https://api.ouraring.com/oauth/token", {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: new URLSearchParams({ grant_type: "authorization_code", code, client_id: clientId, client_secret: clientSecret, redirect_uri: redirectUri }),
+      body: new URLSearchParams({
+        grant_type: "authorization_code",
+        code,
+        client_id: clientId,
+        client_secret: clientSecret,
+        redirect_uri: redirectUri,
+      }),
     });
-    const tokenData = await tokenRes.json() as any;
+    const tokenData = (await tokenRes.json()) as any;
 
     if (!tokenData.access_token) {
       return Response.redirect(`${redirectBase}/portal/integrations?error=oura_token`, 302);
@@ -341,13 +398,13 @@ app.get("/oauth/google_fit/start", requireAuth, async (c) => {
   const redirectBase = c.env.WEARABLE_OAUTH_REDIRECT_BASE ?? "https://app.moocafisio.com.br";
   const redirectUri = encodeURIComponent(`${redirectBase}/api/wearables/oauth/google_fit/callback`);
   const state = btoa(JSON.stringify({ patient_id, org: user.organizationId }));
-  
+
   // Scopes for Google Fit
   const scopes = [
     "https://www.googleapis.com/auth/fitness.activity.read",
     "https://www.googleapis.com/auth/fitness.body.read",
     "https://www.googleapis.com/auth/fitness.heart_rate.read",
-    "https://www.googleapis.com/auth/fitness.sleep.read"
+    "https://www.googleapis.com/auth/fitness.sleep.read",
   ].join(" ");
 
   const authUrl =
@@ -380,10 +437,10 @@ app.get("/oauth/google_fit/callback", async (c) => {
         client_secret: clientSecret,
         code,
         grant_type: "authorization_code",
-        redirect_uri: redirectUri
+        redirect_uri: redirectUri,
       }),
     });
-    const tokenData = await tokenRes.json() as any;
+    const tokenData = (await tokenRes.json()) as any;
 
     if (!tokenData.access_token) {
       return Response.redirect(`${redirectBase}/portal/integrations?error=google_fit_token`, 302);
@@ -400,8 +457,15 @@ app.get("/oauth/google_fit/callback", async (c) => {
          token_expires_at = EXCLUDED.token_expires_at,
          is_active = true,
          connected_at = NOW()`,
-      [org, patient_id, tokenData.access_token, tokenData.refresh_token ?? null,
-       tokenData.expires_in ? new Date(Date.now() + tokenData.expires_in * 1000).toISOString() : null],
+      [
+        org,
+        patient_id,
+        tokenData.access_token,
+        tokenData.refresh_token ?? null,
+        tokenData.expires_in
+          ? new Date(Date.now() + tokenData.expires_in * 1000).toISOString()
+          : null,
+      ],
     );
 
     return Response.redirect(`${redirectBase}/portal/integrations?connected=google_fit`, 302);
@@ -415,7 +479,8 @@ app.get("/oauth/google_fit/callback", async (c) => {
 app.post("/sync-provider", requireAuth, async (c) => {
   const user = c.get("user");
   const { patient_id, provider } = await c.req.json<{ patient_id: string; provider: string }>();
-  if (!patient_id || !provider) return c.json({ error: "patient_id e provider são obrigatórios" }, 400);
+  if (!patient_id || !provider)
+    return c.json({ error: "patient_id e provider são obrigatórios" }, 400);
 
   const db = createPool(c.env);
   const tokenResult = await db.query(
@@ -436,7 +501,7 @@ app.post("/sync-provider", requireAuth, async (c) => {
       `https://www.strava.com/api/v3/athlete/activities?after=${Math.floor(Date.now() / 1000 - 7 * 86400)}&per_page=30`,
       { headers: { Authorization: `Bearer ${access_token}` } },
     );
-    const activities = await res.json() as any[];
+    const activities = (await res.json()) as any[];
 
     for (const act of activities ?? []) {
       const entries = [
@@ -452,19 +517,35 @@ app.post("/sync-provider", requireAuth, async (c) => {
           `INSERT INTO wearable_data (organization_id, patient_id, source, data_type, value, unit, timestamp, metadata)
            VALUES ($1, $2, 'strava', $3, $4, $5, $6, $7)
            ON CONFLICT DO NOTHING`,
-          [user.organizationId, patient_id, e.data_type, e.value, e.unit,
-           act.start_date, JSON.stringify({ activity_type: act.type, activity_name: act.name, activity_id: act.id })],
+          [
+            user.organizationId,
+            patient_id,
+            e.data_type,
+            e.value,
+            e.unit,
+            act.start_date,
+            JSON.stringify({
+              activity_type: act.type,
+              activity_name: act.name,
+              activity_id: act.id,
+            }),
+          ],
         );
         synced++;
       }
     }
   } else if (provider === "oura") {
     const [sleepRes, hrRes] = await Promise.all([
-      fetch(`https://api.ouraring.com/v2/usercollection/sleep?start_date=${since}`, { headers: { Authorization: `Bearer ${access_token}` } }),
-      fetch(`https://api.ouraring.com/v2/usercollection/heartrate?start_datetime=${since}T00:00:00`, { headers: { Authorization: `Bearer ${access_token}` } }),
+      fetch(`https://api.ouraring.com/v2/usercollection/sleep?start_date=${since}`, {
+        headers: { Authorization: `Bearer ${access_token}` },
+      }),
+      fetch(
+        `https://api.ouraring.com/v2/usercollection/heartrate?start_datetime=${since}T00:00:00`,
+        { headers: { Authorization: `Bearer ${access_token}` } },
+      ),
     ]);
-    const sleepData = await sleepRes.json() as any;
-    const _hrData = await hrRes.json() as any;
+    const sleepData = (await sleepRes.json()) as any;
+    const _hrData = (await hrRes.json()) as any;
 
     for (const s of sleepData?.data ?? []) {
       const entries = [
@@ -478,7 +559,15 @@ app.post("/sync-provider", requireAuth, async (c) => {
         await db.query(
           `INSERT INTO wearable_data (organization_id, patient_id, source, data_type, value, unit, timestamp, metadata)
            VALUES ($1, $2, 'oura', $3, $4, $5, $6, $7) ON CONFLICT DO NOTHING`,
-          [user.organizationId, patient_id, e.data_type, e.value, e.unit, s.bedtime_start, JSON.stringify({ sleep_id: s.id })],
+          [
+            user.organizationId,
+            patient_id,
+            e.data_type,
+            e.value,
+            e.unit,
+            s.bedtime_start,
+            JSON.stringify({ sleep_id: s.id }),
+          ],
         );
         synced++;
       }
@@ -487,24 +576,27 @@ app.post("/sync-provider", requireAuth, async (c) => {
     // Google Fit REST API sync for steps and heart rate
     const startTimeMillis = Date.now() - 7 * 86400 * 1000;
     const endTimeMillis = Date.now();
-    const syncRes = await fetch("https://www.googleapis.com/fitness/v1/users/me/dataset:aggregate", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${access_token}`,
-        "Content-Type": "application/json",
+    const syncRes = await fetch(
+      "https://www.googleapis.com/fitness/v1/users/me/dataset:aggregate",
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${access_token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          aggregateBy: [
+            { dataTypeName: "com.google.step_count.delta" },
+            { dataTypeName: "com.google.heart_rate.summary" },
+          ],
+          bucketByTime: { durationMillis: 86400000 }, // Daily buckets
+          startTimeMillis,
+          endTimeMillis,
+        }),
       },
-      body: JSON.stringify({
-        aggregateBy: [
-          { dataTypeName: "com.google.step_count.delta" },
-          { dataTypeName: "com.google.heart_rate.summary" }
-        ],
-        bucketByTime: { durationMillis: 86400000 }, // Daily buckets
-        startTimeMillis,
-        endTimeMillis
-      })
-    });
+    );
 
-    const fitData = await syncRes.json() as any;
+    const fitData = (await syncRes.json()) as any;
     for (const bucket of fitData.bucket ?? []) {
       const date = new Date(Number(bucket.startTimeMillis)).toISOString();
       for (const dataset of bucket.dataset ?? []) {
@@ -514,7 +606,7 @@ app.post("/sync-provider", requireAuth, async (c) => {
             await db.query(
               `INSERT INTO wearable_data (organization_id, patient_id, source, data_type, value, unit, timestamp)
                VALUES ($1, $2, 'google_fit', 'steps', $3, 'count', $4) ON CONFLICT DO NOTHING`,
-              [user.organizationId, patient_id, steps, date]
+              [user.organizationId, patient_id, steps, date],
             );
             synced++;
           }
@@ -547,7 +639,7 @@ app.get("/rtm/status/:patientId", requireAuth, async (c) => {
      WHERE patient_id = $1 AND organization_id = $2
        AND timestamp >= NOW() - INTERVAL '7 days'
      GROUP BY data_type, unit`,
-    [patientId, user.organizationId]
+    [patientId, user.organizationId],
   );
 
   const prevWeek = await db.query(
@@ -556,13 +648,13 @@ app.get("/rtm/status/:patientId", requireAuth, async (c) => {
      WHERE patient_id = $1 AND organization_id = $2
        AND timestamp BETWEEN NOW() - INTERVAL '14 days' AND NOW() - INTERVAL '7 days'
      GROUP BY data_type, unit`,
-    [patientId, user.organizationId]
+    [patientId, user.organizationId],
   );
 
   // Simple Score Calculation (0-100)
   // Base meta: 50k steps/week, 150min activity/week
   let score = 50;
-  const steps = currentWeek.rows.find(r => r.data_type === 'steps')?.total || 0;
+  const steps = currentWeek.rows.find((r) => r.data_type === "steps")?.total || 0;
   if (steps > 0) score = Math.min(100, Math.round((Number(steps) / 50000) * 100));
 
   return c.json({
@@ -570,10 +662,10 @@ app.get("/rtm/status/:patientId", requireAuth, async (c) => {
       score,
       trends: {
         current: currentWeek.rows,
-        previous: prevWeek.rows
+        previous: prevWeek.rows,
       },
-      status: score > 70 ? 'active' : (score > 30 ? 'moderate' : 'low')
-    }
+      status: score > 70 ? "active" : score > 30 ? "moderate" : "low",
+    },
   });
 });
 
@@ -587,7 +679,7 @@ app.post("/rtm/milestones/sync", requireAuth, async (c) => {
   const totalSteps = await db.query(
     `SELECT SUM(value) as total FROM wearable_data 
      WHERE patient_id = $1 AND data_type = 'steps'`,
-    [patientId]
+    [patientId],
   );
 
   const total = Number(totalSteps.rows[0]?.total || 0);
@@ -596,14 +688,14 @@ app.post("/rtm/milestones/sync", requireAuth, async (c) => {
   if (total >= 100000) {
     const exists = await db.query(
       `SELECT id FROM patient_achievements WHERE patient_id = $1 AND type = 'steps_100k'`,
-      [patientId]
+      [patientId],
     );
     if (exists.rows.length === 0) {
       milestoneReached = "steps_100k";
       await db.query(
         `INSERT INTO patient_achievements (patient_id, organization_id, type, title, metadata)
          VALUES ($1, $2, 'steps_100k', 'Caminhante de Elite (100k passos)', $3)`,
-        [patientId, user.organizationId, JSON.stringify({ total_steps: total })]
+        [patientId, user.organizationId, JSON.stringify({ total_steps: total })],
       );
 
       // Trigger Celebration Workflow
@@ -614,9 +706,9 @@ app.post("/rtm/milestones/sync", requireAuth, async (c) => {
           params: {
             patientId,
             organizationId: user.organizationId,
-            alertType: 'milestone_reached',
-            milestoneTitle: 'Caminhante de Elite (100k passos)'
-          }
+            alertType: "milestone_reached",
+            milestoneTitle: "Caminhante de Elite (100k passos)",
+          },
         });
       }
     }

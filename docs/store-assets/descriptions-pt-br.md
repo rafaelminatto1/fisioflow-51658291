@@ -9,6 +9,7 @@
 Eleve o nível da sua prática clínica com o FisioFlow Pro. O único software de gestão para fisioterapeutas que integra inteligência artificial de ponta diretamente no seu dia a dia.
 
 **Principais Recursos:**
+
 - **Agenda Inteligente:** Controle total de seus agendamentos, faltas e reagendamentos de forma intuitiva.
 - **AI Scribe (Escriba SOAP):** Capture o ditado ambiente durante a sessão e deixe nossa IA gerar evoluções SOAP técnicas e precisas em segundos.
 - **Assistente Cinemático:** Use a câmera do seu iPhone para realizar análises biomecânicas em tempo real, medindo ângulos articulares e assimetrias com precisão de laboratório.
@@ -26,6 +27,7 @@ Eleve o nível da sua prática clínica com o FisioFlow Pro. O único software d
 Acompanhe seu tratamento fisioterapêutico de forma simples e motivadora. Com o FisioFlow, você leva seu plano de recuperação para onde quer que vá.
 
 **Principais Recursos:**
+
 - **Plano de Exercícios Personalizado (HEP):** Veja as demonstrações em vídeo e as instruções enviadas pelo seu fisioterapeuta.
 - **Gamificação e Recompensas:** Ganhe XP e desbloqueie conquistas ao completar seus exercícios diários. Suba de nível e acompanhe sua consistência.
 - **Check-in Offline:** Registre que fez seus exercícios mesmo sem internet; nós cuidamos da sincronização para você.

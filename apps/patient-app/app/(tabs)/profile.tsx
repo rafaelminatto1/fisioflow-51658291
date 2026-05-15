@@ -81,7 +81,7 @@ export default function ProfileScreen() {
   const handleShareReferral = async () => {
     if (!referral?.code) return;
     const message = `Use meu código *${referral.code}* e ganhe ${referral.reward_value}% de desconto na sua primeira avaliação na Mooca Fisio! 🎁\n\nLink: https://app.moocafisio.com.br/indicacao/${referral.code}`;
-    
+
     try {
       await Share.share({
         message,
@@ -199,14 +199,21 @@ export default function ProfileScreen() {
         </View>
 
         {/* Referral Program Card */}
-        <Card style={[styles.referralCard, { backgroundColor: colors.primary + "10", borderColor: colors.primary + "30" }]}>
+        <Card
+          style={[
+            styles.referralCard,
+            { backgroundColor: colors.primary + "10", borderColor: colors.primary + "30" },
+          ]}
+        >
           <View style={styles.referralHeader}>
             <View style={[styles.referralIcon, { backgroundColor: colors.primary }]}>
               <Ionicons name="gift" size={24} color="#FFFFFF" />
             </View>
             <View style={styles.referralTextContainer}>
               <Text style={[styles.referralTitle, { color: colors.text }]}>Indique um Amigo</Text>
-              <Text style={[styles.referralSubtitle, { color: colors.textSecondary }]}>Ganhe benefícios na renovação</Text>
+              <Text style={[styles.referralSubtitle, { color: colors.textSecondary }]}>
+                Ganhe benefícios na renovação
+              </Text>
             </View>
           </View>
 

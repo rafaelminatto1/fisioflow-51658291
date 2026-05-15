@@ -21,7 +21,7 @@ app.get("/status", requireAuth, async (c) => {
        FROM inventory_items
        WHERE organization_id = $1 AND deleted_at IS NULL
        ORDER BY needs_replenishment DESC, name ASC`,
-      [user.organizationId]
+      [user.organizationId],
     );
 
     return c.json({ data: result.rows });

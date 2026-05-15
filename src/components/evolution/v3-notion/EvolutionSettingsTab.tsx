@@ -1,11 +1,6 @@
 import React from "react";
 import { useEvolutionSettings } from "@/hooks/useEvolutionSettings";
-import {
-  Settings,
-  SlidersHorizontal,
-  EyeOff,
-  LayoutTemplate,
-} from "lucide-react";
+import { Settings, SlidersHorizontal, EyeOff, LayoutTemplate } from "lucide-react";
 
 // Hardcoded available commands for now.
 // Eventually this could be dynamic, but since we are controlling Tiptap commands, we list the main ones.

@@ -116,17 +116,23 @@ export function DocumentSigning() {
             <>
               <div className="w-full bg-blue-50 rounded-lg p-4 text-left space-y-2 border border-blue-100">
                 <div>
-                  <span className="text-xs text-muted-foreground uppercase font-medium">Documento</span>
+                  <span className="text-xs text-muted-foreground uppercase font-medium">
+                    Documento
+                  </span>
                   <p className="font-semibold text-gray-900">{docInfo.documentTitle}</p>
                 </div>
                 {docInfo.documentType && (
                   <div>
-                    <span className="text-xs text-muted-foreground uppercase font-medium">Tipo</span>
+                    <span className="text-xs text-muted-foreground uppercase font-medium">
+                      Tipo
+                    </span>
                     <p className="text-sm text-gray-700">{docInfo.documentType}</p>
                   </div>
                 )}
                 <div>
-                  <span className="text-xs text-muted-foreground uppercase font-medium">Signatário</span>
+                  <span className="text-xs text-muted-foreground uppercase font-medium">
+                    Signatário
+                  </span>
                   <p className="text-sm text-gray-700">{docInfo.signerName}</p>
                 </div>
               </div>
@@ -144,12 +150,7 @@ export function DocumentSigning() {
                 </span>
               </label>
 
-              <Button
-                onClick={handleSign}
-                disabled={!agreed}
-                size="lg"
-                className="w-full"
-              >
+              <Button onClick={handleSign} disabled={!agreed} size="lg" className="w-full">
                 Assinar Documento
               </Button>
 
@@ -178,9 +179,7 @@ export function DocumentSigning() {
                 Sua assinatura eletrônica foi registrada com sucesso.
               </p>
               {signedAt && (
-                <p className="text-sm text-muted-foreground">
-                  Assinado em {formatDate(signedAt)}
-                </p>
+                <p className="text-sm text-muted-foreground">Assinado em {formatDate(signedAt)}</p>
               )}
               <p className="text-xs text-muted-foreground text-center mt-2">
                 Guarde esta confirmação. O fisioterapeuta responsável já foi notificado.

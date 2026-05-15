@@ -3,7 +3,7 @@
  * Optimized with modular hooks and components for better maintainability.
  */
 
-import { lazy, Suspense, useMemo, useEffect } from "react";
+import { lazy, Suspense, useMemo, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { AlertTriangle } from "lucide-react";
 
@@ -14,7 +14,15 @@ import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { LoadingSkeleton } from "@/components/ui/loading-skeleton";
 import { useCommandPalette } from "@/hooks/ui/useCommandPalette";
 import { PatientHelpers } from "@/types";
-import { FileText, Activity, Layers, History, Bot, Settings as SettingsIcon, Camera } from "lucide-react";
+import {
+  FileText,
+  Activity,
+  Layers,
+  History,
+  Bot,
+  Settings as SettingsIcon,
+  Camera,
+} from "lucide-react";
 
 // Hooks Modulares
 import { usePatientEvolutionState } from "@/hooks/evolution/usePatientEvolutionState";
@@ -82,14 +90,15 @@ const LazyPatientMediaGallery = lazy(() =>
   })),
 );
 
-// Lazy editor (modo único — texto livre com layout em grid)
-const LazyLiveTextEvolution = lazy(() =>
-  import("@/components/evolution/live-text/LiveTextEvolution").then((m) => ({
-    default: m.LiveTextEvolution,
+// Lazy editor (modo premium com cabeçalho)
+const LazyNotionEvolutionPanel = lazy(() =>
+  import("@/components/evolution/v2-improved/NotionEvolutionPanel").then((m) => ({
+    default: m.NotionEvolutionPanel,
   })),
 );
 
 import { preloadEditorChunks } from "@/lib/evolution/preloadEditors";
+import type { EvolutionV2Data } from "@/components/evolution/v2-improved/types";
 
 export interface PainScaleData {
   level: number;
@@ -103,6 +112,57 @@ const PatientEvolution = () => {
   const state = usePatientEvolutionState();
   const handlers = usePatientEvolutionHandlers(state);
   const autoSaveMutation = useAutoSaveSoapRecord();
+
+  const handleEvolutionV2Change = useCallback(
+    (next: EvolutionV2Data) => {
+      state.setEvolutionV2Data(next);
+
+      const orderedItems = [...(next.unifiedItems || [])].sort(
+        (a, b) => (a.order ?? 0) - (b.order ?? 0),
+      );
+
+      const usesUnifiedItems = Array.isArray(next.unifiedItems);
+      const procedures = usesUnifiedItems
+        ? orderedItems
+            .map((item, index) => ({ item, sequenceOrder: index + 1 }))
+            .filter(({ item }) => item.type === "procedure")
+            .map(({ item, sequenceOrder }) => ({
+              id: item.id,
+              exerciseId: item.exerciseId,
+              name: item.name,
+              completed: item.completed,
+              sequenceOrder,
+              notes: item.notes,
+              category: item.category,
+              intensity: item.intensity as any,
+            }))
+        : next.procedures;
+
+      const exercises = usesUnifiedItems
+        ? orderedItems
+            .map((item, index) => ({ item, sequenceOrder: index + 1 }))
+            .filter(({ item }) => item.type === "exercise")
+            .map(({ item, sequenceOrder }) => ({
+              id: item.id,
+              name: item.name,
+              completed: item.completed,
+              sequenceOrder,
+              prescription: item.prescription,
+              patientFeedback: item.patientFeedback,
+            }))
+        : next.exercises;
+
+      state.setEvolutionData((prev) => ({
+        ...prev,
+        observacao: next.evolutionText || next.observations || prev.observacao,
+        painScale: next.painLevel ?? prev.painScale,
+        procedures: procedures as any,
+        exercises: exercises as any,
+        measurements: (next.measurements as any) || prev.measurements,
+      }));
+    },
+    [state],
+  );
 
   // Preload all editor chunks during idle time so tab switching is instant
   useEffect(() => {
@@ -273,7 +333,7 @@ const PatientEvolution = () => {
       const dateA = new Date(a.appointment_date || a.date || 0).getTime();
       const dateB = new Date(b.appointment_date || b.date || 0).getTime();
       if (dateA !== dateB) return dateA - dateB;
-      
+
       const timeA = a.appointment_time || a.start_time || a.startTime || "";
       const timeB = b.appointment_time || b.start_time || b.startTime || "";
       return timeA.localeCompare(timeB);
@@ -281,7 +341,12 @@ const PatientEvolution = () => {
 
     const index = sortedApts.findIndex((a: any) => a.id === state.appointmentId);
     return index !== -1 ? index + 1 : state.previousEvolutions.length + 1;
-  }, [state.appointment, state.allAppointments, state.appointmentId, state.previousEvolutions.length]);
+  }, [
+    state.appointment,
+    state.allAppointments,
+    state.appointmentId,
+    state.previousEvolutions.length,
+  ]);
 
   const treatmentDuration = useMemo(() => {
     if (sessionNumber === 1) return "Primeira sessão";
@@ -324,20 +389,13 @@ const PatientEvolution = () => {
   const mainGridContent = useMemo(() => {
     return (
       <Suspense fallback={<LoadingSkeleton type="card" />}>
-        <LazyLiveTextEvolution
-          data={state.evolutionData}
-          onChange={state.setEvolutionData}
+        <LazyNotionEvolutionPanel
+          data={state.evolutionV2Data}
+          onChange={handleEvolutionV2Change}
           patientId={state.patientId}
           evolutionId={state.currentSoapRecordId}
-          previousEvolutions={state.previousEvolutions as any}
-          homeExercisesText={(state.evolutionV2Data as any).homeCareExercises || ""}
-          onHomeExercisesTextChange={(text) =>
-            state.setEvolutionV2Data((prev: any) => ({ ...prev, homeCareExercises: text }))
-          }
-          attachments={(state.evolutionV2Data as any).attachments || []}
-          onAttachmentsChange={(urls) =>
-            state.setEvolutionV2Data((prev: any) => ({ ...prev, attachments: urls }))
-          }
+          lastSaved={lastSavedAt}
+          onNavigateToHistorico={() => state.setActiveTab("historico")}
         />
       </Suspense>
     );
@@ -547,9 +605,7 @@ const PatientEvolution = () => {
               </TabsContent>
               <TabsContent value="midia">
                 <Suspense fallback={<LoadingSkeleton />}>
-                  {state.patientId && (
-                    <LazyPatientMediaGallery patientId={state.patientId} />
-                  )}
+                  {state.patientId && <LazyPatientMediaGallery patientId={state.patientId} />}
                 </Suspense>
               </TabsContent>
               <TabsContent value="configuracoes" className="mt-0 p-4">

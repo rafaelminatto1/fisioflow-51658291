@@ -25,4 +25,3 @@ describe("hasSPCertConfig", () => {
     ).toBe(true);
   });
 });
-

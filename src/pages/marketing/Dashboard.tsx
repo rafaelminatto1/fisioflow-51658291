@@ -41,7 +41,7 @@ const DEFAULT_CHANNELS = [
   { id: "seo_organic", label: "Busca Orgânica", spend: 0, newPatients: 0 },
 ];
 
-type CACChannel = typeof DEFAULT_CHANNELS[number];
+type CACChannel = (typeof DEFAULT_CHANNELS)[number];
 
 function CACByChannelCard() {
   const [channels, setChannels] = useState<CACChannel[]>(() => {
@@ -118,10 +118,25 @@ function CACByChannelCard() {
                   </>
                 ) : (
                   <>
-                    <span className="text-xs text-right">{ch.spend > 0 ? `R$ ${ch.spend.toLocaleString("pt-BR")}` : "-"}</span>
-                    <span className="text-xs text-right">{ch.newPatients > 0 ? ch.newPatients : "-"}</span>
+                    <span className="text-xs text-right">
+                      {ch.spend > 0 ? `R$ ${ch.spend.toLocaleString("pt-BR")}` : "-"}
+                    </span>
+                    <span className="text-xs text-right">
+                      {ch.newPatients > 0 ? ch.newPatients : "-"}
+                    </span>
                     <div className="flex justify-end items-center gap-1">
-                      <span className={cn("text-xs font-mono", cac === null ? "text-muted-foreground" : cac < 200 ? "text-green-600" : cac < 500 ? "text-yellow-600" : "text-red-600")}>
+                      <span
+                        className={cn(
+                          "text-xs font-mono",
+                          cac === null
+                            ? "text-muted-foreground"
+                            : cac < 200
+                              ? "text-green-600"
+                              : cac < 500
+                                ? "text-yellow-600"
+                                : "text-red-600",
+                        )}
+                      >
                         {cac !== null ? `R$${cac.toFixed(0)}` : "-"}
                       </span>
                       <button
@@ -140,12 +155,21 @@ function CACByChannelCard() {
             <span>Total</span>
             <span className="text-right">R$ {totalSpend.toLocaleString("pt-BR")}</span>
             <span className="text-right">{totalPatients}</span>
-            <span className={cn("text-right font-mono", totalPatients > 0 && totalSpend / totalPatients < 300 ? "text-green-600" : "text-amber-600")}>
+            <span
+              className={cn(
+                "text-right font-mono",
+                totalPatients > 0 && totalSpend / totalPatients < 300
+                  ? "text-green-600"
+                  : "text-amber-600",
+              )}
+            >
               {totalPatients > 0 ? `R$${(totalSpend / totalPatients).toFixed(0)}` : "-"}
             </span>
           </div>
         </div>
-        <p className="text-[10px] text-muted-foreground mt-2">Clique no lápis de cada linha para editar. Dados salvos localmente.</p>
+        <p className="text-[10px] text-muted-foreground mt-2">
+          Clique no lápis de cada linha para editar. Dados salvos localmente.
+        </p>
       </CardContent>
     </Card>
   );

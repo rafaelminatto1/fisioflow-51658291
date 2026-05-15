@@ -5,12 +5,7 @@ import { BookingWindowSettings } from "@/components/schedule/settings/BookingWin
 import { BlockedTimesManager } from "@/components/schedule/settings/BlockedTimesManager";
 import { GlobalPresetsPanel } from "@/components/schedule/settings/GlobalPresetsPanel";
 import { SettingsSectionCard } from "@/components/schedule/settings/shared/SettingsSectionCard";
-import {
-  ShieldAlert,
-  Bell,
-  UserX,
-  CalendarOff,
-} from "lucide-react";
+import { ShieldAlert, Bell, UserX, CalendarOff } from "lucide-react";
 
 /**
  * PoliciesRulesTab — Merge de Políticas + Bloqueios + Aparência

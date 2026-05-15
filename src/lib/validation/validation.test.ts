@@ -329,7 +329,12 @@ describe("Property 3: Validation determinism", () => {
 
     fc.assert(
       fc.property(futureDateArb, durationArb, timeArb, isNewArb, (date, duration, time, isNew) => {
-        const input: AppointmentInput = { date, duration, ...(time !== undefined && { time }), ...(isNew !== undefined && { isNew }) };
+        const input: AppointmentInput = {
+          date,
+          duration,
+          ...(time !== undefined && { time }),
+          ...(isNew !== undefined && { isNew }),
+        };
         const result1 = validateAppointment(input);
         const result2 = validateAppointment(input);
         expect(result1).toEqual(result2);
@@ -391,10 +396,9 @@ describe("Property 4: Validation totality", () => {
         fc.constant(null),
         fc.constant(undefined),
       ),
-      time: fc.option(
-        fc.oneof(fc.string({ minLength: 0, maxLength: 20 }), fc.constant(null)),
-        { nil: undefined },
-      ),
+      time: fc.option(fc.oneof(fc.string({ minLength: 0, maxLength: 20 }), fc.constant(null)), {
+        nil: undefined,
+      }),
       isNew: fc.option(fc.boolean(), { nil: undefined }),
     });
 

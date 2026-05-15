@@ -30,14 +30,14 @@ function _escapeXml(s: string): string {
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&apos;");
-  }
+}
 
 // ===== DEBUG: Ver última assinatura gerada =====
 app.get("/debug-signature", async (c) => {
   const lastSign = (globalThis as any).__lastSignString;
-  return c.json({ 
+  return c.json({
     lastSignatureString: lastSign,
-    last15Chars: lastSign ? lastSign.slice(-15) : null 
+    last15Chars: lastSign ? lastSign.slice(-15) : null,
   });
 });
 
@@ -47,15 +47,18 @@ app.get("/test-rps", async (c) => {
   const hasCert = !!c.env.NFSE_SP_CERT;
   const hasCertPem = !!c.env.NFSE_SP_CERT_PEM;
   const hasKeyPem = !!c.env.NFSE_SP_KEY_PEM;
-  
+
   if (!hasSPCertConfig(c.env)) {
-    return c.json({ 
-      error: "Certificado não configurado", 
-      cert: hasCert, 
-      mtls: hasCert,
-      certPem: hasCertPem,
-      keyPem: hasKeyPem,
-    }, 422);
+    return c.json(
+      {
+        error: "Certificado não configurado",
+        cert: hasCert,
+        mtls: hasCert,
+        certPem: hasCertPem,
+        keyPem: hasKeyPem,
+      },
+      422,
+    );
   }
 
   await import("../lib/nfseSPClient");
@@ -84,16 +87,16 @@ app.get("/test-rps", async (c) => {
       codigoMunicipio: "3550308",
       isSimplesNacional: true,
     };
-    
+
     // Import the format function to see what it produces
     const { formatValorSemDecimal } = await import("../lib/nfseSPClient");
     const formattedValor = formatValorSemDecimal(rpsParams.valorServicos);
     const formattedDed = formatValorSemDecimal(rpsParams.valorDeducoes);
-    
+
     const tomadorDigits = (rpsParams.tomadorCpfCnpj || "").replace(/\D/g, "");
     const indicadorCalc = tomadorDigits ? (tomadorDigits.length <= 11 ? "1" : "2") : "3";
     const cpfCalc = indicadorCalc === "3" ? "" : tomadorDigits;
-    
+
     const result = await envioRPS(c.env, rpsParams);
 
     return c.json({
@@ -143,7 +146,7 @@ app.get("/debug-xml", async (c) => {
       codigoMunicipio: "3550308",
       isSimplesNacional: true,
     };
-    
+
     const result = await debugBuildXmlMessage(c.env, rpsParams);
     return c.json({
       rpsXml: result.rpsXml,
@@ -357,7 +360,7 @@ app.post("/generate", requireAuth, async (c) => {
 
   const aliquota = body.aliquota_iss ?? Number(cfg.aliquota_iss ?? cfg.aliquota_padrao ?? 0.02);
   const valorIss = Number((body.valor_servico * aliquota).toFixed(2));
-  
+
   // Horário de Brasília (UTC-3)
   const dataEmissao = new Date(Date.now() - 3 * 3600000);
 
@@ -415,8 +418,7 @@ app.post("/send/:id", requireAuth, async (c) => {
     `SELECT status FROM nfse_records WHERE id = $1 AND organization_id = $2 LIMIT 1`,
     [id, user.organizationId],
   );
-  if (!nfseResult.rows.length)
-    return c.json({ error: "NFS-e não encontrada" }, 404);
+  if (!nfseResult.rows.length) return c.json({ error: "NFS-e não encontrada" }, 404);
 
   const nfse = nfseResult.rows[0];
   if (nfse.status !== "rascunho" && nfse.status !== "falhou") {
@@ -434,18 +436,19 @@ app.post("/send/:id", requireAuth, async (c) => {
       params: {
         nfseId: id,
         organizationId: user.organizationId,
-      }
+      },
     });
 
     await pool.query(
       `UPDATE nfse_records SET status = 'aguardando_prefeitura', workflow_id = $1 WHERE id = $2`,
-      [run.id, id]
+      [run.id, id],
     );
 
-    return c.json({ 
-      success: true, 
-      message: "Emissão iniciada em segundo plano. O sistema tentará transmitir até que a prefeitura responda.",
-      workflowId: run.id
+    return c.json({
+      success: true,
+      message:
+        "Emissão iniciada em segundo plano. O sistema tentará transmitir até que a prefeitura responda.",
+      workflowId: run.id,
     });
   } catch (err: any) {
     console.error("[NFSe] Erro ao iniciar workflow:", err);
@@ -773,12 +776,16 @@ app.post("/batch", requireAuth, async (c) => {
   if (c.env.VAPID_PRIVATE_KEY) {
     const { sendPushToUser } = await import("../lib/webpush");
     c.executionCtx.waitUntil(
-      sendPushToUser(user.uid, {
-        title: `NFS-e em lote iniciada — ${queued.length} notas`,
-        body: `Período ${body.start_date} → ${body.end_date}. As notas serão processadas em segundo plano.`,
-        url: "/financeiro/nfse",
-        tag: "nfse-batch",
-      }, c.env).catch(() => {}),
+      sendPushToUser(
+        user.uid,
+        {
+          title: `NFS-e em lote iniciada — ${queued.length} notas`,
+          body: `Período ${body.start_date} → ${body.end_date}. As notas serão processadas em segundo plano.`,
+          url: "/financeiro/nfse",
+          tag: "nfse-batch",
+        },
+        c.env,
+      ).catch(() => {}),
     );
   }
 

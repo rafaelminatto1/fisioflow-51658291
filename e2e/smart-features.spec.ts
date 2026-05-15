@@ -1,11 +1,11 @@
-import { test, expect } from '@playwright/test';
-import { testUsers } from './fixtures/test-data';
+import { test, expect } from "@playwright/test";
+import { testUsers } from "./fixtures/test-data";
 
-test.describe('Smart Features - Agenda', () => {
+test.describe("Smart Features - Agenda", () => {
   // Setup: Login and navigate to schedule
   test.beforeEach(async ({ page }) => {
     // Navigate to login page
-    await page.goto('/auth');
+    await page.goto("/auth");
 
     // Login
     await page.fill('input[name="email"]', testUsers.fisio.email);
@@ -13,14 +13,14 @@ test.describe('Smart Features - Agenda', () => {
     await page.click('button[type="submit"]');
 
     // Wait for redirect
-    await page.waitForURL('/');
+    await page.waitForURL("/");
 
     // Navigate to Schedule
-    await page.goto('/schedule');
-    await page.waitForLoadState('domcontentloaded');
+    await page.goto("/schedule");
+    await page.waitForLoadState("domcontentloaded");
   });
 
-  test('should toggle selection mode and show bulk actions bar', async ({ page }) => {
+  test("should toggle selection mode and show bulk actions bar", async ({ page }) => {
     // 1. Toggle Selection Mode
     const selectionButton = page.locator('button[title="Modo de Seleção"]');
     await expect(selectionButton).toBeVisible();
@@ -38,27 +38,27 @@ test.describe('Smart Features - Agenda', () => {
     // Let's create a quick appointment to ensure we have something to select
     await page.click('button:has-text("Novo Agendamento")');
     await page.click('[role="combobox"]');
-    await page.keyboard.type('Test Bulk');
-    await page.keyboard.press('Enter');
+    await page.keyboard.type("Test Bulk");
+    await page.keyboard.press("Enter");
     await page.click('button:has-text("Salvar")');
     await page.waitForTimeout(1000); // Wait for creation
 
     // Re-enable selection mode if it reset (it shouldn't, but good to be safe or check state)
     // Actually, creating appointment closes modal, but selection mode might persist?
     // Let's assume we need to re-enable or check.
-    if (!await selectionButton.evaluate(el => el.classList.contains('bg-primary'))) {
-        await selectionButton.click();
+    if (!(await selectionButton.evaluate((el) => el.classList.contains("bg-primary")))) {
+      await selectionButton.click();
     }
 
     // Click on the appointment card
-    const appointmentCard = page.locator('.calendar-appointment-card').first();
+    const appointmentCard = page.locator(".calendar-appointment-card").first();
     await expect(appointmentCard).toBeVisible();
     await appointmentCard.click();
 
     // 3. Verify Bulk Actions Bar appears
-    const bulkBar = page.locator('text=selecionados');
+    const bulkBar = page.locator("text=selecionados");
     await expect(bulkBar).toBeVisible();
-    await expect(bulkBar).toContainText('1');
+    await expect(bulkBar).toContainText("1");
 
     // 4. Clear selection
 
@@ -69,10 +69,10 @@ test.describe('Smart Features - Agenda', () => {
     await expect(bulkBar).not.toBeVisible();
   });
 
-  test('should use auto-schedule suggestion', async ({ page }) => {
+  test("should use auto-schedule suggestion", async ({ page }) => {
     // 1. Open New Appointment Modal
     await page.click('button:has-text("Novo Agendamento")');
-    await expect(page.locator('text=Novo Agendamento')).toBeVisible();
+    await expect(page.locator("text=Novo Agendamento")).toBeVisible();
 
     // 2. Select a Date (Important for auto-schedule to work)
     await page.click('button:has-text("Selecione uma data")');
@@ -80,7 +80,7 @@ test.describe('Smart Features - Agenda', () => {
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
     await page.click(`button[name="day"]:has-text("${tomorrow.getDate()}")`);
-    await page.keyboard.press('Escape'); // Close calendar popover if it stays open
+    await page.keyboard.press("Escape"); // Close calendar popover if it stays open
 
     // 3. Click Magic Wand (Auto Schedule)
     const magicWand = page.locator('button[title="Sugerir melhor horário"]');
@@ -88,7 +88,7 @@ test.describe('Smart Features - Agenda', () => {
     await magicWand.click();
 
     // 4. Verify Toast and Input Change
-    await expect(page.locator('text=Horário sugerido')).toBeVisible();
+    await expect(page.locator("text=Horário sugerido")).toBeVisible();
 
     // Verify the select has a value (not empty)
     // The select trigger usually displays the selected value

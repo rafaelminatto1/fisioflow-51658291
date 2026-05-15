@@ -221,7 +221,11 @@ app.get("/therapists", requireAuth, async (c) => {
     );
 
     return c.json({
-      data: result.rows.map((t: any) => ({ id: String(t.id), name: String(t.name), crefito: t.crefito ?? undefined })),
+      data: result.rows.map((t: any) => ({
+        id: String(t.id),
+        name: String(t.name),
+        crefito: t.crefito ?? undefined,
+      })),
     });
   } catch (error) {
     console.error("[Profile/Therapists] error:", error);
@@ -616,10 +620,14 @@ app.delete("/me", requireAuth, async (c) => {
     await pool.query(
       `INSERT INTO audit_logs (organization_id, user_id, action, entity_type, entity_id, metadata)
        VALUES ($1, $2, 'ACCOUNT_DELETION_REQUESTED', 'profile', $2, $3)`,
-      [user.organizationId, user.uid, JSON.stringify({ 
-        reason: "User requested account deletion via App/Profile",
-        retention_policy: "20 years (Law 13.787/2018)" 
-      })]
+      [
+        user.organizationId,
+        user.uid,
+        JSON.stringify({
+          reason: "User requested account deletion via App/Profile",
+          retention_policy: "20 years (Law 13.787/2018)",
+        }),
+      ],
     );
 
     // 2. Mark profile as inactive and set deletion flag
@@ -630,16 +638,17 @@ app.delete("/me", requireAuth, async (c) => {
            updated_at = NOW(),
            preferences = jsonb_set(COALESCE(preferences, '{}'), '{deletion_requested_at}', $2)
        WHERE user_id = $1`,
-      [user.uid, new Date().toISOString()]
+      [user.uid, new Date().toISOString()],
     );
 
-    // 3. In a real production environment, you would also call your auth provider 
+    // 3. In a real production environment, you would also call your auth provider
     // to disable the user login (e.g., Neon Auth / Better Auth / Clerk)
     // For now, setting is_active = false will block most application flows via requireAuth if checked.
 
-    return c.json({ 
-      success: true, 
-      message: "Solicitação de exclusão processada. Seu acesso foi desativado, mas seus registros clínicos serão mantidos por 20 anos conforme exigido pela Lei nº 13.787/2018." 
+    return c.json({
+      success: true,
+      message:
+        "Solicitação de exclusão processada. Seu acesso foi desativado, mas seus registros clínicos serão mantidos por 20 anos conforme exigido pela Lei nº 13.787/2018.",
     });
   } catch (error) {
     console.error("[Profile/Delete] error:", error);
@@ -683,7 +692,14 @@ app.post("/admin/approve/:profileId", requireAuth, async (c) => {
   const { role, roles } = await c.req.json<{ role: string; roles?: string[] }>();
 
   if (!role) return c.json({ error: "role é obrigatório" }, 400);
-  const allowedRoles = ["admin", "fisioterapeuta", "estagiario", "paciente", "parceiro", "recepcionista"];
+  const allowedRoles = [
+    "admin",
+    "fisioterapeuta",
+    "estagiario",
+    "paciente",
+    "parceiro",
+    "recepcionista",
+  ];
   if (!allowedRoles.includes(role)) return c.json({ error: "role inválido" }, 400);
 
   const filteredRoles = roles?.filter((r) => allowedRoles.includes(r));

@@ -3,16 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { useQuery } from "@tanstack/react-query";
 import { request } from "@/api/v2/base";
 import { SafeResponsiveContainer } from "@/components/charts/SafeResponsiveContainer";
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  Cell,
-} from "recharts";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Cell } from "recharts";
 
 interface ProfessionalMetric {
   therapist_id: string;
@@ -31,7 +22,11 @@ export function TeamPerformanceDashboard() {
   });
 
   if (isLoading) {
-    return <div className="h-96 flex items-center justify-center">Analisando performance da equipe...</div>;
+    return (
+      <div className="h-96 flex items-center justify-center">
+        Analisando performance da equipe...
+      </div>
+    );
   }
 
   const data = teamData?.data || [];
@@ -42,7 +37,9 @@ export function TeamPerformanceDashboard() {
         {/* Faturamento por Profissional */}
         <Card className="border-none shadow-premium bg-white dark:bg-slate-900/50">
           <CardHeader>
-            <CardTitle className="text-lg font-black tracking-tight">Faturamento por Profissional</CardTitle>
+            <CardTitle className="text-lg font-black tracking-tight">
+              Faturamento por Profissional
+            </CardTitle>
             <CardDescription>Receita gerada no mês atual</CardDescription>
           </CardHeader>
           <CardContent>
@@ -52,13 +49,21 @@ export function TeamPerformanceDashboard() {
                   <CartesianGrid strokeDasharray="3 3" vertical={false} opacity={0.3} />
                   <XAxis dataKey="full_name" axisLine={false} tickLine={false} fontSize={11} />
                   <YAxis axisLine={false} tickLine={false} fontSize={11} />
-                  <Tooltip 
-                    cursor={{ fill: 'rgba(0,0,0,0.05)' }}
-                    contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }}
+                  <Tooltip
+                    cursor={{ fill: "rgba(0,0,0,0.05)" }}
+                    contentStyle={{
+                      borderRadius: "12px",
+                      border: "none",
+                      boxShadow: "0 10px 15px -3px rgba(0,0,0,0.1)",
+                    }}
                   />
                   <Bar dataKey="monthly_revenue" name="Receita (R$)" radius={[6, 6, 0, 0]}>
                     {data.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={index === 0 ? "#4f46e5" : "#6366f1"} opacity={0.8} />
+                      <Cell
+                        key={`cell-${index}`}
+                        fill={index === 0 ? "#4f46e5" : "#6366f1"}
+                        opacity={0.8}
+                      />
                     ))}
                   </Bar>
                 </BarChart>
@@ -80,10 +85,22 @@ export function TeamPerformanceDashboard() {
                   <CartesianGrid strokeDasharray="3 3" vertical={false} opacity={0.3} />
                   <XAxis dataKey="full_name" axisLine={false} tickLine={false} fontSize={11} />
                   <YAxis axisLine={false} tickLine={false} fontSize={11} />
-                  <Tooltip cursor={{ fill: 'rgba(0,0,0,0.05)' }} />
+                  <Tooltip cursor={{ fill: "rgba(0,0,0,0.05)" }} />
                   <Legend iconType="circle" />
-                  <Bar dataKey="completed_count" name="Realizados" stackId="a" fill="#10b981" radius={[0, 0, 0, 0]} />
-                  <Bar dataKey="no_show_count" name="Faltas" stackId="a" fill="#ef4444" radius={[6, 6, 0, 0]} />
+                  <Bar
+                    dataKey="completed_count"
+                    name="Realizados"
+                    stackId="a"
+                    fill="#10b981"
+                    radius={[0, 0, 0, 0]}
+                  />
+                  <Bar
+                    dataKey="no_show_count"
+                    name="Faltas"
+                    stackId="a"
+                    fill="#ef4444"
+                    radius={[6, 6, 0, 0]}
+                  />
                 </BarChart>
               </SafeResponsiveContainer>
             </div>
@@ -94,7 +111,9 @@ export function TeamPerformanceDashboard() {
       {/* Lista Detalhada */}
       <Card className="border-none shadow-premium bg-white dark:bg-slate-900/50 overflow-hidden">
         <CardHeader className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-800">
-          <CardTitle className="text-base font-black uppercase tracking-widest text-slate-400">Resumo de Produtividade</CardTitle>
+          <CardTitle className="text-base font-black uppercase tracking-widest text-slate-400">
+            Resumo de Produtividade
+          </CardTitle>
         </CardHeader>
         <CardContent className="p-0">
           <div className="overflow-x-auto">
@@ -109,23 +128,31 @@ export function TeamPerformanceDashboard() {
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                 {data.map((prof) => {
-                  const attendanceRate = prof.total_appointments > 0 
-                    ? (prof.completed_count / prof.total_appointments) * 100 
-                    : 0;
-                    
+                  const attendanceRate =
+                    prof.total_appointments > 0
+                      ? (prof.completed_count / prof.total_appointments) * 100
+                      : 0;
+
                   return (
-                    <tr key={prof.therapist_id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
-                      <td className="px-6 py-4 font-bold text-slate-900 dark:text-white">{prof.full_name}</td>
+                    <tr
+                      key={prof.therapist_id}
+                      className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors"
+                    >
+                      <td className="px-6 py-4 font-bold text-slate-900 dark:text-white">
+                        {prof.full_name}
+                      </td>
                       <td className="px-6 py-4 text-slate-500">{prof.total_appointments} total</td>
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-2">
-                          <span className={`font-black ${attendanceRate > 85 ? 'text-emerald-500' : 'text-amber-500'}`}>
+                          <span
+                            className={`font-black ${attendanceRate > 85 ? "text-emerald-500" : "text-amber-500"}`}
+                          >
                             {attendanceRate.toFixed(1)}%
                           </span>
                         </div>
                       </td>
                       <td className="px-6 py-4 font-black text-brand-blue">
-                        R$ {prof.monthly_revenue.toLocaleString('pt-BR')}
+                        R$ {prof.monthly_revenue.toLocaleString("pt-BR")}
                       </td>
                     </tr>
                   );

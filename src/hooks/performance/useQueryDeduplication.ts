@@ -73,7 +73,10 @@ class QueryDeduplicationManager {
 const dedupManager = new QueryDeduplicationManager();
 
 // Limpeza periódica de cache antigo — intervalo inicializado uma única vez
-if (typeof window !== "undefined" && !(globalThis as Record<string, unknown>).__dedupCleanupStarted) {
+if (
+  typeof window !== "undefined" &&
+  !(globalThis as Record<string, unknown>).__dedupCleanupStarted
+) {
   (globalThis as Record<string, unknown>).__dedupCleanupStarted = true;
   setInterval(() => {
     dedupManager.clearOldCache();

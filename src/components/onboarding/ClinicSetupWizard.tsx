@@ -5,16 +5,12 @@ import { Building2, Clock, UserPlus, Check, ChevronRight, Loader2 } from "lucide
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
-import { profileApi, patientsApi } from "@/api/v2";
+import { organizationsApi, patientsApi } from "@/api/v2";
 import { schedulingApi } from "@/api/v2/scheduling";
+import { useOrganizations } from "@/hooks/useOrganizations";
 
 interface ClinicSetupWizardProps {
   open: boolean;
@@ -24,11 +20,11 @@ interface ClinicSetupWizardProps {
 const DAYS = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
 const DEFAULT_HOURS = [
   { day_of_week: 0, is_open: false, open_time: "08:00", close_time: "18:00" },
-  { day_of_week: 1, is_open: true,  open_time: "08:00", close_time: "18:00" },
-  { day_of_week: 2, is_open: true,  open_time: "08:00", close_time: "18:00" },
-  { day_of_week: 3, is_open: true,  open_time: "08:00", close_time: "18:00" },
-  { day_of_week: 4, is_open: true,  open_time: "08:00", close_time: "18:00" },
-  { day_of_week: 5, is_open: true,  open_time: "08:00", close_time: "18:00" },
+  { day_of_week: 1, is_open: true, open_time: "08:00", close_time: "18:00" },
+  { day_of_week: 2, is_open: true, open_time: "08:00", close_time: "18:00" },
+  { day_of_week: 3, is_open: true, open_time: "08:00", close_time: "18:00" },
+  { day_of_week: 4, is_open: true, open_time: "08:00", close_time: "18:00" },
+  { day_of_week: 5, is_open: true, open_time: "08:00", close_time: "18:00" },
   { day_of_week: 6, is_open: false, open_time: "08:00", close_time: "13:00" },
 ];
 
@@ -36,6 +32,7 @@ type Step = "clinic" | "hours" | "patient" | "done";
 
 export function ClinicSetupWizard({ open, onClose }: ClinicSetupWizardProps) {
   const queryClient = useQueryClient();
+  const { currentOrganization } = useOrganizations();
   const [step, setStep] = useState<Step>("clinic");
   const [saving, setSaving] = useState(false);
 
@@ -55,10 +52,10 @@ export function ClinicSetupWizard({ open, onClose }: ClinicSetupWizardProps) {
   });
 
   const steps: { id: Step; label: string; icon: React.ReactNode }[] = [
-    { id: "clinic",  label: "Clínica",   icon: <Building2 className="h-4 w-4" /> },
-    { id: "hours",   label: "Horários",  icon: <Clock className="h-4 w-4" /> },
-    { id: "patient", label: "Paciente",  icon: <UserPlus className="h-4 w-4" /> },
-    { id: "done",    label: "Pronto",    icon: <Check className="h-4 w-4" /> },
+    { id: "clinic", label: "Clínica", icon: <Building2 className="h-4 w-4" /> },
+    { id: "hours", label: "Horários", icon: <Clock className="h-4 w-4" /> },
+    { id: "patient", label: "Paciente", icon: <UserPlus className="h-4 w-4" /> },
+    { id: "done", label: "Pronto", icon: <Check className="h-4 w-4" /> },
   ];
 
   const stepIndex = steps.findIndex((s) => s.id === step);
@@ -68,17 +65,28 @@ export function ClinicSetupWizard({ open, onClose }: ClinicSetupWizardProps) {
       toast.error("Informe o nome da clínica.");
       return false;
     }
+    if (!currentOrganization?.id) {
+      toast.error("Não foi possível identificar a clínica atual.");
+      return false;
+    }
     try {
-      await profileApi.update({
-        clinic_name: clinicData.name,
-        phone: clinicData.phone || undefined,
-        address: clinicData.address || undefined,
-        city: clinicData.city || undefined,
-      } as any);
+      await organizationsApi.update(currentOrganization.id, {
+        name: clinicData.name.trim(),
+        settings: {
+          ...(currentOrganization.settings ?? {}),
+          clinic_phone: clinicData.phone || undefined,
+          clinic_address: clinicData.address || undefined,
+          clinic_city: clinicData.city || undefined,
+          onboarding_completed_at: new Date().toISOString(),
+        },
+      });
       queryClient.invalidateQueries({ queryKey: ["profile"] });
       queryClient.invalidateQueries({ queryKey: ["organization"] });
+      queryClient.invalidateQueries({ queryKey: ["organizations"] });
+      queryClient.invalidateQueries({ queryKey: ["current-organization"] });
       return true;
-    } catch {
+    } catch (error) {
+      console.error("[ClinicSetupWizard] saveClinic failed", error);
       toast.error("Erro ao salvar dados da clínica.");
       return false;
     }
@@ -118,8 +126,8 @@ export function ClinicSetupWizard({ open, onClose }: ClinicSetupWizardProps) {
     setSaving(true);
     try {
       let ok = true;
-      if (step === "clinic")  ok = await saveClinic();
-      if (step === "hours")   ok = await saveHours();
+      if (step === "clinic") ok = await saveClinic();
+      if (step === "hours") ok = await saveHours();
       if (step === "patient") ok = await savePatient();
       if (!ok) return;
 
@@ -142,9 +150,7 @@ export function ClinicSetupWizard({ open, onClose }: ClinicSetupWizardProps) {
   };
 
   const updateHour = (idx: number, field: "open_time" | "close_time", val: string) => {
-    setHours((prev) =>
-      prev.map((h) => (h.day_of_week === idx ? { ...h, [field]: val } : h)),
-    );
+    setHours((prev) => prev.map((h) => (h.day_of_week === idx ? { ...h, [field]: val } : h)));
   };
 
   return (
@@ -163,13 +169,15 @@ export function ClinicSetupWizard({ open, onClose }: ClinicSetupWizardProps) {
                   i < stepIndex
                     ? "bg-green-500 text-white"
                     : i === stepIndex
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-muted text-muted-foreground"
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-muted text-muted-foreground"
                 }`}
               >
                 {i < stepIndex ? <Check className="h-3.5 w-3.5" /> : s.icon}
               </div>
-              <span className={`hidden sm:inline text-xs ${i === stepIndex ? "font-semibold" : "text-muted-foreground"}`}>
+              <span
+                className={`hidden sm:inline text-xs ${i === stepIndex ? "font-semibold" : "text-muted-foreground"}`}
+              >
                 {s.label}
               </span>
               {i < steps.length - 1 && <ChevronRight className="h-3 w-3 text-muted-foreground" />}
@@ -180,7 +188,9 @@ export function ClinicSetupWizard({ open, onClose }: ClinicSetupWizardProps) {
         {/* Step content */}
         {step === "clinic" && (
           <div className="space-y-3">
-            <p className="text-sm text-muted-foreground">Informe os dados básicos da sua clínica.</p>
+            <p className="text-sm text-muted-foreground">
+              Informe os dados básicos da sua clínica.
+            </p>
             <div>
               <Label className="text-xs">Nome da clínica *</Label>
               <Input
@@ -220,14 +230,13 @@ export function ClinicSetupWizard({ open, onClose }: ClinicSetupWizardProps) {
 
         {step === "hours" && (
           <div className="space-y-2">
-            <p className="text-sm text-muted-foreground">Configure os dias e horários de atendimento.</p>
+            <p className="text-sm text-muted-foreground">
+              Configure os dias e horários de atendimento.
+            </p>
             <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
               {hours.map((h) => (
                 <div key={h.day_of_week} className="flex items-center gap-3">
-                  <Switch
-                    checked={h.is_open}
-                    onCheckedChange={() => toggleDay(h.day_of_week)}
-                  />
+                  <Switch checked={h.is_open} onCheckedChange={() => toggleDay(h.day_of_week)} />
                   <span className="w-8 text-xs font-medium">{DAYS[h.day_of_week]}</span>
                   {h.is_open ? (
                     <>
@@ -246,7 +255,9 @@ export function ClinicSetupWizard({ open, onClose }: ClinicSetupWizardProps) {
                       />
                     </>
                   ) : (
-                    <Badge variant="outline" className="text-xs text-muted-foreground">Fechado</Badge>
+                    <Badge variant="outline" className="text-xs text-muted-foreground">
+                      Fechado
+                    </Badge>
                   )}
                 </div>
               ))}
@@ -307,7 +318,12 @@ export function ClinicSetupWizard({ open, onClose }: ClinicSetupWizardProps) {
               variant="ghost"
               size="sm"
               onClick={() => {
-                const prev: Record<Step, Step> = { clinic: "clinic", hours: "clinic", patient: "hours", done: "patient" };
+                const prev: Record<Step, Step> = {
+                  clinic: "clinic",
+                  hours: "clinic",
+                  patient: "hours",
+                  done: "patient",
+                };
                 setStep(prev[step]);
               }}
             >

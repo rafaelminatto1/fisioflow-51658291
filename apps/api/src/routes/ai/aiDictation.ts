@@ -33,7 +33,7 @@ app.post("/dictate", requireAuth, async (c) => {
       {
         audio: [...new Uint8Array(audioBuffer)],
       },
-      { cache: false }
+      { cache: false },
     );
 
     const rawText = (transcriptionResponse as any).text || "";
@@ -75,7 +75,7 @@ Sua tarefa é limpar o texto de um ditado clínico de fisioterapia.
         error: "Falha no ditado clínico",
         details: error.message,
       },
-      500
+      500,
     );
   }
 });

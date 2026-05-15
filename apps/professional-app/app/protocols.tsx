@@ -529,12 +529,14 @@ export default function ProtocolsScreen() {
                         medium();
                         router.push({
                           pathname: "/clinical-test-ai",
-                          params: { testId: test.id, testName: test.title }
+                          params: { testId: test.id, testName: test.title },
                         } as any);
                       }}
                     >
                       <Ionicons name="scan-outline" size={14} color={colors.primary} />
-                      <Text style={[styles.aiVerifyButtonText, { color: colors.primary }]}>Verificar com IA</Text>
+                      <Text style={[styles.aiVerifyButtonText, { color: colors.primary }]}>
+                        Verificar com IA
+                      </Text>
                     </TouchableOpacity>
                   </View>
                 ))}

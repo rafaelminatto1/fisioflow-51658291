@@ -14,18 +14,14 @@
 }
 
 .glass-morphism {
-  backdrop-filter: blur(12px) saturate(150%);
-  -webkit-backdrop-filter: blur(12px) saturate(150%);
-  background: rgba(17, 25, 40, 0.7);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
 }
 
 .glass-card {
-  backdrop-filter: blur(24px) saturate(200%);
-  -webkit-backdrop-filter: blur(24px) saturate(200%);
-  background: rgba(17, 25, 40, 0.85);
-  border: 1px solid rgba(255, 255, 255, 0.125);
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-premium-md);
 }
 
 .shadow-premium-sm {
@@ -68,26 +64,24 @@
 
 /* Bento Grid & Brand Tokens */
 :root {
-  --brand-blue: #6DC0E3;
-  --brand-blue-light: #B5E2F5;
-  --brand-blue-dark: #3A92B8;
-  
+  --brand-blue: #6dc0e3;
+  --brand-blue-light: #b5e2f5;
+  --brand-blue-dark: #3a92b8;
+
   --bento-gap: 1.25rem;
   --bento-radius: 1.5rem;
   --glass-blur: 12px;
 }
 
 .premium-glass {
-  background: rgba(255, 255, 255, 0.7);
-  backdrop-filter: blur(12px) saturate(180%);
-  -webkit-backdrop-filter: blur(12px) saturate(180%);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  box-shadow: 0 8px 32px 0 rgba(109, 192, 227, 0.1);
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  box-shadow: 0 4px 12px 0 rgba(109, 192, 227, 0.1);
 }
 
 .dark .premium-glass {
-  background: rgba(15, 23, 42, 0.7);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
   box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
 }
 
@@ -112,7 +106,7 @@
 }
 
 .bento-card::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   left: 0;
@@ -129,13 +123,23 @@
 
 /* Animations */
 @keyframes slide-up {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @keyframes fade-in {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 .animate-slide-up {

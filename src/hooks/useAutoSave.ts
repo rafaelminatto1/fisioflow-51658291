@@ -29,46 +29,49 @@ export function useAutoSave<T>({
   const isSavingRef = useRef(false);
   const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
 
-  const save = useCallback(async (dataToSave: T = data) => {
-    if (isSavingRef.current || !enabled) return;
+  const save = useCallback(
+    async (dataToSave: T = data) => {
+      if (isSavingRef.current || !enabled) return;
 
-    const currentData = JSON.stringify(dataToSave);
+      const currentData = JSON.stringify(dataToSave);
 
-    // Não salvar se não mudou
-    if (currentData === lastSavedRef.current) {
-      lastSaveTimeRef.current = Date.now(); // Resetar tempo se não houve mudança
-      return;
-    }
-
-    try {
-      isSavingRef.current = true;
-      await onSave(dataToSave);
-      lastSavedRef.current = currentData;
-      lastSaveTimeRef.current = Date.now();
-      const now = new Date();
-      setLastSavedAt(now);
-
-      // Only show toast if explicitly enabled
-      if (showToasts) {
-        const timeString = format(now, "HH:mm", { locale: ptBR });
-        toast({
-          title: "Salvo automaticamente",
-          description: `Salvo às ${timeString}`,
-          variant: "default",
-        });
+      // Não salvar se não mudou
+      if (currentData === lastSavedRef.current) {
+        lastSaveTimeRef.current = Date.now(); // Resetar tempo se não houve mudança
+        return;
       }
-    } catch (error) {
-      logger.error("Erro no auto-save", error as Error, "useAutoSave");
-      // Só mostrar toast de erro se não for erro de rede temporário (opcional)
-      toast({
-        title: "Erro ao salvar",
-        description: "Não foi possível salvar automaticamente. Tente salvar manualmente.",
-        variant: "destructive",
-      });
-    } finally {
-      isSavingRef.current = false;
-    }
-  }, [data, onSave, enabled, toast, showToasts]);
+
+      try {
+        isSavingRef.current = true;
+        await onSave(dataToSave);
+        lastSavedRef.current = currentData;
+        lastSaveTimeRef.current = Date.now();
+        const now = new Date();
+        setLastSavedAt(now);
+
+        // Only show toast if explicitly enabled
+        if (showToasts) {
+          const timeString = format(now, "HH:mm", { locale: ptBR });
+          toast({
+            title: "Salvo automaticamente",
+            description: `Salvo às ${timeString}`,
+            variant: "default",
+          });
+        }
+      } catch (error) {
+        logger.error("Erro no auto-save", error as Error, "useAutoSave");
+        // Só mostrar toast de erro se não for erro de rede temporário (opcional)
+        toast({
+          title: "Erro ao salvar",
+          description: "Não foi possível salvar automaticamente. Tente salvar manualmente.",
+          variant: "destructive",
+        });
+      } finally {
+        isSavingRef.current = false;
+      }
+    },
+    [data, onSave, enabled, toast, showToasts],
+  );
 
   // Keep refs for unmount save
   const dataRef = useRef(data);

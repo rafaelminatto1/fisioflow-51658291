@@ -32,14 +32,14 @@ async function ensureLiveCheckinsTable(db: D1Database) {
         enrollment_id TEXT NOT NULL,
         status TEXT NOT NULL,
         timestamp INTEGER NOT NULL
-      )`
+      )`,
     )
     .run();
 
   await db
     .prepare(
       `CREATE INDEX IF NOT EXISTS idx_live_checkins_org_timestamp
-       ON live_checkins (org_id, timestamp DESC)`
+       ON live_checkins (org_id, timestamp DESC)`,
     )
     .run();
 
@@ -62,7 +62,7 @@ app.get("/classes", requireAuth, async (c) => {
        LEFT JOIN profiles p ON p.id = gc.therapist_id
        WHERE gc.organization_id = $1 AND gc.is_active = true
        ORDER BY gc.day_of_week ASC, gc.start_time ASC`,
-      [user.organizationId]
+      [user.organizationId],
     );
 
     return c.json({ data: result.rows });
@@ -97,7 +97,7 @@ app.post("/classes", requireAuth, async (c) => {
         body.dayOfWeek,
         body.startTime,
         body.endTime,
-      ]
+      ],
     );
 
     return c.json({ data: result.rows[0] }, 201);
@@ -121,17 +121,17 @@ app.post("/enroll", requireAuth, async (c) => {
     const capRes = await pool.query(
       `SELECT capacity, (SELECT COUNT(*) FROM group_enrollments WHERE class_id = $1 AND status = 'confirmed') as current
        FROM group_classes WHERE id = $1`,
-      [classId]
+      [classId],
     );
 
     const isFull = capRes.rows[0].current >= capRes.rows[0].capacity;
-    const status = isFull ? 'waitlist' : 'confirmed';
+    const status = isFull ? "waitlist" : "confirmed";
 
     const result = await pool.query(
       `INSERT INTO group_enrollments (organization_id, class_id, patient_id, status)
        VALUES ($1, $2, $3, $4)
        RETURNING *`,
-      [user.organizationId, classId, patientId, status]
+      [user.organizationId, classId, patientId, status],
     );
 
     return c.json({ data: result.rows[0], waitlist: isFull });
@@ -156,7 +156,7 @@ app.post("/checkin", requireAuth, async (c) => {
       `INSERT INTO group_checkins (organization_id, enrollment_id, session_date, status, notes)
        VALUES ($1, $2, $3, $4, $5)
        RETURNING *`,
-      [user.organizationId, enrollmentId, date, status, notes]
+      [user.organizationId, enrollmentId, date, status, notes],
     );
 
     // 2. Se D1 estiver disponível, espelhar para consulta rápida "Live Room"
@@ -164,8 +164,10 @@ app.post("/checkin", requireAuth, async (c) => {
       try {
         await ensureLiveCheckinsTable(c.env.DB);
         await c.env.DB.prepare(
-          "INSERT INTO live_checkins (id, org_id, enrollment_id, status, timestamp) VALUES (?, ?, ?, ?, ?)"
-        ).bind(result.rows[0].id, user.organizationId, enrollmentId, status, Date.now()).run();
+          "INSERT INTO live_checkins (id, org_id, enrollment_id, status, timestamp) VALUES (?, ?, ?, ?, ?)",
+        )
+          .bind(result.rows[0].id, user.organizationId, enrollmentId, status, Date.now())
+          .run();
       } catch (d1Error) {
         console.warn("[Groups] D1 live checkin mirror failed:", d1Error);
       }
@@ -194,8 +196,10 @@ app.get("/live-status", requireAuth, async (c) => {
        FROM live_checkins
        WHERE org_id = ?
        ORDER BY timestamp DESC
-       LIMIT 10`
-    ).bind(user.organizationId).all<LiveCheckinRow>();
+       LIMIT 10`,
+    )
+      .bind(user.organizationId)
+      .all<LiveCheckinRow>();
 
     const liveCheckins = results.results ?? [];
     const enrollmentIds = [...new Set(liveCheckins.map((row) => row.enrollment_id))];
@@ -213,12 +217,10 @@ app.get("/live-status", requireAuth, async (c) => {
        JOIN group_classes gc ON gc.id = ge.class_id
        WHERE ge.organization_id = $1
          AND ge.id IN (${placeholders})`,
-      [user.organizationId, ...enrollmentIds]
+      [user.organizationId, ...enrollmentIds],
     );
 
-    const detailsByEnrollmentId = new Map(
-      details.rows.map((row) => [row.enrollment_id, row])
-    );
+    const detailsByEnrollmentId = new Map(details.rows.map((row) => [row.enrollment_id, row]));
 
     const data = liveCheckins.map((row) => {
       const detail = detailsByEnrollmentId.get(row.enrollment_id);

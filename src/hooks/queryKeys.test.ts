@@ -110,17 +110,14 @@ describe("QueryKeys registry", () => {
      */
     it("lists() starts with all() for all domains (property-based)", () => {
       fc.assert(
-        fc.property(
-          fc.constantFrom(...DOMAINS_WITH_PREFIX_INVARIANT),
-          (domainName: DomainName) => {
-            const domain = QueryKeys[domainName];
-            const allKey = domain.all();
-            const listsKey = domain.lists();
+        fc.property(fc.constantFrom(...DOMAINS_WITH_PREFIX_INVARIANT), (domainName: DomainName) => {
+          const domain = QueryKeys[domainName];
+          const allKey = domain.all();
+          const listsKey = domain.lists();
 
-            expect(listsKey.slice(0, allKey.length)).toEqual(allKey);
-            expect(listsKey.length).toBeGreaterThan(allKey.length);
-          },
-        ),
+          expect(listsKey.slice(0, allKey.length)).toEqual(allKey);
+          expect(listsKey.length).toBeGreaterThan(allKey.length);
+        }),
         { numRuns: 50 },
       );
     });

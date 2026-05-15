@@ -37,12 +37,14 @@ app.post("/scribe/process", requireAuth, async (c) => {
     if (!rawText) return c.json({ error: "Falha na transcrição" }, 422);
 
     const sectionName =
-      ({
-        S: "Subjetivo (Queixas e Histórico)",
-        O: "Objetivo (Medições e Exames)",
-        A: "Avaliação (Raciocínio Clínico)",
-        P: "Plano (Condutas e Próximos Passos)",
-      } as Record<string, string>)[section] ?? section;
+      (
+        {
+          S: "Subjetivo (Queixas e Histórico)",
+          O: "Objetivo (Medições e Exames)",
+          A: "Avaliação (Raciocínio Clínico)",
+          P: "Plano (Condutas e Próximos Passos)",
+        } as Record<string, string>
+      )[section] ?? section;
 
     const result = await callAI(c.env, {
       task: "soap",
