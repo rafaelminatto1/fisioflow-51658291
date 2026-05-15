@@ -5,6 +5,7 @@ import type { Env } from "../types/env";
 import { sessions, sessionAttachments, sessionTemplates, patients } from "@fisioflow/db";
 import { eq, and, desc, count, sql, or, ilike } from "drizzle-orm";
 import { withTenant } from "../lib/db-utils";
+import { stripHtml } from "../lib/stripHtml";
 import { invalidatePatientCache } from "../lib/ai-context-cache";
 import { processClinicalEmbedding } from "../lib/ai/embeddings";
 import { triggerFiscalCycleNotification } from "../lib/fiscal/notificationTrigger";
@@ -43,7 +44,7 @@ function toPainScale(val: unknown): number | null | undefined {
 /** Plain-text snippet a partir do HTML da observação (para preview/timeline) */
 function observacaoPreview(html: unknown, max = 200): string {
   if (typeof html !== "string" || !html) return "";
-  return html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim().slice(0, max);
+  return stripHtml(html).slice(0, max);
 }
 
 type DbSessionStatus = "draft" | "finalized" | "cancelled";

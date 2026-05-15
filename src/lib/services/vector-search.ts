@@ -12,6 +12,7 @@ import {
   cosineSimilarity,
 } from "@/lib/ai/embeddings";
 import { withPerformanceTrace } from "@/lib/monitoring/performance";
+import { stripHtml } from "@/lib/utils/stripHtml";
 import type { Evolution } from "@/types/clinical";
 import { sessionsApi } from "@/api/v2";
 
@@ -70,7 +71,7 @@ export async function findSimilarEvolutions(
       for (const session of sessions) {
         const evolution = toEvolution(session);
         const observacao = (session as any).observacao || "";
-        const plainText = observacao.replace(/<[^>]+>/g, " ").trim();
+        const plainText = stripHtml(observacao);
         if (!plainText) continue;
         const embedding = await generateEmbedding(plainText);
         const similarity = cosineSimilarity(queryEmbedding, embedding);

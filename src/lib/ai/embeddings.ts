@@ -6,6 +6,7 @@
 
 import { logger } from "@/lib/errors/logger";
 import { withPerformanceTrace } from "@/lib/monitoring/performance";
+import { stripHtml } from "@/lib/utils/stripHtml";
 import {
   generateEmbedding as generateEmbeddingWithGemini,
   cosineSimilarity as cosineSimilarityDirect,
@@ -102,9 +103,6 @@ export async function generateEvolutionEmbedding(evolution: {
   exercises?: Array<{ name?: string; prescription?: string }>;
   measurements?: Array<{ name?: string; value?: number; unit?: string }>;
 }): Promise<number[]> {
-  const stripHtml = (html: string) =>
-    html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
-
   const sections: string[] = [];
   if (evolution.observacao) sections.push(stripHtml(evolution.observacao));
   if (evolution.pain_scale != null) sections.push(`EVA: ${evolution.pain_scale}/10`);

@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { logger } from "@/lib/logging/logger";
+import { stripHtml } from "@/lib/utils/stripHtml";
 
 interface SemanticSearchProps {
   organizationId?: string;
@@ -65,7 +66,7 @@ export function SemanticSearch({
       const formatted: SearchResult[] = searchResults.map((r) => {
         const ev = r.evolution as any;
         const observacao = ev.observacao || "";
-        const plain = observacao.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+        const plain = stripHtml(observacao);
         return {
           evolutionId: r.evolutionId,
           date: r.evolution.date,

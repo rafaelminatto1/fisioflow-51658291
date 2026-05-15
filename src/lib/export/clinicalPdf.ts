@@ -6,6 +6,7 @@ import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { stripHtml } from "@/lib/utils/stripHtml";
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
@@ -96,9 +97,6 @@ export interface EvolutionDocument {
 
 /** @deprecated use EvolutionDocument */
 export type SoapEvolution = EvolutionDocument;
-
-const stripHtml = (html: string) =>
-  html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
 
 export function generateSoapPDF(evolution: EvolutionDocument): void {
   const doc = new jsPDF({ unit: "mm", format: "a4" });
