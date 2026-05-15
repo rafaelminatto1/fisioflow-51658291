@@ -1,4 +1,6 @@
 import React, { useMemo, useState } from "react";
+import { createPortal } from "react-dom";
+
 import {
   Plus,
   Trash2,
@@ -144,26 +146,43 @@ const EvolutionItemRow: React.FC<EvolutionItemRowProps> = ({
 
   return (
     <Draggable draggableId={item.id} index={index} isDragDisabled={disabled}>
-      {(provided, snapshot) => (
-        <motion.div
-          ref={provided.innerRef}
-          {...provided.draggableProps}
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.95 }}
-          layout={!snapshot.isDragging}
-          className={cn(
-            "group/item relative flex flex-col rounded-2xl border overflow-hidden mb-2.5 transition-[border-color,box-shadow,background-color,opacity] duration-200",
-            item.completed
-              ? "bg-muted/5 border-border/40"
-              : "bg-background border-border/60 shadow-sm",
-            isExpanded && "ring-1 ring-primary/20 border-primary/30 shadow-md",
-            snapshot.isDragging &&
-              "z-[100] bg-background shadow-[0_14px_36px_rgba(15,23,42,0.16)] ring-1 ring-primary/35",
-          )}
-        >
-          {/* Row Header */}
-          <div className="flex items-center gap-3 p-3">
+      {(provided, snapshot) => {
+        const row = (
+          <motion.div
+            ref={provided.innerRef}
+            {...provided.draggableProps}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            layout={!snapshot.isDragging}
+            className={cn(
+              "group/item relative flex flex-col rounded-2xl border overflow-hidden mb-2.5 transition-[border-color,box-shadow,background-color,opacity] duration-200",
+              item.completed
+                ? "bg-muted/5 border-border/40"
+                : "bg-background border-border/60 shadow-sm",
+              isExpanded && "ring-1 ring-primary/20 border-primary/30 shadow-md",
+              snapshot.isDragging &&
+                "z-[100] bg-background shadow-[0_14px_36px_rgba(15,23,42,0.16)] ring-1 ring-primary/35",
+              snapshot.isDragging && "pointer-events-none", // Evita interferência durante o drag
+            )}
+            style={{
+              ...provided.draggableProps.style,
+              // Garante que o width seja mantido quando estiver no portal
+              width: snapshot.isDragging ? "var(--drag-width)" : provided.draggableProps.style?.width,
+            }}
+          >
+            {/* Row Header */}
+            <div className="flex items-center gap-3 p-3" ref={(el) => {
+              if (el && snapshot.isDragging) {
+                // Captura o width original para usar no portal
+                const parent = el.closest('.droppable-container');
+                if (parent) {
+                  const width = parent.getBoundingClientRect().width;
+                  document.documentElement.style.setProperty('--drag-width', `${width}px`);
+                }
+              }
+            }}>
+
             {/* Order number */}
             <span
               className="shrink-0 w-5 text-center text-[10px] font-bold text-muted-foreground/40 select-none"
@@ -377,9 +396,17 @@ const EvolutionItemRow: React.FC<EvolutionItemRowProps> = ({
               </motion.div>
             )}
           </AnimatePresence>
-        </motion.div>
-      )}
+          </motion.div>
+        );
+
+        if (snapshot.isDragging) {
+          return createPortal(row, document.body);
+        }
+
+        return row;
+      }}
     </Draggable>
+
   );
 };
 
@@ -767,7 +794,12 @@ export const EvolutionBlockV3: React.FC<EvolutionBlockV3Props> = ({
         <DragDropContext onDragEnd={onDragEnd}>
           <Droppable droppableId="evolution-items">
             {(provided) => (
-              <div {...provided.droppableProps} ref={provided.innerRef} className="space-y-0.5">
+              <div
+                {...provided.droppableProps}
+                ref={provided.innerRef}
+                className="space-y-0.5 droppable-container"
+              >
+
                 <AnimatePresence mode="popLayout">
                   {items.length === 0 ? (
                     <motion.div

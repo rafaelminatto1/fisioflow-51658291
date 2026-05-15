@@ -119,6 +119,10 @@ export const exercises = pgTable(
     thumbnailUrl: text("thumbnail_url"),
     videoUrl: text("video_url"),
 
+    // Internacionalização e Busca
+    nameEn: varchar("name_en", { length: 250 }),
+    aliases: text("aliases").array().default([]),
+
     // Clínico
     pathologiesIndicated: text("pathologies_indicated").array().default([]),
     pathologiesContraindicated: text("pathologies_contraindicated").array().default([]),

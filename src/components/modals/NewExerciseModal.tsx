@@ -34,6 +34,7 @@ import {
   BookOpen,
   MoreVertical,
   Share2 as Youtube,
+  Search,
 } from "lucide-react";
 import { exercisesApi } from "@/api/v2";
 import { uploadToR2 } from "@/lib/storage/r2-storage";
@@ -64,6 +65,9 @@ interface ScientificReference {
 }
 
 type ExerciseExtended = Exercise & {
+  name_en?: string;
+  aliases_pt?: string[];
+  aliases_en?: string[];
   alternativeEquipment?: string[];
   precaution_level?: string;
   precaution_notes?: string;
@@ -72,6 +76,7 @@ type ExerciseExtended = Exercise & {
 };
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { knowledgeBase } from "@/data/knowledgeBase";
+import { exerciseDictionary } from "@/data/exerciseDictionary";
 import { MediaGalleryModal } from "../media/MediaGalleryModal";
 import {
   DndContext,
@@ -93,11 +98,14 @@ import { CSS } from "@dnd-kit/utilities";
 
 const exerciseSchema = z.object({
   name: z.string().min(3, "Nome deve ter pelo menos 3 caracteres"),
+  name_en: z.string().optional(),
   description: z.string().optional(),
   category: z.string().optional(),
   difficulty: z.enum(["Iniciante", "Intermediário", "Avançado"]).optional(),
   video_url: z.string().optional().or(z.literal("")),
   image_url: z.string().optional().or(z.literal("")),
+  aliases_pt: z.array(z.string()).optional(),
+  aliases_en: z.array(z.string()).optional(),
   instructions: z.string().optional(),
   sets: z.number().int().positive().optional().nullable(),
   repetitions: z.number().int().positive().optional().nullable(),
@@ -234,6 +242,60 @@ export function NewExerciseModal({
   const [isGalleryOpen, setIsGalleryOpen] = React.useState(false);
   const [_activeMediaTab, _setActiveMediaTab] = React.useState<"view" | "edit">("view");
 
+  const handleApplyDictionaryEntry = (entry: ExerciseDictionaryEntry) => {
+    form.setValue("name", entry.name_pt);
+    form.setValue("name_en", entry.name_en);
+    form.setValue("description", entry.description_pt);
+    form.setValue("category", entry.category);
+    
+    // Mapear aliases se existirem no dicionário
+    if (entry.aliases_pt) {
+      form.setValue("aliases_pt", entry.aliases_pt);
+    }
+    if (entry.aliases_en) {
+      form.setValue("aliases_en", entry.aliases_en);
+    }
+
+    if (entry.image_url) {
+      const currentMedia = form.getValues("media") || [];
+      const alreadyHas = currentMedia.some((m) => m.url === entry.image_url);
+      if (!alreadyHas) {
+        form.setValue("media", [
+          {
+            url: entry.image_url,
+            type: "image",
+            caption: entry.name_pt,
+            orderIndex: currentMedia.length,
+          },
+          ...currentMedia,
+        ]);
+      }
+    }
+    
+    // Preencher instruções e metadados clínicos se disponíveis
+    if (entry.metadata) {
+      if (entry.metadata.instruction_pt) {
+        form.setValue("instructions", entry.metadata.instruction_pt);
+      }
+      if (entry.metadata.difficulty) {
+        // Mapear nível de dificuldade numérico para o enum do formulário
+        const diffMap: Record<number, "Iniciante" | "Intermediário" | "Avançado"> = {
+          1: "Iniciante",
+          2: "Intermediário",
+          3: "Avançado"
+        };
+        form.setValue("difficulty", diffMap[entry.metadata.intensity_level] || "Iniciante");
+      }
+    }
+
+    setSearchTerm("");
+    setSearchResults([]);
+    toast({
+      title: "Dados Aplicados",
+      description: `O exercício "${entry.name_pt}" foi carregado com sucesso.`,
+    });
+  };
+
   const sensors = useSensors(
     useSensor(PointerSensor),
     useSensor(KeyboardSensor, {
@@ -288,14 +350,42 @@ export function NewExerciseModal({
     setIsUploading(false);
 
     if (exercise) {
+      const ext = exercise as ExerciseExtended;
+
+      // --- Lógica de Mídia Legada (Fallback) ---
+      let initialMedia = ext.media || [];
+      if (initialMedia.length === 0) {
+        if (exercise.image_url) {
+          initialMedia.push({
+            id: "legacy-image-" + Math.random().toString(36).substr(2, 9),
+            url: exercise.image_url,
+            type: "image",
+            orderIndex: 0,
+          });
+        }
+        if (exercise.video_url) {
+          const isYoutube =
+            exercise.video_url.includes("youtube.com") || exercise.video_url.includes("youtu.be");
+          initialMedia.push({
+            id: "legacy-video-" + Math.random().toString(36).substr(2, 9),
+            url: exercise.video_url,
+            type: isYoutube ? "youtube" : "video",
+            orderIndex: initialMedia.length,
+          });
+        }
+      }
+
       form.reset({
         name: exercise.name || "",
+        name_en: ext.name_en || "",
         description: exercise.description || "",
         category: exercise.category || "",
         difficulty:
           (exercise.difficulty as "Iniciante" | "Intermediário" | "Avançado") || undefined,
         video_url: exercise.video_url || "",
         image_url: exercise.image_url || "",
+        aliases_pt: ext.aliases_pt || [],
+        aliases_en: ext.aliases_en || [],
         instructions: exercise.instructions || "",
         sets: exercise.sets || undefined,
         repetitions: exercise.repetitions || undefined,
@@ -308,15 +398,15 @@ export function NewExerciseModal({
           : [],
         body_parts: Array.isArray(exercise.body_parts) ? exercise.body_parts : [],
         equipment: Array.isArray(exercise.equipment) ? exercise.equipment : [],
-        alternativeEquipment: Array.isArray((exercise as ExerciseExtended).alternativeEquipment)
-          ? (exercise as ExerciseExtended).alternativeEquipment
+        alternativeEquipment: Array.isArray(ext.alternativeEquipment)
+          ? ext.alternativeEquipment
           : [],
-        precaution_level: (exercise as ExerciseExtended).precaution_level || "safe",
-        precaution_notes: (exercise as ExerciseExtended).precaution_notes || "",
-        scientific_references: Array.isArray((exercise as ExerciseExtended).scientific_references)
-          ? (exercise as ExerciseExtended).scientific_references
+        precaution_level: ext.precaution_level || "safe",
+        precaution_notes: ext.precaution_notes || "",
+        scientific_references: Array.isArray(ext.scientific_references)
+          ? ext.scientific_references
           : [],
-        media: (exercise as ExerciseExtended).media || [],
+        media: initialMedia,
       });
       if (Array.isArray((exercise as ExerciseExtended).scientific_references)) {
         replace((exercise as ExerciseExtended).scientific_references);
@@ -324,11 +414,14 @@ export function NewExerciseModal({
     } else {
       form.reset({
         name: "",
+        name_en: "",
         description: "",
         category: "",
         difficulty: undefined,
         video_url: "",
         image_url: "",
+        aliases_pt: [],
+        aliases_en: [],
         instructions: "",
         sets: undefined,
         repetitions: undefined,
@@ -483,19 +576,127 @@ export function NewExerciseModal({
               onSubmit={form.handleSubmit(handleSubmit)}
               className="space-y-4"
             >
-              <FormField
-                control={form.control}
-                name="name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Nome*</FormLabel>
-                    <FormControl>
-                      <Input {...field} placeholder="Nome do exercício" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="flex justify-between items-center">
+                        <span>Nome (PT)*</span>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-6 text-[10px] gap-1 text-primary hover:text-primary hover:bg-primary/5"
+                            >
+                              <Search className="h-3 w-3" />
+                              Dicionário Clínico
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-80 p-0" align="end">
+                            <div className="p-2 border-b">
+                              <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider px-2">
+                                Sugestões do Dicionário
+                              </p>
+                            </div>
+                            <div className="max-h-60 overflow-y-auto">
+                              {exerciseDictionary
+                                .filter(
+                                  (e) =>
+                                    e.name_pt.toLowerCase().includes(field.value?.toLowerCase() || "") ||
+                                    e.aliases_pt.some((a) =>
+                                      a.toLowerCase().includes(field.value?.toLowerCase() || ""),
+                                    ),
+                                )
+                                .map((entry) => (
+                                  <button
+                                    key={entry.name_pt}
+                                    type="button"
+                                    onClick={() => handleApplyDictionaryEntry(entry)}
+                                    className="w-full flex flex-col items-start gap-0.5 p-3 text-left hover:bg-slate-50 border-b last:border-0 transition-colors"
+                                  >
+                                    <span className="text-sm font-medium text-slate-900">
+                                      {entry.name_pt}
+                                    </span>
+                                    <span className="text-[10px] text-slate-500 italic">
+                                      {entry.name_en}
+                                    </span>
+                                  </button>
+                                ))}
+                            </div>
+                          </PopoverContent>
+                        </Popover>
+                      </FormLabel>
+                      <FormControl>
+                        <Input {...field} placeholder="Ex: Agachamento Livre" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="name_en"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Nome (EN)</FormLabel>
+                      <FormControl>
+                        <Input {...field} placeholder="Ex: Squat" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="aliases_pt"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Apelidos / Variações (PT)</FormLabel>
+                        <FormControl>
+                          <MultiSelect
+                            options={[]}
+                            selected={field.value || []}
+                            onChange={field.onChange}
+                            allowCustom={true}
+                            placeholder="Adicionar apelidos (ex: 4 apoios)..."
+                          />
+                        </FormControl>
+                        <FormDescription className="text-[10px]">
+                          Pressione Enter para adicionar cada variação.
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="aliases_en"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Aliases / Variations (EN)</FormLabel>
+                        <FormControl>
+                          <MultiSelect
+                            options={[]}
+                            selected={field.value || []}
+                            onChange={field.onChange}
+                            allowCustom={true}
+                            placeholder="Add aliases (ex: quadruped)..."
+                          />
+                        </FormControl>
+                        <FormDescription className="text-[10px]">
+                          Press Enter to add each variation.
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
 
               <FormField
                 control={form.control}

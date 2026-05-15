@@ -379,6 +379,7 @@ export interface ScientificReference {
 export interface Exercise {
   id: string;
   name: string;
+  name_en?: string;
   category?: string;
   difficulty?: string;
   video_url?: string;

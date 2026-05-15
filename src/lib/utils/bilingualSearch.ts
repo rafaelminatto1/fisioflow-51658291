@@ -71,10 +71,7 @@ export function expandSearchQuery(query: string): string[] {
 
     // Check if any term in the entry matches or contains the query
     const isMatch = termsInEntry.some(
-      (term) =>
-        term === normalizedQuery ||
-        term.includes(normalizedQuery) ||
-        normalizedQuery.includes(term),
+      (term) => term.includes(normalizedQuery),
     );
 
     if (isMatch) {

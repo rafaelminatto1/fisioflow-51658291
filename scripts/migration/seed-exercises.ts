@@ -6,6 +6,12 @@
 import { Pool } from "pg";
 import * as fs from "fs";
 import * as path from "path";
+import * as dotenv from "dotenv";
+
+dotenv.config();
+if (!process.env.DATABASE_URL && fs.existsSync(".env.production")) {
+  dotenv.config({ path: ".env.production" });
+}
 
 const DATABASE_URL = process.env.DATABASE_URL || process.env.CLOUD_SQL_CONNECTION_STRING;
 
@@ -36,6 +42,7 @@ interface Exercise {
   precautions?: string;
   benefits?: string;
   tags: string[];
+  aliases?: string[];
   image_url?: string;
   image_variants?: string[];
 }
@@ -94,9 +101,9 @@ async function insertExercise(exercise: Exercise, categoryId: string): Promise<s
       name, name_en, slug, dictionary_id, category_id, description, instructions,
       muscles_primary, equipment, difficulty, duration_seconds,
       sets_recommended, reps_recommended, precautions,
-      benefits, tags, image_url, image_variants, is_active, is_public, updated_at
+      benefits, tags, aliases, image_url, image_variants, is_active, is_public, updated_at
     )
-    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, NOW())
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, NOW())
     ON CONFLICT (slug) DO UPDATE SET
       name = EXCLUDED.name,
       name_en = EXCLUDED.name_en,
@@ -113,6 +120,7 @@ async function insertExercise(exercise: Exercise, categoryId: string): Promise<s
       precautions = EXCLUDED.precautions,
       benefits = EXCLUDED.benefits,
       tags = EXCLUDED.tags,
+      aliases = EXCLUDED.aliases,
       image_url = EXCLUDED.image_url,
       image_variants = EXCLUDED.image_variants,
       updated_at = NOW()
@@ -142,6 +150,7 @@ async function insertExercise(exercise: Exercise, categoryId: string): Promise<s
     exercise.precautions || null,
     exercise.benefits || null,
     exercise.tags,
+    exercise.aliases || [],
     exercise.image_url || null,
     exercise.image_variants || [],
     true, // is_active
@@ -202,6 +211,7 @@ async function main(): Promise<void> {
 
     console.log("🛠️ Verificando esquema do banco...");
     await pool.query("ALTER TABLE exercises ADD COLUMN IF NOT EXISTS name_en TEXT;");
+    await pool.query("ALTER TABLE exercises ADD COLUMN IF NOT EXISTS aliases TEXT[];");
     await pool.query("ALTER TABLE exercises ADD COLUMN IF NOT EXISTS image_variants TEXT[];");
 
     await seedExercises();
