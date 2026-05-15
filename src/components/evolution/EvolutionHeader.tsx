@@ -345,6 +345,13 @@ export const EvolutionHeader = memo(
                 {isSaving ? "Salvando" : "Salvar"}
               </span>
             </Button>
+            {/* Last saved inline indicator */}
+            {lastSavedAt && !isSaving && (
+              <span className="hidden sm:flex items-center gap-1 text-[10px] text-muted-foreground/60 font-medium">
+                <Clock className="h-3 w-3" />
+                {format(lastSavedAt, "HH:mm")}
+              </span>
+            )}
             <Button
               onClick={onComplete}
               size="sm"
@@ -362,10 +369,10 @@ export const EvolutionHeader = memo(
         </div>
 
         {/* Linha 2: Cronômetro | Abas | Fisioterapeuta | Menu */}
-        <div className="flex items-center gap-4 mt-4 pt-4 border-t border-slate-100 flex-wrap">
+        <div className="flex items-center gap-4 mt-4 pt-4 border-t border-slate-100 overflow-x-auto scrollbar-none">
           {tabsConfig.length > 0 && onTabChange && (
             <nav
-              className="inline-flex h-9 items-center justify-center rounded-lg bg-slate-50/80 p-1 gap-1"
+              className="inline-flex h-9 shrink-0 items-center justify-center rounded-lg bg-slate-50/80 p-1 gap-1"
               role="tablist"
             >
               {tabsConfig.map((tab) => {

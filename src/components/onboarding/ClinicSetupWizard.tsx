@@ -8,8 +8,9 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
-import { profileApi, patientsApi } from "@/api/v2";
+import { organizationsApi, patientsApi } from "@/api/v2";
 import { schedulingApi } from "@/api/v2/scheduling";
+import { useOrganizations } from "@/hooks/useOrganizations";
 
 interface ClinicSetupWizardProps {
   open: boolean;
@@ -31,6 +32,7 @@ type Step = "clinic" | "hours" | "patient" | "done";
 
 export function ClinicSetupWizard({ open, onClose }: ClinicSetupWizardProps) {
   const queryClient = useQueryClient();
+  const { currentOrganization } = useOrganizations();
   const [step, setStep] = useState<Step>("clinic");
   const [saving, setSaving] = useState(false);
 
@@ -63,17 +65,28 @@ export function ClinicSetupWizard({ open, onClose }: ClinicSetupWizardProps) {
       toast.error("Informe o nome da clínica.");
       return false;
     }
+    if (!currentOrganization?.id) {
+      toast.error("Não foi possível identificar a clínica atual.");
+      return false;
+    }
     try {
-      await profileApi.update({
-        clinic_name: clinicData.name,
-        phone: clinicData.phone || undefined,
-        address: clinicData.address || undefined,
-        city: clinicData.city || undefined,
-      } as any);
+      await organizationsApi.update(currentOrganization.id, {
+        name: clinicData.name.trim(),
+        settings: {
+          ...(currentOrganization.settings ?? {}),
+          clinic_phone: clinicData.phone || undefined,
+          clinic_address: clinicData.address || undefined,
+          clinic_city: clinicData.city || undefined,
+          onboarding_completed_at: new Date().toISOString(),
+        },
+      });
       queryClient.invalidateQueries({ queryKey: ["profile"] });
       queryClient.invalidateQueries({ queryKey: ["organization"] });
+      queryClient.invalidateQueries({ queryKey: ["organizations"] });
+      queryClient.invalidateQueries({ queryKey: ["current-organization"] });
       return true;
-    } catch {
+    } catch (error) {
+      console.error("[ClinicSetupWizard] saveClinic failed", error);
       toast.error("Erro ao salvar dados da clínica.");
       return false;
     }

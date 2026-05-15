@@ -7,6 +7,7 @@ export interface EvolutionItemV3 {
   type: EvolutionItemType;
 
   // Specific to exercises
+  exerciseId?: string;
   prescription?: string;
   patientFeedback?: string;
 
