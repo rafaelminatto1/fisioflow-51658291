@@ -75,7 +75,7 @@ export const WhatsAppSidebar: React.FC<WhatsAppSidebarProps> = ({
 }) => {
   return (
     <div className="w-[380px] border-r flex flex-col bg-muted/5 z-20">
-      <div className="p-4 space-y-4 shrink-0 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 z-10 border-b shadow-sm">
+      <div className="p-4 space-y-4 shrink-0 bg-background z-10 border-b shadow-sm">
         <div className="flex items-center justify-between">
           <h2 className="text-xl font-bold tracking-tight">Mensagens</h2>
           <div className="flex items-center gap-1">

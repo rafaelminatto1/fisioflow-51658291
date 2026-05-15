@@ -18,6 +18,7 @@ import { useColors } from "@/hooks/useColorScheme";
 import { useHaptics } from "@/hooks/useHaptics";
 import { useEvolutions } from "@/hooks";
 import { EvolutionChart } from "@/components/charts/evolution-chart";
+import { stripHtml } from "@/lib/utils/stripHtml";
 import type { Evolution } from "@/types";
 
 // ─── helpers ────────────────────────────────────────────────────────────────
@@ -27,16 +28,6 @@ function getPainColor(level: number): string {
   if (level <= 3) return "#10B981";
   if (level <= 6) return "#F59E0B";
   return "#EF4444";
-}
-
-function stripHtml(html: string): string {
-  let prev = "";
-  let s = html;
-  while (s !== prev) {
-    prev = s;
-    s = s.replace(/<[^>]*>/g, "");
-  }
-  return s.replace(/\s+/g, " ").trim();
 }
 
 // ─── sub-components ─────────────────────────────────────────────────────────

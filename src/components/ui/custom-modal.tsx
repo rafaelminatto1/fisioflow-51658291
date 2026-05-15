@@ -179,7 +179,7 @@ export const CustomModalFooter: React.FC<{
       className={cn(
         "flex items-center justify-end gap-3 px-4 sm:px-6 py-4 border-t shrink-0",
         isMobile
-          ? "sticky bottom-0 z-10 border-border/80 bg-background/95 pb-[calc(env(safe-area-inset-bottom)+1rem)] shadow-[0_-8px_24px_-20px_rgba(15,23,42,0.45)] backdrop-blur supports-[backdrop-filter]:bg-background/90"
+          ? "sticky bottom-0 z-10 border-border/80 bg-background pb-[calc(env(safe-area-inset-bottom)+1rem)] shadow-[0_-8px_24px_-20px_rgba(15,23,42,0.45)]"
           : "bg-gray-50",
         className,
       )}

@@ -22,15 +22,7 @@ import { ptBR } from "date-fns/locale";
 import { useProgress } from "@/hooks/useProgress";
 import { Evolution } from "@/types/api";
 
-function stripHtml(html: string): string {
-  let prev = "";
-  let s = html;
-  while (s !== prev) {
-    prev = s;
-    s = s.replace(/<[^>]*>/g, "");
-  }
-  return s.replace(/\s+/g, " ").trim();
-}
+import { StringFormatter } from "@/lib/formatters";
 
 const SCREEN_PADDING = Spacing.screen;
 const CARD_GAP = Spacing.gap;
@@ -382,7 +374,7 @@ function EvolutionCard({ evolution, colors }: { evolution: Evolution; colors: an
               ? (
                 <SOAPSection
                   label="Evolução"
-                  content={stripHtml(evolution.observacao)}
+                  content={StringFormatter.stripHtml(evolution.observacao)}
                   colors={colors}
                 />
               )
