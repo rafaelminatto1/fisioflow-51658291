@@ -31,18 +31,6 @@ export {
 } from "./exercises";
 
 // ============================================================================
-// SOAP Assistant (DEPRECATED) — mantido só para tipos legados; a transcrição
-// de voz agora produz texto direto para a observação (ver hooks/useVoiceScribe).
-// ============================================================================
-
-export {
-  type PatientSOAPContext,
-  type TranscriptionResult,
-  type SOAPGenerationResponse,
-  type VoiceTranscriptionOptions,
-} from "./soap-assistant";
-
-// ============================================================================
 // Clinical Decision Support
 // ============================================================================
 
@@ -79,7 +67,6 @@ export const AI_MODULE_NAME = "@fisioflow/ai-clinical-assistants";
  */
 export const AI_FEATURES = {
   exerciseSuggestions: true,
-  soapAssistant: true,
   voiceTranscription: true,
   clinicalDecisionSupport: true,
   grounding: true,
@@ -103,7 +90,6 @@ export const AI_SUPPORTED_LANGUAGES = {
  */
 export const AI_DEFAULT_CONFIG = {
   exerciseModel: "gemini-2.5-flash-lite",
-  soapModel: "gemini-2.5-pro",
   clinicalModel: "gemini-2.5-pro",
   transcriptionModel: "gemini-2.5-pro",
   predictiveModel: "gemini-2.5-pro",
@@ -111,7 +97,6 @@ export const AI_DEFAULT_CONFIG = {
   treatmentOptimizerModel: "gemini-2.5-pro",
   temperature: {
     exercise: 0.4,
-    soap: 0.3,
     clinical: 0.2,
     predictive: 0.3,
     population: 0.4,
@@ -119,7 +104,6 @@ export const AI_DEFAULT_CONFIG = {
   },
   maxTokens: {
     exercise: 4096,
-    soap: 8192,
     clinical: 8192,
     predictive: 8192,
     population: 4096,

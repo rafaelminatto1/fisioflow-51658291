@@ -174,7 +174,7 @@ export default function Protocols() {
   if (selectedProtocol) {
     return (
       <MainLayout>
-        <div className="container mx-auto p-6 max-w-7xl pb-24 md:pb-12">
+        <div className="w-full p-4 sm:p-6 pb-24 md:pb-12">
           <div className="grid grid-cols-1 xl:grid-cols-[1fr_320px] gap-6 items-start">
             <div className="space-y-8">
               <ProtocolDetailView
@@ -281,7 +281,7 @@ export default function Protocols() {
 
   return (
     <MainLayout>
-      <div className="container mx-auto p-6 max-w-7xl space-y-8 pb-24 md:pb-12 animate-fade-in">
+      <div className="w-full p-4 sm:p-6 space-y-8 pb-24 md:pb-12 animate-fade-in">
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>

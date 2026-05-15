@@ -106,7 +106,7 @@ export const ProtocolsManager = memo(function ProtocolsManager() {
   };
 
   return (
-    <div className="space-y-6 animate-fade-in p-4 max-w-7xl mx-auto">
+    <div className="space-y-6 animate-fade-in p-4 w-full">
       {/* Header Deck - System Style */}
       <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary/5 via-white to-white p-6 sm:p-8 border border-border shadow-premium-sm">
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">

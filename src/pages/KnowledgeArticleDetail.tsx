@@ -59,6 +59,7 @@ export default function KnowledgeArticleDetail() {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
   const [isStudyModeOpen, setIsStudyModeOpen] = useState(false);
+  const [selectedStudyUrl, setSelectedStudyUrl] = useState<string | null>(null);
   const [_activeAttachmentType, setActiveAttachmentType] = useState<
     "document" | "presentation" | null
   >(null);
@@ -104,6 +105,14 @@ export default function KnowledgeArticleDetail() {
     setIsEditDialogOpen(true);
   };
 
+  const handleOpenStudyMode = (url?: string) => {
+    // Se não passar URL, tenta pegar o primeiro PDF, senão a URL do artigo
+    const finalUrl =
+      url || article.metadata?.attachments?.find((a) => a.type === "document")?.url || article.url;
+    setSelectedStudyUrl(finalUrl || null);
+    setIsStudyModeOpen(true);
+  };
+
   const handleShare = (platform: "whatsapp" | "clipboard") => {
     const text = `*${article.title}*\n${article.group} - ${article.subgroup}\n\nResumo da Evidência: ${article.highlights[0]}\n\nVeja mais no FisioFlow.`;
 
@@ -124,7 +133,7 @@ export default function KnowledgeArticleDetail() {
       organizationId: currentOrganizationId || "",
       title: article.title,
       type: "pdf" as const,
-      url: article.url || "",
+      url: selectedStudyUrl || article.url || "",
       group: article.group as any,
       subgroup: article.subgroup,
       tags: article.tags,
@@ -150,7 +159,7 @@ export default function KnowledgeArticleDetail() {
       keyFindings: article.highlights,
       clinicalImplications: article.observations,
     };
-  }, [article, currentOrganizationId, currentUserId]);
+  }, [article, currentOrganizationId, currentUserId, selectedStudyUrl]);
 
   return (
     <MainLayout>
@@ -207,12 +216,11 @@ export default function KnowledgeArticleDetail() {
               variant="outline"
               size="sm"
               className="gap-2 hidden md:flex border-amber-200 bg-amber-50/30 text-amber-700"
-              onClick={() => setIsStudyModeOpen(true)}
+              onClick={() => handleOpenStudyMode()}
             >
               <BookOpen className="h-4 w-4" />
               Modo Estudo IA
-            </Button>
-            <Button
+            </Button>            <Button
               variant="default"
               size="sm"
               className="gap-2"
@@ -420,7 +428,7 @@ export default function KnowledgeArticleDetail() {
                                     variant="outline"
                                     size="sm"
                                     className="h-8 text-[10px] uppercase font-bold"
-                                    onClick={() => setIsStudyModeOpen(true)}
+                                    onClick={() => handleOpenStudyMode(file.url)}
                                   >
                                     Abrir com IA
                                   </Button>
@@ -576,7 +584,7 @@ export default function KnowledgeArticleDetail() {
                       <Button
                         variant="secondary"
                         className="h-9 text-[10px] font-bold uppercase bg-white/10 hover:bg-white/20 text-white border-0"
-                        onClick={() => setIsStudyModeOpen(true)}
+                        onClick={() => handleOpenStudyMode()}
                       >
                         <BookOpen className="h-3 w-3 mr-1.5" /> Estudar
                       </Button>
@@ -709,7 +717,13 @@ export default function KnowledgeArticleDetail() {
         />
 
         {isStudyModeOpen && artifact && (
-          <StudyMode artifact={artifact as any} onClose={() => setIsStudyModeOpen(false)} />
+          <StudyMode
+            artifact={artifact as any}
+            onClose={() => {
+              setIsStudyModeOpen(false);
+              setSelectedStudyUrl(null);
+            }}
+          />
         )}
       </div>
     </MainLayout>

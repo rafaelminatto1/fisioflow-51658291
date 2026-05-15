@@ -208,7 +208,7 @@ export default function Inventory() {
   };
 
   return (
-    <PageLayout>
+    <PageLayout fullWidth compactHeader>
       <PageHeader
         title="Controle de Estoque"
         description="Gerencie o inventário, suprimentos e equipamentos da clínica."
@@ -241,7 +241,7 @@ export default function Inventory() {
         }
       />
 
-      <PageContainer>
+      <PageContainer maxWidth="full">
         {/* Bento Grid Stats */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
           <Card className="border-none shadow-sm bg-white overflow-hidden group">

@@ -1,8 +1,9 @@
 {
   "exercises": [
     {
-      "name": "Agachamento com peso corporal",
-      "slug": "agachamento-peso-corporal",
+      "name": "Agachamento",
+      "name_en": "Squat",
+      "slug": "exd-agachamento",
       "category": "fortalecimento",
       "description": "Exercício fundamental para fortalecer quadríceps, glúteos e core. Ideal para reabilitação de membros inferiores e melhora da funcionalidade diária.",
       "instructions": [
@@ -19,11 +20,13 @@
       "reps_recommended": 12,
       "precautions": "Evite que os joelhos colapsem para dentro (valgo). Mantenha o peso distribuído nos calcanhares.",
       "benefits": "Melhora a força funcional, estabilidade de joelho e autonomia em atividades diárias.",
-      "tags": ["pernas", "quadríceps", "glúteos", "funcional", "membros inferiores"]
+      "tags": ["pernas", "quadríceps", "glúteos", "funcional", "membros inferiores"],
+      "image_url": "/exercises/illustrations/agachamento-livre.avif"
     },
     {
-      "name": "Abdominal Crupeado",
-      "slug": "abdominal-crupeado",
+      "name": "Abdominal Crunch",
+      "name_en": "Abdominal Crunch",
+      "slug": "exd-crunch",
       "category": "fortalecimento",
       "description": "Flexão de tronco clássica focada no fortalecimento da musculatura anterior do abdômen.",
       "instructions": [
@@ -40,11 +43,13 @@
       "reps_recommended": 15,
       "precautions": "Não puxe a cabeça com as mãos para evitar tensão cervical.",
       "benefits": "Fortalece a musculatura central e estabiliza a coluna.",
-      "tags": ["core", "abdominal", "coluna"]
+      "tags": ["core", "abdominal", "coluna"],
+      "image_url": "/exercises/illustrations/abdominal-crunch.avif"
     },
     {
-      "name": "4 Apoios (Four Point Kneeling)",
-      "slug": "quatro-apoios-estabilizacao",
+      "name": "Quatro Apoios",
+      "name_en": "Four Point Kneeling",
+      "slug": "exd-quatro-apoios",
       "category": "fortalecimento",
       "description": "Exercício de estabilização segmentar da coluna em posição de quadrúpede.",
       "instructions": [
@@ -64,7 +69,8 @@
     },
     {
       "name": "Abdominal Oblíquo",
-      "slug": "abdominal-obliquo",
+      "name_en": "Oblique Crunch",
+      "slug": "exd-abdominal-obliquo",
       "category": "fortalecimento",
       "description": "Rotação de tronco para fortalecimento dos músculos oblíquos do abdômen.",
       "instructions": [
@@ -84,7 +90,8 @@
     },
     {
       "name": "Abdução de Quadril Deitado",
-      "slug": "leg-raise-lateral",
+      "name_en": "Side-Lying Hip Abduction",
+      "slug": "exd-leg-raise-lateral",
       "category": "fortalecimento",
       "description": "Fortalecimento de glúteo médio e estabilizadores laterais do quadril.",
       "instructions": [
@@ -100,11 +107,13 @@
       "reps_recommended": 12,
       "precautions": "Não deixe o tronco rodar para trás durante a subida.",
       "benefits": "Fundamental para estabilidade pélvica e prevenção de dores no joelho.",
-      "tags": ["quadril", "glúteos", "membros inferiores"]
+      "tags": ["quadril", "glúteos", "membros inferiores"],
+      "image_url": "/exercises/illustrations/abducao-quadril-deitado.avif"
     },
     {
       "name": "Abdução de Quadril em Pé",
-      "slug": "abducao-quadril-em-pe",
+      "name_en": "Standing Hip Abduction",
+      "slug": "exd-abducao-quadril-em-pe",
       "category": "fortalecimento",
       "description": "Exercício de fortalecimento lateral do quadril em apoio unipodal.",
       "instructions": [
@@ -124,7 +133,8 @@
     },
     {
       "name": "Agachamento Sumô",
-      "slug": "agachamento-sumô",
+      "name_en": "Sumo Squat",
+      "slug": "exd-agachamento-sumô",
       "category": "fortalecimento",
       "description": "Variação de agachamento com foco em adutores e glúteos.",
       "instructions": [
@@ -144,7 +154,8 @@
     },
     {
       "name": "Alongamento de Quadríceps",
-      "slug": "along-quadriceps",
+      "name_en": "Quadriceps Stretch",
+      "slug": "exd-along-quadriceps",
       "category": "alongamento",
       "description": "Alongamento da musculatura anterior da coxa.",
       "instructions": [
@@ -163,8 +174,9 @@
       "tags": ["alongamento", "quadríceps", "joelho"]
     },
     {
-      "name": "Elevação Pélvica (Ponte)",
-      "slug": "ponte-gluteo",
+      "name": "Ponte de Glúteo",
+      "name_en": "Glute Bridge",
+      "slug": "exd-ponte-gluteo",
       "category": "fortalecimento",
       "description": "Fortalecimento da cadeia posterior e estabilizadores da coluna.",
       "instructions": [
@@ -180,11 +192,13 @@
       "reps_recommended": 12,
       "precautions": "Não hiperestenda a lombar no topo.",
       "benefits": "Fundamental para reabilitação lombar e força propulsiva.",
-      "tags": ["glúteos", "cadeia posterior", "lombar"]
+      "tags": ["glúteos", "cadeia posterior", "lombar"],
+      "image_url": "/exercises/illustrations/ponte-gluteo.avif"
     },
     {
       "name": "Extensão de Quadril (4 Apoios)",
-      "slug": "extensao-quadril-quatro-apoios",
+      "name_en": "Hip Extension (Quadruped)",
+      "slug": "exd-extensao-quadril-4-apoios",
       "category": "fortalecimento",
       "description": "Isolamento de glúteo máximo em posição de 4 apoios.",
       "instructions": [
@@ -203,8 +217,9 @@
       "tags": ["glúteos", "quadril", "estabilização"]
     },
     {
-      "name": "Flexão de Braço (Push-up)",
-      "slug": "flexao-braco",
+      "name": "Flexão de Braço",
+      "name_en": "Push-up",
+      "slug": "exd-flexao-braco",
       "category": "fortalecimento",
       "description": "Exercício de força de empurrar para membros superiores e core.",
       "instructions": [
@@ -224,8 +239,9 @@
       "tags": ["braços", "peito", "funcional"]
     },
     {
-      "name": "Panturrilha Unilateral",
-      "slug": "pant-em-pe",
+      "name": "Panturrilha em Pé",
+      "name_en": "Standing Calf Raise",
+      "slug": "exd-pant-em-pe",
       "category": "fortalecimento",
       "description": "Fortalecimento isolado do tríceps sural com carga total do corpo.",
       "instructions": [
@@ -245,14 +261,15 @@
     },
     {
       "name": "Prancha Lateral",
-      "slug": "prancha-lateral",
+      "name_en": "Side Plank",
+      "slug": "exd-prancha-lateral",
       "category": "fortalecimento",
       "description": "Estabilização lateral do core e fortalecimento de abdutores.",
       "instructions": [
         "Deitado de lado, apoie o antebraço no chão.",
         "Eleve o quadril do chão, formando uma linha reta dos pés à cabeça.",
         "Mantenha o cotovelo alinhado abaixo do ombro.",
-        "Segure a posição respirando calmamente."
+        "Segure a position respirando calmamente."
       ],
       "muscles": ["quadrado lombar", "oblíquos", "glúteo médio"],
       "equipment": "nenhum",
@@ -261,13 +278,15 @@
       "duration_seconds": 30,
       "precautions": "Não deixe o quadril cair em direção ao chão.",
       "benefits": "Reduz dor lombar e estabiliza a coluna contra forças laterais.",
-      "tags": ["core", "estabilização", "lombar"]
+      "tags": ["core", "estabilização", "lombar"],
+      "image_url": "/exercises/illustrations/prancha-lateral.avif"
     },
     {
-      "name": "Ponte com uma perna",
-      "slug": "single-leg-bridge",
+      "name": "Ponte Unilateral",
+      "name_en": "Single Leg Bridge",
+      "slug": "exd-single-leg-bridge",
       "category": "fortalecimento",
-      "description": "Variação avançada da elevação pélvica para desafio unilateral.",
+      "description": "Variação avançada da elevação pélvica para desafio unilateral e estabilidade pélvica.",
       "instructions": [
         "Deitado de costas, eleve uma perna mantendo-a estendida no ar.",
         "Empurre pelo calcanhar da perna que está no chão para elevar o quadril.",
@@ -281,11 +300,14 @@
       "reps_recommended": 10,
       "precautions": "Se houver câimbra nos isquiotibiais, aproxime o pé do quadril.",
       "benefits": "Corrige assimetrias de força entre os membros inferiores.",
-      "tags": ["glúteos", "unilateral", "quadril"]
+      "tags": ["glúteos", "unilateral", "quadril", "cadeia posterior"],
+      "image_url": "/exercises/illustrations/ponte-unipodal.avif",
+      "image_variants": ["/exercises/illustrations/ponte-unipodal.png"]
     },
     {
-      "name": "Serrote com halter (Remada Unilateral)",
-      "slug": "serrote-halter",
+      "name": "Serrote",
+      "name_en": "Dumbbell Row",
+      "slug": "exd-serrote",
       "category": "fortalecimento",
       "description": "Fortalecimento da musculatura das costas e estabilizadores escapulares.",
       "instructions": [
@@ -305,8 +327,9 @@
       "tags": ["costas", "braços", "escápula"]
     },
     {
-      "name": "Supino com halter",
-      "slug": "supino-halter",
+      "name": "Supino",
+      "name_en": "Dumbbell Press",
+      "slug": "exd-supino",
       "category": "fortalecimento",
       "description": "Fortalecimento peitoral com maior amplitude e exigência de estabilização.",
       "instructions": [
@@ -325,8 +348,9 @@
       "tags": ["peito", "braços", "ombro"]
     },
     {
-      "name": "Prancha abdominal",
-      "slug": "prancha-ventral",
+      "name": "Prancha Ventral",
+      "name_en": "Front Plank",
+      "slug": "exd-prancha-ventral",
       "category": "fortalecimento",
       "description": "Exercício isométrico para fortalecimento completo do core. Essencial para estabilidade da coluna.",
       "instructions": [
@@ -343,11 +367,13 @@
       "duration_seconds": 60,
       "precautions": "Manter coluna neutra, não deixar quadril cair ou subir demais.",
       "benefits": "Fortalece core, melhora postura, previne dores lombares",
-      "tags": ["core", "abdominal", "postura", "isometria"]
+      "tags": ["core", "abdominal", "postura", "isometria"],
+      "image_url": "/exercises/illustrations/prancha-frontal.avif"
     },
     {
-      "name": "Afundo ou Passada",
-      "slug": "afundo",
+      "name": "Afundo",
+      "name_en": "Lunge",
+      "slug": "exd-afundo",
       "category": "fortalecimento",
       "description": "Exercício unilateral avançado para membros inferiores. Excelente para reabilitação de joelhos.",
       "instructions": [
@@ -364,11 +390,13 @@
       "reps_recommended": 10,
       "precautions": "Manter joelho frontal alinhado com tornozelo. Não deixar joelho trás tocar o chão.",
       "benefits": "Fortalece unilateralmente, melhora equilíbrio, funcionalidade",
-      "tags": ["pernas", "quadríceps", "glúteos", "unilateral"]
+      "tags": ["pernas", "quadríceps", "glúteos", "unilateral"],
+      "image_url": "/exercises/illustrations/afundo.avif"
     },
     {
-      "name": "Gato-Vaca (Cat-Cow)",
-      "slug": "cat-cow",
+      "name": "Gato-Vaca",
+      "name_en": "Cat-Cow",
+      "slug": "exd-cat-cow",
       "category": "mobilidade",
       "description": "Mobilização da coluna vertebral, excelente para dor lombar e rigidez.",
       "instructions": [
@@ -388,8 +416,9 @@
       "tags": ["coluna", "mobilidade", "lombar", "flexibilidade"]
     },
     {
-      "name": "Bird-Dog (Cachorro-Passarinho)",
-      "slug": "bird-dog",
+      "name": "Bird-Dog",
+      "name_en": "Bird-Dog",
+      "slug": "exd-bird-dog",
       "category": "fortalecimento",
       "description": "Exercício de coordenação e core, excelente para estabilidade lombo-pélvica.",
       "instructions": [
@@ -409,8 +438,9 @@
       "tags": ["core", "coordenação", "multífidos", "equilíbrio"]
     },
     {
-      "name": "Extensão de joelho em cadeia cinética aberta",
-      "slug": "extensao-joelho-cadeia-aberta",
+      "name": "Extensão de Joelho (Cadeia Aberta)",
+      "name_en": "Knee Extension (Open Chain)",
+      "slug": "exd-extensao-joelho",
       "category": "fortalecimento",
       "description": "Fortalecimento isolado do quadríceps, indicado para reabilitação de joelho.",
       "instructions": [
@@ -430,8 +460,9 @@
       "tags": ["quadríceps", "joelho", "cadeia aberta", "reabilitação"]
     },
     {
-      "name": "Alongamento de peitoral na porta",
-      "slug": "along-peitoral",
+      "name": "Alongamento de Peitoral",
+      "name_en": "Pectoral Stretch",
+      "slug": "exd-along-peitoral",
       "category": "alongamento",
       "description": "Alonga peitorais e melhora postura de ombros, importante para postura geral.",
       "instructions": [
@@ -448,11 +479,13 @@
       "duration_seconds": 45,
       "precautions": "Não forçar. Manter ombros relaxados.",
       "benefits": "Abre peitoral, melhora postura, reduz ombros caídos",
-      "tags": ["peitoral", "ombro", "alongamento", "postura"]
+      "tags": ["peitoral", "ombro", "alongamento", "postura"],
+      "image_url": "/exercises/illustrations/alongamento-peitoral-porta.avif"
     },
     {
-      "name": "Rotação externa de ombro com elástico",
-      "slug": "rot-ext-ombro",
+      "name": "Rotação Externa de Ombro",
+      "name_en": "Shoulder External Rotation",
+      "slug": "exd-rot-externa-ombro",
       "category": "fortalecimento",
       "description": "Fortalece manguito rotador, essencial para estabilidade do ombro.",
       "instructions": [
@@ -473,7 +506,8 @@
     },
     {
       "name": "Dead Bug",
-      "slug": "dead-bug",
+      "name_en": "Dead Bug",
+      "slug": "exd-dead-bug",
       "category": "fortalecimento",
       "description": "Exercício progressivo de core, mais acessível que prancha para iniciantes.",
       "instructions": [
@@ -494,7 +528,8 @@
     },
     {
       "name": "Copenhagen Adduction (Nível 1)",
-      "slug": "copenhagen-adduction-lvl1",
+      "name_en": "Copenhagen Adduction (Level 1)",
+      "slug": "exd-copenhagen-lvl1",
       "category": "fortalecimento",
       "description": "Exercício padrão-ouro para fortalecimento de adutores e prevenção de dor inguinal.",
       "instructions": [
@@ -513,8 +548,9 @@
       "tags": ["esportiva", "quadril", "adutores", "prevenção"]
     },
     {
-      "name": "Spanish Squat (Agachamento Espanhol)",
-      "slug": "spanish-squat",
+      "name": "Agachamento Espanhol",
+      "name_en": "Spanish Squat",
+      "slug": "exd-spanish-squat",
       "category": "fortalecimento",
       "description": "Agachamento isométrico indicado para tendinopatia patelar, isolando o quadríceps sem sobrecarregar a articulação.",
       "instructions": [
@@ -533,8 +569,9 @@
       "tags": ["joelho", "tendinopatia", "quadríceps"]
     },
     {
-      "name": "Nordic Hamstring (Iniciante)",
-      "slug": "nordic-hamstring-beginner",
+      "name": "Nordic Hamstring",
+      "name_en": "Nordic Hamstring",
+      "slug": "exd-nordico",
       "category": "fortalecimento",
       "description": "Exercício excêntrico potente para prevenção de lesões de isquiotibiais.",
       "instructions": [
@@ -550,7 +587,191 @@
       "reps_recommended": 5,
       "precautions": "Alto risco de câimbra nas primeiras sessões. Progressão lenta.",
       "benefits": "Aumenta o comprimento dos fascículos musculares e previne estiramentos.",
-      "tags": ["esportiva", "isquiotibiais", "excêntrico", "prevenção"]
+      "tags": ["esportiva", "isquiotibiais", "excêntrico", "prevenção"],
+      "image_url": "/exercises/illustrations/nordic-hamstring-beginner.avif"
+    },
+    {
+      "name": "Monster Walk (Siri)",
+      "name_en": "Monster Walk",
+      "slug": "exd-monster-walk",
+      "category": "fortalecimento",
+      "description": "Exercício fundamental para ativação do glúteo médio e estabilidade lateral do quadril.",
+      "instructions": [
+        "Coloque uma miniband ao redor dos joelhos ou tornozelos.",
+        "Mantenha uma posição de meio agachamento, com pés paralelos.",
+        "Dê passos laterais curtos, mantendo a tensão na faixa o tempo todo.",
+        "Mantenha o tronco ereto e evite que os joelhos colapsem para dentro."
+      ],
+      "muscles": ["glúteo médio", "tensor da fáscia lata", "glúteo máximo"],
+      "equipment": "miniband",
+      "difficulty": "beginner",
+      "sets_recommended": 3,
+      "reps_recommended": 15,
+      "precautions": "Não deixe o joelho entrar (valgo dinâmico). Mantenha o quadril nivelado.",
+      "benefits": "Melhora a estabilidade da pelve e previne lesões no joelho e quadril.",
+      "tags": ["quadril", "glúteos", "estabilidade", "siri"],
+      "image_url": "/exercises/illustrations/caminhada-siri-miniband.png",
+      "image_variants": ["/exercises/illustrations/caminhada-de-lado-com-miniband-lateral-band-walk.avif"]
+    },
+    {
+      "name": "Mobilização de Tornozelo",
+      "name_en": "Ankle Mobilization",
+      "slug": "exd-mob-tornozelo",
+      "category": "mobilidade",
+      "description": "Melhora a dorsiflexão do tornozelo, essencial para agachamentos e marcha.",
+      "instructions": [
+        "Fique de frente para uma parede em posição de afundo, com o pé da frente a alguns centímetros da parede.",
+        "Mantendo o calcanhar no chão, leve o joelho em direção à parede até tocá-la.",
+        "Aumente a distância do pé da parede conforme a mobilidade melhora.",
+        "Mantenha o alinhamento do joelho com o segundo dedo do pé."
+      ],
+      "muscles": ["sóleo", "gastrocnêmio", "cápsula articular do tornozelo"],
+      "equipment": "parede",
+      "difficulty": "beginner",
+      "sets_recommended": 2,
+      "reps_recommended": 12,
+      "precautions": "Não deixe o calcanhar sair do chão. Evite dor aguda na frente do tornozelo.",
+      "benefits": "Aumenta a amplitude de movimento e melhora a mecânica de agachamento.",
+      "tags": ["tornozelo", "mobilidade", "dorsiflexão"],
+      "image_url": "/exercises/illustrations/mobilidade-tornozelo-parede.png",
+      "image_variants": ["/exercises/illustrations/mobilizacao-tornozelo-df.avif"]
+    },
+    {
+      "name": "Alongamento de Trapézio Superior",
+      "name_en": "Upper Trapezius Stretch",
+      "slug": "exd-along-trapezio",
+      "category": "alongamento",
+      "description": "Alivia a tensão cervical e dores de cabeça tensionais.",
+      "instructions": [
+        "Sentado ou em pé com a coluna ereta.",
+        "Incline a cabeça suavemente para um lado, levando a orelha em direção ao ombro.",
+        "Use a mão do mesmo lado para aplicar uma pressão leve e constante.",
+        "Mantenha o ombro oposto relaxado e para baixo."
+      ],
+      "muscles": ["trapézio superior", "elevador da escápula"],
+      "equipment": "nenhum",
+      "difficulty": "beginner",
+      "sets_recommended": 2,
+      "duration_seconds": 30,
+      "precautions": "Não puxe com força excessiva. Mantenha a respiração fluida.",
+      "benefits": "Reduz rigidez no pescoço e melhora a mobilidade cervical.",
+      "tags": ["pescoço", "cervical", "alongamento", "postura"],
+      "image_url": "/exercises/illustrations/alongamento-trapezio-superior.avif",
+      "image_variants": ["/exercises/illustrations/alongamento-trapezio-superior.png"]
+    },
+    {
+      "name": "Extensão de McKenzie",
+      "name_en": "McKenzie Extension",
+      "slug": "exd-mckenzie",
+      "category": "mobilidade",
+      "description": "Exercício clássico do método McKenzie para centralização de sintomas discais lombares.",
+      "instructions": [
+        "Deite-se de bruços com as mãos apoiadas ao lado dos ombros.",
+        "Empurre o chão com as mãos, estendendo os cotovelos e elevando o tronco.",
+        "Mantenha o quadril e as pernas relaxados e em contato com o chão.",
+        "Expire no topo e retorne lentamente."
+      ],
+      "muscles": ["eretores da espinha", "multífidos", "reto abdominal (alongamento)"],
+      "equipment": "nenhum",
+      "difficulty": "beginner",
+      "sets_recommended": 3,
+      "reps_recommended": 10,
+      "precautions": "Se houver irradiação para a perna (periferização), interrompa o exercício.",
+      "benefits": "Melhora a extensão lombar e ajuda no tratamento de hérnias de disco.",
+      "tags": ["coluna", "lombar", "mckenzie", "mobilidade"],
+      "image_url": "/exercises/illustrations/extensao-tronco-cobra.png",
+      "image_variants": ["/exercises/illustrations/mckenzie-extensao-lombar-deitado.avif"]
+    },
+    {
+      "name": "Prancha com Toque no Ombro",
+      "name_en": "Shoulder Tap Plank",
+      "slug": "exd-prancha-toque-ombro",
+      "category": "fortalecimento",
+      "description": "Desafio de estabilidade anti-rotacional para o core.",
+      "instructions": [
+        "Inicie na posição de prancha alta (mãos no chão).",
+        "Mantendo o quadril o mais imóvel possível, tire uma mão do chão e toque o ombro oposto.",
+        "Alterne os lados de forma controlada.",
+        "Resista à tentação de girar o corpo lateralmente."
+      ],
+      "muscles": ["transverso do abdômen", "oblíquos", "serrátil anterior", "estabilizadores do ombro"],
+      "equipment": "nenhum",
+      "difficulty": "intermediate",
+      "sets_recommended": 3,
+      "reps_recommended": 12,
+      "precautions": "Mantenha o quadril paralelo ao chão. Não deixe a lombar selar.",
+      "benefits": "Fortalece o core de forma funcional e melhora a estabilidade escapular.",
+      "tags": ["core", "estabilização", "ombro", "funcional"],
+      "image_url": "/exercises/illustrations/prancha-toque-ombro.png"
+    },
+    {
+      "name": "Alongamento de Isquiotibiais",
+      "name_en": "Hamstring Stretch",
+      "slug": "exd-along-isquiotibiais",
+      "category": "alongamento",
+      "description": "Alongamento passivo controlado para a musculatura posterior da coxa.",
+      "instructions": [
+        "Deitado de costas, passe uma fita ou toalha ao redor do pé de uma perna.",
+        "Eleve a perna mantendo o joelho o mais estendido possível.",
+        "Puxe suavemente a fita em direção ao tronco até sentir o alongamento.",
+        "Mantenha a perna oposta relaxada no chão."
+      ],
+      "muscles": ["isquiotibiais", "gastrocnêmio"],
+      "equipment": "fita ou toalha",
+      "difficulty": "beginner",
+      "sets_recommended": 2,
+      "duration_seconds": 45,
+      "precautions": "Não force se sentir dor neuropática (choque). Mantenha o joelho estendido.",
+      "benefits": "Melhora a flexibilidade posterior e reduz tensão na lombar.",
+      "tags": ["alongamento", "isquiotibiais", "flexibilidade"],
+      "image_url": "/exercises/illustrations/alongamento-isquiotibiais-fita.png",
+      "image_variants": ["/exercises/illustrations/alongamento-de-isquiotibiais.avif"]
+    },
+    {
+      "name": "Mobilidade Torácica",
+      "name_en": "Thoracic Mobility",
+      "slug": "exd-rotacao-tronco",
+      "category": "mobilidade",
+      "description": "Melhora a rotação torácica e abertura peitoral (Open Book).",
+      "instructions": [
+        "Deitado de lado com quadris e joelhos flexionados a 90°.",
+        "Braços estendidos à frente, um sobre o outro.",
+        "Abra o braço de cima descrevendo um arco até tocar o chão do outro lado.",
+        "Acompanhe a mão com o olhar, mantendo os joelhos juntos no chão."
+      ],
+      "muscles": ["coluna torácica", "peitoral maior", "rombóides"],
+      "equipment": "nenhum",
+      "difficulty": "beginner",
+      "sets_recommended": 2,
+      "reps_recommended": 10,
+      "precautions": "Não deixe os joelhos saírem do chão. Movimento lento e respirado.",
+      "benefits": "Alivia dores nas costas e melhora a mecânica respiratória.",
+      "tags": ["coluna", "torácica", "mobilidade", "postura"],
+      "image_url": "/exercises/illustrations/mobilidade-toracica-open-book.png",
+      "image_variants": ["/exercises/illustrations/mobilidade-coluna-sentado.avif"]
+    },
+    {
+      "name": "Serratus Punch",
+      "name_en": "Serratus Punch",
+      "slug": "exd-serratus-punch",
+      "category": "fortalecimento",
+      "description": "Fortalece o serrátil anterior, fundamental para a estabilidade da escápula.",
+      "instructions": [
+        "Deitado de costas ou em pé contra uma parede.",
+        "Braço estendido a 90° à frente do corpo.",
+        "Empurre a mão para frente (protração) afastando a escápula da coluna.",
+        "Retorne controladamente (retração). Mantenha o cotovelo sempre estendido."
+      ],
+      "muscles": ["serrátil anterior"],
+      "equipment": "nenhum",
+      "difficulty": "beginner",
+      "sets_recommended": 3,
+      "reps_recommended": 12,
+      "precautions": "Não dobre o cotovelo. Foque no movimento da escápula.",
+      "benefits": "Melhora a estabilidade escapular e previne dores no ombro.",
+      "tags": ["ombro", "escápula", "estabilidade", "serrátil"],
+      "image_url": "/exercises/illustrations/serratus-punch.png",
+      "image_variants": ["/exercises/illustrations/serratus-punch.avif"]
     }
   ]
 }

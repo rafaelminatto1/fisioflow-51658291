@@ -93,7 +93,7 @@ export function TaskQuickCreateModal({
       prioridade: (initialData?.prioridade as TarefaPrioridade) || "MEDIA",
       tipo: (initialData?.tipo as TarefaTipo) || "TAREFA",
       data_vencimento: initialData?.data_vencimento ? new Date(initialData.data_vencimento) : null,
-      project_id: initialData?.project_id || defaultProjectId || null,
+      project_id: initialData?.project_id || defaultProjectId || "__none__",
       requires_acknowledgment: initialData?.requires_acknowledgment || false,
     },
   });
@@ -109,7 +109,7 @@ export function TaskQuickCreateModal({
         data_vencimento: initialData?.data_vencimento
           ? new Date(initialData.data_vencimento)
           : null,
-        project_id: initialData?.project_id || defaultProjectId || null,
+        project_id: initialData?.project_id || defaultProjectId || "__none__",
         requires_acknowledgment: initialData?.requires_acknowledgment || false,
       });
     }
@@ -124,7 +124,7 @@ export function TaskQuickCreateModal({
         prioridade: data.prioridade,
         tipo: data.tipo,
         data_vencimento: data.data_vencimento?.toISOString().split("T")[0],
-        project_id: data.project_id,
+        project_id: data.project_id === "__none__" ? null : data.project_id,
         order_index: 0,
         tags: initialData?.tags || [],
         board_id: initialData?.board_id,
@@ -316,14 +316,14 @@ export function TaskQuickCreateModal({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Projeto</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value || ""}>
+                    <Select onValueChange={field.onChange} value={field.value || "__none__"}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Sem projeto" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="">Sem projeto</SelectItem>
+                        <SelectItem value="__none__">Sem projeto</SelectItem>
                         {projects.map((p) => (
                           <SelectItem key={p.id} value={p.id}>
                             {p.title}

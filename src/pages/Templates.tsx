@@ -342,7 +342,7 @@ export default function Templates() {
   // Main render
   return (
     <MainLayout>
-      <div className="container mx-auto p-6 max-w-7xl space-y-10 pb-24 md:pb-12 animate-in fade-in duration-700">
+      <div className="w-full p-4 sm:p-6 space-y-10 pb-24 md:pb-12 animate-in fade-in duration-700">
         {/* Header Section */}
         <Card className="relative overflow-hidden rounded-[2.5rem] bg-slate-900 p-8 md:p-12 text-white border-0 shadow-premium-xl">
           <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/4 w-96 h-96 bg-primary/20 rounded-full blur-[120px]" />

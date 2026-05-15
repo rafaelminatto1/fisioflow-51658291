@@ -39,10 +39,6 @@ export type {
   PatientProfileContext,
   ExerciseRecommendation,
   ExerciseProgramRecommendation,
-  // SOAP types
-  PatientSOAPContext,
-  SOAPSection,
-  SOAPGenerationResult,
   // Clinical types
   PatientCaseData,
   ClinicalRedFlag,
