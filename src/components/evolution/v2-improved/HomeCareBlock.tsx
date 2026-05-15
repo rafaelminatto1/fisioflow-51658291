@@ -4,12 +4,14 @@
  * Enhanced home care exercises block with better UX,
  * professional design, and improved visual presentation.
  */
-import React, { useState, useCallback, useEffect } from "react";
-import { Home, Plus, X, CheckCircle2, Calendar } from "lucide-react";
+import React, { useState, useCallback, useEffect, useMemo, useRef } from "react";
+import { Home, Plus, X, CheckCircle2, Calendar, Dumbbell } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { useExercises } from "@/hooks/useExercises";
+import { accentIncludes } from "@/lib/utils/bilingualSearch";
 
 interface HomeCareExercise {
   id: string;
@@ -72,6 +74,29 @@ export const HomeCareBlock: React.FC<HomeCareBlockProps> = ({
   const [newExerciseName, setNewExerciseName] = useState("");
   const [newExercisePrescription, setNewExercisePrescription] = useState("");
   const [showPresets, setShowPresets] = useState(false);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const suggestionsRef = useRef<HTMLDivElement>(null);
+
+  const { exercises: libraryExercises } = useExercises();
+
+  const suggestions = useMemo(() => {
+    const q = newExerciseName.trim();
+    if (q.length < 2) return [];
+    return libraryExercises
+      .filter((ex) => accentIncludes(ex.name, q))
+      .slice(0, 6);
+  }, [libraryExercises, newExerciseName]);
+
+  useEffect(() => {
+    if (!showSuggestions) return;
+    const handler = (e: MouseEvent) => {
+      if (suggestionsRef.current && !suggestionsRef.current.contains(e.target as Node)) {
+        setShowSuggestions(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [showSuggestions]);
 
   useEffect(() => {
     setExercises(parseExercises(value));
@@ -117,6 +142,27 @@ export const HomeCareBlock: React.FC<HomeCareBlockProps> = ({
     setNewExercisePrescription(pres);
     setShowPresets(false);
   }, []);
+
+  const handleSelectSuggestion = useCallback(
+    (exercise: (typeof libraryExercises)[number]) => {
+      const sets = (exercise as any).sets ?? 3;
+      const reps = (exercise as any).repetitions ?? 10;
+      const prescription = `${sets}x${reps}`;
+      const newExercise: HomeCareExercise = {
+        id: generateId(),
+        name: exercise.name,
+        prescription,
+        instructions: "",
+      };
+      const updated = [...exercises, newExercise];
+      setExercises(updated);
+      onChange(stringifyExercises(updated));
+      setNewExerciseName("");
+      setNewExercisePrescription("");
+      setShowSuggestions(false);
+    },
+    [exercises, libraryExercises, onChange],
+  );
 
   return (
     <div className={cn("relative transition-all duration-300 group", className)}>
@@ -211,19 +257,60 @@ export const HomeCareBlock: React.FC<HomeCareBlockProps> = ({
               </span>
             </div>
             <div className="flex items-center gap-2">
-              <Input
-                value={newExerciseName}
-                onChange={(e) => setNewExerciseName(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    e.preventDefault();
-                    handleAddExercise();
-                  }
-                }}
-                placeholder="Nome do exercício..."
-                disabled={disabled}
-                className="flex-1 h-9 border-dashed rounded-lg text-sm"
-              />
+              <div className="relative flex-1" ref={suggestionsRef}>
+                <Input
+                  value={newExerciseName}
+                  onChange={(e) => {
+                    setNewExerciseName(e.target.value);
+                    setShowSuggestions(true);
+                  }}
+                  onFocus={() => setShowSuggestions(true)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      if (suggestions.length > 0) {
+                        handleSelectSuggestion(suggestions[0]);
+                      } else {
+                        handleAddExercise();
+                      }
+                    } else if (e.key === "Escape") {
+                      setShowSuggestions(false);
+                    }
+                  }}
+                  placeholder="Nome do exercício..."
+                  disabled={disabled}
+                  className="w-full h-9 border-dashed rounded-lg text-sm"
+                />
+                {showSuggestions && suggestions.length > 0 && (
+                  <div className="absolute z-20 top-full left-0 right-0 mt-1 p-1 bg-popover border border-border rounded-xl shadow-lg max-h-64 overflow-y-auto">
+                    <div className="px-2 py-1">
+                      <span className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest">
+                        Selecione da biblioteca
+                      </span>
+                    </div>
+                    {suggestions.map((ex) => (
+                      <button
+                        key={ex.id}
+                        type="button"
+                        onClick={() => handleSelectSuggestion(ex)}
+                        className="w-full flex items-center gap-2 p-2 rounded-lg hover:bg-violet-500/5 text-left transition-colors"
+                      >
+                        <div className="p-1.5 rounded-md bg-blue-500/10 text-blue-700 shrink-0">
+                          <Dumbbell className="h-3.5 w-3.5" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <span className="block truncate text-sm font-medium">{ex.name}</span>
+                          {(ex as any).category && (
+                            <span className="block truncate text-xs text-muted-foreground">
+                              {(ex as any).category}
+                            </span>
+                          )}
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
               <Input
                 value={newExercisePrescription}
                 onChange={(e) => setNewExercisePrescription(e.target.value)}
