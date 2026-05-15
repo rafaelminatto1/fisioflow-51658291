@@ -7,6 +7,7 @@
 ## Tipos de Buffer
 
 ### Buffer Antes (Buffer Before)
+
 - **Tempo reservado ANTES do atendimento**
 - Usado para:
   - Preparar a sala
@@ -15,11 +16,13 @@
   - Transição entre pacientes
 
 **Exemplo**: Se você configura 5 minutos de buffer antes:
+
 - Atendimento agendado: 10:00
 - Você tem de 09:55 até 10:00 para se preparar
 - O horário fica bloqueado na agenda
 
 ### Buffer Depois (Buffer After)
+
 - **Tempo reservado DEPOIS do atendimento**
 - Usado para:
   - Registrar anotações no prontuário
@@ -28,6 +31,7 @@
   - Preparar para o próximo paciente
 
 **Exemplo**: Se você configura 10 minutos de buffer depois:
+
 - Atendimento termina: 10:45
 - Você tem até 10:55 para finalizar
 - O próximo horário disponível é 10:55 ou depois
@@ -35,11 +39,13 @@
 ## Exemplo Prático Completo
 
 **Configuração**:
+
 - Duração: 45 minutos
 - Buffer antes: 5 minutos
 - Buffer depois: 10 minutos
 
 **Na agenda**:
+
 ```
 09:55 - 10:00  [Buffer Antes - preparação]
 10:00 - 10:45  [Atendimento com o paciente]
@@ -58,7 +64,7 @@
 ## Recomendações
 
 | Tipo de Atendimento | Buffer Antes | Buffer Depois |
-|---------------------|--------------|---------------|
+| ------------------- | ------------ | ------------- |
 | Avaliação Inicial   | 5-10 min     | 10-15 min     |
 | Retorno             | 0-5 min      | 5 min         |
 | Reabilitação        | 5 min        | 5-10 min      |
@@ -78,6 +84,7 @@
 ## Visualização na Agenda
 
 O buffer aparece como:
+
 - **Resumo**: "Buffer 5+10 min" (5 antes, 10 depois)
 - **Na agenda**: Horários bloqueados antes e depois do atendimento
 - **Cor**: Mesma cor do tipo de atendimento, mas com opacidade reduzida

@@ -23,10 +23,22 @@ const AdvancedReportGenerator = lazy(() =>
   })),
 );
 const AdvancedAnalytics = lazy(() => import("@/components/analytics/AdvancedAnalytics"));
-const CohortAnalysis = lazy(() => import("@/components/analytics/CohortAnalysis").then(m => ({ default: m.CohortAnalysis })));
-const ChurnReport = lazy(() => import("@/components/analytics/ChurnReport").then(m => ({ default: m.ChurnReport })));
-const ProtocolEfficacyDashboard = lazy(() => import("@/components/analytics/ProtocolEfficacyDashboard").then(m => ({ default: m.ProtocolEfficacyDashboard })));
-const ClinicalQualityDashboard = lazy(() => import("@/components/analytics/ClinicalQualityDashboard").then(m => ({ default: m.ClinicalQualityDashboard })));
+const CohortAnalysis = lazy(() =>
+  import("@/components/analytics/CohortAnalysis").then((m) => ({ default: m.CohortAnalysis })),
+);
+const ChurnReport = lazy(() =>
+  import("@/components/analytics/ChurnReport").then((m) => ({ default: m.ChurnReport })),
+);
+const ProtocolEfficacyDashboard = lazy(() =>
+  import("@/components/analytics/ProtocolEfficacyDashboard").then((m) => ({
+    default: m.ProtocolEfficacyDashboard,
+  })),
+);
+const ClinicalQualityDashboard = lazy(() =>
+  import("@/components/analytics/ClinicalQualityDashboard").then((m) => ({
+    default: m.ClinicalQualityDashboard,
+  })),
+);
 const ClinicAIInsights = lazy(() =>
   import("@/components/reports/ClinicAIInsights").then((m) => ({
     default: m.ClinicAIInsights,

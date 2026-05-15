@@ -6,11 +6,7 @@
  * enviar datas para o backend no formato YYYY-MM-DD.
  */
 
-import {
-  toLocalYMD,
-  parseLocalDate,
-  formatShortDate,
-} from "@/lib/date-utils";
+import { toLocalYMD, parseLocalDate, formatShortDate } from "@/lib/date-utils";
 
 /**
  * Formata uma data para o formato ISO local (YYYY-MM-DD)

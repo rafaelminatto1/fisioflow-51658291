@@ -51,10 +51,7 @@ app.post("/replay", requireAuth, async (c) => {
       method: c.req.method,
       status: 422,
     });
-    return c.json(
-      { error: `Task type ${body.task.type} is not replayable`, summary },
-      422,
-    );
+    return c.json({ error: `Task type ${body.task.type} is not replayable`, summary }, 422);
   }
 
   try {

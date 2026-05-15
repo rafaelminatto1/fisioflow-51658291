@@ -42,6 +42,7 @@ export function getGamificationIcon(
   name: string | undefined,
   fallback: LucideIcon,
 ): React.ComponentType<any> {
-  const IconComponent = name && GAMIFICATION_ICON_MAP[name] ? GAMIFICATION_ICON_MAP[name] : fallback;
+  const IconComponent =
+    name && GAMIFICATION_ICON_MAP[name] ? GAMIFICATION_ICON_MAP[name] : fallback;
   return withIconErrorBoundary(IconComponent);
 }

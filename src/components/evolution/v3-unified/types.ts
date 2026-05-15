@@ -5,14 +5,14 @@ export interface EvolutionItemV3 {
   name: string;
   completed: boolean;
   type: EvolutionItemType;
-  
+
   // Specific to exercises
   prescription?: string;
   patientFeedback?: string;
-  
+
   // Specific to procedures
   notes?: string;
-  
+
   // Metadata
   category?: string;
   intensity?: string | "low" | "medium" | "high";

@@ -68,12 +68,15 @@ export const NotionEvolutionPanel: React.FC<NotionEvolutionPanelProps> = ({
 
   // Migration logic (run once if unifiedItems is empty but legacy items exist)
   React.useEffect(() => {
-    if ((!data.unifiedItems || data.unifiedItems.length === 0) && (data.procedures?.length > 0 || data.exercises?.length > 0)) {
+    if (
+      (!data.unifiedItems || data.unifiedItems.length === 0) &&
+      (data.procedures?.length > 0 || data.exercises?.length > 0)
+    ) {
       const migratedItems: EvolutionItemV3[] = [];
-      
+
       // Add procedures
       if (data.procedures?.length > 0) {
-        data.procedures.forEach(p => {
+        data.procedures.forEach((p) => {
           migratedItems.push({
             id: p.id,
             name: p.name,
@@ -81,14 +84,14 @@ export const NotionEvolutionPanel: React.FC<NotionEvolutionPanelProps> = ({
             type: "procedure",
             notes: p.notes,
             intensity: p.intensity,
-            category: p.category
+            category: p.category,
           });
         });
       }
-      
+
       // Add exercises
       if (data.exercises?.length > 0) {
-        data.exercises.forEach(e => {
+        data.exercises.forEach((e) => {
           migratedItems.push({
             id: e.id,
             name: e.name,
@@ -96,11 +99,11 @@ export const NotionEvolutionPanel: React.FC<NotionEvolutionPanelProps> = ({
             type: "exercise",
             prescription: e.prescription,
             patientFeedback: e.patientFeedback?.notes || "",
-            difficulty: e.difficulty
+            difficulty: e.difficulty,
           });
         });
       }
-      
+
       if (migratedItems.length > 0) {
         onChange({ ...data, unifiedItems: migratedItems });
       }
@@ -123,7 +126,6 @@ export const NotionEvolutionPanel: React.FC<NotionEvolutionPanelProps> = ({
     >
       <div className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
         <div className="flex flex-col gap-6 max-w-5xl mx-auto pb-12">
-          
           {/* Main Column - Free Text Evolution */}
           <div className="flex flex-col min-w-0">
             <div className="flex items-center justify-between mb-4">
@@ -132,16 +134,27 @@ export const NotionEvolutionPanel: React.FC<NotionEvolutionPanelProps> = ({
                   <FileText className="h-6 w-6 text-primary" />
                 </div>
                 <div>
-                  <h2 className="text-xl font-bold text-foreground tracking-tight">Evolução Clínica</h2>
+                  <h2 className="text-xl font-bold text-foreground tracking-tight">
+                    Evolução Clínica
+                  </h2>
                   <p className="text-sm text-muted-foreground">Texto livre formatado</p>
                 </div>
               </div>
-              
+
               <div className="flex items-center gap-3">
                 {autoSaveEnabled && lastSaved && (
-                  <Badge variant="outline" className="text-xs h-8 px-3 gap-2 rounded-xl border-green-500/20 bg-green-500/10 text-green-600">
+                  <Badge
+                    variant="outline"
+                    className="text-xs h-8 px-3 gap-2 rounded-xl border-green-500/20 bg-green-500/10 text-green-600"
+                  >
                     <CheckCircle2 className="h-4 w-4" />
-                    <span className="font-medium">Salvo às {lastSaved.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}</span>
+                    <span className="font-medium">
+                      Salvo às{" "}
+                      {lastSaved.toLocaleTimeString("pt-BR", {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </span>
                   </Badge>
                 )}
                 {onSave && (
@@ -197,11 +210,13 @@ export const NotionEvolutionPanel: React.FC<NotionEvolutionPanelProps> = ({
 
             {/* Card Amarelo: Observações */}
             <div className="rounded-3xl bg-amber-500/5 border border-amber-500/10 p-5 transition-all hover:bg-amber-500/10 overflow-hidden flex flex-col">
-               <div className="flex items-center gap-2 mb-3">
+              <div className="flex items-center gap-2 mb-3">
                 <div className="p-1.5 rounded-lg bg-amber-500/20">
                   <StickyNote className="h-4 w-4 text-amber-600 dark:text-amber-400" />
                 </div>
-                <h3 className="font-semibold text-amber-900 dark:text-amber-300 text-sm">Observações</h3>
+                <h3 className="font-semibold text-amber-900 dark:text-amber-300 text-sm">
+                  Observações
+                </h3>
               </div>
               <div className="flex-1 -mx-4 -mb-4">
                 <RichTextBlock
@@ -223,7 +238,9 @@ export const NotionEvolutionPanel: React.FC<NotionEvolutionPanelProps> = ({
               <div className="p-2 rounded-xl bg-blue-500/20">
                 <History className="h-5 w-5 text-blue-600 dark:text-blue-400" />
               </div>
-              <h3 className="font-semibold text-blue-900 dark:text-blue-300">Histórico de Evoluções</h3>
+              <h3 className="font-semibold text-blue-900 dark:text-blue-300">
+                Histórico de Evoluções
+              </h3>
             </div>
             <div className="text-sm text-blue-800/60 dark:text-blue-200/60 p-4 text-center rounded-2xl bg-blue-500/5 border border-blue-500/10 border-dashed">
               Nenhuma evolução anterior encontrada.
@@ -237,11 +254,13 @@ export const NotionEvolutionPanel: React.FC<NotionEvolutionPanelProps> = ({
                 <div className="p-2 rounded-xl bg-emerald-500/20">
                   <Activity className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
                 </div>
-                <h3 className="font-semibold text-emerald-900 dark:text-emerald-300">Intervenções</h3>
+                <h3 className="font-semibold text-emerald-900 dark:text-emerald-300">
+                  Intervenções
+                </h3>
               </div>
-              <Button 
-                variant="outline" 
-                size="sm" 
+              <Button
+                variant="outline"
+                size="sm"
                 className="rounded-full border-emerald-500/30 text-emerald-700 bg-emerald-500/10 hover:bg-emerald-500/20 hover:text-emerald-800"
                 onClick={() => setIsLibraryModalOpen(true)}
                 disabled={disabled}
@@ -284,11 +303,13 @@ export const NotionEvolutionPanel: React.FC<NotionEvolutionPanelProps> = ({
                 <div className="p-2 rounded-xl bg-zinc-500/20">
                   <Home className="h-5 w-5 text-zinc-600 dark:text-zinc-400" />
                 </div>
-                <h3 className="font-semibold text-zinc-900 dark:text-zinc-300">Exercícios para Casa</h3>
+                <h3 className="font-semibold text-zinc-900 dark:text-zinc-300">
+                  Exercícios para Casa
+                </h3>
               </div>
-              <Button 
-                variant="outline" 
-                size="sm" 
+              <Button
+                variant="outline"
+                size="sm"
                 className="rounded-full border-zinc-500/30 text-zinc-700 bg-zinc-500/10 hover:bg-zinc-500/20 hover:text-zinc-800"
                 onClick={() => setIsLibraryModalOpen(true)}
                 disabled={disabled}
@@ -326,10 +347,8 @@ export const NotionEvolutionPanel: React.FC<NotionEvolutionPanelProps> = ({
               />
             </div>
           </div>
-
         </div>
       </div>
     </Card>
   );
 };
-

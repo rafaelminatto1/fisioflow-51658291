@@ -47,7 +47,7 @@ export function MagicTextarea({
       const toastId = toast.loading("Processando áudio...");
       try {
         const audioBlob = await stopRecording();
-        
+
         // Verifica se o áudio tem tamanho mínimo
         if (audioBlob.size < 1000) {
           toast.error("Áudio muito curto. Tente falar um pouco mais.", { id: toastId });
@@ -61,7 +61,7 @@ export function MagicTextarea({
           audio: audioBase64,
           mimeType: audioBlob.type || "audio/webm",
         });
-        
+
         const transcription = result.data.transcription;
         if (transcription && transcription.trim()) {
           // Adiciona ao texto existente ou substitui

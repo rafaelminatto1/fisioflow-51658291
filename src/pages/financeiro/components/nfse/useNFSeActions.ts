@@ -68,13 +68,13 @@ export function useNFSeActions(organizationId?: string) {
     },
     onError: (err: any) => {
       toast.error("Falha ao gerar rascunho", { description: err.message });
-    }
+    },
   });
 
   const cancelNFSe = useMutation({
     mutationFn: async (id: string) => {
       const response = await request<any>(`/api/nfse/cancel/${id}`, {
-        method: "POST"
+        method: "POST",
       });
       return response.data;
     },
@@ -84,7 +84,7 @@ export function useNFSeActions(organizationId?: string) {
     },
     onError: (err: any) => {
       toast.error("Falha no cancelamento", { description: err.message });
-    }
+    },
   });
 
   return {
@@ -92,6 +92,6 @@ export function useNFSeActions(organizationId?: string) {
     isLoading,
     isOnline,
     createNFSe,
-    cancelNFSe
+    cancelNFSe,
   };
 }

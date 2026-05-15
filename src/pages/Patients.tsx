@@ -220,8 +220,8 @@ const Patients = () => {
   return (
     <PageLayout>
       <PageContainer className="pb-20" data-testid="patients-page">
-        <PageHeader 
-          title="Gestão de Pacientes" 
+        <PageHeader
+          title="Gestão de Pacientes"
           subtitle="Visualize e gerencie a base clínica e operacional"
           icon={Users}
           actions={
@@ -264,11 +264,15 @@ const Patients = () => {
             onPathologyFilterChange={(value) => updateSearchParams({ condition: value })}
             pathologyOptions={facets.pathologies}
             pathologyStatusFilter={filtersState.pathologyStatus}
-            onPathologyStatusFilterChange={(value) => updateSearchParams({ pathologyStatus: value })}
+            onPathologyStatusFilterChange={(value) =>
+              updateSearchParams({ pathologyStatus: value })
+            }
             paymentModelFilter={filtersState.paymentModel}
             onPaymentModelFilterChange={(value) => updateSearchParams({ paymentModel: value })}
             financialStatusFilter={filtersState.financialStatus}
-            onFinancialStatusFilterChange={(value) => updateSearchParams({ financialStatus: value })}
+            onFinancialStatusFilterChange={(value) =>
+              updateSearchParams({ financialStatus: value })
+            }
             sortBy={filtersState.sortBy}
             onSortByChange={(value) => updateSearchParams({ sortBy: value })}
             activeAdvancedFiltersCount={activeAdvancedFiltersCount}
@@ -364,7 +368,11 @@ const Patients = () => {
             <TabsContent value="list" className="mt-8 space-y-8">
               {showAnalytics && (
                 <div className="bento-card p-4 bg-primary/5 border-primary/10">
-                  <LazyComponent placeholder={<div className="h-[240px] w-full animate-pulse rounded-2xl bg-slate-200 dark:bg-slate-800" />}>
+                  <LazyComponent
+                    placeholder={
+                      <div className="h-[240px] w-full animate-pulse rounded-2xl bg-slate-200 dark:bg-slate-800" />
+                    }
+                  >
                     <PatientAnalytics
                       totalPatients={totalCount}
                       classificationStats={{
@@ -387,19 +395,31 @@ const Patients = () => {
               {isLoading && patients.length === 0 ? (
                 <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
                   {Array.from({ length: 6 }).map((_, index) => (
-                    <div key={index} className="h-64 animate-pulse rounded-3xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800" />
+                    <div
+                      key={index}
+                      className="h-64 animate-pulse rounded-3xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800"
+                    />
                   ))}
                 </div>
               ) : patients.length === 0 ? (
                 <div className="py-20 bento-card">
                   <EmptyState
                     icon={Users}
-                    title={hasActiveFilters ? "Nenhum paciente encontrado" : "Nenhum paciente cadastrado"}
-                    description={hasActiveFilters ? "Ajuste os filtros clínicos para ampliar a busca." : "Comece cadastrando seu primeiro paciente."}
+                    title={
+                      hasActiveFilters ? "Nenhum paciente encontrado" : "Nenhum paciente cadastrado"
+                    }
+                    description={
+                      hasActiveFilters
+                        ? "Ajuste os filtros clínicos para ampliar a busca."
+                        : "Comece cadastrando seu primeiro paciente."
+                    }
                     action={
                       hasActiveFilters
                         ? { label: "Limpar filtros", onClick: handleClearAllFilters }
-                        : { label: "Cadastrar paciente", onClick: () => updateSearchParams({ modal: "create" }) }
+                        : {
+                            label: "Cadastrar paciente",
+                            onClick: () => updateSearchParams({ modal: "create" }),
+                          }
                     }
                   />
                 </div>
@@ -411,7 +431,8 @@ const Patients = () => {
                         key={patient.id}
                         patient={patient}
                         onClick={() => {
-                          const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+                          const UUID_REGEX =
+                            /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
                           if (patient.id && UUID_REGEX.test(patient.id)) {
                             navigate(patientRoutes.profile(patient.id));
                           }
@@ -429,8 +450,13 @@ const Patients = () => {
                         <PaginationContent className="gap-2">
                           <PaginationItem>
                             <PaginationPrevious
-                              onClick={() => updateSearchParams({ page: String(pagination.currentPage - 1) })}
-                              className={cn("rounded-xl border-slate-200 dark:border-slate-800", pagination.currentPage <= 1 && "pointer-events-none opacity-40")}
+                              onClick={() =>
+                                updateSearchParams({ page: String(pagination.currentPage - 1) })
+                              }
+                              className={cn(
+                                "rounded-xl border-slate-200 dark:border-slate-800",
+                                pagination.currentPage <= 1 && "pointer-events-none opacity-40",
+                              )}
                             />
                           </PaginationItem>
                           <PaginationItem>
@@ -440,8 +466,14 @@ const Patients = () => {
                           </PaginationItem>
                           <PaginationItem>
                             <PaginationNext
-                              onClick={() => updateSearchParams({ page: String(pagination.currentPage + 1) })}
-                              className={cn("rounded-xl border-slate-200 dark:border-slate-800", pagination.currentPage >= pagination.totalPages && "pointer-events-none opacity-40")}
+                              onClick={() =>
+                                updateSearchParams({ page: String(pagination.currentPage + 1) })
+                              }
+                              className={cn(
+                                "rounded-xl border-slate-200 dark:border-slate-800",
+                                pagination.currentPage >= pagination.totalPages &&
+                                  "pointer-events-none opacity-40",
+                              )}
                             />
                           </PaginationItem>
                         </PaginationContent>

@@ -14,7 +14,12 @@ interface LogPayload {
   [key: string]: unknown;
 }
 
-function formatMessage(level: LogLevel, context: string, message: string, _data?: LogPayload): string {
+function formatMessage(
+  level: LogLevel,
+  context: string,
+  message: string,
+  _data?: LogPayload,
+): string {
   return `[${level.toUpperCase()}] [${context}] ${message}`;
 }
 
@@ -36,9 +41,10 @@ export const logger = {
   },
 
   error(context: string, message: string, error?: unknown, data?: LogPayload) {
-    const errorInfo = error instanceof Error
-      ? { name: error.name, message: error.message, stack: error.stack }
-      : { raw: String(error) };
+    const errorInfo =
+      error instanceof Error
+        ? { name: error.name, message: error.message, stack: error.stack }
+        : { raw: String(error) };
 
     console.error(formatMessage("error", context, message), { ...errorInfo, ...data });
   },

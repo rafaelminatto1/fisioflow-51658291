@@ -10,7 +10,7 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  Legend
+  Legend,
 } from "recharts";
 
 interface DigitalTwinProps {
@@ -20,7 +20,7 @@ interface DigitalTwinProps {
 export function DigitalTwinPanel({ patientId: _patientId }: DigitalTwinProps) {
   // In a real implementation, this would use a hook like useDigitalTwin(patientId)
   // For now, we use simulated data based on the PRD specification
-  
+
   const simulatedData = {
     proms_timeline: [
       { date: "2026-01-10", VAS: 8, PSFS: 3 },
@@ -36,7 +36,7 @@ export function DigitalTwinPanel({ patientId: _patientId }: DigitalTwinProps) {
       "Melhora consistente no VAS (-3 pts/mês)",
       "Aderência HEP acima da média para CID",
       "Previsão de alta: ~6 sessões",
-    ]
+    ],
   };
 
   return (
@@ -53,7 +53,7 @@ export function DigitalTwinPanel({ patientId: _patientId }: DigitalTwinProps) {
             <Progress value={simulatedData.adherence_score} className="h-2 mt-2" />
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground uppercase">
@@ -99,19 +99,19 @@ export function DigitalTwinPanel({ patientId: _patientId }: DigitalTwinProps) {
               <YAxis fontSize={12} tickLine={false} axisLine={false} />
               <Tooltip />
               <Legend />
-              <Line 
-                type="monotone" 
-                dataKey="VAS" 
-                stroke="#ef4444" 
-                strokeWidth={3} 
+              <Line
+                type="monotone"
+                dataKey="VAS"
+                stroke="#ef4444"
+                strokeWidth={3}
                 dot={{ r: 4 }}
                 activeDot={{ r: 6 }}
               />
-              <Line 
-                type="monotone" 
-                dataKey="PSFS" 
-                stroke="#3b82f6" 
-                strokeWidth={3} 
+              <Line
+                type="monotone"
+                dataKey="PSFS"
+                stroke="#3b82f6"
+                strokeWidth={3}
                 dot={{ r: 4 }}
               />
             </LineChart>
@@ -135,7 +135,7 @@ export function DigitalTwinPanel({ patientId: _patientId }: DigitalTwinProps) {
               </li>
             ))}
           </ul>
-          
+
           <div className="pt-2 border-t border-primary/10">
             <div className="text-sm font-bold flex items-center gap-2">
               <CheckCircle2 className="h-4 w-4" />

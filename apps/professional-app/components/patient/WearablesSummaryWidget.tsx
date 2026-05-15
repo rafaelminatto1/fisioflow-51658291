@@ -27,9 +27,10 @@ export const WearablesSummaryWidget: React.FC<WearablesSummaryWidgetProps> = ({ 
 
   const { data, isLoading } = useQuery({
     queryKey: ["patient-wearables-summary", patientId],
-    queryFn: () => fetchApi<{ readings: WearableReading[], integrations: any[] }>(
-      `/api/wearables/patient/${patientId}/summary`
-    ),
+    queryFn: () =>
+      fetchApi<{ readings: WearableReading[]; integrations: any[] }>(
+        `/api/wearables/patient/${patientId}/summary`,
+      ),
     enabled: !!patientId,
     staleTime: 1000 * 60 * 5, // 5 mins
   });
@@ -47,23 +48,35 @@ export const WearablesSummaryWidget: React.FC<WearablesSummaryWidgetProps> = ({ 
 
   const getIcon = (type: string) => {
     switch (type) {
-      case "steps": return "footsteps";
-      case "heart_rate": return "heart";
-      case "sleep_hours": return "moon";
-      case "distance": return "walk";
-      case "active_calories": return "flame";
-      default: return "fitness";
+      case "steps":
+        return "footsteps";
+      case "heart_rate":
+        return "heart";
+      case "sleep_hours":
+        return "moon";
+      case "distance":
+        return "walk";
+      case "active_calories":
+        return "flame";
+      default:
+        return "fitness";
     }
   };
 
   const getLabel = (type: string) => {
     switch (type) {
-      case "steps": return "Passos";
-      case "heart_rate": return "Freq. Cardíaca";
-      case "sleep_hours": return "Sono";
-      case "distance": return "Distância";
-      case "active_calories": return "Calorias";
-      default: return type;
+      case "steps":
+        return "Passos";
+      case "heart_rate":
+        return "Freq. Cardíaca";
+      case "sleep_hours":
+        return "Sono";
+      case "distance":
+        return "Distância";
+      case "active_calories":
+        return "Calorias";
+      default:
+        return type;
     }
   };
 
@@ -77,7 +90,9 @@ export const WearablesSummaryWidget: React.FC<WearablesSummaryWidgetProps> = ({ 
   return (
     <Card style={[styles.container, { backgroundColor: colors.surface + "80" }]}>
       <View style={styles.header}>
-        <Text style={[styles.title, { color: colors.textSecondary }]}>Monitoramento Remoto (Wearables)</Text>
+        <Text style={[styles.title, { color: colors.textSecondary }]}>
+          Monitoramento Remoto (Wearables)
+        </Text>
         <Ionicons name="pulse" size={16} color={colors.primary} />
       </View>
 
@@ -88,7 +103,9 @@ export const WearablesSummaryWidget: React.FC<WearablesSummaryWidgetProps> = ({ 
               <Ionicons name={getIcon(item.data_type) as any} size={18} color={colors.primary} />
             </View>
             <View>
-              <Text style={[styles.metricLabel, { color: colors.textSecondary }]}>{getLabel(item.data_type)}</Text>
+              <Text style={[styles.metricLabel, { color: colors.textSecondary }]}>
+                {getLabel(item.data_type)}
+              </Text>
               <Text style={[styles.metricValue, { color: colors.text }]}>{formatValue(item)}</Text>
               <Text style={[styles.metricTime, { color: colors.textMuted }]}>
                 {format(new Date(item.timestamp), "HH:mm", { locale: ptBR })}
@@ -148,5 +165,5 @@ const styles = StyleSheet.create({
   metricTime: {
     fontSize: 8,
     marginTop: 2,
-  }
+  },
 });

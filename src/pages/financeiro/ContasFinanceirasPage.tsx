@@ -8,11 +8,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Plus,
-  ArrowUpCircle,
-  ArrowDownCircle,
-} from "lucide-react";
+import { Plus, ArrowUpCircle, ArrowDownCircle } from "lucide-react";
 import { MainLayout } from "@/components/layout/MainLayout";
 
 import { useContasFinanceirasLogic } from "@/hooks/useContasFinanceirasLogic";

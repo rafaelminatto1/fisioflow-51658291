@@ -1,19 +1,8 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import {
-  Search,
-  Folder,
-  Plus,
-  Image as ImageIcon,
-  Video as VideoIcon,
-  Trash2,
-} from "lucide-react";
-import {
-  CustomModal,
-  CustomModalHeader,
-  CustomModalTitle,
-} from "../ui/custom-modal";
+import { Search, Folder, Plus, Image as ImageIcon, Video as VideoIcon, Trash2 } from "lucide-react";
+import { CustomModal, CustomModalHeader, CustomModalTitle } from "../ui/custom-modal";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { ScrollArea } from "../ui/scroll-area";

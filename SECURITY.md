@@ -8,28 +8,28 @@
 
 ## Stack de segurança atual
 
-| Controle | Implementação | Status |
-|---|---|---|
-| Autenticação | Neon Auth (JWT EdDSA / JWKS) | ✅ Ativo |
-| Autorização | RBAC por role + RLS Neon | ✅ Ativo |
-| SAST | CodeQL (`javascript-typescript`, `security-and-quality`) | ✅ CI ativo |
-| Secret scan | TruffleHog OSS `--only-verified` | ✅ CI ativo |
-| Dependency audit | `pnpm audit --audit-level=high` | ✅ CI bloqueante |
-| CORS | Validação contra `env.ALLOWED_ORIGINS` (CSV) | ✅ Ativo |
-| Rate limiting | D1 `fisioflow-edge-cache` (upsert atômico) | ✅ Ativo |
-| TLS | Cloudflare edge (1.2+) | ✅ Automático |
+| Controle         | Implementação                                            | Status           |
+| ---------------- | -------------------------------------------------------- | ---------------- |
+| Autenticação     | Neon Auth (JWT EdDSA / JWKS)                             | ✅ Ativo         |
+| Autorização      | RBAC por role + RLS Neon                                 | ✅ Ativo         |
+| SAST             | CodeQL (`javascript-typescript`, `security-and-quality`) | ✅ CI ativo      |
+| Secret scan      | TruffleHog OSS `--only-verified`                         | ✅ CI ativo      |
+| Dependency audit | `pnpm audit --audit-level=high`                          | ✅ CI bloqueante |
+| CORS             | Validação contra `env.ALLOWED_ORIGINS` (CSV)             | ✅ Ativo         |
+| Rate limiting    | D1 `fisioflow-edge-cache` (upsert atômico)               | ✅ Ativo         |
+| TLS              | Cloudflare edge (1.2+)                                   | ✅ Automático    |
 
 ---
 
 ## RBAC — Roles definidos
 
-| Role | Acesso |
-|---|---|
-| `admin` | Tudo — todas as rotas e dados |
+| Role             | Acesso                                                                                              |
+| ---------------- | --------------------------------------------------------------------------------------------------- |
+| `admin`          | Tudo — todas as rotas e dados                                                                       |
 | `fisioterapeuta` | Dados clínicos (pacientes, sessões, agendamentos, prescrições) — **sem** CRM, marketing, financeiro |
-| `estagiario` | Mesmas permissões que fisioterapeuta (sem restrições adicionais neste ciclo) |
-| `paciente` | Apenas próprios dados e sessões — sem agendamento próprio ainda |
-| `viewer` | Fallback de segurança — acesso somente leitura mínimo |
+| `estagiario`     | Mesmas permissões que fisioterapeuta (sem restrições adicionais neste ciclo)                        |
+| `paciente`       | Apenas próprios dados e sessões — sem agendamento próprio ainda                                     |
+| `viewer`         | Fallback de segurança — acesso somente leitura mínimo                                               |
 
 **Implementação:** `apps/api/src/lib/auth.ts` — `requireAuth()` retorna 401 real (não 403 silencioso).  
 Role fallback = `'viewer'` (nunca `'admin'`).
@@ -82,12 +82,12 @@ wrangler secret put DATABASE_URL --env production
 
 Definidos em `.github/workflows/security-audit.yml`:
 
-| Job | O que faz | Falha = |
-|---|---|---|
-| `secret-scan` | TruffleHog `--only-verified` em todo o histórico | Bloqueia merge |
-| `dependency-audit` | `pnpm audit --audit-level=high` | Bloqueia merge |
-| `lint-and-typecheck` | `pnpm lint` + `pnpm type-check` | Bloqueia merge |
-| `analyze` (CodeQL) | SAST completo TypeScript | Alerta no GitHub Security |
+| Job                  | O que faz                                        | Falha =                   |
+| -------------------- | ------------------------------------------------ | ------------------------- |
+| `secret-scan`        | TruffleHog `--only-verified` em todo o histórico | Bloqueia merge            |
+| `dependency-audit`   | `pnpm audit --audit-level=high`                  | Bloqueia merge            |
+| `lint-and-typecheck` | `pnpm lint` + `pnpm type-check`                  | Bloqueia merge            |
+| `analyze` (CodeQL)   | SAST completo TypeScript                         | Alerta no GitHub Security |
 
 ---
 
@@ -116,9 +116,9 @@ Cria perfil no evento `user.created`.
 
 ## Revisões periódicas
 
-| Frequência | Ação |
-|---|---|
-| A cada PR | CodeQL + TruffleHog + pnpm audit (automático) |
-| A cada 90 dias | Rotação de segredos (ver `PLAYBOOK_SECRETS_ROTATION.md`) |
-| A cada release principal | Revisão deste documento + atualização do inventário de secrets |
-| Anual | Revisar runbook + playbook de segredos e atualizar se necessário |
+| Frequência               | Ação                                                             |
+| ------------------------ | ---------------------------------------------------------------- |
+| A cada PR                | CodeQL + TruffleHog + pnpm audit (automático)                    |
+| A cada 90 dias           | Rotação de segredos (ver `PLAYBOOK_SECRETS_ROTATION.md`)         |
+| A cada release principal | Revisão deste documento + atualização do inventário de secrets   |
+| Anual                    | Revisar runbook + playbook de segredos e atualizar se necessário |

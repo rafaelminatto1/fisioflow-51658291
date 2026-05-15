@@ -32,12 +32,12 @@ export const satisfactionSurveysApi = {
       method: "POST",
       body: JSON.stringify(data),
     }),
-    createPublic: (data: Record<string, unknown>) =>
+  createPublic: (data: Record<string, unknown>) =>
     request<{ data: Record<string, unknown> }>("/api/satisfaction-surveys/public", {
       method: "POST",
       body: JSON.stringify(data),
     }),
-    update: (id: string, data: Record<string, unknown>) =>
+  update: (id: string, data: Record<string, unknown>) =>
     request<{ data: Record<string, unknown> }>(
       `/api/satisfaction-surveys/${encodeURIComponent(id)}`,
       {

@@ -121,7 +121,10 @@ export default function WhatsAppIntegration() {
     await sendMessage.mutateAsync({
       recipient: formData.recipient,
       message: formData.message,
-      templateId: (formData.template_id === "" || formData.template_id === "none") ? undefined : formData.template_id,
+      templateId:
+        formData.template_id === "" || formData.template_id === "none"
+          ? undefined
+          : formData.template_id,
     });
 
     setIsDialogOpen(false);

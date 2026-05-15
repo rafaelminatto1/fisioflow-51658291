@@ -317,8 +317,10 @@ export function useStatusConfig() {
     },
     getStatusColors,
     createStatus: createMutation.mutate,
-    updateStatus: (statusId: string, updates: Partial<Omit<CustomStatusConfig, "id" | "isCustom">>) =>
-      updateMutation.mutate({ statusId, updates }),
+    updateStatus: (
+      statusId: string,
+      updates: Partial<Omit<CustomStatusConfig, "id" | "isCustom">>,
+    ) => updateMutation.mutate({ statusId, updates }),
     deleteStatus: deleteMutation.mutate,
     resetToDefaults,
     allStatuses: activeRows.map((row) => row.key),

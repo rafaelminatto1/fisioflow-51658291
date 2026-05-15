@@ -106,5 +106,7 @@ export const wearablesApi = {
       body: JSON.stringify({ entries }),
     }),
   getPatientSummary: (patientId: string) =>
-    request<WearablePatientSummary>(`/api/wearables/patient/${encodeURIComponent(patientId)}/summary`),
+    request<WearablePatientSummary>(
+      `/api/wearables/patient/${encodeURIComponent(patientId)}/summary`,
+    ),
 };

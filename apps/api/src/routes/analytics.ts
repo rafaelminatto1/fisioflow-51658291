@@ -32,8 +32,8 @@ app.get("/at-risk-patients", async (c) => {
     .where(
       and(
         eq(patientAdherencePredictions.organizationId, user.organizationId),
-        eq(patientAdherencePredictions.status, "active")
-      )
+        eq(patientAdherencePredictions.status, "active"),
+      ),
     )
     .orderBy(desc(patientAdherencePredictions.dropoutRisk))
     .limit(20);
@@ -50,11 +50,7 @@ app.post("/predict/:patientId", async (c) => {
   const user = c.get("user");
   const patientId = c.req.param("patientId");
 
-  const prediction = await AdherencePredictor.predictForPatient(
-    db,
-    user.organizationId,
-    patientId
-  );
+  const prediction = await AdherencePredictor.predictForPatient(db, user.organizationId, patientId);
 
   return c.json({ data: prediction });
 });

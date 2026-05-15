@@ -11,11 +11,7 @@
  */
 
 // Patient schemas
-export {
-  PatientCreateSchema,
-  PatientUpdateSchema,
-  PatientResponseSchema,
-} from "./patient.schema";
+export { PatientCreateSchema, PatientUpdateSchema, PatientResponseSchema } from "./patient.schema";
 export type { PatientCreate, PatientUpdate, PatientResponse } from "./patient.schema";
 
 // Appointment schemas
@@ -34,8 +30,5 @@ export type {
 export { PatientSchema, PatientFormSchema, PatientQuickFormSchema } from "./patient";
 export type { PatientFormData, PatientQuickFormData } from "./patient";
 
-export {
-  AppointmentSchema,
-  VerifiedAppointmentSchema,
-} from "./appointment";
+export { AppointmentSchema, VerifiedAppointmentSchema } from "./appointment";
 export type { AppointmentRow, VerifiedAppointment } from "./appointment";

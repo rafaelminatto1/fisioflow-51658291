@@ -84,7 +84,10 @@ export const AppointmentCard = React.forwardRef<HTMLDivElement, AppointmentCardP
       >
         {/* Status accent strip — single source of truth for the side bar */}
         <div
-          className={cn("absolute left-0 top-0 bottom-0 rounded-l-[inherit]", compact ? "w-1" : "w-1.5")}
+          className={cn(
+            "absolute left-0 top-0 bottom-0 rounded-l-[inherit]",
+            compact ? "w-1" : "w-1.5",
+          )}
           style={
             statusConfig?.color
               ? { backgroundColor: statusConfig.color }

@@ -30,7 +30,14 @@ export interface PatientVideo {
   patient_id: string;
   organization_id: string;
   professional_id: string | null;
-  video_type: "gait" | "biomechanics" | "range_of_motion" | "before" | "after" | "exercise" | "clinical";
+  video_type:
+    | "gait"
+    | "biomechanics"
+    | "range_of_motion"
+    | "before"
+    | "after"
+    | "exercise"
+    | "clinical";
   r2_key: string;
   file_name: string | null;
   file_size: number | null;
@@ -98,9 +105,16 @@ export async function getPatientMediaAccessUrl(r2Key: string): Promise<string> {
 
 // ─── Serve URL (via Images API — otimizada, sem presigned) ───────────────────
 
-export function getImageServeUrl(r2Key: string, opts?: {
-  w?: number; h?: number; fit?: "cover" | "contain" | "scale-down"; q?: number; blur?: number;
-}): string {
+export function getImageServeUrl(
+  r2Key: string,
+  opts?: {
+    w?: number;
+    h?: number;
+    fit?: "cover" | "contain" | "scale-down";
+    q?: number;
+    blur?: number;
+  },
+): string {
   const base = getWorkersApiUrl();
   const params = new URLSearchParams();
   if (opts?.w) params.set("w", String(opts.w));

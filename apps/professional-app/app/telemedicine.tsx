@@ -117,7 +117,10 @@ export default function TelemedicineScreen() {
         </TouchableOpacity>
         <Text style={[styles.title, { color: colors.text }]}>Telemedicina</Text>
         <TouchableOpacity
-          onPress={() => { medium(); setPickerVisible(true); }}
+          onPress={() => {
+            medium();
+            setPickerVisible(true);
+          }}
           style={styles.addButton}
           disabled={creating}
         >
@@ -158,7 +161,10 @@ export default function TelemedicineScreen() {
             </Text>
             <TouchableOpacity
               style={[styles.createButton, { backgroundColor: colors.primary }]}
-              onPress={() => { medium(); setPickerVisible(true); }}
+              onPress={() => {
+                medium();
+                setPickerVisible(true);
+              }}
             >
               <Ionicons name="add" size={20} color="#fff" />
               <Text style={styles.createButtonText}>Nova Teleconsulta</Text>
@@ -195,8 +201,11 @@ const styles = StyleSheet.create({
   roomCard: { padding: 16, marginBottom: 12 },
   roomHeader: { flexDirection: "row", alignItems: "center" },
   roomIcon: {
-    width: 48, height: 48, borderRadius: 24,
-    justifyContent: "center", alignItems: "center",
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    justifyContent: "center",
+    alignItems: "center",
   },
   roomInfo: { flex: 1, marginLeft: 12 },
   patientName: { fontSize: 16, fontWeight: "bold", marginBottom: 4 },
@@ -208,8 +217,12 @@ const styles = StyleSheet.create({
   emptyState: { alignItems: "center", justifyContent: "center", marginTop: 80 },
   emptyText: { fontSize: 16, marginTop: 16, textAlign: "center", marginBottom: 24 },
   createButton: {
-    flexDirection: "row", alignItems: "center", gap: 8,
-    paddingHorizontal: 24, paddingVertical: 12, borderRadius: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 12,
   },
   createButtonText: { color: "#FFFFFF", fontWeight: "bold", fontSize: 16 },
 });

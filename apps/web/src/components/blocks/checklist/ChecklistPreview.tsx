@@ -1,7 +1,7 @@
-import React from 'react';
-import ProcedureChecklistV1 from './v1-simple/ProcedureChecklistBlock';
-import ProcedureChecklistV2 from './v2-improved/ProcedureChecklistBlock';
-import ProcedureChecklistV3 from './v3-premium/ProcedureChecklistBlock';
+import React from "react";
+import ProcedureChecklistV1 from "./v1-simple/ProcedureChecklistBlock";
+import ProcedureChecklistV2 from "./v2-improved/ProcedureChecklistBlock";
+import ProcedureChecklistV3 from "./v3-premium/ProcedureChecklistBlock";
 
 const ChecklistPreview = () => {
   return (
@@ -54,9 +54,7 @@ const ChecklistPreview = () => {
         </section>
 
         <footer className="pt-12 text-center border-t border-slate-200">
-          <p className="text-sm text-slate-400">
-            FisioFlow Design System &copy; 2026
-          </p>
+          <p className="text-sm text-slate-400">FisioFlow Design System &copy; 2026</p>
         </footer>
       </div>
     </div>

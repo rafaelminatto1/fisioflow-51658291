@@ -12,39 +12,39 @@ jobs:
     timeout-minutes: 60
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
-    - uses: ./.github/actions/setup
-      with:
-        node-version: "22"
-      
-    - name: Install Playwright Browsers
-      run: pnpm exec playwright install --with-deps chromium
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+        with:
+          node-version: "22"
 
-    - name: Check staging reachability
-      id: staging_check
-      run: |
-        URL="${STAGING_BASE_URL:-http://localhost:5173}"
-        HOST=$(echo "$URL" | sed 's|https\?://||' | cut -d/ -f1 | cut -d: -f1)
-        if nslookup "$HOST" >/dev/null 2>&1; then
-          echo "reachable=true" >> "$GITHUB_OUTPUT"
-        else
-          echo "reachable=false" >> "$GITHUB_OUTPUT"
-          echo "::warning::Staging host $HOST not resolvable — skipping E2E tests"
-        fi
-      env:
-        STAGING_BASE_URL: ${{ secrets.STAGING_BASE_URL }}
+      - name: Install Playwright Browsers
+        run: pnpm exec playwright install --with-deps chromium
 
-    - name: Run Playwright tests
-      if: steps.staging_check.outputs.reachable == 'true'
-      run: pnpm exec playwright test --config e2e/playwright.config.ts
-      env:
-        STAGING_BASE_URL: ${{ secrets.STAGING_BASE_URL }}
-        STAGING_TEST_USER_EMAIL: ${{ secrets.STAGING_TEST_USER_EMAIL }}
-        STAGING_TEST_USER_PASSWORD: ${{ secrets.STAGING_TEST_USER_PASSWORD }}
+      - name: Check staging reachability
+        id: staging_check
+        run: |
+          URL="${STAGING_BASE_URL:-http://localhost:5173}"
+          HOST=$(echo "$URL" | sed 's|https\?://||' | cut -d/ -f1 | cut -d: -f1)
+          if nslookup "$HOST" >/dev/null 2>&1; then
+            echo "reachable=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "reachable=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::Staging host $HOST not resolvable — skipping E2E tests"
+          fi
+        env:
+          STAGING_BASE_URL: ${{ secrets.STAGING_BASE_URL }}
 
-    - uses: actions/upload-artifact@v4
-      if: always() && steps.staging_check.outputs.reachable == 'true'
-      with:
-        name: playwright-report
-        path: e2e/playwright-report/
-        retention-days: 30
+      - name: Run Playwright tests
+        if: steps.staging_check.outputs.reachable == 'true'
+        run: pnpm exec playwright test --config e2e/playwright.config.ts
+        env:
+          STAGING_BASE_URL: ${{ secrets.STAGING_BASE_URL }}
+          STAGING_TEST_USER_EMAIL: ${{ secrets.STAGING_TEST_USER_EMAIL }}
+          STAGING_TEST_USER_PASSWORD: ${{ secrets.STAGING_TEST_USER_PASSWORD }}
+
+      - uses: actions/upload-artifact@v4
+        if: always() && steps.staging_check.outputs.reachable == 'true'
+        with:
+          name: playwright-report
+          path: e2e/playwright-report/
+          retention-days: 30

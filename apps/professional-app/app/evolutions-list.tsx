@@ -82,9 +82,7 @@ function EvolutionCardItem({
           </View>
           <View style={styles.cardHeaderRight}>
             {pain != null && pain > 0 ? (
-              <View
-                style={[styles.painBadge, { backgroundColor: getPainColor(pain) + "20" }]}
-              >
+              <View style={[styles.painBadge, { backgroundColor: getPainColor(pain) + "20" }]}>
                 <Text style={[styles.painBadgeText, { color: getPainColor(pain) }]}>
                   EVA: {pain}
                 </Text>

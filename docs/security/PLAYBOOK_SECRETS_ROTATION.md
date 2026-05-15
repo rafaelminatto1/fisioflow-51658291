@@ -19,29 +19,29 @@
 
 ### Workers (Cloudflare) — via `wrangler secret put`
 
-| Segredo | Serviço | Usado em | Rotacionar a cada |
-|---|---|---|---|
-| `DATABASE_URL` | Neon PostgreSQL | `apps/api` | 90 dias ou se comprometido |
-| `NEON_AUTH_JWKS_URL` | Neon Auth | `apps/api` | Raro (muda só se endpoint mudar) |
-| `CF_API_TOKEN` | Cloudflare API | CI/CD, `.env.cloudflare.local` | 90 dias |
-| `AXIOM_TOKEN` | Axiom Logging | `apps/api` | 90 dias |
-| `TURNSTILE_SECRET_KEY` | Cloudflare Turnstile | `apps/api` | 90 dias |
-| `INNGEST_EVENT_KEY` | Inngest | `apps/api` | 90 dias |
-| `INNGEST_SIGNING_KEY` | Inngest | `apps/api` | 90 dias |
-| `WHATSAPP_ACCESS_TOKEN` | Meta WhatsApp | `apps/api` | 60 dias |
-| `LIVEKIT_API_SECRET` | LiveKit | `apps/api` | 90 dias |
+| Segredo                 | Serviço              | Usado em                       | Rotacionar a cada                |
+| ----------------------- | -------------------- | ------------------------------ | -------------------------------- |
+| `DATABASE_URL`          | Neon PostgreSQL      | `apps/api`                     | 90 dias ou se comprometido       |
+| `NEON_AUTH_JWKS_URL`    | Neon Auth            | `apps/api`                     | Raro (muda só se endpoint mudar) |
+| `CF_API_TOKEN`          | Cloudflare API       | CI/CD, `.env.cloudflare.local` | 90 dias                          |
+| `AXIOM_TOKEN`           | Axiom Logging        | `apps/api`                     | 90 dias                          |
+| `TURNSTILE_SECRET_KEY`  | Cloudflare Turnstile | `apps/api`                     | 90 dias                          |
+| `INNGEST_EVENT_KEY`     | Inngest              | `apps/api`                     | 90 dias                          |
+| `INNGEST_SIGNING_KEY`   | Inngest              | `apps/api`                     | 90 dias                          |
+| `WHATSAPP_ACCESS_TOKEN` | Meta WhatsApp        | `apps/api`                     | 60 dias                          |
+| `LIVEKIT_API_SECRET`    | LiveKit              | `apps/api`                     | 90 dias                          |
 
 ### GitHub Actions — via GitHub Settings → Secrets → Actions
 
-| Segredo | Usado em |
-|---|---|
-| `CF_API_TOKEN` | Deploy CI |
-| `CF_ACCOUNT_ID` | Deploy CI |
-| `PROD_TEST_USER_EMAIL` | Smoke test pós-deploy |
-| `PROD_TEST_USER_PASSWORD` | Smoke test pós-deploy |
-| `STAGING_TEST_USER_EMAIL` | E2E smoke em PRs |
-| `STAGING_TEST_USER_PASSWORD` | E2E smoke em PRs |
-| `VITE_GOOGLE_AI_API_KEY` | Build web (Google AI) |
+| Segredo                      | Usado em              |
+| ---------------------------- | --------------------- |
+| `CF_API_TOKEN`               | Deploy CI             |
+| `CF_ACCOUNT_ID`              | Deploy CI             |
+| `PROD_TEST_USER_EMAIL`       | Smoke test pós-deploy |
+| `PROD_TEST_USER_PASSWORD`    | Smoke test pós-deploy |
+| `STAGING_TEST_USER_EMAIL`    | E2E smoke em PRs      |
+| `STAGING_TEST_USER_PASSWORD` | E2E smoke em PRs      |
+| `VITE_GOOGLE_AI_API_KEY`     | Build web (Google AI) |
 
 ---
 
@@ -131,8 +131,8 @@ wrangler secret put WHATSAPP_ACCESS_TOKEN --env production
 
 ## Registro de Rotações
 
-| Data | Segredo | Motivo | Feito por |
-|---|---|---|---|
+| Data       | Segredo    | Motivo               | Feito por |
+| ---------- | ---------- | -------------------- | --------- |
 | 2026-04-28 | (baseline) | Documentação inicial | Tech Lead |
 
 > Atualizar esta tabela a cada rotação. Não registrar os valores, apenas metadados.

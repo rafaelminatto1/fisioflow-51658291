@@ -54,7 +54,7 @@ export function useBatchAnalyticsExport() {
           progressResult.status === "fulfilled" ? progressResult.value.data : null;
         const riskScore = riskResult.status === "fulfilled" ? riskResult.value.data : null;
         const goals = goalsResult.status === "fulfilled" ? goalsResult.value.data : [];
-        
+
         const sessionCount = stats?.totalSessions ?? progressSummary?.total_sessions ?? 0;
         const goalsAchieved =
           progressSummary?.goals_achieved ??

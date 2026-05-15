@@ -1,39 +1,39 @@
-import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
-import { 
-  CheckCircle2, 
-  Circle, 
-  GripVertical, 
-  Plus, 
-  X, 
-  ChevronRight, 
+import React, { useState, useCallback, useMemo, useEffect, useRef } from "react";
+import {
+  CheckCircle2,
+  Circle,
+  GripVertical,
+  Plus,
+  X,
+  ChevronRight,
   LayoutList,
   Sparkles,
   Command,
   Trash2,
   MoreVertical,
-  Check
-} from 'lucide-react';
-import { motion, AnimatePresence, useAnimation } from 'framer-motion';
-import { 
-  DndContext, 
+  Check,
+} from "lucide-react";
+import { motion, AnimatePresence, useAnimation } from "framer-motion";
+import {
+  DndContext,
   closestCenter,
   KeyboardSensor,
   PointerSensor,
   useSensor,
   useSensors,
   DragEndEvent,
-  DragStartEvent
-} from '@dnd-kit/core';
+  DragStartEvent,
+} from "@dnd-kit/core";
 import {
   arrayMove,
   SortableContext,
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
-  useSortable
-} from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
-import confetti from 'canvas-confetti';
-import { toast } from 'sonner';
+  useSortable,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import confetti from "canvas-confetti";
+import { toast } from "sonner";
 
 // --- Types ---
 
@@ -61,14 +61,9 @@ interface SortableItemProps {
 }
 
 const SortableItem = ({ step, onToggle, onRemove, onEdit }: SortableItemProps) => {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging
-  } = useSortable({ id: step.id });
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: step.id,
+  });
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -97,8 +92,8 @@ const SortableItem = ({ step, onToggle, onRemove, onEdit }: SortableItemProps) =
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') handleBlur();
-    if (e.key === 'Escape') {
+    if (e.key === "Enter") handleBlur();
+    if (e.key === "Escape") {
       setEditValue(step.text);
       setIsEditing(false);
     }
@@ -109,9 +104,9 @@ const SortableItem = ({ step, onToggle, onRemove, onEdit }: SortableItemProps) =
       ref={setNodeRef}
       style={style}
       className={`group relative flex items-center gap-3 p-3 rounded-xl transition-all duration-300 ${
-        isDragging 
-          ? 'bg-blue-50/50 border-2 border-blue-200 shadow-lg scale-[1.02]' 
-          : 'bg-white/40 hover:bg-white/80 border border-transparent hover:border-slate-200/50 hover:shadow-sm'
+        isDragging
+          ? "bg-blue-50/50 border-2 border-blue-200 shadow-lg scale-[1.02]"
+          : "bg-white/40 hover:bg-white/80 border border-transparent hover:border-slate-200/50 hover:shadow-sm"
       }`}
     >
       {/* Drag Handle */}
@@ -128,7 +123,7 @@ const SortableItem = ({ step, onToggle, onRemove, onEdit }: SortableItemProps) =
         whileTap={{ scale: 0.9 }}
         onClick={() => onToggle(step.id)}
         className={`flex-shrink-0 transition-colors ${
-          step.completed ? 'text-blue-500' : 'text-slate-300 hover:text-slate-400'
+          step.completed ? "text-blue-500" : "text-slate-300 hover:text-slate-400"
         }`}
       >
         {step.completed ? (
@@ -150,10 +145,10 @@ const SortableItem = ({ step, onToggle, onRemove, onEdit }: SortableItemProps) =
             className="w-full bg-transparent border-b border-blue-500 focus:outline-none py-0.5 text-slate-700"
           />
         ) : (
-          <span 
+          <span
             onClick={() => setIsEditing(true)}
             className={`block truncate text-sm font-medium transition-all duration-300 cursor-text ${
-              step.completed ? 'text-slate-400 line-through' : 'text-slate-700'
+              step.completed ? "text-slate-400 line-through" : "text-slate-700"
             }`}
           >
             {step.text}
@@ -177,17 +172,21 @@ const SortableItem = ({ step, onToggle, onRemove, onEdit }: SortableItemProps) =
 
 // --- Main Block Component ---
 
-export const ProcedureChecklistBlock = ({ 
-  initialSteps = [], 
+export const ProcedureChecklistBlock = ({
+  initialSteps = [],
   title = "Checklist do Procedimento",
-  onUpdate 
+  onUpdate,
 }: ProcedureChecklistBlockProps) => {
-  const [steps, setSteps] = useState<Step[]>(initialSteps.length > 0 ? initialSteps : [
-    { id: '1', text: 'Preparação do ambiente e materiais', completed: false },
-    { id: '2', text: 'Higienização das mãos e EPIs', completed: false },
-    { id: '3', text: 'Explicação do procedimento ao paciente', completed: false },
-  ]);
-  const [newStepText, setNewStepText] = useState('');
+  const [steps, setSteps] = useState<Step[]>(
+    initialSteps.length > 0
+      ? initialSteps
+      : [
+          { id: "1", text: "Preparação do ambiente e materiais", completed: false },
+          { id: "2", text: "Higienização das mãos e EPIs", completed: false },
+          { id: "3", text: "Explicação do procedimento ao paciente", completed: false },
+        ],
+  );
+  const [newStepText, setNewStepText] = useState("");
   const [activeId, setActiveId] = useState<string | null>(null);
 
   const sensors = useSensors(
@@ -198,11 +197,14 @@ export const ProcedureChecklistBlock = ({
     }),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
-    })
+    }),
   );
 
-  const completedCount = useMemo(() => steps.filter(s => s.completed).length, [steps]);
-  const progress = useMemo(() => steps.length > 0 ? (completedCount / steps.length) * 100 : 0, [completedCount, steps.length]);
+  const completedCount = useMemo(() => steps.filter((s) => s.completed).length, [steps]);
+  const progress = useMemo(
+    () => (steps.length > 0 ? (completedCount / steps.length) * 100 : 0),
+    [completedCount, steps.length],
+  );
 
   useEffect(() => {
     if (progress === 100 && steps.length > 0) {
@@ -210,9 +212,9 @@ export const ProcedureChecklistBlock = ({
         particleCount: 100,
         spread: 70,
         origin: { y: 0.6 },
-        colors: ['#3b82f6', '#60a5fa', '#93c5fd']
+        colors: ["#3b82f6", "#60a5fa", "#93c5fd"],
       });
-      toast.success('Procedimento concluído com sucesso!');
+      toast.success("Procedimento concluído com sucesso!");
     }
     onUpdate?.(steps);
   }, [progress, steps, onUpdate]);
@@ -225,24 +227,24 @@ export const ProcedureChecklistBlock = ({
       id: Math.random().toString(36).substr(2, 9),
       text: newStepText.trim(),
       completed: false,
-      isNew: true
+      isNew: true,
     };
 
     setSteps([...steps, newStep]);
-    setNewStepText('');
-    toast.info('Passo adicionado');
+    setNewStepText("");
+    toast.info("Passo adicionado");
   };
 
   const handleToggleStep = (id: string) => {
-    setSteps(steps.map(s => s.id === id ? { ...s, completed: !s.completed } : s));
+    setSteps(steps.map((s) => (s.id === id ? { ...s, completed: !s.completed } : s)));
   };
 
   const handleRemoveStep = (id: string) => {
-    setSteps(steps.filter(s => s.id !== id));
+    setSteps(steps.filter((s) => s.id !== id));
   };
 
   const handleEditStep = (id: string, text: string) => {
-    setSteps(steps.map(s => s.id === id ? { ...s, text } : s));
+    setSteps(steps.map((s) => (s.id === id ? { ...s, text } : s)));
   };
 
   const handleDragStart = (event: DragStartEvent) => {
@@ -265,7 +267,7 @@ export const ProcedureChecklistBlock = ({
   return (
     <div className="max-w-xl mx-auto my-8">
       {/* Main Glass Container */}
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         className="relative overflow-hidden bg-white/60 backdrop-blur-xl border border-white/40 shadow-[0_8px_32px_0_rgba(31,38,135,0.07)] rounded-[2rem] p-6 md:p-8"
@@ -283,13 +285,17 @@ export const ProcedureChecklistBlock = ({
               </div>
               <div>
                 <h2 className="text-xl font-bold text-slate-800 tracking-tight">{title}</h2>
-                <p className="text-xs font-medium text-slate-500 uppercase tracking-wider">Protocolo Clínico</p>
+                <p className="text-xs font-medium text-slate-500 uppercase tracking-wider">
+                  Protocolo Clínico
+                </p>
               </div>
             </div>
-            
+
             <div className="hidden sm:flex items-center gap-1 px-3 py-1.5 bg-slate-100/50 rounded-full border border-slate-200/50">
               <Command size={12} className="text-slate-400" />
-              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-tighter">CMD + K</span>
+              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-tighter">
+                CMD + K
+              </span>
             </div>
           </div>
 
@@ -304,7 +310,7 @@ export const ProcedureChecklistBlock = ({
               </span>
             </div>
             <div className="h-3 w-full bg-slate-100 rounded-full overflow-hidden p-0.5">
-              <motion.div 
+              <motion.div
                 className="h-full bg-gradient-to-r from-blue-400 via-blue-500 to-indigo-500 rounded-full shadow-[0_0_12px_rgba(59,130,246,0.3)]"
                 initial={{ width: 0 }}
                 animate={{ width: `${progress}%` }}
@@ -322,10 +328,7 @@ export const ProcedureChecklistBlock = ({
             onDragStart={handleDragStart}
             onDragEnd={handleDragEnd}
           >
-            <SortableContext
-              items={steps.map(s => s.id)}
-              strategy={verticalListSortingStrategy}
-            >
+            <SortableContext items={steps.map((s) => s.id)} strategy={verticalListSortingStrategy}>
               <AnimatePresence initial={false}>
                 {steps.map((step) => (
                   <motion.div
@@ -348,7 +351,7 @@ export const ProcedureChecklistBlock = ({
           </DndContext>
 
           {steps.length === 0 && (
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               className="py-12 text-center border-2 border-dashed border-slate-100 rounded-2xl"
@@ -357,8 +360,8 @@ export const ProcedureChecklistBlock = ({
                 <Sparkles size={24} />
               </div>
               <p className="text-sm text-slate-400 font-medium">Nenhum passo definido ainda.</p>
-              <button 
-                onClick={() => handleAddStep()} 
+              <button
+                onClick={() => handleAddStep()}
                 className="mt-2 text-xs font-bold text-blue-500 hover:text-blue-600 uppercase tracking-wider"
               >
                 Adicionar primeiro passo
@@ -393,15 +396,21 @@ export const ProcedureChecklistBlock = ({
         {/* Footer shortcuts */}
         <div className="mt-8 pt-6 border-t border-slate-100/50 flex flex-wrap gap-4 items-center justify-center text-[10px] font-bold text-slate-400 uppercase tracking-widest">
           <div className="flex items-center gap-1.5">
-            <kbd className="px-1.5 py-0.5 bg-slate-50 border border-slate-200 rounded shadow-sm">ESPAÇO</kbd>
+            <kbd className="px-1.5 py-0.5 bg-slate-50 border border-slate-200 rounded shadow-sm">
+              ESPAÇO
+            </kbd>
             <span>Marcar</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <kbd className="px-1.5 py-0.5 bg-slate-50 border border-slate-200 rounded shadow-sm">ENTER</kbd>
+            <kbd className="px-1.5 py-0.5 bg-slate-50 border border-slate-200 rounded shadow-sm">
+              ENTER
+            </kbd>
             <span>Editar</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <kbd className="px-1.5 py-0.5 bg-slate-50 border border-slate-200 rounded shadow-sm">ESC</kbd>
+            <kbd className="px-1.5 py-0.5 bg-slate-50 border border-slate-200 rounded shadow-sm">
+              ESC
+            </kbd>
             <span>Cancelar</span>
           </div>
         </div>

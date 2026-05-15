@@ -24,7 +24,8 @@ const memberUser = {
 
 async function buildApp(userOverride?: any) {
   const { Hono } = await import("hono");
-  const { dlqReplayRoutes } = await import("../admin/dlq-replay");  const app = new Hono<any>();
+  const { dlqReplayRoutes } = await import("../admin/dlq-replay");
+  const app = new Hono<any>();
   app.use("/*", async (c, next) => {
     c.set("user", userOverride ?? adminUser);
     await next();
@@ -102,10 +103,7 @@ describe("DLQ replay route", () => {
       },
     };
 
-    const res = await app.fetch(
-      makeRequest("POST", "/api/admin/dlq/replay", { task }),
-      env,
-    );
+    const res = await app.fetch(makeRequest("POST", "/api/admin/dlq/replay", { task }), env);
 
     expect(res.status).toBe(200);
     expect(queueSend).toHaveBeenCalled();
@@ -146,13 +144,16 @@ describe("DLQ replay route", () => {
     const app = await buildApp();
     const task = {
       type: "PROCESS_EXAM",
-      payload: { examId: "exam-1", r2Key: "test.pdf", organizationId: "org-1", patientId: "p1", fileType: "image" },
+      payload: {
+        examId: "exam-1",
+        r2Key: "test.pdf",
+        organizationId: "org-1",
+        patientId: "p1",
+        fileType: "image",
+      },
     };
 
-    await app.fetch(
-      makeRequest("POST", "/api/admin/dlq/replay", { task }),
-      env,
-    );
+    await app.fetch(makeRequest("POST", "/api/admin/dlq/replay", { task }), env);
 
     expect(writeDataPoint).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -170,13 +171,19 @@ describe("DLQ replay route", () => {
     const app = await buildApp();
     const task = {
       type: "SEND_WHATSAPP",
-      payload: { to: "+5511", templateName: "test", languageCode: "pt_BR", bodyParameters: [], organizationId: "org-1", patientId: "p1", messageText: "msg", appointmentId: "a1" },
+      payload: {
+        to: "+5511",
+        templateName: "test",
+        languageCode: "pt_BR",
+        bodyParameters: [],
+        organizationId: "org-1",
+        patientId: "p1",
+        messageText: "msg",
+        appointmentId: "a1",
+      },
     };
 
-    const res = await app.fetch(
-      makeRequest("POST", "/api/admin/dlq/replay", { task }),
-      env,
-    );
+    const res = await app.fetch(makeRequest("POST", "/api/admin/dlq/replay", { task }), env);
 
     expect(res.status).toBe(500);
     expect(writeDataPoint).toHaveBeenCalledWith(

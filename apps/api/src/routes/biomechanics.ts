@@ -123,11 +123,11 @@ app.post("/:id/sign", requireAuth, async (c) => {
     );
 
   if (!assessment) return c.json({ error: "Avaliação não encontrada" }, 404);
-  if (assessment.status === 'signed') return c.json({ error: "Avaliação já está assinada" }, 409);
+  if (assessment.status === "signed") return c.json({ error: "Avaliação já está assinada" }, 409);
 
   const ip = c.req.header("CF-Connecting-IP") ?? "unknown";
   const now = new Date().toISOString();
-  
+
   // Create Signature Metadata (Simulating ICP-Brasil)
   const signatureMetadata = {
     signerId: user.uid,
@@ -136,19 +136,22 @@ app.post("/:id/sign", requireAuth, async (c) => {
     ip,
     userAgent: c.req.header("User-Agent") || "unknown",
     // SHA-256 of the assessment content to ensure integrity
-    contentHash: await crypto.subtle.digest(
-      "SHA-256",
-      new TextEncoder().encode(JSON.stringify(assessment.analysisData))
-    ).then(b => Array.from(new Uint8Array(b)).map(x => x.toString(16).padStart(2, "0")).join(""))
+    contentHash: await crypto.subtle
+      .digest("SHA-256", new TextEncoder().encode(JSON.stringify(assessment.analysisData)))
+      .then((b) =>
+        Array.from(new Uint8Array(b))
+          .map((x) => x.toString(16).padStart(2, "0"))
+          .join(""),
+      ),
   };
 
   const [updated] = await db
     .update(biomechanicsAssessments)
     .set({
-      status: 'signed',
+      status: "signed",
       analysisData: {
         ...(assessment.analysisData as object),
-        _signature: signatureMetadata
+        _signature: signatureMetadata,
       } as any,
       updatedAt: new Date(),
     })
@@ -169,7 +172,8 @@ app.get("/:id/verify", async (c) => {
     .where(eq(biomechanicsAssessments.id, id));
 
   if (!assessment) return c.json({ error: "Relatório não encontrado" }, 404);
-  if (assessment.status !== 'signed') return c.json({ valid: false, error: "Relatório não está assinado" });
+  if (assessment.status !== "signed")
+    return c.json({ valid: false, error: "Relatório não está assinado" });
 
   const analysisData = assessment.analysisData as any;
   const signature = analysisData?._signature;
@@ -180,10 +184,13 @@ app.get("/:id/verify", async (c) => {
   const dataToHash = { ...analysisData };
   delete dataToHash._signature;
 
-  const currentHash = await crypto.subtle.digest(
-    "SHA-256",
-    new TextEncoder().encode(JSON.stringify(dataToHash))
-  ).then(b => Array.from(new Uint8Array(b)).map(x => x.toString(16).padStart(2, "0")).join(""));
+  const currentHash = await crypto.subtle
+    .digest("SHA-256", new TextEncoder().encode(JSON.stringify(dataToHash)))
+    .then((b) =>
+      Array.from(new Uint8Array(b))
+        .map((x) => x.toString(16).padStart(2, "0"))
+        .join(""),
+    );
 
   const isValid = currentHash === signature.contentHash;
 
@@ -191,7 +198,7 @@ app.get("/:id/verify", async (c) => {
     valid: isValid,
     signer: signature.signerName,
     signedAt: signature.timestamp,
-    integrityStatus: isValid ? "verified" : "compromised"
+    integrityStatus: isValid ? "verified" : "compromised",
   });
 });
 

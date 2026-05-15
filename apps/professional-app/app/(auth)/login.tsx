@@ -21,7 +21,6 @@ import { useAuthStore } from "@/store/auth";
 import { useBiometricAuth } from "@/hooks/useBiometricAuth";
 import { ERROR_MESSAGES } from "@/constants/errorMessages";
 
-
 export default function LoginScreen() {
   const colors = useColors();
   const { signIn, isLoading, error, clearError } = useAuthStore();

@@ -4,19 +4,19 @@ As diretrizes operacionais e restrições do sistema estão documentadas em [Reg
 
 ## 🚀 Tecnologias Principais
 
-| Camada         | Tecnologia               | Implementação                                                     |
-| :------------- | :----------------------- | :---------------------------------------------------------------- |
-| **Runtime**    | Node.js v20.12.0+        | Ambiente de desenvolvimento e build consistente.                  |
-| **Frontend**   | React 19 + Vite 8        | Hospedado no **Cloudflare Pages**.                                |
-| **Backend**    | Cloudflare Workers       | Serverless API (Hono.js/TypeScript) em `apps/api`.                |
-| **Database**   | **Neon DB (PostgreSQL)** | Banco relacional serverless com **Drizzle ORM**.                  |
-| **Auth**       | **Neon Auth (JWKS)**     | Gestão de identidade integrada com validação por chaves públicas. |
-| **Storage**    | **Cloudflare R2**        | Armazenamento de mídia (Vídeos/Imagens) via S3 API.               |
-| **Aceleração** | Cloudflare Hyperdrive    | Pooling de conexões PostgreSQL distribuído na borda.              |
-| **PDF Engine** | **Browser Rendering**    | Geração de documentos (Alta/Recibos) via Puppeteer nativo.        |
-| **Sync**       | **Background Sync**      | Sincronização offline robusta via IndexedDB (Pro) e AsyncStorage. |
-| **IA Studio**  | **Google/Meta/Vision**   | IA Generativa (SOAP) e Visão Computacional (Cinemática).          |
-| **Resiliência**| **Geographical DR**      | Backup Neon Branching + R2 Cross-region (SP -> ENAM).             |
+| Camada          | Tecnologia               | Implementação                                                     |
+| :-------------- | :----------------------- | :---------------------------------------------------------------- |
+| **Runtime**     | Node.js v20.12.0+        | Ambiente de desenvolvimento e build consistente.                  |
+| **Frontend**    | React 19 + Vite 8        | Hospedado no **Cloudflare Pages**.                                |
+| **Backend**     | Cloudflare Workers       | Serverless API (Hono.js/TypeScript) em `apps/api`.                |
+| **Database**    | **Neon DB (PostgreSQL)** | Banco relacional serverless com **Drizzle ORM**.                  |
+| **Auth**        | **Neon Auth (JWKS)**     | Gestão de identidade integrada com validação por chaves públicas. |
+| **Storage**     | **Cloudflare R2**        | Armazenamento de mídia (Vídeos/Imagens) via S3 API.               |
+| **Aceleração**  | Cloudflare Hyperdrive    | Pooling de conexões PostgreSQL distribuído na borda.              |
+| **PDF Engine**  | **Browser Rendering**    | Geração de documentos (Alta/Recibos) via Puppeteer nativo.        |
+| **Sync**        | **Background Sync**      | Sincronização offline robusta via IndexedDB (Pro) e AsyncStorage. |
+| **IA Studio**   | **Google/Meta/Vision**   | IA Generativa (SOAP) e Visão Computacional (Cinemática).          |
+| **Resiliência** | **Geographical DR**      | Backup Neon Branching + R2 Cross-region (SP -> ENAM).             |
 
 ## 📐 Diagrama de Arquitetura
 
@@ -47,6 +47,7 @@ graph TD
         CF_R2 -.-> CF_R2_DR[Cloudflare R2 DR - North America]
     end
 ```
+
 ## 🔐 Modelo de Segurança e Isolamento
 
 1.  **Isolamento de Tenant**: O sistema utiliza um padrão de **Multi-tenancy** no nível da aplicação. Todas as tabelas possuem `organizationId`, e o acesso é filtrado em tempo de execução pelo Drizzle ORM baseado no contexto do usuário autenticado.

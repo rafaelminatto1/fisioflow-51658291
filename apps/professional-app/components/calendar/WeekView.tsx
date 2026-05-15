@@ -202,7 +202,9 @@ export const WeekView = ({
                       .filter(Boolean) as Array<AppointmentBase & { top: number; height: number }>;
 
                     // Detect overlaps
-                    const groups: Array<Array<{ top: number; height: number; id: string; index: number }>> = [];
+                    const groups: Array<
+                      Array<{ top: number; height: number; id: string; index: number }>
+                    > = [];
                     dayApts.forEach((apt, index) => {
                       const aptWithIndex = { ...apt, index };
                       let addedToGroup = false;
@@ -241,7 +243,10 @@ export const WeekView = ({
 
                     // Render
                     return dayApts.map((aptWithPos) => {
-                      const pos = positioning.get(aptWithPos.id) || { left: 2, width: dayWidth - 4 };
+                      const pos = positioning.get(aptWithPos.id) || {
+                        left: 2,
+                        width: dayWidth - 4,
+                      };
 
                       return (
                         <DraggableAptCard
@@ -261,7 +266,9 @@ export const WeekView = ({
                             primary: colors.primary,
                             textSecondary: colors.textSecondary,
                           }}
-                          onPress={() => router.push(`/appointment-form?id=${aptWithPos.id}` as any)}
+                          onPress={() =>
+                            router.push(`/appointment-form?id=${aptWithPos.id}` as any)
+                          }
                         />
                       );
                     });

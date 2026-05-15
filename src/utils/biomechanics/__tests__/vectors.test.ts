@@ -18,7 +18,7 @@ describe("Biomechanical Vectors", () => {
     const v1 = { x: 1, y: 0, z: 0 };
     const v2 = { x: 0, y: 1, z: 0 };
     expect(dotProduct(v1, v2)).toBe(0); // Orthogonal
-    
+
     const v3 = { x: 2, y: 3, z: 4 };
     const v4 = { x: 5, y: 6, z: 7 };
     expect(dotProduct(v3, v4)).toBe(10 + 18 + 28);

@@ -282,15 +282,15 @@ export const AppointmentInfoTab: React.FC<AppointmentInfoTabProps> = ({
                   {allStatuses.map((key) => {
                     const config = statusConfig[key] || statusConfig.agendado;
                     return (
-                    <SelectItem key={key} value={key} className="text-sm py-2.5">
-                      <div className="flex items-center gap-3">
-                        <div
-                          className="h-2.5 w-2.5 rounded-full shrink-0 shadow-sm transition-transform group-hover:scale-125"
-                          style={{ backgroundColor: (config as any).color }}
-                        />
-                        <span className="font-semibold text-slate-700">{config.label}</span>
-                      </div>
-                    </SelectItem>
+                      <SelectItem key={key} value={key} className="text-sm py-2.5">
+                        <div className="flex items-center gap-3">
+                          <div
+                            className="h-2.5 w-2.5 rounded-full shrink-0 shadow-sm transition-transform group-hover:scale-125"
+                            style={{ backgroundColor: (config as any).color }}
+                          />
+                          <span className="font-semibold text-slate-700">{config.label}</span>
+                        </div>
+                      </SelectItem>
                     );
                   })}
                 </SelectContent>

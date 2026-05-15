@@ -7,13 +7,7 @@ import { useEffect, useState, memo } from "react";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import {
-  Stethoscope,
-  FileText,
-  Plus,
-  Edit2,
-  RefreshCw,
-} from "lucide-react";
+import { Stethoscope, FileText, Plus, Edit2, RefreshCw } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { usePatientMedicalReturns } from "@/hooks/usePatientEvolution";
@@ -128,7 +122,10 @@ export const MedicalReturnCard = memo(function MedicalReturnCard({
                 medicalReturns.length > 0 ? "text-primary" : "text-slate-400",
               )}
             />
-            <CardTitle as="h2" className="text-sm font-semibold text-slate-700 flex items-center gap-2">
+            <CardTitle
+              as="h2"
+              className="text-sm font-semibold text-slate-700 flex items-center gap-2"
+            >
               Retorno Médico
               {medicalReturns.length > 0 && (
                 <Badge

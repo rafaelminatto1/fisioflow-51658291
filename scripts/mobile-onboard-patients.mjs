@@ -90,7 +90,11 @@ async function main() {
 
   for (const patient of targets) {
     const ok = await sendWhatsApp(patient);
-    if (ok) { sent++; } else { skipped++; }
+    if (ok) {
+      sent++;
+    } else {
+      skipped++;
+    }
     // Rate limit: 1 mensagem por segundo
     await new Promise((r) => setTimeout(r, 1000));
   }

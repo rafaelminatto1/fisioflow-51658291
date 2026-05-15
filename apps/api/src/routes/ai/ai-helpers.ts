@@ -73,9 +73,10 @@ export function buildSoapFromText(text: string) {
  * (sem partição S/O/A/P) e tenta extrair a EVA quando o relato menciona uma
  * escala numérica de dor.
  */
-export function buildEvolutionFromText(
-  text: string,
-): { observacao: string; painScale: number | null } {
+export function buildEvolutionFromText(text: string): {
+  observacao: string;
+  painScale: number | null;
+} {
   const trimmed = (text ?? "").trim();
   const painMatch = trimmed.match(/(?:eva|dor)[^\d]{0,12}(\d{1,2})(?:\s*\/\s*10)?/i);
   let painScale: number | null = null;

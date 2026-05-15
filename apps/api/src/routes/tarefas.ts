@@ -365,21 +365,23 @@ app.patch("/:id", requireAuth, async (c) => {
     if (taskBefore?.status !== "CONCLUIDO" && taskAfter.status === "CONCLUIDO") {
       const completedBy = (taskAfter.responsavel_id ?? user.uid) as string;
       const linkedPatientId =
-        taskAfter.linked_entity_type === "patient" && isUuid(String(taskAfter.linked_entity_id ?? ""))
+        taskAfter.linked_entity_type === "patient" &&
+        isUuid(String(taskAfter.linked_entity_id ?? ""))
           ? String(taskAfter.linked_entity_id)
           : null;
 
-      if (linkedPatientId) db.query(
-        `INSERT INTO xp_transactions (organization_id, patient_id, amount, reason, description, source, metadata, created_by)
+      if (linkedPatientId)
+        db.query(
+          `INSERT INTO xp_transactions (organization_id, patient_id, amount, reason, description, source, metadata, created_by)
          VALUES ($1, $2, 10, 'task_completed', 'Tarefa concluída', 'tarefa', $3::jsonb, $4)
          ON CONFLICT DO NOTHING`,
-        [
-          user.organizationId,
-          linkedPatientId,
-          jsonSerialize({ task_id: id }),
-          isUuid(completedBy) ? completedBy : null,
-        ],
-      ).catch(() => null);
+          [
+            user.organizationId,
+            linkedPatientId,
+            jsonSerialize({ task_id: id }),
+            isUuid(completedBy) ? completedBy : null,
+          ],
+        ).catch(() => null);
     }
 
     return c.json({ data: taskAfter });

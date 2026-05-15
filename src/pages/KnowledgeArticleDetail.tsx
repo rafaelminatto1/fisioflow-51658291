@@ -220,7 +220,8 @@ export default function KnowledgeArticleDetail() {
             >
               <BookOpen className="h-4 w-4" />
               Modo Estudo IA
-            </Button>            <Button
+            </Button>{" "}
+            <Button
               variant="default"
               size="sm"
               className="gap-2"

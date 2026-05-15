@@ -16,7 +16,10 @@ function RecommendedDurationsCard() {
     >
       <div className="rounded-xl border divide-y overflow-hidden">
         {RECOMMENDED_DURATIONS.map((rec) => (
-          <div key={rec.type} className="flex justify-between items-center p-3 bg-card hover:bg-muted/30 transition-colors">
+          <div
+            key={rec.type}
+            className="flex justify-between items-center p-3 bg-card hover:bg-muted/30 transition-colors"
+          >
             <span className="text-sm text-muted-foreground">{rec.type}</span>
             <span className="font-mono text-sm font-medium">{rec.range}</span>
           </div>

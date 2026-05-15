@@ -65,13 +65,10 @@ export function SlotConfigurationSettings() {
     }
   }, [remote, dirty]);
 
-  const update = useCallback(
-    <K extends keyof SlotLocalState>(key: K, value: SlotLocalState[K]) => {
-      setState((prev) => ({ ...prev, [key]: value }));
-      setDirty(true);
-    },
-    [],
-  );
+  const update = useCallback(<K extends keyof SlotLocalState>(key: K, value: SlotLocalState[K]) => {
+    setState((prev) => ({ ...prev, [key]: value }));
+    setDirty(true);
+  }, []);
 
   const handleSave = useCallback(() => {
     save({

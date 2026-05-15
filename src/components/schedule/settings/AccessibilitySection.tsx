@@ -6,12 +6,7 @@
  */
 
 import { cn } from "@/lib/utils";
-import {
-  Accessibility,
-  EyeOff,
-  Zap,
-  RotateCcw,
-} from "lucide-react";
+import { Accessibility, EyeOff, Zap, RotateCcw } from "lucide-react";
 import { useAccessibilitySettings } from "@/hooks/useAccessibilitySettings";
 import { SettingsSectionCard } from "@/components/schedule/settings/shared/SettingsSectionCard";
 import { Label } from "@/components/ui/label";

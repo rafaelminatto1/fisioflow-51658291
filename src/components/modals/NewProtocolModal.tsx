@@ -191,7 +191,11 @@ export const NewProtocolModal: React.FC<NewProtocolModalProps> = ({
     }));
   };
 
-  const updateMilestone = (index: number, field: keyof Milestone, value: Milestone[keyof Milestone]) => {
+  const updateMilestone = (
+    index: number,
+    field: keyof Milestone,
+    value: Milestone[keyof Milestone],
+  ) => {
     const newMilestones = [...formData.milestones];
     newMilestones[index] = { ...newMilestones[index], [field]: value };
     setFormData((prev) => ({ ...prev, milestones: newMilestones }));
@@ -211,7 +215,11 @@ export const NewProtocolModal: React.FC<NewProtocolModalProps> = ({
     }));
   };
 
-  const updateRestriction = (index: number, field: keyof Restriction, value: Restriction[keyof Restriction]) => {
+  const updateRestriction = (
+    index: number,
+    field: keyof Restriction,
+    value: Restriction[keyof Restriction],
+  ) => {
     const newRestrictions = [...formData.restrictions];
     newRestrictions[index] = { ...newRestrictions[index], [field]: value };
     setFormData((prev) => ({ ...prev, restrictions: newRestrictions }));

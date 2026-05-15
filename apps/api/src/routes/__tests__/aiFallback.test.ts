@@ -132,6 +132,8 @@ describe("AI route provider fallback", () => {
     expect(res.status).toBe(200);
     const body = (await res.json()) as { data: { suggestions: Array<{ label: string }> } };
     expect(body.data.suggestions.length).toBeGreaterThan(0);
-    expect(body.data.suggestions.some((s) => s.label.includes("coluna") || s.label.includes("Lasègue"))).toBe(true);
+    expect(
+      body.data.suggestions.some((s) => s.label.includes("coluna") || s.label.includes("Lasègue")),
+    ).toBe(true);
   });
 });

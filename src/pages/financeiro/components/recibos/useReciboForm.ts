@@ -78,7 +78,8 @@ export function useReciboForm(pacientes: any[], clinicaConfig: any, receiptConfi
       valor_extenso: valorPorExtenso(valorNumerico),
       referente: formData.referente,
       data_emissao: dataEmissao || new Date().toISOString(),
-      emitido_por: receiptConfig.custom_professional_name || clinicaConfig?.profile?.full_name || "Sistema",
+      emitido_por:
+        receiptConfig.custom_professional_name || clinicaConfig?.profile?.full_name || "Sistema",
       cpf_cnpj_emitente: clinicaConfig?.profile?.cpf_cnpj,
       assinado: receiptConfig.assinado_padrao,
     });
@@ -107,8 +108,13 @@ export function useReciboForm(pacientes: any[], clinicaConfig: any, receiptConfi
       dataEmissao: formData.omit_date ? "" : created.data_emissao || formData.data_emissao,
       emitente: {
         nome: formData.usar_dados_clinica
-          ? receiptConfig.custom_issuer_name || clinicaConfig?.org?.name || clinicaConfig?.profile?.full_name || "Profissional"
-          : receiptConfig.custom_professional_name || clinicaConfig?.profile?.full_name || "Profissional",
+          ? receiptConfig.custom_issuer_name ||
+            clinicaConfig?.org?.name ||
+            clinicaConfig?.profile?.full_name ||
+            "Profissional"
+          : receiptConfig.custom_professional_name ||
+            clinicaConfig?.profile?.full_name ||
+            "Profissional",
         cpfCnpj: created.cpf_cnpj_emitente ?? clinicaConfig?.profile?.cpf_cnpj,
         telefone: clinicaConfig?.profile?.phone,
         email: clinicaConfig?.profile?.email,

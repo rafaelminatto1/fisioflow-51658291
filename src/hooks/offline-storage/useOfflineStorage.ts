@@ -1,11 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { toast } from "sonner";
 import { fisioLogger as logger } from "@/lib/errors/logger";
-import type { 
-  OfflineStorageOptions, 
-  SyncResult, 
-  StorageQuota,
-} from "./types";
+import type { OfflineStorageOptions, SyncResult, StorageQuota } from "./types";
 import { getDB } from "./database";
 import { isCacheExpired, generateActionId, canRetryAction } from "./utils";
 

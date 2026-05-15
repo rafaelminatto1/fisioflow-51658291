@@ -14,9 +14,9 @@ vi.mock("@/lib/auth/neon-token", () => ({
 
 vi.mock("@/services/offlineSync", () => ({
   getOfflineSyncService: vi.fn().mockReturnValue({
-    enqueueAction: (...args: any[]) => enqueueActionMock(...args)
+    enqueueAction: (...args: any[]) => enqueueActionMock(...args),
   }),
-  enqueueAction: (...args: any[]) => enqueueActionMock(...args)
+  enqueueAction: (...args: any[]) => enqueueActionMock(...args),
 }));
 
 describe("api v2 base request", () => {
@@ -149,7 +149,7 @@ describe("api v2 base request", () => {
   it("intercepta erro de rede em POST quando offline e enfileira ação", async () => {
     // Simular offline
     vi.stubGlobal("navigator", { onLine: false });
-    
+
     // Simular falha de rede
     vi.mocked(fetch).mockRejectedValue(new TypeError("Failed to fetch"));
 
@@ -158,7 +158,7 @@ describe("api v2 base request", () => {
     const payload = { title: "New Event" };
     const result = await request("/api/events", {
       method: "POST",
-      body: JSON.stringify(payload)
+      body: JSON.stringify(payload),
     });
 
     // Deve retornar sucesso simulado

@@ -91,17 +91,27 @@ export const EvidenceTab = ({ patient }: EvidenceTabProps) => {
             )}
             {evidenceResult.sources.length > 0 && (
               <div className="flex flex-col gap-2">
-                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Fontes</p>
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                  Fontes
+                </p>
                 {evidenceResult.sources.map((src) => {
-                  const badge = SOURCE_BADGE_MAP[src.source] ?? { label: src.source, className: "bg-gray-100 text-gray-700 border-gray-200" };
+                  const badge = SOURCE_BADGE_MAP[src.source] ?? {
+                    label: src.source,
+                    className: "bg-gray-100 text-gray-700 border-gray-200",
+                  };
                   return (
-                    <div key={src.id} className="rounded-xl border p-3 bg-white flex flex-col gap-1">
+                    <div
+                      key={src.id}
+                      className="rounded-xl border p-3 bg-white flex flex-col gap-1"
+                    >
                       <div className="flex items-center gap-2">
                         <Badge className={`text-xs border ${badge.className}`}>{badge.label}</Badge>
                         <span className="text-sm font-medium">{src.title}</span>
                       </div>
                       {src.excerpt && (
-                        <p className="text-xs text-muted-foreground line-clamp-2 mt-1">{src.excerpt}</p>
+                        <p className="text-xs text-muted-foreground line-clamp-2 mt-1">
+                          {src.excerpt}
+                        </p>
                       )}
                     </div>
                   );

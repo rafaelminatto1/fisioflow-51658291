@@ -26,7 +26,7 @@ export const PageContainer: React.FC<PageContainerProps> = ({
         maxWidth === "2xl" && "max-w-2xl",
         maxWidth === "7xl" && "max-w-7xl",
         maxWidth === "full" && "max-w-full",
-        className
+        className,
       )}
     >
       {children}

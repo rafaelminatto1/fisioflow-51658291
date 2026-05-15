@@ -14,7 +14,15 @@ import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { LoadingSkeleton } from "@/components/ui/loading-skeleton";
 import { useCommandPalette } from "@/hooks/ui/useCommandPalette";
 import { PatientHelpers } from "@/types";
-import { FileText, Activity, Layers, History, Bot, Settings as SettingsIcon, Camera } from "lucide-react";
+import {
+  FileText,
+  Activity,
+  Layers,
+  History,
+  Bot,
+  Settings as SettingsIcon,
+  Camera,
+} from "lucide-react";
 
 // Hooks Modulares
 import { usePatientEvolutionState } from "@/hooks/evolution/usePatientEvolutionState";
@@ -273,7 +281,7 @@ const PatientEvolution = () => {
       const dateA = new Date(a.appointment_date || a.date || 0).getTime();
       const dateB = new Date(b.appointment_date || b.date || 0).getTime();
       if (dateA !== dateB) return dateA - dateB;
-      
+
       const timeA = a.appointment_time || a.start_time || a.startTime || "";
       const timeB = b.appointment_time || b.start_time || b.startTime || "";
       return timeA.localeCompare(timeB);
@@ -281,7 +289,12 @@ const PatientEvolution = () => {
 
     const index = sortedApts.findIndex((a: any) => a.id === state.appointmentId);
     return index !== -1 ? index + 1 : state.previousEvolutions.length + 1;
-  }, [state.appointment, state.allAppointments, state.appointmentId, state.previousEvolutions.length]);
+  }, [
+    state.appointment,
+    state.allAppointments,
+    state.appointmentId,
+    state.previousEvolutions.length,
+  ]);
 
   const treatmentDuration = useMemo(() => {
     if (sessionNumber === 1) return "Primeira sessão";
@@ -547,9 +560,7 @@ const PatientEvolution = () => {
               </TabsContent>
               <TabsContent value="midia">
                 <Suspense fallback={<LoadingSkeleton />}>
-                  {state.patientId && (
-                    <LazyPatientMediaGallery patientId={state.patientId} />
-                  )}
+                  {state.patientId && <LazyPatientMediaGallery patientId={state.patientId} />}
                 </Suspense>
               </TabsContent>
               <TabsContent value="configuracoes" className="mt-0 p-4">

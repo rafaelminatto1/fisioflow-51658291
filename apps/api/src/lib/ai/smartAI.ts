@@ -1,11 +1,6 @@
 import type { Env } from "../../types/env";
 import type { ThinkingLevel } from "./modelRegistry";
-import {
-  callAI,
-  callAIStructured,
-  type AITask,
-  type CallAIResult,
-} from "./callAI";
+import { callAI, callAIStructured, type AITask, type CallAIResult } from "./callAI";
 import { z } from "zod";
 
 export interface UnifiedAIOptions {

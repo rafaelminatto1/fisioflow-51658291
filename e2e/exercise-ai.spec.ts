@@ -13,20 +13,18 @@
  * @see src/lib/ai/exercises.ts
  */
 
-import { test } from '@playwright/test';
-import { testUsers } from './fixtures/test-data';
+import { test } from "@playwright/test";
+import { testUsers } from "./fixtures/test-data";
 
-const BASE_URL = 'http://localhost:8080';
+const BASE_URL = "http://localhost:8080";
 
 // Configure test for Chromium only with extended timeout
-test.use({ browserName: 'chromium' });
+test.use({ browserName: "chromium" });
 test.setTimeout(180000);
 
 // ========================================
 // TEST DATA
 // ========================================
-
-
 
 const MOCK_EXERCISE_RESPONSES = {
   lombalgia: {
@@ -34,57 +32,58 @@ const MOCK_EXERCISE_RESPONSES = {
     data: {
       exercises: [
         {
-          name: 'Pontes',
-          category: 'Fortalecimento',
-          difficulty: 'beginner',
-          rationale: 'Fortalece glúteos e core com carga mínima sobre coluna',
-          targetArea: 'Glúteos e Core',
-          goalsAddressed: ['Reduzir dor lombar', 'Estabilização'],
+          name: "Pontes",
+          category: "Fortalecimento",
+          difficulty: "beginner",
+          rationale: "Fortalece glúteos e core com carga mínima sobre coluna",
+          targetArea: "Glúteos e Core",
+          goalsAddressed: ["Reduzir dor lombar", "Estabilização"],
           sets: 3,
           reps: 12,
-          frequency: 'Diário',
-          precautions: ['Evitar se houver dor aguda'],
+          frequency: "Diário",
+          precautions: ["Evitar se houver dor aguda"],
           confidence: 0.9,
         },
         {
-          name: 'Cat-Camel (Gato-Camelo)',
-          category: 'Mobilidade',
-          difficulty: 'beginner',
-          rationale: 'Melhora mobilidade flexão-extensão de coluna lombar',
-          targetArea: 'Coluna lombar',
-          goalsAddressed: ['Melhorar mobilidade', 'Aquecimento'],
+          name: "Cat-Camel (Gato-Camelo)",
+          category: "Mobilidade",
+          difficulty: "beginner",
+          rationale: "Melhora mobilidade flexão-extensão de coluna lombar",
+          targetArea: "Coluna lombar",
+          goalsAddressed: ["Melhorar mobilidade", "Aquecimento"],
           sets: 2,
           reps: 10,
-          frequency: '2x/dia',
+          frequency: "2x/dia",
           precautions: [],
           confidence: 0.95,
         },
         {
-          name: 'Bird-Dog',
-          category: 'Estabilização',
-          difficulty: 'intermediate',
-          rationale: 'Treina estabilizadores de tronco com movimento alternado',
-          targetArea: 'Core',
-          goalsAddressed: ['Estabilidade', 'Coordenação'],
+          name: "Bird-Dog",
+          category: "Estabilização",
+          difficulty: "intermediate",
+          rationale: "Treina estabilizadores de tronco com movimento alternado",
+          targetArea: "Core",
+          goalsAddressed: ["Estabilidade", "Coordenação"],
           sets: 3,
           reps: 8,
-          frequency: 'Diário',
-          precautions: ['Manter coluna neutra'],
+          frequency: "Diário",
+          precautions: ["Manter coluna neutra"],
           confidence: 0.88,
         },
       ],
-      programRationale: 'Programa inicial focado em mobilidade básica e fortalecimento de core para reduzir dor e melhorar função.',
+      programRationale:
+        "Programa inicial focado em mobilidade básica e fortalecimento de core para reduzir dor e melhorar função.",
       expectedOutcomes: [
-        'Redução de dor em 2-3 semanas',
-        'Melhora na mobilidade funcional',
-        'Capacidade de caminhar 30min sem dor aguda',
+        "Redução de dor em 2-3 semanas",
+        "Melhora na mobilidade funcional",
+        "Capacidade de caminhar 30min sem dor aguda",
       ],
       progressionCriteria: [
-        'Progressar quando exercícios atuais não causarem dor',
-        'Aumentar repetições gradualmente',
-        'Adicionar resistência após 4 semanas',
+        "Progressar quando exercícios atuais não causarem dor",
+        "Aumentar repetições gradualmente",
+        "Adicionar resistência após 4 semanas",
       ],
-      redFlags: ['Dor irradiada para membros inferiores', 'Formigamento ou perda de força'],
+      redFlags: ["Dor irradiada para membros inferiores", "Formigamento ou perda de força"],
       estimatedDuration: 25,
     },
   },
@@ -98,14 +97,14 @@ const MOCK_EXERCISE_RESPONSES = {
  * Login helper
  */
 async function login(page: any, email: string, password: string) {
-  await page.goto(`${BASE_URL}/auth`, { waitUntil: 'domcontentloaded' });
+  await page.goto(`${BASE_URL}/auth`, { waitUntil: "domcontentloaded" });
   await page.waitForTimeout(2000);
 
   await page.fill('input[name="email"]', email);
   await page.fill('input[name="password"]', password);
   await page.click('button[type="submit"]');
 
-  await page.waitForURL(url => !url.pathname.includes('/auth'), { timeout: 30000 });
+  await page.waitForURL((url) => !url.pathname.includes("/auth"), { timeout: 30000 });
   await page.waitForTimeout(3000);
 }
 
@@ -117,7 +116,7 @@ async function navigateToEvolution(page: any, patientId?: string) {
     ? `${BASE_URL}/patient-evolution/${patientId}`
     : `${BASE_URL}/patient-evolution/test-patient`;
 
-  await page.goto(targetUrl, { waitUntil: 'domcontentloaded' });
+  await page.goto(targetUrl, { waitUntil: "domcontentloaded" });
   await page.waitForTimeout(3000);
 
   return page.url();
@@ -128,19 +127,19 @@ async function navigateToEvolution(page: any, patientId?: string) {
  */
 async function mockExerciseAI(page: any, mockResponse: any) {
   // Intercept calls to exercise AI endpoint
-  await page.route('**/api/ai/exercises**', async route => {
+  await page.route("**/api/ai/exercises**", async (route) => {
     await route.fulfill({
       status: 200,
-      contentType: 'application/json',
+      contentType: "application/json",
       body: JSON.stringify(mockResponse),
     });
   });
 
   // Also intercept Firebase Functions calls
-  await page.route('**/suggestExercises**', async route => {
+  await page.route("**/suggestExercises**", async (route) => {
     await route.fulfill({
       status: 200,
-      contentType: 'application/json',
+      contentType: "application/json",
       body: JSON.stringify(mockResponse),
     });
   });
@@ -150,13 +149,13 @@ async function mockExerciseAI(page: any, mockResponse: any) {
  * Mock rate limit error
  */
 async function mockRateLimitError(page: any) {
-  await page.route('**/api/ai/exercises**', async route => {
+  await page.route("**/api/ai/exercises**", async (route) => {
     await route.fulfill({
       status: 429,
-      contentType: 'application/json',
+      contentType: "application/json",
       body: JSON.stringify({
         success: false,
-        error: 'Rate limit exceeded. Please try again later.',
+        error: "Rate limit exceeded. Please try again later.",
       }),
     });
   });
@@ -165,11 +164,14 @@ async function mockRateLimitError(page: any) {
 /**
  * Mock API error
  */
-async function mockAPIError(page: any, errorMessage: string = 'AI service temporarily unavailable') {
-  await page.route('**/api/ai/exercises**', async route => {
+async function mockAPIError(
+  page: any,
+  errorMessage: string = "AI service temporarily unavailable",
+) {
+  await page.route("**/api/ai/exercises**", async (route) => {
     await route.fulfill({
       status: 500,
-      contentType: 'application/json',
+      contentType: "application/json",
       body: JSON.stringify({
         success: false,
         error: errorMessage,
@@ -182,11 +184,11 @@ async function mockAPIError(page: any, errorMessage: string = 'AI service tempor
 // TESTS
 // ========================================
 
-test.describe('Exercise AI Assistant - Happy Paths', () => {
-  test('should suggest exercises for patient with low back pain', async ({ page }) => {
-    console.log('\n' + '█'.repeat(70));
-    console.log('█    TEST: Exercise Suggestions for Low Back Pain');
-    console.log('█'.repeat(70));
+test.describe("Exercise AI Assistant - Happy Paths", () => {
+  test("should suggest exercises for patient with low back pain", async ({ page }) => {
+    console.log("\n" + "█".repeat(70));
+    console.log("█    TEST: Exercise Suggestions for Low Back Pain");
+    console.log("█".repeat(70));
 
     // Setup: Mock AI response
     await mockExerciseAI(page, MOCK_EXERCISE_RESPONSES.lombalgia);
@@ -198,7 +200,7 @@ test.describe('Exercise AI Assistant - Happy Paths', () => {
     const url = await navigateToEvolution(page);
     console.log(`  Navegado para: ${url}`);
 
-    await page.screenshot({ path: '/tmp/exercise-ai-01-evolution-page.png', fullPage: true });
+    await page.screenshot({ path: "/tmp/exercise-ai-01-evolution-page.png", fullPage: true });
 
     // Look for AI exercise suggestion button or trigger
     const aiButtonSelectors = [
@@ -222,29 +224,29 @@ test.describe('Exercise AI Assistant - Happy Paths', () => {
     }
 
     if (!aiButtonClicked) {
-      console.log('⚠️  Botão de sugestão de exercícios não encontrado');
-      console.log('   Verificando se há formulário para preencher...');
+      console.log("⚠️  Botão de sugestão de exercícios não encontrado");
+      console.log("   Verificando se há formulário para preencher...");
 
       // Try to fill patient data to trigger AI
-      const textarea = page.locator('textarea').first();
-      if (await textarea.count() > 0) {
+      const textarea = page.locator("textarea").first();
+      if ((await textarea.count()) > 0) {
         await textarea.fill(
-          'Paciente com lombalgia crônica, dor 7/10 na região lombar, ' +
-          'piora ao sentar. Melhora com deambulação. Objetivo: voltar a caminhar 30min.'
+          "Paciente com lombalgia crônica, dor 7/10 na região lombar, " +
+            "piora ao sentar. Melhora com deambulação. Objetivo: voltar a caminhar 30min.",
         );
-        console.log('✅ Textarea preenchida com dados do paciente');
+        console.log("✅ Textarea preenchida com dados do paciente");
       }
     }
 
-    await page.screenshot({ path: '/tmp/exercise-ai-02-after-trigger.png', fullPage: true });
+    await page.screenshot({ path: "/tmp/exercise-ai-02-after-trigger.png", fullPage: true });
 
     // Look for exercise suggestions in the response
     const exerciseIndicators = [
-      'text=/Pontes|Cat-Camel|Bird-Dog/i',
-      'text=/fortalecimento|mobilidade|estabilização/i',
+      "text=/Pontes|Cat-Camel|Bird-Dog/i",
+      "text=/fortalecimento|mobilidade|estabilização/i",
       '[data-testid="exercise-suggestion"]',
-      '.exercise-card',
-      '.ai-suggestion',
+      ".exercise-card",
+      ".ai-suggestion",
     ];
 
     let exercisesFound = false;
@@ -259,32 +261,32 @@ test.describe('Exercise AI Assistant - Happy Paths', () => {
 
     if (exercisesFound) {
       // Verify exercise details are displayed
-      const exerciseDetails = page.locator('text=/sets|reps|series|repetições/i');
-      const hasDetails = await exerciseDetails.count() > 0;
+      const exerciseDetails = page.locator("text=/sets|reps|series|repetições/i");
+      const hasDetails = (await exerciseDetails.count()) > 0;
 
       if (hasDetails) {
-        console.log('✅ Detalhes dos exercícios (sets/reps) exibidos');
+        console.log("✅ Detalhes dos exercícios (sets/reps) exibidos");
       }
 
       // Verify rationale is shown
-      const rationale = page.locator('text=/rationale|justificativa|por que/i');
-      const hasRationale = await rationale.count() > 0;
+      const rationale = page.locator("text=/rationale|justificativa|por que/i");
+      const hasRationale = (await rationale.count()) > 0;
 
       if (hasRationale) {
-        console.log('✅ Justificativa clínica exibida');
+        console.log("✅ Justificativa clínica exibida");
       }
     } else {
-      console.log('⚠️  Sugestões de exercícios não encontradas na página');
-      console.log('   Isso pode indicar que a feature ainda não está implementada na UI');
+      console.log("⚠️  Sugestões de exercícios não encontradas na página");
+      console.log("   Isso pode indicar que a feature ainda não está implementada na UI");
     }
 
-    console.log('\n' + '█'.repeat(70));
+    console.log("\n" + "█".repeat(70));
   });
 
-  test('should display exercise program with progression criteria', async ({ page }) => {
-    console.log('\n' + '█'.repeat(70));
-    console.log('█    TEST: Exercise Program Progression');
-    console.log('█'.repeat(70));
+  test("should display exercise program with progression criteria", async ({ page }) => {
+    console.log("\n" + "█".repeat(70));
+    console.log("█    TEST: Exercise Program Progression");
+    console.log("█".repeat(70));
 
     await mockExerciseAI(page, MOCK_EXERCISE_RESPONSES.lombalgia);
     await login(page, testUsers.rafael.email, testUsers.rafael.password);
@@ -295,10 +297,10 @@ test.describe('Exercise AI Assistant - Happy Paths', () => {
     await page.waitForTimeout(3000);
 
     const progressionIndicators = [
-      'text=/progressão|progression|avançar/i',
-      'text=/critérios|criteria/i',
+      "text=/progressão|progression|avançar/i",
+      "text=/critérios|criteria/i",
       '[data-testid="progression-criteria"]',
-      '.exercise-progression',
+      ".exercise-progression",
     ];
 
     let progressionFound = false;
@@ -312,16 +314,16 @@ test.describe('Exercise AI Assistant - Happy Paths', () => {
     }
 
     if (!progressionFound) {
-      console.log('⚠️  Critérios de progressão não encontrados');
+      console.log("⚠️  Critérios de progressão não encontrados");
     }
 
-    console.log('\n' + '█'.repeat(70));
+    console.log("\n" + "█".repeat(70));
   });
 
-  test('should show expected outcomes for exercise program', async ({ page }) => {
-    console.log('\n' + '█'.repeat(70));
-    console.log('█    TEST: Exercise Expected Outcomes');
-    console.log('█'.repeat(70));
+  test("should show expected outcomes for exercise program", async ({ page }) => {
+    console.log("\n" + "█".repeat(70));
+    console.log("█    TEST: Exercise Expected Outcomes");
+    console.log("█".repeat(70));
 
     await mockExerciseAI(page, MOCK_EXERCISE_RESPONSES.lombalgia);
     await login(page, testUsers.rafael.email, testUsers.rafael.password);
@@ -330,8 +332,8 @@ test.describe('Exercise AI Assistant - Happy Paths', () => {
     await page.waitForTimeout(3000);
 
     const outcomeIndicators = [
-      'text=/esperado|expected|outcome|resultado/i',
-      'text=/melhora|redução|aumento/i',
+      "text=/esperado|expected|outcome|resultado/i",
+      "text=/melhora|redução|aumento/i",
       '[data-testid="expected-outcomes"]',
     ];
 
@@ -346,37 +348,39 @@ test.describe('Exercise AI Assistant - Happy Paths', () => {
     }
 
     if (!outcomesFound) {
-      console.log('⚠️  Resultados esperados não encontrados');
+      console.log("⚠️  Resultados esperados não encontrados");
     }
 
-    console.log('\n' + '█'.repeat(70));
+    console.log("\n" + "█".repeat(70));
   });
 });
 
-test.describe('Exercise AI Assistant - Error Handling', () => {
-  test('should handle API errors gracefully', async ({ page }) => {
-    console.log('\n' + '█'.repeat(70));
-    console.log('█    TEST: Exercise AI API Error Handling');
-    console.log('█'.repeat(70));
+test.describe("Exercise AI Assistant - Error Handling", () => {
+  test("should handle API errors gracefully", async ({ page }) => {
+    console.log("\n" + "█".repeat(70));
+    console.log("█    TEST: Exercise AI API Error Handling");
+    console.log("█".repeat(70));
 
-    await mockAPIError(page, 'AI service temporarily unavailable');
+    await mockAPIError(page, "AI service temporarily unavailable");
     await login(page, testUsers.rafael.email, testUsers.rafael.password);
 
     await navigateToEvolution(page);
 
     // Try to trigger exercise AI
-    const aiButton = page.locator('button:has-text("Sugerir Exercícios"), button:has-text("AI Exercises")');
-    if (await aiButton.count() > 0) {
+    const aiButton = page.locator(
+      'button:has-text("Sugerir Exercícios"), button:has-text("AI Exercises")',
+    );
+    if ((await aiButton.count()) > 0) {
       await aiButton.first().click();
       await page.waitForTimeout(3000);
     }
 
     // Look for error message
     const errorIndicators = [
-      '.error',
-      '.destructive',
+      ".error",
+      ".destructive",
       '[role="alert"]',
-      'text=/erro|error|unavailable/i',
+      "text=/erro|error|unavailable/i",
     ];
 
     let errorFound = false;
@@ -394,18 +398,18 @@ test.describe('Exercise AI Assistant - Error Handling', () => {
     }
 
     if (!errorFound) {
-      console.log('⚠️  Mensagem de erro não encontrada (ou UI ainda não implementada)');
+      console.log("⚠️  Mensagem de erro não encontrada (ou UI ainda não implementada)");
     }
 
-    await page.screenshot({ path: '/tmp/exercise-ai-error.png', fullPage: true });
+    await page.screenshot({ path: "/tmp/exercise-ai-error.png", fullPage: true });
 
-    console.log('\n' + '█'.repeat(70));
+    console.log("\n" + "█".repeat(70));
   });
 
-  test('should handle rate limiting gracefully', async ({ page }) => {
-    console.log('\n' + '█'.repeat(70));
-    console.log('█    TEST: Exercise AI Rate Limiting');
-    console.log('█'.repeat(70));
+  test("should handle rate limiting gracefully", async ({ page }) => {
+    console.log("\n" + "█".repeat(70));
+    console.log("█    TEST: Exercise AI Rate Limiting");
+    console.log("█".repeat(70));
 
     await mockRateLimitError(page);
     await login(page, testUsers.rafael.email, testUsers.rafael.password);
@@ -413,16 +417,18 @@ test.describe('Exercise AI Assistant - Error Handling', () => {
     await navigateToEvolution(page);
 
     // Try to trigger exercise AI
-    const aiButton = page.locator('button:has-text("Sugerir Exercícios"), button:has-text("AI Exercises")');
-    if (await aiButton.count() > 0) {
+    const aiButton = page.locator(
+      'button:has-text("Sugerir Exercícios"), button:has-text("AI Exercises")',
+    );
+    if ((await aiButton.count()) > 0) {
       await aiButton.first().click();
       await page.waitForTimeout(3000);
     }
 
     // Look for rate limit message
     const rateLimitIndicators = [
-      'text=/rate limit|limite|muitas solicitações/i',
-      'text=/try again|tente novamente/i',
+      "text=/rate limit|limite|muitas solicitações/i",
+      "text=/try again|tente novamente/i",
       '[data-testid="rate-limit"]',
     ];
 
@@ -437,25 +443,25 @@ test.describe('Exercise AI Assistant - Error Handling', () => {
     }
 
     if (!rateLimitFound) {
-      console.log('⚠️  Mensagem de rate limit não encontrada (ou UI ainda não implementada)');
+      console.log("⚠️  Mensagem de rate limit não encontrada (ou UI ainda não implementada)");
     }
 
-    await page.screenshot({ path: '/tmp/exercise-ai-rate-limit.png', fullPage: true });
+    await page.screenshot({ path: "/tmp/exercise-ai-rate-limit.png", fullPage: true });
 
-    console.log('\n' + '█'.repeat(70));
+    console.log("\n" + "█".repeat(70));
   });
 
-  test('should show loading state while waiting for AI response', async ({ page }) => {
-    console.log('\n' + '█'.repeat(70));
-    console.log('█    TEST: Exercise AI Loading State');
-    console.log('█'.repeat(70));
+  test("should show loading state while waiting for AI response", async ({ page }) => {
+    console.log("\n" + "█".repeat(70));
+    console.log("█    TEST: Exercise AI Loading State");
+    console.log("█".repeat(70));
 
     // Delay response to test loading state
-    await page.route('**/api/ai/exercises**', async route => {
-      await new Promise(resolve => setTimeout(resolve, 2000));
+    await page.route("**/api/ai/exercises**", async (route) => {
+      await new Promise((resolve) => setTimeout(resolve, 2000));
       await route.fulfill({
         status: 200,
-        contentType: 'application/json',
+        contentType: "application/json",
         body: JSON.stringify(MOCK_EXERCISE_RESPONSES.lombalgia),
       });
     });
@@ -464,22 +470,24 @@ test.describe('Exercise AI Assistant - Error Handling', () => {
     await navigateToEvolution(page);
 
     // Click AI button and immediately check for loading state
-    const aiButton = page.locator('button:has-text("Sugerir Exercícios"), button:has-text("AI Exercises")');
-    if (await aiButton.count() > 0) {
+    const aiButton = page.locator(
+      'button:has-text("Sugerir Exercícios"), button:has-text("AI Exercises")',
+    );
+    if ((await aiButton.count()) > 0) {
       await aiButton.first().click();
 
       // Check for loading indicators immediately
       const loadingIndicators = [
         '[data-testid="loading"]',
-        '.loading',
-        '.spinner',
-        'text=/gerando|carregando|loading|generating/i',
+        ".loading",
+        ".spinner",
+        "text=/gerando|carregando|loading|generating/i",
         '[aria-busy="true"]',
       ];
 
       for (const indicator of loadingIndicators) {
         const element = page.locator(indicator).first();
-        if (await element.count() > 0) {
+        if ((await element.count()) > 0) {
           const isVisible = await element.isVisible();
           if (isVisible) {
             console.log(`✅ Estado de carregamento exibido: ${indicator}`);
@@ -491,24 +499,24 @@ test.describe('Exercise AI Assistant - Error Handling', () => {
       await page.waitForTimeout(2500);
     }
 
-    await page.screenshot({ path: '/tmp/exercise-ai-loading.png', fullPage: true });
+    await page.screenshot({ path: "/tmp/exercise-ai-loading.png", fullPage: true });
 
-    console.log('\n' + '█'.repeat(70));
+    console.log("\n" + "█".repeat(70));
   });
 });
 
-test.describe('Exercise AI Assistant - Accessibility', () => {
-  test('should have accessible exercise suggestion buttons', async ({ page }) => {
-    console.log('\n' + '█'.repeat(70));
-    console.log('█    TEST: Exercise AI Accessibility');
-    console.log('█'.repeat(70));
+test.describe("Exercise AI Assistant - Accessibility", () => {
+  test("should have accessible exercise suggestion buttons", async ({ page }) => {
+    console.log("\n" + "█".repeat(70));
+    console.log("█    TEST: Exercise AI Accessibility");
+    console.log("█".repeat(70));
 
     await mockExerciseAI(page, MOCK_EXERCISE_RESPONSES.lombalgia);
     await login(page, testUsers.rafael.email, testUsers.rafael.password);
     await navigateToEvolution(page);
 
     // Check for accessible AI buttons
-    const aiButtons = page.locator('button');
+    const aiButtons = page.locator("button");
     const buttonCount = await aiButtons.count();
 
     console.log(`  Total de botões na página: ${buttonCount}`);
@@ -517,9 +525,9 @@ test.describe('Exercise AI Assistant - Accessibility', () => {
     for (let i = 0; i < Math.min(buttonCount, 20); i++) {
       const button = aiButtons.nth(i);
       const text = await button.textContent();
-      const ariaLabel = await button.getAttribute('aria-label');
+      const ariaLabel = await button.getAttribute("aria-label");
 
-      if (text && (text.includes('IA') || text.includes('AI') || text.includes('Sugerir'))) {
+      if (text && (text.includes("IA") || text.includes("AI") || text.includes("Sugerir"))) {
         console.log(`  Botão encontrado: "${text?.trim()}"`);
         if (ariaLabel) {
           console.log(`    ✓ aria-label: ${ariaLabel}`);
@@ -537,15 +545,15 @@ test.describe('Exercise AI Assistant - Accessibility', () => {
       console.log(`✅ ${containerCount} contenedores com roles semânticas encontrados`);
     }
 
-    await page.screenshot({ path: '/tmp/exercise-ai-accessibility.png', fullPage: true });
+    await page.screenshot({ path: "/tmp/exercise-ai-accessibility.png", fullPage: true });
 
-    console.log('\n' + '█'.repeat(70));
+    console.log("\n" + "█".repeat(70));
   });
 
-  test('should be keyboard navigable', async ({ page, context: _context }) => {
-    console.log('\n' + '█'.repeat(70));
-    console.log('█    TEST: Exercise AI Keyboard Navigation');
-    console.log('█'.repeat(70));
+  test("should be keyboard navigable", async ({ page, context: _context }) => {
+    console.log("\n" + "█".repeat(70));
+    console.log("█    TEST: Exercise AI Keyboard Navigation");
+    console.log("█".repeat(70));
 
     await mockExerciseAI(page, MOCK_EXERCISE_RESPONSES.lombalgia);
     await login(page, testUsers.rafael.email, testUsers.rafael.password);
@@ -554,88 +562,92 @@ test.describe('Exercise AI Assistant - Accessibility', () => {
     // Tab through interactive elements
     const tabCount = 10;
     for (let i = 0; i < tabCount; i++) {
-      await page.keyboard.press('Tab');
+      await page.keyboard.press("Tab");
       await page.waitForTimeout(200);
 
       const focusedElement = await page.evaluate(() => {
         const el = document.activeElement;
         return {
           tagName: el?.tagName,
-          type: (el as HTMLElement)?.getAttribute('type'),
-          ariaLabel: (el as HTMLElement)?.getAttribute('aria-label'),
+          type: (el as HTMLElement)?.getAttribute("type"),
+          ariaLabel: (el as HTMLElement)?.getAttribute("aria-label"),
           textContent: el?.textContent?.substring(0, 50),
         };
       });
 
       if (focusedElement.ariaLabel || focusedElement.textContent) {
-        console.log(`  Tab ${i + 1}: ${focusedElement.tagName} - ${focusedElement.ariaLabel || focusedElement.textContent}`);
+        console.log(
+          `  Tab ${i + 1}: ${focusedElement.tagName} - ${focusedElement.ariaLabel || focusedElement.textContent}`,
+        );
       }
     }
 
     // Check for focus indicators
     const hasFocusVisible = await page.evaluate(() => {
       const style = window.getComputedStyle(document.body);
-      return style.getPropertyValue('--focus-visible') !== '' ||
-             document.querySelector('[data-focus-visible]') !== null;
+      return (
+        style.getPropertyValue("--focus-visible") !== "" ||
+        document.querySelector("[data-focus-visible]") !== null
+      );
     });
 
     if (hasFocusVisible) {
-      console.log('✅ Indicadores de foco visíveis configurados');
+      console.log("✅ Indicadores de foco visíveis configurados");
     }
 
-    await page.screenshot({ path: '/tmp/exercise-ai-keyboard.png', fullPage: true });
+    await page.screenshot({ path: "/tmp/exercise-ai-keyboard.png", fullPage: true });
 
-    console.log('\n' + '█'.repeat(70));
+    console.log("\n" + "█".repeat(70));
   });
 });
 
-test.describe('Exercise AI Assistant - Integration', () => {
-  test('should integrate with patient SOAP notes', async ({ page }) => {
-    console.log('\n' + '█'.repeat(70));
-    console.log('█    TEST: Exercise AI + SOAP Integration');
-    console.log('█'.repeat(70));
+test.describe("Exercise AI Assistant - Integration", () => {
+  test("should integrate with patient SOAP notes", async ({ page }) => {
+    console.log("\n" + "█".repeat(70));
+    console.log("█    TEST: Exercise AI + SOAP Integration");
+    console.log("█".repeat(70));
 
     await mockExerciseAI(page, MOCK_EXERCISE_RESPONSES.lombalgia);
     await login(page, testUsers.rafael.email, testUsers.rafael.password);
     await navigateToEvolution(page);
 
     // Fill SOAP fields
-    const textareas = await page.locator('textarea').all();
+    const textareas = await page.locator("textarea").all();
 
     if (textareas.length >= 2) {
-      await textareas[0].fill('Paciente relata dor lombar há 6 meses com piora ao sentar.');
-      console.log('✅ Subjetivo preenchido');
+      await textareas[0].fill("Paciente relata dor lombar há 6 meses com piora ao sentar.");
+      console.log("✅ Subjetivo preenchido");
 
       if (textareas.length >= 3) {
-        await textareas[1].fill('Mobilidade de coluna reduzida. Força muscular 4/5.');
-        console.log('✅ Objetivo preenchido');
+        await textareas[1].fill("Mobilidade de coluna reduzida. Força muscular 4/5.");
+        console.log("✅ Objetivo preenchido");
       }
 
       if (textareas.length >= 4) {
-        await textareas[2].fill('Lombalgia mecânica. Prognóstico favorável.');
-        console.log('✅ Avaliação preenchida');
+        await textareas[2].fill("Lombalgia mecânica. Prognóstico favorável.");
+        console.log("✅ Avaliação preenchida");
       }
     }
 
-    await page.screenshot({ path: '/tmp/exercise-ai-soap-filled.png', fullPage: true });
+    await page.screenshot({ path: "/tmp/exercise-ai-soap-filled.png", fullPage: true });
 
     // Try to trigger exercise suggestions based on SOAP
     const aiButton = page.locator('button:has-text("Sugerir Exercícios"), button:has-text("AI")');
-    if (await aiButton.count() > 0) {
+    if ((await aiButton.count()) > 0) {
       await aiButton.first().click();
       await page.waitForTimeout(3000);
-      console.log('✅ Sugestões de exercícios solicitadas');
+      console.log("✅ Sugestões de exercícios solicitadas");
     }
 
-    await page.screenshot({ path: '/tmp/exercise-ai-soap-result.png', fullPage: true });
+    await page.screenshot({ path: "/tmp/exercise-ai-soap-result.png", fullPage: true });
 
-    console.log('\n' + '█'.repeat(70));
+    console.log("\n" + "█".repeat(70));
   });
 
-  test('should save exercise suggestions to patient record', async ({ page }) => {
-    console.log('\n' + '█'.repeat(70));
-    console.log('█    TEST: Exercise AI Save to Record');
-    console.log('█'.repeat(70));
+  test("should save exercise suggestions to patient record", async ({ page }) => {
+    console.log("\n" + "█".repeat(70));
+    console.log("█    TEST: Exercise AI Save to Record");
+    console.log("█".repeat(70));
 
     await mockExerciseAI(page, MOCK_EXERCISE_RESPONSES.lombalgia);
     await login(page, testUsers.rafael.email, testUsers.rafael.password);
@@ -662,20 +674,20 @@ test.describe('Exercise AI Assistant - Integration', () => {
     }
 
     if (!saveButtonClicked) {
-      console.log('⚠️  Botão de salvar exercícios não encontrado');
+      console.log("⚠️  Botão de salvar exercícios não encontrado");
     }
 
-    await page.screenshot({ path: '/tmp/exercise-ai-save.png', fullPage: true });
+    await page.screenshot({ path: "/tmp/exercise-ai-save.png", fullPage: true });
 
-    console.log('\n' + '█'.repeat(70));
+    console.log("\n" + "█".repeat(70));
   });
 });
 
-test.describe('Exercise AI Assistant - Edge Cases', () => {
-  test('should handle patient with no pain data', async ({ page }) => {
-    console.log('\n' + '█'.repeat(70));
-    console.log('█    TEST: Exercise AI - No Pain Data');
-    console.log('█'.repeat(70));
+test.describe("Exercise AI Assistant - Edge Cases", () => {
+  test("should handle patient with no pain data", async ({ page }) => {
+    console.log("\n" + "█".repeat(70));
+    console.log("█    TEST: Exercise AI - No Pain Data");
+    console.log("█".repeat(70));
 
     // Mock response for patient without pain data
     const noPainResponse = {
@@ -683,22 +695,22 @@ test.describe('Exercise AI Assistant - Edge Cases', () => {
       data: {
         exercises: [
           {
-            name: 'Alongamento global',
-            category: 'Alongamento',
-            difficulty: 'beginner',
-            rationale: 'Manutenção de flexibilidade geral',
-            targetArea: 'Corpo todo',
-            goalsAddressed: ['Manter flexibilidade'],
+            name: "Alongamento global",
+            category: "Alongamento",
+            difficulty: "beginner",
+            rationale: "Manutenção de flexibilidade geral",
+            targetArea: "Corpo todo",
+            goalsAddressed: ["Manter flexibilidade"],
             sets: 1,
             reps: 3,
-            frequency: '3x/semana',
+            frequency: "3x/semana",
             precautions: [],
             confidence: 0.85,
           },
         ],
-        programRationale: 'Programa de manutenção para paciente sem queixas álgicas atuais.',
-        expectedOutcomes: ['Manter amplitude de movimento', 'Prevenir contraturas'],
-        progressionCriteria: ['Progressar conforme tolerância'],
+        programRationale: "Programa de manutenção para paciente sem queixas álgicas atuais.",
+        expectedOutcomes: ["Manter amplitude de movimento", "Prevenir contraturas"],
+        progressionCriteria: ["Progressar conforme tolerância"],
         estimatedDuration: 15,
       },
     };
@@ -707,39 +719,39 @@ test.describe('Exercise AI Assistant - Edge Cases', () => {
     await login(page, testUsers.rafael.email, testUsers.rafael.password);
     await navigateToEvolution(page);
 
-    console.log('✅ Teste de paciente sem dor iniciado');
-    await page.screenshot({ path: '/tmp/exercise-ai-no-pain.png', fullPage: true });
+    console.log("✅ Teste de paciente sem dor iniciado");
+    await page.screenshot({ path: "/tmp/exercise-ai-no-pain.png", fullPage: true });
 
-    console.log('\n' + '█'.repeat(70));
+    console.log("\n" + "█".repeat(70));
   });
 
-  test('should handle patient with multiple pain areas', async ({ page }) => {
-    console.log('\n' + '█'.repeat(70));
-    console.log('█    TEST: Exercise AI - Multiple Pain Areas');
-    console.log('█'.repeat(70));
+  test("should handle patient with multiple pain areas", async ({ page }) => {
+    console.log("\n" + "█".repeat(70));
+    console.log("█    TEST: Exercise AI - Multiple Pain Areas");
+    console.log("█".repeat(70));
 
     const multiPainResponse = {
       success: true,
       data: {
         exercises: [
           {
-            name: 'Exercício integrado',
-            category: 'Funcional',
-            difficulty: 'beginner',
-            rationale: 'Aborda múltiplas áreas de forma integrada',
-            targetArea: 'Múltiplos',
-            goalsAddressed: ['Redução de dor multicêntrica'],
+            name: "Exercício integrado",
+            category: "Funcional",
+            difficulty: "beginner",
+            rationale: "Aborda múltiplas áreas de forma integrada",
+            targetArea: "Múltiplos",
+            goalsAddressed: ["Redução de dor multicêntrica"],
             sets: 2,
             reps: 8,
-            frequency: 'Diário',
-            precautions: ['Priorizar áreas mais limitantes'],
+            frequency: "Diário",
+            precautions: ["Priorizar áreas mais limitantes"],
             confidence: 0.82,
           },
         ],
-        programRationale: 'Programa integrado para paciente com múltiplas queixas álgicas.',
-        expectedOutcomes: ['Melhora funcional global'],
-        progressionCriteria: ['Adicionar exercícios específicos conforme evolução'],
-        redFlags: ['Dor que piora com exercício'],
+        programRationale: "Programa integrado para paciente com múltiplas queixas álgicas.",
+        expectedOutcomes: ["Melhora funcional global"],
+        progressionCriteria: ["Adicionar exercícios específicos conforme evolução"],
+        redFlags: ["Dor que piora com exercício"],
         estimatedDuration: 30,
       },
     };
@@ -748,9 +760,9 @@ test.describe('Exercise AI Assistant - Edge Cases', () => {
     await login(page, testUsers.rafael.email, testUsers.rafael.password);
     await navigateToEvolution(page);
 
-    console.log('✅ Teste de múltiplas áreas de dor iniciado');
-    await page.screenshot({ path: '/tmp/exercise-ai-multi-pain.png', fullPage: true });
+    console.log("✅ Teste de múltiplas áreas de dor iniciado");
+    await page.screenshot({ path: "/tmp/exercise-ai-multi-pain.png", fullPage: true });
 
-    console.log('\n' + '█'.repeat(70));
+    console.log("\n" + "█".repeat(70));
   });
 });

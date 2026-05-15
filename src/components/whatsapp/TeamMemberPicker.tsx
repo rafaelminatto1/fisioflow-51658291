@@ -75,7 +75,7 @@ export const TeamMemberPicker: React.FC<TeamMemberPickerProps> = ({
                   const userId = member.userId ?? member.user_id ?? member.id;
                   const name = member.user?.name ?? member.name ?? "Membro";
                   const wl = agentsWorkload.find((w) => w.agentId === userId);
-                  
+
                   return (
                     <button
                       key={member.id}
@@ -94,9 +94,13 @@ export const TeamMemberPicker: React.FC<TeamMemberPickerProps> = ({
                         </p>
                       </div>
                       {wl && (
-                        <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded-full ${
-                          wl.openConversations > 5 ? "bg-orange-50 text-orange-600" : "bg-green-50 text-green-600"
-                        }`}>
+                        <span
+                          className={`text-[10px] font-medium px-1.5 py-0.5 rounded-full ${
+                            wl.openConversations > 5
+                              ? "bg-orange-50 text-orange-600"
+                              : "bg-green-50 text-green-600"
+                          }`}
+                        >
                           {wl.openConversations} ativas
                         </span>
                       )}

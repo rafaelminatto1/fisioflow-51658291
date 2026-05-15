@@ -279,8 +279,8 @@ app.post("/patient-package/:id/use", requireAuth, async (c) => {
         updatedPkg.patient_id,
         pkg.patient_name,
         1,
-        pkg.package_name
-      ).catch(err => console.error("[Packages/Use] Renewal trigger failed:", err))
+        pkg.package_name,
+      ).catch((err) => console.error("[Packages/Use] Renewal trigger failed:", err)),
     );
   }
 

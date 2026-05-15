@@ -13,7 +13,7 @@ import { SearchablePatientPicker } from "@/components/ui/SearchablePatientPicker
 export default function BiomechanicsScreen() {
   const colors = useColors();
   const router = useRouter();
-  
+
   const {
     currentStep,
     setCurrentStep,
@@ -41,7 +41,10 @@ export default function BiomechanicsScreen() {
   };
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={["top", "left", "right", "bottom"]}>
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: colors.background }]}
+      edges={["top", "left", "right", "bottom"]}
+    >
       <Stack.Screen options={{ headerShown: false }} />
 
       {/* Roteamento de Telas */}

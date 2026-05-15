@@ -1,13 +1,7 @@
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { iaStudioApi, AtRiskPatient } from "@/api/v2";
-import {
-  MessageSquare,
-  AlertTriangle,
-  ArrowUpRight,
-  Clock,
-  CheckCircle2,
-} from "lucide-react";
+import { MessageSquare, AlertTriangle, ArrowUpRight, Clock, CheckCircle2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";

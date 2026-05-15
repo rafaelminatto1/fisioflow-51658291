@@ -331,7 +331,9 @@ app.patch("/treatment-sessions/:id", requireAuth, async (c) => {
     subjective = {
       ...subjective,
       ...(body.subjective !== undefined ? { notes: String(body.subjective) } : {}),
-      ...(body.pain_level_before !== undefined ? { painScale: Number(body.pain_level_before) } : {}),
+      ...(body.pain_level_before !== undefined
+        ? { painScale: Number(body.pain_level_before) }
+        : {}),
     };
   }
 
@@ -341,12 +343,18 @@ app.patch("/treatment-sessions/:id", requireAuth, async (c) => {
   }
 
   let plan = session.plan || {};
-  if (body.plan !== undefined || body.observations !== undefined || body.pain_level_after !== undefined) {
+  if (
+    body.plan !== undefined ||
+    body.observations !== undefined ||
+    body.pain_level_after !== undefined
+  ) {
     plan = {
       ...plan,
       ...(body.plan !== undefined ? { notes: String(body.plan) } : {}),
       ...(body.observations !== undefined ? { orientations: String(body.observations) } : {}),
-      ...(body.pain_level_after !== undefined ? { painScaleAfter: Number(body.pain_level_after) } : {}),
+      ...(body.pain_level_after !== undefined
+        ? { painScaleAfter: Number(body.pain_level_after) }
+        : {}),
     };
   }
 

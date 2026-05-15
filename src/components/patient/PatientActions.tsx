@@ -27,7 +27,6 @@ import { PatientDeleteDialog } from "./PatientDeleteDialog";
 import { toast } from "@/hooks/use-toast";
 import type { PatientRow as Patient } from "@/types/workers";
 
-
 interface PatientActionsProps {
   patient: Patient;
   variant?: "default" | "speed-dial";

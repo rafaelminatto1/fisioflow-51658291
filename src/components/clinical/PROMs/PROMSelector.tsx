@@ -238,119 +238,119 @@ export function PROMSelector({
 
   return (
     <>
-    <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent
-        className="max-w-2xl max-h-[90vh] overflow-y-auto"
-        aria-describedby={undefined}
-      >
-        <DialogHeader>
-          <div className="flex items-center gap-2">
-            {selectedScale && (
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-7 w-7 -ml-2"
-                onClick={() => setSelectedScale(null)}
-                disabled={isPending}
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </Button>
-            )}
-            <DialogTitle>
-              {selectedScale
-                ? `Aplicar ${SCALES.find((s) => s.key === selectedScale)?.name}`
-                : "Selecionar Instrumento de Avaliação (PROM)"}
-            </DialogTitle>
-          </div>
-        </DialogHeader>
+      <Dialog open={open} onOpenChange={handleClose}>
+        <DialogContent
+          className="max-w-2xl max-h-[90vh] overflow-y-auto"
+          aria-describedby={undefined}
+        >
+          <DialogHeader>
+            <div className="flex items-center gap-2">
+              {selectedScale && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7 -ml-2"
+                  onClick={() => setSelectedScale(null)}
+                  disabled={isPending}
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+              )}
+              <DialogTitle>
+                {selectedScale
+                  ? `Aplicar ${SCALES.find((s) => s.key === selectedScale)?.name}`
+                  : "Selecionar Instrumento de Avaliação (PROM)"}
+              </DialogTitle>
+            </div>
+          </DialogHeader>
 
-        {!selectedScale ? (
-          <div className="space-y-3">
-            <p className="text-sm text-muted-foreground">
-              Selecione o instrumento de avaliação padronizado que deseja aplicar:
-            </p>
-            <div className="grid gap-2.5 sm:grid-cols-2">
-              {SCALES.map((scale) => (
-                <div key={scale.key} className="relative group">
-                  <button
-                    type="button"
-                    onClick={() => setSelectedScale(scale.key)}
-                    className="w-full flex items-start gap-3 rounded-lg border p-3.5 text-left transition-all hover:border-primary/50 hover:bg-primary/5 hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                  >
-                    <div className="mt-0.5 shrink-0">{scale.icon}</div>
-                    <div className="flex-1 min-w-0 space-y-1">
-                      <div className="flex items-center gap-1.5 flex-wrap">
-                        <span className="text-sm font-semibold">{scale.name}</span>
-                        <Badge className={`${scale.badgeColor} text-[10px] py-0`}>
-                          {scale.region}
-                        </Badge>
-                      </div>
-                      <p className="text-xs text-muted-foreground leading-snug">
-                        {scale.description}
-                      </p>
-                      <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                        <span className="flex items-center gap-1">
-                          <ListChecks className="h-3 w-3" />
-                          {scale.items}
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <Clock className="h-3 w-3" />
-                          {scale.time}
-                        </span>
-                        {scale.demoVideoUrl && (
-                          <span className="flex items-center gap-1 text-primary/70">
-                            <PlayCircle className="h-3 w-3" />
-                            Demo
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  </button>
-                  {scale.demoVideoUrl && (
+          {!selectedScale ? (
+            <div className="space-y-3">
+              <p className="text-sm text-muted-foreground">
+                Selecione o instrumento de avaliação padronizado que deseja aplicar:
+              </p>
+              <div className="grid gap-2.5 sm:grid-cols-2">
+                {SCALES.map((scale) => (
+                  <div key={scale.key} className="relative group">
                     <button
                       type="button"
-                      title="Ver demonstração em vídeo"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setDemoScale(scale);
-                      }}
-                      className="absolute top-2 right-2 p-1 rounded-md opacity-0 group-hover:opacity-100 transition-opacity text-primary hover:bg-primary/10"
+                      onClick={() => setSelectedScale(scale.key)}
+                      className="w-full flex items-start gap-3 rounded-lg border p-3.5 text-left transition-all hover:border-primary/50 hover:bg-primary/5 hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                     >
-                      <PlayCircle className="h-4 w-4" />
+                      <div className="mt-0.5 shrink-0">{scale.icon}</div>
+                      <div className="flex-1 min-w-0 space-y-1">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span className="text-sm font-semibold">{scale.name}</span>
+                          <Badge className={`${scale.badgeColor} text-[10px] py-0`}>
+                            {scale.region}
+                          </Badge>
+                        </div>
+                        <p className="text-xs text-muted-foreground leading-snug">
+                          {scale.description}
+                        </p>
+                        <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                          <span className="flex items-center gap-1">
+                            <ListChecks className="h-3 w-3" />
+                            {scale.items}
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <Clock className="h-3 w-3" />
+                            {scale.time}
+                          </span>
+                          {scale.demoVideoUrl && (
+                            <span className="flex items-center gap-1 text-primary/70">
+                              <PlayCircle className="h-3 w-3" />
+                              Demo
+                            </span>
+                          )}
+                        </div>
+                      </div>
                     </button>
-                  )}
-                </div>
-              ))}
+                    {scale.demoVideoUrl && (
+                      <button
+                        type="button"
+                        title="Ver demonstração em vídeo"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setDemoScale(scale);
+                        }}
+                        className="absolute top-2 right-2 p-1 rounded-md opacity-0 group-hover:opacity-100 transition-opacity text-primary hover:bg-primary/10"
+                      >
+                        <PlayCircle className="h-4 w-4" />
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
-        ) : (
-          <div className={isPending ? "pointer-events-none opacity-60" : ""}>{renderForm()}</div>
-        )}
-      </DialogContent>
-    </Dialog>
+          ) : (
+            <div className={isPending ? "pointer-events-none opacity-60" : ""}>{renderForm()}</div>
+          )}
+        </DialogContent>
+      </Dialog>
 
-    {/* Demo video dialog */}
-    <Dialog open={!!demoScale} onOpenChange={() => setDemoScale(null)}>
-      <DialogContent className="max-w-2xl" aria-describedby={undefined}>
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <PlayCircle className="h-5 w-5 text-primary" />
-            Demonstração — {demoScale?.name}
-          </DialogTitle>
-        </DialogHeader>
-        {demoScale?.demoVideoUrl && (
-          <div className="aspect-video w-full overflow-hidden rounded-lg bg-black">
-            <iframe
-              src={demoScale.demoVideoUrl}
-              title={`Demonstração ${demoScale.name}`}
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowFullScreen
-              className="h-full w-full"
-            />
-          </div>
-        )}
-      </DialogContent>
-    </Dialog>
+      {/* Demo video dialog */}
+      <Dialog open={!!demoScale} onOpenChange={() => setDemoScale(null)}>
+        <DialogContent className="max-w-2xl" aria-describedby={undefined}>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <PlayCircle className="h-5 w-5 text-primary" />
+              Demonstração — {demoScale?.name}
+            </DialogTitle>
+          </DialogHeader>
+          {demoScale?.demoVideoUrl && (
+            <div className="aspect-video w-full overflow-hidden rounded-lg bg-black">
+              <iframe
+                src={demoScale.demoVideoUrl}
+                title={`Demonstração ${demoScale.name}`}
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+                className="h-full w-full"
+              />
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

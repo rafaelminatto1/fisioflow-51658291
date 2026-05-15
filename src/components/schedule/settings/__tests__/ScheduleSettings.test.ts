@@ -3,12 +3,7 @@
 
 import { describe, it, expect } from "vitest";
 import * as fc from "fast-check";
-import {
-  getBadgeCount,
-  getTabFromUrl,
-  setTabInUrl,
-  VALID_TAB_IDS,
-} from "@/pages/ScheduleSettings";
+import { getBadgeCount, getTabFromUrl, setTabInUrl, VALID_TAB_IDS } from "@/pages/ScheduleSettings";
 
 // ─── Property 15: Badge de contagem reflete tamanho da lista ─────────────────
 // Validates: Requirements 2.8
@@ -95,15 +90,12 @@ describe("Property 16: URL sync é bidirecional", () => {
 
   it("getTabFromUrl returns the tab from URL when it is valid", () => {
     fc.assert(
-      fc.property(
-        fc.constantFrom(...validTabs),
-        (tab) => {
-          const params = new URLSearchParams();
-          params.set("tab", tab);
-          const result = getTabFromUrl(params, validTabs);
-          expect(result).toBe(tab);
-        },
-      ),
+      fc.property(fc.constantFrom(...validTabs), (tab) => {
+        const params = new URLSearchParams();
+        params.set("tab", tab);
+        const result = getTabFromUrl(params, validTabs);
+        expect(result).toBe(tab);
+      }),
       { numRuns: 100 },
     );
   });
@@ -111,7 +103,7 @@ describe("Property 16: URL sync é bidirecional", () => {
   it("getTabFromUrl returns first valid tab when URL tab is invalid", () => {
     fc.assert(
       fc.property(
-        fc.string().filter((s) => !validTabs.includes(s as typeof validTabs[number])),
+        fc.string().filter((s) => !validTabs.includes(s as (typeof validTabs)[number])),
         (invalidTab) => {
           const params = new URLSearchParams();
           params.set("tab", invalidTab);
@@ -131,48 +123,38 @@ describe("Property 16: URL sync é bidirecional", () => {
 
   it("setTabInUrl sets the tab in URL params", () => {
     fc.assert(
-      fc.property(
-        fc.constantFrom(...validTabs),
-        (tab) => {
-          const params = new URLSearchParams();
-          const next = setTabInUrl(params, tab);
-          expect(next.get("tab")).toBe(tab);
-        },
-      ),
+      fc.property(fc.constantFrom(...validTabs), (tab) => {
+        const params = new URLSearchParams();
+        const next = setTabInUrl(params, tab);
+        expect(next.get("tab")).toBe(tab);
+      }),
       { numRuns: 100 },
     );
   });
 
   it("round-trip: setTabInUrl then getTabFromUrl returns the same tab", () => {
     fc.assert(
-      fc.property(
-        fc.constantFrom(...validTabs),
-        (tab) => {
-          const params = new URLSearchParams();
-          const next = setTabInUrl(params, tab);
-          const result = getTabFromUrl(next, validTabs);
-          expect(result).toBe(tab);
-        },
-      ),
+      fc.property(fc.constantFrom(...validTabs), (tab) => {
+        const params = new URLSearchParams();
+        const next = setTabInUrl(params, tab);
+        const result = getTabFromUrl(next, validTabs);
+        expect(result).toBe(tab);
+      }),
       { numRuns: 100 },
     );
   });
 
   it("setTabInUrl does not mutate the original URLSearchParams", () => {
     fc.assert(
-      fc.property(
-        fc.constantFrom(...validTabs),
-        fc.constantFrom(...validTabs),
-        (tab1, tab2) => {
-          const original = new URLSearchParams();
-          original.set("tab", tab1);
-          const next = setTabInUrl(original, tab2);
-          // Original should still have tab1
-          expect(original.get("tab")).toBe(tab1);
-          // Next should have tab2
-          expect(next.get("tab")).toBe(tab2);
-        },
-      ),
+      fc.property(fc.constantFrom(...validTabs), fc.constantFrom(...validTabs), (tab1, tab2) => {
+        const original = new URLSearchParams();
+        original.set("tab", tab1);
+        const next = setTabInUrl(original, tab2);
+        // Original should still have tab1
+        expect(original.get("tab")).toBe(tab1);
+        // Next should have tab2
+        expect(next.get("tab")).toBe(tab2);
+      }),
       { numRuns: 100 },
     );
   });

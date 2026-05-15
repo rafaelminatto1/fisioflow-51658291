@@ -1,5 +1,12 @@
 import React from "react";
-import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, FlatList } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  ActivityIndicator,
+  FlatList,
+} from "react-native";
 import { Card } from "@/components";
 import { useClinicalAlerts } from "@/hooks/useClinicalAlerts";
 import { useColors } from "@/hooks/useColorScheme";
@@ -42,31 +49,35 @@ export const ProactiveRiskDashboard: React.FC = () => {
         )}
       </View>
 
-      <ScrollView 
-        horizontal 
-        showsHorizontalScrollIndicator={false} 
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
       >
         {alerts.map((alert) => (
-          <TouchableOpacity 
+          <TouchableOpacity
             key={alert.id}
             onPress={() => router.push(`/patient/${alert.patient_id}`)}
             activeOpacity={0.7}
           >
-            <Card style={[
-              styles.alertCard, 
-              { borderColor: alert.severity === 'high' ? "#ef444440" : colors.border }
-            ]}>
+            <Card
+              style={[
+                styles.alertCard,
+                { borderColor: alert.severity === "high" ? "#ef444440" : colors.border },
+              ]}
+            >
               <View style={styles.alertHeader}>
-                <View style={[
-                  styles.statusDot, 
-                  { backgroundColor: alert.severity === 'high' ? "#ef4444" : "#fbbf24" }
-                ]} />
+                <View
+                  style={[
+                    styles.statusDot,
+                    { backgroundColor: alert.severity === "high" ? "#ef4444" : "#fbbf24" },
+                  ]}
+                />
                 <Text style={[styles.patientName, { color: colors.text }]} numberOfLines={1}>
-                   {alert.patient_name || "Paciente"}
+                  {alert.patient_name || "Paciente"}
                 </Text>
               </View>
-              
+
               <Text style={[styles.message, { color: colors.textSecondary }]} numberOfLines={2}>
                 {alert.message}
               </Text>
@@ -75,7 +86,7 @@ export const ProactiveRiskDashboard: React.FC = () => {
                 <View style={styles.typeTag}>
                   <Activity size={10} color={colors.primary} />
                   <Text style={[styles.typeText, { color: colors.primary }]}>
-                    {alert.type === 'pain_spike' ? 'Pico de Dor' : 'Queda de Adesão'}
+                    {alert.type === "pain_spike" ? "Pico de Dor" : "Queda de Adesão"}
                   </Text>
                 </View>
                 <ChevronRight size={14} color={colors.textSecondary} />
@@ -187,5 +198,5 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: 11,
     textAlign: "center",
-  }
+  },
 });

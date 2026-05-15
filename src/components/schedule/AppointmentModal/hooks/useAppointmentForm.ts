@@ -118,9 +118,7 @@ export const useAppointmentForm = ({
           payment_method: apt.payment_method || "",
           installments: apt.installments || 1,
           is_recurring: apt.is_recurring || false,
-          recurring_until: apt.recurring_until
-            ? toLocalYMD(new Date(apt.recurring_until))
-            : "",
+          recurring_until: apt.recurring_until ? toLocalYMD(new Date(apt.recurring_until)) : "",
           session_package_id: apt.session_package_id || "",
         };
       }

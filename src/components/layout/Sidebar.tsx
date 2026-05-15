@@ -250,7 +250,8 @@ export function Sidebar() {
   const { profile: sidebarProfile } = useAuth();
   const isAdmin =
     sidebarProfile?.role === "admin" ||
-    (Array.isArray((sidebarProfile as any)?.roles) && (sidebarProfile as any).roles.includes("admin"));
+    (Array.isArray((sidebarProfile as any)?.roles) &&
+      (sidebarProfile as any).roles.includes("admin"));
 
   const { preloadRoute } = useNavPreload();
 
@@ -593,52 +594,54 @@ export function Sidebar() {
                   })}
                 </CollapsibleContent>
               </Collapsible>
-              {isAdmin && <Collapsible open={adminOpen} onOpenChange={setAdminOpen}>
-                <CollapsibleTrigger asChild>
-                  <button
-                    className={cn(
-                      "flex items-center justify-between w-full px-4 py-3 rounded-2xl transition-all duration-500 group",
-                      isAdminActive
-                        ? "bg-slate-50 dark:bg-slate-800/30 text-slate-900 dark:text-white font-black"
-                        : "text-slate-500",
-                    )}
-                  >
-                    <div className="flex items-center gap-3">
-                      <Settings className="h-5 w-5" />
-                      {!collapsed && (
-                        <span className="text-xs font-bold uppercase tracking-widest">
-                          Painel Admin
-                        </span>
-                      )}
-                    </div>
-                    {!collapsed && (
-                      <ChevronDown
-                        className={cn(
-                          "h-3.5 w-3.5 transition-transform",
-                          adminOpen && "rotate-180",
-                        )}
-                      />
-                    )}
-                  </button>
-                </CollapsibleTrigger>
-                <CollapsibleContent className="pl-9 space-y-1 mt-1 animate-in slide-in-from-top-2">
-                  {adminSubmenu.map((item) => (
-                    <Link
-                      key={item.href}
-                      to={item.href}
-                      onMouseEnter={() => preloadRoute(item.href)}
+              {isAdmin && (
+                <Collapsible open={adminOpen} onOpenChange={setAdminOpen}>
+                  <CollapsibleTrigger asChild>
+                    <button
                       className={cn(
-                        "block px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all",
-                        location.pathname === item.href
-                          ? "text-primary bg-primary/5"
-                          : "text-muted-foreground hover:text-foreground hover:pl-4",
+                        "flex items-center justify-between w-full px-4 py-3 rounded-2xl transition-all duration-500 group",
+                        isAdminActive
+                          ? "bg-slate-50 dark:bg-slate-800/30 text-slate-900 dark:text-white font-black"
+                          : "text-slate-500",
                       )}
                     >
-                      {item.label}
-                    </Link>
-                  ))}
-                </CollapsibleContent>
-              </Collapsible>}
+                      <div className="flex items-center gap-3">
+                        <Settings className="h-5 w-5" />
+                        {!collapsed && (
+                          <span className="text-xs font-bold uppercase tracking-widest">
+                            Painel Admin
+                          </span>
+                        )}
+                      </div>
+                      {!collapsed && (
+                        <ChevronDown
+                          className={cn(
+                            "h-3.5 w-3.5 transition-transform",
+                            adminOpen && "rotate-180",
+                          )}
+                        />
+                      )}
+                    </button>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent className="pl-9 space-y-1 mt-1 animate-in slide-in-from-top-2">
+                    {adminSubmenu.map((item) => (
+                      <Link
+                        key={item.href}
+                        to={item.href}
+                        onMouseEnter={() => preloadRoute(item.href)}
+                        className={cn(
+                          "block px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all",
+                          location.pathname === item.href
+                            ? "text-primary bg-primary/5"
+                            : "text-muted-foreground hover:text-foreground hover:pl-4",
+                        )}
+                      >
+                        {item.label}
+                      </Link>
+                    ))}
+                  </CollapsibleContent>
+                </Collapsible>
+              )}
             </SidebarSection>
           </div>
         </ScrollArea>

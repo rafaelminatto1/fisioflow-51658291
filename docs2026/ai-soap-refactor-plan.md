@@ -4,13 +4,13 @@ Status: **NÃO BLOQUEADOR.** Os arquivos abaixo compilam contra aliases `@deprec
 
 ## Arquivos pendentes
 
-| Arquivo | LoC aprox | Consumidores diretos | Impacto se quebrado |
-|---|---|---|---|
-| `src/lib/ai/clinical-support.ts` | ~750 | `ClinicalDecisionSupport` em `AssistenteTab.tsx`, `IntelligentReports.tsx` | Sugestões clínicas + red flags |
-| `src/lib/ai/rag-clinical.ts` | ~350 | `RAGClinicalContext`, busca por casos similares | Buscas de evidência clínica |
-| `src/lib/ai/soap-assistant.ts` | ~720 | Apenas tipos (após cleanup da Fase 7) | Tipos legados de transcrição |
-| `src/lib/ai/pain-analysis.ts` | ~400 | `PainAnalysisDashboard`, gráficos de evolução de dor | Análise de tendência de dor |
-| `src/lib/ai/exercises.ts` | ~280 | `ExerciseAIAssistant` em modal de recomendação | Sugestão de exercícios |
+| Arquivo                          | LoC aprox | Consumidores diretos                                                       | Impacto se quebrado            |
+| -------------------------------- | --------- | -------------------------------------------------------------------------- | ------------------------------ |
+| `src/lib/ai/clinical-support.ts` | ~750      | `ClinicalDecisionSupport` em `AssistenteTab.tsx`, `IntelligentReports.tsx` | Sugestões clínicas + red flags |
+| `src/lib/ai/rag-clinical.ts`     | ~350      | `RAGClinicalContext`, busca por casos similares                            | Buscas de evidência clínica    |
+| `src/lib/ai/soap-assistant.ts`   | ~720      | Apenas tipos (após cleanup da Fase 7)                                      | Tipos legados de transcrição   |
+| `src/lib/ai/pain-analysis.ts`    | ~400      | `PainAnalysisDashboard`, gráficos de evolução de dor                       | Análise de tendência de dor    |
+| `src/lib/ai/exercises.ts`        | ~280      | `ExerciseAIAssistant` em modal de recomendação                             | Sugestão de exercícios         |
 
 Total: ~2.500 linhas.
 
@@ -22,6 +22,7 @@ Tocar tudo de uma vez é arriscado (cada arquivo serve N componentes UI). Sugest
 
 1. **Inputs**: trocar parâmetro `currentSOAP: { subjective, objective, assessment, plan }` por `currentEvolution: { observacao, painScale, procedures, exercises, measurements, recentPROMs }`.
 2. **Prompt**: substituir o bloco "S/O/A/P" por:
+
    ```
    Observação clínica do fisioterapeuta:
    {observacao_plain}
@@ -38,6 +39,7 @@ Tocar tudo de uma vez é arriscado (cada arquivo serve N componentes UI). Sugest
 
    Tarefa: {task}
    ```
+
 3. **Output schema (Zod)**: manter inalterado (red flags, recommendations, etc. seguem com os mesmos campos).
 4. **Consumidores**: ajustar componentes UI que chamavam `buildPatientCaseData()` para passar `evolutionData` direto do `usePatientEvolutionState`.
 5. **Smoke test**: rodar a feature em produção com 1 sessão real, comparar saída com a versão antiga.

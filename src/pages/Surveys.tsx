@@ -25,7 +25,16 @@ import {
 } from "@/hooks/useSatisfactionSurveys";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Star, TrendingUp, Users, MessageSquare, Trash2, Search, CheckCircle2, Loader2 } from "lucide-react";
+import {
+  Star,
+  TrendingUp,
+  Users,
+  MessageSquare,
+  Trash2,
+  Search,
+  CheckCircle2,
+  Loader2,
+} from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -102,12 +111,14 @@ export default function Surveys() {
       <div className="min-h-[80vh] flex items-center justify-center p-4 bg-muted/30">
         <div className="w-full max-w-2xl">
           <div className="flex justify-center mb-6">
-            <img src={logoImg} alt="FisioFlow" className="h-10" onError={(e) => (e.currentTarget.style.display = 'none')} />
+            <img
+              src={logoImg}
+              alt="FisioFlow"
+              className="h-10"
+              onError={(e) => (e.currentTarget.style.display = "none")}
+            />
           </div>
-          <NPSSurveyForm 
-            patientId={patientId} 
-            onComplete={() => setSubmitted(true)} 
-          />
+          <NPSSurveyForm patientId={patientId} onComplete={() => setSubmitted(true)} />
         </div>
       </div>
     );
@@ -164,7 +175,12 @@ export default function Surveys() {
         <Card className="w-full max-w-xl shadow-xl border-t-4 border-t-primary">
           <CardHeader className="space-y-1">
             <div className="flex justify-center mb-4">
-              <img src={logoImg} alt="FisioFlow" className="h-10" onError={(e) => (e.currentTarget.style.display = 'none')} />
+              <img
+                src={logoImg}
+                alt="FisioFlow"
+                className="h-10"
+                onError={(e) => (e.currentTarget.style.display = "none")}
+              />
             </div>
             <CardTitle className="text-2xl text-center">Como está sua experiência?</CardTitle>
             <CardDescription className="text-center text-base">
@@ -187,7 +203,7 @@ export default function Surveys() {
                 </button>
               ))}
             </div>
-            
+
             <div className="flex justify-between text-xs text-muted-foreground px-1">
               <span>Nada provável</span>
               <span>Extremamente provável</span>
@@ -204,16 +220,16 @@ export default function Surveys() {
               />
             </div>
 
-            <Button 
-              className="w-full text-lg py-6" 
-              size="lg" 
+            <Button
+              className="w-full text-lg py-6"
+              size="lg"
               onClick={handlePublicSubmit}
               disabled={npsScore === null || saving || !orgId}
             >
               {saving && <Loader2 className="mr-2 h-5 w-5 animate-spin" />}
               Enviar Avaliação
             </Button>
-            
+
             {!orgId && (
               <p className="text-destructive text-center text-sm font-medium">
                 Erro: Link inválido. Identificador da organização ausente.
@@ -232,7 +248,9 @@ export default function Surveys() {
         <div className="space-y-6">
           <Skeleton className="h-12 w-1/3" />
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            {[1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-24 w-full" />)}
+            {[1, 2, 3, 4].map((i) => (
+              <Skeleton key={i} className="h-24 w-full" />
+            ))}
           </div>
           <Skeleton className="h-64 w-full" />
         </div>

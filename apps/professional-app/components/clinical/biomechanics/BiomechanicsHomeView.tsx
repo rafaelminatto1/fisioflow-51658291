@@ -18,7 +18,10 @@ export const BiomechanicsHomeView: React.FC<BiomechanicsHomeViewProps> = ({
 }) => {
   const colors = useColors();
   return (
-    <ScrollView style={[styles.container, { backgroundColor: colors.background }]} contentContainerStyle={styles.content}>
+    <ScrollView
+      style={[styles.container, { backgroundColor: colors.background }]}
+      contentContainerStyle={styles.content}
+    >
       {/* Seção do Paciente */}
       <TouchableOpacity style={styles.patientCard} onPress={onSelectPatient}>
         <View style={styles.patientInfo}>
@@ -38,7 +41,9 @@ export const BiomechanicsHomeView: React.FC<BiomechanicsHomeViewProps> = ({
       </TouchableOpacity>
 
       <Text style={[styles.sectionTitle, { color: colors.text }]}>Análise Biomecânica</Text>
-      <Text style={[styles.sectionSubtitle, { color: colors.textSecondary }]}>Selecione o tipo de avaliação para iniciar</Text>
+      <Text style={[styles.sectionSubtitle, { color: colors.textSecondary }]}>
+        Selecione o tipo de avaliação para iniciar
+      </Text>
 
       <View style={styles.grid}>
         {ANALYSIS_TYPES.map((type) => (
@@ -51,7 +56,9 @@ export const BiomechanicsHomeView: React.FC<BiomechanicsHomeViewProps> = ({
               <Activity size={28} color={colors.primary} />
             </View>
             <Text style={[styles.typeLabel, { color: colors.text }]}>{type.label}</Text>
-            <Text style={[styles.typeDesc, { color: colors.textSecondary }]}>{type.description}</Text>
+            <Text style={[styles.typeDesc, { color: colors.textSecondary }]}>
+              {type.description}
+            </Text>
           </TouchableOpacity>
         ))}
       </View>
@@ -59,15 +66,21 @@ export const BiomechanicsHomeView: React.FC<BiomechanicsHomeViewProps> = ({
       <View style={styles.optionsSection}>
         <Text style={[styles.sectionTitle, { color: colors.text }]}>Outras Opções</Text>
         <View style={styles.optionRow}>
-          <TouchableOpacity 
-            style={[styles.secondaryOption, { backgroundColor: colors.surface, borderColor: colors.border }]}
+          <TouchableOpacity
+            style={[
+              styles.secondaryOption,
+              { backgroundColor: colors.surface, borderColor: colors.border },
+            ]}
             onPress={() => onStartAnalysis("postura", "video")}
           >
             <Video size={20} color={colors.textSecondary} />
             <Text style={[styles.optionText, { color: colors.textSecondary }]}>Analisar Vídeo</Text>
           </TouchableOpacity>
-          <TouchableOpacity 
-            style={[styles.secondaryOption, { backgroundColor: colors.surface, borderColor: colors.border }]}
+          <TouchableOpacity
+            style={[
+              styles.secondaryOption,
+              { backgroundColor: colors.surface, borderColor: colors.border },
+            ]}
             onPress={() => onStartAnalysis("postura", "photo")}
           >
             <ImageIcon size={20} color={colors.textSecondary} />

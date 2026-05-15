@@ -49,7 +49,7 @@ export function useOfflineSync(options: UseOfflineSyncOptions = {}): UseOfflineS
 
     setIsSyncing(true);
     const service = getOfflineSyncService();
-    
+
     try {
       const stats = await service.syncNow();
       setPendingCount(stats.pendingActions);
@@ -65,20 +65,20 @@ export function useOfflineSync(options: UseOfflineSyncOptions = {}): UseOfflineS
   }, [isOnline, isSyncing]);
 
   // Add item to queue
-  const addToQueue = useCallback(
-    async (item: Omit<SyncQueueItem, "id" | "timestamp">) => {
-      const service = getOfflineSyncService();
-      await service.enqueueAction(`${item.type.toUpperCase()}_${item.table.toUpperCase()}`, item.data);
-      
-      const stats = await service.getStats();
-      setPendingCount(stats.pendingActions);
-    },
-    [],
-  );
+  const addToQueue = useCallback(async (item: Omit<SyncQueueItem, "id" | "timestamp">) => {
+    const service = getOfflineSyncService();
+    await service.enqueueAction(
+      `${item.type.toUpperCase()}_${item.table.toUpperCase()}`,
+      item.data,
+    );
+
+    const stats = await service.getStats();
+    setPendingCount(stats.pendingActions);
+  }, []);
 
   // Clear queue (maintained for interface consistency, but use with caution)
   const clearQueue = useCallback(async () => {
-    // Note: The service doesn't have a simple clearAll yet, 
+    // Note: The service doesn't have a simple clearAll yet,
     // but we can at least reset local state for UI
     setPendingCount(0);
   }, []);
@@ -86,7 +86,7 @@ export function useOfflineSync(options: UseOfflineSyncOptions = {}): UseOfflineS
   // Initialize and subscribe to service events
   useEffect(() => {
     const service = getOfflineSyncService();
-    
+
     const updateStats = async () => {
       const stats = await service.getStats();
       setPendingCount(stats.pendingActions);

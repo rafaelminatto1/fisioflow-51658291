@@ -4,11 +4,18 @@ const DEFAULT_HEALTH_URL = "https://api-pro.moocafisio.com.br/api/health";
 const RENOTIFY_INTERVAL_MS = 30 * 60 * 1000;
 const REQUEST_TIMEOUT_MS = 8_000;
 
-async function notify(topic: string, title: string, body: string, priority: "urgent" | "high" | "default") {
+async function notify(
+  topic: string,
+  title: string,
+  body: string,
+  priority: "urgent" | "high" | "default",
+) {
   const tags =
-    priority === "urgent" ? "rotating_light,warning" :
-    priority === "high"   ? "warning" :
-                            "white_check_mark";
+    priority === "urgent"
+      ? "rotating_light,warning"
+      : priority === "high"
+        ? "warning"
+        : "white_check_mark";
   try {
     await fetch(`https://ntfy.sh/${topic}`, {
       method: "POST",
@@ -30,7 +37,9 @@ function brTime(iso?: string | null): string {
   return d.toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" });
 }
 
-async function pingUrl(url: string): Promise<{ healthy: boolean; status: number; latencyMs: number }> {
+async function pingUrl(
+  url: string,
+): Promise<{ healthy: boolean; status: number; latencyMs: number }> {
   try {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);

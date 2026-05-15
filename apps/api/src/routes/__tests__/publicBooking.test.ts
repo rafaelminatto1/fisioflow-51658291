@@ -19,7 +19,12 @@ const BASE_ENV = {
   TURNSTILE_SECRET_KEY: "turnstile-secret",
 } as const;
 
-function makeRequest(method: string, path: string, body?: unknown, headers?: Record<string, string>) {
+function makeRequest(
+  method: string,
+  path: string,
+  body?: unknown,
+  headers?: Record<string, string>,
+) {
   return new Request(`http://localhost${path}`, {
     method,
     headers: { "Content-Type": "application/json", ...headers },
@@ -87,7 +92,7 @@ describe("public booking protection", () => {
       BASE_ENV as any,
     );
     expect(res.status).toBe(400);
-    const body = await res.json() as any;
+    const body = (await res.json()) as any;
     expect(body.error).toMatch(/Token/i);
   });
 

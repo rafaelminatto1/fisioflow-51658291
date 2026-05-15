@@ -33,7 +33,12 @@ export function useChatLogic() {
         confidence: 0.9,
         intent: "schedule_appointment",
         quickReplies: [
-          { id: "fisio_general", text: "Fisioterapia Geral", payload: "schedule_general", icon: "🏃‍♂️" },
+          {
+            id: "fisio_general",
+            text: "Fisioterapia Geral",
+            payload: "schedule_general",
+            icon: "🏃‍♂️",
+          },
           { id: "fisio_ortopedic", text: "Ortopédica", payload: "schedule_orthopedic", icon: "🦴" },
           { id: "fisio_neuro", text: "Neurológica", payload: "schedule_neuro", icon: "🧠" },
           { id: "evaluation", text: "Avaliação", payload: "schedule_evaluation", icon: "📋" },
@@ -77,31 +82,60 @@ export function useChatLogic() {
           { id: "mild_pain", text: "Dor leve", payload: "pain_mild", icon: "😐" },
           { id: "moderate_pain", text: "Dor moderada", payload: "pain_moderate", icon: "😣" },
           { id: "severe_pain", text: "Dor intensa", payload: "pain_severe", icon: "😰" },
-          { id: "schedule_consult", text: "Agendar consulta", payload: "schedule_appointment", icon: "📅" },
+          {
+            id: "schedule_consult",
+            text: "Agendar consulta",
+            payload: "schedule_appointment",
+            icon: "📅",
+          },
         ],
       };
     }
 
     if (input.includes("medicamento") || input.includes("remédio") || input.includes("medicação")) {
       return {
-        message: "Não posso prescrever medicamentos, mas posso dar informações gerais. Para prescrições, consulte um médico ou fisioterapeuta.",
+        message:
+          "Não posso prescrever medicamentos, mas posso dar informações gerais. Para prescrições, consulte um médico ou fisioterapeuta.",
         confidence: 0.9,
         intent: "medication_info",
         requiresHumanHandoff: true,
         quickReplies: [
-          { id: "schedule_doctor", text: "Agendar consulta", payload: "schedule_appointment", icon: "👨‍⚕️" },
-          { id: "general_info", text: "Informações gerais", payload: "medication_general", icon: "ℹ️" },
+          {
+            id: "schedule_doctor",
+            text: "Agendar consulta",
+            payload: "schedule_appointment",
+            icon: "👨‍⚕️",
+          },
+          {
+            id: "general_info",
+            text: "Informações gerais",
+            payload: "medication_general",
+            icon: "ℹ️",
+          },
         ],
       };
     }
 
-    if (input.includes("olá") || input.includes("oi") || input.includes("bom dia") || input.includes("boa tarde")) {
+    if (
+      input.includes("olá") ||
+      input.includes("oi") ||
+      input.includes("bom dia") ||
+      input.includes("boa tarde")
+    ) {
       return {
-        message: predefinedResponses.greeting[Math.floor(Math.random() * predefinedResponses.greeting.length)],
+        message:
+          predefinedResponses.greeting[
+            Math.floor(Math.random() * predefinedResponses.greeting.length)
+          ],
         confidence: 0.95,
         intent: "greeting",
         quickReplies: [
-          { id: "appointment", text: "Agendar consulta", payload: "schedule_appointment", icon: "📅" },
+          {
+            id: "appointment",
+            text: "Agendar consulta",
+            payload: "schedule_appointment",
+            icon: "📅",
+          },
           { id: "exercises", text: "Ver exercícios", payload: "show_exercises", icon: "🏃‍♂️" },
           { id: "symptoms", text: "Relatar sintomas", payload: "report_symptoms", icon: "🩺" },
         ],
@@ -109,7 +143,8 @@ export function useChatLogic() {
     }
 
     return {
-      message: predefinedResponses.unknown[Math.floor(Math.random() * predefinedResponses.unknown.length)],
+      message:
+        predefinedResponses.unknown[Math.floor(Math.random() * predefinedResponses.unknown.length)],
       confidence: 0.3,
       intent: "unknown",
       requiresHumanHandoff: input.length > 50,

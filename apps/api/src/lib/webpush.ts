@@ -132,7 +132,9 @@ async function encryptPayload(
     ...new TextEncoder().encode("Content-Encoding: auth\0"),
   ]);
 
-  const hkdfKey = await crypto.subtle.importKey("raw", ikm.buffer as ArrayBuffer, "HKDF", false, ["deriveBits"]);
+  const hkdfKey = await crypto.subtle.importKey("raw", ikm.buffer as ArrayBuffer, "HKDF", false, [
+    "deriveBits",
+  ]);
 
   const prk = await crypto.subtle.deriveBits(
     {
@@ -277,10 +279,9 @@ export async function sendPushToUser(
     );
 
     if (expired.length > 0) {
-      await pool.query(
-        `UPDATE push_subscriptions SET active = false WHERE endpoint = ANY($1)`,
-        [expired],
-      );
+      await pool.query(`UPDATE push_subscriptions SET active = false WHERE endpoint = ANY($1)`, [
+        expired,
+      ]);
     }
   } catch (error) {
     console.error("[WebPush] sendPushToUser error:", error);
@@ -316,10 +317,9 @@ export async function sendPushToOrg(
     );
 
     if (expired.length > 0) {
-      await pool.query(
-        `UPDATE push_subscriptions SET active = false WHERE endpoint = ANY($1)`,
-        [expired],
-      );
+      await pool.query(`UPDATE push_subscriptions SET active = false WHERE endpoint = ANY($1)`, [
+        expired,
+      ]);
     }
   } catch (error) {
     console.error("[WebPush] sendPushToOrg error:", error);

@@ -339,36 +339,33 @@ describe("Property 9: Debounce agrupa escritas", () => {
 
   it("a última mudança dentro da janela de debounce é a que dispara o PUT", () => {
     fc.assert(
-      fc.property(
-        fc.array(fcAppearanceState, { minLength: 2, maxLength: 10 }),
-        (states) => {
-          let savedState: (typeof states)[0] | null = null;
-          let debounceTimer: ReturnType<typeof setTimeout> | null = null;
+      fc.property(fc.array(fcAppearanceState, { minLength: 2, maxLength: 10 }), (states) => {
+        let savedState: (typeof states)[0] | null = null;
+        let debounceTimer: ReturnType<typeof setTimeout> | null = null;
 
-          const debouncedSave = (state: (typeof states)[0]) => {
-            if (debounceTimer !== null) {
-              clearTimeout(debounceTimer);
-            }
-            debounceTimer = setTimeout(() => {
-              savedState = state;
-              debounceTimer = null;
-            }, 800);
-          };
-
-          // Fire all changes within 800ms window
-          for (const state of states) {
-            debouncedSave(state);
-            vi.advanceTimersByTime(50); // 50ms between each, well within 800ms
+        const debouncedSave = (state: (typeof states)[0]) => {
+          if (debounceTimer !== null) {
+            clearTimeout(debounceTimer);
           }
+          debounceTimer = setTimeout(() => {
+            savedState = state;
+            debounceTimer = null;
+          }, 800);
+        };
 
-          // Advance past debounce window
-          vi.advanceTimersByTime(900);
+        // Fire all changes within 800ms window
+        for (const state of states) {
+          debouncedSave(state);
+          vi.advanceTimersByTime(50); // 50ms between each, well within 800ms
+        }
 
-          // The last state should be the one that was saved
-          const lastState = states[states.length - 1];
-          expect(savedState).toEqual(lastState);
-        },
-      ),
+        // Advance past debounce window
+        vi.advanceTimersByTime(900);
+
+        // The last state should be the one that was saved
+        const lastState = states[states.length - 1];
+        expect(savedState).toEqual(lastState);
+      }),
       { numRuns: 100 },
     );
   });

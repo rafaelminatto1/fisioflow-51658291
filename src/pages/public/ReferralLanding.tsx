@@ -27,7 +27,12 @@ export default function ReferralLanding() {
     if (code) fetchCode();
   }, [code]);
 
-  if (isLoading) return <div className="min-h-screen flex items-center justify-center"><LoadingSkeleton type="card" /></div>;
+  if (isLoading)
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <LoadingSkeleton type="card" />
+      </div>
+    );
 
   return (
     <div className="min-h-screen bg-[#F8FAFC]">
@@ -45,13 +50,14 @@ export default function ReferralLanding() {
         <Badge className="mb-6 bg-purple-100 text-purple-700 hover:bg-purple-100 border-none px-4 py-1 rounded-full">
           🎁 Convite Especial Ativo
         </Badge>
-        
+
         <h1 className="text-4xl md:text-6xl font-black text-slate-900 mb-6 leading-tight">
           Você ganhou um presente de <span className="text-primary">fisioterapia!</span>
         </h1>
-        
+
         <p className="text-lg text-slate-600 mb-12 max-w-xl mx-auto">
-          Um amigo indicou você para a elite da reabilitação física. Use o código abaixo para garantir seu benefício na primeira avaliação.
+          Um amigo indicou você para a elite da reabilitação física. Use o código abaixo para
+          garantir seu benefício na primeira avaliação.
         </p>
 
         {/* Card do Código */}
@@ -59,19 +65,21 @@ export default function ReferralLanding() {
           <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:rotate-12 transition-transform duration-500">
             <Gift size={120} className="text-primary" />
           </div>
-          
+
           <CardHeader className="text-center">
-            <CardTitle className="text-2xl font-bold text-slate-800">Seu Código de Boas-Vindas</CardTitle>
+            <CardTitle className="text-2xl font-bold text-slate-800">
+              Seu Código de Boas-Vindas
+            </CardTitle>
             <CardDescription>Válido para novos pacientes</CardDescription>
           </CardHeader>
-          
+
           <CardContent>
             <div className="bg-slate-50 border-2 border-dashed border-slate-200 rounded-3xl p-6 mb-8">
               <span className="text-4xl md:text-5xl font-black tracking-[0.2em] text-primary font-mono uppercase">
                 {code}
               </span>
             </div>
-            
+
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <div className="flex items-center gap-2 text-slate-600 font-bold">
                 <CheckCircle2 className="text-emerald-500" />
@@ -88,7 +96,7 @@ export default function ReferralLanding() {
 
         {/* CTA */}
         <div className="space-y-6">
-          <Button 
+          <Button
             className="w-full max-w-md h-16 rounded-2xl bg-primary hover:bg-primary/90 text-lg font-black shadow-xl shadow-primary/20 transition-all hover:scale-105"
             onClick={() => navigate(`/agendar/moocafisio?referral=${code}`)}
           >
@@ -114,7 +122,9 @@ export default function ReferralLanding() {
               <Users className="text-indigo-500 h-6 w-6" />
             </div>
             <h4 className="font-bold text-slate-800">Equipe de Elite</h4>
-            <p className="text-xs text-slate-500">Fisioterapeutas especializados e tecnologia de ponta.</p>
+            <p className="text-xs text-slate-500">
+              Fisioterapeutas especializados e tecnologia de ponta.
+            </p>
           </div>
           <div className="space-y-4">
             <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center mx-auto shadow-md">

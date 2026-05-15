@@ -43,7 +43,12 @@ export class AppointmentReminderWorkflow extends WorkflowEntrypoint<
         FROM patient_longitudinal_summary 
         WHERE patient_id = (SELECT patient_id FROM appointments WHERE id = ${appointmentId}::uuid)
       `;
-      return (res.rows[0] as { ai_risk_level: string; adherence_score: number }) || { ai_risk_level: "low", adherence_score: 100 };
+      return (
+        (res.rows[0] as { ai_risk_level: string; adherence_score: number }) || {
+          ai_risk_level: "low",
+          adherence_score: 100,
+        }
+      );
     });
 
     const apptTime = new Date(appointmentDate).getTime();
@@ -56,7 +61,14 @@ export class AppointmentReminderWorkflow extends WorkflowEntrypoint<
     }
 
     await step.do("send-d3-reminder", async () => {
-      await this.sendReminder(patientPhone, patientName, therapistName, appointmentDate, 3, riskProfile.ai_risk_level);
+      await this.sendReminder(
+        patientPhone,
+        patientName,
+        therapistName,
+        appointmentDate,
+        3,
+        riskProfile.ai_risk_level,
+      );
       await this.logReminder(appointmentId, organizationId, "d3");
     });
 
@@ -67,7 +79,14 @@ export class AppointmentReminderWorkflow extends WorkflowEntrypoint<
     }
 
     await step.do("send-d1-reminder", async () => {
-      await this.sendReminder(patientPhone, patientName, therapistName, appointmentDate, 1, riskProfile.ai_risk_level);
+      await this.sendReminder(
+        patientPhone,
+        patientName,
+        therapistName,
+        appointmentDate,
+        1,
+        riskProfile.ai_risk_level,
+      );
       await this.logReminder(appointmentId, organizationId, "d1");
     });
 
@@ -78,7 +97,14 @@ export class AppointmentReminderWorkflow extends WorkflowEntrypoint<
     }
 
     await step.do("send-d0-reminder", async () => {
-      await this.sendReminder(patientPhone, patientName, therapistName, appointmentDate, 0, riskProfile.ai_risk_level);
+      await this.sendReminder(
+        patientPhone,
+        patientName,
+        therapistName,
+        appointmentDate,
+        0,
+        riskProfile.ai_risk_level,
+      );
       await this.logReminder(appointmentId, organizationId, "d0");
     });
   }

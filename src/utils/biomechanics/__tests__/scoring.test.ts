@@ -9,20 +9,20 @@ describe("Biomechanical Scoring", () => {
   });
 
   it("evaluates clinical risk correctly", () => {
-    expect(evaluateRisk(5)).toBe('low');
-    expect(evaluateRisk(12)).toBe('moderate');
-    expect(evaluateRisk(25)).toBe('high');
+    expect(evaluateRisk(5)).toBe("low");
+    expect(evaluateRisk(12)).toBe("moderate");
+    expect(evaluateRisk(25)).toBe("high");
   });
 
   it("analyzes gait (marcha) correctly", () => {
     const metrics = {
       stepLengthLeft: 60,
       stepLengthRight: 45, // 25% asymmetry
-      cadence: 100
+      cadence: 100,
     };
     const analysis = analyzeGait(metrics);
     expect(analysis.asymmetry).toBe(25);
-    expect(analysis.risk).toBe('high');
+    expect(analysis.risk).toBe("high");
     expect(analysis.isNormal).toBe(false);
   });
 });

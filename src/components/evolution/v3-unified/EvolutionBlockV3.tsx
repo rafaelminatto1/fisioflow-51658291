@@ -2,34 +2,29 @@ import React, { useState } from "react";
 import {
   Plus,
   Trash2,
-  ChevronDown, 
-  ChevronUp, 
-  Activity, 
-  Dumbbell, 
+  ChevronDown,
+  ChevronUp,
+  Activity,
+  Dumbbell,
   Stethoscope,
   Info,
   MoreVertical,
   MessageSquare,
-  GripVertical
+  GripVertical,
 } from "lucide-react";
 import { motion, AnimatePresence, LayoutGroup } from "framer-motion";
-import { 
-  DragDropContext, 
-  Droppable, 
-  Draggable,
-  DropResult
-} from "@hello-pangea/dnd";
+import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Progress } from "@/components/ui/progress";
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
-  DropdownMenuTrigger 
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { EvolutionItemV3, EvolutionBlockV3Props } from "./types";
 import { COMMON_PROCEDURES } from "../v2-improved/types";
@@ -80,7 +75,7 @@ const EvolutionItemRow: React.FC<EvolutionItemRowProps> = ({
   handleToggleItem,
   handleRemoveItem,
   handleUpdateItem,
-  type
+  type,
 }) => {
   const isExpanded = expandedId === item.id;
 
@@ -96,16 +91,17 @@ const EvolutionItemRow: React.FC<EvolutionItemRowProps> = ({
           layout
           className={cn(
             "group/item relative flex flex-col rounded-2xl border transition-all duration-200 overflow-hidden mb-2.5",
-            item.completed 
-              ? "bg-muted/5 border-border/40" 
+            item.completed
+              ? "bg-muted/5 border-border/40"
               : "bg-background border-border/60 shadow-sm",
             isExpanded && "ring-1 ring-primary/20 border-primary/30 shadow-md",
-            snapshot.isDragging && "shadow-[0_20px_50px_rgba(0,0,0,0.15)] ring-2 ring-primary/40 rotate-[1.5deg] z-[100] bg-background scale-[1.02]"
+            snapshot.isDragging &&
+              "shadow-[0_20px_50px_rgba(0,0,0,0.15)] ring-2 ring-primary/40 rotate-[1.5deg] z-[100] bg-background scale-[1.02]",
           )}
         >
           {/* Row Header */}
           <div className="flex items-center gap-3 p-3">
-            <div 
+            <div
               {...provided.dragHandleProps}
               className="p-1 -ml-1 cursor-grab active:cursor-grabbing text-muted-foreground/30 hover:text-muted-foreground/60 transition-colors"
             >
@@ -118,20 +114,24 @@ const EvolutionItemRow: React.FC<EvolutionItemRowProps> = ({
               disabled={disabled}
               className="h-5 w-5 rounded-md data-[state=checked]:bg-primary data-[state=checked]:border-primary"
             />
-            
-            <div 
+
+            <div
               className="flex-1 cursor-pointer flex items-center min-w-0"
               onClick={() => setExpandedId(isExpanded ? null : item.id)}
             >
-              <span className={cn(
-                "text-sm font-semibold truncate transition-all duration-300 flex items-center gap-2",
-                item.completed && "text-muted-foreground/70 line-through decoration-muted-foreground/30 font-medium"
-              )}>
-                {type === "unified" && (
-                  item.type === "exercise" 
-                    ? <Dumbbell className="h-3.5 w-3.5 text-blue-500/70 shrink-0" /> 
-                    : <Stethoscope className="h-3.5 w-3.5 text-emerald-500/70 shrink-0" />
+              <span
+                className={cn(
+                  "text-sm font-semibold truncate transition-all duration-300 flex items-center gap-2",
+                  item.completed &&
+                    "text-muted-foreground/70 line-through decoration-muted-foreground/30 font-medium",
                 )}
+              >
+                {type === "unified" &&
+                  (item.type === "exercise" ? (
+                    <Dumbbell className="h-3.5 w-3.5 text-blue-500/70 shrink-0" />
+                  ) : (
+                    <Stethoscope className="h-3.5 w-3.5 text-emerald-500/70 shrink-0" />
+                  ))}
                 {item.name}
               </span>
 
@@ -139,27 +139,42 @@ const EvolutionItemRow: React.FC<EvolutionItemRowProps> = ({
               {item.type === "procedure" && (
                 <div className="flex items-center gap-1.5 ml-2">
                   {item.category && item.category !== "outro" && (
-                    <Badge variant="outline" className={cn("text-[9px] px-1.5 h-4 font-medium border-0", CATEGORY_COLORS[item.category])}>
+                    <Badge
+                      variant="outline"
+                      className={cn(
+                        "text-[9px] px-1.5 h-4 font-medium border-0",
+                        CATEGORY_COLORS[item.category],
+                      )}
+                    >
                       {CATEGORY_LABELS[item.category]}
                     </Badge>
                   )}
                   {item.intensity && (
-                    <Badge variant="outline" className="text-[9px] px-1.5 h-4 font-bold border-yellow-200 bg-yellow-50 text-yellow-700">
+                    <Badge
+                      variant="outline"
+                      className="text-[9px] px-1.5 h-4 font-bold border-yellow-200 bg-yellow-50 text-yellow-700"
+                    >
                       {item.intensity}
                     </Badge>
                   )}
                 </div>
               )}
-              
+
               {/* Indicators */}
               <div className="ml-2 flex items-center gap-1.5 opacity-0 group-hover/item:opacity-100 transition-opacity">
                 {(item.prescription || item.notes) && (
-                  <div className="p-1 rounded-md bg-muted/30 text-muted-foreground/70" title="Possui detalhes">
+                  <div
+                    className="p-1 rounded-md bg-muted/30 text-muted-foreground/70"
+                    title="Possui detalhes"
+                  >
                     <Info className="h-3 w-3" />
                   </div>
                 )}
                 {item.patientFeedback && (
-                  <div className="p-1 rounded-md bg-sky-500/10 text-sky-600" title="Possui feedback">
+                  <div
+                    className="p-1 rounded-md bg-sky-500/10 text-sky-600"
+                    title="Possui feedback"
+                  >
                     <MessageSquare className="h-3 w-3" />
                   </div>
                 )}
@@ -173,17 +188,25 @@ const EvolutionItemRow: React.FC<EvolutionItemRowProps> = ({
                 onClick={() => setExpandedId(isExpanded ? null : item.id)}
                 className="h-8 w-8 rounded-lg text-muted-foreground hover:text-primary transition-colors"
               >
-                {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                {isExpanded ? (
+                  <ChevronUp className="h-4 w-4" />
+                ) : (
+                  <ChevronDown className="h-4 w-4" />
+                )}
               </Button>
-              
+
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button size="icon" variant="ghost" className="h-8 w-8 rounded-lg text-muted-foreground">
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    className="h-8 w-8 rounded-lg text-muted-foreground"
+                  >
                     <MoreVertical className="h-4 w-4" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-40 rounded-xl">
-                  <DropdownMenuItem 
+                  <DropdownMenuItem
                     onClick={() => handleRemoveItem(item.id)}
                     className="text-destructive focus:text-destructive focus:bg-destructive/10 cursor-pointer"
                   >
@@ -198,7 +221,7 @@ const EvolutionItemRow: React.FC<EvolutionItemRowProps> = ({
           {/* Expanded Details */}
           <AnimatePresence>
             {isExpanded && (
-              <motion.div 
+              <motion.div
                 initial={{ height: 0, opacity: 0 }}
                 animate={{ height: "auto", opacity: 1 }}
                 exit={{ height: 0, opacity: 0 }}
@@ -217,7 +240,9 @@ const EvolutionItemRow: React.FC<EvolutionItemRowProps> = ({
                         </div>
                         <Input
                           value={item.prescription || ""}
-                          onChange={(e) => handleUpdateItem(item.id, { prescription: e.target.value })}
+                          onChange={(e) =>
+                            handleUpdateItem(item.id, { prescription: e.target.value })
+                          }
                           placeholder="Ex: 3x12 - 5kg - 30s descanso"
                           className="h-9 rounded-xl bg-muted/40 border-border/40 focus-visible:ring-blue-500/20 text-sm"
                           disabled={disabled}
@@ -232,7 +257,9 @@ const EvolutionItemRow: React.FC<EvolutionItemRowProps> = ({
                         </div>
                         <Input
                           value={item.patientFeedback || ""}
-                          onChange={(e) => handleUpdateItem(item.id, { patientFeedback: e.target.value })}
+                          onChange={(e) =>
+                            handleUpdateItem(item.id, { patientFeedback: e.target.value })
+                          }
                           placeholder="Como o paciente se sentiu? Dor? Facilidade?"
                           className="h-9 rounded-xl bg-muted/40 border-border/40 focus-visible:ring-indigo-500/20 text-sm"
                           disabled={disabled}
@@ -287,14 +314,14 @@ export const EvolutionBlockV3: React.FC<EvolutionBlockV3Props> = ({
   accentColor: _accentColor = "primary",
   placeholder,
   disabled = false,
-  className
+  className,
 }) => {
   const [newItemName, setNewItemName] = useState("");
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   const [newItemType, setNewItemType] = useState<EvolutionItemType>("procedure");
 
-  const completedCount = items.filter(item => item.completed).length;
+  const completedCount = items.filter((item) => item.completed).length;
   const totalCount = items.length;
   const progress = totalCount > 0 ? (completedCount / totalCount) * 100 : 0;
 
@@ -307,76 +334,79 @@ export const EvolutionBlockV3: React.FC<EvolutionBlockV3Props> = ({
   const getIcon = () => {
     if (icon) return icon;
     if (type === "unified") return <Activity className="h-4 w-4" />;
-    return type === "exercise" ? <Dumbbell className="h-4 w-4" /> : <Stethoscope className="h-4 w-4" />;
+    return type === "exercise" ? (
+      <Dumbbell className="h-4 w-4" />
+    ) : (
+      <Stethoscope className="h-4 w-4" />
+    );
   };
 
-  const defaultPlaceholder = type === "exercise" ? "Adicionar novo exercício..." : "Adicionar novo procedimento...";
+  const defaultPlaceholder =
+    type === "exercise" ? "Adicionar novo exercício..." : "Adicionar novo procedimento...";
 
   const handleAddItem = () => {
     if (!newItemName.trim()) return;
-    
+
     const newItem: EvolutionItemV3 = {
       id: crypto.randomUUID(),
       name: newItemName.trim(),
       completed: true, // Auto-complete when added manually in evolution
       type: type === "unified" ? newItemType : type,
-      order: items.length
+      order: items.length,
     };
-    
+
     onChange([...items, newItem]);
     setNewItemName("");
     setExpandedId(newItem.id);
   };
 
   const handleToggleItem = (id: string) => {
-    onChange(items.map(item => 
-      item.id === id ? { ...item, completed: !item.completed } : item
-    ));
+    onChange(
+      items.map((item) => (item.id === id ? { ...item, completed: !item.completed } : item)),
+    );
   };
 
   const handleRemoveItem = (id: string) => {
-    onChange(items.filter(item => item.id !== id));
+    onChange(items.filter((item) => item.id !== id));
   };
 
   const handleUpdateItem = (id: string, updates: Partial<EvolutionItemV3>) => {
-    onChange(items.map(item => 
-      item.id === id ? { ...item, ...updates } : item
-    ));
+    onChange(items.map((item) => (item.id === id ? { ...item, ...updates } : item)));
   };
 
   const onDragEnd = (result: DropResult) => {
     if (!result.destination) return;
-    
+
     const reorderedItems = Array.from(items);
     const [removed] = reorderedItems.splice(result.source.index, 1);
     reorderedItems.splice(result.destination.index, 0, removed);
-    
+
     // Update order metadata
     const finalItems = reorderedItems.map((item, index) => ({
       ...item,
-      order: index
+      order: index,
     }));
-    
+
     onChange(finalItems);
   };
 
   const suggestions = useMemo(() => {
     if (!newItemName.trim() || newItemType !== "procedure") return [];
-    return COMMON_PROCEDURES.filter(p => 
-      p.name.toLowerCase().includes(newItemName.toLowerCase())
+    return COMMON_PROCEDURES.filter((p) =>
+      p.name.toLowerCase().includes(newItemName.toLowerCase()),
     ).slice(0, 5);
   }, [newItemName, newItemType]);
 
-  const handleSelectSuggestion = (suggestion: typeof COMMON_PROCEDURES[0]) => {
+  const handleSelectSuggestion = (suggestion: (typeof COMMON_PROCEDURES)[0]) => {
     const newItem: EvolutionItemV3 = {
       id: crypto.randomUUID(),
       name: suggestion.name,
       completed: true,
       type: "procedure",
       category: suggestion.category,
-      order: items.length
+      order: items.length,
     };
-    
+
     onChange([...items, newItem]);
     setNewItemName("");
     setExpandedId(newItem.id);
@@ -388,12 +418,12 @@ export const EvolutionBlockV3: React.FC<EvolutionBlockV3Props> = ({
       e.preventDefault();
       handleAddItem();
     }
-    
+
     if (e.altKey && e.key.toLowerCase() === "p") {
       e.preventDefault();
       setNewItemType("procedure");
     }
-    
+
     if (e.altKey && e.key.toLowerCase() === "e") {
       e.preventDefault();
       setNewItemType("exercise");
@@ -401,21 +431,26 @@ export const EvolutionBlockV3: React.FC<EvolutionBlockV3Props> = ({
   };
 
   return (
-    <div className={cn(
-      "group relative flex flex-col gap-3 p-5 rounded-3xl border border-border/50 bg-card/50 transition-all duration-300 hover:shadow-xl hover:shadow-primary/5 hover:border-primary/20",
-      className
-    )}>
+    <div
+      className={cn(
+        "group relative flex flex-col gap-3 p-5 rounded-3xl border border-border/50 bg-card/50 transition-all duration-300 hover:shadow-xl hover:shadow-primary/5 hover:border-primary/20",
+        className,
+      )}
+    >
       {/* Header */}
       <div className="flex items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          <div className={cn(
-            "p-2.5 rounded-2xl transition-colors duration-300",
-            iconBg || (
-              type === "unified" ? "bg-primary/10 text-primary" : 
-              type === "exercise" ? "bg-blue-500/10 text-blue-600" : 
-              "bg-emerald-500/10 text-emerald-600"
-            )
-          )}>
+          <div
+            className={cn(
+              "p-2.5 rounded-2xl transition-colors duration-300",
+              iconBg ||
+                (type === "unified"
+                  ? "bg-primary/10 text-primary"
+                  : type === "exercise"
+                    ? "bg-blue-500/10 text-blue-600"
+                    : "bg-emerald-500/10 text-emerald-600"),
+            )}
+          >
             {getIcon()}
           </div>
           <div>
@@ -431,20 +466,28 @@ export const EvolutionBlockV3: React.FC<EvolutionBlockV3Props> = ({
         {totalCount > 0 && (
           <div className="flex items-center gap-3">
             <div className="flex flex-col items-end gap-1.5">
-              <span className={cn(
-                "text-sm font-bold",
-                progress === 100 ? "text-primary" : "text-muted-foreground"
-              )}>
+              <span
+                className={cn(
+                  "text-sm font-bold",
+                  progress === 100 ? "text-primary" : "text-muted-foreground",
+                )}
+              >
                 {Math.round(progress)}%
               </span>
-              <Progress value={progress} className="h-1.5 w-24 sm:w-32 bg-muted/50 overflow-hidden rounded-full">
-                <div 
+              <Progress
+                value={progress}
+                className="h-1.5 w-24 sm:w-32 bg-muted/50 overflow-hidden rounded-full"
+              >
+                <div
                   className={cn(
                     "h-full transition-all duration-700 ease-in-out bg-gradient-to-r",
-                    type === "unified" ? "from-primary/80 to-primary" :
-                    type === "exercise" ? "from-blue-500 to-indigo-500" : "from-emerald-500 to-teal-500"
-                  )} 
-                  style={{ width: `${progress}%` }} 
+                    type === "unified"
+                      ? "from-primary/80 to-primary"
+                      : type === "exercise"
+                        ? "from-blue-500 to-indigo-500"
+                        : "from-emerald-500 to-teal-500",
+                  )}
+                  style={{ width: `${progress}%` }}
                 />
               </Progress>
             </div>
@@ -463,7 +506,7 @@ export const EvolutionBlockV3: React.FC<EvolutionBlockV3Props> = ({
                 onClick={() => setNewItemType("procedure")}
                 className={cn(
                   "h-7 rounded-full text-[10px] uppercase font-bold tracking-wider",
-                  newItemType === "procedure" && "bg-emerald-600 hover:bg-emerald-700"
+                  newItemType === "procedure" && "bg-emerald-600 hover:bg-emerald-700",
                 )}
               >
                 <Stethoscope className="h-3 w-3 mr-1.5" />
@@ -475,7 +518,7 @@ export const EvolutionBlockV3: React.FC<EvolutionBlockV3Props> = ({
                 onClick={() => setNewItemType("exercise")}
                 className={cn(
                   "h-7 rounded-full text-[10px] uppercase font-bold tracking-wider",
-                  newItemType === "exercise" && "bg-blue-600 hover:bg-blue-700"
+                  newItemType === "exercise" && "bg-blue-600 hover:bg-blue-700",
                 )}
               >
                 <Dumbbell className="h-3 w-3 mr-1.5" />
@@ -488,17 +531,30 @@ export const EvolutionBlockV3: React.FC<EvolutionBlockV3Props> = ({
               value={newItemName}
               onChange={(e) => setNewItemName(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder={placeholder || (type === "unified" ? (newItemType === "exercise" ? "Adicionar exercício..." : "Adicionar procedimento...") : defaultPlaceholder)}
+              placeholder={
+                placeholder ||
+                (type === "unified"
+                  ? newItemType === "exercise"
+                    ? "Adicionar exercício..."
+                    : "Adicionar procedimento..."
+                  : defaultPlaceholder)
+              }
               className="pl-10 pr-12 h-12 rounded-2xl bg-muted/30 border-border/50 focus-visible:ring-primary/20 focus-visible:border-primary/30 transition-all"
             />
             <Plus className="absolute left-3.5 h-4 w-4 text-muted-foreground transition-colors group-focus-within/input:text-primary" />
-            
+
             <div className="absolute right-1.5 flex items-center gap-1">
               <div className="hidden sm:flex items-center gap-1.5 mr-2">
-                <Badge variant="outline" className="h-5 px-1.5 text-[9px] font-bold text-muted-foreground/50 border-muted-foreground/20">
+                <Badge
+                  variant="outline"
+                  className="h-5 px-1.5 text-[9px] font-bold text-muted-foreground/50 border-muted-foreground/20"
+                >
                   ALT+P
                 </Badge>
-                <Badge variant="outline" className="h-5 px-1.5 text-[9px] font-bold text-muted-foreground/50 border-muted-foreground/20">
+                <Badge
+                  variant="outline"
+                  className="h-5 px-1.5 text-[9px] font-bold text-muted-foreground/50 border-muted-foreground/20"
+                >
                   ALT+E
                 </Badge>
               </div>
@@ -523,7 +579,9 @@ export const EvolutionBlockV3: React.FC<EvolutionBlockV3Props> = ({
                   className="absolute top-full left-0 right-0 mt-2 z-50 p-1.5 rounded-2xl border border-border shadow-2xl bg-background/95 backdrop-blur-xl"
                 >
                   <div className="px-2 py-1.5 mb-1">
-                    <span className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest">Sugestões Rápidas</span>
+                    <span className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest">
+                      Sugestões Rápidas
+                    </span>
                   </div>
                   {suggestions.map((s) => (
                     <button
@@ -552,14 +610,10 @@ export const EvolutionBlockV3: React.FC<EvolutionBlockV3Props> = ({
         <DragDropContext onDragEnd={onDragEnd}>
           <Droppable droppableId="evolution-items">
             {(provided) => (
-              <div
-                {...provided.droppableProps}
-                ref={provided.innerRef}
-                className="space-y-0.5"
-              >
+              <div {...provided.droppableProps} ref={provided.innerRef} className="space-y-0.5">
                 <AnimatePresence mode="popLayout">
                   {items.length === 0 ? (
-                    <motion.div 
+                    <motion.div
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       exit={{ opacity: 0 }}

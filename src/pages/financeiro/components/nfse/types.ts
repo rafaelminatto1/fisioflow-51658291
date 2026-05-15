@@ -54,47 +54,48 @@ export function normalizeNFSe(row: any): NFSe {
   };
 }
 
-export const statusConfig: Record<string, { label: string; icon: any; color: string; bg: string }> = {
-  autorizado: { 
-    label: "Autorizada", 
-    icon: CheckCircle2, 
-    color: "text-emerald-600", 
-    bg: "bg-emerald-50 dark:bg-emerald-500/10" 
-  },
-  emitida: { 
-    label: "Emitida", 
-    icon: CheckCircle2, 
-    color: "text-emerald-600", 
-    bg: "bg-emerald-50 dark:bg-emerald-500/10" 
-  },
-  rascunho: { 
-    label: "Rascunho", 
-    icon: Clock, 
-    color: "text-amber-600", 
-    bg: "bg-amber-50 dark:bg-amber-500/10" 
-  },
-  aguardando_prefeitura: { 
-    label: "Aguardando Prefeitura", 
-    icon: Clock, 
-    color: "text-blue-600", 
-    bg: "bg-blue-50 dark:bg-blue-500/10" 
-  },
-  aguardando_internet: { 
-    label: "Aguardando Internet", 
-    icon: ShieldCheck, 
-    color: "text-slate-600", 
-    bg: "bg-slate-50 dark:bg-slate-500/10" 
-  },
-  falhou: { 
-    label: "Falhou", 
-    icon: AlertCircle, 
-    color: "text-red-600", 
-    bg: "bg-red-50 dark:bg-red-500/10" 
-  },
-  cancelada: { 
-    label: "Cancelada", 
-    icon: AlertCircle, 
-    color: "text-slate-600", 
-    bg: "bg-slate-50 dark:bg-slate-500/10" 
-  },
-};
+export const statusConfig: Record<string, { label: string; icon: any; color: string; bg: string }> =
+  {
+    autorizado: {
+      label: "Autorizada",
+      icon: CheckCircle2,
+      color: "text-emerald-600",
+      bg: "bg-emerald-50 dark:bg-emerald-500/10",
+    },
+    emitida: {
+      label: "Emitida",
+      icon: CheckCircle2,
+      color: "text-emerald-600",
+      bg: "bg-emerald-50 dark:bg-emerald-500/10",
+    },
+    rascunho: {
+      label: "Rascunho",
+      icon: Clock,
+      color: "text-amber-600",
+      bg: "bg-amber-50 dark:bg-amber-500/10",
+    },
+    aguardando_prefeitura: {
+      label: "Aguardando Prefeitura",
+      icon: Clock,
+      color: "text-blue-600",
+      bg: "bg-blue-50 dark:bg-blue-500/10",
+    },
+    aguardando_internet: {
+      label: "Aguardando Internet",
+      icon: ShieldCheck,
+      color: "text-slate-600",
+      bg: "bg-slate-50 dark:bg-slate-500/10",
+    },
+    falhou: {
+      label: "Falhou",
+      icon: AlertCircle,
+      color: "text-red-600",
+      bg: "bg-red-50 dark:bg-red-500/10",
+    },
+    cancelada: {
+      label: "Cancelada",
+      icon: AlertCircle,
+      color: "text-slate-600",
+      bg: "bg-slate-50 dark:bg-slate-500/10",
+    },
+  };

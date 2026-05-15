@@ -1,19 +1,10 @@
-import {
-  pgTable,
-  uuid,
-  text,
-  timestamp,
-  jsonb,
-  varchar,
-  index,
-  inet,
-} from "drizzle-orm/pg-core";
+import { pgTable, uuid, text, timestamp, jsonb, varchar, index, inet } from "drizzle-orm/pg-core";
 import { organizations } from "./organizations";
 import { withOrganizationPolicy } from "./rls_helper";
 
 /**
  * Audit Logs Schema - LGPD Compliance
- * 
+ *
  * Records every sensitive action in the system, specifically:
  * - Patient record access (READ)
  * - Clinical data modification (WRITE)
@@ -28,21 +19,21 @@ export const auditLogs = pgTable(
       .references(() => organizations.id)
       .notNull(),
     userId: uuid("user_id").notNull(),
-    
+
     // Action details
     action: varchar("action", { length: 50 }).notNull(), // 'READ', 'CREATE', 'UPDATE', 'DELETE', 'LOGIN', 'EXPORT'
     entityType: varchar("entity_type", { length: 50 }).notNull(), // 'patient', 'session', 'financial', 'user'
     entityId: uuid("entity_id"),
-    
+
     // Context
     description: text("description"),
     metadata: jsonb("metadata").default({}), // UI path, specific feature, etc.
     changes: jsonb("changes"), // Before/After diff for updates
-    
+
     // Security tracking
     ipAddress: inet("ip_address"),
     userAgent: text("user_agent"),
-    
+
     createdAt: timestamp("created_at").defaultNow().notNull(),
   },
   (table) => [
@@ -50,7 +41,7 @@ export const auditLogs = pgTable(
     index("idx_audit_logs_entity").on(table.entityType, table.entityId),
     index("idx_audit_logs_user").on(table.userId),
     withOrganizationPolicy("audit_logs", table.organizationId),
-  ]
+  ],
 );
 
 export type AuditLog = typeof auditLogs.$inferSelect;

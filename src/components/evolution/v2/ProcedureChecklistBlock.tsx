@@ -5,7 +5,16 @@
  * smooth animations, and professional visual design.
  */
 import React, { useState, useMemo, useCallback, useRef } from "react";
-import { CheckSquare, Plus, X, Zap, MessageSquare, Sparkles, MoreVertical, Library } from "lucide-react";
+import {
+  CheckSquare,
+  Plus,
+  X,
+  Zap,
+  MessageSquare,
+  Sparkles,
+  MoreVertical,
+  Library,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";

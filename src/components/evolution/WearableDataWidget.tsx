@@ -10,22 +10,25 @@ interface Props {
   patientId: string;
 }
 
-const DATA_TYPE_META: Record<string, { label: string; unit: string; icon: React.ElementType; color: string }> = {
-  steps:           { label: "Passos", unit: "passos", icon: Footprints, color: "text-amber-500" },
-  heart_rate:      { label: "Freq. Cardíaca", unit: "bpm", icon: Heart, color: "text-red-500" },
+const DATA_TYPE_META: Record<
+  string,
+  { label: string; unit: string; icon: React.ElementType; color: string }
+> = {
+  steps: { label: "Passos", unit: "passos", icon: Footprints, color: "text-amber-500" },
+  heart_rate: { label: "Freq. Cardíaca", unit: "bpm", icon: Heart, color: "text-red-500" },
   active_calories: { label: "Calorias", unit: "kcal", icon: Flame, color: "text-green-500" },
-  distance:        { label: "Distância", unit: "m", icon: Route, color: "text-blue-500" },
-  sleep_hours:     { label: "Sono", unit: "h", icon: Moon, color: "text-indigo-400" },
-  hrv:             { label: "HRV", unit: "ms", icon: Zap, color: "text-purple-500" },
-  vo2_max:         { label: "VO₂ Máx", unit: "ml/kg/min", icon: Activity, color: "text-teal-500" },
+  distance: { label: "Distância", unit: "m", icon: Route, color: "text-blue-500" },
+  sleep_hours: { label: "Sono", unit: "h", icon: Moon, color: "text-indigo-400" },
+  hrv: { label: "HRV", unit: "ms", icon: Zap, color: "text-purple-500" },
+  vo2_max: { label: "VO₂ Máx", unit: "ml/kg/min", icon: Activity, color: "text-teal-500" },
 };
 
 const SOURCE_LABEL: Record<string, string> = {
-  apple_health:   "Apple Health",
+  apple_health: "Apple Health",
   health_connect: "Health Connect",
-  strava:         "Strava",
-  oura:           "Oura Ring",
-  garmin:         "Garmin",
+  strava: "Strava",
+  oura: "Oura Ring",
+  garmin: "Garmin",
 };
 
 function formatValue(item: WearableSummaryItem): string {
@@ -91,7 +94,11 @@ export function WearableDataWidget({ patientId }: Props) {
         {data.integrations.length > 0 && (
           <div className="flex flex-wrap gap-1.5 pt-2 border-t border-border/40">
             {data.integrations.map((intg) => (
-              <Badge key={intg.provider} variant="outline" className="text-[10px] px-2 py-0.5 gap-1">
+              <Badge
+                key={intg.provider}
+                variant="outline"
+                className="text-[10px] px-2 py-0.5 gap-1"
+              >
                 <span className="h-1.5 w-1.5 rounded-full bg-green-500 inline-block" />
                 {SOURCE_LABEL[intg.provider] ?? intg.provider}
               </Badge>

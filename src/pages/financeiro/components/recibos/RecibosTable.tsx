@@ -98,9 +98,7 @@ export function RecibosTable({ recibos, isLoading, onPreview }: RecibosTableProp
                     };
                     return (
                       <Fragment key={recibo.id}>
-                        <TableRow
-                          className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 border-slate-50 dark:border-slate-800/50"
-                        >
+                        <TableRow className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 border-slate-50 dark:border-slate-800/50">
                           <TableCell className="px-6 py-4">
                             <Badge variant="outline" className="font-mono text-xs rounded-lg">
                               #{recibo.numero_recibo.toString().padStart(6, "0")}

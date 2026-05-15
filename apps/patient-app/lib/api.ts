@@ -288,10 +288,8 @@ export const patientApi = {
   getStats: (): Promise<PatientStats> => api.get<PatientStats>(`${PATIENT_PORTAL_PREFIX}/stats`),
   getReferralCode: (): Promise<{ code: string; reward_value: number }> =>
     api.get<any>(`${PATIENT_PORTAL_PREFIX}/referral`),
-  getDigitalTwin: (): Promise<any> =>
-    api.get<any>(`${PATIENT_PORTAL_PREFIX}/digital-twin`),
-  getAiSnapshot: (): Promise<any> =>
-    api.get<any>(`${PATIENT_PORTAL_PREFIX}/ai-snapshot`),
+  getDigitalTwin: (): Promise<any> => api.get<any>(`${PATIENT_PORTAL_PREFIX}/digital-twin`),
+  getAiSnapshot: (): Promise<any> => api.get<any>(`${PATIENT_PORTAL_PREFIX}/ai-snapshot`),
 };
 
 export const gamificationApi = {
@@ -435,10 +433,8 @@ export type WearableReading = {
 };
 
 export const patientMediaApi = {
-  getPhotos: () =>
-    api.get<any[]>(`${PATIENT_PORTAL_PREFIX}/media/photos`),
-  getMedicalRequests: () =>
-    api.get<any[]>(`${PATIENT_PORTAL_PREFIX}/media/medical-requests`),
+  getPhotos: () => api.get<any[]>(`${PATIENT_PORTAL_PREFIX}/media/photos`),
+  getMedicalRequests: () => api.get<any[]>(`${PATIENT_PORTAL_PREFIX}/media/medical-requests`),
   getAccessUrl: (r2Key: string) =>
     api.get<{ url: string; expiresIn: number }>(
       `${PATIENT_PORTAL_PREFIX}/media/access-url/${r2Key}`,
@@ -454,8 +450,7 @@ export const wearablesApi = {
     ),
   disconnectProvider: (provider: string) =>
     api.delete<{ success: boolean }>(`/api/wearables/integrations/${provider}`),
-  getRtmStatus: (patientId: string) =>
-    api.get<any>(`/api/wearables/rtm/status/${patientId}`),
+  getRtmStatus: (patientId: string) => api.get<any>(`/api/wearables/rtm/status/${patientId}`),
   syncMilestones: (patientId: string) =>
     api.post<any>("/api/wearables/rtm/milestones/sync", { patientId }),
 };

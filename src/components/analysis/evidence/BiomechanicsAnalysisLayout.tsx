@@ -46,7 +46,11 @@ export function BiomechanicsAnalysisLayout({
           { label: title, href: "#" },
         ]}
         actions={
-          <Button variant="outline" size="sm" className="gap-2 rounded-2xl font-bold border-brand-blue/20 text-brand-blue">
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-2 rounded-2xl font-bold border-brand-blue/20 text-brand-blue"
+          >
             <FileText className="h-4 w-4" />
             Relatório
           </Button>
@@ -55,7 +59,7 @@ export function BiomechanicsAnalysisLayout({
 
       <PageContainer>
         <MedicalDisclaimer className="mb-6" />
-        
+
         <div className="grid grid-cols-1 xl:grid-cols-[1fr_360px] gap-6">
           <div className="space-y-6">
             <div className="grid gap-4 md:grid-cols-3">
@@ -90,7 +94,7 @@ export function BiomechanicsAnalysisLayout({
             </div>
             {children}
           </div>
-          
+
           <div className="space-y-6 lg:sticky lg:top-6 lg:self-start">
             <BiomechanicsProtocolGuidePanel mode={mode} />
             <BiomechanicsTemplateLibraryPanel mode={mode} />

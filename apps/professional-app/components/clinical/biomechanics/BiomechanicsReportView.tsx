@@ -1,5 +1,15 @@
 import React, { useState } from "react";
-import { StyleSheet, View, Text, ScrollView, TouchableOpacity, TextInput, Image, Alert, ActivityIndicator } from "react-native";
+import {
+  StyleSheet,
+  View,
+  Text,
+  ScrollView,
+  TouchableOpacity,
+  TextInput,
+  Image,
+  Alert,
+  ActivityIndicator,
+} from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { AnalysisResult, REFERENCE_ANGLES } from "../../../types/biomechanics";
 import { AnalysisResultCard } from "./AnalysisResultCard";
@@ -48,7 +58,7 @@ export const BiomechanicsReportView: React.FC<BiomechanicsReportViewProps> = ({
     try {
       await generateBiomechanicsReport({
         ...result,
-        observations
+        observations,
       });
     } catch (err) {
       console.error("Erro ao gerar PDF:", err);
@@ -63,14 +73,14 @@ export const BiomechanicsReportView: React.FC<BiomechanicsReportViewProps> = ({
       Alert.alert("Aviso", "Salve o relatório primeiro para poder assiná-lo.");
       return;
     }
-    
+
     Alert.alert(
       "Certificar Relatório",
       "Deseja assinar digitalmente este relatório? Uma vez assinado, ele será bloqueado para edições e terá validade jurídica (Simulação ICP-Brasil).",
       [
         { text: "Cancelar", style: "cancel" },
-        { 
-          text: "Assinar e Certificar", 
+        {
+          text: "Assinar e Certificar",
           onPress: async () => {
             setIsSigning(true);
             try {
@@ -82,8 +92,8 @@ export const BiomechanicsReportView: React.FC<BiomechanicsReportViewProps> = ({
                 signature: {
                   signer: verify.signer,
                   signedAt: verify.signedAt,
-                  hash: "CERTIFICADO-FISIOFLOW-" + result.id!.substring(0, 8).toUpperCase()
-                }
+                  hash: "CERTIFICADO-FISIOFLOW-" + result.id!.substring(0, 8).toUpperCase(),
+                },
               });
               Alert.alert("Sucesso", "Relatório certificado e bloqueado com sucesso.");
             } catch (err) {
@@ -91,9 +101,9 @@ export const BiomechanicsReportView: React.FC<BiomechanicsReportViewProps> = ({
             } finally {
               setIsSigning(false);
             }
-          }
-        }
-      ]
+          },
+        },
+      ],
     );
   };
 
@@ -127,7 +137,11 @@ export const BiomechanicsReportView: React.FC<BiomechanicsReportViewProps> = ({
       </View>
 
       <ScrollView contentContainerStyle={styles.content}>
-        <ViewShot ref={reportRef} options={{ format: "png", quality: 1 }} style={{ backgroundColor: "#f8fafc" }}>
+        <ViewShot
+          ref={reportRef}
+          options={{ format: "png", quality: 1 }}
+          style={{ backgroundColor: "#f8fafc" }}
+        >
           <View style={styles.reportInner}>
             <View style={styles.reportHeader}>
               <View>
@@ -135,7 +149,9 @@ export const BiomechanicsReportView: React.FC<BiomechanicsReportViewProps> = ({
                 <Text style={styles.brandSubtitle}>LAB DE BIOMECÂNICA PRO</Text>
               </View>
               <View style={styles.dateBadge}>
-                <Text style={styles.dateBadgeText}>{new Date(result.timestamp).toLocaleDateString("pt-BR")}</Text>
+                <Text style={styles.dateBadgeText}>
+                  {new Date(result.timestamp).toLocaleDateString("pt-BR")}
+                </Text>
               </View>
             </View>
 
@@ -144,7 +160,10 @@ export const BiomechanicsReportView: React.FC<BiomechanicsReportViewProps> = ({
                 <Ionicons name="shield-checkmark" size={20} color="#059669" />
                 <View>
                   <Text style={styles.signatureBannerTitle}>Documento Assinado Digitalmente</Text>
-                  <Text style={styles.signatureBannerSub}>Assinado por: {result.signature?.signer} em {new Date(result.signature?.signedAt || "").toLocaleString("pt-BR")}</Text>
+                  <Text style={styles.signatureBannerSub}>
+                    Assinado por: {result.signature?.signer} em{" "}
+                    {new Date(result.signature?.signedAt || "").toLocaleString("pt-BR")}
+                  </Text>
                 </View>
               </View>
             )}
@@ -158,9 +177,12 @@ export const BiomechanicsReportView: React.FC<BiomechanicsReportViewProps> = ({
             <Text style={styles.sectionSubtitle}>Amplitude máxima atingida durante a gravação</Text>
 
             {result.angles.map((angle, index) => {
-              const refKey = Object.keys(REFERENCE_ANGLES).find(k => angle.joint.includes(REFERENCE_ANGLES[k].label)) || "joelho_flex";
+              const refKey =
+                Object.keys(REFERENCE_ANGLES).find((k) =>
+                  angle.joint.includes(REFERENCE_ANGLES[k].label),
+                ) || "joelho_flex";
               const ref = REFERENCE_ANGLES[refKey];
-              
+
               return (
                 <AnalysisResultCard
                   key={index}
@@ -181,7 +203,12 @@ export const BiomechanicsReportView: React.FC<BiomechanicsReportViewProps> = ({
                     <Text style={styles.symmetryLabel}>{s.joint}</Text>
                     <View style={styles.symmetryValueBox}>
                       <Text style={styles.symmetryDiff}>{s.diff}°</Text>
-                      <Text style={[styles.symmetryPercentage, s.percentage > 10 ? { color: "#ef4444" } : { color: "#10b981" }]}>
+                      <Text
+                        style={[
+                          styles.symmetryPercentage,
+                          s.percentage > 10 ? { color: "#ef4444" } : { color: "#10b981" },
+                        ]}
+                      >
                         {s.percentage}%
                       </Text>
                     </View>
@@ -194,7 +221,9 @@ export const BiomechanicsReportView: React.FC<BiomechanicsReportViewProps> = ({
               <View style={styles.observationBox}>
                 <Text style={styles.sectionTitle}>Conclusão Clínica</Text>
                 <View style={[styles.obsContent, isSigned && styles.obsContentSigned]}>
-                  <Text style={styles.obsText}>{observations || "Nenhuma observação registrada."}</Text>
+                  <Text style={styles.obsText}>
+                    {observations || "Nenhuma observação registrada."}
+                  </Text>
                 </View>
               </View>
             )}
@@ -207,7 +236,9 @@ export const BiomechanicsReportView: React.FC<BiomechanicsReportViewProps> = ({
                 <View style={styles.verificationText}>
                   <Text style={styles.verificationTitle}>Verificação de Autenticidade</Text>
                   <Text style={styles.verificationHash}>{result.signature?.hash}</Text>
-                  <Text style={styles.verificationDisclaimer}>Este documento é assinado digitalmente nos termos da MP 2.200-2/2001.</Text>
+                  <Text style={styles.verificationDisclaimer}>
+                    Este documento é assinado digitalmente nos termos da MP 2.200-2/2001.
+                  </Text>
                 </View>
               </View>
             )}
@@ -236,28 +267,29 @@ export const BiomechanicsReportView: React.FC<BiomechanicsReportViewProps> = ({
         <View style={styles.actionsContainer}>
           {!isSigned ? (
             <>
-              <Button 
-                title="Salvar Rascunho" 
+              <Button
+                title="Salvar Rascunho"
                 onPress={() => onSave(observations)}
                 variant="outline"
                 style={styles.actionButton}
               />
-              <Button 
-                title={isSigning ? "Certificando..." : "Assinar e Bloquear"} 
+              <Button
+                title={isSigning ? "Certificando..." : "Assinar e Bloquear"}
                 onPress={handleSignReport}
                 variant="primary"
                 style={styles.actionButton}
-                leftIcon={isSigning ? <ActivityIndicator size="small" color="#fff" /> : <Ionicons name="pencil" size={20} color="#fff" />}
+                leftIcon={
+                  isSigning ? (
+                    <ActivityIndicator size="small" color="#fff" />
+                  ) : (
+                    <Ionicons name="pencil" size={20} color="#fff" />
+                  )
+                }
                 disabled={isSigning}
               />
             </>
           ) : (
-            <Button 
-              title="Voltar" 
-              onPress={onClose}
-              variant="primary"
-              style={styles.saveButton}
-            />
+            <Button title="Voltar" onPress={onClose} variant="primary" style={styles.saveButton} />
           )}
         </View>
       </ScrollView>

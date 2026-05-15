@@ -322,18 +322,18 @@ export default function BiomechanicsAnalysisPage() {
         breadcrumb={[{ label: "Biomecânica", href: "/clinical/biomechanics" }]}
         actions={
           <div className="flex items-center gap-2">
-             <Badge className="bg-brand-blue text-white font-black text-[10px] px-2 py-1 rounded-lg">
-               V3 KINOVEA ENGINE
-             </Badge>
+            <Badge className="bg-brand-blue text-white font-black text-[10px] px-2 py-1 rounded-lg">
+              V3 KINOVEA ENGINE
+            </Badge>
           </div>
         }
       >
-         <div className="flex items-center gap-2 mt-2">
-            <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
-              Sistema de Suporte à Decisão Clínica Ativo
-            </span>
-         </div>
+        <div className="flex items-center gap-2 mt-2">
+          <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+          <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+            Sistema de Suporte à Decisão Clínica Ativo
+          </span>
+        </div>
       </PageHeader>
 
       <PageContainer>

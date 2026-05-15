@@ -25,22 +25,29 @@ app.get("/recovery-prediction/:patientId", requireAuth, async (c) => {
   const pool = createPool(c.env);
 
   try {
-    const [patientRes, metricsRes, appointmentsRes, pathologiesRes, exercisesRes] = await Promise.all([
-      pool.query("SELECT * FROM patients WHERE id = $1 AND organization_id = $2", [patientId, user.organizationId]),
-      pool.query(
-        "SELECT * FROM patient_session_metrics WHERE patient_id = $1 AND organization_id = $2 ORDER BY session_date DESC LIMIT 10",
-        [patientId, user.organizationId]
-      ),
-      pool.query(
-        "SELECT status, date FROM appointments WHERE patient_id = $1 AND organization_id = $2 ORDER BY date DESC LIMIT 20",
-        [patientId, user.organizationId]
-      ),
-      pool.query("SELECT * FROM patient_pathologies WHERE patient_id = $1 AND organization_id = $2", [patientId, user.organizationId]),
-      pool.query(
-        "SELECT count(*) as total, count(*) FILTER (WHERE completed = true) as completed FROM exercise_sessions WHERE patient_id = $1 AND created_at > NOW() - INTERVAL '30 days'",
-        [patientId]
-      ),
-    ]);
+    const [patientRes, metricsRes, appointmentsRes, pathologiesRes, exercisesRes] =
+      await Promise.all([
+        pool.query("SELECT * FROM patients WHERE id = $1 AND organization_id = $2", [
+          patientId,
+          user.organizationId,
+        ]),
+        pool.query(
+          "SELECT * FROM patient_session_metrics WHERE patient_id = $1 AND organization_id = $2 ORDER BY session_date DESC LIMIT 10",
+          [patientId, user.organizationId],
+        ),
+        pool.query(
+          "SELECT status, date FROM appointments WHERE patient_id = $1 AND organization_id = $2 ORDER BY date DESC LIMIT 20",
+          [patientId, user.organizationId],
+        ),
+        pool.query(
+          "SELECT * FROM patient_pathologies WHERE patient_id = $1 AND organization_id = $2",
+          [patientId, user.organizationId],
+        ),
+        pool.query(
+          "SELECT count(*) as total, count(*) FILTER (WHERE completed = true) as completed FROM exercise_sessions WHERE patient_id = $1 AND created_at > NOW() - INTERVAL '30 days'",
+          [patientId],
+        ),
+      ]);
 
     if (patientRes.rows.length === 0) {
       return c.json({ error: "Paciente não encontrado" }, 404);
@@ -108,7 +115,7 @@ Seja realista e conservador em suas estimativas.`,
         prediction.data.confidence_score,
         prediction.data.key_limiting_factors,
         prediction.data.recommendations,
-      ]
+      ],
     );
 
     return c.json({
@@ -136,7 +143,7 @@ app.get("/history/:patientId", requireAuth, async (c) => {
     `SELECT * FROM patient_predictions
      WHERE patient_id = $1 AND organization_id = $2
      ORDER BY created_at DESC`,
-    [patientId, user.organizationId]
+    [patientId, user.organizationId],
   );
 
   return c.json({ data: result.rows });

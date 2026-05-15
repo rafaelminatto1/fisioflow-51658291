@@ -15,11 +15,7 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { z } from "zod";
 import type { Patient } from "@/types";
-import type {
-  ProcedureItem,
-  ExerciseItem,
-  MeasurementItem,
-} from "@/types/evolution";
+import type { ProcedureItem, ExerciseItem, MeasurementItem } from "@/types/evolution";
 import { fisioLogger as logger } from "@/lib/errors/logger";
 import { stripHtml } from "@/lib/utils/stripHtml";
 
@@ -283,13 +279,9 @@ function formatMeasurements(items: MeasurementItem[] | undefined): string {
     .join("\n");
 }
 
-function formatProms(
-  proms: CurrentEvolutionContext["proms"] | undefined,
-): string {
+function formatProms(proms: CurrentEvolutionContext["proms"] | undefined): string {
   if (!proms?.length) return "Nenhuma escala aplicada nesta sessão.";
-  return proms
-    .map((p) => `- ${p.name}: ${p.score}${p.unit ? ` ${p.unit}` : ""}`)
-    .join("\n");
+  return proms.map((p) => `- ${p.name}: ${p.score}${p.unit ? ` ${p.unit}` : ""}`).join("\n");
 }
 
 function formatPreviousSessions(prev: PreviousEvolutionSummary[] | undefined): string {
@@ -369,7 +361,9 @@ export class ClinicalDecisionSupport {
 
       let analysisData: ClinicalAnalysisResult;
       try {
-        analysisData = ClinicalAnalysisSchema.parse(JSON.parse(cleanedJson)) as ClinicalAnalysisResult;
+        analysisData = ClinicalAnalysisSchema.parse(
+          JSON.parse(cleanedJson),
+        ) as ClinicalAnalysisResult;
       } catch (parseError) {
         logger.error("[ClinicalSupport] JSON parse error", parseError, "clinical-support");
         return {
@@ -490,7 +484,8 @@ Retorne APENAS JSON válido com campos: summary, references (array), evidenceLev
     const { patient, currentEvolution, previousSessions, sessionNumber, treatmentDurationWeeks } =
       caseData;
 
-    const observacaoText = stripHtml(currentEvolution.observacao || "") ||
+    const observacaoText =
+      stripHtml(currentEvolution.observacao || "") ||
       "Sem observação clínica registrada nesta sessão.";
 
     return `## Caso clínico para análise

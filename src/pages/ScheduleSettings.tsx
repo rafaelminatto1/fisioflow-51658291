@@ -397,10 +397,7 @@ export default function ScheduleSettings() {
                 </SheetHeader>
                 <ScrollArea className="h-[calc(100vh-4rem)]">
                   <TabsList className="flex h-auto w-full flex-col gap-1 bg-transparent p-3">
-                    <NavItems
-                      activeTab={activeTab}
-                      appointmentTypesCount={appointmentTypesCount}
-                    />
+                    <NavItems activeTab={activeTab} appointmentTypesCount={appointmentTypesCount} />
                   </TabsList>
                 </ScrollArea>
               </SheetContent>

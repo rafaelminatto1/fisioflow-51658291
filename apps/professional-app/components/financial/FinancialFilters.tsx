@@ -12,13 +12,7 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { useColors } from "@/hooks/useColorScheme";
 import { Card } from "@/components";
-import {
-  format,
-  subDays,
-  startOfMonth,
-  endOfMonth,
-  subMonths,
-} from "date-fns";
+import { format, subDays, startOfMonth, endOfMonth, subMonths } from "date-fns";
 
 const { width: _SCREEN_WIDTH } = Dimensions.get("window");
 

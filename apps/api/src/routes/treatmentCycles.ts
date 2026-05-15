@@ -117,17 +117,20 @@ app.post("/:id/close", requireAuth, async (c) => {
   const cycle = cycleRes.rows[0] as Record<string, unknown>;
 
   // Fetch latest sessions
-  const sessionsRes = await db.query(
-    `SELECT s.id, s.session_date, s.subjective, s.assessment, s.plan
+  const sessionsRes = await db
+    .query(
+      `SELECT s.id, s.session_date, s.subjective, s.assessment, s.plan
      FROM sessions s
      WHERE s.patient_id = $1 AND s.organization_id = $2
      ORDER BY s.session_date ASC LIMIT 30`,
-    [cycle.patient_id, user.organizationId],
-  ).catch(() => ({ rows: [] }));
+      [cycle.patient_id, user.organizationId],
+    )
+    .catch(() => ({ rows: [] }));
 
   // Fetch last active exercise plan
-  const hepRes = await db.query(
-    `SELECT ep.id, ep.title, json_agg(json_build_object(
+  const hepRes = await db
+    .query(
+      `SELECT ep.id, ep.title, json_agg(json_build_object(
         'name', e.name, 'sets', epi.sets, 'reps', epi.reps
       )) AS exercises
      FROM exercise_plans ep
@@ -135,14 +138,17 @@ app.post("/:id/close", requireAuth, async (c) => {
      JOIN exercises e ON e.id = epi.exercise_id
      WHERE ep.patient_id = $1 AND ep.status = 'active'
      GROUP BY ep.id, ep.title LIMIT 1`,
-    [cycle.patient_id],
-  ).catch(() => ({ rows: [] }));
+      [cycle.patient_id],
+    )
+    .catch(() => ({ rows: [] }));
 
   const sessions = sessionsRes.rows as Record<string, unknown>[];
   const hep = hepRes.rows[0] as Record<string, unknown> | undefined;
   const today = new Date().toLocaleDateString("pt-BR");
   const patientAge = cycle.date_of_birth
-    ? Math.floor((Date.now() - new Date(String(cycle.date_of_birth)).getTime()) / (365.25 * 24 * 3600000))
+    ? Math.floor(
+        (Date.now() - new Date(String(cycle.date_of_birth)).getTime()) / (365.25 * 24 * 3600000),
+      )
     : null;
 
   // Generate HTML report
@@ -176,28 +182,45 @@ app.post("/:id/close", requireAuth, async (c) => {
   ${cycle.start_date ? `<div><strong>Período</strong>${new Date(String(cycle.start_date)).toLocaleDateString("pt-BR")} — ${today}</div>` : ""}
 </div>
 
-${sessions.length > 0 ? `
+${
+  sessions.length > 0
+    ? `
 <h2>Evolução Clínica</h2>
 <table>
 <tr><th>Data</th><th>Subjetivo (S)</th><th>Avaliação (A)</th></tr>
-${sessions.slice(0, 5).map((s) => `<tr>
+${sessions
+  .slice(0, 5)
+  .map(
+    (s) => `<tr>
   <td>${s.session_date ? new Date(String(s.session_date)).toLocaleDateString("pt-BR") : "—"}</td>
   <td>${String(s.subjective ?? "").substring(0, 120)}</td>
   <td>${String(s.assessment ?? "").substring(0, 120)}</td>
-</tr>`).join("")}
+</tr>`,
+  )
+  .join("")}
 </table>
-` : ""}
+`
+    : ""
+}
 
-${hep ? `
+${
+  hep
+    ? `
 <h2>Plano de Alta (HEP)</h2>
 <p><strong>${hep.title}</strong></p>
 <table>
 <tr><th>Exercício</th><th>Séries × Reps</th></tr>
-${Array.isArray(hep.exercises) ? hep.exercises.map((e: any) =>
-  `<tr><td>${e.name}</td><td>${e.sets ?? 3}×${e.reps ?? 10}</td></tr>`
-).join("") : ""}
+${
+  Array.isArray(hep.exercises)
+    ? hep.exercises
+        .map((e: any) => `<tr><td>${e.name}</td><td>${e.sets ?? 3}×${e.reps ?? 10}</td></tr>`)
+        .join("")
+    : ""
+}
 </table>
-` : ""}
+`
+    : ""
+}
 
 <div class="footer">
   <p>Gerado automaticamente pelo FisioFlow em ${today}.</p>
@@ -217,19 +240,19 @@ ${Array.isArray(hep.exercises) ? hep.exercises.map((e: any) =>
   }
 
   // Mark cycle as completed
-  await db.query(
-    `UPDATE treatment_cycles SET status = 'completed', end_date = NOW(), report_url = $1, updated_at = NOW() WHERE id = $2`,
-    [reportUrl, id],
-  ).catch(async () => {
-    // report_url column might not exist
-    await db.query(
-      `ALTER TABLE treatment_cycles ADD COLUMN IF NOT EXISTS report_url TEXT`,
-    );
-    await db.query(
+  await db
+    .query(
       `UPDATE treatment_cycles SET status = 'completed', end_date = NOW(), report_url = $1, updated_at = NOW() WHERE id = $2`,
       [reportUrl, id],
-    );
-  });
+    )
+    .catch(async () => {
+      // report_url column might not exist
+      await db.query(`ALTER TABLE treatment_cycles ADD COLUMN IF NOT EXISTS report_url TEXT`);
+      await db.query(
+        `UPDATE treatment_cycles SET status = 'completed', end_date = NOW(), report_url = $1, updated_at = NOW() WHERE id = $2`,
+        [reportUrl, id],
+      );
+    });
 
   return c.json({ success: true, data: { reportUrl } });
 });

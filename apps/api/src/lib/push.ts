@@ -33,9 +33,7 @@ function isExpoPushToken(token: string): boolean {
   return token.startsWith("ExponentPushToken[") || token.startsWith("ExpoPushToken[");
 }
 
-async function sendExpoPushBatch(
-  messages: ExpoPushMessage[],
-): Promise<ExpoPushTicket[]> {
+async function sendExpoPushBatch(messages: ExpoPushMessage[]): Promise<ExpoPushTicket[]> {
   const resp = await fetch(EXPO_PUSH_URL, {
     method: "POST",
     headers: {

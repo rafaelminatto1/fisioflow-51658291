@@ -47,30 +47,46 @@ export const generateBiomechanicsReport = async (result: AnalysisResult) => {
             </tr>
           </thead>
           <tbody>
-            ${result.angles.map(a => `
+            ${result.angles
+              .map(
+                (a) => `
               <tr>
                 <td>${a.joint}</td>
                 <td>${a.angle.toFixed(1)}°</td>
                 <td>${a.reference}°</td>
                 <td class="status-${a.status}">${a.status.toUpperCase()}</td>
               </tr>
-            `).join("")}
+            `,
+              )
+              .join("")}
           </tbody>
         </table>
 
-        ${result.symmetries && result.symmetries.length > 0 ? `
+        ${
+          result.symmetries && result.symmetries.length > 0
+            ? `
           <div class="section-title">Análise de Simetria</div>
-          ${result.symmetries.map(s => `
+          ${result.symmetries
+            .map(
+              (s) => `
             <div class="symmetry-card">
               <strong>${s.joint}</strong>: Diferença de ${s.diff}° (${s.percentage}% de assimetria)
             </div>
-          `).join("")}
-        ` : ""}
+          `,
+            )
+            .join("")}
+        `
+            : ""
+        }
 
-        ${result.observations ? `
+        ${
+          result.observations
+            ? `
           <div class="section-title">Observações Clínicas</div>
           <div style="white-space: pre-wrap; font-size: 14px; line-height: 1.5;">${result.observations}</div>
-        ` : ""}
+        `
+            : ""
+        }
 
         <div class="footer">
           Gerado automaticamente pela plataforma FisioFlow em ${new Date().toLocaleString("pt-BR")}.

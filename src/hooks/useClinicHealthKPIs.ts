@@ -5,7 +5,7 @@ import { format } from "date-fns";
 
 export const useClinicHealthKPIs = (month?: string) => {
   const { organizationId } = useAuth();
-  
+
   // Default to current month if not provided (YYYY-MM)
   const targetMonth = month || format(new Date(), "yyyy-MM");
 

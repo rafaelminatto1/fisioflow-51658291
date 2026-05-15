@@ -30,7 +30,7 @@ export class RTMAlertsService {
          AND s.value >= 7
          AND s.timestamp >= NOW() - INTERVAL '24 hours'
        ORDER BY s.timestamp DESC`,
-      [organizationId]
+      [organizationId],
     );
 
     for (const row of painSpikes.rows) {
@@ -39,7 +39,7 @@ export class RTMAlertsService {
         type: "pain_spike",
         severity: "high",
         message: `ALERTA: Paciente ${row.full_name} relatou dor nível ${row.pain_level} nas últimas 24h.`,
-        data: { painLevel: row.pain_level }
+        data: { painLevel: row.pain_level },
       });
       alertsTriggered++;
     }
@@ -59,7 +59,7 @@ export class RTMAlertsService {
        JOIN patients p ON p.id = w.patient_id
        WHERE w.current_week < (w.prev_week * 0.6) -- 40% drop
          AND w.prev_week > 1000 -- Avoid false positives for inactive patients`,
-      [organizationId]
+      [organizationId],
     );
 
     for (const row of activityDrops.rows) {
@@ -67,8 +67,8 @@ export class RTMAlertsService {
         patientId: row.patient_id,
         type: "compliance_drop",
         severity: "medium",
-        message: `ATENÇÃO: Queda brusca de atividade para ${row.full_name} (-${Math.round((1 - row.current_week/row.prev_week)*100)}%).`,
-        data: { current: row.current_week, previous: row.prev_week }
+        message: `ATENÇÃO: Queda brusca de atividade para ${row.full_name} (-${Math.round((1 - row.current_week / row.prev_week) * 100)}%).`,
+        data: { current: row.current_week, previous: row.prev_week },
       });
       alertsTriggered++;
     }
@@ -76,7 +76,7 @@ export class RTMAlertsService {
     // 3. AI Anomaly Detection (Predictive Clinical Guard)
     const activePatients = await db.query(
       `SELECT id, full_name FROM patients WHERE organization_id = $1 AND status = 'ativo'`,
-      [organizationId]
+      [organizationId],
     );
 
     for (const patient of activePatients.rows) {
@@ -84,7 +84,7 @@ export class RTMAlertsService {
         `SELECT data_type, value, timestamp FROM wearable_data 
          WHERE patient_id = $1 AND timestamp >= NOW() - INTERVAL '7 days'
          ORDER BY timestamp ASC`,
-        [patient.id]
+        [patient.id],
       );
 
       if (recentData.rows.length > 5) {
@@ -103,7 +103,7 @@ export class RTMAlertsService {
             prompt,
             model: "gemini-1.5-flash",
             temperature: 0.1,
-            responseFormat: "json"
+            responseFormat: "json",
           });
 
           const jsonMatch = aiResponse.content.match(/\{[\s\S]*\}/);
@@ -115,7 +115,7 @@ export class RTMAlertsService {
               type: "low_activity", // Generico para anomalia
               severity: analysis.severity,
               message: `IA: ${analysis.reason}`,
-              data: { ai_analysis: analysis }
+              data: { ai_analysis: analysis },
             });
             alertsTriggered++;
           }
@@ -134,7 +134,7 @@ export class RTMAlertsService {
     await db.query(
       `INSERT INTO clinical_alerts (patient_id, type, severity, message, data, status)
        VALUES ($1, $2, $3, $4, $5, 'pending')`,
-      [alert.patientId, alert.type, alert.severity, alert.message, JSON.stringify(alert.data)]
+      [alert.patientId, alert.type, alert.severity, alert.message, JSON.stringify(alert.data)],
     );
 
     // Note: Inngest trigger requires ExecutionContext — log for now, notifications handled by cron

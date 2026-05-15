@@ -57,7 +57,8 @@ async function rsaSha1Sign(key: CryptoKey, data: string): Promise<ArrayBuffer> {
 }
 
 function sortAttributes(xml: string): string {
-  return xml.replace(/<([a-zA-Z0-9_:]+)((?:\s+[a-zA-Z_:][a-zA-Z0-9_.:-]*(?:\s*=\s*(?:"[^"]*"|'[^']*'))?)*)\s*(\/?)>/g,
+  return xml.replace(
+    /<([a-zA-Z0-9_:]+)((?:\s+[a-zA-Z_:][a-zA-Z0-9_.:-]*(?:\s*=\s*(?:"[^"]*"|'[^']*'))?)*)\s*(\/?)>/g,
     (_match, name: string, attrs: string, selfClose: string) => {
       if (!attrs.trim()) return `<${name}${selfClose}>`;
       const attrRegex = /\s+([a-zA-Z_:][a-zA-Z0-9_.:-]*)\s*=\s*("[^"]*"|'[^']*')/g;
@@ -72,8 +73,8 @@ function sortAttributes(xml: string): string {
         }
         m = attrRegex.exec(attrs);
       }
-      nsAttrs.sort((a, b) => a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0);
-      otherAttrs.sort((a, b) => a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0);
+      nsAttrs.sort((a, b) => (a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0));
+      otherAttrs.sort((a, b) => (a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0));
       const allAttrs = [...nsAttrs, ...otherAttrs];
       return `<${name}${allAttrs.length ? " " : ""}${allAttrs.map(([k, v]) => `${k}=${v}`).join(" ")}${selfClose}>`;
     },

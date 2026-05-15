@@ -21,44 +21,44 @@ Sem essas métricas, a clínica cresce "por instinto" — não por dados. O obje
 
 ### 2.1 Mapa de Concorrentes
 
-| Software | Foco | Preço | Diferencial Chave |
-|----------|------|-------|-------------------|
-| **FisioSync** | Fisio/Pilates | Freemium | IA secretária WhatsApp 24h, lembretes ilimitados sem custo |
-| **GestãoDS** | Médico/Saúde | Alto | CRM funil marketing, relatórios financeiros avançados |
-| **EffiClin / ZenFisio** | "De fisio para fisio" | Baixo | Simplicidade, jornada básica funciona bem |
-| **Ikora** | Clínicas fisio | Freemium | VAS visual, gestão de turmas, WhatsApp automático |
-| **Clinora** | Modular | R$49,90/user | Flexibilidade modular, agentes IA de confirmação |
-| **HumanDoctor** | Autônomo | Único plano | Consultório virtual exclusivo, WhatsApp ilimitado |
-| **NinSaúde** | Enterprise/Franquia | Alto | CRM nativo, Power BI, home care, TISS |
-| **WIO Clinic** | IA-first | Sob consulta | Portal paciente, compliance HEP, IA prontuário |
-| **Cliniconect** | Multidisciplinar | Sob consulta | IA prontuário lançada mai/2026, TISS, ICP-Brasil |
-| **FisioAvalia** | IA avaliação | Trial 7d | IA em fichas de avaliação, condutas por evidências |
+| Software                | Foco                  | Preço        | Diferencial Chave                                          |
+| ----------------------- | --------------------- | ------------ | ---------------------------------------------------------- |
+| **FisioSync**           | Fisio/Pilates         | Freemium     | IA secretária WhatsApp 24h, lembretes ilimitados sem custo |
+| **GestãoDS**            | Médico/Saúde          | Alto         | CRM funil marketing, relatórios financeiros avançados      |
+| **EffiClin / ZenFisio** | "De fisio para fisio" | Baixo        | Simplicidade, jornada básica funciona bem                  |
+| **Ikora**               | Clínicas fisio        | Freemium     | VAS visual, gestão de turmas, WhatsApp automático          |
+| **Clinora**             | Modular               | R$49,90/user | Flexibilidade modular, agentes IA de confirmação           |
+| **HumanDoctor**         | Autônomo              | Único plano  | Consultório virtual exclusivo, WhatsApp ilimitado          |
+| **NinSaúde**            | Enterprise/Franquia   | Alto         | CRM nativo, Power BI, home care, TISS                      |
+| **WIO Clinic**          | IA-first              | Sob consulta | Portal paciente, compliance HEP, IA prontuário             |
+| **Cliniconect**         | Multidisciplinar      | Sob consulta | IA prontuário lançada mai/2026, TISS, ICP-Brasil           |
+| **FisioAvalia**         | IA avaliação          | Trial 7d     | IA em fichas de avaliação, condutas por evidências         |
 
 ### 2.2 O que o FisioFlow já tem que os concorrentes NÃO têm
 
-| Diferencial | Status FisioFlow | Concorrentes |
-|-------------|-----------------|--------------|
-| Biomecânica avançada (marcha, postura, salto, corrida) | ✅ Implementado | ❌ Nenhum |
-| IA Studio + Computer Vision + AR | ✅ Implementado | ❌ Nenhum |
-| Gamificação completa (XP, quests, shop, leaderboard) | ✅ Implementado | ❌ Nenhum completo |
-| App mobile paciente (React Native/Expo) | ✅ Desenvolvido | Apenas NinSaúde/WIO |
-| NFS-e nativo (XML, SP, ABRASF) | ✅ Implementado | Raramente |
-| Marketing suite (16 módulos: SEO, ROI, referral, reativação) | ✅ Implementado | Parcial |
-| Voice Scribe (ditado → SOAP via IA) | ✅ Implementado | ❌ Nenhum |
-| Telemedicina integrada (LiveKit) | ✅ Implementado | Apenas alguns |
-| Stack edge moderna (Cloudflare + Neon PG) | ✅ Implementado | Infraestrutura legada |
+| Diferencial                                                  | Status FisioFlow | Concorrentes          |
+| ------------------------------------------------------------ | ---------------- | --------------------- |
+| Biomecânica avançada (marcha, postura, salto, corrida)       | ✅ Implementado  | ❌ Nenhum             |
+| IA Studio + Computer Vision + AR                             | ✅ Implementado  | ❌ Nenhum             |
+| Gamificação completa (XP, quests, shop, leaderboard)         | ✅ Implementado  | ❌ Nenhum completo    |
+| App mobile paciente (React Native/Expo)                      | ✅ Desenvolvido  | Apenas NinSaúde/WIO   |
+| NFS-e nativo (XML, SP, ABRASF)                               | ✅ Implementado  | Raramente             |
+| Marketing suite (16 módulos: SEO, ROI, referral, reativação) | ✅ Implementado  | Parcial               |
+| Voice Scribe (ditado → SOAP via IA)                          | ✅ Implementado  | ❌ Nenhum             |
+| Telemedicina integrada (LiveKit)                             | ✅ Implementado  | Apenas alguns         |
+| Stack edge moderna (Cloudflare + Neon PG)                    | ✅ Implementado  | Infraestrutura legada |
 
 ### 2.3 Gaps vs. Concorrentes (a resolver)
 
-| Gap | Impacto | Prioridade |
-|-----|---------|------------|
-| Dashboard CAC/LTV/Payback não existe | Alto — gestão às cegas | P1 |
-| WhatsApp confirmação end-to-end não verificado | Alto — no-show alto | P1 |
-| Gestão de turmas (Pilates/grupos) ausente | Médio — perda de segmento | P2 |
-| AI Concierge 24h para novos leads no WhatsApp | Alto — resposta lenta = perda de paciente | P1 |
-| Wearables integration (HealthKit/Garmin/Strava) | Médio-Alto — diferencial único | P2 |
-| App não publicado nas stores | Alto — pacientes não engajam | P1 |
-| CRM reativação pós-alta ausente | Alto — LTV perdido | P1 |
+| Gap                                             | Impacto                                   | Prioridade |
+| ----------------------------------------------- | ----------------------------------------- | ---------- |
+| Dashboard CAC/LTV/Payback não existe            | Alto — gestão às cegas                    | P1         |
+| WhatsApp confirmação end-to-end não verificado  | Alto — no-show alto                       | P1         |
+| Gestão de turmas (Pilates/grupos) ausente       | Médio — perda de segmento                 | P2         |
+| AI Concierge 24h para novos leads no WhatsApp   | Alto — resposta lenta = perda de paciente | P1         |
+| Wearables integration (HealthKit/Garmin/Strava) | Médio-Alto — diferencial único            | P2         |
+| App não publicado nas stores                    | Alto — pacientes não engajam              | P1         |
+| CRM reativação pós-alta ausente                 | Alto — LTV perdido                        | P1         |
 
 ---
 
@@ -86,6 +86,7 @@ Payback (meses) = CAC ÷ (Receita média mensal por paciente)
 ```
 
 **Exemplo prático:**
+
 - Ticket médio: R$80/sessão
 - Média de sessões: 20 sessões por tratamento
 - Taxa de renovação para 2° tratamento: 40%
@@ -100,39 +101,43 @@ Payback (meses) = CAC ÷ (Receita média mensal por paciente)
 
 ### 3.3 10 KPIs a monitorar no dashboard
 
-| # | KPI | Meta | Frequência |
-|---|-----|------|-----------|
-| 1 | Taxa de Ocupação da Agenda | ≥ 75% | Diária |
-| 2 | No-Show Rate | < 15% | Semanal |
-| 3 | Ticket Médio por Sessão | Benchmark local | Mensal |
-| 4 | LTV estimado por paciente | 3× CAC | Trimestral |
-| 5 | CAC por canal | Menor possível | Mensal |
-| 6 | Payback em meses | < 6 meses | Mensal |
-| 7 | LTV:CAC ratio | ≥ 3:1 | Mensal |
-| 8 | Taxa de Conversão avaliação→tratamento | ≥ 70% | Mensal |
-| 9 | Taxa de Renovação de Pacotes | > 60% | Mensal |
-| 10 | Churn Rate mensal | < 10% | Mensal |
+| #   | KPI                                    | Meta            | Frequência |
+| --- | -------------------------------------- | --------------- | ---------- |
+| 1   | Taxa de Ocupação da Agenda             | ≥ 75%           | Diária     |
+| 2   | No-Show Rate                           | < 15%           | Semanal    |
+| 3   | Ticket Médio por Sessão                | Benchmark local | Mensal     |
+| 4   | LTV estimado por paciente              | 3× CAC          | Trimestral |
+| 5   | CAC por canal                          | Menor possível  | Mensal     |
+| 6   | Payback em meses                       | < 6 meses       | Mensal     |
+| 7   | LTV:CAC ratio                          | ≥ 3:1           | Mensal     |
+| 8   | Taxa de Conversão avaliação→tratamento | ≥ 70%           | Mensal     |
+| 9   | Taxa de Renovação de Pacotes           | > 60%           | Mensal     |
+| 10  | Churn Rate mensal                      | < 10%           | Mensal     |
 
 ---
 
 ## 4. COMO REDUZIR CAC (sem perder qualidade)
 
 ### Canal 1 — Indicações (CAC próximo de zero)
+
 - Pacientes satisfeitos indicam → ganham sessão grátis
 - Rastrear origem de cada novo paciente
 - Os "super promotores" (>2 indicações) merecem VIP treatment
 
 ### Canal 2 — SEO Local (CAC baixo, 3-6 meses para resultado)
+
 - Página pública `/agendar/:slug` com Schema markup LocalBusiness
 - Blog com artigos: "fisioterapia [bairro]", "tratamento dor lombar [cidade]"
 - Google My Business otimizado + respostas automáticas de reviews
 
 ### Canal 3 — Automação WhatsApp AI Concierge (CAC médio, resposta imediata)
+
 - Novos leads no WhatsApp recebem triagem IA em < 1 minuto
 - Benchmarks (Triagefy): tempo de resposta manual = 1-4h; com IA = < 1 min
 - Resultado: 20-30% mais conversão de leads para agendamentos
 
 ### Canal 4 — Reativação pós-alta (CAC = quase zero, LTV += 40%)
+
 - Trigger automático: 6 meses após alta → WhatsApp de reavaliação
 - "Oi [Nome], faz 6 meses da sua alta do tratamento de [condição]. Que tal agendarmos uma reavaliação de performance física?"
 - ROI muito alto: paciente já conhece a clínica, CAC é praticamente zero
@@ -142,21 +147,25 @@ Payback (meses) = CAC ÷ (Receita média mensal por paciente)
 ## 5. COMO AUMENTAR LTV (menos churn, mais retenção)
 
 ### Tática 1 — Mostrar resultado ao paciente (principal driver de retenção)
+
 - Gráfico VAS (dor) ao longo das sessões — visível para o paciente
 - Comparativo foto before/after no app
 - Celebração de milestones: "Você completou 10 sessões! Sua evolução foi incrível 🎉"
 
 ### Tática 2 — Gamificação ativa (já implementada, melhorar visibilidade)
+
 - Badgets por assiduidade ("7 dias seguidos")
 - XP por fazer exercícios HEP em casa
 - Ranking entre pacientes (com privacidade respeitada)
 
 ### Tática 3 — HEP + Wearables (compliance fora da clínica = maior resultado = menor abandono)
+
 - Paciente faz exercícios em casa → app registra
 - Fisioterapeuta vê compliance de HEP antes de cada sessão
 - Wearable (smartwatch) envia dados de atividade → aparece na evolução
 
 ### Tática 4 — Comunicação proativa anti-churn
+
 - Trigger: sem sessão há 14 dias → WhatsApp automático
 - Trigger: pacote com 2 sessões → WhatsApp para renovar
 - Trigger: NPS < 7 → contato pessoal do fisio responsável
@@ -168,6 +177,7 @@ Payback (meses) = CAC ÷ (Receita média mensal por paciente)
 A abordagem recomendada é **OAuth 2.0 + REST APIs diretas** — sem burocracia de saúde.
 
 ### Camada 1 — HealthKit + Google Health Connect (via patient-app)
+
 ```
 Paciente tem smartphone → app FisioFlow solicita permissão →
 lê dados localmente (passos, BPM, sono, carga de treino) →
@@ -175,6 +185,7 @@ POST /api/wearables/sync → dados aparecem na evolução
 ```
 
 ### Camada 2 — APIs de Fabricantes (Garmin, Strava, Oura)
+
 ```
 Portal do paciente → "Conectar Garmin" → OAuth 2.0 →
 Webhook em tempo real quando o paciente treina →
@@ -183,6 +194,7 @@ aparecem automaticamente na evolução do próximo dia
 ```
 
 ### Camada 3 — Google Fit REST API
+
 ```
 Conta Google do paciente → OAuth 2.0 →
 histórico de passos, peso, atividades consolidadas →
@@ -196,16 +208,18 @@ gráfico de atividade no perfil do paciente
 ## 7. ROADMAP COMPLETO — 16 SPRINTS (32 SEMANAS)
 
 ### Legenda de prioridade
-- 🔴 P0 = Quebrado — corrigir imediatamente  
-- 🟠 P1 = Alto impacto na receita/retenção, baixo/médio esforço  
-- 🟡 P2 = Alto impacto, maior esforço  
-- 🟢 P3 = Diferencial estratégico, alto esforço  
+
+- 🔴 P0 = Quebrado — corrigir imediatamente
+- 🟠 P1 = Alto impacto na receita/retenção, baixo/médio esforço
+- 🟡 P2 = Alto impacto, maior esforço
+- 🟢 P3 = Diferencial estratégico, alto esforço
 
 ---
 
 ### SPRINT 1 (Semana 1-2) 🔴 — Auditoria + Correções P0
 
 **Pré-requisito:** Deletar lock do Chrome DevTools MCP:
+
 ```bash
 rm ~/.cache/chrome-devtools-mcp/chrome-profile/Default/SingletonLock
 rm ~/.cache/chrome-devtools-mcp/chrome-profile/Default/SingletonSocket
@@ -213,6 +227,7 @@ rm ~/.cache/chrome-devtools-mcp/chrome-profile/Default/SingletonCookie
 ```
 
 **TODO List:**
+
 - [ ] Navegar todas as 28 rotas em produção (moocafisio.com.br) com DevTools
 - [ ] Capturar todos os erros de console (P0 = erros, P1 = warnings)
 - [ ] Testar CRUDs: Paciente / Agendamento / Evolução / Exercício / Protocolo / Financeiro
@@ -230,6 +245,7 @@ rm ~/.cache/chrome-devtools-mcp/chrome-profile/Default/SingletonCookie
 **Objetivo:** Gestor vê CAC / LTV / Payback / Ocupação em 1 tela
 
 **TODO List:**
+
 - [ ] Criar `src/components/dashboard/ClinicHealthKPIs.tsx`
   - [ ] Widget: Taxa de Ocupação da Agenda (live — query `appointments`)
   - [ ] Widget: No-Show Rate (30/90 dias)
@@ -257,6 +273,7 @@ rm ~/.cache/chrome-devtools-mcp/chrome-profile/Default/SingletonCookie
 **Objetivo:** Fisioterapeuta dita evolução em voz → IA estrutura SOAP em segundos
 
 **TODO List:**
+
 - [ ] Melhorar botão 🎤 no formulário de evolução (mais visível/acessível)
 - [ ] Adicionar feedback visual durante transcrição (waveform animado)
 - [ ] IA estrutura automaticamente: Subjetivo / Objetivo / Avaliação / Plano + escala de dor + exercícios realizados
@@ -280,6 +297,7 @@ rm ~/.cache/chrome-devtools-mcp/chrome-profile/Default/SingletonCookie
 **Objetivo:** Identificar e agir sobre pacientes prestes a abandonar + inadimplentes
 
 **TODO List:**
+
 - [ ] Conectar `AtRiskPatients.tsx` com dados reais do banco
 - [ ] Critérios de risco configuráveis:
   - [ ] Sem sessão há ≥ 14 dias (configurável)
@@ -306,6 +324,7 @@ rm ~/.cache/chrome-devtools-mcp/chrome-profile/Default/SingletonCookie
 **Objetivo:** Reduzir no-show ≥ 30% + triagem de novos pacientes 24/7
 
 **TODO List (Confirmação automática):**
+
 - [ ] Worker cron: 48h antes da sessão → WhatsApp de confirmação
   - [ ] Template: "[Nome], confirme sua sessão [dia] às [hora] 👇"
   - [ ] Botões: "✅ Confirmado" / "❌ Preciso cancelar"
@@ -315,8 +334,9 @@ rm ~/.cache/chrome-devtools-mcp/chrome-profile/Default/SingletonCookie
 - [ ] Usar Cloudflare Queue `fisioflow-background-tasks` para envios
 
 **TODO List (AI Concierge):**
+
 - [ ] Criar fluxo de triagem no WhatsApp para número da clínica
-- [ ] Menu inicial: "1️⃣ Marcar avaliação  2️⃣ Falar com equipe  3️⃣ Dúvidas"
+- [ ] Menu inicial: "1️⃣ Marcar avaliação 2️⃣ Falar com equipe 3️⃣ Dúvidas"
 - [ ] Fluxo "Marcar avaliação": coletar nome → queixa principal → plano de saúde → propor horários disponíveis → confirmar agendamento
 - [ ] Integrar Claude AI para entender mensagens livres (não só botões)
 - [ ] Encaminhar para profissional correto com base na queixa
@@ -331,6 +351,7 @@ rm ~/.cache/chrome-devtools-mcp/chrome-profile/Default/SingletonCookie
 **Objetivo:** Gestor sabe exatamente o que vai receber e quem precisa renovar
 
 **TODO List:**
+
 - [ ] Widget "Pacotes" no dashboard financeiro:
   - [ ] Pacientes com pacote expirando em < 7 dias
   - [ ] Pacientes com saldo zero (renovação pendente)
@@ -351,6 +372,7 @@ rm ~/.cache/chrome-devtools-mcp/chrome-profile/Default/SingletonCookie
 **Objetivo:** Controlar check-ins, vagas e lista de espera para turmas
 
 **TODO List:**
+
 - [ ] Migration: `workers/migrations/0036_groups.sql`
   - Tabelas: `group_sessions`, `group_enrollments`, `group_waitlist`
 - [ ] Worker route: `workers/src/routes/groups.ts`
@@ -372,6 +394,7 @@ rm ~/.cache/chrome-devtools-mcp/chrome-profile/Default/SingletonCookie
 **Objetivo:** Gestor visualiza produtividade individual e compara a equipe
 
 **TODO List:**
+
 - [ ] Enriquecer `/performance-equipe`:
   - [ ] Ocupação por profissional (% agenda preenchida) com gráfico
   - [ ] Faturamento por profissional (já tem `commissions`)
@@ -392,12 +415,14 @@ rm ~/.cache/chrome-devtools-mcp/chrome-profile/Default/SingletonCookie
 **Objetivo:** Dados de atividade física do paciente aparecem na evolução clínica
 
 **TODO List (Camada 1 — HealthKit/Health Connect):**
+
 - [ ] `apps/patient-app/app/(tabs)/wellness.tsx` — solicitar permissão de saúde
 - [ ] Ler dados locais: batimentos cardíacos, passos, sono, carga de treino
 - [ ] `POST /api/wearables/sync` — enviar dados para Neon DB (`wearable_data` já existe)
 - [ ] Widget "Dados do Paciente" na evolução clínica
 
 **TODO List (Camada 2 — Garmin/Strava/Oura):**
+
 - [ ] Tela `/portal/integrations` no portal do paciente
   - [ ] Botões "Conectar Garmin" / "Conectar Strava" / "Conectar Oura"
 - [ ] Worker endpoints OAuth:
@@ -408,6 +433,7 @@ rm ~/.cache/chrome-devtools-mcp/chrome-profile/Default/SingletonCookie
 - [ ] Aparecem automaticamente na evolução quando há atividade recente
 
 **TODO List (Camada 3 — Google Fit):**
+
 - [ ] Integração OAuth com conta Google do paciente
 - [ ] Gráfico de atividade física no perfil do paciente
 
@@ -420,6 +446,7 @@ rm ~/.cache/chrome-devtools-mcp/chrome-profile/Default/SingletonCookie
 **Objetivo:** Pacientes engajam pelo app → menos churn → maior LTV
 
 **TODO List:**
+
 - [ ] Verificar `apps/patient-app/eas.json` e `app.json`
 - [ ] Assets para as stores:
   - [ ] Ícone 1024×1024 e 512×512
@@ -444,6 +471,7 @@ rm ~/.cache/chrome-devtools-mcp/chrome-profile/Default/SingletonCookie
 **Objetivo:** Paciente agenda sozinho sem passar pelo balcão/WhatsApp
 
 **TODO List:**
+
 - [ ] Audit completo da página `/agendar/:slug`:
   - [ ] Testar fluxo: serviço → horário disponível → dados pessoais → confirmar → email/WhatsApp de confirmação
   - [ ] Identificar e corrigir bugs no fluxo
@@ -466,6 +494,7 @@ rm ~/.cache/chrome-devtools-mcp/chrome-profile/Default/SingletonCookie
 **Objetivo:** Clínica tem visão financeira 360° sem planilha paralela
 
 **TODO List:**
+
 - [ ] Audit NFS-e SP ponta a ponta em produção
   - [ ] Testar emissão com dados reais
   - [ ] Verificar configuração certificado digital A1/A3
@@ -490,6 +519,7 @@ rm ~/.cache/chrome-devtools-mcp/chrome-profile/Default/SingletonCookie
 **Objetivo:** Reduzir CAC com presença orgânica — pacientes chegam sem pagar por anúncio
 
 **TODO List:**
+
 - [ ] FisioLink (`/marketing/fisiolink`):
   - [ ] Página link-in-bio com SEO local
   - [ ] Schema markup LocalBusiness
@@ -514,6 +544,7 @@ rm ~/.cache/chrome-devtools-mcp/chrome-profile/Default/SingletonCookie
 **Objetivo:** Transformar pacientes satisfeitos em canal de aquisição (CAC ≈ zero)
 
 **TODO List:**
+
 - [ ] Melhorar `/marketing/referral`:
   - [ ] Landing page para o indicado com desconto de boas-vindas
   - [ ] "Indique um amigo → ganhe 1 sessão grátis"
@@ -531,6 +562,7 @@ rm ~/.cache/chrome-devtools-mcp/chrome-profile/Default/SingletonCookie
 ### SPRINT 15 (Semana 29-30) 🟢 — Relatórios Avançados + Business Intelligence
 
 **TODO List:**
+
 - [ ] Relatório de cohort melhorado (`/admin/cohorts`):
   - [ ] Retenção por mês de início de tratamento
   - [ ] Cohort de receita (LTV por coorte)
@@ -552,6 +584,7 @@ rm ~/.cache/chrome-devtools-mcp/chrome-profile/Default/SingletonCookie
 **Objetivo:** Ativar mais rápido → reduzir churn dos primeiros 30 dias
 
 **TODO List:**
+
 - [ ] Checklist de onboarding no primeiro login:
   - [ ] "Configure sua agenda" ✅
   - [ ] "Cadastre seus serviços" ✅
@@ -569,19 +602,19 @@ rm ~/.cache/chrome-devtools-mcp/chrome-profile/Default/SingletonCookie
 
 ## 8. METAS DE NEGÓCIO — 6 MESES
 
-| KPI | Baseline (estimado hoje) | Meta 6 meses |
-|-----|--------------------------|--------------|
-| No-show rate | ~25% | **< 12%** |
-| Taxa de ocupação agenda | ~60% | **≥ 80%** |
-| Churn rate mensal | ~20% | **< 10%** |
-| LTV:CAC ratio | Desconhecido | **≥ 3:1** |
-| Payback | Desconhecido | **≤ 6 meses** |
-| NPS interno | Desconhecido | **≥ 50** |
-| Pacientes usando app mobile | ~0% | **≥ 50% da base** |
-| Conversão avaliação→tratamento | Desconhecido | **≥ 70%** |
-| Inadimplência | Desconhecida | **< 5%** |
-| % pacientes de indicação rastreada | ~0% | **≥ 10%** |
-| CAC (custo por novo paciente) | Desconhecido | **Calculável e monitorado** |
+| KPI                                | Baseline (estimado hoje) | Meta 6 meses                |
+| ---------------------------------- | ------------------------ | --------------------------- |
+| No-show rate                       | ~25%                     | **< 12%**                   |
+| Taxa de ocupação agenda            | ~60%                     | **≥ 80%**                   |
+| Churn rate mensal                  | ~20%                     | **< 10%**                   |
+| LTV:CAC ratio                      | Desconhecido             | **≥ 3:1**                   |
+| Payback                            | Desconhecido             | **≤ 6 meses**               |
+| NPS interno                        | Desconhecido             | **≥ 50**                    |
+| Pacientes usando app mobile        | ~0%                      | **≥ 50% da base**           |
+| Conversão avaliação→tratamento     | Desconhecido             | **≥ 70%**                   |
+| Inadimplência                      | Desconhecida             | **< 5%**                    |
+| % pacientes de indicação rastreada | ~0%                      | **≥ 10%**                   |
+| CAC (custo por novo paciente)      | Desconhecido             | **Calculável e monitorado** |
 
 ---
 
@@ -663,18 +696,20 @@ O FisioFlow já tem a **melhor stack técnica do mercado** de software para fisi
 Além do roadmap original, as seguintes tecnologias de elite foram integradas:
 
 ### 8.1 Inteligência Clínica Avançada
+
 - **Digital Twin (Gêmeo Digital):** Predição de alta e risco de abandono baseada em trajetória histórica.
 - **RAG de Exames:** Chat com laudos PDF via Cloudflare Vectorize.
 - **Vision AI Verifier:** Auditoria de execução de testes clínicos via câmera em tempo real.
 
 ### 8.2 Gestão de Alta Performance
+
 - **Edge Caching Turbo:** Agenda carregando em < 50ms via Cloudflare KV/D1.
 - **Smart Inventory Forecasting:** Previsão de demanda de materiais baseada na agenda futura.
 - **Regional Enterprise Dashboard:** Visão consolidada para redes de múltiplas clínicas.
 - **AI Reimbursement Billing:** Inteligência de faturamento para maximizar reembolsos de convênios.
 
 ### 8.3 Patient Experience (UX)
+
 - **Omnisearch (Cmd+K):** Busca global unificada e semântica.
 - **Live Waiting Room TV:** Painel em tempo real para recepção via D1.
 - **Programa de Indicação (MGM):** Crescimento orgânico integrado ao portal do paciente.
-

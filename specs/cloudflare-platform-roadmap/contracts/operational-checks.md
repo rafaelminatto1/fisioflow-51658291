@@ -4,34 +4,34 @@ This contract defines expected checks for implementation and review. It is inten
 
 ## Environment Binding Contract
 
-| Binding Type | Production Requirement | Staging Requirement | Validation |
-|--------------|------------------------|---------------------|------------|
-| Hyperdrive | Production Neon pooler | Staging Neon pooler | Wrangler dry-run and Cloudflare dashboard resource ID |
-| R2 | Production media bucket | Staging media bucket | Upload test object to staging only |
-| KV | Production config namespace | Staging config namespace | Read/write `__healthcheck__` staging key |
-| D1 DB | Production D1 DB | Staging D1 DB | Query staging tables |
-| D1 EDGE_CACHE | Production edge cache | Staging edge cache | Rate-limit test writes staging only |
-| Analytics Engine | Production dataset | Staging dataset | Route metric appears in correct dataset |
-| Vectorize | Production clinical index | Staging clinical index | Staging upsert/query does not affect production |
-| Pipeline | Production pipeline/stream | Staging pipeline/stream | Test event lands only in staging destination |
-| Queue | Production queue and DLQ | Staging queue and DLQ | Failing test task reaches staging DLQ |
-| Workflows | Production workflow bindings | Staging workflow bindings | Create test instance in staging |
-| Durable Objects | Production namespaces/classes | Staging namespaces/classes | WebSocket/agent smoke test in staging |
-| mTLS | Production certificate binding | Homologation/staging certificate binding | NFS-e homologation request uses binding |
+| Binding Type     | Production Requirement         | Staging Requirement                      | Validation                                            |
+| ---------------- | ------------------------------ | ---------------------------------------- | ----------------------------------------------------- |
+| Hyperdrive       | Production Neon pooler         | Staging Neon pooler                      | Wrangler dry-run and Cloudflare dashboard resource ID |
+| R2               | Production media bucket        | Staging media bucket                     | Upload test object to staging only                    |
+| KV               | Production config namespace    | Staging config namespace                 | Read/write `__healthcheck__` staging key              |
+| D1 DB            | Production D1 DB               | Staging D1 DB                            | Query staging tables                                  |
+| D1 EDGE_CACHE    | Production edge cache          | Staging edge cache                       | Rate-limit test writes staging only                   |
+| Analytics Engine | Production dataset             | Staging dataset                          | Route metric appears in correct dataset               |
+| Vectorize        | Production clinical index      | Staging clinical index                   | Staging upsert/query does not affect production       |
+| Pipeline         | Production pipeline/stream     | Staging pipeline/stream                  | Test event lands only in staging destination          |
+| Queue            | Production queue and DLQ       | Staging queue and DLQ                    | Failing test task reaches staging DLQ                 |
+| Workflows        | Production workflow bindings   | Staging workflow bindings                | Create test instance in staging                       |
+| Durable Objects  | Production namespaces/classes  | Staging namespaces/classes               | WebSocket/agent smoke test in staging                 |
+| mTLS             | Production certificate binding | Homologation/staging certificate binding | NFS-e homologation request uses binding               |
 
 ## Route Protection Contract
 
-| Route Category | Required Controls |
-|----------------|-------------------|
-| Auth login/session | Rate limit by IP and identity hint; secure cookies/headers; no PHI logs |
-| Signup/password reset | Turnstile; rate limit by IP/email; audit event |
-| Public booking/pre-cadastro | Turnstile; rate limit by IP; input validation; tenant-safe writes |
-| Webhooks | Provider signature verification; replay tolerance; no Turnstile; rate limit where provider-compatible |
-| AI routes | Auth; per-org rate limit; gateway metrics; cost/error analytics |
-| Upload/media | Auth; tenant scope; file type/size validation; signed URL TTL; audit event |
-| Billing/NFS-e | Auth; role/permission check; audit event; idempotency |
-| Admin/operator | Auth; admin role; audit event; no broad payload exposure |
-| Patient portal | Patient identity scope; CORS allowlist; rate limit for sensitive actions |
+| Route Category              | Required Controls                                                                                     |
+| --------------------------- | ----------------------------------------------------------------------------------------------------- |
+| Auth login/session          | Rate limit by IP and identity hint; secure cookies/headers; no PHI logs                               |
+| Signup/password reset       | Turnstile; rate limit by IP/email; audit event                                                        |
+| Public booking/pre-cadastro | Turnstile; rate limit by IP; input validation; tenant-safe writes                                     |
+| Webhooks                    | Provider signature verification; replay tolerance; no Turnstile; rate limit where provider-compatible |
+| AI routes                   | Auth; per-org rate limit; gateway metrics; cost/error analytics                                       |
+| Upload/media                | Auth; tenant scope; file type/size validation; signed URL TTL; audit event                            |
+| Billing/NFS-e               | Auth; role/permission check; audit event; idempotency                                                 |
+| Admin/operator              | Auth; admin role; audit event; no broad payload exposure                                              |
+| Patient portal              | Patient identity scope; CORS allowlist; rate limit for sensitive actions                              |
 
 ## Observability Contract
 

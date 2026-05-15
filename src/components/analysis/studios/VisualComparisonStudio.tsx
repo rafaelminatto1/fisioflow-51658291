@@ -5,14 +5,7 @@ import { BiomechanicsComparison } from "../BiomechanicsComparison";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { 
-  History, 
-  ArrowLeftRight, 
-  Calendar,
-  Sparkles,
-  TrendingUp,
-  X
-} from "lucide-react";
+import { History, ArrowLeftRight, Calendar, Sparkles, TrendingUp, X } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { LoadingSkeleton } from "@/components/ui/loading-skeleton";
@@ -71,7 +64,8 @@ export const VisualComparisonStudio: React.FC<VisualComparisonStudioProps> = ({
           </div>
           <h3 className="font-bold text-lg">Histórico Insuficiente</h3>
           <p className="text-sm text-muted-foreground max-w-sm mt-1">
-            É necessário ter pelo menos duas análises biomecânicas salvas para realizar uma comparação evolutiva.
+            É necessário ter pelo menos duas análises biomecânicas salvas para realizar uma
+            comparação evolutiva.
           </p>
         </CardContent>
       </Card>
@@ -118,7 +112,9 @@ export const VisualComparisonStudio: React.FC<VisualComparisonStudioProps> = ({
                   <Card
                     key={item.id}
                     className={`cursor-pointer overflow-hidden transition-all relative border-2 ${
-                      isSelected ? "border-primary bg-primary/5 ring-4 ring-primary/10" : "border-transparent hover:border-muted-foreground/30"
+                      isSelected
+                        ? "border-primary bg-primary/5 ring-4 ring-primary/10"
+                        : "border-transparent hover:border-muted-foreground/30"
                     }`}
                     onClick={() => toggleSelection(item.id)}
                   >
@@ -147,11 +143,13 @@ export const VisualComparisonStudio: React.FC<VisualComparisonStudioProps> = ({
                         {item.type.replace("_", " ").toUpperCase()}
                       </p>
                       <div className="flex gap-1 mt-1">
-                        {Object.keys(item.analysisData.angles || {}).slice(0, 2).map(k => (
-                          <Badge key={k} variant="secondary" className="text-[9px] px-1.5 py-0">
-                            {k}
-                          </Badge>
-                        ))}
+                        {Object.keys(item.analysisData.angles || {})
+                          .slice(0, 2)
+                          .map((k) => (
+                            <Badge key={k} variant="secondary" className="text-[9px] px-1.5 py-0">
+                              {k}
+                            </Badge>
+                          ))}
                       </div>
                     </div>
                   </Card>

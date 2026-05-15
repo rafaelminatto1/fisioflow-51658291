@@ -243,35 +243,46 @@ export function PackagesManager() {
                     onClick={() => handleOpenDialog(undefined, tpl)}
                     className={cn(
                       "text-left p-4 rounded-xl border-2 border-dashed transition-all hover:shadow-sm group",
-                      tpl.color === "emerald" && "border-emerald-200 hover:border-emerald-400 hover:bg-emerald-50/50",
-                      tpl.color === "blue" && "border-blue-200 hover:border-blue-400 hover:bg-blue-50/50",
-                      tpl.color === "violet" && "border-violet-200 hover:border-violet-400 hover:bg-violet-50/50",
+                      tpl.color === "emerald" &&
+                        "border-emerald-200 hover:border-emerald-400 hover:bg-emerald-50/50",
+                      tpl.color === "blue" &&
+                        "border-blue-200 hover:border-blue-400 hover:bg-blue-50/50",
+                      tpl.color === "violet" &&
+                        "border-violet-200 hover:border-violet-400 hover:bg-violet-50/50",
                     )}
                   >
                     <div className="flex items-start justify-between mb-2">
-                      <span className={cn(
-                        "text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full",
-                        tpl.color === "emerald" && "bg-emerald-100 text-emerald-700",
-                        tpl.color === "blue" && "bg-blue-100 text-blue-700",
-                        tpl.color === "violet" && "bg-violet-100 text-violet-700",
-                      )}>
+                      <span
+                        className={cn(
+                          "text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full",
+                          tpl.color === "emerald" && "bg-emerald-100 text-emerald-700",
+                          tpl.color === "blue" && "bg-blue-100 text-blue-700",
+                          tpl.color === "violet" && "bg-violet-100 text-violet-700",
+                        )}
+                      >
                         {tpl.label}
                       </span>
-                      <Zap className={cn(
-                        "h-3.5 w-3.5 opacity-0 group-hover:opacity-100 transition-opacity",
-                        tpl.color === "emerald" && "text-emerald-500",
-                        tpl.color === "blue" && "text-blue-500",
-                        tpl.color === "violet" && "text-violet-500",
-                      )} />
+                      <Zap
+                        className={cn(
+                          "h-3.5 w-3.5 opacity-0 group-hover:opacity-100 transition-opacity",
+                          tpl.color === "emerald" && "text-emerald-500",
+                          tpl.color === "blue" && "text-blue-500",
+                          tpl.color === "violet" && "text-violet-500",
+                        )}
+                      />
                     </div>
-                    <p className="text-sm font-semibold text-slate-700 leading-snug mb-1">{tpl.name}</p>
+                    <p className="text-sm font-semibold text-slate-700 leading-snug mb-1">
+                      {tpl.name}
+                    </p>
                     <p className="text-xs text-slate-400 line-clamp-2">{tpl.description}</p>
                     <div className="flex items-center gap-3 mt-3 text-xs text-slate-500">
                       <span className="flex items-center gap-1">
-                        <Users className="h-3 w-3" />{tpl.sessions_count} sessões
+                        <Users className="h-3 w-3" />
+                        {tpl.sessions_count} sessões
                       </span>
                       <span className="flex items-center gap-1">
-                        <DollarSign className="h-3 w-3" />{formatCurrency(tpl.price)}
+                        <DollarSign className="h-3 w-3" />
+                        {formatCurrency(tpl.price)}
                       </span>
                     </div>
                   </button>
@@ -285,7 +296,12 @@ export function PackagesManager() {
               </div>
 
               <div className="text-center">
-                <Button variant="outline" size="sm" onClick={() => handleOpenDialog()} className="rounded-xl gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleOpenDialog()}
+                  className="rounded-xl gap-2"
+                >
                   <Plus className="h-3.5 w-3.5" />
                   Criar pacote personalizado
                 </Button>
@@ -422,7 +438,9 @@ export function PackagesManager() {
         <CustomModalBody className="p-0 sm:p-0">
           {!editingPackage && (
             <div className="px-6 py-4 bg-slate-50/80 border-b border-slate-100">
-              <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-3">Modelos Sugeridos</p>
+              <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-3">
+                Modelos Sugeridos
+              </p>
               <div className="flex flex-wrap gap-2">
                 {QUICK_TEMPLATES.map((tpl) => (
                   <button
@@ -430,7 +448,8 @@ export function PackagesManager() {
                     onClick={() => setFormData(tpl)}
                     className={cn(
                       "px-3 py-1.5 rounded-full border border-dashed text-[11px] font-bold transition-all hover:shadow-sm",
-                      tpl.color === "emerald" && "border-emerald-200 bg-emerald-50 text-emerald-700",
+                      tpl.color === "emerald" &&
+                        "border-emerald-200 bg-emerald-50 text-emerald-700",
                       tpl.color === "blue" && "border-blue-200 bg-blue-50 text-blue-700",
                       tpl.color === "violet" && "border-violet-200 bg-violet-50 text-violet-700",
                     )}

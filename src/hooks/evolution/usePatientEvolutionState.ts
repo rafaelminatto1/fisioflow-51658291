@@ -156,8 +156,7 @@ export function usePatientEvolutionState() {
     if (!draftByAppointment || currentSoapRecordId !== undefined) return;
 
     const observacao = draftByAppointment.observacao ?? "";
-    const painScaleValue =
-      draftByAppointment.pain_scale ?? draftByAppointment.pain_level ?? null;
+    const painScaleValue = draftByAppointment.pain_scale ?? draftByAppointment.pain_level ?? null;
 
     setEvolutionData({
       observacao,

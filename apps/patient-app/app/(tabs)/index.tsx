@@ -24,7 +24,14 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useColors } from "@/hooks/useColorScheme";
 import { useAuthStore } from "@/store/auth";
 import { useGamification } from "@/hooks/useGamification";
-import { Card, NotificationPermissionModal, SyncIndicator, LinearProgress, RTMDashboardWidget, GamificationDashboard } from "@/components";
+import {
+  Card,
+  NotificationPermissionModal,
+  SyncIndicator,
+  LinearProgress,
+  RTMDashboardWidget,
+  GamificationDashboard,
+} from "@/components";
 import { RecoveryTrajectoryMobileWidget } from "@/components/RecoveryTrajectoryWidget";
 import { ClinicalAISnapshotMobile } from "@/components/ClinicalAISnapshotMobile";
 import { AIEducationHub } from "@/components/AIEducationHub";
@@ -83,12 +90,13 @@ const quickActions: QuickAction[] = [
 export default function DashboardScreen() {
   const colors = useColors();
   const { user } = useAuthStore();
-  const {
-    profile,
-    isLoading: gamificationLoading,
-  } = useGamification();
+  const { profile, isLoading: gamificationLoading } = useGamification();
   const { data: exercises = [], isLoading: exercisesLoading } = useExercises();
-  const { data: upcomingAppointments = [], isLoading: appointmentsLoading, refetch: refetchAppointments } = useAppointments(true);
+  const {
+    data: upcomingAppointments = [],
+    isLoading: appointmentsLoading,
+    refetch: refetchAppointments,
+  } = useAppointments(true);
   const confirmMutation = useConfirmAppointment();
   const { activeRoom } = useTelemedicine();
 
@@ -221,7 +229,7 @@ export default function DashboardScreen() {
 
         {/* Gamification & Progress */}
         <GamificationDashboard />
-        
+
         {/* RTM Activity Widget */}
         <RTMDashboardWidget />
 

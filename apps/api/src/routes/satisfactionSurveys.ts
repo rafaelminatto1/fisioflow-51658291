@@ -217,7 +217,7 @@ app.post(
       try {
         const { runThinkingModel } = await import("../lib/ai-native");
         const feedback = `Comentários: ${body.comments || ""} | Sugestões: ${body.suggestions || ""}`;
-        
+
         const aiResponse = await runThinkingModel(c.env, {
           prompt: `Analise este feedback de um paciente de fisioterapia: "${feedback}". 
           Classifique o sentimento em 'positive', 'neutral' ou 'negative'. 
@@ -225,7 +225,7 @@ app.post(
           Indique se há urgência de resposta (ex: reclamação grave). 
           Retorne JSON: {"sentiment": "...", "summary": "...", "urgent": true/false}`,
           model: "gemini-1.5-flash",
-          responseFormat: "json"
+          responseFormat: "json",
         });
 
         const jsonMatch = aiResponse.content.match(/\{[\s\S]*\}/);
@@ -260,7 +260,7 @@ app.post(
         body.suggestions ?? null,
         aiSentiment,
         aiSummary,
-        aiUrgency
+        aiUrgency,
       ],
     );
 
@@ -338,7 +338,7 @@ app.get("/latest-feedbacks", requireAuth, async (c) => {
        WHERE ss.organization_id = $1
        ORDER BY ss.responded_at DESC
        LIMIT 20`,
-      [user.organizationId]
+      [user.organizationId],
     );
 
     return c.json({ data: result.rows });

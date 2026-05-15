@@ -206,8 +206,7 @@ export const schedulingApi = {
         }),
     },
     statuses: {
-      list: () =>
-        request<{ data: ScheduleStatusSetting[] }>("/api/scheduling/settings/statuses"),
+      list: () => request<{ data: ScheduleStatusSetting[] }>("/api/scheduling/settings/statuses"),
       create: (data: Record<string, unknown>) =>
         request<{ data: ScheduleStatusSetting }>("/api/scheduling/settings/statuses", {
           method: "POST",

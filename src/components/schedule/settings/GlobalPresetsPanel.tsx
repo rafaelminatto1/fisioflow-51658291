@@ -131,10 +131,7 @@ export function GlobalPresetsPanel() {
               </div>
               <div>
                 <p
-                  className={cn(
-                    "text-xs font-semibold leading-none",
-                    isActive ? preset.color : "",
-                  )}
+                  className={cn("text-xs font-semibold leading-none", isActive ? preset.color : "")}
                 >
                   {preset.name}
                 </p>
