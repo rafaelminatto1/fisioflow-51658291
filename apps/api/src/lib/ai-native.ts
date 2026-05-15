@@ -258,9 +258,10 @@ export async function runThinkingModel(
 ): Promise<ThinkingModelResult> {
   const modelId = opts.model ?? "@cf/meta/llama-3.3-70b-instruct-fp8-fast";
 
-  const systemContent = opts.responseFormat === "json"
-    ? "Responda APENAS com JSON válido, sem markdown, sem explicações adicionais."
-    : "Você é um assistente especializado em fisioterapia e reabilitação.";
+  const systemContent =
+    opts.responseFormat === "json"
+      ? "Responda APENAS com JSON válido, sem markdown, sem explicações adicionais."
+      : "Você é um assistente especializado em fisioterapia e reabilitação.";
 
   const response = await runAi(
     env,

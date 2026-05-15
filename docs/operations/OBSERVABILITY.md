@@ -8,13 +8,13 @@
 
 ## Stack atual (sem Grafana/OTEL)
 
-| Camada | Ferramenta | Status |
-|---|---|---|
-| Métricas e eventos | Cloudflare Analytics Engine | ✅ Ativo |
-| Logs de Workers | `[observability] enabled = true` (wrangler.toml) | ✅ Ativo |
-| Health checks | `/api/health` (liveness) + `/api/health/ready` (readiness) | ✅ Ativo |
-| Alertas | Cloudflare Notifications (3 alertas — configurar manualmente) | ⏳ Pendente configuração |
-| Tracing distribuído | Não implementado — não é necessário neste ciclo | — |
+| Camada              | Ferramenta                                                    | Status                   |
+| ------------------- | ------------------------------------------------------------- | ------------------------ |
+| Métricas e eventos  | Cloudflare Analytics Engine                                   | ✅ Ativo                 |
+| Logs de Workers     | `[observability] enabled = true` (wrangler.toml)              | ✅ Ativo                 |
+| Health checks       | `/api/health` (liveness) + `/api/health/ready` (readiness)    | ✅ Ativo                 |
+| Alertas             | Cloudflare Notifications (3 alertas — configurar manualmente) | ⏳ Pendente configuração |
+| Tracing distribuído | Não implementado — não é necessário neste ciclo               | —                        |
 
 ---
 
@@ -23,15 +23,15 @@
 **Dataset:** `fisioflow_events`  
 **Helper:** `src/lib/analytics.ts` — `writeEvent()` + `analyticsMiddleware()`
 
-| Campo | Conteúdo |
-|---|---|
-| `blob1` | Rota normalizada (ex: `/api/appointments/:id`) |
-| `blob2` | Método HTTP |
-| `blob3` | `organization_id` do usuário |
-| `blob4` | Tipo do evento (`request`, `whatsapp_sent`, `ai_call`) |
-| `double1` | Latência em ms |
-| `double2` | HTTP status code |
-| `double3` | Valor extra (tokens, etc.) |
+| Campo     | Conteúdo                                               |
+| --------- | ------------------------------------------------------ |
+| `blob1`   | Rota normalizada (ex: `/api/appointments/:id`)         |
+| `blob2`   | Método HTTP                                            |
+| `blob3`   | `organization_id` do usuário                           |
+| `blob4`   | Tipo do evento (`request`, `whatsapp_sent`, `ai_call`) |
+| `double1` | Latência em ms                                         |
+| `double2` | HTTP status code                                       |
+| `double3` | Valor extra (tokens, etc.)                             |
 
 `analyticsMiddleware()` é aplicado globalmente no `apps/api/src/index.ts` — todos os requests são instrumentados automaticamente.
 
@@ -59,12 +59,12 @@ Verifica DB (Neon/Hyperdrive) e KV (`FISIOFLOW_CONFIG`).
 
 ## SLOs definidos
 
-| Métrica | Alvo | Medição |
-|---|---|---|
-| Latência p95 (fluxos críticos) | < 300 ms | Analytics Engine Query #1 |
-| Taxa de erro 5xx | < 0,5% | Analytics Engine Query #2 |
-| Disponibilidade mensal | > 99,9% | Analytics Engine Query #4 |
-| Cold start Neon (p95) | < 3s | Latência de `/api/health/ready` após inatividade |
+| Métrica                        | Alvo     | Medição                                          |
+| ------------------------------ | -------- | ------------------------------------------------ |
+| Latência p95 (fluxos críticos) | < 300 ms | Analytics Engine Query #1                        |
+| Taxa de erro 5xx               | < 0,5%   | Analytics Engine Query #2                        |
+| Disponibilidade mensal         | > 99,9%  | Analytics Engine Query #4                        |
+| Cold start Neon (p95)          | < 3s     | Latência de `/api/health/ready` após inatividade |
 
 ---
 
@@ -87,11 +87,11 @@ curl -X POST "https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT_ID}/ana
 
 ## Alertas a configurar (Cloudflare Dashboard → Notifications)
 
-| Alerta | Trigger | Janela |
-|---|---|---|
-| Workers alto erro | Error rate > 1% | 5 min |
-| Workers alta latência | P95 CPU > 50ms | 5 min |
-| Disponibilidade | Health check `/api/health/ready` != 200 | > 2 min |
+| Alerta                | Trigger                                 | Janela  |
+| --------------------- | --------------------------------------- | ------- |
+| Workers alto erro     | Error rate > 1%                         | 5 min   |
+| Workers alta latência | P95 CPU > 50ms                          | 5 min   |
+| Disponibilidade       | Health check `/api/health/ready` != 200 | > 2 min |
 
 Setup detalhado em `docs/OBSERVABILITY_DASHBOARD.md`.
 

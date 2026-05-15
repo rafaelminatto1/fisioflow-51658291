@@ -26,13 +26,13 @@ export function usePatientAnalyticsDashboard(patientId: string) {
 
   const hasAnalyticsData = Boolean(
     (progressSummary.data?.total_sessions ?? 0) > 0 ||
-      (lifecycleSummary.data?.stage_history?.length ?? 0) > 0 ||
-      (outcomeTrends.data?.length ?? 0) > 0 ||
-      (sessionMetrics.data?.length ?? 0) > 0 ||
-      riskScore.data ||
-      (predictions.data?.length ?? 0) > 0 ||
-      (goals.data?.length ?? 0) > 0 ||
-      (insights.data?.length ?? 0) > 0,
+    (lifecycleSummary.data?.stage_history?.length ?? 0) > 0 ||
+    (outcomeTrends.data?.length ?? 0) > 0 ||
+    (sessionMetrics.data?.length ?? 0) > 0 ||
+    riskScore.data ||
+    (predictions.data?.length ?? 0) > 0 ||
+    (goals.data?.length ?? 0) > 0 ||
+    (insights.data?.length ?? 0) > 0,
   );
 
   const isEmpty = !isLoading && !isError && !hasAnalyticsData;

@@ -15,7 +15,7 @@ export function createVector(from: Point3D, to: Point3D): Point3D {
   return {
     x: to.x - from.x,
     y: to.y - from.y,
-    z: to.z - from.z
+    z: to.z - from.z,
   };
 }
 
@@ -42,6 +42,6 @@ export function normalize(v: Point3D): Point3D {
   return {
     x: v.x / m,
     y: v.y / m,
-    z: v.z / m
+    z: v.z / m,
   };
 }

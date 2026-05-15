@@ -44,7 +44,7 @@ export default function VoiceTaskScreen() {
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <Stack.Screen options={{ title: "Comando de Voz", headerLargeTitle: true }} />
-      
+
       <View style={styles.content}>
         <View style={[styles.aiCircle, { backgroundColor: colors.primary + "10" }]}>
           <Ionicons name="mic" size={60} color={colors.primary} />
@@ -52,16 +52,18 @@ export default function VoiceTaskScreen() {
         </View>
 
         <Text style={[styles.instruction, { color: colors.text }]}>
-          {isRecording ? "Ouvindo seu comando..." : "Toque no microfone e diga o que precisa ser feito."}
+          {isRecording
+            ? "Ouvindo seu comando..."
+            : "Toque no microfone e diga o que precisa ser feito."}
         </Text>
-        
+
         <Text style={[styles.hint, { color: colors.textSecondary }]}>
           Ex: "Peça para a recepção ligar para o Sr. João e confirmar a RM dele."
         </Text>
 
         <View style={styles.controls}>
           {!isRecording && !audioUri && (
-            <TouchableOpacity 
+            <TouchableOpacity
               style={[styles.micButton, { backgroundColor: colors.primary }]}
               onPress={startRecording}
             >
@@ -70,7 +72,7 @@ export default function VoiceTaskScreen() {
           )}
 
           {isRecording && (
-            <TouchableOpacity 
+            <TouchableOpacity
               style={[styles.stopButton, { backgroundColor: colors.error }]}
               onPress={stopRecording}
             >
@@ -80,14 +82,16 @@ export default function VoiceTaskScreen() {
 
           {audioUri && !isProcessing && (
             <View style={styles.actionRow}>
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={[styles.retryButton, { borderColor: colors.border }]}
                 onPress={() => router.replace("/(app)/voice-task" as any)}
               >
-                <Text style={[styles.retryText, { color: colors.textSecondary }]}>Gravar novamente</Text>
+                <Text style={[styles.retryText, { color: colors.textSecondary }]}>
+                  Gravar novamente
+                </Text>
               </TouchableOpacity>
-              
-              <TouchableOpacity 
+
+              <TouchableOpacity
                 style={[styles.confirmButton, { backgroundColor: colors.success }]}
                 onPress={handleProcessVoice}
               >
@@ -96,9 +100,7 @@ export default function VoiceTaskScreen() {
             </View>
           )}
 
-          {isProcessing && (
-            <ActivityIndicator size="large" color={colors.primary} />
-          )}
+          {isProcessing && <ActivityIndicator size="large" color={colors.primary} />}
         </View>
       </View>
     </SafeAreaView>

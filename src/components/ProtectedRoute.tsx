@@ -113,8 +113,7 @@ export function ProtectedRoute({
   }
 
   // Handle PENDING users — block access until admin approves
-  const isPending =
-    profile?.role === "pending" || (profile?.roles?.includes("pending") ?? false);
+  const isPending = profile?.role === "pending" || (profile?.roles?.includes("pending") ?? false);
   if (isPending && location.pathname !== "/pending-approval") {
     return <Navigate to="/pending-approval" replace />;
   }
@@ -125,13 +124,11 @@ export function ProtectedRoute({
   }
 
   // Multi-role check: exclude "pending" so it never grants access on its own
-  const userRoles: UserRole[] = (
-    profile?.roles?.filter((r) => r !== "pending").length
-      ? (profile.roles!.filter((r) => r !== "pending") as UserRole[])
-      : role && role !== "pending"
-        ? [role]
-        : []
-  );
+  const userRoles: UserRole[] = profile?.roles?.filter((r) => r !== "pending").length
+    ? (profile.roles!.filter((r) => r !== "pending") as UserRole[])
+    : role && role !== "pending"
+      ? [role]
+      : [];
 
   if (allowedRoles.length > 0 && profile && !userRoles.some((r) => allowedRoles.includes(r))) {
     return (

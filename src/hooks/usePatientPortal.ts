@@ -64,35 +64,35 @@ export function usePortalExerciseHistory(patientId?: string) {
     queryKey: [...KEYS.exerciseHistory, patientId],
     queryFn: async () => {
       if (!patientId) return [];
-      
+
       const res = await exerciseSessionsApi.list({ patientId, limit: 50 });
       const sessions = res.data || [];
-      
+
       // Construir os últimos 7 dias
       const last7Days = Array.from({ length: 7 }).map((_, i) => {
         const date = subDays(new Date(), 6 - i);
         return {
           date,
-          day: format(date, "eee", { locale: ptBR }).replace(/^\w/, c => c.toUpperCase()),
-          completed: 0
+          day: format(date, "eee", { locale: ptBR }).replace(/^\w/, (c) => c.toUpperCase()),
+          completed: 0,
         };
       });
 
       // Distribuir sessões concluídas
-      sessions.forEach(session => {
+      sessions.forEach((session) => {
         if (!session.completed || !session.start_time) return;
         const sessionDate = new Date(session.start_time);
-        
-        const dayEntry = last7Days.find(d => isSameDay(d.date, sessionDate));
+
+        const dayEntry = last7Days.find((d) => isSameDay(d.date, sessionDate));
         if (dayEntry) {
           dayEntry.completed += 100; // Simplificação: se tem sessão concluída, ganha 100.
         }
       });
 
       // Limitar máximo a 100%
-      return last7Days.map(d => ({
+      return last7Days.map((d) => ({
         day: d.day,
-        completed: Math.min(d.completed, 100)
+        completed: Math.min(d.completed, 100),
       }));
     },
     enabled: !!patientId,

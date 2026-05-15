@@ -21,11 +21,13 @@ import { stripHtml } from "@/lib/utils/stripHtml";
 
 export function sanitizeString(input: string): string {
   // stripHtml é idempotente; protege contra payloads aninhados tipo <<script>script>
-  return stripHtml(input.trim())
-    // Remove caracteres nulos
-    .split("\u0000")
-    .join("")
-    .slice(0, 10000); // Limitar tamanho
+  return (
+    stripHtml(input.trim())
+      // Remove caracteres nulos
+      .split("\u0000")
+      .join("")
+      .slice(0, 10000)
+  ); // Limitar tamanho
 }
 
 /**

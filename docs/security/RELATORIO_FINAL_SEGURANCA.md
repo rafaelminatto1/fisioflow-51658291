@@ -11,6 +11,7 @@
 ### FASE 1: Remoção de Arquivos Vulneráveis ✅ CONCLUÍDA
 
 **Ações Executadas:**
+
 1. ✅ `.gitignore` reescrito com 15+ regras de segurança:
    - `opencode.json`, `.cursor/mcp.json`, `.gemini/settings.json`, `mcp.json`
    - `test-*.mjs`, `generate-reports.mjs`, `e2e/*.mjs`
@@ -34,6 +35,7 @@
 ### FASE 2: Reescrita do Histórico Git ✅ CONCLUÍDA
 
 **Ações Executadas:**
+
 1. ✅ Backup criado: `fisioflow-backup-20260429`
 2. ✅ `git-filter-repo` instalado e executado
 3. ✅ 3408 commits processados e reescritos
@@ -55,6 +57,7 @@
 ### FASE 3: Melhorias Contínuas ✅ CONCLUÍDA
 
 **Ações Executadas:**
+
 1. ✅ **Pre-commit hook** criado e instalado:
    - `.git/hooks/pre-commit` executável
    - Verificação de secrets com TruffleHog (se instalado)
@@ -87,14 +90,14 @@
 
 ## 📊 DOCUMENTOS CRIADOS/MODIFICADOS
 
-| Arquivo | Descrição | Status |
-|---|---|---|
-| `.gitignore` | Reescrito com regras de segurança | ✅ Commitado |
-| `SECURITY_AUDIT.md` | Relatório consolidado de auditoria | ✅ Commitado |
-| `LGPD_RETENTION_POLICY.md` | Política de retenção LGPD | ✅ Commitado |
-| `.git/hooks/pre-commit` | Pre-commit hook de segurança | ✅ Instalado |
-| `.github/workflows/security-audit.yml` | Atualizado com DAST + LGPD check | ✅ Commitado |
-| `.zap/rules.tsv` | Regras do OWASP ZAP | ✅ Commitado |
+| Arquivo                                | Descrição                          | Status       |
+| -------------------------------------- | ---------------------------------- | ------------ |
+| `.gitignore`                           | Reescrito com regras de segurança  | ✅ Commitado |
+| `SECURITY_AUDIT.md`                    | Relatório consolidado de auditoria | ✅ Commitado |
+| `LGPD_RETENTION_POLICY.md`             | Política de retenção LGPD          | ✅ Commitado |
+| `.git/hooks/pre-commit`                | Pre-commit hook de segurança       | ✅ Instalado |
+| `.github/workflows/security-audit.yml` | Atualizado com DAST + LGPD check   | ✅ Commitado |
+| `.zap/rules.tsv`                       | Regras do OWASP ZAP                | ✅ Commitado |
 
 ---
 
@@ -103,16 +106,17 @@
 ### URGENTE (Executar HOJE):
 
 1. **🔐 Rotacionar TODAS as credenciais comprometidas:**
+
    ```bash
    # Neon Auth - Alterar senha "Yukari30@" IMEDIATAMENTE
    # Acessar: https://console.neon.tech
-   
+
    # Exa API Key - Regenerar
    # Acessar: https://exa.ai → Revogar [REDACTED_EXA_KEY]
-   
+
    # Context7 API Key - Regenerar
    # Revogar: [REDACTED_CONTEXT7_KEY]
-   
+
    # Stitch API Key - Regenerar
    # Google Cloud Console → Revogar [REDACTED_STITCH_KEY]
    ```
@@ -122,13 +126,14 @@
    - Se PÚBLICO → Tornar PRIVADO imediatamente (credenciais já foram indexadas)
 
 3. **⚡ Resolver Force Push (Fase 2):**
+
    ```bash
    # Opção 1: Desativar proteção temporariamente
    # Settings → Branches → Disable "Restrict pushes that rewrite history"
-   
+
    # Opção 2: Force push da sua máquina
    git push --force --all
-   
+
    # Opção 3: Criar novo repositório limpo (mais seguro)
    ```
 
@@ -136,32 +141,35 @@
 
 ## 📈 MÉTRICAS DE SEGURANÇA
 
-| Métrica | Antes | Depois | Melhoria |
-|---|---|---|---|
-| Arquivos com senha hardcoded (tracking) | 31 | 0 | ✅ 100% |
-| Commits com senha no histórico | 142 | 0 | ✅ 100% |
-| Commits com API keys | 16 | 0 | ✅ 100% |
-| Regras de segurança no .gitignore | ~5 | 20+ | ✅ +300% |
-| Cobertura de CI (segurança) | SAST | SAST + DAST | ✅ +100% |
-| Documentação LGPD | Parcial | Completa | ✅ +100% |
-| Pre-commit hooks | Não | Sim | ✅ Ativo |
+| Métrica                                 | Antes   | Depois      | Melhoria |
+| --------------------------------------- | ------- | ----------- | -------- |
+| Arquivos com senha hardcoded (tracking) | 31      | 0           | ✅ 100%  |
+| Commits com senha no histórico          | 142     | 0           | ✅ 100%  |
+| Commits com API keys                    | 16      | 0           | ✅ 100%  |
+| Regras de segurança no .gitignore       | ~5      | 20+         | ✅ +300% |
+| Cobertura de CI (segurança)             | SAST    | SAST + DAST | ✅ +100% |
+| Documentação LGPD                       | Parcial | Completa    | ✅ +100% |
+| Pre-commit hooks                        | Não     | Sim         | ✅ Ativo |
 
 ---
 
 ## 🎯 PRÓXIMOS PASSOS RECOMENDADOS
 
 ### Semana 1-2:
+
 - [ ] Executar rotação de credenciais (URGENTE)
 - [ ] Resolver force push (Fase 2)
 - [ ] Testar pre-commit hook localmente
 - [ ] Primeiro scan DAST no staging
 
 ### Mês 1-2:
+
 - [ ] Teste de penetração escopo limitado
 - [ ] Implementar SIEM + detecção de anomalias
 - [ ] Exercícios trimestrais do playbook
 
 ### Mês 2-3:
+
 - [ ] Criptografia aplicação-level para prontuários
 - [ ] Programa de bug bounty (HackerOne/Bugcrowd)
 
@@ -185,6 +193,7 @@
 ## 📝 NOTAS TÉCNICAS
 
 **Comandos executados:**
+
 ```bash
 # Fase 1
 git rm --cached test-*.mjs opencode.json .cursor/mcp.json # + 28 outros
@@ -197,6 +206,7 @@ git add .github/workflows/security-audit.yml LGPD_RETENTION_POLICY.md .zap/
 ```
 
 **Commits gerados:**
+
 1. `d3fab1c9` - security: remove vulnerable files from tracking and update gitignore
 2. `a6923deb` - security: implement Phase 3 continuous improvements
 

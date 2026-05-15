@@ -7,15 +7,7 @@
  * Requirements: 3.1, 3.8
  */
 
-import {
-  pgTable,
-  uuid,
-  text,
-  jsonb,
-  timestamp,
-  index,
-  uniqueIndex,
-} from "drizzle-orm/pg-core";
+import { pgTable, uuid, text, jsonb, timestamp, index, uniqueIndex } from "drizzle-orm/pg-core";
 
 export const userAgendaAppearance = pgTable(
   "user_agenda_appearance",
@@ -29,23 +21,13 @@ export const userAgendaAppearance = pgTable(
     // Serialized AgendaAppearanceState (global + per-view overrides)
     appearanceData: jsonb("appearance_data").notNull().default({}),
 
-    createdAt: timestamp("created_at", { withTimezone: true })
-      .notNull()
-      .defaultNow(),
-    updatedAt: timestamp("updated_at", { withTimezone: true })
-      .notNull()
-      .defaultNow(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (table) => [
     // Enforce one appearance profile per user per organization
-    uniqueIndex("idx_user_agenda_appearance_unique").on(
-      table.profileId,
-      table.organizationId,
-    ),
+    uniqueIndex("idx_user_agenda_appearance_unique").on(table.profileId, table.organizationId),
     // Fast lookup by profile + organization
-    index("idx_user_agenda_appearance_profile").on(
-      table.profileId,
-      table.organizationId,
-    ),
+    index("idx_user_agenda_appearance_profile").on(table.profileId, table.organizationId),
   ],
 );

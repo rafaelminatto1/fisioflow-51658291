@@ -9,12 +9,15 @@ interface SemanticRecommenderWidgetProps {
   condition: string;
 }
 
-export const SemanticRecommenderWidget: React.FC<SemanticRecommenderWidgetProps> = ({ condition }) => {
+export const SemanticRecommenderWidget: React.FC<SemanticRecommenderWidgetProps> = ({
+  condition,
+}) => {
   const { data, isLoading } = useQuery({
     queryKey: ["semantic-recommendations", condition],
-    queryFn: () => requestPublic<{ recommendations: { protocols: any[], exercises: any[] } }>(
-      `/api/ai-search/recommend?condition=${encodeURIComponent(condition)}`
-    ),
+    queryFn: () =>
+      requestPublic<{ recommendations: { protocols: any[]; exercises: any[] } }>(
+        `/api/ai-search/recommend?condition=${encodeURIComponent(condition)}`,
+      ),
     enabled: !!condition && condition.length > 3,
     staleTime: 1000 * 60 * 60, // 1h
   });
@@ -46,7 +49,10 @@ export const SemanticRecommenderWidget: React.FC<SemanticRecommenderWidgetProps>
               Inteligência Clínica Ativa
             </CardTitle>
             <CardDescription className="text-xs font-bold text-slate-500">
-              Recomendações baseadas em: <span className="text-indigo-600 dark:text-indigo-400 uppercase tracking-wider">{condition}</span>
+              Recomendações baseadas em:{" "}
+              <span className="text-indigo-600 dark:text-indigo-400 uppercase tracking-wider">
+                {condition}
+              </span>
             </CardDescription>
           </div>
         </div>
@@ -60,10 +66,17 @@ export const SemanticRecommenderWidget: React.FC<SemanticRecommenderWidgetProps>
             </h4>
             <div className="grid gap-2">
               {protocols.slice(0, 3).map((p: any) => (
-                <div key={p.id} className="flex items-center justify-between p-3 rounded-2xl bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 hover:border-indigo-200 transition-colors cursor-pointer group">
+                <div
+                  key={p.id}
+                  className="flex items-center justify-between p-3 rounded-2xl bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 hover:border-indigo-200 transition-colors cursor-pointer group"
+                >
                   <div className="flex-1 min-w-0 pr-4">
-                    <p className="font-bold text-sm text-slate-700 dark:text-slate-200 truncate group-hover:text-indigo-600 transition-colors">{p.title}</p>
-                    <p className="text-[10px] text-slate-400 font-medium uppercase tracking-wider mt-0.5">{p.category}</p>
+                    <p className="font-bold text-sm text-slate-700 dark:text-slate-200 truncate group-hover:text-indigo-600 transition-colors">
+                      {p.title}
+                    </p>
+                    <p className="text-[10px] text-slate-400 font-medium uppercase tracking-wider mt-0.5">
+                      {p.category}
+                    </p>
                   </div>
                   <ArrowRight className="h-4 w-4 text-slate-300 group-hover:text-indigo-500 transition-colors" />
                 </div>
@@ -80,10 +93,17 @@ export const SemanticRecommenderWidget: React.FC<SemanticRecommenderWidgetProps>
             </h4>
             <div className="grid gap-2">
               {exercises.slice(0, 3).map((e: any) => (
-                <div key={e.id} className="flex items-center justify-between p-3 rounded-2xl bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 hover:border-indigo-200 transition-colors cursor-pointer group">
+                <div
+                  key={e.id}
+                  className="flex items-center justify-between p-3 rounded-2xl bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 hover:border-indigo-200 transition-colors cursor-pointer group"
+                >
                   <div className="flex-1 min-w-0 pr-4">
-                    <p className="font-bold text-sm text-slate-700 dark:text-slate-200 truncate group-hover:text-indigo-600 transition-colors">{e.name}</p>
-                    <p className="text-[10px] text-slate-400 font-medium uppercase tracking-wider mt-0.5">{e.category || "Geral"}</p>
+                    <p className="font-bold text-sm text-slate-700 dark:text-slate-200 truncate group-hover:text-indigo-600 transition-colors">
+                      {e.name}
+                    </p>
+                    <p className="text-[10px] text-slate-400 font-medium uppercase tracking-wider mt-0.5">
+                      {e.category || "Geral"}
+                    </p>
                   </div>
                   <ArrowRight className="h-4 w-4 text-slate-300 group-hover:text-indigo-500 transition-colors" />
                 </div>

@@ -52,12 +52,12 @@ module.exports = function withSwiftConcurrency(config) {
 
       const updated = podfile.replace(
         /(post_install do \|installer\|.*?)(^\s+end\s*\nend)/ms,
-        `$1${workaround}$2`
+        `$1${workaround}$2`,
       );
 
       if (updated === podfile) {
         console.warn(
-          "[withSwiftConcurrency] WARNING: post_install block not found in Podfile — workaround NOT applied"
+          "[withSwiftConcurrency] WARNING: post_install block not found in Podfile — workaround NOT applied",
         );
       } else {
         console.log("[withSwiftConcurrency] applied ExpoModulesCore Swift 6 workaround");

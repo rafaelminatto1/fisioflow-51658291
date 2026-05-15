@@ -25,7 +25,10 @@ import { useAuthStore } from "@/store/auth";
 import { usePatient } from "@/hooks/usePatients";
 import { reportSharingService } from "@/lib/services/reportSharingService";
 
-function arrayToChips(items: any[] | undefined, extractDetail?: (item: any) => string | undefined): ChipItem[] {
+function arrayToChips(
+  items: any[] | undefined,
+  extractDetail?: (item: any) => string | undefined,
+): ChipItem[] {
   if (!Array.isArray(items)) return [];
   return items
     .map((item, idx) => {
@@ -39,8 +42,10 @@ function arrayToChips(items: any[] | undefined, extractDetail?: (item: any) => s
     .filter(Boolean) as ChipItem[];
 }
 
-const chipsToProcedures = (c: ChipItem[]) => c.map((x) => ({ id: x.id, name: x.name, notes: x.detail }));
-const chipsToExercises = (c: ChipItem[]) => c.map((x) => ({ id: x.id, name: x.name, prescription: x.detail }));
+const chipsToProcedures = (c: ChipItem[]) =>
+  c.map((x) => ({ id: x.id, name: x.name, notes: x.detail }));
+const chipsToExercises = (c: ChipItem[]) =>
+  c.map((x) => ({ id: x.id, name: x.name, prescription: x.detail }));
 const chipsToMeasurements = (c: ChipItem[]) =>
   c.map((x) => ({ id: x.id, name: x.name, unit: x.detail ?? "", value: 0 }));
 const chipsToHomeExercises = (c: ChipItem[]) =>
@@ -94,7 +99,9 @@ export default function EvolutionDetailScreen() {
     setProcedures(arrayToChips(evolution.procedures as any[], (it) => it.notes));
     setExercises(arrayToChips(evolution.exercises as any[], (it) => it.prescription || it.notes));
     setMeasurements(
-      arrayToChips(evolution.measurements as any[], (it) => (it.unit ? String(it.unit) : undefined)),
+      arrayToChips(evolution.measurements as any[], (it) =>
+        it.unit ? String(it.unit) : undefined,
+      ),
     );
     setHomeExercises(
       arrayToChips(evolution.homeExercises as any[], (it) => it.frequency || it.prescription),
@@ -242,7 +249,10 @@ export default function EvolutionDetailScreen() {
   }
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={["top"]}>
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: colors.background }]}
+      edges={["top"]}
+    >
       <View
         style={[
           styles.header,
@@ -420,10 +430,30 @@ export default function EvolutionDetailScreen() {
             )}
 
             {[
-              { title: "Procedimentos", items: procedures, accent: "#16a34a", icon: "medkit-outline" as const },
-              { title: "Exercícios", items: exercises, accent: "#0ea5e9", icon: "barbell-outline" as const },
-              { title: "Medições", items: measurements, accent: "#db2777", icon: "speedometer-outline" as const },
-              { title: "Exercícios para Casa", items: homeExercises, accent: "#6b7280", icon: "home-outline" as const },
+              {
+                title: "Procedimentos",
+                items: procedures,
+                accent: "#16a34a",
+                icon: "medkit-outline" as const,
+              },
+              {
+                title: "Exercícios",
+                items: exercises,
+                accent: "#0ea5e9",
+                icon: "barbell-outline" as const,
+              },
+              {
+                title: "Medições",
+                items: measurements,
+                accent: "#db2777",
+                icon: "speedometer-outline" as const,
+              },
+              {
+                title: "Exercícios para Casa",
+                items: homeExercises,
+                accent: "#6b7280",
+                icon: "home-outline" as const,
+              },
             ]
               .filter((g) => g.items.length > 0)
               .map((g) => (

@@ -1,29 +1,28 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from "@playwright/test";
 
-test.describe('Login Page Refresh Test', () => {
+test.describe("Login Page Refresh Test", () => {
   test.use({ storageState: { cookies: [], origins: [] } });
 
-  test('should not refresh every 10 seconds', async ({ page }) => {
+  test("should not refresh every 10 seconds", async ({ page }) => {
     let navigationCount = 0;
 
-
     // Listen for navigation events
-    page.on('load', () => {
+    page.on("load", () => {
       navigationCount++;
       console.log(`Page loaded. Count: ${navigationCount}`);
     });
 
     // Go to login page
-    await page.goto('/auth');
+    await page.goto("/auth");
 
     // Wait for initial load
-    await page.waitForLoadState('domcontentloaded');
+    await page.waitForLoadState("domcontentloaded");
     const initialCount = navigationCount;
 
     console.log(`Initial navigation count: ${initialCount}`);
 
     // Wait for 35 seconds to catch any periodic refresh (10s interval would trigger 3 times)
-    console.log('Waiting 35 seconds to detect periodic refreshes...');
+    console.log("Waiting 35 seconds to detect periodic refreshes...");
 
     // Check for DOM changes that might indicate refresh
     await page.content();
@@ -46,10 +45,10 @@ test.describe('Login Page Refresh Test', () => {
     await expect(emailInput).toBeAttached();
   });
 
-  test('should detect auth state change loops', async ({ page }) => {
+  test("should detect auth state change loops", async ({ page }) => {
     // Listen for console errors and warnings
-    page.on('console', msg => {
-      if (msg.type() === 'error' || msg.type() === 'warning') {
+    page.on("console", (msg) => {
+      if (msg.type() === "error" || msg.type() === "warning") {
         console.log(`Console ${msg.type()}: ${msg.text()}`);
       }
     });
@@ -62,15 +61,15 @@ test.describe('Login Page Refresh Test', () => {
       // Hook into Supabase auth if available
       const originalLog = console.log;
       console.log = (...args) => {
-        if (args[0]?.includes?.('Auth state changed') || args[0]?.includes?.('onAuthStateChange')) {
+        if (args[0]?.includes?.("Auth state changed") || args[0]?.includes?.("onAuthStateChange")) {
           (window as any).authChangeCount++;
         }
         originalLog.apply(console, args);
       };
     });
 
-    await page.goto('/auth');
-    await page.waitForLoadState('domcontentloaded');
+    await page.goto("/auth");
+    await page.waitForLoadState("domcontentloaded");
 
     // Wait and check for auth state changes
     await page.waitForTimeout(30000);
@@ -82,19 +81,19 @@ test.describe('Login Page Refresh Test', () => {
     expect(changes).toBeLessThan(5);
   });
 
-  test('should check for useEffect infinite loops', async ({ page }) => {
-    await page.goto('/auth');
+  test("should check for useEffect infinite loops", async ({ page }) => {
+    await page.goto("/auth");
 
     // Monitor React DevTools for excessive re-renders
     const renderCounts = await page.evaluate(async () => {
       const result: Record<string, number> = {};
 
       // Wait and observe
-      await new Promise(resolve => setTimeout(resolve, 25000));
+      await new Promise((resolve) => setTimeout(resolve, 25000));
 
       return result;
     });
 
-    console.log('Render counts:', renderCounts);
+    console.log("Render counts:", renderCounts);
   });
 });

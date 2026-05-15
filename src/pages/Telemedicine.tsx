@@ -107,14 +107,19 @@ const Telemedicine = () => {
         actions={
           <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
             <DialogTrigger asChild>
-              <Button size="sm" className="h-10 rounded-2xl px-5 font-bold shadow-sm bg-brand-blue hover:bg-brand-blue/90">
+              <Button
+                size="sm"
+                className="h-10 rounded-2xl px-5 font-bold shadow-sm bg-brand-blue hover:bg-brand-blue/90"
+              >
                 <Plus className="h-4 w-4 mr-2" />
                 Nova Consulta
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-[90vw] sm:max-w-md rounded-[32px]">
               <DialogHeader>
-                <DialogTitle className="text-lg font-black tracking-tight">Nova Teleconsulta</DialogTitle>
+                <DialogTitle className="text-lg font-black tracking-tight">
+                  Nova Teleconsulta
+                </DialogTitle>
                 <DialogDescription>
                   Crie uma sala de teleconsulta para um paciente
                 </DialogDescription>
@@ -177,8 +182,12 @@ const Telemedicine = () => {
                     <PhoneCall className="h-6 w-6 text-emerald-500" />
                   </div>
                   <div>
-                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-600/70 dark:text-emerald-400/70">Ao Vivo</p>
-                    <p className="text-3xl font-black text-emerald-600 dark:text-emerald-400">{activeRooms.length}</p>
+                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-600/70 dark:text-emerald-400/70">
+                      Ao Vivo
+                    </p>
+                    <p className="text-3xl font-black text-emerald-600 dark:text-emerald-400">
+                      {activeRooms.length}
+                    </p>
                   </div>
                 </div>
               </CardContent>
@@ -191,8 +200,12 @@ const Telemedicine = () => {
                     <Clock className="h-6 w-6 text-amber-500" />
                   </div>
                   <div>
-                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-amber-600/70 dark:text-amber-400/70">Aguardando</p>
-                    <p className="text-3xl font-black text-amber-600 dark:text-amber-400">{waitingRooms.length}</p>
+                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-amber-600/70 dark:text-amber-400/70">
+                      Aguardando
+                    </p>
+                    <p className="text-3xl font-black text-amber-600 dark:text-amber-400">
+                      {waitingRooms.length}
+                    </p>
                   </div>
                 </div>
               </CardContent>
@@ -205,8 +218,12 @@ const Telemedicine = () => {
                     <Calendar className="h-6 w-6 text-slate-500" />
                   </div>
                   <div>
-                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-600/70 dark:text-slate-400/70">Concluídas</p>
-                    <p className="text-3xl font-black text-slate-600 dark:text-slate-400">{completedRooms.length}</p>
+                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-600/70 dark:text-slate-400/70">
+                      Concluídas
+                    </p>
+                    <p className="text-3xl font-black text-slate-600 dark:text-slate-400">
+                      {completedRooms.length}
+                    </p>
                   </div>
                 </div>
               </CardContent>
@@ -219,7 +236,9 @@ const Telemedicine = () => {
                     <Users className="h-6 w-6 text-brand-blue" />
                   </div>
                   <div>
-                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-brand-blue/70 dark:text-brand-blue/70">Total</p>
+                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-brand-blue/70 dark:text-brand-blue/70">
+                      Total
+                    </p>
                     <p className="text-3xl font-black text-brand-blue">{rooms?.length || 0}</p>
                   </div>
                 </div>
@@ -230,25 +249,29 @@ const Telemedicine = () => {
           {/* Rooms List */}
           <Card className="rounded-[32px] border-brand-blue/10 bg-white/50 backdrop-blur-xl shadow-premium dark:bg-slate-950/50">
             <CardHeader className="p-8">
-              <CardTitle className="text-xl font-black tracking-tight">Salas de Teleconsulta</CardTitle>
-              <CardDescription>Gerencie suas consultas online e envie os links para seus pacientes.</CardDescription>
+              <CardTitle className="text-xl font-black tracking-tight">
+                Salas de Teleconsulta
+              </CardTitle>
+              <CardDescription>
+                Gerencie suas consultas online e envie os links para seus pacientes.
+              </CardDescription>
             </CardHeader>
             <CardContent className="p-8 pt-0">
-            {roomsLoading ? (
-              <div className="flex justify-center py-8">
-                <Loader2 className="h-6 w-6 animate-spin" />
-              </div>
-            ) : rooms?.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
-                <Video className="h-10 w-10 sm:h-12 sm:w-12 mx-auto mb-4 opacity-50" />
-                <p className="text-xs sm:text-sm">Nenhuma teleconsulta criada ainda</p>
-                <Button variant="link" className="mt-2" onClick={() => setIsCreateOpen(true)}>
-                  Criar primeira consulta
-                </Button>
-              </div>
-            ) : (
-              <div className="space-y-2 sm:space-y-4">
-                {rooms?.map((room) => (
+              {roomsLoading ? (
+                <div className="flex justify-center py-8">
+                  <Loader2 className="h-6 w-6 animate-spin" />
+                </div>
+              ) : rooms?.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  <Video className="h-10 w-10 sm:h-12 sm:w-12 mx-auto mb-4 opacity-50" />
+                  <p className="text-xs sm:text-sm">Nenhuma teleconsulta criada ainda</p>
+                  <Button variant="link" className="mt-2" onClick={() => setIsCreateOpen(true)}>
+                    Criar primeira consulta
+                  </Button>
+                </div>
+              ) : (
+                <div className="space-y-2 sm:space-y-4">
+                  {rooms?.map((room) => (
                     <div
                       key={room.id}
                       className="flex items-center justify-between gap-4 p-5 rounded-2xl border border-brand-blue/5 bg-brand-blue/5 hover:bg-brand-blue/10 transition-all duration-300 group"
@@ -302,14 +325,14 @@ const Telemedicine = () => {
                         )}
                       </div>
                     </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-          </div>
-        </PageContainer>
-      </PageLayout>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      </PageContainer>
+    </PageLayout>
   );
 };
 

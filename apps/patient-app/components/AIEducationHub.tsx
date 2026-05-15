@@ -13,7 +13,8 @@ export const AIEducationHub = () => {
 
   const { data: tipsResponse, isLoading } = useQuery({
     queryKey: ["patient-education-tips", user?.id],
-    queryFn: () => api.request<{ data: string[] }>(`/api/ai-search/education?patientId=${user?.id}`),
+    queryFn: () =>
+      api.request<{ data: string[] }>(`/api/ai-search/education?patientId=${user?.id}`),
     enabled: !!user?.id,
     staleTime: 1000 * 60 * 60 * 24, // 24h
   });
@@ -30,7 +31,12 @@ export const AIEducationHub = () => {
   if (tips.length === 0) return null;
 
   return (
-    <Card style={[styles.container, { backgroundColor: "#EEF2FF", borderColor: "#C7D2FE", borderWidth: 1 }]}>
+    <Card
+      style={[
+        styles.container,
+        { backgroundColor: "#EEF2FF", borderColor: "#C7D2FE", borderWidth: 1 },
+      ]}
+    >
       <View style={styles.header}>
         <View style={styles.iconBox}>
           <Ionicons name="bulb" size={20} color="#4F46E5" />
@@ -108,5 +114,5 @@ const styles = StyleSheet.create({
     marginTop: 20,
     textAlign: "center",
     opacity: 0.6,
-  }
+  },
 });

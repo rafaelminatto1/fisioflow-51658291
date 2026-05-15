@@ -6,7 +6,7 @@ packages:
 nodeLinker: hoisted
 
 allowBuilds:
-  '@google/genai': true
+  "@google/genai": true
   "@scarf/scarf": true
   "@sentry-internal/node-cpu-profiler": true
   "@sentry/cli": true

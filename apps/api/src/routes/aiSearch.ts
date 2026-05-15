@@ -100,11 +100,18 @@ export async function syncAutoRAGContent(
 
   if (types.includes("exercises")) {
     const res = await pool.query<{
-      id: string; name: string; description: string | null;
-      instructions: string | null; category: string | null;
-      difficulty: string | null; muscles_primary: string[] | null;
-      muscles_secondary: string[] | null; body_parts: string[] | null;
-      tips: string | null; precautions: string | null; benefits: string | null;
+      id: string;
+      name: string;
+      description: string | null;
+      instructions: string | null;
+      category: string | null;
+      difficulty: string | null;
+      muscles_primary: string[] | null;
+      muscles_secondary: string[] | null;
+      body_parts: string[] | null;
+      tips: string | null;
+      precautions: string | null;
+      benefits: string | null;
     }>(
       `SELECT e.id, e.name, e.description, e.instructions,
               ec.name AS category, e.difficulty,
@@ -118,9 +125,9 @@ export async function syncAutoRAGContent(
     let count = 0;
     for (let i = 0; i < res.rows.length; i += 5) {
       await Promise.all(
-        res.rows.slice(i, i + 5).map((row) =>
-          uploadDoc(`exercise-${row.id}.md`, buildExerciseDoc(row)),
-        ),
+        res.rows
+          .slice(i, i + 5)
+          .map((row) => uploadDoc(`exercise-${row.id}.md`, buildExerciseDoc(row))),
       );
       count += Math.min(5, res.rows.length - i);
     }
@@ -129,10 +136,15 @@ export async function syncAutoRAGContent(
 
   if (types.includes("protocols")) {
     const res = await pool.query<{
-      id: string; name: string; description: string | null;
-      condition_name: string | null; weeks_total: number | null;
-      objectives: string | null; contraindications: string | null;
-      evidence_level: string | null; protocol_type: string | null;
+      id: string;
+      name: string;
+      description: string | null;
+      condition_name: string | null;
+      weeks_total: number | null;
+      objectives: string | null;
+      contraindications: string | null;
+      evidence_level: string | null;
+      protocol_type: string | null;
     }>(
       `SELECT id, name, description, condition_name, weeks_total,
               objectives, contraindications, evidence_level, protocol_type
@@ -143,9 +155,9 @@ export async function syncAutoRAGContent(
     let count = 0;
     for (let i = 0; i < res.rows.length; i += 5) {
       await Promise.all(
-        res.rows.slice(i, i + 5).map((row) =>
-          uploadDoc(`protocol-${row.id}.md`, buildProtocolDoc(row)),
-        ),
+        res.rows
+          .slice(i, i + 5)
+          .map((row) => uploadDoc(`protocol-${row.id}.md`, buildProtocolDoc(row))),
       );
       count += Math.min(5, res.rows.length - i);
     }
@@ -154,7 +166,10 @@ export async function syncAutoRAGContent(
 
   if (types.includes("wiki")) {
     const res = await pool.query<{
-      id: string; title: string; content: string | null; category: string | null;
+      id: string;
+      title: string;
+      content: string | null;
+      category: string | null;
     }>(
       `SELECT wp.id, wp.title, LEFT(wp.content, 3000) AS content, wc.name AS category
        FROM wiki_pages wp
@@ -165,9 +180,7 @@ export async function syncAutoRAGContent(
     let count = 0;
     for (let i = 0; i < res.rows.length; i += 5) {
       await Promise.all(
-        res.rows.slice(i, i + 5).map((row) =>
-          uploadDoc(`wiki-${row.id}.md`, buildWikiDoc(row)),
-        ),
+        res.rows.slice(i, i + 5).map((row) => uploadDoc(`wiki-${row.id}.md`, buildWikiDoc(row))),
       );
       count += Math.min(5, res.rows.length - i);
     }
@@ -202,11 +215,12 @@ aiSearchApp.get("/exercises", requireAuth, async (c) => {
     try {
       const expansion: any = await c.env.AI.run("@cf/meta/llama-3.1-8b-instruct", {
         messages: [
-          { 
-            role: "system", 
-            content: "Você é um dicionário clínico de fisioterapia. Dada uma queixa, termo leigo ou objetivo, retorne uma lista de 3 a 5 termos clínicos, sinônimos técnicos, patologias ou músculos/articulações relacionados, separados por vírgula. Não escreva frases, introduções ou explicações. APENAS os termos." 
+          {
+            role: "system",
+            content:
+              "Você é um dicionário clínico de fisioterapia. Dada uma queixa, termo leigo ou objetivo, retorne uma lista de 3 a 5 termos clínicos, sinônimos técnicos, patologias ou músculos/articulações relacionados, separados por vírgula. Não escreva frases, introduções ou explicações. APENAS os termos.",
           },
-          { role: "user", content: query }
+          { role: "user", content: query },
         ],
       });
       if (expansion.response) {
@@ -278,9 +292,17 @@ aiSearchApp.get("/recommend", requireAuth, async (c) => {
     return c.json({
       condition,
       recommendations: {
-        protocols: wikiMatches.matches.map((m: any) => ({ id: m.id, score: m.score, ...m.metadata })),
-        exercises: exerciseMatches.matches.map((m: any) => ({ id: m.id, score: m.score, ...m.metadata })),
-      }
+        protocols: wikiMatches.matches.map((m: any) => ({
+          id: m.id,
+          score: m.score,
+          ...m.metadata,
+        })),
+        exercises: exerciseMatches.matches.map((m: any) => ({
+          id: m.id,
+          score: m.score,
+          ...m.metadata,
+        })),
+      },
     });
   } catch (error: any) {
     console.error("[Vectorize] Recommend error:", error);
@@ -293,7 +315,7 @@ aiSearchApp.get("/recommend", requireAuth, async (c) => {
 aiSearchApp.post("/exercises/sync", requireAuth, async (c) => {
   if (!c.env.CLINICAL_KNOWLEDGE) return c.json({ error: "Vectorize não configurado" }, 503);
   const pool = createPool(c.env);
-  
+
   try {
     const res = await pool.query(`
       SELECT id, name, description, instructions, muscles_primary, muscles_secondary, body_parts
@@ -316,15 +338,17 @@ aiSearchApp.post("/exercises/sync", requireAuth, async (c) => {
         text: [textToEmbed],
       });
 
-      await c.env.CLINICAL_KNOWLEDGE.upsert([{
-        id: row.id,
-        values: aiResponse.data[0],
-        namespace: "exercises",
-        metadata: {
-          name: row.name,
-          category: "exercise"
-        }
-      }]);
+      await c.env.CLINICAL_KNOWLEDGE.upsert([
+        {
+          id: row.id,
+          values: aiResponse.data[0],
+          namespace: "exercises",
+          metadata: {
+            name: row.name,
+            category: "exercise",
+          },
+        },
+      ]);
     }
 
     return c.json({ success: true, count: res.rows.length });
@@ -339,7 +363,7 @@ aiSearchApp.post("/exercises/sync", requireAuth, async (c) => {
 aiSearchApp.post("/wiki/sync", requireAuth, async (c) => {
   if (!c.env.CLINICAL_KNOWLEDGE) return c.json({ error: "Vectorize não configurado" }, 503);
   const pool = createPool(c.env);
-  
+
   try {
     const res = await pool.query(`
       SELECT wp.id, wp.title, wp.content, wc.name as category
@@ -355,21 +379,25 @@ aiSearchApp.post("/wiki/sync", requireAuth, async (c) => {
         Título: ${row.title}
         Categoria: ${row.category || "Geral"}
         Conteúdo: ${row.content || ""}
-      `.trim().substring(0, 8000);
+      `
+        .trim()
+        .substring(0, 8000);
 
       const aiResponse: any = await c.env.AI.run("@cf/baai/bge-m3", {
         text: [textToEmbed],
       });
 
-      await c.env.CLINICAL_KNOWLEDGE.upsert([{
-        id: row.id,
-        values: aiResponse.data[0],
-        namespace: "wiki",
-        metadata: {
-          title: row.title,
-          category: row.category || "wiki"
-        }
-      }]);
+      await c.env.CLINICAL_KNOWLEDGE.upsert([
+        {
+          id: row.id,
+          values: aiResponse.data[0],
+          namespace: "wiki",
+          metadata: {
+            title: row.title,
+            category: row.category || "wiki",
+          },
+        },
+      ]);
     }
 
     return c.json({ success: true, count: res.rows.length });
@@ -392,14 +420,18 @@ aiSearchApp.get("/unified", requireAuth, async (c) => {
 
     // 1. Buscar Exercícios e Wiki no Vectorize em paralelo
     const [exerciseMatches, wikiMatches] = await Promise.all([
-      c.env.CLINICAL_KNOWLEDGE.query(vector, { topK: 5, namespace: "exercises", returnMetadata: true }),
-      c.env.CLINICAL_KNOWLEDGE.query(vector, { topK: 3, namespace: "wiki", returnMetadata: true })
+      c.env.CLINICAL_KNOWLEDGE.query(vector, {
+        topK: 5,
+        namespace: "exercises",
+        returnMetadata: true,
+      }),
+      c.env.CLINICAL_KNOWLEDGE.query(vector, { topK: 3, namespace: "wiki", returnMetadata: true }),
     ]);
 
     // 2. Buscar Pacientes Similares no Neon (pgvector)
     const sql = getRawSql(c.env, "read");
     const user = c.get("user");
-    
+
     const patientMatches = await sql`
       SELECT 
         p.id, p.full_name as name, ce.content_summary as summary,
@@ -431,12 +463,12 @@ aiSearchApp.get("/unified", requireAuth, async (c) => {
         title: p.name,
         description: p.summary,
         score: p.similarity,
-      }))
+      })),
     ];
 
-    return c.json({ 
+    return c.json({
       query,
-      data: results.sort((a, b) => b.score - a.score) 
+      data: results.sort((a, b) => b.score - a.score),
     });
   } catch (error: any) {
     console.error("[Omnisearch] Error:", error);
@@ -459,7 +491,8 @@ aiSearchApp.get("/education", async (c) => {
     const sql = getRawSql(c.env, "read");
 
     // 1. Obter diagnóstico e condição do paciente
-    const patientRes = await sql`SELECT condition, diagnosis FROM patients WHERE id = ${patientId}::uuid`;
+    const patientRes =
+      await sql`SELECT condition, diagnosis FROM patients WHERE id = ${patientId}::uuid`;
     const patient = patientRes.rows[0];
     if (!patient) return c.json({ error: "Paciente não encontrado" }, 404);
 
@@ -495,7 +528,7 @@ aiSearchApp.get("/education", async (c) => {
       prompt,
       model: "gemini-1.5-flash",
       temperature: 0.7,
-      responseFormat: "json"
+      responseFormat: "json",
     });
 
     const jsonMatch = aiRes.content.match(/\{[\s\S]*\}/);
@@ -510,27 +543,34 @@ aiSearchApp.get("/education", async (c) => {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-export async function surgicalSyncWiki(env: Env, row: { id: string, title: string, content: string, category: string }) {
+export async function surgicalSyncWiki(
+  env: Env,
+  row: { id: string; title: string; content: string; category: string },
+) {
   if (!env.CLINICAL_KNOWLEDGE) return;
-  
+
   const textToEmbed = `
     Título: ${row.title}
     Categoria: ${row.category || "Geral"}
     Conteúdo: ${row.content || ""}
-  `.trim().substring(0, 8000);
+  `
+    .trim()
+    .substring(0, 8000);
 
   const { generateEmbedding } = await import("../lib/ai-native");
   const vector = await generateEmbedding(env, textToEmbed);
 
-  await env.CLINICAL_KNOWLEDGE.upsert([{
-    id: row.id,
-    values: vector,
-    namespace: "wiki",
-    metadata: {
-      title: row.title,
-      category: row.category || "wiki"
-    }
-  }]);
+  await env.CLINICAL_KNOWLEDGE.upsert([
+    {
+      id: row.id,
+      values: vector,
+      namespace: "wiki",
+      metadata: {
+        title: row.title,
+        category: row.category || "wiki",
+      },
+    },
+  ]);
 }
 
 function getCfApi(env: Env) {
@@ -549,17 +589,26 @@ function getCfApi(env: Env) {
 }
 
 function buildExerciseDoc(row: {
-  id: string; name: string; description: string | null;
-  instructions: string | null; category: string | null;
-  difficulty: string | null; muscles_primary: string[] | null;
-  muscles_secondary: string[] | null; body_parts: string[] | null;
-  tips: string | null; precautions: string | null; benefits: string | null;
+  id: string;
+  name: string;
+  description: string | null;
+  instructions: string | null;
+  category: string | null;
+  difficulty: string | null;
+  muscles_primary: string[] | null;
+  muscles_secondary: string[] | null;
+  body_parts: string[] | null;
+  tips: string | null;
+  precautions: string | null;
+  benefits: string | null;
 }): string {
   const parts: string[] = [`# Exercício: ${row.name}`];
   if (row.category) parts.push(`**Categoria:** ${row.category}`);
   if (row.difficulty) parts.push(`**Dificuldade:** ${row.difficulty}`);
-  if (row.muscles_primary?.length) parts.push(`**Músculos primários:** ${row.muscles_primary.join(", ")}`);
-  if (row.muscles_secondary?.length) parts.push(`**Músculos secundários:** ${row.muscles_secondary.join(", ")}`);
+  if (row.muscles_primary?.length)
+    parts.push(`**Músculos primários:** ${row.muscles_primary.join(", ")}`);
+  if (row.muscles_secondary?.length)
+    parts.push(`**Músculos secundários:** ${row.muscles_secondary.join(", ")}`);
   if (row.body_parts?.length) parts.push(`**Regiões corporais:** ${row.body_parts.join(", ")}`);
   if (row.description) parts.push(`\n## Descrição\n${row.description}`);
   if (row.instructions) parts.push(`\n## Instruções de Execução\n${row.instructions}`);
@@ -570,10 +619,15 @@ function buildExerciseDoc(row: {
 }
 
 function buildProtocolDoc(row: {
-  id: string; name: string; description: string | null;
-  condition_name: string | null; weeks_total: number | null;
-  objectives: string | null; contraindications: string | null;
-  evidence_level: string | null; protocol_type: string | null;
+  id: string;
+  name: string;
+  description: string | null;
+  condition_name: string | null;
+  weeks_total: number | null;
+  objectives: string | null;
+  contraindications: string | null;
+  evidence_level: string | null;
+  protocol_type: string | null;
 }): string {
   const parts: string[] = [`# Protocolo Clínico: ${row.name}`];
   if (row.condition_name) parts.push(`**Condição clínica:** ${row.condition_name}`);
@@ -587,7 +641,10 @@ function buildProtocolDoc(row: {
 }
 
 function buildWikiDoc(row: {
-  id: string; title: string; content: string | null; category: string | null;
+  id: string;
+  title: string;
+  content: string | null;
+  category: string | null;
 }): string {
   const parts: string[] = [`# ${row.title}`];
   if (row.category) parts.push(`**Categoria:** ${row.category}`);

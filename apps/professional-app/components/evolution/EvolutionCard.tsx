@@ -77,9 +77,7 @@ export const EvolutionCard = React.forwardRef<View, EvolutionCardProps>(
           </View>
           {pain != null ? (
             <View style={[styles.badge, { backgroundColor: getPainBg(pain) }]}>
-              <Text style={[styles.badgeText, { color: getPainColor(pain) }]}>
-                EVA: {pain}/10
-              </Text>
+              <Text style={[styles.badgeText, { color: getPainColor(pain) }]}>EVA: {pain}/10</Text>
             </View>
           ) : null}
         </View>

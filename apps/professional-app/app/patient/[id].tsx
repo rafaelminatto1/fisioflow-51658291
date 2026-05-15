@@ -467,7 +467,9 @@ export default function PatientDetailScreen() {
                   </View>
                   {(patient as any).insurance.plan && (
                     <View style={styles.infoRow}>
-                      <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>Plano:</Text>
+                      <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>
+                        Plano:
+                      </Text>
                       <Text style={[styles.infoValue, { color: colors.text }]}>
                         {(patient as any).insurance.plan}
                       </Text>

@@ -94,7 +94,10 @@ export const SurgeriesCard = memo(function SurgeriesCard({
                 surgeries.length > 0 ? "text-primary" : "text-slate-400",
               )}
             />
-            <CardTitle as="h2" className="text-sm font-semibold text-slate-700 flex items-center gap-2">
+            <CardTitle
+              as="h2"
+              className="text-sm font-semibold text-slate-700 flex items-center gap-2"
+            >
               Cirurgias
               {surgeries.length > 0 && (
                 <Badge

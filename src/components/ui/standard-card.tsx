@@ -29,7 +29,7 @@ export const StandardCard: React.FC<StandardCardProps> = ({
         variant === "glass" && "glass-card border-white/10",
         variant === "outline" && "bg-transparent border-border shadow-none",
         variant === "ghost" && "bg-transparent border-none shadow-none p-0",
-        className
+        className,
       )}
     >
       {(title || Icon || actions) && (
@@ -56,14 +56,10 @@ export const StandardCard: React.FC<StandardCardProps> = ({
           {actions && <div className="flex items-center gap-2">{actions}</div>}
         </div>
       )}
-      
+
       <div className="flex-1">{children}</div>
-      
-      {footer && (
-        <div className="mt-auto pt-4 border-t border-border/40">
-          {footer}
-        </div>
-      )}
+
+      {footer && <div className="mt-auto pt-4 border-t border-border/40">{footer}</div>}
     </div>
   );
 };

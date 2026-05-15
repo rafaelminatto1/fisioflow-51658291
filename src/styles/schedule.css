@@ -8,11 +8,11 @@
   --fc-border-color: transparent !important;
   --fc-page-bg-color: transparent !important;
   border: none !important;
-  font-family: 'Inter', sans-serif !important;
+  font-family: "Inter", sans-serif !important;
 }
 
 /* Remove all table borders from the grid */
-.fc-theme-standard td, 
+.fc-theme-standard td,
 .fc-theme-standard th,
 .fc-theme-standard .fc-scrollgrid {
   border: none !important;
@@ -48,7 +48,7 @@
 }
 
 .fc .fc-col-header-cell-cushion {
-  font-family: 'Manrope', sans-serif !important;
+  font-family: "Manrope", sans-serif !important;
   font-size: 10px !important;
   text-transform: uppercase !important;
   letter-spacing: 0.1em !important;
@@ -139,4 +139,3 @@
 .dark .fc .fc-timegrid-slot:not(.fc-timegrid-slot-minor) {
   border-top-color: rgba(148, 163, 184, 0.1) !important;
 }
-

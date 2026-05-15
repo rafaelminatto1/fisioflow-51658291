@@ -146,7 +146,7 @@ describe("OfflineSyncService", () => {
 
     it("maps API_REQUEST correctly using generic request", async () => {
       const payload = { url: "/api/custom", method: "POST", body: JSON.stringify({ a: 1 }) };
-      
+
       // @ts-ignore
       await service.executeAction({
         id: "1",
@@ -168,7 +168,7 @@ describe("OfflineSyncService", () => {
     it("adds an action to the database", async () => {
       const actionType = "TEST_ACTION";
       const payload = { foo: "bar" };
-      
+
       const id = await service.enqueueAction(actionType, payload);
       expect(id).toBeDefined();
       expect(typeof id).toBe("string");
@@ -179,7 +179,7 @@ describe("OfflineSyncService", () => {
         action: actionType,
         payload,
         synced: false,
-        retryCount: 0
+        retryCount: 0,
       });
     });
   });

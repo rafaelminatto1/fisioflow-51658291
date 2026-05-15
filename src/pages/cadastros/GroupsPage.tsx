@@ -68,7 +68,8 @@ function ClassCard({
   onDelete: (id: string) => void;
   onSelect: (c: GroupClass) => void;
 }) {
-  const occupancy = cls.max_capacity > 0 ? Math.round((cls.enrolled_count / cls.max_capacity) * 100) : 0;
+  const occupancy =
+    cls.max_capacity > 0 ? Math.round((cls.enrolled_count / cls.max_capacity) * 100) : 0;
   const isFull = cls.enrolled_count >= cls.max_capacity;
 
   return (
@@ -82,10 +83,7 @@ function ClassCard({
       <CardContent className="p-4">
         <div className="flex items-start justify-between gap-2 mb-3">
           <div className="flex items-center gap-2 min-w-0">
-            <div
-              className="h-3 w-3 rounded-full shrink-0"
-              style={{ backgroundColor: cls.color }}
-            />
+            <div className="h-3 w-3 rounded-full shrink-0" style={{ backgroundColor: cls.color }} />
             <h3 className="font-bold text-sm truncate">{cls.name}</h3>
           </div>
           <div className="flex items-center gap-1 shrink-0">
@@ -93,7 +91,10 @@ function ClassCard({
               variant="ghost"
               size="icon"
               className="h-6 w-6"
-              onClick={(e) => { e.stopPropagation(); onEdit(cls); }}
+              onClick={(e) => {
+                e.stopPropagation();
+                onEdit(cls);
+              }}
             >
               <Edit2 className="h-3.5 w-3.5" />
             </Button>
@@ -101,7 +102,10 @@ function ClassCard({
               variant="ghost"
               size="icon"
               className="h-6 w-6 text-destructive hover:text-destructive"
-              onClick={(e) => { e.stopPropagation(); onDelete(cls.id); }}
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete(cls.id);
+              }}
             >
               <Trash2 className="h-3.5 w-3.5" />
             </Button>
@@ -126,7 +130,9 @@ function ClassCard({
           {cls.schedules.length > 0 && (
             <div className="flex items-center gap-1.5">
               <Calendar className="h-3 w-3" />
-              {cls.schedules.map((s) => `${WEEKDAYS[s.weekday]} ${s.start_time.substring(0, 5)}`).join(", ")}
+              {cls.schedules
+                .map((s) => `${WEEKDAYS[s.weekday]} ${s.start_time.substring(0, 5)}`)
+                .join(", ")}
             </div>
           )}
         </div>
@@ -145,19 +151,29 @@ function ClassCard({
           </div>
           <div className="h-1.5 bg-muted/40 rounded-full overflow-hidden">
             <div
-              className={cn("h-full rounded-full transition-all", isFull ? "bg-red-500" : "bg-emerald-500")}
+              className={cn(
+                "h-full rounded-full transition-all",
+                isFull ? "bg-red-500" : "bg-emerald-500",
+              )}
               style={{ width: `${Math.min(occupancy, 100)}%` }}
             />
           </div>
         </div>
 
         <div className="mt-3 flex items-center justify-between">
-          {!cls.is_active && <Badge variant="outline" className="text-[10px]">Inativa</Badge>}
+          {!cls.is_active && (
+            <Badge variant="outline" className="text-[10px]">
+              Inativa
+            </Badge>
+          )}
           <Button
             variant="ghost"
             size="sm"
             className="ml-auto h-7 text-[11px] gap-1 text-primary"
-            onClick={(e) => { e.stopPropagation(); onSelect(cls); }}
+            onClick={(e) => {
+              e.stopPropagation();
+              onSelect(cls);
+            }}
           >
             Gerenciar <ChevronRight className="h-3 w-3" />
           </Button>
@@ -180,7 +196,9 @@ function ClassFormModal({
   open: boolean;
   initial?: GroupClass | null;
   onClose: () => void;
-  onSave: (data: Partial<GroupClass> & { schedules?: { weekday: number; start_time: string }[] }) => void;
+  onSave: (
+    data: Partial<GroupClass> & { schedules?: { weekday: number; start_time: string }[] },
+  ) => void;
 }) {
   const [name, setName] = useState(initial?.name ?? "");
   const [description, setDescription] = useState(initial?.description ?? "");
@@ -197,10 +215,13 @@ function ClassFormModal({
   const addSchedule = () => setSchedules((s) => [...s, { weekday: 1, start_time: "09:00" }]);
   const removeSchedule = (i: number) => setSchedules((s) => s.filter((_, idx) => idx !== i));
   const updateSchedule = (i: number, key: "weekday" | "start_time", val: string | number) =>
-    setSchedules((s) => s.map((sched, idx) => idx === i ? { ...sched, [key]: val } : sched));
+    setSchedules((s) => s.map((sched, idx) => (idx === i ? { ...sched, [key]: val } : sched)));
 
   const handleSubmit = () => {
-    if (!name.trim()) { toast({ title: "Nome obrigatório", variant: "destructive" }); return; }
+    if (!name.trim()) {
+      toast({ title: "Nome obrigatório", variant: "destructive" });
+      return;
+    }
     onSave({
       name: name.trim(),
       description: description.trim() || undefined,
@@ -224,7 +245,12 @@ function ClassFormModal({
           <div className="grid grid-cols-2 gap-3">
             <div className="col-span-2">
               <Label className="text-xs font-bold uppercase tracking-wider">Nome *</Label>
-              <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Ex: Pilates Manhã" className="mt-1" />
+              <Input
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Ex: Pilates Manhã"
+                className="mt-1"
+              />
             </div>
             <div>
               <Label className="text-xs font-bold uppercase tracking-wider">Modalidade</Label>
@@ -234,51 +260,90 @@ function ClassFormModal({
                 </SelectTrigger>
                 <SelectContent>
                   {Object.entries(MODALITIES).map(([v, l]) => (
-                    <SelectItem key={v} value={v}>{l}</SelectItem>
+                    <SelectItem key={v} value={v}>
+                      {l}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
             <div>
               <Label className="text-xs font-bold uppercase tracking-wider">Capacidade</Label>
-              <Input type="number" min="1" value={maxCapacity} onChange={(e) => setMaxCapacity(e.target.value)} className="mt-1" />
+              <Input
+                type="number"
+                min="1"
+                value={maxCapacity}
+                onChange={(e) => setMaxCapacity(e.target.value)}
+                className="mt-1"
+              />
             </div>
             <div>
               <Label className="text-xs font-bold uppercase tracking-wider">Duração (min)</Label>
-              <Input type="number" min="15" step="15" value={duration} onChange={(e) => setDuration(e.target.value)} className="mt-1" />
+              <Input
+                type="number"
+                min="15"
+                step="15"
+                value={duration}
+                onChange={(e) => setDuration(e.target.value)}
+                className="mt-1"
+              />
             </div>
             <div>
               <Label className="text-xs font-bold uppercase tracking-wider">Cor</Label>
               <div className="flex items-center gap-2 mt-1">
-                <input type="color" value={color} onChange={(e) => setColor(e.target.value)} className="h-9 w-16 rounded cursor-pointer border" />
+                <input
+                  type="color"
+                  value={color}
+                  onChange={(e) => setColor(e.target.value)}
+                  className="h-9 w-16 rounded cursor-pointer border"
+                />
                 <span className="text-xs text-muted-foreground font-mono">{color}</span>
               </div>
             </div>
             <div className="col-span-2">
               <Label className="text-xs font-bold uppercase tracking-wider">Local</Label>
-              <Input value={location} onChange={(e) => setLocation(e.target.value)} placeholder="Ex: Sala 2" className="mt-1" />
+              <Input
+                value={location}
+                onChange={(e) => setLocation(e.target.value)}
+                placeholder="Ex: Sala 2"
+                className="mt-1"
+              />
             </div>
             <div className="col-span-2">
               <Label className="text-xs font-bold uppercase tracking-wider">Descrição</Label>
-              <Textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={2} className="mt-1 resize-none" />
+              <Textarea
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                rows={2}
+                className="mt-1 resize-none"
+              />
             </div>
           </div>
 
           <div>
             <div className="flex items-center justify-between mb-2">
-              <Label className="text-xs font-bold uppercase tracking-wider">Horários Recorrentes</Label>
+              <Label className="text-xs font-bold uppercase tracking-wider">
+                Horários Recorrentes
+              </Label>
               <Button variant="ghost" size="sm" className="h-7 text-[11px]" onClick={addSchedule}>
                 <Plus className="h-3 w-3 mr-1" /> Adicionar
               </Button>
             </div>
             {schedules.map((sched, i) => (
               <div key={i} className="flex items-center gap-2 mb-2">
-                <Select value={String(sched.weekday)} onValueChange={(v) => updateSchedule(i, "weekday", Number(v))}>
+                <Select
+                  value={String(sched.weekday)}
+                  onValueChange={(v) => updateSchedule(i, "weekday", Number(v))}
+                >
                   <SelectTrigger className="w-24 h-8 text-xs">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {WEEKDAYS.map((d, idx) => <SelectItem key={idx} value={String(idx)}>{d}</SelectItem>)}
+                    {WEEKDAYS.map((d, idx) => (
+                      <SelectItem key={idx} value={String(idx)}>
+                        {d}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
                 <Input
@@ -287,7 +352,12 @@ function ClassFormModal({
                   onChange={(e) => updateSchedule(i, "start_time", e.target.value)}
                   className="h-8 text-xs w-28"
                 />
-                <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => removeSchedule(i)}>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 shrink-0"
+                  onClick={() => removeSchedule(i)}
+                >
                   <X className="h-3.5 w-3.5" />
                 </Button>
               </div>
@@ -300,7 +370,9 @@ function ClassFormModal({
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={onClose}>Cancelar</Button>
+          <Button variant="outline" onClick={onClose}>
+            Cancelar
+          </Button>
           <Button onClick={handleSubmit}>{initial ? "Salvar" : "Criar Turma"}</Button>
         </DialogFooter>
       </DialogContent>
@@ -352,9 +424,15 @@ function CheckinModal({
             {checkedCount}/{enrolled.length} presentes
           </p>
           {isLoading ? (
-            <div className="space-y-2">{[1, 2, 3].map((i) => <Skeleton key={i} className="h-10" />)}</div>
+            <div className="space-y-2">
+              {[1, 2, 3].map((i) => (
+                <Skeleton key={i} className="h-10" />
+              ))}
+            </div>
           ) : enrolled.length === 0 ? (
-            <p className="text-sm text-muted-foreground text-center py-4">Nenhum aluno matriculado</p>
+            <p className="text-sm text-muted-foreground text-center py-4">
+              Nenhum aluno matriculado
+            </p>
           ) : (
             <div className="space-y-2 max-h-80 overflow-y-auto">
               {enrolled.map((e) => (
@@ -371,7 +449,10 @@ function CheckinModal({
                   <Button
                     variant={e.checked_in ? "outline" : "default"}
                     size="sm"
-                    className={cn("h-7 gap-1 text-[11px]", e.checked_in && "border-emerald-300 text-emerald-700")}
+                    className={cn(
+                      "h-7 gap-1 text-[11px]",
+                      e.checked_in && "border-emerald-300 text-emerald-700",
+                    )}
                     disabled={addCheckin.isPending || removeCheckin.isPending}
                     onClick={() =>
                       e.checked_in
@@ -379,7 +460,13 @@ function CheckinModal({
                         : addCheckin.mutate(e.patient_id)
                     }
                   >
-                    {e.checked_in ? <><Check className="h-3 w-3" /> Presente</> : "Marcar"}
+                    {e.checked_in ? (
+                      <>
+                        <Check className="h-3 w-3" /> Presente
+                      </>
+                    ) : (
+                      "Marcar"
+                    )}
                   </Button>
                 </div>
               ))}
@@ -396,23 +483,18 @@ function CheckinModal({
 
 // ─── Class Detail Panel ───────────────────────────────────────────────────────
 
-function ClassDetailPanel({
-  cls,
-  onClose,
-}: {
-  cls: GroupClass;
-  onClose: () => void;
-}) {
+function ClassDetailPanel({ cls, onClose }: { cls: GroupClass; onClose: () => void }) {
   const qc = useQueryClient();
   const [checkinSession, setCheckinSession] = useState<GroupSession | null>(null);
   const [tab, setTab] = useState<"sessions" | "enrollments" | "waitlist">("sessions");
 
   const { data: sessionsData, isLoading: sessLoading } = useQuery({
     queryKey: ["group-sessions", cls.id],
-    queryFn: () => groupsApi.sessions.list(cls.id, {
-      from: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
-      to: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
-    }),
+    queryFn: () =>
+      groupsApi.sessions.list(cls.id, {
+        from: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
+        to: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
+      }),
   });
 
   const { data: enrollmentsData, isLoading: enrollLoading } = useQuery({
@@ -442,8 +524,12 @@ function ClassDetailPanel({
   const enrollments = (enrollmentsData as any)?.data ?? [];
   const waitlist = (waitlistData as any)?.data ?? [];
 
-  const upcomingSessions = sessions.filter((s: GroupSession) => s.date >= new Date().toISOString().split("T")[0]);
-  const pastSessions = sessions.filter((s: GroupSession) => s.date < new Date().toISOString().split("T")[0]);
+  const upcomingSessions = sessions.filter(
+    (s: GroupSession) => s.date >= new Date().toISOString().split("T")[0],
+  );
+  const pastSessions = sessions.filter(
+    (s: GroupSession) => s.date < new Date().toISOString().split("T")[0],
+  );
 
   return (
     <div className="fixed inset-0 z-50 flex">
@@ -453,9 +539,13 @@ function ClassDetailPanel({
           <div className="flex items-center gap-2">
             <div className="h-3 w-3 rounded-full" style={{ backgroundColor: cls.color }} />
             <h2 className="font-black text-base">{cls.name}</h2>
-            <Badge variant="secondary" className="text-[10px]">{MODALITIES[cls.modality]}</Badge>
+            <Badge variant="secondary" className="text-[10px]">
+              {MODALITIES[cls.modality]}
+            </Badge>
           </div>
-          <Button variant="ghost" size="icon" onClick={onClose}><X className="h-4 w-4" /></Button>
+          <Button variant="ghost" size="icon" onClick={onClose}>
+            <X className="h-4 w-4" />
+          </Button>
         </div>
 
         <div className="flex border-b">
@@ -465,7 +555,9 @@ function ClassDetailPanel({
               onClick={() => setTab(t)}
               className={cn(
                 "flex-1 py-2.5 text-xs font-bold uppercase tracking-wider transition-colors",
-                tab === t ? "border-b-2 border-primary text-primary" : "text-muted-foreground hover:text-foreground",
+                tab === t
+                  ? "border-b-2 border-primary text-primary"
+                  : "text-muted-foreground hover:text-foreground",
               )}
             >
               {t === "sessions" && `Aulas (${upcomingSessions.length})`}
@@ -486,27 +578,46 @@ function ClassDetailPanel({
                   disabled={generateSessions.isPending}
                   onClick={() => generateSessions.mutate()}
                 >
-                  {generateSessions.isPending ? <Loader2 className="h-3 w-3 animate-spin" /> : <RefreshCw className="h-3 w-3" />}
+                  {generateSessions.isPending ? (
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                  ) : (
+                    <RefreshCw className="h-3 w-3" />
+                  )}
                   Gerar próximas 4 semanas
                 </Button>
               </div>
               {sessLoading ? (
-                <div className="space-y-2">{[1, 2, 3].map((i) => <Skeleton key={i} className="h-14 rounded-xl" />)}</div>
+                <div className="space-y-2">
+                  {[1, 2, 3].map((i) => (
+                    <Skeleton key={i} className="h-14 rounded-xl" />
+                  ))}
+                </div>
               ) : sessions.length === 0 ? (
-                <p className="text-sm text-muted-foreground text-center py-8">Nenhuma aula. Gere a partir do horário da turma.</p>
+                <p className="text-sm text-muted-foreground text-center py-8">
+                  Nenhuma aula. Gere a partir do horário da turma.
+                </p>
               ) : (
                 <>
                   {upcomingSessions.length > 0 && (
-                    <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Próximas</p>
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                      Próximas
+                    </p>
                   )}
                   {upcomingSessions.map((s: GroupSession) => (
                     <SessionRow key={s.id} session={s} onCheckin={() => setCheckinSession(s)} />
                   ))}
                   {pastSessions.length > 0 && (
-                    <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mt-3">Anteriores</p>
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mt-3">
+                      Anteriores
+                    </p>
                   )}
                   {pastSessions.slice(0, 10).map((s: GroupSession) => (
-                    <SessionRow key={s.id} session={s} onCheckin={() => setCheckinSession(s)} past />
+                    <SessionRow
+                      key={s.id}
+                      session={s}
+                      onCheckin={() => setCheckinSession(s)}
+                      past
+                    />
                   ))}
                 </>
               )}
@@ -516,15 +627,26 @@ function ClassDetailPanel({
           {tab === "enrollments" && (
             <>
               <div className="flex justify-between items-center mb-2">
-                <span className="text-xs text-muted-foreground">{enrollments.length}/{cls.max_capacity} vagas</span>
+                <span className="text-xs text-muted-foreground">
+                  {enrollments.length}/{cls.max_capacity} vagas
+                </span>
               </div>
               {enrollLoading ? (
-                <div className="space-y-2">{[1, 2, 3].map((i) => <Skeleton key={i} className="h-10 rounded-xl" />)}</div>
+                <div className="space-y-2">
+                  {[1, 2, 3].map((i) => (
+                    <Skeleton key={i} className="h-10 rounded-xl" />
+                  ))}
+                </div>
               ) : enrollments.length === 0 ? (
-                <p className="text-sm text-muted-foreground text-center py-8">Nenhum aluno matriculado</p>
+                <p className="text-sm text-muted-foreground text-center py-8">
+                  Nenhum aluno matriculado
+                </p>
               ) : (
                 enrollments.map((e: any) => (
-                  <div key={e.id} className="flex items-center justify-between px-3 py-2 rounded-xl border border-border/50 bg-card">
+                  <div
+                    key={e.id}
+                    className="flex items-center justify-between px-3 py-2 rounded-xl border border-border/50 bg-card"
+                  >
                     <div>
                       <p className="text-sm font-semibold">{e.full_name}</p>
                       {e.phone && <p className="text-[11px] text-muted-foreground">{e.phone}</p>}
@@ -546,16 +668,26 @@ function ClassDetailPanel({
           {tab === "waitlist" && (
             <>
               {waitlist.length === 0 ? (
-                <p className="text-sm text-muted-foreground text-center py-8">Fila de espera vazia</p>
+                <p className="text-sm text-muted-foreground text-center py-8">
+                  Fila de espera vazia
+                </p>
               ) : (
                 waitlist.map((w: any, i: number) => (
-                  <div key={w.patient_id} className="flex items-center gap-3 px-3 py-2 rounded-xl border border-border/50 bg-card">
-                    <span className="text-xl font-black text-muted-foreground/40 w-6 text-center">{i + 1}</span>
+                  <div
+                    key={w.patient_id}
+                    className="flex items-center gap-3 px-3 py-2 rounded-xl border border-border/50 bg-card"
+                  >
+                    <span className="text-xl font-black text-muted-foreground/40 w-6 text-center">
+                      {i + 1}
+                    </span>
                     <div className="flex-1">
                       <p className="text-sm font-semibold">{w.full_name}</p>
                       <Badge
                         variant="outline"
-                        className={cn("text-[10px]", w.status === "offered" && "text-amber-600 border-amber-300")}
+                        className={cn(
+                          "text-[10px]",
+                          w.status === "offered" && "text-amber-600 border-amber-300",
+                        )}
                       >
                         {w.status === "offered" ? "Vaga oferecida" : "Aguardando"}
                       </Badge>
@@ -608,17 +740,13 @@ function SessionRow({
           {session.end_time && ` – ${session.end_time.substring(0, 5)}`}
           {session.checkin_count > 0 && (
             <span className="ml-2 text-emerald-600 font-semibold">
-              <CheckSquare className="inline h-3 w-3 mr-0.5" />{session.checkin_count}
+              <CheckSquare className="inline h-3 w-3 mr-0.5" />
+              {session.checkin_count}
             </span>
           )}
         </p>
       </div>
-      <Button
-        variant="outline"
-        size="sm"
-        className="h-7 text-[11px] gap-1"
-        onClick={onCheckin}
-      >
+      <Button variant="outline" size="sm" className="h-7 text-[11px] gap-1" onClick={onCheckin}>
         <ListChecks className="h-3.5 w-3.5" />
         Check-in
       </Button>
@@ -686,14 +814,18 @@ export default function GroupsPage() {
 
         {isLoading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {[1, 2, 3].map((i) => <Skeleton key={i} className="h-48 rounded-2xl" />)}
+            {[1, 2, 3].map((i) => (
+              <Skeleton key={i} className="h-48 rounded-2xl" />
+            ))}
           </div>
         ) : classes.length === 0 ? (
           <Card className="border-dashed border-2 border-border/50">
             <CardContent className="flex flex-col items-center justify-center py-16 gap-3">
               <Users className="h-12 w-12 text-muted-foreground/30" />
               <p className="font-bold text-muted-foreground">Nenhuma turma cadastrada</p>
-              <p className="text-sm text-muted-foreground">Crie sua primeira turma de Pilates ou grupo</p>
+              <p className="text-sm text-muted-foreground">
+                Crie sua primeira turma de Pilates ou grupo
+              </p>
               <Button onClick={() => setFormOpen(true)} className="mt-2 gap-2">
                 <Plus className="h-4 w-4" /> Criar Turma
               </Button>
@@ -718,7 +850,10 @@ export default function GroupsPage() {
         <ClassFormModal
           open
           initial={editTarget}
-          onClose={() => { setFormOpen(false); setEditTarget(null); }}
+          onClose={() => {
+            setFormOpen(false);
+            setEditTarget(null);
+          }}
           onSave={(body) =>
             editTarget
               ? updateMutation.mutate({ id: editTarget.id, body })

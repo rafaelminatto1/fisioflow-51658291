@@ -33,9 +33,7 @@ export const ClinicalAISnapshotMobile = () => {
         <Text style={[styles.title, { color: colors.text }]}>Resumo da sua Evolução</Text>
       </View>
 
-      <Text style={[styles.mainStatus, { color: colors.textSecondary }]}>
-        "{data.mainStatus}"
-      </Text>
+      <Text style={[styles.mainStatus, { color: colors.textSecondary }]}>"{data.mainStatus}"</Text>
 
       <View style={styles.grid}>
         <View style={styles.section}>
@@ -44,7 +42,9 @@ export const ClinicalAISnapshotMobile = () => {
             <Text style={[styles.sectionTitle, { color: "#22c55e" }]}>Suas Conquistas</Text>
           </View>
           {data.keyWins.map((win: string, i: number) => (
-            <Text key={i} style={[styles.itemText, { color: colors.text }]}>• {win}</Text>
+            <Text key={i} style={[styles.itemText, { color: colors.text }]}>
+              • {win}
+            </Text>
           ))}
         </View>
 
@@ -54,7 +54,9 @@ export const ClinicalAISnapshotMobile = () => {
             <Text style={[styles.sectionTitle, { color: "#f59e0b" }]}>Próximos Passos</Text>
           </View>
           {data.remainingChallenges.map((challenge: string, i: number) => (
-            <Text key={i} style={[styles.itemText, { color: colors.text }]}>• {challenge}</Text>
+            <Text key={i} style={[styles.itemText, { color: colors.text }]}>
+              • {challenge}
+            </Text>
           ))}
         </View>
       </View>
@@ -109,5 +111,5 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: "500",
     lineHeight: 18,
-  }
+  },
 });

@@ -52,9 +52,9 @@
   --color-card: hsl(var(--card));
   --color-card-foreground: hsl(var(--card-foreground));
 
-  --color-brand-blue: #6DC0E3;
-  --color-brand-blue-light: #A5D9EF;
-  --color-brand-blue-dark: #4A9ABA;
+  --color-brand-blue: #6dc0e3;
+  --color-brand-blue-light: #a5d9ef;
+  --color-brand-blue-dark: #4a9aba;
   --color-brand-blue-glow: rgba(109, 192, 227, 0.3);
 
   --color-sidebar-background: hsl(var(--sidebar-background));
@@ -91,8 +91,8 @@
   --color-status-completed: #3b82f6;
 
   /* 2026 Design System - Solid Surfaces (No Glassmorphism) */
-  --glass-bg: #FFFFFF;
-  --glass-bg-dark: #0F172A;
+  --glass-bg: #ffffff;
+  --glass-bg-dark: #0f172a;
   --glass-border: var(--color-border);
   --glass-shadow: 0 4px 12px 0 rgba(0, 0, 0, 0.05);
 
@@ -318,6 +318,12 @@
 }
 
 @keyframes voiceWave {
-  from { transform: scaleY(0.3); opacity: 0.7; }
-  to   { transform: scaleY(1);   opacity: 1; }
+  from {
+    transform: scaleY(0.3);
+    opacity: 0.7;
+  }
+  to {
+    transform: scaleY(1);
+    opacity: 1;
+  }
 }

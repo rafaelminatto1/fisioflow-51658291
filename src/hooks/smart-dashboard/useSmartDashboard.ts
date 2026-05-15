@@ -1,12 +1,5 @@
 import { useQueryClient } from "@tanstack/react-query";
-import {
-  differenceInDays,
-  isValid,
-  parseISO,
-  startOfDay,
-  subMonths,
-  subDays,
-} from "date-fns";
+import { differenceInDays, isValid, parseISO, startOfDay, subMonths, subDays } from "date-fns";
 import { useMemo } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { fisioLogger as logger } from "@/lib/errors/logger";
@@ -110,7 +103,10 @@ export function useSmartDashboardData(viewMode: ViewMode = "today") {
         const days = differenceInDays(startOfDay(date), todayStart);
         return days >= 0 && days <= DEFAULT_MEDICAL_RETURN_DAYS;
       })
-      .sort((a, b) => new Date(a.medical_return_date!).getTime() - new Date(b.medical_return_date!).getTime());
+      .sort(
+        (a, b) =>
+          new Date(a.medical_return_date!).getTime() - new Date(b.medical_return_date!).getTime(),
+      );
   }, [patients, now]);
 
   const isLoading = Object.values(queries).some((q) => q.isLoading);

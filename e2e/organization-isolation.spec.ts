@@ -1,8 +1,9 @@
-import { test, expect, type Page } from '@playwright/test';
-import { authenticateBrowserContext } from './helpers/neon-auth';
-import { testUsers } from './fixtures/test-data';
+import { test, expect, type Page } from "@playwright/test";
+import { authenticateBrowserContext } from "./helpers/neon-auth";
+import { testUsers } from "./fixtures/test-data";
 
-const TEST_ORG_ID = testUsers.admin.expectedOrganizationId || '00000000-0000-0000-0000-000000000001';
+const TEST_ORG_ID =
+  testUsers.admin.expectedOrganizationId || "00000000-0000-0000-0000-000000000001";
 
 type PatientRecord = {
   id: string;
@@ -33,11 +34,11 @@ async function dismissOnboardingIfPresent(page: Page) {
     return;
   }
 
-  const closeButton = onboardingDialog.getByRole('button', { name: /Close|Fechar/i }).first();
+  const closeButton = onboardingDialog.getByRole("button", { name: /Close|Fechar/i }).first();
   if (await closeButton.isVisible().catch(() => false)) {
     await closeButton.click({ force: true });
   } else {
-    await page.keyboard.press('Escape').catch(() => {});
+    await page.keyboard.press("Escape").catch(() => {});
   }
 
   await expect(onboardingDialog).toBeHidden({ timeout: 5000 });
@@ -46,36 +47,36 @@ async function dismissOnboardingIfPresent(page: Page) {
 async function setupIsolationMocks(page: Page) {
   const patients: PatientRecord[] = [
     {
-      id: 'patient-org-1',
-      name: 'Paciente Org 1',
-      full_name: 'Paciente Org 1',
+      id: "patient-org-1",
+      name: "Paciente Org 1",
+      full_name: "Paciente Org 1",
       organization_id: TEST_ORG_ID,
-      status: 'active',
+      status: "active",
     },
   ];
 
   const appointments: AppointmentRecord[] = [
     {
-      id: 'appointment-org-1',
+      id: "appointment-org-1",
       patient_id: patients[0].id,
       patient_name: patients[0].full_name,
       organization_id: TEST_ORG_ID,
       date: new Date().toISOString().slice(0, 10),
-      start_time: '10:00',
-      end_time: '10:50',
-      status: 'confirmado',
+      start_time: "10:00",
+      end_time: "10:50",
+      status: "confirmado",
     },
   ];
 
   await page.route(`**/api/organizations/${TEST_ORG_ID}`, async (route) => {
     await route.fulfill({
       status: 200,
-      contentType: 'application/json',
+      contentType: "application/json",
       body: JSON.stringify({
         data: {
           id: TEST_ORG_ID,
-          name: 'Organização Isolada',
-          slug: 'organizacao-isolada',
+          name: "Organização Isolada",
+          slug: "organizacao-isolada",
           settings: {},
           active: true,
         },
@@ -83,17 +84,17 @@ async function setupIsolationMocks(page: Page) {
     });
   });
 
-  await page.route('**/api/organization-members?**', async (route) => {
+  await page.route("**/api/organization-members?**", async (route) => {
     await route.fulfill({
       status: 200,
-      contentType: 'application/json',
+      contentType: "application/json",
       body: JSON.stringify({
         data: [
           {
-            id: 'member-org-admin',
+            id: "member-org-admin",
             organization_id: TEST_ORG_ID,
-            user_id: 'user-org-admin',
-            role: 'admin',
+            user_id: "user-org-admin",
+            role: "admin",
             active: true,
           },
         ],
@@ -102,17 +103,17 @@ async function setupIsolationMocks(page: Page) {
     });
   });
 
-  await page.route('**/api/profile/me', async (route) => {
+  await page.route("**/api/profile/me", async (route) => {
     await route.fulfill({
       status: 200,
-      contentType: 'application/json',
+      contentType: "application/json",
       body: JSON.stringify({
         data: {
-          id: 'user-org-admin',
-          user_id: 'user-org-admin',
+          id: "user-org-admin",
+          user_id: "user-org-admin",
           email: testUsers.admin.email,
-          full_name: 'Admin Organização',
-          role: 'admin',
+          full_name: "Admin Organização",
+          role: "admin",
           organization_id: TEST_ORG_ID,
           organizationId: TEST_ORG_ID,
           email_verified: true,
@@ -121,37 +122,40 @@ async function setupIsolationMocks(page: Page) {
     });
   });
 
-  await page.route('**/api/notifications?**', async (route) => {
+  await page.route("**/api/notifications?**", async (route) => {
     await route.fulfill({
       status: 200,
-      contentType: 'application/json',
+      contentType: "application/json",
       body: JSON.stringify({ data: [] }),
     });
   });
 
-  await page.route('**/api/audit-logs?**', async (route) => {
+  await page.route("**/api/audit-logs?**", async (route) => {
     await route.fulfill({
       status: 200,
-      contentType: 'application/json',
+      contentType: "application/json",
       body: JSON.stringify({ data: [] }),
     });
   });
 
   await page.route(/\/api\/patients(?:\?.*)?$/i, async (route) => {
-    if (route.request().method() === 'POST') {
-      const payload = (await route.request().postDataJSON().catch(() => ({}))) as Partial<PatientRecord>;
+    if (route.request().method() === "POST") {
+      const payload = (await route
+        .request()
+        .postDataJSON()
+        .catch(() => ({}))) as Partial<PatientRecord>;
       const created: PatientRecord = {
         id: `patient-org-created-${Date.now()}`,
-        name: payload.name || 'Paciente Criado',
-        full_name: payload.full_name || payload.name || 'Paciente Criado',
+        name: payload.name || "Paciente Criado",
+        full_name: payload.full_name || payload.name || "Paciente Criado",
         organization_id: TEST_ORG_ID,
-        status: 'active',
+        status: "active",
       };
       patients.unshift(created);
 
       await route.fulfill({
         status: 201,
-        contentType: 'application/json',
+        contentType: "application/json",
         body: JSON.stringify({ data: created }),
       });
       return;
@@ -159,7 +163,7 @@ async function setupIsolationMocks(page: Page) {
 
     await route.fulfill({
       status: 200,
-      contentType: 'application/json',
+      contentType: "application/json",
       body: JSON.stringify({ data: patients, total: patients.length }),
     });
   });
@@ -167,7 +171,7 @@ async function setupIsolationMocks(page: Page) {
   await page.route(/\/api\/appointments(?:\?.*)?$/i, async (route) => {
     await route.fulfill({
       status: 200,
-      contentType: 'application/json',
+      contentType: "application/json",
       body: JSON.stringify({ data: appointments, total: appointments.length }),
     });
   });
@@ -181,45 +185,55 @@ async function authenticateAndBootstrap(page: Page) {
 async function openSecuredPage(page: Page, path: string) {
   await authenticateAndBootstrap(page);
   await page.goto(path);
-  await page.waitForURL((url) => !url.pathname.includes('/auth'), { timeout: 30000 });
-  await page.waitForLoadState('domcontentloaded');
+  await page.waitForURL((url) => !url.pathname.includes("/auth"), { timeout: 30000 });
+  await page.waitForLoadState("domcontentloaded");
   await dismissOnboardingIfPresent(page);
 }
 
-test.describe('Isolamento de Dados por Organização', () => {
+test.describe("Isolamento de Dados por Organização", () => {
   test.use({ storageState: { cookies: [], origins: [] } });
 
-  test('deve filtrar pacientes por organização', async ({ page }) => {
-    await openSecuredPage(page, '/patients');
+  test("deve filtrar pacientes por organização", async ({ page }) => {
+    await openSecuredPage(page, "/patients");
 
-    await expect(page.locator('[data-testid="patients-page-header"], #page-title, h1').first()).toBeVisible({
+    await expect(
+      page.locator('[data-testid="patients-page-header"], #page-title, h1').first(),
+    ).toBeVisible({
       timeout: 20000,
     });
-    await expect(page.getByText('Paciente Org 1').first()).toBeVisible({ timeout: 10000 }).catch(async () => {
-      await expect(page.locator('main')).toBeVisible();
-    });
+    await expect(page.getByText("Paciente Org 1").first())
+      .toBeVisible({ timeout: 10000 })
+      .catch(async () => {
+        await expect(page.locator("main")).toBeVisible();
+      });
   });
 
-  test('deve filtrar agendamentos por organização', async ({ page }) => {
-    await openSecuredPage(page, '/agenda');
+  test("deve filtrar agendamentos por organização", async ({ page }) => {
+    await openSecuredPage(page, "/agenda");
 
     await expect(page).toHaveURL(/\/agenda/);
-    await expect(page.getByText('Paciente Org 1').first()).toBeVisible({ timeout: 10000 }).catch(async () => {
-      await expect(page.locator('main')).toBeVisible();
-    });
+    await expect(page.getByText("Paciente Org 1").first())
+      .toBeVisible({ timeout: 10000 })
+      .catch(async () => {
+        await expect(page.locator("main")).toBeVisible();
+      });
   });
 
-  test('usuários de organizações diferentes não devem ver dados uns dos outros', async ({ page }) => {
-    await openSecuredPage(page, '/patients');
+  test("usuários de organizações diferentes não devem ver dados uns dos outros", async ({
+    page,
+  }) => {
+    await openSecuredPage(page, "/patients");
 
     await expect(page).toHaveURL(/\/patients/);
-    await expect(page.getByText('Organização Isolada').first()).toBeVisible({ timeout: 10000 }).catch(async () => {
-      await expect(page.locator('main')).toBeVisible();
-    });
+    await expect(page.getByText("Organização Isolada").first())
+      .toBeVisible({ timeout: 10000 })
+      .catch(async () => {
+        await expect(page.locator("main")).toBeVisible();
+      });
   });
 
-  test('deve criar paciente na organização correta', async ({ page }) => {
-    await openSecuredPage(page, '/patients');
+  test("deve criar paciente na organização correta", async ({ page }) => {
+    await openSecuredPage(page, "/patients");
 
     const newPatientButton = page
       .locator('[data-testid="add-patient"], button')
@@ -231,7 +245,9 @@ test.describe('Isolamento de Dados por Organização', () => {
       await page.waitForTimeout(500);
     }
 
-    await expect(page.locator('[data-testid="patients-page-header"], #page-title, h1').first()).toBeVisible({
+    await expect(
+      page.locator('[data-testid="patients-page-header"], #page-title, h1').first(),
+    ).toBeVisible({
       timeout: 15000,
     });
   });

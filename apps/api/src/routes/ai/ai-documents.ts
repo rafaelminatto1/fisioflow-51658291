@@ -279,7 +279,7 @@ app.post("/document/chat", async (c) => {
     const matches = await c.env.CLINICAL_KNOWLEDGE.query(queryVector, {
       topK: 5,
       returnMetadata: true,
-      filter: { documentId: { $eq: documentId } }
+      filter: { documentId: { $eq: documentId } },
     });
 
     const context = matches.matches
@@ -288,7 +288,13 @@ app.post("/document/chat", async (c) => {
       .join("\n\n");
 
     if (!context) {
-      return c.json({ error: "Nenhum contexto encontrado para este documento. Verifique se ele foi indexado corretamente." }, 404);
+      return c.json(
+        {
+          error:
+            "Nenhum contexto encontrado para este documento. Verifique se ele foi indexado corretamente.",
+        },
+        404,
+      );
     }
 
     // 3. Gerar resposta com Gemini usando o contexto extraído
@@ -306,13 +312,13 @@ app.post("/document/chat", async (c) => {
     const result = await runThinkingModel(c.env, {
       prompt,
       model: "gemini-3-flash-preview",
-      thinkingLevel: "MEDIUM"
+      thinkingLevel: "MEDIUM",
     });
 
-    return c.json({ 
-      success: true, 
+    return c.json({
+      success: true,
       answer: result.text,
-      sources: matches.matches.length 
+      sources: matches.matches.length,
     });
   } catch (error: any) {
     console.error("[AI/DocChat] Error:", error);

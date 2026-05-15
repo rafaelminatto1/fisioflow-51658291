@@ -530,7 +530,8 @@ async function generateNFSeForSession(
 // ===== EVENT HANDLERS =====
 
 async function handleAppointmentCreated(data: any, env: Env) {
-  const { appointmentId, patientId, patientName, patientPhone, date, startTime, organizationId } = data;
+  const { appointmentId, patientId, patientName, patientPhone, date, startTime, organizationId } =
+    data;
   if (!patientPhone) return;
 
   const firstName = patientName?.split(" ")[0] || "Paciente";
@@ -539,25 +540,28 @@ async function handleAppointmentCreated(data: any, env: Env) {
 
   const messageText = `Olá, ${firstName}! 👋 Seu agendamento no FisioFlow foi confirmado para o dia ${formattedDate} às ${time}. Até lá!`;
 
-  await processWhatsAppMessage({
-    to: patientPhone,
-    templateName: "confirmacao_agendamento", // Template para envio imediato
-    languageCode: "pt_BR",
-    bodyParameters: [
-      { type: "text", text: firstName },
-      { type: "text", text: formattedDate },
-      { type: "text", text: time }
-    ],
-    organizationId,
-    patientId,
-    messageText,
-    appointmentId
-  }, env);
+  await processWhatsAppMessage(
+    {
+      to: patientPhone,
+      templateName: "confirmacao_agendamento", // Template para envio imediato
+      languageCode: "pt_BR",
+      bodyParameters: [
+        { type: "text", text: firstName },
+        { type: "text", text: formattedDate },
+        { type: "text", text: time },
+      ],
+      organizationId,
+      patientId,
+      messageText,
+      appointmentId,
+    },
+    env,
+  );
 }
 
 async function handlePatientInactive(data: any, env: Env) {
   const { patientId, name, phone, organizationId } = data;
-  
+
   if (env.WORKFLOW_REENGAGEMENT) {
     // Inicia o workflow de reengajamento progressivo
     await env.WORKFLOW_REENGAGEMENT.create({
@@ -568,8 +572,8 @@ async function handlePatientInactive(data: any, env: Env) {
         patientPhone: phone,
         organizationId,
         therapistName: "seu fisioterapeuta",
-        daysSinceLastAppointment: 15
-      }
+        daysSinceLastAppointment: 15,
+      },
     });
   }
 }
@@ -581,14 +585,17 @@ async function handlePatientBirthday(data: any, env: Env) {
   const firstName = name?.split(" ")[0] || "Paciente";
   const messageText = `Parabéns, ${firstName}! 🎂 O FisioFlow te deseja um dia incrível e muita saúde!`;
 
-  await processWhatsAppMessage({
-    to: phone,
-    templateName: "parabens_paciente",
-    languageCode: "pt_BR",
-    bodyParameters: [{ type: "text", text: firstName }],
-    organizationId,
-    patientId,
-    messageText,
-    appointmentId: ""
-  }, env);
+  await processWhatsAppMessage(
+    {
+      to: phone,
+      templateName: "parabens_paciente",
+      languageCode: "pt_BR",
+      bodyParameters: [{ type: "text", text: firstName }],
+      organizationId,
+      patientId,
+      messageText,
+      appointmentId: "",
+    },
+    env,
+  );
 }

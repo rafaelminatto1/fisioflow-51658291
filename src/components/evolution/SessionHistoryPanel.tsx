@@ -193,7 +193,9 @@ export const SessionHistoryPanel: React.FC<SessionHistoryPanelProps> = ({
 
                           {obsText && (
                             <div className="space-y-1">
-                              <p className="text-xs font-medium text-amber-600">Observação clínica</p>
+                              <p className="text-xs font-medium text-amber-600">
+                                Observação clínica
+                              </p>
                               <div
                                 className="text-xs text-muted-foreground bg-muted/50 p-2 rounded prose prose-sm max-w-none"
                                 // O backend já sanitiza HTML; o TipTap só emite tags seguras.

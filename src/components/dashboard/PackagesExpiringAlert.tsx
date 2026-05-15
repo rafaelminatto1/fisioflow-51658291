@@ -58,9 +58,21 @@ function buildWhatsAppUrl(pkg: ExpiringPackage): string | null {
 }
 
 const alertConfig = {
-  zero: { label: "Zerado", color: "text-red-600 dark:text-red-400", bg: "bg-red-100 dark:bg-red-900/30" },
-  low: { label: "Crítico", color: "text-orange-600 dark:text-orange-400", bg: "bg-orange-100 dark:bg-orange-900/30" },
-  expiring_soon: { label: "Vence em breve", color: "text-amber-600 dark:text-amber-400", bg: "bg-amber-100 dark:bg-amber-900/30" },
+  zero: {
+    label: "Zerado",
+    color: "text-red-600 dark:text-red-400",
+    bg: "bg-red-100 dark:bg-red-900/30",
+  },
+  low: {
+    label: "Crítico",
+    color: "text-orange-600 dark:text-orange-400",
+    bg: "bg-orange-100 dark:bg-orange-900/30",
+  },
+  expiring_soon: {
+    label: "Vence em breve",
+    color: "text-amber-600 dark:text-amber-400",
+    bg: "bg-amber-100 dark:bg-amber-900/30",
+  },
   ok: { label: "", color: "", bg: "" },
 };
 
@@ -77,7 +89,9 @@ export function PackagesExpiringAlert() {
         </CardHeader>
         <CardContent>
           <div className="space-y-2">
-            {[1, 2].map((i) => <Skeleton key={i} className="h-12 rounded-xl" />)}
+            {[1, 2].map((i) => (
+              <Skeleton key={i} className="h-12 rounded-xl" />
+            ))}
           </div>
         </CardContent>
       </Card>
@@ -138,8 +152,8 @@ export function PackagesExpiringAlert() {
                   </span>
                   {pkg.expires_at && pkg.days_until_expiry !== null && (
                     <>
-                      {" "}·{" "}
-                      <Clock className="inline h-3 w-3" />{" "}
+                      {" "}
+                      · <Clock className="inline h-3 w-3" />{" "}
                       {pkg.days_until_expiry <= 0
                         ? "Vencido"
                         : `vence em ${pkg.days_until_expiry}d`}
@@ -174,9 +188,13 @@ export function PackagesExpiringAlert() {
             onClick={() => setExpanded(!expanded)}
           >
             {expanded ? (
-              <><ChevronUp className="h-3.5 w-3.5" /> Ver menos</>
+              <>
+                <ChevronUp className="h-3.5 w-3.5" /> Ver menos
+              </>
             ) : (
-              <><ChevronDown className="h-3.5 w-3.5" /> Ver mais {packages.length - 3} pacotes</>
+              <>
+                <ChevronDown className="h-3.5 w-3.5" /> Ver mais {packages.length - 3} pacotes
+              </>
             )}
           </Button>
         )}

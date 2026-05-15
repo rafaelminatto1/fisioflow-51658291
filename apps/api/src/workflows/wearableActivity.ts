@@ -22,15 +22,23 @@ export class PatientWearableActivityWorkflow extends WorkflowEntrypoint<
   WearableActivityParams
 > {
   async run(event: WorkflowEvent<WearableActivityParams>, step: WorkflowStep) {
-    const { patientId, organizationId, alertType, metricType, currentValue, baselineValue, milestoneTitle } = event.payload;
+    const {
+      patientId,
+      organizationId,
+      alertType,
+      metricType,
+      currentValue,
+      baselineValue,
+      milestoneTitle,
+    } = event.payload;
 
     const pool = createPool(this.env);
-    
+
     // Get patient details
     const patientRes = await step.do("get-patient-info", async () => {
       const res = await pool.query(
         "SELECT full_name, phone FROM patients WHERE id = $1 AND organization_id = $2",
-        [patientId, organizationId]
+        [patientId, organizationId],
       );
       return res.rows[0] as { full_name: string; phone: string } | undefined;
     });
@@ -42,17 +50,18 @@ export class PatientWearableActivityWorkflow extends WorkflowEntrypoint<
 
     if (alertType === "low_activity") {
       await step.do("send-low-activity-alert", async () => {
-        const dropPercent = baselineValue && baselineValue > 0 
-          ? Math.round((1 - (currentValue || 0) / baselineValue) * 100) 
-          : 0;
+        const dropPercent =
+          baselineValue && baselineValue > 0
+            ? Math.round((1 - (currentValue || 0) / baselineValue) * 100)
+            : 0;
 
         const message = `Olá ${patientRes.full_name.split(" ")[0]}! Notamos que sua atividade física (${metricType}) diminuiu cerca de ${dropPercent}% esta semana. 📉\n\nManter a constância é fundamental para sua recuperação. Que tal retomar sua meta hoje? 💪`;
-        
+
         await this.sendWhatsApp(patientRes.phone, message);
       });
 
       // Notify therapist if drop is severe (> 50%)
-      if (baselineValue && currentValue && (currentValue / baselineValue < 0.5)) {
+      if (baselineValue && currentValue && currentValue / baselineValue < 0.5) {
         await step.do("notify-therapist-escalation", async () => {
           await pool.query(
             `INSERT INTO notifications (organization_id, user_id, type, title, message, link, metadata)
@@ -62,8 +71,8 @@ export class PatientWearableActivityWorkflow extends WorkflowEntrypoint<
               `Paciente ${patientRes.full_name} teve queda severa de atividade (${metricType}).`,
               `/patients/${patientId}/wearables`,
               JSON.stringify({ patient_id: patientId, alert_type: "severe_drop" }),
-              organizationId
-            ]
+              organizationId,
+            ],
           );
         });
       }

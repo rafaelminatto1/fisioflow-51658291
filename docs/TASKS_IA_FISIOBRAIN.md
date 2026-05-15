@@ -1,11 +1,15 @@
 # FisioFlow — Plano de Implementação IA + FisioBrain
+
 # Spec-Driven Development — 20 Tasks / 5 Sprints
+
 # Criado em: 2026-04-29
+
 # Status: AGUARDANDO APROVAÇÃO
 
 ---
 
 ## Legenda
+
 - [ ] Pendente
 - [~] Em andamento
 - [x] Concluído
@@ -14,6 +18,7 @@
 ---
 
 ## Sprint 0 — Fundação (Semanas 1–2)
+
 > Bugs críticos + infraestrutura base. Nenhuma feature nova antes de fechar isto.
 
 - [x] **#1 S0-T1** — Corrigir bug de fuso horário (UTC vs BRT) em date-utils.ts
@@ -34,6 +39,7 @@
 ---
 
 ## Sprint 1 — FisioBrain Core: Wiki + PDFs (Semanas 3–6)
+
 > O coração do sistema de conhecimento clínico.
 
 - [x] **#5 S1-T1** — Backend: rota POST /api/knowledge/upload-paper
@@ -57,6 +63,7 @@
 ---
 
 ## Sprint 2 — FisioBrain em Contexto Clínico (Semanas 7–10)
+
 > Evidência no momento certo — durante a consulta.
 
 - [x] **#11 S2-T1** — 🔒(#6) Frontend: FisioBrain no painel de SOAP (Sheet lateral)
@@ -78,11 +85,12 @@
 ---
 
 ## Sprint 3 — ClinicAgent + Automações WhatsApp (Semanas 11–14)
+
 > A clínica funciona sozinha fora do horário.
 
 - [x] **#15 S3-T1** — Backend: ClinicAgent (Durable Object com crons e skills em R2)
   - Arquivos: `apps/api/src/agents/ClinicAgent.ts` (NOVO), `apps/api/wrangler.toml`, `apps/api/src/index.ts`
-  - Feito: ClinicAgent extends Agent<Env, ClinicState> com @callable methods: runMorningBriefing, runDailySummary, checkMissingPatients (Neon query), handleWhatsAppReschedule. Bindings CLINIC_AGENT em wrangler.toml + prod. Crons 30 10 / 30 21 / 0 12 * * 1 adicionados ao [triggers] e aos case handlers em cron.ts.
+  - Feito: ClinicAgent extends Agent<Env, ClinicState> com @callable methods: runMorningBriefing, runDailySummary, checkMissingPatients (Neon query), handleWhatsAppReschedule. Bindings CLINIC_AGENT em wrangler.toml + prod. Crons 30 10 / 30 21 / 0 12 \* \* 1 adicionados ao [triggers] e aos case handlers em cron.ts.
 
 - [x] **#16 S3-T2** — 🔒(#2) Backend: SessionSummaryWorkflow (SOAP → WhatsApp paciente)
   - Arquivos: `apps/api/src/workflows/sessionSummary.ts` (NOVO), `apps/api/src/routes/sessions.ts`, `apps/api/wrangler.toml`
@@ -91,6 +99,7 @@
 ---
 
 ## Sprint 4 — Avaliação por Voz (Semanas 15–17)
+
 > Fisioterapeuta fala, IA preenche o formulário.
 
 - [x] **#18 S4-T2** — Backend: testar e validar endpoints de avaliação por voz
@@ -104,6 +113,7 @@
 ---
 
 ## Sprint 5 — Digital Twin (Semanas 18–20)
+
 > O paciente vê seu progresso. O fisio vê o prognóstico.
 
 - [x] **#20 S5-T2** — Backend: IA narrativa no digital-twin.ts (prognóstico)
@@ -135,31 +145,31 @@
 
 ## Arquivos Novos a Criar
 
-| Arquivo | Sprint |
-|---|---|
-| `apps/api/migrations/0061_ai_usage.sql` | S0 |
-| `apps/api/src/routes/fisiobrain.ts` | S1 |
-| `apps/api/src/workflows/wikiSync.ts` | S1 |
-| `apps/api/src/workflows/knowledgeSync.ts` | S1 |
-| `apps/api/src/workflows/sessionSummary.ts` | S3 |
-| `apps/api/src/agents/ClinicAgent.ts` | S3 |
-| `src/components/wiki/ScientificPapersView.tsx` | S1 |
-| `src/components/ai/AssessmentVoiceRecorder.tsx` | S4 |
-| `src/components/patient/DigitalTwinPanel.tsx` | S5 |
+| Arquivo                                         | Sprint |
+| ----------------------------------------------- | ------ |
+| `apps/api/migrations/0061_ai_usage.sql`         | S0     |
+| `apps/api/src/routes/fisiobrain.ts`             | S1     |
+| `apps/api/src/workflows/wikiSync.ts`            | S1     |
+| `apps/api/src/workflows/knowledgeSync.ts`       | S1     |
+| `apps/api/src/workflows/sessionSummary.ts`      | S3     |
+| `apps/api/src/agents/ClinicAgent.ts`            | S3     |
+| `src/components/wiki/ScientificPapersView.tsx`  | S1     |
+| `src/components/ai/AssessmentVoiceRecorder.tsx` | S4     |
+| `src/components/patient/DigitalTwinPanel.tsx`   | S5     |
 
 ---
 
 ## Custo Estimado Pós-Implementação
 
-| Serviço | R$/mês |
-|---|---|
-| Cloudflare Workers Paid | R$27 |
-| ZAI/GLM-4.7-Flash (maioria das tasks) | R$0 (gratuito) |
-| ZAI/GLM-4.7 + Workers AI Whisper | R$15–35 |
-| AI Search (open beta) | R$0 (gratuito) |
-| Gemini Flash (voz + análise profunda) | R$10–25 |
-| Neon DB (já existe) | R$0–30 |
-| **TOTAL** | **R$52–117/mês** |
+| Serviço                               | R$/mês           |
+| ------------------------------------- | ---------------- |
+| Cloudflare Workers Paid               | R$27             |
+| ZAI/GLM-4.7-Flash (maioria das tasks) | R$0 (gratuito)   |
+| ZAI/GLM-4.7 + Workers AI Whisper      | R$15–35          |
+| AI Search (open beta)                 | R$0 (gratuito)   |
+| Gemini Flash (voz + análise profunda) | R$10–25          |
+| Neon DB (já existe)                   | R$0–30           |
+| **TOTAL**                             | **R$52–117/mês** |
 
 ---
 

@@ -20,7 +20,7 @@ app.get("/kpis", requireAuth, async (c) => {
        WHERE organization_id = $1 
          AND date >= date_trunc('month', CURRENT_DATE)
          AND date < date_trunc('month', CURRENT_DATE) + interval '1 month'`,
-      [user.organizationId]
+      [user.organizationId],
     );
 
     // 2. No-Show Rate (Últimos 90 dias)
@@ -31,7 +31,7 @@ app.get("/kpis", requireAuth, async (c) => {
        FROM appointments 
        WHERE organization_id = $1 
          AND date >= CURRENT_DATE - interval '90 days'`,
-      [user.organizationId]
+      [user.organizationId],
     );
 
     // 3. Ticket Médio e Receita
@@ -43,7 +43,7 @@ app.get("/kpis", requireAuth, async (c) => {
        FROM pagamentos
        WHERE organization_id = $1
          AND created_at >= date_trunc('month', CURRENT_DATE)`,
-      [user.organizationId]
+      [user.organizationId],
     );
 
     // 4. LTV Base (Refinado: Pacientes com pelo menos 2 sessões para filtrar 'one-timers')
@@ -56,7 +56,7 @@ app.get("/kpis", requireAuth, async (c) => {
         HAVING COUNT(*) >= 2
       )
       SELECT COALESCE(AVG(session_count), 0) as avg_sessions_per_patient FROM patient_sessions`,
-      [user.organizationId]
+      [user.organizationId],
     );
 
     const stats = {
@@ -74,7 +74,7 @@ app.get("/kpis", requireAuth, async (c) => {
       },
       clinical: {
         avgSessions: Number(ltvRes.rows[0].avg_sessions_per_patient || 0),
-      }
+      },
     };
 
     return c.json({ data: stats });
@@ -122,7 +122,7 @@ app.get("/team-performance", requireAuth, async (c) => {
       FROM professional_stats s
       LEFT JOIN professional_revenue r ON r.therapist_id = s.therapist_id
       ORDER BY monthly_revenue DESC`,
-      [user.organizationId]
+      [user.organizationId],
     );
 
     return c.json({ data: result.rows });
@@ -145,7 +145,7 @@ app.get("/patients/:id/digital-twin", requireAuth, async (c) => {
     const result = await pool.query(
       `SELECT * FROM patient_longitudinal_summary 
        WHERE patient_id = $1 AND organization_id = $2`,
-      [patientId, user.organizationId]
+      [patientId, user.organizationId],
     );
 
     return c.json({ data: result.rows[0] || null });
@@ -204,7 +204,7 @@ app.get("/cohorts", requireAuth, async (c) => {
       FROM retention_data r
       JOIN cohort_size cs ON cs.cohort_month = r.cohort_month
       ORDER BY r.cohort_month DESC, r.month_number ASC`,
-      [user.organizationId]
+      [user.organizationId],
     );
 
     return c.json({ data: result.rows });
@@ -244,7 +244,7 @@ app.get("/churn", requireAuth, async (c) => {
         AND la.last_session_date < CURRENT_DATE - INTERVAL '30 days'
         AND p.status != 'alta'
       ORDER BY la.last_session_date DESC`,
-      [user.organizationId]
+      [user.organizationId],
     );
 
     return c.json({ data: result.rows });
@@ -271,11 +271,13 @@ app.get("/patients/:id/ai-snapshot", requireAuth, async (c) => {
        WHERE s.patient_id = $1 AND s.organization_id = $2
        ORDER BY s.date DESC
        LIMIT 10`,
-      [patientId, user.organizationId]
+      [patientId, user.organizationId],
     );
 
     if (history.rows.length === 0) {
-      return c.json({ data: { mainStatus: "Sem histórico clínico suficiente para gerar snapshot." } });
+      return c.json({
+        data: { mainStatus: "Sem histórico clínico suficiente para gerar snapshot." },
+      });
     }
 
     const { runThinkingModel } = await import("../lib/ai-native");
@@ -300,7 +302,7 @@ app.get("/patients/:id/ai-snapshot", requireAuth, async (c) => {
       prompt,
       model: "gemini-1.5-flash",
       temperature: 0.2,
-      responseFormat: "json"
+      responseFormat: "json",
     });
 
     const jsonMatch = result.content.match(/\{[\s\S]*\}/);
@@ -356,7 +358,7 @@ app.get("/protocol-efficacy", requireAuth, async (c) => {
       GROUP BY protocol_id, protocol_name
       HAVING COUNT(DISTINCT patient_id) >= 2
       ORDER BY avg_sessions_to_goal ASC`,
-      [user.organizationId]
+      [user.organizationId],
     );
 
     return c.json({ data: result.rows });
@@ -386,7 +388,7 @@ app.get("/clinical-quality", requireAuth, async (c) => {
        WHERE p.organization_id = $1 AND p.role = 'therapist'
        GROUP BY p.id, p.full_name
        ORDER BY avg_quality DESC`,
-      [user.organizationId]
+      [user.organizationId],
     );
 
     return c.json({ data: result.rows });
@@ -413,7 +415,7 @@ app.get("/clinical-alerts", requireAuth, async (c) => {
        JOIN patients p ON p.id = ca.patient_id
        WHERE p.organization_id = $1 AND ca.status = 'pending'
        ORDER BY ca.created_at DESC`,
-      [user.organizationId]
+      [user.organizationId],
     );
 
     return c.json({ data: result.rows });

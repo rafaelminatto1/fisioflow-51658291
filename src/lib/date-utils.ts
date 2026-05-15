@@ -6,7 +6,17 @@
  * Solution: always construct dates at local noon to avoid DST/TZ boundary issues.
  */
 
-import { format, isValid, parseISO, startOfDay, endOfDay, addDays, subDays, startOfWeek, endOfWeek } from "date-fns";
+import {
+  format,
+  isValid,
+  parseISO,
+  startOfDay,
+  endOfDay,
+  addDays,
+  subDays,
+  startOfWeek,
+  endOfWeek,
+} from "date-fns";
 import { ptBR } from "date-fns/locale";
 
 /**

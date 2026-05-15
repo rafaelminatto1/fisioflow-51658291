@@ -50,19 +50,25 @@ export function ScheduleEventContent({
       className="flex h-full w-full flex-col overflow-hidden rounded-xl border-l-4 border border-slate-200/40 p-2 shadow-sm transition-all duration-200 hover:shadow-md dark:border-slate-800/40"
       style={{
         borderLeftColor: safeColors.accent,
-        backgroundColor: safeColors.background !== "transparent" ? safeColors.background : "rgba(255,255,255,0.95)",
+        backgroundColor:
+          safeColors.background !== "transparent"
+            ? safeColors.background
+            : "rgba(255,255,255,0.95)",
         color: safeColors.text,
         opacity: isSelected ? 0.88 : 1,
       }}
     >
       <div className="flex items-start justify-between mb-1.5">
-        <span 
+        <span
           className="text-[9px] font-black uppercase tracking-widest flex flex-wrap gap-1"
           style={{ color: safeColors.accent }}
         >
           {typeLabel}
           {hasHighPain && (
-            <span className="flex items-center gap-0.5 bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-400 px-1 rounded shadow-sm ml-1" title="Paciente relatou dor alta recentemente (>7)">
+            <span
+              className="flex items-center gap-0.5 bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-400 px-1 rounded shadow-sm ml-1"
+              title="Paciente relatou dor alta recentemente (>7)"
+            >
               <AlertTriangle className="h-2.5 w-2.5" />
               Dor Alta
             </span>
@@ -78,7 +84,7 @@ export function ScheduleEventContent({
 
       <p
         className="fc-event-patient-name text-[13px] font-bold leading-tight text-slate-900 dark:text-white min-w-0"
-        style={{ fontFamily: 'var(--font-display, Inter, sans-serif)' }}
+        style={{ fontFamily: "var(--font-display, Inter, sans-serif)" }}
       >
         {title}
       </p>

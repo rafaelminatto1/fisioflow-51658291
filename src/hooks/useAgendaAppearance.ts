@@ -16,9 +16,9 @@ const DEFAULT_GLOBAL: AgendaViewAppearance = {
 };
 
 const VIEW_DEFAULT_OVERRIDES: Record<AgendaView, Partial<AgendaViewAppearance>> = {
-  day: { heightScale: 1 }, 
-  week: { heightScale: 1, fontScale: 4 },
-  month: { cardSize: "extra_small", heightScale: 1, fontScale: 4 },
+  day: {},
+  week: {},
+  month: { cardSize: "extra_small" },
 };
 
 export function useAgendaAppearance(view: AgendaView) {
@@ -48,7 +48,12 @@ export function useAgendaAppearance(view: AgendaView) {
   const save = useCallback((newState: AgendaAppearanceState) => {
     setState(newState);
     localStorage.setItem("agenda_appearance_v2", JSON.stringify(newState));
-    window.dispatchEvent(new StorageEvent("storage", { key: "agenda_appearance_v2", newValue: JSON.stringify(newState) }));
+    window.dispatchEvent(
+      new StorageEvent("storage", {
+        key: "agenda_appearance_v2",
+        newValue: JSON.stringify(newState),
+      }),
+    );
   }, []);
 
   const effectiveForView = useMemo(() => {
@@ -65,7 +70,7 @@ export function useAgendaAppearance(view: AgendaView) {
   }, [state, view]);
 
   const slotHeightPx = slotHeightPxFromScale(effectiveForView.heightScale);
-  const fontPercentage = 80 + (effectiveForView.fontScale - 1) * 5;
+  const fontPercentage = 70 + (effectiveForView.fontScale - 1) * 5;
 
   return {
     view,
@@ -79,25 +84,36 @@ export function useAgendaAppearance(view: AgendaView) {
       "--agenda-font-scale": `${fontPercentage / 100}`,
       "--fc-timegrid-slot-height": `${slotHeightPx}px`,
     } as React.CSSProperties,
-    setCardSize: (val: any) => save({ ...state, [view]: { ...(state[view] || {}), cardSize: val } }),
-    setHeightScale: (val: number) => save({ ...state, [view]: { ...(state[view] || {}), heightScale: val } }),
-    setFontScale: (val: number) => save({ ...state, [view]: { ...(state[view] || {}), fontScale: val } }),
-    setOpacity: (val: number) => save({ ...state, [view]: { ...(state[view] || {}), opacity: val } }),
+    setCardSize: (val: any) =>
+      save({ ...state, [view]: { ...(state[view] || {}), cardSize: val } }),
+    setHeightScale: (val: number) =>
+      save({ ...state, [view]: { ...(state[view] || {}), heightScale: val } }),
+    setFontScale: (val: number) =>
+      save({ ...state, [view]: { ...(state[view] || {}), fontScale: val } }),
+    setOpacity: (val: number) =>
+      save({ ...state, [view]: { ...(state[view] || {}), opacity: val } }),
     setAll: (patch: any) => save({ ...state, [view]: { ...(state[view] || {}), ...patch } }),
-    applyToAllViews: (patch: any) => save({ 
-      global: { ...state.global, ...patch },
-      day: {},
-      week: {},
-      month: {}
-    }),
+    applyToAllViews: (patch: any) =>
+      save({
+        global: { ...state.global, ...patch },
+        day: {},
+        week: {},
+        month: {},
+      }),
     resetView: () => save({ ...state, [view]: {} }),
     resetAll: () => save({ global: DEFAULT_GLOBAL, day: {}, week: {}, month: {} }),
-    hasOverrideForView: !!state[view] && Object.keys(state[view] || {}).length > 0
+    hasOverrideForView: !!state[view] && Object.keys(state[view] || {}).length > 0,
   };
 }
 
 export function slotHeightPxFromScale(scale: number): number {
   if (scale <= 0) return 4;
-  const multiplier = 0.16 + (Math.max(0, Math.min(10, scale)) / 10) * 2.34;
-  return Math.round(24 * multiplier);
+  // Scale 1 to 10. Default 5 should be ~12px to fit 7h-21h on desktop without scrolling.
+  if (scale <= 5) {
+    // map 1..5 to 8..12px
+    return Math.round(8 + ((scale - 1) / 4) * 4);
+  } else {
+    // map 5..10 to 12..28px
+    return Math.round(12 + ((scale - 5) / 5) * 16);
+  }
 }

@@ -84,9 +84,16 @@ export const BookingPage = () => {
       el.content = content;
     };
 
-    setMeta("description", `Agende sua sessão de ${specialty} com ${profile.full_name}${city ? ` em ${city}` : ""}. Atendimento online e presencial.`);
+    setMeta(
+      "description",
+      `Agende sua sessão de ${specialty} com ${profile.full_name}${city ? ` em ${city}` : ""}. Atendimento online e presencial.`,
+    );
     setMeta("og:title", `Agendar com ${profile.full_name}`, true);
-    setMeta("og:description", `Fisioterapia ${specialty}${city ? ` em ${city}` : ""} — agendamento online`, true);
+    setMeta(
+      "og:description",
+      `Fisioterapia ${specialty}${city ? ` em ${city}` : ""} — agendamento online`,
+      true,
+    );
     if (profile.avatar_url) setMeta("og:image", profile.avatar_url, true);
     setMeta("og:type", "website", true);
     setMeta("robots", "index, follow");
@@ -97,7 +104,9 @@ export const BookingPage = () => {
       "@type": ["Physician", "LocalBusiness"],
       name: clinicName,
       description: profile.bio ?? `Fisioterapia — ${specialty}`,
-      ...(city ? { address: { "@type": "PostalAddress", addressLocality: city, addressCountry: "BR" } } : {}),
+      ...(city
+        ? { address: { "@type": "PostalAddress", addressLocality: city, addressCountry: "BR" } }
+        : {}),
       ...(profile.avatar_url ? { image: profile.avatar_url } : {}),
       medicalSpecialty: specialty,
       availableService: { "@type": "MedicalTherapy", name: specialty },
@@ -119,10 +128,14 @@ export const BookingPage = () => {
   }, [profile]);
 
   useEffect(() => {
-    if (!selectedDate || !slug) { setAvailableTimes([]); return; }
+    if (!selectedDate || !slug) {
+      setAvailableTimes([]);
+      return;
+    }
     const dateStr = format(selectedDate, "yyyy-MM-dd");
     setAvailabilityLoading(true);
-    publicBookingApi.getAvailability(slug, dateStr)
+    publicBookingApi
+      .getAvailability(slug, dateStr)
       .then((res) => setAvailableTimes((res as any).slots ?? []))
       .catch(() => setAvailableTimes([]))
       .finally(() => setAvailabilityLoading(false));

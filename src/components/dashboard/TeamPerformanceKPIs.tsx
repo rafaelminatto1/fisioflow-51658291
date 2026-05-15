@@ -84,7 +84,9 @@ export function TeamPerformanceKPIs() {
           <Skeleton className="h-5 w-48" />
         </CardHeader>
         <CardContent className="space-y-2">
-          {[1, 2, 3].map((i) => <Skeleton key={i} className="h-14 rounded-xl" />)}
+          {[1, 2, 3].map((i) => (
+            <Skeleton key={i} className="h-14 rounded-xl" />
+          ))}
         </CardContent>
       </Card>
     );
@@ -112,18 +114,31 @@ export function TeamPerformanceKPIs() {
           </Button>
         </div>
         <p className="text-[11px] text-muted-foreground">
-          {new Date(data.period.start + "T12:00:00").toLocaleString("pt-BR", { month: "long", year: "numeric" })}
+          {new Date(data.period.start + "T12:00:00").toLocaleString("pt-BR", {
+            month: "long",
+            year: "numeric",
+          })}
         </p>
       </CardHeader>
       <CardContent className="space-y-2">
         {/* Column headers */}
         <div className="grid grid-cols-[auto_1fr_repeat(4,minmax(0,1fr))] items-center gap-3 px-4 pb-1">
           <span className="w-5" />
-          <span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">Profissional</span>
-          <span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground text-center">Sessões</span>
-          <span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground text-center">Ocupação</span>
-          <span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground text-center">No-show</span>
-          <span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground text-center">Faturamento</span>
+          <span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">
+            Profissional
+          </span>
+          <span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground text-center">
+            Sessões
+          </span>
+          <span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground text-center">
+            Ocupação
+          </span>
+          <span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground text-center">
+            No-show
+          </span>
+          <span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground text-center">
+            Faturamento
+          </span>
         </div>
 
         {therapists.map((t, i) => (

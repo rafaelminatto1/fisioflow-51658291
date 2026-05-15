@@ -1,12 +1,5 @@
 import React from "react";
-import {
-  CheckCircle2,
-  ChevronRight,
-  Dumbbell,
-  Clock,
-  Target,
-  BookOpen,
-} from "lucide-react";
+import { CheckCircle2, ChevronRight, Dumbbell, Clock, Target, BookOpen } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ProtocolEntry } from "@/data/protocolDictionary";

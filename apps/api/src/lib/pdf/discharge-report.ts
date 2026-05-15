@@ -8,7 +8,7 @@ import puppeteer from "@cloudflare/puppeteer";
 
 export async function generateDischargeReport(cycleId: string, env: Env): Promise<Uint8Array> {
   const pool = createPool(env);
-  
+
   // 1. Fetch Data (Clinical + Org + Patient)
   const cycleRes = await pool.query(
     `SELECT tc.*, p.full_name as patient_name, p.birth_date, o.name as org_name
@@ -16,16 +16,16 @@ export async function generateDischargeReport(cycleId: string, env: Env): Promis
      JOIN patients p ON tc.patient_id = p.id
      JOIN organizations o ON tc.organization_id = o.id
      WHERE tc.id = $1`,
-    [cycleId]
+    [cycleId],
   );
-  
+
   if (!cycleRes.rows.length) throw new Error("Ciclo não encontrado");
   const cycle = cycleRes.rows[0];
-  
+
   const sessionsRes = await pool.query(
     `SELECT subjective, objective, created_at FROM treatment_sessions
      WHERE treatment_cycle_id = $1 ORDER BY created_at ASC`,
-    [cycleId]
+    [cycleId],
   );
 
   // 2. Build HTML Template
@@ -61,7 +61,7 @@ export async function generateDischargeReport(cycleId: string, env: Env): Promis
         </div>
         <div class="info-item">
           <div class="info-label">PERÍODO</div>
-          <div class="info-value">${new Date(cycle.start_date).toLocaleDateString('pt-BR')} — ${new Date().toLocaleDateString('pt-BR')}</div>
+          <div class="info-value">${new Date(cycle.start_date).toLocaleDateString("pt-BR")} — ${new Date().toLocaleDateString("pt-BR")}</div>
         </div>
       </div>
 
@@ -69,17 +69,21 @@ export async function generateDischargeReport(cycleId: string, env: Env): Promis
         <div class="section-title">Diagnóstico e Evolução</div>
         <div class="content">
           Total de sessões realizadas: <strong>${sessionsRes.rows.length}</strong><br><br>
-          ${sessionsRes.rows.map((s: any) => `
+          ${sessionsRes.rows
+            .map(
+              (s: any) => `
             <div style="margin-bottom: 15px; padding-left: 10px; border-left: 3px solid #e2e8f0;">
-              <small>${new Date(s.created_at).toLocaleDateString('pt-BR')}</small><br>
-              ${s.objective || 'Evolução clínica registrada.'}
+              <small>${new Date(s.created_at).toLocaleDateString("pt-BR")}</small><br>
+              ${s.objective || "Evolução clínica registrada."}
             </div>
-          `).join('')}
+          `,
+            )
+            .join("")}
         </div>
       </div>
 
       <div class="footer">
-        Documento gerado digitalmente pelo sistema FisioFlow em ${new Date().toLocaleString('pt-BR')}.
+        Documento gerado digitalmente pelo sistema FisioFlow em ${new Date().toLocaleString("pt-BR")}.
       </div>
     </body>
     </html>
@@ -87,19 +91,18 @@ export async function generateDischargeReport(cycleId: string, env: Env): Promis
 
   // 3. Render PDF via Browser Rendering
   if (!env.BROWSER) throw new Error("Browser rendering binding missing");
-  
+
   const browser = await puppeteer.launch(env.BROWSER);
   try {
     const page = await browser.newPage();
     await page.setContent(html);
     const pdfBuffer = await page.pdf({
-      format: 'A4',
+      format: "A4",
       printBackground: true,
-      margin: { top: '20px', right: '20px', bottom: '20px', left: '20px' }
+      margin: { top: "20px", right: "20px", bottom: "20px", left: "20px" },
     });
     return new Uint8Array(pdfBuffer);
   } finally {
     await browser.close();
   }
 }
-

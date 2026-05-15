@@ -21,11 +21,13 @@ Para uma submissão de sucesso, precisamos de screenshots que destaquem as funci
 6.  **Gráfico de Progresso:** A jornada de recuperação do paciente.
 
 ## 📐 Especificações Técnicas (iOS)
+
 - **iPhone 6.5" (1290 x 2796 px)**
 - **iPhone 5.5" (1242 x 2208 px)**
 - **iPad Pro 12.9" (opcional, mas recomendado)**
 
 ## 📐 Especificações Técnicas (Android)
+
 - **4 imagens mínimas**
 - **Formatos: 16:9 ou 9:16**
 - **Tamanho: Entre 320px e 3840px**

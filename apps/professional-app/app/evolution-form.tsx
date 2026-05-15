@@ -24,7 +24,10 @@ import { fetchApi } from "@/lib/api";
 
 type StructuredItem = ChipItem;
 
-function arrayToChips(items: any[] | undefined, extractDetail?: (item: any) => string | undefined): StructuredItem[] {
+function arrayToChips(
+  items: any[] | undefined,
+  extractDetail?: (item: any) => string | undefined,
+): StructuredItem[] {
   if (!Array.isArray(items)) return [];
   return items
     .map((item, idx) => {
@@ -126,9 +129,7 @@ export default function EvolutionFormScreen() {
           setObservacao(obs);
           setPainLevel(Number(draft.pain_scale ?? draft.pain_level ?? 0));
           setProcedures(arrayToChips(draft.procedures, (it) => it.notes));
-          setExercises(
-            arrayToChips(draft.exercises, (it) => it.prescription || it.notes),
-          );
+          setExercises(arrayToChips(draft.exercises, (it) => it.prescription || it.notes));
           setMeasurements(
             arrayToChips(draft.measurements, (it) => (it.unit ? String(it.unit) : undefined)),
           );
@@ -220,7 +221,17 @@ export default function EvolutionFormScreen() {
         console.error("[AutoSave Server Error]", err);
       }
     }, 5000);
-  }, [observacao, painLevel, procedures, exercises, measurements, homeExercises, photos, patientId, appointmentId]);
+  }, [
+    observacao,
+    painLevel,
+    procedures,
+    exercises,
+    measurements,
+    homeExercises,
+    photos,
+    patientId,
+    appointmentId,
+  ]);
 
   useEffect(() => {
     triggerAutoSave();
@@ -283,7 +294,10 @@ export default function EvolutionFormScreen() {
           : "";
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={["top"]}>
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: colors.background }]}
+      edges={["top"]}
+    >
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0}

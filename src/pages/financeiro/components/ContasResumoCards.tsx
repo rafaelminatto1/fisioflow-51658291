@@ -66,9 +66,7 @@ export function ContasResumoCards({ resumo }: Props) {
           <div className="text-2xl font-black text-amber-500">
             {(resumo?.receberHoje || 0) + (resumo?.pagarHoje || 0)}
           </div>
-          <p className="text-[10px] font-bold text-muted-foreground uppercase mt-1">
-            Lançamentos
-          </p>
+          <p className="text-[10px] font-bold text-muted-foreground uppercase mt-1">Lançamentos</p>
         </CardContent>
       </Card>
       <Card className="rounded-2xl border-none shadow-sm bg-white dark:bg-slate-900">
@@ -86,9 +84,7 @@ export function ContasResumoCards({ resumo }: Props) {
               minimumFractionDigits: 2,
             })}
           </div>
-          <p className="text-[10px] font-bold text-muted-foreground uppercase mt-1">
-            Saldo Final
-          </p>
+          <p className="text-[10px] font-bold text-muted-foreground uppercase mt-1">Saldo Final</p>
         </CardContent>
       </Card>
     </div>

@@ -8,10 +8,10 @@
 
 ## Dois sistemas de migration
 
-| Sistema | Localização | Ferramenta | Quando usar |
-|---|---|---|---|
-| Auto (Drizzle Kit) | `drizzle/` | `drizzle-kit generate` + `drizzle-kit migrate` | Schema Drizzle → SQL gerado automaticamente |
-| Manual SQL | `apps/api/migrations/` | Neon Console / SQL Runner | RLS, roles de DB, índices GIN, políticas de segurança |
+| Sistema            | Localização            | Ferramenta                                     | Quando usar                                           |
+| ------------------ | ---------------------- | ---------------------------------------------- | ----------------------------------------------------- |
+| Auto (Drizzle Kit) | `drizzle/`             | `drizzle-kit generate` + `drizzle-kit migrate` | Schema Drizzle → SQL gerado automaticamente           |
+| Manual SQL         | `apps/api/migrations/` | Neon Console / SQL Runner                      | RLS, roles de DB, índices GIN, políticas de segurança |
 
 Migrations manuais têm precedência operacional — são aplicadas primeiro e controlam políticas de acesso que o Drizzle não gerencia.
 

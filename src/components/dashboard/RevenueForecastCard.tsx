@@ -18,7 +18,9 @@ export function RevenueForecastCard() {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-3 gap-3">
-            {[1, 2, 3].map((i) => <Skeleton key={i} className="h-16 rounded-xl" />)}
+            {[1, 2, 3].map((i) => (
+              <Skeleton key={i} className="h-16 rounded-xl" />
+            ))}
           </div>
         </CardContent>
       </Card>

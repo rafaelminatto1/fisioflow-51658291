@@ -78,9 +78,7 @@ export function LiveTextEvolution({
     () =>
       previousEvolutions.slice(0, 8).map((ev) => {
         const dateStr = ev.created_at || ev.record_date;
-        const dateLabel = dateStr
-          ? format(new Date(dateStr), "dd/MM/yy", { locale: ptBR })
-          : "—";
+        const dateLabel = dateStr ? format(new Date(dateStr), "dd/MM/yy", { locale: ptBR }) : "—";
         const preview = stripHtml(ev.observacao || ev.subjective || ev.assessment || "").slice(
           0,
           120,
@@ -95,12 +93,9 @@ export function LiveTextEvolution({
     [previousEvolutions],
   );
 
-  const handleProceduresChange = (procedures: any[]) =>
-    onChange({ ...data, procedures });
-  const handleExercisesChange = (exercises: any[]) =>
-    onChange({ ...data, exercises });
-  const handleMeasurementsChange = (measurements: any[]) =>
-    onChange({ ...data, measurements });
+  const handleProceduresChange = (procedures: any[]) => onChange({ ...data, procedures });
+  const handleExercisesChange = (exercises: any[]) => onChange({ ...data, exercises });
+  const handleMeasurementsChange = (measurements: any[]) => onChange({ ...data, measurements });
 
   const handleSelectFromLibrary = (exercise: any) => {
     const newItem = {
@@ -153,8 +148,7 @@ export function LiveTextEvolution({
         className="col-span-12 md:col-span-9 rounded-xl border-2 border-amber-200 bg-amber-50/40 dark:bg-amber-950/20 p-3 min-h-[180px]"
       >
         <header className="flex items-center gap-2 mb-2 text-sm font-semibold text-amber-800 dark:text-amber-200">
-          <span className="inline-block w-2 h-2 rounded-full bg-amber-500" /> Observações
-          clínicas
+          <span className="inline-block w-2 h-2 rounded-full bg-amber-500" /> Observações clínicas
         </header>
         <RichTextBlock
           placeholder="Descreva o que o paciente relatou e o que foi feito na sessão…"
@@ -171,8 +165,7 @@ export function LiveTextEvolution({
         className="col-span-12 rounded-xl border-2 border-blue-200 bg-blue-50/40 dark:bg-blue-950/20 p-3"
       >
         <header className="flex items-center gap-2 mb-2 text-sm font-semibold text-blue-700 dark:text-blue-300">
-          <span className="inline-block w-2 h-2 rounded-full bg-blue-500" /> Histórico de
-          evoluções
+          <span className="inline-block w-2 h-2 rounded-full bg-blue-500" /> Histórico de evoluções
           <span className="ml-auto text-xs font-normal text-muted-foreground">
             {previousEvolutions.length} sessões
           </span>
@@ -208,10 +201,7 @@ export function LiveTextEvolution({
         aria-label="Procedimentos e exercícios"
         className="col-span-12 md:col-span-7 rounded-xl border-2 border-emerald-200 bg-emerald-50/40 dark:bg-emerald-950/20 p-3"
       >
-        <Tabs
-          value={groupTab}
-          onValueChange={(v) => setGroupTab(v as typeof groupTab)}
-        >
+        <Tabs value={groupTab} onValueChange={(v) => setGroupTab(v as typeof groupTab)}>
           <div className="flex items-center gap-2 mb-3 flex-wrap">
             <span className="inline-block w-2 h-2 rounded-full bg-emerald-500" />
             <TabsList className="bg-emerald-100/60 dark:bg-emerald-900/30">
@@ -270,8 +260,7 @@ export function LiveTextEvolution({
         className="col-span-12 md:col-span-7 rounded-xl border-2 border-slate-300 bg-slate-50/60 dark:bg-slate-900/30 p-3"
       >
         <header className="flex items-center gap-2 mb-2 text-sm font-semibold text-slate-700 dark:text-slate-300">
-          <span className="inline-block w-2 h-2 rounded-full bg-slate-500" /> Exercícios para
-          casa
+          <span className="inline-block w-2 h-2 rounded-full bg-slate-500" /> Exercícios para casa
         </header>
         <HomeCareBlock
           value={homeExercisesText}

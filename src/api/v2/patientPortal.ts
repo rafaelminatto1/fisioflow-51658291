@@ -148,7 +148,9 @@ export const patientPortalApi = {
   },
 
   async getExerciseHistory(): Promise<PortalExerciseHistory[]> {
-    const res = await request<{ data: PortalExerciseHistory[] }>("/api/patient-portal/exercises/history");
+    const res = await request<{ data: PortalExerciseHistory[] }>(
+      "/api/patient-portal/exercises/history",
+    );
     return res.data ?? [];
   },
 };

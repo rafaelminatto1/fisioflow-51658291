@@ -63,7 +63,10 @@ export const AIMedicalReportModal: React.FC<AIMedicalReportModalProps> = ({
               </h4>
               <ul className="grid gap-2">
                 {report.functionalGains.map((gain, i) => (
-                  <li key={i} className="text-xs font-bold text-slate-600 dark:text-slate-400 flex gap-2">
+                  <li
+                    key={i}
+                    className="text-xs font-bold text-slate-600 dark:text-slate-400 flex gap-2"
+                  >
                     <span className="text-emerald-500">•</span> {gain}
                   </li>
                 ))}
@@ -80,22 +83,30 @@ export const AIMedicalReportModal: React.FC<AIMedicalReportModalProps> = ({
             </section>
 
             <div className="p-6 rounded-3xl bg-indigo-50 dark:bg-indigo-950/20 border border-indigo-100 dark:border-indigo-900/30">
-               <h4 className="text-[10px] font-black uppercase tracking-widest text-indigo-600 mb-2">Recomendação Final</h4>
-               <p className="text-sm font-black text-indigo-900 dark:text-indigo-100">{report.finalRecommendation}</p>
+              <h4 className="text-[10px] font-black uppercase tracking-widest text-indigo-600 mb-2">
+                Recomendação Final
+              </h4>
+              <p className="text-sm font-black text-indigo-900 dark:text-indigo-100">
+                {report.finalRecommendation}
+              </p>
             </div>
           </div>
         </ScrollArea>
 
         <DialogFooter className="p-6 bg-slate-50 dark:bg-slate-900/50 border-t border-slate-100 dark:border-slate-800">
-           <div className="flex w-full gap-3">
-             <Button variant="outline" className="flex-1 rounded-xl h-12 font-bold" onClick={() => onOpenChange(false)}>
-               Fechar
-             </Button>
-             <Button className="flex-1 rounded-xl h-12 bg-indigo-600 hover:bg-indigo-700 font-bold gap-2 shadow-lg shadow-indigo-200">
-               <Share2 className="h-4 w-4" />
-               Compartilhar PDF
-             </Button>
-           </div>
+          <div className="flex w-full gap-3">
+            <Button
+              variant="outline"
+              className="flex-1 rounded-xl h-12 font-bold"
+              onClick={() => onOpenChange(false)}
+            >
+              Fechar
+            </Button>
+            <Button className="flex-1 rounded-xl h-12 bg-indigo-600 hover:bg-indigo-700 font-bold gap-2 shadow-lg shadow-indigo-200">
+              <Share2 className="h-4 w-4" />
+              Compartilhar PDF
+            </Button>
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>

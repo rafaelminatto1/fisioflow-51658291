@@ -57,7 +57,7 @@ const SESSION_STATUS_ALIASES: Record<string, DbSessionStatus> = {
   completed: "finalized",
   complete: "finalized",
   concluido: "finalized",
-  "concluído": "finalized",
+  concluído: "finalized",
   signed: "finalized",
   cancelled: "cancelled",
   canceled: "cancelled",
@@ -243,9 +243,12 @@ app.post("/autosave", requireAuth, async (c) => {
   const insertValues: any = {
     patientId,
     appointmentId: body.appointment_id || null,
-    therapistId: (body.therapist_id && isValidUuid(String(body.therapist_id)))
-      ? String(body.therapist_id)
-      : isValidUuid(user.uid) ? user.uid : (null as any),
+    therapistId:
+      body.therapist_id && isValidUuid(String(body.therapist_id))
+        ? String(body.therapist_id)
+        : isValidUuid(user.uid)
+          ? user.uid
+          : (null as any),
     organizationId: user.organizationId,
     date: recordDate,
     duration: durationNum || null,
@@ -463,7 +466,8 @@ app.put("/:id", requireAuth, async (c) => {
   if ("procedures" in body) updatePayload.procedures = toJsonArray(body.procedures) ?? [];
   if ("exercises" in body) updatePayload.exercises = toJsonArray(body.exercises) ?? [];
   if ("measurements" in body) updatePayload.measurements = toJsonArray(body.measurements) ?? [];
-  if ("home_exercises" in body) updatePayload.homeExercises = toJsonArray(body.home_exercises) ?? [];
+  if ("home_exercises" in body)
+    updatePayload.homeExercises = toJsonArray(body.home_exercises) ?? [];
   if (body.duration_minutes != null) updatePayload.duration = Number(body.duration_minutes);
   if ("status" in body) {
     const status = normalizeSessionStatusInput(body.status);
@@ -484,7 +488,10 @@ app.put("/:id", requireAuth, async (c) => {
     .where(withTenant(sessions, user.organizationId, eq(sessions.id, id)))
     .limit(1);
 
-  if (existingSession?.status === "finalized" && !("status" in body && body.status === "finalized")) {
+  if (
+    existingSession?.status === "finalized" &&
+    !("status" in body && body.status === "finalized")
+  ) {
     updatePayload.isEdited = true;
     updatePayload.lastEditedBy = user.uid as any;
   }

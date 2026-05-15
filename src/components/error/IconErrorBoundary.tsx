@@ -13,10 +13,7 @@ interface IconErrorBoundaryState {
   hasError: boolean;
 }
 
-export class IconErrorBoundary extends Component<
-  IconErrorBoundaryProps,
-  IconErrorBoundaryState
-> {
+export class IconErrorBoundary extends Component<IconErrorBoundaryProps, IconErrorBoundaryState> {
   constructor(props: IconErrorBoundaryProps) {
     super(props);
     this.state = { hasError: false };

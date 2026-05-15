@@ -48,7 +48,11 @@ export function NfseBatchEmitter() {
     setLoading(true);
     setPreview(null);
     try {
-      const res = await nfseRequest("/batch", { start_date: startDate, end_date: endDate, dry_run: true });
+      const res = await nfseRequest("/batch", {
+        start_date: startDate,
+        end_date: endDate,
+        dry_run: true,
+      });
       setPreview(res.data.sessions ?? []);
     } catch (e: any) {
       toast.error(e?.message ?? "Erro ao buscar sessões");
@@ -101,7 +105,11 @@ export function NfseBatchEmitter() {
           </div>
           <div className="flex items-end">
             <Button variant="outline" onClick={handlePreview} disabled={loading || emitting}>
-              {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Search className="mr-2 h-4 w-4" />}
+              {loading ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Search className="mr-2 h-4 w-4" />
+              )}
               Verificar
             </Button>
           </div>

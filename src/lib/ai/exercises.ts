@@ -252,10 +252,16 @@ function buildExercisePrompt(context: PatientProfileContext): string {
       const obs = stripHtml(ev.observacao || "").slice(0, 300);
       const eva = ev.painScale != null ? `EVA ${ev.painScale}/10` : "EVA não registrado";
       const procs = ev.procedures?.length
-        ? ev.procedures.map((p) => p.name).filter(Boolean).join(", ")
+        ? ev.procedures
+            .map((p) => p.name)
+            .filter(Boolean)
+            .join(", ")
         : "—";
       const exs = ev.exercises?.length
-        ? ev.exercises.map((e) => e.name).filter(Boolean).join(", ")
+        ? ev.exercises
+            .map((e) => e.name)
+            .filter(Boolean)
+            .join(", ")
         : "—";
       return `
 Sessão ${ev.sessionNumber} (${eva}):

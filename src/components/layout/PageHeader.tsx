@@ -38,22 +38,16 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
               <h1 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight uppercase">
                 {title}
               </h1>
-              {subtitle && (
-                <p className="text-sm text-muted-foreground font-medium">
-                  {subtitle}
-                </p>
-              )}
+              {subtitle && <p className="text-sm text-muted-foreground font-medium">{subtitle}</p>}
             </div>
           </div>
         </div>
-        
+
         {actions && (
-          <div className="flex items-center gap-3 self-end md:self-center">
-            {actions}
-          </div>
+          <div className="flex items-center gap-3 self-end md:self-center">{actions}</div>
         )}
       </div>
-      
+
       <div className="h-px w-full bg-gradient-to-r from-primary/20 via-transparent to-transparent" />
     </div>
   );

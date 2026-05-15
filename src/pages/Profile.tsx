@@ -413,7 +413,7 @@ function ProfileContent() {
           )}
 
           <Separator className="my-6" />
-          
+
           <div className="rounded-2xl border border-red-200 bg-red-50/30 dark:bg-red-950/10 p-6 space-y-4">
             <div className="flex items-start gap-4">
               <div className="h-10 w-10 rounded-xl bg-red-100 dark:bg-red-900/30 flex items-center justify-center text-red-600 shrink-0">
@@ -433,22 +433,28 @@ function ProfileContent() {
               <div className="space-y-1">
                 <p className="text-sm font-bold">Excluir Conta</p>
                 <p className="text-xs text-muted-foreground leading-relaxed max-w-md">
-                  Ao excluir sua conta, seu acesso ao sistema será revogado imediatamente. 
+                  Ao excluir sua conta, seu acesso ao sistema será revogado imediatamente.
                   <span className="block mt-1 font-semibold text-red-600/80">
-                    Importante: Conforme a Lei nº 13.787/2018 e LGPD, seus registros clínicos (evoluções, exames e dados de saúde) serão mantidos em arquivo digital seguro por um período de 20 anos.
+                    Importante: Conforme a Lei nº 13.787/2018 e LGPD, seus registros clínicos
+                    (evoluções, exames e dados de saúde) serão mantidos em arquivo digital seguro
+                    por um período de 20 anos.
                   </span>
                 </p>
               </div>
-              <Button 
-                variant="destructive" 
+              <Button
+                variant="destructive"
                 size="sm"
                 className="font-bold uppercase tracking-widest text-[10px] h-9 px-6"
                 onClick={() => {
-                  if (window.confirm("Tem certeza que deseja solicitar a exclusão da sua conta? Seu acesso será revogado, mas seus dados clínicos serão mantidos por 20 anos para fins legais.")) {
+                  if (
+                    window.confirm(
+                      "Tem certeza que deseja solicitar a exclusão da sua conta? Seu acesso será revogado, mas seus dados clínicos serão mantidos por 20 anos para fins legais.",
+                    )
+                  ) {
                     toast.promise(profileApi.deleteMe(), {
                       loading: "Processando solicitação...",
                       success: () => {
-                        setTimeout(() => window.location.href = "/login", 2000);
+                        setTimeout(() => (window.location.href = "/login"), 2000);
                         return "Solicitação enviada. Você será desconectado.";
                       },
                       error: "Erro ao processar solicitação.",
@@ -486,7 +492,9 @@ export const Profile = () => {
 
         <div className="mt-8 space-y-6 animate-fade-in">
           <Tabs value={state.activeTab} onValueChange={state.handleTabChange} className="space-y-6">
-            <TabsList className={`grid w-full grid-cols-${colCount} h-12 bg-muted/50 rounded-xl p-1`}>
+            <TabsList
+              className={`grid w-full grid-cols-${colCount} h-12 bg-muted/50 rounded-xl p-1`}
+            >
               {allTabs.map((tab) => (
                 <TabsTrigger
                   key={tab.value}

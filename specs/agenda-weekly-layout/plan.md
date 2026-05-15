@@ -3,9 +3,11 @@
 **Branch**: `agenda-weekly-layout` | **Date**: 2026-04-28 | **Spec**: `specs/agenda-weekly-layout/spec.md`
 
 ## Summary
+
 Criar uma versão mais sofisticada da página de agenda com foco na visualização semanal. Reutilizar a engine do FullCalendar e ajustar o estilo dos eventos para um aspecto mais limpo, suave e clínico.
 
 ## Technical Context
+
 - **Target**: `src/pages/Schedule.tsx`, `src/components/schedule/ScheduleCalendar.tsx`, `src/components/schedule/ScheduleEventContent.tsx`, `src/styles/schedule.css`
 - **Libraries**: React, FullCalendar, Tailwind, date-fns
 - **Data**: já disponível em `useSchedulePageData`
@@ -37,6 +39,7 @@ Criar uma versão mais sofisticada da página de agenda com foco na visualizaç�
    - Verificar renderização de métricas e texto de período
 
 ## Validation
+
 - Navegar para `/schedule` e confirmar que a exibição inicial abre em `week`.
 - Verificar o novo painel de resumo semanal.
 - Confirmar que eventos aparecem como cards suaves no calendário.

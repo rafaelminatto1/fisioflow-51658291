@@ -8,12 +8,12 @@
 
 ## Severidades
 
-| Nível | Descrição | Tempo de resposta inicial | Tempo de resolução alvo |
-|---|---|---|---|
-| **P1 — Crítico** | Sistema indisponível ou dados de pacientes expostos | < 15 min | < 2 h |
-| **P2 — Alto** | Feature crítica quebrada (agendamento, prontuário, auth) | < 30 min | < 4 h |
-| **P3 — Médio** | Feature não-crítica degradada, lentidão parcial | < 2 h | < 24 h |
-| **P4 — Baixo** | Bug cosmético, feature menor | < 24 h | Próximo sprint |
+| Nível            | Descrição                                                | Tempo de resposta inicial | Tempo de resolução alvo |
+| ---------------- | -------------------------------------------------------- | ------------------------- | ----------------------- |
+| **P1 — Crítico** | Sistema indisponível ou dados de pacientes expostos      | < 15 min                  | < 2 h                   |
+| **P2 — Alto**    | Feature crítica quebrada (agendamento, prontuário, auth) | < 30 min                  | < 4 h                   |
+| **P3 — Médio**   | Feature não-crítica degradada, lentidão parcial          | < 2 h                     | < 24 h                  |
+| **P4 — Baixo**   | Bug cosmético, feature menor                             | < 24 h                    | Próximo sprint          |
 
 ---
 
@@ -170,6 +170,7 @@ wrangler deploy --env production --dry-run  # testar localmente
 **Impacto:** [Quem foi afetado e como]
 
 ### Linha do Tempo
+
 - HH:MM — Incidente iniciado
 - HH:MM — Detectado por [quem/como]
 - HH:MM — Resposta iniciada
@@ -178,15 +179,19 @@ wrangler deploy --env production --dry-run  # testar localmente
 - HH:MM — Sistema estabilizado
 
 ### Causa Raiz
+
 [Descrição técnica objetiva]
 
 ### O que foi feito
+
 [Ações de mitigação e resolução]
 
 ### O que evitar
+
 [Mudanças de processo ou código para prevenir recorrência]
 
 ### Itens de ação
+
 - [ ] [Tarefa] — Owner: [Nome] — Prazo: [Data]
 ```
 
@@ -194,12 +199,12 @@ wrangler deploy --env production --dry-run  # testar localmente
 
 ## Contatos e Recursos
 
-| Recurso | URL / Comando |
-|---|---|
-| Cloudflare Dashboard | `https://dash.cloudflare.com` |
-| Neon Console | `https://console.neon.tech` |
-| Workers Tail (prod) | `wrangler tail --env production` |
-| Analytics Engine (SQL) | Ver `docs/OBSERVABILITY_DASHBOARD.md` |
-| Health API (liveness) | `curl https://api-pro.moocafisio.com.br/api/health` |
+| Recurso                | URL / Comando                                             |
+| ---------------------- | --------------------------------------------------------- |
+| Cloudflare Dashboard   | `https://dash.cloudflare.com`                             |
+| Neon Console           | `https://console.neon.tech`                               |
+| Workers Tail (prod)    | `wrangler tail --env production`                          |
+| Analytics Engine (SQL) | Ver `docs/OBSERVABILITY_DASHBOARD.md`                     |
+| Health API (liveness)  | `curl https://api-pro.moocafisio.com.br/api/health`       |
 | Health API (readiness) | `curl https://api-pro.moocafisio.com.br/api/health/ready` |
-| GitHub Actions | `https://github.com/{org}/{repo}/actions` |
+| GitHub Actions         | `https://github.com/{org}/{repo}/actions`                 |

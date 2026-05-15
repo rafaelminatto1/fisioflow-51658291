@@ -25,13 +25,13 @@ type Variables = {
 
 // Cost per 1M tokens (USD). Updated May 2026 — adjust if pricing changes.
 const MODEL_COST: Record<string, { input: number; output: number }> = {
-  "gemini-2.0-flash":         { input: 0.075,  output: 0.30  },
-  "gemini-2.0-flash-lite":    { input: 0.0375, output: 0.15  },
-  "gemini-1.5-flash":         { input: 0.075,  output: 0.30  },
-  "gemini-1.5-flash-8b":      { input: 0.0375, output: 0.15  },
-  "gemini-1.5-pro":           { input: 1.25,   output: 5.00  },
-  "gemini-2.5-pro":           { input: 1.25,   output: 10.00 },
-  "gemini-2.5-flash":         { input: 0.15,   output: 0.60  },
+  "gemini-2.0-flash": { input: 0.075, output: 0.3 },
+  "gemini-2.0-flash-lite": { input: 0.0375, output: 0.15 },
+  "gemini-1.5-flash": { input: 0.075, output: 0.3 },
+  "gemini-1.5-flash-8b": { input: 0.0375, output: 0.15 },
+  "gemini-1.5-pro": { input: 1.25, output: 5.0 },
+  "gemini-2.5-pro": { input: 1.25, output: 10.0 },
+  "gemini-2.5-flash": { input: 0.15, output: 0.6 },
 };
 
 function estimateCost(model: string, inputTokens: number, outputTokens: number): number {
@@ -56,9 +56,12 @@ let jwks: ReturnType<typeof createRemoteJWKSet> | null = null;
 const app = new Hono<{ Bindings: Bindings; Variables: Variables }>();
 
 app.use("*", async (c, next) => {
-  const allowedOrigins = (c.env.ALLOWED_ORIGINS ?? "").split(",").map((o) => o.trim()).filter(Boolean);
+  const allowedOrigins = (c.env.ALLOWED_ORIGINS ?? "")
+    .split(",")
+    .map((o) => o.trim())
+    .filter(Boolean);
   return cors({
-    origin: (origin) => (allowedOrigins.includes(origin) ? origin : allowedOrigins[0] ?? ""),
+    origin: (origin) => (allowedOrigins.includes(origin) ? origin : (allowedOrigins[0] ?? "")),
     allowMethods: ["POST", "GET", "OPTIONS"],
     allowHeaders: ["Content-Type", "Authorization"],
     exposeHeaders: ["Content-Length"],
@@ -93,9 +96,7 @@ app.use("/v1/*", async (c, next) => {
   }
 });
 
-app.get("/health", (c) =>
-  c.json({ status: "ok", environment: c.env.ENVIRONMENT }),
-);
+app.get("/health", (c) => c.json({ status: "ok", environment: c.env.ENVIRONMENT }));
 
 app.post("/v1/chat/completions", async (c) => {
   const body = await c.req.json();
@@ -107,7 +108,11 @@ app.post("/v1/chat/completions", async (c) => {
   let provider = "";
   const headers: Record<string, string> = { "Content-Type": "application/json" };
 
-  if (rawModel.startsWith("ollama/") || rawModel.startsWith("llama") || rawModel.startsWith("mistral")) {
+  if (
+    rawModel.startsWith("ollama/") ||
+    rawModel.startsWith("llama") ||
+    rawModel.startsWith("mistral")
+  ) {
     provider = "ollama";
     targetUrl = `${c.env.OLLAMA_ENDPOINT}/api/chat`;
   } else {
@@ -148,26 +153,32 @@ app.post("/v1/chat/completions", async (c) => {
       });
     }
 
-    console.log(JSON.stringify(redactPII({
-      event: "ai_usage",
-      org: user.organizationId,
-      model: rawModel,
-      provider,
-      latencyMs,
-      status: response.status,
-      promptTokens,
-      completionTokens,
-      totalTokens,
-      estimatedCostUSD: estimatedCostUSD.toFixed(6),
-    })));
+    console.log(
+      JSON.stringify(
+        redactPII({
+          event: "ai_usage",
+          org: user.organizationId,
+          model: rawModel,
+          provider,
+          latencyMs,
+          status: response.status,
+          promptTokens,
+          completionTokens,
+          totalTokens,
+          estimatedCostUSD: estimatedCostUSD.toFixed(6),
+        }),
+      ),
+    );
 
     return c.json(data, response.status as any);
   } catch (error: any) {
-    console.error(JSON.stringify({
-      event: "ai_error",
-      org: user?.organizationId,
-      error: error.message,
-    }));
+    console.error(
+      JSON.stringify({
+        event: "ai_error",
+        org: user?.organizationId,
+        error: error.message,
+      }),
+    );
     return c.json({ error: "Failed to route AI request" }, 500);
   }
 });
@@ -210,7 +221,7 @@ app.get("/v1/usage", async (c) => {
         body: sql,
       },
     );
-    const json = await res.json() as any;
+    const json = (await res.json()) as any;
     if (!res.ok) return c.json({ error: "Analytics query failed", detail: json }, 500);
 
     const rows: any[] = json.data ?? [];

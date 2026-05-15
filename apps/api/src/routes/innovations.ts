@@ -402,7 +402,7 @@ app.get("/inventory/forecast", requireAuth, async (c) => {
         AND related_appointment_id IS NOT NULL
         AND created_at > NOW() - INTERVAL '90 days'
       GROUP BY inventory_id`,
-      [user.organizationId]
+      [user.organizationId],
     );
 
     // 2. Buscar agenda futura (próximos 30 dias)
@@ -410,7 +410,7 @@ app.get("/inventory/forecast", requireAuth, async (c) => {
       `SELECT COUNT(*) as count FROM appointments
        WHERE organization_id = $1 AND date >= CURRENT_DATE AND date <= CURRENT_DATE + INTERVAL '30 days'
          AND status NOT IN ('cancelado', 'no_show')`,
-      [user.organizationId]
+      [user.organizationId],
     );
 
     const sessionCount = Number(futureSessions.rows[0].count);
@@ -418,18 +418,20 @@ app.get("/inventory/forecast", requireAuth, async (c) => {
     // 3. Cruzar com estoque atual para prever dias restantes
     const inventory = await pool.query(
       "SELECT id, item_name, current_quantity, unit FROM clinic_inventory WHERE organization_id = $1 AND is_active = true",
-      [user.organizationId]
+      [user.organizationId],
     );
 
     const forecasts = inventory.rows.map((item: any) => {
       const stats = consumptionStats.rows.find((s: any) => s.inventory_id === item.id);
       const avgConsumption = stats ? Number(stats.avg_per_session) : 0;
-      
+
       // Se não temos histórico, usamos uma estimativa conservadora para itens comuns
-      const estimatedAvg = avgConsumption || (item.item_name.toLowerCase().includes('gel') ? 0.05 : 0.1);
-      
+      const estimatedAvg =
+        avgConsumption || (item.item_name.toLowerCase().includes("gel") ? 0.05 : 0.1);
+
       const predictedMonthlyNeed = sessionCount * estimatedAvg;
-      const daysRemaining = estimatedAvg > 0 ? (item.current_quantity / (estimatedAvg * (sessionCount / 30))) : 999;
+      const daysRemaining =
+        estimatedAvg > 0 ? item.current_quantity / (estimatedAvg * (sessionCount / 30)) : 999;
 
       return {
         id: item.id,
@@ -438,7 +440,7 @@ app.get("/inventory/forecast", requireAuth, async (c) => {
         unit: item.unit,
         predictedMonthlyNeed: Math.ceil(predictedMonthlyNeed),
         daysRemaining: Math.round(daysRemaining),
-        risk: daysRemaining < 7 ? 'high' : (daysRemaining < 15 ? 'medium' : 'low')
+        risk: daysRemaining < 7 ? "high" : daysRemaining < 15 ? "medium" : "low",
       };
     });
 

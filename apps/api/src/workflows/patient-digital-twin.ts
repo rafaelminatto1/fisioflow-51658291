@@ -72,7 +72,8 @@ export class PatientDigitalTwinWorkflow extends WorkflowEntrypoint<Env, { patien
     // Passo 4: Gerar Predição de Trajetória e Recuperação via Gemini
     const trajectory = await step.do("ai-trajectory-prediction", async () => {
       const sql = getRawSql(this.env, "read");
-      const patientRes = await sql`SELECT condition, diagnosis FROM patients WHERE id = ${patientId}::uuid`;
+      const patientRes =
+        await sql`SELECT condition, diagnosis FROM patients WHERE id = ${patientId}::uuid`;
       const patient = patientRes.rows[0];
 
       const prompt = `Você é um especialista em prognóstico clínico de fisioterapia.

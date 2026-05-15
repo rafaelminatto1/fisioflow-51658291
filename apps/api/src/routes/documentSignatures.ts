@@ -93,30 +93,31 @@ app.post("/:id/send-for-signature", requireAuth, async (c) => {
     .join("");
   const expiresAt = new Date(Date.now() + 48 * 60 * 60 * 1000);
 
-  await db.query(
-    `UPDATE document_signatures SET signing_token = $1, signing_token_expires_at = $2 WHERE id = $3`,
-    [token, expiresAt.toISOString(), id],
-  ).catch(async () => {
-    // Column might not exist yet — try adding it
-    await db.query(
-      `ALTER TABLE document_signatures ADD COLUMN IF NOT EXISTS signing_token TEXT,
-       ADD COLUMN IF NOT EXISTS signing_token_expires_at TIMESTAMPTZ`,
-    );
-    await db.query(
+  await db
+    .query(
       `UPDATE document_signatures SET signing_token = $1, signing_token_expires_at = $2 WHERE id = $3`,
       [token, expiresAt.toISOString(), id],
-    );
-  });
+    )
+    .catch(async () => {
+      // Column might not exist yet — try adding it
+      await db.query(
+        `ALTER TABLE document_signatures ADD COLUMN IF NOT EXISTS signing_token TEXT,
+       ADD COLUMN IF NOT EXISTS signing_token_expires_at TIMESTAMPTZ`,
+      );
+      await db.query(
+        `UPDATE document_signatures SET signing_token = $1, signing_token_expires_at = $2 WHERE id = $3`,
+        [token, expiresAt.toISOString(), id],
+      );
+    });
 
   const baseUrl = c.env.PAGES_URL ?? "https://moocafisio.com.br";
   const signingUrl = `${baseUrl}/assinar/${token}`;
 
   // Try sending via WhatsApp if patient has a phone on record
   if (row.signer_id) {
-    const patientRes = await db.query(
-      `SELECT phone FROM patients WHERE id = $1 LIMIT 1`,
-      [row.signer_id],
-    ).catch(() => ({ rows: [] }));
+    const patientRes = await db
+      .query(`SELECT phone FROM patients WHERE id = $1 LIMIT 1`, [row.signer_id])
+      .catch(() => ({ rows: [] }));
     const phone = (patientRes.rows[0] as any)?.phone;
     if (phone) {
       const { WhatsAppService } = await import("../lib/whatsapp");
@@ -138,12 +139,14 @@ app.get("/sign/:token", async (c) => {
   const { token } = c.req.param();
   const db = createPool(c.env);
 
-  const result = await db.query(
-    `SELECT id, document_id, document_title, document_type, signer_name,
+  const result = await db
+    .query(
+      `SELECT id, document_id, document_title, document_type, signer_name,
             signing_token_expires_at, signed_at, signature_hash
      FROM document_signatures WHERE signing_token = $1 LIMIT 1`,
-    [token],
-  ).catch(() => ({ rows: [] }));
+      [token],
+    )
+    .catch(() => ({ rows: [] }));
 
   if (!result.rows.length) return c.json({ error: "Link de assinatura inválido ou expirado" }, 404);
   const row = result.rows[0] as Record<string, unknown>;
@@ -170,11 +173,13 @@ app.post("/sign/:token/confirm", async (c) => {
   const { token } = c.req.param();
   const db = createPool(c.env);
 
-  const result = await db.query(
-    `SELECT id, document_id, document_title, signer_name, signing_token_expires_at, signed_at
+  const result = await db
+    .query(
+      `SELECT id, document_id, document_title, signer_name, signing_token_expires_at, signed_at
      FROM document_signatures WHERE signing_token = $1 LIMIT 1`,
-    [token],
-  ).catch(() => ({ rows: [] }));
+      [token],
+    )
+    .catch(() => ({ rows: [] }));
 
   if (!result.rows.length) return c.json({ error: "Link inválido ou expirado" }, 404);
   const row = result.rows[0] as Record<string, unknown>;
@@ -190,10 +195,7 @@ app.post("/sign/:token/confirm", async (c) => {
 
   // SHA-256 hash of document_id + signer + timestamp
   const content = `${row.document_id}:${row.signer_name}:${now}`;
-  const hashBuffer = await crypto.subtle.digest(
-    "SHA-256",
-    new TextEncoder().encode(content),
-  );
+  const hashBuffer = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(content));
   const hash = Array.from(new Uint8Array(hashBuffer))
     .map((b) => b.toString(16).padStart(2, "0"))
     .join("");

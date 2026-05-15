@@ -92,9 +92,7 @@ const mapPredictionToRecoveryPrediction = (
 
   const rawMilestones = prediction.milestones as unknown;
   const rawRiskFactors = prediction.risk_factors as unknown;
-  const rawTreatment = prediction.treatment_recommendations as
-    | Record<string, any>
-    | undefined;
+  const rawTreatment = prediction.treatment_recommendations as Record<string, any> | undefined;
   const rawSimilarCases = prediction.similar_cases as Record<string, any> | undefined;
 
   return {

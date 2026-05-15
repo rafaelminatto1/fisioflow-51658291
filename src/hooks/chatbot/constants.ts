@@ -82,8 +82,17 @@ export const mockMedicalKnowledge: MedicalKnowledge = {
     },
   },
   emergencyKeywords: [
-    "emergência", "urgente", "socorro", "dor intensa", "não consigo respirar",
-    "desmaiei", "sangramento", "fratura", "acidente", "infarto", "avc",
+    "emergência",
+    "urgente",
+    "socorro",
+    "dor intensa",
+    "não consigo respirar",
+    "desmaiei",
+    "sangramento",
+    "fratura",
+    "acidente",
+    "infarto",
+    "avc",
   ],
 };
 

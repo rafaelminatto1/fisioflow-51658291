@@ -98,7 +98,7 @@ export function useCreateSurvey() {
         const result = await satisfactionSurveysApi.createPublic(data as Record<string, unknown>);
         return result.data as SatisfactionSurvey;
       }
-      
+
       const result = await satisfactionSurveysApi.create(data as Record<string, unknown>);
       return result.data as SatisfactionSurvey;
     },

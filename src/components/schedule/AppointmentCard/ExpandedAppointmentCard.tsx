@@ -39,9 +39,7 @@ export const ExpandedAppointmentCard: React.FC<ExpandedAppointmentCardProps> = (
   const statusConfig = getStatusConfig(appointment.status);
 
   const dateStr =
-    appointment.date instanceof Date
-      ? toLocalYMD(appointment.date)
-      : (appointment.date ?? "");
+    appointment.date instanceof Date ? toLocalYMD(appointment.date) : (appointment.date ?? "");
 
   const ongoing = isAppointmentOngoing(dateStr, appointment.time, appointment.duration || 60);
   const progress = getAppointmentProgress(dateStr, appointment.time, appointment.duration || 60);

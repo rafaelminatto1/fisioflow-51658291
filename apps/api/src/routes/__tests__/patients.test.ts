@@ -112,7 +112,10 @@ describe("GET /api/patients/:id — busca individual", () => {
     mockQuery.mockResolvedValue({ rows: [] });
 
     const app = await buildApp();
-    const res = await app.fetch(req("GET", "/api/patients/00000000-0000-0000-0000-000000000000"), ENV as any);
+    const res = await app.fetch(
+      req("GET", "/api/patients/00000000-0000-0000-0000-000000000000"),
+      ENV as any,
+    );
 
     // 404 = esperado; 500 = DB mock incompleto mas auth passou
     expect(res.status).not.toBe(401);

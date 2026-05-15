@@ -41,12 +41,12 @@ export class ClinicAgent extends Agent<Env, ClinicState> {
         const sql = neon(url);
         const [risks, renewals] = await Promise.all([
           sql`SELECT p.full_name, ls.ai_risk_level FROM patient_longitudinal_summary ls JOIN patients p ON p.id = ls.patient_id WHERE ls.organization_id = ${orgId} AND ls.ai_risk_level = 'high' LIMIT 3`,
-          sql`SELECT p.full_name, pk.remaining_sessions FROM patient_packages pk JOIN patients p ON p.id = pk.patient_id WHERE pk.organization_id = ${orgId} AND pk.status = 'active' AND pk.remaining_sessions <= 2 LIMIT 3`
+          sql`SELECT p.full_name, pk.remaining_sessions FROM patient_packages pk JOIN patients p ON p.id = pk.patient_id WHERE pk.organization_id = ${orgId} AND pk.status = 'active' AND pk.remaining_sessions <= 2 LIMIT 3`,
         ]);
-        
+
         aiContext = `
-          PACIENTES EM RISCO (Digital Twin): ${risks.map(r => r.full_name).join(", ")}
-          RENOVAÇÕES PENDENTES (LTV): ${renewals.map(r => `${r.full_name} (${r.remaining_sessions} sessões)`).join(", ")}
+          PACIENTES EM RISCO (Digital Twin): ${risks.map((r) => r.full_name).join(", ")}
+          RENOVAÇÕES PENDENTES (LTV): ${renewals.map((r) => `${r.full_name} (${r.remaining_sessions} sessões)`).join(", ")}
         `;
       }
     } catch (e) {
@@ -130,7 +130,13 @@ export class ClinicAgent extends Agent<Env, ClinicState> {
   }
 
   @callable()
-  async handleWhatsAppReschedule({ patientName, requestedDate }: { patientName: string; requestedDate: string }) {
+  async handleWhatsAppReschedule({
+    patientName,
+    requestedDate,
+  }: {
+    patientName: string;
+    requestedDate: string;
+  }) {
     const prompt = `Um paciente chamado "${patientName}" solicitou reagendamento via WhatsApp para "${requestedDate}". Gere uma resposta amigável confirmando que a equipe vai verificar a disponibilidade e entrar em contato em breve. Máximo 80 palavras. Em português, tom cordial.`;
 
     const result = await callAI(this.env, {

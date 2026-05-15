@@ -64,10 +64,10 @@
 
 /* Bento Grid & Brand Tokens */
 :root {
-  --brand-blue: #6DC0E3;
-  --brand-blue-light: #B5E2F5;
-  --brand-blue-dark: #3A92B8;
-  
+  --brand-blue: #6dc0e3;
+  --brand-blue-light: #b5e2f5;
+  --brand-blue-dark: #3a92b8;
+
   --bento-gap: 1.25rem;
   --bento-radius: 1.5rem;
   --glass-blur: 12px;
@@ -106,7 +106,7 @@
 }
 
 .bento-card::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   left: 0;
@@ -123,13 +123,23 @@
 
 /* Animations */
 @keyframes slide-up {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @keyframes fade-in {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 .animate-slide-up {

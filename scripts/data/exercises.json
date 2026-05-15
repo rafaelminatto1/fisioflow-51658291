@@ -611,7 +611,9 @@
       "benefits": "Melhora a estabilidade da pelve e previne lesões no joelho e quadril.",
       "tags": ["quadril", "glúteos", "estabilidade", "siri"],
       "image_url": "/exercises/illustrations/caminhada-siri-miniband.png",
-      "image_variants": ["/exercises/illustrations/caminhada-de-lado-com-miniband-lateral-band-walk.avif"]
+      "image_variants": [
+        "/exercises/illustrations/caminhada-de-lado-com-miniband-lateral-band-walk.avif"
+      ]
     },
     {
       "name": "Mobilização de Tornozelo",
@@ -694,7 +696,12 @@
         "Alterne os lados de forma controlada.",
         "Resista à tentação de girar o corpo lateralmente."
       ],
-      "muscles": ["transverso do abdômen", "oblíquos", "serrátil anterior", "estabilizadores do ombro"],
+      "muscles": [
+        "transverso do abdômen",
+        "oblíquos",
+        "serrátil anterior",
+        "estabilizadores do ombro"
+      ],
       "equipment": "nenhum",
       "difficulty": "intermediate",
       "sets_recommended": 3,

@@ -12,7 +12,10 @@ interface UseContasFinanceirasLogicProps {
   lockType: boolean;
 }
 
-export function useContasFinanceirasLogic({ initialTab, lockType }: UseContasFinanceirasLogicProps) {
+export function useContasFinanceirasLogic({
+  initialTab,
+  lockType,
+}: UseContasFinanceirasLogicProps) {
   const [tab, setTab] = useState<"receber" | "pagar">(initialTab);
   const [statusFilter, setStatusFilter] = useState<string>("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);

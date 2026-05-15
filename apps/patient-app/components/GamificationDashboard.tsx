@@ -9,7 +9,8 @@ import { Ionicons } from "@expo/vector-icons";
 
 export const GamificationDashboard: React.FC = () => {
   const colors = useColors();
-  const { profile, currentLevel, currentXp, xpPerLevel, progressPercentage, isLoading } = useGamification();
+  const { profile, currentLevel, currentXp, xpPerLevel, progressPercentage, isLoading } =
+    useGamification();
 
   if (isLoading) {
     return (

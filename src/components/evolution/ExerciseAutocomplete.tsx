@@ -33,7 +33,10 @@ export const ExerciseAutocomplete: React.FC<ExerciseAutocompleteProps> = ({
 
   const filteredExercises = useMemo(() => {
     if (!searchValue) return exercises.slice(0, 10);
-    return bilingualFilter(exercises, searchValue, ['name', 'aliases_pt', 'aliases_en']).slice(0, 10);
+    return bilingualFilter(exercises, searchValue, ["name", "aliases_pt", "aliases_en"]).slice(
+      0,
+      10,
+    );
   }, [exercises, searchValue]);
 
   return (
@@ -63,7 +66,11 @@ export const ExerciseAutocomplete: React.FC<ExerciseAutocompleteProps> = ({
             <CommandEmpty>
               <div className="py-3 px-2 text-center space-y-3">
                 <p className="text-sm text-muted-foreground leading-relaxed">
-                  Exercício não encontrado. Deseja cadastrar <span className="font-semibold text-foreground">&quot;{searchValue.trim()}&quot;</span> ou quer sugestões para substituir?
+                  Exercício não encontrado. Deseja cadastrar{" "}
+                  <span className="font-semibold text-foreground">
+                    &quot;{searchValue.trim()}&quot;
+                  </span>{" "}
+                  ou quer sugestões para substituir?
                 </p>
                 <div className="flex flex-col gap-2 mt-2">
                   {canCreateNew && searchValue.trim().length >= 2 && (

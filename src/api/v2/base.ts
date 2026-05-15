@@ -94,14 +94,14 @@ export async function request<T>(path: string, options: RequestInit = {}): Promi
       (error instanceof TypeError || (error as Error).message.includes("Failed to fetch"))
     ) {
       console.warn(`[API] Offline detectado. Enfileirando ${method} ${path}`);
-      
+
       const { enqueueAction } = await import("@/services/offlineSync");
       await enqueueAction("API_REQUEST", {
         url: path,
         method,
         body: options.body,
       });
-      
+
       // Simular retorno de sucesso para o hook não quebrar
       return { success: true, offline: true } as unknown as T;
     }

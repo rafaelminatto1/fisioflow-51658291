@@ -84,14 +84,9 @@ export function mergeAppearanceState(
 
   return {
     global: { ...safeLocal.global, ...safeServer.global },
-    day:
-      safeServer.day !== undefined
-        ? { ...safeLocal.day, ...safeServer.day }
-        : safeLocal.day,
+    day: safeServer.day !== undefined ? { ...safeLocal.day, ...safeServer.day } : safeLocal.day,
     week:
-      safeServer.week !== undefined
-        ? { ...safeLocal.week, ...safeServer.week }
-        : safeLocal.week,
+      safeServer.week !== undefined ? { ...safeLocal.week, ...safeServer.week } : safeLocal.week,
     month:
       safeServer.month !== undefined
         ? { ...safeLocal.month, ...safeServer.month }

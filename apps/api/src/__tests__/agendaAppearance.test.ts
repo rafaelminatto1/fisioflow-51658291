@@ -178,8 +178,8 @@ describe("PUT /api/v1/user/agenda-appearance", () => {
       global: {
         cardSize: "small",
         heightScale: 15, // out of range — should be clamped to 10
-        fontScale: -3,   // out of range — should be clamped to 0
-        opacity: 150,    // out of range — should be clamped to 100
+        fontScale: -3, // out of range — should be clamped to 0
+        opacity: 150, // out of range — should be clamped to 100
       },
     };
 
@@ -223,7 +223,7 @@ describe("PUT /api/v1/user/agenda-appearance", () => {
       },
       day: {
         heightScale: 99, // should be clamped to 10
-        opacity: -10,    // should be clamped to 0
+        opacity: -10, // should be clamped to 0
       },
     };
 
@@ -281,7 +281,7 @@ describe("PUT /api/v1/user/agenda-appearance", () => {
 
     const [_sql, params] = mockQuery.mock.calls[0];
     expect(params[0]).toBe("profile-uuid-456"); // profileId
-    expect(params[1]).toBe("org-uuid-789");      // organizationId
+    expect(params[1]).toBe("org-uuid-789"); // organizationId
   });
 });
 

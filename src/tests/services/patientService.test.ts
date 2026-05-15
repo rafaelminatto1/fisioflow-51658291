@@ -297,15 +297,12 @@ describe("Property 1: ServiceResult completeness", () => {
 
   it("getActivePatients always returns exactly one of data/error non-null (error path)", async () => {
     await fc.assert(
-      fc.asyncProperty(
-        fc.string({ minLength: 1, maxLength: 100 }),
-        async (errorMessage) => {
-          vi.mocked(patientsApi.list).mockRejectedValue(new Error(errorMessage));
-          const result = await PatientService.getActivePatients("org-1");
-          // On error: error is non-null (data may be empty array for graceful degradation)
-          expect(result.error).not.toBeNull();
-        },
-      ),
+      fc.asyncProperty(fc.string({ minLength: 1, maxLength: 100 }), async (errorMessage) => {
+        vi.mocked(patientsApi.list).mockRejectedValue(new Error(errorMessage));
+        const result = await PatientService.getActivePatients("org-1");
+        // On error: error is non-null (data may be empty array for graceful degradation)
+        expect(result.error).not.toBeNull();
+      }),
       { numRuns: 20 },
     );
   });

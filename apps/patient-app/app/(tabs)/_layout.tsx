@@ -69,7 +69,9 @@ export default function TabsLayout() {
         name="media"
         options={{
           title: "Mídia",
-          tabBarIcon: ({ color, size }) => <Ionicons name="images-outline" size={size} color={color} />,
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="images-outline" size={size} color={color} />
+          ),
         }}
       />
       <Tabs.Screen

@@ -11,80 +11,96 @@
  * 7. Salvar e validar sucesso
  */
 
-import { test, expect } from '@playwright/test';
+import { test, expect } from "@playwright/test";
 
-const BASE_URL = 'http://localhost:8084';
+const BASE_URL = "http://localhost:8084";
 const CREDENTIALS = {
-  email: 'teste.qa@fisioflow.com',
-  password: 'Teste@12345'
+  email: "teste.qa@fisioflow.com",
+  password: "Teste@12345",
 };
 
 // Test patient data
 const TEST_PATIENT = {
-  name: 'Paciente Teste E2E',
-  phone: '11999999999',
-  email: 'teste-e2e@fisioflow.test',
-  cpf: '12345678900',
-  birthDate: '1990-01-01'
+  name: "Paciente Teste E2E",
+  phone: "11999999999",
+  email: "teste-e2e@fisioflow.test",
+  cpf: "12345678900",
+  birthDate: "1990-01-01",
 };
 
 // Configure test for Chromium only with extended timeout
-test.use({ browserName: 'chromium' });
+test.use({ browserName: "chromium" });
 test.setTimeout(180000); // 3 minutes
 
-test('fluxo completo: login -> agendamento (avaliação) -> evolução SOAP', async ({ page, context }) => {
+test("fluxo completo: login -> agendamento (avaliação) -> evolução SOAP", async ({
+  page,
+  context,
+}) => {
   // Clear cookies for fresh session
   await context.clearCookies();
 
   // ========================================
   // ETAPA 0: LOGIN
   // ========================================
-  console.log('\n📍 ETAPA 0: Login');
-  await page.goto(`${BASE_URL}/auth`, { waitUntil: 'domcontentloaded' });
+  console.log("\n📍 ETAPA 0: Login");
+  await page.goto(`${BASE_URL}/auth`, { waitUntil: "domcontentloaded" });
 
-  await page.fill('#login-email', CREDENTIALS.email);
-  await page.fill('#login-password', CREDENTIALS.password);
+  await page.fill("#login-email", CREDENTIALS.email);
+  await page.fill("#login-password", CREDENTIALS.password);
   await page.click('button:has-text("Entrar na Plataforma")');
 
   // Wait for login to complete (check for dashboard or schedule URL)
-  await page.waitForURL(url => !url.pathname.includes('/auth'), { timeout: 30000 });
-  console.log('✅ Login realizado');
+  await page.waitForURL((url) => !url.pathname.includes("/auth"), { timeout: 30000 });
+  console.log("✅ Login realizado");
 
   // ========================================
   // ETAPA 1: FECHAR ONBOARDING (SE APARECER)
   // ========================================
-  console.log('\n📍 ETAPA 1: Verificar Onboarding');
+  console.log("\n📍 ETAPA 1: Verificar Onboarding");
 
   // Tenta fechar o modal de onboarding se ele aparecer em até 10 segundos
   try {
-    const onboardingCloseBtn = page.locator('button:has-text("Pular Tour"), button[aria-label="Close"], button:has-text("Fechar")').first();
+    const onboardingCloseBtn = page
+      .locator(
+        'button:has-text("Pular Tour"), button[aria-label="Close"], button:has-text("Fechar")',
+      )
+      .first();
     if (await onboardingCloseBtn.isVisible({ timeout: 5000 })) {
       await onboardingCloseBtn.click();
-      console.log('✅ Onboarding fechado');
+      console.log("✅ Onboarding fechado");
     } else {
-      console.log('ℹ️ Onboarding não apareceu');
+      console.log("ℹ️ Onboarding não apareceu");
     }
-  } catch  {
-    console.log('ℹ️ Onboarding não detectado ou erro ao fechar');
+  } catch {
+    console.log("ℹ️ Onboarding não detectado ou erro ao fechar");
   }
 
   // ========================================
   // ETAPA 2: CRIAR PACIENTE (SE NECESSÁRIO)
   // ========================================
-  console.log('\n📍 ETAPA 2: Verificar/Criar Paciente');
+  console.log("\n📍 ETAPA 2: Verificar/Criar Paciente");
 
   // Try to navigate to patients page to check if any patients exist
   await page.goto(`${BASE_URL}/patients`);
   await page.waitForTimeout(2000);
 
   // Check if there are any patients by looking for patient cards or empty state
-  const hasPatients = await page.locator('[data-testid="patient-card"], .patient-card, tr:has-text("Paciente"), div:has-text("Nenhum paciente"), div:has-text("Empty")').count() > 0;
+  const hasPatients =
+    (await page
+      .locator(
+        '[data-testid="patient-card"], .patient-card, tr:has-text("Paciente"), div:has-text("Nenhum paciente"), div:has-text("Empty")',
+      )
+      .count()) > 0;
 
   if (!hasPatients) {
-    console.log('  ℹ️ Nenhum paciente encontrado, criando paciente de teste...');
+    console.log("  ℹ️ Nenhum paciente encontrado, criando paciente de teste...");
 
     // Look for the "New Patient" or "Novo Paciente" button
-    const newPatientBtn = page.locator('button:has-text("Novo Paciente"), button:has-text("New Patient"), button:has-text("Adicionar"), a:has-text("Novo")').first();
+    const newPatientBtn = page
+      .locator(
+        'button:has-text("Novo Paciente"), button:has-text("New Patient"), button:has-text("Adicionar"), a:has-text("Novo")',
+      )
+      .first();
 
     // Wait a bit for the page to fully load
     await page.waitForTimeout(1000);
@@ -97,27 +113,35 @@ test('fluxo completo: login -> agendamento (avaliação) -> evolução SOAP', as
       await page.goto(`${BASE_URL}/patients/new`);
     }
 
-    console.log('  ✓ Abrindo formulário de criação de paciente');
+    console.log("  ✓ Abrindo formulário de criação de paciente");
 
     // Wait for the form/modal to appear
     await page.waitForTimeout(1000);
 
     // Fill the patient form - look for common input field patterns
     // Try multiple selector patterns for maximum compatibility
-    const nameInput = page.locator('input[name="name"], input[name="full_name"], input[id*="name"], input[placeholder*="Nome"]').first();
+    const nameInput = page
+      .locator(
+        'input[name="name"], input[name="full_name"], input[id*="name"], input[placeholder*="Nome"]',
+      )
+      .first();
     if (await nameInput.isVisible({ timeout: 5000 })) {
       await nameInput.fill(TEST_PATIENT.name);
       console.log(`  ✓ Nome preenchido: ${TEST_PATIENT.name}`);
     }
 
     // Fill phone
-    const phoneInput = page.locator('input[name="phone"], input[name="telefone"], input[id*="phone"]').first();
+    const phoneInput = page
+      .locator('input[name="phone"], input[name="telefone"], input[id*="phone"]')
+      .first();
     if (await phoneInput.isVisible({ timeout: 3000 })) {
       await phoneInput.fill(TEST_PATIENT.phone);
     }
 
     // Fill email
-    const emailInput = page.locator('input[name="email"], input[name="email"], input[id*="email"]').first();
+    const emailInput = page
+      .locator('input[name="email"], input[name="email"], input[id*="email"]')
+      .first();
     if (await emailInput.isVisible({ timeout: 3000 })) {
       await emailInput.fill(TEST_PATIENT.email);
     }
@@ -133,48 +157,61 @@ test('fluxo completo: login -> agendamento (avaliação) -> evolução SOAP', as
     await page.waitForTimeout(500);
 
     // Submit the form - try more specific selectors for the patient form
-    const saveBtn = page.locator('button[type="submit"]').and(page.locator('button:has-text("Salvar"), button:has-text("Criar"), button:has-text("Cadastrar"), button:has-text("Confirmar")')).first();
+    const saveBtn = page
+      .locator('button[type="submit"]')
+      .and(
+        page.locator(
+          'button:has-text("Salvar"), button:has-text("Criar"), button:has-text("Cadastrar"), button:has-text("Confirmar")',
+        ),
+      )
+      .first();
 
     // If no submit button with text, try any submit button in the form
-    const submitBtnAlt = page.locator('form button[type="submit"], dialog button[type="submit"], button:has-text("Adicionar")').first();
+    const submitBtnAlt = page
+      .locator(
+        'form button[type="submit"], dialog button[type="submit"], button:has-text("Adicionar")',
+      )
+      .first();
 
     if (await saveBtn.isVisible({ timeout: 3000 })) {
       await saveBtn.click();
-      console.log('  ✓ Formulário enviado (botão salvar)');
+      console.log("  ✓ Formulário enviado (botão salvar)");
     } else if (await submitBtnAlt.isVisible({ timeout: 2000 })) {
       await submitBtnAlt.click();
-      console.log('  ✓ Formulário enviado (botão submit)');
+      console.log("  ✓ Formulário enviado (botão submit)");
     } else {
       // Last resort - press Enter on a focused field
-      await page.keyboard.press('Enter');
-      console.log('  ✓ Formulário enviado (Enter key)');
+      await page.keyboard.press("Enter");
+      console.log("  ✓ Formulário enviado (Enter key)");
     }
 
     // Wait for success message or redirect
     await page.waitForTimeout(3000);
-    console.log('✅ Paciente de teste criado');
+    console.log("✅ Paciente de teste criado");
 
     // Navigate to schedule to refresh the patient list cache
     await page.goto(`${BASE_URL}/schedule`);
     await page.waitForTimeout(3000); // Wait for page to fully load
-    console.log('  ✓ Página recarregada para atualizar cache de pacientes');
+    console.log("  ✓ Página recarregada para atualizar cache de pacientes");
   } else {
-    console.log('  ℹ️ Pacientes já existem no banco de dados');
+    console.log("  ℹ️ Pacientes já existem no banco de dados");
   }
 
   // ========================================
   // ETAPA 3: CRIAR AGENDAMENTO DE AVALIAÇÃO
   // ========================================
-  console.log('\n📍 ETAPA 2: Criar Agendamento');
+  console.log("\n📍 ETAPA 2: Criar Agendamento");
 
   // Garantir que estamos na agenda
   await page.goto(`${BASE_URL}/schedule`);
 
   // Clicar em "Novo" ou "Novo Agendamento"
-  const newAppointmentBtn = page.locator('button:has-text("Novo"), button:has-text("Novo Agendamento")').first();
-  await newAppointmentBtn.waitFor({ state: 'visible' });
+  const newAppointmentBtn = page
+    .locator('button:has-text("Novo"), button:has-text("Novo Agendamento")')
+    .first();
+  await newAppointmentBtn.waitFor({ state: "visible" });
   await newAppointmentBtn.click();
-  console.log('  ✓ Botão Novo Agendamento clicado');
+  console.log("  ✓ Botão Novo Agendamento clicado");
 
   // Selecionar Paciente (Combo box)
   // Note: The PatientCombobox might be empty due to data source issues
@@ -185,10 +222,10 @@ test('fluxo completo: login -> agendamento (avaliação) -> evolução SOAP', as
   // Wait for the dropdown listbox to appear
   const listbox = page.locator('[role="listbox"]').first();
   try {
-    await listbox.waitFor({ state: 'visible', timeout: 3000 });
-    console.log('  ✓ Dropdown aberto');
+    await listbox.waitFor({ state: "visible", timeout: 3000 });
+    console.log("  ✓ Dropdown aberto");
   } catch {
-    console.log('  ⚠️ Dropdown não abriu, tentando alternativa');
+    console.log("  ⚠️ Dropdown não abriu, tentando alternativa");
   }
 
   await page.waitForTimeout(1000);
@@ -201,15 +238,27 @@ test('fluxo completo: login -> agendamento (avaliação) -> evolução SOAP', as
     console.log('  ℹ️ Nenhum paciente encontrado, usando fluxo "Criar Novo"...');
 
     // Type the patient name to trigger the search/create flow
-    const comboboxInput = page.locator('[role="combobox"] input, input[role="combobox"], [role="combobox"] input[type="text"]').first();
+    const comboboxInput = page
+      .locator(
+        '[role="combobox"] input, input[role="combobox"], [role="combobox"] input[type="text"]',
+      )
+      .first();
     if (await comboboxInput.isVisible({ timeout: 2000 })) {
       await comboboxInput.click();
       await comboboxInput.fill(TEST_PATIENT.name);
       await page.waitForTimeout(2000);
 
       // Look for a "Create new" option or button
-      const createNewOption = page.locator('[role="option"]:has-text("Criar"), [role="option"]:has-text("Novo"), [role="option"]:has-text("Adicionar")').first();
-      const createNewBtn = page.locator('button:has-text("Criar Novo"), button:has-text("Novo Paciente"), button:has-text("Adicionar Paciente")').first();
+      const createNewOption = page
+        .locator(
+          '[role="option"]:has-text("Criar"), [role="option"]:has-text("Novo"), [role="option"]:has-text("Adicionar")',
+        )
+        .first();
+      const createNewBtn = page
+        .locator(
+          'button:has-text("Criar Novo"), button:has-text("Novo Paciente"), button:has-text("Adicionar Paciente")',
+        )
+        .first();
 
       if (await createNewOption.isVisible({ timeout: 2000 })) {
         await createNewOption.click();
@@ -219,27 +268,33 @@ test('fluxo completo: login -> agendamento (avaliação) -> evolução SOAP', as
         console.log('  ✓ Botão "Criar Novo Paciente" clicado');
       } else {
         // Fallback: press Enter to see if that triggers the modal
-        await page.keyboard.press('Enter');
+        await page.keyboard.press("Enter");
         await page.waitForTimeout(1500);
       }
 
       // QuickPatientModal should now be open - fill it out
       await page.waitForTimeout(1000);
-      console.log('  ⏳ QuickPatientModal deve estar aberto');
+      console.log("  ⏳ QuickPatientModal deve estar aberto");
 
       // Look for the name input in the QuickPatientModal
-      const quickNameInput = page.locator('dialog input[name="name"], [role="dialog"] input[id*="name"], .modal input[placeholder*="Nome"]').first();
+      const quickNameInput = page
+        .locator(
+          'dialog input[name="name"], [role="dialog"] input[id*="name"], .modal input[placeholder*="Nome"]',
+        )
+        .first();
       if (await quickNameInput.isVisible({ timeout: 3000 })) {
         // The name might be pre-filled from the search
         const currentValue = await quickNameInput.inputValue();
         if (!currentValue || currentValue !== TEST_PATIENT.name) {
           await quickNameInput.fill(TEST_PATIENT.name);
         }
-        console.log('  ✓ Nome preenchido no modal rápido');
+        console.log("  ✓ Nome preenchido no modal rápido");
       }
 
       // Fill phone if field exists
-      const quickPhoneInput = page.locator('dialog input[name="phone"], [role="dialog"] input[id*="phone"]').first();
+      const quickPhoneInput = page
+        .locator('dialog input[name="phone"], [role="dialog"] input[id*="phone"]')
+        .first();
       if (await quickPhoneInput.isVisible({ timeout: 2000 })) {
         await quickPhoneInput.fill(TEST_PATIENT.phone);
       }
@@ -247,36 +302,42 @@ test('fluxo completo: login -> agendamento (avaliação) -> evolução SOAP', as
       // Click save/create button in the modal
       // We need to find the button specifically in the QuickPatientModal, not the appointment form
       // The QuickPatientModal is a dialog, so we look for buttons inside dialogs
-      const quickSaveBtn = page.locator(
-        'dialog button[type="submit"]:visible, ' +
-        'dialog button:has-text("Salvar"):visible, ' +
-        'dialog button:has-text("Criar"):visible, ' +
-        '[role="dialog"] button[type="submit"]:visible'
-      ).first();
+      const quickSaveBtn = page
+        .locator(
+          'dialog button[type="submit"]:visible, ' +
+            'dialog button:has-text("Salvar"):visible, ' +
+            'dialog button:has-text("Criar"):visible, ' +
+            '[role="dialog"] button[type="submit"]:visible',
+        )
+        .first();
 
       // Force click since there might be overlays
       if (await quickSaveBtn.isVisible({ timeout: 3000 })) {
         await quickSaveBtn.click({ force: true });
-        console.log('  ✓ Botão salvar clicado');
+        console.log("  ✓ Botão salvar clicado");
       } else {
         // Last resort - press Enter while focused on the form
-        await page.keyboard.press('Enter');
-        console.log('  ✓ Enter pressionado para submeter formulário');
+        await page.keyboard.press("Enter");
+        console.log("  ✓ Enter pressionado para submeter formulário");
       }
 
       await page.waitForTimeout(2000);
 
       // Modal should close automatically, but if not, press Escape
-      const modalStillOpen = page.locator('dialog[open], [role="dialog"][data-state="open"], [data-radix-dialog][data-state="open"]').first();
+      const modalStillOpen = page
+        .locator(
+          'dialog[open], [role="dialog"][data-state="open"], [data-radix-dialog][data-state="open"]',
+        )
+        .first();
       if (await modalStillOpen.isVisible({ timeout: 1000 }).catch(() => false)) {
-        console.log('  ⏳ Modal ainda aberto, fechando...');
-        await page.keyboard.press('Escape');
+        console.log("  ⏳ Modal ainda aberto, fechando...");
+        await page.keyboard.press("Escape");
         await page.waitForTimeout(1000);
       }
 
-      console.log('  ✓ Paciente criado e selecionado');
+      console.log("  ✓ Paciente criado e selecionado");
     } else {
-      throw new Error('Não foi possível encontrar input do combobox para criar paciente');
+      throw new Error("Não foi possível encontrar input do combobox para criar paciente");
     }
   } else {
     // Select the first patient option
@@ -315,14 +376,14 @@ test('fluxo completo: login -> agendamento (avaliação) -> evolução SOAP', as
         const avaliacaoOption = page.locator('[role="option"]:has-text("Avaliação")');
         if (await avaliacaoOption.isVisible({ timeout: 1000 }).catch(() => false)) {
           await avaliacaoOption.click();
-          console.log('  ✓ Status definido para Avaliação');
+          console.log("  ✓ Status definido para Avaliação");
           break;
         } else {
           // Close and try next
-          await page.keyboard.press('Escape');
+          await page.keyboard.press("Escape");
           await page.waitForTimeout(300);
         }
-      } catch  {
+      } catch {
         // Continue to next select
       }
     }
@@ -331,7 +392,7 @@ test('fluxo completo: login -> agendamento (avaliação) -> evolução SOAP', as
   // Selecionar Horário (obrigatório)
   // Try to find and click the time select
   // Look for elements related to time selection
-  console.log('  ⏳ Procurando seletor de horário...');
+  console.log("  ⏳ Procurando seletor de horário...");
 
   // Try multiple selectors for time
   const timeSelectors = [
@@ -354,14 +415,14 @@ test('fluxo completo: login -> agendamento (avaliação) -> evolução SOAP', as
         const timeOption = page.locator('[role="option"]').first();
         if (await timeOption.isVisible({ timeout: 1000 }).catch(() => false)) {
           await timeOption.click();
-          console.log('  ✓ Horário selecionado');
+          console.log("  ✓ Horário selecionado");
           timeSelected = true;
           break;
         } else {
-          await page.keyboard.press('Escape');
+          await page.keyboard.press("Escape");
         }
       }
-    } catch  {
+    } catch {
       // Try next selector
     }
   }
@@ -369,34 +430,34 @@ test('fluxo completo: login -> agendamento (avaliação) -> evolução SOAP', as
   // Alternative: Try to find time slots displayed as buttons
   if (!timeSelected) {
     try {
-      const timeSlotButtons = page.locator('button:has-text(/^\\d{2}:\\d{2}$/)').first();
+      const timeSlotButtons = page.locator("button:has-text(/^\\d{2}:\\d{2}$/)").first();
       if (await timeSlotButtons.isVisible({ timeout: 2000 }).catch(() => false)) {
         await timeSlotButtons.click();
-        console.log('  ✓ Horário selecionado (slot button)');
+        console.log("  ✓ Horário selecionado (slot button)");
         timeSelected = true;
       }
-    } catch  {
+    } catch {
       // Ignore
     }
   }
 
   if (!timeSelected) {
-    console.log('  ⚠️ Não foi possível selecionar horário automaticamente');
+    console.log("  ⚠️ Não foi possível selecionar horário automaticamente");
     // Try typing a time value directly
     try {
       const timeInput = page.locator('input[name="appointment_time"], input[id*="time"]').first();
       if (await timeInput.isVisible({ timeout: 1000 }).catch(() => false)) {
-        await timeInput.fill('09:00');
-        console.log('  ✓ Horário preenchido manualmente: 09:00');
+        await timeInput.fill("09:00");
+        console.log("  ✓ Horário preenchido manualmente: 09:00");
       }
-    } catch  {
-      console.log('  ⚠️ Não foi possível preencher horário, tentando continuar mesmo assim');
+    } catch {
+      console.log("  ⚠️ Não foi possível preencher horário, tentando continuar mesmo assim");
     }
   }
 
   // Clicar no botão de submit
   // Try to find the submit button with various selectors
-  console.log('  ⏳ Procurando botão de submit...');
+  console.log("  ⏳ Procurando botão de submit...");
 
   // The submit button is usually "Iniciar Avaliação", "Criar", or "Salvar"
   const submitSelectors = [
@@ -417,39 +478,46 @@ test('fluxo completo: login -> agendamento (avaliação) -> evolução SOAP', as
         submitClicked = true;
         break;
       }
-    } catch  {
+    } catch {
       // Try next selector
     }
   }
 
   if (!submitClicked) {
-    console.log('  ⚠️ Botão submit não encontrado pelos seletores, tentando Enter');
+    console.log("  ⚠️ Botão submit não encontrado pelos seletores, tentando Enter");
     // Try pressing Enter while focusing on a form element
-    await page.keyboard.press('Enter');
-    console.log('  ✓ Enter pressionado');
+    await page.keyboard.press("Enter");
+    console.log("  ✓ Enter pressionado");
   }
 
   // ========================================
   // ETAPA 4: VERIFICAR REDIRECIONAMENTO
   // ========================================
-  console.log('\n📍 ETAPA 3: Verificar Redirecionamento para Evolução');
+  console.log("\n📍 ETAPA 3: Verificar Redirecionamento para Evolução");
 
   // O redirecionamento pode levar para /patients/{id}/evaluations/new... ou /patient-evolution/...
   // Vamos esperar URL mudar
-  await page.waitForURL(url => url.pathname.includes('/evaluations/') || url.pathname.includes('/patient-evolution/'), { timeout: 20000 });
+  await page.waitForURL(
+    (url) => url.pathname.includes("/evaluations/") || url.pathname.includes("/patient-evolution/"),
+    { timeout: 20000 },
+  );
   console.log(`  ✓ Redirecionado para: ${page.url()}`);
   await page.waitForTimeout(2000); // Esperar carregamento inicial
-  await page.screenshot({ path: '/tmp/fluxo-03-redirecionamento.png' });
+  await page.screenshot({ path: "/tmp/fluxo-03-redirecionamento.png" });
 
   // ========================================
   // ETAPA 5: PREENCHER EVOLUÇÃO SOAP
   // ========================================
-  console.log('\n📍 ETAPA 4: Preencher SOAP');
+  console.log("\n📍 ETAPA 4: Preencher SOAP");
 
   const fillTextarea = async (placeholder: string, value: string) => {
     // Tenta encontrar por placeholder ou label próximo
-    const locator = page.locator(`textarea[placeholder*="${placeholder}" i], textarea[name*="${placeholder.toLowerCase()}" i]`).first();
-    if (await locator.count() > 0) {
+    const locator = page
+      .locator(
+        `textarea[placeholder*="${placeholder}" i], textarea[name*="${placeholder.toLowerCase()}" i]`,
+      )
+      .first();
+    if ((await locator.count()) > 0) {
       await locator.fill(value);
       console.log(`  ✓ Campo "${placeholder}" preenchido`);
       return true;
@@ -462,27 +530,30 @@ test('fluxo completo: login -> agendamento (avaliação) -> evolução SOAP', as
   // Ajuste estes seletores conforme sua UI real de evolução
 
   // S - Subjetivo
-  const sFilled = await fillTextarea('Queixas', 'Paciente relata melhora parcial.');
-  if (!sFilled) await page.locator('textarea').nth(0).fill('Paciente relata melhora parcial.'); // Fallback 1º textarea
+  const sFilled = await fillTextarea("Queixas", "Paciente relata melhora parcial.");
+  if (!sFilled) await page.locator("textarea").nth(0).fill("Paciente relata melhora parcial."); // Fallback 1º textarea
 
   // O - Objetivo
-  const oFilled = await fillTextarea('Objetivo', 'Amplitude de movimento preservada.');
-  if (!oFilled && await page.locator('textarea').count() > 1) await page.locator('textarea').nth(1).fill('ADM preservada.');
+  const oFilled = await fillTextarea("Objetivo", "Amplitude de movimento preservada.");
+  if (!oFilled && (await page.locator("textarea").count()) > 1)
+    await page.locator("textarea").nth(1).fill("ADM preservada.");
 
   // A - Avaliação
-  const aFilled = await fillTextarea('Avaliação', 'Boa evolução do quadro.');
-  if (!aFilled && await page.locator('textarea').count() > 2) await page.locator('textarea').nth(2).fill('Boa evolução.');
+  const aFilled = await fillTextarea("Avaliação", "Boa evolução do quadro.");
+  if (!aFilled && (await page.locator("textarea").count()) > 2)
+    await page.locator("textarea").nth(2).fill("Boa evolução.");
 
   // P - Plano
-  const pFilled = await fillTextarea('Conduta', 'Manter exercícios de fortalecimento.');
-  if (!pFilled && await page.locator('textarea').count() > 3) await page.locator('textarea').nth(3).fill('Manter conduta.');
+  const pFilled = await fillTextarea("Conduta", "Manter exercícios de fortalecimento.");
+  if (!pFilled && (await page.locator("textarea").count()) > 3)
+    await page.locator("textarea").nth(3).fill("Manter conduta.");
 
-  await page.screenshot({ path: '/tmp/fluxo-04-soap-preenchido.png', fullPage: true });
+  await page.screenshot({ path: "/tmp/fluxo-04-soap-preenchido.png", fullPage: true });
 
   // ========================================
   // ETAPA 6: SALVAR
   // ========================================
-  console.log('\n📍 ETAPA 5: Salvar Evolução');
+  console.log("\n📍 ETAPA 5: Salvar Evolução");
 
   // Botão Salvar ou Finalizar
   const saveBtn = page.locator('button:has-text("Salvar"), button:has-text("Finalizar")').first();
@@ -490,10 +561,12 @@ test('fluxo completo: login -> agendamento (avaliação) -> evolução SOAP', as
 
   // Esperar sucesso (toast ou redirecionamento de volta)
   // Geralmente volta para lista ou mostra toast
-  await expect(page.locator('div:has-text("sucesso"), div:has-text("salvo")').first()).toBeVisible({ timeout: 10000 });
-  console.log('✅ Evolução salva com sucesso');
+  await expect(page.locator('div:has-text("sucesso"), div:has-text("salvo")').first()).toBeVisible({
+    timeout: 10000,
+  });
+  console.log("✅ Evolução salva com sucesso");
 
-  console.log('\n' + '█'.repeat(70));
-  console.log('█    TESTE CONCLUÍDO COM SUCESSO');
-  console.log('█'.repeat(70));
+  console.log("\n" + "█".repeat(70));
+  console.log("█    TESTE CONCLUÍDO COM SUCESSO");
+  console.log("█".repeat(70));
 });

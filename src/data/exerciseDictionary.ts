@@ -1924,7 +1924,8 @@ const upperBody: PhysioDictionaryEntry[] = [
       suggested_reps: 45,
       suggested_rpe: "7-8",
       progression_suggestion: "Aumentar o tempo sob tensão.",
-      instruction_pt: "Com um elástico forte atrás dos joelhos, realize um agachamento mantendo o tronco ereto.",
+      instruction_pt:
+        "Com um elástico forte atrás dos joelhos, realize um agachamento mantendo o tronco ereto.",
       image_url: "/exercises/illustrations/spanish-squat.avif",
     },
   ),
@@ -1945,7 +1946,8 @@ const upperBody: PhysioDictionaryEntry[] = [
       suggested_reps: 8,
       suggested_rpe: "8-9",
       progression_suggestion: "Progredir para apoio no tornozelo (Nível 2).",
-      instruction_pt: "Apoie o joelho de cima em um banco e eleve o corpo, aproximando a perna de baixo.",
+      instruction_pt:
+        "Apoie o joelho de cima em um banco e eleve o corpo, aproximando a perna de baixo.",
       image_url: "/exercises/illustrations/copenhagen-adduction.avif",
     },
   ),

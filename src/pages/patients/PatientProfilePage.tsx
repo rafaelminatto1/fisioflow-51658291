@@ -307,23 +307,23 @@ const PatientProfileContent = () => {
     setIsChatOpen(true);
   };
 
-    return (
-      <MainLayout>
-        <div className="space-y-6 pb-20 fade-in relative">
-          <PatientProfileHeader
-            patient={patient as any}
-            patientName={patientName}
-            initials={initials}
-            onBack={() => navigate(APP_ROUTES.PATIENTS)}
-            onOpenReport={() => navigate(`/patient-evolution-report/${id}`)}
-            onOpenPremiumReport={handleExportPremium}
-            onOpenProntuario={() => navigate(`/prontuario/${id}`)}
-            onEdit={() => setEditingPatient(true)}
-            onEvaluate={handleStartEvaluation}
-            onSchedule={() => setScheduleModalOpen(true)}
-            onAskAI={handleAskAI}
-            onOpenMedicalReport={handleOpenMedicalReport}
-          />
+  return (
+    <MainLayout>
+      <div className="space-y-6 pb-20 fade-in relative">
+        <PatientProfileHeader
+          patient={patient as any}
+          patientName={patientName}
+          initials={initials}
+          onBack={() => navigate(APP_ROUTES.PATIENTS)}
+          onOpenReport={() => navigate(`/patient-evolution-report/${id}`)}
+          onOpenPremiumReport={handleExportPremium}
+          onOpenProntuario={() => navigate(`/prontuario/${id}`)}
+          onEdit={() => setEditingPatient(true)}
+          onEvaluate={handleStartEvaluation}
+          onSchedule={() => setScheduleModalOpen(true)}
+          onAskAI={handleAskAI}
+          onOpenMedicalReport={handleOpenMedicalReport}
+        />
         {/* Chat IA Contextual 360° */}
         <Patient360ChatDrawer
           open={isChatOpen}
@@ -363,212 +363,212 @@ const PatientProfileContent = () => {
           <div className="sticky top-0 z-20 bg-background/95 backdrop-blur-sm pb-1 pt-2 -mx-4 px-4 border-b border-blue-50/50 shadow-sm shadow-blue-500/5">
             <div className="relative">
               <TabsList className="w-full justify-start h-auto p-0 bg-transparent overflow-x-auto flex-nowrap scrollbar-hide gap-6 pr-12">
-              <TabsTrigger
-                value="overview"
-                className="data-[state=active]:border-blue-600 data-[state=active]:text-blue-600 rounded-none bg-transparent border-b-2 border-transparent px-0 py-2 text-sm font-semibold transition-all"
-              >
-                Visão Geral
-              </TabsTrigger>
-              <TabsTrigger
-                value="evolution"
-                className="data-[state=active]:border-blue-600 data-[state=active]:text-blue-600 rounded-none bg-transparent border-b-2 border-transparent px-0 py-2 text-sm font-semibold gap-2 transition-all"
-              >
-                <TrendingUp className="h-4 w-4" />
-                Evolução
-              </TabsTrigger>
-              <TabsTrigger
-                value="timeline"
-                className="data-[state=active]:border-blue-600 data-[state=active]:text-blue-600 rounded-none bg-transparent border-b-2 border-transparent px-0 py-2 text-sm font-semibold gap-2 transition-all"
-              >
-                <History className="h-4 w-4" />
-                Linha do Tempo
-              </TabsTrigger>
-              <TabsTrigger
-                value="analytics"
-                className="data-[state=active]:border-blue-600 data-[state=active]:text-blue-600 rounded-none bg-transparent border-b-2 border-transparent px-0 py-2 text-sm font-semibold gap-2 transition-all"
-              >
-                <Brain className="h-4 w-4" />
-                Analytics & IA
-              </TabsTrigger>
-              <TabsTrigger
-                value="personal"
-                className="data-[state=active]:border-blue-600 data-[state=active]:text-blue-600 rounded-none bg-transparent border-b-2 border-transparent px-0 py-2 text-sm font-semibold transition-all"
-              >
-                Dados Pessoais
-              </TabsTrigger>
-              <TabsTrigger
-                value="clinical"
-                className="data-[state=active]:border-blue-600 data-[state=active]:text-blue-600 rounded-none bg-transparent border-b-2 border-transparent px-0 py-2 text-sm font-semibold transition-all"
-              >
-                Histórico Clínico
-              </TabsTrigger>
-              <TabsTrigger
-                value="activity-lab"
-                className="data-[state=active]:border-blue-600 data-[state=active]:text-blue-600 rounded-none bg-transparent border-b-2 border-transparent px-0 py-2 text-sm font-semibold transition-all gap-2"
-              >
-                <Activity className="h-4 w-4" />
-                Biomecânica
-              </TabsTrigger>
-              <TabsTrigger
-                value="financial"
-                className="data-[state=active]:border-blue-600 data-[state=active]:text-blue-600 rounded-none bg-transparent border-b-2 border-transparent px-0 py-2 text-sm font-semibold transition-all"
-              >
-                Financeiro
-              </TabsTrigger>
-              <TabsTrigger
-                value="gamification"
-                className="data-[state=active]:border-blue-600 data-[state=active]:text-blue-600 rounded-none bg-transparent border-b-2 border-transparent px-0 py-2 text-sm font-semibold transition-all"
-              >
-                Gamificação
-              </TabsTrigger>
-              <TabsTrigger
-                value="documents"
-                className="data-[state=active]:border-blue-600 data-[state=active]:text-blue-600 rounded-none bg-transparent border-b-2 border-transparent px-0 py-2 text-sm font-semibold transition-all"
-              >
-                Arquivos
-              </TabsTrigger>
-              <TabsTrigger
-                value="tasks"
-                className="data-[state=active]:border-blue-600 data-[state=active]:text-blue-600 rounded-none bg-transparent border-b-2 border-transparent px-0 py-2 text-sm font-semibold gap-2 transition-all"
-              >
-                <CheckSquare className="h-4 w-4" />
-                Tarefas
-              </TabsTrigger>
-              <TabsTrigger
-                value="evidence"
-                className="data-[state=active]:border-violet-600 data-[state=active]:text-violet-600 rounded-none bg-transparent border-b-2 border-transparent px-0 py-2 text-sm font-semibold gap-2 transition-all"
-              >
-                <Brain className="h-4 w-4" />
-                Evidência
-              </TabsTrigger>
-            </TabsList>
-            {/* Visual indicator for horizontal scroll */}
-            <div className="absolute right-0 top-0 bottom-0 w-12 bg-gradient-to-l from-background to-transparent pointer-events-none md:hidden" />
+                <TabsTrigger
+                  value="overview"
+                  className="data-[state=active]:border-blue-600 data-[state=active]:text-blue-600 rounded-none bg-transparent border-b-2 border-transparent px-0 py-2 text-sm font-semibold transition-all"
+                >
+                  Visão Geral
+                </TabsTrigger>
+                <TabsTrigger
+                  value="evolution"
+                  className="data-[state=active]:border-blue-600 data-[state=active]:text-blue-600 rounded-none bg-transparent border-b-2 border-transparent px-0 py-2 text-sm font-semibold gap-2 transition-all"
+                >
+                  <TrendingUp className="h-4 w-4" />
+                  Evolução
+                </TabsTrigger>
+                <TabsTrigger
+                  value="timeline"
+                  className="data-[state=active]:border-blue-600 data-[state=active]:text-blue-600 rounded-none bg-transparent border-b-2 border-transparent px-0 py-2 text-sm font-semibold gap-2 transition-all"
+                >
+                  <History className="h-4 w-4" />
+                  Linha do Tempo
+                </TabsTrigger>
+                <TabsTrigger
+                  value="analytics"
+                  className="data-[state=active]:border-blue-600 data-[state=active]:text-blue-600 rounded-none bg-transparent border-b-2 border-transparent px-0 py-2 text-sm font-semibold gap-2 transition-all"
+                >
+                  <Brain className="h-4 w-4" />
+                  Analytics & IA
+                </TabsTrigger>
+                <TabsTrigger
+                  value="personal"
+                  className="data-[state=active]:border-blue-600 data-[state=active]:text-blue-600 rounded-none bg-transparent border-b-2 border-transparent px-0 py-2 text-sm font-semibold transition-all"
+                >
+                  Dados Pessoais
+                </TabsTrigger>
+                <TabsTrigger
+                  value="clinical"
+                  className="data-[state=active]:border-blue-600 data-[state=active]:text-blue-600 rounded-none bg-transparent border-b-2 border-transparent px-0 py-2 text-sm font-semibold transition-all"
+                >
+                  Histórico Clínico
+                </TabsTrigger>
+                <TabsTrigger
+                  value="activity-lab"
+                  className="data-[state=active]:border-blue-600 data-[state=active]:text-blue-600 rounded-none bg-transparent border-b-2 border-transparent px-0 py-2 text-sm font-semibold transition-all gap-2"
+                >
+                  <Activity className="h-4 w-4" />
+                  Biomecânica
+                </TabsTrigger>
+                <TabsTrigger
+                  value="financial"
+                  className="data-[state=active]:border-blue-600 data-[state=active]:text-blue-600 rounded-none bg-transparent border-b-2 border-transparent px-0 py-2 text-sm font-semibold transition-all"
+                >
+                  Financeiro
+                </TabsTrigger>
+                <TabsTrigger
+                  value="gamification"
+                  className="data-[state=active]:border-blue-600 data-[state=active]:text-blue-600 rounded-none bg-transparent border-b-2 border-transparent px-0 py-2 text-sm font-semibold transition-all"
+                >
+                  Gamificação
+                </TabsTrigger>
+                <TabsTrigger
+                  value="documents"
+                  className="data-[state=active]:border-blue-600 data-[state=active]:text-blue-600 rounded-none bg-transparent border-b-2 border-transparent px-0 py-2 text-sm font-semibold transition-all"
+                >
+                  Arquivos
+                </TabsTrigger>
+                <TabsTrigger
+                  value="tasks"
+                  className="data-[state=active]:border-blue-600 data-[state=active]:text-blue-600 rounded-none bg-transparent border-b-2 border-transparent px-0 py-2 text-sm font-semibold gap-2 transition-all"
+                >
+                  <CheckSquare className="h-4 w-4" />
+                  Tarefas
+                </TabsTrigger>
+                <TabsTrigger
+                  value="evidence"
+                  className="data-[state=active]:border-violet-600 data-[state=active]:text-violet-600 rounded-none bg-transparent border-b-2 border-transparent px-0 py-2 text-sm font-semibold gap-2 transition-all"
+                >
+                  <Brain className="h-4 w-4" />
+                  Evidência
+                </TabsTrigger>
+              </TabsList>
+              {/* Visual indicator for horizontal scroll */}
+              <div className="absolute right-0 top-0 bottom-0 w-12 bg-gradient-to-l from-background to-transparent pointer-events-none md:hidden" />
+            </div>
           </div>
-        </div>
 
-        <div className="mt-6 min-h-[500px]">
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={activeTab}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.2 }}
-            >
-            <TabsContent
-              value="overview"
-              className="mt-0 focus-visible:outline-none animate-in fade-in-50 duration-500 slide-in-from-bottom-2"
-            >
-              <OverviewTab
-                patient={patient as any}
-                upcomingAppointments={appointments}
-                invalidateTab={invalidateTab}
-              />
-            </TabsContent>
+          <div className="mt-6 min-h-[500px]">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={activeTab}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.2 }}
+              >
+                <TabsContent
+                  value="overview"
+                  className="mt-0 focus-visible:outline-none animate-in fade-in-50 duration-500 slide-in-from-bottom-2"
+                >
+                  <OverviewTab
+                    patient={patient as any}
+                    upcomingAppointments={appointments}
+                    invalidateTab={invalidateTab}
+                  />
+                </TabsContent>
 
-            <TabsContent
-              value="evolution"
-              className="mt-0 focus-visible:outline-none animate-in fade-in-50 duration-500 slide-in-from-bottom-2"
-            >
-              <Suspense fallback={<LoadingSkeleton type="card" />}>
-                <LazyEvolutionDashboard patientId={id || ""} />
-              </Suspense>
-            </TabsContent>
+                <TabsContent
+                  value="evolution"
+                  className="mt-0 focus-visible:outline-none animate-in fade-in-50 duration-500 slide-in-from-bottom-2"
+                >
+                  <Suspense fallback={<LoadingSkeleton type="card" />}>
+                    <LazyEvolutionDashboard patientId={id || ""} />
+                  </Suspense>
+                </TabsContent>
 
-            <TabsContent
-              value="timeline"
-              className="mt-0 focus-visible:outline-none animate-in fade-in-50 duration-500 slide-in-from-bottom-2"
-            >
-              <div className="bg-white rounded-3xl p-8 border border-blue-100 shadow-premium-sm">
-                <h3 className="text-lg font-black uppercase tracking-tight mb-8 flex items-center gap-2">
-                  <History className="h-5 w-5 text-blue-600" />
-                  Linha do Tempo de Atividades
-                </h3>
-                <PatientTimeline patientId={id} />
-              </div>
-            </TabsContent>
+                <TabsContent
+                  value="timeline"
+                  className="mt-0 focus-visible:outline-none animate-in fade-in-50 duration-500 slide-in-from-bottom-2"
+                >
+                  <div className="bg-white rounded-3xl p-8 border border-blue-100 shadow-premium-sm">
+                    <h3 className="text-lg font-black uppercase tracking-tight mb-8 flex items-center gap-2">
+                      <History className="h-5 w-5 text-blue-600" />
+                      Linha do Tempo de Atividades
+                    </h3>
+                    <PatientTimeline patientId={id} />
+                  </div>
+                </TabsContent>
 
-            <TabsContent
-              value="analytics"
-              className="mt-0 focus-visible:outline-none animate-in fade-in-50 duration-500 slide-in-from-bottom-2"
-            >
-              <PatientAnalyticsTab
-                patientId={id || ""}
-                patientName={patientName}
-                birthDate={patient.birth_date}
-                condition={(patient as any).main_condition || "Não informada"}
-              />
-              <Suspense fallback={null}>
-                <LazyDigitalTwinPanel patientId={id || ""} />
-              </Suspense>
-            </TabsContent>
+                <TabsContent
+                  value="analytics"
+                  className="mt-0 focus-visible:outline-none animate-in fade-in-50 duration-500 slide-in-from-bottom-2"
+                >
+                  <PatientAnalyticsTab
+                    patientId={id || ""}
+                    patientName={patientName}
+                    birthDate={patient.birth_date}
+                    condition={(patient as any).main_condition || "Não informada"}
+                  />
+                  <Suspense fallback={null}>
+                    <LazyDigitalTwinPanel patientId={id || ""} />
+                  </Suspense>
+                </TabsContent>
 
-            <TabsContent
-              value="personal"
-              className="mt-0 focus-visible:outline-none animate-in fade-in-50 duration-500 slide-in-from-bottom-2"
-            >
-              <PersonalDataTab patient={patient as any} />
-            </TabsContent>
+                <TabsContent
+                  value="personal"
+                  className="mt-0 focus-visible:outline-none animate-in fade-in-50 duration-500 slide-in-from-bottom-2"
+                >
+                  <PersonalDataTab patient={patient as any} />
+                </TabsContent>
 
-            <TabsContent
-              value="clinical"
-              className="mt-0 focus-visible:outline-none animate-in fade-in-50 duration-500 slide-in-from-bottom-2"
-            >
-              <PatientClinicalHistoryTab patientId={id || ""} />
-            </TabsContent>
+                <TabsContent
+                  value="clinical"
+                  className="mt-0 focus-visible:outline-none animate-in fade-in-50 duration-500 slide-in-from-bottom-2"
+                >
+                  <PatientClinicalHistoryTab patientId={id || ""} />
+                </TabsContent>
 
-            <TabsContent
-              value="activity-lab"
-              className="mt-0 focus-visible:outline-none animate-in fade-in-50 duration-500 slide-in-from-bottom-2"
-            >
-              <Suspense fallback={<LoadingSkeleton />}>
-                <LazyPatientActivityLabTab patientId={id || ""} />
-              </Suspense>
-            </TabsContent>
+                <TabsContent
+                  value="activity-lab"
+                  className="mt-0 focus-visible:outline-none animate-in fade-in-50 duration-500 slide-in-from-bottom-2"
+                >
+                  <Suspense fallback={<LoadingSkeleton />}>
+                    <LazyPatientActivityLabTab patientId={id || ""} />
+                  </Suspense>
+                </TabsContent>
 
-            <TabsContent
-              value="financial"
-              className="mt-0 focus-visible:outline-none animate-in fade-in-50 duration-500 slide-in-from-bottom-2"
-            >
-              <PatientFinancialTab patientId={id || ""} appointments={appointments} />
-            </TabsContent>
+                <TabsContent
+                  value="financial"
+                  className="mt-0 focus-visible:outline-none animate-in fade-in-50 duration-500 slide-in-from-bottom-2"
+                >
+                  <PatientFinancialTab patientId={id || ""} appointments={appointments} />
+                </TabsContent>
 
-            <TabsContent
-              value="gamification"
-              className="mt-0 focus-visible:outline-none animate-in fade-in-50 duration-500 slide-in-from-bottom-2"
-            >
-              <PatientGamificationTab patientId={id || ""} />
-            </TabsContent>
+                <TabsContent
+                  value="gamification"
+                  className="mt-0 focus-visible:outline-none animate-in fade-in-50 duration-500 slide-in-from-bottom-2"
+                >
+                  <PatientGamificationTab patientId={id || ""} />
+                </TabsContent>
 
-            <TabsContent
-              value="documents"
-              className="mt-0 focus-visible:outline-none animate-in fade-in-50 duration-500 slide-in-from-bottom-2"
-            >
-              <PatientDocumentsTab
-                patientId={id || ""}
-                documents={documents as any}
-                isLoading={isLoadingDocuments}
-              />
-            </TabsContent>
+                <TabsContent
+                  value="documents"
+                  className="mt-0 focus-visible:outline-none animate-in fade-in-50 duration-500 slide-in-from-bottom-2"
+                >
+                  <PatientDocumentsTab
+                    patientId={id || ""}
+                    documents={documents as any}
+                    isLoading={isLoadingDocuments}
+                  />
+                </TabsContent>
 
-            <TabsContent
-              value="tasks"
-              className="mt-0 focus-visible:outline-none animate-in fade-in-50 duration-500 slide-in-from-bottom-2"
-            >
-              <PatientTasksPanel patientId={id || ""} />
-            </TabsContent>
+                <TabsContent
+                  value="tasks"
+                  className="mt-0 focus-visible:outline-none animate-in fade-in-50 duration-500 slide-in-from-bottom-2"
+                >
+                  <PatientTasksPanel patientId={id || ""} />
+                </TabsContent>
 
-            <TabsContent
-              value="evidence"
-              className="mt-0 focus-visible:outline-none animate-in fade-in-50 duration-500 slide-in-from-bottom-2"
-            >
-              <EvidenceTab patient={patient} />
-            </TabsContent>
-            </motion.div>
-          </AnimatePresence>
-        </div>
-      </Tabs>
+                <TabsContent
+                  value="evidence"
+                  className="mt-0 focus-visible:outline-none animate-in fade-in-50 duration-500 slide-in-from-bottom-2"
+                >
+                  <EvidenceTab patient={patient} />
+                </TabsContent>
+              </motion.div>
+            </AnimatePresence>
+          </div>
+        </Tabs>
 
         <EditPatientModal
           open={editingPatient}

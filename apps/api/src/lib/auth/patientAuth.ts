@@ -31,7 +31,7 @@ export const requirePatientAuth: MiddlewareHandler<{
   Variables: { patient: PatientUser };
 }> = async (c, next) => {
   let token = c.req.header("Authorization")?.replace("Bearer ", "");
-  
+
   if (!token) {
     token = getCookie(c, "patient_session_token");
   }
@@ -70,7 +70,7 @@ export const requirePatientAuth: MiddlewareHandler<{
     };
 
     c.set("patient", patient);
-    
+
     // RLS scoping
     return await runWithOrg(organizationId, () => next());
   } catch (error) {

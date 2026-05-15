@@ -45,11 +45,7 @@ interface OverviewTabProps {
   invalidateTab: (tab: ProfileTab) => void;
 }
 
-export const OverviewTab = ({
-  patient,
-  upcomingAppointments,
-  invalidateTab,
-}: OverviewTabProps) => {
+export const OverviewTab = ({ patient, upcomingAppointments, invalidateTab }: OverviewTabProps) => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   // eslint-disable-next-line @typescript-eslint/no-unused-vars

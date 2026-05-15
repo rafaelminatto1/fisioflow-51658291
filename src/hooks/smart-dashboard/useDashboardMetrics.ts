@@ -1,13 +1,7 @@
 import { useMemo } from "react";
 import { subDaysFromYMD } from "@/lib/date-utils";
 import { DashboardMetrics } from "./types";
-import {
-  isCompletedStatus,
-  isCancelledStatus,
-  isNoShowStatus,
-  toDate,
-  sumRevenue,
-} from "./utils";
+import { isCompletedStatus, isCancelledStatus, isNoShowStatus, toDate, sumRevenue } from "./utils";
 import {
   AppointmentRow,
   ContaFinanceira,
@@ -49,13 +43,7 @@ export function useDashboardMetrics(params: {
     dates,
   } = params;
 
-  const {
-    now,
-    startCurrentMonthDate,
-    startLastMonthDate,
-    endLastMonthDate,
-    weekEnd,
-  } = dates;
+  const { now, startCurrentMonthDate, startLastMonthDate, endLastMonthDate, weekEnd } = dates;
 
   return useMemo<DashboardMetrics>(() => {
     const pacientesAtivosCount = new Set(
@@ -134,17 +122,22 @@ export function useDashboardMetrics(params: {
       financialToday: adData?.financialToday ?? { received: 0, projected: 0 },
       revenueChart: adData?.revenueChart ?? [],
       engagementScore: adData?.engagementScore ?? gamificationStats?.engagementRate ?? 0,
-      patientsAtRisk: atRiskPatients.length || adData?.patientsAtRisk || (() => {
-        const uniquePatientsLast30d = new Set(appointments30d.map((a) => a.patient_id));
-        const futureApts = appointmentsWeek.filter((a) => a.date && new Date(a.date as string) > now);
-        const futurePatientIds = new Set(futureApts.map((a) => a.patient_id));
-        
-        let riskCount = 0;
-        uniquePatientsLast30d.forEach(id => {
-          if (!futurePatientIds.has(id)) riskCount++;
-        });
-        return riskCount;
-      })(),
+      patientsAtRisk:
+        atRiskPatients.length ||
+        adData?.patientsAtRisk ||
+        (() => {
+          const uniquePatientsLast30d = new Set(appointments30d.map((a) => a.patient_id));
+          const futureApts = appointmentsWeek.filter(
+            (a) => a.date && new Date(a.date as string) > now,
+          );
+          const futurePatientIds = new Set(futureApts.map((a) => a.patient_id));
+
+          let riskCount = 0;
+          uniquePatientsLast30d.forEach((id) => {
+            if (!futurePatientIds.has(id)) riskCount++;
+          });
+          return riskCount;
+        })(),
       occupancyRate: Math.round((agendamentosHoje / Math.max(1, therapists.length * 8)) * 100),
       retentionRate: (() => {
         const uniquePatientsLast30d = new Set(appointments30d.map((a) => a.patient_id));

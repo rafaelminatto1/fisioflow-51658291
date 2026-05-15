@@ -33,14 +33,12 @@ export const CombinedInterventionBlock: React.FC<CombinedInterventionBlockProps>
 }) => {
   const [activeTab, setActiveTab] = useState<"both" | "procedures" | "exercises">("both");
 
-  const completedProcs = procedures.filter(p => p.completed).length;
-  const completedExs = exercises.filter(e => e.completed).length;
+  const completedProcs = procedures.filter((p) => p.completed).length;
+  const completedExs = exercises.filter((e) => e.completed).length;
   const totalItems = procedures.length + exercises.length;
   const totalCompleted = completedProcs + completedExs;
 
-  const completionPercent = totalItems > 0
-    ? Math.round((totalCompleted / totalItems) * 100)
-    : 0;
+  const completionPercent = totalItems > 0 ? Math.round((totalCompleted / totalItems) * 100) : 0;
 
   return (
     <div
@@ -61,7 +59,10 @@ export const CombinedInterventionBlock: React.FC<CombinedInterventionBlockProps>
             <div className="flex flex-col">
               <h3 className="text-base font-bold text-foreground">Condutas e Exercícios</h3>
               <div className="flex items-center gap-2 mt-0.5">
-                <Badge variant="outline" className="text-[10px] h-4 border-emerald-500/30 text-emerald-700 bg-emerald-50">
+                <Badge
+                  variant="outline"
+                  className="text-[10px] h-4 border-emerald-500/30 text-emerald-700 bg-emerald-50"
+                >
                   {totalCompleted}/{totalItems} Concluídos
                 </Badge>
                 {completionPercent === 100 && totalItems > 0 && (

@@ -149,13 +149,7 @@ export function useMedicalRequests(patientId: string) {
 export function useCreateMedicalRequest(patientId: string) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({
-      data,
-      file,
-    }: {
-      data: Partial<MedicalRequest>;
-      file?: File;
-    }) => {
+    mutationFn: async ({ data, file }: { data: Partial<MedicalRequest>; file?: File }) => {
       let r2Key: string | undefined;
       if (file) {
         const uploaded = await uploadPatientFile({
@@ -167,7 +161,9 @@ export function useCreateMedicalRequest(patientId: string) {
       }
       return createMedicalRequest(patientId, {
         ...data,
-        ...(r2Key ? { r2_key: r2Key, file_name: file?.name, file_size: file?.size, mime_type: file?.type } : {}),
+        ...(r2Key
+          ? { r2_key: r2Key, file_name: file?.name, file_size: file?.size, mime_type: file?.type }
+          : {}),
       });
     },
     onSuccess: () => {

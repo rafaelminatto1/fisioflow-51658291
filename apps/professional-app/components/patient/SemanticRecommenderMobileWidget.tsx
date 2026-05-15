@@ -10,14 +10,17 @@ interface SemanticRecommenderMobileWidgetProps {
   condition?: string;
 }
 
-export const SemanticRecommenderMobileWidget: React.FC<SemanticRecommenderMobileWidgetProps> = ({ condition }) => {
+export const SemanticRecommenderMobileWidget: React.FC<SemanticRecommenderMobileWidgetProps> = ({
+  condition,
+}) => {
   const colors = useColors();
 
   const { data, isLoading } = useQuery({
     queryKey: ["semantic-recommendations", condition],
-    queryFn: () => fetchApi<{ recommendations: { protocols: any[], exercises: any[] } }>(
-      `/api/ai-search/recommend?condition=${encodeURIComponent(condition || "")}`
-    ),
+    queryFn: () =>
+      fetchApi<{ recommendations: { protocols: any[]; exercises: any[] } }>(
+        `/api/ai-search/recommend?condition=${encodeURIComponent(condition || "")}`,
+      ),
     enabled: !!condition && condition.length > 3,
     staleTime: 1000 * 60 * 60, // 1h
   });
@@ -28,9 +31,16 @@ export const SemanticRecommenderMobileWidget: React.FC<SemanticRecommenderMobile
 
   if (isLoading) {
     return (
-      <Card style={[styles.container, { backgroundColor: colors.surface + "B0", borderColor: colors.border + "40" }]}>
+      <Card
+        style={[
+          styles.container,
+          { backgroundColor: colors.surface + "B0", borderColor: colors.border + "40" },
+        ]}
+      >
         <ActivityIndicator size="small" color={colors.primary} />
-        <Text style={[styles.loadingText, { color: colors.textSecondary }]}>Buscando recomendações da IA...</Text>
+        <Text style={[styles.loadingText, { color: colors.textSecondary }]}>
+          Buscando recomendações da IA...
+        </Text>
       </Card>
     );
   }
@@ -43,7 +53,16 @@ export const SemanticRecommenderMobileWidget: React.FC<SemanticRecommenderMobile
   }
 
   return (
-    <Card style={[styles.container, { backgroundColor: colors.surface + "B0", borderColor: colors.primary + "40", borderWidth: 1.5 }]}>
+    <Card
+      style={[
+        styles.container,
+        {
+          backgroundColor: colors.surface + "B0",
+          borderColor: colors.primary + "40",
+          borderWidth: 1.5,
+        },
+      ]}
+    >
       <View style={styles.header}>
         <View style={[styles.iconContainer, { backgroundColor: colors.primary + "15" }]}>
           <Sparkles size={16} color={colors.primary} />
@@ -58,12 +77,22 @@ export const SemanticRecommenderMobileWidget: React.FC<SemanticRecommenderMobile
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <FileText size={12} color={colors.textSecondary} />
-            <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>WIKI & PROTOCOLOS</Text>
+            <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>
+              WIKI & PROTOCOLOS
+            </Text>
           </View>
           <View style={styles.list}>
             {protocols.slice(0, 2).map((p: any) => (
-              <View key={p.id} style={[styles.item, { backgroundColor: colors.background, borderColor: colors.border }]}>
-                <Text style={[styles.itemText, { color: colors.text }]} numberOfLines={1}>{p.title}</Text>
+              <View
+                key={p.id}
+                style={[
+                  styles.item,
+                  { backgroundColor: colors.background, borderColor: colors.border },
+                ]}
+              >
+                <Text style={[styles.itemText, { color: colors.text }]} numberOfLines={1}>
+                  {p.title}
+                </Text>
                 <Text style={[styles.itemCategory, { color: colors.textMuted }]}>{p.category}</Text>
               </View>
             ))}
@@ -75,12 +104,22 @@ export const SemanticRecommenderMobileWidget: React.FC<SemanticRecommenderMobile
         <View style={[styles.section, { marginTop: 12 }]}>
           <View style={styles.sectionHeader}>
             <Barbell size={12} color={colors.textSecondary} />
-            <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>EXERCÍCIOS SUGERIDOS</Text>
+            <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>
+              EXERCÍCIOS SUGERIDOS
+            </Text>
           </View>
           <View style={styles.list}>
             {exercises.slice(0, 3).map((e: any) => (
-              <View key={e.id} style={[styles.item, { backgroundColor: colors.background, borderColor: colors.border }]}>
-                <Text style={[styles.itemText, { color: colors.text }]} numberOfLines={1}>{e.name}</Text>
+              <View
+                key={e.id}
+                style={[
+                  styles.item,
+                  { backgroundColor: colors.background, borderColor: colors.border },
+                ]}
+              >
+                <Text style={[styles.itemText, { color: colors.text }]} numberOfLines={1}>
+                  {e.name}
+                </Text>
               </View>
             ))}
           </View>
@@ -158,5 +197,5 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: "bold",
     textTransform: "uppercase",
-  }
+  },
 });

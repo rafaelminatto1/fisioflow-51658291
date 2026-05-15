@@ -38,11 +38,11 @@ export class PatientDischargeWorkflow extends WorkflowEntrypoint<Env, PatientDis
       try {
         const { runThinkingModel } = await import("../lib/ai-native");
         const pool = createPool(this.env);
-        
+
         // Coleta histórico para a IA
         const history = await pool.query(
           `SELECT subjective, assessment, date FROM sessions WHERE patient_id = $1 ORDER BY date ASC`,
-          [patientId]
+          [patientId],
         );
 
         const prompt = `
@@ -63,18 +63,18 @@ export class PatientDischargeWorkflow extends WorkflowEntrypoint<Env, PatientDis
         const aiStory = await runThinkingModel(this.env, {
           prompt,
           model: "gemini-1.5-flash",
-          temperature: 0.7
+          temperature: 0.7,
         });
 
         await this.sendWhatsApp(
           patientPhone,
-          `🏆 *SUA HISTÓRIA DE SUCESSO:*\n\n${aiStory.content}\n\n${patientName}, parabéns pela sua jornada! 🎉 Para nos ajudar a melhorar, responda nossa pesquisa rápida:\nhttps://moocafisio.com.br/satisfacao?p=${patientId}`
+          `🏆 *SUA HISTÓRIA DE SUCESSO:*\n\n${aiStory.content}\n\n${patientName}, parabéns pela sua jornada! 🎉 Para nos ajudar a melhorar, responda nossa pesquisa rápida:\nhttps://moocafisio.com.br/satisfacao?p=${patientId}`,
         );
       } catch (e) {
         console.warn("[Discharge/AI] Success story failed, sending default", e);
         await this.sendWhatsApp(
           patientPhone,
-          `${patientName}, parabéns pela sua alta! 🎉\n\nFoi um prazer acompanhar sua recuperação. Responda nossa pesquisa rápida:\nhttps://moocafisio.com.br/satisfacao?p=${patientId}`
+          `${patientName}, parabéns pela sua alta! 🎉\n\nFoi um prazer acompanhar sua recuperação. Responda nossa pesquisa rápida:\nhttps://moocafisio.com.br/satisfacao?p=${patientId}`,
         );
       }
     });

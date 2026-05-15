@@ -884,7 +884,10 @@ export function ExerciseLibrary({
                 Cadastrar Novo
               </Button>
               {debouncedSearchTerm && (
-                <Button variant="outline" className="gap-2 text-primary border-primary/20 hover:bg-primary/5">
+                <Button
+                  variant="outline"
+                  className="gap-2 text-primary border-primary/20 hover:bg-primary/5"
+                >
                   <Search className="h-4 w-4" />
                   Sugestões da IA
                 </Button>

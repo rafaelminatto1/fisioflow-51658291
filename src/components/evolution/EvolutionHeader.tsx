@@ -248,7 +248,7 @@ export const EvolutionHeader = memo(
       : null;
     const _sessionStartDate = getSessionStartDate(appointment);
 
-    const sessionNumber = propSessionNumber ?? (evolutionStats.totalEvolutions + 1);
+    const sessionNumber = propSessionNumber ?? evolutionStats.totalEvolutions + 1;
     const patientAvatar = (patient as Patient & { avatar_url?: string })?.avatar_url;
 
     return (
@@ -287,7 +287,10 @@ export const EvolutionHeader = memo(
                     Sessão #{sessionNumber}
                   </Badge>
                   {appointment.is_edited && (
-                    <Badge variant="outline" className="text-[9px] px-2 py-0.5 shrink-0 bg-amber-50 border-amber-200 text-amber-600 font-bold uppercase tracking-tight rounded-lg flex items-center gap-1">
+                    <Badge
+                      variant="outline"
+                      className="text-[9px] px-2 py-0.5 shrink-0 bg-amber-50 border-amber-200 text-amber-600 font-bold uppercase tracking-tight rounded-lg flex items-center gap-1"
+                    >
                       <Clock className="h-2.5 w-2.5" /> Editado
                     </Badge>
                   )}
@@ -322,7 +325,9 @@ export const EvolutionHeader = memo(
               <div className="absolute inset-0 bg-gradient-to-r from-brand-blue/20 to-brand-blue/5 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
               <Mic className="h-3.5 w-3.5 mr-2 animate-pulse text-brand-blue" />
               <span className="uppercase tracking-widest">Voice Scribe</span>
-              <Badge className="ml-2 bg-brand-blue text-white text-[9px] px-1 py-0 border-0 h-4">IA</Badge>
+              <Badge className="ml-2 bg-brand-blue text-white text-[9px] px-1 py-0 border-0 h-4">
+                IA
+              </Badge>
             </Button>
             <Button
               onClick={onSave}
@@ -416,7 +421,10 @@ export const EvolutionHeader = memo(
                 value={selectedTherapistId || THERAPIST_SELECT_NONE}
                 onValueChange={(v) => onTherapistChange(v === THERAPIST_SELECT_NONE ? "" : v)}
               >
-                <SelectTrigger aria-label="Selecionar fisioterapeuta" className="h-9 w-[180px] text-xs font-bold bg-white/50 border-slate-200 shadow-none hover:border-primary/30 transition-all text-slate-600">
+                <SelectTrigger
+                  aria-label="Selecionar fisioterapeuta"
+                  className="h-9 w-[180px] text-xs font-bold bg-white/50 border-slate-200 shadow-none hover:border-primary/30 transition-all text-slate-600"
+                >
                   <div className="flex items-center gap-2 truncate">
                     <UserCog className="h-3.5 w-3.5 text-primary/60 shrink-0" />
                     <SelectValue placeholder={THERAPIST_PLACEHOLDER} />

@@ -19,7 +19,8 @@ interface ClinicalAISnapshotProps {
 export const ClinicalAISnapshot: React.FC<ClinicalAISnapshotProps> = ({ patientId }) => {
   const { data: snapshotRes, isLoading } = useQuery({
     queryKey: ["clinical-ai-snapshot", patientId],
-    queryFn: () => request<{ data: AISnapshotData }>(`/api/clinic-metrics/patients/${patientId}/ai-snapshot`),
+    queryFn: () =>
+      request<{ data: AISnapshotData }>(`/api/clinic-metrics/patients/${patientId}/ai-snapshot`),
     enabled: !!patientId,
     staleTime: 1000 * 60 * 15, // 15 mins
   });
@@ -29,7 +30,9 @@ export const ClinicalAISnapshot: React.FC<ClinicalAISnapshotProps> = ({ patientI
       <Card className="border-none shadow-sm bg-slate-50/50 dark:bg-slate-900/30">
         <CardContent className="h-40 flex flex-col items-center justify-center gap-2">
           <Loader2 className="h-5 w-5 text-indigo-500 animate-spin" />
-          <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Sintetizando histórico clínico...</p>
+          <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+            Sintetizando histórico clínico...
+          </p>
         </CardContent>
       </Card>
     );
@@ -40,17 +43,25 @@ export const ClinicalAISnapshot: React.FC<ClinicalAISnapshotProps> = ({ patientI
 
   return (
     <Card className="border-none shadow-premium bg-white dark:bg-slate-950 overflow-hidden group">
-      <div className={cn(
-        "h-1.5 w-full",
-        data.clinicalRisk === "high" ? "bg-red-500" : (data.clinicalRisk === "medium" ? "bg-amber-500" : "bg-emerald-500")
-      )} />
+      <div
+        className={cn(
+          "h-1.5 w-full",
+          data.clinicalRisk === "high"
+            ? "bg-red-500"
+            : data.clinicalRisk === "medium"
+              ? "bg-amber-500"
+              : "bg-emerald-500",
+        )}
+      />
       <CardHeader className="pb-3 pt-6">
         <div className="flex items-center gap-3">
           <div className="p-2 rounded-xl bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400">
             <Sparkles className="h-4 w-4" />
           </div>
           <div>
-            <CardTitle className="text-sm font-black uppercase tracking-widest">Resumo Executivo (IA)</CardTitle>
+            <CardTitle className="text-sm font-black uppercase tracking-widest">
+              Resumo Executivo (IA)
+            </CardTitle>
             <CardDescription className="text-xs font-bold text-slate-500 mt-1">
               Visão consolidada das últimas 10 sessões
             </CardDescription>

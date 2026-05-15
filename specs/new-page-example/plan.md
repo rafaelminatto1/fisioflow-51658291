@@ -4,6 +4,7 @@
 **Input**: Feature specification from `specs/new-page-example/spec.md`
 
 ## Summary
+
 Implementar uma nova página de acompanhamento de pacientes no web dashboard do FisioFlow. A página deve consolidar próximos atendimentos, status de home exercise programs e ações de lembrete em uma visão única.
 
 ## Technical Context
@@ -18,6 +19,7 @@ Implementar uma nova página de acompanhamento de pacientes no web dashboard do 
 **Constraints**: reutilizar componentes e garantir tenant isolation sem criar APIs novas desnecessárias.
 
 ## Constitution Check
+
 - Mantém o padrão spec-driven para novos recursos.
 - Usa a pilha existente de web e API do monorepo.
 - Respeita isolamento de dados por organização.
@@ -26,6 +28,7 @@ Implementar uma nova página de acompanhamento de pacientes no web dashboard do 
 ## Project Structure
 
 ### Documentation
+
 ```text
 specs/new-page-example/
   spec.md
@@ -34,6 +37,7 @@ specs/new-page-example/
 ```
 
 ### Implementation Outline
+
 ```text
 apps/web/src/pages/follow-up.tsx
 apps/web/src/components/follow-up/
@@ -48,6 +52,7 @@ apps/web/src/hooks/useFollowUpData.ts
 **Structure Decision**: A funcionalidade será adicionada ao frontend web usando a arquitetura de páginas/rotas existente do Next.js. Os dados serão consumidos por uma rota de API backend reutilizando serviços já existentes.
 
 ## Implementation Approach
+
 1. Criar `apps/web/src/pages/follow-up.tsx` e componentizar a interface.
 2. Reutilizar componentes de lista e cartão do design system compartilhado.
 3. Criar hook `useFollowUpData` para buscar informações de pacientes e planos.
@@ -55,6 +60,7 @@ apps/web/src/hooks/useFollowUpData.ts
 5. Validar comportamento com testes de componente e fluxo.
 
 ## Validation
+
 - Confirmação manual da navegação para a nova página e exibição de dados.
 - Testes automatizados de componente e fluxo de filtro.
 - Revisão do PR para garantir que o novo recurso utiliza `specs/` e respeita tenant isolation.

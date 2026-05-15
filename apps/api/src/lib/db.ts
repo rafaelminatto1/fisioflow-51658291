@@ -173,7 +173,7 @@ export function createDb(env: Env, _mode: "read" | "write" = "write"): FisioDb {
           orgId,
           errorCode: dbErr.code,
         });
-        
+
         const enhancedError = new Error(errorMsg);
         (enhancedError as any).code = dbErr.code;
         (enhancedError as any).detail = dbErr.detail;

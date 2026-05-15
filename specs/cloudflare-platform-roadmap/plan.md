@@ -68,10 +68,10 @@ wrangler.toml
 
 ## Complexity Tracking
 
-| Violation | Why Needed | Simpler Alternative Rejected Because |
-|-----------|------------|--------------------------------------|
+| Violation                                   | Why Needed                                                                                                                                                                               | Simpler Alternative Rejected Because                                                                                            |
+| ------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
 | Multiple Cloudflare products in one roadmap | The existing platform already uses Workers, Hyperdrive, R2, D1, KV, Vectorize, Queues, Workflows, Durable Objects, Analytics Engine, Pipelines, AI, Browser Rendering, and Static Assets | A single-product plan would miss cross-cutting production risks such as environment isolation, PHI-safe logs, and replay safety |
-| Operational docs before code changes | Cloudflare provisioning and paid/account-gated features require human/account validation | Editing code first could create config drift or production deploy failures |
+| Operational docs before code changes        | Cloudflare provisioning and paid/account-gated features require human/account validation                                                                                                 | Editing code first could create config drift or production deploy failures                                                      |
 
 ## Implementation Approach
 

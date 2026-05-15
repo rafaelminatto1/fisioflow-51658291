@@ -44,7 +44,13 @@ interface QuickExerciseModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   suggestedName?: string;
-  onSuccess?: (exercise: { id: string; name: string; category?: string; sets?: number; repetitions?: number }) => void;
+  onSuccess?: (exercise: {
+    id: string;
+    name: string;
+    category?: string;
+    sets?: number;
+    repetitions?: number;
+  }) => void;
 }
 
 const QuickExerciseModalComponent: React.FC<QuickExerciseModalProps> = ({
@@ -136,7 +142,8 @@ const QuickExerciseModalComponent: React.FC<QuickExerciseModalProps> = ({
       <CustomModalBody className="p-0 sm:p-0">
         <div className="px-6 py-4 space-y-5">
           <p className="text-sm text-muted-foreground">
-            Cadastre as informações essenciais. Você pode completar os detalhes depois na biblioteca de exercícios.
+            Cadastre as informações essenciais. Você pode completar os detalhes depois na biblioteca
+            de exercícios.
           </p>
 
           <form id="quick-exercise-form" onSubmit={handleSubmit(onSubmit)} className="space-y-4">

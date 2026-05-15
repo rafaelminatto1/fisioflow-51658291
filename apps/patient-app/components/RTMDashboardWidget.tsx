@@ -44,14 +44,18 @@ export function RTMDashboardWidget() {
 
       <View style={styles.content}>
         <View style={styles.scoreContainer}>
-          <CircularProgress 
+          <CircularProgress
             progress={data.engagementScore / 100}
             size={70}
             thickness={6}
             color={getStatusColor(data.engagementScore)}
             showLabel
             label={Math.round(data.engagementScore).toString()}
-            labelStyle={{ fontSize: 20, fontWeight: "800", color: getStatusColor(data.engagementScore) }}
+            labelStyle={{
+              fontSize: 20,
+              fontWeight: "800",
+              color: getStatusColor(data.engagementScore),
+            }}
           />
         </View>
 
@@ -63,7 +67,7 @@ export function RTMDashboardWidget() {
             </Text>
             <Text style={[styles.statLabelSmall, { color: colors.textSecondary }]}>Passos</Text>
           </View>
-          
+
           <View style={styles.divider} />
 
           <View style={styles.statItem}>

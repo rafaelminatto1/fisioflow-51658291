@@ -34,7 +34,7 @@ export const NewConversationDialog: React.FC<NewConversationDialogProps> = ({
 
   useEffect(() => {
     if (!open) return;
-    
+
     const handler = setTimeout(async () => {
       setLoading(true);
       try {

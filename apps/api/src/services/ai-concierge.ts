@@ -22,9 +22,8 @@ export class AIConciergeService {
     env: Env,
     orgId: string,
     message: string,
-    history: any[] = []
+    history: any[] = [],
   ): Promise<ConciergeResponse> {
-    
     // 1. Semantic Context: Search Wiki for clinic info if relevant
     let clinicalContext = "";
     try {
@@ -34,7 +33,7 @@ export class AIConciergeService {
         namespace: "wiki",
         returnMetadata: true,
       });
-      
+
       clinicalContext = (wikiMatches?.matches ?? [])
         .map((m: any) => `${m.metadata.title}: ${m.metadata.text || ""}`)
         .join("\n\n");
@@ -72,24 +71,25 @@ export class AIConciergeService {
         {
           messages: [
             { role: "system", content: systemPrompt },
-            ...history.map(h => ({ role: h.role, content: h.content })),
-            { role: "user", content: message }
+            ...history.map((h) => ({ role: h.role, content: h.content })),
+            { role: "user", content: message },
           ],
-          response_format: { type: "json_object" }
+          response_format: { type: "json_object" },
         },
-        { cache: false }
+        { cache: false },
       );
 
       const raw = (response as any).response as string;
       const jsonMatch = raw.match(/\{[\s\S]*\}/);
       const result = JSON.parse(jsonMatch?.[0] ?? "{}") as ConciergeResponse;
-      
+
       return result;
     } catch (error) {
       console.error("[AI Concierge] LLM Error:", error);
       return {
-        reply: "Olá! Recebemos sua mensagem. Um de nossos especialistas vai te retornar em instantes para te ajudar. 😊",
-        intent: "other"
+        reply:
+          "Olá! Recebemos sua mensagem. Um de nossos especialistas vai te retornar em instantes para te ajudar. 😊",
+        intent: "other",
       };
     }
   }

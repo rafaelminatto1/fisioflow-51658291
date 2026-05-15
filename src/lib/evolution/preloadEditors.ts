@@ -12,5 +12,4 @@ export const preloadEditorChunks = {
 
 export type EditorVersionKey = keyof typeof preloadEditorChunks;
 
-export const preloadEditorVersion = (version: EditorVersionKey) =>
-  preloadEditorChunks[version]?.();
+export const preloadEditorVersion = (version: EditorVersionKey) => preloadEditorChunks[version]?.();

@@ -126,8 +126,7 @@ export const useSignEvolution = () => {
     onError: (error: unknown) => {
       toast({
         title: "Erro ao finalizar evolução",
-        description:
-          error instanceof EvolutionOperationError ? error.message : "Erro desconhecido",
+        description: error instanceof EvolutionOperationError ? error.message : "Erro desconhecido",
         variant: "destructive",
       });
     },
@@ -153,8 +152,7 @@ export const useDeleteEvolution = () => {
     onError: (error: unknown) => {
       toast({
         title: "Erro ao excluir evolução",
-        description:
-          error instanceof EvolutionOperationError ? error.message : "Erro desconhecido",
+        description: error instanceof EvolutionOperationError ? error.message : "Erro desconhecido",
         variant: "destructive",
       });
     },
