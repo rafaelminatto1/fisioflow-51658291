@@ -208,13 +208,12 @@ export function LiveTextEvolution({
         aria-label="Procedimentos e exercícios"
         className="col-span-12 md:col-span-7 rounded-xl border-2 border-emerald-200 bg-emerald-50/40 dark:bg-emerald-950/20 p-3"
       >
-        <header className="flex items-center gap-2 mb-3">
-          <span className="inline-block w-2 h-2 rounded-full bg-emerald-500" />
-          <Tabs
-            value={groupTab}
-            onValueChange={(v) => setGroupTab(v as typeof groupTab)}
-            className="flex-1"
-          >
+        <Tabs
+          value={groupTab}
+          onValueChange={(v) => setGroupTab(v as typeof groupTab)}
+        >
+          <div className="flex items-center gap-2 mb-3 flex-wrap">
+            <span className="inline-block w-2 h-2 rounded-full bg-emerald-500" />
             <TabsList className="bg-emerald-100/60 dark:bg-emerald-900/30">
               <TabsTrigger value="procedures" className="gap-1">
                 <Activity className="w-3 h-3" /> Procedimentos ({data.procedures.length})
@@ -226,28 +225,28 @@ export function LiveTextEvolution({
             <Button
               variant="outline"
               size="sm"
-              className="ml-auto float-right -mt-9"
+              className="ml-auto"
               onClick={() => setLibraryOpen(true)}
               disabled={disabled}
             >
               <Library className="w-4 h-4 mr-1" /> Biblioteca
             </Button>
-            <TabsContent value="procedures" className="mt-2">
-              <ProcedureChecklistBlock
-                procedures={data.procedures as any}
-                onChange={handleProceduresChange}
-                disabled={disabled}
-              />
-            </TabsContent>
-            <TabsContent value="exercises" className="mt-2">
-              <ExerciseBlockV2
-                exercises={data.exercises as any}
-                onChange={handleExercisesChange}
-                disabled={disabled}
-              />
-            </TabsContent>
-          </Tabs>
-        </header>
+          </div>
+          <TabsContent value="procedures" className="mt-0">
+            <ProcedureChecklistBlock
+              procedures={data.procedures as any}
+              onChange={handleProceduresChange}
+              disabled={disabled}
+            />
+          </TabsContent>
+          <TabsContent value="exercises" className="mt-0">
+            <ExerciseBlockV2
+              exercises={data.exercises as any}
+              onChange={handleExercisesChange}
+              disabled={disabled}
+            />
+          </TabsContent>
+        </Tabs>
       </section>
 
       {/* 🟣 Medições */}
