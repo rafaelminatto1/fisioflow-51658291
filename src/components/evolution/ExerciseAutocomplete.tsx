@@ -3,7 +3,7 @@ import { Search, Plus, Dumbbell, PlusCircle } from "lucide-react";
 import { useExercises, type Exercise } from "@/hooks/useExercises";
 import { cn } from "@/lib/utils";
 import { withImageParams } from "@/lib/storageProxy";
-import { accentIncludes } from "@/lib/utils/bilingualSearch";
+import { accentIncludes, bilingualFilter } from "@/lib/utils/bilingualSearch";
 import {
   Command,
   CommandEmpty,
@@ -33,7 +33,7 @@ export const ExerciseAutocomplete: React.FC<ExerciseAutocompleteProps> = ({
 
   const filteredExercises = useMemo(() => {
     if (!searchValue) return exercises.slice(0, 10);
-    return exercises.filter((ex) => accentIncludes(ex.name, searchValue)).slice(0, 10);
+    return bilingualFilter(exercises, searchValue, ['name', 'aliases_pt', 'aliases_en']).slice(0, 10);
   }, [exercises, searchValue]);
 
   return (
@@ -61,24 +61,41 @@ export const ExerciseAutocomplete: React.FC<ExerciseAutocompleteProps> = ({
           />
           <CommandList>
             <CommandEmpty>
-              <div className="py-2 text-center space-y-3">
-                <p className="text-sm text-muted-foreground">Nenhum exercício encontrado.</p>
-                {canCreateNew && searchValue.trim().length >= 2 && (
+              <div className="py-3 px-2 text-center space-y-3">
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  Exercício não encontrado. Deseja cadastrar <span className="font-semibold text-foreground">&quot;{searchValue.trim()}&quot;</span> ou quer sugestões para substituir?
+                </p>
+                <div className="flex flex-col gap-2 mt-2">
+                  {canCreateNew && searchValue.trim().length >= 2 && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="gap-2 border-dashed border-primary/40 text-primary hover:border-primary hover:bg-primary/5 w-full"
+                      onClick={() => {
+                        onCreateNew!(searchValue.trim());
+                        setOpen(false);
+                        setSearchValue("");
+                      }}
+                    >
+                      <PlusCircle className="h-4 w-4" />
+                      Cadastrar &quot;{searchValue.trim()}&quot;
+                    </Button>
+                  )}
                   <Button
                     type="button"
-                    variant="outline"
+                    variant="secondary"
                     size="sm"
-                    className="gap-2 border-dashed border-primary/40 text-primary hover:border-primary hover:bg-primary/5"
+                    className="gap-2 w-full bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200"
                     onClick={() => {
-                      onCreateNew!(searchValue.trim());
-                      setOpen(false);
+                      // Placeholder for future AI suggestion feature
                       setSearchValue("");
                     }}
                   >
-                    <PlusCircle className="h-4 w-4" />
-                    Cadastrar &quot;{searchValue.trim()}&quot;
+                    <Search className="h-4 w-4" />
+                    Buscar sugestões para substituir
                   </Button>
-                )}
+                </div>
               </div>
             </CommandEmpty>
             <CommandGroup>

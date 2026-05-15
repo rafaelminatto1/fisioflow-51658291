@@ -95,7 +95,7 @@ const FinancialCommandCenterPage = () => {
   const { transactions, stats, commandCenter } = data;
 
   return (
-    <PageLayout>
+    <PageLayout fullWidth compactHeader>
       <PageHeader
         title="Gestão Financeira"
         description="Visão unificada de caixa, cobrança, documentos e performance conectada a pacientes, CRM, marketing e agenda."
@@ -170,7 +170,7 @@ const FinancialCommandCenterPage = () => {
         </div>
       </PageHeader>
 
-      <PageContainer>
+      <PageContainer maxWidth="full">
 
         <Tabs value={state.activeTab} onValueChange={actions.handleMainTabChange} className="space-y-6">
           <div className="sticky top-14 z-20 rounded-[28px] border border-white/80 bg-white/85 p-1.5 shadow-premium backdrop-blur-xl dark:border-slate-800/80 dark:bg-slate-950/80">

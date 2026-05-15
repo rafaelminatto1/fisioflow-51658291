@@ -68,7 +68,7 @@ export function PainPointModal({
   const [intensity, setIntensity] = useState<number>(point?.intensity ?? 5);
   const [painType, setPainType] = useState<PainPoint["painType"]>(point?.painType ?? "sharp");
   const [notes, setNotes] = useState(point?.notes ?? "");
-  const [muscleCode, setMuscleCode] = useState(point?.muscleCode ?? "");
+  const [muscleCode, setMuscleCode] = useState(point?.muscleCode ?? "none");
   const [muscleName, setMuscleName] = useState(point?.muscleName ?? "");
 
   // Buscar músculos disponíveis para a região
@@ -81,20 +81,20 @@ export function PainPointModal({
         setIntensity(point.intensity);
         setPainType(point.painType);
         setNotes(point.notes ?? "");
-        setMuscleCode(point.muscleCode ?? "");
+        setMuscleCode(point.muscleCode ?? "none");
         setMuscleName(point.muscleName ?? "");
       } else {
         // Reset para valores padrão quando criando novo ponto
         setIntensity(5);
         setPainType("sharp");
         setNotes("");
-        setMuscleCode("");
+        setMuscleCode("none");
         setMuscleName("");
       }
     } else {
       // Limpar ao fechar
       setNotes("");
-      setMuscleCode("");
+      setMuscleCode("none");
       setMuscleName("");
     }
   }, [point, open]);
@@ -106,8 +106,8 @@ export function PainPointModal({
       id: point?.id ?? `temp-${Date.now()}`,
       regionCode: point?.regionCode ?? region ?? "",
       region: point?.region ?? region ?? "",
-      muscleCode: muscleCode || undefined,
-      muscleName: muscleName || undefined,
+      muscleCode: (muscleCode === "" || muscleCode === "none") ? undefined : muscleCode,
+      muscleName: (muscleCode === "" || muscleCode === "none") ? undefined : muscleName,
       intensity: intensity as PainPoint["intensity"],
       painType,
       notes: notes || undefined,
@@ -185,6 +185,11 @@ export function PainPointModal({
               <Select
                 value={muscleCode}
                 onValueChange={(value) => {
+                  if (value === "none") {
+                    setMuscleCode("none");
+                    setMuscleName("");
+                    return;
+                  }
                   const selected = availableMuscles.find((m) => m.code === value);
                   if (selected) {
                     setMuscleCode(selected.code);
@@ -196,7 +201,7 @@ export function PainPointModal({
                   <SelectValue placeholder="Selecione um músculo ou deixe em branco" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Região geral</SelectItem>
+                  <SelectItem value="none">Região geral</SelectItem>
                   {availableMuscles.map((muscle) => (
                     <SelectItem key={muscle.code} value={muscle.code}>
                       <div className="flex flex-col">

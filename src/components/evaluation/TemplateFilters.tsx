@@ -14,7 +14,7 @@ import { cn } from "@/lib/utils";
 import { TemplateFilters as TemplateFiltersType } from "@/types/clinical-forms";
 
 const CATEGORIES = [
-  { value: "", label: "Todas Categorias" },
+  { value: "all", label: "Todas Categorias" },
   { value: "anamnese", label: "Anamnese" },
   { value: "avaliacao_postural", label: "Avaliação Postural" },
   { value: "avaliacao_funcional", label: "Avaliação Funcional" },
@@ -111,7 +111,7 @@ export function TemplateFilters({
           </SelectTrigger>
           <SelectContent>
             {CATEGORIES.map((cat) => (
-              <SelectItem key={cat.value || "all"} value={cat.value || "all"}>
+              <SelectItem key={cat.value} value={cat.value}>
                 {cat.label}
               </SelectItem>
             ))}

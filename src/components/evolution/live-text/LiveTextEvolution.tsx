@@ -1,23 +1,24 @@
 /**
  * LiveTextEvolution
  *
- * Editor único de evolução (texto livre). Layout em grid colorido:
+ * Refatorado para o layout Premium:
+ * [ Área de Texto Livre (Evolução Clínica) ] [ Sidebar de Cards Coloridos ]
  *
- * ┌─────────────┬─────────────────────────────────────────┐
- * │  EVA        │  OBSERVAÇÕES (texto livre)              │
- * ├─────────────┴─────────────────────────────────────────┤
- * │  HISTÓRICO DE EVOLUÇÕES                               │
- * ├───────────────────────────┬───────────────────────────┤
- * │  PROCEDIMENTOS + EXERCÍCIOS │  MEDIÇÕES               │
- * ├───────────────────────────┼───────────────────────────┤
- * │  EXERCÍCIOS PARA CASA     │  ANEXOS                   │
- * └───────────────────────────┴───────────────────────────┘
+ * Cores e Grid:
+ * - Esquerda: Evolução Clínica (Card Grande)
+ * - Direita: Sidebar (Grid 2-col):
+ *   - EVA (Vermelho) | Observações (Amarelo)
+ *   - Histórico (Azul) - Full Sidebar
+ *   - Procedimentos/Exercícios (Verde) | Medições (Rosa)
+ *   - Exercícios Casa (Cinza) | Anexos (Preto)
+ *
+ * @version 2.0.0 - Premium Grid
  */
 
 import { useMemo, useState } from "react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { Library, Activity, Dumbbell } from "lucide-react";
+import { Library, Activity, Dumbbell, History, Scale, Home, Paperclip, MessageSquare } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -29,6 +30,7 @@ import { MeasurementsBlock } from "@/components/evolution/v2-improved/Measuremen
 import { HomeCareBlock } from "@/components/evolution/v2-improved/HomeCareBlock";
 import { AttachmentsBlock } from "@/components/evolution/v2-improved/AttachmentsBlock";
 import { ExerciseLibraryModal } from "@/components/exercises/ExerciseLibraryModal";
+import { cn } from "@/lib/utils";
 
 import type { EvolutionData } from "@/hooks/evolution/usePatientEvolutionState";
 
@@ -37,7 +39,6 @@ export interface LiveTextEvolutionProps {
   onChange: (next: EvolutionData) => void;
   patientId?: string;
   evolutionId?: string;
-  /** Sessões anteriores para o card "Histórico de evoluções" (azul). */
   previousEvolutions?: Array<{
     id: string;
     created_at?: string;
@@ -48,11 +49,8 @@ export interface LiveTextEvolutionProps {
     assessment?: string;
   }>;
   onSelectPreviousEvolution?: (id: string) => void;
-  /** Texto adicional de "exercícios para casa" salvo como string HTML simples
-   *  (compatibilidade com HomeCareBlock; sincronizado com `data.homeExercises`). */
   homeExercisesText?: string;
   onHomeExercisesTextChange?: (text: string) => void;
-  /** Anexos persistidos como lista de URLs (HomeCareBlock-like). */
   attachments?: string[];
   onAttachmentsChange?: (urls: string[]) => void;
   disabled?: boolean;
@@ -60,6 +58,75 @@ export interface LiveTextEvolutionProps {
 
 const stripHtml = (html: string) =>
   html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+
+/**
+ * Componente de Card Reutilizável com Estilo Premium
+ */
+const PremiumCard = ({
+  children,
+  title,
+  icon: Icon,
+  variant = "default",
+  className,
+}: {
+  children: React.ReactNode;
+  title: string;
+  icon: any;
+  variant?: "red" | "amber" | "blue" | "emerald" | "pink" | "slate" | "black" | "default";
+  className?: string;
+}) => {
+  const variants = {
+    red: "border-red-200 bg-red-50/40 text-red-700",
+    amber: "border-amber-200 bg-amber-50/40 text-amber-800",
+    blue: "border-blue-200 bg-blue-50/40 text-blue-700",
+    emerald: "border-emerald-200 bg-emerald-50/40 text-emerald-700",
+    pink: "border-pink-200 bg-pink-50/40 text-pink-700",
+    slate: "border-slate-300 bg-slate-50/60 text-slate-700",
+    black: "border-zinc-800 bg-zinc-900 text-zinc-100",
+    default: "border-slate-200 bg-white text-slate-900",
+  };
+
+  const headerColors = {
+    red: "text-red-700",
+    amber: "text-amber-800",
+    blue: "text-blue-700",
+    emerald: "text-emerald-700",
+    pink: "text-pink-700",
+    slate: "text-slate-700",
+    black: "text-zinc-400",
+    default: "text-slate-600",
+  };
+
+  const dotColors = {
+    red: "bg-red-500",
+    amber: "bg-amber-500",
+    blue: "bg-blue-500",
+    emerald: "bg-emerald-500",
+    pink: "bg-pink-500",
+    slate: "bg-slate-500",
+    black: "bg-zinc-100",
+    default: "bg-slate-400",
+  };
+
+  return (
+    <section
+      className={cn(
+        "rounded-[2.5rem] border-2 p-5 transition-all duration-300 shadow-sm hover:shadow-md",
+        variants[variant],
+        className
+      )}
+    >
+      <header className={cn("flex items-center gap-2 mb-3 text-sm font-bold uppercase tracking-wider", headerColors[variant])}>
+        <span className={cn("inline-block w-2.5 h-2.5 rounded-full", dotColors[variant])} />
+        <Icon className="w-4 h-4 opacity-70" />
+        {title}
+      </header>
+      <div className="relative">
+        {children}
+      </div>
+    </section>
+  );
+};
 
 export function LiveTextEvolution({
   data,
@@ -78,14 +145,14 @@ export function LiveTextEvolution({
 
   const previousItems = useMemo(
     () =>
-      previousEvolutions.slice(0, 8).map((ev) => {
+      previousEvolutions.slice(0, 5).map((ev) => {
         const dateStr = ev.created_at || ev.record_date;
         const dateLabel = dateStr
           ? format(new Date(dateStr), "dd/MM/yy", { locale: ptBR })
           : "—";
         const preview = stripHtml(ev.observacao || ev.subjective || ev.assessment || "").slice(
           0,
-          120,
+          100,
         );
         return {
           id: ev.id,
@@ -106,10 +173,7 @@ export function LiveTextEvolution({
 
   const handleSelectFromLibrary = (exercise: any) => {
     const newItem = {
-      id:
-        typeof crypto !== "undefined" && crypto.randomUUID
-          ? crypto.randomUUID()
-          : `lib_${Date.now()}`,
+      id: typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : `lib_${Date.now()}`,
       exerciseId: exercise.id,
       name: exercise.name || exercise.title || "Exercício",
       prescription: exercise.prescription || "3x10",
@@ -133,115 +197,104 @@ export function LiveTextEvolution({
   };
 
   return (
-    <div className="grid grid-cols-12 gap-3 auto-rows-max">
-      {/* 🔴 EVA */}
-      <section
-        aria-label="Escala de dor"
-        className="col-span-12 md:col-span-3 rounded-xl border-2 border-red-200 bg-red-50/40 dark:bg-red-950/20 p-3"
-      >
-        <header className="flex items-center gap-2 mb-2 text-sm font-semibold text-red-700 dark:text-red-300">
-          <span className="inline-block w-2 h-2 rounded-full bg-red-500" /> Dor (EVA)
+    <div className="flex flex-col gap-6 w-full max-w-5xl mx-auto">
+      {/* 🟢 Evolução Clínica (Main) */}
+      <section className="rounded-[3rem] border-2 border-slate-200 bg-white p-8 shadow-sm flex flex-col transition-all hover:shadow-md">
+        <header className="flex items-center gap-3 mb-6">
+          <div className="p-3 rounded-2xl bg-slate-100 text-slate-600">
+            <MessageSquare className="w-6 h-6" />
+          </div>
+          <div>
+            <h2 className="text-2xl font-bold text-slate-900">Evolução Clínica</h2>
+            <p className="text-sm text-slate-500">Relatório detalhado da sessão</p>
+          </div>
         </header>
-        <QuickPainSlider
-          value={data.painScale ?? undefined}
-          onChange={(level) => onChange({ ...data, painScale: level })}
-          disabled={disabled}
-        />
+        
+        <div className="w-full">
+          <RichTextBlock
+            placeholder="Comece a digitar a evolução clínica do paciente aqui..."
+            value={data.observacao}
+            onValueChange={(html) => onChange({ ...data, observacao: html })}
+            disabled={disabled}
+            className="min-h-[300px]"
+          />
+        </div>
       </section>
 
-      {/* 🟡 Observações */}
-      <section
-        aria-label="Observações"
-        className="col-span-12 md:col-span-9 rounded-xl border-2 border-amber-200 bg-amber-50/40 dark:bg-amber-950/20 p-3 min-h-[180px]"
-      >
-        <header className="flex items-center gap-2 mb-2 text-sm font-semibold text-amber-800 dark:text-amber-200">
-          <span className="inline-block w-2 h-2 rounded-full bg-amber-500" /> Observações
-          clínicas
-        </header>
-        <RichTextBlock
-          placeholder="Descreva o que o paciente relatou e o que foi feito na sessão…"
-          value={data.observacao}
-          onValueChange={(html) => onChange({ ...data, observacao: html })}
-          disabled={disabled}
-          className="min-h-[140px]"
-        />
-      </section>
+      {/* 🔴 Grid de Cards (Sem Sidebar) */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Row 1: EVA + OBS (Lado a Lado no Desktop) */}
+        <PremiumCard title="Dor (EVA)" icon={Activity} variant="red">
+          <QuickPainSlider
+            value={data.painScale ?? undefined}
+            onChange={(level) => onChange({ ...data, painScale: level })}
+            disabled={disabled}
+          />
+        </PremiumCard>
 
-      {/* 🔵 Histórico de evoluções */}
-      <section
-        aria-label="Histórico de evoluções"
-        className="col-span-12 rounded-xl border-2 border-blue-200 bg-blue-50/40 dark:bg-blue-950/20 p-3"
-      >
-        <header className="flex items-center gap-2 mb-2 text-sm font-semibold text-blue-700 dark:text-blue-300">
-          <span className="inline-block w-2 h-2 rounded-full bg-blue-500" /> Histórico de
-          evoluções
-          <span className="ml-auto text-xs font-normal text-muted-foreground">
-            {previousEvolutions.length} sessões
-          </span>
-        </header>
-        {previousItems.length === 0 ? (
-          <p className="text-sm text-muted-foreground py-4 text-center">
-            Sem evoluções anteriores.
-          </p>
-        ) : (
-          <ul className="flex gap-2 overflow-x-auto pb-1">
-            {previousItems.map((item) => (
-              <li
-                key={item.id}
-                className="shrink-0 w-56 rounded-lg bg-white dark:bg-slate-900 border border-blue-200/60 p-2 text-xs"
-              >
-                <div className="flex items-center justify-between mb-1">
-                  <span className="font-medium">{item.dateLabel}</span>
-                  {item.pain != null && (
-                    <span className="px-1.5 py-0.5 rounded bg-red-100 text-red-700 text-[10px]">
-                      EVA {item.pain}/10
-                    </span>
-                  )}
+        <PremiumCard title="Observações" icon={MessageSquare} variant="amber">
+          <textarea
+            className="w-full bg-transparent border-none focus:ring-0 text-sm resize-none min-h-[80px]"
+            placeholder="Notas rápidas..."
+            value={data.subjective || ""}
+            onChange={(e) => onChange({ ...data, subjective: e.target.value })}
+            disabled={disabled}
+          />
+        </PremiumCard>
+
+        {/* Row 2: Histórico (Largura Total) */}
+        <PremiumCard title="Histórico de Evoluções" icon={History} variant="blue" className="md:col-span-2">
+          {previousItems.length === 0 ? (
+            <p className="text-xs text-slate-500 py-2">Sem registros anteriores.</p>
+          ) : (
+            <div className="flex flex-col gap-2">
+              {previousItems.map((item) => (
+                <div
+                  key={item.id}
+                  className="p-3 rounded-2xl bg-white/80 dark:bg-slate-900/40 border border-blue-100 flex flex-col gap-1 text-xs"
+                >
+                  <div className="flex justify-between items-center">
+                    <span className="font-bold text-blue-900">{item.dateLabel}</span>
+                    {item.pain != null && (
+                      <span className="px-2 py-0.5 rounded-full bg-red-100 text-red-700 font-bold">
+                        EVA {item.pain}
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-slate-600 line-clamp-2">{item.preview}</p>
                 </div>
-                <p className="text-muted-foreground line-clamp-3">{item.preview}</p>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
+              ))}
+            </div>
+          )}
+        </PremiumCard>
 
-      {/* 🟢 Procedimentos + Exercícios (unificado) */}
-      <section
-        aria-label="Procedimentos e exercícios"
-        className="col-span-12 md:col-span-7 rounded-xl border-2 border-emerald-200 bg-emerald-50/40 dark:bg-emerald-950/20 p-3"
-      >
-        <header className="flex items-center gap-2 mb-3">
-          <span className="inline-block w-2 h-2 rounded-full bg-emerald-500" />
-          <Tabs
-            value={groupTab}
-            onValueChange={(v) => setGroupTab(v as typeof groupTab)}
-            className="flex-1"
-          >
-            <TabsList className="bg-emerald-100/60 dark:bg-emerald-900/30">
-              <TabsTrigger value="procedures" className="gap-1">
-                <Activity className="w-3 h-3" /> Procedimentos ({data.procedures.length})
-              </TabsTrigger>
-              <TabsTrigger value="exercises" className="gap-1">
-                <Dumbbell className="w-3 h-3" /> Exercícios ({data.exercises.length})
-              </TabsTrigger>
-            </TabsList>
-            <Button
-              variant="outline"
-              size="sm"
-              className="ml-auto float-right -mt-9"
-              onClick={() => setLibraryOpen(true)}
-              disabled={disabled}
-            >
-              <Library className="w-4 h-4 mr-1" /> Biblioteca
-            </Button>
-            <TabsContent value="procedures" className="mt-2">
+        {/* Row 3: Intervenções (Largura Total) */}
+        <PremiumCard title="Intervenções" icon={Dumbbell} variant="emerald" className="md:col-span-2">
+          <Tabs value={groupTab} onValueChange={(v) => setGroupTab(v as any)} className="w-full">
+            <div className="flex items-center justify-between mb-4">
+              <TabsList className="bg-emerald-100/50 p-1 rounded-xl">
+                <TabsTrigger value="procedures" className="text-[10px] uppercase font-bold rounded-lg px-2 py-1">Procs</TabsTrigger>
+                <TabsTrigger value="exercises" className="text-[10px] uppercase font-bold rounded-lg px-2 py-1">Exer</TabsTrigger>
+              </TabsList>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 text-[10px] uppercase font-bold text-emerald-700 hover:bg-emerald-100"
+                onClick={() => setLibraryOpen(true)}
+                disabled={disabled}
+              >
+                <Library className="w-3 h-3 mr-1" /> Biblioteca
+              </Button>
+            </div>
+
+            <TabsContent value="procedures" className="mt-0">
               <ProcedureChecklistBlock
                 procedures={data.procedures as any}
                 onChange={handleProceduresChange}
                 disabled={disabled}
               />
             </TabsContent>
-            <TabsContent value="exercises" className="mt-2">
+            <TabsContent value="exercises" className="mt-0">
               <ExerciseBlockV2
                 exercises={data.exercises as any}
                 onChange={handleExercisesChange}
@@ -249,56 +302,36 @@ export function LiveTextEvolution({
               />
             </TabsContent>
           </Tabs>
-        </header>
-      </section>
+        </PremiumCard>
 
-      {/* 🟣 Medições */}
-      <section
-        aria-label="Medições"
-        className="col-span-12 md:col-span-5 rounded-xl border-2 border-pink-200 bg-pink-50/40 dark:bg-pink-950/20 p-3"
-      >
-        <header className="flex items-center gap-2 mb-2 text-sm font-semibold text-pink-700 dark:text-pink-300">
-          <span className="inline-block w-2 h-2 rounded-full bg-pink-500" /> Medições
-        </header>
-        <MeasurementsBlock
-          measurements={data.measurements as any}
-          onChange={handleMeasurementsChange}
-          disabled={disabled}
-        />
-      </section>
+        {/* Row 4: Medições (Largura Total) */}
+        <PremiumCard title="Medições" icon={Scale} variant="pink" className="md:col-span-2">
+          <MeasurementsBlock
+            measurements={data.measurements as any}
+            onChange={handleMeasurementsChange}
+            disabled={disabled}
+          />
+        </PremiumCard>
 
-      {/* ⚪ Exercícios para casa */}
-      <section
-        aria-label="Exercícios para casa"
-        className="col-span-12 md:col-span-7 rounded-xl border-2 border-slate-300 bg-slate-50/60 dark:bg-slate-900/30 p-3"
-      >
-        <header className="flex items-center gap-2 mb-2 text-sm font-semibold text-slate-700 dark:text-slate-300">
-          <span className="inline-block w-2 h-2 rounded-full bg-slate-500" /> Exercícios para
-          casa
-        </header>
-        <HomeCareBlock
-          value={homeExercisesText}
-          onChange={(v) => onHomeExercisesTextChange?.(v)}
-          disabled={disabled}
-        />
-      </section>
+        {/* Row 5: Home Care + Anexos (Lado a Lado no Desktop) */}
+        <PremiumCard title="Casa" icon={Home} variant="slate">
+          <HomeCareBlock
+            value={homeExercisesText}
+            onChange={(v) => onHomeExercisesTextChange?.(v)}
+            disabled={disabled}
+          />
+        </PremiumCard>
 
-      {/* ⚫ Anexos */}
-      <section
-        aria-label="Anexos"
-        className="col-span-12 md:col-span-5 rounded-xl border-2 border-zinc-900/30 bg-zinc-50 dark:bg-zinc-900/40 p-3"
-      >
-        <header className="flex items-center gap-2 mb-2 text-sm font-semibold text-zinc-800 dark:text-zinc-200">
-          <span className="inline-block w-2 h-2 rounded-full bg-zinc-900" /> Anexos
-        </header>
-        <AttachmentsBlock
-          patientId={patientId}
-          evolutionId={evolutionId}
-          value={attachments}
-          onChange={(urls) => onAttachmentsChange?.(urls)}
-          disabled={disabled}
-        />
-      </section>
+        <PremiumCard title="Anexos" icon={Paperclip} variant="black">
+          <AttachmentsBlock
+            patientId={patientId}
+            evolutionId={evolutionId}
+            value={attachments}
+            onChange={(urls) => onAttachmentsChange?.(urls)}
+            disabled={disabled}
+          />
+        </PremiumCard>
+      </div>
 
       <ExerciseLibraryModal
         open={libraryOpen}
