@@ -6,8 +6,8 @@ import { transcribeAudioWithGemini } from "../../lib/ai-gemini";
 import { smartStructured, smartTranscribe } from "../../lib/ai/smartAI";
 import { logToAxiom } from "../../lib/axiom";
 import { transcribeAudio as transcribeWithWhisper } from "../../lib/ai-native";
-import { SoapSchema } from "../../schemas/ai-schemas";
-import { safeText, buildSoapFromText } from "./ai-helpers";
+import { SoapSchema, EvolutionObservacaoSchema } from "../../schemas/ai-schemas";
+import { safeText, buildSoapFromText, buildEvolutionFromText } from "./ai-helpers";
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
@@ -73,17 +73,22 @@ app.post("/transcribe-session", async (c) => {
   const body = (await c.req.json().catch(() => ({}))) as Record<string, unknown>;
   const text = safeText(body.hintText);
 
-  const prompt = `Relato de uma sessão de fisioterapia para estruturar em SOAP:
+  const prompt = `Você recebe o relato bruto de uma sessão de fisioterapia.
+Estruture-o em UMA observação clínica única, narrativa, em português brasileiro,
+integrando relato do paciente + achados objetivos + análise + conduta em prosa
+concisa. Extraia a EVA (escala 0–10) quando o relato mencionar.
+
+Relato bruto:
 "${text}"`;
 
   const systemInstruction =
-    "Você é um fisioterapeuta experiente. Estruture o relato no formato SOAP em português brasileiro. Cada seção deve ter conteúdo clínico objetivo e conciso, sem repetir literalmente o relato.";
+    "Você é um fisioterapeuta experiente. Retorne JSON com `observacao` (texto narrativo único) e `painScale` (EVA 0–10 ou null). Não use cabeçalhos S/O/A/P.";
 
   const start = performance.now();
   try {
-    const { data: soapData } = await smartStructured(c.env, {
+    const { data: evolution } = await smartStructured(c.env, {
       task: "soap",
-      schema: SoapSchema,
+      schema: EvolutionObservacaoSchema,
       prompt,
       thinkingLevel: "MEDIUM",
       systemInstruction,
@@ -95,7 +100,7 @@ app.post("/transcribe-session", async (c) => {
       logToAxiom(c.env, c.executionCtx, {
         level: "info",
         type: "ai_inference_latency",
-        message: "SOAP generation completed",
+        message: "Evolution generation completed",
         metadata: {
           action: "transcribe-session",
           durationMs: duration,
@@ -104,14 +109,28 @@ app.post("/transcribe-session", async (c) => {
       }),
     );
 
-    return c.json({ data: { soapData } });
+    // Back-compat: clientes legados ainda consomem `soapData`. Mantemos um
+    // shim que concentra a observação inteira em `assessment`.
+    const legacySoap = {
+      subjective: "",
+      objective: "",
+      assessment: evolution.observacao,
+      plan: "",
+    };
+    return c.json({
+      data: {
+        observacao: evolution.observacao,
+        painScale: evolution.painScale ?? null,
+        soapData: legacySoap,
+      },
+    });
   } catch (error) {
     const duration = performance.now() - start;
     c.executionCtx.waitUntil(
       logToAxiom(c.env, c.executionCtx, {
         level: "error",
         type: "ai_inference_error",
-        message: "SOAP generation failed, using heuristic fallback",
+        message: "Evolution generation failed, using heuristic fallback",
         metadata: {
           action: "transcribe-session",
           durationMs: duration,
@@ -119,7 +138,14 @@ app.post("/transcribe-session", async (c) => {
         },
       }),
     );
-    return c.json({ data: { soapData: buildSoapFromText(text) } });
+    const fallback = buildEvolutionFromText(text);
+    return c.json({
+      data: {
+        observacao: fallback.observacao,
+        painScale: fallback.painScale,
+        soapData: buildSoapFromText(text),
+      },
+    });
   }
 });
 
@@ -167,26 +193,46 @@ app.post("/voice/evolution", async (c) => {
   }
 
   const systemInstruction =
-    "Você é um fisioterapeuta experiente. Estruture o relato no formato SOAP em português brasileiro. " +
-    "Cada seção deve ter conteúdo clínico objetivo e conciso, sem repetir literalmente o relato. " +
-    "Use terminologia técnica apropriada e identifique red flags se presentes.";
+    "Você é um fisioterapeuta experiente. Retorne JSON com `observacao` (texto narrativo " +
+    "único, em português brasileiro, integrando relato + achados + análise + conduta) e " +
+    "`painScale` (EVA 0–10 ou null). Use terminologia técnica e sinalize red flags na própria " +
+    "observação quando presentes.";
 
-  const prompt = `Relato de uma sessão de fisioterapia para estruturar em SOAP:
+  const prompt = `Relato bruto de uma sessão de fisioterapia para virar uma observação clínica:
 "${transcript}"`;
 
   try {
-    const { data: soapData } = await smartStructured(c.env, {
+    const { data: evolution } = await smartStructured(c.env, {
       task: "soap",
-      schema: SoapSchema,
+      schema: EvolutionObservacaoSchema,
       prompt,
       systemInstruction,
       thinkingLevel: "MEDIUM",
       temperature: 0.4,
     });
 
-    return c.json({ success: true, transcript, soapData });
+    const legacySoap = {
+      subjective: "",
+      objective: "",
+      assessment: evolution.observacao,
+      plan: "",
+    };
+    return c.json({
+      success: true,
+      transcript,
+      observacao: evolution.observacao,
+      painScale: evolution.painScale ?? null,
+      soapData: legacySoap,
+    });
   } catch {
-    return c.json({ success: true, transcript, soapData: buildSoapFromText(transcript) });
+    const fallback = buildEvolutionFromText(transcript);
+    return c.json({
+      success: true,
+      transcript,
+      observacao: fallback.observacao,
+      painScale: fallback.painScale,
+      soapData: buildSoapFromText(transcript),
+    });
   }
 });
 
