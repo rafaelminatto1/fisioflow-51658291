@@ -2,10 +2,11 @@
  * Exercise AI Assistant
  *
  * Uses Gemini 2.5 Flash-Lite for cost-efficient exercise suggestions
- * based on patient profile, SOAP notes, and pain map data.
+ * based on patient profile, evolution observations (texto livre + estruturados),
+ * and pain map data.
  *
  * @module lib/ai/exercises
- * @version 2.0.0
+ * @version 3.0.0
  */
 
 // ============================================================================
@@ -18,18 +19,28 @@
 
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { z } from "zod";
-import type { Exercise, Patient, SOAPRecord } from "@/types";
+import type { Exercise, Patient } from "@/types";
+import type { ProcedureItem, ExerciseItem } from "@/types/evolution";
 import { fisioLogger as logger } from "@/lib/errors/logger";
+
+/** Resumo de uma evolução para o prompt (texto + estruturados). */
+export interface EvolutionHistoryItem {
+  id?: string;
+  sessionNumber: number;
+  /** Texto livre (HTML ou plain) que o fisio escreveu naquela sessão. */
+  observacao: string;
+  painScale: number | null;
+  procedures?: ProcedureItem[];
+  exercises?: ExerciseItem[];
+}
 
 export interface PatientProfileContext {
   /** Patient basic information */
   patient: Pick<Patient, "id" | "name" | "birthDate" | "gender" | "mainCondition"> & {
     age: number;
   };
-  /** Recent SOAP records for clinical context */
-  soapHistory: Array<
-    Pick<SOAPRecord, "id" | "sessionNumber" | "subjective" | "objective" | "assessment" | "plan">
-  >;
+  /** Histórico recente de evoluções (observação + estruturados). */
+  evolutionHistory: EvolutionHistoryItem[];
   /** Current pain map data (body regions with intensity 0-10) */
   painMap?: Record<string, number>;
   /** Patient treatment goals */
@@ -193,8 +204,8 @@ const EXERCISE_SYSTEM_PROMPT = `You are an expert physical therapist AI assistan
 
 Your role is to recommend appropriate exercises from a comprehensive library of 500+ exercises based on:
 1. Patient profile (age, gender, condition)
-2. Clinical notes (SOAP records)
-3. Current pain presentation
+2. Histórico recente de evoluções (observação clínica em texto livre + procedimentos + exercícios prescritos)
+3. Current pain presentation (EVA + pain map)
 4. Treatment goals
 5. Available equipment
 6. Treatment phase
@@ -216,11 +227,21 @@ Return ONLY valid JSON matching the provided schema. Do not include markdown cod
 /**
  * Build user prompt from patient context
  */
-function buildExercisePrompt(context: PatientProfileContext): string {
-  const { patient, soapHistory, painMap, goals, availableEquipment, treatmentPhase, sessionCount } =
-    context;
+function stripHtml(html: string): string {
+  return html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+}
 
-  // Format pain map for prompt
+function buildExercisePrompt(context: PatientProfileContext): string {
+  const {
+    patient,
+    evolutionHistory,
+    painMap,
+    goals,
+    availableEquipment,
+    treatmentPhase,
+    sessionCount,
+  } = context;
+
   const painMapText = painMap
     ? Object.entries(painMap)
         .filter(([_, intensity]) => intensity > 0)
@@ -228,17 +249,24 @@ function buildExercisePrompt(context: PatientProfileContext): string {
         .join(", ")
     : "No pain data available";
 
-  // Format recent SOAP notes
-  const recentSOAP = soapHistory
+  const recentEvolutions = evolutionHistory
     .slice(-3)
-    .map(
-      (soap, _idx) => `
-Sessão ${soap.sessionNumber}:
-- Queixa principal: ${soap.subjective || "N/A"}
-- Avaliação: ${soap.assessment || "N/A"}
-- Plano: ${typeof soap.plan === "object" ? JSON.stringify(soap.plan) : soap.plan || "N/A"}
-`,
-    )
+    .map((ev) => {
+      const obs = stripHtml(ev.observacao || "").slice(0, 300);
+      const eva = ev.painScale != null ? `EVA ${ev.painScale}/10` : "EVA não registrado";
+      const procs = ev.procedures?.length
+        ? ev.procedures.map((p) => p.name).filter(Boolean).join(", ")
+        : "—";
+      const exs = ev.exercises?.length
+        ? ev.exercises.map((e) => e.name).filter(Boolean).join(", ")
+        : "—";
+      return `
+Sessão ${ev.sessionNumber} (${eva}):
+- Observação: ${obs || "sem observação"}${obs.length === 300 ? "…" : ""}
+- Procedimentos: ${procs}
+- Exercícios prescritos: ${exs}
+`;
+    })
     .join("\n");
 
   return `
@@ -253,8 +281,8 @@ Sessão ${soap.sessionNumber}:
 **Apresentação Atual de Dor:**
 ${painMapText || "Sem dados de dor"}
 
-**Histórico Clínico Recente:**
-${recentSOAP || "Sem histórico disponível"}
+**Histórico Clínico Recente (últimas evoluções):**
+${recentEvolutions || "Sem histórico disponível"}
 
 **Objetivos do Tratamento:**
 ${goals.map((g) => `- ${g}`).join("\n")}
@@ -269,7 +297,7 @@ ${goals.map((g) => `- ${g}`).join("\n")}
 Com base no perfil acima, recomende um programa de exercícios apropriado que:
 
 1. Direcione as áreas de dor identificadas
-2. Considere as limitações e contraindicações do SOAP
+2. Considere as limitações descritas na observação clínica
 3. Ajude a alcançar os objetivos estabelecidos
 4. Use equipamentos disponíveis ou nenhum equipamento
 5. Seja apropriado para a fase de tratamento atual
@@ -314,7 +342,7 @@ export class ExerciseAIAssistant {
    * const assistant = new ExerciseAIAssistant();
    * const recommendations = await assistant.suggestExercises({
    *   patient: { ... },
-   *   soapHistory: [ ... ],
+   *   evolutionHistory: [ ... ],
    *   painMap: { 'lombar': 7, 'quadril direito': 5 },
    *   goals: ['Reduzir dor lombar', 'Melhorar mobilidade'],
    *   sessionCount: 5
@@ -529,11 +557,18 @@ export function determineTreatmentPhase(
  */
 export async function buildPatientContext(
   patient: Patient,
-  soapHistory: SOAPRecord[],
+  evolutionHistory: Array<{
+    id?: string;
+    session_number?: number;
+    observacao?: string;
+    pain_scale?: number | null;
+    procedures?: ProcedureItem[];
+    exercises?: ExerciseItem[];
+  }>,
   additionalContext?: Partial<PatientProfileContext>,
 ): Promise<PatientProfileContext> {
   const age = calculateAge(patient.birthDate);
-  const sessionCount = soapHistory.length;
+  const sessionCount = evolutionHistory.length;
   const treatmentPhase = determineTreatmentPhase(sessionCount);
 
   return {
@@ -545,13 +580,13 @@ export async function buildPatientContext(
       mainCondition: patient.mainCondition,
       age,
     },
-    soapHistory: soapHistory.map((soap) => ({
-      id: soap.id,
-      sessionNumber: soap.sessionNumber,
-      subjective: soap.subjective,
-      objective: soap.objective,
-      assessment: soap.assessment,
-      plan: soap.plan,
+    evolutionHistory: evolutionHistory.map((ev, idx) => ({
+      id: ev.id,
+      sessionNumber: ev.session_number ?? idx + 1,
+      observacao: ev.observacao ?? "",
+      painScale: ev.pain_scale ?? null,
+      procedures: ev.procedures,
+      exercises: ev.exercises,
     })),
     painMap: additionalContext?.painMap || {},
     goals: additionalContext?.goals || [],
