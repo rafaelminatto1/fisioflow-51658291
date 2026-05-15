@@ -13,6 +13,7 @@
 import { flashModel, proModel } from "@/lib/gemini-ai";
 import { logger } from "@/lib/errors/logger";
 import { withPerformanceTrace, traceAIOperation } from "@/lib/monitoring/performance";
+import { stripHtml } from "@/lib/utils/stripHtml";
 import {
   findSimilarEvolutions,
   indexEvolution,
@@ -72,10 +73,6 @@ export interface ClinicalSuggestion {
 // ============================================================================
 // HELPERS
 // ============================================================================
-
-function stripHtml(html: string): string {
-  return html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
-}
 
 function evolutionToText(ev: Partial<RagEvolution>, maxObsChars = 400): string {
   const obs = stripHtml(ev.observacao || "").slice(0, maxObsChars);

@@ -17,6 +17,8 @@
 
 import { z } from "zod";
 
+import { stripHtml } from "@/lib/utils/stripHtml";
+
 export function sanitizeString(input: string): string {
   return (
     input
@@ -26,8 +28,8 @@ export function sanitizeString(input: string): string {
       .join("")
       // Remove múltiplos espaços
       .replace(/\s+/g, " ")
-      // Remove tags HTML (básico)
-      .replace(/<[^>]*>/g, "")
+      // Remove tags HTML — stripHtml é idempotente; protege contra payloads aninhados
+      .replace(/<[^>]*>/g, (m) => stripHtml(m))
       .slice(0, 10000)
   ); // Limitar tamanho
 }

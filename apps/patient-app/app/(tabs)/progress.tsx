@@ -22,6 +22,16 @@ import { ptBR } from "date-fns/locale";
 import { useProgress } from "@/hooks/useProgress";
 import { Evolution } from "@/types/api";
 
+function stripHtml(html: string): string {
+  let prev = "";
+  let s = html;
+  while (s !== prev) {
+    prev = s;
+    s = s.replace(/<[^>]*>/g, "");
+  }
+  return s.replace(/\s+/g, " ").trim();
+}
+
 const SCREEN_PADDING = Spacing.screen;
 const CARD_GAP = Spacing.gap;
 const HALF_CARD_WIDTH = (Dimensions.get("window").width - SCREEN_PADDING * 2 - CARD_GAP) / 2;
@@ -60,11 +70,11 @@ export default function ProgressScreen() {
       Math.ceil((lastDate.getTime() - firstDate.getTime()) / (1000 * 60 * 60 * 24)),
     );
 
-    const painLevels = evolutions.map((e) => e.painLevel || 0);
+    const painLevels = evolutions.map((e) => e.painScale ?? e.painLevel ?? 0);
     const averagePain = painLevels.reduce((sum, level) => sum + level, 0) / painLevels.length;
 
-    const firstPain = evolutions[evolutions.length - 1]?.painLevel || 0;
-    const lastPain = evolutions[0]?.painLevel || 0;
+    const firstPain = evolutions[evolutions.length - 1]?.painScale ?? evolutions[evolutions.length - 1]?.painLevel ?? 0;
+    const lastPain = evolutions[0]?.painScale ?? evolutions[0]?.painLevel ?? 0;
     const painImprovement = firstPain - lastPain;
 
     return {
@@ -339,23 +349,26 @@ function EvolutionCard({ evolution, colors }: { evolution: Evolution; colors: an
               {evolution.professionalName || "Fisioterapeuta"}
             </Text>
           </View>
-          <View
-            style={[
-              styles.painIndicator,
-              {
-                backgroundColor: getPainColor(evolution.painLevel || 0, colors) + "20",
-              },
-            ]}
-          >
-            <Text
-              style={[
-                styles.painIndicatorText,
-                { color: getPainColor(evolution.painLevel || 0, colors) },
-              ]}
-            >
-              Dor: {evolution.painLevel ?? "--"}/10
-            </Text>
-          </View>
+          {(() => {
+            const pain = evolution.painScale ?? evolution.painLevel ?? null;
+            return (
+              <View
+                style={[
+                  styles.painIndicator,
+                  { backgroundColor: getPainColor(pain ?? 0, colors) + "20" },
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.painIndicatorText,
+                    { color: getPainColor(pain ?? 0, colors) },
+                  ]}
+                >
+                  Dor: {pain ?? "--"}/10
+                </Text>
+              </View>
+            );
+          })()}
           <Ionicons
             name={expanded ? "chevron-up" : "chevron-down"}
             size={20}
@@ -365,16 +378,39 @@ function EvolutionCard({ evolution, colors }: { evolution: Evolution; colors: an
 
         {expanded && (
           <View style={[styles.evolutionDetails, { borderTopColor: colors.border }]}>
-            {evolution.subjective && (
-              <SOAPSection label="Relato" content={evolution.subjective} colors={colors} />
-            )}
-            {evolution.assessment && (
-              <SOAPSection label="Evolução" content={evolution.assessment} colors={colors} />
-            )}
-            {evolution.plan && (
+            {evolution.observacao
+              ? (
+                <SOAPSection
+                  label="Evolução"
+                  content={stripHtml(evolution.observacao)}
+                  colors={colors}
+                />
+              )
+              : evolution.assessment && (
+                <SOAPSection label="Evolução" content={evolution.assessment} colors={colors} />
+              )}
+            {evolution.procedures && evolution.procedures.length > 0 && (
               <SOAPSection
-                label="Plano / Exercícios Casa"
-                content={evolution.plan}
+                label="Procedimentos"
+                content={evolution.procedures.map((p) => `• ${p.name}`).join("\n")}
+                colors={colors}
+              />
+            )}
+            {evolution.exercises && evolution.exercises.length > 0 && (
+              <SOAPSection
+                label="Exercícios"
+                content={evolution.exercises
+                  .map((ex) => `• ${ex.name}${ex.prescription ? ` (${ex.prescription})` : ""}`)
+                  .join("\n")}
+                colors={colors}
+              />
+            )}
+            {evolution.homeExercises && evolution.homeExercises.length > 0 && (
+              <SOAPSection
+                label="Exercícios para Casa"
+                content={evolution.homeExercises
+                  .map((ex) => `• ${ex.name}${ex.frequency ? ` — ${ex.frequency}` : ""}`)
+                  .join("\n")}
                 colors={colors}
               />
             )}

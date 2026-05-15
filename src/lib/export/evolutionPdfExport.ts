@@ -3,6 +3,7 @@ import autoTable from "jspdf-autotable";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { formatClinicalText } from "@/lib/evolution/formatters";
+import { stripHtml } from "@/lib/utils/stripHtml";
 
 interface PatientData {
   name: string;
@@ -190,9 +191,6 @@ export const generateEvolutionPDF = (
   doc.setFont("helvetica", "bold");
   doc.text("📅 Histórico de Sessões", 20, yPos);
   yPos += 8;
-
-  const stripHtml = (html: string) =>
-    html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
 
   const sessionTableData = sessions.map((s, i) => {
     const obsText = s.observacao ? stripHtml(s.observacao) : s.observations || "";

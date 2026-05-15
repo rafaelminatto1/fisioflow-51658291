@@ -21,6 +21,7 @@ import type {
   MeasurementItem,
 } from "@/types/evolution";
 import { fisioLogger as logger } from "@/lib/errors/logger";
+import { stripHtml } from "@/lib/utils/stripHtml";
 
 // ============================================================================
 // TYPES
@@ -237,10 +238,6 @@ Inclua as queries usadas no campo \`searchQueries\` da resposta.`;
 // ============================================================================
 // HELPERS
 // ============================================================================
-
-function stripHtml(html: string): string {
-  return html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
-}
 
 function formatProcedures(items: ProcedureItem[]): string {
   if (!items?.length) return "Nenhum procedimento registrado.";

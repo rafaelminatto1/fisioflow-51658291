@@ -22,6 +22,7 @@ import { z } from "zod";
 import type { Exercise, Patient } from "@/types";
 import type { ProcedureItem, ExerciseItem } from "@/types/evolution";
 import { fisioLogger as logger } from "@/lib/errors/logger";
+import { stripHtml } from "@/lib/utils/stripHtml";
 
 /** Resumo de uma evolução para o prompt (texto + estruturados). */
 export interface EvolutionHistoryItem {
@@ -227,10 +228,6 @@ Return ONLY valid JSON matching the provided schema. Do not include markdown cod
 /**
  * Build user prompt from patient context
  */
-function stripHtml(html: string): string {
-  return html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
-}
-
 function buildExercisePrompt(context: PatientProfileContext): string {
   const {
     patient,
