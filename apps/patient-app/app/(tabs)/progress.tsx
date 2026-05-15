@@ -22,15 +22,7 @@ import { ptBR } from "date-fns/locale";
 import { useProgress } from "@/hooks/useProgress";
 import { Evolution } from "@/types/api";
 
-function stripHtml(html: string): string {
-  let prev = "";
-  let s = html;
-  while (s !== prev) {
-    prev = s;
-    s = s.replace(/<[^>]*>/g, "");
-  }
-  return s.replace(/\s+/g, " ").trim();
-}
+import { StringFormatter } from "@/lib/formatters";
 
 const SCREEN_PADDING = Spacing.screen;
 const CARD_GAP = Spacing.gap;
@@ -73,7 +65,10 @@ export default function ProgressScreen() {
     const painLevels = evolutions.map((e) => e.painScale ?? e.painLevel ?? 0);
     const averagePain = painLevels.reduce((sum, level) => sum + level, 0) / painLevels.length;
 
-    const firstPain = evolutions[evolutions.length - 1]?.painScale ?? evolutions[evolutions.length - 1]?.painLevel ?? 0;
+    const firstPain =
+      evolutions[evolutions.length - 1]?.painScale ??
+      evolutions[evolutions.length - 1]?.painLevel ??
+      0;
     const lastPain = evolutions[0]?.painScale ?? evolutions[0]?.painLevel ?? 0;
     const painImprovement = firstPain - lastPain;
 
@@ -359,10 +354,7 @@ function EvolutionCard({ evolution, colors }: { evolution: Evolution; colors: an
                 ]}
               >
                 <Text
-                  style={[
-                    styles.painIndicatorText,
-                    { color: getPainColor(pain ?? 0, colors) },
-                  ]}
+                  style={[styles.painIndicatorText, { color: getPainColor(pain ?? 0, colors) }]}
                 >
                   Dor: {pain ?? "--"}/10
                 </Text>
@@ -378,17 +370,17 @@ function EvolutionCard({ evolution, colors }: { evolution: Evolution; colors: an
 
         {expanded && (
           <View style={[styles.evolutionDetails, { borderTopColor: colors.border }]}>
-            {evolution.observacao
-              ? (
-                <SOAPSection
-                  label="Evolução"
-                  content={stripHtml(evolution.observacao)}
-                  colors={colors}
-                />
-              )
-              : evolution.assessment && (
+            {evolution.observacao ? (
+              <SOAPSection
+                label="Evolução"
+                content={StringFormatter.stripHtml(evolution.observacao)}
+                colors={colors}
+              />
+            ) : (
+              evolution.assessment && (
                 <SOAPSection label="Evolução" content={evolution.assessment} colors={colors} />
-              )}
+              )
+            )}
             {evolution.procedures && evolution.procedures.length > 0 && (
               <SOAPSection
                 label="Procedimentos"

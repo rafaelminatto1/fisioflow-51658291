@@ -1,5 +1,12 @@
 import React, { useState } from "react";
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  ActivityIndicator,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useColors } from "@/hooks/useColorScheme";
@@ -23,7 +30,9 @@ export default function GroupSessionScreen() {
   const { data: attendees = [], isLoading } = useQuery({
     queryKey: ["group-attendees", sessionId],
     queryFn: async () => {
-      const res = await fetchApi<{ data: GroupAttendee[] }>(`/api/groups/sessions/${sessionId}/attendees`);
+      const res = await fetchApi<{ data: GroupAttendee[] }>(
+        `/api/groups/sessions/${sessionId}/attendees`,
+      );
       return res.data;
     },
     enabled: !!sessionId,
@@ -36,7 +45,7 @@ export default function GroupSessionScreen() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["group-attendees", sessionId] });
       toast.success("Presença confirmada!");
-    }
+    },
   });
 
   if (isLoading) {
@@ -49,33 +58,50 @@ export default function GroupSessionScreen() {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
-      <Stack.Screen options={{ title: (groupName as string) || "Sessão de Grupo", headerLargeTitle: true }} />
-      
+      <Stack.Screen
+        options={{ title: (groupName as string) || "Sessão de Grupo", headerLargeTitle: true }}
+      />
+
       <ScrollView contentContainerStyle={styles.scroll}>
         <View style={styles.headerInfo}>
-           <Text style={[styles.subtitle, { color: colors.textSecondary }]}>Lista de Presença</Text>
-           <Text style={[styles.count, { color: colors.primary }]}>{attendees.length} alunos inscritos</Text>
+          <Text style={[styles.subtitle, { color: colors.textSecondary }]}>Lista de Presença</Text>
+          <Text style={[styles.count, { color: colors.primary }]}>
+            {attendees.length} alunos inscritos
+          </Text>
         </View>
 
         <View style={styles.list}>
           {attendees.map((attendee) => (
-            <View key={attendee.id} style={[styles.attendeeCard, { backgroundColor: colors.surface }]}>
+            <View
+              key={attendee.id}
+              style={[styles.attendeeCard, { backgroundColor: colors.surface }]}
+            >
               <View style={styles.attendeeInfo}>
-                 <View style={[styles.avatar, { backgroundColor: colors.primary + "20" }]}>
-                    <Text style={[styles.avatarText, { color: colors.primary }]}>
-                      {attendee.patient_name.substring(0, 1)}
-                    </Text>
-                 </View>
-                 <View>
-                    <Text style={[styles.name, { color: colors.text }]}>{attendee.patient_name}</Text>
-                    <Text style={[styles.status, { color: attendee.status === "confirmed" ? colors.success : colors.textSecondary }]}>
-                       {attendee.status === "confirmed" ? `Presente (${new Date(attendee.checked_in_at!).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })})` : "Aguardando check-in"}
-                    </Text>
-                 </View>
+                <View style={[styles.avatar, { backgroundColor: colors.primary + "20" }]}>
+                  <Text style={[styles.avatarText, { color: colors.primary }]}>
+                    {attendee.patient_name.substring(0, 1)}
+                  </Text>
+                </View>
+                <View>
+                  <Text style={[styles.name, { color: colors.text }]}>{attendee.patient_name}</Text>
+                  <Text
+                    style={[
+                      styles.status,
+                      {
+                        color:
+                          attendee.status === "confirmed" ? colors.success : colors.textSecondary,
+                      },
+                    ]}
+                  >
+                    {attendee.status === "confirmed"
+                      ? `Presente (${new Date(attendee.checked_in_at!).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })})`
+                      : "Aguardando check-in"}
+                  </Text>
+                </View>
               </View>
 
               {attendee.status !== "confirmed" && (
-                <TouchableOpacity 
+                <TouchableOpacity
                   style={[styles.confirmButton, { backgroundColor: colors.primary }]}
                   onPress={() => confirmMutation.mutate(attendee.id)}
                   disabled={confirmMutation.isPending}

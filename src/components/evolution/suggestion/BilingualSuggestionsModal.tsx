@@ -1,10 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import {
-  Dialog,
-  DialogContent,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Search, BookOpen, Stethoscope, Activity, ArrowRight, Loader2 } from "lucide-react";
 import { PhysioDictionaryEntry } from "@/data/physioDictionary";

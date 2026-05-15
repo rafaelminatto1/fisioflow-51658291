@@ -139,7 +139,12 @@ export function SetupChecklist() {
                 )}
               </button>
               <div className="flex-1 min-w-0" onClick={() => !done && navigate(item.route)}>
-                <p className={cn("text-sm font-medium truncate", done && "line-through text-muted-foreground")}>
+                <p
+                  className={cn(
+                    "text-sm font-medium truncate",
+                    done && "line-through text-muted-foreground",
+                  )}
+                >
                   {item.label}
                 </p>
                 <p className="text-xs text-muted-foreground truncate">{item.description}</p>

@@ -176,9 +176,7 @@ describe("AI route rate limiting", () => {
 
     expect(writeDataPoint).toHaveBeenCalled();
     const call = writeDataPoint.mock.calls[0][0];
-    expect(call.blobs).toEqual(
-      expect.arrayContaining([expect.stringContaining("rate_limit:ai")]),
-    );
+    expect(call.blobs).toEqual(expect.arrayContaining([expect.stringContaining("rate_limit:ai")]));
   });
 });
 
@@ -245,7 +243,7 @@ describe("Voice Assessment Endpoints (#18 S4-T2)", () => {
     );
 
     expect(res.status).toBe(200);
-    const body = await res.json() as any;
+    const body = (await res.json()) as any;
     expect(body.success).toBe(true);
     expect(body.data).toBeDefined();
     expect(body.transcript).toBe("Paciente relata dor lombar há 3 dias");
@@ -265,7 +263,7 @@ describe("Voice Assessment Endpoints (#18 S4-T2)", () => {
     );
 
     expect(res.status).toBe(400);
-    const body = await res.json() as any;
+    const body = (await res.json()) as any;
     expect(body.error).toMatch(/audioBase64/);
   });
 
@@ -283,7 +281,7 @@ describe("Voice Assessment Endpoints (#18 S4-T2)", () => {
     );
 
     expect(res.status).toBe(200);
-    const body = await res.json() as any;
+    const body = (await res.json()) as any;
     expect(body.success).toBe(true);
     expect(body.data).toBeDefined();
   });
@@ -309,7 +307,9 @@ describe("Voice Assessment Endpoints (#18 S4-T2)", () => {
     const env = { ...makeUnderLimitEnv(), GOOGLE_AI_PREMIUM_ENABLED: "false" };
 
     const res = await app.fetch(
-      new Request("http://localhost/api/ai/assessment/live-ws?patientId=00000000-0000-0000-0000-000000000001"),
+      new Request(
+        "http://localhost/api/ai/assessment/live-ws?patientId=00000000-0000-0000-0000-000000000001",
+      ),
       env,
     );
 

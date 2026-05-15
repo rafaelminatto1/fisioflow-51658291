@@ -493,11 +493,11 @@ app.post("/auth/request-otp", async (c) => {
   if (!phone) return c.json({ error: "Telefone é obrigatório" }, 400);
 
   const pool = await createPool(c.env);
-  
+
   // 1. Verificar se o paciente existe
   const patientRes = await pool.query(
     "SELECT id, full_name FROM patients WHERE phone = $1 OR phone = $2 LIMIT 1",
-    [phone, phone.replace(/\D/g, "")]
+    [phone, phone.replace(/\D/g, "")],
   );
 
   if (patientRes.rows.length === 0) {
@@ -513,27 +513,30 @@ app.post("/auth/request-otp", async (c) => {
     `INSERT INTO patient_portal_users (phone, otp_code, otp_expires_at, patient_id, organization_id)
      SELECT $1, $2, $3, $4, organization_id FROM patients WHERE id = $4
      ON CONFLICT (phone) DO UPDATE SET otp_code = $2, otp_expires_at = $3, updated_at = NOW()`,
-    [phone, otp, expiresAt, patient.id]
+    [phone, otp, expiresAt, patient.id],
   );
 
   // 3. Enviar via WhatsApp (Simulado se não houver credenciais)
   console.log(`[PatientPortal] OTP para ${phone}: ${otp}`);
-  
+
   if (c.env.WHATSAPP_PHONE_NUMBER_ID && c.env.WHATSAPP_ACCESS_TOKEN) {
     // Aqui integraria com o serviço de WhatsApp real
   }
 
-  return c.json({ message: "Código enviado com sucesso", dev_otp: c.env.ENVIRONMENT !== "production" ? otp : undefined });
+  return c.json({
+    message: "Código enviado com sucesso",
+    dev_otp: c.env.ENVIRONMENT !== "production" ? otp : undefined,
+  });
 });
 
 app.post("/auth/verify-otp", async (c) => {
-  const { phone, code } = (await c.req.json().catch(() => ({}))) as { phone: string, code: string };
+  const { phone, code } = (await c.req.json().catch(() => ({}))) as { phone: string; code: string };
   if (!phone || !code) return c.json({ error: "Telefone e código são obrigatórios" }, 400);
 
   const pool = await createPool(c.env);
   const userRes = await pool.query(
     "SELECT * FROM patient_portal_users WHERE phone = $1 AND otp_code = $2 AND otp_expires_at > NOW()",
-    [phone, code]
+    [phone, code],
   );
 
   if (userRes.rows.length === 0) {
@@ -541,7 +544,7 @@ app.post("/auth/verify-otp", async (c) => {
   }
 
   const user = userRes.rows[0];
-  
+
   // Limpar OTP
   await pool.query("UPDATE patient_portal_users SET otp_code = NULL WHERE id = $1", [user.id]);
 
@@ -552,7 +555,7 @@ app.post("/auth/verify-otp", async (c) => {
     patientId: user.patient_id,
     orgId: user.organization_id,
     phone: user.phone,
-    role: "patient"
+    role: "patient",
   })
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
@@ -752,7 +755,9 @@ app.get("/appointments", async (c) => {
 
   // 2. Salvar no Cache KV por 15 minutos
   if (c.env.FISIOFLOW_CONFIG) {
-    await c.env.FISIOFLOW_CONFIG.put(cacheKey, JSON.stringify(appointments), { expirationTtl: 900 });
+    await c.env.FISIOFLOW_CONFIG.put(cacheKey, JSON.stringify(appointments), {
+      expirationTtl: 900,
+    });
   }
 
   // Cache de Consultas HTTP: 1 min na borda, revalidação em background (stale-while-revalidate)
@@ -1047,7 +1052,7 @@ app.post("/exercises/:assignmentId/complete", async (c) => {
         streak = 1;
       }
       const longest = Math.max(prof.longest_streak || 0, streak);
-      
+
       let bonusXp = 0;
       let badgeEarned: string | null = null;
 
@@ -1093,7 +1098,11 @@ app.post("/exercises/:assignmentId/complete", async (c) => {
                  xp_reward = EXCLUDED.xp_reward
            RETURNING id`,
           [
-            badgeEarned.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, "_"),
+            badgeEarned
+              .toLowerCase()
+              .normalize("NFD")
+              .replace(/[\u0300-\u036f]/g, "")
+              .replace(/\s+/g, "_"),
             badgeEarned,
             `Conquista desbloqueada por sequência de ${streak} dias`,
             bonusXp,
@@ -1105,12 +1114,13 @@ app.post("/exercises/:assignmentId/complete", async (c) => {
            VALUES ($1, $2, $3, NOW(), $4, $5) ON CONFLICT DO NOTHING`,
           [data.patient_id, achievement.rows[0]?.id, badgeEarned, bonusXp, user.organizationId],
         );
-        await pool.query(
-          `UPDATE patient_gamification SET total_badges = total_badges + 1 WHERE patient_id = $1`,
-          [data.patient_id],
-        ).catch(() => {}); // total_badges column might not exist yet
+        await pool
+          .query(
+            `UPDATE patient_gamification SET total_badges = total_badges + 1 WHERE patient_id = $1`,
+            [data.patient_id],
+          )
+          .catch(() => {}); // total_badges column might not exist yet
       }
-
     } catch {
       // XP failures are non-blocking
     }
@@ -1322,7 +1332,7 @@ app.get("/referral", async (c) => {
     `SELECT code, reward_value FROM referral_codes 
      WHERE patient_id = $1 
      ORDER BY created_at DESC LIMIT 1`,
-    [patientId]
+    [patientId],
   );
 
   let referral = (result.rows[0] as any) || null;
@@ -1333,7 +1343,7 @@ app.get("/referral", async (c) => {
       `INSERT INTO referral_codes (patient_id, organization_id, code, reward_type, reward_value)
        VALUES ($1, $2, $3, 'discount', 10)
        RETURNING code, reward_value`,
-      [patientId, user.organizationId, code]
+      [patientId, user.organizationId, code],
     );
     referral = insert.rows[0];
   }
@@ -1358,7 +1368,7 @@ app.get("/digital-twin", async (c) => {
       last_ai_assessment_at 
      FROM patient_longitudinal_summary 
      WHERE patient_id = $1`,
-    [patientId]
+    [patientId],
   );
 
   return c.json({ data: result.rows[0] || null });
@@ -1381,7 +1391,7 @@ app.get("/ai-snapshot", async (c) => {
      WHERE s.patient_id = $1 AND s.organization_id = $2
      ORDER BY s.date DESC
      LIMIT 10`,
-    [patientId, user.organizationId]
+    [patientId, user.organizationId],
   );
 
   if (history.rows.length === 0) {
@@ -1410,7 +1420,7 @@ app.get("/ai-snapshot", async (c) => {
     prompt,
     model: "gemini-1.5-flash",
     temperature: 0.2,
-    responseFormat: "json"
+    responseFormat: "json",
   });
 
   const jsonMatch = result.content.match(/\{[\s\S]*\}/);
@@ -1428,12 +1438,14 @@ app.get("/gamification", async (c) => {
   const patientId = context.data.patient_id as string;
   if (!patientId) return c.json({ error: "Paciente não encontrado" }, 404);
 
-  const gamRes = await pool.query(
-    `SELECT current_xp, level, current_streak, longest_streak, last_activity_date,
+  const gamRes = await pool
+    .query(
+      `SELECT current_xp, level, current_streak, longest_streak, last_activity_date,
             total_points, total_badges
      FROM patient_gamification WHERE patient_id = $1 LIMIT 1`,
-    [patientId],
-  ).catch(() => ({ rows: [] }));
+      [patientId],
+    )
+    .catch(() => ({ rows: [] }));
 
   const gam = (gamRes.rows[0] ?? {}) as Record<string, unknown>;
 
@@ -1446,13 +1458,15 @@ app.get("/gamification", async (c) => {
   const xpInLevel = currentXp - prevThreshold;
   const xpNeeded = nextThreshold - prevThreshold;
 
-  const badgesRes = await pool.query(
-    `SELECT achievement_title AS badge_name, unlocked_at AS earned_at
+  const badgesRes = await pool
+    .query(
+      `SELECT achievement_title AS badge_name, unlocked_at AS earned_at
      FROM achievements_log
      WHERE patient_id = $1
      ORDER BY unlocked_at DESC`,
-    [patientId],
-  ).catch(() => ({ rows: [] }));
+      [patientId],
+    )
+    .catch(() => ({ rows: [] }));
 
   return c.json({
     data: {
@@ -1484,26 +1498,40 @@ app.post("/proms", async (c) => {
 
   if (!scale) return c.json({ error: "scale é obrigatório" }, 400);
 
-  await pool.query(
-    `INSERT INTO standardized_test_results
+  await pool
+    .query(
+      `INSERT INTO standardized_test_results
        (organization_id, patient_id, test_type, test_name, scale_name, score, max_score,
         interpretation, answers, responses, applied_at, applied_by, notes, created_by, created_at, updated_at)
      VALUES ($1, $2, $3, $4, $4, $5, $5, NULL, '{}'::jsonb, '{}'::jsonb, NOW(), $6, $7, $6, NOW(), NOW())`,
-    [user.organizationId, patientId, scale.toLowerCase(), scale.toUpperCase(), score, user.uid, notes],
-  ).catch(() => {});
+      [
+        user.organizationId,
+        patientId,
+        scale.toLowerCase(),
+        scale.toUpperCase(),
+        score,
+        user.uid,
+        notes,
+      ],
+    )
+    .catch(() => {});
 
   // Award XP for recording a PROM
-  await pool.query(
-    `INSERT INTO xp_transactions (organization_id, patient_id, amount, reason, source, description, created_at)
+  await pool
+    .query(
+      `INSERT INTO xp_transactions (organization_id, patient_id, amount, reason, source, description, created_at)
      VALUES ($1, $2, 5, 'prom_recorded', 'proms', $3, NOW())`,
-    [user.organizationId, patientId, `Registrou escala ${scale}`],
-  ).catch(() => {});
+      [user.organizationId, patientId, `Registrou escala ${scale}`],
+    )
+    .catch(() => {});
 
-  await pool.query(
-    `UPDATE patient_gamification SET current_xp = current_xp + 5, total_points = total_points + 5,
+  await pool
+    .query(
+      `UPDATE patient_gamification SET current_xp = current_xp + 5, total_points = total_points + 5,
      updated_at = NOW() WHERE patient_id = $1`,
-    [patientId],
-  ).catch(() => {});
+      [patientId],
+    )
+    .catch(() => {});
 
   return c.json({ success: true, data: { xpAwarded: 5 } }, 201);
 });
@@ -1523,7 +1551,7 @@ app.post("/exercises/log", async (c) => {
   };
 
   const pool = await createPool(c.env);
-  
+
   await pool.query(
     `INSERT INTO patient_exercise_logs 
      (patient_id, organization_id, exercise_id, pain_level, difficulty, completed, notes, created_at)
@@ -1535,8 +1563,8 @@ app.post("/exercises/log", async (c) => {
       body.painLevel,
       body.difficulty,
       body.completed,
-      body.notes || null
-    ]
+      body.notes || null,
+    ],
   );
 
   return c.json({ success: true });
@@ -1551,11 +1579,13 @@ app.get("/media/photos", async (c) => {
   const patientId = context.data.patient_id as string;
   if (!patientId) return c.json({ error: "Paciente não encontrado" }, 404);
 
-  const res = await pool.query(
-    `SELECT id, r2_key, thumbnail_url, photo_type, body_region, notes, taken_at, created_at
+  const res = await pool
+    .query(
+      `SELECT id, r2_key, thumbnail_url, photo_type, body_region, notes, taken_at, created_at
      FROM patient_photos WHERE patient_id = $1 ORDER BY taken_at DESC NULLS LAST, created_at DESC LIMIT 100`,
-    [patientId],
-  ).catch(() => ({ rows: [] }));
+      [patientId],
+    )
+    .catch(() => ({ rows: [] }));
 
   return c.json({ data: res.rows });
 });
@@ -1567,12 +1597,14 @@ app.get("/media/medical-requests", async (c) => {
   const patientId = context.data.patient_id as string;
   if (!patientId) return c.json({ error: "Paciente não encontrado" }, 404);
 
-  const res = await pool.query(
-    `SELECT id, request_type, title, requested_by, scheduled_date, completed_date,
+  const res = await pool
+    .query(
+      `SELECT id, request_type, title, requested_by, scheduled_date, completed_date,
             status, notes, file_r2_key, created_at
      FROM medical_requests WHERE patient_id = $1 ORDER BY created_at DESC LIMIT 50`,
-    [patientId],
-  ).catch(() => ({ rows: [] }));
+      [patientId],
+    )
+    .catch(() => ({ rows: [] }));
 
   return c.json({ data: res.rows });
 });
@@ -1588,7 +1620,9 @@ app.get("/media/access-url/*", async (c) => {
   const r2Key = c.req.path.replace(/^.*\/media\/access-url\//, "");
   if (!r2Key) return c.json({ error: "r2Key é obrigatório" }, 400);
 
-  const orgId = String((context.data as Record<string, unknown>).organization_id ?? user.organizationId ?? "");
+  const orgId = String(
+    (context.data as Record<string, unknown>).organization_id ?? user.organizationId ?? "",
+  );
   if (!r2Key.startsWith(`${orgId}/${patientId}/`)) {
     return c.json({ error: "Acesso negado" }, 403);
   }
@@ -1597,7 +1631,10 @@ app.get("/media/access-url/*", async (c) => {
   const s3 = new S3Client({
     region: "auto",
     endpoint: `https://${c.env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
-    credentials: { accessKeyId: c.env.R2_ACCESS_KEY_ID, secretAccessKey: c.env.R2_SECRET_ACCESS_KEY },
+    credentials: {
+      accessKeyId: c.env.R2_ACCESS_KEY_ID,
+      secretAccessKey: c.env.R2_SECRET_ACCESS_KEY,
+    },
   });
   const cmd = new GetObjectCommand({ Bucket: examsBucket, Key: r2Key });
   const url = await getSignedUrl(s3, cmd, { expiresIn: 900 });

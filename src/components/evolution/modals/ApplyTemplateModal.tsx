@@ -39,10 +39,13 @@ export const ApplyTemplateModal: React.FC<ApplyTemplateModalProps> = ({
             <div className="p-2 rounded-xl bg-brand-blue/10">
               <FileText className="h-5 w-5 text-brand-blue" />
             </div>
-            <DialogTitle className="text-2xl font-black tracking-tight">Modelos de Evolução</DialogTitle>
+            <DialogTitle className="text-2xl font-black tracking-tight">
+              Modelos de Evolução
+            </DialogTitle>
           </div>
           <DialogDescription className="text-slate-500 font-medium">
-            Selecione um modelo clínico para acelerar seu registro. Você poderá editar o texto livremente após aplicar.
+            Selecione um modelo clínico para acelerar seu registro. Você poderá editar o texto
+            livremente após aplicar.
           </DialogDescription>
         </DialogHeader>
 
@@ -50,15 +53,21 @@ export const ApplyTemplateModal: React.FC<ApplyTemplateModalProps> = ({
           {isLoading ? (
             <div className="py-20 flex flex-col items-center justify-center gap-4">
               <Loader2 className="h-10 w-10 text-brand-blue animate-spin" />
-              <p className="text-xs font-black uppercase tracking-widest text-slate-400">Buscando templates clínicos...</p>
+              <p className="text-xs font-black uppercase tracking-widest text-slate-400">
+                Buscando templates clínicos...
+              </p>
             </div>
           ) : templates.length === 0 ? (
             <div className="py-20 text-center space-y-4">
               <div className="mx-auto w-16 h-16 rounded-full bg-slate-50 flex items-center justify-center">
                 <Info className="h-8 w-8 text-slate-300" />
               </div>
-              <p className="text-slate-500 font-bold">Nenhum template encontrado para sua organização.</p>
-              <Button variant="outline" className="rounded-full">Cadastrar Primeiro Template</Button>
+              <p className="text-slate-500 font-bold">
+                Nenhum template encontrado para sua organização.
+              </p>
+              <Button variant="outline" className="rounded-full">
+                Cadastrar Primeiro Template
+              </Button>
             </div>
           ) : (
             <ScrollArea className="h-[400px] pr-4">
@@ -94,7 +103,11 @@ export const ApplyTemplateModal: React.FC<ApplyTemplateModalProps> = ({
         </div>
 
         <div className="p-6 bg-slate-50 dark:bg-slate-800/30 border-t border-slate-100 dark:border-slate-800 flex justify-end">
-          <Button variant="ghost" onClick={() => onOpenChange(false)} className="rounded-full font-bold">
+          <Button
+            variant="ghost"
+            onClick={() => onOpenChange(false)}
+            className="rounded-full font-bold"
+          >
             Cancelar
           </Button>
         </div>

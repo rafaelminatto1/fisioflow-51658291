@@ -13,11 +13,11 @@
 
 ## Naming Convention
 
-| Environment | Suffix | Example |
-|-------------|--------|---------|
-| Production | none | `fisioflow-clinical` |
-| Staging | `-staging` | `fisioflow-clinical-staging` |
-| Development/local | `-dev` when remote resource is required | `fisioflow-clinical-dev` |
+| Environment       | Suffix                                  | Example                      |
+| ----------------- | --------------------------------------- | ---------------------------- |
+| Production        | none                                    | `fisioflow-clinical`         |
+| Staging           | `-staging`                              | `fisioflow-clinical-staging` |
+| Development/local | `-dev` when remote resource is required | `fisioflow-clinical-dev`     |
 
 ## Required Provisioning
 
@@ -88,10 +88,10 @@ Validation:
 
 Recommended initial values:
 
-| Environment | Logs | Traces |
-|-------------|------|--------|
-| Production | `0.1` | `0.05` |
-| Staging | `1` | `1` |
+| Environment | Logs  | Traces |
+| ----------- | ----- | ------ |
+| Production  | `0.1` | `0.05` |
+| Staging     | `1`   | `1`    |
 
 Incident override:
 
@@ -172,13 +172,13 @@ Do not switch root `wrangler.toml` to native `not_found_handling = "single-page-
 
 Recommended lifecycle rules to create in the Cloudflare dashboard or API after compliance approval:
 
-| Prefix | Action | Timing | Reason |
-|--------|--------|--------|--------|
-| `tmp/ai/` | Delete objects | 1-7 days | Temporary AI artifacts should not persist |
-| `pipelines/events-staging/` | Delete or archive | 30-90 days | Staging operational data should not grow forever |
-| `recordings/` | Review before automatic deletion | Clinic policy | Telemedicine recordings may be clinical records |
-| `orgs/*/nfse/` | Retain | Fiscal policy | DANFSe retention follows fiscal rules |
-| `orgs/*/patients/` | Retain | Clinical/legal policy | Patient records follow healthcare retention |
+| Prefix                      | Action                           | Timing                | Reason                                           |
+| --------------------------- | -------------------------------- | --------------------- | ------------------------------------------------ |
+| `tmp/ai/`                   | Delete objects                   | 1-7 days              | Temporary AI artifacts should not persist        |
+| `pipelines/events-staging/` | Delete or archive                | 30-90 days            | Staging operational data should not grow forever |
+| `recordings/`               | Review before automatic deletion | Clinic policy         | Telemedicine recordings may be clinical records  |
+| `orgs/*/nfse/`              | Retain                           | Fiscal policy         | DANFSe retention follows fiscal rules            |
+| `orgs/*/patients/`          | Retain                           | Clinical/legal policy | Patient records follow healthcare retention      |
 
 Provisioning notes:
 

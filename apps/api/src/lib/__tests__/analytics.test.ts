@@ -9,13 +9,10 @@ describe("normalizeAnalyticsRoute", () => {
   });
 
   it("normalizes numeric path segments", () => {
-    expect(normalizeAnalyticsRoute("/api/reports/2026/items/42")).toBe(
-      "/api/reports/:n/items/:n",
-    );
+    expect(normalizeAnalyticsRoute("/api/reports/2026/items/42")).toBe("/api/reports/:n/items/:n");
   });
 
   it("preserves stable route segments", () => {
     expect(normalizeAnalyticsRoute("/api/health/ready")).toBe("/api/health/ready");
   });
 });
-

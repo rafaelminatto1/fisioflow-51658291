@@ -1,4 +1,3 @@
-
 export interface ActionRule {
   id: string;
   name: string;

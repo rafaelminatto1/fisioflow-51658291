@@ -33,15 +33,17 @@ interface Props {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
   editingConta: ContaFinanceira | null;
-  formData: {
-    tipo: "receber" | "pagar";
-    descricao: "";
-    valor: "";
-    data_vencimento: "";
-    categoria: "";
-    forma_pagamento: "";
-    observacoes: "";
-  } | any;
+  formData:
+    | {
+        tipo: "receber" | "pagar";
+        descricao: "";
+        valor: "";
+        data_vencimento: "";
+        categoria: "";
+        forma_pagamento: "";
+        observacoes: "";
+      }
+    | any;
   setFormData: (data: any) => void;
   handleSubmit: (e: React.FormEvent) => void;
   isPending: boolean;

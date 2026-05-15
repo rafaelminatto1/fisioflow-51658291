@@ -116,7 +116,9 @@ function FisioBrainChat() {
       const res = await fetch(`${getWorkersApiUrl()}/api/fisiobrain/search?${params}`);
       const data: FisioBrainResult = await res.json();
       setResult(data);
-      setHistory((prev) => [{ query: query.trim(), result: data, timestamp: new Date() }, ...prev].slice(0, 10));
+      setHistory((prev) =>
+        [{ query: query.trim(), result: data, timestamp: new Date() }, ...prev].slice(0, 10),
+      );
     } catch {
       toast.error("Erro ao consultar o FisioBrain.");
     } finally {
@@ -197,7 +199,11 @@ function FisioBrainChat() {
                 className="gap-2 h-8"
                 size="sm"
               >
-                {loading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5" />}
+                {loading ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  <Send className="h-3.5 w-3.5" />
+                )}
                 {loading ? "Buscando..." : "Buscar"}
               </Button>
             </div>
@@ -302,7 +308,10 @@ function FisioBrainChat() {
                 </p>
                 <p className="text-[10px] text-muted-foreground mt-1">
                   {item.result.sources.length} fonte(s) •{" "}
-                  {item.timestamp.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
+                  {item.timestamp.toLocaleTimeString("pt-BR", {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
                 </p>
               </button>
             ))}
@@ -465,7 +474,9 @@ export function AIHubView() {
                     </ul>
                     {soapResult.improvedText && (
                       <div className="space-y-2">
-                        <Label className="text-xs font-bold uppercase">Versão Aprimorada (IA)</Label>
+                        <Label className="text-xs font-bold uppercase">
+                          Versão Aprimorada (IA)
+                        </Label>
                         <div className="p-3 bg-background border rounded-lg text-sm italic">
                           {soapResult.improvedText}
                         </div>
@@ -564,7 +575,9 @@ export function AIHubView() {
 function ArtigosTab() {
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
-  const [uploadResult, setUploadResult] = useState<{ success: boolean; message: string } | null>(null);
+  const [uploadResult, setUploadResult] = useState<{ success: boolean; message: string } | null>(
+    null,
+  );
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -594,7 +607,10 @@ function ArtigosTab() {
       });
       const data = await res.json();
       if (res.ok) {
-        setUploadResult({ success: true, message: data.message || "Artigo indexado com sucesso no FisioBrain!" });
+        setUploadResult({
+          success: true,
+          message: data.message || "Artigo indexado com sucesso no FisioBrain!",
+        });
         setFile(null);
         if (fileInputRef.current) fileInputRef.current.value = "";
       } else {
@@ -612,8 +628,8 @@ function ArtigosTab() {
       <div>
         <h3 className="text-lg font-semibold mb-1">Artigos Científicos</h3>
         <p className="text-sm text-muted-foreground">
-          Faça upload de artigos em PDF para indexar na base de conhecimento do FisioBrain.
-          Após indexado, o conteúdo estará disponível nas buscas do FisioBrain Chat.
+          Faça upload de artigos em PDF para indexar na base de conhecimento do FisioBrain. Após
+          indexado, o conteúdo estará disponível nas buscas do FisioBrain Chat.
         </p>
       </div>
 
@@ -639,23 +655,35 @@ function ArtigosTab() {
             ) : (
               <div className="space-y-1">
                 <p className="font-medium text-sm">Clique para selecionar um PDF</p>
-                <p className="text-xs text-muted-foreground">Artigos científicos, guias clínicos, protocolos</p>
+                <p className="text-xs text-muted-foreground">
+                  Artigos científicos, guias clínicos, protocolos
+                </p>
               </div>
             )}
           </div>
 
           {uploadResult && (
-            <div className={`flex items-center gap-2 p-3 rounded-lg text-sm ${uploadResult.success ? "bg-green-50 text-green-700" : "bg-red-50 text-red-700"}`}>
-              {uploadResult.success ? <CheckCircle2 className="h-4 w-4 shrink-0" /> : <AlertTriangle className="h-4 w-4 shrink-0" />}
+            <div
+              className={`flex items-center gap-2 p-3 rounded-lg text-sm ${uploadResult.success ? "bg-green-50 text-green-700" : "bg-red-50 text-red-700"}`}
+            >
+              {uploadResult.success ? (
+                <CheckCircle2 className="h-4 w-4 shrink-0" />
+              ) : (
+                <AlertTriangle className="h-4 w-4 shrink-0" />
+              )}
               {uploadResult.message}
             </div>
           )}
 
           <Button onClick={handleUpload} disabled={!file || uploading} className="w-full">
             {uploading ? (
-              <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Indexando...</>
+              <>
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" /> Indexando...
+              </>
             ) : (
-              <><Upload className="h-4 w-4 mr-2" /> Indexar Artigo no FisioBrain</>
+              <>
+                <Upload className="h-4 w-4 mr-2" /> Indexar Artigo no FisioBrain
+              </>
             )}
           </Button>
         </CardContent>

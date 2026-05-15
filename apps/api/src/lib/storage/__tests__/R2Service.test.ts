@@ -153,7 +153,11 @@ describe("R2Service", () => {
     const { R2Service } = await import("../R2Service");
     const service = new R2Service(env);
 
-    await service.uploadFile("unknown/path/file.bin", new Uint8Array([1]), "application/octet-stream");
+    await service.uploadFile(
+      "unknown/path/file.bin",
+      new Uint8Array([1]),
+      "application/octet-stream",
+    );
 
     const putCommand = (await import("@aws-sdk/client-s3")).PutObjectCommand as any;
     const lastCall = putCommand.mock.calls[putCommand.mock.calls.length - 1][0];

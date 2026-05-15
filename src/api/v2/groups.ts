@@ -53,14 +53,14 @@ export const groupsApi = {
   list: (active?: boolean) =>
     request<{ data: GroupClass[] }>(`${BASE}${active !== undefined ? `?active=${active}` : ""}`),
 
-  create: (body: Partial<GroupClass> & { schedules?: Array<{ weekday: number; start_time: string }> }) =>
-    request<{ data: GroupClass }>(BASE, { method: "POST", body: JSON.stringify(body) }),
+  create: (
+    body: Partial<GroupClass> & { schedules?: Array<{ weekday: number; start_time: string }> },
+  ) => request<{ data: GroupClass }>(BASE, { method: "POST", body: JSON.stringify(body) }),
 
   update: (id: string, body: Partial<GroupClass>) =>
     request<{ data: GroupClass }>(`${BASE}/${id}`, { method: "PUT", body: JSON.stringify(body) }),
 
-  delete: (id: string) =>
-    request<{ success: boolean }>(`${BASE}/${id}`, { method: "DELETE" }),
+  delete: (id: string) => request<{ success: boolean }>(`${BASE}/${id}`, { method: "DELETE" }),
 
   sessions: {
     list: (classId: string, params?: { from?: string; to?: string }) => {
@@ -96,9 +96,12 @@ export const groupsApi = {
 
   checkins: {
     list: (sessionId: string) =>
-      request<{ data: { checkins: GroupCheckin[]; enrolled: Array<{ patient_id: string; full_name: string; checked_in: boolean }> } }>(
-        `${BASE}/sessions/${sessionId}/checkins`,
-      ),
+      request<{
+        data: {
+          checkins: GroupCheckin[];
+          enrolled: Array<{ patient_id: string; full_name: string; checked_in: boolean }>;
+        };
+      }>(`${BASE}/sessions/${sessionId}/checkins`),
     add: (sessionId: string, patient_id: string, method?: string) =>
       request<{ data: GroupCheckin }>(`${BASE}/sessions/${sessionId}/checkins`, {
         method: "POST",
@@ -111,7 +114,7 @@ export const groupsApi = {
   },
 
   waitlist: (classId: string) =>
-    request<{ data: Array<{ patient_id: string; full_name: string; position: number; status: string }> }>(
-      `${BASE}/${classId}/waitlist`,
-    ),
+    request<{
+      data: Array<{ patient_id: string; full_name: string; position: number; status: string }>;
+    }>(`${BASE}/${classId}/waitlist`),
 };

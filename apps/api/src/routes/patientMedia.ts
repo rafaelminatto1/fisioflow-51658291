@@ -30,7 +30,12 @@
  *   DELETE /api/patient-media/:patientId/medical-requests/:id     — deletar
  */
 import { Hono } from "hono";
-import { S3Client, PutObjectCommand, GetObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
+import {
+  S3Client,
+  PutObjectCommand,
+  GetObjectCommand,
+  DeleteObjectCommand,
+} from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { requireAuth, type AuthVariables } from "../lib/auth";
 import { createPool } from "../lib/db";
@@ -100,7 +105,10 @@ app.post("/upload-url", requireAuth, async (c) => {
   }
 
   if (!ALL_ALLOWED[contentType]) {
-    return c.json({ error: "Tipo de arquivo não suportado", allowed: Object.keys(ALL_ALLOWED) }, 400);
+    return c.json(
+      { error: "Tipo de arquivo não suportado", allowed: Object.keys(ALL_ALLOWED) },
+      400,
+    );
   }
 
   if (fileSize && fileSize > (MAX_SIZE[mediaType] ?? 50 * 1024 * 1024)) {
@@ -249,8 +257,12 @@ app.get("/:patientId/photos", requireAuth, async (c) => {
              WHERE patient_id = $1 AND organization_id = $2`;
   const params: unknown[] = [patientId, user.organizationId];
 
-  if (series_id) { sql += ` AND series_id = $${params.push(series_id)}`; }
-  if (photo_type) { sql += ` AND photo_type = $${params.push(photo_type)}`; }
+  if (series_id) {
+    sql += ` AND series_id = $${params.push(series_id)}`;
+  }
+  if (photo_type) {
+    sql += ` AND photo_type = $${params.push(photo_type)}`;
+  }
   sql += " ORDER BY created_at DESC";
 
   const res = await pool.query(sql, params);
@@ -275,7 +287,9 @@ app.post("/:patientId/photos", requireAuth, async (c) => {
      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)
      RETURNING *`,
     [
-      patientId, user.organizationId, user.uid,
+      patientId,
+      user.organizationId,
+      user.uid,
       body.photo_type ?? "clinical",
       body.r2_key,
       body.file_name ?? null,
@@ -329,7 +343,9 @@ app.get("/:patientId/videos", requireAuth, async (c) => {
   let sql = `SELECT * FROM patient_videos
              WHERE patient_id = $1 AND organization_id = $2`;
   const params: unknown[] = [patientId, user.organizationId];
-  if (video_type) { sql += ` AND video_type = $${params.push(video_type)}`; }
+  if (video_type) {
+    sql += ` AND video_type = $${params.push(video_type)}`;
+  }
   sql += " ORDER BY created_at DESC";
 
   const res = await pool.query(sql, params);
@@ -355,7 +371,9 @@ app.post("/:patientId/videos", requireAuth, async (c) => {
      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)
      RETURNING *`,
     [
-      patientId, user.organizationId, user.uid,
+      patientId,
+      user.organizationId,
+      user.uid,
       body.video_type ?? "clinical",
       body.r2_key,
       body.file_name ?? null,
@@ -391,9 +409,9 @@ app.delete("/:patientId/videos/:id", requireAuth, async (c) => {
   const toDelete = [r2_key, thumbnail_r2_key].filter(Boolean) as string[];
   await Promise.all(
     toDelete.map((key) =>
-      s3.send(new DeleteObjectCommand({ Bucket: EXAMS_BUCKET, Key: key })).catch((e) =>
-        console.warn("[PatientMedia] R2 delete failed for video:", key, e),
-      ),
+      s3
+        .send(new DeleteObjectCommand({ Bucket: EXAMS_BUCKET, Key: key }))
+        .catch((e) => console.warn("[PatientMedia] R2 delete failed for video:", key, e)),
     ),
   );
 
@@ -429,7 +447,9 @@ app.post("/:patientId/medical-requests", requireAuth, async (c) => {
      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)
      RETURNING *`,
     [
-      patientId, user.organizationId, user.uid,
+      patientId,
+      user.organizationId,
+      user.uid,
       body.request_type ?? "exam_request",
       body.title ?? null,
       body.notes ?? null,
@@ -454,8 +474,21 @@ app.patch("/:patientId/medical-requests/:id", requireAuth, async (c) => {
 
   const fields: string[] = [];
   const values: unknown[] = [];
-  for (const key of ["title", "notes", "status", "r2_key", "file_name", "file_size", "mime_type", "request_date", "requested_by", "specialty"] as const) {
-    if (key in body) { fields.push(`${key} = $${values.push(body[key])}`); }
+  for (const key of [
+    "title",
+    "notes",
+    "status",
+    "r2_key",
+    "file_name",
+    "file_size",
+    "mime_type",
+    "request_date",
+    "requested_by",
+    "specialty",
+  ] as const) {
+    if (key in body) {
+      fields.push(`${key} = $${values.push(body[key])}`);
+    }
   }
   if (!fields.length) return c.json({ error: "Nenhum campo para atualizar" }, 400);
   fields.push(`updated_at = NOW()`);

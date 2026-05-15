@@ -339,7 +339,9 @@ export function CommandPalette({
         icon: BrainIcon,
         category: "ai",
         action: () => {
-          const evidenceTab = document.querySelector('[data-value="evidence"]') as HTMLButtonElement;
+          const evidenceTab = document.querySelector(
+            '[data-value="evidence"]',
+          ) as HTMLButtonElement;
           if (evidenceTab) evidenceTab.click();
           else navigate(`/patients/${patientId}?tab=evidence`);
         },
@@ -360,19 +362,22 @@ export function CommandPalette({
     const fetchClinicalData = async () => {
       setIsSearching(true);
       try {
-        const res = await request<{ data: any[] }>(`/api/ai-search/unified?q=${encodeURIComponent(debouncedQuery)}`);
-        
+        const res = await request<{ data: any[] }>(
+          `/api/ai-search/unified?q=${encodeURIComponent(debouncedQuery)}`,
+        );
+
         const mappedResults: CommandItem[] = res.data.map((item: any) => ({
           id: `ai-${item.type}-${item.id}`,
           label: item.title,
-          description: item.type === "patient" ? item.description : (item.category || "Conteúdo Clínico"),
-          icon: item.type === "exercise" ? Dumbbell : (item.type === "wiki" ? BookOpen : Users),
+          description:
+            item.type === "patient" ? item.description : item.category || "Conteúdo Clínico",
+          icon: item.type === "exercise" ? Dumbbell : item.type === "wiki" ? BookOpen : Users,
           category: "clinical-results",
           action: () => {
             if (item.type === "patient") navigate(`/pacientes/${item.id}`);
             else if (item.type === "wiki") navigate(`/wiki?id=${item.id}`);
             else if (item.type === "exercise") navigate(`/exercicios/${item.id}`);
-          }
+          },
         }));
 
         setClinicalResults(mappedResults);
@@ -468,117 +473,119 @@ export function CommandPalette({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="p-0 max-w-2xl border-none bg-transparent shadow-none top-[20%] translate-y-0">
         <div className="glass-panel border-primary/20 shadow-premium-xl overflow-hidden animate-in fade-in zoom-in-95 duration-300">
-        <DialogHeader className="px-4 pt-4 pb-0">
-          <DialogTitle className="flex items-center gap-2">
-            <Command className="h-5 w-5" />
-            Busca Rápida
-          </DialogTitle>
-          <DialogDescription className="sr-only">
-            Busca rápida para navegação e ações. Use Ctrl+K para abrir.
-          </DialogDescription>
-        </DialogHeader>
+          <DialogHeader className="px-4 pt-4 pb-0">
+            <DialogTitle className="flex items-center gap-2">
+              <Command className="h-5 w-5" />
+              Busca Rápida
+            </DialogTitle>
+            <DialogDescription className="sr-only">
+              Busca rápida para navegação e ações. Use Ctrl+K para abrir.
+            </DialogDescription>
+          </DialogHeader>
 
-        <div className="flex items-center px-4 py-2 border-b">
-          {isSearching ? (
-            <Loader2 className="h-4 w-4 mr-2 text-primary animate-spin shrink-0" />
-          ) : (
-            <Search className="h-4 w-4 mr-2 text-muted-foreground shrink-0" />
-          )}
-          <Input
-            data-testid="omnisearch-input"
-            placeholder="Buscar comandos, pacientes, exercícios (IA)..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="border-0 focus-visible:ring-0 h-9"
-            autoFocus
-          />
-          {searchQuery && (
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-6 px-2 text-xs"
-              onClick={() => setSearchQuery("")}
-            >
-              Limpar
-            </Button>
-          )}
-        </div>
+          <div className="flex items-center px-4 py-2 border-b">
+            {isSearching ? (
+              <Loader2 className="h-4 w-4 mr-2 text-primary animate-spin shrink-0" />
+            ) : (
+              <Search className="h-4 w-4 mr-2 text-muted-foreground shrink-0" />
+            )}
+            <Input
+              data-testid="omnisearch-input"
+              placeholder="Buscar comandos, pacientes, exercícios (IA)..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="border-0 focus-visible:ring-0 h-9"
+              autoFocus
+            />
+            {searchQuery && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-6 px-2 text-xs"
+                onClick={() => setSearchQuery("")}
+              >
+                Limpar
+              </Button>
+            )}
+          </div>
 
-        <ScrollArea className="max-h-[400px]">
-          <div className="px-2 py-2">
-            {Object.entries(groupedItems).map(([category, items]) => {
-              const categoryInfo = CATEGORIES[category as keyof typeof CATEGORIES];
-              if (!categoryInfo || items.length === 0) return null;
+          <ScrollArea className="max-h-[400px]">
+            <div className="px-2 py-2">
+              {Object.entries(groupedItems).map(([category, items]) => {
+                const categoryInfo = CATEGORIES[category as keyof typeof CATEGORIES];
+                if (!categoryInfo || items.length === 0) return null;
 
-              const CategoryIcon = categoryInfo.icon;
+                const CategoryIcon = categoryInfo.icon;
 
-              return (
-                <div key={category} className="mb-4 last:mb-0">
-                  <div className="flex items-center gap-2 px-2 py-1.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                    <CategoryIcon className="h-3 w-3" />
-                    {categoryInfo.label}
-                  </div>
-                  <div className="mt-1 space-y-1">
-                    {items.map((item, _index) => {
-                      const globalIndex = filteredItems.indexOf(item);
-                      const isSelected = globalIndex === selectedIndex;
-                      const Icon = item.icon;
+                return (
+                  <div key={category} className="mb-4 last:mb-0">
+                    <div className="flex items-center gap-2 px-2 py-1.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                      <CategoryIcon className="h-3 w-3" />
+                      {categoryInfo.label}
+                    </div>
+                    <div className="mt-1 space-y-1">
+                      {items.map((item, _index) => {
+                        const globalIndex = filteredItems.indexOf(item);
+                        const isSelected = globalIndex === selectedIndex;
+                        const Icon = item.icon;
 
-                      return (
-                        <button
-                          key={item.id}
-                          onClick={() => handleExecuteItem(item)}
-                          onMouseEnter={() => setSelectedIndex(globalIndex)}
-                          className={cn(
-                            "w-full flex items-center gap-3 px-3 py-2 rounded-md text-left text-sm",
-                            "hover:bg-accent hover:text-accent-foreground",
-                            "transition-colors",
-                            isSelected && "bg-accent",
-                          )}
-                        >
-                          <div className="shrink-0">
-                            <Icon className="h-4 w-4" />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2">
-                              <span className="font-medium truncate">{item.label}</span>
-                              {item.shortcut && (
-                                <Badge variant="outline" className="text-[10px] px-1 py-0">
-                                  {item.shortcut}
-                                </Badge>
+                        return (
+                          <button
+                            key={item.id}
+                            onClick={() => handleExecuteItem(item)}
+                            onMouseEnter={() => setSelectedIndex(globalIndex)}
+                            className={cn(
+                              "w-full flex items-center gap-3 px-3 py-2 rounded-md text-left text-sm",
+                              "hover:bg-accent hover:text-accent-foreground",
+                              "transition-colors",
+                              isSelected && "bg-accent",
+                            )}
+                          >
+                            <div className="shrink-0">
+                              <Icon className="h-4 w-4" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2">
+                                <span className="font-medium truncate">{item.label}</span>
+                                {item.shortcut && (
+                                  <Badge variant="outline" className="text-[10px] px-1 py-0">
+                                    {item.shortcut}
+                                  </Badge>
+                                )}
+                              </div>
+                              {item.description && (
+                                <p className="text-xs text-muted-foreground truncate">
+                                  {item.description}
+                                </p>
                               )}
                             </div>
-                            {item.description && (
-                              <p className="text-xs text-muted-foreground truncate">
-                                {item.description}
-                              </p>
-                            )}
-                          </div>
-                        </button>
-                      );
-                    })}
+                          </button>
+                        );
+                      })}
+                    </div>
                   </div>
-                </div>
-              );
-            })}
-          </div>
-        </ScrollArea>
+                );
+              })}
+            </div>
+          </ScrollArea>
 
-        <div className="flex items-center justify-between px-4 py-2 border-t text-xs text-muted-foreground">
-          <div className="flex items-center gap-4">
-            <span>
-              <kbd className="px-1.5 py-0.5 bg-muted rounded text-[10px] font-mono">↑↓</kbd> navegar
-            </span>
-            <span>
-              <kbd className="px-1.5 py-0.5 bg-muted rounded text-[10px] font-mono">↵</kbd>{" "}
-              selecionar
-            </span>
-            <span>
-              <kbd className="px-1.5 py-0.5 bg-muted rounded text-[10px] font-mono">esc</kbd> fechar
-            </span>
+          <div className="flex items-center justify-between px-4 py-2 border-t text-xs text-muted-foreground">
+            <div className="flex items-center gap-4">
+              <span>
+                <kbd className="px-1.5 py-0.5 bg-muted rounded text-[10px] font-mono">↑↓</kbd>{" "}
+                navegar
+              </span>
+              <span>
+                <kbd className="px-1.5 py-0.5 bg-muted rounded text-[10px] font-mono">↵</kbd>{" "}
+                selecionar
+              </span>
+              <span>
+                <kbd className="px-1.5 py-0.5 bg-muted rounded text-[10px] font-mono">esc</kbd>{" "}
+                fechar
+              </span>
+            </div>
+            <span>{filteredItems.length} resultados</span>
           </div>
-          <span>{filteredItems.length} resultados</span>
-        </div>
         </div>
       </DialogContent>
     </Dialog>

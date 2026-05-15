@@ -717,7 +717,9 @@ export default function AuditLogs() {
                                   {backup.status === "completed" && (
                                     <CheckCircle className="h-3 w-3 mr-1" />
                                   )}
-                                  {backup.status === "failed" && <XCircle className="h-3 w-3 mr-1" />}
+                                  {backup.status === "failed" && (
+                                    <XCircle className="h-3 w-3 mr-1" />
+                                  )}
                                   {backup.status === "pending" && (
                                     <AlertCircle className="h-3 w-3 mr-1" />
                                   )}
@@ -731,7 +733,9 @@ export default function AuditLogs() {
                                 </Badge>
                               </TableCell>
                               <TableCell>{backup.tables_included?.length || 0} tabelas</TableCell>
-                              <TableCell>{totalRecords.toLocaleString("pt-BR")} registros</TableCell>
+                              <TableCell>
+                                {totalRecords.toLocaleString("pt-BR")} registros
+                              </TableCell>
                               <TableCell>
                                 {format(new Date(backup.created_at), "dd/MM/yyyy HH:mm", {
                                   locale: ptBR,

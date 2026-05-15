@@ -39,7 +39,8 @@ export function PatientGamificationSummary({ patientId }: PatientGamificationSum
   }
 
   const streak = profile.current_streak ?? 0;
-  const adherence = totalPoints > 0 ? Math.min(100, Math.round((totalPoints / (currentLevel * 100)) * 100)) : 0;
+  const adherence =
+    totalPoints > 0 ? Math.min(100, Math.round((totalPoints / (currentLevel * 100)) * 100)) : 0;
 
   return (
     <div className="rounded-lg border bg-gradient-to-br from-blue-50/50 to-white p-3 space-y-3">
@@ -64,7 +65,9 @@ export function PatientGamificationSummary({ patientId }: PatientGamificationSum
 
       <div className="space-y-1">
         <div className="flex justify-between text-xs text-muted-foreground">
-          <span>{currentXp} / {xpPerLevel} XP para nível {currentLevel + 1}</span>
+          <span>
+            {currentXp} / {xpPerLevel} XP para nível {currentLevel + 1}
+          </span>
           <span>{Math.round(progressPercentage)}%</span>
         </div>
         <Progress value={progressPercentage} className="h-1.5" />
@@ -73,7 +76,9 @@ export function PatientGamificationSummary({ patientId }: PatientGamificationSum
       {adherence > 0 && (
         <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
           <TrendingUp className="h-3.5 w-3.5 text-green-600" />
-          <span>Aderência estimada: <span className="font-medium text-green-700">{adherence}%</span></span>
+          <span>
+            Aderência estimada: <span className="font-medium text-green-700">{adherence}%</span>
+          </span>
         </div>
       )}
     </div>

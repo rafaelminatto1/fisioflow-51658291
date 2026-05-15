@@ -240,9 +240,9 @@ describe("AppointmentService.updateAppointment", () => {
   });
 
   it("throws AppError.badRequest when no data to update", async () => {
-    await expect(
-      AppointmentService.updateAppointment("appt-uuid-1", {}, "org-1"),
-    ).rejects.toThrow(AppError);
+    await expect(AppointmentService.updateAppointment("appt-uuid-1", {}, "org-1")).rejects.toThrow(
+      AppError,
+    );
   });
 
   it("throws AppError when API fails", async () => {

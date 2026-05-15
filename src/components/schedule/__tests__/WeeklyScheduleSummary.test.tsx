@@ -12,7 +12,10 @@ const appointments = [
 describe("WeeklyScheduleSummary", () => {
   it("renders weekly period and appointment metrics", () => {
     render(
-      <WeeklyScheduleSummary currentDate={new Date("2026-05-01T10:00:00")} appointments={appointments} />,
+      <WeeklyScheduleSummary
+        currentDate={new Date("2026-05-01T10:00:00")}
+        appointments={appointments}
+      />,
     );
 
     expect(screen.getByText(/Semana ativa/i)).toBeInTheDocument();

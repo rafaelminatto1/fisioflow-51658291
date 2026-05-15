@@ -492,7 +492,7 @@ export async function fetchContacts(filters?: { search?: string; page?: number; 
   if (filters?.limit) params.set("limit", String(filters.limit));
   const qs = params.toString();
   const res = await request<{
-    data:{ data: unknown } | unknown[];
+    data: { data: unknown } | unknown[];
     pagination: { page: number; limit: number; total: number };
   }>(`${BASE}/contacts${qs ? `?${qs}` : ""}`);
   return {
@@ -502,7 +502,9 @@ export async function fetchContacts(filters?: { search?: string; page?: number; 
 }
 
 export async function fetchContact(id: string) {
-  const res = await request<{ data: unknown } | unknown|{ data: unknown } | unknown>(`${BASE}/contacts/${id}`);
+  const res = await request<{ data: unknown } | unknown | { data: unknown } | unknown>(
+    `${BASE}/contacts/${id}`,
+  );
   return mapContact(unwrapData(res));
 }
 
@@ -511,10 +513,13 @@ export async function resolveContact(data: {
   displayName?: string;
   patientId?: string;
 }) {
-  const res = await request<{ data: unknown } | unknown|{ data: unknown } | unknown>(`${BASE}/contacts/resolve`, {
-    method: "POST",
-    body: JSON.stringify(data),
-  });
+  const res = await request<{ data: unknown } | unknown | { data: unknown } | unknown>(
+    `${BASE}/contacts/resolve`,
+    {
+      method: "POST",
+      body: JSON.stringify(data),
+    },
+  );
   return mapContact(unwrapData(res));
 }
 
@@ -533,7 +538,7 @@ export async function fetchMetrics() {
 
 export async function fetchTags() {
   const res = await request<{ data: Tag[] } | Tag[]>(`${BASE}/tags`);
-  return Array.isArray(res) ? res : (unwrapData(res));
+  return Array.isArray(res) ? res : unwrapData(res);
 }
 
 export async function createTag(name: string, color: string) {
@@ -564,7 +569,7 @@ export async function fetchQuickReplies(team?: string) {
   const res = await request<{ data: QuickReply[] } | QuickReply[]>(
     `${BASE}/quick-replies${qs ? `?${qs}` : ""}`,
   );
-  return Array.isArray(res) ? res : (unwrapData(res));
+  return Array.isArray(res) ? res : unwrapData(res);
 }
 
 export async function updatePriority(
@@ -609,17 +614,22 @@ export async function createQuickReply(data: Omit<QuickReply, "id">) {
 }
 
 export async function fetchAutomationRules() {
-  const res = await request<{ data: AutomationRule[] } | AutomationRule[]>(`${AUTOMATIONS_BASE}/automations`);
-  return Array.isArray(res) ? res : (unwrapData(res));
+  const res = await request<{ data: AutomationRule[] } | AutomationRule[]>(
+    `${AUTOMATIONS_BASE}/automations`,
+  );
+  return Array.isArray(res) ? res : unwrapData(res);
 }
 
 export async function createAutomationRule(
   data: Omit<AutomationRule, "id" | "createdAt" | "updatedAt">,
 ) {
-  const res = await request<{ data: AutomationRule } | AutomationRule>(`${AUTOMATIONS_BASE}/automations`, {
-    method: "POST",
-    body: JSON.stringify(data),
-  });
+  const res = await request<{ data: AutomationRule } | AutomationRule>(
+    `${AUTOMATIONS_BASE}/automations`,
+    {
+      method: "POST",
+      body: JSON.stringify(data),
+    },
+  );
   return unwrapData(res);
 }
 
@@ -642,7 +652,7 @@ export async function deleteAutomationRule(id: string) {
 
 export async function fetchTemplates() {
   const res = await request<{ data: Template[] } | Template[]>("/api/whatsapp/templates");
-  const templates = Array.isArray(res) ? res : (unwrapData(res));
+  const templates = Array.isArray(res) ? res : unwrapData(res);
   return Array.isArray(templates) ? templates.map(normalizeTemplate) : [];
 }
 
@@ -701,8 +711,10 @@ export async function snoozeConversation(conversationId: string, until: string) 
 }
 
 export async function fetchConversationActivity(conversationId: string) {
-  const res = await request<{ data: unknown[] }>(`${BASE}/conversations/${conversationId}/activity`);
-  return (res as{ data: unknown } | unknown).data ?? [];
+  const res = await request<{ data: unknown[] }>(
+    `${BASE}/conversations/${conversationId}/activity`,
+  );
+  return (res as { data: unknown } | unknown).data ?? [];
 }
 
 export async function fetchAgentsWorkload() {
@@ -714,5 +726,5 @@ export async function fetchAgentsWorkload() {
       resolvedToday: number;
     }>;
   }>(`${BASE}/agents/workload`);
-  return (res as{ data: unknown } | unknown).data ?? [];
+  return (res as { data: unknown } | unknown).data ?? [];
 }

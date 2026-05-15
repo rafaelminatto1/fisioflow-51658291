@@ -1,4 +1,16 @@
-import { Brain, Download, Filter, Grid3X3, List, Loader2, PlusCircle, Search, Send, SortAsc, Target } from "lucide-react";
+import {
+  Brain,
+  Download,
+  Filter,
+  Grid3X3,
+  List,
+  Loader2,
+  PlusCircle,
+  Search,
+  Send,
+  SortAsc,
+  Target,
+} from "lucide-react";
 import { useEffect, useState } from "react";
 import MainLayout from "@/components/layout/MainLayout";
 import { NewProtocolModal } from "@/components/modals/NewProtocolModal";
@@ -214,7 +226,11 @@ export default function Protocols() {
                   onClick={searchFB}
                   disabled={fbLoading || fbQuery.trim().length < 3}
                 >
-                  {fbLoading ? <Loader2 className="h-3 w-3 animate-spin" /> : <Send className="h-3 w-3" />}
+                  {fbLoading ? (
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                  ) : (
+                    <Send className="h-3 w-3" />
+                  )}
                   {fbLoading ? "Buscando..." : "Buscar"}
                 </Button>
               </div>
@@ -227,18 +243,30 @@ export default function Protocols() {
                     </p>
                   )}
                   {fbResult.sources.map((src) => {
-                    const badge = FB_BADGES[src.source] ?? { label: src.source, cls: "bg-gray-100 text-gray-700" };
+                    const badge = FB_BADGES[src.source] ?? {
+                      label: src.source,
+                      cls: "bg-gray-100 text-gray-700",
+                    };
                     const hasArticle = src.source === "paper";
                     return (
-                      <div key={src.id} className="rounded-lg border p-2 bg-white flex flex-col gap-1 text-xs">
+                      <div
+                        key={src.id}
+                        className="rounded-lg border p-2 bg-white flex flex-col gap-1 text-xs"
+                      >
                         <div className="flex items-start gap-1 flex-wrap">
-                          <Badge className={cn("text-[10px] px-1 py-0", badge.cls)}>{badge.label}</Badge>
+                          <Badge className={cn("text-[10px] px-1 py-0", badge.cls)}>
+                            {badge.label}
+                          </Badge>
                           {hasArticle && (
-                            <Badge className="text-[10px] px-1 py-0 bg-violet-600 text-white">Baseado em evidência</Badge>
+                            <Badge className="text-[10px] px-1 py-0 bg-violet-600 text-white">
+                              Baseado em evidência
+                            </Badge>
                           )}
                         </div>
                         <p className="font-medium leading-snug">{src.title}</p>
-                        {src.excerpt && <p className="text-muted-foreground line-clamp-2">{src.excerpt}</p>}
+                        {src.excerpt && (
+                          <p className="text-muted-foreground line-clamp-2">{src.excerpt}</p>
+                        )}
                       </div>
                     );
                   })}
@@ -316,10 +344,7 @@ export default function Protocols() {
           </div>
         </div>
 
-        <AIProtocolGenerator
-          open={showAIGenerator}
-          onOpenChange={setShowAIGenerator}
-        />
+        <AIProtocolGenerator open={showAIGenerator} onOpenChange={setShowAIGenerator} />
 
         {/* Search and Filters Area */}
         <div className="space-y-6">

@@ -5,15 +5,15 @@
 
 ## Replay Eligibility
 
-| Task Type | Replayable | Required Guard |
-|-----------|------------|----------------|
-| `SEND_WHATSAPP` | Yes, with caution | Message/provider idempotency key and patient communication audit |
-| `R2_OBJECT_CREATED` | Yes | R2 key + event action idempotency |
-| `PROCESS_EXAM` | Yes | Exam ID + processing version |
-| `GENERATE_TTS` | Yes | R2 key must be overwrite-safe or versioned |
-| `TRIGGER_WORKFLOW` | Yes | Workflow type + business entity id + workflow instance id |
-| `PROCESS_BACKUP` | No-op today | No replay needed |
-| `CLEANUP_LOGS` | No-op today | No replay needed |
+| Task Type           | Replayable        | Required Guard                                                   |
+| ------------------- | ----------------- | ---------------------------------------------------------------- |
+| `SEND_WHATSAPP`     | Yes, with caution | Message/provider idempotency key and patient communication audit |
+| `R2_OBJECT_CREATED` | Yes               | R2 key + event action idempotency                                |
+| `PROCESS_EXAM`      | Yes               | Exam ID + processing version                                     |
+| `GENERATE_TTS`      | Yes               | R2 key must be overwrite-safe or versioned                       |
+| `TRIGGER_WORKFLOW`  | Yes               | Workflow type + business entity id + workflow instance id        |
+| `PROCESS_BACKUP`    | No-op today       | No replay needed                                                 |
+| `CLEANUP_LOGS`      | No-op today       | No replay needed                                                 |
 
 ## Redaction Rules
 
@@ -78,4 +78,3 @@ Do not expose a DLQ replay route until:
 - Audit event is written for view and replay.
 - Redacted summary helper has test coverage.
 - Staging replay proves no duplicate WhatsApp/NFS-e side effects.
-

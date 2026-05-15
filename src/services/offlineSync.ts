@@ -216,7 +216,7 @@ class OfflineSyncService {
   public async enqueueAction(actionType: string, payload: unknown): Promise<string> {
     const db = await getDB();
     const id = crypto.randomUUID();
-    
+
     const action: QueuedAction = {
       id,
       action: actionType,
@@ -227,10 +227,10 @@ class OfflineSyncService {
     };
 
     await db.add("offline_actions", action);
-    
+
     logger.info(`Action ${actionType} enqueued for sync`, { id }, "offlineSync");
     this.notifyListeners();
-    
+
     return id;
   }
 

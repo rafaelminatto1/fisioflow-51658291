@@ -40,20 +40,25 @@ function sumValores(items: Array<{ valor?: string | number }>) {
 export function useDemonstrativoMensalLogic() {
   const { currentOrganization } = useOrganizations();
   const organizationId = currentOrganization?.id;
-  
+
   const [mesSelecionado, setMesSelecionado] = useState(format(new Date(), "yyyy-MM").split("-")[1]);
   const [anoSelecionado, setAnoSelecionado] = useState(String(new Date().getFullYear()));
 
-  const meses = useMemo(() => 
-    Array.from({ length: 12 }, (_, i) => ({
-      value: String(i + 1).padStart(2, "0"),
-      label: format(new Date(new Date().getFullYear(), i, 1), "MMMM", {
-        locale: ptBR,
-      }),
-    })), []);
+  const meses = useMemo(
+    () =>
+      Array.from({ length: 12 }, (_, i) => ({
+        value: String(i + 1).padStart(2, "0"),
+        label: format(new Date(new Date().getFullYear(), i, 1), "MMMM", {
+          locale: ptBR,
+        }),
+      })),
+    [],
+  );
 
-  const anos = useMemo(() => 
-    Array.from({ length: 5 }, (_, i) => String(new Date().getFullYear() - i)), []);
+  const anos = useMemo(
+    () => Array.from({ length: 5 }, (_, i) => String(new Date().getFullYear() - i)),
+    [],
+  );
 
   const { data: demoData, isLoading } = useQuery({
     queryKey: ["demonstrativo-mensal", organizationId, anoSelecionado, mesSelecionado],
@@ -183,8 +188,12 @@ export function useDemonstrativoMensalLogic() {
               const movs = (res?.data ?? []) as Array<{ tipo: string; valor: string | number }>;
               return {
                 mes: format(d, "MMM/yy", { locale: ptBR }),
-                entradas: movs.filter((m) => m.tipo === "entrada").reduce((s, m) => s + Number(m.valor), 0),
-                saidas: movs.filter((m) => m.tipo === "saida").reduce((s, m) => s + Number(m.valor), 0),
+                entradas: movs
+                  .filter((m) => m.tipo === "entrada")
+                  .reduce((s, m) => s + Number(m.valor), 0),
+                saidas: movs
+                  .filter((m) => m.tipo === "saida")
+                  .reduce((s, m) => s + Number(m.valor), 0),
               };
             });
         }),
@@ -198,8 +207,10 @@ export function useDemonstrativoMensalLogic() {
   const growth = useMemo(() => {
     if (!demoMesAnterior || !demoData) return { revenue: 0, balance: 0 };
     return {
-      revenue: ((demoData.entradas - demoMesAnterior.entradas) / (demoMesAnterior.entradas || 1)) * 100,
-      balance: ((demoData.saldo - demoMesAnterior.saldo) / Math.abs(demoMesAnterior.saldo || 1)) * 100,
+      revenue:
+        ((demoData.entradas - demoMesAnterior.entradas) / (demoMesAnterior.entradas || 1)) * 100,
+      balance:
+        ((demoData.saldo - demoMesAnterior.saldo) / Math.abs(demoMesAnterior.saldo || 1)) * 100,
     };
   }, [demoData, demoMesAnterior]);
 

@@ -116,7 +116,11 @@ const PatientPortal = () => {
     unreadCount,
   } = usePortalNotifications();
   const { confirm: _confirmApt, cancel: _cancelApt } = usePortalAppointmentActions();
-  const { data: portalExercises, isLoading: _isLoadingExercises, complete: completeExercise } = usePortalExercises();
+  const {
+    data: portalExercises,
+    isLoading: _isLoadingExercises,
+    complete: completeExercise,
+  } = usePortalExercises();
   const { data: weeklyAdhesion } = usePortalExerciseHistory(patient?.id);
 
   // Fetch patient data linked to the profile
@@ -255,7 +259,7 @@ const PatientPortal = () => {
     );
   }
 
-  const completedTodayCount = portalExercises?.filter(p => p.completed_today).length || 0;
+  const completedTodayCount = portalExercises?.filter((p) => p.completed_today).length || 0;
   const exerciseProgress = portalExercises?.length
     ? (completedTodayCount / portalExercises.length) * 100
     : 0;
@@ -285,7 +289,7 @@ const PatientPortal = () => {
                   Olá, {PatientHelpers.getName(patient).split(" ")[0]}! 👋
                 </h1>
                 {portalProgress?.streak_days > 0 && (
-                  <motion.div 
+                  <motion.div
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
                     className="flex items-center gap-1 bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full text-xs font-bold border border-amber-200"
@@ -513,7 +517,10 @@ const PatientPortal = () => {
                       </CardTitle>
                       <CardDescription>Acompanhe sua consistência nos exercícios</CardDescription>
                     </div>
-                    <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20">
+                    <Badge
+                      variant="outline"
+                      className="bg-primary/5 text-primary border-primary/20"
+                    >
                       Últimos 7 dias
                     </Badge>
                   </div>
@@ -521,36 +528,42 @@ const PatientPortal = () => {
                 <CardContent>
                   <div className="h-[200px] w-full mt-4">
                     <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={weeklyAdhesion || [
-                        { day: "Seg", completed: 0 },
-                        { day: "Ter", completed: 0 },
-                        { day: "Qua", completed: 0 },
-                        { day: "Qui", completed: 0 },
-                        { day: "Sex", completed: 0 },
-                        { day: "Sáb", completed: 0 },
-                        { day: "Dom", completed: 0 },
-                      ]}>
+                      <BarChart
+                        data={
+                          weeklyAdhesion || [
+                            { day: "Seg", completed: 0 },
+                            { day: "Ter", completed: 0 },
+                            { day: "Qua", completed: 0 },
+                            { day: "Qui", completed: 0 },
+                            { day: "Sex", completed: 0 },
+                            { day: "Sáb", completed: 0 },
+                            { day: "Dom", completed: 0 },
+                          ]
+                        }
+                      >
                         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
-                        <XAxis 
-                          dataKey="day" 
-                          axisLine={false} 
-                          tickLine={false} 
-                          tick={{ fontSize: 12, fill: "#888" }} 
+                        <XAxis
+                          dataKey="day"
+                          axisLine={false}
+                          tickLine={false}
+                          tick={{ fontSize: 12, fill: "#888" }}
                         />
                         <YAxis hide domain={[0, 100]} />
-                        <Tooltip 
+                        <Tooltip
                           cursor={{ fill: "rgba(0,0,0,0.02)" }}
-                          contentStyle={{ borderRadius: "12px", border: "none", boxShadow: "0 10px 15px -3px rgba(0,0,0,0.1)" }}
+                          contentStyle={{
+                            borderRadius: "12px",
+                            border: "none",
+                            boxShadow: "0 10px 15px -3px rgba(0,0,0,0.1)",
+                          }}
                         />
-                        <Bar 
-                          dataKey="completed" 
-                          radius={[6, 6, 0, 0]} 
-                          barSize={32}
-                        >
+                        <Bar dataKey="completed" radius={[6, 6, 0, 0]} barSize={32}>
                           {[80, 100, 60, 90, 100, 40, 0].map((entry, index) => (
-                            <Cell 
-                              key={`cell-${index}`} 
-                              fill={entry >= 80 ? "var(--primary)" : entry >= 50 ? "#94a3b8" : "#cbd5e1"} 
+                            <Cell
+                              key={`cell-${index}`}
+                              fill={
+                                entry >= 80 ? "var(--primary)" : entry >= 50 ? "#94a3b8" : "#cbd5e1"
+                              }
                             />
                           ))}
                         </Bar>
@@ -563,7 +576,7 @@ const PatientPortal = () => {
               {/* Card de Metas AI */}
               <Card className="shadow-lg border-none bg-gradient-to-br from-primary to-blue-700 text-white overflow-hidden relative">
                 <div className="absolute top-0 right-0 p-4 opacity-10">
-                   <Sparkles className="h-24 w-24" />
+                  <Sparkles className="h-24 w-24" />
                 </div>
                 <CardHeader>
                   <CardTitle className="text-lg flex items-center gap-2">
@@ -724,14 +737,17 @@ const PatientPortal = () => {
                     Sua Missão de Hoje
                   </CardTitle>
                   <CardDescription>
-                    {completedTodayCount === (portalExercises?.length || 0) && (portalExercises?.length || 0) > 0
+                    {completedTodayCount === (portalExercises?.length || 0) &&
+                    (portalExercises?.length || 0) > 0
                       ? "Parabéns! Você completou todos os exercícios de hoje! 🎉"
                       : `${(portalExercises?.length || 0) - completedTodayCount} exercícios restantes para hoje.`}
                   </CardDescription>
                 </div>
                 <div className="text-right">
-                   <p className="text-2xl font-bold text-primary">{Math.round(exerciseProgress)}%</p>
-                   <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Concluído</p>
+                  <p className="text-2xl font-bold text-primary">{Math.round(exerciseProgress)}%</p>
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider">
+                    Concluído
+                  </p>
                 </div>
               </CardHeader>
               <CardContent>
@@ -750,57 +766,80 @@ const PatientPortal = () => {
                           key={p.id}
                           className={cn(
                             "group flex items-center justify-between p-4 rounded-xl border transition-all duration-300",
-                            isCompleted 
-                              ? "bg-emerald-50/50 border-emerald-100 opacity-80" 
-                              : "bg-white hover:border-primary/30 hover:shadow-md"
+                            isCompleted
+                              ? "bg-emerald-50/50 border-emerald-100 opacity-80"
+                              : "bg-white hover:border-primary/30 hover:shadow-md",
                           )}
                         >
                           <div className="flex items-center gap-4">
                             <button
                               onClick={() => {
                                 if (!isCompleted) {
-                                  completeExercise.mutate({ 
+                                  completeExercise.mutate({
                                     assignmentId: p.assignment_id,
-                                    data: { sets_done: p.sets, reps_done: p.reps }
+                                    data: { sets_done: p.sets, reps_done: p.reps },
                                   });
                                 }
                               }}
                               className={cn(
                                 "h-10 w-10 rounded-full flex items-center justify-center transition-all duration-500",
-                                isCompleted 
-                                  ? "bg-emerald-500 text-white shadow-lg shadow-emerald-200" 
-                                  : "border-2 border-primary/20 text-primary/20 hover:border-primary hover:text-primary"
+                                isCompleted
+                                  ? "bg-emerald-500 text-white shadow-lg shadow-emerald-200"
+                                  : "border-2 border-primary/20 text-primary/20 hover:border-primary hover:text-primary",
                               )}
                             >
-                              {isCompleted ? <CheckCircle2 className="h-6 w-6" /> : <Play className="h-5 w-5 ml-1" />}
+                              {isCompleted ? (
+                                <CheckCircle2 className="h-6 w-6" />
+                              ) : (
+                                <Play className="h-5 w-5 ml-1" />
+                              )}
                             </button>
-                            <div onClick={() => setSelectedPrescription(p as any)} className="cursor-pointer">
-                              <p className={cn("font-bold transition-all", isCompleted && "text-muted-foreground line-through")}>
+                            <div
+                              onClick={() => setSelectedPrescription(p as any)}
+                              className="cursor-pointer"
+                            >
+                              <p
+                                className={cn(
+                                  "font-bold transition-all",
+                                  isCompleted && "text-muted-foreground line-through",
+                                )}
+                              >
                                 {p.name}
                               </p>
                               <div className="flex gap-3 text-xs text-muted-foreground">
-                                <span className="flex items-center gap-1"><Activity className="h-3 w-3" /> {p.sets} séries</span>
-                                <span className="flex items-center gap-1"><Target className="h-3 w-3" /> {p.reps} reps</span>
-                                {p.frequency && <span className="flex items-center gap-1"><Clock className="h-3 w-3" /> {p.frequency}</span>}
+                                <span className="flex items-center gap-1">
+                                  <Activity className="h-3 w-3" /> {p.sets} séries
+                                </span>
+                                <span className="flex items-center gap-1">
+                                  <Target className="h-3 w-3" /> {p.reps} reps
+                                </span>
+                                {p.frequency && (
+                                  <span className="flex items-center gap-1">
+                                    <Clock className="h-3 w-3" /> {p.frequency}
+                                  </span>
+                                )}
                               </div>
                             </div>
                           </div>
                           <div className="flex items-center gap-2">
-                             {!isCompleted && (
-                               <Button 
-                                 variant="ghost" 
-                                 size="sm" 
-                                 className="opacity-0 group-hover:opacity-100 transition-opacity"
-                                 onClick={() => setSelectedPrescription(p as any)}
-                               >
-                                 Ver Aula
-                               </Button>
-                             )}
-                             {isCompleted && (
-                               <Badge variant="outline" className="bg-emerald-100 text-emerald-700 border-emerald-200">
-                                 Concluído
-                               </Badge>
-                             )}
+                            {!isCompleted && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="opacity-0 group-hover:opacity-100 transition-opacity"
+                                onClick={() => setSelectedPrescription(p as any)}
+                              >
+                                Ver Aula
+                              </Button>
+                            )}
+                            {isCompleted && (
+                              <Badge
+                                variant="outline"
+                                className="bg-emerald-100 text-emerald-700 border-emerald-200"
+                              >
+                                Concluído
+                              </Badge>
+                            )}
                           </div>
                         </div>
                       );

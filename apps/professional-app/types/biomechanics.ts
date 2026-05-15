@@ -10,11 +10,11 @@ export interface AnglePoint {
 export interface AnalysisResult {
   id?: string;
   type: AnalysisType;
-  angles: { 
-    joint: string; 
-    angle: number; 
-    reference: number; 
-    status: "ok" | "warning" | "alert" 
+  angles: {
+    joint: string;
+    angle: number;
+    reference: number;
+    status: "ok" | "warning" | "alert";
   }[];
   observations: string;
   timestamp: string;
@@ -35,34 +35,38 @@ export interface AnalysisResult {
   };
 }
 
-export const ANALYSIS_TYPES: { id: AnalysisType; label: string; icon: any; description: string }[] = [
-  {
-    id: "postura",
-    label: "Análise Postural",
-    icon: "body",
-    description: "Avaliação de desvios posturais globais",
-  },
-  {
-    id: "marcha",
-    label: "Análise de Marcha",
-    icon: "walk",
-    description: "Ciclo de marcha, eventos e simetria",
-  },
-  {
-    id: "articulacao",
-    label: "Ângulos Articulares",
-    icon: "analytics",
-    description: "Medição de ADM em articulações específicas",
-  },
-  {
-    id: "plumb",
-    label: "Linha de Prumo",
-    icon: "git-commit",
-    description: "Alinhamento vertical do centro de gravidade",
-  },
-];
+export const ANALYSIS_TYPES: { id: AnalysisType; label: string; icon: any; description: string }[] =
+  [
+    {
+      id: "postura",
+      label: "Análise Postural",
+      icon: "body",
+      description: "Avaliação de desvios posturais globais",
+    },
+    {
+      id: "marcha",
+      label: "Análise de Marcha",
+      icon: "walk",
+      description: "Ciclo de marcha, eventos e simetria",
+    },
+    {
+      id: "articulacao",
+      label: "Ângulos Articulares",
+      icon: "analytics",
+      description: "Medição de ADM em articulações específicas",
+    },
+    {
+      id: "plumb",
+      label: "Linha de Prumo",
+      icon: "git-commit",
+      description: "Alinhamento vertical do centro de gravidade",
+    },
+  ];
 
-export const REFERENCE_ANGLES: Record<string, { label: string; reference: number; tolerance: number }> = {
+export const REFERENCE_ANGLES: Record<
+  string,
+  { label: string; reference: number; tolerance: number }
+> = {
   joelho_flex: { label: "Flexão de Joelho", reference: 140, tolerance: 10 },
   joelho_ext: { label: "Extensão de Joelho", reference: 0, tolerance: 5 },
   quadril_flex: { label: "Flexão de Quadril", reference: 120, tolerance: 10 },

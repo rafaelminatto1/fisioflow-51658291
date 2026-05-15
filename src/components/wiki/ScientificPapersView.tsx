@@ -204,7 +204,10 @@ export function ScientificPapersView() {
                       {paper.group}
                     </Badge>
                   )}
-                  <Badge variant="outline" className="text-[10px] text-violet-600 border-violet-200">
+                  <Badge
+                    variant="outline"
+                    className="text-[10px] text-violet-600 border-violet-200"
+                  >
                     <FileText className="h-2.5 w-2.5 mr-1" />
                     PDF
                   </Badge>
@@ -269,7 +272,9 @@ export function ScientificPapersView() {
               ) : (
                 <div className="flex flex-col items-center gap-2 text-muted-foreground">
                   <FileText className="h-8 w-8 opacity-40" />
-                  <p className="text-sm font-medium">Arraste o PDF aqui ou clique para selecionar</p>
+                  <p className="text-sm font-medium">
+                    Arraste o PDF aqui ou clique para selecionar
+                  </p>
                   <p className="text-xs">Máx. 4 MB</p>
                 </div>
               )}

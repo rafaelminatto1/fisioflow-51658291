@@ -230,9 +230,7 @@ export function PatientProfileHeader({
                 Localização
               </p>
               <p className="font-semibold text-slate-700 truncate">
-                {patient.city
-                  ? `${patient.city}/${patient.state || ""}`
-                  : "Não informado"}
+                {patient.city ? `${patient.city}/${patient.state || ""}` : "Não informado"}
               </p>
             </div>
           </div>

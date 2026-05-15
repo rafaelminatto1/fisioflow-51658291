@@ -347,10 +347,13 @@ export default function PatientFormScreen() {
           <Card style={styles.sectionCard} padding="sm">
             <View style={styles.sectionHeader}>
               <Ionicons name="shield-outline" size={20} color={colors.primary} />
-              <Text style={[styles.sectionTitle, { color: colors.text }]}>Convênio (Para Reembolso)</Text>
+              <Text style={[styles.sectionTitle, { color: colors.text }]}>
+                Convênio (Para Reembolso)
+              </Text>
             </View>
             <Text style={[styles.fieldHint, { color: colors.textSecondary, marginBottom: 12 }]}>
-              O FisioFlow não atende convênios diretamente. Registre os dados apenas para auxiliar o paciente no processo de reembolso.
+              O FisioFlow não atende convênios diretamente. Registre os dados apenas para auxiliar o
+              paciente no processo de reembolso.
             </Text>
 
             <Input

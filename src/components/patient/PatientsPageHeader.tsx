@@ -112,7 +112,10 @@ export function PatientsPageHeader({
   isSimplified = false,
 }: PatientsPageHeaderProps) {
   return (
-    <div className={cn("space-y-6", isSimplified && "space-y-0")} data-testid="patients-page-header">
+    <div
+      className={cn("space-y-6", isSimplified && "space-y-0")}
+      data-testid="patients-page-header"
+    >
       {!isSimplified && (
         <div className="relative overflow-hidden rounded-[2.25rem] border border-white/40 bg-[radial-gradient(circle_at_top_left,_rgba(109,192,227,0.08),_transparent_28%),radial-gradient(circle_at_bottom_right,_rgba(16,185,129,0.10),_transparent_32%),linear-gradient(135deg,_rgba(255,255,255,0.92),_rgba(248,250,252,0.84))] p-6 shadow-[0_32px_80px_-48px_rgba(15,23,42,0.45)] backdrop-blur-xl dark:border-slate-800/60 dark:bg-[radial-gradient(circle_at_top_left,_rgba(109,192,227,0.16),_transparent_28%),radial-gradient(circle_at_bottom_right,_rgba(16,185,129,0.12),_transparent_32%),linear-gradient(135deg,_rgba(15,23,42,0.94),_rgba(15,23,42,0.82))] md:p-8">
           <div className="flex flex-col gap-6 xl:flex-row xl:items-start xl:justify-between">
@@ -189,7 +192,7 @@ export function PatientsPageHeader({
                 onClick={onToggleAnalytics}
                 className={cn(
                   "h-14 rounded-[1.35rem] px-5 text-xs font-black uppercase tracking-[0.18em]",
-                  showAnalytics && "bg-brand-blue hover:bg-brand-blue/90"
+                  showAnalytics && "bg-brand-blue hover:bg-brand-blue/90",
                 )}
               >
                 {showAnalytics ? "Ocultar análises" : "Análises"}
@@ -199,10 +202,13 @@ export function PatientsPageHeader({
         </div>
       )}
 
-      <div className={cn(
-        "space-y-5 rounded-[2rem] border border-white/50 bg-white/70 p-5 backdrop-blur-xl dark:border-slate-800/70 dark:bg-slate-950/40 shadow-premium",
-        isSimplified && "mt-0 border-none bg-transparent p-0 backdrop-blur-none shadow-none dark:bg-transparent"
-      )}>
+      <div
+        className={cn(
+          "space-y-5 rounded-[2rem] border border-white/50 bg-white/70 p-5 backdrop-blur-xl dark:border-slate-800/70 dark:bg-slate-950/40 shadow-premium",
+          isSimplified &&
+            "mt-0 border-none bg-transparent p-0 backdrop-blur-none shadow-none dark:bg-transparent",
+        )}
+      >
         <div className="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1.6fr)_repeat(3,minmax(170px,0.8fr))] 2xl:grid-cols-[minmax(0,1.6fr)_repeat(5,minmax(150px,0.72fr))]">
           <div className="relative">
             <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
@@ -366,7 +372,6 @@ export function PatientsPageHeader({
     </div>
   );
 }
-
 
 function HeaderSelect({
   value,

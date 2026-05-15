@@ -55,7 +55,7 @@ export const formatClinicalSummary = (
                 }
                 // Handle pain scale objects inside arrays
                 if (item.level !== undefined) {
-                   return `Nível ${item.level}${item.location ? ` em ${item.location}` : ""}`;
+                  return `Nível ${item.level}${item.location ? ` em ${item.location}` : ""}`;
                 }
                 return JSON.stringify(item);
               }

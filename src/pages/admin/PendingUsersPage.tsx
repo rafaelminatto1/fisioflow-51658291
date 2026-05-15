@@ -63,7 +63,11 @@ export default function PendingUsersPage() {
     },
     onError: () => {
       setApprovingId(null);
-      toast({ title: "Erro", description: "Não foi possível aprovar o usuário.", variant: "destructive" });
+      toast({
+        title: "Erro",
+        description: "Não foi possível aprovar o usuário.",
+        variant: "destructive",
+      });
     },
   });
 
@@ -133,10 +137,15 @@ export default function PendingUsersPage() {
                           <p className="text-sm text-slate-500">{u.email}</p>
                           <p className="text-xs text-slate-400 mt-0.5">
                             Cadastro em{" "}
-                            {format(new Date(u.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
+                            {format(new Date(u.created_at), "dd/MM/yyyy 'às' HH:mm", {
+                              locale: ptBR,
+                            })}
                           </p>
                         </div>
-                        <Badge variant="outline" className="border-amber-300 text-amber-700 bg-amber-50 shrink-0">
+                        <Badge
+                          variant="outline"
+                          className="border-amber-300 text-amber-700 bg-amber-50 shrink-0"
+                        >
                           Pendente
                         </Badge>
                       </div>
@@ -178,12 +187,17 @@ export default function PendingUsersPage() {
                       <div className="flex items-center justify-between pt-1 border-t border-slate-100">
                         <div className="flex flex-wrap gap-1.5">
                           {chosenRoles.map((r) => (
-                            <Badge key={r} className="bg-brand-blue/10 text-brand-blue border-brand-blue/20 text-xs">
+                            <Badge
+                              key={r}
+                              className="bg-brand-blue/10 text-brand-blue border-brand-blue/20 text-xs"
+                            >
                               {ROLE_OPTIONS.find((o) => o.value === r)?.label ?? r}
                             </Badge>
                           ))}
                           {chosenRoles.length === 0 && (
-                            <span className="text-xs text-slate-400 italic">Nenhum papel selecionado</span>
+                            <span className="text-xs text-slate-400 italic">
+                              Nenhum papel selecionado
+                            </span>
                           )}
                         </div>
                         <Button

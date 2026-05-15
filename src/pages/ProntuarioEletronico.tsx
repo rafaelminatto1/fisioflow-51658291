@@ -12,15 +12,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  FileText,
-  Download,
-  PenLine,
-  CheckCircle,
-  Calendar,
-  Shield,
-  Printer,
-} from "lucide-react";
+import { FileText, Download, PenLine, CheckCircle, Calendar, Shield, Printer } from "lucide-react";
 import { DigitalSignature, type SignatureData } from "@/components/signature/DigitalSignature";
 import { SignedDocumentBadge } from "@/components/signature/SignedDocumentBadge";
 import { generateSoapPDF, type SoapEvolution } from "@/lib/export/clinicalPdf";
@@ -122,8 +114,8 @@ function SessionCard({
   return (
     <button
       className={`w-full text-left p-3 rounded-xl border transition-all duration-200 group ${
-        isSelected 
-          ? "border-brand-blue bg-brand-blue/10 shadow-sm" 
+        isSelected
+          ? "border-brand-blue bg-brand-blue/10 shadow-sm"
           : "border-border hover:border-brand-blue/50 hover:bg-muted/30"
       }`}
       onClick={onSelect}
@@ -402,9 +394,14 @@ export default function ProntuarioEletronico() {
           icon={FileText}
           backButton
           actions={
-            <Badge variant="outline" className="rounded-lg gap-1.5 py-1.5 px-3 border-brand-blue/20 bg-brand-blue/5 text-brand-blue">
+            <Badge
+              variant="outline"
+              className="rounded-lg gap-1.5 py-1.5 px-3 border-brand-blue/20 bg-brand-blue/5 text-brand-blue"
+            >
               <Shield className="h-3.5 w-3.5" />
-              <span className="font-bold uppercase tracking-wider text-[10px]">Protegido por Criptografia</span>
+              <span className="font-bold uppercase tracking-wider text-[10px]">
+                Protegido por Criptografia
+              </span>
             </Badge>
           }
         />

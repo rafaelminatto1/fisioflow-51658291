@@ -98,7 +98,7 @@ export function CRMTarefas({ leadId, compact = false }: CRMTarefasProps) {
     e?.preventDefault();
     await createMutation.mutateAsync({
       ...formData,
-      lead_id: (formData.lead_id === "" || formData.lead_id === "__none__") ? null : formData.lead_id,
+      lead_id: formData.lead_id === "" || formData.lead_id === "__none__" ? null : formData.lead_id,
       data_vencimento: formData.data_vencimento || null,
       hora_vencimento: formData.hora_vencimento || null,
       status: "pendente",

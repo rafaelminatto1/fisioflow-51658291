@@ -20,16 +20,12 @@ import { z } from "zod";
 import { stripHtml } from "@/lib/utils/stripHtml";
 
 export function sanitizeString(input: string): string {
+  // stripHtml é idempotente; protege contra payloads aninhados tipo <<script>script>
   return (
-    input
-      .trim()
+    stripHtml(input.trim())
       // Remove caracteres nulos
       .split("\u0000")
       .join("")
-      // Remove múltiplos espaços
-      .replace(/\s+/g, " ")
-      // Remove tags HTML — stripHtml é idempotente; protege contra payloads aninhados
-      .replace(/<[^>]*>/g, (m) => stripHtml(m))
       .slice(0, 10000)
   ); // Limitar tamanho
 }

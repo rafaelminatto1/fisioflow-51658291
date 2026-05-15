@@ -15,10 +15,7 @@ import * as path from "path";
 const BASE_URL = "https://moocafisio.com.br";
 const _EMAIL = "rafael.minatto@yahoo.com.br";
 const _PASSWORD = "Yukari30@";
-const REPORT_PATH = path.resolve(
-  process.cwd(),
-  "scripts/prod-audit-report.json"
-);
+const REPORT_PATH = path.resolve(process.cwd(), "scripts/prod-audit-report.json");
 
 // ─── Routes to audit (from src/routes.ts) ───────────────────────────────────
 
@@ -112,11 +109,7 @@ function collectNetworkErrors(page: Page) {
 
   page.on("requestfailed", (request) => {
     const url = request.url();
-    if (
-      !url.includes("posthog") &&
-      !url.includes("sentry") &&
-      !url.includes("google-analytics")
-    ) {
+    if (!url.includes("posthog") && !url.includes("sentry") && !url.includes("google-analytics")) {
       networkErrors.push(`REQUEST FAILED: ${url} — ${request.failure()?.errorText}`);
     }
   });
@@ -124,23 +117,16 @@ function collectNetworkErrors(page: Page) {
   return networkErrors;
 }
 
-async function getPerformanceMetrics(
-  page: Page
-): Promise<Record<string, number>> {
+async function getPerformanceMetrics(page: Page): Promise<Record<string, number>> {
   return await page.evaluate(() => {
-    const nav = performance.getEntriesByType(
-      "navigation"
-    )[0] as PerformanceNavigationTiming;
+    const nav = performance.getEntriesByType("navigation")[0] as PerformanceNavigationTiming;
     const paint = performance.getEntriesByType("paint");
 
-    const fcp =
-      paint.find((p) => p.name === "first-contentful-paint")?.startTime ?? 0;
+    const fcp = paint.find((p) => p.name === "first-contentful-paint")?.startTime ?? 0;
     const _lcp = 0; // Would need PerformanceObserver - captured separately
 
     return {
-      domContentLoaded: Math.round(
-        nav.domContentLoadedEventEnd - nav.startTime
-      ),
+      domContentLoaded: Math.round(nav.domContentLoadedEventEnd - nav.startTime),
       loadComplete: Math.round(nav.loadEventEnd - nav.startTime),
       ttfb: Math.round(nav.responseStart - nav.requestStart),
       fcp: Math.round(fcp),
@@ -150,10 +136,7 @@ async function getPerformanceMetrics(
   });
 }
 
-async function clickAllTabs(
-  page: Page,
-  auditedTabs: string[]
-): Promise<void> {
+async function clickAllTabs(page: Page, auditedTabs: string[]): Promise<void> {
   // Try multiple tab selectors
   const tabSelectors = [
     '[role="tab"]:not([disabled])',
@@ -206,10 +189,10 @@ test.describe("Production Audit", () => {
 
         // Check if we got redirected to login (auth guard)
         if (page.url().includes("/auth") || page.url().includes("/login")) {
-           // If we are here, storage state might not have worked or session expired
-           // But global setup should have handled it. Let's log it.
-           errors.push(`Redirected to login on ${route.path}`);
-           status = "error";
+          // If we are here, storage state might not have worked or session expired
+          // But global setup should have handled it. Let's log it.
+          errors.push(`Redirected to login on ${route.path}`);
+          status = "error";
         } else {
           // Wait for main content to appear
           await page.waitForTimeout(3000);
@@ -277,7 +260,7 @@ test.describe("Production Audit", () => {
           `tabs: ${tabs} | ` +
           `errors: ${errorCount} | ` +
           `warns: ${warnCount} | ` +
-          `net: ${netCount}`
+          `net: ${netCount}`,
       );
 
       // Attach data to report
@@ -297,20 +280,13 @@ test.afterAll(async () => {
     baseUrl: BASE_URL,
     totalPages: auditResults.length,
     summary: {
-      pagesWithErrors: auditResults.filter((r) => r.consoleErrors.length > 0)
-        .length,
-      pagesWithWarnings: auditResults.filter(
-        (r) => r.consoleWarnings.length > 0
-      ).length,
-      pagesWithNetworkErrors: auditResults.filter(
-        (r) => r.networkErrors.length > 0
-      ).length,
+      pagesWithErrors: auditResults.filter((r) => r.consoleErrors.length > 0).length,
+      pagesWithWarnings: auditResults.filter((r) => r.consoleWarnings.length > 0).length,
+      pagesWithNetworkErrors: auditResults.filter((r) => r.networkErrors.length > 0).length,
       timeouts: auditResults.filter((r) => r.status === "timeout").length,
-      avgLoadTimeMs:
-        Math.round(
-          auditResults.reduce((acc, r) => acc + r.loadTimeMs, 0) /
-            auditResults.length
-        ),
+      avgLoadTimeMs: Math.round(
+        auditResults.reduce((acc, r) => acc + r.loadTimeMs, 0) / auditResults.length,
+      ),
     },
     globalErrors,
     pages: auditResults,
@@ -322,8 +298,6 @@ test.afterAll(async () => {
   console.log(`Total pages: ${report.totalPages}`);
   console.log(`Pages with JS errors: ${report.summary.pagesWithErrors}`);
   console.log(`Pages with warnings: ${report.summary.pagesWithWarnings}`);
-  console.log(
-    `Pages with network errors: ${report.summary.pagesWithNetworkErrors}`
-  );
+  console.log(`Pages with network errors: ${report.summary.pagesWithNetworkErrors}`);
   console.log(`Avg load time: ${report.summary.avgLoadTimeMs}ms`);
 });

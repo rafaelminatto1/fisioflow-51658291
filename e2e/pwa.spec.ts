@@ -1,16 +1,16 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from "@playwright/test";
 
-test.use({ serviceWorkers: 'allow' });
+test.use({ serviceWorkers: "allow" });
 
-test.describe('PWA Tests', () => {
-  test('deve ter manifest.json válido', async ({ page }) => {
-    await page.goto('/');
+test.describe("PWA Tests", () => {
+  test("deve ter manifest.json válido", async ({ page }) => {
+    await page.goto("/");
 
     // Verificar link do manifest no HTML
     const manifestLink = await page.locator('link[rel="manifest"]');
     await expect(manifestLink).toHaveCount(1);
 
-    const manifestHref = await manifestLink.getAttribute('href');
+    const manifestHref = await manifestLink.getAttribute("href");
     expect(manifestHref).toBeTruthy();
 
     // Buscar e validar manifest
@@ -34,30 +34,30 @@ test.describe('PWA Tests', () => {
     console.log(`Ícones: ${manifest.icons.length}`);
   });
 
-  test('deve ter Service Worker registrado', async ({ page }) => {
-    await page.goto('/');
-    await page.waitForLoadState('domcontentloaded');
+  test("deve ter Service Worker registrado", async ({ page }) => {
+    await page.goto("/");
+    await page.waitForLoadState("domcontentloaded");
 
     // Aguardar registro do Service Worker
     await page.waitForTimeout(2000);
 
     const swRegistered = await page.evaluate(async () => {
-      if ('serviceWorker' in navigator) {
+      if ("serviceWorker" in navigator) {
         const registration = await navigator.serviceWorker.getRegistration();
         return !!registration;
       }
       return false;
     });
 
-    console.log(`\n🔧 Service Worker registrado: ${swRegistered ? 'Sim' : 'Não'}`);
+    console.log(`\n🔧 Service Worker registrado: ${swRegistered ? "Sim" : "Não"}`);
     expect(swRegistered).toBe(true);
   });
 
-  test('deve ter ícones de tamanhos corretos', async ({ page }) => {
-    await page.goto('/manifest.json');
-    const manifest = await page.evaluate(() => JSON.parse(document.body.textContent || '{}'));
+  test("deve ter ícones de tamanhos corretos", async ({ page }) => {
+    await page.goto("/manifest.json");
+    const manifest = await page.evaluate(() => JSON.parse(document.body.textContent || "{}"));
 
-    const requiredSizes = ['192x192', '512x512'];
+    const requiredSizes = ["192x192", "512x512"];
     const iconSizes = manifest.icons.map((icon: { sizes: string }) => icon.sizes);
 
     console.log(`\n🖼️ Ícones disponíveis:`);
@@ -70,8 +70,8 @@ test.describe('PWA Tests', () => {
     }
   });
 
-  test('deve ter meta tags para PWA', async ({ page }) => {
-    await page.goto('/');
+  test("deve ter meta tags para PWA", async ({ page }) => {
+    await page.goto("/");
 
     // Theme color
     const themeColor = await page.locator('meta[name="theme-color"]');
@@ -88,12 +88,12 @@ test.describe('PWA Tests', () => {
     console.log(`\n🏷️ Meta tags PWA:`);
     console.log(`✓ theme-color`);
     console.log(`✓ viewport`);
-    console.log(`${appleIconCount > 0 ? '✓' : '✗'} apple-touch-icon`);
+    console.log(`${appleIconCount > 0 ? "✓" : "✗"} apple-touch-icon`);
   });
 
-  test('deve funcionar offline (básico)', async ({ page, context }) => {
-    await page.goto('/');
-    await page.waitForLoadState('domcontentloaded');
+  test("deve funcionar offline (básico)", async ({ page, context }) => {
+    await page.goto("/");
+    await page.waitForLoadState("domcontentloaded");
 
     // Aguardar Service Worker cachear recursos
     await page.waitForTimeout(3000);
@@ -116,34 +116,34 @@ test.describe('PWA Tests', () => {
     await context.setOffline(false);
   });
 
-  test('deve ter estratégia de cache configurada', async ({ page }) => {
-    await page.goto('/');
-    await page.waitForLoadState('domcontentloaded');
+  test("deve ter estratégia de cache configurada", async ({ page }) => {
+    await page.goto("/");
+    await page.waitForLoadState("domcontentloaded");
 
     // Verificar se Service Worker tem estratégias de cache
     const cacheNames = await page.evaluate(async () => {
-      if ('caches' in window) {
+      if ("caches" in window) {
         return await caches.keys();
       }
       return [];
     });
 
     console.log(`\n💾 Caches disponíveis:`);
-    cacheNames.forEach(name => console.log(`- ${name}`));
+    cacheNames.forEach((name) => console.log(`- ${name}`));
 
     expect(cacheNames.length).toBeGreaterThan(0);
   });
 
-  test('deve salvar dados no IndexedDB', async ({ page }) => {
-    await page.goto('/');
-    await page.waitForLoadState('domcontentloaded');
+  test("deve salvar dados no IndexedDB", async ({ page }) => {
+    await page.goto("/");
+    await page.waitForLoadState("domcontentloaded");
 
     // Aguardar inicialização do IndexedDB
     await page.waitForTimeout(2000);
 
     const dbExists = await page.evaluate(async () => {
       return new Promise((resolve) => {
-        const request = indexedDB.open('FisioFlowDB');
+        const request = indexedDB.open("FisioFlowDB");
         request.onsuccess = () => {
           resolve(true);
           request.result.close();
@@ -153,21 +153,21 @@ test.describe('PWA Tests', () => {
     });
 
     console.log(`\n🗄️ IndexedDB:`);
-    console.log(`Database existe: ${dbExists ? 'Sim' : 'Não'}`);
+    console.log(`Database existe: ${dbExists ? "Sim" : "Não"}`);
 
     expect(dbExists).toBe(true);
   });
 
-  test('deve ter install prompt disponível', async ({ page }) => {
-    await page.goto('/');
-    await page.waitForLoadState('domcontentloaded');
+  test("deve ter install prompt disponível", async ({ page }) => {
+    await page.goto("/");
+    await page.waitForLoadState("domcontentloaded");
 
     // Verificar se beforeinstallprompt é capturado
     const installable = await page.evaluate(() => {
       return new Promise((resolve) => {
         let captured = false;
 
-        window.addEventListener('beforeinstallprompt', () => {
+        window.addEventListener("beforeinstallprompt", () => {
           captured = true;
         });
 
@@ -176,29 +176,29 @@ test.describe('PWA Tests', () => {
     });
 
     console.log(`\n📲 Install Prompt:`);
-    console.log(`Instalável: ${installable ? 'Sim' : 'Não'}`);
+    console.log(`Instalável: ${installable ? "Sim" : "Não"}`);
 
     // Note: Em testes, o evento pode não disparar sempre
     // Então não falhamos se não disparar
     console.log(`(Evento beforeinstallprompt pode não disparar em testes)`);
   });
 
-  test('deve ter recursos críticos pré-cacheados', async ({ page }) => {
-    await page.goto('/');
-    await page.waitForLoadState('domcontentloaded');
+  test("deve ter recursos críticos pré-cacheados", async ({ page }) => {
+    await page.goto("/");
+    await page.waitForLoadState("domcontentloaded");
 
     // Aguardar cache
     await page.waitForTimeout(3000);
 
     const cachedUrls = await page.evaluate(async () => {
-      if ('caches' in window) {
+      if ("caches" in window) {
         const cacheNames = await caches.keys();
         const allUrls: string[] = [];
 
         for (const name of cacheNames) {
           const cache = await caches.open(name);
           const requests = await cache.keys();
-          allUrls.push(...requests.map(req => new URL(req.url).pathname));
+          allUrls.push(...requests.map((req) => new URL(req.url).pathname));
         }
 
         return allUrls;
@@ -209,20 +209,22 @@ test.describe('PWA Tests', () => {
     console.log(`\n📦 Recursos cacheados: ${cachedUrls.length}`);
 
     // Verificar recursos críticos
-    const criticalResources = ['/', '/manifest.json', '/service-worker.js'];
-    const cachedCritical = criticalResources.filter(url =>
-      cachedUrls.some(cached => cached.includes(url))
+    const criticalResources = ["/", "/manifest.json", "/service-worker.js"];
+    const cachedCritical = criticalResources.filter((url) =>
+      cachedUrls.some((cached) => cached.includes(url)),
     );
 
-    console.log(`Recursos críticos cacheados: ${cachedCritical.length}/${criticalResources.length}`);
+    console.log(
+      `Recursos críticos cacheados: ${cachedCritical.length}/${criticalResources.length}`,
+    );
   });
 
-  test('deve atualizar Service Worker quando disponível', async ({ page }) => {
-    await page.goto('/');
-    await page.waitForLoadState('domcontentloaded');
+  test("deve atualizar Service Worker quando disponível", async ({ page }) => {
+    await page.goto("/");
+    await page.waitForLoadState("domcontentloaded");
 
     const swStatus = await page.evaluate(async () => {
-      if ('serviceWorker' in navigator) {
+      if ("serviceWorker" in navigator) {
         const registration = await navigator.serviceWorker.getRegistration();
 
         if (registration) {
@@ -230,7 +232,7 @@ test.describe('PWA Tests', () => {
             hasActive: !!registration.active,
             hasWaiting: !!registration.waiting,
             hasInstalling: !!registration.installing,
-            updateFound: !!registration.waiting || !!registration.installing
+            updateFound: !!registration.waiting || !!registration.installing,
           };
         }
       }
@@ -239,14 +241,14 @@ test.describe('PWA Tests', () => {
         hasActive: false,
         hasWaiting: false,
         hasInstalling: false,
-        updateFound: false
+        updateFound: false,
       };
     });
 
     console.log(`\n🔄 Service Worker Status:`);
-    console.log(`Active: ${swStatus.hasActive ? 'Sim' : 'Não'}`);
-    console.log(`Waiting: ${swStatus.hasWaiting ? 'Sim' : 'Não'}`);
-    console.log(`Installing: ${swStatus.hasInstalling ? 'Sim' : 'Não'}`);
+    console.log(`Active: ${swStatus.hasActive ? "Sim" : "Não"}`);
+    console.log(`Waiting: ${swStatus.hasWaiting ? "Sim" : "Não"}`);
+    console.log(`Installing: ${swStatus.hasInstalling ? "Sim" : "Não"}`);
 
     expect(swStatus.hasActive).toBe(true);
   });

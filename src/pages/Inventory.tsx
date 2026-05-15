@@ -250,24 +250,39 @@ export default function Inventory() {
                 <div className="p-2 rounded-xl bg-brand-blue/10 text-brand-blue group-hover:scale-110 transition-transform">
                   <Package className="h-5 w-5" />
                 </div>
-                <Badge variant="secondary" className="bg-brand-blue/5 text-brand-blue border-none">Total</Badge>
+                <Badge variant="secondary" className="bg-brand-blue/5 text-brand-blue border-none">
+                  Total
+                </Badge>
               </div>
               <p className="text-3xl font-bold text-slate-900">{inventory.length}</p>
               <p className="text-sm text-slate-500 mt-1">Itens catalogados</p>
             </CardContent>
           </Card>
 
-          <Card className={`border-none shadow-sm overflow-hidden group ${lowStockItems.length > 0 ? "bg-amber-50" : "bg-white"}`}>
+          <Card
+            className={`border-none shadow-sm overflow-hidden group ${lowStockItems.length > 0 ? "bg-amber-50" : "bg-white"}`}
+          >
             <CardContent className="p-6">
               <div className="flex items-center justify-between mb-2">
-                <div className={`p-2 rounded-xl ${lowStockItems.length > 0 ? "bg-amber-100 text-amber-600" : "bg-slate-100 text-slate-500"} group-hover:scale-110 transition-transform`}>
+                <div
+                  className={`p-2 rounded-xl ${lowStockItems.length > 0 ? "bg-amber-100 text-amber-600" : "bg-slate-100 text-slate-500"} group-hover:scale-110 transition-transform`}
+                >
                   <AlertTriangle className="h-5 w-5" />
                 </div>
                 {lowStockItems.length > 0 && (
-                  <Badge variant="secondary" className="bg-amber-100 text-amber-700 border-none animate-pulse">Crítico</Badge>
+                  <Badge
+                    variant="secondary"
+                    className="bg-amber-100 text-amber-700 border-none animate-pulse"
+                  >
+                    Crítico
+                  </Badge>
                 )}
               </div>
-              <p className={`text-3xl font-bold ${lowStockItems.length > 0 ? "text-amber-700" : "text-slate-900"}`}>{lowStockItems.length}</p>
+              <p
+                className={`text-3xl font-bold ${lowStockItems.length > 0 ? "text-amber-700" : "text-slate-900"}`}
+              >
+                {lowStockItems.length}
+              </p>
               <p className="text-sm text-slate-500 mt-1">Itens em falta</p>
             </CardContent>
           </Card>
@@ -278,7 +293,9 @@ export default function Inventory() {
                 <div className="p-2 rounded-xl bg-emerald-100 text-emerald-600 group-hover:scale-110 transition-transform">
                   <ArrowUpCircle className="h-5 w-5" />
                 </div>
-                <Badge variant="secondary" className="bg-emerald-50 text-emerald-700 border-none">Ativos</Badge>
+                <Badge variant="secondary" className="bg-emerald-50 text-emerald-700 border-none">
+                  Ativos
+                </Badge>
               </div>
               <p className="text-3xl font-bold text-slate-900">
                 R$ {totalValue.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
@@ -302,45 +319,99 @@ export default function Inventory() {
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="bg-slate-100 p-1 rounded-xl mb-4">
-            <TabsTrigger value="items" className="rounded-lg data-[state=active]:bg-white data-[state=active]:text-brand-blue data-[state=active]:shadow-sm">Itens</TabsTrigger>
-            <TabsTrigger value="movements" className="rounded-lg data-[state=active]:bg-white data-[state=active]:text-brand-blue data-[state=active]:shadow-sm">Movimentações</TabsTrigger>
-            <TabsTrigger value="forecast" className="rounded-lg data-[state=active]:bg-white data-[state=active]:text-brand-blue data-[state=active]:shadow-sm flex gap-2">
+            <TabsTrigger
+              value="items"
+              className="rounded-lg data-[state=active]:bg-white data-[state=active]:text-brand-blue data-[state=active]:shadow-sm"
+            >
+              Itens
+            </TabsTrigger>
+            <TabsTrigger
+              value="movements"
+              className="rounded-lg data-[state=active]:bg-white data-[state=active]:text-brand-blue data-[state=active]:shadow-sm"
+            >
+              Movimentações
+            </TabsTrigger>
+            <TabsTrigger
+              value="forecast"
+              className="rounded-lg data-[state=active]:bg-white data-[state=active]:text-brand-blue data-[state=active]:shadow-sm flex gap-2"
+            >
               <Brain className="h-3.5 w-3.5" /> Previsão IA
             </TabsTrigger>
-            <TabsTrigger value="alerts" className="rounded-lg data-[state=active]:bg-white data-[state=active]:text-brand-blue data-[state=active]:shadow-sm">Alertas</TabsTrigger>
+            <TabsTrigger
+              value="alerts"
+              className="rounded-lg data-[state=active]:bg-white data-[state=active]:text-brand-blue data-[state=active]:shadow-sm"
+            >
+              Alertas
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="forecast" className="space-y-4">
             {isLoadingForecast ? (
-              <div className="h-64 flex items-center justify-center text-xs text-muted-foreground animate-pulse">Calculando demanda futura baseada na agenda...</div>
+              <div className="h-64 flex items-center justify-center text-xs text-muted-foreground animate-pulse">
+                Calculando demanda futura baseada na agenda...
+              </div>
             ) : (
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                 {forecasts.map((f: any) => (
-                  <Card key={f.id} className={cn("border-none shadow-premium transition-all hover:shadow-md", f.risk === 'high' ? 'bg-red-50 dark:bg-red-950/20' : 'bg-white dark:bg-slate-900/50')}>
+                  <Card
+                    key={f.id}
+                    className={cn(
+                      "border-none shadow-premium transition-all hover:shadow-md",
+                      f.risk === "high"
+                        ? "bg-red-50 dark:bg-red-950/20"
+                        : "bg-white dark:bg-slate-900/50",
+                    )}
+                  >
                     <CardContent className="p-6">
                       <div className="flex justify-between items-start mb-4">
                         <div className="flex-1 pr-2">
-                          <p className="font-bold text-slate-900 dark:text-white truncate">{f.name}</p>
-                          <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest">{f.currentQuantity} {f.unit} em estoque</p>
+                          <p className="font-bold text-slate-900 dark:text-white truncate">
+                            {f.name}
+                          </p>
+                          <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest">
+                            {f.currentQuantity} {f.unit} em estoque
+                          </p>
                         </div>
-                        <div className={cn("p-2 rounded-xl", f.risk === 'high' ? 'bg-red-100 text-red-600' : 'bg-brand-blue/10 text-brand-blue')}>
-                           {f.risk === 'high' ? <TrendingDown className="h-5 w-5" /> : <Brain className="h-5 w-5" />}
+                        <div
+                          className={cn(
+                            "p-2 rounded-xl",
+                            f.risk === "high"
+                              ? "bg-red-100 text-red-600"
+                              : "bg-brand-blue/10 text-brand-blue",
+                          )}
+                        >
+                          {f.risk === "high" ? (
+                            <TrendingDown className="h-5 w-5" />
+                          ) : (
+                            <Brain className="h-5 w-5" />
+                          )}
                         </div>
                       </div>
 
                       <div className="space-y-4">
                         <div className="flex justify-between items-center">
-                          <span className="text-xs text-slate-500 font-medium">Duração estimada</span>
-                          <span className={cn("text-lg font-black", f.risk === 'high' ? 'text-red-600' : 'text-slate-900 dark:text-white')}>
+                          <span className="text-xs text-slate-500 font-medium">
+                            Duração estimada
+                          </span>
+                          <span
+                            className={cn(
+                              "text-lg font-black",
+                              f.risk === "high" ? "text-red-600" : "text-slate-900 dark:text-white",
+                            )}
+                          >
                             {f.daysRemaining} dias
                           </span>
                         </div>
                         <div className="flex justify-between items-center">
-                          <span className="text-xs text-slate-500 font-medium">Demanda próx. 30 dias</span>
-                          <span className="text-sm font-bold text-slate-700 dark:text-slate-300">~{f.predictedMonthlyNeed} {f.unit}</span>
+                          <span className="text-xs text-slate-500 font-medium">
+                            Demanda próx. 30 dias
+                          </span>
+                          <span className="text-sm font-bold text-slate-700 dark:text-slate-300">
+                            ~{f.predictedMonthlyNeed} {f.unit}
+                          </span>
                         </div>
-                        
-                        {f.risk === 'high' && (
+
+                        {f.risk === "high" && (
                           <div className="p-2 rounded-lg bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-400 text-[10px] font-black uppercase text-center tracking-wider animate-pulse">
                             Risco de Ruptura Crítico
                           </div>

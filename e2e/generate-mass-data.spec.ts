@@ -76,12 +76,15 @@ const PATIENTS = [
 ];
 
 // Conteúdo SOAP realista por condição
-const SOAP_TEMPLATES: Record<string, {
-  subjective: string[];
-  objective: string[];
-  assessment: string[];
-  plan: string[];
-}> = {
+const SOAP_TEMPLATES: Record<
+  string,
+  {
+    subjective: string[];
+    objective: string[];
+    assessment: string[];
+    plan: string[];
+  }
+> = {
   "Lombalgia crônica mecânica": {
     subjective: [
       "Paciente relata dor lombar de intensidade 6/10, piora ao sentar por períodos prolongados.",
@@ -252,7 +255,7 @@ test("Gerar 10 pacientes com 10 agendamentos e evoluções cada", async ({ page,
 
     // 3. Criar Novo Paciente
     console.log(`  👤 [${p + 1}/${PATIENTS.length}] Criando paciente: ${patient.name}`);
-      await page.goto(`${baseURL}/pacientes`);
+    await page.goto(`${baseURL}/pacientes`);
     await page.waitForLoadState("networkidle");
 
     const newPatientBtn = page.locator('button:has-text("Novo Paciente")').first();
@@ -263,15 +266,15 @@ test("Gerar 10 pacientes com 10 agendamentos e evoluções cada", async ({ page,
     console.log("  👤 Aguardando modal de cadastro...");
     const modal = page.getByRole("dialog");
     await modal.waitFor({ state: "visible", timeout: 15000 });
-    
+
     console.log("  👤 Preenchendo nome...");
     const nameInput = modal.locator('input#full_name, input[name="full_name"]').first();
     await nameInput.waitFor({ state: "visible", timeout: 10000 });
     await nameInput.fill(patient.name);
-    
+
     console.log("  👤 Preenchendo e-mail e telefone...");
-    await modal.locator('input#email').fill(patientEmail);
-    await modal.locator('input#phone').fill(patient.phone);
+    await modal.locator("input#email").fill(patientEmail);
+    await modal.locator("input#phone").fill(patient.phone);
 
     // Salvar
     console.log("  👤 Clicando em Cadastrar...");
@@ -286,7 +289,7 @@ test("Gerar 10 pacientes com 10 agendamentos e evoluções cada", async ({ page,
       const date = format(subDays(new Date(), 30 - a * 3), "yyyy-MM-dd");
       console.log(`  📅 [${a}/10] Criando agendamento para ${patient.name} (${date})`);
 
-        await page.goto(`${baseURL}/pacientes`);
+      await page.goto(`${baseURL}/pacientes`);
       await page.waitForLoadState("networkidle");
 
       // Buscar paciente
@@ -308,9 +311,11 @@ test("Gerar 10 pacientes com 10 agendamentos e evoluções cada", async ({ page,
       }
 
       // Confirmar agendamento
-      const confirmBtn = page.locator(
-        'button:has-text("Confirmar Agendamento"), button:has-text("Salvar Agendamento"), button:has-text("Agendar"), button[type="submit"]'
-      ).first();
+      const confirmBtn = page
+        .locator(
+          'button:has-text("Confirmar Agendamento"), button:has-text("Salvar Agendamento"), button:has-text("Agendar"), button[type="submit"]',
+        )
+        .first();
       await confirmBtn.waitFor({ state: "visible", timeout: 10000 });
       await confirmBtn.click();
 
@@ -332,63 +337,74 @@ test("Gerar 10 pacientes com 10 agendamentos e evoluções cada", async ({ page,
       }
 
       // Botão "Iniciar Atendimento" ou similar
-      const startBtn = page.locator(
-        'button:has-text("Iniciar Atendimento"), button:has-text("Iniciar"), button:has-text("Abrir Evolução")'
-      ).first();
-      
+      const startBtn = page
+        .locator(
+          'button:has-text("Iniciar Atendimento"), button:has-text("Iniciar"), button:has-text("Abrir Evolução")',
+        )
+        .first();
+
       if (await startBtn.isVisible().catch(() => false)) {
         await startBtn.click();
         await page.waitForTimeout(1500);
 
         // Preencher S (Subjetivo)
         const subj = soapData.subjective[(a - 1) % soapData.subjective.length];
-        const subjField = page.locator(
-          'textarea[placeholder*="Subjetivo"], textarea[name="subjective"], [contenteditable="true"]:near(:text("Subjetivo"))'
-        ).first();
+        const subjField = page
+          .locator(
+            'textarea[placeholder*="Subjetivo"], textarea[name="subjective"], [contenteditable="true"]:near(:text("Subjetivo"))',
+          )
+          .first();
         if (await subjField.isVisible().catch(() => false)) {
           await subjField.fill(subj);
         }
 
         // Preencher O (Objetivo)
         const obj = soapData.objective[(a - 1) % soapData.objective.length];
-        const objField = page.locator(
-          'textarea[placeholder*="Objetivo"], textarea[name="objective"], [contenteditable="true"]:near(:text("Objetivo"))'
-        ).first();
+        const objField = page
+          .locator(
+            'textarea[placeholder*="Objetivo"], textarea[name="objective"], [contenteditable="true"]:near(:text("Objetivo"))',
+          )
+          .first();
         if (await objField.isVisible().catch(() => false)) {
           await objField.fill(obj);
         }
 
         // Preencher A (Avaliação/Assessment)
         const assess = soapData.assessment[(a - 1) % soapData.assessment.length];
-        const assessField = page.locator(
-          'textarea[placeholder*="Avaliação"], textarea[name="assessment"], [contenteditable="true"]:near(:text("Avaliação"))'
-        ).first();
+        const assessField = page
+          .locator(
+            'textarea[placeholder*="Avaliação"], textarea[name="assessment"], [contenteditable="true"]:near(:text("Avaliação"))',
+          )
+          .first();
         if (await assessField.isVisible().catch(() => false)) {
           await assessField.fill(assess);
         }
 
         // Preencher P (Plano)
         const plan = soapData.plan[(a - 1) % soapData.plan.length];
-        const planField = page.locator(
-          'textarea[placeholder*="Plano"], textarea[name="plan"], [contenteditable="true"]:near(:text("Plano"))'
-        ).first();
+        const planField = page
+          .locator(
+            'textarea[placeholder*="Plano"], textarea[name="plan"], [contenteditable="true"]:near(:text("Plano"))',
+          )
+          .first();
         if (await planField.isVisible().catch(() => false)) {
           await planField.fill(plan);
         }
 
         // 5. Criar Análise Biomecânica Fictícia (para teste de comparação)
-        if (a === 1 || a === 10) { // Criar na primeira e na última sessão para comparar evolução
+        if (a === 1 || a === 10) {
+          // Criar na primeira e na última sessão para comparar evolução
           console.log(`  🦴 [${a}/10] Gerando análise biomecânica para ${patient.name}`);
-          
+
           await page.click('button[role="tab"]:has-text("Biomec.")');
           await page.waitForTimeout(1000);
-          
+
           // Selecionar Postura se disponível
           const postureBtn = page.locator('button:has-text("Avaliação Postural")').first();
           if (await postureBtn.isVisible().catch(() => false)) {
             await postureBtn.click();
             await page.waitForTimeout(1000);
-            
+
             // Clicar em Salvar na Sessão
             const saveBioBtn = page.locator('button:has-text("Salvar na Sessão")').first();
             if (await saveBioBtn.isVisible().catch(() => false)) {
@@ -399,9 +415,11 @@ test("Gerar 10 pacientes com 10 agendamentos e evoluções cada", async ({ page,
         }
 
         // Finalizar evolução
-        const finishBtn = page.locator(
-          'button:has-text("Finalizar Evolução"), button:has-text("Salvar Evolução"), button:has-text("Concluir"), button[type="submit"]'
-        ).first();
+        const finishBtn = page
+          .locator(
+            'button:has-text("Finalizar Evolução"), button:has-text("Salvar Evolução"), button:has-text("Concluir"), button[type="submit"]',
+          )
+          .first();
         if (await finishBtn.isVisible().catch(() => false)) {
           await finishBtn.click();
           await page.waitForTimeout(1500);
@@ -411,8 +429,12 @@ test("Gerar 10 pacientes com 10 agendamentos e evoluções cada", async ({ page,
       console.log(`  ✅ Evolução SOAP ${a}/10 finalizada para ${patient.name}`);
     }
 
-    console.log(`\n🎉 Paciente ${p + 1}/10 COMPLETO: ${patient.name} - 10 agendamentos + 10 evoluções\n`);
+    console.log(
+      `\n🎉 Paciente ${p + 1}/10 COMPLETO: ${patient.name} - 10 agendamentos + 10 evoluções\n`,
+    );
   }
 
-  console.log("🏁 Geração de dados em massa concluída com sucesso! 10 pacientes, 100 agendamentos, 100 evoluções SOAP criadas.");
+  console.log(
+    "🏁 Geração de dados em massa concluída com sucesso! 10 pacientes, 100 agendamentos, 100 evoluções SOAP criadas.",
+  );
 });

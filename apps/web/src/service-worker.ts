@@ -122,7 +122,11 @@ async function drainOfflineQueue() {
         // Client error — mark failed permanently (don't retry)
         await new Promise<void>((resolve) => {
           const tx = db.transaction(STORE_NAME, "readwrite");
-          tx.objectStore(STORE_NAME).put({ ...op, status: "failed", failReason: `HTTP ${res.status}` });
+          tx.objectStore(STORE_NAME).put({
+            ...op,
+            status: "failed",
+            failReason: `HTTP ${res.status}`,
+          });
           tx.oncomplete = () => resolve();
           tx.onerror = () => resolve();
         });

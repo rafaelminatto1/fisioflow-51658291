@@ -27,7 +27,9 @@ export const BiomechanicsCameraView: React.FC<BiomechanicsCameraViewProps> = ({
 }) => {
   const device = useCameraDevice("back");
   const [currentPose, setCurrentPose] = React.useState<any>(null);
-  const [jointHistory, setJointHistory] = React.useState<Record<string, { x: number; y: number }[]>>({});
+  const [jointHistory, setJointHistory] = React.useState<
+    Record<string, { x: number; y: number }[]>
+  >({});
 
   const updatePose = (results: Pose) => {
     const mapped = mapVisionToPoseLandmarks(results);
@@ -36,18 +38,18 @@ export const BiomechanicsCameraView: React.FC<BiomechanicsCameraViewProps> = ({
       onPoseDetected(mapped);
 
       if (isRecording) {
-        setJointHistory(prev => {
+        setJointHistory((prev) => {
           const next = { ...prev };
           // Rastrear articulações de interesse
           const jointsToTrack = ["leftAnkle", "rightAnkle", "leftKnee", "rightKnee"];
-          
-          jointsToTrack.forEach(joint => {
+
+          jointsToTrack.forEach((joint) => {
             if (mapped[joint] && mapped[joint].score > 0.5) {
               const history = next[joint] || [];
               next[joint] = [...history.slice(-50), { x: mapped[joint].x, y: mapped[joint].y }];
             }
           });
-          
+
           return next;
         });
       }
@@ -61,13 +63,16 @@ export const BiomechanicsCameraView: React.FC<BiomechanicsCameraViewProps> = ({
     onToggleRecording();
   };
 
-  const frameProcessor = useFrameProcessor((frame) => {
-    "worklet";
-    const results = detectPose(frame);
-    if (results) {
-      runOnJS(updatePose)(results);
-    }
-  }, [onPoseDetected, isRecording]);
+  const frameProcessor = useFrameProcessor(
+    (frame) => {
+      "worklet";
+      const results = detectPose(frame);
+      if (results) {
+        runOnJS(updatePose)(results);
+      }
+    },
+    [onPoseDetected, isRecording],
+  );
 
   if (!device) {
     return (
@@ -88,19 +93,14 @@ export const BiomechanicsCameraView: React.FC<BiomechanicsCameraViewProps> = ({
       />
 
       {ghostMedia && (
-        <Image 
-          source={{ uri: ghostMedia }} 
-          style={[StyleSheet.absoluteFill, { opacity: 0.3 }]} 
+        <Image
+          source={{ uri: ghostMedia }}
+          style={[StyleSheet.absoluteFill, { opacity: 0.3 }]}
           resizeMode="cover"
         />
       )}
 
-      <PoseOverlay 
-        pose={currentPose} 
-        width={width} 
-        height={height} 
-        pathHistory={jointHistory}
-      />
+      <PoseOverlay pose={currentPose} width={width} height={height} pathHistory={jointHistory} />
 
       {/* Overlays e Controles */}
       <View style={styles.overlay}>
@@ -110,8 +110,8 @@ export const BiomechanicsCameraView: React.FC<BiomechanicsCameraViewProps> = ({
 
         <View style={styles.bottomControls}>
           <BlurView intensity={20} style={styles.controlsContainer}>
-            <TouchableOpacity 
-              style={[styles.recordButton, isRecording && styles.recordingButton]} 
+            <TouchableOpacity
+              style={[styles.recordButton, isRecording && styles.recordingButton]}
               onPress={handleToggleRecording}
             >
               <View style={[styles.recordInner, isRecording && styles.recordingInner]} />

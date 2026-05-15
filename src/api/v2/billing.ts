@@ -52,7 +52,8 @@ export const nfseApi = {
       body: JSON.stringify(data),
     }),
 
-  testConnection: () => request<{ data: { success: boolean; error?: string } }>("/api/nfse/test-connection"),
+  testConnection: () =>
+    request<{ data: { success: boolean; error?: string } }>("/api/nfse/test-connection"),
 
   generate: (data: Record<string, unknown>) =>
     request<{ data: unknown }>("/api/nfse/generate", {

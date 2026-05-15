@@ -102,7 +102,12 @@ export function WaitlistSidebar({ onSchedulePatient, className }: WaitlistSideba
           </div>
         </div>
         <Link to="/waitlist">
-          <Button variant="ghost" size="icon" aria-label="Ver lista de espera completa" className="h-7 w-7">
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label="Ver lista de espera completa"
+            className="h-7 w-7"
+          >
             <ExternalLink className="h-3.5 w-3.5 text-gray-500" />
           </Button>
         </Link>

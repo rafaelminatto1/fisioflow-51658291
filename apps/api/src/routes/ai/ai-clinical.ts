@@ -612,19 +612,21 @@ Retorne APENAS o JSON, sem markdown.
     const sessionId = body.sessionId;
 
     c.executionCtx.waitUntil(
-      pool.query(
-        `INSERT INTO ai_peer_reviews (organization_id, session_id, therapist_id, quality_score, insights, missing_tests, suggestions)
+      pool
+        .query(
+          `INSERT INTO ai_peer_reviews (organization_id, session_id, therapist_id, quality_score, insights, missing_tests, suggestions)
          VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-        [
-          user.organizationId,
-          sessionId ?? null,
-          user.uid,
-          data.score,
-          JSON.stringify(data.insights),
-          JSON.stringify(data.missingTests),
-          JSON.stringify(data.suggestedExercises),
-        ],
-      ).catch(e => console.error("[AI/PeerReview] Persistence failed", e))
+          [
+            user.organizationId,
+            sessionId ?? null,
+            user.uid,
+            data.score,
+            JSON.stringify(data.insights),
+            JSON.stringify(data.missingTests),
+            JSON.stringify(data.suggestedExercises),
+          ],
+        )
+        .catch((e) => console.error("[AI/PeerReview] Persistence failed", e)),
     );
 
     return c.json({ success: true, data });
@@ -651,7 +653,7 @@ app.get("/medical-report/outcome", async (c) => {
     // 1. Buscar histórico consolidado
     const [patientData, sessions] = await Promise.all([
       sql`SELECT full_name, diagnosis, condition FROM patients WHERE id = ${patientId}::uuid`,
-      sql`SELECT date AS session_date, observacao, pain_scale, procedures, exercises FROM sessions WHERE patient_id = ${patientId}::uuid ORDER BY date ASC LIMIT 20`
+      sql`SELECT date AS session_date, observacao, pain_scale, procedures, exercises FROM sessions WHERE patient_id = ${patientId}::uuid ORDER BY date ASC LIMIT 20`,
     ]);
 
     if (!patientData.rows.length || !sessions.rows.length) {
@@ -683,7 +685,7 @@ app.get("/medical-report/outcome", async (c) => {
       prompt,
       model: "gemini-1.5-flash",
       temperature: 0.2,
-      responseFormat: "json"
+      responseFormat: "json",
     });
 
     const jsonMatch = aiReport.content.match(/\{[\s\S]*\}/);

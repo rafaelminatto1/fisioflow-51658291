@@ -32,7 +32,7 @@ export async function sendAppointmentReminderEmail(
 export async function sendNfseToAccounting(
   env: Env,
   to: string,
-  data: { 
+  data: {
     numeroNfse: string;
     tomadorNome: string;
     valor: number;
@@ -42,7 +42,7 @@ export async function sendNfseToAccounting(
 ) {
   const resend = createResend(env);
   if (!resend) return;
-  
+
   await resend.emails.send({
     from: FROM(env),
     to,
@@ -77,7 +77,7 @@ export async function sendNfseToAccounting(
 export async function sendNfseCancellationToAccounting(
   env: Env,
   to: string,
-  data: { 
+  data: {
     numeroNfse: string;
     tomadorNome: string;
     valor: number;
@@ -86,7 +86,7 @@ export async function sendNfseCancellationToAccounting(
 ) {
   const resend = createResend(env);
   if (!resend) return;
-  
+
   await resend.emails.send({
     from: FROM(env),
     to,

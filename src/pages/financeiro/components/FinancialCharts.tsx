@@ -31,10 +31,12 @@ const COLORS = [
 ];
 
 export function FinancialCharts({ demoData, historicoData }: Props) {
-  const entradasCategoriaData = Object.entries(demoData.entradasPorCategoria).map(([cat, valor]) => ({
-    name: cat,
-    value: valor,
-  }));
+  const entradasCategoriaData = Object.entries(demoData.entradasPorCategoria).map(
+    ([cat, valor]) => ({
+      name: cat,
+      value: valor,
+    }),
+  );
 
   const saidasCategoriaData = Object.entries(demoData.saidasPorCategoria).map(([cat, valor]) => ({
     name: cat,
@@ -54,7 +56,11 @@ export function FinancialCharts({ demoData, historicoData }: Props) {
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
                 <XAxis dataKey="mes" tick={{ fontSize: 11 }} />
                 <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} />
-                <Tooltip formatter={(v: number) => `R$ ${v.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`} />
+                <Tooltip
+                  formatter={(v: number) =>
+                    `R$ ${v.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`
+                  }
+                />
                 <Legend iconSize={10} />
                 <Bar dataKey="entradas" name="Entradas" fill="#22c55e" radius={[4, 4, 0, 0]} />
                 <Bar dataKey="saidas" name="Saídas" fill="#ef4444" radius={[4, 4, 0, 0]} />
@@ -94,9 +100,7 @@ export function FinancialCharts({ demoData, historicoData }: Props) {
                 </RechartsPieChart>
               </ResponsiveContainer>
             ) : (
-              <div className="text-center text-muted-foreground py-8">
-                Sem dados de entradas
-              </div>
+              <div className="text-center text-muted-foreground py-8">Sem dados de entradas</div>
             )}
           </CardContent>
         </Card>
@@ -130,9 +134,7 @@ export function FinancialCharts({ demoData, historicoData }: Props) {
                 </RechartsPieChart>
               </ResponsiveContainer>
             ) : (
-              <div className="text-center text-muted-foreground py-8">
-                Sem dados de saídas
-              </div>
+              <div className="text-center text-muted-foreground py-8">Sem dados de saídas</div>
             )}
           </CardContent>
         </Card>

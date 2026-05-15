@@ -350,10 +350,14 @@ async function executeProvider(
 
       // O gateway Cloudflare ou nosso custom segue o formato OpenAI
       return {
-        content: data.choices?.[0]?.message?.content || data.candidates?.[0]?.content?.parts?.[0]?.text || "",
+        content:
+          data.choices?.[0]?.message?.content ||
+          data.candidates?.[0]?.content?.parts?.[0]?.text ||
+          "",
         usage: {
           inputTokens: data.usage?.prompt_tokens || data.usageMetadata?.promptTokenCount || 0,
-          outputTokens: data.usage?.completion_tokens || data.usageMetadata?.candidatesTokenCount || 0,
+          outputTokens:
+            data.usage?.completion_tokens || data.usageMetadata?.candidatesTokenCount || 0,
           cachedTokens: 0,
         },
         model: modelId,

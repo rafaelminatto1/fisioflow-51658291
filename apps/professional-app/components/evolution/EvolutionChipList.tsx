@@ -121,10 +121,7 @@ export function EvolutionChipList({
           <TouchableOpacity
             onPress={handleAdd}
             disabled={!draftName.trim()}
-            style={[
-              styles.addBtn,
-              { backgroundColor: draftName.trim() ? accent : colors.border },
-            ]}
+            style={[styles.addBtn, { backgroundColor: draftName.trim() ? accent : colors.border }]}
           >
             <Ionicons name="add" size={20} color="#fff" />
           </TouchableOpacity>

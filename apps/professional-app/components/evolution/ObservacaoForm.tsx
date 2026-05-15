@@ -26,7 +26,9 @@ export function ObservacaoForm({ value, onChange, colors, placeholder }: Observa
         </View>
         <TextInput
           style={[styles.input, { color: colors.text, borderColor: colors.border }]}
-          placeholder={placeholder ?? "Descreva a evolução do paciente: queixa, evolução, análise, conduta..."}
+          placeholder={
+            placeholder ?? "Descreva a evolução do paciente: queixa, evolução, análise, conduta..."
+          }
           placeholderTextColor={colors.textMuted}
           value={value}
           onChangeText={onChange}

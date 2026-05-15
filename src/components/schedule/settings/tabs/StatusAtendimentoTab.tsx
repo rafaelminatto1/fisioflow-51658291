@@ -1,5 +1,15 @@
 import { useMemo, useState } from "react";
-import { Activity, AlertCircle, Edit3, Eye, ListChecks, Loader2, Palette, Plus, Trash2 } from "lucide-react";
+import {
+  Activity,
+  AlertCircle,
+  Edit3,
+  Eye,
+  ListChecks,
+  Loader2,
+  Palette,
+  Plus,
+  Trash2,
+} from "lucide-react";
 import { SettingsSectionCard } from "@/components/schedule/settings/shared/SettingsSectionCard";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
@@ -132,15 +142,8 @@ function getFormErrors(form: StatusFormState) {
 }
 
 export function StatusAtendimentoTab() {
-  const {
-    allStatusRows,
-    createStatus,
-    updateStatus,
-    deleteStatus,
-    isLoading,
-    isSaving,
-    error,
-  } = useStatusConfig();
+  const { allStatusRows, createStatus, updateStatus, deleteStatus, isLoading, isSaving, error } =
+    useStatusConfig();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [form, setForm] = useState<StatusFormState>(EMPTY_FORM);
   const [deleteTarget, setDeleteTarget] = useState<any | null>(null);
@@ -265,75 +268,78 @@ export function StatusAtendimentoTab() {
                   </TableCell>
                 </TableRow>
               )}
-              {!isLoading && (allStatusRows ?? []).map((status: any) => (
-                <TableRow key={status.id} className={cn(!status.is_active && "opacity-60")}>
-                  <TableCell>
-                    <div className="flex items-center gap-3">
-                      <span
-                        className="h-8 w-8 rounded-md border"
+              {!isLoading &&
+                (allStatusRows ?? []).map((status: any) => (
+                  <TableRow key={status.id} className={cn(!status.is_active && "opacity-60")}>
+                    <TableCell>
+                      <div className="flex items-center gap-3">
+                        <span
+                          className="h-8 w-8 rounded-md border"
+                          style={{
+                            backgroundColor: status.bg_color,
+                            borderColor: status.border_color,
+                          }}
+                        />
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium">{status.label}</span>
+                            {status.is_default && <Badge variant="outline">Padrão</Badge>}
+                          </div>
+                          <p className="text-xs text-muted-foreground">{status.color}</p>
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell className="font-mono text-xs">{status.key}</TableCell>
+                    <TableCell>
+                      <div
+                        className="inline-flex items-center gap-2 rounded-md border px-2 py-1 text-xs font-medium"
                         style={{
+                          color: status.color,
                           backgroundColor: status.bg_color,
                           borderColor: status.border_color,
                         }}
-                      />
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <span className="font-medium">{status.label}</span>
-                          {status.is_default && <Badge variant="outline">Padrão</Badge>}
-                        </div>
-                        <p className="text-xs text-muted-foreground">{status.color}</p>
+                      >
+                        <Eye className="h-3 w-3" />
+                        Card da agenda
                       </div>
-                    </div>
-                  </TableCell>
-                  <TableCell className="font-mono text-xs">{status.key}</TableCell>
-                  <TableCell>
-                    <div
-                      className="inline-flex items-center gap-2 rounded-md border px-2 py-1 text-xs font-medium"
-                      style={{
-                        color: status.color,
-                        backgroundColor: status.bg_color,
-                        borderColor: status.border_color,
-                      }}
-                    >
-                      <Eye className="h-3 w-3" />
-                      Card da agenda
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant={status.counts_toward_capacity ? "default" : "secondary"}>
-                      {status.counts_toward_capacity ? "Conta" : "Ignora"}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <Switch
-                      checked={status.is_active}
-                      onCheckedChange={(checked) => updateStatus(status.id, { isActive: checked })}
-                      aria-label={`Ativar ${status.label}`}
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex justify-end gap-1">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8"
-                        onClick={() => openEdit(status)}
-                      >
-                        <Edit3 className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 text-destructive hover:text-destructive"
-                        disabled={status.is_default}
-                        onClick={() => setDeleteTarget(status)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={status.counts_toward_capacity ? "default" : "secondary"}>
+                        {status.counts_toward_capacity ? "Conta" : "Ignora"}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Switch
+                        checked={status.is_active}
+                        onCheckedChange={(checked) =>
+                          updateStatus(status.id, { isActive: checked })
+                        }
+                        aria-label={`Ativar ${status.label}`}
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex justify-end gap-1">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8"
+                          onClick={() => openEdit(status)}
+                        >
+                          <Edit3 className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-destructive hover:text-destructive"
+                          disabled={status.is_default}
+                          onClick={() => setDeleteTarget(status)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
               {!isLoading && (allStatusRows?.length ?? 0) === 0 && (
                 <TableRow>
                   <TableCell colSpan={6} className="h-28 text-center text-muted-foreground">
@@ -379,7 +385,8 @@ export function StatusAtendimentoTab() {
                   aria-invalid={!STATUS_KEY_RE.test(form.key)}
                 />
                 <p className="text-xs text-muted-foreground">
-                  A chave é usada pela API. Depois de salvar, ela não muda para proteger o histórico.
+                  A chave é usada pela API. Depois de salvar, ela não muda para proteger o
+                  histórico.
                 </p>
               </div>
               <div className="grid gap-3 sm:grid-cols-3">

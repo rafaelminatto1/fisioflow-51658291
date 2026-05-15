@@ -108,7 +108,10 @@ export async function generateEvolutionEmbedding(evolution: {
   if (evolution.pain_scale != null) sections.push(`EVA: ${evolution.pain_scale}/10`);
   if (evolution.procedures?.length) {
     sections.push(
-      `Procedimentos: ${evolution.procedures.map((p) => p.name).filter(Boolean).join(", ")}`,
+      `Procedimentos: ${evolution.procedures
+        .map((p) => p.name)
+        .filter(Boolean)
+        .join(", ")}`,
     );
   }
   if (evolution.exercises?.length) {

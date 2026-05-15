@@ -80,10 +80,7 @@ function escapeXml(s: string): string {
 
 function escapeXmlContent(s: string): string {
   if (!s) return "";
-  return String(s)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;");
+  return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
 
 function buildSoapEnvelope(method: string, mensagemXml: string, schemaVersion: string): string {
@@ -101,9 +98,14 @@ function buildSoapEnvelope(method: string, mensagemXml: string, schemaVersion: s
   ].join("");
 }
 
-async function soapCall(env: Env, method: string, mensagemXml: string, schemaVersion: string): Promise<string> {
+async function soapCall(
+  env: Env,
+  method: string,
+  mensagemXml: string,
+  schemaVersion: string,
+): Promise<string> {
   const soapXml = buildSoapEnvelope(method, mensagemXml, schemaVersion);
-  
+
   if (!env.NFSE_SP_CERT) {
     throw new Error("Certificado NFSE_SP_CERT não configurado no Cloudflare.");
   }
@@ -123,13 +125,15 @@ async function soapCall(env: Env, method: string, mensagemXml: string, schemaVer
     const text = await resp.text();
     // 520 errors sometimes happen on PMSP side during maintenance
     if (resp.status === 520) {
-      throw new Error(`A prefeitura de São Paulo (PMSP) retornou um erro 520. Isso geralmente ocorre durante instabilidades momentâneas no servidor deles.`);
+      throw new Error(
+        `A prefeitura de São Paulo (PMSP) retornou um erro 520. Isso geralmente ocorre durante instabilidades momentâneas no servidor deles.`,
+      );
     }
     throw new Error(`SP NFSe SOAP ${method} falhou (${resp.status}): ${text.slice(0, 500)}`);
   }
 
   const rawBody = await resp.text();
-  
+
   // Extract content from RetornoXML
   const retornoMatch = rawBody.match(/<RetornoXML>([\s\S]*?)<\/RetornoXML>/i);
   if (retornoMatch) {
@@ -245,13 +249,10 @@ async function buildSignedMessage(
 /**
  * Builds the RPS XML parts following the mandatory order of the schema.
  */
-async function buildRpsXml(
-  p: RpsParams,
-  assinatura: string,
-): Promise<string> {
+async function buildRpsXml(p: RpsParams, assinatura: string): Promise<string> {
   const issRetidoStr = p.issRetido ? "true" : "false";
   const layout = p.layout ?? "V1";
-  
+
   const tomadorParts: string[] = [];
   if (p.tomadorCpfCnpj) {
     const digits = p.tomadorCpfCnpj.replace(/\D/g, "");
@@ -262,10 +263,14 @@ async function buildRpsXml(
     }
   }
   if (p.tomadorInscricaoMunicipal) {
-    tomadorParts.push(`<InscricaoMunicipalTomador>${escapeXml(p.tomadorInscricaoMunicipal)}</InscricaoMunicipalTomador>`);
+    tomadorParts.push(
+      `<InscricaoMunicipalTomador>${escapeXml(p.tomadorInscricaoMunicipal)}</InscricaoMunicipalTomador>`,
+    );
   }
   if (p.tomadorRazaoSocial) {
-    tomadorParts.push(`<RazaoSocialTomador>${escapeXml(p.tomadorRazaoSocial)}</RazaoSocialTomador>`);
+    tomadorParts.push(
+      `<RazaoSocialTomador>${escapeXml(p.tomadorRazaoSocial)}</RazaoSocialTomador>`,
+    );
   }
   if (p.tomadorEmail) {
     tomadorParts.push(`<EmailTomador>${escapeXml(p.tomadorEmail)}</EmailTomador>`);
@@ -353,17 +358,20 @@ async function buildRpsXml(
   }
 }
 
-async function prepareEmissionMessage(env: Env, rpsParams: RpsParams): Promise<{ innerXml: string; schemaVersion: string }> {
+async function prepareEmissionMessage(
+  env: Env,
+  rpsParams: RpsParams,
+): Promise<{ innerXml: string; schemaVersion: string }> {
   const p = rpsParams;
   const layout = p.layout ?? "V1";
   const schemaVersion = NFSE_LAYOUTS[layout];
-  
+
   const cnpjDigits = p.cnpjPrestador.replace(/\D/g, "");
   const imDigits = p.inscricaoMunicipal.replace(/\D/g, "");
   const tomadorDigits = (p.tomadorCpfCnpj || "").replace(/\D/g, "");
   const codigoServicoDigits = p.codigoServico.replace(/\D/g, "");
   const indicador = tomadorDigits ? (tomadorDigits.length <= 11 ? "1" : "2") : "3";
-  
+
   const assinatura = await signRps(
     {
       inscricaoMunicipal: imDigits,
@@ -394,31 +402,28 @@ async function prepareEmissionMessage(env: Env, rpsParams: RpsParams): Promise<{
   return { innerXml, schemaVersion };
 }
 
-export async function envioRPS(
-  env: Env,
-  rpsParams: RpsParams,
-): Promise<SPNfseResult> {
+export async function envioRPS(env: Env, rpsParams: RpsParams): Promise<SPNfseResult> {
   const { innerXml, schemaVersion } = await prepareEmissionMessage(env, rpsParams);
   const signed = await buildSignedMessage(env, "PedidoEnvioRPS", innerXml);
   const raw = await soapCall(env, "EnvioRPS", signed, schemaVersion);
   return parseNfseFromResponse(raw);
 }
 
-export async function testeEnvioLoteRPS(
-  env: Env,
-  rpsParams: RpsParams,
-): Promise<SPNfseResult> {
+export async function testeEnvioLoteRPS(env: Env, rpsParams: RpsParams): Promise<SPNfseResult> {
   const { innerXml, schemaVersion } = await prepareEmissionMessage(env, rpsParams);
   // Add transacao/qtd for Lote
   const today = new Date().toISOString().slice(0, 10);
   const innerXmlLote = innerXml
-    .replace("</Cabecalho>", `<transacao>true</transacao><dtInicio>${today}</dtInicio><dtFim>${today}</dtFim><QtdRPS>1</QtdRPS></Cabecalho>`)
+    .replace(
+      "</Cabecalho>",
+      `<transacao>true</transacao><dtInicio>${today}</dtInicio><dtFim>${today}</dtFim><QtdRPS>1</QtdRPS></Cabecalho>`,
+    )
     .replace("<RPS", "<LoteRPS><RPS")
     .replace("</RPS>", "</RPS></LoteRPS>");
 
   const signed = await buildSignedMessage(env, "PedidoEnvioLoteRPS", innerXmlLote);
   const raw = await soapCall(env, "TesteEnvioLoteRPS", signed, schemaVersion);
-  
+
   const erros = parseErros(raw);
   if (erros.length > 0) {
     return { success: false, erros, alertas: parseAlertas(raw) };
@@ -447,13 +452,19 @@ export async function consultaNFe(
     filtroParts.push(`<NumeroNFe>${escapeXml(params.numeroNfse)}</NumeroNFe>`);
   }
   if (params.codigoVerificacao) {
-    filtroParts.push(`<CodigoVerificacao>${escapeXml(params.codigoVerificacao)}</CodigoVerificacao>`);
+    filtroParts.push(
+      `<CodigoVerificacao>${escapeXml(params.codigoVerificacao)}</CodigoVerificacao>`,
+    );
   }
   if (params.dataEmissaoInicio) {
-    filtroParts.push(`<DataEmissaoNFeInicial>${escapeXml(params.dataEmissaoInicio)}</DataEmissaoNFeInicial>`);
+    filtroParts.push(
+      `<DataEmissaoNFeInicial>${escapeXml(params.dataEmissaoInicio)}</DataEmissaoNFeInicial>`,
+    );
   }
   if (params.dataEmissaoFim) {
-    filtroParts.push(`<DataEmissaoNFeFinal>${escapeXml(params.dataEmissaoFim)}</DataEmissaoNFeFinal>`);
+    filtroParts.push(
+      `<DataEmissaoNFeFinal>${escapeXml(params.dataEmissaoFim)}</DataEmissaoNFeFinal>`,
+    );
   }
 
   const innerXml = [
@@ -545,7 +556,12 @@ export async function consultaCNPJ(
   cnpj: string,
 ): Promise<
   SPNfseResult & {
-    inscricoes?: Array<{ inscricaoMunicipal: string; razaoSocial: string; autorizado: boolean; emiteNfe?: boolean }>;
+    inscricoes?: Array<{
+      inscricaoMunicipal: string;
+      razaoSocial: string;
+      autorizado: boolean;
+      emiteNfe?: boolean;
+    }>;
   }
 > {
   const cnpjDigits = cnpj.replace(/\D/g, "");
@@ -578,7 +594,13 @@ export async function consultaCNPJ(
     const rz = parseXmlValue(block, "RazaoSocial") ?? "";
     const auth = parseXmlValue(block, "Autorizado") === "true";
     const emite = parseXmlValue(block, "EmiteNFe") === "true";
-    if (im) inscricoes.push({ inscricaoMunicipal: im, razaoSocial: rz, autorizado: auth, emiteNfe: emite });
+    if (im)
+      inscricoes.push({
+        inscricaoMunicipal: im,
+        razaoSocial: rz,
+        autorizado: auth,
+        emiteNfe: emite,
+      });
   }
 
   return { success: true, inscricoes };

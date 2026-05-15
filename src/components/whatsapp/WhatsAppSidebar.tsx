@@ -75,7 +75,7 @@ export const WhatsAppSidebar: React.FC<WhatsAppSidebarProps> = ({
 }) => {
   return (
     <div className="w-[380px] border-r flex flex-col bg-muted/5 z-20">
-      <div className="p-4 space-y-4 shrink-0 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 z-10 border-b shadow-sm">
+      <div className="p-4 space-y-4 shrink-0 bg-background z-10 border-b shadow-sm">
         <div className="flex items-center justify-between">
           <h2 className="text-xl font-bold tracking-tight">Mensagens</h2>
           <div className="flex items-center gap-1">
@@ -162,7 +162,9 @@ export const WhatsAppSidebar: React.FC<WhatsAppSidebarProps> = ({
                   className={`h-7 text-xs gap-1 rounded-full px-2.5 ${tagFilter ? "bg-primary/10 text-primary" : "text-muted-foreground"}`}
                 >
                   <Tag className="h-3 w-3" />
-                  {tagFilter ? (availableTags.find((t) => t.id === tagFilter)?.name ?? "Tag") : "Tag"}
+                  {tagFilter
+                    ? (availableTags.find((t) => t.id === tagFilter)?.name ?? "Tag")
+                    : "Tag"}
                   <ChevronDown className="h-3 w-3" />
                 </Button>
               </DropdownMenuTrigger>
@@ -173,7 +175,10 @@ export const WhatsAppSidebar: React.FC<WhatsAppSidebarProps> = ({
                 <DropdownMenuSeparator />
                 {availableTags.map((tag) => (
                   <DropdownMenuItem key={tag.id} onClick={() => onTagFilterChange(tag.id)}>
-                    <div className="h-2 w-2 rounded-full mr-2" style={{ backgroundColor: tag.color }} />
+                    <div
+                      className="h-2 w-2 rounded-full mr-2"
+                      style={{ backgroundColor: tag.color }}
+                    />
                     {tag.name}
                   </DropdownMenuItem>
                 ))}
@@ -224,7 +229,7 @@ export const WhatsAppSidebar: React.FC<WhatsAppSidebarProps> = ({
                 key={conv.id}
                 conversation={conv}
                 isSelected={selectedId === conv.id}
-                onClick={() => bulkMode ? onToggleBulkSelect(conv.id) : onSelect(conv.id)}
+                onClick={() => (bulkMode ? onToggleBulkSelect(conv.id) : onSelect(conv.id))}
                 bulkMode={bulkMode}
                 isSelectedBulk={selectedConvIds.has(conv.id)}
               />

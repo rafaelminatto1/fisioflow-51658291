@@ -120,10 +120,10 @@ app.delete("/blocks/:id", requireAuth, async (c) => {
   if (!isUuid(id)) return c.json({ error: "ID inválido" }, 400);
 
   const pool = createPool(c.env);
-  await pool.query(
-    `DELETE FROM staff_blocks WHERE id = $1 AND organization_id = $2`,
-    [id, user.organizationId],
-  );
+  await pool.query(`DELETE FROM staff_blocks WHERE id = $1 AND organization_id = $2`, [
+    id,
+    user.organizationId,
+  ]);
   return c.json({ success: true });
 });
 

@@ -58,10 +58,10 @@ export const calculateAngle = (p1: Landmark, p2: Landmark, p3: Landmark): number
 export const calculateVerticalAngle = (p1: Landmark, p2: Landmark): number => {
   const radians = Math.atan2(p2.y - p1.y, p2.x - p1.x);
   let angle = (radians * 180.0) / Math.PI;
-  
+
   // Normaliza para o desvio da vertical (90 graus)
   angle = Math.abs(angle - 90);
-  
+
   return Math.round(angle * 10) / 10;
 };
 
@@ -71,17 +71,21 @@ export const calculateVerticalAngle = (p1: Landmark, p2: Landmark): number => {
 export const calculateHorizontalAngle = (p1: Landmark, p2: Landmark): number => {
   const radians = Math.atan2(p2.y - p1.y, p2.x - p1.x);
   let angle = (radians * 180.0) / Math.PI;
-  
+
   // Normaliza para o desvio da horizontal (0 graus)
   angle = Math.abs(angle);
-  
+
   return Math.round(angle * 10) / 10;
 };
 
 /**
  * Verifica o status de um ângulo comparado à referência
  */
-export const getAngleStatus = (angle: number, reference: number, tolerance: number): "ok" | "warning" | "alert" => {
+export const getAngleStatus = (
+  angle: number,
+  reference: number,
+  tolerance: number,
+): "ok" | "warning" | "alert" => {
   const diff = Math.abs(angle - reference);
   if (diff <= tolerance) return "ok";
   if (diff <= tolerance * 2) return "warning";

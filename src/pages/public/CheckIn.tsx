@@ -122,9 +122,7 @@ export function CheckIn() {
               <p className="text-sm text-muted-foreground">
                 {message || "Não foi possível realizar o check-in."}
               </p>
-              <p className="text-xs text-muted-foreground">
-                Por favor, informe a recepção.
-              </p>
+              <p className="text-xs text-muted-foreground">Por favor, informe a recepção.</p>
             </div>
           )}
         </CardContent>

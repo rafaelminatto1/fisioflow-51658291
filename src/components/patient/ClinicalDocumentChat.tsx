@@ -67,16 +67,13 @@ export const ClinicalDocumentChat: React.FC<ClinicalDocumentChatProps> = ({
     setIsLoading(true);
 
     try {
-      const res = await request<{ success: boolean; answer: string }>(
-        "/api/ai/document/chat",
-        {
-          method: "POST",
-          body: JSON.stringify({
-            documentId,
-            message: userMessage.content,
-          }),
-        }
-      );
+      const res = await request<{ success: boolean; answer: string }>("/api/ai/document/chat", {
+        method: "POST",
+        body: JSON.stringify({
+          documentId,
+          message: userMessage.content,
+        }),
+      });
 
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
@@ -92,7 +89,8 @@ export const ClinicalDocumentChat: React.FC<ClinicalDocumentChatProps> = ({
         {
           id: (Date.now() + 1).toString(),
           role: "assistant",
-          content: "Desculpe, tive um problema ao processar sua pergunta. Por favor, tente novamente.",
+          content:
+            "Desculpe, tive um problema ao processar sua pergunta. Por favor, tente novamente.",
         },
       ]);
     } finally {
@@ -124,13 +122,15 @@ export const ClinicalDocumentChat: React.FC<ClinicalDocumentChatProps> = ({
                 key={m.id}
                 className={cn(
                   "flex items-start gap-3 max-w-[85%]",
-                  m.role === "user" ? "ml-auto flex-row-reverse" : "mr-auto"
+                  m.role === "user" ? "ml-auto flex-row-reverse" : "mr-auto",
                 )}
               >
                 <div
                   className={cn(
                     "p-2 rounded-lg shrink-0",
-                    m.role === "user" ? "bg-brand-blue" : "bg-white dark:bg-slate-800 shadow-sm border border-slate-100 dark:border-slate-700"
+                    m.role === "user"
+                      ? "bg-brand-blue"
+                      : "bg-white dark:bg-slate-800 shadow-sm border border-slate-100 dark:border-slate-700",
                   )}
                 >
                   {m.role === "user" ? (
@@ -144,7 +144,7 @@ export const ClinicalDocumentChat: React.FC<ClinicalDocumentChatProps> = ({
                     "p-4 rounded-2xl text-sm leading-relaxed",
                     m.role === "user"
                       ? "bg-brand-blue text-white rounded-tr-none"
-                      : "bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 shadow-sm border border-slate-100 dark:border-slate-700 rounded-tl-none"
+                      : "bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 shadow-sm border border-slate-100 dark:border-slate-700 rounded-tl-none",
                   )}
                 >
                   {m.content}

@@ -266,29 +266,39 @@ app.post(
         c.executionCtx.waitUntil(
           (async () => {
             // 1. Push notification
-            await sendPushToOrg(user.organizationId, {
-              title: "Novo agendamento",
-              body: `${row.patient_name ?? "Paciente"} — ${row.date ?? row.appointment_date} às ${row.start_time}`,
-              url: "/agenda",
-              tag: `appointment-new-${row.id}`,
-            }, c.env).catch(() => {});
+            await sendPushToOrg(
+              user.organizationId,
+              {
+                title: "Novo agendamento",
+                body: `${row.patient_name ?? "Paciente"} — ${row.date ?? row.appointment_date} às ${row.start_time}`,
+                url: "/agenda",
+                tag: `appointment-new-${row.id}`,
+              },
+              c.env,
+            ).catch(() => {});
 
             // 2. Trigger Inngest Event for Automation (WhatsApp confirmation, etc)
             const patientData = await db.query.patients.findFirst({
               where: (p, { eq }) => eq(p.id, row.patient_id),
-              columns: { fullName: true, phone: true }
+              columns: { fullName: true, phone: true },
             });
 
-            await triggerInngestEvent(c.env, c.executionCtx, "appointment.created", {
-              appointmentId: row.id,
-              patientId: row.patient_id,
-              patientName: patientData?.fullName,
-              patientPhone: patientData?.phone,
-              date: row.date,
-              startTime: row.start_time,
-              organizationId: row.organization_id
-            }, { id: user.uid }).catch(err => console.error("[Appointments/Create] Inngest trigger failed:", err));
-          })()
+            await triggerInngestEvent(
+              c.env,
+              c.executionCtx,
+              "appointment.created",
+              {
+                appointmentId: row.id,
+                patientId: row.patient_id,
+                patientName: patientData?.fullName,
+                patientPhone: patientData?.phone,
+                date: row.date,
+                startTime: row.start_time,
+                organizationId: row.organization_id,
+              },
+              { id: user.uid },
+            ).catch((err) => console.error("[Appointments/Create] Inngest trigger failed:", err));
+          })(),
         );
       }
 

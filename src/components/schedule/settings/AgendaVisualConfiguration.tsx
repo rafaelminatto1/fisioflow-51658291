@@ -110,11 +110,9 @@ export function AgendaVisualConfiguration() {
           </Label>
         </div>
 
-        <div
-          className="relative rounded-[2rem] border border-slate-200/60 dark:border-slate-800/60 bg-white dark:bg-slate-950 p-8 overflow-hidden min-h-[220px] flex flex-col justify-center shadow-2xl transition-all duration-500"
-        >
+        <div className="relative rounded-[2rem] border border-slate-200/60 dark:border-slate-800/60 bg-white dark:bg-slate-950 p-8 overflow-hidden min-h-[220px] flex flex-col justify-center shadow-2xl transition-all duration-500">
           {/* Background Pattern */}
-          <div 
+          <div
             className="absolute inset-0 opacity-[0.03] dark:opacity-[0.05] pointer-events-none"
             style={{
               backgroundSize: "30px 30px",
@@ -178,20 +176,21 @@ interface ControlSectionProps {
 }
 
 const ControlSection = memo(
-  ({ 
-    label, 
-    subLabel, 
-    icon, 
-    value, 
-    max, 
-    step = 1, 
-    onChange, 
-    renderValue, 
-    accent 
+  ({
+    label,
+    subLabel,
+    icon,
+    value,
+    max,
+    step = 1,
+    onChange,
+    renderValue,
+    accent,
   }: ControlSectionProps) => {
     const accents = {
       teal: "bg-teal-50 text-teal-600 dark:bg-teal-900/30 dark:text-teal-400 border-teal-100 dark:border-teal-900/50",
-      indigo: "bg-indigo-50 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400 border-indigo-100 dark:border-indigo-900/50",
+      indigo:
+        "bg-indigo-50 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400 border-indigo-100 dark:border-indigo-900/50",
       sky: "bg-sky-50 text-sky-600 dark:bg-sky-900/30 dark:text-sky-400 border-sky-100 dark:border-sky-900/50",
     };
 
@@ -199,15 +198,27 @@ const ControlSection = memo(
       <div className="group space-y-5 p-5 rounded-2xl border border-slate-100 dark:border-slate-800 hover:border-slate-200 dark:hover:border-slate-700 transition-all hover:shadow-sm">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className={cn("p-2.5 rounded-xl border transition-all duration-300 group-hover:scale-110", accents[accent])}>
+            <div
+              className={cn(
+                "p-2.5 rounded-xl border transition-all duration-300 group-hover:scale-110",
+                accents[accent],
+              )}
+            >
               {icon}
             </div>
             <div className="space-y-0.5">
-              <Label className="text-sm font-bold text-slate-800 dark:text-slate-200">{label}</Label>
+              <Label className="text-sm font-bold text-slate-800 dark:text-slate-200">
+                {label}
+              </Label>
               <p className="text-[10px] text-slate-400 font-medium">{subLabel}</p>
             </div>
           </div>
-          <div className={cn("px-3 py-1 rounded-full border text-[11px] font-black font-mono shadow-inner", accents[accent])}>
+          <div
+            className={cn(
+              "px-3 py-1 rounded-full border text-[11px] font-black font-mono shadow-inner",
+              accents[accent],
+            )}
+          >
             {renderValue}
           </div>
         </div>
@@ -224,7 +235,7 @@ const ControlSection = memo(
         </div>
       </div>
     );
-  }
+  },
 );
 
 interface PreviewCardProps {
@@ -241,17 +252,17 @@ interface PreviewCardProps {
 }
 
 const PreviewCard = memo(
-  ({ 
-    time, 
-    title, 
-    subtitle, 
-    accentColor, 
-    bgColor, 
-    textColor, 
-    fontScale, 
-    heightScale, 
-    opacity, 
-    delay 
+  ({
+    time,
+    title,
+    subtitle,
+    accentColor,
+    bgColor,
+    textColor,
+    fontScale,
+    heightScale,
+    opacity,
+    delay,
   }: PreviewCardProps) => (
     <motion.div
       layout
@@ -293,7 +304,7 @@ const PreviewCard = memo(
             {subtitle}
           </span>
         </div>
-        
+
         {heightScale > 1.3 && (
           <motion.div
             initial={{ opacity: 0 }}
@@ -308,7 +319,7 @@ const PreviewCard = memo(
 
         {/* Glossy overlay */}
         <div className="absolute inset-0 bg-gradient-to-br from-white/20 via-transparent to-transparent pointer-events-none" />
-        
+
         {/* Inner glow on hover */}
         <div className="absolute inset-0 bg-current opacity-0 group-hover:opacity-[0.02] transition-opacity pointer-events-none" />
       </div>

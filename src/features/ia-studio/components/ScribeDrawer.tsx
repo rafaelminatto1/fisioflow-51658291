@@ -1,15 +1,6 @@
 import React, { useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import {
-  Mic,
-  X,
-  Save,
-  Volume2,
-  BrainCircuit,
-  Loader2,
-  FileText,
-  Sparkles,
-} from "lucide-react";
+import { Mic, X, Save, Volume2, BrainCircuit, Loader2, FileText, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";

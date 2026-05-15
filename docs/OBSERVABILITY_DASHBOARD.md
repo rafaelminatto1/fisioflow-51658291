@@ -8,16 +8,16 @@
 
 ## Layout dos Campos (Analytics Engine)
 
-| Campo | Tipo | Conteúdo |
-|---|---|---|
-| `blob1` | string | Rota normalizada (ex: `/api/appointments/:id`) |
-| `blob2` | string | Método HTTP (GET, POST, etc.) |
-| `blob3` | string | `organization_id` do usuário autenticado |
-| `blob4` | string | Tipo do evento (`request`, `whatsapp_sent`, `ai_call`) |
-| `double1` | number | Latência em ms |
-| `double2` | number | HTTP status code |
-| `double3` | number | Valor extra (ex: tokens usados) |
-| `indexes` | string | `organization_id` (para particionamento) |
+| Campo     | Tipo   | Conteúdo                                               |
+| --------- | ------ | ------------------------------------------------------ |
+| `blob1`   | string | Rota normalizada (ex: `/api/appointments/:id`)         |
+| `blob2`   | string | Método HTTP (GET, POST, etc.)                          |
+| `blob3`   | string | `organization_id` do usuário autenticado               |
+| `blob4`   | string | Tipo do evento (`request`, `whatsapp_sent`, `ai_call`) |
+| `double1` | number | Latência em ms                                         |
+| `double2` | number | HTTP status code                                       |
+| `double3` | number | Valor extra (ex: tokens usados)                        |
+| `indexes` | string | `organization_id` (para particionamento)               |
 
 ---
 
@@ -161,30 +161,30 @@ curl -X POST "https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT_ID}/ana
 
 ### Alerta 1 — Workers alto erro (5xx)
 
-| Campo | Valor |
-|---|---|
-| **Tipo** | Workers Usage |
+| Campo       | Valor           |
+| ----------- | --------------- |
+| **Tipo**    | Workers Usage   |
 | **Trigger** | Error rate > 1% |
-| **Janela** | 5 minutos |
-| **Canal** | Email / Webhook |
+| **Janela**  | 5 minutos       |
+| **Canal**   | Email / Webhook |
 
 ### Alerta 2 — Workers alta latência
 
-| Campo | Valor |
-|---|---|
-| **Tipo** | Workers Usage |
+| Campo       | Valor                                          |
+| ----------- | ---------------------------------------------- |
+| **Tipo**    | Workers Usage                                  |
 | **Trigger** | P95 CPU Time > 50ms (proxy para latência alta) |
-| **Janela** | 5 minutos |
-| **Canal** | Email / Webhook |
+| **Janela**  | 5 minutos                                      |
+| **Canal**   | Email / Webhook                                |
 
 ### Alerta 3 — Disponibilidade abaixo do SLO
 
-| Campo | Valor |
-|---|---|
-| **Tipo** | Health Check Alert |
+| Campo        | Valor                                                |
+| ------------ | ---------------------------------------------------- |
+| **Tipo**     | Health Check Alert                                   |
 | **Endpoint** | `https://api-pro.moocafisio.com.br/api/health/ready` |
-| **Trigger** | Status != 200 por > 2 minutos |
-| **Canal** | Email / Webhook |
+| **Trigger**  | Status != 200 por > 2 minutos                        |
+| **Canal**    | Email / Webhook                                      |
 
 > **Setup:** Cloudflare Dashboard → Traffic → Health Checks → Create  
 > Method: GET | Path: `/api/health/ready` | Interval: 60s | Threshold: 2 failures
@@ -193,12 +193,12 @@ curl -X POST "https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT_ID}/ana
 
 ## SLOs Definidos
 
-| Métrica | Alvo | Como medir |
-|---|---|---|
-| Latência p95 (fluxos críticos) | < 300ms | Query #1 acima |
-| Taxa de erro 5xx | < 0,5% | Query #2 acima |
-| Disponibilidade mensal | > 99,9% | Query #4 acima |
-| Cold start Neon (p95) | < 3s | Latência de `/api/health/db` após inatividade |
+| Métrica                        | Alvo    | Como medir                                    |
+| ------------------------------ | ------- | --------------------------------------------- |
+| Latência p95 (fluxos críticos) | < 300ms | Query #1 acima                                |
+| Taxa de erro 5xx               | < 0,5%  | Query #2 acima                                |
+| Disponibilidade mensal         | > 99,9% | Query #4 acima                                |
+| Cold start Neon (p95)          | < 3s    | Latência de `/api/health/db` após inatividade |
 
 ---
 

@@ -151,8 +151,7 @@ export default function MediaScreen() {
   };
 
   const isLoading = loadingPhotos || loadingRequests;
-  const isEmpty =
-    activeSection === "photos" ? photos.length === 0 : requests.length === 0;
+  const isEmpty = activeSection === "photos" ? photos.length === 0 : requests.length === 0;
 
   const styles = makeStyles(colors);
 
@@ -252,7 +251,13 @@ export default function MediaScreen() {
           contentContainerStyle={styles.listContent}
         >
           {(requests as MedicalRequest[]).map((req) => (
-            <View key={req.id} style={[styles.requestCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            <View
+              key={req.id}
+              style={[
+                styles.requestCard,
+                { backgroundColor: colors.surface, borderColor: colors.border },
+              ]}
+            >
               <View style={styles.requestHeader}>
                 <View style={styles.requestTitleRow}>
                   <Ionicons name="document-text-outline" size={18} color={colors.primary} />
@@ -300,7 +305,10 @@ export default function MediaScreen() {
               </View>
 
               {req.notes && (
-                <Text style={[styles.requestNotes, { color: colors.textSecondary }]} numberOfLines={2}>
+                <Text
+                  style={[styles.requestNotes, { color: colors.textSecondary }]}
+                  numberOfLines={2}
+                >
                   {req.notes}
                 </Text>
               )}
@@ -354,9 +362,7 @@ export default function MediaScreen() {
                 {selectedPhoto.body_region ? ` · ${selectedPhoto.body_region}` : ""}
                 {selectedPhoto.taken_at ? ` · ${formatDate(selectedPhoto.taken_at)}` : ""}
               </Text>
-              {selectedPhoto.notes && (
-                <Text style={styles.modalNotes}>{selectedPhoto.notes}</Text>
-              )}
+              {selectedPhoto.notes && <Text style={styles.modalNotes}>{selectedPhoto.notes}</Text>}
             </View>
           )}
         </View>

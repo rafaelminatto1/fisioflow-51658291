@@ -18,14 +18,14 @@ export class GamificationNotificationService {
           <span>+{amount} XP</span>
         </div>
       ),
-      description: (leveledUp ? (
+      description: leveledUp ? (
         <div className="space-y-1">
           <p>{description}</p>
           <p className="font-semibold text-yellow-600 dark:text-yellow-400">🎉 Subiu de nível!</p>
         </div>
       ) : (
         description
-      )),
+      ),
       variant: leveledUp ? "default" : "default",
     });
   }

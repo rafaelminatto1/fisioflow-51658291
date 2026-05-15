@@ -267,7 +267,6 @@ export const Commands = Extension.create({
   },
 });
 
-
 interface CommandListProps {
   items: Command[];
   command: (item: Command) => void;

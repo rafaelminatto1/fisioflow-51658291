@@ -19,11 +19,7 @@ import {
   indexEvolution,
   type VectorSearchResult,
 } from "@/lib/services/vector-search";
-import type {
-  ProcedureItem,
-  ExerciseItem,
-  MeasurementItem,
-} from "@/types/evolution";
+import type { ProcedureItem, ExerciseItem, MeasurementItem } from "@/types/evolution";
 
 /** Evolução clínica (shape comum usado por retrieval/prompt). */
 export interface RagEvolution {
@@ -78,10 +74,16 @@ function evolutionToText(ev: Partial<RagEvolution>, maxObsChars = 400): string {
   const obs = stripHtml(ev.observacao || "").slice(0, maxObsChars);
   const eva = ev.painScale != null ? `EVA ${ev.painScale}/10` : null;
   const procs = ev.procedures?.length
-    ? `Procedimentos: ${ev.procedures.map((p) => p.name).filter(Boolean).join(", ")}`
+    ? `Procedimentos: ${ev.procedures
+        .map((p) => p.name)
+        .filter(Boolean)
+        .join(", ")}`
     : null;
   const exs = ev.exercises?.length
-    ? `Exercícios: ${ev.exercises.map((e) => e.name).filter(Boolean).join(", ")}`
+    ? `Exercícios: ${ev.exercises
+        .map((e) => e.name)
+        .filter(Boolean)
+        .join(", ")}`
     : null;
   return [obs, eva, procs, exs].filter(Boolean).join("\n");
 }
@@ -90,8 +92,14 @@ function evolutionToQueryText(ev: Partial<RagEvolution>): string {
   return [
     stripHtml(ev.observacao || ""),
     ev.painScale != null ? `dor ${ev.painScale}/10` : "",
-    (ev.procedures || []).map((p) => p.name).filter(Boolean).join(" "),
-    (ev.exercises || []).map((e) => e.name).filter(Boolean).join(" "),
+    (ev.procedures || [])
+      .map((p) => p.name)
+      .filter(Boolean)
+      .join(" "),
+    (ev.exercises || [])
+      .map((e) => e.name)
+      .filter(Boolean)
+      .join(" "),
   ]
     .filter(Boolean)
     .join("\n");
@@ -170,7 +178,7 @@ async function generateSuggestionWithContext(
   return traceAIOperation("gemini-2.5-flash", "rag_suggestion", async () => {
     const similarCasesText = context.similarCases
       .map((c, i) => {
-        const evo = (c.evolution as unknown) as RagEvolution;
+        const evo = c.evolution as unknown as RagEvolution;
         return `
 Caso similar #${i + 1} (similaridade: ${(c.similarity * 100).toFixed(0)}%)
 Data: ${evo.date ?? "—"}
@@ -181,9 +189,8 @@ ${evolutionToText(evo)}
 
     const recentEvolutionsText = context.recentEvolutions
       .slice(-3)
-      .map(
-        (e, i) =>
-          `
+      .map((e, i) =>
+        `
 Evolução recente #${i + 1} (${e.date ?? "—"})
 ${evolutionToText(e, 250)}
         `.trim(),
@@ -248,7 +255,7 @@ IMPORTANTE: baseie suas sugestões APENAS nos casos similares apresentados. Não
     const suggestion = JSON.parse(jsonMatch[1] || jsonMatch[0]) as ClinicalSuggestion;
 
     suggestion.references = context.similarCases.slice(0, 3).map((c) => {
-      const evo = (c.evolution as unknown) as RagEvolution;
+      const evo = c.evolution as unknown as RagEvolution;
       const snippet = stripHtml(evo.observacao || "").slice(0, 120) || "Sem observação";
       return {
         evolutionId: c.evolutionId,
@@ -291,11 +298,7 @@ Responda em JSON array.
     const jsonMatch = text.match(/```json\n([\s\S]*?)\n```/) || text.match(/\[[\s\S]*\]/);
 
     if (!jsonMatch) {
-      logger.error(
-        "[RAG] Resposta de exercícios não contém JSON válido:",
-        text,
-        "rag-clinical",
-      );
+      logger.error("[RAG] Resposta de exercícios não contém JSON válido:", text, "rag-clinical");
       return [];
     }
 
@@ -308,9 +311,7 @@ Responda em JSON array.
  *
  * O caller deve passar a evolução completa — a função não busca no DB.
  */
-export async function analyzeEvolutionAndSuggest(
-  evolution: RagEvolution,
-): Promise<{
+export async function analyzeEvolutionAndSuggest(evolution: RagEvolution): Promise<{
   analysis: string;
   suggestions: string[];
   considerations: string[];
@@ -339,7 +340,7 @@ ${evolutionToText(evolution)}
 ## Casos similares
 ${similarCases
   .map((c, i) => {
-    const evo = (c.evolution as unknown) as RagEvolution;
+    const evo = c.evolution as unknown as RagEvolution;
     return `Caso #${i + 1} (${evo.date ?? "—"}, similaridade ${(c.similarity * 100).toFixed(0)}%)\n${evolutionToText(evo, 250)}`;
   })
   .join("\n\n")}
@@ -410,11 +411,7 @@ Se a pergunta não puder ser respondida com o contexto disponível, diga que nã
       const result = await flashModel.generateContent(prompt);
       return result.response.text();
     } catch (error) {
-      logger.error(
-        `[RAG] Erro no chat RAG para paciente ${patientId}:`,
-        error,
-        "rag-clinical",
-      );
+      logger.error(`[RAG] Erro no chat RAG para paciente ${patientId}:`, error, "rag-clinical");
       return null;
     }
   });

@@ -49,14 +49,16 @@ export class SessionSummaryWorkflow extends WorkflowEntrypoint<Env, SessionSumma
         WHERE s.id = ${sessionId}
         LIMIT 1
       `;
-      return rows[0] as {
-        subjective?: string;
-        objective?: string;
-        assessment?: string;
-        plan?: string;
-        patient_name?: string;
-        patient_phone?: string;
-      } | undefined;
+      return rows[0] as
+        | {
+            subjective?: string;
+            objective?: string;
+            assessment?: string;
+            plan?: string;
+            patient_name?: string;
+            patient_phone?: string;
+          }
+        | undefined;
     });
 
     if (!sessionData) {
@@ -168,7 +170,7 @@ Retorne SOMENTE JSON válido no formato:
             WHERE patient_id = ${patientId} 
             ORDER BY created_at DESC LIMIT 1
           `;
-          
+
           let code = codeRes[0]?.code;
           if (!code) {
             code = `FISIO${Math.random().toString(36).substring(2, 7).toUpperCase()}`;
@@ -180,35 +182,39 @@ Retorne SOMENTE JSON válido no formato:
 
           const referralMessage = `Parabéns, ${sessionData.patient_name}! 🎉 Você completou 10 sessões conosco!\n\nEstamos adorando sua evolução. Sabia que você pode ajudar um amigo e ainda ganhar benefícios? Compartilhe seu código de indicação *${code}* com alguém. Se essa pessoa começar o tratamento, vocês dois ganham 10% de desconto na próxima renovação! 🎁`;
 
-          await this.env.BACKGROUND_QUEUE!.send({
-            type: "SEND_WHATSAPP",
-            payload: {
-              to: sessionData.patient_phone!,
-              templateName: "referral_request",
-              languageCode: "pt_BR",
-              bodyParameters: [{ type: "text", text: referralMessage }],
-              organizationId: orgId,
-              patientId,
-              messageText: referralMessage,
-              appointmentId: "",
-            },
-          }).catch(() => {});
+          await this.env
+            .BACKGROUND_QUEUE!.send({
+              type: "SEND_WHATSAPP",
+              payload: {
+                to: sessionData.patient_phone!,
+                templateName: "referral_request",
+                languageCode: "pt_BR",
+                bodyParameters: [{ type: "text", text: referralMessage }],
+                organizationId: orgId,
+                patientId,
+                messageText: referralMessage,
+                appointmentId: "",
+              },
+            })
+            .catch(() => {});
         }
 
         // Milestone: Billing Alert for Admins (Every 10 sessions)
         if (totalSessions % 10 === 0 && totalSessions > 0) {
           const billingMessage = `🚨 [FATURAMENTO] O paciente ${sessionData.patient_name} completou ${totalSessions} sessões. Por favor, verifique a emissão da NFS-e de renovação ou cobrança de ciclo.`;
-          
-          await this.env.BACKGROUND_QUEUE!.send({
-            type: "INTERNAL_NOTIFICATION",
-            payload: {
-              title: "Gatilho de Faturamento (10 sessões)",
-              body: billingMessage,
-              organizationId: orgId,
-              type: "billing",
-              metadata: { patientId, sessionCount: totalSessions }
-            }
-          }).catch(() => {});
+
+          await this.env
+            .BACKGROUND_QUEUE!.send({
+              type: "INTERNAL_NOTIFICATION",
+              payload: {
+                title: "Gatilho de Faturamento (10 sessões)",
+                body: billingMessage,
+                organizationId: orgId,
+                type: "billing",
+                metadata: { patientId, sessionCount: totalSessions },
+              },
+            })
+            .catch(() => {});
         }
       });
     }
@@ -253,7 +259,7 @@ Retorne SOMENTE JSON válido no formato:
           prompt,
           model: "gemini-1.5-flash",
           temperature: 0.3,
-          responseFormat: "json"
+          responseFormat: "json",
         });
 
         const jsonMatch = aiWiki.content.match(/\{[\s\S]*\}/);
@@ -261,7 +267,7 @@ Retorne SOMENTE JSON válido no formato:
 
         if (data.worthCapturing) {
           const { surgicalSyncWiki } = await import("../routes/aiSearch");
-          
+
           // Salvar na tabela wiki_pages (rascunho)
           const wikiId = crypto.randomUUID();
           await sql`

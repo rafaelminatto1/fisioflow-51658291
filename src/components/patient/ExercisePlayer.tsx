@@ -174,10 +174,10 @@ export function ExercisePlayer({
     try {
       // Log completion with extra qualitative data in notes/metrics
       await PatientService.logExercise(
-        patientId, 
-        prescription.id, 
-        String(difficulty), 
-        `Pain: ${painLevel}/10. ${feedback}`
+        patientId,
+        prescription.id,
+        String(difficulty),
+        `Pain: ${painLevel}/10. ${feedback}`,
       );
 
       if (isLastExercise) {
@@ -433,12 +433,17 @@ export function ExercisePlayer({
                   <label className="text-sm font-bold text-muted-foreground uppercase tracking-wider">
                     Esforço Percebido (Borg)
                   </label>
-                  <Badge variant="outline" className={cn(
-                    "text-lg font-bold px-3 py-1",
-                    difficulty <= 3 ? "text-emerald-600 border-emerald-200 bg-emerald-50" :
-                    difficulty <= 7 ? "text-amber-600 border-amber-200 bg-amber-50" :
-                    "text-red-600 border-red-200 bg-red-50"
-                  )}>
+                  <Badge
+                    variant="outline"
+                    className={cn(
+                      "text-lg font-bold px-3 py-1",
+                      difficulty <= 3
+                        ? "text-emerald-600 border-emerald-200 bg-emerald-50"
+                        : difficulty <= 7
+                          ? "text-amber-600 border-amber-200 bg-amber-50"
+                          : "text-red-600 border-red-200 bg-red-50",
+                    )}
+                  >
                     {difficulty}
                   </Badge>
                 </div>
@@ -453,7 +458,7 @@ export function ExercisePlayer({
                         "flex-1 h-10 rounded-lg flex items-center justify-center text-xs font-bold transition-all border",
                         difficulty === level
                           ? "bg-primary text-primary-foreground border-primary shadow-lg ring-2 ring-primary/20"
-                          : "bg-white hover:bg-muted border-slate-200"
+                          : "bg-white hover:bg-muted border-slate-200",
                       )}
                     >
                       {level}

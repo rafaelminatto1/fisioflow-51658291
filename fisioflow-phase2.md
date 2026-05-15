@@ -1,12 +1,15 @@
 # FisioFlow Phase 2 Implementation Plan
 
 ## Overview
+
 Implementação completa da Fase 2 do FisioFlow (Maio–Agosto 2026), abrangendo: 1) Testes E2E (Playwright), 2) Preparação App Mobile para Stores, 3) Melhorias de UX/Adoção (NFS-e, WhatsApp) e 4) Qualidade de Código (Testes Unitários e Oxlint).
 
 ## Project Type
+
 WEB e BACKEND (Fases 1, 3, 4) e MOBILE (Fase 2)
 
 ## Success Criteria
+
 - Testes E2E cobrindo os 6 "golden paths" configurados com Playwright.
 - Fluxo de configuração de NFS-e transformado num Wizard passo-a-passo e testado.
 - Cobertura de testes unitários >60% no backend para rotas críticas (Workers).
@@ -14,6 +17,7 @@ WEB e BACKEND (Fases 1, 3, 4) e MOBILE (Fase 2)
 - Verificação de logs e estabilidade da cronjob do WhatsApp.
 
 ## Tech Stack
+
 - **E2E:** Playwright Test.
 - **Frontend:** React, TailwindCSS, Vite.
 - **Backend:** Cloudflare Workers, Hono, Vitest (Unitários).
@@ -33,7 +37,9 @@ WEB e BACKEND (Fases 1, 3, 4) e MOBILE (Fase 2)
 ## Verification Plan (Phase X)
 
 ### Automated Tests
+
 Serão executados localmente para garantir sucesso antes do encerramento da branch/tarefa:
+
 ```bash
 # E2E Tests
 npx playwright test

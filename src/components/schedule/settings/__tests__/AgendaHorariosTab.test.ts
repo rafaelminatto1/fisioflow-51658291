@@ -70,10 +70,7 @@ const fcDateYYYYMMDD = fc
     fc.integer({ min: 1, max: 12 }),
     fc.integer({ min: 1, max: 28 }), // use 28 to avoid month-end edge cases
   )
-  .map(
-    ([y, m, d]) =>
-      `${y}-${String(m).padStart(2, "0")}-${String(d).padStart(2, "0")}`,
-  );
+  .map(([y, m, d]) => `${y}-${String(m).padStart(2, "0")}-${String(d).padStart(2, "0")}`);
 
 /** Generates a non-empty string (title) */
 const fcNonEmptyString = fc.string({ minLength: 1, maxLength: 100 });

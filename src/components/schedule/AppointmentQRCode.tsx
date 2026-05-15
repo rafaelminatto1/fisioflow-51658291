@@ -43,7 +43,7 @@ export function AppointmentQRCode({
     if (controlledOpen && !qrUrl && !loading) {
       handleOpen();
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [controlledOpen]);
 
   const handleOpen = async () => {
@@ -85,7 +85,8 @@ export function AppointmentQRCode({
               {patientName && <span className="font-medium">{patientName}</span>}
               {date && time && (
                 <span className="text-muted-foreground">
-                  {" "}— {date} às {time}
+                  {" "}
+                  — {date} às {time}
                 </span>
               )}
             </DialogDescription>

@@ -52,9 +52,9 @@
   --color-card: hsl(var(--card));
   --color-card-foreground: hsl(var(--card-foreground));
 
-  --color-brand-blue: #6DC0E3;
-  --color-brand-blue-light: #A5D9EF;
-  --color-brand-blue-dark: #4A9ABA;
+  --color-brand-blue: #6dc0e3;
+  --color-brand-blue-light: #a5d9ef;
+  --color-brand-blue-dark: #4a9aba;
   --color-brand-blue-glow: rgba(109, 192, 227, 0.3);
 
   --color-sidebar-background: hsl(var(--sidebar-background));
@@ -90,11 +90,11 @@
   --color-status-cancelled: #ef4444;
   --color-status-completed: #3b82f6;
 
-  /* Glassmorphism 2026 Design System */
-  --glass-bg: rgba(255, 255, 255, 0.7);
-  --glass-bg-dark: rgba(15, 23, 42, 0.7);
-  --glass-border: rgba(255, 255, 255, 0.2);
-  --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+  /* 2026 Design System - Solid Surfaces (No Glassmorphism) */
+  --glass-bg: #ffffff;
+  --glass-bg-dark: #0f172a;
+  --glass-border: var(--color-border);
+  --glass-shadow: 0 4px 12px 0 rgba(0, 0, 0, 0.05);
 
   /* Border Radius */
   --radius-lg: var(--radius);
@@ -271,17 +271,14 @@
 
 @utility glass-panel {
   background: var(--glass-bg);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
   border: 1px solid var(--glass-border);
   box-shadow: var(--glass-shadow);
   border-radius: 16px;
 }
 
 @utility glass-card {
-  background: rgba(255, 255, 255, 0.4);
-  backdrop-filter: blur(4px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
   transition: all 0.3s ease;
 }
 
@@ -298,8 +295,7 @@
 
 .sx__time-grid-event {
   border-radius: 8px !important;
-  backdrop-filter: blur(4px);
-  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  border: 1px solid rgba(255, 255, 255, 0.3) !important;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05) !important;
 }
 
@@ -322,6 +318,12 @@
 }
 
 @keyframes voiceWave {
-  from { transform: scaleY(0.3); opacity: 0.7; }
-  to   { transform: scaleY(1);   opacity: 1; }
+  from {
+    transform: scaleY(0.3);
+    opacity: 0.7;
+  }
+  to {
+    transform: scaleY(1);
+    opacity: 1;
+  }
 }

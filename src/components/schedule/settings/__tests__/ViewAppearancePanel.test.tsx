@@ -104,12 +104,7 @@ function hasOverrideForView(state: AgendaAppearanceState, view: AgendaView): boo
 
 // ─── Generators ──────────────────────────────────────────────────────────────
 
-const fcCardSize = fc.constantFrom<CardSize>(
-  "extra_small",
-  "small",
-  "medium",
-  "large",
-);
+const fcCardSize = fc.constantFrom<CardSize>("extra_small", "small", "medium", "large");
 
 const fcView = fc.constantFrom<AgendaView>("day", "week", "month");
 
@@ -237,13 +232,18 @@ describe("Property 1: Isolamento de override por view", () => {
 
   it("atualizar múltiplos campos de uma view não afeta o global", () => {
     fc.assert(
-      fc.property(fcAppearanceState, fcView, fcNonEmptyPartialViewAppearance, (state, view, patch) => {
-        const prevGlobal = state.global;
-        const newState = updateView(state, view, patch);
+      fc.property(
+        fcAppearanceState,
+        fcView,
+        fcNonEmptyPartialViewAppearance,
+        (state, view, patch) => {
+          const prevGlobal = state.global;
+          const newState = updateView(state, view, patch);
 
-        // Global must be unchanged
-        expect(newState.global).toEqual(prevGlobal);
-      }),
+          // Global must be unchanged
+          expect(newState.global).toEqual(prevGlobal);
+        },
+      ),
       { numRuns: 100 },
     );
   });
@@ -630,38 +630,30 @@ describe("Property 5: Pré-visualização reflete configuração", () => {
 
   it("CSS vars são monotonicamente crescentes com seus respectivos scales", () => {
     fc.assert(
-      fc.property(
-        fcViewAppearance,
-        fc.integer({ min: 0, max: 9 }),
-        (appearance, lowerScale) => {
-          const higherScale = lowerScale + 1;
+      fc.property(fcViewAppearance, fc.integer({ min: 0, max: 9 }), (appearance, lowerScale) => {
+        const higherScale = lowerScale + 1;
 
-          const lower = computeCssVars({ ...appearance, fontScale: lowerScale });
-          const higher = computeCssVars({ ...appearance, fontScale: higherScale });
+        const lower = computeCssVars({ ...appearance, fontScale: lowerScale });
+        const higher = computeCssVars({ ...appearance, fontScale: higherScale });
 
-          // Higher fontScale → higher fontPercentage
-          expect(higher.fontPercentage).toBeGreaterThan(lower.fontPercentage);
-        },
-      ),
+        // Higher fontScale → higher fontPercentage
+        expect(higher.fontPercentage).toBeGreaterThan(lower.fontPercentage);
+      }),
       { numRuns: 100 },
     );
   });
 
   it("slotHeightPx é monotonicamente crescente com heightScale", () => {
     fc.assert(
-      fc.property(
-        fcViewAppearance,
-        fc.integer({ min: 0, max: 9 }),
-        (appearance, lowerScale) => {
-          const higherScale = lowerScale + 1;
+      fc.property(fcViewAppearance, fc.integer({ min: 0, max: 9 }), (appearance, lowerScale) => {
+        const higherScale = lowerScale + 1;
 
-          const lower = computeCssVars({ ...appearance, heightScale: lowerScale });
-          const higher = computeCssVars({ ...appearance, heightScale: higherScale });
+        const lower = computeCssVars({ ...appearance, heightScale: lowerScale });
+        const higher = computeCssVars({ ...appearance, heightScale: higherScale });
 
-          // Higher heightScale → higher or equal slotHeightPx (due to rounding)
-          expect(higher.slotHeightPx).toBeGreaterThanOrEqual(lower.slotHeightPx);
-        },
-      ),
+        // Higher heightScale → higher or equal slotHeightPx (due to rounding)
+        expect(higher.slotHeightPx).toBeGreaterThanOrEqual(lower.slotHeightPx);
+      }),
       { numRuns: 100 },
     );
   });

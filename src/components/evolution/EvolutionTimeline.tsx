@@ -86,7 +86,6 @@ import { type SoapRecord, useSessionAttachments, useSoapRecords } from "@/hooks/
 import { getAffectedSideAbbreviation } from "@/lib/constants/surgery";
 import { cn } from "@/lib/utils";
 import { stripHtml } from "@/lib/utils/stripHtml";
-import { formatClinicalSummary, formatClinicalText } from "@/lib/evolution/formatters";
 import type {
   AttachmentData,
   MeasurementData,
@@ -704,7 +703,10 @@ export const EvolutionTimeline: React.FC<EvolutionTimelineProps> = ({
 
     // Adicionar sessões SOAP
     soapRecords.forEach((record) => {
-      const soapParts = [
+      const obsText = stripHtml(record.observacao || "");
+      const hasContent = obsText.length > 0;
+
+      const legacySoap = [
         record.subjective && "S",
         record.objective && "O",
         record.assessment && "A",
@@ -713,16 +715,18 @@ export const EvolutionTimeline: React.FC<EvolutionTimelineProps> = ({
 
       const hasAttachments = attachments.some((a) => a.soap_record_id === record.id);
       const hasExercises = record.appointment_id; // Indicador que pode ter exercícios
+      const painValue = record.pain_scale ?? record.pain_level;
 
       events.push({
         id: `soap-${record.id}`,
         type: "session",
         date: new Date(record.created_at),
         title: `Sessão ${record.session_number || "?"} - ${safeFormat(record.created_at, "dd/MM/yyyy")}`,
-        description:
-          soapParts.length > 0
-            ? `SOAP: ${soapParts.join(" - ")}${record.pain_level !== undefined ? ` | EVA: ${record.pain_level}/10` : ""}${hasAttachments ? " | 📎" : ""}${hasExercises ? " | 💪" : ""}`
-            : "Sem descrição",
+        description: hasContent
+          ? `${obsText.slice(0, 80)}${obsText.length > 80 ? "..." : ""}${painValue != null ? ` | EVA: ${painValue}/10` : ""}${hasAttachments ? " | 📎" : ""}`
+          : legacySoap.length > 0
+            ? `SOAP: ${legacySoap.join(" - ")}${painValue != null ? ` | EVA: ${painValue}/10` : ""}${hasAttachments ? " | 📎" : ""}`
+            : "Sessão registrada",
         data: { ...record, hasAttachments, hasExercises },
       });
     });

@@ -32,10 +32,9 @@ test.describe("Analytics — Predição de Aderência", () => {
     request,
   }) => {
     const fakePatientId = "00000000-0000-0000-0000-000000000099";
-    const response = await request.post(
-      `${API_BASE}/api/analytics/predict/${fakePatientId}`,
-      { headers: { Authorization: `Bearer ${AUTH_TOKEN}` } }
-    );
+    const response = await request.post(`${API_BASE}/api/analytics/predict/${fakePatientId}`, {
+      headers: { Authorization: `Bearer ${AUTH_TOKEN}` },
+    });
 
     // 200 com null (< 2 sessões) ou 404 (paciente não existe)
     expect([200, 404]).toContain(response.status());
@@ -54,7 +53,7 @@ test.describe("Analytics — ML Recovery Prediction", () => {
   }) => {
     const response = await request.get(
       `${API_BASE}/api/analytics/ml/recovery-prediction/not-a-uuid`,
-      { headers: { Authorization: `Bearer ${AUTH_TOKEN}` } }
+      { headers: { Authorization: `Bearer ${AUTH_TOKEN}` } },
     );
 
     expect(response.status()).toBe(400);
@@ -65,10 +64,9 @@ test.describe("Analytics — ML Recovery Prediction", () => {
   test("GET /api/analytics/ml/history/:patientId retorna 400 para UUID inválido", async ({
     request,
   }) => {
-    const response = await request.get(
-      `${API_BASE}/api/analytics/ml/history/not-a-uuid`,
-      { headers: { Authorization: `Bearer ${AUTH_TOKEN}` } }
-    );
+    const response = await request.get(`${API_BASE}/api/analytics/ml/history/not-a-uuid`, {
+      headers: { Authorization: `Bearer ${AUTH_TOKEN}` },
+    });
 
     expect(response.status()).toBe(400);
   });

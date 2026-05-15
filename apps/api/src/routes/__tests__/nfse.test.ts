@@ -14,7 +14,9 @@ function validateNfsePayload(payload: Record<string, unknown>): string[] {
 }
 
 function formatValorSemDecimal(valor: number): string {
-  return Math.round(valor * 100).toString().padStart(15, "0");
+  return Math.round(valor * 100)
+    .toString()
+    .padStart(15, "0");
 }
 
 function buildRpsNumber(lastRps: number): string {
@@ -114,7 +116,7 @@ describe("isNfseConfigComplete", () => {
         razao_social: "Mooca Fisioterapia",
         inscricao_municipal: "98765432",
         codigo_servico: "04391",
-      })
+      }),
     ).toBe(true);
   });
 

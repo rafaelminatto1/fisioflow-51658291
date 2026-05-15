@@ -24,14 +24,14 @@
 ## 🧠 Fase 2: Refinamento de IA e Machine Learning (Junho–Julho)
 
 **Duração:** 2 meses  
-**Objetivo:** Calibrar as respostas dos agentes e aumentar a assertividade do *Digital Twin*.
+**Objetivo:** Calibrar as respostas dos agentes e aumentar a assertividade do _Digital Twin_.
 
 1. **Auditoria Clínica via Peer-Review**
-   - Acompanhar semanalmente o *Clinical Quality Dashboard*.
+   - Acompanhar semanalmente o _Clinical Quality Dashboard_.
    - Identificar fisioterapeutas com score < 70 e fornecer mentoria focada nos pontos que a IA destacou.
 2. **RAG & Context Caching Optimization**
-   - Monitorar os custos do *Context Caching* na Cloudflare/Gemini.
-   - Refinar a base de conhecimento (Wiki) adicionando mais *Estudos de Caso* gerados pelo **Auto-Wiki**.
+   - Monitorar os custos do _Context Caching_ na Cloudflare/Gemini.
+   - Refinar a base de conhecimento (Wiki) adicionando mais _Estudos de Caso_ gerados pelo **Auto-Wiki**.
 3. **Ajuste do Preditor de No-Show**
    - Cruzar a taxa real de faltas com os alertas de "Alto Risco" gerados pela IA.
 
@@ -41,36 +41,37 @@
 **Objetivo:** Usar a plataforma como motor de aquisição de novos pacientes e aumento de receita.
 
 1. **Programa de Indicação (MGM) em Escala**
-   - Acompanhar as conversões do *Referral Program* gerado na Alta Clínica (História de Sucesso).
+   - Acompanhar as conversões do _Referral Program_ gerado na Alta Clínica (História de Sucesso).
    - Injetar bonificações gamificadas (Vouchers) no Patient App.
 2. **Campanhas Anti-Churn**
-   - Fazer "War Room" semanal usando o *Churn Report*. O gestor deve entrar em contato com os Top 10 pacientes em risco de abandono listados pela IA.
+   - Fazer "War Room" semanal usando o _Churn Report_. O gestor deve entrar em contato com os Top 10 pacientes em risco de abandono listados pela IA.
 3. **Medical Bridge Strategy**
    - Passar a enviar os **Laudos Médicos (IA)** impressos para os 5 principais ortopedistas parceiros da clínica, demonstrando autoridade técnica.
 
 ## 🏢 Fase 4: Enterprise Scaling & Franchising (Outubro–Dezembro)
 
 **Duração:** 3 meses  
-**Objetivo:** Expandir a marca Mooca Fisio utilizando o *Multi-tenant Hardening* já construído.
+**Objetivo:** Expandir a marca Mooca Fisio utilizando o _Multi-tenant Hardening_ já construído.
 
 1. **Licenciamento do Software**
    - Comercializar o FisioFlow como plataforma SaaS White-Label para outras clínicas parceiras em São Paulo.
 2. **Dashboard Regional**
-   - Ativar novas filiais e gerenciar tudo pelo *Centro de Comando Regional*.
+   - Ativar novas filiais e gerenciar tudo pelo _Centro de Comando Regional_.
 3. **Previsão Financeira Consolidada**
-   - Utilizar a *Previsão de Receita (IA)* de 90 dias para tomar decisões de expansão (compra de novos equipamentos ou contratação de mais equipe).
+   - Utilizar a _Previsão de Receita (IA)_ de 90 dias para tomar decisões de expansão (compra de novos equipamentos ou contratação de mais equipe).
 
 ---
 
 ## 🎯 Métricas de Sucesso a Serem Acompanhadas
 
-| Indicador | Fonte no FisioFlow | Meta até Dez/2026 |
-| :--- | :--- | :--- |
-| **Aderência do App Paciente** | Auth DB | > 60% dos pacientes ativos |
-| **Automação SOAP (Voz)** | AI Logs | > 80% das evoluções feitas via Scribe |
-| **Taxa de Retenção (LTV)** | BI Dashboard | Aumento de 2.5 para 3.5 ciclos médios |
-| **Precisão de Agendamento** | No-Show BI | Redução do No-Show para < 10% |
-| **Eficácia Clínica** | Quality Dashboard| Score médio da equipe > 85/100 |
+| Indicador                     | Fonte no FisioFlow | Meta até Dez/2026                     |
+| :---------------------------- | :----------------- | :------------------------------------ |
+| **Aderência do App Paciente** | Auth DB            | > 60% dos pacientes ativos            |
+| **Automação SOAP (Voz)**      | AI Logs            | > 80% das evoluções feitas via Scribe |
+| **Taxa de Retenção (LTV)**    | BI Dashboard       | Aumento de 2.5 para 3.5 ciclos médios |
+| **Precisão de Agendamento**   | No-Show BI         | Redução do No-Show para < 10%         |
+| **Eficácia Clínica**          | Quality Dashboard  | Score médio da equipe > 85/100        |
 
 ## 🏁 Notas Finais da Arquitetura
-A infraestrutura (*Cloudflare Edge + Neon Serverless*) foi desenhada para **Escala Infinita**. O custo de operação será marginal até cruzar a barreira de 10.000 pacientes. O foco da gestão agora deve ser puramente **Operacional e Comercial**. O software está pronto para a guerra.
+
+A infraestrutura (_Cloudflare Edge + Neon Serverless_) foi desenhada para **Escala Infinita**. O custo de operação será marginal até cruzar a barreira de 10.000 pacientes. O foco da gestão agora deve ser puramente **Operacional e Comercial**. O software está pronto para a guerra.

@@ -7,14 +7,14 @@
  * Execute com: npm run test:e2e:e2e/critical-flows.spec.ts
  */
 
-import { test, expect, Page } from '@playwright/test';
-import { authenticateBrowserContext } from './helpers/neon-auth';
+import { test, expect, Page } from "@playwright/test";
+import { authenticateBrowserContext } from "./helpers/neon-auth";
 
-const TEST_ORG_ID = '00000000-0000-0000-0000-000000000001';
+const TEST_ORG_ID = "00000000-0000-0000-0000-000000000001";
 
-const neonAuthUrl = process.env.VITE_NEON_AUTH_URL || '';
-const loginEmail = process.env.E2E_LOGIN_EMAIL || 'rafael.minatto@yahoo.com.br';
-const loginPassword = process.env.E2E_LOGIN_PASSWORD || 'Yukari30@';
+const neonAuthUrl = process.env.VITE_NEON_AUTH_URL || "";
+const loginEmail = process.env.E2E_LOGIN_EMAIL || "rafael.minatto@yahoo.com.br";
+const loginPassword = process.env.E2E_LOGIN_PASSWORD || "Yukari30@";
 
 function generateValidCpf(): string {
   const digits = Array.from({ length: 9 }, () => Math.floor(Math.random() * 10));
@@ -25,7 +25,7 @@ function generateValidCpf(): string {
   };
   const d1 = calcDigit(digits);
   const d2 = calcDigit([...digits, d1]);
-  return [...digits, d1, d2].join('');
+  return [...digits, d1, d2].join("");
 }
 
 async function dismissOnboardingIfPresent(page: Page) {
@@ -38,11 +38,11 @@ async function dismissOnboardingIfPresent(page: Page) {
     return;
   }
 
-  const closeButton = onboardingDialog.getByRole('button', { name: /Close|Fechar/i }).first();
+  const closeButton = onboardingDialog.getByRole("button", { name: /Close|Fechar/i }).first();
   if (await closeButton.isVisible().catch(() => false)) {
     await closeButton.click({ force: true });
   } else {
-    await page.keyboard.press('Escape').catch(() => {});
+    await page.keyboard.press("Escape").catch(() => {});
   }
 
   await expect(onboardingDialog).toBeHidden({ timeout: 5000 });
@@ -50,18 +50,21 @@ async function dismissOnboardingIfPresent(page: Page) {
 }
 
 async function mockOrganizationBootstrap(page: Page) {
-  const fulfillPatientsList = async (route: { request(): { method(): string }; fulfill: (options: { status: number; contentType: string; body: string }) => Promise<void> }) => {
-    if (route.request().method() === 'POST') {
+  const fulfillPatientsList = async (route: {
+    request(): { method(): string };
+    fulfill: (options: { status: number; contentType: string; body: string }) => Promise<void>;
+  }) => {
+    if (route.request().method() === "POST") {
       const timestamp = Date.now();
       await route.fulfill({
         status: 201,
-        contentType: 'application/json',
+        contentType: "application/json",
         body: JSON.stringify({
           data: {
             id: `patient-created-${timestamp}`,
             name: `Paciente Teste E2E ${timestamp}`,
             full_name: `Paciente Teste E2E ${timestamp}`,
-            status: 'active',
+            status: "active",
           },
         }),
       });
@@ -70,17 +73,17 @@ async function mockOrganizationBootstrap(page: Page) {
 
     await route.fulfill({
       status: 200,
-      contentType: 'application/json',
+      contentType: "application/json",
       body: JSON.stringify({
         data: [
           {
-            id: 'patient-e2e-list',
-            name: 'João Silva',
-            full_name: 'João Silva',
-            status: 'active',
+            id: "patient-e2e-list",
+            name: "João Silva",
+            full_name: "João Silva",
+            status: "active",
             sessions_count: 0,
             total_sessions: 0,
-            main_condition: 'Dor Lombar',
+            main_condition: "Dor Lombar",
           },
         ],
         total: 1,
@@ -91,12 +94,12 @@ async function mockOrganizationBootstrap(page: Page) {
   await page.route(`**/api/organizations/${TEST_ORG_ID}`, async (route) => {
     await route.fulfill({
       status: 200,
-      contentType: 'application/json',
+      contentType: "application/json",
       body: JSON.stringify({
         data: {
           id: TEST_ORG_ID,
-          name: 'Organização E2E',
-          slug: 'organizacao-e2e',
+          name: "Organização E2E",
+          slug: "organizacao-e2e",
           settings: {},
           active: true,
           created_at: null,
@@ -106,22 +109,22 @@ async function mockOrganizationBootstrap(page: Page) {
     });
   });
 
-  await page.route('**/api/organization-members?**', async (route) => {
+  await page.route("**/api/organization-members?**", async (route) => {
     await route.fulfill({
       status: 200,
-      contentType: 'application/json',
+      contentType: "application/json",
       body: JSON.stringify({
         data: [
           {
-            id: 'member-e2e-admin',
+            id: "member-e2e-admin",
             organization_id: TEST_ORG_ID,
-            user_id: 'user-e2e-admin',
-            role: 'admin',
+            user_id: "user-e2e-admin",
+            role: "admin",
             active: true,
             joined_at: new Date().toISOString(),
             profiles: {
-              full_name: 'Admin E2E',
-              email: 'admin@e2e.local',
+              full_name: "Admin E2E",
+              email: "admin@e2e.local",
             },
           },
         ],
@@ -130,97 +133,97 @@ async function mockOrganizationBootstrap(page: Page) {
     });
   });
 
-  await page.route('**/api/notifications?**', async (route) => {
+  await page.route("**/api/notifications?**", async (route) => {
     await route.fulfill({
       status: 200,
-      contentType: 'application/json',
+      contentType: "application/json",
       body: JSON.stringify({ data: [] }),
     });
   });
 
-  await page.route('**/api/audit-logs?**', async (route) => {
+  await page.route("**/api/audit-logs?**", async (route) => {
     await route.fulfill({
       status: 200,
-      contentType: 'application/json',
+      contentType: "application/json",
       body: JSON.stringify({ data: [] }),
     });
   });
 
-  await page.route('**/api/appointments?**', async (route) => {
+  await page.route("**/api/appointments?**", async (route) => {
     await route.fulfill({
       status: 200,
-      contentType: 'application/json',
+      contentType: "application/json",
       body: JSON.stringify({ data: [] }),
     });
   });
 
-  await page.route('**/api/exercises?**', async (route) => {
+  await page.route("**/api/exercises?**", async (route) => {
     await route.fulfill({
       status: 200,
-      contentType: 'application/json',
+      contentType: "application/json",
       body: JSON.stringify({ data: [] }),
     });
   });
 
-  await page.route('**/api/scheduling/waitlist?**', async (route) => {
+  await page.route("**/api/scheduling/waitlist?**", async (route) => {
     await route.fulfill({
       status: 200,
-      contentType: 'application/json',
+      contentType: "application/json",
       body: JSON.stringify({ data: [] }),
     });
   });
 
-  await page.route('**/api/scheduling/settings/notification-settings', async (route) => {
+  await page.route("**/api/scheduling/settings/notification-settings", async (route) => {
     await route.fulfill({
       status: 200,
-      contentType: 'application/json',
+      contentType: "application/json",
       body: JSON.stringify({ data: [] }),
     });
   });
 
-  await page.route('**/api/scheduling/settings/cancellation-rules', async (route) => {
+  await page.route("**/api/scheduling/settings/cancellation-rules", async (route) => {
     await route.fulfill({
       status: 200,
-      contentType: 'application/json',
+      contentType: "application/json",
       body: JSON.stringify({ data: [] }),
     });
   });
 
-  await page.route('**/api/scheduling/settings/business-hours', async (route) => {
+  await page.route("**/api/scheduling/settings/business-hours", async (route) => {
     await route.fulfill({
       status: 200,
-      contentType: 'application/json',
+      contentType: "application/json",
       body: JSON.stringify({ data: [] }),
     });
   });
 
-  await page.route('**/api/scheduling/settings/blocked-times', async (route) => {
+  await page.route("**/api/scheduling/settings/blocked-times", async (route) => {
     await route.fulfill({
       status: 200,
-      contentType: 'application/json',
+      contentType: "application/json",
       body: JSON.stringify({ data: [] }),
     });
   });
 
-  await page.route('**/api/scheduling/capacity-config', async (route) => {
+  await page.route("**/api/scheduling/capacity-config", async (route) => {
     await route.fulfill({
       status: 200,
-      contentType: 'application/json',
+      contentType: "application/json",
       body: JSON.stringify({ data: [] }),
     });
   });
 
-  await page.route('**/api/profile/me', async (route) => {
+  await page.route("**/api/profile/me", async (route) => {
     await route.fulfill({
       status: 200,
-      contentType: 'application/json',
+      contentType: "application/json",
       body: JSON.stringify({
         data: {
-          id: 'user-e2e-admin',
-          user_id: 'user-e2e-admin',
-          email: 'admin@e2e.local',
-          full_name: 'Admin E2E',
-          role: 'admin',
+          id: "user-e2e-admin",
+          user_id: "user-e2e-admin",
+          email: "admin@e2e.local",
+          full_name: "Admin E2E",
+          role: "admin",
           organization_id: TEST_ORG_ID,
           organizationId: TEST_ORG_ID,
           email_verified: true,
@@ -229,56 +232,56 @@ async function mockOrganizationBootstrap(page: Page) {
     });
   });
 
-  await page.route('**/api/profile/therapists', async (route) => {
+  await page.route("**/api/profile/therapists", async (route) => {
     await route.fulfill({
       status: 200,
-      contentType: 'application/json',
+      contentType: "application/json",
       body: JSON.stringify({
         data: [
           {
-            id: 'therapist-e2e',
-            name: 'Dr. Teste Atualizado',
-            crefito: '000000',
+            id: "therapist-e2e",
+            name: "Dr. Teste Atualizado",
+            crefito: "000000",
           },
         ],
       }),
     });
   });
 
-  await page.route('**/api/patients', fulfillPatientsList);
-  await page.route('**/api/patients?**', fulfillPatientsList);
+  await page.route("**/api/patients", fulfillPatientsList);
+  await page.route("**/api/patients?**", fulfillPatientsList);
 
-  await page.route('**/api/financial/patient-packages?**', async (route) => {
+  await page.route("**/api/financial/patient-packages?**", async (route) => {
     await route.fulfill({
       status: 200,
-      contentType: 'application/json',
+      contentType: "application/json",
       body: JSON.stringify({ data: [], total: 0 }),
     });
   });
 
-  await page.route('**/api/patients/patient-e2e-list', async (route) => {
+  await page.route("**/api/patients/patient-e2e-list", async (route) => {
     await route.fulfill({
       status: 200,
-      contentType: 'application/json',
+      contentType: "application/json",
       body: JSON.stringify({
         data: {
-          id: 'patient-e2e-list',
-          name: 'João Silva',
-          full_name: 'João Silva',
-          status: 'active',
-          email: 'joao.silva@example.com',
-          phone: '11999999999',
-          cpf: '12345678901',
-          main_condition: 'Dor Lombar',
+          id: "patient-e2e-list",
+          name: "João Silva",
+          full_name: "João Silva",
+          status: "active",
+          email: "joao.silva@example.com",
+          phone: "11999999999",
+          cpf: "12345678901",
+          main_condition: "Dor Lombar",
         },
       }),
     });
   });
 
-  await page.route('**/api/patients/patient-e2e-list/stats', async (route) => {
+  await page.route("**/api/patients/patient-e2e-list/stats", async (route) => {
     await route.fulfill({
       status: 200,
-      contentType: 'application/json',
+      contentType: "application/json",
       body: JSON.stringify({
         data: {
           totalAppointments: 0,
@@ -294,10 +297,10 @@ async function mockOrganizationBootstrap(page: Page) {
     });
   });
 
-  await page.route('**/api/sessions?patientId=patient-e2e-list**', async (route) => {
+  await page.route("**/api/sessions?patientId=patient-e2e-list**", async (route) => {
     await route.fulfill({
       status: 200,
-      contentType: 'application/json',
+      contentType: "application/json",
       body: JSON.stringify({ data: [], total: 0 }),
     });
   });
@@ -305,12 +308,12 @@ async function mockOrganizationBootstrap(page: Page) {
 
 async function authenticatePage(page: Page) {
   if (!neonAuthUrl) {
-    throw new Error('VITE_NEON_AUTH_URL ausente para critical-flows.spec.ts');
+    throw new Error("VITE_NEON_AUTH_URL ausente para critical-flows.spec.ts");
   }
   await authenticateBrowserContext(page.context(), loginEmail, loginPassword);
 }
 
-test.describe('Fluxos Críticos do FisioFlow', () => {
+test.describe("Fluxos Críticos do FisioFlow", () => {
   test.use({ storageState: { cookies: [], origins: [] } });
 
   // Autenticação
@@ -319,24 +322,28 @@ test.describe('Fluxos Críticos do FisioFlow', () => {
     await mockOrganizationBootstrap(page);
 
     // Log console messages
-    page.on('console', msg => {
-      if (msg.type() === 'error') {
+    page.on("console", (msg) => {
+      if (msg.type() === "error") {
         console.error(`BROWSER ERROR: ${msg.text()}`);
-      } else if (msg.type() === 'warning') {
+      } else if (msg.type() === "warning") {
         console.warn(`BROWSER WARN: ${msg.text()}`);
       }
     });
 
-    page.on('response', (response) => {
+    page.on("response", (response) => {
       if (response.status() >= 400) {
-        console.error(`[E2E HTTP ${response.status()}] ${response.request().method()} ${response.url()} -> ${response.status()}`);
+        console.error(
+          `[E2E HTTP ${response.status()}] ${response.request().method()} ${response.url()} -> ${response.status()}`,
+        );
       }
     });
 
-    await page.goto('/?e2e=true');
+    await page.goto("/?e2e=true");
 
     // Caminho '/' é válido pois redireciona para agenda por padrão
-    await page.waitForURL((url) => /\/(dashboard|eventos|schedule|agenda)?/.test(url.pathname), { timeout: 30000 });
+    await page.waitForURL((url) => /\/(dashboard|eventos|schedule|agenda)?/.test(url.pathname), {
+      timeout: 30000,
+    });
 
     // Esperar o skeleton de carregamento sumir
     const skeleton = page.locator('[data-testid="app-loading-skeleton"]');
@@ -346,7 +353,7 @@ test.describe('Fluxos Críticos do FisioFlow', () => {
 
     // Estabilização
     await page.waitForTimeout(1000);
-    await page.waitForLoadState('domcontentloaded');
+    await page.waitForLoadState("domcontentloaded");
     await dismissOnboardingIfPresent(page);
   });
 
@@ -354,39 +361,51 @@ test.describe('Fluxos Críticos do FisioFlow', () => {
    * Helper para garantir que exista pelo menos um paciente utilizável nos fluxos.
    */
   async function ensurePatientAvailable(page: Page): Promise<string> {
-    const targetName = 'João Silva';
+    const targetName = "João Silva";
 
     const readFirstPatientName = async () => {
       const firstCard = page.locator('[data-testid^="patient-card-"]').first();
       if (await firstCard.isVisible().catch(() => false)) {
-        const raw = (await firstCard.textContent()) || '';
-        const firstLine = raw.split('\n').map((line) => line.trim()).find(Boolean);
+        const raw = (await firstCard.textContent()) || "";
+        const firstLine = raw
+          .split("\n")
+          .map((line) => line.trim())
+          .find(Boolean);
         if (firstLine) return firstLine;
       }
       return targetName;
     };
 
-    await page.goto('/patients?e2e=true');
-    await page.waitForLoadState('domcontentloaded');
+    await page.goto("/patients?e2e=true");
+    await page.waitForLoadState("domcontentloaded");
     await page.waitForTimeout(1200);
 
-    const clearFiltersButton = page.getByRole('button', { name: /Limpar filtros/i }).first();
+    const clearFiltersButton = page.getByRole("button", { name: /Limpar filtros/i }).first();
     if (await clearFiltersButton.isVisible().catch(() => false)) {
       await clearFiltersButton.click();
     }
 
-    const searchInput = page.locator('input[aria-label="Buscar pacientes"], input[type="search"]').first();
+    const searchInput = page
+      .locator('input[aria-label="Buscar pacientes"], input[type="search"]')
+      .first();
     if (await searchInput.isVisible().catch(() => false)) {
       await searchInput.fill(targetName);
     }
 
-    const existingCard = page.locator('[data-testid^="patient-card-"]').filter({ hasText: targetName }).first();
+    const existingCard = page
+      .locator('[data-testid^="patient-card-"]')
+      .filter({ hasText: targetName })
+      .first();
     if (await existingCard.isVisible().catch(() => false)) {
       return targetName;
     }
 
     // Criar se não existir - Tentar vários seletores para o botão de adicionar
-    const addButton = page.locator('button:has-text("Novo Paciente"), [data-testid="add-patient"], a:has-text("Novo Paciente")').first();
+    const addButton = page
+      .locator(
+        'button:has-text("Novo Paciente"), [data-testid="add-patient"], a:has-text("Novo Paciente")',
+      )
+      .first();
     await expect(addButton).toBeVisible({ timeout: 15000 });
     await addButton.evaluate((button: HTMLElement) => button.click());
 
@@ -396,7 +415,7 @@ test.describe('Fluxos Críticos do FisioFlow', () => {
     const patientForm = page.locator('form[data-testid="patient-form"]').first();
     const hasForm = await patientForm.isVisible().catch(() => false);
     if (!hasForm) {
-      await page.keyboard.press('Escape').catch(() => {});
+      await page.keyboard.press("Escape").catch(() => {});
       return readFirstPatientName();
     }
 
@@ -409,20 +428,23 @@ test.describe('Fluxos Críticos do FisioFlow', () => {
     const dayBtn = page.locator('[role="grid"] button:not([disabled])').first();
     await expect(dayBtn).toBeVisible({ timeout: 5000 });
     await dayBtn.click();
-    await expect(birthdateBtn).not.toContainText('Selecione uma data');
+    await expect(birthdateBtn).not.toContainText("Selecione uma data");
 
     await patientForm.locator('[data-testid="patient-cpf"]').fill(generateValidCpf());
-    await patientForm.locator('[data-testid="patient-phone"]').fill('11999999999');
+    await patientForm.locator('[data-testid="patient-phone"]').fill("11999999999");
 
     // Aba Médico
     await page.locator('button[role="tab"]:has-text("Médico")').click();
-    await patientForm.locator('input#main_condition').fill('Dor Lombar E2E');
+    await patientForm.locator("input#main_condition").fill("Dor Lombar E2E");
 
     await patientForm.locator('button[type="submit"]').click();
     if (await searchInput.isVisible().catch(() => false)) {
       await searchInput.fill(targetName);
     }
-    const createdCard = page.locator('[data-testid^="patient-card-"]').filter({ hasText: targetName }).first();
+    const createdCard = page
+      .locator('[data-testid^="patient-card-"]')
+      .filter({ hasText: targetName })
+      .first();
     if (await createdCard.isVisible({ timeout: 20000 }).catch(() => false)) {
       return targetName;
     }
@@ -430,47 +452,58 @@ test.describe('Fluxos Críticos do FisioFlow', () => {
   }
 
   async function openPatientProfile(page: Page, preferredPatientName?: string): Promise<string> {
-    const patientName = preferredPatientName ?? await ensurePatientAvailable(page);
-    await page.goto('/patients?e2e=true');
-    await page.waitForLoadState('domcontentloaded');
-    await page.keyboard.press('Escape').catch(() => {});
+    const patientName = preferredPatientName ?? (await ensurePatientAvailable(page));
+    await page.goto("/patients?e2e=true");
+    await page.waitForLoadState("domcontentloaded");
+    await page.keyboard.press("Escape").catch(() => {});
     await page.waitForTimeout(300);
 
-    const clearFiltersButton = page.getByRole('button', { name: /Limpar filtros/i }).first();
+    const clearFiltersButton = page.getByRole("button", { name: /Limpar filtros/i }).first();
     if (await clearFiltersButton.isVisible().catch(() => false)) {
       await clearFiltersButton.click();
     }
 
-    const searchInput = page.locator('input[aria-label="Buscar pacientes"], input[type="search"]').first();
+    const searchInput = page
+      .locator('input[aria-label="Buscar pacientes"], input[type="search"]')
+      .first();
     if (await searchInput.isVisible().catch(() => false)) {
       await searchInput.fill(patientName);
     }
 
-    const patientCard = page.locator('[data-testid^="patient-card-"]').filter({ hasText: patientName }).first();
+    const patientCard = page
+      .locator('[data-testid^="patient-card-"]')
+      .filter({ hasText: patientName })
+      .first();
     let selectedPatientName = patientName;
     if (await patientCard.isVisible().catch(() => false)) {
       await patientCard.evaluate((card: HTMLElement) => card.click());
     } else {
       const fallbackCard = page.locator('[data-testid^="patient-card-"]').first();
       if (await fallbackCard.isVisible({ timeout: 5000 }).catch(() => false)) {
-        const raw = (await fallbackCard.textContent()) || '';
-        const firstLine = raw.split('\n').map((line) => line.trim()).find(Boolean);
+        const raw = (await fallbackCard.textContent()) || "";
+        const firstLine = raw
+          .split("\n")
+          .map((line) => line.trim())
+          .find(Boolean);
         if (firstLine) selectedPatientName = firstLine;
         await fallbackCard.evaluate((card: HTMLElement) => card.click());
       } else {
-        await page.goto('/patients/patient-e2e-list?e2e=true');
-        await page.waitForLoadState('domcontentloaded');
+        await page.goto("/patients/patient-e2e-list?e2e=true");
+        await page.waitForLoadState("domcontentloaded");
       }
     }
 
-    const navigatedToProfile = await page.waitForURL(/\/patients\/[^/]+/, { timeout: 5000 }).then(() => true).catch(() => false);
+    const navigatedToProfile = await page
+      .waitForURL(/\/patients\/[^/]+/, { timeout: 5000 })
+      .then(() => true)
+      .catch(() => false);
     if (!navigatedToProfile) {
-      await page.goto('/patients/patient-e2e-list?e2e=true');
-      await page.waitForLoadState('domcontentloaded');
+      await page.goto("/patients/patient-e2e-list?e2e=true");
+      await page.waitForLoadState("domcontentloaded");
     }
 
     await expect(page).toHaveURL(/\/patients\/[^/]+/);
-    await expect(page.locator('text=Paciente não encontrado').first()).not.toBeVisible();
+    await expect(page.locator("text=Paciente não encontrado").first()).not.toBeVisible();
     return selectedPatientName;
   }
 
@@ -478,36 +511,50 @@ test.describe('Fluxos Críticos do FisioFlow', () => {
    * TESTE 1: Agendamento Completo
    * Verifica o fluxo de criação de um agendamento
    */
-  test('CRÍTICO: Agendamento - Fluxo completo de criação', async ({ page }) => {
+  test("CRÍTICO: Agendamento - Fluxo completo de criação", async ({ page }) => {
     const patientName = await ensurePatientAvailable(page);
-    await page.goto('/agenda?e2e=true');
-    await page.waitForLoadState('domcontentloaded');
+    await page.goto("/agenda?e2e=true");
+    await page.waitForLoadState("domcontentloaded");
 
-    const agendaError = page.getByText(/Erro ao carregar agendamentos|Token JWT do Neon Auth indisponível/i).first();
+    const agendaError = page
+      .getByText(/Erro ao carregar agendamentos|Token JWT do Neon Auth indisponível/i)
+      .first();
     if (await agendaError.isVisible({ timeout: 5000 }).catch(() => false)) {
       test.info().annotations.push({
-        type: 'note',
-        description: 'Agenda abriu, mas a hidratação de agendamentos falhou por indisponibilidade momentânea do JWT Neon no runtime do app; cenário mantido como smoke.',
+        type: "note",
+        description:
+          "Agenda abriu, mas a hidratação de agendamentos falhou por indisponibilidade momentânea do JWT Neon no runtime do app; cenário mantido como smoke.",
       });
       await expect(page).toHaveURL(/\/agenda/);
-      await expect(page.getByRole('link', { name: /Agenda/i }).first()).toBeVisible({ timeout: 10000 });
+      await expect(page.getByRole("link", { name: /Agenda/i }).first()).toBeVisible({
+        timeout: 10000,
+      });
       return;
     }
 
     const newAppointmentButton = page.locator('[data-testid="new-appointment"]:visible').first();
-    const canUseTestIdButton = await newAppointmentButton.isVisible({ timeout: 5000 }).catch(() => false);
+    const canUseTestIdButton = await newAppointmentButton
+      .isVisible({ timeout: 5000 })
+      .catch(() => false);
     if (canUseTestIdButton) {
       await newAppointmentButton.click();
     } else {
-      const fallbackNewAppointmentButton = page.getByRole('button', { name: /Novo Agendamento/i }).first();
-      const fallbackVisible = await fallbackNewAppointmentButton.isVisible({ timeout: 15000 }).catch(() => false);
+      const fallbackNewAppointmentButton = page
+        .getByRole("button", { name: /Novo Agendamento/i })
+        .first();
+      const fallbackVisible = await fallbackNewAppointmentButton
+        .isVisible({ timeout: 15000 })
+        .catch(() => false);
       if (!fallbackVisible) {
         test.info().annotations.push({
-          type: 'note',
-          description: 'CTA de novo agendamento não ficou visível neste layout/estado do lote amplo; cenário mantido como smoke.',
+          type: "note",
+          description:
+            "CTA de novo agendamento não ficou visível neste layout/estado do lote amplo; cenário mantido como smoke.",
         });
         await expect(page).toHaveURL(/\/agenda/);
-        await expect(page.getByRole('link', { name: /Agenda/i }).first()).toBeVisible({ timeout: 10000 });
+        await expect(page.getByRole("link", { name: /Agenda/i }).first()).toBeVisible({
+          timeout: 10000,
+        });
         return;
       }
       await fallbackNewAppointmentButton.evaluate((button: HTMLElement) => button.click());
@@ -516,14 +563,17 @@ test.describe('Fluxos Críticos do FisioFlow', () => {
     const dialogVisible = await appointmentDialog.isVisible({ timeout: 5000 }).catch(() => false);
     if (!dialogVisible) {
       test.info().annotations.push({
-        type: 'note',
-        description: 'CTA de novo agendamento carregou, mas o modal não abriu de forma determinística neste ambiente; cenário mantido como smoke.',
+        type: "note",
+        description:
+          "CTA de novo agendamento carregou, mas o modal não abriu de forma determinística neste ambiente; cenário mantido como smoke.",
       });
-      await expect(page.getByRole('button', { name: /Novo Agendamento/i }).first()).toBeVisible({ timeout: 10000 });
+      await expect(page.getByRole("button", { name: /Novo Agendamento/i }).first()).toBeVisible({
+        timeout: 10000,
+      });
       return;
     }
 
-    await page.keyboard.press('Escape').catch(() => {});
+    await page.keyboard.press("Escape").catch(() => {});
     await page.waitForTimeout(400);
 
     // Selecionar paciente
@@ -531,16 +581,19 @@ test.describe('Fluxos Críticos do FisioFlow', () => {
     const patientSelectEnabled = await patientSelect.isEnabled().catch(() => false);
     if (!patientSelectEnabled) {
       test.info().annotations.push({
-        type: 'note',
-        description: 'Modal de agendamento abriu, mas o seletor de paciente permaneceu desabilitado neste ambiente; cenário mantido como smoke.',
+        type: "note",
+        description:
+          "Modal de agendamento abriu, mas o seletor de paciente permaneceu desabilitado neste ambiente; cenário mantido como smoke.",
       });
-      const cancelButton = page.getByRole('button', { name: /Cancelar|Fechar/i }).first();
+      const cancelButton = page.getByRole("button", { name: /Cancelar|Fechar/i }).first();
       if (await cancelButton.isVisible().catch(() => false)) {
         await cancelButton.click({ force: true });
       } else {
-        await page.keyboard.press('Escape').catch(() => {});
+        await page.keyboard.press("Escape").catch(() => {});
       }
-      await expect(page.getByRole('button', { name: /Novo Agendamento/i }).first()).toBeVisible({ timeout: 10000 });
+      await expect(page.getByRole("button", { name: /Novo Agendamento/i }).first()).toBeVisible({
+        timeout: 10000,
+      });
       return;
     }
 
@@ -564,8 +617,8 @@ test.describe('Fluxos Críticos do FisioFlow', () => {
     let therapistSelected = false;
     for (let i = 0; i < therapistCount; i++) {
       const option = therapistOptions.nth(i);
-      const text = (await option.textContent())?.trim().toLowerCase() || '';
-      if (!text || text.includes('escolher')) continue;
+      const text = (await option.textContent())?.trim().toLowerCase() || "";
+      if (!text || text.includes("escolher")) continue;
       await option.click();
       therapistSelected = true;
       break;
@@ -577,55 +630,60 @@ test.describe('Fluxos Críticos do FisioFlow', () => {
     // Encerrar fluxo no modal sem persistir para evitar 400 intermitente em ambiente de teste
     const dialog = page.locator('[role="dialog"]');
     if (await dialog.isVisible().catch(() => false)) {
-      const cancelButton = page.getByRole('button', { name: /Cancelar|Fechar/i }).first();
+      const cancelButton = page.getByRole("button", { name: /Cancelar|Fechar/i }).first();
       if (await cancelButton.isVisible().catch(() => false)) {
         await cancelButton.click();
       } else {
-        await page.keyboard.press('Escape');
+        await page.keyboard.press("Escape");
       }
     }
     await expect(dialog).not.toBeVisible({ timeout: 10000 });
 
     // Verificar se a agenda continua funcional após o fluxo
-    await expect(page.locator('[data-testid="new-appointment"]:visible').first()).toBeVisible({ timeout: 10000 });
+    await expect(page.locator('[data-testid="new-appointment"]:visible').first()).toBeVisible({
+      timeout: 10000,
+    });
   });
 
   /**
    * TESTE 2: Evolução SOAP
    * Verifica o registro de uma evolução SOAP
    */
-  test('CRÍTICO: Evolução Clínica - Registro SOAP completo', async ({ page }) => {
+  test("CRÍTICO: Evolução Clínica - Registro SOAP completo", async ({ page }) => {
     await openPatientProfile(page);
-    const clinicalTab = page.getByRole('tab', { name: 'Histórico Clínico' });
+    const clinicalTab = page.getByRole("tab", { name: "Histórico Clínico" });
     const canOpenClinical = await clinicalTab.isVisible({ timeout: 10000 }).catch(() => false);
     if (!canOpenClinical) {
       test.info().annotations.push({
-        type: 'note',
-        description: 'Perfil do paciente não expôs aba Histórico Clínico neste ambiente; cenário marcado como smoke.',
+        type: "note",
+        description:
+          "Perfil do paciente não expôs aba Histórico Clínico neste ambiente; cenário marcado como smoke.",
       });
       return;
     }
     await clinicalTab.click();
-    await expect(clinicalTab).toHaveAttribute('data-state', 'active');
-    await expect(page.locator('text=Paciente não encontrado')).not.toBeVisible();
+    await expect(clinicalTab).toHaveAttribute("data-state", "active");
+    await expect(page.locator("text=Paciente não encontrado")).not.toBeVisible();
   });
 
   /**
    * TESTE 3: Cadastro de Paciente
    * Verifica o cadastro completo de um novo paciente
    */
-  test('CRÍTICO: Pacientes - Cadastro completo', async ({ page }) => {
-    await page.goto('/patients?e2e=true');
-    await page.waitForLoadState('domcontentloaded');
+  test("CRÍTICO: Pacientes - Cadastro completo", async ({ page }) => {
+    await page.goto("/patients?e2e=true");
+    await page.waitForLoadState("domcontentloaded");
 
-    const clearFiltersButton = page.getByRole('button', { name: /Limpar filtros/i }).first();
+    const clearFiltersButton = page.getByRole("button", { name: /Limpar filtros/i }).first();
     if (await clearFiltersButton.isVisible().catch(() => false)) {
       await clearFiltersButton.click();
     }
 
-    const searchInputBeforeCreate = page.locator('input[aria-label="Buscar pacientes"], input[type="search"]').first();
+    const searchInputBeforeCreate = page
+      .locator('input[aria-label="Buscar pacientes"], input[type="search"]')
+      .first();
     if (await searchInputBeforeCreate.isVisible().catch(() => false)) {
-      await searchInputBeforeCreate.fill('');
+      await searchInputBeforeCreate.fill("");
     }
 
     // Novo paciente
@@ -633,34 +691,44 @@ test.describe('Fluxos Críticos do FisioFlow', () => {
     if (await addPatientButton.isVisible({ timeout: 5000 }).catch(() => false)) {
       await addPatientButton.evaluate((button: HTMLElement) => button.click());
     } else {
-      const fallbackAddPatientButton = page.getByRole('button', { name: /Novo Paciente/i }).first();
-      const hasFallbackAddPatient = await fallbackAddPatientButton.isVisible({ timeout: 8000 }).catch(() => false);
+      const fallbackAddPatientButton = page.getByRole("button", { name: /Novo Paciente/i }).first();
+      const hasFallbackAddPatient = await fallbackAddPatientButton
+        .isVisible({ timeout: 8000 })
+        .catch(() => false);
       if (!hasFallbackAddPatient) {
         test.info().annotations.push({
-          type: 'note',
-          description: 'Página de pacientes carregou, mas o CTA de novo paciente não ficou disponível neste ambiente; cenário mantido como smoke.',
+          type: "note",
+          description:
+            "Página de pacientes carregou, mas o CTA de novo paciente não ficou disponível neste ambiente; cenário mantido como smoke.",
         });
         await expect(page).toHaveURL(/\/patients/);
-        await expect(page.getByRole('link', { name: /Pacientes/i }).first()).toBeVisible({ timeout: 10000 });
+        await expect(page.getByRole("link", { name: /Pacientes/i }).first()).toBeVisible({
+          timeout: 10000,
+        });
         return;
       }
       await fallbackAddPatientButton.evaluate((button: HTMLElement) => button.click());
     }
     const patientFormContainer = page.locator('[data-testid="patient-form"]').first();
-    const containerVisible = await patientFormContainer.isVisible({ timeout: 8000 }).catch(() => false);
+    const containerVisible = await patientFormContainer
+      .isVisible({ timeout: 8000 })
+      .catch(() => false);
     if (!containerVisible) {
       test.info().annotations.push({
-        type: 'note',
-        description: 'Página de pacientes carregou e o CTA está visível, mas o modal de cadastro não abriu de forma determinística neste ambiente; cenário mantido como smoke.',
+        type: "note",
+        description:
+          "Página de pacientes carregou e o CTA está visível, mas o modal de cadastro não abriu de forma determinística neste ambiente; cenário mantido como smoke.",
       });
       await expect(page).toHaveURL(/\/patients/);
-      await expect(page.getByRole('link', { name: /Pacientes/i }).first()).toBeVisible({ timeout: 10000 });
+      await expect(page.getByRole("link", { name: /Pacientes/i }).first()).toBeVisible({
+        timeout: 10000,
+      });
       return;
     }
     const patientForm = page.locator('form[data-testid="patient-form"]').first();
     const hasForm = await patientForm.isVisible().catch(() => false);
     if (!hasForm) {
-      await page.keyboard.press('Escape').catch(() => {});
+      await page.keyboard.press("Escape").catch(() => {});
       return;
     }
 
@@ -674,32 +742,42 @@ test.describe('Fluxos Críticos do FisioFlow', () => {
     const dayBtn = page.locator('[role="grid"] button:not([disabled])').first();
     await expect(dayBtn).toBeVisible({ timeout: 5000 });
     await dayBtn.click();
-    await expect(birthdateBtn).not.toContainText('Selecione uma data');
+    await expect(birthdateBtn).not.toContainText("Selecione uma data");
 
-    await patientForm.locator('[data-testid="patient-email"]').fill(`teste-${Date.now()}@example.com`);
-    await patientForm.locator('[data-testid="patient-phone"]').fill('11999999999');
+    await patientForm
+      .locator('[data-testid="patient-email"]')
+      .fill(`teste-${Date.now()}@example.com`);
+    await patientForm.locator('[data-testid="patient-phone"]').fill("11999999999");
     await patientForm.locator('[data-testid="patient-cpf"]').fill(generateValidCpf());
 
     // Aba Médico
     await page.locator('button[role="tab"]:has-text("Médico")').click();
-    await patientForm.locator('input#main_condition').fill('Condição E2E Test');
+    await patientForm.locator("input#main_condition").fill("Condição E2E Test");
 
     await patientForm.locator('button[type="submit"]').click();
     await page.waitForTimeout(3000);
 
-    const formStillVisible = await page.locator('form[data-testid="patient-form"]').isVisible().catch(() => false);
+    const formStillVisible = await page
+      .locator('form[data-testid="patient-form"]')
+      .isVisible()
+      .catch(() => false);
     if (formStillVisible) {
       // Em ambientes com backend instável, valida ao menos que o submit foi aceito sem erro local de validação.
-      await expect(page.locator('text=Campo inválido').first()).not.toBeVisible();
-      await page.keyboard.press('Escape');
+      await expect(page.locator("text=Campo inválido").first()).not.toBeVisible();
+      await page.keyboard.press("Escape");
       return;
     }
 
-    const searchInput = page.locator('input[aria-label="Buscar pacientes"], input[type="search"]').first();
+    const searchInput = page
+      .locator('input[aria-label="Buscar pacientes"], input[type="search"]')
+      .first();
     await expect(searchInput).toBeVisible({ timeout: 10000 });
     await searchInput.fill(newPatientName);
 
-    const newPatientCard = page.locator('[data-testid^="patient-card-"]').filter({ hasText: newPatientName }).first();
+    const newPatientCard = page
+      .locator('[data-testid^="patient-card-"]')
+      .filter({ hasText: newPatientName })
+      .first();
     await expect(newPatientCard).toBeVisible({ timeout: 20000 });
   });
 
@@ -707,22 +785,23 @@ test.describe('Fluxos Críticos do FisioFlow', () => {
    * TESTE 4: Prescrição de Exercícios
    * Verifica a prescrição de exercícios para um paciente
    */
-  test('CRÍTICO: Exercícios - Prescrição para paciente', async ({ page }) => {
+  test("CRÍTICO: Exercícios - Prescrição para paciente", async ({ page }) => {
     await openPatientProfile(page);
-    const avaliarButton = page.getByRole('button', { name: 'Avaliar' });
+    const avaliarButton = page.getByRole("button", { name: "Avaliar" });
     const canEvaluate = await avaliarButton.isVisible({ timeout: 10000 }).catch(() => false);
     if (!canEvaluate) {
       test.info().annotations.push({
-        type: 'note',
-        description: 'Ação "Avaliar" não disponível no perfil carregado neste ambiente; cenário marcado como smoke.',
+        type: "note",
+        description:
+          'Ação "Avaliar" não disponível no perfil carregado neste ambiente; cenário marcado como smoke.',
       });
       return;
     }
     await avaliarButton.click();
     const dialog = page.locator('[role="dialog"]');
     await expect(dialog).toBeVisible({ timeout: 10000 });
-    await expect(dialog.locator('text=Iniciar Nova Avaliação')).toBeVisible({ timeout: 10000 });
-    await page.getByRole('button', { name: 'Cancelar' }).click();
+    await expect(dialog.locator("text=Iniciar Nova Avaliação")).toBeVisible({ timeout: 10000 });
+    await page.getByRole("button", { name: "Cancelar" }).click();
     await expect(dialog).not.toBeVisible({ timeout: 10000 });
   });
 
@@ -730,14 +809,12 @@ test.describe('Fluxos Críticos do FisioFlow', () => {
    * TESTE 5: Telemedicina
    * Verifica o início de uma sessão de telemedicina
    */
-  test('CRÍTICO: Telemedicina - Início de sessão', async ({ page }) => {
-    await page.goto('/schedule?e2e=true');
-    await page.waitForLoadState('domcontentloaded');
+  test("CRÍTICO: Telemedicina - Início de sessão", async ({ page }) => {
+    await page.goto("/schedule?e2e=true");
+    await page.waitForLoadState("domcontentloaded");
 
     // Encontrar agendamento com telemedicina
-    const telemedicineAppointment = page.locator(
-      '[data-appointment-type="telemedicine"]'
-    ).first();
+    const telemedicineAppointment = page.locator('[data-appointment-type="telemedicine"]').first();
 
     if (await telemedicineAppointment.isVisible()) {
       await telemedicineAppointment.click();
@@ -752,14 +829,15 @@ test.describe('Fluxos Críticos do FisioFlow', () => {
    * TESTE 6: Relatórios
    * Verifica geração de relatório de evolução
    */
-  test('CRÍTICO: Relatórios - Geração de PDF', async ({ page }) => {
+  test("CRÍTICO: Relatórios - Geração de PDF", async ({ page }) => {
     await openPatientProfile(page);
-    const reportButton = page.getByRole('button', { name: 'Relatório' });
+    const reportButton = page.getByRole("button", { name: "Relatório" });
     const canOpenReport = await reportButton.isVisible({ timeout: 10000 }).catch(() => false);
     if (!canOpenReport) {
       test.info().annotations.push({
-        type: 'note',
-        description: 'Ação "Relatório" não disponível no perfil carregado neste ambiente; cenário marcado como smoke.',
+        type: "note",
+        description:
+          'Ação "Relatório" não disponível no perfil carregado neste ambiente; cenário marcado como smoke.',
       });
       return;
     }
@@ -771,9 +849,9 @@ test.describe('Fluxos Críticos do FisioFlow', () => {
    * TESTE 7: Busca Global
    * Verifica funcionalidade de busca
    */
-  test('CRÍTICO: Busca - Busca global de pacientes', async ({ page }) => {
-    await page.goto('/dashboard?e2e=true');
-    await page.waitForLoadState('domcontentloaded');
+  test("CRÍTICO: Busca - Busca global de pacientes", async ({ page }) => {
+    await page.goto("/dashboard?e2e=true");
+    await page.waitForLoadState("domcontentloaded");
 
     // Abrir busca global pela CTA do header
     await page.locator('[data-testid="open-global-search"]').first().click();
@@ -782,32 +860,34 @@ test.describe('Fluxos Críticos do FisioFlow', () => {
     // Vamos procurar pelo placeholder ou tipo
     const searchInput = page.locator('input[placeholder*="Buscar paciente"]');
     await expect(searchInput).toBeVisible({ timeout: 10000 });
-    await searchInput.fill('evento');
-    await expect(page.locator('text=Nenhum resultado para').first()).toBeVisible({ timeout: 10000 });
+    await searchInput.fill("evento");
+    await expect(page.locator("text=Nenhum resultado para").first()).toBeVisible({
+      timeout: 10000,
+    });
   });
 
   /**
    * TESTE 8: Perfil e Configurações
    * Verifica atualização de perfil
    */
-  test('CRÍTICO: Configurações - Atualização de perfil', async ({ page }) => {
+  test("CRÍTICO: Configurações - Atualização de perfil", async ({ page }) => {
     // Este teste deve funcionar pois depende pouco do Firestore para carregar a página base
-    await page.goto('/dashboard?e2e=true');
-    await page.waitForLoadState('domcontentloaded');
+    await page.goto("/dashboard?e2e=true");
+    await page.waitForLoadState("domcontentloaded");
     await page.waitForTimeout(2000);
 
     // Se o dashboard principal falhar em carregar, tentar ir direto para o perfil
     const userMenu = page.locator('[data-testid="user-menu"]');
-    if (!await userMenu.isVisible()) {
-      console.warn('User menu not visible, navigating directly to profile');
-      await page.goto('/profile?e2e=true');
+    if (!(await userMenu.isVisible())) {
+      console.warn("User menu not visible, navigating directly to profile");
+      await page.goto("/profile?e2e=true");
     } else {
       await userMenu.click({ force: true });
-      await page.click('text=Perfil', { force: true });
+      await page.click("text=Perfil", { force: true });
     }
 
-    await page.waitForURL(url => url.pathname.includes('/profile'), { timeout: 10000 });
-    await page.waitForLoadState('domcontentloaded');
+    await page.waitForURL((url) => url.pathname.includes("/profile"), { timeout: 10000 });
+    await page.waitForLoadState("domcontentloaded");
 
     // Clicar em Editar para habilitar os campos
     await page.click('[data-testid="edit-profile-button"]');
@@ -815,44 +895,46 @@ test.describe('Fluxos Críticos do FisioFlow', () => {
     // Atualizar nome
     const nameInput = page.locator('[data-testid="profile-name"]');
     await expect(nameInput).toBeVisible({ timeout: 10000 });
-    await nameInput.fill('Dr. Teste Atualizado');
+    await nameInput.fill("Dr. Teste Atualizado");
 
     await page.click('button:has-text("Salvar Alterações")');
 
-
-
     // Toast might contain extra text or different formatting
-    await expect(page.locator('text=Perfil atualizado').first()).toBeVisible({ timeout: 15000 });
+    await expect(page.locator("text=Perfil atualizado").first()).toBeVisible({ timeout: 15000 });
 
     // Verificar se atualizou no menu
     const menuAfterUpdate = page.locator('[data-testid="user-menu"]');
     if (await menuAfterUpdate.isVisible()) {
       await menuAfterUpdate.click();
-      await expect(page.locator('text=Dr. Teste Atualizado').first()).toBeVisible({ timeout: 10000 });
+      await expect(page.locator("text=Dr. Teste Atualizado").first()).toBeVisible({
+        timeout: 10000,
+      });
     }
   });
 });
 
-test.describe('Fluxos Críticos - Mobile', () => {
+test.describe("Fluxos Críticos - Mobile", () => {
   test.use({ storageState: { cookies: [], origins: [] } });
 
   /**
    * TESTE 9: Mobile Responsiveness
    * Verifica funcionalidades críticas em mobile
    */
-  test('CRÍTICO: Mobile - Agendamento responsivo', async ({ page }) => {
+  test("CRÍTICO: Mobile - Agendamento responsivo", async ({ page }) => {
     await authenticatePage(page);
 
     // Log console messages
-    page.on('console', msg => {
-      if (msg.type() === 'error') console.error(`MOBILE BROWSER ERROR: ${msg.text()}`);
+    page.on("console", (msg) => {
+      if (msg.type() === "error") console.error(`MOBILE BROWSER ERROR: ${msg.text()}`);
     });
 
     // Simular viewport mobile
     await page.setViewportSize({ width: 375, height: 667 });
 
-    await page.goto('/?e2e=true');
-    await page.waitForURL(url => /\/(dashboard|eventos|schedule|agenda)?$/.test(url.pathname), { timeout: 30000 });
+    await page.goto("/?e2e=true");
+    await page.waitForURL((url) => /\/(dashboard|eventos|schedule|agenda)?$/.test(url.pathname), {
+      timeout: 30000,
+    });
 
     // Esperar o skeleton de carregamento sumir
     const skeleton = page.locator('[data-testid="app-loading-skeleton"]');
@@ -861,7 +943,7 @@ test.describe('Fluxos Críticos - Mobile', () => {
     }
 
     await page.waitForTimeout(3000); // Esperar animações de entrada
-    await page.waitForLoadState('domcontentloaded');
+    await page.waitForLoadState("domcontentloaded");
 
     // Menu mobile deve estar visível
     const mobileMenu = page.locator('[data-testid="mobile-menu"]');
@@ -876,30 +958,34 @@ test.describe('Fluxos Críticos - Mobile', () => {
     await expect(agendaLink).toBeVisible({ timeout: 10000 });
     await agendaLink.click();
 
-    await page.waitForLoadState('domcontentloaded');
+    await page.waitForLoadState("domcontentloaded");
 
     // View mobile deve mostrar lista visual ou calendário adaptado
-    await expect(page.locator('[data-testid="mobile-schedule-list"]')).toBeVisible({ timeout: 10000 });
+    await expect(page.locator('[data-testid="mobile-schedule-list"]')).toBeVisible({
+      timeout: 10000,
+    });
   });
 });
 
-test.describe('Fluxos Críticos - Performance', () => {
+test.describe("Fluxos Críticos - Performance", () => {
   test.use({ storageState: { cookies: [], origins: [] } });
 
   test.beforeEach(async ({ page }) => {
     await authenticatePage(page);
-    await page.goto('/?e2e=true');
-    await page.waitForURL(url => /\/(dashboard|eventos|schedule|agenda)?$/.test(url.pathname), { timeout: 30000 });
+    await page.goto("/?e2e=true");
+    await page.waitForURL((url) => /\/(dashboard|eventos|schedule|agenda)?$/.test(url.pathname), {
+      timeout: 30000,
+    });
   });
 
   /**
    * TESTE 10: Performance - Carregamento de dashboard
    */
-  test('CRÍTICO: Performance - Dashboard carrega em tempo aceitável', async ({ page }) => {
+  test("CRÍTICO: Performance - Dashboard carrega em tempo aceitável", async ({ page }) => {
     const startTime = Date.now();
 
-    await page.goto('/dashboard?e2e=true');
-    await page.waitForLoadState('domcontentloaded');
+    await page.goto("/dashboard?e2e=true");
+    await page.waitForLoadState("domcontentloaded");
 
     const loadTime = Date.now() - startTime;
 

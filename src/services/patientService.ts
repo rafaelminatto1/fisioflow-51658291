@@ -184,11 +184,15 @@ export const PatientService = {
           },
         });
       } catch (auditErr) {
-        fisioLogger.warn("Audit log failed for patient creation", {
-          operation: "PatientService.createPatient",
-          patientId: mapped.id,
-          error: auditErr instanceof Error ? auditErr.message : String(auditErr),
-        }, "PatientService");
+        fisioLogger.warn(
+          "Audit log failed for patient creation",
+          {
+            operation: "PatientService.createPatient",
+            patientId: mapped.id,
+            error: auditErr instanceof Error ? auditErr.message : String(auditErr),
+          },
+          "PatientService",
+        );
       }
 
       return { data: mapped, error: null };
@@ -221,11 +225,15 @@ export const PatientService = {
           },
         });
       } catch (auditErr) {
-        fisioLogger.warn("Audit log failed for patient update", {
-          operation: "PatientService.updatePatient",
-          patientId: id,
-          error: auditErr instanceof Error ? auditErr.message : String(auditErr),
-        }, "PatientService");
+        fisioLogger.warn(
+          "Audit log failed for patient update",
+          {
+            operation: "PatientService.updatePatient",
+            patientId: id,
+            error: auditErr instanceof Error ? auditErr.message : String(auditErr),
+          },
+          "PatientService",
+        );
       }
 
       return { data: mapped, error: null };
@@ -260,11 +268,15 @@ export const PatientService = {
           },
         });
       } catch (auditErr) {
-        fisioLogger.warn("Audit log failed for patient deletion", {
-          operation: "PatientService.deletePatient",
-          patientId: id,
-          error: auditErr instanceof Error ? auditErr.message : String(auditErr),
-        }, "PatientService");
+        fisioLogger.warn(
+          "Audit log failed for patient deletion",
+          {
+            operation: "PatientService.deletePatient",
+            patientId: id,
+            error: auditErr instanceof Error ? auditErr.message : String(auditErr),
+          },
+          "PatientService",
+        );
       }
 
       return { data: null, error: null };

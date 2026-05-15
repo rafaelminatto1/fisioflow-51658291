@@ -98,7 +98,9 @@ export function ReciboSettings({
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
                 <Label className="text-sm font-bold">Mostrar Disclaimer</Label>
-                <p className="text-[10px] text-slate-400 font-medium">Exibir texto de rodapé legal no PDF</p>
+                <p className="text-[10px] text-slate-400 font-medium">
+                  Exibir texto de rodapé legal no PDF
+                </p>
               </div>
               <Switch
                 checked={receiptConfig.show_disclaimer}
@@ -107,13 +109,15 @@ export function ReciboSettings({
                 }
               />
             </div>
-            
+
             <div className="h-px bg-slate-200 dark:bg-slate-700" />
-            
+
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
                 <Label className="text-sm font-bold">Assinado por Padrão</Label>
-                <p className="text-[10px] text-slate-400 font-medium">Marcar recibos como assinados automaticamente</p>
+                <p className="text-[10px] text-slate-400 font-medium">
+                  Marcar recibos como assinados automaticamente
+                </p>
               </div>
               <Switch
                 checked={receiptConfig.assinado_padrao}

@@ -70,61 +70,69 @@ export const sessions = pgTable(
 
     // Procedimentos realizados na sessão
     procedures: jsonb("procedures")
-      .$type<Array<{
-        id: string;
-        name: string;
-        completed?: boolean;
-        intensity?: number;
-        notes?: string;
-        category?: string;
-        durationMinutes?: number;
-      }>>()
+      .$type<
+        Array<{
+          id: string;
+          name: string;
+          completed?: boolean;
+          intensity?: number;
+          notes?: string;
+          category?: string;
+          durationMinutes?: number;
+        }>
+      >()
       .notNull()
       .default([]),
 
     // Exercícios prescritos na sessão (executados em consultório)
     exercises: jsonb("exercises")
-      .$type<Array<{
-        id: string;
-        exerciseId?: string;
-        name: string;
-        prescription?: string; // séries x reps x carga
-        sets?: number;
-        reps?: number;
-        duration?: string;
-        completed?: boolean;
-        patientFeedback?: string;
-        notes?: string;
-      }>>()
+      .$type<
+        Array<{
+          id: string;
+          exerciseId?: string;
+          name: string;
+          prescription?: string; // séries x reps x carga
+          sets?: number;
+          reps?: number;
+          duration?: string;
+          completed?: boolean;
+          patientFeedback?: string;
+          notes?: string;
+        }>
+      >()
       .notNull()
       .default([]),
 
     // Medições/testes específicos coletados na sessão
     measurements: jsonb("measurements")
-      .$type<Array<{
-        id: string;
-        name: string; // ex.: "Flexão de joelho"
-        value: number;
-        unit: string; // graus, cm, kg
-        side?: "left" | "right" | "bilateral";
-        previousValue?: number;
-        notes?: string;
-      }>>()
+      .$type<
+        Array<{
+          id: string;
+          name: string; // ex.: "Flexão de joelho"
+          value: number;
+          unit: string; // graus, cm, kg
+          side?: "left" | "right" | "bilateral";
+          previousValue?: number;
+          notes?: string;
+        }>
+      >()
       .notNull()
       .default([]),
 
     // Programa de exercícios para casa (HEP) prescrito nesta sessão
     homeExercises: jsonb("home_exercises")
-      .$type<Array<{
-        id: string;
-        exerciseId?: string;
-        name: string;
-        prescription?: string;
-        sets?: number;
-        reps?: number;
-        frequency?: string; // ex.: "2x/dia"
-        notes?: string;
-      }>>()
+      .$type<
+        Array<{
+          id: string;
+          exerciseId?: string;
+          name: string;
+          prescription?: string;
+          sets?: number;
+          reps?: number;
+          frequency?: string; // ex.: "2x/dia"
+          notes?: string;
+        }>
+      >()
       .notNull()
       .default([]),
 

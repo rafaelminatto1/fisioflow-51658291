@@ -23,24 +23,20 @@ function replaceToken(html: string, token: string, value: string): string {
 }
 
 /** 2.1 — Buggy implementation: replaces __CACHE_BUSTER__ globally, including in JS */
-function transformIndexHtmlBuggy(
-  html: string,
-  appVersion: string,
-  buildTime: string,
-): string {
+function transformIndexHtmlBuggy(html: string, appVersion: string, buildTime: string): string {
   return replaceToken(
-    replaceToken(replaceToken(replaceToken(html, "%APP_VERSION%", appVersion), "%BUILD_TIME%", buildTime), "%CACHE_BUSTER%", buildTime),
+    replaceToken(
+      replaceToken(replaceToken(html, "%APP_VERSION%", appVersion), "%BUILD_TIME%", buildTime),
+      "%CACHE_BUSTER%",
+      buildTime,
+    ),
     "__CACHE_BUSTER__",
     buildTime,
   ); // ← BUG
 }
 
 /** 2.1 — Fixed implementation: __CACHE_BUSTER__ in JS is intentionally NOT replaced */
-function transformIndexHtmlFixed(
-  html: string,
-  appVersion: string,
-  buildTime: string,
-): string {
+function transformIndexHtmlFixed(html: string, appVersion: string, buildTime: string): string {
   return replaceToken(
     replaceToken(replaceToken(html, "%APP_VERSION%", appVersion), "%BUILD_TIME%", buildTime),
     "%CACHE_BUSTER%",
@@ -56,8 +52,7 @@ function transformIndexHtmlFixed(
 describe("htmlPlugin — transformIndexHtml", () => {
   // 2.2 — Property 1 (fix-checking): numeric buildTime does NOT produce window.<digits> =
   describe("Property 1: numeric buildTime does not corrupt JS identifier", () => {
-    const jsLine =
-      "window.__CACHE_BUSTER__ = window.__BUILD_TIME__ || Date.now().toString()";
+    const jsLine = "window.__CACHE_BUSTER__ = window.__BUILD_TIME__ || Date.now().toString()";
     const appVersion = "1.0.0";
 
     it("fixed: buildTime 1777249895018 does NOT produce window.<digits> =", () => {
@@ -130,8 +125,7 @@ describe("htmlPlugin — transformIndexHtml", () => {
   // 2.7 — Exploratory/regression: buggy implementation DOES produce window.<digits> =
   describe("Regression: buggy implementation confirms the old code was broken", () => {
     it("buggy: buildTime 1777249895018 DOES produce window.<digits> = (confirms bug existed)", () => {
-      const jsLine =
-        "window.__CACHE_BUSTER__ = window.__BUILD_TIME__ || Date.now().toString()";
+      const jsLine = "window.__CACHE_BUSTER__ = window.__BUILD_TIME__ || Date.now().toString()";
       const appVersion = "1.0.0";
       const buildTime = "1777249895018";
 
@@ -155,8 +149,7 @@ describe("Property-Based Tests", () => {
    * Validates: Requirements 2.1, 2.2
    */
   it("3.1 — Property 1: fixed transform never produces window.<digits>= for any numeric buildTime", () => {
-    const html =
-      "window.__CACHE_BUSTER__ = window.__BUILD_TIME__ || Date.now().toString()";
+    const html = "window.__CACHE_BUSTER__ = window.__BUILD_TIME__ || Date.now().toString()";
     const appVersion = "1.0.0";
 
     fc.assert(

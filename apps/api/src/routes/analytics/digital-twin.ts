@@ -35,69 +35,90 @@ app.get("/patient/:id", requireAuth, async (c) => {
   }
 
   // 1. PROMs timeline
-  const promsResult = await db.query(
-    `SELECT scale_name, score, completed_at
+  const promsResult = await db
+    .query(
+      `SELECT scale_name, score, completed_at
      FROM standardized_test_results
      WHERE patient_id = $1
      ORDER BY completed_at ASC`,
-    [patientId],
-  ).catch(() => ({ rows: [] }));
+      [patientId],
+    )
+    .catch(() => ({ rows: [] }));
 
   // 2. Attendance rate (last 60 days)
-  const attendanceResult = await db.query(
-    `SELECT
+  const attendanceResult = await db
+    .query(
+      `SELECT
        COUNT(*) FILTER (WHERE status IN ('concluido','confirmado','em_atendimento')) AS attended,
        COUNT(*) AS total
      FROM appointments
      WHERE patient_id = $1
        AND date >= CURRENT_DATE - INTERVAL '60 days'
        AND status NOT IN ('cancelado')`,
-    [patientId],
-  ).catch(() => ({ rows: [{ attended: 0, total: 0 }] }));
+      [patientId],
+    )
+    .catch(() => ({ rows: [{ attended: 0, total: 0 }] }));
 
   const { attended, total } = attendanceResult.rows[0] ?? { attended: 0, total: 1 };
   const attendanceRate = total > 0 ? Math.round((Number(attended) / Number(total)) * 100) : 0;
 
   // 3. Days since last session
-  const lastSessionResult = await db.query(
-    `SELECT MAX(created_at) AS last_session FROM sessions WHERE patient_id = $1`,
-    [patientId],
-  ).catch(() => ({ rows: [{ last_session: null }] }));
+  const lastSessionResult = await db
+    .query(`SELECT MAX(created_at) AS last_session FROM sessions WHERE patient_id = $1`, [
+      patientId,
+    ])
+    .catch(() => ({ rows: [{ last_session: null }] }));
   const lastSession = lastSessionResult.rows[0]?.last_session;
   const daysSinceLastSession = lastSession
     ? Math.floor((Date.now() - new Date(lastSession).getTime()) / (1000 * 60 * 60 * 24))
     : 999;
 
   // 4. HEP adherence (XP gained in last 30 days as proxy)
-  const hepResult = await db.query(
-    `SELECT COALESCE(SUM(xp_earned), 0) AS xp_30d
+  const hepResult = await db
+    .query(
+      `SELECT COALESCE(SUM(xp_earned), 0) AS xp_30d
      FROM xp_transactions
      WHERE patient_id = $1 AND created_at >= NOW() - INTERVAL '30 days'`,
-    [patientId],
-  ).catch(() => ({ rows: [{ xp_30d: 0 }] }));
+      [patientId],
+    )
+    .catch(() => ({ rows: [{ xp_30d: 0 }] }));
   const xp30d = Number(hepResult.rows[0]?.xp_30d ?? 0);
   // 30 * 35 XP/day theoretical max; normalize 0–100
   const adherenceScore = Math.min(100, Math.round((xp30d / (30 * 35)) * 100));
 
   // 5. Missed consecutive appointments
-  const missedResult = await db.query(
-    `SELECT COUNT(*) AS missed
+  const missedResult = await db
+    .query(
+      `SELECT COUNT(*) AS missed
      FROM appointments
      WHERE patient_id = $1
        AND status = 'nao_compareceu'
        AND date >= CURRENT_DATE - INTERVAL '14 days'`,
-    [patientId],
-  ).catch(() => ({ rows: [{ missed: 0 }] }));
+      [patientId],
+    )
+    .catch(() => ({ rows: [{ missed: 0 }] }));
   const recentMissed = Number(missedResult.rows[0]?.missed ?? 0);
 
   // 6. Dropout risk calculation
   let dropoutRisk: "low" | "medium" | "high" = "low";
   const riskFactors: string[] = [];
 
-  if (recentMissed >= 2) { dropoutRisk = "high"; riskFactors.push("2+ faltas nos últimos 14 dias"); }
-  if (adherenceScore < 30) { if (dropoutRisk === "low") dropoutRisk = "medium"; riskFactors.push("Aderência ao HEP abaixo de 30%"); }
-  if (daysSinceLastSession > 14) { if (dropoutRisk === "low") dropoutRisk = "medium"; riskFactors.push(`Sem sessão há ${daysSinceLastSession} dias`); }
-  if (attendanceRate < 50 && total > 0) { if (dropoutRisk === "low") dropoutRisk = "medium"; riskFactors.push(`Taxa de comparecimento: ${attendanceRate}%`); }
+  if (recentMissed >= 2) {
+    dropoutRisk = "high";
+    riskFactors.push("2+ faltas nos últimos 14 dias");
+  }
+  if (adherenceScore < 30) {
+    if (dropoutRisk === "low") dropoutRisk = "medium";
+    riskFactors.push("Aderência ao HEP abaixo de 30%");
+  }
+  if (daysSinceLastSession > 14) {
+    if (dropoutRisk === "low") dropoutRisk = "medium";
+    riskFactors.push(`Sem sessão há ${daysSinceLastSession} dias`);
+  }
+  if (attendanceRate < 50 && total > 0) {
+    if (dropoutRisk === "low") dropoutRisk = "medium";
+    riskFactors.push(`Taxa de comparecimento: ${attendanceRate}%`);
+  }
   if (recentMissed >= 3 || (daysSinceLastSession > 21 && adherenceScore < 30)) dropoutRisk = "high";
 
   // 7. PROMs trend
@@ -105,9 +126,12 @@ app.get("/patient/:id", requireAuth, async (c) => {
   let trend: "improving" | "stable" | "declining" = "stable";
   if (promsTimeline.length >= 4) {
     const half = Math.floor(promsTimeline.length / 2);
-    const earlyAvg = promsTimeline.slice(0, half).reduce((s: number, p: any) => s + Number(p.score), 0) / half;
-    const recentAvg = promsTimeline.slice(-half).reduce((s: number, p: any) => s + Number(p.score), 0) / half;
-    if (recentAvg < earlyAvg * 0.9) trend = "improving"; // lower score = better for pain scales
+    const earlyAvg =
+      promsTimeline.slice(0, half).reduce((s: number, p: any) => s + Number(p.score), 0) / half;
+    const recentAvg =
+      promsTimeline.slice(-half).reduce((s: number, p: any) => s + Number(p.score), 0) / half;
+    if (recentAvg < earlyAvg * 0.9)
+      trend = "improving"; // lower score = better for pain scales
     else if (recentAvg > earlyAvg * 1.1) trend = "declining";
   }
 
@@ -184,26 +208,29 @@ Retorne SOMENTE JSON válido neste formato:
 
   // Save snapshot to digital_twin_snapshots (non-blocking)
   c.executionCtx.waitUntil(
-    db.query(
-      `INSERT INTO digital_twin_snapshots (patient_id, org_id, snapshot, created_at)
+    db
+      .query(
+        `INSERT INTO digital_twin_snapshots (patient_id, org_id, snapshot, created_at)
        VALUES ($1, $2, $3, NOW())
        ON CONFLICT (patient_id) DO UPDATE
          SET snapshot = EXCLUDED.snapshot, created_at = NOW()`,
-      [patientId, user.organizationId, JSON.stringify(result)],
-    ).catch(() => {}),
+        [patientId, user.organizationId, JSON.stringify(result)],
+      )
+      .catch(() => {}),
   );
 
   // Cache for 24h
   if (c.env.FISIOFLOW_CONFIG) {
-    c.env.FISIOFLOW_CONFIG.put(cacheKey, JSON.stringify(result), { expirationTtl: 86400 }).catch(() => {});
+    c.env.FISIOFLOW_CONFIG.put(cacheKey, JSON.stringify(result), { expirationTtl: 86400 }).catch(
+      () => {},
+    );
   }
 
   // Alert therapist if high risk
   if (dropoutRisk === "high" && user.uid) {
-    const patientResult = await db.query(
-      `SELECT full_name FROM patients WHERE id = $1 LIMIT 1`,
-      [patientId],
-    ).catch(() => ({ rows: [] }));
+    const patientResult = await db
+      .query(`SELECT full_name FROM patients WHERE id = $1 LIMIT 1`, [patientId])
+      .catch(() => ({ rows: [] }));
     const name = patientResult.rows[0]?.full_name ?? "Paciente";
 
     sendPushToUser(

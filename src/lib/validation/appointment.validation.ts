@@ -99,12 +99,7 @@ export function validateAppointment(
 
     // --- Duration validation ---
     const duration = input.duration;
-    if (
-      typeof duration !== "number" ||
-      !isFinite(duration) ||
-      duration < 15 ||
-      duration > 480
-    ) {
+    if (typeof duration !== "number" || !isFinite(duration) || duration < 15 || duration > 480) {
       errors.push("A duração deve ser entre 15 e 480 minutos");
     }
 

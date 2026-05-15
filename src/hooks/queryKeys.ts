@@ -21,10 +21,8 @@ export const QueryKeys = {
     detail: (id: string) => ["patients", "list", id] as const,
     evolutions: (patientId: string) => ["patients", "list", patientId, "evolutions"] as const,
     evaluations: (patientId: string) => ["patients", "list", patientId, "evaluations"] as const,
-    appointments: (patientId: string) =>
-      ["patients", "list", patientId, "appointments"] as const,
-    gamification: (patientId: string) =>
-      ["patients", "list", patientId, "gamification"] as const,
+    appointments: (patientId: string) => ["patients", "list", patientId, "appointments"] as const,
+    gamification: (patientId: string) => ["patients", "list", patientId, "gamification"] as const,
   },
 
   // ─── Appointments ─────────────────────────────────────────────────────────

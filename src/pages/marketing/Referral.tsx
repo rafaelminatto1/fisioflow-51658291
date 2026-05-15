@@ -633,13 +633,20 @@ export default function ReferralPage() {
             <CardContent>
               <div className="space-y-3">
                 {topReferrers.map((r, idx) => (
-                  <div key={r.patientId} className="flex items-center gap-4 p-3 rounded-lg bg-muted/40">
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${idx === 0 ? "bg-amber-400 text-amber-900" : idx === 1 ? "bg-gray-300 text-gray-700" : idx === 2 ? "bg-orange-300 text-orange-800" : "bg-muted text-muted-foreground"}`}>
+                  <div
+                    key={r.patientId}
+                    className="flex items-center gap-4 p-3 rounded-lg bg-muted/40"
+                  >
+                    <div
+                      className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${idx === 0 ? "bg-amber-400 text-amber-900" : idx === 1 ? "bg-gray-300 text-gray-700" : idx === 2 ? "bg-orange-300 text-orange-800" : "bg-muted text-muted-foreground"}`}
+                    >
                       {idx + 1}
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="font-medium truncate">{r.name}</p>
-                      <p className="text-xs text-muted-foreground">{r.totalUses} indicações convertidas</p>
+                      <p className="text-xs text-muted-foreground">
+                        {r.totalUses} indicações convertidas
+                      </p>
                     </div>
                     <div className="text-right">
                       <p className="font-semibold text-primary">{r.totalUses}</p>

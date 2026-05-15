@@ -13,13 +13,18 @@ export class PaybackAutomationService {
   private static DEFAULT_CONFIG: PaybackConfig = {
     targetRoi: 1.2, // Payback + 20% margin
     defaultCac: 150,
-    loyaltyMessage: "Olá {nome}! Notamos que você é um de nossos pacientes mais fiéis. Como agradecimento, gostaríamos de oferecer um bônus especial na sua próxima sessão! 🎁",
+    loyaltyMessage:
+      "Olá {nome}! Notamos que você é um de nossos pacientes mais fiéis. Como agradecimento, gostaríamos de oferecer um bônus especial na sua próxima sessão! 🎁",
   };
 
   /**
    * Check and trigger payback automation for a patient
    */
-  static async processPatientPayback(patientId: string, patientName?: string, phone?: string): Promise<boolean> {
+  static async processPatientPayback(
+    patientId: string,
+    patientName?: string,
+    phone?: string,
+  ): Promise<boolean> {
     try {
       let finalName = patientName;
       let finalPhone = phone;
@@ -32,22 +37,30 @@ export class PaybackAutomationService {
       }
 
       if (!finalPhone) {
-        logger.warn(`[PaybackAutomation] Patient ${patientId} has no phone. Skipping.`, {}, "paybackAutomation");
+        logger.warn(
+          `[PaybackAutomation] Patient ${patientId} has no phone. Skipping.`,
+          {},
+          "paybackAutomation",
+        );
         return false;
       }
 
       // 1. Get LTV
       const ltv = await FinancialService.getPatientLTV(patientId);
-      
+
       // 2. Get Config (In a real scenario, this would come from the database/organization config)
       const config = this.DEFAULT_CONFIG;
 
       // 3. Determine if Payback target reached
       const threshold = config.defaultCac * config.targetRoi;
-      
+
       if (ltv >= threshold) {
-        logger.info(`[PaybackAutomation] Patient ${finalName} reached payback threshold. LTV: ${ltv}, Threshold: ${threshold}`, { patientId }, "paybackAutomation");
-        
+        logger.info(
+          `[PaybackAutomation] Patient ${finalName} reached payback threshold. LTV: ${ltv}, Threshold: ${threshold}`,
+          { patientId },
+          "paybackAutomation",
+        );
+
         // 4. Check if already triggered (to avoid spam)
         const hasTriggered = await this.checkIfAlreadyTriggered(patientId);
         if (hasTriggered) return false;
@@ -55,10 +68,10 @@ export class PaybackAutomationService {
         // 5. Send WhatsApp Message
         const message = config.loyaltyMessage.replace("{nome}", finalName.split(" ")[0]);
         await sendMessage(finalPhone, message);
-        
+
         // 6. Record trigger
         await this.recordTrigger(patientId);
-        
+
         return true;
       }
 
@@ -85,7 +98,7 @@ export class PaybackAutomationService {
         patient_id: patientId,
         type: "payback_loyalty",
         executed_at: new Date().toISOString(),
-        metadata: { source: "PaybackAutomationService" }
+        metadata: { source: "PaybackAutomationService" },
       });
     } catch (error) {
       logger.warn("[PaybackAutomation] Failed to record trigger log", error, "paybackAutomation");

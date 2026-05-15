@@ -22,7 +22,7 @@ test.describe("AI Clinical Golden Path", () => {
 
     // Digita uma intenção clínica
     await input.fill("reabilitação de joelho");
-    
+
     // Espera os resultados da IA (async)
     const aiCategory = page.getByText("Resultados Clínicos (IA)");
     await expect(aiCategory).toBeVisible({ timeout: 15000 });
@@ -56,9 +56,11 @@ test.describe("AI Clinical Golden Path", () => {
 
     // Vai para a aba de evoluções
     await page.goto(`${href}?tab=evolutions`);
-    
+
     // Clica para criar nova evolução (se houver botão)
-    const newEvolutionBtn = page.getByRole("button", { name: /nova evolução|registrar sessão/i }).first();
+    const newEvolutionBtn = page
+      .getByRole("button", { name: /nova evolução|registrar sessão/i })
+      .first();
     if (await newEvolutionBtn.isVisible()) {
       await newEvolutionBtn.click();
     }
@@ -70,7 +72,7 @@ test.describe("AI Clinical Golden Path", () => {
     // Digita um contexto
     await editor.click();
     await page.keyboard.type("Paciente apresenta dor no ombro direito ao realizar abdução.");
-    
+
     // Dispara o comando de recomendação
     await page.keyboard.type("/");
     const recommendCmd = page.getByText("Sugerir Condutas (IA)");

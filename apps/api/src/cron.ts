@@ -24,7 +24,8 @@ export async function handleScheduled(event: ScheduledEvent, env: Env, ctx: Exec
         await runHealthMonitor(env);
         break;
 
-      case "0 9 * * *": { // UTC 09h = BRT 06h — Lembretes + prewarm pós cold-start
+      case "0 9 * * *": {
+        // UTC 09h = BRT 06h — Lembretes + prewarm pós cold-start
         const pool = createPool(env);
         await prewarmDatabase(pool);
         await sendAppointmentReminders(pool, env, ctx);
@@ -35,7 +36,8 @@ export async function handleScheduled(event: ScheduledEvent, env: Env, ctx: Exec
         break;
       }
 
-      case "0 11 * * *": { // UTC 11h = BRT 08h — Manutenção + lembrete same-day não confirmados
+      case "0 11 * * *": {
+        // UTC 11h = BRT 08h — Manutenção + lembrete same-day não confirmados
         const pool = createPool(env);
         await performDatabaseCleanup(pool, env);
         await sendSameDayUnconfirmedReminders(pool, env);
@@ -46,7 +48,8 @@ export async function handleScheduled(event: ScheduledEvent, env: Env, ctx: Exec
         break;
       }
 
-      case "0 12 * * *": { // UTC 12h = BRT 09h — Automações por vencimento de tarefa
+      case "0 12 * * *": {
+        // UTC 12h = BRT 09h — Automações por vencimento de tarefa
         const pool = createPool(env);
         await processDueDateAutomations(pool);
         break;
@@ -61,7 +64,8 @@ export async function handleScheduled(event: ScheduledEvent, env: Env, ctx: Exec
         }
         break;
 
-      case "10 10 * * 1": { // UTC 10h10 Segunda = BRT 07h10 — KnowledgeSync + AutoRAG + Vectorize
+      case "10 10 * * 1": {
+        // UTC 10h10 Segunda = BRT 07h10 — KnowledgeSync + AutoRAG + Vectorize
         if (env.WORKFLOW_KNOWLEDGE_SYNC) {
           await env.WORKFLOW_KNOWLEDGE_SYNC.create({
             id: `knowledge-sync-${new Date().toISOString().slice(0, 10)}`,
@@ -71,16 +75,22 @@ export async function handleScheduled(event: ScheduledEvent, env: Env, ctx: Exec
 
         // AutoRAG: upload exercícios, protocolos e wiki como markdown para busca semântica com LLM
         if (env.CF_API_TOKEN && env.CF_ACCOUNT_ID) {
-          syncAutoRAGContent(env).then((indexed) => {
-            console.log("[Cron] AutoRAG sync complete:", JSON.stringify(indexed));
-          }).catch((err) => console.error("[Cron] AutoRAG sync failed:", err));
+          syncAutoRAGContent(env)
+            .then((indexed) => {
+              console.log("[Cron] AutoRAG sync complete:", JSON.stringify(indexed));
+            })
+            .catch((err) => console.error("[Cron] AutoRAG sync failed:", err));
         }
 
         // Vectorize: gera embeddings e popula o índice fisioflow-clinical para busca por similaridade
         if (env.CLINICAL_KNOWLEDGE) {
-          syncVectorizeIndex(env).then(({ indexed, skipped }) => {
-            console.log(`[Cron] Vectorize sync complete — indexed: ${indexed}, skipped: ${skipped}`);
-          }).catch((err) => console.error("[Cron] Vectorize sync failed:", err));
+          syncVectorizeIndex(env)
+            .then(({ indexed, skipped }) => {
+              console.log(
+                `[Cron] Vectorize sync complete — indexed: ${indexed}, skipped: ${skipped}`,
+              );
+            })
+            .catch((err) => console.error("[Cron] Vectorize sync failed:", err));
         }
         break;
       }
@@ -92,9 +102,11 @@ export async function handleScheduled(event: ScheduledEvent, env: Env, ctx: Exec
           for (const org of orgs.rows) {
             const stub = env.CLINIC_AGENT.get(env.CLINIC_AGENT.idFromName(org.id));
             await (stub as any).setOrgId({ orgId: org.id }).catch(() => {});
-            await (stub as any).runMorningBriefing().catch((err: unknown) =>
-              console.error(`[Cron] ClinicAgent briefing failed for org ${org.id}:`, err),
-            );
+            await (stub as any)
+              .runMorningBriefing()
+              .catch((err: unknown) =>
+                console.error(`[Cron] ClinicAgent briefing failed for org ${org.id}:`, err),
+              );
           }
         }
         break;
@@ -105,9 +117,11 @@ export async function handleScheduled(event: ScheduledEvent, env: Env, ctx: Exec
           const orgs = await pool.query("SELECT id FROM organizations WHERE is_active = true");
           for (const org of orgs.rows) {
             const stub = env.CLINIC_AGENT.get(env.CLINIC_AGENT.idFromName(org.id));
-            await (stub as any).runDailySummary().catch((err: unknown) =>
-              console.error(`[Cron] ClinicAgent summary failed for org ${org.id}:`, err),
-            );
+            await (stub as any)
+              .runDailySummary()
+              .catch((err: unknown) =>
+                console.error(`[Cron] ClinicAgent summary failed for org ${org.id}:`, err),
+              );
           }
         }
         break;
@@ -118,36 +132,43 @@ export async function handleScheduled(event: ScheduledEvent, env: Env, ctx: Exec
           const orgs = await pool.query("SELECT id FROM organizations WHERE is_active = true");
           for (const org of orgs.rows) {
             const stub = env.CLINIC_AGENT.get(env.CLINIC_AGENT.idFromName(org.id));
-            await (stub as any).checkMissingPatients().catch((err: unknown) =>
-              console.error(`[Cron] ClinicAgent missing patients failed for org ${org.id}:`, err),
-            );
+            await (stub as any)
+              .checkMissingPatients()
+              .catch((err: unknown) =>
+                console.error(`[Cron] ClinicAgent missing patients failed for org ${org.id}:`, err),
+              );
           }
         }
         break;
 
-      case "0 14 * * *": { // UTC 14h = BRT 11h — NPS auto-trigger (Orgs & Patients)
+      case "0 14 * * *": {
+        // UTC 14h = BRT 11h — NPS auto-trigger (Orgs & Patients)
         const pool = createPool(env);
         await triggerNpsSurveys(pool, env);
         await triggerPatientNpsSurveys(pool, env);
         break;
       }
 
-      case "0 13 * * *": { // UTC 13h = BRT 10h — Anti-Churn (Reativação e Pacotes)
+      case "0 13 * * *": {
+        // UTC 13h = BRT 10h — Anti-Churn (Reativação e Pacotes)
         // Placeholder: anti-churn automations (patient reactivation) are handled by Workflows
         console.log("[Cron] Anti-churn automations — delegated to WORKFLOW_REENGAGEMENT");
         break;
       }
 
-      case "0 15 * * *": { // UTC 15h = BRT 12h — RTM Clinical Alerts
+      case "0 15 * * *": {
+        // UTC 15h = BRT 12h — RTM Clinical Alerts
         const pool = createPool(env);
-        
+
         // 1. Process Clinical Proactive Alerts for ALL organizations
         console.log("[Cron] Processing RTM Clinical Alerts for all orgs...");
         const orgs = await pool.query("SELECT id FROM organizations WHERE is_active = true");
         for (const org of orgs.rows) {
           const clinicalAlerts = await RTMAlertsService.processDailyAlerts(env, org.id);
           if (clinicalAlerts > 0) {
-            console.log(`[Cron] RTM Clinical Alerts: triggered ${clinicalAlerts} alerts for org ${org.id}.`);
+            console.log(
+              `[Cron] RTM Clinical Alerts: triggered ${clinicalAlerts} alerts for org ${org.id}.`,
+            );
           }
         }
 
@@ -216,9 +237,9 @@ async function processInactivePatients(db: any, env: Env, ctx: ExecutionContext)
           patientPhone: row.phone,
           organizationId: row.organization_id,
           therapistName: "seu fisioterapeuta", // Could be dynamic if we join with last appointment therapist
-          daysSinceLastAppointment: 15
-        }
-      }).catch(err => console.error(`[Cron] Workflow Reengagement failed for ${row.id}:`, err));
+          daysSinceLastAppointment: 15,
+        },
+      }).catch((err) => console.error(`[Cron] Workflow Reengagement failed for ${row.id}:`, err));
     }
   }
 }
@@ -300,15 +321,23 @@ async function sendAppointmentReminders(pool: any, env: Env, _ctx: ExecutionCont
     }
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
-    const dateStr = tomorrow.toLocaleDateString("pt-BR", { weekday: "long", day: "2-digit", month: "short" });
+    const dateStr = tomorrow.toLocaleDateString("pt-BR", {
+      weekday: "long",
+      day: "2-digit",
+      month: "short",
+    });
     for (const [orgId, rows] of orgGroups) {
       const first = rows[0];
-      await sendPushToOrg(orgId, {
-        title: `Agenda de amanhã — ${rows.length} sessão${rows.length > 1 ? "ões" : ""}`,
-        body: `${dateStr} · Primeiro: ${first.patient_name} às ${first.time?.substring(0, 5) ?? ""}`,
-        url: "/agenda",
-        tag: `reminder-summary-${tomorrow.toISOString().split("T")[0]}`,
-      }, env).catch(() => {});
+      await sendPushToOrg(
+        orgId,
+        {
+          title: `Agenda de amanhã — ${rows.length} sessão${rows.length > 1 ? "ões" : ""}`,
+          body: `${dateStr} · Primeiro: ${first.patient_name} às ${first.time?.substring(0, 5) ?? ""}`,
+          url: "/agenda",
+          tag: `reminder-summary-${tomorrow.toISOString().split("T")[0]}`,
+        },
+        env,
+      ).catch(() => {});
     }
   }
 }
@@ -511,8 +540,8 @@ async function triggerPatientNpsSurveys(pool: any, env: Env) {
     for (const row of result.rows) {
       if (row.phone && env.BACKGROUND_QUEUE) {
         const npsUrl = `${env.FRONTEND_URL ?? "https://moocafisio.com.br"}/satisfacao?p=${row.patient_id}`;
-        const messageText = `Olá, ${row.full_name.split(' ')[0]}! 👋 Já faz uma semana desde sua primeira sessão na clínica. Como foi sua experiência?\n\nLeve 1 minuto para nos avaliar: ${npsUrl}`;
-        
+        const messageText = `Olá, ${row.full_name.split(" ")[0]}! 👋 Já faz uma semana desde sua primeira sessão na clínica. Como foi sua experiência?\n\nLeve 1 minuto para nos avaliar: ${npsUrl}`;
+
         await env.BACKGROUND_QUEUE.send({
           type: "SEND_WHATSAPP",
           payload: {
@@ -783,32 +812,37 @@ async function processWearableRTMAlerts(pool: any, env: Env) {
       const orgId = row.organization_id;
 
       // Calculate current week vs previous week steps
-      const activity = await pool.query(`
+      const activity = await pool.query(
+        `
         SELECT 
           SUM(value) FILTER (WHERE timestamp >= NOW() - INTERVAL '7 days') as current_steps,
           SUM(value) FILTER (WHERE timestamp BETWEEN NOW() - INTERVAL '14 days' AND NOW() - INTERVAL '7 days') as prev_steps
         FROM wearable_data
         WHERE patient_id = $1 AND data_type = 'steps'
-      `, [patientId]);
+      `,
+        [patientId],
+      );
 
       const current = Number(activity.rows[0]?.current_steps || 0);
       const prev = Number(activity.rows[0]?.prev_steps || 0);
 
       // Alert if drop is > 30% and baseline was > 10k steps
-      if (prev > 10000 && (current / prev < 0.7)) {
+      if (prev > 10000 && current / prev < 0.7) {
         const wearableWorkflow = (env as any).WORKFLOW_WEARABLE_ACTIVITY;
         if (wearableWorkflow) {
-          await wearableWorkflow.create({
-            id: `rtm-alert-${patientId}-${new Date().toISOString().slice(0, 10)}`,
-            params: {
-              patientId,
-              organizationId: orgId,
-              alertType: 'low_activity',
-              metricType: 'Passos (Steps)',
-              currentValue: current,
-              baselineValue: prev
-            }
-          }).catch(() => {});
+          await wearableWorkflow
+            .create({
+              id: `rtm-alert-${patientId}-${new Date().toISOString().slice(0, 10)}`,
+              params: {
+                patientId,
+                organizationId: orgId,
+                alertType: "low_activity",
+                metricType: "Passos (Steps)",
+                currentValue: current,
+                baselineValue: prev,
+              },
+            })
+            .catch(() => {});
         }
       }
     }

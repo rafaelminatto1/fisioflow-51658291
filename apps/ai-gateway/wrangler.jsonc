@@ -4,22 +4,22 @@
   "main": "src/index.ts",
   "compatibility_date": "2026-05-12",
   "observability": {
-    "enabled": true
+    "enabled": true,
   },
   "placement": {
-    "mode": "smart"
+    "mode": "smart",
   },
   "analytics_engine_datasets": [
     {
       "binding": "ANALYTICS",
-      "dataset": "fisioflow_ai_usage"
-    }
+      "dataset": "fisioflow_ai_usage",
+    },
   ],
   "vars": {
     "ENVIRONMENT": "production",
     "ALLOWED_ORIGINS": "https://moocafisio.com.br,https://www.moocafisio.com.br,https://fisioflow.pages.dev,http://localhost:5173",
     "GOOGLE_AI_URL": "https://generativelanguage.googleapis.com/v1beta/models",
-    "OLLAMA_ENDPOINT": "https://ollama.moocafisio.com.br"
+    "OLLAMA_ENDPOINT": "https://ollama.moocafisio.com.br",
   },
   "env": {
     "staging": {
@@ -27,11 +27,9 @@
         "ENVIRONMENT": "staging",
         "ALLOWED_ORIGINS": "https://fisioflow-web-staging.rafalegollas.workers.dev,http://localhost:5173",
         "GOOGLE_AI_URL": "https://generativelanguage.googleapis.com/v1beta/models",
-        "OLLAMA_ENDPOINT": "https://ollama-staging.moocafisio.com.br"
+        "OLLAMA_ENDPOINT": "https://ollama-staging.moocafisio.com.br",
       },
-      "analytics_engine_datasets": [
-        { "binding": "ANALYTICS", "dataset": "fisioflow_ai_usage" }
-      ]
+      "analytics_engine_datasets": [{ "binding": "ANALYTICS", "dataset": "fisioflow_ai_usage" }],
     },
     "production": {
       "name": "fisioflow-ai-gateway",
@@ -39,11 +37,9 @@
         "ENVIRONMENT": "production",
         "ALLOWED_ORIGINS": "https://moocafisio.com.br,https://www.moocafisio.com.br,https://fisioflow.pages.dev,http://localhost:5173",
         "GOOGLE_AI_URL": "https://generativelanguage.googleapis.com/v1beta/models",
-        "OLLAMA_ENDPOINT": "https://ollama.moocafisio.com.br"
+        "OLLAMA_ENDPOINT": "https://ollama.moocafisio.com.br",
       },
-      "analytics_engine_datasets": [
-        { "binding": "ANALYTICS", "dataset": "fisioflow_ai_usage" }
-      ]
-    }
-  }
+      "analytics_engine_datasets": [{ "binding": "ANALYTICS", "dataset": "fisioflow_ai_usage" }],
+    },
+  },
 }

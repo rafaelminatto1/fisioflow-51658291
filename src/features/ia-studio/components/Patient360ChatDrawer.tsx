@@ -68,7 +68,7 @@ export const Patient360ChatDrawer: React.FC<Patient360ChatDrawerProps> = ({
 
   useEffect(() => {
     if (scrollRef.current) {
-      const scrollContainer = scrollRef.current.querySelector('[data-radix-scroll-area-viewport]');
+      const scrollContainer = scrollRef.current.querySelector("[data-radix-scroll-area-viewport]");
       if (scrollContainer) {
         scrollContainer.scrollTo({
           top: scrollContainer.scrollHeight,
@@ -102,7 +102,7 @@ export const Patient360ChatDrawer: React.FC<Patient360ChatDrawerProps> = ({
             thinkingLevel: "MEDIUM",
             includeThoughts: true,
           }),
-        }
+        },
       );
 
       const assistantMessage: Message = {
@@ -121,7 +121,8 @@ export const Patient360ChatDrawer: React.FC<Patient360ChatDrawerProps> = ({
         {
           id: (Date.now() + 1).toString(),
           role: "assistant",
-          content: "Desculpe, tive um problema ao consultar o histórico. Por favor, tente novamente.",
+          content:
+            "Desculpe, tive um problema ao consultar o histórico. Por favor, tente novamente.",
         },
       ]);
     } finally {
@@ -131,7 +132,10 @@ export const Patient360ChatDrawer: React.FC<Patient360ChatDrawerProps> = ({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="sm:max-w-[500px] flex flex-col p-0 border-l border-indigo-100 dark:border-indigo-900/30 shadow-2xl">
+      <SheetContent
+        side="right"
+        className="sm:max-w-[500px] flex flex-col p-0 border-l border-indigo-100 dark:border-indigo-900/30 shadow-2xl"
+      >
         <SheetHeader className="p-6 bg-gradient-to-br from-indigo-600 to-violet-700 text-white">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -164,13 +168,15 @@ export const Patient360ChatDrawer: React.FC<Patient360ChatDrawerProps> = ({
                 key={m.id}
                 className={cn(
                   "flex items-start gap-3",
-                  m.role === "user" ? "flex-row-reverse" : ""
+                  m.role === "user" ? "flex-row-reverse" : "",
                 )}
               >
                 <div
                   className={cn(
                     "p-2 rounded-xl shrink-0 shadow-sm",
-                    m.role === "user" ? "bg-indigo-600" : "bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700"
+                    m.role === "user"
+                      ? "bg-indigo-600"
+                      : "bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700",
                   )}
                 >
                   {m.role === "user" ? (
@@ -185,7 +191,7 @@ export const Patient360ChatDrawer: React.FC<Patient360ChatDrawerProps> = ({
                       "p-4 rounded-2xl text-sm leading-relaxed shadow-premium-sm",
                       m.role === "user"
                         ? "bg-indigo-600 text-white rounded-tr-none"
-                        : "bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-100 dark:border-slate-700 rounded-tl-none"
+                        : "bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-100 dark:border-slate-700 rounded-tl-none",
                     )}
                   >
                     {m.content}

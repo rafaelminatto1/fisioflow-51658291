@@ -21,10 +21,13 @@ import { NFSeDetailsDialog } from "./components/nfse/NFSeDetailsDialog";
 import { useNFSeActions } from "./components/nfse/useNFSeActions";
 import { type NFSe } from "./components/nfse/types";
 
-export function NFSeContent({ autoOpenCreate = false, onAutoOpenHandled }: { autoOpenCreate?: boolean; onAutoOpenHandled?: () => void } = {}) {
+export function NFSeContent({
+  autoOpenCreate = false,
+  onAutoOpenHandled,
+}: { autoOpenCreate?: boolean; onAutoOpenHandled?: () => void } = {}) {
   const { currentOrganization: orgData } = useOrganizations();
   const organizationId = orgData?.id;
-  
+
   const { data: configData, isLoading: isLoadingConfig } = useNFSeConfig();
   const hasConfig = !isLoadingConfig && configData?.data != null;
 
@@ -47,7 +50,7 @@ export function NFSeContent({ autoOpenCreate = false, onAutoOpenHandled }: { aut
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div className="space-y-2">
           <div className="flex items-center gap-3">
-            <motion.div 
+            <motion.div
               whileHover={{ scale: 1.1, rotate: 5 }}
               className="p-3 rounded-2xl bg-slate-900 text-white shadow-2xl shadow-slate-200 dark:shadow-none"
             >
@@ -58,13 +61,14 @@ export function NFSeContent({ autoOpenCreate = false, onAutoOpenHandled }: { aut
             </h2>
           </div>
           <p className="text-slate-500 font-medium max-w-md leading-relaxed">
-            Interface de alta performance para emissão e controle de NFS-e integrada à Nota do Milhão.
+            Interface de alta performance para emissão e controle de NFS-e integrada à Nota do
+            Milhão.
           </p>
         </div>
 
         <motion.div whileHover={{ scale: 1.02 }} whileActive={{ scale: 0.98 }}>
-          <Button 
-            onClick={() => setIsEmissionOpen(true)} 
+          <Button
+            onClick={() => setIsEmissionOpen(true)}
             className="rounded-[1.5rem] h-16 px-10 bg-slate-900 hover:bg-slate-800 text-white shadow-2xl shadow-slate-200 dark:shadow-none transition-all group border-none text-lg"
           >
             <Plus className="mr-2 h-6 w-6 transition-transform group-hover:rotate-90 duration-500" />
@@ -80,9 +84,12 @@ export function NFSeContent({ autoOpenCreate = false, onAutoOpenHandled }: { aut
             <Settings className="h-4.5 w-4.5" />
           </div>
           <div className="flex-1 space-y-1.5">
-            <p className="text-sm font-bold text-amber-800 dark:text-amber-300">Configure o emissor antes de emitir notas</p>
+            <p className="text-sm font-bold text-amber-800 dark:text-amber-300">
+              Configure o emissor antes de emitir notas
+            </p>
             <p className="text-xs text-amber-700/80 dark:text-amber-400/80">
-              Preencha CNPJ, inscrição municipal e certificado digital. Leva menos de 5 minutos com o assistente passo a passo.
+              Preencha CNPJ, inscrição municipal e certificado digital. Leva menos de 5 minutos com
+              o assistente passo a passo.
             </p>
           </div>
           <Button
@@ -120,21 +127,17 @@ export function NFSeContent({ autoOpenCreate = false, onAutoOpenHandled }: { aut
 
         <AnimatePresence mode="wait">
           <TabsContent value="lista" className="mt-10 outline-none">
-            <NFSeTable 
-              nfses={nfses} 
-              isLoading={isLoading} 
-              onSelect={setSelectedNFSe} 
-            />
+            <NFSeTable nfses={nfses} isLoading={isLoading} onSelect={setSelectedNFSe} />
           </TabsContent>
 
           <TabsContent value="config" className="mt-10 outline-none">
-             <NfseWizard />
+            <NfseWizard />
           </TabsContent>
         </AnimatePresence>
       </Tabs>
 
       {/* EMISSION DIALOG */}
-      <NFSeEmissionDialog 
+      <NFSeEmissionDialog
         isOpen={isEmissionOpen}
         onClose={() => setIsEmissionOpen(false)}
         onSubmit={(data) => createNFSe.mutate(data)}
@@ -142,7 +145,7 @@ export function NFSeContent({ autoOpenCreate = false, onAutoOpenHandled }: { aut
       />
 
       {/* VIEW DETAILS DIALOG */}
-      <NFSeDetailsDialog 
+      <NFSeDetailsDialog
         selectedNFSe={selectedNFSe}
         onClose={() => setSelectedNFSe(null)}
         onCancel={(id) => cancelNFSe.mutate(id)}

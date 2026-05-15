@@ -24,11 +24,14 @@ import { ReciboSettings } from "./components/recibos/ReciboSettings";
 import { ReciboDetailsModal } from "./components/recibos/ReciboDetailsModal";
 import { useReciboForm } from "./components/recibos/useReciboForm";
 
-export function RecibosContent({ autoOpenCreate = false, onAutoOpenHandled }: { autoOpenCreate?: boolean; onAutoOpenHandled?: () => void } = {}) {
+export function RecibosContent({
+  autoOpenCreate = false,
+  onAutoOpenHandled,
+}: { autoOpenCreate?: boolean; onAutoOpenHandled?: () => void } = {}) {
   const { user } = useAuth();
   const isMobile = useIsMobile();
   const { currentOrganization, updateOrganization, isUpdating } = useOrganizations();
-  
+
   const [activeTab, setActiveTab] = useState<"lista" | "criar" | "config">("lista");
   const [previewRecibo, setPreviewRecibo] = useState<ReciboData | null>(null);
   const [_isDialogOpen, _setIsDialogOpen] = useState(false);
@@ -36,7 +39,8 @@ export function RecibosContent({ autoOpenCreate = false, onAutoOpenHandled }: { 
   const [receiptConfig, setReceiptConfig] = useState({
     custom_issuer_name: "",
     custom_professional_name: "",
-    disclaimer_text: "Este recibo serve como comprovante de pagamento para todos os fins de direito. Documento emitido eletronicamente conforme Lei nº 14.063/2020 (Brasil).",
+    disclaimer_text:
+      "Este recibo serve como comprovante de pagamento para todos os fins de direito. Documento emitido eletronicamente conforme Lei nº 14.063/2020 (Brasil).",
     show_disclaimer: true,
     assinado_padrao: true,
   });
@@ -72,8 +76,11 @@ export function RecibosContent({ autoOpenCreate = false, onAutoOpenHandled }: { 
       const settings = clinicaConfig.org.settings.receipt_settings as any;
       setReceiptConfig({
         custom_issuer_name: settings.custom_issuer_name || currentOrganization?.name || "",
-        custom_professional_name: settings.custom_professional_name || clinicaConfig.profile?.full_name || "",
-        disclaimer_text: settings.disclaimer_text || "Este recibo serve como comprovante de pagamento para todos os fins de direito. Documento emitido eletronicamente conforme Lei nº 14.063/2020 (Brasil).",
+        custom_professional_name:
+          settings.custom_professional_name || clinicaConfig.profile?.full_name || "",
+        disclaimer_text:
+          settings.disclaimer_text ||
+          "Este recibo serve como comprovante de pagamento para todos os fins de direito. Documento emitido eletronicamente conforme Lei nº 14.063/2020 (Brasil).",
         show_disclaimer: settings.show_disclaimer !== false,
         assinado_padrao: settings.assinado_padrao !== false,
       });
@@ -81,12 +88,17 @@ export function RecibosContent({ autoOpenCreate = false, onAutoOpenHandled }: { 
       setReceiptConfig((prev) => ({
         ...prev,
         custom_issuer_name: prev.custom_issuer_name || currentOrganization?.name || "",
-        custom_professional_name: prev.custom_professional_name || clinicaConfig.profile?.full_name || "",
+        custom_professional_name:
+          prev.custom_professional_name || clinicaConfig.profile?.full_name || "",
       }));
     }
   }, [clinicaConfig, currentOrganization]);
 
-  const { formData, setFormData, handleOCRExtracted, handleSubmit, isSubmitting } = useReciboForm(pacientes, clinicaConfig, receiptConfig);
+  const { formData, setFormData, handleOCRExtracted, handleSubmit, isSubmitting } = useReciboForm(
+    pacientes,
+    clinicaConfig,
+    receiptConfig,
+  );
 
   useEffect(() => {
     if (autoOpenCreate) {
@@ -116,7 +128,9 @@ export function RecibosContent({ autoOpenCreate = false, onAutoOpenHandled }: { 
             <FileText className="h-6 w-6 text-primary" />
             Emissão de Recibos
           </h2>
-          <p className="text-muted-foreground mt-1">Gere comprovantes profissionais para seus pacientes</p>
+          <p className="text-muted-foreground mt-1">
+            Gere comprovantes profissionais para seus pacientes
+          </p>
         </div>
         <Button onClick={() => setActiveTab("criar")} className="rounded-xl shadow-lg gap-2">
           <Plus className="h-4 w-4" />
@@ -126,21 +140,32 @@ export function RecibosContent({ autoOpenCreate = false, onAutoOpenHandled }: { 
 
       <Tabs value={activeTab} onValueChange={(v: any) => setActiveTab(v)}>
         <TabsList className="bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
-          <TabsTrigger value="lista" className="rounded-lg px-4 font-bold text-xs uppercase tracking-wider">Histórico</TabsTrigger>
-          <TabsTrigger value="criar" className="rounded-lg px-4 font-bold text-xs uppercase tracking-wider">Novo Recibo</TabsTrigger>
-          <TabsTrigger value="config" className="rounded-lg px-4 font-bold text-xs uppercase tracking-wider">Configurar</TabsTrigger>
+          <TabsTrigger
+            value="lista"
+            className="rounded-lg px-4 font-bold text-xs uppercase tracking-wider"
+          >
+            Histórico
+          </TabsTrigger>
+          <TabsTrigger
+            value="criar"
+            className="rounded-lg px-4 font-bold text-xs uppercase tracking-wider"
+          >
+            Novo Recibo
+          </TabsTrigger>
+          <TabsTrigger
+            value="config"
+            className="rounded-lg px-4 font-bold text-xs uppercase tracking-wider"
+          >
+            Configurar
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="lista" className="mt-4">
-          <RecibosTable 
-            recibos={recibos} 
-            isLoading={isLoading} 
-            onPreview={setPreviewRecibo} 
-          />
+          <RecibosTable recibos={recibos} isLoading={isLoading} onPreview={setPreviewRecibo} />
         </TabsContent>
 
         <TabsContent value="criar" className="mt-4">
-          <ReciboForm 
+          <ReciboForm
             formData={formData}
             setFormData={setFormData}
             pacientes={pacientes}
@@ -155,7 +180,7 @@ export function RecibosContent({ autoOpenCreate = false, onAutoOpenHandled }: { 
         </TabsContent>
 
         <TabsContent value="config" className="mt-4">
-          <ReciboSettings 
+          <ReciboSettings
             receiptConfig={receiptConfig}
             setReceiptConfig={setReceiptConfig}
             onSave={handleSaveConfig}
@@ -164,7 +189,7 @@ export function RecibosContent({ autoOpenCreate = false, onAutoOpenHandled }: { 
         </TabsContent>
       </Tabs>
 
-      <ReciboDetailsModal 
+      <ReciboDetailsModal
         previewRecibo={previewRecibo}
         onClose={() => setPreviewRecibo(null)}
         isMobile={isMobile}

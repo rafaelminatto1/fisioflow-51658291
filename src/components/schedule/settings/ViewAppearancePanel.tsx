@@ -41,7 +41,12 @@ interface ViewAppearancePanelProps {
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
-const CARD_SIZE_OPTIONS: { value: CardSize; label: string; shortLabel: string; icon: LucideIcon }[] = [
+const CARD_SIZE_OPTIONS: {
+  value: CardSize;
+  label: string;
+  shortLabel: string;
+  icon: LucideIcon;
+}[] = [
   { value: "extra_small", label: "Extra Pequeno", shortLabel: "XS", icon: Minimize },
   { value: "small", label: "Pequeno", shortLabel: "P", icon: Square },
   { value: "medium", label: "Médio", shortLabel: "M", icon: Frame },

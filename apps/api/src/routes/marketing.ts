@@ -744,31 +744,33 @@ app.get("/ltv-maximizer/opportunities", requireAuth, async (c) => {
       )
       SELECT * FROM package_status
       ORDER BY remaining_sessions ASC`,
-      [user.organizationId]
+      [user.organizationId],
     );
 
     const { runThinkingModel } = await import("../lib/ai-native");
 
-    const enrichedOpportunities = await Promise.all(opportunities.rows.map(async (opp: any) => {
-      // Usar IA para gerar um pitch personalizado
-      const prompt = `Gere uma sugestão de mensagem curta e acolhedora para o paciente ${opp.full_name}. 
+    const enrichedOpportunities = await Promise.all(
+      opportunities.rows.map(async (opp: any) => {
+        // Usar IA para gerar um pitch personalizado
+        const prompt = `Gere uma sugestão de mensagem curta e acolhedora para o paciente ${opp.full_name}. 
       Ele está com apenas ${opp.remaining_sessions} sessões sobrando de um pacote de ${opp.total_sessions}.
       Sua aderência clínica é de ${opp.adherence_score}%. 
       
       Objetivo: Sugerir um "Plano de Manutenção Preventiva" ou "Renovação de Ciclo" para consolidar os ganhos.
       Seja profissional, clínico e motivador.`;
 
-      const aiPitch = await runThinkingModel(c.env, {
-        prompt,
-        model: "gemini-1.5-flash",
-        temperature: 0.7
-      });
+        const aiPitch = await runThinkingModel(c.env, {
+          prompt,
+          model: "gemini-1.5-flash",
+          temperature: 0.7,
+        });
 
-      return {
-        ...opp,
-        ai_suggestion: aiPitch.content
-      };
-    }));
+        return {
+          ...opp,
+          ai_suggestion: aiPitch.content,
+        };
+      }),
+    );
 
     return c.json({ data: enrichedOpportunities });
   } catch (error) {

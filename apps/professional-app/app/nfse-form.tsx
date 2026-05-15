@@ -46,7 +46,9 @@ export default function NFSeForm() {
   const [sessionsCount, setSessionsCount] = useState("10");
   const [plannedStartDate, setPlannedStartDate] = useState(format(new Date(), "yyyy-MM-dd"));
   const [tussCode, setTussCode] = useState("50000160");
-  const [clinicalFocus, setClinicalFocus] = useState("Reabilitação ortopédica, pós-operatório e esportivo");
+  const [clinicalFocus, setClinicalFocus] = useState(
+    "Reabilitação ortopédica, pós-operatório e esportivo",
+  );
   const [medicalReferralDate, setMedicalReferralDate] = useState(format(new Date(), "yyyy-MM-dd"));
 
   const calculateDates = (start: string, count: number) => {
@@ -87,7 +89,15 @@ export default function NFSeForm() {
     } else {
       setDiscriminacao("Serviços de Fisioterapia");
     }
-  }, [patientId, patients, usePlannedSessions, sessionsCount, plannedStartDate, tussCode, valorServico]);
+  }, [
+    patientId,
+    patients,
+    usePlannedSessions,
+    sessionsCount,
+    plannedStartDate,
+    tussCode,
+    valorServico,
+  ]);
 
   const getDisplayValor = () => {
     if (!valorServico) return "";
@@ -114,8 +124,8 @@ export default function NFSeForm() {
         "A data de início das sessões deve ser posterior à data do pedido médico para garantir o reembolso. Deseja prosseguir mesmo assim?",
         [
           { text: "Cancelar", style: "cancel" },
-          { text: "Sim, prosseguir", style: "destructive", onPress: () => handleSubmit() }
-        ]
+          { text: "Sim, prosseguir", style: "destructive", onPress: () => handleSubmit() },
+        ],
       );
       return false;
     }
@@ -160,8 +170,8 @@ export default function NFSeForm() {
       }
 
       Alert.alert("NFS-e gerada!", `RPS nº ${record.numero_rps}\nStatus: ${record.status}`, [
-        { 
-          text: "Gerar Relatório de Reembolso", 
+        {
+          text: "Gerar Relatório de Reembolso",
           onPress: async () => {
             const patient = patients.find((p) => p.id === patientId);
             if (patient) {
@@ -172,11 +182,11 @@ export default function NFSeForm() {
                 startDate: dates[0].toISOString(),
                 endDate: dates[dates.length - 1].toISOString(),
                 tussCode,
-                clinicalFocus
+                clinicalFocus,
               });
             }
             router.back();
-          }
+          },
         },
         { text: "Apenas OK", onPress: () => router.back() },
       ]);
@@ -227,7 +237,9 @@ export default function NFSeForm() {
             <View style={styles.cardHeader}>
               <View style={styles.cardTitleContainer}>
                 <Ionicons name="sparkles-outline" size={18} color={colors.primary} />
-                <Text style={[styles.cardTitle, { color: colors.text }]}>Reembolso Inteligente</Text>
+                <Text style={[styles.cardTitle, { color: colors.text }]}>
+                  Reembolso Inteligente
+                </Text>
               </View>
               <TouchableOpacity
                 onPress={() => {
@@ -264,7 +276,9 @@ export default function NFSeForm() {
 
                 <View style={{ flexDirection: "row", gap: 12, marginTop: 12 }}>
                   <View style={{ flex: 1 }}>
-                    <Text style={[styles.label, { marginTop: 0, color: colors.text }]}>Sessões</Text>
+                    <Text style={[styles.label, { marginTop: 0, color: colors.text }]}>
+                      Sessões
+                    </Text>
                     <TextInput
                       style={[
                         styles.input,
@@ -315,7 +329,7 @@ export default function NFSeForm() {
                   onChangeText={setMedicalReferralDate}
                   placeholder="Data que consta no encaminhamento"
                 />
-                
+
                 <Text style={[styles.label, { marginTop: 12, color: colors.text }]}>
                   Foco Clínico
                 </Text>
@@ -331,7 +345,7 @@ export default function NFSeForm() {
                   value={clinicalFocus}
                   onChangeText={setClinicalFocus}
                 />
-                
+
                 <Text style={[styles.hint, { color: colors.textMuted }]}>
                   * As datas serão geradas 3x por semana (Seg/Qua/Sex) em dias úteis.
                 </Text>

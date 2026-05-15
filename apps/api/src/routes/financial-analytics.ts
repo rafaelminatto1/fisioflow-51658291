@@ -1060,10 +1060,11 @@ export const registerFinancialAnalyticsRoutes = (app: FinancialApp) => {
     const user = c.get("user");
     const pool = createPool(c.env);
     const { month, year } = c.req.query();
-    
-    const targetDate = month && year 
-      ? `${year}-${String(month).padStart(2, '0')}-01`
-      : toYmd(startOfDay(new Date()));
+
+    const targetDate =
+      month && year
+        ? `${year}-${String(month).padStart(2, "0")}-01`
+        : toYmd(startOfDay(new Date()));
 
     try {
       const dreResult = await queryFirst(
@@ -1090,7 +1091,7 @@ export const registerFinancialAnalyticsRoutes = (app: FinancialApp) => {
           COALESCE((SELECT details FROM monthly_data WHERE tipo = 'receita'), '{}') as revenue_details,
           COALESCE((SELECT details FROM monthly_data WHERE tipo = 'despesa'), '{}') as expense_details`,
         [user.organizationId, targetDate],
-        { gross_revenue: 0, total_expenses: 0, revenue_details: {}, expense_details: {} }
+        { gross_revenue: 0, total_expenses: 0, revenue_details: {}, expense_details: {} },
       );
 
       const grossRevenue = toNumber(dreResult.gross_revenue);
@@ -1107,9 +1108,9 @@ export const registerFinancialAnalyticsRoutes = (app: FinancialApp) => {
             netProfit,
             margin,
             revenueDetails: dreResult.revenue_details,
-            expenseDetails: dreResult.expense_details
-          }
-        }
+            expenseDetails: dreResult.expense_details,
+          },
+        },
       });
     } catch (error) {
       console.error("[FinancialAnalytics] DRE error:", error);
@@ -1140,7 +1141,7 @@ export const registerFinancialAnalyticsRoutes = (app: FinancialApp) => {
           AND p.payment_method = 'reembolso'
         GROUP BY hi.name, p.metadata->>'procedure_name'
         ORDER BY avg_reimbursement DESC`,
-        [user.organizationId]
+        [user.organizationId],
       );
 
       const { runThinkingModel } = await import("../lib/ai-native");
@@ -1163,7 +1164,7 @@ export const registerFinancialAnalyticsRoutes = (app: FinancialApp) => {
         prompt,
         model: "gemini-1.5-flash",
         temperature: 0.3,
-        responseFormat: "json"
+        responseFormat: "json",
       });
 
       const jsonMatch = aiAnalysis.content.match(/\{[\s\S]*\}/);
@@ -1172,8 +1173,8 @@ export const registerFinancialAnalyticsRoutes = (app: FinancialApp) => {
       return c.json({
         data: {
           patterns: patterns.rows,
-          aiInsights: data
-        }
+          aiInsights: data,
+        },
       });
     } catch (error) {
       console.error("[FinancialAnalytics] Reimbursement patterns error:", error);

@@ -17,10 +17,10 @@ app.get("/regional-summary", requireAuth, async (c) => {
     // 1. Identificar se a organização atual é uma Enterprise (tem filiais)
     const orgRes = await pool.query(
       "SELECT id, name FROM organizations WHERE parent_id = $1 OR id = $1",
-      [user.organizationId]
+      [user.organizationId],
     );
 
-    const clinicIds = orgRes.rows.map(o => o.id);
+    const clinicIds = orgRes.rows.map((o) => o.id);
     if (clinicIds.length <= 1) {
       return c.json({ message: "Esta conta não possui filiais configuradas.", data: [] });
     }
@@ -34,7 +34,7 @@ app.get("/regional-summary", requireAuth, async (c) => {
         (SELECT COUNT(*) FROM appointments WHERE organization_id = o.id AND date = CURRENT_DATE) as appointments_today
        FROM organizations o
        WHERE o.id = ANY($1::uuid[])`,
-      [clinicIds]
+      [clinicIds],
     );
 
     return c.json({ data: summary.rows });
@@ -61,7 +61,7 @@ app.get("/regional-audit", requireAuth, async (c) => {
         (SELECT ROUND(AVG(nps_score),1) FROM satisfaction_surveys WHERE organization_id = o.id) as avg_nps
        FROM organizations o
        WHERE o.parent_id = $1 OR o.id = $1`,
-      [user.organizationId]
+      [user.organizationId],
     );
 
     const { runThinkingModel } = await import("../lib/ai-native");
@@ -81,15 +81,15 @@ app.get("/regional-audit", requireAuth, async (c) => {
     const aiAudit = await runThinkingModel(c.env, {
       prompt,
       model: "gemini-1.5-flash",
-      temperature: 0.3
+      temperature: 0.3,
     });
 
     return c.json({
       success: true,
       data: {
         summary: aiAudit.content,
-        generatedAt: new Date().toISOString()
-      }
+        generatedAt: new Date().toISOString(),
+      },
     });
   } catch (error) {
     console.error("[Enterprise/Audit] Error:", error);

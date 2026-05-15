@@ -28,7 +28,12 @@ interface AIScribeModalProps {
   patientId?: string;
 }
 
-export const AIScribeModal: React.FC<AIScribeModalProps> = ({ open, onOpenChange, onApply, patientId }) => {
+export const AIScribeModal: React.FC<AIScribeModalProps> = ({
+  open,
+  onOpenChange,
+  onApply,
+  patientId,
+}) => {
   const {
     voiceState,
     transcribedText: _transcribedText,

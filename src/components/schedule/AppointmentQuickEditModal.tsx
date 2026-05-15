@@ -304,8 +304,7 @@ export const AppointmentQuickEditModal: React.FC<AppointmentQuickEditModalProps>
     [formData.appointment_date],
   );
 
-  const statusConfig =
-    appointmentStatusConfig[formData.status] || appointmentStatusConfig.agendado;
+  const statusConfig = appointmentStatusConfig[formData.status] || appointmentStatusConfig.agendado;
 
   const effectiveCancellationRules = useMemo(
     () => ({
@@ -688,17 +687,18 @@ export const AppointmentQuickEditModal: React.FC<AppointmentQuickEditModalProps>
                     </SelectTrigger>
                     <SelectContent>
                       {allStatuses.map((value) => {
-                        const config = appointmentStatusConfig[value] || appointmentStatusConfig.agendado;
+                        const config =
+                          appointmentStatusConfig[value] || appointmentStatusConfig.agendado;
                         return (
-                        <SelectItem key={value} value={value}>
-                          <div className="flex items-center gap-2">
-                            <div
-                              className="w-2 h-2 rounded-full"
-                              style={{ backgroundColor: config.color }}
-                            />
-                            {config.label}
-                          </div>
-                        </SelectItem>
+                          <SelectItem key={value} value={value}>
+                            <div className="flex items-center gap-2">
+                              <div
+                                className="w-2 h-2 rounded-full"
+                                style={{ backgroundColor: config.color }}
+                              />
+                              {config.label}
+                            </div>
+                          </SelectItem>
                         );
                       })}
                     </SelectContent>

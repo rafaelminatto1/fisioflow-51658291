@@ -41,7 +41,9 @@ export function OfflineBanner() {
   useEffect(() => {
     const handler = (event: MessageEvent) => {
       if (event.data?.type === "SYNC_COMPLETE") {
-        pendingCount().then(setPending).catch(() => {});
+        pendingCount()
+          .then(setPending)
+          .catch(() => {});
         setJustSynced(true);
         setTimeout(() => setJustSynced(false), 3000);
       }
@@ -79,7 +81,12 @@ export function OfflineBanner() {
       {!isOnline ? (
         <>
           <WifiOff className="h-4 w-4" />
-          <span>Sem conexão{pending > 0 ? ` — ${pending} alteração${pending > 1 ? "ões" : ""} pendente${pending > 1 ? "s" : ""}` : ""}</span>
+          <span>
+            Sem conexão
+            {pending > 0
+              ? ` — ${pending} alteração${pending > 1 ? "ões" : ""} pendente${pending > 1 ? "s" : ""}`
+              : ""}
+          </span>
         </>
       ) : justSynced ? (
         <>

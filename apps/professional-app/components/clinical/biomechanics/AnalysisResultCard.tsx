@@ -17,20 +17,26 @@ export const AnalysisResultCard: React.FC<AnalysisResultCardProps> = ({
   tolerance,
 }) => {
   const status = getAngleStatus(angle, reference, tolerance);
-  
+
   const getStatusColor = () => {
     switch (status) {
-      case "ok": return "#22c55e";
-      case "warning": return "#eab308";
-      case "alert": return "#ef4444";
+      case "ok":
+        return "#22c55e";
+      case "warning":
+        return "#eab308";
+      case "alert":
+        return "#ef4444";
     }
   };
 
   const getStatusIcon = () => {
     switch (status) {
-      case "ok": return "checkmark-circle";
-      case "warning": return "alert-circle";
-      case "alert": return "close-circle";
+      case "ok":
+        return "checkmark-circle";
+      case "warning":
+        return "alert-circle";
+      case "alert":
+        return "close-circle";
     }
   };
 
@@ -40,15 +46,15 @@ export const AnalysisResultCard: React.FC<AnalysisResultCardProps> = ({
         <Text style={styles.jointLabel}>{joint}</Text>
         <Ionicons name={getStatusIcon()} size={20} color={getStatusColor()} />
       </View>
-      
+
       <View style={styles.metrics}>
         <View style={styles.metricItem}>
           <Text style={styles.metricValue}>{formatAngle(angle)}</Text>
           <Text style={styles.metricLabel}>Atual</Text>
         </View>
-        
+
         <View style={styles.divider} />
-        
+
         <View style={styles.metricItem}>
           <Text style={[styles.metricValue, { color: "#64748b" }]}>{formatAngle(reference)}</Text>
           <Text style={styles.metricLabel}>Ref.</Text>

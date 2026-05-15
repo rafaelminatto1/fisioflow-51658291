@@ -314,11 +314,7 @@ export const patientsApi = {
         body: JSON.stringify(data),
       },
     ),
-  updatePathology: (
-    patientId: string,
-    pathologyId: string,
-    data: Partial<PatientPathologyInput>,
-  ) =>
+  updatePathology: (patientId: string, pathologyId: string, data: Partial<PatientPathologyInput>) =>
     request<{ data: PatientPathology }>(
       `/api/patients/${encodeURIComponent(patientId)}/pathologies/${encodeURIComponent(pathologyId)}`,
       {
@@ -345,11 +341,7 @@ export const patientsApi = {
         body: JSON.stringify(data),
       },
     ),
-  updateMedicalReturn: (
-    patientId: string,
-    returnId: string,
-    data: Partial<MedicalReturnInput>,
-  ) =>
+  updateMedicalReturn: (patientId: string, returnId: string, data: Partial<MedicalReturnInput>) =>
     request<{ data: MedicalReturn }>(
       `/api/patients/${encodeURIComponent(patientId)}/medical-returns/${encodeURIComponent(returnId)}`,
       {

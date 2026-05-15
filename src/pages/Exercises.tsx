@@ -296,17 +296,16 @@ export default function Exercises() {
       </PageHeader>
 
       <PageContainer maxWidth="full">
-
         {/* Main Content Tabs - Mobile Optimized */}
         <Card className="overflow-visible border-none bg-transparent shadow-none">
           <Tabs value={activeTab} onValueChange={handleTabChange}>
             <div className="border-b bg-background/95 backdrop-blur-sm rounded-t-xl overflow-hidden">
-          <TabsList className="bg-slate-100 p-1 rounded-xl mb-4 h-12 sm:h-14">
-            <TabsTrigger
-              value="library"
-              data-testid="tab-library"
-              className="gap-1.5 sm:gap-2 h-full rounded-lg data-[state=active]:bg-white data-[state=active]:text-brand-blue data-[state=active]:shadow-sm px-3 sm:px-4 md:px-6 text-xs sm:text-sm"
-            >
+              <TabsList className="bg-slate-100 p-1 rounded-xl mb-4 h-12 sm:h-14">
+                <TabsTrigger
+                  value="library"
+                  data-testid="tab-library"
+                  className="gap-1.5 sm:gap-2 h-full rounded-lg data-[state=active]:bg-white data-[state=active]:text-brand-blue data-[state=active]:shadow-sm px-3 sm:px-4 md:px-6 text-xs sm:text-sm"
+                >
                   <BookOpen className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                   <span className="hidden xs:inline">Biblioteca</span>
                   <Badge
@@ -449,25 +448,25 @@ export default function Exercises() {
           </Tabs>
         </Card>
 
-      <Suspense fallback={null}>
-        <NewExerciseModal
-          open={showNewModal}
-          onOpenChange={handleModalOpenChange}
-          onSubmit={handleSubmit}
-          exercise={editingExercise || undefined}
-          isLoading={isCreating || isUpdating}
-        />
-      </Suspense>
+        <Suspense fallback={null}>
+          <NewExerciseModal
+            open={showNewModal}
+            onOpenChange={handleModalOpenChange}
+            onSubmit={handleSubmit}
+            exercise={editingExercise || undefined}
+            isLoading={isCreating || isUpdating}
+          />
+        </Suspense>
 
-      <Suspense fallback={null}>
-        <ExerciseVideoUpload
-          open={showVideoUpload}
-          onOpenChange={handleVideoUploadOpenChange}
-          onSuccess={() => {
-            // Invalidate queries to refresh video list
-          }}
-        />
-      </Suspense>
+        <Suspense fallback={null}>
+          <ExerciseVideoUpload
+            open={showVideoUpload}
+            onOpenChange={handleVideoUploadOpenChange}
+            onSuccess={() => {
+              // Invalidate queries to refresh video list
+            }}
+          />
+        </Suspense>
       </PageContainer>
     </PageLayout>
   );

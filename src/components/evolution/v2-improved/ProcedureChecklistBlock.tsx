@@ -5,7 +5,17 @@
  * smooth animations, and professional visual design.
  */
 import React, { useState, useCallback, useRef, useEffect } from "react";
-import { Plus, CheckCircle2, Zap, Trophy, X, MessageSquare, Sparkles, MoreVertical, CheckSquare } from "lucide-react";
+import {
+  Plus,
+  CheckCircle2,
+  Zap,
+  Trophy,
+  X,
+  MessageSquare,
+  Sparkles,
+  MoreVertical,
+  CheckSquare,
+} from "lucide-react";
 import confetti from "canvas-confetti";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -98,7 +108,11 @@ export const ProcedureChecklistBlock: React.FC<ProcedureChecklistBlockProps> = (
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       // Focus search with "/" if not in an input
-      if (e.key === "/" && document.activeElement?.tagName !== "INPUT" && document.activeElement?.tagName !== "TEXTAREA") {
+      if (
+        e.key === "/" &&
+        document.activeElement?.tagName !== "INPUT" &&
+        document.activeElement?.tagName !== "TEXTAREA"
+      ) {
         e.preventDefault();
         quickAddRef.current?.focus();
       }
@@ -191,16 +205,16 @@ export const ProcedureChecklistBlock: React.FC<ProcedureChecklistBlockProps> = (
           ) : (
             <div className="space-y-1">
               {procedures.map((proc, index) => (
-                  <ProcedureRow
-                    key={proc.id}
-                    procedure={proc}
-                    onToggle={handleToggle}
-                    onRemove={handleRemove}
-                    onUpdateNotes={handleUpdateNotes}
-                    onUpdateIntensity={handleUpdateIntensity}
-                    disabled={disabled}
-                    index={index}
-                  />
+                <ProcedureRow
+                  key={proc.id}
+                  procedure={proc}
+                  onToggle={handleToggle}
+                  onRemove={handleRemove}
+                  onUpdateNotes={handleUpdateNotes}
+                  onUpdateIntensity={handleUpdateIntensity}
+                  disabled={disabled}
+                  index={index}
+                />
               ))}
             </div>
           )}
@@ -244,42 +258,56 @@ export const ProcedureChecklistBlock: React.FC<ProcedureChecklistBlockProps> = (
         {/* Progress bar - Enhanced */}
         {procedures.length > 0 && (
           <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2">
-          <div className={cn(
-            "p-1.5 rounded-lg transition-colors duration-300",
-            isAllCompleted ? "bg-emerald-100 text-emerald-600" : "bg-slate-100 text-slate-500"
-          )}>
-            {isAllCompleted ? <Trophy className="h-4 w-4" /> : <CheckCircle2 className="h-4 w-4" />}
+            <div className="flex items-center gap-2">
+              <div
+                className={cn(
+                  "p-1.5 rounded-lg transition-colors duration-300",
+                  isAllCompleted
+                    ? "bg-emerald-100 text-emerald-600"
+                    : "bg-slate-100 text-slate-500",
+                )}
+              >
+                {isAllCompleted ? (
+                  <Trophy className="h-4 w-4" />
+                ) : (
+                  <CheckCircle2 className="h-4 w-4" />
+                )}
+              </div>
+              <div>
+                <h3 className="text-sm font-semibold text-slate-800">
+                  Procedimentos & Intervenções
+                </h3>
+                <p className="text-[10px] text-slate-400 font-medium">
+                  Acompanhamento clínico em tempo real
+                </p>
+              </div>
+            </div>
+            <div className="flex flex-col items-end">
+              <div className="flex items-center gap-1.5 mb-1">
+                <span
+                  className={cn(
+                    "text-xs font-bold transition-colors duration-300",
+                    isAllCompleted ? "text-emerald-600" : "text-slate-700",
+                  )}
+                >
+                  {completedCount}/{procedures.length}
+                </span>
+                <span className="text-[10px] text-slate-400 font-medium">concluídos</span>
+              </div>
+              <div className="w-24 h-1.5 bg-slate-100 rounded-full overflow-hidden relative">
+                <div
+                  className={cn(
+                    "h-full transition-all duration-500 ease-out rounded-full relative z-10",
+                    isAllCompleted ? "bg-emerald-500" : "bg-blue-500",
+                  )}
+                  style={{ width: `${(completedCount / Math.max(1, procedures.length)) * 100}%` }}
+                />
+                {isAllCompleted && (
+                  <div className="absolute inset-0 bg-emerald-400/30 animate-shimmer z-20" />
+                )}
+              </div>
+            </div>
           </div>
-          <div>
-            <h3 className="text-sm font-semibold text-slate-800">Procedimentos & Intervenções</h3>
-            <p className="text-[10px] text-slate-400 font-medium">Acompanhamento clínico em tempo real</p>
-          </div>
-        </div>
-        <div className="flex flex-col items-end">
-          <div className="flex items-center gap-1.5 mb-1">
-            <span className={cn(
-              "text-xs font-bold transition-colors duration-300",
-              isAllCompleted ? "text-emerald-600" : "text-slate-700"
-            )}>
-              {completedCount}/{procedures.length}
-            </span>
-            <span className="text-[10px] text-slate-400 font-medium">concluídos</span>
-          </div>
-          <div className="w-24 h-1.5 bg-slate-100 rounded-full overflow-hidden relative">
-            <div
-              className={cn(
-                "h-full transition-all duration-500 ease-out rounded-full relative z-10",
-                isAllCompleted ? "bg-emerald-500" : "bg-blue-500"
-              )}
-              style={{ width: `${(completedCount / Math.max(1, procedures.length)) * 100}%` }}
-            />
-            {isAllCompleted && (
-              <div className="absolute inset-0 bg-emerald-400/30 animate-shimmer z-20" />
-            )}
-          </div>
-        </div>
-      </div>
         )}
       </div>
 
@@ -368,134 +396,150 @@ const ProcedureRow: React.FC<{
   onUpdateIntensity: (id: string, intensity: string) => void;
   disabled: boolean;
   index: number;
-}> = React.memo(({ procedure, onToggle, onRemove, onUpdateNotes, onUpdateIntensity, disabled, index: _index }) => {
-  const [showNotes, setShowNotes] = useState(false);
-  const [isRemoving, setIsRemoving] = useState(false);
+}> = React.memo(
+  ({
+    procedure,
+    onToggle,
+    onRemove,
+    onUpdateNotes,
+    onUpdateIntensity,
+    disabled,
+    index: _index,
+  }) => {
+    const [showNotes, setShowNotes] = useState(false);
+    const [isRemoving, setIsRemoving] = useState(false);
 
-  const handleRemove = () => {
-    setIsRemoving(true);
-    setTimeout(() => onRemove(procedure.id), 200);
-  };
+    const handleRemove = () => {
+      setIsRemoving(true);
+      setTimeout(() => onRemove(procedure.id), 200);
+    };
 
-  return (
-    <div
-      className={cn(
-        "group relative flex flex-col rounded-lg transition-all duration-200",
-        "border border-transparent hover:bg-slate-50",
-        procedure.completed && "opacity-50",
-        isRemoving && "opacity-0 scale-95",
-      )}
-    >
-      <div className="flex items-center gap-3 py-2.5 px-3">
-        {/* Animated checkbox */}
-        <button
-          onClick={() => onToggle(procedure.id)}
-          disabled={disabled}
-          className="flex-shrink-0 transition-all duration-200 hover:scale-110"
-        >
-          {procedure.completed ? (
-            <div className="w-5 h-5 rounded-lg bg-emerald-500 flex items-center justify-center shadow-sm">
-              <CheckSquare className="h-3.5 w-3.5 text-white" />
-            </div>
-          ) : (
-            <div className="w-5 h-5 rounded-lg border-2 border-muted-foreground/30 hover:border-emerald-500 transition-colors" />
-          )}
-        </button>
+    return (
+      <div
+        className={cn(
+          "group relative flex flex-col rounded-lg transition-all duration-200",
+          "border border-transparent hover:bg-slate-50",
+          procedure.completed && "opacity-50",
+          isRemoving && "opacity-0 scale-95",
+        )}
+      >
+        <div className="flex items-center gap-3 py-2.5 px-3">
+          {/* Animated checkbox */}
+          <button
+            onClick={() => onToggle(procedure.id)}
+            disabled={disabled}
+            className="flex-shrink-0 transition-all duration-200 hover:scale-110"
+          >
+            {procedure.completed ? (
+              <div className="w-5 h-5 rounded-lg bg-emerald-500 flex items-center justify-center shadow-sm">
+                <CheckSquare className="h-3.5 w-3.5 text-white" />
+              </div>
+            ) : (
+              <div className="w-5 h-5 rounded-lg border-2 border-muted-foreground/30 hover:border-emerald-500 transition-colors" />
+            )}
+          </button>
 
-        {/* Name */}
-        <span
-          className={cn(
-            "flex-1 text-sm font-medium",
-            procedure.completed && "line-through text-muted-foreground",
-          )}
-        >
-          {procedure.name}
-        </span>
-
-        {/* Category badge */}
-        {procedure.category && procedure.category !== "outro" && (
-          <Badge
-            variant="outline"
+          {/* Name */}
+          <span
             className={cn(
-              "text-[10px] px-2 py-0.5 rounded-md font-medium border",
-              CATEGORY_COLORS[procedure.category],
+              "flex-1 text-sm font-medium",
+              procedure.completed && "line-through text-muted-foreground",
             )}
           >
-            {PROCEDURE_CATEGORY_LABELS[procedure.category]}
-          </Badge>
-        )}
+            {procedure.name}
+          </span>
 
-        {/* Status indicators */}
-        <div className="flex items-center gap-1">
-          {procedure.notes && (
-            <Badge variant="secondary" className="text-[10px] h-6 px-2 gap-1 rounded-full">
-              <MessageSquare className="h-2.5 w-2.5" />
-              nota
-            </Badge>
-          )}
-
-          {procedure.intensity && (
-            <Badge variant="outline" className="text-[10px] h-6 px-2 gap-1 rounded-full bg-yellow-50 text-yellow-700 border-yellow-200">
-              <Zap className="h-2.5 w-2.5" />
-              {procedure.intensity}
-            </Badge>
-          )}
-        </div>
-
-        {/* Actions dropdown */}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <button className="p-1 rounded-lg hover:bg-muted opacity-0 group-hover:opacity-100 transition-all" aria-label="Mais opções">
-              <MoreVertical className="h-4 w-4 text-muted-foreground" />
-            </button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-[160px]">
-            <DropdownMenuItem onClick={() => setShowNotes(!showNotes)} className="gap-2">
-              <MessageSquare className="h-4 w-4" />
-              {showNotes ? "Ocultar notas" : "Adicionar notas"}
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={handleRemove}
-              className="gap-2 text-destructive focus:text-destructive"
+          {/* Category badge */}
+          {procedure.category && procedure.category !== "outro" && (
+            <Badge
+              variant="outline"
+              className={cn(
+                "text-[10px] px-2 py-0.5 rounded-md font-medium border",
+                CATEGORY_COLORS[procedure.category],
+              )}
             >
-              <X className="h-4 w-4" />
-              Remover
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
-
-      {/* Intensity and Notes area */}
-      {(procedure.category === "laser" || procedure.category === "ultrassom" || showNotes) && (
-        <div className="px-3 pb-3 flex flex-col gap-2 animate-in slide-in-from-top-2 duration-200">
-          {(procedure.category === "laser" || procedure.category === "ultrassom") && (
-            <div className="flex items-center gap-2">
-              <div className="flex items-center gap-1.5 px-2 py-1 rounded bg-slate-100/50 border border-slate-200/50 w-full max-w-[200px]">
-                <Zap className="h-3 w-3 text-yellow-500" />
-                <input
-                  value={procedure.intensity || ""}
-                  onChange={(e) => onUpdateIntensity(procedure.id, e.target.value)}
-                  placeholder="Intensidade (ex: 2.0 J/cm²)"
-                  className="bg-transparent border-none text-[10px] outline-none w-full placeholder:text-muted-foreground/50"
-                  disabled={disabled}
-                />
-              </div>
-            </div>
+              {PROCEDURE_CATEGORY_LABELS[procedure.category]}
+            </Badge>
           )}
 
-          {showNotes && (
-            <Input
-              value={procedure.notes || ""}
-              onChange={(e) => onUpdateNotes(procedure.id, e.target.value)}
-              placeholder="Adicione detalhes: região, parâmetros, tempo, observações..."
-              className="h-8 text-xs border-dashed rounded-lg"
-              disabled={disabled}
-            />
-          )}
+          {/* Status indicators */}
+          <div className="flex items-center gap-1">
+            {procedure.notes && (
+              <Badge variant="secondary" className="text-[10px] h-6 px-2 gap-1 rounded-full">
+                <MessageSquare className="h-2.5 w-2.5" />
+                nota
+              </Badge>
+            )}
+
+            {procedure.intensity && (
+              <Badge
+                variant="outline"
+                className="text-[10px] h-6 px-2 gap-1 rounded-full bg-yellow-50 text-yellow-700 border-yellow-200"
+              >
+                <Zap className="h-2.5 w-2.5" />
+                {procedure.intensity}
+              </Badge>
+            )}
+          </div>
+
+          {/* Actions dropdown */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                className="p-1 rounded-lg hover:bg-muted opacity-0 group-hover:opacity-100 transition-all"
+                aria-label="Mais opções"
+              >
+                <MoreVertical className="h-4 w-4 text-muted-foreground" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-[160px]">
+              <DropdownMenuItem onClick={() => setShowNotes(!showNotes)} className="gap-2">
+                <MessageSquare className="h-4 w-4" />
+                {showNotes ? "Ocultar notas" : "Adicionar notas"}
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={handleRemove}
+                className="gap-2 text-destructive focus:text-destructive"
+              >
+                <X className="h-4 w-4" />
+                Remover
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
-      )}
-    </div>
-  );
-});
+
+        {/* Intensity and Notes area */}
+        {(procedure.category === "laser" || procedure.category === "ultrassom" || showNotes) && (
+          <div className="px-3 pb-3 flex flex-col gap-2 animate-in slide-in-from-top-2 duration-200">
+            {(procedure.category === "laser" || procedure.category === "ultrassom") && (
+              <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1.5 px-2 py-1 rounded bg-slate-100/50 border border-slate-200/50 w-full max-w-[200px]">
+                  <Zap className="h-3 w-3 text-yellow-500" />
+                  <input
+                    value={procedure.intensity || ""}
+                    onChange={(e) => onUpdateIntensity(procedure.id, e.target.value)}
+                    placeholder="Intensidade (ex: 2.0 J/cm²)"
+                    className="bg-transparent border-none text-[10px] outline-none w-full placeholder:text-muted-foreground/50"
+                    disabled={disabled}
+                  />
+                </div>
+              </div>
+            )}
+
+            {showNotes && (
+              <Input
+                value={procedure.notes || ""}
+                onChange={(e) => onUpdateNotes(procedure.id, e.target.value)}
+                placeholder="Adicione detalhes: região, parâmetros, tempo, observações..."
+                className="h-8 text-xs border-dashed rounded-lg"
+                disabled={disabled}
+              />
+            )}
+          </div>
+        )}
+      </div>
+    );
+  },
+);
 
 ProcedureRow.displayName = "ProcedureRow";

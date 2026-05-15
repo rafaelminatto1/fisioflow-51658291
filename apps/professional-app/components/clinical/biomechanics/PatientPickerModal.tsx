@@ -26,9 +26,8 @@ export const PatientPickerModal: React.FC<PatientPickerModalProps> = ({
   const colors = useColors();
   const [search, setSearch] = useState("");
 
-  const filteredPatients = patients.filter(p => 
-    p.name.toLowerCase().includes(search.toLowerCase()) || 
-    (p.cpf && p.cpf.includes(search))
+  const filteredPatients = patients.filter(
+    (p) => p.name.toLowerCase().includes(search.toLowerCase()) || (p.cpf && p.cpf.includes(search)),
   );
 
   return (
@@ -49,7 +48,7 @@ export const PatientPickerModal: React.FC<PatientPickerModalProps> = ({
           data={filteredPatients}
           keyExtractor={(item) => item.id}
           renderItem={({ item }) => (
-            <TouchableOpacity 
+            <TouchableOpacity
               style={[styles.patientItem, { borderBottomColor: colors.border }]}
               onPress={() => {
                 onSelect(item);
@@ -58,7 +57,9 @@ export const PatientPickerModal: React.FC<PatientPickerModalProps> = ({
             >
               <View style={styles.patientInfo}>
                 <Text style={[styles.patientName, { color: colors.text }]}>{item.name}</Text>
-                {item.cpf && <Text style={{ color: colors.textSecondary, fontSize: 12 }}>{item.cpf}</Text>}
+                {item.cpf && (
+                  <Text style={{ color: colors.textSecondary, fontSize: 12 }}>{item.cpf}</Text>
+                )}
               </View>
               <Ionicons name="chevron-forward" size={20} color={colors.textSecondary} />
             </TouchableOpacity>
@@ -112,5 +113,5 @@ const styles = StyleSheet.create({
   empty: {
     alignItems: "center",
     marginTop: 40,
-  }
+  },
 });

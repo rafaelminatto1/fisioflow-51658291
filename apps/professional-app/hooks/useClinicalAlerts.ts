@@ -22,7 +22,7 @@ export function useClinicalAlerts() {
     },
   });
 
-  const highSeverityCount = alerts.filter(a => a.severity === 'high').length;
+  const highSeverityCount = alerts.filter((a) => a.severity === "high").length;
 
   return {
     alerts,

@@ -29,28 +29,45 @@ export const BiomechanicsComparison: React.FC<BiomechanicsComparisonProps> = ({
           Modo de Visualização
         </h3>
         <div className="flex items-center gap-3">
-          <Label htmlFor="ghost-mode" className={`font-semibold text-xs cursor-pointer ${!isGhostMode ? 'text-primary' : 'text-muted-foreground'}`}>Lado a Lado</Label>
+          <Label
+            htmlFor="ghost-mode"
+            className={`font-semibold text-xs cursor-pointer ${!isGhostMode ? "text-primary" : "text-muted-foreground"}`}
+          >
+            Lado a Lado
+          </Label>
           <Switch id="ghost-mode" checked={isGhostMode} onCheckedChange={setIsGhostMode} />
-          <Label htmlFor="ghost-mode" className={`font-semibold text-xs cursor-pointer ${isGhostMode ? 'text-primary' : 'text-muted-foreground'}`}>Ghost Mode (Sobreposição)</Label>
+          <Label
+            htmlFor="ghost-mode"
+            className={`font-semibold text-xs cursor-pointer ${isGhostMode ? "text-primary" : "text-muted-foreground"}`}
+          >
+            Ghost Mode (Sobreposição)
+          </Label>
         </div>
       </div>
 
       {isGhostMode ? (
         <div className="relative w-full aspect-[4/3] md:aspect-video bg-black rounded-xl overflow-hidden border-2 border-primary/20 shadow-lg group">
-           <div className="absolute inset-0">
-             <GhostAssessmentView assessment={baseAssessment} />
-           </div>
-           {/* Mix-blend-screen clareia o fundo sobreposto e destaca a diferença. Opacidade em 65% para manter a base visível */}
-           <div className="absolute inset-0 z-10 pointer-events-none mix-blend-screen opacity-[0.65] transition-opacity duration-300 group-hover:opacity-80">
-             <GhostAssessmentView assessment={compareAssessment} />
-           </div>
-           
-           <div className="absolute top-4 left-4 z-20">
-              <Badge variant="outline" className="bg-black/60 text-white backdrop-blur-sm border-white/20">Base (Anterior)</Badge>
-           </div>
-           <div className="absolute top-4 right-4 z-20">
-              <Badge className="bg-primary/90 text-white backdrop-blur-sm shadow-md">Comparação (Atual)</Badge>
-           </div>
+          <div className="absolute inset-0">
+            <GhostAssessmentView assessment={baseAssessment} />
+          </div>
+          {/* Mix-blend-screen clareia o fundo sobreposto e destaca a diferença. Opacidade em 65% para manter a base visível */}
+          <div className="absolute inset-0 z-10 pointer-events-none mix-blend-screen opacity-[0.65] transition-opacity duration-300 group-hover:opacity-80">
+            <GhostAssessmentView assessment={compareAssessment} />
+          </div>
+
+          <div className="absolute top-4 left-4 z-20">
+            <Badge
+              variant="outline"
+              className="bg-black/60 text-white backdrop-blur-sm border-white/20"
+            >
+              Base (Anterior)
+            </Badge>
+          </div>
+          <div className="absolute top-4 right-4 z-20">
+            <Badge className="bg-primary/90 text-white backdrop-blur-sm shadow-md">
+              Comparação (Atual)
+            </Badge>
+          </div>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -58,7 +75,7 @@ export const BiomechanicsComparison: React.FC<BiomechanicsComparisonProps> = ({
           <AssessmentView assessment={compareAssessment} label="Comparação (Atual)" />
         </div>
       )}
-      
+
       {/* Delta Metrics Panel */}
       <div className="bg-primary/5 rounded-3xl p-6 border border-primary/10">
         <h4 className="text-sm font-black uppercase tracking-tight mb-4 flex items-center gap-2">
@@ -69,17 +86,23 @@ export const BiomechanicsComparison: React.FC<BiomechanicsComparisonProps> = ({
           {Object.entries(compareAssessment.analysisData.angles || {}).map(([name, currentVal]) => {
             const baseVal = baseAssessment.analysisData.angles?.[name];
             if (baseVal === undefined) return null;
-            
+
             const delta = currentVal - baseVal;
             const isImprovement = delta > 0; // Depende do contexto, mas geralmente +ADM é bom
-            
+
             return (
-              <div key={name} className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-primary/5 shadow-sm">
+              <div
+                key={name}
+                className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-primary/5 shadow-sm"
+              >
                 <p className="text-[10px] text-muted-foreground uppercase font-bold">{name}</p>
                 <div className="flex items-baseline gap-2 mt-1">
                   <span className="text-xl font-black">{currentVal.toFixed(1)}°</span>
-                  <span className={`text-xs font-bold ${delta === 0 ? 'text-slate-400' : isImprovement ? 'text-emerald-500' : 'text-rose-500'}`}>
-                    {delta > 0 ? '+' : ''}{delta.toFixed(1)}°
+                  <span
+                    className={`text-xs font-bold ${delta === 0 ? "text-slate-400" : isImprovement ? "text-emerald-500" : "text-rose-500"}`}
+                  >
+                    {delta > 0 ? "+" : ""}
+                    {delta.toFixed(1)}°
                   </span>
                 </div>
               </div>

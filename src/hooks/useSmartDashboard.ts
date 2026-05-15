@@ -9,14 +9,7 @@
  */
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import {
-  differenceInDays,
-  isValid,
-  parseISO,
-  startOfDay,
-  subMonths,
-  subDays,
-} from "date-fns";
+import { differenceInDays, isValid, parseISO, startOfDay, subMonths, subDays } from "date-fns";
 import { useMemo } from "react";
 import { innovationsApi } from "@/api/v2";
 import { appointmentsApi } from "@/api/v2/appointments";

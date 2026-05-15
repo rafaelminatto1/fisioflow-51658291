@@ -354,7 +354,7 @@ export function ScheduleCalendar(props: ScheduleCalendarProps) {
     if (onEventClick) {
       onEventClick({ id: info.event.id });
     }
-    
+
     // Always set quick view for appointments if not in selection mode
     setQuickViewAppointment(original);
   };
@@ -483,7 +483,10 @@ export function ScheduleCalendar(props: ScheduleCalendarProps) {
       />
 
       <div className="flex min-h-0 flex-1 flex-col p-1 md:p-2">
-        <div className="relative w-full overflow-y-auto overflow-x-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900" style={{ maxHeight: "calc(100vh - 200px)" }}>
+        <div
+          className="relative w-full overflow-y-auto overflow-x-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900"
+          style={{ maxHeight: "calc(100vh - 200px)" }}
+        >
           <FullCalendar
             ref={calendarRef}
             plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}

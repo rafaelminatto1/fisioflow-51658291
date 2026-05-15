@@ -101,8 +101,6 @@ export function useLazyCamera() {
   return useLazyModule(() => import("expo-camera").then((m) => m.Camera), "expo-camera");
 }
 
-
-
 /**
  * Hook para carregar o módulo de localização sob demanda
  */

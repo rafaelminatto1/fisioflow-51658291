@@ -70,7 +70,9 @@ export function ChurnReportCard() {
           <div className="text-xs text-muted-foreground ml-auto text-right">
             <p>Meta: &lt; 10%</p>
             {data.churnRate < 10 && <p className="text-green-600 font-medium">✓ OK</p>}
-            {data.churnRate >= 10 && data.churnRate < 20 && <p className="text-yellow-600 font-medium">⚠ Atenção</p>}
+            {data.churnRate >= 10 && data.churnRate < 20 && (
+              <p className="text-yellow-600 font-medium">⚠ Atenção</p>
+            )}
             {data.churnRate >= 20 && <p className="text-red-600 font-medium">✗ Alto</p>}
           </div>
         </div>
@@ -82,7 +84,10 @@ export function ChurnReportCard() {
             </p>
             <div className="space-y-1 max-h-40 overflow-y-auto">
               {data.churnedPatients.slice(0, 8).map((p) => (
-                <div key={p.patient_id} className="flex items-center justify-between text-xs py-0.5">
+                <div
+                  key={p.patient_id}
+                  className="flex items-center justify-between text-xs py-0.5"
+                >
                   <span className="flex items-center gap-1.5">
                     <UserMinus className="h-3 w-3 text-muted-foreground" />
                     {p.name}

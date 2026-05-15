@@ -491,7 +491,7 @@ function PerformanceDashboardContent({ isOpen }: { isOpen: boolean }) {
   };
 
   return (
-    <div className="flex flex-col h-full bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <div className="flex flex-col h-full bg-background">
       <div className="p-4 border-b flex justify-between items-center bg-muted/20">
         <div className="flex gap-2">
           <Button variant="outline" size="sm" onClick={loadData} disabled={loading} className="h-8">
