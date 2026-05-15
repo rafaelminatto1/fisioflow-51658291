@@ -98,7 +98,6 @@ export default function Schedule() {
 
   const isNavigating = isLoading && appointments.length === 0;
   const { sendBirthdayMessage, isSending } = useBirthdayNotification();
-  const { totalToReengage } = usePatientReengagement();
 
   const {
     selectedIds,
