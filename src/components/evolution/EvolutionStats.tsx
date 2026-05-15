@@ -129,7 +129,7 @@ export const EvolutionStats = memo(
             return (
               <div
                 key={idx}
-                className={`group relative overflow-hidden rounded-xl border ${colors.border} bg-card/40 backdrop-blur-sm p-2 hover:bg-card/60 transition-all shadow-sm`}
+                className={`group relative overflow-hidden rounded-xl border ${colors.border} bg-card p-2 hover:bg-accent/50 transition-all shadow-sm`}
               >
                 <div className="flex items-center gap-1.5 mb-1">
                   <div className={`p-1 rounded-md bg-gradient-to-br ${colors.bg}`}>
@@ -171,7 +171,7 @@ export const EvolutionStats = memo(
           return (
             <div
               key={idx}
-              className="group relative overflow-hidden rounded-xl border border-border/60 bg-card/60 backdrop-blur-sm p-4 sm:p-5 hover:bg-card/90 hover:shadow-lg transition-all cursor-default"
+              className="group relative overflow-hidden rounded-xl border border-border bg-card p-4 sm:p-5 hover:shadow-lg transition-all cursor-default"
             >
               <div
                 className={`absolute inset-0 bg-gradient-to-br ${colors.bg} to-transparent opacity-0 group-hover:opacity-100 transition-opacity`}
