@@ -94,13 +94,16 @@ export function EvolutionSectionCard({
   return (
     <section
       className={cn(
-        "relative flex flex-col rounded-2xl border border-slate-200/70 bg-white shadow-sm overflow-hidden",
+        "relative flex flex-col rounded-2xl border border-slate-200/70 bg-white shadow-sm",
         className,
       )}
     >
       <span
         aria-hidden
-        className={cn("absolute inset-x-0 top-0 h-[3px]", colors.bar)}
+        className={cn(
+          "absolute inset-x-0 top-0 h-[3px] rounded-t-2xl pointer-events-none",
+          colors.bar,
+        )}
       />
 
       <header className="flex items-start justify-between gap-3 px-5 pt-5 pb-3">

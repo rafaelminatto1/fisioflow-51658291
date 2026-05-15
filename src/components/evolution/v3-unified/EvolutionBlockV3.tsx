@@ -148,15 +148,11 @@ const EvolutionItemRow: React.FC<EvolutionItemRowProps> = ({
     <Draggable draggableId={item.id} index={index} isDragDisabled={disabled}>
       {(provided, snapshot) => {
         const row = (
-          <motion.div
+          <div
             ref={provided.innerRef}
             {...provided.draggableProps}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95 }}
-            layout={!snapshot.isDragging}
             className={cn(
-              "group/item relative flex flex-col rounded-2xl border overflow-hidden mb-2.5 transition-[border-color,box-shadow,background-color,opacity] duration-200",
+              "group/item relative flex flex-col rounded-xl border overflow-hidden mb-1.5 transition-[border-color,box-shadow,background-color,opacity] duration-200",
               item.completed
                 ? "bg-muted/5 border-border/40"
                 : "bg-background border-border/60 shadow-sm",
@@ -172,7 +168,7 @@ const EvolutionItemRow: React.FC<EvolutionItemRowProps> = ({
             }}
           >
             {/* Row Header */}
-            <div className="flex items-center gap-3 p-3" ref={(el) => {
+            <div className="flex items-center gap-2 px-2.5 py-1.5" ref={(el) => {
               if (el && snapshot.isDragging) {
                 // Captura o width original para usar no portal
                 const parent = el.closest('.droppable-container');
@@ -193,20 +189,20 @@ const EvolutionItemRow: React.FC<EvolutionItemRowProps> = ({
             <div
               {...provided.dragHandleProps}
               className={cn(
-                "flex h-9 w-8 shrink-0 items-center justify-center -ml-1 rounded-lg cursor-grab active:cursor-grabbing",
+                "flex h-7 w-6 shrink-0 items-center justify-center rounded-md cursor-grab active:cursor-grabbing",
                 "text-muted-foreground/35 hover:bg-muted/50 hover:text-muted-foreground/80 transition-colors",
                 disabled && "cursor-not-allowed opacity-40",
               )}
               aria-label="Arrastar item na sequência"
             >
-              <GripVertical className="h-4 w-4" />
+              <GripVertical className="h-3.5 w-3.5" />
             </div>
 
             <Checkbox
               checked={item.completed}
               onCheckedChange={() => handleToggleItem(item.id)}
               disabled={disabled}
-              className="h-5 w-5 rounded-md data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+              className="h-4 w-4 rounded data-[state=checked]:bg-primary data-[state=checked]:border-primary"
             />
 
             <button
@@ -283,7 +279,7 @@ const EvolutionItemRow: React.FC<EvolutionItemRowProps> = ({
                 size="icon"
                 variant="ghost"
                 onClick={() => setExpandedId(isExpanded ? null : item.id)}
-                className="h-8 w-8 rounded-lg text-muted-foreground hover:text-primary transition-colors"
+                className="h-7 w-7 rounded-md text-muted-foreground hover:text-primary transition-colors"
               >
                 {isExpanded ? (
                   <ChevronUp className="h-4 w-4" />
@@ -297,7 +293,7 @@ const EvolutionItemRow: React.FC<EvolutionItemRowProps> = ({
                   <Button
                     size="icon"
                     variant="ghost"
-                    className="h-8 w-8 rounded-lg text-muted-foreground opacity-0 group-hover/item:opacity-100 transition-opacity focus-visible:opacity-100"
+                    className="h-7 w-7 rounded-md text-muted-foreground opacity-0 group-hover/item:opacity-100 transition-opacity focus-visible:opacity-100"
                     aria-label="Mais opções"
                   >
                     <MoreVertical className="h-4 w-4" />
@@ -396,7 +392,7 @@ const EvolutionItemRow: React.FC<EvolutionItemRowProps> = ({
               </motion.div>
             )}
           </AnimatePresence>
-          </motion.div>
+          </div>
         );
 
         if (snapshot.isDragging) {
@@ -800,53 +796,46 @@ export const EvolutionBlockV3: React.FC<EvolutionBlockV3Props> = ({
                 className="space-y-0.5 droppable-container"
               >
 
-                <AnimatePresence mode="popLayout">
-                  {items.length === 0 ? (
-                    <motion.div
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                      className="flex flex-col items-center justify-center py-8 px-4 rounded-2xl border border-dashed border-border/60 bg-muted/10"
-                    >
-                      <div className="p-3 rounded-full bg-muted/20 mb-3">
-                        <Activity className="h-5 w-5 text-muted-foreground/50" />
-                      </div>
-                      <p className="text-sm text-muted-foreground font-medium text-center">
-                        Nenhum item adicionado
-                      </p>
-                      {!disabled && (
-                        <button
-                          type="button"
-                          onClick={() => {
-                            const input = document.querySelector<HTMLInputElement>(
-                              `[data-evolution-input="${type}"]`,
-                            );
-                            input?.focus();
-                          }}
-                          className="mt-3 inline-flex items-center gap-1.5 text-[11px] font-bold text-primary/70 hover:text-primary transition-colors underline-offset-2 hover:underline"
-                        >
-                          <Plus className="h-3 w-3" />
-                          Adicionar primeiro item
-                        </button>
-                      )}
-                    </motion.div>
-                  ) : (
-                    items.map((item, index) => (
-                      <EvolutionItemRow
-                        key={item.id}
-                        item={item}
-                        index={index}
-                        type={type}
-                        disabled={disabled}
-                        expandedId={expandedId}
-                        setExpandedId={setExpandedId}
-                        handleToggleItem={handleToggleItem}
-                        handleRemoveItem={handleRemoveItem}
-                        handleUpdateItem={handleUpdateItem}
-                      />
-                    ))
-                  )}
-                </AnimatePresence>
+                {items.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-8 px-4 rounded-2xl border border-dashed border-border/60 bg-muted/10">
+                    <div className="p-3 rounded-full bg-muted/20 mb-3">
+                      <Activity className="h-5 w-5 text-muted-foreground/50" />
+                    </div>
+                    <p className="text-sm text-muted-foreground font-medium text-center">
+                      Nenhum item adicionado
+                    </p>
+                    {!disabled && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const input = document.querySelector<HTMLInputElement>(
+                            `[data-evolution-input="${type}"]`,
+                          );
+                          input?.focus();
+                        }}
+                        className="mt-3 inline-flex items-center gap-1.5 text-[11px] font-bold text-primary/70 hover:text-primary transition-colors underline-offset-2 hover:underline"
+                      >
+                        <Plus className="h-3 w-3" />
+                        Adicionar primeiro item
+                      </button>
+                    )}
+                  </div>
+                ) : (
+                  items.map((item, index) => (
+                    <EvolutionItemRow
+                      key={item.id}
+                      item={item}
+                      index={index}
+                      type={type}
+                      disabled={disabled}
+                      expandedId={expandedId}
+                      setExpandedId={setExpandedId}
+                      handleToggleItem={handleToggleItem}
+                      handleRemoveItem={handleRemoveItem}
+                      handleUpdateItem={handleUpdateItem}
+                    />
+                  ))
+                )}
                 {provided.placeholder}
               </div>
             )}
