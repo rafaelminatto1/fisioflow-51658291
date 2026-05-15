@@ -21,16 +21,21 @@ function mapApiEvolution(apiEvolution: ApiEvolution): Evolution {
     professionalId: apiEvolution.therapist_id,
     appointmentId: apiEvolution.appointment_id,
     date: new Date(apiEvolution.date),
+    observacao: apiEvolution.observacao ?? "",
+    painScale: apiEvolution.pain_scale ?? apiEvolution.pain_level ?? null,
+    procedures: (apiEvolution.procedures as Evolution["procedures"]) ?? [],
+    exercises: (apiEvolution.exercises as Evolution["exercises"]) ?? [],
+    measurements: (apiEvolution.measurements as Evolution["measurements"]) ?? [],
+    homeExercises: (apiEvolution.home_exercises as Evolution["homeExercises"]) ?? [],
+    attachments: apiEvolution.attachments || [],
+    createdAt: new Date(apiEvolution.created_at),
+    notes: "",
+    // Aliases legados — preserva ao ler para back-compat com componentes não migrados
     subjective: apiEvolution.subjective,
     objective: apiEvolution.objective,
     assessment: apiEvolution.assessment,
     plan: apiEvolution.plan,
     painLevel: apiEvolution.pain_level,
-    attachments: apiEvolution.attachments || [],
-    createdAt: new Date(apiEvolution.created_at),
-    // The following fields are not in the new table, so we use defaults
-    notes: "",
-    exercises: [],
   };
 }
 
@@ -78,11 +83,12 @@ export function useEvolutions(patientId: string, pageSize = DEFAULT_PAGE_SIZE) {
         patient_id: data.patientId,
         appointment_id: data.appointmentId,
         date: (data.date || new Date()).toISOString(),
-        subjective: data.subjective,
-        objective: data.objective,
-        assessment: data.assessment,
-        plan: data.plan,
-        pain_level: data.painLevel,
+        observacao: data.observacao,
+        pain_scale: data.painScale ?? data.painLevel ?? null,
+        procedures: data.procedures,
+        exercises: data.exercises,
+        measurements: data.measurements,
+        home_exercises: data.homeExercises,
         attachments: data.attachments,
       };
       const result = await apiCreateEvolution(apiData);
@@ -101,11 +107,12 @@ export function useEvolutions(patientId: string, pageSize = DEFAULT_PAGE_SIZE) {
     mutationFn: async ({ id, data }: { id: string; data: Partial<Evolution> }) => {
       const apiData: Partial<ApiEvolution> = {
         date: data.date?.toISOString(),
-        subjective: data.subjective,
-        objective: data.objective,
-        assessment: data.assessment,
-        plan: data.plan,
-        pain_level: data.painLevel,
+        observacao: data.observacao,
+        pain_scale: data.painScale ?? data.painLevel ?? null,
+        procedures: data.procedures,
+        exercises: data.exercises,
+        measurements: data.measurements,
+        home_exercises: data.homeExercises,
         attachments: data.attachments,
       };
       const result = await apiUpdateEvolution(id, apiData);
