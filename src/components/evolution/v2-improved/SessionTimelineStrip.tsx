@@ -11,6 +11,8 @@ interface SessionTimelineStripProps {
   patientId?: string;
   maxItems?: number;
   onSeeAll?: () => void;
+  /** Sessão atualmente em edição — não deve aparecer no histórico. */
+  excludeId?: string;
 }
 
 function painChipClasses(pain: number | null | undefined) {
@@ -24,8 +26,17 @@ export function SessionTimelineStrip({
   patientId,
   maxItems = 6,
   onSeeAll,
+  excludeId,
 }: SessionTimelineStripProps) {
-  const { data: records = [], isLoading } = useSoapRecords(patientId ?? "", maxItems);
+  const { data: rawRecords = [], isLoading } = useSoapRecords(
+    patientId ?? "",
+    maxItems + 1,
+  );
+
+  const records = useMemo(
+    () => (excludeId ? rawRecords.filter((r) => r.id !== excludeId) : rawRecords).slice(0, maxItems),
+    [rawRecords, excludeId, maxItems],
+  );
 
   const items = useMemo(() => {
     return records.map((r, index) => {
