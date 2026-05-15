@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import {
   Plus,
   Trash2,
@@ -11,8 +11,9 @@ import {
   MoreVertical,
   MessageSquare,
   GripVertical,
+  Search,
 } from "lucide-react";
-import { motion, AnimatePresence, LayoutGroup } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -21,13 +22,23 @@ import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Progress } from "@/components/ui/progress";
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { EvolutionItemV3, EvolutionBlockV3Props } from "./types";
+import type { EvolutionBlockV3Props, EvolutionItemType, EvolutionItemV3 } from "./types";
 import { COMMON_PROCEDURES } from "../v2-improved/types";
+import { useExercises } from "@/hooks/useExercises";
+import { accentIncludes } from "@/lib/utils/bilingualSearch";
 
 // Category colors for visual distinction
 const CATEGORY_COLORS: Record<string, string> = {
@@ -54,6 +65,57 @@ const CATEGORY_LABELS: Record<string, string> = {
   outro: "Outro",
 };
 
+const INTENSITY_LABELS: Record<string, string> = {
+  low: "Baixa",
+  medium: "Média",
+  high: "Alta",
+};
+
+function formatItemDetail(item: EvolutionItemV3) {
+  if (item.type === "exercise") {
+    return [
+      item.prescription
+        ? {
+            key: "prescription",
+            label: item.prescription,
+            className: "border-blue-200 bg-blue-50 text-blue-700",
+          }
+        : null,
+      item.patientFeedback
+        ? {
+            key: "feedback",
+            label: item.patientFeedback,
+            className: "border-indigo-200 bg-indigo-50 text-indigo-700",
+          }
+        : null,
+    ].filter(Boolean) as Array<{ key: string; label: string; className: string }>;
+  }
+
+  return [
+    item.category && item.category !== "outro"
+      ? {
+          key: "category",
+          label: CATEGORY_LABELS[item.category] || item.category,
+          className: CATEGORY_COLORS[item.category] || CATEGORY_COLORS.outro,
+        }
+      : null,
+    item.intensity
+      ? {
+          key: "intensity",
+          label: INTENSITY_LABELS[item.intensity] || item.intensity,
+          className: "border-amber-200 bg-amber-50 text-amber-700",
+        }
+      : null,
+    item.notes
+      ? {
+          key: "notes",
+          label: item.notes,
+          className: "border-slate-200 bg-slate-50 text-slate-700",
+        }
+      : null,
+  ].filter(Boolean) as Array<{ key: string; label: string; className: string }>;
+}
+
 interface EvolutionItemRowProps {
   item: EvolutionItemV3;
   index: number;
@@ -78,6 +140,7 @@ const EvolutionItemRow: React.FC<EvolutionItemRowProps> = ({
   type,
 }) => {
   const isExpanded = expandedId === item.id;
+  const itemDetails = formatItemDetail(item);
 
   return (
     <Draggable draggableId={item.id} index={index} isDragDisabled={disabled}>
@@ -88,22 +151,34 @@ const EvolutionItemRow: React.FC<EvolutionItemRowProps> = ({
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95 }}
-          layout
+          layout={!snapshot.isDragging}
           className={cn(
-            "group/item relative flex flex-col rounded-2xl border transition-all duration-200 overflow-hidden mb-2.5",
+            "group/item relative flex flex-col rounded-2xl border overflow-hidden mb-2.5 transition-[border-color,box-shadow,background-color,opacity] duration-200",
             item.completed
               ? "bg-muted/5 border-border/40"
               : "bg-background border-border/60 shadow-sm",
             isExpanded && "ring-1 ring-primary/20 border-primary/30 shadow-md",
             snapshot.isDragging &&
-              "shadow-[0_20px_50px_rgba(0,0,0,0.15)] ring-2 ring-primary/40 rotate-[1.5deg] z-[100] bg-background scale-[1.02]",
+              "z-[100] bg-background shadow-[0_14px_36px_rgba(15,23,42,0.16)] ring-1 ring-primary/35",
           )}
         >
           {/* Row Header */}
           <div className="flex items-center gap-3 p-3">
+            {/* Order number */}
+            <span
+              className="shrink-0 w-5 text-center text-[10px] font-bold text-muted-foreground/40 select-none"
+              aria-label={`Item ${index + 1}`}
+            >
+              {index + 1}
+            </span>
             <div
               {...provided.dragHandleProps}
-              className="p-1 -ml-1 cursor-grab active:cursor-grabbing text-muted-foreground/30 hover:text-muted-foreground/60 transition-colors"
+              className={cn(
+                "flex h-9 w-8 shrink-0 items-center justify-center -ml-1 rounded-lg cursor-grab active:cursor-grabbing",
+                "text-muted-foreground/35 hover:bg-muted/50 hover:text-muted-foreground/80 transition-colors",
+                disabled && "cursor-not-allowed opacity-40",
+              )}
+              aria-label="Arrastar item na sequência"
             >
               <GripVertical className="h-4 w-4" />
             </div>
@@ -115,13 +190,14 @@ const EvolutionItemRow: React.FC<EvolutionItemRowProps> = ({
               className="h-5 w-5 rounded-md data-[state=checked]:bg-primary data-[state=checked]:border-primary"
             />
 
-            <div
-              className="flex-1 cursor-pointer flex items-center min-w-0"
+            <button
+              type="button"
+              className="flex min-w-0 flex-1 cursor-pointer items-center gap-2 text-left"
               onClick={() => setExpandedId(isExpanded ? null : item.id)}
             >
               <span
                 className={cn(
-                  "text-sm font-semibold truncate transition-all duration-300 flex items-center gap-2",
+                  "min-w-0 shrink text-sm font-semibold transition-all duration-300 flex items-center gap-2",
                   item.completed &&
                     "text-muted-foreground/70 line-through decoration-muted-foreground/30 font-medium",
                 )}
@@ -132,29 +208,31 @@ const EvolutionItemRow: React.FC<EvolutionItemRowProps> = ({
                   ) : (
                     <Stethoscope className="h-3.5 w-3.5 text-emerald-500/70 shrink-0" />
                   ))}
-                {item.name}
+                <span className="truncate">{item.name}</span>
               </span>
 
-              {/* Procedure metadata badges */}
-              {item.type === "procedure" && (
-                <div className="flex items-center gap-1.5 ml-2">
-                  {item.category && item.category !== "outro" && (
+              {itemDetails.length > 0 && (
+                <div className="flex min-w-0 flex-1 items-center gap-1.5 overflow-hidden">
+                  {itemDetails.slice(0, 2).map((detail) => (
                     <Badge
+                      key={detail.key}
                       variant="outline"
+                      title={detail.label}
                       className={cn(
-                        "text-[9px] px-1.5 h-4 font-medium border-0",
-                        CATEGORY_COLORS[item.category],
+                        "h-5 min-w-0 max-w-[9rem] shrink-0 truncate border px-1.5 text-[10px] font-semibold",
+                        item.type === "exercise" && detail.key === "prescription" && "font-mono",
+                        detail.className,
                       )}
                     >
-                      {CATEGORY_LABELS[item.category]}
+                      <span className="truncate">{detail.label}</span>
                     </Badge>
-                  )}
-                  {item.intensity && (
+                  ))}
+                  {itemDetails.length > 2 && (
                     <Badge
                       variant="outline"
-                      className="text-[9px] px-1.5 h-4 font-bold border-yellow-200 bg-yellow-50 text-yellow-700"
+                      className="h-5 shrink-0 border-slate-200 bg-slate-50 px-1.5 text-[10px] font-semibold text-slate-600"
                     >
-                      {item.intensity}
+                      +{itemDetails.length - 2}
                     </Badge>
                   )}
                 </div>
@@ -179,7 +257,7 @@ const EvolutionItemRow: React.FC<EvolutionItemRowProps> = ({
                   </div>
                 )}
               </div>
-            </div>
+            </button>
 
             <div className="flex items-center gap-1">
               <Button
@@ -200,7 +278,8 @@ const EvolutionItemRow: React.FC<EvolutionItemRowProps> = ({
                   <Button
                     size="icon"
                     variant="ghost"
-                    className="h-8 w-8 rounded-lg text-muted-foreground"
+                    className="h-8 w-8 rounded-lg text-muted-foreground opacity-0 group-hover/item:opacity-100 transition-opacity focus-visible:opacity-100"
+                    aria-label="Mais opções"
                   >
                     <MoreVertical className="h-4 w-4" />
                   </Button>
@@ -318,8 +397,11 @@ export const EvolutionBlockV3: React.FC<EvolutionBlockV3Props> = ({
 }) => {
   const [newItemName, setNewItemName] = useState("");
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [newItemDialogOpen, setNewItemDialogOpen] = useState(false);
+  const [pendingItemName, setPendingItemName] = useState("");
 
   const [newItemType, setNewItemType] = useState<EvolutionItemType>("procedure");
+  const { exercises: libraryExercises } = useExercises();
 
   const completedCount = items.filter((item) => item.completed).length;
   const totalCount = items.length;
@@ -344,20 +426,29 @@ export const EvolutionBlockV3: React.FC<EvolutionBlockV3Props> = ({
   const defaultPlaceholder =
     type === "exercise" ? "Adicionar novo exercício..." : "Adicionar novo procedimento...";
 
-  const handleAddItem = () => {
-    if (!newItemName.trim()) return;
-
+  const appendItem = (item: Omit<EvolutionItemV3, "id" | "completed" | "order">) => {
     const newItem: EvolutionItemV3 = {
       id: crypto.randomUUID(),
-      name: newItemName.trim(),
-      completed: true, // Auto-complete when added manually in evolution
-      type: type === "unified" ? newItemType : type,
+      completed: false,
       order: items.length,
+      ...item,
     };
 
     onChange([...items, newItem]);
     setNewItemName("");
-    setExpandedId(newItem.id);
+    setPendingItemName("");
+    // Item starts collapsed; user expands manually to fill details
+  };
+
+  const addNewTypedItem = (name: string) => {
+    if (!name.trim()) return;
+
+    const itemType = type === "unified" ? newItemType : type;
+    appendItem({
+      name: name.trim(),
+      type: itemType,
+      ...(itemType === "exercise" ? { prescription: "3x10" } : { category: "outro" }),
+    });
   };
 
   const handleToggleItem = (id: string) => {
@@ -376,6 +467,7 @@ export const EvolutionBlockV3: React.FC<EvolutionBlockV3Props> = ({
 
   const onDragEnd = (result: DropResult) => {
     if (!result.destination) return;
+    if (result.source.index === result.destination.index) return;
 
     const reorderedItems = Array.from(items);
     const [removed] = reorderedItems.splice(result.source.index, 1);
@@ -390,26 +482,68 @@ export const EvolutionBlockV3: React.FC<EvolutionBlockV3Props> = ({
     onChange(finalItems);
   };
 
-  const suggestions = useMemo(() => {
-    if (!newItemName.trim() || newItemType !== "procedure") return [];
-    return COMMON_PROCEDURES.filter((p) =>
-      p.name.toLowerCase().includes(newItemName.toLowerCase()),
-    ).slice(0, 5);
-  }, [newItemName, newItemType]);
+  const procedureSuggestions = useMemo(() => {
+    if (!newItemName.trim() || (type === "unified" && newItemType !== "procedure")) return [];
+    if (type === "exercise") return [];
+    return COMMON_PROCEDURES.filter((procedure) =>
+      accentIncludes(procedure.name, newItemName),
+    ).slice(0, 8);
+  }, [newItemName, newItemType, type]);
 
-  const handleSelectSuggestion = (suggestion: (typeof COMMON_PROCEDURES)[0]) => {
-    const newItem: EvolutionItemV3 = {
-      id: crypto.randomUUID(),
+  const exerciseSuggestions = useMemo(() => {
+    if (!newItemName.trim() || (type === "unified" && newItemType !== "exercise")) return [];
+    if (type === "procedure") return [];
+    return libraryExercises
+      .filter((exercise) => accentIncludes(exercise.name, newItemName))
+      .slice(0, 8);
+  }, [libraryExercises, newItemName, newItemType, type]);
+
+  const hasSuggestions = procedureSuggestions.length > 0 || exerciseSuggestions.length > 0;
+
+  const handleSelectProcedureSuggestion = (suggestion: (typeof COMMON_PROCEDURES)[0]) => {
+    appendItem({
       name: suggestion.name,
-      completed: true,
       type: "procedure",
       category: suggestion.category,
-      order: items.length,
-    };
+    });
+  };
 
-    onChange([...items, newItem]);
-    setNewItemName("");
-    setExpandedId(newItem.id);
+  const handleSelectExerciseSuggestion = (exercise: (typeof libraryExercises)[number]) => {
+    appendItem({
+      name: exercise.name,
+      type: "exercise",
+      exerciseId: exercise.id,
+      prescription: `${exercise.sets || 3}x${exercise.repetitions || 10}`,
+    });
+  };
+
+  const handleAddItem = () => {
+    const trimmedName = newItemName.trim();
+    if (!trimmedName) return;
+
+    const exactProcedure = procedureSuggestions.find(
+      (procedure) => procedure.name.toLowerCase() === trimmedName.toLowerCase(),
+    );
+    if (exactProcedure) {
+      handleSelectProcedureSuggestion(exactProcedure);
+      return;
+    }
+
+    const exactExercise = exerciseSuggestions.find(
+      (exercise) => exercise.name.toLowerCase() === trimmedName.toLowerCase(),
+    );
+    if (exactExercise) {
+      handleSelectExerciseSuggestion(exactExercise);
+      return;
+    }
+
+    setPendingItemName(trimmedName);
+    setNewItemDialogOpen(true);
+  };
+
+  const handleConfirmNewItem = () => {
+    addNewTypedItem(pendingItemName);
+    setNewItemDialogOpen(false);
   };
 
   // Keyboard shortcuts
@@ -528,6 +662,7 @@ export const EvolutionBlockV3: React.FC<EvolutionBlockV3Props> = ({
           )}
           <div className="relative flex items-center group/input">
             <Input
+              data-evolution-input={type}
               value={newItemName}
               onChange={(e) => setNewItemName(e.target.value)}
               onKeyDown={handleKeyDown}
@@ -571,7 +706,7 @@ export const EvolutionBlockV3: React.FC<EvolutionBlockV3Props> = ({
 
             {/* Smart Suggestions Dropdown */}
             <AnimatePresence>
-              {suggestions.length > 0 && (
+              {hasSuggestions && (
                 <motion.div
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -580,13 +715,13 @@ export const EvolutionBlockV3: React.FC<EvolutionBlockV3Props> = ({
                 >
                   <div className="px-2 py-1.5 mb-1">
                     <span className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest">
-                      Sugestões Rápidas
+                      Selecione da biblioteca
                     </span>
                   </div>
-                  {suggestions.map((s) => (
+                  {procedureSuggestions.map((s) => (
                     <button
                       key={s.name}
-                      onClick={() => handleSelectSuggestion(s)}
+                      onClick={() => handleSelectProcedureSuggestion(s)}
                       className="w-full flex items-center justify-between p-2.5 rounded-xl hover:bg-primary/5 text-sm transition-all group/sug"
                     >
                       <div className="flex items-center gap-2.5">
@@ -594,6 +729,28 @@ export const EvolutionBlockV3: React.FC<EvolutionBlockV3Props> = ({
                           <Stethoscope className="h-3.5 w-3.5" />
                         </div>
                         <span className="font-medium">{s.name}</span>
+                      </div>
+                      <Plus className="h-3.5 w-3.5 text-muted-foreground/40 group-hover/sug:text-primary opacity-0 group-hover/sug:opacity-100 transition-all" />
+                    </button>
+                  ))}
+                  {exerciseSuggestions.map((exercise) => (
+                    <button
+                      key={exercise.id}
+                      onClick={() => handleSelectExerciseSuggestion(exercise)}
+                      className="w-full flex items-center justify-between p-2.5 rounded-xl hover:bg-primary/5 text-sm transition-all group/sug"
+                    >
+                      <div className="flex min-w-0 items-center gap-2.5">
+                        <div className="p-1.5 rounded-lg bg-blue-500/10 text-blue-700">
+                          <Dumbbell className="h-3.5 w-3.5" />
+                        </div>
+                        <div className="min-w-0 text-left">
+                          <span className="block truncate font-medium">{exercise.name}</span>
+                          {exercise.category && (
+                            <span className="block truncate text-xs text-muted-foreground">
+                              {exercise.category}
+                            </span>
+                          )}
+                        </div>
                       </div>
                       <Plus className="h-3.5 w-3.5 text-muted-foreground/40 group-hover/sug:text-primary opacity-0 group-hover/sug:opacity-100 transition-all" />
                     </button>
@@ -623,11 +780,23 @@ export const EvolutionBlockV3: React.FC<EvolutionBlockV3Props> = ({
                         <Activity className="h-5 w-5 text-muted-foreground/50" />
                       </div>
                       <p className="text-sm text-muted-foreground font-medium text-center">
-                        Nenhum item adicionado ainda
+                        Nenhum item adicionado
                       </p>
-                      <p className="text-[11px] text-muted-foreground/60 text-center mt-1">
-                        Adicione os procedimentos realizados ou exercícios prescritos
-                      </p>
+                      {!disabled && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const input = document.querySelector<HTMLInputElement>(
+                              `[data-evolution-input="${type}"]`,
+                            );
+                            input?.focus();
+                          }}
+                          className="mt-3 inline-flex items-center gap-1.5 text-[11px] font-bold text-primary/70 hover:text-primary transition-colors underline-offset-2 hover:underline"
+                        >
+                          <Plus className="h-3 w-3" />
+                          Adicionar primeiro item
+                        </button>
+                      )}
                     </motion.div>
                   ) : (
                     items.map((item, index) => (
@@ -652,6 +821,38 @@ export const EvolutionBlockV3: React.FC<EvolutionBlockV3Props> = ({
           </Droppable>
         </DragDropContext>
       </div>
+
+      <Dialog open={newItemDialogOpen} onOpenChange={setNewItemDialogOpen}>
+        <DialogContent className="sm:max-w-[460px] rounded-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Search className="h-5 w-5 text-primary" />
+              Item não encontrado
+            </DialogTitle>
+            <DialogDescription>
+              Não encontramos esse nome na biblioteca. Ajuste o texto ou confirme que é um novo{" "}
+              {(type === "unified" ? newItemType : type) === "exercise"
+                ? "exercício"
+                : "procedimento"}
+              .
+            </DialogDescription>
+          </DialogHeader>
+          <Input
+            value={pendingItemName}
+            onChange={(event) => setPendingItemName(event.target.value)}
+            className="h-10 rounded-xl"
+            autoFocus
+          />
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setNewItemDialogOpen(false)}>
+              Cancelar
+            </Button>
+            <Button onClick={handleConfirmNewItem} disabled={!pendingItemName.trim()}>
+              Adicionar como novo
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

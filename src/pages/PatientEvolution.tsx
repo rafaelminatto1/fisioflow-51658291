@@ -128,6 +128,7 @@ const PatientEvolution = () => {
             .filter(({ item }) => item.type === "procedure")
             .map(({ item, sequenceOrder }) => ({
               id: item.id,
+              exerciseId: item.exerciseId,
               name: item.name,
               completed: item.completed,
               sequenceOrder,
