@@ -8,6 +8,29 @@ export const SoapSchema = z.object({
 });
 export type Soap = z.infer<typeof SoapSchema>;
 
+/**
+ * Schema único do modelo pós-migração SOAP → observação livre (PR #71).
+ * O LLM devolve a observação clínica como texto narrativo e, opcionalmente,
+ * a EVA extraída do relato.
+ */
+export const EvolutionObservacaoSchema = z.object({
+  observacao: z
+    .string()
+    .describe(
+      "Texto narrativo único da evolução clínica: relato do paciente, achados do exame, " +
+        "análise e conduta integrados em prosa fisioterápica concisa em português brasileiro.",
+    ),
+  painScale: z
+    .number()
+    .int()
+    .min(0)
+    .max(10)
+    .nullable()
+    .optional()
+    .describe("EVA 0–10 extraída do relato quando mencionada. Null se ausente."),
+});
+export type EvolutionObservacao = z.infer<typeof EvolutionObservacaoSchema>;
+
 export const ExerciseSuggestionSchema = z.object({
   exercises: z
     .array(
