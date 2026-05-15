@@ -13,6 +13,7 @@ import {
   FastProcessingSchema,
   FormSuggestionSchema,
   TreatmentAdherenceSchema,
+  EvolutionObservacaoSchema,
 } from "../../schemas/ai-schemas";
 import {
   safeText,
@@ -20,6 +21,7 @@ import {
   buildClinicalReport,
   buildFormSuggestions,
   buildExecutiveSummary,
+  buildEvolutionFromText,
 } from "./ai-helpers";
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
@@ -478,6 +480,64 @@ app.post("/suggest-reply", async (c) => {
 app.post("/executive-summary", async (c) => {
   const body = (await c.req.json().catch(() => ({}))) as Record<string, unknown>;
   return c.json({ data: buildExecutiveSummary(body) });
+});
+
+/**
+ * Gera uma sugestão de observação clínica a partir do contexto que o app
+ * profissional já preencheu (texto parcial, procedimentos já anotados, EVA).
+ *
+ * Substitui o antigo `/soap-suggestions` semântico: o nome do path é mantido
+ * por compatibilidade com clientes existentes (mobile pro), mas a resposta
+ * vem no novo shape `{ observacao, painScale }` — sem campos S/O/A/P.
+ */
+app.post("/soap-suggestions", async (c) => {
+  const body = (await c.req.json().catch(() => ({}))) as Record<string, unknown>;
+  const context =
+    body.context && typeof body.context === "object" ? (body.context as Record<string, unknown>) : {};
+
+  const partial = safeText(context.observacao);
+  const proceduresArr = Array.isArray(context.procedures) ? (context.procedures as any[]) : [];
+  const proceduresLine = proceduresArr
+    .map((p) => (typeof p === "string" ? p : p?.name))
+    .filter(Boolean)
+    .join(", ");
+  const painLevel = typeof body.painLevel === "number" ? body.painLevel : undefined;
+
+  const prompt = `Você recebe o esboço de uma evolução fisioterápica e precisa devolver UMA
+observação clínica narrativa pronta para colar no prontuário (português
+brasileiro). Integre relato, achados, análise e conduta em prosa concisa, sem
+cabeçalhos S/O/A/P.
+
+Esboço parcial do fisio: "${partial || "(vazio)"}"
+${proceduresLine ? `Procedimentos realizados nesta sessão: ${proceduresLine}` : ""}
+${painLevel != null ? `EVA registrada: ${painLevel}/10` : ""}`;
+
+  const systemInstruction =
+    "Retorne JSON com `observacao` (texto narrativo único) e `painScale` (EVA 0–10 ou null). " +
+    "Use terminologia técnica fisioterápica em português brasileiro. Sem S/O/A/P.";
+
+  try {
+    const { data: evolution } = await smartStructured(c.env, {
+      task: "soap",
+      schema: EvolutionObservacaoSchema,
+      prompt,
+      systemInstruction,
+      thinkingLevel: "MEDIUM",
+      temperature: 0.4,
+    });
+    return c.json({
+      observacao: evolution.observacao,
+      painScale: evolution.painScale ?? painLevel ?? null,
+    });
+  } catch (error) {
+    const fallback = buildEvolutionFromText(partial);
+    return c.json({
+      observacao: fallback.observacao,
+      painScale: fallback.painScale ?? painLevel ?? null,
+      fallback: true,
+      error: error instanceof Error ? error.message : String(error),
+    });
+  }
 });
 
 /**

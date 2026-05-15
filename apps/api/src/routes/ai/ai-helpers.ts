@@ -49,9 +49,8 @@ export function buildExecutiveSummary(body: Record<string, unknown>) {
   };
 }
 
+/** @deprecated Mantida apenas pra back-compat até consumidores legados migrarem. */
 export function buildSoapFromText(text: string) {
-  // This will now be handled by a real LLM prompt in the route if needed,
-  // but keeping the fallback logic here.
   const lines = text
     .split("\n")
     .map((line) => line.trim())
@@ -66,6 +65,29 @@ export function buildSoapFromText(text: string) {
     plan:
       lines.slice(6, 8).join(" ") ||
       "Manter plano terapêutico, reforçar adesão e reavaliar na próxima sessão.",
+  };
+}
+
+/**
+ * Fallback heurístico no novo modelo: devolve a observação como texto único
+ * (sem partição S/O/A/P) e tenta extrair a EVA quando o relato menciona uma
+ * escala numérica de dor.
+ */
+export function buildEvolutionFromText(
+  text: string,
+): { observacao: string; painScale: number | null } {
+  const trimmed = (text ?? "").trim();
+  const painMatch = trimmed.match(/(?:eva|dor)[^\d]{0,12}(\d{1,2})(?:\s*\/\s*10)?/i);
+  let painScale: number | null = null;
+  if (painMatch) {
+    const n = Number(painMatch[1]);
+    if (Number.isFinite(n) && n >= 0 && n <= 10) painScale = n;
+  }
+  return {
+    observacao:
+      trimmed ||
+      "Paciente em acompanhamento fisioterapêutico — sem observação estruturada disponível.",
+    painScale,
   };
 }
 
