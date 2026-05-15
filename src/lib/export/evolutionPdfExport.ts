@@ -2,7 +2,6 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { formatClinicalText } from "@/lib/evolution/formatters";
 import { stripHtml } from "@/lib/utils/stripHtml";
 
 interface PatientData {
@@ -195,7 +194,10 @@ export const generateEvolutionPDF = (
   const sessionTableData = sessions.map((s, i) => {
     const obsText = s.observacao ? stripHtml(s.observacao) : s.observations || "";
     const procText = s.procedures?.length
-      ? `\nProc.: ${s.procedures.map((p) => p.name).filter(Boolean).join(", ")}`
+      ? `\nProc.: ${s.procedures
+          .map((p) => p.name)
+          .filter(Boolean)
+          .join(", ")}`
       : "";
     const exText = s.exercises?.length
       ? `\nExerc.: ${s.exercises

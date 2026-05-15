@@ -86,7 +86,6 @@ import { type SoapRecord, useSessionAttachments, useSoapRecords } from "@/hooks/
 import { getAffectedSideAbbreviation } from "@/lib/constants/surgery";
 import { cn } from "@/lib/utils";
 import { stripHtml } from "@/lib/utils/stripHtml";
-import { formatClinicalSummary, formatClinicalText } from "@/lib/evolution/formatters";
 import type {
   AttachmentData,
   MeasurementData,
@@ -706,7 +705,7 @@ export const EvolutionTimeline: React.FC<EvolutionTimelineProps> = ({
     soapRecords.forEach((record) => {
       const obsText = stripHtml(record.observacao || "");
       const hasContent = obsText.length > 0;
-      
+
       const legacySoap = [
         record.subjective && "S",
         record.objective && "O",
