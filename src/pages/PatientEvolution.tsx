@@ -90,10 +90,10 @@ const LazyPatientMediaGallery = lazy(() =>
   })),
 );
 
-// Lazy editor (modo único — texto livre com layout em grid)
-const LazyLiveTextEvolution = lazy(() =>
-  import("@/components/evolution/live-text/LiveTextEvolution").then((m) => ({
-    default: m.LiveTextEvolution,
+// Lazy editor (modo premium com cabeçalho)
+const LazyNotionEvolutionPanel = lazy(() =>
+  import("@/components/evolution/v2-improved/NotionEvolutionPanel").then((m) => ({
+    default: m.NotionEvolutionPanel,
   })),
 );
 
@@ -337,20 +337,13 @@ const PatientEvolution = () => {
   const mainGridContent = useMemo(() => {
     return (
       <Suspense fallback={<LoadingSkeleton type="card" />}>
-        <LazyLiveTextEvolution
-          data={state.evolutionData}
-          onChange={state.setEvolutionData}
+        <LazyNotionEvolutionPanel
+          data={state.evolutionV2Data}
+          onChange={state.setEvolutionV2Data}
           patientId={state.patientId}
           evolutionId={state.currentSoapRecordId}
-          previousEvolutions={state.previousEvolutions as any}
-          homeExercisesText={(state.evolutionV2Data as any).homeCareExercises || ""}
-          onHomeExercisesTextChange={(text) =>
-            state.setEvolutionV2Data((prev: any) => ({ ...prev, homeCareExercises: text }))
-          }
-          attachments={(state.evolutionV2Data as any).attachments || []}
-          onAttachmentsChange={(urls) =>
-            state.setEvolutionV2Data((prev: any) => ({ ...prev, attachments: urls }))
-          }
+          isEdited={state.isEdited}
+          lastSavedAt={lastSavedAt}
         />
       </Suspense>
     );
