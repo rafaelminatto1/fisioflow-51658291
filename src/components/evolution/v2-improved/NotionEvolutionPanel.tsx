@@ -259,6 +259,7 @@ export const NotionEvolutionPanel: React.FC<NotionEvolutionPanelProps> = ({
             >
               <SessionTimelineStrip
                 patientId={patientId}
+                excludeId={evolutionId}
                 onSeeAll={onNavigateToHistorico}
               />
             </EvolutionSectionCard>
