@@ -17,6 +17,7 @@ import { format, formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useSoapRecords } from "@/hooks/useSoapRecords";
 import { cn } from "@/lib/utils";
+import { stripHtml } from "@/lib/utils/stripHtml";
 import type {
   ProcedureItem,
   ExerciseItem,
@@ -37,9 +38,6 @@ interface SessionHistoryPanelProps {
   onSelectSession?: (sessionId: string) => void;
   maxItems?: number;
 }
-
-const stripHtml = (html: string) =>
-  html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
 
 export const SessionHistoryPanel: React.FC<SessionHistoryPanelProps> = ({
   patientId,

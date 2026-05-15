@@ -85,6 +85,7 @@ import {
 import { type SoapRecord, useSessionAttachments, useSoapRecords } from "@/hooks/useSoapRecords";
 import { getAffectedSideAbbreviation } from "@/lib/constants/surgery";
 import { cn } from "@/lib/utils";
+import { stripHtml } from "@/lib/utils/stripHtml";
 import { formatClinicalSummary, formatClinicalText } from "@/lib/evolution/formatters";
 import type {
   AttachmentData,
@@ -219,8 +220,7 @@ const SessionDetailsModal: React.FC<{
     (a) => (a as any).soap_record_id === session.id || (a as any).session_id === session.id,
   );
 
-  const stripHtml = (html: string) =>
-    html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+  // stripHtml importado de @/lib/utils/stripHtml
   const observacaoText = stripHtml((session as any).observacao || "");
   const hasObservacao = observacaoText.length > 0;
   const painScale = (session as any).pain_scale ?? (session as any).pain_level ?? null;
@@ -1218,94 +1218,28 @@ export const EvolutionTimeline: React.FC<EvolutionTimelineProps> = ({
                                               </Badge>
                                             </div>
                                           </div>
-                                          {(event.data as SoapRecord).pain_level !== undefined && (
-                                            <div className="text-xs">
-                                              <span className="text-muted-foreground">EVA:</span>{" "}
-                                              <span className="font-medium">
-                                                {(event.data as SoapRecord).pain_level}
-                                                /10
-                                              </span>
-                                            </div>
-                                          )}
+                                          {(() => {
+                                            const rec = event.data as SoapRecord;
+                                            const pain = rec.pain_scale ?? rec.pain_level;
+                                            return pain != null ? (
+                                              <div className="text-xs">
+                                                <span className="text-muted-foreground">EVA:</span>{" "}
+                                                <span className="font-medium">{pain}/10</span>
+                                              </div>
+                                            ) : null;
+                                          })()}
 
-                                          {/* Resumo SOAP */}
-                                          {((event.data as SoapRecord).subjective ||
-                                            (event.data as SoapRecord).objective ||
-                                            (event.data as SoapRecord).assessment ||
-                                            (event.data as SoapRecord).plan) && (
-                                            <div className="mt-2 space-y-2">
-                                              {(
-                                                [
-                                                  "subjective",
-                                                  "objective",
-                                                  "assessment",
-                                                  "plan",
-                                                ] as const
-                                              ).map((field) => {
-                                                const content = (event.data as SoapRecord)[field];
-                                                if (!content) return null;
-
-                                                const summary = formatClinicalSummary(content);
-                                                const fieldLabel = field.charAt(0).toUpperCase();
-                                                const bgColors: Record<string, string> = {
-                                                  subjective: "bg-blue-50 dark:bg-blue-950/20",
-                                                  objective: "bg-green-50 dark:bg-green-950/20",
-                                                  assessment: "bg-purple-50 dark:bg-purple-950/20",
-                                                  plan: "bg-amber-50 dark:bg-amber-950/20",
-                                                };
-                                                const textColors: Record<string, string> = {
-                                                  subjective: "text-blue-600",
-                                                  objective: "text-green-600",
-                                                  assessment: "text-purple-600",
-                                                  plan: "text-amber-600",
-                                                };
-
-                                                return (
-                                                  <div
-                                                    key={field}
-                                                    className={cn(
-                                                      "text-xs p-2 rounded-lg",
-                                                      bgColors[field],
-                                                    )}
-                                                  >
-                                                    <div className="flex items-start gap-2">
-                                                      <span
-                                                        className={cn(
-                                                          "font-bold mt-0.5",
-                                                          textColors[field],
-                                                        )}
-                                                      >
-                                                        {fieldLabel}:
-                                                      </span>
-                                                      <div className="flex-1">
-                                                        {Array.isArray(summary) ? (
-                                                          <div className="space-y-1">
-                                                            {summary.map((item) => (
-                                                              <div
-                                                                key={item.label}
-                                                                className="flex gap-1.5"
-                                                              >
-                                                                <span className="font-semibold text-[10px] uppercase opacity-90 min-w-[50px]">
-                                                                  {item.label}:
-                                                                </span>
-                                                                <span className="line-clamp-2">
-                                                                  {item.value}
-                                                                </span>
-                                                              </div>
-                                                            ))}
-                                                          </div>
-                                                        ) : (
-                                                          <span className="line-clamp-2">
-                                                            {summary}
-                                                          </span>
-                                                        )}
-                                                      </div>
-                                                    </div>
-                                                  </div>
-                                                );
-                                              })}
-                                            </div>
-                                          )}
+                                          {(() => {
+                                            const obs = (event.data as SoapRecord).observacao;
+                                            if (!obs) return null;
+                                            const plain = stripHtml(obs);
+                                            if (!plain) return null;
+                                            return (
+                                              <div className="mt-2 text-xs p-2 rounded-lg bg-[#F7F6F3] dark:bg-zinc-900 line-clamp-3">
+                                                {plain}
+                                              </div>
+                                            );
+                                          })()}
                                         </>
                                       )}
 

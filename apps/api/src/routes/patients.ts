@@ -6,6 +6,7 @@ import { requireAuth, type AuthVariables } from "../lib/auth";
 import type { CustomVariables } from "../middleware/requestId";
 import { createDb, createPool } from "../lib/db";
 import { withTenant } from "../lib/db-utils";
+import { stripHtml } from "../lib/stripHtml";
 import { triggerInngestEvent } from "../lib/inngest-client";
 import { registerPatientClinicalDetailRoutes } from "./patients/clinical-details";
 import { isUuid } from "../lib/validators";
@@ -1556,7 +1557,7 @@ app.get("/:id/timeline", async (c) => {
 
     const evolutions = sessionRows.map((row) => {
       const observacao = typeof row.observacao === "string" ? row.observacao : "";
-      const preview = observacao.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+      const preview = stripHtml(observacao);
 
       return {
         id: row.id,

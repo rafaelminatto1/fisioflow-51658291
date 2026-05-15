@@ -13,6 +13,7 @@
 import React, { useState, useMemo } from "react";
 import { FileText, Plus, ChevronDown, Search, Star } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { stripHtml } from "@/lib/utils/stripHtml";
 import { expandSearchQuery, normalizeForSearch } from "@/lib/utils/bilingualSearch";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -83,16 +84,6 @@ const CATEGORY_META: Record<
       "border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-800 dark:bg-rose-950 dark:text-rose-300",
   },
 };
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Strip HTML from rich template content for preview and search
-// ─────────────────────────────────────────────────────────────────────────────
-function stripHtml(html: string): string {
-  return html
-    .replace(/<[^>]+>/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
-}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Legacy plain-text templates (kept for backwards compat)

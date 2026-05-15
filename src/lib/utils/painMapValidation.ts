@@ -1,5 +1,6 @@
 import type { PainPoint } from "@/components/pain-map/BodyMap";
 import { PainType } from "@/types/painMap";
+import { stripHtml } from "@/lib/utils/stripHtml";
 
 export interface ValidationError {
   field: string;
@@ -174,11 +175,10 @@ export function validateDuplicatePoints(points: PainPoint[]): ValidationResult {
 
 // Sanitizar entrada de texto
 export function sanitizeTextInput(input: string): string {
-  return input
-    .trim()
-    .replace(/<script[^>]*>.*?<\/script>/gi, "")
-    .replace(/<[^>]+>/g, "")
-    .slice(0, 500); // Limitar tamanho
+  // stripHtml é idempotente — payloads malformados tipo `<<scr<x>ipt>` são
+  // removidos completamente (loop até estabilizar), evitando bypass que
+  // sobreviveria a um único replace.
+  return stripHtml(input).slice(0, 500);
 }
 
 // Validar e sanitizar um ponto antes de salvar
