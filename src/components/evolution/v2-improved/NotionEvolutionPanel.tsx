@@ -37,6 +37,8 @@ import { PainLevelBlock } from "./PainLevelBlock";
 import { HomeCareBlock } from "./HomeCareBlock";
 import { AttachmentsBlock } from "./AttachmentsBlock";
 import { MeasurementsBlock } from "./MeasurementsBlock";
+import { EvolutionSectionCard } from "./EvolutionSectionCard";
+import { SessionTimelineStrip } from "./SessionTimelineStrip";
 import { ExerciseLibraryModal } from "@/components/exercises/ExerciseLibraryModal";
 import { COMMON_PROCEDURES, PROCEDURE_CATEGORY_LABELS } from "./types";
 import type { EvolutionV2Data } from "./types";
@@ -52,6 +54,7 @@ interface NotionEvolutionPanelProps {
   className?: string;
   patientId?: string;
   evolutionId?: string;
+  onNavigateToHistorico?: () => void;
 }
 
 export const NotionEvolutionPanel: React.FC<NotionEvolutionPanelProps> = ({
@@ -65,6 +68,7 @@ export const NotionEvolutionPanel: React.FC<NotionEvolutionPanelProps> = ({
   className,
   patientId,
   evolutionId,
+  onNavigateToHistorico,
 }) => {
   const [procedureLibraryOpen, setProcedureLibraryOpen] = useState(false);
   const [exerciseLibraryOpen, setExerciseLibraryOpen] = useState(false);
@@ -149,88 +153,80 @@ export const NotionEvolutionPanel: React.FC<NotionEvolutionPanelProps> = ({
         <div className="flex-1 overflow-y-auto p-3 sm:p-5">
           <div className="mx-auto flex w-full max-w-[1440px] flex-col gap-5 pb-12">
 
-            <div className="grid grid-cols-1 lg:grid-cols-[minmax(280px,1fr)_2fr] gap-5">
-              {/* Left Column: EVA */}
-              <div className="flex flex-col gap-5">
-                <div className="rounded-2xl bg-red-500/5 border border-red-500/10 p-4 transition-all hover:bg-red-500/10 overflow-hidden flex flex-col">
-                  <div className="flex items-center gap-2 mb-3">
-                    <div className="p-1.5 rounded-lg bg-red-500/20">
-                      <Activity className="h-4 w-4 text-red-600 dark:text-red-400" />
-                    </div>
-                    <h3 className="font-semibold text-red-900 dark:text-red-300 text-sm">Nível de Dor</h3>
-                  </div>
-                  <div className="flex-1 -mx-3 -mb-3">
-                    <PainLevelBlock
-                      painLevel={data.painLevel}
-                      painLocation={data.painLocation}
-                      onPainLevelChange={(level) => handleFieldChange("painLevel", level)}
-                      onPainLocationChange={(location) => handleFieldChange("painLocation", location)}
-                      disabled={disabled}
-                    />
-                  </div>
-                </div>
-              </div>
+            {/* Linha 1: EVA + Observações Clínicas */}
+            <div className="grid grid-cols-1 lg:grid-cols-[minmax(320px,1fr)_2fr] gap-5">
+              <EvolutionSectionCard
+                accent="rose"
+                icon={Activity}
+                title="Nível de Dor"
+                subtitle="Escala Visual Analógica (EVA)"
+                flushContent
+              >
+                <PainLevelBlock
+                  painLevel={data.painLevel}
+                  painLocation={data.painLocation}
+                  onPainLevelChange={(level) => handleFieldChange("painLevel", level)}
+                  onPainLocationChange={(location) =>
+                    handleFieldChange("painLocation", location)
+                  }
+                  disabled={disabled}
+                />
+              </EvolutionSectionCard>
 
-              {/* Right Column: Free Text Evolution */}
-              <div className="flex flex-col min-w-0">
-                <div className="rounded-2xl border border-amber-500/20 bg-amber-500/5 overflow-hidden flex flex-col transition-all hover:bg-amber-500/10" style={{ minHeight: 180 }}>
-                  <div className="flex items-center gap-2 px-4 pt-3 pb-2">
-                    <div className="p-1.5 rounded-lg bg-amber-500/20">
-                      <StickyNote className="h-4 w-4 text-amber-600 dark:text-amber-400" />
-                    </div>
-                    <h3 className="font-semibold text-amber-900 dark:text-amber-300 text-sm">Observações Clínicas</h3>
-                  </div>
-                  <RichTextBlock
-                    title=""
-                    placeholder="Orientações gerais, encaminhamentos, cuidados e notas da sessão..."
-                    value={data.evolutionText || data.observations}
-                    onValueChange={(val) => {
-                      handleFieldChange("evolutionText", val);
-                      handleFieldChange("observations", val);
-                    }}
-                    disabled={disabled}
-                    className="flex-1 border-none shadow-none bg-transparent"
-                    accentColor="amber"
-                  />
-                </div>
-              </div>
+              <EvolutionSectionCard
+                accent="amber"
+                icon={StickyNote}
+                title="Observações Clínicas"
+                subtitle="Notas livres da sessão"
+                flushContent
+              >
+                <RichTextBlock
+                  title=""
+                  placeholder="Orientações gerais, encaminhamentos, cuidados e notas da sessão..."
+                  value={data.evolutionText || data.observations}
+                  onValueChange={(val) => {
+                    handleFieldChange("evolutionText", val);
+                    handleFieldChange("observations", val);
+                  }}
+                  disabled={disabled}
+                  className="border-none shadow-none bg-transparent"
+                  accentColor="amber"
+                />
+              </EvolutionSectionCard>
             </div>
 
-            {/* Card Verde: Procedimentos e Exercícios */}
-            <div className="rounded-2xl bg-emerald-500/5 border border-emerald-500/10 p-4 transition-all hover:bg-emerald-500/10 flex flex-col gap-3">
-              <div className="flex items-center justify-between gap-3">
-                <div className="flex items-center gap-2">
-                  <div className="p-1.5 rounded-xl bg-emerald-500/20">
-                    <Activity className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
-                  </div>
-                  <h3 className="font-semibold text-emerald-900 dark:text-emerald-300 text-sm">
-                    Procedimentos & Exercícios
-                  </h3>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-8 rounded-xl border border-emerald-500/20 text-emerald-700 text-xs hover:bg-emerald-500/10"
-                    onClick={() => setProcedureLibraryOpen(true)}
-                    disabled={disabled}
-                  >
-                    <Stethoscope className="h-3.5 w-3.5 mr-1.5" />
-                    Procedimentos
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-8 rounded-xl border border-blue-500/20 text-blue-700 text-xs hover:bg-blue-500/10"
-                    onClick={() => setExerciseLibraryOpen(true)}
-                    disabled={disabled}
-                  >
-                    <Dumbbell className="h-3.5 w-3.5 mr-1.5" />
-                    Exercícios
-                  </Button>
-                </div>
-              </div>
-              <div className="-mx-4 -mb-4 px-4 pb-4 bg-background/30 rounded-b-2xl">
+            {/* Linha 2: Procedimentos & Exercícios + Medições */}
+            <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-5">
+              <EvolutionSectionCard
+                accent="emerald"
+                icon={Activity}
+                title="Procedimentos & Exercícios"
+                subtitle="Sequência da sessão"
+                actions={
+                  <>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 rounded-xl border border-emerald-200 text-emerald-700 text-xs hover:bg-emerald-50"
+                      onClick={() => setProcedureLibraryOpen(true)}
+                      disabled={disabled}
+                    >
+                      <Stethoscope className="h-3.5 w-3.5 mr-1.5" />
+                      Procedimentos
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 rounded-xl border border-blue-200 text-blue-700 text-xs hover:bg-blue-50"
+                      onClick={() => setExerciseLibraryOpen(true)}
+                      disabled={disabled}
+                    >
+                      <Dumbbell className="h-3.5 w-3.5 mr-1.5" />
+                      Exercícios
+                    </Button>
+                  </>
+                }
+              >
                 <EvolutionBlockV3
                   items={unifiedItems}
                   onChange={handleUnifiedItemsChange}
@@ -238,74 +234,78 @@ export const NotionEvolutionPanel: React.FC<NotionEvolutionPanelProps> = ({
                   title="Sequência da sessão"
                   disabled={disabled}
                 />
-              </div>
-            </div>
+              </EvolutionSectionCard>
 
-            {/* Card Rosa: Medições */}
-            <div className="rounded-2xl bg-pink-500/5 border border-pink-500/10 p-4 transition-all hover:bg-pink-500/10 flex flex-col">
-              <div className="flex items-center gap-2 mb-3">
-                <div className="p-1.5 rounded-lg bg-pink-500/20">
-                  <Ruler className="h-4 w-4 text-pink-600 dark:text-pink-400" />
-                </div>
-                <h3 className="font-semibold text-pink-900 dark:text-pink-300 text-sm">Medições</h3>
-              </div>
-              <div className="-mx-4 -mb-4 px-4 pb-4">
+              <EvolutionSectionCard
+                accent="pink"
+                icon={Ruler}
+                title="Medições"
+                subtitle="Sinais vitais e antropometria"
+              >
                 <MeasurementsBlock
                   measurements={data.measurements || []}
                   onChange={(meas) => handleFieldChange("measurements", meas)}
                   disabled={disabled}
                 />
-              </div>
+              </EvolutionSectionCard>
             </div>
 
-            {/* Card Cinza: Home Care */}
-            <div className="rounded-2xl bg-zinc-500/5 border border-zinc-500/10 p-4 transition-all hover:bg-zinc-500/10 flex flex-col">
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-2">
-                  <div className="p-1.5 rounded-lg bg-zinc-500/20">
-                    <Home className="h-4 w-4 text-zinc-600 dark:text-zinc-400" />
-                  </div>
-                  <h3 className="font-semibold text-zinc-900 dark:text-zinc-300 text-sm">Exercícios para Casa</h3>
-                </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-8 rounded-xl border border-zinc-500/20 text-zinc-700 text-xs hover:bg-zinc-500/10"
-                  onClick={() => setExerciseLibraryOpen(true)}
-                  disabled={disabled}
-                >
-                  <Library className="h-3.5 w-3.5 mr-1.5" />
-                  Biblioteca
-                </Button>
-              </div>
-              <div className="-mx-4 -mb-4 px-4 pb-4">
+            {/* Linha 3: Histórico de Sessões (timeline) */}
+            <EvolutionSectionCard
+              accent="blue"
+              icon={History}
+              title="Histórico de Sessões"
+              subtitle="Últimas evoluções deste paciente"
+            >
+              <SessionTimelineStrip
+                patientId={patientId}
+                onSeeAll={onNavigateToHistorico}
+              />
+            </EvolutionSectionCard>
+
+            {/* Linha 4: Exercícios para Casa + Anexos */}
+            <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-5">
+              <EvolutionSectionCard
+                accent="slate"
+                icon={Home}
+                title="Exercícios para Casa"
+                subtitle="HEP — Home Exercise Program"
+                actions={
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 rounded-xl border border-slate-200 text-slate-700 text-xs hover:bg-slate-50"
+                    onClick={() => setExerciseLibraryOpen(true)}
+                    disabled={disabled}
+                  >
+                    <Library className="h-3.5 w-3.5 mr-1.5" />
+                    Biblioteca
+                  </Button>
+                }
+              >
                 <HomeCareBlock
                   value={data.homeCareExercises || ""}
                   onChange={(val) => handleFieldChange("homeCareExercises", val)}
                   disabled={disabled}
-                  className="border-none shadow-none bg-background/50 rounded-xl"
+                  className="border-none shadow-none bg-slate-50/60 rounded-xl"
                 />
-              </div>
-            </div>
+              </EvolutionSectionCard>
 
-            {/* Card Preto: Anexos */}
-            <div className="rounded-2xl bg-zinc-900 border border-zinc-800 p-4 transition-all hover:bg-zinc-800/90 text-zinc-100 flex flex-col">
-              <div className="flex items-center gap-2 mb-3">
-                <div className="p-1.5 rounded-lg bg-zinc-800">
-                  <Paperclip className="h-4 w-4 text-zinc-300" />
-                </div>
-                <h3 className="font-semibold text-zinc-100 text-sm">Anexos</h3>
-              </div>
-              <div className="-mx-4 -mb-4 px-4 pb-4">
+              <EvolutionSectionCard
+                accent="zinc"
+                icon={Paperclip}
+                title="Anexos"
+                subtitle="Fotos, exames e documentos"
+              >
                 <AttachmentsBlock
                   patientId={patientId}
                   evolutionId={evolutionId}
                   value={data.attachments || []}
                   onChange={(val) => handleFieldChange("attachments", val)}
                   disabled={disabled}
-                  className="border-none shadow-none bg-zinc-950/50 rounded-xl"
+                  className="border-none shadow-none bg-zinc-50/60 rounded-xl"
                 />
-              </div>
+              </EvolutionSectionCard>
             </div>
           </div>
         </div>
