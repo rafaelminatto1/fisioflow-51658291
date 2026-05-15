@@ -1231,11 +1231,28 @@ app.get("/progress", async (c) => {
         record_date: (row as DbRow).session_date
           ? String((row as DbRow).session_date)
           : new Date().toISOString(),
-        subjective: trimmedString((row as DbRow).subjective) ?? null,
-        objective: trimmedString((row as DbRow).objective) ?? null,
-        assessment: trimmedString((row as DbRow).assessment) ?? null,
-        plan: trimmedString((row as DbRow).plan) ?? null,
+        // Modelo pós-migração: observação livre + estruturados. Mantém
+        // aliases legados (subjective/assessment/plan) zerados pra
+        // back-compat enquanto consumidores ainda referenciam.
+        observacao: trimmedString((row as DbRow).observacao) ?? null,
+        pain_scale:
+          nullableNumber((row as DbRow).pain_scale) ??
+          nullableNumber((row as DbRow).pain_level_after) ??
+          nullableNumber((row as DbRow).pain_level_before) ??
+          null,
+        procedures: Array.isArray((row as DbRow).procedures) ? (row as DbRow).procedures : [],
+        exercises: Array.isArray((row as DbRow).exercises) ? (row as DbRow).exercises : [],
+        measurements: Array.isArray((row as DbRow).measurements) ? (row as DbRow).measurements : [],
+        home_exercises: Array.isArray((row as DbRow).home_exercises)
+          ? (row as DbRow).home_exercises
+          : [],
+        // Aliases legados (sempre null no novo modelo — clientes migrados leem `observacao`)
+        subjective: null,
+        objective: null,
+        assessment: null,
+        plan: null,
         pain_level:
+          nullableNumber((row as DbRow).pain_scale) ??
           nullableNumber((row as DbRow).pain_level_after) ??
           nullableNumber((row as DbRow).pain_level_before) ??
           0,
@@ -1355,9 +1372,11 @@ app.get("/ai-snapshot", async (c) => {
 
   if (!patientId) return c.json({ error: "Paciente não encontrado" }, 404);
 
-  // Re-utiliza a mesma lógica do clinicMetrics para manter consistência
+  // Modelo único pós-migração SOAP→observação. As colunas
+  // subjective/objective/assessment/plan foram dropadas; usamos
+  // observacao + estruturados.
   const history = await pool.query(
-    `SELECT s.content, s.date, s.subjective, s.assessment, s.objective, s.plan
+    `SELECT s.date, s.observacao, s.pain_scale, s.procedures, s.exercises, s.measurements, s.home_exercises
      FROM sessions s
      WHERE s.patient_id = $1 AND s.organization_id = $2
      ORDER BY s.date DESC
