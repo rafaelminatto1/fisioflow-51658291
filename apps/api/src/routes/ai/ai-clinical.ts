@@ -502,20 +502,25 @@ app.post("/summarize-patient", async (c) => {
         const { neon } = await import("@neondatabase/serverless");
         const sql = neon(url);
         const rows = await sql`
-          SELECT s.subjective, s.objective, s.assessment, s.plan, s.session_date
+          SELECT s.observacao, s.pain_scale, s.procedures, s.exercises, s.date AS session_date
           FROM sessions s
           JOIN appointments a ON s.appointment_id = a.id
           WHERE a.patient_id = ${patientId}
             AND a.organization_id = ${user.organizationId}
-          ORDER BY s.session_date DESC
+          ORDER BY s.date DESC
           LIMIT 5
         `;
         if (rows.length) {
           clinicalContext = rows
-            .map(
-              (r: any) =>
-                `[${r.session_date}] S: ${r.subjective} | O: ${r.objective} | A: ${r.assessment} | P: ${r.plan}`,
-            )
+            .map((r: any) => {
+              const pain = r.pain_scale != null ? ` | EVA ${r.pain_scale}/10` : "";
+              const procCount = Array.isArray(r.procedures) ? r.procedures.length : 0;
+              const exCount = Array.isArray(r.exercises) ? r.exercises.length : 0;
+              const counts = procCount || exCount
+                ? ` | ${procCount} procedimentos, ${exCount} exercícios`
+                : "";
+              return `[${r.session_date}] ${r.observacao ?? ""}${pain}${counts}`;
+            })
             .join("\n");
         }
       }
@@ -533,7 +538,7 @@ app.post("/summarize-patient", async (c) => {
     const contextHeader = [
       condition ? `Condição principal: ${condition}` : "",
       sessions != null ? `Total de sessões: ${sessions}` : "",
-      "Últimas evoluções SOAP:",
+      "Últimas evoluções (observação clínica):",
     ]
       .filter(Boolean)
       .join("\n");
@@ -554,13 +559,22 @@ app.post("/summarize-patient", async (c) => {
 app.post("/peer-review", async (c) => {
   const user = c.get("user");
   const body = await c.req.json();
-  const { subjective = "", objective = "", assessment = "", plan = "" } = body as Record<
-    string,
-    string
-  >;
+  const {
+    observacao = "",
+    subjective = "",
+    objective = "",
+    assessment = "",
+    plan = "",
+  } = body as Record<string, string>;
 
-  if (!subjective && !objective && !assessment && !plan) {
-    return c.json({ error: "Nota SOAP vazia" }, 422);
+  // Modelo único pós-migração SOAP→observação. Aceita `observacao` direto
+  // OU concatena campos legados (S/O/A/P) caso clientes ainda não migrados
+  // enviem nesse formato.
+  const noteText =
+    observacao || [subjective, objective, assessment, plan].filter(Boolean).join("\n\n");
+
+  if (!noteText.trim()) {
+    return c.json({ error: "Nota clínica vazia" }, 422);
   }
 
   try {
@@ -569,21 +583,18 @@ app.post("/peer-review", async (c) => {
       task: "soap-review",
       organizationId: user.organizationId,
       systemInstruction:
-        "Você é um fisioterapeuta sênior avaliando a qualidade de notas clínicas SOAP. Responda sempre em JSON válido.",
+        "Você é um fisioterapeuta sênior avaliando a qualidade de uma evolução clínica narrativa. Responda sempre em JSON válido.",
       prompt: `
-Avalie a seguinte nota SOAP de fisioterapia e retorne um JSON com este formato exato:
+Avalie a seguinte evolução clínica de fisioterapia e retorne um JSON com este formato exato:
 {
   "score": <número de 0 a 100 representando qualidade geral>,
   "insights": [<lista de pontos fortes e observações em até 4 frases curtas>],
   "missingTests": [<testes ou escalas ausentes que seriam relevantes, ex: "EVA", "PSFS", "ADM de ombro">],
-  "suggestedExercises": [<até 3 sugestões de exercícios ou condutas baseadas no P>]
+  "suggestedExercises": [<até 3 sugestões de exercícios ou condutas baseadas na conduta descrita>]
 }
 
-NOTA SOAP:
-S (Subjetivo): ${subjective}
-O (Objetivo): ${objective}
-A (Avaliação): ${assessment}
-P (Plano): ${plan}
+OBSERVAÇÃO CLÍNICA:
+${noteText}
 
 Retorne APENAS o JSON, sem markdown.
       `.trim(),
@@ -640,7 +651,7 @@ app.get("/medical-report/outcome", async (c) => {
     // 1. Buscar histórico consolidado
     const [patientData, sessions] = await Promise.all([
       sql`SELECT full_name, diagnosis, condition FROM patients WHERE id = ${patientId}::uuid`,
-      sql`SELECT session_date, subjective, assessment, plan FROM sessions WHERE patient_id = ${patientId}::uuid ORDER BY session_date ASC LIMIT 20`
+      sql`SELECT date AS session_date, observacao, pain_scale, procedures, exercises FROM sessions WHERE patient_id = ${patientId}::uuid ORDER BY date ASC LIMIT 20`
     ]);
 
     if (!patientData.rows.length || !sessions.rows.length) {

@@ -199,22 +199,32 @@ app.post("/treatment-sessions", requireAuth, async (c) => {
 
   const sessionDate = parseIsoDate(body.session_date) ?? new Date().toISOString().split("T")[0];
 
-  // Map to new schema (JSONB)
-  const subjective = jsonSerialize({
-    notes: body.subjective ? String(body.subjective) : undefined,
-    painScale: body.pain_level_before != null ? Number(body.pain_level_before) : undefined,
-  });
-  const objective = jsonSerialize(body.objective);
-  const assessment = jsonSerialize({
-    notes: body.assessment ? String(body.assessment) : undefined,
-  });
-  const plan = jsonSerialize({
-    notes: body.plan ? String(body.plan) : undefined,
-    orientations: body.observations ? String(body.observations) : undefined,
-    exercises: body.exercises_performed,
-    nextSessionGoals: body.next_session_goals,
-    painScaleAfter: body.pain_level_after != null ? Number(body.pain_level_after) : undefined,
-  });
+  // Modelo único pós-migração SOAP→observação. Aceita campos legados
+  // (subjective/objective/assessment/plan/observations) concatenando-os em
+  // `observacao`, e os novos canônicos diretos.
+  const observacao =
+    typeof body.observacao === "string"
+      ? body.observacao
+      : [body.subjective, body.objective, body.assessment, body.plan, body.observations]
+          .filter((v) => v != null && String(v).trim())
+          .map((v) => String(v))
+          .join("\n\n") || null;
+
+  const painScale =
+    body.pain_scale != null
+      ? Number(body.pain_scale)
+      : body.pain_level_before != null
+        ? Number(body.pain_level_before)
+        : null;
+
+  const procedures = Array.isArray(body.procedures) ? body.procedures : [];
+  const exercises = Array.isArray(body.exercises)
+    ? body.exercises
+    : Array.isArray(body.exercises_performed)
+      ? body.exercises_performed
+      : [];
+  const measurements = Array.isArray(body.measurements) ? body.measurements : [];
+  const homeExercises = Array.isArray(body.home_exercises) ? body.home_exercises : [];
 
   let result;
 
@@ -223,12 +233,14 @@ app.post("/treatment-sessions", requireAuth, async (c) => {
     therapistId,
     appointmentId,
     sessionDate,
-    subjective,
-    objective,
-    assessment,
-    plan,
+    observacao,
+    painScale,
+    jsonSerialize(procedures),
+    jsonSerialize(exercises),
+    jsonSerialize(measurements),
+    jsonSerialize(homeExercises),
     user.organizationId,
-    "finalized", // Status set to finalized on create for simplicity in this migration
+    "finalized",
   ];
 
   const existing = appointmentId
@@ -245,13 +257,15 @@ app.post("/treatment-sessions", requireAuth, async (c) => {
           patient_id      = $1,
           therapist_id    = $2,
           date            = $4,
-          subjective      = $5::jsonb,
-          objective       = $6::jsonb,
-          assessment      = $7::jsonb,
-          plan            = $8::jsonb,
-          status          = $10,
+          observacao      = $5,
+          pain_scale      = $6,
+          procedures      = $7::jsonb,
+          exercises       = $8::jsonb,
+          measurements    = $9::jsonb,
+          home_exercises  = $10::jsonb,
+          status          = $12,
           updated_at      = NOW()
-        WHERE id = $11
+        WHERE id = $13
         RETURNING *
       `,
       [...values, existing.rows[0].id],
@@ -261,8 +275,9 @@ app.post("/treatment-sessions", requireAuth, async (c) => {
       `
         INSERT INTO sessions (
           patient_id, therapist_id, appointment_id, date,
-          subjective, objective, assessment, plan, organization_id, status
-        ) VALUES ($1, $2, $3, $4, $5::jsonb, $6::jsonb, $7::jsonb, $8::jsonb, $9, $10)
+          observacao, pain_scale, procedures, exercises, measurements, home_exercises,
+          organization_id, status
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7::jsonb, $8::jsonb, $9::jsonb, $10::jsonb, $11, $12)
         RETURNING *
       `,
       values,
@@ -317,7 +332,8 @@ app.patch("/treatment-sessions/:id", requireAuth, async (c) => {
   const body = (await c.req.json()) as Record<string, unknown>;
 
   const existing = await pool.query(
-    `SELECT id, subjective, objective, assessment, plan FROM sessions WHERE id = $1 AND organization_id = $2 LIMIT 1`,
+    `SELECT id, observacao, pain_scale, procedures, exercises, measurements, home_exercises
+       FROM sessions WHERE id = $1 AND organization_id = $2 LIMIT 1`,
     [id, user.organizationId],
   );
   if (!existing.rows.length) return c.json({ error: "Sessão não encontrada" }, 404);
@@ -325,50 +341,56 @@ app.patch("/treatment-sessions/:id", requireAuth, async (c) => {
   const session = existing.rows[0];
   const sessionDate = parseIsoDate(body.session_date ?? body.date);
 
-  // Merge JSONB fields if they are provided in the body
-  let subjective = session.subjective || {};
-  if (body.subjective !== undefined || body.pain_level_before !== undefined) {
-    subjective = {
-      ...subjective,
-      ...(body.subjective !== undefined ? { notes: String(body.subjective) } : {}),
-      ...(body.pain_level_before !== undefined ? { painScale: Number(body.pain_level_before) } : {}),
-    };
+  // Modelo único pós-migração. Permite atualizar `observacao` direto OU
+  // concatenar campos legados (subjective/objective/assessment/plan/observations)
+  // em `observacao` quando o cliente ainda envia o shape antigo.
+  let observacao = session.observacao ?? "";
+  if (typeof body.observacao === "string") {
+    observacao = body.observacao;
+  } else {
+    const legacyParts = [body.subjective, body.objective, body.assessment, body.plan, body.observations]
+      .filter((v) => v != null && String(v).trim())
+      .map((v) => String(v));
+    if (legacyParts.length) observacao = legacyParts.join("\n\n");
   }
 
-  let assessment = session.assessment || {};
-  if (body.assessment !== undefined) {
-    assessment = { ...assessment, notes: String(body.assessment) };
+  let painScale: number | null = session.pain_scale ?? null;
+  if (body.pain_scale !== undefined && body.pain_scale !== null) {
+    painScale = Number(body.pain_scale);
+  } else if (body.pain_level_before !== undefined) {
+    painScale = Number(body.pain_level_before);
   }
 
-  let plan = session.plan || {};
-  if (body.plan !== undefined || body.observations !== undefined || body.pain_level_after !== undefined) {
-    plan = {
-      ...plan,
-      ...(body.plan !== undefined ? { notes: String(body.plan) } : {}),
-      ...(body.observations !== undefined ? { orientations: String(body.observations) } : {}),
-      ...(body.pain_level_after !== undefined ? { painScaleAfter: Number(body.pain_level_after) } : {}),
-    };
-  }
-
-  const objective = body.objective !== undefined ? body.objective : session.objective;
+  const procedures = Array.isArray(body.procedures) ? body.procedures : session.procedures ?? [];
+  const exercises = Array.isArray(body.exercises)
+    ? body.exercises
+    : Array.isArray(body.exercises_performed)
+      ? body.exercises_performed
+      : session.exercises ?? [];
+  const measurements = Array.isArray(body.measurements) ? body.measurements : session.measurements ?? [];
+  const homeExercises = Array.isArray(body.home_exercises) ? body.home_exercises : session.home_exercises ?? [];
 
   const row = await pool.query(
     `
       UPDATE sessions SET
-        subjective          = $1::jsonb,
-        objective           = $2::jsonb,
-        assessment          = $3::jsonb,
-        plan                = $4::jsonb,
-        date                = COALESCE($5, date),
-        updated_at          = NOW()
-      WHERE id = $6
+        observacao      = $1,
+        pain_scale      = $2,
+        procedures      = $3::jsonb,
+        exercises       = $4::jsonb,
+        measurements    = $5::jsonb,
+        home_exercises  = $6::jsonb,
+        date            = COALESCE($7, date),
+        updated_at      = NOW()
+      WHERE id = $8
       RETURNING *
     `,
     [
-      jsonSerialize(subjective),
-      jsonSerialize(objective),
-      jsonSerialize(assessment),
-      jsonSerialize(plan),
+      observacao || null,
+      painScale,
+      jsonSerialize(procedures),
+      jsonSerialize(exercises),
+      jsonSerialize(measurements),
+      jsonSerialize(homeExercises),
       sessionDate,
       id,
     ],
