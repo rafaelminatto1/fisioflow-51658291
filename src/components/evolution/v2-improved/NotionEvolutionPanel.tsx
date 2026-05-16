@@ -39,6 +39,8 @@ import { AttachmentsBlock } from "./AttachmentsBlock";
 import { MeasurementsBlock } from "./MeasurementsBlock";
 import { EvolutionSectionCard } from "./EvolutionSectionCard";
 import { SessionTimelineStrip } from "./SessionTimelineStrip";
+import { toast } from "sonner";
+import type { SoapRecord } from "@/hooks/useSoapRecords";
 import { ExerciseLibraryModal } from "@/components/exercises/ExerciseLibraryModal";
 import { COMMON_PROCEDURES, PROCEDURE_CATEGORY_LABELS } from "./types";
 import type { EvolutionV2Data } from "./types";
@@ -141,6 +143,64 @@ export const NotionEvolutionPanel: React.FC<NotionEvolutionPanelProps> = ({
       },
     ]);
   };
+
+  const handleReplicate = useCallback(
+    (record: SoapRecord) => {
+      const procedures = (record.procedures || []) as any[];
+      const exercises = (record.exercises || []) as any[];
+
+      const replicatedItems: EvolutionItemV3[] = [
+        ...procedures.map((p, i) => ({
+          id: crypto.randomUUID(),
+          name: p.name,
+          completed: false,
+          order: i,
+          type: "procedure" as const,
+          notes: p.notes,
+          intensity: p.intensity,
+          category: p.category,
+        })),
+        ...exercises.map((e, i) => ({
+          id: crypto.randomUUID(),
+          name: e.name,
+          completed: false,
+          order: procedures.length + i,
+          type: "exercise" as const,
+          exerciseId: e.exerciseId || e.exercise_id,
+          prescription: e.prescription,
+          difficulty: e.difficulty,
+        })),
+      ];
+
+      const homeExercises = record.home_exercises;
+      const homeCareExercises =
+        Array.isArray(homeExercises) && homeExercises.length > 0
+          ? JSON.stringify(
+              homeExercises.map((h: any, i: number) => ({
+                id: `hc_${i}`,
+                name: h.name || "",
+                prescription: h.prescription || "3x10",
+                instructions: h.instructions || "",
+              })),
+            )
+          : data.homeCareExercises;
+
+      onChange({
+        ...data,
+        evolutionText: record.observacao || data.evolutionText,
+        observations: record.observacao || data.observations,
+        painLevel: record.pain_scale ?? data.painLevel,
+        unifiedItems: replicatedItems.length > 0 ? replicatedItems : data.unifiedItems,
+        measurements: (record.measurements as any) || data.measurements,
+        homeCareExercises,
+      });
+
+      toast.success("Sessão replicada", {
+        description: "Os dados foram carregados na evolução atual. Não esqueça de salvar.",
+      });
+    },
+    [data, onChange],
+  );
 
   return (
     <>
@@ -260,6 +320,7 @@ export const NotionEvolutionPanel: React.FC<NotionEvolutionPanelProps> = ({
                 patientId={patientId}
                 excludeId={evolutionId}
                 onSeeAll={onNavigateToHistorico}
+                onReplicate={handleReplicate}
               />
             </EvolutionSectionCard>
 

@@ -1,9 +1,9 @@
 import { useMemo } from "react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { ArrowRight, FileText, Loader2 } from "lucide-react";
+import { ArrowRight, Copy, FileText, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useSoapRecords } from "@/hooks/useSoapRecords";
+import { useSoapRecords, type SoapRecord } from "@/hooks/useSoapRecords";
 import { stripHtml } from "@/lib/utils/stripHtml";
 import { cn } from "@/lib/utils";
 
@@ -13,6 +13,7 @@ interface SessionTimelineStripProps {
   onSeeAll?: () => void;
   /** Sessão atualmente em edição — não deve aparecer no histórico. */
   excludeId?: string;
+  onReplicate?: (record: SoapRecord) => void;
 }
 
 function painChipClasses(pain: number | null | undefined) {
@@ -27,6 +28,7 @@ export function SessionTimelineStrip({
   maxItems = 6,
   onSeeAll,
   excludeId,
+  onReplicate,
 }: SessionTimelineStripProps) {
   const { data: rawRecords = [], isLoading } = useSoapRecords(
     patientId ?? "",
@@ -47,6 +49,7 @@ export function SessionTimelineStrip({
       const conduct = firstProcedure || firstExercise || obs || "Sem registro de conduta";
       return {
         id: r.id,
+        record: r,
         index: records.length - index,
         date,
         pain: r.pain_scale,
@@ -108,6 +111,19 @@ export function SessionTimelineStrip({
             <p className="text-xs text-slate-700 line-clamp-2 leading-snug">
               {item.conduct}
             </p>
+            {onReplicate && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="h-7 w-full text-[11px] mt-1 border-slate-200 text-slate-600 hover:bg-blue-50 hover:text-blue-700 hover:border-blue-200"
+                onClick={() => onReplicate(item.record)}
+                title="Replicar esta sessão na evolução atual"
+              >
+                <Copy className="h-3 w-3 mr-1.5" />
+                Replicar
+              </Button>
+            )}
           </article>
         ))}
       </div>
