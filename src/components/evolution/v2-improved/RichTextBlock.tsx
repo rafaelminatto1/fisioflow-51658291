@@ -14,6 +14,7 @@ interface RichTextBlockProps {
   onValueChange: (value: string) => void;
   disabled?: boolean;
   className?: string;
+  showToolbar?: boolean;
 }
 
 export const RichTextBlock: React.FC<RichTextBlockProps> = ({
@@ -22,18 +23,19 @@ export const RichTextBlock: React.FC<RichTextBlockProps> = ({
   onValueChange,
   disabled,
   className,
+  showToolbar = false,
 }) => {
   const [isFocused, setIsFocused] = useState(false);
 
   return (
     <div className={cn("relative transition-all duration-300 group", className)}>
-      {/* Content – Rich Text Editor */}
       <div className="pb-1">
         <RichTextEditor
           value={value}
           onValueChange={onValueChange}
           placeholder={placeholder}
           disabled={disabled}
+          showToolbar={showToolbar}
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
           className={cn(

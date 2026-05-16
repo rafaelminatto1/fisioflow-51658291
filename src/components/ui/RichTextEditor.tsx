@@ -23,7 +23,24 @@ import { Superscript } from "@tiptap/extension-superscript";
 import { Youtube } from "@tiptap/extension-youtube";
 import { CodeBlockLowlight } from "@tiptap/extension-code-block-lowlight";
 import { common, createLowlight } from "lowlight";
-import { Dumbbell, Search, ClipboardCheck } from "lucide-react";
+import {
+  Dumbbell,
+  Search,
+  ClipboardCheck,
+  Bold as BoldIcon,
+  Italic as ItalicIcon,
+  Underline as UnderlineIcon,
+  Strikethrough,
+  List as ListIcon,
+  ListOrdered,
+  ListChecks,
+  Highlighter,
+  Heading2,
+  Heading3,
+  Undo2,
+  Redo2,
+  Quote,
+} from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { useRichTextContext } from "@/contexts/RichTextContext";
@@ -96,6 +113,7 @@ interface RichTextEditorProps {
   onFocus?: () => void;
   onBlur?: () => void;
   accentColor?: "sky" | "violet" | "amber" | "rose";
+  showToolbar?: boolean;
 }
 
 export const RichTextEditor: React.FC<RichTextEditorProps> = ({
@@ -109,6 +127,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
   onFocus,
   onBlur,
   accentColor = "violet",
+  showToolbar = false,
 }) => {
   const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastSentValue = useRef(value);
@@ -446,6 +465,58 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
       )}
       style={isTyping ? ({ "--typing-glow": getAccentGlow() } as React.CSSProperties) : undefined}
     >
+      {showToolbar && editor && (
+        <div className="flex flex-wrap items-center gap-0.5 px-2 py-1.5 border border-slate-200 bg-slate-50/80 rounded-t-lg sticky top-0 z-10">
+          {[
+            { icon: BoldIcon, action: () => editor.chain().focus().toggleBold().run(), active: editor.isActive("bold"), label: "Negrito" },
+            { icon: ItalicIcon, action: () => editor.chain().focus().toggleItalic().run(), active: editor.isActive("italic"), label: "Itálico" },
+            { icon: UnderlineIcon, action: () => editor.chain().focus().toggleUnderline().run(), active: editor.isActive("underline"), label: "Sublinhado" },
+            { icon: Strikethrough, action: () => editor.chain().focus().toggleStrike().run(), active: editor.isActive("strike"), label: "Tachado" },
+            { sep: true },
+            { icon: Heading2, action: () => editor.chain().focus().toggleHeading({ level: 2 }).run(), active: editor.isActive("heading", { level: 2 }), label: "Título grande" },
+            { icon: Heading3, action: () => editor.chain().focus().toggleHeading({ level: 3 }).run(), active: editor.isActive("heading", { level: 3 }), label: "Subtítulo" },
+            { sep: true },
+            { icon: ListIcon, action: () => editor.chain().focus().toggleBulletList().run(), active: editor.isActive("bulletList"), label: "Lista" },
+            { icon: ListOrdered, action: () => editor.chain().focus().toggleOrderedList().run(), active: editor.isActive("orderedList"), label: "Lista numerada" },
+            { icon: ListChecks, action: () => editor.chain().focus().toggleTaskList().run(), active: editor.isActive("taskList"), label: "Checklist" },
+            { sep: true },
+            { icon: Quote, action: () => editor.chain().focus().toggleBlockquote().run(), active: editor.isActive("blockquote"), label: "Citação" },
+            { icon: Highlighter, action: () => editor.chain().focus().toggleHighlight().run(), active: editor.isActive("highlight"), label: "Destacar" },
+            { sep: true },
+            { icon: Undo2, action: () => editor.chain().focus().undo().run(), active: false, label: "Desfazer" },
+            { icon: Redo2, action: () => editor.chain().focus().redo().run(), active: false, label: "Refazer" },
+          ].map((tool, idx) => {
+            if ("sep" in tool && tool.sep) {
+              return <span key={`sep-${idx}`} className="mx-1 h-5 w-px bg-slate-300" aria-hidden />;
+            }
+            const t = tool as { icon: typeof BoldIcon; action: () => void; active: boolean; label: string };
+            const Icon = t.icon;
+            return (
+              <button
+                key={t.label}
+                type="button"
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  t.action();
+                }}
+                title={t.label}
+                aria-label={t.label}
+                aria-pressed={t.active}
+                disabled={disabled}
+                className={cn(
+                  "h-7 w-7 inline-flex items-center justify-center rounded-md transition-colors",
+                  t.active
+                    ? "bg-slate-900 text-white"
+                    : "text-slate-600 hover:bg-slate-200 hover:text-slate-900",
+                  disabled && "opacity-40 cursor-not-allowed",
+                )}
+              >
+                <Icon className="h-3.5 w-3.5" />
+              </button>
+            );
+          })}
+        </div>
+      )}
       <EditorContent editor={editor} onInput={handleInput} />
       <ImageEditDialog
         open={!!editingExistingImage}
