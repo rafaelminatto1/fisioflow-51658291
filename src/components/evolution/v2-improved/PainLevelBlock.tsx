@@ -89,33 +89,28 @@ export const PainLevelBlock: React.FC<PainLevelBlockProps> = ({
       </div>
 
       {/* 0-10 chips */}
-      <div>
-        <p className="text-[11px] font-medium text-slate-500 mb-2">
-          Selecione o nível de dor <span className="text-slate-400">(clique para selecionar)</span>
-        </p>
-        <div className="grid grid-cols-11 gap-1.5">
-          {Array.from({ length: 11 }, (_, n) => n).map((n) => {
-            const isActive = painLevel === n;
-            const nTier = getTier(n);
-            return (
-              <button
-                key={n}
-                type="button"
-                onClick={() => onPainLevelChange(n)}
-                disabled={disabled}
-                aria-label={`Nível ${n} — ${nTier.label}`}
-                className={cn(
-                  "h-9 rounded-full text-xs font-semibold border transition-all",
-                  isActive
-                    ? cn(nTier.chip, "border-transparent shadow-sm scale-105")
-                    : "bg-white border-slate-200 text-slate-600 hover:border-slate-300 hover:bg-slate-50",
-                )}
-              >
-                {n}
-              </button>
-            );
-          })}
-        </div>
+      <div className="grid grid-cols-11 gap-1.5">
+        {Array.from({ length: 11 }, (_, n) => n).map((n) => {
+          const isActive = painLevel === n;
+          const nTier = getTier(n);
+          return (
+            <button
+              key={n}
+              type="button"
+              onClick={() => onPainLevelChange(n)}
+              disabled={disabled}
+              aria-label={`Nível ${n} — ${nTier.label}`}
+              className={cn(
+                "h-12 rounded-xl text-base font-bold border transition-all",
+                isActive
+                  ? cn(nTier.chip, "border-transparent shadow-sm scale-[1.06]")
+                  : "bg-white border-slate-200 text-slate-700 hover:border-slate-300 hover:bg-slate-50",
+              )}
+            >
+              {n}
+            </button>
+          );
+        })}
       </div>
 
       {/* Pain location */}

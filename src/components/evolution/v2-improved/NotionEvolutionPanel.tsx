@@ -181,7 +181,6 @@ export const NotionEvolutionPanel: React.FC<NotionEvolutionPanelProps> = ({
                 flushContent
               >
                 <RichTextBlock
-                  title=""
                   placeholder="Orientações gerais, encaminhamentos, cuidados e notas da sessão..."
                   value={data.evolutionText || data.observations}
                   onValueChange={(val) => {
@@ -189,8 +188,8 @@ export const NotionEvolutionPanel: React.FC<NotionEvolutionPanelProps> = ({
                     handleFieldChange("observations", val);
                   }}
                   disabled={disabled}
+                  showToolbar
                   className="border-none shadow-none bg-transparent"
-                  accentColor="amber"
                 />
               </EvolutionSectionCard>
             </div>
