@@ -5,6 +5,7 @@ import { sendAppointmentReminderEmail } from "./lib/email";
 import type { WhatsAppQueuePayload } from "./queue";
 import { cleanupRateLimits } from "./middleware/rateLimit";
 import { runHealthMonitor } from "./lib/monitor";
+import { scanPendingExecutions } from "./services/crm-automation-engine";
 import { notifyPatientAppointment } from "./lib/push";
 import { RTMAlertsService } from "./services/rtm-alerts";
 import { syncAutoRAGContent } from "./routes/aiSearch";
@@ -23,6 +24,20 @@ export async function handleScheduled(event: ScheduledEvent, env: Env, ctx: Exec
       case "*/5 * * * *": // A cada 5 minutos — Health monitor leve, sem acordar Neon
         await runHealthMonitor(env);
         break;
+
+      case "*/15 * * * *": {
+        // A cada 15 minutos — CRM automations scan (executa ações agendadas)
+        try {
+          const pool = createPool(env);
+          const out = await scanPendingExecutions(env, pool, 50);
+          if (out.executed || out.failed) {
+            console.log(`[Cron] CRM automations: executed=${out.executed} failed=${out.failed}`);
+          }
+        } catch (err) {
+          console.warn("[Cron] CRM scan failed:", err);
+        }
+        break;
+      }
 
       case "0 9 * * *": {
         // UTC 09h = BRT 06h — Lembretes + prewarm pós cold-start
