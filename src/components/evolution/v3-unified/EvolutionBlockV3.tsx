@@ -422,6 +422,7 @@ export const EvolutionBlockV3: React.FC<EvolutionBlockV3Props> = ({
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [newItemDialogOpen, setNewItemDialogOpen] = useState(false);
   const [pendingItemName, setPendingItemName] = useState("");
+  const [isInputFocused, setIsInputFocused] = useState(false);
 
   const [newItemType, setNewItemType] = useState<EvolutionItemType>("procedure");
   const { exercises: libraryExercises } = useExercises();
@@ -505,23 +506,32 @@ export const EvolutionBlockV3: React.FC<EvolutionBlockV3Props> = ({
     onChange(finalItems);
   };
 
+  const trimmedQuery = newItemName.trim();
+  const showProcedureSlot =
+    type === "procedure" || (type === "unified" && newItemType === "procedure");
+  const showExerciseSlot =
+    type === "exercise" || (type === "unified" && newItemType === "exercise");
+
   const procedureSuggestions = useMemo(() => {
-    if (!newItemName.trim() || (type === "unified" && newItemType !== "procedure")) return [];
-    if (type === "exercise") return [];
-    return COMMON_PROCEDURES.filter((procedure) =>
-      accentIncludes(procedure.name, newItemName),
+    if (!showProcedureSlot) return [];
+    return (
+      trimmedQuery
+        ? COMMON_PROCEDURES.filter((procedure) => accentIncludes(procedure.name, newItemName))
+        : COMMON_PROCEDURES
     ).slice(0, 8);
-  }, [newItemName, newItemType, type]);
+  }, [newItemName, trimmedQuery, showProcedureSlot]);
 
   const exerciseSuggestions = useMemo(() => {
-    if (!newItemName.trim() || (type === "unified" && newItemType !== "exercise")) return [];
-    if (type === "procedure") return [];
-    return libraryExercises
-      .filter((exercise) => accentIncludes(exercise.name, newItemName))
-      .slice(0, 8);
-  }, [libraryExercises, newItemName, newItemType, type]);
+    if (!showExerciseSlot) return [];
+    return (
+      trimmedQuery
+        ? libraryExercises.filter((exercise) => accentIncludes(exercise.name, newItemName))
+        : libraryExercises
+    ).slice(0, 8);
+  }, [libraryExercises, newItemName, trimmedQuery, showExerciseSlot]);
 
   const hasSuggestions = procedureSuggestions.length > 0 || exerciseSuggestions.length > 0;
+  const shouldShowSuggestions = hasSuggestions && (isInputFocused || trimmedQuery.length > 0);
 
   const handleSelectProcedureSuggestion = (suggestion: (typeof COMMON_PROCEDURES)[0]) => {
     appendItem({
@@ -689,6 +699,8 @@ export const EvolutionBlockV3: React.FC<EvolutionBlockV3Props> = ({
               value={newItemName}
               onChange={(e) => setNewItemName(e.target.value)}
               onKeyDown={handleKeyDown}
+              onFocus={() => setIsInputFocused(true)}
+              onBlur={() => setTimeout(() => setIsInputFocused(false), 150)}
               placeholder={
                 placeholder ||
                 (type === "unified"
@@ -729,16 +741,16 @@ export const EvolutionBlockV3: React.FC<EvolutionBlockV3Props> = ({
 
             {/* Smart Suggestions Dropdown */}
             <AnimatePresence>
-              {hasSuggestions && (
+              {shouldShowSuggestions && (
                 <motion.div
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
-                  className="absolute top-full left-0 right-0 mt-2 z-50 p-1.5 rounded-2xl border border-border shadow-2xl bg-background/95 backdrop-blur-xl"
+                  className="absolute top-full left-0 right-0 mt-2 z-50 p-1.5 rounded-2xl border border-border shadow-2xl bg-background/95 max-h-[320px] overflow-y-auto"
                 >
                   <div className="px-2 py-1.5 mb-1">
                     <span className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest">
-                      Selecione da biblioteca
+                      {trimmedQuery ? "Resultados" : "Sugestões da biblioteca"}
                     </span>
                   </div>
                   {procedureSuggestions.map((s) => (

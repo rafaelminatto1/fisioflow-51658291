@@ -142,6 +142,15 @@ export const patients = pgTable(
     status: varchar("status", { length: 100 }),
     sessionValue: numeric("session_value", { precision: 10, scale: 2 }),
 
+    // Caching/Summary fields for performance
+    sessionsCompleted: integer("sessions_completed").default(0),
+    totalAppointments: integer("total_appointments").default(0),
+    openBalance: numeric("open_balance", { precision: 10, scale: 2 }).default("0"),
+    lastAppointmentDate: date("last_appointment_date"),
+    nextAppointmentDate: date("next_appointment_date"),
+
+    version: integer("version").default(1).notNull(),
+
     deletedAt: timestamp("deleted_at"),
 
     createdAt: timestamp("created_at").defaultNow().notNull(),

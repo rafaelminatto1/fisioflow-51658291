@@ -75,12 +75,21 @@ export function useCreateAppointment() {
         }),
       );
 
-      await invalidateAppointmentsComprehensive(queryClient, data.date, profile?.organization_id);
+      const isOnline = typeof navigator === "undefined" || navigator.onLine;
+      const isOfflinePlaceholder = typeof data.id === "string" && data.id.startsWith("offline-");
+
+      if (isOnline && !isOfflinePlaceholder) {
+        await invalidateAppointmentsComprehensive(queryClient, data.date, profile?.organization_id);
+      }
 
       toast({
-        title: "Sucesso",
-        description: "Agendamento criado com sucesso",
+        title: isOfflinePlaceholder ? "Salvo localmente" : "Sucesso",
+        description: isOfflinePlaceholder
+          ? "Agendamento será sincronizado quando a conexão voltar."
+          : "Agendamento criado com sucesso",
       });
+
+      if (isOfflinePlaceholder) return;
 
       AppointmentNotificationService.scheduleNotification(
         data.id,
@@ -170,13 +179,18 @@ export function useUpdateAppointment() {
     },
     onSuccess: async (data, variables) => {
       const organizationId = profile?.organization_id || "";
+      const isOffline = (data as { __offline?: boolean })?.__offline === true;
 
-      await invalidateAppointmentsComprehensive(queryClient, data.date, organizationId);
+      if (!isOffline && typeof navigator !== "undefined" && navigator.onLine) {
+        await invalidateAppointmentsComprehensive(queryClient, data.date, organizationId);
+      }
 
       if (!variables.suppressSuccessToast) {
         toast({
-          title: "Sucesso",
-          description: "Agendamento atualizado com sucesso",
+          title: isOffline ? "Salvo localmente" : "Sucesso",
+          description: isOffline
+            ? "Alteração será sincronizada quando a conexão voltar."
+            : "Agendamento atualizado com sucesso",
         });
       }
     },
@@ -214,21 +228,58 @@ export function useDeleteAppointment() {
       await AppointmentService.deleteAppointment(appointmentId, organizationId);
       return { appointmentId, appointment };
     },
+    networkMode: "offlineFirst",
+    onMutate: async (appointmentId) => {
+      const organizationId = profile?.organization_id;
+      await queryClient.cancelQueries({ queryKey: appointmentKeys.list(organizationId) });
+      await queryClient.cancelQueries({ queryKey: appointmentPeriodKeys.all });
+
+      const previousData = queryClient.getQueryData<AppointmentsQueryResult>(
+        appointmentKeys.list(organizationId),
+      );
+      const previousPeriodQueries = queryClient.getQueriesData({
+        queryKey: appointmentPeriodKeys.all,
+      });
+
+      // Remoção optimista — some imediatamente da agenda
+      queryClient.setQueryData(
+        appointmentKeys.list(organizationId),
+        (old: AppointmentsQueryResult | undefined) => ({
+          ...old,
+          data: (old?.data || []).filter((apt) => apt.id !== appointmentId),
+        }),
+      );
+      queryClient.setQueriesData(
+        { queryKey: appointmentPeriodKeys.all },
+        (old: AppointmentBase[] | undefined) =>
+          old?.filter((apt) => apt.id !== appointmentId),
+      );
+
+      return { previousData, previousPeriodQueries };
+    },
     onSuccess: async ({ appointmentId, appointment }) => {
       const organizationId = profile?.organization_id || "";
 
-      await invalidateAppointmentsComprehensive(queryClient, appointment?.date, organizationId);
+      // Quando offline a fila ainda não confirmou — só revalida quando online
+      if (typeof navigator !== "undefined" && navigator.onLine) {
+        await invalidateAppointmentsComprehensive(queryClient, appointment?.date, organizationId);
+      }
 
-      queryClient.removeQueries({
-        queryKey: appointmentKeys.detail(appointmentId),
-      });
+      queryClient.removeQueries({ queryKey: appointmentKeys.detail(appointmentId) });
 
       toast({
         title: "Sucesso",
         description: "Agendamento excluído com sucesso",
       });
     },
-    onError: (error: Error) => {
+    onError: (error: Error, _appointmentId, context) => {
+      const organizationId = profile?.organization_id;
+      if (context?.previousData) {
+        queryClient.setQueryData(appointmentKeys.list(organizationId), context.previousData);
+      }
+      context?.previousPeriodQueries?.forEach(([queryKey, data]) => {
+        queryClient.setQueryData(queryKey, data);
+      });
       ErrorHandler.handle(error, "useDeleteAppointment");
     },
   });
@@ -305,6 +356,15 @@ export function useUpdateAppointmentStatus() {
     onSuccess: (updatedData, variables) => {
       const organizationId = profile?.organization_id;
       const { appointmentId } = variables;
+      const isOffline = (updatedData as { __offline?: boolean })?.__offline === true;
+
+      if (isOffline) {
+        toast({
+          title: "Salvo localmente",
+          description: "Status será sincronizado quando a conexão voltar.",
+        });
+        return;
+      }
 
       // Se tivermos os dados atualizados, injetamos no cache para evitar o "flicker" de refetch
       if (updatedData) {

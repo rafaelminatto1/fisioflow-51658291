@@ -219,7 +219,7 @@ export default function Schedule() {
       <PageContainer
         maxWidth="full"
         noPadding
-        className="h-[calc(100vh-64px)] flex flex-col px-2 md:px-3"
+        className="h-[calc(100vh-64px)] flex flex-col"
       >
         <div className="flex-1 flex flex-col min-h-0 relative">
           {/* Action Banner: Birthdays */}
@@ -262,7 +262,7 @@ export default function Schedule() {
             </motion.div>
           )}
 
-          <div className="flex-1 bento-card p-0 overflow-hidden bg-white dark:bg-slate-950/50">
+          <div className="flex-1 min-h-0 overflow-hidden bg-white dark:bg-slate-950/50">
             <AnimatePresence mode="wait">
               <motion.div
                 key={`${viewType}-${dateParam}`}

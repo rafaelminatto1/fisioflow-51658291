@@ -1,8 +1,7 @@
-import { Suspense, lazy, useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import {
   ArrowLeft,
-  Bell,
   CalendarClock,
   CalendarOff,
   Clock,
@@ -13,108 +12,39 @@ import {
   Shield,
   SlidersHorizontal,
   Stethoscope,
-  TimerOff,
 } from "lucide-react";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { SettingsLoadingState } from "@/components/schedule/settings/shared/SettingsLoadingState";
-import { SettingsSectionCard } from "@/components/schedule/settings/shared/SettingsSectionCard";
-import { BusinessHoursManager } from "@/components/schedule/settings/BusinessHoursManager";
-import { CapacityRulesList } from "@/components/schedule/settings/CapacityRulesList";
-import { SlotConfigurationSettings } from "@/components/schedule/settings/SlotConfigurationSettings";
-import { BlockedTimesManager } from "@/components/schedule/settings/BlockedTimesManager";
-import { useAppointmentTypes } from "@/hooks/useAppointmentTypes";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { useScheduleCapacity } from "@/hooks/useScheduleCapacity";
-import { useScheduleSettings } from "@/hooks/useScheduleSettings";
-import { useStatusConfig } from "@/hooks/useStatusConfig";
+import { useAppointmentTypes } from "@/hooks/useAppointmentTypes";
 import { cn } from "@/lib/utils";
+import { OverviewTab } from "@/components/schedule/settings-v2/tabs/OverviewTab";
+import { HorariosTab } from "@/components/schedule/settings-v2/tabs/HorariosTab";
+import { CapacidadeTab } from "@/components/schedule/settings-v2/tabs/CapacidadeTab";
+import { StatusTab } from "@/components/schedule/settings-v2/tabs/StatusTab";
+import { TiposTab } from "@/components/schedule/settings-v2/tabs/TiposTab";
+import { BloqueiosTab } from "@/components/schedule/settings-v2/tabs/BloqueiosTab";
+import { PoliticasTab } from "@/components/schedule/settings-v2/tabs/PoliticasTab";
+import { AparenciaTab } from "@/components/schedule/settings-v2/tabs/AparenciaTab";
 
-const StatusAtendimentoTab = lazy(() =>
-  import("@/components/schedule/settings/tabs/StatusAtendimentoTab").then((m) => ({
-    default: m.StatusAtendimentoTab,
-  })),
-);
-
-const ScheduleAppointmentTypesTab = lazy(() =>
-  import("@/components/schedule/settings/tabs/ScheduleAppointmentTypesTab").then((m) => ({
-    default: m.ScheduleAppointmentTypesTab,
-  })),
-);
-
-const PoliciesRulesTab = lazy(() =>
-  import("@/components/schedule/settings/tabs/PoliciesRulesTab").then((m) => ({
-    default: m.PoliciesRulesTab,
-  })),
-);
-
-const ScheduleVisualTab = lazy(() =>
-  import("@/components/schedule/settings/tabs/ScheduleVisualTab").then((m) => ({
-    default: m.ScheduleVisualTab,
-  })),
-);
-
-const settingsTabs = [
-  {
-    value: "overview",
-    label: "Visão geral",
-    description: "Saúde da configuração",
-    icon: LayoutGrid,
-  },
-  {
-    value: "horarios",
-    label: "Horários",
-    description: "Expediente e pausas",
-    icon: Clock,
-  },
-  {
-    value: "capacidade",
-    label: "Capacidade",
-    description: "Vagas por faixa",
-    icon: Gauge,
-  },
-  {
-    value: "status",
-    label: "Status",
-    description: "CRUD, cores e regras",
-    icon: Palette,
-  },
-  {
-    value: "tipos",
-    label: "Tipos",
-    description: "Serviços e durações",
-    icon: Stethoscope,
-  },
-  {
-    value: "bloqueios",
-    label: "Bloqueios",
-    description: "Feriados e indisponibilidades",
-    icon: TimerOff,
-  },
-  {
-    value: "politicas",
-    label: "Políticas",
-    description: "Cancelamento e lembretes",
-    icon: Shield,
-  },
-  {
-    value: "aparencia",
-    label: "Aparência",
-    description: "Densidade e visual",
-    icon: SlidersHorizontal,
-  },
+const TABS = [
+  { value: "overview", label: "Visão geral", description: "Saúde da configuração", icon: LayoutGrid, Component: OverviewTab },
+  { value: "horarios", label: "Horários", description: "Expediente e pausas", icon: Clock, Component: HorariosTab },
+  { value: "capacidade", label: "Capacidade", description: "Vagas por horário", icon: Gauge, Component: CapacidadeTab },
+  { value: "status", label: "Status", description: "Cores e estados", icon: Palette, Component: StatusTab },
+  { value: "tipos", label: "Tipos", description: "Serviços e durações", icon: Stethoscope, Component: TiposTab },
+  { value: "bloqueios", label: "Bloqueios", description: "Feriados e folgas", icon: CalendarOff, Component: BloqueiosTab },
+  { value: "politicas", label: "Políticas", description: "Cancelamento e lembretes", icon: Shield, Component: PoliticasTab },
+  { value: "aparencia", label: "Aparência", description: "Densidade e visual", icon: SlidersHorizontal, Component: AparenciaTab },
 ] as const;
 
-type TabValue = (typeof settingsTabs)[number]["value"];
+type TabValue = (typeof TABS)[number]["value"];
 
-export const VALID_TAB_IDS = settingsTabs.map((tab) => tab.value) as TabValue[];
+export const VALID_TAB_IDS = TABS.map((t) => t.value) as TabValue[];
 
-const LEGACY_TAB_REDIRECTS: Record<string, TabValue> = {
+const LEGACY_REDIRECTS: Record<string, TabValue> = {
   visual: "aparencia",
   "agenda-horarios": "horarios",
   "capacidade-horarios": "capacidade",
@@ -140,203 +70,80 @@ export function setTabInUrl(searchParams: URLSearchParams, tab: string): URLSear
   return next;
 }
 
-function NavItems({
-  activeTab,
-  appointmentTypesCount,
+function NavList({
+  active,
+  onSelect,
+  typesCount,
 }: {
-  activeTab: TabValue;
-  appointmentTypesCount: number;
+  active: TabValue;
+  onSelect: (v: TabValue) => void;
+  typesCount: number;
 }) {
   return (
-    <>
-      {settingsTabs.map((tab) => {
+    <nav className="flex flex-col gap-1">
+      {TABS.map((tab) => {
         const Icon = tab.icon;
-        const isActive = activeTab === tab.value;
-        const badge =
-          tab.value === "tipos" && appointmentTypesCount > 0 ? appointmentTypesCount : null;
+        const isActive = active === tab.value;
+        const badge = tab.value === "tipos" && typesCount > 0 ? typesCount : null;
         return (
-          <TabsTrigger
+          <button
             key={tab.value}
-            value={tab.value}
+            type="button"
+            onClick={() => onSelect(tab.value)}
             className={cn(
-              "group h-auto w-full justify-start rounded-lg border border-transparent px-3 py-2.5 text-left",
-              "data-[state=active]:border-teal-200 data-[state=active]:bg-teal-50 data-[state=active]:text-teal-950 dark:data-[state=active]:border-teal-900 dark:data-[state=active]:bg-teal-950/40 dark:data-[state=active]:text-teal-100",
+              "group flex w-full items-center gap-3 rounded-lg border border-transparent px-3 py-2.5 text-left transition",
+              isActive
+                ? "border-teal-200 bg-teal-50 text-teal-950 dark:border-teal-900 dark:bg-teal-950/40 dark:text-teal-100"
+                : "hover:bg-slate-50 dark:hover:bg-slate-900",
             )}
           >
-            <div className="flex min-w-0 items-center gap-3">
-              <span
-                className={cn(
-                  "flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground",
-                  isActive && "bg-teal-600 text-white",
-                )}
-              >
-                <Icon className="h-4 w-4" />
-              </span>
-              <span className="min-w-0 flex-1">
-                <span className="block truncate text-sm font-semibold">{tab.label}</span>
-                <span className="mt-0.5 hidden truncate text-xs font-normal text-muted-foreground xl:block">
-                  {tab.description}
-                </span>
-              </span>
-              {badge && (
-                <Badge variant="secondary" className="h-5 min-w-5 px-1.5 text-[10px]">
-                  {badge}
-                </Badge>
+            <span
+              className={cn(
+                "flex h-8 w-8 shrink-0 items-center justify-center rounded-md",
+                isActive ? "bg-teal-600 text-white" : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400",
               )}
-            </div>
-          </TabsTrigger>
+            >
+              <Icon className="h-4 w-4" />
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block truncate text-sm font-semibold">{tab.label}</span>
+              <span className="mt-0.5 block truncate text-[11px] font-normal text-muted-foreground">
+                {tab.description}
+              </span>
+            </span>
+            {badge !== null && (
+              <Badge variant="secondary" className="h-5 min-w-5 px-1.5 text-[10px]">
+                {badge}
+              </Badge>
+            )}
+          </button>
         );
       })}
-    </>
-  );
-}
-
-function OverviewPanel() {
-  const { businessHours, blockedTimes, notificationSettings } = useScheduleSettings();
-  const { capacityGroups, capacities } = useScheduleCapacity();
-  const { allStatusRows } = useStatusConfig();
-  const { types } = useAppointmentTypes();
-
-  const openDays = businessHours.filter((hour) => hour.is_open).length;
-  const activeStatuses = (allStatusRows ?? []).filter((status: any) => status.is_active).length;
-  const capacityTotal = capacities.reduce((sum, item) => sum + item.max_patients, 0);
-  const reminders =
-    notificationSettings?.send_reminder_24h || notificationSettings?.send_reminder_2h;
-
-  const cards = [
-    {
-      label: "Dias abertos",
-      value: `${openDays}/7`,
-      detail: openDays > 0 ? "Expediente configurado" : "Defina horários",
-      icon: Clock,
-    },
-    {
-      label: "Regras de capacidade",
-      value: capacityGroups.length,
-      detail: `${capacityTotal} vagas somadas`,
-      icon: Gauge,
-    },
-    {
-      label: "Status ativos",
-      value: activeStatuses,
-      detail: "Disponíveis na agenda",
-      icon: Palette,
-    },
-    {
-      label: "Tipos de atendimento",
-      value: types.length,
-      detail: "Serviços cadastrados",
-      icon: Stethoscope,
-    },
-  ];
-
-  return (
-    <div className="space-y-5">
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        {cards.map((card) => {
-          const Icon = card.icon;
-          return (
-            <Card key={card.label} className="rounded-lg">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">
-                  {card.label}
-                </CardTitle>
-                <Icon className="h-4 w-4 text-teal-600" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-semibold tracking-tight">{card.value}</div>
-                <p className="mt-1 text-xs text-muted-foreground">{card.detail}</p>
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
-
-      <div className="grid gap-4 xl:grid-cols-[1.2fr_0.8fr]">
-        <SettingsSectionCard
-          icon={<CalendarClock className="h-4 w-4" />}
-          iconBg="bg-teal-100 dark:bg-teal-900/40 text-teal-600 dark:text-teal-400"
-          title="Mapa semanal"
-          description="Visão dos dias e horários de funcionamento"
-        >
-          <div className="grid gap-2">
-            {businessHours.length > 0 ? (
-              businessHours.map((hour) => (
-                <div
-                  key={hour.day_of_week}
-                  className="grid grid-cols-[4rem_minmax(0,1fr)_auto] items-center gap-3 rounded-lg border px-3 py-2 sm:grid-cols-[7rem_minmax(0,1fr)_auto]"
-                >
-                  <span className="text-sm font-medium">
-                    {["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"][hour.day_of_week]}
-                  </span>
-                  <div className="h-2 rounded-full bg-muted">
-                    <div
-                      className={cn("h-2 rounded-full", hour.is_open ? "bg-teal-500" : "bg-muted")}
-                      style={{ width: hour.is_open ? "100%" : "0%" }}
-                    />
-                  </div>
-                  <span className="font-mono text-xs text-muted-foreground">
-                    {hour.is_open ? `${hour.open_time}-${hour.close_time}` : "Fechado"}
-                  </span>
-                </div>
-              ))
-            ) : (
-              <div className="rounded-xl border border-dashed p-6 text-center">
-                <p className="text-sm font-medium">Nenhum expediente salvo</p>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  Configure os dias e horários na aba Horários.
-                </p>
-              </div>
-            )}
-          </div>
-        </SettingsSectionCard>
-
-        <SettingsSectionCard
-          icon={<Bell className="h-4 w-4" />}
-          iconBg="bg-sky-100 dark:bg-sky-900/40 text-sky-600 dark:text-sky-400"
-          title="Pronto para uso"
-          description="Status de configuração da clínica"
-        >
-          <div className="space-y-3">
-            {[
-              ["Horários de atendimento", openDays > 0],
-              ["Capacidade por faixa", capacityGroups.length > 0],
-              ["Status ativos", activeStatuses > 0],
-              ["Lembretes", !!reminders],
-              ["Bloqueios cadastrados", blockedTimes.length > 0],
-            ].map(([label, ok]) => (
-              <div key={String(label)} className="flex items-center justify-between gap-3">
-                <span className="text-sm">{label}</span>
-                <Badge variant={ok ? "default" : "secondary"}>{ok ? "OK" : "Pendente"}</Badge>
-              </div>
-            ))}
-          </div>
-        </SettingsSectionCard>
-      </div>
-    </div>
+    </nav>
   );
 }
 
 export default function ScheduleSettings() {
-  const { types } = useAppointmentTypes();
   const isMobile = useIsMobile();
   const [searchParams, setSearchParams] = useSearchParams();
   const [sheetOpen, setSheetOpen] = useState(false);
+  const { types } = useAppointmentTypes();
 
   const rawTab = searchParams.get("tab") ?? "overview";
-  const activeTab: TabValue = useMemo(
-    () =>
-      LEGACY_TAB_REDIRECTS[rawTab] ??
-      (VALID_TAB_IDS.includes(rawTab as TabValue) ? (rawTab as TabValue) : "overview"),
-    [rawTab],
-  );
-  const activeMeta = settingsTabs.find((tab) => tab.value === activeTab) ?? settingsTabs[0];
-  const ActiveIcon = activeMeta.icon;
-  const appointmentTypesCount = getBadgeCount(types);
+  const activeTab: TabValue = useMemo(() => {
+    const redirected = LEGACY_REDIRECTS[rawTab];
+    if (redirected) return redirected;
+    return (VALID_TAB_IDS as readonly string[]).includes(rawTab) ? (rawTab as TabValue) : "overview";
+  }, [rawTab]);
 
-  const handleTabChange = useCallback(
-    (value: string) => {
-      const next = LEGACY_TAB_REDIRECTS[value] ?? value;
+  const activeMeta = TABS.find((t) => t.value === activeTab) ?? TABS[0];
+  const ActiveIcon = activeMeta.icon;
+  const ActiveComponent = activeMeta.Component;
+  const typesCount = getBadgeCount(types);
+
+  const handleSelect = useCallback(
+    (value: TabValue) => {
+      const next = LEGACY_REDIRECTS[value] ?? value;
       setSearchParams((prev) => setTabInUrl(prev, next), { replace: true });
       setSheetOpen(false);
     },
@@ -349,7 +156,7 @@ export default function ScheduleSettings() {
         <header className="flex flex-col gap-3 border-b pb-4 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex min-w-0 items-center gap-3">
             <Button asChild variant="ghost" size="icon" className="h-9 w-9 shrink-0 rounded-lg">
-              <Link to="/agenda">
+              <Link to="/agenda" aria-label="Voltar para agenda">
                 <ArrowLeft className="h-4 w-4" />
               </Link>
             </Button>
@@ -357,29 +164,20 @@ export default function ScheduleSettings() {
               <CalendarClock className="h-5 w-5" />
             </div>
             <div className="min-w-0">
-              <h1 className="truncate text-lg font-semibold tracking-tight">
-                Configurações da Agenda
-              </h1>
+              <h1 className="truncate text-lg font-semibold tracking-tight">Configurações da Agenda</h1>
               <p className="text-sm text-muted-foreground">
-                Capacidade, horários, status, bloqueios e regras de atendimento.
+                Horários, capacidade, status, tipos, bloqueios e políticas de atendimento.
               </p>
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <Badge variant="outline" className="hidden sm:inline-flex">
-              Console clínico
-            </Badge>
             <Button asChild variant="outline" size="sm">
               <Link to="/agenda">Ver agenda</Link>
             </Button>
           </div>
         </header>
 
-        <Tabs
-          value={activeTab}
-          onValueChange={handleTabChange}
-          className="grid gap-5 lg:grid-cols-[17rem_minmax(0,1fr)]"
-        >
+        <div className="grid gap-5 lg:grid-cols-[16rem_minmax(0,1fr)]">
           {isMobile ? (
             <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
               <SheetTrigger asChild>
@@ -395,23 +193,21 @@ export default function ScheduleSettings() {
                 <SheetHeader className="border-b p-4">
                   <SheetTitle>Configurações</SheetTitle>
                 </SheetHeader>
-                <ScrollArea className="h-[calc(100vh-4rem)]">
-                  <TabsList className="flex h-auto w-full flex-col gap-1 bg-transparent p-3">
-                    <NavItems activeTab={activeTab} appointmentTypesCount={appointmentTypesCount} />
-                  </TabsList>
-                </ScrollArea>
+                <div className="p-3">
+                  <NavList active={activeTab} onSelect={handleSelect} typesCount={typesCount} />
+                </div>
               </SheetContent>
             </Sheet>
           ) : (
             <aside className="hidden lg:block">
-              <TabsList className="sticky top-4 flex h-auto w-full flex-col gap-1 rounded-xl border bg-card p-2 shadow-sm">
-                <NavItems activeTab={activeTab} appointmentTypesCount={appointmentTypesCount} />
-              </TabsList>
+              <div className="sticky top-4 rounded-xl border border-slate-200 bg-white p-2 shadow-sm dark:border-slate-800 dark:bg-slate-950">
+                <NavList active={activeTab} onSelect={handleSelect} typesCount={typesCount} />
+              </div>
             </aside>
           )}
 
-          <main className="min-w-0 rounded-xl border bg-background">
-            <div className="flex items-center gap-3 border-b bg-card/80 px-5 py-4">
+          <main className="min-w-0 space-y-4">
+            <div className="flex items-center gap-3 rounded-xl border border-slate-200 bg-white px-5 py-4 dark:border-slate-800 dark:bg-slate-950">
               <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-teal-50 text-teal-700 dark:bg-teal-950 dark:text-teal-300">
                 <ActiveIcon className="h-4 w-4" />
               </div>
@@ -421,60 +217,9 @@ export default function ScheduleSettings() {
               </div>
             </div>
 
-            <div className="p-4 md:p-5">
-              <Suspense fallback={<SettingsLoadingState />}>
-                <TabsContent value="overview" className="m-0 focus-visible:outline-none">
-                  <OverviewPanel />
-                </TabsContent>
-                <TabsContent value="horarios" className="m-0 focus-visible:outline-none">
-                  <div className="space-y-5">
-                    <SettingsSectionCard
-                      icon={<Clock className="h-4 w-4" />}
-                      iconBg="bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400"
-                      title="Horários de Funcionamento"
-                      description="Configure os dias e horários de atendimento da clínica"
-                    >
-                      <BusinessHoursManager />
-                    </SettingsSectionCard>
-                    <SlotConfigurationSettings />
-                  </div>
-                </TabsContent>
-                <TabsContent value="capacidade" className="m-0 focus-visible:outline-none">
-                  <SettingsSectionCard
-                    icon={<Gauge className="h-4 w-4" />}
-                    iconBg="bg-teal-100 dark:bg-teal-900/40 text-teal-600 dark:text-teal-400"
-                    title="Capacidade de Atendimento"
-                    description="Regras de capacidade por faixa horária"
-                  >
-                    <CapacityRulesList />
-                  </SettingsSectionCard>
-                </TabsContent>
-                <TabsContent value="status" className="m-0 focus-visible:outline-none">
-                  <StatusAtendimentoTab />
-                </TabsContent>
-                <TabsContent value="tipos" className="m-0 focus-visible:outline-none">
-                  <ScheduleAppointmentTypesTab />
-                </TabsContent>
-                <TabsContent value="bloqueios" className="m-0 focus-visible:outline-none">
-                  <SettingsSectionCard
-                    icon={<CalendarOff className="h-4 w-4" />}
-                    iconBg="bg-orange-100 dark:bg-orange-900/40 text-orange-600 dark:text-orange-400"
-                    title="Bloqueios de Agenda"
-                    description="Feriados, recessos e indisponibilidades"
-                  >
-                    <BlockedTimesManager />
-                  </SettingsSectionCard>
-                </TabsContent>
-                <TabsContent value="politicas" className="m-0 focus-visible:outline-none">
-                  <PoliciesRulesTab />
-                </TabsContent>
-                <TabsContent value="aparencia" className="m-0 focus-visible:outline-none">
-                  <ScheduleVisualTab />
-                </TabsContent>
-              </Suspense>
-            </div>
+            <ActiveComponent />
           </main>
-        </Tabs>
+        </div>
       </div>
     </MainLayout>
   );

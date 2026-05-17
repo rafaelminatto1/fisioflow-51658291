@@ -2,6 +2,7 @@
 
 import { appointmentsApi } from "@/api/v2/appointments";
 import { auditApi } from "@/api/v2";
+import { isOfflineEnqueuedResponse } from "@/api/v2/base";
 import { parseLocalDate } from "@/lib/date-utils";
 import {
   AppointmentBase,
@@ -287,6 +288,28 @@ export class AppointmentService {
       };
 
       const response = await appointmentsApi.create(payload);
+
+      // Offline — request() enfileirou e devolveu sentinel; retornamos um
+      // AppointmentBase optimista para o hook não quebrar. Quando a fila
+      // drenar, `offlineSync` invalida o cache e o registro real chega.
+      if (isOfflineEnqueuedResponse(response)) {
+        const offlineAppt: AppointmentBase = {
+          id: `offline-${Date.now()}`,
+          patientId: data.patient_id,
+          patientName: data.patient_name || "Desconhecido",
+          phone: "",
+          date: parseLocalDate(rawDate),
+          time: rawTime,
+          duration: data.duration || 60,
+          type: sessionType as AppointmentType,
+          status: (data.status || APPOINTMENT_STATUSES[0]) as AppointmentStatus,
+          notes: data.notes || "",
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        };
+        return offlineAppt;
+      }
+
       const newAppointment = response.data as AppointmentApiItem;
 
       // Log de auditoria: Novo Agendamento
@@ -466,6 +489,13 @@ export class AppointmentService {
         throw AppError.badRequest("Nenhum dado para atualizar");
 
       const response = await appointmentsApi.update(id, updateData);
+
+      // Offline — sentinel. Fila vai sincronizar; aqui só sinalizamos que
+      // o update foi aceito pra UI manter o estado optimista do hook.
+      if (isOfflineEnqueuedResponse(response)) {
+        return { id, ...updateData, __offline: true } as unknown as AppointmentBase;
+      }
+
       const fetchedUpdatedAppointment = response.data as AppointmentApiItem;
 
       // Log de auditoria: Atualização de Agendamento
@@ -595,6 +625,9 @@ export class AppointmentService {
       const normalizedStatus = String(status || "").toLowerCase();
       if (normalizedStatus === "cancelado" || normalizedStatus === "cancelled") {
         const result = await appointmentsApi.cancel(id);
+        if (isOfflineEnqueuedResponse(result)) {
+          return { id, status, __offline: true };
+        }
         // Log de auditoria: Cancelamento
         try {
           await auditApi.create({
@@ -620,6 +653,9 @@ export class AppointmentService {
         return result;
       }
       const result = await appointmentsApi.update(id, { status });
+      if (isOfflineEnqueuedResponse(result)) {
+        return { id, status, __offline: true };
+      }
       // Log de auditoria: Mudança de Status
       try {
         await auditApi.create({

@@ -118,6 +118,7 @@ export const exercises = pgTable(
     imageUrl: text("image_url"),
     thumbnailUrl: text("thumbnail_url"),
     videoUrl: text("video_url"),
+    pdfUrl: text("pdf_url"),
 
     // Internacionalização e Busca
     nameEn: varchar("name_en", { length: 250 }),

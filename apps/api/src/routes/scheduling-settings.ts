@@ -20,6 +20,7 @@ import {
   normalizeAppointmentStatusSettingPayload,
   mapBookingWindowRow,
   mapSlotConfigRow,
+  mapNoShowPolicyRow,
 } from "./scheduling-helpers";
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
@@ -31,7 +32,8 @@ type ScheduleCacheResource =
   | "capacity-config"
   | "appointment-statuses"
   | "booking-window"
-  | "slot-config";
+  | "slot-config"
+  | "no-show-policy";
 
 const SCHEDULE_CACHE_VERSION = "v1";
 const BUSINESS_HOURS_TTL_SECONDS = 15 * 60;
@@ -509,8 +511,8 @@ app.post("/capacity-config", requireAuth, async (c) => {
     for (const config of configs) {
       const normalized = normalizeCapacityPayload(config);
       const res = await pool.query(
-        `INSERT INTO schedule_capacity (organization_id, day_of_week, start_time, end_time, max_patients)
-         VALUES ($1, $2, $3, $4, $5)
+        `INSERT INTO schedule_capacity (organization_id, day_of_week, start_time, end_time, max_patients, appointment_type_id)
+         VALUES ($1, $2, $3, $4, $5, $6)
          RETURNING *`,
         [
           user.organizationId,
@@ -518,6 +520,7 @@ app.post("/capacity-config", requireAuth, async (c) => {
           normalized.startTime,
           normalized.endTime,
           normalized.maxPatients,
+          normalized.appointmentTypeId,
         ],
       );
       results.push(mapCapacityRow(res.rows[0]));
@@ -551,19 +554,25 @@ app.put("/capacity-config/:id", requireAuth, async (c) => {
       start_time: body.start_time ?? current.rows[0].start_time,
       end_time: body.end_time ?? current.rows[0].end_time,
       max_patients: body.max_patients ?? current.rows[0].max_patients,
+      appointment_type_id:
+        body.appointment_type_id !== undefined
+          ? body.appointment_type_id
+          : current.rows[0].appointment_type_id,
     };
     const normalized = normalizeCapacityPayload(merged);
 
     const res = await pool.query(
       `UPDATE schedule_capacity
-       SET day_of_week = $1, start_time = $2, end_time = $3, max_patients = $4, updated_at = NOW()
-       WHERE id = $5 AND organization_id = $6
+       SET day_of_week = $1, start_time = $2, end_time = $3, max_patients = $4,
+           appointment_type_id = $5, updated_at = NOW()
+       WHERE id = $6 AND organization_id = $7
        RETURNING *`,
       [
         normalized.dayOfWeek,
         normalized.startTime,
         normalized.endTime,
         normalized.maxPatients,
+        normalized.appointmentTypeId,
         id,
         user.organizationId,
       ],
@@ -800,5 +809,71 @@ app.get("/settings/slot-config", requireAuth, async (c) => {
 
 app.post("/settings/slot-config", requireAuth, handleUpsertSlotConfig);
 app.put("/settings/slot-config", requireAuth, handleUpsertSlotConfig);
+
+// No-Show Policy
+const handleUpsertNoShowPolicy = async (c: any) => {
+  const user = c.get("user");
+  const pool = await createPool(c.env);
+  try {
+    const body = await c.req.json();
+    const threshold = Math.max(1, Math.min(20, Number(body.threshold_count ?? 3)));
+    const window = Math.max(7, Math.min(365, Number(body.window_days ?? 90)));
+    const action = ["warn", "block_online", "suspend", "charge"].includes(body.action)
+      ? body.action
+      : "warn";
+    const suspendDays = Math.max(0, Math.min(365, Number(body.suspend_days ?? 0)));
+    const chargeFee = body.charge_fee === true;
+    const feeAmount = Math.max(0, Number(body.fee_amount ?? 0));
+    const notifyAdmin = body.notify_admin !== false;
+
+    const result = await pool.query(
+      `INSERT INTO schedule_no_show_policy (
+         organization_id, threshold_count, window_days, action,
+         suspend_days, charge_fee, fee_amount, notify_admin, updated_at
+       )
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW())
+       ON CONFLICT (organization_id) DO UPDATE
+       SET threshold_count = EXCLUDED.threshold_count,
+           window_days = EXCLUDED.window_days,
+           action = EXCLUDED.action,
+           suspend_days = EXCLUDED.suspend_days,
+           charge_fee = EXCLUDED.charge_fee,
+           fee_amount = EXCLUDED.fee_amount,
+           notify_admin = EXCLUDED.notify_admin,
+           updated_at = NOW()
+       RETURNING *`,
+      [user.organizationId, threshold, window, action, suspendDays, chargeFee, feeAmount, notifyAdmin],
+    );
+    await invalidateScheduleCache(c.env, user.organizationId, "no-show-policy");
+    return c.json({ data: mapNoShowPolicyRow(result.rows[0]) });
+  } catch (error: any) {
+    return c.json({ error: error.message }, 500);
+  }
+};
+
+app.get("/settings/no-show-policy", requireAuth, async (c) => {
+  const user = c.get("user");
+  try {
+    const data = await readThroughScheduleCache(
+      c.env,
+      user.organizationId,
+      "no-show-policy",
+      async () => {
+        const pool = await createPool(c.env);
+        const result = await pool.query(
+          "SELECT * FROM schedule_no_show_policy WHERE organization_id = $1 LIMIT 1",
+          [user.organizationId],
+        );
+        return result.rows[0] ? mapNoShowPolicyRow(result.rows[0]) : null;
+      },
+    );
+    return c.json({ data });
+  } catch {
+    return c.json(emptyObject());
+  }
+});
+
+app.post("/settings/no-show-policy", requireAuth, handleUpsertNoShowPolicy);
+app.put("/settings/no-show-policy", requireAuth, handleUpsertNoShowPolicy);
 
 export { app as settingsRoutes };

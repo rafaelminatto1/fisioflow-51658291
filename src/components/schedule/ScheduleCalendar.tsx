@@ -482,10 +482,9 @@ export function ScheduleCalendar(props: ScheduleCalendarProps) {
         therapists={therapists}
       />
 
-      <div className="flex min-h-0 flex-1 flex-col p-1 md:p-2">
+      <div className="flex min-h-0 flex-1 flex-col">
         <div
-          className="relative w-full overflow-y-auto overflow-x-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900"
-          style={{ maxHeight: "calc(100vh - 200px)" }}
+          className="relative flex min-h-0 w-full flex-1 overflow-hidden border-t border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900 [&>.fc]:flex-1 [&>.fc]:min-h-0"
         >
           <FullCalendar
             ref={calendarRef}
@@ -517,7 +516,8 @@ export function ScheduleCalendar(props: ScheduleCalendarProps) {
             selectMirror
             snapDuration="00:15:00"
             longPressDelay={250}
-            height="auto"
+            height="100%"
+            expandRows
             events={events}
             eventContent={renderEventContent}
             dateClick={handleDateClick}

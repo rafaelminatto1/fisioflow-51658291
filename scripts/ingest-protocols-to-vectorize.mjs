@@ -11,7 +11,7 @@ import { Client } from "pg";
 // Configurações Cloudflare
 const CF_ACCOUNT_ID = "32156f9a72a32d1ece28ab74bcd398fb";
 const CF_API_TOKEN = process.env.CLOUDFLARE_API_TOKEN;
-const VECTOR_INDEX_NAME = "clinical-knowledge";
+const VECTOR_INDEX_NAME = "fisioflow-clinical";
 
 async function generateEmbedding(text) {
   // Modelo Base gera 768 dimensões (compatível com o índice clinical-knowledge atual)
@@ -50,6 +50,9 @@ async function upsertToVectorize(vectors) {
 }
 
 async function run() {
+  console.log("🔍 Debug Token:", process.env.CLOUDFLARE_API_TOKEN ? process.env.CLOUDFLARE_API_TOKEN.substring(0, 10) + "..." : "not set");
+  console.log("🔍 Debug Account ID:", CF_ACCOUNT_ID);
+  
   const client = new Client({
     connectionString: process.env.DATABASE_URL,
   });

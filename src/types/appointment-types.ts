@@ -8,6 +8,7 @@ export interface AppointmentType {
   maxPerDay: number | null;
   isActive: boolean;
   isDefault: boolean;
+  sortOrder?: number;
 }
 
 export interface AppointmentTypeFormData {

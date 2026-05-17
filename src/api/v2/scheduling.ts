@@ -77,6 +77,21 @@ export interface ScheduleCapacityConfig {
   start_time: string;
   end_time: string;
   max_patients: number;
+  appointment_type_id?: string | null;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface ScheduleNoShowPolicy {
+  id: string;
+  organization_id?: string;
+  threshold_count: number;
+  window_days: number;
+  action: "warn" | "block_online" | "suspend" | "charge";
+  suspend_days: number;
+  charge_fee: boolean;
+  fee_amount: number;
+  notify_admin: boolean;
   created_at?: string;
   updated_at?: string;
 }
@@ -379,6 +394,15 @@ export const schedulingApi = {
       request<{ data: ScheduleBookingWindow | null }>("/api/scheduling/settings/booking-window"),
     upsert: (data: Record<string, unknown>) =>
       request<{ data: ScheduleBookingWindow }>("/api/scheduling/settings/booking-window", {
+        method: "PUT",
+        body: JSON.stringify(data),
+      }),
+  },
+  noShowPolicy: {
+    get: () =>
+      request<{ data: ScheduleNoShowPolicy | null }>("/api/scheduling/settings/no-show-policy"),
+    upsert: (data: Record<string, unknown>) =>
+      request<{ data: ScheduleNoShowPolicy }>("/api/scheduling/settings/no-show-policy", {
         method: "PUT",
         body: JSON.stringify(data),
       }),

@@ -4,7 +4,7 @@
  * Enhanced measurements registration block with better UX,
  * professional visual design, and proper Y-Balance test layout.
  */
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useMemo, useRef, useEffect } from "react";
 import {
   Ruler,
   Trash2,
@@ -21,6 +21,9 @@ import {
   Thermometer,
   CheckCircle2,
   Info,
+  Search,
+  Plus,
+  Sparkles,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -36,6 +39,20 @@ import {
 import { cn } from "@/lib/utils";
 import { YBalanceBlock } from "./YBalanceBlock";
 import { type MeasurementItem, MEASUREMENT_TYPES, MEASUREMENT_TYPE_LABELS } from "./types";
+
+const QUICK_TEMPLATES: Array<Partial<MeasurementItem> & { name: string }> = [
+  { name: "Y-Balance Test", measurement_type: "Teste Funcional", measurement_name: "Y-Balance Test", unit: "cm" },
+  { name: "Sinais Vitais", measurement_type: "Sinais Vitais", measurement_name: "Checkup Geral", unit: "" },
+  { name: "Goniometria", measurement_type: "Goniometria", measurement_name: "ADM", unit: "graus" },
+  { name: "Dor (EVA)", measurement_type: "Dor (EVA)", measurement_name: "EVA", unit: "0-10" },
+  { name: "Força Muscular", measurement_type: "Força Muscular", measurement_name: "Força", unit: "0-5" },
+  { name: "Perimetria", measurement_type: "Perimetria", measurement_name: "Circunferência", unit: "cm" },
+];
+
+const generateId = () =>
+  typeof crypto !== "undefined" && crypto.randomUUID
+    ? crypto.randomUUID()
+    : "meas_" + Math.random().toString(36).substring(2, 9) + Date.now().toString(36);
 
 // Vital signs configuration
 const VITAL_SIGNS_FIELDS = [
@@ -106,16 +123,130 @@ interface MeasurementsBlockProps {
   onChange: (measurements: MeasurementItem[]) => void;
   disabled?: boolean;
   className?: string;
+  /**
+   * Histórico de valores numéricos por nome de medição (lowercase),
+   * em ordem cronológica antiga→nova. Usado para renderizar sparkline de tendência.
+   */
+  history?: Record<string, number[]>;
 }
+
+/** Sparkline mínima em SVG (sem dependências). */
+const Sparkline: React.FC<{
+  values: number[];
+  current?: number;
+  width?: number;
+  height?: number;
+  className?: string;
+}> = ({ values, current, width = 56, height = 18, className }) => {
+  const series = [...values, ...(typeof current === "number" && Number.isFinite(current) ? [current] : [])];
+  if (series.length < 2) return null;
+  const min = Math.min(...series);
+  const max = Math.max(...series);
+  const range = max - min || 1;
+  const stepX = series.length > 1 ? width / (series.length - 1) : width;
+  const points = series
+    .map((v, i) => {
+      const x = i * stepX;
+      const y = height - ((v - min) / range) * height;
+      return `${x.toFixed(1)},${y.toFixed(1)}`;
+    })
+    .join(" ");
+  const first = series[0];
+  const last = series[series.length - 1];
+  const trend = last > first ? "up" : last < first ? "down" : "flat";
+  const color =
+    trend === "up" ? "#dc2626" : trend === "down" ? "#16a34a" : "#64748b"; // dor↑=ruim por padrão
+  const lastX = (series.length - 1) * stepX;
+  const lastY = height - ((last - min) / range) * height;
+  return (
+    <svg
+      width={width}
+      height={height}
+      viewBox={`0 0 ${width} ${height}`}
+      className={cn("flex-shrink-0", className)}
+      aria-label={`Tendência: ${series.length} valores, ${trend === "up" ? "alta" : trend === "down" ? "queda" : "estável"}`}
+    >
+      <polyline
+        points={points}
+        fill="none"
+        stroke={color}
+        strokeWidth={1.5}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <circle cx={lastX} cy={lastY} r={1.8} fill={color} />
+    </svg>
+  );
+};
 
 export const MeasurementsBlock: React.FC<MeasurementsBlockProps> = ({
   measurements,
   onChange,
   disabled = false,
   className,
+  history = {},
 }) => {
   const [expandedId, setExpandedId] = useState<string | null>(null);
-  const [, _setShowTemplates] = useState(false);
+  const [search, setSearch] = useState("");
+  const [showResults, setShowResults] = useState(false);
+  const searchWrapRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const onClickAway = (e: MouseEvent) => {
+      if (!searchWrapRef.current?.contains(e.target as Node)) {
+        setShowResults(false);
+      }
+    };
+    document.addEventListener("mousedown", onClickAway);
+    return () => document.removeEventListener("mousedown", onClickAway);
+  }, []);
+
+  const handleAddMeasurement = useCallback(
+    (template?: Partial<MeasurementItem>) => {
+      const newMeasurement: MeasurementItem = {
+        id: generateId(),
+        measurement_type: template?.measurement_type || "",
+        measurement_name: template?.measurement_name || "",
+        value: template?.value || "",
+        unit: template?.unit || "",
+        notes: template?.notes || "",
+        custom_data: template?.custom_data || {},
+        selectedTestId: template?.selectedTestId,
+        selectedTest: template?.selectedTest,
+        completed: false,
+      };
+      onChange([...measurements, newMeasurement]);
+      setExpandedId(newMeasurement.id);
+      setSearch("");
+      setShowResults(false);
+    },
+    [measurements, onChange],
+  );
+
+  const normalized = search.trim().toLowerCase();
+  const filteredTemplates = useMemo(
+    () =>
+      normalized
+        ? QUICK_TEMPLATES.filter(
+            (t) =>
+              t.name.toLowerCase().includes(normalized) ||
+              t.measurement_type?.toLowerCase().includes(normalized),
+          )
+        : QUICK_TEMPLATES,
+    [normalized],
+  );
+  const filteredTypes = useMemo(
+    () =>
+      normalized
+        ? MEASUREMENT_TYPES.filter(
+            (t) =>
+              t.toLowerCase().includes(normalized) ||
+              MEASUREMENT_TYPE_LABELS[t]?.toLowerCase().includes(normalized),
+          )
+        : MEASUREMENT_TYPES,
+    [normalized],
+  );
+  const hasResults = filteredTemplates.length > 0 || filteredTypes.length > 0;
 
   const handleRemoveMeasurement = useCallback(
     (id: string) => {
@@ -161,6 +292,98 @@ export const MeasurementsBlock: React.FC<MeasurementsBlockProps> = ({
   return (
     <>
       <div className={cn("w-full transition-all duration-300", className)}>
+        {/* Inline search/add bar — sem precisar clicar em "Adicionar" */}
+        <div ref={searchWrapRef} className="relative px-1 pb-3">
+          <div className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 focus-within:border-violet-400 focus-within:ring-2 focus-within:ring-violet-100">
+            <Search className="h-3.5 w-3.5 text-slate-400 flex-shrink-0" />
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                setShowResults(true);
+              }}
+              onFocus={() => setShowResults(true)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  if (filteredTemplates[0]) {
+                    handleAddMeasurement(filteredTemplates[0]);
+                  } else if (filteredTypes[0]) {
+                    handleAddMeasurement({ measurement_type: filteredTypes[0], measurement_name: "" });
+                  } else if (search.trim()) {
+                    handleAddMeasurement({ measurement_name: search.trim() });
+                  }
+                } else if (e.key === "Escape") {
+                  setShowResults(false);
+                }
+              }}
+              placeholder="Buscar ou adicionar medição (Y-Balance, EVA, Goniometria...)"
+              disabled={disabled}
+              className="flex-1 bg-transparent text-sm outline-none placeholder:text-slate-400 disabled:cursor-not-allowed"
+            />
+            <button
+              type="button"
+              disabled={disabled}
+              onClick={() =>
+                handleAddMeasurement(
+                  search.trim() ? { measurement_name: search.trim() } : undefined,
+                )
+              }
+              className="flex items-center gap-1 rounded-md bg-violet-500 px-2 py-1 text-[11px] font-medium text-white transition hover:bg-violet-600 disabled:opacity-50"
+            >
+              <Plus className="h-3 w-3" />
+              Adicionar
+            </button>
+          </div>
+
+          {showResults && !disabled && hasResults && (
+            <div className="absolute left-1 right-1 z-20 mt-1 max-h-72 overflow-y-auto rounded-lg border border-slate-200 bg-white shadow-lg">
+              {filteredTemplates.length > 0 && (
+                <div className="py-1">
+                  <div className="px-3 py-1 text-[10px] font-semibold uppercase text-slate-400">
+                    Modelos rápidos
+                  </div>
+                  {filteredTemplates.map((template) => (
+                    <button
+                      key={template.name}
+                      type="button"
+                      onClick={() => handleAddMeasurement(template)}
+                      className="flex w-full items-center gap-2 px-3 py-1.5 text-left text-sm hover:bg-violet-50"
+                    >
+                      <Sparkles className="h-3.5 w-3.5 text-violet-500" />
+                      <span className="flex-1">{template.name}</span>
+                      {template.unit && (
+                        <span className="text-[10px] text-slate-400">{template.unit}</span>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              )}
+              {filteredTypes.length > 0 && (
+                <div className="border-t border-slate-100 py-1">
+                  <div className="px-3 py-1 text-[10px] font-semibold uppercase text-slate-400">
+                    Tipo personalizado
+                  </div>
+                  {filteredTypes.map((type) => (
+                    <button
+                      key={type}
+                      type="button"
+                      onClick={() =>
+                        handleAddMeasurement({ measurement_type: type, measurement_name: "" })
+                      }
+                      className="flex w-full items-center gap-2 px-3 py-1.5 text-left text-sm hover:bg-violet-50"
+                    >
+                      <Plus className="h-3.5 w-3.5 text-slate-400" />
+                      <span>{MEASUREMENT_TYPE_LABELS[type]}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
         {/* Measurements list */}
         <div className="pb-2 space-y-3">
           {measurements.length === 0 ? (
@@ -169,7 +392,7 @@ export const MeasurementsBlock: React.FC<MeasurementsBlockProps> = ({
                 <Ruler className="h-5 w-5 text-slate-300" />
               </div>
               <p className="text-sm font-medium">Nenhuma medição adicionada</p>
-              <p className="text-xs mt-1.5 opacity-90">Use o botão "Adicionar" para registrar</p>
+              <p className="text-xs mt-1.5 opacity-90">Use a barra de busca acima para registrar</p>
             </div>
           ) : (
             measurements.map((measurement, index) => (
@@ -187,6 +410,7 @@ export const MeasurementsBlock: React.FC<MeasurementsBlockProps> = ({
                 }
                 onRemove={() => handleRemoveMeasurement(measurement.id)}
                 disabled={disabled}
+                history={history[(measurement.measurement_name || "").trim().toLowerCase()] || []}
               />
             ))
           )}
@@ -224,6 +448,7 @@ const MeasurementCard: React.FC<{
   onUpdateCustomData: (key: string, value: string) => void;
   onRemove: () => void;
   disabled: boolean;
+  history?: number[];
 }> = React.memo(
   ({
     measurement,
@@ -234,6 +459,7 @@ const MeasurementCard: React.FC<{
     onUpdateCustomData,
     onRemove,
     disabled,
+    history = [],
   }) => {
     const [isRemoving, setIsRemoving] = React.useState(false);
 
@@ -323,6 +549,34 @@ const MeasurementCard: React.FC<{
               </p>
             )}
           </div>
+
+          {/* Sparkline — tendência das últimas medições com mesmo nome */}
+          {history.length >= 2 && (() => {
+            const currentNum = parseFloat(String(measurement.value ?? "").replace(",", "."));
+            const series = [...history, ...(Number.isFinite(currentNum) ? [currentNum] : [])];
+            const first = series[0];
+            const last = series[series.length - 1];
+            const delta = last - first;
+            const trendArrow = delta > 0 ? "↑" : delta < 0 ? "↓" : "→";
+            const trendColor =
+              delta > 0
+                ? "text-rose-600"
+                : delta < 0
+                  ? "text-emerald-600"
+                  : "text-slate-500";
+            return (
+              <div
+                className="hidden sm:flex items-center gap-1.5 px-1.5"
+                title={`${history.length + (Number.isFinite(currentNum) ? 1 : 0)} medições — variação ${delta > 0 ? "+" : ""}${delta.toFixed(1)}`}
+              >
+                <Sparkline values={history} current={Number.isFinite(currentNum) ? currentNum : undefined} />
+                <span className={cn("text-[10px] font-semibold tabular-nums", trendColor)}>
+                  {trendArrow}
+                  {Math.abs(delta).toFixed(1)}
+                </span>
+              </div>
+            );
+          })()}
 
           {/* Expand/collapse */}
           <button

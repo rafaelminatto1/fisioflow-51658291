@@ -43,7 +43,11 @@ import { toast } from "sonner";
 import type { SoapRecord } from "@/hooks/useSoapRecords";
 import { ExerciseLibraryModal } from "@/components/exercises/ExerciseLibraryModal";
 import { COMMON_PROCEDURES, PROCEDURE_CATEGORY_LABELS } from "./types";
-import type { EvolutionV2Data } from "./types";
+import type { EvolutionV2Data, MeasurementItem } from "./types";
+import { useSoapRecords } from "@/hooks/useSoapRecords";
+import { Copy } from "lucide-react";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 
 interface NotionEvolutionPanelProps {
   data: EvolutionV2Data;
@@ -74,6 +78,48 @@ export const NotionEvolutionPanel: React.FC<NotionEvolutionPanelProps> = ({
 }) => {
   const [procedureLibraryOpen, setProcedureLibraryOpen] = useState(false);
   const [exerciseLibraryOpen, setExerciseLibraryOpen] = useState(false);
+
+  // Histórico (usado por: banner "Replicar última sessão" + sparklines de medições)
+  const { data: recentRecords = [] } = useSoapRecords(patientId ?? "", 8);
+  const lastSession = React.useMemo(() => {
+    const list = evolutionId
+      ? recentRecords.filter((r) => r.id !== evolutionId)
+      : recentRecords;
+    return list[0] ?? null;
+  }, [recentRecords, evolutionId]);
+
+  // Série histórica de medições por nome (cronológica antiga→nova) para sparklines
+  const measurementHistory = React.useMemo<Record<string, number[]>>(() => {
+    const series: Record<string, number[]> = {};
+    const chronological = [...recentRecords]
+      .filter((r) => !evolutionId || r.id !== evolutionId)
+      .sort(
+        (a, b) =>
+          new Date(a.record_date).getTime() - new Date(b.record_date).getTime(),
+      );
+    for (const rec of chronological) {
+      const meas = (rec.measurements as MeasurementItem[] | undefined) || [];
+      for (const m of meas) {
+        const key = (m.measurement_name || "").trim().toLowerCase();
+        if (!key) continue;
+        const n = parseFloat(String(m.value ?? "").replace(",", "."));
+        if (Number.isFinite(n)) {
+          series[key] = series[key] || [];
+          series[key].push(n);
+        }
+      }
+    }
+    return series;
+  }, [recentRecords, evolutionId]);
+
+  const currentIsEmpty = React.useMemo(() => {
+    const hasUnified = (data.unifiedItems?.length ?? 0) > 0;
+    const hasLegacy =
+      (data.procedures?.length ?? 0) > 0 || (data.exercises?.length ?? 0) > 0;
+    const hasText = (data.evolutionText || data.observations || "").trim().length > 0;
+    const hasMeas = (data.measurements?.length ?? 0) > 0;
+    return !hasUnified && !hasLegacy && !hasText && !hasMeas;
+  }, [data]);
 
   // Migration logic (run once if unifiedItems is empty but legacy items exist)
   React.useEffect(() => {
@@ -213,6 +259,46 @@ export const NotionEvolutionPanel: React.FC<NotionEvolutionPanelProps> = ({
         <div className="flex-1 overflow-y-auto p-3 sm:p-5">
           <div className="mx-auto flex w-full max-w-[1440px] flex-col gap-5 pb-12">
 
+            {/* Banner: Replicar última sessão (1 clique) */}
+            {lastSession && currentIsEmpty && !disabled && (
+              <div className="flex flex-col sm:flex-row sm:items-center gap-3 rounded-xl border border-blue-200 bg-blue-50 px-4 py-3">
+                <div className="flex items-center gap-3 flex-1 min-w-0">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-100 text-blue-700 flex-shrink-0">
+                    <Copy className="h-4 w-4" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold text-blue-900">
+                      Replicar última sessão
+                    </p>
+                    <p className="text-xs text-blue-700/80 truncate">
+                      Sessão de{" "}
+                      {format(new Date(lastSession.record_date), "dd/MM • HH'h'mm", {
+                        locale: ptBR,
+                      })}
+                      {typeof lastSession.pain_scale === "number" &&
+                        ` • EVA ${lastSession.pain_scale}`}
+                      {(lastSession.procedures?.length ?? 0) +
+                        (lastSession.exercises?.length ?? 0) >
+                        0 &&
+                        ` • ${
+                          (lastSession.procedures?.length ?? 0) +
+                          (lastSession.exercises?.length ?? 0)
+                        } itens`}
+                    </p>
+                  </div>
+                </div>
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={() => handleReplicate(lastSession)}
+                  className="bg-blue-600 hover:bg-blue-700 text-white h-9 px-4 self-stretch sm:self-auto"
+                >
+                  <Copy className="h-3.5 w-3.5 mr-1.5" />
+                  Replicar agora
+                </Button>
+              </div>
+            )}
+
             {/* Linha 1: EVA + Observações Clínicas */}
             <div className="grid grid-cols-1 lg:grid-cols-[minmax(320px,1fr)_2fr] gap-5">
               <EvolutionSectionCard
@@ -305,6 +391,7 @@ export const NotionEvolutionPanel: React.FC<NotionEvolutionPanelProps> = ({
                   measurements={data.measurements || []}
                   onChange={(meas) => handleFieldChange("measurements", meas)}
                   disabled={disabled}
+                  history={measurementHistory}
                 />
               </EvolutionSectionCard>
             </div>

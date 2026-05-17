@@ -12,6 +12,13 @@ export interface BookingWindowData {
 
 const QUERY_KEY = "schedule-booking-window";
 
+const DEFAULT_BOOKING_WINDOW: BookingWindowData = {
+  minAdvanceDays: 0,
+  maxAdvanceDays: 60,
+  allowSameDay: true,
+  allowOnlineBooking: true,
+};
+
 export function useBookingWindow() {
   const { toast } = useToast();
   const { profile } = useAuth();
@@ -24,14 +31,7 @@ export function useBookingWindow() {
       try {
         const res = await schedulingApi.bookingWindow.get();
         const row = (res?.data ?? null) as ScheduleBookingWindow | null;
-        if (!row) {
-          return {
-            minAdvanceDays: 0,
-            maxAdvanceDays: 60,
-            allowSameDay: true,
-            allowOnlineBooking: true,
-          };
-        }
+        if (!row) return DEFAULT_BOOKING_WINDOW;
         return {
           minAdvanceDays: row.min_advance_days,
           maxAdvanceDays: row.max_advance_days,
@@ -39,12 +39,7 @@ export function useBookingWindow() {
           allowOnlineBooking: row.online_booking,
         };
       } catch {
-        return {
-          minAdvanceDays: 0,
-          maxAdvanceDays: 60,
-          allowSameDay: true,
-          allowOnlineBooking: true,
-        };
+        return DEFAULT_BOOKING_WINDOW;
       }
     },
     enabled: !!organizationId,
@@ -70,12 +65,7 @@ export function useBookingWindow() {
   });
 
   return {
-    data: data ?? {
-      minAdvanceDays: 0,
-      maxAdvanceDays: 60,
-      allowSameDay: true,
-      allowOnlineBooking: true,
-    },
+    data: data ?? DEFAULT_BOOKING_WINDOW,
     isLoading,
     save: save.mutate,
     isSaving: save.isPending,

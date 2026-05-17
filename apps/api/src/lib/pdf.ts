@@ -21,7 +21,7 @@ export async function generatePdfFromHtml(env: Env, html: string): Promise<Uint8
   });
 
   if (!response.ok) {
-    const text = await response.text();
+    const text = await response.text().catch(() => "Unable to read error response");
     throw new Error(`Quick Actions PDF failed: ${response.status} ${text}`);
   }
 

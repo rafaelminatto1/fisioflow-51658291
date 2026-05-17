@@ -7,6 +7,7 @@ import { defineConfig } from "vite";
 import Icons from "unplugin-icons/vite";
 import Inspect from "vite-plugin-inspect";
 import checker from "vite-plugin-checker";
+import { VitePWA } from "vite-plugin-pwa";
 
 const repoRoot = path.resolve(__dirname, "../..");
 
@@ -87,52 +88,49 @@ export default defineConfig(({ mode }) => {
       }),
       mockMobileModules(),
       htmlPlugin(appVersion, buildTime),
-      // VitePWA({
-      //   strategies: "injectManifest",
-      //   srcDir: "src",
-      //   filename: "service-worker.ts",
-      //   registerType: "autoUpdate",
-      //   injectRegister: null,
-      //   manifest: {
-      //     name: "FisioFlow - Plataforma de Fisioterapia Digital",
-      //     short_name: "FisioFlow",
-      //     description: "Sistema completo de gestão para fisioterapeutas",
-      //     theme_color: "#0ea5e9",
-      //     background_color: "#ffffff",
-      //     display: "standalone",
-      //     orientation: "portrait-primary",
-      //     scope: "/",
-      //     start_url: "/",
-      //     icons: [
-      //       {
-      //         src: "/icons/badge-72x72.svg",
-      //         sizes: "72x72",
-      //         type: "image/svg+xml",
-      //         purpose: "any",
-      //       },
-      //       {
-      //         src: "/icons/icon-192x192.svg",
-      //         sizes: "192x192",
-      //         type: "image/svg+xml",
-      //         purpose: "any",
-      //       },
-      //       {
-      //         src: "/icons/icon-512x512.svg",
-      //         sizes: "512x512",
-      //         type: "image/svg+xml",
-      //         purpose: "any",
-      //       },
-      //     ],
-      //   },
-      //   injectManifest: {
-      //     globPatterns: ["**/*.{js,css,html,ico,png,svg,avif,woff2}"],
-      //     maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
-      //   },
-      //   devOptions: {
-      //     enabled: false,
-      //     type: "module",
-      //   },
-      // }),
+      // PWA — habilitado em Maio 2026 para suportar reload offline.
+      // O SW (src/service-worker.ts) faz precaching do app shell via Workbox,
+      // permitindo que recarregar a aba sem rede ainda sirva o app.
+      VitePWA({
+        strategies: "injectManifest",
+        srcDir: "src",
+        filename: "service-worker.ts",
+        registerType: "autoUpdate",
+        // Registro é feito manualmente em src/lib/pwa/serviceWorkerRegistration.ts
+        injectRegister: null,
+        manifest: {
+          name: "FisioFlow - Plataforma de Fisioterapia Digital",
+          short_name: "FisioFlow",
+          description: "Sistema completo de gestão para fisioterapeutas",
+          theme_color: "#0ea5e9",
+          background_color: "#ffffff",
+          display: "standalone",
+          orientation: "portrait-primary",
+          scope: "/",
+          start_url: "/",
+          icons: [
+            { src: "/icons/badge-72x72.svg", sizes: "72x72", type: "image/svg+xml", purpose: "any" },
+            { src: "/icons/icon-192x192.svg", sizes: "192x192", type: "image/svg+xml", purpose: "any" },
+            { src: "/icons/icon-512x512.svg", sizes: "512x512", type: "image/svg+xml", purpose: "any" },
+          ],
+        },
+        injectManifest: {
+          // Precache só o essencial: HTML, CSS, JS principal, fontes, ícones SVG/PNG.
+          // Sourcemaps, WebP/AVIF pesadas e vídeos ficam fora — buscados sob demanda.
+          globPatterns: ["**/*.{js,css,html,ico,svg,woff2}"],
+          globIgnores: [
+            "**/*.map",
+            "**/sw.js",
+            "**/service-worker.js",
+            "**/vendor-image-editor-*.js", // editor de imagens é raramente usado
+          ],
+          maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
+        },
+        devOptions: {
+          enabled: false,
+          type: "module",
+        },
+      }),
       Icons({
         compiler: "jsx",
         autoInstall: true,

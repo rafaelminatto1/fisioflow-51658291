@@ -13,6 +13,7 @@ const capacitySchema = z.object({
   start_time: z.string(),
   end_time: z.string(),
   max_patients: z.number().min(1).max(20),
+  appointment_type_id: z.string().nullable().optional(),
 });
 
 export type CapacityFormData = z.infer<typeof capacitySchema>;
@@ -24,15 +25,17 @@ export interface ScheduleCapacity {
   start_time: string;
   end_time: string;
   max_patients: number;
+  appointment_type_id?: string | null;
   created_at: string;
   updated_at: string;
 }
 
-/** Grupo de capacidades com mesmo horário e vagas (para exibição agrupada) */
+/** Grupo de capacidades com mesmo horário, vagas e tipo (para exibição agrupada) */
 export interface CapacityGroup {
   start_time: string;
   end_time: string;
   max_patients: number;
+  appointment_type_id: string | null;
   ids: string[];
   days: number[];
 }
@@ -59,6 +62,7 @@ export function useScheduleCapacity() {
           start_time: String(row.start_time ?? "07:00").slice(0, 5),
           end_time: String(row.end_time ?? "19:00").slice(0, 5),
           max_patients: Number(row.max_patients ?? 1),
+          appointment_type_id: row.appointment_type_id ? String(row.appointment_type_id) : null,
           created_at: String(row.created_at ?? ""),
           updated_at: String(row.updated_at ?? ""),
         }))
@@ -412,7 +416,8 @@ export function useScheduleCapacity() {
     const list = capacities || [];
     if (list.length === 0) return [];
 
-    const key = (c: ScheduleCapacity) => `${c.start_time}|${c.end_time}|${c.max_patients}`;
+    const key = (c: ScheduleCapacity) =>
+      `${c.start_time}|${c.end_time}|${c.max_patients}|${c.appointment_type_id ?? ""}`;
     const map = new Map<string, ScheduleCapacity[]>();
 
     for (const c of list) {
@@ -425,6 +430,7 @@ export function useScheduleCapacity() {
       start_time: items[0].start_time,
       end_time: items[0].end_time,
       max_patients: items[0].max_patients,
+      appointment_type_id: items[0].appointment_type_id ?? null,
       ids: items.map((i) => i.id),
       days: [...new Set(items.map((i) => i.day_of_week))].sort((a, b) => a - b),
     }));

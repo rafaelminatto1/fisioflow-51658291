@@ -21,6 +21,7 @@ function apiToClient(row: ScheduleAppointmentType): AppointmentType {
     maxPerDay: row.max_per_day,
     isActive: row.is_active,
     isDefault: row.is_default,
+    sortOrder: row.sort_order,
   };
 }
 

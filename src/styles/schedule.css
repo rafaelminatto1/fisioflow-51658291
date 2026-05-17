@@ -28,7 +28,14 @@
 .fc .fc-timegrid-slot-lane,
 .fc .fc-timegrid-slot-label {
   height: var(--agenda-slot-height) !important;
+  min-height: var(--agenda-slot-height) !important;
   border: none !important;
+}
+
+/* Allow rows to expand to fill available height when expandRows is on */
+.fc .fc-timegrid-body,
+.fc .fc-timegrid-body > table {
+  height: 100% !important;
 }
 
 /* Subtle tonal separator for full hours only */

@@ -15,6 +15,7 @@ import { useEffect, useRef, useCallback } from "react";
 import { useOfflineSync } from "@/services/offlineSync";
 import { fisioLogger as logger } from "@/lib/errors/logger";
 import { useConnectionStatus } from "@/hooks/useConnectionStatus";
+import { usePrefetchWeeklyPatientData } from "@/hooks/usePrefetchWeeklyPatientData";
 
 const SYNC_MANAGER_VERSION = "1.1.0";
 
@@ -56,6 +57,7 @@ export function SyncManager(userOptions: SyncManagerOptions = {}) {
     syncInterval: options.syncInterval,
     showNotifications: options.showNotifications,
   });
+  const { prefetchNow: prefetchWeeklyPatients } = usePrefetchWeeklyPatientData();
 
   const { connectionType } = useConnectionStatus();
 
@@ -92,11 +94,16 @@ export function SyncManager(userOptions: SyncManagerOptions = {}) {
 
         await cacheCriticalData();
 
+        // Prefetch das evoluções + histórico clínico dos pacientes agendados
+        // na próxima semana (cobertura completa para uso offline)
+        const prefetchResult = await prefetchWeeklyPatients();
+
         if (options.verboseLogging) {
           logger.info(
             "[SyncManager] Cache de dados críticos concluído",
             {
               pendingActions: stats.pendingActions,
+              prefetchedPatients: prefetchResult.patientCount,
             },
             "SyncManager",
           );
@@ -132,7 +139,7 @@ export function SyncManager(userOptions: SyncManagerOptions = {}) {
         isCachingRef.current = false;
       }
     },
-    [cacheCriticalData, stats.pendingActions, connectionType, options.verboseLogging],
+    [cacheCriticalData, prefetchWeeklyPatients, stats.pendingActions, connectionType, options.verboseLogging],
   );
 
   /**

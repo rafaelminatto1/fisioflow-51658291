@@ -146,7 +146,7 @@ export function createDb(env: Env, _mode: "read" | "write" = "write"): FisioDb {
 
       try {
         const results = await baseSql.transaction([
-          baseSql.query(`SELECT set_config('app.org_id', $1, true)`, [orgId ?? ""]),
+          baseSql.query(`SELECT set_config('role', 'authenticated', true), set_config('app.org_id', $1, true)`, [orgId ?? ""]),
           baseSql.query(queryText, queryParams, queryOpts as any),
         ]);
 
@@ -200,7 +200,7 @@ export async function withRls<T>(
     const client = createPgClient(env, mode);
     try {
       await client.connect();
-      await client.query(`SELECT set_config('app.org_id', $1, true)`, [organizationId]);
+      await client.query(`SELECT set_config('role', 'authenticated', true), set_config('app.org_id', $1, true)`, [organizationId]);
       return await fn(client);
     } finally {
       await client.end().catch(() => {});
@@ -210,7 +210,7 @@ export async function withRls<T>(
   const sql = neon(url);
   // Neon transaction returns values for each query
   await (sql as any).transaction([
-    (sql as any).query(`SELECT set_config('app.org_id', $1, true)`, [organizationId]),
+    (sql as any).query(`SELECT set_config('role', 'authenticated', true), set_config('app.org_id', $1, true)`, [organizationId]),
     // This is a bit tricky because fn(sql) expects the sql client itself
   ]);
   // Since fn(sql) might execute multiple queries, we should ideally use a proxy here too.
@@ -239,7 +239,7 @@ export function createPool(
           await client.connect();
           const effectiveOrgId = getOrgContext() || orgId;
           if (effectiveOrgId) {
-            await client.query(`SELECT set_config('app.org_id', $1, true)`, [effectiveOrgId]);
+            await client.query(`SELECT set_config('role', 'authenticated', true), set_config('app.org_id', $1, true)`, [effectiveOrgId]);
           }
           const res = await client.query(text, params);
           return {
@@ -267,7 +267,7 @@ export function createPool(
           await client.query("BEGIN");
           const effectiveOrgId = getOrgContext() || orgId;
           if (effectiveOrgId) {
-            await client.query(`SELECT set_config('app.org_id', $1, true)`, [effectiveOrgId]);
+            await client.query(`SELECT set_config('role', 'authenticated', true), set_config('app.org_id', $1, true)`, [effectiveOrgId]);
           }
           const results = [];
           for (const q of queries) {
@@ -296,7 +296,7 @@ export function createPool(
     const effectiveOrgId = getOrgContext() ?? orgId;
     if (effectiveOrgId) {
       const results = await (sql as any).transaction([
-        (sql as any).query(`SELECT set_config('app.org_id', $1, true)`, [effectiveOrgId]),
+        (sql as any).query(`SELECT set_config('role', 'authenticated', true), set_config('app.org_id', $1, true)`, [effectiveOrgId]),
         (sql as any).query(text, params),
       ]);
       return results[1] as DbQueryResult<Row>;
@@ -319,7 +319,7 @@ export function createPool(
       const neonQueries = queries.map((q) => (sql as any).query(q.text, q.values));
       const allQueries = effectiveOrgId
         ? [
-            (sql as any).query(`SELECT set_config('app.org_id', $1, true)`, [effectiveOrgId]),
+            (sql as any).query(`SELECT set_config('role', 'authenticated', true), set_config('app.org_id', $1, true)`, [effectiveOrgId]),
             ...neonQueries,
           ]
         : neonQueries;
@@ -346,7 +346,7 @@ export function getRawSql(env: Env, mode: "read" | "write" = "read"): DbQuery {
         await client.connect();
         const effectiveOrgId = getOrgContext() ?? orgId;
         if (effectiveOrgId) {
-          await client.query(`SELECT set_config('app.org_id', $1, true)`, [effectiveOrgId]);
+          await client.query(`SELECT set_config('role', 'authenticated', true), set_config('app.org_id', $1, true)`, [effectiveOrgId]);
         }
 
         const res = await client.query(text, params);
@@ -386,7 +386,7 @@ export function getRawSql(env: Env, mode: "read" | "write" = "read"): DbQuery {
 
     if (orgId) {
       const results = await (sql as any).transaction([
-        (sql as any).query(`SELECT set_config('app.org_id', $1, true)`, [orgId]),
+        (sql as any).query(`SELECT set_config('role', 'authenticated', true), set_config('app.org_id', $1, true)`, [orgId]),
         (sql as any).query(text, params),
       ]);
       return results[1] as DbQueryResult<Row>;

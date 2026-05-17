@@ -173,7 +173,7 @@ Retorne SOMENTE JSON válido no formato:
 
           let code = codeRes[0]?.code;
           if (!code) {
-            code = `FISIO${Math.random().toString(36).substring(2, 7).toUpperCase()}`;
+            code = `FISIO${crypto.randomUUID().substring(0, 5).toUpperCase()}`;
             await sql`
               INSERT INTO referral_codes (patient_id, organization_id, code, reward_type, reward_value)
               VALUES (${patientId}, ${orgId}, ${code}, 'discount', 10)

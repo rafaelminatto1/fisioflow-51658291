@@ -1,9 +1,10 @@
 import { useMemo } from "react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { ArrowRight, Copy, FileText, Loader2 } from "lucide-react";
+import { ArrowRight, CloudOff, Copy, FileText, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useSoapRecords, type SoapRecord } from "@/hooks/useSoapRecords";
+import { usePendingSyncIds } from "@/hooks/usePendingSyncIds";
 import { stripHtml } from "@/lib/utils/stripHtml";
 import { cn } from "@/lib/utils";
 
@@ -34,6 +35,7 @@ export function SessionTimelineStrip({
     patientId ?? "",
     maxItems + 1,
   );
+  const pendingSessionIds = usePendingSyncIds("sessions");
 
   const records = useMemo(
     () => (excludeId ? rawRecords.filter((r) => r.id !== excludeId) : rawRecords).slice(0, maxItems),
@@ -93,8 +95,17 @@ export function SessionTimelineStrip({
             className="snap-start shrink-0 w-[240px] rounded-xl border border-slate-200 bg-slate-50/60 hover:bg-slate-50 transition-colors p-3 flex flex-col gap-2"
           >
             <header className="flex items-center justify-between gap-2">
-              <span className="text-xs font-semibold text-slate-700">
+              <span className="flex items-center gap-1.5 text-xs font-semibold text-slate-700">
                 Sessão #{item.index}
+                {pendingSessionIds.has(item.id) && (
+                  <span
+                    className="inline-flex items-center gap-0.5 rounded-full bg-amber-500 px-1.5 py-0.5 text-[9px] font-bold uppercase text-white"
+                    title="Aguardando sincronização"
+                  >
+                    <CloudOff className="h-2.5 w-2.5" />
+                    Pendente
+                  </span>
+                )}
               </span>
               <span
                 className={cn(

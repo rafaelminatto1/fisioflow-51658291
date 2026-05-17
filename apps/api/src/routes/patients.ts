@@ -609,13 +609,13 @@ app.get("/", async (c) => {
 						p.is_active AS "isActive",
 						p.created_at AS "createdAt",
 						p.date_of_birth AS "birthDate",
-						(SELECT MAX(date) FROM appointments WHERE patient_id = p.id AND organization_id = p.organization_id) as "lastAppointmentDate",
+						p.last_appointment_date as "lastAppointmentDate",
 						NULL as classification,
 						'current' as "financialStatus",
-						0 as "sessionsCompleted",
-						0 as "totalAppointments",
-						NULL as "nextAppointmentDate",
-						0 as "openBalance"
+						p.sessions_completed as "sessionsCompleted",
+						p.total_appointments as "totalAppointments",
+						p.next_appointment_date as "nextAppointmentDate",
+						p.open_balance as "openBalance"
 					FROM patients p
 					WHERE p.organization_id = $1::uuid
 						AND COALESCE(p.archived, FALSE) = FALSE
@@ -623,34 +623,7 @@ app.get("/", async (c) => {
 			`;
     } else {
       cteSql = `
-			WITH appointment_agg AS (
-				SELECT
-					a.patient_id,
-					COUNT(*)::int AS total_appointments,
-					COUNT(*) FILTER (
-						WHERE LOWER(COALESCE(a.status::text, '')) IN ('atendido', 'realizado', 'completed', 'concluido', 'concluído')
-					)::int AS completed_appointments,
-					COUNT(*) FILTER (
-						WHERE LOWER(COALESCE(a.status::text, '')) IN ('faltou', 'faltou_sem_aviso', 'faltou_com_aviso', 'no_show', 'missed')
-					)::int AS no_show_count,
-					COUNT(*) FILTER (
-						WHERE a.date >= CURRENT_DATE
-							AND LOWER(COALESCE(a.status::text, '')) IN ('agendado', 'avaliacao', 'presenca_confirmada', 'scheduled', 'confirmed')
-					)::int AS upcoming_appointments,
-					MAX(a.date) AS last_appointment_date,
-					MIN(a.date) FILTER (
-						WHERE a.date >= CURRENT_DATE
-							AND LOWER(COALESCE(a.status::text, '')) IN ('agendado', 'avaliacao', 'presenca_confirmada', 'scheduled', 'confirmed')
-					) AS next_appointment_date,
-					COUNT(*) FILTER (
-						WHERE LOWER(COALESCE(a.payment_status::text, '')) = 'pending'
-							AND LOWER(COALESCE(a.status::text, '')) IN ('atendido', 'realizado', 'completed', 'concluido', 'concluído')
-					)::int AS unpaid_appointments
-				FROM appointments a
-				WHERE a.organization_id = $1::uuid
-				GROUP BY a.patient_id
-			),
-			pathology_agg AS (
+			WITH pathology_agg AS (
 				SELECT
 					pp.patient_id,
 					ARRAY_REMOVE(ARRAY_AGG(DISTINCT pp.name), NULL) AS pathology_names,
@@ -683,66 +656,6 @@ app.get("/", async (c) => {
 				FROM patient_surgeries ps
 				WHERE ps.organization_id = $1::uuid
 				GROUP BY ps.patient_id
-			),
-			finance_agg AS (
-				SELECT
-					cf.patient_id,
-					COUNT(*) FILTER (
-						WHERE LOWER(COALESCE(cf.status::text, '')) IN ('pendente', 'pending', 'aberto', 'open')
-					)::int AS open_count,
-					COUNT(*) FILTER (
-						WHERE LOWER(COALESCE(cf.status::text, '')) IN ('pendente', 'pending', 'aberto', 'open')
-							AND cf.data_vencimento < CURRENT_DATE
-					)::int AS overdue_count,
-					COALESCE(SUM(
-						CASE
-							WHEN LOWER(COALESCE(cf.tipo::text, '')) = 'receita'
-								THEN cf.valor::numeric
-							ELSE 0::numeric
-						END
-					), 0::numeric) AS receivable_total,
-					COALESCE(SUM(
-						CASE
-							WHEN LOWER(COALESCE(cf.status::text, '')) IN ('pendente', 'pending', 'aberto', 'open')
-								THEN cf.valor::numeric
-							ELSE 0::numeric
-						END
-					), 0::numeric) AS open_amount
-				FROM contas_financeiras cf
-				WHERE cf.organization_id = $1::uuid
-					AND COALESCE(cf.deleted_at IS NULL, TRUE)
-					AND cf.patient_id IS NOT NULL
-				GROUP BY cf.patient_id
-			),
-			payments_agg AS (
-				SELECT
-					pg.patient_id,
-					COALESCE(SUM(pg.valor::numeric), 0::numeric) AS paid_total
-				FROM pagamentos pg
-				WHERE pg.organization_id = $1::uuid
-					AND COALESCE(pg.deleted_at IS NULL, TRUE)
-					AND pg.patient_id IS NOT NULL
-				GROUP BY pg.patient_id
-			),
-			unbilled_agg AS (
-				SELECT
-					a.patient_id,
-					COUNT(*)::int AS unbilled_count
-				FROM appointments a
-				LEFT JOIN contas_financeiras cf
-					ON cf.appointment_id = a.id
-					AND cf.organization_id = a.organization_id
-					AND COALESCE(cf.deleted_at IS NULL, TRUE)
-				LEFT JOIN pagamentos pg
-					ON pg.appointment_id = a.id
-					AND pg.organization_id = a.organization_id
-					AND COALESCE(pg.deleted_at IS NULL, TRUE)
-				WHERE a.organization_id = $1::uuid
-					AND LOWER(COALESCE(a.status::text, '')) IN ('atendido', 'realizado', 'completed', 'concluido', 'concluído')
-					AND a.package_id IS NULL
-					AND cf.id IS NULL
-					AND pg.id IS NULL
-				GROUP BY a.patient_id
 			),
 			directory_rows AS (
 				SELECT
@@ -807,46 +720,33 @@ app.get("/", async (c) => {
 					p.partner_company_name AS "partnerCompanyName",
 					COALESCE(surgery_agg.has_surgery, FALSE) AS "hasSurgery",
 					COALESCE(surgery_agg.recent_surgery, FALSE) AS "recentSurgery",
-					COALESCE(appointment_agg.completed_appointments, 0) AS "sessionsCompleted",
-					COALESCE(appointment_agg.total_appointments, 0) AS "totalAppointments",
-					COALESCE(appointment_agg.no_show_count, 0) AS "noShowCount",
-					COALESCE(appointment_agg.upcoming_appointments, 0) AS "upcomingAppointmentsCount",
-					appointment_agg.last_appointment_date AS "lastAppointmentDate",
-					appointment_agg.next_appointment_date AS "nextAppointmentDate",
-					COALESCE(finance_agg.open_amount, 0::numeric) AS "openBalance",
+					COALESCE(p.sessions_completed, 0) AS "sessionsCompleted",
+					COALESCE(p.total_appointments, 0) AS "totalAppointments",
+					0 AS "noShowCount",
+					0 AS "upcomingAppointmentsCount",
+					p.last_appointment_date AS "lastAppointmentDate",
+					p.next_appointment_date AS "nextAppointmentDate",
+					COALESCE(p.open_balance, 0::numeric) AS "openBalance",
 					CASE
-						WHEN COALESCE(payments_agg.paid_total, 0::numeric) > COALESCE(finance_agg.receivable_total, 0::numeric)
-							AND COALESCE(finance_agg.receivable_total, 0::numeric) > 0::numeric
-							THEN 'credit'
-						WHEN COALESCE(finance_agg.overdue_count, 0) > 0 THEN 'in_collection'
-						WHEN COALESCE(unbilled_agg.unbilled_count, 0) > 0 THEN 'uninvoiced'
-						WHEN COALESCE(finance_agg.open_count, 0) > 0 THEN 'pending_balance'
+						WHEN COALESCE(p.open_balance, 0::numeric) > 0 THEN 'pending_balance'
 						ELSE 'current'
 					END AS "financialStatus",
 					CASE
 						WHEN LOWER(COALESCE(p.status::text, '')) IN ('concluído', 'concluido', 'alta', 'arquivado')
 							THEN 'completed'
-						WHEN COALESCE(appointment_agg.total_appointments, 0) = 0
+						WHEN COALESCE(p.total_appointments, 0) = 0
 							AND p.created_at >= NOW() - INTERVAL '30 days'
 							THEN 'new_patient'
 						WHEN (
-							COALESCE(appointment_agg.no_show_count, 0) > 0
-							AND COALESCE(appointment_agg.upcoming_appointments, 0) = 0
-						) OR (
-							appointment_agg.last_appointment_date IS NOT NULL
-							AND appointment_agg.last_appointment_date < CURRENT_DATE - INTERVAL '30 days'
-							AND COALESCE(appointment_agg.upcoming_appointments, 0) = 0
+							p.last_appointment_date IS NOT NULL
+							AND p.last_appointment_date < CURRENT_DATE - INTERVAL '30 days'
 						)
 							THEN 'at_risk'
 						ELSE 'active'
 					END AS classification
 				FROM patients p
-				LEFT JOIN appointment_agg ON appointment_agg.patient_id = p.id
 				LEFT JOIN pathology_agg ON pathology_agg.patient_id = p.id
 				LEFT JOIN surgery_agg ON surgery_agg.patient_id = p.id
-				LEFT JOIN finance_agg ON finance_agg.patient_id = p.id
-				LEFT JOIN payments_agg ON payments_agg.patient_id = p.id
-				LEFT JOIN unbilled_agg ON unbilled_agg.patient_id = p.id
 				WHERE p.organization_id = $1::uuid
 					AND COALESCE(p.archived, FALSE) = FALSE
 			)
@@ -1470,15 +1370,31 @@ const updatePatientHandler = async (c: any) => {
       return c.json({ error: "Nenhum campo para atualizar" }, 400);
     }
 
+    if ((body as any).version !== undefined) {
+      (updateValues as any).version = sql`${patients.version} + 1`;
+    }
+
+    const conditions = [eq(patients.id, id)];
+    if ((body as any).version !== undefined) {
+      conditions.push(eq(patients.version, Number((body as any).version)));
+    }
+
     const result = await db
       .update(patients)
       .set(updateValues as any)
-      .where(withTenant(patients, user.organizationId, eq(patients.id, id)))
+      .where(withTenant(patients, user.organizationId, ...conditions))
       .returning();
 
     const row = result[0];
-    if (!row) return c.json({ error: "Paciente não encontrado" }, 404);
-
+    if (!row) {
+      if ((body as any).version !== undefined) {
+        const check = await db.select({ id: patients.id }).from(patients).where(withTenant(patients, user.organizationId, eq(patients.id, id)));
+        if (check.length > 0) {
+          return c.json({ error: "Conflito de versão. O registro foi atualizado por outro usuário." }, 409);
+        }
+      }
+      return c.json({ error: "Paciente não encontrado" }, 404);
+    }
     return c.json({ data: normalizePatientRow(row as DbRow) });
   } catch (error) {
     console.error("[Patients/Update] Error:", error);

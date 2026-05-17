@@ -190,6 +190,8 @@ export const sessions = pgTable(
     lastEditedBy: uuid("last_edited_by"),
     editReason: text("edit_reason"),
 
+    version: integer("version").default(1).notNull(),
+
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
   },
