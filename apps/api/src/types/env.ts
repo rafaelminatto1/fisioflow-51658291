@@ -46,6 +46,8 @@ export interface Env {
   FISIOFLOW_AI_GATEWAY_URL?: string;
   FISIOFLOW_AI_GATEWAY_TOKEN?: string;
   INNGEST_SIGNING_KEY?: string;
+  /** Base URL pública para links de NPS (ex: https://app.moocafisio.com.br). */
+  NPS_PUBLIC_BASE_URL?: string;
 
   // Cloudflare Images API (transform, resize, WebP/AVIF, watermark)
   IMAGES?: {
