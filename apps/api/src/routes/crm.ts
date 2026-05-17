@@ -9,7 +9,37 @@
 import { Hono } from "hono";
 import { createPool } from "../lib/db";
 import { requireAuth, type AuthVariables } from "../lib/auth";
+import { upsertContact, logContactActivity } from "../lib/contacts";
+import { processCrmTrigger } from "../services/crm-automation-engine";
 import type { Env } from "../types/env";
+
+function stageToLifecycle(
+  estagio: string | null | undefined,
+):
+  | "lead"
+  | "mql"
+  | "sql"
+  | "opportunity"
+  | "customer"
+  | "churned"
+  | undefined {
+  switch (estagio) {
+    case "aguardando":
+      return "lead";
+    case "em_contato":
+      return "mql";
+    case "avaliacao_agendada":
+      return "sql";
+    case "avaliacao_realizada":
+      return "opportunity";
+    case "efetivado":
+      return "customer";
+    case "nao_efetivado":
+      return "churned";
+    default:
+      return undefined;
+  }
+}
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
@@ -20,22 +50,34 @@ app.get("/leads", requireAuth, async (c) => {
   const pool = await createPool(c.env);
   const { estagio, responsavelId, limit = "50", offset = "0" } = c.req.query();
 
-  const conditions: string[] = ["organization_id = $1"];
+  const conditions: string[] = ["leads.organization_id = $1"];
   const params: unknown[] = [user.organizationId];
 
   if (estagio) {
     params.push(estagio);
-    conditions.push(`estagio = $${params.length}`);
+    conditions.push(`leads.estagio = $${params.length}`);
   }
   if (responsavelId) {
     params.push(responsavelId);
-    conditions.push(`responsavel_id = $${params.length}`);
+    conditions.push(`leads.responsavel_id = $${params.length}`);
+  }
+
+  // Filtro opcional por temperatura (via JOIN com contacts)
+  const { score_temperature } = c.req.query();
+  if (score_temperature) {
+    params.push(score_temperature);
+    conditions.push(
+      `EXISTS (SELECT 1 FROM contacts ct WHERE ct.id = leads.contact_id AND ct.score_temperature = $${params.length})`,
+    );
   }
 
   params.push(Number(limit), Number(offset));
   const result = await pool.query(
-    `SELECT * FROM leads WHERE ${conditions.join(" AND ")}
-     ORDER BY created_at DESC LIMIT $${params.length - 1} OFFSET $${params.length}`,
+    `SELECT leads.*, ct.score AS contact_score, ct.score_temperature AS contact_score_temperature
+       FROM leads LEFT JOIN contacts ct ON ct.id = leads.contact_id
+      WHERE ${conditions.join(" AND ")}
+      ORDER BY leads.created_at DESC
+      LIMIT $${params.length - 1} OFFSET $${params.length}`,
     params,
   );
   try {
@@ -65,29 +107,79 @@ app.post("/leads", requireAuth, async (c) => {
 
   if (!body.nome) return c.json({ error: "nome é obrigatório" }, 400);
 
+  const nome = String(body.nome);
+  const telefone = (body.telefone as string | null) ?? null;
+  const email = (body.email as string | null) ?? null;
+  const origem = (body.origem as string | null) ?? null;
+  const estagio = (body.estagio as string) ?? "aguardando";
+  const responsavelId = (body.responsavel_id as string | null) ?? user.uid;
+
+  // 1. Upsert do contact (dedup por phone/email/cpf)
+  const contact = await upsertContact(pool, {
+    organizationId: user.organizationId,
+    nome,
+    telefone,
+    email,
+    lifecycleStage: stageToLifecycle(estagio),
+    ownerId: responsavelId,
+    origem,
+    sourceCampaignId: (body.source_campaign_id as string | null) ?? null,
+    sourceReferralCode: (body.source_referral_code as string | null) ?? null,
+  });
+
+  // 2. Cria o lead com contact_id
   const result = await pool.query(
     `INSERT INTO leads
        (organization_id, nome, telefone, email, origem, estagio, responsavel_id,
         data_primeiro_contato, data_ultimo_contato, interesse, observacoes,
-        motivo_nao_efetivacao, created_at, updated_at)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,NOW(),NOW())
+        motivo_nao_efetivacao, contact_id, created_at, updated_at)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,NOW(),NOW())
      RETURNING *`,
     [
       user.organizationId,
-      String(body.nome),
-      body.telefone ?? null,
-      body.email ?? null,
-      body.origem ?? null,
-      body.estagio ?? "aguardando",
-      body.responsavel_id ?? user.uid,
+      nome,
+      telefone,
+      email,
+      origem,
+      estagio,
+      responsavelId,
       body.data_primeiro_contato ?? null,
       body.data_ultimo_contato ?? null,
       body.interesse ?? null,
       body.observacoes ?? null,
       body.motivo_nao_efetivacao ?? null,
+      contact.id,
     ],
   );
-  return c.json({ data: result.rows[0] }, 201);
+
+  // 3. Liga primary_lead_id se o contact ainda não tem
+  if (!contact.primary_lead_id) {
+    await pool.query(
+      `UPDATE contacts SET primary_lead_id = $1, updated_at = NOW() WHERE id = $2`,
+      [result.rows[0].id, contact.id],
+    );
+  }
+
+  await logContactActivity(pool, {
+    organizationId: user.organizationId,
+    contactId: contact.id,
+    tipo: "lead_created",
+    titulo: "Lead criado",
+    refLeadId: result.rows[0].id,
+    payload: { origem, estagio },
+    createdBy: user.uid,
+  });
+
+  // Dispara automações (fire-and-forget — falha não bloqueia resposta)
+  c.executionCtx?.waitUntil(
+    processCrmTrigger(c.env, pool, user.organizationId, "lead_created", contact.id, {
+      lead_id: result.rows[0].id,
+      origem,
+      estagio,
+    }).catch((e: unknown) => console.warn("[crm] trigger lead_created:", e)),
+  );
+
+  return c.json({ data: { ...result.rows[0], contact_id: contact.id } }, 201);
 });
 
 app.put("/leads/:id", requireAuth, async (c) => {
@@ -152,7 +244,33 @@ app.put("/leads/:id", requireAuth, async (c) => {
     params,
   );
   if (!result.rows.length) return c.json({ error: "Lead não encontrado" }, 404);
-  return c.json({ data: result.rows[0] });
+
+  // Sync leve no contact (nome/telefone/email). Lifecycle/conversão são
+  // tratados pelos triggers em 0085_lead_conversion_trigger.sql.
+  const lead = result.rows[0];
+  if (lead.contact_id) {
+    await pool.query(
+      `UPDATE contacts SET
+         nome     = COALESCE(NULLIF($2,''), nome),
+         telefone = COALESCE(telefone, $3),
+         email    = COALESCE(email, $4),
+         updated_at = NOW()
+       WHERE id = $1`,
+      [lead.contact_id, lead.nome, lead.telefone, lead.email],
+    );
+  }
+
+  // Se o estágio mudou, dispara automações stage_changed
+  if (body.estagio !== undefined && lead.contact_id) {
+    c.executionCtx?.waitUntil(
+      processCrmTrigger(c.env, pool, user.organizationId, "stage_changed", lead.contact_id, {
+        lead_id: lead.id,
+        to: String(body.estagio),
+      }).catch((e: unknown) => console.warn("[crm] trigger stage_changed:", e)),
+    );
+  }
+
+  return c.json({ data: lead });
 });
 
 app.delete("/leads/:id", requireAuth, async (c) => {
