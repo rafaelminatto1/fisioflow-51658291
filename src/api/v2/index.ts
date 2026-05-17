@@ -6,6 +6,7 @@ export * from "./boards";
 export * from "./clinical";
 export * from "./communications";
 export * from "./contacts";
+export * from "./crmAutomations";
 export * from "./nps";
 export * from "./referrals";
 export * from "./documents";
