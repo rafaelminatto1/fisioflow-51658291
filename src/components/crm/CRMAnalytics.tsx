@@ -23,6 +23,7 @@ import {
 } from "recharts";
 import { useCRMAnalytics, useNPSMetrics } from "@/hooks/useCRM";
 import { useLeadMetrics } from "@/hooks/useLeads";
+import { RoiBySourceCard } from "@/components/crm/RoiBySourceCard";
 
 const ESTAGIOS_LABELS: Record<string, string> = {
   aguardando: "Aguardando",
@@ -329,6 +330,8 @@ export function CRMAnalytics() {
           </CardContent>
         </Card>
       </div>
+
+      <RoiBySourceCard days={90} />
     </div>
   );
 }
