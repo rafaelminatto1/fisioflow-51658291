@@ -9,6 +9,7 @@ import { useLeads, useLeadMetrics, useUpdateLead, Lead } from "@/hooks/useLeads"
 import { LeadDialog } from "@/components/crm/LeadDialog";
 import { LeadDetailSheet } from "@/components/crm/LeadDetailSheet";
 import { LeadFunnel } from "@/components/crm/LeadFunnel";
+import { ContactTemperatureBadge } from "@/components/crm/ContactTemperatureBadge";
 import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd";
 import { toast } from "sonner";
 
@@ -276,7 +277,14 @@ export function LeadsContent() {
                               }`}
                               onClick={() => setSelectedLead(lead)}
                             >
-                              <p className="font-medium truncate">{lead.nome}</p>
+                              <div className="flex items-start justify-between gap-2">
+                                <p className="font-medium truncate flex-1">{lead.nome}</p>
+                                <ContactTemperatureBadge
+                                  temperature={(lead as any).contact_score_temperature}
+                                  score={(lead as any).contact_score}
+                                  compact
+                                />
+                              </div>
                               <div className="flex flex-col gap-1 mt-2">
                                 {lead.telefone && (
                                   <p className="text-xs text-muted-foreground flex items-center gap-1">

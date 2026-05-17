@@ -6,6 +6,7 @@ import type { WhatsAppQueuePayload } from "./queue";
 import { cleanupRateLimits } from "./middleware/rateLimit";
 import { runHealthMonitor } from "./lib/monitor";
 import { scanPendingExecutions } from "./services/crm-automation-engine";
+import { scoreContacts } from "./jobs/leadScoring";
 import { notifyPatientAppointment } from "./lib/push";
 import { RTMAlertsService } from "./services/rtm-alerts";
 import { syncAutoRAGContent } from "./routes/aiSearch";
@@ -24,6 +25,18 @@ export async function handleScheduled(event: ScheduledEvent, env: Env, ctx: Exec
       case "*/5 * * * *": // A cada 5 minutos — Health monitor leve, sem acordar Neon
         await runHealthMonitor(env);
         break;
+
+      case "0 6 * * *": {
+        // 03:00 BRT — Lead scoring batch
+        try {
+          const pool = createPool(env);
+          const out = await scoreContacts(env, pool, { batchSize: 50 });
+          console.log(`[Cron] Lead scoring: scored=${out.scored} failed=${out.failed}`);
+        } catch (err) {
+          console.warn("[Cron] Lead scoring failed:", err);
+        }
+        break;
+      }
 
       case "*/15 * * * *": {
         // A cada 15 minutos — CRM automations scan (executa ações agendadas)
