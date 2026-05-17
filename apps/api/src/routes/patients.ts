@@ -5,6 +5,7 @@ import type { Env } from "../types/env";
 import { requireAuth, type AuthVariables } from "../lib/auth";
 import type { CustomVariables } from "../middleware/requestId";
 import { createDb, createPool } from "../lib/db";
+import { upsertContact, logContactActivity } from "../lib/contacts";
 import { withTenant } from "../lib/db-utils";
 import { stripHtml } from "../lib/stripHtml";
 import { triggerInngestEvent } from "../lib/inngest-client";
@@ -1295,6 +1296,25 @@ app.post("/", async (c) => {
     console.log("[Patients/Create] Insert values:", insertValues);
     console.log("[Patients/Create] Executing DB insert...");
 
+    // CRM hub: cria/atualiza contact ANTES do INSERT em patients para que o
+    // FK contact_id já vá no insert. Dedup por (org, cpf|phone|email).
+    try {
+      const pool = createPool(c.env);
+      const contact = await upsertContact(pool, {
+        organizationId: user.organizationId,
+        nome: fullName,
+        telefone: insertValues.phone ?? null,
+        email: insertValues.email ?? null,
+        cpf: insertValues.cpf ?? null,
+        lifecycleStage: "customer",
+        ownerId: user.uid,
+        origem: insertValues.origin ?? null,
+      });
+      (insertValues as any).contactId = contact.id;
+    } catch (contactErr) {
+      console.warn("[Patients/Create] upsertContact falhou (segue sem):", contactErr);
+    }
+
     const [patient] = await db
       .insert(patients)
       .values(insertValues as any)
@@ -1303,6 +1323,29 @@ app.post("/", async (c) => {
     if (!patient) {
       console.error("[Patients/Create] Insert failed - no patient returned from DB");
       return c.json({ error: "Erro ao criar paciente: Nenhum dado retornado do banco." }, 500);
+    }
+
+    // Sincroniza primary_patient_id no contact + activity
+    if ((patient as any).contactId) {
+      try {
+        const pool = createPool(c.env);
+        await pool.query(
+          `UPDATE contacts SET primary_patient_id = COALESCE(primary_patient_id, $1),
+                                updated_at = NOW()
+            WHERE id = $2`,
+          [patient.id, (patient as any).contactId],
+        );
+        await logContactActivity(pool, {
+          organizationId: user.organizationId,
+          contactId: (patient as any).contactId,
+          tipo: "patient_created",
+          titulo: "Paciente cadastrado",
+          refPatientId: patient.id,
+          createdBy: user.uid,
+        });
+      } catch (err) {
+        console.warn("[Patients/Create] sync contact pós-insert falhou:", err);
+      }
     }
 
     // Inngest Event: Patient Created (Sequência de Boas-vindas)
