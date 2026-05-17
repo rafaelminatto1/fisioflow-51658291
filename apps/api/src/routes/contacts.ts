@@ -12,6 +12,7 @@ import { createPool } from "../lib/db";
 import { requireAuth, type AuthVariables } from "../lib/auth";
 import { isUuid } from "../lib/validators";
 import { logContactActivity } from "../lib/contacts";
+import { rescoreContact } from "../jobs/leadScoring";
 import type { Env } from "../types/env";
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
@@ -300,6 +301,19 @@ app.get("/roi-by-source", requireAuth, async (c) => {
   );
 
   return c.json({ data: result.rows, days: sinceDays });
+});
+
+// ===== RESCORE (manual) =====
+
+app.post("/:id/rescore", requireAuth, async (c) => {
+  const user = c.get("user");
+  const { id } = c.req.param();
+  if (!isUuid(id)) return c.json({ error: "id inválido" }, 400);
+
+  const pool = await createPool(c.env);
+  const result = await rescoreContact(c.env, pool, user.organizationId, id);
+  if (!result) return c.json({ error: "Contato não encontrado" }, 404);
+  return c.json({ data: result });
 });
 
 export const contactsRoutes = app;
