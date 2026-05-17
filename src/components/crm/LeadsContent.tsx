@@ -10,6 +10,7 @@ import { LeadDialog } from "@/components/crm/LeadDialog";
 import { LeadDetailSheet } from "@/components/crm/LeadDetailSheet";
 import { LeadFunnel } from "@/components/crm/LeadFunnel";
 import { ContactTemperatureBadge } from "@/components/crm/ContactTemperatureBadge";
+import { PostConversionDialog } from "@/components/crm/PostConversionDialog";
 import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd";
 import { toast } from "sonner";
 
@@ -34,6 +35,7 @@ export function LeadsContent() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingLead, setEditingLead] = useState<Lead | null>(null);
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
+  const [conversionLead, setConversionLead] = useState<Lead | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [filtroOrigem, setFiltroOrigem] = useState<string>("");
   const [activeTab, setActiveTab] = useState("kanban");
@@ -75,6 +77,9 @@ export function LeadsContent() {
     if (lead && lead.estagio !== novoEstagio) {
       await updateMutation.mutateAsync({ id: leadId, estagio: novoEstagio });
       toast.success(`Lead movido para ${ESTAGIOS.find((e) => e.value === novoEstagio)?.label}`);
+      if (novoEstagio === "efetivado") {
+        setConversionLead({ ...lead, estagio: novoEstagio });
+      }
     }
   };
 
@@ -345,6 +350,12 @@ export function LeadsContent() {
         onClose={() => setSelectedLead(null)}
         onEdit={handleOpenEdit}
         estagios={ESTAGIOS}
+      />
+
+      <PostConversionDialog
+        open={!!conversionLead}
+        onClose={() => setConversionLead(null)}
+        lead={conversionLead}
       />
     </div>
   );

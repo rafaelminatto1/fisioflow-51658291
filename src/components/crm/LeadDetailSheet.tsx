@@ -37,6 +37,7 @@ import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
+import { PostConversionDialog } from "@/components/crm/PostConversionDialog";
 
 const TIPOS_CONTATO = [
   {
@@ -76,6 +77,7 @@ interface LeadDetailSheetProps {
 export function LeadDetailSheet({ lead, onClose, onEdit, estagios }: LeadDetailSheetProps) {
   const isMobile = useIsMobile();
   const [showAddHistorico, setShowAddHistorico] = useState(false);
+  const [showPostConversion, setShowPostConversion] = useState(false);
   const [historicoForm, setHistoricoForm] = useState({
     tipo_contato: "whatsapp",
     descricao: "",
@@ -115,6 +117,9 @@ export function LeadDetailSheet({ lead, onClose, onEdit, estagios }: LeadDetailS
     if (!lead || lead.estagio === novoEstagio) return;
     await updateLeadMutation.mutateAsync({ id: lead.id, estagio: novoEstagio });
     toast.success(`Lead movido para ${getEstagioInfo(novoEstagio).label}`);
+    if (novoEstagio === "efetivado") {
+      setShowPostConversion(true);
+    }
   };
 
   const handleWhatsApp = () => {
@@ -414,6 +419,12 @@ export function LeadDetailSheet({ lead, onClose, onEdit, estagios }: LeadDetailS
           Fechar Detalhes
         </Button>
       </CustomModalFooter>
+
+      <PostConversionDialog
+        open={showPostConversion}
+        onClose={() => setShowPostConversion(false)}
+        lead={lead}
+      />
     </CustomModal>
   );
 }
