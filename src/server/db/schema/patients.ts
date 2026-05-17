@@ -93,6 +93,7 @@ export const patients = pgTable(
 
     // Organization & Origin
     organizationId: uuid("organization_id"),
+    contactId: uuid("contact_id"),
     profileId: uuid("profile_id"),
     userId: text("user_id"),
     origin: varchar("origin", { length: 100 }), // How patient found the clinic

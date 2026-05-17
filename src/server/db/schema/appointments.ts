@@ -74,6 +74,7 @@ export const appointments = pgTable(
 
     // Organization (multi-tenant)
     organizationId: uuid("organization_id"),
+    contactId: uuid("contact_id"),
 
     // Scheduling - RF02.1
     date: date("date").notNull(),
