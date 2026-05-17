@@ -1,25 +1,33 @@
-import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+/**
+ * CRMAutomacoes — gerencia regras de automação CRM (Fase 3 do plano CRM).
+ *
+ * - Lista templates globais (organization_id IS NULL) e regras da clínica
+ * - Toggle ativo/inativo (optimistic update)
+ * - Clonar template → cria regra na clínica já ativa
+ * - Ver execuções recentes
+ * - Deletar regra da clínica (templates globais protegidos)
+ * - Botão "Executar agora" dispara scan manual
+ */
+import { useState, useMemo } from "react";
+import { formatDistanceToNow, format } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -31,430 +39,392 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Plus, Zap, Cake, RefreshCw, Star, MessageSquare, Mail, Trash2, Clock } from "lucide-react";
 import {
-  useCRMAutomacoes,
-  useCreateAutomacao,
-  useToggleAutomacao,
-  useDeleteAutomacao,
-} from "@/hooks/useCRM";
+  Zap,
+  Clock,
+  CheckCircle2,
+  XCircle,
+  AlertCircle,
+  Loader2,
+  Copy,
+  Trash2,
+  RefreshCcw,
+  History,
+} from "lucide-react";
+import {
+  useCrmAutomationsList,
+  useCrmAutomationTemplates,
+  useToggleCrmAutomation,
+  useDeleteCrmAutomation,
+  useCloneCrmAutomation,
+  useCrmAutomationExecutions,
+  useScanCrmAutomations,
+} from "@/hooks/useCrmAutomations";
+import type { CrmAutomationRule, CrmTriggerType } from "@/api/v2/crmAutomations";
 
-const TIPOS_AUTOMACAO = [
-  {
-    value: "aniversario",
-    label: "Aniversário",
-    icon: Cake,
-    description: "Mensagem automática no aniversário",
-  },
-  {
-    value: "lembrete_consulta",
-    label: "Lembrete de Consulta",
-    icon: Clock,
-    description: "Envia lembrete 24h antes da sessão",
-  },
-  {
-    value: "reengajamento",
-    label: "Reengajamento",
-    icon: RefreshCw,
-    description: "Contato com leads inativos",
-  },
-  {
-    value: "pos_avaliacao",
-    label: "Pós-Avaliação",
-    icon: Star,
-    description: "Follow-up após avaliação",
-  },
-  {
-    value: "boas_vindas",
-    label: "Boas-vindas",
-    icon: MessageSquare,
-    description: "Mensagem para novos leads",
-  },
-];
+const TRIGGER_LABEL: Record<CrmTriggerType, string> = {
+  lead_created: "Novo lead",
+  stage_changed: "Mudou de estágio",
+  birthday: "Aniversário",
+  discharge: "Alta clínica",
+  nps_low: "NPS baixo",
+  appointment_no_show: "No-show",
+  inactivity: "Inatividade",
+};
 
-const CANAIS = [
-  { value: "whatsapp", label: "WhatsApp", icon: MessageSquare },
-  { value: "email", label: "Email", icon: Mail },
-];
+const TRIGGER_COLOR: Record<CrmTriggerType, string> = {
+  lead_created: "bg-blue-100 text-blue-700 border-blue-200",
+  stage_changed: "bg-purple-100 text-purple-700 border-purple-200",
+  birthday: "bg-pink-100 text-pink-700 border-pink-200",
+  discharge: "bg-emerald-100 text-emerald-700 border-emerald-200",
+  nps_low: "bg-rose-100 text-rose-700 border-rose-200",
+  appointment_no_show: "bg-amber-100 text-amber-700 border-amber-200",
+  inactivity: "bg-slate-100 text-slate-700 border-slate-200",
+};
 
-type TipoAutomacao =
-  | "aniversario"
-  | "lembrete_consulta"
-  | "reengajamento"
-  | "pos_avaliacao"
-  | "boas_vindas";
-type CanalAutomacao = "whatsapp" | "email";
+const ACTION_LABEL: Record<string, string> = {
+  send_whatsapp: "WhatsApp",
+  send_email: "E-mail",
+  send_nps: "Pesquisa NPS",
+  create_task: "Criar tarefa",
+  update_stage: "Mudar estágio",
+  add_tag: "Adicionar tag",
+  wait: "Aguardar",
+  webhook: "Webhook",
+};
 
-interface GatilhoConfig {
-  dias_inativo?: number;
-  horas_apos?: number;
-  horas_antes?: number;
-  intervalo_dias?: number;
+function ActionsSummary({ rule }: { rule: CrmAutomationRule }) {
+  if (!rule.acoes.length) return <span className="text-muted-foreground">—</span>;
+  return (
+    <div className="flex flex-wrap gap-1">
+      {rule.acoes.map((a, i) => {
+        const delay = a.delay_seconds ?? 0;
+        const delayLabel =
+          delay >= 86400
+            ? `${Math.round(delay / 86400)}d`
+            : delay >= 3600
+              ? `${Math.round(delay / 3600)}h`
+              : delay >= 60
+                ? `${Math.round(delay / 60)}m`
+                : delay > 0
+                  ? `${delay}s`
+                  : "";
+        return (
+          <Badge key={i} variant="outline" className="text-xs gap-1">
+            {ACTION_LABEL[a.type] ?? a.type}
+            {delayLabel && <span className="text-muted-foreground">+{delayLabel}</span>}
+          </Badge>
+        );
+      })}
+    </div>
+  );
 }
 
-interface FormDataAutomacao {
-  nome: string;
-  descricao: string;
-  tipo: TipoAutomacao;
-  canal: CanalAutomacao;
-  template_mensagem: string;
-  gatilho_config: GatilhoConfig;
+function ExecutionsSheet({
+  rule,
+  open,
+  onClose,
+}: {
+  rule: CrmAutomationRule | null;
+  open: boolean;
+  onClose: () => void;
+}) {
+  const { data: executions = [], isLoading } = useCrmAutomationExecutions(
+    open && rule ? rule.id : null,
+  );
+
+  return (
+    <Sheet open={open} onOpenChange={(v) => !v && onClose()}>
+      <SheetContent className="w-full sm:max-w-lg overflow-y-auto">
+        <SheetHeader>
+          <SheetTitle className="flex items-center gap-2">
+            <History className="h-4 w-4 text-primary" /> Execuções
+          </SheetTitle>
+          <SheetDescription>{rule?.nome}</SheetDescription>
+        </SheetHeader>
+        <div className="mt-4 space-y-2">
+          {isLoading ? (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground py-6">
+              <Loader2 className="h-4 w-4 animate-spin" /> Carregando…
+            </div>
+          ) : executions.length === 0 ? (
+            <p className="text-sm text-muted-foreground py-6 text-center">
+              Nenhuma execução ainda.
+            </p>
+          ) : (
+            executions.map((e) => {
+              const StatusIcon =
+                e.status === "completed"
+                  ? CheckCircle2
+                  : e.status === "failed"
+                    ? XCircle
+                    : e.status === "running"
+                      ? Loader2
+                      : Clock;
+              const color =
+                e.status === "completed"
+                  ? "text-emerald-600"
+                  : e.status === "failed"
+                    ? "text-rose-600"
+                    : e.status === "running"
+                      ? "text-blue-600"
+                      : "text-muted-foreground";
+              return (
+                <div key={e.id} className="rounded-md border p-3 text-sm">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className={`inline-flex items-center gap-1 font-medium ${color}`}>
+                      <StatusIcon
+                        className={`h-3.5 w-3.5 ${e.status === "running" ? "animate-spin" : ""}`}
+                      />
+                      {e.status} · passo #{e.action_index + 1}
+                    </span>
+                    <span className="text-xs text-muted-foreground">
+                      {format(new Date(e.scheduled_for), "dd MMM HH:mm", { locale: ptBR })}
+                    </span>
+                  </div>
+                  {e.error && (
+                    <p className="mt-1 text-xs text-rose-600 break-words">{e.error}</p>
+                  )}
+                </div>
+              );
+            })
+          )}
+        </div>
+      </SheetContent>
+    </Sheet>
+  );
+}
+
+function RuleCard({
+  rule,
+  isTemplate,
+  onView,
+}: {
+  rule: CrmAutomationRule;
+  isTemplate: boolean;
+  onView: () => void;
+}) {
+  const toggleMutation = useToggleCrmAutomation();
+  const deleteMutation = useDeleteCrmAutomation();
+  const cloneMutation = useCloneCrmAutomation();
+
+  return (
+    <Card className="hover:shadow-md transition-shadow">
+      <CardHeader className="pb-3">
+        <div className="flex items-start justify-between gap-2">
+          <div className="space-y-1 flex-1 min-w-0">
+            <CardTitle className="text-base flex items-center gap-2">
+              {rule.nome}
+              {isTemplate && (
+                <Badge variant="outline" className="text-xs font-normal">
+                  Template
+                </Badge>
+              )}
+            </CardTitle>
+            <CardDescription className="line-clamp-2">
+              {rule.descricao ?? "—"}
+            </CardDescription>
+          </div>
+          {!isTemplate && (
+            <Switch
+              checked={rule.ativo}
+              onCheckedChange={(v) => toggleMutation.mutate({ id: rule.id, ativo: v })}
+              disabled={toggleMutation.isPending}
+            />
+          )}
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-3 pt-0">
+        <div className="flex flex-wrap items-center gap-2 text-xs">
+          <Badge variant="outline" className={`border ${TRIGGER_COLOR[rule.gatilho_tipo]}`}>
+            <Zap className="h-3 w-3 mr-1" />
+            {TRIGGER_LABEL[rule.gatilho_tipo] ?? rule.gatilho_tipo}
+          </Badge>
+          {rule.cooldown_minutes > 0 && (
+            <span className="text-muted-foreground inline-flex items-center gap-1">
+              <Clock className="h-3 w-3" />
+              cooldown {Math.round(rule.cooldown_minutes / 60)}h
+            </span>
+          )}
+        </div>
+
+        <div>
+          <p className="text-xs text-muted-foreground mb-1">Ações</p>
+          <ActionsSummary rule={rule} />
+        </div>
+
+        <div className="flex items-center justify-between gap-2 pt-2 border-t">
+          {isTemplate ? (
+            <Button
+              size="sm"
+              onClick={() => cloneMutation.mutate({ template: rule, ativo: true })}
+              disabled={cloneMutation.isPending}
+            >
+              <Copy className="h-3.5 w-3.5 mr-1" />
+              Clonar e ativar
+            </Button>
+          ) : (
+            <>
+              <Button variant="ghost" size="sm" onClick={onView}>
+                <History className="h-3.5 w-3.5 mr-1" />
+                Execuções
+              </Button>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-rose-600 hover:text-rose-700 hover:bg-rose-50"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Remover regra?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Execuções pendentes desta regra também serão canceladas.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={() => deleteMutation.mutate(rule.id)}
+                      className="bg-rose-600 hover:bg-rose-700"
+                    >
+                      Remover
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </>
+          )}
+        </div>
+      </CardContent>
+    </Card>
+  );
 }
 
 export function CRMAutomacoes() {
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [formData, setFormData] = useState<FormDataAutomacao>({
-    nome: "",
-    descricao: "",
-    tipo: "boas_vindas",
-    canal: "whatsapp",
-    template_mensagem: "",
-    gatilho_config: {},
-  });
+  const { data: all = [], isLoading } = useCrmAutomationsList();
+  const { data: templates = [] } = useCrmAutomationTemplates();
+  const scanMutation = useScanCrmAutomations();
+  const [viewingRule, setViewingRule] = useState<CrmAutomationRule | null>(null);
 
-  const { data: automacoes = [] } = useCRMAutomacoes();
-  const createMutation = useCreateAutomacao();
-  const toggleMutation = useToggleAutomacao();
-  const deleteMutation = useDeleteAutomacao();
+  const myRules = useMemo(() => all.filter((r) => r.organization_id !== null), [all]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    await createMutation.mutateAsync({
-      ...formData,
-      ativo: false,
-    });
-    setIsDialogOpen(false);
-    resetForm();
-  };
+  // Templates ainda não clonados (dedup por nome+gatilho — heurística)
+  const availableTemplates = useMemo(() => {
+    const clonedKey = new Set(myRules.map((r) => `${r.nome}|${r.gatilho_tipo}`));
+    return templates.filter((t) => !clonedKey.has(`${t.nome}|${t.gatilho_tipo}`));
+  }, [templates, myRules]);
 
-  const resetForm = () => {
-    setFormData({
-      nome: "",
-      descricao: "",
-      tipo: "boas_vindas",
-      canal: "whatsapp",
-      template_mensagem: "",
-      gatilho_config: {},
-    });
-  };
-
-  const getTipoInfo = (tipo: string) =>
-    TIPOS_AUTOMACAO.find((t) => t.value === tipo) || TIPOS_AUTOMACAO[0];
-  const getCanalInfo = (canal: string) => CANAIS.find((c) => c.value === canal) || CANAIS[0];
-
-  const getGatilhoDescription = (tipo: string, config: GatilhoConfig) => {
-    switch (tipo) {
-      case "aniversario":
-        return "Dispara no aniversário do lead";
-      case "lembrete_consulta":
-        return `Dispara ${config.horas_antes || 24}h antes da sessão agendada`;
-      case "reengajamento":
-        return `Dispara após ${config.dias_inativo || 7} dias sem contato`;
-      case "pos_avaliacao":
-        return `Dispara ${config.horas_apos || 24}h após avaliação`;
-      case "boas_vindas":
-        return "Dispara quando um novo lead é cadastrado";
-      default:
-        return "Gatilho personalizado";
-    }
-  };
+  const lastUpdatedText = useMemo(() => {
+    if (!myRules.length) return null;
+    const lastUpdated = myRules.reduce<Date | null>((acc, r) => {
+      const d = new Date(r.updated_at);
+      return !acc || d > acc ? d : acc;
+    }, null);
+    if (!lastUpdated) return null;
+    return formatDistanceToNow(lastUpdated, { addSuffix: true, locale: ptBR });
+  }, [myRules]);
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-start justify-between gap-3 flex-wrap">
         <div>
-          <h2 className="text-2xl font-bold flex items-center gap-2">
-            <Zap className="h-6 w-6" />
-            Automações
+          <h2 className="text-xl font-bold flex items-center gap-2">
+            <Zap className="h-5 w-5 text-amber-500" />
+            Regras de Automação
           </h2>
-          <p className="text-muted-foreground">Configure ações automáticas para seus leads</p>
+          <p className="text-sm text-muted-foreground">
+            Gatilhos automáticos do CRM. Cron <code>*/15 * * * *</code> executa as
+            ações agendadas.
+            {lastUpdatedText && <> Última regra atualizada {lastUpdatedText}.</>}
+          </p>
         </div>
-        <Button onClick={() => setIsDialogOpen(true)}>
-          <Plus className="h-4 w-4 mr-2" />
-          Nova Automação
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => scanMutation.mutate()}
+          disabled={scanMutation.isPending}
+        >
+          <RefreshCcw
+            className={`h-4 w-4 mr-2 ${scanMutation.isPending ? "animate-spin" : ""}`}
+          />
+          Executar scan agora
         </Button>
       </div>
 
-      {/* Templates Pré-definidos */}
-      <div className="grid md:grid-cols-3 gap-4">
-        {TIPOS_AUTOMACAO.map((tipo) => {
-          const Icon = tipo.icon;
-          const existente = automacoes.find((a) => a.tipo === tipo.value);
-          return (
-            <Card
-              key={tipo.value}
-              className={`cursor-pointer transition-all hover:shadow-md ${existente ? "border-primary/50" : ""}`}
-            >
-              <CardContent className="p-4">
-                <div className="flex items-start gap-3">
-                  <div className="p-2 rounded-lg bg-primary/10">
-                    <Icon className="h-5 w-5 text-primary" />
-                  </div>
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2">
-                      <h3 className="font-medium">{tipo.label}</h3>
-                      {existente && (
-                        <Badge
-                          variant={existente.ativo ? "default" : "secondary"}
-                          className="text-xs"
-                        >
-                          {existente.ativo ? "Ativa" : "Inativa"}
-                        </Badge>
-                      )}
-                    </div>
-                    <p className="text-sm text-muted-foreground mt-1">{tipo.description}</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
+      <section className="space-y-3">
+        <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
+          Minhas regras ({myRules.length})
+        </h3>
+        {isLoading ? (
+          <div className="flex items-center gap-2 text-sm text-muted-foreground py-6">
+            <Loader2 className="h-4 w-4 animate-spin" /> Carregando…
+          </div>
+        ) : myRules.length === 0 ? (
+          <Card className="border-dashed">
+            <CardContent className="pt-6 pb-6 text-center text-sm text-muted-foreground">
+              <AlertCircle className="h-6 w-6 mx-auto mb-2 opacity-50" />
+              Nenhuma regra ativa ainda. Clone um template abaixo para começar.
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="grid gap-3 md:grid-cols-2">
+            {myRules.map((r) => (
+              <RuleCard
+                key={r.id}
+                rule={r}
+                isTemplate={false}
+                onView={() => setViewingRule(r)}
+              />
+            ))}
+          </div>
+        )}
+      </section>
 
-      {/* Lista de Automações */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Automações Configuradas</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {automacoes.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              <Zap className="h-12 w-12 mx-auto mb-4 opacity-50" />
-              <p>Nenhuma automação configurada</p>
-              <p className="text-sm">Crie automações para engajar seus leads automaticamente</p>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {automacoes.map((automacao) => {
-                const tipoInfo = getTipoInfo(automacao.tipo);
-                const canalInfo = getCanalInfo(automacao.canal);
-                const TipoIcon = tipoInfo.icon;
-                const CanalIcon = canalInfo.icon;
+      {availableTemplates.length > 0 && (
+        <section className="space-y-3">
+          <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
+            Templates disponíveis ({availableTemplates.length})
+          </h3>
+          <p className="text-xs text-muted-foreground -mt-2">
+            Clonar copia o template para sua clínica já ativo. Você pode
+            personalizar ou desativar a qualquer momento.
+          </p>
+          <div className="grid gap-3 md:grid-cols-2">
+            {availableTemplates.map((t) => (
+              <RuleCard key={t.id} rule={t} isTemplate onView={() => {}} />
+            ))}
+          </div>
+        </section>
+      )}
 
-                return (
-                  <div
-                    key={automacao.id}
-                    className="flex items-center justify-between p-4 border rounded-lg"
-                  >
-                    <div className="flex items-center gap-4">
-                      <div
-                        className={`p-2 rounded-lg ${automacao.ativo ? "bg-emerald-500/10" : "bg-muted"}`}
-                      >
-                        <TipoIcon
-                          className={`h-5 w-5 ${automacao.ativo ? "text-emerald-500" : "text-muted-foreground"}`}
-                        />
-                      </div>
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <h4 className="font-medium">{automacao.nome}</h4>
-                          <Badge variant="outline" className="text-xs">
-                            <CanalIcon className="h-3 w-3 mr-1" />
-                            {canalInfo.label}
-                          </Badge>
-                        </div>
-                        <p className="text-sm text-muted-foreground">
-                          {getGatilhoDescription(automacao.tipo, automacao.gatilho_config)}
-                        </p>
-                        {automacao.total_executado > 0 && (
-                          <p className="text-xs text-muted-foreground mt-1">
-                            {automacao.total_executado} execuções
-                          </p>
-                        )}
-                      </div>
-                    </div>
+      <ExecutionsSheet
+        rule={viewingRule}
+        open={!!viewingRule}
+        onClose={() => setViewingRule(null)}
+      />
 
-                    <div className="flex items-center gap-4">
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm text-muted-foreground">
-                          {automacao.ativo ? "Ativa" : "Inativa"}
-                        </span>
-                        <Switch
-                          checked={automacao.ativo}
-                          onCheckedChange={(ativo) =>
-                            toggleMutation.mutate({ id: automacao.id, ativo })
-                          }
-                        />
-                      </div>
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="text-muted-foreground hover:text-destructive"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>Excluir automação?</AlertDialogTitle>
-                            <AlertDialogDescription>
-                              Esta ação não pode ser desfeita.
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                            <AlertDialogAction
-                              onClick={() => deleteMutation.mutate(automacao.id)}
-                              className="bg-destructive text-destructive-foreground"
-                            >
-                              Excluir
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
+      <Card className="bg-amber-50/50 border-amber-200">
+        <CardContent className="pt-4 pb-4 text-xs text-amber-900 flex items-start gap-2">
+          <AlertCircle className="h-4 w-4 mt-0.5 flex-shrink-0" />
+          <div className="space-y-1">
+            <p>
+              <strong>Editor visual de regras</strong> ainda não disponível — para
+              criar regras customizadas (gatilhos compostos, novas ações), use a
+              API <code>POST /api/crm-automations</code> diretamente.
+            </p>
+            <p>
+              Ações de envio dependem das credenciais configuradas:{" "}
+              <code>WHATSAPP_*</code> para WhatsApp e <code>NPS_PUBLIC_BASE_URL</code>{" "}
+              para links de NPS.
+            </p>
+          </div>
         </CardContent>
       </Card>
-
-      {/* Dialog Nova Automação */}
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle>Nova Automação</DialogTitle>
-          </DialogHeader>
-
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label>Nome *</Label>
-              <Input
-                value={formData.nome}
-                onChange={(e) => setFormData((prev) => ({ ...prev, nome: e.target.value }))}
-                placeholder="Ex: Boas-vindas WhatsApp"
-                required
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Tipo</Label>
-                <Select
-                  value={formData.tipo}
-                  onValueChange={(v) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      tipo: v as TipoAutomacao,
-                    }))
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {TIPOS_AUTOMACAO.map((t) => {
-                      const Icon = t.icon;
-                      return (
-                        <SelectItem key={t.value} value={t.value}>
-                          <span className="flex items-center gap-2">
-                            <Icon className="h-4 w-4" />
-                            {t.label}
-                          </span>
-                        </SelectItem>
-                      );
-                    })}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label>Canal</Label>
-                <Select
-                  value={formData.canal}
-                  onValueChange={(v) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      canal: v as CanalAutomacao,
-                    }))
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {CANAIS.map((c) => {
-                      const Icon = c.icon;
-                      return (
-                        <SelectItem key={c.value} value={c.value}>
-                          <span className="flex items-center gap-2">
-                            <Icon className="h-4 w-4" />
-                            {c.label}
-                          </span>
-                        </SelectItem>
-                      );
-                    })}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            {formData.tipo === "reengajamento" && (
-              <div className="space-y-2">
-                <Label>Dias sem contato</Label>
-                <Input
-                  type="number"
-                  value={formData.gatilho_config.dias_inativo || 7}
-                  onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      gatilho_config: {
-                        ...prev.gatilho_config,
-                        dias_inativo: parseInt(e.target.value),
-                      },
-                    }))
-                  }
-                  min={1}
-                />
-              </div>
-            )}
-
-            <div className="space-y-2">
-              <Label>Mensagem *</Label>
-              <Textarea
-                value={formData.template_mensagem}
-                onChange={(e) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    template_mensagem: e.target.value,
-                  }))
-                }
-                placeholder="Olá {nome}! ..."
-                rows={4}
-                required
-              />
-              <p className="text-xs text-muted-foreground">
-                Use {"{nome}"}, {"{telefone}"} para personalizar
-              </p>
-            </div>
-
-            <div className="space-y-2">
-              <Label>Descrição</Label>
-              <Input
-                value={formData.descricao}
-                onChange={(e) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    descricao: e.target.value,
-                  }))
-                }
-                placeholder="Descrição opcional"
-              />
-            </div>
-
-            <DialogFooter>
-              <Button variant="outline" type="button" onClick={() => setIsDialogOpen(false)}>
-                Cancelar
-              </Button>
-              <Button type="submit" disabled={createMutation.isPending}>
-                {createMutation.isPending ? "Criando..." : "Criar Automação"}
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
