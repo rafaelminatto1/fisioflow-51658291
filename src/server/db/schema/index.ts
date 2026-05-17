@@ -80,3 +80,6 @@ export * from "./analytics";
 
 // Group Classes & Pilates Management (Sprint 7)
 export * from "./groups";
+
+// CRM Hub Unificado (contacts + activities + scores)
+export * from "./contacts";

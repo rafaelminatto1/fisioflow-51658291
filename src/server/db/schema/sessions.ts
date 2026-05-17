@@ -54,6 +54,7 @@ export const sessions = pgTable(
     }),
     therapistId: uuid("therapist_id").notNull(),
     organizationId: uuid("organization_id"),
+    contactId: uuid("contact_id"),
 
     // Session Tracking
     sessionNumber: integer("session_number"), // Sequential per patient
