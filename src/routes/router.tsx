@@ -25,6 +25,7 @@ const BookingPage = lazy(() =>
 );
 const CheckIn = lazy(() => import("@/pages/public/CheckIn"));
 const DocumentSigning = lazy(() => import("@/pages/public/DocumentSigning"));
+const NpsPublic = lazy(() => import("@/pages/public/NpsPublic"));
 const PublicPrescriptionPage = lazy(() => import("@/pages/prescricoes/PublicPrescriptionPage"));
 const Install = lazy(() => import("@/pages/Install"));
 const SeedData = lazy(() => import("@/pages/SeedData"));
@@ -55,6 +56,7 @@ export const router = createBrowserRouter(
         <Route path="/satisfacao" element={<Surveys />} />
         <Route path="/checkin" element={<CheckIn />} />
         <Route path="/assinar/:token" element={<DocumentSigning />} />
+        <Route path="/nps/:token" element={<NpsPublic />} />
         <Route path="/install" element={<Install />} />
         <Route path="/admin" element={<Navigate to="/admin/analytics" replace />} />
         <Route path="/goals" element={<Navigate to="/cadastros/objetivos" replace />} />
