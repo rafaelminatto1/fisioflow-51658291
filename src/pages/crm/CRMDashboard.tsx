@@ -1,6 +1,6 @@
 // Lazy load LeadImport (contém exceljs - ~946KB) - só carrega quando a tab é acessada
 
-import { BarChart3, Bot, CheckSquare, Loader2, Send, Upload, Users, Zap } from "lucide-react";
+import { Award, BarChart3, Bot, CheckSquare, Heart, Loader2, Send, Upload, Users, Zap } from "lucide-react";
 import { lazy, Suspense, useState } from "react";
 import { CRMAnalytics } from "@/components/crm/CRMAnalytics";
 import { CRMAutomacoes } from "@/components/crm/CRMAutomacoes";
@@ -8,6 +8,8 @@ import { CRMAutomationDashboard } from "@/components/crm/CRMAutomationDashboard"
 import { CRMCampanhas } from "@/components/crm/CRMCampanhas";
 import { CRMTarefas } from "@/components/crm/CRMTarefas";
 import { LeadsContent } from "@/components/crm/LeadsContent";
+import { NPSDashboard } from "@/components/crm/NPSDashboard";
+import { ReferralsRanking } from "@/components/crm/ReferralsRanking";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -49,11 +51,11 @@ export default function CRMDashboard() {
               <span>Campanhas Manuais</span>
             </TabsTrigger>
             <TabsTrigger
-              value="regresos_automacao"
+              value="regras_automacao"
               className="magnetic-button gap-2 data-[state=active]:bg-primary/10 data-[state=active]:text-primary border border-transparent data-[state=active]:border-primary/20 rounded-xl px-4 py-2"
             >
               <Zap className="h-4 w-4" />
-              <span>Regas de Automação</span>
+              <span>Regras de Automação</span>
             </TabsTrigger>
             <TabsTrigger
               value="monitor_robo"
@@ -68,6 +70,20 @@ export default function CRMDashboard() {
             >
               <CheckSquare className="h-4 w-4" />
               <span>Tarefas</span>
+            </TabsTrigger>
+            <TabsTrigger
+              value="nps"
+              className="magnetic-button gap-2 data-[state=active]:bg-primary/10 data-[state=active]:text-primary border border-transparent data-[state=active]:border-primary/20 rounded-xl px-4 py-2"
+            >
+              <Heart className="h-4 w-4" />
+              <span>NPS</span>
+            </TabsTrigger>
+            <TabsTrigger
+              value="indicacoes"
+              className="magnetic-button gap-2 data-[state=active]:bg-primary/10 data-[state=active]:text-primary border border-transparent data-[state=active]:border-primary/20 rounded-xl px-4 py-2"
+            >
+              <Award className="h-4 w-4" />
+              <span>Indicações</span>
             </TabsTrigger>
             <TabsTrigger
               value="analytics"
@@ -118,6 +134,20 @@ export default function CRMDashboard() {
             className="mt-6 animate-in fade-in-50 slide-in-from-bottom-2 duration-300"
           >
             <CRMTarefas />
+          </TabsContent>
+
+          <TabsContent
+            value="nps"
+            className="mt-6 animate-in fade-in-50 slide-in-from-bottom-2 duration-300"
+          >
+            <NPSDashboard />
+          </TabsContent>
+
+          <TabsContent
+            value="indicacoes"
+            className="mt-6 animate-in fade-in-50 slide-in-from-bottom-2 duration-300"
+          >
+            <ReferralsRanking />
           </TabsContent>
 
           <TabsContent

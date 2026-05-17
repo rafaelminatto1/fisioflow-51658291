@@ -28,6 +28,8 @@ import { schedulingRoutes } from "./routes/scheduling";
 import { crmRoutes } from "./routes/crm";
 import { contactsRoutes } from "./routes/contacts";
 import { crmAutomationsRoutes } from "./routes/crmAutomations";
+import { npsRoutes, npsPublicRoutes } from "./routes/nps";
+import { referralsRoutes } from "./routes/referrals";
 import { clinicalRoutes } from "./routes/clinical";
 import { notificationsRoutes } from "./routes/notifications";
 import { eventosRoutes } from "./routes/eventos";
@@ -294,6 +296,9 @@ const apiRoutes = [
   ["/api/crm", crmRoutes],
   ["/api/contacts", contactsRoutes],
   ["/api/crm-automations", crmAutomationsRoutes],
+  ["/api/nps", npsRoutes],
+  ["/api/public-nps", npsPublicRoutes],
+  ["/api/referrals", referralsRoutes],
   ["/api/clinical", clinicalRoutes],
   ["/api/notifications", notificationsRoutes],
   ["/api/communications", communicationsRoutes],
