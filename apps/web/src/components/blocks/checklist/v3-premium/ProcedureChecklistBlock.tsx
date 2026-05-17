@@ -1,19 +1,16 @@
-import React, { useState, useCallback, useMemo, useEffect, useRef } from "react";
+import React, { useState, useMemo, useEffect, useRef } from "react";
 import {
   CheckCircle2,
   Circle,
   GripVertical,
   Plus,
-  X,
-  ChevronRight,
   LayoutList,
   Sparkles,
   Command,
   Trash2,
-  MoreVertical,
   Check,
 } from "lucide-react";
-import { motion, AnimatePresence, useAnimation } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   DndContext,
   closestCenter,
@@ -187,7 +184,7 @@ export const ProcedureChecklistBlock = ({
         ],
   );
   const [newStepText, setNewStepText] = useState("");
-  const [activeId, setActiveId] = useState<string | null>(null);
+  const [_activeId, setActiveId] = useState<string | null>(null);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {

@@ -13,9 +13,6 @@ import { useQuery } from "@tanstack/react-query";
 import { fetchApi } from "@/lib/api";
 import { Card, Header } from "@/components";
 import { Ionicons } from "@expo/vector-icons";
-import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
-
 const DAYS = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
 
 export default function GroupsScreen() {

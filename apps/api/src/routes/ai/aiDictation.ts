@@ -15,7 +15,7 @@ app.post("/dictate", requireAuth, async (c) => {
   const formData = await c.req.parseBody();
   const audioFile = formData["audio"] as File | undefined;
   const context = String(formData["context"] || "evolução clínica de fisioterapia");
-  const language = String(formData["language"] || "pt-BR");
+  const _language = String(formData["language"] || "pt-BR");
 
   if (!audioFile) {
     return c.json({ error: "Arquivo de áudio obrigatório (campo 'audio')" }, 400);

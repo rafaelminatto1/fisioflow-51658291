@@ -64,7 +64,7 @@ test.describe("Saldo de pacotes na Evolução do Paciente", () => {
     await page.waitForLoadState("networkidle");
 
     // Verifica que a chamada à API de pacotes foi feita
-    const packagesRequestMade = await page.evaluate(() => {
+    const _packagesRequestMade = await page.evaluate(() => {
       return (window as any).__packagesApiCalled !== undefined;
     });
 

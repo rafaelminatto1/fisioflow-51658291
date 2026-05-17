@@ -1,5 +1,5 @@
 import React from "react";
-import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator } from "react-native";
+import { View, Text, StyleSheet, ActivityIndicator } from "react-native";
 import { Card } from "@/components";
 import { useColors } from "@/hooks/useColorScheme";
 import { useQuery } from "@tanstack/react-query";

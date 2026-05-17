@@ -1,8 +1,7 @@
 import React from "react";
-import { StyleSheet, View, Dimensions } from "react-native";
+import { StyleSheet, View } from "react-native";
 import Svg, { Line, Circle, Polyline, G, Rect, Text as SvgText } from "react-native-svg";
 import {
-  Landmark,
   calculateAngle,
   getAngleStatus,
   calculateVerticalAngle,

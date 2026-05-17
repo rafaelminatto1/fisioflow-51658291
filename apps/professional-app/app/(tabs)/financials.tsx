@@ -49,7 +49,7 @@ export default function FinancialsScreen() {
 
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
   const [recordToDelete, setRecordToDelete] = useState<any>(null);
-  const [isGeneratingReceipt, setIsGeneratingReceipt] = useState<string | null>(null);
+  const [_isGeneratingReceipt, setIsGeneratingReceipt] = useState<string | null>(null);
 
   const queryOptions = useMemo(() => {
     const dateRange = filters.customDateRange || getDateRange(filters.datePeriod);
@@ -375,7 +375,7 @@ export default function FinancialsScreen() {
                             },
                           }).catch((e) => console.error("Erro ao enviar WhatsApp:", e));
                         }
-                      } catch (err) {
+                      } catch {
                         hapticError();
                         Alert.alert("Erro", "Não foi possível gerar o recibo.");
                       } finally {

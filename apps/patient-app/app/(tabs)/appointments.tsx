@@ -167,7 +167,7 @@ export default function AppointmentsScreen() {
               try {
                 await confirmMutation.mutateAsync(appointment.id);
                 refetch();
-              } catch (err) {
+              } catch {
                 // Handled
               }
             }}

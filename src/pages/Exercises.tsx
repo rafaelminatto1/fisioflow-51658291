@@ -186,7 +186,7 @@ export default function Exercises() {
 
   const exercisesWithVideo = useMemo(() => exercises.filter((ex) => ex.video_url), [exercises]);
 
-  const videoPercentage = useMemo(
+  const _videoPercentage = useMemo(
     () =>
       exercises.length > 0 ? Math.round((exercisesWithVideo.length / exercises.length) * 100) : 0,
     [exercises.length, exercisesWithVideo.length],

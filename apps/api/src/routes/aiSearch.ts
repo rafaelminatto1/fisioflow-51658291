@@ -486,7 +486,7 @@ aiSearchApp.get("/education", async (c) => {
   if (!c.env.CLINICAL_KNOWLEDGE) return c.json({ error: "Vectorize não configurado" }, 503);
 
   try {
-    const pool = createPool(c.env);
+    const _pool = createPool(c.env);
     const { getRawSql } = await import("../lib/db");
     const sql = getRawSql(c.env, "read");
 

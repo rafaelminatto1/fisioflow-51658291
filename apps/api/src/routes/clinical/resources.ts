@@ -1179,9 +1179,9 @@ export function registerClinicalResourceRoutes(app: ClinicalRouteApp) {
    * Valida a execução de um teste clínico (ex: Lachman, Thomas) usando dados de visão.
    */
   app.post("/verify-test", requireAuth, async (c) => {
-    const user = c.get("user");
+    const _user = c.get("user");
     const body = (await c.req.json()) as Record<string, any>;
-    const { test_id, pose_data, patient_id } = body;
+    const { test_id, pose_data, _patient_id } = body;
 
     if (!test_id || !pose_data) {
       return c.json({ error: "test_id e pose_data são obrigatórios" }, 400);

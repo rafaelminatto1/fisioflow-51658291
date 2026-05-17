@@ -50,7 +50,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 import { ExerciseViewModal } from "./ExerciseViewModal";
-import { EmptyState } from "@/components/ui/empty-state";
 import { ExerciseFiltersPanel, type ExerciseFiltersState } from "./ExerciseFiltersPanel";
 import { MergeExercisesModal } from "./MergeExercisesModal";
 import { Checkbox } from "@/components/ui/checkbox";

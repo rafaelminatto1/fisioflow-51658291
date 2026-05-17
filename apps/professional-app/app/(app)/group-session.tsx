@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, {  } from "react";
 import {
   View,
   Text,
@@ -12,7 +12,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useColors } from "@/hooks/useColorScheme";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { fetchApi } from "@/lib/api";
-import { router, Stack, useLocalSearchParams } from "expo-router";
+import { Stack, useLocalSearchParams } from "expo-router";
 import { toast } from "@/lib/toast";
 
 interface GroupAttendee {

@@ -98,7 +98,7 @@ export class PatientDigitalTwinWorkflow extends WorkflowEntrypoint<Env, { patien
       try {
         const jsonMatch = (response as any).response.match(/\{[\s\S]*\}/);
         return JSON.parse(jsonMatch?.[0] ?? (response as any).response);
-      } catch (e) {
+      } catch {
         return { risk: "low", recoveryWeeks: 8, confidence: 50 };
       }
     });

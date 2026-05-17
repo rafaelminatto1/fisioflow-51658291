@@ -6,9 +6,6 @@ import { request } from "@/api/v2/base";
 import {
   Map,
   Building2,
-  TrendingUp,
-  Users,
-  DollarSign,
   LayoutDashboard,
   Sparkles,
   Loader2,

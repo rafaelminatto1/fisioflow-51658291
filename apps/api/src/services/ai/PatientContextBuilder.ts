@@ -381,7 +381,7 @@ function renderPatientContextXml(input: RenderInput): string {
   return lines.join("\n");
 }
 
-function extractSoapText(field: unknown, keys: string[]): string {
+function _extractSoapText(field: unknown, keys: string[]): string {
   if (!field || typeof field !== "object") return "";
   const obj = field as Record<string, unknown>;
   const parts: string[] = [];

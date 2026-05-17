@@ -93,7 +93,7 @@ function normalizePatientStatus(value: unknown): string {
   return trimmedString(value) ?? "Inicial";
 }
 
-function jsonbTextToString(value: unknown): string | undefined {
+function _jsonbTextToString(value: unknown): string | undefined {
   if (value == null) return undefined;
   if (typeof value === "string") return value;
   if (typeof value === "object") {

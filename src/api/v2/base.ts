@@ -1,7 +1,5 @@
 import { getNeonAccessToken } from "@/lib/auth/neon-token";
 import { getWorkersApiUrl } from "@/lib/api/config";
-import { getOfflineSyncService } from "@/services/offlineSync";
-
 type RequestError = Error & {
   status?: number;
   payload?: unknown;

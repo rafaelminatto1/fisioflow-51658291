@@ -9,7 +9,7 @@ import { test, expect, type Page } from "@playwright/test";
 
 const BASE = process.env.PREVIEW_BASE_URL || "http://127.0.0.1:4321";
 
-async function waitForSWActive(page: Page) {
+async function _waitForSWActive(page: Page) {
   await page.evaluate(async () => {
     if (!("serviceWorker" in navigator)) return;
     const reg = await navigator.serviceWorker.ready;
