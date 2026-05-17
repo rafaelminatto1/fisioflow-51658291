@@ -19,6 +19,7 @@ import { parseLocalDate } from "@/lib/date-utils";
 import { appointmentPeriodKeys } from "../useAppointmentsByPeriod";
 import type { AppointmentsQueryResult } from "./useAppointmentsCache";
 import { appointmentKeys } from "./useAppointmentsData";
+import { isOfflinePlaceholder } from "@/api/v2/base";
 
 export function useCreateAppointment() {
   const queryClient = useQueryClient();
@@ -76,20 +77,20 @@ export function useCreateAppointment() {
       );
 
       const isOnline = typeof navigator === "undefined" || navigator.onLine;
-      const isOfflinePlaceholder = typeof data.id === "string" && data.id.startsWith("offline-");
+      const isPending = typeof data.id === "string" && data.id.startsWith("offline-");
 
-      if (isOnline && !isOfflinePlaceholder) {
+      if (isOnline && !isPending) {
         await invalidateAppointmentsComprehensive(queryClient, data.date, profile?.organization_id);
       }
 
       toast({
-        title: isOfflinePlaceholder ? "Salvo localmente" : "Sucesso",
-        description: isOfflinePlaceholder
+        title: isPending ? "Salvo localmente" : "Sucesso",
+        description: isPending
           ? "Agendamento será sincronizado quando a conexão voltar."
           : "Agendamento criado com sucesso",
       });
 
-      if (isOfflinePlaceholder) return;
+      if (isPending) return;
 
       AppointmentNotificationService.scheduleNotification(
         data.id,
@@ -179,7 +180,7 @@ export function useUpdateAppointment() {
     },
     onSuccess: async (data, variables) => {
       const organizationId = profile?.organization_id || "";
-      const isOffline = (data as { __offline?: boolean })?.__offline === true;
+      const isOffline = isOfflinePlaceholder<AppointmentBase>(data);
 
       if (!isOffline && typeof navigator !== "undefined" && navigator.onLine) {
         await invalidateAppointmentsComprehensive(queryClient, data.date, organizationId);
@@ -356,7 +357,7 @@ export function useUpdateAppointmentStatus() {
     onSuccess: (updatedData, variables) => {
       const organizationId = profile?.organization_id;
       const { appointmentId } = variables;
-      const isOffline = (updatedData as { __offline?: boolean })?.__offline === true;
+      const isOffline = isOfflinePlaceholder(updatedData);
 
       if (isOffline) {
         toast({

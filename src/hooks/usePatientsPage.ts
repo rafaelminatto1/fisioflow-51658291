@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { patientsApi, type PatientsListFacets, type PatientsListSummary } from "@/api/v2/patients";
-import { isOfflineEnqueuedResponse } from "@/api/v2/base";
+import { isOfflineEnqueuedResponse, isOfflinePlaceholder } from "@/api/v2/base";
 import { useAuth } from "@/hooks/useAuth";
 import { fisioLogger as logger } from "@/lib/errors/logger";
 import { invalidatePatientsComprehensive } from "@/utils/cacheInvalidation";
@@ -159,7 +159,7 @@ export function usePatientsPageData(filters: PatientsFilters = {}) {
     },
     onSuccess: async (data) => {
       const isOffline =
-        (data as { __offline?: boolean })?.__offline === true ||
+        isOfflinePlaceholder<PatientRow>(data) ||
         (typeof data?.id === "string" && data.id.startsWith("offline-"));
       if (!isOffline && typeof navigator !== "undefined" && navigator.onLine) {
         await invalidatePatientsComprehensive(queryClient);
@@ -188,7 +188,7 @@ export function usePatientsPageData(filters: PatientsFilters = {}) {
       return (res?.data ?? res) as PatientRow;
     },
     onSuccess: async (data, variables) => {
-      const isOffline = (data as { __offline?: boolean })?.__offline === true;
+      const isOffline = isOfflinePlaceholder<PatientRow>(data);
       if (!isOffline && typeof navigator !== "undefined" && navigator.onLine) {
         await invalidatePatientsComprehensive(queryClient, variables.id);
       }

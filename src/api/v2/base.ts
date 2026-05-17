@@ -25,6 +25,26 @@ export function isOfflineEnqueuedResponse(value: unknown): value is OfflineEnque
   );
 }
 
+/**
+ * Wrapper de tipo para retornos que podem ser uma entidade real OU um
+ * placeholder optimista marcado com `__offline: true`. Use nos hooks de
+ * mutation que precisam diferenciar offline de online.
+ *
+ * Exemplo:
+ *   onSuccess: (data: MaybeOffline<AppointmentBase>) => {
+ *     if (isOfflinePlaceholder(data)) { ... }
+ *   }
+ */
+export type MaybeOffline<T> = T | (Partial<T> & { __offline: true; id: string });
+
+export function isOfflinePlaceholder<T>(value: MaybeOffline<T> | undefined | null): value is Partial<T> & { __offline: true; id: string } {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    (value as { __offline?: unknown }).__offline === true
+  );
+}
+
 async function getAuthHeader(): Promise<Record<string, string>> {
   const token = await getNeonAccessToken();
   return { Authorization: `Bearer ${token}` };
