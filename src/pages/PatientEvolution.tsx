@@ -3,7 +3,8 @@
  * Optimized with modular hooks and components for better maintainability.
  */
 
-import { lazy, Suspense, useMemo, useEffect, useCallback } from "react";
+import { lazy, Suspense, useMemo, useEffect, useCallback, useRef } from "react";
+import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { AlertTriangle } from "lucide-react";
 
@@ -30,6 +31,8 @@ import { usePatientEvolutionHandlers } from "@/hooks/evolution/usePatientEvoluti
 import { useEvolutionShortcuts } from "@/hooks/evolution/useEvolutionShortcuts";
 import { useAutoSave } from "@/hooks/useAutoSave";
 import { useAutoSaveSoapRecord } from "@/hooks/useSoapRecords";
+import { useEvolutionDraft } from "@/hooks/useEvolutionDraft";
+import { useOfflineSync } from "@/services/offlineSync";
 import { stripHtml } from "@/lib/utils/stripHtml";
 
 // Componentes
@@ -113,9 +116,62 @@ const PatientEvolution = () => {
   const handlers = usePatientEvolutionHandlers(state);
   const autoSaveMutation = useAutoSaveSoapRecord();
 
+  // Status offline (queue de ações pendentes + navigator.onLine)
+  const offline = useOfflineSync();
+
+  // Persistência local do rascunho (sobrevive a reload/fechar aba)
+  const draft = useEvolutionDraft<EvolutionV2Data>({
+    evolutionId: state.currentSoapRecordId,
+    patientId: state.patientId,
+    appointmentId: state.appointmentId,
+    sessionDate: state.evolutionV2Data?.sessionDate,
+  });
+
+  // Hidratação única do draft ao montar (se houver e o estado atual estiver vazio)
+  const hydratedRef = useRef(false);
+  useEffect(() => {
+    if (hydratedRef.current) return;
+    if (!state.patientId) return;
+    const saved = draft.readDraft();
+    if (!saved) {
+      hydratedRef.current = true;
+      return;
+    }
+    // Só hidrata se o painel atual estiver "vazio" — para não sobrescrever
+    // dados frescos vindos do servidor.
+    const current = state.evolutionV2Data;
+    const currentIsEmpty =
+      !(current?.unifiedItems?.length ?? 0) &&
+      !(current?.procedures?.length ?? 0) &&
+      !(current?.exercises?.length ?? 0) &&
+      !(current?.measurements?.length ?? 0) &&
+      !(current?.evolutionText || current?.observations || "").trim();
+    if (currentIsEmpty) {
+      handleEvolutionV2Change(saved);
+      toast.message("Rascunho restaurado", {
+        description: "Encontramos um rascunho local não sincronizado.",
+      });
+    }
+    hydratedRef.current = true;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state.patientId]);
+
+  // Limpa o draft quando o registro é confirmado pelo servidor sem operações pendentes
+  useEffect(() => {
+    if (
+      state.currentSoapRecordId &&
+      offline.stats.pendingActions === 0 &&
+      offline.isOnline
+    ) {
+      draft.clearDraft();
+    }
+  }, [state.currentSoapRecordId, offline.stats.pendingActions, offline.isOnline, draft]);
+
   const handleEvolutionV2Change = useCallback(
     (next: EvolutionV2Data) => {
       state.setEvolutionV2Data(next);
+      // Persiste o rascunho local a cada mudança
+      draft.writeDraft(next);
 
       const orderedItems = [...(next.unifiedItems || [])].sort(
         (a, b) => (a.order ?? 0) - (b.order ?? 0),
@@ -453,6 +509,10 @@ const PatientEvolution = () => {
               autoSaveEnabled={state.autoSaveEnabled}
               toggleAutoSave={() => state.setAutoSaveEnabled(!state.autoSaveEnabled)}
               lastSavedAt={lastSavedAt}
+              offlineStatus={{
+                isOnline: offline.isOnline,
+                pendingActions: offline.stats.pendingActions,
+              }}
               activeTab={state.activeTab}
               onTabChange={(v) => state.setActiveTab(v as EvolutionTab)}
               evolutionVersion={state.evolutionVersion}

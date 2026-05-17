@@ -198,7 +198,12 @@ export const normalizeCapacityPayload = (body: Record<string, any>) => {
     throw new Error("start_time deve ser anterior ao end_time");
   }
 
-  return { dayOfWeek, startTime, endTime, maxPatients };
+  const appointmentTypeId =
+    body.appointment_type_id === null || body.appointment_type_id === undefined || body.appointment_type_id === ""
+      ? null
+      : String(body.appointment_type_id);
+
+  return { dayOfWeek, startTime, endTime, maxPatients, appointmentTypeId };
 };
 
 const HEX_COLOR_RE = /^#[0-9a-fA-F]{6}$/;
@@ -555,4 +560,15 @@ export const mapSlotConfigRow = (row: Record<string, any>) => ({
   ...row,
   slot_interval_minutes: Number(row.slot_interval_minutes ?? 30),
   alignment_type: row.alignment_type ?? "fixed",
+});
+
+export const mapNoShowPolicyRow = (row: Record<string, any>) => ({
+  ...row,
+  threshold_count: Number(row.threshold_count ?? 3),
+  window_days: Number(row.window_days ?? 90),
+  action: String(row.action ?? "warn"),
+  suspend_days: Number(row.suspend_days ?? 0),
+  charge_fee: row.charge_fee === true,
+  fee_amount: Number(row.fee_amount ?? 0),
+  notify_admin: row.notify_admin !== false,
 });

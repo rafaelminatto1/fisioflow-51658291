@@ -51,6 +51,10 @@ export interface QueuedAction {
   synced: boolean;
   /** Current retry count */
   retryCount: number;
+  /** Quando 409 do servidor — aguarda resolução manual do usuário */
+  conflictedAt?: number;
+  /** Última mensagem de erro (para diagnóstico do conflito) */
+  lastError?: string;
 }
 
 export interface SyncStats {
@@ -62,6 +66,8 @@ export interface SyncStats {
   syncedActions: number;
   /** Actions that failed after max retries */
   failedActions: number;
+  /** Ações com conflito 409 aguardando resolução manual */
+  conflictedActions: number;
   /** Last sync timestamp */
   lastSyncTime?: number;
   /** Whether last sync was successful */
@@ -72,6 +78,7 @@ export type SyncEventType =
   | "sync_start"
   | "sync_complete"
   | "sync_error"
+  | "sync_conflict"
   | "action_success"
   | "action_failure";
 
@@ -304,9 +311,12 @@ class OfflineSyncService {
         return this.lastSyncStats;
       }
 
-      // Filter actions that haven't exceeded max retries
+      // Filter actions that haven't exceeded max retries E que não estão
+      // marcadas como conflito (essas exigem resolução manual)
       const validActions = pendingActions.filter(
-        (a) => a.retryCount < (this.config.maxRetries || DEFAULT_MAX_RETRIES),
+        (a) =>
+          a.retryCount < (this.config.maxRetries || DEFAULT_MAX_RETRIES) &&
+          !a.conflictedAt,
       );
 
       if (validActions.length === 0) {
@@ -388,7 +398,8 @@ class OfflineSyncService {
       });
     } catch (error) {
       const status = (error as { status?: number })?.status ?? 0;
-      const isTerminalError = status >= 400 && status < 500;
+      const isConflict = status === 409;
+      const isTerminalError = status >= 400 && status < 500 && !isConflict;
 
       // Increment retry count or handle as terminal
       const maxRetries = this.config.maxRetries || DEFAULT_MAX_RETRIES;
@@ -396,6 +407,39 @@ class OfflineSyncService {
         ...action,
         retryCount: action.retryCount + 1,
       };
+
+      if (isConflict) {
+        // 409: o servidor tem versão mais nova. Marca como conflito,
+        // NÃO remove — aguarda resolução manual via UI.
+        const conflictedAction: QueuedAction = {
+          ...action,
+          conflictedAt: Date.now(),
+          lastError: (error as Error)?.message?.slice(0, 240) ?? "conflict",
+        };
+        await db.put("offline_actions", conflictedAction);
+        logger.warn(
+          `Conflict (409) for action ${action.id} — awaiting manual resolution.`,
+          { action: action.action },
+          "offlineSync",
+        );
+        this.emit({
+          type: "sync_conflict",
+          timestamp: Date.now(),
+          data: {
+            actionId: action.id,
+            actionType: action.action,
+            error: error as Error,
+          },
+        });
+        if (this.config.showNotifications) {
+          toast.warning("Conflito de sincronização", {
+            description:
+              "Uma alteração offline conflita com a versão atual no servidor. Revise manualmente.",
+            duration: 8000,
+          });
+        }
+        throw error;
+      }
 
       if (isTerminalError) {
         logger.error(
@@ -543,15 +587,16 @@ class OfflineSyncService {
       // Initialize both databases correctly
       const localDb = await getDB();
 
-      // 1. Cache upcoming appointments (next 24 hours)
+      // 1. Cache upcoming appointments (next 7 days — antes era só 24h,
+      // mas atendimentos podem perder rede no meio da semana)
       const today = new Date();
       today.setHours(0, 0, 0, 0);
-      const tomorrow = new Date(today);
-      tomorrow.setDate(tomorrow.getDate() + 1);
+      const horizon = new Date(today);
+      horizon.setDate(horizon.getDate() + 7);
 
       // Format as YYYY-MM-DD for date comparison
       const todayStr = today.toISOString().split("T")[0];
-      const tomorrowStr = tomorrow.toISOString().split("T")[0];
+      const horizonStr = horizon.toISOString().split("T")[0];
 
       let appointments: unknown[] = [];
       let apptError: Error | null = null;
@@ -559,7 +604,7 @@ class OfflineSyncService {
       try {
         const appointmentsRes = await appointmentsApi.list({
           dateFrom: todayStr,
-          dateTo: tomorrowStr,
+          dateTo: horizonStr,
           limit: 500,
         });
         appointments = appointmentsRes.data ?? [];
@@ -633,6 +678,43 @@ class OfflineSyncService {
         );
       }
 
+      // 3. Cache pacientes ativos (até 500) — necessário para que a agenda
+      // e a busca de paciente funcionem offline.
+      try {
+        const patientsRes = await patientsApi.list({
+          status: "ativo",
+          limit: 500,
+          minimal: true,
+        });
+        const patientsData = (patientsRes.data ?? []) as Array<{ id?: string }>;
+        if (patientsData.length > 0) {
+          const tx = localDb.transaction("patients", "readwrite");
+          for (const p of patientsData) {
+            if (p?.id) await tx.store.put(p as never);
+          }
+          await tx.done;
+          logger.debug(
+            `[OfflineSyncService] Cached ${patientsData.length} patients`,
+            { count: patientsData.length },
+            "offlineSync",
+          );
+        }
+      } catch (error) {
+        if ((error as { code?: string })?.code === "permission-denied") {
+          logger.debug(
+            "[OfflineSyncService] Permission denied for patients. Skipping.",
+            undefined,
+            "offlineSync",
+          );
+        } else {
+          logger.warn(
+            "[OfflineSyncService] Error fetching patients",
+            { error: (error as Error).message },
+            "offlineSync",
+          );
+        }
+      }
+
       if (!_loggedOfflineSyncComplete) {
         _loggedOfflineSyncComplete = true;
         logger.debug(
@@ -663,11 +745,14 @@ class OfflineSyncService {
       let pending = 0;
       let synced = 0;
       let failed = 0;
+      let conflicted = 0;
 
       for (const action of allActions) {
         total++;
         if (action.synced) {
           synced++;
+        } else if (action.conflictedAt) {
+          conflicted++;
         } else if (action.retryCount >= (this.config.maxRetries || DEFAULT_MAX_RETRIES)) {
           failed++;
         } else {
@@ -680,6 +765,7 @@ class OfflineSyncService {
         pendingActions: pending,
         syncedActions: synced,
         failedActions: failed,
+        conflictedActions: conflicted,
         lastSyncTime: this.lastSyncStats?.lastSyncTime,
         lastSyncSuccess: this.lastSyncStats?.lastSyncSuccess,
       };
@@ -690,9 +776,47 @@ class OfflineSyncService {
         pendingActions: 0,
         syncedActions: 0,
         failedActions: 0,
+        conflictedActions: 0,
         lastSyncSuccess: false,
       };
     }
+  }
+
+  /**
+   * Resolução manual de conflito: descarta a ação local (servidor venceu)
+   */
+  public async resolveConflictKeepServer(actionId: string): Promise<void> {
+    const db = await getDB();
+    await db.delete("offline_actions", actionId);
+    this.notifyListeners();
+  }
+
+  /**
+   * Resolução manual de conflito: tenta reaplicar a ação local forçadamente
+   * (limpa o flag de conflito). Use com cuidado — sobrescreverá o servidor.
+   */
+  public async resolveConflictKeepLocal(actionId: string): Promise<void> {
+    const db = await getDB();
+    const action = await db.get("offline_actions", actionId);
+    if (!action) return;
+    const next: QueuedAction = {
+      ...action,
+      conflictedAt: undefined,
+      retryCount: 0,
+      lastError: undefined,
+    };
+    await db.put("offline_actions", next);
+    this.notifyListeners();
+    void this.syncNow();
+  }
+
+  /**
+   * Lista ações em conflito para exibir em um modal de resolução.
+   */
+  public async listConflicts(): Promise<QueuedAction[]> {
+    const db = await getDB();
+    const all = await db.getAll("offline_actions");
+    return all.filter((a) => Boolean(a.conflictedAt));
   }
 
   /**
@@ -850,6 +974,7 @@ export function useOfflineSync(config?: SyncConfig) {
     pendingActions: 0,
     syncedActions: 0,
     failedActions: 0,
+    conflictedActions: 0,
   });
   const [isOnline, setIsOnline] = useState(
     typeof navigator !== "undefined" ? navigator.onLine : true,
@@ -918,6 +1043,16 @@ export function useOfflineSync(config?: SyncConfig) {
     return service.cacheCriticalData();
   }, []);
 
+  const listConflicts = useCallback(() => getOfflineSyncService().listConflicts(), []);
+  const resolveConflictKeepServer = useCallback(
+    (actionId: string) => getOfflineSyncService().resolveConflictKeepServer(actionId),
+    [],
+  );
+  const resolveConflictKeepLocal = useCallback(
+    (actionId: string) => getOfflineSyncService().resolveConflictKeepLocal(actionId),
+    [],
+  );
+
   return {
     stats,
     syncNow,
@@ -926,6 +1061,9 @@ export function useOfflineSync(config?: SyncConfig) {
     updateConfig,
     isOnline,
     cacheCriticalData,
+    listConflicts,
+    resolveConflictKeepServer,
+    resolveConflictKeepLocal,
   };
 }
 

@@ -1,4 +1,5 @@
 import React, { useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -7,6 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -76,7 +78,7 @@ type ExerciseExtended = Exercise & {
 };
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { knowledgeBase } from "@/data/knowledgeBase";
-import { exerciseDictionary } from "@/data/exerciseDictionary";
+import { exerciseDictionary, ExerciseEntry } from "@/data/exerciseDictionary";
 import { MediaGalleryModal } from "../media/MediaGalleryModal";
 import {
   DndContext,
@@ -242,11 +244,26 @@ export function NewExerciseModal({
   const [isGalleryOpen, setIsGalleryOpen] = React.useState(false);
   const [_activeMediaTab, _setActiveMediaTab] = React.useState<"view" | "edit">("view");
 
-  const handleApplyDictionaryEntry = (entry: ExerciseDictionaryEntry) => {
-    form.setValue("name", entry.name_pt);
-    form.setValue("name_en", entry.name_en);
+  // Busca o exercício completo (com mídia da galeria) ao abrir para edição —
+  // a lista não traz exercise_media_attachments, então sem este fetch o painel
+  // de mídia abre vazio mesmo quando há fotos/vídeos cadastrados.
+  const { data: detailData } = useQuery({
+    queryKey: ["exercise-detail", exercise?.id],
+    queryFn: () => exercisesApi.get(exercise!.id),
+    enabled: Boolean(open && exercise?.id),
+    staleTime: 0,
+  });
+  const currentExercise = React.useMemo<ExerciseExtended | undefined>(() => {
+    if (!exercise) return undefined;
+    const fetched = (detailData?.data as Partial<ExerciseExtended> | undefined) ?? {};
+    return { ...(exercise as ExerciseExtended), ...fetched } as ExerciseExtended;
+  }, [exercise, detailData]);
+
+  const handleApplyDictionaryEntry = (entry: ExerciseEntry) => {
+    form.setValue("name", entry.pt);
+    form.setValue("name_en", entry.en);
     form.setValue("description", entry.description_pt);
-    form.setValue("category", entry.category);
+    form.setValue("category", entry.subcategory || entry.category);
     
     // Mapear aliases se existirem no dicionário
     if (entry.aliases_pt) {
@@ -264,7 +281,7 @@ export function NewExerciseModal({
           {
             url: entry.image_url,
             type: "image",
-            caption: entry.name_pt,
+            caption: entry.pt,
             orderIndex: currentMedia.length,
           },
           ...currentMedia,
@@ -273,26 +290,24 @@ export function NewExerciseModal({
     }
     
     // Preencher instruções e metadados clínicos se disponíveis
-    if (entry.metadata) {
-      if (entry.metadata.instruction_pt) {
-        form.setValue("instructions", entry.metadata.instruction_pt);
-      }
-      if (entry.metadata.difficulty) {
-        // Mapear nível de dificuldade numérico para o enum do formulário
-        const diffMap: Record<number, "Iniciante" | "Intermediário" | "Avançado"> = {
-          1: "Iniciante",
-          2: "Intermediário",
-          3: "Avançado"
-        };
-        form.setValue("difficulty", diffMap[entry.metadata.intensity_level] || "Iniciante");
-      }
+    if (entry.instruction_pt) {
+      form.setValue("instructions", entry.instruction_pt);
+    }
+    if (entry.intensity_level) {
+      // Mapear nível de dificuldade numérico para o enum do formulário
+      const diffMap: Record<number, "Iniciante" | "Intermediário" | "Avançado"> = {
+        1: "Iniciante",
+        2: "Iniciante",
+        3: "Intermediário",
+        4: "Avançado",
+        5: "Avançado",
+      };
+      form.setValue("difficulty", diffMap[entry.intensity_level] || "Iniciante");
     }
 
-    setSearchTerm("");
-    setSearchResults([]);
     toast({
       title: "Dados Aplicados",
-      description: `O exercício "${entry.name_pt}" foi carregado com sucesso.`,
+      description: `O exercício "${entry.pt}" foi carregado com sucesso.`,
     });
   };
 
@@ -335,10 +350,10 @@ export function NewExerciseModal({
 
   // Sincronizar mídia quando o formulário reseta (ex: ao abrir para editar)
   useEffect(() => {
-    if (exercise && (exercise as ExerciseExtended).media) {
-      form.setValue("media", (exercise as ExerciseExtended).media);
+    if (currentExercise && currentExercise.media) {
+      form.setValue("media", currentExercise.media);
     }
-  }, [exercise, form]);
+  }, [currentExercise, form]);
 
   useEffect(() => {
     // Clear files and previews when switching exercises or opening/closing
@@ -349,8 +364,9 @@ export function NewExerciseModal({
     setUploadProgress(0);
     setIsUploading(false);
 
-    if (exercise) {
-      const ext = exercise as ExerciseExtended;
+    if (currentExercise) {
+      const ext = currentExercise;
+      const exercise = currentExercise as Exercise;
 
       // --- Lógica de Mídia Legada (Fallback) ---
       let initialMedia = ext.media || [];
@@ -408,8 +424,8 @@ export function NewExerciseModal({
           : [],
         media: initialMedia,
       });
-      if (Array.isArray((exercise as ExerciseExtended).scientific_references)) {
-        replace((exercise as ExerciseExtended).scientific_references);
+      if (Array.isArray(ext.scientific_references)) {
+        replace(ext.scientific_references);
       }
     } else {
       form.reset({
@@ -438,7 +454,7 @@ export function NewExerciseModal({
       });
       replace([]);
     }
-  }, [exercise, form, replace]);
+  }, [currentExercise, form, replace]);
 
   const _handleAnalyzeImage = async () => {
     const imageUrl = form.getValues("image_url");
@@ -563,19 +579,21 @@ export function NewExerciseModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[95vw] md:max-w-2xl max-h-[90vh] md:max-h-[85vh] flex flex-col p-0">
-        <DialogHeader className="p-4 sm:p-6 pb-2">
+      <DialogContent className="max-w-[95vw] lg:max-w-5xl xl:max-w-6xl max-h-[92vh] flex flex-col p-0 gap-0">
+        <DialogHeader className="px-6 py-4 border-b shrink-0">
           <DialogTitle className="text-lg sm:text-xl">
             {exercise ? "Editar Exercício" : "Novo Exercício"}
           </DialogTitle>
         </DialogHeader>
-        <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-2">
+        <div className="flex-1 overflow-y-auto">
           <Form {...form}>
             <form
               id="exercise-form"
               onSubmit={form.handleSubmit(handleSubmit)}
-              className="space-y-4"
+              className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-0"
             >
+              {/* ===== COLUNA ESQUERDA: campos textuais e clínicos ===== */}
+              <div className="p-5 sm:p-6 space-y-5 min-w-0">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
@@ -603,25 +621,27 @@ export function NewExerciseModal({
                             </div>
                             <div className="max-h-60 overflow-y-auto">
                               {exerciseDictionary
-                                .filter(
-                                  (e) =>
-                                    e.name_pt.toLowerCase().includes(field.value?.toLowerCase() || "") ||
-                                    e.aliases_pt.some((a) =>
-                                      a.toLowerCase().includes(field.value?.toLowerCase() || ""),
-                                    ),
-                                )
+                                .filter((e) => {
+                                  const q = (field.value || "").toLowerCase();
+                                  const pt = (e?.pt || "").toLowerCase();
+                                  const aliases = Array.isArray(e?.aliases_pt) ? e.aliases_pt : [];
+                                  return (
+                                    pt.includes(q) ||
+                                    aliases.some((a) => (a || "").toLowerCase().includes(q))
+                                  );
+                                })
                                 .map((entry) => (
                                   <button
-                                    key={entry.name_pt}
+                                    key={entry.pt}
                                     type="button"
                                     onClick={() => handleApplyDictionaryEntry(entry)}
                                     className="w-full flex flex-col items-start gap-0.5 p-3 text-left hover:bg-slate-50 border-b last:border-0 transition-colors"
                                   >
                                     <span className="text-sm font-medium text-slate-900">
-                                      {entry.name_pt}
+                                      {entry.pt}
                                     </span>
                                     <span className="text-[10px] text-slate-500 italic">
-                                      {entry.name_en}
+                                      {entry.en}
                                     </span>
                                   </button>
                                 ))}
@@ -833,200 +853,7 @@ export function NewExerciseModal({
                 />
               </div>
 
-              <div className="space-y-4 pt-4 border-t mt-4">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-sm font-semibold flex items-center gap-2">
-                    <ImageIcon className="h-4 w-4 text-primary" />
-                    Gerenciamento de Mídia
-                  </h3>
-                  <div className="flex gap-2">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      className="h-8 text-[11px]"
-                      onClick={() => setIsGalleryOpen(true)}
-                    >
-                      <Plus className="h-3 w-3 mr-1" />
-                      Adicionar da Galeria
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      className="h-8 text-[11px]"
-                      onClick={() => imageInputRef.current?.click()}
-                    >
-                      <Upload className="h-3 w-3 mr-1" />
-                      Upload Direto
-                    </Button>
-                  </div>
-                </div>
-
-                {/* Input Oculto para Upload */}
-                <input
-                  type="file"
-                  ref={imageInputRef}
-                  className="hidden"
-                  accept="image/*,video/*"
-                  multiple
-                  onChange={(e) => {
-                    const files = Array.from(e.target.files || []);
-                    if (files.length > 0) {
-                      // Simular upload e adicionar à lista
-                      // Em produção, isso chamaria uploadToR2
-                      toast({
-                        title: "Dica",
-                        description: "Use a Galeria para gerenciar seus arquivos permanentemente.",
-                      });
-                    }
-                  }}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="media"
-                  render={({ field }) => {
-                    const media = field.value || [];
-                    const images = media.filter((m) => m.type === "image");
-                    const videos = media.filter((m) => m.type !== "image");
-
-                    const handleDragEnd = (event: DragEndEvent, type: "image" | "video") => {
-                      const { active, over } = event;
-                      if (over && active.id !== over.id) {
-                        const items = type === "image" ? images : videos;
-                        const oldIdx = items.findIndex((i) => i.url === active.id);
-                        const newIdx = items.findIndex((i) => i.url === over.id);
-
-                        const sortedItems = arrayMove(items, oldIdx, newIdx);
-
-                        const otherItems = media.filter((m) =>
-                          type === "image" ? m.type !== "image" : m.type === "image",
-                        );
-                        // Mantemos as imagens primeiro, depois os vídeos para uma estrutura organizada
-                        const finalArray =
-                          type === "image"
-                            ? [...sortedItems, ...otherItems]
-                            : [...otherItems, ...sortedItems];
-
-                        field.onChange(
-                          finalArray.map((item, idx) => ({
-                            ...item,
-                            orderIndex: idx,
-                          })),
-                        );
-                      }
-                    };
-
-                    return (
-                      <div className="space-y-6">
-                        {/* Seção de Fotos */}
-                        <div className="space-y-3">
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                              <ImageIcon className="h-3 w-3" />
-                              Fotos ({images.length})
-                            </div>
-                            {images.length > 0 && (
-                              <span className="text-[9px] bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded-full font-bold">
-                                A primeira será a Capa
-                              </span>
-                            )}
-                          </div>
-                          {images.length > 0 ? (
-                            <DndContext
-                              sensors={sensors}
-                              collisionDetection={closestCenter}
-                              onDragEnd={(e) => handleDragEnd(e, "image")}
-                            >
-                              <SortableContext
-                                items={images.map((i) => i.url)}
-                                strategy={horizontalListSortingStrategy}
-                              >
-                                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-                                  {images.map((item) => (
-                                    <SortableMediaItem
-                                      key={item.url}
-                                      id={item.url}
-                                      url={item.url}
-                                      type={item.type}
-                                      caption={item.caption || null}
-                                      onRemove={() => {
-                                        field.onChange(media.filter((m) => m.url !== item.url));
-                                      }}
-                                      onCaptionChange={(val) => {
-                                        field.onChange(
-                                          media.map((m) =>
-                                            m.url === item.url ? { ...m, caption: val } : m,
-                                          ),
-                                        );
-                                      }}
-                                    />
-                                  ))}
-                                </div>
-                              </SortableContext>
-                            </DndContext>
-                          ) : (
-                            <div className="flex h-20 flex-col items-center justify-center rounded-xl border-2 border-dashed bg-slate-50/50 dark:bg-slate-900/50">
-                              <p className="text-[10px] text-slate-400 italic">
-                                Nenhuma foto adicionada
-                              </p>
-                            </div>
-                          )}
-                        </div>
-
-                        {/* Seção de Vídeos */}
-                        <div className="space-y-3">
-                          <div className="flex items-center gap-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                            <VideoIcon className="h-3 w-3" />
-                            Vídeos e YouTube ({videos.length})
-                          </div>
-                          {videos.length > 0 ? (
-                            <DndContext
-                              sensors={sensors}
-                              collisionDetection={closestCenter}
-                              onDragEnd={(e) => handleDragEnd(e, "video")}
-                            >
-                              <SortableContext
-                                items={videos.map((i) => i.url)}
-                                strategy={horizontalListSortingStrategy}
-                              >
-                                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-                                  {videos.map((item) => (
-                                    <SortableMediaItem
-                                      key={item.url}
-                                      id={item.url}
-                                      url={item.url}
-                                      type={item.type}
-                                      caption={item.caption || null}
-                                      onRemove={() => {
-                                        field.onChange(media.filter((m) => m.url !== item.url));
-                                      }}
-                                      onCaptionChange={(val) => {
-                                        field.onChange(
-                                          media.map((m) =>
-                                            m.url === item.url ? { ...m, caption: val } : m,
-                                          ),
-                                        );
-                                      }}
-                                    />
-                                  ))}
-                                </div>
-                              </SortableContext>
-                            </DndContext>
-                          ) : (
-                            <div className="flex h-20 flex-col items-center justify-center rounded-xl border-2 border-dashed bg-slate-50/50 dark:bg-slate-900/50">
-                              <p className="text-[10px] text-slate-400 italic">
-                                Nenhum vídeo adicionado
-                              </p>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  }}
-                />
-              </div>
+              {/* Bloco de mídia movido para a coluna direita (sticky) — ver final do <form>. */}
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <FormField
@@ -1360,6 +1187,193 @@ export function NewExerciseModal({
                   </div>
                 </div>
               </div>
+              </div>
+              {/* ===== COLUNA DIREITA: Mídia (sticky) ===== */}
+              <aside className="border-t lg:border-t-0 lg:border-l bg-slate-50/40 dark:bg-slate-900/40 lg:sticky lg:top-0 lg:self-start lg:max-h-[calc(92vh-130px)] overflow-y-auto">
+                <div className="p-5 space-y-4">
+                  <div className="flex items-start justify-between gap-2">
+                    <h3 className="text-sm font-semibold flex items-center gap-2">
+                      <ImageIcon className="h-4 w-4 text-primary" />
+                      Mídia
+                    </h3>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="h-8 text-[11px]"
+                      onClick={() => setIsGalleryOpen(true)}
+                    >
+                      <Plus className="h-3 w-3 mr-1" />
+                      Galeria
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="h-8 text-[11px]"
+                      onClick={() => imageInputRef.current?.click()}
+                    >
+                      <Upload className="h-3 w-3 mr-1" />
+                      Upload
+                    </Button>
+                  </div>
+
+                  <input
+                    type="file"
+                    ref={imageInputRef}
+                    className="hidden"
+                    accept="image/*,video/*"
+                    multiple
+                    onChange={(e) => {
+                      const files = Array.from(e.target.files || []);
+                      if (files.length > 0) {
+                        toast({
+                          title: "Dica",
+                          description: "Use a Galeria para gerenciar seus arquivos permanentemente.",
+                        });
+                      }
+                    }}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="media"
+                    render={({ field }) => {
+                      const media = field.value || [];
+                      const images = media.filter((m) => m.type === "image");
+                      const videos = media.filter((m) => m.type !== "image");
+
+                      const handleDragEnd = (event: DragEndEvent, type: "image" | "video") => {
+                        const { active, over } = event;
+                        if (over && active.id !== over.id) {
+                          const items = type === "image" ? images : videos;
+                          const oldIdx = items.findIndex((i) => i.url === active.id);
+                          const newIdx = items.findIndex((i) => i.url === over.id);
+                          const sortedItems = arrayMove(items, oldIdx, newIdx);
+                          const otherItems = media.filter((m) =>
+                            type === "image" ? m.type !== "image" : m.type === "image",
+                          );
+                          const finalArray =
+                            type === "image"
+                              ? [...sortedItems, ...otherItems]
+                              : [...otherItems, ...sortedItems];
+                          field.onChange(
+                            finalArray.map((item, idx) => ({ ...item, orderIndex: idx })),
+                          );
+                        }
+                      };
+
+                      return (
+                        <div className="space-y-5">
+                          <div className="space-y-2">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                                <ImageIcon className="h-3 w-3" />
+                                Fotos ({images.length})
+                              </div>
+                              {images.length > 0 && (
+                                <span className="text-[9px] bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded-full font-bold">
+                                  1ª = Capa
+                                </span>
+                              )}
+                            </div>
+                            {images.length > 0 ? (
+                              <DndContext
+                                sensors={sensors}
+                                collisionDetection={closestCenter}
+                                onDragEnd={(e) => handleDragEnd(e, "image")}
+                              >
+                                <SortableContext
+                                  items={images.map((i) => i.url)}
+                                  strategy={horizontalListSortingStrategy}
+                                >
+                                  <div className="grid grid-cols-2 gap-2">
+                                    {images.map((item) => (
+                                      <SortableMediaItem
+                                        key={item.url}
+                                        id={item.url}
+                                        url={item.url}
+                                        type={item.type}
+                                        caption={item.caption || null}
+                                        onRemove={() => {
+                                          field.onChange(media.filter((m) => m.url !== item.url));
+                                        }}
+                                        onCaptionChange={(val) => {
+                                          field.onChange(
+                                            media.map((m) =>
+                                              m.url === item.url ? { ...m, caption: val } : m,
+                                            ),
+                                          );
+                                        }}
+                                      />
+                                    ))}
+                                  </div>
+                                </SortableContext>
+                              </DndContext>
+                            ) : (
+                              <div className="flex h-20 flex-col items-center justify-center rounded-xl border-2 border-dashed bg-white/50 dark:bg-slate-900/50">
+                                <p className="text-[10px] text-slate-400 italic">
+                                  Nenhuma foto adicionada
+                                </p>
+                              </div>
+                            )}
+                          </div>
+
+                          <div className="space-y-2">
+                            <div className="flex items-center gap-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                              <VideoIcon className="h-3 w-3" />
+                              Vídeos / YouTube ({videos.length})
+                            </div>
+                            {videos.length > 0 ? (
+                              <DndContext
+                                sensors={sensors}
+                                collisionDetection={closestCenter}
+                                onDragEnd={(e) => handleDragEnd(e, "video")}
+                              >
+                                <SortableContext
+                                  items={videos.map((i) => i.url)}
+                                  strategy={horizontalListSortingStrategy}
+                                >
+                                  <div className="grid grid-cols-2 gap-2">
+                                    {videos.map((item) => (
+                                      <SortableMediaItem
+                                        key={item.url}
+                                        id={item.url}
+                                        url={item.url}
+                                        type={item.type}
+                                        caption={item.caption || null}
+                                        onRemove={() => {
+                                          field.onChange(media.filter((m) => m.url !== item.url));
+                                        }}
+                                        onCaptionChange={(val) => {
+                                          field.onChange(
+                                            media.map((m) =>
+                                              m.url === item.url ? { ...m, caption: val } : m,
+                                            ),
+                                          );
+                                        }}
+                                      />
+                                    ))}
+                                  </div>
+                                </SortableContext>
+                              </DndContext>
+                            ) : (
+                              <div className="flex h-20 flex-col items-center justify-center rounded-xl border-2 border-dashed bg-white/50 dark:bg-slate-900/50">
+                                <p className="text-[10px] text-slate-400 italic">
+                                  Nenhum vídeo adicionado
+                                </p>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    }}
+                  />
+                </div>
+              </aside>
             </form>
           </Form>
         </div>

@@ -1338,7 +1338,7 @@ app.get("/referral", async (c) => {
   let referral = (result.rows[0] as any) || null;
 
   if (!referral) {
-    const code = `FISIO${Math.random().toString(36).substring(2, 7).toUpperCase()}`;
+    const code = `FISIO${crypto.randomUUID().substring(0, 5).toUpperCase()}`;
     const insert = await pool.query(
       `INSERT INTO referral_codes (patient_id, organization_id, code, reward_type, reward_value)
        VALUES ($1, $2, $3, 'discount', 10)

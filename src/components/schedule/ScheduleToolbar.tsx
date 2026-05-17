@@ -14,12 +14,10 @@ import {
   Plus,
   Search,
   Sparkles,
-  Stethoscope,
   X,
   Zap,
 } from "lucide-react";
 import React from "react";
-import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -153,20 +151,8 @@ export const ScheduleToolbar: React.FC<ScheduleToolbarProps> = ({
 
   // For desktop - show all controls
   const DesktopToolbar = () => (
-    <div className="flex items-center justify-between px-8 py-2 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 sticky top-0 z-40">
-      {/* Left Group: Brand Logo (Stitch style: 'WORKBENCH' equivalent) */}
+    <div className="flex items-center justify-between px-3 py-1.5 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 sticky top-0 z-40">
       <div className="flex flex-wrap items-center gap-6">
-        <Link to="/agenda" className="flex items-center gap-2 hover:opacity-80 transition-all">
-          <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center shadow-lg shadow-blue-500/20">
-            <Stethoscope className="w-4 h-4 text-white" />
-          </div>
-          <span className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-tighter">
-            FISIOFLOW
-          </span>
-        </Link>
-
-        <div className="h-6 w-[1px] bg-slate-200 dark:bg-slate-800" />
-
         {/* Date Navigation Block */}
         <div className="flex flex-wrap items-center gap-3">
           <Button

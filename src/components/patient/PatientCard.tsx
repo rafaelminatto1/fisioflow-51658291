@@ -2,7 +2,8 @@ import { memo } from "react";
 import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { ChevronRight, Calendar, Stethoscope } from "lucide-react";
+import { ChevronRight, Calendar, Stethoscope, CloudOff } from "lucide-react";
+import { usePendingSyncIds } from "@/hooks/usePendingSyncIds";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { Patient } from "@/schemas/patient";
@@ -51,6 +52,11 @@ export const PatientCard = memo(({ patient, index, onClick, stats, actions }: Pa
 
   const classificationInfo = stats ? PATIENT_CLASSIFICATIONS[stats.classification] : null;
 
+  const pendingPatientIds = usePendingSyncIds("patients");
+  const isPendingSync =
+    pendingPatientIds.has(patient.id) ||
+    (typeof patient.id === "string" && patient.id.startsWith("offline-"));
+
   // Handler para teclado
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" || e.key === " ") {
@@ -61,9 +67,18 @@ export const PatientCard = memo(({ patient, index, onClick, stats, actions }: Pa
 
   return (
     <Card
-      className="group flex flex-col gap-3 p-4 rounded-2xl bg-white dark:bg-slate-900 border-none shadow-premium-sm hover:shadow-premium-md hover-lift transition-all duration-300 focus-visible:ring-2 focus-visible:ring-primary/20"
+      className="group relative flex flex-col gap-3 p-4 rounded-2xl bg-white dark:bg-slate-900 border-none shadow-premium-sm hover:shadow-premium-md hover-lift transition-all duration-300 focus-visible:ring-2 focus-visible:ring-primary/20"
       style={{ animationDelay: `${Math.min(index * 30, 300)}ms` }}
     >
+      {isPendingSync && (
+        <span
+          className="pointer-events-none absolute right-2 top-2 z-10 flex items-center gap-1 rounded-full bg-amber-500 px-2 py-0.5 text-[10px] font-bold uppercase text-white shadow"
+          title="Aguardando sincronização — será enviado ao servidor quando a rede voltar."
+        >
+          <CloudOff className="h-2.5 w-2.5" />
+          Pendente
+        </span>
+      )}
       <div
         className="flex items-start gap-4 w-full min-w-0 cursor-pointer"
         role="button"

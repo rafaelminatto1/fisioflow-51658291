@@ -82,6 +82,11 @@ interface EvolutionHeaderProps {
   autoSaveEnabled: boolean;
   toggleAutoSave: () => void;
   lastSavedAt: Date | null;
+  /** Estado da fila offline (opcional). Se passado, mostra indicador "Aguardando rede". */
+  offlineStatus?: {
+    isOnline: boolean;
+    pendingActions: number;
+  };
   showInsights: boolean;
   toggleInsights: () => void;
   onShowTemplateModal: () => void;
@@ -213,13 +218,14 @@ export const EvolutionHeader = memo(
     appointment,
     treatmentDuration,
     evolutionStats,
-    onSave,
+    onSave: _onSave,
     onComplete,
     isSaving,
     isCompleting,
     autoSaveEnabled,
     toggleAutoSave,
     lastSavedAt,
+    offlineStatus,
     showInsights,
     toggleInsights,
     onShowTemplateModal,
@@ -329,29 +335,48 @@ export const EvolutionHeader = memo(
                 IA
               </Badge>
             </Button>
-            <Button
-              onClick={onSave}
-              size="sm"
-              variant="outline"
-              disabled={isSaving}
-              className="h-10 px-4 shadow-none hover:bg-slate-50 border-slate-200 text-slate-600 text-xs font-bold transition-all"
-            >
-              {isSaving ? (
-                <Loader2 className="h-3.5 w-3.5 animate-spin" />
-              ) : (
-                <Save className="h-3.5 w-3.5" />
-              )}
-              <span className="ml-2 uppercase tracking-wide">
-                {isSaving ? "Salvando" : "Salvar"}
-              </span>
-            </Button>
-            {/* Last saved inline indicator */}
-            {lastSavedAt && !isSaving && (
-              <span className="hidden sm:flex items-center gap-1 text-[10px] text-muted-foreground/60 font-medium">
-                <Clock className="h-3 w-3" />
-                {format(lastSavedAt, "HH:mm")}
-              </span>
-            )}
+            {/* Auto-save status (sem botão — tudo é salvo automaticamente) */}
+            {(() => {
+              const hasPending = (offlineStatus?.pendingActions ?? 0) > 0;
+              const isOffline = offlineStatus && !offlineStatus.isOnline;
+              if (isSaving) {
+                return (
+                  <span className="hidden sm:flex items-center gap-1.5 text-[11px] text-slate-500 font-medium">
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                    Salvando…
+                  </span>
+                );
+              }
+              if (isOffline || hasPending) {
+                return (
+                  <span
+                    className="hidden sm:flex items-center gap-1.5 text-[11px] text-amber-600 font-medium"
+                    title={
+                      isOffline
+                        ? "Você está offline — as alterações serão enviadas quando a conexão voltar."
+                        : `${offlineStatus?.pendingActions} ${offlineStatus?.pendingActions === 1 ? "alteração pendente" : "alterações pendentes"} de sincronização.`
+                    }
+                  >
+                    <Clock className="h-3 w-3" />
+                    {isOffline ? "Offline — fila local" : "Aguardando rede"}
+                    {hasPending && (
+                      <span className="ml-0.5 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-amber-100 px-1 text-[10px] font-bold text-amber-700">
+                        {offlineStatus!.pendingActions}
+                      </span>
+                    )}
+                  </span>
+                );
+              }
+              if (lastSavedAt) {
+                return (
+                  <span className="hidden sm:flex items-center gap-1.5 text-[11px] text-emerald-600 font-medium">
+                    <CheckCircle2 className="h-3 w-3" />
+                    Salvo {format(lastSavedAt, "HH:mm")}
+                  </span>
+                );
+              }
+              return null;
+            })()}
             <Button
               onClick={onComplete}
               size="sm"
@@ -528,6 +553,8 @@ export const EvolutionHeader = memo(
       prevProps.isCompleting === nextProps.isCompleting &&
       prevProps.autoSaveEnabled === nextProps.autoSaveEnabled &&
       prevProps.lastSavedAt === nextProps.lastSavedAt &&
+      prevProps.offlineStatus?.isOnline === nextProps.offlineStatus?.isOnline &&
+      prevProps.offlineStatus?.pendingActions === nextProps.offlineStatus?.pendingActions &&
       prevProps.showInsights === nextProps.showInsights &&
       prevProps.activeTab === nextProps.activeTab &&
       prevProps.previousEvolutionsCount === nextProps.previousEvolutionsCount &&

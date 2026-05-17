@@ -200,17 +200,32 @@ app.post("/autosave", requireAuth, async (c) => {
       payload.lastEditedBy = user.uid as any;
     }
 
+    if ((body as any).version !== undefined) {
+      payload.version = sql`${sessions.version} + 1`;
+    }
+
+    const updateConditions = [eq(sessions.id, idToUpdate)];
+    if ((body as any).version !== undefined) {
+      updateConditions.push(eq(sessions.version, Number((body as any).version)));
+    }
+
     const res = await db
       .update(sessions)
       .set(payload)
-      .where(withTenant(sessions, user.organizationId, eq(sessions.id, idToUpdate)))
+      .where(withTenant(sessions, user.organizationId, ...updateConditions))
       .returning();
 
     if (res.length) {
       return c.json({ data: { ...rowToRecord(res[0]), isNew: false } });
     }
-  }
 
+    if ((body as any).version !== undefined) {
+      const check = await db.select({ id: sessions.id }).from(sessions).where(withTenant(sessions, user.organizationId, eq(sessions.id, idToUpdate)));
+      if (check.length > 0) {
+        return c.json({ error: "Conflito de versão. O registro foi atualizado por outro usuário." }, 409);
+      }
+    }
+  }
   if (body.appointment_id) {
     const existing = await db
       .select({ id: sessions.id })

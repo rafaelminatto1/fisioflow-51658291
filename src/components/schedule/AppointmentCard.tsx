@@ -1,7 +1,10 @@
 import { memo } from "react";
+import { CloudOff } from "lucide-react";
 import type { Appointment } from "@/types/appointment";
 import { CompactAppointmentCard } from "./AppointmentCard/CompactAppointmentCard";
 import { ExpandedAppointmentCard } from "./AppointmentCard/ExpandedAppointmentCard";
+import { usePendingSyncIds } from "@/hooks/usePendingSyncIds";
+import { cn } from "@/lib/utils";
 
 interface AppointmentCardProps {
   appointment: Appointment;
@@ -45,8 +48,13 @@ export const AppointmentCard = memo(
     onStatusChange,
     onEdit,
   }: AppointmentCardProps) => {
-    if (variant === "compact") {
-      return (
+    const pendingIds = usePendingSyncIds("appointments");
+    const isPending =
+      pendingIds.has(appointment.id) ||
+      (typeof appointment.id === "string" && appointment.id.startsWith("offline-"));
+
+    const inner =
+      variant === "compact" ? (
         <CompactAppointmentCard
           appointment={appointment}
           onClick={onClick}
@@ -55,18 +63,30 @@ export const AppointmentCard = memo(
           onStatusChange={onStatusChange}
           onEdit={onEdit}
         />
+      ) : (
+        <ExpandedAppointmentCard
+          appointment={appointment}
+          onClick={onClick}
+          className={className}
+          dataAnchor={dataAnchor}
+          onStatusChange={onStatusChange}
+          onEdit={onEdit}
+        />
       );
-    }
+
+    if (!isPending) return inner;
 
     return (
-      <ExpandedAppointmentCard
-        appointment={appointment}
-        onClick={onClick}
-        className={className}
-        dataAnchor={dataAnchor}
-        onStatusChange={onStatusChange}
-        onEdit={onEdit}
-      />
+      <div className={cn("relative", isPending && "opacity-95")}>
+        {inner}
+        <span
+          className="pointer-events-none absolute right-1 top-1 z-10 flex items-center gap-1 rounded-full bg-amber-500 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-white shadow"
+          title="Aguardando sincronização — será enviado ao servidor quando a rede voltar."
+        >
+          <CloudOff className="h-2.5 w-2.5" />
+          Pendente
+        </span>
+      </div>
     );
   },
   arePropsEqual,

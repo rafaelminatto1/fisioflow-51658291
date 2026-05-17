@@ -7,6 +7,24 @@ type RequestError = Error & {
   payload?: unknown;
 };
 
+/**
+ * Resposta sintética que `request()` retorna quando enfileira uma mutação
+ * offline. Use {@link isOfflineEnqueuedResponse} para detectar e tratar.
+ */
+export interface OfflineEnqueuedResponse {
+  success: true;
+  offline: true;
+}
+
+export function isOfflineEnqueuedResponse(value: unknown): value is OfflineEnqueuedResponse {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    (value as { offline?: unknown }).offline === true &&
+    (value as { success?: unknown }).success === true
+  );
+}
+
 async function getAuthHeader(): Promise<Record<string, string>> {
   const token = await getNeonAccessToken();
   return { Authorization: `Bearer ${token}` };

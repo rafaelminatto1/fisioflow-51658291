@@ -1,4 +1,5 @@
 import { Pool } from "pg";
+import "dotenv/config";
 
 export const GOLD_STANDARD_SEED = [
   {
@@ -159,7 +160,7 @@ export const GOLD_STANDARD_SEED = [
   },
 ];
 
-const DATABASE_URL = "process.env.DATABASE_URL";
+const DATABASE_URL = process.env.DATABASE_URL;
 
 async function main() {
   const pool = new Pool({ connectionString: DATABASE_URL });

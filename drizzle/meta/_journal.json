@@ -78,6 +78,13 @@
       "when": 1776957722765,
       "tag": "0010_cheerful_captain_america",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1779004855303,
+      "tag": "0011_add_pdf_url_to_exercises",
+      "breakpoints": true
     }
   ]
 }

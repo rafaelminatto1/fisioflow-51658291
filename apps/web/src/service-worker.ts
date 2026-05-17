@@ -1,4 +1,9 @@
-import { precacheAndRoute, cleanupOutdatedCaches } from "workbox-precaching";
+import {
+  precacheAndRoute,
+  cleanupOutdatedCaches,
+  createHandlerBoundToURL,
+} from "workbox-precaching";
+import { NavigationRoute, registerRoute } from "workbox-routing";
 import { clientsClaim } from "workbox-core";
 
 declare let self: ServiceWorkerGlobalScope & {
@@ -12,6 +17,24 @@ cleanupOutdatedCaches();
 
 // Precaching automático de todos os assets do build (injetado pelo Vite PWA)
 precacheAndRoute(self.__WB_MANIFEST);
+
+// ============================================================================
+// SHELL FALLBACK — todas as navegações SPA (incluindo reload offline) servem
+// o index.html do precache. Sem isso, F5 sem rede dá ERR_INTERNET_DISCONNECTED.
+// ============================================================================
+const navigationHandler = createHandlerBoundToURL("/index.html");
+registerRoute(
+  new NavigationRoute(navigationHandler, {
+    // Não interceptar rotas de API nem assets versionados; tudo restante (SPA)
+    // cai no shell.
+    denylist: [
+      /^\/api\//,
+      /^\/assets\//,
+      /^\/icons\//,
+      /\.(?:js|css|json|map|png|jpg|jpeg|svg|webp|avif|woff2?|ico)$/,
+    ],
+  }),
+);
 
 self.skipWaiting();
 clientsClaim();

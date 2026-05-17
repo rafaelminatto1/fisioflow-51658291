@@ -8,6 +8,7 @@ import {
   exerciseCategories,
   exerciseFavorites,
   exerciseMediaAttachments,
+  wikiDictionary,
 } from "@fisioflow/db";
 import { generateEmbedding, generateTurboSketch } from "../lib/ai-native";
 
@@ -40,6 +41,76 @@ async function kvDelete(env: Env, ...keys: string[]): Promise<void> {
   if (!env.FISIOFLOW_CONFIG) return;
   const kv = env.FISIOFLOW_CONFIG;
   await Promise.allSettled(keys.map((k) => kv.delete(k)));
+}
+
+/**
+ * Converte o payload vindo do frontend (mistura snake_case / camelCase) para o shape
+ * camelCase exigido pelo Drizzle. Também deriva `imageUrl`/`videoUrl` da primeira
+ * mídia da galeria, para mantermos os campos legados em sincronia com
+ * `exercise_media_attachments`.
+ */
+function normalizeExercisePayload(
+  raw: Record<string, any>,
+  media?: Array<{ url: string; type: string }>,
+): Record<string, any> {
+  const mapping: Record<string, string> = {
+    name_en: "nameEn",
+    image_url: "imageUrl",
+    thumbnail_url: "thumbnailUrl",
+    video_url: "videoUrl",
+    pdf_url: "pdfUrl",
+    body_parts: "bodyParts",
+    muscles_primary: "musclesPrimary",
+    muscles_secondary: "musclesSecondary",
+    alternative_equipment: "alternativeEquipment",
+    indicated_pathologies: "pathologiesIndicated",
+    contraindicated_pathologies: "pathologiesContraindicated",
+    icd10_codes: "icd10Codes",
+    scientific_references: "references",
+    sets: "setsRecommended",
+    repetitions: "repsRecommended",
+    duration: "durationSeconds",
+    rest_seconds: "restSeconds",
+    category_id: "categoryId",
+    is_active: "isActive",
+    is_public: "isPublic",
+    organization_id: "organizationId",
+  };
+
+  const out: Record<string, any> = {};
+  for (const [k, v] of Object.entries(raw)) {
+    if (v === undefined) continue;
+    const target = mapping[k] ?? k;
+    out[target] = v;
+  }
+
+  if (out.references && typeof out.references !== "string") {
+    try {
+      out.references = JSON.stringify(out.references);
+    } catch {
+      delete out.references;
+    }
+  }
+
+  // Drop unknown form-only fields that have no column.
+  delete out.precaution_level;
+  delete out.precaution_notes;
+  delete out.aliases_pt;
+  delete out.aliases_en;
+
+  // Sincroniza imageUrl/videoUrl com a primeira mídia da galeria.
+  if (Array.isArray(media)) {
+    const firstImage = media.find((m) => m?.type === "image")?.url ?? null;
+    const firstVideo = media.find((m) => m?.type === "video" || m?.type === "youtube")?.url ?? null;
+    if (firstImage !== null || media.length > 0) {
+      out.imageUrl = firstImage;
+    }
+    if (firstVideo !== null || media.length > 0) {
+      out.videoUrl = firstVideo;
+    }
+  }
+
+  return out;
 }
 
 async function invalidateListCache(env: Env): Promise<void> {
@@ -259,7 +330,62 @@ app.get("/:id", async (c) => {
 
     if (!row.length) return c.json({ error: "Exercício não encontrado" }, 404);
 
-    return c.json({ data: row[0] });
+    const exercise = row[0];
+
+    const attachments = await db
+      .select({
+        id: exerciseMediaAttachments.id,
+        url: exerciseMediaAttachments.url,
+        type: exerciseMediaAttachments.type,
+        caption: exerciseMediaAttachments.caption,
+        orderIndex: exerciseMediaAttachments.orderIndex,
+      })
+      .from(exerciseMediaAttachments)
+      .where(eq(exerciseMediaAttachments.exerciseId, exercise.id))
+      .orderBy(exerciseMediaAttachments.orderIndex);
+
+    // Fallback legado: se não há attachments mas o exercise tem image_url/video_url, sintetiza.
+    const media: Array<{
+      id: string;
+      url: string;
+      type: "image" | "video" | "youtube";
+      caption: string | null;
+      orderIndex: number;
+    }> =
+      attachments.length > 0
+        ? attachments.map((a) => ({
+            id: a.id,
+            url: a.url,
+            type: a.type as "image" | "video" | "youtube",
+            caption: a.caption,
+            orderIndex: a.orderIndex,
+          }))
+        : [];
+
+    if (media.length === 0) {
+      if (exercise.imageUrl) {
+        media.push({
+          id: `legacy-image-${exercise.id}`,
+          url: exercise.imageUrl,
+          type: "image",
+          caption: null,
+          orderIndex: 0,
+        });
+      }
+      if (exercise.videoUrl) {
+        const isYoutube =
+          exercise.videoUrl.includes("youtube.com") || exercise.videoUrl.includes("youtu.be");
+        media.push({
+          id: `legacy-video-${exercise.id}`,
+          url: exercise.videoUrl,
+          type: isYoutube ? "youtube" : "video",
+          caption: null,
+          orderIndex: media.length,
+        });
+      }
+    }
+
+    return c.json({ data: { ...exercise, media } });
   } catch (error: any) {
     console.error("[Exercises/Detail] Error:", error.message);
     return c.json({ error: "Erro ao buscar exercício" }, 500);
@@ -362,7 +488,8 @@ app.post("/", requireAuth, async (c) => {
   const user = c.get("user");
   const body = await c.req.json();
 
-  const { media, ...exerciseData } = body;
+  const { media, ...rawExerciseData } = body;
+  const exerciseData = normalizeExercisePayload(rawExerciseData, media) as any;
 
   const [row] = await db
     .insert(exercises)
@@ -382,9 +509,26 @@ app.post("/", requireAuth, async (c) => {
         url: m.url,
         caption: m.caption,
         orderIndex: m.orderIndex ?? idx,
-        organizationId: user.organizationId,
-      })),
+        // organizationId omitido: coluna não existe em produção (schema drift)
+      })) as any,
     );
+  }
+
+  // Adicionar ao dicionário automaticamente
+  try {
+    await db.insert(wikiDictionary).values({
+      pt: row.name,
+      en: row.nameEn || row.name,
+      category: "exercise",
+      subcategory: row.subcategory,
+      aliasesPt: row.aliases || [],
+      descriptionPt: row.description,
+      organizationId: row.organizationId,
+      isGlobal: row.isPublic || false,
+      createdBy: row.createdBy,
+    });
+  } catch (dictErr) {
+    console.error("[exercises] Error adding to dictionary:", dictErr);
   }
 
   // Background tasks: Invalidate cache and update embedding/vectorize
@@ -432,7 +576,8 @@ app.put("/:id", requireAuth, async (c) => {
   const db = await createDb(c.env);
   const { id } = c.req.param();
   const body = await c.req.json();
-  const { media, ...exerciseData } = body;
+  const { media, ...rawExerciseData } = body;
+  const exerciseData = normalizeExercisePayload(rawExerciseData, media) as any;
   const user = c.get("user");
 
   // Remove campos imutáveis
@@ -464,8 +609,8 @@ app.put("/:id", requireAuth, async (c) => {
           url: m.url,
           caption: m.caption,
           orderIndex: m.orderIndex ?? idx,
-          organizationId: user.organizationId,
-        })),
+          // organizationId omitido: coluna não existe em produção (schema drift)
+        })) as any,
       );
     }
   }

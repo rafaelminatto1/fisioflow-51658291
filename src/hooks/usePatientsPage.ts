@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { patientsApi, type PatientsListFacets, type PatientsListSummary } from "@/api/v2/patients";
+import { isOfflineEnqueuedResponse } from "@/api/v2/base";
 import { useAuth } from "@/hooks/useAuth";
 import { fisioLogger as logger } from "@/lib/errors/logger";
 import { invalidatePatientsComprehensive } from "@/utils/cacheInvalidation";
@@ -143,13 +144,31 @@ export function usePatientsPageData(filters: PatientsFilters = {}) {
   const facets = patientsResponse?.facets ?? EMPTY_FACETS;
 
   const createMutation = useMutation({
+    networkMode: "offlineFirst",
     mutationFn: async (data: Partial<PatientRow>) => {
       const res = await patientsApi.create(data);
-      return res?.data ?? res;
+      if (isOfflineEnqueuedResponse(res)) {
+        // Sentinel — request() enfileirou. Retorna optimistic c/ id temp.
+        return {
+          ...(data as PatientRow),
+          id: `offline-${Date.now()}`,
+          __offline: true,
+        } as PatientRow & { __offline: true };
+      }
+      return (res?.data ?? res) as PatientRow;
     },
-    onSuccess: async () => {
-      await invalidatePatientsComprehensive(queryClient);
-      toast.success("Paciente criado com sucesso");
+    onSuccess: async (data) => {
+      const isOffline =
+        (data as { __offline?: boolean })?.__offline === true ||
+        (typeof data?.id === "string" && data.id.startsWith("offline-"));
+      if (!isOffline && typeof navigator !== "undefined" && navigator.onLine) {
+        await invalidatePatientsComprehensive(queryClient);
+      }
+      toast.success(
+        isOffline
+          ? "Paciente salvo localmente — será sincronizado quando a conexão voltar"
+          : "Paciente criado com sucesso",
+      );
     },
     onError: (mutationError) => {
       logger.error("Error creating patient", { error: mutationError }, "usePatientsPage");
@@ -158,13 +177,26 @@ export function usePatientsPageData(filters: PatientsFilters = {}) {
   });
 
   const updateMutation = useMutation({
+    networkMode: "offlineFirst",
     mutationFn: async (data: { id: string; patient: Partial<PatientRow> }) => {
       const res = await patientsApi.update(data.id, data.patient);
-      return res?.data ?? res;
+      if (isOfflineEnqueuedResponse(res)) {
+        return { id: data.id, ...data.patient, __offline: true } as PatientRow & {
+          __offline: true;
+        };
+      }
+      return (res?.data ?? res) as PatientRow;
     },
-    onSuccess: async (_, variables) => {
-      await invalidatePatientsComprehensive(queryClient, variables.id);
-      toast.success("Paciente atualizado com sucesso");
+    onSuccess: async (data, variables) => {
+      const isOffline = (data as { __offline?: boolean })?.__offline === true;
+      if (!isOffline && typeof navigator !== "undefined" && navigator.onLine) {
+        await invalidatePatientsComprehensive(queryClient, variables.id);
+      }
+      toast.success(
+        isOffline
+          ? "Alteração salva localmente — sincronizará ao voltar online"
+          : "Paciente atualizado com sucesso",
+      );
     },
     onError: (mutationError) => {
       logger.error("Error updating patient", { error: mutationError }, "usePatientsPage");
@@ -173,12 +205,21 @@ export function usePatientsPageData(filters: PatientsFilters = {}) {
   });
 
   const deleteMutation = useMutation({
+    networkMode: "offlineFirst",
     mutationFn: async (id: string) => {
-      await patientsApi.delete(id);
+      const res = await patientsApi.delete(id);
+      const offline = isOfflineEnqueuedResponse(res);
+      return { id, offline };
     },
-    onSuccess: async (_, variables) => {
-      await invalidatePatientsComprehensive(queryClient, variables);
-      toast.success("Paciente arquivado com sucesso");
+    onSuccess: async ({ id, offline }) => {
+      if (!offline && typeof navigator !== "undefined" && navigator.onLine) {
+        await invalidatePatientsComprehensive(queryClient, id);
+      }
+      toast.success(
+        offline
+          ? "Arquivamento será sincronizado quando a conexão voltar"
+          : "Paciente arquivado com sucesso",
+      );
     },
     onError: (mutationError) => {
       logger.error("Error archiving patient", { error: mutationError }, "usePatientsPage");
