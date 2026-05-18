@@ -1,6 +1,6 @@
 name = "fisioflow-api"
 main = "src/index.ts"
-compatibility_date = "2026-03-25"
+compatibility_date = "2026-05-14"
 compatibility_flags = ["nodejs_compat"]
 workers_dev = true
 
@@ -35,6 +35,12 @@ bucket_name = "fisioflow-media"
 [[r2_buckets]]
 binding = "EXAMS_BUCKET"
 bucket_name = "fisioflow-exams"
+
+# Documentos clínicos para vetorização (PDFs, etc)
+[[r2_buckets]]
+binding = "CLINICAL_DOCS_BUCKET"
+bucket_name = "fisioflow-clinical-docs"
+
 
 # ===== KV NAMESPACES (Global Cache) =====
 [[kv_namespaces]]
@@ -364,6 +370,11 @@ bucket_name = "fisioflow-media"
 binding = "EXAMS_BUCKET"
 bucket_name = "fisioflow-exams"
 
+[[env.production.r2_buckets]]
+binding = "CLINICAL_DOCS_BUCKET"
+bucket_name = "fisioflow-clinical-docs"
+
+
 [env.production.durable_objects]
 bindings = [
   { name = "ORGANIZATION_STATE", class_name = "OrganizationState" },
@@ -442,6 +453,11 @@ bucket_name = "fisioflow-media-staging"
 [[env.staging.r2_buckets]]
 binding = "EXAMS_BUCKET"
 bucket_name = "fisioflow-exams-staging"
+
+[[env.staging.r2_buckets]]
+binding = "CLINICAL_DOCS_BUCKET"
+bucket_name = "fisioflow-clinical-docs-staging"
+
 
 [env.staging.durable_objects]
 bindings = [

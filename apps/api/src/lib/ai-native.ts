@@ -1,5 +1,6 @@
 import type { Env } from "../types/env";
 import { TurboQuant } from "@fisioflow/core";
+import { WORKERS_AI_MODELS } from "./workersAi";
 
 /**
  * Utilitários para usar o Cloudflare Workers AI (Modelos Nativos).
@@ -135,7 +136,7 @@ export async function generateSoapSuggestion(
 ): Promise<{ subjective: string; objective: string; assessment: string; plan: string }> {
   const response = await runAi(
     env,
-    "@cf/meta/llama-3.1-8b-instruct",
+    WORKERS_AI_MODELS.llama_3_1_8b,
     {
       messages: [
         {
