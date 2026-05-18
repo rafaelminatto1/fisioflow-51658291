@@ -41,6 +41,12 @@ bucket_name = "fisioflow-exams"
 binding = "CLINICAL_DOCS_BUCKET"
 bucket_name = "fisioflow-clinical-docs"
 
+# ===== STREAM (Vídeo: encoding adaptativo, HLS, thumbnails) — GA 2026-05-07 =====
+# Requer compatibility_date >= 2026-04-14. Webhook: configurar no dashboard CF
+# (Stream → Webhooks) → https://api-pro.moocafisio.com.br/api/exercise-videos/stream-webhook
+# Secret HMAC: wrangler secret put STREAM_WEBHOOK_SECRET
+[stream]
+binding = "STREAM"
 
 # ===== KV NAMESPACES (Global Cache) =====
 [[kv_namespaces]]
@@ -374,6 +380,9 @@ bucket_name = "fisioflow-exams"
 binding = "CLINICAL_DOCS_BUCKET"
 bucket_name = "fisioflow-clinical-docs"
 
+[env.production.stream]
+binding = "STREAM"
+
 
 [env.production.durable_objects]
 bindings = [
@@ -457,6 +466,9 @@ bucket_name = "fisioflow-exams-staging"
 [[env.staging.r2_buckets]]
 binding = "CLINICAL_DOCS_BUCKET"
 bucket_name = "fisioflow-clinical-docs-staging"
+
+[env.staging.stream]
+binding = "STREAM"
 
 
 [env.staging.durable_objects]

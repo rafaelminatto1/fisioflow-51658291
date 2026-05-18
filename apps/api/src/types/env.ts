@@ -12,6 +12,46 @@ import type {
 } from "../workflows";
 
 /**
+ * Cloudflare Stream binding (GA 2026-05-07).
+ * `wrangler.toml`: `[stream] binding = "STREAM"`. Permite criar direct-uploads
+ * e iniciar uploads do servidor sem credentials adicionais (CF REST API).
+ */
+export interface StreamBinding {
+  /** Upload server-to-server a partir de uma URL pública. */
+  upload(
+    url: string,
+    options?: {
+      meta?: Record<string, string>;
+      thumbnailTimestampPct?: number;
+      requireSignedURLs?: boolean;
+      watermark?: { uid: string };
+    },
+  ): Promise<StreamVideoDetails>;
+  /**
+   * Direct creator upload — retorna URL temporária para `tus-js-client` ou
+   * upload simples via PUT no browser, sem expor credenciais CF.
+   */
+  directUpload(options?: {
+    maxDurationSeconds?: number;
+    expiryMinutes?: number;
+    meta?: Record<string, string>;
+    requireSignedURLs?: boolean;
+    creator?: string;
+  }): Promise<{ uploadURL: string; uid: string }>;
+}
+
+export interface StreamVideoDetails {
+  uid: string;
+  thumbnail?: string;
+  preview?: string;
+  readyToStream: boolean;
+  status?: { state: string };
+  meta?: Record<string, string>;
+  duration?: number;
+  playback?: { hls: string; dash: string };
+}
+
+/**
  * Cloudflare Workers Environment Bindings
  * Define todas as variáveis e bindings disponíveis no Worker
  */
@@ -59,6 +99,9 @@ export interface Env {
   // Cloudflare R2 Config
   MEDIA_BUCKET: R2Bucket;
   EXAMS_BUCKET?: R2Bucket; // fisioflow-exams: exames, fotos, vídeos clínicos (privado)
+
+  // Cloudflare Stream (vídeo: encoding adaptativo, HLS, thumbnails) — GA 2026-05-07
+  STREAM?: StreamBinding;
   R2_ACCOUNT_ID: string;
   R2_ACCESS_KEY_ID: string;
   R2_SECRET_ACCESS_KEY: string;
@@ -169,6 +212,9 @@ export interface Env {
 
   // Queues
   BACKGROUND_QUEUE: Queue;
+
+  // Cloudflare Stream Webhook Secret — para validar POST /api/exercise-videos/stream-webhook
+  STREAM_WEBHOOK_SECRET?: string;
 
   // Cloudflare REST API (AutoRAG document management via CF REST API)
   CF_API_TOKEN?: string;
