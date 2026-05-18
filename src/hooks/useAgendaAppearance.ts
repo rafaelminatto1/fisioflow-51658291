@@ -28,7 +28,7 @@ export function useAgendaAppearance(view: AgendaView) {
     try {
       if (!saved || saved === "undefined") return { global: DEFAULT_GLOBAL };
       return JSON.parse(saved);
-    } catch (e) {
+    } catch {
       return { global: DEFAULT_GLOBAL };
     }
   });
@@ -38,7 +38,7 @@ export function useAgendaAppearance(view: AgendaView) {
       if (e.key === "agenda_appearance_v2" && e.newValue) {
         try {
           setState(JSON.parse(e.newValue));
-        } catch (err) {}
+        } catch {}
       }
     };
     window.addEventListener("storage", handler);
@@ -85,14 +85,14 @@ export function useAgendaAppearance(view: AgendaView) {
       "--fc-timegrid-slot-height": `${slotHeightPx}px`,
     } as React.CSSProperties,
     setCardSize: (val: any) =>
-      save({ ...state, [view]: { ...(state[view] || {}), cardSize: val } }),
+      save({ ...state, [view]: { ...state[view], cardSize: val } }),
     setHeightScale: (val: number) =>
-      save({ ...state, [view]: { ...(state[view] || {}), heightScale: val } }),
+      save({ ...state, [view]: { ...state[view], heightScale: val } }),
     setFontScale: (val: number) =>
-      save({ ...state, [view]: { ...(state[view] || {}), fontScale: val } }),
+      save({ ...state, [view]: { ...state[view], fontScale: val } }),
     setOpacity: (val: number) =>
-      save({ ...state, [view]: { ...(state[view] || {}), opacity: val } }),
-    setAll: (patch: any) => save({ ...state, [view]: { ...(state[view] || {}), ...patch } }),
+      save({ ...state, [view]: { ...state[view], opacity: val } }),
+    setAll: (patch: any) => save({ ...state, [view]: { ...state[view], ...patch } }),
     applyToAllViews: (patch: any) =>
       save({
         global: { ...state.global, ...patch },

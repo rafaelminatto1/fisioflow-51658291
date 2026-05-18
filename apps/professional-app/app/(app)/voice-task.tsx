@@ -34,7 +34,7 @@ export default function VoiceTaskScreen() {
         toast.success("Tarefa criada com sucesso!");
         router.back();
       }
-    } catch (e) {
+    } catch {
       toast.error("Falha ao criar tarefa via voz.");
     } finally {
       setIsProcessing(false);

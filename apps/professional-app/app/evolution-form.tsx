@@ -110,7 +110,7 @@ export default function EvolutionFormScreen() {
         try {
           const res = await fetchApi<{ data: any[] }>(url);
           serverDraft = res.data?.[0];
-        } catch (err) {
+        } catch {
           console.log("[EvolutionForm] Server unreachable, using local cache if available");
         }
 
@@ -144,7 +144,7 @@ export default function EvolutionFormScreen() {
         } else {
           setAutoSaveStatus("idle");
         }
-      } catch (err) {
+      } catch {
         console.error("[EvolutionForm] Error fetching draft:", err);
         setAutoSaveStatus("idle");
       }
@@ -169,7 +169,7 @@ export default function EvolutionFormScreen() {
       };
       try {
         await AsyncStorage.setItem(DRAFT_KEY, JSON.stringify(draftData));
-      } catch (err) {
+      } catch {
         console.warn("[EvolutionForm] Local save failed", err);
       }
     };
@@ -208,7 +208,7 @@ export default function EvolutionFormScreen() {
         });
         savedEvolutionId.current = res.data?.id ?? savedEvolutionId.current;
         setAutoSaveStatus("saved");
-      } catch (err: any) {
+      } catch {
         setAutoSaveStatus("error");
         const technicalDetail = [
           err?.message,
@@ -263,7 +263,7 @@ export default function EvolutionFormScreen() {
       }
       success();
       Alert.alert("Sucesso", "Sugestão gerada com IA!");
-    } catch (err: any) {
+    } catch {
       hapticError();
       Alert.alert("Erro", err?.message ?? "Não foi possível gerar com IA");
     } finally {
@@ -278,7 +278,7 @@ export default function EvolutionFormScreen() {
       await AsyncStorage.removeItem(DRAFT_KEY);
       success();
       router.back();
-    } catch (err) {
+    } catch {
       hapticError();
       Alert.alert("Erro", "Não foi possível finalizar a evolução.");
     }

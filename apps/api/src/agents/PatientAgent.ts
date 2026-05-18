@@ -1,5 +1,6 @@
 import { Agent, callable } from "agents";
 import type { Env } from "../types/env";
+import { WORKERS_AI_MODELS } from "../lib/workersAi";
 
 type RetentionState = {
   patientId: string;
@@ -89,7 +90,7 @@ export class PatientAgent extends Agent<Env, RetentionState> {
 
     try {
       // Uso do Workers AI nativo da Cloudflare (Llama 3.1 8B Instruct)
-      const response = await this.env.AI.run("@cf/meta/llama-3.1-8b-instruct", {
+      const response = await this.env.AI.run(WORKERS_AI_MODELS.llama_3_1_8b, {
         messages: [
           {
             role: "system",

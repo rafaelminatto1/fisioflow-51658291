@@ -3,8 +3,6 @@ import { StyleSheet, View, Text, ScrollView, TouchableOpacity } from "react-nati
 import { User, ChevronRight, Video, Image as ImageIcon, Activity } from "lucide-react-native";
 import { ANALYSIS_TYPES, AnalysisType, AnalysisMode } from "../../../types/biomechanics";
 import { useColors } from "../../../hooks/useColorScheme";
-import { Card } from "../../Card";
-
 interface BiomechanicsHomeViewProps {
   selectedPatient: any;
   onSelectPatient: () => void;

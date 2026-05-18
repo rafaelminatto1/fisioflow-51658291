@@ -31,7 +31,7 @@ async function deduplicateExercises() {
     let mergedCount = 0;
     let deletedCount = 0;
 
-    for (const [name, duplicates] of groups.entries()) {
+    for (const [_name, duplicates] of groups.entries()) {
       if (duplicates.length <= 1) continue;
 
       console.log(

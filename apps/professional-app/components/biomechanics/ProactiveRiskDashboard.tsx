@@ -4,9 +4,7 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  ActivityIndicator,
-  FlatList,
-} from "react-native";
+  } from "react-native";
 import { Card } from "@/components";
 import { useClinicalAlerts } from "@/hooks/useClinicalAlerts";
 import { useColors } from "@/hooks/useColorScheme";

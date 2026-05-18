@@ -88,7 +88,7 @@ type Section = "photos" | "requests";
 
 export default function MediaScreen() {
   const colors = useColors();
-  const queryClient = useQueryClient();
+  const _queryClient = useQueryClient();
   const [activeSection, setActiveSection] = useState<Section>("photos");
   const [selectedPhoto, setSelectedPhoto] = useState<PhotoItem | null>(null);
   const [photoAccessUrl, setPhotoAccessUrl] = useState<string | null>(null);
@@ -371,7 +371,7 @@ export default function MediaScreen() {
   );
 }
 
-function makeStyles(colors: ReturnType<typeof useColors>) {
+function makeStyles(_colors: ReturnType<typeof useColors>) {
   return StyleSheet.create({
     container: { flex: 1 },
     header: {

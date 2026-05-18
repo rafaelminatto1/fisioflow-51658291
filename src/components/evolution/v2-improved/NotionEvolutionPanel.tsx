@@ -12,10 +12,7 @@
  */
 import React, { useCallback, useState } from "react";
 import {
-  FileText,
   StickyNote,
-  Loader2,
-  CheckCircle2,
   History,
   Activity,
   Dumbbell,
@@ -27,7 +24,6 @@ import {
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import { RichTextBlock } from "./RichTextBlock";
@@ -66,11 +62,11 @@ interface NotionEvolutionPanelProps {
 export const NotionEvolutionPanel: React.FC<NotionEvolutionPanelProps> = ({
   data,
   onChange,
-  onSave,
-  isSaving = false,
+  onSave: _onSave,
+  isSaving: _isSaving = false,
   disabled = false,
-  autoSaveEnabled = false,
-  lastSaved,
+  autoSaveEnabled: _autoSaveEnabled = false,
+  lastSaved: _lastSaved,
   className,
   patientId,
   evolutionId,

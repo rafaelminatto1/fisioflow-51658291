@@ -41,7 +41,7 @@ export const AIProtocolGenerator: React.FC<AIProtocolGeneratorProps> = ({ open, 
         setGeneratedProtocol(res.data);
         toast.success("Protocolo gerado pela IA com sucesso!");
       }
-    } catch (error) {
+    } catch {
       console.error("Erro ao gerar protocolo:", error);
       toast.error("Falha ao gerar protocolo. Tente novamente.");
     } finally {
@@ -73,7 +73,7 @@ export const AIProtocolGenerator: React.FC<AIProtocolGeneratorProps> = ({ open, 
       onOpenChange(false);
       setGeneratedProtocol(null);
       setCondition("");
-    } catch (error) {
+    } catch {
       toast.error("Erro ao salvar protocolo.");
     }
   };

@@ -28,7 +28,6 @@ import {
   Card,
   NotificationPermissionModal,
   SyncIndicator,
-  LinearProgress,
   RTMDashboardWidget,
   GamificationDashboard,
 } from "@/components";

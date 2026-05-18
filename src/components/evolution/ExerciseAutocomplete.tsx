@@ -3,7 +3,7 @@ import { Search, Plus, Dumbbell, PlusCircle } from "lucide-react";
 import { useExercises, type Exercise } from "@/hooks/useExercises";
 import { cn } from "@/lib/utils";
 import { withImageParams } from "@/lib/storageProxy";
-import { accentIncludes, bilingualFilter } from "@/lib/utils/bilingualSearch";
+import { bilingualFilter } from "@/lib/utils/bilingualSearch";
 import {
   Command,
   CommandEmpty,

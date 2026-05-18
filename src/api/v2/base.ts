@@ -1,7 +1,5 @@
 import { getNeonAccessToken } from "@/lib/auth/neon-token";
 import { getWorkersApiUrl } from "@/lib/api/config";
-import { getOfflineSyncService } from "@/services/offlineSync";
-
 type RequestError = Error & {
   status?: number;
   payload?: unknown;
@@ -22,6 +20,26 @@ export function isOfflineEnqueuedResponse(value: unknown): value is OfflineEnque
     value !== null &&
     (value as { offline?: unknown }).offline === true &&
     (value as { success?: unknown }).success === true
+  );
+}
+
+/**
+ * Wrapper de tipo para retornos que podem ser uma entidade real OU um
+ * placeholder optimista marcado com `__offline: true`. Use nos hooks de
+ * mutation que precisam diferenciar offline de online.
+ *
+ * Exemplo:
+ *   onSuccess: (data: MaybeOffline<AppointmentBase>) => {
+ *     if (isOfflinePlaceholder(data)) { ... }
+ *   }
+ */
+export type MaybeOffline<T> = T | (Partial<T> & { __offline: true; id: string });
+
+export function isOfflinePlaceholder<T>(value: MaybeOffline<T> | undefined | null): value is Partial<T> & { __offline: true; id: string } {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    (value as { __offline?: unknown }).__offline === true
   );
 }
 

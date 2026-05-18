@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { View, StyleSheet, Alert, SafeAreaView } from "react-native";
+import { StyleSheet, Alert, SafeAreaView } from "react-native";
 import { Stack, useRouter } from "expo-router";
 import { useColors } from "@/hooks/useColorScheme";
 import { useBiomechanicsAnalysis } from "../hooks/useBiomechanicsAnalysis";
@@ -12,7 +12,7 @@ import { SearchablePatientPicker } from "@/components/ui/SearchablePatientPicker
 
 export default function BiomechanicsScreen() {
   const colors = useColors();
-  const router = useRouter();
+  const _router = useRouter();
 
   const {
     currentStep,
@@ -21,20 +21,20 @@ export default function BiomechanicsScreen() {
     setSelectedPatient,
     isRecording,
     analysisResults,
-    setAnalysisResults,
+    _setAnalysisResults,
     startAnalysis,
     toggleRecording,
     saveReferencePose,
     resetAnalysis,
     ghostMedia,
-    setAsGhost,
-    patients,
+    _setAsGhost,
+    _patients,
   } = useBiomechanicsAnalysis();
 
   const [showPatientPicker, setShowPatientPicker] = useState(false);
 
   // Handlers de navegação e lógica
-  const handleSaveReport = async (observations: string) => {
+  const handleSaveReport = async (_observations: string) => {
     // Lógica de persistência já integrada no hook/componente
     Alert.alert("Sucesso", "Avaliação salva com sucesso no prontuário.");
     resetAnalysis();

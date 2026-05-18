@@ -2,6 +2,7 @@ import { Hono } from "hono";
 import type { Env } from "../types/env";
 import { requireAuth, type AuthVariables } from "../lib/auth";
 import { createPool, getRawSql } from "../lib/db";
+import { WORKERS_AI_MODELS } from "../lib/workersAi";
 
 const AUTORAG_NAME = "fisioflow-rag";
 
@@ -213,7 +214,7 @@ aiSearchApp.get("/exercises", requireAuth, async (c) => {
     // 0. Expansão de Dicionário Clínico (Ontologia via Llama 3)
     let expandedQuery = query;
     try {
-      const expansion: any = await c.env.AI.run("@cf/meta/llama-3.1-8b-instruct", {
+      const expansion: any = await c.env.AI.run(WORKERS_AI_MODELS.llama_3_1_8b, {
         messages: [
           {
             role: "system",
@@ -486,7 +487,7 @@ aiSearchApp.get("/education", async (c) => {
   if (!c.env.CLINICAL_KNOWLEDGE) return c.json({ error: "Vectorize não configurado" }, 503);
 
   try {
-    const pool = createPool(c.env);
+    const _pool = createPool(c.env);
     const { getRawSql } = await import("../lib/db");
     const sql = getRawSql(c.env, "read");
 

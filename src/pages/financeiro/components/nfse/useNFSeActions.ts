@@ -1,8 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { request } from "@/api/v2";
-import { appointmentsApi } from "@/api/v2/appointments";
 import { toast } from "sonner";
-import { normalizeNFSe, type NFSe } from "./types";
+import { normalizeNFSe } from "./types";
 import { useState, useEffect } from "react";
 
 export function useNFSeActions(organizationId?: string) {

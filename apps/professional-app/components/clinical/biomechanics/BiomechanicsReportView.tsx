@@ -6,7 +6,6 @@ import {
   ScrollView,
   TouchableOpacity,
   TextInput,
-  Image,
   Alert,
   ActivityIndicator,
 } from "react-native";
@@ -45,7 +44,7 @@ export const BiomechanicsReportView: React.FC<BiomechanicsReportViewProps> = ({
         quality: 1,
       });
       await Share.shareAsync(uri);
-    } catch (err) {
+    } catch {
       console.error("Erro ao exportar imagem:", err);
     } finally {
       setIsExporting(false);
@@ -60,7 +59,7 @@ export const BiomechanicsReportView: React.FC<BiomechanicsReportViewProps> = ({
         ...result,
         observations,
       });
-    } catch (err) {
+    } catch {
       console.error("Erro ao gerar PDF:", err);
       Alert.alert("Erro", "Não foi possível gerar o PDF.");
     } finally {
@@ -96,7 +95,7 @@ export const BiomechanicsReportView: React.FC<BiomechanicsReportViewProps> = ({
                 },
               });
               Alert.alert("Sucesso", "Relatório certificado e bloqueado com sucesso.");
-            } catch (err) {
+            } catch {
               Alert.alert("Erro", "Falha ao assinar relatório. Tente novamente.");
             } finally {
               setIsSigning(false);
