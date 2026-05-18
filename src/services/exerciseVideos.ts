@@ -369,6 +369,58 @@ export const exerciseVideosService = {
     }
   },
 
+  // ── UPLOAD via Cloudflare Stream (S6.1) ──────────────────────────────────
+  // Habilitado por VITE_STREAM_UPLOAD_ENABLED. Fallback: uploadVideo (R2).
+  // Worker cria direct-upload URL via env.STREAM.directUpload; tus-js-client
+  // faz upload resumable; webhook do Stream atualiza stream_status quando ready.
+
+  async uploadVideoViaStream(
+    data: UploadMediaData,
+    onProgress?: (percent: number) => void,
+  ): Promise<{ id: string; stream_id: string }> {
+    if (data.type === "image") {
+      // Imagens continuam em R2 (Stream é só vídeo)
+      const result = await this.uploadVideo(data);
+      return { id: result.id, stream_id: "" };
+    }
+    const validation = this.validateMediaFile(data.file, "video");
+    if (!validation.valid) throw new Error(validation.error);
+
+    const { Upload } = await import("tus-js-client");
+
+    const { data: link } = await exerciseVideosApi.streamUploadUrl({
+      title: data.title.trim(),
+      description: data.description?.trim(),
+      exercise_id: data.exercise_id ?? null,
+      category: data.category,
+      difficulty: data.difficulty,
+      body_parts: data.body_parts,
+      equipment: data.equipment,
+      max_duration_seconds: Math.min(Math.round(data.file.size / 100_000) || 600, 3600),
+    });
+
+    return new Promise<{ id: string; stream_id: string }>((resolve, reject) => {
+      const upload = new Upload(data.file, {
+        endpoint: link.upload_url,
+        uploadUrl: link.upload_url,
+        retryDelays: [0, 1000, 3000, 5000],
+        chunkSize: 50 * 1024 * 1024, // 50MB
+        metadata: { name: data.file.name, filetype: data.file.type },
+        onError: reject,
+        onProgress: (bytesUploaded, bytesTotal) => {
+          onProgress?.(Math.round((bytesUploaded / bytesTotal) * 100));
+        },
+        onSuccess: () => resolve({ id: link.id, stream_id: link.stream_id }),
+      });
+      upload.start();
+    });
+  },
+
+  /** Verifica se Stream upload está habilitado por feature flag. */
+  isStreamEnabled(): boolean {
+    return import.meta.env?.VITE_STREAM_UPLOAD_ENABLED === "true";
+  },
+
   // ── UPDATE ────────────────────────────────────────────────────────────────
 
   async updateVideo(

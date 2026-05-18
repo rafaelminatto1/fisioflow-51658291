@@ -61,16 +61,26 @@ export const useExerciseVideosByExerciseId = (exerciseId: string) => {
 };
 
 /**
- * Hook to upload a new exercise video
- * Invalidates all video queries on success
+ * Hook to upload a new exercise video.
+ *
+ * Roteamento automático: se `VITE_STREAM_UPLOAD_ENABLED=true` E é vídeo,
+ * usa Cloudflare Stream (encoding HLS adaptativo + thumbnails automáticos).
+ * Caso contrário: upload tradicional R2 (legado).
+ *
+ * Invalida todas as queries de vídeo no sucesso.
  */
 export const useUploadExerciseVideo = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: UploadVideoData) => exerciseVideosService.uploadVideo(data),
+    mutationFn: (data: UploadVideoData & { onProgress?: (pct: number) => void }) => {
+      const isVideo = data.type === "video" || data.file.type.startsWith("video/");
+      if (isVideo && exerciseVideosService.isStreamEnabled()) {
+        return exerciseVideosService.uploadVideoViaStream(data, data.onProgress);
+      }
+      return exerciseVideosService.uploadVideo(data);
+    },
     onSuccess: () => {
-      // Invalidate all video list queries
       queryClient.invalidateQueries({ queryKey: exerciseVideoKeys.lists() });
     },
     onError: (error) => {

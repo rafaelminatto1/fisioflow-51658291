@@ -179,6 +179,17 @@ app.delete("/:id", requireAuth, async (c) => {
     [id, user.organizationId],
   );
   if (!result.rows.length) return c.json({ error: "Vídeo não encontrado" }, 404);
+
+  // Cleanup defensivo no Cloudflare Stream — evita órfão (cobra storage por minuto)
+  const streamId = (result.rows[0] as any).stream_id;
+  if (streamId && c.env.STREAM) {
+    try {
+      await (c.env.STREAM as any).video(streamId).delete();
+    } catch (err) {
+      console.warn(`[exerciseVideos] Falha ao deletar Stream video ${streamId}:`, err);
+      // não rollback: linha Neon já apagou; órfão Stream pode ser limpado depois
+    }
+  }
   return c.json({ data: result.rows[0] });
 });
 

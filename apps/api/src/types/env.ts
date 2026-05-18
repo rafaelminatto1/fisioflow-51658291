@@ -38,6 +38,16 @@ export interface StreamBinding {
     requireSignedURLs?: boolean;
     creator?: string;
   }): Promise<{ uploadURL: string; uid: string }>;
+  /** Operações sobre um vídeo específico. */
+  video(uid: string): {
+    details(): Promise<StreamVideoDetails>;
+    update(params: { meta?: Record<string, string>; allowedOrigins?: string[] }): Promise<StreamVideoDetails>;
+    delete(): Promise<void>;
+    generateToken(params?: { exp?: number; nbf?: number; downloadable?: boolean }): Promise<string>;
+  };
+  videos: {
+    list(params?: { limit?: number; creator?: string }): Promise<{ result: StreamVideoDetails[] }>;
+  };
 }
 
 export interface StreamVideoDetails {

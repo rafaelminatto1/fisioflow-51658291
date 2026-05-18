@@ -130,4 +130,19 @@ export const exerciseVideosApi = {
     request<{ data: Record<string, unknown> }>(`/api/exercise-videos/${encodeURIComponent(id)}`, {
       method: "DELETE",
     }),
+  /** S6.1 Stream Bindings — pede direct-upload URL ao Worker e retorna {id, stream_id, upload_url}. */
+  streamUploadUrl: (data: {
+    title: string;
+    description?: string;
+    exercise_id?: string | null;
+    category?: string;
+    difficulty?: string;
+    body_parts?: string[];
+    equipment?: string[];
+    max_duration_seconds?: number;
+  }) =>
+    request<{ data: { id: string; stream_id: string; upload_url: string } }>(
+      "/api/exercise-videos/upload-url",
+      { method: "POST", body: JSON.stringify(data) },
+    ),
 };
