@@ -28,7 +28,7 @@ test.describe("AI Clinical Golden Path", () => {
     await expect(aiCategory).toBeVisible({ timeout: 15000 });
 
     // Verifica se há ao menos um resultado
-    const firstResult = page.locator('button:has-text("ai-")').first();
+    const _firstResult = page.locator('button:has-text("ai-")').first();
     // (O id do item começa com ai-)
   });
 

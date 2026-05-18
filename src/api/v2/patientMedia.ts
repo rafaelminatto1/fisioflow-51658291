@@ -1,7 +1,5 @@
 import { request } from "./base";
 import { getWorkersApiUrl } from "@/lib/api/config";
-import { getNeonAccessToken } from "@/lib/auth/neon-token";
-
 const BASE = "/api/patient-media";
 
 export interface PatientPhoto {

@@ -1,9 +1,7 @@
-import {
-  precacheAndRoute,
-  cleanupOutdatedCaches,
-  createHandlerBoundToURL,
-} from "workbox-precaching";
+import { precacheAndRoute, cleanupOutdatedCaches, matchPrecache } from "workbox-precaching";
 import { NavigationRoute, registerRoute } from "workbox-routing";
+import { StaleWhileRevalidate, CacheFirst } from "workbox-strategies";
+import { ExpirationPlugin } from "workbox-expiration";
 import { clientsClaim } from "workbox-core";
 
 declare let self: ServiceWorkerGlobalScope & {
@@ -19,19 +17,71 @@ cleanupOutdatedCaches();
 precacheAndRoute(self.__WB_MANIFEST);
 
 // ============================================================================
-// SHELL FALLBACK — todas as navegações SPA (incluindo reload offline) servem
-// o index.html do precache. Sem isso, F5 sem rede dá ERR_INTERNET_DISCONNECTED.
+// SHELL FALLBACK — toda navegação SPA tenta a rede; se falhar, serve o
+// /index.html do precache. Sem isso, F5 sem rede dá ERR_INTERNET_DISCONNECTED.
+//
+// Não usamos createHandlerBoundToURL("/index.html") direto porque o Cloudflare
+// Workers Assets retorna 307 para /index.html — fazemos o fallback manual via
+// matchPrecache() que lida com o revision do Workbox.
 // ============================================================================
-const navigationHandler = createHandlerBoundToURL("/index.html");
+async function navigationHandler(): Promise<Response> {
+  try {
+    const networkResponse = await fetch("/", { cache: "no-store" });
+    if (networkResponse.ok) return networkResponse;
+    throw new Error(`Network responded ${networkResponse.status}`);
+  } catch {
+    const cached = await matchPrecache("/index.html");
+    if (cached) return cached;
+    // Último recurso — página offline estática (precached)
+    const offlinePage = await matchPrecache("/offline.html");
+    if (offlinePage) return offlinePage;
+    return new Response("Offline", { status: 503, statusText: "Offline" });
+  }
+}
+
 registerRoute(
   new NavigationRoute(navigationHandler, {
-    // Não interceptar rotas de API nem assets versionados; tudo restante (SPA)
-    // cai no shell.
     denylist: [
       /^\/api\//,
       /^\/assets\//,
       /^\/icons\//,
       /\.(?:js|css|json|map|png|jpg|jpeg|svg|webp|avif|woff2?|ico)$/,
+    ],
+  }),
+);
+
+// ============================================================================
+// RUNTIME CACHING — chunks JS/CSS versionados (assets/) ficam em cache após
+// 1ª visita; navegações offline subsequentes funcionam mesmo que o chunk não
+// estivesse no precache. Cache-first porque os nomes têm hash (imutáveis).
+// ============================================================================
+registerRoute(
+  ({ url }) => url.origin === self.location.origin && /^\/assets\/.+\.(js|css)$/.test(url.pathname),
+  new CacheFirst({
+    cacheName: "app-chunks",
+    plugins: [
+      new ExpirationPlugin({
+        maxEntries: 200,
+        maxAgeSeconds: 60 * 60 * 24 * 30, // 30 dias
+        purgeOnQuotaError: true,
+      }),
+    ],
+  }),
+);
+
+// Imagens / ícones / fontes — StaleWhileRevalidate
+registerRoute(
+  ({ request }) =>
+    request.destination === "image" ||
+    request.destination === "font",
+  new StaleWhileRevalidate({
+    cacheName: "app-static",
+    plugins: [
+      new ExpirationPlugin({
+        maxEntries: 150,
+        maxAgeSeconds: 60 * 60 * 24 * 30,
+        purgeOnQuotaError: true,
+      }),
     ],
   }),
 );

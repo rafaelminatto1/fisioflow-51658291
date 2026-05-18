@@ -1,6 +1,5 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { format, addDays, isWeekend, isMonday, isWednesday, isFriday, parseISO } from "date-fns";
-import { ptBR } from "date-fns/locale";
 import {
   View,
   Text,
@@ -39,7 +38,7 @@ export default function NFSeForm() {
   const [tomadorNome, setTomadorNome] = useState("");
   const [tomadorCpf, setTomadorCpf] = useState("");
   const [showPatientPicker, setShowPatientPicker] = useState(false);
-  const [isGenerating, setIsGenerating] = useState(false);
+  const [_isGenerating, _setIsGenerating] = useState(false);
 
   // Estados Reembolso Inteligente
   const [usePlannedSessions, setUsePlannedSessions] = useState(false);

@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { getClinicalAlerts, resolveClinicalAlert, type ApiClinicalAlert } from "@/lib/api";
+import { getClinicalAlerts, resolveClinicalAlert } from "@/lib/api";
 
 export function useClinicalAlerts() {
   const queryClient = useQueryClient();

@@ -73,7 +73,7 @@ export function ClinicSetupWizard({ open, onClose }: ClinicSetupWizardProps) {
       await organizationsApi.update(currentOrganization.id, {
         name: clinicData.name.trim(),
         settings: {
-          ...(currentOrganization.settings ?? {}),
+          ...currentOrganization.settings,
           clinic_phone: clinicData.phone || undefined,
           clinic_address: clinicData.address || undefined,
           clinic_city: clinicData.city || undefined,

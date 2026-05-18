@@ -51,7 +51,7 @@ export class IconErrorBoundary extends Component<IconErrorBoundaryProps, IconErr
  */
 export function withIconErrorBoundary<P extends object>(
   WrappedIcon: React.ComponentType<P>,
-  fallbackProps?: Partial<P>,
+  _fallbackProps?: Partial<P>,
 ) {
   return function SafeIcon(props: P) {
     return (

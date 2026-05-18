@@ -5,8 +5,6 @@ import { useGamification } from "@/hooks/useGamification";
 import { Card } from "./Card";
 import { LinearProgress } from "./Progress";
 import { GamificationBadge } from "./GamificationBadge";
-import { Ionicons } from "@expo/vector-icons";
-
 export const GamificationDashboard: React.FC = () => {
   const colors = useColors();
   const { profile, currentLevel, currentXp, xpPerLevel, progressPercentage, isLoading } =

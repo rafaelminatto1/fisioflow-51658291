@@ -63,9 +63,9 @@ export default function WellnessScreen() {
   const [steps, setSteps] = useState<number | null>(null);
   const [heartRate, setHeartRate] = useState<number | null>(null);
   const [calories, setCalories] = useState<number | null>(null);
-  const [distance, setDistance] = useState<number | null>(null);
-  const [sleepHours, setSleepHours] = useState<number | null>(null);
-  const [permissionDenied, setPermissionDenied] = useState(false);
+  const [_distance, setDistance] = useState<number | null>(null);
+  const [_sleepHours, setSleepHours] = useState<number | null>(null);
+  const [_permissionDenied, setPermissionDenied] = useState(false);
   const [syncing, setSyncing] = useState(false);
 
   const isIOS = Platform.OS === "ios";
@@ -264,7 +264,7 @@ export default function WellnessScreen() {
     await loadHealthData();
   };
 
-  const handleOpenSettings = () => {
+  const _handleOpenSettings = () => {
     Linking.openSettings().catch(() => {});
   };
 

@@ -4,7 +4,6 @@ import { requireAuth, type AuthVariables } from "../lib/auth";
 import type { Env } from "../types/env";
 import { businessMetrics, patientAdherencePredictions, patients } from "@fisioflow/db";
 import { eq, desc, and } from "drizzle-orm";
-import { withTenant } from "../lib/db-utils";
 import { AdherencePredictor } from "../lib/ai/adherencePredictor";
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();

@@ -115,7 +115,7 @@ export function RecibosContent({
         settings: { ...currentOrganization.settings, receipt_settings: receiptConfig },
       });
       toast.success("Configurações salvas!");
-    } catch (error) {
+    } catch {
       toast.error("Erro ao salvar.");
     }
   };

@@ -13,7 +13,6 @@ import {
   Text,
   TouchableOpacity,
   View,
-  Platform,
   Share,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";

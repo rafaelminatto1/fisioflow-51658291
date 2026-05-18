@@ -19,7 +19,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       variant,
       size,
       asChild = false,
-      magnetic = false,
+      _magnetic = false,
       glow = false,
       premium = false,
       ...props

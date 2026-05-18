@@ -115,14 +115,23 @@ export default defineConfig(({ mode }) => {
           ],
         },
         injectManifest: {
-          // Precache só o essencial: HTML, CSS, JS principal, fontes, ícones SVG/PNG.
-          // Sourcemaps, WebP/AVIF pesadas e vídeos ficam fora — buscados sob demanda.
-          globPatterns: ["**/*.{js,css,html,ico,svg,woff2}"],
+          // Precache MINIMALISTA — só o shell crítico (~1.3 MiB, 11 entries).
+          // Chunks de feature ficam fora — são cacheados sob demanda via
+          // runtime caching `CacheFirst` em /assets/*.js (ver service-worker.ts).
+          //
+          // Trade-off: features raramente usadas (editor de imagens, PDF,
+          // recharts) só funcionam offline DEPOIS que o usuário as acessou
+          // ao menos uma vez online. Aceitável — primeira visita já cacheia.
+          globPatterns: ["**/*.{html,ico,woff2}", "assets/index-*.{js,css}"],
           globIgnores: [
             "**/*.map",
             "**/sw.js",
             "**/service-worker.js",
-            "**/vendor-image-editor-*.js", // editor de imagens é raramente usado
+            // Chunks pesados e raramente usados — runtime cache cobre.
+            "**/vendor-image-editor-*.js", // ~977 KB, editor TipTap
+            "**/vendor-pdf-*.js",
+            "**/vendor-tiptap-*.js",
+            "**/vendor-recharts-*.js",
           ],
           maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
         },

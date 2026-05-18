@@ -38,7 +38,7 @@ interface DraftEnvelope<T> {
   version: 1;
 }
 
-export interface UseEvolutionDraftOptions<T> {
+export interface UseEvolutionDraftOptions<_T> {
   evolutionId?: string | null;
   patientId?: string | null;
   appointmentId?: string | null;

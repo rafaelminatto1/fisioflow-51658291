@@ -32,6 +32,7 @@ import {
   CalendarDays,
   Package,
   MessageCircle,
+  BookOpen,
 } from "lucide-react";
 
 const menuGroups = [
@@ -49,6 +50,7 @@ const menuGroups = [
       { icon: Target, label: "Protocolos", href: "/protocols" },
       { icon: FlaskConical, label: "Testes Clínicos", href: "/clinical-tests" },
       { icon: ClipboardList, label: "Avaliações", href: "/templates" },
+      { icon: BookOpen, label: "Biblioteca Clínica", href: "/clinical-library" },
     ],
   },
   {

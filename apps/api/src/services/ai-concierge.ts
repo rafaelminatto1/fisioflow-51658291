@@ -1,5 +1,6 @@
 import { Env } from "../types/env";
 import { runAi, generateEmbedding } from "../lib/ai-native";
+import { WORKERS_AI_MODELS } from "../lib/workersAi";
 
 export interface ConciergeResponse {
   reply: string;
@@ -67,7 +68,7 @@ export class AIConciergeService {
     try {
       const response = await runAi(
         env,
-        "@cf/meta/llama-3.1-8b-instruct",
+        WORKERS_AI_MODELS.llama_3_1_8b,
         {
           messages: [
             { role: "system", content: systemPrompt },

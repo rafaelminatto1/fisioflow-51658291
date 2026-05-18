@@ -20,7 +20,7 @@ import Svg, { Line, Circle, G } from "react-native-svg";
 import { JointAngles } from "@/utils/biomechanics/angles";
 import { Point3D } from "@/utils/biomechanics/vectors";
 import { calculateAsymmetry, evaluateRisk } from "@/utils/biomechanics/scoring";
-import { Sparkles, X, Activity, ShieldAlert, CheckCircle2 } from "lucide-react-native";
+import { X, Activity, ShieldAlert, CheckCircle2 } from "lucide-react-native";
 import { biomechanicsApi } from "@/api/v2/biomechanics";
 
 const { width, height } = Dimensions.get("window");
@@ -56,7 +56,7 @@ export const BiomechanicalCamera: React.FC<BiomechanicalCameraProps> = ({
   const camera = useRef<Camera>(null);
 
   const [hasPermission, setHasPermission] = useState(false);
-  const [isActive, setIsActive] = useState(true);
+  const [isActive, _setIsActive] = useState(true);
   const [currentPose, setCurrentPose] = useState<Pose | null>(null);
   const [isSaving, setIsSaving] = useState(false);
 

@@ -127,46 +127,6 @@ const PatientEvolution = () => {
     sessionDate: state.evolutionV2Data?.sessionDate,
   });
 
-  // Hidratação única do draft ao montar (se houver e o estado atual estiver vazio)
-  const hydratedRef = useRef(false);
-  useEffect(() => {
-    if (hydratedRef.current) return;
-    if (!state.patientId) return;
-    const saved = draft.readDraft();
-    if (!saved) {
-      hydratedRef.current = true;
-      return;
-    }
-    // Só hidrata se o painel atual estiver "vazio" — para não sobrescrever
-    // dados frescos vindos do servidor.
-    const current = state.evolutionV2Data;
-    const currentIsEmpty =
-      !(current?.unifiedItems?.length ?? 0) &&
-      !(current?.procedures?.length ?? 0) &&
-      !(current?.exercises?.length ?? 0) &&
-      !(current?.measurements?.length ?? 0) &&
-      !(current?.evolutionText || current?.observations || "").trim();
-    if (currentIsEmpty) {
-      handleEvolutionV2Change(saved);
-      toast.message("Rascunho restaurado", {
-        description: "Encontramos um rascunho local não sincronizado.",
-      });
-    }
-    hydratedRef.current = true;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [state.patientId]);
-
-  // Limpa o draft quando o registro é confirmado pelo servidor sem operações pendentes
-  useEffect(() => {
-    if (
-      state.currentSoapRecordId &&
-      offline.stats.pendingActions === 0 &&
-      offline.isOnline
-    ) {
-      draft.clearDraft();
-    }
-  }, [state.currentSoapRecordId, offline.stats.pendingActions, offline.isOnline, draft]);
-
   const handleEvolutionV2Change = useCallback(
     (next: EvolutionV2Data) => {
       state.setEvolutionV2Data(next);
@@ -217,8 +177,58 @@ const PatientEvolution = () => {
         measurements: (next.measurements as any) || prev.measurements,
       }));
     },
-    [state],
+    [state, draft],
   );
+
+  // Hidratação do draft local — roda quando:
+  //  - mudou a sessão (key combina patientId+appointmentId+evolutionId)
+  //  - o servidor terminou de carregar (state.isLoadingTabData = false)
+  // Re-hidrata ao navegar entre evoluções diferentes.
+  const hydratedKeyRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (state.isLoadingTabData) return;
+    if (!state.patientId) return;
+    const key = `${state.patientId}:${state.appointmentId ?? ""}:${state.currentSoapRecordId ?? ""}`;
+    if (hydratedKeyRef.current === key) return;
+    hydratedKeyRef.current = key;
+
+    const saved = draft.readDraft();
+    if (!saved) return;
+
+    const current = state.evolutionV2Data;
+    const currentIsEmpty =
+      !(current?.unifiedItems?.length ?? 0) &&
+      !(current?.procedures?.length ?? 0) &&
+      !(current?.exercises?.length ?? 0) &&
+      !(current?.measurements?.length ?? 0) &&
+      !(current?.evolutionText || current?.observations || "").trim();
+
+    if (currentIsEmpty) {
+      handleEvolutionV2Change(saved);
+      toast.message("Rascunho restaurado", {
+        description: "Encontramos um rascunho local não sincronizado.",
+      });
+    }
+  }, [
+    state.patientId,
+    state.appointmentId,
+    state.currentSoapRecordId,
+    state.isLoadingTabData,
+    state.evolutionV2Data,
+    draft,
+    handleEvolutionV2Change,
+  ]);
+
+  // Limpa o draft quando o registro é confirmado pelo servidor sem operações pendentes
+  useEffect(() => {
+    if (
+      state.currentSoapRecordId &&
+      offline.stats.pendingActions === 0 &&
+      offline.isOnline
+    ) {
+      draft.clearDraft();
+    }
+  }, [state.currentSoapRecordId, offline.stats.pendingActions, offline.isOnline, draft]);
 
   // Preload all editor chunks during idle time so tab switching is instant
   useEffect(() => {

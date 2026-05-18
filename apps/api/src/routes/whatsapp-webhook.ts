@@ -600,11 +600,11 @@ async function maybeHandleAppointmentIntent(
 // Tracks which wa_ids already got the concierge greeting (in-memory, per worker instance)
 const conciergeGreetedThisSession = new Set<string>();
 
-const CONCIERGE_SCHEDULE_PATTERN =
+const _CONCIERGE_SCHEDULE_PATTERN =
   /\b(agendar|agendamento|consulta|marcar|avalia[çc][ãa]o|sessão|sessao|horário|horario|atendimento)\b/i;
-const CONCIERGE_INFO_PATTERN =
+const _CONCIERGE_INFO_PATTERN =
   /\b(informação|informacao|info|dúvida|duvida|preço|preco|valor|plano|convenio|funciona)\b/i;
-const CONCIERGE_URGENT_PATTERN =
+const _CONCIERGE_URGENT_PATTERN =
   /\b(urgente|emergência|emergencia|socorro|dor forte|muito dor|dor intensa)\b/i;
 
 async function maybeSendConciergeGreeting(

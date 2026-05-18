@@ -7,12 +7,11 @@ import {
   Image,
   Dimensions,
   PanResponder,
-  Platform,
   Modal,
   TextInput,
 } from "react-native";
 import ViewShot from "react-native-view-shot";
-import Svg, { Path, G, Line, Text as SvgText, Defs, Marker, Polygon } from "react-native-svg";
+import Svg, { Path, Line, Text as SvgText, Defs, Marker, Polygon } from "react-native-svg";
 import { Ionicons } from "@expo/vector-icons";
 import { useColors } from "@/hooks/useColorScheme";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -38,7 +37,7 @@ interface ImageEditorProps {
   onCancel: () => void;
 }
 
-const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
+const { width: SCREEN_WIDTH, height: _SCREEN_HEIGHT } = Dimensions.get("window");
 const CANVAS_SIZE = SCREEN_WIDTH - 32;
 
 export function ImageEditor({ uri, onSave, onCancel }: ImageEditorProps) {
@@ -52,7 +51,7 @@ export function ImageEditor({ uri, onSave, onCancel }: ImageEditorProps) {
 
   // Crop state
   const [cropRect, setCropRect] = useState({ x: 50, y: 50, width: 200, height: 200 });
-  const [isCropping, setIsCropping] = useState(false);
+  const [_isCropping, _setIsCropping] = useState(false);
 
   // Estados para o Modal de Texto
   const [isTextModalVisible, setIsTextModalVisible] = useState(false);
@@ -97,7 +96,7 @@ export function ImageEditor({ uri, onSave, onCancel }: ImageEditorProps) {
         }
         setCurrentPath((prev) => [...prev, { x: locationX, y: locationY }]);
       },
-      onPanResponderRelease: (evt) => {
+      onPanResponderRelease: (_evt) => {
         if (tool === "text" || tool === "crop") return;
 
         if (currentPath.length > 0) {

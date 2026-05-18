@@ -6,7 +6,7 @@ import { transcribeAudioWithGemini } from "../../lib/ai-gemini";
 import { smartStructured, smartTranscribe } from "../../lib/ai/smartAI";
 import { logToAxiom } from "../../lib/axiom";
 import { transcribeAudio as transcribeWithWhisper } from "../../lib/ai-native";
-import { SoapSchema, EvolutionObservacaoSchema } from "../../schemas/ai-schemas";
+import { EvolutionObservacaoSchema } from "../../schemas/ai-schemas";
 import { safeText, buildSoapFromText, buildEvolutionFromText } from "./ai-helpers";
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();

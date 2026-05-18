@@ -490,8 +490,10 @@ export class AppointmentService {
 
       const response = await appointmentsApi.update(id, updateData);
 
-      // Offline — sentinel. Fila vai sincronizar; aqui só sinalizamos que
-      // o update foi aceito pra UI manter o estado optimista do hook.
+      // Offline — sentinel. Retornamos placeholder com flag __offline para o
+      // hook tratar via isOfflinePlaceholder (ver MaybeOffline em base.ts).
+      // O cast é seguro porque os call-sites checam __offline antes de usar
+      // os outros campos.
       if (isOfflineEnqueuedResponse(response)) {
         return { id, ...updateData, __offline: true } as unknown as AppointmentBase;
       }

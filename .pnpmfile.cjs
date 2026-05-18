@@ -1,4 +1,4 @@
-function readPackage(pkg, context) {
+function readPackage(pkg, _context) {
   const overrides = {
     expo: "55.0.23",
     "expo-asset": "55.0.17",
