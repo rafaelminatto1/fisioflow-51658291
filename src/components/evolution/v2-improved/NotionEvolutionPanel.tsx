@@ -44,6 +44,8 @@ import { useSoapRecords } from "@/hooks/useSoapRecords";
 import { Copy } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { useAIClinicalCopilot } from "@/hooks/useAIClinicalCopilot";
+import { ClinicalCopilotPanel } from "./ClinicalCopilotPanel";
 
 interface NotionEvolutionPanelProps {
   data: EvolutionV2Data;
@@ -74,6 +76,10 @@ export const NotionEvolutionPanel: React.FC<NotionEvolutionPanelProps> = ({
 }) => {
   const [procedureLibraryOpen, setProcedureLibraryOpen] = useState(false);
   const [exerciseLibraryOpen, setExerciseLibraryOpen] = useState(false);
+
+  // Hook do Clinical Copilot
+  const combinedText = data.evolutionText || data.observations || "";
+  const { insights, isAnalyzing } = useAIClinicalCopilot(combinedText);
 
   // Histórico (usado por: banner "Replicar última sessão" + sparklines de medições)
   const { data: recentRecords = [] } = useSoapRecords(patientId ?? "", 8);
@@ -322,17 +328,37 @@ export const NotionEvolutionPanel: React.FC<NotionEvolutionPanelProps> = ({
                 subtitle="Notas livres da sessão"
                 flushContent
               >
-                <RichTextBlock
-                  placeholder="Orientações gerais, encaminhamentos, cuidados e notas da sessão..."
-                  value={data.evolutionText || data.observations}
-                  onValueChange={(val) => {
-                    handleFieldChange("evolutionText", val);
-                    handleFieldChange("observations", val);
-                  }}
-                  disabled={disabled}
-                  showToolbar
-                  className="border-none shadow-none bg-transparent"
-                />
+                <div className="flex flex-col">
+                  <RichTextBlock
+                    placeholder="Orientações gerais, encaminhamentos, cuidados e notas da sessão..."
+                    value={data.evolutionText || data.observations}
+                    onValueChange={(val) => {
+                      handleFieldChange("evolutionText", val);
+                      handleFieldChange("observations", val);
+                    }}
+                    disabled={disabled}
+                    showToolbar
+                    className="border-none shadow-none bg-transparent"
+                  />
+                  <div className="px-5 pb-5 pt-2">
+                    <ClinicalCopilotPanel 
+                      insights={insights} 
+                      isAnalyzing={isAnalyzing} 
+                      onAction={(actionPayload) => {
+                        if (actionPayload?.type === "add_exercise") {
+                          const newItem: EvolutionItemV3 = {
+                            id: `ex-${Date.now()}`,
+                            type: "exercise",
+                            name: actionPayload.name,
+                            completed: false,
+                          };
+                          handleUnifiedItemsChange([...unifiedItems, newItem]);
+                          toast.success(`"${actionPayload.name}" adicionado à sequência da sessão.`);
+                        }
+                      }}
+                    />
+                  </div>
+                </div>
               </EvolutionSectionCard>
             </div>
 
@@ -432,6 +458,7 @@ export const NotionEvolutionPanel: React.FC<NotionEvolutionPanelProps> = ({
                   onChange={(val) => handleFieldChange("homeCareExercises", val)}
                   disabled={disabled}
                   className="border-none shadow-none bg-slate-50/60 rounded-xl"
+                  sessionExercises={unifiedItems.filter(item => item.type === "exercise").map(item => ({ name: item.name, prescription: item.prescription }))}
                 />
               </EvolutionSectionCard>
 

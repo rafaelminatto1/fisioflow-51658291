@@ -10,7 +10,7 @@ aiInsightsRoutes.use("*", authMiddleware);
 
 // Endpoint for proactive dashboard widgets (Churn, Finance, Briefing)
 aiInsightsRoutes.get("/widgets", async (c) => {
-  const orgId = c.get("orgId" as any);
+  const _orgId = c.get("orgId" as any);
   
   // In a real implementation, this would call the MCP server or execute the raw queries.
   // For now, we return mock data structured as the AI would provide.
@@ -32,7 +32,7 @@ aiInsightsRoutes.get("/widgets", async (c) => {
 
 // Endpoint for the AI Hub Analytics
 aiInsightsRoutes.get("/analytics", async (c) => {
-  const orgId = c.get("orgId" as any);
+  const _orgId = c.get("orgId" as any);
   
   const mockAnalytics = {
     retention: [
@@ -60,7 +60,7 @@ aiInsightsRoutes.get("/analytics", async (c) => {
 });
 
 // Endpoint for the AI Command Bar (Streaming Chat)
-// In a real app, this would use the Vercel AI SDK to stream responses from an LLM connected to the MCP tools.
+// Uses Server-Sent Events (SSE) / ReadableStream to stream text back to Vercel AI SDK's useChat
 aiInsightsRoutes.post("/chat", zValidator("json", z.object({
   messages: z.array(z.object({
     role: z.enum(["user", "assistant", "system"]),
@@ -73,17 +73,30 @@ aiInsightsRoutes.post("/chat", zValidator("json", z.object({
   let responseText = "Entendido. Como posso ajudar com a gestão da sua clínica hoje?";
   
   if (lastMessage.includes("faltou") || lastMessage.includes("no-show")) {
-    responseText = "Ontem tivemos 2 faltas. Os pacientes foram notificados automaticamente para reagendamento.";
+    responseText = "Ontem tivemos 2 faltas. Os pacientes foram notificados automaticamente para reagendamento (João Silva e Maria Souza).";
   } else if (lastMessage.includes("receita") || lastMessage.includes("faturamento")) {
     responseText = "A receita prevista para este mês é de R$ 16.000,00. Atualmente temos R$ 600,00 em pagamentos atrasados críticos.";
   } else if (lastMessage.includes("risco") || lastMessage.includes("abandono")) {
-    responseText = "Detectei 2 pacientes que não comparecem há mais de 10 dias. Sugiro enviar uma mensagem de acompanhamento para João Silva e Maria Souza.";
+    responseText = "Detectei 2 pacientes que não comparecem há mais de 10 dias. Sugiro enviar uma mensagem de acompanhamento. Posso criar um rascunho de WhatsApp para você.";
   }
 
-  // Simple JSON response for demonstration. A real implementation would stream text.
-  return c.json({
-    role: "assistant",
-    content: responseText
+  // Simulate streaming response for Vercel AI SDK
+  const stream = new ReadableStream({
+    async start(controller) {
+      const words = responseText.split(" ");
+      for (const word of words) {
+        controller.enqueue(new TextEncoder().encode(`0:"${word} "` + "\n"));
+        await new Promise(r => setTimeout(r, 50)); // Simula latência de token
+      }
+      controller.close();
+    }
+  });
+
+  return new Response(stream, {
+    headers: {
+      "Content-Type": "text/x-mock-messages", // Format needed for some AI SDK versions or just text/plain
+      "Transfer-Encoding": "chunked"
+    }
   });
 });
 
