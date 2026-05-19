@@ -12,6 +12,8 @@ export default [
     }),
     route("feedback-pre-cadastro", "pages/FeedbackPreCadastro.tsx"),
     route("pending-approval", "pages/PendingApproval.tsx"),
+    route("privacidade", "pages/PrivacyPolicy.tsx"),
+    route("privacy", "pages/PrivacyPolicy.tsx", { id: "privacy-en" }),
 
     layout("components/layout/AppShellLayout.tsx", [
       // Dashboard & Home
