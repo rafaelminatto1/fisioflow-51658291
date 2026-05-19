@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import { Library, Search, Sparkles, Loader2, ExternalLink, FileText } from "lucide-react";
 import { useAiSearch, type AiSource } from "@/hooks/useAiSearch";
 import { motion, AnimatePresence } from "framer-motion";

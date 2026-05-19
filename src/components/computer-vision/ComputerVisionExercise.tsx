@@ -18,7 +18,6 @@ import {
   getFormScoreColor,
   getFeedbackIcon,
 } from "../../hooks/useComputerVision";
-import { Button } from "@/components/ui/button";
 
 interface ComputerVisionExerciseProps {
   patientId?: string;
