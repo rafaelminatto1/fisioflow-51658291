@@ -25,6 +25,7 @@ interface HomeCareBlockProps {
   onChange: (value: string) => void;
   disabled?: boolean;
   className?: string;
+  sessionExercises?: { name: string; prescription?: string }[];
 }
 
 const generateId = () =>
@@ -336,7 +337,7 @@ export const HomeCareBlock: React.FC<HomeCareBlockProps> = ({
           </div>
 
           {/* Quick presets */}
-          <div className="relative">
+          <div className="relative mt-2">
             <Button
               variant="outline"
               size="sm"
@@ -349,6 +350,32 @@ export const HomeCareBlock: React.FC<HomeCareBlockProps> = ({
             </Button>
             {showPresets && (
               <div className="absolute z-10 top-full left-0 right-0 mt-1 p-2 bg-popover border border-border rounded-xl shadow-lg animate-in slide-in-from-top-1 duration-200">
+                {sessionExercises && sessionExercises.length > 0 && (
+                  <div className="mb-2 pb-2 border-b">
+                    <span className="text-[10px] font-bold text-violet-500 uppercase tracking-widest px-1 mb-1 block">
+                      Da sessão de hoje
+                    </span>
+                    <div className="grid grid-cols-2 gap-1.5">
+                      {sessionExercises.map((preset, idx) => (
+                        <button
+                          key={`sess-${idx}`}
+                          onClick={() => handlePresetClick(preset.name, preset.prescription || "3x10")}
+                          disabled={disabled}
+                          className="flex items-center gap-2 p-2 rounded-lg hover:bg-violet-50 text-left transition-colors"
+                        >
+                          <span className="text-base">🏋️</span>
+                          <div className="flex flex-col min-w-0">
+                            <span className="text-xs font-medium truncate text-violet-900">{preset.name}</span>
+                            <span className="text-[10px] text-violet-600/70">{preset.prescription || "3x10"}</span>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                <span className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest px-1 mb-1 block">
+                  Padrões
+                </span>
                 <div className="grid grid-cols-2 gap-1.5">
                   {QUICK_PRESETS.map((preset) => (
                     <button

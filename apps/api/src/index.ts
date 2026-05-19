@@ -97,6 +97,7 @@ import { dlqReplayRoutes } from "./routes/admin/dlq-replay";
 import { searchRoutes } from "./routes/search";
 import { reportsPdfRoutes } from "./routes/reportsPdf";
 import { eventsRoutes as businessEventsRoutes } from "./routes/events";
+import { wgerRoutes } from "./routes/wger";
 import aiSearchApp from "./routes/aiSearch";
 import { aiConfigRoutes } from "./routes/ai-config";
 import { aiClinicalSearchRoutes } from "./routes/ai-clinical-search";
@@ -104,6 +105,7 @@ import { agendaAppearanceRoutes } from "./routes/agendaAppearance";
 import { fisioBrainRoutes } from "./routes/fisiobrain";
 import { clinicMetricsRoutes } from "./routes/clinicMetrics";
 import { enterpriseRoutes } from "./routes/enterprise-bi";
+import { aiInsightsRoutes } from "./routes/ai-insights";
 import { verifyToken } from "./lib/auth";
 import { getRawSql } from "./lib/db";
 import { routeAgentRequest } from "agents";
@@ -372,9 +374,11 @@ const apiRoutes = [
   ["/api/ai-clinical-search", aiClinicalSearchRoutes],
   ["/api/v1/user", agendaAppearanceRoutes],
   ["/api/fisiobrain", fisioBrainRoutes],
+  ["/api/ai-insights", aiInsightsRoutes],
   ["/api/clinic-metrics", clinicMetricsRoutes],
   ["/api/groups", groupsRoutes],
   ["/api/enterprise", enterpriseRoutes],
+  ["/api/wger", wgerRoutes],
 ] as const;
 
 apiRoutes.forEach(([path, router]) => {

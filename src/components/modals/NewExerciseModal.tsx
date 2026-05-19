@@ -37,6 +37,8 @@ import {
   MoreVertical,
   Share2 as Youtube,
   Search,
+  Download,
+  Link as LinkIcon,
 } from "lucide-react";
 import { exercisesApi } from "@/api/v2";
 import { uploadToR2 } from "@/lib/storage/r2-storage";
@@ -80,6 +82,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { knowledgeBase } from "@/data/knowledgeBase";
 import { exerciseDictionary, ExerciseEntry } from "@/data/exerciseDictionary";
 import { MediaGalleryModal } from "../media/MediaGalleryModal";
+import { WgerImportModal } from "./WgerImportModal";
 import {
   DndContext,
   closestCenter,
@@ -242,6 +245,7 @@ export function NewExerciseModal({
   const _videoInputRef = React.useRef<HTMLInputElement>(null);
 
   const [isGalleryOpen, setIsGalleryOpen] = React.useState(false);
+  const [isWgerOpen, setIsWgerOpen] = React.useState(false);
   const [_activeMediaTab, _setActiveMediaTab] = React.useState<"view" | "edit">("view");
 
   // Busca o exercício completo (com mídia da galeria) ao abrir para edição —
@@ -602,17 +606,28 @@ export function NewExerciseModal({
                     <FormItem>
                       <FormLabel className="flex justify-between items-center">
                         <span>Nome (PT)*</span>
-                        <Popover>
-                          <PopoverTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-6 text-[10px] gap-1 text-primary hover:text-primary hover:bg-primary/5"
-                            >
-                              <Search className="h-3 w-3" />
-                              Dicionário Clínico
-                            </Button>
-                          </PopoverTrigger>
+                        <div className="flex items-center gap-1">
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            className="h-6 text-[10px] gap-1 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50"
+                            onClick={() => setIsWgerOpen(true)}
+                          >
+                            <Download className="h-3 w-3" />
+                            Importar do wger
+                          </Button>
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-6 text-[10px] gap-1 text-primary hover:text-primary hover:bg-primary/5"
+                              >
+                                <Search className="h-3 w-3" />
+                                Dicionário Clínico
+                              </Button>
+                            </PopoverTrigger>
                           <PopoverContent className="w-80 p-0" align="end">
                             <div className="p-2 border-b">
                               <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider px-2">
@@ -648,6 +663,7 @@ export function NewExerciseModal({
                             </div>
                           </PopoverContent>
                         </Popover>
+                        </div>
                       </FormLabel>
                       <FormControl>
                         <Input {...field} placeholder="Ex: Agachamento Livre" />
@@ -1198,7 +1214,7 @@ export function NewExerciseModal({
                     </h3>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="grid grid-cols-3 gap-2">
                     <Button
                       type="button"
                       variant="outline"
@@ -1219,6 +1235,40 @@ export function NewExerciseModal({
                       <Upload className="h-3 w-3 mr-1" />
                       Upload
                     </Button>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="h-8 text-[11px]"
+                        >
+                          <LinkIcon className="h-3 w-3 mr-1" />
+                          Link Direto
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-80 p-3" align="end">
+                        <div className="space-y-3">
+                          <h4 className="text-xs font-bold uppercase">Adicionar via URL</h4>
+                          <Input 
+                            placeholder="https://..." 
+                            className="text-xs h-8" 
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') {
+                                e.preventDefault();
+                                const url = e.currentTarget.value;
+                                if (!url) return;
+                                const type = url.includes('youtube.com') || url.includes('youtu.be') ? 'youtube' : (url.match(/\.(mp4|webm|mov)$/i) ? 'video' : 'image');
+                                const currentMedia = form.getValues("media") || [];
+                                form.setValue("media", [...currentMedia, { url, type, caption: "", orderIndex: currentMedia.length }]);
+                                e.currentTarget.value = "";
+                              }
+                            }}
+                          />
+                          <p className="text-[10px] text-muted-foreground">Cole a URL e pressione Enter.</p>
+                        </div>
+                      </PopoverContent>
+                    </Popover>
                   </div>
 
                   <input
@@ -1426,6 +1476,34 @@ export function NewExerciseModal({
               description: `${item.name} foi anexado ao exercício.`,
             });
           }}
+        />
+
+        <WgerImportModal 
+          open={isWgerOpen} 
+          onOpenChange={setIsWgerOpen} 
+          onImport={(enrichedData) => {
+            const diffMap: any = {
+              "Iniciante": "Iniciante",
+              "Intermediário": "Intermediário",
+              "Avançado": "Avançado",
+            };
+            form.setValue("name", enrichedData.name || "");
+            form.setValue("description", enrichedData.description || "");
+            form.setValue("category", enrichedData.category || "");
+            form.setValue("difficulty", diffMap[enrichedData.difficulty] || "Iniciante");
+            form.setValue("instructions", enrichedData.instructions || "");
+            if (enrichedData.aliases_pt) form.setValue("aliases_pt", enrichedData.aliases_pt);
+            if (enrichedData.body_parts) form.setValue("body_parts", enrichedData.body_parts);
+            if (enrichedData.equipment) form.setValue("equipment", enrichedData.equipment);
+            if (enrichedData.precaution_level) form.setValue("precaution_level", enrichedData.precaution_level);
+            if (enrichedData.precaution_notes) form.setValue("precaution_notes", enrichedData.precaution_notes);
+            if (enrichedData.scientific_references) replace(enrichedData.scientific_references);
+            
+            if (enrichedData.media) {
+              const currentMedia = form.getValues("media") || [];
+              form.setValue("media", [...currentMedia, ...enrichedData.media.map((m: any, i: number) => ({ ...m, orderIndex: currentMedia.length + i }))]);
+            }
+          }} 
         />
       </DialogContent>
     </Dialog>

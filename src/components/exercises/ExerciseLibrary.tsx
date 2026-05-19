@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState, useMemo, useRef } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -22,6 +22,7 @@ import {
   Merge,
   Plus,
   CheckCircle2,
+  Download,
 } from "lucide-react";
 import {
   EQUIPMENT,
@@ -539,6 +540,30 @@ export function ExerciseLibrary({
 }: ExerciseLibraryProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
+  const [visibleCount, setVisibleCount] = useState(12);
+
+  useEffect(() => {
+    setVisibleCount(12);
+  }, [debouncedSearchTerm, activeFilter, advancedFilters]);
+
+  const sentinelRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          setVisibleCount((prev) => prev + 12);
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    if (sentinelRef.current) {
+      observer.observe(sentinelRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, []);
 
   // Filter panel state
   const [advancedFilters, setAdvancedFilters] = useState<ExerciseFiltersState>({
@@ -752,7 +777,7 @@ export function ExerciseLibrary({
       {/* Search and Filters - Sticky Header */}
       <div className="sticky top-0 z-20 bg-background/95 backdrop-blur-md pt-4 pb-4 -mx-4 px-4 sm:-mx-6 sm:px-6 border-b mb-4 transition-all duration-300">
         <div className="flex flex-col gap-4">
-          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-4">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
@@ -764,7 +789,19 @@ export function ExerciseLibrary({
                 className="pl-9"
               />
             </div>
-            <div className="flex items-center border rounded-lg p-1">
+            <Button
+              variant="outline"
+              className="gap-2 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 whitespace-nowrap"
+              onClick={() => {
+                // Dispatch custom event to open the modal (handled by parent or top-level layout)
+                window.dispatchEvent(new CustomEvent('open-wger-import'));
+              }}
+            >
+              <Download className="h-4 w-4 hidden sm:block" />
+              <span className="hidden sm:inline">Importar wger</span>
+              <span className="sm:hidden">wger</span>
+            </Button>
+            <div className="flex items-center border rounded-lg p-1 hidden sm:flex">
               <Button
                 variant={viewMode === "grid" ? "secondary" : "ghost"}
                 size="icon"
@@ -895,8 +932,8 @@ export function ExerciseLibrary({
           </div>
         ) : viewMode === "grid" ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-2">
-            {filteredExercises.map((exercise, index) => (
-              <div key={exercise.id} className="relative group">
+            {filteredExercises.slice(0, visibleCount).map((exercise, index) => (
+              <div key={exercise.id} className="relative group animate-in fade-in slide-in-from-bottom-4" style={{ animationDelay: `${(index % 12) * 50}ms` }}>
                 <ExerciseCard
                   exercise={exercise}
                   isFavorite={isFavorite(exercise.id)}
@@ -923,8 +960,8 @@ export function ExerciseLibrary({
           </div>
         ) : (
           <div className="space-y-2 p-2">
-            {filteredExercises.map((exercise) => (
-              <div key={exercise.id} className="relative flex items-center gap-2">
+            {filteredExercises.slice(0, visibleCount).map((exercise, index) => (
+              <div key={exercise.id} className="relative flex items-center gap-2 animate-in fade-in slide-in-from-bottom-2" style={{ animationDelay: `${(index % 12) * 50}ms` }}>
                 {isSelectionMode && (
                   <Checkbox
                     checked={selectedExercises.includes(exercise.id)}
@@ -946,6 +983,12 @@ export function ExerciseLibrary({
           </div>
         )}
       </div>
+
+      {filteredExercises.length > visibleCount && (
+        <div ref={sentinelRef} className="h-10 flex items-center justify-center mt-4">
+          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+        </div>
+      )}
 
       {/* Floating Action Bar */}
       {isSelectionMode && selectedExercises.length > 0 && (
