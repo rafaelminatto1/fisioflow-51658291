@@ -1,5 +1,8 @@
 /**
- * useVoiceScribe — gravação de voz → transcrição → texto livre da observação.
+ * useVoiceScribe (v1) — gravação de voz → transcrição → texto livre da observação.
+ *
+ * @deprecated S6.3 — use `useVoiceScribeV2` (`@cloudflare/voice` + DO streaming).
+ * Mantido enquanto `VITE_VOICE_SCRIBE_V2` não estiver totalmente cutovered.
  *
  * Fluxo:
  * 1. startRecording() — inicia captura via MediaRecorder
