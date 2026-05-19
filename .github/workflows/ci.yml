@@ -49,6 +49,7 @@ env:
   VITE_NEON_DATA_API_URL: ${{ vars.VITE_NEON_DATA_API_URL || '' }}
   VITE_GOOGLE_AI_API_KEY: ${{ secrets.VITE_GOOGLE_AI_API_KEY || '' }}
   VITE_STREAM_UPLOAD_ENABLED: ${{ vars.VITE_STREAM_UPLOAD_ENABLED || 'true' }}
+  VITE_VOICE_SCRIBE_V2: ${{ vars.VITE_VOICE_SCRIBE_V2 || 'false' }}
 
 jobs:
   quality-gate:
@@ -126,6 +127,7 @@ jobs:
           VITE_NEON_DATA_API_URL: ${{ env.VITE_NEON_DATA_API_URL }}
           VITE_GOOGLE_AI_API_KEY: ${{ secrets.VITE_GOOGLE_AI_API_KEY }}
           VITE_STREAM_UPLOAD_ENABLED: ${{ env.VITE_STREAM_UPLOAD_ENABLED }}
+          VITE_VOICE_SCRIBE_V2: ${{ env.VITE_VOICE_SCRIBE_V2 }}
 
       - name: Deploy Web
         run: pnpm --filter fisioflow-web exec wrangler deploy --config ../../wrangler.toml --env production
