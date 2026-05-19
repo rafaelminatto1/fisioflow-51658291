@@ -18,6 +18,7 @@ import { toast } from "@/hooks/use-toast";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { ExerciseLibraryModal } from "../exercises/ExerciseLibraryModal";
 import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { withImageParams } from "@/lib/storageProxy";
 
 interface HomeCareWidgetProps {
