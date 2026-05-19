@@ -643,6 +643,7 @@ crons = [
   "30 21 * * *", # Diário às 18:30 BRT - ClinicAgent daily summary
   "0 12 * * 1", # Segunda às 09:00 BRT - ClinicAgent missing patients alert
   "0 14 * * *", # Diário às 11:00 BRT - NPS auto-trigger para orgs com 7 dias de uso
+  "0 3 1 * *", # Dia 1 do mês 00:00 BRT (03:00 UTC) - S6.2 Pipeline R2 archive (sessions >90d → Iceberg)
 ]
 
 # ===== OBSERVABILIDADE =====
