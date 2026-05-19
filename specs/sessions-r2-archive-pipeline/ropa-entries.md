@@ -1,5 +1,17 @@
 # ROPA — Entradas a registrar (LGPD art. 37)
 
+> **⚡ Atalho prático**: [ropa-template.csv](./ropa-template.csv) já tem **20 atividades pré-preenchidas** cobrindo toda Activity Fisioterapia + FisioFlow, aderente ao template oficial da ANPD (Nota Técnica 33/2022).
+>
+> **Como importar no Google Sheets:**
+> 1. https://sheets.google.com → Arquivo → Importar → Upload → escolha `ropa-template.csv`
+> 2. Tipo de separador: vírgula
+> 3. "Substituir planilha" → Importar dados
+> 4. Revise/ajuste as 20 linhas conforme realidade da clínica
+>
+> O markdown abaixo mantém as 3 entradas detalhadas do S6.2 (arquivamento, consulta, logs) em formato narrativo para anexar ao parecer DPO.
+
+---
+
 Rascunho de 3 entradas para o Registro de Operações de Tratamento (ROPA) referentes
 ao S6.2 R2 Archive Pipeline. Conforme parecer DPO §9 ([dpo-approval.md](./dpo-approval.md)).
 
