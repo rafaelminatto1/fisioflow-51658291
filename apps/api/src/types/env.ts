@@ -292,6 +292,7 @@ export interface Env {
   OURA_CLIENT_ID?: string;
   OURA_CLIENT_SECRET?: string;
   WEARABLE_OAUTH_REDIRECT_BASE?: string; // e.g. https://app.moocafisio.com.br
+  WGER_API_TOKEN?: string;
 }
 
 // Helper type para Workflow binding

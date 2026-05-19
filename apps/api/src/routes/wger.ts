@@ -76,23 +76,21 @@ app.post("/enrich", async (c) => {
     };
 
     try {
-      const aiResponse = await callAI({
-        env,
-        provider: "gemini",
-        model: "gemini-1.5-flash",
+      const aiResponse = await callAI(env, {
+        task: "exercise",
         messages: [{ role: "user", content: prompt }],
         systemInstruction: "Retorne EXATAMENTE UM objeto JSON válido. Nada a mais.",
-        responseFormat: "json_object"
+        responseFormat: "json"
       });
-      if (aiResponse.text) {
-        enrichedData = JSON.parse(aiResponse.text);
+      if (aiResponse.content) {
+        enrichedData = JSON.parse(aiResponse.content);
       }
     } catch (aiError) {
       console.warn("Erro ao enriquecer com IA, usando default:", aiError);
     }
 
     // 4. Mapear para o formato do FisioFlow
-    const media = [];
+    const media: any[] = [];
     if (wgerData.images && wgerData.images.length > 0) {
       wgerData.images.forEach((img, i) => {
         media.push({

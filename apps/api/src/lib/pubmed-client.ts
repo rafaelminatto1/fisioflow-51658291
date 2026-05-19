@@ -17,7 +17,7 @@ export class PubMedClient {
       const searchRes = await fetch(searchUrl);
       if (!searchRes.ok) return [];
 
-      const searchData = await searchRes.json();
+      const searchData = (await searchRes.json()) as any;
       const ids: string[] = searchData?.esearchresult?.idlist || [];
 
       if (ids.length === 0) return [];
@@ -30,7 +30,7 @@ export class PubMedClient {
       const summaryRes = await fetch(summaryUrl);
       if (!summaryRes.ok) return [];
 
-      const summaryData = await summaryRes.json();
+      const summaryData = (await summaryRes.json()) as any;
       const results = summaryData?.result || {};
 
       const articles: PubMedArticle[] = ids.map((id) => ({
