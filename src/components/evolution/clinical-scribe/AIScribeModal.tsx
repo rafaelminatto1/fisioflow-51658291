@@ -18,6 +18,8 @@ import {
   FileText,
 } from "lucide-react";
 import { useVoiceScribe, type SoapFields } from "@/hooks/useVoiceScribe";
+import { VOICE_SCRIBE_V2_ENABLED } from "@/hooks/useVoiceScribeV2";
+import { AIScribeModalV2 } from "./AIScribeModalV2";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
@@ -28,7 +30,14 @@ interface AIScribeModalProps {
   patientId?: string;
 }
 
-export const AIScribeModal: React.FC<AIScribeModalProps> = ({
+export const AIScribeModal: React.FC<AIScribeModalProps> = (props) => {
+  if (VOICE_SCRIBE_V2_ENABLED) {
+    return <AIScribeModalV2 {...props} />;
+  }
+  return <AIScribeModalV1 {...props} />;
+};
+
+const AIScribeModalV1: React.FC<AIScribeModalProps> = ({
   open,
   onOpenChange,
   onApply,
