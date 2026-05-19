@@ -1,7 +1,7 @@
 # Parecer DPO — S6.2 R2 Archive Pipeline
 
 **Data**: 2026-05-19
-**DPO**: Rafael Minatto (sócio FisioFlow Ltda., DPO designado nos termos do art. 41 LGPD)
+**DPO**: Rafael Minatto (sócio Activity Fisioterapia, CNPJ 54.836.577/0001-67, DPO designado nos termos do art. 41 LGPD; canal contato@activityfisioterapia.com.br)
 **Escopo**: Arquivamento de `sessions`, `patients` (snapshot mínimo) e `appointments` para Cloudflare R2 (Iceberg/Parquet) após 90 dias do último registro, com retenção total de 20 anos.
 
 ## 1. Base legal e contexto regulatório

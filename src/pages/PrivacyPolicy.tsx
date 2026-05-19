@@ -22,15 +22,15 @@ export default function PrivacyPolicy() {
             <section>
               <h2 className="text-xl font-bold">1. Quem somos</h2>
               <p>
-                FisioFlow é uma plataforma de gestão clínica operada por Mooca Fisio Ltda.,
-                inscrita no CNPJ sob nº [a completar]. Atuamos como{" "}
+                FisioFlow é uma plataforma de gestão clínica operada por Activity Fisioterapia,
+                inscrita no CNPJ sob nº 54.836.577/0001-67. Atuamos como{" "}
                 <strong>controlador de dados pessoais</strong> nos termos do art. 5º, VI da Lei
                 Geral de Proteção de Dados — LGPD (Lei 13.709/2018).
               </p>
               <p>
                 <strong>Encarregado de Proteção de Dados (DPO)</strong>: Rafael Minatto
                 <br />
-                <strong>Canal de contato LGPD</strong>: dpo@moocafisio.com.br
+                <strong>Canal de contato LGPD</strong>: contato@activityfisioterapia.com.br
               </p>
             </section>
 
@@ -133,8 +133,8 @@ export default function PrivacyPolicy() {
               </p>
               <p>
                 Para exercer qualquer direito, envie e-mail para{" "}
-                <a href="mailto:dpo@moocafisio.com.br" className="text-blue-600 underline">
-                  dpo@moocafisio.com.br
+                <a href="mailto:contato@activityfisioterapia.com.br" className="text-blue-600 underline">
+                  contato@activityfisioterapia.com.br
                 </a>{" "}
                 ou abra solicitação no portal do paciente. Responderemos em até 15 dias úteis.
               </p>
@@ -191,8 +191,8 @@ export default function PrivacyPolicy() {
               <h2 className="text-xl font-bold">10. Contato</h2>
               <p>
                 <strong>Encarregado (DPO)</strong>: Rafael Minatto —{" "}
-                <a href="mailto:dpo@moocafisio.com.br" className="text-blue-600 underline">
-                  dpo@moocafisio.com.br
+                <a href="mailto:contato@activityfisioterapia.com.br" className="text-blue-600 underline">
+                  contato@activityfisioterapia.com.br
                 </a>
                 <br />
                 <strong>ANPD</strong>:{" "}
