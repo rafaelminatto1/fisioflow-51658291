@@ -27,11 +27,17 @@ export function useAutoSave<T>({
   const lastSavedRef = useRef<string>();
   const lastSaveTimeRef = useRef<number>(Date.now());
   const isSavingRef = useRef(false);
+  const needsSaveRef = useRef(false);
   const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
 
   const save = useCallback(
     async (dataToSave: T = data) => {
-      if (isSavingRef.current || !enabled) return;
+      if (!enabled) return;
+
+      if (isSavingRef.current) {
+        needsSaveRef.current = true;
+        return;
+      }
 
       const currentData = JSON.stringify(dataToSave);
 
@@ -43,7 +49,8 @@ export function useAutoSave<T>({
 
       try {
         isSavingRef.current = true;
-        await onSave(dataToSave);
+        needsSaveRef.current = false;
+        await onSaveRef.current(dataToSave);
         lastSavedRef.current = currentData;
         lastSaveTimeRef.current = Date.now();
         const now = new Date();
@@ -68,9 +75,12 @@ export function useAutoSave<T>({
         });
       } finally {
         isSavingRef.current = false;
+        if (needsSaveRef.current) {
+          save(dataRef.current);
+        }
       }
     },
-    [data, onSave, enabled, toast, showToasts],
+    [data, enabled, toast, showToasts],
   );
 
   // Keep refs for unmount save

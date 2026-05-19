@@ -24,6 +24,7 @@ import { motion } from "framer-motion";
 import { PageLayout } from "@/components/layout/PageLayout";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { PageContainer } from "@/components/layout/PageContainer";
+import { SmartDashboardWidgets } from "@/components/blocks/SmartDashboardWidgets";
 
 type ViewMode = "today" | "week";
 
@@ -68,6 +69,9 @@ export function SmartDashboardContent() {
         />
 
         <div className="space-y-8 animate-fade-in">
+          {/* AI Command Center Widgets */}
+          <SmartDashboardWidgets />
+
           {/* Medical Returns Alert - Refactored as a Premium Banner */}
           {medicalReturnsUpcoming.length > 0 && (
             <motion.div

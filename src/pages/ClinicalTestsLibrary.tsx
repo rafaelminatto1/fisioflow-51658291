@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect, useRef } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { AlertCircle, BookOpenCheck, HeartPulse, Plus, ScrollText } from "lucide-react";
 import { toast } from "sonner";
@@ -28,7 +28,31 @@ export default function ClinicalTestsLibrary() {
   const queryClient = useQueryClient();
   const [activeFilter, setActiveFilter] = useState("Todos");
   const [searchTerm, setSearchTerm] = useState("");
+  const [visibleCount, setVisibleCount] = useState(12);
   const [selectedTest, setSelectedTest] = useState<ClinicalTest | null>(null);
+
+  useEffect(() => {
+    setVisibleCount(12);
+  }, [searchTerm, activeFilter]);
+
+  const sentinelRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          setVisibleCount((prev) => prev + 12);
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    if (sentinelRef.current) {
+      observer.observe(sentinelRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, []);
   const [formModalOpen, setFormModalOpen] = useState(false);
   const [formMode, setFormMode] = useState<"create" | "edit">("create");
   const [testToEdit, setTestToEdit] = useState<ClinicalTest | null>(null);
@@ -288,13 +312,19 @@ export default function ClinicalTestsLibrary() {
 
             <ClinicalTestsGrid
               isLoading={isLoading}
-              tests={filteredTests}
+              tests={filteredTests.slice(0, visibleCount)}
               onSelectTest={setSelectedTest}
               onClearFilters={() => {
                 setSearchTerm("");
                 setActiveFilter("Todos");
               }}
             />
+
+            {filteredTests.length > visibleCount && (
+              <div ref={sentinelRef} className="h-10 flex items-center justify-center mt-4">
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-teal-600"></div>
+              </div>
+            )}
           </div>
         </main>
 

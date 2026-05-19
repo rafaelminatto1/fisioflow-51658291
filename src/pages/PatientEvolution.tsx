@@ -168,6 +168,33 @@ const PatientEvolution = () => {
             }))
         : next.exercises;
 
+      let parsedHomeExercises: any[] = [];
+      const hasHomeCare = next.homeCareExercises !== undefined;
+      if (hasHomeCare && typeof next.homeCareExercises === "string" && next.homeCareExercises.trim()) {
+        try {
+          const parsed = JSON.parse(next.homeCareExercises);
+          if (Array.isArray(parsed)) {
+            parsedHomeExercises = parsed.map((item: any) => ({
+              id: item.id || '',
+              name: item.name || '',
+              prescription: item.prescription || '',
+              notes: item.instructions || item.notes || '',
+            }));
+          }
+        } catch {
+          const lines = next.homeCareExercises.split("\n").filter((l) => l.trim());
+          parsedHomeExercises = lines.map((line, i) => {
+            const parts = line.split("-");
+            return {
+              id: `hc_${i}`,
+              name: parts[0]?.replace(/^\d+[.)]\s*/, "").trim() || "",
+              prescription: parts[1]?.trim() || "",
+              notes: "",
+            };
+          });
+        }
+      }
+
       state.setEvolutionData((prev) => ({
         ...prev,
         observacao: next.evolutionText || next.observations || prev.observacao,
@@ -175,6 +202,7 @@ const PatientEvolution = () => {
         procedures: procedures as any,
         exercises: exercises as any,
         measurements: (next.measurements as any) || prev.measurements,
+        homeExercises: hasHomeCare ? parsedHomeExercises : prev.homeExercises,
       }));
     },
     [state, draft],
@@ -284,7 +312,7 @@ const PatientEvolution = () => {
       }
     },
     delay: 5000,
-    enabled: state.autoSaveEnabled && !autoSaveMutation.isPending,
+    enabled: state.autoSaveEnabled,
   });
 
   // Shortcurs (atalhos focam blocos do novo layout único)

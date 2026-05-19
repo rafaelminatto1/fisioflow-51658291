@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { useAuth } from "./useAuth";
+import { getNeonAccessToken } from "@/lib/auth/neon-token";
 import { toast } from "sonner";
 
 export interface MediaItem {
@@ -16,7 +16,6 @@ export interface MediaItem {
 }
 
 export function useMediaGallery() {
-  const { getNeonAccessToken } = useAuth();
   const [media, setMedia] = useState<MediaItem[]>([]);
   const [folders, setFolders] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
@@ -113,7 +112,6 @@ export function useMediaGallery() {
 }
 
 export function useExerciseMedia(exerciseId?: string) {
-  const { getNeonAccessToken } = useAuth();
   const [attachments, setAttachments] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
 
