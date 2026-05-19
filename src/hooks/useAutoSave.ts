@@ -94,6 +94,13 @@ export function useAutoSave<T>({
     enabledRef.current = enabled;
   }, [data, onSave, enabled]);
 
+  // Inicializa lastSavedRef com o primeiro dado carregado quando enabled passa a ser true
+  useEffect(() => {
+    if (enabled && lastSavedRef.current === undefined) {
+      lastSavedRef.current = JSON.stringify(dataRef.current);
+    }
+  }, [enabled]);
+
   // Efeito para save por inatividade
   useEffect(() => {
     if (!enabled) return;

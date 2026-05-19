@@ -89,6 +89,6 @@ export const useDraftSoapRecordByAppointment = (
       return (res.data[0] as SoapRecord) ?? null;
     },
     enabled: !!patientId && !!appointmentId,
-    staleTime: 1000 * 60 * 2,
+    staleTime: 0,
   });
 };

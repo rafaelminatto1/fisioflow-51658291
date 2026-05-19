@@ -146,7 +146,7 @@ export function usePatientEvolutionState() {
   const { lastSession, isLoadingLastSession, suggestExerciseChanges } = useSessionExercises(
     patientId || "",
   );
-  const { data: draftByAppointment } = useDraftSoapRecordByAppointment(
+  const { data: draftByAppointment, isLoading: isDraftLoading } = useDraftSoapRecordByAppointment(
     patientId || "",
     appointmentId,
   );
@@ -240,6 +240,7 @@ export function usePatientEvolutionState() {
     patient,
     patientId,
     dataLoading,
+    isDraftLoading,
     appointmentError,
     patientError,
     activeTab,
