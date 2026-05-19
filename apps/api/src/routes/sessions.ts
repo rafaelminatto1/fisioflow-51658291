@@ -9,6 +9,7 @@ import { stripHtml } from "../lib/stripHtml";
 import { invalidatePatientCache } from "../lib/ai-context-cache";
 import { processClinicalEmbedding } from "../lib/ai/embeddings";
 import { triggerFiscalCycleNotification } from "../lib/fiscal/notificationTrigger";
+import { logClinicalAccess, extractClientIp } from "../lib/clinicalAccessLog";
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
@@ -297,6 +298,21 @@ app.get("/:id", requireAuth, async (c) => {
     .limit(1);
 
   if (!row) return c.json({ error: "Sessão não encontrada" }, 404);
+
+  c.executionCtx.waitUntil(
+    logClinicalAccess({
+      env: c.env,
+      organizationId: user.organizationId,
+      userId: user.uid,
+      resource: "sessions",
+      action: "read",
+      patientId: row.patientId ?? null,
+      sessionId: row.id,
+      requestIp: extractClientIp(c.req.raw.headers),
+      userAgent: c.req.header("User-Agent") ?? null,
+    }),
+  );
+
   return c.json({ data: rowToRecord(row) });
 });
 
@@ -455,6 +471,20 @@ app.post("/", requireAuth, async (c) => {
 
   c.executionCtx.waitUntil(invalidatePatientCache(c.env, patientId).catch(() => {}));
 
+  c.executionCtx.waitUntil(
+    logClinicalAccess({
+      env: c.env,
+      organizationId: user.organizationId,
+      userId: user.uid,
+      resource: "sessions",
+      action: "create",
+      patientId,
+      sessionId: newSession.id,
+      requestIp: extractClientIp(c.req.raw.headers),
+      userAgent: c.req.header("User-Agent") ?? null,
+    }),
+  );
+
   return c.json({ data: rowToRecord(newSession) }, 201);
 });
 
@@ -544,6 +574,21 @@ app.put("/:id", requireAuth, async (c) => {
     c.executionCtx.waitUntil(invalidatePatientCache(c.env, updated.patientId).catch(() => {}));
   }
 
+  c.executionCtx.waitUntil(
+    logClinicalAccess({
+      env: c.env,
+      organizationId: user.organizationId,
+      userId: user.uid,
+      resource: "sessions",
+      action: "update",
+      patientId: updated.patientId ?? null,
+      sessionId: updated.id,
+      requestIp: extractClientIp(c.req.raw.headers),
+      userAgent: c.req.header("User-Agent") ?? null,
+      metadata: { fields: Object.keys(updatePayload) },
+    }),
+  );
+
   return c.json({ data: rowToRecord(updated) });
 });
 
@@ -574,6 +619,20 @@ app.delete("/:id", requireAuth, async (c) => {
   if (existing.patientId) {
     c.executionCtx.waitUntil(invalidatePatientCache(c.env, existing.patientId).catch(() => {}));
   }
+
+  c.executionCtx.waitUntil(
+    logClinicalAccess({
+      env: c.env,
+      organizationId: user.organizationId,
+      userId: user.uid,
+      resource: "sessions",
+      action: "delete",
+      patientId: existing.patientId ?? null,
+      sessionId: id,
+      requestIp: extractClientIp(c.req.raw.headers),
+      userAgent: c.req.header("User-Agent") ?? null,
+    }),
+  );
 
   return c.json({ success: true });
 });

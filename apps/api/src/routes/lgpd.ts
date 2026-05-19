@@ -56,7 +56,7 @@ app.post("/data-deletion-request", zValidator("json", deletionRequestSchema), as
   }
 
   const sql = getRawSql(c.env, "write");
-  const [row] = await sql`
+  const result = await sql`
     INSERT INTO public.lgpd_deletion_requests
       (organization_id, patient_id, requester_email, requester_name, scope, status, response_summary, legal_basis, responded_at, request_origin)
     VALUES
@@ -65,7 +65,7 @@ app.post("/data-deletion-request", zValidator("json", deletionRequestSchema), as
     RETURNING id, status, response_summary, legal_basis, due_at, responded_at, created_at
   `;
 
-  return c.json({ data: row }, 201);
+  return c.json({ data: result.rows[0] }, 201);
 });
 
 /**
@@ -80,11 +80,11 @@ app.get("/data-deletion-requests", async (c) => {
   const status = c.req.query("status");
   const sql = getRawSql(c.env, "write");
 
-  const rows = status
+  const result = status
     ? await sql`SELECT * FROM public.lgpd_deletion_requests WHERE organization_id = ${orgId} AND status = ${status} ORDER BY created_at DESC LIMIT 200`
     : await sql`SELECT * FROM public.lgpd_deletion_requests WHERE organization_id = ${orgId} ORDER BY created_at DESC LIMIT 200`;
 
-  return c.json({ data: rows });
+  return c.json({ data: result.rows });
 });
 
 /**
@@ -100,7 +100,7 @@ app.get("/clinical-access-logs", async (c) => {
   const limit = Math.min(Number(c.req.query("limit") ?? 200), 1000);
   const sql = getRawSql(c.env, "write");
 
-  const rows = patientId
+  const result = patientId
     ? await sql`SELECT id, user_id, patient_id, session_id, resource, action, source, created_at, request_ip
                 FROM public.clinical_access_logs
                 WHERE organization_id = ${orgId} AND patient_id = ${patientId}
@@ -110,7 +110,7 @@ app.get("/clinical-access-logs", async (c) => {
                 WHERE organization_id = ${orgId}
                 ORDER BY created_at DESC LIMIT ${limit}`;
 
-  return c.json({ data: rows });
+  return c.json({ data: result.rows });
 });
 
 export { app as lgpdRoutes };
