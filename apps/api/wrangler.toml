@@ -163,6 +163,10 @@ class_name = "AssessmentLiveSession"
 name = "CLINIC_AGENT"
 class_name = "ClinicAgent"
 
+[[durable_objects.bindings]]
+name = "VOICE_SCRIBE_AGENT"
+class_name = "VoiceScribeAgent"
+
 
 # v1 adicionou OrganizationState (ver env.staging.migrations.v1 com new_classes)
 [[migrations]]
@@ -191,6 +195,10 @@ new_classes = ["AssessmentLiveSession"]
 [[migrations]]
 tag = "v8"
 new_classes = ["ClinicAgent"]
+
+[[migrations]]
+tag = "v9"
+new_sqlite_classes = ["VoiceScribeAgent"]
 
 # ===== AI & BROWSER RENDERING (Paid Plan) =====
 [ai]
@@ -390,7 +398,14 @@ bindings = [
   { name = "PATIENT_AGENT", class_name = "PatientAgent" },
   { name = "ASSESSMENT_LIVE_SESSION", class_name = "AssessmentLiveSession" },
   { name = "CLINIC_AGENT", class_name = "ClinicAgent" },
+  { name = "VOICE_SCRIBE_AGENT", class_name = "VoiceScribeAgent" },
 ]
+
+# Production DO migrations — top-level migrations não são herdadas por env.production.
+# v1..v8 já aplicadas em produção; v9 introduz VoiceScribeAgent (SQLite-backed).
+[[env.production.migrations]]
+tag = "v9"
+new_sqlite_classes = ["VoiceScribeAgent"]
 
 [env.production.ai]
 binding = "AI"
@@ -477,6 +492,7 @@ bindings = [
   { name = "PATIENT_AGENT", class_name = "PatientAgent" },
   { name = "ASSESSMENT_LIVE_SESSION", class_name = "AssessmentLiveSession" },
   { name = "CLINIC_AGENT", class_name = "ClinicAgent" },
+  { name = "VOICE_SCRIBE_AGENT", class_name = "VoiceScribeAgent" },
 ]
 
 [[env.staging.migrations]]
@@ -506,6 +522,10 @@ new_classes = ["AssessmentLiveSession"]
 [[env.staging.migrations]]
 tag = "v8"
 new_classes = ["ClinicAgent"]
+
+[[env.staging.migrations]]
+tag = "v9"
+new_sqlite_classes = ["VoiceScribeAgent"]
 
 [env.staging.ai]
 binding = "AI"

@@ -407,6 +407,7 @@ export { OrganizationState } from "./lib/realtime";
 export { PatientAgent } from "./agents/PatientAgent";
 export { AssessmentLiveSession } from "./agents/AssessmentLiveSession";
 export { ClinicAgent } from "./agents/ClinicAgent";
+export { VoiceScribeAgent } from "./agents/VoiceScribeAgent";
 export { SessionSummaryWorkflow } from "./workflows/sessionSummary";
 export {
   AppointmentReminderWorkflow,
