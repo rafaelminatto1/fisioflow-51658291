@@ -145,7 +145,9 @@ export async function runSessionArchive(
         archived_at: archiveTs,
       }));
 
-      await env.EVENTS_PIPELINE.send(events as unknown as Array<Record<string, unknown>>);
+      // Stream fisioflow_events_stream exige schema { value: json }; wrappa cada evento.
+      const wrapped = events.map((e) => ({ value: e }));
+      await env.EVENTS_PIPELINE.send(wrapped as unknown as Array<Record<string, unknown>>);
       rowsSent += events.length;
 
       const ids = batch.rows.map((r) => r.id);

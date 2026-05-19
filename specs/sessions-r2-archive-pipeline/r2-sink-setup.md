@@ -1,6 +1,27 @@
 # R2 Data Catalog Sink — Provisioning (S6.2 Fase 3)
 
-Esta doc descreve os comandos `wrangler` que **você precisa rodar manualmente** para o pipeline R2 archive funcionar de fato. O código do Worker já está pronto e envia eventos pra `EVENTS_PIPELINE`; falta apontar esse pipeline a um sink Iceberg.
+## Status atual (2026-05-19) — INFRA PROVISIONADA ✅
+
+| Recurso | Prod | Staging |
+|---|---|---|
+| Bucket R2 | `fisioflow-archive` | `fisioflow-archive-staging` |
+| Data Catalog | enabled | enabled |
+| Sink Iceberg | `fisioflow_sessions_archive_sink` | `fisioflow_sessions_archive_sink_staging` |
+| Pipeline (SQL `INSERT INTO sink SELECT value FROM stream`) | `fisioflow_archive_pipeline` | `fisioflow_archive_pipeline_staging` |
+| Tabela Iceberg destino | `fisioflow_archive.sessions_archive` | `fisioflow_archive.sessions_archive` |
+
+**Token usado** (Workers R2 Storage:Edit + Workers R2 Data Catalog:Write) — guardado no `.env.cloudflare.local` localmente (gitignored). Para refazer/rotacionar, criar novo no dashboard com essas 2 permissões Account-level.
+
+**Próximo passo**: deploy do Worker (`pnpm deploy:api:staging`) + validar:
+```bash
+curl -X POST https://fisioflow-api-staging.rafalegollas.workers.dev/api/admin/trigger-session-archive \
+  -H "Authorization: Bearer <JWT>"
+# espera resposta com status=success e rowsSent > 0
+```
+
+A doc abaixo é a referência caso precise refazer (DR, conta nova, etc.).
+
+---
 
 ## Pré-requisitos
 
