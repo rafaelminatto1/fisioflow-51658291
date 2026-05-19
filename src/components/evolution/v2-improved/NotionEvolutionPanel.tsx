@@ -333,8 +333,10 @@ export const NotionEvolutionPanel: React.FC<NotionEvolutionPanelProps> = ({
                     placeholder="Orientações gerais, encaminhamentos, cuidados e notas da sessão..."
                     value={data.evolutionText || data.observations}
                     onValueChange={(val) => {
-                      handleFieldChange("evolutionText", val);
-                      handleFieldChange("observations", val);
+                      // Atualiza ambos os campos em UMA chamada para evitar que
+                      // o segundo handleFieldChange descarte o primeiro por
+                      // closure stale (mesmo `data` em ambos).
+                      onChange({ ...data, evolutionText: val, observations: val });
                     }}
                     disabled={disabled}
                     showToolbar
