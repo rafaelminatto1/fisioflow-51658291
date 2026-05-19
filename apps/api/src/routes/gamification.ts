@@ -89,25 +89,38 @@ app.get("/profile/:patientId", requireAuth, async (c) => {
   const { patientId } = c.req.param();
   const pool = createPool(c.env);
 
-  const patientExists = await pool.query("SELECT 1 FROM patients WHERE id = $1", [patientId]);
-  if (!patientExists.rows.length) {
-    return c.json({ data: null, message: "Paciente não encontrado" });
+  try {
+    const patientExists = await pool.query("SELECT 1 FROM patients WHERE id = $1", [patientId]);
+    if (!patientExists.rows.length) {
+      return c.json({ data: null, message: "Paciente não encontrado" });
+    }
+  } catch {
+    return c.json({ data: null });
   }
 
-  let result = await pool.query("SELECT * FROM patient_gamification WHERE patient_id = $1", [
-    patientId,
-  ]);
+  let result;
+  try {
+    result = await pool.query("SELECT * FROM patient_gamification WHERE patient_id = $1", [
+      patientId,
+    ]);
+  } catch {
+    return c.json({ data: null });
+  }
 
   if (!result.rows.length) {
-    result = await pool.query(
-      `INSERT INTO patient_gamification
-         (patient_id, current_xp, level, current_streak, longest_streak,
-          total_points, last_activity_date, created_at, updated_at)
-       VALUES ($1, 0, 1, 0, 0, 0, NULL, NOW(), NOW())
-       RETURNING *`,
-      [patientId],
-    );
-    return c.json({ data: result.rows[0] });
+    try {
+      result = await pool.query(
+        `INSERT INTO patient_gamification
+           (patient_id, current_xp, level, current_streak, longest_streak,
+            total_points, last_activity_date, created_at, updated_at)
+         VALUES ($1, 0, 1, 0, 0, 0, NULL, NOW(), NOW())
+         RETURNING *`,
+        [patientId],
+      );
+      return c.json({ data: result.rows[0] });
+    } catch {
+      return c.json({ data: null });
+    }
   }
 
   const profile = result.rows[0];
@@ -120,12 +133,18 @@ app.get("/profile/:patientId", requireAuth, async (c) => {
     const diffDays = Math.floor((today.getTime() - lastDate.getTime()) / 86400000);
 
     if (diffDays > 1) {
-      const freezeResult = await pool.query(
-        `SELECT * FROM user_inventory
-         WHERE user_id = $1 AND item_code = 'streak_freeze' AND quantity > 0
-         LIMIT 1`,
-        [patientId],
-      );
+      let freezeResult: { rows: Array<{ id: string; quantity: number }> } = { rows: [] };
+      try {
+        freezeResult = await pool.query(
+          `SELECT * FROM user_inventory
+           WHERE user_id = $1 AND item_code = 'streak_freeze' AND quantity > 0
+           LIMIT 1`,
+          [patientId],
+        );
+      } catch {
+        // user_inventory may be missing or have a different schema; treat as no freeze.
+        return c.json({ data: profile });
+      }
 
       if (freezeResult.rows.length) {
         const freeze = freezeResult.rows[0];
