@@ -312,7 +312,7 @@ const PatientEvolution = () => {
       }
     },
     delay: 5000,
-    enabled: state.autoSaveEnabled,
+    enabled: state.autoSaveEnabled && !state.isDraftLoading && !state.dataLoading,
   });
 
   // Shortcurs (atalhos focam blocos do novo layout único)
