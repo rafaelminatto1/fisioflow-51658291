@@ -1,12 +1,12 @@
 import { Hono } from "hono";
 import { z } from "zod";
 import { zValidator } from "@hono/zod-validator";
-import { authMiddleware } from "../middleware/authMiddleware";
+import { requireAuth } from "../lib/auth";
 import type { Env } from "../types/env";
 
 const aiInsightsRoutes = new Hono<{ Bindings: Env }>();
 
-aiInsightsRoutes.use("*", authMiddleware);
+aiInsightsRoutes.use("*", requireAuth);
 
 // Endpoint for proactive dashboard widgets (Churn, Finance, Briefing)
 aiInsightsRoutes.get("/widgets", async (c) => {
