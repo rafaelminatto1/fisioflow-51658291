@@ -156,6 +156,12 @@ const inteligenciaMenuItems = [
   },
   {
     icon: Brain,
+    label: "AI Analytics Hub",
+    href: "/ai-hub",
+    badge: "NEW",
+  },
+  {
+    icon: Brain,
     label: "Hub de Inteligência",
     href: "/inteligencia",
   },

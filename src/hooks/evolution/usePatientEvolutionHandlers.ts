@@ -22,6 +22,7 @@ export function usePatientEvolutionHandlers({
   appointment,
   evolutionData,
   setEvolutionData,
+  setEvolutionV2Data,
   currentSoapRecordId,
   setCurrentSoapRecordId,
   previousEvolutions,
@@ -51,6 +52,18 @@ export function usePatientEvolutionHandlers({
 
   const handleCopyPreviousEvolution = useCallback(
     (evolution: any) => {
+      const homeExercisesList = Array.isArray(evolution.home_exercises)
+        ? evolution.home_exercises.map((item: any) => ({
+            id: item.id || '',
+            name: item.name || '',
+            prescription: item.prescription || '',
+            instructions: item.notes || item.instructions || '',
+          }))
+        : [];
+      const homeCareExercisesString = homeExercisesList.length > 0
+        ? JSON.stringify(homeExercisesList)
+        : "";
+
       setEvolutionData?.({
         observacao: evolution.observacao ?? "",
         painScale: evolution.pain_scale ?? null,
@@ -59,27 +72,75 @@ export function usePatientEvolutionHandlers({
         measurements: Array.isArray(evolution.measurements) ? evolution.measurements : [],
         homeExercises: Array.isArray(evolution.home_exercises) ? evolution.home_exercises : [],
       });
+
+      setEvolutionV2Data?.((prev: any) => ({
+        ...prev,
+        patientReport: "",
+        evolutionText: "",
+        observations: evolution.observacao ?? "",
+        procedures: Array.isArray(evolution.procedures) ? evolution.procedures : [],
+        exercises: Array.isArray(evolution.exercises) ? evolution.exercises : [],
+        measurements: Array.isArray(evolution.measurements) ? evolution.measurements : [],
+        homeCareExercises: homeCareExercisesString,
+        painLevel: evolution.pain_scale ?? undefined,
+        unifiedItems: undefined,
+      }));
+
       toast({
         title: "Evolução copiada",
         description: "Os dados da evolução anterior foram copiados.",
       });
     },
-    [setEvolutionData, toast],
+    [setEvolutionData, setEvolutionV2Data, toast],
   );
 
   const handleRestoreVersion = useCallback(
     (content: any) => {
       if (!setEvolutionData) return;
+
+      const rawHomeExercises = content.home_exercises ?? content.homeExercises;
+      const homeExercisesList = Array.isArray(rawHomeExercises)
+        ? rawHomeExercises.map((item: any) => ({
+            id: item.id || '',
+            name: item.name || '',
+            prescription: item.prescription || '',
+            instructions: item.notes || item.instructions || '',
+          }))
+        : [];
+      const homeCareExercisesString = homeExercisesList.length > 0
+        ? JSON.stringify(homeExercisesList)
+        : "";
+
+      const observacaoVal = content.observacao ?? content.body ?? "";
+      const painScaleVal = content.pain_scale ?? content.painScale ?? null;
+      const proceduresVal = Array.isArray(content.procedures) ? content.procedures : [];
+      const exercisesVal = Array.isArray(content.exercises) ? content.exercises : [];
+      const measurementsVal = Array.isArray(content.measurements) ? content.measurements : [];
+      const homeExercisesVal = Array.isArray(rawHomeExercises) ? rawHomeExercises : [];
+
       setEvolutionData({
-        observacao: content.observacao ?? content.body ?? "",
-        painScale: content.pain_scale ?? content.painScale ?? null,
-        procedures: Array.isArray(content.procedures) ? content.procedures : [],
-        exercises: Array.isArray(content.exercises) ? content.exercises : [],
-        measurements: Array.isArray(content.measurements) ? content.measurements : [],
-        homeExercises: Array.isArray(content.home_exercises) ? content.home_exercises : [],
+        observacao: observacaoVal,
+        painScale: painScaleVal,
+        procedures: proceduresVal,
+        exercises: exercisesVal,
+        measurements: measurementsVal,
+        homeExercises: homeExercisesVal,
       });
+
+      setEvolutionV2Data?.((prev: any) => ({
+        ...prev,
+        patientReport: "",
+        evolutionText: "",
+        observations: observacaoVal,
+        procedures: proceduresVal,
+        exercises: exercisesVal,
+        measurements: measurementsVal,
+        homeCareExercises: homeCareExercisesString,
+        painLevel: painScaleVal ?? undefined,
+        unifiedItems: undefined,
+      }));
     },
-    [setEvolutionData],
+    [setEvolutionData, setEvolutionV2Data],
   );
 
   const handleSave = async () => {

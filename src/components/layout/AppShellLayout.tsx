@@ -3,6 +3,7 @@ import { isPublicBootPath } from "./InfrastructureLayout";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 
 import { AuthenticatedAppShell } from "@/components/app/AuthenticatedAppShell";
+import { AICommandBar } from "./AICommandBar";
 
 /**
  * App Shell Layout
@@ -19,6 +20,7 @@ export default function AppShellLayout() {
   return (
     <ProtectedRoute>
       <AuthenticatedAppShell>
+        <AICommandBar />
         <Outlet />
       </AuthenticatedAppShell>
     </ProtectedRoute>

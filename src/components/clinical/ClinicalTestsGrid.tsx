@@ -77,7 +77,7 @@ export function ClinicalTestsGrid({
 
   return (
     <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
-      {tests.map((test) => {
+      {tests.map((test, index) => {
         const resourceCount = test.evidence_resources?.length ?? 0;
 
         return (
@@ -85,7 +85,8 @@ export function ClinicalTestsGrid({
             key={test.id}
             type="button"
             onClick={() => onSelectTest(test)}
-            className="group overflow-hidden rounded-[28px] border border-slate-200 bg-white text-left shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-slate-900/8"
+            className="group overflow-hidden rounded-[28px] border border-slate-200 bg-white text-left shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-slate-900/8 animate-in fade-in slide-in-from-bottom-4"
+            style={{ animationDelay: `${(index % 12) * 50}ms` }}
           >
             <div className="relative h-52 overflow-hidden border-b border-slate-100 bg-slate-50">
               {test.image_url || test.media_urls?.[0] ? (
