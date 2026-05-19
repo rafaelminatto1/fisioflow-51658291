@@ -2,7 +2,7 @@
 
 **Feature Branch**: `feat/sessions-r2-archive-pipeline`
 **Created**: 2026-05-18
-**Status**: Draft (S6.2) — **⚠️ requer parecer DPO antes de implementar**
+**Status**: Aprovado para implementação (S6.2) — parecer DPO em [dpo-approval.md](./dpo-approval.md), assinado 2026-05-19 por Rafael Minatto (DPO designado)
 
 ## Contexto
 

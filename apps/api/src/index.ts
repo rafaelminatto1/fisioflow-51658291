@@ -106,6 +106,7 @@ import { fisioBrainRoutes } from "./routes/fisiobrain";
 import { clinicMetricsRoutes } from "./routes/clinicMetrics";
 import { enterpriseRoutes } from "./routes/enterprise-bi";
 import { aiInsightsRoutes } from "./routes/ai-insights";
+import { lgpdRoutes } from "./routes/lgpd";
 import { verifyToken } from "./lib/auth";
 import { getRawSql } from "./lib/db";
 import { routeAgentRequest } from "agents";
@@ -375,6 +376,7 @@ const apiRoutes = [
   ["/api/v1/user", agendaAppearanceRoutes],
   ["/api/fisiobrain", fisioBrainRoutes],
   ["/api/ai-insights", aiInsightsRoutes],
+  ["/api/lgpd", lgpdRoutes],
   ["/api/clinic-metrics", clinicMetricsRoutes],
   ["/api/groups", groupsRoutes],
   ["/api/enterprise", enterpriseRoutes],
