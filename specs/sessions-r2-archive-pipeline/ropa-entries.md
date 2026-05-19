@@ -30,7 +30,7 @@ ao S6.2 R2 Archive Pipeline. Conforme parecer DPO §9 ([dpo-approval.md](./dpo-a
 | **Base legal** | LGPD art. 11, II, “f” (tutela da saúde) c/c art. 16, II (cumprimento de obrigação legal — Lei 13.787/2018 art. 6º e Resolução COFFITO 415/2012 art. 6º) |
 | **Categorias de titulares** | Pacientes |
 | **Dados pessoais tratados** | ID interno, ID do paciente, ID do fisioterapeuta, data, duração, status |
-| **Dados sensíveis** | Texto livre da observação clínica (SOAP/evolução), escala de dor (EVA), procedimentos realizados, exercícios prescritos, medições, exercícios domiciliares, anexos |
+| **Dados sensíveis** | Texto livre da observação clínica (evolução), escala de dor (EVA), procedimentos realizados, exercícios prescritos, medições, exercícios domiciliares, anexos |
 | **Fonte dos dados** | Coleta direta do paciente durante atendimento (registrada pelo fisioterapeuta) |
 | **Compartilhamento externo** | Cloudflare Inc. — operador de infraestrutura R2 Data Catalog (Iceberg) |
 | **Transferência internacional** | EUA (Cloudflare global network) — salvaguarda via MSA padrão CF com cláusulas LGPD/GDPR-equivalentes |

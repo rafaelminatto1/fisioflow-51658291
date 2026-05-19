@@ -68,6 +68,7 @@ export default [
       route("settings", "pages/Settings.tsx"),
       route("profile", "pages/Profile.tsx"),
       route("organization", "pages/OrganizationSettings.tsx"),
+      route("admin/lgpd/ropa", "pages/admin/ROPAViewer.tsx"),
     ]),
   ]),
 ] satisfies RouteConfig;
