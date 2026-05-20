@@ -21,6 +21,8 @@ vi.mock("../../lib/auth", () => ({
 
 vi.mock("../../lib/ai-native", () => ({
   generateEmbedding: vi.fn((...args) => mockGenerateEmbedding(...args)),
+  generateTurboSketch: vi.fn(() => "mock-sketch"),
+  parseTurboSketch: vi.fn(() => new Uint8Array([1, 2, 3])),
 }));
 
 async function buildApp() {
@@ -47,7 +49,6 @@ const BASE_ENV = { HYPERDRIVE: {}, ALLOWED_ORIGINS: "*", ENVIRONMENT: "developme
 describe("search routes", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockGenerateEmbedding.mockResolvedValue([0.1, 0.2, 0.3]);
   });
 
   it("GET /api/search rejects short queries", async () => {
@@ -60,74 +61,78 @@ describe("search routes", () => {
     });
   });
 
-  it("GET /api/search uses Vectorize when available", async () => {
-    const vectorQuery = vi.fn().mockResolvedValue({
-      matches: [
-        {
-          id: "exercise:abc",
-          score: 0.93,
-          metadata: {
-            content_type: "exercises",
-            name: "Ponte",
-            description: "Exercício de cadeia posterior",
+  it("GET /api/search uses AI Search when available", async () => {
+    const mockAiSearch = {
+      search: vi.fn().mockResolvedValue({
+        sources: [
+          {
+            id: "exercise:abc",
+            score: 0.93,
+            content: "Ponte - exercício pélvico",
+            metadata: {
+              source: "exercises",
+              name: "Ponte",
+            },
           },
-        },
-      ],
-    });
+        ],
+      }),
+    };
 
     const app = await buildApp();
     const res = await app.fetch(
       makeRequest("GET", "/api/search?q=lombalgia&type=exercises&limit=5"),
       {
         ...BASE_ENV,
-        CLINICAL_KNOWLEDGE: { query: vectorQuery },
+        AI_SEARCH: mockAiSearch,
       } as any,
     );
 
     expect(res.status).toBe(200);
-    await expect(res.json()).resolves.toMatchObject({
-      source: "vectorize",
-      query: "lombalgia",
-      results: [
-        {
-          id: "exercise:abc",
-          type: "exercises",
-          name: "Ponte",
-        },
-      ],
+    const data = await res.json() as any;
+    expect(data.source).toBe("ai_search");
+    expect(data.query).toBe("lombalgia");
+    expect(data.results).toHaveLength(1);
+    expect(data.results[0]).toMatchObject({
+      id: "exercise:abc",
+      score: 0.93,
+      content: "Ponte - exercício pélvico",
+      type: "exercises",
     });
-    expect(mockGenerateEmbedding).toHaveBeenCalledWith(expect.anything(), "lombalgia");
-    expect(vectorQuery).toHaveBeenCalledWith([0.1, 0.2, 0.3], {
-      topK: 5,
-      returnMetadata: "all",
-      filter: { content_type: "exercises" },
+    expect(mockAiSearch.search).toHaveBeenCalledWith({
+      messages: [
+        { role: "system", content: "You are a physiotherapy knowledge assistant." },
+        { role: "user", content: "lombalgia" },
+      ],
+      limit: 5,
+      filters: { source: "exercises" },
     });
   });
 
-  it("POST /api/search/index returns 503 when Vectorize is unavailable", async () => {
+  it("POST /api/search/index returns 200 (no-op compatible with frontend)", async () => {
     const app = await buildApp();
     const res = await app.fetch(
       makeRequest("POST", "/api/search/index", { type: "all" }),
       BASE_ENV as any,
     );
 
-    expect(res.status).toBe(503);
+    expect(res.status).toBe(200);
     await expect(res.json()).resolves.toMatchObject({
-      error: "Vectorize não configurado",
+      success: true,
+      indexed: 0,
     });
-    expect(mockQuery).not.toHaveBeenCalled();
   });
 
-  it("DELETE /api/search/index/:id returns 503 when Vectorize is unavailable", async () => {
+  it("DELETE /api/search/index/:id returns 200 (no-op compatible with frontend)", async () => {
     const app = await buildApp();
     const res = await app.fetch(
       makeRequest("DELETE", "/api/search/index/exercise:abc"),
       BASE_ENV as any,
     );
 
-    expect(res.status).toBe(503);
+    expect(res.status).toBe(200);
     await expect(res.json()).resolves.toMatchObject({
-      error: "Vectorize não configurado",
+      success: true,
+      deleted: true,
     });
   });
 });

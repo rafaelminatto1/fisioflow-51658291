@@ -128,8 +128,6 @@ export interface Env {
   // Analytics Engine (observabilidade em tempo real, free tier)
   ANALYTICS?: AnalyticsEngineDataset;
 
-  // Vectorize (busca semântica — exercícios, protocolos, wiki)
-  CLINICAL_KNOWLEDGE?: VectorizeIndex;
 
   // AI Search (RAG gerenciado — wiki, protocolos, artigos científicos)
   // Bound via [[ai_search]] binding = "AI_SEARCH" instance_name = "fisioflow-knowledge"
