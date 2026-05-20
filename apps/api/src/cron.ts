@@ -205,6 +205,18 @@ export async function handleScheduled(event: ScheduledEvent, env: Env, ctx: Exec
         break;
       }
 
+      case "0 3 1 * *": {
+        // UTC 03h dia 1 do mes — S6.2 Pipeline R2 archive: envia sessions >90d
+        // ao Pipeline (sink Iceberg fisioflow_archive.sessions_archive).
+        const { runSessionArchive } = await import("./lib/sessionArchive");
+        const result = await runSessionArchive(env, "cron");
+        console.log(
+          `[Cron] sessionArchive run=${result.runId} status=${result.status} eligible=${result.rowsEligible} sent=${result.rowsSent} marked=${result.rowsMarked}`,
+        );
+        if (result.errorMessage) console.error("[Cron] sessionArchive error:", result.errorMessage);
+        break;
+      }
+
       default:
         console.warn(`[Cron] No handler defined for schedule: ${cron}`);
     }

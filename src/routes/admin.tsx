@@ -38,6 +38,10 @@ const PendingUsersPage = lazy(
   () => import(/* webpackChunkName: "admin-pending" */ "@/pages/admin/PendingUsersPage"),
 );
 
+const ROPAViewer = lazy(
+  () => import(/* webpackChunkName: "admin-lgpd-ropa" */ "@/pages/admin/ROPAViewer"),
+);
+
 // Goals Admin
 const GoalProfileListPage = lazy(
   () => import(/* webpackChunkName: "goals-list" */ "@/pages/admin/goals/GoalProfileListPage"),
@@ -185,6 +189,14 @@ export const adminRoutes = (
       element={
         <ProtectedRoute allowedRoles={["admin", "fisioterapeuta"]}>
           <AdvancedAnalytics />
+        </ProtectedRoute>
+      }
+    />
+    <Route
+      path="/admin/lgpd/ropa"
+      element={
+        <ProtectedRoute allowedRoles={["admin"]}>
+          <ROPAViewer />
         </ProtectedRoute>
       }
     />
