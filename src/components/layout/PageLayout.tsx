@@ -8,6 +8,7 @@ interface PageLayoutProps {
   showFooter?: boolean;
   compactHeader?: boolean;
   fullWidth?: boolean;
+  noPadding?: boolean;
   className?: string;
 }
 
@@ -17,6 +18,7 @@ export function PageLayout({
   showFooter = true,
   compactHeader = false,
   fullWidth = false,
+  noPadding = false,
   className,
 }: PageLayoutProps) {
   return (
@@ -24,6 +26,7 @@ export function PageLayout({
       showBreadcrumbs={showBreadcrumbs}
       compactPadding={compactHeader}
       fullWidth={fullWidth}
+      noPadding={noPadding}
     >
       <div className={cn("flex-1 flex flex-col min-h-0", className)}>
         {children}

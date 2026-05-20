@@ -571,43 +571,38 @@ app.post("/vector-search", async (c) => {
   if (!query) return c.json({ error: "Query is required" }, 400);
 
   try {
-    // 1. Gerar embedding da pergunta via Gateway
-    const baseUrl = c.env.FISIOFLOW_AI_GATEWAY_URL
-      ? `${c.env.FISIOFLOW_AI_GATEWAY_URL}/google-ai-studio`
-      : "https://generativelanguage.googleapis.com";
-
-    const embedUrl = `${baseUrl}/v1beta/models/text-embedding-004:embedContent?key=${c.env.GOOGLE_AI_API_KEY}`;
-
-    const embedRes = await fetch(embedUrl, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${c.env.FISIOFLOW_AI_GATEWAY_TOKEN}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ content: { parts: [{ text: query }] } }),
-    });
-
-    const { embedding } = (await embedRes.json()) as any;
-
-    // 2. Buscar no Vectorize (se o binding existir)
-    // Nota: Como o binding é dinâmico em 2026, verificamos a existência
-    if (c.env.CLINICAL_KNOWLEDGE) {
-      const vectorRes = await c.env.CLINICAL_KNOWLEDGE.query(embedding.values, {
-        topK: 5,
-        filter: filter || {},
-        returnMetadata: "all",
+    // Tenta usar o AI Search (RAG gerenciado)
+    if (c.env.AI_SEARCH) {
+      const searchRes = await c.env.AI_SEARCH.search({
+        messages: [
+          { role: "system", content: "You are a physiotherapy knowledge assistant." },
+          { role: "user", content: query },
+        ],
+        limit: 5,
+        ...(filter ? { filters: filter } : {}),
       });
-      return c.json({ data: vectorRes.matches });
+
+      const matches = searchRes.sources.map((s) => ({
+        id: s.id,
+        score: s.score ?? 1,
+        metadata: {
+          ...s.metadata,
+          text: s.content,
+          title: s.filename,
+        },
+      }));
+
+      return c.json({ data: matches });
     }
 
-    return c.json({ data: [], message: "Vector index not initialized" });
+    return c.json({ data: [], message: "AI Search index not initialized" });
   } catch (error: any) {
     return c.json({ error: "Vector search failed", details: error.message }, 500);
   }
 });
 
 /**
- * Ingestão de Conhecimento (Wiki -> Vectorize)
+ * Ingestão de Conhecimento (Wiki -> AI Search)
  */
 app.post("/ingest", async (c) => {
   const { text, metadata } = await c.req.json();
@@ -615,42 +610,17 @@ app.post("/ingest", async (c) => {
   if (!text) return c.json({ error: "Text is required" }, 400);
 
   try {
-    // 1. Gerar embedding do conteúdo via Gateway
-    const baseUrl = c.env.FISIOFLOW_AI_GATEWAY_URL
-      ? `${c.env.FISIOFLOW_AI_GATEWAY_URL}/google-ai-studio`
-      : "https://generativelanguage.googleapis.com";
-
-    const embedUrl = `${baseUrl}/v1beta/models/text-embedding-004:embedContent?key=${c.env.GOOGLE_AI_API_KEY}`;
-
-    const embedRes = await fetch(embedUrl, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${c.env.FISIOFLOW_AI_GATEWAY_TOKEN}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ content: { parts: [{ text }] } }),
-    });
-
-    const { embedding } = (await embedRes.json()) as any;
-
-    // 2. Salvar no Vectorize
-    if (c.env.CLINICAL_KNOWLEDGE) {
-      const id = `wiki_${Date.now()}`;
-      await c.env.CLINICAL_KNOWLEDGE.upsert([
-        {
-          id,
-          values: embedding.values,
-          metadata: {
-            ...metadata,
-            text: text.substring(0, 1000), // Guardar amostra do texto para o chat
-            timestamp: new Date().toISOString(),
-          },
-        },
-      ]);
-      return c.json({ success: true, id });
+    if (c.env.AI_SEARCH) {
+      const filename = `wiki_${Date.now()}.md`;
+      const uploadRes = await c.env.AI_SEARCH.items.upload(
+        filename,
+        text,
+        { metadata: metadata || {} }
+      );
+      return c.json({ success: true, id: uploadRes.id });
     }
 
-    return c.json({ error: "Vector index not initialized" }, 500);
+    return c.json({ error: "AI Search index not initialized" }, 500);
   } catch (error: any) {
     return c.json({ error: "Ingestion failed", details: error.message }, 500);
   }
