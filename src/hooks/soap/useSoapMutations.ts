@@ -82,10 +82,14 @@ export const useUpdateEvolution = () => {
   });
 };
 
-export const useAutoSaveEvolution = () => {
+export const useAutoSaveEvolution = (scopeId?: string) => {
   const queryClient = useQueryClient();
 
   return useMutation({
+    // Serializa autosaves por escopo (uma evolução): impede que respostas
+    // out-of-order do servidor sobrescrevam dados mais recentes no cache.
+    // Ref: https://tanstack.com/query/v5/docs/framework/react/guides/mutations#mutation-scopes
+    scope: scopeId ? { id: scopeId } : undefined,
     mutationFn: async (data: CreateEvolutionData & { recordId?: string }) => {
       const { recordId, ...rest } = data;
       const res = await sessionsApi.autosave({

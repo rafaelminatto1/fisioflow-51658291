@@ -114,7 +114,12 @@ const PatientEvolution = () => {
   const { CommandPaletteComponent } = useCommandPalette();
   const state = usePatientEvolutionState();
   const handlers = usePatientEvolutionHandlers(state);
-  const autoSaveMutation = useAutoSaveSoapRecord();
+  // Scope serializa autosaves por evolução: evita races out-of-order entre
+  // mutations concorrentes (debounce + unmount + maxDelay forçado).
+  const autoSaveScopeId = state.appointmentId
+    ? `autosave-evolution-${state.appointmentId}`
+    : undefined;
+  const autoSaveMutation = useAutoSaveSoapRecord(autoSaveScopeId);
 
   // Status offline (queue de ações pendentes + navigator.onLine)
   const offline = useOfflineSync();
