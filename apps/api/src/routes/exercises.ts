@@ -536,34 +536,24 @@ app.post("/", requireAuth, async (c) => {
     (async () => {
       await invalidateListCache(c.env);
 
-      // Generate embedding and update Vectorize if binding exists
-      if (c.env.CLINICAL_KNOWLEDGE) {
-        try {
-          const categoryLabel = row.subcategory || row.categoryId || "";
-          const textToEmbed =
-            `${row.name} ${row.description || ""} ${categoryLabel} ${row.bodyParts?.join(" ") || ""}`.trim();
-          const vector = await generateEmbedding(c.env, textToEmbed);
-          if (vector.length > 0) {
-            const sketch = generateTurboSketch(vector);
-            await c.env.CLINICAL_KNOWLEDGE.upsert([
-              {
-                id: row.id,
-                values: vector,
-                metadata: { name: row.name, category: categoryLabel, sketch },
-              },
-            ]);
-            // Mantemos apenas o sketch no Postgres para busca híbrida local.
-            // O vetor bruto continua no Vectorize, evitando mismatch de dimensão da coluna legada.
-            await db
-              .update(exercises)
-              .set({
-                embeddingSketch: sketch,
-              })
-              .where(eq(exercises.id, row.id));
-          }
-        } catch (e) {
-          console.error("[Exercises] Failed to update semantic index:", e);
+      // Generate embedding and update database sketch
+      try {
+        const categoryLabel = row.subcategory || row.categoryId || "";
+        const textToEmbed =
+          `${row.name} ${row.description || ""} ${categoryLabel} ${row.bodyParts?.join(" ") || ""}`.trim();
+        const vector = await generateEmbedding(c.env, textToEmbed);
+        if (vector.length > 0) {
+          const sketch = generateTurboSketch(vector);
+          // Mantemos apenas o sketch no Postgres para busca híbrida local.
+          await db
+            .update(exercises)
+            .set({
+              embeddingSketch: sketch,
+            })
+            .where(eq(exercises.id, row.id));
         }
+      } catch (e) {
+        console.error("[Exercises] Failed to update semantic index sketch:", e);
       }
     })(),
   );
@@ -621,31 +611,22 @@ app.put("/:id", requireAuth, async (c) => {
       await invalidateListCache(c.env);
 
       // Only regenerate if relevant fields changed (simple check for now)
-      if (c.env.CLINICAL_KNOWLEDGE) {
-        try {
-          const categoryLabel = row.subcategory || row.categoryId || "";
-          const textToEmbed =
-            `${row.name} ${row.description || ""} ${categoryLabel} ${row.bodyParts?.join(" ") || ""}`.trim();
-          const vector = await generateEmbedding(c.env, textToEmbed);
-          if (vector.length > 0) {
-            const sketch = generateTurboSketch(vector);
-            await c.env.CLINICAL_KNOWLEDGE.upsert([
-              {
-                id: row.id,
-                values: vector,
-                metadata: { name: row.name, category: categoryLabel, sketch },
-              },
-            ]);
-            await db
-              .update(exercises)
-              .set({
-                embeddingSketch: sketch,
-              })
-              .where(eq(exercises.id, row.id));
-          }
-        } catch (e) {
-          console.error("[Exercises] Failed to update semantic index on update:", e);
+      try {
+        const categoryLabel = row.subcategory || row.categoryId || "";
+        const textToEmbed =
+          `${row.name} ${row.description || ""} ${categoryLabel} ${row.bodyParts?.join(" ") || ""}`.trim();
+        const vector = await generateEmbedding(c.env, textToEmbed);
+        if (vector.length > 0) {
+          const sketch = generateTurboSketch(vector);
+          await db
+            .update(exercises)
+            .set({
+              embeddingSketch: sketch,
+            })
+            .where(eq(exercises.id, row.id));
         }
+      } catch (e) {
+        console.error("[Exercises] Failed to update semantic index sketch on update:", e);
       }
     })(),
   );
@@ -683,17 +664,20 @@ app.get("/search/semantic", async (c) => {
 
   const limitNum = Math.min(50, Math.max(1, parseInt(limit)));
 
-  // 1. If Vectorize is available, use it
-  if (c.env.CLINICAL_KNOWLEDGE) {
+  // 1. If AI Search is available, use it (modern RAG/semantic search)
+  if (c.env.AI_SEARCH) {
     try {
-      const vector = await generateEmbedding(c.env, q);
-      const matches = await c.env.CLINICAL_KNOWLEDGE.query(vector, {
+      const aiResults = await c.env.AI_SEARCH.search({
+        messages: [
+          { role: "system", content: "You are a physiotherapy exercise search assistant." },
+          { role: "user", content: q },
+        ],
         limit: limitNum,
-        topK: limitNum, // Vectorize query options
-      } as any);
+        filters: { source: "exercises" },
+      });
 
-      if (matches.matches && matches.matches.length > 0) {
-        const matchedIds = matches.matches.map((m) => m.id);
+      if (aiResults.sources && aiResults.sources.length > 0) {
+        const matchedIds = aiResults.sources.map((s) => s.id);
         const db = await createDb(c.env);
         const rows = await db
           .select()
@@ -702,10 +686,10 @@ app.get("/search/semantic", async (c) => {
 
         // Sort rows by the original match order (relevance)
         const sortedRows = matchedIds.map((id) => rows.find((r) => r.id === id)).filter(Boolean);
-        return c.json({ data: sortedRows, meta: { method: "vector" } });
+        return c.json({ data: sortedRows, meta: { method: "ai_search" } });
       }
     } catch (e) {
-      console.error("[Exercises] Semantic search error:", e);
+      console.error("[Exercises] AI Search semantic search error:", e);
       // Fallback below
     }
   }
