@@ -93,6 +93,7 @@ import { staffSchedulesRoutes } from "./routes/staffSchedules";
 import { announcementsRoutes } from "./routes/announcements";
 import { adminSeedTemplatesRoutes } from "./routes/admin/seed-templates";
 import { triggerDigitalTwinRoutes } from "./routes/admin/trigger-digital-twin";
+import { triggerSessionArchiveRoutes } from "./routes/admin/trigger-session-archive";
 import { dlqReplayRoutes } from "./routes/admin/dlq-replay";
 import { searchRoutes } from "./routes/search";
 import { reportsPdfRoutes } from "./routes/reportsPdf";
@@ -275,6 +276,7 @@ app.get("/api/health/schema", async (c) => {
 // ===== ROTAS =====
 const apiRoutes = [
   ["/api/ai-trigger-dt", triggerDigitalTwinRoutes],
+  ["/api/admin/trigger-session-archive", triggerSessionArchiveRoutes],
   ["/api/ai-clinical-search", aiClinicalSearchRoutes],
   ["/api/exercises", exercisesRoutes],
   ["/api/protocols", protocolsRoutes],
