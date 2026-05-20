@@ -217,6 +217,17 @@ export async function handleScheduled(event: ScheduledEvent, env: Env, ctx: Exec
         break;
       }
 
+      case "0 9 1,15 * *": {
+        // UTC 09h dia 1 e 15 — S8 SLO biweekly report.
+        const { runSloBiweeklyReport } = await import("./lib/sloReport");
+        const result = await runSloBiweeklyReport(env);
+        console.log(
+          `[Cron] sloBiweekly requests=${result.requests} uptimePct=${result.uptimePct} p95=${result.p95_ms} adminsNotified=${result.adminsNotified}`,
+        );
+        if (result.error) console.error("[Cron] sloBiweekly error:", result.error);
+        break;
+      }
+
       default:
         console.warn(`[Cron] No handler defined for schedule: ${cron}`);
     }
