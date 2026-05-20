@@ -329,10 +329,17 @@ const PatientEvolution = () => {
 
       if (!hasContent && !hasPain) return;
 
+      // Idempotency key por tentativa: protege contra retries da fila offline
+      // e refresh durante mutation in-flight. Server (KV TTL 60s) dedupe.
+      const idempotencyKey =
+        typeof crypto !== "undefined" && crypto.randomUUID
+          ? crypto.randomUUID()
+          : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
       const record = await autoSaveMutation.mutateAsync({
         patient_id: state.patientId,
         appointment_id: state.appointmentId,
         recordId: state.currentSoapRecordId,
+        idempotencyKey,
         ...data,
       } as any);
 

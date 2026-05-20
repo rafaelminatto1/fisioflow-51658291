@@ -160,6 +160,40 @@ app.post("/autosave", requireAuth, async (c) => {
   const patientId = String(body.patient_id ?? "").trim();
   if (!patientId) return c.json({ error: "patient_id é obrigatório" }, 400);
 
+  // Idempotency: cliente envia Idempotency-Key (header ou body.idempotency_key).
+  // Se a mesma key foi processada nos últimos 60s, retorna resposta cacheada.
+  // Protege contra retries da fila offline e refresh durante mutation in-flight.
+  // Ref: specs/autosave-hardening-p2-p3/spec.md US1
+  const idemKey =
+    c.req.header("Idempotency-Key") ||
+    (typeof body.idempotency_key === "string" ? body.idempotency_key : "");
+  const idemCacheKey = idemKey
+    ? `idem:autosave:${user.organizationId}:${idemKey}`
+    : "";
+  if (idemCacheKey && c.env.FISIOFLOW_CONFIG) {
+    try {
+      const cached = await c.env.FISIOFLOW_CONFIG.get(idemCacheKey);
+      if (cached) {
+        return c.json(JSON.parse(cached));
+      }
+    } catch {
+      // KV falhou — segue sem dedupe (degradação graciosa)
+    }
+  }
+
+  const cacheResponse = async (data: any, status: 200 | 201 = 200) => {
+    if (idemCacheKey && c.env.FISIOFLOW_CONFIG) {
+      try {
+        await c.env.FISIOFLOW_CONFIG.put(idemCacheKey, JSON.stringify(data), {
+          expirationTtl: 60,
+        });
+      } catch {
+        /* best-effort */
+      }
+    }
+    return c.json(data, status);
+  };
+
   const observacao = typeof body.observacao === "string" ? body.observacao : undefined;
   const painScale = toPainScale(body.pain_scale);
   const procedures = toJsonArray(body.procedures);
@@ -217,13 +251,25 @@ app.post("/autosave", requireAuth, async (c) => {
       .returning();
 
     if (res.length) {
-      return c.json({ data: { ...rowToRecord(res[0]), isNew: false } });
+      return cacheResponse({ data: { ...rowToRecord(res[0]), isNew: false } });
     }
 
     if ((body as any).version !== undefined) {
-      const check = await db.select({ id: sessions.id }).from(sessions).where(withTenant(sessions, user.organizationId, eq(sessions.id, idToUpdate)));
+      const check = await db
+        .select()
+        .from(sessions)
+        .where(withTenant(sessions, user.organizationId, eq(sessions.id, idToUpdate)))
+        .limit(1);
       if (check.length > 0) {
-        return c.json({ error: "Conflito de versão. O registro foi atualizado por outro usuário." }, 409);
+        // Não cacheia 409 — cliente precisa fazer merge novo
+        return c.json(
+          {
+            error: "conflict",
+            message: "Esta evolução foi editada em outro dispositivo.",
+            current: rowToRecord(check[0]),
+          },
+          409,
+        );
       }
     }
   }
@@ -249,7 +295,7 @@ app.post("/autosave", requireAuth, async (c) => {
         .returning();
 
       if (res.length) {
-        return c.json({ data: { ...rowToRecord(res[0]), isNew: false } });
+        return cacheResponse({ data: { ...rowToRecord(res[0]), isNew: false } });
       }
     }
   }
@@ -280,7 +326,7 @@ app.post("/autosave", requireAuth, async (c) => {
 
   const [newSession] = await db.insert(sessions).values(insertValues).returning();
 
-  return c.json({ data: { ...rowToRecord(newSession), isNew: true } }, 201);
+  return cacheResponse({ data: { ...rowToRecord(newSession), isNew: true } }, 201);
 });
 
 // ===== DETALHE =====
