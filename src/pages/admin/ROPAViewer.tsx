@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
-import { Download, FileText, Search, Filter } from "lucide-react";
+import { Download, FileText, Search, Filter, Archive, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { request } from "@/api/v2/base";
+import { toast } from "sonner";
 import {
   Card,
   CardContent,
@@ -84,6 +86,33 @@ export default function ROPAViewer() {
   const [q, setQ] = useState("");
   const [areaFilter, setAreaFilter] = useState<string>("all");
   const [selected, setSelected] = useState<Row | null>(null);
+  const [archiving, setArchiving] = useState(false);
+
+  const handleTriggerArchive = async () => {
+    setArchiving(true);
+    try {
+      const res = await request<{ data: { runId: number; rowsEligible: number; rowsSent: number; rowsMarked: number; status: string; errorMessage?: string } }>(
+        "/api/admin/trigger-session-archive",
+        { method: "POST", body: JSON.stringify({}) },
+      );
+      const r = res.data;
+      if (r.status === "success") {
+        toast.success(
+          `Pipeline OK — run #${r.runId}: ${r.rowsMarked} sessões arquivadas (${r.rowsEligible} elegíveis)`,
+        );
+      } else if (r.status === "partial") {
+        toast.warning(
+          `Pipeline parcial — run #${r.runId}: ${r.rowsMarked}/${r.rowsSent} marcadas`,
+        );
+      } else {
+        toast.error(`Pipeline falhou: ${r.errorMessage ?? "erro desconhecido"}`);
+      }
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Falha ao disparar trigger");
+    } finally {
+      setArchiving(false);
+    }
+  };
 
   useEffect(() => {
     fetch("/ropa-fisioflow.csv")
@@ -129,11 +158,25 @@ export default function ROPAViewer() {
               LGPD art. 37 · Activity Fisioterapia · {rows.length} atividades mapeadas
             </p>
           </div>
-          <Button asChild variant="outline">
-            <a href="/ropa-fisioflow.csv" download="ropa-activity-fisioterapia.csv">
-              <Download className="w-4 h-4 mr-2" /> Baixar CSV
-            </a>
-          </Button>
+          <div className="flex flex-col sm:flex-row gap-2">
+            <Button asChild variant="outline">
+              <a href="/ropa-fisioflow.csv" download="ropa-activity-fisioterapia.csv">
+                <Download className="w-4 h-4 mr-2" /> Baixar CSV
+              </a>
+            </Button>
+            <Button
+              onClick={handleTriggerArchive}
+              disabled={archiving}
+              className="bg-blue-600 hover:bg-blue-700"
+            >
+              {archiving ? (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              ) : (
+                <Archive className="w-4 h-4 mr-2" />
+              )}
+              {archiving ? "Arquivando…" : "Disparar archive R2 (manual)"}
+            </Button>
+          </div>
         </header>
 
         <Card>
