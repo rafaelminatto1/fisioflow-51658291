@@ -223,6 +223,19 @@ const PatientEvolution = () => {
     const saved = draft.readDraft();
     if (!saved) return;
 
+    // Não restaurar drafts locais vazios — eles podem sobrescrever os dados
+    // que acabaram de chegar do servidor. Só restauramos se o draft local
+    // tiver conteúdo real (texto, itens, medições ou dor).
+    const savedHasContent =
+      !!(saved.unifiedItems?.length ?? 0) ||
+      !!(saved.procedures?.length ?? 0) ||
+      !!(saved.exercises?.length ?? 0) ||
+      !!(saved.measurements?.length ?? 0) ||
+      !!(saved.painLevel != null) ||
+      (saved.evolutionText || saved.observations || "").trim().length > 0;
+
+    if (!savedHasContent) return;
+
     const current = state.evolutionV2Data;
     const currentIsEmpty =
       !(current?.unifiedItems?.length ?? 0) &&
