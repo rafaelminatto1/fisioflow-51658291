@@ -130,8 +130,19 @@ const PatientEvolution = () => {
   const handleEvolutionV2Change = useCallback(
     (next: EvolutionV2Data) => {
       state.setEvolutionV2Data(next);
-      // Persiste o rascunho local a cada mudança
-      draft.writeDraft(next);
+      // Persiste o rascunho local somente quando há conteúdo real — evita que
+      // renders iniciais com state vazio (antes da hidratação do servidor)
+      // sobrescrevam o draft local válido.
+      const nextHasContent =
+        !!(next.unifiedItems?.length ?? 0) ||
+        !!(next.procedures?.length ?? 0) ||
+        !!(next.exercises?.length ?? 0) ||
+        !!(next.measurements?.length ?? 0) ||
+        !!(next.painLevel != null) ||
+        (next.evolutionText || next.observations || "").trim().length > 0;
+      if (nextHasContent) {
+        draft.writeDraft(next);
+      }
 
       const orderedItems = [...(next.unifiedItems || [])].sort(
         (a, b) => (a.order ?? 0) - (b.order ?? 0),
