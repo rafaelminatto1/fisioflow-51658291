@@ -10,7 +10,6 @@ import { scoreContacts } from "./jobs/leadScoring";
 import { notifyPatientAppointment } from "./lib/push";
 import { RTMAlertsService } from "./services/rtm-alerts";
 import { syncAutoRAGContent } from "./routes/aiSearch";
-import { syncVectorizeIndex } from "./lib/vectorizeSync";
 
 /**
  * Cloudflare Worker Cron Trigger Handler
@@ -110,16 +109,7 @@ export async function handleScheduled(event: ScheduledEvent, env: Env, ctx: Exec
             .catch((err) => console.error("[Cron] AutoRAG sync failed:", err));
         }
 
-        // Vectorize: gera embeddings e popula o índice fisioflow-clinical para busca por similaridade
-        if (env.CLINICAL_KNOWLEDGE) {
-          syncVectorizeIndex(env)
-            .then(({ indexed, skipped }) => {
-              console.log(
-                `[Cron] Vectorize sync complete — indexed: ${indexed}, skipped: ${skipped}`,
-              );
-            })
-            .catch((err) => console.error("[Cron] Vectorize sync failed:", err));
-        }
+
         break;
       }
 

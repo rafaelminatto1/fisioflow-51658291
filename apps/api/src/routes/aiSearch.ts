@@ -203,260 +203,147 @@ aiSearchApp.post("/sync", requireAuth, async (c) => {
   }
 });
 
-// ─── Busca Semântica de Exercícios com Dicionário Clínico (Vectorize) ────────
+// ─── Busca Semântica de Exercícios com Dicionário Clínico (AI Search) ────────
 
 aiSearchApp.get("/exercises", requireAuth, async (c) => {
-  if (!c.env.CLINICAL_KNOWLEDGE) return c.json({ error: "Vectorize não configurado" }, 503);
+  if (!c.env.AI_SEARCH) return c.json({ error: "AI Search não configurado" }, 503);
   const query = c.req.query("q");
   if (!query) return c.json({ error: "query é obrigatória" }, 400);
 
   try {
-    // 0. Expansão de Dicionário Clínico (Ontologia via Llama 3)
-    let expandedQuery = query;
-    try {
-      const expansion: any = await c.env.AI.run(WORKERS_AI_MODELS.llama_3_1_8b, {
-        messages: [
-          {
-            role: "system",
-            content:
-              "Você é um dicionário clínico de fisioterapia. Dada uma queixa, termo leigo ou objetivo, retorne uma lista de 3 a 5 termos clínicos, sinônimos técnicos, patologias ou músculos/articulações relacionados, separados por vírgula. Não escreva frases, introduções ou explicações. APENAS os termos.",
-          },
-          { role: "user", content: query },
-        ],
-      });
-      if (expansion.response) {
-        expandedQuery = `${query}, ${expansion.response}`;
-        console.log(`[Vectorize] Query expanded from "${query}" to "${expandedQuery}"`);
-      }
-    } catch (e) {
-      console.warn("[Vectorize] Dictionary expansion failed, using raw query", e);
-    }
-
-    // 1. Gerar embedding para a busca expandida
-    const aiResponse: any = await c.env.AI.run("@cf/baai/bge-m3", {
-      text: [expandedQuery],
-    });
-    const vector = aiResponse.data[0];
-
-    // 2. Buscar no Vectorize
-    const matches = await c.env.CLINICAL_KNOWLEDGE.query(vector, {
-      topK: 10,
-      namespace: "exercises",
-      returnMetadata: true,
+    const aiResults = await c.env.AI_SEARCH.search({
+      messages: [
+        { role: "system", content: "Você é um dicionário clínico de fisioterapia. Ajude a encontrar exercícios clínicos relevantes." },
+        { role: "user", content: query },
+      ],
+      limit: 10,
+      filters: { source: "exercises" },
     });
 
     return c.json({
       query,
-      expandedQuery,
-      data: matches.matches.map((m: any) => ({
-        id: m.id,
-        score: m.score,
-        ...m.metadata,
+      data: aiResults.sources.map((s) => ({
+        id: s.id,
+        score: s.score ?? 1,
+        name: s.filename,
+        ...s.metadata,
       })),
     });
   } catch (error: any) {
-    console.error("[Vectorize] Search error:", error);
+    console.error("[AI Search] Search error:", error);
     return c.json({ error: "Falha na busca semântica" }, 500);
   }
 });
 
-// ─── Recomendador Automático de Condutas (Vectorize) ─────────────────────────
+// ─── Recomendador Automático de Condutas (AI Search) ─────────────────────────
 
 aiSearchApp.get("/recommend", requireAuth, async (c) => {
-  if (!c.env.CLINICAL_KNOWLEDGE) return c.json({ error: "Vectorize não configurado" }, 503);
+  if (!c.env.AI_SEARCH) return c.json({ error: "AI Search não configurado" }, 503);
   const condition = c.req.query("condition");
   if (!condition) return c.json({ error: "A condição clínica (condition) é obrigatória" }, 400);
 
   try {
-    console.log(`[Vectorize] Generating clinical recommendations for: "${condition}"`);
+    console.log(`[AI Search] Generating clinical recommendations for: "${condition}"`);
 
-    // 1. Gerar embedding para a condição clínica
-    const aiResponse: any = await c.env.AI.run("@cf/baai/bge-m3", {
-      text: [condition],
-    });
-    const vector = aiResponse.data[0];
-
-    // 2. Buscar Protocolos na Wiki
-    const wikiMatches = await c.env.CLINICAL_KNOWLEDGE.query(vector, {
-      topK: 3,
-      namespace: "wiki",
-      returnMetadata: true,
-    });
-
-    // 3. Buscar Exercícios Sugeridos
-    const exerciseMatches = await c.env.CLINICAL_KNOWLEDGE.query(vector, {
-      topK: 5,
-      namespace: "exercises",
-      returnMetadata: true,
-    });
+    // Busca Wiki e Exercícios em paralelo no AI Search
+    const [wikiRes, exerciseRes] = await Promise.all([
+      c.env.AI_SEARCH.search({
+        messages: [
+          { role: "system", content: "Find clinical protocols and guides for this condition." },
+          { role: "user", content: condition },
+        ],
+        limit: 3,
+        filters: { source: "wiki" },
+      }),
+      c.env.AI_SEARCH.search({
+        messages: [
+          { role: "system", content: "Find relevant therapeutic exercises for this condition." },
+          { role: "user", content: condition },
+        ],
+        limit: 5,
+        filters: { source: "exercises" },
+      }),
+    ]);
 
     return c.json({
       condition,
       recommendations: {
-        protocols: wikiMatches.matches.map((m: any) => ({
-          id: m.id,
-          score: m.score,
-          ...m.metadata,
+        protocols: wikiRes.sources.map((s) => ({
+          id: s.id,
+          score: s.score ?? 1,
+          title: s.filename,
+          ...s.metadata,
         })),
-        exercises: exerciseMatches.matches.map((m: any) => ({
-          id: m.id,
-          score: m.score,
-          ...m.metadata,
+        exercises: exerciseRes.sources.map((s) => ({
+          id: s.id,
+          score: s.score ?? 1,
+          name: s.filename,
+          ...s.metadata,
         })),
       },
     });
   } catch (error: any) {
-    console.error("[Vectorize] Recommend error:", error);
+    console.error("[AI Search] Recommend error:", error);
     return c.json({ error: "Falha ao gerar recomendações clínicas" }, 500);
   }
 });
 
-// ─── Sync Exercícios → Vectorize ─────────────────────────────────────────────
+// ─── Sync Exercícios → AI Search (No-op) ─────────────────────────────────────
 
 aiSearchApp.post("/exercises/sync", requireAuth, async (c) => {
-  if (!c.env.CLINICAL_KNOWLEDGE) return c.json({ error: "Vectorize não configurado" }, 503);
-  const pool = createPool(c.env);
-
-  try {
-    const res = await pool.query(`
-      SELECT id, name, description, instructions, muscles_primary, muscles_secondary, body_parts
-      FROM exercises 
-      WHERE is_public = true AND deleted_at IS NULL
-    `);
-
-    console.log(`[Vectorize] Syncing ${res.rows.length} exercises...`);
-
-    for (const row of res.rows) {
-      const textToEmbed = `
-        Nome: ${row.name}
-        Descrição: ${row.description || ""}
-        Instruções: ${row.instructions || ""}
-        Músculos: ${(row.muscles_primary || []).join(", ")}
-        Regiões: ${(row.body_parts || []).join(", ")}
-      `.trim();
-
-      const aiResponse: any = await c.env.AI.run("@cf/baai/bge-m3", {
-        text: [textToEmbed],
-      });
-
-      await c.env.CLINICAL_KNOWLEDGE.upsert([
-        {
-          id: row.id,
-          values: aiResponse.data[0],
-          namespace: "exercises",
-          metadata: {
-            name: row.name,
-            category: "exercise",
-          },
-        },
-      ]);
-    }
-
-    return c.json({ success: true, count: res.rows.length });
-  } catch (error: any) {
-    console.error("[Vectorize] Sync error:", error);
-    return c.json({ error: "Falha na sincronização de vetores" }, 500);
-  }
+  return c.json({ success: true, count: 0, message: "AI Search sync is managed automatically via R2 sync." });
 });
 
-// ─── Sync Wiki → Vectorize ───────────────────────────────────────────────────
+// ─── Sync Wiki → AI Search (No-op) ───────────────────────────────────────────
 
 aiSearchApp.post("/wiki/sync", requireAuth, async (c) => {
-  if (!c.env.CLINICAL_KNOWLEDGE) return c.json({ error: "Vectorize não configurado" }, 503);
-  const pool = createPool(c.env);
-
-  try {
-    const res = await pool.query(`
-      SELECT wp.id, wp.title, wp.content, wc.name as category
-      FROM wiki_pages wp
-      LEFT JOIN wiki_categories wc ON wc.id = wp.category_id
-      WHERE wp.is_public = true AND wp.deleted_at IS NULL
-    `);
-
-    console.log(`[Vectorize] Syncing ${res.rows.length} wiki pages...`);
-
-    for (const row of res.rows) {
-      const textToEmbed = `
-        Título: ${row.title}
-        Categoria: ${row.category || "Geral"}
-        Conteúdo: ${row.content || ""}
-      `
-        .trim()
-        .substring(0, 8000);
-
-      const aiResponse: any = await c.env.AI.run("@cf/baai/bge-m3", {
-        text: [textToEmbed],
-      });
-
-      await c.env.CLINICAL_KNOWLEDGE.upsert([
-        {
-          id: row.id,
-          values: aiResponse.data[0],
-          namespace: "wiki",
-          metadata: {
-            title: row.title,
-            category: row.category || "wiki",
-          },
-        },
-      ]);
-    }
-
-    return c.json({ success: true, count: res.rows.length });
-  } catch (error: any) {
-    console.error("[Vectorize] Wiki Sync error:", error);
-    return c.json({ error: "Falha na sincronização da wiki no Vectorize" }, 500);
-  }
+  return c.json({ success: true, count: 0, message: "AI Search sync is managed automatically via R2 sync." });
 });
 
-// ─── Busca Unificada Global (Omnisearch) ───────────────────────────────────
+// ─── Busca Unificada Global (Omnisearch via AI Search) ───────────────────────
 
 aiSearchApp.get("/unified", requireAuth, async (c) => {
   const query = c.req.query("q");
   if (!query || query.length < 3) return c.json({ data: [] });
-  if (!c.env.CLINICAL_KNOWLEDGE) return c.json({ error: "Vectorize não configurado" }, 503);
+  if (!c.env.AI_SEARCH) return c.json({ error: "AI Search não configurado" }, 503);
 
   try {
     const { generateEmbedding } = await import("../lib/ai-native");
     const vector = await generateEmbedding(c.env, query);
 
-    // 1. Buscar Exercícios e Wiki no Vectorize em paralelo
-    const [exerciseMatches, wikiMatches] = await Promise.all([
-      c.env.CLINICAL_KNOWLEDGE.query(vector, {
-        topK: 5,
-        namespace: "exercises",
-        returnMetadata: true,
+    // Buscar no AI Search e Neon
+    const [aiSearchRes, patientMatches] = await Promise.all([
+      c.env.AI_SEARCH.search({
+        messages: [
+          { role: "system", content: "You are a clinical unified search assistant." },
+          { role: "user", content: query },
+        ],
+        limit: 8,
       }),
-      c.env.CLINICAL_KNOWLEDGE.query(vector, { topK: 3, namespace: "wiki", returnMetadata: true }),
+      (async () => {
+        const { getRawSql } = await import("../lib/db");
+        const sql = getRawSql(c.env, "read");
+        const user = c.get("user");
+        return await sql`
+          SELECT 
+            p.id, p.full_name as name, ce.content_summary as summary,
+            1 - (ce.embedding <=> ${vector}::vector) as similarity
+          FROM clinical_embeddings ce
+          JOIN patients p ON p.id = ce.patient_id
+          WHERE ce.organization_id = ${user.organizationId}::uuid
+          ORDER BY ce.embedding <=> ${vector}::vector
+          LIMIT 3
+        `;
+      })(),
     ]);
 
-    // 2. Buscar Pacientes Similares no Neon (pgvector)
-    const sql = getRawSql(c.env, "read");
-    const user = c.get("user");
-
-    const patientMatches = await sql`
-      SELECT 
-        p.id, p.full_name as name, ce.content_summary as summary,
-        1 - (ce.embedding <=> ${vector}::vector) as similarity
-      FROM clinical_embeddings ce
-      JOIN patients p ON p.id = ce.patient_id
-      WHERE ce.organization_id = ${user.organizationId}::uuid
-      ORDER BY ce.embedding <=> ${vector}::vector
-      LIMIT 3
-    `;
-
     const results = [
-      ...exerciseMatches.matches.map((m: any) => ({
-        id: m.id,
-        type: "exercise",
-        title: m.metadata.name,
-        score: m.score,
-      })),
-      ...wikiMatches.matches.map((m: any) => ({
-        id: m.id,
-        type: "wiki",
-        title: m.metadata.title,
-        category: m.metadata.category,
-        score: m.score,
+      ...aiSearchRes.sources.map((s) => ({
+        id: s.id,
+        type: s.metadata?.source === "wiki" ? "wiki" : "exercise",
+        title: s.filename,
+        category: (s.metadata?.category as string) || "Geral",
+        score: s.score ?? 1,
       })),
       ...patientMatches.rows.map((p: any) => ({
         id: p.id,
@@ -479,15 +366,14 @@ aiSearchApp.get("/unified", requireAuth, async (c) => {
 
 /**
  * GET /api/ai-search/education
- * Retorna dicas de educação em saúde personalizadas baseadas no contexto do paciente.
+ * Retorna dicas de educação em saúde personalizadas baseadas no contexto do paciente via AI Search.
  */
 aiSearchApp.get("/education", async (c) => {
   const patientId = c.req.query("patientId");
   if (!patientId) return c.json({ error: "patientId é obrigatório" }, 400);
-  if (!c.env.CLINICAL_KNOWLEDGE) return c.json({ error: "Vectorize não configurado" }, 503);
+  if (!c.env.AI_SEARCH) return c.json({ error: "AI Search não configurado" }, 503);
 
   try {
-    const _pool = createPool(c.env);
     const { getRawSql } = await import("../lib/db");
     const sql = getRawSql(c.env, "read");
 
@@ -497,19 +383,20 @@ aiSearchApp.get("/education", async (c) => {
     const patient = patientRes.rows[0];
     if (!patient) return c.json({ error: "Paciente não encontrado" }, 404);
 
-    // 2. Buscar conteúdo relevante na Wiki via Vectorize
-    const { generateEmbedding } = await import("../lib/ai-native");
+    // 2. Buscar conteúdo relevante na Wiki via AI Search
     const query = `dicas de saúde e orientações para ${patient.condition} ${patient.diagnosis}`;
-    const vector = await generateEmbedding(c.env, query);
-
-    const wikiMatches = await c.env.CLINICAL_KNOWLEDGE.query(vector, {
-      topK: 2,
-      namespace: "wiki",
-      returnMetadata: true,
+    
+    const wikiRes = await c.env.AI_SEARCH.search({
+      messages: [
+        { role: "system", content: "Find clinical guides and advice for patients." },
+        { role: "user", content: query },
+      ],
+      limit: 2,
+      filters: { source: "wiki" },
     });
 
-    const context = wikiMatches.matches
-      .map((m: any) => m.metadata.text || m.metadata.title)
+    const context = wikiRes.sources
+      .map((s) => s.content)
       .join("\n\n");
 
     // 3. Usar IA para sintetizar dicas curtas e motivadoras
@@ -548,30 +435,23 @@ export async function surgicalSyncWiki(
   env: Env,
   row: { id: string; title: string; content: string; category: string },
 ) {
-  if (!env.CLINICAL_KNOWLEDGE) return;
+  if (!env.AI_SEARCH) return;
 
-  const textToEmbed = `
-    Título: ${row.title}
-    Categoria: ${row.category || "Geral"}
-    Conteúdo: ${row.content || ""}
-  `
-    .trim()
-    .substring(0, 8000);
-
-  const { generateEmbedding } = await import("../lib/ai-native");
-  const vector = await generateEmbedding(env, textToEmbed);
-
-  await env.CLINICAL_KNOWLEDGE.upsert([
-    {
-      id: row.id,
-      values: vector,
-      namespace: "wiki",
+  const docMarkdown = buildWikiDoc(row);
+  const filename = `wiki_${row.id}.md`;
+  
+  try {
+    await env.AI_SEARCH.items.upload(filename, docMarkdown, {
       metadata: {
+        source: "wiki",
+        category: row.category || "Geral",
         title: row.title,
-        category: row.category || "wiki",
       },
-    },
-  ]);
+    });
+    console.log(`[AI Search] Surgically synchronized wiki page: ${row.title}`);
+  } catch (err) {
+    console.error("[AI Search] Surgical wiki sync failed:", err);
+  }
 }
 
 function getCfApi(env: Env) {

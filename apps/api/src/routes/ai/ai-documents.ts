@@ -230,26 +230,16 @@ app.post("/document/rag-ingest", async (c) => {
     return c.json({ error: "markdown é obrigatório" }, 400);
   }
 
-  if (!c.env.CLINICAL_KNOWLEDGE) {
-    return c.json({ error: "Vectorize não configurado" }, 503);
+  if (!c.env.AI_SEARCH) {
+    return c.json({ error: "AI Search não configurado" }, 503);
   }
 
   try {
-    const { generateEmbedding } = await import("../../lib/ai-native");
-    const chunks = splitIntoChunks(markdown, 500);
-    const vectors = [];
-
-    for (const chunk of chunks) {
-      const embedding = await generateEmbedding(c.env, chunk);
-      vectors.push({
-        id: `${documentId}-${vectors.length}`,
-        values: embedding,
-        metadata: { ...metadata, documentId, chunk: String(vectors.length), text: chunk },
-      });
-    }
-
-    await c.env.CLINICAL_KNOWLEDGE.upsert(vectors);
-    return c.json({ success: true, documentId, chunks: vectors.length });
+    const filename = `${documentId}.md`;
+    await c.env.AI_SEARCH.items.upload(filename, markdown, {
+      metadata: { ...metadata, documentId },
+    });
+    return c.json({ success: true, documentId, chunks: 1 });
   } catch (error: any) {
     return c.json({ error: "Falha na ingestão RAG", details: error.message }, 500);
   }
@@ -264,26 +254,25 @@ app.post("/document/chat", async (c) => {
     return c.json({ error: "documentId e message são obrigatórios" }, 400);
   }
 
-  if (!c.env.CLINICAL_KNOWLEDGE) {
-    return c.json({ error: "Vectorize não configurado" }, 503);
+  if (!c.env.AI_SEARCH) {
+    return c.json({ error: "AI Search não configurado" }, 503);
   }
 
   try {
-    const { generateEmbedding, runThinkingModel } = await import("../../lib/ai-native");
+    const { runThinkingModel } = await import("../../lib/ai-native");
 
-    // 1. Gerar embedding da pergunta
-    const queryVector = await generateEmbedding(c.env, message);
-
-    // 2. Buscar chunks relevantes no Vectorize
-    // Filtramos por documentId via metadata (Vectorize suporta filtragem básica)
-    const matches = await c.env.CLINICAL_KNOWLEDGE.query(queryVector, {
-      topK: 5,
-      returnMetadata: true,
-      filter: { documentId: { $eq: documentId } },
+    // 1. Buscar chunks relevantes no AI Search com filtro de documentId
+    const searchRes = await c.env.AI_SEARCH.search({
+      messages: [
+        { role: "system", content: "You are a helpful assistant analyzing clinical documents." },
+        { role: "user", content: message },
+      ],
+      limit: 5,
+      filters: { documentId },
     });
 
-    const context = matches.matches
-      .map((m: any) => m.metadata?.text)
+    const context = searchRes.sources
+      .map((s) => s.content)
       .filter(Boolean)
       .join("\n\n");
 
@@ -318,7 +307,7 @@ app.post("/document/chat", async (c) => {
     return c.json({
       success: true,
       answer: result.text,
-      sources: matches.matches.length,
+      sources: searchRes.sources.length,
     });
   } catch (error: any) {
     console.error("[AI/DocChat] Error:", error);

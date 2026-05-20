@@ -25,19 +25,19 @@ export class AIConciergeService {
     message: string,
     history: any[] = [],
   ): Promise<ConciergeResponse> {
-    // 1. Semantic Context: Search Wiki for clinic info if relevant
     let clinicalContext = "";
     try {
-      const vector = await generateEmbedding(env, message);
-      const wikiMatches = await env.CLINICAL_KNOWLEDGE?.query(vector, {
-        topK: 2,
-        namespace: "wiki",
-        returnMetadata: true,
-      });
-
-      clinicalContext = (wikiMatches?.matches ?? [])
-        .map((m: any) => `${m.metadata.title}: ${m.metadata.text || ""}`)
-        .join("\n\n");
+      if (env.AI_SEARCH) {
+        const aiResults = await env.AI_SEARCH.search({
+          messages: [
+            { role: "system", content: "You are a physiotherapy knowledge assistant." },
+            { role: "user", content: message },
+          ],
+          limit: 2,
+          filters: { source: "wiki" },
+        });
+        clinicalContext = aiResults.sources.map((s) => `${s.filename}: ${s.content}`).join("\n\n");
+      }
     } catch (e) {
       console.warn("[AI Concierge] Wiki search failed:", e);
     }
