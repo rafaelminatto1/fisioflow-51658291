@@ -42,6 +42,10 @@ const ROPAViewer = lazy(
   () => import(/* webpackChunkName: "admin-lgpd-ropa" */ "@/pages/admin/ROPAViewer"),
 );
 
+const SystemHealthPage = lazy(
+  () => import(/* webpackChunkName: "admin-system-health" */ "@/pages/admin/SystemHealthPage"),
+);
+
 // Goals Admin
 const GoalProfileListPage = lazy(
   () => import(/* webpackChunkName: "goals-list" */ "@/pages/admin/goals/GoalProfileListPage"),
@@ -197,6 +201,14 @@ export const adminRoutes = (
       element={
         <ProtectedRoute allowedRoles={["admin"]}>
           <ROPAViewer />
+        </ProtectedRoute>
+      }
+    />
+    <Route
+      path="/admin/system-health"
+      element={
+        <ProtectedRoute allowedRoles={["admin"]}>
+          <SystemHealthPage />
         </ProtectedRoute>
       }
     />
