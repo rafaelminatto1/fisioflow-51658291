@@ -53,31 +53,37 @@ async function getPatientIdFromUser(c: any, pool: any): Promise<string | null> {
   if (!user?.uid) return null;
 
   const result = await pool.query(
-    "SELECT id FROM patients WHERE user_id = $1 OR email = $2 LIMIT 1",
-    [user.uid, user.email],
+    `SELECT id
+     FROM patients
+     WHERE organization_id = $3
+       AND (user_id = $1 OR email = $2)
+     LIMIT 1`,
+    [user.uid, user.email, user.organizationId],
   );
   return result.rows[0]?.id || null;
 }
 
 // ─── GET /profile ────────────────────────────────────────────────────────────
 app.get("/profile", requireAuth, async (c) => {
+  const user = c.get("user");
   const pool = await createPool(c.env);
   const patientId = await getPatientIdFromUser(c, pool);
   if (!patientId) return c.json({ data: null, error: "Paciente não encontrado" }, 404);
 
   // Reutiliza a lógica do perfil
-  let result = await pool.query("SELECT * FROM patient_gamification WHERE patient_id = $1", [
-    patientId,
-  ]);
+  let result = await pool.query(
+    "SELECT * FROM patient_gamification WHERE patient_id = $1 AND organization_id = $2",
+    [patientId, user.organizationId],
+  );
 
   if (!result.rows.length) {
     result = await pool.query(
       `INSERT INTO patient_gamification
-         (patient_id, current_xp, level, current_streak, longest_streak,
+         (organization_id, patient_id, current_xp, level, current_streak, longest_streak,
           total_points, last_activity_date, created_at, updated_at)
-       VALUES ($1, 0, 1, 0, 0, 0, NULL, NOW(), NOW())
+       VALUES ($1, $2, 0, 1, 0, 0, 0, NULL, NOW(), NOW())
        RETURNING *`,
-      [patientId],
+      [user.organizationId, patientId],
     );
   }
   return c.json({ data: result.rows[0] });
@@ -86,11 +92,15 @@ app.get("/profile", requireAuth, async (c) => {
 // ─── GET /profile/:patientId ─────────────────────────────────────────────────
 
 app.get("/profile/:patientId", requireAuth, async (c) => {
+  const user = c.get("user");
   const { patientId } = c.req.param();
   const pool = createPool(c.env);
 
   try {
-    const patientExists = await pool.query("SELECT 1 FROM patients WHERE id = $1", [patientId]);
+    const patientExists = await pool.query(
+      "SELECT 1 FROM patients WHERE id = $1 AND organization_id = $2",
+      [patientId, user.organizationId],
+    );
     if (!patientExists.rows.length) {
       return c.json({ data: null, message: "Paciente não encontrado" });
     }
@@ -100,9 +110,10 @@ app.get("/profile/:patientId", requireAuth, async (c) => {
 
   let result;
   try {
-    result = await pool.query("SELECT * FROM patient_gamification WHERE patient_id = $1", [
-      patientId,
-    ]);
+    result = await pool.query(
+      "SELECT * FROM patient_gamification WHERE patient_id = $1 AND organization_id = $2",
+      [patientId, user.organizationId],
+    );
   } catch {
     return c.json({ data: null });
   }
@@ -111,11 +122,11 @@ app.get("/profile/:patientId", requireAuth, async (c) => {
     try {
       result = await pool.query(
         `INSERT INTO patient_gamification
-           (patient_id, current_xp, level, current_streak, longest_streak,
+           (organization_id, patient_id, current_xp, level, current_streak, longest_streak,
             total_points, last_activity_date, created_at, updated_at)
-         VALUES ($1, 0, 1, 0, 0, 0, NULL, NOW(), NOW())
+         VALUES ($1, $2, 0, 1, 0, 0, 0, NULL, NOW(), NOW())
          RETURNING *`,
-        [patientId],
+        [user.organizationId, patientId],
       );
       return c.json({ data: result.rows[0] });
     } catch {
@@ -160,19 +171,20 @@ app.get("/profile/:patientId", requireAuth, async (c) => {
         const yesterday = new Date();
         yesterday.setDate(yesterday.getDate() - 1);
         await pool.query(
-          "UPDATE patient_gamification SET last_activity_date = $1, updated_at = NOW() WHERE patient_id = $2",
-          [yesterday.toISOString(), patientId],
+          "UPDATE patient_gamification SET last_activity_date = $1, updated_at = NOW() WHERE patient_id = $2 AND organization_id = $3",
+          [yesterday.toISOString(), patientId, user.organizationId],
         );
       } else {
         await pool.query(
-          "UPDATE patient_gamification SET current_streak = 0, updated_at = NOW() WHERE patient_id = $1",
-          [patientId],
+          "UPDATE patient_gamification SET current_streak = 0, updated_at = NOW() WHERE patient_id = $1 AND organization_id = $2",
+          [patientId, user.organizationId],
         );
       }
 
-      result = await pool.query("SELECT * FROM patient_gamification WHERE patient_id = $1", [
-        patientId,
-      ]);
+      result = await pool.query(
+        "SELECT * FROM patient_gamification WHERE patient_id = $1 AND organization_id = $2",
+        [patientId, user.organizationId],
+      );
     }
   }
 
@@ -197,17 +209,18 @@ app.post("/award-xp", requireAuth, async (c) => {
   }
 
   // Get or create profile
-  let profResult = await pool.query("SELECT * FROM patient_gamification WHERE patient_id = $1", [
-    patientId,
-  ]);
+  let profResult = await pool.query(
+    "SELECT * FROM patient_gamification WHERE patient_id = $1 AND organization_id = $2",
+    [patientId, user.organizationId],
+  );
   if (!profResult.rows.length) {
     profResult = await pool.query(
       `INSERT INTO patient_gamification
-         (patient_id, current_xp, level, current_streak, longest_streak,
+         (organization_id, patient_id, current_xp, level, current_streak, longest_streak,
           total_points, last_activity_date, created_at, updated_at)
-       VALUES ($1, 0, 1, 0, 0, 0, NOW(), NOW(), NOW())
+       VALUES ($1, $2, 0, 1, 0, 0, 0, NOW(), NOW(), NOW())
        RETURNING *`,
-      [patientId],
+      [user.organizationId, patientId],
     );
   }
 
@@ -237,9 +250,9 @@ app.post("/award-xp", requireAuth, async (c) => {
 
   // Transaction: log + update profile atomically
   await pool.query(
-    `INSERT INTO xp_transactions (patient_id, amount, reason, description, created_at, created_by)
-     VALUES ($1, $2, $3, $4, NOW(), $5)`,
-    [patientId, amount, reason, description ?? null, user.uid],
+    `INSERT INTO xp_transactions (organization_id, patient_id, amount, reason, description, created_at, created_by)
+     VALUES ($1, $2, $3, $4, $5, NOW(), $6)`,
+    [user.organizationId, patientId, amount, reason, description ?? null, user.uid],
   );
 
   const updated = await pool.query(
@@ -247,9 +260,9 @@ app.post("/award-xp", requireAuth, async (c) => {
      SET total_points = $1, current_xp = $1, level = $2,
          current_streak = $3, longest_streak = $4,
          last_activity_date = NOW(), updated_at = NOW()
-     WHERE patient_id = $5
+     WHERE patient_id = $5 AND organization_id = $6
      RETURNING *`,
-    [newTotalPoints, level, newStreak, longestStreak, patientId],
+    [newTotalPoints, level, newStreak, longestStreak, patientId, user.organizationId],
   );
 
   return c.json({
@@ -262,13 +275,14 @@ app.post("/award-xp", requireAuth, async (c) => {
 
 // ─── GET /quests ─────────────────────────────────────────────────────────────
 app.get("/quests", requireAuth, async (c) => {
+  const user = c.get("user");
   const pool = await createPool(c.env);
   const patientId = await getPatientIdFromUser(c, pool);
   if (!patientId) return c.json({ data: [] });
   const today = new Date().toISOString().split("T")[0];
   const result = await pool.query(
-    "SELECT * FROM daily_quests WHERE patient_id = $1 AND date = $2 LIMIT 1",
-    [patientId, today],
+    "SELECT * FROM daily_quests WHERE patient_id = $1 AND date = $2 AND organization_id = $3 LIMIT 1",
+    [patientId, today, user.organizationId],
   );
   return c.json({ data: result.rows[0] || [] });
 });
@@ -276,6 +290,7 @@ app.get("/quests", requireAuth, async (c) => {
 // ─── GET /quests/:patientId ───────────────────────────────────────────────────
 
 app.get("/quests/:patientId", requireAuth, async (c) => {
+  const user = c.get("user");
   const pool = await createPool(c.env);
   const { patientId } = c.req.param();
 
@@ -285,18 +300,24 @@ app.get("/quests/:patientId", requireAuth, async (c) => {
   }
 
   // Verify patient exists to avoid FK violations on later inserts
-  const patientExists = await pool.query("SELECT 1 FROM patients WHERE id = $1", [patientId]);
+  const patientExists = await pool.query(
+    "SELECT 1 FROM patients WHERE id = $1 AND organization_id = $2",
+    [patientId, user.organizationId],
+  );
   if (!patientExists.rows.length) {
-    return c.json({ data: { quests: [], completed_count: 0 }, message: "Paciente não encontrado" });
+    return c.json({
+      data: { quests: [], completed_count: 0 },
+      message: "Paciente não encontrado",
+    });
   }
 
   const today = new Date().toISOString().split("T")[0];
 
   const result = await pool.query(
     `SELECT * FROM daily_quests
-     WHERE patient_id = $1 AND date = $2
+     WHERE patient_id = $1 AND date = $2 AND organization_id = $3
      LIMIT 1`,
-    [patientId, today],
+    [patientId, today, user.organizationId],
   );
 
   if (result.rows.length) {
@@ -332,10 +353,10 @@ app.get("/quests/:patientId", requireAuth, async (c) => {
   ];
 
   const created = await pool.query(
-    `INSERT INTO daily_quests (patient_id, date, quests_data, completed_count, created_at, updated_at)
-     VALUES ($1, $2, $3, 0, NOW(), NOW())
+    `INSERT INTO daily_quests (organization_id, patient_id, date, quests_data, completed_count, created_at, updated_at)
+     VALUES ($1, $2, $3, $4, 0, NOW(), NOW())
      RETURNING *`,
-    [patientId, today, JSON.stringify(defaultQuests)],
+    [user.organizationId, patientId, today, JSON.stringify(defaultQuests)],
   );
 
   return c.json({ data: created.rows[0] });
@@ -344,14 +365,15 @@ app.get("/quests/:patientId", requireAuth, async (c) => {
 // ─── PUT /quests/:patientId/complete ─────────────────────────────────────────
 
 app.put("/quests/:patientId/complete", requireAuth, async (c) => {
+  const user = c.get("user");
   const pool = await createPool(c.env);
   const { patientId } = c.req.param();
   const body = (await c.req.json()) as { questId: string };
   const today = new Date().toISOString().split("T")[0];
 
   const result = await pool.query(
-    "SELECT * FROM daily_quests WHERE patient_id = $1 AND date = $2 LIMIT 1",
-    [patientId, today],
+    "SELECT * FROM daily_quests WHERE patient_id = $1 AND date = $2 AND organization_id = $3 LIMIT 1",
+    [patientId, today, user.organizationId],
   );
 
   if (!result.rows.length) return c.json({ error: "Missões do dia não encontradas" }, 404);
@@ -369,8 +391,8 @@ app.put("/quests/:patientId/complete", requireAuth, async (c) => {
   await pool.query(
     `UPDATE daily_quests
      SET quests_data = $1, completed_count = $2, updated_at = NOW()
-     WHERE id = $3`,
-    [JSON.stringify(updatedQuests), completedCount, record.id],
+     WHERE id = $3 AND organization_id = $4`,
+    [JSON.stringify(updatedQuests), completedCount, record.id, user.organizationId],
   );
 
   return c.json({
