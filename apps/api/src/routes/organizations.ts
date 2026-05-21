@@ -211,6 +211,15 @@ app.put("/:id", async (c) => {
     params.push(JSON.stringify(body.settings));
     sets.push(`settings = $${params.length}::jsonb`);
   }
+  // S10 fix: campos pra Pix QR em recibos (recibos.ts:163 GET /pix-qr).
+  if (body.pix_key !== undefined) {
+    params.push(body.pix_key ? String(body.pix_key).trim() : null);
+    sets.push(`pix_key = $${params.length}`);
+  }
+  if (body.city !== undefined) {
+    params.push(body.city ? String(body.city).trim() : null);
+    sets.push(`city = $${params.length}`);
+  }
 
   if (!sets.length) {
     return c.json({ error: "Nada para atualizar" }, 400);
@@ -222,7 +231,7 @@ app.put("/:id", async (c) => {
       UPDATE organizations
       SET ${sets.join(", ")}
       WHERE id = $${params.length - 1} AND id = $${params.length}
-      RETURNING id, name, slug, settings, active, created_at, updated_at
+      RETURNING id, name, slug, settings, active, pix_key, city, created_at, updated_at
     `,
     params,
   );
