@@ -415,11 +415,13 @@ app.onError(errorHandler);
 
 import { handleScheduled } from "./cron";
 import { handleQueue } from "./queue";
-export { OrganizationState } from "./lib/realtime";
+export { OrganizationState } from "./agents/OrganizationState";
 export { PatientAgent } from "./agents/PatientAgent";
 export { AssessmentLiveSession } from "./agents/AssessmentLiveSession";
 export { ClinicAgent } from "./agents/ClinicAgent";
 export { VoiceScribeAgent } from "./agents/VoiceScribeAgent";
+export { EvolutionCollaboration } from "./agents/EvolutionCollaboration";
+
 export { SessionSummaryWorkflow } from "./workflows/sessionSummary";
 export {
   AppointmentReminderWorkflow,
@@ -533,11 +535,32 @@ export default {
     if (agentResponse) return agentResponse;
 
     // WebSocket upgrades: bypass Hono middleware (evita corrupção da resposta 101)
-    if (request.headers.get("Upgrade") === "websocket" && pathname === "/api/realtime") {
-      return handleRealtimeWS(request, env);
+    if (request.headers.get("Upgrade") === "websocket") {
+      if (pathname === "/api/realtime") {
+        return handleRealtimeWS(request, env);
+      }
+      if (pathname.startsWith("/api/sessions/") && pathname.endsWith("/collaboration")) {
+        return handleCollaborationWS(request, env);
+      }
     }
     return app.fetch(request, env, ctx);
   },
   scheduled: handleScheduled,
   queue: handleQueue,
 };
+
+/**
+ * Encaminha requests de colaboração real-time para o Durable Object correspondente.
+ */
+async function handleCollaborationWS(request: Request, env: Env): Promise<Response> {
+  const url = new URL(request.url);
+  const parts = url.pathname.split("/");
+  const sessionId = parts[parts.length - 2]; // /api/sessions/:id/collaboration
+
+  if (!sessionId) return new Response("Session ID required", { status: 400 });
+
+  const id = env.EVOLUTION_COLLABORATION.idFromName(sessionId);
+  const obj = env.EVOLUTION_COLLABORATION.get(id);
+
+  return obj.fetch(request);
+}
