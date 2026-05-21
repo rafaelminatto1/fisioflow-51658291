@@ -628,6 +628,7 @@ crons = [
   "0 14 * * *", # Diário às 11:00 BRT - NPS auto-trigger para orgs com 7 dias de uso
   "0 3 1 * *", # Dia 1 do mês 00:00 BRT (03:00 UTC) - S6.2 Pipeline R2 archive (sessions >90d → Iceberg)
   "0 9 1,15 * *", # Dia 1 e 15 às 06:00 BRT (09:00 UTC) - S8 SLO biweekly report (push notif admin)
+  "15 * * * *", # A cada hora aos 15 min - S9 T5 SLO health check (alerta se uptime <99.5% ou p95 >2s)
 ]
 
 # ===== OBSERVABILIDADE =====
