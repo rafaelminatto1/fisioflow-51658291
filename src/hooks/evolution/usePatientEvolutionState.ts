@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { useParams, useLocation } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { appointmentsApi } from "@/api/v2";
@@ -79,16 +79,9 @@ export function usePatientEvolutionState() {
   });
   const [painScale, setPainScale] = useState<PainScaleData>({ level: 0 });
   const [sessionExercises, setSessionExercises] = useState<any[]>([]);
-  const [evolutionV2Data, setEvolutionV2Data] = useState<EvolutionV2Data>({
-    therapistName: "",
-    therapistCrefito: "",
-    sessionDate: new Date().toISOString(),
-    patientReport: "",
-    evolutionText: "",
-    procedures: [],
-    exercises: [],
-    observations: "",
-  });
+  // P2.3: evolutionV2Data agora é DERIVADO do canonical evolutionData via useMemo.
+  // Eliminado useState dual para fonte única da verdade — antes mirror manual
+  // causava bugs de drift (ver bug histórico em 785ad16e0).
 
   // ========== HOOKS ==========
   const {
@@ -175,65 +168,8 @@ export function usePatientEvolutionState() {
         : [],
     });
 
-    // Mirror V2: popular TODOS os campos a partir do servidor para que a UI
-    // (NotionEvolutionPanel) reflita o estado salvo ao reabrir a evolução.
+    // P2.3: V2 mirror agora é derivado via useMemo — sync manual eliminado.
     setSoapData({ subjective: "", objective: "", assessment: "", plan: "" });
-    const serverProcedures = Array.isArray(draftByAppointment.procedures)
-      ? (draftByAppointment.procedures as any[])
-      : [];
-    const serverExercises = Array.isArray(draftByAppointment.exercises)
-      ? (draftByAppointment.exercises as any[])
-      : [];
-    const serverMeasurements = Array.isArray(draftByAppointment.measurements)
-      ? (draftByAppointment.measurements as any[])
-      : [];
-    const serverHomeExercises = Array.isArray(draftByAppointment.home_exercises)
-      ? (draftByAppointment.home_exercises as any[])
-      : [];
-    const homeCareExercisesJson = serverHomeExercises.length > 0
-      ? JSON.stringify(
-          serverHomeExercises.map((h: any, i: number) => ({
-            id: h.id || `hc_${i}`,
-            name: h.name || "",
-            prescription: h.prescription || "3x10",
-            instructions: h.instructions || h.notes || "",
-          })),
-        )
-      : undefined;
-    const migratedUnifiedItems = [
-      ...serverProcedures.map((p: any) => ({
-        id: p.id,
-        name: p.name,
-        completed: !!p.completed,
-        type: "procedure" as const,
-        notes: p.notes,
-        intensity: p.intensity,
-        category: p.category,
-        exerciseId: p.exerciseId,
-        order: p.sequenceOrder,
-      })),
-      ...serverExercises.map((e: any) => ({
-        id: e.id,
-        name: e.name,
-        completed: !!e.completed,
-        type: "exercise" as const,
-        prescription: e.prescription,
-        patientFeedback: e.patientFeedback,
-        order: e.sequenceOrder,
-      })),
-    ];
-    setEvolutionV2Data((prev: any) => ({
-      ...prev,
-      patientReport: "",
-      evolutionText: observacao,
-      observations: observacao,
-      painLevel: painScaleValue ?? prev.painLevel,
-      procedures: serverProcedures,
-      exercises: serverExercises,
-      measurements: serverMeasurements,
-      unifiedItems: migratedUnifiedItems.length > 0 ? migratedUnifiedItems : prev.unifiedItems,
-      homeCareExercises: homeCareExercisesJson ?? prev.homeCareExercises,
-    }));
 
     if (painScaleValue != null) {
       setPainScale({ level: painScaleValue });
@@ -278,6 +214,165 @@ export function usePatientEvolutionState() {
     new Date(draftByAppointment.updated_at).getTime() -
       new Date(draftByAppointment.created_at).getTime() >
       60000; // More than 1 minute difference
+
+  // P2.3: evolutionV2Data DERIVADO do canonical (fonte única da verdade).
+  // unifiedItems é computado a partir de procedures + exercises com discriminator `type`.
+  // homeCareExercises (JSON string esperada pelo NotionPanel) serializado de homeExercises array.
+  const evolutionV2Data = useMemo<EvolutionV2Data>(() => {
+    const procs = (evolutionData.procedures ?? []) as any[];
+    const exs = (evolutionData.exercises ?? []) as any[];
+    const unifiedItems = [
+      ...procs.map((p, i) => ({
+        id: p.id,
+        name: p.name,
+        completed: !!p.completed,
+        type: "procedure" as const,
+        notes: p.notes,
+        intensity: p.intensity,
+        category: p.category,
+        exerciseId: p.exerciseId,
+        order: p.sequenceOrder ?? i,
+      })),
+      ...exs.map((e, i) => ({
+        id: e.id,
+        name: e.name,
+        completed: !!e.completed,
+        type: "exercise" as const,
+        prescription: e.prescription,
+        patientFeedback: e.patientFeedback,
+        order: e.sequenceOrder ?? procs.length + i,
+      })),
+    ];
+    const homeCareExercisesJson =
+      (evolutionData.homeExercises?.length ?? 0) > 0
+        ? JSON.stringify(
+            (evolutionData.homeExercises as any[]).map((h, i) => ({
+              id: h.id || `hc_${i}`,
+              name: h.name || "",
+              prescription: h.prescription || "3x10",
+              instructions: h.instructions || h.notes || "",
+            })),
+          )
+        : undefined;
+    return {
+      therapistName: "",
+      therapistCrefito: "",
+      sessionDate: appointment?.date
+        ? new Date(appointment.date).toISOString()
+        : new Date().toISOString(),
+      patientReport: "",
+      evolutionText: evolutionData.observacao ?? "",
+      observations: evolutionData.observacao ?? "",
+      painLevel: evolutionData.painScale ?? undefined,
+      procedures: procs,
+      exercises: exs,
+      measurements: evolutionData.measurements ?? [],
+      unifiedItems: unifiedItems.length > 0 ? unifiedItems : undefined,
+      homeCareExercises: homeCareExercisesJson,
+    } as EvolutionV2Data;
+  }, [evolutionData, appointment?.date]);
+
+  // P2.3: setter V2 traduz para canonical (fonte única). NotionEvolutionPanel
+  // chama onChange com shape V2; aqui convertemos e setamos no canonical.
+  const setEvolutionV2Data = useCallback(
+    (updater: EvolutionV2Data | ((prev: EvolutionV2Data) => EvolutionV2Data)) => {
+      setEvolutionData((current) => {
+        const prevV2: EvolutionV2Data = {
+          therapistName: "",
+          therapistCrefito: "",
+          sessionDate: new Date().toISOString(),
+          patientReport: "",
+          evolutionText: current.observacao ?? "",
+          observations: current.observacao ?? "",
+          painLevel: current.painScale ?? undefined,
+          procedures: (current.procedures as any) ?? [],
+          exercises: (current.exercises as any) ?? [],
+          measurements: (current.measurements as any) ?? [],
+        } as any;
+        const next = typeof updater === "function" ? (updater as any)(prevV2) : updater;
+
+        // Decompõe unifiedItems em procedures + exercises (se presente)
+        const usesUnified = Array.isArray(next.unifiedItems);
+        const orderedItems = usesUnified
+          ? [...next.unifiedItems].sort((a: any, b: any) => (a.order ?? 0) - (b.order ?? 0))
+          : [];
+        const procedures = usesUnified
+          ? orderedItems
+              .map((item: any, index: number) => ({ item, sequenceOrder: index + 1 }))
+              .filter(({ item }: any) => item.type === "procedure")
+              .map(({ item, sequenceOrder }: any) => ({
+                id: item.id,
+                exerciseId: item.exerciseId,
+                name: item.name,
+                completed: item.completed,
+                sequenceOrder,
+                notes: item.notes,
+                category: item.category,
+                intensity: item.intensity,
+              }))
+          : next.procedures ?? current.procedures;
+        const exercises = usesUnified
+          ? orderedItems
+              .map((item: any, index: number) => ({ item, sequenceOrder: index + 1 }))
+              .filter(({ item }: any) => item.type === "exercise")
+              .map(({ item, sequenceOrder }: any) => ({
+                id: item.id,
+                name: item.name,
+                completed: item.completed,
+                sequenceOrder,
+                prescription: item.prescription,
+                patientFeedback: item.patientFeedback,
+              }))
+          : next.exercises ?? current.exercises;
+
+        // homeCareExercises (JSON string) → homeExercises array canonical
+        let homeExercises = current.homeExercises;
+        if (next.homeCareExercises !== undefined) {
+          if (typeof next.homeCareExercises === "string" && next.homeCareExercises.trim()) {
+            try {
+              const parsed = JSON.parse(next.homeCareExercises);
+              if (Array.isArray(parsed)) {
+                homeExercises = parsed.map((item: any) => ({
+                  id: item.id || "",
+                  name: item.name || "",
+                  prescription: item.prescription || "",
+                  notes: item.instructions || item.notes || "",
+                }));
+              }
+            } catch {
+              const lines = next.homeCareExercises.split("\n").filter((l: string) => l.trim());
+              homeExercises = lines.map((line: string, i: number) => {
+                const parts = line.split("-");
+                return {
+                  id: `hc_${i}`,
+                  name: parts[0]?.replace(/^\d+[.)]\s*/, "").trim() || "",
+                  prescription: parts[1]?.trim() || "",
+                  notes: "",
+                };
+              });
+            }
+          } else if (
+            Array.isArray(next.homeCareExercises) &&
+            (next.homeCareExercises as any[]).length === 0
+          ) {
+            homeExercises = [];
+          }
+        }
+
+        return {
+          ...current,
+          observacao:
+            next.observations ?? next.evolutionText ?? current.observacao ?? "",
+          painScale: next.painLevel ?? current.painScale,
+          procedures: procedures as any,
+          exercises: exercises as any,
+          measurements: (next.measurements as any) ?? current.measurements,
+          homeExercises,
+        };
+      });
+    },
+    [],
+  );
 
   return {
     appointmentId,

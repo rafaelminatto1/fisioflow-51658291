@@ -64,6 +64,8 @@ export function usePatientEvolutionHandlers({
         ? JSON.stringify(homeExercisesList)
         : "";
 
+      // P2.3: V2 é derivado do canonical. Apenas setEvolutionData necessário.
+      void homeCareExercisesString; // mantém variável para referência
       setEvolutionData?.({
         observacao: evolution.observacao ?? "",
         painScale: evolution.pain_scale ?? null,
@@ -72,19 +74,6 @@ export function usePatientEvolutionHandlers({
         measurements: Array.isArray(evolution.measurements) ? evolution.measurements : [],
         homeExercises: Array.isArray(evolution.home_exercises) ? evolution.home_exercises : [],
       });
-
-      setEvolutionV2Data?.((prev: any) => ({
-        ...prev,
-        patientReport: "",
-        evolutionText: "",
-        observations: evolution.observacao ?? "",
-        procedures: Array.isArray(evolution.procedures) ? evolution.procedures : [],
-        exercises: Array.isArray(evolution.exercises) ? evolution.exercises : [],
-        measurements: Array.isArray(evolution.measurements) ? evolution.measurements : [],
-        homeCareExercises: homeCareExercisesString,
-        painLevel: evolution.pain_scale ?? undefined,
-        unifiedItems: undefined,
-      }));
 
       toast({
         title: "Evolução copiada",
@@ -118,6 +107,8 @@ export function usePatientEvolutionHandlers({
       const measurementsVal = Array.isArray(content.measurements) ? content.measurements : [];
       const homeExercisesVal = Array.isArray(rawHomeExercises) ? rawHomeExercises : [];
 
+      // P2.3: V2 é derivado do canonical.
+      void homeCareExercisesString;
       setEvolutionData({
         observacao: observacaoVal,
         painScale: painScaleVal,
@@ -126,21 +117,8 @@ export function usePatientEvolutionHandlers({
         measurements: measurementsVal,
         homeExercises: homeExercisesVal,
       });
-
-      setEvolutionV2Data?.((prev: any) => ({
-        ...prev,
-        patientReport: "",
-        evolutionText: "",
-        observations: observacaoVal,
-        procedures: proceduresVal,
-        exercises: exercisesVal,
-        measurements: measurementsVal,
-        homeCareExercises: homeCareExercisesString,
-        painLevel: painScaleVal ?? undefined,
-        unifiedItems: undefined,
-      }));
     },
-    [setEvolutionData, setEvolutionV2Data],
+    [setEvolutionData],
   );
 
   const handleSave = async () => {

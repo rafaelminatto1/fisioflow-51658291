@@ -147,6 +147,8 @@ const PatientEvolution = () => {
 
   const handleEvolutionV2Change = useCallback(
     (next: EvolutionV2Data) => {
+      // P2.3: setEvolutionV2Data agora traduz V2→canonical internamente
+      // (fonte única da verdade). Apenas chamamos e seguimos.
       state.setEvolutionV2Data(next);
       // Persiste o rascunho local somente quando há conteúdo real — evita que
       // renders iniciais com state vazio (antes da hidratação do servidor)
@@ -161,78 +163,6 @@ const PatientEvolution = () => {
       if (nextHasContent) {
         draft.writeDraft(next);
       }
-
-      const orderedItems = [...(next.unifiedItems || [])].sort(
-        (a, b) => (a.order ?? 0) - (b.order ?? 0),
-      );
-
-      const usesUnifiedItems = Array.isArray(next.unifiedItems);
-      const procedures = usesUnifiedItems
-        ? orderedItems
-            .map((item, index) => ({ item, sequenceOrder: index + 1 }))
-            .filter(({ item }) => item.type === "procedure")
-            .map(({ item, sequenceOrder }) => ({
-              id: item.id,
-              exerciseId: item.exerciseId,
-              name: item.name,
-              completed: item.completed,
-              sequenceOrder,
-              notes: item.notes,
-              category: item.category,
-              intensity: item.intensity as any,
-            }))
-        : next.procedures;
-
-      const exercises = usesUnifiedItems
-        ? orderedItems
-            .map((item, index) => ({ item, sequenceOrder: index + 1 }))
-            .filter(({ item }) => item.type === "exercise")
-            .map(({ item, sequenceOrder }) => ({
-              id: item.id,
-              name: item.name,
-              completed: item.completed,
-              sequenceOrder,
-              prescription: item.prescription,
-              patientFeedback: item.patientFeedback,
-            }))
-        : next.exercises;
-
-      let parsedHomeExercises: any[] = [];
-      const hasHomeCare = next.homeCareExercises !== undefined;
-      if (hasHomeCare && typeof next.homeCareExercises === "string" && next.homeCareExercises.trim()) {
-        try {
-          const parsed = JSON.parse(next.homeCareExercises);
-          if (Array.isArray(parsed)) {
-            parsedHomeExercises = parsed.map((item: any) => ({
-              id: item.id || '',
-              name: item.name || '',
-              prescription: item.prescription || '',
-              notes: item.instructions || item.notes || '',
-            }));
-          }
-        } catch {
-          const lines = next.homeCareExercises.split("\n").filter((l) => l.trim());
-          parsedHomeExercises = lines.map((line, i) => {
-            const parts = line.split("-");
-            return {
-              id: `hc_${i}`,
-              name: parts[0]?.replace(/^\d+[.)]\s*/, "").trim() || "",
-              prescription: parts[1]?.trim() || "",
-              notes: "",
-            };
-          });
-        }
-      }
-
-      state.setEvolutionData((prev) => ({
-        ...prev,
-        observacao: next.evolutionText || next.observations || prev.observacao,
-        painScale: next.painLevel ?? prev.painScale,
-        procedures: procedures as any,
-        exercises: exercises as any,
-        measurements: (next.measurements as any) || prev.measurements,
-        homeExercises: hasHomeCare ? parsedHomeExercises : prev.homeExercises,
-      }));
     },
     [state, draft],
   );
@@ -826,16 +756,11 @@ const PatientEvolution = () => {
               // Atualiza state local diretamente com a versão do servidor (do payload 409)
               // — não esperar refetch, evita flicker e garante UI consistente.
               if (current) {
+                // P2.3: state V2 deriva do canonical, basta atualizar canonical.
                 state.setEvolutionData((prev) => ({
                   ...prev,
                   observacao: current.observacao ?? "",
                   painScale: current.pain_scale ?? null,
-                }));
-                state.setEvolutionV2Data((prev: any) => ({
-                  ...prev,
-                  evolutionText: current.observacao ?? "",
-                  observations: current.observacao ?? "",
-                  painLevel: current.pain_scale ?? undefined,
                 }));
               }
               // Invalida cache para que próximos saves leiam version atualizado
