@@ -100,6 +100,7 @@ function rowToRecord(row: any) {
     is_edited: row.isEdited,
     last_edited_by: row.lastEditedBy ? String(row.lastEditedBy) : undefined,
     edit_reason: row.editReason ?? undefined,
+    version: row.version ?? 1,
   };
 }
 

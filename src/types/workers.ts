@@ -204,6 +204,7 @@ export interface SessionRecord {
   created_at: string;
   updated_at: string;
   signed_at?: string;
+  version?: number;
 }
 
 export interface PatientDocument {

@@ -160,6 +160,8 @@ app.use(
       "Cookie",
       "X-Neon-Auth-Token",
       "X-Request-ID",
+      "Idempotency-Key",
+      "idempotency-key",
     ],
     credentials: true,
     maxAge: 86400,
