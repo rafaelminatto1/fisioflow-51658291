@@ -79,26 +79,28 @@ app.post("/transactions", requireAuth, async (c) => {
   if (amount == null) return c.json({ error: "amount is required" }, 400);
 
   try {
+    const transactionValues: any = {
+      organizationId: user.organizationId,
+      userId: body.user_id ?? user.uid,
+      type: String(type).substring(0, 50),
+      amount: String(amount),
+      description: body.description ?? body.descricao ?? null,
+      status: String(body.status ?? "pending").substring(0, 50),
+      category: body.category ?? body.categoria ?? null,
+      stripePaymentIntentId: body.stripe_payment_intent_id ?? null,
+      stripeRefundId: body.stripe_refund_id ?? null,
+      metadata: body.metadata ?? {},
+    };
+    console.log("[Financial/Transactions] Inserting:", transactionValues);
     const [result] = await db
       .insert(transactions)
-      .values({
-        organizationId: user.organizationId,
-        userId: body.user_id ?? user.uid,
-        type: String(type),
-        amount: String(amount),
-        description: body.description ?? body.descricao ?? null,
-        status: body.status ?? "pending",
-        category: body.category ?? body.categoria ?? null,
-        stripePaymentIntentId: body.stripe_payment_intent_id ?? null,
-        stripeRefundId: body.stripe_refund_id ?? null,
-        metadata: body.metadata ?? {},
-      })
+      .values(transactionValues)
       .returning();
 
     return c.json({ data: result }, 201);
-  } catch (e) {
-    console.error("[Financial/Transactions] Insert error:", e);
-    return c.json({ error: "Error creating transaction" }, 500);
+  } catch (e: any) {
+    console.error("[Financial/Transactions] Insert error:", e.message || e);
+    return c.json({ error: "Error creating transaction", details: e.message }, 500);
   }
 });
 

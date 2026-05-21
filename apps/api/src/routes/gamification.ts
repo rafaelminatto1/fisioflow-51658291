@@ -325,9 +325,15 @@ app.get("/quests/:patientId", requireAuth, async (c) => {
   }
 
   // Generate default quests for today
+  const generateId = () => {
+    return typeof crypto !== 'undefined' && crypto.randomUUID 
+      ? crypto.randomUUID() 
+      : 'uuid-' + Math.random().toString(36).substring(2, 15);
+  };
+
   const defaultQuests = [
     {
-      id: crypto.randomUUID(),
+      id: generateId(),
       title: "Realizar exercícios do protocolo",
       description: "Complete os exercícios prescritos",
       xp: 50,
@@ -335,7 +341,7 @@ app.get("/quests/:patientId", requireAuth, async (c) => {
       icon: "🏋️",
     },
     {
-      id: crypto.randomUUID(),
+      id: generateId(),
       title: "Registrar evolução da sessão",
       description: "Documente sua sessão no sistema",
       xp: 30,
@@ -343,7 +349,7 @@ app.get("/quests/:patientId", requireAuth, async (c) => {
       icon: "📝",
     },
     {
-      id: crypto.randomUUID(),
+      id: generateId(),
       title: "Atingir meta de passos",
       description: "Caminhe pelo menos 30 minutos",
       xp: 20,

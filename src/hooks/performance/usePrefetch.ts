@@ -52,14 +52,14 @@ export function usePrefetchPatientOnHover(patientId: string | undefined) {
 
     // Prefetch dos dados básicos
     queryClient.prefetchQuery({
-      queryKey: QueryKeys.patient(patientId),
+      queryKey: QueryKeys.patients.detail(patientId),
       queryFn: () => PatientService.getPatientById(patientId),
       staleTime: 1000 * 60 * 5,
     });
 
     // Prefetch de evoluções (muito provável que o usuário queira ver)
     queryClient.prefetchQuery({
-      queryKey: QueryKeys.soapRecords(patientId),
+      queryKey: QueryKeys.patients.evolutions(patientId),
       queryFn: () => PatientService.getPatientEvolutions(patientId),
       staleTime: 1000 * 60 * 2,
     });
