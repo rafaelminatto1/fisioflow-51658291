@@ -73,10 +73,9 @@ dataset = "fisioflow_events"
 
 # ===== AI SEARCH (RAG gerenciado — diretrizes clínicas, PDFs, artigos) =====
 # AutoRAG: chunks, embeds e indexa documentos automaticamente (1024 dims).
-# Temporariamente desativado — requer permissão "ai search update" na conta Cloudflare.
-# [[ai_search]]
-# binding = "AI_SEARCH"
-# instance_name = "fisioflow-rag"
+[[ai_search]]
+binding = "AI_SEARCH"
+instance_name = "fisioflow-rag"
 
 # ===== PIPELINES (Data warehouse → R2 JSON, open beta grátis) =====
 # Pipeline: fisioflow_events (id: 584a8a3054d1437686b35823f8476fde)
@@ -160,6 +159,10 @@ class_name = "ClinicAgent"
 name = "VOICE_SCRIBE_AGENT"
 class_name = "VoiceScribeAgent"
 
+[[durable_objects.bindings]]
+name = "EVOLUTION_COLLABORATION"
+class_name = "EvolutionCollaboration"
+
 
 # v1 adicionou OrganizationState (ver env.staging.migrations.v1 com new_classes)
 [[migrations]]
@@ -192,6 +195,10 @@ new_classes = ["ClinicAgent"]
 [[migrations]]
 tag = "v9"
 new_sqlite_classes = ["VoiceScribeAgent"]
+
+[[migrations]]
+tag = "v10"
+new_classes = ["EvolutionCollaboration"]
 
 # ===== AI & BROWSER RENDERING (Paid Plan) =====
 [ai]
@@ -296,9 +303,9 @@ database_id = "9eba3eb7-5486-49d0-9684-c325f8b1ddc2"
 binding = "ANALYTICS"
 dataset = "fisioflow_events"
 
-# [[env.production.ai_search]]
-# binding = "AI_SEARCH"
-# instance_name = "fisioflow-rag"
+[[env.production.ai_search]]
+binding = "AI_SEARCH"
+instance_name = "fisioflow-rag"
 
 [[env.production.pipelines]]
 binding = "EVENTS_PIPELINE"
@@ -388,6 +395,7 @@ bindings = [
   { name = "ASSESSMENT_LIVE_SESSION", class_name = "AssessmentLiveSession" },
   { name = "CLINIC_AGENT", class_name = "ClinicAgent" },
   { name = "VOICE_SCRIBE_AGENT", class_name = "VoiceScribeAgent" },
+  { name = "EVOLUTION_COLLABORATION", class_name = "EvolutionCollaboration" },
 ]
 
 # Production DO migrations — top-level migrations não são herdadas por env.production.
@@ -395,6 +403,10 @@ bindings = [
 [[env.production.migrations]]
 tag = "v9"
 new_sqlite_classes = ["VoiceScribeAgent"]
+
+[[env.production.migrations]]
+tag = "v10"
+new_classes = ["EvolutionCollaboration"]
 
 [env.production.ai]
 binding = "AI"
@@ -482,6 +494,7 @@ bindings = [
   { name = "ASSESSMENT_LIVE_SESSION", class_name = "AssessmentLiveSession" },
   { name = "CLINIC_AGENT", class_name = "ClinicAgent" },
   { name = "VOICE_SCRIBE_AGENT", class_name = "VoiceScribeAgent" },
+  { name = "EVOLUTION_COLLABORATION", class_name = "EvolutionCollaboration" },
 ]
 
 [[env.staging.migrations]]
@@ -515,6 +528,10 @@ new_classes = ["ClinicAgent"]
 [[env.staging.migrations]]
 tag = "v9"
 new_sqlite_classes = ["VoiceScribeAgent"]
+
+[[env.staging.migrations]]
+tag = "v10"
+new_classes = ["EvolutionCollaboration"]
 
 [env.staging.ai]
 binding = "AI"
