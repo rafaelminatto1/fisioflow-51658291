@@ -3,7 +3,7 @@
  */
 
 import { getDB, type FisioFlowDB } from "@/hooks/useOfflineStorage";
-import { appointmentsApi, exercisesApi, evolutionApi, goalsApi, patientsApi } from "@/api/v2";
+import { appointmentsApi, exercisesApi, evolutionApi, goalsApi, patientsApi, sessionsApi } from "@/api/v2";
 import { toast } from "sonner";
 import type { IDBPDatabase } from "idb";
 import { fisioLogger as logger } from "@/lib/errors/logger";
@@ -55,6 +55,10 @@ export interface QueuedAction {
   conflictedAt?: number;
   /** Última mensagem de erro (para diagnóstico do conflito) */
   lastError?: string;
+  /** URL para requisição direta (opcional, para Background Sync genérico no SW) */
+  url?: string;
+  /** Método HTTP (opcional) */
+  method?: string;
 }
 
 export interface SyncStats {
@@ -125,6 +129,7 @@ export const ACTION_TYPES = {
   CREATE_SESSION_METRICS: "CREATE_SESSION_METRICS",
   UPDATE_GOAL: "UPDATE_GOAL",
   CREATE_EVOLUTION: "CREATE_EVOLUTION",
+  AUTOSAVE_EVOLUTION: "AUTOSAVE_EVOLUTION",
   UPDATE_RISK_SCORE: "UPDATE_RISK_SCORE",
   UPDATE_PATIENT: "UPDATE_PATIENT",
   CREATE_APPOINTMENT: "CREATE_APPOINTMENT",
@@ -220,7 +225,11 @@ class OfflineSyncService {
   /**
    * Enqueues an action for offline synchronization
    */
-  public async enqueueAction(actionType: string, payload: unknown): Promise<string> {
+  public async enqueueAction(
+    actionType: string,
+    payload: unknown,
+    options: { url?: string; method?: string } = {},
+  ): Promise<string> {
     const db = await getDB();
     const id = crypto.randomUUID();
 
@@ -231,12 +240,18 @@ class OfflineSyncService {
       timestamp: Date.now(),
       synced: false,
       retryCount: 0,
+      url: options.url,
+      method: options.method,
     };
 
     await db.add("offline_actions", action);
 
     logger.info(`Action ${actionType} enqueued for sync`, { id }, "offlineSync");
     this.notifyListeners();
+
+    // Tenta registrar Background Sync para que o browser tente enviar
+    // mesmo se o usuário fechar a aba/app.
+    void this.registerBackgroundSync();
 
     return id;
   }
@@ -279,7 +294,7 @@ class OfflineSyncService {
         sync?: { register: (tag: string) => Promise<void> };
       };
       if (swReg.sync) {
-        await swReg.sync.register("offline-actions-sync");
+        await swReg.sync.register("fisioflow-sync");
       }
       return true;
     } catch (error) {
@@ -504,6 +519,9 @@ class OfflineSyncService {
         break;
       case ACTION_TYPES.CREATE_EVOLUTION:
         await evolutionApi.treatmentSessions.upsert(payload as any);
+        break;
+      case ACTION_TYPES.AUTOSAVE_EVOLUTION:
+        await sessionsApi.autosave(payload as any);
         break;
       case ACTION_TYPES.UPDATE_RISK_SCORE:
         // Map to evolution measurements as a standardized clinical metric
@@ -1074,9 +1092,13 @@ export function useOfflineSync(config?: SyncConfig) {
 /**
  * Helper function to enqueue an action for offline sync
  */
-export async function enqueueAction(actionType: string, payload: unknown): Promise<string> {
+export async function enqueueAction(
+  actionType: string,
+  payload: unknown,
+  options: { url?: string; method?: string } = {},
+): Promise<string> {
   const service = getOfflineSyncService();
-  return service.enqueueAction(actionType, payload);
+  return service.enqueueAction(actionType, payload, options);
 }
 
 export { OfflineSyncService };
