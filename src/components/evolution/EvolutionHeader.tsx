@@ -82,6 +82,11 @@ interface EvolutionHeaderProps {
   autoSaveEnabled: boolean;
   toggleAutoSave: () => void;
   lastSavedAt: Date | null;
+  /** P3.1: erro da última tentativa de save (NÃO offline). Quando presente,
+   * o indicador no header muda para "Falha ao salvar — Tentar de novo". */
+  saveError?: Error | null;
+  /** P3.1: handler para botão "Tentar de novo" no badge de falha. */
+  onRetrySave?: () => void;
   /** Estado da fila offline (opcional). Se passado, mostra indicador "Aguardando rede". */
   offlineStatus?: {
     isOnline: boolean;
@@ -225,6 +230,8 @@ export const EvolutionHeader = memo(
     autoSaveEnabled,
     toggleAutoSave,
     lastSavedAt,
+    saveError,
+    onRetrySave,
     offlineStatus,
     showInsights,
     toggleInsights,
@@ -339,6 +346,27 @@ export const EvolutionHeader = memo(
             {(() => {
               const hasPending = (offlineStatus?.pendingActions ?? 0) > 0;
               const isOffline = offlineStatus && !offlineStatus.isOnline;
+              // P3.1: estado de falha tem prioridade máxima (exceto isSaving que indica retry em curso)
+              if (saveError && !isSaving) {
+                return (
+                  <span
+                    className="hidden sm:flex items-center gap-1.5 text-[11px] text-rose-600 font-medium"
+                    title={saveError.message || "Erro ao salvar"}
+                  >
+                    <Clock className="h-3 w-3" />
+                    Falha ao salvar
+                    {onRetrySave && (
+                      <button
+                        type="button"
+                        onClick={onRetrySave}
+                        className="ml-1 inline-flex items-center rounded bg-rose-100 px-1.5 py-0.5 text-[10px] font-bold text-rose-700 hover:bg-rose-200 transition-colors"
+                      >
+                        Tentar de novo
+                      </button>
+                    )}
+                  </span>
+                );
+              }
               if (isSaving) {
                 return (
                   <span className="hidden sm:flex items-center gap-1.5 text-[11px] text-slate-500 font-medium">
@@ -553,6 +581,8 @@ export const EvolutionHeader = memo(
       prevProps.isCompleting === nextProps.isCompleting &&
       prevProps.autoSaveEnabled === nextProps.autoSaveEnabled &&
       prevProps.lastSavedAt === nextProps.lastSavedAt &&
+      // P3.1: comparar saveError para re-renderizar badge "Falha ao salvar"
+      prevProps.saveError === nextProps.saveError &&
       prevProps.offlineStatus?.isOnline === nextProps.offlineStatus?.isOnline &&
       prevProps.offlineStatus?.pendingActions === nextProps.offlineStatus?.pendingActions &&
       prevProps.showInsights === nextProps.showInsights &&

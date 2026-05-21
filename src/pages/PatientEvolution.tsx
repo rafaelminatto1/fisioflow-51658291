@@ -257,7 +257,7 @@ const PatientEvolution = () => {
     [state.evolutionData, state.selectedTherapistId],
   );
 
-  const { lastSavedAt } = useAutoSave({
+  const { lastSavedAt, lastError: autoSaveError, retry: autoSaveRetry } = useAutoSave({
     data: autoSaveData,
     onSave: async (data) => {
       if (!state.patientId || !state.appointmentId) return;
@@ -558,6 +558,8 @@ const PatientEvolution = () => {
               autoSaveEnabled={state.autoSaveEnabled}
               toggleAutoSave={() => state.setAutoSaveEnabled(!state.autoSaveEnabled)}
               lastSavedAt={lastSavedAt}
+              saveError={autoSaveError}
+              onRetrySave={autoSaveRetry}
               offlineStatus={{
                 isOnline: offline.isOnline,
                 pendingActions: offline.stats.pendingActions,
