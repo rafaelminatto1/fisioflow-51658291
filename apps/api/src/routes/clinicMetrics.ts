@@ -1,6 +1,7 @@
 import { Hono } from "hono";
 import { createPool } from "../lib/db";
 import { requireAuth, type AuthVariables } from "../lib/auth";
+import { WORKERS_AI_MODELS } from "../lib/workersAi";
 import type { Env } from "../types/env";
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
@@ -302,7 +303,7 @@ app.get("/patients/:id/ai-snapshot", requireAuth, async (c) => {
     try {
       const result = await runThinkingModel(c.env, {
         prompt,
-        model: "@cf/meta/llama-3.1-8b-instruct",
+        model: WORKERS_AI_MODELS.llama_3_1_8b,
         temperature: 0.2,
         responseFormat: "json",
       });
