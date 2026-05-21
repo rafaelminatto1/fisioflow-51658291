@@ -15,12 +15,16 @@ app.get("/status", requireAuth, async (c) => {
 
   try {
     const result = await pool.query(
-      `SELECT 
-        id, name, current_stock, min_stock, unit,
-        CASE WHEN current_stock <= min_stock THEN true ELSE false END as needs_replenishment
-       FROM inventory_items
-       WHERE organization_id = $1 AND deleted_at IS NULL
-       ORDER BY needs_replenishment DESC, name ASC`,
+      `SELECT
+        id,
+        item_name        AS name,
+        current_quantity AS current_stock,
+        minimum_quantity AS min_stock,
+        unit,
+        CASE WHEN current_quantity <= minimum_quantity THEN true ELSE false END AS needs_replenishment
+       FROM clinic_inventory
+       WHERE organization_id = $1 AND is_active = true
+       ORDER BY needs_replenishment DESC, item_name ASC`,
       [user.organizationId],
     );
 
