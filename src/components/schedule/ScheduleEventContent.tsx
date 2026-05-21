@@ -83,7 +83,7 @@ export function ScheduleEventContent({
       </div>
 
       <p
-        className="fc-event-patient-name text-[13px] font-bold leading-tight text-slate-900 dark:text-white min-w-0"
+        className="fc-event-patient-name text-[11px] font-bold leading-tight text-slate-900 dark:text-white min-w-0"
         style={{ fontFamily: "var(--font-display, Inter, sans-serif)" }}
       >
         {title}

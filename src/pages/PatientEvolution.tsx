@@ -272,6 +272,25 @@ const PatientEvolution = () => {
 
       if (!hasContent && !hasPain) return;
 
+      // Guard anti-corrupção: se o servidor já tem observacao com conteúdo
+      // e o local está vazio, NÃO sobrescrever — é race de hidratação
+      // (canonical foi populado parcialmente antes do sync completo).
+      if (state.currentSoapRecordId) {
+        const cachedDraft = queryClient.getQueryData<any>([
+          "evolution-records",
+          "drafts",
+          state.patientId,
+          "byAppointment",
+          state.appointmentId,
+        ]);
+        const serverObs = cachedDraft?.observacao?.trim?.() ?? "";
+        const localObs = stripHtml(data.observacao || "").trim();
+        if (serverObs.length > 0 && localObs.length === 0) {
+          // Server tem texto, local vazio → não enviar (evita zerar)
+          return;
+        }
+      }
+
       // Idempotency key por tentativa: protege contra retries da fila offline
       // e refresh durante mutation in-flight. Server (KV TTL 60s) dedupe.
       const idempotencyKey =
@@ -322,7 +341,10 @@ const PatientEvolution = () => {
         throw err;
       }
     },
-    delay: 5000,
+    // Debounce curto (1.5s) — feedback imediato similar a Notion/Google Docs.
+    // Combinado com mutation scope (P1), idempotency key (P2.1) e version
+    // check (P2.2), saves rápidos não causam race conditions nem duplicação.
+    delay: 1500,
     enabled: state.autoSaveEnabled && !state.isDraftLoading && !state.dataLoading,
   });
 

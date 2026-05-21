@@ -215,7 +215,7 @@ export default function Schedule() {
   }, [modals, actions, toggleSelectionMode, handleDateChange, handleViewTypeChange]);
 
   return (
-    <PageLayout showFooter={false}>
+    <PageLayout showFooter={false} fullWidth noPadding>
       <PageContainer
         maxWidth="full"
         noPadding

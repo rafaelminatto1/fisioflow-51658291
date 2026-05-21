@@ -855,24 +855,6 @@ export function WikiEditor({ page, draft, onCancel, onSave }: WikiEditorProps) {
   const { user, organizationId } = useAuth();
   const source = page ?? draft ?? null;
 
-  // Auto-Save Local
-  useEffect(() => {
-    const draftKey = `wiki_draft_${page?.id || "new"}`;
-    const timeout = setTimeout(() => {
-      if (blocks.length > 0 || title) {
-        localStorage.setItem(
-          draftKey,
-          JSON.stringify({
-            title,
-            blocks,
-            timestamp: Date.now(),
-          }),
-        );
-      }
-    }, 5000);
-    return () => clearTimeout(timeout);
-  }, [blocks, title, page?.id]);
-
   const recoverLocalDraft = () => {
     const draftKey = `wiki_draft_${page?.id || "new"}`;
     const saved = localStorage.getItem(draftKey);
@@ -912,6 +894,24 @@ export function WikiEditor({ page, draft, onCancel, onSave }: WikiEditorProps) {
   const slashInputRef = useRef<HTMLInputElement | null>(null);
   const imageUploadInputRef = useRef<HTMLInputElement | null>(null);
   const videoUploadInputRef = useRef<HTMLInputElement | null>(null);
+
+  // Auto-Save Local
+  useEffect(() => {
+    const draftKey = `wiki_draft_${page?.id || "new"}`;
+    const timeout = setTimeout(() => {
+      if (blocks.length > 0 || title) {
+        localStorage.setItem(
+          draftKey,
+          JSON.stringify({
+            title,
+            blocks,
+            timestamp: Date.now(),
+          }),
+        );
+      }
+    }, 5000);
+    return () => clearTimeout(timeout);
+  }, [blocks, title, page?.id]);
 
   useEffect(() => {
     const nextSource = page ?? draft ?? null;

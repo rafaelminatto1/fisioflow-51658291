@@ -542,10 +542,6 @@ export function ExerciseLibrary({
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
   const [visibleCount, setVisibleCount] = useState(12);
 
-  useEffect(() => {
-    setVisibleCount(12);
-  }, [debouncedSearchTerm, activeFilter, advancedFilters]);
-
   const sentinelRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -587,6 +583,10 @@ export function ExerciseLibrary({
   const { isFavorite, toggleFavorite } = useExerciseFavorites();
 
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+
+  useEffect(() => {
+    setVisibleCount(12);
+  }, [debouncedSearchTerm, activeFilter, advancedFilters]);
 
   const filteredExercises = useMemo(() => {
     const validExercises = exercises.filter(
