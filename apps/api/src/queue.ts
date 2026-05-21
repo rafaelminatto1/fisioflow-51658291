@@ -495,36 +495,62 @@ async function generateNFSeForSession(
 
   const cfg = cfgRows[0];
 
-  // Get next RPS number
-  const seqRows = await sql`
-    SELECT COALESCE(MAX(CAST(numero_rps AS INTEGER)), 0) + 1 AS next_rps
-    FROM nfse_records WHERE organization_id = ${payload.organizationId}
-  `;
-  const numeroRps = String(seqRows[0]?.next_rps ?? 1);
-
+  // S10 fix: race em batch concorrente — UNIQUE (org, numero_rps) garante
+  // unicidade; em caso de conflito (2 consumers leram mesmo MAX) re-tenta
+  // ate 5 vezes com novo MAX+1.
   const aliquota = Number(cfg.aliquota_iss ?? cfg.aliquota_padrao ?? 0.02);
   const valorServico = Number(cfg.valor_padrao_servico ?? 150);
   const valorIss = Number((valorServico * aliquota).toFixed(2));
+  const codigoServico = cfg.codigo_servico_padrao ?? "04391";
+  const discriminacao = "Sessão de fisioterapia - " + payload.date;
+  const dataEmissao = new Date().toISOString();
 
-  await sql`
-    INSERT INTO nfse_records
-      (organization_id, patient_id, numero_rps, serie_rps, data_emissao,
-       valor_servico, aliquota_iss, valor_iss, codigo_servico, discriminacao,
-       tomador_nome, tomador_cpf_cnpj, status, created_at, updated_at)
-    VALUES (
-      ${payload.organizationId}, ${payload.patientId}, ${numeroRps}, 'RPS',
-      ${new Date().toISOString()}, ${valorServico}, ${aliquota}, ${valorIss},
-      ${cfg.codigo_servico_padrao ?? "14.01"},
-      ${"Sessão de fisioterapia - " + payload.date},
-      ${payload.patientName}, ${payload.patientCpf ?? null},
-      'rascunho', NOW(), NOW()
-    )
-    ON CONFLICT DO NOTHING
-  `.catch((err) => {
-    console.warn(`[Queue/NFS-e] Insert failed for session ${payload.sessionId}:`, err?.message);
-  });
+  let inserted = false;
+  let lastErr: unknown;
+  for (let attempt = 0; attempt < 5 && !inserted; attempt++) {
+    const seqRows = await sql`
+      SELECT COALESCE(MAX(CAST(numero_rps AS INTEGER)), 0) + 1 AS next_rps
+      FROM nfse_records WHERE organization_id = ${payload.organizationId}
+    `;
+    const numeroRps = String(seqRows[0]?.next_rps ?? 1);
 
-  console.log(`[Queue/NFS-e] Generated draft NFS-e for session ${payload.sessionId}`);
+    try {
+      const inserts = await sql`
+        INSERT INTO nfse_records
+          (organization_id, patient_id, numero_rps, serie_rps, data_emissao,
+           valor_servico, aliquota_iss, valor_iss, codigo_servico, discriminacao,
+           tomador_nome, tomador_cpf_cnpj, status, created_at, updated_at)
+        VALUES (
+          ${payload.organizationId}, ${payload.patientId}, ${numeroRps}, 'RPS',
+          ${dataEmissao}, ${valorServico}, ${aliquota}, ${valorIss},
+          ${codigoServico}, ${discriminacao},
+          ${payload.patientName}, ${payload.patientCpf ?? null},
+          'rascunho', NOW(), NOW()
+        )
+        ON CONFLICT (organization_id, numero_rps) DO NOTHING
+        RETURNING id
+      `;
+      if (inserts.length > 0) {
+        inserted = true;
+        console.log(
+          `[Queue/NFS-e] Draft created session=${payload.sessionId} rps=${numeroRps} attempt=${attempt + 1}`,
+        );
+      } else {
+        console.log(
+          `[Queue/NFS-e] RPS ${numeroRps} collided (attempt ${attempt + 1}), retrying...`,
+        );
+      }
+    } catch (err) {
+      lastErr = err;
+      break;
+    }
+  }
+  if (!inserted) {
+    console.warn(
+      `[Queue/NFS-e] Insert failed for session ${payload.sessionId} after 5 attempts:`,
+      lastErr instanceof Error ? lastErr.message : lastErr,
+    );
+  }
 }
 
 // ===== EVENT HANDLERS =====
