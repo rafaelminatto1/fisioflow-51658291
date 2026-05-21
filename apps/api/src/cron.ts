@@ -10,6 +10,7 @@ import { scoreContacts } from "./jobs/leadScoring";
 import { notifyPatientAppointment } from "./lib/push";
 import { RTMAlertsService } from "./services/rtm-alerts";
 import { syncAutoRAGContent } from "./routes/aiSearch";
+import { sendHepDailyReminders } from "./jobs/hepDailyReminder";
 
 /**
  * Cloudflare Worker Cron Trigger Handler
@@ -228,6 +229,20 @@ export async function handleScheduled(event: ScheduledEvent, env: Env, ctx: Exec
           );
         }
         if (result.error) console.error("[Cron] sloHealth error:", result.error);
+        break;
+      }
+
+      case "0 21 * * *": {
+        // UTC 21h = BRT 18h — S11 HEP daily reminder push aos pacientes do app
+        try {
+          const pool = createPool(env);
+          const out = await sendHepDailyReminders(env, pool);
+          console.log(
+            `[Cron] HEP reminder: candidates=${out.candidates} pushed=${out.pushed} failed=${out.failed}`,
+          );
+        } catch (err) {
+          console.error("[Cron] HEP reminder failed:", err);
+        }
         break;
       }
 
