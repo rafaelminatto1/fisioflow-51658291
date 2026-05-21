@@ -68,7 +68,10 @@ function getErrorMessage(body: unknown, fallback: string): string {
     : base;
 }
 
-export async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
+export async function request<T>(
+  path: string,
+  options: RequestInit & { keepalive?: boolean } = {},
+): Promise<T> {
   const authHeaders = await getAuthHeader();
   const url = `${getWorkersApiUrl()}${path}`;
   const method = options.method || "GET";
@@ -76,6 +79,7 @@ export async function request<T>(path: string, options: RequestInit = {}): Promi
   try {
     const res = await fetch(url, {
       ...options,
+      keepalive: options.keepalive,
       headers: {
         "Content-Type": "application/json",
         ...authHeaders,
