@@ -170,7 +170,8 @@ app.get("/:id/pix-qr", requireAuth, async (c) => {
   }
 
   const reciboResult = await pool.query(
-    `SELECT r.valor, r.referente, r.numero_recibo, o.pix_key, o.name AS org_name, o.city AS org_city
+    `SELECT r.valor, r.referente, r.numero_recibo, r.data_emissao,
+            o.pix_key, o.name AS org_name, o.city AS org_city
      FROM recibos r
      LEFT JOIN organizations o ON o.id = r.organization_id
      WHERE r.id = $1 AND r.organization_id = $2`,
@@ -189,11 +190,19 @@ app.get("/:id/pix-qr", requireAuth, async (c) => {
   }
 
   // Build Pix Copia e Cola payload (EMV/QRCPS-MPM spec)
+  // S10 fix: remove acentos (EMV exige ASCII); txid prefixado com ano (evita
+  // colisao entre numero_recibo de anos diferentes).
+  const stripAccents = (s: string) =>
+    s
+      .normalize("NFD")
+      .replace(/[̀-ͯ]/g, "")
+      .replace(/[^\x20-\x7E]/g, "");
   const valor = Number(recibo.valor).toFixed(2);
-  const nome = (recibo.org_name ?? "Fisioterapeuta").substring(0, 25);
-  const cidade = (recibo.org_city ?? "SAO PAULO").substring(0, 15).toUpperCase();
-  const txid = `RECIBO${recibo.numero_recibo}`.substring(0, 25).replace(/\s/g, "");
-  const desc = (recibo.referente ?? "Sessao fisioterapia").substring(0, 30);
+  const nome = stripAccents(recibo.org_name ?? "Fisioterapeuta").substring(0, 25);
+  const cidade = stripAccents(recibo.org_city ?? "SAO PAULO").substring(0, 15).toUpperCase();
+  const year = new Date(recibo.data_emissao ?? Date.now()).getFullYear();
+  const txid = `R${year}${recibo.numero_recibo}`.substring(0, 25).replace(/\s/g, "");
+  const desc = stripAccents(recibo.referente ?? "Sessao fisioterapia").substring(0, 30);
 
   function pixField(id: string, value: string): string {
     const len = String(value.length).padStart(2, "0");
