@@ -3,9 +3,10 @@
  * Optimized with modular hooks and components for better maintainability.
  */
 
-import { lazy, Suspense, useMemo, useEffect, useCallback, useRef } from "react";
+import { lazy, Suspense, useMemo, useEffect, useCallback, useRef, useState } from "react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
 import { AlertTriangle } from "lucide-react";
 
 import { PageLayout, PageContainer } from "@/components/layout/PageLayout";
@@ -48,6 +49,10 @@ import { EvolutionSummaryCard } from "@/components/evolution/EvolutionSummaryCar
 import { MetasCard } from "@/components/evolution/MetasCard";
 import { ComponentErrorBoundary } from "@/components/error";
 import { ApplyTemplateModal } from "@/components/evolution/modals/ApplyTemplateModal";
+import {
+  EvolutionConflictModal,
+  type EvolutionConflictData,
+} from "@/components/evolution/EvolutionConflictModal";
 
 import type { EvolutionTab } from "@/hooks/evolution/useEvolutionDataOptimized";
 
@@ -111,6 +116,7 @@ export interface PainScaleData {
 
 const PatientEvolution = () => {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { CommandPaletteComponent } = useCommandPalette();
   const state = usePatientEvolutionState();
   const handlers = usePatientEvolutionHandlers(state);
@@ -120,6 +126,13 @@ const PatientEvolution = () => {
     ? `autosave-evolution-${state.appointmentId}`
     : undefined;
   const autoSaveMutation = useAutoSaveSoapRecord(autoSaveScopeId);
+
+  // Conflict state — disparado quando server retorna 409 (outra aba/dispositivo
+  // editou a mesma evolução em paralelo). Ref: spec US2.
+  const [conflict, setConflict] = useState<EvolutionConflictData | null>(null);
+  // Quando o usuário escolhe "manter minha versão", o próximo save deve ir
+  // sem `version` (force overwrite). Reset após o save bem-sucedido.
+  const forceOverwriteRef = useRef(false);
 
   // Status offline (queue de ações pendentes + navigator.onLine)
   const offline = useOfflineSync();
@@ -335,16 +348,48 @@ const PatientEvolution = () => {
         typeof crypto !== "undefined" && crypto.randomUUID
           ? crypto.randomUUID()
           : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
-      const record = await autoSaveMutation.mutateAsync({
-        patient_id: state.patientId,
-        appointment_id: state.appointmentId,
-        recordId: state.currentSoapRecordId,
-        idempotencyKey,
-        ...data,
-      } as any);
 
-      if (record?.id && record.id !== state.currentSoapRecordId) {
-        state.setCurrentSoapRecordId(record.id);
+      // Version do registro atual: se mismatch no server → 409.
+      // forceOverwriteRef bypassa o check quando user escolheu "manter minha versão".
+      let version: number | undefined;
+      if (state.currentSoapRecordId && !forceOverwriteRef.current) {
+        const cachedDraft = queryClient.getQueryData<any>([
+          "evolution-records",
+          "drafts",
+          state.patientId,
+          "byAppointment",
+          state.appointmentId,
+        ]);
+        version = cachedDraft?.version;
+      }
+
+      try {
+        const record = await autoSaveMutation.mutateAsync({
+          patient_id: state.patientId,
+          appointment_id: state.appointmentId,
+          recordId: state.currentSoapRecordId,
+          idempotencyKey,
+          ...(version !== undefined ? { version } : {}),
+          ...data,
+        } as any);
+
+        if (record?.id && record.id !== state.currentSoapRecordId) {
+          state.setCurrentSoapRecordId(record.id);
+        }
+        // Save bem-sucedido — reseta force overwrite
+        forceOverwriteRef.current = false;
+      } catch (err: any) {
+        if (err?.status === 409 && err?.payload?.error === "conflict") {
+          setConflict({
+            message:
+              err.payload.message ??
+              "Esta evolução foi editada em outro dispositivo.",
+            current: err.payload.current,
+          });
+          // Não relança — modal trata a decisão do usuário
+          return;
+        }
+        throw err;
       }
     },
     delay: 5000,
@@ -770,6 +815,52 @@ const PatientEvolution = () => {
           <EvolutionKeyboardShortcuts
             open={state.showKeyboardHelp}
             onOpenChange={state.setShowKeyboardHelp}
+          />
+          <EvolutionConflictModal
+            open={conflict !== null}
+            conflict={conflict}
+            onReload={async () => {
+              const current = conflict?.current;
+              setConflict(null);
+              forceOverwriteRef.current = false;
+              // Atualiza state local diretamente com a versão do servidor (do payload 409)
+              // — não esperar refetch, evita flicker e garante UI consistente.
+              if (current) {
+                state.setEvolutionData((prev) => ({
+                  ...prev,
+                  observacao: current.observacao ?? "",
+                  painScale: current.pain_scale ?? null,
+                }));
+                state.setEvolutionV2Data((prev: any) => ({
+                  ...prev,
+                  evolutionText: current.observacao ?? "",
+                  observations: current.observacao ?? "",
+                  painLevel: current.pain_scale ?? undefined,
+                }));
+              }
+              // Invalida cache para que próximos saves leiam version atualizado
+              await queryClient.invalidateQueries({
+                queryKey: [
+                  "evolution-records",
+                  "drafts",
+                  state.patientId,
+                  "byAppointment",
+                  state.appointmentId,
+                ],
+              });
+              toast.success("Dados atualizados", {
+                description: "Versão mais recente carregada do servidor.",
+              });
+            }}
+            onKeepLocal={() => {
+              setConflict(null);
+              // Próximo save não enviará `version` → server aceita (force overwrite)
+              forceOverwriteRef.current = true;
+              toast.info("Suas alterações serão salvas", {
+                description: "Sobrescrevendo a versão do servidor no próximo autosave.",
+              });
+            }}
+            onClose={() => setConflict(null)}
           />
           <CommandPaletteComponent />
           <AIScribeModal
