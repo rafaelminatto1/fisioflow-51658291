@@ -288,7 +288,7 @@ app.get("/patients/:id/ai-snapshot", requireAuth, async (c) => {
       Sua tarefa é ler estas últimas 10 evoluções clínicas de um paciente e gerar um snapshot executivo para o time clínico.
       
       EVOLUÇÕES:
-      ${JSON.stringify(history.rows)}
+      ${JSON.stringify(history.rows).substring(0, 15000)}
 
       FORMATO DE SAÍDA (Retorne APENAS JSON puro):
       {
@@ -299,20 +299,44 @@ app.get("/patients/:id/ai-snapshot", requireAuth, async (c) => {
       }
     `.trim();
 
-    const result = await runThinkingModel(c.env, {
-      prompt,
-      model: "gemini-1.5-flash",
-      temperature: 0.2,
-      responseFormat: "json",
-    });
+    try {
+      const result = await runThinkingModel(c.env, {
+        prompt,
+        model: "@cf/meta/llama-3.1-8b-instruct",
+        temperature: 0.2,
+        responseFormat: "json",
+      });
 
-    const jsonMatch = result.content.match(/\{[\s\S]*\}/);
-    const data = JSON.parse(jsonMatch?.[0] ?? result.content);
+      let data;
+      try {
+        const jsonMatch = result.content.match(/\{[\s\S]*\}/);
+        data = JSON.parse(jsonMatch?.[0] ?? result.content);
+      } catch (parseError: any) {
+        console.error("[ClinicMetrics/AI] Failed to parse AI snapshot JSON:", parseError, result.content);
+        data = {
+          mainStatus: "Erro ao processar resposta da IA.",
+          keyWins: [],
+          remainingChallenges: [],
+          clinicalRisk: "medium",
+          _raw: result.content.substring(0, 100)
+        };
+      }
 
-    return c.json({ data });
-  } catch (error) {
-    console.error("[Metrics] AI Snapshot error:", error);
-    return c.json({ error: "Failed to generate AI snapshot" }, 500);
+      return c.json({ data });
+    } catch (modelError: any) {
+      console.error("[ClinicMetrics/AI] Model error:", modelError);
+      return c.json({ 
+        data: { 
+          mainStatus: "Análise IA temporariamente indisponível.",
+          keyWins: [],
+          remainingChallenges: [],
+          clinicalRisk: "medium"
+        } 
+      });
+    }
+  } catch (error: any) {
+    console.error("[ClinicMetrics] Unexpected error:", error);
+    return c.json({ error: "Erro inesperado", details: error.message }, 500);
   }
 });
 

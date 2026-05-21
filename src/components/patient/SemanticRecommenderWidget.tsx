@@ -1,6 +1,6 @@
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
-import { requestPublic } from "@/api/v2/base";
+import { request } from "@/api/v2/base";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Brain, FileText, Dumbbell, ArrowRight } from "lucide-react";
 import { LoadingSkeleton } from "@/components/ui/loading-skeleton";
@@ -15,7 +15,7 @@ export const SemanticRecommenderWidget: React.FC<SemanticRecommenderWidgetProps>
   const { data, isLoading } = useQuery({
     queryKey: ["semantic-recommendations", condition],
     queryFn: () =>
-      requestPublic<{ recommendations: { protocols: any[]; exercises: any[] } }>(
+      request<{ recommendations: { protocols: any[]; exercises: any[] } }>(
         `/api/ai-search/recommend?condition=${encodeURIComponent(condition)}`,
       ),
     enabled: !!condition && condition.length > 3,

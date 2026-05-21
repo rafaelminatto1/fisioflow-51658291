@@ -263,18 +263,21 @@ aiSearchApp.get("/recommend", requireAuth, async (c) => {
         limit: 5,
         filters: { source: "exercises" },
       }),
-    ]);
+    ]).catch(err => {
+      console.error("[AI Search] Promise.all error:", err);
+      throw err;
+    });
 
     return c.json({
       condition,
       recommendations: {
-        protocols: wikiRes.sources.map((s) => ({
+        protocols: (wikiRes.sources || []).map((s) => ({
           id: s.id,
           score: s.score ?? 1,
           title: s.filename,
           ...s.metadata,
         })),
-        exercises: exerciseRes.sources.map((s) => ({
+        exercises: (exerciseRes.sources || []).map((s) => ({
           id: s.id,
           score: s.score ?? 1,
           name: s.filename,
@@ -284,7 +287,11 @@ aiSearchApp.get("/recommend", requireAuth, async (c) => {
     });
   } catch (error: any) {
     console.error("[AI Search] Recommend error:", error);
-    return c.json({ error: "Falha ao gerar recomendações clínicas" }, 500);
+    return c.json({ 
+      error: "Falha ao gerar recomendações clínicas", 
+      details: error.message,
+      _trace: "recommend_fail_v1" 
+    }, 500);
   }
 });
 

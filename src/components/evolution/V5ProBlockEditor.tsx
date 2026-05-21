@@ -142,8 +142,8 @@ export const V5ProBlockEditor: React.FC<V5ProBlockEditorProps> = ({
         // Usar as últimas 200 palavras para contexto (ou a condição do paciente se tivermos, mas aqui pegamos do texto digitado)
         const contextQuery = text.slice(-1000) || "reabilitação fisioterapia";
 
-        const { requestPublic } = await import("@/api/v2/base");
-        const res = await requestPublic<{
+        const { request } = await import("@/api/v2/base");
+        const res = await request<{
           recommendations: { protocols: any[]; exercises: any[] };
         }>(`/api/ai-search/recommend?condition=${encodeURIComponent(contextQuery)}`);
 
