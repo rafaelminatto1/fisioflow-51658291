@@ -73,12 +73,17 @@ export default function OrganizationSettings() {
   // Form state — clinic data
   const [orgName, setOrgName] = useState("");
   const [orgSlug, setOrgSlug] = useState("");
+  const [orgPixKey, setOrgPixKey] = useState("");
+  const [orgCity, setOrgCity] = useState("");
   const [formDirty, setFormDirty] = useState(false);
 
   // Sync form with loaded org data
   if (currentOrganization && !formDirty) {
     if (orgName !== currentOrganization.name) setOrgName(currentOrganization.name);
     if (orgSlug !== (currentOrganization.slug ?? "")) setOrgSlug(currentOrganization.slug ?? "");
+    if (orgPixKey !== (currentOrganization.pix_key ?? ""))
+      setOrgPixKey(currentOrganization.pix_key ?? "");
+    if (orgCity !== (currentOrganization.city ?? "")) setOrgCity(currentOrganization.city ?? "");
   }
 
   // Invite member modal
@@ -98,6 +103,8 @@ export default function OrganizationSettings() {
       id: currentOrganization.id,
       name: orgName,
       slug: orgSlug,
+      pix_key: orgPixKey.trim() || null,
+      city: orgCity.trim() || null,
     });
     setFormDirty(false);
   };
@@ -200,6 +207,37 @@ export default function OrganizationSettings() {
                   />
                   <p className="text-xs text-muted-foreground">
                     Usado em URLs e integrações. Apenas letras minúsculas, números e hifens.
+                  </p>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="org-pix-key">Chave Pix (recibos)</Label>
+                  <Input
+                    id="org-pix-key"
+                    value={orgPixKey}
+                    onChange={(e) => {
+                      setOrgPixKey(e.target.value);
+                      setFormDirty(true);
+                    }}
+                    placeholder="email@clinica.com.br, CPF, CNPJ, telefone ou chave aleatória"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Usada para gerar QR Code Pix dinâmico em cada recibo emitido aos pacientes.
+                  </p>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="org-city">Cidade</Label>
+                  <Input
+                    id="org-city"
+                    value={orgCity}
+                    onChange={(e) => {
+                      setOrgCity(e.target.value);
+                      setFormDirty(true);
+                    }}
+                    placeholder="São Paulo"
+                    maxLength={15}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Aparece no QR Code Pix. Máx. 15 caracteres (limite do padrão EMV).
                   </p>
                 </div>
                 <Button

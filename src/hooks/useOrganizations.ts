@@ -16,6 +16,10 @@ export interface Organization {
   address?: string;
   logo_url?: string;
   active: boolean;
+  /** S10 — chave Pix usada em recibos pra gerar QR Code (EMV BR Code). */
+  pix_key?: string | null;
+  /** S10 — cidade da clínica (campo 60 do payload Pix, max 15 chars ASCII). */
+  city?: string | null;
   created_at: string;
   updated_at: string;
 }
