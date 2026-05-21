@@ -218,6 +218,19 @@ export async function handleScheduled(event: ScheduledEvent, env: Env, ctx: Exec
         break;
       }
 
+      case "15 * * * *": {
+        // A cada hora aos 15min — S9 T5 SLO health check (alerta se uptime <99.5% ou p95 >2s).
+        const { checkSloHealth } = await import("./lib/sloReport");
+        const result = await checkSloHealth(env);
+        if (result.triggered) {
+          console.warn(
+            `[Cron] sloHealth ALERT uptime=${result.uptimePct} p95=${result.p95_ms} reason=${result.reason} notified=${result.adminsNotified}`,
+          );
+        }
+        if (result.error) console.error("[Cron] sloHealth error:", result.error);
+        break;
+      }
+
       default:
         console.warn(`[Cron] No handler defined for schedule: ${cron}`);
     }
