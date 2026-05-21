@@ -773,6 +773,10 @@ const PatientEvolution = () => {
           <EvolutionConflictModal
             open={conflict !== null}
             conflict={conflict}
+            localData={{
+              observacao: state.evolutionData.observacao,
+              painScale: state.evolutionData.painScale,
+            }}
             onReload={async () => {
               const current = conflict?.current;
               setConflict(null);
