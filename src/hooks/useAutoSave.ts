@@ -31,6 +31,10 @@ export function useAutoSave<T>({
   const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
   const [isDirty, setIsDirty] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  // P3.1: estado de "falha real" (erro de servidor, NÃO offline) — UI mostra
+  // badge "Falha ao salvar — Tentar de novo" quando lastError != null.
+  // Limpa automaticamente quando o próximo save bem-sucedido completar.
+  const [lastError, setLastError] = useState<Error | null>(null);
 
   const save = useCallback(
     async (dataToSave: T = data) => {
@@ -59,6 +63,7 @@ export function useAutoSave<T>({
         const now = new Date();
         setLastSavedAt(now);
         setIsDirty(false);
+        setLastError(null);
 
         // Only show toast if explicitly enabled
         if (showToasts) {
@@ -80,11 +85,8 @@ export function useAutoSave<T>({
           (err instanceof TypeError && /fetch|network/i.test(err.message));
         logger.error("Erro no auto-save", err, "useAutoSave");
         if (!isOffline) {
-          toast({
-            title: "Erro ao salvar",
-            description: "Não foi possível salvar automaticamente. Tente salvar manualmente.",
-            variant: "destructive",
-          });
+          // P3.1: marca falha para UI exibir badge + retry (sem toast — já é visual no header)
+          setLastError(err);
         }
       } finally {
         isSavingRef.current = false;
@@ -190,5 +192,13 @@ export function useAutoSave<T>({
     return () => clearInterval(interval);
   }, [enabled, maxDelay, save]);
 
-  return { save, lastSavedAt, isDirty, isSaving };
+  // P3.1: retry — força re-tentativa imediata após falha (botão "Tentar de novo")
+  const retry = useCallback(() => {
+    setLastError(null);
+    // Reseta lastSavedRef para que `save()` não pule por "não mudou"
+    lastSavedRef.current = undefined;
+    save(dataRef.current);
+  }, [save]);
+
+  return { save, lastSavedAt, isDirty, isSaving, lastError, retry };
 }
