@@ -157,56 +157,104 @@ self.addEventListener("sync", (event: any) => {
 });
 
 async function drainOfflineQueue() {
-  const DB_NAME = "fisioflow-offline";
-  const STORE_NAME = "ops";
+  const DB_NAME = "FisioFlowOffline";
+  const STORE_NAME = "offline_actions";
+  const API_BASE_URL = "https://fisioflow-api.rafalegollas.workers.dev";
+  const NEON_AUTH_URL = "https://ep-wandering-bonus-acj4zwvo.neonauth.sa-east-1.aws.neon.tech/neondb/auth";
+
+  // 1. Tenta obter um JWT fresco via Neon direct session fetch
+  let token: string | null = null;
+  try {
+    const authRes = await fetch(`${NEON_AUTH_URL}/get-session`, {
+      method: "GET",
+      credentials: "include",
+      headers: { Accept: "application/json" },
+    });
+    token = authRes.headers.get("set-auth-jwt");
+  } catch (err) {
+    console.error("[SW] Erro ao tentar obter token para Background Sync:", err);
+  }
 
   const db = await new Promise<IDBDatabase>((resolve, reject) => {
-    const req = indexedDB.open(DB_NAME, 1);
+    const req = indexedDB.open(DB_NAME, 2); // Versão 2 conforme useOfflineStorage
     req.onsuccess = () => resolve(req.result);
     req.onerror = () => reject(req.error);
   });
 
-  const ops: any[] = await new Promise((resolve, reject) => {
+  const actions: any[] = await new Promise((resolve, reject) => {
     const tx = db.transaction(STORE_NAME, "readonly");
     const req = tx.objectStore(STORE_NAME).getAll();
     req.onsuccess = () => resolve(req.result ?? []);
     req.onerror = () => reject(req.error);
   });
 
-  const pending = ops.filter((op) => op.status === "pending");
+  // Filtra apenas pendentes (synced === false) e sem conflito
+  const pending = actions.filter((a) => !a.synced && !a.conflictedAt && a.retryCount < 3);
   if (!pending.length) return;
 
   for (const op of pending) {
+    let url = op.url;
+    let method = op.method || "POST";
+    const body = op.payload;
+
+    // Mapeamento legado/específico se a URL não estiver no registro
+    if (!url) {
+      if (op.action === "AUTOSAVE_EVOLUTION") {
+        url = "/api/sessions/autosave";
+        method = "POST";
+      } else {
+        console.warn("[SW] Ação sem URL definida e sem mapeamento:", op.action);
+        continue;
+      }
+    }
+
+    const fullUrl = url.startsWith("http") ? url : `${API_BASE_URL}${url}`;
+
     try {
-      const res = await fetch(op.url, {
-        method: op.method,
-        headers: { "Content-Type": "application/json" },
-        body: op.body ? JSON.stringify(op.body) : undefined,
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+      };
+      if (token) {
+        headers["Authorization"] = `Bearer ${token}`;
+      }
+
+      const res = await fetch(fullUrl, {
+        method,
+        headers,
+        body: JSON.stringify(body),
       });
 
       if (res.ok) {
         await new Promise<void>((resolve, reject) => {
           const tx = db.transaction(STORE_NAME, "readwrite");
+          // No sistema novo, marcamos como synced ou deletamos? 
+          // offlineSync.ts deleta após sucesso.
           tx.objectStore(STORE_NAME).delete(op.id);
           tx.oncomplete = () => resolve();
           tx.onerror = () => reject(tx.error);
         });
-      } else if (res.status < 500) {
-        // Client error — mark failed permanently (don't retry)
+      } else if (res.status === 409) {
+        // Conflito: marca no registro para resolução manual
         await new Promise<void>((resolve) => {
           const tx = db.transaction(STORE_NAME, "readwrite");
           tx.objectStore(STORE_NAME).put({
             ...op,
-            status: "failed",
-            failReason: `HTTP ${res.status}`,
+            conflictedAt: Date.now(),
+            lastError: "Conflict (409) detected during Background Sync",
           });
           tx.oncomplete = () => resolve();
-          tx.onerror = () => resolve();
+        });
+      } else if (res.status >= 400 && res.status < 500) {
+        // Erro terminal do cliente: remove da fila
+        await new Promise<void>((resolve) => {
+          const tx = db.transaction(STORE_NAME, "readwrite");
+          tx.objectStore(STORE_NAME).delete(op.id);
+          tx.oncomplete = () => resolve();
         });
       }
-      // 5xx → leave as pending, Background Sync will retry
-    } catch {
-      // Network error → leave as pending
+      // 5xx ou erro de rede: mantém como pendente para o próximo sync
+    } catch (err) {
+      console.error("[SW] Erro ao sincronizar ação:", op.id, err);
     }
   }
 }

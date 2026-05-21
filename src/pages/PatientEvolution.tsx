@@ -33,7 +33,7 @@ import { useEvolutionShortcuts } from "@/hooks/evolution/useEvolutionShortcuts";
 import { useAutoSave } from "@/hooks/useAutoSave";
 import { useAutoSaveSoapRecord } from "@/hooks/useSoapRecords";
 import { useEvolutionDraft } from "@/hooks/useEvolutionDraft";
-import { useOfflineSync } from "@/services/offlineSync";
+import { useOfflineSync, ACTION_TYPES, enqueueAction } from "@/services/offlineSync";
 import { stripHtml } from "@/lib/utils/stripHtml";
 
 // Componentes
@@ -307,17 +307,71 @@ const PatientEvolution = () => {
         // Save bem-sucedido — reseta force overwrite
         forceOverwriteRef.current = false;
       } catch (err: any) {
-
         if (err?.status === 409 && err?.payload?.error === "conflict") {
+          const serverCurrent = err.payload.current;
+          
+          const localObs = stripHtml(data.observacao || "").trim();
+          const serverObs = stripHtml(serverCurrent?.observacao || "").trim();
+          
+          const isLocalEmpty = 
+            localObs.length === 0 && 
+            data.pain_scale == null && 
+            !(data.procedures?.length) && 
+            !(data.exercises?.length) && 
+            !(data.measurements?.length);
+            
+          const isTextEqual = localObs === serverObs;
+
+          // Se não há dados locais significativos ou se é igual ao do servidor, funde silenciosamente
+          if (isLocalEmpty || isTextEqual) {
+            state.setCurrentSoapRecordId(serverCurrent.id);
+            queryClient.setQueryData(
+              [
+                "evolution-records",
+                "drafts",
+                state.patientId,
+                "byAppointment",
+                state.appointmentId,
+              ],
+              serverCurrent
+            );
+            return;
+          }
+
           setConflict({
             message:
               err.payload.message ??
               "Esta evolução foi editada em outro dispositivo.",
-            current: err.payload.current,
+            current: serverCurrent,
           });
           // Não relança — modal trata a decisão do usuário
           return;
         }
+
+        // Verifica se é erro de rede/offline
+        const isOffline =
+          (typeof navigator !== "undefined" && navigator.onLine === false) ||
+          (err instanceof TypeError && /fetch|network/i.test(err.message));
+
+        if (isOffline) {
+          // Fase 3: Background Sync. Salva no IndexedDB para envio futuro.
+          const payload = {
+            patient_id: state.patientId,
+            appointment_id: state.appointmentId,
+            recordId: state.currentSoapRecordId,
+            idempotencyKey,
+            ...(version !== undefined ? { version } : {}),
+            ...data,
+          };
+          
+          await enqueueAction(ACTION_TYPES.AUTOSAVE_EVOLUTION, payload, {
+            url: "/api/sessions/autosave",
+            method: "POST",
+          });
+          // Omitimos o throw para que o hook entenda que foi "salvo" (no IndexedDB)
+          return;
+        }
+
         throw err;
       }
     },
