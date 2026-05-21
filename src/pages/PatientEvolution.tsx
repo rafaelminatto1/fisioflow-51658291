@@ -555,6 +555,9 @@ const PatientEvolution = () => {
           onChange={handleEvolutionV2Change}
           patientId={state.patientId}
           evolutionId={state.currentSoapRecordId}
+          collaborationId={state.currentSoapRecordId}
+          userName={state.user?.full_name || state.user?.name || "Profissional"}
+          userColor="#8b5cf6"
           lastSaved={lastSavedAt}
           onNavigateToHistorico={() => state.setActiveTab("historico")}
         />
