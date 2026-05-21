@@ -355,11 +355,26 @@ app.get("/quests/:patientId", requireAuth, async (c) => {
   const created = await pool.query(
     `INSERT INTO daily_quests (organization_id, patient_id, date, quests_data, completed_count, created_at, updated_at)
      VALUES ($1, $2, $3, $4, 0, NOW(), NOW())
+     ON CONFLICT (patient_id, date) DO UPDATE
+       SET organization_id = EXCLUDED.organization_id,
+           updated_at = NOW()
+     WHERE daily_quests.organization_id IS NULL
      RETURNING *`,
     [user.organizationId, patientId, today, JSON.stringify(defaultQuests)],
   );
 
-  return c.json({ data: created.rows[0] });
+  if (created.rows.length) {
+    return c.json({ data: created.rows[0] });
+  }
+
+  const existing = await pool.query(
+    `SELECT * FROM daily_quests
+     WHERE patient_id = $1 AND date = $2 AND organization_id = $3
+     LIMIT 1`,
+    [patientId, today, user.organizationId],
+  );
+
+  return c.json({ data: existing.rows[0] || { quests: [], completed_count: 0 } });
 });
 
 // ─── PUT /quests/:patientId/complete ─────────────────────────────────────────
