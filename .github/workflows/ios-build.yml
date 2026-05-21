@@ -131,7 +131,7 @@ jobs:
             -archivePath "$RUNNER_TEMP/app.xcarchive" \
             archive \
             CODE_SIGN_STYLE=Manual \
-            CODE_SIGN_IDENTITY="Apple Distribution" \
+            CODE_SIGN_IDENTITY="Apple Development" \
             DEVELOPMENT_TEAM="$APPLE_TEAM_ID" \
             PROVISIONING_PROFILE="$PROFILE_UUID" \
             SKIP_INSTALL=NO
