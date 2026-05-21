@@ -176,6 +176,7 @@ export interface Env {
   ASSESSMENT_LIVE_SESSION?: DurableObjectNamespace;
   CLINIC_AGENT?: DurableObjectNamespace;
   VOICE_SCRIBE_AGENT?: DurableObjectNamespace;
+  EVOLUTION_COLLABORATION: DurableObjectNamespace;
 
   // Premium AI (opt-in): Gemini Live API para avaliações em tempo real
   GOOGLE_AI_PREMIUM_ENABLED?: string; // "true" para habilitar
