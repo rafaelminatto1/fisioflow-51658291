@@ -82,28 +82,41 @@ export const useUpdateEvolution = () => {
   });
 };
 
+// P3.2: mutationKey global usado pelo resumePausedMutations após hidratação
+// do PersistQueryClient. O setMutationDefaults em AppRuntime registra o
+// mutationFn para esta key para que mutations persistidas sobrevivam refresh.
+export const EVOLUTION_AUTOSAVE_KEY = ["evolution-autosave"] as const;
+
+export type AutosaveMutationVariables = CreateEvolutionData & {
+  recordId?: string;
+  idempotencyKey?: string;
+};
+
+export const evolutionAutosaveMutationFn = async (
+  data: AutosaveMutationVariables,
+) => {
+  const { recordId, idempotencyKey, ...rest } = data;
+  const res = await sessionsApi.autosave({
+    ...rest,
+    patient_id: rest.patient_id,
+    recordId,
+    idempotencyKey,
+    status: rest.status ?? "draft",
+    record_date: rest.record_date ?? new Date().toISOString().split("T")[0],
+  });
+  return res.data as EvolutionRecord & { isNew?: boolean };
+};
+
 export const useAutoSaveEvolution = (scopeId?: string) => {
   const queryClient = useQueryClient();
 
   return useMutation({
+    mutationKey: EVOLUTION_AUTOSAVE_KEY,
     // Serializa autosaves por escopo (uma evolução): impede que respostas
     // out-of-order do servidor sobrescrevam dados mais recentes no cache.
     // Ref: https://tanstack.com/query/v5/docs/framework/react/guides/mutations#mutation-scopes
     scope: scopeId ? { id: scopeId } : undefined,
-    mutationFn: async (
-      data: CreateEvolutionData & { recordId?: string; idempotencyKey?: string },
-    ) => {
-      const { recordId, idempotencyKey, ...rest } = data;
-      const res = await sessionsApi.autosave({
-        ...rest,
-        patient_id: rest.patient_id,
-        recordId,
-        idempotencyKey,
-        status: rest.status ?? "draft",
-        record_date: rest.record_date ?? new Date().toISOString().split("T")[0],
-      });
-      return res.data as EvolutionRecord & { isNew?: boolean };
-    },
+    mutationFn: evolutionAutosaveMutationFn,
     onSuccess: (result) => {
       if (result.patient_id) {
         queryClient.setQueryData(evolutionKeys.detail(result.id), result);
