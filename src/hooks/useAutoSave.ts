@@ -17,9 +17,9 @@ export function useAutoSave<T>({
   data,
   onSave,
   delay = 3000,
-  maxDelay = 30000, // 30 segundos por padrão para save forçado
+  maxDelay = 30000, // Tempo máximo entre saves mesmo com atividade contínua
   enabled = true,
-  showToasts = false, // Disabled by default for auto-save
+  showToasts = false,
 }: UseAutoSaveOptions<T>) {
   const { toast } = useToast();
   const timeoutRef = useRef<NodeJS.Timeout>();
@@ -29,6 +29,8 @@ export function useAutoSave<T>({
   const isSavingRef = useRef(false);
   const needsSaveRef = useRef(false);
   const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
+  const [isDirty, setIsDirty] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   const save = useCallback(
     async (dataToSave: T = data) => {
@@ -49,12 +51,14 @@ export function useAutoSave<T>({
 
       try {
         isSavingRef.current = true;
+        setIsSaving(true);
         needsSaveRef.current = false;
         await onSaveRef.current(dataToSave);
         lastSavedRef.current = currentData;
         lastSaveTimeRef.current = Date.now();
         const now = new Date();
         setLastSavedAt(now);
+        setIsDirty(false);
 
         // Only show toast if explicitly enabled
         if (showToasts) {
@@ -66,15 +70,25 @@ export function useAutoSave<T>({
           });
         }
       } catch (error) {
-        logger.error("Erro no auto-save", error as Error, "useAutoSave");
-        // Só mostrar toast de erro se não for erro de rede temporário (opcional)
-        toast({
-          title: "Erro ao salvar",
-          description: "Não foi possível salvar automaticamente. Tente salvar manualmente.",
-          variant: "destructive",
-        });
+        // Distingue offline real de erro de servidor. Offline não merece toast
+        // de erro — a fila offline (offlineSync) replicará o save depois.
+        // Ref: navigator.onLine é hint, não verdade; TypeError de fetch é o
+        // sinal real de "requisição nunca saiu do device".
+        const err = error as Error;
+        const isOffline =
+          (typeof navigator !== "undefined" && navigator.onLine === false) ||
+          (err instanceof TypeError && /fetch|network/i.test(err.message));
+        logger.error("Erro no auto-save", err, "useAutoSave");
+        if (!isOffline) {
+          toast({
+            title: "Erro ao salvar",
+            description: "Não foi possível salvar automaticamente. Tente salvar manualmente.",
+            variant: "destructive",
+          });
+        }
       } finally {
         isSavingRef.current = false;
+        setIsSaving(false);
         if (needsSaveRef.current) {
           save(dataRef.current);
         }
@@ -82,6 +96,29 @@ export function useAutoSave<T>({
     },
     [data, enabled, toast, showToasts],
   );
+
+  // Detecta "dirty" comparando o snapshot atual ao último salvo.
+  useEffect(() => {
+    if (!enabled || lastSavedRef.current === undefined) return;
+    setIsDirty(JSON.stringify(data) !== lastSavedRef.current);
+  }, [data, enabled]);
+
+  // Guard de saída: avisa o usuário se há mudanças pendentes não salvas.
+  // Ref: https://developer.mozilla.org/en-US/docs/Web/API/Window/beforeunload_event
+  useEffect(() => {
+    if (!enabled) return;
+    const handler = (e: BeforeUnloadEvent) => {
+      if (isDirty || isSavingRef.current) {
+        e.preventDefault();
+        // Maioria dos browsers ignora a string, mas é exigida pelo spec antigo.
+        e.returnValue = "Há alterações não salvas.";
+        return e.returnValue;
+      }
+      return undefined;
+    };
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, [enabled, isDirty]);
 
   // Keep refs for unmount save
   const dataRef = useRef(data);
@@ -153,5 +190,5 @@ export function useAutoSave<T>({
     return () => clearInterval(interval);
   }, [enabled, maxDelay, save]);
 
-  return { save, lastSavedAt };
+  return { save, lastSavedAt, isDirty, isSaving };
 }

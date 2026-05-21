@@ -304,11 +304,25 @@ export const sessionsApi = {
 
   delete: (id: string) => request<{ ok: boolean }>(`/api/sessions/${id}`, { method: "DELETE" }),
 
-  autosave: (data: Partial<SessionRecord> & { patient_id: string; recordId?: string }) =>
-    request<{ data: SessionRecord & { isNew?: boolean } }>("/api/sessions/autosave", {
-      method: "POST",
-      body: JSON.stringify(data),
-    }),
+  autosave: (
+    data: Partial<SessionRecord> & {
+      patient_id: string;
+      recordId?: string;
+      idempotencyKey?: string;
+    },
+  ) => {
+    const { idempotencyKey, ...payload } = data;
+    const headers: Record<string, string> = {};
+    if (idempotencyKey) headers["Idempotency-Key"] = idempotencyKey;
+    return request<{ data: SessionRecord & { isNew?: boolean } }>(
+      "/api/sessions/autosave",
+      {
+        method: "POST",
+        body: JSON.stringify(payload),
+        headers,
+      },
+    );
+  },
 };
 
 // ===== Biomechanics API =====

@@ -114,7 +114,12 @@ const PatientEvolution = () => {
   const { CommandPaletteComponent } = useCommandPalette();
   const state = usePatientEvolutionState();
   const handlers = usePatientEvolutionHandlers(state);
-  const autoSaveMutation = useAutoSaveSoapRecord();
+  // Scope serializa autosaves por evolução: evita races out-of-order entre
+  // mutations concorrentes (debounce + unmount + maxDelay forçado).
+  const autoSaveScopeId = state.appointmentId
+    ? `autosave-evolution-${state.appointmentId}`
+    : undefined;
+  const autoSaveMutation = useAutoSaveSoapRecord(autoSaveScopeId);
 
   // Status offline (queue de ações pendentes + navigator.onLine)
   const offline = useOfflineSync();
@@ -130,8 +135,19 @@ const PatientEvolution = () => {
   const handleEvolutionV2Change = useCallback(
     (next: EvolutionV2Data) => {
       state.setEvolutionV2Data(next);
-      // Persiste o rascunho local a cada mudança
-      draft.writeDraft(next);
+      // Persiste o rascunho local somente quando há conteúdo real — evita que
+      // renders iniciais com state vazio (antes da hidratação do servidor)
+      // sobrescrevam o draft local válido.
+      const nextHasContent =
+        !!(next.unifiedItems?.length ?? 0) ||
+        !!(next.procedures?.length ?? 0) ||
+        !!(next.exercises?.length ?? 0) ||
+        !!(next.measurements?.length ?? 0) ||
+        !!(next.painLevel != null) ||
+        (next.evolutionText || next.observations || "").trim().length > 0;
+      if (nextHasContent) {
+        draft.writeDraft(next);
+      }
 
       const orderedItems = [...(next.unifiedItems || [])].sort(
         (a, b) => (a.order ?? 0) - (b.order ?? 0),
@@ -313,10 +329,17 @@ const PatientEvolution = () => {
 
       if (!hasContent && !hasPain) return;
 
+      // Idempotency key por tentativa: protege contra retries da fila offline
+      // e refresh durante mutation in-flight. Server (KV TTL 60s) dedupe.
+      const idempotencyKey =
+        typeof crypto !== "undefined" && crypto.randomUUID
+          ? crypto.randomUUID()
+          : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
       const record = await autoSaveMutation.mutateAsync({
         patient_id: state.patientId,
         appointment_id: state.appointmentId,
         recordId: state.currentSoapRecordId,
+        idempotencyKey,
         ...data,
       } as any);
 

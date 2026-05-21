@@ -175,19 +175,64 @@ export function usePatientEvolutionState() {
         : [],
     });
 
-    // Legacy mirrors (apenas para consumidores não refatorados).
+    // Mirror V2: popular TODOS os campos a partir do servidor para que a UI
+    // (NotionEvolutionPanel) reflita o estado salvo ao reabrir a evolução.
     setSoapData({ subjective: "", objective: "", assessment: "", plan: "" });
+    const serverProcedures = Array.isArray(draftByAppointment.procedures)
+      ? (draftByAppointment.procedures as any[])
+      : [];
+    const serverExercises = Array.isArray(draftByAppointment.exercises)
+      ? (draftByAppointment.exercises as any[])
+      : [];
+    const serverMeasurements = Array.isArray(draftByAppointment.measurements)
+      ? (draftByAppointment.measurements as any[])
+      : [];
+    const serverHomeExercises = Array.isArray(draftByAppointment.home_exercises)
+      ? (draftByAppointment.home_exercises as any[])
+      : [];
+    const homeCareExercisesJson = serverHomeExercises.length > 0
+      ? JSON.stringify(
+          serverHomeExercises.map((h: any, i: number) => ({
+            id: h.id || `hc_${i}`,
+            name: h.name || "",
+            prescription: h.prescription || "3x10",
+            instructions: h.instructions || h.notes || "",
+          })),
+        )
+      : undefined;
+    const migratedUnifiedItems = [
+      ...serverProcedures.map((p: any) => ({
+        id: p.id,
+        name: p.name,
+        completed: !!p.completed,
+        type: "procedure" as const,
+        notes: p.notes,
+        intensity: p.intensity,
+        category: p.category,
+        exerciseId: p.exerciseId,
+        order: p.sequenceOrder,
+      })),
+      ...serverExercises.map((e: any) => ({
+        id: e.id,
+        name: e.name,
+        completed: !!e.completed,
+        type: "exercise" as const,
+        prescription: e.prescription,
+        patientFeedback: e.patientFeedback,
+        order: e.sequenceOrder,
+      })),
+    ];
     setEvolutionV2Data((prev: any) => ({
       ...prev,
       patientReport: "",
-      evolutionText: "",
+      evolutionText: observacao,
       observations: observacao,
-      procedures: Array.isArray(draftByAppointment.procedures)
-        ? draftByAppointment.procedures
-        : prev.procedures,
-      exercises: Array.isArray(draftByAppointment.exercises)
-        ? draftByAppointment.exercises
-        : prev.exercises,
+      painLevel: painScaleValue ?? prev.painLevel,
+      procedures: serverProcedures,
+      exercises: serverExercises,
+      measurements: serverMeasurements,
+      unifiedItems: migratedUnifiedItems.length > 0 ? migratedUnifiedItems : prev.unifiedItems,
+      homeCareExercises: homeCareExercisesJson ?? prev.homeCareExercises,
     }));
 
     if (painScaleValue != null) {
