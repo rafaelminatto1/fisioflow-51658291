@@ -359,10 +359,45 @@ export function usePatientEvolutionState() {
           }
         }
 
+        // Guarda anti-corrupção: se TODOS os campos do next estão vazios E
+        // o current tem conteúdo, é uma montagem inicial do editor (TipTap
+        // dispara onChange com "" antes do value prop sincronizar). NÃO
+        // sobrescrever — preserva o canonical hidratado do servidor.
+        const nextIsEmpty =
+          (next.observations === "" || next.observations === undefined) &&
+          (next.evolutionText === "" || next.evolutionText === undefined) &&
+          (next.painLevel == null) &&
+          !((next.unifiedItems?.length ?? 0) > 0) &&
+          !((next.procedures?.length ?? 0) > 0) &&
+          !((next.exercises?.length ?? 0) > 0) &&
+          !((next.measurements?.length ?? 0) > 0);
+        const currentHasContent =
+          (current.observacao?.trim()?.length ?? 0) > 0 ||
+          current.painScale != null ||
+          (current.procedures?.length ?? 0) > 0 ||
+          (current.exercises?.length ?? 0) > 0 ||
+          (current.measurements?.length ?? 0) > 0;
+        if (nextIsEmpty && currentHasContent) {
+          return current;
+        }
+
+        // Guard mais cirúrgico: preserva observacao quando next tenta zerar
+        // (TipTap dispara onChange com "" antes do value sincronizar) mas
+        // current já tem texto. User pode esvaziar via undo/redo do editor.
+        const nextObservacaoIncoming =
+          (typeof next.observations === "string" && next.observations.trim().length > 0)
+            ? next.observations
+            : (typeof next.evolutionText === "string" && next.evolutionText.trim().length > 0)
+              ? next.evolutionText
+              : null;
+        const preservedObs =
+          nextObservacaoIncoming !== null
+            ? nextObservacaoIncoming
+            : (current.observacao ?? "");
+
         return {
           ...current,
-          observacao:
-            next.observations ?? next.evolutionText ?? current.observacao ?? "",
+          observacao: preservedObs,
           painScale: next.painLevel ?? current.painScale,
           procedures: procedures as any,
           exercises: exercises as any,

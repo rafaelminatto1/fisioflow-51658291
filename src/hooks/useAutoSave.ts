@@ -122,6 +122,10 @@ export function useAutoSave<T>({
     return () => window.removeEventListener("beforeunload", handler);
   }, [enabled, isDirty]);
 
+  // Flush eager on visibility change desativado — causava saves espúrios.
+  // O debounce + save no unmount + persist mutation (P3.2) já cobrem fechamento
+  // abrupto sem risco de enviar state stale.
+
   // Keep refs for unmount save
   const dataRef = useRef(data);
   const onSaveRef = useRef(onSave);
