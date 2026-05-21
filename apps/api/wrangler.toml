@@ -73,9 +73,10 @@ dataset = "fisioflow_events"
 
 # ===== AI SEARCH (RAG gerenciado — diretrizes clínicas, PDFs, artigos) =====
 # AutoRAG: chunks, embeds e indexa documentos automaticamente (1024 dims).
-[[ai_search]]
-binding = "AI_SEARCH"
-instance_name = "fisioflow-rag"
+# Temporariamente desativado — requer permissão "ai search update" na conta Cloudflare.
+# [[ai_search]]
+# binding = "AI_SEARCH"
+# instance_name = "fisioflow-rag"
 
 # ===== PIPELINES (Data warehouse → R2 JSON, open beta grátis) =====
 # Pipeline: fisioflow_events (id: 584a8a3054d1437686b35823f8476fde)
@@ -295,9 +296,9 @@ database_id = "9eba3eb7-5486-49d0-9684-c325f8b1ddc2"
 binding = "ANALYTICS"
 dataset = "fisioflow_events"
 
-[[env.production.ai_search]]
-binding = "AI_SEARCH"
-instance_name = "fisioflow-rag"
+# [[env.production.ai_search]]
+# binding = "AI_SEARCH"
+# instance_name = "fisioflow-rag"
 
 [[env.production.pipelines]]
 binding = "EVENTS_PIPELINE"
@@ -551,9 +552,9 @@ database_id = "adb59c9c-f22b-467d-a04e-e8e54cf987ed"
 binding = "ANALYTICS"
 dataset = "fisioflow_events_staging"
 
-[[env.staging.ai_search]]
-binding = "AI_SEARCH"
-instance_name = "fisioflow-rag"
+# [[env.staging.ai_search]]
+# binding = "AI_SEARCH"
+# instance_name = "fisioflow-rag"
 
 # Staging Pipelines: binding uses the staging stream ID, not the production stream.
 [[env.staging.pipelines]]

@@ -455,13 +455,27 @@ const updateAppointmentHandler: MiddlewareHandler<{
           : undefined;
 
       const finalEndTime = explicitEndTime ?? calculatedEndTime ?? current.endTime;
+      // Só revalida capacidade quando:
+      // 1. Mudou data/hora/duração (muda qual slot é ocupado), OU
+      // 2. Status mudou de "não conta" para "conta" (nova carga no slot).
+      // NÃO revalida quando agendado→atendido/presenca_confirmada→atendido: o slot
+      // já estava ocupado por este appointment, portanto excluí-lo do count e recontá-lo
+      // não altera a carga real.
+      const currentStatusCountsTowardCapacity = countsTowardCapacity(
+        String(current.status ?? "agendado"),
+      );
+      const newStatusCountsTowardCapacity = countsTowardCapacity(normalizedStatus);
+      const statusAddsNewCapacityLoad =
+        status !== undefined &&
+        newStatusCountsTowardCapacity &&
+        !currentStatusCountsTowardCapacity;
       const shouldRecheckCapacity =
         !ignoreCapacity &&
         (date !== undefined ||
           startTime !== undefined ||
           parsedDuration !== undefined ||
           explicitEndTime !== undefined ||
-          (status !== undefined && countsTowardCapacity(normalizedStatus)));
+          statusAddsNewCapacityLoad);
 
       if (shouldRecheckCapacity) {
         const capacityError = await enforceCapacity(tx, organizationId, {
