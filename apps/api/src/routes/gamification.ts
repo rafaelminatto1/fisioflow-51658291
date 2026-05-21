@@ -279,6 +279,11 @@ app.get("/quests/:patientId", requireAuth, async (c) => {
   const pool = await createPool(c.env);
   const { patientId } = c.req.param();
 
+  // S9 fix: valida UUID antes de query (pg lanca "invalid input syntax for uuid" → 500).
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(patientId)) {
+    return c.json({ error: "patientId invalido" }, 400);
+  }
+
   // Verify patient exists to avoid FK violations on later inserts
   const patientExists = await pool.query("SELECT 1 FROM patients WHERE id = $1", [patientId]);
   if (!patientExists.rows.length) {
