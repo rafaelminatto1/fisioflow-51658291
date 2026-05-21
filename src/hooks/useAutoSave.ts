@@ -105,23 +105,6 @@ export function useAutoSave<T>({
     setIsDirty(JSON.stringify(data) !== lastSavedRef.current);
   }, [data, enabled]);
 
-  // Guard de saída: avisa o usuário se há mudanças pendentes não salvas.
-  // Ref: https://developer.mozilla.org/en-US/docs/Web/API/Window/beforeunload_event
-  useEffect(() => {
-    if (!enabled) return;
-    const handler = (e: BeforeUnloadEvent) => {
-      if (isDirty || isSavingRef.current) {
-        e.preventDefault();
-        // Maioria dos browsers ignora a string, mas é exigida pelo spec antigo.
-        e.returnValue = "Há alterações não salvas.";
-        return e.returnValue;
-      }
-      return undefined;
-    };
-    window.addEventListener("beforeunload", handler);
-    return () => window.removeEventListener("beforeunload", handler);
-  }, [enabled, isDirty]);
-
   // Flush eager on visibility change desativado — causava saves espúrios.
   // O debounce + save no unmount + persist mutation (P3.2) já cobrem fechamento
   // abrupto sem risco de enviar state stale.

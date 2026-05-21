@@ -320,6 +320,7 @@ export const sessionsApi = {
         method: "POST",
         body: JSON.stringify(payload),
         headers,
+        keepalive: true,
       },
     );
   },

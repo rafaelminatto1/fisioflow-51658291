@@ -182,31 +182,19 @@ const PatientEvolution = () => {
     const saved = draft.readDraft();
     if (!saved) return;
 
-    // Não restaurar drafts locais vazios — eles podem sobrescrever os dados
-    // que acabaram de chegar do servidor. Só restauramos se o draft local
-    // tiver conteúdo real (texto, itens, medições ou dor).
-    const savedHasContent =
-      !!(saved.unifiedItems?.length ?? 0) ||
-      !!(saved.procedures?.length ?? 0) ||
-      !!(saved.exercises?.length ?? 0) ||
-      !!(saved.measurements?.length ?? 0) ||
-      !!(saved.painLevel != null) ||
-      (saved.evolutionText || saved.observations || "").trim().length > 0;
-
-    if (!savedHasContent) return;
-
+    // Se o rascunho é diferente do que veio do servidor, restauramos.
+    // O rascunho é a "verdade do cliente" até que o servidor confirme.
     const current = state.evolutionV2Data;
-    const currentIsEmpty =
-      !(current?.unifiedItems?.length ?? 0) &&
-      !(current?.procedures?.length ?? 0) &&
-      !(current?.exercises?.length ?? 0) &&
-      !(current?.measurements?.length ?? 0) &&
-      !(current?.evolutionText || current?.observations || "").trim();
+    const isDifferent =
+      (saved.evolutionText || saved.observations || "").trim() !==
+        (current.evolutionText || current.observations || "").trim() ||
+      (saved.painLevel ?? null) !== (current.painLevel ?? null) ||
+      (saved.unifiedItems?.length ?? 0) !== (current.unifiedItems?.length ?? 0);
 
-    if (currentIsEmpty) {
+    if (isDifferent) {
       handleEvolutionV2Change(saved);
       toast.message("Rascunho restaurado", {
-        description: "Encontramos um rascunho local não sincronizado.",
+        description: "Restauramos suas alterações locais não sincronizadas.",
       });
     }
   }, [
@@ -218,17 +206,6 @@ const PatientEvolution = () => {
     draft,
     handleEvolutionV2Change,
   ]);
-
-  // Limpa o draft quando o registro é confirmado pelo servidor sem operações pendentes
-  useEffect(() => {
-    if (
-      state.currentSoapRecordId &&
-      offline.stats.pendingActions === 0 &&
-      offline.isOnline
-    ) {
-      draft.clearDraft();
-    }
-  }, [state.currentSoapRecordId, offline.stats.pendingActions, offline.isOnline, draft]);
 
   // Preload all editor chunks during idle time so tab switching is instant
   useEffect(() => {
@@ -322,12 +299,15 @@ const PatientEvolution = () => {
           ...data,
         } as any);
 
-        if (record?.id && record.id !== state.currentSoapRecordId) {
+        if (record?.id) {
           state.setCurrentSoapRecordId(record.id);
+          // Sucesso no servidor -> Limpa rascunho local
+          draft.clearDraft();
         }
         // Save bem-sucedido — reseta force overwrite
         forceOverwriteRef.current = false;
       } catch (err: any) {
+
         if (err?.status === 409 && err?.payload?.error === "conflict") {
           setConflict({
             message:
