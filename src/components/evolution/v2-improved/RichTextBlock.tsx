@@ -15,6 +15,9 @@ interface RichTextBlockProps {
   disabled?: boolean;
   className?: string;
   showToolbar?: boolean;
+  collaborationId?: string;
+  userName?: string;
+  userColor?: string;
 }
 
 export const RichTextBlock: React.FC<RichTextBlockProps> = ({
@@ -24,6 +27,9 @@ export const RichTextBlock: React.FC<RichTextBlockProps> = ({
   disabled,
   className,
   showToolbar = false,
+  collaborationId,
+  userName,
+  userColor,
 }) => {
   const [isFocused, setIsFocused] = useState(false);
 
@@ -36,6 +42,9 @@ export const RichTextBlock: React.FC<RichTextBlockProps> = ({
           placeholder={placeholder}
           disabled={disabled}
           showToolbar={showToolbar}
+          collaborationId={collaborationId}
+          userName={userName}
+          userColor={userColor}
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
           className={cn(

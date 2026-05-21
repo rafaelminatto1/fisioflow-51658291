@@ -59,6 +59,9 @@ interface NotionEvolutionPanelProps {
   patientId?: string;
   evolutionId?: string;
   onNavigateToHistorico?: () => void;
+  collaborationId?: string;
+  userName?: string;
+  userColor?: string;
 }
 
 export const NotionEvolutionPanel: React.FC<NotionEvolutionPanelProps> = ({
@@ -73,6 +76,9 @@ export const NotionEvolutionPanel: React.FC<NotionEvolutionPanelProps> = ({
   patientId,
   evolutionId,
   onNavigateToHistorico,
+  collaborationId,
+  userName,
+  userColor,
 }) => {
   const [procedureLibraryOpen, setProcedureLibraryOpen] = useState(false);
   const [exerciseLibraryOpen, setExerciseLibraryOpen] = useState(false);
@@ -341,6 +347,9 @@ export const NotionEvolutionPanel: React.FC<NotionEvolutionPanelProps> = ({
                     disabled={disabled}
                     showToolbar
                     className="border-none shadow-none bg-transparent"
+                    collaborationId={collaborationId}
+                    userName={userName}
+                    userColor={userColor}
                   />
                   <div className="px-5 pb-5 pt-2">
                     <ClinicalCopilotPanel 

@@ -74,6 +74,11 @@ import { uploadFile, STORAGE_FOLDERS } from "@/lib/storage/upload";
 import { toast } from "sonner";
 import { ImageEditDialog } from "@/components/ui/rich-text/ImageEditDialog";
 import { ResizableImage } from "@/components/ui/rich-text/ResizableImageExtension";
+import * as Y from "yjs";
+import { WebsocketProvider } from "y-websocket";
+import Collaboration from "@tiptap/extension-collaboration";
+import CollaborationCursor from "@tiptap/extension-collaboration-cursor";
+import { getWorkersApiUrl } from "@/lib/api/config";
 import "./rich-text-editor.css";
 
 const lowlight = createLowlight(common);
@@ -114,6 +119,12 @@ interface RichTextEditorProps {
   onBlur?: () => void;
   accentColor?: "sky" | "violet" | "amber" | "rose";
   showToolbar?: boolean;
+  /** ID para colaboração real-time (ex: soap_record_id) */
+  collaborationId?: string;
+  /** Nome do usuário para o cursor de colaboração */
+  userName?: string;
+  /** Cor do cursor de colaboração */
+  userColor?: string;
 }
 
 export const RichTextEditor: React.FC<RichTextEditorProps> = ({
@@ -128,6 +139,9 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
   onBlur,
   accentColor = "violet",
   showToolbar = false,
+  collaborationId,
+  userName = "Profissional",
+  userColor = "#8b5cf6",
 }) => {
   const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastSentValue = useRef(value);
@@ -136,6 +150,27 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
   const typingTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const context = useRichTextContext();
   const setActiveEditor = context?.setActiveEditor;
+
+  // ── Colaboração Real-time (Yjs) ─────────────────────
+  const ydoc = useMemo(() => (collaborationId ? new Y.Doc() : null), [collaborationId]);
+  const [provider, setProvider] = useState<WebsocketProvider | null>(null);
+
+  useEffect(() => {
+    if (!ydoc || !collaborationId) return;
+
+    const baseUrl = getWorkersApiUrl();
+    const wsUrl =
+      (baseUrl.startsWith("https") ? baseUrl.replace("https", "wss") : baseUrl.replace("http", "ws")) +
+      `/api/sessions/${collaborationId}/collaboration`;
+
+    const p = new WebsocketProvider(wsUrl, collaborationId, ydoc);
+    setProvider(p);
+
+    return () => {
+      p.destroy();
+      ydoc.destroy();
+    };
+  }, [ydoc, collaborationId]);
 
   // Data Hooks
   const { exercises } = useExercises();
@@ -171,71 +206,106 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
   };
 
   const extensions = useMemo(
-    () => [
-      ForceListContinue,
-      StarterKit.configure({
-        heading: { levels: [1, 2, 3] },
-        link: false,
-        underline: false,
-        codeBlock: false,
-      }),
-      Placeholder.configure({ placeholder }),
-      Underline,
-      TextAlign.configure({ types: ["heading", "paragraph"] }),
-      Highlight.configure({ multicolor: true }),
-      TextStyle,
-      Color,
-      Subscript,
-      Superscript,
-      Link.configure({
-        openOnClick: false,
-        HTMLAttributes: { class: "text-primary underline cursor-pointer" },
-      }),
-      ResizableImage.configure({
-        allowBase64: true,
-        HTMLAttributes: {
-          class: "rounded-lg max-w-full h-auto my-4 mx-auto block",
-        },
-      }),
-      Youtube.configure({
-        HTMLAttributes: {
-          class: "rounded-lg max-w-full my-4 mx-auto block aspect-video",
-        },
-      }),
-      TaskList.configure({
-        HTMLAttributes: { class: "notion-task-list" },
-      }),
-      CustomTaskItem.configure({
-        nested: true,
-        HTMLAttributes: { class: "notion-task-item" },
-      }),
-      Table.configure({
-        resizable: true,
-        HTMLAttributes: { class: "notion-table" },
-      }),
-      TableRow,
-      TableHeader,
-      TableCell,
-      CodeBlockLowlight.configure({
-        lowlight,
-        HTMLAttributes: { class: "notion-code-block" },
-      }),
-      SlashCommand.configure({
-        suggestion: suggestionConfig(exercises, { imageUploadFolder }),
-      }),
-      ExerciseAutocomplete.configure({
-        suggestion: exerciseSuggestionConfig(exercises),
-      }),
+    () => {
+      const base = [
+        ForceListContinue,
+        StarterKit.configure({
+          heading: { levels: [1, 2, 3] },
+          link: false,
+          underline: false,
+          codeBlock: false,
+          // Se estiver em colaboração, desativamos o history do StarterKit
+          // para usar o history compartilhado do Yjs.
+          history: !collaborationId,
+        }),
+        Placeholder.configure({ placeholder }),
+        Underline,
+        TextAlign.configure({ types: ["heading", "paragraph"] }),
+        Highlight.configure({ multicolor: true }),
+        TextStyle,
+        Color,
+        Subscript,
+        Superscript,
+        Link.configure({
+          openOnClick: false,
+          HTMLAttributes: { class: "text-primary underline cursor-pointer" },
+        }),
+        ResizableImage.configure({
+          allowBase64: true,
+          HTMLAttributes: {
+            class: "rounded-lg max-w-full h-auto my-4 mx-auto block",
+          },
+        }),
+        Youtube.configure({
+          HTMLAttributes: {
+            class: "rounded-lg max-w-full my-4 mx-auto block aspect-video",
+          },
+        }),
+        TaskList.configure({
+          HTMLAttributes: { class: "notion-task-list" },
+        }),
+        CustomTaskItem.configure({
+          nested: true,
+          HTMLAttributes: { class: "notion-task-item" },
+        }),
+        Table.configure({
+          resizable: true,
+          HTMLAttributes: { class: "notion-table" },
+        }),
+        TableRow,
+        TableHeader,
+        TableCell,
+        CodeBlockLowlight.configure({
+          lowlight,
+          HTMLAttributes: { class: "notion-code-block" },
+        }),
+        SlashCommand.configure({
+          suggestion: suggestionConfig(exercises, { imageUploadFolder }),
+        }),
+        ExerciseAutocomplete.configure({
+          suggestion: exerciseSuggestionConfig(exercises),
+        }),
+      ];
+
+      if (ydoc && collaborationId) {
+        base.push(
+          Collaboration.configure({
+            document: ydoc,
+          }),
+        );
+        if (provider) {
+          base.push(
+            CollaborationCursor.configure({
+              provider,
+              user: {
+                name: userName,
+                color: userColor,
+              },
+            }),
+          );
+        }
+      }
+
+      return base;
+    },
+    [
+      exercises,
+      placeholder,
+      imageUploadFolder,
+      collaborationId,
+      ydoc,
+      provider,
+      userName,
+      userColor,
     ],
-    [exercises, placeholder, imageUploadFolder],
   );
 
   const editor = useEditor({
     extensions,
-    content: value || "",
+    content: collaborationId ? undefined : (value || ""),
     editable: !disabled,
     onUpdate: ({ editor: ed }) => {
-      if (isUpdatingFromProp.current) return;
+      if (isUpdatingFromProp.current || collaborationId) return;
       const html = ed.getHTML();
       if (debounceTimer.current) clearTimeout(debounceTimer.current);
       debounceTimer.current = setTimeout(() => {
@@ -350,7 +420,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
 
   // Sync external value changes
   useEffect(() => {
-    if (!editor) return;
+    if (!editor || collaborationId) return;
     const currentHtml = editor.getHTML();
     const normalizedCurrent = currentHtml === "<p></p>" ? "" : currentHtml;
     if (value !== normalizedCurrent && value !== lastSentValue.current && !debounceTimer.current) {
@@ -359,7 +429,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
       lastSentValue.current = value || "";
       isUpdatingFromProp.current = false;
     }
-  }, [value, editor]);
+  }, [value, editor, collaborationId]);
 
   useEffect(() => {
     if (editor) editor.setEditable(!disabled);
