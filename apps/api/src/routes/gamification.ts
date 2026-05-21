@@ -626,8 +626,9 @@ app.get("/inventory/:patientId", requireAuth, async (c) => {
 
 app.post("/buy", requireAuth, async (c) => {
   const pool = await createPool(c.env);
-  const body = (await c.req.json()) as { patientId: string; itemId: string };
-  const { patientId, itemId } = body;
+  const body = (await c.req.json()) as { patientId?: string; itemId: string };
+  const itemId = body.itemId;
+  const patientId = body.patientId ?? (await getPatientIdFromUser(c, pool));
 
   if (!patientId || !itemId) {
     return c.json({ error: "patientId e itemId são obrigatórios" }, 400);
