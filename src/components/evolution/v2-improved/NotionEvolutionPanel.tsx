@@ -21,10 +21,23 @@ import {
   Paperclip,
   Library,
   Stethoscope,
+  Maximize2,
+  Minimize2,
+  PanelRightClose,
+  PanelRightOpen,
+  ClipboardList,
+  Gauge,
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 import { RichTextBlock } from "./RichTextBlock";
 import { EvolutionBlockV3 } from "../v3-unified/EvolutionBlockV3";
@@ -82,6 +95,10 @@ export const NotionEvolutionPanel: React.FC<NotionEvolutionPanelProps> = ({
 }) => {
   const [procedureLibraryOpen, setProcedureLibraryOpen] = useState(false);
   const [exerciseLibraryOpen, setExerciseLibraryOpen] = useState(false);
+  const [clinicalPanelOpen, setClinicalPanelOpen] = useState(true);
+  const [observationsFocus, setObservationsFocus] = useState(false);
+  const [measurementsExpanded, setMeasurementsExpanded] = useState(false);
+  const [historyOpen, setHistoryOpen] = useState(false);
 
   // Hook do Clinical Copilot
   const combinedText = data.evolutionText || data.observations || "";
@@ -90,9 +107,7 @@ export const NotionEvolutionPanel: React.FC<NotionEvolutionPanelProps> = ({
   // Histórico (usado por: banner "Replicar última sessão" + sparklines de medições)
   const { data: recentRecords = [] } = useSoapRecords(patientId ?? "", 8);
   const lastSession = React.useMemo(() => {
-    const list = evolutionId
-      ? recentRecords.filter((r) => r.id !== evolutionId)
-      : recentRecords;
+    const list = evolutionId ? recentRecords.filter((r) => r.id !== evolutionId) : recentRecords;
     return list[0] ?? null;
   }, [recentRecords, evolutionId]);
 
@@ -101,10 +116,7 @@ export const NotionEvolutionPanel: React.FC<NotionEvolutionPanelProps> = ({
     const series: Record<string, number[]> = {};
     const chronological = [...recentRecords]
       .filter((r) => !evolutionId || r.id !== evolutionId)
-      .sort(
-        (a, b) =>
-          new Date(a.record_date).getTime() - new Date(b.record_date).getTime(),
-      );
+      .sort((a, b) => new Date(a.record_date).getTime() - new Date(b.record_date).getTime());
     for (const rec of chronological) {
       const meas = (rec.measurements as MeasurementItem[] | undefined) || [];
       for (const m of meas) {
@@ -122,8 +134,7 @@ export const NotionEvolutionPanel: React.FC<NotionEvolutionPanelProps> = ({
 
   const currentIsEmpty = React.useMemo(() => {
     const hasUnified = (data.unifiedItems?.length ?? 0) > 0;
-    const hasLegacy =
-      (data.procedures?.length ?? 0) > 0 || (data.exercises?.length ?? 0) > 0;
+    const hasLegacy = (data.procedures?.length ?? 0) > 0 || (data.exercises?.length ?? 0) > 0;
     const hasText = (data.evolutionText || data.observations || "").trim().length > 0;
     const hasMeas = (data.measurements?.length ?? 0) > 0;
     return !hasUnified && !hasLegacy && !hasText && !hasMeas;
@@ -178,6 +189,20 @@ export const NotionEvolutionPanel: React.FC<NotionEvolutionPanelProps> = ({
   );
 
   const unifiedItems = data.unifiedItems || [];
+  const completedInterventions = unifiedItems.filter((item) => item.completed).length;
+  const procedureCount = unifiedItems.filter((item) => item.type === "procedure").length;
+  const exerciseCount = unifiedItems.filter((item) => item.type === "exercise").length;
+  const measurementsCount = data.measurements?.length ?? 0;
+  const attachmentsCount = data.attachments?.length ?? 0;
+  const painLabel =
+    typeof data.painLevel === "number"
+      ? data.painLevel <= 3
+        ? "leve"
+        : data.painLevel <= 6
+          ? "moderada"
+          : "intensa"
+      : "não registrada";
+  const showClinicalPanel = clinicalPanelOpen && !observationsFocus;
 
   const normalizeUnifiedItems = (items: EvolutionItemV3[]) =>
     items.map((item, index) => ({ ...item, order: index }));
@@ -264,20 +289,17 @@ export const NotionEvolutionPanel: React.FC<NotionEvolutionPanelProps> = ({
           className,
         )}
       >
-        <div className="flex-1 overflow-y-auto p-3 sm:p-5">
-          <div className="mx-auto flex w-full max-w-[1440px] flex-col gap-5 pb-12">
-
+        <div className="flex-1 overflow-y-auto p-3 sm:p-4 xl:p-5">
+          <div className="mx-auto flex w-full max-w-[1720px] flex-col gap-4 pb-12">
             {/* Banner: Replicar última sessão (1 clique) */}
             {lastSession && currentIsEmpty && !disabled && (
-              <div className="flex flex-col sm:flex-row sm:items-center gap-3 rounded-xl border border-blue-200 bg-blue-50 px-4 py-3">
+              <div className="flex flex-col gap-3 rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 sm:flex-row sm:items-center">
                 <div className="flex items-center gap-3 flex-1 min-w-0">
                   <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-100 text-blue-700 flex-shrink-0">
                     <Copy className="h-4 w-4" />
                   </div>
                   <div className="min-w-0">
-                    <p className="text-sm font-semibold text-blue-900">
-                      Replicar última sessão
-                    </p>
+                    <p className="text-sm font-semibold text-blue-900">Replicar última sessão</p>
                     <p className="text-xs text-blue-700/80 truncate">
                       Sessão de{" "}
                       {format(new Date(lastSession.record_date), "dd/MM • HH'h'mm", {
@@ -307,191 +329,428 @@ export const NotionEvolutionPanel: React.FC<NotionEvolutionPanelProps> = ({
               </div>
             )}
 
-            {/* Linha 1: EVA + Observações Clínicas */}
-            <div className="grid grid-cols-1 lg:grid-cols-[minmax(320px,1fr)_2fr] gap-5">
-              <EvolutionSectionCard
-                accent="rose"
-                icon={Activity}
-                title="Nível de Dor"
-                subtitle="Escala Visual Analógica (EVA)"
-                flushContent
-              >
-                <PainLevelBlock
-                  painLevel={data.painLevel}
-                  painLocation={data.painLocation}
-                  onPainLevelChange={(level) => handleFieldChange("painLevel", level)}
-                  onPainLocationChange={(location) =>
-                    handleFieldChange("painLocation", location)
-                  }
-                  disabled={disabled}
-                />
-              </EvolutionSectionCard>
-
-              <EvolutionSectionCard
-                accent="amber"
-                icon={StickyNote}
-                title="Observações Clínicas"
-                subtitle="Notas livres da sessão"
-                flushContent
-              >
-                <div className="flex flex-col">
-                  <RichTextBlock
-                    placeholder="Orientações gerais, encaminhamentos, cuidados e notas da sessão..."
-                    value={data.evolutionText || data.observations}
-                    onValueChange={(val) => {
-                      // Atualiza ambos os campos em UMA chamada para evitar que
-                      // o segundo handleFieldChange descarte o primeiro por
-                      // closure stale (mesmo `data` em ambos).
-                      onChange({ ...data, evolutionText: val, observations: val });
-                    }}
-                    disabled={disabled}
-                    showToolbar
-                    className="border-none shadow-none bg-transparent"
-                    collaborationId={collaborationId}
-                    userName={userName}
-                    userColor={userColor}
-                  />
-                  <div className="px-5 pb-5 pt-2">
-                    <ClinicalCopilotPanel 
-                      insights={insights} 
-                      isAnalyzing={isAnalyzing} 
-                      onAction={(actionPayload) => {
-                        if (actionPayload?.type === "add_exercise") {
-                          const newItem: EvolutionItemV3 = {
-                            id: `ex-${Date.now()}`,
-                            type: "exercise",
-                            name: actionPayload.name,
-                            completed: false,
-                          };
-                          handleUnifiedItemsChange([...unifiedItems, newItem]);
-                          toast.success(`"${actionPayload.name}" adicionado à sequência da sessão.`);
-                        }
-                      }}
-                    />
-                  </div>
+            <div className="grid gap-2 rounded-2xl border border-slate-200/70 bg-white p-3 shadow-sm min-[900px]:grid-cols-4">
+              <div className="flex items-center gap-3 rounded-xl bg-amber-50 px-3 py-2">
+                <StickyNote className="h-4 w-4 shrink-0 text-amber-600" />
+                <div className="min-w-0">
+                  <p className="truncate text-xs font-semibold text-slate-900">Registrar sessão</p>
+                  <p className="truncate text-[11px] text-slate-500">
+                    {combinedText.trim() ? `${combinedText.trim().length} caracteres` : "Sem texto"}
+                  </p>
                 </div>
-              </EvolutionSectionCard>
+              </div>
+              <div className="flex items-center gap-3 rounded-xl bg-emerald-50 px-3 py-2">
+                <ClipboardList className="h-4 w-4 shrink-0 text-emerald-600" />
+                <div className="min-w-0">
+                  <p className="truncate text-xs font-semibold text-slate-900">Executar condutas</p>
+                  <p className="truncate text-[11px] text-slate-500">
+                    {completedInterventions}/{unifiedItems.length} concluídos
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3 rounded-xl bg-rose-50 px-3 py-2">
+                <Gauge className="h-4 w-4 shrink-0 text-rose-600" />
+                <div className="min-w-0">
+                  <p className="truncate text-xs font-semibold text-slate-900">
+                    Acompanhar resposta
+                  </p>
+                  <p className="truncate text-[11px] text-slate-500">
+                    EVA {data.painLevel ?? "—"} · {measurementsCount} medições
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3 rounded-xl bg-slate-50 px-3 py-2">
+                <Home className="h-4 w-4 shrink-0 text-slate-600" />
+                <div className="min-w-0">
+                  <p className="truncate text-xs font-semibold text-slate-900">
+                    Plano e evidências
+                  </p>
+                  <p className="truncate text-[11px] text-slate-500">
+                    {attachmentsCount} anexos · {exerciseCount} exercícios
+                  </p>
+                </div>
+              </div>
             </div>
 
-            {/* Linha 2: Procedimentos & Exercícios + Medições */}
-            <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-5">
-              <EvolutionSectionCard
-                accent="emerald"
-                icon={Activity}
-                title="Procedimentos & Exercícios"
-                subtitle="Sequência da sessão"
-                actions={
-                  <>
+            <div className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-slate-200/70 bg-slate-50/70 px-3 py-2">
+              <div className="flex flex-wrap items-center gap-2 text-[11px] font-medium text-slate-600">
+                <span className="rounded-full bg-white px-2.5 py-1 ring-1 ring-slate-200">
+                  Dor {painLabel}
+                </span>
+                <span className="rounded-full bg-white px-2.5 py-1 ring-1 ring-slate-200">
+                  {procedureCount} procedimentos
+                </span>
+                <span className="rounded-full bg-white px-2.5 py-1 ring-1 ring-slate-200">
+                  {exerciseCount} exercícios
+                </span>
+                <span className="rounded-full bg-white px-2.5 py-1 ring-1 ring-slate-200">
+                  {measurementsCount} medições
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="h-8 rounded-xl bg-white text-xs"
+                  onClick={() => setHistoryOpen(true)}
+                >
+                  <History className="mr-1.5 h-3.5 w-3.5" />
+                  Histórico
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="hidden h-8 rounded-xl bg-white text-xs min-[1180px]:inline-flex"
+                  onClick={() => setClinicalPanelOpen((open) => !open)}
+                >
+                  {showClinicalPanel ? (
+                    <PanelRightClose className="mr-1.5 h-3.5 w-3.5" />
+                  ) : (
+                    <PanelRightOpen className="mr-1.5 h-3.5 w-3.5" />
+                  )}
+                  {showClinicalPanel ? "Ocultar painel" : "Mostrar painel"}
+                </Button>
+              </div>
+            </div>
+
+            <div
+              className={cn(
+                "grid grid-cols-1 gap-4",
+                showClinicalPanel &&
+                  "min-[1180px]:grid-cols-[minmax(0,1fr)_340px] 2xl:grid-cols-[minmax(0,1fr)_420px]",
+              )}
+            >
+              <main className="min-w-0 space-y-4">
+                <EvolutionSectionCard
+                  accent="amber"
+                  icon={StickyNote}
+                  title="Observações Clínicas"
+                  subtitle={observationsFocus ? "Modo foco" : "Registro principal da sessão"}
+                  flushContent
+                  className={cn(observationsFocus ? "min-h-[calc(100vh-16rem)]" : "min-h-[320px]")}
+                  actions={
                     <Button
+                      type="button"
                       variant="ghost"
                       size="sm"
-                      className="h-8 rounded-xl border border-emerald-200 text-emerald-700 text-xs hover:bg-emerald-50"
-                      onClick={() => setProcedureLibraryOpen(true)}
-                      disabled={disabled}
+                      className="h-8 rounded-xl border border-amber-200 text-xs text-amber-700 hover:bg-amber-50"
+                      onClick={() => setObservationsFocus((focus) => !focus)}
                     >
-                      <Stethoscope className="h-3.5 w-3.5 mr-1.5" />
-                      Procedimentos
+                      {observationsFocus ? (
+                        <Minimize2 className="mr-1.5 h-3.5 w-3.5" />
+                      ) : (
+                        <Maximize2 className="mr-1.5 h-3.5 w-3.5" />
+                      )}
+                      {observationsFocus ? "Sair do foco" : "Foco"}
                     </Button>
+                  }
+                >
+                  <div
+                    className={cn(
+                      "flex flex-col",
+                      observationsFocus ? "min-h-[calc(100vh-16rem)]" : "min-h-[320px]",
+                    )}
+                  >
+                    <RichTextBlock
+                      placeholder="Orientações gerais, encaminhamentos, cuidados e notas da sessão..."
+                      value={data.evolutionText || data.observations}
+                      onValueChange={(val) => {
+                        // Atualiza ambos os campos em UMA chamada para evitar que
+                        // o segundo handleFieldChange descarte o primeiro por
+                        // closure stale (mesmo `data` em ambos).
+                        onChange({ ...data, evolutionText: val, observations: val });
+                      }}
+                      disabled={disabled}
+                      showToolbar
+                      className={cn(
+                        "border-none bg-transparent shadow-none",
+                        observationsFocus ? "min-h-[calc(100vh-23rem)]" : "min-h-[250px]",
+                      )}
+                      collaborationId={collaborationId}
+                      userName={userName}
+                      userColor={userColor}
+                    />
+                    <div className="px-5 pb-5 pt-2">
+                      <ClinicalCopilotPanel
+                        insights={insights}
+                        isAnalyzing={isAnalyzing}
+                        onAction={(actionPayload) => {
+                          if (actionPayload?.type === "add_exercise") {
+                            const newItem: EvolutionItemV3 = {
+                              id: `ex-${Date.now()}`,
+                              type: "exercise",
+                              name: actionPayload.name,
+                              completed: false,
+                            };
+                            handleUnifiedItemsChange([...unifiedItems, newItem]);
+                            toast.success(
+                              `"${actionPayload.name}" adicionado à sequência da sessão.`,
+                            );
+                          }
+                        }}
+                      />
+                    </div>
+                  </div>
+                </EvolutionSectionCard>
+
+                <EvolutionSectionCard
+                  accent="emerald"
+                  icon={Activity}
+                  title="Procedimentos & Exercícios"
+                  subtitle="Sequência de trabalho da sessão"
+                  className="min-h-[360px]"
+                  actions={
+                    <>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 rounded-xl border border-emerald-200 text-xs text-emerald-700 hover:bg-emerald-50"
+                        onClick={() => setProcedureLibraryOpen(true)}
+                        disabled={disabled}
+                      >
+                        <Stethoscope className="h-3.5 w-3.5 mr-1.5" />
+                        Procedimentos
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 rounded-xl border border-blue-200 text-xs text-blue-700 hover:bg-blue-50"
+                        onClick={() => setExerciseLibraryOpen(true)}
+                        disabled={disabled}
+                      >
+                        <Dumbbell className="h-3.5 w-3.5 mr-1.5" />
+                        Exercícios
+                      </Button>
+                    </>
+                  }
+                >
+                  <EvolutionBlockV3
+                    items={unifiedItems}
+                    onChange={handleUnifiedItemsChange}
+                    type="unified"
+                    title="Sequência da sessão"
+                    disabled={disabled}
+                  />
+                </EvolutionSectionCard>
+
+                <EvolutionSectionCard
+                  accent="slate"
+                  icon={Home}
+                  title="Exercícios para Casa"
+                  subtitle="HEP — Home Exercise Program"
+                  actions={
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="h-8 rounded-xl border border-blue-200 text-blue-700 text-xs hover:bg-blue-50"
+                      className="h-8 rounded-xl border border-slate-200 text-xs text-slate-700 hover:bg-slate-50"
                       onClick={() => setExerciseLibraryOpen(true)}
                       disabled={disabled}
                     >
-                      <Dumbbell className="h-3.5 w-3.5 mr-1.5" />
-                      Exercícios
+                      <Library className="h-3.5 w-3.5 mr-1.5" />
+                      Biblioteca
                     </Button>
-                  </>
-                }
-              >
-                <EvolutionBlockV3
-                  items={unifiedItems}
-                  onChange={handleUnifiedItemsChange}
-                  type="unified"
-                  title="Sequência da sessão"
-                  disabled={disabled}
-                />
-              </EvolutionSectionCard>
-
-              <EvolutionSectionCard
-                accent="pink"
-                icon={Ruler}
-                title="Medições"
-                subtitle="Sinais vitais e antropometria"
-              >
-                <MeasurementsBlock
-                  measurements={data.measurements || []}
-                  onChange={(meas) => handleFieldChange("measurements", meas)}
-                  disabled={disabled}
-                  history={measurementHistory}
-                />
-              </EvolutionSectionCard>
-            </div>
-
-            {/* Linha 3: Histórico de Sessões (timeline) */}
-            <EvolutionSectionCard
-              accent="blue"
-              icon={History}
-              title="Histórico de Sessões"
-              subtitle="Últimas evoluções deste paciente"
-            >
-              <SessionTimelineStrip
-                patientId={patientId}
-                excludeId={evolutionId}
-                onSeeAll={onNavigateToHistorico}
-                onReplicate={handleReplicate}
-              />
-            </EvolutionSectionCard>
-
-            {/* Linha 4: Exercícios para Casa + Anexos */}
-            <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-5">
-              <EvolutionSectionCard
-                accent="slate"
-                icon={Home}
-                title="Exercícios para Casa"
-                subtitle="HEP — Home Exercise Program"
-                actions={
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-8 rounded-xl border border-slate-200 text-slate-700 text-xs hover:bg-slate-50"
-                    onClick={() => setExerciseLibraryOpen(true)}
+                  }
+                >
+                  <HomeCareBlock
+                    value={data.homeCareExercises || ""}
+                    onChange={(val) => handleFieldChange("homeCareExercises", val)}
                     disabled={disabled}
-                  >
-                    <Library className="h-3.5 w-3.5 mr-1.5" />
-                    Biblioteca
-                  </Button>
-                }
-              >
-                <HomeCareBlock
-                  value={data.homeCareExercises || ""}
-                  onChange={(val) => handleFieldChange("homeCareExercises", val)}
-                  disabled={disabled}
-                  className="border-none shadow-none bg-slate-50/60 rounded-xl"
-                  sessionExercises={unifiedItems.filter(item => item.type === "exercise").map(item => ({ name: item.name, prescription: item.prescription }))}
-                />
-              </EvolutionSectionCard>
+                    className="rounded-xl border-none bg-slate-50/60 shadow-none"
+                    sessionExercises={unifiedItems
+                      .filter((item) => item.type === "exercise")
+                      .map((item) => ({
+                        name: item.name,
+                        prescription: item.prescription,
+                      }))}
+                  />
+                </EvolutionSectionCard>
+              </main>
 
-              <EvolutionSectionCard
-                accent="zinc"
-                icon={Paperclip}
-                title="Anexos"
-                subtitle="Fotos, exames e documentos"
-              >
-                <AttachmentsBlock
-                  patientId={patientId}
-                  evolutionId={evolutionId}
-                  value={data.attachments || []}
-                  onChange={(val) => handleFieldChange("attachments", val)}
-                  disabled={disabled}
-                  className="border-none shadow-none bg-zinc-50/60 rounded-xl"
-                />
-              </EvolutionSectionCard>
+              {showClinicalPanel && (
+                <aside className="min-w-0 space-y-4 min-[1180px]:sticky min-[1180px]:top-4 min-[1180px]:max-h-[calc(100vh-9rem)] min-[1180px]:overflow-y-auto min-[1180px]:pr-1">
+                  <EvolutionSectionCard
+                    accent="rose"
+                    icon={Activity}
+                    title="Nível de Dor"
+                    subtitle="Escala Visual Analógica (EVA)"
+                    flushContent
+                    density="compact"
+                  >
+                    <div className="px-4 pb-4">
+                      <PainLevelBlock
+                        painLevel={data.painLevel}
+                        painLocation={data.painLocation}
+                        onPainLevelChange={(level) => handleFieldChange("painLevel", level)}
+                        onPainLocationChange={(location) =>
+                          handleFieldChange("painLocation", location)
+                        }
+                        disabled={disabled}
+                      />
+                    </div>
+                  </EvolutionSectionCard>
+
+                  <EvolutionSectionCard
+                    accent="pink"
+                    icon={Ruler}
+                    title="Medições"
+                    subtitle="Sinais vitais e antropometria"
+                    density="compact"
+                    actions={
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 rounded-xl border border-pink-200 text-xs text-pink-700 hover:bg-pink-50"
+                        onClick={() => setMeasurementsExpanded((expanded) => !expanded)}
+                      >
+                        {measurementsExpanded ? "Resumo" : "Detalhar"}
+                      </Button>
+                    }
+                  >
+                    {measurementsExpanded ? (
+                      <MeasurementsBlock
+                        measurements={data.measurements || []}
+                        onChange={(meas) => handleFieldChange("measurements", meas)}
+                        disabled={disabled}
+                        history={measurementHistory}
+                      />
+                    ) : (
+                      <div className="space-y-2">
+                        <div className="grid grid-cols-2 gap-2">
+                          <div className="rounded-xl border border-slate-200 bg-white p-3">
+                            <p className="text-[10px] font-semibold uppercase text-slate-400">
+                              Registradas
+                            </p>
+                            <p className="mt-1 text-2xl font-bold tabular-nums text-slate-900">
+                              {measurementsCount}
+                            </p>
+                          </div>
+                          <div className="rounded-xl border border-slate-200 bg-white p-3">
+                            <p className="text-[10px] font-semibold uppercase text-slate-400">
+                              Concluídas
+                            </p>
+                            <p className="mt-1 text-2xl font-bold tabular-nums text-slate-900">
+                              {
+                                (data.measurements || []).filter(
+                                  (measurement) => measurement.completed,
+                                ).length
+                              }
+                            </p>
+                          </div>
+                        </div>
+                        {(data.measurements || []).slice(0, 3).map((measurement) => (
+                          <div
+                            key={measurement.id}
+                            className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white px-3 py-2"
+                          >
+                            <div className="min-w-0">
+                              <p className="truncate text-xs font-semibold text-slate-800">
+                                {measurement.measurement_name ||
+                                  measurement.measurement_type ||
+                                  "Medição"}
+                              </p>
+                              <p className="truncate text-[11px] text-slate-500">
+                                {measurement.measurement_type || "Sem tipo"}
+                              </p>
+                            </div>
+                            <span className="shrink-0 text-xs font-bold tabular-nums text-slate-700">
+                              {measurement.value || "—"} {measurement.unit}
+                            </span>
+                          </div>
+                        ))}
+                        {measurementsCount === 0 && (
+                          <p className="rounded-xl border border-dashed border-slate-200 bg-white px-3 py-4 text-center text-xs text-slate-500">
+                            Nenhuma medição registrada.
+                          </p>
+                        )}
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="h-8 w-full rounded-xl bg-white text-xs"
+                          onClick={() => setMeasurementsExpanded(true)}
+                        >
+                          Abrir medições
+                        </Button>
+                      </div>
+                    )}
+                  </EvolutionSectionCard>
+
+                  <EvolutionSectionCard
+                    accent="blue"
+                    icon={History}
+                    title="Histórico de Sessões"
+                    subtitle="Últimas evoluções"
+                    density="compact"
+                  >
+                    <div className="space-y-3">
+                      <div className="rounded-xl border border-blue-100 bg-blue-50/70 p-3">
+                        <p className="text-xs font-semibold text-blue-900">
+                          {Math.max(recentRecords.length - (evolutionId ? 1 : 0), 0)} sessões
+                          recentes
+                        </p>
+                        <p className="mt-1 text-[11px] leading-snug text-blue-700/80">
+                          Última atualização clínica disponível
+                        </p>
+                      </div>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="h-8 w-full rounded-xl bg-white text-xs text-blue-700"
+                        onClick={() => setHistoryOpen(true)}
+                      >
+                        <History className="mr-1.5 h-3.5 w-3.5" />
+                        Abrir histórico
+                      </Button>
+                    </div>
+                  </EvolutionSectionCard>
+
+                  <EvolutionSectionCard
+                    accent="zinc"
+                    icon={Paperclip}
+                    title="Anexos"
+                    subtitle="Fotos, exames e documentos"
+                    density="compact"
+                  >
+                    <AttachmentsBlock
+                      patientId={patientId}
+                      evolutionId={evolutionId}
+                      value={data.attachments || []}
+                      onChange={(val) => handleFieldChange("attachments", val)}
+                      disabled={disabled}
+                      className="rounded-xl border-none bg-zinc-50/60 shadow-none"
+                    />
+                  </EvolutionSectionCard>
+                </aside>
+              )}
             </div>
           </div>
         </div>
       </Card>
+
+      <Sheet open={historyOpen} onOpenChange={setHistoryOpen}>
+        <SheetContent side="right" className="w-[92vw] overflow-y-auto p-4 sm:max-w-xl">
+          <SheetHeader className="pr-8">
+            <SheetTitle className="flex items-center gap-2">
+              <History className="h-5 w-5 text-blue-600" />
+              Histórico de sessões
+            </SheetTitle>
+            <SheetDescription>Últimas evoluções deste paciente</SheetDescription>
+          </SheetHeader>
+          <div className="mt-4">
+            <SessionTimelineStrip
+              patientId={patientId}
+              excludeId={evolutionId}
+              onSeeAll={onNavigateToHistorico}
+              onReplicate={handleReplicate}
+              maxItems={8}
+            />
+          </div>
+        </SheetContent>
+      </Sheet>
 
       <Dialog open={procedureLibraryOpen} onOpenChange={setProcedureLibraryOpen}>
         <DialogContent className="w-[92vw] max-w-3xl rounded-2xl">
