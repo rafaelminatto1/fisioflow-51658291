@@ -1,6 +1,7 @@
 import React, { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { analyticsApi } from "@/api/v2/insights";
+import { unwrapList } from "@/lib/api/unwrapData";
 import { SafeResponsiveContainer } from "@/components/charts/SafeResponsiveContainer";
 import { XAxis, YAxis, CartesianGrid, Tooltip, AreaChart, Area } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -13,7 +14,7 @@ export function ClinicalEfficacyDashboard() {
     queryKey: ["analytics", "efficacy", "pain"],
     queryFn: async () => {
       const res = await (analyticsApi as any).efficacyPainEvolution();
-      return res.data || [];
+      return unwrapList(res);
     },
   });
 

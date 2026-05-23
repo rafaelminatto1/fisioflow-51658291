@@ -6,6 +6,7 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { request } from "@/api/v2";
+import { unwrapList } from "@/lib/api/unwrapData";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -257,7 +258,7 @@ export function PROMsDashboard({ patientId, sessionId }: PROMsDashboardProps) {
       const res = await request<{ data: StandardizedTestResult[] }>(
         `/api/standardized-tests?patientId=${patientId}&limit=200`,
       );
-      return res?.data ?? [];
+      return unwrapList<StandardizedTestResult>(res);
     },
     enabled: Boolean(patientId),
     staleTime: 5 * 60 * 1000,

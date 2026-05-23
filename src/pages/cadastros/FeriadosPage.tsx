@@ -81,8 +81,12 @@ export default function FeriadosPage() {
     },
   });
 
-  const filteredFeriados =
-    feriados?.filter((f) => f.nome.toLowerCase().includes(searchQuery.toLowerCase())) || [];
+  const safeFeriados = Array.isArray(feriados) ? feriados : [];
+  const filteredFeriados = safeFeriados.filter((f) =>
+    String(f.nome ?? "")
+      .toLowerCase()
+      .includes(searchQuery.toLowerCase()),
+  );
 
   const openCreateModal = () => {
     reset({

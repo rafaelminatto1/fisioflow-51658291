@@ -2,6 +2,7 @@ import React from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
 import { request } from "@/api/v2/base";
+import { unwrapList } from "@/lib/api/unwrapData";
 import { SafeResponsiveContainer } from "@/components/charts/SafeResponsiveContainer";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Cell } from "recharts";
 
@@ -29,7 +30,7 @@ export function TeamPerformanceDashboard() {
     );
   }
 
-  const data = teamData?.data || [];
+  const data = unwrapList<ProfessionalMetric>(teamData);
 
   return (
     <div className="space-y-6">

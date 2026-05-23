@@ -60,14 +60,64 @@ const KinoveaStudio = lazy(() =>
 // Helper function to generate UUID
 const uuidv4 = (): string => crypto.randomUUID();
 
-function mapEvaluationField(field: Record<string, unknown>): TemplateField {
+function normalizeOptionList(value: unknown): string[] | null {
+  if (Array.isArray(value)) {
+    return value.map(String).filter(Boolean);
+  }
+
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    if (!trimmed) return null;
+
+    try {
+      const parsed = JSON.parse(trimmed) as unknown;
+      if (Array.isArray(parsed)) {
+        return parsed.map(String).filter(Boolean);
+      }
+    } catch {
+      // Some older rows stored options as plain text, one option per line.
+    }
+
+    return trimmed
+      .split(/\r?\n/)
+      .map((option) => option.trim())
+      .filter(Boolean);
+  }
+
+  if (value && typeof value === "object") {
+    return Object.values(value).map(String).filter(Boolean);
+  }
+
+  return null;
+}
+
+function normalizeEvaluationFields(value: unknown): TemplateField[] {
+  const rawFields = Array.isArray(value)
+    ? value
+    : value && typeof value === "object"
+      ? Object.values(value)
+      : [];
+
+  return rawFields
+    .filter((field): field is Record<string, unknown> => !!field && typeof field === "object")
+    .map(mapEvaluationField)
+    .sort((a, b) => a.ordem - b.ordem);
+}
+
+function normalizeEvaluationResponses(value: unknown): Record<string, unknown> {
+  return value && typeof value === "object" && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : {};
+}
+
+function mapEvaluationField(field: Record<string, unknown>, index = 0): TemplateField {
   return {
     ...(field as TemplateField),
-    id: String(field.id),
+    id: String(field.id ?? `field-${index}`),
     label: String(field.label ?? ""),
     tipo_campo: String(field.tipo_campo ?? "texto_curto"),
     placeholder: typeof field.placeholder === "string" ? field.placeholder : null,
-    opcoes: Array.isArray(field.opcoes) ? (field.opcoes as string[]) : null,
+    opcoes: normalizeOptionList(field.opcoes),
     ordem: Number(field.ordem ?? 0),
     obrigatorio: Boolean(field.obrigatorio),
     section:
@@ -199,9 +249,7 @@ export default function NewEvaluationPage() {
   useEffect(() => {
     if (!evaluationResponse || hasHydratedEvaluation.current) return;
 
-    const fields = (evaluationResponse.fields ?? []).map((field) =>
-      mapEvaluationField(field as Record<string, unknown>),
-    );
+    const fields = normalizeEvaluationFields(evaluationResponse.fields);
     const form = evaluationResponse.form ?? {};
 
     setSelectedTemplate({
@@ -220,7 +268,7 @@ export default function NewEvaluationPage() {
       fields,
       isBuiltin: false,
     });
-    setFieldValues(evaluationResponse.responses ?? {});
+    setFieldValues(normalizeEvaluationResponses(evaluationResponse.responses));
     setIsTemplateLoading(false);
     setActiveTab("anamnesis");
     hasHydratedEvaluation.current = true;
@@ -638,7 +686,10 @@ export default function NewEvaluationPage() {
                       </Suspense>
                     </div>
                     <div className="hidden print:grid grid-cols-2 gap-4">
-                      {physicalExamData.posturalAnalysis?.map((item: any, idx: number) => (
+                      {(Array.isArray(physicalExamData.posturalAnalysis)
+                        ? physicalExamData.posturalAnalysis
+                        : []
+                      ).map((item: any, idx: number) => (
                         <div key={idx} className="border rounded-xl p-2">
                           <img
                             src={item.img}

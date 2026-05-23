@@ -62,9 +62,12 @@ export default function CentrosCustoPage() {
   const createMutation = useCreateCentroCusto();
   const updateMutation = useUpdateCentroCusto();
   const deleteMutation = useDeleteCentroCusto();
+  const safeCentrosCusto = Array.isArray(centrosCusto) ? centrosCusto : [];
 
-  const filteredData = centrosCusto?.filter((item) => {
-    const matchesSearch = item.nome.toLowerCase().includes(searchTerm.toLowerCase());
+  const filteredData = safeCentrosCusto.filter((item) => {
+    const matchesSearch = String(item.nome ?? "")
+      .toLowerCase()
+      .includes(searchTerm.toLowerCase());
     const matchesStatus = showInactive ? true : item.ativo;
     return matchesSearch && matchesStatus;
   });

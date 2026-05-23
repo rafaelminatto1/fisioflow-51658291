@@ -2,6 +2,7 @@ import React from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
 import { request } from "@/api/v2/base";
+import { unwrapList } from "@/lib/api/unwrapData";
 import { SafeResponsiveContainer } from "@/components/charts/SafeResponsiveContainer";
 import { RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, Tooltip } from "recharts";
 import { ShieldCheck, AlertCircle } from "lucide-react";
@@ -28,7 +29,7 @@ export function ClinicalQualityDashboard() {
     );
   }
 
-  const data = (qualityRes?.data || []).map((d) => ({
+  const data = unwrapList<QualityMetric>(qualityRes).map((d) => ({
     ...d,
     score: Number(d.avg_quality),
   }));

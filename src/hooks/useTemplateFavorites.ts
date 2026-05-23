@@ -5,6 +5,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { evaluationFormsApi, type EvaluationFormRow } from "@/api/v2";
+import { unwrapList } from "@/lib/api/unwrapData";
 
 export function useToggleFavorite() {
   const queryClient = useQueryClient();
@@ -63,7 +64,7 @@ export function useFavoriteTemplates() {
         ativo: true,
         favorite: true,
       });
-      const data = (res?.data ?? []) as EvaluationFormRow[];
+      const data = unwrapList<EvaluationFormRow>(res);
       return data.sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"));
     },
   });

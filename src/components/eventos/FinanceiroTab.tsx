@@ -44,24 +44,28 @@ export function FinanceiroTab({ eventoId, evento }: FinanceiroTabProps) {
   const { data: checklistItems } = useChecklist(eventoId);
   const { data: pagamentos } = usePagamentos(eventoId);
   const deletePagamento = useDeletePagamento();
+  const safePrestadores = Array.isArray(prestadores) ? prestadores : [];
+  const safeChecklistItems = Array.isArray(checklistItems) ? checklistItems : [];
+  const safePagamentos = Array.isArray(pagamentos) ? pagamentos : [];
 
-  const custoPrestadores = prestadores?.reduce((sum, p) => sum + Number(p.valor_acordado), 0) || 0;
-  const custoInsumos =
-    checklistItems?.reduce((sum, item) => sum + Number(item.custo_unitario) * item.quantidade, 0) ||
-    0;
-  const custoOutros = pagamentos?.reduce((sum, p) => sum + Number(p.valor), 0) || 0;
+  const custoPrestadores = safePrestadores.reduce((sum, p) => sum + Number(p.valor_acordado), 0);
+  const custoInsumos = safeChecklistItems.reduce(
+    (sum, item) => sum + Number(item.custo_unitario) * item.quantidade,
+    0,
+  );
+  const custoOutros = safePagamentos.reduce((sum, p) => sum + Number(p.valor), 0);
 
   const custoTotal = custoPrestadores + custoInsumos + custoOutros;
 
   const prestadoresPagos =
-    prestadores
-      ?.filter((p) => p.status_pagamento === "PAGO")
+    safePrestadores
+      .filter((p) => p.status_pagamento === "PAGO")
       .reduce((sum, p) => sum + Number(p.valor_acordado), 0) || 0;
   const prestadoresPendentes = custoPrestadores - prestadoresPagos;
   const percentualPago = custoPrestadores > 0 ? (prestadoresPagos / custoPrestadores) * 100 : 0;
 
-  const checklistOk = checklistItems?.filter((i) => i.status === "OK").length || 0;
-  const checklistTotal = checklistItems?.length || 0;
+  const checklistOk = safeChecklistItems.filter((i) => i.status === "OK").length;
+  const checklistTotal = safeChecklistItems.length;
   const percentualChecklist = checklistTotal > 0 ? (checklistOk / checklistTotal) * 100 : 0;
 
   const handleEditPagamento = (pagamento: Record<string, unknown>) => {
@@ -118,7 +122,7 @@ export function FinanceiroTab({ eventoId, evento }: FinanceiroTabProps) {
               R$ {prestadoresPendentes.toFixed(2)}
             </div>
             <p className="text-xs text-muted-foreground mt-1">
-              {prestadores?.filter((p) => p.status_pagamento === "PENDENTE").length || 0}{" "}
+              {safePrestadores.filter((p) => p.status_pagamento === "PENDENTE").length}{" "}
               prestador(es)
             </p>
           </CardContent>
@@ -153,14 +157,14 @@ export function FinanceiroTab({ eventoId, evento }: FinanceiroTabProps) {
             <div className="flex-1">
               <div className="flex items-center gap-2">
                 <p className="font-medium">Prestadores de Serviço</p>
-                <Badge variant="secondary">{prestadores?.length || 0}</Badge>
+                <Badge variant="secondary">{safePrestadores.length}</Badge>
               </div>
               <div className="flex gap-3 mt-2">
                 <span className="text-xs text-green-600">
-                  ✓ {prestadores?.filter((p) => p.status_pagamento === "PAGO").length || 0} Pagos
+                  ✓ {safePrestadores.filter((p) => p.status_pagamento === "PAGO").length} Pagos
                 </span>
                 <span className="text-xs text-yellow-600">
-                  ⏳ {prestadores?.filter((p) => p.status_pagamento === "PENDENTE").length || 0}{" "}
+                  ⏳ {safePrestadores.filter((p) => p.status_pagamento === "PENDENTE").length}{" "}
                   Pendentes
                 </span>
               </div>
@@ -179,7 +183,7 @@ export function FinanceiroTab({ eventoId, evento }: FinanceiroTabProps) {
             <div>
               <p className="font-medium">Insumos (Checklist)</p>
               <p className="text-sm text-muted-foreground">
-                {checklistItems?.length || 0} item(ns)
+                {safeChecklistItems.length} item(ns)
               </p>
             </div>
             <div className="text-right">
@@ -192,7 +196,7 @@ export function FinanceiroTab({ eventoId, evento }: FinanceiroTabProps) {
             <div>
               <p className="font-medium">Outros Pagamentos</p>
               <p className="text-sm text-muted-foreground">
-                {pagamentos?.length || 0} pagamento(s)
+                {safePagamentos.length} pagamento(s)
               </p>
             </div>
             <div className="text-right">
@@ -202,13 +206,13 @@ export function FinanceiroTab({ eventoId, evento }: FinanceiroTabProps) {
           </div>
 
           {/* Breakdown por tipo de checklist */}
-          {checklistItems && checklistItems.length > 0 && (
+          {safeChecklistItems.length > 0 && (
             <div className="pl-4 space-y-2">
               {["levar", "alugar", "comprar"].map((tipo) => {
-                const custoTipo = checklistItems
+                const custoTipo = safeChecklistItems
                   .filter((item) => item.tipo === tipo)
                   .reduce((sum, item) => sum + Number(item.custo_unitario) * item.quantidade, 0);
-                const qtdTipo = checklistItems.filter((item) => item.tipo === tipo).length;
+                const qtdTipo = safeChecklistItems.filter((item) => item.tipo === tipo).length;
 
                 if (qtdTipo === 0) return null;
 
@@ -274,7 +278,7 @@ export function FinanceiroTab({ eventoId, evento }: FinanceiroTabProps) {
           </Button>
         </CardHeader>
         <CardContent>
-          {!pagamentos || pagamentos.length === 0 ? (
+          {safePagamentos.length === 0 ? (
             <p className="text-muted-foreground text-center py-4">Nenhum pagamento registrado</p>
           ) : (
             <Table>
@@ -288,7 +292,7 @@ export function FinanceiroTab({ eventoId, evento }: FinanceiroTabProps) {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {pagamentos.map((pagamento) => (
+                {safePagamentos.map((pagamento) => (
                   <TableRow key={pagamento.id}>
                     <TableCell>{format(new Date(pagamento.pago_em), "dd/MM/yyyy")}</TableCell>
                     <TableCell>

@@ -17,6 +17,7 @@ import {
   EvaluationFormField,
 } from "@/types/clinical-forms";
 import { fisioLogger as logger } from "@/lib/errors/logger";
+import { unwrapList } from "@/lib/api/unwrapData";
 
 export type EvaluationFormFormData = {
   nome: string;
@@ -30,6 +31,26 @@ export type EvaluationFormFieldFormData = Omit<
   EvaluationFormField,
   "id" | "created_at" | "form_id"
 >;
+
+function normalizeOptions(value: unknown): string[] | null {
+  if (Array.isArray(value)) return value.map(String).filter(Boolean);
+  if (typeof value !== "string") return null;
+
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+
+  try {
+    const parsed = JSON.parse(trimmed) as unknown;
+    if (Array.isArray(parsed)) return parsed.map(String).filter(Boolean);
+  } catch {
+    // Keep compatibility with legacy rows saved as plain multiline text.
+  }
+
+  return trimmed
+    .split(/\r?\n/)
+    .map((option) => option.trim())
+    .filter(Boolean);
+}
 
 const mapForm = (row: EvaluationFormRow): EvaluationForm => ({
   id: row.id,
@@ -50,7 +71,7 @@ const mapField = (row: EvaluationFormFieldRow): EvaluationFormField => ({
   tipo_campo: row.tipo_campo as EvaluationFormField["tipo_campo"],
   label: row.label,
   placeholder: row.placeholder ?? null,
-  opcoes: Array.isArray(row.opcoes) ? (row.opcoes as string[]) : null,
+  opcoes: normalizeOptions(row.opcoes),
   ordem: Number(row.ordem ?? 0),
   obrigatorio: Boolean(row.obrigatorio),
   grupo: row.grupo ?? null,
@@ -62,7 +83,7 @@ const mapField = (row: EvaluationFormFieldRow): EvaluationFormField => ({
 
 const mapFormWithFields = (row: EvaluationFormWithFieldsRow): EvaluationFormWithFields => ({
   ...mapForm(row),
-  fields: (row.fields ?? []).map(mapField),
+  fields: unwrapList<EvaluationFormFieldRow>(row.fields).map(mapField),
 });
 
 export function useEvaluationForms(tipo?: string) {
@@ -70,7 +91,7 @@ export function useEvaluationForms(tipo?: string) {
     queryKey: ["evaluation-forms", tipo],
     queryFn: async () => {
       const res = await evaluationFormsApi.list({ tipo, ativo: true });
-      const data = (res?.data ?? []) as EvaluationFormRow[];
+      const data = unwrapList<EvaluationFormRow>(res);
       return data.map(mapForm).filter((form) => (!tipo ? true : form.tipo === tipo));
     },
   });
@@ -306,7 +327,7 @@ export function usePatientEvaluationResponses(patientId: string | undefined) {
     queryFn: async () => {
       if (!patientId) return [];
       const res = await evaluationFormsApi.responses.listByPatient(patientId);
-      return (res?.data ?? []) as PatientEvaluationResponseRow[];
+      return unwrapList<PatientEvaluationResponseRow>(res);
     },
     enabled: !!patientId,
   });

@@ -51,6 +51,7 @@ export default function ContratadosPage() {
   const createContratado = useCreateContratado();
   const updateContratado = useUpdateContratado();
   const deleteContratado = useDeleteContratado();
+  const safeContratados = Array.isArray(contratados) ? contratados : [];
 
   const { register, handleSubmit, reset } = useForm<ContratadoCreate>({
     defaultValues: {
@@ -63,16 +64,16 @@ export default function ContratadosPage() {
   });
 
   const especialidades = Array.from(
-    new Set(contratados.map((c) => c.especialidade).filter(Boolean) as string[]),
+    new Set(safeContratados.map((c) => c.especialidade).filter(Boolean) as string[]),
   ).sort((a, b) => a.localeCompare(b));
 
-  const filtered = contratados.filter((c) => {
+  const filtered = safeContratados.filter((c) => {
     const term = searchQuery.toLowerCase();
     const matchesSearch =
-      c.nome.toLowerCase().includes(term) ||
-      (c.contato || "").toLowerCase().includes(term) ||
-      (c.cpf_cnpj || "").toLowerCase().includes(term) ||
-      (c.especialidade || "").toLowerCase().includes(term);
+      String(c.nome ?? "").toLowerCase().includes(term) ||
+      String(c.contato ?? "").toLowerCase().includes(term) ||
+      String(c.cpf_cnpj ?? "").toLowerCase().includes(term) ||
+      String(c.especialidade ?? "").toLowerCase().includes(term);
     const matchesEspecialidade =
       especialidadeFiltro === "todas" ? true : (c.especialidade || "") === especialidadeFiltro;
     const matchesDocumento = comDocumento ? Boolean(c.cpf_cnpj) : true;

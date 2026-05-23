@@ -50,6 +50,7 @@ export function FornecedoresContent() {
   const createFornecedor = useCreateFornecedor();
   const updateFornecedor = useUpdateFornecedor();
   const deleteFornecedor = useDeleteFornecedor();
+  const safeFornecedores = Array.isArray(fornecedores) ? fornecedores : [];
 
   const { register, handleSubmit, reset, setValue, watch } = useForm<FornecedorFormData>({
     defaultValues: {
@@ -73,11 +74,11 @@ export function FornecedoresContent() {
   });
 
   const filteredFornecedores =
-    fornecedores?.filter(
+    safeFornecedores.filter(
       (f) =>
-        accentIncludes(f.razao_social, searchQuery) ||
-        accentIncludes(f.nome_fantasia || "", searchQuery),
-    ) || [];
+        accentIncludes(String(f.razao_social ?? ""), searchQuery) ||
+        accentIncludes(String(f.nome_fantasia ?? ""), searchQuery),
+    );
 
   const openCreateModal = () => {
     reset({

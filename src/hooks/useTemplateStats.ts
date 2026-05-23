@@ -5,6 +5,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { EvaluationForm } from "@/types/clinical-forms";
 import { evaluationFormsApi, type EvaluationFormRow } from "@/api/v2";
+import { unwrapList } from "@/lib/api/unwrapData";
 
 const toForm = (row: EvaluationFormRow): EvaluationForm => ({
   id: row.id,
@@ -29,7 +30,7 @@ export function useTemplateStats() {
     queryKey: ["template-stats"],
     queryFn: async () => {
       const res = await evaluationFormsApi.list({ ativo: true });
-      const forms = ((res?.data ?? []) as EvaluationFormRow[]).map(toForm);
+      const forms = unwrapList<EvaluationFormRow>(res).map(toForm);
 
       const total = forms.length;
       const favorites = forms.filter((f) => f.is_favorite).length;
@@ -92,7 +93,7 @@ export function useMostUsedTemplates(limitNum = 10) {
     queryKey: ["evaluation-forms", "most-used", limitNum],
     queryFn: async () => {
       const res = await evaluationFormsApi.list({ ativo: true });
-      const forms = ((res?.data ?? []) as EvaluationFormRow[])
+      const forms = unwrapList<EvaluationFormRow>(res)
         .map(toForm)
         .filter((f) => Number(f.usage_count || 0) > 0)
         .sort((a, b) => Number(b.usage_count || 0) - Number(a.usage_count || 0))
@@ -108,7 +109,7 @@ export function useRecentlyUsedTemplates(limitNum = 6) {
     queryKey: ["evaluation-forms", "recently-used", limitNum],
     queryFn: async () => {
       const res = await evaluationFormsApi.list({ ativo: true });
-      const forms = ((res?.data ?? []) as EvaluationFormRow[])
+      const forms = unwrapList<EvaluationFormRow>(res)
         .map(toForm)
         .filter((f) => Boolean(f.last_used_at))
         .sort((a, b) => {

@@ -245,7 +245,7 @@ const Patients = () => {
           }
         />
 
-        <div className="space-y-8 mt-8">
+        <div className="space-y-6 mt-6">
           <PatientsPageHeader
             stats={headerStats}
             onNewPatient={() => updateSearchParams({ modal: "create" })}
@@ -365,7 +365,7 @@ const Patients = () => {
               </div>
             </div>
 
-            <TabsContent value="list" className="mt-8 space-y-8">
+            <TabsContent value="list" className="mt-6 space-y-6">
               {showAnalytics && (
                 <div className="bento-card p-4 bg-primary/5 border-primary/10">
                   <LazyComponent

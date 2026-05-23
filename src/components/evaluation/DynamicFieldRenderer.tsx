@@ -31,6 +31,10 @@ interface DynamicFieldRendererProps {
   readOnly?: boolean;
 }
 
+function getOptions(field: TemplateField): string[] {
+  return Array.isArray(field.opcoes) ? field.opcoes.map(String) : [];
+}
+
 // Group fields by section
 function groupFieldsBySection(fields: TemplateField[]): Record<string, TemplateField[]> {
   const groups: Record<string, TemplateField[]> = {};
@@ -172,7 +176,7 @@ function renderField(
           disabled={readOnly}
           className="grid grid-cols-1 sm:grid-cols-2 gap-3"
         >
-          {(field.opcoes || []).map((option, idx) => (
+          {getOptions(field).map((option, idx) => (
             <div
               key={idx}
               className={cn(
@@ -199,7 +203,7 @@ function renderField(
             <SelectValue placeholder={field.placeholder || "Selecione..."} />
           </SelectTrigger>
           <SelectContent>
-            {(field.opcoes || []).map((option, idx) => (
+            {getOptions(field).map((option, idx) => (
               <SelectItem key={idx} value={option}>
                 {option}
               </SelectItem>
@@ -233,10 +237,10 @@ function renderField(
 
     case "lista":
     case "multiselect": {
-      const selectedValues = (value as string[]) || [];
+      const selectedValues = Array.isArray(value) ? value.map(String) : [];
       return (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-          {(field.opcoes || []).map((option, idx) => (
+          {getOptions(field).map((option, idx) => (
             <div
               key={idx}
               className={cn(
@@ -307,27 +311,36 @@ export function DynamicFieldRenderer({
   onChange,
   readOnly = false,
 }: DynamicFieldRendererProps) {
+  const safeFields = useMemo(() => (Array.isArray(fields) ? fields : []), [fields]);
+  const safeValues = useMemo(
+    () =>
+      values && typeof values === "object" && !Array.isArray(values)
+        ? values
+        : ({} as Record<string, unknown>),
+    [values],
+  );
+
   const checkFieldVisibility = useCallback(
     (field: TemplateField) => {
       if (!field.dependsOnFieldId) return true;
-      const depValue = values[field.dependsOnFieldId];
+      const depValue = safeValues[field.dependsOnFieldId];
       if (Array.isArray(field.dependsOnValue)) {
         return field.dependsOnValue.includes(depValue);
       }
       return depValue === field.dependsOnValue;
     },
-    [values],
+    [safeValues],
   );
 
   const visibleFields = useMemo(
-    () => fields.filter(checkFieldVisibility),
-    [fields, checkFieldVisibility],
+    () => safeFields.filter(checkFieldVisibility),
+    [safeFields, checkFieldVisibility],
   );
 
   const groupedFields = groupFieldsBySection(visibleFields);
   const sections = Object.keys(groupedFields);
 
-  if (fields.length === 0) {
+  if (safeFields.length === 0) {
     return (
       <Card className="border-2 border-dashed bg-muted/10">
         <CardContent className="py-12 text-center">
@@ -383,7 +396,7 @@ export function DynamicFieldRenderer({
                   <div className="animate-in fade-in slide-in-from-top-1 duration-300">
                     {renderField(
                       field,
-                      values[field.id],
+                      safeValues[field.id],
                       (value) => onChange(field.id, value),
                       readOnly,
                     )}

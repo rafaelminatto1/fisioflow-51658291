@@ -33,10 +33,11 @@ export default function GamificationQuestsPage() {
 
   const [activeTab, setActiveTab] = useState<"daily" | "weekly">("daily");
 
-  const completedQuests = dailyQuests?.filter((q) => q.completed).length || 0;
-  const totalQuests = dailyQuests?.length || 0;
+  const safeDailyQuests = Array.isArray(dailyQuests) ? dailyQuests : [];
+  const completedQuests = safeDailyQuests.filter((q) => q.completed).length;
+  const totalQuests = safeDailyQuests.length;
   const allCompleted = completedQuests === totalQuests && totalQuests > 0;
-  const totalXp = dailyQuests?.reduce((sum, q) => sum + (q.completed ? q.xp : 0), 0) || 0;
+  const totalXp = safeDailyQuests.reduce((sum, q) => sum + (q.completed ? q.xp : 0), 0);
 
   const ICON_MAP: Record<string, React.ElementType> = {
     Star,
@@ -132,7 +133,7 @@ export default function GamificationQuestsPage() {
                 animate="show"
                 className="space-y-4"
               >
-                {dailyQuests?.map((quest) => {
+                {safeDailyQuests.map((quest) => {
                   const Icon = ICON_MAP[quest.icon || "Star"] || Star;
                   return (
                     <motion.div
@@ -229,7 +230,7 @@ export default function GamificationQuestsPage() {
                   );
                 })}
 
-                {(!dailyQuests || dailyQuests.length === 0) && (
+                {safeDailyQuests.length === 0 && (
                   <Card className="p-8">
                     <div className="flex flex-col items-center justify-center text-center text-muted-foreground">
                       <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mb-4">

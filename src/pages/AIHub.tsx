@@ -19,9 +19,16 @@ import {
   Legend
 } from "recharts";
 
+function asArray<T = unknown>(value: unknown): T[] {
+  return Array.isArray(value) ? (value as T[]) : [];
+}
+
 export default function AIHub() {
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const retentionData = asArray(data?.retention);
+  const noShowData = asArray(data?.noShow);
+  const revenueForecastData = asArray(data?.revenueForecast);
 
   useEffect(() => {
     fetch("/api/ai-insights/analytics", {
@@ -83,7 +90,7 @@ export default function AIHub() {
                 </CardHeader>
                 <CardContent className="h-[300px]">
                   <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={data?.retention || []} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
+                    <LineChart data={retentionData} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
                       <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
                       <XAxis dataKey="month" stroke="#888888" fontSize={12} tickLine={false} axisLine={false} />
                       <YAxis stroke="#888888" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `${value}%`} />
@@ -111,7 +118,7 @@ export default function AIHub() {
                 </CardHeader>
                 <CardContent className="h-[300px]">
                   <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={data?.noShow || []} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
+                    <BarChart data={noShowData} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
                       <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
                       <XAxis dataKey="month" stroke="#888888" fontSize={12} tickLine={false} axisLine={false} />
                       <YAxis stroke="#888888" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `${value}%`} />
@@ -139,7 +146,7 @@ export default function AIHub() {
                 </CardHeader>
                 <CardContent className="h-[350px]">
                   <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={data?.revenueForecast || []} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
+                    <LineChart data={revenueForecastData} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
                       <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
                       <XAxis dataKey="month" stroke="#888888" fontSize={12} tickLine={false} axisLine={false} />
                       <YAxis stroke="#888888" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `R$ ${value/1000}k`} />

@@ -33,6 +33,8 @@ function FormField({
   readonly?: boolean;
 }) {
   const renderField = () => {
+    const options = Array.isArray(field.opcoes) ? field.opcoes : [];
+
     switch (field.tipo_campo) {
       case "texto_curto":
       case "text":
@@ -89,7 +91,7 @@ function FormField({
             disabled={readonly}
           >
             <option value="">Selecione...</option>
-            {field.opcoes?.map((opt: string, i: number) => (
+            {options.map((opt: string, i: number) => (
               <option key={i} value={opt}>
                 {opt}
               </option>
@@ -100,7 +102,7 @@ function FormField({
       case "radio":
         return (
           <div className="space-y-2">
-            {field.opcoes?.map((opt: string, i: number) => (
+            {options.map((opt: string, i: number) => (
               <label key={i} className="flex items-center gap-2 cursor-pointer">
                 <input
                   type="radio"
@@ -120,7 +122,7 @@ function FormField({
       case "checkbox":
         return (
           <div className="space-y-2">
-            {field.opcoes?.map((opt: string, i: number) => (
+            {options.map((opt: string, i: number) => (
               <label key={i} className="flex items-center gap-2 cursor-pointer">
                 <input
                   type="checkbox"

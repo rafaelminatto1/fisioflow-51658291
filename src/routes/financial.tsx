@@ -34,10 +34,11 @@ const SimuladorReceitasPage = lazy(
       /* webpackChunkName: "financial-simulador" */ "@/pages/financeiro/SimuladorReceitasPage"
     ),
 );
-const CommissionsPage = lazy(() =>
-  import(
-    /* webpackChunkName: "financial-commissions" */ "@/components/financial/CommissionsDashboard"
-  ).then((m) => ({ default: m.CommissionsDashboard })),
+const CommissionsPage = lazy(
+  () =>
+    import(
+      /* webpackChunkName: "financial-commissions" */ "@/pages/financeiro/ComissoesPage"
+    ),
 );
 
 export const financialRoutes = (

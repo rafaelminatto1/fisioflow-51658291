@@ -69,9 +69,12 @@ export default function SalasPage() {
   const createMutation = useCreateSala();
   const updateMutation = useUpdateSala();
   const deleteMutation = useDeleteSala();
+  const safeSalas = Array.isArray(salas) ? salas : [];
 
-  const filteredData = salas?.filter((item) => {
-    const matchesSearch = item.nome.toLowerCase().includes(searchTerm.toLowerCase());
+  const filteredData = safeSalas.filter((item) => {
+    const matchesSearch = String(item.nome ?? "")
+      .toLowerCase()
+      .includes(searchTerm.toLowerCase());
     const matchesStatus = showInactive ? true : item.ativo;
     return matchesSearch && matchesStatus;
   });
