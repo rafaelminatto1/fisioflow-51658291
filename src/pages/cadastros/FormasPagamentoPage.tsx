@@ -70,9 +70,12 @@ export default function FormasPagamentoPage() {
   const createMutation = useCreateFormaPagamento();
   const updateMutation = useUpdateFormaPagamento();
   const deleteMutation = useDeleteFormaPagamento();
+  const safeFormasPagamento = Array.isArray(formasPagamento) ? formasPagamento : [];
 
-  const filteredData = formasPagamento?.filter((item) => {
-    const matchesSearch = item.nome.toLowerCase().includes(searchTerm.toLowerCase());
+  const filteredData = safeFormasPagamento.filter((item) => {
+    const matchesSearch = String(item.nome ?? "")
+      .toLowerCase()
+      .includes(searchTerm.toLowerCase());
     const matchesStatus = showInactive ? true : item.ativo;
     return matchesSearch && matchesStatus;
   });

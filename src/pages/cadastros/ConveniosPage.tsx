@@ -68,9 +68,12 @@ export default function ConveniosPage() {
   const createMutation = useCreateConvenio();
   const updateMutation = useUpdateConvenio();
   const deleteMutation = useDeleteConvenio();
+  const safeConvenios = Array.isArray(convenios) ? convenios : [];
 
-  const filteredData = convenios?.filter((item) => {
-    const matchesSearch = item.nome.toLowerCase().includes(searchTerm.toLowerCase());
+  const filteredData = safeConvenios.filter((item) => {
+    const matchesSearch = String(item.nome ?? "")
+      .toLowerCase()
+      .includes(searchTerm.toLowerCase());
     const matchesStatus = showInactive ? true : item.ativo;
     return matchesSearch && matchesStatus;
   });

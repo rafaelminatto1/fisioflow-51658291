@@ -844,7 +844,9 @@ export default function DocumentScannerPage() {
                         </TabsContent>
                       )}
 
-                      {extractedData.formFields && (
+                      {extractedData.formFields &&
+                        typeof extractedData.formFields === "object" &&
+                        !Array.isArray(extractedData.formFields) && (
                         <TabsContent value="fields">
                           <ScrollArea className="h-[400px]">
                             <div className="grid grid-cols-2 gap-2">

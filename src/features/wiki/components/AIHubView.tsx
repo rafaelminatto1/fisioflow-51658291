@@ -53,6 +53,24 @@ interface SearchHistoryItem {
   timestamp: Date;
 }
 
+function asArray<T = unknown>(value: unknown): T[] {
+  return Array.isArray(value) ? (value as T[]) : [];
+}
+
+function asStringArray(value: unknown): string[] {
+  return asArray(value).map(String).filter(Boolean);
+}
+
+function normalizeFisioBrainResult(value: unknown): FisioBrainResult {
+  const raw = value && typeof value === "object" ? (value as Partial<FisioBrainResult>) : {};
+
+  return {
+    answer: typeof raw.answer === "string" ? raw.answer : "",
+    sources: asArray<FisioBrainSource>(raw.sources),
+    configured: raw.configured,
+  };
+}
+
 // ─── Source badge config ────────────────────────────────────────────────────
 const SOURCE_BADGES: Record<string, { label: string; className: string; Icon: React.FC<any> }> = {
   paper: {
@@ -114,7 +132,7 @@ function FisioBrainChat() {
       if (areaFilter && areaFilter !== "all") params.append("area", areaFilter);
 
       const res = await fetch(`${getWorkersApiUrl()}/api/fisiobrain/search?${params}`);
-      const data: FisioBrainResult = await res.json();
+      const data = normalizeFisioBrainResult(await res.json());
       setResult(data);
       setHistory((prev) =>
         [{ query: query.trim(), result: data, timestamp: new Date() }, ...prev].slice(0, 10),
@@ -465,7 +483,7 @@ export function AIHubView() {
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <ul className="space-y-1">
-                      {soapResult.suggestions?.map((s: string, i: number) => (
+                      {asStringArray(soapResult.suggestions).map((s: string, i: number) => (
                         <li key={i} className="flex items-start gap-2 text-sm text-slate-700">
                           <CheckCircle2 className="h-4 w-4 text-emerald-500 mt-0.5 shrink-0" />
                           {s}

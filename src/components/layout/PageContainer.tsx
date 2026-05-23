@@ -18,7 +18,7 @@ export const PageContainer: React.FC<PageContainerProps> = ({
     <div
       className={cn(
         "mx-auto w-full transition-all duration-500 animate-slide-up",
-        !noPadding && "p-4 md:p-8 pt-0 md:pt-0",
+        !noPadding && "px-4 md:px-8 pt-6 md:pt-8 pb-4 md:pb-8",
         maxWidth === "sm" && "max-w-sm",
         maxWidth === "md" && "max-w-md",
         maxWidth === "lg" && "max-w-lg",

@@ -684,9 +684,16 @@ export default function AuditLogs() {
                       </TableHeader>
                       <TableBody>
                         {backups.map((backup) => {
-                          const totalRecords = backup.records_count
-                            ? Object.values(backup.records_count).reduce((a, b) => a + b, 0)
-                            : 0;
+                          const recordCounts =
+                            backup.records_count &&
+                            typeof backup.records_count === "object" &&
+                            !Array.isArray(backup.records_count)
+                              ? backup.records_count
+                              : {};
+                          const totalRecords = Object.values(recordCounts).reduce(
+                            (a, b) => a + Number(b || 0),
+                            0,
+                          );
 
                           return (
                             <TableRow key={backup.id}>

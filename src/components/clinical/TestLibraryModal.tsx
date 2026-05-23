@@ -153,7 +153,7 @@ export function TestLibraryModal({
     queryKey: ["clinical-tests-library"],
     queryFn: async () => {
       const res = await clinicalTestsApi.list();
-      return (res?.data ?? []) as ClinicalTest[];
+      return (Array.isArray(res?.data) ? res.data : []) as ClinicalTest[];
     },
     enabled: open,
   });
@@ -162,11 +162,22 @@ export function TestLibraryModal({
     return tests.filter((test) => {
       const searchLower = searchTerm.toLowerCase();
       const matchesSearch =
-        test.name.toLowerCase().includes(searchLower) ||
-        (test.name_en && test.name_en.toLowerCase().includes(searchLower)) ||
-        (test.tags && test.tags.some((t) => t.toLowerCase().includes(searchLower))) ||
-        (test.target_joint && test.target_joint.toLowerCase().includes(searchLower)) ||
-        (test.purpose && test.purpose.toLowerCase().includes(searchLower));
+        String(test.name ?? "").toLowerCase().includes(searchLower) ||
+        String(test.name_en ?? "")
+          .toLowerCase()
+          .includes(searchLower) ||
+        (Array.isArray(test.tags) &&
+          test.tags.some((t) =>
+            String(t ?? "")
+              .toLowerCase()
+              .includes(searchLower),
+          )) ||
+        String(test.target_joint ?? "")
+          .toLowerCase()
+          .includes(searchLower) ||
+        String(test.purpose ?? "")
+          .toLowerCase()
+          .includes(searchLower);
 
       const matchesCategory = selectedCategory === "Todos" || test.category === selectedCategory;
       const matchesJoint = selectedJoint === "Todos" || test.target_joint === selectedJoint;

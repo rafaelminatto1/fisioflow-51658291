@@ -14,6 +14,7 @@ import { PatientHelpers } from "@/types";
 
 // Lazy loads - AI Features
 const IAStudio = lazy(() => import(/* webpackChunkName: "ia-studio" */ "@/pages/IAStudio"));
+const AIHub = lazy(() => import(/* webpackChunkName: "ai-hub" */ "@/pages/AIHub"));
 const IntelligenceHub = lazy(
   () => import(/* webpackChunkName: "intelligence-hub" */ "@/pages/IntelligenceHub"),
 );
@@ -89,6 +90,15 @@ export const aiRoutes = (
       element={
         <ProtectedRoute>
           <IAStudio />
+        </ProtectedRoute>
+      }
+    />
+
+    <Route
+      path="/ai-hub"
+      element={
+        <ProtectedRoute>
+          <AIHub />
         </ProtectedRoute>
       }
     />

@@ -51,6 +51,7 @@ export function ChecklistTab({ eventoId }: ChecklistTabProps) {
   const deleteItem = useDeleteChecklistItem();
   const toggleItem = useToggleChecklistItem();
   const { canWrite, canDelete } = usePermissions();
+  const safeItems = Array.isArray(items) ? items : [];
 
   const {
     register,
@@ -84,11 +85,13 @@ export function ChecklistTab({ eventoId }: ChecklistTabProps) {
   };
 
   const itemsFiltrados =
-    filtroTipo === "todos" ? items : items?.filter((item) => item.tipo === filtroTipo);
+    filtroTipo === "todos" ? safeItems : safeItems.filter((item) => item.tipo === filtroTipo);
 
-  const custoTotal =
-    items?.reduce((sum, item) => sum + Number(item.custo_unitario) * item.quantidade, 0) || 0;
-  const totalPorTipo = items?.reduce(
+  const custoTotal = safeItems.reduce(
+    (sum, item) => sum + Number(item.custo_unitario) * item.quantidade,
+    0,
+  );
+  const totalPorTipo = safeItems.reduce(
     (acc, item) => {
       const custo = Number(item.custo_unitario) * item.quantidade;
       acc[item.tipo] = (acc[item.tipo] || 0) + custo;
@@ -202,35 +205,35 @@ export function ChecklistTab({ eventoId }: ChecklistTabProps) {
             size="sm"
             onClick={() => setFiltroTipo("todos")}
           >
-            Todos ({items?.length || 0})
+            Todos ({safeItems.length})
           </Button>
           <Button
             variant={filtroTipo === "levar" ? "default" : "outline"}
             size="sm"
             onClick={() => setFiltroTipo("levar")}
           >
-            Levar ({items?.filter((i) => i.tipo === "levar").length || 0})
+            Levar ({safeItems.filter((i) => i.tipo === "levar").length})
           </Button>
           <Button
             variant={filtroTipo === "alugar" ? "default" : "outline"}
             size="sm"
             onClick={() => setFiltroTipo("alugar")}
           >
-            Alugar ({items?.filter((i) => i.tipo === "alugar").length || 0})
+            Alugar ({safeItems.filter((i) => i.tipo === "alugar").length})
           </Button>
           <Button
             variant={filtroTipo === "comprar" ? "default" : "outline"}
             size="sm"
             onClick={() => setFiltroTipo("comprar")}
           >
-            Comprar ({items?.filter((i) => i.tipo === "comprar").length || 0})
+            Comprar ({safeItems.filter((i) => i.tipo === "comprar").length})
           </Button>
         </div>
       </CardHeader>
       <CardContent>
         {isLoading ? (
           <p className="text-sm text-muted-foreground">Carregando...</p>
-        ) : !itemsFiltrados || itemsFiltrados.length === 0 ? (
+        ) : itemsFiltrados.length === 0 ? (
           <p className="text-sm text-muted-foreground">
             {filtroTipo === "todos"
               ? "Nenhum item no checklist."

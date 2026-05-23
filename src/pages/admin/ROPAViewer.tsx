@@ -141,7 +141,7 @@ export default function ROPAViewer() {
     return rows.filter((r) => {
       if (areaFilter !== "all" && r.area_responsavel !== areaFilter) return false;
       if (!ql) return true;
-      return Object.values(r).some((v) => v.toLowerCase().includes(ql));
+      return Object.values(r).some((v) => String(v ?? "").toLowerCase().includes(ql));
     });
   }, [rows, q, areaFilter]);
 

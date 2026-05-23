@@ -73,6 +73,36 @@ const CATEGORY_COLORS: Record<string, string> = {
   "pos-operatorio": "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400",
 };
 
+function asObjectArray(value: unknown): Array<Record<string, unknown>> {
+  const rows = Array.isArray(value)
+    ? value
+    : value && typeof value === "object"
+      ? Object.values(value)
+      : [];
+
+  return rows.filter((row): row is Record<string, unknown> => !!row && typeof row === "object");
+}
+
+function normalizeOptions(value: unknown): string[] | null {
+  if (Array.isArray(value)) return value.map(String).filter(Boolean);
+  if (typeof value !== "string") return null;
+
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+
+  try {
+    const parsed = JSON.parse(trimmed) as unknown;
+    if (Array.isArray(parsed)) return parsed.map(String).filter(Boolean);
+  } catch {
+    // Keep compatibility with rows saved as plain multiline text.
+  }
+
+  return trimmed
+    .split(/\r?\n/)
+    .map((option) => option.trim())
+    .filter(Boolean);
+}
+
 export function EvaluationTemplateSelector({
   selectedTemplateId,
   onTemplateSelect,
@@ -91,23 +121,24 @@ export function EvaluationTemplateSelector({
         ativo: true,
         ...(category ? { tipo: category } : {}),
       });
-      const forms = (formsResponse?.data ?? formsResponse ?? []) as Array<Record<string, unknown>>;
+      const forms = asObjectArray(formsResponse?.data ?? formsResponse);
 
       const templatesWithFields = await Promise.all(
         forms.map(async (form) => {
           const detailResponse = await evaluationFormsApi.get(String(form.id));
           const detail = (detailResponse?.data ?? detailResponse) as Record<string, unknown>;
-          const rawFields = Array.isArray(detail.fields) ? detail.fields : [];
+          const rawFields = asObjectArray(detail.fields);
 
           const fields = rawFields.map((field) => {
-            const data = field as Record<string, unknown>;
+            const data = field;
             return {
               ...data,
               section: data.grupo,
               min: data.minimo,
               max: data.maximo,
               description: data.descricao,
-              opcoes: Array.isArray(data.opcoes) ? (data.opcoes as string[]) : null,
+              opcoes: normalizeOptions(data.opcoes),
+              ordem: Number(data.ordem ?? 0),
             } as TemplateField;
           });
 
@@ -118,7 +149,7 @@ export function EvaluationTemplateSelector({
             tipo: String(detail.tipo ?? "geral"),
             referencias: typeof detail.referencias === "string" ? detail.referencias : null,
             category: String(detail.tipo ?? "geral"),
-            fields: fields.sort((a, b) => a.ordem - b.ordem),
+            fields: fields.sort((a, b) => Number(a.ordem ?? 0) - Number(b.ordem ?? 0)),
             isBuiltin: false,
           } as EvaluationTemplate;
         }),

@@ -5,6 +5,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { triggerGamificationFeedback } from "@/lib/gamification/feedback-utils";
 import { fisioLogger as logger } from "@/lib/errors/logger";
+import { unwrapList } from "@/lib/api/unwrapData";
 import {
   gamificationApi,
   type GamificationProfileRow,
@@ -139,7 +140,7 @@ export const useGamification = (patientId: string): UseGamificationResult => {
     queryFn: async () => {
       try {
         const res = await gamificationApi.getShopItems();
-        return res.data ?? [];
+        return unwrapList(res.data);
       } catch (err) {
         logger.warn("[useGamification] Falha ao carregar loja", { err }, "useGamification");
         return [];
@@ -157,7 +158,7 @@ export const useGamification = (patientId: string): UseGamificationResult => {
     queryFn: async () => {
       try {
         const res = await gamificationApi.getInventory(patientId);
-        return res.data ?? [];
+        return unwrapList(res.data);
       } catch (err) {
         logger.warn("[useGamification] Falha ao carregar inventário", { err }, "useGamification");
         return [];
@@ -208,7 +209,9 @@ export const useGamification = (patientId: string): UseGamificationResult => {
     staleTime: 1000 * 60 * 60,
   });
 
-  const dailyQuests: DailyQuestItem[] = (questsRecord?.quests_data as DailyQuestItem[]) ?? [];
+  const dailyQuests: DailyQuestItem[] = Array.isArray(questsRecord?.quests_data)
+    ? (questsRecord.quests_data as DailyQuestItem[])
+    : [];
 
   // ── 5. Conquistas ─────────────────────────────────────────────────────────
   const { data: achievementsData } = useQuery({
@@ -232,7 +235,7 @@ export const useGamification = (patientId: string): UseGamificationResult => {
     queryFn: async () => {
       try {
         const res = await gamificationApi.getTransactions(patientId);
-        return (res.data ?? []).map((t) => ({
+        return unwrapList(res.data).map((t) => ({
           id: t.id,
           amount: t.amount,
           reason: t.reason,
@@ -327,8 +330,12 @@ export const useGamification = (patientId: string): UseGamificationResult => {
 
   // ── Derived state ─────────────────────────────────────────────────────────
 
-  const allAchievements = (achievementsData?.all ?? []) as Achievement[];
-  const unlockedAchievements = (achievementsData?.unlocked ?? []) as UnlockedAchievement[];
+  const allAchievements = Array.isArray(achievementsData?.all)
+    ? (achievementsData.all as Achievement[])
+    : [];
+  const unlockedAchievements = Array.isArray(achievementsData?.unlocked)
+    ? (achievementsData.unlocked as UnlockedAchievement[])
+    : [];
   const lockedAchievements = allAchievements.filter(
     (a) => !unlockedAchievements.some((ua) => ua.achievement_id === a.id),
   );

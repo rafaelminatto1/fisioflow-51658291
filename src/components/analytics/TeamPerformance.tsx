@@ -53,10 +53,12 @@ function TeamPerformanceComponent() {
       const to = format(dateRange!.to!, "yyyy-MM-dd");
 
       const response = await appointmentsApi.list({ dateFrom: from, dateTo: to, limit: 2000 });
-      const appointments = response?.data ?? [];
+      const appointments = Array.isArray(response?.data) ? response.data : [];
 
       const therapists =
-        members?.filter((m) => m.role === "fisioterapeuta" || m.role === "admin") || [];
+        Array.isArray(members)
+          ? members.filter((m) => m.role === "fisioterapeuta" || m.role === "admin")
+          : [];
 
       return therapists
         .map((member) => {
@@ -94,7 +96,7 @@ function TeamPerformanceComponent() {
     queryKey: ["analytics", "bi", biMonths],
     queryFn: () => request<{ data: BIData }>(`/api/analytics/bi?months=${biMonths}`),
     staleTime: 5 * 60 * 1000,
-    select: (res) => res.data?.top_therapists ?? [],
+    select: (res) => (Array.isArray(res.data?.top_therapists) ? res.data.top_therapists : []),
   });
 
   if (loadingMembers || loadingPerformance) {
@@ -105,9 +107,10 @@ function TeamPerformanceComponent() {
     );
   }
 
-  const bestAttendance = performanceData?.reduce(
+  const safePerformanceData = Array.isArray(performanceData) ? performanceData : [];
+  const bestAttendance = safePerformanceData.reduce(
     (prev, curr) => (prev.attendanceRate > curr.attendanceRate ? prev : curr),
-    performanceData[0],
+    safePerformanceData[0],
   );
 
   return (
@@ -143,11 +146,11 @@ function TeamPerformanceComponent() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {performanceData?.[0] ? (
+            {safePerformanceData[0] ? (
               <div className="space-y-1">
-                <div className="text-2xl font-black">{performanceData[0].name}</div>
+                <div className="text-2xl font-black">{safePerformanceData[0].name}</div>
                 <div className="text-xs text-muted-foreground font-medium">
-                  {performanceData[0].completed} sessões no período
+                  {safePerformanceData[0].completed} sessões no período
                 </div>
               </div>
             ) : (
@@ -166,10 +169,10 @@ function TeamPerformanceComponent() {
           <CardContent>
             <div className="space-y-1">
               <div className="text-2xl font-black">
-                {performanceData && performanceData.length > 0
+                {safePerformanceData.length > 0
                   ? Math.round(
-                      performanceData.reduce((acc, curr) => acc + curr.attendanceRate, 0) /
-                        performanceData.length,
+                      safePerformanceData.reduce((acc, curr) => acc + curr.attendanceRate, 0) /
+                        safePerformanceData.length,
                     )
                   : 0}
                 %
@@ -192,7 +195,7 @@ function TeamPerformanceComponent() {
           <CardContent>
             <div className="h-[300px] w-full">
               <SafeResponsiveContainer className="h-full" minHeight={300}>
-                <BarChart data={performanceData || []}>
+                <BarChart data={safePerformanceData}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} strokeOpacity={0.1} />
                   <XAxis
                     dataKey="name"
@@ -210,7 +213,7 @@ function TeamPerformanceComponent() {
                     }}
                   />
                   <Bar dataKey="completed" radius={[6, 6, 0, 0]} name="Concluídas">
-                    {performanceData?.map((_, index) => (
+                    {safePerformanceData.map((_, index) => (
                       <Cell
                         key={`cell-${index}`}
                         fill={index === 0 ? "hsl(var(--primary))" : "hsl(var(--primary)/0.4)"}
@@ -247,7 +250,7 @@ function TeamPerformanceComponent() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {performanceData?.map((row) => (
+                  {safePerformanceData.map((row) => (
                     <TableRow key={row.id} className="border-border/40">
                       <TableCell className="font-bold py-4 px-6">{row.name}</TableCell>
                       <TableCell className="text-center font-medium">{row.total}</TableCell>
@@ -315,13 +318,13 @@ function TeamPerformanceComponent() {
                   <div key={i} className="h-12 rounded-xl bg-muted/40 animate-pulse" />
                 ))}
               </div>
-            ) : (biData ?? []).length === 0 ? (
+            ) : !Array.isArray(biData) || biData.length === 0 ? (
               <p className="text-sm text-muted-foreground text-center py-8">
                 Nenhum dado disponível
               </p>
             ) : (
               <div className="space-y-2">
-                {(biData ?? []).map((t, i) => (
+                {biData.map((t, i) => (
                   <div
                     key={t.therapist_id}
                     className="flex items-center gap-3 p-3 rounded-xl bg-muted/30 hover:bg-muted/50 transition-colors"

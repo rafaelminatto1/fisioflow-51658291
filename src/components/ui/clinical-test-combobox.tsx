@@ -40,7 +40,7 @@ export function ClinicalTestCombobox({
     queryKey: ["clinical-tests-combobox"],
     queryFn: async () => {
       const res = await clinicalTestsApi.list();
-      return (res?.data ?? []) as ClinicalTest[];
+      return (Array.isArray(res?.data) ? res.data : []) as ClinicalTest[];
     },
   });
 
@@ -52,11 +52,22 @@ export function ClinicalTestCombobox({
     const searchLower = searchTerm.toLowerCase();
     return tests.filter(
       (test) =>
-        test.name.toLowerCase().includes(searchLower) ||
-        (test.name_en && test.name_en.toLowerCase().includes(searchLower)) ||
-        (test.category && test.category.toLowerCase().includes(searchLower)) ||
-        (test.target_joint && test.target_joint.toLowerCase().includes(searchLower)) ||
-        (test.tags && test.tags.some((t) => t.toLowerCase().includes(searchLower))),
+        String(test.name ?? "").toLowerCase().includes(searchLower) ||
+        String(test.name_en ?? "")
+          .toLowerCase()
+          .includes(searchLower) ||
+        String(test.category ?? "")
+          .toLowerCase()
+          .includes(searchLower) ||
+        String(test.target_joint ?? "")
+          .toLowerCase()
+          .includes(searchLower) ||
+        (Array.isArray(test.tags) &&
+          test.tags.some((t) =>
+            String(t ?? "")
+              .toLowerCase()
+              .includes(searchLower),
+          )),
     );
   }, [tests, searchTerm]);
 

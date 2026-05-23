@@ -483,7 +483,11 @@ export default function KnowledgeArticleDetail() {
                         <div className="grid gap-3">
                           {!article.metadata?.attachments ||
                           article.metadata.attachments.filter(
-                            (a) => a.type === "video" || a.name.toLowerCase().includes("aula"),
+                            (a) =>
+                              a.type === "video" ||
+                              String(a.name ?? "")
+                                .toLowerCase()
+                                .includes("aula"),
                           ).length === 0 ? (
                             <div className="text-center py-12 border border-dashed rounded-2xl bg-slate-50/50">
                               <div className="h-12 w-12 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-3">
@@ -500,7 +504,11 @@ export default function KnowledgeArticleDetail() {
                           ) : (
                             article.metadata?.attachments
                               ?.filter(
-                                (a) => a.type === "video" || a.name.toLowerCase().includes("aula"),
+                                (a) =>
+                                  a.type === "video" ||
+                                  String(a.name ?? "")
+                                    .toLowerCase()
+                                    .includes("aula"),
                               )
                               .map((file, i) => (
                                 <div

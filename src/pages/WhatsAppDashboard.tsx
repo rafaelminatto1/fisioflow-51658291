@@ -106,7 +106,8 @@ function exportMetricsCSV(metrics: Metrics) {
     ["Tempo médio 1ª resposta (min)", Math.round(metrics.avgFirstResponseTime)],
     ["Tempo médio resolução (min)", Math.round(metrics.avgResolutionTime)],
   ];
-  metrics.agentWorkload?.forEach((a) => {
+  const agentWorkload = Array.isArray(metrics.agentWorkload) ? metrics.agentWorkload : [];
+  agentWorkload.forEach((a) => {
     rows.push([`Agente: ${a.agentName} - ativas`, a.activeConversations]);
     rows.push([`Agente: ${a.agentName} - resolvidas hoje`, a.resolvedToday]);
   });

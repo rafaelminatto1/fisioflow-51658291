@@ -20,7 +20,7 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
   className,
 }) => {
   return (
-    <div className={cn("flex flex-col gap-4 mb-8 animate-fade-in", className)}>
+    <div className={cn("flex flex-col gap-4 mb-6 animate-fade-in", className)}>
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex flex-col gap-1">
           {breadcrumbs && (

@@ -38,6 +38,9 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
   const [errors, setErrors] = useState<Record<string, string>>({});
   const { toast } = useToast();
 
+  const getOptions = (field: EvaluationFormField) =>
+    Array.isArray(field.opcoes) ? field.opcoes.map(String) : [];
+
   const handleInputChange = (fieldId: string, value: unknown) => {
     setFormData((prev) => ({ ...prev, [fieldId]: value }));
     // Clear error if exists
@@ -179,7 +182,7 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
             disabled={readOnly}
           >
             <div className="flex flex-col gap-2">
-              {field.opcoes?.map((opt, idx) => (
+              {getOptions(field).map((opt, idx) => (
                 <div key={idx} className="flex items-center space-x-2">
                   <RadioGroupItem value={opt} id={`${field.id}-${idx}`} />
                   <Label htmlFor={`${field.id}-${idx}`} className="font-normal">
@@ -196,7 +199,7 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
         const currentSelection = Array.isArray(value) ? value : [];
         return (
           <div className="flex flex-col gap-2">
-            {field.opcoes?.map((opt, idx) => (
+            {getOptions(field).map((opt, idx) => (
               <div key={idx} className="flex items-center space-x-2">
                 <Checkbox
                   id={`${field.id}-${idx}`}
@@ -235,7 +238,7 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
             disabled={readOnly}
           >
             <option value="">Selecione...</option>
-            {field.opcoes?.map((opt, idx) => (
+            {getOptions(field).map((opt, idx) => (
               <option key={idx} value={opt}>
                 {opt}
               </option>

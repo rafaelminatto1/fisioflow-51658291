@@ -71,6 +71,7 @@ export function ServicosContent() {
   const createServico = useCreateServico();
   const updateServico = useUpdateServico();
   const deleteServico = useDeleteServico();
+  const safeServicos = Array.isArray(servicos) ? servicos : [];
 
   const { register, handleSubmit, reset, setValue, watch } = useForm<ServicoFormData>({
     defaultValues: {
@@ -114,8 +115,10 @@ export function ServicosContent() {
     setIsModalOpen(true);
   };
 
-  const filteredServicos = servicos?.filter(
-    (s) => accentIncludes(s.nome, searchQuery) || accentIncludes(s.descricao || "", searchQuery),
+  const filteredServicos = safeServicos.filter(
+    (s) =>
+      accentIncludes(String(s.nome ?? ""), searchQuery) ||
+      accentIncludes(String(s.descricao ?? ""), searchQuery),
   );
 
   return (

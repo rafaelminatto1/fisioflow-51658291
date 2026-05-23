@@ -73,11 +73,14 @@ export default function ProjectsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [projectToDelete, setProjectToDelete] = useState<Project | null>(null);
+  const safeProjects = Array.isArray(projects) ? projects : [];
 
-  const filteredProjects = projects?.filter(
+  const filteredProjects = safeProjects.filter(
     (p) =>
-      p.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      p.description?.toLowerCase().includes(searchTerm.toLowerCase()),
+      String(p.title ?? "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+      String(p.description ?? "")
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase()),
   );
 
   const handleEdit = (e: React.MouseEvent, project: Project) => {

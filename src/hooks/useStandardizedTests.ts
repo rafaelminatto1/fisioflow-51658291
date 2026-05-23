@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { fisioLogger as logger } from "@/lib/errors/logger";
 import { request } from "@/api/v2";
+import { unwrapList } from "@/lib/api/unwrapData";
 
 export interface StandardizedTestResult {
   id: string;
@@ -39,7 +40,7 @@ export const useStandardizedTests = (patientId: string, options?: UseStandardize
       const res = await request<{ data: StandardizedTestResult[] }>(
         `/api/standardized-tests?${params.toString()}`,
       );
-      return (res?.data ?? []) as StandardizedTestResult[];
+      return unwrapList<StandardizedTestResult>(res);
     },
     enabled: !!patientId,
   });
