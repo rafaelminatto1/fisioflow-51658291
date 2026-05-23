@@ -2,14 +2,7 @@ import type { LucideIcon } from "lucide-react";
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
-export type EvolutionAccent =
-  | "rose"
-  | "amber"
-  | "emerald"
-  | "pink"
-  | "blue"
-  | "slate"
-  | "zinc";
+export type EvolutionAccent = "rose" | "amber" | "emerald" | "pink" | "blue" | "slate" | "zinc";
 
 interface AccentClasses {
   bar: string;
@@ -75,6 +68,7 @@ interface EvolutionSectionCardProps {
   contentClassName?: string;
   /** When true, removes the inner padding around children (for blocks that manage their own spacing). */
   flushContent?: boolean;
+  density?: "regular" | "compact";
 }
 
 export function EvolutionSectionCard({
@@ -88,8 +82,10 @@ export function EvolutionSectionCard({
   className,
   contentClassName,
   flushContent = false,
+  density = "regular",
 }: EvolutionSectionCardProps) {
   const colors = accentMap[accent];
+  const isCompact = density === "compact";
 
   return (
     <section
@@ -106,24 +102,26 @@ export function EvolutionSectionCard({
         )}
       />
 
-      <header className="flex items-start justify-between gap-3 px-5 pt-5 pb-3">
-        <div className="flex items-center gap-3 min-w-0">
+      <header
+        className={cn(
+          "flex items-start justify-between gap-3",
+          isCompact ? "px-4 pt-4 pb-2.5" : "px-5 pt-5 pb-3",
+        )}
+      >
+        <div className={cn("flex items-center min-w-0", isCompact ? "gap-2.5" : "gap-3")}>
           <div
             className={cn(
-              "h-9 w-9 shrink-0 rounded-full ring-1 flex items-center justify-center",
+              "shrink-0 rounded-full ring-1 flex items-center justify-center",
+              isCompact ? "h-8 w-8" : "h-9 w-9",
               colors.badge,
               colors.ring,
             )}
           >
-            <Icon className={cn("h-4 w-4", colors.icon)} />
+            <Icon className={cn(isCompact ? "h-3.5 w-3.5" : "h-4 w-4", colors.icon)} />
           </div>
           <div className="min-w-0">
-            <h3 className="font-semibold text-slate-900 text-sm leading-tight truncate">
-              {title}
-            </h3>
-            {subtitle ? (
-              <p className="text-xs text-slate-500 mt-0.5 truncate">{subtitle}</p>
-            ) : null}
+            <h3 className="font-semibold text-slate-900 text-sm leading-tight truncate">{title}</h3>
+            {subtitle ? <p className="text-xs text-slate-500 mt-0.5 truncate">{subtitle}</p> : null}
           </div>
         </div>
         {(badge || actions) && (
@@ -137,7 +135,7 @@ export function EvolutionSectionCard({
       <div
         className={cn(
           "flex-1 min-h-0",
-          flushContent ? "px-0 pb-0" : "px-5 pb-5",
+          flushContent ? "px-0 pb-0" : isCompact ? "px-4 pb-4" : "px-5 pb-5",
           contentClassName,
         )}
       >
