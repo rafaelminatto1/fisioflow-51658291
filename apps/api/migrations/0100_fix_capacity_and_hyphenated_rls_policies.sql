@@ -1,6 +1,6 @@
--- Migration 0100: Fix RLS policies with hyphens for schedule_capacity and others
--- Problem: Policies defined in 0057_rls_complete.sql with hyphens in their names (e.g. org_isolation_schedule-capacity)
--- are syntactically invalid without double quotes in PostgreSQL and were never created, causing RLS violations on insert.
+-- Migration 0100: Fix RLS policies with hyphens for schedule_capacity, business_hours and others
+-- Problem: Policies defined in 0057_rls_complete.sql with hyphens in their names (e.g. org_isolation_schedule-capacity, org_isolation_business-hours)
+-- are syntactically invalid without double quotes in PostgreSQL and were never created, causing RLS violations on insert/update.
 -- Fix: Drop old hyphenated policies (if they exist) and create clean policies with underscores.
 
 DO $$
@@ -75,6 +75,70 @@ BEGIN
   DROP POLICY IF EXISTS org_isolation_user_vouchers ON public.user_vouchers;
   
   CREATE POLICY org_isolation_user_vouchers ON public.user_vouchers FOR ALL
+    USING (organization_id::text = current_setting('app.org_id', true))
+    WITH CHECK (organization_id::text = current_setting('app.org_id', true));
+
+  -- 10. business_hours
+  DROP POLICY IF EXISTS "org_isolation_business-hours" ON public.business_hours;
+  DROP POLICY IF EXISTS org_isolation_business_hours ON public.business_hours;
+  
+  CREATE POLICY org_isolation_business_hours ON public.business_hours FOR ALL
+    USING (organization_id::text = current_setting('app.org_id', true))
+    WITH CHECK (organization_id::text = current_setting('app.org_id', true));
+
+  -- 11. cancellation_rules
+  DROP POLICY IF EXISTS "org_isolation_cancellation-rules" ON public.cancellation_rules;
+  DROP POLICY IF EXISTS org_isolation_cancellation_rules ON public.cancellation_rules;
+  
+  CREATE POLICY org_isolation_cancellation_rules ON public.cancellation_rules FOR ALL
+    USING (organization_id::text = current_setting('app.org_id', true))
+    WITH CHECK (organization_id::text = current_setting('app.org_id', true));
+
+  -- 12. security_events
+  DROP POLICY IF EXISTS "org_isolation_security-events" ON public.security_events;
+  DROP POLICY IF EXISTS org_isolation_security_events ON public.security_events;
+  
+  CREATE POLICY org_isolation_security_events ON public.security_events FOR ALL
+    USING (organization_id::text = current_setting('app.org_id', true))
+    WITH CHECK (organization_id::text = current_setting('app.org_id', true));
+
+  -- 13. staff_performance_metrics
+  DROP POLICY IF EXISTS "org_isolation_staff-performance-metrics" ON public.staff_performance_metrics;
+  DROP POLICY IF EXISTS org_isolation_staff_performance_metrics ON public.staff_performance_metrics;
+  
+  CREATE POLICY org_isolation_staff_performance_metrics ON public.staff_performance_metrics FOR ALL
+    USING (organization_id::text = current_setting('app.org_id', true))
+    WITH CHECK (organization_id::text = current_setting('app.org_id', true));
+
+  -- 14. waitlist_offers
+  DROP POLICY IF EXISTS "org_isolation_waitlist-offers" ON public.waitlist_offers;
+  DROP POLICY IF EXISTS org_isolation_waitlist_offers ON public.waitlist_offers;
+  
+  CREATE POLICY org_isolation_waitlist_offers ON public.waitlist_offers FOR ALL
+    USING (organization_id::text = current_setting('app.org_id', true))
+    WITH CHECK (organization_id::text = current_setting('app.org_id', true));
+
+  -- 15. wearable_data
+  DROP POLICY IF EXISTS "org_isolation_wearable-data" ON public.wearable_data;
+  DROP POLICY IF EXISTS org_isolation_wearable_data ON public.wearable_data;
+  
+  CREATE POLICY org_isolation_wearable_data ON public.wearable_data FOR ALL
+    USING (organization_id::text = current_setting('app.org_id', true))
+    WITH CHECK (organization_id::text = current_setting('app.org_id', true));
+
+  -- 16. whatsapp_exercise_queue
+  DROP POLICY IF EXISTS "org_isolation_whatsapp-exercise-queue" ON public.whatsapp_exercise_queue;
+  DROP POLICY IF EXISTS org_isolation_whatsapp_exercise_queue ON public.whatsapp_exercise_queue;
+  
+  CREATE POLICY org_isolation_whatsapp_exercise_queue ON public.whatsapp_exercise_queue FOR ALL
+    USING (organization_id::text = current_setting('app.org_id', true))
+    WITH CHECK (organization_id::text = current_setting('app.org_id', true));
+
+  -- 17. whatsapp_messages
+  DROP POLICY IF EXISTS "org_isolation_whatsapp-messages" ON public.whatsapp_messages;
+  DROP POLICY IF EXISTS org_isolation_whatsapp_messages ON public.whatsapp_messages;
+  
+  CREATE POLICY org_isolation_whatsapp_messages ON public.whatsapp_messages FOR ALL
     USING (organization_id::text = current_setting('app.org_id', true))
     WITH CHECK (organization_id::text = current_setting('app.org_id', true));
 END $$;
