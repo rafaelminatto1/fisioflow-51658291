@@ -27,6 +27,12 @@ const AgendaViewAppearanceSchema = z.object({
   fontScale: z.number(),
   /** 0..100 */
   opacity: z.number(),
+  /** 0..10 */
+  timeFontScale: z.number().optional(),
+  /** 0..10 */
+  typeFontScale: z.number().optional(),
+  /** 0..10 */
+  paddingScale: z.number().optional(),
 });
 
 const PartialAgendaViewAppearanceSchema = AgendaViewAppearanceSchema.partial();
@@ -60,6 +66,15 @@ function clampViewAppearance(
   if (result.opacity !== undefined) {
     result.opacity = clamp(result.opacity, 0, 100);
   }
+  if (result.timeFontScale !== undefined) {
+    result.timeFontScale = clamp(result.timeFontScale, 0, 10);
+  }
+  if (result.typeFontScale !== undefined) {
+    result.typeFontScale = clamp(result.typeFontScale, 0, 10);
+  }
+  if (result.paddingScale !== undefined) {
+    result.paddingScale = clamp(result.paddingScale, 0, 10);
+  }
   return result;
 }
 
@@ -70,6 +85,9 @@ function clampAppearanceState(state: AgendaAppearanceState): AgendaAppearanceSta
       heightScale: clamp(state.global.heightScale, 0, 10),
       fontScale: clamp(state.global.fontScale, 0, 10),
       opacity: clamp(state.global.opacity, 0, 100),
+      timeFontScale: state.global.timeFontScale !== undefined ? clamp(state.global.timeFontScale, 0, 10) : undefined,
+      typeFontScale: state.global.typeFontScale !== undefined ? clamp(state.global.typeFontScale, 0, 10) : undefined,
+      paddingScale: state.global.paddingScale !== undefined ? clamp(state.global.paddingScale, 0, 10) : undefined,
     },
     day: state.day ? clampViewAppearance(state.day) : undefined,
     week: state.week ? clampViewAppearance(state.week) : undefined,

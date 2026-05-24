@@ -126,6 +126,7 @@ export function LiveViewPreview({ appearance, view }: LiveViewPreviewProps) {
           <EventCard
             key={i}
             event={event}
+            appearance={appearance}
             slotHeightPx={slotHeightPx}
             fontPercentage={fontPercentage}
             opacityValue={opacityValue}
@@ -139,15 +140,21 @@ export function LiveViewPreview({ appearance, view }: LiveViewPreviewProps) {
 
 interface EventCardProps {
   event: ExampleEvent;
+  appearance: AgendaViewAppearance;
   slotHeightPx: number;
   fontPercentage: number;
   opacityValue: number;
   compact: boolean;
 }
 
-function EventCard({ event, slotHeightPx, fontPercentage, opacityValue, compact }: EventCardProps) {
+function EventCard({ event, appearance, slotHeightPx, fontPercentage, opacityValue, compact }: EventCardProps) {
   const minHeight = Math.max(slotHeightPx, 20);
   const baseFontSize = fontPercentage / 100;
+
+  // Clamped scales for specific fields (defaulting to 5 if undefined)
+  const timeScale = 0.6 + (clamp(appearance.timeFontScale ?? 5, 0, 10) / 10) * 0.8;
+  const typeScale = 0.6 + (clamp(appearance.typeFontScale ?? 5, 0, 10) / 10) * 0.8;
+  const paddingRem = 0.25 + (clamp(appearance.paddingScale ?? 5, 0, 10) / 10) * 0.75;
 
   if (compact) {
     // Month view: pill style
@@ -180,7 +187,7 @@ function EventCard({ event, slotHeightPx, fontPercentage, opacityValue, compact 
       <div className="w-8 shrink-0 text-right pt-0.5">
         <span
           className="font-mono text-muted-foreground"
-          style={{ fontSize: `${Math.max(8 * baseFontSize, 7)}px` }}
+          style={{ fontSize: `${Math.max(8 * baseFontSize * timeScale, 7)}px` }}
         >
           {event.time}
         </span>
@@ -188,13 +195,15 @@ function EventCard({ event, slotHeightPx, fontPercentage, opacityValue, compact 
 
       {/* Event card */}
       <div
-        className="flex-1 rounded-lg overflow-hidden flex flex-col justify-center px-2.5 transition-all duration-150"
+        className="flex-1 rounded-lg overflow-hidden flex flex-col justify-center transition-all duration-150"
         style={{
           backgroundColor: event.bgColor,
           borderLeft: `3px solid ${event.accentColor}`,
           opacity: opacityValue,
           minHeight: `${minHeight}px`,
           boxShadow: "0 1px 3px rgba(0,0,0,0.06)",
+          padding: `${paddingRem * 0.7}rem ${paddingRem}rem`,
+          paddingLeft: `${paddingRem + 0.15}rem`,
         }}
       >
         <span
@@ -208,9 +217,9 @@ function EventCard({ event, slotHeightPx, fontPercentage, opacityValue, compact 
         </span>
         {slotHeightPx >= 24 && (
           <span
-            className="truncate opacity-70 leading-tight"
+            className="truncate opacity-70 leading-tight mt-0.5 font-medium"
             style={{
-              fontSize: `${Math.max(8 * baseFontSize, 7)}px`,
+              fontSize: `${Math.max(8 * baseFontSize * typeScale, 7)}px`,
               color: event.textColor,
             }}
           >
