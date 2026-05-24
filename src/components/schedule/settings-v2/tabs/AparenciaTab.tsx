@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import { useAgendaAppearancePersistence } from "@/hooks/useAgendaAppearancePersistence";
 import { Switch } from "@/components/ui/switch";
 import { LiveViewPreview } from "@/components/schedule/settings/LiveViewPreview";
+import { toast } from "sonner";
 
 type CardSize = "extra_small" | "small" | "medium" | "large";
 type AgendaView = "day" | "week" | "month";
@@ -30,11 +31,18 @@ export function AparenciaTab() {
     setHeightScale,
     setFontScale,
     setOpacity,
+    setTimeFontScale,
+    setTypeFontScale,
+    setPaddingScale,
+    save,
     applyToAllViews,
     resetView,
     resetAll,
     slotHeightPx,
     fontPercentage,
+    isSyncing,
+    syncError,
+    lastSyncedAt,
   } = useAgendaAppearancePersistence(activeView);
 
   // Proportional cardSize mapping based on heightScale
@@ -73,11 +81,36 @@ export function AparenciaTab() {
     }
   };
 
+  const handleSave = () => {
+    save();
+    toast.success("Configurações da agenda salvas com sucesso!");
+  };
+
   return (
     <SectionCard
       icon={<SlidersHorizontal className="h-4 w-4" />}
       title="Aparência da Agenda"
       description="Personalize a densidade, altura dos slots, escala de fonte e opacidade da sua agenda"
+      action={
+        <div className="flex items-center gap-2">
+          {isSyncing ? (
+            <span className="flex items-center gap-1.5 text-xs text-amber-700 bg-amber-50 border border-amber-200 dark:bg-amber-950/20 dark:border-amber-900 px-2.5 py-1 rounded-md font-medium transition animate-pulse">
+              <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
+              Salvando...
+            </span>
+          ) : syncError ? (
+            <span className="flex items-center gap-1.5 text-xs text-red-700 bg-red-50 border border-red-200 dark:bg-red-950/20 dark:border-red-900 px-2.5 py-1 rounded-md font-medium transition">
+              <span className="h-1.5 w-1.5 rounded-full bg-red-500" />
+              Erro ao salvar
+            </span>
+          ) : lastSyncedAt ? (
+            <span className="flex items-center gap-1.5 text-xs text-teal-700 bg-teal-50 border border-teal-200 dark:bg-teal-950/20 dark:border-teal-900 px-2.5 py-1 rounded-md font-medium transition">
+              <span className="h-1.5 w-1.5 rounded-full bg-teal-500" />
+              Salvo em nuvem
+            </span>
+          ) : null}
+        </div>
+      }
     >
       <div className="grid gap-6 lg:grid-cols-12">
         {/* Coluna da Esquerda: Controles */}
@@ -170,7 +203,7 @@ export function AparenciaTab() {
 
             <FieldRow
               label="Tamanho da fonte"
-              description="Escala o texto dentro dos cards"
+              description="Escala global de texto dentro dos cards"
               control={
                 <div className="flex items-center gap-3">
                   <input
@@ -184,6 +217,69 @@ export function AparenciaTab() {
                   />
                   <span className="text-xs font-mono text-muted-foreground w-6 text-right">
                     {appearance.fontScale}
+                  </span>
+                </div>
+              }
+            />
+
+            <FieldRow
+              label="Fonte do horário"
+              description="Ajusta o tamanho da fonte do texto do horário"
+              control={
+                <div className="flex items-center gap-3">
+                  <input
+                    type="range"
+                    min={1}
+                    max={10}
+                    step={1}
+                    value={appearance.timeFontScale ?? 5}
+                    onChange={(e) => setTimeFontScale(Number(e.target.value))}
+                    className="w-32 sm:w-40 accent-teal-600 cursor-pointer"
+                  />
+                  <span className="text-xs font-mono text-muted-foreground w-6 text-right">
+                    {appearance.timeFontScale ?? 5}
+                  </span>
+                </div>
+              }
+            />
+
+            <FieldRow
+              label="Fonte do tipo de consulta"
+              description="Ajusta o tamanho da fonte do tipo de consulta"
+              control={
+                <div className="flex items-center gap-3">
+                  <input
+                    type="range"
+                    min={1}
+                    max={10}
+                    step={1}
+                    value={appearance.typeFontScale ?? 5}
+                    onChange={(e) => setTypeFontScale(Number(e.target.value))}
+                    className="w-32 sm:w-40 accent-teal-600 cursor-pointer"
+                  />
+                  <span className="text-xs font-mono text-muted-foreground w-6 text-right">
+                    {appearance.typeFontScale ?? 5}
+                  </span>
+                </div>
+              }
+            />
+
+            <FieldRow
+              label="Espaçamento dos cards"
+              description="Controla o espaçamento interno (padding) dos cards"
+              control={
+                <div className="flex items-center gap-3">
+                  <input
+                    type="range"
+                    min={1}
+                    max={10}
+                    step={1}
+                    value={appearance.paddingScale ?? 5}
+                    onChange={(e) => setPaddingScale(Number(e.target.value))}
+                    className="w-32 sm:w-40 accent-teal-600 cursor-pointer"
+                  />
+                  <span className="text-xs font-mono text-muted-foreground w-6 text-right">
+                    {appearance.paddingScale ?? 5}
                   </span>
                 </div>
               }
@@ -212,43 +308,58 @@ export function AparenciaTab() {
           </div>
 
           {/* Rodapé de Ações */}
-          <div className="flex flex-wrap items-center justify-end gap-3 border-t border-slate-100 pt-4 dark:border-slate-800">
-            <button
-              type="button"
-              onClick={() =>
-                applyToAllViews({
-                  cardSize: appearance.cardSize,
-                  heightScale: appearance.heightScale,
-                  fontScale: appearance.fontScale,
-                  opacity: appearance.opacity ?? 100,
-                })
-              }
-              className="text-xs font-medium text-teal-700 hover:underline dark:text-teal-400"
-            >
-              Aplicar a todas as visualizações
-            </button>
-            <span className="text-slate-300 dark:text-slate-700">·</span>
-            <button
-              type="button"
-              onClick={() => resetView()}
-              className="text-xs font-medium text-slate-600 hover:underline dark:text-slate-400"
-            >
-              Restaurar esta visão
-            </button>
-            <span className="text-slate-300 dark:text-slate-700">·</span>
-            <button
-              type="button"
-              onClick={() => {
-                if (confirm("Restaurar todos os ajustes de aparência?")) {
-                  resetAll();
-                  setAutoAdjust(true);
-                  localStorage.setItem("agenda_appearance_auto_adjust", "true");
+          <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 pt-4 dark:border-slate-800">
+            <div>
+              <button
+                type="button"
+                onClick={handleSave}
+                className="px-4 py-2 text-xs font-semibold rounded-lg bg-teal-600 hover:bg-teal-700 text-white shadow-sm transition-colors"
+              >
+                Salvar Alterações
+              </button>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() =>
+                  applyToAllViews({
+                    cardSize: appearance.cardSize,
+                    heightScale: appearance.heightScale,
+                    fontScale: appearance.fontScale,
+                    opacity: appearance.opacity ?? 100,
+                    timeFontScale: appearance.timeFontScale ?? 5,
+                    typeFontScale: appearance.typeFontScale ?? 5,
+                    paddingScale: appearance.paddingScale ?? 5,
+                  })
                 }
-              }}
-              className="text-xs font-medium text-red-600 hover:underline"
-            >
-              Resetar tudo
-            </button>
+                className="text-xs font-medium text-teal-700 hover:underline dark:text-teal-400"
+              >
+                Aplicar a todas as visualizações
+              </button>
+              <span className="text-slate-300 dark:text-slate-700">·</span>
+              <button
+                type="button"
+                onClick={() => resetView()}
+                className="text-xs font-medium text-slate-600 hover:underline dark:text-slate-400"
+              >
+                Restaurar esta visão
+              </button>
+              <span className="text-slate-300 dark:text-slate-700">·</span>
+              <button
+                type="button"
+                onClick={() => {
+                  if (confirm("Restaurar todos os ajustes de aparência?")) {
+                    resetAll();
+                    setAutoAdjust(true);
+                    localStorage.setItem("agenda_appearance_auto_adjust", "true");
+                  }
+                }}
+                className="text-xs font-medium text-red-600 hover:underline"
+              >
+                Resetar tudo
+              </button>
+            </div>
           </div>
         </div>
 
@@ -278,6 +389,18 @@ export function AparenciaTab() {
               <div className="flex justify-between">
                 <span>Escala do texto dos cards:</span>
                 <span className="font-mono">{fontPercentage}%</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Fonte do horário:</span>
+                <span className="font-mono">{(0.6 + (appearance.timeFontScale ?? 5) * 0.08).toFixed(2)}x</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Fonte do tipo de consulta:</span>
+                <span className="font-mono">{(0.6 + (appearance.typeFontScale ?? 5) * 0.08).toFixed(2)}x</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Espaçamento dos cards:</span>
+                <span className="font-mono">{(0.25 + (appearance.paddingScale ?? 5) * 0.075).toFixed(2)}rem</span>
               </div>
               <div className="flex justify-between">
                 <span>Opacidade dos cards:</span>

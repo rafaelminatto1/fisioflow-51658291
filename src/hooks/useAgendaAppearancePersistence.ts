@@ -306,6 +306,34 @@ export function useAgendaAppearancePersistence(
     [baseHook, debouncedSave],
   );
 
+  const setTimeFontScale = useCallback(
+    (scale: number) => {
+      baseHook.setTimeFontScale?.(scale);
+      debouncedSave();
+    },
+    [baseHook, debouncedSave],
+  );
+
+  const setTypeFontScale = useCallback(
+    (scale: number) => {
+      baseHook.setTypeFontScale?.(scale);
+      debouncedSave();
+    },
+    [baseHook, debouncedSave],
+  );
+
+  const setPaddingScale = useCallback(
+    (scale: number) => {
+      baseHook.setPaddingScale?.(scale);
+      debouncedSave();
+    },
+    [baseHook, debouncedSave],
+  );
+
+  const save = useCallback(() => {
+    debouncedSave.flush();
+  }, [debouncedSave]);
+
   const setAll = useCallback(
     (next: Partial<AgendaViewAppearance>) => {
       baseHook.setAll(next);
@@ -349,6 +377,10 @@ export function useAgendaAppearancePersistence(
     setHeightScale,
     setFontScale,
     setOpacity,
+    setTimeFontScale,
+    setTypeFontScale,
+    setPaddingScale,
+    save,
     setAll,
     applyToAllViews,
     resetView,

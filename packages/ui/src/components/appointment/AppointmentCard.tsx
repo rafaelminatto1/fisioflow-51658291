@@ -68,6 +68,8 @@ export const AppointmentCard = React.forwardRef<HTMLDivElement, AppointmentCardP
         style={{
           ...cleanStyle,
           background: isCalendarCard ? undefined : cleanStyle?.background,
+          padding: compact ? "var(--agenda-card-padding, 0.35rem 0.5rem)" : undefined,
+          paddingLeft: compact ? "calc(var(--agenda-card-padding, 0.5rem) + 0.15rem)" : undefined,
         }}
         className={cn(
           "relative overflow-hidden cursor-pointer flex flex-col",
@@ -77,7 +79,7 @@ export const AppointmentCard = React.forwardRef<HTMLDivElement, AppointmentCardP
           isDropTarget && "ring-2 ring-primary/60 shadow-2xl scale-105 z-25",
           isSelected && "ring-2 ring-primary shadow-xl z-40",
           compact && "calendar-card-weekly",
-          compact ? "justify-start px-2 py-1.5 pl-2.5" : "justify-center p-3 pl-4",
+          compact ? "justify-start" : "justify-center p-3 pl-4",
           className,
         )}
         {...(props as any)}
@@ -103,10 +105,13 @@ export const AppointmentCard = React.forwardRef<HTMLDivElement, AppointmentCardP
               "font-semibold min-w-0 tracking-tight",
               compact
                 ? isVeryCompact
-                  ? "text-[11px] leading-tight truncate"
-                  : "text-[12px] leading-snug line-clamp-2"
+                  ? "leading-tight truncate"
+                  : "leading-snug line-clamp-2"
                 : "text-base leading-tight truncate",
             )}
+            style={{
+              fontSize: compact ? "calc(var(--agenda-font-scale, 1) * 12px)" : undefined,
+            }}
           >
             {patientName}
           </span>
@@ -120,8 +125,11 @@ export const AppointmentCard = React.forwardRef<HTMLDivElement, AppointmentCardP
             <span
               className={cn(
                 "font-mono tabular-nums tracking-tight opacity-75 leading-none",
-                compact ? "text-[10px]" : "text-xs",
+                compact ? "" : "text-xs",
               )}
+              style={{
+                fontSize: compact ? "calc(var(--agenda-time-font-scale, 1) * 10px)" : undefined,
+              }}
             >
               {time}
               {endTime && !compact && <span className="opacity-60"> – {endTime}</span>}
@@ -134,8 +142,18 @@ export const AppointmentCard = React.forwardRef<HTMLDivElement, AppointmentCardP
             )}
           </div>
 
-          {!compact && type && (
-            <span className="text-[11px] opacity-70 truncate mt-1 font-medium">{type}</span>
+          {type && (
+            <span
+              className={cn(
+                "opacity-70 truncate font-medium",
+                compact ? "mt-0.5" : "text-[11px] mt-1"
+              )}
+              style={{
+                fontSize: compact ? "calc(var(--agenda-type-font-scale, 1) * 11px)" : undefined,
+              }}
+            >
+              {type}
+            </span>
           )}
         </div>
 

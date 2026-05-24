@@ -13,6 +13,9 @@ const DEFAULT_GLOBAL: AgendaViewAppearance = {
   heightScale: 5,
   fontScale: 5,
   opacity: 100,
+  timeFontScale: 5,
+  typeFontScale: 5,
+  paddingScale: 5,
 };
 
 const VIEW_DEFAULT_OVERRIDES: Record<AgendaView, Partial<AgendaViewAppearance>> = {
@@ -83,6 +86,9 @@ export function useAgendaAppearance(view: AgendaView) {
       "--agenda-slot-height": `${slotHeightPx}px`,
       "--agenda-font-scale": `${fontPercentage / 100}`,
       "--fc-timegrid-slot-height": `${slotHeightPx}px`,
+      "--agenda-time-font-scale": `${0.6 + (Math.max(0, Math.min(10, effectiveForView.timeFontScale ?? 5)) / 10) * 0.8}`,
+      "--agenda-type-font-scale": `${0.6 + (Math.max(0, Math.min(10, effectiveForView.typeFontScale ?? 5)) / 10) * 0.8}`,
+      "--agenda-card-padding": `${0.25 + (Math.max(0, Math.min(10, effectiveForView.paddingScale ?? 5)) / 10) * 0.75}rem`,
     } as React.CSSProperties,
     setCardSize: (val: any) =>
       save({ ...state, [view]: { ...state[view], cardSize: val } }),
@@ -92,6 +98,12 @@ export function useAgendaAppearance(view: AgendaView) {
       save({ ...state, [view]: { ...state[view], fontScale: val } }),
     setOpacity: (val: number) =>
       save({ ...state, [view]: { ...state[view], opacity: val } }),
+    setTimeFontScale: (val: number) =>
+      save({ ...state, [view]: { ...state[view], timeFontScale: val } }),
+    setTypeFontScale: (val: number) =>
+      save({ ...state, [view]: { ...state[view], typeFontScale: val } }),
+    setPaddingScale: (val: number) =>
+      save({ ...state, [view]: { ...state[view], paddingScale: val } }),
     setAll: (patch: any) => save({ ...state, [view]: { ...state[view], ...patch } }),
     applyToAllViews: (patch: any) =>
       save({
