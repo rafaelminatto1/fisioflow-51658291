@@ -11,14 +11,14 @@ Este documento define a estratégia de evolução da inteligência clínica do F
 - **FisioReasoning**: O sistema não apenas resume, mas explica o raciocínio clínico por trás de uma sugestão de diagnóstico ou conduta.
 - **Dedução de Patologias**: Análise cruzada de dados subjetivos e objetivos para sugerir diagnósticos diferenciais com base em literatura médica atualizada.
 
-## 2. FisioAmbient Scribe (Ambient Intelligence)
+## 2. AI Clinical Scribe (Active Voice Intelligence)
 
-**Tecnologia:** Real-time WebSockets + Whisper v3 + Gemini 3.0
+**Tecnologia:** Cloudflare Workers AI + Whisper v3 + Gemini 1.5 Flash / 3.0
 
-**Objetivo:** Eliminar a digitação durante a consulta.
+**Objetivo:** Agilizar a digitação clínica de prontuários.
 
-- **Captura Passiva**: O celular ou computador "escuta" a sessão e gera automaticamente a evolução SOAP em blocos estruturados.
-- **Extração de Métricas**: Identificação automática de amplitude de movimento (ROM), escala de dor e exercícios mencionados durante a fala.
+- **Ditado de Voz Ativo**: O fisioterapeuta aciona ativamente o microfone para ditar o resumo do atendimento de forma focada e em ambiente isolado, sem capturas indesejadas de terceiros.
+- **Estruturação SOAP**: Processamento e refino do relato de voz pelo modelo de linguagem para gerar notas SOAP estruturadas.
 
 ## 3. Agentes Autônomos de Coordenação (Orchestrator)
 
@@ -43,7 +43,7 @@ Este documento define a estratégia de evolução da inteligência clínica do F
 ### Q1-Q2: Consolidação do AI Studio
 
 - Implementação total do Gemini 3.0 em todos os endpoints de análise.
-- Lançamento do Scribe Ambiental em versão Beta.
+- Lançamento do AI Scribe de Ditado Ativo.
 
 ### Q3: Agentes de Operação
 

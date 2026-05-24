@@ -121,9 +121,9 @@ const COMMANDS_REGISTRY: Record<string, Command> = {
   },
   scribe: {
     id: "scribe",
-    title: "AI Scribe (Ambiente)",
+    title: "AI Scribe (Ditado de Voz)",
     icon: Sparkles,
-    description: "Capturar áudio da sessão e gerar nota SOAP automaticamente",
+    description: "Gravar ditado clínico para gerar nota SOAP automaticamente",
     command: ({ editor, range }: any) => {
       editor.chain().focus().deleteRange(range).run();
       window.dispatchEvent(new CustomEvent("tiptap-scribe-open"));
