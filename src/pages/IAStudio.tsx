@@ -251,7 +251,7 @@ export const IAStudio: React.FC = () => {
                           className="bg-blue-600 hover:bg-blue-500 text-white rounded-2xl px-8 h-14 font-black text-sm uppercase tracking-widest shadow-xl shadow-blue-500/20"
                           onClick={() => setIsScribeOpen(true)}
                         >
-                          Ativar FisioAmbient
+                          Ativar AI Scribe
                         </Button>
                       </div>
                     </div>

@@ -105,7 +105,7 @@ const AIScribeModalV1: React.FC<AIScribeModalProps> = ({
                 AI Scribe
               </DialogTitle>
               <DialogDescription className="text-xs font-bold text-slate-400 uppercase tracking-widest">
-                Escuta Ambiente Clínica
+                Ditado Clínico Inteligente
               </DialogDescription>
             </div>
           </div>
@@ -164,7 +164,7 @@ const AIScribeModalV1: React.FC<AIScribeModalProps> = ({
                   </p>
                   <p className="text-[10px] font-black text-red-500 uppercase tracking-widest flex items-center justify-center gap-1.5">
                     <span className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse" />
-                    Gravando Ambiente...
+                    Gravando Ditado...
                   </p>
                 </div>
               )}

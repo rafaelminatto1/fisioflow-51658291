@@ -38,7 +38,7 @@
 ## 🤖 AI & Agentic Intelligence (Roadmap 2026)
 
 - `[ ]` Implement Gemini 3.0 Thinking Mode in `EvolutionSummarizer`
-- `[ ]` Finalize Beta of FisioAmbient Scribe (Ambient Clinical Recording)
+- `[x]` Refactor AI Scribe to active clinical dictation for LGPD compliance (decommissioned passive ambient recorder)
 - `[ ]` Develop Orchestrator Agent for automated scheduling and billing
 - `[ ]` Integrate Structured Outputs (Zod) in all clinical analysis endpoints
 - `[ ]` Launch Exercise Correction via Computer Vision (Mobile Edge AI)

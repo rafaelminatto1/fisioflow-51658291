@@ -11,7 +11,6 @@ Utilizamos modelos de última geração (**Gemini 3.0**, **Claude 3.5 Sonnet**) 
 | Funcionalidade                                                                   | Descrição                                                         | Status        |
 | :------------------------------------------------------------------------------- | :---------------------------------------------------------------- | :------------ |
 | [AI Studio](./specs/2026-04-19-fisioflow-ai-studio-design.md)                    | Central de criação de planos de tratamento e análise diagnóstica. | ✅ Produção   |
-| [FisioAmbient Scribe](./specs/2026-04-19-fisioambient-scribe-design.md)          | Transcrição e resumo automático de sessões em tempo real.         | ✅ Produção   |
 | [Premium Reports](./specs/2026-04-19-ia-studio-premium-reports-design.md)        | Geração de laudos clínicos detalhados com análise visual.         | ✅ Produção   |
 | [Avaliações Paciente](./specs/2026-04-14-avaliacoes-template-paciente-design.md) | Templates inteligentes para avaliações físicas.                   | ✅ Produção   |
 | [Refactor Header Evolution](./specs/2026-04-16-refactor-evolution-header.md)     | Interface dinâmica para acompanhamento de evolução.               | 🛠️ Finalizado |

@@ -13,17 +13,12 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Video,
-  VideoOff,
-  Mic,
-  MicOff,
-  PhoneOff,
-  Monitor,
-  Clock,
   AlertCircle,
   CheckCircle,
 } from "lucide-react";
 import { request } from "@/api/v2";
 import { toast } from "sonner";
+import { CloudflareRealtimeKitRoom } from "./CloudflareRealtimeKitRoom";
 
 interface LiveKitTokenResponse {
   data: {
@@ -82,8 +77,6 @@ export function LiveKitRoom({
   const [sessionStart, setSessionStart] = useState<Date | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [livekitData, setLivekitData] = useState<LiveKitTokenResponse["data"] | null>(null);
-  const [isMuted, setIsMuted] = useState(false);
-  const [isVideoOff, setIsVideoOff] = useState(false);
 
   const connect = async () => {
     setStatus("connecting");
@@ -205,92 +198,16 @@ export function LiveKitRoom({
   }
 
   // Status: connected
-  // Renderiza iframe Jitsi como fallback enquanto LiveKit SDK não está instalado
-  const jitsiUrl = livekitData
-    ? `https://meet.jit.si/fisioflow-${livekitData.room_name}#userInfo.displayName="${encodeURIComponent(displayName ?? identity ?? "Usuário")}"&config.prejoinPageEnabled=false`
-    : null;
-
+  // Migrado para Cloudflare RealtimeKit por padrão para segurança e baixíssima latência
   return (
-    <Card className={className}>
-      <CardHeader className="pb-2">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
-            <span className="text-sm font-medium">Em atendimento</span>
-            {sessionStart && <SessionTimer startTime={sessionStart} />}
-          </div>
-          <div className="flex items-center gap-1">
-            <Badge variant="outline" className="text-xs">
-              <Clock className="h-3 w-3 mr-1" />
-              Ao vivo
-            </Badge>
-          </div>
-        </div>
-      </CardHeader>
-      <CardContent className="space-y-3 p-3">
-        {/* Video area */}
-        {jitsiUrl ? (
-          <div
-            className="relative bg-black rounded-lg overflow-hidden"
-            style={{ paddingBottom: "56.25%" }}
-          >
-            <iframe
-              src={jitsiUrl}
-              className="absolute inset-0 w-full h-full"
-              allow="camera; microphone; display-capture; autoplay; clipboard-write"
-              allowFullScreen
-              title="Teleconsulta FisioFlow"
-            />
-          </div>
-        ) : (
-          <div className="bg-black rounded-lg h-48 flex items-center justify-center">
-            <p className="text-white/50 text-sm">Câmera não disponível</p>
-          </div>
-        )}
-
-        {/* Controls */}
-        <div className="flex items-center justify-center gap-3">
-          <Button
-            variant={isMuted ? "destructive" : "outline"}
-            size="icon"
-            className="rounded-full h-10 w-10"
-            onClick={() => setIsMuted(!isMuted)}
-            title={isMuted ? "Ativar microfone" : "Silenciar"}
-          >
-            {isMuted ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
-          </Button>
-          <Button
-            variant={isVideoOff ? "destructive" : "outline"}
-            size="icon"
-            className="rounded-full h-10 w-10"
-            onClick={() => setIsVideoOff(!isVideoOff)}
-            title={isVideoOff ? "Ativar câmera" : "Desligar câmera"}
-          >
-            {isVideoOff ? <VideoOff className="h-4 w-4" /> : <Video className="h-4 w-4" />}
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="rounded-full h-10 w-10"
-            title="Compartilhar tela"
-          >
-            <Monitor className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="destructive"
-            size="icon"
-            className="rounded-full h-12 w-12"
-            onClick={disconnect}
-            title="Encerrar consulta"
-          >
-            <PhoneOff className="h-5 w-5" />
-          </Button>
-        </div>
-
-        <p className="text-xs text-center text-muted-foreground">
-          Sala: {livekitData?.room_name} · {role === "therapist" ? "Profissional" : "Paciente"}
-        </p>
-      </CardContent>
-    </Card>
+    <CloudflareRealtimeKitRoom
+      roomId={roomId}
+      identity={identity}
+      displayName={displayName}
+      role={role}
+      onEnd={disconnect}
+      onSessionStart={onSessionStart}
+      className={className}
+    />
   );
 }

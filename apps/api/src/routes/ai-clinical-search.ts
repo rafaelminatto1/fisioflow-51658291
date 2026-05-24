@@ -1,10 +1,24 @@
 import { Hono } from "hono";
+import { z } from "zod";
 import type { Env } from "../types/env";
 import type { AuthVariables } from "../lib/auth";
 import { requireAuth } from "../lib/auth";
 import { getRawSql } from "../lib/db";
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
+
+const SearchResultSchema = z.object({
+  query: z.string(),
+  count: z.number(),
+  data: z.array(z.object({
+    evolutionId: z.string().uuid(),
+    summary: z.string(),
+    patientId: z.string().uuid(),
+    patientName: z.string(),
+    sessionDate: z.any(), // Aceita datas do Postgres
+    similarity: z.number()
+  }))
+});
 
 /**
  * GET /api/ai-clinical-search
@@ -50,11 +64,13 @@ app.get("/", requireAuth, async (c) => {
 			LIMIT ${limit};
 		`;
 
-    return c.json({
+    const validatedResponse = SearchResultSchema.parse({
       query,
       count: results.rows.length,
       data: results.rows,
     });
+
+    return c.json(validatedResponse);
   } catch (error: any) {
     console.error("[AI/Search] Error:", error);
     return c.json(
@@ -65,6 +81,17 @@ app.get("/", requireAuth, async (c) => {
       500,
     );
   }
+});
+
+const SimilarPatientsSchema = z.object({
+  data: z.array(z.object({
+    patientId: z.string().uuid(),
+    patientName: z.string(),
+    evolutionId: z.string().uuid(),
+    summary: z.string(),
+    sessionDate: z.any(),
+    similarity: z.number()
+  }))
 });
 
 /**
@@ -124,7 +151,10 @@ app.get("/patients/:id/similar", requireAuth, async (c) => {
       LIMIT ${limit}
     `;
 
-    return c.json({ data: results });
+    const similarData = Array.isArray(results.rows) ? results.rows : results;
+    const validatedResponse = SimilarPatientsSchema.parse({ data: similarData });
+
+    return c.json(validatedResponse);
   } catch (error: any) {
     console.error("[AI/Similar] Error:", error);
     return c.json({ error: "Erro ao buscar pacientes similares" }, 500);

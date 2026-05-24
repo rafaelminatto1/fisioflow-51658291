@@ -6,14 +6,14 @@ O **FisioFlow AI Studio** é uma suíte de inteligência clínica projetada para
 
 ## 2. Eixos de Funcionalidade
 
-### Eixo 1: FisioAmbient (Ambient Scribe)
+### Eixo 1: AI Clinical Scribe (Ditado de Voz)
 
 - **Objetivo:** Gerar notas SOAP a partir de ditado clínico estruturado.
 - **Fluxo:**
-  1.  O terapeuta aciona o microfone em seções específicas (Subjetivo, Objetivo, Avaliação, Plano).
+  1.  O terapeuta aciona o microfone em seções específicas (Subjetivo, Objetivo, Avaliação, Plano) para ditar ativamente a evolução.
   2.  O áudio é processado em lote via `Whisper-v3` no Cloudflare Workers AI.
   3.  O `Llama-3-70b` refina a transcrição para terminologia técnica de fisioterapia.
-  4.  A nota é salva no Neon DB com um adendo de consentimento verbal do paciente (Compliance LGPD).
+  4.  A nota é salva no Neon DB em conformidade com as diretrizes da LGPD.
 
 ### Eixo 2: FisioADM (Bio-Vision ADM)
 
@@ -83,7 +83,7 @@ O **FisioFlow AI Studio** é uma suíte de inteligência clínica projetada para
 - **Visualização:** Overlay de vetores biomecânicos e rastreamento de Centro de Massa (COM).
 - **Métricas:** Oscilação de tronco, simetria de passo e deslocamento vertical.
 
-### 7.2 OCR de Laudos (FisioAmbient 2.0)
+### 7.2 OCR de Laudos (AI Studio Scribe)
 
 - **Tecnologia:** Cloudflare Workers AI (Llama 3.2 Vision ou OCR clássico + Llama refino).
 - **Fluxo:** Upload de foto/PDF -> Extração de achados críticos -> Inserção automática no SOAP (Objetivo).

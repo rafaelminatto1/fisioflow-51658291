@@ -133,7 +133,7 @@ export const ScribeDrawer: React.FC<ScribeDrawerProps> = ({ isOpen, onClose, pat
               </div>
               <div>
                 <h2 className="text-base font-black tracking-tight uppercase">
-                  FisioAmbient <span className="text-violet-400">2.0</span>
+                  AI Clinical Scribe
                 </h2>
                 <div className="flex items-center gap-1.5">
                   <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
