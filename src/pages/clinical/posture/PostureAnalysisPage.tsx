@@ -25,8 +25,8 @@ export default function PostureAnalysisPage() {
       title="Postura & Escoliose"
       subtitle="SAPO / Adams / Fotogrametria"
       icon={User}
-      iconBgClassName="border-purple-500/20 bg-purple-500/10"
-      iconClassName="text-purple-500"
+      iconBgClassName="border-brand-blue/20 bg-brand-blue/10"
+      iconClassName="text-brand-blue"
     >
       <Suspense fallback={<StudioLoadingFallback />}>
         <PostureAnalysisStudio />

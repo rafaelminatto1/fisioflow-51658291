@@ -23,6 +23,7 @@ import {
   Plus,
   CheckCircle2,
   Download,
+  SlidersHorizontal,
 } from "lucide-react";
 import {
   EQUIPMENT,
@@ -532,6 +533,119 @@ const ExerciseListItem = React.memo(function ExerciseListItem({
   );
 });
 
+const ExerciseCompactCard = React.memo(function ExerciseCompactCard({
+  exercise,
+  isFavorite,
+  onToggleFavorite,
+  onView,
+  selectionMode,
+  isAdded,
+  onAdd,
+  isSelected,
+  onSelect,
+  isSelectionMode,
+}: {
+  exercise: Exercise;
+  isFavorite: boolean;
+  onToggleFavorite: () => void;
+  onView: () => void;
+  selectionMode?: boolean;
+  isAdded?: boolean;
+  onAdd?: () => void;
+  isSelected: boolean;
+  onSelect: () => void;
+  isSelectionMode: boolean;
+}) {
+  const thumbSrc = getBestImageUrl(exercise);
+
+  return (
+    <Card
+      className={cn(
+        "flex items-center gap-3 p-2 w-[280px] flex-shrink-0 cursor-pointer transition-all border border-slate-200/60 dark:border-slate-800/80 rounded-2xl shadow-sm hover:shadow-md hover:border-primary/40 select-none",
+        isSelected && "bg-slate-100 dark:bg-slate-900 border-emerald-500/50 dark:border-emerald-500 shadow-md scale-[0.98]",
+      )}
+      onClick={() => {
+        if (isSelectionMode) {
+          onSelect();
+        } else if (selectionMode) {
+          if (!isAdded && onAdd) onAdd();
+        } else {
+          onView();
+        }
+      }}
+    >
+      {/* Thumbnail miniatura */}
+      <div className="h-12 w-12 rounded-xl overflow-hidden bg-gradient-to-br from-muted to-muted/50 flex-shrink-0 relative">
+        {thumbSrc ? (
+          <OptimizedImage
+            src={thumbSrc}
+            alt={exercise.name ?? "Exercício"}
+            className="w-full h-full object-cover"
+            aspectRatio="1:1"
+            fallback="/placeholder.svg"
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/5 to-primary/10">
+            <Dumbbell className="h-5 w-5 text-primary/40" />
+          </div>
+        )}
+      </div>
+
+      {/* Info condensada */}
+      <div className="flex-1 min-w-0">
+        <h4 className="font-semibold text-xs text-slate-800 dark:text-slate-200 truncate pr-2">
+          {exercise.name ?? "Sem nome"}
+        </h4>
+        <div className="flex items-center gap-1.5 mt-1 text-[9px] text-slate-500 font-mono">
+          {exercise.sets && <span>{exercise.sets}x</span>}
+          {exercise.repetitions && <span>{exercise.repetitions} reps</span>}
+          {exercise.duration && <span>{exercise.duration}s</span>}
+        </div>
+      </div>
+
+      {/* Ação rápida */}
+      <div className="flex-shrink-0 mr-1">
+        {isSelectionMode ? (
+          <Checkbox
+            checked={isSelected}
+            onCheckedChange={onSelect}
+            className="h-5 w-5 border-2 data-[state=checked]:bg-emerald-500 data-[state=checked]:border-emerald-500 rounded-md"
+            onClick={(e) => e.stopPropagation()}
+          />
+        ) : selectionMode ? (
+          <Button
+            size="icon"
+            variant={isAdded ? "default" : "outline"}
+            className={cn(
+              "h-8 w-8 rounded-xl",
+              isAdded ? "bg-emerald-500 hover:bg-emerald-600 text-white border-none" : "border-slate-200 dark:border-slate-800"
+            )}
+            onClick={(e) => {
+              e.stopPropagation();
+              if (!isAdded && onAdd) onAdd();
+            }}
+            disabled={isAdded}
+          >
+            {isAdded ? <CheckCircle2 className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
+          </Button>
+        ) : (
+          <Button
+            size="icon"
+            variant="ghost"
+            className="h-8 w-8 text-slate-400 hover:text-slate-600 rounded-xl"
+            onClick={(e) => {
+              e.stopPropagation();
+              onView();
+            }}
+          >
+            <Play className="h-4 w-4" />
+          </Button>
+        )}
+      </div>
+    </Card>
+  );
+});
+
 export function ExerciseLibrary({
   onSelectExercise,
   onEditExercise,
@@ -582,7 +696,20 @@ export function ExerciseLibrary({
   const { exercises, loading, deleteExercise, mergeExercises, isDeleting } = useExercises();
   const { isFavorite, toggleFavorite } = useExerciseFavorites();
 
-  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const [viewMode, setViewMode] = useState<"grid" | "list" | "compact">("grid");
+
+  // Agrupamento de exercícios por categoria para o modo compacto
+  const groupedByCategory = useMemo(() => {
+    const groups: Record<string, Exercise[]> = {};
+    filteredExercises.forEach((ex) => {
+      const cat = ex.category || "Outros";
+      if (!groups[cat]) groups[cat] = [];
+      groups[cat].push(ex);
+    });
+    return groups;
+  }, [filteredExercises]);
+
+  const isSearchActive = !!debouncedSearchTerm;
 
   useEffect(() => {
     setVisibleCount(12);
@@ -807,6 +934,7 @@ export function ExerciseLibrary({
                 size="icon"
                 className="h-8 w-8"
                 onClick={() => setViewMode("grid")}
+                title="Visualização em Grade"
               >
                 <LayoutGrid className="h-4 w-4" />
               </Button>
@@ -815,8 +943,18 @@ export function ExerciseLibrary({
                 size="icon"
                 className="h-8 w-8"
                 onClick={() => setViewMode("list")}
+                title="Visualização em Lista"
               >
                 <List className="h-4 w-4" />
+              </Button>
+              <Button
+                variant={viewMode === "compact" ? "secondary" : "ghost"}
+                size="icon"
+                className="h-8 w-8"
+                onClick={() => setViewMode("compact")}
+                title="Visualização Compacta Horizontal"
+              >
+                <SlidersHorizontal className="h-4 w-4" />
               </Button>
             </div>
           </div>
@@ -958,7 +1096,7 @@ export function ExerciseLibrary({
               </div>
             ))}
           </div>
-        ) : (
+        ) : viewMode === "list" ? (
           <div className="space-y-2 p-2">
             {filteredExercises.slice(0, visibleCount).map((exercise, index) => (
               <div key={exercise.id} className="relative flex items-center gap-2 animate-in fade-in slide-in-from-bottom-2" style={{ animationDelay: `${(index % 12) * 50}ms` }}>
@@ -980,6 +1118,66 @@ export function ExerciseLibrary({
                 </div>
               </div>
             ))}
+          </div>
+        ) : (
+          // MOTO COMPACTO HORIZONTAL
+          <div className="space-y-6 p-4">
+            {isSearchActive ? (
+              <div className="space-y-3">
+                <h4 className="text-xs font-black uppercase tracking-wider text-slate-400">
+                  Resultados da Busca
+                </h4>
+                <div className="flex gap-4 overflow-x-auto pb-4 pt-1 snap-x scroll-smooth scrollbar-thin scrollbar-thumb-slate-200">
+                  {filteredExercises.slice(0, visibleCount).map((exercise) => (
+                    <div key={exercise.id} className="snap-start flex-shrink-0">
+                      <ExerciseCompactCard
+                        exercise={exercise}
+                        isFavorite={isFavorite(exercise.id)}
+                        onToggleFavorite={() => toggleFavorite(exercise.id)}
+                        onView={() => setViewExercise(exercise)}
+                        selectionMode={selectionMode}
+                        isAdded={addedExerciseIds.includes(exercise.id)}
+                        onAdd={() => onSelectExercise && onSelectExercise(exercise)}
+                        isSelected={selectedExercises.includes(exercise.id)}
+                        onSelect={() => toggleSelection(exercise.id)}
+                        isSelectionMode={isSelectionMode}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              Object.entries(groupedByCategory).map(([category, items]) => (
+                <div key={category} className="space-y-3 border-b border-slate-100 dark:border-slate-800/40 pb-4 last:border-none last:pb-0">
+                  <div className="flex justify-between items-center px-1">
+                    <h4 className="text-xs font-black uppercase tracking-widest text-slate-500">
+                      {category}
+                    </h4>
+                    <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+                      {items.length} {items.length !== 1 ? "Exercícios" : "Exercício"}
+                    </span>
+                  </div>
+                  <div className="flex gap-4 overflow-x-auto pb-3 pt-1 snap-x scroll-smooth scrollbar-thin scrollbar-thumb-slate-200">
+                    {items.slice(0, visibleCount).map((exercise) => (
+                      <div key={exercise.id} className="snap-start flex-shrink-0">
+                        <ExerciseCompactCard
+                          exercise={exercise}
+                          isFavorite={isFavorite(exercise.id)}
+                          onToggleFavorite={() => toggleFavorite(exercise.id)}
+                          onView={() => setViewExercise(exercise)}
+                          selectionMode={selectionMode}
+                          isAdded={addedExerciseIds.includes(exercise.id)}
+                          onAdd={() => onSelectExercise && onSelectExercise(exercise)}
+                          isSelected={selectedExercises.includes(exercise.id)}
+                          onSelect={() => toggleSelection(exercise.id)}
+                          isSelectionMode={isSelectionMode}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         )}
       </div>
