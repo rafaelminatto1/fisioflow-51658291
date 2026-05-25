@@ -698,23 +698,6 @@ export function ExerciseLibrary({
 
   const [viewMode, setViewMode] = useState<"grid" | "list" | "compact">("grid");
 
-  // Agrupamento de exercícios por categoria para o modo compacto
-  const groupedByCategory = useMemo(() => {
-    const groups: Record<string, Exercise[]> = {};
-    filteredExercises.forEach((ex) => {
-      const cat = ex.category || "Outros";
-      if (!groups[cat]) groups[cat] = [];
-      groups[cat].push(ex);
-    });
-    return groups;
-  }, [filteredExercises]);
-
-  const isSearchActive = !!debouncedSearchTerm;
-
-  useEffect(() => {
-    setVisibleCount(12);
-  }, [debouncedSearchTerm, activeFilter, advancedFilters]);
-
   const filteredExercises = useMemo(() => {
     const validExercises = exercises.filter(
       (ex): ex is Exercise => ex != null && typeof ex === "object",
@@ -795,6 +778,23 @@ export function ExerciseLibrary({
       return true;
     });
   }, [exercises, debouncedSearchTerm, activeFilter, isFavorite, advancedFilters]);
+
+  // Agrupamento de exercícios por categoria para o modo compacto
+  const groupedByCategory = useMemo(() => {
+    const groups: Record<string, Exercise[]> = {};
+    filteredExercises.forEach((ex) => {
+      const cat = ex.category || "Outros";
+      if (!groups[cat]) groups[cat] = [];
+      groups[cat].push(ex);
+    });
+    return groups;
+  }, [filteredExercises]);
+
+  const isSearchActive = !!debouncedSearchTerm;
+
+  useEffect(() => {
+    setVisibleCount(12);
+  }, [debouncedSearchTerm, activeFilter, advancedFilters]);
 
   useEffect(() => {
     if (loading) return;
