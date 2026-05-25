@@ -27,6 +27,7 @@ import { IAInsightsBar } from "@/features/ia-studio/components/IAInsightsBar";
 import { AgentHub } from "@/features/ia-studio/components/AgentHub";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { getWorkersApiUrl } from "@/lib/api/config";
 
 export const IAStudio: React.FC = () => {
   const [activeTab, setActiveTab] = useState("dashboard");
@@ -34,7 +35,7 @@ export const IAStudio: React.FC = () => {
   const { data: usageData } = useQuery({
     queryKey: ["ai-usage-weekly"],
     queryFn: async () => {
-      const res = await fetch("/api/ai/usage/weekly");
+      const res = await fetch(`${getWorkersApiUrl()}/api/ai/usage/weekly`);
       if (!res.ok) return null;
       return res.json() as Promise<{
         totalCalls: number;

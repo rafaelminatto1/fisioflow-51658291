@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { AlertTriangle, DollarSign, Activity, MessageCircle, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { getWorkersApiUrl } from "@/lib/api/config";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -11,7 +12,7 @@ export function SmartDashboardWidgets() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("/api/ai-insights/widgets", {
+    fetch(`${getWorkersApiUrl()}/api/ai-insights/widgets`, {
       headers: {
         "Authorization": `Bearer ${localStorage.getItem("token") || ""}`
       }

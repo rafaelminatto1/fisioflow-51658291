@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { PageLayout } from "@/components/layout/PageLayout";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { PageContainer } from "@/components/layout/PageContainer";
+import { getWorkersApiUrl } from "@/lib/api/config";
 import { BrainCircuit, LineChart as LineChartIcon, PieChart as PieChartIcon } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -31,7 +32,7 @@ export default function AIHub() {
   const revenueForecastData = asArray(data?.revenueForecast);
 
   useEffect(() => {
-    fetch("/api/ai-insights/analytics", {
+    fetch(`${getWorkersApiUrl()}/api/ai-insights/analytics`, {
       headers: {
         "Authorization": `Bearer ${localStorage.getItem("token") || ""}`
       }
