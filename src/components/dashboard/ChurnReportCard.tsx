@@ -40,6 +40,64 @@ export function ChurnReportCard() {
   });
 
   if (isLoading || !data) return null;
+
+  // Evita crash de TypeError se o back-end retornar um array de pacientes inativos
+  if (Array.isArray(data)) {
+    const churnedCount = data.length;
+    if (churnedCount === 0) return null;
+
+    return (
+      <Card className="border border-border/50">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm font-semibold flex items-center gap-2">
+            <TrendingDown className="h-4 w-4 text-muted-foreground" />
+            Churn Mensal
+            <Badge variant="outline" className="text-xs ml-auto">
+              Inativos (&gt;30 dias)
+            </Badge>
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="pt-0 space-y-3">
+          <div className="flex items-center gap-4">
+            <div>
+              <p className="text-xs text-muted-foreground">Pacientes perdidos</p>
+              <p className="text-2xl font-bold">{churnedCount}</p>
+            </div>
+          </div>
+
+          <div className="space-y-1.5 border-t pt-2">
+            <p className="text-xs font-medium text-muted-foreground">
+              Pacientes sem sessão há mais de 30 dias:
+            </p>
+            <div className="space-y-1 max-h-40 overflow-y-auto">
+              {data.slice(0, 8).map((p: any) => (
+                <div
+                  key={p.id}
+                  className="flex items-center justify-between text-xs py-0.5"
+                >
+                  <span className="flex items-center gap-1.5">
+                    <UserMinus className="h-3 w-3 text-muted-foreground" />
+                    {p.full_name}
+                  </span>
+                  {p.days_inactive != null && (
+                    <span className="text-[10px] text-muted-foreground">
+                      {p.days_inactive} dias inativo
+                    </span>
+                  )}
+                </div>
+              ))}
+              {data.length > 8 && (
+                <p className="text-xs text-muted-foreground">
+                  +{data.length - 8} pacientes
+                </p>
+              )}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   if (data.churnedCount === 0 && data.activePrevMonth === 0) return null;
 
   const prevLabel = format(new Date(data.period.previous.start), "MMMM", { locale: ptBR });
