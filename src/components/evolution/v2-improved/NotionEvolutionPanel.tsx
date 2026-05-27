@@ -285,11 +285,11 @@ export const NotionEvolutionPanel: React.FC<NotionEvolutionPanelProps> = ({
     <>
       <Card
         className={cn(
-          "h-full flex flex-col border-none shadow-none bg-background overflow-hidden",
+          "flex flex-col border-none shadow-none bg-background",
           className,
         )}
       >
-        <div className="flex-1 overflow-y-auto p-3 sm:p-4 xl:p-5">
+        <div className="flex-1 p-3 sm:p-4 xl:p-5">
           <div className="mx-auto flex w-full max-w-[1720px] flex-col gap-4 pb-12">
             {/* Banner: Replicar última sessão (1 clique) */}
             {lastSession && currentIsEmpty && !disabled && (
@@ -569,7 +569,7 @@ export const NotionEvolutionPanel: React.FC<NotionEvolutionPanelProps> = ({
               </main>
 
               {showClinicalPanel && (
-                <aside className="min-w-0 space-y-4 min-[1180px]:sticky min-[1180px]:top-4 min-[1180px]:max-h-[calc(100vh-9rem)] min-[1180px]:overflow-y-auto min-[1180px]:pr-1">
+                <aside className="min-w-0 space-y-4 min-[1180px]:pr-1">
                   <EvolutionSectionCard
                     accent="rose"
                     icon={Activity}
