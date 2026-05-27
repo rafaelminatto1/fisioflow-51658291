@@ -37,6 +37,7 @@ import type { EvaluationTemplate, TemplateField } from "@/components/evaluation"
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { PatientHelpers } from "@/types";
 import { fisioLogger as logger } from "@/lib/errors/logger";
@@ -873,6 +874,36 @@ export default function NewEvaluationPage() {
             </Tabs>
           </div>
         </div>
+
+        {/* Floating Action Bar (Sticky Footer) */}
+        {!isReadOnlyEvaluation && activeTab !== "dashboard" && activeTab !== "voice-ai" && (
+          <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 animate-in slide-in-from-bottom-4 duration-500 print:hidden pointer-events-auto">
+            <div className="bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border border-blue-100/50 dark:border-blue-900/50 shadow-premium-md rounded-full px-6 py-3 flex items-center gap-4">
+              <div className="hidden sm:block">
+                <p className="text-xs font-black uppercase tracking-widest text-slate-500">Ação Rápida</p>
+                <p className="text-sm font-bold text-slate-800 dark:text-slate-200">Finalizou o preenchimento?</p>
+              </div>
+              <Separator orientation="vertical" className="h-8 hidden sm:block mx-2" />
+              <Button
+                onClick={handleSaveEvaluation}
+                disabled={isSaving}
+                className="rounded-full px-8 h-12 font-black text-sm shadow-sm shadow-blue-600/20 bg-blue-600 hover:bg-blue-700 hover:scale-105 transition-all"
+              >
+                {isSaving ? (
+                  <>
+                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                    Salvando...
+                  </>
+                ) : (
+                  <>
+                    Salvar e Concluir
+                    <Save className="ml-2 h-5 w-5" />
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+        )}
 
         <AddCustomFieldDialog
           open={showAddFieldDialog}
