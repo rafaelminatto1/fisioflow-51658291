@@ -535,8 +535,6 @@ const ExerciseListItem = React.memo(function ExerciseListItem({
 
 const ExerciseCompactCard = React.memo(function ExerciseCompactCard({
   exercise,
-  isFavorite,
-  onToggleFavorite,
   onView,
   selectionMode,
   isAdded,
@@ -546,8 +544,6 @@ const ExerciseCompactCard = React.memo(function ExerciseCompactCard({
   isSelectionMode,
 }: {
   exercise: Exercise;
-  isFavorite: boolean;
-  onToggleFavorite: () => void;
   onView: () => void;
   selectionMode?: boolean;
   isAdded?: boolean;

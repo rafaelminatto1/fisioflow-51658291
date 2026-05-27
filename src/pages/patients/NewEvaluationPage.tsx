@@ -10,7 +10,6 @@ import {
   Map,
   Plus,
   Save,
-  Sparkles,
   Camera,
   Printer,
   Mic,
@@ -25,6 +24,7 @@ import {
   AddCustomFieldDialog,
   SaveAsTemplateDialog,
   EvaluationActionBridge,
+  EvaluationHistorySidebar,
 } from "@/components/evaluation";
 import { useActionBridge } from "@/hooks/useActionBridge";
 import { NewPrescriptionModal } from "@/components/prescriptions/NewPrescriptionModal";
@@ -166,7 +166,7 @@ export default function NewEvaluationPage() {
   const hasMarkedStarted = useRef(false);
 
   const [activeTab, setActiveTab] = useState(() =>
-    templateId || evaluationId ? "anamnesis" : "dashboard",
+    templateId || evaluationId || appointmentId ? "anamnesis" : "dashboard",
   );
   const [isSaving, setIsSaving] = useState(false);
   const [_isTemplateLoading, setIsTemplateLoading] = useState(!!templateId);
@@ -186,6 +186,19 @@ export default function NewEvaluationPage() {
 
   // Physical Exam State
   const [physicalExamData, setPhysicalExamData] = useState<any>({});
+
+  // History Data for Comparison
+  const { data: allEvaluations = [] } = usePatientEvaluationResponses(patientId);
+  const lastCompletedEvaluation = useMemo(() => {
+    if (!selectedTemplate || !allEvaluations.length) return null;
+    return allEvaluations
+      .filter(ev => ev.id !== evaluationId && ev.status === "completed" && ev.form_id === selectedTemplate.id)
+      .sort((a, b) => new Date(b.completed_at || 0).getTime() - new Date(a.completed_at || 0).getTime())[0];
+  }, [selectedTemplate, allEvaluations, evaluationId]);
+
+  const previousValues = useMemo(() => {
+    return normalizeEvaluationResponses(lastCompletedEvaluation?.responses);
+  }, [lastCompletedEvaluation]);
 
   // Combined fields
   const allFields = [...(selectedTemplate?.fields || []), ...customFields];
@@ -467,32 +480,34 @@ export default function NewEvaluationPage() {
         <div className="bg-slate-50/50 dark:bg-slate-950/50 min-h-[calc(100vh-4rem)]">
           <div className="container max-w-7xl mx-auto pt-6 px-4 space-y-8 print:pt-0">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid w-full grid-cols-2 md:grid-cols-3 lg:grid-cols-6 p-1 bg-muted/50 rounded-xl mb-6 print:hidden">
-                <TabsTrigger value="dashboard" className="gap-2">
-                  <LayoutDashboard className="h-4 w-4" />
-                  <span className="hidden sm:inline">Visão Geral</span>
-                </TabsTrigger>
-                <TabsTrigger value="voice-ai" className="gap-2">
-                  <Mic className="h-4 w-4" />
-                  <span className="hidden sm:inline">Voz IA</span>
-                </TabsTrigger>
-                <TabsTrigger value="anamnesis" className="gap-2">
-                  <FileText className="h-4 w-4" />
-                  <span className="hidden sm:inline">Anamnese</span>
-                </TabsTrigger>
-                <TabsTrigger value="physical" className="gap-2">
-                  <Activity className="h-4 w-4" />
-                  <span className="hidden sm:inline">Exame Físico</span>
-                </TabsTrigger>
-                <TabsTrigger value="postural" className="gap-2">
-                  <Camera className="h-4 w-4" />
-                  <span className="hidden sm:inline">Análise Postural</span>
-                </TabsTrigger>
-                <TabsTrigger value="pain-map" className="gap-2">
-                  <Map className="h-4 w-4" />
-                  <span className="hidden sm:inline">Mapa de Dor</span>
-                </TabsTrigger>
-              </TabsList>
+              <div className="sticky top-16 z-40 bg-slate-50/95 dark:bg-slate-950/95 backdrop-blur-sm -mx-4 px-4 py-3 border-b border-blue-100/50 shadow-sm print:hidden mb-6">
+                <TabsList className="flex w-full overflow-x-auto h-auto p-1 bg-blue-50/50 dark:bg-blue-900/20 rounded-2xl gap-2 scrollbar-hide">
+                  <TabsTrigger value="dashboard" className="flex-1 min-w-[120px] rounded-xl data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-blue-600 font-bold py-2.5 transition-all gap-2">
+                    <LayoutDashboard className="h-4 w-4" />
+                    <span>Visão Geral</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="voice-ai" className="flex-1 min-w-[100px] rounded-xl data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-blue-600 font-bold py-2.5 transition-all gap-2">
+                    <Mic className="h-4 w-4" />
+                    <span>Voz IA</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="anamnesis" className="flex-1 min-w-[110px] rounded-xl data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-blue-600 font-bold py-2.5 transition-all gap-2">
+                    <FileText className="h-4 w-4" />
+                    <span>Anamnese</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="physical" className="flex-1 min-w-[110px] rounded-xl data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-blue-600 font-bold py-2.5 transition-all gap-2">
+                    <Activity className="h-4 w-4" />
+                    <span>Exame Físico</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="postural" className="flex-1 min-w-[140px] rounded-xl data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-blue-600 font-bold py-2.5 transition-all gap-2">
+                    <Camera className="h-4 w-4" />
+                    <span>Análise Postural</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="pain-map" className="flex-1 min-w-[120px] rounded-xl data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-blue-600 font-bold py-2.5 transition-all gap-2">
+                    <Map className="h-4 w-4" />
+                    <span>Mapa de Dor</span>
+                  </TabsTrigger>
+                </TabsList>
+              </div>
 
               <div className="mt-6 animate-in fade-in-50 duration-500 print:mt-0">
                 <TabsContent value="dashboard" className="m-0 print:hidden">
@@ -522,124 +537,154 @@ export default function NewEvaluationPage() {
                 </TabsContent>
 
                 <TabsContent value="anamnesis" className="m-0">
-                  <div className="max-w-4xl mx-auto space-y-6 print:max-w-full">
+                  <div className="max-w-7xl mx-auto space-y-6 print:max-w-full">
                     <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 print:hidden">
-                      <div>
-                        <h2 className="text-2xl font-bold tracking-tight">Anamnese Detalhada</h2>
-                        <p className="text-muted-foreground">
-                          Colete o histórico clínico completo do paciente.
+                      <div className="space-y-1">
+                        <h2 className="text-2xl font-black tracking-tight text-slate-800 dark:text-slate-100 flex items-center gap-2">
+                          <FileText className="h-6 w-6 text-blue-600" />
+                          Anamnese Clínica
+                        </h2>
+                        <p className="text-sm text-muted-foreground font-medium">
+                          Registro detalhado e histórico clínico do paciente.
                         </p>
                       </div>
                       {!isReadOnlyEvaluation && (
-                        <div className="flex gap-2">
+                        <div className="flex items-center gap-2 bg-white/50 dark:bg-slate-900/50 p-1.5 rounded-2xl border border-slate-200/60 shadow-sm">
                           <Button
-                            variant="outline"
+                            variant="ghost"
                             size="sm"
                             onClick={() => setShowAddFieldDialog(true)}
+                            className="rounded-xl h-9 font-bold text-xs"
                           >
-                            <Plus className="mr-2 h-4 w-4" /> Adicionar Campo
+                            <Plus className="mr-1.5 h-3.5 w-3.5" /> Campo
                           </Button>
+                          <Separator orientation="vertical" className="h-4" />
                           <Button
-                            variant="outline"
+                            variant="ghost"
                             size="sm"
                             onClick={() => setShowSaveTemplateDialog(true)}
                             disabled={allFields.length === 0}
+                            className="rounded-xl h-9 font-bold text-xs"
                           >
-                            <BookmarkPlus className="mr-2 h-4 w-4" /> Salvar Template
+                            <BookmarkPlus className="mr-1.5 h-3.5 w-3.5" /> Template
                           </Button>
                         </div>
                       )}
                     </div>
 
-                    <div className="space-y-3 bg-muted/30 p-4 rounded-xl border border-dashed print:hidden">
-                      <div className="flex items-center justify-between">
-                        <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
-                          Template de Avaliação
-                        </label>
-                        {selectedTemplate && !evaluationId && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleTemplateSelect(null)}
-                            className="h-7 text-[10px] uppercase font-bold text-destructive hover:text-destructive hover:bg-destructive/10"
-                          >
-                            Limpar e voltar para Quadro Branco
-                          </Button>
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                      {/* Main Form Area */}
+                      <div className={cn(
+                        "space-y-6",
+                        patientId ? "lg:col-span-8" : "lg:col-span-12"
+                      )}>
+                        <div className="space-y-3 bg-white dark:bg-slate-900 p-6 rounded-3xl border border-blue-100/50 shadow-premium-sm print:hidden">
+                          <div className="flex items-center justify-between mb-2">
+                            <label className="text-[10px] font-black uppercase tracking-widest text-blue-600/80">
+                              Template de Avaliação Selecionado
+                            </label>
+                            {selectedTemplate && !evaluationId && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleTemplateSelect(null)}
+                                className="h-7 text-[9px] uppercase font-black text-rose-600 hover:text-rose-700 hover:bg-rose-50 rounded-lg"
+                              >
+                                Descartar Template
+                              </Button>
+                            )}
+                          </div>
+                          <EvaluationTemplateSelector
+                            selectedTemplateId={selectedTemplate?.id}
+                            onTemplateSelect={handleTemplateSelect}
+                            autoLoadDefault={false}
+                            initialTemplateId={templateId}
+                          />
+                        </div>
+
+                        {!selectedTemplate && customFields.length === 0 ? (
+                          <div className="animate-in fade-in slide-in-from-bottom-2 duration-500 print:space-y-4">
+                            <div className="border-2 border-slate-200/50 dark:border-slate-800/50 rounded-[32px] bg-white dark:bg-slate-950 shadow-premium-md overflow-hidden print:border-none">
+                              <div className="bg-slate-50/50 dark:bg-slate-900/50 border-b p-2 print:hidden">
+                                <RichTextToolbar
+                                  imageUploadFolder={
+                                    patientId
+                                      ? `patients/${patientId}/evaluations/whiteboard`
+                                      : undefined
+                                  }
+                                />
+                              </div>
+                              <div className="p-8 md:p-12 min-h-[600px] print:p-0">
+                                <RichTextEditor
+                                  placeholder="Comece a escrever sua anamnese livre de forma detalhada..."
+                                  value={richTextAnamnesis}
+                                  onValueChange={setRichTextAnamnesis}
+                                  accentColor="sky"
+                                  className="!border-0 !p-0 shadow-none min-h-[550px] [&_.ProseMirror]:text-lg [&_.ProseMirror]:leading-relaxed"
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-500 pt-2 print:pt-0">
+                            <DynamicFieldRenderer
+                              fields={allFields}
+                              values={fieldValues}
+                              onChange={handleFieldValueChange}
+                              readOnly={isReadOnlyEvaluation}
+                              previousValues={previousValues}
+                            />
+
+                            {/* Mobile Action Bridge (hidden on desktop) */}
+                            <div className="lg:hidden print:hidden">
+                              <EvaluationActionBridge
+                                suggestions={suggestions}
+                                onProtocolSelect={(_id) => {
+                                  toast({
+                                    title: "Protocolo Sugerido",
+                                    description: "Visualizando detalhes...",
+                                  });
+                                }}
+                                onPrescribeProtocol={handlePrescribeProtocol}
+                                onPrescribeExercise={handlePrescribeExercise}
+                              />
+                            </div>
+                          </div>
                         )}
                       </div>
-                      <EvaluationTemplateSelector
-                        selectedTemplateId={selectedTemplate?.id}
-                        onTemplateSelect={handleTemplateSelect}
-                        autoLoadDefault={false}
-                        initialTemplateId={templateId}
-                      />
-                    </div>
 
-                    {!selectedTemplate && customFields.length === 0 ? (
-                      <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500 print:space-y-4">
-                        <div className="flex items-center justify-between border-b pb-4 print:hidden">
-                          <div className="space-y-1">
-                            <Badge
-                              variant="outline"
-                              className="gap-1.5 py-1 px-3 bg-primary/5 text-primary border-primary/20"
-                            >
-                              <Sparkles className="h-3.5 w-3.5" /> Quadro Branco (Livre)
-                            </Badge>
-                            <p className="text-xs text-muted-foreground ml-1">
-                              Use este espaço para uma anamnese sem restrições.
-                            </p>
-                          </div>
-                        </div>
-                        <div className="border-2 border-muted/50 rounded-2xl bg-card shadow-sm overflow-hidden print:border-none">
-                          <div className="bg-muted/30 border-b p-1 print:hidden">
-                            <RichTextToolbar
-                              imageUploadFolder={
-                                patientId
-                                  ? `patients/${patientId}/evaluations/whiteboard`
-                                  : undefined
-                              }
-                            />
-                          </div>
-                          <div className="p-8 min-h-[600px] print:p-0">
-                            <RichTextEditor
-                              placeholder="Comece a escrever sua anamnese livre..."
-                              value={richTextAnamnesis}
-                              onValueChange={setRichTextAnamnesis}
-                              accentColor="sky"
-                              className="!border-0 !p-0 shadow-none min-h-[550px] [&_.ProseMirror]:text-lg"
-                            />
-                          </div>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-                        <div className="lg:col-span-8 animate-in fade-in slide-in-from-bottom-2 duration-500 pt-4 print:pt-0">
-                          <DynamicFieldRenderer
-                            fields={allFields}
-                            values={fieldValues}
-                            onChange={handleFieldValueChange}
-                            readOnly={isReadOnlyEvaluation}
-                          />
-                        </div>
-
-                        {/* Painel de Inteligência Action Bridge */}
-                        <div className="lg:col-span-4 sticky top-24 hidden lg:block print:hidden">
-                          <EvaluationActionBridge
-                            suggestions={suggestions}
-                            onProtocolSelect={(_id) => {
+                      {/* Right Sidebar Area (History & Intel) */}
+                      {patientId && (
+                        <div className="lg:col-span-4 space-y-6 sticky top-24 print:hidden">
+                          <EvaluationHistorySidebar
+                            patientId={patientId}
+                            currentEvaluationId={evaluationId}
+                            onSelectEvaluation={(id) => {
+                              // Open in a new tab or mode? For now just navigate
+                              navigate(`/patients/${patientId}/evaluations/new/${selectedTemplate?.id || 'manual'}?evaluationId=${id}&mode=view`);
                               toast({
-                                title: "Protocolo Sugerido",
-                                description:
-                                  "Você pode visualizar este protocolo no dicionário clínico.",
-                                variant: "default",
+                                title: "Visualizando histórico",
+                                description: "Carregando dados da avaliação anterior.",
                               });
                             }}
-                            onPrescribeProtocol={handlePrescribeProtocol}
-                            onPrescribeExercise={handlePrescribeExercise}
                           />
+
+                          <div className="hidden lg:block">
+                            <EvaluationActionBridge
+                              suggestions={suggestions}
+                              onProtocolSelect={(_id) => {
+                                toast({
+                                  title: "Protocolo Sugerido",
+                                  description: "Visualizando detalhes...",
+                                });
+                              }}
+                              onPrescribeProtocol={handlePrescribeProtocol}
+                              onPrescribeExercise={handlePrescribeExercise}
+                            />
+                          </div>
                         </div>
-                      </div>
-                    )}
+                      )}
+                    </div>
                   </div>
                 </TabsContent>
 

@@ -18,7 +18,7 @@ async function main() {
   
   try {
     // Corrected to use sql.query for conventional function call
-    const res = await sql.query(rawSql);
+    await sql.query(rawSql);
     console.log("✅ Migration executed successfully on production database!");
   } catch (error) {
     console.error("❌ Migration failed:", error);

@@ -76,7 +76,6 @@ export function LiveKitRoom({
   );
   const [sessionStart, setSessionStart] = useState<Date | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [livekitData, setLivekitData] = useState<LiveKitTokenResponse["data"] | null>(null);
 
   const connect = async () => {
     setStatus("connecting");
@@ -91,7 +90,7 @@ export function LiveKitRoom({
           display_name: displayName,
         }),
       });
-      setLivekitData(res.data);
+      void res.data;
 
       // Nota: integração real requer @livekit/components-react.
       // Por ora, simula conexão e exibe iframe fallback (Jitsi).

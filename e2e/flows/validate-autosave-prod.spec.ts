@@ -142,19 +142,16 @@ test.describe("Validação E2E em Produção - Autosave e Nível de Dor (EVA)", 
       'button:has(.lucide-plus)'
     ].join(', ')).first();
 
-    let clicked = false;
     try {
       console.log("[Test] Aguardando botão de Novo Agendamento ficar visível...");
       await newAppointmentBtn.waitFor({ state: "visible", timeout: 15000 });
       await newAppointmentBtn.click();
-      clicked = true;
       console.log("[Test] Botão de novo agendamento clicado com sucesso.");
-    } catch (e) {
+    } catch {
       console.log("[Test] Botão físico não ficou visível ou não pôde ser clicado. Tentando atalho de teclado...");
       try {
         await page.focus("body");
         await page.keyboard.press("n");
-        clicked = true;
         console.log("[Test] Pressionado atalho 'n' no teclado para abrir o modal.");
         await page.waitForTimeout(2000);
       } catch (keyErr) {
@@ -215,7 +212,7 @@ test.describe("Validação E2E em Produção - Autosave e Nível de Dor (EVA)", 
     try {
       await alterarBtn.waitFor({ state: "visible", timeout: 5000 });
       console.log("[Test] Paciente selecionado com sucesso (botão Alterar visível).");
-    } catch (selectErr) {
+    } catch {
       console.log("[Test] Botão Alterar não apareceu. Verificando se o modal de Cadastro Rápido foi aberto...");
       const cadastroRapidoModal = page.locator('[role="dialog"]:has-text("Cadastro Rápido"), [role="dialog"]:has-text("Cadastro Rápido de Paciente")').first();
       
@@ -293,7 +290,7 @@ test.describe("Validação E2E em Produção - Autosave e Nível de Dor (EVA)", 
       await expect(modal).toBeHidden({ timeout: 8000 });
       modalHidden = true;
       console.log("[Test] Modal de agendamento fechou com sucesso.");
-    } catch (e) {
+    } catch {
       console.log("[Test] O modal de agendamento ainda está aberto. Verificando se abriu diálogo de Capacidade Excedida...");
       const capacityDialogBtn = page.locator('button:has-text("Agendar Mesmo Assim"), button:has-text("Confirmar atendimento extra")').first();
       
@@ -368,7 +365,7 @@ test.describe("Validação E2E em Produção - Autosave e Nível de Dor (EVA)", 
         cardFound = true;
         console.log("[Test] Card de agendamento localizado com sucesso!");
         break;
-      } catch (e) {
+      } catch {
         if (attempt < 3) {
           console.log(`[Test] Card não encontrado na tentativa ${attempt}. Recarregando a Agenda...`);
           await page.goto(`${baseURL}/agenda`);

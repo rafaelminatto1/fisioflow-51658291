@@ -7,7 +7,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { Loader2, Upload, Play, ChevronRight, Cpu } from "lucide-react";
 import { detectPoseInImage } from "@/services/ai/poseDetectionService";
 import { UnifiedLandmark } from "@/utils/geometry";
-import { calculatePostureMetrics, PostureReport, PostureMetric } from "@/utils/postureMetrics";
+import { calculatePostureMetrics, PostureReport } from "@/utils/postureMetrics";
 import LandmarkEditor from "./LandmarkEditor";
 import { fisioLogger as logger } from "@/lib/errors/logger";
 import { Badge } from "@/components/ui/badge";
