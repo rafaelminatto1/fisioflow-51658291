@@ -24,12 +24,15 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 
+import { FieldTrendChart } from "./FieldTrendChart";
+
 interface DynamicFieldRendererProps {
   fields: TemplateField[];
   values: Record<string, unknown>;
   onChange: (fieldId: string, value: unknown) => void;
   readOnly?: boolean;
   previousValues?: Record<string, unknown>;
+  historicalData?: Record<string, Array<{ date: string; value: number }>>;
 }
 
 function getOptions(field: TemplateField): string[] {
@@ -312,6 +315,7 @@ export function DynamicFieldRenderer({
   onChange,
   readOnly = false,
   previousValues = {},
+  historicalData = {},
 }: DynamicFieldRendererProps) {
   const safeFields = useMemo(() => (Array.isArray(fields) ? fields : []), [fields]);
   const safeValues = useMemo(
@@ -381,6 +385,11 @@ export function DynamicFieldRenderer({
               {sectionFields.map((field) => {
                 const prevValue = previousValues[field.id];
                 const hasHistory = prevValue !== undefined && prevValue !== null && prevValue !== "";
+                const isNumericField = ["numero", "escala", "range"].includes(field.tipo_campo);
+                const fieldHistory = historicalData[field.id];
+                const hasTrendData = isNumericField && fieldHistory && fieldHistory.length > 1;
+                // Reverse logic for pain maps (e.g. lower is better)
+                const isInverseLogic = field.label.toLowerCase().includes("dor") || field.tipo_campo === "escala";
 
                 return (
                   <div key={field.id} className="group space-y-4">
@@ -392,12 +401,17 @@ export function DynamicFieldRenderer({
                         )}
                       </Label>
 
-                      {hasHistory && !readOnly && (
-                        <Badge variant="outline" className="text-[9px] uppercase font-black bg-slate-50 text-slate-500 border-slate-200 py-0.5 px-2 rounded-lg gap-1.5 flex items-center">
-                          <History className="h-2.5 w-2.5" />
-                          Último: {String(prevValue)}
-                        </Badge>
-                      )}
+                      <div className="flex items-center gap-2">
+                        {hasHistory && !hasTrendData && !readOnly && (
+                          <Badge variant="outline" className="text-[9px] uppercase font-black bg-slate-50 text-slate-500 border-slate-200 py-0.5 px-2 rounded-lg gap-1.5 flex items-center">
+                            <History className="h-2.5 w-2.5" />
+                            Último: {String(prevValue)}
+                          </Badge>
+                        )}
+                        {hasTrendData && !readOnly && (
+                          <FieldTrendChart data={fieldHistory} inverseLogic={isInverseLogic} />
+                        )}
+                      </div>
                     </div>
 
                     {field.description && (
