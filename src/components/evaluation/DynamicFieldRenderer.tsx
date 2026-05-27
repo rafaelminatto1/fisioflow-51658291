@@ -343,19 +343,35 @@ export function DynamicFieldRenderer({
     [safeFields, checkFieldVisibility],
   );
 
+  const requiredFields = useMemo(() => visibleFields.filter(f => f.obrigatorio), [visibleFields]);
+  const filledRequiredFields = useMemo(() => requiredFields.filter(f => {
+    const val = safeValues[f.id];
+    return val !== undefined && val !== null && val !== "" && (Array.isArray(val) ? val.length > 0 : true);
+  }), [requiredFields, safeValues]);
+  const progressPercent = requiredFields.length > 0 ? Math.round((filledRequiredFields.length / requiredFields.length) * 100) : 100;
+
   const groupedFields = groupFieldsBySection(visibleFields);
   const sections = Object.keys(groupedFields);
+  const [activeSections, setActiveSections] = React.useState<string[]>(sections);
+
+  const toggleAll = () => {
+    if (activeSections.length === sections.length) {
+      setActiveSections([]);
+    } else {
+      setActiveSections(sections);
+    }
+  };
 
   if (safeFields.length === 0) {
     return (
-      <Card className="border-2 border-dashed bg-muted/10 rounded-[32px]">
-        <CardContent className="py-12 text-center">
-          <div className="bg-muted/20 h-12 w-12 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Info className="h-6 w-6 text-muted-foreground/40" />
+      <Card className="border-2 border-dashed bg-blue-50/30 border-blue-200/50 rounded-[32px]">
+        <CardContent className="py-16 text-center">
+          <div className="bg-blue-100 h-16 w-16 rounded-full flex items-center justify-center mx-auto mb-6 shadow-sm">
+            <Sparkles className="h-8 w-8 text-blue-600" />
           </div>
-          <p className="text-muted-foreground font-medium">Nenhum campo configurado.</p>
-          <p className="text-xs text-muted-foreground/60 mt-1">
-            Selecione um template acima para começar.
+          <p className="text-lg font-black text-slate-800 tracking-tight">Anamnese Estruturada</p>
+          <p className="text-sm text-slate-500 mt-2 max-w-md mx-auto">
+            Para iniciar o preenchimento, selecione um template clínico acima ou utilize o quadro branco para evolução livre.
           </p>
         </CardContent>
       </Card>
@@ -363,7 +379,42 @@ export function DynamicFieldRenderer({
   }
 
   return (
-    <Accordion type="multiple" defaultValue={sections} className="space-y-6">
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-4 rounded-3xl border border-blue-100/50 shadow-premium-sm">
+        <div className="flex-1 max-w-xs space-y-1.5">
+          <div className="flex items-center justify-between text-xs font-black uppercase tracking-widest text-slate-500">
+            <span>Progresso da Avaliação</span>
+            <span className={cn(progressPercent === 100 ? "text-emerald-600" : "text-blue-600")}>
+              {progressPercent}%
+            </span>
+          </div>
+          <div className="h-2.5 w-full bg-slate-100 rounded-full overflow-hidden">
+            <div 
+              className={cn(
+                "h-full transition-all duration-500 ease-out", 
+                progressPercent === 100 ? "bg-emerald-500" : "bg-blue-600"
+              )} 
+              style={{ width: `${progressPercent}%` }} 
+            />
+          </div>
+          <p className="text-[10px] text-slate-400 font-bold">
+            {filledRequiredFields.length} de {requiredFields.length} campos obrigatórios preenchidos
+          </p>
+        </div>
+        <button
+          onClick={toggleAll}
+          className="text-xs font-bold text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 px-4 py-2 rounded-xl transition-all whitespace-nowrap"
+        >
+          {activeSections.length === sections.length ? "Recolher Todos" : "Expandir Todos"}
+        </button>
+      </div>
+
+      <Accordion 
+        type="multiple" 
+        value={activeSections} 
+        onValueChange={setActiveSections} 
+        className="space-y-6"
+      >
       {Object.entries(groupedFields).map(([section, sectionFields]) => (
         <AccordionItem
           key={section}
@@ -436,6 +487,7 @@ export function DynamicFieldRenderer({
         </AccordionItem>
       ))}
     </Accordion>
+    </div>
   );
 }
 
