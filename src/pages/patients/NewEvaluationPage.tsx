@@ -27,6 +27,9 @@ import {
   EvaluationHistorySidebar,
 } from "@/components/evaluation";
 import { useActionBridge } from "@/hooks/useActionBridge";
+import { useRedFlagsDetector } from "@/hooks/useRedFlagsDetector";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { ShieldAlert, Loader2 } from "lucide-react";
 import { NewPrescriptionModal } from "@/components/prescriptions/NewPrescriptionModal";
 import { AssessmentVoiceRecorder } from "@/components/ai/AssessmentVoiceRecorder";
 
@@ -147,6 +150,8 @@ function mapEvaluationField(field: Record<string, unknown>, index = 0): Template
   };
 }
 
+import { useAIScribeMapping } from "@/hooks/useAIScribeMapping";
+
 export default function NewEvaluationPage() {
   const { patientId, templateId } = useParams();
   const navigate = useNavigate();
@@ -187,7 +192,7 @@ export default function NewEvaluationPage() {
   // Physical Exam State
   const [physicalExamData, setPhysicalExamData] = useState<any>({});
 
-  // History Data for Comparison
+  // History Data for Comparison & Trends
   const { data: allEvaluations = [] } = usePatientEvaluationResponses(patientId);
   const lastCompletedEvaluation = useMemo(() => {
     if (!selectedTemplate || !allEvaluations.length) return null;
@@ -200,11 +205,78 @@ export default function NewEvaluationPage() {
     return normalizeEvaluationResponses(lastCompletedEvaluation?.responses);
   }, [lastCompletedEvaluation]);
 
+  const historicalFieldData = useMemo(() => {
+    if (!selectedTemplate || !allEvaluations.length) return {};
+    
+    const history: Record<string, Array<{ date: string; value: number }>> = {};
+    
+    // Get all completed evaluations for this template, chronologically
+    const evalsForThisForm = allEvaluations
+      .filter(ev => ev.id !== evaluationId && ev.status === "completed" && ev.form_id === selectedTemplate.id)
+      .sort((a, b) => new Date(a.completed_at || 0).getTime() - new Date(b.completed_at || 0).getTime());
+
+    evalsForThisForm.forEach(ev => {
+      const responses = normalizeEvaluationResponses(ev.responses);
+      const dateStr = ev.completed_at || ev.created_at;
+      if (!dateStr) return;
+
+      Object.entries(responses).forEach(([fieldId, rawVal]) => {
+        // Only track numerical values for trends
+        const numVal = Number(rawVal);
+        if (!isNaN(numVal) && rawVal !== null && rawVal !== "") {
+          if (!history[fieldId]) history[fieldId] = [];
+          history[fieldId].push({ date: dateStr, value: numVal });
+        }
+      });
+    });
+
+    return history;
+  }, [selectedTemplate, allEvaluations, evaluationId]);
+
   // Combined fields
   const allFields = [...(selectedTemplate?.fields || []), ...customFields];
 
   // Action Bridge Intelligence
   const suggestions = useActionBridge(allFields, fieldValues);
+
+  // AI Scribe Mapping
+  const { mapTranscriptToFields, isMapping } = useAIScribeMapping({
+    onSuccess: (mappedData) => {
+      if (Object.keys(mappedData).length > 0) {
+        setFieldValues(prev => ({ ...prev, ...mappedData }));
+        toast({
+          title: "Scribe IA Concluído",
+          description: `${Object.keys(mappedData).length} campos preenchidos automaticamente.`,
+        });
+      }
+    },
+    onError: () => {
+      toast({
+        title: "Erro no Scribe IA",
+        description: "Não foi possível extrair campos do áudio. O texto foi salvo no quadro branco.",
+        variant: "destructive",
+      });
+    }
+  });
+
+  const handleVoiceCompleted = async (text: string) => {
+    // Sempre salva o texto bruto no quadro branco como backup
+    setRichTextAnamnesis(prev => prev ? `${prev}\n\n[Transcrição IA]: ${text}` : text);
+    
+    // Se temos campos estruturados, tenta o mapeamento inteligente
+    if (allFields.length > 0) {
+      toast({
+        title: "Processando Scribe IA...",
+        description: "Extraindo dados clínicos do áudio para o formulário.",
+      });
+      await mapTranscriptToFields(text, allFields);
+    }
+    
+    setActiveTab("anamnesis");
+  };
+
+  // Red Flags Detection
+  const { hasRedFlags, detectedFlags } = useRedFlagsDetector(richTextAnamnesis, fieldValues);
 
   // Fetch Patient Data
   const {
@@ -527,11 +599,18 @@ export default function NewEvaluationPage() {
                 </TabsContent>
 
                 <TabsContent value="voice-ai" className="m-0 print:hidden">
-                  <div className="max-w-4xl mx-auto">
+                  <div className="max-w-4xl mx-auto relative">
+                    {isMapping && (
+                      <div className="absolute inset-0 z-10 bg-white/50 dark:bg-slate-950/50 backdrop-blur-sm flex flex-col items-center justify-center rounded-[32px]">
+                        <Loader2 className="h-8 w-8 text-blue-600 animate-spin mb-4" />
+                        <p className="text-sm font-bold text-slate-800">Extraindo dados clínicos...</p>
+                        <p className="text-xs text-slate-500">Mapeando sua fala para os campos do formulário</p>
+                      </div>
+                    )}
                     <AssessmentVoiceRecorder
                       patientId={patientId}
                       patientContextHint={patient?.name ? `Paciente: ${patient.name}` : undefined}
-                      onCompleted={() => setActiveTab("anamnesis")}
+                      onCompleted={handleVoiceCompleted}
                     />
                   </div>
                 </TabsContent>
@@ -572,6 +651,19 @@ export default function NewEvaluationPage() {
                       )}
                     </div>
 
+                    {hasRedFlags && (
+                      <Alert variant="destructive" className="bg-rose-50 border-rose-200 text-rose-900 animate-in fade-in slide-in-from-top-2">
+                        <ShieldAlert className="h-5 w-5 !text-rose-600" />
+                        <AlertTitle className="text-rose-800 font-bold uppercase tracking-widest text-xs">Alerta de Segurança Clínica</AlertTitle>
+                        <AlertDescription className="text-sm mt-1">
+                          Foram detectados possíveis sinais de alerta (Red Flags) baseados na avaliação: 
+                          <span className="font-bold ml-1">{detectedFlags.join(", ")}</span>.
+                          <br />
+                          Considere encaminhamento médico ou investigação aprofundada antes de prosseguir com o tratamento.
+                        </AlertDescription>
+                      </Alert>
+                    )}
+
                     <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
                       {/* Main Form Area */}
                       <div className={cn(
@@ -604,8 +696,8 @@ export default function NewEvaluationPage() {
 
                         {!selectedTemplate && customFields.length === 0 ? (
                           <div className="animate-in fade-in slide-in-from-bottom-2 duration-500 print:space-y-4">
-                            <div className="border-2 border-slate-200/50 dark:border-slate-800/50 rounded-[32px] bg-white dark:bg-slate-950 shadow-premium-md overflow-hidden print:border-none">
-                              <div className="bg-slate-50/50 dark:bg-slate-900/50 border-b p-2 print:hidden">
+                            <div className="border-2 border-slate-200/50 dark:border-slate-800/50 rounded-[32px] bg-white dark:bg-slate-950 shadow-premium-md overflow-hidden print:border-none relative">
+                              <div className="bg-slate-50/50 dark:bg-slate-900/50 border-b p-2 print:hidden flex items-center justify-between">
                                 <RichTextToolbar
                                   imageUploadFolder={
                                     patientId
@@ -613,9 +705,20 @@ export default function NewEvaluationPage() {
                                       : undefined
                                   }
                                 />
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => setActiveTab("pain-map")}
+                                  className="h-8 text-[10px] font-black uppercase tracking-widest text-blue-600 bg-blue-50/50 hover:bg-blue-100 rounded-xl px-3 gap-2"
+                                  title="Marcar local da dor no corpo do paciente"
+                                >
+                                  <Map className="h-3.5 w-3.5" />
+                                  <span className="hidden sm:inline">Mapa de Dor</span>
+                                </Button>
                               </div>
                               <div className="p-8 md:p-12 min-h-[600px] print:p-0">
                                 <RichTextEditor
+
                                   placeholder="Comece a escrever sua anamnese livre de forma detalhada..."
                                   value={richTextAnamnesis}
                                   onValueChange={setRichTextAnamnesis}
@@ -633,6 +736,7 @@ export default function NewEvaluationPage() {
                               onChange={handleFieldValueChange}
                               readOnly={isReadOnlyEvaluation}
                               previousValues={previousValues}
+                              historicalData={historicalFieldData}
                             />
 
                             {/* Mobile Action Bridge (hidden on desktop) */}
