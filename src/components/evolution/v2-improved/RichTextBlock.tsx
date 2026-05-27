@@ -18,6 +18,7 @@ interface RichTextBlockProps {
   collaborationId?: string;
   userName?: string;
   userColor?: string;
+  externalValueRevision?: number;
 }
 
 export const RichTextBlock: React.FC<RichTextBlockProps> = ({
@@ -30,6 +31,7 @@ export const RichTextBlock: React.FC<RichTextBlockProps> = ({
   collaborationId,
   userName,
   userColor,
+  externalValueRevision,
 }) => {
   const [isFocused, setIsFocused] = useState(false);
 
@@ -45,6 +47,7 @@ export const RichTextBlock: React.FC<RichTextBlockProps> = ({
           collaborationId={collaborationId}
           userName={userName}
           userColor={userColor}
+          externalValueRevision={externalValueRevision}
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
           className={cn(

@@ -1,5 +1,5 @@
 import "./load-cloudflare-env.mjs";
-import { readFileSync, readdirSync, statSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import { join, extname, basename } from "node:path";
 
 const CF_ACCOUNT_ID = process.env.CLOUDFLARE_ACCOUNT_ID || "32156f9a72a32d1ece28ab74bcd398fb";

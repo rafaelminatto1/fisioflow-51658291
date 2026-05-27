@@ -4,7 +4,7 @@ import type { Env } from "../../types/env";
 
 import { unifiedThinking, unifiedStructured } from "../../lib/ai/unifiedAI";
 import { ClinicalReportSchema, ReceiptOcrSchema } from "../../schemas/ai-schemas";
-import { safeText, splitIntoChunks } from "./ai-helpers";
+import { safeText } from "./ai-helpers";
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 

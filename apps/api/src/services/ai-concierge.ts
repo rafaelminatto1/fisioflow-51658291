@@ -1,5 +1,5 @@
 import { Env } from "../types/env";
-import { runAi, generateEmbedding } from "../lib/ai-native";
+import { runAi } from "../lib/ai-native";
 import { WORKERS_AI_MODELS } from "../lib/workersAi";
 
 export interface ConciergeResponse {

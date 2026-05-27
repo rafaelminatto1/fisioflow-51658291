@@ -29,6 +29,7 @@ interface DynamicFieldRendererProps {
   values: Record<string, unknown>;
   onChange: (fieldId: string, value: unknown) => void;
   readOnly?: boolean;
+  previousValues?: Record<string, unknown>;
 }
 
 function getOptions(field: TemplateField): string[] {
@@ -310,6 +311,7 @@ export function DynamicFieldRenderer({
   values,
   onChange,
   readOnly = false,
+  previousValues = {},
 }: DynamicFieldRendererProps) {
   const safeFields = useMemo(() => (Array.isArray(fields) ? fields : []), [fields]);
   const safeValues = useMemo(
@@ -342,7 +344,7 @@ export function DynamicFieldRenderer({
 
   if (safeFields.length === 0) {
     return (
-      <Card className="border-2 border-dashed bg-muted/10">
+      <Card className="border-2 border-dashed bg-muted/10 rounded-[32px]">
         <CardContent className="py-12 text-center">
           <div className="bg-muted/20 h-12 w-12 rounded-full flex items-center justify-center mx-auto mb-4">
             <Info className="h-6 w-6 text-muted-foreground/40" />
@@ -357,52 +359,64 @@ export function DynamicFieldRenderer({
   }
 
   return (
-    <Accordion type="multiple" defaultValue={sections} className="space-y-4">
+    <Accordion type="multiple" defaultValue={sections} className="space-y-6">
       {Object.entries(groupedFields).map(([section, sectionFields]) => (
         <AccordionItem
           key={section}
           value={section}
-          className="border rounded-2xl bg-card/50 overflow-hidden shadow-sm"
+          className="border-none bg-white dark:bg-slate-900 rounded-[32px] overflow-hidden shadow-premium-sm"
         >
-          <AccordionTrigger className="px-6 py-4 hover:no-underline hover:bg-muted/30 transition-all">
-            <div className="flex items-center gap-3">
-              <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
-                <Sparkles className="h-4 w-4 text-primary" />
+          <AccordionTrigger className="px-8 py-5 hover:no-underline hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-all border-b border-slate-100/50 dark:border-slate-800/50">
+            <div className="flex items-center gap-4">
+              <div className="h-10 w-10 rounded-2xl bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center border border-blue-100/50">
+                <Sparkles className="h-5 w-5 text-blue-600" />
               </div>
-              <h3 className="text-sm font-bold uppercase tracking-widest text-primary/80">
+              <h3 className="text-sm font-black uppercase tracking-widest text-slate-800 dark:text-slate-200">
                 {section}
               </h3>
             </div>
           </AccordionTrigger>
-          <AccordionContent className="px-6 pb-6 pt-2">
-            <div className="grid grid-cols-1 gap-8">
-              {sectionFields.map((field) => (
-                <div key={field.id} className="group space-y-3">
-                  <div className="flex items-center justify-between gap-4">
-                    <Label htmlFor={field.id} className="text-sm font-bold text-foreground/80">
-                      {field.label}
-                      {field.obrigatorio && (
-                        <span className="text-xs text-destructive ml-1">*</span>
+          <AccordionContent className="px-8 pb-8 pt-6">
+            <div className="grid grid-cols-1 gap-10">
+              {sectionFields.map((field) => {
+                const prevValue = previousValues[field.id];
+                const hasHistory = prevValue !== undefined && prevValue !== null && prevValue !== "";
+
+                return (
+                  <div key={field.id} className="group space-y-4">
+                    <div className="flex items-center justify-between gap-4">
+                      <Label htmlFor={field.id} className="text-sm font-black text-slate-700 dark:text-slate-300 tracking-tight">
+                        {field.label}
+                        {field.obrigatorio && (
+                          <span className="text-xs text-rose-500 ml-1.5">*</span>
+                        )}
+                      </Label>
+
+                      {hasHistory && !readOnly && (
+                        <Badge variant="outline" className="text-[9px] uppercase font-black bg-slate-50 text-slate-500 border-slate-200 py-0.5 px-2 rounded-lg gap-1.5 flex items-center">
+                          <History className="h-2.5 w-2.5" />
+                          Último: {String(prevValue)}
+                        </Badge>
                       )}
-                    </Label>
-                  </div>
+                    </div>
 
-                  {field.description && (
-                    <p className="text-xs text-muted-foreground leading-relaxed italic border-l-2 border-primary/20 pl-3">
-                      {field.description}
-                    </p>
-                  )}
-
-                  <div className="animate-in fade-in slide-in-from-top-1 duration-300">
-                    {renderField(
-                      field,
-                      safeValues[field.id],
-                      (value) => onChange(field.id, value),
-                      readOnly,
+                    {field.description && (
+                      <p className="text-xs text-muted-foreground leading-relaxed italic border-l-2 border-blue-200 pl-4 py-0.5">
+                        {field.description}
+                      </p>
                     )}
+
+                    <div className="animate-in fade-in slide-in-from-top-1 duration-300">
+                      {renderField(
+                        field,
+                        safeValues[field.id],
+                        (value) => onChange(field.id, value),
+                        readOnly,
+                      )}
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </AccordionContent>
         </AccordionItem>

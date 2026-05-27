@@ -25,8 +25,6 @@ import {
   Minimize2,
   PanelRightClose,
   PanelRightOpen,
-  ClipboardList,
-  Gauge,
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -99,6 +97,7 @@ export const NotionEvolutionPanel: React.FC<NotionEvolutionPanelProps> = ({
   const [observationsFocus, setObservationsFocus] = useState(false);
   const [measurementsExpanded, setMeasurementsExpanded] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
+  const [replicatedContentRevision, setReplicatedContentRevision] = useState(0);
 
   // Hook do Clinical Copilot
   const combinedText = data.evolutionText || data.observations || "";
@@ -189,11 +188,9 @@ export const NotionEvolutionPanel: React.FC<NotionEvolutionPanelProps> = ({
   );
 
   const unifiedItems = data.unifiedItems || [];
-  const completedInterventions = unifiedItems.filter((item) => item.completed).length;
   const procedureCount = unifiedItems.filter((item) => item.type === "procedure").length;
   const exerciseCount = unifiedItems.filter((item) => item.type === "exercise").length;
   const measurementsCount = data.measurements?.length ?? 0;
-  const attachmentsCount = data.attachments?.length ?? 0;
   const painLabel =
     typeof data.painLevel === "number"
       ? data.painLevel <= 3
@@ -227,6 +224,11 @@ export const NotionEvolutionPanel: React.FC<NotionEvolutionPanelProps> = ({
     (record: SoapRecord) => {
       const procedures = (record.procedures || []) as any[];
       const exercises = (record.exercises || []) as any[];
+      const observacao =
+        record.observacao ||
+        [record.subjective, record.objective, record.assessment, record.plan]
+          .filter((value) => typeof value === "string" && value.trim().length > 0)
+          .join("\n\n");
 
       const replicatedItems: EvolutionItemV3[] = [
         ...procedures.map((p, i) => ({
@@ -266,13 +268,14 @@ export const NotionEvolutionPanel: React.FC<NotionEvolutionPanelProps> = ({
 
       onChange({
         ...data,
-        evolutionText: record.observacao || data.evolutionText,
-        observations: record.observacao || data.observations,
+        evolutionText: observacao || data.evolutionText,
+        observations: observacao || data.observations,
         painLevel: record.pain_scale ?? data.painLevel,
         unifiedItems: replicatedItems.length > 0 ? replicatedItems : data.unifiedItems,
         measurements: (record.measurements as any) || data.measurements,
         homeCareExercises,
       });
+      setReplicatedContentRevision((revision) => revision + 1);
 
       toast.success("Sessão replicada", {
         description: "Os dados foram carregados na evolução atual. Não esqueça de salvar.",
@@ -328,49 +331,6 @@ export const NotionEvolutionPanel: React.FC<NotionEvolutionPanelProps> = ({
                 </Button>
               </div>
             )}
-
-            <div className="grid gap-2 rounded-2xl border border-slate-200/70 bg-white p-3 shadow-sm min-[900px]:grid-cols-4">
-              <div className="flex items-center gap-3 rounded-xl bg-amber-50 px-3 py-2">
-                <StickyNote className="h-4 w-4 shrink-0 text-amber-600" />
-                <div className="min-w-0">
-                  <p className="truncate text-xs font-semibold text-slate-900">Registrar sessão</p>
-                  <p className="truncate text-[11px] text-slate-500">
-                    {combinedText.trim() ? `${combinedText.trim().length} caracteres` : "Sem texto"}
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3 rounded-xl bg-emerald-50 px-3 py-2">
-                <ClipboardList className="h-4 w-4 shrink-0 text-emerald-600" />
-                <div className="min-w-0">
-                  <p className="truncate text-xs font-semibold text-slate-900">Executar condutas</p>
-                  <p className="truncate text-[11px] text-slate-500">
-                    {completedInterventions}/{unifiedItems.length} concluídos
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3 rounded-xl bg-rose-50 px-3 py-2">
-                <Gauge className="h-4 w-4 shrink-0 text-rose-600" />
-                <div className="min-w-0">
-                  <p className="truncate text-xs font-semibold text-slate-900">
-                    Acompanhar resposta
-                  </p>
-                  <p className="truncate text-[11px] text-slate-500">
-                    EVA {data.painLevel ?? "—"} · {measurementsCount} medições
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3 rounded-xl bg-slate-50 px-3 py-2">
-                <Home className="h-4 w-4 shrink-0 text-slate-600" />
-                <div className="min-w-0">
-                  <p className="truncate text-xs font-semibold text-slate-900">
-                    Plano e evidências
-                  </p>
-                  <p className="truncate text-[11px] text-slate-500">
-                    {attachmentsCount} anexos · {exerciseCount} exercícios
-                  </p>
-                </div>
-              </div>
-            </div>
 
             <div className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-slate-200/70 bg-slate-50/70 px-3 py-2">
               <div className="flex flex-wrap items-center gap-2 text-[11px] font-medium text-slate-600">
@@ -471,6 +431,7 @@ export const NotionEvolutionPanel: React.FC<NotionEvolutionPanelProps> = ({
                       collaborationId={collaborationId}
                       userName={userName}
                       userColor={userColor}
+                      externalValueRevision={replicatedContentRevision}
                     />
                     <div className="px-5 pb-5 pt-2">
                       <ClinicalCopilotPanel

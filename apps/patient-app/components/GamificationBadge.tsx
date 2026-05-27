@@ -13,7 +13,6 @@ interface GamificationBadgeProps {
 
 export const GamificationBadge: React.FC<GamificationBadgeProps> = ({
   name,
-  description,
   imageUrl,
   unlockedAt,
   size = 64,

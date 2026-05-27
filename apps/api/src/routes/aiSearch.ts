@@ -1,8 +1,7 @@
 import { Hono } from "hono";
 import type { Env } from "../types/env";
 import { requireAuth, type AuthVariables } from "../lib/auth";
-import { createPool, getRawSql } from "../lib/db";
-import { WORKERS_AI_MODELS } from "../lib/workersAi";
+import { createPool } from "../lib/db";
 
 const AUTORAG_NAME = "fisioflow-rag";
 

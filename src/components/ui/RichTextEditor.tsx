@@ -125,6 +125,11 @@ interface RichTextEditorProps {
   userName?: string;
   /** Cor do cursor de colaboração */
   userColor?: string;
+  /**
+   * Increment this value to intentionally replace the editor content from the
+   * parent, including collaborative sessions where normal prop sync is disabled.
+   */
+  externalValueRevision?: number;
 }
 
 export const RichTextEditor: React.FC<RichTextEditorProps> = ({
@@ -142,9 +147,11 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
   collaborationId,
   userName = "Profissional",
   userColor = "#8b5cf6",
+  externalValueRevision,
 }) => {
   const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastSentValue = useRef(value);
+  const lastExternalValueRevision = useRef(externalValueRevision);
   const isUpdatingFromProp = useRef(false);
   const [isTyping, setIsTyping] = useState(false);
   const typingTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -305,7 +312,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
     content: collaborationId ? undefined : (value || ""),
     editable: !disabled,
     onUpdate: ({ editor: ed }) => {
-      if (isUpdatingFromProp.current || collaborationId) return;
+      if (isUpdatingFromProp.current) return;
       const html = ed.getHTML();
       if (debounceTimer.current) clearTimeout(debounceTimer.current);
       debounceTimer.current = setTimeout(() => {
@@ -418,18 +425,36 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
     return () => clearInterval(interval);
   }, [editor, goals, pathologies, evolutions]);
 
-  // Sync external value changes
+  // Sync external value changes.
+  // Collaborative editors normally own their document through Yjs, so regular
+  // prop changes are ignored. `externalValueRevision` is reserved for explicit
+  // commands such as "Replicar sessão", where replacing the visible content is
+  // the intended user action.
   useEffect(() => {
-    if (!editor || collaborationId) return;
+    if (!editor) return;
+
+    const hasExplicitExternalUpdate =
+      externalValueRevision !== undefined &&
+      externalValueRevision !== lastExternalValueRevision.current;
+
+    if (collaborationId && !hasExplicitExternalUpdate) return;
+
     const currentHtml = editor.getHTML();
     const normalizedCurrent = currentHtml === "<p></p>" ? "" : currentHtml;
-    if (value !== normalizedCurrent && value !== lastSentValue.current && !debounceTimer.current) {
+    if (
+      value !== normalizedCurrent &&
+      (hasExplicitExternalUpdate || (value !== lastSentValue.current && !debounceTimer.current))
+    ) {
       isUpdatingFromProp.current = true;
       editor.commands.setContent(value || "");
       lastSentValue.current = value || "";
       isUpdatingFromProp.current = false;
     }
-  }, [value, editor, collaborationId]);
+
+    if (hasExplicitExternalUpdate) {
+      lastExternalValueRevision.current = externalValueRevision;
+    }
+  }, [value, editor, collaborationId, externalValueRevision]);
 
   useEffect(() => {
     if (editor) editor.setEditable(!disabled);
