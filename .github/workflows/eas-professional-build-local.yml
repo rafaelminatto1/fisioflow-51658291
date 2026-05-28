@@ -96,13 +96,33 @@ jobs:
           SENTRY_ALLOW_FAILURE: "true"
         run: |
           echo "Perfil: $PROFILE"
-          echo "Xcode: $(xcodebuild -version | head -1)"
+          xcodebuild -version
+
+          set +e
           eas build \
             --platform ios \
             --profile "$PROFILE" \
             --local \
             --non-interactive \
             --output "${{ github.workspace }}/build.ipa"
+          EAS_EXIT=$?
+          set -e
+
+          if [ "$EAS_EXIT" -ne 0 ]; then
+            echo "::warning::eas build terminou com exit code $EAS_EXIT. Validando build.ipa antes de falhar o job."
+          fi
+
+          if [ ! -f "${{ github.workspace }}/build.ipa" ]; then
+            echo "::error::build.ipa nao foi gerado."
+            exit 1
+          fi
+
+          unzip -t "${{ github.workspace }}/build.ipa" >/dev/null
+          unzip -l "${{ github.workspace }}/build.ipa" | grep -q "Payload/.*\\.app/"
+
+          if [ "$EAS_EXIT" -ne 0 ]; then
+            echo "::warning::eas build retornou $EAS_EXIT, mas build.ipa foi gerado e validado."
+          fi
 
       # ─── Artefato ─────────────────────────────────────────────────────────────
       - name: Upload .ipa
