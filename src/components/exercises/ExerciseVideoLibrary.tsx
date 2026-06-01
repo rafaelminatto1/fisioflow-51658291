@@ -1004,7 +1004,7 @@ function VideoCard({
   return (
     <div
       className={cn(
-        "group relative overflow-hidden rounded-lg border bg-card hover:shadow-lg transition-all",
+        "cv-card group relative overflow-hidden rounded-lg border bg-card hover:shadow-lg transition-all",
         isSelected && "ring-2 ring-primary",
       )}
       onClick={handleCardClick}
@@ -1178,7 +1178,7 @@ function VideoListItem({
   return (
     <div
       className={cn(
-        "group flex items-center gap-4 p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors",
+        "cv-row group flex items-center gap-4 p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors",
         isSelected && "ring-2 ring-primary",
       )}
     >
