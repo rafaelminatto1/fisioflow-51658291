@@ -196,7 +196,7 @@ function PhotoCard({ photo, onDelete }: { photo: PatientPhoto; onDelete: (id: st
   return (
     <>
       <div
-        className="group relative aspect-square rounded-lg overflow-hidden bg-muted cursor-pointer border hover:border-primary transition-colors"
+        className="cv-tile group relative aspect-square rounded-lg overflow-hidden bg-muted cursor-pointer border hover:border-primary transition-colors"
         onClick={() => setLightbox(true)}
       >
         <img
@@ -309,7 +309,7 @@ function VideoCard({ video, onDelete }: { video: PatientVideo; onDelete: (id: st
 
   return (
     <>
-      <Card className="group relative overflow-hidden hover:shadow-md transition-shadow">
+      <Card className="cv-card group relative overflow-hidden hover:shadow-md transition-shadow">
         <div
           className="relative aspect-video bg-black cursor-pointer flex items-center justify-center"
           onClick={() => setPlaying(true)}

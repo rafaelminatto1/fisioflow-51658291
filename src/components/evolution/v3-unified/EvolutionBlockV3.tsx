@@ -417,6 +417,7 @@ export const EvolutionBlockV3: React.FC<EvolutionBlockV3Props> = ({
   placeholder,
   disabled = false,
   className,
+  variant = "card",
 }) => {
   const [newItemName, setNewItemName] = useState("");
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -430,6 +431,7 @@ export const EvolutionBlockV3: React.FC<EvolutionBlockV3Props> = ({
   const completedCount = items.filter((item) => item.completed).length;
   const totalCount = items.length;
   const progress = totalCount > 0 ? (completedCount / totalCount) * 100 : 0;
+  const isEmbedded = variant === "embedded";
 
   const getTitle = () => {
     if (title) return title;
@@ -600,67 +602,72 @@ export const EvolutionBlockV3: React.FC<EvolutionBlockV3Props> = ({
   return (
     <div
       className={cn(
-        "group relative flex flex-col gap-3 p-5 rounded-3xl border border-border/50 bg-card/50 transition-all duration-300 hover:shadow-xl hover:shadow-primary/5 hover:border-primary/20",
+        "group relative flex flex-col gap-3 transition-all duration-300",
+        isEmbedded
+          ? "bg-transparent"
+          : "p-5 rounded-3xl border border-border/50 bg-card/50 hover:shadow-xl hover:shadow-primary/5 hover:border-primary/20",
         className,
       )}
     >
       {/* Header */}
-      <div className="flex items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <div
-            className={cn(
-              "p-2.5 rounded-2xl transition-colors duration-300",
-              iconBg ||
-                (type === "unified"
-                  ? "bg-primary/10 text-primary"
-                  : type === "exercise"
-                    ? "bg-blue-500/10 text-blue-600"
-                    : "bg-emerald-500/10 text-emerald-600"),
-            )}
-          >
-            {getIcon()}
-          </div>
-          <div>
-            <h3 className="font-bold text-base tracking-tight text-foreground/90">{getTitle()}</h3>
-            <div className="flex items-center gap-2 mt-0.5">
-              <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">
-                {completedCount} de {totalCount} concluídos
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {totalCount > 0 && (
+      {!isEmbedded && (
+        <div className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="flex flex-col items-end gap-1.5">
-              <span
-                className={cn(
-                  "text-sm font-bold",
-                  progress === 100 ? "text-primary" : "text-muted-foreground",
-                )}
-              >
-                {Math.round(progress)}%
-              </span>
-              <Progress
-                value={progress}
-                className="h-1.5 w-24 sm:w-32 bg-muted/50 overflow-hidden rounded-full"
-              >
-                <div
-                  className={cn(
-                    "h-full transition-all duration-700 ease-in-out bg-gradient-to-r",
-                    type === "unified"
-                      ? "from-primary/80 to-primary"
-                      : type === "exercise"
-                        ? "from-blue-500 to-indigo-500"
-                        : "from-emerald-500 to-teal-500",
-                  )}
-                  style={{ width: `${progress}%` }}
-                />
-              </Progress>
+            <div
+              className={cn(
+                "p-2.5 rounded-2xl transition-colors duration-300",
+                iconBg ||
+                  (type === "unified"
+                    ? "bg-primary/10 text-primary"
+                    : type === "exercise"
+                      ? "bg-blue-500/10 text-blue-600"
+                      : "bg-emerald-500/10 text-emerald-600"),
+              )}
+            >
+              {getIcon()}
+            </div>
+            <div>
+              <h3 className="font-bold text-base tracking-tight text-foreground/90">{getTitle()}</h3>
+              <div className="flex items-center gap-2 mt-0.5">
+                <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">
+                  {completedCount} de {totalCount} concluídos
+                </span>
+              </div>
             </div>
           </div>
-        )}
-      </div>
+
+          {totalCount > 0 && (
+            <div className="flex items-center gap-3">
+              <div className="flex flex-col items-end gap-1.5">
+                <span
+                  className={cn(
+                    "text-sm font-bold",
+                    progress === 100 ? "text-primary" : "text-muted-foreground",
+                  )}
+                >
+                  {Math.round(progress)}%
+                </span>
+                <Progress
+                  value={progress}
+                  className="h-1.5 w-24 sm:w-32 bg-muted/50 overflow-hidden rounded-full"
+                >
+                  <div
+                    className={cn(
+                      "h-full transition-all duration-700 ease-in-out bg-gradient-to-r",
+                      type === "unified"
+                        ? "from-primary/80 to-primary"
+                        : type === "exercise"
+                          ? "from-blue-500 to-indigo-500"
+                          : "from-emerald-500 to-teal-500",
+                    )}
+                    style={{ width: `${progress}%` }}
+                  />
+                </Progress>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Input Section */}
       {!disabled && (
@@ -809,7 +816,14 @@ export const EvolutionBlockV3: React.FC<EvolutionBlockV3Props> = ({
               >
 
                 {items.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center py-8 px-4 rounded-2xl border border-dashed border-border/60 bg-muted/10">
+                  <div
+                    className={cn(
+                      "flex flex-col items-center justify-center py-8 px-4",
+                      isEmbedded
+                        ? "rounded-none bg-transparent"
+                        : "rounded-2xl border border-dashed border-border/60 bg-muted/10",
+                    )}
+                  >
                     <div className="p-3 rounded-full bg-muted/20 mb-3">
                       <Activity className="h-5 w-5 text-muted-foreground/50" />
                     </div>
