@@ -9,8 +9,8 @@ if (!process.env.DATABASE_URL && existsSync(".env.production")) {
 }
 
 export default defineConfig({
-  schema: "./src/server/db/schema/*",
-  out: "./drizzle",
+  schema: "./packages/db/src/schema/*",
+  out: "./packages/db/migrations",
   dialect: "postgresql",
   dbCredentials: {
     url: process.env.DATABASE_URL!,
