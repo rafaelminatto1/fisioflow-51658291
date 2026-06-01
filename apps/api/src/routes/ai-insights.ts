@@ -60,7 +60,7 @@ aiInsightsRoutes.get("/analytics", async (c) => {
 });
 
 // Endpoint for the AI Command Bar (Streaming Chat)
-// Uses Server-Sent Events (SSE) / ReadableStream to stream text back to Vercel AI SDK's useChat
+// Uses Server-Sent Events (SSE) / ReadableStream to stream text back to the client
 aiInsightsRoutes.post("/chat", zValidator("json", z.object({
   messages: z.array(z.object({
     role: z.enum(["user", "assistant", "system"]),
@@ -80,13 +80,14 @@ aiInsightsRoutes.post("/chat", zValidator("json", z.object({
     responseText = "Detectei 2 pacientes que não comparecem há mais de 10 dias. Sugiro enviar uma mensagem de acompanhamento. Posso criar um rascunho de WhatsApp para você.";
   }
 
-  // Simulate streaming response for Vercel AI SDK
+  // Simulate streaming response
   const stream = new ReadableStream({
     async start(controller) {
       const words = responseText.split(" ");
       for (const word of words) {
-        controller.enqueue(new TextEncoder().encode(`0:"${word} "` + "\n"));
-        await new Promise(r => setTimeout(r, 50)); // Simula latência de token
+        // Standard data format for streaming
+        controller.enqueue(new TextEncoder().encode(word + " "));
+        await new Promise(r => setTimeout(r, 50)); // Simulate token latency
       }
       controller.close();
     }
@@ -94,7 +95,7 @@ aiInsightsRoutes.post("/chat", zValidator("json", z.object({
 
   return new Response(stream, {
     headers: {
-      "Content-Type": "text/x-mock-messages", // Format needed for some AI SDK versions or just text/plain
+      "Content-Type": "text/plain; charset=utf-8",
       "Transfer-Encoding": "chunked"
     }
   });

@@ -32,4 +32,5 @@ export interface EvolutionBlockV3Props {
   placeholder?: string;
   disabled?: boolean;
   className?: string;
+  variant?: "card" | "embedded";
 }

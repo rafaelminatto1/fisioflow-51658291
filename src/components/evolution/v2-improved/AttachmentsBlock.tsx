@@ -44,6 +44,7 @@ interface AttachmentsBlockProps {
   onChange: (attachments: string[]) => void;
   disabled?: boolean;
   className?: string;
+  variant?: "card" | "embedded";
 }
 
 const getFileIcon = (
@@ -93,11 +94,13 @@ export const AttachmentsBlock: React.FC<AttachmentsBlockProps> = ({
   onChange,
   disabled = false,
   className,
+  variant = "card",
 }) => {
   const [uploadModalOpen, setUploadModalOpen] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
+  const isEmbedded = variant === "embedded";
   const [attachments, setAttachments] = useState<Attachment[]>(() => {
     return value.map((url, i) => {
       const name = url.split("/").pop() || `Anexo ${i + 1}`;
@@ -200,26 +203,28 @@ export const AttachmentsBlock: React.FC<AttachmentsBlockProps> = ({
     <>
       <div className={cn("relative transition-all duration-300 group", className)}>
         {/* Header */}
-        <div className="relative">
-          <div className="flex items-center justify-between px-2 py-1.5 opacity-70 group-hover:opacity-100 transition-opacity">
-            <div className="flex items-center gap-2.5">
-              <div className="p-1.5 rounded-lg bg-gradient-to-br from-cyan-500/10 to-cyan-500/5 border border-cyan-500/20">
-                <Paperclip className="h-4 w-4 text-cyan-500" />
-              </div>
-              <div className="flex flex-col">
-                <h3 className="text-sm font-semibold text-foreground">Anexos</h3>
-                {attachments.length > 0 && (
-                  <span className="text-[10px] text-muted-foreground">
-                    {attachments.length} arquivo
-                    {attachments.length !== 1 ? "s" : ""}
-                  </span>
-                )}
+        {!isEmbedded && (
+          <div className="relative">
+            <div className="flex items-center justify-between px-2 py-1.5 opacity-70 group-hover:opacity-100 transition-opacity">
+              <div className="flex items-center gap-2.5">
+                <div className="p-1.5 rounded-lg bg-gradient-to-br from-cyan-500/10 to-cyan-500/5 border border-cyan-500/20">
+                  <Paperclip className="h-4 w-4 text-cyan-500" />
+                </div>
+                <div className="flex flex-col">
+                  <h3 className="text-sm font-semibold text-foreground">Anexos</h3>
+                  {attachments.length > 0 && (
+                    <span className="text-[10px] text-muted-foreground">
+                      {attachments.length} arquivo
+                      {attachments.length !== 1 ? "s" : ""}
+                    </span>
+                  )}
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        )}
 
-        <div className="px-2 pb-2">
+        <div className={cn("px-2 pb-2", isEmbedded && "pt-2")}>
           {/* Attachments list */}
           {attachments.length === 0 ? (
             <div className="text-center py-10 text-muted-foreground">

@@ -65,8 +65,8 @@ Modular knowledge domains that agents can load on-demand. based on task context.
 
 | Skill | Description |
 | ----- | ----------- |
-| `nextjs-react-expert` | React & Next.js performance optimization (Vercel - 57 rules) |
-| `web-design-guidelines` | Web UI audit - 100+ rules for accessibility, UX, performance (Vercel) |
+| `nextjs-react-expert` | React performance optimization (57 rules) |
+| `web-design-guidelines` | Web UI audit - 100+ rules for accessibility, UX, performance |
 | `tailwind-patterns` | Tailwind CSS v4 utilities |
 | `frontend-design` | UI/UX patterns, design systems |
 | `ui-ux-pro-max` | 50 styles, 21 palettes, 50 fonts |
