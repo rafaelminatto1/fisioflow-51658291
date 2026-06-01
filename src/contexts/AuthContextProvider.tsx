@@ -8,7 +8,6 @@ import { getNeonAuthUrl } from "@/lib/config/neon";
 import { AuthContextType, AuthContext, AuthError, AuthUser } from "./AuthContext";
 import { Profile, RegisterFormData, UserRole } from "@/types/auth";
 import { useQueryClient } from "@tanstack/react-query";
-import { AppointmentService } from "@/services/appointmentService";
 import { setupUserTracking, clearUserTracking } from "@/lib/services/initialization";
 
 /** ID da Organização Padrão (Clínica Única) */
@@ -78,6 +77,9 @@ export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({ c
         queryClient.prefetchQuery({
           queryKey: ["appointments_v2", "list", orgId],
           queryFn: async () => {
+            // Import dinâmico: mantém appointmentService + @/api/v2 fora do
+            // bundle eager do AuthContextProvider (carrega só no prefetch).
+            const { AppointmentService } = await import("@/services/appointmentService");
             const data = await AppointmentService.fetchAppointments(orgId);
             return {
               data,

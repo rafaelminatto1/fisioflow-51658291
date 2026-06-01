@@ -62,11 +62,12 @@ export const exerciseCategories = pgTable(
     organizationId: uuid("organization_id"), // Para categorias personalizadas da clínica
     createdAt: timestamp("created_at").defaultNow().notNull(),
   },
-  (table) => ({
-    slugIdx: index("idx_exercise_categories_slug").on(table.slug),
-    parentIdIdx: index("idx_exercise_categories_parent_id").on(table.parentId),
-    orgIdx: index("idx_exercise_categories_org_id").on(table.organizationId),
-  }),
+  (table) => [
+    index("idx_exercise_categories_slug").on(table.slug),
+    index("idx_exercise_categories_parent_id").on(table.parentId),
+    index("idx_exercise_categories_org_id").on(table.organizationId),
+    withPublicOrOrganizationPolicy("exercise_categories", table.organizationId)
+  ]
 );
 
 export const exerciseCategoriesRelations = relations(exerciseCategories, ({ one, many }) => ({
@@ -178,11 +179,12 @@ export const exerciseFavorites = pgTable(
     organizationId: uuid("organization_id"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
   },
-  (table) => ({
-    exerciseIdIdx: index("idx_exercise_favorites_exercise_id").on(table.exerciseId),
-    userIdIdx: index("idx_exercise_favorites_user_id").on(table.userId),
-    organizationIdIdx: index("idx_exercise_favorites_organization_id").on(table.organizationId),
-  }),
+  (table) => [
+    index("idx_exercise_favorites_exercise_id").on(table.exerciseId),
+    index("idx_exercise_favorites_user_id").on(table.userId),
+    index("idx_exercise_favorites_organization_id").on(table.organizationId),
+    withOrganizationPolicy("exercise_favorites", table.organizationId),
+  ]
 );
 
 export const exerciseFavoritesRelations = relations(exerciseFavorites, ({ one }) => ({
