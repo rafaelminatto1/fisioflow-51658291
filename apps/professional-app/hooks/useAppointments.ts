@@ -131,14 +131,6 @@ function mapToApiStatus(status: Appointment["status"]): string {
   return statusMap[status] || "agendado";
 }
 
-// Format Date to YYYY-MM-DD
-function formatDateForAPI(date: Date): string {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
-}
-
 // Add minutes to HH:MM time string
 function addMinutesToTime(time: string, minutes: number): string {
   const [h, m] = time.split(":").map(Number);
@@ -148,17 +140,12 @@ function addMinutesToTime(time: string, minutes: number): string {
   return `${String(newH).padStart(2, "0")}:${String(newM).padStart(2, "0")}`;
 }
 
-function parseLocalDate(dateStr: string): Date {
-  const [year, month, day] = dateStr.split("-").map(Number);
-  return new Date(year, month - 1, day);
-}
-
 export function useAppointments(options?: UseAppointmentsOptions) {
   const { user } = useAuthStore();
   const queryClient = useQueryClient();
 
-  const dateFromStr = options?.startDate ? formatDateForAPI(options.startDate) : undefined;
-  const dateToStr = options?.endDate ? formatDateForAPI(options.endDate) : undefined;
+  const dateFromStr = options?.startDate ? toLocalYMD(options.startDate) : undefined;
+  const dateToStr = options?.endDate ? toLocalYMD(options.endDate) : undefined;
 
   const appointments = useQuery({
     queryKey: [
@@ -205,8 +192,15 @@ export function useAppointments(options?: UseAppointmentsOptions) {
     mutationFn: async (data: Omit<Appointment, "id" | "createdAt" | "updatedAt">) => {
       if (!user?.id) throw new Error("User not authenticated");
 
-      const dateStr =
-        typeof data.date === "string" ? data.date : formatDateForAPI(new Date(data.date));
+      let dateStr: string;
+      if (typeof data.date === "string") {
+        dateStr = data.date;
+      } else if (data.date instanceof Date) {
+        dateStr = toLocalYMD(data.date);
+      } else {
+        dateStr = toLocalYMD(new Date());
+      }
+      
       const startTime = data.time || "09:00";
       const endTime = addMinutesToTime(startTime, data.duration);
 
@@ -304,6 +298,27 @@ export function useAppointments(options?: UseAppointmentsOptions) {
 export async function getAppointmentByIdHook(id: string): Promise<Appointment | null> {
   try {
     const apiAppointment = await getAppointmentById(id);
+    return apiAppointment ? mapApiAppointment(apiAppointment) : null;
+  } catch {
+    return null;
+  }
+}
+   isCreating: createMutation.isPending,
+    isUpdating: updateMutation.isPending,
+    isDeleting: deleteMutation.isPending,
+  };
+}
+
+// Additional function to get a single appointment
+export async function getAppointmentByIdHook(id: string): Promise<Appointment | null> {
+  try {
+    const apiAppointment = await getAppointmentById(id);
+    return apiAppointment ? mapApiAppointment(apiAppointment) : null;
+  } catch {
+    return null;
+  }
+}
+pointmentById(id);
     return apiAppointment ? mapApiAppointment(apiAppointment) : null;
   } catch {
     return null;
