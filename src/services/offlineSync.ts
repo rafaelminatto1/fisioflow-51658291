@@ -3,7 +3,13 @@
  */
 
 import { getDB, type FisioFlowDB } from "@/hooks/useOfflineStorage";
-import { appointmentsApi, exercisesApi, evolutionApi, goalsApi, patientsApi, sessionsApi } from "@/api/v2";
+// Imports diretos dos arquivos (não do barrel @/api/v2, cujo `export *` de 39
+// módulos derrota o tree-shaking e arrastava ~93 KB para o entry eager via
+// OfflineBanner → offlineSync).
+import { appointmentsApi } from "@/api/v2/appointments";
+import { exercisesApi } from "@/api/v2/exercises";
+import { patientsApi } from "@/api/v2/patients";
+import { evolutionApi, goalsApi, sessionsApi } from "@/api/v2/clinical";
 import { toast } from "sonner";
 import type { IDBPDatabase } from "idb";
 import { fisioLogger as logger } from "@/lib/errors/logger";
