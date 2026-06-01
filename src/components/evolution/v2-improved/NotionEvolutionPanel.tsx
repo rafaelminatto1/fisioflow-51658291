@@ -493,6 +493,7 @@ export const NotionEvolutionPanel: React.FC<NotionEvolutionPanelProps> = ({
                     type="unified"
                     title="Sequência da sessão"
                     disabled={disabled}
+                    variant="embedded"
                   />
                 </EvolutionSectionCard>
 
@@ -519,6 +520,7 @@ export const NotionEvolutionPanel: React.FC<NotionEvolutionPanelProps> = ({
                     onChange={(val) => handleFieldChange("homeCareExercises", val)}
                     disabled={disabled}
                     className="rounded-xl border-none bg-slate-50/60 shadow-none"
+                    variant="embedded"
                     sessionExercises={unifiedItems
                       .filter((item) => item.type === "exercise")
                       .map((item) => ({
@@ -683,6 +685,7 @@ export const NotionEvolutionPanel: React.FC<NotionEvolutionPanelProps> = ({
                       onChange={(val) => handleFieldChange("attachments", val)}
                       disabled={disabled}
                       className="rounded-xl border-none bg-zinc-50/60 shadow-none"
+                      variant="embedded"
                     />
                   </EvolutionSectionCard>
                 </aside>
