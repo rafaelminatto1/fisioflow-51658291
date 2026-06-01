@@ -298,16 +298,6 @@ export default defineConfig(({ mode }) => {
                 priority: 22.3,
               },
               {
-                name: "vendor-prosemirror",
-                test: /node_modules\/prosemirror/,
-                priority: 22.3,
-              },
-              {
-                name: "vendor-tippy",
-                test: /node_modules\/tippy/,
-                priority: 22.2,
-              },
-              {
                 name: "vendor-tiptap",
                 test: /node_modules\/@tiptap/,
                 priority: 22,
@@ -418,6 +408,13 @@ export default defineConfig(({ mode }) => {
                 name: "vendor-image-editor",
                 test: /node_modules\/(react-filerobot-image-editor|@scaleflex)/,
                 priority: 15.5,
+              },
+              // zod — schemas de validação (~133 KB); isolado do entry para
+              // carregamento paralelo + cache estável entre deploys do app.
+              {
+                name: "vendor-zod",
+                test: /node_modules\/zod/,
+                priority: 16,
               },
               // @radix-ui — primitives usadas em boa parte do app, mas separadas do core React
               {

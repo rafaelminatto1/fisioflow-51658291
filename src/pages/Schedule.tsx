@@ -1,5 +1,5 @@
 import { Cake, Sparkles } from "lucide-react";
-import { Suspense, useEffect, useMemo } from "react";
+import { lazy, Suspense, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useQueries } from "@tanstack/react-query";
 import { useSearchParams } from "react-router-dom";
@@ -7,7 +7,13 @@ import { PatientService } from "@/lib/services/PatientService";
 import { PageLayout } from "@/components/layout/PageLayout";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { BulkActionsBar } from "@/components/schedule/BulkActionsBar";
-import { ScheduleCalendar } from "@/components/schedule/ScheduleCalendar";
+// Lazy: o FullCalendar (~core/daygrid/timegrid/interaction/rrule) só baixa
+// quando o calendário monta, atrás do Suspense + CalendarSkeletonEnhanced.
+const ScheduleCalendar = lazy(() =>
+  import("@/components/schedule/ScheduleCalendar").then((m) => ({
+    default: m.ScheduleCalendar,
+  })),
+);
 import { ScheduleModals } from "@/components/schedule/ScheduleModals";
 import { CalendarSkeletonEnhanced } from "@/components/schedule/skeletons/CalendarSkeletonEnhanced";
 import { Button } from "@/components/ui/button";
