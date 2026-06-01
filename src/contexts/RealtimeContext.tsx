@@ -1,5 +1,7 @@
 import { createContext, useState, useCallback, useEffect, useRef } from "react";
-import { appointmentsApi } from "@/api/v2";
+// Import direto (não do barrel): RealtimeProvider é eager (AuthenticatedAppShell);
+// via barrel (export * de 39 módulos) arrastava o api/v2 inteiro para o entry.
+import { appointmentsApi } from "@/api/v2/appointments";
 import { useAuth } from "@/contexts/AuthContext";
 import { fisioLogger as logger } from "@/lib/errors/logger";
 import { useDebounce } from "@/hooks/performance/useDebounce";
