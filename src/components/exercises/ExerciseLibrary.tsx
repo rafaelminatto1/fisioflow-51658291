@@ -1067,7 +1067,7 @@ export function ExerciseLibrary({
         ) : viewMode === "grid" ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-2">
             {filteredExercises.slice(0, visibleCount).map((exercise, index) => (
-              <div key={exercise.id} className="relative group animate-in fade-in slide-in-from-bottom-4" style={{ animationDelay: `${(index % 12) * 50}ms` }}>
+              <div key={exercise.id} className="cv-card relative group animate-in fade-in slide-in-from-bottom-4" style={{ animationDelay: `${(index % 12) * 50}ms` }}>
                 <ExerciseCard
                   exercise={exercise}
                   isFavorite={isFavorite(exercise.id)}
@@ -1095,7 +1095,7 @@ export function ExerciseLibrary({
         ) : viewMode === "list" ? (
           <div className="space-y-2 p-2">
             {filteredExercises.slice(0, visibleCount).map((exercise, index) => (
-              <div key={exercise.id} className="relative flex items-center gap-2 animate-in fade-in slide-in-from-bottom-2" style={{ animationDelay: `${(index % 12) * 50}ms` }}>
+              <div key={exercise.id} className="cv-row relative flex items-center gap-2 animate-in fade-in slide-in-from-bottom-2" style={{ animationDelay: `${(index % 12) * 50}ms` }}>
                 {isSelectionMode && (
                   <Checkbox
                     checked={selectedExercises.includes(exercise.id)}
