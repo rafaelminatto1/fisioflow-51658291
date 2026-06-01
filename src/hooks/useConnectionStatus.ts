@@ -4,7 +4,10 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { fisioLogger as logger } from "@/lib/errors/logger";
-import { healthApi } from "@/api/v2";
+// Import direto (não do barrel @/api/v2): useConnectionStatus roda no shell
+// eager (NetworkStatus); via barrel (export * de 39 módulos) arrastava todo o
+// api/v2 (~93 KB) para o entry.
+import { healthApi } from "@/api/v2/system";
 
 export type ConnectionState = "online" | "offline" | "checking" | "reconnecting";
 
