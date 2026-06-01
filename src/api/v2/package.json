@@ -1,0 +1,4 @@
+{
+  "//": "Marca os módulos de api/v2 como livres de side-effects (são puros wrappers da Data API). Permite que o bundler tree-shake o barrel index.ts (export * de 39 módulos), removendo apis não usados do entry. Escopo restrito a este diretório — não afeta o resto de src/.",
+  "sideEffects": false
+}
