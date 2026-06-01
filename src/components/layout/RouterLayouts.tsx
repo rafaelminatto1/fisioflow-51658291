@@ -1,7 +1,6 @@
 import { useEffect, lazy, Suspense } from "react";
 import { Outlet, useLocation } from "react-router-dom";
 import { NetworkStatus } from "@/components/ui/network-status";
-import { SyncManager } from "@/components/sync/SyncManager";
 import { OfflineBanner } from "@/components/sync/OfflineBanner";
 import { TourGuide } from "@/components/system/TourGuide";
 import { VersionManager } from "@/components/system/VersionManager";
@@ -16,6 +15,16 @@ const ClinicSetupWizard = lazy(() =>
   import("@/components/onboarding/ClinicSetupWizard").then((m) => ({
     default: m.ClinicSetupWizard,
   })),
+);
+
+// Lazy: coordenador de sync em background (offlineSync + @/api/v2). Não é
+// crítico para o first paint — carrega após o mount, tirando offlineSync e
+// api/v2 do bundle eager. Offline: o chunk é cacheado pelo runtime CacheFirst
+// do SW (/assets/*.js) já no 1º carregamento autenticado, pois monta em toda
+// rota privada. Se faltar, o Suspense cai em null (sem crash) e o replay de
+// mutações segue via PersistQueryClient/resumePausedMutations (eager).
+const SyncManager = lazy(() =>
+  import("@/components/sync/SyncManager").then((m) => ({ default: m.SyncManager })),
 );
 
 import { useNavigate } from "react-router-dom";
@@ -90,7 +99,11 @@ export const InfrastructureLayout = () => {
   return (
     <>
       <NetworkStatus />
-      {!isPublicRoute && <SyncManager />}
+      {!isPublicRoute && (
+        <Suspense fallback={null}>
+          <SyncManager />
+        </Suspense>
+      )}
       {!isPublicRoute && <OfflineBanner />}
       {!isPublicRoute && <TourGuide />}
       {!isPublicRoute && <NotificationInitializer />}
