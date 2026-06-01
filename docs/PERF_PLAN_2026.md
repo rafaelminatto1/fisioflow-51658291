@@ -35,14 +35,37 @@
   → Offline: **seguro** — fica precacheado como o shell (download em background no SW
   install, não bloqueia o paint).
 
-- **T2 — Auditar o restante do entry via `stats.html`** (`ANALYZE=true build`).
-  Candidatos: barrel de `src/components/ui` (86 KB), 85 ícones lucide (tree-shake),
-  `appointmentService` (21 KB), `whatsapp-api` (11 KB). Lazy/deferir o que não é
-  necessário no primeiro paint.
+- **T1 — STATUS (Jun/2026): PARCIAL.** Feito: `appointmentService` dinâmico no
+  AuthContextProvider + `SyncManager` lazy → entry **411→368 KB**. Deployado e
+  offline verificado (reload offline OK, 0 erros). **PORÉM `api/v2` (93 KB)
+  continua no entry** — ver T2.
 
-- **T3 — Route-groups eager (~60 KB).** `src/routes/*.tsx` entram no entry porque
-  `router.tsx` os referencia na criação. Avaliar `lazy()` dos grupos não-core
-  (enterprise/marketing/admin) mantendo core (agenda/pacientes) eager.
+- **T2 — `api/v2` no entry: BLOQUEADO por arquitetura de barrel (ACHADO).**
+  Investigação (Jun/2026) revelou a causa raiz:
+  - O barrel `src/api/v2/index.ts` faz `export *` de **39 módulos**.
+  - **335 arquivos** importam `from "@/api/v2"` — vários são hooks usados no shell
+    eager (ex.: `useConnectionStatus`, `usePatientEvolution`), e `OfflineBanner`
+    (eager) → `offlineSync` → barrel. Qualquer um arrasta os 39 módulos.
+  - **`sideEffects` NÃO está configurado** em `package.json` (raiz nem apps/web).
+    Sem isso o bundler assume side-effects em tudo e **não tree-shaka** o `export *`.
+  - Trocar só `offlineSync` para imports diretos **NÃO move o entry** (testado) —
+    outro importador eager do barrel domina.
+  - **Fix real (esforço próprio, NÃO quick win):** ou (a) adicionar
+    `"sideEffects"` como **array** enumerando arquivos com efeito colateral
+    (CSS, `temporal-polyfill/global`, `src/main.tsx`, registro de SW, polyfills),
+    deixando o resto tree-shakeable; ou (b) migrar os 335 sites para imports
+    diretos. **(a) é arriscado** num app médico em prod (config errada dropa
+    CSS/polyfill/SW silenciosamente) — exige teste de regressão de CSS + offline +
+    polyfills + smoke completo. Fazer isolado, com staging primeiro.
+  - Outros itens do entry: `src/components/ui` (65 KB, primitives — maioria
+    necessária), `src/components/error` (38 KB, boundaries eager), lucide (30 KB,
+    ícones do shell), `src/types/pose.ts` (12 KB — 18 exports de runtime, achar
+    importador eager e deferir).
+
+- **T3 — Route-groups eager (~52 KB).** `src/routes/*.tsx` entram no entry porque
+  `router.tsx` (library-mode `createRoutesFromElements`) referencia os arrays JSX
+  `<Route>` na criação. Tornar lazy exige migrar para a API de lazy routes do
+  React Router (objetos com `lazy`) — refactor não-trivial do router. Avaliar.
 
 ### Fase 2 — Caminho crítico do first paint
 
