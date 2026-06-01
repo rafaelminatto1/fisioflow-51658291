@@ -286,6 +286,27 @@
   background: var(--glass-bg-dark);
 }
 
+/*
+ * Virtualização de renderização nativa (content-visibility): pula
+ * layout/paint dos itens fora da viewport em grids/listas longas que rolam
+ * com a página, sem mudar DOM, scroll, grid responsivo ou acessibilidade.
+ * `auto` em contain-intrinsic-size memoriza o tamanho real após o 1º render.
+ */
+@utility cv-card {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 300px;
+}
+
+@utility cv-row {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 96px;
+}
+
+@utility cv-tile {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 200px;
+}
+
 /* ScheduleX Specific overrides */
 .sx__calendar-wrapper {
   background: transparent !important;

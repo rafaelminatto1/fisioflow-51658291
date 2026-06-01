@@ -26,6 +26,7 @@ interface HomeCareBlockProps {
   disabled?: boolean;
   className?: string;
   sessionExercises?: { name: string; prescription?: string }[];
+  variant?: "card" | "embedded";
 }
 
 const generateId = () =>
@@ -70,6 +71,8 @@ export const HomeCareBlock: React.FC<HomeCareBlockProps> = ({
   onChange,
   disabled = false,
   className,
+  sessionExercises,
+  variant = "card",
 }) => {
   const [exercises, setExercises] = useState<HomeCareExercise[]>(() => parseExercises(value));
   const [newExerciseName, setNewExerciseName] = useState("");
@@ -77,6 +80,8 @@ export const HomeCareBlock: React.FC<HomeCareBlockProps> = ({
   const [showPresets, setShowPresets] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const suggestionsRef = useRef<HTMLDivElement>(null);
+
+  const isEmbedded = variant === "embedded";
 
   const { exercises: libraryExercises } = useExercises();
 
@@ -168,32 +173,34 @@ export const HomeCareBlock: React.FC<HomeCareBlockProps> = ({
   return (
     <div className={cn("relative transition-all duration-300 group", className)}>
       {/* Header */}
-      <div className="relative">
-        <div className="flex items-center justify-between px-2 py-1.5 opacity-90 group-hover:opacity-100 transition-opacity">
-          <div className="flex items-center gap-2.5">
-            <div className="p-1.5 rounded-lg bg-gradient-to-br from-violet-500/10 to-violet-500/5 border border-violet-500/20">
-              <Home className="h-4 w-4 text-violet-500" />
+      {!isEmbedded && (
+        <div className="relative">
+          <div className="flex items-center justify-between px-2 py-1.5 opacity-90 group-hover:opacity-100 transition-opacity">
+            <div className="flex items-center gap-2.5">
+              <div className="p-1.5 rounded-lg bg-gradient-to-br from-violet-500/10 to-violet-500/5 border border-violet-500/20">
+                <Home className="h-4 w-4 text-violet-500" />
+              </div>
+              <div className="flex flex-col">
+                <h3 className="text-sm font-semibold text-foreground">Exercícios para Casa</h3>
+                {exercises.length > 0 && (
+                  <span className="text-[10px] text-muted-foreground">
+                    {exercises.length} exercício
+                    {exercises.length !== 1 ? "s" : ""} prescritos
+                  </span>
+                )}
+              </div>
             </div>
-            <div className="flex flex-col">
-              <h3 className="text-sm font-semibold text-foreground">Exercícios para Casa</h3>
-              {exercises.length > 0 && (
-                <span className="text-[10px] text-muted-foreground">
-                  {exercises.length} exercício
-                  {exercises.length !== 1 ? "s" : ""} prescritos
-                </span>
-              )}
-            </div>
+            {exercises.length > 0 && (
+              <Badge variant="secondary" className="text-xs h-6 px-2.5 rounded-full">
+                <CheckCircle2 className="h-3 w-3 mr-1 text-violet-500" />
+                Casa
+              </Badge>
+            )}
           </div>
-          {exercises.length > 0 && (
-            <Badge variant="secondary" className="text-xs h-6 px-2.5 rounded-full">
-              <CheckCircle2 className="h-3 w-3 mr-1 text-violet-500" />
-              Casa
-            </Badge>
-          )}
         </div>
-      </div>
+      )}
 
-      <div className="px-2 pb-2 space-y-3">
+      <div className={cn("px-2 pb-2 space-y-3", isEmbedded && "pt-2")}>
         {/* Exercise list */}
         {exercises.length === 0 ? (
           <div className="text-center py-10 text-muted-foreground">

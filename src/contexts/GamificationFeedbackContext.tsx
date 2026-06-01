@@ -1,6 +1,5 @@
 import React, { createContext, useContext, useState, useCallback } from "react";
 import { XpGainToast } from "@/components/gamification/XpGainToast";
-import confetti from "canvas-confetti";
 import { toast } from "sonner";
 
 interface GamificationFeedbackContextType {
@@ -35,11 +34,15 @@ export function GamificationFeedbackProvider({ children }: { children: React.Rea
   }, []);
 
   const levelUpFeedback = useCallback((level: number) => {
-    confetti({
-      particleCount: 200,
-      spread: 90,
-      origin: { y: 0.6 },
-      colors: ["#EAB308", "#06B6D4", "#3B82F6"],
+    // canvas-confetti carregado sob demanda — só no level-up (evento raro),
+    // mantendo a lib (~20 KB) fora do bundle inicial do app shell.
+    void import("canvas-confetti").then(({ default: confetti }) => {
+      confetti({
+        particleCount: 200,
+        spread: 90,
+        origin: { y: 0.6 },
+        colors: ["#EAB308", "#06B6D4", "#3B82F6"],
+      });
     });
 
     toast.success(`NÍVEL ${level} ALCANÇADO!`, {

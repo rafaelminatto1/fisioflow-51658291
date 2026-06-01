@@ -28,7 +28,11 @@ const queryClient = new QueryClient({
         return failureCount < 3;
       },
       retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
-      refetchOnWindowFocus: true,
+      // Desligado globalmente: numa clínica a aba fica aberta o dia todo e o
+      // refetch em cascata a cada foco gerava tráfego e re-renders desnecessários.
+      // staleTime (5min) já cobre frescor; telas "vivas" (inbox WhatsApp, agenda
+      // do dia) reativam refetchOnWindowFocus localmente quando necessário.
+      refetchOnWindowFocus: false,
       refetchOnReconnect: true,
       networkMode: "offlineFirst",
     },

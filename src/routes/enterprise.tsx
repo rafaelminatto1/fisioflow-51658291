@@ -7,7 +7,13 @@ import { lazy } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
-import { WikiDashboard, WikiLayout } from "@/features/wiki";
+
+// Lazy + import direto do arquivo (não do barrel @/features/wiki, que arrastava
+// StudyMode/ArticleUploadDialog/WikiDashboard etc. ~60 KB para o bundle inicial).
+const WikiDashboard = lazy(() => import("@/features/wiki/pages/WikiDashboard"));
+const WikiLayout = lazy(() =>
+  import("@/features/wiki/components/WikiLayout").then((m) => ({ default: m.WikiLayout })),
+);
 
 // Lazy loads - Enterprise Features
 const TimeTracking = lazy(
