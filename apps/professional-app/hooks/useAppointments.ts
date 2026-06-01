@@ -303,24 +303,3 @@ export async function getAppointmentByIdHook(id: string): Promise<Appointment | 
     return null;
   }
 }
-   isCreating: createMutation.isPending,
-    isUpdating: updateMutation.isPending,
-    isDeleting: deleteMutation.isPending,
-  };
-}
-
-// Additional function to get a single appointment
-export async function getAppointmentByIdHook(id: string): Promise<Appointment | null> {
-  try {
-    const apiAppointment = await getAppointmentById(id);
-    return apiAppointment ? mapApiAppointment(apiAppointment) : null;
-  } catch {
-    return null;
-  }
-}
-pointmentById(id);
-    return apiAppointment ? mapApiAppointment(apiAppointment) : null;
-  } catch {
-    return null;
-  }
-}
