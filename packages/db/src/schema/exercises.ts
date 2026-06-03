@@ -31,6 +31,7 @@ const vector = customType<{ data: number[] }>({
 import { relations } from "drizzle-orm";
 import { protocolExercises } from "./protocols";
 import { exerciseMediaAttachments } from "./media";
+import { withOrganizationPolicy, withPublicOrOrganizationPolicy } from "./rls_helper";
 
 // ===== ENUMS =====
 export const difficultyEnum = pgEnum("exercise_difficulty", [
