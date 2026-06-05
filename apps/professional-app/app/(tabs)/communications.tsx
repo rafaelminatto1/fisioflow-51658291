@@ -5,6 +5,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useColors } from "@/hooks/useColorScheme";
 import { useHaptics } from "@/hooks/useHaptics";
 import { router } from "expo-router";
+import type { ThemeColors } from "@/types/theme";
 
 type CommTab = "whatsapp" | "crm" | "messages";
 
@@ -50,7 +51,7 @@ export default function CommunicationsScreen() {
               accessibilityState={{ selected: isActive }}
             >
               <Ionicons
-                name={tab.icon as any}
+                name={tab.icon as keyof typeof Ionicons.glyphMap}
                 size={18}
                 color={isActive ? "#fff" : colors.textSecondary}
               />
@@ -73,7 +74,7 @@ export default function CommunicationsScreen() {
   );
 }
 
-function WhatsAppPlaceholder({ colors }: { colors: any }) {
+function WhatsAppPlaceholder({ colors }: { colors: ThemeColors }) {
   return (
     <View style={styles.placeholder}>
       <Ionicons name="logo-whatsapp" size={64} color={colors.primary} />
@@ -94,7 +95,7 @@ function WhatsAppPlaceholder({ colors }: { colors: any }) {
   );
 }
 
-function CRMPlaceholder({ colors }: { colors: any }) {
+function CRMPlaceholder({ colors }: { colors: ThemeColors }) {
   return (
     <View style={styles.placeholder}>
       <Ionicons name="funnel" size={64} color="#F59E0B" />
@@ -115,7 +116,7 @@ function CRMPlaceholder({ colors }: { colors: any }) {
   );
 }
 
-function MessagesPlaceholder({ colors }: { colors: any }) {
+function MessagesPlaceholder({ colors }: { colors: ThemeColors }) {
   return (
     <View style={styles.placeholder}>
       <Ionicons name="chatbubbles" size={64} color="#6366F1" />

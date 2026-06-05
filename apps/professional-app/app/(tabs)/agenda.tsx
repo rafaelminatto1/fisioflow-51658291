@@ -2,7 +2,7 @@ import { useState, useCallback, useMemo } from "react";
 import { View, Text, StyleSheet, TouchableOpacity, Alert } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
-import { router } from "expo-router";
+import { router, type Href } from "expo-router";
 import {
   startOfWeek,
   endOfWeek,
@@ -190,7 +190,7 @@ export default function AgendaScreen() {
         <TouchableOpacity
           onPress={() => {
             light();
-            router.push("/(settings)/working-hours" as any);
+            router.push("/(settings)/working-hours" as Href);
           }}
           style={styles.headerButton}
           accessibilityRole="button"

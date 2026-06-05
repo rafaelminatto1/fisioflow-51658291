@@ -16,7 +16,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
+import { useRouter, type Href } from "expo-router";
 import { useColors } from "@/hooks/useColorScheme";
 import { useHaptics } from "@/hooks/useHaptics";
 import {
@@ -289,7 +289,7 @@ export default function WhatsAppScreen() {
 
   const handleOpenChat = (conv: WaConversation) => {
     light();
-    router.push(`/whatsapp-chat/${conv.id}` as any);
+    router.push(`/whatsapp-chat/${conv.id}` as Href);
   };
 
   const resetComposer = () => {

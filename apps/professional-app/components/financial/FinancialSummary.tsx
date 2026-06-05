@@ -84,7 +84,7 @@ export function FinancialSummaryCard({
         <View style={styles.cardInner}>
           <View style={styles.contentHeader}>
             <View style={[styles.iconContainer, { backgroundColor: variantStyles.iconBg }]}>
-              <Ionicons name={icon as any} size={20} color={variantStyles.iconColor} />
+              <Ionicons name={icon as keyof typeof Ionicons.glyphMap} size={20} color={variantStyles.iconColor} />
             </View>
             <Text style={[styles.title, { color: colors.textSecondary }]}>{title}</Text>
           </View>
@@ -187,7 +187,7 @@ export function StatCard({ label, value, icon, color = "primary" }: StatCardProp
 
   return (
     <View style={styles.statCard}>
-      {icon && <Ionicons name={icon as any} size={16} color={getColor()} style={styles.statIcon} />}
+      {icon && <Ionicons name={icon as keyof typeof Ionicons.glyphMap} size={16} color={getColor()} style={styles.statIcon} />}
       <Text style={[styles.statLabel, { color: colors.textSecondary }]}>{label}</Text>
       <Text style={[styles.statValue, { color: colors.text }]}>{value}</Text>
     </View>

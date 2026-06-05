@@ -10,7 +10,7 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useRouter, useLocalSearchParams, Stack } from "expo-router";
+import { useRouter, useLocalSearchParams, Stack, type Href } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useColors } from "@/hooks/useColorScheme";
 import { useHaptics } from "@/hooks/useHaptics";
@@ -56,7 +56,7 @@ export default function ProtocolFormScreen() {
   const handleAddExercise = () => {
     medium();
     // Navegar para seleção de exercícios
-    router.push("/exercises?selectMode=true&returnTo=protocol-form" as any);
+    router.push("/exercises?selectMode=true&returnTo=protocol-form" as Href);
   };
 
   const handleRemoveExercise = (index: number) => {

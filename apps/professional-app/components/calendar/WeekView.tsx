@@ -2,7 +2,7 @@ import React, { useState, useMemo } from "react";
 import { View, Text, StyleSheet, TouchableOpacity, useWindowDimensions } from "react-native";
 import { useColors } from "@/hooks/useColorScheme";
 import { AppointmentBase } from "@/types";
-import { router } from "expo-router";
+import { router, type Href } from "expo-router";
 import { format, startOfWeek, addDays, isSameDay } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { DraggableAptCard } from "./DraggableAptCard";
@@ -51,7 +51,7 @@ export const WeekView = ({
   const handleGridPress = (day: Date, hour: number) => {
     const dateStr = format(day, "dd/MM/yyyy");
     const timeStr = `${hour.toString().padStart(2, "0")}:00`;
-    router.push(`/appointment-form?date=${dateStr}&time=${timeStr}` as any);
+    router.push(`/appointment-form?date=${dateStr}&time=${timeStr}` as Href);
   };
 
   const getAppointmentsForDay = (day: Date) => {
@@ -267,7 +267,7 @@ export const WeekView = ({
                             textSecondary: colors.textSecondary,
                           }}
                           onPress={() =>
-                            router.push(`/appointment-form?id=${aptWithPos.id}` as any)
+                            router.push(`/appointment-form?id=${aptWithPos.id}` as Href)
                           }
                         />
                       );

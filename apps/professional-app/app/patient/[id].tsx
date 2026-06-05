@@ -13,7 +13,7 @@ import {
   Alert,
   Linking,
 } from "react-native";
-import { useLocalSearchParams, router } from "expo-router";
+import { useLocalSearchParams, router, type Href } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useColors } from "@/hooks/useColorScheme";
@@ -248,7 +248,7 @@ export default function PatientDetailScreen() {
             style={[styles.actionBtn, { backgroundColor: colors.info + "E0" }]}
             onPress={() => {
               medium();
-              router.push(`/evolution-form?patientId=${id}&patientName=${name}` as any);
+              router.push(`/evolution-form?patientId=${id}&patientName=${name}` as Href);
             }}
           >
             <Ionicons name="document-text-outline" size={18} color="#FFFFFF" />
@@ -514,7 +514,7 @@ export default function PatientDetailScreen() {
               style={[styles.editButton, { backgroundColor: colors.primary }]}
               onPress={() => {
                 light();
-                router.push(`/patient-form?id=${id}` as any);
+                router.push(`/patient-form?id=${id}` as Href);
               }}
             >
               <Ionicons name="create-outline" size={18} color="#FFFFFF" />
@@ -530,7 +530,7 @@ export default function PatientDetailScreen() {
                 style={[styles.addEvolutionBtn, { backgroundColor: colors.primary, flex: 1 }]}
                 onPress={() => {
                   medium();
-                  router.push(`/evolution-form?patientId=${id}&patientName=${name}` as any);
+                  router.push(`/evolution-form?patientId=${id}&patientName=${name}` as Href);
                 }}
               >
                 <Ionicons name="add" size={24} color="#FFFFFF" />
@@ -601,7 +601,7 @@ export default function PatientDetailScreen() {
                 ]}
                 onPress={() => {
                   medium();
-                  router.push(`/evolutions-list?patientId=${id}&patientName=${name}` as any);
+                  router.push(`/evolutions-list?patientId=${id}&patientName=${name}` as Href);
                 }}
               >
                 <Ionicons name="list-outline" size={20} color={colors.primary} />
@@ -620,7 +620,7 @@ export default function PatientDetailScreen() {
                   onPress={() => {
                     medium();
                     router.push(
-                      `/evolution-detail?evolutionId=${evolution.id}&patientId=${id}&patientName=${name}` as any,
+                      `/evolution-detail?evolutionId=${evolution.id}&patientId=${id}&patientName=${name}` as Href,
                     );
                   }}
                 >

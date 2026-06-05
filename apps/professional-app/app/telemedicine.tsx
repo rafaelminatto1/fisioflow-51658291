@@ -20,6 +20,7 @@ import { useTelemedicine } from "@/hooks/useTelemedicine";
 import { usePatients } from "@/hooks/usePatients";
 import { ApiTelemedicineRoom } from "@/lib/api";
 import { SearchablePatientPicker } from "@/components/ui/SearchablePatientPicker";
+import type { ThemeColors } from "@/types/theme";
 
 const STATUS_LABELS: Record<ApiTelemedicineRoom["status"], string> = {
   waiting: "Aguardando",
@@ -34,7 +35,7 @@ const RoomCard = ({
   onStart,
 }: {
   room: ApiTelemedicineRoom;
-  colors: any;
+  colors: ThemeColors;
   light: () => void;
   onStart: (id: string) => void;
 }) => {

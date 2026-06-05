@@ -93,7 +93,7 @@ export default function AuditLogScreen() {
     <Card style={styles.logCard}>
       <View style={styles.logHeader}>
         <View style={[styles.iconContainer, { backgroundColor: colors.primary + "10" }]}>
-          <Ionicons name={getActionIcon(item.action) as any} size={20} color={colors.primary} />
+          <Ionicons name={getActionIcon(item.action) as keyof typeof Ionicons.glyphMap} size={20} color={colors.primary} />
         </View>
         <View style={styles.logTitleContainer}>
           <Text style={[styles.logAction, { color: colors.text }]}>

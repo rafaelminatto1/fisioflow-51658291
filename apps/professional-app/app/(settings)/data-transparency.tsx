@@ -4,7 +4,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useColors } from "@/hooks/useColorScheme";
 import { Card } from "@/components";
-import { router } from "expo-router";
+import { router, type Href } from "expo-router";
 
 interface DataCategory {
   id: string;
@@ -66,7 +66,7 @@ export default function DataTransparencyScreen() {
   const handleOpenPrivacyPolicy = () => {
     // In a real app, this would open a URL or navigate to the privacy policy screen
     // For now, let's try to navigate to the legal group if it exists
-    router.push("/(legal)/privacy-policy" as any);
+    router.push("/(legal)/privacy-policy" as Href);
   };
 
   return (
@@ -86,7 +86,7 @@ export default function DataTransparencyScreen() {
           <Card key={category.id} style={styles.categoryCard}>
             <View style={styles.categoryHeader}>
               <View style={[styles.iconContainer, { backgroundColor: colors.primary + "15" }]}>
-                <Ionicons name={category.icon as any} size={24} color={colors.primary} />
+                <Ionicons name={category.icon as keyof typeof Ionicons.glyphMap} size={24} color={colors.primary} />
               </View>
               <Text style={[styles.categoryName, { color: colors.text }]}>{category.name}</Text>
             </View>

@@ -5,7 +5,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useColors } from "@/hooks/useColorScheme";
 import { useAudioRecorder } from "@/hooks/useAudioRecorder";
 import { fetchApi } from "@/lib/api";
-import { router, Stack } from "expo-router";
+import { router, Stack, type Href } from "expo-router";
 import { toast } from "@/lib/toast";
 
 export default function VoiceTaskScreen() {
@@ -84,7 +84,7 @@ export default function VoiceTaskScreen() {
             <View style={styles.actionRow}>
               <TouchableOpacity
                 style={[styles.retryButton, { borderColor: colors.border }]}
-                onPress={() => router.replace("/(app)/voice-task" as any)}
+                onPress={() => router.replace("/(app)/voice-task" as Href)}
               >
                 <Text style={[styles.retryText, { color: colors.textSecondary }]}>
                   Gravar novamente

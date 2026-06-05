@@ -82,7 +82,7 @@ export function PermissionExplainerModal({
           <SafeAreaView>
             <View style={styles.content}>
               <View style={[styles.iconContainer, { backgroundColor: colors.primary + "15" }]}>
-                <Ionicons name={config.icon as any} size={48} color={colors.primary} />
+                <Ionicons name={config.icon as keyof typeof Ionicons.glyphMap} size={48} color={colors.primary} />
               </View>
 
               <Text style={[styles.title, { color: colors.text }]}>{config.title}</Text>

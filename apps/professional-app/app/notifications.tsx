@@ -251,7 +251,7 @@ export default function NotificationsScreen() {
                     ]}
                   >
                     <Ionicons
-                      name={getIcon(notification.type) as any}
+                      name={getIcon(notification.type) as keyof typeof Ionicons.glyphMap}
                       size={22}
                       color={getIconColor(notification.type)}
                     />

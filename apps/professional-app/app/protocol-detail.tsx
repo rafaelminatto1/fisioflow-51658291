@@ -8,7 +8,7 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Stack, useRouter, useLocalSearchParams } from "expo-router";
+import { Stack, useRouter, useLocalSearchParams, type Href } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useColors } from "@/hooks/useColorScheme";
 import { useHaptics } from "@/hooks/useHaptics";
@@ -28,7 +28,7 @@ export default function ProtocolDetailScreen() {
 
   const handleEdit = () => {
     medium();
-    router.push(`/protocol-form?protocolId=${protocolId}` as any);
+    router.push(`/protocol-form?protocolId=${protocolId}` as Href);
   };
 
   const handleDuplicate = async () => {
@@ -83,7 +83,7 @@ export default function ProtocolDetailScreen() {
 
   const handleApplyToPatient = () => {
     medium();
-    router.push(`/apply-protocol?protocolId=${protocolId}` as any);
+    router.push(`/apply-protocol?protocolId=${protocolId}` as Href);
   };
 
   if (isLoading) {
