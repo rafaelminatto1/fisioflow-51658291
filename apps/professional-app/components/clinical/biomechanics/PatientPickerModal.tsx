@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { StyleSheet, View, Text, FlatList, TouchableOpacity, TextInput } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { Modal } from "../Modal";
+import { Modal } from "@/components";
 import { useColors } from "@/hooks/useColorScheme";
 
 interface Patient {

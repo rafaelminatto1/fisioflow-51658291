@@ -365,7 +365,7 @@ export default function FinancialsScreen() {
                             patient_id: patient.id,
                             template_key: "recibo_gerado",
                             variables: {
-                              name: patient.full_name.split(" ")[0],
+                              name: (patient.full_name ?? patient.name ?? "").split(" ")[0],
                               amount: new Intl.NumberFormat("pt-BR", {
                                 style: "currency",
                                 currency: "BRL",

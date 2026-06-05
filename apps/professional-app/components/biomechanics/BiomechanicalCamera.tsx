@@ -21,7 +21,7 @@ import { JointAngles } from "@/utils/biomechanics/angles";
 import { Point3D } from "@/utils/biomechanics/vectors";
 import { calculateAsymmetry, evaluateRisk } from "@/utils/biomechanics/scoring";
 import { X, Activity, ShieldAlert, CheckCircle2 } from "lucide-react-native";
-import { biomechanicsApi } from "@/api/v2/biomechanics";
+import { biomechanicsApi } from "@/lib/api/biomechanics";
 
 const { width, height } = Dimensions.get("window");
 
@@ -178,7 +178,6 @@ export const BiomechanicalCamera: React.FC<BiomechanicalCameraProps> = ({
         format={format}
         isActive={isActive}
         frameProcessor={frameProcessor}
-        frameProcessorFps={15}
       />
 
       <View style={styles.overlay}>

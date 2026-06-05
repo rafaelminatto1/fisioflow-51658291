@@ -4,7 +4,7 @@ import { Card } from "@/components";
 import { useColors } from "@/hooks/useColorScheme";
 import { useQuery } from "@tanstack/react-query";
 import { fetchApi } from "@/lib/api";
-import { Sparkles, FileText, Barbell } from "lucide-react-native";
+import { Sparkles, FileText, Dumbbell } from "lucide-react-native";
 
 interface SemanticRecommenderMobileWidgetProps {
   condition?: string;
@@ -45,8 +45,8 @@ export const SemanticRecommenderMobileWidget: React.FC<SemanticRecommenderMobile
     );
   }
 
-  const protocols = data?.data?.recommendations?.protocols || [];
-  const exercises = data?.data?.recommendations?.exercises || [];
+  const protocols = data?.recommendations?.protocols || [];
+  const exercises = data?.recommendations?.exercises || [];
 
   if (protocols.length === 0 && exercises.length === 0) {
     return null;
@@ -103,7 +103,7 @@ export const SemanticRecommenderMobileWidget: React.FC<SemanticRecommenderMobile
       {exercises.length > 0 && (
         <View style={[styles.section, { marginTop: 12 }]}>
           <View style={styles.sectionHeader}>
-            <Barbell size={12} color={colors.textSecondary} />
+            <Dumbbell size={12} color={colors.textSecondary} />
             <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>
               EXERCÍCIOS SUGERIDOS
             </Text>

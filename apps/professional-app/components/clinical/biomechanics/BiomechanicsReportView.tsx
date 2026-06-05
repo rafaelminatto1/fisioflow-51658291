@@ -44,7 +44,7 @@ export const BiomechanicsReportView: React.FC<BiomechanicsReportViewProps> = ({
         quality: 1,
       });
       await Share.shareAsync(uri);
-    } catch {
+    } catch (err: any) {
       console.error("Erro ao exportar imagem:", err);
     } finally {
       setIsExporting(false);
@@ -59,7 +59,7 @@ export const BiomechanicsReportView: React.FC<BiomechanicsReportViewProps> = ({
         ...result,
         observations,
       });
-    } catch {
+    } catch (err: any) {
       console.error("Erro ao gerar PDF:", err);
       Alert.alert("Erro", "Não foi possível gerar o PDF.");
     } finally {
@@ -120,7 +120,7 @@ export const BiomechanicsReportView: React.FC<BiomechanicsReportViewProps> = ({
           <Text style={styles.title}>Relatório de Avaliação</Text>
           {isSigned && (
             <View style={styles.signedBadge}>
-              <Ionicons name="checkmark-seal" size={14} color="#10b981" />
+              <Ionicons name="ribbon" size={14} color="#10b981" />
               <Text style={styles.signedText}>CERTIFICADO</Text>
             </View>
           )}

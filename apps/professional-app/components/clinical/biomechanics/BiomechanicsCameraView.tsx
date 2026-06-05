@@ -4,7 +4,6 @@ import { Camera, useCameraDevice, useFrameProcessor } from "react-native-vision-
 import { detectPose, Pose } from "expo-vision-pose-detector";
 import { runOnJS } from "react-native-reanimated";
 import { X } from "lucide-react-native";
-import { BlurView } from "expo-blur";
 import { mapVisionToPoseLandmarks } from "../../../utils/pose-utils";
 import { PoseOverlay } from "./PoseOverlay";
 
@@ -89,7 +88,6 @@ export const BiomechanicsCameraView: React.FC<BiomechanicsCameraViewProps> = ({
         device={device}
         isActive={true}
         frameProcessor={frameProcessor}
-        frameProcessorFps={30}
       />
 
       {ghostMedia && (
@@ -109,14 +107,14 @@ export const BiomechanicsCameraView: React.FC<BiomechanicsCameraViewProps> = ({
         </TouchableOpacity>
 
         <View style={styles.bottomControls}>
-          <BlurView intensity={20} style={styles.controlsContainer}>
+          <View style={styles.controlsContainer}>
             <TouchableOpacity
               style={[styles.recordButton, isRecording && styles.recordingButton]}
               onPress={handleToggleRecording}
             >
               <View style={[styles.recordInner, isRecording && styles.recordingInner]} />
             </TouchableOpacity>
-          </BlurView>
+          </View>
         </View>
 
         {isRecording && (
@@ -162,6 +160,7 @@ const styles = StyleSheet.create({
     padding: 20,
     borderRadius: 40,
     overflow: "hidden",
+    backgroundColor: "#0F172A",
   },
   recordButton: {
     width: 72,

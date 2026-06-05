@@ -397,7 +397,7 @@ export default function PatientDetailScreen() {
               </Card>
 
               {/* Monitoramento de Wearables */}
-              <WearablesSummaryWidget patientId={id || ""} />
+              <WearablesSummaryWidget patientId={(Array.isArray(id) ? id[0] : id) || ""} />
 
               <Card
                 style={[
