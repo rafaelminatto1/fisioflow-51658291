@@ -1,13 +1,14 @@
 import React, { useState } from "react";
-import { StyleSheet, Alert, SafeAreaView } from "react-native";
+import { StyleSheet, Alert } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { Stack, useRouter } from "expo-router";
 import { useColors } from "@/hooks/useColorScheme";
-import { useBiomechanicsAnalysis } from "../hooks/useBiomechanicsAnalysis";
+import { useBiomechanicsAnalysis } from "@/hooks/useBiomechanicsAnalysis";
 
 // Componentes Modulares
-import { BiomechanicsHomeView } from "../components/clinical/biomechanics/BiomechanicsHomeView";
-import { BiomechanicsCameraView } from "../components/clinical/biomechanics/BiomechanicsCameraView";
-import { BiomechanicsReportView } from "../components/clinical/biomechanics/BiomechanicsReportView";
+import { BiomechanicsHomeView } from "@/components/clinical/biomechanics/BiomechanicsHomeView";
+import { BiomechanicsCameraView } from "@/components/clinical/biomechanics/BiomechanicsCameraView";
+import { BiomechanicsReportView } from "@/components/clinical/biomechanics/BiomechanicsReportView";
 import { SearchablePatientPicker } from "@/components/ui/SearchablePatientPicker";
 
 export default function BiomechanicsScreen() {
@@ -21,14 +22,15 @@ export default function BiomechanicsScreen() {
     setSelectedPatient,
     isRecording,
     analysisResults,
-    _setAnalysisResults,
+    setAnalysisResults: _setAnalysisResults,
     startAnalysis,
     toggleRecording,
     saveReferencePose,
     resetAnalysis,
     ghostMedia,
-    _setAsGhost,
-    _patients,
+    setAsGhost: _setAsGhost,
+    patients,
+    patientsLoading,
   } = useBiomechanicsAnalysis();
 
   const [showPatientPicker, setShowPatientPicker] = useState(false);
@@ -78,6 +80,8 @@ export default function BiomechanicsScreen() {
       <SearchablePatientPicker
         visible={showPatientPicker}
         onClose={() => setShowPatientPicker(false)}
+        patients={patients}
+        isLoading={patientsLoading}
         onSelect={(patient) => {
           setSelectedPatient(patient);
           setShowPatientPicker(false);

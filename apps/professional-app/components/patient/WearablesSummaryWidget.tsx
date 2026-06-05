@@ -43,7 +43,7 @@ export const WearablesSummaryWidget: React.FC<WearablesSummaryWidgetProps> = ({ 
     );
   }
 
-  const readings = data?.data?.readings || [];
+  const readings = data?.readings || [];
   if (readings.length === 0) return null;
 
   const getIcon = (type: string) => {

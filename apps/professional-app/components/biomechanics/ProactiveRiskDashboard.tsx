@@ -4,7 +4,8 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  } from "react-native";
+  ScrollView,
+} from "react-native";
 import { Card } from "@/components";
 import { useClinicalAlerts } from "@/hooks/useClinicalAlerts";
 import { useColors } from "@/hooks/useColorScheme";

@@ -3,6 +3,7 @@ import * as Sharing from "expo-sharing";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import type { Patient, Evolution } from "@/types";
+import type { ApiPatient } from "@/types/api";
 
 /**
  * Generates a professional text summary for WhatsApp sharing.
@@ -541,7 +542,7 @@ export async function generateReimbursementReportPDF(
     await Sharing.shareAsync(uri, {
       UTI: ".pdf",
       mimeType: "application/pdf",
-      dialogTitle: `Relatório_${patient.full_name.replace(/\s/g, "_")}`,
+      dialogTitle: `Relatório_${(patient.full_name ?? patient.name ?? "paciente").replace(/\s/g, "_")}`,
     });
   } catch (error) {
     console.error("Report Generation Error:", error);
