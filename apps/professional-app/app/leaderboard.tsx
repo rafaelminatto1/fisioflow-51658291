@@ -109,7 +109,7 @@ export default function LeaderboardScreen() {
                 <Card key={entry.id || entry.patient_id} style={styles.rankCard}>
                   <View style={styles.rankIndexContainer}>
                     {icon ? (
-                      <Ionicons name={icon.name as any} size={24} color={icon.color} />
+                      <Ionicons name={icon.name as keyof typeof Ionicons.glyphMap} size={24} color={icon.color} />
                     ) : (
                       <Text style={[styles.rankIndex, { color: colors.textMuted }]}>
                         {index + 1}

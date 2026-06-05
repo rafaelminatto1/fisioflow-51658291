@@ -5,10 +5,11 @@ import { Card } from "../Card";
 import { ExerciseSession } from "../../types/pose";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import type { ThemeColors } from "@/types/theme";
 
 interface Props {
   session: ExerciseSession;
-  colors: any;
+  colors: ThemeColors;
 }
 
 export function AIExerciseHistoryCard({ session, colors }: Props) {

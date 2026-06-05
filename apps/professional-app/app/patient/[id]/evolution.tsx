@@ -23,6 +23,7 @@ import { uploadFile } from "@/lib/storage";
 import { Card } from "@/components";
 import { getPatientById } from "@/lib/api";
 import { generateEvolutionPDF } from "@/lib/services/pdfGenerator";
+import type { ThemeColors } from "@/types/theme";
 
 function FullScreenImageModal({
   visible,
@@ -33,7 +34,7 @@ function FullScreenImageModal({
   visible: boolean;
   uri: string | null;
   onClose: () => void;
-  colors: any;
+  colors: ThemeColors;
 }) {
   if (!uri) return null;
   return (
@@ -85,7 +86,7 @@ const SOAPInputField = ({
   isFocused: boolean;
   onFocus: () => void;
   onBlur: () => void;
-  colors: any;
+  colors: ThemeColors;
 }) => {
   return (
     <View style={[styles.soapField, isFocused && { borderColor: colors.primary }]}>
@@ -112,7 +113,7 @@ const PainLevelSlider = ({
 }: {
   painLevel: number;
   onValueChange: (val: number) => void;
-  colors: any;
+  colors: ThemeColors;
 }) => {
   return (
     <View style={styles.painLevelContainer}>
@@ -146,7 +147,7 @@ const PhotoGrid = ({
   onTakePhoto: () => void;
   onRemovePhoto: (id: string) => void;
   onViewPhoto?: (uri: string) => void;
-  colors: any;
+  colors: ThemeColors;
 }) => {
   return (
     <View style={styles.photoGridContainer}>

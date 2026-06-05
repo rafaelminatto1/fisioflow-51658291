@@ -1,11 +1,12 @@
 import React from "react";
 import { View, Text, TextInput, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import type { ThemeColors } from "@/types/theme";
 
 interface ObservacaoFormProps {
   value: string;
   onChange: (text: string) => void;
-  colors: any;
+  colors: ThemeColors;
   placeholder?: string;
 }
 

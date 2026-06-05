@@ -64,7 +64,7 @@ export function EmptyState({
           },
         ]}
       >
-        <Ionicons name={icon as any} size={64} color={variantStyles.iconColor} />
+        <Ionicons name={icon as keyof typeof Ionicons.glyphMap} size={64} color={variantStyles.iconColor} />
       </View>
 
       <Text style={[styles.title, { color: variantStyles.titleColor }]}>{title}</Text>

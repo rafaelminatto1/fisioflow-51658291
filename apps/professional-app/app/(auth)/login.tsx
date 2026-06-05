@@ -231,7 +231,7 @@ export default function LoginScreen() {
                 ]}
                 onPress={handleBiometricLogin}
               >
-                <Ionicons name={getBiometricIcon() as any} size={24} color={colors.textSecondary} />
+                <Ionicons name={getBiometricIcon() as keyof typeof Ionicons.glyphMap} size={24} color={colors.textSecondary} />
                 <Text style={[styles.biometricText, { color: colors.textSecondary }]}>
                   Entrar com {biometricTypeName}
                 </Text>

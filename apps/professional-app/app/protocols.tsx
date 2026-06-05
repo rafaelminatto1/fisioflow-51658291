@@ -11,7 +11,7 @@ import {
   FlatList,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Stack, useRouter } from "expo-router";
+import { Stack, useRouter, type Href } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useColors } from "@/hooks/useColorScheme";
 import { useHaptics } from "@/hooks/useHaptics";
@@ -189,7 +189,7 @@ export default function ProtocolsScreen() {
           <TouchableOpacity
             onPress={() => {
               medium();
-              router.push("/protocol-form" as any);
+              router.push("/protocol-form" as Href);
             }}
             style={styles.addButton}
           >
@@ -358,7 +358,7 @@ export default function ProtocolsScreen() {
                     style={[styles.emptyButton, { backgroundColor: colors.primary }]}
                     onPress={() => {
                       medium();
-                      router.push("/protocol-form" as any);
+                      router.push("/protocol-form" as Href);
                     }}
                   >
                     <Ionicons name="add" size={20} color="#fff" />
@@ -371,7 +371,7 @@ export default function ProtocolsScreen() {
               <TouchableOpacity
                 onPress={() => {
                   light();
-                  router.push(`/protocol-detail?protocolId=${protocol.id}` as any);
+                  router.push(`/protocol-detail?protocolId=${protocol.id}` as Href);
                 }}
               >
                 <Card
@@ -459,7 +459,7 @@ export default function ProtocolsScreen() {
                       onPress={(e) => {
                         e.stopPropagation();
                         medium();
-                        router.push(`/apply-protocol?protocolId=${protocol.id}` as any);
+                        router.push(`/apply-protocol?protocolId=${protocol.id}` as Href);
                       }}
                     >
                       <Ionicons name="person-add" size={14} color="#fff" />

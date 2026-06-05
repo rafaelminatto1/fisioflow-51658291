@@ -13,8 +13,9 @@ import { Ionicons } from "@expo/vector-icons";
 import { useColors } from "@/hooks/useColorScheme";
 import { useHaptics } from "@/hooks/useHaptics";
 import { useHEPCompliance, usePatientExercisePlans } from "@/hooks/useHEPCompliance";
+import type { ThemeColors } from "@/types/theme";
 
-function ComplianceBar({ rate, colors }: { rate: number; colors: any }) {
+function ComplianceBar({ rate, colors }: { rate: number; colors: ThemeColors }) {
   const color = rate >= 70 ? colors.success : rate >= 40 ? "#F59E0B" : colors.error;
   return (
     <View style={styles.barContainer}>
@@ -36,7 +37,7 @@ function CalendarDots({
   colors,
 }: {
   days: Array<{ date: string; completed: boolean }>;
-  colors: any;
+  colors: ThemeColors;
 }) {
   return (
     <View style={styles.calendarRow}>

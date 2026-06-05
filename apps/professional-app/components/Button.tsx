@@ -124,7 +124,7 @@ export function Button({
           {leftIcon &&
             (typeof leftIcon === "string" ? (
               <Ionicons
-                name={leftIcon as any}
+                name={leftIcon as keyof typeof Ionicons.glyphMap}
                 size={size === "sm" ? 18 : 20}
                 color={getTextColor()}
                 style={styles.icon}

@@ -13,7 +13,7 @@ import {
   Animated,
   Dimensions,
 } from "react-native";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter, type Href } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { Button, Input } from "@/components";
@@ -747,7 +747,7 @@ export default function AppointmentFormScreen() {
             title="Iniciar Atendimento"
             onPress={() =>
               router.push(
-                `/evolution-form?patientId=${selectedPatientId}&appointmentId=${appointmentId}` as any,
+                `/evolution-form?patientId=${selectedPatientId}&appointmentId=${appointmentId}` as Href,
               )
             }
             variant="secondary"

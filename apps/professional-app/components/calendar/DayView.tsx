@@ -3,7 +3,7 @@ import { View, StyleSheet, ScrollView, TouchableOpacity, useWindowDimensions } f
 import { useColors } from "@/hooks/useColorScheme";
 import { TimeGrid } from "./TimeGrid";
 import { AppointmentBase } from "@/types";
-import { router } from "expo-router";
+import { router, type Href } from "expo-router";
 import { format, isSameDay } from "date-fns";
 import { DraggableAptCard } from "./DraggableAptCard";
 import { TIME_LABEL_WIDTH, getTimeParts } from "./utils";
@@ -44,7 +44,7 @@ export const DayView = ({
     // Navigate to appointment form with pre-filled date and time
     const dateStr = format(date, "dd/MM/yyyy");
     const timeStr = `${hour.toString().padStart(2, "0")}:00`;
-    router.push(`/appointment-form?date=${dateStr}&time=${timeStr}` as any);
+    router.push(`/appointment-form?date=${dateStr}&time=${timeStr}` as Href);
   };
 
   // Helper to detect overlapping appointments
@@ -147,7 +147,7 @@ export const DayView = ({
             primary: colors.primary,
             textSecondary: colors.textSecondary,
           }}
-          onPress={() => router.push(`/appointment-form?id=${apt.id}` as any)}
+          onPress={() => router.push(`/appointment-form?id=${apt.id}` as Href)}
         />
       );
     });
