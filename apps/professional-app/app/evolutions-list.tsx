@@ -389,7 +389,7 @@ export default function EvolutionsListScreen() {
               labels={evolutions
                 .slice(0, 10)
                 .reverse()
-                .map((_: any, i: number) => `${i + 1}`)}
+                .map((_: unknown, i: number) => `${i + 1}`)}
               title="Evolução da Dor"
               color={colors.primary}
             />

@@ -923,7 +923,7 @@ export default function PatientDetailScreen() {
                                         onSuccess: () => {
                                           Alert.alert("Sucesso", "Registro marcado como pago!");
                                         },
-                                        onError: (error: any) => {
+                                        onError: (error: Error) => {
                                           Alert.alert(
                                             "Erro",
                                             error.message || "Não foi possível marcar como pago.",
@@ -974,7 +974,7 @@ export default function PatientDetailScreen() {
                                     onSuccess: () => {
                                       Alert.alert("Sucesso", "Registro excluído!");
                                     },
-                                    onError: (error: any) => {
+                                    onError: (error: Error) => {
                                       Alert.alert(
                                         "Erro",
                                         error.message || "Não foi possível excluir o registro.",
@@ -1167,7 +1167,7 @@ export default function PatientDetailScreen() {
                             setShowFinancialModal(false);
                             Alert.alert("Sucesso", "Registro atualizado!");
                           },
-                          onError: (error: any) => {
+                          onError: (error: Error) => {
                             Alert.alert(
                               "Erro",
                               error.message || "Não foi possível atualizar o registro.",
@@ -1181,7 +1181,7 @@ export default function PatientDetailScreen() {
                           setShowFinancialModal(false);
                           Alert.alert("Sucesso", "Registro criado!");
                         },
-                        onError: (error: any) => {
+                        onError: (error: Error) => {
                           Alert.alert(
                             "Erro",
                             error.message || "Não foi possível criar o registro.",
