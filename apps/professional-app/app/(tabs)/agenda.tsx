@@ -127,7 +127,9 @@ export default function AgendaScreen() {
           },
         });
         hapticSuccess();
-      } catch {}
+      } catch {
+        // reagendamento otimista: falha silenciosa, estado revalida no próximo fetch
+      }
     },
     [appointments, updateAsync, hapticSuccess],
   );

@@ -51,7 +51,7 @@ export default function NFSeForm() {
   const [medicalReferralDate, setMedicalReferralDate] = useState(format(new Date(), "yyyy-MM-dd"));
 
   const calculateDates = (start: string, count: number) => {
-    let dates: Date[] = [];
+    const dates: Date[] = [];
     let current = parseISO(start);
     while (dates.length < count) {
       if (!isWeekend(current) && (isMonday(current) || isWednesday(current) || isFriday(current))) {

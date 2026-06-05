@@ -23,6 +23,9 @@ export default function BiomechanicsScreen() {
     );
   }
 
+  // require() intencional: carrega o impl com react-native-vision-camera apenas
+  // fora do Expo Go (já filtrado acima), evitando avaliar o módulo nativo ausente.
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const BiomechanicsImpl = require("./biomechanics-impl").default;
   return <BiomechanicsImpl />;
 }
