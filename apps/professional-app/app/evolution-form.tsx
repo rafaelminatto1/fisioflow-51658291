@@ -144,7 +144,7 @@ export default function EvolutionFormScreen() {
         } else {
           setAutoSaveStatus("idle");
         }
-      } catch {
+      } catch (err: any) {
         console.error("[EvolutionForm] Error fetching draft:", err);
         setAutoSaveStatus("idle");
       }
@@ -169,7 +169,7 @@ export default function EvolutionFormScreen() {
       };
       try {
         await AsyncStorage.setItem(DRAFT_KEY, JSON.stringify(draftData));
-      } catch {
+      } catch (err: any) {
         console.warn("[EvolutionForm] Local save failed", err);
       }
     };
@@ -208,7 +208,7 @@ export default function EvolutionFormScreen() {
         });
         savedEvolutionId.current = res.data?.id ?? savedEvolutionId.current;
         setAutoSaveStatus("saved");
-      } catch {
+      } catch (err: any) {
         setAutoSaveStatus("error");
         const technicalDetail = [
           err?.message,
@@ -263,7 +263,7 @@ export default function EvolutionFormScreen() {
       }
       success();
       Alert.alert("Sucesso", "Sugestão gerada com IA!");
-    } catch {
+    } catch (err: any) {
       hapticError();
       Alert.alert("Erro", err?.message ?? "Não foi possível gerar com IA");
     } finally {

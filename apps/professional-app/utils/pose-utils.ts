@@ -10,7 +10,7 @@ export interface Landmark {
 /**
  * Mapeia os landmarks da Vision Camera para o formato esperado pela UI de Biomecânica
  */
-export const mapVisionToPoseLandmarks = (results: Pose) => {
+export const mapVisionToPoseLandmarks = (results: Pose): Pose | null => {
   if (!results) return null;
 
   return {

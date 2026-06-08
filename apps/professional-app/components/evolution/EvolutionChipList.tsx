@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { View, Text, TextInput, StyleSheet, TouchableOpacity } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import type { ThemeColors } from "@/types/theme";
 
 export interface ChipItem {
   id: string;
@@ -15,7 +16,7 @@ interface EvolutionChipListProps {
   placeholder?: string;
   items: ChipItem[];
   onChange: (items: ChipItem[]) => void;
-  colors: any;
+  colors: ThemeColors;
   /** Quando true, o input pede um detalhe adicional (ex.: prescrição). */
   withDetail?: boolean;
   detailPlaceholder?: string;

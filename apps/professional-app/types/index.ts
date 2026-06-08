@@ -12,6 +12,12 @@ export interface Patient {
   birthDate?: Date | string;
   condition?: string;
   diagnosis?: string;
+  document?: string;
+  insurance?: {
+    provider?: string;
+    plan?: string;
+    cardNumber?: string;
+  };
   status: "active" | "inactive";
   notes?: string;
   progress?: number;

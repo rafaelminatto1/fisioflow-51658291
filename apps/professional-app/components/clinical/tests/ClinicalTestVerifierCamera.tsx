@@ -4,7 +4,6 @@ import { Camera, useCameraDevice, useFrameProcessor } from "react-native-vision-
 import { detectPose, Pose } from "expo-vision-pose-detector";
 import { runOnJS } from "react-native-reanimated";
 import { Ionicons } from "@expo/vector-icons";
-import { BlurView } from "expo-blur";
 import { fetchApi } from "@/lib/api";
 import { PoseOverlay } from "../biomechanics/PoseOverlay";
 import { mapVisionToPoseLandmarks } from "../../../utils/pose-utils";
@@ -104,12 +103,12 @@ export const ClinicalTestVerifierCamera: React.FC<ClinicalTestVerifierCameraProp
         </View>
 
         <View style={styles.bottomFeedback}>
-          <BlurView intensity={80} style={styles.feedbackCard}>
+          <View style={styles.feedbackCard}>
             {isValidating && (
               <ActivityIndicator size="small" color="#0EA5E9" style={{ marginBottom: 8 }} />
             )}
             <Text style={styles.feedbackText}>{feedback}</Text>
-          </BlurView>
+          </View>
         </View>
       </View>
     </View>
@@ -124,6 +123,12 @@ const styles = StyleSheet.create({
   titleContainer: { flex: 1 },
   title: { color: "white", fontSize: 16, fontWeight: "900", textTransform: "uppercase" },
   bottomFeedback: { marginBottom: 40 },
-  feedbackCard: { padding: 20, borderRadius: 20, alignItems: "center", overflow: "hidden" },
+  feedbackCard: {
+    padding: 20,
+    borderRadius: 20,
+    alignItems: "center",
+    overflow: "hidden",
+    backgroundColor: "#0F172A",
+  },
   feedbackText: { color: "white", fontSize: 14, fontWeight: "bold", textAlign: "center" },
 });

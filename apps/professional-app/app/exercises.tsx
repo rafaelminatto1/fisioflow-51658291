@@ -15,7 +15,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
-import { useLocalSearchParams, router } from "expo-router";
+import { useLocalSearchParams, router, type Href } from "expo-router";
 import { useColors } from "@/hooks/useColorScheme";
 import { Button, Modal } from "@/components";
 import { useExercisesLibrary, usePatientExerciseAssignments } from "@/hooks";
@@ -159,7 +159,7 @@ export default function ExercisesScreen() {
             setSelectedExercise(exercise);
             setShowAssignModal(true);
           } else {
-            router.push(`/exercises/${exercise.id}` as any);
+            router.push(`/exercises/${exercise.id}` as Href);
           }
         }}
         onLongPress={() => {

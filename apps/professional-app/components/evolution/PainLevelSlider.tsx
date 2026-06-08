@@ -1,11 +1,12 @@
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 import Slider from "@react-native-community/slider";
+import type { ThemeColors } from "@/types/theme";
 
 interface PainLevelSliderProps {
   painLevel: number;
   onValueChange: (value: number) => void;
-  colors: any;
+  colors: ThemeColors;
 }
 
 export function PainLevelSlider({ painLevel, onValueChange, colors }: PainLevelSliderProps) {

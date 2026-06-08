@@ -2,7 +2,7 @@ import { useState, useCallback } from "react";
 import { View, StyleSheet, ScrollView, TouchableOpacity, Alert, Text, Linking } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
-import { router } from "expo-router";
+import { router, type Href } from "expo-router";
 import { useColors } from "@/hooks/useColorScheme";
 import { useAuthStore } from "@/store/auth";
 import { useHaptics } from "@/hooks/useHaptics";
@@ -84,11 +84,11 @@ export default function ProfileScreen() {
           email={user?.email}
           onAvatarPress={() => {
             medium();
-            router.push("/profile-edit" as any);
+            router.push("/profile-edit" as Href);
           }}
           onSettingsPress={() => {
             medium();
-            router.push("/(settings)/notification-preferences" as any);
+            router.push("/(settings)/notification-preferences" as Href);
           }}
           stats={{
             patients: stats?.activePatients ?? 0,
@@ -104,7 +104,7 @@ export default function ProfileScreen() {
               label="Meus Dados"
               onPress={() => {
                 medium();
-                router.push("/profile-edit" as any);
+                router.push("/profile-edit" as Href);
               }}
             />
             <ProfileMenuItem
@@ -112,7 +112,7 @@ export default function ProfileScreen() {
               label="Preferências de Notificação"
               onPress={() => {
                 medium();
-                router.push("/(settings)/notification-preferences" as any);
+                router.push("/(settings)/notification-preferences" as Href);
               }}
             />
             <ProfileMenuItem
@@ -131,7 +131,7 @@ export default function ProfileScreen() {
               label="Horários de Atendimento"
               onPress={() => {
                 medium();
-                router.push("/(settings)/working-hours" as any);
+                router.push("/(settings)/working-hours" as Href);
               }}
             />
             <ProfileMenuItem
@@ -139,7 +139,7 @@ export default function ProfileScreen() {
               label="Segurança e Senha"
               onPress={() => {
                 medium();
-                router.push("/change-password" as any);
+                router.push("/change-password" as Href);
               }}
               showDivider={false}
             />
@@ -152,7 +152,7 @@ export default function ProfileScreen() {
               iconColor={colors.info}
               onPress={() => {
                 medium();
-                router.push("/protocols" as any);
+                router.push("/protocols" as Href);
               }}
             />
             <ProfileMenuItem
@@ -172,7 +172,7 @@ export default function ProfileScreen() {
               iconColor={colors.warning}
               onPress={() => {
                 medium();
-                router.push("/(settings)/help" as any);
+                router.push("/(settings)/help" as Href);
               }}
               showDivider={false}
             />

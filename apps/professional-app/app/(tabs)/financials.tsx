@@ -297,14 +297,14 @@ export default function FinancialsScreen() {
                   title: "Receita",
                   amount: totalRevenue,
                   subtitle: getDatePeriodLabel(),
-                  icon: "arrow-up-circle" as any,
+                  icon: "arrow-up-circle" as keyof typeof Ionicons.glyphMap,
                   variant: "success",
                 },
                 {
                   title: "Pendente",
                   amount: totalPending,
                   subtitle: getDatePeriodLabel(),
-                  icon: "time" as any,
+                  icon: "time" as keyof typeof Ionicons.glyphMap,
                   variant: "warning",
                 },
               ]}
@@ -365,7 +365,7 @@ export default function FinancialsScreen() {
                             patient_id: patient.id,
                             template_key: "recibo_gerado",
                             variables: {
-                              name: patient.full_name.split(" ")[0],
+                              name: (patient.full_name ?? patient.name ?? "").split(" ")[0],
                               amount: new Intl.NumberFormat("pt-BR", {
                                 style: "currency",
                                 currency: "BRL",

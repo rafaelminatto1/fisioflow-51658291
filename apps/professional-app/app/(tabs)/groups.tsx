@@ -25,7 +25,7 @@ export default function GroupsScreen() {
     refetch,
   } = useQuery({
     queryKey: ["group-classes"],
-    queryFn: () => fetchApi<any[]>("/api/groups/classes"),
+    queryFn: () => fetchApi<{ data: any[] }>("/api/groups/classes"),
   });
 
   const onRefresh = async () => {

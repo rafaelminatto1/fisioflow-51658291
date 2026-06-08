@@ -11,7 +11,7 @@ import {
   TextInput,
 } from "react-native";
 import ViewShot from "react-native-view-shot";
-import Svg, { Path, Line, Text as SvgText, Defs, Marker, Polygon } from "react-native-svg";
+import Svg, { Path, Line, Text as SvgText, Defs, Marker, Polygon, Rect } from "react-native-svg";
 import { Ionicons } from "@expo/vector-icons";
 import { useColors } from "@/hooks/useColorScheme";
 import { SafeAreaView } from "react-native-safe-area-context";

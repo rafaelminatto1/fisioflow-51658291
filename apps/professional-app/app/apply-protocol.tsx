@@ -10,7 +10,7 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useRouter, useLocalSearchParams } from "expo-router";
+import { useRouter, useLocalSearchParams, type Href } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useColors } from "@/hooks/useColorScheme";
 import { useHaptics } from "@/hooks/useHaptics";
@@ -57,7 +57,7 @@ export default function ApplyProtocolScreen() {
         {
           text: "Ver Paciente",
           onPress: () => {
-            router.replace(`/patient/${selectedPatientId}?tab=exercises` as any);
+            router.replace(`/patient/${selectedPatientId}?tab=exercises` as Href);
           },
         },
         {

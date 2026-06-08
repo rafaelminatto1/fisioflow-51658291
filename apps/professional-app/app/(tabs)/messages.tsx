@@ -10,7 +10,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
-import { router, useFocusEffect } from "expo-router";
+import { router, useFocusEffect, type Href } from "expo-router";
 import { useColors } from "@/hooks/useColorScheme";
 import { useHaptics } from "@/hooks/useHaptics";
 import { Card, SyncStatus, Skeleton } from "@/components";
@@ -189,7 +189,7 @@ export default function MessagesScreen() {
                 key={conv.id}
                 onPress={() => {
                   light();
-                  router.push(`/messages/${conv.participantId}` as any);
+                  router.push(`/messages/${conv.participantId}` as Href);
                 }}
                 activeOpacity={0.7}
               >
