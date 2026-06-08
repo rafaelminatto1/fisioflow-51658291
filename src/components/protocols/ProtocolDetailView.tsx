@@ -169,14 +169,14 @@ export function ProtocolDetailView({
 
   return (
     <div className="space-y-6 animate-fade-in">
-      <div className="sticky top-0 z-20 -mx-4 flex flex-col gap-4 border-b border-border/50 bg-background/85 px-4 pb-4 pt-1 backdrop-blur-xl">
+      <div className="sticky top-0 z-20 -mx-4 flex flex-col gap-4 border-b border-border/50 bg-card px-4 pb-4 pt-1">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div className="flex items-start gap-3">
             <Button
               variant="ghost"
               size="icon"
               onClick={onBack}
-              className="mt-0.5 rounded-full border border-border/60 bg-background/80"
+              className="mt-0.5 rounded-full border border-border/60 bg-card"
             >
               <ArrowLeft className="h-5 w-5" />
             </Button>
@@ -330,7 +330,7 @@ export function ProtocolDetailView({
                 {overviewObjectives.map((objective, index) => (
                   <div
                     key={`${objective}-${index}`}
-                    className="flex items-start gap-3 rounded-2xl border border-primary/10 bg-background/75 px-4 py-3"
+                    className="flex items-start gap-3 rounded-2xl border border-primary/10 bg-card px-4 py-3"
                   >
                     <div className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
                       <CheckCircle2 className="h-3.5 w-3.5" />
@@ -342,7 +342,7 @@ export function ProtocolDetailView({
             )}
 
             {phases.length > 0 && (
-              <div className="mt-5 rounded-2xl border border-border/60 bg-background/60 p-4">
+              <div className="mt-5 rounded-2xl border border-border/60 bg-card p-4">
                 <div className="mb-3 flex items-center justify-between gap-2">
                   <span className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
                     Progressão clínica
@@ -375,7 +375,7 @@ export function ProtocolDetailView({
           </Card>
 
           {phases.length > 0 && (
-            <Card className="border-border/60 bg-background/70 p-4 shadow-sm sm:p-5">
+            <Card className="border-border/60 bg-card p-4 shadow-sm sm:p-5">
               <div className="flex flex-col gap-2 border-b border-border/60 pb-4 sm:flex-row sm:items-end sm:justify-between">
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-[0.22em] text-indigo-500/80">
@@ -389,7 +389,7 @@ export function ProtocolDetailView({
                 </div>
                 <Badge
                   variant="outline"
-                  className="w-fit border-border/70 bg-background/80 text-muted-foreground"
+                  className="w-fit border-border/70 bg-card text-muted-foreground"
                 >
                   {phases.length} fases
                 </Badge>
@@ -475,7 +475,7 @@ export function ProtocolDetailView({
                               </div>
                             </div>
 
-                            <div className="mt-1 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-border/70 bg-background/80 text-muted-foreground">
+                            <div className="mt-1 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-border/70 bg-card text-muted-foreground">
                               {isExpanded ? (
                                 <ChevronUp className="h-4 w-4" />
                               ) : (
@@ -547,7 +547,7 @@ export function ProtocolDetailView({
                                       <Badge
                                         key={`${exercise}-${exerciseIndex}`}
                                         variant="outline"
-                                        className="border-indigo-500/15 bg-background/80 text-indigo-700 dark:text-indigo-300"
+                                        className="border-indigo-500/15 bg-card text-indigo-700 dark:text-indigo-300"
                                       >
                                         {exercise}
                                       </Badge>
@@ -601,7 +601,7 @@ export function ProtocolDetailView({
             const hasAny = refs.length > 0 || refArticles.length > 0;
             if (!hasAny) return null;
             return (
-              <Card className="border-border/60 bg-background/70 p-5 shadow-sm">
+              <Card className="border-border/60 bg-card p-5 shadow-sm">
                 <div className="flex items-center justify-between gap-2 border-b border-border/60 pb-4">
                   <div>
                     <p className="text-xs font-semibold uppercase tracking-[0.22em] text-primary/75">
@@ -613,7 +613,7 @@ export function ProtocolDetailView({
                   </div>
                   <Badge
                     variant="outline"
-                    className="border-border/70 bg-background/80 text-muted-foreground"
+                    className="border-border/70 bg-card text-muted-foreground"
                   >
                     {refs.length + refArticles.length}
                   </Badge>
@@ -689,7 +689,7 @@ export function ProtocolDetailView({
         </div>
 
         <div className="space-y-6 xl:sticky xl:top-24 xl:self-start">
-          <Card className="border-border/60 bg-background/70 p-5 shadow-sm">
+          <Card className="border-border/60 bg-card p-5 shadow-sm">
             <div className="flex items-center justify-between gap-2">
               <div>
                 <p className="text-xs font-semibold uppercase tracking-[0.22em] text-primary/75">
@@ -772,7 +772,7 @@ export function ProtocolDetailView({
             )}
           </Card>
 
-          <Card className="border-border/60 bg-background/70 p-5 shadow-sm">
+          <Card className="border-border/60 bg-card p-5 shadow-sm">
             <div className="flex items-center justify-between gap-3">
               <div>
                 <p className="text-xs font-semibold uppercase tracking-[0.22em] text-cyan-600/80">
@@ -799,7 +799,7 @@ export function ProtocolDetailView({
                     <div className="mt-2 flex flex-wrap items-center gap-2">
                       <Badge
                         variant="outline"
-                        className="border-cyan-500/15 bg-background/80 text-cyan-700 dark:text-cyan-300"
+                        className="border-cyan-500/15 bg-card text-cyan-700 dark:text-cyan-300"
                       >
                         {test.target_joint}
                       </Badge>
@@ -808,14 +808,14 @@ export function ProtocolDetailView({
                   </div>
                 ))
               ) : (
-                <div className="rounded-2xl border border-dashed border-border/70 bg-background/60 px-4 py-5 text-sm text-muted-foreground">
+                <div className="rounded-2xl border border-dashed border-border/70 bg-card px-4 py-5 text-sm text-muted-foreground">
                   Nenhum teste vinculado ao protocolo.
                 </div>
               )}
             </div>
           </Card>
 
-          <Card className="border-border/60 bg-background/70 p-5 shadow-sm">
+          <Card className="border-border/60 bg-card p-5 shadow-sm">
             <p className="text-xs font-semibold uppercase tracking-[0.22em] text-amber-600/80">
               Segurança clínica
             </p>
@@ -832,7 +832,7 @@ export function ProtocolDetailView({
                       <AlertTriangle className="h-4 w-4 text-amber-600" />
                       <Badge
                         variant="outline"
-                        className="border-amber-500/15 bg-background/80 text-amber-700 dark:text-amber-300"
+                        className="border-amber-500/15 bg-card text-amber-700 dark:text-amber-300"
                       >
                         W{restriction.weekStart}
                         {restriction.weekEnd != null ? ` - W${restriction.weekEnd}` : "+"}
@@ -844,7 +844,7 @@ export function ProtocolDetailView({
                   </div>
                 ))
               ) : (
-                <div className="rounded-2xl border border-dashed border-border/70 bg-background/60 px-4 py-5 text-sm text-muted-foreground">
+                <div className="rounded-2xl border border-dashed border-border/70 bg-card px-4 py-5 text-sm text-muted-foreground">
                   Nenhuma restrição especial cadastrada.
                 </div>
               )}

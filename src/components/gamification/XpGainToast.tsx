@@ -29,7 +29,7 @@ export function XpGainToast({ amount, reason, onClose }: XpGainToastProps) {
           exit={{ opacity: 0, scale: 0.5, transition: { duration: 0.2 } }}
           className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[100] pointer-events-none"
         >
-          <div className="bg-slate-900/90 backdrop-blur-md border border-yellow-500/50 text-white px-6 py-4 rounded-3xl shadow-2xl flex items-center gap-4 min-w-[200px]">
+          <div className="bg-slate-900/90 border border-yellow-500/50 text-white px-6 py-4 rounded-3xl shadow-2xl flex items-center gap-4 min-w-[200px]">
             <div className="bg-yellow-500 p-2 rounded-full shadow-[0_0_15px_rgba(234,179,8,0.6)]">
               <ArrowUpCircle className="w-6 h-6 text-slate-900" />
             </div>

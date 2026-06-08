@@ -220,7 +220,7 @@ ${errorInfo?.componentStack || "No component stack"}
 
       return (
         <div className="min-h-screen flex items-center justify-center bg-gray-50/50 p-4">
-          <Card className="w-full max-w-lg border-0 shadow-2xl bg-white/80 backdrop-blur-sm ring-1 ring-gray-900/5">
+          <Card className="w-full max-w-lg border-0 shadow-2xl bg-card ring-1 ring-gray-900/5">
             <CardHeader className="text-center pb-2">
               <div className="mx-auto mb-6 h-20 w-20 bg-amber-50 rounded-2xl flex items-center justify-center shadow-inner">
                 <Bandage className="h-10 w-10 text-amber-600" />

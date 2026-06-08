@@ -175,7 +175,7 @@ export function DeviceIndicator({ width, height }: { width: number; height: numb
   const device = getDeviceType();
 
   return (
-    <div className="fixed top-16 right-4 z-50 bg-background/90 backdrop-blur border rounded-full px-3 py-1 text-xs flex items-center gap-2 shadow-lg">
+    <div className="fixed top-16 right-4 z-50 bg-card border rounded-full px-3 py-1 text-xs flex items-center gap-2 shadow-lg">
       <span>{device.icon}</span>
       <span className="font-medium">{device.name}</span>
       <span className="text-muted-foreground">

@@ -34,7 +34,7 @@ export const PremiumHover: Story = {
           <p className="text-sm text-white/80">Elevated dark gradient for premium feel</p>
         </div>
 
-        <div className="gradient-glass backdrop-blur-xl border border-white/20 bg-white/5 p-6 rounded-2xl card-premium-hover">
+        <div className="gradient-glass border border-white/20 bg-white/5 p-6 rounded-2xl card-premium-hover">
           <h3 className="text-xl font-display text-foreground">Glass Variant</h3>
           <p className="text-sm text-muted-foreground">Glassmorphism with blur effects</p>
         </div>

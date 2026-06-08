@@ -559,7 +559,7 @@ export const RichTextToolbar: React.FC<RichTextToolbarProps> = ({
   return (
     <div
       className={cn(
-        "rich-text-toolbar sticky top-0 z-50 flex flex-wrap gap-1 px-4 py-1.5 border-b border-border/40 bg-white/95 backdrop-blur-md shadow-sm transition-all duration-300",
+        "rich-text-toolbar sticky top-0 z-50 flex flex-wrap gap-1 px-4 py-1.5 border-b border-border/40 bg-card shadow-sm transition-all duration-300",
         className,
       )}
     >

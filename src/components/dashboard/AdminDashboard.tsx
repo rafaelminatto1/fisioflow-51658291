@@ -105,7 +105,7 @@ const CustomChartTooltip = memo(({ active, payload, label }: any) => {
   if (!active || !payload?.length) return null;
 
   return (
-    <div className="rounded-2xl border border-border/60 bg-background/95 p-3 shadow-lg backdrop-blur-xl">
+    <div className="rounded-2xl border border-border/60 bg-popover p-3 shadow-lg">
       <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
         {label}
       </p>
@@ -281,7 +281,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ period = "hoje" 
       {/* ── 2. Agenda + Atalhos ── */}
       <section aria-label="Agenda e atalhos">
         <div className="grid gap-5 lg:grid-cols-7">
-          <Card className="rounded-[2rem] border-border/60 bg-background/80 shadow-sm backdrop-blur-xl lg:col-span-4">
+          <Card className="rounded-[2rem] border-border/60 bg-card shadow-sm lg:col-span-4">
             <CardHeader className="border-b border-border/60 pb-4">
               <div className="flex items-center justify-between gap-3">
                 <div className="flex items-center gap-3">
@@ -354,7 +354,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ period = "hoje" 
             </CardContent>
           </Card>
 
-          <Card className="rounded-[2rem] border-border/60 bg-background/80 shadow-sm backdrop-blur-xl lg:col-span-3">
+          <Card className="rounded-[2rem] border-border/60 bg-card shadow-sm lg:col-span-3">
             <CardHeader className="border-b border-border/60 pb-4">
               <div className="flex items-center gap-3">
                 <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary/10 text-primary">
@@ -408,7 +408,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ period = "hoje" 
       {/* ── 3. Charts ── */}
       <section aria-label="Gráficos e desempenho">
         <div className="grid gap-5 lg:grid-cols-2">
-          <Card className="rounded-[2rem] border-border/60 bg-background/80 shadow-sm backdrop-blur-xl">
+          <Card className="rounded-[2rem] border-border/60 bg-card shadow-sm">
             <CardHeader className="border-b border-border/60 pb-4">
               <div className="flex items-center gap-3">
                 <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary/10 text-primary">
@@ -493,7 +493,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ period = "hoje" 
             </CardContent>
           </Card>
 
-          <Card className="rounded-[2rem] border-border/60 bg-background/80 shadow-sm backdrop-blur-xl">
+          <Card className="rounded-[2rem] border-border/60 bg-card shadow-sm">
             <CardHeader className="border-b border-border/60 pb-4">
               <div className="flex items-center gap-3">
                 <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-600">
@@ -579,7 +579,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ period = "hoje" 
           <div className="space-y-5">
             <ClinicalAlertsWidget />
             <InventoryAlertsWidget />
-            <Card className="rounded-[2rem] border-border/60 bg-background/80 shadow-sm backdrop-blur-xl">
+            <Card className="rounded-[2rem] border-border/60 bg-card shadow-sm">
               <CardHeader className="border-b border-border/60 pb-4">
                 <div className="flex items-center justify-between gap-3">
                   <div>

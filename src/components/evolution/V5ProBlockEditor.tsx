@@ -313,7 +313,7 @@ export const V5ProBlockEditor: React.FC<V5ProBlockEditorProps> = ({
   return (
     <div className="flex flex-col w-full max-w-5xl mx-auto bg-white dark:bg-slate-950 rounded-2xl shadow-premium-lg border border-slate-200 dark:border-slate-800 overflow-hidden transition-all duration-300">
       {/* Premium Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-center px-6 py-4 bg-slate-50/50 dark:bg-slate-900/50 border-b border-slate-200 dark:border-slate-800 gap-4">
+      <div className="flex flex-col sm:flex-row justify-between items-center px-6 py-4 bg-muted dark:bg-slate-900/50 border-b border-slate-200 dark:border-slate-800 gap-4">
         <div className="flex items-center gap-3">
           <div className="p-2 bg-blue-600 rounded-xl shadow-lg shadow-blue-500/30">
             <FileText className="w-5 h-5 text-white" />
@@ -445,7 +445,7 @@ export const V5ProBlockEditor: React.FC<V5ProBlockEditorProps> = ({
         ) */}
 
         {isUploading && (
-          <div className="absolute inset-0 z-10 bg-white/60 dark:bg-slate-950/60 backdrop-blur-[2px] flex items-center justify-center animate-in fade-in duration-500">
+          <div className="absolute inset-0 z-10 bg-card flex items-center justify-center animate-in fade-in duration-500">
             <div className="flex flex-col items-center gap-4 bg-white dark:bg-slate-900 p-8 rounded-3xl shadow-2xl border border-slate-100 dark:border-slate-800">
               <div className="relative">
                 <Loader2 className="w-12 h-12 text-blue-600 animate-spin" />
@@ -467,7 +467,7 @@ export const V5ProBlockEditor: React.FC<V5ProBlockEditorProps> = ({
       </div>
 
       {/* Modern Footer Shortcuts */}
-      <div className="px-8 py-4 bg-slate-50/30 dark:bg-slate-900/30 border-t border-slate-100 dark:border-slate-800 flex flex-wrap justify-between items-center gap-4">
+      <div className="px-8 py-4 bg-muted dark:bg-slate-900/30 border-t border-slate-100 dark:border-slate-800 flex flex-wrap justify-between items-center gap-4">
         <div className="flex flex-wrap items-center gap-4">
           <div className="flex items-center gap-1.5 group">
             <kbd className="px-2 py-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md text-[10px] font-black text-slate-500 shadow-sm group-hover:border-blue-400 transition-colors">
@@ -543,7 +543,7 @@ export const V5ProBlockEditor: React.FC<V5ProBlockEditorProps> = ({
             </div>
           }
         >
-          <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/90 backdrop-blur-sm p-2 sm:p-6">
+          <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/90 p-2 sm:p-6">
             <div className="w-full h-full max-w-[1200px] max-h-[95vh] bg-slate-900 rounded-2xl overflow-hidden shadow-[0_0_50px_-12px_rgba(0,0,0,0.5)] border border-slate-800 relative flex flex-col">
               <LazyFilerobotImageEditor
                 source={URL.createObjectURL(editingImage)}

@@ -842,7 +842,7 @@ export const PatientForm = forwardRef<HTMLFormElement, PatientFormProps>(
 
         {/* Action Buttons */}
         {!hideActions && (
-          <div className="flex items-center justify-end gap-3 pt-4 sticky bottom-0 bg-background/80 backdrop-blur-md pb-4 z-10 border-t border-slate-100 dark:border-slate-800">
+          <div className="flex items-center justify-end gap-3 pt-4 sticky bottom-0 bg-card pb-4 z-10 border-t border-slate-100 dark:border-slate-800">
             <Button
               type="button"
               variant="ghost"

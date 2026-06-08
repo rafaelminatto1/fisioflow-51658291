@@ -28,7 +28,7 @@ export function PredictiveRetentionWidget() {
   }
 
   return (
-    <Card className="rounded-3xl border-border/40 shadow-premium-lg flex flex-col h-full bg-white/50 backdrop-blur-sm">
+    <Card className="rounded-3xl border-border/40 shadow-premium-lg flex flex-col h-full bg-card">
       <CardHeader className="pb-3 border-b border-border/10">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">

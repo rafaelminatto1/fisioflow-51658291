@@ -107,7 +107,7 @@ export const PatientListItem = ({ patient, onClick }: PatientListItemProps) => {
 
   return (
     <Card
-      className="group h-full rounded-[2rem] border border-white/60 bg-white/85 p-5 shadow-[0_24px_60px_-40px_rgba(15,23,42,0.55)] backdrop-blur-xl transition duration-300 hover:-translate-y-1 hover:shadow-[0_32px_80px_-42px_rgba(79,70,229,0.35)] dark:border-slate-800/70 dark:bg-slate-950/75"
+      className="group h-full rounded-[2rem] border border-white/60 bg-card p-5 shadow-[0_24px_60px_-40px_rgba(15,23,42,0.55)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_32px_80px_-42px_rgba(79,70,229,0.35)] dark:border-slate-800/70 dark:bg-slate-950/75"
       onMouseEnter={handleMouseEnter}
       data-testid={`patient-card-${patient.id}`}
       data-patient-id={patient.id}

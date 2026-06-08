@@ -64,7 +64,7 @@ const ProtocolDetailView: React.FC<ProtocolDetailViewProps> = ({ protocol, onClo
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-md overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 overflow-hidden">
       <motion.div
         initial="hidden"
         animate="visible"

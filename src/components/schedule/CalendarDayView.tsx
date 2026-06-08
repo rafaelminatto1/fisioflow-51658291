@@ -184,7 +184,7 @@ const CalendarDayView = memo(
           <div className="flex w-full" style={{ height: slotHeightMobile }}>
             {/* Time column part */}
             <div
-              className="w-16 md:w-24 border-r border-border bg-muted/30 backdrop-blur-sm flex-shrink-0 border-b p-1 md:p-3 text-[11px] md:text-sm font-medium text-muted-foreground flex items-center justify-center md:justify-start"
+              className="w-16 md:w-24 border-r border-border bg-muted/30 flex-shrink-0 border-b p-1 md:p-3 text-[11px] md:text-sm font-medium text-muted-foreground flex items-center justify-center md:justify-start"
               role="listitem"
             >
               {time}
@@ -415,7 +415,7 @@ const CalendarDayView = memo(
         <div className="flex flex-1 overflow-hidden relative">
           <div className="flex-1 flex flex-col min-w-0">
             {/* Sticky Day Header */}
-            <div className="h-16 md:h-20 border-b bg-gradient-to-r from-primary/10 to-primary/5 p-2 md:p-4 backdrop-blur-sm z-30 shadow-sm flex-shrink-0">
+            <div className="h-16 md:h-20 border-b bg-gradient-to-r from-primary/10 to-primary/5 p-2 md:p-4 z-30 shadow-sm flex-shrink-0">
               <div className="font-semibold text-center flex items-center justify-center gap-2 text-sm md:text-base">
                 <Calendar className="h-3.5 md:h-4 w-3.5 md:w-4" />
                 <span className="hidden sm:inline">

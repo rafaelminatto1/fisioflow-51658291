@@ -291,7 +291,7 @@ export function ExercisePlayer({
                     <Button
                       variant="outline"
                       size="icon"
-                      className="h-16 w-16 rounded-full border-2 bg-white/10 backdrop-blur hover:bg-white/20 border-white text-white"
+                      className="h-16 w-16 rounded-full border-2 bg-white/10 hover:bg-white/20 border-white text-white"
                       onClick={togglePlay}
                     >
                       {isPlaying ? (
@@ -502,7 +502,7 @@ export function ExercisePlayer({
                   placeholder="Ex: 'Senti um estalo no 3º set' ou 'Foi mais fácil que ontem'"
                   value={feedback}
                   onValueChange={(val) => setFeedback(val)}
-                  className="h-24 resize-none bg-slate-50/50 border-slate-200 focus:bg-white transition-all rounded-xl"
+                  className="h-24 resize-none bg-muted border-slate-200 focus:bg-white transition-all rounded-xl"
                 />
               </div>
             </div>

@@ -24,7 +24,7 @@ const SelectTrigger = React.forwardRef<
     ref={ref}
     className={cn(
       "flex h-10 w-full items-center justify-between rounded-[14px] border px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1 transition-all duration-300",
-      variant === "glass" && "gradient-glass backdrop-blur-sm border-white/20 bg-white/5",
+      variant === "glass" && "gradient-glass border-white/20 bg-white/5",
       variant === "default" && "border border-input bg-background",
       premium && "hover:border-primary/40 focus-visible:ring-4 focus-visible:ring-offset-2",
       className,
@@ -84,7 +84,7 @@ const SelectContent = React.forwardRef<
   ) => {
     const variantClasses = {
       default: "border bg-popover text-popover-foreground shadow-lg ",
-      glass: "gradient-glass backdrop-blur-xl border border-white/20 p-2 ",
+      glass: "gradient-glass border border-white/20 p-2 ",
       dark: "gradient-dark border-none p-2 ",
     };
 

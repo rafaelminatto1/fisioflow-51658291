@@ -45,13 +45,13 @@ export function BoardCard({ board, onStar, onDelete }: BoardCardProps) {
       <div className="absolute inset-0 flex flex-col justify-between p-5">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0 space-y-3">
-            <Badge className="rounded-full border-0 bg-white/10 px-2.5 py-0.5 text-[9px] font-black uppercase tracking-widest text-white backdrop-blur-md hover:bg-white/20 transition-colors">
+            <Badge className="rounded-full border-0 bg-white/10 px-2.5 py-0.5 text-[9px] font-black uppercase tracking-widest text-white hover:bg-white/20 transition-colors">
               <LayoutGrid className="mr-1.5 h-3 w-3" />
               Board
             </Badge>
             <div className="flex items-start gap-3">
               {board.icon && (
-                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white/10 text-2xl backdrop-blur-md border border-white/5 shadow-inner group-hover:scale-110 transition-transform duration-500">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white/10 text-2xl border border-white/5 shadow-inner group-hover:scale-110 transition-transform duration-500">
                   {board.icon}
                 </div>
               )}
@@ -97,7 +97,7 @@ export function BoardCard({ board, onStar, onDelete }: BoardCardProps) {
               </DropdownMenuTrigger>
               <DropdownMenuContent
                 align="end"
-                className="rounded-2xl border-border/40 bg-white/95 dark:bg-slate-950/95 backdrop-blur-xl p-2 shadow-premium-lg"
+                className="rounded-2xl border-border/40 bg-card p-2 shadow-premium-lg"
                 onClick={(e) => e.stopPropagation()}
               >
                 <DropdownMenuItem
@@ -122,11 +122,11 @@ export function BoardCard({ board, onStar, onDelete }: BoardCardProps) {
 
         <div className="space-y-4">
           <div className="flex items-center gap-2">
-            <div className="rounded-full border border-white/5 bg-white/10 px-3 py-1 text-[9px] font-black uppercase tracking-widest text-white/80 backdrop-blur-md">
+            <div className="rounded-full border border-white/5 bg-white/10 px-3 py-1 text-[9px] font-black uppercase tracking-widest text-white/80">
               {board.task_count ?? 0} tarefa
               {Number(board.task_count ?? 0) !== 1 ? "s" : ""}
             </div>
-            <div className="rounded-full border border-white/5 bg-white/10 px-3 py-1 text-[9px] font-black uppercase tracking-widest text-white/80 backdrop-blur-md">
+            <div className="rounded-full border border-white/5 bg-white/10 px-3 py-1 text-[9px] font-black uppercase tracking-widest text-white/80">
               {formatDistanceToNow(new Date(board.updated_at), {
                 addSuffix: true,
                 locale: ptBR,

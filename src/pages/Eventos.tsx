@@ -210,7 +210,7 @@ export default function Eventos() {
 
         {/* Toolbar & Filters */}
         <div className="flex flex-col gap-4">
-          <div className="flex flex-col lg:flex-row items-center gap-4 bg-white/50 dark:bg-slate-900/50 backdrop-blur-md p-2 rounded-[2.5rem] border border-border/40 shadow-sm">
+          <div className="flex flex-col lg:flex-row items-center gap-4 bg-card p-2 rounded-[2.5rem] border border-border/40 shadow-sm">
             <div className="relative flex-1 w-full lg:w-auto">
               <Search className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
               <Input
@@ -392,7 +392,7 @@ export default function Eventos() {
                         </DropdownMenuTrigger>
                         <DropdownMenuContent
                           align="end"
-                          className="w-56 p-2 rounded-2xl border-border/40 bg-white/95 dark:bg-slate-950/95 backdrop-blur-xl"
+                          className="w-56 p-2 rounded-2xl border-border/40 bg-card"
                         >
                           <DropdownMenuItem
                             onClick={() => navigate(`/eventos/${evento.id}`)}

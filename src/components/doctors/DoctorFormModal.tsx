@@ -158,7 +158,7 @@ export function DoctorFormModal({
       <DialogContent className="w-[96vw] sm:!max-w-5xl max-h-[92vh] overflow-hidden p-0 gap-0 border-none shadow-2xl">
         <DialogHeader className="p-6 pb-4 bg-gradient-to-br from-blue-600 to-blue-700 text-white dark:from-blue-900 dark:to-slate-900">
           <div className="flex items-center gap-3">
-            <div className="p-2.5 bg-white/20 rounded-xl backdrop-blur-sm ring-1 ring-white/30">
+            <div className="p-2.5 bg-white/20 rounded-xl ring-1 ring-white/30">
               <Stethoscope className="h-6 w-6 text-white" />
             </div>
             <div>

@@ -92,7 +92,7 @@ export const CustomModal: React.FC<CustomModalProps> = ({
     <div
       ref={overlayRef}
       className={cn(
-        "fixed inset-0 z-40 bg-black/50 backdrop-blur-sm",
+        "fixed inset-0 z-40 bg-black/50",
         "animate-in fade-in duration-200",
         className,
       )}

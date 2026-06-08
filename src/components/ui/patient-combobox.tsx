@@ -223,7 +223,7 @@ export function PatientCombobox({
           "px-3 py-3",
           !inline &&
             "border-b border-border/60 bg-[radial-gradient(circle_at_top_left,rgba(59,130,246,0.07),transparent_26%),linear-gradient(180deg,rgba(248,250,252,0.92),rgba(248,250,252,0.78))] dark:bg-[radial-gradient(circle_at_top_left,rgba(59,130,246,0.12),transparent_28%),linear-gradient(180deg,rgba(2,6,23,0.96),rgba(2,6,23,0.88))]",
-          inline && "bg-slate-50/30",
+          inline && "bg-muted",
         )}
       >
         {!inline && (
@@ -237,7 +237,7 @@ export function PatientCombobox({
               </p>
             </div>
             {filteredPatients.length > 0 && (
-              <span className="shrink-0 rounded-full border border-white/70 bg-white/80 px-2.5 py-1 text-[11px] font-semibold text-slate-600 shadow-sm backdrop-blur dark:border-white/10 dark:bg-white/5 dark:text-slate-200">
+              <span className="shrink-0 rounded-full border border-white/70 bg-card px-2.5 py-1 text-[11px] font-semibold text-slate-600 shadow-sm dark:border-white/10 dark:bg-white/5 dark:text-slate-200">
                 {filteredPatients.length}{" "}
                 {filteredPatients.length === 1 ? "resultado" : "resultados"}
               </span>
@@ -255,7 +255,7 @@ export function PatientCombobox({
           wrapperClassName={cn(
             "mx-0 mt-0 rounded-xl border border-slate-200 bg-white px-3 shadow-sm transition-all focus-within:border-blue-500/50 focus-within:ring-4 focus-within:ring-blue-500/5",
             !inline &&
-              "border-white/80 bg-white/85 shadow-[inset_0_1px_0_rgba(255,255,255,0.7),0_12px_24px_-20px_rgba(15,23,42,0.45)] backdrop-blur dark:border-white/10 dark:bg-white/5",
+              "border-white/80 bg-card shadow-[inset_0_1px_0_rgba(255,255,255,0.7),0_12px_24px_-20px_rgba(15,23,42,0.45)] dark:border-white/10 dark:bg-white/5",
           )}
           iconClassName="text-slate-400"
           className="h-11 py-0 text-sm"
@@ -560,7 +560,7 @@ export function PatientCombobox({
 
           <div
             className={cn(
-              "ml-3 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-border/70 bg-background/80 shadow-sm transition-all",
+              "ml-3 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-border/70 bg-card shadow-sm transition-all",
               open && "border-primary/20 bg-primary/5 text-primary",
             )}
           >
@@ -574,7 +574,7 @@ export function PatientCombobox({
         </Button>
       </PopoverTrigger>
       <PopoverContent
-        className="z-[100] w-[var(--radix-popover-trigger-width)] max-w-[calc(100vw-2rem)] overflow-hidden rounded-[24px] border border-border/70 bg-background/95 p-0 shadow-[0_24px_80px_-28px_rgba(15,23,42,0.45)] backdrop-blur-xl"
+        className="z-[100] w-[var(--radix-popover-trigger-width)] max-w-[calc(100vw-2rem)] overflow-hidden rounded-[24px] border border-border/70 bg-card p-0 shadow-[0_24px_80px_-28px_rgba(15,23,42,0.45)]"
         align="start"
         sideOffset={8}
         onOpenAutoFocus={(e) => {

@@ -62,7 +62,7 @@ export const ClinicalInsightCard: React.FC<ClinicalInsightCardProps> = ({
       initial={{ opacity: 0, y: 20, scale: 0.95 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.2 } }}
-      className={`relative overflow-hidden rounded-xl border ${styles.border} ${styles.bg} p-4 shadow-lg backdrop-blur-md`}
+      className={`relative overflow-hidden rounded-xl border ${styles.border} ${styles.bg} p-4 shadow-lg`}
     >
       <div className="flex items-start justify-between gap-3">
         <div className="flex flex-1 gap-3">

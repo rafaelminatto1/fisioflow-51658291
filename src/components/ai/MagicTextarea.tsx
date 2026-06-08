@@ -149,7 +149,7 @@ export function MagicTextarea({
         {...props}
       />
 
-      <div className="absolute bottom-2 right-2 flex gap-1.5 p-1 rounded-full bg-white/60 backdrop-blur-md border border-slate-200/50 shadow-sm transition-all duration-300">
+      <div className="absolute bottom-2 right-2 flex gap-1.5 p-1 rounded-full bg-card border border-slate-200/50 shadow-sm transition-all duration-300">
         <TooltipProvider>
           {/* Botão de Microfone */}
           {showMic && (

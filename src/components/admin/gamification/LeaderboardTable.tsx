@@ -252,7 +252,7 @@ export const LeaderboardTable: React.FC = () => {
       )}
 
       {/* Filters Header */}
-      <Card className="border-none shadow-xl shadow-primary/5 bg-background/60 backdrop-blur-xl ring-1 ring-border/50 overflow-hidden">
+      <Card className="border-none shadow-xl shadow-primary/5 bg-card ring-1 ring-border/50 overflow-hidden">
         <CardHeader>
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>

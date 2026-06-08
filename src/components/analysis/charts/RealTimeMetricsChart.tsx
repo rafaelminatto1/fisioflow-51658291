@@ -46,7 +46,7 @@ export const RealTimeMetricsChart: React.FC<RealTimeMetricsChartProps> = ({
   const canRenderChart = chartSize.width > 24 && chartSize.height > 24 && chartData.length > 0;
 
   return (
-    <Card className="border-none bg-slate-950/40 backdrop-blur-xl shadow-2xl overflow-hidden rounded-[2rem]">
+    <Card className="border-none bg-slate-950/40 shadow-2xl overflow-hidden rounded-[2rem]">
       <CardContent className="p-4 h-[200px]">
         <h4 className="text-[10px] font-black uppercase tracking-widest text-indigo-400 mb-4 px-2">
           Angle Variation Trend

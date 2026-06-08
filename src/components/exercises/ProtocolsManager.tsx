@@ -135,7 +135,7 @@ export const ProtocolsManager = memo(function ProtocolsManager() {
       </div>
 
       {/* Horizontal Filter Bar */}
-      <div className="sticky top-0 z-20 flex flex-col md:flex-row items-center gap-4 bg-background/80 backdrop-blur-md py-4 border-b border-border/50">
+      <div className="sticky top-0 z-20 flex flex-col md:flex-row items-center gap-4 bg-card py-4 border-b border-border/50">
         <div className="relative w-full md:w-80">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/50" />
           <Input

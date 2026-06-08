@@ -41,7 +41,7 @@ export const BulkActionsBar: React.FC<BulkActionsBarProps> = ({
           animate={{ y: 0, x: "-50%", opacity: 1 }}
           exit={{ y: 100, x: "-50%", opacity: 0 }}
           transition={{ type: "spring", damping: 20, stiffness: 300 }}
-          className="fixed bottom-10 left-1/2 bg-white/80 dark:bg-slate-900/80 backdrop-blur-2xl border border-blue-100/50 dark:border-slate-800/50 shadow-premium-xl rounded-[2rem] px-8 py-4 flex items-center gap-6 z-[100]"
+          className="fixed bottom-10 left-1/2 bg-card border border-blue-100/50 dark:border-slate-800/50 shadow-premium-xl rounded-[2rem] px-8 py-4 flex items-center gap-6 z-[100]"
         >
           <div className="flex items-center gap-3">
             <div className="bg-blue-600 text-white text-xs font-black rounded-xl w-8 h-8 flex items-center justify-center shadow-lg shadow-blue-500/30">
@@ -83,7 +83,7 @@ export const BulkActionsBar: React.FC<BulkActionsBarProps> = ({
               </DropdownMenuTrigger>
               <DropdownMenuContent
                 align="end"
-                className="w-56 rounded-2xl p-2 shadow-premium-lg border-blue-100/50 bg-white/95 backdrop-blur-xl"
+                className="w-56 rounded-2xl p-2 shadow-premium-lg border-blue-100/50 bg-card"
               >
                 <DropdownMenuItem
                   onClick={() => onUpdateStatusSelected("atendido")}

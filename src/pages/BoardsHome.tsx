@@ -148,21 +148,21 @@ export default function BoardsHome() {
               </div>
 
               <div className="grid gap-3 sm:grid-cols-4">
-                <div className="rounded-2xl border border-white/12 bg-white/10 p-4 backdrop-blur-sm">
+                <div className="rounded-2xl border border-white/12 bg-white/10 p-4">
                   <div className="text-xs uppercase tracking-[0.16em] text-white/62">Boards</div>
                   <div className="mt-2 text-3xl font-semibold">{allBoards.length}</div>
                 </div>
-                <div className="rounded-2xl border border-white/12 bg-white/10 p-4 backdrop-blur-sm">
+                <div className="rounded-2xl border border-white/12 bg-white/10 p-4">
                   <div className="text-xs uppercase tracking-[0.16em] text-white/62">Favoritos</div>
                   <div className="mt-2 text-3xl font-semibold">{starredBoards.length}</div>
                 </div>
-                <div className="rounded-2xl border border-white/12 bg-white/10 p-4 backdrop-blur-sm">
+                <div className="rounded-2xl border border-white/12 bg-white/10 p-4">
                   <div className="text-xs uppercase tracking-[0.16em] text-white/62">Tarefas</div>
                   <div className="mt-2 text-3xl font-semibold">
                     {allBoards.reduce((total, board) => total + Number(board.task_count ?? 0), 0)}
                   </div>
                 </div>
-                <div className="rounded-2xl border border-white/12 bg-white/10 p-4 backdrop-blur-sm">
+                <div className="rounded-2xl border border-white/12 bg-white/10 p-4">
                   <div className="flex items-center gap-1 text-xs uppercase tracking-[0.16em] text-white/62">
                     <TrendingUp className="h-3.5 w-3.5" />
                     Ritmo
@@ -172,7 +172,7 @@ export default function BoardsHome() {
               </div>
             </div>
 
-            <div className="space-y-4 rounded-[28px] border border-white/12 bg-white/10 p-5 backdrop-blur-sm">
+            <div className="space-y-4 rounded-[28px] border border-white/12 bg-white/10 p-5">
               <div className="flex items-center justify-between">
                 <div>
                   <div className="text-lg font-semibold">Acesse rápido</div>
@@ -227,7 +227,7 @@ export default function BoardsHome() {
 
               <Button
                 onClick={() => setCreateOpen(true)}
-                className="h-11 w-full rounded-2xl bg-white text-slate-950 hover:bg-white/90"
+                className="h-11 w-full rounded-2xl bg-white text-slate-950 hover:bg-card"
               >
                 <Plus className="mr-2 h-4 w-4" />
                 Novo board

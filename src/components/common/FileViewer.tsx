@@ -226,7 +226,7 @@ export const FileViewer: React.FC<FileViewerProps> = ({ files, bucketName }) => 
                       variant="ghost"
                       size="icon"
                       className={cn(
-                        "absolute left-4 top-1/2 -translate-y-1/2 h-14 w-14 rounded-full bg-black/20 text-white backdrop-blur-sm transition-all hover:bg-black/40 border border-white/10",
+                        "absolute left-4 top-1/2 -translate-y-1/2 h-14 w-14 rounded-full bg-black/20 text-white transition-all hover:bg-black/40 border border-white/10",
                         selectedIndex === 0 && "opacity-0 pointer-events-none",
                       )}
                       onClick={handlePrev}
@@ -238,7 +238,7 @@ export const FileViewer: React.FC<FileViewerProps> = ({ files, bucketName }) => 
                       variant="ghost"
                       size="icon"
                       className={cn(
-                        "absolute right-4 top-1/2 -translate-y-1/2 h-14 w-14 rounded-full bg-black/20 text-white backdrop-blur-sm transition-all hover:bg-black/40 border border-white/10",
+                        "absolute right-4 top-1/2 -translate-y-1/2 h-14 w-14 rounded-full bg-black/20 text-white transition-all hover:bg-black/40 border border-white/10",
                         selectedIndex === files.length - 1 && "opacity-0 pointer-events-none",
                       )}
                       onClick={handleNext}

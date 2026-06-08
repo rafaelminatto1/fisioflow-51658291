@@ -545,7 +545,7 @@ export const KinoveaStudio: React.FC<KinoveaStudioProps> = ({
             )}
 
             {/* Control HUD */}
-            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-2 bg-black/80 backdrop-blur-2xl p-2 rounded-2xl border border-white/10 z-30">
+            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-2 bg-black/80 p-2 rounded-2xl border border-white/10 z-30">
               {/* MoveNet AI toggle */}
               <Button
                 variant={aiEnabled ? "default" : "ghost"}

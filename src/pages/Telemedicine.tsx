@@ -247,7 +247,7 @@ const Telemedicine = () => {
           </div>
 
           {/* Rooms List */}
-          <Card className="rounded-[32px] border-brand-blue/10 bg-white/50 backdrop-blur-xl shadow-premium dark:bg-slate-950/50">
+          <Card className="rounded-[32px] border-brand-blue/10 bg-card shadow-premium dark:bg-slate-950/50">
             <CardHeader className="p-8">
               <CardTitle className="text-xl font-black tracking-tight">
                 Salas de Teleconsulta

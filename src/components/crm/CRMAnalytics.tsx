@@ -132,7 +132,7 @@ export function CRMAnalytics() {
       </div>
 
       {/* Tendência de Conversão */}
-      <Card className="border-none shadow-premium-sm ring-1 ring-border/50 bg-background/50 backdrop-blur-sm overflow-hidden">
+      <Card className="border-none shadow-premium-sm ring-1 ring-border/50 bg-card overflow-hidden">
         <CardHeader className="border-b border-border/40 bg-muted/20">
           <CardTitle className="text-lg font-bold flex items-center gap-2">
             <LineChartIcon className="h-5 w-5 text-primary" />

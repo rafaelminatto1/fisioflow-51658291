@@ -97,7 +97,7 @@ export function CustomizableDashboard() {
   };
 
   return (
-    <Card className="overflow-hidden rounded-[2rem] border-border/60 bg-background/75 shadow-sm backdrop-blur-xl">
+    <Card className="overflow-hidden rounded-[2rem] border-border/60 bg-card shadow-sm">
       <CardHeader className="border-b border-border/60 bg-[radial-gradient(circle_at_top_left,rgba(37,99,235,0.08),transparent_30%),linear-gradient(180deg,rgba(255,255,255,0.92),rgba(248,250,252,0.72))] px-5 py-5 dark:bg-[radial-gradient(circle_at_top_left,rgba(37,99,235,0.12),transparent_30%),linear-gradient(180deg,rgba(15,23,42,0.86),rgba(2,6,23,0.7))]">
         <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <div>

@@ -158,7 +158,7 @@ export const GoniometryAnalyzer = () => {
 
           {isActive && (
             <div className="absolute top-4 left-4 right-4 flex justify-between items-start pointer-events-none">
-              <div className="bg-black/60 backdrop-blur-md p-3 rounded-lg border border-white/10 pointer-events-auto">
+              <div className="bg-black/60 p-3 rounded-lg border border-white/10 pointer-events-auto">
                 <p className="text-[10px] text-blue-300 uppercase font-bold mb-1">Articulação</p>
                 <Select value={jointType} onValueChange={(v: unknown) => setJointType(v)}>
                   <SelectTrigger className="h-8 w-40 bg-white/10 border-none text-white text-xs">
@@ -174,13 +174,13 @@ export const GoniometryAnalyzer = () => {
               </div>
 
               <div className="flex gap-2">
-                <div className="bg-black/60 backdrop-blur-md p-3 rounded-lg border border-white/10 text-center min-w-[80px]">
+                <div className="bg-black/60 p-3 rounded-lg border border-white/10 text-center min-w-[80px]">
                   <p className="text-[10px] text-blue-300 uppercase font-bold">Atual</p>
                   <p className="text-2xl font-bold text-white">
                     {currentAngle !== null ? `${currentAngle}°` : "--"}
                   </p>
                 </div>
-                <div className="bg-blue-600/80 backdrop-blur-md p-3 rounded-lg border border-white/10 text-center min-w-[80px]">
+                <div className="bg-blue-600/80 p-3 rounded-lg border border-white/10 text-center min-w-[80px]">
                   <p className="text-[10px] text-blue-100 uppercase font-bold">Máximo</p>
                   <p className="text-2xl font-bold text-white">{maxAngle}°</p>
                 </div>

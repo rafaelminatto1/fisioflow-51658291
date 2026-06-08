@@ -179,26 +179,21 @@
 }
 
 .card-premium-hover:hover {
-  transform: translateY(-6px) scale(1.03);
-  box-shadow:
-    0 32px 64px -10px rgba(0, 0, 0, 0.15),
-    0 16px 32px -8px rgba(0, 0, 0, 0.25),
-    0 8px 16px -6px rgba(0, 0, 0, 0.35);
-  border-color: hsl(var(--primary) / 0.4);
-  z-index: 10;
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md, 0 4px 6px -1px rgb(0 0 0 / 0.08), 0 2px 4px -2px rgb(0 0 0 / 0.06));
+  border-color: hsl(var(--border));
 }
 
 .card-premium-hover:active {
-  transform: translateY(-3px) scale(1.01);
+  transform: none;
 }
 
 .button-premium-hover {
-  transition: all 0.3s var(--ease-out-back);
+  transition: background-color 0.2s ease-out;
 }
 
 .button-premium-hover:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 12px 20px -8px rgba(0, 0, 0, 0.15);
+  transform: none;
 }
 
 .link-premium-hover {
@@ -229,24 +224,18 @@
 
 .magnetic-button {
   position: relative;
-  transition: transform 0.3s var(--ease-elastic-out);
-  transform-origin: center;
 }
 
 .magnetic-button:hover {
-  transform: scale(1.05);
+  transform: none;
 }
 
 .glow-on-hover {
-  transition: box-shadow 0.3s var(--ease-out-back);
+  transition: background-color 0.2s ease-out;
 }
 
 .glow-on-hover:hover {
-  box-shadow:
-    0 0 8px hsl(var(--primary) / 0.4),
-    0 4px 24px hsl(var(--primary) / 0.6),
-    0 2px 48px hsl(var(--primary) / 0.8);
-  z-index: 5;
+  box-shadow: none;
 }
 
 .shimmer-card {
@@ -254,23 +243,15 @@
   overflow: hidden;
 }
 
+/* shimmer desativado — sem brilho deslizante (superfícies sólidas) */
 .shimmer-card::after {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0) 50%, transparent 100%);
-  animation: shimmer 1.5s infinite;
+  content: none;
 }
 
 @keyframes shimmer {
-  0% {
-    transform: translateX(-100%);
-  }
+  0%,
   100% {
-    transform: translateX(100%);
+    transform: none;
   }
 }
 

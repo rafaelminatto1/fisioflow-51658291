@@ -109,9 +109,6 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
         <Sidebar />
 
         <div className="flex-1 flex flex-col min-h-screen min-w-0 overflow-visible relative">
-          {/* Decorative background for the whole content area */}
-          <div className="absolute inset-0 bg-gradient-to-br from-background via-primary/5 to-accent/5 pointer-events-none animate-bg-gradient bg-[length:400%_400%]" />
-
           {/* Header Mobile */}
           <MobileHeader />
 
@@ -221,7 +218,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
                       </DropdownMenuTrigger>
                       <DropdownMenuContent
                         align="end"
-                        className="w-64 p-3 bg-white/95 dark:bg-slate-950/95 backdrop-blur-2xl border border-border/40 shadow-premium-lg rounded-3xl animate-scale-in card-premium-hover"
+                        className="w-64 p-3 bg-card border border-border/40 shadow-premium-lg rounded-3xl animate-scale-in card-premium-hover"
                       >
                         <DropdownMenuLabel className="px-3 py-2 text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em]">
                           Sessão Ativa

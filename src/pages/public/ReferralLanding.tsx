@@ -37,7 +37,7 @@ export default function ReferralLanding() {
   return (
     <div className="min-h-screen bg-[#F8FAFC]">
       {/* Header Simples */}
-      <header className="h-20 flex items-center justify-center border-b bg-white/50 backdrop-blur-md sticky top-0 z-50">
+      <header className="h-20 flex items-center justify-center border-b bg-card sticky top-0 z-50">
         <div className="flex items-center gap-2">
           <Activity className="h-6 w-6 text-primary" />
           <span className="text-xl font-black tracking-tighter text-slate-900">

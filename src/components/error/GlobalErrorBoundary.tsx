@@ -136,7 +136,7 @@ export class GlobalErrorBoundary extends Component<Props, State> {
 
           <div className="w-full max-w-3xl relative z-10">
             <div className="p-1 rounded-[3rem] bg-gradient-to-b from-white/10 to-transparent border border-white/10 shadow-2xl overflow-hidden">
-              <div className="bg-slate-900/40 backdrop-blur-3xl rounded-[2.85rem] p-8 md:p-16 border border-white/5 flex flex-col items-center text-center">
+              <div className="bg-slate-900/40 rounded-[2.85rem] p-8 md:p-16 border border-white/5 flex flex-col items-center text-center">
                 <div className="mb-10 relative">
                   <div className="absolute inset-0 bg-destructive/30 rounded-full blur-2xl animate-pulse" />
                   <div className="relative h-24 w-24 rounded-[2rem] bg-gradient-to-br from-destructive/40 to-destructive/10 flex items-center justify-center border border-destructive/30 shadow-inner rotate-3">

@@ -44,9 +44,9 @@ export default function AutomationPage() {
 
   return (
     <MainLayout>
-      <div className="min-h-screen bg-background/50">
+      <div className="min-h-screen bg-card">
         {/* Header */}
-        <div className="border-b bg-background/95 backdrop-blur">
+        <div className="border-b bg-card">
           <div className="container mx-auto px-6 py-4">
             <div className="flex items-center justify-between">
               <div>

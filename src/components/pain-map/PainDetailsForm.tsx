@@ -94,7 +94,7 @@ export function PainDetailsForm({
         >
           <SelectTrigger
             id="intensity"
-            className="h-11 border-white/10 bg-black/20 backdrop-blur-sm"
+            className="h-11 border-white/10 bg-black/20"
           >
             <SelectValue />
           </SelectTrigger>
@@ -140,7 +140,7 @@ export function PainDetailsForm({
         >
           <SelectTrigger
             id="painType"
-            className="h-11 border-white/10 bg-black/20 backdrop-blur-sm"
+            className="h-11 border-white/10 bg-black/20"
           >
             <SelectValue />
           </SelectTrigger>
@@ -171,7 +171,7 @@ export function PainDetailsForm({
           placeholder="Descreva a dor..."
           rows={3}
           disabled={readOnly}
-          className="resize-none border-white/10 bg-black/20 backdrop-blur-sm focus:border-primary/50"
+          className="resize-none border-white/10 bg-black/20 focus:border-primary/50"
         />
       </div>
     </div>

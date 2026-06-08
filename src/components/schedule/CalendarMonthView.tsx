@@ -71,7 +71,7 @@ const CalendarMonthView = memo(
         aria-label="Visualização mensal do calendário"
       >
         <div
-          className="grid grid-cols-7 border-b bg-gradient-to-r from-muted/50 to-muted/30 sticky top-0 z-10 backdrop-blur-sm shadow-sm"
+          className="grid grid-cols-7 border-b bg-gradient-to-r from-muted/50 to-muted/30 sticky top-0 z-10 shadow-sm"
           role="row"
         >
           {["Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado", "Domingo"].map((day) => (

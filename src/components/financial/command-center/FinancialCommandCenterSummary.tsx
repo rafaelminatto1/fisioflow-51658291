@@ -70,7 +70,7 @@ function StatCard({
   tone?: "default" | "success" | "warning" | "danger";
 }) {
   return (
-    <Card className="overflow-hidden rounded-3xl border-white/70 bg-white/90 shadow-[0_20px_70px_-45px_rgba(15,23,42,0.45)] backdrop-blur-xl dark:border-slate-800/80 dark:bg-slate-950/70">
+    <Card className="overflow-hidden rounded-3xl border-white/70 bg-card shadow-[0_20px_70px_-45px_rgba(15,23,42,0.45)] dark:border-slate-800/80 dark:bg-slate-950/70">
       <CardContent className="p-5">
         <div className="flex items-start justify-between gap-4">
           <div className="space-y-2">
@@ -113,7 +113,7 @@ function QuickAction({
   return (
     <Link
       to={to}
-      className="group flex min-w-[200px] items-center justify-between gap-4 rounded-2xl border border-white/70 bg-white/80 px-4 py-3 shadow-[0_18px_40px_-35px_rgba(15,23,42,0.45)] transition-all hover:-translate-y-0.5 hover:border-primary/20 hover:bg-white dark:border-slate-800/70 dark:bg-slate-950/70 dark:hover:border-primary/40"
+      className="group flex min-w-[200px] items-center justify-between gap-4 rounded-2xl border border-white/70 bg-card px-4 py-3 shadow-[0_18px_40px_-35px_rgba(15,23,42,0.45)] transition-all hover:-translate-y-0.5 hover:border-primary/20 hover:bg-white dark:border-slate-800/70 dark:bg-slate-950/70 dark:hover:border-primary/40"
     >
       <div className="flex items-center gap-3">
         <div className="rounded-2xl bg-primary/10 p-2 text-primary">
@@ -142,7 +142,7 @@ export function FinancialCommandCenterSummary({
           <CardContent className="flex h-full flex-col justify-between gap-6 p-5 md:p-6">
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div className="space-y-3">
-                <Badge className="rounded-full bg-white/80 px-3 py-1 text-[10px] font-black uppercase tracking-[0.2em] text-slate-700 shadow-sm dark:bg-slate-900/70 dark:text-slate-200">
+                <Badge className="rounded-full bg-card px-3 py-1 text-[10px] font-black uppercase tracking-[0.2em] text-slate-700 shadow-sm dark:bg-slate-900/70 dark:text-slate-200">
                   Command Center Financeiro
                 </Badge>
                 <div className="space-y-2">
@@ -166,7 +166,7 @@ export function FinancialCommandCenterSummary({
                 <Button
                   asChild
                   variant="outline"
-                  className="h-10 rounded-2xl border-primary/20 bg-white/70 px-5 font-bold dark:bg-slate-950/40"
+                  className="h-10 rounded-2xl border-primary/20 bg-card px-5 font-bold dark:bg-slate-950/40"
                 >
                   <Link to={`${APP_ROUTES.FINANCIAL}?tab=collections&collections=receivables`}>
                     Ir para cobrança
@@ -176,7 +176,7 @@ export function FinancialCommandCenterSummary({
             </div>
 
             <div className="grid gap-3 md:grid-cols-3">
-              <div className="rounded-3xl border border-white/70 bg-white/70 p-4 dark:border-slate-800/70 dark:bg-slate-950/40">
+              <div className="rounded-3xl border border-white/70 bg-card p-4 dark:border-slate-800/70 dark:bg-slate-950/40">
                 <p className="text-[10px] font-black uppercase tracking-[0.22em] text-slate-400">
                   Saldo do período
                 </p>
@@ -205,7 +205,7 @@ export function FinancialCommandCenterSummary({
                 </div>
               </div>
 
-              <div className="rounded-3xl border border-white/70 bg-white/70 p-4 dark:border-slate-800/70 dark:bg-slate-950/40">
+              <div className="rounded-3xl border border-white/70 bg-card p-4 dark:border-slate-800/70 dark:bg-slate-950/40">
                 <p className="text-[10px] font-black uppercase tracking-[0.22em] text-slate-400">
                   Receita ajustada 30d
                 </p>
@@ -218,7 +218,7 @@ export function FinancialCommandCenterSummary({
                 </p>
               </div>
 
-              <div className="rounded-3xl border border-white/70 bg-white/70 p-4 dark:border-slate-800/70 dark:bg-slate-950/40">
+              <div className="rounded-3xl border border-white/70 bg-card p-4 dark:border-slate-800/70 dark:bg-slate-950/40">
                 <p className="text-[10px] font-black uppercase tracking-[0.22em] text-slate-400">
                   Sessões previstas 30d
                 </p>
@@ -234,7 +234,7 @@ export function FinancialCommandCenterSummary({
           </CardContent>
         </Card>
 
-        <Card className="rounded-[28px] border-white/70 bg-white/90 shadow-[0_24px_70px_-52px_rgba(15,23,42,0.45)] dark:border-slate-800/80 dark:bg-slate-950/70">
+        <Card className="rounded-[28px] border-white/70 bg-card shadow-[0_24px_70px_-52px_rgba(15,23,42,0.45)] dark:border-slate-800/80 dark:bg-slate-950/70">
           <CardContent className="space-y-4 p-5 md:p-6">
             <div className="flex items-center gap-3">
               <div className="rounded-2xl bg-emerald-500/10 p-2 text-emerald-600">
@@ -327,7 +327,7 @@ export function FinancialCommandCenterSummary({
 
       <div className="grid gap-4 xl:grid-cols-[1.6fr_0.95fr]">
         <div className="grid gap-4">
-          <Card className="rounded-[28px] border-white/70 bg-white/90 shadow-[0_24px_70px_-52px_rgba(15,23,42,0.45)] dark:border-slate-800/80 dark:bg-slate-950/70">
+          <Card className="rounded-[28px] border-white/70 bg-card shadow-[0_24px_70px_-52px_rgba(15,23,42,0.45)] dark:border-slate-800/80 dark:bg-slate-950/70">
             <CardHeader className="flex flex-row items-start justify-between gap-3 pb-2">
               <div>
                 <CardTitle className="text-lg font-black tracking-tight text-slate-950 dark:text-white">
@@ -469,7 +469,7 @@ export function FinancialCommandCenterSummary({
             </CardContent>
           </Card>
 
-          <Card className="rounded-[28px] border-white/70 bg-white/90 shadow-[0_24px_70px_-52px_rgba(15,23,42,0.45)] dark:border-slate-800/80 dark:bg-slate-950/70">
+          <Card className="rounded-[28px] border-white/70 bg-card shadow-[0_24px_70px_-52px_rgba(15,23,42,0.45)] dark:border-slate-800/80 dark:bg-slate-950/70">
             <CardHeader className="flex flex-row items-center justify-between gap-3 pb-2">
               <div>
                 <CardTitle className="text-base font-black text-slate-950 dark:text-white">
@@ -495,7 +495,7 @@ export function FinancialCommandCenterSummary({
                 data.recentTransactions.slice(0, 5).map((transaction) => (
                   <div
                     key={transaction.id}
-                    className="flex items-center justify-between gap-3 rounded-2xl border border-slate-100 bg-slate-50/80 p-4 dark:border-slate-800 dark:bg-slate-900/60"
+                    className="flex items-center justify-between gap-3 rounded-2xl border border-slate-100 bg-muted p-4 dark:border-slate-800 dark:bg-slate-900/60"
                   >
                     <div>
                       <p className="text-sm font-bold text-slate-950 dark:text-white">
@@ -522,7 +522,7 @@ export function FinancialCommandCenterSummary({
         </div>
 
         <div className="grid gap-4">
-          <Card className="rounded-[28px] border-white/70 bg-white/90 shadow-[0_24px_70px_-52px_rgba(15,23,42,0.45)] dark:border-slate-800/80 dark:bg-slate-950/70">
+          <Card className="rounded-[28px] border-white/70 bg-card shadow-[0_24px_70px_-52px_rgba(15,23,42,0.45)] dark:border-slate-800/80 dark:bg-slate-950/70">
             <CardHeader className="pb-2">
               <CardTitle className="flex items-center gap-2 text-base font-black text-slate-950 dark:text-white">
                 <AlertTriangle className="h-4 w-4 text-amber-500" />
@@ -571,7 +571,7 @@ export function FinancialCommandCenterSummary({
             </CardContent>
           </Card>
 
-          <Card className="rounded-[28px] border-white/70 bg-white/90 shadow-[0_24px_70px_-52px_rgba(15,23,42,0.45)] dark:border-slate-800/80 dark:bg-slate-950/70">
+          <Card className="rounded-[28px] border-white/70 bg-card shadow-[0_24px_70px_-52px_rgba(15,23,42,0.45)] dark:border-slate-800/80 dark:bg-slate-950/70">
             <CardHeader className="pb-2">
               <CardTitle className="flex items-center gap-2 text-base font-black text-slate-950 dark:text-white">
                 <Wallet className="h-4 w-4 text-primary" />
@@ -611,7 +611,7 @@ export function FinancialCommandCenterSummary({
                       <Link
                         key={account.id}
                         to={patientRoutes.profile(account.patientId)}
-                        className="block rounded-2xl border border-slate-100 bg-slate-50/80 p-4 transition-all hover:-translate-y-0.5 dark:border-slate-800 dark:bg-slate-900/60"
+                        className="block rounded-2xl border border-slate-100 bg-muted p-4 transition-all hover:-translate-y-0.5 dark:border-slate-800 dark:bg-slate-900/60"
                       >
                         {accountContent}
                       </Link>
@@ -621,7 +621,7 @@ export function FinancialCommandCenterSummary({
                   return (
                     <div
                       key={account.id}
-                      className="rounded-2xl border border-slate-100 bg-slate-50/80 p-4 dark:border-slate-800 dark:bg-slate-900/60"
+                      className="rounded-2xl border border-slate-100 bg-muted p-4 dark:border-slate-800 dark:bg-slate-900/60"
                     >
                       {accountContent}
                     </div>
@@ -639,7 +639,7 @@ export function FinancialCommandCenterSummary({
       </div>
 
       <div className="grid gap-4 xl:grid-cols-4">
-        <Card className="rounded-[28px] border-white/70 bg-white/90 shadow-[0_24px_70px_-52px_rgba(15,23,42,0.45)] dark:border-slate-800/80 dark:bg-slate-950/70">
+        <Card className="rounded-[28px] border-white/70 bg-card shadow-[0_24px_70px_-52px_rgba(15,23,42,0.45)] dark:border-slate-800/80 dark:bg-slate-950/70">
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center gap-2 text-base font-black text-slate-950 dark:text-white">
               <HeartPulse className="h-4 w-4 text-rose-500" />
@@ -656,7 +656,7 @@ export function FinancialCommandCenterSummary({
                 <Link
                   key={patient.id}
                   to={patientRoutes.profile(patient.id)}
-                  className="block rounded-2xl border border-slate-100 bg-slate-50/80 p-4 transition-all hover:-translate-y-0.5 dark:border-slate-800 dark:bg-slate-900/60"
+                  className="block rounded-2xl border border-slate-100 bg-muted p-4 transition-all hover:-translate-y-0.5 dark:border-slate-800 dark:bg-slate-900/60"
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div>
@@ -684,7 +684,7 @@ export function FinancialCommandCenterSummary({
           </CardContent>
         </Card>
 
-        <Card className="rounded-[28px] border-white/70 bg-white/90 shadow-[0_24px_70px_-52px_rgba(15,23,42,0.45)] dark:border-slate-800/80 dark:bg-slate-950/70">
+        <Card className="rounded-[28px] border-white/70 bg-card shadow-[0_24px_70px_-52px_rgba(15,23,42,0.45)] dark:border-slate-800/80 dark:bg-slate-950/70">
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center gap-2 text-base font-black text-slate-950 dark:text-white">
               <ClipboardList className="h-4 w-4 text-primary" />
@@ -719,7 +719,7 @@ export function FinancialCommandCenterSummary({
               </div>
             </div>
 
-            <div className="rounded-2xl border border-slate-100 bg-slate-50/80 p-4 dark:border-slate-800 dark:bg-slate-900/60">
+            <div className="rounded-2xl border border-slate-100 bg-muted p-4 dark:border-slate-800 dark:bg-slate-900/60">
               <div className="flex items-center justify-between gap-3">
                 <div>
                   <p className="text-sm font-bold text-slate-950 dark:text-white">
@@ -736,7 +736,7 @@ export function FinancialCommandCenterSummary({
               </div>
             </div>
 
-            <div className="rounded-2xl border border-slate-100 bg-slate-50/80 p-4 dark:border-slate-800 dark:bg-slate-900/60">
+            <div className="rounded-2xl border border-slate-100 bg-muted p-4 dark:border-slate-800 dark:bg-slate-900/60">
               <div className="flex items-center justify-between gap-3">
                 <div>
                   <p className="text-sm font-bold text-slate-950 dark:text-white">
@@ -755,7 +755,7 @@ export function FinancialCommandCenterSummary({
           </CardContent>
         </Card>
 
-        <Card className="rounded-[28px] border-white/70 bg-white/90 shadow-[0_24px_70px_-52px_rgba(15,23,42,0.45)] dark:border-slate-800/80 dark:bg-slate-950/70">
+        <Card className="rounded-[28px] border-white/70 bg-card shadow-[0_24px_70px_-52px_rgba(15,23,42,0.45)] dark:border-slate-800/80 dark:bg-slate-950/70">
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center gap-2 text-base font-black text-slate-950 dark:text-white">
               <Sparkles className="h-4 w-4 text-primary" />
@@ -815,7 +815,7 @@ export function FinancialCommandCenterSummary({
               </div>
             </div>
 
-            <div className="rounded-2xl border border-slate-100 bg-slate-50/80 p-4 dark:border-slate-800 dark:bg-slate-900/60">
+            <div className="rounded-2xl border border-slate-100 bg-muted p-4 dark:border-slate-800 dark:bg-slate-900/60">
               <p className="text-xs leading-relaxed text-slate-500 dark:text-slate-400">
                 A FisioFlow utiliza modelos de alta performance para resumos SOAP e triagem,
                 otimizando o tempo clínico do terapeuta em até 15 min por sessão.
@@ -825,7 +825,7 @@ export function FinancialCommandCenterSummary({
         </Card>
 
         <div className="grid gap-4">
-          <Card className="rounded-[28px] border-white/70 bg-white/90 shadow-[0_24px_70px_-52px_rgba(15,23,42,0.45)] dark:border-slate-800/80 dark:bg-slate-950/70">
+          <Card className="rounded-[28px] border-white/70 bg-card shadow-[0_24px_70px_-52px_rgba(15,23,42,0.45)] dark:border-slate-800/80 dark:bg-slate-950/70">
             <CardHeader className="pb-2">
               <CardTitle className="flex items-center gap-2 text-base font-black text-slate-950 dark:text-white">
                 <Receipt className="h-4 w-4 text-primary" />
@@ -834,7 +834,7 @@ export function FinancialCommandCenterSummary({
             </CardHeader>
             <CardContent className="space-y-3">
               <div className="grid gap-3 sm:grid-cols-2">
-                <div className="rounded-2xl bg-slate-50/80 p-4 dark:bg-slate-900/60">
+                <div className="rounded-2xl bg-muted p-4 dark:bg-slate-900/60">
                   <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
                     Recibos emitidos
                   </p>
@@ -845,7 +845,7 @@ export function FinancialCommandCenterSummary({
                     Último número #{data.documents.lastReceiptNumber}
                   </p>
                 </div>
-                <div className="rounded-2xl bg-slate-50/80 p-4 dark:bg-slate-900/60">
+                <div className="rounded-2xl bg-muted p-4 dark:bg-slate-900/60">
                   <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
                     NFS-e
                   </p>
@@ -867,7 +867,7 @@ export function FinancialCommandCenterSummary({
                   <Link
                     key={document.id}
                     to={document.href}
-                    className="block rounded-2xl border border-slate-100 bg-slate-50/80 p-4 transition-all hover:-translate-y-0.5 dark:border-slate-800 dark:bg-slate-900/60"
+                    className="block rounded-2xl border border-slate-100 bg-muted p-4 transition-all hover:-translate-y-0.5 dark:border-slate-800 dark:bg-slate-900/60"
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div>
@@ -898,7 +898,7 @@ export function FinancialCommandCenterSummary({
             </CardContent>
           </Card>
 
-          <Card className="rounded-[28px] border-white/70 bg-white/90 shadow-[0_24px_70px_-52px_rgba(15,23,42,0.45)] dark:border-slate-800/80 dark:bg-slate-950/70">
+          <Card className="rounded-[28px] border-white/70 bg-card shadow-[0_24px_70px_-52px_rgba(15,23,42,0.45)] dark:border-slate-800/80 dark:bg-slate-950/70">
             <CardHeader className="pb-2">
               <CardTitle className="text-base font-black text-slate-950 dark:text-white">
                 IA financeira acionável
@@ -914,7 +914,7 @@ export function FinancialCommandCenterSummary({
                   <Link
                     key={suggestion.id}
                     to={suggestion.href}
-                    className="block rounded-2xl border border-slate-100 bg-slate-50/80 p-4 transition-all hover:-translate-y-0.5 dark:border-slate-800 dark:bg-slate-900/60"
+                    className="block rounded-2xl border border-slate-100 bg-muted p-4 transition-all hover:-translate-y-0.5 dark:border-slate-800 dark:bg-slate-900/60"
                   >
                     <p className="text-sm font-bold text-slate-950 dark:text-white">
                       {suggestion.title}

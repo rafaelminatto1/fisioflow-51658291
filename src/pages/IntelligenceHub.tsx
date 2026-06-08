@@ -31,7 +31,7 @@ export default function IntelligenceHub() {
         </div>
 
         <Tabs value={tab} onValueChange={handleTabChange} className="flex-1 flex flex-col min-h-0">
-          <TabsList className="grid grid-cols-3 w-full md:w-auto md:inline-grid mb-4 shrink-0 bg-muted/50 backdrop-blur-sm border border-border/50 p-1 rounded-xl">
+          <TabsList className="grid grid-cols-3 w-full md:w-auto md:inline-grid mb-4 shrink-0 bg-muted/50 border border-border/50 p-1 rounded-xl">
             <TabsTrigger
               value="clinica"
               className="rounded-lg text-xs font-bold gap-2 data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all h-9"

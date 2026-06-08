@@ -589,7 +589,7 @@ export function BodyMap({
     >
       {/* Legenda */}
       <div
-        className="absolute top-2 right-2 bg-background/90 backdrop-blur p-2 rounded-lg text-xs space-y-1 z-10"
+        className="absolute top-2 right-2 bg-card p-2 rounded-lg text-xs space-y-1 z-10"
         role="legend"
         aria-label="Legenda de intensidade de dor"
       >
@@ -828,7 +828,7 @@ export function BodyMap({
 
       {/* Tooltip da região */}
       {hoveredRegion && (
-        <div className="absolute bottom-2 left-2 bg-background/90 backdrop-blur px-2 py-1 rounded text-sm">
+        <div className="absolute bottom-2 left-2 bg-card px-2 py-1 rounded text-sm">
           {regions.find((r) => r.code === hoveredRegion)?.name}
         </div>
       )}

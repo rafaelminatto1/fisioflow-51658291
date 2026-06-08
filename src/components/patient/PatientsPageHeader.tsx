@@ -117,7 +117,7 @@ export function PatientsPageHeader({
       data-testid="patients-page-header"
     >
       {!isSimplified && (
-        <div className="relative overflow-hidden rounded-[2.25rem] border border-white/40 bg-[radial-gradient(circle_at_top_left,_rgba(109,192,227,0.08),_transparent_28%),radial-gradient(circle_at_bottom_right,_rgba(16,185,129,0.10),_transparent_32%),linear-gradient(135deg,_rgba(255,255,255,0.92),_rgba(248,250,252,0.84))] p-6 shadow-[0_32px_80px_-48px_rgba(15,23,42,0.45)] backdrop-blur-xl dark:border-slate-800/60 dark:bg-[radial-gradient(circle_at_top_left,_rgba(109,192,227,0.16),_transparent_28%),radial-gradient(circle_at_bottom_right,_rgba(16,185,129,0.12),_transparent_32%),linear-gradient(135deg,_rgba(15,23,42,0.94),_rgba(15,23,42,0.82))] md:p-8">
+        <div className="relative overflow-hidden rounded-[2.25rem] border border-white/40 bg-[radial-gradient(circle_at_top_left,_rgba(109,192,227,0.08),_transparent_28%),radial-gradient(circle_at_bottom_right,_rgba(16,185,129,0.10),_transparent_32%),linear-gradient(135deg,_rgba(255,255,255,0.92),_rgba(248,250,252,0.84))] p-6 shadow-[0_32px_80px_-48px_rgba(15,23,42,0.45)] dark:border-slate-800/60 dark:bg-[radial-gradient(circle_at_top_left,_rgba(109,192,227,0.16),_transparent_28%),radial-gradient(circle_at_bottom_right,_rgba(16,185,129,0.12),_transparent_32%),linear-gradient(135deg,_rgba(15,23,42,0.94),_rgba(15,23,42,0.82))] md:p-8">
           <div className="flex flex-col gap-6 xl:flex-row xl:items-start xl:justify-between">
             <div className="space-y-3">
               <div className="flex items-center gap-4">
@@ -182,7 +182,7 @@ export function PatientsPageHeader({
               <Button
                 variant="outline"
                 onClick={onExport}
-                className="h-14 rounded-[1.35rem] border-white/50 bg-white/70 px-5 text-xs font-black uppercase tracking-[0.18em] backdrop-blur-md dark:border-slate-700 dark:bg-slate-900/50"
+                className="h-14 rounded-[1.35rem] border-white/50 bg-card px-5 text-xs font-black uppercase tracking-[0.18em] dark:border-slate-700 dark:bg-slate-900/50"
               >
                 <Download className="mr-2 h-4 w-4" />
                 Exportar
@@ -204,9 +204,9 @@ export function PatientsPageHeader({
 
       <div
         className={cn(
-          "space-y-5 rounded-[2rem] border border-white/50 bg-white/70 p-5 backdrop-blur-xl dark:border-slate-800/70 dark:bg-slate-950/40 shadow-premium",
+          "space-y-5 rounded-[2rem] border border-white/50 bg-card p-5 dark:border-slate-800/70 dark:bg-slate-950/40 shadow-premium",
           isSimplified &&
-            "mt-0 rounded-2xl border border-slate-200/60 bg-white/80 p-4 md:p-6 shadow-sm backdrop-blur-sm dark:border-slate-800/60 dark:bg-slate-900/60",
+            "mt-0 rounded-2xl border border-slate-200/60 bg-card p-4 md:p-6 shadow-sm dark:border-slate-800/60 dark:bg-slate-900/60",
         )}
       >
         <div className="grid grid-cols-1 gap-3 xl:grid-cols-[minmax(0,1.6fr)_repeat(3,minmax(150px,0.8fr))] 2xl:grid-cols-[minmax(0,1.6fr)_repeat(5,minmax(140px,0.72fr))]">
@@ -451,7 +451,7 @@ function HeaderStatCard({
     >
       <div className="flex items-center justify-between">
         <p className="text-[10px] font-black uppercase tracking-[0.2em]">{label}</p>
-        <div className="rounded-full bg-white/70 p-2 dark:bg-slate-900/50">
+        <div className="rounded-full bg-card p-2 dark:bg-slate-900/50">
           <Icon className="h-4 w-4" />
         </div>
       </div>

@@ -119,7 +119,7 @@ export class ComponentErrorBoundary extends Component<
     // Fallback padrão
     return (
       <div className="p-1 rounded-[2.5rem] bg-gradient-to-br from-destructive/20 via-destructive/5 to-transparent border border-destructive/20 shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-500">
-        <div className="relative overflow-hidden bg-background/60 backdrop-blur-2xl rounded-[2.25rem] p-8 md:p-10 border border-white/10">
+        <div className="relative overflow-hidden bg-card rounded-[2.25rem] p-8 md:p-10 border border-white/10">
           {/* Decorative background elements */}
           <div className="absolute top-0 right-0 -mr-20 -mt-20 w-64 h-64 bg-destructive/10 rounded-full blur-3xl pointer-events-none" />
           <div className="absolute bottom-0 left-0 -ml-20 -mb-20 w-64 h-64 bg-primary/5 rounded-full blur-3xl pointer-events-none" />

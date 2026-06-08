@@ -150,7 +150,7 @@ export function StudyMode({ artifact, onClose }: StudyModeProps) {
   return (
     <div className="fixed inset-0 z-[100] bg-background flex flex-col h-screen w-screen overflow-hidden animate-in fade-in duration-300">
       {/* Header */}
-      <header className="h-14 border-b flex items-center justify-between px-4 bg-background/95 backdrop-blur shrink-0 shadow-sm relative z-20">
+      <header className="h-14 border-b flex items-center justify-between px-4 bg-card shrink-0 shadow-sm relative z-20">
         <div className="flex items-center gap-4">
           <Button variant="ghost" size="sm" onClick={onClose} className="gap-2 -ml-2">
             <ArrowLeft className="h-5 w-5" />
@@ -306,13 +306,13 @@ export function StudyMode({ artifact, onClose }: StudyModeProps) {
 
         {/* Right Pane - AI Chat / Notes */}
         <div className="w-full md:w-[400px] lg:w-[450px] flex flex-col bg-background border-l shadow-2xl z-10 shrink-0">
-          <div className="flex border-b bg-slate-50/50">
+          <div className="flex border-b bg-muted">
             <button
               onClick={() => setActiveTab("chat")}
               className={`flex-1 py-4 text-xs font-bold uppercase tracking-widest border-b-2 transition-all ${
                 activeTab === "chat"
                   ? "border-emerald-600 text-emerald-600 bg-white"
-                  : "border-transparent text-muted-foreground hover:text-foreground hover:bg-white/50"
+                  : "border-transparent text-muted-foreground hover:text-foreground hover:bg-card"
               }`}
             >
               <div className="flex items-center justify-center gap-2">
@@ -325,7 +325,7 @@ export function StudyMode({ artifact, onClose }: StudyModeProps) {
               className={`flex-1 py-4 text-xs font-bold uppercase tracking-widest border-b-2 transition-all ${
                 activeTab === "notes"
                   ? "border-emerald-600 text-emerald-600 bg-white"
-                  : "border-transparent text-muted-foreground hover:text-foreground hover:bg-white/50"
+                  : "border-transparent text-muted-foreground hover:text-foreground hover:bg-card"
               }`}
             >
               <div className="flex items-center justify-center gap-2">
@@ -366,7 +366,7 @@ export function StudyMode({ artifact, onClose }: StudyModeProps) {
                   </Button>
                 </div>
 
-                <ScrollArea className="flex-1 p-4 bg-slate-50/30">
+                <ScrollArea className="flex-1 p-4 bg-muted">
                   <div className="space-y-6">
                     {messages.map((msg, idx) => (
                       <div

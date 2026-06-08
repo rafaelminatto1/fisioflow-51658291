@@ -440,7 +440,7 @@ export const VoiceAppointmentAssistant: React.FC<VoiceAppointmentAssistantProps>
         </div>
 
         {/* Transcrição */}
-        <div className="min-h-[100px] p-4 bg-background/80 backdrop-blur rounded-lg mb-4">
+        <div className="min-h-[100px] p-4 bg-card rounded-lg mb-4">
           {state.transcript ? (
             <p className="text-lg">
               {state.transcript}

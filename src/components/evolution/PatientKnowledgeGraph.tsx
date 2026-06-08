@@ -794,7 +794,7 @@ export const PatientKnowledgeGraph: React.FC<PatientKnowledgeGraphProps> = ({
 
                 {/* Legenda */}
                 <Panel position="bottom-left">
-                  <div className="bg-white/90 backdrop-blur-sm border border-gray-200 rounded-xl px-3 py-2.5 shadow-md space-y-1.5 mb-2 ml-1">
+                  <div className="bg-card border border-gray-200 rounded-xl px-3 py-2.5 shadow-md space-y-1.5 mb-2 ml-1">
                     <p className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider mb-2">
                       Legenda
                     </p>

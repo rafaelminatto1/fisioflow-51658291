@@ -56,7 +56,7 @@ export const RescheduleConfirmDialog: React.FC<RescheduleConfirmDialogProps> = (
 
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogContent className="max-w-xl p-0 gap-0 border-none shadow-premium-xl rounded-[2rem] overflow-hidden bg-white/95 dark:bg-slate-950/95 backdrop-blur-xl">
+      <AlertDialogContent className="max-w-xl p-0 gap-0 border-none shadow-premium-xl rounded-[2rem] overflow-hidden bg-card">
         <AlertDialogHeader className="px-8 py-8 relative overflow-hidden">
           <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary via-blue-400 to-primary" />
           <div className="flex items-center gap-4 relative z-10">

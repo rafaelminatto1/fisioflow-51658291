@@ -44,7 +44,7 @@ export const EvaluationHistorySidebar: React.FC<EvaluationHistorySidebarProps> =
   if (isLoading) {
     return (
       <Card className="border-blue-100 shadow-premium-sm h-full flex flex-col rounded-[32px] overflow-hidden">
-        <CardHeader className="pb-3 border-b bg-slate-50/50">
+        <CardHeader className="pb-3 border-b bg-muted">
           <CardTitle className="text-xs font-black uppercase tracking-widest flex items-center gap-2 text-slate-400">
             <History className="h-4 w-4" />
             Histórico
@@ -152,7 +152,7 @@ const EvaluationDetailView = ({ evaluationId, onClose }: { evaluationId: string,
 
   return (
     <>
-      <SheetHeader className="p-6 border-b bg-slate-50/50">
+      <SheetHeader className="p-6 border-b bg-muted">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="h-10 w-10 rounded-2xl bg-blue-600 flex items-center justify-center text-white shadow-lg shadow-blue-600/20">
@@ -178,7 +178,7 @@ const EvaluationDetailView = ({ evaluationId, onClose }: { evaluationId: string,
         </div>
       </SheetHeader>
 
-      <ScrollArea className="flex-1 p-6 md:p-10 bg-slate-50/30">
+      <ScrollArea className="flex-1 p-6 md:p-10 bg-muted/40">
         <div className="max-w-2xl mx-auto space-y-8">
           <DynamicFieldRenderer
             fields={evaluation.fields as any || []}

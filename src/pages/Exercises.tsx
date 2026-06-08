@@ -299,7 +299,7 @@ export default function Exercises() {
         {/* Main Content Tabs - Mobile Optimized */}
         <Card className="overflow-visible border-none bg-transparent shadow-none">
           <Tabs value={activeTab} onValueChange={handleTabChange}>
-            <div className="border-b bg-background/95 backdrop-blur-sm rounded-t-xl overflow-hidden">
+            <div className="border-b bg-card rounded-t-xl overflow-hidden">
               <TabsList className="bg-slate-100 p-1 rounded-xl mb-4 h-12 sm:h-14">
                 <TabsTrigger
                   value="library"

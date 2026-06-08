@@ -245,7 +245,7 @@ export function ClinicalTestDetailsModal({
                       />
                       <div className="absolute inset-0 bg-slate-900/0 transition-colors group-hover:bg-slate-900/10" />
                       <div className="absolute inset-0 flex items-center justify-center opacity-0 transition-opacity group-hover:opacity-100">
-                        <div className="rounded-full border border-slate-100 bg-white/90 p-2 text-slate-700 shadow-lg">
+                        <div className="rounded-full border border-slate-100 bg-card p-2 text-slate-700 shadow-lg">
                           <ZoomIn className="h-4 w-4" />
                         </div>
                       </div>
@@ -302,7 +302,7 @@ export function ClinicalTestDetailsModal({
             ) : null}
 
             {test.sensitivity_specificity || test.lr_positive ? (
-              <div className="rounded-3xl border border-slate-100 bg-white/50 p-5 shadow-sm backdrop-blur-sm">
+              <div className="rounded-3xl border border-slate-100 bg-card p-5 shadow-sm">
                 <h3 className="mb-4 flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.2em] text-slate-500">
                   <Info className="h-3.5 w-3.5" />
                   Acurácia Diagnóstica
@@ -474,7 +474,7 @@ export function ClinicalTestDetailsModal({
 
       {previewImage ? (
         <div
-          className="fixed inset-0 z-[70] flex items-center justify-center bg-slate-950/85 p-4 backdrop-blur-md"
+          className="fixed inset-0 z-[70] flex items-center justify-center bg-slate-950/85 p-4"
           onClick={() => setPreviewImage(null)}
           role="dialog"
           aria-modal="true"

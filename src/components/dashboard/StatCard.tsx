@@ -64,7 +64,7 @@ export const StatCard = memo(function StatCard({
     <Card
       className={cn(
         "border-border/40 transition-all duration-500 hover:shadow-premium-lg cursor-pointer group overflow-hidden relative min-h-[120px] ring-offset-background",
-        gradient ? "bg-gradient-card" : "bg-card/40 backdrop-blur-md",
+        gradient ? "bg-gradient-card" : "bg-card",
         onClick && "hover:scale-[1.01] hover:-translate-y-1 active:scale-[0.98]",
       )}
       onClick={onClick}

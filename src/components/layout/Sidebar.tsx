@@ -74,7 +74,7 @@ const GamificationMiniProfile = ({ collapsed }: { collapsed: boolean }) => {
   }
 
   return (
-    <div className="mx-3 my-4 p-4 rounded-[1.5rem] bg-white/40 dark:bg-slate-900/40 backdrop-blur-md border border-border/40 shadow-premium-sm hover:shadow-premium-md transition-all duration-500 relative overflow-hidden group">
+    <div className="mx-3 my-4 p-4 rounded-[1.5rem] bg-card border border-border shadow-sm hover:shadow-md transition-all duration-500 relative overflow-hidden group">
       <div className="absolute -right-4 -top-4 w-16 h-16 bg-yellow-400/5 rounded-full blur-2xl group-hover:bg-yellow-400/10 transition-colors" />
       <div className="flex items-center justify-between mb-3 relative z-10">
         <div className="flex items-center gap-2.5">
@@ -115,9 +115,12 @@ const mainMenuItems = [
   },
   { icon: Users, label: "Pacientes", href: APP_ROUTES.PATIENTS },
   { icon: MessageCircle, label: "WhatsApp", href: "/whatsapp/inbox" },
+  { icon: MessageSquare, label: "CRM · WhatsApp", href: "/crm-whatsapp" },
 ];
 
 const clinicaMenuItems = [
+  { icon: ClipboardList, label: "Avaliação Inicial", href: "/avaliacao-inicial" },
+  { icon: Activity, label: "Evolução Clínica", href: "/evolucao-clinica" },
   { icon: Activity, label: "Exercícios", href: APP_ROUTES.EXERCISES },
   { icon: Target, label: "Protocolos", href: "/protocols" },
   { icon: FlaskConical, label: "Testes Clínicos", href: "/clinical-tests" },
@@ -301,7 +304,7 @@ export function Sidebar() {
           "flex items-center gap-3 rounded-2xl transition-all duration-500 group relative overflow-hidden",
           collapsed ? "justify-center px-2 py-3.5" : "px-4 py-3",
           isActive
-            ? "bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-black shadow-premium-md"
+            ? "bg-primary/10 dark:bg-primary/20 text-primary font-black"
             : "text-slate-500 hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-800/50 dark:hover:text-white",
         )}
       >
@@ -322,7 +325,7 @@ export function Sidebar() {
           </div>
         )}
         {isActive && (
-          <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-6 bg-primary rounded-r-full shadow-[0_0_12px_rgba(var(--primary),0.8)]" />
+          <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-7 bg-primary rounded-r-full" />
         )}
       </Link>
     );
@@ -335,7 +338,7 @@ export function Sidebar() {
         id="main-navigation"
         tabIndex={-1}
         className={cn(
-          "hidden md:flex bg-white/80 dark:bg-slate-950/80 backdrop-blur-2xl border-r border-border/40 transition-all duration-500 ease-in-out flex-col h-screen sticky top-0 shadow-premium-lg z-50",
+          "hidden md:flex bg-card border-r border-border/40 transition-all duration-500 ease-in-out flex-col h-screen sticky top-0 shadow-premium-lg z-50",
           collapsed ? "w-[84px]" : "w-[240px]",
         )}
       >

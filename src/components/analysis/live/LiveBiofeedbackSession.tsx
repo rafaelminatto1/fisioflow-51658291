@@ -40,7 +40,7 @@ const MetricTrafficLight = ({
   }
 
   return (
-    <div className="flex items-center justify-between p-3 bg-slate-900/50 rounded-lg border border-slate-700/50 backdrop-blur-sm">
+    <div className="flex items-center justify-between p-3 bg-slate-900/50 rounded-lg border border-slate-700/50">
       <span className="text-white text-sm font-medium">{label}</span>
       <div className="flex items-center gap-3">
         <span className="text-xs text-slate-300 font-mono">
@@ -165,7 +165,7 @@ const LiveBiofeedbackSession: React.FC<LiveBiofeedbackSessionProps> = ({ onClose
               <Button
                 variant="outline"
                 size="lg"
-                className="rounded-full bg-black/50 border-white/20 text-white hover:bg-black/70 backdrop-blur-md"
+                className="rounded-full bg-black/50 border-white/20 text-white hover:bg-black/70"
               >
                 <Camera className="mr-2 h-5 w-5" /> Snapshot
               </Button>

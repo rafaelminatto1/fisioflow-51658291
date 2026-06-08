@@ -150,7 +150,7 @@ export const EquipmentSelector: React.FC<EquipmentSelectorProps> = ({
                           <SelectTrigger className={compactFieldClass}>
                             <SelectValue />
                           </SelectTrigger>
-                          <SelectContent className="rounded-[20px] border border-border/70 bg-background/95 p-1 shadow-[0_24px_70px_-30px_rgba(15,23,42,0.45)] backdrop-blur-xl">
+                          <SelectContent className="rounded-[20px] border border-border/70 bg-popover p-1 shadow-[0_24px_70px_-30px_rgba(15,23,42,0.45)]">
                             {param.options?.map((option) => (
                               <SelectItem key={option} value={option}>
                                 {option}

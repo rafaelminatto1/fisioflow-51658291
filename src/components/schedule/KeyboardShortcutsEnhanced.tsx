@@ -238,7 +238,7 @@ const KeyboardShortcutsEnhanced = memo(({ open, onClose }: KeyboardShortcutsEnha
           onClick={onClose}
         >
           {/* Backdrop */}
-          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
+          <div className="absolute inset-0 bg-black/40" onClick={onClose} />
 
           {/* Content */}
           <motion.div

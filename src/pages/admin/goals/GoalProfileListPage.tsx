@@ -338,7 +338,7 @@ export default function GoalProfileListPage() {
             {GOAL_PROFILES_SEED.slice(0, 4).map((seed) => (
               <Card
                 key={seed.id}
-                className="group hover:border-blue-300 transition-all cursor-pointer border-dashed bg-white/50"
+                className="group hover:border-blue-300 transition-all cursor-pointer border-dashed bg-card"
                 onClick={() => handleQuickCreate(seed)}
               >
                 <CardHeader className="p-4 pb-2">
@@ -436,7 +436,7 @@ export default function GoalProfileListPage() {
                       <div className="flex items-center gap-1.5">
                         <Badge
                           variant="outline"
-                          className="text-[10px] font-bold border-slate-100 bg-slate-50/50"
+                          className="text-[10px] font-bold border-slate-100 bg-muted"
                         >
                           v{p.version}
                         </Badge>
@@ -448,7 +448,7 @@ export default function GoalProfileListPage() {
                     </div>
                   </CardContent>
 
-                  <CardFooter className="bg-slate-50/50 p-4 flex gap-2 border-t border-slate-100">
+                  <CardFooter className="bg-muted p-4 flex gap-2 border-t border-slate-100">
                     <Button
                       variant="secondary"
                       className="w-full bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 gap-2 h-10 rounded-lg"
@@ -508,7 +508,7 @@ export default function GoalProfileListPage() {
                 {showGuide ? "Ocultar Guia" : "Ler Guia de Melhores Práticas"}
               </Button>
             </div>
-            <div className="hidden lg:block p-6 bg-white/10 backdrop-blur-md rounded-2xl border border-white/20">
+            <div className="hidden lg:block p-6 bg-white/10 rounded-2xl border border-white/20">
               <Stethoscope className="w-24 h-24 text-blue-100 opacity-20 absolute -right-4 -bottom-4" />
               <div className="space-y-4 relative z-20">
                 <div className="flex items-center gap-3">
@@ -537,7 +537,7 @@ export default function GoalProfileListPage() {
         {showGuide && (
           <div className="animate-in fade-in slide-in-from-top-4 duration-500">
             <Card className="border-none shadow-xl bg-white overflow-hidden">
-              <CardHeader className="bg-slate-50/50 border-b border-slate-100">
+              <CardHeader className="bg-muted border-b border-slate-100">
                 <CardTitle className="text-2xl font-bold text-slate-900 flex items-center gap-2">
                   <ShieldCheck className="w-6 h-6 text-emerald-500" />
                   Guia de Melhores Práticas: Metas SMART em Fisioterapia

@@ -216,19 +216,19 @@ export function BoardHeader({
 
           {stats && (
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-              <div className="rounded-2xl border border-white/15 bg-white/10 px-4 py-3 backdrop-blur-sm">
+              <div className="rounded-2xl border border-white/15 bg-white/10 px-4 py-3">
                 <div className="text-xs uppercase tracking-[0.16em] text-white/65">Tarefas</div>
                 <div className="mt-2 text-2xl font-semibold text-white">{stats.taskCount}</div>
               </div>
-              <div className="rounded-2xl border border-white/15 bg-white/10 px-4 py-3 backdrop-blur-sm">
+              <div className="rounded-2xl border border-white/15 bg-white/10 px-4 py-3">
                 <div className="text-xs uppercase tracking-[0.16em] text-white/65">Colunas</div>
                 <div className="mt-2 text-2xl font-semibold text-white">{stats.columnCount}</div>
               </div>
-              <div className="rounded-2xl border border-white/15 bg-white/10 px-4 py-3 backdrop-blur-sm">
+              <div className="rounded-2xl border border-white/15 bg-white/10 px-4 py-3">
                 <div className="text-xs uppercase tracking-[0.16em] text-white/65">Concluídas</div>
                 <div className="mt-2 text-2xl font-semibold text-white">{stats.completedCount}</div>
               </div>
-              <div className="rounded-2xl border border-white/15 bg-white/10 px-4 py-3 backdrop-blur-sm">
+              <div className="rounded-2xl border border-white/15 bg-white/10 px-4 py-3">
                 <div className="flex items-center gap-1 text-xs uppercase tracking-[0.16em] text-white/65">
                   <BarChart3 className="h-3.5 w-3.5" />
                   Risco
@@ -240,7 +240,7 @@ export function BoardHeader({
         </div>
 
         <Tabs value={currentView} onValueChange={(value) => onViewChange(value as BoardView)}>
-          <TabsList className="h-auto flex-wrap rounded-2xl border border-white/15 bg-white/10 p-1.5 backdrop-blur-sm">
+          <TabsList className="h-auto flex-wrap rounded-2xl border border-white/15 bg-white/10 p-1.5">
             <TabsTrigger
               value="kanban"
               className="gap-2 rounded-xl px-4 py-2 text-white/78 data-[state=active]:bg-white data-[state=active]:text-slate-950"

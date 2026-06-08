@@ -104,18 +104,18 @@ export function ClinicalTestsGrid({
 
               <div className="absolute inset-x-0 top-0 flex items-start justify-between gap-3 p-4">
                 <span
-                  className={`rounded-full border px-3 py-1 text-[11px] font-bold uppercase tracking-[0.18em] backdrop-blur-sm ${getBadgeColor(test.category)}`}
+                  className={`rounded-full border px-3 py-1 text-[11px] font-bold uppercase tracking-[0.18em] ${getBadgeColor(test.category)}`}
                 >
                   {test.category || "Geral"}
                 </span>
 
                 {test.is_builtin ? (
-                  <span className="inline-flex items-center gap-1 rounded-full border border-white/20 bg-slate-900/75 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-white backdrop-blur-sm">
+                  <span className="inline-flex items-center gap-1 rounded-full border border-white/20 bg-slate-900/75 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-white">
                     <Sparkles className="h-3.5 w-3.5" />
                     Biblioteca
                   </span>
                 ) : (
-                  <span className="rounded-full border border-white/20 bg-white/80 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-700 backdrop-blur-sm">
+                  <span className="rounded-full border border-white/20 bg-card px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-700">
                     Customizado
                   </span>
                 )}

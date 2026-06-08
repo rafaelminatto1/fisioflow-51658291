@@ -168,7 +168,7 @@ export const FisioADM: React.FC<FisioADMProps> = ({ isOpen, onClose, onResult })
 
           <div className="w-full h-full max-w-7xl grid grid-cols-1 lg:grid-cols-4 gap-8 mt-16">
             {/* Sidebar Controls */}
-            <Card className="lg:col-span-1 bg-slate-900/50 border-white/5 backdrop-blur-xl rounded-[40px] overflow-hidden">
+            <Card className="lg:col-span-1 bg-slate-900/50 border-white/5 rounded-[40px] overflow-hidden">
               <CardContent className="p-8 space-y-8">
                 <div>
                   <h3 className="text-xs font-black uppercase text-slate-500 tracking-widest mb-6 flex items-center gap-2">
@@ -277,7 +277,7 @@ export const FisioADM: React.FC<FisioADMProps> = ({ isOpen, onClose, onResult })
               <div className="absolute bottom-8 left-8 flex items-center gap-4 z-40">
                 <Badge
                   variant="outline"
-                  className="bg-black/50 backdrop-blur-md border-white/10 text-white/70 py-2 px-4 rounded-full font-bold"
+                  className="bg-black/50 border-white/10 text-white/70 py-2 px-4 rounded-full font-bold"
                 >
                   <Maximize2 className="w-3 h-3 mr-2" /> 1080P @ 30FPS
                 </Badge>

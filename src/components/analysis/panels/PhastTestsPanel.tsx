@@ -34,7 +34,7 @@ export const PhastTestsPanel: React.FC = () => {
       animate={{ opacity: 1, x: 0 }}
       transition={{ duration: 0.5, delay: 0.1 }}
     >
-      <Card className="border-none shadow-2xl bg-emerald-950/20 backdrop-blur-xl border border-emerald-500/10 mt-4 overflow-hidden">
+      <Card className="border-none shadow-2xl bg-emerald-950/20 border border-emerald-500/10 mt-4 overflow-hidden">
         <CardContent className="p-4 space-y-4">
           <div className="flex items-center justify-between">
             <h4 className="text-[10px] font-black uppercase tracking-widest text-emerald-500 flex items-center gap-2">

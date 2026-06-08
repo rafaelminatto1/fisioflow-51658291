@@ -100,7 +100,7 @@ export function DashboardNotificationWidget() {
   const recent = notifications.slice(0, 6);
 
   return (
-    <Card className="rounded-[2rem] border-border/40 shadow-premium-sm hover:shadow-premium-md transition-all duration-300 bg-white/40 dark:bg-slate-900/40 backdrop-blur-md overflow-hidden">
+    <Card className="rounded-[2rem] border-border/40 shadow-premium-sm hover:shadow-premium-md transition-all duration-300 bg-card overflow-hidden">
       <CardHeader className="pb-3 px-6 pt-6 border-b border-border/10 bg-slate-50/50 dark:bg-slate-800/20">
         <CardTitle className="flex items-center justify-between text-sm font-bold tracking-tight">
           <div className="flex items-center gap-3">

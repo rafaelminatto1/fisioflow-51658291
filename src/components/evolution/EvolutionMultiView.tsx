@@ -445,7 +445,7 @@ const GalleryView: React.FC<GalleryViewProps> = ({ evolutions }) => {
             <div className="absolute top-2 left-2">
               <Badge
                 variant="secondary"
-                className="text-[10px] px-1.5 py-0 backdrop-blur-sm bg-black/40 text-white border-0"
+                className="text-[10px] px-1.5 py-0 bg-black/40 text-white border-0"
               >
                 Sessao {photo.sessionIndex}
               </Badge>

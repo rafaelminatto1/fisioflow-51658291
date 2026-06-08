@@ -24,7 +24,7 @@ const premiumFieldBaseClass =
 const premiumFieldClass = `${premiumFieldBaseClass} h-11 text-xs sm:text-sm`;
 
 const premiumSelectContentClass =
-  "rounded-xl border border-blue-100 bg-white p-1 shadow-lg backdrop-blur-sm";
+  "rounded-xl border border-blue-100 bg-white p-1 shadow-lg";
 
 interface AppointmentPaymentTabProps {
   disabled: boolean;
@@ -466,7 +466,7 @@ export function AppointmentPaymentTab({
           ) : (
             <div className="rounded-[24px] border border-blue-500/15 bg-blue-50/70 p-4 text-blue-900 shadow-[0_18px_40px_-32px_rgba(59,130,246,0.32)] dark:bg-blue-950/20 dark:text-blue-100">
               <div className="flex items-start gap-3">
-                <div className="mt-0.5 rounded-full bg-white/80 p-2 shadow-sm dark:bg-blue-950/40">
+                <div className="mt-0.5 rounded-full bg-card p-2 shadow-sm dark:bg-blue-950/40">
                   <Check className="h-4 w-4 text-blue-600 dark:text-blue-300" />
                 </div>
                 <div>

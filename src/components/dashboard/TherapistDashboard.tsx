@@ -222,7 +222,7 @@ export function TherapistDashboard({
 
   return (
     <div className="space-y-6">
-      <Card className="rounded-[2rem] border-border/60 bg-background/75 shadow-sm backdrop-blur-xl">
+      <Card className="rounded-[2rem] border-border/60 bg-card shadow-sm">
         <CardContent className="flex flex-col gap-4 p-5 lg:flex-row lg:items-end lg:justify-between">
           <div>
             <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-primary/75">
@@ -283,7 +283,7 @@ export function TherapistDashboard({
 
       <div className="grid gap-6 lg:grid-cols-12">
         <Card
-          className="rounded-[2rem] border-border/60 bg-background/80 shadow-sm backdrop-blur-xl lg:col-span-7"
+          className="rounded-[2rem] border-border/60 bg-card shadow-sm lg:col-span-7"
           data-testid="today-schedule"
         >
           <CardHeader className="border-b border-border/60 pb-4">
@@ -379,7 +379,7 @@ export function TherapistDashboard({
         </Card>
 
         <div className="space-y-6 lg:col-span-5">
-          <Card className="rounded-[2rem] border-border/60 bg-background/80 shadow-sm backdrop-blur-xl">
+          <Card className="rounded-[2rem] border-border/60 bg-card shadow-sm">
             <CardHeader className="border-b border-border/60 pb-4">
               <div className="flex items-center gap-3">
                 <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary/10 text-primary">
@@ -431,7 +431,7 @@ export function TherapistDashboard({
 
           <PredictiveRetentionWidget />
 
-          <Card className="rounded-[2rem] border-border/60 bg-background/80 shadow-sm backdrop-blur-xl">
+          <Card className="rounded-[2rem] border-border/60 bg-card shadow-sm">
             <CardHeader className="border-b border-border/60 pb-4">
               <div className="flex items-center gap-3">
                 <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary/10 text-primary">

@@ -153,12 +153,12 @@ export const PostureAnalysisStudio: React.FC<PostureAnalysisStudioProps> = ({ on
           </div>
 
           {activeTool === "goniometer" && (
-            <div className="absolute top-8 left-8 z-20 bg-slate-900/80 backdrop-blur-xl text-white text-lg font-black px-6 py-2 rounded-2xl border border-white/10 shadow-2xl">
+            <div className="absolute top-8 left-8 z-20 bg-slate-900/80 text-white text-lg font-black px-6 py-2 rounded-2xl border border-white/10 shadow-2xl">
               {currentAngle}°
             </div>
           )}
 
-          <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-3 bg-slate-900/60 backdrop-blur-3xl p-3 rounded-[2rem] border border-white/10 z-30 shadow-2xl">
+          <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-3 bg-slate-900/60 p-3 rounded-[2rem] border border-white/10 z-30 shadow-2xl">
             <input
               type="file"
               className="hidden"

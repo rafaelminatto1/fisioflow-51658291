@@ -204,7 +204,7 @@ export function ProcedureChecklistBlock({ procedures, onChange }: ProcedureCheck
         </div>
 
         {/* Liquid Progress Bar */}
-        <div className="relative h-2 w-full bg-secondary/30 rounded-full overflow-hidden backdrop-blur-sm border border-white/5">
+        <div className="relative h-2 w-full bg-secondary/30 rounded-full overflow-hidden border border-white/5">
           <motion.div
             className="absolute inset-y-0 left-0 bg-gradient-to-r from-primary via-blue-500 to-emerald-500"
             initial={{ width: 0 }}
@@ -229,10 +229,10 @@ export function ProcedureChecklistBlock({ procedures, onChange }: ProcedureCheck
                   exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.2 } }}
                   className={cn(
                     "group relative flex items-center gap-3 p-4 rounded-2xl transition-all duration-300",
-                    "border border-white/5 backdrop-blur-md",
+                    "border border-white/5",
                     procedure.completed
-                      ? "bg-white/5 shadow-inner"
-                      : "bg-white/10 shadow-lg hover:shadow-primary/5 hover:border-primary/20",
+                      ? "bg-card shadow-inner"
+                      : "bg-card shadow-lg hover:shadow-primary/5 hover:border-primary/20",
                     "cursor-default",
                   )}
                 >
@@ -319,7 +319,7 @@ export function ProcedureChecklistBlock({ procedures, onChange }: ProcedureCheck
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="flex flex-col items-center justify-center py-12 px-4 rounded-3xl border-2 border-dashed border-white/5 bg-white/5"
+              className="flex flex-col items-center justify-center py-12 px-4 rounded-3xl border-2 border-dashed border-white/5 bg-card"
             >
               <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center mb-4">
                 <Plus className="w-6 h-6 text-primary/40" />
@@ -337,10 +337,10 @@ export function ProcedureChecklistBlock({ procedures, onChange }: ProcedureCheck
         <div
           className={cn(
             "relative flex items-center gap-2 p-2 rounded-2xl transition-all duration-500",
-            "border-2 backdrop-blur-xl shadow-2xl",
+            "border-2 shadow-2xl",
             isFocused
-              ? "bg-white/15 border-primary/40 ring-4 ring-primary/10 shadow-primary/10"
-              : "bg-white/5 border-white/10",
+              ? "bg-card border-primary/40 ring-4 ring-primary/10 shadow-primary/10"
+              : "bg-card border-white/10",
           )}
         >
           <Search
@@ -409,7 +409,7 @@ export function ProcedureChecklistBlock({ procedures, onChange }: ProcedureCheck
                 initial={{ opacity: 0, y: 10, scale: 0.95 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, y: 5, scale: 0.98 }}
-                className="absolute bottom-full mb-3 left-0 right-0 p-2 bg-black/80 backdrop-blur-2xl border border-white/10 rounded-2xl shadow-2xl z-50 overflow-hidden"
+                className="absolute bottom-full mb-3 left-0 right-0 p-2 bg-black/80 border border-white/10 rounded-2xl shadow-2xl z-50 overflow-hidden"
               >
                 <div className="px-3 py-2 border-b border-white/5 flex items-center justify-between">
                   <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/80">
@@ -427,7 +427,7 @@ export function ProcedureChecklistBlock({ procedures, onChange }: ProcedureCheck
                         onMouseEnter={() => setSuggestionIndex(idx)}
                         className={cn(
                           "w-full flex items-center justify-between p-3 rounded-xl transition-all group text-left",
-                          suggestionIndex === idx ? "bg-white/15" : "hover:bg-white/10",
+                          suggestionIndex === idx ? "bg-card" : "hover:bg-card",
                         )}
                       >
                         <div className="flex items-center gap-3">
@@ -470,20 +470,20 @@ export function ProcedureChecklistBlock({ procedures, onChange }: ProcedureCheck
       {/* Quick Tips */}
       <div className="flex items-center justify-center gap-4 text-[10px] text-muted-foreground/40 font-medium uppercase tracking-tighter">
         <div className="flex items-center gap-1">
-          <kbd className="px-1.5 py-0.5 rounded border border-white/10 bg-white/5 font-sans">
+          <kbd className="px-1.5 py-0.5 rounded border border-white/10 bg-card font-sans">
             {" "}
             /{" "}
           </kbd>
           <span>para focar</span>
         </div>
-        <div className="w-1 h-1 rounded-full bg-white/5" />
+        <div className="w-1 h-1 rounded-full bg-card" />
         <div className="flex items-center gap-1">
           <CheckCircle2 className="w-3 h-3" />
           <span>Enter para adicionar</span>
         </div>
-        <div className="w-1 h-1 rounded-full bg-white/5" />
+        <div className="w-1 h-1 rounded-full bg-card" />
         <span>Arraste para reordenar</span>
-        <div className="w-1 h-1 rounded-full bg-white/5" />
+        <div className="w-1 h-1 rounded-full bg-card" />
         <span>Confete ao completar 100%</span>
       </div>
     </div>

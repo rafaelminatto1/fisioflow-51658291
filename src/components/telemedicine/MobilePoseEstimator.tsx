@@ -107,11 +107,11 @@ export function MobilePoseEstimator({
             <div className="absolute inset-0 flex flex-col justify-between p-4 z-10">
               {/* Top HUD Row */}
               <div className="flex items-center justify-between">
-                <Badge variant="outline" className="border-blue-500/30 text-blue-400 bg-blue-500/5 backdrop-blur-md animate-pulse">
+                <Badge variant="outline" className="border-blue-500/30 text-blue-400 bg-blue-500/5 animate-pulse">
                   <Activity className="w-3.5 h-3.5 mr-1" />
                   Rastreamento Ativo
                 </Badge>
-                <Badge variant="outline" className="border-violet-500/30 text-violet-400 bg-violet-500/5 backdrop-blur-md">
+                <Badge variant="outline" className="border-violet-500/30 text-violet-400 bg-violet-500/5">
                   <Sparkles className="w-3.5 h-3.5 mr-1" />
                   Edge AI Local
                 </Badge>
@@ -147,7 +147,7 @@ export function MobilePoseEstimator({
               </svg>
 
               {/* Bottom HUD Row */}
-              <div className="flex justify-between items-end backdrop-blur-sm bg-black/30 p-3 rounded-2xl border border-white/5">
+              <div className="flex justify-between items-end bg-black/30 p-3 rounded-2xl border border-white/5">
                 <div className="space-y-0.5">
                   <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">Angulação Atual</span>
                   <span className="text-3xl font-black italic text-emerald-400 tabular-nums">{currentAngle}°</span>

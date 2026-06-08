@@ -46,7 +46,7 @@ export const CalibrationOverlay: React.FC<CalibrationOverlayProps> = ({
 
   return (
     <div className="absolute inset-0 bg-black/80 z-50 flex flex-col items-center justify-center p-4">
-      <Card className="w-full max-w-md bg-background/95 backdrop-blur">
+      <Card className="w-full max-w-md bg-card">
         <CardContent className="p-6 space-y-6 text-center">
           <h2 className="text-2xl font-bold">Ajuste sua Posição</h2>
 

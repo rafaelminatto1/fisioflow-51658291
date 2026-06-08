@@ -506,7 +506,7 @@ export function MovementRecorder({
             )}
 
             {state === "uploading" || state === "analyzing" ? (
-              <div className="absolute inset-0 flex items-center justify-center bg-background/90 backdrop-blur">
+              <div className="absolute inset-0 flex items-center justify-center bg-card">
                 <div className="text-center space-y-4 max-w-md">
                   <div className="h-16 w-16 mx-auto rounded-full border-4 border-primary border-t-transparent animate-spin" />
                   <div>

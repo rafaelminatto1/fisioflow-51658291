@@ -87,7 +87,7 @@ export function AniversariantesContent() {
       {/* Celebrate Today Section - Ultra Premium Glass */}
       {aniversariantesHoje.length > 0 && (
         <div className="relative group overflow-hidden rounded-[2.5rem] p-1 bg-gradient-to-r from-blue-500/20 via-primary/20 to-indigo-500/20 shadow-2xl shadow-primary/10 transition-all duration-500 hover:shadow-primary/20">
-          <div className="relative z-10 bg-white/40 dark:bg-slate-900/40 backdrop-blur-3xl rounded-[2.25rem] p-8 border border-white/40 dark:border-white/10">
+          <div className="relative z-10 bg-card rounded-[2.25rem] p-8 border border-white/40 dark:border-white/10">
             <div className="flex flex-col md:flex-row items-center justify-between gap-8">
               <div className="space-y-4 text-center md:text-left">
                 <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary border border-primary/20">
@@ -109,7 +109,7 @@ export function AniversariantesContent() {
                 {aniversariantesHoje.map((a) => (
                   <div
                     key={a.id}
-                    className="group/card flex items-center gap-4 bg-white/80 dark:bg-slate-900/80 rounded-3xl p-4 border border-primary/10 shadow-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-primary/20 hover:border-primary/30"
+                    className="group/card flex items-center gap-4 bg-card rounded-3xl p-4 border border-primary/10 shadow-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-primary/20 hover:border-primary/30"
                   >
                     <div className="relative">
                       <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary to-indigo-600 flex items-center justify-center font-black text-xl text-white shadow-lg shadow-primary/30">
@@ -175,7 +175,7 @@ export function AniversariantesContent() {
                   "rounded-2xl h-14 px-8 text-xs font-black uppercase tracking-widest transition-all duration-300",
                   mesSelecionado === idx + 1
                     ? "bg-primary text-white shadow-xl shadow-primary/30 border-primary scale-105"
-                    : "bg-white/50 dark:bg-slate-900/50 hover:bg-white dark:hover:bg-slate-800 border-slate-200 dark:border-slate-800 text-slate-500",
+                    : "bg-card hover:bg-white dark:hover:bg-slate-800 border-slate-200 dark:border-slate-800 text-slate-500",
                 )}
               >
                 {mes}
@@ -187,7 +187,7 @@ export function AniversariantesContent() {
 
       {/* Main Grid Content */}
       <div className="grid grid-cols-1 gap-8">
-        <div className="bg-white/40 dark:bg-slate-900/40 backdrop-blur-xl rounded-[2.5rem] border border-white/40 dark:border-white/10 shadow-premium overflow-hidden">
+        <div className="bg-card rounded-[2.5rem] border border-white/40 dark:border-white/10 shadow-premium overflow-hidden">
           <div className="p-8 border-b border-slate-100 dark:border-slate-800/50 flex flex-col sm:flex-row items-center justify-between gap-6">
             <div>
               <h3 className="text-2xl font-black text-slate-800 dark:text-white tracking-tight">
@@ -204,7 +204,7 @@ export function AniversariantesContent() {
                 placeholder="Buscar por nome..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="pl-12 h-14 rounded-2xl border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50 font-bold text-sm focus:ring-primary/20 focus:border-primary shadow-inner"
+                className="pl-12 h-14 rounded-2xl border-slate-200 dark:border-slate-800 bg-card font-bold text-sm focus:ring-primary/20 focus:border-primary shadow-inner"
               />
             </div>
           </div>
@@ -240,7 +240,7 @@ export function AniversariantesContent() {
                       "group relative overflow-hidden p-6 rounded-3xl border transition-all duration-500",
                       a.dia === hoje && mesSelecionado === mesAtual
                         ? "bg-primary/5 border-primary/30 shadow-lg shadow-primary/10"
-                        : "bg-white/50 dark:bg-slate-800/50 border-slate-100 dark:border-slate-800 hover:border-primary/20 hover:bg-white dark:hover:bg-slate-800 hover:shadow-xl hover:shadow-primary/5 hover:-translate-y-1",
+                        : "bg-card border-slate-100 dark:border-slate-800 hover:border-primary/20 hover:bg-white dark:hover:bg-slate-800 hover:shadow-xl hover:shadow-primary/5 hover:-translate-y-1",
                     )}
                   >
                     <div className="flex items-start justify-between relative z-10">

@@ -221,7 +221,7 @@ const MetricCard: React.FC<MetricCardProps> = ({
 
   return (
     <div
-      className={`relative overflow-hidden rounded-3xl border bg-card/40 backdrop-blur-md p-6 transition-all hover:shadow-xl hover:bg-card/60 group ${colors[color]}`}
+      className={`relative overflow-hidden rounded-3xl border bg-card p-6 transition-all hover:shadow-xl hover:bg-card group ${colors[color]}`}
     >
       <div className="flex justify-between items-start">
         <div>
@@ -253,7 +253,7 @@ interface DashboardCardProps {
 }
 
 const DashboardCard: React.FC<DashboardCardProps> = ({ title, children }) => (
-  <div className="rounded-3xl border bg-card/40 backdrop-blur-md p-6 shadow-sm border-border/50">
+  <div className="rounded-3xl border bg-card p-6 shadow-sm border-border/50">
     <div className="flex items-center gap-2 mb-2">
       <TrendingUp className="w-4 h-4 text-primary" />
       <h4 className="font-bold text-sm uppercase tracking-wider text-muted-foreground">{title}</h4>

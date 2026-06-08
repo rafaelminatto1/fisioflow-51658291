@@ -41,7 +41,7 @@ export function RouterErrorElement() {
   return (
     <main className="min-h-screen overflow-hidden bg-[radial-gradient(circle_at_top_left,hsl(var(--primary)/0.14),transparent_32rem),linear-gradient(135deg,hsl(var(--background)),hsl(var(--muted)/0.65))] p-4">
       <div className="mx-auto flex min-h-screen max-w-5xl items-center justify-center">
-        <section className="relative w-full overflow-hidden rounded-[2rem] border bg-background/90 p-6 shadow-2xl shadow-slate-950/10 backdrop-blur md:p-10">
+        <section className="relative w-full overflow-hidden rounded-[2rem] border bg-card p-6 shadow-2xl shadow-slate-950/10 md:p-10">
           <div className="absolute right-0 top-0 h-44 w-44 translate-x-12 -translate-y-12 rounded-full bg-primary/10 blur-3xl" />
           <div className="absolute bottom-0 left-0 h-40 w-40 -translate-x-10 translate-y-10 rounded-full bg-amber-400/10 blur-3xl" />
 
