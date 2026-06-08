@@ -172,7 +172,7 @@ export const SessionExercisesPanel: React.FC<SessionExercisesPanelProps> = ({
                         <div className="absolute top-2 left-2">
                           <Badge
                             variant="secondary"
-                            className="bg-background/80 backdrop-blur-sm shadow-sm h-6 px-2 font-bold"
+                            className="bg-card shadow-sm h-6 px-2 font-bold"
                           >
                             #{index + 1}
                           </Badge>

@@ -77,7 +77,7 @@ export const GoniometerPanel: React.FC<DynamicGoniometerProps> = ({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, delay: 0.2 }}
     >
-      <Card className="border-none shadow-2xl bg-slate-900/40 backdrop-blur-xl border border-white/5 overflow-hidden">
+      <Card className="border-none shadow-2xl bg-slate-900/40 border border-white/5 overflow-hidden">
         <CardContent className="p-4 space-y-4">
           <div className="flex items-center justify-between">
             <h4 className="text-[10px] font-black uppercase tracking-widest text-orange-500 flex items-center gap-2">

@@ -35,7 +35,7 @@ export function RevenueForecastCard() {
       : 0;
 
   return (
-    <Card className="border border-border/50 shadow-sm bg-card/80 backdrop-blur-sm">
+    <Card className="border border-border/50 shadow-sm bg-card">
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <CardTitle className="text-sm font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">

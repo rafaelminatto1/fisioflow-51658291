@@ -29,7 +29,7 @@ export const AssessmentInstruction: React.FC<InstructionProps> = ({
 
   return (
     <div className="max-w-4xl mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <Card className="border-0 shadow-2xl bg-background/60 backdrop-blur-xl overflow-hidden ring-1 ring-white/10">
+      <Card className="border-0 shadow-2xl bg-card overflow-hidden ring-1 ring-white/10">
         <CardHeader className="bg-gradient-to-r from-primary/10 via-background to-transparent border-b border-primary/5 py-8">
           <div className="flex justify-between items-center px-2">
             <div className="space-y-1">
@@ -72,7 +72,7 @@ export const AssessmentInstruction: React.FC<InstructionProps> = ({
               </div>
 
               {reference && (
-                <div className="p-6 bg-background/40 rounded-3xl border border-primary/5 space-y-3">
+                <div className="p-6 bg-card rounded-3xl border border-primary/5 space-y-3">
                   <div className="flex items-center gap-2">
                     <Badge className="bg-green-500/10 text-green-600 hover:bg-green-500/20 border-0 text-[9px] font-black uppercase">
                       Padrão Ouro
@@ -113,7 +113,7 @@ export const AssessmentInstruction: React.FC<InstructionProps> = ({
 
                   <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-60" />
                   <div className="absolute bottom-6 left-6 right-6">
-                    <div className="bg-white/10 backdrop-blur-md p-4 rounded-2xl border border-white/10">
+                    <div className="bg-white/10 p-4 rounded-2xl border border-white/10">
                       <p className="text-xs font-bold text-white leading-relaxed">{positioning}</p>
                     </div>
                   </div>

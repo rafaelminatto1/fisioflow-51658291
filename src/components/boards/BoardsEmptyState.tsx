@@ -28,13 +28,13 @@ function Badge({
 
 export function BoardsEmptyState({ onCreate }: BoardsEmptyStateProps) {
   return (
-    <div className="overflow-hidden rounded-3xl border border-slate-800/20 bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 text-white shadow-xl relative">
+    <div className="overflow-hidden rounded-3xl border border-slate-800/20 bg-slate-900 text-white shadow-xl relative">
       {/* Decorative background pattern */}
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.05),transparent_40%)] pointer-events-none" />
 
       <div className="grid gap-8 px-6 py-10 sm:px-10 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-center relative z-10">
         <div className="space-y-6">
-          <div className="inline-flex items-center rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[10px] font-black uppercase tracking-[0.2em] text-white/80 backdrop-blur-md">
+          <div className="inline-flex items-center rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[10px] font-black uppercase tracking-[0.2em] text-white/80">
             <Sparkles className="mr-2 h-3 w-3 text-blue-400" />
             Workspace de boards
           </div>
@@ -51,18 +51,18 @@ export function BoardsEmptyState({ onCreate }: BoardsEmptyStateProps) {
             <Button
               onClick={onCreate}
               size="lg"
-              className="rounded-2xl h-12 px-8 bg-white text-slate-950 font-black uppercase text-[10px] tracking-widest hover:bg-white/90 shadow-[0_4px_20px_rgba(255,255,255,0.2)] hover:scale-[1.02] transition-all active:scale-95"
+              className="rounded-2xl h-12 px-8 bg-white text-slate-950 font-black uppercase text-[10px] tracking-widest hover:bg-card shadow-[0_4px_20px_rgba(255,255,255,0.2)] hover:scale-[1.02] transition-all active:scale-95"
             >
               <Plus className="mr-2 h-4 w-4" />
               Criar primeiro board
             </Button>
-            <div className="rounded-2xl border border-white/5 bg-white/5 px-5 py-3.5 text-xs font-bold text-white/40 backdrop-blur-md uppercase tracking-widest">
+            <div className="rounded-2xl border border-white/5 bg-white/5 px-5 py-3.5 text-xs font-bold text-white/40 uppercase tracking-widest">
               Pipeline • Operação • Sprints • CRM
             </div>
           </div>
         </div>
 
-        <div className="rounded-3xl border border-white/10 bg-white/5 p-6 backdrop-blur-xl shadow-2xl">
+        <div className="rounded-3xl border border-white/10 bg-white/5 p-6 shadow-2xl">
           <div className="flex items-center justify-between">
             <div className="rounded-2xl bg-white/10 p-3 text-white/80 border border-white/5">
               <LayoutGrid className="h-6 w-6" />

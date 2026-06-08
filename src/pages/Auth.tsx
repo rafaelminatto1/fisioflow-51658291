@@ -380,7 +380,7 @@ export default function Auth() {
 
   return (
     <AuthLayout>
-      <Card className="border-border/50 shadow-xl shadow-primary/5 bg-background/80 backdrop-blur-sm">
+      <Card className="border-border/50 shadow-xl shadow-primary/5 bg-card">
         <CardHeader className="space-y-1.5 pb-6">
           <CardTitle className="text-2xl font-bold text-center">
             {activeTab === "login" ? "Bem-vindo de volta" : "Crie sua conta"}

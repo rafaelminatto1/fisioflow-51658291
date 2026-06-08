@@ -131,7 +131,7 @@ export function ReceiptOCR({ onDataExtracted }: ReceiptOCRProps) {
   return (
     <div className="space-y-4">
       <Card
-        className={`border-dashed border-2 bg-slate-50/50 dark:bg-slate-900/50 overflow-hidden relative group transition-all ${
+        className={`border-dashed border-2 bg-muted dark:bg-slate-900/50 overflow-hidden relative group transition-all ${
           isDragOver ? "border-primary bg-primary/5" : "hover:bg-slate-100"
         }`}
         onDragOver={(e) => {
@@ -153,7 +153,7 @@ export function ReceiptOCR({ onDataExtracted }: ReceiptOCRProps) {
                   alt="Preview comprovante"
                   className="w-full h-full object-contain opacity-50 blur-[1px]"
                 />
-                <div className="absolute inset-0 flex flex-col items-center justify-center bg-white/20 backdrop-blur-sm">
+                <div className="absolute inset-0 flex flex-col items-center justify-center bg-white/20">
                   {isAnalyzing ? (
                     <>
                       <Loader2 className="h-8 w-8 animate-spin text-primary mb-2" />
@@ -177,7 +177,7 @@ export function ReceiptOCR({ onDataExtracted }: ReceiptOCRProps) {
                       e.preventDefault();
                       clearPreview();
                     }}
-                    className="absolute top-2 right-2 p-1 rounded-full bg-white/80 hover:bg-white shadow"
+                    className="absolute top-2 right-2 p-1 rounded-full bg-card hover:bg-white shadow"
                   >
                     <X className="h-3.5 w-3.5 text-slate-500" />
                   </button>

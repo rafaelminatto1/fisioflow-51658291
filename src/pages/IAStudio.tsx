@@ -228,7 +228,7 @@ export const IAStudio: React.FC = () => {
                   </div>
 
                   {/* Promo Section */}
-                  <section className="p-10 rounded-[40px] bg-gradient-to-br from-slate-900 to-slate-950 text-white relative overflow-hidden group">
+                  <section className="p-10 rounded-[40px] bg-slate-900 text-white relative overflow-hidden group">
                     <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:opacity-20 transition-opacity">
                       <TrendingUp className="w-48 h-48" />
                     </div>

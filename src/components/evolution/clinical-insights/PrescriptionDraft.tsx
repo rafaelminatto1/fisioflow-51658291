@@ -49,7 +49,7 @@ export const PrescriptionDraft: React.FC<PrescriptionDraftProps> = ({
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
             transition={{ type: "spring", damping: 25, stiffness: 200 }}
-            className="fixed right-0 top-0 z-[60] h-screen w-80 border-l border-slate-200 bg-white/80 shadow-2xl backdrop-blur-xl dark:border-slate-800 dark:bg-slate-900/80"
+            className="fixed right-0 top-0 z-[60] h-screen w-80 border-l border-slate-200 bg-card shadow-2xl dark:border-slate-800 dark:bg-slate-900/80"
           >
             <div className="flex h-full flex-col p-6">
               <div className="mb-6 flex items-center justify-between">
@@ -120,7 +120,7 @@ export const PrescriptionDraft: React.FC<PrescriptionDraftProps> = ({
       {/* Backdrop */}
       {isOpen && (
         <div
-          className="fixed inset-0 z-[55] bg-black/10 backdrop-blur-sm"
+          className="fixed inset-0 z-[55] bg-black/10"
           onClick={() => setIsOpen(false)}
         />
       )}

@@ -159,7 +159,7 @@ export default function BoardDetail() {
         />
 
         <div className="mx-auto max-w-[1600px] px-4 py-4 sm:px-6 lg:px-8">
-          <div className="overflow-hidden rounded-[28px] border border-border/60 bg-card/70 shadow-sm backdrop-blur-sm lg:hidden">
+          <div className="overflow-hidden rounded-[28px] border border-border/60 bg-card shadow-sm lg:hidden">
             <div className="p-4 sm:p-5">
               {view === "kanban" && (
                 <KanbanFull
@@ -187,7 +187,7 @@ export default function BoardDetail() {
             </div>
           </div>
 
-          <div className="hidden overflow-hidden rounded-[28px] border border-border/60 bg-card/70 shadow-sm backdrop-blur-sm lg:block">
+          <div className="hidden overflow-hidden rounded-[28px] border border-border/60 bg-card shadow-sm lg:block">
             <ResizablePanelGroup direction="horizontal" className="min-h-[calc(100vh-280px)]">
               <ResizablePanel defaultSize={22} minSize={18} maxSize={30}>
                 <div className="h-full border-r border-border/60 bg-muted/25 p-4">
@@ -196,7 +196,7 @@ export default function BoardDetail() {
               </ResizablePanel>
               <ResizableHandle withHandle />
               <ResizablePanel defaultSize={78} minSize={50}>
-                <div className="h-full bg-background/60">
+                <div className="h-full bg-card">
                   <div className="h-full p-6">
                     {view === "kanban" && (
                       <KanbanFull

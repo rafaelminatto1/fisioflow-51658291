@@ -37,7 +37,7 @@ interface LoadingScreenProps {
  */
 export function LoadingScreen({ text, subtext, progress }: LoadingScreenProps) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-card">
       <div className="flex flex-col items-center gap-4 p-8">
         <LoadingSpinner size="xl" />
         <div className="text-center space-y-1">
@@ -234,7 +234,7 @@ export function LoadingOverlay({ show, text }: { show: boolean; text?: string })
   if (!show) return null;
 
   return (
-    <div className="absolute inset-0 z-10 flex items-center justify-center bg-background/50 backdrop-blur-sm rounded-lg">
+    <div className="absolute inset-0 z-10 flex items-center justify-center bg-card rounded-lg">
       <LoadingSpinner size="md" text={text} />
     </div>
   );

@@ -149,7 +149,7 @@ export function ClinicalTestCombobox({
         align="start"
       >
         <Command shouldFilter={false} className="rounded-none">
-          <div className="flex items-center border-b px-3 bg-slate-50/50" cmdk-input-wrapper="">
+          <div className="flex items-center border-b px-3 bg-muted" cmdk-input-wrapper="">
             <Search className="mr-2 h-4 w-4 shrink-0 text-teal-600 opacity-70" />
             <CommandInput
               placeholder="Buscar por nome, categoria ou articulação..."
@@ -241,7 +241,7 @@ export function ClinicalTestCombobox({
                         {test.purpose && (
                           <TooltipContent
                             side="right"
-                            className="max-w-xs p-3 shadow-xl border-slate-100 bg-white/95 backdrop-blur-sm"
+                            className="max-w-xs p-3 shadow-xl border-slate-100 bg-card"
                             sideOffset={10}
                           >
                             <div className="space-y-1.5">

@@ -349,7 +349,7 @@ export default function Templates() {
           <div className="absolute bottom-0 left-0 translate-y-1/2 -translate-x-1/4 w-64 h-64 bg-blue-500/10 rounded-full blur-[100px]" />
 
           <div className="relative z-10 max-w-3xl space-y-4 text-left">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/20 mb-2">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/20 mb-2">
               <ClipboardList className="w-4 h-4 text-primary" />
               <span className="text-[10px] font-black uppercase tracking-widest">
                 Protocolos de Avaliação
@@ -373,7 +373,7 @@ export default function Templates() {
               placeholder="Buscar templates por patologia, nome ou descrição..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="h-14 pl-12 pr-4 rounded-2xl bg-white/50 dark:bg-slate-900/50 backdrop-blur-xl border-border/40 shadow-premium-sm focus:shadow-premium-md transition-all text-base font-medium"
+              className="h-14 pl-12 pr-4 rounded-2xl bg-card border-border/40 shadow-premium-sm focus:shadow-premium-md transition-all text-base font-medium"
             />
           </div>
 
@@ -921,7 +921,7 @@ export default function Templates() {
               )}
 
               <div className="space-y-4">
-                <div className="flex items-center justify-between sticky top-0 bg-white/80 dark:bg-slate-900/80 backdrop-blur pb-2 z-10">
+                <div className="flex items-center justify-between sticky top-0 bg-card pb-2 z-10">
                   <h4 className="text-sm font-black uppercase tracking-[0.2em] text-slate-400">
                     Estrutura do Protocolo
                   </h4>

@@ -87,7 +87,7 @@ export function WaitlistSidebar({ onSchedulePatient, className }: WaitlistSideba
       )}
     >
       {/* Header */}
-      <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between sticky top-0 bg-white/50 backdrop-blur-sm z-10">
+      <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between sticky top-0 bg-card z-10">
         <div className="flex items-center gap-2">
           <div className="p-1.5 bg-indigo-50 dark:bg-indigo-900/20 rounded-lg">
             <Clock className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />

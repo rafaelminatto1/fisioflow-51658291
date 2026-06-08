@@ -34,7 +34,7 @@ export default function Welcome() {
   return (
     <div className="min-h-screen bg-[#F8FAFC] selection:bg-primary/20">
       {/* Modern Premium Header */}
-      <header className="fixed top-0 w-full z-50 backdrop-blur-xl bg-white/70 border-b border-gray-100/50">
+      <header className="fixed top-0 w-full z-50 bg-card border-b border-gray-100/50">
         <div className="max-w-7xl mx-auto px-4 h-20 flex items-center justify-between">
           <div className="flex items-center gap-2 group cursor-pointer">
             <div className="bg-primary p-2 rounded-xl group-hover:rotate-12 transition-transform duration-300">
@@ -130,7 +130,7 @@ export default function Welcome() {
             {features.map((feature, i) => (
               <Card
                 key={i}
-                className="border-none shadow-none bg-slate-50/50 p-8 rounded-3xl hover:bg-white hover:shadow-xl transition-all duration-300 group"
+                className="border-none shadow-none bg-muted p-8 rounded-3xl hover:bg-white hover:shadow-xl transition-all duration-300 group"
               >
                 <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center mb-6 shadow-sm group-hover:scale-110 transition-transform">
                   {feature.icon}

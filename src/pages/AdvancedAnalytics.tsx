@@ -231,7 +231,7 @@ function AdvancedAnalyticsContentInternal() {
       {/* Tabs */}
       <Tabs defaultValue="patients" className="space-y-6">
         <div className="flex items-center overflow-x-auto pb-2 -mx-1 px-1 no-scrollbar">
-          <TabsList className="h-12 inline-flex items-center justify-start p-1.5 bg-muted/50 rounded-2xl border border-border/50 backdrop-blur-sm">
+          <TabsList className="h-12 inline-flex items-center justify-start p-1.5 bg-muted/50 rounded-2xl border border-border/50">
             <TabsTrigger
               value="patients"
               className="h-9 px-4 rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-md data-[state=active]:text-primary transition-all text-xs font-bold gap-2"

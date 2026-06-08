@@ -55,7 +55,7 @@ export const AppointmentContextMenu = ({
   return (
     <ContextMenu>
       <ContextMenuTrigger asChild>{trigger}</ContextMenuTrigger>
-      <ContextMenuContent className="w-64 rounded-xl border-blue-100 shadow-2xl backdrop-blur-xl bg-white/90 dark:bg-slate-900/90">
+      <ContextMenuContent className="w-64 rounded-xl border-blue-100 shadow-2xl bg-card">
         <div className="px-3 py-2 text-xs font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 dark:border-slate-800 mb-1">
           {appointment.patientName}
         </div>
@@ -99,7 +99,7 @@ export const AppointmentContextMenu = ({
             <Clock className="w-4 h-4 text-slate-400" />
             <span>Alterar Status</span>
           </ContextMenuSubTrigger>
-          <ContextMenuSubContent className="w-56 rounded-xl shadow-xl border-blue-100 bg-white/95 dark:bg-slate-900/95">
+          <ContextMenuSubContent className="w-56 rounded-xl shadow-xl border-blue-100 bg-card">
             {allStatuses.map((status) => {
               const config = statusConfig[status] || statusConfig.agendado;
 

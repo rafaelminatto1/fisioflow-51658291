@@ -186,7 +186,7 @@ export default function PublicPrescriptionPage() {
                             onError={(e) => (e.currentTarget.parentElement!.style.display = "none")}
                           />
                           <div className="absolute top-3 right-3">
-                            <Badge className="bg-white/90 text-slate-800 backdrop-blur-sm border-slate-200 shadow-sm">
+                            <Badge className="bg-card text-slate-800 border-slate-200 shadow-sm">
                               Guia Visual
                             </Badge>
                           </div>

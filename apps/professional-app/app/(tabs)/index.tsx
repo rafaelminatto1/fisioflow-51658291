@@ -10,7 +10,7 @@ import {
 import { useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
-import { router } from "expo-router";
+import { router, type Href } from "expo-router";
 import { addHours, isBefore } from "date-fns";
 import { useColors } from "@/hooks/useColorScheme";
 import { useAuthStore } from "@/store/auth";
@@ -266,7 +266,7 @@ export default function DashboardScreen() {
                     ]}
                   >
                     <Ionicons
-                      name={stat.icon as any}
+                      name={stat.icon as keyof typeof Ionicons.glyphMap}
                       size={20} // Slightly more compact
                       color={stat.color}
                     />
@@ -300,7 +300,7 @@ export default function DashboardScreen() {
                 ]}
                 onPress={() => {
                   medium();
-                  router.push("/biomechanics" as any);
+                  router.push("/biomecanica" as Href);
                 }}
                 activeOpacity={0.9}
               >
@@ -344,7 +344,7 @@ export default function DashboardScreen() {
                   ]}
                   onPress={() => {
                     light();
-                    router.push("/exercises" as any);
+                    router.push("/exercises" as Href);
                   }}
                   activeOpacity={0.7}
                 >
@@ -369,7 +369,7 @@ export default function DashboardScreen() {
                   ]}
                   onPress={() => {
                     light();
-                    router.push("/protocols" as any);
+                    router.push("/protocols" as Href);
                   }}
                   activeOpacity={0.7}
                 >
@@ -394,7 +394,7 @@ export default function DashboardScreen() {
                   ]}
                   onPress={() => {
                     light();
-                    router.push("/telemedicine" as any);
+                    router.push("/telemedicine" as Href);
                   }}
                   activeOpacity={0.7}
                 >
@@ -421,7 +421,7 @@ export default function DashboardScreen() {
                   ]}
                   onPress={() => {
                     light();
-                    router.push("/leaderboard" as any);
+                    router.push("/leaderboard" as Href);
                   }}
                   activeOpacity={0.7}
                 >
@@ -654,7 +654,7 @@ export default function DashboardScreen() {
                 {protocols.slice(0, 5).map((p) => (
                   <TouchableOpacity
                     key={p.id}
-                    onPress={() => router.push(`/protocol-detail?protocolId=${p.id}` as any)}
+                    onPress={() => router.push(`/protocol-detail?protocolId=${p.id}` as Href)}
                     activeOpacity={0.7}
                   >
                     <Card

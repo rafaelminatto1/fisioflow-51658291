@@ -104,7 +104,7 @@ const Index = () => {
       >
         {/* ── Compact Command Bar ── */}
         <div
-          className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 rounded-2xl border border-border/60 bg-background/80 backdrop-blur-xl px-5 py-3 shadow-sm"
+          className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 rounded-2xl border border-border/60 bg-card px-5 py-3 shadow-sm"
           data-testid="dashboard-header"
         >
           {/* Identity */}

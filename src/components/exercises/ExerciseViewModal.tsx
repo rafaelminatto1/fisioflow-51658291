@@ -120,7 +120,7 @@ export function ExerciseViewModal({
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent
-          className="fixed left-[50%] top-[50%] z-50 !-translate-x-1/2 !-translate-y-1/2 w-[95vw] md:w-[90vw] lg:w-[85vw] max-w-[1400px] max-h-[90vh] p-0 gap-0 overflow-hidden flex flex-col bg-background/95 backdrop-blur-xl border-border/50 shadow-2xl rounded-lg exercise-print-layout"
+          className="fixed left-[50%] top-[50%] z-50 !-translate-x-1/2 !-translate-y-1/2 w-[95vw] md:w-[90vw] lg:w-[85vw] max-w-[1400px] max-h-[90vh] p-0 gap-0 overflow-hidden flex flex-col bg-card border-border/50 shadow-2xl rounded-lg exercise-print-layout"
           onInteractOutside={(e) => e.preventDefault()}
           onEscapeKeyDown={(e) => {
             e.preventDefault();
@@ -128,7 +128,7 @@ export function ExerciseViewModal({
           }}
         >
           {/* Header */}
-          <div className="flex-none p-4 sm:p-6 border-b bg-background/50 backdrop-blur-sm z-10 flex items-start justify-between gap-4 exercise-print-header">
+          <div className="flex-none p-4 sm:p-6 border-b bg-card z-10 flex items-start justify-between gap-4 exercise-print-header">
             <div className="space-y-1.5 pt-1">
               <DialogTitle className="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2 exercise-print-title">
                 {exercise?.name ?? "Exercício"}
@@ -149,7 +149,7 @@ export function ExerciseViewModal({
                   <Badge
                     variant="outline"
                     className={cn(
-                      "border bg-background/50",
+                      "border bg-card",
                       difficultyColors[exercise.difficulty],
                       "exercise-print-badge",
                     )}
@@ -238,7 +238,7 @@ export function ExerciseViewModal({
 
               <Tabs defaultValue={defaultTab} className="flex-1 flex flex-col relative z-0">
                 <div className="px-6 pt-4 flex-none z-10">
-                  <TabsList className="bg-background/80 backdrop-blur border w-auto inline-flex shadow-sm">
+                  <TabsList className="bg-card border w-auto inline-flex shadow-sm">
                     <TabsTrigger value="video" disabled={!hasVideo} className="gap-2 px-4">
                       <Video className="h-4 w-4" /> Vídeo
                     </TabsTrigger>

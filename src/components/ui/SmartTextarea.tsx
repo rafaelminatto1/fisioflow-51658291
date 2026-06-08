@@ -476,7 +476,7 @@ const MemoizedSmartTextarea = memo(
           className={cn(
             "relative group transition-all duration-300",
             variant === "default" &&
-              "border rounded-lg shadow-sm bg-background/50 backdrop-blur-sm",
+              "border rounded-lg shadow-sm bg-card",
             variant === "default" &&
               (isFocused
                 ? "ring-2 ring-primary/20 border-primary/50 bg-background"
@@ -614,7 +614,7 @@ const MemoizedSmartTextarea = memo(
                 )}
               >
                 <span
-                  className="text-[10px] sm:text-[11px] text-muted-foreground bg-background/90 px-2 py-1 rounded-md border border-border/50 backdrop-blur-sm shadow-sm font-medium tabular-nums"
+                  className="text-[10px] sm:text-[11px] text-muted-foreground bg-card px-2 py-1 rounded-md border border-border/50 shadow-sm font-medium tabular-nums"
                   aria-live="polite"
                   aria-atomic="true"
                 >

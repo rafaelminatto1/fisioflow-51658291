@@ -135,7 +135,7 @@ export function NFSeEmissionDialog({
               className="relative z-10"
             >
               <div className="flex items-center gap-3 mb-3">
-                <div className="bg-emerald-500/20 p-2 rounded-xl backdrop-blur-md">
+                <div className="bg-emerald-500/20 p-2 rounded-xl">
                   <Zap className="h-5 w-5 text-emerald-400 fill-emerald-400" />
                 </div>
                 <h3 className="text-2xl font-black tracking-tight font-display italic">
@@ -349,7 +349,7 @@ export function NFSeEmissionDialog({
             </div>
           </ScrollArea>
 
-          <DialogFooter className="p-8 border-t border-slate-50 dark:border-slate-800 bg-slate-50/30 flex items-center justify-between gap-4">
+          <DialogFooter className="p-8 border-t border-slate-50 dark:border-slate-800 bg-muted flex items-center justify-between gap-4">
             <Button
               variant="ghost"
               className="rounded-2xl h-14 px-8 font-black text-slate-400 uppercase tracking-widest text-[10px]"
@@ -368,7 +368,7 @@ export function NFSeEmissionDialog({
         </div>
 
         <div className="hidden lg:flex flex-1 bg-slate-50 dark:bg-slate-950/50 p-12 border-l border-slate-100 dark:border-slate-800 flex-col items-center justify-center relative overflow-hidden">
-          <div className="absolute top-10 left-10 p-2 rounded-xl bg-white/80 backdrop-blur-md shadow-sm border border-slate-100">
+          <div className="absolute top-10 left-10 p-2 rounded-xl bg-card shadow-sm border border-slate-100">
             <Eye className="h-4 w-4 text-slate-400" />
           </div>
 

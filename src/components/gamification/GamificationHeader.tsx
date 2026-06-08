@@ -36,7 +36,7 @@ export default function GamificationHeader({
           {/* Avatar Level Ring */}
           <div className="relative group">
             <div className="absolute inset-0 rounded-full bg-white/20 blur-md transform group-hover:scale-110 transition-transform duration-500" />
-            <div className="relative h-24 w-24 rounded-full p-1 bg-white/10 backdrop-blur-sm ring-1 ring-white/30">
+            <div className="relative h-24 w-24 rounded-full p-1 bg-white/10 ring-1 ring-white/30">
               <svg className="w-full h-full -rotate-90">
                 <circle
                   cx="50%"
@@ -119,7 +119,7 @@ export default function GamificationHeader({
 
           {/* Streak Badge */}
           <motion.div
-            className="flex flex-col items-center p-3 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 min-w-[100px]"
+            className="flex flex-col items-center p-3 rounded-2xl bg-white/10 border border-white/20 min-w-[100px]"
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
           >

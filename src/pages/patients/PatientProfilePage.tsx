@@ -360,7 +360,7 @@ const PatientProfileContent = () => {
           }}
           className="w-full"
         >
-          <div className="sticky top-0 z-20 bg-background/95 backdrop-blur-sm pb-1 pt-2 -mx-4 px-4 border-b border-blue-50/50 shadow-sm shadow-blue-500/5">
+          <div className="sticky top-0 z-20 bg-card pb-1 pt-2 -mx-4 px-4 border-b border-blue-50/50 shadow-sm shadow-blue-500/5">
             <div className="relative">
               <TabsList className="w-full justify-start h-auto p-0 bg-transparent overflow-x-auto flex-nowrap scrollbar-hide gap-6 pr-12">
                 <TabsTrigger

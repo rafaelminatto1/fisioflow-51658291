@@ -79,7 +79,7 @@ export function PhysioDictionaryView() {
   };
 
   return (
-    <div className="flex flex-col h-full bg-slate-50/50 dark:bg-slate-900/50">
+    <div className="flex flex-col h-full bg-muted dark:bg-slate-900/50">
       <div className="border-b bg-background px-6 py-6 space-y-4">
         <div className="flex justify-between items-start">
           <div>
@@ -137,7 +137,7 @@ export function PhysioDictionaryView() {
             {terms.map((term) => (
               <Card
                 key={term.id}
-                className="group relative border-slate-200/60 dark:border-slate-800/60 bg-white/70 dark:bg-slate-900/70 backdrop-blur-sm rounded-2xl transition-all duration-300 hover:shadow-xl hover:shadow-blue-500/5 hover:-translate-y-1 overflow-hidden cursor-pointer"
+                className="group relative border-slate-200/60 dark:border-slate-800/60 bg-card rounded-2xl transition-all duration-300 hover:shadow-xl hover:shadow-blue-500/5 hover:-translate-y-1 overflow-hidden cursor-pointer"
                 onClick={() => {
                   if (term.category === "procedure" || term.subcategory === "Protocolo") {
                     const proto = protocolDictionary.find((p) => p.id === term.id);
@@ -167,7 +167,7 @@ export function PhysioDictionaryView() {
                     {term.en}
                   </CardDescription>
 
-                  <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-all duration-300 flex gap-1 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md p-1 rounded-xl border border-slate-200/50 dark:border-slate-800/50 shadow-lg z-10 translate-y-1 group-hover:translate-y-0">
+                  <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-all duration-300 flex gap-1 bg-card p-1 rounded-xl border border-slate-200/50 dark:border-slate-800/50 shadow-lg z-10 translate-y-1 group-hover:translate-y-0">
                     <Button
                       variant="ghost"
                       size="icon"

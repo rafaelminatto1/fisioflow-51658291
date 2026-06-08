@@ -77,7 +77,7 @@ export const InternalChat = () => {
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 h-[calc(100vh-12rem)] min-h-[600px]">
       {/* Left Panel: Conversation List */}
-      <Card className="flex flex-col overflow-hidden col-span-1 border-r md:border-r-0 rounded-r-none md:rounded-r-xl bg-background/50 backdrop-blur-sm">
+      <Card className="flex flex-col overflow-hidden col-span-1 border-r md:border-r-0 rounded-r-none md:rounded-r-xl bg-card">
         <div className="p-4 border-b space-y-3">
           <div className="flex items-center justify-between">
             <h3 className="text-sm font-black uppercase tracking-widest text-muted-foreground">
@@ -207,11 +207,11 @@ export const InternalChat = () => {
       </Card>
 
       {/* Right Panel: Active Chat */}
-      <Card className="flex flex-col overflow-hidden col-span-1 md:col-span-2 rounded-l-none md:rounded-l-xl border-l-0 shadow-premium-sm bg-white/80 dark:bg-slate-950/50 backdrop-blur-md">
+      <Card className="flex flex-col overflow-hidden col-span-1 md:col-span-2 rounded-l-none md:rounded-l-xl border-l-0 shadow-premium-sm bg-card">
         {selectedParticipantId ? (
           <>
             {/* Chat Header */}
-            <div className="p-4 border-b flex items-center justify-between bg-card/30 backdrop-blur-sm sticky top-0 z-10">
+            <div className="p-4 border-b flex items-center justify-between bg-card sticky top-0 z-10">
               <div className="flex items-center gap-3">
                 <Avatar className="h-10 w-10 ring-2 ring-primary/10">
                   <AvatarFallback className="bg-primary/10 text-primary font-bold">
@@ -307,8 +307,8 @@ export const InternalChat = () => {
             </div>
 
             {/* Chat Input */}
-            <div className="p-4 border-t bg-card/20 backdrop-blur-md">
-              <div className="flex gap-3 bg-background/50 p-2 rounded-2xl border border-border/40 shadow-inner focus-within:border-primary/50 transition-all">
+            <div className="p-4 border-t bg-card">
+              <div className="flex gap-3 bg-card p-2 rounded-2xl border border-border/40 shadow-inner focus-within:border-primary/50 transition-all">
                 <Input
                   placeholder="Digite sua mensagem..."
                   value={messageText}

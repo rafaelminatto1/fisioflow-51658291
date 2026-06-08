@@ -188,7 +188,7 @@ export const PosturalAnalysisTool: React.FC<PosturalAnalysisToolProps> = ({
                 <div className="absolute top-4 left-4 flex flex-col gap-2">
                   <Badge
                     className={cn(
-                      "backdrop-blur-md text-white border-none px-3 py-1 gap-2",
+                      " text-white border-none px-3 py-1 gap-2",
                       isReady ? "bg-green-500/80" : "bg-primary/80",
                     )}
                   >
@@ -203,7 +203,7 @@ export const PosturalAnalysisTool: React.FC<PosturalAnalysisToolProps> = ({
                   {patientName && (
                     <Badge
                       variant="outline"
-                      className="bg-black/40 backdrop-blur-md text-white border-white/20 font-medium"
+                      className="bg-black/40 text-white border-white/20 font-medium"
                     >
                       Paciente: {patientName}
                     </Badge>
@@ -211,7 +211,7 @@ export const PosturalAnalysisTool: React.FC<PosturalAnalysisToolProps> = ({
                 </div>
 
                 {/* Floating Controls */}
-                <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-4 bg-black/60 backdrop-blur-xl p-2 rounded-2xl border border-white/10 shadow-2xl opacity-0 group-hover:opacity-100 transition-all duration-300">
+                <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-4 bg-black/60 p-2 rounded-2xl border border-white/10 shadow-2xl opacity-0 group-hover:opacity-100 transition-all duration-300">
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <Button
@@ -245,7 +245,7 @@ export const PosturalAnalysisTool: React.FC<PosturalAnalysisToolProps> = ({
                   <Button
                     onClick={() => captureSnapshot(viewType.toUpperCase())}
                     disabled={!isReady || !videoSrc}
-                    className="h-14 px-8 rounded-xl bg-white text-black hover:bg-white/90 font-bold gap-2"
+                    className="h-14 px-8 rounded-xl bg-white text-black hover:bg-card font-bold gap-2"
                   >
                     <Camera className="h-5 w-5" /> Capturar{" "}
                     {viewType === "front"
@@ -292,7 +292,7 @@ export const PosturalAnalysisTool: React.FC<PosturalAnalysisToolProps> = ({
 
           {/* Sidebar Tools */}
           <div className="flex flex-col gap-6">
-            <Card className="border-none shadow-sm bg-card/50">
+            <Card className="border-none shadow-sm bg-card">
               <CardContent className="p-6 space-y-6">
                 <div className="space-y-4">
                   <h4 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">

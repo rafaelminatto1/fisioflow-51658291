@@ -790,7 +790,7 @@ export function BodyMapRealistic({
         {/* Right Side: Details Panel Overlay */}
         {currentSelectedPoint && (
           <div className="absolute right-4 top-1/2 -translate-y-1/2 z-30 w-[350px] animate-in slide-in-from-right-10 fade-in duration-300 max-h-[90%] overflow-y-auto hidden md:block">
-            <Card className="bg-background/95 backdrop-blur-xl border-border/50 shadow-2xl">
+            <Card className="bg-card border-border/50 shadow-2xl">
               <CardHeader className="pb-3 border-b border-border/50">
                 <div className="flex justify-between items-start">
                   <div>
@@ -829,7 +829,7 @@ export function BodyMapRealistic({
 
         {/* Mobile Bottom Sheet for Details (Visible only on small screens) */}
         {currentSelectedPoint && (
-          <div className="absolute bottom-0 left-0 right-0 z-40 bg-background/95 backdrop-blur-xl border-t border-border p-4 md:hidden animate-in slide-in-from-bottom-full duration-300 rounded-t-2xl shadow-[0_-5px_20px_rgba(0,0,0,0.2)]">
+          <div className="absolute bottom-0 left-0 right-0 z-40 bg-card border-t border-border p-4 md:hidden animate-in slide-in-from-bottom-full duration-300 rounded-t-2xl shadow-[0_-5px_20px_rgba(0,0,0,0.2)]">
             <div className="flex justify-between items-center mb-4">
               <h3 className="font-semibold text-sm">Detalhes: {currentSelectedPoint.region}</h3>
               <Button variant="ghost" size="sm" onClick={() => setSelectedPointId(null)}>
@@ -852,7 +852,7 @@ export function BodyMapRealistic({
         {/* View Controls & Zoom */}
         <div className="absolute bottom-6 right-6 z-20 flex flex-col gap-2 items-end">
           {/* Zoom Controls */}
-          <Card className="bg-background/90 backdrop-blur-md p-1 border-border/50 flex flex-col gap-1 shadow-lg">
+          <Card className="bg-card p-1 border-border/50 flex flex-col gap-1 shadow-lg">
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
@@ -899,7 +899,7 @@ export function BodyMapRealistic({
           </Card>
 
           {/* View Switcher */}
-          <Card className="bg-background/90 backdrop-blur-md p-1 border-border/50 flex gap-1 shadow-lg">
+          <Card className="bg-card p-1 border-border/50 flex gap-1 shadow-lg">
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
@@ -937,7 +937,7 @@ export function BodyMapRealistic({
 
         {/* Left Stats Overlay - Dynamic History */}
         <div className="absolute top-24 left-6 z-10 w-64 pointer-events-none hidden lg:block">
-          <Card className="bg-background/60 backdrop-blur-md border-white/10 shadow-lg mb-4">
+          <Card className="bg-card border-white/10 shadow-lg mb-4">
             <div className="p-4">
               <div className="flex justify-between items-center mb-3">
                 <div className="flex items-center gap-2">
@@ -990,7 +990,7 @@ export function BodyMapRealistic({
           </Card>
 
           {/* Tips Card */}
-          <Card className="bg-background/60 backdrop-blur-md border-white/10 shadow-sm p-3 flex items-start gap-3">
+          <Card className="bg-card border-white/10 shadow-sm p-3 flex items-start gap-3">
             <div className="bg-primary/10 p-1.5 rounded-full mt-0.5">
               <Move className="w-3 h-3 text-primary" />
             </div>

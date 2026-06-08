@@ -131,7 +131,7 @@ export function VideoCall({
   return (
     <div className={cn("flex flex-col h-full bg-gray-900 dark:bg-gray-950", className)}>
       {/* Top Bar */}
-      <div className="flex items-center justify-between p-4 bg-gray-800/50 backdrop-blur-sm border-b border-gray-700">
+      <div className="flex items-center justify-between p-4 bg-gray-800/50 border-b border-gray-700">
         <div className="flex items-center gap-3">
           <Badge
             variant="outline"
@@ -275,7 +275,7 @@ export function VideoCall({
 
             {/* Chat sidebar */}
             {showChat && (
-              <div className="absolute right-0 top-0 bottom-24 w-80 bg-gray-800/95 backdrop-blur-sm border-l border-gray-700 p-4">
+              <div className="absolute right-0 top-0 bottom-24 w-80 bg-gray-800/95 border-l border-gray-700 p-4">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="font-semibold text-white">Chat</h3>
                   <Button

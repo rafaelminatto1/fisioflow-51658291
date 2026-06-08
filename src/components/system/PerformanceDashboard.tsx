@@ -368,14 +368,14 @@ export function PerformanceIndicator() {
           className={`
             fixed bottom-4 right-20 z-50
             flex items-center gap-2 px-3 py-1.5
-            rounded-full shadow-lg border backdrop-blur-md transition-all duration-300
+            rounded-full shadow-lg border transition-all duration-300
             hover:shadow-xl hover:scale-105 active:scale-95
             ${
               avgTime < 100
-                ? "bg-background/80 border-green-500/30 text-green-600 dark:text-green-400"
+                ? "bg-card border-green-500/30 text-green-600 dark:text-green-400"
                 : avgTime < 500
-                  ? "bg-background/80 border-yellow-500/30 text-yellow-600 dark:text-yellow-400"
-                  : "bg-background/80 border-red-500/30 text-red-600 dark:text-red-400"
+                  ? "bg-card border-yellow-500/30 text-yellow-600 dark:text-yellow-400"
+                  : "bg-card border-red-500/30 text-red-600 dark:text-red-400"
             }
           `}
           title="System Performance Dashboard"

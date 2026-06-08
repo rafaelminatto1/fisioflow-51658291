@@ -109,7 +109,7 @@ export const ClinicAIInsights: React.FC<ClinicAIInsightsProps> = ({ data }) => {
               animate={{ opacity: 1, y: 0 }}
               className="prose prose-sm dark:prose-invert max-w-none"
             >
-              <div className="bg-background/50 backdrop-blur-sm p-6 rounded-2xl border border-primary/10 shadow-inner leading-relaxed text-foreground/90 whitespace-pre-wrap">
+              <div className="bg-card p-6 rounded-2xl border border-primary/10 shadow-inner leading-relaxed text-foreground/90 whitespace-pre-wrap">
                 {insights}
               </div>
               <div className="mt-4 flex justify-end">

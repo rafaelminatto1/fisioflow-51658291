@@ -98,7 +98,7 @@ export default function BiomechanicsAnalysisPage() {
             transition={{ delay: idx * 0.1 }}
           >
             <Card
-              className="group cursor-pointer bg-slate-900/40 backdrop-blur-xl border-white/5 hover:border-primary/40 hover:shadow-[0_0_30px_rgba(249,115,22,0.15)] transition-all duration-500 overflow-hidden"
+              className="group cursor-pointer bg-slate-900/40 border-white/5 hover:border-primary/40 hover:shadow-[0_0_30px_rgba(249,115,22,0.15)] transition-all duration-500 overflow-hidden"
               onClick={() => {
                 setSelectedTest(cat.id);
                 setActiveTab("instructions");
@@ -235,7 +235,7 @@ export default function BiomechanicsAnalysisPage() {
               {protocol.guidedTemplates.map((template) => (
                 <Card
                   key={template.id}
-                  className="border-white/10 bg-slate-950/40 backdrop-blur-xl"
+                  className="border-white/10 bg-slate-950/40"
                 >
                   <CardContent className="space-y-4 p-5">
                     <div className="space-y-2">

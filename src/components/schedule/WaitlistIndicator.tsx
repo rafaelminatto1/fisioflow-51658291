@@ -57,7 +57,7 @@ export function WaitlistIndicator({ onSchedulePatient, className }: WaitlistIndi
       </DropdownMenuTrigger>
       <DropdownMenuContent
         align="end"
-        className="w-[280px] p-2 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border-slate-200/50 dark:border-slate-800/50 shadow-xl rounded-xl"
+        className="w-[280px] p-2 bg-card border-slate-200/50 dark:border-slate-800/50 shadow-xl rounded-xl"
       >
         <div className="px-2 py-1.5 mb-1.5 border-b border-slate-100 dark:border-slate-800">
           <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">

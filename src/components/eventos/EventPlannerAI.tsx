@@ -120,7 +120,7 @@ export const EventPlannerAI: React.FC = () => {
                   Tipo de Evento
                 </label>
                 <Select value={category} onValueChange={setCategory}>
-                  <SelectTrigger className="rounded-2xl h-12 bg-background/50 border-primary/10 hover:border-primary/30 transition-colors">
+                  <SelectTrigger className="rounded-2xl h-12 bg-card border-primary/10 hover:border-primary/30 transition-colors">
                     <SelectValue placeholder="Categoria" />
                   </SelectTrigger>
                   <SelectContent className="rounded-2xl border-primary/10">
@@ -142,7 +142,7 @@ export const EventPlannerAI: React.FC = () => {
                       value={manualParticipants}
                       onChange={(e) => setManualParticipants(e.target.value)}
                       placeholder="Ex: 250"
-                      className="rounded-2xl h-12 bg-background/50 border-primary/20 hover:border-primary/40 focus-visible:ring-primary/30 pr-10 transition-all"
+                      className="rounded-2xl h-12 bg-card border-primary/20 hover:border-primary/40 focus-visible:ring-primary/30 pr-10 transition-all"
                       autoFocus
                     />
                     <Button
@@ -166,7 +166,7 @@ export const EventPlannerAI: React.FC = () => {
                       }
                     }}
                   >
-                    <SelectTrigger className="rounded-2xl h-12 bg-background/50 border-primary/10 hover:border-primary/30 transition-colors">
+                    <SelectTrigger className="rounded-2xl h-12 bg-card border-primary/10 hover:border-primary/30 transition-colors">
                       <SelectValue placeholder="Qtd" />
                     </SelectTrigger>
                     <SelectContent className="rounded-2xl border-primary/10">
@@ -203,7 +203,7 @@ export const EventPlannerAI: React.FC = () => {
             </Button>
 
             {plan && (
-              <div className="mt-6 p-6 rounded-3xl bg-background/80 backdrop-blur-sm border border-primary/10 prose prose-sm max-w-none dark:prose-invert shadow-inner animate-in fade-in slide-in-from-top-4 duration-500">
+              <div className="mt-6 p-6 rounded-3xl bg-card border border-primary/10 prose prose-sm max-w-none dark:prose-invert shadow-inner animate-in fade-in slide-in-from-top-4 duration-500">
                 <div className="flex items-center gap-2 mb-4 text-primary">
                   <div className="p-1.5 rounded-lg bg-primary/10">
                     <Info className="h-4 w-4" />

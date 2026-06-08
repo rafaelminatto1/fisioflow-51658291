@@ -550,10 +550,10 @@ export default function NewEvaluationPage() {
           </div>
         }
       >
-        <div className="bg-slate-50/50 dark:bg-slate-950/50 min-h-[calc(100vh-4rem)]">
+        <div className="bg-muted dark:bg-slate-950/50 min-h-[calc(100vh-4rem)]">
           <div className="container max-w-7xl mx-auto pt-6 px-4 space-y-8 print:pt-0">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <div className="sticky top-16 z-40 bg-slate-50/95 dark:bg-slate-950/95 backdrop-blur-sm -mx-4 px-4 py-3 border-b border-blue-100/50 shadow-sm print:hidden mb-6">
+              <div className="sticky top-16 z-40 bg-muted dark:bg-slate-950/95 -mx-4 px-4 py-3 border-b border-blue-100/50 shadow-sm print:hidden mb-6">
                 <TabsList className="flex w-full overflow-x-auto h-auto p-1 bg-blue-50/50 dark:bg-blue-900/20 rounded-2xl gap-2 scrollbar-hide">
                   <TabsTrigger value="dashboard" className="flex-1 min-w-[120px] rounded-xl data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-blue-600 font-bold py-2.5 transition-all gap-2">
                     <LayoutDashboard className="h-4 w-4" />
@@ -602,7 +602,7 @@ export default function NewEvaluationPage() {
                 <TabsContent value="voice-ai" className="m-0 print:hidden">
                   <div className="max-w-4xl mx-auto relative">
                     {isMapping && (
-                      <div className="absolute inset-0 z-10 bg-white/50 dark:bg-slate-950/50 backdrop-blur-sm flex flex-col items-center justify-center rounded-[32px]">
+                      <div className="absolute inset-0 z-10 bg-card flex flex-col items-center justify-center rounded-[32px]">
                         <Loader2 className="h-8 w-8 text-blue-600 animate-spin mb-4" />
                         <p className="text-sm font-bold text-slate-800">Extraindo dados clínicos...</p>
                         <p className="text-xs text-slate-500">Mapeando sua fala para os campos do formulário</p>
@@ -629,7 +629,7 @@ export default function NewEvaluationPage() {
                         </p>
                       </div>
                       {!isReadOnlyEvaluation && (
-                        <div className="flex items-center gap-2 bg-white/50 dark:bg-slate-900/50 p-1.5 rounded-2xl border border-slate-200/60 shadow-sm">
+                        <div className="flex items-center gap-2 bg-card p-1.5 rounded-2xl border border-slate-200/60 shadow-sm">
                           <Button
                             variant="ghost"
                             size="sm"
@@ -698,7 +698,7 @@ export default function NewEvaluationPage() {
                         {!selectedTemplate && customFields.length === 0 ? (
                           <div className="animate-in fade-in slide-in-from-bottom-2 duration-500 print:space-y-4">
                             <div className="border-2 border-slate-200/50 dark:border-slate-800/50 rounded-[32px] bg-white dark:bg-slate-950 shadow-premium-md overflow-hidden print:border-none relative">
-                              <div className="bg-slate-50/50 dark:bg-slate-900/50 border-b p-2 print:hidden flex items-center justify-between">
+                              <div className="bg-muted dark:bg-slate-900/50 border-b p-2 print:hidden flex items-center justify-between">
                                 <RichTextToolbar
                                   imageUploadFolder={
                                     patientId
@@ -816,7 +816,7 @@ export default function NewEvaluationPage() {
                     <div className="print:hidden">
                       <Suspense
                         fallback={
-                          <div className="flex min-h-[420px] items-center justify-center rounded-3xl border border-dashed bg-card/30 text-sm text-muted-foreground">
+                          <div className="flex min-h-[420px] items-center justify-center rounded-3xl border border-dashed bg-card text-sm text-muted-foreground">
                             Carregando estúdio postural...
                           </div>
                         }
@@ -878,7 +878,7 @@ export default function NewEvaluationPage() {
         {/* Floating Action Bar (Sticky Footer) */}
         {!isReadOnlyEvaluation && activeTab !== "dashboard" && activeTab !== "voice-ai" && (
           <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 animate-in slide-in-from-bottom-4 duration-500 print:hidden pointer-events-auto">
-            <div className="bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border border-blue-100/50 dark:border-blue-900/50 shadow-premium-md rounded-full px-6 py-3 flex items-center gap-4">
+            <div className="bg-card border border-blue-100/50 dark:border-blue-900/50 shadow-premium-md rounded-full px-6 py-3 flex items-center gap-4">
               <div className="hidden sm:block">
                 <p className="text-xs font-black uppercase tracking-widest text-slate-500">Ação Rápida</p>
                 <p className="text-sm font-bold text-slate-800 dark:text-slate-200">Finalizou o preenchimento?</p>

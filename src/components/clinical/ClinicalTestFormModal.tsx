@@ -274,7 +274,7 @@ export function ClinicalTestFormModal({
       open={open}
       onOpenChange={onOpenChange}
       isMobile={isMobile}
-      contentClassName="max-w-3xl h-[90vh] bg-white/70 backdrop-blur-2xl border-white/20 shadow-2xl overflow-hidden rounded-3xl"
+      contentClassName="max-w-3xl h-[90vh] bg-card border-white/20 shadow-2xl overflow-hidden rounded-3xl"
     >
       <CustomModalHeader
         onClose={() => onOpenChange(false)}
@@ -337,7 +337,7 @@ export function ClinicalTestFormModal({
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                     placeholder="Ex: Teste de Lachman"
                     required
-                    className="h-12 bg-white/50 border-white/40 focus:bg-white focus:border-teal-500/50 rounded-xl transition-all shadow-sm"
+                    className="h-12 bg-card border-white/40 focus:bg-white focus:border-teal-500/50 rounded-xl transition-all shadow-sm"
                   />
                 </div>
                 <div className="col-span-2 md:col-span-1 space-y-2">
@@ -352,7 +352,7 @@ export function ClinicalTestFormModal({
                     value={formData.name_en || ""}
                     onChange={(e) => setFormData({ ...formData, name_en: e.target.value })}
                     placeholder="Ex: Lachman Test"
-                    className="h-12 bg-white/50 border-white/40 focus:bg-white focus:border-teal-500/50 rounded-xl transition-all shadow-sm"
+                    className="h-12 bg-card border-white/40 focus:bg-white focus:border-teal-500/50 rounded-xl transition-all shadow-sm"
                   />
                 </div>
               </div>
@@ -371,11 +371,11 @@ export function ClinicalTestFormModal({
                   >
                     <SelectTrigger
                       id="category"
-                      className="h-12 bg-white/50 border-white/40 focus:bg-white focus:border-teal-500/50 rounded-xl transition-all shadow-sm"
+                      className="h-12 bg-card border-white/40 focus:bg-white focus:border-teal-500/50 rounded-xl transition-all shadow-sm"
                     >
                       <SelectValue placeholder="Selecione..." />
                     </SelectTrigger>
-                    <SelectContent className="rounded-xl border-white/20 backdrop-blur-xl">
+                    <SelectContent className="rounded-xl border-white/20">
                       {CATEGORIES.map((cat) => (
                         <SelectItem key={cat} value={cat}>
                           {cat}
@@ -397,11 +397,11 @@ export function ClinicalTestFormModal({
                   >
                     <SelectTrigger
                       id="target_joint"
-                      className="h-12 bg-white/50 border-white/40 focus:bg-white focus:border-teal-500/50 rounded-xl transition-all shadow-sm"
+                      className="h-12 bg-card border-white/40 focus:bg-white focus:border-teal-500/50 rounded-xl transition-all shadow-sm"
                     >
                       <SelectValue placeholder="Selecione..." />
                     </SelectTrigger>
-                    <SelectContent className="rounded-xl border-white/20 backdrop-blur-xl">
+                    <SelectContent className="rounded-xl border-white/20">
                       {TARGET_JOINTS.map((joint) => (
                         <SelectItem key={joint} value={joint}>
                           {joint}
@@ -427,7 +427,7 @@ export function ClinicalTestFormModal({
                   onValueChange={(val) => setFormData({ ...formData, purpose: val })}
                   placeholder="Descreva o objetivo clínico do teste..."
                   rows={2}
-                  className="bg-white/50 border-white/40 focus:bg-white focus:border-teal-500/50 rounded-2xl transition-all shadow-sm min-h-[80px]"
+                  className="bg-card border-white/40 focus:bg-white focus:border-teal-500/50 rounded-2xl transition-all shadow-sm min-h-[80px]"
                 />
               </div>
 
@@ -446,7 +446,7 @@ export function ClinicalTestFormModal({
                   onValueChange={(val) => setFormData({ ...formData, execution: val })}
                   placeholder="Descreva passo a passo como realizar o teste..."
                   rows={3}
-                  className="bg-white/50 border-white/40 focus:bg-white focus:border-teal-500/50 rounded-2xl transition-all shadow-sm min-h-[100px]"
+                  className="bg-card border-white/40 focus:bg-white focus:border-teal-500/50 rounded-2xl transition-all shadow-sm min-h-[100px]"
                 />
               </div>
 
@@ -465,7 +465,7 @@ export function ClinicalTestFormModal({
                   onValueChange={(val) => setFormData({ ...formData, positive_sign: val })}
                   placeholder="O que indica um resultado positivo..."
                   rows={2}
-                  className="bg-white/50 border-white/40 focus:bg-white focus:border-teal-500/50 rounded-2xl transition-all shadow-sm min-h-[80px]"
+                  className="bg-card border-white/40 focus:bg-white focus:border-teal-500/50 rounded-2xl transition-all shadow-sm min-h-[80px]"
                 />
               </div>
 
@@ -483,7 +483,7 @@ export function ClinicalTestFormModal({
                     value={formData.reference || ""}
                     onChange={(e) => setFormData({ ...formData, reference: e.target.value })}
                     placeholder="Ex: Magee, 2014"
-                    className="h-12 bg-white/50 border-white/40 focus:bg-white focus:border-teal-500/50 rounded-xl shadow-sm"
+                    className="h-12 bg-card border-white/40 focus:bg-white focus:border-teal-500/50 rounded-xl shadow-sm"
                   />
                 </div>
                 <div className="space-y-2">
@@ -503,7 +503,7 @@ export function ClinicalTestFormModal({
                       })
                     }
                     placeholder="Ex: 85% sens, 94% espec"
-                    className="h-12 bg-white/50 border-white/40 focus:bg-white focus:border-teal-500/50 rounded-xl shadow-sm"
+                    className="h-12 bg-card border-white/40 focus:bg-white focus:border-teal-500/50 rounded-xl shadow-sm"
                   />
                 </div>
               </div>
@@ -521,7 +521,7 @@ export function ClinicalTestFormModal({
                   value={tagsInput}
                   onChange={(e) => setTagsInput(e.target.value)}
                   placeholder="Ex: Ortopedia, Joelho, LCA"
-                  className="h-12 bg-white/50 border-white/40 focus:bg-white focus:border-teal-500/50 rounded-xl shadow-sm"
+                  className="h-12 bg-card border-white/40 focus:bg-white focus:border-teal-500/50 rounded-xl shadow-sm"
                 />
               </div>
             </TabsContent>
@@ -637,7 +637,7 @@ export function ClinicalTestFormModal({
                     }}
                     placeholder="https://www.youtube.com/watch?v=..., https://vimeo.com/..."
                     rows={2}
-                    className="bg-white/50 border-white/40 focus:bg-white focus:border-teal-500/50 rounded-2xl shadow-sm min-h-[80px]"
+                    className="bg-card border-white/40 focus:bg-white focus:border-teal-500/50 rounded-2xl shadow-sm min-h-[80px]"
                   />
                   <div className="flex flex-col gap-2 shrink-0">
                     <TooltipProvider>
@@ -647,7 +647,7 @@ export function ClinicalTestFormModal({
                             type="button"
                             variant="outline"
                             size="icon"
-                            className="h-10 w-10 rounded-xl bg-white/50 border-white/40 hover:bg-white hover:border-teal-500/50 transition-all"
+                            className="h-10 w-10 rounded-xl bg-card border-white/40 hover:bg-white hover:border-teal-500/50 transition-all"
                             onClick={() => handleOpenGallery("media_urls")}
                           >
                             <FolderOpen className="h-4 w-4 text-teal-600" />
@@ -663,7 +663,7 @@ export function ClinicalTestFormModal({
                             type="button"
                             variant="outline"
                             size="icon"
-                            className="h-10 w-10 rounded-xl bg-white/50 border-white/40 hover:bg-white hover:border-teal-500/50 transition-all"
+                            className="h-10 w-10 rounded-xl bg-card border-white/40 hover:bg-white hover:border-teal-500/50 transition-all"
                             onClick={() => handleOpenUpload("media_urls")}
                           >
                             <UploadCloud className="h-4 w-4 text-teal-600" />
@@ -694,7 +694,7 @@ export function ClinicalTestFormModal({
                     value={formData.image_url || ""}
                     onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
                     placeholder="https://... (imagem de execução)"
-                    className="h-12 bg-white/50 border-white/40 focus:bg-white focus:border-teal-500/50 rounded-xl shadow-sm"
+                    className="h-12 bg-card border-white/40 focus:bg-white focus:border-teal-500/50 rounded-xl shadow-sm"
                   />
                   <TooltipProvider>
                     <Tooltip>
@@ -703,7 +703,7 @@ export function ClinicalTestFormModal({
                           type="button"
                           variant="outline"
                           size="icon"
-                          className="h-12 w-12 rounded-xl bg-white/50 border-white/40 hover:bg-white hover:border-teal-500/50 transition-all shrink-0"
+                          className="h-12 w-12 rounded-xl bg-card border-white/40 hover:bg-white hover:border-teal-500/50 transition-all shrink-0"
                           onClick={() => handleOpenGallery("image_url")}
                         >
                           <FolderOpen className="h-5 w-5 text-teal-600" />
@@ -719,7 +719,7 @@ export function ClinicalTestFormModal({
                           type="button"
                           variant="outline"
                           size="icon"
-                          className="h-12 w-12 rounded-xl bg-white/50 border-white/40 hover:bg-white hover:border-teal-500/50 transition-all shrink-0"
+                          className="h-12 w-12 rounded-xl bg-card border-white/40 hover:bg-white hover:border-teal-500/50 transition-all shrink-0"
                           onClick={() => handleOpenUpload("image_url")}
                         >
                           <UploadCloud className="h-5 w-5 text-teal-600" />
@@ -755,13 +755,13 @@ export function ClinicalTestFormModal({
                         })
                       }
                       placeholder="https://..."
-                      className="h-12 bg-white/50 border-white/40 focus:bg-white focus:border-teal-500/50 rounded-xl shadow-sm"
+                      className="h-12 bg-card border-white/40 focus:bg-white focus:border-teal-500/50 rounded-xl shadow-sm"
                     />
                     <Button
                       type="button"
                       variant="outline"
                       size="icon"
-                      className="h-12 w-12 rounded-xl bg-white/50 border-white/40 shrink-0"
+                      className="h-12 w-12 rounded-xl bg-card border-white/40 shrink-0"
                       onClick={() => handleOpenGallery("initial_position_image_url")}
                     >
                       <FolderOpen className="h-4 w-4 text-teal-600" />
@@ -770,7 +770,7 @@ export function ClinicalTestFormModal({
                       type="button"
                       variant="outline"
                       size="icon"
-                      className="h-12 w-12 rounded-xl bg-white/50 border-white/40 shrink-0"
+                      className="h-12 w-12 rounded-xl bg-card border-white/40 shrink-0"
                       onClick={() => handleOpenUpload("initial_position_image_url")}
                     >
                       <UploadCloud className="h-4 w-4 text-teal-600" />
@@ -796,13 +796,13 @@ export function ClinicalTestFormModal({
                         })
                       }
                       placeholder="https://..."
-                      className="h-12 bg-white/50 border-white/40 focus:bg-white focus:border-teal-500/50 rounded-xl shadow-sm"
+                      className="h-12 bg-card border-white/40 focus:bg-white focus:border-teal-500/50 rounded-xl shadow-sm"
                     />
                     <Button
                       type="button"
                       variant="outline"
                       size="icon"
-                      className="h-12 w-12 rounded-xl bg-white/50 border-white/40 shrink-0"
+                      className="h-12 w-12 rounded-xl bg-card border-white/40 shrink-0"
                       onClick={() => handleOpenGallery("final_position_image_url")}
                     >
                       <FolderOpen className="h-4 w-4 text-teal-600" />
@@ -811,7 +811,7 @@ export function ClinicalTestFormModal({
                       type="button"
                       variant="outline"
                       size="icon"
-                      className="h-12 w-12 rounded-xl bg-white/50 border-white/40 shrink-0"
+                      className="h-12 w-12 rounded-xl bg-card border-white/40 shrink-0"
                       onClick={() => handleOpenUpload("final_position_image_url")}
                     >
                       <UploadCloud className="h-4 w-4 text-teal-600" />

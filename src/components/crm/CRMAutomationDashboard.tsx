@@ -46,7 +46,7 @@ export function CRMAutomationDashboard() {
   return (
     <div className="space-y-6 p-1">
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card className="bg-white/50 backdrop-blur-sm border-slate-200 dark:border-slate-800 rounded-3xl">
+        <Card className="bg-card border-slate-200 dark:border-slate-800 rounded-3xl">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-slate-500">Enviadas (Hoje)</CardTitle>
             <Send className="h-4 w-4 text-primary" />
@@ -59,7 +59,7 @@ export function CRMAutomationDashboard() {
           </CardContent>
         </Card>
 
-        <Card className="bg-white/50 backdrop-blur-sm border-slate-200 dark:border-slate-800 rounded-3xl">
+        <Card className="bg-card border-slate-200 dark:border-slate-800 rounded-3xl">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-slate-500">Confirmadas</CardTitle>
             <CheckCircle2 className="h-4 w-4 text-emerald-500" />
@@ -70,7 +70,7 @@ export function CRMAutomationDashboard() {
           </CardContent>
         </Card>
 
-        <Card className="bg-white/50 backdrop-blur-sm border-slate-200 dark:border-slate-800 rounded-3xl">
+        <Card className="bg-card border-slate-200 dark:border-slate-800 rounded-3xl">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-slate-500">Agendadas (Fila)</CardTitle>
             <Clock className="h-4 w-4 text-amber-500" />
@@ -81,7 +81,7 @@ export function CRMAutomationDashboard() {
           </CardContent>
         </Card>
 
-        <Card className="bg-white/50 backdrop-blur-sm border-slate-200 dark:border-slate-800 rounded-3xl">
+        <Card className="bg-card border-slate-200 dark:border-slate-800 rounded-3xl">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-slate-500">Falhas</CardTitle>
             <AlertCircle className="h-4 w-4 text-destructive" />
@@ -94,7 +94,7 @@ export function CRMAutomationDashboard() {
       </div>
 
       <Card className="border-slate-200 dark:border-slate-800 rounded-3xl shadow-xl shadow-slate-200/50 dark:shadow-none overflow-hidden">
-        <CardHeader className="border-b border-slate-100 dark:border-slate-800 bg-slate-50/50">
+        <CardHeader className="border-b border-slate-100 dark:border-slate-800 bg-muted">
           <div className="flex items-center justify-between">
             <div>
               <CardTitle className="text-lg">Status por Automação</CardTitle>

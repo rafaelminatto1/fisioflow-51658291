@@ -25,7 +25,7 @@ const Card = React.forwardRef<HTMLDivElement, CardProps>(
       warm: "gradient-warm text-white border-none ",
       dark: "gradient-dark text-white border-none ",
       neon: "gradient-neon text-white border-none ",
-      glass: "gradient-glass backdrop-blur-xl border border-white/20 ",
+      glass: "gradient-glass border border-white/20 ",
       "accent-teal": "gradient-accent-teal text-white border-none ",
     };
 

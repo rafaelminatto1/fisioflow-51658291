@@ -249,14 +249,14 @@ export const FunctionalAnalysisStudio: React.FC<FunctionalAnalysisStudioProps> =
             <motion.div
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="absolute top-6 left-6 z-20 bg-slate-900/80 backdrop-blur-xl text-white text-2xl font-black px-5 py-2 rounded-2xl border border-white/10 shadow-2xl"
+              className="absolute top-6 left-6 z-20 bg-slate-900/80 text-white text-2xl font-black px-5 py-2 rounded-2xl border border-white/10 shadow-2xl"
             >
               {currentAngle}°
             </motion.div>
           )}
 
           {/* Control HUD */}
-          <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-3 bg-slate-900/60 backdrop-blur-3xl p-3 rounded-[2rem] border border-white/10 z-30 shadow-2xl">
+          <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-3 bg-slate-900/60 p-3 rounded-[2rem] border border-white/10 z-30 shadow-2xl">
             <input
               type="file"
               className="hidden"

@@ -51,8 +51,8 @@
 }
 
 .hover-lift:hover {
-  transform: translateY(-6px) scale(1.01);
-  box-shadow: var(--shadow-premium-lg);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md, 0 4px 6px -1px rgb(0 0 0 / 0.08), 0 2px 4px -2px rgb(0 0 0 / 0.06));
 }
 
 .text-massive {
@@ -64,9 +64,9 @@
 
 /* Bento Grid & Brand Tokens */
 :root {
-  --brand-blue: #6dc0e3;
-  --brand-blue-light: #b5e2f5;
-  --brand-blue-dark: #3a92b8;
+  --brand-blue: #0080ff;
+  --brand-blue-light: #4da6ff;
+  --brand-blue-dark: #0066cc;
 
   --bento-gap: 1.25rem;
   --bento-radius: 1.5rem;

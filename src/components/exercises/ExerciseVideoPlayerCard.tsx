@@ -387,7 +387,7 @@ export const ExerciseVideoPlayer: React.FC<ExerciseVideoPlayerProps> = ({
           <Button
             size="icon"
             variant="ghost"
-            className="w-16 h-16 rounded-full bg-white/20 hover:bg-white/30 backdrop-blur-sm"
+            className="w-16 h-16 rounded-full bg-white/20 hover:bg-white/30"
             onClick={togglePlay}
           >
             <Play className="w-8 h-8 fill-white text-white" />
@@ -578,7 +578,7 @@ export const CompactVideoPlayer: React.FC<CompactVideoPlayerProps> = ({
 
       {!isPlaying && (
         <div className="absolute inset-0 flex items-center justify-center bg-black/30">
-          <div className="w-12 h-12 rounded-full bg-white/90 flex items-center justify-center">
+          <div className="w-12 h-12 rounded-full bg-card flex items-center justify-center">
             <Play className="w-6 h-6 fill-black text-black ml-1" />
           </div>
         </div>

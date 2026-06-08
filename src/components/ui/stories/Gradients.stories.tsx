@@ -44,7 +44,7 @@ export const AllGradients: Story = {
           <p className="text-sm opacity-90">Elevated Dark</p>
         </div>
 
-        <div className="gradient-glass border border-white/20 p-8 rounded-2xl backdrop-blur-sm">
+        <div className="gradient-glass border border-white/20 p-8 rounded-2xl">
           <h3 className="text-2xl font-display mb-2 text-foreground">Glass</h3>
           <p className="text-sm opacity-70">Transparent Glassmorphism</p>
         </div>

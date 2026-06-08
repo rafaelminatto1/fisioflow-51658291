@@ -453,7 +453,7 @@ export default function AuditLogs() {
 
             <TabsContent value="security" className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <Card className="bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm border-slate-200 dark:border-slate-800">
+                <Card className="bg-card border-slate-200 dark:border-slate-800">
                   <CardHeader className="pb-2">
                     <div className="flex items-center justify-between">
                       <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
@@ -468,7 +468,7 @@ export default function AuditLogs() {
                   </CardContent>
                 </Card>
 
-                <Card className="bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm border-slate-200 dark:border-slate-800">
+                <Card className="bg-card border-slate-200 dark:border-slate-800">
                   <CardHeader className="pb-2">
                     <div className="flex items-center justify-between">
                       <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
@@ -483,7 +483,7 @@ export default function AuditLogs() {
                   </CardContent>
                 </Card>
 
-                <Card className="bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm border-slate-200 dark:border-slate-800">
+                <Card className="bg-card border-slate-200 dark:border-slate-800">
                   <CardHeader className="pb-2">
                     <div className="flex items-center justify-between">
                       <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-wider">

@@ -22,7 +22,7 @@ const premiumFieldBaseClass =
 const premiumFieldClass = `${premiumFieldBaseClass} h-11 text-xs sm:text-sm`;
 
 const premiumSelectContentClass =
-  "rounded-xl border border-blue-100 bg-white p-1 shadow-lg backdrop-blur-sm";
+  "rounded-xl border border-blue-100 bg-white p-1 shadow-lg";
 
 interface AppointmentTypeStatusSectionProps {
   disabled: boolean;

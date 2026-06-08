@@ -93,10 +93,10 @@ export const GlobalCommandPalette: React.FC = () => {
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-start justify-center pt-[15vh] px-4 bg-slate-950/40 backdrop-blur-md animate-in fade-in duration-300">
+    <div className="fixed inset-0 z-[100] flex items-start justify-center pt-[15vh] px-4 bg-slate-950/40 animate-in fade-in duration-300">
       <div className="w-full max-w-2xl bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden ring-1 ring-black/5">
         <Command label="Global Search" onKeyDown={(e) => e.key === "Escape" && setOpen(false)}>
-          <div className="flex items-center px-6 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50">
+          <div className="flex items-center px-6 border-b border-slate-100 dark:border-slate-800 bg-muted dark:bg-slate-900/50">
             <Search className="w-5 h-5 text-blue-600 dark:text-blue-400 mr-4" />
             <Command.Input
               autoFocus

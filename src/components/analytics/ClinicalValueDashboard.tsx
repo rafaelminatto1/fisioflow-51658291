@@ -219,7 +219,7 @@ export function ClinicalValueDashboard() {
 
 function KPICard({ title, value, sub, icon: Icon, color }: any) {
   return (
-    <Card className="border-none shadow-sm bg-white/50 dark:bg-slate-900/30 backdrop-blur-sm">
+    <Card className="border-none shadow-sm bg-card">
       <CardContent className="p-5">
         <div className="flex justify-between items-start">
           <div>

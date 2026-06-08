@@ -255,7 +255,7 @@ export function PatientGamification({ patientId }: PatientGamificationProps) {
           </div>
 
           <div className="grid grid-cols-3 gap-4 pt-2">
-            <div className="text-center p-4 bg-background/50 backdrop-blur-sm rounded-xl border border-border/50 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
+            <div className="text-center p-4 bg-card rounded-xl border border-border/50 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
               {hasFreeze && (
                 <div
                   className="absolute top-1 right-1 text-blue-400 animate-pulse"
@@ -275,7 +275,7 @@ export function PatientGamification({ patientId }: PatientGamificationProps) {
                 Dias Seguidos
               </p>
             </div>
-            <div className="text-center p-4 bg-background/50 backdrop-blur-sm rounded-xl border border-border/50 shadow-sm hover:shadow-md transition-shadow">
+            <div className="text-center p-4 bg-card rounded-xl border border-border/50 shadow-sm hover:shadow-md transition-shadow">
               <div className="bg-blue-100 dark:bg-blue-900/20 w-10 h-10 rounded-full flex items-center justify-center mx-auto mb-2">
                 <Target className="h-5 w-5 text-blue-500" />
               </div>
@@ -284,7 +284,7 @@ export function PatientGamification({ patientId }: PatientGamificationProps) {
                 Conquistas
               </p>
             </div>
-            <div className="text-center p-4 bg-background/50 backdrop-blur-sm rounded-xl border border-border/50 shadow-sm hover:shadow-md transition-shadow">
+            <div className="text-center p-4 bg-card rounded-xl border border-border/50 shadow-sm hover:shadow-md transition-shadow">
               <div className="bg-green-100 dark:bg-green-900/20 w-10 h-10 rounded-full flex items-center justify-center mx-auto mb-2">
                 <TrendingUp className="h-5 w-5 text-green-500" />
               </div>
@@ -469,7 +469,7 @@ export function PatientGamification({ patientId }: PatientGamificationProps) {
       {/* Motivational Banner */}
       {xpPerLevel - currentXp <= 200 && (
         <div className="bg-gradient-to-r from-indigo-500 to-purple-600 rounded-xl p-1 shadow-lg animate-pulse-slow">
-          <div className="bg-background/95 backdrop-blur-md rounded-lg p-4 flex items-center justify-between gap-4">
+          <div className="bg-card rounded-lg p-4 flex items-center justify-between gap-4">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-indigo-100 dark:bg-indigo-900/30 rounded-full">
                 <Zap className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />

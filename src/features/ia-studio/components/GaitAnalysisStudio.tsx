@@ -164,7 +164,7 @@ export const GaitAnalysisStudio: React.FC<GaitAnalysisStudioProps> = ({ isOpen, 
           className="fixed inset-0 z-[200] bg-slate-950 flex flex-col"
         >
           {/* Header Premium */}
-          <header className="p-6 border-b border-white/5 flex items-center justify-between bg-black/40 backdrop-blur-md">
+          <header className="p-6 border-b border-white/5 flex items-center justify-between bg-black/40">
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 bg-blue-600 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-500/20">
                 <Activity className="text-white w-6 h-6" />
@@ -254,7 +254,7 @@ export const GaitAnalysisStudio: React.FC<GaitAnalysisStudioProps> = ({ isOpen, 
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="absolute inset-0 bg-black/60 backdrop-blur-sm z-30 flex flex-col items-center justify-center p-12"
+                        className="absolute inset-0 bg-black/60 z-30 flex flex-col items-center justify-center p-12"
                       >
                         <div className="w-full max-w-md space-y-6">
                           <div className="flex justify-between items-end">
@@ -289,7 +289,7 @@ export const GaitAnalysisStudio: React.FC<GaitAnalysisStudioProps> = ({ isOpen, 
                   </AnimatePresence>
 
                   {/* Controls HUD */}
-                  <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-4 bg-slate-900/80 backdrop-blur-xl p-3 px-6 rounded-full border border-white/10 shadow-2xl z-40">
+                  <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-4 bg-slate-900/80 p-3 px-6 rounded-full border border-white/10 shadow-2xl z-40">
                     <Button
                       variant="ghost"
                       size="icon"
@@ -303,7 +303,7 @@ export const GaitAnalysisStudio: React.FC<GaitAnalysisStudioProps> = ({ isOpen, 
                     <Button
                       variant="secondary"
                       size="icon"
-                      className="w-12 h-12 bg-white text-black hover:bg-white/90 rounded-full shadow-lg"
+                      className="w-12 h-12 bg-white text-black hover:bg-card rounded-full shadow-lg"
                       onClick={togglePlay}
                     >
                       {isPlaying ? (

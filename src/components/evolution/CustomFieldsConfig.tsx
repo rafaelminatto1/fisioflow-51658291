@@ -123,7 +123,7 @@ export const CustomFieldsConfig: React.FC<CustomFieldsConfigProps> = ({
         "flex items-center gap-3 p-3 rounded-xl border transition-all duration-300",
         field.enabled
           ? "bg-white border-teal-100 shadow-md shadow-teal-900/5"
-          : "bg-slate-50/50 border-slate-100 text-gray-500 opacity-60",
+          : "bg-muted border-slate-100 text-gray-500 opacity-60",
       )}
     >
       <div className="cursor-grab p-1 hover:bg-slate-100 rounded-md transition-colors text-slate-300">
@@ -208,7 +208,7 @@ export const CustomFieldsConfig: React.FC<CustomFieldsConfigProps> = ({
   );
 
   return (
-    <Card className="border-0 shadow-lg bg-slate-50/50 backdrop-blur-sm rounded-2xl overflow-hidden border border-slate-100/50">
+    <Card className="border-0 shadow-lg bg-muted rounded-2xl overflow-hidden border border-slate-100/50">
       <CardHeader className="py-4 px-6 bg-white border-b border-slate-100">
         <CardTitle className="text-sm font-bold flex items-center justify-between text-slate-800 uppercase tracking-wider">
           <div className="flex items-center gap-2.5">

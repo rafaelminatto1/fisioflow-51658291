@@ -165,7 +165,7 @@ export const IncompleteRegistrationAlert: React.FC = () => {
                 exit={{ height: 0, opacity: 0 }}
                 transition={{ duration: 0.3, ease: "easeInOut" }}
               >
-                <div className="p-3 sm:p-4 bg-white/40 dark:bg-black/10 backdrop-blur-sm">
+                <div className="p-3 sm:p-4 bg-muted">
                   <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3 max-h-[300px] overflow-y-auto pr-1 custom-scrollbar">
                     {visiblePatients.map((patient) => (
                       <div

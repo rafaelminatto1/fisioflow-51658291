@@ -14,6 +14,8 @@ import * as Haptics from "expo-haptics";
 import { registerForPushNotificationsAsync } from "@/lib/notifications";
 import * as Sentry from "@sentry/react-native";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { useFonts } from "expo-font";
+import { nunitoFonts } from "@/constants/biomecanica";
 
 // Initialize Sentry — only in production builds (native SDK not available via Metro)
 const sentryDsn = process.env.EXPO_PUBLIC_SENTRY_DSN;
@@ -57,6 +59,7 @@ function RootLayoutContent() {
   const colors = useColors();
   const colorScheme = useColorScheme();
   const { isLoading, initialize } = useAuthStore();
+  const [fontsLoaded] = useFonts(nunitoFonts);
 
   // 1. Inicialização única da autenticação
   useEffect(() => {
@@ -94,7 +97,7 @@ function RootLayoutContent() {
     finalizeSetup();
   }, [isLoading]);
 
-  if (isLoading) {
+  if (isLoading || !fontsLoaded) {
     return (
       <View style={[styles.loading, { backgroundColor: colors.background }]}>
         <ActivityIndicator size="large" color={colors.primary} />
@@ -122,6 +125,7 @@ function RootLayoutContent() {
         <Stack.Screen name="index" options={{ headerShown: false }} />
         <Stack.Screen name="(auth)" options={{ headerShown: false }} />
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen name="biomecanica" options={{ headerShown: false }} />
         <Stack.Screen
           name="patient/[id]"
           options={{ title: "Paciente", headerBackTitle: "Voltar" }}

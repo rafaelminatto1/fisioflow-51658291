@@ -129,7 +129,7 @@ export default function PatientGamificationPage() {
                 </div>
                 <Button
                   onClick={() => setShowFreezeModal(true)}
-                  className="bg-white/20 hover:bg-white/30 text-white border-none backdrop-blur-sm"
+                  className="bg-white/20 hover:bg-white/30 text-white border-none"
                 >
                   Congelar ({freezeCost?.price} pts)
                 </Button>
@@ -251,7 +251,7 @@ export default function PatientGamificationPage() {
 
               {/* 5. Achievements Preview */}
               <Card className="overflow-hidden border border-border/50 shadow-sm bg-gradient-to-br from-slate-50 to-white">
-                <div className="p-4 border-b flex justify-between items-center bg-white/50 backdrop-blur-sm">
+                <div className="p-4 border-b flex justify-between items-center bg-card">
                   <h3 className="font-semibold flex items-center gap-2">
                     <Award className="w-5 h-5 text-blue-500" />
                     Conquistas

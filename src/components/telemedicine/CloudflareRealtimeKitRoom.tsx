@@ -135,12 +135,12 @@ export function CloudflareRealtimeKitRoom({
             <div className="absolute inset-0 flex items-center justify-center">
               {/* Simulação de stream de vídeo de alta definição nativo */}
               <div className="w-full h-full bg-gradient-to-br from-slate-900 to-slate-950 flex flex-col items-center justify-center relative">
-                <div className="p-5 bg-white/5 border border-white/10 rounded-full shadow-2xl backdrop-blur-md mb-3 animate-pulse">
+                <div className="p-5 bg-white/5 border border-white/10 rounded-full shadow-2xl mb-3 animate-pulse">
                   <VideoIcon className="w-10 h-10 text-blue-400" />
                 </div>
                 
                 {/* Active camera watermark badge */}
-                <div className="absolute top-4 left-4 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/40 border border-white/5 backdrop-blur-md">
+                <div className="absolute top-4 left-4 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/40 border border-white/5">
                   <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-ping" />
                   <span className="text-[9px] font-black uppercase text-green-400 tracking-widest">Câmera Ativa</span>
                 </div>

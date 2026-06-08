@@ -132,7 +132,7 @@ export function PatientAnalytics({ totalPatients, classificationStats }: Patient
 
       {/* Gráficos em Containers de Vidro */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <Card className="rounded-[2rem] border-white/40 dark:border-white/10 bg-white/40 dark:bg-slate-900/40 backdrop-blur-xl shadow-premium overflow-hidden border">
+        <Card className="rounded-[2rem] border-white/40 dark:border-white/10 bg-card shadow-premium overflow-hidden border">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-black uppercase tracking-[0.2em] text-slate-400">
               Fluxo de Classificação
@@ -158,7 +158,7 @@ export function PatientAnalytics({ totalPatients, classificationStats }: Patient
                   />
                   <ChartTooltip
                     content={
-                      <ChartTooltipContent className="rounded-2xl shadow-2xl border-none backdrop-blur-xl" />
+                      <ChartTooltipContent className="rounded-2xl shadow-2xl border-none" />
                     }
                   />
                   <Bar
@@ -173,7 +173,7 @@ export function PatientAnalytics({ totalPatients, classificationStats }: Patient
           </CardContent>
         </Card>
 
-        <Card className="rounded-[2rem] border-white/40 dark:border-white/10 bg-white/40 dark:bg-slate-900/40 backdrop-blur-xl shadow-premium overflow-hidden border">
+        <Card className="rounded-[2rem] border-white/40 dark:border-white/10 bg-card shadow-premium overflow-hidden border">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-black uppercase tracking-[0.2em] text-slate-400">
               Composição da Base
@@ -199,7 +199,7 @@ export function PatientAnalytics({ totalPatients, classificationStats }: Patient
                   </Pie>
                   <ChartTooltip
                     content={
-                      <ChartTooltipContent className="rounded-2xl shadow-2xl border-none backdrop-blur-xl" />
+                      <ChartTooltipContent className="rounded-2xl shadow-2xl border-none" />
                     }
                   />
                 </PieChart>
@@ -295,7 +295,7 @@ function AnalyticsMiniCard({
       whileHover={{ y: -5 }}
       transition={{ duration: 0.4 }}
       className={cn(
-        "group relative overflow-hidden p-6 rounded-[2rem] bg-white/40 dark:bg-slate-900/40 backdrop-blur-xl border transition-all duration-500 hover:shadow-2xl",
+        "group relative overflow-hidden p-6 rounded-[2rem] bg-card border transition-all duration-500 hover:shadow-2xl",
         colors[color],
       )}
     >
@@ -340,7 +340,7 @@ function InsightPill({
   return (
     <div
       className={cn(
-        "flex items-center gap-3 p-3 rounded-2xl border backdrop-blur-sm transition-all hover:translate-x-1",
+        "flex items-center gap-3 p-3 rounded-2xl border transition-all hover:translate-x-1",
         colors[color],
       )}
     >

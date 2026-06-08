@@ -26,7 +26,7 @@ export const StandardCard: React.FC<StandardCardProps> = ({
     <div
       className={cn(
         "bento-card flex flex-col gap-4",
-        variant === "glass" && "glass-card border-white/10",
+        variant === "glass" && "glass-card border-border",
         variant === "outline" && "bg-transparent border-border shadow-none",
         variant === "ghost" && "bg-transparent border-none shadow-none p-0",
         className,

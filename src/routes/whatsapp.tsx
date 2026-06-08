@@ -14,9 +14,20 @@ const WhatsAppAutomationsPage = lazy(
 const WhatsAppTemplatesPage = lazy(
   () => import(/* webpackChunkName: "whatsapp-templates" */ "@/pages/WhatsAppTemplates"),
 );
+const CrmWhatsAppPage = lazy(
+  () => import(/* webpackChunkName: "crm-whatsapp" */ "@/pages/CrmWhatsApp"),
+);
 
 export const whatsappRoutes = (
   <>
+    <Route
+      path="/crm-whatsapp"
+      element={
+        <ProtectedRoute>
+          <CrmWhatsAppPage />
+        </ProtectedRoute>
+      }
+    />
     <Route
       path="/whatsapp/inbox"
       element={

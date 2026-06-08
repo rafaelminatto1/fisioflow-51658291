@@ -122,7 +122,7 @@ const FinancialCommandCenterPage = () => {
         actions={
           <div className="flex flex-wrap items-center gap-2">
             <Select value={state.period} onValueChange={actions.handlePeriodChange}>
-              <SelectTrigger className="h-10 w-[160px] rounded-2xl border-white/80 bg-white/70 shadow-sm dark:border-slate-800/80 dark:bg-slate-950/60">
+              <SelectTrigger className="h-10 w-[160px] rounded-2xl border-white/80 bg-card shadow-sm dark:border-slate-800/80 dark:bg-slate-950/60">
                 <SelectValue placeholder="Período" />
               </SelectTrigger>
               <SelectContent className="rounded-2xl">
@@ -136,7 +136,7 @@ const FinancialCommandCenterPage = () => {
             <Button
               onClick={actions.handleExport}
               variant="outline"
-              className="h-10 rounded-2xl border-white/80 bg-white/70 px-4 font-bold shadow-sm dark:border-slate-800/80 dark:bg-slate-950/60"
+              className="h-10 rounded-2xl border-white/80 bg-card px-4 font-bold shadow-sm dark:border-slate-800/80 dark:bg-slate-950/60"
               disabled={transactions.length === 0 || state.isExporting}
             >
               <Download className="mr-2 h-4 w-4" />
@@ -204,7 +204,7 @@ const FinancialCommandCenterPage = () => {
           onValueChange={actions.handleMainTabChange}
           className="space-y-6"
         >
-          <div className="sticky top-14 z-20 rounded-[28px] border border-white/80 bg-white/85 p-1.5 shadow-premium backdrop-blur-xl dark:border-slate-800/80 dark:bg-slate-950/80">
+          <div className="sticky top-14 z-20 rounded-[28px] border border-white/80 bg-card p-1.5 shadow-premium dark:border-slate-800/80 dark:bg-slate-950/80">
             <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1 bg-transparent p-0">
               <TabsTrigger
                 value="summary"
@@ -294,7 +294,7 @@ const FinancialCommandCenterPage = () => {
               }
               className="space-y-5"
             >
-              <TabsList className="flex h-auto flex-wrap justify-start gap-2 rounded-[24px] bg-white/80 p-2 dark:bg-slate-950/70">
+              <TabsList className="flex h-auto flex-wrap justify-start gap-2 rounded-[24px] bg-card p-2 dark:bg-slate-950/70">
                 <TabsTrigger value="receivables" className="rounded-2xl px-4 py-2 font-bold">
                   Recebíveis
                 </TabsTrigger>
@@ -346,7 +346,7 @@ const FinancialCommandCenterPage = () => {
               onValueChange={(v) => actions.updateQueryParams({ tab: "billing", billing: v })}
               className="space-y-5"
             >
-              <TabsList className="flex h-auto flex-wrap justify-start gap-2 rounded-[24px] bg-white/80 p-2 dark:bg-slate-950/70">
+              <TabsList className="flex h-auto flex-wrap justify-start gap-2 rounded-[24px] bg-card p-2 dark:bg-slate-950/70">
                 <TabsTrigger value="operations" className="rounded-2xl px-4 py-2 font-bold">
                   Operação
                 </TabsTrigger>
@@ -363,7 +363,7 @@ const FinancialCommandCenterPage = () => {
                   />
                   <MetricCard title="Ticket filtrado" value={formatCurrency(stats.averageTicket)} />
                 </div>
-                <Card className="rounded-[28px] border-white/70 bg-white/90 shadow-[0_24px_70px_-52px_rgba(15,23,42,0.45)] dark:border-slate-800/80 dark:bg-slate-950/70">
+                <Card className="rounded-[28px] border-white/70 bg-card shadow-[0_24px_70px_-52px_rgba(15,23,42,0.45)] dark:border-slate-800/80 dark:bg-slate-950/70">
                   <CardHeader className="flex flex-row items-center justify-between gap-4 pb-2">
                     <div>
                       <CardTitle className="text-lg font-black tracking-tight text-slate-950 dark:text-white">
@@ -423,7 +423,7 @@ const FinancialCommandCenterPage = () => {
               onValueChange={(v) => actions.updateQueryParams({ tab: "documents", documents: v })}
               className="space-y-5"
             >
-              <TabsList className="flex h-auto flex-wrap justify-start gap-2 rounded-[24px] bg-white/80 p-2 dark:bg-slate-950/70">
+              <TabsList className="flex h-auto flex-wrap justify-start gap-2 rounded-[24px] bg-card p-2 dark:bg-slate-950/70">
                 <TabsTrigger value="receipts" className="rounded-2xl px-4 py-2 font-bold">
                   Recibos
                 </TabsTrigger>
@@ -461,7 +461,7 @@ const FinancialCommandCenterPage = () => {
               }
               className="space-y-5"
             >
-              <TabsList className="flex h-auto flex-wrap justify-start gap-2 rounded-[24px] bg-white/80 p-2 dark:bg-slate-950/70">
+              <TabsList className="flex h-auto flex-wrap justify-start gap-2 rounded-[24px] bg-card p-2 dark:bg-slate-950/70">
                 <TabsTrigger value="analytics" className="rounded-2xl px-4 py-2 font-bold">
                   Painel
                 </TabsTrigger>
@@ -573,7 +573,7 @@ const FinancialCommandCenterPage = () => {
 
 function MetricCard({ title, value }: { title: string; value: string | number }) {
   return (
-    <Card className="rounded-[28px] border-white/70 bg-white/90 dark:border-slate-800/80 dark:bg-slate-950/70">
+    <Card className="rounded-[28px] border-white/70 bg-card dark:border-slate-800/80 dark:bg-slate-950/70">
       <CardContent className="p-5">
         <p className="text-[10px] font-black uppercase tracking-[0.22em] text-slate-400">{title}</p>
         <p className="mt-2 text-2xl font-black text-slate-950 dark:text-white md:text-3xl">

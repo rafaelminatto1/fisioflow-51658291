@@ -298,7 +298,7 @@ export const DayColumn = memo(
                     "appointment-card absolute [transition:left_100ms_ease-out,width_100ms_ease-out,opacity_100ms_ease-out,transform_100ms_ease-out] group/card z-10",
                     dragState.isDragging &&
                       dragState.appointment?.id === apt.id &&
-                      "opacity-40 scale-95 ring-2 ring-dashed ring-primary/60 backdrop-blur-[1px] dragging-ghost",
+                      "opacity-40 scale-95 ring-2 ring-dashed ring-primary/60 dragging-ghost",
                     "hover:z-20 card-hover", // Garantir que o hover fique por cima
                   )}
                   style={

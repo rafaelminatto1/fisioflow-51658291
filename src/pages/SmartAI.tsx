@@ -386,7 +386,7 @@ export const SmartAIContent = () => {
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="absolute -top-1 -right-1 h-6 w-6 opacity-0 group-hover/content:opacity-100 transition-opacity bg-background/50 backdrop-blur-sm shadow-sm"
+                          className="absolute -top-1 -right-1 h-6 w-6 opacity-0 group-hover/content:opacity-100 transition-opacity bg-card shadow-sm"
                           onClick={() => handleCopy(message.content, message.id)}
                           title="Copiar resposta"
                         >

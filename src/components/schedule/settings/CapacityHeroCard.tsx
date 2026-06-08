@@ -8,7 +8,7 @@ interface CapacityHeroCardProps {
 
 export function CapacityHeroCard({ onAddRule, totalVagasDia }: CapacityHeroCardProps) {
   return (
-    <section className="rounded-xl p-6 border-l-4 border-l-blue-600 dark:border-l-blue-400 bg-card/90 backdrop-blur-sm border border-border/60 shadow-sm relative overflow-hidden">
+    <section className="rounded-xl p-6 border-l-4 border-l-blue-600 dark:border-l-blue-400 bg-card border border-border/60 shadow-sm relative overflow-hidden">
       <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <div className="flex items-center gap-2.5 mb-1.5">

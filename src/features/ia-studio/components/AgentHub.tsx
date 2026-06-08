@@ -89,7 +89,7 @@ export const AgentHub: React.FC<AgentHubProps> = ({ isOpen, onClose }) => {
           className="fixed inset-y-0 right-0 w-full max-w-2xl bg-white dark:bg-slate-950 shadow-2xl z-[250] flex flex-col border-l border-slate-200 dark:border-slate-800"
         >
           {/* Header */}
-          <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-900/50 backdrop-blur-md">
+          <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-muted dark:bg-slate-900/50">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-violet-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/20">
                 <Bot className="text-white w-5 h-5" />
@@ -145,7 +145,7 @@ export const AgentHub: React.FC<AgentHubProps> = ({ isOpen, onClose }) => {
                       whileTap={{ scale: 0.98 }}
                     >
                       <Card
-                        className="cursor-pointer border-slate-100 dark:border-slate-800 hover:border-blue-500/30 hover:shadow-xl hover:shadow-blue-500/5 transition-all bg-slate-50/50 dark:bg-slate-900/50 group overflow-hidden"
+                        className="cursor-pointer border-slate-100 dark:border-slate-800 hover:border-blue-500/30 hover:shadow-xl hover:shadow-blue-500/5 transition-all bg-muted dark:bg-slate-900/50 group overflow-hidden"
                         onClick={() => setSelectedAgent(agent)}
                       >
                         <CardContent className="p-6 flex items-center gap-6">

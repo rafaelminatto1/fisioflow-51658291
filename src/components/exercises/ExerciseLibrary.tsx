@@ -187,7 +187,7 @@ const ExerciseCard = React.memo(function ExerciseCard({
               onView();
             }}
             size="lg"
-            className="shadow-2xl gap-2 bg-white/95 text-foreground hover:bg-white touch-manipulation pointer-events-auto"
+            className="shadow-2xl gap-2 bg-card text-foreground hover:bg-white touch-manipulation pointer-events-auto"
           >
             <Play className="h-5 w-5" />
             Visualizar
@@ -200,7 +200,7 @@ const ExerciseCard = React.memo(function ExerciseCard({
             variant="ghost"
             size="icon"
             className={cn(
-              "h-9 w-9 bg-background/90 backdrop-blur-sm hover:bg-background shadow-lg touch-manipulation",
+              "h-9 w-9 bg-card hover:bg-background shadow-lg touch-manipulation",
               isFavorite && "text-rose-500 hover:text-rose-600",
             )}
             onClick={(e) => {
@@ -222,7 +222,7 @@ const ExerciseCard = React.memo(function ExerciseCard({
             ) : (
               <Badge
                 variant="secondary"
-                className="bg-background/90 backdrop-blur-sm shadow-lg gap-1"
+                className="bg-card shadow-lg gap-1"
               >
                 <VideoOff className="h-3 w-3" />
                 Sem vídeo
@@ -898,7 +898,7 @@ export function ExerciseLibrary({
   return (
     <div className="flex flex-col w-full relative px-4 sm:px-6 pb-6">
       {/* Search and Filters - Sticky Header */}
-      <div className="sticky top-0 z-20 bg-background/95 backdrop-blur-md pt-4 pb-4 -mx-4 px-4 sm:-mx-6 sm:px-6 border-b mb-4 transition-all duration-300">
+      <div className="sticky top-0 z-20 bg-card pt-4 pb-4 -mx-4 px-4 sm:-mx-6 sm:px-6 border-b mb-4 transition-all duration-300">
         <div className="flex flex-col gap-4">
             <div className="flex items-center gap-4">
             <div className="relative flex-1">
@@ -1031,7 +1031,7 @@ export function ExerciseLibrary({
       </div>
 
       {/* Library Grid */}
-      <div className="rounded-xl border bg-background/50 backdrop-blur-sm relative min-h-[400px]">
+      <div className="rounded-xl border bg-card relative min-h-[400px]">
         {filteredExercises.length === 0 ? (
           <div className="flex flex-col items-center justify-center p-8 text-center min-h-[400px]">
             <Dumbbell className="h-12 w-12 text-muted-foreground mb-4 opacity-20" />
@@ -1188,7 +1188,7 @@ export function ExerciseLibrary({
       {isSelectionMode && selectedExercises.length > 0 && (
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-foreground text-background px-6 py-3 rounded-full shadow-2xl z-50 flex items-center gap-4 animate-in slide-in-from-bottom-10 fade-in duration-300">
           <span className="font-medium">{selectedExercises.length} selecionados</span>
-          <div className="h-4 w-px bg-background/20" />
+          <div className="h-4 w-px bg-card" />
           <Button size="sm" variant="secondary" onClick={() => setShowCreateTemplateModal(true)}>
             Criar Template
           </Button>

@@ -206,7 +206,7 @@ export const AppointmentListView: React.FC<AppointmentListViewProps> = ({
       )}
 
       {/* Header com data e estatísticas */}
-      <div className="sticky top-0 z-10 bg-gradient-to-b from-background to-background/95 backdrop-blur-sm border-b p-4 sm:p-6">
+      <div className="sticky top-0 z-10 bg-gradient-to-b from-background to-background/95 border-b p-4 sm:p-6">
         <div className="flex items-start justify-between mb-4">
           <div>
             <h2 className="text-2xl font-bold mb-1">{getDateLabel}</h2>

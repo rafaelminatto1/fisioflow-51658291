@@ -77,7 +77,7 @@ export function ExerciseMediaCarousel({ media, className }: ExerciseMediaCarouse
                 e.stopPropagation();
                 prev();
               }}
-              className="h-10 w-10 rounded-full border-white/20 bg-black/30 text-white backdrop-blur-md hover:bg-black/50"
+              className="h-10 w-10 rounded-full border-white/20 bg-black/30 text-white hover:bg-black/50"
             >
               <ChevronLeft className="h-6 w-6" />
             </Button>
@@ -88,7 +88,7 @@ export function ExerciseMediaCarousel({ media, className }: ExerciseMediaCarouse
                 e.stopPropagation();
                 next();
               }}
-              className="h-10 w-10 rounded-full border-white/20 bg-black/30 text-white backdrop-blur-md hover:bg-black/50"
+              className="h-10 w-10 rounded-full border-white/20 bg-black/30 text-white hover:bg-black/50"
             >
               <ChevronRight className="h-6 w-6" />
             </Button>
@@ -102,7 +102,7 @@ export function ExerciseMediaCarousel({ media, className }: ExerciseMediaCarouse
                 onClick={() => setCurrentIndex(idx)}
                 className={cn(
                   "h-1.5 w-1.5 rounded-full transition-all",
-                  idx === currentIndex ? "w-4 bg-white" : "bg-white/40 hover:bg-white/60",
+                  idx === currentIndex ? "w-4 bg-white" : "bg-card hover:bg-card",
                 )}
               />
             ))}
@@ -118,7 +118,7 @@ export function ExerciseMediaCarousel({ media, className }: ExerciseMediaCarouse
       )}
 
       {/* Media Type Badge */}
-      <div className="absolute right-4 top-4 rounded-lg bg-black/40 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-white backdrop-blur-md">
+      <div className="absolute right-4 top-4 rounded-lg bg-black/40 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-white">
         {currentMedia.type}
       </div>
     </div>

@@ -92,7 +92,7 @@ const AIScribeModalV1: React.FC<AIScribeModalProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px] p-0 overflow-hidden bg-white/80 dark:bg-slate-950/80 backdrop-blur-xl border-slate-200 dark:border-slate-800 rounded-[2.5rem] shadow-premium-2xl">
+      <DialogContent className="sm:max-w-[500px] p-0 overflow-hidden bg-card border-slate-200 dark:border-slate-800 rounded-[2.5rem] shadow-premium-2xl">
         <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/4 w-64 h-64 bg-blue-500/10 rounded-full blur-[80px] pointer-events-none" />
 
         <DialogHeader className="p-8 pb-0">
@@ -131,7 +131,7 @@ const AIScribeModalV1: React.FC<AIScribeModalProps> = ({
           </div>
 
           {/* Status & Visualizer */}
-          <div className="flex flex-col items-center justify-center py-10 rounded-[2rem] bg-slate-50/50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-800 relative overflow-hidden">
+          <div className="flex flex-col items-center justify-center py-10 rounded-[2rem] bg-muted dark:bg-slate-900/50 border border-slate-100 dark:border-slate-800 relative overflow-hidden">
             {isRecording && (
               <div className="absolute inset-0 flex items-center justify-center opacity-10">
                 <div className="w-32 h-32 bg-blue-500 rounded-full animate-ping" />
@@ -259,7 +259,7 @@ const AIScribeModalV1: React.FC<AIScribeModalProps> = ({
           </div>
         </div>
 
-        <div className="px-8 py-3 bg-slate-50/50 dark:bg-slate-900/50 border-t border-slate-100 dark:border-slate-800 flex justify-center">
+        <div className="px-8 py-3 bg-muted dark:bg-slate-900/50 border-t border-slate-100 dark:border-slate-800 flex justify-center">
           <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">
             Whisper v3-large • Gemini 1.5 Flash
           </p>

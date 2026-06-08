@@ -51,7 +51,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
 
     const variantClasses = {
       default: "border border-input bg-background",
-      glass: "gradient-glass backdrop-blur-sm border-white/20 bg-white/5",
+      glass: "gradient-glass border-white/20 bg-white/5",
       "brand-light": "gradient-brand-light border-primary/20",
       "success-light": "gradient-success-light border-emerald-500/20",
     };

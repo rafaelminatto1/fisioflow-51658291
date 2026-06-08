@@ -120,7 +120,7 @@ export const ScribeDrawer: React.FC<ScribeDrawerProps> = ({ isOpen, onClose, pat
           animate={{ x: 0 }}
           exit={{ x: "100%" }}
           transition={{ type: "spring", damping: 25, stiffness: 200 }}
-          className="fixed top-0 right-0 h-full w-full max-w-md bg-slate-950/90 backdrop-blur-2xl border-l border-violet-500/30 shadow-2xl z-[100] text-slate-50 flex flex-col overflow-hidden"
+          className="fixed top-0 right-0 h-full w-full max-w-md bg-slate-950/90 border-l border-violet-500/30 shadow-2xl z-[100] text-slate-50 flex flex-col overflow-hidden"
         >
           {/* Aura Background Effect */}
           <div className="absolute top-0 right-0 w-64 h-64 bg-violet-600/10 blur-[100px] pointer-events-none" />
@@ -267,7 +267,7 @@ export const ScribeDrawer: React.FC<ScribeDrawerProps> = ({ isOpen, onClose, pat
                   <Card className="bg-violet-600 border-none rounded-[32px] shadow-xl shadow-violet-600/20 overflow-hidden">
                     <CardContent className="p-6 flex flex-col items-center gap-4">
                       <div className="flex items-center justify-between w-full">
-                        <Badge className="bg-white/20 text-white border-none backdrop-blur-md">
+                        <Badge className="bg-white/20 text-white border-none">
                           {isProcessing ? "IA Processando..." : "Escutando..."}
                         </Badge>
                         <span className="text-[10px] font-black text-white/50 tracking-widest uppercase">
@@ -348,7 +348,7 @@ export const ScribeDrawer: React.FC<ScribeDrawerProps> = ({ isOpen, onClose, pat
           </ScrollArea>
 
           {/* Footer */}
-          <div className="p-6 bg-slate-950/50 backdrop-blur-xl border-t border-white/5">
+          <div className="p-6 bg-slate-950/50 border-t border-white/5">
             <Button
               onClick={() => {
                 toast.success("Evolução sincronizada com sucesso!");

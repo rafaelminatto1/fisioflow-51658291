@@ -266,7 +266,7 @@ export const EvolutionHeader = memo(
 
     return (
       <div
-        className="sticky top-0 z-30 rounded-xl border border-primary/10 bg-white/80 shadow-sm backdrop-blur-md p-4 transition-all duration-300"
+        className="sticky top-0 z-30 rounded-xl border border-primary/10 bg-card shadow-sm p-4 transition-all duration-300"
         role="banner"
         aria-label="Cabeçalho da evolução"
       >
@@ -425,7 +425,7 @@ export const EvolutionHeader = memo(
         <div className="flex items-center gap-4 mt-4 pt-4 border-t border-slate-100 overflow-x-auto scrollbar-none">
           {tabsConfig.length > 0 && onTabChange && (
             <nav
-              className="inline-flex h-9 shrink-0 items-center justify-center rounded-lg bg-slate-50/80 p-1 gap-1"
+              className="inline-flex h-9 shrink-0 items-center justify-center rounded-lg bg-muted p-1 gap-1"
               role="tablist"
             >
               {tabsConfig.map((tab) => {
@@ -483,7 +483,7 @@ export const EvolutionHeader = memo(
               >
                 <SelectTrigger
                   aria-label="Selecionar fisioterapeuta"
-                  className="h-9 w-[180px] text-xs font-bold bg-white/50 border-slate-200 shadow-none hover:border-primary/30 transition-all text-slate-600"
+                  className="h-9 w-[180px] text-xs font-bold bg-card border-slate-200 shadow-none hover:border-primary/30 transition-all text-slate-600"
                 >
                   <div className="flex items-center gap-2 truncate">
                     <UserCog className="h-3.5 w-3.5 text-primary/60 shrink-0" />

@@ -1172,7 +1172,7 @@ export function BodyMapAnatomical({
         {/* Tooltip da região */}
         {hoveredRegion && (
           <div className="absolute bottom-20 left-2 z-30">
-            <div className="bg-background/95 backdrop-blur-sm px-4 py-3 rounded-xl shadow-xl border">
+            <div className="bg-card px-4 py-3 rounded-xl shadow-xl border">
               {(() => {
                 const region = musclePaths.find((r) => r.code === hoveredRegion);
                 const stats = regionStats.get(hoveredRegion);
@@ -1234,7 +1234,7 @@ export function BodyMapAnatomical({
               const painData = PAIN_TYPE_DATA[point.painType];
 
               return (
-                <div className="bg-background/95 backdrop-blur-md rounded-xl shadow-2xl border p-4 animate-in slide-in-from-bottom-4">
+                <div className="bg-card rounded-xl shadow-2xl border p-4 animate-in slide-in-from-bottom-4">
                   <div className="space-y-4">
                     {/* Header */}
                     <div className="flex justify-between items-start">
@@ -1327,7 +1327,7 @@ export function BodyMapAnatomical({
 
         {/* Legenda */}
         <div className="absolute bottom-2 left-2 z-20">
-          <div className="bg-background/90 backdrop-blur-sm px-4 py-3 rounded-xl shadow-lg border">
+          <div className="bg-card px-4 py-3 rounded-xl shadow-lg border">
             <div className="font-semibold text-xs mb-3 text-center">
               {view === "front" ? "VISTA FRONTAL" : "VISTA POSTERIOR"}
             </div>

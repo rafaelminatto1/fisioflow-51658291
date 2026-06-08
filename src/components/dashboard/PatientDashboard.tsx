@@ -133,7 +133,7 @@ export function PatientDashboard({ profile }: PatientDashboardProps) {
 
   return (
     <div className="space-y-6">
-      <Card className="rounded-[2rem] border-border/60 bg-background/75 shadow-sm backdrop-blur-xl">
+      <Card className="rounded-[2rem] border-border/60 bg-card shadow-sm">
         <CardContent className="flex flex-col gap-4 p-5 lg:flex-row lg:items-end lg:justify-between">
           <div>
             <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-primary/75">
@@ -167,14 +167,14 @@ export function PatientDashboard({ profile }: PatientDashboardProps) {
       </Card>
 
       {/* ── Gamification Hero ── */}
-      <Card className="rounded-[2rem] border-none bg-gradient-to-br from-slate-900 via-slate-800 to-primary/20 text-white shadow-premium-lg overflow-hidden relative group">
+      <Card className="rounded-[2rem] border-none bg-slate-900 text-white shadow-premium-lg overflow-hidden relative group">
         <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:scale-110 transition-transform duration-700">
           <Trophy className="h-32 w-32" />
         </div>
         <CardContent className="p-8 relative z-10">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-8">
             <div className="space-y-4">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/10">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/15 border border-white/20">
                 <Star className="h-3 w-3 text-yellow-400 fill-yellow-400" />
                 <span className="text-[10px] font-black uppercase tracking-[0.2em]">
                   Nível {gamification?.level || 1}
@@ -270,7 +270,7 @@ export function PatientDashboard({ profile }: PatientDashboardProps) {
 
       <div className="grid gap-6 lg:grid-cols-12">
         <Card
-          className="rounded-[2rem] border-border/60 bg-background/80 shadow-sm backdrop-blur-xl lg:col-span-7"
+          className="rounded-[2rem] border-border/60 bg-card shadow-sm lg:col-span-7"
           data-testid="today-schedule"
         >
           <CardHeader className="border-b border-border/60 pb-4">
@@ -328,7 +328,7 @@ export function PatientDashboard({ profile }: PatientDashboardProps) {
         </Card>
 
         <div className="space-y-6 lg:col-span-5">
-          <Card className="rounded-[2rem] border-border/60 bg-background/80 shadow-sm backdrop-blur-xl">
+          <Card className="rounded-[2rem] border-border/60 bg-card shadow-sm">
             <CardHeader className="border-b border-border/60 pb-4">
               <div className="flex items-center gap-3">
                 <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-600">
@@ -349,7 +349,7 @@ export function PatientDashboard({ profile }: PatientDashboardProps) {
             </CardContent>
           </Card>
 
-          <Card className="rounded-[2rem] border-border/60 bg-background/80 shadow-sm backdrop-blur-xl">
+          <Card className="rounded-[2rem] border-border/60 bg-card shadow-sm">
             <CardHeader className="border-b border-border/60 pb-4">
               <div className="flex items-center gap-3">
                 <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-amber-500/10 text-amber-600">

@@ -435,7 +435,7 @@ const ComputerVisionExercise: React.FC<ComputerVisionExerciseProps> = ({ onSessi
     <div className="max-w-6xl mx-auto p-6">
       {/* AI Coach Overlay - Show when finished */}
       {sessionFinished && currentSession && (
-        <div className="fixed inset-0 z-[100] bg-background/80 backdrop-blur-sm flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[100] bg-card flex items-center justify-center p-4">
           <div className="max-w-md w-full animate-in zoom-in-95 duration-300">
             <ExerciseCoachAI
               sessionData={{

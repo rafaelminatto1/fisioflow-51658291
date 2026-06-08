@@ -124,7 +124,7 @@ export default function WikiDashboard() {
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
             <Input
               placeholder="Busque por 'LCA', 'Ombro', 'Protocolo'..."
-              className="pl-12 h-14 rounded-xl bg-white/10 border-white/10 text-white placeholder:text-slate-400 focus:bg-white/20 backdrop-blur-sm transition-all"
+              className="pl-12 h-14 rounded-xl bg-white/10 border-white/10 text-white placeholder:text-slate-400 focus:bg-white/20 transition-all"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />

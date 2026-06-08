@@ -220,7 +220,7 @@ export const AppointmentReminder: React.FC<AppointmentReminderProps> = ({
                 <SelectTrigger className={compactFieldClass}>
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent className="rounded-[20px] border border-border/70 bg-background/95 p-1 shadow-[0_24px_70px_-30px_rgba(15,23,42,0.45)] backdrop-blur-xl">
+                <SelectContent className="rounded-[20px] border border-border/70 bg-popover p-1 shadow-[0_24px_70px_-30px_rgba(15,23,42,0.45)]">
                   <SelectItem value="minutes">Minutos</SelectItem>
                   <SelectItem value="hours">Horas</SelectItem>
                   <SelectItem value="days">Dias</SelectItem>
@@ -241,7 +241,7 @@ export const AppointmentReminder: React.FC<AppointmentReminderProps> = ({
                 <SelectTrigger className={compactFieldClass}>
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent className="rounded-[20px] border border-border/70 bg-background/95 p-1 shadow-[0_24px_70px_-30px_rgba(15,23,42,0.45)] backdrop-blur-xl">
+                <SelectContent className="rounded-[20px] border border-border/70 bg-popover p-1 shadow-[0_24px_70px_-30px_rgba(15,23,42,0.45)]">
                   <SelectItem value="before">Antes</SelectItem>
                   <SelectItem value="after">Depois</SelectItem>
                 </SelectContent>

@@ -151,8 +151,8 @@ export default function NotificationPreferencesPage() {
 
   return (
     <MainLayout>
-      <div className="min-h-screen bg-background/50 pb-20">
-        <div className="sticky top-0 z-30 bg-background/95 backdrop-blur border-b px-6 py-3">
+      <div className="min-h-screen bg-card pb-20">
+        <div className="sticky top-0 z-30 bg-card border-b px-6 py-3">
           <div className="flex items-center gap-4 max-w-3xl mx-auto">
             <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
               <ArrowLeft className="h-5 w-5" />

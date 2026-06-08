@@ -134,7 +134,7 @@ export const JumpAnalysisStudio: React.FC<JumpAnalysisStudioProps> = ({ onDataUp
             </Stage>
           </div>
 
-          <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-3 bg-slate-900/60 backdrop-blur-3xl p-3 rounded-[2rem] border border-white/10 z-30 shadow-2xl">
+          <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-3 bg-slate-900/60 p-3 rounded-[2rem] border border-white/10 z-30 shadow-2xl">
             <input
               type="file"
               className="hidden"
