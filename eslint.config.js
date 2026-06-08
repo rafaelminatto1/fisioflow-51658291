@@ -11,6 +11,10 @@ import unusedImports from "eslint-plugin-unused-imports";
 export default tseslint.config(
   {
     ignores: [
+      "scratch/**",
+      ".claude/**",
+      ".gemini/**",
+      "pnpm-lock.yaml",
       "dist",
       "**/dist/**",
       "**/*.mjs",

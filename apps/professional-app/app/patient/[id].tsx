@@ -13,7 +13,7 @@ import {
   Alert,
   Linking,
 } from "react-native";
-import { useLocalSearchParams, router } from "expo-router";
+import { useLocalSearchParams, router, type Href } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useColors } from "@/hooks/useColorScheme";
@@ -248,7 +248,7 @@ export default function PatientDetailScreen() {
             style={[styles.actionBtn, { backgroundColor: colors.info + "E0" }]}
             onPress={() => {
               medium();
-              router.push(`/evolution-form?patientId=${id}&patientName=${name}` as any);
+              router.push(`/evolution-form?patientId=${id}&patientName=${name}` as Href);
             }}
           >
             <Ionicons name="document-text-outline" size={18} color="#FFFFFF" />
@@ -397,7 +397,7 @@ export default function PatientDetailScreen() {
               </Card>
 
               {/* Monitoramento de Wearables */}
-              <WearablesSummaryWidget patientId={id || ""} />
+              <WearablesSummaryWidget patientId={(Array.isArray(id) ? id[0] : id) || ""} />
 
               <Card
                 style={[
@@ -514,7 +514,7 @@ export default function PatientDetailScreen() {
               style={[styles.editButton, { backgroundColor: colors.primary }]}
               onPress={() => {
                 light();
-                router.push(`/patient-form?id=${id}` as any);
+                router.push(`/patient-form?id=${id}` as Href);
               }}
             >
               <Ionicons name="create-outline" size={18} color="#FFFFFF" />
@@ -530,7 +530,7 @@ export default function PatientDetailScreen() {
                 style={[styles.addEvolutionBtn, { backgroundColor: colors.primary, flex: 1 }]}
                 onPress={() => {
                   medium();
-                  router.push(`/evolution-form?patientId=${id}&patientName=${name}` as any);
+                  router.push(`/evolution-form?patientId=${id}&patientName=${name}` as Href);
                 }}
               >
                 <Ionicons name="add" size={24} color="#FFFFFF" />
@@ -601,7 +601,7 @@ export default function PatientDetailScreen() {
                 ]}
                 onPress={() => {
                   medium();
-                  router.push(`/evolutions-list?patientId=${id}&patientName=${name}` as any);
+                  router.push(`/evolutions-list?patientId=${id}&patientName=${name}` as Href);
                 }}
               >
                 <Ionicons name="list-outline" size={20} color={colors.primary} />
@@ -620,7 +620,7 @@ export default function PatientDetailScreen() {
                   onPress={() => {
                     medium();
                     router.push(
-                      `/evolution-detail?evolutionId=${evolution.id}&patientId=${id}&patientName=${name}` as any,
+                      `/evolution-detail?evolutionId=${evolution.id}&patientId=${id}&patientName=${name}` as Href,
                     );
                   }}
                 >
@@ -923,7 +923,7 @@ export default function PatientDetailScreen() {
                                         onSuccess: () => {
                                           Alert.alert("Sucesso", "Registro marcado como pago!");
                                         },
-                                        onError: (error: any) => {
+                                        onError: (error: Error) => {
                                           Alert.alert(
                                             "Erro",
                                             error.message || "Não foi possível marcar como pago.",
@@ -974,7 +974,7 @@ export default function PatientDetailScreen() {
                                     onSuccess: () => {
                                       Alert.alert("Sucesso", "Registro excluído!");
                                     },
-                                    onError: (error: any) => {
+                                    onError: (error: Error) => {
                                       Alert.alert(
                                         "Erro",
                                         error.message || "Não foi possível excluir o registro.",
@@ -1167,7 +1167,7 @@ export default function PatientDetailScreen() {
                             setShowFinancialModal(false);
                             Alert.alert("Sucesso", "Registro atualizado!");
                           },
-                          onError: (error: any) => {
+                          onError: (error: Error) => {
                             Alert.alert(
                               "Erro",
                               error.message || "Não foi possível atualizar o registro.",
@@ -1181,7 +1181,7 @@ export default function PatientDetailScreen() {
                           setShowFinancialModal(false);
                           Alert.alert("Sucesso", "Registro criado!");
                         },
-                        onError: (error: any) => {
+                        onError: (error: Error) => {
                           Alert.alert(
                             "Erro",
                             error.message || "Não foi possível criar o registro.",

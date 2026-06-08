@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import * as ImagePicker from "expo-image-picker";
-import { useRouter } from "expo-router";
+import { useRouter, type Href } from "expo-router";
 import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
@@ -503,7 +503,7 @@ export default function ProfileEditScreen() {
                   title="Configurar Horários"
                   onPress={() => {
                     medium();
-                    router.push("/working-hours" as any);
+                    router.push("/working-hours" as Href);
                   }}
                   variant="outline"
                   style={{ marginTop: 16 }}
@@ -521,7 +521,7 @@ export default function ProfileEditScreen() {
             <TouchableOpacity
               style={[styles.dangerButton, { backgroundColor: colors.error + "10" }]}
               onPress={() => {
-                router.push("/change-password" as any);
+                router.push("/change-password" as Href);
               }}
             >
               <Ionicons name="lock-closed-outline" size={20} color={colors.error} />

@@ -47,6 +47,11 @@ overrides:
   esbuild: "^0.25.0"
   "@xmldom/xmldom": "^0.8.13"
   ajv: "^8.18.0"
+  # eslint e @eslint/eslintrc usam a API antiga do ajv v6 (missingRefs,
+  # _opts.defaultMeta, refs/json-schema-draft-04); o override global de ajv@8
+  # acima quebrava o ESLint. Escopa o ajv deles p/ v6.
+  "@eslint/eslintrc>ajv": "^6.12.6"
+  "eslint>ajv": "^6.12.6"
   immutable: "^3.8.3"
   svelte: "^5.53.5"
   expo-modules-core: 55.0.25

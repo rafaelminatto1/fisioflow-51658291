@@ -10,7 +10,7 @@ import {
   Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useRouter, useLocalSearchParams } from "expo-router";
+import { useRouter, useLocalSearchParams, type Href } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -20,6 +20,7 @@ import { useEvolutions } from "@/hooks";
 import { EvolutionChart } from "@/components/charts/evolution-chart";
 import { stripHtml } from "@/lib/utils/stripHtml";
 import type { Evolution } from "@/types";
+import type { ThemeColors } from "@/types/theme";
 
 // ─── helpers ────────────────────────────────────────────────────────────────
 
@@ -39,7 +40,7 @@ interface EvolutionCardItemProps {
   onEdit: () => void;
   onDuplicate: () => void;
   isDuplicating: boolean;
-  colors: any;
+  colors: ThemeColors;
   light: () => void;
   medium: () => void;
 }
@@ -180,7 +181,7 @@ interface PaginationBarProps {
   hasPrevPage: boolean;
   onNext: () => void;
   onPrev: () => void;
-  colors: any;
+  colors: ThemeColors;
   medium: () => void;
 }
 
@@ -360,7 +361,7 @@ export default function EvolutionsListScreen() {
         <TouchableOpacity
           onPress={() => {
             medium();
-            router.push(`/evolution-form?patientId=${patientId}&patientName=${patientName}` as any);
+            router.push(`/evolution-form?patientId=${patientId}&patientName=${patientName}` as Href);
           }}
           style={styles.addButton}
         >
@@ -388,7 +389,7 @@ export default function EvolutionsListScreen() {
               labels={evolutions
                 .slice(0, 10)
                 .reverse()
-                .map((_: any, i: number) => `${i + 1}`)}
+                .map((_: unknown, i: number) => `${i + 1}`)}
               title="Evolução da Dor"
               color={colors.primary}
             />
@@ -424,7 +425,7 @@ export default function EvolutionsListScreen() {
               onPress={() => {
                 medium();
                 router.push(
-                  `/evolution-form?patientId=${patientId}&patientName=${patientName}` as any,
+                  `/evolution-form?patientId=${patientId}&patientName=${patientName}` as Href,
                 );
               }}
             >
@@ -444,12 +445,12 @@ export default function EvolutionsListScreen() {
               onView={() => {
                 light();
                 router.push(
-                  `/evolution-detail?evolutionId=${evolution.id}&patientId=${patientId}&patientName=${patientName}` as any,
+                  `/evolution-detail?evolutionId=${evolution.id}&patientId=${patientId}&patientName=${patientName}` as Href,
                 );
               }}
               onEdit={() => {
                 router.push(
-                  `/evolution-detail?evolutionId=${evolution.id}&patientId=${patientId}&patientName=${patientName}&startEditing=true` as any,
+                  `/evolution-detail?evolutionId=${evolution.id}&patientId=${patientId}&patientName=${patientName}&startEditing=true` as Href,
                 );
               }}
               onDuplicate={() => handleDuplicate(evolution)}

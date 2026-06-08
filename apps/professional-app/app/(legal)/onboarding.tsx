@@ -11,7 +11,7 @@ import {
   ActivityIndicator,
   ScrollView,
 } from "react-native";
-import { useRouter } from "expo-router";
+import { useRouter, type Href } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import * as Device from "expo-device";
@@ -158,7 +158,7 @@ export default function OnboardingScreen() {
   };
 
   const setupBiometric = () => {
-    router.push("/(auth)/biometric-setup?mode=onboarding" as any);
+    router.push("/(auth)/biometric-setup?mode=onboarding" as Href);
   };
 
   const renderWelcome = () => (
@@ -207,7 +207,7 @@ export default function OnboardingScreen() {
       </ScrollView>
       <TouchableOpacity
         style={styles.primaryButton}
-        onPress={() => router.push("/(legal)/privacy-policy?mode=onboarding" as any)}
+        onPress={() => router.push("/(legal)/privacy-policy?mode=onboarding" as Href)}
       >
         <Text style={styles.primaryButtonText}>Ler Política de Privacidade</Text>
       </TouchableOpacity>
@@ -233,7 +233,7 @@ export default function OnboardingScreen() {
       </Text>
       <TouchableOpacity
         style={styles.primaryButton}
-        onPress={() => router.push("/(legal)/terms-of-service?mode=onboarding" as any)}
+        onPress={() => router.push("/(legal)/terms-of-service?mode=onboarding" as Href)}
       >
         <Text style={styles.primaryButtonText}>Ler Termos de Uso</Text>
       </TouchableOpacity>

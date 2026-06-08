@@ -14,12 +14,13 @@ import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import { useHaptics } from "@/hooks/useHaptics";
 import { ImageEditor } from "./ImageEditor";
+import type { ThemeColors } from "@/types/theme";
 
 interface PhotoUploadProps {
   photos: string[];
   onPhotosChange: (photos: string[]) => void;
   maxPhotos?: number;
-  colors: any;
+  colors: ThemeColors;
 }
 
 export function PhotoUpload({ photos, onPhotosChange, maxPhotos = 6, colors }: PhotoUploadProps) {

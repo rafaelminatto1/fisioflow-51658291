@@ -323,21 +323,25 @@ export function getDateRange(period: DatePeriod): { start: Date; end: Date } {
   switch (period) {
     case "today":
       return { start: today, end: today };
-    case "week":
+    case "week": {
       const weekStart = subDays(today, 7);
       return { start: weekStart, end: today };
-    case "month":
+    }
+    case "month": {
       const monthStart = subDays(today, 30);
       return { start: monthStart, end: today };
-    case "thisMonth":
+    }
+    case "thisMonth": {
       const thisMonthStart = startOfMonth(today);
       const thisMonthEnd = endOfMonth(today);
       return { start: thisMonthStart, end: thisMonthEnd };
-    case "lastMonth":
+    }
+    case "lastMonth": {
       const lastMonthDate = subMonths(today, 1);
       const lastMonthStart = startOfMonth(lastMonthDate);
       const lastMonthEnd = endOfMonth(lastMonthDate);
       return { start: lastMonthStart, end: lastMonthEnd };
+    }
     default:
       return { start: today, end: today };
   }

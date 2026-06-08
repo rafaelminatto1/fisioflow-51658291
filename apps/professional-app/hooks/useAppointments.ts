@@ -9,6 +9,7 @@ import {
   cancelAppointment,
   type ApiAppointment,
 } from "@/lib/api";
+import { toLocalYMD, parseLocalDate, formatDateForAPI } from "@/lib/date-utils";
 
 export interface UseAppointmentsOptions {
   startDate?: Date;

@@ -3,6 +3,7 @@ import React from "react";
 import {
   TouchableOpacity,
   Text,
+  View,
   StyleSheet,
   ActivityIndicator,
   ViewStyle,
@@ -20,7 +21,7 @@ interface ButtonProps {
   loading?: boolean;
   style?: ViewStyle;
   textStyle?: TextStyle;
-  leftIcon?: keyof typeof Ionicons.prototype.props.name;
+  leftIcon?: React.ComponentProps<typeof Ionicons>["name"] | React.ReactNode;
 }
 
 export function Button({
@@ -120,14 +121,17 @@ export function Button({
         <ActivityIndicator color={getTextColor()} size="small" />
       ) : (
         <>
-          {leftIcon && (
-            <Ionicons
-              name={leftIcon as any}
-              size={size === "sm" ? 18 : 20}
-              color={getTextColor()}
-              style={styles.icon}
-            />
-          )}
+          {leftIcon &&
+            (typeof leftIcon === "string" ? (
+              <Ionicons
+                name={leftIcon as keyof typeof Ionicons.glyphMap}
+                size={size === "sm" ? 18 : 20}
+                color={getTextColor()}
+                style={styles.icon}
+              />
+            ) : (
+              <View style={styles.icon}>{leftIcon}</View>
+            ))}
           <Text
             style={[
               styles.text,

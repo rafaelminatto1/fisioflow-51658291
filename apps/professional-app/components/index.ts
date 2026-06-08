@@ -1,6 +1,7 @@
 export { Button } from "./Button";
 export { Input } from "./Input";
 export { Card } from "./Card";
+export { Header } from "./Header";
 export { Modal } from "./Modal";
 export { Picker } from "./Picker";
 export { TextArea } from "./TextArea";

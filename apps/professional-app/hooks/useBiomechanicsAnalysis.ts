@@ -24,7 +24,7 @@ export const useBiomechanicsAnalysis = () => {
   const [analysisResults, setAnalysisResults] = useState<AnalysisResult | null>(null);
 
   const haptics = useHaptics();
-  const { patients } = usePatients();
+  const { data: patients, isLoading: patientsLoading } = usePatients();
 
   // Ref para frames e poses (otimização de performance)
   const currentPose = useRef<any>(null);
@@ -76,18 +76,18 @@ export const useBiomechanicsAnalysis = () => {
   const setAsGhost = useCallback(
     (uri: string | null) => {
       setGhostMedia(uri);
-      haptics.impact("light");
+      haptics.light();
     },
     [haptics],
   );
 
   const toggleRecording = useCallback(() => {
     if (isRecording) {
-      haptics.notification("success");
+      haptics.success();
       setIsRecording(false);
       processRecordingResults();
     } else {
-      haptics.impact("medium");
+      haptics.medium();
       setIsRecording(true);
       sessionPoses.current = [];
     }
@@ -209,7 +209,7 @@ export const useBiomechanicsAnalysis = () => {
     setCapturedMedia(null);
     setAnalysisResults(null);
     setIsRecording(false);
-    sessionFrames.current = [];
+    sessionPoses.current = [];
   }, []);
 
   return {
@@ -230,5 +230,6 @@ export const useBiomechanicsAnalysis = () => {
     ghostMedia,
     setAsGhost,
     patients,
+    patientsLoading,
   };
 };
