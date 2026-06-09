@@ -133,7 +133,7 @@ export default defineConfig({
       "@fisioflow/config": path.resolve(repoRoot, "packages/config/src"),
       "@fisioflow/skills": path.resolve(repoRoot, "src/lib/skills"),
       lodash: "lodash-es",
-      "fast-check": path.resolve(__dirname, "node_modules/fast-check"),
+      "fast-check": path.resolve(repoRoot, "node_modules/fast-check"),
     },
   },
 });
