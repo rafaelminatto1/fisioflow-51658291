@@ -44,7 +44,7 @@ overrides:
   rollup: "^4.59.0"
   minimatch: "^3.1.4"
   serialize-javascript: "^7.0.5"
-  esbuild: "^0.25.0"
+  esbuild: "^0.28.0"
   "@xmldom/xmldom": "^0.8.13"
   ajv: "^8.18.0"
   # eslint e @eslint/eslintrc usam a API antiga do ajv v6 (missingRefs,
