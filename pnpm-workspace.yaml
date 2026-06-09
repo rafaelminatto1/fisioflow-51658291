@@ -8,6 +8,7 @@ nodeLinker: hoisted
 
 allowBuilds:
   "@google/genai": true
+  "@mongodb-js/zstd": false
   "@scarf/scarf": true
   "@sentry-internal/node-cpu-profiler": true
   "@sentry/cli": true
@@ -16,6 +17,7 @@ allowBuilds:
   "core-js-pure": true
   "esbuild": true
   "msw": true
+  "node-liblzma": false
   "protobufjs": true
   "puppeteer": true
   "sharp": true
