@@ -14,7 +14,7 @@ concurrency:
 
 env:
   NODE_VERSION: "22"
-  PNPM_VERSION: "10.33.0"
+  PNPM_VERSION: "11.0.9"
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
   NODE_OPTIONS: "--max-old-space-size=8192"
   VITE_API_BASE_URL: ${{ vars.VITE_API_BASE_URL || 'https://fisioflow-api-staging.rafalegollas.workers.dev/api' }}
@@ -46,6 +46,10 @@ jobs:
     needs: [quality-gate]
     runs-on: ubuntu-latest
     timeout-minutes: 25
+    env:
+      # wrangler lê CLOUDFLARE_* do ambiente; os secrets do repo se chamam CF_*.
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
     steps:
       - uses: actions/checkout@v6
 
