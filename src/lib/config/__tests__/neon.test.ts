@@ -14,10 +14,12 @@ describe("Neon config", () => {
     expect(isNeonAuthConfigured()).toBe(true);
   });
 
-  it("uses the production fallback when the build env is missing", () => {
+  it("falls back to the same-origin proxy in production when the build env is missing", () => {
     vi.stubEnv("PROD", true);
     vi.stubEnv("VITE_NEON_AUTH_URL", "");
 
+    // Without a `window` (node test env) the same-origin proxy path is returned
+    // verbatim; in the browser it is resolved against window.location.origin.
     expect(getNeonAuthUrl()).toBe(DEFAULT_PRODUCTION_NEON_AUTH_URL);
     expect(isNeonAuthConfigured()).toBe(true);
   });
