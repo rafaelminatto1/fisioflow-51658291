@@ -71,7 +71,7 @@ export function RegisterForm({
             onChange={onFullNameChange}
             required
             className="h-12 bg-white/50 dark:bg-slate-900/50 border-slate-200 dark:border-slate-800 rounded-xl focus:ring-primary/20 transition-all duration-200"
-            tabIndex={activeTab === "register" ? 1 : -1}
+            tabIndex={activeTab === "register" ? 0 : -1}
             autoComplete="name"
           />
           {validationErrors.fullName && (
@@ -94,7 +94,7 @@ export function RegisterForm({
             required
             disabled={!!invitationData}
             className="h-12 bg-white/50 dark:bg-slate-900/50 border-slate-200 dark:border-slate-800 rounded-xl focus:ring-primary/20 transition-all duration-200"
-            tabIndex={activeTab === "register" ? 2 : -1}
+            tabIndex={activeTab === "register" ? 0 : -1}
             autoComplete="email"
           />
           {validationErrors.email && (
@@ -117,7 +117,7 @@ export function RegisterForm({
               onChange={onPasswordChange}
               required
               className="h-12 bg-white/50 dark:bg-slate-900/50 border-slate-200 dark:border-slate-800 rounded-xl focus:ring-primary/20 transition-all duration-200"
-              tabIndex={activeTab === "register" ? 3 : -1}
+              tabIndex={activeTab === "register" ? 0 : -1}
               autoComplete="new-password"
             />
           </div>
@@ -133,7 +133,7 @@ export function RegisterForm({
               onChange={onConfirmPasswordChange}
               required
               className="h-12 bg-white/50 dark:bg-slate-900/50 border-slate-200 dark:border-slate-800 rounded-xl focus:ring-primary/20 transition-all duration-200"
-              tabIndex={activeTab === "register" ? 4 : -1}
+              tabIndex={activeTab === "register" ? 0 : -1}
               autoComplete="new-password"
             />
           </div>
@@ -172,7 +172,7 @@ export function RegisterForm({
         type="submit"
         className="w-full h-12 text-sm font-bold bg-gradient-to-r from-primary to-blue-600 hover:from-primary/90 hover:to-blue-700 shadow-lg shadow-primary/25 transition-all duration-200 active:scale-[0.98] rounded-xl mt-2"
         disabled={loading || !fullName.trim() || !email.trim() || !password || !confirmPassword}
-        tabIndex={activeTab === "register" ? 5 : -1}
+        tabIndex={activeTab === "register" ? 0 : -1}
       >
         {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
         Começar Agora Gratuitamente

@@ -461,7 +461,6 @@ export default function Auth() {
             onGoogleClick={handleGoogleSignIn}
             onGithubClick={handleGithubSignIn}
             onAppleClick={handleAppleSignIn}
-            activeTab={activeTab}
           />
         </CardContent>
       </Card>

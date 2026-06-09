@@ -136,7 +136,7 @@ export function LoginForm({
                     placeholder="nome@exemplo.com"
                     autoComplete="email"
                     className="h-12 bg-white/50 dark:bg-slate-900/50 border-slate-200 dark:border-slate-800 focus:ring-primary/20 transition-all duration-200"
-                    tabIndex={activeTab === "login" ? 1 : -1}
+                    tabIndex={activeTab === "login" ? 0 : -1}
                     disabled={loading}
                     {...field}
                   />
@@ -159,7 +159,7 @@ export function LoginForm({
                   <button
                     type="button"
                     className="text-xs font-semibold text-primary hover:text-primary/80 transition-colors bg-transparent border-0 p-0 cursor-pointer"
-                    tabIndex={activeTab === "login" ? 5 : -1}
+                    tabIndex={activeTab === "login" ? 0 : -1}
                     onClick={() => {
                       logger.debug("Forgot password clicked", null, "LoginForm");
                     }}
@@ -176,7 +176,7 @@ export function LoginForm({
                     placeholder="•••••••"
                     autoComplete="current-password"
                     className="h-12 bg-white/50 dark:bg-slate-900/50 border-slate-200 dark:border-slate-800 focus:ring-primary/20 transition-all duration-200"
-                    tabIndex={activeTab === "login" ? 2 : -1}
+                    tabIndex={activeTab === "login" ? 0 : -1}
                     disabled={loading}
                     {...field}
                   />
@@ -206,7 +206,7 @@ export function LoginForm({
           data-testid="auth-submit-button"
           className="w-full h-12 text-sm font-bold bg-gradient-to-r from-primary to-blue-600 hover:from-primary/90 hover:to-blue-700 shadow-lg shadow-primary/25 transition-all duration-200 active:scale-[0.98] rounded-xl"
           disabled={loading}
-          tabIndex={activeTab === "login" ? 3 : -1}
+          tabIndex={activeTab === "login" ? 0 : -1}
         >
           {loading ? (
             <>

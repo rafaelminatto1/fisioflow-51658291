@@ -18,6 +18,12 @@ window.addEventListener("unhandledrejection", (event) => {
   handleChunkError(event.reason, "unhandledrejection");
 });
 
+// Evento dedicado do Vite para falha de preload/prefetch de chunk (não passa pelo
+// render do React, então os boundaries não pegam). Recomendação oficial do Vite.
+window.addEventListener("vite:preloadError", (event) => {
+  handleChunkError((event as { payload?: unknown }).payload ?? event, "vite:preloadError");
+});
+
 // ============================================================================
 // BOOTSTRAP (Render first, init later)
 // ============================================================================

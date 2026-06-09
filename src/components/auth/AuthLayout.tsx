@@ -63,7 +63,7 @@ export function AuthLayout({ children }: AuthLayoutProps) {
               <div className="space-y-4">
                 {[
                   "Agenda inteligente com drag-and-drop",
-                  "Evoluções SOAP automatizadas com IA",
+                  "Evoluções clínicas assistidas por IA",
                   "Controle financeiro completo e NF-e",
                   "Portal do paciente e biofeedback",
                 ].map((feature, i) => (
