@@ -23,7 +23,7 @@
     "@google/genai": "^1.50.1",
     "@hono/zod-validator": "^0.8.0",
     "@neondatabase/serverless": "^1.0.2",
-    "agents": "^0.12.4",
+    "agents": "^0.15.0",
     "drizzle-orm": "^0.45.2",
     "hono": "^4.12.24",
     "inngest": "^3.52.3",
