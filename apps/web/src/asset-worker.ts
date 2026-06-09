@@ -60,6 +60,8 @@ export function rewriteAuthLocation(location: string, origin: string): string {
 }
 
 async function proxyNeonAuth(request: Request, url: URL): Promise<Response> {
+  // `rest` always starts with "/" (or is empty) and can never contain a scheme,
+  // so string concatenation keeps the upstream host fixed — this is not an open proxy.
   const rest = url.pathname.slice(NEON_AUTH_PREFIX.length); // "" | "/get-session" | ...
   const target = `${NEON_AUTH_UPSTREAM}${rest}${url.search}`;
 
@@ -68,6 +70,13 @@ async function proxyNeonAuth(request: Request, url: URL): Promise<Response> {
   // better_auth validates Origin against trusted_origins for state-changing calls;
   // same-origin GETs omit it, so set it explicitly to our own origin.
   headers.set("origin", url.origin);
+  // Preserve the real client IP so better_auth's rate-limiting and audit see the
+  // eyeball, not the Cloudflare edge.
+  const clientIp = request.headers.get("cf-connecting-ip");
+  if (clientIp) {
+    const fwd = request.headers.get("x-forwarded-for");
+    headers.set("x-forwarded-for", fwd ? `${fwd}, ${clientIp}` : clientIp);
+  }
 
   const hasBody = request.method !== "GET" && request.method !== "HEAD";
   const init: RequestInit & { duplex?: "half" } = {
@@ -78,7 +87,15 @@ async function proxyNeonAuth(request: Request, url: URL): Promise<Response> {
   };
   if (hasBody) init.duplex = "half";
 
-  const upstream = await fetch(target, init);
+  let upstream: Response;
+  try {
+    upstream = await fetch(target, init);
+  } catch {
+    return new Response(JSON.stringify({ error: "auth_upstream_unreachable" }), {
+      status: 502,
+      headers: { "content-type": "application/json", "cache-control": "no-store" },
+    });
+  }
 
   const respHeaders = new Headers(upstream.headers);
   respHeaders.delete("set-cookie");
