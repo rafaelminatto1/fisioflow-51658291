@@ -160,7 +160,9 @@ async function drainOfflineQueue() {
   const DB_NAME = "FisioFlowOffline";
   const STORE_NAME = "offline_actions";
   const API_BASE_URL = "https://fisioflow-api.rafalegollas.workers.dev";
-  const NEON_AUTH_URL = "https://ep-wandering-bonus-acj4zwvo.neonauth.sa-east-1.aws.neon.tech/neondb/auth";
+  // Same-origin proxy (asset worker) — the session cookie is first-party to this
+  // origin, so a relative path ensures it is sent with the request.
+  const NEON_AUTH_URL = "/__neon-auth";
 
   // 1. Tenta obter um JWT fresco via Neon direct session fetch
   let token: string | null = null;
