@@ -18,9 +18,9 @@ describe("Neon config", () => {
     vi.stubEnv("PROD", true);
     vi.stubEnv("VITE_NEON_AUTH_URL", "");
 
-    // Without a `window` (node test env) the same-origin proxy path is returned
-    // verbatim; in the browser it is resolved against window.location.origin.
-    expect(getNeonAuthUrl()).toBe(DEFAULT_PRODUCTION_NEON_AUTH_URL);
+    // No browser (jsdom aqui) o path do proxy same-origin é resolvido contra
+    // window.location.origin; o path cru é o default de produção.
+    expect(getNeonAuthUrl()).toBe(`${window.location.origin}${DEFAULT_PRODUCTION_NEON_AUTH_URL}`);
     expect(isNeonAuthConfigured()).toBe(true);
   });
 

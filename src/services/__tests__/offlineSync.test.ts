@@ -23,18 +23,30 @@ const {
   requestMock: vi.fn().mockResolvedValue({ ok: true }),
 }));
 
-vi.mock("@/api/v2", () => ({
+// offlineSync.ts importa dos submódulos específicos (não do barrel @/api/v2),
+// então o mock precisa mirar cada caminho real para interceptar as chamadas.
+vi.mock("@/api/v2/appointments", () => ({
   appointmentsApi: {
     create: appointmentsCreateMock,
     update: appointmentsUpdateMock,
     cancel: appointmentsCancelMock,
   },
+}));
+
+vi.mock("@/api/v2/patients", () => ({
+  patientsApi: { update: patientsUpdateMock },
+}));
+
+vi.mock("@/api/v2/clinical", () => ({
   evolutionApi: {
     measurements: { create: evolutionMeasurementsCreateMock },
     treatmentSessions: { upsert: evolutionSessionsUpsertMock },
   },
   goalsApi: { update: goalsUpdateMock },
-  patientsApi: { update: patientsUpdateMock },
+  sessionsApi: { autosave: vi.fn().mockResolvedValue({ data: {} }) },
+}));
+
+vi.mock("@/api/v2/exercises", () => ({
   exercisesApi: {},
 }));
 
