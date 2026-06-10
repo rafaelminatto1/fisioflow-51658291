@@ -159,25 +159,40 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
   const setActiveEditor = context?.setActiveEditor;
 
   // ── Colaboração Real-time (Yjs) ─────────────────────
-  const ydoc = useMemo(() => (collaborationId ? new Y.Doc() : null), [collaborationId]);
+  const [ydoc, setYdoc] = useState<Y.Doc | null>(null);
   const [provider, setProvider] = useState<WebsocketProvider | null>(null);
 
   useEffect(() => {
-    if (!ydoc || !collaborationId) return;
+    if (!collaborationId) {
+      setYdoc(null);
+      setProvider(null);
+      return;
+    }
+
+    const doc = new Y.Doc();
+    setYdoc(doc);
 
     const baseUrl = getWorkersApiUrl();
     const wsUrl =
       (baseUrl.startsWith("https") ? baseUrl.replace("https", "wss") : baseUrl.replace("http", "ws")) +
       `/api/sessions/${collaborationId}/collaboration`;
 
-    const p = new WebsocketProvider(wsUrl, collaborationId, ydoc);
+    const p = new WebsocketProvider(wsUrl, collaborationId, doc);
     setProvider(p);
 
     return () => {
       p.destroy();
-      ydoc.destroy();
+      doc.destroy();
     };
-  }, [ydoc, collaborationId]);
+  }, [collaborationId]);
+
+  // Limpeza dos timers no unmount para evitar leaks
+  useEffect(() => {
+    return () => {
+      if (debounceTimer.current) clearTimeout(debounceTimer.current);
+      if (typingTimer.current) clearTimeout(typingTimer.current);
+    };
+  }, []);
 
   // Data Hooks
   const { exercises } = useExercises();
@@ -319,6 +334,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
         const normalized = html === "<p></p>" ? "" : html;
         lastSentValue.current = normalized;
         onValueChange(normalized);
+        debounceTimer.current = null;
       }, 500);
     },
     onFocus: () => {

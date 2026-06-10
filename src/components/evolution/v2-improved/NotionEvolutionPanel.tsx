@@ -417,13 +417,14 @@ export const NotionEvolutionPanel: React.FC<NotionEvolutionPanelProps> = ({
                       placeholder="Orientações gerais, encaminhamentos, cuidados e notas da sessão..."
                       value={data.evolutionText || data.observations || ""}
                       onValueChange={(val) => {
-                        // Atualiza ambos os campos em UMA chamada para evitar que
-                        // o segundo handleFieldChange descarte o primeiro por
-                        // closure stale (mesmo `data` em ambos).
                         onChange({ ...data, evolutionText: val, observations: val });
                       }}
                       disabled={disabled}
                       showToolbar={true}
+                      collaborationId={collaborationId}
+                      userName={userName}
+                      userColor={userColor}
+                      externalValueRevision={replicatedContentRevision}
                       className={cn(
                         "border-none bg-transparent shadow-none",
                         observationsFocus ? "min-h-[calc(100vh-23rem)]" : "min-h-[250px]",
