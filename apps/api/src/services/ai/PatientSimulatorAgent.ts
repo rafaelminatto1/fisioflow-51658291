@@ -119,6 +119,8 @@ Retorne SOMENTE JSON válido neste formato:
         task: "patient-simulator",
         prompt,
         organizationId: "system",
+        responseFormat: "json",
+        maxTokens: 800,
       });
 
       const jsonMatch = aiResult.content.match(/\{[\s\S]*\}/);
