@@ -309,7 +309,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
 
   const editor = useEditor({
     extensions,
-    content: collaborationId ? undefined : (value || ""),
+    content: value || "",
     editable: !disabled,
     onUpdate: ({ editor: ed }) => {
       if (isUpdatingFromProp.current) return;
@@ -437,7 +437,11 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
       externalValueRevision !== undefined &&
       externalValueRevision !== lastExternalValueRevision.current;
 
-    if (collaborationId && !hasExplicitExternalUpdate) return;
+    // Se o Yjs não estiver carregado de fato (ex: collaborationId mudou após mount),
+    // devemos continuar sincronizando via prop `value`.
+    const isCollaborationLoaded = editor.extensionManager.extensions.some(e => e.name === 'collaboration');
+
+    if (collaborationId && isCollaborationLoaded && !hasExplicitExternalUpdate) return;
 
     const currentHtml = editor.getHTML();
     const normalizedCurrent = currentHtml === "<p></p>" ? "" : currentHtml;

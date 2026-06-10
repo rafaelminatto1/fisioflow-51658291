@@ -17,13 +17,12 @@ test.describe("Validação de Autosave via Agenda (SQL Data)", () => {
     await page.waitForTimeout(3000); // Aguarda eventos da agenda carregarem
 
     // Pega o primeiro agendamento Drizzle
-    console.log("Buscando paciente...");
     const patientItem = page.locator(".fc-event").first();
     await patientItem.waitFor({ state: "attached", timeout: 10000 });
     await patientItem.click({ force: true });
 
     console.log("Clicando Iniciar Atendimento...");
-    const btnIniciar = page.locator("text='Iniciar Atendimento'").first();
+    const btnIniciar = page.locator("button:has-text('Iniciar Atendimento')").first();
     await btnIniciar.waitFor({ state: "visible", timeout: 10000 });
     await btnIniciar.click();
 
@@ -51,7 +50,7 @@ test.describe("Validação de Autosave via Agenda (SQL Data)", () => {
     await patientItem2.click({ force: true });
 
     console.log("Clicando Iniciar Atendimento (2ª vez)...");
-    const btnIniciar2 = page.locator("text='Iniciar Atendimento'").first();
+    const btnIniciar2 = page.locator("button:has-text('Iniciar Atendimento')").first();
     await btnIniciar2.waitFor({ state: "visible", timeout: 10000 });
     await btnIniciar2.click();
 
