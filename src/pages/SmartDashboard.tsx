@@ -36,7 +36,14 @@ export function SmartDashboardContent() {
   const navigate = useNavigate();
 
   const handleViewModeChange = (mode: ViewMode) => {
-    setSearchParams({ view: mode }, { replace: true });
+    setSearchParams(
+      (currentParams) => {
+        const nextParams = new URLSearchParams(currentParams);
+        nextParams.set("view", mode);
+        return nextParams;
+      },
+      { replace: true },
+    );
   };
 
   const dashboardActions = (
@@ -59,8 +66,8 @@ export function SmartDashboardContent() {
   );
 
   return (
-    <PageLayout showFooter={false} fullWidth compactHeader>
-      <PageContainer maxWidth="full">
+    <PageContainer maxWidth="full">
+      <div data-testid="smart-dashboard-page">
         <PageHeader
           title="Fisio Intelligence"
           subtitle="Acompanhe a saúde da sua clínica em tempo real"
@@ -159,7 +166,15 @@ export function SmartDashboardContent() {
             <BentoDashboard viewMode={viewMode} />
           </section>
         </div>
-      </PageContainer>
+      </div>
+    </PageContainer>
+  );
+}
+
+export default function SmartDashboard() {
+  return (
+    <PageLayout showFooter={false} fullWidth compactHeader>
+      <SmartDashboardContent />
     </PageLayout>
   );
 }
