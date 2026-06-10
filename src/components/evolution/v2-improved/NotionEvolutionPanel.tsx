@@ -37,7 +37,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
-import { MagicTextarea } from "@/components/ai/MagicTextarea";
+import { RichTextBlock } from "./RichTextBlock";
 import { EvolutionBlockV3 } from "../v3-unified/EvolutionBlockV3";
 import { EvolutionItemV3 } from "../v3-unified/types";
 import { PainLevelBlock } from "./PainLevelBlock";
@@ -413,7 +413,7 @@ export const NotionEvolutionPanel: React.FC<NotionEvolutionPanelProps> = ({
                       observationsFocus ? "min-h-[calc(100vh-16rem)]" : "min-h-[320px]",
                     )}
                   >
-                    <MagicTextarea
+                    <RichTextBlock
                       placeholder="Orientações gerais, encaminhamentos, cuidados e notas da sessão..."
                       value={data.evolutionText || data.observations || ""}
                       onValueChange={(val) => {
@@ -423,8 +423,9 @@ export const NotionEvolutionPanel: React.FC<NotionEvolutionPanelProps> = ({
                         onChange({ ...data, evolutionText: val, observations: val });
                       }}
                       disabled={disabled}
+                      showToolbar={true}
                       className={cn(
-                        "border-none bg-transparent shadow-none w-full",
+                        "border-none bg-transparent shadow-none",
                         observationsFocus ? "min-h-[calc(100vh-23rem)]" : "min-h-[250px]",
                       )}
                     />
