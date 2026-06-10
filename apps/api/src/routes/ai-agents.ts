@@ -7,6 +7,12 @@ import { SoapReviewAgent } from "../services/ai/SoapReviewAgent";
 
 export const aiAgentsRoutes = new Hono<{ Bindings: Env }>();
 
+function hasCallAIProvider(env: Env): boolean {
+  return Boolean(
+    env.ZAI_API_KEY || env.AI || env.GOOGLE_AI_API_KEY || env.FISIOFLOW_AI_GATEWAY_URL,
+  );
+}
+
 aiAgentsRoutes.post("/soap-review", async (c) => {
   const body = await c.req.json().catch(() => ({}));
   const text = typeof body.text === "string" ? body.text.trim() : "";
@@ -15,7 +21,7 @@ aiAgentsRoutes.post("/soap-review", async (c) => {
     return c.json({ error: "SOAP text is required" }, 400);
   }
 
-  if (!c.env.GOOGLE_AI_API_KEY) {
+  if (!hasCallAIProvider(c.env)) {
     return c.json({ error: "AI not configured" }, 503);
   }
 
@@ -78,7 +84,7 @@ aiAgentsRoutes.post("/simulator/chat", async (c) => {
     return c.json({ error: "profile and agentLastMessage are required" }, 400);
   }
 
-  if (!c.env.GOOGLE_AI_API_KEY) {
+  if (!hasCallAIProvider(c.env)) {
     return c.json({ error: "AI not configured" }, 503);
   }
 
@@ -93,6 +99,29 @@ aiAgentsRoutes.post("/simulator/chat", async (c) => {
     return c.json({ data: result });
   } catch (error: any) {
     return c.json({ error: error.message || "Failed to generate simulation" }, 500);
+  }
+});
+
+aiAgentsRoutes.post("/simulator/evaluate", async (c) => {
+  const body = await c.req.json().catch(() => ({}));
+  const profile = body.profile as SimulatorProfile | undefined;
+  const chatHistory = Array.isArray(body.chatHistory) ? body.chatHistory : [];
+
+  if (!profile || chatHistory.length === 0) {
+    return c.json({ error: "profile and chatHistory are required" }, 400);
+  }
+
+  if (!hasCallAIProvider(c.env)) {
+    return c.json({ error: "AI not configured" }, 503);
+  }
+
+  const simulator = new PatientSimulatorAgent(c.env);
+
+  try {
+    const result = await simulator.evaluateClinicalPerformance(profile, chatHistory);
+    return c.json({ data: result });
+  } catch (error: any) {
+    return c.json({ error: error.message || "Failed to evaluate simulation" }, 500);
   }
 });
 
