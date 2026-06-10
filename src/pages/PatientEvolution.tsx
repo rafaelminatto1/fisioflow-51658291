@@ -301,7 +301,17 @@ const PatientEvolution = () => {
 
         if (record?.id) {
           state.setCurrentSoapRecordId(record.id);
-          // Sucesso no servidor -> Limpa rascunho local
+          // Sucesso no servidor -> Atualiza o cache e limpa rascunho local
+          queryClient.setQueryData(
+            [
+              "evolution-records",
+              "drafts",
+              state.patientId,
+              "byAppointment",
+              state.appointmentId,
+            ],
+            record
+          );
           draft.clearDraft();
         }
         // Save bem-sucedido — reseta force overwrite
