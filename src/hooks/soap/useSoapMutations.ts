@@ -121,6 +121,13 @@ export const useAutoSaveEvolution = (scopeId?: string) => {
       if (result.patient_id) {
         queryClient.setQueryData(evolutionKeys.detail(result.id), result);
         queryClient.invalidateQueries({ queryKey: evolutionKeys.drafts(result.patient_id) });
+        
+        if (result.appointment_id) {
+          queryClient.setQueryData(
+            [...evolutionKeys.drafts(result.patient_id), "byAppointment", result.appointment_id],
+            result,
+          );
+        }
       }
     },
     onError: () => {},
