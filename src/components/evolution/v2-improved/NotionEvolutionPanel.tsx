@@ -37,7 +37,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
-import { RichTextBlock } from "./RichTextBlock";
+import { MagicTextarea } from "@/components/ai/MagicTextarea";
 import { EvolutionBlockV3 } from "../v3-unified/EvolutionBlockV3";
 import { EvolutionItemV3 } from "../v3-unified/types";
 import { PainLevelBlock } from "./PainLevelBlock";
@@ -413,9 +413,9 @@ export const NotionEvolutionPanel: React.FC<NotionEvolutionPanelProps> = ({
                       observationsFocus ? "min-h-[calc(100vh-16rem)]" : "min-h-[320px]",
                     )}
                   >
-                    <RichTextBlock
+                    <MagicTextarea
                       placeholder="Orientações gerais, encaminhamentos, cuidados e notas da sessão..."
-                      value={data.evolutionText || data.observations}
+                      value={data.evolutionText || data.observations || ""}
                       onValueChange={(val) => {
                         // Atualiza ambos os campos em UMA chamada para evitar que
                         // o segundo handleFieldChange descarte o primeiro por
@@ -423,15 +423,10 @@ export const NotionEvolutionPanel: React.FC<NotionEvolutionPanelProps> = ({
                         onChange({ ...data, evolutionText: val, observations: val });
                       }}
                       disabled={disabled}
-                      showToolbar
                       className={cn(
-                        "border-none bg-transparent shadow-none",
+                        "border-none bg-transparent shadow-none w-full",
                         observationsFocus ? "min-h-[calc(100vh-23rem)]" : "min-h-[250px]",
                       )}
-                      collaborationId={collaborationId}
-                      userName={userName}
-                      userColor={userColor}
-                      externalValueRevision={replicatedContentRevision}
                     />
                     <div className="px-5 pb-5 pt-2">
                       <ClinicalCopilotPanel
