@@ -15,7 +15,6 @@ import {
   Search,
   Sparkles,
   X,
-  Zap,
 } from "lucide-react";
 import React from "react";
 import { Button } from "@/components/ui/button";
@@ -137,7 +136,7 @@ export const ScheduleToolbar: React.FC<ScheduleToolbarProps> = ({
         return (
           <Button
             key={view.value}
-            variant={isActive ? "default" : "ghost"}
+            variant="ghost"
             size="sm"
             onClick={() => onViewChange(view.value)}
             className={cn(buttonClassName, isActive ? activeClassName : idleClassName)}
@@ -149,60 +148,71 @@ export const ScheduleToolbar: React.FC<ScheduleToolbarProps> = ({
     </div>
   );
 
-  // For desktop - show all controls
+  // Desktop — 3 zonas: navegação (esq) · seletor de visão (centro) · ações (dir)
   const DesktopToolbar = () => (
-    <div className="flex items-center justify-between px-3 py-1.5 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 sticky top-0 z-40">
-      <div className="flex flex-wrap items-center gap-6">
-        {/* Date Navigation Block */}
-        <div className="flex flex-wrap items-center gap-3">
+    <div className="flex items-center gap-4 px-3 py-1.5 border-b border-border bg-background sticky top-0 z-40">
+      {/* Esquerda: navegação de data */}
+      <div className="flex items-center gap-2">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => onDateChange(getAdjustedToday())}
+          className="h-8 px-3 rounded-lg font-bold text-[10px] uppercase tracking-widest"
+        >
+          Hoje
+        </Button>
+
+        <div className="flex items-center gap-0.5">
           <Button
-            variant="outline"
-            size="sm"
-            onClick={() => onDateChange(getAdjustedToday())}
-            className="h-8 px-3 rounded-lg font-bold text-[10px] uppercase tracking-widest border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-900"
+            variant="ghost"
+            size="icon"
+            onClick={() => handleNavigate("prev")}
+            className="h-8 w-8 p-0 rounded-md"
+            aria-label="Período anterior"
           >
-            Hoje
+            <ChevronLeft className="w-4 h-4" />
           </Button>
-
-          <div className="flex items-center gap-1 bg-slate-50 dark:bg-slate-900 p-1 rounded-lg border border-slate-200/60 dark:border-slate-800/60">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => handleNavigate("prev")}
-              className="h-7 w-7 p-0 rounded-md hover:bg-white dark:hover:bg-slate-800"
-              aria-label="Período anterior"
-            >
-              <ChevronLeft className="w-4 h-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => handleNavigate("next")}
-              className="h-7 w-7 p-0 rounded-md hover:bg-white dark:hover:bg-slate-800"
-              aria-label="Próximo período"
-            >
-              <ChevronRight className="w-4 h-4" />
-            </Button>
-          </div>
-
-          <SmartDatePicker
-            date={currentDate}
-            onChange={(date) => date && onDateChange(date)}
-            className="h-9 px-3 border-none bg-transparent hover:bg-slate-50 dark:hover:bg-slate-900 font-bold text-sm tracking-tight min-w-[160px]"
-            placeholder={formattedDateRange}
-            enableManualInput={false}
-          />
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => handleNavigate("next")}
+            className="h-8 w-8 p-0 rounded-md"
+            aria-label="Próximo período"
+          >
+            <ChevronRight className="w-4 h-4" />
+          </Button>
         </div>
 
-        <div className="h-6 w-[1px] bg-slate-200 dark:bg-slate-800" />
+        <SmartDatePicker
+          date={currentDate}
+          onChange={(date) => date && onDateChange(date)}
+          className="h-9 px-2 border-none bg-transparent hover:bg-muted font-bold text-sm tracking-tight min-w-[150px] capitalize"
+          placeholder={formattedDateRange}
+          enableManualInput={false}
+        />
+      </div>
 
-        <div className="relative min-w-[220px] max-w-[320px] flex-1">
+      {/* Centro: seletor de visão */}
+      <div className="flex flex-1 justify-center">
+        {renderViewSwitcher({
+          activeClassName: "bg-primary text-primary-foreground shadow-sm",
+          idleClassName: "text-muted-foreground hover:text-foreground hover:bg-background",
+          containerClassName:
+            "flex items-center gap-1 bg-muted p-1 rounded-xl border border-border",
+          buttonClassName:
+            "h-7 px-4 rounded-lg font-bold text-[10px] uppercase tracking-widest transition-colors",
+        })}
+      </div>
+
+      {/* Direita: busca + ações */}
+      <div className="flex items-center gap-1.5">
+        <div className="relative w-[200px] hidden xl:block">
           <Input
             value={patientFilter}
             onChange={(event) => onPatientFilterChange(event.target.value)}
             placeholder="Buscar paciente"
             aria-label="Buscar paciente"
-            className="h-10 pr-10"
+            className="h-9 pr-9"
           />
           {patientFilter ? (
             <Button
@@ -210,103 +220,74 @@ export const ScheduleToolbar: React.FC<ScheduleToolbarProps> = ({
               size="icon"
               onClick={() => onPatientFilterChange("")}
               aria-label="Limpar busca de paciente"
-              className="absolute right-1 top-1/2 -translate-y-1/2"
+              className="absolute right-1 top-1/2 h-7 w-7 -translate-y-1/2"
             >
               <X className="w-4 h-4" />
             </Button>
           ) : (
-            <Search className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            <Search className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           )}
         </div>
 
-        {renderViewSwitcher({
-          activeClassName:
-            "bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-sm ring-1 ring-slate-200 dark:ring-slate-700",
-          idleClassName:
-            "text-slate-600 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-800",
-          containerClassName:
-            "flex items-center gap-1 bg-slate-100/50 dark:bg-slate-900/50 p-1 rounded-xl border border-slate-200/50 dark:border-slate-800/50",
-          buttonClassName:
-            "h-7 px-4 rounded-lg font-bold text-[10px] uppercase tracking-widest transition-all",
-        })}
-      </div>
+        <AdvancedFilters
+          filters={filters}
+          onChange={onFiltersChange}
+          onClear={onClearFilters}
+          therapists={therapists}
+        />
 
-      {/* Right Group: Capacity indicator + Gear Button + Actions */}
-      <div className="flex items-center gap-4">
-        {/* Capacity Indicator (Stitch style) */}
-        <div className="hidden lg:flex items-center gap-2 px-3 py-1.5 bg-blue-50 dark:bg-blue-900/20 rounded-full border border-blue-100/50 dark:border-blue-800/30">
-          <div className="flex items-center justify-center w-5 h-5 bg-blue-500 rounded-full">
-            <Zap className="w-3 h-3 text-white fill-white" />
-          </div>
-          <span className="text-[10px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-wider">
-            Capacidade: 84%
-          </span>
-        </div>
+        <ScheduleConfigIconButton className="h-9 w-9 rounded-lg border border-border bg-background text-muted-foreground hover:bg-muted hover:text-primary transition-colors" />
 
-        <div className="h-6 w-[1px] bg-slate-200 dark:bg-slate-800 mx-1" />
+        <Button
+          onClick={onCreateAppointment}
+          className="h-9 px-4 gap-2 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg font-bold text-[11px] uppercase tracking-widest ml-1"
+        >
+          <Plus className="w-3.5 h-3.5" />
+          Agendar
+        </Button>
 
-        <div className="flex items-center gap-1.5">
-          <AdvancedFilters
-            filters={filters}
-            onChange={onFiltersChange}
-            onClear={onClearFilters}
-            therapists={therapists}
-          />
-
-          {/* Engrenagem Button (Prominent as requested) */}
-          <ScheduleConfigIconButton className="h-9 w-9 rounded-full bg-slate-50 dark:bg-slate-900 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-blue-600 transition-all" />
-
-          <Button
-            onClick={onCreateAppointment}
-            className="h-9 px-4 gap-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow-lg shadow-blue-500/10 font-bold text-[11px] uppercase tracking-widest ml-2"
-          >
-            <Plus className="w-3.5 h-3.5" />
-            Agendar
-          </Button>
-
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-9 w-9 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800"
-                aria-label="Mais opções"
-              >
-                <MoreVertical className="w-4 h-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent
-              align="end"
-              className="w-56 p-2 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-800"
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-9 w-9 rounded-lg"
+              aria-label="Mais opções"
             >
-              <DropdownMenuItem className="rounded-xl gap-2 font-medium">
-                <Sparkles className="w-4 h-4 text-amber-500" />
-                Otimizar Agenda (AI)
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                className="rounded-xl gap-2 font-medium"
-                onClick={onToggleSelection}
-              >
-                <CheckSquare className="w-4 h-4 text-blue-500" />
-                {isSelectionMode ? "Sair do modo seleção" : "Seleção em massa"}
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
+              <MoreVertical className="w-4 h-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent
+            align="end"
+            className="w-56 p-2 rounded-2xl shadow-xl border border-border"
+          >
+            <DropdownMenuItem className="rounded-xl gap-2 font-medium">
+              <Sparkles className="w-4 h-4 text-amber-500" />
+              Otimizar Agenda (AI)
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              className="rounded-xl gap-2 font-medium"
+              onClick={onToggleSelection}
+            >
+              <CheckSquare className="w-4 h-4 text-primary" />
+              {isSelectionMode ? "Sair do modo seleção" : "Seleção em massa"}
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </div>
   );
 
-  // For mobile - compact simplified view
+  // Mobile — versão compacta
   const MobileToolbar = () => (
-    <div className="flex flex-col gap-4 px-4 py-4 bg-white dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800">
+    <div className="flex flex-col gap-4 px-4 py-4 bg-background border-b border-border">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Button
             variant="outline"
             size="sm"
             onClick={() => onDateChange(getAdjustedToday())}
-            className="h-8 px-3 rounded-lg font-bold text-[10px] uppercase tracking-widest border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400"
+            className="h-8 px-3 rounded-lg font-bold text-[10px] uppercase tracking-widest"
           >
             Hoje
           </Button>
@@ -316,7 +297,7 @@ export const ScheduleToolbar: React.FC<ScheduleToolbarProps> = ({
             size="icon"
             onClick={() => handleNavigate("prev")}
             aria-label="Período anterior"
-            className="h-9 w-9 rounded-xl border border-slate-200 dark:border-slate-800"
+            className="h-9 w-9 rounded-xl border border-border"
           >
             <ChevronLeft className="w-5 h-5" />
           </Button>
@@ -324,7 +305,7 @@ export const ScheduleToolbar: React.FC<ScheduleToolbarProps> = ({
           <SmartDatePicker
             date={currentDate}
             onChange={(date) => date && onDateChange(date)}
-            className="h-9 min-w-[120px] border-none bg-transparent font-black text-sm px-1"
+            className="h-9 min-w-[120px] border-none bg-transparent font-black text-sm px-1 capitalize"
             placeholder={format(currentDate, "MMM yyyy", { locale: ptBR })}
             enableManualInput={false}
           />
@@ -333,7 +314,7 @@ export const ScheduleToolbar: React.FC<ScheduleToolbarProps> = ({
             variant="ghost"
             size="icon"
             onClick={() => handleNavigate("next")}
-            className="h-9 w-9 rounded-xl border border-slate-200 dark:border-slate-800"
+            className="h-9 w-9 rounded-xl border border-border"
             aria-label="Próximo período (Mobile)"
           >
             <ChevronRight className="w-5 h-5" />
@@ -341,11 +322,11 @@ export const ScheduleToolbar: React.FC<ScheduleToolbarProps> = ({
         </div>
 
         <div className="flex items-center gap-2">
-          <ScheduleConfigIconButton className="h-9 w-9 rounded-xl border border-slate-200 dark:border-slate-800" />
+          <ScheduleConfigIconButton className="h-9 w-9 rounded-xl border border-border" />
           <Button
             onClick={onCreateAppointment}
             size="icon"
-            className="h-10 w-10 bg-blue-600 text-white rounded-xl shadow-lg"
+            className="h-10 w-10 bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl shadow-md"
           >
             <Plus className="w-6 h-6" />
           </Button>
@@ -354,9 +335,9 @@ export const ScheduleToolbar: React.FC<ScheduleToolbarProps> = ({
 
       <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-hide">
         {renderViewSwitcher({
-          activeClassName: "bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-sm",
+          activeClassName: "bg-primary text-primary-foreground shadow-sm",
           idleClassName:
-            "bg-white text-slate-600 border border-slate-200 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-400",
+            "bg-background text-muted-foreground border border-border hover:text-foreground",
           containerClassName: "flex items-center gap-1.5 whitespace-nowrap",
           buttonClassName: "h-8 px-3 rounded-lg font-bold text-[10px] uppercase tracking-widest",
         })}

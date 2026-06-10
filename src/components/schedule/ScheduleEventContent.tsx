@@ -1,4 +1,4 @@
-import { Clock, Users, CheckCircle2, AlertTriangle } from "lucide-react";
+import { AlertTriangle } from "lucide-react";
 
 export interface ScheduleEventColors {
   background: string;
@@ -19,12 +19,14 @@ export interface ScheduleEventContentProps {
 }
 
 /**
- * React render for a single calendar event. Kept small and style-token-driven
- * so FullCalendar's virtualized render stays fast even with hundreds of events.
+ * Render React de um único evento do calendário. Mantido enxuto e
+ * orientado a tokens para a renderização virtualizada do FullCalendar
+ * continuar rápida mesmo com centenas de eventos.
  *
- * Hierarchy:
- * 1. Title (patient/task name) — most prominent
- * 2. Time + group/task badges
+ * Hierarquia:
+ * 1. Nome do paciente/tarefa — elemento dominante
+ * 2. Horário (leve, alinhado à direita)
+ * 3. Status (dot na cor do status) + tipo + alerta de dor
  */
 export function ScheduleEventContent({
   title,
@@ -44,66 +46,54 @@ export function ScheduleEventContent({
   };
 
   const typeLabel = isTask ? "Tarefa" : isGroup ? "Grupo" : "Consulta";
+  const metaLabel = isGroup ? `${typeLabel} · ${groupCount}` : typeLabel;
 
   return (
     <div
-      className="flex h-full w-full flex-col overflow-hidden rounded-xl border-l-4 border border-slate-200/40 p-2 shadow-sm transition-all duration-200 hover:shadow-md dark:border-slate-800/40"
+      className="flex h-full w-full flex-col overflow-hidden rounded-xl border border-l-4 border-border/40 px-2 py-1 shadow-sm transition-shadow duration-200 hover:shadow-md"
       style={{
         borderLeftColor: safeColors.accent,
         backgroundColor:
           safeColors.background !== "transparent"
             ? safeColors.background
-            : "rgba(255,255,255,0.95)",
+            : "hsl(var(--card))",
         color: safeColors.text,
-        opacity: isSelected ? 0.88 : 1,
+        opacity: isSelected ? 0.9 : 1,
       }}
     >
-      <div className="flex items-start justify-between mb-1.5">
-        <span
-          className="text-[9px] font-black uppercase tracking-widest flex flex-wrap gap-1"
-          style={{ color: safeColors.accent }}
+      {/* Linha 1: nome dominante + horário leve */}
+      <div className="flex items-start justify-between gap-1.5">
+        <p
+          className="fc-event-patient-name min-w-0 text-[12px] font-extrabold leading-tight text-slate-900 dark:text-white"
+          style={{ fontFamily: "var(--font-display, Nunito, sans-serif)" }}
         >
-          {typeLabel}
-          {hasHighPain && (
-            <span
-              className="flex items-center gap-0.5 bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-400 px-1 rounded shadow-sm ml-1"
-              title="Paciente relatou dor alta recentemente (>7)"
-            >
-              <AlertTriangle className="h-2.5 w-2.5" />
-              Dor Alta
-            </span>
-          )}
-        </span>
+          {title}
+        </p>
         {!isAllDay && (
-          <div className="flex items-center gap-1 text-[10px] font-bold opacity-60">
-            <Clock className="h-3 w-3" aria-hidden />
-            <span>{timeText}</span>
-          </div>
+          <span className="shrink-0 text-[10px] font-semibold tabular-nums opacity-60">
+            {timeText}
+          </span>
         )}
       </div>
 
-      <p
-        className="fc-event-patient-name text-[11px] font-bold leading-tight text-slate-900 dark:text-white min-w-0"
-        style={{ fontFamily: "var(--font-display, Inter, sans-serif)" }}
-      >
-        {title}
-      </p>
-
-      {(isGroup || isTask) && (
-        <div className="mt-1 flex items-center gap-1.5 text-[10px] font-semibold opacity-60">
-          {isGroup ? (
-            <>
-              <Users className="h-3 w-3" aria-hidden />
-              <span>{groupCount} participantes</span>
-            </>
-          ) : (
-            <>
-              <CheckCircle2 className="h-3 w-3" aria-hidden />
-              <span>Tarefa Clínica</span>
-            </>
-          )}
-        </div>
-      )}
+      {/* Linha 2: dot de status + tipo + alerta de dor */}
+      <div className="mt-auto flex items-center gap-1.5 pt-1 text-[10px] font-semibold opacity-70">
+        <span
+          className="h-1.5 w-1.5 shrink-0 rounded-full"
+          style={{ backgroundColor: safeColors.accent }}
+          aria-hidden
+        />
+        <span className="min-w-0 truncate">{metaLabel}</span>
+        {hasHighPain && (
+          <span
+            className="ml-auto flex shrink-0 items-center gap-0.5 rounded bg-red-100 px-1 text-red-700 dark:bg-red-900/40 dark:text-red-400"
+            title="Paciente relatou dor alta recentemente (>7)"
+          >
+            <AlertTriangle className="h-2.5 w-2.5" />
+            Dor
+          </span>
+        )}
+      </div>
     </div>
   );
 }

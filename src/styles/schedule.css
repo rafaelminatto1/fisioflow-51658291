@@ -1,26 +1,27 @@
 /* ================================================================
- * Clinical Sanctuary Aesthetic - Agenda (FullCalendar)
- * Philosophy: No rigid grid lines, tonal layering, high density.
+ * Agenda (FullCalendar) — FisioFlow Design System
+ * Tokens-first: cores via hsl(var(--token)) para herdar tema + dark
+ * mode automaticamente. Fonte única Nunito. Sem glass/efeitos.
+ * Filosofia: sem grade rígida, camadas tonais, alta densidade.
  * ================================================================ */
 
-/* 1. Global Calendar Container & Grid Removal */
+/* 1. Container global e remoção da grade */
 .fc {
   --fc-border-color: transparent !important;
   --fc-page-bg-color: transparent !important;
   border: none !important;
-  font-family: "Inter", sans-serif !important;
+  font-family: var(--font-sans) !important;
 }
 
-/* Remove all table borders from the grid */
 .fc-theme-standard td,
 .fc-theme-standard th,
 .fc-theme-standard .fc-scrollgrid {
   border: none !important;
 }
 
-/* 2. Slot & Header Height Optimization */
+/* 2. Altura de slots e header */
 :root {
-  --agenda-slot-height: 12px; /* Compact: 14h × 56 slots × 12px = 672px fits 7h-21h */
+  --agenda-slot-height: 12px; /* Compacto: 14h × 56 slots × 12px = 672px (7h–21h) */
   --agenda-header-height: 42px;
 }
 
@@ -32,53 +33,56 @@
   border: none !important;
 }
 
-/* Allow rows to expand to fill available height when expandRows is on */
 .fc .fc-timegrid-body,
 .fc .fc-timegrid-body > table {
   height: 100% !important;
 }
 
-/* Subtle tonal separator for full hours only */
+/* Separador tonal apenas nas horas cheias */
 .fc .fc-timegrid-slot-minor {
   border-top: none !important;
 }
 
 .fc .fc-timegrid-slot:not(.fc-timegrid-slot-minor) {
-  border-top: 1px solid rgba(148, 163, 184, 0.05) !important; /* Extremely subtle */
+  border-top: 1px solid hsl(var(--border) / 0.4) !important;
 }
 
-/* 3. Header Customization (Tonal Header) */
+/* 3. Header tonal */
 .fc .fc-col-header-cell {
-  background: #f8fafc !important;
+  background: hsl(var(--muted)) !important;
   border: none !important;
   height: var(--agenda-header-height) !important;
 }
 
 .fc .fc-col-header-cell-cushion {
-  font-family: "Manrope", sans-serif !important;
+  font-family: var(--font-sans) !important;
   font-size: 10px !important;
   text-transform: uppercase !important;
   letter-spacing: 0.1em !important;
   font-weight: 800 !important;
-  color: #64748b !important;
+  color: hsl(var(--muted-foreground)) !important;
   padding: 8px 4px !important;
 }
 
-/* 4. Time Labels (Sidebar) */
+/* Header do dia de hoje recebe o azul primário */
+.fc .fc-col-header-cell.fc-day-today .fc-col-header-cell-cushion {
+  color: hsl(var(--primary)) !important;
+}
+
+/* 4. Labels de horário (sidebar) */
 .fc .fc-timegrid-slot-label-cushion {
   font-size: 10px !important;
   font-weight: 700 !important;
-  color: #94a3b8 !important;
+  color: hsl(var(--muted-foreground)) !important;
   text-transform: uppercase !important;
   letter-spacing: -0.02em !important;
 }
 
-/* 5. Event Card Wrapper (Harness) - Override FC defaults */
+/* 5. Wrapper do card de evento (harness) */
 .fc .fc-timegrid-event-harness {
-  padding: 2px 4px !important; /* 4px horizontal gap between side-by-side cards */
+  padding: 2px 4px !important;
 }
 
-/* Extra inset so adjacent overlapping cards never touch */
 .fc .fc-timegrid-event-harness-inset {
   padding: 2px 4px !important;
 }
@@ -91,7 +95,6 @@
   border-radius: 12px !important;
 }
 
-/* Garante que o conteúdo interno ocupe todo o espaço com a nova margem */
 .fc .fc-event-main {
   padding: 0 !important;
   border: none !important;
@@ -100,7 +103,7 @@
   width: 100% !important;
 }
 
-/* Patient name: wrap into up to 2 lines, never truncate on a single line */
+/* Nome do paciente: até 2 linhas, sem truncar numa linha só */
 .fc-event-patient-name {
   display: -webkit-box !important;
   -webkit-line-clamp: 2 !important;
@@ -111,38 +114,23 @@
   white-space: normal !important;
 }
 
-/* 6. Current Time Indicator */
+/* 6. Indicador de horário atual (azul primário) */
 .fc .fc-timegrid-now-indicator-line {
-  border-color: #0d9488 !important; /* Teal accent */
+  border-color: hsl(var(--primary)) !important;
   border-width: 2px !important;
 }
 
 .fc .fc-timegrid-now-indicator-arrow {
-  border-left-color: #0d9488 !important;
+  border-left-color: hsl(var(--primary)) !important;
+  border-top-color: transparent !important;
+  border-bottom-color: transparent !important;
 }
 
-/* 7. Column Shading (Tonal Layering) */
+/* 7. Camadas tonais das colunas */
 .fc .fc-timegrid-col {
-  border-right: 1px solid rgba(148, 163, 184, 0.03) !important; /* Ghost line */
+  border-right: 1px solid hsl(var(--border) / 0.3) !important;
 }
 
 .fc .fc-day-today {
-  background: rgba(13, 148, 136, 0.02) !important; /* Ultra light teal for today */
-}
-
-/* Dark Mode Adjustments */
-.dark .fc .fc-col-header-cell {
-  background: #0f172a !important;
-}
-
-.dark .fc .fc-col-header-cell-cushion {
-  color: #94a3b8 !important;
-}
-
-.dark .fc .fc-timegrid-col {
-  border-right-color: rgba(148, 163, 184, 0.05) !important;
-}
-
-.dark .fc .fc-timegrid-slot:not(.fc-timegrid-slot-minor) {
-  border-top-color: rgba(148, 163, 184, 0.1) !important;
+  background: hsl(var(--primary) / 0.04) !important;
 }

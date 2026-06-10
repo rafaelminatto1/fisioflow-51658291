@@ -128,7 +128,7 @@ const CalendarAppointmentCardBase = forwardRef<HTMLDivElement, CalendarAppointme
           }}
           data-appointment-popover-anchor={dataAnchor}
           layout={!reducedMotion}
-          layoutId={isSaving ? `${appointment.id}-saving` : appointment.id}
+          layoutId={appointment.id}
           transition={{
             layout: reducedMotion
               ? { duration: 0 }
@@ -137,7 +137,7 @@ const CalendarAppointmentCardBase = forwardRef<HTMLDivElement, CalendarAppointme
             scale: { duration: dragDuration },
             boxShadow: { duration: 0.15 },
           }}
-          initial={reducedMotion ? false : { opacity: 0, scale: 0.98, y: 2 }}
+          initial={false}
           animate={{
             opacity: isDragging && hideGhostWhenSiblings ? 0 : 1,
             scale: reducedMotion ? 1 : isDragging ? 0.98 : 1,
