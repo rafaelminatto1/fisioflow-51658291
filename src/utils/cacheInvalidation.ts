@@ -48,9 +48,15 @@ export async function invalidateAppointmentsComprehensive(
     ["appointments"],
   ];
 
-  // 1. Basic Invalidation for all known patterns
+  // 1. Invalidation for all known patterns.
   // Use exact: false to catch partial matches like ["schedule-appointments", "2026-04-27", ...]
-  // Use type: 'all' to invalidate ALL queries, not just active ones
+  // Use type: 'all' to mark inactive queries stale too (refetched on next mount).
+  // Active queries refetch in BACKGROUND keeping current data on screen.
+  //
+  // IMPORTANTE: nunca usar resetQueries/refetchQueries em massa aqui. O reset
+  // apaga os dados da query ativa (status volta a pending), o que zera os
+  // appointments e faz Schedule.tsx trocar o FullCalendar pelo skeleton —
+  // a agenda inteira "pisca" a cada drag-and-drop/mutation.
   const invalidationPromises = keysToInvalidate.map((key) =>
     queryClient.invalidateQueries({
       queryKey: key,
@@ -68,23 +74,6 @@ export async function invalidateAppointmentsComprehensive(
     }),
   );
 
-  await Promise.all(invalidationPromises);
-
-  // CRITICAL: Reset ALL appointment queries to force fresh fetch
-  // This clears both memory cache AND persisted cache (PersistQueryClientProvider)
-  await queryClient.resetQueries({
-    queryKey: ["schedule-appointments"],
-    exact: false,
-  });
-
-  // Reset all other appointment-related keys
-  for (const key of keysToInvalidate) {
-    await queryClient.resetQueries({
-      queryKey: key,
-      exact: false,
-    });
-  }
-
   // 2. If a specific date is provided, prioritize invalidating affected periods
   if (date) {
     const dateStr = typeof date === "string" ? date : toLocalYMD(date);
@@ -94,22 +83,6 @@ export async function invalidateAppointmentsComprehensive(
   }
 
   await Promise.all(invalidationPromises);
-
-  // 3. Force refetch of ALL queries (not just active) to ensure immediate UI update
-  // Use exact: false to match partial keys and fetch all appointments queries
-  await queryClient.refetchQueries({
-    exact: false,
-    predicate: (query) => {
-      const key = query.queryKey as any[];
-      return (
-        key[0] === "appointments_v2" ||
-        key[0] === "schedule-appointments" ||
-        (key[0] === "appointments" && key[1] === "period") ||
-        key[0] === "appointments" ||
-        (Array.isArray(key) && key.includes("schedule-appointments"))
-      );
-    },
-  });
 
   logger.debug("Comprehensive invalidation completed");
 }

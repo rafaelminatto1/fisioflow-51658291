@@ -70,8 +70,6 @@ export { useAppointmentListScroll } from "./VirtualizedAppointmentList";
 
 export { VirtualizedDayView } from "./VirtualizedDayView";
 
-export { VirtualizedWeekView } from "./VirtualizedWeekView";
-
 export { LazyAppointmentModal, useAppointmentModalPreload } from "./LazyAppointmentModal";
 
 export { OptimizedImageLoader, OptimizedAvatar } from "./OptimizedImageLoader";
