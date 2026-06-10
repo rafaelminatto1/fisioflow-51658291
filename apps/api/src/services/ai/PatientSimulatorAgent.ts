@@ -29,8 +29,8 @@ export interface SimulationEvaluationResult {
 
 const SimulationSchema = z.object({
   simulatedMessage: z.string(),
-  internalThoughtProcess: z.string(),
-  safetyTriggered: z.boolean(),
+  internalThoughtProcess: z.string().optional().default("Resposta gerada sem raciocínio interno estruturado."),
+  safetyTriggered: z.boolean().optional().default(false),
 });
 
 const SimulationEvaluationSchema = z.object({
@@ -67,6 +67,48 @@ const EVALUATION_FALLBACK: SimulationEvaluationResult = {
     "Investigar sinais de alerta",
   ],
 };
+
+function buildLocalSimulatedResponse(
+  profile: SimulatorProfile,
+  chatHistory: { role: string; content: string }[],
+  clinicianLastMessage: string,
+): SimulationResult {
+  const question = clinicianLastMessage.toLowerCase();
+  const turn = chatHistory.filter((message) => message.role === "user").length;
+  const safetyTriggered =
+    profile.painLevel >= 7 &&
+    /(correr|saltar|agachamento profundo|forçar|treino intenso|continuar mesmo com dor)/i.test(
+      clinicianLastMessage,
+    );
+
+  let simulatedMessage: string;
+  if (/quando|começou|início|inicio|tempo/.test(question)) {
+    simulatedMessage = `Começou há cerca de duas semanas. Eu percebo mais quando subo escadas ou fico muito tempo sentado e depois levanto. A dor fica em torno de ${profile.painLevel}/10.`;
+  } else if (/piora|melhora|escada|noite|deitar/.test(question)) {
+    simulatedMessage =
+      "Piora principalmente para subir escadas e levantar da cadeira. Melhora um pouco quando eu descanso e evito dobrar muito o joelho.";
+  } else if (/trauma|febre|formig|perda de força|red flag|sinal de alerta|inchaço/.test(question)) {
+    simulatedMessage =
+      "Não tive febre, formigamento ou perda importante de força. Também não lembro de uma queda; foi aparecendo aos poucos.";
+  } else if (/trabalho|rotina|atividade|func|limita|objetivo|esporte/.test(question)) {
+    simulatedMessage =
+      "Na rotina está atrapalhando escadas, caminhada mais longa e treino. Meu objetivo é voltar a me exercitar sem medo de piorar.";
+  } else if (/dor|eva|escala|intensidade/.test(question)) {
+    simulatedMessage = `Agora está ${profile.painLevel}/10, mas chega perto de ${Math.min(profile.painLevel + 2, 10)}/10 quando forço escada.`;
+  } else if (turn >= 3) {
+    simulatedMessage =
+      "Acho que isso faz sentido. Eu só fico receoso de fazer exercício e piorar a dor, então queria entender o que é seguro para começar.";
+  } else {
+    simulatedMessage = `Sinto essa dor relacionada a ${profile.condition}. Ela aparece mais nos movimentos do dia a dia e me deixa um pouco inseguro para continuar treinando.`;
+  }
+
+  return {
+    simulatedMessage,
+    internalThoughtProcess:
+      "Fallback local gerado a partir do perfil do paciente e da última pergunta clínica.",
+    safetyTriggered,
+  };
+}
 
 export class PatientSimulatorAgent {
   constructor(private env: Env) {}
@@ -124,7 +166,17 @@ Retorne SOMENTE JSON válido neste formato:
       });
 
       const jsonMatch = aiResult.content.match(/\{[\s\S]*\}/);
-      if (!jsonMatch) return FALLBACK;
+      if (!jsonMatch) {
+        const content = aiResult.content.trim();
+        if (content) {
+          return {
+            simulatedMessage: content,
+            internalThoughtProcess: "Resposta textual aceita sem JSON estruturado.",
+            safetyTriggered: false,
+          };
+        }
+        return FALLBACK;
+      }
 
       const parsed = SimulationSchema.safeParse(JSON.parse(jsonMatch[0]));
       if (!parsed.success) {
@@ -135,7 +187,7 @@ Retorne SOMENTE JSON válido neste formato:
       return parsed.data;
     } catch (error) {
       console.error("[PatientSimulatorAgent] Error generating simulation:", error);
-      return FALLBACK;
+      return buildLocalSimulatedResponse(profile, chatHistory, clinicianLastMessage);
     }
   }
 
