@@ -1,6 +1,5 @@
 import { Cake, Sparkles } from "lucide-react";
 import { lazy, Suspense, useEffect, useMemo } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import { useQueries } from "@tanstack/react-query";
 import { useSearchParams } from "react-router-dom";
 import { PatientService } from "@/lib/services/PatientService";
@@ -230,17 +229,13 @@ export default function Schedule() {
         <div className="flex-1 flex flex-col min-h-0 relative">
           {/* Action Banner: Birthdays */}
           {(birthdaysToday.length > 0 || staffBirthdaysToday.length > 0) && (
-            <motion.div
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="absolute top-0 left-1/2 -translate-x-1/2 z-[45] w-full max-w-4xl px-4 pointer-events-none"
-            >
-              <div className="premium-glass rounded-2xl p-3 flex items-center justify-between border-primary/20 pointer-events-auto shadow-2xl">
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 z-[45] w-full max-w-4xl px-4 pointer-events-none">
+              <div className="bg-card rounded-2xl p-3 flex items-center justify-between border border-border pointer-events-auto shadow-lg">
                 <div className="flex items-center gap-6">
                   {(birthdaysToday.length > 0 || staffBirthdaysToday.length > 0) && (
                     <div className="flex items-center gap-2">
                       <Cake className="h-4 w-4 text-primary" />
-                      <p className="text-[11px] font-bold text-slate-700 dark:text-slate-300">
+                      <p className="text-[11px] font-bold text-foreground">
                         <span className="text-primary uppercase tracking-wider">Aniversários:</span>{" "}
                         {[...birthdaysToday, ...staffBirthdaysToday]
                           .map((p) => p.full_name)
@@ -265,18 +260,11 @@ export default function Schedule() {
                   )}
                 </div>
               </div>
-            </motion.div>
+            </div>
           )}
 
-          <div className="flex-1 min-h-0 overflow-hidden bg-white dark:bg-slate-950/50">
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={`${viewType}-${dateParam}`}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="h-full flex flex-col"
-              >
+          <div className="flex-1 min-h-0 overflow-hidden bg-background">
+            <div className="h-full flex flex-col">
                 <Suspense
                   fallback={<CalendarSkeletonEnhanced viewType={viewType as CalendarViewType} />}
                 >
@@ -326,8 +314,7 @@ export default function Schedule() {
                     />
                   )}
                 </Suspense>
-              </motion.div>
-            </AnimatePresence>
+            </div>
           </div>
         </div>
 

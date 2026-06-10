@@ -10,7 +10,12 @@ import { fisioLogger as logger } from "@/lib/errors/logger";
 import { AppointmentNotificationService } from "@/lib/services/AppointmentNotificationService";
 import { AppointmentService } from "@/services/appointmentService";
 import { normalizeStatus as normalizeFrontendStatus } from "@/components/schedule/shared/appointment-status";
-import type { AppointmentBase, AppointmentFormData, AppointmentStatus } from "@/types/appointment";
+import type {
+  Appointment,
+  AppointmentBase,
+  AppointmentFormData,
+  AppointmentStatus,
+} from "@/types/appointment";
 import { isAppointmentConflictError } from "@/utils/appointmentErrors";
 import { invalidateAppointmentsComprehensive } from "@/utils/cacheInvalidation";
 import { requireUserOrganizationId } from "@/utils/userHelpers";
@@ -148,12 +153,19 @@ export function useUpdateAppointment() {
         queryKey: appointmentKeys.list(organizationId),
       });
       await queryClient.cancelQueries({ queryKey: appointmentPeriodKeys.all });
+      await queryClient.cancelQueries({ queryKey: ["schedule-appointments"] });
 
       const previousData = queryClient.getQueryData<AppointmentsQueryResult>(
         appointmentKeys.list(organizationId),
       );
       const previousPeriodQueries = queryClient.getQueriesData({
         queryKey: appointmentPeriodKeys.all,
+      });
+      // A agenda (FullCalendar) lê de ["schedule-appointments"], chave distinta
+      // das demais. Sem este update otimista o card "volta" para a posição
+      // antiga até o refetch concluir — causando o flicker no drag-and-drop.
+      const previousScheduleQueries = queryClient.getQueriesData<Appointment[]>({
+        queryKey: ["schedule-appointments"],
       });
       const parsedUpdates = parseUpdatesToAppointment(variables.updates);
 
@@ -176,7 +188,15 @@ export function useUpdateAppointment() {
           ),
       );
 
-      return { previousData, previousPeriodQueries };
+      queryClient.setQueriesData<Appointment[]>(
+        { queryKey: ["schedule-appointments"] },
+        (old) =>
+          old?.map((apt) =>
+            apt.id === variables.appointmentId ? ({ ...apt, ...parsedUpdates } as Appointment) : apt,
+          ),
+      );
+
+      return { previousData, previousPeriodQueries, previousScheduleQueries };
     },
     onSuccess: async (data, variables) => {
       const organizationId = profile?.organization_id || "";
@@ -201,6 +221,9 @@ export function useUpdateAppointment() {
         queryClient.setQueryData(appointmentKeys.list(organizationId), context.previousData);
       }
       context?.previousPeriodQueries?.forEach(([queryKey, data]) => {
+        queryClient.setQueryData(queryKey, data);
+      });
+      context?.previousScheduleQueries?.forEach(([queryKey, data]) => {
         queryClient.setQueryData(queryKey, data);
       });
       if (isAppointmentConflictError(error)) {

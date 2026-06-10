@@ -129,7 +129,9 @@ export function useScheduleHandlers(
         });
         setRescheduleSuccessMessage("Reagendado com sucesso");
         setCapacityConfirmation(null); // Clear confirmation if it was open
-        refetchAppointments();
+        // Sem refetch explícito: o onSuccess da mutation já invalida
+        // ["schedule-appointments"] de forma abrangente. Um refetch extra aqui
+        // causaria um segundo repaint do FullCalendar (flicker no drag-drop).
       } catch (error) {
         if (isAppointmentConflictError(error) && !ignoreCapacity) {
           // If it's a conflict and we haven't ignored capacity yet, show confirmation modal
