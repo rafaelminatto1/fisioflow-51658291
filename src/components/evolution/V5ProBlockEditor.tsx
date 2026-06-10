@@ -209,6 +209,20 @@ export const V5ProBlockEditor: React.FC<V5ProBlockEditorProps> = ({
     }
   }, [editor, initialContent, DRAFT_KEY, soapData]);
 
+  const lastInitialContent = useRef(initialContent);
+
+  // Sync prop changes that happen after mount (e.g., when the data is finally fetched from the API)
+  useEffect(() => {
+    if (editor && initialContent !== lastInitialContent.current) {
+      lastInitialContent.current = initialContent;
+      const currentHtml = editor.getHTML();
+      const normalizedCurrent = currentHtml === "<p></p>" ? "" : currentHtml;
+      if (initialContent !== normalizedCurrent) {
+        editor.commands.setContent(initialContent || "");
+      }
+    }
+  }, [editor, initialContent]);
+
   const uploadToCloudflareR2 = useCallback(
     async (file: File) => {
       setIsUploading(true);
