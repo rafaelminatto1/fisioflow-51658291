@@ -22,7 +22,7 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
 import { QuickPainSlider } from "@/components/evolution/v3-notion/QuickPainSlider";
-import { RichTextBlock } from "@/components/evolution/v2-improved/RichTextBlock";
+import { MagicTextarea } from "@/components/ai/MagicTextarea";
 import { ProcedureChecklistBlock } from "@/components/evolution/v2-improved/ProcedureChecklistBlock";
 import { ExerciseBlockV2 } from "@/components/evolution/v2-improved/ExerciseBlockV2";
 import { MeasurementsBlock } from "@/components/evolution/v2-improved/MeasurementsBlock";
@@ -175,12 +175,12 @@ export function LiveTextEvolution({
         <header className="flex items-center gap-2 mb-2 text-sm font-semibold text-amber-800 dark:text-amber-200">
           <span className="inline-block w-2 h-2 rounded-full bg-amber-500" /> Observações clínicas
         </header>
-        <RichTextBlock
+        <MagicTextarea
           placeholder="Descreva o que o paciente relatou e o que foi feito na sessão…"
-          value={data.observacao}
+          value={data.observacao || ""}
           onValueChange={(html) => onChange({ ...data, observacao: html })}
           disabled={disabled}
-          className="min-h-[140px]"
+          className="min-h-[140px] w-full"
         />
       </section>
 
