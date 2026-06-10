@@ -12,7 +12,14 @@ export default function IntelligenceHub() {
   const tab = searchParams.get("tab") || "clinica";
 
   const handleTabChange = (val: string) => {
-    setSearchParams({ tab: val });
+    setSearchParams(
+      (currentParams) => {
+        const nextParams = new URLSearchParams(currentParams);
+        nextParams.set("tab", val);
+        return nextParams;
+      },
+      { replace: true },
+    );
   };
 
   return (
