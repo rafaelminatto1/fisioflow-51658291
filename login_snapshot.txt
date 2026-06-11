@@ -1,0 +1,28 @@
+uid=1_0 RootWebArea "FisioFlow - Sistema de Gestão para Clínicas de Fisioterapia" url="https://fisioflow-web.rafalegollas.workers.dev/auth/login"
+  uid=1_1 region "Notifications (F8)"
+    uid=1_2 list
+  uid=1_3 region "Notifications alt+T" live="polite" relevant="additions text"
+  uid=1_4 main
+    uid=1_5 StaticText "FisioFlow"
+    uid=1_6 heading "Bem-vindo de volta" level="3"
+    uid=1_7 StaticText "Entre com suas credenciais para acessar sua conta"
+    uid=1_8 tablist orientation="horizontal"
+      uid=1_9 tab "Login" selectable selected
+      uid=1_10 tab "Cadastro" selectable
+    uid=1_11 tabpanel "Login"
+      uid=1_12 form
+        uid=1_13 StaticText "Email"
+        uid=1_14 textbox "Email"
+        uid=1_15 StaticText "Senha"
+        uid=1_16 button "Esqueceu a senha?"
+        uid=1_17 textbox "Senha"
+        uid=1_18 button "Acessar Minha Conta"
+    uid=1_19 StaticText "OU CONTINUE COM"
+    uid=1_20 button "Google"
+    uid=1_21 button "GitHub"
+    uid=1_22 button "Apple"
+    uid=1_23 StaticText "Ao continuar, você concorda com nossos"
+    uid=1_24 button "Termos de Serviço"
+    uid=1_25 StaticText "e"
+    uid=1_26 button "Política de Privacidade"
+    uid=1_27 StaticText "."

@@ -170,6 +170,7 @@ export const protocolExercises = pgTable(
 
     organizationId: uuid("organization_id"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
   },
   (table) => ({
     orgIdx: index("idx_protocol_exercises_org_id").on(table.organizationId),

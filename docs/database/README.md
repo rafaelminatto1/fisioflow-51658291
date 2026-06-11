@@ -18,7 +18,7 @@ O banco de dados é projetado seguindo um modelo **Multi-tenant**, onde a maiori
 - **`organizations`**: Clínicas ou profissionais autônomos.
 - **`users`**: Usuários do sistema (Fisioterapeutas, Secretárias, Administradores).
 - **`patients`**: Registro central de pacientes.
-- **`evolutions`**: Registros de evolução clínica (SOAP / Blocos).
+- **`evolutions`**: Registros de evolução clínica (Observação Livre / Blocos).
 - **`activities`**: Catálogo de exercícios e atividades.
 - **`financial_transactions`**: Controle de caixa e faturamento.
 

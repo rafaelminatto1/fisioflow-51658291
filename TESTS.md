@@ -11,7 +11,7 @@
 apps/api/src/routes/__tests__/          # unit tests da API (Workers)
   appointmentHelpers.test.ts            # 20 testes — funções puras
   patients.test.ts                      # 8 testes — RBAC + rotas
-  sessions.test.ts                      # 9 testes — RBAC + rotas SOAP
+  sessions.test.ts                      # 9 testes — RBAC + rotas Observação Livre
   ...
 
 src/components/ui/__tests__/           # unit tests de componentes web
@@ -137,7 +137,7 @@ Não exigir status exato (200/201) em rotas que dependem de DB mock imperfeito �
 
 - [ ] Cadastro de paciente (admin)
 - [ ] Agendamento de sessão (fisioterapeuta)
-- [ ] Criação de evolução SOAP
+- [ ] Criação de evolução Observação Livre
 - [ ] Prescrição de exercício (HEP)
 - [ ] Login + logout com Neon Auth
 

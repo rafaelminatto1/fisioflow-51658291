@@ -4,14 +4,51 @@ import { AITutorAgent, ChatMessage } from "../services/ai/AITutorAgent";
 import { PatientSimulatorAgent, SimulatorProfile } from "../services/ai/PatientSimulatorAgent";
 import { ChartGenerationAgent } from "../services/ai/ChartGenerationAgent";
 import { SoapReviewAgent } from "../services/ai/SoapReviewAgent";
+import { ResourceSearchService } from "../services/ai/ResourceSearchService";
+import { requireAuth, AuthVariables } from "../lib/auth";
 
-export const aiAgentsRoutes = new Hono<{ Bindings: Env }>();
+export const aiAgentsRoutes = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
 function hasCallAIProvider(env: Env): boolean {
   return Boolean(
     env.ZAI_API_KEY || env.AI || env.GOOGLE_AI_API_KEY || env.FISIOFLOW_AI_GATEWAY_URL,
   );
 }
+
+aiAgentsRoutes.post("/resources/search", requireAuth, async (c) => {
+  const body = await c.req.json().catch(() => ({}));
+  const query = typeof body.query === "string" ? body.query.trim() : "";
+  const types = Array.isArray(body.types) ? body.types : ["test", "exercise", "protocol", "wiki"];
+  const context = body.context;
+
+  if (!query) return c.json({ error: "query is required" }, 400);
+
+  const user = c.get("user");
+  const searchService = new ResourceSearchService(c.env);
+
+  try {
+    const resources = await searchService.searchResources(query, user.organizationId, context, types);
+    return c.json({ data: { resources } });
+  } catch (error: any) {
+    return c.json({ error: error.message || "Search failed" }, 500);
+  }
+});
+
+aiAgentsRoutes.post("/resources/suggest", requireAuth, async (c) => {
+    const body = await c.req.json().catch(() => ({}));
+    const { resource, query } = body;
+    if (!resource || !query) return c.json({ error: "resource and query are required" }, 400);
+
+    const user = c.get("user");
+    const searchService = new ResourceSearchService(c.env);
+
+    try {
+        await searchService.saveSuggestion(user.organizationId, user.uid, resource, query);
+        return c.json({ success: true });
+    } catch (error: any) {
+        return c.json({ error: error.message || "Failed to save suggestion" }, 500);
+    }
+});
 
 aiAgentsRoutes.post("/soap-review", async (c) => {
   const body = await c.req.json().catch(() => ({}));
@@ -88,6 +125,7 @@ aiAgentsRoutes.post("/simulator/chat", async (c) => {
     return c.json({ error: "AI not configured" }, 503);
   }
 
+  const user = c.get("user");
   const simulator = new PatientSimulatorAgent(c.env);
 
   try {
@@ -95,6 +133,7 @@ aiAgentsRoutes.post("/simulator/chat", async (c) => {
       profile,
       chatHistory,
       agentLastMessage,
+      user.organizationId
     );
     return c.json({ data: result });
   } catch (error: any) {

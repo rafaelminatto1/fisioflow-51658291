@@ -14,6 +14,7 @@ import { requireAuth, type AuthVariables } from "../lib/auth";
 import { withTenant } from "../lib/db-utils";
 import type { Env } from "../types/env";
 import { registerClinicalResourceRoutes } from "./clinical/resources";
+import { homeExerciseRoutes } from "./clinical/home-exercises";
 import { patientGoals, patientPathologies } from "@fisioflow/db";
 import { sql, desc } from "drizzle-orm";
 
@@ -118,6 +119,7 @@ app.get("/insights", requireAuth, async (c) => {
   });
 });
 
+app.route("/home-exercises", homeExerciseRoutes);
 registerClinicalResourceRoutes(app);
 
 export { app as clinicalRoutes };

@@ -8,6 +8,7 @@ import { ApiError } from "./index";
 export interface ClientConfig {
   baseUrl: string;
   getToken: () => Promise<string | null>;
+  onOfflineMutation?: (url: string, method: string, headers: HeadersInit, body: any) => Promise<void>;
 }
 
 export class FisioFlowClient {
@@ -29,29 +30,44 @@ export class FisioFlowClient {
       headers.set("Content-Type", "application/json");
     }
 
-    const response = await fetch(url, {
-      ...options,
-      headers,
-    });
+    try {
+      const response = await fetch(url, {
+        ...options,
+        headers,
+      });
 
-    const json = await response.json().catch(() => ({}));
+      const json = await response.json().catch(() => ({}));
 
-    if (!response.ok) {
-      const error: ApiError = {
-        error: (json as any).error || "API Error",
-        message: (json as any).message || `HTTP ${response.status}`,
-        code: (json as any).code,
-        details: (json as any).details,
-      };
+      if (!response.ok) {
+        const error: ApiError = {
+          error: (json as any).error || "API Error",
+          message: (json as any).message || `HTTP ${response.status}`,
+          code: (json as any).code,
+          details: (json as any).details,
+        };
+        throw error;
+      }
+
+      // Extract data if nested in ApiResponse
+      if (json && typeof json === "object" && "data" in json) {
+        return (json as any).data as T;
+      }
+
+      return json as T;
+    } catch (error: any) {
+      const method = options.method || "GET";
+      const isMutation = ["POST", "PUT", "PATCH", "DELETE"].includes(method.toUpperCase());
+      const isOffline = typeof navigator !== "undefined" && navigator.onLine === false;
+      
+      // Se for um erro de rede (fetch failed) e estivermos offline com onOfflineMutation configurado
+      if (isMutation && (isOffline || error.name === 'TypeError') && this.config.onOfflineMutation) {
+        console.log(`[FisioFlowClient] Rede indisponível. Enfileirando mutação offline: ${method} ${url}`);
+        await this.config.onOfflineMutation(url, method, headers, options.body);
+        return { __offline_queued: true } as unknown as T;
+      }
+      
       throw error;
     }
-
-    // Extract data if nested in ApiResponse
-    if (json && typeof json === "object" && "data" in json) {
-      return (json as any).data as T;
-    }
-
-    return json as T;
   }
 
   get<T>(endpoint: string, params?: Record<string, string>) {

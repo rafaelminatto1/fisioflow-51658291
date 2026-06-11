@@ -190,7 +190,7 @@ RECURSOS PRINCIPAIS:
 • Acompanhamento de evolução e nível de dor
 • Lembretes de consultas e exercícios
 • Funciona offline - sincronização automática
-• Histórico completo de evoluções SOAP
+• Histórico completo de evoluções Observação Livre
 • Interface intuitiva e acessível
 
 PARA FISIOTERAPEUTAS:

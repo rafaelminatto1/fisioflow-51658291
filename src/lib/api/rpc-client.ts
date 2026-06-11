@@ -46,14 +46,40 @@ async function getHeaders(): Promise<Record<string, string>> {
 export const rpc = hc<AppType>(getBaseUrl(), {
   fetch: async (input: RequestInfo | URL, init?: RequestInit) => {
     const authHeaders = await getHeaders();
-    return fetch(input, {
-      ...init,
-      headers: {
-        "Content-Type": "application/json",
-        ...authHeaders,
-        ...init?.headers,
-      },
-    });
+    try {
+      return await fetch(input, {
+        ...init,
+        headers: {
+          "Content-Type": "application/json",
+          ...authHeaders,
+          ...init?.headers,
+        },
+      });
+    } catch (error: any) {
+      const method = init?.method || "GET";
+      const isMutation = ["POST", "PUT", "PATCH", "DELETE"].includes(method.toUpperCase());
+      const isOffline = typeof navigator !== "undefined" && navigator.onLine === false;
+
+      // Se for um erro de rede (incluindo falha de fetch por timeout ou indisponibilidade)
+      if (isMutation && (isOffline || error.name === "TypeError") && typeof window !== "undefined") {
+        const manager = (window as any).offlineSyncManager;
+        if (manager) {
+          console.warn(`[Hono RPC] Network offline. Queueing mutation: ${method} ${input.toString()}`);
+          await manager.enqueueRequest(
+            input.toString(),
+            method,
+            { "Content-Type": "application/json", ...authHeaders, ...init?.headers } as Record<string, string>,
+            init?.body
+          );
+          // Retornar um 202 Accepted mockado para que a Promise seja resolvida sem quebrar o fluxo da UI
+          return new Response(JSON.stringify({ offlineQueued: true, message: "Ação salva offline." }), { 
+            status: 202,
+            headers: { "Content-Type": "application/json" }
+          });
+        }
+      }
+      throw error;
+    }
   },
 });
 

@@ -15,7 +15,7 @@ App mobile para profissionais de fisioterapia gerenciarem:
 
 - 👥 Pacientes e prontuários
 - 📅 Agendamentos e calendário
-- 📝 Evoluções SOAP com fotos
+- 📝 Evoluções Observação Livre com fotos
 - 💪 Protocolos de tratamento
 - 💰 Controle financeiro
 - 📊 Relatórios e análises
@@ -49,8 +49,8 @@ App mobile para profissionais de fisioterapia gerenciarem:
   - Conflitos automáticos
   - Notificações
 
-- **Evoluções SOAP** (95%) ⭐ NOVO
-  - Formulário SOAP completo
+- **Evoluções Observação Livre** (95%) ⭐ NOVO
+  - Formulário Observação Livre completo
   - Slider de nível de dor
   - Upload de até 6 fotos
   - Gráfico de progresso
@@ -138,7 +138,7 @@ apps/professional-app/
 ├── app/                    # Páginas (Expo Router)
 │   ├── (auth)/            # Autenticação
 │   ├── (tabs)/            # Tabs principais
-│   ├── evolution-*.tsx    # Evoluções SOAP
+│   ├── evolution-*.tsx    # Evoluções Observação Livre
 │   ├── protocol-*.tsx     # Protocolos
 │   └── patient/           # Pacientes
 ├── components/            # Componentes
@@ -215,7 +215,7 @@ apps/professional-app/
 
 - [App Analysis](./APP_ANALYSIS_AND_ROADMAP.md) - Análise completa
 - [Executive Summary](./EXECUTIVE_SUMMARY.md) - Resumo executivo
-- [Evolutions](./IMPLEMENTATION_COMPLETE.md) - Evoluções SOAP
+- [Evolutions](./IMPLEMENTATION_COMPLETE.md) - Evoluções Observação Livre
 - [Protocols](./PROTOCOLS_COMPLETE.md) - Protocolos
 
 ---
@@ -318,7 +318,7 @@ eas update --branch production --message "Bug fixes"
 
 #### Added ⭐
 
-- Sistema completo de Evoluções SOAP
+- Sistema completo de Evoluções Observação Livre
 - Upload de fotos (câmera e galeria)
 - Protocolos de tratamento (UI completa)
 - Gráfico de evolução da dor

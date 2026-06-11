@@ -117,7 +117,7 @@ Hooks para gerenciamento de pacientes, documentos, evolução e prontuário.
 - `usePatients` - Lista de pacientes
 - `usePatientCrud` - Operações CRUD
 - `usePatientDocuments` - Documentos do paciente
-- `useSoapRecords` - Registros SOAP
+- `useSoapRecords` - Registros Observação Livre
 - `usePainMaps` - Mapas de dor
 
 ### 💰 financial/

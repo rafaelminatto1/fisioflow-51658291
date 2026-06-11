@@ -73,12 +73,12 @@ O FisioFlow é um sistema completo de gestão para clínicas de fisioterapia que
 - **Conflitos**: O sistema detecta automaticamente conflitos de horário
 - **Lembretes**: Configure lembretes automáticos para pacientes
 
-#### Prontuários SOAP
+#### Prontuários Observação Livre
 
-**Criar Registro SOAP**
+**Criar Registro Observação Livre**
 
 1. Acesse o paciente desejado
-2. Clique em "+ Novo SOAP"
+2. Clique em "+ Novo Observação Livre"
 3. Preencha cada seção:
    - **Subjetivo**: Queixas e sintomas relatados pelo paciente
    - **Objetivo**: Observações clínicas e exames físicos
@@ -88,7 +88,7 @@ O FisioFlow é um sistema completo de gestão para clínicas de fisioterapia que
 5. Assine digitalmente o registro
 6. Salve o prontuário
 
-**Recursos Avançados do SOAP**
+**Recursos Avançados do Observação Livre**
 
 - **Templates**: Use modelos pré-definidos para agilizar
 - **Escalas de dor**: Registre escalas visuais de dor
@@ -147,7 +147,7 @@ O FisioFlow é um sistema completo de gestão para clínicas de fisioterapia que
 #### Acesso Supervisionado
 
 - **Pacientes designados**: Acesso apenas aos pacientes sob supervisão
-- **Registros SOAP**: Criação com aprovação do supervisor
+- **Registros Observação Livre**: Criação com aprovação do supervisor
 - **Exercícios**: Prescrição com validação do fisioterapeuta responsável
 - **Relatórios**: Visualização limitada aos casos acompanhados
 
@@ -235,7 +235,7 @@ O FisioFlow é um sistema completo de gestão para clínicas de fisioterapia que
 **Histórico Médico**
 
 - Consultas realizadas
-- Registros SOAP (versão simplificada)
+- Registros Observação Livre (versão simplificada)
 - Evolução do tratamento
 - Documentos e exames
 
@@ -354,7 +354,7 @@ O FisioFlow é um sistema completo de gestão para clínicas de fisioterapia que
 
 **Documentação Eficiente**
 
-- Use templates para agilizar registros SOAP
+- Use templates para agilizar registros Observação Livre
 - Documente imediatamente após a consulta
 - Inclua fotos quando relevante
 - Mantenha linguagem clara e objetiva

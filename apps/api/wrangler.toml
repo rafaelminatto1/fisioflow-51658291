@@ -15,77 +15,59 @@ routes = [
 
 
 # ===== HYPERDRIVE (Neon PostgreSQL) =====
-# Crie com: wrangler hyperdrive create fisioflow-neon \
-#   --connection-string="postgresql://neondb_owner:<PASSWORD>@ep-wandering-bonus-acj4zwvo-pooler.sa-east-1.aws.neon.tech/neondb?sslmode=require"
 [[hyperdrive]]
 binding = "HYPERDRIVE"
 id = "12b9fefcfbc04074a63342a9212e1b4f"
-# Query caching is configured on the Hyperdrive resource itself via:
-# Cache de 1h para queries estáticas (Wiki/Protocolos)
-# wrangler hyperdrive update 12b9fefcfbc04074a63342a9212e1b4f --max-age 3600 --swr 300
-# Cloudflare requires `--swr` to be lower than `--max-age`.
 
 # ===== CLOUDFLARE R2 (Media Storage) =====
-# Crie com: wrangler r2 bucket create fisioflow-media
 [[r2_buckets]]
 binding = "MEDIA_BUCKET"
 bucket_name = "fisioflow-media"
 
-# Exames, fotos clínicas e vídeos — PRIVADO (sem domínio público, presigned URLs)
 [[r2_buckets]]
 binding = "EXAMS_BUCKET"
 bucket_name = "fisioflow-exams"
 
-# Documentos clínicos para vetorização (PDFs, etc)
 [[r2_buckets]]
 binding = "CLINICAL_DOCS_BUCKET"
 bucket_name = "fisioflow-clinical-docs"
 
-# ===== STREAM (Vídeo: encoding adaptativo, HLS, thumbnails) — GA 2026-05-07 =====
-# Requer compatibility_date >= 2026-04-14. Webhook: configurar no dashboard CF
-# (Stream → Webhooks) → https://api-pro.moocafisio.com.br/api/exercise-videos/stream-webhook
-# Secret HMAC: wrangler secret put STREAM_WEBHOOK_SECRET
+# ===== STREAM =====
 [stream]
 binding = "STREAM"
 
-# ===== KV NAMESPACES (Global Cache) =====
+# ===== KV NAMESPACES =====
 [[kv_namespaces]]
 binding = "FISIOFLOW_CONFIG"
 id = "4284b33fa7ed40b6bc9c59b6041c03ed"
 
-# ===== D1 SQL (Edge SQLite — evolution_index, feriados, rate limiting) =====
-# fisioflow-db: índice de evoluções, feriados nacionais
+# ===== D1 SQL =====
 [[d1_databases]]
 binding = "DB"
 database_name = "fisioflow-db"
 database_id = "bf781be2-527d-471d-9cf2-dd18f8e6c2b2"
 
-# fisioflow-edge-cache: query_cache genérico, rate_limits por organização
 [[d1_databases]]
 binding = "EDGE_CACHE"
 database_name = "fisioflow-edge-cache"
 database_id = "9eba3eb7-5486-49d0-9684-c325f8b1ddc2"
 
-# ===== ANALYTICS ENGINE (Observabilidade em tempo real — Free) =====
+# ===== ANALYTICS ENGINE =====
 [[analytics_engine_datasets]]
 binding = "ANALYTICS"
 dataset = "fisioflow_events"
 
-# ===== AI SEARCH (RAG gerenciado — diretrizes clínicas, PDFs, artigos) =====
-# AutoRAG: chunks, embeds e indexa documentos automaticamente (1024 dims).
+# ===== AI SEARCH (AutoRAG) =====
 [[ai_search]]
 binding = "AI_SEARCH"
 instance_name = "fisioflow-rag"
 
-# ===== PIPELINES (Data warehouse → R2 JSON, open beta grátis) =====
-# Pipeline: fisioflow_events (id: 584a8a3054d1437686b35823f8476fde)
-# Stream: fisioflow_events_stream (id: 701aff68d26e4c45a29f090389bcd4f2)
-# Stream endpoint: https://701aff68d26e4c45a29f090389bcd4f2.ingest.cloudflare.com
+# ===== PIPELINES =====
 [[pipelines]]
 binding = "EVENTS_PIPELINE"
 stream = "701aff68d26e4c45a29f090389bcd4f2"
 
-# ===== WORKFLOWS (Automações duráveis multi-step) =====
+# ===== WORKFLOWS =====
 [[workflows]]
 name = "appointment-reminder"
 binding = "WORKFLOW_APPOINTMENT_REMINDER"
@@ -136,9 +118,7 @@ name = "session-summary"
 binding = "WORKFLOW_SESSION_SUMMARY"
 class_name = "SessionSummaryWorkflow"
 
-# ===== DURABLE OBJECTS (Realtime State & Agents) =====
-# DO migration tags são imutáveis após deploy — nunca renomeie tags já aplicadas.
-# Para adicionar nova classe: append novo bloco com tag = "v{N+1}".
+# ===== DURABLE OBJECTS =====
 [[durable_objects.bindings]]
 name = "ORGANIZATION_STATE"
 class_name = "OrganizationState"
@@ -163,8 +143,6 @@ class_name = "VoiceScribeAgent"
 name = "EVOLUTION_COLLABORATION"
 class_name = "EvolutionCollaboration"
 
-
-# v1 adicionou OrganizationState (ver env.staging.migrations.v1 com new_classes)
 [[migrations]]
 tag = "v1"
 
@@ -200,14 +178,14 @@ new_sqlite_classes = ["VoiceScribeAgent"]
 tag = "v10"
 new_classes = ["EvolutionCollaboration"]
 
-# ===== AI & BROWSER RENDERING (Paid Plan) =====
+# ===== AI & BROWSER RENDERING =====
 [ai]
 binding = "AI"
 
 [browser]
 binding = "BROWSER"
 
-# ===== QUEUES (Asynchronous Tasks) =====
+# ===== QUEUES =====
 [[queues.producers]]
 queue = "fisioflow-background-tasks"
 binding = "BACKGROUND_QUEUE"
@@ -222,41 +200,22 @@ dead_letter_queue = "fisioflow-tasks-dlq"
 # ===== VARIÁVEIS DE AMBIENTE =====
 [vars]
 ENVIRONMENT = "production"
-# Tópico ntfy.sh para alertas de saúde da API (instale o app ntfy e assine este tópico)
-# App: https://ntfy.sh | iOS: App Store | Android: Play Store / F-Droid
 MONITOR_NTFY_TOPIC = "fisioflow-mon-rafael-prod"
 MONITOR_HEALTH_URL = "https://api-pro.moocafisio.com.br/api/health"
 MONITOR_AI_GATEWAY_URL = "https://fisioflow-ai-gateway.rafalegollas.workers.dev/health"
-# Habilita transformações de imagem via URL no painel Cloudflare
 IMAGE_TRANSFORMATIONS = "enabled"
 R2_PUBLIC_URL = "https://media.moocafisio.com.br"
-# Turnstile (anti-bot para rotas públicas) — sitekey pública, secret via wrangler secret put
 TURNSTILE_SITE_KEY = "0x4AAAAAAC813j31sbl6IHX3"
-# CORS: origens permitidas (Pages e workers ativos — remover se projeto for desativado)
 ALLOWED_ORIGINS = "https://moocafisio.com.br,https://www.moocafisio.com.br,https://media.moocafisio.com.br,http://localhost:5173,https://fisioflow-web.rafalegollas.workers.dev"
 PAGES_URL = "https://moocafisio.com.br"
-GOOGLE_MAPS_API_KEY = ""
-# Neon Auth JWT verification (obrigatório para rotas protegidas)
-# Ajuste para os valores reais do seu tenant Neon Auth.
 NEON_AUTH_URL = "https://ep-wandering-bonus-acj4zwvo.neonauth.sa-east-1.aws.neon.tech/neondb/auth"
 NEON_AUTH_JWKS_URL = "https://ep-wandering-bonus-acj4zwvo.neonauth.sa-east-1.aws.neon.tech/neondb/auth/.well-known/jwks.json"
 NEON_AUTH_ISSUER = "https://ep-wandering-bonus-acj4zwvo.neonauth.sa-east-1.aws.neon.tech"
 NEON_AUTH_AUDIENCE = "https://ep-wandering-bonus-acj4zwvo.neonauth.sa-east-1.aws.neon.tech"
-
-# Axiom Logging (Produção)
 AXIOM_ORG_ID = "activity-dbyc"
 AXIOM_DATASET = "fisioflow-logs"
-# AXIOM_TOKEN deve ser setado via 'wrangler secret put AXIOM_TOKEN'
-
-# Cloudflare AI Gateway
-# Troque <ACCOUNT_ID> e <GATEWAY_NAME> pelos seus dados no painel da Cloudflare (AI > AI Gateway)
 FISIOFLOW_AI_GATEWAY_URL = "https://gateway.ai.cloudflare.com/v1/32156f9a72a32d1ece28ab74bcd398fb/fisioflow-gateway"
-
-# Premium AI (opt-in): habilita Gemini Live API para avaliações em tempo real (~R$1-2/avaliação)
 GOOGLE_AI_PREMIUM_ENABLED = "false"
-
-# Inngest (Produção)
-# INNGEST_EVENT_KEY e INNGEST_SIGNING_KEY devem ser setados via wrangler secret
 
 # ===== AMBIENTE DE PRODUCAO =====
 [env.production]
@@ -276,13 +235,11 @@ NEON_AUTH_URL = "https://ep-wandering-bonus-acj4zwvo.neonauth.sa-east-1.aws.neon
 NEON_AUTH_JWKS_URL = "https://ep-wandering-bonus-acj4zwvo.neonauth.sa-east-1.aws.neon.tech/neondb/auth/.well-known/jwks.json"
 NEON_AUTH_ISSUER = "https://ep-wandering-bonus-acj4zwvo.neonauth.sa-east-1.aws.neon.tech"
 NEON_AUTH_AUDIENCE = "https://ep-wandering-bonus-acj4zwvo.neonauth.sa-east-1.aws.neon.tech"
-# NEON_URL must be configured as a Cloudflare secret.
 NEON_DATA_API_URL = "https://ep-wandering-bonus-acj4zwvo.apirest.sa-east-1.aws.neon.tech/neondb/rest/v1"
 AXIOM_ORG_ID = "activity-dbyc"
 AXIOM_DATASET = "fisioflow-logs"
 PAGES_URL = "https://moocafisio.com.br"
 FISIOFLOW_AI_GATEWAY_URL = "https://gateway.ai.cloudflare.com/v1/32156f9a72a32d1ece28ab74bcd398fb/fisioflow-gateway"
-# Turnstile (anti-bot) — sitekey pública, secret via wrangler secret put TURNSTILE_SECRET_KEY
 TURNSTILE_SITE_KEY = "0x4AAAAAAC813j31sbl6IHX3"
 
 [[env.production.kv_namespaces]]
@@ -311,7 +268,6 @@ instance_name = "fisioflow-rag"
 binding = "EVENTS_PIPELINE"
 stream = "701aff68d26e4c45a29f090389bcd4f2"
 
-# NFS-e São Paulo — mTLS binding (certificado ICP-Brasil e-CNPJ A1)
 [[env.production.mtls_certificates]]
 binding = "NFSE_SP_CERT"
 certificate_id = "20d19f67-72ea-4768-8df4-215eeabbbca6"
@@ -369,8 +325,6 @@ class_name = "SessionSummaryWorkflow"
 [[env.production.hyperdrive]]
 binding = "HYPERDRIVE"
 id = "12b9fefcfbc04074a63342a9212e1b4f"
-# Production caching is configured on the Hyperdrive resource itself:
-#   wrangler hyperdrive update 12b9fefcfbc04074a63342a9212e1b4f --max-age 3600 --swr 300
 
 [[env.production.r2_buckets]]
 binding = "MEDIA_BUCKET"
@@ -387,7 +341,6 @@ bucket_name = "fisioflow-clinical-docs"
 [env.production.stream]
 binding = "STREAM"
 
-
 [env.production.durable_objects]
 bindings = [
   { name = "ORGANIZATION_STATE", class_name = "OrganizationState" },
@@ -398,8 +351,6 @@ bindings = [
   { name = "EVOLUTION_COLLABORATION", class_name = "EvolutionCollaboration" },
 ]
 
-# Production DO migrations — top-level migrations não são herdadas por env.production.
-# v1..v8 já aplicadas em produção; v9 introduz VoiceScribeAgent (SQLite-backed).
 [[env.production.migrations]]
 tag = "v9"
 new_sqlite_classes = ["VoiceScribeAgent"]
@@ -410,9 +361,6 @@ new_classes = ["EvolutionCollaboration"]
 
 [env.production.ai]
 binding = "AI"
-
-[env.production.images]
-binding = "IMAGES"
 
 [env.production.browser]
 binding = "BROWSER"
@@ -428,226 +376,25 @@ max_batch_timeout = 30
 max_retries = 3
 dead_letter_queue = "fisioflow-tasks-dlq"
 
-# ===== AMBIENTE DE STAGING =====
-[env.staging]
-name = "fisioflow-api-staging"
-
-[env.staging.vars]
-ENVIRONMENT = "staging"
-MONITOR_HEALTH_URL = "https://fisioflow-api-staging.rafalegollas.workers.dev/api/health"
-MONITOR_NTFY_TOPIC = "fisioflow-mon-rafael-staging"
-IMAGE_TRANSFORMATIONS = "enabled"
-GOOGLE_AI_PREMIUM_ENABLED = "false"
-R2_PUBLIC_URL = "https://pub-7d7f6b6af4684fb3a18be682c4b610d9.r2.dev"
-PAGES_URL = "https://fisioflow-web-staging.rafalegollas.workers.dev"
-ALLOWED_ORIGINS = "https://fisioflow-web-staging.rafalegollas.workers.dev,http://localhost:5173"
-GOOGLE_MAPS_API_KEY = ""
-NEON_AUTH_URL = "https://ep-withered-glade-acrv7il7.neonauth.sa-east-1.aws.neon.tech/neondb/auth"
-NEON_AUTH_JWKS_URL = "https://ep-withered-glade-acrv7il7.neonauth.sa-east-1.aws.neon.tech/neondb/auth/.well-known/jwks.json"
-NEON_AUTH_ISSUER = "https://ep-withered-glade-acrv7il7.neonauth.sa-east-1.aws.neon.tech"
-NEON_AUTH_AUDIENCE = "https://ep-withered-glade-acrv7il7.neonauth.sa-east-1.aws.neon.tech"
-FISIOFLOW_AI_GATEWAY_URL = "https://gateway.ai.cloudflare.com/v1/32156f9a72a32d1ece28ab74bcd398fb/fisioflow-gateway-staging"
-TURNSTILE_SITE_KEY = "0x4AAAAAAC813j31sbl6IHX3"
-
-# Axiom (Staging)
-AXIOM_ORG_ID = "activity-dbyc"
-AXIOM_DATASET = "fisioflow-logs-staging"
-
-# NFS-e São Paulo — mTLS binding (staging)
-[[env.staging.mtls_certificates]]
-binding = "NFSE_SP_CERT"
-certificate_id = "20d19f67-72ea-4768-8df4-215eeabbbca6"
-
-# Inngest (Staging)
-# INNGEST_EVENT_KEY deve ser setado via: wrangler secret put INNGEST_EVENT_KEY --env staging
-
-[[env.staging.kv_namespaces]]
-binding = "FISIOFLOW_CONFIG"
-id = "774bb5738e634d7ea9dc53d410a13218"
-
-[[env.staging.hyperdrive]]
-binding = "HYPERDRIVE"
-id = "37189eb42d314a0a8fd0e169a2b27ad1"
-# Staging caching is configured on the Hyperdrive resource itself:
-#   wrangler hyperdrive update 37189eb42d314a0a8fd0e169a2b27ad1 --max-age 60 --swr 15
-
-[[env.staging.r2_buckets]]
-binding = "MEDIA_BUCKET"
-bucket_name = "fisioflow-media-staging"
-
-[[env.staging.r2_buckets]]
-binding = "EXAMS_BUCKET"
-bucket_name = "fisioflow-exams-staging"
-
-[[env.staging.r2_buckets]]
-binding = "CLINICAL_DOCS_BUCKET"
-bucket_name = "fisioflow-clinical-docs-staging"
-
-[env.staging.stream]
-binding = "STREAM"
-
-
-[env.staging.durable_objects]
-bindings = [
-  { name = "ORGANIZATION_STATE", class_name = "OrganizationState" },
-  { name = "PATIENT_AGENT", class_name = "PatientAgent" },
-  { name = "ASSESSMENT_LIVE_SESSION", class_name = "AssessmentLiveSession" },
-  { name = "CLINIC_AGENT", class_name = "ClinicAgent" },
-  { name = "VOICE_SCRIBE_AGENT", class_name = "VoiceScribeAgent" },
-  { name = "EVOLUTION_COLLABORATION", class_name = "EvolutionCollaboration" },
-]
-
-[[env.staging.migrations]]
-tag = "v1"
-new_classes = ["OrganizationState"]
-
-[[env.staging.migrations]]
-tag = "v2"
-
-[[env.staging.migrations]]
-tag = "v3"
-
-[[env.staging.migrations]]
-tag = "v4"
-
-[[env.staging.migrations]]
-tag = "v5"
-
-[[env.staging.migrations]]
-tag = "v6"
-new_classes = ["PatientAgent"]
-
-[[env.staging.migrations]]
-tag = "v7"
-new_classes = ["AssessmentLiveSession"]
-
-[[env.staging.migrations]]
-tag = "v8"
-new_classes = ["ClinicAgent"]
-
-[[env.staging.migrations]]
-tag = "v9"
-new_sqlite_classes = ["VoiceScribeAgent"]
-
-[[env.staging.migrations]]
-tag = "v10"
-new_classes = ["EvolutionCollaboration"]
-
-[env.staging.ai]
-binding = "AI"
-
-[env.staging.images]
-binding = "IMAGES"
-
-[env.staging.browser]
-binding = "BROWSER"
-
-[[env.staging.queues.producers]]
-queue = "fisioflow-background-tasks-staging"
-binding = "BACKGROUND_QUEUE"
-
-[[env.staging.queues.consumers]]
-queue = "fisioflow-background-tasks-staging"
-max_batch_size = 10
-max_batch_timeout = 30
-max_retries = 3
-dead_letter_queue = "fisioflow-tasks-dlq-staging"
-
-# Staging D1 databases
-[[env.staging.d1_databases]]
-binding = "DB"
-database_name = "fisioflow-db-staging"
-database_id = "39b12788-3de4-4421-b5c3-1cc594abe207"
-
-[[env.staging.d1_databases]]
-binding = "EDGE_CACHE"
-database_name = "fisioflow-edge-cache-staging"
-database_id = "adb59c9c-f22b-467d-a04e-e8e54cf987ed"
-
-# Staging Analytics Engine
-[[env.staging.analytics_engine_datasets]]
-binding = "ANALYTICS"
-dataset = "fisioflow_events_staging"
-
-# [[env.staging.ai_search]]
-# binding = "AI_SEARCH"
-# instance_name = "fisioflow-rag"
-
-# Staging Pipelines: binding uses the staging stream ID, not the production stream.
-[[env.staging.pipelines]]
-binding = "EVENTS_PIPELINE"
-stream = "cbf62503169e4dadacbcb72b0534100f"
-
-# Staging Workflows
-[[env.staging.workflows]]
-name = "appointment-reminder"
-binding = "WORKFLOW_APPOINTMENT_REMINDER"
-class_name = "AppointmentReminderWorkflow"
-
-[[env.staging.workflows]]
-name = "patient-onboarding"
-binding = "WORKFLOW_PATIENT_ONBOARDING"
-class_name = "PatientOnboardingWorkflow"
-
-[[env.staging.workflows]]
-name = "nfse-emission"
-binding = "WORKFLOW_NFSE"
-class_name = "NFSeWorkflow"
-
-[[env.staging.workflows]]
-name = "hep-compliance"
-binding = "WORKFLOW_HEP_COMPLIANCE"
-class_name = "HEPComplianceWorkflow"
-
-[[env.staging.workflows]]
-name = "patient-discharge"
-binding = "WORKFLOW_DISCHARGE"
-class_name = "PatientDischargeWorkflow"
-
-[[env.staging.workflows]]
-name = "patient-reengagement"
-binding = "WORKFLOW_REENGAGEMENT"
-class_name = "PatientReengagementWorkflow"
-
-[[env.staging.workflows]]
-name = "patient-digital-twin"
-binding = "WORKFLOW_DIGITAL_TWIN"
-class_name = "PatientDigitalTwinWorkflow"
-
-[[env.staging.workflows]]
-name = "wiki-sync"
-binding = "WORKFLOW_WIKI_SYNC"
-class_name = "WikiSyncWorkflow"
-
-[[env.staging.workflows]]
-name = "knowledge-sync"
-binding = "WORKFLOW_KNOWLEDGE_SYNC"
-class_name = "KnowledgeSyncWorkflow"
-
-[[env.staging.workflows]]
-name = "session-summary"
-binding = "WORKFLOW_SESSION_SUMMARY"
-class_name = "SessionSummaryWorkflow"
-
 # ===== CRON TRIGGERS =====
 [triggers]
 crons = [
-  "*/5 * * * *", # A cada 5 minutos — Health monitor leve do Worker/API (não acorda Neon)
-  "*/15 * * * *", # A cada 15 minutos — CRM automations scan (executa ações pendentes)
-  "0 6 * * *",   # Diário às 03:00 BRT — Lead scoring (batch 50 contatos lead/mql/sql)
-  "0 9 * * *", # Diário às 06:00 BRT - Lembretes de Consultas (banco já acorda aqui)
-  "0 11 * * *", # Diário às 08:00 BRT - Relatórios e Limpeza (horário de expediente)
-  "0 12 * * *", # Diário às 09:00 BRT - Automações de vencimento de tarefas
-  "0 10 * * *", # Diário às 07:00 BRT - WikiSyncWorkflow na abertura da clínica
-  "10 10 * * 1", # Segunda às 07:10 BRT - KnowledgeSyncWorkflow (protocolos + exercícios)
-  "30 10 * * *", # Diário às 07:30 BRT - ClinicAgent morning briefing
-  "30 21 * * *", # Diário às 18:30 BRT - ClinicAgent daily summary
-  "0 12 * * 1", # Segunda às 09:00 BRT - ClinicAgent missing patients alert
-  "0 14 * * *", # Diário às 11:00 BRT - NPS auto-trigger para orgs com 7 dias de uso
-  "0 3 1 * *", # Dia 1 do mês 00:00 BRT (03:00 UTC) - S6.2 Pipeline R2 archive (sessions >90d → Iceberg)
-  "0 9 1,15 * *", # Dia 1 e 15 às 06:00 BRT (09:00 UTC) - S8 SLO biweekly report (push notif admin)
-  "15 * * * *", # A cada hora aos 15 min - S9 T5 SLO health check (alerta se uptime <99.5% ou p95 >2s)
-  "0 21 * * *", # Diário às 18:00 BRT — S11 HEP daily reminder push aos pacientes do app
+  "*/5 * * * *",
+  "*/15 * * * *",
+  "0 6 * * *",
+  "0 9 * * *",
+  "0 11 * * *",
+  "0 12 * * *",
+  "0 10 * * *",
+  "10 10 * * 1",
+  "30 10 * * *",
+  "30 21 * * *",
+  "0 12 * * 1",
+  "0 14 * * *",
+  "0 3 1 * *",
+  "0 9 1,15 * *",
+  "15 * * * *",
+  "0 21 * * *",
 ]
 
 # ===== OBSERVABILIDADE =====
@@ -670,13 +417,3 @@ head_sampling_rate = 0.1
 [env.production.observability.traces]
 enabled = true
 head_sampling_rate = 0.05
-
-[env.staging.observability]
-enabled = true
-
-[env.staging.observability.logs]
-head_sampling_rate = 1
-
-[env.staging.observability.traces]
-enabled = true
-head_sampling_rate = 1

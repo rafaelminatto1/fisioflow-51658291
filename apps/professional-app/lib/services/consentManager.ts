@@ -1,166 +1,157 @@
-import { Consent, ConsentHistory, ConsentType, ConsentCategory } from "@/types/consent";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { fetchApi } from "@/lib/api/client";
 import { CONSENT_TYPES } from "@/constants/consentTypes";
-import { fetchApi } from "@/lib/api";
+import type { Consent, ConsentCategory, ConsentType } from "@/types/consent";
 
-export class ConsentManager {
-  private static instance: ConsentManager;
+const STORAGE_PREFIX = "fisioflow:consents";
 
-  private constructor() {}
+const CONSENT_METADATA: Record<
+  string,
+  { type: ConsentType; category: ConsentCategory; description: string }
+> = {
+  [CONSENT_TYPES.PRIVACY_POLICY]: {
+    type: "required",
+    category: "legal",
+    description: "Aceite da politica de privacidade.",
+  },
+  [CONSENT_TYPES.TERMS_OF_SERVICE]: {
+    type: "required",
+    category: "legal",
+    description: "Aceite dos termos de servico.",
+  },
+  [CONSENT_TYPES.CAMERA_PERMISSION]: {
+    type: "required",
+    category: "permission",
+    description: "Permissao para capturar imagens e videos clinicos.",
+  },
+  [CONSENT_TYPES.PHOTOS_PERMISSION]: {
+    type: "required",
+    category: "permission",
+    description: "Permissao para selecionar midias do dispositivo.",
+  },
+  [CONSENT_TYPES.LOCATION_PERMISSION]: {
+    type: "optional",
+    category: "permission",
+    description: "Permissao para recursos baseados em localizacao.",
+  },
+  [CONSENT_TYPES.NOTIFICATIONS_PERMISSION]: {
+    type: "optional",
+    category: "permission",
+    description: "Permissao para lembretes e avisos.",
+  },
+  [CONSENT_TYPES.ANALYTICS]: {
+    type: "optional",
+    category: "analytics",
+    description: "Consentimento para analise de uso.",
+  },
+  [CONSENT_TYPES.CRASH_REPORTS]: {
+    type: "optional",
+    category: "analytics",
+    description: "Consentimento para relatorios tecnicos de erro.",
+  },
+  [CONSENT_TYPES.MARKETING_EMAILS]: {
+    type: "optional",
+    category: "marketing",
+    description: "Consentimento para comunicacoes comerciais.",
+  },
+};
 
-  static getInstance(): ConsentManager {
-    if (!ConsentManager.instance) {
-      ConsentManager.instance = new ConsentManager();
-    }
-    return ConsentManager.instance;
-  }
+function storageKey(userId: string) {
+  return `${STORAGE_PREFIX}:${userId}`;
+}
 
-  /**
-   * Initialize consent manager for user
-   */
-  async initialize(userId: string): Promise<void> {
-    await this.getUserConsents(userId);
-  }
+function buildConsent(userId: string, name: string, version: string, status: Consent["status"]): Consent {
+  const metadata = CONSENT_METADATA[name] ?? {
+    type: "optional" as const,
+    category: "legal" as const,
+    description: name,
+  };
+  const now = new Date();
 
-  /**
-   * Grant consent for a specific type
-   */
-  async grantConsent(
-    userId: string,
-    consentType: string,
-    version: string,
-    metadata?: Record<string, any>,
-  ): Promise<Consent> {
-    const payload = {
-      userId,
-      consentType,
-      version,
-      metadata,
-      type: this.getConsentTypeCategory(consentType),
-      category: this.getConsentCategory(consentType),
-      name: consentType,
-      description: this.getConsentDescription(consentType),
-      action: "granted",
-    };
+  return {
+    id: `${userId}:${name}`,
+    userId,
+    name,
+    version,
+    status,
+    grantedAt: status === "granted" ? now : undefined,
+    withdrawnAt: status === "withdrawn" ? now : undefined,
+    ...metadata,
+  };
+}
 
-    const response = await fetchApi<any>("/api/consents/grant", {
-      method: "POST",
-      data: payload,
-    });
-    return response.data;
-  }
+async function readLocalConsents(userId: string): Promise<Consent[]> {
+  const raw = await AsyncStorage.getItem(storageKey(userId));
+  if (!raw) return [];
 
-  /**
-   * Withdraw consent (only for optional consents)
-   */
-  async withdrawConsent(userId: string, consentType: string, reason?: string): Promise<void> {
-    const typeCategory = this.getConsentTypeCategory(consentType);
-    if (typeCategory === "required") {
-      throw new Error("Cannot withdraw required consent");
-    }
-
-    await fetchApi("/api/consents/withdraw", {
-      method: "POST",
-      data: {
-        userId,
-        consentType,
-        reason,
-      },
-    });
-  }
-
-  /**
-   * Check if user has granted specific consent
-   */
-  async hasConsent(userId: string, consentType: string): Promise<boolean> {
-    try {
-      const response = await fetchApi<any>("/api/consents/check", {
-        params: { userId, consentType },
-      });
-      return response.data?.status === "granted";
-    } catch {
-      return false;
-    }
-  }
-
-  /**
-   * Get all consents for user
-   */
-  async getUserConsents(userId: string): Promise<Consent[]> {
-    try {
-      const response = await fetchApi<any>(`/api/consents/user/${userId}`);
-      return response.data || [];
-    } catch {
-      return [];
-    }
-  }
-
-  /**
-   * Get consent history
-   */
-  async getConsentHistory(userId: string, consentType?: string): Promise<ConsentHistory[]> {
-    try {
-      const response = await fetchApi<any>(`/api/consents/history/${userId}`, {
-        params: { consentType },
-      });
-      return response.data || [];
-    } catch {
-      return [];
-    }
-  }
-
-  /**
-   * Check if consent needs renewal (version changed)
-   */
-  async needsRenewal(
-    userId: string,
-    consentType: string,
-    currentVersion: string,
-  ): Promise<boolean> {
-    try {
-      const response = await fetchApi<any>("/api/consents/check-renewal", {
-        params: { userId, consentType, version: currentVersion },
-      });
-      return response.data?.needsRenewal || false;
-    } catch {
-      return true;
-    }
-  }
-
-  /**
-   * Sync consent with device permissions
-   */
-  async syncDevicePermissions(userId: string): Promise<void> {
-    console.log("Syncing device permissions for", userId);
-  }
-
-  // Helpers
-  private getConsentTypeCategory(consentType: string): ConsentType {
-    const required = [
-      CONSENT_TYPES.PRIVACY_POLICY,
-      CONSENT_TYPES.TERMS_OF_SERVICE,
-      CONSENT_TYPES.CAMERA_PERMISSION,
-      CONSENT_TYPES.PHOTOS_PERMISSION,
-    ];
-
-    return required.includes(consentType as any) ? "required" : "optional";
-  }
-
-  private getConsentCategory(consentType: string): ConsentCategory {
-    if (
-      consentType === CONSENT_TYPES.PRIVACY_POLICY ||
-      consentType === CONSENT_TYPES.TERMS_OF_SERVICE
-    )
-      return "legal";
-    if (consentType.includes("permission")) return "permission";
-    if (consentType === CONSENT_TYPES.ANALYTICS || consentType === CONSENT_TYPES.CRASH_REPORTS)
-      return "analytics";
-    if (consentType === CONSENT_TYPES.MARKETING_EMAILS) return "marketing";
-    return "legal"; // Default
-  }
-
-  private getConsentDescription(consentType: string): string {
-    return consentType;
+  try {
+    const parsed = JSON.parse(raw) as Consent[];
+    return parsed.map((consent) => ({
+      ...consent,
+      grantedAt: consent.grantedAt ? new Date(consent.grantedAt) : undefined,
+      withdrawnAt: consent.withdrawnAt ? new Date(consent.withdrawnAt) : undefined,
+    }));
+  } catch {
+    return [];
   }
 }
 
-export const consentManager = ConsentManager.getInstance();
+async function writeLocalConsents(userId: string, consents: Consent[]) {
+  await AsyncStorage.setItem(storageKey(userId), JSON.stringify(consents));
+}
+
+async function upsertLocalConsent(
+  userId: string,
+  consentType: string,
+  version: string,
+  status: Consent["status"],
+) {
+  const consents = await readLocalConsents(userId);
+  const next = buildConsent(userId, consentType, version, status);
+  const updated = [next, ...consents.filter((consent) => consent.name !== consentType)];
+  await writeLocalConsents(userId, updated);
+  return next;
+}
+
+export const consentManager = {
+  async getUserConsents(userId: string): Promise<Consent[]> {
+    try {
+      const response = await fetchApi<{ data: Consent[] }>("/api/security/lgpd-consents", {
+        method: "GET",
+      });
+      if (Array.isArray(response.data)) {
+        return response.data;
+      }
+    } catch {
+      // Local fallback keeps privacy settings usable when the security route is unavailable.
+    }
+
+    return readLocalConsents(userId);
+  },
+
+  async grantConsent(userId: string, consentType: string, version: string): Promise<Consent> {
+    try {
+      await fetchApi(`/api/security/lgpd-consents/${encodeURIComponent(consentType)}`, {
+        method: "PUT",
+        data: { granted: true, version },
+      });
+    } catch {
+      // Persist locally even if backend consent sync is not configured for the mobile app.
+    }
+
+    return upsertLocalConsent(userId, consentType, version, "granted");
+  },
+
+  async withdrawConsent(userId: string, consentType: string): Promise<Consent> {
+    try {
+      await fetchApi(`/api/security/lgpd-consents/${encodeURIComponent(consentType)}`, {
+        method: "PUT",
+        data: { granted: false },
+      });
+    } catch {
+      // Persist locally even if backend consent sync is not configured for the mobile app.
+    }
+
+    return upsertLocalConsent(userId, consentType, "1.0", "withdrawn");
+  },
+};

@@ -165,8 +165,35 @@ const PatientEvolutionReport = () => {
 	if (isLoading) {
 		return (
 			<MainLayout>
-				<div className="space-y-4">
-					<LoadingSkeleton type="card" rows={4} />
+				<div className="space-y-4 sm:space-y-6 px-1 sm:px-0">
+					{/* Skeleton Header */}
+					<div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-primary/10 via-primary/5 to-background p-4 sm:p-6 shadow-lg border">
+						<div className="flex flex-col sm:flex-row gap-4 sm:items-center sm:justify-between">
+							<div className="flex items-center gap-4">
+								<div className="h-10 w-10 shrink-0 bg-muted animate-pulse rounded-md" />
+								<div className="space-y-2">
+									<div className="h-8 w-48 bg-muted animate-pulse rounded-md" />
+									<div className="h-4 w-32 bg-muted animate-pulse rounded-md" />
+								</div>
+							</div>
+							<div className="flex flex-wrap gap-2">
+								<div className="h-10 w-32 bg-muted animate-pulse rounded-md" />
+								<div className="h-10 w-32 bg-muted animate-pulse rounded-md" />
+							</div>
+						</div>
+						<div className="mt-6 flex flex-wrap gap-2">
+							<div className="h-6 w-24 bg-muted animate-pulse rounded-full" />
+							<div className="h-6 w-24 bg-muted animate-pulse rounded-full" />
+							<div className="h-6 w-24 bg-muted animate-pulse rounded-full" />
+						</div>
+					</div>
+
+					{/* Content Skeleton */}
+					<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+						<div className="h-64 bg-muted animate-pulse rounded-xl" />
+						<div className="h-64 bg-muted animate-pulse rounded-xl" />
+					</div>
+					<div className="h-96 bg-muted animate-pulse rounded-xl mt-6" />
 				</div>
 			</MainLayout>
 		);

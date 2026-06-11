@@ -70,7 +70,7 @@
 **Mostra**: Gráfico de evolução
 
 - Gráfico de nível de dor
-- Timeline de evoluções SOAP
+- Timeline de evoluções Observação Livre
 - Estatísticas (sessões, dias, melhora)
 - Filtro de período
 

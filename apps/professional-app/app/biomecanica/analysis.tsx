@@ -1,15 +1,17 @@
 import { useState } from "react";
-import { View, Text, Pressable, TextInput, ScrollView, StyleSheet } from "react-native";
+import { View, Text, Pressable, TextInput, ScrollView, StyleSheet, ActivityIndicator, Alert } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useRouter } from "expo-router";
+import { useRouter, useLocalSearchParams } from "expo-router";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, { useSharedValue, useAnimatedStyle, withTiming, runOnJS } from "react-native-reanimated";
-import Svg, { Circle, Path, Ellipse } from "react-native-svg";
+import Svg, { Circle, Path, Ellipse, Line, Text as SvgText, G } from "react-native-svg";
+import { useVideoPlayer, VideoView } from "expo-video";
 import {
   ChevronLeft, GitCompare, Share2, ChevronUp, ChevronDown, Rewind, FastForward, Play, Pause,
-  TrendingUp, TrendingDown, AlertTriangle, Check,
+  TrendingUp, TrendingDown, AlertTriangle, Check, PenTool, Eraser
 } from "lucide-react-native";
 import { bio, font } from "@/constants/biomecanica";
+import { biomechanicsApi } from "@/lib/api/biomechanics";
 
 const METRICS = [
   { l: "ROM joelho", v: "118°", d: "+6° vs 112°", up: true, tone: "ok" as const, icon: TrendingUp },
@@ -28,12 +30,54 @@ const COLLAPSED = 330;
 
 export default function AnalysisScreen() {
   const router = useRouter();
+  const { uri, patientId, patientName } = useLocalSearchParams<{ uri?: string; patientId?: string; patientName?: string }>();
   const [playing, setPlaying] = useState(false);
   const [view, setView] = useState("SAGITAL");
   const [open, setOpen] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [note, setNote] = useState(
     "Valgo dinâmico do joelho direito no descenso, com compensação por inclinação de tronco. Paciente relata pinçada patelar ao atingir 90°.",
   );
+
+  const handleSave = async () => {
+    if (!patientId) {
+      Alert.alert("Erro", "Paciente não identificado. Inicie a captura a partir de um paciente.");
+      return;
+    }
+
+    setSaving(true);
+    try {
+      const res = await biomechanicsApi.create({
+        patientId,
+        type: "Agachamento",
+        analysisData: {
+          metrics: METRICS,
+          goniometry: GONIO,
+          patientName,
+        },
+        observations: note,
+        mediaUrl: uri,
+      });
+
+      if (res.data?.id) {
+        router.push(`/biomecanica/report?assessmentId=${res.data.id}&patientId=${patientId}&patientName=${encodeURIComponent(patientName || "")}`);
+      } else {
+        throw new Error("Erro ao criar avaliação");
+      }
+    } catch (err: any) {
+      Alert.alert("Erro", err.message || "Falha ao salvar avaliação");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const [mode, setMode] = useState<"view" | "goniometer">("view");
+  const [points, setPoints] = useState<{ x: number; y: number }[]>([]);
+
+  const player = useVideoPlayer(uri ? { uri } : "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4", player => {
+    player.loop = true;
+    if (playing) player.play();
+  });
 
   const ty = useSharedValue(COLLAPSED);
   const start = useSharedValue(COLLAPSED);
@@ -43,6 +87,26 @@ export default function AnalysisScreen() {
     ty.value = withTiming(toOpen ? 0 : COLLAPSED, { duration: 280 });
     setOpen(toOpen);
   };
+
+  const handleTap = (e: any) => {
+    if (mode !== "goniometer") return;
+    setPoints(prev => {
+      if (prev.length >= 3) return [{ x: e.x, y: e.y }];
+      return [...prev, { x: e.x, y: e.y }];
+    });
+  };
+
+  const calculateAngle = (p1: {x:number, y:number}, p2: {x:number, y:number}, p3: {x:number, y:number}) => {
+    const a = Math.pow(p2.x - p1.x, 2) + Math.pow(p2.y - p1.y, 2);
+    const b = Math.pow(p2.x - p3.x, 2) + Math.pow(p2.y - p3.y, 2);
+    const c = Math.pow(p3.x - p1.x, 2) + Math.pow(p3.y - p1.y, 2);
+    const angle = Math.acos((a + b - c) / Math.sqrt(4 * a * b));
+    return (angle * (180 / Math.PI)).toFixed(1);
+  };
+
+  const tapGesture = Gesture.Tap().onEnd((e) => {
+    runOnJS(handleTap)(e);
+  });
   const pan = Gesture.Pan()
     .onBegin(() => {
       start.value = ty.value;
@@ -60,33 +124,67 @@ export default function AnalysisScreen() {
   return (
     <View style={styles.root}>
       {/* video */}
-      <View style={styles.video}>
-        <View style={styles.athlete}>
-          <Svg width={170} height={340} viewBox="0 0 200 400" fill="none" stroke="#cbd5e1" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round">
-            <Circle cx="100" cy="40" r="18" fill="#cbd5e1" />
-            <Path d="M100 60 Q105 95 115 130 Q120 155 118 175" />
-            <Ellipse cx="118" cy="180" rx="14" ry="9" fill="#cbd5e1" />
-            <Path d="M118 185 Q105 220 80 240" />
-            <Path d="M80 240 Q90 280 110 320" />
-            <Path d="M108 320 Q115 335 135 332" strokeWidth={6} />
-            <Path d="M105 100 Q140 110 160 95" />
-          </Svg>
+      <GestureDetector gesture={tapGesture}>
+        <View style={styles.video}>
+          <VideoView style={StyleSheet.absoluteFill} player={player} />
+          {/* Skeleton mockup when no video */}
+          {!uri && (
+            <View style={styles.athlete}>
+              <Svg width={170} height={340} viewBox="0 0 200 400" fill="none" stroke="#cbd5e1" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round">
+                <Circle cx="100" cy="40" r="18" fill="#cbd5e1" />
+                <Path d="M100 60 Q105 95 115 130 Q120 155 118 175" />
+                <Ellipse cx="118" cy="180" rx="14" ry="9" fill="#cbd5e1" />
+                <Path d="M118 185 Q105 220 80 240" />
+                <Path d="M80 240 Q90 280 110 320" />
+                <Path d="M108 320 Q115 335 135 332" strokeWidth={6} />
+                <Path d="M105 100 Q140 110 160 95" />
+              </Svg>
+            </View>
+          )}
+
+          {/* Goniometer Canvas */}
+          <View style={StyleSheet.absoluteFill} pointerEvents="none">
+            <Svg height="100%" width="100%">
+              {points.map((p, i) => (
+                <G key={i}>
+                  <Circle cx={p.x} cy={p.y} r={12} fill="rgba(255,255,255,0.4)" />
+                  <Circle cx={p.x} cy={p.y} r={4} fill={bio.primary} />
+                </G>
+              ))}
+              {points.length > 1 && (
+                <Line x1={points[0].x} y1={points[0].y} x2={points[1].x} y2={points[1].y} stroke={bio.primary} strokeWidth={3} strokeDasharray="6 4" />
+              )}
+              {points.length > 2 && (
+                <>
+                  <Line x1={points[1].x} y1={points[1].y} x2={points[2].x} y2={points[2].y} stroke={bio.primary} strokeWidth={3} strokeDasharray="6 4" />
+                  <SvgText x={points[1].x + 15} y={points[1].y - 15} fill="white" fontSize="18" fontWeight="bold">
+                    {calculateAngle(points[0], points[1], points[2])}°
+                  </SvgText>
+                </>
+              )}
+            </Svg>
+          </View>
+
+          {/* angle overlays (hidden in goniometer mode) */}
+          {mode === "view" && (
+            <>
+              <View style={[styles.angLabel, styles.angPrimary, { top: "22%", left: "18%" }]}>
+                <Text style={styles.angTextWhite}>Tronco 32° flexão</Text>
+              </View>
+              <View style={[styles.angLabel, styles.angPrimary, { top: "36%", right: "10%" }]}>
+                <Text style={styles.angTextWhite}>Quadril 78°</Text>
+              </View>
+              <View style={[styles.angLabel, styles.angWarn, { top: "50%", left: "14%" }]}>
+                <AlertTriangle size={13} color="hsl(35,70%,18%)" strokeWidth={2.4} />
+                <Text style={styles.angTextDark}>Joelho 92° valgo</Text>
+              </View>
+              <View style={[styles.angLabel, styles.angOk, { top: "58%", right: "14%" }]}>
+                <Text style={styles.angTextWhite}>Tornozelo 24°</Text>
+              </View>
+            </>
+          )}
         </View>
-        {/* angle overlays */}
-        <View style={[styles.angLabel, styles.angPrimary, { top: "22%", left: "18%" }]}>
-          <Text style={styles.angTextWhite}>Tronco 32° flexão</Text>
-        </View>
-        <View style={[styles.angLabel, styles.angPrimary, { top: "36%", right: "10%" }]}>
-          <Text style={styles.angTextWhite}>Quadril 78°</Text>
-        </View>
-        <View style={[styles.angLabel, styles.angWarn, { top: "50%", left: "14%" }]}>
-          <AlertTriangle size={13} color="hsl(35,70%,18%)" strokeWidth={2.4} />
-          <Text style={styles.angTextDark}>Joelho 92° valgo</Text>
-        </View>
-        <View style={[styles.angLabel, styles.angOk, { top: "58%", right: "14%" }]}>
-          <Text style={styles.angTextWhite}>Tornozelo 24°</Text>
-        </View>
-      </View>
+      </GestureDetector>
 
       {/* top bar */}
       <SafeAreaView edges={["top"]} style={styles.topSafe} pointerEvents="box-none">
@@ -95,11 +193,19 @@ export default function AnalysisScreen() {
             <ChevronLeft size={19} color="#fff" strokeWidth={2.2} />
           </Pressable>
           <View style={{ flex: 1, minWidth: 0 }}>
-            <Text style={styles.tn} numberOfLines={1}>Carla Ferreira</Text>
-            <Text style={styles.ts}>Agachamento · 02/06 · Sessão 12</Text>
+            <Text style={styles.tn} numberOfLines={1}>Análise</Text>
+            <Text style={styles.ts}>Biomecânica</Text>
           </View>
-          <Pressable style={styles.roundBtn} onPress={() => router.push("/biomecanica/comparison" as never)} hitSlop={6}>
-            <GitCompare size={19} color="#fff" strokeWidth={2.2} />
+          <Pressable style={styles.roundBtn} onPress={() => {
+            if (mode === "goniometer") {
+              setPoints([]);
+              setMode("view");
+            } else {
+              setMode("goniometer");
+              player?.pause();
+            }
+          }} hitSlop={6}>
+            {mode === "goniometer" ? <Eraser size={19} color="#fff" strokeWidth={2.2} /> : <PenTool size={19} color="#fff" strokeWidth={2.2} />}
           </Pressable>
           <Pressable style={styles.roundBtn} hitSlop={6}>
             <Share2 size={19} color="#fff" strokeWidth={2.2} />
@@ -133,11 +239,14 @@ export default function AnalysisScreen() {
           <View style={styles.ctlRow}>
             <Text style={styles.timecode}>00:04.21 / 00:10.05</Text>
             <View style={{ flex: 1 }} />
-            <Pressable style={styles.ctlBtn}><Rewind size={18} color="#fff" strokeWidth={2.2} /></Pressable>
-            <Pressable style={styles.play} onPress={() => setPlaying((p) => !p)}>
+            <Pressable style={styles.ctlBtn} onPress={() => player?.seekBy(-5)}><Rewind size={18} color="#fff" strokeWidth={2.2} /></Pressable>
+            <Pressable style={styles.play} onPress={() => {
+              if (playing) { player?.pause(); setPlaying(false); }
+              else { player?.play(); setPlaying(true); }
+            }}>
               {playing ? <Pause size={26} color={bio.primary} strokeWidth={2.4} /> : <Play size={26} color={bio.primary} strokeWidth={2.4} />}
             </Pressable>
-            <Pressable style={styles.ctlBtn}><FastForward size={18} color="#fff" strokeWidth={2.2} /></Pressable>
+            <Pressable style={styles.ctlBtn} onPress={() => player?.seekBy(5)}><FastForward size={18} color="#fff" strokeWidth={2.2} /></Pressable>
             <View style={styles.speed}><Text style={styles.speedText}>0.5×</Text></View>
           </View>
         </View>
@@ -212,9 +321,19 @@ export default function AnalysisScreen() {
               />
               <View style={styles.noteFoot}>
                 <Text style={styles.noteTime}>marcador 00:04.21</Text>
-                <Pressable style={styles.save}>
-                  <Check size={14} color="#fff" strokeWidth={2.6} />
-                  <Text style={styles.saveText}>Salvar nota</Text>
+                <Pressable 
+                  style={[styles.save, saving && { opacity: 0.7 }]} 
+                  onPress={handleSave} 
+                  disabled={saving}
+                >
+                  {saving ? (
+                    <ActivityIndicator size="small" color="#fff" />
+                  ) : (
+                    <>
+                      <Check size={14} color="#fff" strokeWidth={2.6} />
+                      <Text style={styles.saveText}>Salvar nota</Text>
+                    </>
+                  )}
                 </Pressable>
               </View>
             </View>

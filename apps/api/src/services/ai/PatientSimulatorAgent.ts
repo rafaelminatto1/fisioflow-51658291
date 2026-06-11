@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { callAI } from "../../lib/ai/callAI";
 import type { Env } from "../../types/env";
+import { Resource, ResourceSearchService } from "./ResourceSearchService";
 
 export interface SimulatorProfile {
   age: number;
@@ -14,6 +15,7 @@ export interface SimulationResult {
   simulatedMessage: string;
   internalThoughtProcess: string;
   safetyTriggered: boolean;
+  suggestedResources?: Resource[];
 }
 
 export interface SimulationEvaluationResult {
@@ -117,7 +119,30 @@ export class PatientSimulatorAgent {
     profile: SimulatorProfile,
     chatHistory: { role: string; content: string }[],
     clinicianLastMessage: string,
+    organizationId: string = "system"
   ): Promise<SimulationResult> {
+    // 1. Detecção de intenção clínica (devemos sugerir recursos?)
+    let suggestedResources: Resource[] = [];
+    const lowerMessage = clinicianLastMessage.toLowerCase();
+    const clinicalIntentPatterns = [
+        "qual teste", "o que avaliar", "que exercicio", "qual exercício", 
+        "qual conduta", "que protocolo", "qual protocolo", "o que fazer"
+    ];
+    
+    const hasClinicalIntent = clinicalIntentPatterns.some(p => lowerMessage.includes(p));
+
+    if (hasClinicalIntent) {
+        try {
+            const searchService = new ResourceSearchService(this.env);
+            suggestedResources = await searchService.searchResources(clinicianLastMessage, organizationId, {
+                patientCondition: profile.condition,
+                painLevel: profile.painLevel
+            });
+        } catch (err) {
+            console.warn("[PatientSimulator] Failed to fetch resources:", err);
+        }
+    }
+
     const prompt = `You are a Patient Simulator for a physiotherapy application.
 Your task is to play the role of a patient interacting with a physiotherapist during a clinical evaluation training session.
 You MUST stay in character and respond exactly as this patient would.
@@ -160,34 +185,40 @@ Retorne SOMENTE JSON válido neste formato:
       const aiResult = await callAI(this.env, {
         task: "patient-simulator",
         prompt,
-        organizationId: "system",
+        organizationId,
         responseFormat: "json",
         maxTokens: 800,
       });
 
       const jsonMatch = aiResult.content.match(/\{[\s\S]*\}/);
+      let result: SimulationResult;
+      
       if (!jsonMatch) {
         const content = aiResult.content.trim();
         if (content) {
-          return {
+          result = {
             simulatedMessage: content,
             internalThoughtProcess: "Resposta textual aceita sem JSON estruturado.",
             safetyTriggered: false,
           };
+        } else {
+          result = FALLBACK;
         }
-        return FALLBACK;
+      } else {
+        const parsed = SimulationSchema.safeParse(JSON.parse(jsonMatch[0]));
+        if (!parsed.success) {
+          console.error("[PatientSimulatorAgent] Schema validation failed:", parsed.error.issues);
+          result = FALLBACK;
+        } else {
+          result = parsed.data;
+        }
       }
 
-      const parsed = SimulationSchema.safeParse(JSON.parse(jsonMatch[0]));
-      if (!parsed.success) {
-        console.error("[PatientSimulatorAgent] Schema validation failed:", parsed.error.issues);
-        return FALLBACK;
-      }
-
-      return parsed.data;
+      return { ...result, suggestedResources };
     } catch (error) {
       console.error("[PatientSimulatorAgent] Error generating simulation:", error);
-      return buildLocalSimulatedResponse(profile, chatHistory, clinicianLastMessage);
+      const local = buildLocalSimulatedResponse(profile, chatHistory, clinicianLastMessage);
+      return { ...local, suggestedResources };
     }
   }
 

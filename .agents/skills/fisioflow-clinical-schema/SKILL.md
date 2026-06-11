@@ -192,7 +192,7 @@ appointments N:1 patients
 appointments 1:1 sessions (via sessions.appointmentId)
 ```
 
-### sessions (SOAP Evolution - RF01.3)
+### sessions (Observação Livre Evolution - RF01.3)
 
 ```
 sessions
@@ -371,7 +371,7 @@ Simpler clinical tables, some with Portuguese column names:
 | `clinical_test_templates`                              | Special test definitions with fields_definition                               |
 | `standardized_test_results`                            | Standardized test/scale results                                               |
 | `pain_maps` + `pain_map_points`                        | Body pain mapping with coordinates                                            |
-| `evolution_templates`                                  | SOAP evolution templates                                                      |
+| `evolution_templates`                                  | Observação Livre evolution templates                                                      |
 | `exercise_prescriptions`                               | Home exercise programs with QR codes                                          |
 | `patient_objectives` + `patient_objective_assignments` | Objective library and patient assignments                                     |
 
@@ -405,7 +405,7 @@ Simpler clinical tables, some with Portuguese column names:
 
 ### AI Studio (`ai_studio.ts`)
 
-`clinicalScribeLogs` — AI SOAP section formatting logs.
+`clinicalScribeLogs` — AI Observação Livre section formatting logs.
 
 ### Templates (`templates.ts`)
 
@@ -528,7 +528,7 @@ const conflicts = await db
   );
 ```
 
-### Session with SOAP data and attachments
+### Session with Observação Livre data and attachments
 
 ```ts
 const session = await db.query.sessions.findFirst({

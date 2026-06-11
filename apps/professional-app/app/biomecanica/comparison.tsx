@@ -1,10 +1,12 @@
-import { useState } from "react";
-import { View, Text, ScrollView, Pressable, StyleSheet, type DimensionValue } from "react-native";
+import { useEffect, useMemo, useState } from "react";
+import { ActivityIndicator, View, Text, ScrollView, Pressable, StyleSheet, type DimensionValue } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import Svg, { Circle, Path, Ellipse } from "react-native-svg";
 import { ChevronLeft, FileText, ChevronDown, Play, AlertTriangle, TrendingUp } from "lucide-react-native";
 import { bio, font } from "@/constants/biomecanica";
+import { biomechanicsApi, type BiomechanicsComparison } from "@/lib/api/biomechanics";
+import { differenceInWeeks } from "date-fns";
 
 type JL = { text: string; tone: "primary" | "warn" | "crit" | "ok" | "mute"; top: DimensionValue; left: DimensionValue; alert?: boolean };
 
@@ -55,6 +57,23 @@ const JL_FG: Record<JL["tone"], string> = {
   primary: "#fff", warn: "hsl(35,70%,18%)", crit: "#fff", ok: "#fff", mute: "#fff",
 };
 const RO_COLOR: Record<string, string> = { crit: "hsl(0,72%,45%)", warn: "hsl(35,92%,38%)", ok: "hsl(158,64%,30%)" };
+
+function formatMetricValue(value: number | null, unit: string) {
+  if (value == null) return "-";
+  if (unit === "%") return `${Math.round(value)}%`;
+  if (unit === "deg") return `${Math.round(value)}°`;
+  if (unit === "/10") return `${value}/10`;
+  return `${value}${unit ? ` ${unit}` : ""}`;
+}
+
+function formatMetricDelta(delta: number | null, unit: string) {
+  if (delta == null) return "novo";
+  const rounded = Math.abs(delta) >= 10 ? delta.toFixed(0) : delta.toFixed(1);
+  const sign = delta > 0 ? "+" : "";
+  if (unit === "deg") return `${sign}${rounded}°`;
+  if (unit === "%") return `${sign}${rounded} p.p.`;
+  return `${sign}${rounded}`;
+}
 
 function Panel({ which }: { which: "antes" | "depois" }) {
   const p = PANELS[which];
@@ -109,7 +128,62 @@ function Panel({ which }: { which: "antes" | "depois" }) {
 
 export default function ComparisonScreen() {
   const router = useRouter();
+  const { patientId, patientName, fromAssessmentId, toAssessmentId, type } = useLocalSearchParams<{
+    patientId?: string;
+    patientName?: string;
+    fromAssessmentId?: string;
+    toAssessmentId?: string;
+    type?: string;
+  }>();
   const [tab, setTab] = useState<"antes" | "depois">("depois");
+  const [comparison, setComparison] = useState<BiomechanicsComparison | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (!patientId) return;
+
+    let mounted = true;
+    setLoading(true);
+    biomechanicsApi
+      .getComparison(patientId, { fromAssessmentId, toAssessmentId, type })
+      .then((response) => {
+        if (mounted) setComparison(response.data);
+      })
+      .catch(() => {
+        if (mounted) setComparison(null);
+      })
+      .finally(() => {
+        if (mounted) setLoading(false);
+      });
+
+    return () => {
+      mounted = false;
+    };
+  }, [fromAssessmentId, patientId, toAssessmentId, type]);
+
+  const variation = useMemo(() => {
+    if (!comparison?.metrics?.length) return VARIATION;
+    return comparison.metrics.map((metric) => ({
+      name: metric.label,
+      sub: metric.lowerIsBetter ? "menor = melhor" : "maior = melhor",
+      s03: formatMetricValue(metric.fromValue, metric.unit),
+      s12: formatMetricValue(metric.toValue, metric.unit),
+      change: formatMetricDelta(metric.delta, metric.unit),
+      up: metric.direction !== "worse",
+    }));
+  }, [comparison]);
+
+  const reportParams = {
+    assessmentId: comparison?.to.id ?? toAssessmentId,
+    patientId,
+    patientName,
+    comparisonAssessmentId: comparison?.from?.id ?? fromAssessmentId,
+  };
+
+  const intervalWeeks = useMemo(() => {
+    if (!comparison?.from?.date || !comparison?.to?.date) return 8;
+    return differenceInWeeks(new Date(comparison.to.date), new Date(comparison.from.date));
+  }, [comparison]);
 
   return (
     <View style={styles.root}>
@@ -120,9 +194,20 @@ export default function ComparisonScreen() {
           </Pressable>
           <View style={{ flex: 1 }}>
             <Text style={styles.tn}>Comparar sessões</Text>
-            <Text style={styles.ts}>Carla Ferreira · agachamento</Text>
+            <Text style={styles.ts}>
+              {patientName || "Paciente"} · {type || comparison?.to.type || "biomecanica"}
+            </Text>
           </View>
-          <Pressable style={styles.roundBtn} onPress={() => router.push("/biomecanica/report" as never)} hitSlop={6}>
+          <Pressable
+            style={styles.roundBtn}
+            onPress={() =>
+              router.push({
+                pathname: "/biomecanica/report",
+                params: reportParams,
+              } as never)
+            }
+            hitSlop={6}
+          >
             <FileText size={18} color={bio.fg} strokeWidth={2.2} />
           </Pressable>
         </View>
@@ -132,19 +217,19 @@ export default function ComparisonScreen() {
           <Pressable style={[styles.sessCard, styles.sessBefore]}>
             <Text style={styles.sessL}>Antes · S03</Text>
             <View style={styles.sessV}>
-              <Text style={styles.sessVText}>17 mar</Text>
+              <Text style={styles.sessVText}>{comparison?.from?.label ?? "17 mar"}</Text>
               <ChevronDown size={15} color={bio.muted} strokeWidth={2.2} />
             </View>
             <Text style={styles.sessSub}>Avaliação inicial</Text>
           </Pressable>
           <View style={styles.sessGap}>
             <Text style={styles.vs}>VS</Text>
-            <Text style={styles.wk}>8 sem</Text>
+            <Text style={styles.wk}>{intervalWeeks} sem</Text>
           </View>
           <Pressable style={[styles.sessCard, styles.sessAfter]}>
             <Text style={styles.sessL}>Depois · S12</Text>
             <View style={styles.sessV}>
-              <Text style={styles.sessVText}>02 jun</Text>
+              <Text style={styles.sessVText}>{comparison?.to.label ?? "02 jun"}</Text>
               <ChevronDown size={15} color={bio.muted} strokeWidth={2.2} />
             </View>
             <Text style={styles.sessSub}>Reavaliação</Text>
@@ -167,9 +252,15 @@ export default function ComparisonScreen() {
       </SafeAreaView>
 
       <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+        {loading ? (
+          <View style={styles.loading}>
+            <ActivityIndicator color={bio.primary} />
+            <Text style={styles.loadingText}>Carregando comparativo real...</Text>
+          </View>
+        ) : null}
         <Panel which={tab} />
 
-        <Text style={styles.blockLabel}>Variação em 8 semanas</Text>
+        <Text style={styles.blockLabel}>Variação em {intervalWeeks} semanas</Text>
         <View style={styles.verdict}>
           <View style={styles.vh}>
             <TrendingUp size={14} color="hsl(158,64%,22%)" strokeWidth={2.4} />
@@ -188,8 +279,8 @@ export default function ComparisonScreen() {
             <Text style={[styles.vc, styles.vcHead, styles.vcNum]}>S12</Text>
             <Text style={[styles.vc, styles.vcHead, styles.vcChange]}>Δ</Text>
           </View>
-          {VARIATION.map((r, i) => (
-            <View key={r.name} style={[styles.varRow, i > 0 && styles.varBorder]}>
+          {variation.map((r, i) => (
+            <View key={`${r.name}-${i}`} style={[styles.varRow, i > 0 && styles.varBorder]}>
               <View style={{ flex: 1 }}>
                 <Text style={styles.vName}>{r.name}</Text>
                 <Text style={styles.vSub}>{r.sub}</Text>
@@ -232,6 +323,8 @@ const styles = StyleSheet.create({
   tabText: { fontSize: 13, fontFamily: font.extrabold, color: bio.muted },
 
   scroll: { paddingHorizontal: 16, paddingTop: 14, paddingBottom: 24 },
+  loading: { flexDirection: "row", alignItems: "center", gap: 8, paddingVertical: 10 },
+  loadingText: { fontSize: 12, fontFamily: font.bold, color: bio.muted },
   vidHead: { flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 10 },
   vidTag: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999 },
   vidTagBefore: { backgroundColor: "hsl(220,14%,90%)" },

@@ -75,7 +75,7 @@ Usamos **Conventional Commits** para garantir consistência:
 | -------------- | ------------------------ |
 | `patients`     | Gestão de Pacientes      |
 | `schedule`     | Agendamento              |
-| `evolution`    | Evolução Clínica (SOAP)  |
+| `evolution`    | Evolução Clínica (Observação Livre)  |
 | `exercises`    | Biblioteca de Exercícios |
 | `telemedicine` | Telemedicina             |
 | `reports`      | Relatórios               |

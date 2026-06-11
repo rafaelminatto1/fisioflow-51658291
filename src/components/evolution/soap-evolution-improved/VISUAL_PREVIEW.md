@@ -23,8 +23,8 @@
 |                                          |
 |  [====●====]  Slider                    |
 +------------------------------------------+
-|  SOAP CARD                                |
-|  [Registro SOAP]              [75%]      |
+|  Observação Livre CARD                                |
+|  [Registro Observação Livre]              [75%]      |
 |  [█████████████░░░░] Progress Bar        |
 |                                          |
 |  [S] Subjetivo              [✓]          |
@@ -120,7 +120,7 @@
 - Status dot: 8px circle, success color
 - Shadow: Subtle (2px offset, 0.05 opacity)
 
-### SOAP Letter Badge
+### Observação Livre Letter Badge
 
 - Size: 32px circle
 - Font: 16px, weight 800, white

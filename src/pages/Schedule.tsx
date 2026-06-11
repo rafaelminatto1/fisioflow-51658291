@@ -95,29 +95,14 @@ export default function Schedule() {
 		) as string[];
 	}, [appointments]);
 
-	const painQueries = useQueries({
-		queries: uniquePatientIds.map((id) => ({
-			queryKey: ["painRecords", id],
-			queryFn: () => PatientService.getPainRecords(id),
-			staleTime: 5 * 60 * 1000,
-		})),
-	});
-
+	// TODO: Mover a flag de has_high_pain_alert para o backend (payload do appointment)
+	// Para evitar N+1 requests (ex: 50 pacientes = 50 requests) ao carregar a agenda.
 	const enrichedAppointments = useMemo(() => {
-		const highPainMap = new Map<string, boolean>();
-		painQueries.forEach((q, index) => {
-			if (q.data) {
-				const hasHigh = q.data.some((record) => record.level > 7);
-				highPainMap.set(uniquePatientIds[index], hasHigh);
-			}
-		});
-
 		return appointments.map((a: any) => ({
 			...a,
-			has_high_pain_alert:
-				highPainMap.get(a.patient_id || a.patientId) || false,
+			has_high_pain_alert: false,
 		}));
-	}, [appointments, painQueries, uniquePatientIds]);
+	}, [appointments]);
 
 	const viewType = viewParam;
 	const patientFilter = patientParam || "";
@@ -323,57 +308,54 @@ export default function Schedule() {
 									/>
 								}
 							>
-								{isNavigating ? (
-									<CalendarSkeletonEnhanced
-										viewType={viewType as CalendarViewType}
-									/>
-								) : (
-									<ScheduleCalendar
-										appointments={enrichedAppointments as any}
-										tarefas={tarefas ?? []}
-										currentDate={currentDate}
-										onDateChange={handleDateChange}
-										viewType={viewType}
-										onViewTypeChange={handleViewTypeChange}
-										onTimeSlotClick={handleTimeSlotClick}
-										onAppointmentReschedule={(id, start) => {
-											const appointment = appointments.find((a) => a.id === id);
-											if (!appointment) return;
-											const match = start.match(
-												/^(\d{4}-\d{2}-\d{2})(?:[T\s](\d{2}:\d{2}))?/,
+								{/* O ScheduleCalendar NUNCA deve ser desmontado durante a navegação. 
+								    O React Query e o Suspense cuidarão do loading, mas o DOM do calendário persiste 
+								    (graças ao keepPreviousData), evitando repintar todo o grid e travar o navegador. */}
+								<ScheduleCalendar
+									appointments={enrichedAppointments as any}
+									tarefas={tarefas ?? []}
+									currentDate={currentDate}
+									onDateChange={handleDateChange}
+									viewType={viewType}
+									onViewTypeChange={handleViewTypeChange}
+									onTimeSlotClick={handleTimeSlotClick}
+									onAppointmentReschedule={(id, start) => {
+										const appointment = appointments.find((a) => a.id === id);
+										if (!appointment) return;
+										const match = start.match(
+											/^(\d{4}-\d{2}-\d{2})(?:[T\s](\d{2}:\d{2}))?/,
+										);
+										if (match)
+											actions.handleAppointmentReschedule(
+												appointment,
+												parseLocalDate(match[1]),
+												match[2] || "",
 											);
-											if (match)
-												actions.handleAppointmentReschedule(
-													appointment,
-													parseLocalDate(match[1]),
-													match[2] || "",
-												);
-										}}
-										onEditAppointment={(id) => {
-											const appointment = appointments.find((a) => a.id === id);
-											if (appointment)
-												actions.handleEditAppointment(appointment);
-										}}
-										onDeleteAppointment={(id) => {
-											const appointment = appointments.find((a) => a.id === id);
-											if (appointment)
-												actions.handleDeleteAppointment(appointment);
-										}}
-										onStatusChange={actions.handleUpdateStatus}
-										isSelectionMode={isSelectionMode}
-										selectedIds={selectedIds}
-										onToggleSelection={toggleSelection}
-										onCreateAppointment={actions.handleCreateAppointment}
-										onToggleSelectionMode={toggleSelectionMode}
-										filters={filters}
-										onFiltersChange={handleFiltersChange}
-										onClearFilters={clearFilters}
-										totalAppointmentsCount={appointments.length}
-										patientFilter={patientFilter}
-										onPatientFilterChange={handlePatientFilterChange}
-										therapists={therapists}
-									/>
-								)}
+									}}
+									onEditAppointment={(id) => {
+										const appointment = appointments.find((a) => a.id === id);
+										if (appointment)
+											actions.handleEditAppointment(appointment);
+									}}
+									onDeleteAppointment={(id) => {
+										const appointment = appointments.find((a) => a.id === id);
+										if (appointment)
+											actions.handleDeleteAppointment(appointment);
+									}}
+									onStatusChange={actions.handleUpdateStatus}
+									isSelectionMode={isSelectionMode}
+									selectedIds={selectedIds}
+									onToggleSelection={toggleSelection}
+									onCreateAppointment={actions.handleCreateAppointment}
+									onToggleSelectionMode={toggleSelectionMode}
+									filters={filters}
+									onFiltersChange={handleFiltersChange}
+									onClearFilters={clearFilters}
+									totalAppointmentsCount={appointments.length}
+									patientFilter={patientFilter}
+									onPatientFilterChange={handlePatientFilterChange}
+									therapists={therapists}
+								/>
 							</Suspense>
 						</div>
 					</div>

@@ -58,16 +58,63 @@ export default function ChatDetailScreen() {
     [id, user?.id],
   );
 
+  const ws = useRef<WebSocket | null>(null);
+  const reconnectAttempts = useRef(0);
+
+  const connectWebSocket = useCallback(() => {
+    if (ws.current) {
+      ws.current.close();
+    }
+    
+    // API endpoint per task instructions
+    const socket = new WebSocket('wss://api-pro.moocafisio.com.br/api/messaging/ws');
+    
+    socket.onopen = () => {
+      console.log("WebSocket connected");
+      reconnectAttempts.current = 0;
+    };
+    
+    socket.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        if (data.type === "new_message" || data.conversationId === id) {
+          fetchMessages();
+        }
+      } catch (e) {
+        console.error("Error parsing WS message", e);
+      }
+    };
+    
+    socket.onclose = () => {
+      console.log("WebSocket closed. Reconnecting...");
+      if (reconnectAttempts.current < 10) {
+        const timeout = Math.min(10000, 1000 * Math.pow(2, reconnectAttempts.current));
+        setTimeout(() => {
+          reconnectAttempts.current += 1;
+          connectWebSocket();
+        }, timeout);
+      }
+    };
+    
+    socket.onerror = (e) => {
+      console.error("WebSocket error", e);
+    };
+
+    ws.current = socket;
+  }, [id, fetchMessages]);
+
   useEffect(() => {
     fetchMessages(true);
     markAsRead(id).catch(console.error);
 
-    const interval = setInterval(() => {
-      fetchMessages();
-    }, 5000);
+    connectWebSocket();
 
-    return () => clearInterval(interval);
-  }, [fetchMessages, id]);
+    return () => {
+      if (ws.current) {
+        ws.current.close();
+      }
+    };
+  }, [fetchMessages, id, connectWebSocket]);
 
   const handleSend = async () => {
     if (!inputText.trim() || isSending) return;

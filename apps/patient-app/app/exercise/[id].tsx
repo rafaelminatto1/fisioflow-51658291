@@ -403,12 +403,7 @@ export default function ExerciseDetailScreen() {
             title="Iniciar Biofeedback com Câmera"
             onPress={() => {
               Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-              Alert.alert(
-                "Motion Vision",
-                "O rastreamento de movimento por IA ajudará você a manter a forma correta durante este exercício.",
-              );
-              // This would navigate to a specialized Camera screen
-              // router.push(`/exercise/vision/${exerciseId}`);
+              router.push(`/exercise/vision/${exerciseId}`);
             }}
             variant="outline"
             style={{ borderColor: colors.primary, borderWidth: 2 }}

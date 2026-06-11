@@ -7,7 +7,7 @@
  * @version 1.0.0 - Library Mode Migration
  */
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo } from "react";
 import { toast } from "sonner";
 import { appointmentsApi } from "@/api/v2/appointments";
@@ -182,8 +182,9 @@ export function useSchedulePageData(date: string, view: ViewType, filters?: Sche
         throw error;
       }
     },
-    staleTime: 0, // Refetch imediato após mudanças
+    staleTime: 1000 * 60 * 5, // 5 minutos de cache para navegação rápida
     gcTime: 1000 * 60 * 5,
+    placeholderData: keepPreviousData,
   });
 
   const { data: therapists = [], isLoading: isLoadingTherapists } = useQuery({
@@ -214,7 +215,7 @@ export function useSchedulePageData(date: string, view: ViewType, filters?: Sche
         return [];
       }
     },
-    staleTime: 0, // Refetch imediato após mudanças
+    staleTime: 1000 * 60 * 5, // 5 minutos
     gcTime: 1000 * 60 * 5,
   });
 
