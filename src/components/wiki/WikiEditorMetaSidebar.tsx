@@ -23,9 +23,11 @@ export function WikiEditorMetaSidebar({
   category,
   tags,
   page,
+  clinicalMetadata,
   onPublishedChange,
   onCategoryChange,
   onTagsChange,
+  onClinicalMetadataChange,
 }: {
   isPublished: boolean;
   category: string;
