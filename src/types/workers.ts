@@ -18,8 +18,11 @@ export interface Exercise {
   durationSeconds: number | null;
   duration?: number | null;
   description: string | null;
+  instructions?: string | null;
   sets?: number | null;
+  setsRecommended?: number | null;
   repetitions?: number | null;
+  repsRecommended?: number | null;
   indicated_pathologies?: string[] | null;
   contraindicated_pathologies?: string[] | null;
   scientific_references?: string | null;
