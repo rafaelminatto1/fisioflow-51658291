@@ -4,6 +4,7 @@ import type { Env } from "../../types/env";
 import type { AuthVariables } from "../../lib/auth";
 import { requireAuth } from "../../lib/auth";
 import { getRawSql } from "../../lib/db";
+import { WORKERS_AI_MODELS } from "../../lib/workersAi";
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
@@ -34,7 +35,7 @@ app.get("/", requireAuth, async (c) => {
 
   try {
     // 1. Gerar embedding para a query semântica
-    const aiResponse = await c.env.AI.run("@cf/baai/bge-m3", {
+    const aiResponse = await c.env.AI.run(WORKERS_AI_MODELS.embeddings_bge_m3, {
       text: [q],
     });
 
@@ -43,10 +44,6 @@ app.get("/", requireAuth, async (c) => {
 
     // 2. Busca no Neon usando pgvector e filtros SQL
     const sql = getRawSql(c.env, "read");
-
-    // Nota: Como o helper rawSql é limitado, construímos a query com os filtros opcionais
-    // Se minPain ou maxPain forem fornecidos, adicionamos à cláusula WHERE.
-    // Para simplificar e manter a segurança, usamos condicionais no SQL.
 
     const results = await sql`
       SELECT

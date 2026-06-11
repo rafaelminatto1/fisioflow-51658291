@@ -78,6 +78,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="groups"
         options={{
+          href: null,
           title: "Turmas",
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="layers-outline" size={size} color={color} />
