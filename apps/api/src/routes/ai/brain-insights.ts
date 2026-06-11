@@ -60,30 +60,38 @@ app.get("/:patientId", requireAuth, async (c) => {
 
     // 3. Gerar Insights via LLM (Llama 3.1)
     const prompt = `
-      Você é o FisioFlow Brain, um assistente de raciocínio clínico de elite.
-      Analise o histórico do paciente abaixo e gere 3 insights estruturados (JSON) para o fisioterapeuta.
+      Você é o FisioFlow Brain, um assistente de raciocínio clínico especializado em fisioterapia ortopédica e esportiva.
+      Analise o histórico do paciente abaixo e gere 3 insights técnicos e acionáveis para o fisioterapeuta.
 
-      PACIENTE: ${patient.full_name}
-      DIAGNÓSTICO: ${patient.main_diagnosis || "Não informado"}
+      DADOS DO PACIENTE:
+      - Nome: ${patient.full_name}
+      - Diagnóstico Principal: ${patient.main_diagnosis || "Não informado"}
       
-      CONTEXTO CLÍNICO RECENTE:
+      CONTEXTO CLÍNICO RECENTE (Últimas Sessões/Biomecânica/Exercícios Casa):
       ${JSON.stringify(context)}
 
-      LITERATURA CIENTÍFICA RELEVANTE:
-      ${literatureContext}
+      LITERATURA CIENTÍFICA E PROTOCOLO DE REFERÊNCIA:
+      ${literatureContext || "Use conhecimentos padrão de fisioterapia baseada em evidências."}
 
-      REGRAS:
-      1. Insight 1 deve focar em PROGRESSO ou PLATÔ (ex: Amplitude, Dor).
-      2. Insight 2 deve focar em RECOMENDAÇÃO TÉCNICA ou EXERCÍCIO (baseado em evidência ou casos de sucesso).
-      3. Insight 3 deve focar em ADESÃO ou ALERTA (baseado em exercícios de casa).
-      
-      Responda APENAS em JSON no formato:
+      REQUISITOS DOS INSIGHTS:
+      1. INSIGHT DE EVOLUÇÃO: Analise a tendência de Dor vs. ROM. Identifique platôs ou ganhos significativos.
+      2. RECOMENDAÇÃO TÉCNICA: Sugira uma progressão de carga, alteração de técnica manual ou novo exercício baseado no estágio atual.
+      3. ALERTA DE COMPLIANCE: Analise a frequência e qualidade dos exercícios domiciliares e sugira uma abordagem de engajamento.
+
+      CITE AS FONTES: Sempre que possível, refira-se a sessões específicas pela data ou à literatura fornecida.
+
+      Responda EXCLUSIVAMENTE em JSON:
       {
         "insights": [
-          { "type": "plateau|progress", "title": "...", "description": "...", "severity": "low|medium|high" },
-          ...
+          { 
+            "type": "plateau|progress|alert", 
+            "title": "...", 
+            "description": "...", 
+            "severity": "low|medium|high",
+            "citation": "Ex: Baseado na sessão de 10/05 ou Guia ASSET"
+          }
         ],
-        "summary": "Resumo clínico de uma frase."
+        "summary": "Resumo clínico executivo de uma frase."
       }
     `;
 

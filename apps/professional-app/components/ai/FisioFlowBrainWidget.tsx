@@ -12,13 +12,14 @@ import { Ionicons } from "@expo/vector-icons";
 import { useColors } from "@/hooks/useColorScheme";
 import { useQuery } from "@tanstack/react-query";
 import { fetchApi } from "@/lib/api";
-import Animated, { FadeIn, FadeInDown } from "react-native-reanimated";
+import Animated, { FadeIn } from "react-native-reanimated";
 
 interface Insight {
   type: "plateau" | "progress" | "alert";
   title: string;
   description: string;
   severity: "low" | "medium" | "high";
+  citation?: string;
 }
 
 interface BrainResponse {
@@ -30,7 +31,7 @@ export function FisioFlowBrainWidget({ patientId }: { patientId: string }) {
   const colors = useColors();
   const [expanded, setExpanded] = useState(true);
 
-  const { data, isLoading, isError, refetch } = useQuery<BrainResponse>({
+  const { data, isLoading, isError } = useQuery<BrainResponse>({
     queryKey: ["brain-insights", patientId],
     queryFn: async () => {
       const res = await fetchApi<any>(`/api/ai/brain/insights/${patientId}`);
@@ -109,6 +110,11 @@ export function FisioFlowBrainWidget({ patientId }: { patientId: string }) {
                 <Text style={[styles.insightDesc, { color: colors.textSecondary }]} numberOfLines={2}>
                   {insight.description}
                 </Text>
+                {insight.citation && (
+                  <Text style={[styles.citation, { color: colors.textMuted }]}>
+                    {insight.citation}
+                  </Text>
+                )}
               </View>
             ))}
           </ScrollView>
@@ -171,6 +177,7 @@ const styles = StyleSheet.create({
     padding: 12,
     borderRadius: 12,
     borderWidth: 1,
+    minHeight: 100,
   },
   insightHeader: {
     flexDirection: "row",
@@ -185,6 +192,12 @@ const styles = StyleSheet.create({
   insightDesc: {
     fontSize: 12,
     lineHeight: 18,
+    marginBottom: 4,
+  },
+  citation: {
+    fontSize: 10,
+    fontStyle: "italic",
+    marginTop: "auto",
   },
   chatBtn: {
     flexDirection: "row",
