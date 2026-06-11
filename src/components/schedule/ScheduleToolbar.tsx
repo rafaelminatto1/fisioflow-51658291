@@ -150,14 +150,14 @@ export const ScheduleToolbar: React.FC<ScheduleToolbarProps> = ({
 
   // Desktop — 3 zonas: navegação (esq) · seletor de visão (centro) · ações (dir)
   const DesktopToolbar = () => (
-    <div className="flex items-center gap-4 px-3 py-1.5 border-b border-border bg-background sticky top-0 z-40">
+    <div className="flex items-center gap-4 px-3 py-1.5 border-b border-border bg-background/80 backdrop-blur-md sticky top-0 z-40">
       {/* Esquerda: navegação de data */}
       <div className="flex items-center gap-2">
         <Button
           variant="outline"
           size="sm"
           onClick={() => onDateChange(getAdjustedToday())}
-          className="h-8 px-3 rounded-lg font-bold text-[10px] uppercase tracking-widest"
+          className="h-8 px-3 rounded-lg font-bold text-[10px] uppercase tracking-widest shadow-sm"
         >
           Hoje
         </Button>
@@ -167,7 +167,7 @@ export const ScheduleToolbar: React.FC<ScheduleToolbarProps> = ({
             variant="ghost"
             size="icon"
             onClick={() => handleNavigate("prev")}
-            className="h-8 w-8 p-0 rounded-md"
+            className="h-8 w-8 p-0 rounded-md hover:bg-muted/80 transition-colors"
             aria-label="Período anterior"
           >
             <ChevronLeft className="w-4 h-4" />
@@ -176,7 +176,7 @@ export const ScheduleToolbar: React.FC<ScheduleToolbarProps> = ({
             variant="ghost"
             size="icon"
             onClick={() => handleNavigate("next")}
-            className="h-8 w-8 p-0 rounded-md"
+            className="h-8 w-8 p-0 rounded-md hover:bg-muted/80 transition-colors"
             aria-label="Próximo período"
           >
             <ChevronRight className="w-4 h-4" />
@@ -186,7 +186,7 @@ export const ScheduleToolbar: React.FC<ScheduleToolbarProps> = ({
         <SmartDatePicker
           date={currentDate}
           onChange={(date) => date && onDateChange(date)}
-          className="h-9 px-2 border-none bg-transparent hover:bg-muted font-bold text-sm tracking-tight min-w-[150px] capitalize"
+          className="h-9 px-2 border-none bg-transparent hover:bg-muted/50 font-bold text-sm tracking-tight min-w-[150px] capitalize transition-colors"
           placeholder={formattedDateRange}
           enableManualInput={false}
         />
@@ -196,11 +196,11 @@ export const ScheduleToolbar: React.FC<ScheduleToolbarProps> = ({
       <div className="flex flex-1 justify-center">
         {renderViewSwitcher({
           activeClassName: "bg-primary text-primary-foreground shadow-sm",
-          idleClassName: "text-muted-foreground hover:text-foreground hover:bg-background",
+          idleClassName: "text-muted-foreground hover:text-foreground hover:bg-background/50",
           containerClassName:
-            "flex items-center gap-1 bg-muted p-1 rounded-xl border border-border",
+            "flex items-center gap-1 bg-muted/50 p-1 rounded-xl border border-border/50",
           buttonClassName:
-            "h-7 px-4 rounded-lg font-bold text-[10px] uppercase tracking-widest transition-colors",
+            "h-7 px-4 rounded-lg font-bold text-[10px] uppercase tracking-widest transition-all",
         })}
       </div>
 
@@ -212,7 +212,7 @@ export const ScheduleToolbar: React.FC<ScheduleToolbarProps> = ({
             onChange={(event) => onPatientFilterChange(event.target.value)}
             placeholder="Buscar paciente"
             aria-label="Buscar paciente"
-            className="h-9 pr-9"
+            className="h-9 pr-9 bg-muted/30 focus-visible:bg-background transition-colors"
           />
           {patientFilter ? (
             <Button
@@ -220,7 +220,7 @@ export const ScheduleToolbar: React.FC<ScheduleToolbarProps> = ({
               size="icon"
               onClick={() => onPatientFilterChange("")}
               aria-label="Limpar busca de paciente"
-              className="absolute right-1 top-1/2 h-7 w-7 -translate-y-1/2"
+              className="absolute right-1 top-1/2 h-7 w-7 -translate-y-1/2 text-muted-foreground hover:text-foreground"
             >
               <X className="w-4 h-4" />
             </Button>
@@ -236,11 +236,11 @@ export const ScheduleToolbar: React.FC<ScheduleToolbarProps> = ({
           therapists={therapists}
         />
 
-        <ScheduleConfigIconButton className="h-9 w-9 rounded-lg border border-border bg-background text-muted-foreground hover:bg-muted hover:text-primary transition-colors" />
+        <ScheduleConfigIconButton className="h-9 w-9 rounded-lg border border-border/50 bg-background/50 text-muted-foreground hover:bg-muted hover:text-primary transition-colors shadow-sm" />
 
         <Button
           onClick={onCreateAppointment}
-          className="h-9 px-4 gap-2 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg font-bold text-[11px] uppercase tracking-widest ml-1"
+          className="h-9 px-4 gap-2 bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary text-primary-foreground rounded-lg font-bold text-[11px] uppercase tracking-widest ml-1 shadow-md hover:shadow-lg transition-all"
         >
           <Plus className="w-3.5 h-3.5" />
           Agendar

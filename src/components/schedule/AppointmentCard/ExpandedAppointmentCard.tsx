@@ -63,9 +63,6 @@ export const ExpandedAppointmentCard: React.FC<ExpandedAppointmentCardProps> = (
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, scale: 0.95 }}
       whileHover={{
         y: -4,
         transition: { duration: 0.2, ease: "easeOut" },
@@ -181,9 +178,7 @@ export const ExpandedAppointmentCard: React.FC<ExpandedAppointmentCardProps> = (
 
           <div className="relative h-4 w-full bg-slate-100 dark:bg-slate-800/50 rounded-full overflow-hidden p-1 border border-slate-200/50 dark:border-slate-700/50">
             <motion.div
-              initial={{ width: 0 }}
-              animate={{ width: `${progress}%` }}
-              transition={{ duration: 1.5, ease: "circOut" }}
+              style={{ width: `${progress}%` }}
               className={cn(
                 "absolute top-1 left-1 bottom-1 rounded-full transition-all duration-1000",
                 ongoing
@@ -196,9 +191,6 @@ export const ExpandedAppointmentCard: React.FC<ExpandedAppointmentCardProps> = (
 
         {appointment.notes && (
           <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
             className="mt-10 p-6 rounded-[2rem] bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800/50 flex items-start gap-4 group/notes relative overflow-hidden"
           >
             <div className="absolute top-0 left-0 bottom-0 w-1.5 bg-amber-400/40" />

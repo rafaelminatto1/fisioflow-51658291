@@ -37,6 +37,8 @@ export function StudyMode({ artifact, onClose }: StudyModeProps) {
   ]);
   const [query, setQuery] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
+  const [pageNumber, setPageNumber] = useState(1);
+  const [scale, setScale] = useState(1.2);
   const chatInputRef = useRef<HTMLInputElement>(null);
   const notesRef = useRef<HTMLTextAreaElement>(null);
 
