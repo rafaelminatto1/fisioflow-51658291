@@ -78,8 +78,8 @@ export const IAStudio: React.FC = () => {
       name: "Agent Hub",
       description: "Revisores de SOAP e Simuladores",
       icon: Bot,
-      color: "text-violet-500",
-      bg: "bg-violet-500/10",
+      color: "text-emerald-500",
+      bg: "bg-emerald-500/10",
       action: () => setIsAgentHubOpen(true),
     },
     {
@@ -323,11 +323,11 @@ export const IAStudio: React.FC = () => {
                   <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest">
                     Uso IA (7 dias)
                   </span>
-                  <DollarSign className="w-4 h-4 text-violet-400 opacity-60" />
+                  <DollarSign className="w-4 h-4 text-emerald-400 opacity-60" />
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <span className="text-xl font-black tracking-tighter text-violet-500">
+                    <span className="text-xl font-black tracking-tighter text-emerald-500">
                       {usageData?.totalCalls ?? "—"}
                     </span>
                     <span className="text-[10px] font-semibold text-slate-400 block">chamadas</span>

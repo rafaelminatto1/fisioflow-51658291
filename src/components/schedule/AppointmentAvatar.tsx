@@ -14,7 +14,7 @@ interface AppointmentAvatarProps {
 const getColorFromName = (name: string): string => {
   const colors = [
     "bg-gradient-to-br from-blue-400 to-blue-600",
-    "bg-gradient-to-br from-purple-400 to-purple-600",
+    "bg-gradient-to-br from-emerald-400 to-emerald-600",
     "bg-gradient-to-br from-pink-400 to-pink-600",
     "bg-gradient-to-br from-green-400 to-green-600",
     "bg-gradient-to-br from-yellow-400 to-yellow-600",

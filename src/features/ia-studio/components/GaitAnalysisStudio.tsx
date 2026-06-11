@@ -221,7 +221,7 @@ export const GaitAnalysisStudio: React.FC<GaitAnalysisStudioProps> = ({ isOpen, 
                   >
                     Selecionar Vídeo
                   </Button>
-                  <input
+                  <input aria-label="Input"
                     type="file"
                     hidden
                     ref={fileInputRef}
@@ -357,8 +357,8 @@ export const GaitAnalysisStudio: React.FC<GaitAnalysisStudioProps> = ({ isOpen, 
                   <div className="space-y-3">
                     <div className="flex items-center justify-between p-4 rounded-2xl bg-white/5 border border-white/5">
                       <div className="flex items-center gap-3">
-                        <div className="p-2 bg-violet-500/20 rounded-lg">
-                          <Eye className="w-4 h-4 text-violet-400" />
+                        <div className="p-2 bg-emerald-500/20 rounded-lg">
+                          <Eye className="w-4 h-4 text-emerald-400" />
                         </div>
                         <span className="text-xs font-bold text-slate-200">Esqueleto Neural</span>
                       </div>

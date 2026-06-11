@@ -17,7 +17,7 @@ interface KanbanColumnProps {
 const COLUMN_COLORS: Record<TarefaStatus, { header: string; dot: string }> = {
   A_FAZER: { header: "bg-slate-500/10", dot: "bg-slate-400" },
   EM_PROGRESSO: { header: "bg-blue-500/10", dot: "bg-blue-400" },
-  REVISAO: { header: "bg-purple-500/10", dot: "bg-purple-400" },
+  REVISAO: { header: "bg-emerald-500/10", dot: "bg-emerald-400" },
   CONCLUIDO: { header: "bg-green-500/10", dot: "bg-green-400" },
 };
 

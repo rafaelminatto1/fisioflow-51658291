@@ -981,7 +981,7 @@ export function TaskDetailModal({ open, onOpenChange, tarefa, teamMembers }: Tas
                             <UserCircle className="h-4 w-4 text-blue-500 shrink-0" />
                           )}
                           {tarefa.linked_entity_type === "appointment" && (
-                            <CalendarIcon className="h-4 w-4 text-purple-500 shrink-0" />
+                            <CalendarIcon className="h-4 w-4 text-emerald-500 shrink-0" />
                           )}
                           {tarefa.linked_entity_type === "session" && (
                             <Stethoscope className="h-4 w-4 text-emerald-500 shrink-0" />

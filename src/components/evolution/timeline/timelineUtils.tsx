@@ -51,9 +51,9 @@ export const EVENT_TYPE_CONFIG: Record<
   surgery: {
     label: "Cirurgias",
     icon: <Bone className="h-4 w-4" />,
-    color: "text-purple-600 dark:text-purple-400",
-    bgColor: "bg-purple-500/5",
-    borderColor: "border-purple-500/20",
+    color: "text-emerald-600 dark:text-emerald-400",
+    bgColor: "bg-emerald-500/5",
+    borderColor: "border-emerald-500/20",
   },
   goal: {
     label: "Metas",

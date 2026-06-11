@@ -789,7 +789,7 @@ export const KinoveaStudio: React.FC<KinoveaStudioProps> = ({
                   <Button
                     size="sm"
                     variant="ghost"
-                    className="h-7 text-[9px] bg-purple-500/10 font-black text-purple-500"
+                    className="h-7 text-[9px] bg-emerald-500/10 font-black text-emerald-500"
                     onClick={() =>
                       setGaitEvents((p) => [
                         ...p,

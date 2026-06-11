@@ -58,8 +58,8 @@ const SCALES: ScaleInfo[] = [
     description: "Avaliação de atividades funcionais específicas do paciente",
     items: "3–5 atividades",
     time: "3–5 min",
-    icon: <Target className="h-5 w-5 text-purple-500" />,
-    badgeColor: "bg-purple-100 text-purple-800",
+    icon: <Target className="h-5 w-5 text-emerald-500" />,
+    badgeColor: "bg-emerald-100 text-emerald-800",
     region: "Funcional geral",
   },
   {

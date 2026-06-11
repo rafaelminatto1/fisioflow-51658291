@@ -284,7 +284,7 @@ export const GlobalCommandPalette: React.FC = () => {
             {protocolResults.length > 0 && (
               <Command.Group
                 heading={
-                  <span className="px-3 py-2 text-[10px] font-black uppercase tracking-[0.2em] text-purple-600 dark:text-purple-400 block">
+                  <span className="px-3 py-2 text-[10px] font-black uppercase tracking-[0.2em] text-emerald-600 dark:text-emerald-400 block">
                     Protocolos Clínicos
                   </span>
                 }
@@ -296,14 +296,14 @@ export const GlobalCommandPalette: React.FC = () => {
                       setOpen(false);
                       navigate(`/protocols/${protocol.id}`);
                     }}
-                    className="flex items-start gap-4 p-4 rounded-2xl cursor-pointer transition-all aria-selected:bg-purple-50 dark:aria-selected:bg-purple-900/20 group hover:translate-x-1"
+                    className="flex items-start gap-4 p-4 rounded-2xl cursor-pointer transition-all aria-selected:bg-emerald-50 dark:aria-selected:bg-emerald-900/20 group hover:translate-x-1"
                   >
-                    <div className="p-3 bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 group-aria-selected:border-purple-200 dark:group-aria-selected:border-purple-800 transition-all">
-                      <BookOpen className="w-5 h-5 text-slate-400 group-aria-selected:text-purple-600 dark:group-aria-selected:text-purple-400" />
+                    <div className="p-3 bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 group-aria-selected:border-emerald-200 dark:group-aria-selected:border-emerald-800 transition-all">
+                      <BookOpen className="w-5 h-5 text-slate-400 group-aria-selected:text-emerald-600 dark:group-aria-selected:text-emerald-400" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
-                        <span className="text-[10px] font-black text-purple-600 uppercase">
+                        <span className="text-[10px] font-black text-emerald-600 uppercase">
                           {protocol.type || "Protocolo"}
                         </span>
                       </div>

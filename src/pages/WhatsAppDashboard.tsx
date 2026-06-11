@@ -231,7 +231,7 @@ export default function WhatsAppDashboardPage() {
             value={formatMinutes(metrics.avgFirstResponseTime)}
             subtitle="Primeira resposta"
             icon={Timer}
-            iconColor="text-purple-500"
+            iconColor="text-emerald-500"
           />
           <MetricCard
             title="Tempo médio ART"

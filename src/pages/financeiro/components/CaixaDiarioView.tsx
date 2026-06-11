@@ -19,7 +19,7 @@ export function CaixaDiarioView({ dataCaixa, setDataCaixa, caixaDiario }: Props)
           <span className="text-xs font-black uppercase tracking-widest text-slate-400">
             Data do Caixa:
           </span>
-          <input
+          <input aria-label="Input"
             type="date"
             value={dataCaixa}
             onChange={(e) => setDataCaixa(e.target.value)}

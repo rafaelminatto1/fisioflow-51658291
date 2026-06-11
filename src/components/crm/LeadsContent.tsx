@@ -25,7 +25,7 @@ const ESTAGIOS = [
   {
     value: "avaliacao_realizada",
     label: "Avaliação Realizada",
-    color: "bg-purple-500",
+    color: "bg-emerald-500",
   },
   { value: "efetivado", label: "Efetivado", color: "bg-emerald-500" },
   { value: "nao_efetivado", label: "Não Efetivado", color: "bg-rose-500" },
@@ -179,9 +179,9 @@ export function LeadsContent() {
             <p className="text-sm text-muted-foreground">Avaliações</p>
           </CardContent>
         </Card>
-        <Card className="bg-gradient-to-br from-purple-500/10 to-purple-500/5 border-purple-500/20">
+        <Card className="bg-gradient-to-br from-emerald-500/10 to-emerald-500/5 border-emerald-500/20">
           <CardContent className="pt-4">
-            <div className="text-2xl font-bold text-purple-600">
+            <div className="text-2xl font-bold text-emerald-600">
               {metrics?.porEstagio?.avaliacao_realizada || 0}
             </div>
             <p className="text-sm text-muted-foreground">Realizadas</p>

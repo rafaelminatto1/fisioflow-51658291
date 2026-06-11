@@ -55,19 +55,19 @@ const CARD_SIZE_OPTIONS: {
 
 const VIEW_ICON_BG: Record<AgendaView, string> = {
   day: "bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400",
-  week: "bg-violet-100 dark:bg-violet-900/40 text-violet-600 dark:text-violet-400",
+  week: "bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400",
   month: "bg-teal-100 dark:bg-teal-900/40 text-teal-600 dark:text-teal-400",
 };
 
 const VIEW_ACCENT: Record<AgendaView, string> = {
   day: "border-blue-400 bg-blue-50 dark:bg-blue-950/30",
-  week: "border-violet-400 bg-violet-50 dark:bg-violet-950/30",
+  week: "border-emerald-400 bg-emerald-50 dark:bg-emerald-950/30",
   month: "border-teal-400 bg-teal-50 dark:bg-teal-950/30",
 };
 
 const VIEW_BADGE: Record<AgendaView, string> = {
   day: "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300",
-  week: "bg-violet-100 text-violet-700 dark:bg-violet-900/40 dark:text-violet-300",
+  week: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300",
   month: "bg-teal-100 text-teal-700 dark:bg-teal-900/40 dark:text-teal-300",
 };
 

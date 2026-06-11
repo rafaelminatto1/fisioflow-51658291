@@ -452,15 +452,15 @@ export default function MarketingSettingsPage() {
                 )}
 
                 {/* AI Generation Button for Reviews */}
-                <Card className="border-purple-200 bg-purple-50 dark:border-purple-900 dark:bg-purple-950">
+                <Card className="border-emerald-200 bg-emerald-50 dark:border-emerald-900 dark:bg-emerald-950">
                   <CardContent className="p-4">
                     <div className="flex items-start gap-3">
-                      <Sparkles className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+                      <Sparkles className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
                       <div className="text-sm">
-                        <p className="font-medium text-purple-900 dark:text-purple-100">
+                        <p className="font-medium text-emerald-900 dark:text-emerald-100">
                           Gerar Template com IA
                         </p>
-                        <p className="text-purple-800 dark:text-purple-200">
+                        <p className="text-emerald-800 dark:text-emerald-200">
                           Use IA para criar uma mensagem personalizada e persuasiva.
                         </p>
                       </div>
@@ -468,7 +468,7 @@ export default function MarketingSettingsPage() {
                     <Button
                       onClick={handleGenerateReviewWithAI}
                       disabled={generatingReview}
-                      className="w-full bg-purple-600 hover:bg-purple-700"
+                      className="w-full bg-emerald-600 hover:bg-emerald-700"
                     >
                       {generatingReview ? (
                         <>
@@ -625,13 +625,13 @@ export default function MarketingSettingsPage() {
                   </div>
 
                   {/* AI Generation Button for Recall */}
-                  <Card className="border-purple-200 bg-purple-50 dark:border-purple-900 dark:bg-purple-950 mt-3">
+                  <Card className="border-emerald-200 bg-emerald-50 dark:border-emerald-900 dark:bg-emerald-950 mt-3">
                     <CardContent className="p-3">
                       <div className="flex items-center justify-between gap-2">
                         <div className="flex items-start gap-2">
-                          <Sparkles className="h-4 w-4 text-purple-600 dark:text-purple-400" />
+                          <Sparkles className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
                           <div className="text-xs">
-                            <p className="font-medium text-purple-900 dark:text-purple-100">
+                            <p className="font-medium text-emerald-900 dark:text-emerald-100">
                               Gerar Mensagem com IA
                             </p>
                           </div>
@@ -640,7 +640,7 @@ export default function MarketingSettingsPage() {
                           onClick={handleGenerateRecallWithAI}
                           disabled={generatingRecall}
                           variant="outline"
-                          className="h-8 bg-purple-600 hover:bg-purple-700"
+                          className="h-8 bg-emerald-600 hover:bg-emerald-700"
                         >
                           {generatingRecall ? (
                             <RefreshCw className="h-3 w-3 mr-1 animate-spin" />
@@ -756,15 +756,15 @@ export default function MarketingSettingsPage() {
                 )}
 
                 {/* AI Generation Button for Birthdays */}
-                <Card className="border-purple-200 bg-purple-50 dark:border-purple-900 dark:bg-purple-950">
+                <Card className="border-emerald-200 bg-emerald-50 dark:border-emerald-900 dark:bg-emerald-950">
                   <CardContent className="p-4">
                     <div className="flex items-start gap-3">
-                      <Sparkles className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+                      <Sparkles className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
                       <div className="text-sm">
-                        <p className="font-medium text-purple-900 dark:text-purple-100">
+                        <p className="font-medium text-emerald-900 dark:text-emerald-100">
                           Gerar Mensagem com IA
                         </p>
-                        <p className="text-purple-800 dark:text-purple-200">
+                        <p className="text-emerald-800 dark:text-emerald-200">
                           Use IA para criar uma mensagem calorosa e personalizada.
                         </p>
                       </div>
@@ -772,7 +772,7 @@ export default function MarketingSettingsPage() {
                     <Button
                       onClick={handleGenerateBirthdayWithAI}
                       disabled={generatingBirthday}
-                      className="w-full bg-purple-600 hover:bg-purple-700"
+                      className="w-full bg-emerald-600 hover:bg-emerald-700"
                     >
                       {generatingBirthday ? (
                         <>

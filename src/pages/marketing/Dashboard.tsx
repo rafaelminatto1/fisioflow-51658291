@@ -276,12 +276,12 @@ export default function MarketingDashboard() {
     icon: React.ComponentType<{ className?: string }>;
     trend?: { value: number; isPositive: boolean };
     href?: string;
-    color?: "blue" | "green" | "purple" | "amber" | "emerald";
+    color?: "blue" | "green" | "emerald" | "amber" | "emerald";
   }) => {
     const gradientClasses = {
       blue: "gradient-brand-light",
       green: "gradient-success-light",
-      purple: "gradient-accent-teal-light",
+      emerald: "gradient-accent-teal-light",
       amber: "gradient-warm-light",
       emerald: "gradient-success-light",
     };
@@ -289,7 +289,7 @@ export default function MarketingDashboard() {
     const colorClasses = {
       blue: "bg-blue-500/10 text-blue-600 dark:text-blue-400",
       green: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
-      purple: "bg-purple-500/10 text-purple-600 dark:text-purple-400",
+      emerald: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
       amber: "bg-amber-500/10 text-amber-600 dark:text-amber-400",
       emerald: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
     };
@@ -408,7 +408,7 @@ export default function MarketingDashboard() {
             </TabsTrigger>
             <TabsTrigger
               value="strategy"
-              className="magnetic-button rounded-lg py-2.5 text-purple-600"
+              className="magnetic-button rounded-lg py-2.5 text-emerald-600"
             >
               Estratégia
             </TabsTrigger>
@@ -432,7 +432,7 @@ export default function MarketingDashboard() {
                 title="Exportações"
                 value={metrics?.totalExports || 0}
                 icon={Video}
-                color="purple"
+                color="emerald"
               />
               <StatCard
                 title="Leads CRM"
@@ -517,8 +517,8 @@ export default function MarketingDashboard() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="p-4 rounded-lg bg-purple-50 border border-purple-100 dark:bg-purple-950/20 dark:border-purple-900">
-                  <p className="text-sm text-purple-800 dark:text-purple-300">
+                <div className="p-4 rounded-lg bg-emerald-50 border border-emerald-100 dark:bg-emerald-950/20 dark:border-emerald-900">
+                  <p className="text-sm text-emerald-800 dark:text-emerald-300">
                     Seu perfil local tem <strong>12% mais visualizações</strong> que a média da
                     região. Recomendamos focar em <strong>Google Reviews</strong> este mês para
                     subir para o Top 3 no termo "Fisioterapia em [Cidade]".

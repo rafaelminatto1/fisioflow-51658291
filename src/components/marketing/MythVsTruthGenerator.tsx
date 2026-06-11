@@ -288,7 +288,7 @@ ${myth.explanation}
                 size="sm"
                 onClick={handleAIGenerate}
                 disabled={isGeneratingAI}
-                className="h-8 text-purple-600 hover:text-purple-700 hover:bg-purple-50 gap-1.5"
+                className="h-8 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 gap-1.5"
               >
                 {isGeneratingAI ? (
                   <Loader2 className="h-3 w-3 animate-spin" />
@@ -395,15 +395,15 @@ ${myth.explanation}
       )}
 
       {/* Tips Card */}
-      <Card className="border-purple-200 bg-purple-50 dark:border-purple-900 dark:bg-purple-950">
+      <Card className="border-emerald-200 bg-emerald-50 dark:border-emerald-900 dark:bg-emerald-950">
         <CardContent className="p-4">
           <div className="flex items-start gap-3">
-            <Lightbulb className="h-5 w-5 text-purple-600 dark:text-purple-400 mt-0.5" />
+            <Lightbulb className="h-5 w-5 text-emerald-600 dark:text-emerald-400 mt-0.5" />
             <div className="text-sm">
-              <p className="font-medium text-purple-900 dark:text-purple-100 mb-2">
+              <p className="font-medium text-emerald-900 dark:text-emerald-100 mb-2">
                 Dicas para Carrosséis de Sucesso
               </p>
-              <ul className="space-y-1 text-purple-800 dark:text-purple-200">
+              <ul className="space-y-1 text-emerald-800 dark:text-emerald-200">
                 <li>• Use mitos que você ouve frequentemente de pacientes</li>
                 <li>• Mantenha o texto curto e direto</li>
                 <li>• Use cores contrastantes para cada slide</li>

@@ -130,7 +130,7 @@ const BacklinkList = forwardRef((props: any, ref) => {
             key={index}
             className={`flex w-full items-center gap-2 px-3 py-1.5 text-left text-sm ${
               index === selectedIndex
-                ? "bg-purple-600 text-white"
+                ? "bg-emerald-600 text-white"
                 : "hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300"
             }`}
             onClick={() => selectItem(index)}

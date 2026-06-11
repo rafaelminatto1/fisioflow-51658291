@@ -75,7 +75,7 @@ function normalizeFisioBrainResult(value: unknown): FisioBrainResult {
 const SOURCE_BADGES: Record<string, { label: string; className: string; Icon: React.FC<any> }> = {
   paper: {
     label: "Artigo",
-    className: "bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-400",
+    className: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400",
     Icon: BookOpen,
   },
   wiki: {
@@ -164,7 +164,7 @@ function FisioBrainChat() {
         {/* Campo de busca */}
         <Card>
           <CardContent className="p-4 space-y-3">
-            <div className="flex items-center gap-2 text-sm font-semibold text-violet-700 dark:text-violet-400">
+            <div className="flex items-center gap-2 text-sm font-semibold text-emerald-700 dark:text-emerald-400">
               <Brain className="h-4 w-4" />
               FisioBrain — Busca por evidência clínica
             </div>
@@ -244,10 +244,10 @@ function FisioBrainChat() {
             )}
 
             {result.configured && (
-              <Card className="border-violet-100 dark:border-violet-900/30">
+              <Card className="border-emerald-100 dark:border-emerald-900/30">
                 <CardHeader className="pb-2">
                   <div className="flex items-center gap-2">
-                    <Sparkles className="h-4 w-4 text-violet-500" />
+                    <Sparkles className="h-4 w-4 text-emerald-500" />
                     <CardTitle className="text-sm">Resposta do FisioBrain</CardTitle>
                   </div>
                 </CardHeader>
@@ -321,7 +321,7 @@ function FisioBrainChat() {
                 onClick={() => loadFromHistory(item)}
                 className="w-full text-left p-3 rounded-xl border border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-900 transition-colors group"
               >
-                <p className="text-xs font-medium line-clamp-2 group-hover:text-violet-600 transition-colors">
+                <p className="text-xs font-medium line-clamp-2 group-hover:text-emerald-600 transition-colors">
                   {item.query}
                 </p>
                 <p className="text-[10px] text-muted-foreground mt-1">
@@ -403,8 +403,8 @@ export function AIHubView() {
   return (
     <div className="space-y-6">
       <header className="flex items-center gap-3">
-        <div className="p-2 bg-violet-100 rounded-xl">
-          <Brain className="h-6 w-6 text-violet-600" />
+        <div className="p-2 bg-emerald-100 rounded-xl">
+          <Brain className="h-6 w-6 text-emerald-600" />
         </div>
         <div>
           <h2 className="text-2xl font-bold tracking-tight">FisioBrain + AI Hub</h2>

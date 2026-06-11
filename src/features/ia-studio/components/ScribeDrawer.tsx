@@ -120,15 +120,15 @@ export const ScribeDrawer: React.FC<ScribeDrawerProps> = ({ isOpen, onClose, pat
           animate={{ x: 0 }}
           exit={{ x: "100%" }}
           transition={{ type: "spring", damping: 25, stiffness: 200 }}
-          className="fixed top-0 right-0 h-full w-full max-w-md bg-slate-950/90 border-l border-violet-500/30 shadow-2xl z-[100] text-slate-50 flex flex-col overflow-hidden"
+          className="fixed top-0 right-0 h-full w-full max-w-md bg-slate-950/90 border-l border-emerald-500/30 shadow-2xl z-[100] text-slate-50 flex flex-col overflow-hidden"
         >
           {/* Aura Background Effect */}
-          <div className="absolute top-0 right-0 w-64 h-64 bg-violet-600/10 blur-[100px] pointer-events-none" />
+          <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-600/10 blur-[100px] pointer-events-none" />
 
           {/* Header */}
           <div className="p-6 border-b border-white/5 flex items-center justify-between relative bg-white/5">
             <div className="flex items-center gap-4">
-              <div className="w-10 h-10 bg-violet-600 rounded-2xl flex items-center justify-center shadow-lg shadow-violet-600/20">
+              <div className="w-10 h-10 bg-emerald-600 rounded-2xl flex items-center justify-center shadow-lg shadow-emerald-600/20">
                 <BrainCircuit className="w-5 h-5" />
               </div>
               <div>
@@ -161,7 +161,7 @@ export const ScribeDrawer: React.FC<ScribeDrawerProps> = ({ isOpen, onClose, pat
                   "p-4 rounded-3xl border transition-all duration-500",
                   consentObtained
                     ? "bg-emerald-500/5 border-emerald-500/20"
-                    : "bg-violet-500/5 border-violet-500/20",
+                    : "bg-emerald-500/5 border-emerald-500/20",
                 )}
               >
                 <div className="flex items-center justify-between">
@@ -190,7 +190,7 @@ export const ScribeDrawer: React.FC<ScribeDrawerProps> = ({ isOpen, onClose, pat
                   {isScanning ? (
                     <Loader2 className="w-4 h-4 animate-spin" />
                   ) : (
-                    <FileText className="w-4 h-4 text-violet-400" />
+                    <FileText className="w-4 h-4 text-emerald-400" />
                   )}
                   Scan Laudo (OCR)
                 </Button>
@@ -223,7 +223,7 @@ export const ScribeDrawer: React.FC<ScribeDrawerProps> = ({ isOpen, onClose, pat
                     "relative group flex flex-col items-center justify-center p-6 rounded-[32px] border transition-all duration-500 overflow-hidden",
                     activeSection === section && isRecording
                       ? "bg-red-500/20 border-red-500 shadow-lg shadow-red-500/10 scale-[1.02]"
-                      : "bg-slate-900 border-white/5 hover:border-violet-500/40 shadow-sm",
+                      : "bg-slate-900 border-white/5 hover:border-emerald-500/40 shadow-sm",
                     !consentObtained && "opacity-30 grayscale cursor-not-allowed",
                   )}
                 >
@@ -232,7 +232,7 @@ export const ScribeDrawer: React.FC<ScribeDrawerProps> = ({ isOpen, onClose, pat
                       "w-12 h-12 rounded-2xl flex items-center justify-center mb-3 transition-all duration-500",
                       activeSection === section && isRecording
                         ? "bg-red-500 rotate-12"
-                        : "bg-white/5 group-hover:bg-violet-600 group-hover:-rotate-6",
+                        : "bg-white/5 group-hover:bg-emerald-600 group-hover:-rotate-6",
                     )}
                   >
                     {activeSection === section && isRecording ? (
@@ -264,7 +264,7 @@ export const ScribeDrawer: React.FC<ScribeDrawerProps> = ({ isOpen, onClose, pat
                   exit={{ opacity: 0, scale: 0.95 }}
                   className="mb-8"
                 >
-                  <Card className="bg-violet-600 border-none rounded-[32px] shadow-xl shadow-violet-600/20 overflow-hidden">
+                  <Card className="bg-emerald-600 border-none rounded-[32px] shadow-xl shadow-emerald-600/20 overflow-hidden">
                     <CardContent className="p-6 flex flex-col items-center gap-4">
                       <div className="flex items-center justify-between w-full">
                         <Badge className="bg-white/20 text-white border-none">
@@ -289,7 +289,7 @@ export const ScribeDrawer: React.FC<ScribeDrawerProps> = ({ isOpen, onClose, pat
             {/* Review Section */}
             <div className="space-y-6 pb-20">
               <div className="flex items-center gap-2">
-                <div className="w-1 h-4 bg-violet-500 rounded-full" />
+                <div className="w-1 h-4 bg-emerald-500 rounded-full" />
                 <h3 className="text-xs font-black uppercase text-slate-400 tracking-[0.2em]">
                   Resumo da IA Studio
                 </h3>
@@ -302,13 +302,13 @@ export const ScribeDrawer: React.FC<ScribeDrawerProps> = ({ isOpen, onClose, pat
                       key={section}
                       initial={{ opacity: 0, x: 20 }}
                       animate={{ opacity: 1, x: 0 }}
-                      className="p-5 rounded-3xl bg-white/5 border border-white/5 hover:border-violet-500/20 transition-all group relative"
+                      className="p-5 rounded-3xl bg-white/5 border border-white/5 hover:border-emerald-500/20 transition-all group relative"
                     >
                       <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center gap-2">
                           <Badge
                             variant="outline"
-                            className="bg-violet-500/10 text-violet-400 border-violet-500/20 font-black"
+                            className="bg-emerald-500/10 text-emerald-400 border-emerald-500/20 font-black"
                           >
                             {section}
                           </Badge>
@@ -319,7 +319,7 @@ export const ScribeDrawer: React.FC<ScribeDrawerProps> = ({ isOpen, onClose, pat
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="h-7 text-[9px] font-black uppercase hover:text-violet-400 px-2 rounded-lg bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity"
+                          className="h-7 text-[9px] font-black uppercase hover:text-emerald-400 px-2 rounded-lg bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity"
                         >
                           Editar
                         </Button>
@@ -355,7 +355,7 @@ export const ScribeDrawer: React.FC<ScribeDrawerProps> = ({ isOpen, onClose, pat
                 onClose();
               }}
               disabled={Object.values(transcription).every((t) => !t) || isProcessing}
-              className="w-full h-14 bg-violet-600 hover:bg-violet-500 text-white rounded-[24px] font-black text-sm gap-3 shadow-xl shadow-violet-600/20 transition-all hover:translate-y-[-2px] active:scale-95"
+              className="w-full h-14 bg-emerald-600 hover:bg-emerald-500 text-white rounded-[24px] font-black text-sm gap-3 shadow-xl shadow-emerald-600/20 transition-all hover:translate-y-[-2px] active:scale-95"
             >
               <Save className="w-5 h-5" />
               Sincronizar Prontuário

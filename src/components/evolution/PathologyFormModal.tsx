@@ -133,7 +133,7 @@ const STATUS_OPTIONS = [
   {
     value: "cronica",
     label: "Crônica",
-    color: "bg-purple-500/10 text-purple-600",
+    color: "bg-emerald-500/10 text-emerald-600",
   },
 ];
 

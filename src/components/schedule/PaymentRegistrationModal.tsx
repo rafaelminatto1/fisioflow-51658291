@@ -224,7 +224,7 @@ export function PaymentRegistrationModal({
                   </SelectItem>
                   <SelectItem value="debit_card">
                     <div className="flex items-center gap-2">
-                      <CreditCard className="h-4 w-4 text-purple-500" />
+                      <CreditCard className="h-4 w-4 text-emerald-500" />
                       Cartão de Débito
                     </div>
                   </SelectItem>

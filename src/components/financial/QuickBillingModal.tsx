@@ -124,7 +124,7 @@ export function QuickBillingModal({ isOpen, onClose, appointment }: QuickBilling
                 </SelectItem>
                 <SelectItem value="credit">
                   <div className="flex items-center gap-2">
-                    <CreditCard className="w-4 h-4 text-purple-400" />
+                    <CreditCard className="w-4 h-4 text-emerald-400" />
                     Cartão de Crédito
                   </div>
                 </SelectItem>

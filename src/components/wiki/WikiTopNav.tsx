@@ -220,11 +220,11 @@ export function WikiTopNav({
           <Button
             variant="ghost"
             size="sm"
-            className="gap-2 font-bold font-display rounded-xl transition-all duration-300 hover:bg-violet-50 dark:hover:bg-violet-900/20"
+            className="gap-2 font-bold font-display rounded-xl transition-all duration-300 hover:bg-emerald-50 dark:hover:bg-emerald-900/20"
             onClick={onPapersSelect}
           >
-            <BookOpen className="h-4 w-4 text-violet-500" />
-            <span className="hidden sm:inline text-slate-700 dark:text-slate-300 hover:text-violet-600 transition-colors">
+            <BookOpen className="h-4 w-4 text-emerald-500" />
+            <span className="hidden sm:inline text-slate-700 dark:text-slate-300 hover:text-emerald-600 transition-colors">
               Artigos
             </span>
           </Button>

@@ -132,7 +132,7 @@ ${
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-6xl max-h-[92vh] overflow-hidden p-0 w-[95vw]">
         {/* Header com gradiente */}
-        <div className="bg-gradient-to-r from-blue-500/10 to-purple-500/10 border-b px-6 py-4">
+        <div className="bg-gradient-to-r from-blue-500/10 to-emerald-500/10 border-b px-6 py-4">
           <DialogHeader className="space-y-2">
             <div className="flex items-center justify-between">
               <DialogTitle className="flex items-center gap-4">
@@ -292,9 +292,9 @@ ${
 
                     {/* Quick Stats */}
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                      <div className="bg-purple-50 dark:bg-purple-950/20 border border-purple-200 dark:border-purple-800 rounded-xl p-4 text-center">
-                        <Dumbbell className="h-5 w-5 text-purple-600 mx-auto mb-2" />
-                        <div className="text-2xl font-bold text-purple-700 dark:text-purple-300">
+                      <div className="bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800 rounded-xl p-4 text-center">
+                        <Dumbbell className="h-5 w-5 text-emerald-600 mx-auto mb-2" />
+                        <div className="text-2xl font-bold text-emerald-700 dark:text-emerald-300">
                           {sessionExercises.length}
                         </div>
                         <div className="text-xs text-muted-foreground">Exercícios</div>
@@ -352,11 +352,11 @@ ${
                         {sessionExercises.map((exercise, index) => (
                           <div
                             key={index}
-                            className="bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-950/20 dark:to-pink-950/20 border border-purple-200 dark:border-purple-800 rounded-2xl p-4 hover:shadow-md transition-shadow"
+                            className="bg-gradient-to-r from-emerald-50 to-pink-50 dark:from-emerald-950/20 dark:to-pink-950/20 border border-emerald-200 dark:border-emerald-800 rounded-2xl p-4 hover:shadow-md transition-shadow"
                           >
                             <div className="flex items-start justify-between gap-4">
                               <div className="flex items-start gap-3 flex-1">
-                                <div className="w-10 h-10 rounded-xl bg-purple-500 flex items-center justify-center shrink-0">
+                                <div className="w-10 h-10 rounded-xl bg-emerald-500 flex items-center justify-center shrink-0">
                                   <Dumbbell className="h-5 w-5 text-white" />
                                 </div>
                                 <div className="flex-1 min-w-0">

@@ -163,7 +163,7 @@ export function PatientsPageHeader({
                 <HeaderStatCard
                   label="Alta / Finalizados"
                   value={stats.completedCount}
-                  tone="violet"
+                  tone="emerald"
                   isSelected={classificationFilter === "completed"}
                   onClick={() => onClassificationFilterChange?.("completed")}
                   icon={CheckCircle2}
@@ -423,7 +423,7 @@ function HeaderStatCard({
   label: string;
   value: number;
   icon: React.ElementType;
-  tone: "emerald" | "blue" | "amber" | "violet";
+  tone: "emerald" | "blue" | "amber" | "emerald";
   isSelected?: boolean;
   onClick?: () => void;
 }) {
@@ -433,8 +433,8 @@ function HeaderStatCard({
     blue: "border-blue-200/70 bg-blue-50/80 text-blue-700 dark:border-blue-900/60 dark:bg-blue-950/20 dark:text-blue-300",
     amber:
       "border-amber-200/70 bg-amber-50/80 text-amber-700 dark:border-amber-900/60 dark:bg-amber-950/20 dark:text-amber-300",
-    violet:
-      "border-violet-200/70 bg-violet-50/80 text-violet-700 dark:border-violet-900/60 dark:bg-violet-950/20 dark:text-violet-300",
+    emerald:
+      "border-emerald-200/70 bg-emerald-50/80 text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-950/20 dark:text-emerald-300",
   } satisfies Record<string, string>;
 
   return (

@@ -24,7 +24,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 
-const COLORS = ["#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6"];
+const COLORS = ["#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#10b981"];
 
 export function ClinicalAnalyticsDashboard() {
   const { dashboard, topExercises, isLoading, error, refetch } = useClinicalAnalytics();

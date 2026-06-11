@@ -109,7 +109,7 @@ const SHORTCUTS = {
   },
   navigation: {
     label: "Navegação",
-    icon: <FileText className="h-4 w-4 text-purple-500" />,
+    icon: <FileText className="h-4 w-4 text-emerald-500" />,
     items: [
       {
         keys: ["1"],
@@ -133,7 +133,7 @@ const SHORTCUTS = {
         keys: ["3"],
         description: "Ir para Avaliação",
         icon: (
-          <span className="w-4 h-4 text-[10px] font-bold flex items-center justify-center bg-purple-500 text-white rounded">
+          <span className="w-4 h-4 text-[10px] font-bold flex items-center justify-center bg-emerald-500 text-white rounded">
             A
           </span>
         ),
@@ -166,7 +166,7 @@ const SHORTCUTS = {
   },
   ai: {
     label: "IA Assistant",
-    icon: <Sparkles className="h-4 w-4 text-purple-500" />,
+    icon: <Sparkles className="h-4 w-4 text-emerald-500" />,
     items: [
       {
         keys: ["Alt", "A"],
@@ -243,7 +243,7 @@ export const EvolutionKeyboardShortcuts = memo(
               <Badge className="bg-green-500/20 text-green-600 border-green-500/30">
                 O - Objetivo
               </Badge>
-              <Badge className="bg-purple-500/20 text-purple-600 border-purple-500/30">
+              <Badge className="bg-emerald-500/20 text-emerald-600 border-emerald-500/30">
                 A - Avaliação
               </Badge>
               <Badge className="bg-orange-500/20 text-orange-600 border-orange-500/30">

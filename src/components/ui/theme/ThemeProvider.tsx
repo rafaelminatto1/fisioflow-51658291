@@ -17,7 +17,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState } 
 // DEFINIÇÃO DE TIPOS
 // ============================================================================
 
-export type ColorScheme = "default" | "blue" | "green" | "purple" | "orange" | "rose";
+export type ColorScheme = "default" | "blue" | "green" | "emerald" | "orange" | "rose";
 
 export type FontSize = "sm" | "md" | "lg" | "xl";
 
@@ -59,9 +59,9 @@ const COLOR_SCHEMES: Record<ColorScheme, { primary: string; secondary: string }>
     primary: "#059669",
     secondary: "#10b981",
   },
-  purple: {
+  emerald: {
     primary: "#7c3aed",
-    secondary: "#8b5cf6",
+    secondary: "#10b981",
   },
   orange: {
     primary: "#ea580c",
@@ -233,7 +233,7 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children, defaultP
       "scheme-default",
       "scheme-blue",
       "scheme-green",
-      "scheme-purple",
+      "scheme-emerald",
       "scheme-orange",
       "scheme-rose",
     );

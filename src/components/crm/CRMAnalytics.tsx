@@ -116,14 +116,14 @@ export function CRMAnalytics() {
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-purple-500/10 to-purple-500/5">
+        <Card className="bg-gradient-to-br from-emerald-500/10 to-emerald-500/5">
           <CardContent className="pt-4">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-full bg-purple-500/20">
-                <Award className="h-5 w-5 text-purple-500" />
+              <div className="p-2 rounded-full bg-emerald-500/20">
+                <Award className="h-5 w-5 text-emerald-500" />
               </div>
               <div>
-                <div className="text-2xl font-bold text-purple-600">{npsMetrics?.nps || 0}</div>
+                <div className="text-2xl font-bold text-emerald-600">{npsMetrics?.nps || 0}</div>
                 <p className="text-sm text-muted-foreground">NPS Score</p>
               </div>
             </div>

@@ -9,7 +9,7 @@ export const ScribeWaveform: React.FC<{ isRecording: boolean }> = ({ isRecording
       {bars.map((_, i) => (
         <motion.div
           key={i}
-          className="w-1.5 bg-violet-500 rounded-full"
+          className="w-1.5 bg-emerald-500 rounded-full"
           animate={
             isRecording
               ? {

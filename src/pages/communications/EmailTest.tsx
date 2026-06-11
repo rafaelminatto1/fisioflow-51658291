@@ -50,8 +50,8 @@ export default function EmailTest() {
         <Card>
           <CardHeader>
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-purple-100 rounded-lg">
-                <Mail className="w-6 h-6 text-purple-600" />
+              <div className="p-2 bg-emerald-100 rounded-lg">
+                <Mail className="w-6 h-6 text-emerald-600" />
               </div>
               <div>
                 <CardTitle>Teste de Email (Resend)</CardTitle>
@@ -75,7 +75,7 @@ export default function EmailTest() {
             </div>
 
             <Button
-              className="w-full bg-purple-600 hover:bg-purple-700"
+              className="w-full bg-emerald-600 hover:bg-emerald-700"
               onClick={handleSendTest}
               disabled={!email || loading}
             >

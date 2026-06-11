@@ -33,7 +33,7 @@ const PLATFORMS = [
     id: "instagram",
     name: "Instagram",
     icon: Camera,
-    color: "bg-gradient-to-br from-purple-500 to-pink-500",
+    color: "bg-gradient-to-br from-emerald-500 to-pink-500",
     hashtags: ["#fisioterapia", "#saude", "#bemestar", "#movimento", "#qualidadedevida"],
     maxLength: 2200,
   },
@@ -83,7 +83,7 @@ const CONTENT_TYPES = [
     name: "Promocional",
     icon: Sparkles,
     description: "Divulgação de serviços e promoções",
-    color: "bg-purple-500",
+    color: "bg-emerald-500",
   },
   {
     id: "transformation",
@@ -273,7 +273,7 @@ export default function ContentGeneratorPage() {
         {/* Header */}
         <div>
           <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
-            <Sparkles className="h-8 w-8 text-purple-500" />
+            <Sparkles className="h-8 w-8 text-emerald-500" />
             Gerador de Conteúdo Social
           </h1>
           <p className="text-muted-foreground mt-1">Crie posts otimizados para redes sociais</p>
@@ -441,7 +441,7 @@ export default function ContentGeneratorPage() {
               </Button>
               <Button
                 onClick={handleAIGenerate}
-                className="w-full bg-purple-600 hover:bg-purple-700 text-white"
+                className="w-full bg-emerald-600 hover:bg-emerald-700 text-white"
                 disabled={isGeneratingAI}
               >
                 {isGeneratingAI ? (

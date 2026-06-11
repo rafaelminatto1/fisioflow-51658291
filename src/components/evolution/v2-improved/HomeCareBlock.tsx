@@ -177,8 +177,8 @@ export const HomeCareBlock: React.FC<HomeCareBlockProps> = ({
         <div className="relative">
           <div className="flex items-center justify-between px-2 py-1.5 opacity-90 group-hover:opacity-100 transition-opacity">
             <div className="flex items-center gap-2.5">
-              <div className="p-1.5 rounded-lg bg-gradient-to-br from-violet-500/10 to-violet-500/5 border border-violet-500/20">
-                <Home className="h-4 w-4 text-violet-500" />
+              <div className="p-1.5 rounded-lg bg-gradient-to-br from-emerald-500/10 to-emerald-500/5 border border-emerald-500/20">
+                <Home className="h-4 w-4 text-emerald-500" />
               </div>
               <div className="flex flex-col">
                 <h3 className="text-sm font-semibold text-foreground">Exercícios para Casa</h3>
@@ -192,7 +192,7 @@ export const HomeCareBlock: React.FC<HomeCareBlockProps> = ({
             </div>
             {exercises.length > 0 && (
               <Badge variant="secondary" className="text-xs h-6 px-2.5 rounded-full">
-                <CheckCircle2 className="h-3 w-3 mr-1 text-violet-500" />
+                <CheckCircle2 className="h-3 w-3 mr-1 text-emerald-500" />
                 Casa
               </Badge>
             )}
@@ -217,10 +217,10 @@ export const HomeCareBlock: React.FC<HomeCareBlockProps> = ({
             {exercises.map((exercise, index) => (
               <div
                 key={exercise.id}
-                className="group relative flex flex-col gap-2 p-3 rounded-xl border border-border/50 hover:border-violet-200 hover:bg-violet-500/5 transition-all"
+                className="group relative flex flex-col gap-2 p-3 rounded-xl border border-border/50 hover:border-emerald-200 hover:bg-emerald-500/5 transition-all"
               >
                 <div className="flex items-center gap-3">
-                  <div className="flex items-center justify-center w-7 h-7 rounded-lg bg-violet-100 text-violet-600 font-bold text-xs flex-shrink-0">
+                  <div className="flex items-center justify-center w-7 h-7 rounded-lg bg-emerald-100 text-emerald-600 font-bold text-xs flex-shrink-0">
                     {index + 1}
                   </div>
                   <Input
@@ -301,7 +301,7 @@ export const HomeCareBlock: React.FC<HomeCareBlockProps> = ({
                         key={ex.id}
                         type="button"
                         onClick={() => handleSelectSuggestion(ex)}
-                        className="w-full flex items-center gap-2 p-2 rounded-lg hover:bg-violet-500/5 text-left transition-colors"
+                        className="w-full flex items-center gap-2 p-2 rounded-lg hover:bg-emerald-500/5 text-left transition-colors"
                       >
                         <div className="p-1.5 rounded-md bg-blue-500/10 text-blue-700 shrink-0">
                           <Dumbbell className="h-3.5 w-3.5" />
@@ -359,7 +359,7 @@ export const HomeCareBlock: React.FC<HomeCareBlockProps> = ({
               <div className="absolute z-10 top-full left-0 right-0 mt-1 p-2 bg-popover border border-border rounded-xl shadow-lg animate-in slide-in-from-top-1 duration-200">
                 {sessionExercises && sessionExercises.length > 0 && (
                   <div className="mb-2 pb-2 border-b">
-                    <span className="text-[10px] font-bold text-violet-500 uppercase tracking-widest px-1 mb-1 block">
+                    <span className="text-[10px] font-bold text-emerald-500 uppercase tracking-widest px-1 mb-1 block">
                       Da sessão de hoje
                     </span>
                     <div className="grid grid-cols-2 gap-1.5">
@@ -368,12 +368,12 @@ export const HomeCareBlock: React.FC<HomeCareBlockProps> = ({
                           key={`sess-${idx}`}
                           onClick={() => handlePresetClick(preset.name, preset.prescription || "3x10")}
                           disabled={disabled}
-                          className="flex items-center gap-2 p-2 rounded-lg hover:bg-violet-50 text-left transition-colors"
+                          className="flex items-center gap-2 p-2 rounded-lg hover:bg-emerald-50 text-left transition-colors"
                         >
                           <span className="text-base">🏋️</span>
                           <div className="flex flex-col min-w-0">
-                            <span className="text-xs font-medium truncate text-violet-900">{preset.name}</span>
-                            <span className="text-[10px] text-violet-600/70">{preset.prescription || "3x10"}</span>
+                            <span className="text-xs font-medium truncate text-emerald-900">{preset.name}</span>
+                            <span className="text-[10px] text-emerald-600/70">{preset.prescription || "3x10"}</span>
                           </div>
                         </button>
                       ))}

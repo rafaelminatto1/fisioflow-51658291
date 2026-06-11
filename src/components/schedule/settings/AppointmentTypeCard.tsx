@@ -106,7 +106,7 @@ export function AppointmentTypeCard({
                       durationMinutes: parseInt(e.target.value, 10),
                     })
                   }
-                  className="flex-1 accent-violet-500"
+                  className="flex-1 accent-emerald-500"
                 />
                 <span className="font-mono text-sm w-10 text-center">{type.durationMinutes}</span>
               </div>
@@ -164,7 +164,7 @@ export function AppointmentTypeCard({
                       bufferBeforeMinutes: parseInt(e.target.value, 10),
                     })
                   }
-                  className="flex-1 accent-violet-500"
+                  className="flex-1 accent-emerald-500"
                 />
                 <span className="font-mono text-sm w-8 text-center">
                   {type.bufferBeforeMinutes}
@@ -188,7 +188,7 @@ export function AppointmentTypeCard({
                       bufferAfterMinutes: parseInt(e.target.value, 10),
                     })
                   }
-                  className="flex-1 accent-violet-500"
+                  className="flex-1 accent-emerald-500"
                 />
                 <span className="font-mono text-sm w-8 text-center">{type.bufferAfterMinutes}</span>
               </div>
@@ -207,7 +207,7 @@ export function AppointmentTypeCard({
                   onClick={() => onUpdate({ color: c })}
                   className={cn(
                     "w-8 h-8 rounded-full cursor-pointer flex items-center justify-center transition-all hover:scale-110",
-                    type.color === c && "ring-2 ring-offset-2 ring-violet-400",
+                    type.color === c && "ring-2 ring-offset-2 ring-emerald-400",
                   )}
                   style={{ backgroundColor: c }}
                 >

@@ -49,7 +49,7 @@ const CATEGORY_COLORS: Record<string, string> = {
   global: "text-slate-600",
   navigation: "text-blue-600",
   actions: "text-green-600",
-  schedule: "text-purple-600",
+  schedule: "text-emerald-600",
   patients: "text-orange-600",
   forms: "text-pink-600",
 };

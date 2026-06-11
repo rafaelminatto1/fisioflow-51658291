@@ -66,7 +66,7 @@ export default function Welcome() {
       <section className="relative pt-32 pb-20 overflow-hidden">
         {/* Background Mesh Gradient Blobs */}
         <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/4 w-[800px] h-[800px] bg-blue-200/30 blur-[120px] rounded-full" />
-        <div className="absolute bottom-0 left-0 translate-y-1/2 -translate-x-1/4 w-[600px] h-[600px] bg-purple-200/20 blur-[100px] rounded-full" />
+        <div className="absolute bottom-0 left-0 translate-y-1/2 -translate-x-1/4 w-[600px] h-[600px] bg-emerald-200/20 blur-[100px] rounded-full" />
 
         <div className="max-w-7xl mx-auto px-4 relative">
           <div className="flex flex-col lg:flex-row items-center gap-16">
@@ -110,7 +110,7 @@ export default function Welcome() {
 
             {/* Mockup Display */}
             <div className="flex-1 relative group w-full max-w-2xl mx-auto">
-              <div className="absolute -inset-4 bg-gradient-to-tr from-primary to-purple-400 rounded-3xl opacity-20 blur-2xl group-hover:opacity-30 transition-opacity duration-500" />
+              <div className="absolute -inset-4 bg-gradient-to-tr from-primary to-emerald-400 rounded-3xl opacity-20 blur-2xl group-hover:opacity-30 transition-opacity duration-500" />
               <div className="relative bg-white rounded-2xl shadow-2xl overflow-hidden border border-slate-200 p-2">
                 <img
                   src="/home/rafael/.gemini/antigravity/brain/50b79b29-6721-4127-b1c7-28d0c25370b2/fisioflow_2026_mockup_1775758529989.png"

@@ -280,7 +280,7 @@ const DynamicComparisonPage = () => {
               <div className="flex justify-between mb-4">
                 <Button
                   variant="outline"
-                  className="gap-2 text-purple-700 bg-purple-50 border-purple-200 hover:bg-purple-100"
+                  className="gap-2 text-emerald-700 bg-emerald-50 border-emerald-200 hover:bg-emerald-100"
                   onClick={() => setIsMarketingModalOpen(true)}
                 >
                   <Video className="w-4 h-4" /> Criar Vídeo Marketing

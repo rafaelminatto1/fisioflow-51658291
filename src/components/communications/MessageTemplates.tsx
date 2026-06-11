@@ -95,7 +95,7 @@ const MESSAGE_TEMPLATES: MessageTemplate[] = [
 
 const CATEGORY_COLORS: Record<MessageTemplate["category"], string> = {
   lembrete: "bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-500/20",
-  agendamento: "bg-purple-500/10 text-purple-700 dark:text-purple-400 border-purple-500/20",
+  agendamento: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20",
   aniversario: "bg-pink-500/10 text-pink-700 dark:text-pink-400 border-pink-500/20",
   reactivacao: "bg-orange-500/10 text-orange-700 dark:text-orange-400 border-orange-500/20",
   pesquisa: "bg-green-500/10 text-green-700 dark:text-green-400 border-green-500/20",

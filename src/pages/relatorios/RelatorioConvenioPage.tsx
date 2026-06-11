@@ -863,7 +863,7 @@ export default function RelatorioConvenioPage() {
                     </CardContent>
                   </Card>
 
-                  <Card className="border-2 border-purple-500/20">
+                  <Card className="border-2 border-emerald-500/20">
                     <CardHeader>
                       <CardTitle className="text-base">Relatório para Especialista</CardTitle>
                     </CardHeader>

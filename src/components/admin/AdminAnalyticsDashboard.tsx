@@ -325,7 +325,7 @@ interface MetricCardProps {
   title: string;
   value: number;
   icon: React.ReactNode;
-  color: "blue" | "green" | "orange" | "purple" | "red";
+  color: "blue" | "green" | "orange" | "emerald" | "red";
   highlight?: boolean;
   trend?: number;
   suffix?: string;
@@ -336,7 +336,7 @@ function MetricCard({ title, value, icon, color, highlight, trend, suffix = "" }
     blue: "bg-blue-500 text-white",
     green: "bg-green-500 text-white",
     orange: "bg-orange-500 text-white",
-    purple: "bg-purple-500 text-white",
+    emerald: "bg-emerald-500 text-white",
     red: "bg-red-500 text-white",
   };
 
@@ -344,7 +344,7 @@ function MetricCard({ title, value, icon, color, highlight, trend, suffix = "" }
     blue: "from-blue-50 to-white dark:from-blue-950/20",
     green: "from-green-50 to-white dark:from-green-950/20",
     orange: "from-orange-50 to-white dark:from-orange-950/20",
-    purple: "from-purple-50 to-white dark:from-purple-950/20",
+    emerald: "from-emerald-50 to-white dark:from-emerald-950/20",
     red: "from-red-50 to-white dark:from-red-950/20",
   };
 
@@ -352,7 +352,7 @@ function MetricCard({ title, value, icon, color, highlight, trend, suffix = "" }
     blue: "border-blue-200 dark:border-blue-800",
     green: "border-green-200 dark:border-green-800",
     orange: "border-orange-200 dark:border-orange-800",
-    purple: "border-purple-200 dark:border-purple-800",
+    emerald: "border-emerald-200 dark:border-emerald-800",
     red: "border-red-200 dark:border-red-800",
   };
 
@@ -781,7 +781,7 @@ export function AdminAnalyticsDashboard({ className }: AdminAnalyticsDashboardPr
           title="Taxa de Retenção"
           value={data.metrics.retentionRate}
           icon={<Target className="h-5 w-5" />}
-          color="purple"
+          color="emerald"
           suffix="%"
         />
       </div>
@@ -804,7 +804,7 @@ export function AdminAnalyticsDashboard({ className }: AdminAnalyticsDashboardPr
           title="Média de Sessões"
           value={data.metrics.avgSessions}
           icon={<Brain className="h-5 w-5" />}
-          color="purple"
+          color="emerald"
         />
       </div>
 
@@ -874,8 +874,8 @@ export function AdminAnalyticsDashboard({ className }: AdminAnalyticsDashboardPr
                 <Area
                   type="monotone"
                   dataKey="value"
-                  stroke="#8b5cf6"
-                  fill="#8b5cf6"
+                  stroke="#10b981"
+                  fill="#10b981"
                   fillOpacity={0.3}
                 />
               </AreaChart>

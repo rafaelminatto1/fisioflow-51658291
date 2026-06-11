@@ -54,7 +54,7 @@ const PERFORMANCE_MARKERS = {
     name: "renderTime",
     unit: "ms",
     threshold: 100,
-    color: "purple",
+    color: "emerald",
   },
   cacheHitRate: {
     name: "cacheHitRate",

@@ -258,11 +258,11 @@ export const MeasurementsBlock: React.FC<MeasurementsBlockProps> = ({
       >
         {/* Header with gradient accent */}
         <div className="relative">
-          <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-violet-500/60 via-violet-500 to-violet-500/60" />
-          <div className="flex items-center justify-between p-3.5 border-b border-border/40 bg-gradient-to-r from-violet-500/5 to-transparent">
+          <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-emerald-500/60 via-emerald-500 to-emerald-500/60" />
+          <div className="flex items-center justify-between p-3.5 border-b border-border/40 bg-gradient-to-r from-emerald-500/5 to-transparent">
             <div className="flex items-center gap-2.5">
-              <div className="p-1.5 rounded-lg bg-gradient-to-br from-violet-500/10 to-violet-500/5 border border-violet-500/20">
-                <Ruler className="h-4 w-4 text-violet-500" />
+              <div className="p-1.5 rounded-lg bg-gradient-to-br from-emerald-500/10 to-emerald-500/5 border border-emerald-500/20">
+                <Ruler className="h-4 w-4 text-emerald-500" />
               </div>
               <div className="flex flex-col">
                 <h3 className="text-sm font-semibold text-foreground">Medições</h3>
@@ -280,7 +280,7 @@ export const MeasurementsBlock: React.FC<MeasurementsBlockProps> = ({
                   variant="ghost"
                   size="sm"
                   disabled={disabled}
-                  className="gap-1.5 text-violet-600 hover:text-violet-700 hover:bg-violet-500/10 rounded-lg"
+                  className="gap-1.5 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-500/10 rounded-lg"
                 >
                   <Plus className="h-3.5 w-3.5" />
                   <span className="hidden sm:inline text-xs font-medium">Adicionar</span>
@@ -305,7 +305,7 @@ export const MeasurementsBlock: React.FC<MeasurementsBlockProps> = ({
                           }}
                           className="cursor-pointer"
                         >
-                          <Sparkles className="h-4 w-4 mr-2 text-violet-500" />
+                          <Sparkles className="h-4 w-4 mr-2 text-emerald-500" />
                           <span>{template.name}</span>
                         </CommandItem>
                       ))}
@@ -375,7 +375,7 @@ export const MeasurementsBlock: React.FC<MeasurementsBlockProps> = ({
             </div>
             <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
               <div
-                className="h-full bg-gradient-to-r from-violet-400 to-violet-600 transition-all duration-500 ease-out rounded-full"
+                className="h-full bg-gradient-to-r from-emerald-400 to-emerald-600 transition-all duration-500 ease-out rounded-full"
                 style={{
                   width: `${measurements.length > 0 ? (completedCount / measurements.length) * 100 : 0}%`,
                 }}
@@ -430,8 +430,8 @@ const MeasurementCard: React.FC<{
           "group relative rounded-xl border transition-all duration-200 overflow-hidden",
           "bg-card hover:bg-muted/30",
           measurement.completed
-            ? "border-violet-200 bg-violet-50/30"
-            : "border-border hover:border-violet-200",
+            ? "border-emerald-200 bg-emerald-50/30"
+            : "border-border hover:border-emerald-200",
           isRemoving && "opacity-0 scale-95",
         )}
       >
@@ -455,8 +455,8 @@ const MeasurementCard: React.FC<{
             className={cn(
               "flex-shrink-0 w-5 h-5 rounded-lg border-2 transition-all duration-200",
               measurement.completed
-                ? "bg-violet-500 border-violet-500 flex items-center justify-center"
-                : "border-muted-foreground/30 hover:border-violet-400",
+                ? "bg-emerald-500 border-emerald-500 flex items-center justify-center"
+                : "border-muted-foreground/30 hover:border-emerald-400",
             )}
           >
             {measurement.completed && <CheckCircle2 className="h-3.5 w-3.5 text-white" />}
@@ -586,8 +586,8 @@ const MeasurementCard: React.FC<{
                         key={field.id}
                         className={cn(
                           "p-2.5 rounded-lg border transition-all duration-200",
-                          "bg-background hover:border-violet-300",
-                          "focus-within:ring-2 focus-within:ring-violet-100 focus-within:border-violet-400",
+                          "bg-background hover:border-emerald-300",
+                          "focus-within:ring-2 focus-within:ring-emerald-100 focus-within:border-emerald-400",
                           field.border,
                         )}
                       >
@@ -635,7 +635,7 @@ const MeasurementCard: React.FC<{
                 </div>
                 <div className="space-y-1.5">
                   <Label className="text-[11px] font-semibold text-muted-foreground uppercase flex items-center gap-1.5">
-                    <Target className="h-3 w-3 text-violet-500" />
+                    <Target className="h-3 w-3 text-emerald-500" />
                     Unidade
                   </Label>
                   <Input

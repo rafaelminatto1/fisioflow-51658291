@@ -76,7 +76,7 @@ export function ExerciseShelf() {
               {aiSuggestions.map((ex) => (
                 <div key={ex.id} className="relative group">
                   <div className="absolute -top-1 -right-1 z-10">
-                    <Badge className="h-5 px-1 bg-gradient-to-r from-purple-500 to-indigo-500 border-none text-[10px]">
+                    <Badge className="h-5 px-1 bg-gradient-to-r from-emerald-500 to-indigo-500 border-none text-[10px]">
                       {(ex as any).aiMetadata?.score}% Match
                     </Badge>
                   </div>

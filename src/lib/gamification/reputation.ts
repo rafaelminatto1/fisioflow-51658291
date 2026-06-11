@@ -99,7 +99,7 @@ export const LEVEL_TITLES: LevelTitle[] = [
     title: "Mestre",
     titleEn: "Master",
     icon: "👑",
-    color: "text-purple-500",
+    color: "text-emerald-500",
     description: "Dominando sua reabilitação",
   },
   {
@@ -107,7 +107,7 @@ export const LEVEL_TITLES: LevelTitle[] = [
     title: "Grão-Mestre",
     titleEn: "Grandmaster",
     icon: "🏆",
-    color: "text-purple-600",
+    color: "text-emerald-600",
     description: "Exemplo de superação",
   },
   {
@@ -269,7 +269,7 @@ export function calculatePatientReputation(
     novice: "bg-gray-500",
     beginner: "bg-green-500",
     experienced: "bg-blue-500",
-    master: "bg-purple-500",
+    master: "bg-emerald-500",
     legendary: "bg-amber-500",
   };
 
@@ -293,7 +293,7 @@ export function getRankGradient(rank: PatientReputation["rank"]): string {
     novice: "from-gray-500/20 to-gray-600/20",
     beginner: "from-green-500/20 to-green-600/20",
     experienced: "from-blue-500/20 to-blue-600/20",
-    master: "from-purple-500/20 to-purple-600/20",
+    master: "from-emerald-500/20 to-emerald-600/20",
     legendary: "from-amber-500/20 to-amber-600/20",
   };
   return gradients[rank];
@@ -307,7 +307,7 @@ export function getRankBorderColor(rank: PatientReputation["rank"]): string {
     novice: "border-gray-500/30",
     beginner: "border-green-500/30",
     experienced: "border-blue-500/30",
-    master: "border-purple-500/30",
+    master: "border-emerald-500/30",
     legendary: "border-amber-500/30",
   };
   return borders[rank];

@@ -43,7 +43,7 @@ import { cn } from "@/lib/utils";
 const TIPOS_TAREFA = [
   { value: "follow_up", label: "Follow-up", icon: Users, color: "bg-blue-500" },
   { value: "ligacao", label: "Ligação", icon: Phone, color: "bg-green-500" },
-  { value: "email", label: "Email", icon: Mail, color: "bg-purple-500" },
+  { value: "email", label: "Email", icon: Mail, color: "bg-emerald-500" },
   {
     value: "whatsapp",
     label: "WhatsApp",

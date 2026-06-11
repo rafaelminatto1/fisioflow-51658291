@@ -85,7 +85,7 @@ export const COLOR_OPTIONS = [
   "#14b8a6",
   "#f59e0b",
   "#f43f5e",
-  "#8b5cf6",
+  "#10b981",
   "#64748b",
   "#ec4899",
   "#06b6d4",

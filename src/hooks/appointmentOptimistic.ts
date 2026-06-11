@@ -12,6 +12,9 @@ export function parseUpdatesToAppointment(
   }
   if (updates.appointment_time || updates.start_time) {
     result.time = updates.appointment_time || updates.start_time;
+    // Remove snake_case fields so ScheduleCalendar falls back to time + duration
+    (result as any).start_time = undefined;
+    (result as any).end_time = undefined;
   }
   if (updates.duration) result.duration = updates.duration;
   if (updates.type) result.type = updates.type;

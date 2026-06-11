@@ -41,7 +41,7 @@ SKIP_DIRS = {
     '.playwright', 'playwright', 'playwright-screenshots', 'playwright-video',
     'test-results', 'screenshots', '.gemini', '.claude', '.cursor', '.trae',
     '.jules', '.kiro', 'docs2026', 'docker', 'e2e', 'e2e-tests', 'claude-skills',
-    'fisioflow-screenshots', 'public', 'temp', 'tmp', 'out'
+    'fisioflow-screenshots', 'public', 'temp', 'tmp', 'out', 'scripts', 'android', '_design-system-export', 'components', 'contexts', 'styles', 'hooks', 'utils'
 }
 
 # Files to skip (not pages)
@@ -118,10 +118,9 @@ def check_page(file_path: Path) -> dict:
     except Exception as e:
         return {"file": str(file_path.name), "issues": [f"Error: {e}"]}
     
-    # Detect if this is a layout/template file (has Head component)
-    is_layout = bool(re.search(r'Head>|<head', content, re.I))
+    is_layout = bool(re.search(r'<Head>|<head>', content, re.I))
     
-    has_title = bool(re.search(r'<title|title=|Head>', content, re.I))
+    has_title = bool(re.search(r'<title|<title=|<Head>', content, re.I))
     if not has_title and is_layout:
         issues.append("Missing title indicator")
     

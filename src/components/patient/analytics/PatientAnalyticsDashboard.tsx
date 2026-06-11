@@ -315,8 +315,8 @@ function InsightCard({ insight, onAcknowledge }: InsightCardProps) {
     },
     recommendation: {
       icon: Sparkles,
-      color: "text-purple-600",
-      bg: "bg-purple-500/10",
+      color: "text-emerald-600",
+      bg: "bg-emerald-500/10",
     },
     comparison: {
       icon: Activity,
@@ -693,7 +693,7 @@ export function PatientAnalyticsDashboard({
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <Sparkles className="h-5 w-5 text-purple-500" />
+                  <Sparkles className="h-5 w-5 text-emerald-500" />
                   Insights Recentes
                 </CardTitle>
               </CardHeader>
@@ -872,24 +872,24 @@ export function PatientAnalyticsDashboard({
           </div>
 
           {predictions.predicted_recovery_date && (
-            <Card className="bg-purple-50 dark:bg-purple-950/30 border-purple-200 dark:border-purple-800">
+            <Card className="bg-emerald-50 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-800">
               <CardContent className="pt-6">
                 <div className="flex items-center gap-4">
-                  <div className="p-4 bg-purple-500/10 rounded-xl">
-                    <Brain className="h-8 w-8 text-purple-600" />
+                  <div className="p-4 bg-emerald-500/10 rounded-xl">
+                    <Brain className="h-8 w-8 text-emerald-600" />
                   </div>
                   <div className="flex-1">
-                    <p className="text-sm font-medium text-purple-800 dark:text-purple-200">
+                    <p className="text-sm font-medium text-emerald-800 dark:text-emerald-200">
                       Previsão de Recuperação
                     </p>
-                    <p className="text-2xl font-bold text-purple-600">
+                    <p className="text-2xl font-bold text-emerald-600">
                       {format(
                         new Date(predictions.predicted_recovery_date),
                         "dd 'de' MMMM 'de' yyyy",
                         { locale: ptBR },
                       )}
                     </p>
-                    <p className="text-xs text-purple-700 dark:text-purple-300 mt-1">
+                    <p className="text-xs text-emerald-700 dark:text-emerald-300 mt-1">
                       Confiança da previsão:{" "}
                       {Math.round(predictions.predicted_recovery_confidence * 100)}%
                     </p>

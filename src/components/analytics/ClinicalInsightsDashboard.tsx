@@ -17,7 +17,7 @@ import { useClinicalInsights } from "@/hooks/useClinicalInsights";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Brain, TrendingDown, Target, Activity } from "lucide-react";
 
-const COLORS = ["#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6"];
+const COLORS = ["#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#10b981"];
 
 export const ClinicalInsightsDashboard = () => {
   const { data, isLoading, error } = useClinicalInsights();
@@ -79,10 +79,10 @@ export const ClinicalInsightsDashboard = () => {
           </CardContent>
         </Card>
 
-        <Card className="bg-purple-50/50 dark:bg-purple-950/20 border-purple-100 dark:border-purple-900">
+        <Card className="bg-emerald-50/50 dark:bg-emerald-950/20 border-emerald-100 dark:border-emerald-900">
           <CardContent className="pt-6">
             <div className="flex items-center gap-4">
-              <div className="p-2 bg-purple-500 rounded-lg text-white">
+              <div className="p-2 bg-emerald-500 rounded-lg text-white">
                 <Brain className="h-5 w-5" />
               </div>
               <div>

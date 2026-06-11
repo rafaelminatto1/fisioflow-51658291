@@ -22,12 +22,12 @@ interface StickySectionHeaderProps {
   showBackToTop?: boolean;
   onBackToTop?: () => void;
   className?: string;
-  accentColor?: "sky" | "violet" | "amber" | "rose" | "emerald";
+  accentColor?: "sky" | "emerald" | "amber" | "rose" | "emerald";
 }
 
 const ACCENT_COLORS = {
   sky: "bg-sky-500",
-  violet: "bg-violet-500",
+  emerald: "bg-emerald-500",
   amber: "bg-amber-500",
   rose: "bg-rose-500",
   emerald: "bg-emerald-500",

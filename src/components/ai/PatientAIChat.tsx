@@ -75,9 +75,9 @@ export function PatientAIChat({ patientId, patientName }: Props) {
   };
 
   return (
-    <Card className="h-[600px] flex flex-col shadow-lg border-t-4 border-t-purple-500">
-      <CardHeader className="pb-3 border-b bg-purple-50/50">
-        <CardTitle className="text-lg flex items-center gap-2 text-purple-700">
+    <Card className="h-[600px] flex flex-col shadow-lg border-t-4 border-t-emerald-500">
+      <CardHeader className="pb-3 border-b bg-emerald-50/50">
+        <CardTitle className="text-lg flex items-center gap-2 text-emerald-700">
           <Sparkles className="w-5 h-5" />
           Assistente Clínico Gemini
         </CardTitle>
@@ -85,7 +85,7 @@ export function PatientAIChat({ patientId, patientName }: Props) {
           Pergunte sobre o histórico de {patientName}. Ex: "Resuma a evolução da dor".
         </p>
         {analyticsLoading && (
-          <p className="text-[11px] text-purple-600">Preparando contexto clinico do paciente...</p>
+          <p className="text-[11px] text-emerald-600">Preparando contexto clinico do paciente...</p>
         )}
       </CardHeader>
 
@@ -106,15 +106,15 @@ export function PatientAIChat({ patientId, patientName }: Props) {
                 className={`flex gap-3 ${msg.role === "user" ? "justify-end" : "justify-start"}`}
               >
                 {msg.role === "model" && (
-                  <div className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center shrink-0">
-                    <Bot className="w-5 h-5 text-purple-600" />
+                  <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center shrink-0">
+                    <Bot className="w-5 h-5 text-emerald-600" />
                   </div>
                 )}
 
                 <div
                   className={`rounded-2xl px-4 py-2 max-w-[80%] text-sm ${
                     msg.role === "user"
-                      ? "bg-purple-600 text-white rounded-br-none"
+                      ? "bg-emerald-600 text-white rounded-br-none"
                       : "bg-gray-100 text-gray-800 rounded-bl-none"
                   }`}
                 >
@@ -130,8 +130,8 @@ export function PatientAIChat({ patientId, patientName }: Props) {
             ))}
             {loading && (
               <div className="flex gap-3 justify-start">
-                <div className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center">
-                  <Loader2 className="w-4 h-4 text-purple-600 animate-spin" />
+                <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center">
+                  <Loader2 className="w-4 h-4 text-emerald-600 animate-spin" />
                 </div>
                 <div className="bg-gray-50 rounded-2xl px-4 py-2 text-xs text-gray-500 italic">
                   Analisando prontuário no Postgres...
@@ -154,13 +154,13 @@ export function PatientAIChat({ patientId, patientName }: Props) {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder="Digite sua pergunta clínica..."
-            className="flex-1 focus-visible:ring-purple-500"
+            className="flex-1 focus-visible:ring-emerald-500"
             disabled={loading}
           />
           <Button
             type="submit"
             size="icon"
-            className="bg-purple-600 hover:bg-purple-700"
+            className="bg-emerald-600 hover:bg-emerald-700"
             disabled={loading || !input.trim()}
           >
             <Send className="w-4 h-4" />

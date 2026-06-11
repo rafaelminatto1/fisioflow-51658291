@@ -59,8 +59,8 @@ const STAGE_CONFIGS: Record<LifecycleEventType, StageConfig> = {
   first_appointment_scheduled: {
     label: "Primeira Consulta Agendada",
     icon: Calendar,
-    color: "text-purple-600",
-    bgColor: "bg-purple-500/10",
+    color: "text-emerald-600",
+    bgColor: "bg-emerald-500/10",
     description: "Agendamento da avaliação inicial",
   },
   first_appointment_completed: {
@@ -115,8 +115,8 @@ const STAGE_CONFIGS: Record<LifecycleEventType, StageConfig> = {
   reactivation: {
     label: "Reativado",
     icon: RefreshCw,
-    color: "text-violet-600",
-    bgColor: "bg-violet-500/10",
+    color: "text-emerald-600",
+    bgColor: "bg-emerald-500/10",
     description: "Paciente retornou após pausa",
   },
   churned: {

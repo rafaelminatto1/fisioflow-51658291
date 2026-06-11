@@ -39,7 +39,7 @@ export const TreatmentDurationCard: React.FC<TreatmentDurationCardProps> = ({
     if (days <= 14) return "bg-blue-500/10 text-blue-600 border-blue-500/30";
     if (days <= 30) return "bg-green-500/10 text-green-600 border-green-500/30";
     if (days <= 90) return "bg-amber-500/10 text-amber-600 border-amber-500/30";
-    return "bg-purple-500/10 text-purple-600 border-purple-500/30";
+    return "bg-emerald-500/10 text-emerald-600 border-emerald-500/30";
   };
 
   const getPhaseLabel = () => {

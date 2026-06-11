@@ -49,13 +49,13 @@ export const PremiumReportGenerator: React.FC<PremiumReportGeneratorProps> = ({
     <div className="space-y-8">
       <header className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-violet-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-violet-600/20">
+          <div className="w-10 h-10 bg-emerald-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-emerald-600/20">
             <FileText className="w-5 h-5" />
           </div>
           <div>
             <h3 className="font-bold text-lg">Gerador de Relatório Premium</h3>
-            <p className="text-[10px] text-violet-500 uppercase font-black tracking-widest flex items-center gap-1">
-              <Sparkles className="w-2.5 h-2.5 fill-violet-500" /> IA Synthesis Engine
+            <p className="text-[10px] text-emerald-500 uppercase font-black tracking-widest flex items-center gap-1">
+              <Sparkles className="w-2.5 h-2.5 fill-emerald-500" /> IA Synthesis Engine
             </p>
           </div>
         </div>
@@ -73,7 +73,7 @@ export const PremiumReportGenerator: React.FC<PremiumReportGeneratorProps> = ({
             </Label>
             <Textarea
               placeholder="Ex: Paciente ganhou 15 graus de flexão de joelho, dor reduziu de 7 para 2, já consegue caminhar 20 min sem compensação..."
-              className="min-h-[150px] rounded-3xl bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 p-6 focus:ring-violet-500/20 transition-all text-sm leading-relaxed"
+              className="min-h-[150px] rounded-3xl bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 p-6 focus:ring-emerald-500/20 transition-all text-sm leading-relaxed"
               value={highlights}
               onChange={(e) => setHighlights(e.target.value)}
             />
@@ -82,7 +82,7 @@ export const PremiumReportGenerator: React.FC<PremiumReportGeneratorProps> = ({
           <Button
             onClick={handleGenerate}
             disabled={isGenerating}
-            className="w-full h-14 bg-violet-600 hover:bg-violet-500 text-white rounded-2xl font-black text-sm gap-3 shadow-xl shadow-violet-600/20 transition-all"
+            className="w-full h-14 bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl font-black text-sm gap-3 shadow-xl shadow-emerald-600/20 transition-all"
           >
             {isGenerating ? (
               <>
@@ -112,11 +112,11 @@ export const PremiumReportGenerator: React.FC<PremiumReportGeneratorProps> = ({
                 "{reportData.medico}"
               </p>
             </Card>
-            <Card className="rounded-[32px] border-none bg-violet-50 dark:bg-violet-900/10 p-6 space-y-4 border border-violet-500/10">
-              <Badge className="bg-violet-500/10 text-violet-600 border-none rounded-full px-3 py-1 font-bold text-[10px]">
+            <Card className="rounded-[32px] border-none bg-emerald-50 dark:bg-emerald-900/10 p-6 space-y-4 border border-emerald-500/10">
+              <Badge className="bg-emerald-500/10 text-emerald-600 border-none rounded-full px-3 py-1 font-bold text-[10px]">
                 PARA O PACIENTE
               </Badge>
-              <p className="text-sm text-violet-900/70 dark:text-violet-300 leading-relaxed italic line-clamp-6">
+              <p className="text-sm text-emerald-900/70 dark:text-emerald-300 leading-relaxed italic line-clamp-6">
                 "{reportData.paciente}"
               </p>
             </Card>

@@ -294,7 +294,7 @@ export const MeasurementsBlock: React.FC<MeasurementsBlockProps> = ({
       <div className={cn("w-full transition-all duration-300", className)}>
         {/* Inline search/add bar — sem precisar clicar em "Adicionar" */}
         <div ref={searchWrapRef} className="relative px-1 pb-3">
-          <div className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 focus-within:border-violet-400 focus-within:ring-2 focus-within:ring-violet-100">
+          <div className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 focus-within:border-emerald-400 focus-within:ring-2 focus-within:ring-emerald-100">
             <Search className="h-3.5 w-3.5 text-slate-400 flex-shrink-0" />
             <input
               type="text"
@@ -330,7 +330,7 @@ export const MeasurementsBlock: React.FC<MeasurementsBlockProps> = ({
                   search.trim() ? { measurement_name: search.trim() } : undefined,
                 )
               }
-              className="flex items-center gap-1 rounded-md bg-violet-500 px-2 py-1 text-[11px] font-medium text-white transition hover:bg-violet-600 disabled:opacity-50"
+              className="flex items-center gap-1 rounded-md bg-emerald-500 px-2 py-1 text-[11px] font-medium text-white transition hover:bg-emerald-600 disabled:opacity-50"
             >
               <Plus className="h-3 w-3" />
               Adicionar
@@ -349,9 +349,9 @@ export const MeasurementsBlock: React.FC<MeasurementsBlockProps> = ({
                       key={template.name}
                       type="button"
                       onClick={() => handleAddMeasurement(template)}
-                      className="flex w-full items-center gap-2 px-3 py-1.5 text-left text-sm hover:bg-violet-50"
+                      className="flex w-full items-center gap-2 px-3 py-1.5 text-left text-sm hover:bg-emerald-50"
                     >
-                      <Sparkles className="h-3.5 w-3.5 text-violet-500" />
+                      <Sparkles className="h-3.5 w-3.5 text-emerald-500" />
                       <span className="flex-1">{template.name}</span>
                       {template.unit && (
                         <span className="text-[10px] text-slate-400">{template.unit}</span>
@@ -372,7 +372,7 @@ export const MeasurementsBlock: React.FC<MeasurementsBlockProps> = ({
                       onClick={() =>
                         handleAddMeasurement({ measurement_type: type, measurement_name: "" })
                       }
-                      className="flex w-full items-center gap-2 px-3 py-1.5 text-left text-sm hover:bg-violet-50"
+                      className="flex w-full items-center gap-2 px-3 py-1.5 text-left text-sm hover:bg-emerald-50"
                     >
                       <Plus className="h-3.5 w-3.5 text-slate-400" />
                       <span>{MEASUREMENT_TYPE_LABELS[type]}</span>
@@ -425,7 +425,7 @@ export const MeasurementsBlock: React.FC<MeasurementsBlockProps> = ({
             </div>
             <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
               <div
-                className="h-full bg-gradient-to-r from-violet-400 to-violet-600 transition-all duration-500 ease-out rounded-full"
+                className="h-full bg-gradient-to-r from-emerald-400 to-emerald-600 transition-all duration-500 ease-out rounded-full"
                 style={{
                   width: `${measurements.length > 0 ? (completedCount / measurements.length) * 100 : 0}%`,
                 }}
@@ -508,8 +508,8 @@ const MeasurementCard: React.FC<{
             className={cn(
               "flex-shrink-0 w-5 h-5 rounded-lg border-2 transition-all duration-200",
               measurement.completed
-                ? "bg-violet-500 border-violet-500 flex items-center justify-center"
-                : "border-muted-foreground/30 hover:border-violet-400",
+                ? "bg-emerald-500 border-emerald-500 flex items-center justify-center"
+                : "border-muted-foreground/30 hover:border-emerald-400",
             )}
           >
             {measurement.completed && <CheckCircle2 className="h-3.5 w-3.5 text-white" />}
@@ -667,8 +667,8 @@ const MeasurementCard: React.FC<{
                         key={field.id}
                         className={cn(
                           "p-2.5 rounded-lg border transition-all duration-200",
-                          "bg-background hover:border-violet-300",
-                          "focus-within:ring-2 focus-within:ring-violet-100 focus-within:border-violet-400",
+                          "bg-background hover:border-emerald-300",
+                          "focus-within:ring-2 focus-within:ring-emerald-100 focus-within:border-emerald-400",
                           field.border,
                         )}
                       >
@@ -716,7 +716,7 @@ const MeasurementCard: React.FC<{
                 </div>
                 <div className="space-y-1.5">
                   <Label className="text-[11px] font-semibold text-muted-foreground uppercase flex items-center gap-1.5">
-                    <Target className="h-3 w-3 text-violet-500" />
+                    <Target className="h-3 w-3 text-emerald-500" />
                     Unidade
                   </Label>
                   <Input

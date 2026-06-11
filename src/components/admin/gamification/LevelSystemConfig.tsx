@@ -247,7 +247,7 @@ export const LevelSystemConfig: React.FC = () => {
                   key={level.level}
                   className="flex items-center gap-4 p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
                 >
-                  <div className="flex items-center justify-center w-10 h-10 rounded-full bg-gradient-to-br from-primary to-purple-500 text-white font-bold text-sm">
+                  <div className="flex items-center justify-center w-10 h-10 rounded-full bg-gradient-to-br from-primary to-emerald-500 text-white font-bold text-sm">
                     {level.level}
                   </div>
 

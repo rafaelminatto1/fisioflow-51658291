@@ -90,7 +90,7 @@ export function ClinicalValueDashboard() {
           value={healthData?.data?.avgSatisfaction || 9.2}
           sub="Média de 0-10"
           icon={Brain}
-          color="text-purple-500"
+          color="text-emerald-500"
         />
         <KPICard
           title="Risco de Churn"
@@ -171,7 +171,7 @@ export function ClinicalValueDashboard() {
                 <span className="w-2 h-2 rounded-full bg-indigo-500" /> Mid LTV
               </span>
               <span className="flex items-center gap-1">
-                <span className="w-2 h-2 rounded-full bg-purple-600" /> High LTV
+                <span className="w-2 h-2 rounded-full bg-emerald-600" /> High LTV
               </span>
             </div>
           </CardContent>
@@ -243,5 +243,5 @@ function KPICard({ title, value, sub, icon: Icon, color }: any) {
 function getColorByLTV(ltv: number) {
   if (ltv < 2000) return "#60a5fa"; // blue-400
   if (ltv < 4000) return "#6366f1"; // indigo-500
-  return "#9333ea"; // purple-600
+  return "#9333ea"; // emerald-600
 }

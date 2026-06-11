@@ -211,7 +211,7 @@ export function ReviewAutomation({ organizationId }: { organizationId?: string }
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-2">
-              <TrendingUp className="h-5 w-5 text-purple-600" />
+              <TrendingUp className="h-5 w-5 text-emerald-600" />
               <div>
                 <p className="text-2xl font-bold">{stats.conversionRate}%</p>
                 <p className="text-xs text-muted-foreground">Taxa de Conversão</p>

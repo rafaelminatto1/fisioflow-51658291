@@ -321,7 +321,7 @@ export default function ReferralPage() {
                           size="sm"
                           onClick={handleAIGenerateSuggestion}
                           disabled={isGeneratingAI}
-                          className="h-7 text-purple-600 hover:text-purple-700 hover:bg-purple-50 gap-1 px-2"
+                          className="h-7 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 gap-1 px-2"
                         >
                           {isGeneratingAI ? (
                             <Loader2 className="h-3 w-3 animate-spin" />
@@ -545,9 +545,9 @@ export default function ReferralPage() {
         </div>
 
         {/* Rewards Information */}
-        <Card className="border-purple-200 bg-purple-50 dark:border-purple-900 dark:bg-purple-950">
+        <Card className="border-emerald-200 bg-emerald-50 dark:border-emerald-900 dark:bg-emerald-950">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-purple-900 dark:text-purple-100">
+            <CardTitle className="flex items-center gap-2 text-emerald-900 dark:text-emerald-100">
               <Gift className="h-5 w-5" />
               Como Funciona o Programa de Indicação
             </CardTitle>
@@ -555,64 +555,64 @@ export default function ReferralPage() {
           <CardContent className="space-y-4">
             <div className="grid gap-4 md:grid-cols-3">
               <div className="flex gap-3">
-                <div className="flex-shrink-0 w-8 h-8 rounded-full bg-purple-600 text-white flex items-center justify-center font-semibold">
+                <div className="flex-shrink-0 w-8 h-8 rounded-full bg-emerald-600 text-white flex items-center justify-center font-semibold">
                   1
                 </div>
                 <div>
-                  <p className="font-medium text-purple-900 dark:text-purple-100">
+                  <p className="font-medium text-emerald-900 dark:text-emerald-100">
                     O paciente recebe um código único
                   </p>
-                  <p className="text-sm text-purple-800 dark:text-purple-200">
+                  <p className="text-sm text-emerald-800 dark:text-emerald-200">
                     Cada paciente tem um código personalizado para compartilhar
                   </p>
                 </div>
               </div>
 
               <div className="flex gap-3">
-                <div className="flex-shrink-0 w-8 h-8 rounded-full bg-purple-600 text-white flex items-center justify-center font-semibold">
+                <div className="flex-shrink-0 w-8 h-8 rounded-full bg-emerald-600 text-white flex items-center justify-center font-semibold">
                   2
                 </div>
                 <div>
-                  <p className="font-medium text-purple-900 dark:text-purple-100">
+                  <p className="font-medium text-emerald-900 dark:text-emerald-100">
                     Amigo usa o código no cadastro
                   </p>
-                  <p className="text-sm text-purple-800 dark:text-purple-200">
+                  <p className="text-sm text-emerald-800 dark:text-emerald-200">
                     O novo paciente insere o código para ganhar benefício
                   </p>
                 </div>
               </div>
 
               <div className="flex gap-3">
-                <div className="flex-shrink-0 w-8 h-8 rounded-full bg-purple-600 text-white flex items-center justify-center font-semibold">
+                <div className="flex-shrink-0 w-8 h-8 rounded-full bg-emerald-600 text-white flex items-center justify-center font-semibold">
                   3
                 </div>
                 <div>
-                  <p className="font-medium text-purple-900 dark:text-purple-100">
+                  <p className="font-medium text-emerald-900 dark:text-emerald-100">
                     Ambos ganham recompensas
                   </p>
-                  <p className="text-sm text-purple-800 dark:text-purple-200">
+                  <p className="text-sm text-emerald-800 dark:text-emerald-200">
                     Quem indicou e quem foi indicado recebem benefícios
                   </p>
                 </div>
               </div>
             </div>
 
-            <div className="flex flex-wrap gap-4 pt-4 border-t border-purple-200 dark:border-purple-800">
+            <div className="flex flex-wrap gap-4 pt-4 border-t border-emerald-200 dark:border-emerald-800">
               <div className="flex items-center gap-2">
-                <Percent className="h-5 w-5 text-purple-600" />
-                <span className="text-sm text-purple-900 dark:text-purple-100">
+                <Percent className="h-5 w-5 text-emerald-600" />
+                <span className="text-sm text-emerald-900 dark:text-emerald-100">
                   Desconto no tratamento
                 </span>
               </div>
               <div className="flex items-center gap-2">
-                <DollarSign className="h-5 w-5 text-purple-600" />
-                <span className="text-sm text-purple-900 dark:text-purple-100">
+                <DollarSign className="h-5 w-5 text-emerald-600" />
+                <span className="text-sm text-emerald-900 dark:text-emerald-100">
                   Sessões bonificadas
                 </span>
               </div>
               <div className="flex items-center gap-2">
-                <Award className="h-5 w-5 text-purple-600" />
-                <span className="text-sm text-purple-900 dark:text-purple-100">
+                <Award className="h-5 w-5 text-emerald-600" />
+                <span className="text-sm text-emerald-900 dark:text-emerald-100">
                   Produtos exclusivos
                 </span>
               </div>

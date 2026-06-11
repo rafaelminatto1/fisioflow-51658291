@@ -26,7 +26,7 @@ export default function GamificationHeader({
   else greeting = "Boa noite";
 
   return (
-    <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500 text-white shadow-xl">
+    <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-indigo-600 via-emerald-600 to-pink-500 text-white shadow-xl">
       {/* Background shapes */}
       <div className="absolute top-0 right-0 -mt-10 -mr-10 h-64 w-64 rounded-full bg-white/10 blur-3xl" />
       <div className="absolute bottom-0 left-0 -mb-10 -ml-10 h-40 w-40 rounded-full bg-black/10 blur-2xl" />

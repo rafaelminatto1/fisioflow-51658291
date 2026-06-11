@@ -59,7 +59,7 @@ export function WeeklySummary({
           value={formatHoursDecimal(totalSeconds / totalDays || 0)}
           subtitle={`${totalDays} dias trabalhados`}
           icon={TrendingUp}
-          color="purple"
+          color="emerald"
         />
       </div>
 
@@ -134,14 +134,14 @@ interface SummaryCardProps {
   value: string;
   subtitle: string;
   icon: React.ComponentType<{ className?: string }>;
-  color: "blue" | "green" | "purple" | "yellow";
+  color: "blue" | "green" | "emerald" | "yellow";
 }
 
 function SummaryCard({ title, value, subtitle, icon: Icon, color }: SummaryCardProps) {
   const colorClasses = {
     blue: "bg-blue-500/10 text-blue-500",
     green: "bg-green-500/10 text-green-500",
-    purple: "bg-purple-500/10 text-purple-500",
+    emerald: "bg-emerald-500/10 text-emerald-500",
     yellow: "bg-yellow-500/10 text-yellow-500",
   };
 

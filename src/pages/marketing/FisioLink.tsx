@@ -51,7 +51,7 @@ const THEME_OPTIONS = [
 const COLOR_OPTIONS = [
   { value: "#3b82f6", label: "Azul", color: "bg-blue-500" },
   { value: "#10b981", label: "Verde", color: "bg-emerald-500" },
-  { value: "#8b5cf6", label: "Roxo", color: "bg-purple-500" },
+  { value: "#10b981", label: "Roxo", color: "bg-emerald-500" },
   { value: "#f59e0b", label: "Laranja", color: "bg-amber-500" },
   { value: "#ef4444", label: "Vermelho", color: "bg-red-500" },
   { value: "#06b6d4", label: "Ciano", color: "bg-cyan-500" },
@@ -298,7 +298,7 @@ export default function FisioLinkPage() {
                       size="sm"
                       onClick={handleAIGenerate}
                       disabled={isGeneratingAI}
-                      className="h-8 text-purple-600 hover:text-purple-700 hover:bg-purple-50 gap-1.5"
+                      className="h-8 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 gap-1.5"
                     >
                       {isGeneratingAI ? (
                         <Loader2 className="h-3 w-3 animate-spin" />
@@ -413,7 +413,7 @@ export default function FisioLinkPage() {
                   >
                     {/* Header */}
                     <div className="text-center space-y-2">
-                      <div className="w-16 h-16 mx-auto rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white text-2xl font-bold">
+                      <div className="w-16 h-16 mx-auto rounded-full bg-gradient-to-br from-blue-500 to-emerald-500 flex items-center justify-center text-white text-2xl font-bold">
                         F
                       </div>
                       <h2 className="font-bold text-lg">FisioFlow</h2>

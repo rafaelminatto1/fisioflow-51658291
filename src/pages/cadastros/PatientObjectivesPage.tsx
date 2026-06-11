@@ -52,7 +52,7 @@ import {
 const CATEGORIAS = [
   { value: "flexibilidade", label: "Flexibilidade", color: "bg-blue-500" },
   { value: "força", label: "Força", color: "bg-red-500" },
-  { value: "postura", label: "Postura", color: "bg-purple-500" },
+  { value: "postura", label: "Postura", color: "bg-emerald-500" },
   { value: "dor", label: "Dor", color: "bg-orange-500" },
   { value: "composição", label: "Composição Corporal", color: "bg-green-500" },
   { value: "funcional", label: "Funcional", color: "bg-cyan-500" },

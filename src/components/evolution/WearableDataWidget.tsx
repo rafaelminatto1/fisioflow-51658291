@@ -19,7 +19,7 @@ const DATA_TYPE_META: Record<
   active_calories: { label: "Calorias", unit: "kcal", icon: Flame, color: "text-green-500" },
   distance: { label: "Distância", unit: "m", icon: Route, color: "text-blue-500" },
   sleep_hours: { label: "Sono", unit: "h", icon: Moon, color: "text-indigo-400" },
-  hrv: { label: "HRV", unit: "ms", icon: Zap, color: "text-purple-500" },
+  hrv: { label: "HRV", unit: "ms", icon: Zap, color: "text-emerald-500" },
   vo2_max: { label: "VO₂ Máx", unit: "ml/kg/min", icon: Activity, color: "text-teal-500" },
 };
 

@@ -53,7 +53,7 @@ const TIPOS_CONTATO = [
   {
     value: "email",
     label: "Email",
-    icon: <Mail className="h-4 w-4 text-purple-500" />,
+    icon: <Mail className="h-4 w-4 text-emerald-500" />,
   },
   {
     value: "presencial",

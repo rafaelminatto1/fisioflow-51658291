@@ -136,7 +136,7 @@ export const Patient360ChatDrawer: React.FC<Patient360ChatDrawerProps> = ({
         side="right"
         className="sm:max-w-[500px] flex flex-col p-0 border-l border-indigo-100 dark:border-indigo-900/30 shadow-2xl"
       >
-        <SheetHeader className="p-6 bg-gradient-to-br from-indigo-600 to-violet-700 text-white">
+        <SheetHeader className="p-6 bg-gradient-to-br from-indigo-600 to-emerald-700 text-white">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="p-2 rounded-xl bg-white/20">

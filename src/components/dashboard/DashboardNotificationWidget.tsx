@@ -35,7 +35,7 @@ const NOTIFICATION_ICONS: Record<string, React.ElementType> = {
 const NOTIFICATION_COLORS: Record<string, string> = {
   appointment: "bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400",
   payment: "bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400",
-  patient: "bg-violet-100 text-violet-600 dark:bg-violet-900/30 dark:text-violet-400",
+  patient: "bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400",
   whatsapp: "bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400",
   warning: "bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400",
   error: "bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400",

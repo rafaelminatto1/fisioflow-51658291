@@ -63,7 +63,7 @@ const QuickFilters = memo(
         id: "thisWeek" as QuickFilterType,
         label: "Esta Semana",
         icon: Calendar,
-        color: "bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300",
+        color: "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300",
         count: null,
       },
       {

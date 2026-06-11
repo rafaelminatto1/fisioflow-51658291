@@ -68,16 +68,16 @@ export function ClinicalEfficacyDashboard() {
           </CardContent>
         </Card>
 
-        <Card className="rounded-2xl border-border/40 shadow-premium-sm bg-purple-50/30 dark:bg-purple-950/10">
+        <Card className="rounded-2xl border-border/40 shadow-premium-sm bg-emerald-50/30 dark:bg-emerald-950/10">
           <CardContent className="p-4 flex items-center gap-4">
-            <div className="h-10 w-10 rounded-xl bg-purple-500/10 flex items-center justify-center text-purple-600">
+            <div className="h-10 w-10 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-600">
               <Users className="h-5 w-5" />
             </div>
             <div>
               <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
                 Engajamento
               </p>
-              <h3 className="text-xl font-black tracking-tighter text-purple-700">
+              <h3 className="text-xl font-black tracking-tighter text-emerald-700">
                 {stats?.engagementScore || 0}%
               </h3>
             </div>

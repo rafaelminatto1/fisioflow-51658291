@@ -444,9 +444,9 @@ export const EvolutionTimeline: React.FC<EvolutionTimelineProps> = ({
             <div className="space-y-4">
               {/* Level Progress */}
               {!isLoadingGamification && (
-                <div className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950/20 dark:to-purple-950/20 border border-blue-200 dark:border-blue-800 rounded-xl p-4">
+                <div className="bg-gradient-to-r from-blue-50 to-emerald-50 dark:from-blue-950/20 dark:to-emerald-950/20 border border-blue-200 dark:border-blue-800 rounded-xl p-4">
                   <div className="flex items-center gap-3 mb-3">
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center">
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-emerald-500 flex items-center justify-center">
                       <span className="text-sm font-bold text-white">Lvl {currentLevel}</span>
                     </div>
                     <div className="flex-1">
@@ -456,7 +456,7 @@ export const EvolutionTimeline: React.FC<EvolutionTimelineProps> = ({
                       </div>
                       <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
                         <div
-                          className="bg-gradient-to-r from-blue-500 to-purple-500 h-2 rounded-full transition-all duration-500"
+                          className="bg-gradient-to-r from-blue-500 to-emerald-500 h-2 rounded-full transition-all duration-500"
                           style={{ width: `${progressPercentage}%` }}
                         />
                       </div>

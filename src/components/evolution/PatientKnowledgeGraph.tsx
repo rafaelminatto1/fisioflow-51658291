@@ -352,8 +352,8 @@ const ExerciseNode: React.FC<NodeProps<ExerciseNodeData>> = ({ data, selected })
         onClick={handleClick}
         className={cn(
           nodeBaseClass,
-          "w-12 h-12 bg-gradient-to-br from-purple-500 to-purple-700 border-purple-300 text-white",
-          selected && "ring-4 ring-purple-300 ring-offset-2",
+          "w-12 h-12 bg-gradient-to-br from-emerald-500 to-emerald-700 border-emerald-300 text-white",
+          selected && "ring-4 ring-emerald-300 ring-offset-2",
         )}
       >
         <Dumbbell className="w-4 h-4" />
@@ -425,7 +425,7 @@ const typeConfig: Record<
   },
   exercise: {
     label: "Exercício",
-    color: "text-purple-700 bg-purple-50 border-purple-200",
+    color: "text-emerald-700 bg-emerald-50 border-emerald-200",
     icon: <Dumbbell className="w-4 h-4" />,
   },
 };
@@ -512,7 +512,7 @@ const EmptyState: React.FC = () => (
       <Badge variant="outline" className="text-orange-600 border-orange-200 bg-orange-50 text-xs">
         Patologias
       </Badge>
-      <Badge variant="outline" className="text-purple-600 border-purple-200 bg-purple-50 text-xs">
+      <Badge variant="outline" className="text-emerald-600 border-emerald-200 bg-emerald-50 text-xs">
         Exercícios
       </Badge>
     </div>
@@ -784,7 +784,7 @@ export const PatientKnowledgeGraph: React.FC<PatientKnowledgeGraphProps> = ({
                     if (type === "session") return "#3b82f6";
                     if (type === "goal") return "#10b981";
                     if (type === "pathology") return "#f97316";
-                    if (type === "exercise") return "#8b5cf6";
+                    if (type === "exercise") return "#10b981";
                     return "#94a3b8";
                   }}
                   maskColor="rgba(248, 250, 252, 0.85)"
@@ -802,7 +802,7 @@ export const PatientKnowledgeGraph: React.FC<PatientKnowledgeGraphProps> = ({
                     <LegendItem color="bg-blue-500" label="Sessões" />
                     <LegendItem color="bg-emerald-500" label="Metas" />
                     <LegendItem color="bg-orange-500" label="Patologias" />
-                    <LegendItem color="bg-purple-500" label="Exercícios" />
+                    <LegendItem color="bg-emerald-500" label="Exercícios" />
                   </div>
                 </Panel>
 
@@ -835,9 +835,9 @@ export const PatientKnowledgeGraph: React.FC<PatientKnowledgeGraphProps> = ({
                       </div>
                     )}
                     {exercises.length > 0 && (
-                      <div className="bg-purple-50 border border-purple-100 rounded-lg px-2.5 py-1.5 flex items-center gap-1.5 shadow-sm">
-                        <Dumbbell className="w-3 h-3 text-purple-500" />
-                        <span className="text-[10px] font-semibold text-purple-700">
+                      <div className="bg-emerald-50 border border-emerald-100 rounded-lg px-2.5 py-1.5 flex items-center gap-1.5 shadow-sm">
+                        <Dumbbell className="w-3 h-3 text-emerald-500" />
+                        <span className="text-[10px] font-semibold text-emerald-700">
                           {exercises.length} {exercises.length === 1 ? "Exercício" : "Exercícios"}
                         </span>
                       </div>

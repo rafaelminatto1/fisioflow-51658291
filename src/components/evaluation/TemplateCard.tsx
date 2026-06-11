@@ -16,7 +16,7 @@ import { EvaluationTemplate } from "@/types/clinical-forms";
 const CATEGORY_COLORS: Record<string, string> = {
   esportiva: "bg-green-500",
   ortopedica: "bg-blue-500",
-  neurologica: "bg-purple-500",
+  neurologica: "bg-emerald-500",
   respiratoria: "bg-orange-500",
   padrao: "bg-primary",
   geral: "bg-gray-500",

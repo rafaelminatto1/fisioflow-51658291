@@ -894,7 +894,7 @@ export const ExerciseBlockWidget: React.FC<ExerciseBlockWidgetProps> = memo(
                     className={cn(
                       "h-8 sm:h-7 px-2.5 gap-1.5 text-xs font-medium relative transition-colors shadow-sm",
                       activeFiltersCount > 0 &&
-                        "border-purple-300 bg-purple-50 text-purple-700 hover:bg-purple-100",
+                        "border-emerald-300 bg-emerald-50 text-emerald-700 hover:bg-emerald-100",
                     )}
                     aria-label={ARIA_LABELS.filters}
                     aria-expanded={showFilters}
@@ -903,7 +903,7 @@ export const ExerciseBlockWidget: React.FC<ExerciseBlockWidgetProps> = memo(
                     <span>Filtros</span>
                     {activeFiltersCount > 0 && (
                       <Badge
-                        className="h-4 min-w-4 px-1 text-[10px] bg-purple-600 text-white"
+                        className="h-4 min-w-4 px-1 text-[10px] bg-emerald-600 text-white"
                         aria-label={`${activeFiltersCount} filtros ativos`}
                       >
                         {activeFiltersCount}
@@ -954,11 +954,11 @@ export const ExerciseBlockWidget: React.FC<ExerciseBlockWidgetProps> = memo(
                     variant="outline"
                     size="sm"
                     onClick={openLibraryModal}
-                    className="h-8 px-2.5 gap-1.5 text-sm font-medium border-dashed border-purple-300 hover:border-purple-400 hover:bg-purple-50 transition-all"
+                    className="h-8 px-2.5 gap-1.5 text-sm font-medium border-dashed border-emerald-300 hover:border-emerald-400 hover:bg-emerald-50 transition-all"
                     disabled={disabled}
                     aria-label="Abrir biblioteca de exercícios"
                   >
-                    <Library className="h-3.5 w-3.5 text-purple-600" />
+                    <Library className="h-3.5 w-3.5 text-emerald-600" />
                     <span className="hidden sm:inline">Biblioteca</span>
                   </Button>
                 </TooltipTrigger>
@@ -975,7 +975,7 @@ export const ExerciseBlockWidget: React.FC<ExerciseBlockWidgetProps> = memo(
                       variant="outline"
                       size="sm"
                       onClick={onSuggest}
-                      className="h-8 px-3 gap-2 text-sm font-medium text-purple-700 border-purple-300 bg-purple-50 hover:bg-purple-100 hover:border-purple-400 transition-all"
+                      className="h-8 px-3 gap-2 text-sm font-medium text-emerald-700 border-emerald-300 bg-emerald-50 hover:bg-emerald-100 hover:border-emerald-400 transition-all"
                       disabled={disabled || exercises.length === 0}
                       aria-label={ARIA_LABELS.suggestExercises}
                     >

@@ -27,7 +27,7 @@ const NOTIFICATION_ICONS = {
 
 const NOTIFICATION_COLORS = {
   achievement: "text-yellow-500",
-  level_up: "text-purple-500",
+  level_up: "text-emerald-500",
   streak_milestone: "text-orange-500",
   quest_complete: "text-blue-500",
   reward_unlocked: "text-green-500",

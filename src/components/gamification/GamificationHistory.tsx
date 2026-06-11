@@ -98,7 +98,7 @@ export function GamificationHistory({
       case "achievement":
         return <Trophy className="h-4 w-4 text-yellow-500" />;
       case "level_up":
-        return <Zap className="h-4 w-4 text-purple-500" />;
+        return <Zap className="h-4 w-4 text-emerald-500" />;
       case "streak":
         return <Flame className="h-4 w-4 text-orange-500" />;
       case "quest":
@@ -115,7 +115,7 @@ export function GamificationHistory({
       case "achievement":
         return "bg-yellow-500/10 text-yellow-600 border-yellow-500/20";
       case "level_up":
-        return "bg-purple-500/10 text-purple-600 border-purple-500/20";
+        return "bg-emerald-500/10 text-emerald-600 border-emerald-500/20";
       case "streak":
         return "bg-orange-500/10 text-orange-600 border-orange-500/20";
       case "quest":
@@ -364,7 +364,7 @@ export function GamificationHistory({
 
         <Card className="p-4">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-purple-500/10 rounded-full text-purple-600">
+            <div className="p-2 bg-emerald-500/10 rounded-full text-emerald-600">
               <Trophy className="h-5 w-5" />
             </div>
             <div>

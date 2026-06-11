@@ -401,8 +401,8 @@ export default function WhatsAppIntegration() {
                 <Card className="border-dashed">
                   <CardContent className="pt-4">
                     <div className="flex items-start gap-3">
-                      <div className="p-2 bg-purple-500/10 rounded-lg">
-                        <Zap className="h-5 w-5 text-purple-500" />
+                      <div className="p-2 bg-emerald-500/10 rounded-lg">
+                        <Zap className="h-5 w-5 text-emerald-500" />
                       </div>
                       <div className="flex-1">
                         <p className="font-medium">Follow-up Pós-Consulta</p>

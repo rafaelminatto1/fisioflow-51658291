@@ -302,8 +302,8 @@ export const PatientDashboard360 = ({
 
         <Card className="border-blue-100 shadow-sm bg-white overflow-hidden group">
           <CardContent className="p-4 flex items-center gap-4">
-            <div className="h-12 w-12 rounded-xl bg-purple-50 flex items-center justify-center shrink-0">
-              <Trophy className="w-6 h-6 text-purple-600" />
+            <div className="h-12 w-12 rounded-xl bg-emerald-50 flex items-center justify-center shrink-0">
+              <Trophy className="w-6 h-6 text-emerald-600" />
             </div>
             <div>
               <p className="text-slate-400 text-[10px] font-bold uppercase tracking-wider">

@@ -44,7 +44,7 @@ export const STATUS_LABELS: Record<string, string> = {
 export const STATUS_COLORS: Record<string, string> = {
   agendado: "bg-blue-500",
   atendido: "bg-emerald-500",
-  avaliacao: "bg-violet-500",
+  avaliacao: "bg-emerald-500",
   cancelado: "bg-slate-950",
   faltou: "bg-red-500",
   faltou_com_aviso: "bg-teal-400",

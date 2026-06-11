@@ -223,7 +223,7 @@ export function ExercisePlayer({
             variant={aiMode ? "default" : "outline"}
             size="sm"
             onClick={() => setAiMode(!aiMode)}
-            className={cn(aiMode && "bg-gradient-to-r from-purple-600 to-blue-600 border-0")}
+            className={cn(aiMode && "bg-gradient-to-r from-emerald-600 to-blue-600 border-0")}
           >
             {aiMode ? <Video className="h-4 w-4 mr-2" /> : <Sparkles className="h-4 w-4 mr-2" />}
             {aiMode ? "Ver Vídeo Aula" : "Ativar Modo IA"}

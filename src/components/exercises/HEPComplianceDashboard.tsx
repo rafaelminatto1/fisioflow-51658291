@@ -86,7 +86,7 @@ function HEPGenerateWithAI({ planId }: { planId: string }) {
       <Button
         size="sm"
         variant="outline"
-        className="gap-2 text-violet-600 border-violet-200 hover:bg-violet-50 self-start text-xs"
+        className="gap-2 text-emerald-600 border-emerald-200 hover:bg-emerald-50 self-start text-xs"
         onClick={generate}
         disabled={loading}
       >
@@ -97,7 +97,7 @@ function HEPGenerateWithAI({ planId }: { planId: string }) {
       {result && (
         <div className="flex flex-col gap-3 text-xs">
           {result.exercises.map((ex, i) => (
-            <div key={i} className="rounded-lg border p-2 bg-violet-50/40">
+            <div key={i} className="rounded-lg border p-2 bg-emerald-50/40">
               <p className="font-semibold text-sm">{ex.name}</p>
               {ex.description && <p className="text-muted-foreground mt-0.5">{ex.description}</p>}
               <div className="flex gap-3 mt-1 flex-wrap text-muted-foreground">
@@ -108,10 +108,10 @@ function HEPGenerateWithAI({ planId }: { planId: string }) {
             </div>
           ))}
           {result.evidence_references && result.evidence_references.length > 0 && (
-            <div className="rounded-lg border border-violet-200 bg-violet-50 p-2">
-              <p className="font-semibold text-violet-700 mb-1">Baseado em:</p>
+            <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-2">
+              <p className="font-semibold text-emerald-700 mb-1">Baseado em:</p>
               {result.evidence_references.map((ref, i) => (
-                <p key={i} className="text-violet-600">
+                <p key={i} className="text-emerald-600">
                   • {ref.title} <span className="opacity-60">({ref.source})</span>
                 </p>
               ))}

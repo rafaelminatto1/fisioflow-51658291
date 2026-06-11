@@ -34,7 +34,7 @@ const STAT_CONFIG = [
     label: "Progresso",
     getVal: (s: EvolutionStatsProps["stats"]) => `${s.avgGoalProgress || 0}%`,
     icon: TrendingUp,
-    color: "purple",
+    color: "emerald",
   },
   {
     label: "Patologias",
@@ -80,12 +80,12 @@ const COLOR_CLASSES: Record<
     border: "border-green-500/20",
     progress: "bg-green-500",
   },
-  purple: {
-    bg: "from-purple-500/5",
-    text: "text-purple-600 dark:text-purple-400",
-    icon: "text-purple-500/30 group-hover:text-purple-500/50",
-    border: "border-purple-500/20",
-    progress: "bg-purple-500",
+  emerald: {
+    bg: "from-emerald-500/5",
+    text: "text-emerald-600 dark:text-emerald-400",
+    icon: "text-emerald-500/30 group-hover:text-emerald-500/50",
+    border: "border-emerald-500/20",
+    progress: "bg-emerald-500",
   },
   orange: {
     bg: "from-orange-500/5",

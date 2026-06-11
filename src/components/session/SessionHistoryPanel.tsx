@@ -105,7 +105,7 @@ export const SessionHistoryPanel = ({
                     )}
                     {session.assessment && (
                       <div className="bg-muted/30 p-2 rounded">
-                        <span className="font-semibold text-xs text-purple-600">A:</span>{" "}
+                        <span className="font-semibold text-xs text-emerald-600">A:</span>{" "}
                         {formatClinicalText(session.assessment)}
                       </div>
                     )}

@@ -76,7 +76,7 @@ export function RevenueForecastCard() {
             className={cn(
               "rounded-2xl border p-4 flex flex-col gap-1",
               data.total_month_estimate > 0
-                ? "bg-violet-50 border-violet-200 dark:bg-violet-950/30 dark:border-violet-800"
+                ? "bg-emerald-50 border-emerald-200 dark:bg-emerald-950/30 dark:border-emerald-800"
                 : "bg-muted/30 border-border/50",
             )}
           >
@@ -87,7 +87,7 @@ export function RevenueForecastCard() {
               className={cn(
                 "text-xl font-black font-display",
                 data.total_month_estimate > 0
-                  ? "text-violet-600 dark:text-violet-400"
+                  ? "text-emerald-600 dark:text-emerald-400"
                   : "text-muted-foreground",
               )}
             >

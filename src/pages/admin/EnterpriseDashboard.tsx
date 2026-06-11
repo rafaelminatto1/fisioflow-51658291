@@ -73,7 +73,7 @@ export default function EnterpriseDashboard() {
           <Button
             onClick={runRegionalAudit}
             disabled={isAuditing}
-            className="rounded-xl h-12 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 shadow-lg shadow-indigo-200 border-none px-6 gap-2"
+            className="rounded-xl h-12 bg-gradient-to-r from-indigo-600 to-emerald-600 hover:from-indigo-700 hover:to-emerald-700 shadow-lg shadow-indigo-200 border-none px-6 gap-2"
           >
             {isAuditing ? (
               <Loader2 className="h-4 w-4 animate-spin" />

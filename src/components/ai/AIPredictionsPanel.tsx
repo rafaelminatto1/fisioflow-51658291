@@ -83,10 +83,10 @@ export function AIPredictionsPanel({ patientId }: AIPredictionsPanelProps) {
 
   return (
     <div className="space-y-6">
-      <Card className="border-2 border-purple-200 dark:border-purple-800">
+      <Card className="border-2 border-emerald-200 dark:border-emerald-800">
         <CardHeader>
           <div className="flex items-center gap-3">
-            <div className="p-3 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl shadow-lg">
+            <div className="p-3 bg-gradient-to-br from-emerald-500 to-pink-500 rounded-xl shadow-lg">
               <Brain className="h-6 w-6 text-white" />
             </div>
             <div>

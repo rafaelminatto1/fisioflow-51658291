@@ -81,10 +81,10 @@ export const MeasurementCharts: React.FC<MeasurementChartsProps> = ({ measuremen
 
   return (
     <Card className="shadow-lg">
-      <CardHeader className="bg-gradient-to-r from-purple-50/50 to-purple-100/50 dark:from-purple-950/20 dark:to-purple-900/20">
+      <CardHeader className="bg-gradient-to-r from-emerald-50/50 to-emerald-100/50 dark:from-emerald-950/20 dark:to-emerald-900/20">
         <div className="flex items-center justify-between flex-wrap gap-4">
           <CardTitle className="text-lg flex items-center gap-2">
-            <TrendingUp className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+            <TrendingUp className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
             Evolução das Medições
           </CardTitle>
           <div className="flex items-center gap-3">
@@ -196,7 +196,7 @@ export const MeasurementCharts: React.FC<MeasurementChartsProps> = ({ measuremen
         {currentData.length > 0 && (
           <div className="mt-6 pt-4 border-t grid grid-cols-3 gap-4">
             <div className="text-center">
-              <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
+              <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
                 {currentData[currentData.length - 1]?.value || 0}
               </div>
               <div className="text-xs text-muted-foreground">Último valor</div>

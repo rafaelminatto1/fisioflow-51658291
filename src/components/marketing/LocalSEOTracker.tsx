@@ -48,7 +48,7 @@ interface GoogleBusinessMetrics {
 const _KEYWORD_CATEGORIES = [
   {
     name: "Primárias",
-    color: "bg-purple-100 text-purple-700 border-purple-200",
+    color: "bg-emerald-100 text-emerald-700 border-emerald-200",
   },
   { name: "Secundárias", color: "bg-blue-100 text-blue-700 border-blue-200" },
   { name: "Long-tail", color: "bg-green-100 text-green-700 border-green-200" },
@@ -282,7 +282,7 @@ export function LocalSEOTracker() {
               icon={MapPin}
               label="Direções"
               value={metrics.directionRequests.toString()}
-              color="text-purple-600"
+              color="text-emerald-600"
             />
             <MetricCard
               icon={ExternalLink}

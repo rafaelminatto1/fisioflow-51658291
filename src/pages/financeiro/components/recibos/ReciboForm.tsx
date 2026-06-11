@@ -71,7 +71,7 @@ export function ReciboForm({
                   Classificação Inteligente
                 </h4>
                 {formData.is_first_payment && (
-                  <Badge className="bg-purple-500 text-white border-none text-[9px] uppercase font-black">
+                  <Badge className="bg-emerald-500 text-white border-none text-[9px] uppercase font-black">
                     Primeiro Pagamento
                   </Badge>
                 )}

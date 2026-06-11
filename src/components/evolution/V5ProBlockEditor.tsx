@@ -87,7 +87,7 @@ export const V5ProBlockEditor: React.FC<V5ProBlockEditorProps> = ({
       Mention.configure({
         HTMLAttributes: {
           class:
-            "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300 px-1.5 py-0.5 rounded-md font-bold text-xs",
+            "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300 px-1.5 py-0.5 rounded-md font-bold text-xs",
         },
       }),
       Placeholder.configure({
@@ -420,9 +420,9 @@ export const V5ProBlockEditor: React.FC<V5ProBlockEditorProps> = ({
               </label>
               <button
                 onClick={() => onAiAssist ? onAiAssist() : toast.info("IA Ativada")}
-                className="flex items-center gap-3 px-3 py-2 hover:bg-purple-50 dark:hover:bg-purple-900/30 rounded-lg text-sm text-purple-600 dark:text-purple-400 transition-colors group"
+                className="flex items-center gap-3 px-3 py-2 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 rounded-lg text-sm text-emerald-600 dark:text-emerald-400 transition-colors group"
               >
-                <Sparkles className="w-4 h-4 text-purple-500 group-hover:rotate-12 transition-transform" />
+                <Sparkles className="w-4 h-4 text-emerald-500 group-hover:rotate-12 transition-transform" />
                 <span className="font-bold uppercase text-[11px] tracking-tight">Assistente IA</span>
               </button>
             </div>
@@ -493,7 +493,7 @@ export const V5ProBlockEditor: React.FC<V5ProBlockEditorProps> = ({
             </span>
           </div>
           <div className="flex items-center gap-1.5 group">
-            <kbd className="px-2 py-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md text-[10px] font-black text-slate-500 shadow-sm group-hover:border-purple-400 transition-colors">
+            <kbd className="px-2 py-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md text-[10px] font-black text-slate-500 shadow-sm group-hover:border-emerald-400 transition-colors">
               {" "}
               [[{" "}
             </kbd>

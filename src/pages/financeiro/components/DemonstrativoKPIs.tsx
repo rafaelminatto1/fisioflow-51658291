@@ -92,15 +92,15 @@ export function DemonstrativoKPIs({ demoData, growth }: Props) {
         </CardContent>
       </Card>
 
-      <Card className="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-950 dark:to-purple-900 border-purple-200 dark:border-purple-800">
+      <Card className="bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-950 dark:to-emerald-900 border-emerald-200 dark:border-emerald-800">
         <CardHeader className="pb-2">
-          <CardTitle className="text-sm text-purple-700 dark:text-purple-400 flex items-center gap-2">
+          <CardTitle className="text-sm text-emerald-700 dark:text-emerald-400 flex items-center gap-2">
             <Target className="h-4 w-4" />
             Ticket Médio
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-3xl font-bold text-purple-700 dark:text-purple-400">
+          <div className="text-3xl font-bold text-emerald-700 dark:text-emerald-400">
             R${" "}
             {demoData.ticketMedio.toLocaleString("pt-BR", {
               minimumFractionDigits: 2,

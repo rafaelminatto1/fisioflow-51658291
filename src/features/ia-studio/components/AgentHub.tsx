@@ -68,8 +68,8 @@ const AGENTS = [
     name: "Simulador de Paciente",
     description: "Treine seu raciocínio clínico com casos simulados de alta complexidade.",
     icon: BrainCircuit,
-    color: "text-violet-500",
-    bg: "bg-violet-500/10",
+    color: "text-emerald-500",
+    bg: "bg-emerald-500/10",
     prompt:
       "Estou pronto para simular um paciente. Que tipo de patologia ou queixa você gostaria de avaliar hoje?",
   },
@@ -228,12 +228,12 @@ export const AgentHub: React.FC<AgentHubProps> = ({ isOpen, onClose }) => {
           initial={{ opacity: 0, x: 400 }}
           animate={{ opacity: 1, x: 0 }}
           exit={{ opacity: 0, x: 400 }}
-          className="fixed inset-y-0 right-0 w-full max-w-2xl bg-white dark:bg-slate-950 shadow-2xl z-[250] flex flex-col border-l border-slate-200 dark:border-slate-800"
+          className="fixed top-0 bottom-0 right-0 md:top-12 w-full max-w-2xl bg-white dark:bg-slate-950 shadow-2xl z-[250] flex flex-col border-l border-slate-200 dark:border-slate-800"
         >
           {/* Header */}
           <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-muted dark:bg-slate-900/50">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-violet-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/20">
+              <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-emerald-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/20">
                 <Bot className="text-white w-5 h-5" />
               </div>
               <div>
@@ -369,17 +369,17 @@ export const AgentHub: React.FC<AgentHubProps> = ({ isOpen, onClose }) => {
                     </div>
 
                     {selectedAgent.id === "simulator" && messages.length > 0 && (
-                      <div className="mx-auto max-w-[85%] rounded-2xl border border-violet-100 bg-violet-50/70 px-4 py-3 dark:border-violet-900/40 dark:bg-violet-950/20">
+                      <div className="mx-auto max-w-[85%] rounded-2xl border border-emerald-100 bg-emerald-50/70 px-4 py-3 dark:border-emerald-900/40 dark:bg-emerald-950/20">
                         <div className="flex items-center justify-between gap-3">
                           <div>
-                            <p className="text-[10px] font-black uppercase tracking-widest text-violet-500">
+                            <p className="text-[10px] font-black uppercase tracking-widest text-emerald-500">
                               Caso em simulação
                             </p>
                             <p className="mt-1 text-sm font-semibold text-slate-800 dark:text-slate-100">
                               {simulatorProfile.condition}
                             </p>
                           </div>
-                          <Badge className="bg-violet-600 text-white">
+                          <Badge className="bg-emerald-600 text-white">
                             {simulatorProfile.painLevel}/10 dor
                           </Badge>
                         </div>

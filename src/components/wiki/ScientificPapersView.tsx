@@ -140,8 +140,8 @@ export function ScientificPapersView() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="p-2 bg-violet-100 rounded-xl">
-            <BookOpen className="h-5 w-5 text-violet-600" />
+          <div className="p-2 bg-emerald-100 rounded-xl">
+            <BookOpen className="h-5 w-5 text-emerald-600" />
           </div>
           <div>
             <h2 className="text-xl font-bold">Artigos Científicos</h2>
@@ -206,7 +206,7 @@ export function ScientificPapersView() {
                   )}
                   <Badge
                     variant="outline"
-                    className="text-[10px] text-violet-600 border-violet-200"
+                    className="text-[10px] text-emerald-600 border-emerald-200"
                   >
                     <FileText className="h-2.5 w-2.5 mr-1" />
                     PDF
@@ -228,7 +228,7 @@ export function ScientificPapersView() {
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <Upload className="h-5 w-5 text-violet-600" />
+              <Upload className="h-5 w-5 text-emerald-600" />
               Adicionar Artigo Científico
             </DialogTitle>
           </DialogHeader>
@@ -238,10 +238,10 @@ export function ScientificPapersView() {
             <div
               className={`border-2 border-dashed rounded-xl p-8 text-center transition-colors cursor-pointer ${
                 dragOver
-                  ? "border-violet-500 bg-violet-50 dark:bg-violet-950/20"
+                  ? "border-emerald-500 bg-emerald-50 dark:bg-emerald-950/20"
                   : selectedFile
                     ? "border-emerald-400 bg-emerald-50 dark:bg-emerald-950/20"
-                    : "border-slate-200 hover:border-violet-300 hover:bg-slate-50 dark:hover:bg-slate-900"
+                    : "border-slate-200 hover:border-emerald-300 hover:bg-slate-50 dark:hover:bg-slate-900"
               }`}
               onDragOver={(e) => {
                 e.preventDefault();

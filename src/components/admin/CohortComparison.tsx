@@ -130,7 +130,7 @@ const CHART_COLORS = [
   "#eab308", // Yellow
   "#f97316", // Orange
   "#ef4444", // Red
-  "#8b5cf6", // Purple
+  "#10b981", // emerald
   "#06b6d4", // Cyan
 ] as const;
 
@@ -386,7 +386,7 @@ interface SummaryCardProps {
   title: string;
   value: string | number;
   icon: React.ReactNode;
-  color: "indigo" | "green" | "yellow" | "purple";
+  color: "indigo" | "green" | "yellow" | "emerald";
 }
 
 const COLOR_CLASSES = {
@@ -402,9 +402,9 @@ const COLOR_CLASSES = {
     bg: "bg-yellow-100 dark:bg-yellow-900/30",
     text: "text-yellow-600 dark:text-yellow-400",
   },
-  purple: {
-    bg: "bg-purple-100 dark:bg-purple-900/30",
-    text: "text-purple-600 dark:text-purple-400",
+  emerald: {
+    bg: "bg-emerald-100 dark:bg-emerald-900/30",
+    text: "text-emerald-600 dark:text-emerald-400",
   },
 } as const;
 
@@ -905,7 +905,7 @@ export function CohortComparison({
           title="Sessões Médias"
           value={summaryData.avgSessions}
           icon={<Calendar className="h-5 w-5" />}
-          color="purple"
+          color="emerald"
         />
       </div>
 

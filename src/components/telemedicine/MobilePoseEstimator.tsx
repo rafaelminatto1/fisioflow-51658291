@@ -111,7 +111,7 @@ export function MobilePoseEstimator({
                   <Activity className="w-3.5 h-3.5 mr-1" />
                   Rastreamento Ativo
                 </Badge>
-                <Badge variant="outline" className="border-violet-500/30 text-violet-400 bg-violet-500/5">
+                <Badge variant="outline" className="border-emerald-500/30 text-emerald-400 bg-emerald-500/5">
                   <Sparkles className="w-3.5 h-3.5 mr-1" />
                   Edge AI Local
                 </Badge>
@@ -124,11 +124,11 @@ export function MobilePoseEstimator({
                 {/* Tronco */}
                 <line x1="50" y1="29" x2="50" y2="55" className="stroke-blue-400 stroke-[0.8]" />
                 {/* Ombros */}
-                <line x1="38" y1="32" x2="62" y2="32" className="stroke-violet-400 stroke-[0.8]" />
+                <line x1="38" y1="32" x2="62" y2="32" className="stroke-emerald-400 stroke-[0.8]" />
                 {/* Braço Direito */}
-                <line x1="38" y1="32" x2="32" y2="45" className="stroke-violet-400 stroke-[0.8]" />
+                <line x1="38" y1="32" x2="32" y2="45" className="stroke-emerald-400 stroke-[0.8]" />
                 {/* Braço Esquerdo */}
-                <line x1="62" y1="32" x2="68" y2="45" className="stroke-violet-400 stroke-[0.8]" />
+                <line x1="62" y1="32" x2="68" y2="45" className="stroke-emerald-400 stroke-[0.8]" />
                 {/* Quadril */}
                 <line x1="42" y1="55" x2="58" y2="55" className="stroke-blue-400 stroke-[0.8]" />
                 {/* Perna Direita (Joelho flexionado dinamicamente) */}
@@ -154,7 +154,7 @@ export function MobilePoseEstimator({
                 </div>
                 <div className="text-right space-y-0.5">
                   <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">Repetições</span>
-                  <span className="text-3xl font-black italic text-violet-400 tabular-nums">{repetitions}</span>
+                  <span className="text-3xl font-black italic text-emerald-400 tabular-nums">{repetitions}</span>
                 </div>
               </div>
             </div>

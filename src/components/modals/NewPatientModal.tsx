@@ -906,8 +906,8 @@ export const NewPatientModal: React.FC<NewPatientModalProps> = ({ open, onOpenCh
                 <Card className="border-0 shadow-none">
                   <CardHeader className="px-0 pt-0">
                     <CardTitle className="flex items-center gap-2 text-base">
-                      <div className="p-1.5 bg-purple-100 dark:bg-purple-900/30 rounded-lg">
-                        <Shield className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+                      <div className="p-1.5 bg-emerald-100 dark:bg-emerald-900/30 rounded-lg">
+                        <Shield className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
                       </div>
                       Informações Complementares
                     </CardTitle>
