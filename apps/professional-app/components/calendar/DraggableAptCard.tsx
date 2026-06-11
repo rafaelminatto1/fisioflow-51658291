@@ -111,6 +111,8 @@ export interface DraggableAptCardProps {
   colors: DraggableAptCardColors;
   /** Optional onPress for navigating to appointment detail */
   onPress?: () => void;
+  /** Triggered on two finger tap */
+  onTwoFingerTap?: () => void;
 }
 
 export const DraggableAptCard = ({
@@ -127,6 +129,7 @@ export const DraggableAptCard = ({
   onScrollEnable,
   colors,
   onPress,
+  onTwoFingerTap,
 }: DraggableAptCardProps) => {
   const translateX = useSharedValue(0);
   const translateY = useSharedValue(0);
@@ -207,6 +210,17 @@ export const DraggableAptCard = ({
       }
     });
 
+  const twoFingerTap = Gesture.Tap()
+    .numberOfPointers(2)
+    .maxDuration(500)
+    .onEnd(() => {
+      if (onTwoFingerTap) {
+        runOnJS(onTwoFingerTap)();
+      }
+    });
+
+  const composedGesture = Gesture.Simultaneous(panGesture, twoFingerTap);
+
   const cardAnimatedStyle = useAnimatedStyle(() => ({
     transform: [{ translateY: translateY.value }, { translateX: translateX.value }],
     opacity: isDragging.value ? 0.7 : 1,
@@ -242,7 +256,7 @@ export const DraggableAptCard = ({
       />
 
       {/* Draggable card */}
-      <GestureDetector gesture={panGesture}>
+      <GestureDetector gesture={composedGesture}>
         <Animated.View
           style={[
             styles.card,
