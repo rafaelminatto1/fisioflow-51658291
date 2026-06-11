@@ -150,13 +150,35 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
   externalValueRevision,
 }) => {
   const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pendingValue = useRef<string | null>(null);
   const lastSentValue = useRef(value);
   const lastExternalValueRevision = useRef(externalValueRevision);
   const isUpdatingFromProp = useRef(false);
+  const onValueChangeRef = useRef(onValueChange);
   const [isTyping, setIsTyping] = useState(false);
   const typingTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const context = useRichTextContext();
   const setActiveEditor = context?.setActiveEditor;
+
+  useEffect(() => {
+    onValueChangeRef.current = onValueChange;
+  }, [onValueChange]);
+
+  const flushPendingValue = useCallback(() => {
+    if (debounceTimer.current) {
+      clearTimeout(debounceTimer.current);
+      debounceTimer.current = null;
+    }
+
+    const nextValue = pendingValue.current;
+    if (nextValue === null) return;
+
+    pendingValue.current = null;
+    if (nextValue === lastSentValue.current) return;
+
+    lastSentValue.current = nextValue;
+    onValueChangeRef.current(nextValue);
+  }, []);
 
   // ── Colaboração Real-time (Yjs) ─────────────────────
   const [ydoc, setYdoc] = useState<Y.Doc | null>(null);
@@ -189,10 +211,10 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
   // Limpeza dos timers no unmount para evitar leaks
   useEffect(() => {
     return () => {
-      if (debounceTimer.current) clearTimeout(debounceTimer.current);
+      flushPendingValue();
       if (typingTimer.current) clearTimeout(typingTimer.current);
     };
-  }, []);
+  }, [flushPendingValue]);
 
   // Data Hooks
   const { exercises } = useExercises();
@@ -330,18 +352,17 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
       if (isUpdatingFromProp.current) return;
       const html = ed.getHTML();
       if (debounceTimer.current) clearTimeout(debounceTimer.current);
-      debounceTimer.current = setTimeout(() => {
-        const normalized = html === "<p></p>" ? "" : html;
-        lastSentValue.current = normalized;
-        onValueChange(normalized);
-        debounceTimer.current = null;
-      }, 500);
+      pendingValue.current = html === "<p></p>" ? "" : html;
+      debounceTimer.current = setTimeout(flushPendingValue, 500);
     },
     onFocus: () => {
       onFocus?.();
       if (editor) setActiveEditor?.(editor);
     },
-    onBlur: () => onBlur?.(),
+    onBlur: () => {
+      flushPendingValue();
+      onBlur?.();
+    },
     editorProps: {
       attributes: { class: "outline-none" },
     },

@@ -1,5 +1,6 @@
 // Load polyfills first
 import "../lib/polyfills";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import { useEffect } from "react";
 import { Stack } from "expo-router";
@@ -299,13 +300,15 @@ function RootLayoutContent() {
 
 export default function RootLayout() {
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      <ErrorBoundary>
-        <QueryClientProvider client={queryClient}>
-          <RootLayoutContent />
-        </QueryClientProvider>
-      </ErrorBoundary>
-    </GestureHandlerRootView>
+    <SafeAreaProvider>
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <ErrorBoundary>
+          <QueryClientProvider client={queryClient}>
+            <RootLayoutContent />
+          </QueryClientProvider>
+        </ErrorBoundary>
+      </GestureHandlerRootView>
+    </SafeAreaProvider>
   );
 }
 

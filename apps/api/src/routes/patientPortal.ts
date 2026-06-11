@@ -1371,6 +1371,7 @@ app.get("/digital-twin", async (c) => {
     [patientId],
   );
 
+  c.header("Cache-Control", "public, max-age=60");
   return c.json({ data: result.rows[0] || null });
 });
 
@@ -1395,6 +1396,7 @@ app.get("/ai-snapshot", async (c) => {
   );
 
   if (history.rows.length === 0) {
+    c.header("Cache-Control", "public, max-age=60");
     return c.json({ data: { mainStatus: "Seu histórico clínico está sendo processado." } });
   }
 
