@@ -179,11 +179,11 @@ export const ActivityLabChart: React.FC<ActivityLabChartProps> = ({ session }) =
               <span className="text-sm font-bold">kg</span>
             </p>
           </div>
-          <div className="p-4 bg-purple-50/50 rounded-2xl border border-purple-100/50">
-            <p className="text-[10px] font-black text-purple-400 uppercase tracking-widest mb-1">
+          <div className="p-4 bg-emerald-50/50 rounded-2xl border border-emerald-100/50">
+            <p className="text-[10px] font-black text-emerald-400 uppercase tracking-widest mb-1">
               RFD (kg/s)
             </p>
-            <p className="text-2xl font-black text-purple-700">
+            <p className="text-2xl font-black text-emerald-700">
               {(session.rfd || session.rateOfForceDevelopment || 0).toFixed(1)}
             </p>
           </div>

@@ -205,7 +205,7 @@ const SummaryHeader: React.FC<SummaryHeaderProps> = ({ cycles }) => {
         </div>
         <div className="h-1.5 rounded-full bg-slate-100 overflow-hidden">
           <motion.div
-            className="h-full rounded-full bg-gradient-to-r from-blue-500 to-violet-500"
+            className="h-full rounded-full bg-gradient-to-r from-blue-500 to-emerald-500"
             initial={{ width: 0 }}
             animate={{ width: `${overallPct}%` }}
             transition={{ duration: 0.8, ease: "easeOut" }}
@@ -303,7 +303,7 @@ const CycleCard: React.FC<CycleCardProps> = ({ cycle, index, onEdit }) => {
                 className={cn(
                   "h-full rounded-full",
                   cycle.status === "active"
-                    ? "bg-gradient-to-r from-blue-400 to-violet-500"
+                    ? "bg-gradient-to-r from-blue-400 to-emerald-500"
                     : cycle.status === "completed"
                       ? "bg-gradient-to-r from-emerald-400 to-teal-500"
                       : cycle.status === "paused"
@@ -373,7 +373,7 @@ const EmptyState: React.FC<EmptyStateProps> = ({ onCreateCycle }) => (
     {/* Icon halo */}
     <div className="relative mb-5">
       <div className="absolute inset-0 rounded-full bg-blue-100 blur-xl opacity-60 scale-110" />
-      <div className="relative w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-violet-600 flex items-center justify-center shadow-lg shadow-blue-200">
+      <div className="relative w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-emerald-600 flex items-center justify-center shadow-lg shadow-blue-200">
         <GitBranch className="w-8 h-8 text-white" />
       </div>
     </div>
@@ -399,7 +399,7 @@ const EmptyState: React.FC<EmptyStateProps> = ({ onCreateCycle }) => (
 
     <Button
       onClick={onCreateCycle}
-      className="bg-gradient-to-r from-blue-600 to-violet-600 hover:from-blue-700 hover:to-violet-700 text-white shadow-md shadow-blue-200 hover:shadow-lg hover:shadow-blue-300 transition-all duration-200 gap-2"
+      className="bg-gradient-to-r from-blue-600 to-emerald-600 hover:from-blue-700 hover:to-emerald-700 text-white shadow-md shadow-blue-200 hover:shadow-lg hover:shadow-blue-300 transition-all duration-200 gap-2"
     >
       <Plus className="w-4 h-4" />
       Criar Primeiro Ciclo
@@ -435,7 +435,7 @@ export const TreatmentCycles: React.FC<TreatmentCyclesProps> = ({
       <CardHeader className="pb-2 px-5 pt-5">
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2 text-base font-bold text-slate-800">
-            <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-blue-500 to-violet-600 flex items-center justify-center shadow-sm">
+            <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-blue-500 to-emerald-600 flex items-center justify-center shadow-sm">
               <GitBranch className="w-3.5 h-3.5 text-white" />
             </div>
             Ciclos de Tratamento

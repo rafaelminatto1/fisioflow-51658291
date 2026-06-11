@@ -45,7 +45,7 @@ export const BrandGradient: Story = {
       <>
         <CardHeader>
           <CardTitle>Brand Gradient</CardTitle>
-          <CardDescription>Premium sky blue to purple gradient</CardDescription>
+          <CardDescription>Premium sky blue to emerald gradient</CardDescription>
         </CardHeader>
         <CardContent>
           <p>This card uses the brand gradient with premium hover effects.</p>

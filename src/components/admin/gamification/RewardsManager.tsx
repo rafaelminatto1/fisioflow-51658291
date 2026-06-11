@@ -119,7 +119,7 @@ export default function RewardsManager() {
       <CardHeader className="flex flex-row items-center justify-between">
         <div>
           <CardTitle className="flex items-center gap-2">
-            <Gift className="h-5 w-5 text-purple-500" />
+            <Gift className="h-5 w-5 text-emerald-500" />
             Loja de Recompensas
           </CardTitle>
           <CardDescription>Gerencie os itens resgatáveis pelos pacientes</CardDescription>
@@ -247,7 +247,7 @@ export default function RewardsManager() {
               >
                 <div className="flex items-start gap-3">
                   <div
-                    className={`p-3 rounded-xl ${reward.is_active ? "bg-purple-100 text-purple-600" : "bg-muted text-muted-foreground"}`}
+                    className={`p-3 rounded-xl ${reward.is_active ? "bg-emerald-100 text-emerald-600" : "bg-muted text-muted-foreground"}`}
                   >
                     <Gift className="h-6 w-6" />
                   </div>

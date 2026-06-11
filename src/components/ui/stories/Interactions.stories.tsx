@@ -16,7 +16,7 @@ export const PremiumHover: Story = {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <div className="gradient-brand text-white p-6 rounded-2xl card-premium-hover">
           <h3 className="text-xl font-display text-foreground">Brand Gradient</h3>
-          <p className="text-sm text-white/80">Sky blue to purple gradient with elevation effect</p>
+          <p className="text-sm text-white/80">Sky blue to emerald gradient with elevation effect</p>
         </div>
 
         <div className="gradient-success text-white p-6 rounded-2xl card-premium-hover">

@@ -178,8 +178,8 @@ export default function ClinicalAnalysisPage() {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
-            <div className="p-3 bg-purple-100 rounded-lg">
-              <Brain className="w-8 h-8 text-purple-600" />
+            <div className="p-3 bg-emerald-100 rounded-lg">
+              <Brain className="w-8 h-8 text-emerald-600" />
             </div>
             <div>
               <h1 className="text-3xl font-bold text-gray-900">IA Clínica (Google AI Suite)</h1>

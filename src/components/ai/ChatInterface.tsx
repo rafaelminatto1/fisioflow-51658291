@@ -324,8 +324,8 @@ export function ChatInterface({
                   }`}
                 >
                   {message.role === "assistant" && (
-                    <div className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center flex-shrink-0">
-                      <Bot className="w-4 h-4 text-purple-600" />
+                    <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0">
+                      <Bot className="w-4 h-4 text-emerald-600" />
                     </div>
                   )}
                   <div
@@ -365,8 +365,8 @@ export function ChatInterface({
             )}
             {loading && (
               <div className="flex gap-3 justify-start">
-                <div className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center">
-                  <Sparkles className="w-4 h-4 text-purple-600 animate-spin" />
+                <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center">
+                  <Sparkles className="w-4 h-4 text-emerald-600 animate-spin" />
                 </div>
                 <div className="bg-gray-100 rounded-lg px-4 py-3">
                   <div className="flex space-x-1">
@@ -401,7 +401,7 @@ export function ChatInterface({
             <Button
               onClick={handleSend}
               disabled={!input.trim() || loading}
-              className="bg-purple-600 hover:bg-purple-700"
+              className="bg-emerald-600 hover:bg-emerald-700"
             >
               <Send className="w-4 h-4" />
             </Button>

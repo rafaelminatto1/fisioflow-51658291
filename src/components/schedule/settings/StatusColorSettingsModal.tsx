@@ -29,7 +29,7 @@ const COLOR_PALETTE = [
   "#0073EA", // Blue
   "#579BFC", // Light Blue
   "#66CCFF", // Sky Blue
-  "#A25DDC", // Purple
+  "#A25DDC", // emerald
   "#FF158A", // Pink
   "#DF2F4A", // Red
   "#FF7575", // Light Red

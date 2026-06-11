@@ -78,9 +78,9 @@ const INSIGHT_CONFIGS: Record<InsightType, InsightConfig> = {
   },
   progress_summary: {
     icon: Info,
-    color: "text-purple-600",
-    bgColor: "bg-purple-50 dark:bg-purple-950/30",
-    borderColor: "border-purple-200 dark:border-purple-800",
+    color: "text-emerald-600",
+    bgColor: "bg-emerald-50 dark:bg-emerald-950/30",
+    borderColor: "border-emerald-200 dark:border-emerald-800",
     label: "Resumo",
   },
 };
@@ -372,7 +372,7 @@ export const PatientInsightsPanel = memo(function PatientInsightsPanel({
           <div className="flex items-center justify-between">
             <div>
               <CardTitle className="flex items-center gap-2">
-                <Sparkles className="h-5 w-5 text-purple-500" />
+                <Sparkles className="h-5 w-5 text-emerald-500" />
                 Insights Inteligentes
               </CardTitle>
               <CardDescription>Análises automáticas baseadas em dados do paciente</CardDescription>

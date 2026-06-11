@@ -66,7 +66,7 @@ const TIPOS_CAMPANHA = [
     color: "bg-emerald-500",
   },
   { value: "email", label: "Email", icon: Mail, color: "bg-blue-500" },
-  { value: "sms", label: "SMS", icon: Smartphone, color: "bg-purple-500" },
+  { value: "sms", label: "SMS", icon: Smartphone, color: "bg-emerald-500" },
 ];
 
 const STATUS_CAMPANHA = {

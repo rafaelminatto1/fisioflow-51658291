@@ -41,7 +41,7 @@ const SCALE_LABELS: Record<string, string> = {
 
 const SCALE_BADGE_COLORS: Record<string, string> = {
   VAS: "bg-blue-100 text-blue-800",
-  PSFS: "bg-purple-100 text-purple-800",
+  PSFS: "bg-emerald-100 text-emerald-800",
   DASH: "bg-blue-100 text-blue-700",
   OSWESTRY: "bg-orange-100 text-orange-800",
   NDI: "bg-indigo-100 text-indigo-800",

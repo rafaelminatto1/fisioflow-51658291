@@ -196,7 +196,7 @@ const CATEGORY_COLORS: Record<ScriptCategory, string> = {
   agendamento: "bg-blue-100 text-blue-700 border-blue-200",
   lembrete: "bg-amber-100 text-amber-700 border-amber-200",
   alta: "bg-emerald-100 text-emerald-700 border-emerald-200",
-  recall: "bg-purple-100 text-purple-700 border-purple-200",
+  recall: "bg-emerald-100 text-emerald-700 border-emerald-200",
   promocao: "bg-red-100 text-red-700 border-red-200",
   aniversario: "bg-pink-100 text-pink-700 border-pink-200",
   agradecimento: "bg-teal-100 text-teal-700 border-teal-200",
@@ -451,7 +451,7 @@ export function WhatsAppScriptGenerator() {
                   </Button>
                   <Button
                     onClick={handleAIGenerate}
-                    className="w-full bg-purple-600 hover:bg-purple-700 text-white"
+                    className="w-full bg-emerald-600 hover:bg-emerald-700 text-white"
                     disabled={isGeneratingAI}
                   >
                     {isGeneratingAI ? (

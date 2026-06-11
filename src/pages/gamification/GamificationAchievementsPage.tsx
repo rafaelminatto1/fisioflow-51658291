@@ -67,7 +67,7 @@ export default function GamificationAchievementsPage() {
     sessions: "bg-blue-500",
     exercises: "bg-green-500",
     streaks: "bg-orange-500",
-    social: "bg-purple-500",
+    social: "bg-emerald-500",
     special: "bg-yellow-500",
   };
 
@@ -87,7 +87,7 @@ export default function GamificationAchievementsPage() {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-3xl font-bold flex items-center gap-3">
-                <Award className="w-8 h-8 text-purple-500" />
+                <Award className="w-8 h-8 text-emerald-500" />
                 Minhas Conquistas
               </h1>
               <p className="text-muted-foreground mt-1">
@@ -176,14 +176,14 @@ export default function GamificationAchievementsPage() {
                     relative overflow-hidden rounded-xl border-2 transition-all cursor-pointer
                     ${
                       isUnlocked
-                        ? "bg-gradient-to-br from-purple-50 to-white border-purple-200 shadow-md hover:shadow-lg"
+                        ? "bg-gradient-to-br from-emerald-50 to-white border-emerald-200 shadow-md hover:shadow-lg"
                         : "bg-gray-50 border-gray-200 opacity-70"
                     }
                   `}
                 >
                   {/* Shimmer effect for unlocked achievements */}
                   {isUnlocked && (
-                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-purple-100/20 to-transparent animate-shimmer" />
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-emerald-100/20 to-transparent animate-shimmer" />
                   )}
 
                   <div className="p-6">
@@ -192,7 +192,7 @@ export default function GamificationAchievementsPage() {
                       <div
                         className={`
                         w-16 h-16 rounded-xl flex items-center justify-center text-2xl shrink-0
-                        ${isUnlocked ? "bg-purple-100 text-purple-600" : "bg-gray-100 text-gray-500"}
+                        ${isUnlocked ? "bg-emerald-100 text-emerald-600" : "bg-gray-100 text-gray-500"}
                       `}
                       >
                         {isUnlocked ? (
@@ -206,7 +206,7 @@ export default function GamificationAchievementsPage() {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">
                           <h3
-                            className={`font-bold truncate ${isUnlocked ? "text-purple-900" : "text-gray-600"}`}
+                            className={`font-bold truncate ${isUnlocked ? "text-emerald-900" : "text-gray-600"}`}
                           >
                             {achievement.title}
                           </h3>

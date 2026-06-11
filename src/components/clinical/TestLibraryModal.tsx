@@ -76,7 +76,7 @@ const CATEGORIES = [
     id: "Neurológico",
     label: "Neurológico",
     icon: Brain,
-    color: "bg-purple-50 text-purple-700 border-purple-200",
+    color: "bg-emerald-50 text-emerald-700 border-emerald-200",
   },
   {
     id: "Respiratório",
@@ -467,8 +467,8 @@ export function TestLibraryModal({
                     className={cn(
                       "h-7 px-3 text-xs font-medium whitespace-nowrap shrink-0",
                       selectedType === type.id
-                        ? "bg-violet-600 hover:bg-violet-700 text-white"
-                        : "border-slate-200 hover:border-violet-300 hover:bg-violet-50",
+                        ? "bg-emerald-600 hover:bg-emerald-700 text-white"
+                        : "border-slate-200 hover:border-emerald-300 hover:bg-emerald-50",
                     )}
                   >
                     {type.label}
@@ -778,7 +778,7 @@ export function TestLibraryModal({
                     {selectedTest.type && (
                       <Badge
                         variant="secondary"
-                        className="bg-violet-50 text-violet-700 border-violet-200"
+                        className="bg-emerald-50 text-emerald-700 border-emerald-200"
                       >
                         {selectedTest.type === "functional_test" ? "Funcional" : "Especial"}
                       </Badge>

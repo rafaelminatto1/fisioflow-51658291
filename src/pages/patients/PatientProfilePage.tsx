@@ -436,7 +436,7 @@ const PatientProfileContent = () => {
                 </TabsTrigger>
                 <TabsTrigger
                   value="evidence"
-                  className="data-[state=active]:border-violet-600 data-[state=active]:text-violet-600 rounded-none bg-transparent border-b-2 border-transparent px-0 py-2 text-sm font-semibold gap-2 transition-all"
+                  className="data-[state=active]:border-emerald-600 data-[state=active]:text-emerald-600 rounded-none bg-transparent border-b-2 border-transparent px-0 py-2 text-sm font-semibold gap-2 transition-all"
                 >
                   <Brain className="h-4 w-4" />
                   Evidência

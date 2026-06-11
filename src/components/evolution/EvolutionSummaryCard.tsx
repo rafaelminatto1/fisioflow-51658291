@@ -33,8 +33,8 @@ const STATS = [
     label: "Progresso",
     getValue: (s: EvolutionSummaryCardProps["stats"]) => `${s.avgGoalProgress}%`,
     icon: TrendingUp,
-    color: "text-purple-600",
-    bg: "bg-purple-50",
+    color: "text-emerald-600",
+    bg: "bg-emerald-50",
   },
   {
     label: "Patologias",

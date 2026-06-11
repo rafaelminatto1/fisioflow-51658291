@@ -191,7 +191,7 @@ function RecoveryTimelineCard({
         {/* Visualization */}
         <div className="relative h-4 bg-muted rounded-full overflow-hidden">
           <div
-            className="absolute h-full bg-gradient-to-r from-green-500 via-blue-500 to-purple-500"
+            className="absolute h-full bg-gradient-to-r from-green-500 via-blue-500 to-emerald-500"
             style={{
               left: `${(confidenceInterval.lowerDays / confidenceInterval.upperDays) * 100}%`,
               width: `${((confidenceInterval.upperDays - confidenceInterval.lowerDays) / confidenceInterval.upperDays) * 100}%`,

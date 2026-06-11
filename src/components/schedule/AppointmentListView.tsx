@@ -227,8 +227,8 @@ export const AppointmentListView: React.FC<AppointmentListViewProps> = ({
             <div className="w-2 h-2 rounded-full bg-emerald-500" />
             {stats.confirmed} confirmados
           </div>
-          <div className="flex items-center gap-1.5 bg-purple-500/10 text-purple-600 dark:text-purple-400 rounded-lg px-3 py-1.5 font-medium">
-            <div className="w-2 h-2 rounded-full bg-purple-500" />
+          <div className="flex items-center gap-1.5 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-lg px-3 py-1.5 font-medium">
+            <div className="w-2 h-2 rounded-full bg-emerald-500" />
             {stats.completed} concluídos
           </div>
         </div>

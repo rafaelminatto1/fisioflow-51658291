@@ -74,7 +74,7 @@ export const AIReportGeneratorModal: React.FC<AIReportGeneratorModalProps> = ({
       <DialogContent className="max-w-4xl max-h-[90vh] p-0 overflow-hidden flex flex-col bg-white">
         <DialogHeader className="px-6 pt-6 pb-4 border-b bg-slate-50">
           <DialogTitle className="flex items-center gap-2 text-xl text-slate-800">
-            <Sparkles className="h-5 w-5 text-purple-600" />
+            <Sparkles className="h-5 w-5 text-emerald-600" />
             Relatório Clínico IA
           </DialogTitle>
           <DialogDescription className="text-slate-500">
@@ -86,7 +86,7 @@ export const AIReportGeneratorModal: React.FC<AIReportGeneratorModalProps> = ({
         <div className="flex-1 overflow-hidden p-6 flex flex-col">
           {isGenerating ? (
             <div className="flex flex-col items-center justify-center py-20 flex-1">
-              <Loader2 className="h-10 w-10 animate-spin text-purple-600 mb-6" />
+              <Loader2 className="h-10 w-10 animate-spin text-emerald-600 mb-6" />
               <h3 className="text-lg font-medium text-slate-800">Gerando relatório clínico...</h3>
               <p className="text-slate-500 text-center max-w-sm mt-2 text-sm leading-relaxed">
                 Analisando as queixas, condutas e evolução funcional a partir das sessões
@@ -115,7 +115,7 @@ export const AIReportGeneratorModal: React.FC<AIReportGeneratorModalProps> = ({
                   variant="ghost"
                   size="sm"
                   onClick={handleRegenerate}
-                  className="h-8 gap-2 text-slate-500 hover:text-purple-700"
+                  className="h-8 gap-2 text-slate-500 hover:text-emerald-700"
                 >
                   <RefreshCw className="h-3.5 w-3.5" /> Gerar Novamente
                 </Button>
@@ -123,7 +123,7 @@ export const AIReportGeneratorModal: React.FC<AIReportGeneratorModalProps> = ({
               <Textarea
                 value={generatedReport}
                 onChange={(e) => setGeneratedReport(e.target.value)}
-                className="flex-1 min-h-[400px] font-mono text-sm resize-none focus-visible:ring-purple-500 p-4 bg-slate-50/50 border-slate-200"
+                className="flex-1 min-h-[400px] font-mono text-sm resize-none focus-visible:ring-emerald-500 p-4 bg-slate-50/50 border-slate-200"
                 placeholder="O relatório gerado aparecerá aqui..."
               />
               <div className="flex items-center justify-between pt-2">
@@ -139,7 +139,7 @@ export const AIReportGeneratorModal: React.FC<AIReportGeneratorModalProps> = ({
                   <Button
                     disabled={isExporting}
                     onClick={handleExportPDF}
-                    className="gap-2 bg-purple-600 hover:bg-purple-700 text-white shadow shadow-purple-200"
+                    className="gap-2 bg-emerald-600 hover:bg-emerald-700 text-white shadow shadow-emerald-200"
                   >
                     {isExporting ? (
                       <Loader2 className="h-4 w-4 animate-spin" />

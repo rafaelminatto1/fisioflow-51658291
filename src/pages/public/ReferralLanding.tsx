@@ -47,7 +47,7 @@ export default function ReferralLanding() {
       </header>
 
       <main className="max-w-3xl mx-auto px-4 py-16 text-center">
-        <Badge className="mb-6 bg-purple-100 text-purple-700 hover:bg-purple-100 border-none px-4 py-1 rounded-full">
+        <Badge className="mb-6 bg-emerald-100 text-emerald-700 hover:bg-emerald-100 border-none px-4 py-1 rounded-full">
           🎁 Convite Especial Ativo
         </Badge>
 

@@ -99,7 +99,7 @@ export default function Protocols() {
   } | null>(null);
 
   const FB_BADGES: Record<string, { label: string; cls: string }> = {
-    paper: { label: "Artigo", cls: "bg-violet-100 text-violet-700" },
+    paper: { label: "Artigo", cls: "bg-emerald-100 text-emerald-700" },
     wiki: { label: "Wiki", cls: "bg-blue-100 text-blue-700" },
     protocol: { label: "Protocolo", cls: "bg-emerald-100 text-emerald-700" },
     exercise: { label: "Exercício", cls: "bg-amber-100 text-amber-700" },
@@ -201,8 +201,8 @@ export default function Protocols() {
             </div>
 
             {/* FisioBrain Related Evidence Sidebar */}
-            <aside className="rounded-2xl border border-violet-200 bg-white shadow-sm p-4 flex flex-col gap-3 sticky top-4">
-              <div className="flex items-center gap-2 text-violet-700 font-semibold text-sm">
+            <aside className="rounded-2xl border border-emerald-200 bg-white shadow-sm p-4 flex flex-col gap-3 sticky top-4">
+              <div className="flex items-center gap-2 text-emerald-700 font-semibold text-sm">
                 <Brain className="h-4 w-4" />
                 Protocolos Relacionados por IA
               </div>
@@ -222,7 +222,7 @@ export default function Protocols() {
                 />
                 <Button
                   size="sm"
-                  className="gap-2 bg-violet-600 hover:bg-violet-700 text-white text-xs"
+                  className="gap-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs"
                   onClick={searchFB}
                   disabled={fbLoading || fbQuery.trim().length < 3}
                 >
@@ -238,7 +238,7 @@ export default function Protocols() {
               {fbResult && (
                 <div className="flex flex-col gap-2 overflow-y-auto max-h-[60vh]">
                   {fbResult.answer && (
-                    <p className="text-xs text-violet-900 bg-violet-50 rounded-lg p-2 leading-relaxed border border-violet-100">
+                    <p className="text-xs text-emerald-900 bg-emerald-50 rounded-lg p-2 leading-relaxed border border-emerald-100">
                       {fbResult.answer}
                     </p>
                   )}
@@ -258,7 +258,7 @@ export default function Protocols() {
                             {badge.label}
                           </Badge>
                           {hasArticle && (
-                            <Badge className="text-[10px] px-1 py-0 bg-violet-600 text-white">
+                            <Badge className="text-[10px] px-1 py-0 bg-emerald-600 text-white">
                               Baseado em evidência
                             </Badge>
                           )}

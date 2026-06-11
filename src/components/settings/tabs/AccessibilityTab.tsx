@@ -113,7 +113,7 @@ export function AccessibilityTab() {
               {[
                 { id: "default", color: "#2563eb", name: "Padrão" },
                 { id: "green", color: "#059669", name: "Verde" },
-                { id: "purple", color: "#7c3aed", name: "Roxo" },
+                { id: "emerald", color: "#7c3aed", name: "Roxo" },
                 { id: "orange", color: "#ea580c", name: "Laranja" },
                 { id: "rose", color: "#e11d48", name: "Rosa" },
               ].map((scheme) => (

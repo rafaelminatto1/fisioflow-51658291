@@ -49,7 +49,7 @@ export function UserInventory({ patientId }: UserInventoryProps) {
                 item.type === "consumable"
                   ? "bg-blue-100 text-blue-600 dark:bg-blue-900/20"
                   : item.type === "cosmetic"
-                    ? "bg-purple-100 text-purple-600 dark:bg-purple-900/20"
+                    ? "bg-emerald-100 text-emerald-600 dark:bg-emerald-900/20"
                     : "bg-gray-100 text-gray-600 dark:bg-gray-900/20",
               )}
             >

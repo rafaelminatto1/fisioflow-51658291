@@ -54,7 +54,7 @@ function StandardFormCard({ type, onCreate, onDuplicate }: StandardFormCardProps
       case "AVALIACAO_POSTURAL":
         return <Activity className="h-8 w-8 text-green-500" />;
       case "AVALIACAO_FUNCIONAL":
-        return <UserCheck className="h-8 w-8 text-purple-500" />;
+        return <UserCheck className="h-8 w-8 text-emerald-500" />;
       case "FISIOTERAPIA_ORTOPEDICA":
         return <Bone className="h-8 w-8 text-orange-500" />;
       case "FISIOTERAPIA_ESPORTIVA":

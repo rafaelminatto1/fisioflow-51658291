@@ -152,7 +152,7 @@ export default function DocumentScannerPage() {
     mri: {
       label: "Ressonância Magnética",
       icon: "🧠",
-      color: "bg-purple-100 text-purple-700",
+      color: "bg-emerald-100 text-emerald-700",
     },
     xray: { label: "Raio-X", icon: "💀", color: "bg-blue-100 text-blue-700" },
     ultrasound: {
@@ -959,7 +959,7 @@ export default function DocumentScannerPage() {
                   <Card>
                     <CardHeader>
                       <CardTitle className="flex items-center gap-2">
-                        <Brain className="w-5 h-5 text-purple-600" />
+                        <Brain className="w-5 h-5 text-emerald-600" />
                         Análise com Gemini/MedLM
                       </CardTitle>
                     </CardHeader>

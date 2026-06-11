@@ -359,7 +359,7 @@ export default function TeamPerformance() {
             icon={Users}
             change={data?.previousPeriodComparison.retentionChange}
             changePositive={(data?.previousPeriodComparison.retentionChange || 0) > 0}
-            gradient="bg-gradient-to-br from-purple-500/10 to-purple-500/5"
+            gradient="bg-gradient-to-br from-emerald-500/10 to-emerald-500/5"
           />
           <StatCard
             title="NPS Médio"

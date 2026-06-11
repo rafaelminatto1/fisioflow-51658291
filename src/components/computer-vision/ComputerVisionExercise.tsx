@@ -107,7 +107,7 @@ const RealTimeMetrics: React.FC<{
 
       <div className="bg-white p-4 rounded-lg shadow-sm border">
         <div className="flex items-center space-x-2">
-          <Timer className="h-5 w-5 text-purple-600" />
+          <Timer className="h-5 w-5 text-emerald-600" />
           <span className="text-sm font-medium text-gray-600">FPS</span>
         </div>
         <p className="text-2xl font-bold text-gray-900 mt-1">{processingStats.fps}</p>

@@ -497,7 +497,7 @@ function InsightsCard({
       case "concern":
         return <AlertCircle className="h-4 w-4 text-red-500" />;
       case "trend":
-        return <Activity className="h-4 w-4 text-purple-500" />;
+        return <Activity className="h-4 w-4 text-emerald-500" />;
       default:
         return <Info className="h-4 w-4" />;
     }

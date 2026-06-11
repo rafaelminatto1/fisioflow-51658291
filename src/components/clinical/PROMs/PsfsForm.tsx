@@ -91,7 +91,7 @@ export function PsfsForm({ onSave, onCancel }: PsfsFormProps) {
     <Card className="w-full">
       <CardHeader className="pb-3">
         <div className="flex items-center gap-2">
-          <Target className="h-5 w-5 text-purple-500" />
+          <Target className="h-5 w-5 text-emerald-500" />
           <CardTitle className="text-lg">
             Escala Funcional Específica do Paciente (EFEP/PSFS)
           </CardTitle>
@@ -115,7 +115,7 @@ export function PsfsForm({ onSave, onCancel }: PsfsFormProps) {
           {activities.map((activity, index) => (
             <div key={index} className="rounded-md border p-3 space-y-3 bg-card">
               <div className="flex items-center gap-2">
-                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-purple-100 text-xs font-bold text-purple-700">
+                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-xs font-bold text-emerald-700">
                   {index + 1}
                 </span>
                 <Input

@@ -556,7 +556,7 @@ export default function RelatorioMedicoPage() {
       case "evolucao":
         return <TrendingUp className="h-6 w-6 text-green-500" />;
       case "alta":
-        return <CheckCircle2 className="h-6 w-6 text-purple-500" />;
+        return <CheckCircle2 className="h-6 w-6 text-emerald-500" />;
       case "interconsulta":
         return <Stethoscope className="h-6 w-6 text-orange-500" />;
       case "cirurgico":

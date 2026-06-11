@@ -40,7 +40,7 @@ export function BiomechanicsProtocolGuidePanel({ mode }: { mode: BiomechanicsEvi
 
         <section className="space-y-2">
           <div className="flex items-center gap-2 text-sm font-semibold">
-            <ListChecks className="h-4 w-4 text-violet-500" />
+            <ListChecks className="h-4 w-4 text-emerald-500" />
             Passo a passo
           </div>
           <ol className="space-y-1 text-sm text-muted-foreground">

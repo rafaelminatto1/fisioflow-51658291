@@ -153,7 +153,7 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
                   size="sm"
                   onClick={() => handleGenerateSuggestions(field.id)}
                   disabled={isGeneratingAI}
-                  className="text-purple-600 border-purple-200 hover:bg-purple-50"
+                  className="text-emerald-600 border-emerald-200 hover:bg-emerald-50"
                 >
                   {isGeneratingAI ? (
                     <Loader2 className="mr-2 h-3 w-3 animate-spin" />

@@ -236,7 +236,7 @@ export function renderDailyReport(data: DailyReportData): string {
         </tr>
         <tr>
           <td style="padding: 10px 0;">👥 Novos pacientes:</td>
-          <td style="text-align: right; padding: 10px 0; color: #8b5cf6;">${data.newPatients}</td>
+          <td style="text-align: right; padding: 10px 0; color: #10b981;">${data.newPatients}</td>
         </tr>
       </table>
     </div>

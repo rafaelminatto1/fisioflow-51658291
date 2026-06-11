@@ -51,12 +51,12 @@ const STATUS_OPTIONS = [
   {
     value: "atendido",
     label: "Atendido",
-    color: "bg-purple-500 hover:bg-purple-600",
+    color: "bg-emerald-500 hover:bg-emerald-600",
   },
   {
     value: "avaliacao",
     label: "Avaliação",
-    color: "bg-violet-500 hover:bg-violet-600",
+    color: "bg-emerald-500 hover:bg-emerald-600",
   },
   { value: "faltou", label: "Faltou", color: "bg-rose-500 hover:bg-rose-600" },
   {

@@ -129,7 +129,7 @@ export function CloudflareRealtimeKitRoom({
 
           {/* Dynamic Aura Glow Blobs */}
           <div className="absolute top-1/4 left-1/4 w-40 h-40 bg-blue-500/5 rounded-full blur-[60px] animate-pulse pointer-events-none" />
-          <div className="absolute bottom-1/4 right-1/4 w-40 h-40 bg-violet-500/5 rounded-full blur-[60px] animate-pulse pointer-events-none [animation-delay:1s]" />
+          <div className="absolute bottom-1/4 right-1/4 w-40 h-40 bg-emerald-500/5 rounded-full blur-[60px] animate-pulse pointer-events-none [animation-delay:1s]" />
 
           {!isVideoOff ? (
             <div className="absolute inset-0 flex items-center justify-center">

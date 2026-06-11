@@ -117,7 +117,7 @@ interface RichTextEditorProps {
   className?: string;
   onFocus?: () => void;
   onBlur?: () => void;
-  accentColor?: "sky" | "violet" | "amber" | "rose";
+  accentColor?: "sky" | "emerald" | "amber" | "rose";
   showToolbar?: boolean;
   /** ID para colaboração real-time (ex: soap_record_id) */
   collaborationId?: string;
@@ -142,11 +142,11 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
   className,
   onFocus,
   onBlur,
-  accentColor = "violet",
+  accentColor = "emerald",
   showToolbar = false,
   collaborationId,
   userName = "Profissional",
-  userColor = "#8b5cf6",
+  userColor = "#10b981",
   externalValueRevision,
 }) => {
   const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -220,7 +220,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
   const getAccentGlow = () => {
     const colors = {
       sky: "hsl(199, 89%, 48%)",
-      violet: "hsl(263, 70%, 50%)",
+      emerald: "hsl(263, 70%, 50%)",
       amber: "hsl(38, 92%, 50%)",
       rose: "hsl(346, 77%, 49%)",
     };
@@ -421,7 +421,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
         toast.info("Solicitando sugestão à IA...");
         // Simulação de chamada de IA - Em produção chamaria patient-summary ou similar
         setTimeout(() => {
-          const aiHtml = `<div class="notion-callout notion-callout--info" style="border-left-color: #8b5cf6"><span class="notion-callout-icon">✨</span><div class="notion-callout-content"><p><strong>Sugestão da IA:</strong> Baseado na evolução estável, recomendo progressão de carga nos exercícios de agachamento e início de treino de equilíbrio dinâmico.</p></div></div>`;
+          const aiHtml = `<div class="notion-callout notion-callout--info" style="border-left-color: #10b981"><span class="notion-callout-icon">✨</span><div class="notion-callout-content"><p><strong>Sugestão da IA:</strong> Baseado na evolução estável, recomendo progressão de carga nos exercícios de agachamento e início de treino de equilíbrio dinâmico.</p></div></div>`;
           editor.chain().focus().insertContent(aiHtml).run();
         }, 1500);
       }

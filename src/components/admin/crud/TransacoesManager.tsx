@@ -63,7 +63,7 @@ export function TransacoesManager() {
       despesa: "bg-red-500/10 text-red-600 border-red-500/20",
       reembolso: "bg-orange-500/10 text-orange-600 border-orange-500/20",
       pacote: "bg-blue-500/10 text-blue-600 border-blue-500/20",
-      sessao_avulsa: "bg-purple-500/10 text-purple-600 border-purple-500/20",
+      sessao_avulsa: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20",
     };
     return (
       <Badge variant="outline" className={colors[tipo] || ""}>

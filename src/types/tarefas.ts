@@ -215,9 +215,9 @@ export const STATUS_COLORS: Record<TarefaStatus, { bg: string; text: string; dot
     dot: "bg-blue-400",
   },
   REVISAO: {
-    bg: "bg-purple-500/10",
-    text: "text-purple-500",
-    dot: "bg-purple-400",
+    bg: "bg-emerald-500/10",
+    text: "text-emerald-500",
+    dot: "bg-emerald-400",
   },
   CONCLUIDO: {
     bg: "bg-green-500/10",
@@ -257,7 +257,7 @@ export const TIPO_LABELS: Record<TarefaTipo, string> = {
 export const TIPO_COLORS: Record<TarefaTipo, string> = {
   TAREFA: "bg-blue-500/20 text-blue-500",
   BUG: "bg-red-500/20 text-red-500",
-  FEATURE: "bg-purple-500/20 text-purple-500",
+  FEATURE: "bg-emerald-500/20 text-emerald-500",
   MELHORIA: "bg-green-500/20 text-green-500",
   DOCUMENTACAO: "bg-yellow-500/20 text-yellow-500",
   REUNIAO: "bg-cyan-500/20 text-cyan-500",

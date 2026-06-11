@@ -113,8 +113,8 @@ export const PatientEvolutionDashboard = ({
       value: `${averageImprovement.toFixed(1)}%`,
       subtitle: "por sessão",
       icon: Target,
-      color: "text-purple-600",
-      bg: "bg-purple-500/10",
+      color: "text-emerald-600",
+      bg: "bg-emerald-500/10",
     },
   ];
 

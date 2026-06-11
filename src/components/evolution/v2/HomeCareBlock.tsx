@@ -128,11 +128,11 @@ export const HomeCareBlock: React.FC<HomeCareBlockProps> = ({
     >
       {/* Header with gradient accent */}
       <div className="relative">
-        <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-violet-500/60 via-violet-500 to-violet-500/60" />
-        <div className="flex items-center justify-between p-3.5 border-b border-border/40 bg-gradient-to-r from-violet-500/5 to-transparent">
+        <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-emerald-500/60 via-emerald-500 to-emerald-500/60" />
+        <div className="flex items-center justify-between p-3.5 border-b border-border/40 bg-gradient-to-r from-emerald-500/5 to-transparent">
           <div className="flex items-center gap-2.5">
-            <div className="p-1.5 rounded-lg bg-gradient-to-br from-violet-500/10 to-violet-500/5 border border-violet-500/20">
-              <Home className="h-4 w-4 text-violet-500" />
+            <div className="p-1.5 rounded-lg bg-gradient-to-br from-emerald-500/10 to-emerald-500/5 border border-emerald-500/20">
+              <Home className="h-4 w-4 text-emerald-500" />
             </div>
             <div className="flex flex-col">
               <h3 className="text-sm font-semibold text-foreground">Exercícios para Casa</h3>
@@ -146,7 +146,7 @@ export const HomeCareBlock: React.FC<HomeCareBlockProps> = ({
           </div>
           {exercises.length > 0 && (
             <Badge variant="secondary" className="text-xs h-6 px-2.5 rounded-full">
-              <CheckCircle2 className="h-3 w-3 mr-1 text-violet-500" />
+              <CheckCircle2 className="h-3 w-3 mr-1 text-emerald-500" />
               Casa
             </Badge>
           )}
@@ -170,10 +170,10 @@ export const HomeCareBlock: React.FC<HomeCareBlockProps> = ({
             {exercises.map((exercise, index) => (
               <div
                 key={exercise.id}
-                className="group relative flex flex-col gap-2 p-3 rounded-xl border border-border/50 hover:border-violet-200 hover:bg-violet-500/5 transition-all"
+                className="group relative flex flex-col gap-2 p-3 rounded-xl border border-border/50 hover:border-emerald-200 hover:bg-emerald-500/5 transition-all"
               >
                 <div className="flex items-center gap-3">
-                  <div className="flex items-center justify-center w-7 h-7 rounded-lg bg-violet-100 text-violet-600 font-bold text-xs flex-shrink-0">
+                  <div className="flex items-center justify-center w-7 h-7 rounded-lg bg-emerald-100 text-emerald-600 font-bold text-xs flex-shrink-0">
                     {index + 1}
                   </div>
                   <Input

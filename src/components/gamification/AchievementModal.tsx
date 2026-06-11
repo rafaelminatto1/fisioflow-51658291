@@ -31,7 +31,7 @@ const AchievementModal = ({ isOpen, onClose, achievement }: AchievementModalProp
             transition={{ type: "spring", damping: 12 }}
             className="relative w-full max-w-sm bg-white rounded-[2.5rem] overflow-hidden shadow-2xl"
           >
-            <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-br from-purple-600 to-indigo-700" />
+            <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-br from-emerald-600 to-indigo-700" />
 
             <button
               onClick={onClose}
@@ -45,10 +45,10 @@ const AchievementModal = ({ isOpen, onClose, achievement }: AchievementModalProp
                 initial={{ y: 20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ delay: 0.2 }}
-                className="w-32 h-32 bg-white rounded-3xl shadow-xl flex items-center justify-center border-4 border-purple-50 mb-6"
+                className="w-32 h-32 bg-white rounded-3xl shadow-xl flex items-center justify-center border-4 border-emerald-50 mb-6"
               >
-                <div className="w-24 h-24 bg-gradient-to-br from-purple-100 to-indigo-100 rounded-2xl flex items-center justify-center">
-                  <Award className="w-14 h-14 text-purple-600" />
+                <div className="w-24 h-24 bg-gradient-to-br from-emerald-100 to-indigo-100 rounded-2xl flex items-center justify-center">
+                  <Award className="w-14 h-14 text-emerald-600" />
                 </div>
               </motion.div>
 
@@ -58,7 +58,7 @@ const AchievementModal = ({ isOpen, onClose, achievement }: AchievementModalProp
                 transition={{ delay: 0.3 }}
                 className="space-y-2"
               >
-                <div className="text-xs font-bold text-purple-600 uppercase tracking-widest mb-1">
+                <div className="text-xs font-bold text-emerald-600 uppercase tracking-widest mb-1">
                   Nova Conquista!
                 </div>
                 <h2 className="text-2xl font-black text-slate-800 leading-tight">

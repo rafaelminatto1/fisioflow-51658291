@@ -157,7 +157,7 @@ export function AIAssistantPanel({ patientId, patientName }: AIAssistantPanelPro
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="p-2 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg">
+            <div className="p-2 bg-gradient-to-br from-emerald-500 to-pink-500 rounded-lg">
               <Sparkles className="h-4 w-4 text-white" />
             </div>
             <div>
@@ -203,7 +203,7 @@ export function AIAssistantPanel({ patientId, patientName }: AIAssistantPanelPro
       {isExpanded && (
         <CardContent className="space-y-4">
           {/* Educational Banner - Vectorize/RAG */}
-          <div className="bg-purple-500/10 border border-purple-500/20 text-purple-800 dark:text-purple-300 p-3 rounded-lg flex items-start gap-3 text-sm animate-in fade-in">
+          <div className="bg-emerald-500/10 border border-emerald-500/20 text-emerald-800 dark:text-emerald-300 p-3 rounded-lg flex items-start gap-3 text-sm animate-in fade-in">
             <div className="text-lg leading-none">📚</div>
             <div>
               <strong className="block mb-0.5">Raciocínio Baseado em Evidências:</strong>
@@ -244,7 +244,7 @@ export function AIAssistantPanel({ patientId, patientName }: AIAssistantPanelPro
                       )}
                     >
                       {message.role === "assistant" && (
-                        <div className="p-2 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg shrink-0">
+                        <div className="p-2 bg-gradient-to-br from-emerald-500 to-pink-500 rounded-lg shrink-0">
                           <Sparkles className="h-4 w-4 text-white" />
                         </div>
                       )}
@@ -285,7 +285,7 @@ export function AIAssistantPanel({ patientId, patientName }: AIAssistantPanelPro
 
                   {chat.isLoading && (
                     <div className="flex gap-3 justify-start">
-                      <div className="p-2 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg shrink-0">
+                      <div className="p-2 bg-gradient-to-br from-emerald-500 to-pink-500 rounded-lg shrink-0">
                         <Sparkles className="h-4 w-4 text-white" />
                       </div>
                       <div className="bg-muted rounded-lg px-3 py-2">
@@ -483,7 +483,7 @@ export function AIAssistantMini({ patientId, patientName }: AIAssistantMiniProps
         <Button
           size="lg"
           onClick={() => setIsOpen(true)}
-          className="fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-lg z-50 bg-gradient-to-br from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
+          className="fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-lg z-50 bg-gradient-to-br from-emerald-500 to-pink-500 hover:from-emerald-600 hover:to-pink-600"
         >
           <Sparkles className="h-6 w-6" />
         </Button>

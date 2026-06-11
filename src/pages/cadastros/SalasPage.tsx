@@ -40,7 +40,7 @@ import { Badge } from "@/components/ui/badge";
 const COLORS = [
   { value: "#3b82f6", label: "Azul" },
   { value: "#10b981", label: "Verde" },
-  { value: "#8b5cf6", label: "Roxo" },
+  { value: "#10b981", label: "Roxo" },
   { value: "#f59e0b", label: "Laranja" },
   { value: "#ef4444", label: "Vermelho" },
   { value: "#ec4899", label: "Rosa" },

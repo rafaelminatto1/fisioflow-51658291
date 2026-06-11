@@ -123,7 +123,7 @@ export function DoctorReferralReportGenerator({
       <CardContent className="space-y-4">
         <div className="grid grid-cols-2 gap-3">
           <div className="p-3 bg-white dark:bg-slate-900 rounded-xl border border-indigo-100 dark:border-indigo-800 flex items-center gap-3">
-            <Brain className="w-4 h-4 text-purple-500" />
+            <Brain className="w-4 h-4 text-emerald-500" />
             <div className="text-xs">
               <p className="font-bold text-slate-500">PARECER IA</p>
               <p className={aiSummary ? "text-green-600 font-medium" : "text-slate-400"}>
@@ -146,7 +146,7 @@ export function DoctorReferralReportGenerator({
               onClick={generateAISummary}
               disabled={generatingAI}
               variant="outline"
-              className="w-full gap-2 border-purple-200 hover:bg-purple-50 text-purple-700 dark:border-purple-900 dark:hover:bg-purple-900/20"
+              className="w-full gap-2 border-emerald-200 hover:bg-emerald-50 text-emerald-700 dark:border-emerald-900 dark:hover:bg-emerald-900/20"
             >
               {generatingAI ? (
                 <Loader2 className="w-4 h-4 animate-spin" />

@@ -255,7 +255,7 @@ const VideoComposer: React.FC<VideoComposerProps> = ({
         <Button
           onClick={startExport}
           disabled={isRecording || isPlaying}
-          className="bg-purple-600 hover:bg-purple-700"
+          className="bg-emerald-600 hover:bg-emerald-700"
         >
           <Download className="w-4 h-4 mr-2" />
           Gerar Vídeo de Marketing

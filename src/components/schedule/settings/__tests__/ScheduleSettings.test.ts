@@ -52,7 +52,7 @@ describe("Property 15: Badge de contagem reflete tamanho da lista", () => {
             durationMinutes: fc.integer({ min: 15, max: 480 }),
             bufferBeforeMinutes: fc.integer({ min: 0, max: 60 }),
             bufferAfterMinutes: fc.integer({ min: 0, max: 60 }),
-            color: fc.constantFrom("#3b82f6", "#8b5cf6", "#10b981", "#f59e0b", "#ef4444"),
+            color: fc.constantFrom("#3b82f6", "#10b981", "#10b981", "#f59e0b", "#ef4444"),
             maxPerDay: fc.option(fc.integer({ min: 1, max: 50 })),
             isActive: fc.boolean(),
             isDefault: fc.boolean(),

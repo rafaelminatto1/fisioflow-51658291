@@ -37,13 +37,13 @@ function ImpactVisualization() {
   return (
     <SettingsSectionCard
       icon={<BarChart2 className="h-4 w-4" />}
-      iconBg="bg-violet-100 dark:bg-violet-900/40 text-violet-600 dark:text-violet-400"
+      iconBg="bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400"
       title="Visualização do Impacto"
       description="Simulação de preenchimento diário"
     >
       <div className="mb-2 flex justify-between items-end">
         <span className="text-xs text-muted-foreground uppercase">Ocupação Média</span>
-        <span className="text-sm font-medium text-violet-600 dark:text-violet-400">
+        <span className="text-sm font-medium text-emerald-600 dark:text-emerald-400">
           {activeTypes.length} tipos ativos
         </span>
       </div>
@@ -86,7 +86,7 @@ export function ScheduleAppointmentTypesTab() {
       <div className="xl:col-span-2">
         <SettingsSectionCard
           icon={<Stethoscope className="h-4 w-4" />}
-          iconBg="bg-violet-100 dark:bg-violet-900/40 text-violet-600 dark:text-violet-400"
+          iconBg="bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400"
           title="Tipos de Atendimento"
           description="Configure duração, buffer e cor para cada tipo de consulta"
           variant="highlight"

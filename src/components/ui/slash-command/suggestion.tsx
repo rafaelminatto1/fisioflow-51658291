@@ -217,7 +217,7 @@ export const getSuggestionItems = ({
       description: "Sugerir conduta clínica com IA.",
       icon: <Sparkles className="w-4 h-4" />,
       category: "clinico",
-      iconColor: "bg-violet-50 text-violet-600 border-violet-200",
+      iconColor: "bg-emerald-50 text-emerald-600 border-emerald-200",
       keywords: ["ia", "ajuda", "sugestao"],
       command: ({ editor, range }: any) => {
         editor.chain().focus().deleteRange(range).run();
@@ -269,7 +269,7 @@ export const getSuggestionItems = ({
       description: "Prescrever exercícios para casa.",
       icon: <Home className="w-4 h-4" />,
       category: "clinico",
-      iconColor: "bg-violet-50 text-violet-600 border-violet-200",
+      iconColor: "bg-emerald-50 text-emerald-600 border-emerald-200",
       keywords: ["casa", "home", "orientacao"],
       command: ({ editor, range }: any) => {
         insertClinicalBlock(editor, range, "🏠", "Exercícios para Casa", "taskList", [

@@ -301,7 +301,7 @@ export function TreatmentAssistant({
                   });
                 }}
                 variant="secondary"
-                className="bg-purple-500/10 hover:bg-purple-500/20 text-purple-700 dark:text-purple-300 border-purple-500/30"
+                className="bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border-emerald-500/30"
               >
                 <Wand2 className="h-4 w-4 mr-2" />
                 Aplicar à Avaliação (A)

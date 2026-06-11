@@ -48,7 +48,7 @@ export const BioVisionOverlay: React.FC<BioVisionOverlayProps> = ({
 
     // 1. Draw Skeleton
     if (showSkeleton) {
-      ctx.strokeStyle = "rgba(139, 92, 246, 0.4)"; // Violet transparent
+      ctx.strokeStyle = "rgba(139, 92, 246, 0.4)"; // emerald transparent
       ctx.lineWidth = 2;
       ctx.lineJoin = "round";
 
@@ -66,7 +66,7 @@ export const BioVisionOverlay: React.FC<BioVisionOverlayProps> = ({
       // 2. Draw Points
       landmarks.forEach((lm, i) => {
         if (lm.visibility < 0.5 || i < 11) return;
-        ctx.fillStyle = "#8b5cf6";
+        ctx.fillStyle = "#10b981";
         ctx.beginPath();
         ctx.arc(lm.x * width, lm.y * height, 3, 0, 2 * Math.PI);
         ctx.fill();

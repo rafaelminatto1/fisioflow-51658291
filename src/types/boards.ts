@@ -70,7 +70,7 @@ export const LABEL_PRESET_COLORS = [
   { label: "Amarelo médio", value: "#EAB308" },
   { label: "Verde concluído", value: "#22C55E" },
   { label: "Azul fisio", value: "#3B82F6" },
-  { label: "Roxo TO", value: "#8B5CF6" },
+  { label: "Roxo TO", value: "#10b981" },
   { label: "Cyan aquático", value: "#06B6D4" },
   { label: "Rosa", value: "#EC4899" },
   { label: "Cinza admin", value: "#6B7280" },

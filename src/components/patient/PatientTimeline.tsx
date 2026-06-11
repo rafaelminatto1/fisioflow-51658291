@@ -130,7 +130,7 @@ export function PatientTimeline({ patientId }: PatientTimelineProps) {
 
   const getEntryColor = (entry: TimelineEntry) => {
     if (entry.category === "clinical") return "bg-blue-500/10 text-blue-600 border-blue-200";
-    return "bg-purple-500/10 text-purple-600 border-purple-200";
+    return "bg-emerald-500/10 text-emerald-600 border-emerald-200";
   };
 
   const renderEvolutionSections = (entry: TimelineEntry) => {

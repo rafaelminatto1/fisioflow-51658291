@@ -52,9 +52,9 @@ const ScheduleGridComponent: React.FC<ScheduleGridProps> = ({
         },
         avaliacao: {
           label: "Avaliação",
-          color: "bg-violet-100 text-violet-800 border-violet-200",
+          color: "bg-emerald-100 text-emerald-800 border-emerald-200",
           icon: FileText,
-          bgColor: "bg-violet-50",
+          bgColor: "bg-emerald-50",
         },
         cancelado: {
           label: "Cancelado",
@@ -89,9 +89,9 @@ const ScheduleGridComponent: React.FC<ScheduleGridProps> = ({
         },
         completed: {
           label: "Concluído",
-          color: "bg-purple-100 text-purple-800 border-purple-200",
+          color: "bg-emerald-100 text-emerald-800 border-emerald-200",
           icon: CheckCircle,
-          bgColor: "bg-purple-50",
+          bgColor: "bg-emerald-50",
         },
         "no-show": {
           label: "Faltou",

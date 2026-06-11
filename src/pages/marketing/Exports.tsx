@@ -280,8 +280,8 @@ export default function MarketingExportsPage() {
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex items-start gap-4 flex-1">
                       {/* Thumbnail / Icon */}
-                      <div className="flex-shrink-0 w-16 h-16 rounded-lg bg-gradient-to-br from-purple-500/10 to-pink-500/10 flex items-center justify-center">
-                        <Video className="h-8 w-8 text-purple-600 dark:text-purple-400" />
+                      <div className="flex-shrink-0 w-16 h-16 rounded-lg bg-gradient-to-br from-emerald-500/10 to-pink-500/10 flex items-center justify-center">
+                        <Video className="h-8 w-8 text-emerald-600 dark:text-emerald-400" />
                       </div>
 
                       {/* Info */}

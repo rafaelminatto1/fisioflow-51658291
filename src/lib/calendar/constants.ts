@@ -118,9 +118,9 @@ export const STATUS_COLORS = {
     shadow: "shadow-blue-500/30",
   },
   atendido: {
-    bg: "from-purple-500 to-purple-600",
-    border: "border-purple-400",
-    shadow: "shadow-purple-500/30",
+    bg: "from-emerald-500 to-emerald-600",
+    border: "border-emerald-400",
+    shadow: "shadow-emerald-500/30",
   },
   cancelado: {
     bg: "from-red-500 to-red-600",

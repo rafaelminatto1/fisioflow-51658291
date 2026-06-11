@@ -58,7 +58,7 @@ const GeneralImageAnalyzer: React.FC<GeneralImageAnalyzerProps> = ({ file }) => 
       <Card className="w-[400px] flex flex-col p-4 gap-4 bg-slate-50 border-l">
         <div className="flex items-center justify-between">
           <h3 className="font-semibold text-lg flex items-center gap-2">
-            <Brain className="w-5 h-5 text-purple-600" />
+            <Brain className="w-5 h-5 text-emerald-600" />
             Assistente IA
           </h3>
           {analysis && (
@@ -83,7 +83,7 @@ const GeneralImageAnalyzer: React.FC<GeneralImageAnalyzerProps> = ({ file }) => 
         <ScrollArea className="flex-1 border rounded-md p-4 bg-white">
           {isAnalyzing ? (
             <div className="flex flex-col items-center justify-center h-full gap-2 text-muted-foreground">
-              <Loader2 className="w-8 h-8 animate-spin text-purple-600" />
+              <Loader2 className="w-8 h-8 animate-spin text-emerald-600" />
               <span>Processando imagem...</span>
             </div>
           ) : analysis ? (
@@ -101,7 +101,7 @@ const GeneralImageAnalyzer: React.FC<GeneralImageAnalyzerProps> = ({ file }) => 
         <Button
           onClick={handleAnalyze}
           disabled={isAnalyzing || !imageUrl}
-          className="w-full bg-purple-600 hover:bg-purple-700 text-white"
+          className="w-full bg-emerald-600 hover:bg-emerald-700 text-white"
         >
           {isAnalyzing ? "Analisando..." : "Gerar Relatório AI"}
         </Button>

@@ -236,7 +236,7 @@ export function AdherenceGamification() {
                 <p className="text-xs text-muted-foreground">Sequência Atual</p>
               </div>
               <div>
-                <p className="text-2xl font-bold text-purple-600">
+                <p className="text-2xl font-bold text-emerald-600">
                   {patientStats.unlockedAchievements}
                 </p>
                 <p className="text-xs text-muted-foreground">Conquistas</p>
@@ -478,15 +478,15 @@ export function AdherenceGamification() {
       </Card>
 
       {/* Tips Card */}
-      <Card className="border-purple-200 bg-purple-50 dark:border-purple-900 dark:bg-purple-950">
+      <Card className="border-emerald-200 bg-emerald-50 dark:border-emerald-900 dark:bg-emerald-950">
         <CardContent className="p-4">
           <div className="flex items-start gap-3">
-            <Sparkles className="h-5 w-5 text-purple-600 dark:text-purple-400 mt-0.5" />
+            <Sparkles className="h-5 w-5 text-emerald-600 dark:text-emerald-400 mt-0.5" />
             <div className="text-sm">
-              <p className="font-medium text-purple-900 dark:text-purple-100 mb-2">
+              <p className="font-medium text-emerald-900 dark:text-emerald-100 mb-2">
                 Benefícios da Gamificação
               </p>
-              <ul className="space-y-1 text-purple-800 dark:text-purple-200">
+              <ul className="space-y-1 text-emerald-800 dark:text-emerald-200">
                 <li>• Aumenta a adesão ao tratamento em até 40%</li>
                 <li>• Reduz o absenteísmo e cancelamentos</li>
                 <li>• Melhora a motivação e engajamento dos pacientes</li>

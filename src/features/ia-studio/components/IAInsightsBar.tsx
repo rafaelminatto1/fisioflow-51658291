@@ -8,9 +8,9 @@ export const IAInsightsBar = () => {
       label: "Tempo Economizado",
       value: "12.4h",
       sub: "Este mês",
-      icon: <Clock className="w-4 h-4 text-violet-500" />,
+      icon: <Clock className="w-4 h-4 text-emerald-500" />,
       trend: "+2h vs mês ant.",
-      color: "from-violet-500/10 to-transparent",
+      color: "from-emerald-500/10 to-transparent",
     },
     {
       label: "Pacientes em Risco",

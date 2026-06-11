@@ -567,7 +567,7 @@ const PatientEvolution = () => {
           evolutionId={state.currentSoapRecordId}
           collaborationId={undefined}
           userName={state.user?.full_name || state.user?.name || "Profissional"}
-          userColor="#8b5cf6"
+          userColor="#10b981"
           lastSaved={lastSavedAt}
           onNavigateToHistorico={() => state.setActiveTab("historico")}
         />

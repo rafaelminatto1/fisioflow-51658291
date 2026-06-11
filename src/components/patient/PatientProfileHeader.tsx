@@ -158,7 +158,7 @@ export function PatientProfileHeader({
                 onClick={onOpenProntuario}
                 variant="outline"
                 size="sm"
-                className="flex-1 md:flex-none gap-2 border-violet-100 text-violet-700 hover:bg-violet-50 hover:text-violet-800 transition-colors shadow-sm font-medium"
+                className="flex-1 md:flex-none gap-2 border-emerald-100 text-emerald-700 hover:bg-emerald-50 hover:text-emerald-800 transition-colors shadow-sm font-medium"
               >
                 <ClipboardList className="h-4 w-4" />
                 Prontuário

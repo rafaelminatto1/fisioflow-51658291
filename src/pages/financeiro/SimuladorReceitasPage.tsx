@@ -262,7 +262,7 @@ export default function SimuladorReceitasPage() {
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm text-muted-foreground flex items-center gap-2">
-                <Target className="h-4 w-4 text-purple-500" />
+                <Target className="h-4 w-4 text-emerald-500" />
                 Meta de Lucro
               </CardTitle>
             </CardHeader>

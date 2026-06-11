@@ -29,7 +29,7 @@ const NOTIFICATION_ICONS = {
 };
 
 const NOTIFICATION_COLORS = {
-  level_up: "from-purple-500 to-pink-500",
+  level_up: "from-emerald-500 to-pink-500",
   achievement: "from-yellow-500 to-orange-500",
   streak: "from-orange-500 to-red-500",
   xp_milestone: "from-green-500 to-emerald-500",

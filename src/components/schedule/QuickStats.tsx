@@ -66,8 +66,8 @@ export function QuickStats() {
       icon: TrendingUp,
       label: "Taxa Presença",
       value: `${attendanceRate.toFixed(0)}%`,
-      color: "text-purple-600 dark:text-purple-400",
-      bg: "bg-purple-500/10",
+      color: "text-emerald-600 dark:text-emerald-400",
+      bg: "bg-emerald-500/10",
     },
     {
       icon: DollarSign,

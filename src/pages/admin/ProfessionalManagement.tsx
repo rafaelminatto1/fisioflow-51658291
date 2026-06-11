@@ -59,7 +59,7 @@ const roleLabels: Record<string, { label: string; icon: any; color: string }> = 
   admin: {
     label: "Administrador",
     icon: Shield,
-    color: "text-purple-600 bg-purple-50",
+    color: "text-emerald-600 bg-emerald-50",
   },
   fisioterapeuta: {
     label: "Fisioterapeuta",

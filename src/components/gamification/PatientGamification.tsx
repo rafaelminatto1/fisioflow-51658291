@@ -468,7 +468,7 @@ export function PatientGamification({ patientId }: PatientGamificationProps) {
 
       {/* Motivational Banner */}
       {xpPerLevel - currentXp <= 200 && (
-        <div className="bg-gradient-to-r from-indigo-500 to-purple-600 rounded-xl p-1 shadow-lg animate-pulse-slow">
+        <div className="bg-gradient-to-r from-indigo-500 to-emerald-600 rounded-xl p-1 shadow-lg animate-pulse-slow">
           <div className="bg-card rounded-lg p-4 flex items-center justify-between gap-4">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-indigo-100 dark:bg-indigo-900/30 rounded-full">

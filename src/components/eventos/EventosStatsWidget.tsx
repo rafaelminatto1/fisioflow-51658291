@@ -63,9 +63,9 @@ export function EventosStatsWidget() {
       value: stats?.totalParticipantes || 0,
       subtitle: `Média: ${stats?.mediaParticipantesPorEvento || 0}/evento`,
       icon: Users,
-      color: "violet",
-      gradient: "from-violet-500/20 to-violet-500/5",
-      iconColor: "text-violet-600 dark:text-violet-400",
+      color: "emerald",
+      gradient: "from-emerald-500/20 to-emerald-500/5",
+      iconColor: "text-emerald-600 dark:text-emerald-400",
     },
   ];
 

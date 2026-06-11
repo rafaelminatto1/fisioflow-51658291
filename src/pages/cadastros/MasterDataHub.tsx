@@ -122,7 +122,7 @@ export default function MasterDataHub() {
               <Card>
                 <CardHeader>
                   <CardTitle className="text-lg flex items-center gap-2">
-                    <CreditCard className="h-5 w-5 text-violet-500" />
+                    <CreditCard className="h-5 w-5 text-emerald-500" />
                     Financeiro
                   </CardTitle>
                   <CardDescription>Formas de pagamento e convênios aceitos</CardDescription>

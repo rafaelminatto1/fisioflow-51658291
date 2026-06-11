@@ -122,7 +122,7 @@ export function QuestList({ patientId, category = "all" }: QuestListProps) {
                       className={cn(
                         "p-2 rounded-lg",
                         quest.category === "daily" && "bg-blue-500/10 text-blue-500",
-                        quest.category === "weekly" && "bg-purple-500/10 text-purple-500",
+                        quest.category === "weekly" && "bg-emerald-500/10 text-emerald-500",
                         quest.category === "special" && "bg-yellow-500/10 text-yellow-500",
                       )}
                     >

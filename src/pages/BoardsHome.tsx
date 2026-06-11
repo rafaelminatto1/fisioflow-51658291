@@ -351,10 +351,10 @@ export default function BoardsHome() {
                     type="button"
                     disabled={createFromTemplate.isPending}
                     onClick={() => createFromTemplate.mutate("goals")}
-                    className="flex w-full items-start gap-3 rounded-2xl border border-border/50 bg-background px-3 py-3 text-left transition-colors hover:border-violet-300 hover:bg-violet-50/40 disabled:opacity-60"
+                    className="flex w-full items-start gap-3 rounded-2xl border border-border/50 bg-background px-3 py-3 text-left transition-colors hover:border-emerald-300 hover:bg-emerald-50/40 disabled:opacity-60"
                   >
-                    <div className="rounded-xl bg-violet-100 p-2">
-                      <Target className="h-4 w-4 text-violet-600" />
+                    <div className="rounded-xl bg-emerald-100 p-2">
+                      <Target className="h-4 w-4 text-emerald-600" />
                     </div>
                     <div className="min-w-0">
                       <div className="text-sm font-medium">Objetivos dos Pacientes</div>

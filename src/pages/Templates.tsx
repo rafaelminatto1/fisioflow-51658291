@@ -91,8 +91,8 @@ const CATEGORY_CONFIG: Record<
   "pos-operatorio": {
     label: "Pós-Op",
     icon: History,
-    color: "text-purple-600",
-    bg: "bg-purple-50 dark:bg-purple-950/30",
+    color: "text-emerald-600",
+    bg: "bg-emerald-50 dark:bg-emerald-950/30",
   },
   geral: {
     label: "Geral",

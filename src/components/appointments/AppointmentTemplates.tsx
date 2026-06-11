@@ -383,7 +383,7 @@ const COLORS = [
   { name: "Verde", value: "#10b981" },
   { name: "Amarelo", value: "#f59e0b" },
   { name: "Vermelho", value: "#ef4444" },
-  { name: "Roxo", value: "#8b5cf6" },
+  { name: "Roxo", value: "#10b981" },
   { name: "Rosa", value: "#ec4899" },
 ];
 

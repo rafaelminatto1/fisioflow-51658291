@@ -2,7 +2,7 @@
 
 @layer base {
   :root {
-    /* Gradient da Marca (FisioFlow - Sky Blue → Purple) */
+    /* Gradient da Marca (FisioFlow - Sky Blue → Emerald) */
     --gradient-brand-primary: linear-gradient(
       135deg,
       hsl(var(--primary)) 0%,

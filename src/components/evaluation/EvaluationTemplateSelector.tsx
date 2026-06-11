@@ -66,7 +66,7 @@ const CATEGORY_LABELS: Record<string, string> = {
 const CATEGORY_COLORS: Record<string, string> = {
   esportiva: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400",
   ortopedica: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400",
-  neurologica: "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400",
+  neurologica: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400",
   respiratoria: "bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400",
   padrao: "bg-primary/10 text-primary",
   geral: "bg-muted text-muted-foreground",

@@ -369,7 +369,7 @@ export function ReviewsContent() {
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="text-purple-600 h-8 text-xs"
+                        className="text-emerald-600 h-8 text-xs"
                         onClick={() => handleAIGenerateReply(review)}
                         disabled={isGeneratingReply === review.author}
                       >

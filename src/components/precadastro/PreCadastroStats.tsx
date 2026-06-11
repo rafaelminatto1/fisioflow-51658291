@@ -74,8 +74,8 @@ export const PreCadastroStats = ({ tokens, precadastros }: StatsProps) => {
       <Card className="col-span-2 md:col-span-1">
         <CardContent className="pt-4">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-purple-500/10 rounded-lg">
-              <Users className="h-5 w-5 text-purple-500" />
+            <div className="p-2 bg-emerald-500/10 rounded-lg">
+              <Users className="h-5 w-5 text-emerald-500" />
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Total</p>

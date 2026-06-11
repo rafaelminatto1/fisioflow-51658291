@@ -779,7 +779,7 @@ export const AppointmentQuickEditModal: React.FC<AppointmentQuickEditModalProps>
                       className={cn(
                         "flex-1 sm:flex-none text-white",
                         formData.status === "avaliacao"
-                          ? "bg-violet-600 hover:bg-violet-700"
+                          ? "bg-emerald-600 hover:bg-emerald-700"
                           : "bg-emerald-600 hover:bg-emerald-700",
                       )}
                       aria-label={

@@ -38,7 +38,7 @@ const rewards: RewardItem[] = [
     description: "Desconto em lojas de suplementos e equipamentos esportivos parceiros.",
     cost: 800,
     category: "discount",
-    icon: <Gift className="w-6 h-6 text-purple-500" />,
+    icon: <Gift className="w-6 h-6 text-emerald-500" />,
   },
   {
     id: "streak_freeze",

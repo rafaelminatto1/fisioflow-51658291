@@ -61,14 +61,14 @@ export const STATUS_CONFIG: Record<SessionStatus, StatusConfig> = {
     allowedActions: ["confirm", "cancel", "reschedule", "edit"],
   },
 
-  // Evaluation - Soft Purple
+  // Evaluation - Soft emerald
   avaliacao: {
     label: "Avaliação",
     color: "hsl(275 60% 55%)",
     bgColor: "hsl(275 60% 55%)",
     borderColor: "hsl(275 60% 48%)",
-    twBg: "bg-purple-600",
-    twBorder: "border-purple-700",
+    twBg: "bg-emerald-600",
+    twBorder: "border-emerald-700",
     twText: "text-white",
     icon: Clock,
     allowedActions: ["confirm", "cancel", "reschedule", "edit"],

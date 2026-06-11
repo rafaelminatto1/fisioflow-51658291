@@ -23,7 +23,7 @@ export const OnlineUsersIndicator: React.FC = () => {
   // Cores por role
   const getRoleColor = (role: string) => {
     const colors: Record<string, string> = {
-      admin: "text-purple-600 bg-purple-100",
+      admin: "text-emerald-600 bg-emerald-100",
       fisioterapeuta: "text-blue-600 bg-blue-100",
       estagiario: "text-green-600 bg-green-100",
       paciente: "text-gray-600 bg-gray-100",

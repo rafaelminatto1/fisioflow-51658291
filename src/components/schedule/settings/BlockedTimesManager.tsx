@@ -69,9 +69,9 @@ const QUICK_TEMPLATES = [
     reason: "Participação em curso/evento",
     type: "curso",
     color:
-      "from-purple-50 to-violet-50 dark:from-purple-950/30 dark:to-violet-950/30 border-purple-200 dark:border-purple-800",
-    borderColor: "border-l-purple-500",
-    badgeColor: "bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300",
+      "from-emerald-50 to-emerald-50 dark:from-emerald-950/30 dark:to-emerald-950/30 border-emerald-200 dark:border-emerald-800",
+    borderColor: "border-l-emerald-500",
+    badgeColor: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300",
   },
   {
     title: "Manutenção",

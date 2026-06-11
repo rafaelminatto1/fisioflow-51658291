@@ -84,7 +84,7 @@ const QUICK_TEMPLATES: Array<PackageFormData & { label: string; color: string }>
     sessions_count: 5,
     price: 550,
     validity_days: 60,
-    color: "violet",
+    color: "emerald",
   },
 ];
 
@@ -247,8 +247,8 @@ export function PackagesManager() {
                         "border-emerald-200 hover:border-emerald-400 hover:bg-emerald-50/50",
                       tpl.color === "blue" &&
                         "border-blue-200 hover:border-blue-400 hover:bg-blue-50/50",
-                      tpl.color === "violet" &&
-                        "border-violet-200 hover:border-violet-400 hover:bg-violet-50/50",
+                      tpl.color === "emerald" &&
+                        "border-emerald-200 hover:border-emerald-400 hover:bg-emerald-50/50",
                     )}
                   >
                     <div className="flex items-start justify-between mb-2">
@@ -257,7 +257,7 @@ export function PackagesManager() {
                           "text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full",
                           tpl.color === "emerald" && "bg-emerald-100 text-emerald-700",
                           tpl.color === "blue" && "bg-blue-100 text-blue-700",
-                          tpl.color === "violet" && "bg-violet-100 text-violet-700",
+                          tpl.color === "emerald" && "bg-emerald-100 text-emerald-700",
                         )}
                       >
                         {tpl.label}
@@ -267,7 +267,7 @@ export function PackagesManager() {
                           "h-3.5 w-3.5 opacity-0 group-hover:opacity-100 transition-opacity",
                           tpl.color === "emerald" && "text-emerald-500",
                           tpl.color === "blue" && "text-blue-500",
-                          tpl.color === "violet" && "text-violet-500",
+                          tpl.color === "emerald" && "text-emerald-500",
                         )}
                       />
                     </div>
@@ -451,7 +451,7 @@ export function PackagesManager() {
                       tpl.color === "emerald" &&
                         "border-emerald-200 bg-emerald-50 text-emerald-700",
                       tpl.color === "blue" && "border-blue-200 bg-blue-50 text-blue-700",
-                      tpl.color === "violet" && "border-violet-200 bg-violet-50 text-violet-700",
+                      tpl.color === "emerald" && "border-emerald-200 bg-emerald-50 text-emerald-700",
                     )}
                   >
                     {tpl.label}

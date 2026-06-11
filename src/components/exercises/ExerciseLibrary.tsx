@@ -107,7 +107,7 @@ const difficultyConfig: Record<string, { color: string; bg: string; border: stri
 
 const categoryColors: Record<string, string> = {
   Fortalecimento: "bg-blue-500/10 text-blue-600 border-blue-500/30",
-  Alongamento: "bg-purple-500/10 text-purple-600 border-purple-500/30",
+  Alongamento: "bg-emerald-500/10 text-emerald-600 border-emerald-500/30",
   Mobilidade: "bg-cyan-500/10 text-cyan-600 border-cyan-500/30",
   Equilíbrio: "bg-teal-500/10 text-teal-600 border-teal-500/30",
   Cardio: "bg-rose-500/10 text-rose-600 border-rose-500/30",

@@ -307,8 +307,8 @@ const CalendarView: React.FC<CalendarViewProps> = ({ evolutions }) => {
                             </div>
                           )}
                           {ev.assessment && (
-                            <div className="p-2 rounded-lg bg-purple-500/5 border border-purple-500/10">
-                              <p className="font-semibold text-purple-600 dark:text-purple-400 mb-1">
+                            <div className="p-2 rounded-lg bg-emerald-500/5 border border-emerald-500/10">
+                              <p className="font-semibold text-emerald-600 dark:text-emerald-400 mb-1">
                                 A:
                               </p>
                               <p className="text-muted-foreground line-clamp-2">{ev.assessment}</p>

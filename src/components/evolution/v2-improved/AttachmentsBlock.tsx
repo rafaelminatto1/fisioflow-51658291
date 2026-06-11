@@ -54,8 +54,8 @@ const getFileIcon = (
     case "image":
       return {
         icon: <ImageIcon className="h-4 w-4" />,
-        bgColor: "bg-violet-500/10",
-        textColor: "text-violet-600",
+        bgColor: "bg-emerald-500/10",
+        textColor: "text-emerald-600",
       };
     case "document":
       return {
