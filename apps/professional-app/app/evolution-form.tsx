@@ -9,6 +9,7 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
+  Image,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams, Stack } from "expo-router";
@@ -20,6 +21,7 @@ import { ObservacaoForm } from "@/components/evolution/ObservacaoForm";
 import { EvolutionChipList, type ChipItem } from "@/components/evolution/EvolutionChipList";
 import { PainLevelSlider } from "@/components/evolution/PainLevelSlider";
 import { PhotoUpload } from "@/components/evolution/PhotoUpload";
+import { SignaturePad } from "@/components/evolution/SignaturePad";
 import { fetchApi } from "@/lib/api";
 
 type StructuredItem = ChipItem;
@@ -80,6 +82,7 @@ export default function EvolutionFormScreen() {
   const [measurements, setMeasurements] = useState<StructuredItem[]>([]);
   const [homeExercises, setHomeExercises] = useState<StructuredItem[]>([]);
   const [photos, setPhotos] = useState<string[]>([]);
+  const [patientSignatureUrl, setPatientSignatureUrl] = useState<string | null>(null);
 
   // Auto-save state
   const [autoSaveStatus, setAutoSaveStatus] = useState<"idle" | "saving" | "saved" | "error">(
@@ -139,6 +142,7 @@ export default function EvolutionFormScreen() {
 
           if (Array.isArray(draft.photos)) setPhotos(draft.photos);
           if (Array.isArray(draft.attachments)) setPhotos(draft.attachments);
+          if (draft.patient_signature_url) setPatientSignatureUrl(draft.patient_signature_url);
 
           setAutoSaveStatus("saved");
         } else {
@@ -165,6 +169,7 @@ export default function EvolutionFormScreen() {
         measurements: chipsToMeasurements(measurements),
         home_exercises: chipsToHomeExercises(homeExercises),
         photos,
+        patient_signature_url: patientSignatureUrl,
         updatedAt: new Date().toISOString(),
       };
       try {
@@ -199,6 +204,7 @@ export default function EvolutionFormScreen() {
           exercises: chipsToExercises(exercises),
           measurements: chipsToMeasurements(measurements),
           home_exercises: chipsToHomeExercises(homeExercises),
+          patient_signature_url: patientSignatureUrl,
         };
         if (savedEvolutionId.current) body.recordId = savedEvolutionId.current;
 
@@ -229,6 +235,7 @@ export default function EvolutionFormScreen() {
     measurements,
     homeExercises,
     photos,
+    patientSignatureUrl,
     patientId,
     appointmentId,
   ]);
@@ -387,6 +394,24 @@ export default function EvolutionFormScreen() {
 
           {/* ⚫ Anexos / fotos */}
           <PhotoUpload photos={photos} onPhotosChange={setPhotos} colors={colors} />
+
+          {/* Assinatura */}
+          {patientSignatureUrl ? (
+            <View style={{ marginVertical: 16 }}>
+               <Text style={[styles.headerTitle, { color: colors.text, marginBottom: 8 }]}>Assinatura do Paciente</Text>
+               <View style={{ height: 120, borderWidth: 1, borderColor: colors.border, borderRadius: 8, overflow: 'hidden' }}>
+                 <Image source={{ uri: patientSignatureUrl }} style={{ width: '100%', height: '100%', resizeMode: 'contain' }} alt="Assinatura" />
+               </View>
+               <TouchableOpacity 
+                  style={{ marginTop: 8 }} 
+                  onPress={() => setPatientSignatureUrl(null)}
+               >
+                 <Text style={{ color: colors.error }}>Remover Assinatura</Text>
+               </TouchableOpacity>
+            </View>
+          ) : (
+            <SignaturePad onSignatureSaved={setPatientSignatureUrl} colors={colors} />
+          )}
 
           {/* IA */}
           <View style={styles.aiButtonContainer}>

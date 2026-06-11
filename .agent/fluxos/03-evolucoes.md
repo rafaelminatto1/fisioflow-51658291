@@ -8,9 +8,9 @@
 | Arquivo | Caminho | Status |
 |---------|---------|--------|
 | Container Principal | `src/components/evolution/SessionEvolutionContainer.tsx` | ✅ OK |
-| Formulário SOAP | `src/components/evolution/SOAPFormPanel.tsx` | ⚠️ POTENCIAL #185 |
+| Formulário Observação Livre | `src/components/evolution/SOAPFormPanel.tsx` | ⚠️ POTENCIAL #185 |
 | Painel Exercícios | `src/components/evolution/SessionExercisesPanel.tsx` | ✅ OK |
-| SOAP Accordion | `src/components/evolution/SOAPAccordion.tsx` | ✅ OK |
+| Observação Livre Accordion | `src/components/evolution/SOAPAccordion.tsx` | ✅ OK |
 | Mapa de Dor | `src/components/evolution/PainMapManager.tsx` | ⚠️ POTENCIAL #185 |
 | Floating Action Bar | `src/components/evolution/FloatingActionBar.tsx` | ⚠️ POTENCIAL #185 |
 | Exercise Widget | `src/components/evolution/ExerciseBlockWidget.tsx` | ⚠️ POTENCIAL #185 |
@@ -87,7 +87,7 @@ useEffect(() => {
 
 ## VALIDAÇÕES IMPLEMENTADAS
 
-### SOAP (Subjetivo, Objetivo, Avaliação, Plano)
+### Observação Livre (Subjetivo, Objetivo, Avaliação, Plano)
 
 ```tsx
 const trimmedSubjective = soapData.subjective?.trim() || '';
@@ -98,7 +98,7 @@ const trimmedPlan = soapData.plan?.trim() || '';
 if (!trimmedSubjective || !trimmedObjective || !trimmedAssessment || !trimmedPlan) {
   toast({
     title: 'Campos obrigatórios',
-    description: 'Preencha todos os campos do SOAP (S, O, A, P).',
+    description: 'Preencha todos os campos do Observação Livre (S, O, A, P).',
     variant: 'destructive'
   });
   return;
@@ -116,7 +116,7 @@ if (!trimmedSubjective || !trimmedObjective || !trimmedAssessment || !trimmedPla
 | Criar nova evolução | ✅ OK | Validação implementada |
 | Editar evolução | ✅ OK | Web implementado |
 | Editar evolução (iOS) | ⚠️ PENDENTE | Não implementado |
-| Componentes SOAP | ✅ OK | Com otimização sugerida |
+| Componentes Observação Livre | ✅ OK | Com otimização sugerida |
 | Formulários | ✅ OK | Campos obrigatórios validados |
 
 ---

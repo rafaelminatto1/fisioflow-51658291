@@ -7,7 +7,7 @@ Este arquivo rastreia o progresso final e a conclusão do `PLANO_IMPLEMENTACAO_2
 - [x] **S0-A: Utilitário Global de Datas** (`src/lib/date-utils.ts` implementado).
 - [x] **S0-B: Down Scripts das Migrations** (Scripts presentes em `apps/api/migrations/`).
 - [x] **S0-C: Launch Checklist** (Revisado; pronto para produção).
-- [x] **S0-D: E2E Smoke Tests** (Caminho feliz completo: Login -> Paciente -> Agenda -> SOAP).
+- [x] **S0-D: E2E Smoke Tests** (Caminho feliz completo: Login -> Paciente -> Agenda -> Observação Livre).
 
 ## SPRINT 1 — Push Notifications & Sync Offline
 

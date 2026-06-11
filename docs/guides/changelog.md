@@ -40,7 +40,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Complete patient management system
-- Advanced SOAP notes system
+- Advanced Observação Livre notes system
 - Exercise library with prescription capabilities
 - Real-time scheduling with conflict detection
 - Analytics dashboard with patient metrics
@@ -69,7 +69,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Initial patient CRUD operations
-- Basic SOAP notes
+- Basic Observação Livre notes
 - Exercise library
 - Simple scheduling system
 - Authentication with Supabase

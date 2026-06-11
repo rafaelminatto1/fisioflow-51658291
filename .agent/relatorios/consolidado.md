@@ -109,7 +109,7 @@ useEffect(() => {
 
 ---
 
-### #008 - useEffect com debounce em SOAP
+### #008 - useEffect com debounce em Observação Livre
 **Arquivo:** `src/components/evolution/SOAPFormPanel.tsx:112-117`
 
 **Problema:** Padrão de debounce misturado com useEffect pode causar loops

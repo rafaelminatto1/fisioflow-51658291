@@ -67,6 +67,9 @@ const appointmentSchema = z.object({
   isGroup: z.boolean().default(false),
   additionalNames: z.string().optional(),
   isUnlimited: z.boolean().default(false),
+  isRecurring: z.boolean().default(false),
+  recurrenceType: z.enum(["daily", "weekly", "monthly"]).default("weekly"),
+  recurrenceEndWeeks: z.number().min(1).default(4),
 });
 
 type AppointmentFormData = z.infer<typeof appointmentSchema>;
@@ -134,6 +137,9 @@ export default function AppointmentFormScreen() {
       isGroup: false,
       additionalNames: "",
       isUnlimited: false,
+      isRecurring: false,
+      recurrenceType: "weekly",
+      recurrenceEndWeeks: 4,
     },
   });
 
@@ -219,6 +225,26 @@ export default function AppointmentFormScreen() {
           navigateToAgenda();
         }
       } else {
+        if (formData.isRecurring) {
+          try {
+            await fetch('https://api-pro.moocafisio.com.br/api/recurring-series', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                ...appointmentData,
+                recurrenceType: formData.recurrenceType,
+                recurrenceEndWeeks: formData.recurrenceEndWeeks
+              })
+            });
+            success();
+            Alert.alert("Sucesso", "Série de agendamentos criada com sucesso");
+            router.back();
+            return;
+          } catch (err) {
+            throw err;
+          }
+        }
+        
         await createAsync(appointmentData);
         success();
         Alert.alert("Sucesso", "Agendamento criado com sucesso");
@@ -625,6 +651,66 @@ export default function AppointmentFormScreen() {
                 )}
               />
             </View>
+          </View>
+        )}
+
+        {/* Recurrence Section - Only for new appointments */}
+        {!isEditing && showAdvanced && (
+          <View style={styles.row}>
+             <View style={styles.col}>
+                <Controller
+                  control={control}
+                  name="isRecurring"
+                  render={({ field: { value, onChange } }) => (
+                    <OptionSelector
+                      label="É Recorrente?"
+                      value={value ? "Sim" : "Não"}
+                      options={[{label: "Sim", value: "Sim"}, {label: "Não", value: "Não"}]}
+                      onSelect={(v) => onChange(v === "Sim")}
+                    />
+                  )}
+                />
+             </View>
+             {watch("isRecurring") && (
+               <View style={styles.col}>
+                  <Controller
+                    control={control}
+                    name="recurrenceType"
+                    render={({ field: { value, onChange } }) => (
+                      <OptionSelector
+                        label="Frequência"
+                        value={value}
+                        options={[
+                          {label: "Diário", value: "daily"},
+                          {label: "Semanal", value: "weekly"},
+                          {label: "Mensal", value: "monthly"}
+                        ]}
+                        onSelect={onChange}
+                      />
+                    )}
+                  />
+               </View>
+             )}
+          </View>
+        )}
+        
+        {!isEditing && showAdvanced && watch("isRecurring") && (
+          <View style={styles.row}>
+             <View style={styles.col}>
+               <Text style={[styles.label, { color: colors.textSecondary, marginTop: 12 }]}>Duração (Semanas)</Text>
+               <Controller
+                  control={control}
+                  name="recurrenceEndWeeks"
+                  render={({ field: { value, onChange } }) => (
+                    <TextInput
+                      style={[styles.pickerButton, { color: colors.text, borderColor: colors.border }]}
+                      keyboardType="numeric"
+                      value={String(value)}
+                      onChangeText={(text) => onChange(parseInt(text) || 1)}
+                    />
+                  )}
+                />
+             </View>
           </View>
         )}
 

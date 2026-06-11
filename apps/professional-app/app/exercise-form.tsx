@@ -19,7 +19,8 @@ import { Button } from "@/components";
 import { useColors } from "@/hooks/useColorScheme";
 import { useExerciseCreate, useExerciseDelete, useExerciseUpdate } from "@/hooks/useExercises";
 import { useHaptics } from "@/hooks/useHaptics";
-import { getExerciseById } from "@/lib/api";
+import { getExerciseById, fetchApi } from "@/lib/api";
+import * as ImagePicker from "expo-image-picker";
 import {
   BODY_PARTS,
   CATEGORIES,
@@ -482,6 +483,9 @@ export default function ExerciseFormScreen() {
   const { updateExerciseAsync, isUpdating } = useExerciseUpdate();
   const { deleteExerciseAsync, isDeleting } = useExerciseDelete();
 
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadType, setUploadType] = useState<"camera" | "gallery" | null>(null);
+
   const [categories, setCategories] = useState<string[]>(["Fortalecimento"]);
   const [tags, setTags] = useState<string[]>([]);
   const [bodyParts, setBodyParts] = useState<string[]>([]);
@@ -616,6 +620,87 @@ export default function ExerciseFormScreen() {
 
   const handleTagSelect = (newTags: string[]) => {
     setTags(newTags);
+  };
+
+  const handlePickVideo = async (source: "camera" | "gallery") => {
+    try {
+      let result;
+      if (source === "camera") {
+        const { status } = await ImagePicker.requestCameraPermissionsAsync();
+        if (status !== "granted") {
+          Alert.alert("Permissão necessária", "Precisamos de acesso à câmera para gravar o vídeo.");
+          return;
+        }
+        result = await ImagePicker.launchCameraAsync({
+          mediaTypes: ImagePicker.MediaTypeOptions.Videos,
+          allowsEditing: true,
+          quality: 1,
+        });
+      } else {
+        const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+        if (status !== "granted") {
+          Alert.alert("Permissão necessária", "Precisamos de acesso à galeria para selecionar o vídeo.");
+          return;
+        }
+        result = await ImagePicker.launchImageLibraryAsync({
+          mediaTypes: ImagePicker.MediaTypeOptions.Videos,
+          allowsEditing: true,
+          quality: 1,
+        });
+      }
+
+      if (!result.canceled && result.assets[0]) {
+        setIsUploading(true);
+        setUploadType(source);
+        medium();
+
+        // 1. Get Presigned URL
+        const uploadData = await fetchApi<any>("/api/upload-url", {
+          method: "POST",
+          data: {
+            contentType: "video/mp4",
+            folder: "exercises",
+          },
+        });
+
+        const uploadUrl = uploadData.uploadUrl || uploadData.upload_url;
+        const publicUrl = uploadData.publicUrl || uploadData.public_url;
+
+        if (!uploadUrl || !publicUrl) {
+          throw new Error("Erro ao gerar URL de upload no servidor.");
+        }
+
+        // 2. Fetch local file
+        const fileUri = result.assets[0].uri;
+        const response = await fetch(fileUri);
+        const blob = await response.blob();
+
+        // 3. Upload to Cloudflare R2
+        const uploadRes = await fetch(uploadUrl, {
+          method: "PUT",
+          body: blob,
+          headers: {
+            "Content-Type": "video/mp4",
+          },
+        });
+
+        if (!uploadRes.ok) {
+          throw new Error("Falha ao enviar o arquivo para o servidor de armazenamento.");
+        }
+
+        // 4. Set Video URL
+        updateField("videoUrl", publicUrl);
+        success();
+        Alert.alert("Sucesso", "Vídeo enviado com sucesso!");
+      }
+    } catch (err: any) {
+      error();
+      console.error(err);
+      Alert.alert("Erro no Upload", err.message || "Ocorreu um erro ao enviar o vídeo.");
+    } finally {
+      setIsUploading(false);
+      setUploadType(null);
+    }
   };
 
   if (isLoadingExercise) {
@@ -1095,7 +1180,39 @@ export default function ExerciseFormScreen() {
             keyboardType="url"
           />
 
-          <Text style={[styles.label, { color: colors.text }]}>URL do Vídeo</Text>
+          <Text style={[styles.label, { color: colors.text }]}>Vídeo do Exercício</Text>
+          {formData.videoUrl ? (
+            <View style={{ marginBottom: 16 }}>
+              <View style={[styles.input, { borderColor: colors.border, backgroundColor: colors.surface, marginBottom: 8 }]}>
+                <Text style={{ color: colors.primary }} numberOfLines={1}>
+                  {formData.videoUrl}
+                </Text>
+              </View>
+              <Button
+                title="Remover / Trocar Vídeo"
+                variant="outline"
+                onPress={() => updateField("videoUrl", "")}
+              />
+            </View>
+          ) : (
+            <View style={{ flexDirection: "row", gap: 10, marginBottom: 16 }}>
+              <Button
+                title={isUploading && uploadType === "camera" ? "Gravando..." : "Gravar Vídeo"}
+                variant="outline"
+                onPress={() => handlePickVideo("camera")}
+                style={{ flex: 1 }}
+                disabled={isUploading}
+              />
+              <Button
+                title={isUploading && uploadType === "gallery" ? "Enviando..." : "Galeria"}
+                variant="outline"
+                onPress={() => handlePickVideo("gallery")}
+                style={{ flex: 1 }}
+                disabled={isUploading}
+              />
+            </View>
+          )}
+
           <TextInput
             style={[
               styles.input,
@@ -1107,9 +1224,10 @@ export default function ExerciseFormScreen() {
             ]}
             value={formData.videoUrl}
             onChangeText={(v) => updateField("videoUrl", v)}
-            placeholder="https://youtube.com/watch?v=..."
+            placeholder="Ou cole a URL do vídeo aqui..."
             placeholderTextColor={colors.textMuted}
             keyboardType="url"
+            editable={!isUploading}
           />
 
           <Text style={[styles.label, { color: colors.text }]}>Esboço do Esqueleto (JSON)</Text>

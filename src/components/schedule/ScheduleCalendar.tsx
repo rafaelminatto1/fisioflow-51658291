@@ -26,7 +26,7 @@ import dayGridPlugin from "@fullcalendar/daygrid";
 import FullCalendar from "@fullcalendar/react";
 import type { EventResizeDoneArg } from "@fullcalendar/interaction";
 import timeGridPlugin from "@fullcalendar/timegrid";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { memo, useEffect, useMemo, useRef, useState } from "react";
 
 import { useAgendaAppearancePersistence } from "@/hooks/useAgendaAppearancePersistence";
 import { useScheduleSettings } from "@/hooks/useScheduleSettings";
@@ -116,7 +116,7 @@ export interface ScheduleCalendarProps {
   therapists?: TherapistSummary[];
 }
 
-export function ScheduleCalendar(props: ScheduleCalendarProps) {
+const ScheduleCalendarInner = (props: ScheduleCalendarProps) => {
   const {
     appointments,
     tarefas = [],
@@ -570,4 +570,5 @@ export function ScheduleCalendar(props: ScheduleCalendarProps) {
   );
 }
 
+export const ScheduleCalendar = memo(ScheduleCalendarInner);
 export default ScheduleCalendar;

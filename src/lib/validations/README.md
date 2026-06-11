@@ -244,13 +244,13 @@ const profile = {
 userSchemas.profile.parse(profile); // OK
 ```
 
-### SOAP Schemas
+### Observação Livre Schemas
 
 ```typescript
 import { soapSchemas } from "@/lib/validations";
 
 const soapRecord = {
-  id: "soap-1",
+  id: "observacao-1",
   patientId: "patient-123",
   sessionNumber: 1,
   subjective: "Patient reports pain in lumbar region",

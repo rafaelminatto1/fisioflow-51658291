@@ -15,7 +15,7 @@
    - Utilizar os metadados gerados em `docs/mobile/STORE_METADATA.md`.
    - Iniciar rollout do Patient App nas stores da Apple e Google.
 2. **Onboarding da Equipe (Training Week)**
-   - Treinar os fisioterapeutas no uso do **Voice Scribe (SOAP via Voz)** e **HUD Biomecânico 3D**.
+   - Treinar os fisioterapeutas no uso do **Voice Scribe (Observação Livre via Voz)** e **HUD Biomecânico 3D**.
    - Validar a precisão da transcrição técnica do Gemini 1.5 Flash na clínica.
 3. **Ativação Gradual de Automações**
    - Ligar o cron de **NPS Patient Trigger** (D+7) para os próximos pacientes novos.
@@ -67,7 +67,7 @@
 | Indicador                     | Fonte no FisioFlow | Meta até Dez/2026                     |
 | :---------------------------- | :----------------- | :------------------------------------ |
 | **Aderência do App Paciente** | Auth DB            | > 60% dos pacientes ativos            |
-| **Automação SOAP (Voz)**      | AI Logs            | > 80% das evoluções feitas via Scribe |
+| **Automação Observação Livre (Voz)**      | AI Logs            | > 80% das evoluções feitas via Scribe |
 | **Taxa de Retenção (LTV)**    | BI Dashboard       | Aumento de 2.5 para 3.5 ciclos médios |
 | **Precisão de Agendamento**   | No-Show BI         | Redução do No-Show para < 10%         |
 | **Eficácia Clínica**          | Quality Dashboard  | Score médio da equipe > 85/100        |

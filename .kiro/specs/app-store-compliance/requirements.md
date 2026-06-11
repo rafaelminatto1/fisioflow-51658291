@@ -2,13 +2,13 @@
 
 ## Introduction
 
-Este documento especifica os requisitos para tornar o FisioFlow Professional App totalmente compatível com as diretrizes da Apple App Store. O aplicativo é uma ferramenta de gerenciamento clínico para profissionais de fisioterapia que coleta e processa dados de saúde sensíveis (PHI - Protected Health Information), incluindo registros SOAP, fotos de pacientes, histórico médico, e prescrições de exercícios.
+Este documento especifica os requisitos para tornar o FisioFlow Professional App totalmente compatível com as diretrizes da Apple App Store. O aplicativo é uma ferramenta de gerenciamento clínico para profissionais de fisioterapia que coleta e processa dados de saúde sensíveis (PHI - Protected Health Information), incluindo registros Observação Livre, fotos de pacientes, histórico médico, e prescrições de exercícios.
 
 O aplicativo atualmente apresenta lacunas críticas de compliance que impedem sua aprovação na App Store, incluindo ausência de políticas de privacidade acessíveis, proteções inadequadas para dados de saúde, permissões sem justificativas claras, e falta de transparência no tratamento de dados.
 
 ## Glossary
 
-- **PHI (Protected Health Information)**: Informações de saúde protegidas, incluindo dados médicos, registros SOAP, fotos de pacientes, histórico de tratamento
+- **PHI (Protected Health Information)**: Informações de saúde protegidas, incluindo dados médicos, registros Observação Livre, fotos de pacientes, histórico de tratamento
 - **LGPD**: Lei Geral de Proteção de Dados (Brasil) - Lei nº 13.709/2018
 - **HIPAA**: Health Insurance Portability and Accountability Act (EUA)
 - **App**: FisioFlow Professional App (aplicativo móvel React Native/Expo)
@@ -66,7 +66,7 @@ O aplicativo atualmente apresenta lacunas críticas de compliance que impedem su
 2. THE App SHALL encrypt all PHI data in transit using TLS 1.3 or higher
 3. WHEN Patient_Data is stored in Firebase Firestore, THE App SHALL ensure RLS policies prevent unauthorized access
 4. WHEN Patient_Data includes photos or documents, THE App SHALL encrypt files in Firebase Storage
-5. THE App SHALL implement E2EE for SOAP notes containing sensitive medical information
+5. THE App SHALL implement E2EE for Observação Livre notes containing sensitive medical information
 6. THE App SHALL never store PHI in device logs or analytics
 7. THE App SHALL never transmit PHI to third-party analytics services
 8. THE App SHALL implement secure key management for encryption keys
@@ -153,7 +153,7 @@ O aplicativo atualmente apresenta lacunas críticas de compliance que impedem su
 6. THE App SHALL provide Data_Export functionality allowing Professional_User to download all their data in JSON format
 7. THE App SHALL provide Data_Export functionality allowing Professional_User to download all their data in PDF format
 8. THE Data_Export SHALL include all Patient_Data managed by Professional_User
-9. THE Data_Export SHALL include all SOAP notes, photos, and documents
+9. THE Data_Export SHALL include all Observação Livre notes, photos, and documents
 10. THE Data_Export SHALL complete within 48 hours for large datasets
 11. THE App SHALL provide Data_Deletion functionality allowing Professional_User to request account deletion
 12. WHEN Data_Deletion is requested, THE App SHALL display warning about permanent data loss

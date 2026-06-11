@@ -20,7 +20,7 @@ Sistema de geração de relatórios clínicos PDF de alto padrão ("Premium"), q
 
 - **Motor de PDF:** `@react-pdf/renderer` para geração dinâmica no lado do cliente (Edge-friendly).
 - **Geração de Texto:**
-  - **Input:** Evoluções SOAP recentes + Medições de ADM + CID-10.
+  - **Input:** Evoluções Observação Livre recentes + Medições de ADM + CID-10.
   - **IA:** Cloudflare Workers AI (Llama 3.1 70B) com prompt assistido por tópicos.
 - **Assets Visuais:** Capturas de tela (stills) do esqueleto biomecânico e gráficos de tendência.
 

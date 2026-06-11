@@ -8,23 +8,23 @@ FisioFlow é um sistema completo de gestão para clínicas de fisioterapia, cons
 
 ## Propósito
 
-Solução digital para clínicas de fisioterapia que cobre gestão de pacientes, agendamento, prontuário eletrônico (SOAP), prescrição de exercícios, controle financeiro e analytics clínico.
+Solução digital para clínicas de fisioterapia que cobre gestão de pacientes, agendamento, prontuário eletrônico (Observação Livre), prescrição de exercícios, controle financeiro e analytics clínico.
 
 ## Funcionalidades Principais
 
 - **Gestão de Pacientes**: Ciclo completo com conformidade LGPD, histórico médico, uploads e acompanhamento de progresso
 - **Agenda**: Calendário avançado com detecção de conflitos, agendamentos recorrentes, notificações WhatsApp e sync Google Calendar
-- **Prontuário Eletrônico**: Notas SOAP com assinatura digital, trilha de auditoria e controle de sessões
+- **Prontuário Eletrônico**: Notas Observação Livre com assinatura digital, trilha de auditoria e controle de sessões
 - **Biblioteca de Exercícios**: Base de exercícios com vídeos, prescrição e monitoramento de progresso
 - **Financeiro**: Transações, pagamentos (Stripe), vouchers e relatórios
 - **Analytics**: Dashboards em tempo real, métricas de retenção e performance da clínica
-- **IA**: Recomendação de exercícios (Gemini), geração de SOAP, análise clínica e de movimento
+- **IA**: Recomendação de exercícios (Gemini), geração de Observação Livre, análise clínica e de movimento
 - **Multi-tenant**: Isolamento por organização com controle de acesso baseado em roles (RBAC)
 
 ## Roles de Usuário
 
 - **Admin**: Acesso total, gestão de usuários, relatórios financeiros
-- **Fisioterapeuta**: Gestão de pacientes, prescrição de exercícios, prontuários SOAP
+- **Fisioterapeuta**: Gestão de pacientes, prescrição de exercícios, prontuários Observação Livre
 - **Estagiário**: Acesso limitado a pacientes, visualização de protocolos
 - **Recepcionista**: Agendamentos e tarefas de recepção
 - **Paciente**: Portal self-service com acesso a exercícios e histórico de consultas

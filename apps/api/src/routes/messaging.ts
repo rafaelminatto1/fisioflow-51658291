@@ -9,6 +9,30 @@ const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 app.use("*", requireAuth);
 
 /**
+ * WebSocket for real-time chat (handled by OrganizationState Durable Object)
+ */
+app.get("/ws", async (c) => {
+  const upgradeHeader = c.req.header("Upgrade");
+  if (upgradeHeader !== "websocket") {
+    return c.json({ error: "Expected WebSocket upgrade" }, 426);
+  }
+
+  const user = c.get("user");
+  const orgId = user.organizationId || "default";
+
+  const id = c.env.ORGANIZATION_STATE.idFromName(orgId);
+  const stub = c.env.ORGANIZATION_STATE.get(id);
+
+  const url = new URL(c.req.url);
+  url.pathname = "/ws";
+  url.searchParams.set("userId", user.uid);
+  url.searchParams.set("orgId", orgId);
+
+  const doReq = new Request(url.toString(), c.req.raw);
+  return stub.fetch(doReq);
+});
+
+/**
  * Get all conversations for the authenticated user
  */
 app.get("/conversations", async (c) => {

@@ -29,7 +29,7 @@
 | Exercise search | Curated exercises         | Relevant result in top 5                    |
 | Protocol search | Clinical protocols        | Correct protocol family in top 5            |
 | Wiki search     | Internal wiki pages       | Source page appears in top 5                |
-| SOAP assistance | Redacted clinical samples | No invented diagnosis; includes uncertainty |
+| Observação Livre assistance | Redacted clinical samples | No invented diagnosis; includes uncertainty |
 
 ## Rollout Gates
 

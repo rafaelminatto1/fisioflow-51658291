@@ -1,6 +1,6 @@
-# Plano: Reescrita dos AI helpers legados (pós-migração SOAP → observação)
+# Plano: Reescrita dos AI helpers legados (pós-migração Observação Livre → observação)
 
-Status: **NÃO BLOQUEADOR.** Os arquivos abaixo compilam contra aliases `@deprecated` mantidos em `src/hooks/soap/types.ts` (Fase 2). Eles ainda funcionam, mas produzem prompts com seções SOAP vazias (`"Não informado"`), portanto degradados.
+Status: **NÃO BLOQUEADOR.** Os arquivos abaixo compilam contra aliases `@deprecated` mantidos em `src/hooks/observacao/types.ts` (Fase 2). Eles ainda funcionam, mas produzem prompts com seções Observação Livre vazias (`"Não informado"`), portanto degradados.
 
 ## Arquivos pendentes
 
@@ -8,7 +8,7 @@ Status: **NÃO BLOQUEADOR.** Os arquivos abaixo compilam contra aliases `@deprec
 | -------------------------------- | --------- | -------------------------------------------------------------------------- | ------------------------------ |
 | `src/lib/ai/clinical-support.ts` | ~750      | `ClinicalDecisionSupport` em `AssistenteTab.tsx`, `IntelligentReports.tsx` | Sugestões clínicas + red flags |
 | `src/lib/ai/rag-clinical.ts`     | ~350      | `RAGClinicalContext`, busca por casos similares                            | Buscas de evidência clínica    |
-| `src/lib/ai/soap-assistant.ts`   | ~720      | Apenas tipos (após cleanup da Fase 7)                                      | Tipos legados de transcrição   |
+| `src/lib/ai/observacao-assistant.ts`   | ~720      | Apenas tipos (após cleanup da Fase 7)                                      | Tipos legados de transcrição   |
 | `src/lib/ai/pain-analysis.ts`    | ~400      | `PainAnalysisDashboard`, gráficos de evolução de dor                       | Análise de tendência de dor    |
 | `src/lib/ai/exercises.ts`        | ~280      | `ExerciseAIAssistant` em modal de recomendação                             | Sugestão de exercícios         |
 
@@ -50,7 +50,7 @@ Tocar tudo de uma vez é arriscado (cada arquivo serve N componentes UI). Sugest
 2. **`pain-analysis.ts`** — Dashboard de dor. Após o refator, parar de derivar EVA de `subjective.painScale` (não existe mais) e usar `sessions.pain_scale` direto. ~3-4h.
 3. **`exercises.ts`** — Sugestão de exercícios. Usar `currentEvolution.observacao + currentEvolution.measurements` como contexto. ~3-4h.
 4. **`rag-clinical.ts`** — Busca semântica clínica. Os embeddings já estão corretos (Fase 4); só falta atualizar o builder de contexto para o retrieval. ~2h.
-5. **`soap-assistant.ts`** — Apagar inteiro. Tipos legados não têm mais consumidores reais após PRs 1-4. ~30min.
+5. **`observacao-assistant.ts`** — Apagar inteiro. Tipos legados não têm mais consumidores reais após PRs 1-4. ~30min.
 
 Total estimado: **2–3 dias de trabalho**, distribuídos em 5 PRs revisáveis.
 
@@ -71,7 +71,7 @@ Já criado em `scripts/find-ai-consumers.sh`.
 - Cada feature IA funcional com pelo menos 1 paciente real (não-vazio).
 - Prompts revisados visualmente — não deve haver mais menção a "S/O/A/P" no texto.
 - `grep -r "currentSOAP\|SOAPSection\|subjective" src/lib/ai/` retorna vazio.
-- Aliases `@deprecated` em `src/hooks/soap/types.ts` podem ser removidos.
+- Aliases `@deprecated` em `src/hooks/observacao/types.ts` podem ser removidos.
 
 ## Alternativa: deixar como está
 

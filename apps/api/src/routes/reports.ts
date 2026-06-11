@@ -388,4 +388,43 @@ app.delete("/convenio/:id", requireAuth, async (c) => {
   return c.json({ ok: true });
 });
 
+app.get("/chart", requireAuth, async (c) => {
+  const { type = "bar", data = "10,20,30,40", labels = "Jan,Feb,Mar,Apr", title = "Demo Chart" } = c.req.query();
+
+  const chartConfig = {
+    type,
+    data: {
+      labels: labels.split(","),
+      datasets: [
+        {
+          label: title,
+          data: data.split(",").map(Number),
+          backgroundColor: ["#4f46e5", "#10b981", "#f59e0b", "#ef4444", "#3b82f6", "#8b5cf6"],
+        },
+      ],
+    },
+    options: {
+      title: {
+        display: true,
+        text: title,
+      },
+    },
+  };
+
+  const url = \`https://quickchart.io/chart?c=\${encodeURIComponent(JSON.stringify(chartConfig))}&w=500&h=300&bkg=white\`;
+
+  try {
+    const response = await fetch(url);
+    if (!response.ok) throw new Error("Failed to fetch chart");
+
+    const arrayBuffer = await response.arrayBuffer();
+    c.header("Content-Type", "image/png");
+    c.header("Cache-Control", "public, max-age=3600");
+    return c.body(arrayBuffer);
+  } catch (error) {
+    console.error("[Reports/Chart] Error fetching chart:", error);
+    return c.json({ error: "Failed to generate chart" }, 500);
+  }
+});
+
 export { app as reportsRoutes };

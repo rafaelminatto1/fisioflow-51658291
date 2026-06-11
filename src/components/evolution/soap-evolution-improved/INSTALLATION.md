@@ -12,7 +12,7 @@ cp /home/rafael/antigravity/fisioflow/fisioflow-51658291/professional-app/app/pa
 ## Step 2: Copy the Improved File
 
 ```bash
-cp /home/rafael/antigravity/fisioflow/fisioflow-51658291/.agent/improved-soap-evolution/evolution.tsx \
+cp /home/rafael/antigravity/fisioflow/fisioflow-51658291/.agent/improved-observacao-evolution/evolution.tsx \
    /home/rafael/antigravity/fisioflow/fisioflow-51658291/professional-app/app/patient/[id]/evolution.tsx
 ```
 
@@ -47,7 +47,7 @@ The improved component uses the same dependencies as the original. Verify you ha
 3. Test all features:
    - Back button navigation
    - Pain level slider
-   - All four SOAP input fields
+   - All four Observação Livre input fields
    - Focus states and animations
    - Photo adding (gallery and camera)
    - Photo removal
@@ -137,7 +137,7 @@ cp /home/rafael/antigravity/fisioflow/fisioflow-51658291/professional-app/app/pa
 Consider adding these for even better UX:
 
 1. **Auto-save**: Implement debounced auto-save as user types
-2. **Templates**: Add pre-filled SOAP templates for common conditions
+2. **Templates**: Add pre-filled Observação Livre templates for common conditions
 3. **Voice input**: Integrate speech-to-text for faster entry
 4. **Drafts**: Save drafts when user navigates away accidentally
 5. **Offline support**: Queue changes when offline and sync when connected
@@ -146,5 +146,5 @@ Consider adding these for even better UX:
 
 For issues or questions, refer to:
 
-- Main README: `/home/rafael/antigravity/fisioflow/fisioflow-51658291/.agent/improved-soap-evolution/README.md`
-- Style Guide: `/home/rafael/antigravity/fisioflow/fisioflow-51658291/.agent/improved-soap-evolution/STYLE_GUIDE.md`
+- Main README: `/home/rafael/antigravity/fisioflow/fisioflow-51658291/.agent/improved-observacao-evolution/README.md`
+- Style Guide: `/home/rafael/antigravity/fisioflow/fisioflow-51658291/.agent/improved-observacao-evolution/STYLE_GUIDE.md`

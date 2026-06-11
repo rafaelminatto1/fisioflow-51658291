@@ -31,6 +31,7 @@ async function ensurePushSubscriptionsSchema(pool: Pool) {
         `ALTER TABLE IF EXISTS push_subscriptions ADD COLUMN IF NOT EXISTS auth TEXT`,
         `ALTER TABLE IF EXISTS push_subscriptions ADD COLUMN IF NOT EXISTS device_info JSONB`,
         `ALTER TABLE IF EXISTS push_subscriptions ADD COLUMN IF NOT EXISTS active BOOLEAN NOT NULL DEFAULT TRUE`,
+        `ALTER TABLE IF EXISTS push_subscriptions ADD COLUMN IF NOT EXISTS expo_push_token TEXT`,
         `ALTER TABLE IF EXISTS push_subscriptions ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()`,
         `ALTER TABLE IF EXISTS push_subscriptions ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()`,
         `CREATE UNIQUE INDEX IF NOT EXISTS idx_push_subscriptions_endpoint_user ON push_subscriptions (endpoint, user_id)`,
@@ -101,6 +102,8 @@ app.post("/", requireAuth, async (c) => {
       organization_id?: string | null;
       organizationId?: string | null;
       active?: boolean;
+      expo_push_token?: string;
+      expoPushToken?: string;
     };
     const deviceInfo = body.device_info ?? body.deviceInfo ?? null;
     const organizationId =
@@ -124,8 +127,9 @@ app.post("/", requireAuth, async (c) => {
             device_info = $3,
             active = $4,
             organization_id = $5,
+            expo_push_token = $6,
             updated_at = NOW()
-          WHERE id = $6
+          WHERE id = $7
         `,
         [
           body.p256dh ?? null,
@@ -133,6 +137,7 @@ app.post("/", requireAuth, async (c) => {
           deviceInfo ? JSON.stringify(deviceInfo) : null,
           body.active ?? true,
           organizationId,
+          body.expo_push_token ?? body.expoPushToken ?? null,
           existing.rows[0].id,
         ],
       );
@@ -152,9 +157,10 @@ app.post("/", requireAuth, async (c) => {
           auth,
           device_info,
           active,
+          expo_push_token,
           created_at,
           updated_at
-        ) VALUES ($1,$2,$3,$4,$5,$6,$7,NOW(),NOW())
+        ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,NOW(),NOW())
         RETURNING *
       `,
       [
@@ -165,6 +171,7 @@ app.post("/", requireAuth, async (c) => {
         body.auth ?? null,
         deviceInfo ? JSON.stringify(deviceInfo) : null,
         body.active ?? true,
+        body.expo_push_token ?? body.expoPushToken ?? null,
       ],
     );
     return c.json({ data: result.rows[0] }, 201);

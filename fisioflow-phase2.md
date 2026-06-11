@@ -27,7 +27,7 @@ WEB e BACKEND (Fases 1, 3, 4) e MOBILE (Fase 2)
 
 - **T1:** Instalar e configurar `@playwright/test` na raiz.
 - **T2:** Escrever fluxos de Auth e Agenda (Playwright).
-- **T3:** Escrever fluxos E2E de SOAP, NFSe e Pacotes.
+- **T3:** Escrever fluxos E2E de Observação Livre, NFSe e Pacotes.
 - **T4:** Auditar automações do WhatsApp (Wranger tail).
 - **T5:** Criar interface Wizard para configuração NFS-e.
 - **T6:** Escrever os 3 testes unitários no Cloudflare Workers.

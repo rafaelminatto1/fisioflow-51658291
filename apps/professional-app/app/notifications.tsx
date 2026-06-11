@@ -42,9 +42,36 @@ export default function NotificationsScreen() {
     setRefreshing(false);
   }, [refetch, light]);
 
-  const handleMarkAsRead = (id: string) => {
+  const handleNotificationPress = (notification: Notification) => {
     medium();
-    markAsReadMutation.mutate(id);
+    if (!notification.is_read) {
+      markAsReadMutation.mutate(notification.id);
+    }
+
+    if (notification.link) {
+      router.push(notification.link as any);
+      return;
+    }
+
+    const relatedId = notification.metadata?.id || notification.metadata?.appointmentId || notification.metadata?.chatId;
+
+    switch (notification.type) {
+      case "appointment":
+        if (relatedId) router.push(`/appointment-form?id=${relatedId}`);
+        else router.push("/(tabs)/agenda");
+        break;
+      case "payment":
+        if (relatedId) router.push(`/financial-form?id=${relatedId}`);
+        else router.push("/(tabs)/financials");
+        break;
+      case "whatsapp":
+        if (relatedId) router.push(`/whatsapp-chat/${relatedId}`);
+        else router.push("/(tabs)/whatsapp");
+        break;
+      default:
+        // do nothing
+        break;
+    }
   };
 
   const handleDelete = (id: string) => {
@@ -227,7 +254,7 @@ export default function NotificationsScreen() {
           notifications.map((notification) => (
             <TouchableOpacity
               key={notification.id}
-              onPress={() => handleMarkAsRead(notification.id)}
+              onPress={() => handleNotificationPress(notification)}
               onLongPress={() => handleDelete(notification.id)}
               activeOpacity={0.7}
             >
