@@ -83,7 +83,7 @@ instance_name = "fisioflow-rag"
 # Stream endpoint: https://701aff68d26e4c45a29f090389bcd4f2.ingest.cloudflare.com
 [[pipelines]]
 binding = "EVENTS_PIPELINE"
-pipeline = "701aff68d26e4c45a29f090389bcd4f2"
+stream = "701aff68d26e4c45a29f090389bcd4f2"
 
 # ===== WORKFLOWS (Automações duráveis multi-step) =====
 [[workflows]]
@@ -309,7 +309,7 @@ instance_name = "fisioflow-rag"
 
 [[env.production.pipelines]]
 binding = "EVENTS_PIPELINE"
-pipeline = "701aff68d26e4c45a29f090389bcd4f2"
+stream = "701aff68d26e4c45a29f090389bcd4f2"
 
 # NFS-e São Paulo — mTLS binding (certificado ICP-Brasil e-CNPJ A1)
 [[env.production.mtls_certificates]]
@@ -576,7 +576,7 @@ dataset = "fisioflow_events_staging"
 # Staging Pipelines: binding uses the staging stream ID, not the production stream.
 [[env.staging.pipelines]]
 binding = "EVENTS_PIPELINE"
-pipeline = "cbf62503169e4dadacbcb72b0534100f"
+stream = "cbf62503169e4dadacbcb72b0534100f"
 
 # Staging Workflows
 [[env.staging.workflows]]
