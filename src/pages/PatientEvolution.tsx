@@ -409,8 +409,7 @@ const PatientEvolution = () => {
 		// Combinado com mutation scope (P1), idempotency key (P2.1) e version
 		// check (P2.2), saves rápidos não causam race conditions nem duplicação.
 		delay: 1500,
-		enabled:
-			state.autoSaveEnabled && !state.isDraftLoading && !state.dataLoading,
+		enabled: state.autoSaveEnabled && !state.dataLoading,
 	});
 
 	// Shortcurs (atalhos focam blocos do novo layout único)

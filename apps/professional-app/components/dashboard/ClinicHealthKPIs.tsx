@@ -6,5 +6,3 @@
 export function ClinicHealthKPIs() {
   return null;
 }
-
-export default ClinicHealthKPIs;
