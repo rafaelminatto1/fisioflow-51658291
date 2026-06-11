@@ -57,6 +57,7 @@ export default function CaptureScreen() {
     if (!result.canceled) {
       console.log("Video selected:", result.assets[0].uri);
       // Process video using native module / Frame Processor here
+      router.push(`/biomecanica/analysis?uri=${encodeURIComponent(result.assets[0].uri)}`);
     }
   };
 

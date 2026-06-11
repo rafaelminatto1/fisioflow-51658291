@@ -382,6 +382,8 @@ export const mapWaitlistRow = (row: Record<string, any>) => ({
   preferred_periods: parseStringArray(row.preferred_periods),
   offered_slot: formatTime(row.offered_slot),
   refusal_count: Number(row.refusal_count ?? 0),
+  patient_name: row.patient_name ?? null,
+  patient_avatar_url: row.patient_avatar_url ?? null,
 });
 
 export const normalizeWaitlistPayload = (body: Record<string, any>) => ({

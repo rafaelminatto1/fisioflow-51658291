@@ -239,7 +239,8 @@
       "msw",
       "sharp",
       "@sentry/cli",
-      "@sentry-internal/node-cpu-profiler"
+      "@sentry-internal/node-cpu-profiler",
+      "@shopify/react-native-skia"
     ],
     "overrides": {
       "@expo/vector-icons": "^15.1.1",

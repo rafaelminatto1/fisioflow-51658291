@@ -31,6 +31,29 @@ export function WaitlistManager() {
     enabled: isOpen,
   });
 
+  const offerSlotMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const res = await rpc.api.scheduling.waitlist[":id"].$put({
+        param: { id },
+        json: { status: "offered" }
+      });
+      if (!res.ok) throw new Error("Falha ao oferecer vaga");
+      return res.json();
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["scheduling", "waitlist"] })
+  });
+
+  const removeMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const res = await rpc.api.scheduling.waitlist[":id"].$delete({
+        param: { id }
+      });
+      if (!res.ok) throw new Error("Falha ao remover");
+      return res.json();
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["scheduling", "waitlist"] })
+  });
+
   return (
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
       <SheetTrigger asChild>
@@ -80,7 +103,7 @@ export function WaitlistManager() {
                   <div className="flex items-start justify-between mb-2">
                     <div>
                       <p className="text-sm font-bold text-foreground">
-                        Paciente ID: {item.patient_id}
+                        {item.patient_name || `Paciente ID: ${item.patient_id}`}
                       </p>
                       <p className="text-xs text-muted-foreground font-medium">
                         Preferência: {item.preferred_days?.join(", ") || "Qualquer dia"}
@@ -95,11 +118,23 @@ export function WaitlistManager() {
                   </div>
                   
                   <div className="mt-4 flex gap-2">
-                    <Button size="sm" variant="default" className="flex-1 bg-brand-blue hover:bg-brand-blue/90 h-8 text-[11px] font-bold rounded-xl shadow-sm">
+                    <Button 
+                      size="sm" 
+                      variant="default" 
+                      className="flex-1 bg-brand-blue hover:bg-brand-blue/90 h-8 text-[11px] font-bold rounded-xl shadow-sm"
+                      onClick={() => offerSlotMutation.mutate(item.id)}
+                      disabled={offerSlotMutation.isPending || item.status === "offered"}
+                    >
                       <ArrowRight className="h-3 w-3 mr-1.5" />
-                      Oferecer Vaga
+                      {item.status === "offered" ? "Vaga Oferecida" : "Oferecer Vaga"}
                     </Button>
-                    <Button size="sm" variant="ghost" className="h-8 w-8 p-0 text-muted-foreground hover:text-rose-500 rounded-xl">
+                    <Button 
+                      size="sm" 
+                      variant="ghost" 
+                      className="h-8 w-8 p-0 text-muted-foreground hover:text-rose-500 rounded-xl"
+                      onClick={() => removeMutation.mutate(item.id)}
+                      disabled={removeMutation.isPending}
+                    >
                       <XCircle className="h-4 w-4" />
                     </Button>
                   </div>
