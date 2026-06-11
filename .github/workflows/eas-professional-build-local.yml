@@ -164,3 +164,4 @@ jobs:
             echo "  .ipa    : NÃO GERADO ❌ — ver logs acima"
           fi
           echo "========================================================"
+# trigger build
