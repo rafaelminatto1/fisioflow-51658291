@@ -1,5 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { View, Image, ActivityIndicator, StyleSheet, Text } from "react-native";
+import {
+  View,
+  Image,
+  ActivityIndicator,
+  StyleSheet,
+  Text,
+  type DimensionValue,
+} from "react-native";
 import { config } from "@/lib/config";
 import { getToken } from "@/lib/token-storage";
 import { useColors } from "@/hooks/useColorScheme";
@@ -7,7 +14,7 @@ import { Ionicons } from "@expo/vector-icons";
 
 interface ServerChartProps {
   endpoint: string;
-  width?: number | string;
+  width?: DimensionValue;
   height?: number;
 }
 

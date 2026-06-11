@@ -152,21 +152,10 @@ const biomecanicaSubmenu = [
 
 const inteligenciaMenuItems = [
   {
-    icon: Zap,
-    label: "IA Studio Central",
-    href: "/ia-studio",
-    badge: "PRO",
-  },
-  {
     icon: Brain,
-    label: "AI Analytics Hub",
-    href: "/ai-hub",
-    badge: "NEW",
-  },
-  {
-    icon: Brain,
-    label: "Hub de Inteligência",
+    label: "Central de Inteligência",
     href: "/inteligencia",
+    badge: "AI",
   },
 ];
 

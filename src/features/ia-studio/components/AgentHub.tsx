@@ -14,12 +14,28 @@ import {
   Loader2,
   RotateCcw,
   Trophy,
+  Activity,
+  FileCheck,
+  ClipboardList,
+  BookOpen,
+  Youtube,
+  ExternalLink,
+  PlusCircle,
+  PlayCircle,
+  Eye,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { getWorkersApiUrl } from "@/lib/api/config";
 import { cn } from "@/lib/utils";
@@ -29,9 +45,27 @@ interface AgentHubProps {
   onClose: () => void;
 }
 
+type ResourceAction = {
+  kind: "open_modal" | "open_url" | "create_suggestion";
+  target: string;
+};
+
+type SuggestedResource = {
+  id: string;
+  type: "test" | "exercise" | "protocol" | "wiki" | "external_suggestion";
+  title: string;
+  description: string;
+  thumbnailUrl?: string;
+  score: number;
+  source: "system" | "ai_search" | "youtube" | "wiki";
+  action: ResourceAction;
+  metadata?: Record<string, any>;
+};
+
 type ChatMessage = {
   role: "user" | "assistant";
   content: string;
+  suggestedResources?: SuggestedResource[];
 };
 
 type SimulatorProfile = {
@@ -114,11 +148,122 @@ async function readJsonOrThrow(response: Response) {
   return payload;
 }
 
+const ResourceCard: React.FC<{
+  resource: SuggestedResource;
+  query: string;
+  onPreview: (res: SuggestedResource) => void;
+}> = ({ resource, query, onPreview }) => {
+  const Icon =
+    {
+      test: FileCheck,
+      exercise: Activity,
+      protocol: ClipboardList,
+      wiki: BookOpen,
+      external_suggestion: Youtube,
+    }[resource.type] || Activity;
+
+  const handleAction = async () => {
+    if (resource.action.kind === "open_url" || resource.action.kind === "create_suggestion") {
+      window.open(resource.action.target, "_blank");
+
+      if (resource.action.kind === "create_suggestion") {
+        try {
+          await fetch(`${getWorkersApiUrl()}/api/agents/resources/suggest`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ resource, query }),
+          });
+          toast.success("Sugestão enviada para curadoria!");
+        } catch {
+          toast.error("Falha ao salvar sugestão.");
+        }
+      }
+    } else {
+      onPreview(resource);
+    }
+  };
+
+  return (
+    <Card className="border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 shadow-sm overflow-hidden group">
+      <CardContent className="p-0 flex items-stretch">
+        {resource.thumbnailUrl ? (
+          <div className="w-24 shrink-0 bg-slate-100 dark:bg-slate-800 relative">
+            <img
+              src={resource.thumbnailUrl}
+              alt={resource.title}
+              className="w-full h-full object-cover"
+            />
+            <div className="absolute inset-0 bg-black/5 group-hover:bg-transparent transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
+              <Eye className="w-5 h-5 text-white drop-shadow-md" />
+            </div>
+          </div>
+        ) : (
+          <div
+            className={cn(
+              "w-20 shrink-0 flex items-center justify-center",
+              resource.source === "system"
+                ? "bg-blue-50 dark:bg-blue-900/20"
+                : "bg-slate-100 dark:bg-slate-800",
+            )}
+          >
+            <Icon
+              className={cn(
+                "w-8 h-8",
+                resource.source === "system" ? "text-blue-500" : "text-slate-400",
+              )}
+            />
+          </div>
+        )}
+        <div className="flex-1 p-3 min-w-0 flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between gap-2">
+              <Badge
+                variant="outline"
+                className="text-[9px] uppercase tracking-widest font-black h-4 px-1.5"
+              >
+                {resource.type}
+              </Badge>
+              <span className="text-[10px] text-slate-400 font-black uppercase">
+                {resource.source}
+              </span>
+            </div>
+            <h5 className="mt-1 font-black text-[13px] text-slate-900 dark:text-white truncate">
+              {resource.title}
+            </h5>
+            <p className="mt-0.5 text-[11px] text-slate-500 line-clamp-2 leading-tight">
+              {resource.description}
+            </p>
+          </div>
+          <div className="mt-3 flex gap-2">
+            <Button
+              size="sm"
+              variant={resource.type === "external_suggestion" ? "outline" : "default"}
+              className="h-7 px-3 text-[10px] uppercase font-black"
+              onClick={handleAction}
+            >
+              {resource.action.kind === "create_suggestion" ? (
+                <>
+                  <PlusCircle className="w-3 h-3 mr-1" /> Sugerir
+                </>
+              ) : (
+                <>
+                  <PlayCircle className="w-3 h-3 mr-1" /> Abrir
+                </>
+              )}
+            </Button>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
+
 export const AgentHub: React.FC<AgentHubProps> = ({ isOpen, onClose }) => {
   const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null);
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isTyping, setIsTyping] = useState(false);
+  const [previewResource, setPreviewResource] = useState<SuggestedResource | null>(null);
   const [evaluation, setEvaluation] = useState<SimulationEvaluation | null>(null);
   const [isEvaluating, setIsEvaluating] = useState(false);
   const [simulatorProfile, setSimulatorProfile] =
@@ -175,10 +320,17 @@ export const AgentHub: React.FC<AgentHubProps> = ({ isOpen, onClose }) => {
       const safetyPrefix = payload?.data?.safetyTriggered
         ? "Atenção de segurança: conduta potencialmente insegura detectada.\n\n"
         : "";
+      const suggestedResources = Array.isArray(payload?.data?.suggestedResources)
+        ? payload.data.suggestedResources
+        : [];
 
       setMessages((prev) => [
         ...prev,
-        { role: "assistant", content: `${safetyPrefix}${simulatedMessage}` },
+        { 
+          role: "assistant", 
+          content: `${safetyPrefix}${simulatedMessage}`,
+          suggestedResources 
+        },
       ]);
     } catch (error) {
       const message = error instanceof Error ? error.message : "Erro ao chamar agente.";
@@ -435,6 +587,23 @@ export const AgentHub: React.FC<AgentHubProps> = ({ isOpen, onClose }) => {
                           <p className="whitespace-pre-wrap text-sm leading-relaxed">
                             {msg.content}
                           </p>
+
+                          {msg.role === "assistant" && msg.suggestedResources && msg.suggestedResources.length > 0 && (
+                            <div className="mt-4 space-y-3">
+                              <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 flex items-center gap-2">
+                                <Zap className="w-3 h-3 fill-amber-500 text-amber-500" /> 
+                                Recursos Sugeridos
+                              </p>
+                              {msg.suggestedResources.map((res) => (
+                                <ResourceCard 
+                                    key={res.id} 
+                                    resource={res} 
+                                    query={messages[i-1]?.content || ""} 
+                                    onPreview={(r) => setPreviewResource(r)}
+                                />
+                              ))}
+                            </div>
+                          )}
                         </div>
                       </div>
                     ))}
@@ -566,6 +735,73 @@ export const AgentHub: React.FC<AgentHubProps> = ({ isOpen, onClose }) => {
           </div>
         </motion.div>
       )}
+
+      <Dialog open={!!previewResource} onOpenChange={() => setPreviewResource(null)}>
+        <DialogContent className="max-w-2xl bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800">
+          <DialogHeader>
+            <div className="flex items-center gap-2 mb-2">
+                <Badge variant="secondary" className="uppercase tracking-widest text-[10px] font-black">
+                    {previewResource?.type}
+                </Badge>
+                <span className="text-[10px] text-slate-400 font-black uppercase">
+                    {previewResource?.source}
+                </span>
+            </div>
+            <DialogTitle className="text-xl font-black text-slate-900 dark:text-white leading-tight">
+              {previewResource?.title}
+            </DialogTitle>
+            <DialogDescription className="text-slate-500 dark:text-slate-400">
+              {previewResource?.description}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="mt-4 space-y-4">
+            {previewResource?.thumbnailUrl && (
+                <div className="aspect-video rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                    <img 
+                        src={previewResource.thumbnailUrl} 
+                        alt={previewResource.title}
+                        className="w-full h-full object-cover" 
+                    />
+                </div>
+            )}
+
+            <div className="bg-slate-50 dark:bg-slate-900/50 rounded-xl p-4 border border-slate-100 dark:border-slate-800/50">
+                <h6 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">
+                    Metadados Clínicos
+                </h6>
+                <div className="grid grid-cols-2 gap-4">
+                    <div>
+                        <p className="text-[11px] text-slate-400">Score de Relevância</p>
+                        <p className="text-sm font-bold text-slate-700 dark:text-slate-200">
+                            {(previewResource?.score || 0 * 100).toFixed(1)}%
+                        </p>
+                    </div>
+                    {previewResource?.metadata?.category && (
+                         <div>
+                            <p className="text-[11px] text-slate-400">Categoria</p>
+                            <p className="text-sm font-bold text-slate-700 dark:text-slate-200">
+                                {previewResource.metadata.category}
+                            </p>
+                        </div>
+                    )}
+                </div>
+            </div>
+
+            <div className="flex justify-end gap-3 pt-4 border-t border-slate-100 dark:border-slate-800">
+                <Button variant="ghost" onClick={() => setPreviewResource(null)}>
+                    Fechar
+                </Button>
+                {previewResource?.action.target.startsWith('http') && (
+                    <Button onClick={() => window.open(previewResource.action.target, '_blank')}>
+                        Ver Completo
+                        <ExternalLink className="w-4 h-4 ml-2" />
+                    </Button>
+                )}
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </AnimatePresence>
   );
 };

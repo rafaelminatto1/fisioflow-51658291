@@ -92,9 +92,25 @@ export async function syncAutoRAGContent(
   const pool = createPool(env);
   const results: Record<string, number> = {};
 
-  async function uploadDoc(filename: string, markdown: string): Promise<void> {
+  async function uploadDoc(filename: string, markdown: string, metadata: Record<string, any>): Promise<void> {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(markdown);
+    const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+    const hashHex = Array.from(new Uint8Array(hashBuffer))
+      .map((b) => b.toString(16).padStart(2, "0"))
+      .join("");
+
+    const finalMetadata = {
+        ...metadata,
+        embedding_model: "baai/bge-large-en-v1.5", // AutoRAG default ou especificado
+        embedding_version: "1.0",
+        indexed_at: new Date().toISOString(),
+        content_hash: hashHex
+    };
+
     const form = new FormData();
     form.append("file", new Blob([markdown], { type: "text/markdown" }), filename);
+    form.append("metadata", JSON.stringify(finalMetadata));
     await api!(`/autorag/rags/${AUTORAG_NAME}/files`, { method: "POST", body: form });
   }
 
@@ -127,7 +143,12 @@ export async function syncAutoRAGContent(
       await Promise.all(
         res.rows
           .slice(i, i + 5)
-          .map((row) => uploadDoc(`exercise-${row.id}.md`, buildExerciseDoc(row))),
+          .map((row) => uploadDoc(`exercise-${row.id}.md`, buildExerciseDoc(row), {
+              source: "exercise",
+              id: row.id,
+              title: row.name,
+              category: row.category
+          })),
       );
       count += Math.min(5, res.rows.length - i);
     }
@@ -157,7 +178,12 @@ export async function syncAutoRAGContent(
       await Promise.all(
         res.rows
           .slice(i, i + 5)
-          .map((row) => uploadDoc(`protocol-${row.id}.md`, buildProtocolDoc(row))),
+          .map((row) => uploadDoc(`protocol-${row.id}.md`, buildProtocolDoc(row), {
+              source: "protocol",
+              id: row.id,
+              title: row.name,
+              condition: row.condition_name
+          })),
       );
       count += Math.min(5, res.rows.length - i);
     }
@@ -180,7 +206,12 @@ export async function syncAutoRAGContent(
     let count = 0;
     for (let i = 0; i < res.rows.length; i += 5) {
       await Promise.all(
-        res.rows.slice(i, i + 5).map((row) => uploadDoc(`wiki-${row.id}.md`, buildWikiDoc(row))),
+        res.rows.slice(i, i + 5).map((row) => uploadDoc(`wiki-${row.id}.md`, buildWikiDoc(row), {
+            source: "wiki",
+            id: row.id,
+            title: row.title,
+            category: row.category
+        })),
       );
       count += Math.min(5, res.rows.length - i);
     }

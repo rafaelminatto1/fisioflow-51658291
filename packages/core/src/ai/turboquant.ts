@@ -190,8 +190,9 @@ export class TurboQuant {
  * Works natively in Node.js, and in React Native uses atob or buffer.
  */
 export function parseTurboSketch(base64: string): Uint8Array {
-  if (typeof Buffer !== "undefined") {
-    const buf = Buffer.from(base64, "base64");
+  const NodeBuffer = (globalThis as any).Buffer;
+  if (typeof NodeBuffer !== "undefined") {
+    const buf = NodeBuffer.from(base64, "base64");
     return new Uint8Array(buf.buffer, buf.byteOffset, buf.length);
   }
 

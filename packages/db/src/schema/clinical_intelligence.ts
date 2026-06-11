@@ -123,3 +123,29 @@ export const clinicalReasoningLogs = pgTable(
     withOrganizationPolicy("clinical_reasoning_logs", table.organizationId),
   ],
 );
+
+/**
+ * Clinical Resource Suggestions
+ * Sugestões de exercícios, testes ou protocolos criados pela IA 
+ * (ex: via busca externa) que aguardam curadoria para entrar no sistema.
+ */
+export const clinicalResourceSuggestions = pgTable(
+  "clinical_resource_suggestions",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    organizationId: uuid("organization_id").notNull(),
+    userId: uuid("user_id"),
+    query: text("query").notNull(),
+    suggestedType: text("suggested_type", { enum: ["test", "exercise", "protocol", "wiki"] }).notNull(),
+    suggestedTitle: text("suggested_title").notNull(),
+    externalSource: text("external_source"), // ex: URL do YouTube
+    status: text("status", { enum: ["pending", "approved", "rejected"] }).default("pending").notNull(),
+    metadata: jsonb("metadata"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  },
+  (table) => [
+    withOrganizationPolicy("clinical_resource_suggestions", table.organizationId),
+  ],
+);
+
