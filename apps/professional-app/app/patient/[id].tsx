@@ -38,7 +38,7 @@ import {
   useDeleteFinancialRecord,
   useMarkAsPaid,
 } from "@/hooks/usePatientFinancial";
-import type { ApiFinancialRecord } from "@/lib/api";
+import { fetchApi, type ApiFinancialRecord } from "@/lib/api";
 
 export default function PatientDetailScreen() {
   const params = useLocalSearchParams();
@@ -61,6 +61,16 @@ export default function PatientDetailScreen() {
     queryFn: async () => {
       if (!id) return [];
       const res = await biomechanicsApi.listByPatient(id as string);
+      return res.data || [];
+    },
+    enabled: !!id,
+  });
+
+  const { data: homeExercises, isLoading: isLoadingHome } = useQuery({
+    queryKey: ["patient-home-exercises", id],
+    queryFn: async () => {
+      if (!id) return [];
+      const res = await fetchApi<any>(`/api/clinical/home-exercises/patient/${id}`);
       return res.data || [];
     },
     enabled: !!id,
@@ -364,6 +374,30 @@ export default function PatientDetailScreen() {
                 <Text style={[styles.emptyEvolutionText, { color: colors.textSecondary }]}>
                   O paciente ainda não realizou avaliações biomecânicas.
                 </Text>
+              </View>
+            )}
+
+            {/* Home Activities Shared */}
+            {homeExercises && homeExercises.length > 0 && (
+              <View style={{ marginTop: 24 }}>
+                <Text style={{ fontSize: 16, fontWeight: "bold", color: colors.text, marginBottom: 12 }}>Atividades Domiciliares Compartilhadas</Text>
+                {homeExercises.map((ex: any) => (
+                  <View key={ex.id} style={{ backgroundColor: colors.surface, padding: 16, borderRadius: 12, marginBottom: 10, borderWidth: 1, borderColor: colors.border }}>
+                    <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 8 }}>
+                      <Text style={{ fontWeight: "bold", color: colors.text }}>{ex.exerciseName}</Text>
+                      <Text style={{ fontSize: 12, color: colors.textSecondary }}>{format(new Date(ex.createdAt), "dd/MM HH:mm")}</Text>
+                    </View>
+                    <Text style={{ fontSize: 13, color: colors.textSecondary }}>
+                      {ex.metrics.reps} reps · {ex.metrics.rom}° ROM · {ex.metrics.compensations?.length || 0} alertas
+                    </Text>
+                    {ex.videoUrl && (
+                      <TouchableOpacity style={{ marginTop: 10, flexDirection: "row", alignItems: "center", gap: 5 }}>
+                        <Ionicons name="play-circle" size={20} color={colors.primary} />
+                        <Text style={{ color: colors.primary, fontWeight: "600", fontSize: 13 }}>Ver clipe da IA</Text>
+                      </TouchableOpacity>
+                    )}
+                  </View>
+                ))}
               </View>
             )}
           </View>
