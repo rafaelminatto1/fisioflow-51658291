@@ -25,6 +25,7 @@ import { useProtocols } from "@/hooks/useProtocols";
 import { useExercisesLibrary } from "@/hooks/useExercises";
 import { useTelemedicine } from "@/hooks/useTelemedicine";
 import { formatAppointmentTime } from "@/components/calendar/utils";
+import { useUnreadCount } from "@/hooks/useNotifications";
 
 function DashboardSkeleton() {
   return (
@@ -104,6 +105,7 @@ export default function DashboardScreen() {
   const { protocols } = useProtocols();
   const { data: exercises = [] } = useExercisesLibrary();
   const { rooms: teleRooms } = useTelemedicine();
+  const unreadCount = useUnreadCount();
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -232,6 +234,11 @@ export default function DashboardScreen() {
             onPress={() => router.push("/notifications")}
           >
             <Ionicons name="notifications-outline" size={24} color={colors.text} />
+            {unreadCount > 0 && (
+              <View style={[styles.badge, { backgroundColor: colors.primary }]}>
+                <Text style={styles.badgeText}>{unreadCount > 99 ? "99+" : unreadCount}</Text>
+              </View>
+            )}
           </TouchableOpacity>
         </View>
 
@@ -799,6 +806,24 @@ const styles = StyleSheet.create({
     borderRadius: 22,
     alignItems: "center",
     justifyContent: "center",
+  },
+  badge: {
+    position: "absolute",
+    top: -2,
+    right: -2,
+    minWidth: 18,
+    height: 18,
+    borderRadius: 9,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 4,
+    borderWidth: 1.5,
+    borderColor: "#fff",
+  },
+  badgeText: {
+    color: "#fff",
+    fontSize: 10,
+    fontWeight: "bold",
   },
   statsGrid: {
     flexDirection: "row",

@@ -104,7 +104,7 @@ Tornar o FisioFlow Professional App compatível com as diretrizes da Apple App S
 
 - AES-256 for data at rest
 - TLS 1.3+ for data in transit
-- E2EE for SOAP notes
+- E2EE for Observação Livre notes
 - Secure key management
 
 ### Authentication

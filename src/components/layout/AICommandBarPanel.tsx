@@ -164,11 +164,11 @@ export default function AICommandBarPanel({ onClose }: { onClose: () => void }) 
                     Buscar Pacientes...
                   </Command.Item>
                   <Command.Item
-                    onSelect={() => runCommand(() => navigate("/ai-hub"))}
+                    onSelect={() => runCommand(() => navigate("/inteligencia?tab=analytics"))}
                     className="flex items-center px-3 py-2.5 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl cursor-pointer transition-colors"
                   >
                     <Activity className="w-4 h-4 mr-3 text-slate-400" />
-                    Abrir AI Analytics Hub
+                    Abrir Analytics IA
                   </Command.Item>
                 </Command.Group>
               </Command.List>

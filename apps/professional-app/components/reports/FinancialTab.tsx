@@ -5,7 +5,7 @@ import { startOfMonth, endOfMonth, subMonths, format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useColors } from "@/hooks/useColorScheme";
 import { Card } from "@/components";
-import { Bar } from "./BarChart";
+import { ServerChart } from "./ServerChart";
 import { StatGrid } from "./StatGrid";
 import { useFinancialMetrics, formatCurrency, formatNumber } from "@/hooks/useFinancialMetrics";
 
@@ -111,26 +111,7 @@ export function FinancialTab({ selectedPeriod }: FinancialTabProps) {
       {metrics?.revenueByDay && metrics.revenueByDay.length > 0 && (
         <Card style={styles.chartCard} padding="md">
           <Text style={[styles.chartTitle, { color: colors.text }]}>Faturamento Diário</Text>
-          <View style={styles.chartContent}>
-            {metrics.revenueByDay.slice(-7).map((item, idx) => {
-              const maxRevenue = Math.max(
-                ...metrics.revenueByDay.map((d) =>
-                  typeof d.total === "string" ? parseFloat(d.total) : d.total,
-                ),
-                0,
-              );
-              const value = typeof item.total === "string" ? parseFloat(item.total) : item.total;
-              return (
-                <Bar
-                  key={idx}
-                  label={format(new Date(item.date), "dd", { locale: ptBR })}
-                  value={Math.round(value / 100)}
-                  maxValue={maxRevenue / 100}
-                  color={colors.success}
-                />
-              );
-            })}
-          </View>
+          <ServerChart endpoint={`/api/reports/financial-chart?startDate=${dateRange.startDate}&endDate=${dateRange.endDate}`} height={200} />
         </Card>
       )}
 

@@ -409,8 +409,7 @@ const PatientEvolution = () => {
 		// Combinado com mutation scope (P1), idempotency key (P2.1) e version
 		// check (P2.2), saves rápidos não causam race conditions nem duplicação.
 		delay: 1500,
-		enabled:
-			state.autoSaveEnabled && !state.isDraftLoading && !state.dataLoading,
+		enabled: state.autoSaveEnabled && !state.dataLoading,
 	});
 
 	// Shortcurs (atalhos focam blocos do novo layout único)
@@ -612,10 +611,50 @@ const PatientEvolution = () => {
 
 	if (state.dataLoading)
 		return (
-			<PageLayout>
-				<div className="flex items-center justify-center h-[50vh]">
-					<div className="w-12 h-12 border-4 border-brand-blue border-t-transparent rounded-full animate-spin" />
-				</div>
+			<PageLayout compactHeader fullWidth>
+				<PageContainer maxWidth="full" noPadding className="px-3 md:px-5 pt-0">
+					<div className="space-y-5 animate-fade-in pb-8">
+						{/* Skeleton Header */}
+						<div className="sticky top-0 z-30 rounded-xl border border-primary/10 bg-card shadow-sm p-4">
+							<div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+								<div className="flex items-start gap-3 min-w-0 flex-1">
+									<div className="h-10 w-10 shrink-0 rounded-md bg-muted animate-pulse" />
+									<div className="flex items-center gap-3 min-w-0 flex-1">
+										<div className="h-12 w-12 shrink-0 rounded-full bg-muted animate-pulse" />
+										<div className="min-w-0 flex-1 space-y-2">
+											<div className="h-6 w-48 bg-muted animate-pulse rounded" />
+											<div className="h-4 w-32 bg-muted animate-pulse rounded" />
+										</div>
+									</div>
+								</div>
+								<div className="flex items-center gap-3 shrink-0">
+									<div className="h-10 w-32 bg-muted animate-pulse rounded-md" />
+									<div className="h-10 w-28 bg-muted animate-pulse rounded-2xl" />
+								</div>
+							</div>
+							<div className="flex items-center gap-4 mt-4 pt-4 border-t border-slate-100 overflow-hidden">
+								<div className="flex gap-2 w-full">
+									{Array.from({ length: 6 }).map((_, i) => (
+										<div key={i} className="h-8 w-24 bg-muted animate-pulse rounded-md shrink-0" />
+									))}
+								</div>
+							</div>
+						</div>
+
+						{/* Skeleton Top Section */}
+						<div className="w-full grid grid-cols-1 md:grid-cols-3 gap-3">
+							<div className="h-24 bg-muted animate-pulse rounded-xl border border-primary/5" />
+							<div className="h-24 bg-muted animate-pulse rounded-xl border border-primary/5" />
+							<div className="h-24 bg-muted animate-pulse rounded-xl border border-primary/5" />
+						</div>
+
+						{/* Skeleton Summary Bar */}
+						<div className="h-16 w-full bg-muted animate-pulse rounded-xl border border-primary/5" />
+
+						{/* Skeleton Main Grid */}
+						<div className="h-[500px] w-full bg-muted animate-pulse rounded-xl border border-primary/5" />
+					</div>
+				</PageContainer>
 			</PageLayout>
 		);
 	if (!state.appointment || !state.patient)

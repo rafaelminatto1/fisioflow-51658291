@@ -16,7 +16,7 @@ NFS-e is the electronic service invoice mandated by Brazilian municipalities. Ph
 Key facts for FisioFlow:
 
 - Emission is per-municipality — each city has its own web service (most follow ABRASF standard)
-- FisioFlow uses **Focus NFe** as the intermediary — they manage the digital certificate (A1) and handle SOAP communication with the municipality
+- FisioFlow uses **Focus NFe** as the intermediary — they manage the digital certificate (A1) and handle Observação Livre communication with the municipality
 - The NFS-e lifecycle in FisioFlow: `rascunho` → `enviado` → `autorizado` | `erro` | `cancelado`
 
 ---

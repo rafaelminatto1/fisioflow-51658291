@@ -224,7 +224,7 @@
     "typescript-eslint": "^8.24.1",
     "vite": "8.0.16",
     "vitest": "^4.1.8",
-    "wrangler": "4.98.0"
+    "wrangler": "4.100.0"
   },
   "engines": {
     "node": ">=22.13.0",
@@ -239,7 +239,8 @@
       "msw",
       "sharp",
       "@sentry/cli",
-      "@sentry-internal/node-cpu-profiler"
+      "@sentry-internal/node-cpu-profiler",
+      "@shopify/react-native-skia"
     ],
     "overrides": {
       "@expo/vector-icons": "^15.1.1",

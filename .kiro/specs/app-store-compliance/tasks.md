@@ -88,9 +88,9 @@ All tasks reference specific requirements from requirements.md and implement cor
 
 - [x] 12. Integrate encryption into existing data storage operations
   - [x] 12.1 Update patient photo upload in `hooks/usePatients.ts`
-  - [x] 12.2 Update SOAP note storage in `hooks/useEvolutions.ts`
+  - [x] 12.2 Update Observação Livre note storage in `hooks/useEvolutions.ts`
   - [x] 12.3 Update photo retrieval to decrypt on load
-  - [x] 12.4 Update SOAP note retrieval to decrypt on load
+  - [x] 12.4 Update Observação Livre note retrieval to decrypt on load
   - [x] 12.5 Write integration tests for encrypted data flow
   - _Requirements: 2.4, 2.5_
 

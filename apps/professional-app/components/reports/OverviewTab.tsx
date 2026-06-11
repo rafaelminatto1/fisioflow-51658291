@@ -4,7 +4,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { startOfMonth, endOfMonth } from "date-fns";
 import { useColors } from "@/hooks/useColorScheme";
 import { Card } from "@/components";
-import { Bar } from "./BarChart";
+import { ServerChart } from "./ServerChart";
 import { StatGrid } from "./StatGrid";
 
 interface OverviewTabProps {
@@ -72,26 +72,7 @@ export function OverviewTab({
 
       <Card style={styles.chartCard} padding="md">
         <Text style={[styles.chartTitle, { color: colors.text }]}>Consultas por Tipo</Text>
-        {appointmentsByType.length > 0 ? (
-          <View style={styles.chartContent}>
-            {appointmentsByType.map((item, idx) => (
-              <Bar
-                key={idx}
-                label={item.label}
-                value={item.value}
-                maxValue={maxTypeValue}
-                color={colors.primary}
-              />
-            ))}
-          </View>
-        ) : (
-          <View style={styles.chartPlaceholder}>
-            <Ionicons name="bar-chart" size={48} color={colors.textMuted} />
-            <Text style={[styles.chartPlaceholderText, { color: colors.textSecondary }]}>
-              Nenhum dado disponível
-            </Text>
-          </View>
-        )}
+        <ServerChart endpoint="/api/reports/appointments-chart" height={200} />
       </Card>
     </View>
   );

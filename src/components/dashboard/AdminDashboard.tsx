@@ -23,6 +23,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { todayYMD, startOfLocalWeek, endOfLocalWeek, startOfLocalMonth } from "@/lib/date-utils";
 import { AIInsightsWidget } from "./AIInsightsWidget";
 import { ClinicalEfficacyDashboard } from "@/components/analytics/ClinicalEfficacyDashboard";
+import { FisioBrainAnalyticsDashboard } from "@/components/analytics/FisioBrainAnalyticsDashboard";
 import { EmptyStateEnhanced } from "@/components/ui/EmptyStateEnhanced";
 import { LazyWidget } from "./LazyWidget";
 import { EventosStatsWidget } from "@/components/eventos/EventosStatsWidget";
@@ -221,8 +222,13 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ period = "hoje" 
       : undefined;
 
   return (
-    <div className="space-y-5 pb-8">
-      {/* ── 1. KPI Summary Cards ── */}
+    <div className="space-y-8 pb-8">
+      {/* ── NOVO: FISIOBRAIN ANALYTICS EM TEMPO REAL ── */}
+      <section aria-label="FisioBrain Analytics">
+        <FisioBrainAnalyticsDashboard />
+      </section>
+
+      {/* ── 1. KPI Summary Cards (Antigos) ── */}
       {loading ? (
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4" data-testid="stats-cards">
           {[1, 2, 3, 4].map((index) => (

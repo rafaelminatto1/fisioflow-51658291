@@ -7,6 +7,9 @@ import { aiChatRoutes } from "./ai/ai-chat";
 import { aiAudioRoutes } from "./ai/ai-audio";
 import { aiDocumentRoutes } from "./ai/ai-documents";
 import { aiClinicalRoutes } from "./ai/ai-clinical";
+import { aiInsightsRoutes } from "./ai/ai-insights";
+import { aiBrainInsightsRoutes } from "./ai/brain-insights";
+import { aiBrainChatRoutes } from "./ai/brain-chat";
 import { aiDictationRoutes } from "./ai/aiDictation";
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
@@ -19,6 +22,9 @@ app.route("/", aiChatRoutes);
 app.route("/", aiAudioRoutes);
 app.route("/", aiDocumentRoutes);
 app.route("/", aiClinicalRoutes);
+app.route("/insights", aiInsightsRoutes);
+app.route("/brain/insights", aiBrainInsightsRoutes);
+app.route("/brain/chat", aiBrainChatRoutes);
 app.route("/", aiDictationRoutes);
 
 export { app as aiRoutes };

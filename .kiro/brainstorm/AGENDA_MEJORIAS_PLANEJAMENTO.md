@@ -729,7 +729,7 @@ case 'suggestOptimalSlot':
 
 - **Auto-Documentation**: Documentação automática
   - Transcrição de consulta
-  - Auto-gerar SOAP notes
+  - Auto-gerar Observação Livre notes
   - Sugestão de evolução
 
 - **Predictive Treatment**: Tratamento preditivo

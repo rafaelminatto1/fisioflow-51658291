@@ -4,7 +4,7 @@
     "slug": "fisioflow-pro",
     "privacy": "public",
     "version": "1.0.0",
-    "orientation": "default",
+    "orientation": "portrait",
     "icon": "./assets/icon.png",
     "scheme": "fisioflowpro",
     "userInterfaceStyle": "automatic",

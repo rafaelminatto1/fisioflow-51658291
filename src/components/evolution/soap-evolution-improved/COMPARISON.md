@@ -78,7 +78,7 @@
 - Patient name + session label
 - Live status indicator with dot
 
-## SOAP Input Fields
+## Observação Livre Input Fields
 
 ### Before
 
@@ -250,7 +250,7 @@
   )}
 </TouchableOpacity>
 <Text style={[styles.saveHint, { color: colors.textSecondary }]}>
-  Preencha pelo menos um campo do SOAP para salvar
+  Preencha pelo menos um campo do Observação Livre para salvar
 </Text>
 ```
 

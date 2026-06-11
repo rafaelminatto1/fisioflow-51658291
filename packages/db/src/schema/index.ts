@@ -83,3 +83,10 @@ export * from "./groups";
 
 // CRM Hub Unificado (contacts + activities + scores)
 export * from "./contacts";
+
+// Push Notifications
+export * from "./notifications";
+
+// Messaging & Chat
+export * from "./messaging";
+

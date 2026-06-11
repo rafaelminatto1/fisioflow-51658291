@@ -19,18 +19,18 @@ app.get("/waitlist", requireAuth, async (c) => {
     const { status, priority } = c.req.query();
     const params: unknown[] = [user.organizationId];
     let idx = 2;
-    let sql = "SELECT * FROM waitlist WHERE organization_id = $1";
+    let sql = "SELECT w.*, p.name as patient_name, p.avatar_url as patient_avatar_url FROM waitlist w LEFT JOIN patients p ON w.patient_id = p.id WHERE w.organization_id = $1";
 
     if (status) {
-      sql += ` AND status = $${idx++}`;
+      sql += ` AND w.status = $${idx++}`;
       params.push(status);
     }
     if (priority) {
-      sql += ` AND priority = $${idx++}`;
+      sql += ` AND w.priority = $${idx++}`;
       params.push(priority);
     }
 
-    sql += " ORDER BY created_at ASC";
+    sql += " ORDER BY w.created_at ASC";
 
     const result = await pool.query(sql, params);
     return c.json({ data: result.rows.map(mapWaitlistRow) });

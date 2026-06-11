@@ -526,11 +526,36 @@ export default function NewEvaluationPage() {
 
 	if (isLoading || (evaluationId && isEvaluationLoading)) {
 		return (
-			<PageLayout>
-				<PageContainer>
-					<div className="p-8 space-y-4">
-						<Skeleton className="h-12 w-1/3" />
-						<Skeleton className="h-64 w-full" />
+			<PageLayout compactHeader={!isViewMode}>
+				<PageContainer maxWidth="4xl" className="animate-fade-in pb-20">
+					{/* Header Skeleton */}
+					<div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 pt-4">
+						<div className="flex items-center gap-4">
+							<div className="h-10 w-10 shrink-0 bg-muted animate-pulse rounded-md" />
+							<div className="h-12 w-12 shrink-0 bg-muted animate-pulse rounded-full" />
+							<div className="space-y-2">
+								<div className="h-8 w-48 bg-muted animate-pulse rounded-md" />
+								<div className="h-5 w-32 bg-muted animate-pulse rounded-md" />
+							</div>
+						</div>
+						<div className="flex items-center gap-2">
+							<div className="h-10 w-24 bg-muted animate-pulse rounded-md" />
+							<div className="h-10 w-24 bg-muted animate-pulse rounded-md" />
+						</div>
+					</div>
+
+					{/* Tabs Skeleton */}
+					<div className="w-full">
+						<div className="flex gap-4 border-b pb-2 mb-6">
+							<div className="h-10 w-32 bg-muted animate-pulse rounded-md" />
+							<div className="h-10 w-32 bg-muted animate-pulse rounded-md" />
+							<div className="h-10 w-32 bg-muted animate-pulse rounded-md" />
+						</div>
+
+						{/* Content Skeleton */}
+						<div className="space-y-6">
+							<div className="h-[400px] bg-muted animate-pulse rounded-xl border border-primary/5" />
+						</div>
 					</div>
 				</PageContainer>
 			</PageLayout>

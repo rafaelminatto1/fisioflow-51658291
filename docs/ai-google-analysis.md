@@ -10,7 +10,7 @@ O projeto **FisioFlow** já possui um ecossistema AI extremamente robusto:
 - **Workers AI** (Llama 3.3 70B, Whisper, BGE-M3 embeddings)
 - **MediaPipe** + **TensorFlow.js** para pose detection/biomecânica
 - **Cornerstone.js** para DICOM
-- **20+ endpoints AI**, 6 agentes (SOAP Review, AI Tutor, Patient Simulator, etc.)
+- **20+ endpoints AI**, 6 agentes (Observação Livre Review, AI Tutor, Patient Simulator, etc.)
 - **RAG com Vectorize**, transcrição de áudio, OCR de recibos, marketing AI
 
 ---

@@ -1,4 +1,4 @@
-# Improved SOAP Evolution UI/UX
+# Improved Observação Livre Evolution UI/UX
 
 ## Summary of Improvements
 
@@ -6,9 +6,9 @@
 
 - **Enhanced Header**: New header with date display, back button with circular background, and circular progress indicator showing form completion percentage
 - **Patient Card**: Redesigned patient info section with avatar, session status indicator, and better visual separation
-- **Section Cards**: Each section (Pain Level, SOAP, Photos) now has consistent rounded corners (20px), subtle shadows, and proper spacing
+- **Section Cards**: Each section (Pain Level, Observação Livre, Photos) now has consistent rounded corners (20px), subtle shadows, and proper spacing
 
-### 2. Color-Coded SOAP Sections
+### 2. Color-Coded Observação Livre Sections
 
 - **S (Subjective)**: Blue gradient (#3B82F6 - #2563EB)
 - **O (Objective)**: Green gradient (#10B981 - #059669)
@@ -34,7 +34,7 @@
 ### 5. Progress Tracking
 
 - **Header Progress Ring**: Circular progress indicator in header
-- **Linear Progress Bar**: Visual progress bar above SOAP fields
+- **Linear Progress Bar**: Visual progress bar above Observação Livre fields
 - **Completion Badge**: Shows percentage complete
 - **Per-Field Indicators**: Each field shows checkmark when filled
 
@@ -89,7 +89,7 @@ evolution.tsx (main screen)
 │   └── Session Status
 ├── ScrollView
 │   ├── PainLevelSlider
-│   ├── SOAP Form
+│   ├── Observação Livre Form
 │   │   ├── Progress Bar
 │   │   └── SOAPInputField (x4)
 │   ├── PhotoGrid

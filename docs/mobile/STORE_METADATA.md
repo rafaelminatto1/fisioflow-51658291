@@ -27,7 +27,7 @@ Transforme sua clínica de fisioterapia com o FisioFlow, a plataforma de gestão
 
 **1. IA STUDIO: SEU ASSISTENTE CLÍNICO 24/7**
 
-- **Escriba SOAP:** Use o ditado por voz e deixe que nossa IA estruture suas evoluções clínicas automaticamente. Economize horas de digitação.
+- **Escriba Observação Livre:** Use o ditado por voz e deixe que nossa IA estruture suas evoluções clínicas automaticamente. Economize horas de digitação.
 - **Análise Cinemática:** Realize avaliações posturais e de movimento em tempo real com visão computacional. Identifique riscos e progressos com precisão matemática.
 - **Chat com Exames:** Faça o upload de laudos de RM ou TC e "converse" com o documento para extrair informações clínicas cruciais em segundos.
 
@@ -56,7 +56,7 @@ Transforme sua clínica de fisioterapia com o FisioFlow, a plataforma de gestão
 ## 3. Conceitos de Screenshots (8 Telas)
 
 1. **A Home da Inteligência:** Dashboard principal com os KPIs de saúde da clínica e o "Cérebro Analítico".
-2. **Evolução por Voz:** O fisioterapeuta ditando e o texto SOAP sendo gerado magicamente.
+2. **Evolução por Voz:** O fisioterapeuta ditando e o texto Observação Livre sendo gerado magicamente.
 3. **Visão Cinemática:** Foto da análise de marcha ou postura com os pontos do esqueleto sobrepostos.
 4. **Chat com Laudos:** Interface de chat mostrando a IA respondendo dúvidas sobre um exame de ressonância.
 5. **Busca Mágica (Cmd+K):** A barra de busca unificada trazendo resultados de pacientes e exercícios simultaneamente.

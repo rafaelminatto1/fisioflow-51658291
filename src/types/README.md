@@ -217,7 +217,7 @@ const event: TimelineEvent = {
   title: "Sessão de Avaliação",
   data: {
     sessionId: "session-1",
-    soap: { subjective: "..." },
+    observacao: { subjective: "..." },
     exercises: [],
   },
 };
@@ -232,7 +232,7 @@ import type { SessionEventData } from "@/types";
 
 const sessionData: SessionEventData = {
   sessionId: "session-1",
-  soap: {
+  observacao: {
     subjective: "Patient reports pain",
     objective: { inspection: "Normal" },
   },
