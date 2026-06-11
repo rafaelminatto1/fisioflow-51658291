@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { View, Text, Pressable, TextInput, ScrollView, StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useRouter } from "expo-router";
+import { useRouter, useLocalSearchParams } from "expo-router";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, { useSharedValue, useAnimatedStyle, withTiming, runOnJS } from "react-native-reanimated";
 import Svg, { Circle, Path, Ellipse } from "react-native-svg";
+import { useVideoPlayer, VideoView } from "expo-video";
 import {
   ChevronLeft, GitCompare, Share2, ChevronUp, ChevronDown, Rewind, FastForward, Play, Pause,
   TrendingUp, TrendingDown, AlertTriangle, Check,
@@ -28,12 +29,18 @@ const COLLAPSED = 330;
 
 export default function AnalysisScreen() {
   const router = useRouter();
+  const { uri } = useLocalSearchParams<{ uri?: string }>();
   const [playing, setPlaying] = useState(false);
   const [view, setView] = useState("SAGITAL");
   const [open, setOpen] = useState(false);
   const [note, setNote] = useState(
     "Valgo dinâmico do joelho direito no descenso, com compensação por inclinação de tronco. Paciente relata pinçada patelar ao atingir 90°.",
   );
+
+  const player = useVideoPlayer(uri ? { uri } : "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4", player => {
+    player.loop = true;
+    if (playing) player.play();
+  });
 
   const ty = useSharedValue(COLLAPSED);
   const start = useSharedValue(COLLAPSED);
@@ -61,16 +68,20 @@ export default function AnalysisScreen() {
     <View style={styles.root}>
       {/* video */}
       <View style={styles.video}>
+        <VideoView style={StyleSheet.absoluteFill} player={player} />
         <View style={styles.athlete}>
-          <Svg width={170} height={340} viewBox="0 0 200 400" fill="none" stroke="#cbd5e1" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round">
-            <Circle cx="100" cy="40" r="18" fill="#cbd5e1" />
-            <Path d="M100 60 Q105 95 115 130 Q120 155 118 175" />
-            <Ellipse cx="118" cy="180" rx="14" ry="9" fill="#cbd5e1" />
-            <Path d="M118 185 Q105 220 80 240" />
-            <Path d="M80 240 Q90 280 110 320" />
-            <Path d="M108 320 Q115 335 135 332" strokeWidth={6} />
-            <Path d="M105 100 Q140 110 160 95" />
-          </Svg>
+          {/* Skeleton mockup when no video */}
+          {!uri && (
+            <Svg width={170} height={340} viewBox="0 0 200 400" fill="none" stroke="#cbd5e1" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round">
+              <Circle cx="100" cy="40" r="18" fill="#cbd5e1" />
+              <Path d="M100 60 Q105 95 115 130 Q120 155 118 175" />
+              <Ellipse cx="118" cy="180" rx="14" ry="9" fill="#cbd5e1" />
+              <Path d="M118 185 Q105 220 80 240" />
+              <Path d="M80 240 Q90 280 110 320" />
+              <Path d="M108 320 Q115 335 135 332" strokeWidth={6} />
+              <Path d="M105 100 Q140 110 160 95" />
+            </Svg>
+          )}
         </View>
         {/* angle overlays */}
         <View style={[styles.angLabel, styles.angPrimary, { top: "22%", left: "18%" }]}>
@@ -133,11 +144,14 @@ export default function AnalysisScreen() {
           <View style={styles.ctlRow}>
             <Text style={styles.timecode}>00:04.21 / 00:10.05</Text>
             <View style={{ flex: 1 }} />
-            <Pressable style={styles.ctlBtn}><Rewind size={18} color="#fff" strokeWidth={2.2} /></Pressable>
-            <Pressable style={styles.play} onPress={() => setPlaying((p) => !p)}>
+            <Pressable style={styles.ctlBtn} onPress={() => player?.seekBy(-5)}><Rewind size={18} color="#fff" strokeWidth={2.2} /></Pressable>
+            <Pressable style={styles.play} onPress={() => {
+              if (playing) { player?.pause(); setPlaying(false); }
+              else { player?.play(); setPlaying(true); }
+            }}>
               {playing ? <Pause size={26} color={bio.primary} strokeWidth={2.4} /> : <Play size={26} color={bio.primary} strokeWidth={2.4} />}
             </Pressable>
-            <Pressable style={styles.ctlBtn}><FastForward size={18} color="#fff" strokeWidth={2.2} /></Pressable>
+            <Pressable style={styles.ctlBtn} onPress={() => player?.seekBy(5)}><FastForward size={18} color="#fff" strokeWidth={2.2} /></Pressable>
             <View style={styles.speed}><Text style={styles.speedText}>0.5×</Text></View>
           </View>
         </View>
