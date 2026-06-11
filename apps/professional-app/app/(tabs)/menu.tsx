@@ -72,6 +72,14 @@ const MENU_ITEMS: MenuItem[] = [
     color: "#14B8A6",
   },
   {
+    id: "insights",
+    title: "Insights IA",
+    icon: "sparkles-outline",
+    route: "/insights/search",
+    description: "Busca clínica e padrões por IA",
+    color: "#0080FF",
+  },
+  {
     id: "settings",
     title: "Configurações",
     icon: "settings-outline",
