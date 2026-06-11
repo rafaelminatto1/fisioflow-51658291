@@ -1,10 +1,16 @@
-import { MainLayout } from "@/components/layout/MainLayout";
+import {
+	PageLayout,
+	PageContainer,
+	PageHeader,
+} from "@/components/layout/PageLayout";
 import { CommissionsDashboard } from "@/components/financial/CommissionsDashboard";
 
 export default function ComissoesPage() {
-  return (
-    <MainLayout>
-      <CommissionsDashboard />
-    </MainLayout>
-  );
+	return (
+		<PageLayout>
+			<PageContainer>
+				<CommissionsDashboard />
+			</PageContainer>
+		</PageLayout>
+	);
 }

@@ -5,16 +5,22 @@
  */
 
 import { CohortComparison } from "@/components/admin/CohortComparison";
-import { MainLayout } from "@/components/layout/MainLayout";
+import {
+	PageLayout,
+	PageContainer,
+	PageHeader,
+} from "@/components/layout/PageLayout";
 
 function CohortAnalysisPage() {
-  return (
-    <MainLayout>
-      <div className="container mx-auto p-6">
-        <CohortComparison />
-      </div>
-    </MainLayout>
-  );
+	return (
+		<PageLayout>
+			<PageContainer>
+				<div className="container mx-auto p-6">
+					<CohortComparison />
+				</div>
+			</PageContainer>
+		</PageLayout>
+	);
 }
 
 export default CohortAnalysisPage;
