@@ -5,6 +5,7 @@ import type { AuthVariables } from "../../lib/auth";
 import { requireAuth } from "../../lib/auth";
 import { getRawSql } from "../../lib/db";
 import { isUuid } from "../../lib/validators";
+import { WORKERS_AI_MODELS } from "../../lib/workersAi";
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
@@ -95,7 +96,7 @@ app.get("/:patientId", requireAuth, async (c) => {
       }
     `;
 
-    const aiResponse = await c.env.AI.run("@cf/meta/llama-3.1-8b-instruct", {
+    const aiResponse = await c.env.AI.run(WORKERS_AI_MODELS.llama_3_1_8b, {
       messages: [{ role: "user", content: prompt }],
     });
 
