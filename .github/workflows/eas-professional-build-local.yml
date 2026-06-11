@@ -78,6 +78,8 @@ jobs:
       - name: Instalar dependências (pnpm)
         run: |
           pnpm config set side-effects-cache false
+          pnpm install --no-frozen-lockfile --ignore-scripts --filter "@fisioflow/professional-app..." --filter "@fisioflow/core" --filter "."
+          pnpm approve-builds --yes
           pnpm install --no-frozen-lockfile --filter "@fisioflow/professional-app..." --filter "@fisioflow/core" --filter "."
 
       # ─── EAS CLI ──────────────────────────────────────────────────────────────
