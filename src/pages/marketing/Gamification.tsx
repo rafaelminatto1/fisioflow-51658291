@@ -5,13 +5,19 @@
  */
 
 import React from "react";
-import { MainLayout } from "@/components/layout/MainLayout";
+import {
+	PageLayout,
+	PageContainer,
+	PageHeader,
+} from "@/components/layout/PageLayout";
 import { AdherenceGamification } from "@/components/marketing/AdherenceGamification";
 
 export default function AdherenceGamificationPage() {
-  return (
-    <MainLayout>
-      <AdherenceGamification />
-    </MainLayout>
-  );
+	return (
+		<PageLayout>
+			<PageContainer>
+				<AdherenceGamification />
+			</PageContainer>
+		</PageLayout>
+	);
 }

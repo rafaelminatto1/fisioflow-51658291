@@ -5,13 +5,19 @@
  */
 
 import React from "react";
-import { MainLayout } from "@/components/layout/MainLayout";
+import {
+	PageLayout,
+	PageContainer,
+	PageHeader,
+} from "@/components/layout/PageLayout";
 import { WhatsAppScriptGenerator } from "@/components/marketing/WhatsAppScriptGenerator";
 
 export default function WhatsAppScriptsPage() {
-  return (
-    <MainLayout>
-      <WhatsAppScriptGenerator />
-    </MainLayout>
-  );
+	return (
+		<PageLayout>
+			<PageContainer>
+				<WhatsAppScriptGenerator />
+			</PageContainer>
+		</PageLayout>
+	);
 }

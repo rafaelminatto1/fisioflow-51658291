@@ -5,13 +5,19 @@
  */
 
 import React from "react";
-import { MainLayout } from "@/components/layout/MainLayout";
+import {
+	PageLayout,
+	PageContainer,
+	PageHeader,
+} from "@/components/layout/PageLayout";
 import { LocalSEOTracker } from "@/components/marketing/LocalSEOTracker";
 
 export default function LocalSEOPage() {
-  return (
-    <MainLayout>
-      <LocalSEOTracker />
-    </MainLayout>
-  );
+	return (
+		<PageLayout>
+			<PageContainer>
+				<LocalSEOTracker />
+			</PageContainer>
+		</PageLayout>
+	);
 }

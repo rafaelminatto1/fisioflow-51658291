@@ -5,13 +5,19 @@
  */
 
 import React from "react";
-import { MainLayout } from "@/components/layout/MainLayout";
+import {
+	PageLayout,
+	PageContainer,
+	PageHeader,
+} from "@/components/layout/PageLayout";
 import { MythVsTruthGenerator } from "@/components/marketing/MythVsTruthGenerator";
 
 export default function MythVsTruthPage() {
-  return (
-    <MainLayout>
-      <MythVsTruthGenerator />
-    </MainLayout>
-  );
+	return (
+		<PageLayout>
+			<PageContainer>
+				<MythVsTruthGenerator />
+			</PageContainer>
+		</PageLayout>
+	);
 }
