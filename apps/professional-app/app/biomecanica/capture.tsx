@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { View, Text, Pressable, StyleSheet, useWindowDimensions } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useRouter } from "expo-router";
+import { useRouter, useLocalSearchParams } from "expo-router";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, { useSharedValue, useAnimatedStyle, withTiming, runOnJS } from "react-native-reanimated";
 import Svg, { Line } from "react-native-svg";
@@ -36,11 +36,15 @@ const COLLAPSED = 300;
 
 export default function CaptureScreen() {
   const router = useRouter();
+  const { patientId, patientName } = useLocalSearchParams<{ patientId?: string; patientName?: string }>();
   const { height } = useWindowDimensions();
   const [recording, setRecording] = useState(false);
   const [view, setView] = useState("Sagital");
   const [protocol, setProtocol] = useState("Agachamento");
   const [open, setOpen] = useState(false);
+
+  const initials = patientName ? patientName.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2) : "CF";
+  const displayName = patientName || "Carla Ferreira";
 
   const device = useCameraDevice("back");
   const { hasPermission, requestPermission } = useCameraPermission();
@@ -57,7 +61,11 @@ export default function CaptureScreen() {
     if (!result.canceled) {
       console.log("Video selected:", result.assets[0].uri);
       // Process video using native module / Frame Processor here
-      router.push(`/biomecanica/analysis?uri=${encodeURIComponent(result.assets[0].uri)}`);
+      const params = new URLSearchParams();
+      params.append("uri", result.assets[0].uri);
+      if (patientId) params.append("patientId", patientId);
+      if (patientName) params.append("patientName", patientName);
+      router.push(`/biomecanica/analysis?${params.toString()}`);
     }
   };
 
@@ -198,10 +206,10 @@ export default function CaptureScreen() {
 
         <View style={styles.sheetBody}>
           <Pressable style={styles.patientSel}>
-            <View style={styles.patientPa}><Text style={styles.patientPaText}>CF</Text></View>
+            <View style={styles.patientPa}><Text style={styles.patientPaText}>{initials}</Text></View>
             <View style={{ flex: 1 }}>
-              <Text style={styles.patientPn}>Carla Ferreira</Text>
-              <Text style={styles.patientPx}>34 anos · Condromalácia G2 · Sessão 12</Text>
+              <Text style={styles.patientPn}>{displayName}</Text>
+              <Text style={styles.patientPx}>{patientId ? "Paciente selecionado" : "34 anos · Condromalácia G2 · Sessão 12"}</Text>
             </View>
             <ChevronDown size={18} color={bio.muted} strokeWidth={2.2} />
           </Pressable>

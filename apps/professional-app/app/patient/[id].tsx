@@ -22,9 +22,9 @@ import { useHaptics } from "@/hooks/useHaptics";
 import { useQuery } from "@tanstack/react-query";
 import { getPatientByIdHook } from "@/hooks/usePatients";
 import { format, isValid, parse } from "date-fns";
+import { ptBR } from "date-fns/locale";
 import { useEvolutions } from "@/hooks";
-import { useAIExerciseHistory } from "@/hooks/useAIExerciseHistory";
-import { AIExerciseHistoryCard } from "@/components/ai/AIExerciseHistoryCard";
+import { biomechanicsApi } from "@/lib/api/biomechanics";
 import { PainProgressChart } from "@/components/patient/PainProgressChart";
 import { CloudReportActions } from "@/components/patient/CloudReportActions";
 import { SemanticRecommenderMobileWidget } from "@/components/patient/SemanticRecommenderMobileWidget";
@@ -56,7 +56,15 @@ export default function PatientDetailScreen() {
     enabled: !!id,
   });
 
-  const { data: aiHistory, isLoading: isLoadingAI } = useAIExerciseHistory(id as string);
+  const { data: biomechanicsData, isLoading: isLoadingBiomechanics } = useQuery({
+    queryKey: ["biomechanics-assessments", id],
+    queryFn: async () => {
+      if (!id) return [];
+      const res = await biomechanicsApi.listByPatient(id as string);
+      return res.data || [];
+    },
+    enabled: !!id,
+  });
   const {
     evolutions,
     isLoading: isLoadingEvolutions,
@@ -303,27 +311,58 @@ export default function PatientDetailScreen() {
               style={[styles.addEvolutionBtn, { backgroundColor: colors.primary }]}
               onPress={() => {
                 medium();
-                router.push(`/patient/${id}/ai-assessment?name=${name}`);
+                router.push(`/biomecanica/capture?patientId=${id}&patientName=${encodeURIComponent(name)}`);
               }}
             >
               <Ionicons name="scan" size={24} color="#FFFFFF" />
-              <Text style={styles.addEvolutionBtnText}>Nova Avaliação IA</Text>
+              <Text style={styles.addEvolutionBtnText}>Nova Avaliação Biomecânica</Text>
             </TouchableOpacity>
 
-            {isLoadingAI ? (
+            {isLoadingBiomechanics ? (
               <ActivityIndicator size="large" color={colors.primary} style={{ marginTop: 20 }} />
-            ) : aiHistory && aiHistory.length > 0 ? (
-              aiHistory.map((session) => (
-                <AIExerciseHistoryCard key={session.id} session={session} colors={colors} />
-              ))
+            ) : biomechanicsData && biomechanicsData.length > 0 ? (
+              biomechanicsData.map((assessment, index) => {
+                const prevAssessment = biomechanicsData[index + 1];
+                return (
+                  <View key={assessment.id} style={{ backgroundColor: colors.surface, padding: 16, borderRadius: 12, marginBottom: 12, borderWidth: 1, borderColor: colors.border }}>
+                    <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 12 }}>
+                      <View>
+                        <Text style={{ color: colors.text, fontWeight: "bold", fontSize: 16 }}>{assessment.type.toUpperCase()}</Text>
+                        <Text style={{ color: colors.textSecondary }}>{format(new Date(assessment.createdAt), "dd 'de' MMM, yyyy", { locale: ptBR })}</Text>
+                      </View>
+                      <View style={{ backgroundColor: assessment.status === "completed" ? "#10B98120" : colors.primary + "20", paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8, alignSelf: "flex-start" }}>
+                        <Text style={{ color: assessment.status === "completed" ? "#10B981" : colors.primary, fontWeight: "bold", fontSize: 12 }}>{assessment.status === "completed" ? "Concluído" : "Processando"}</Text>
+                      </View>
+                    </View>
+                    
+                    <View style={{ flexDirection: "row", gap: 8 }}>
+                      <TouchableOpacity
+                        style={{ flex: 1, backgroundColor: colors.primary, padding: 10, borderRadius: 8, alignItems: "center" }}
+                        onPress={() => router.push(`/biomecanica/report?patientId=${id}&patientName=${encodeURIComponent(patientName as string)}&assessmentId=${assessment.id}` as any)}
+                      >
+                        <Text style={{ color: "#fff", fontWeight: "600" }}>Laudo</Text>
+                      </TouchableOpacity>
+                      
+                      {prevAssessment && (
+                        <TouchableOpacity
+                          style={{ flex: 1, backgroundColor: "transparent", padding: 10, borderRadius: 8, alignItems: "center", borderWidth: 1, borderColor: colors.border }}
+                          onPress={() => router.push(`/biomecanica/comparison?patientId=${id}&patientName=${encodeURIComponent(name)}&toAssessmentId=${assessment.id}&fromAssessmentId=${prevAssessment.id}` as any)}
+                        >
+                          <Text style={{ color: colors.text, fontWeight: "600" }}>Comparar</Text>
+                        </TouchableOpacity>
+                      )}
+                    </View>
+                  </View>
+                );
+              })
             ) : (
               <View style={styles.emptyEvolution}>
                 <Ionicons name="analytics-outline" size={64} color={colors.textMuted} />
                 <Text style={[styles.emptyEvolutionTitle, { color: colors.text }]}>
-                  Sem sessões de IA
+                  Sem sessões de Biomecânica
                 </Text>
                 <Text style={[styles.emptyEvolutionText, { color: colors.textSecondary }]}>
-                  O paciente ainda não realizou exercícios com monitoramento biomecânico.
+                  O paciente ainda não realizou avaliações biomecânicas.
                 </Text>
               </View>
             )}
