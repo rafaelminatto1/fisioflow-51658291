@@ -461,6 +461,21 @@ export default function AppointmentFormScreen() {
       </View>
 
       <ScrollView style={styles.content} keyboardShouldPersistTaps="handled">
+        {isEditing && watch("status") !== "completed" && (
+          <Button
+            title="Iniciar Atendimento"
+            onPress={() =>
+              router.push(
+                `/evolution-form?patientId=${selectedPatientId}&appointmentId=${appointmentId}` as Href,
+              )
+            }
+            variant="secondary"
+            style={[{ backgroundColor: colors.success, marginBottom: 16 }] as any}
+            leftIcon="play-circle-outline"
+            textStyle={{ color: '#fff' }}
+          />
+        )}
+
         {/* Patient Selection */}
         <Text style={[styles.label, { color: colors.textSecondary }]}>Paciente *</Text>
         <Controller
@@ -828,19 +843,7 @@ export default function AppointmentFormScreen() {
           />
         )}
 
-        {isEditing && watch("status") !== "completed" && (
-          <Button
-            title="Iniciar Atendimento"
-            onPress={() =>
-              router.push(
-                `/evolution-form?patientId=${selectedPatientId}&appointmentId=${appointmentId}` as Href,
-              )
-            }
-            variant="secondary"
-            style={[styles.startButton, { backgroundColor: colors.success }] as any}
-            leftIcon="play-circle-outline"
-          />
-        )}
+
 
         {isEditing && (
           <Button

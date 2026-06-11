@@ -129,7 +129,13 @@ export default function EvolutionFormScreen() {
               .join("\n\n") ||
             "";
 
-          setObservacao(obs);
+          const cleanObs = obs
+            .replace(/<br\s*\/?>/gi, "\n")
+            .replace(/<\/p>/gi, "\n\n")
+            .replace(/<[^>]*>?/gm, "")
+            .trim();
+
+          setObservacao(cleanObs);
           setPainLevel(Number(draft.pain_scale ?? draft.pain_level ?? 0));
           setProcedures(arrayToChips(draft.procedures, (it) => it.notes));
           setExercises(arrayToChips(draft.exercises, (it) => it.prescription || it.notes));

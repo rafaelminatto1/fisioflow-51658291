@@ -7,9 +7,11 @@ import Animated, { useSharedValue, useAnimatedStyle, withTiming, runOnJS } from 
 import Svg, { Line } from "react-native-svg";
 import {
   X, SettingsIcon, CheckCircle2, RotateCcw, Timer, ChevronDown, ChevronUp,
-  ArrowDown, Footprints, MoveVertical, ChevronsUp,
+  ArrowDown, Footprints, MoveVertical, ChevronsUp, FolderUp
 } from "lucide-react-native";
 import { bio, font } from "@/constants/biomecanica";
+import { Camera, useCameraDevice, useCameraPermission } from "react-native-vision-camera";
+import * as ImagePicker from "expo-image-picker";
 
 const JOINTS: Record<string, [number, number]> = {
   nose: [50, 12], neck: [50, 16], chest: [50, 21], spine: [50, 27], pelvis: [50, 33],
@@ -40,8 +42,23 @@ export default function CaptureScreen() {
   const [protocol, setProtocol] = useState("Agachamento");
   const [open, setOpen] = useState(false);
 
+  const device = useCameraDevice("back");
+  const { hasPermission, requestPermission } = useCameraPermission();
+
   const ty = useSharedValue(COLLAPSED);
   const start = useSharedValue(COLLAPSED);
+
+  const handlePickVideo = async () => {
+    let result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['videos'],
+      allowsEditing: false,
+      quality: 1,
+    });
+    if (!result.canceled) {
+      console.log("Video selected:", result.assets[0].uri);
+      // Process video using native module / Frame Processor here
+    }
+  };
 
   const setOpenState = (v: boolean) => setOpen(v);
   const snap = (toOpen: boolean) => {
@@ -69,6 +86,22 @@ export default function CaptureScreen() {
     <View style={styles.root}>
       {/* camera feed */}
       <View style={styles.camera}>
+        {device && hasPermission ? (
+          <Camera
+            style={StyleSheet.absoluteFill}
+            device={device}
+            isActive={!open} // pause camera when sheet is open
+            video={true}
+          />
+        ) : (
+          <View style={[StyleSheet.absoluteFill, { backgroundColor: "#000", alignItems: 'center', justifyContent: 'center' }]}>
+            {!hasPermission && (
+              <Pressable onPress={requestPermission}>
+                <Text style={{ color: bio.primary, fontFamily: font.bold }}>Permitir Câmera</Text>
+              </Pressable>
+            )}
+          </View>
+        )}
         {/* plumb line */}
         <View style={styles.plumb} />
         {/* skeleton edges */}
@@ -133,8 +166,8 @@ export default function CaptureScreen() {
       {/* record controls */}
       {!open && (
         <View style={styles.recRow}>
-          <Pressable style={styles.recSide} hitSlop={6}>
-            <RotateCcw size={20} color="#fff" strokeWidth={2.2} />
+          <Pressable style={styles.recSide} hitSlop={6} onPress={handlePickVideo}>
+            <FolderUp size={20} color="#fff" strokeWidth={2.2} />
           </Pressable>
           <Pressable style={styles.recBtn} onPress={() => setRecording((r) => !r)}>
             <View style={[styles.recInner, recording && styles.recInnerActive]} />
@@ -202,11 +235,11 @@ const styles = StyleSheet.create({
   plumb: { position: "absolute", top: 0, bottom: 0, left: "50%", width: 1, backgroundColor: "hsla(45,93%,55%,0.45)" },
   joint: { position: "absolute", width: 11, height: 11, borderRadius: 6, backgroundColor: "hsl(45,93%,55%)", borderWidth: 2, borderColor: "#fff", marginLeft: -5.5, marginTop: -5.5 },
 
-  topSafe: { position: "absolute", top: 0, left: 0, right: 0 },
-  topctl: { flexDirection: "row", alignItems: "center", gap: 10, paddingHorizontal: 18, paddingTop: 6 },
+  topSafe: { position: "absolute", top: 0, left: 0, right: 0, zIndex: 10 },
+  topctl: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 18, paddingTop: 12 },
   roundBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: "rgba(15,20,30,0.6)", borderWidth: 1, borderColor: "rgba(255,255,255,0.14)", alignItems: "center", justifyContent: "center" },
-  calibChip: { marginHorizontal: "auto", flexDirection: "row", alignItems: "center", gap: 7, paddingHorizontal: 14, paddingVertical: 8, borderRadius: 999, backgroundColor: "hsl(142,60%,16%)", borderWidth: 1, borderColor: "hsl(142,50%,32%)" },
-  calibText: { color: "hsl(142,70%,75%)", fontSize: 12, fontFamily: font.extrabold },
+  calibChip: { flexDirection: "row", alignItems: "center", gap: 6, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 999, backgroundColor: "hsl(142,60%,16%)", borderWidth: 1, borderColor: "hsl(142,50%,32%)" },
+  calibText: { color: "hsl(142,70%,75%)", fontSize: 11, fontFamily: font.extrabold },
   recBadge: { position: "absolute", top: 96, alignSelf: "center", flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 14, paddingVertical: 7, borderRadius: 999, backgroundColor: "rgba(0,0,0,0.5)", borderWidth: 1, borderColor: "rgba(255,255,255,0.12)" },
   recDot: { width: 9, height: 9, borderRadius: 5, backgroundColor: "hsl(0,80%,55%)" },
   recBadgeText: { color: "#fff", fontSize: 12, fontFamily: font.extrabold, letterSpacing: 0.4 },
