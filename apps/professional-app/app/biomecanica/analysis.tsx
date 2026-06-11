@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { View, Text, Pressable, TextInput, ScrollView, StyleSheet } from "react-native";
+import { View, Text, Pressable, TextInput, ScrollView, StyleSheet, ActivityIndicator, Alert } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
@@ -11,6 +11,7 @@ import {
   TrendingUp, TrendingDown, AlertTriangle, Check, PenTool, Eraser
 } from "lucide-react-native";
 import { bio, font } from "@/constants/biomecanica";
+import { biomechanicsApi } from "@/lib/api/biomechanics";
 
 const METRICS = [
   { l: "ROM joelho", v: "118°", d: "+6° vs 112°", up: true, tone: "ok" as const, icon: TrendingUp },
@@ -29,13 +30,46 @@ const COLLAPSED = 330;
 
 export default function AnalysisScreen() {
   const router = useRouter();
-  const { uri } = useLocalSearchParams<{ uri?: string }>();
+  const { uri, patientId, patientName } = useLocalSearchParams<{ uri?: string; patientId?: string; patientName?: string }>();
   const [playing, setPlaying] = useState(false);
   const [view, setView] = useState("SAGITAL");
   const [open, setOpen] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [note, setNote] = useState(
     "Valgo dinâmico do joelho direito no descenso, com compensação por inclinação de tronco. Paciente relata pinçada patelar ao atingir 90°.",
   );
+
+  const handleSave = async () => {
+    if (!patientId) {
+      Alert.alert("Erro", "Paciente não identificado. Inicie a captura a partir de um paciente.");
+      return;
+    }
+
+    setSaving(true);
+    try {
+      const res = await biomechanicsApi.create({
+        patientId,
+        type: "Agachamento",
+        analysisData: {
+          metrics: METRICS,
+          goniometry: GONIO,
+          patientName,
+        },
+        observations: note,
+        mediaUrl: uri,
+      });
+
+      if (res.data?.id) {
+        router.push(`/biomecanica/report?assessmentId=${res.data.id}&patientId=${patientId}&patientName=${encodeURIComponent(patientName || "")}`);
+      } else {
+        throw new Error("Erro ao criar avaliação");
+      }
+    } catch (err: any) {
+      Alert.alert("Erro", err.message || "Falha ao salvar avaliação");
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const [mode, setMode] = useState<"view" | "goniometer">("view");
   const [points, setPoints] = useState<{ x: number; y: number }[]>([]);
@@ -287,9 +321,19 @@ export default function AnalysisScreen() {
               />
               <View style={styles.noteFoot}>
                 <Text style={styles.noteTime}>marcador 00:04.21</Text>
-                <Pressable style={styles.save}>
-                  <Check size={14} color="#fff" strokeWidth={2.6} />
-                  <Text style={styles.saveText}>Salvar nota</Text>
+                <Pressable 
+                  style={[styles.save, saving && { opacity: 0.7 }]} 
+                  onPress={handleSave} 
+                  disabled={saving}
+                >
+                  {saving ? (
+                    <ActivityIndicator size="small" color="#fff" />
+                  ) : (
+                    <>
+                      <Check size={14} color="#fff" strokeWidth={2.6} />
+                      <Text style={styles.saveText}>Salvar nota</Text>
+                    </>
+                  )}
                 </Pressable>
               </View>
             </View>
