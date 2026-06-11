@@ -46,7 +46,7 @@ Requires heightened protection. Stored across multiple tables:
 | Allergies                   | `medical_records`  | `allergies` (JSONB)                                                |
 | Physical exam findings      | `medical_records`  | `physicalExam` (JSONB: ROM, muscle strength, special tests)        |
 | Diagnoses + CID-10          | `medical_records`  | `diagnosis`, `icd10Codes`                                          |
-| SOAP session notes          | `sessions`         | `subjective`, `objective`, `assessment`, `plan`                    |
+| Observação Livre session notes          | `sessions`         | `subjective`, `objective`, `assessment`, `plan`                    |
 | Pathologies                 | `pathologies`      | `name`, `icdCode`, `status`, `diagnosedAt`                         |
 | Surgeries                   | `surgeries`        | `name`, `surgeryDate`, `surgeon`, `hospital`                       |
 | Biomechanics                | `biomechanics`     | gait analysis, joint angles                                        |
@@ -417,7 +417,7 @@ CFM Resolution 2.145/2016 requires physiotherapy records be retained for at leas
 
 | Data Type                              | Retention                           | Legal Basis                      |
 | -------------------------------------- | ----------------------------------- | -------------------------------- |
-| Clinical records (SOAP, anamnesis)     | 20 years minimum                    | CFM Resolution 2.145/2016        |
+| Clinical records (Observação Livre, anamnesis)     | 20 years minimum                    | CFM Resolution 2.145/2016        |
 | Patient registration data              | Duration of relationship + 20 years | Contract + regulatory            |
 | Session recordings (video/audio)       | 5 years after last session          | Clinical quality, not regulatory |
 | Financial records (invoices, payments) | 5 years + current year              | Tax legislation                  |

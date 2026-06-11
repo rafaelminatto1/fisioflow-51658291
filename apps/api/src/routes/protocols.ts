@@ -227,6 +227,35 @@ app.put("/:id", requireAuth, async (c) => {
   const { id } = c.req.param();
   const body = await c.req.json();
 
+  // Conflict detection
+  if (body.updatedAt) {
+    const existing = await db
+      .select({ updatedAt: exerciseProtocols.updatedAt })
+      .from(exerciseProtocols)
+      .where(eq(exerciseProtocols.id, id))
+      .limit(1);
+
+    if (!existing.length) return c.json({ error: "Protocolo não encontrado" }, 404);
+
+    const clientDate = new Date(body.updatedAt);
+    const serverDate = existing[0].updatedAt;
+
+    if (clientDate.getTime() < serverDate.getTime()) {
+      const currentData = await db
+        .select()
+        .from(exerciseProtocols)
+        .where(eq(exerciseProtocols.id, id))
+        .limit(1);
+      return c.json(
+        {
+          error: "Conflito de versão. Os dados foram atualizados por outro usuário.",
+          serverData: currentData[0],
+        },
+        409,
+      );
+    }
+  }
+
   // Campos permitidos para atualização
   const updateData: Record<string, unknown> = {};
   const allowedFields = [
@@ -293,6 +322,136 @@ app.delete("/:id", requireAuth, async (c) => {
   if (!deleted) return c.json({ error: "Protocolo não encontrado" }, 404);
 
   c.executionCtx.waitUntil(kvDelete(c.env, KV_LIST_PREFIX + "p1:l20", KV_LIST_PREFIX + "p1:l500"));
+  return c.json({ success: true });
+});
+
+// ===== ADICIONAR EXERCÍCIO AO PROTOCOLO =====
+app.post("/:id/exercises", requireAuth, async (c) => {
+  const user = c.get("user");
+  const db = await createDb(c.env);
+  const { id } = c.req.param();
+  const body = await c.req.json();
+
+  const existingProtocol = await db
+    .select({ id: exerciseProtocols.id })
+    .from(exerciseProtocols)
+    .where(eq(exerciseProtocols.id, id))
+    .limit(1);
+
+  if (!existingProtocol.length) return c.json({ error: "Protocolo não encontrado" }, 404);
+
+  const [created] = await db
+    .insert(protocolExercises)
+    .values({
+      protocolId: id,
+      exerciseId: body.exerciseId,
+      phaseWeekStart: body.phaseWeekStart,
+      phaseWeekEnd: body.phaseWeekEnd,
+      setsRecommended: body.setsRecommended,
+      repsRecommended: body.repsRecommended,
+      durationSeconds: body.durationSeconds,
+      frequencyPerWeek: body.frequencyPerWeek,
+      progressionNotes: body.progressionNotes,
+      orderIndex: body.orderIndex ?? 0,
+      organizationId: user.organizationId ?? null,
+    })
+    .returning();
+
+  await db
+    .update(exerciseProtocols)
+    .set({ updatedAt: new Date() })
+    .where(eq(exerciseProtocols.id, id));
+
+  return c.json({ data: created }, 201);
+});
+
+// ===== ATUALIZAR EXERCÍCIO DO PROTOCOLO =====
+app.put("/:id/exercises/:exerciseId", requireAuth, async (c) => {
+  const db = await createDb(c.env);
+  const { id, exerciseId } = c.req.param();
+  const body = await c.req.json();
+
+  if (body.updatedAt) {
+    const existing = await db
+      .select({ updatedAt: protocolExercises.updatedAt })
+      .from(protocolExercises)
+      .where(and(eq(protocolExercises.id, exerciseId), eq(protocolExercises.protocolId, id)))
+      .limit(1);
+
+    if (!existing.length) return c.json({ error: "Exercício do protocolo não encontrado" }, 404);
+
+    const clientDate = new Date(body.updatedAt);
+    const serverDate = existing[0].updatedAt;
+
+    if (clientDate.getTime() < serverDate.getTime()) {
+      const currentData = await db
+        .select()
+        .from(protocolExercises)
+        .where(eq(protocolExercises.id, exerciseId))
+        .limit(1);
+      return c.json(
+        {
+          error: "Conflito de versão. Os dados foram atualizados por outro usuário.",
+          serverData: currentData[0],
+        },
+        409,
+      );
+    }
+  }
+
+  const updateData: Record<string, unknown> = {};
+  const allowedFields = [
+    "phaseWeekStart",
+    "phaseWeekEnd",
+    "setsRecommended",
+    "repsRecommended",
+    "durationSeconds",
+    "frequencyPerWeek",
+    "progressionNotes",
+    "orderIndex",
+  ];
+
+  for (const field of allowedFields) {
+    if (body[field] !== undefined) {
+      updateData[field] = body[field];
+    }
+  }
+
+  updateData.updatedAt = new Date();
+
+  const [updated] = await db
+    .update(protocolExercises)
+    .set(updateData)
+    .where(and(eq(protocolExercises.id, exerciseId), eq(protocolExercises.protocolId, id)))
+    .returning();
+
+  if (!updated) return c.json({ error: "Exercício do protocolo não encontrado" }, 404);
+
+  await db
+    .update(exerciseProtocols)
+    .set({ updatedAt: new Date() })
+    .where(eq(exerciseProtocols.id, id));
+
+  return c.json({ data: updated });
+});
+
+// ===== REMOVER EXERCÍCIO DO PROTOCOLO =====
+app.delete("/:id/exercises/:exerciseId", requireAuth, async (c) => {
+  const db = await createDb(c.env);
+  const { id, exerciseId } = c.req.param();
+
+  const [deleted] = await db
+    .delete(protocolExercises)
+    .where(and(eq(protocolExercises.id, exerciseId), eq(protocolExercises.protocolId, id)))
+    .returning({ id: protocolExercises.id });
+
+  if (!deleted) return c.json({ error: "Exercício do protocolo não encontrado" }, 404);
+
+  await db
+    .update(exerciseProtocols)
+    .set({ updatedAt: new Date() })
+    .where(eq(exerciseProtocols.id, id));
+
   return c.json({ success: true });
 });
 

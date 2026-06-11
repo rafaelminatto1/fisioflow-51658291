@@ -11,7 +11,7 @@
 | Item                            | Fase      | Entregável                                                     |
 | ------------------------------- | --------- | -------------------------------------------------------------- |
 | **Estabilização de Build**      | Infra     | OVERRIDES e pnpm hooks corrigidos para Expo/Workers            |
-| **AI Studio (Scribe & Vision)** | Clínica   | SOAP por voz e HUD Cinemático 3D (Vision Camera)               |
+| **AI Studio (Scribe & Vision)** | Clínica   | Observação Livre por voz e HUD Cinemático 3D (Vision Camera)               |
 | **Resiliência Transversal**     | Infra     | Offline-first Pro & Patient com sincronismo automático         |
 | **Business Dashboard**          | BI        | Dashboards de CAC, LTV, Ocupação e Metas Reais                 |
 | **Performance da Equipe**       | BI        | Produtividade e faturamento individual por fisioterapeuta      |
@@ -28,7 +28,7 @@
 | **Predição de No-Show (IA)**    | Clínica   | Lembretes WhatsApp personalizados conforme risco do paciente   |
 | **Dashboard de Recepção (TV)**  | Operação  | Painel em tempo real via D1 para sala de espera                |
 | **AI Anomaly Detection (RTM)**  | Clínica   | Monitoramento proativo de wearables com alertas de risco       |
-| **Resumo de Telemedicina (IA)** | Clínica   | Resumos estruturados (SOAP) de sessões virtuais                |
+| **Resumo de Telemedicina (IA)** | Clínica   | Resumos estruturados (Observação Livre) de sessões virtuais                |
 | **História de Sucesso (IA)**    | Clínica   | Relatório motivacional ao receber alta clínica                 |
 | **Patient 360° Chat**           | Clínica   | RAG completo com contexto de evolução, exames e wearables      |
 | **Laudos Médicos (IA)**         | Médica    | Resumo executivo de desfecho funcional para o médico           |
@@ -41,7 +41,7 @@
 | **Estoque Inteligente**         | Operação  | Monitoramento de itens clínicos com alerta de reposição        |
 | **Multi-tenant Hardening**      | Infra     | Isolamento absoluto de Cron Jobs e Agentes IA                  |
 | **Metadados de Lançamento**     | Mobile    | ASO e descrições otimizadas para App Store/Google Play         |
-| **Golden Path E2E (IA)**        | Hardening | Testes de Omnisearch, Digital Twin e SOAP no Playwright        |
+| **Golden Path E2E (IA)**        | Hardening | Testes de Omnisearch, Digital Twin e Observação Livre no Playwright        |
 
 ---
 
@@ -59,7 +59,7 @@
 | ----------------------------------- | ------- | --------------------------------------------------- |
 | E2E — Fluxo de cadastro de paciente | Alto    | Secrets de staging configurados                     |
 | E2E — Fluxo de agendamento          | Alto    | Idem                                                |
-| E2E — Fluxo de evolução SOAP        | Alto    | Idem                                                |
+| E2E — Fluxo de evolução Observação Livre        | Alto    | Idem                                                |
 | Agendamento pelo Paciente           | Médio   | Re-ativar `POST /booking` após validação da clínica |
 
 ---

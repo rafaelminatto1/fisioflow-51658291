@@ -8,7 +8,7 @@ Para uma submissão de sucesso, precisamos de screenshots que destaquem as funci
 2.  **AI Scribe em Ação:** O modal de gravação com a frase "Ouvindo... Whisper + Gemini" visível.
 3.  **Assistente Cinemático:** A câmera detectando um esqueleto de neon sobre um paciente (HUD).
 4.  **Perfil do Paciente:** Dashboard clínico com o gráfico de evolução.
-5.  **Lista de Evoluções:** Histórico de sessões com o badge "SOAP gerado por IA".
+5.  **Lista de Evoluções:** Histórico de sessões com o badge "Observação Livre gerado por IA".
 6.  **Emissão de NFS-e:** Tela de sucesso de emissão da nota fiscal.
 
 ## 🧘 FisioFlow Paciente (6 telas obrigatórias)

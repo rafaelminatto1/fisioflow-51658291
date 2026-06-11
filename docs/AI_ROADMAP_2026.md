@@ -18,7 +18,7 @@ Este documento define a estratégia de evolução da inteligência clínica do F
 **Objetivo:** Agilizar a digitação clínica de prontuários.
 
 - **Ditado de Voz Ativo**: O fisioterapeuta aciona ativamente o microfone para ditar o resumo do atendimento de forma focada e em ambiente isolado, sem capturas indesejadas de terceiros.
-- **Estruturação SOAP**: Processamento e refino do relato de voz pelo modelo de linguagem para gerar notas SOAP estruturadas.
+- **Estruturação Observação Livre**: Processamento e refino do relato de voz pelo modelo de linguagem para gerar notas Observação Livre estruturadas.
 
 ## 3. Agentes Autônomos de Coordenação (Orchestrator)
 

@@ -58,7 +58,7 @@
   - Feito: `src/components/wiki/ScientificPapersView.tsx` (NOVO) — grid + modal dropzone + área clínica; botão "Artigos" no WikiTopNav; integrado em Wiki.tsx
 
 - [x] **#10 S1-T6** — Frontend: FisioBrain Chat na página Wiki (AIHubView atualizado)
-  - Feito: `AIHubView.tsx` reescrito — aba FisioBrain com busca + filtros fonte/área + badges coloridos + histórico da sessão; abas SOAP/Simulator preservadas
+  - Feito: `AIHubView.tsx` reescrito — aba FisioBrain com busca + filtros fonte/área + badges coloridos + histórico da sessão; abas Observação Livre/Simulator preservadas
 
 ---
 
@@ -66,7 +66,7 @@
 
 > Evidência no momento certo — durante a consulta.
 
-- [x] **#11 S2-T1** — 🔒(#6) Frontend: FisioBrain no painel de SOAP (Sheet lateral)
+- [x] **#11 S2-T1** — 🔒(#6) Frontend: FisioBrain no painel de Observação Livre (Sheet lateral)
   - Arquivos: `src/components/evolution/v3-notion/NotionEvolutionPanel.tsx`
   - Feito: Botão "Evidência" (Brain icon, violet) na barra header. Sheet lateral direita 420px com textarea pré-preenchida do diagnóstico, busca via /api/fisiobrain/search?source=protocol,paper, exibe resposta IA + fontes com badges coloridos + botão "Inserir no Plano" em cada fonte.
 
@@ -92,7 +92,7 @@
   - Arquivos: `apps/api/src/agents/ClinicAgent.ts` (NOVO), `apps/api/wrangler.toml`, `apps/api/src/index.ts`
   - Feito: ClinicAgent extends Agent<Env, ClinicState> com @callable methods: runMorningBriefing, runDailySummary, checkMissingPatients (Neon query), handleWhatsAppReschedule. Bindings CLINIC_AGENT em wrangler.toml + prod. Crons 30 10 / 30 21 / 0 12 \* \* 1 adicionados ao [triggers] e aos case handlers em cron.ts.
 
-- [x] **#16 S3-T2** — 🔒(#2) Backend: SessionSummaryWorkflow (SOAP → WhatsApp paciente)
+- [x] **#16 S3-T2** — 🔒(#2) Backend: SessionSummaryWorkflow (Observação Livre → WhatsApp paciente)
   - Arquivos: `apps/api/src/workflows/sessionSummary.ts` (NOVO), `apps/api/src/routes/sessions.ts`, `apps/api/wrangler.toml`
   - Feito: WorkflowEntrypoint com 4 steps: fetch-session (Neon JOIN patients), generate-summary (callAI → JSON {summary_paciente, proximos_passos, exercicios_casa}), save-summary (session_summaries upsert), send-whatsapp (BACKGROUND_QUEUE). Disparado em sessions.ts finalize via WORKFLOW_SESSION_SUMMARY.create(). Binding em wrangler.toml root + prod. Exportado em index.ts.
 

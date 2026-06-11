@@ -17,7 +17,7 @@ O sistema ja possui a rota `/patients/:patientId/evaluations/new/:formId?` e a t
 ## Fora do Escopo
 
 - Recriar a agenda clinica ou transformar toda avaliacao em consulta obrigatoria.
-- Alterar o fluxo SOAP de atendimento.
+- Alterar o fluxo Observação Livre de atendimento.
 - Reescrever o builder de templates.
 - Implementar assinatura, impressao final ou PDF de avaliacao neste ciclo.
 
@@ -88,7 +88,7 @@ Ao abrir apenas com `formId`, manter compatibilidade criando a avaliacao no mome
 
 ## Perfil do Paciente
 
-A aba "Historico Clinico" deve exibir uma secao "Avaliacoes" antes ou ao lado das sessoes SOAP.
+A aba "Historico Clinico" deve exibir uma secao "Avaliacoes" antes ou ao lado das sessoes Observação Livre.
 
 Cada avaliacao deve mostrar:
 

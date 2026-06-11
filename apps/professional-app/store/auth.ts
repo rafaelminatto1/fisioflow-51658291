@@ -3,7 +3,9 @@ import { authApi } from "@/lib/auth-api";
 import { auditLogger } from "@/lib/services/auditLogger";
 import { biometricAuthService } from "@/lib/services/biometricAuthService";
 import { User, UserRole } from "@/types/auth";
-
+import { fetchApi } from "@/lib/api";
+import { registerForPushNotificationsAsync } from "@/lib/notifications";
+import * as Notifications from "expo-notifications";
 interface AuthState {
   user: User | null;
   isLoading: boolean;
@@ -68,6 +70,12 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         isAuthenticated: true,
         isLoading: false,
       });
+
+      registerForPushNotificationsAsync().then((token) => {
+        if (token) {
+          fetchApi("/api/push-subscriptions", { method: "POST", data: { token } }).catch(console.error);
+        }
+      }).catch(console.error);
     } catch (error: any) {
       set({ error: error.message || "Erro ao fazer login", isLoading: false });
       throw error;
@@ -81,6 +89,19 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       if (currentUser) {
         await auditLogger.logLogout(currentUser.id);
       }
+      
+      try {
+        const projectId = process.env.EXPO_PUBLIC_EXPO_PROJECT_ID || process.env.EXPO_PUBLIC_PROJECT_ID;
+        if (projectId) {
+          const pushToken = (await Notifications.getExpoPushTokenAsync({ projectId })).data;
+          if (pushToken) {
+            await fetchApi(`/api/push-subscriptions?token=${pushToken}`, { method: "DELETE" }).catch(console.error);
+          }
+        }
+      } catch (e) {
+        console.error("Failed to unregister push token", e);
+      }
+
       await authApi.logout();
       set({
         user: null,
@@ -143,6 +164,12 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         isAuthenticated: true,
         isLoading: false,
       });
+
+      registerForPushNotificationsAsync().then((token) => {
+        if (token) {
+          fetchApi("/api/push-subscriptions", { method: "POST", data: { token } }).catch(console.error);
+        }
+      }).catch(console.error);
     } catch {
       set({
         user: null,

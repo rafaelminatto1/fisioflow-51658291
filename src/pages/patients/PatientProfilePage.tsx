@@ -296,9 +296,45 @@ const PatientProfileContent = () => {
 
 	if (isLoading) {
 		return (
-			<PageLayout>
-				<PageContainer>
-					<LoadingSkeleton type="card" rows={4} />
+			<PageLayout compactHeader>
+				<PageContainer maxWidth="xl" className="space-y-6 pt-4 animate-fade-in">
+					{/* Header Skeleton */}
+					<div className="flex flex-col md:flex-row gap-6 md:items-start p-6 bg-card border border-blue-50/50 shadow-sm shadow-blue-500/5 rounded-xl">
+						<div className="h-24 w-24 shrink-0 rounded-2xl bg-muted animate-pulse" />
+						<div className="flex-1 space-y-4 py-2">
+							<div className="h-8 w-64 bg-muted animate-pulse rounded-md" />
+							<div className="flex gap-4">
+								<div className="h-5 w-32 bg-muted animate-pulse rounded-md" />
+								<div className="h-5 w-32 bg-muted animate-pulse rounded-md" />
+								<div className="h-5 w-32 bg-muted animate-pulse rounded-md" />
+							</div>
+						</div>
+						<div className="flex gap-2 py-2">
+							<div className="h-10 w-32 bg-muted animate-pulse rounded-lg" />
+							<div className="h-10 w-10 bg-muted animate-pulse rounded-lg" />
+						</div>
+					</div>
+
+					{/* Tabs Skeleton */}
+					<div className="sticky top-0 z-20 bg-card pb-1 pt-2 -mx-4 px-4 border-b border-blue-50/50 shadow-sm shadow-blue-500/5">
+						<div className="flex gap-6 pb-2">
+							<div className="h-8 w-24 bg-muted animate-pulse rounded" />
+							<div className="h-8 w-24 bg-muted animate-pulse rounded" />
+							<div className="h-8 w-32 bg-muted animate-pulse rounded" />
+							<div className="h-8 w-24 bg-muted animate-pulse rounded" />
+						</div>
+					</div>
+
+					{/* Content Skeleton */}
+					<div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+						<div className="md:col-span-2 space-y-6">
+							<div className="h-64 bg-muted animate-pulse rounded-xl" />
+							<div className="h-64 bg-muted animate-pulse rounded-xl" />
+						</div>
+						<div className="space-y-6">
+							<div className="h-96 bg-muted animate-pulse rounded-xl" />
+						</div>
+					</div>
 				</PageContainer>
 			</PageLayout>
 		);

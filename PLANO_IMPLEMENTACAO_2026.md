@@ -132,7 +132,7 @@ Cenários mínimos:
 1. Login → dashboard carrega
 2. Criar paciente → aparece na lista
 3. Criar agendamento → aparece na agenda na data correta
-4. Criar evolução SOAP → salva sem erro
+4. Criar evolução Observação Livre → salva sem erro
 5. Logout → cookie removido + redirect para login
 
 ---
@@ -204,7 +204,7 @@ interface PushPayload {
 **Arquitetura:**
 
 ```
-[Fisio digita evolução SOAP offline]
+[Fisio digita evolução Observação Livre offline]
   → useOfflineSync detecta navigator.onLine === false
   → Serializa payload em IndexedDB (idb-keyval ou dexie)
   → Service Worker registra SyncTag: "fisioflow-sync"
@@ -244,7 +244,7 @@ export async function markFailed(id: string, error: string): Promise<void>;
 
 **Casos offline suportados no MVP:**
 
-- ✅ Criar/editar evolução SOAP
+- ✅ Criar/editar evolução Observação Livre
 - ✅ Registrar presença/falta em agendamento
 - ✅ Completar exercício no HEP
 - ❌ Criar novo paciente (requer backend para dedup — fase 2)
@@ -808,7 +808,7 @@ Após 14 dias em produção com tráfego real:
 | Risco                                           | Probabilidade | Impacto | Mitigação                                     |
 | ----------------------------------------------- | ------------- | ------- | --------------------------------------------- |
 | Background Sync API não suportada em Safari iOS | Alta          | Alto    | Fallback: sync ao abrir app (foreground sync) |
-| SOAP da prefeitura SP instável (NFS-e)          | Média         | Médio   | Retry + dead letter + alertas                 |
+| Observação Livre da prefeitura SP instável (NFS-e)          | Média         | Médio   | Retry + dead letter + alertas                 |
 | Claude API latência em insights IA              | Baixa         | Médio   | Cache KV 24h, skeleton loading                |
 | Expo push notifications iOS requer APNs         | Alta          | Alto    | Configurar APNs no Sprint 4                   |
 | PDF generation em Workers (limite memória)      | Média         | Médio   | Gerar via Stream + salvar em R2               |

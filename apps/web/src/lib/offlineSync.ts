@@ -124,3 +124,7 @@ class OfflineSyncManager {
 }
 
 export const offlineSyncManager = new OfflineSyncManager();
+
+if (typeof window !== "undefined") {
+  (window as any).offlineSyncManager = offlineSyncManager;
+}

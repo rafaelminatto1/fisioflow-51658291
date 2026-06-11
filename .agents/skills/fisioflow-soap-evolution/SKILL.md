@@ -1,17 +1,17 @@
 ---
-name: fisioflow-soap-evolution
-description: Clinical evolution and SOAP note patterns for FisioFlow. Use when creating, modifying, or reviewing evolution-related components, routes, types, editors, AI generation, or persistence.
+name: fisioflow-observacao-evolution
+description: Clinical evolution and Observação Livre note patterns for FisioFlow. Use when creating, modifying, or reviewing evolution-related components, routes, types, editors, AI generation, or persistence.
 ---
 
-# FisioFlow SOAP Evolution Skill
+# FisioFlow Observação Livre Evolution Skill
 
-Clinical evolution (SOAP notes) patterns for the FisioFlow physiotherapy clinic system. Use this skill when creating, modifying, or reviewing evolution-related components, routes, types, AI generation, or data persistence.
+Clinical evolution (Observação Livre notes) patterns for the FisioFlow physiotherapy clinic system. Use this skill when creating, modifying, or reviewing evolution-related components, routes, types, AI generation, or data persistence.
 
 ---
 
-## 1. SOAP Method
+## 1. Observação Livre Method
 
-FisioFlow uses the standard SOAP clinical documentation method. Each treatment session produces a structured record with four sections.
+FisioFlow uses the standard Observação Livre clinical documentation method. Each treatment session produces a structured record with four sections.
 
 ### Section Breakdown
 
@@ -27,10 +27,10 @@ FisioFlow uses the standard SOAP clinical documentation method. Each treatment s
 The evolution form supports three modes (`FillingMode` type):
 
 ```typescript
-type FillingMode = "SOAP" | "Notion" | "Tiptap";
+type FillingMode = "Observação Livre" | "Notion" | "Tiptap";
 ```
 
-- **SOAP** — Four separate text fields for S/O/A/P
+- **Observação Livre** — Four separate text fields for S/O/A/P
 - **Notion** — Single free-text block (stored in `assessment` column)
 - **Tiptap** — Rich text block editor with slash commands (stored as HTML)
 
@@ -82,7 +82,7 @@ Key points:
 - `exercises_performed` is JSONB array
 - Upsert by `appointment_id` when present; always INSERT when standalone
 
-#### `soap_records` (Web app — full SOAP lifecycle)
+#### `soap_records` (Web app — full Observação Livre lifecycle)
 
 ```sql
 CREATE TABLE soap_records (
@@ -235,7 +235,7 @@ Key types to know:
 - `SessionExerciseData` — exercise performed within a session (sets, reps, weight, difficulty, side)
 - `MeasurementData` — single measurement with type/unit/value
 - `VitalSigns` — blood pressure, heart rate, respiratory rate, temperature, O2 saturation, pain
-- `TimelineEvent` / `SessionEventData` — timeline view data with SOAP + vitals + exercises + measurements
+- `TimelineEvent` / `SessionEventData` — timeline view data with Observação Livre + vitals + exercises + measurements
 - `EvolutionHeaderPatient` — patient info for the evolution header
 - `EvolutionAlertData` — alerts (overdue goal, pain increase, plateau, improvement)
 
@@ -282,10 +282,10 @@ const triggerAutoSave = useCallback(() => {
       patient_id: patientId,
       appointment_id: appointmentId ?? null,
       record_date: new Date().toISOString().split("T")[0],
-      subjective: mode === "SOAP" ? subjective.trim() : "",
-      objective: mode === "SOAP" ? objective.trim() : "",
-      assessment: mode === "SOAP" ? assessment.trim() : freeContent.trim(),
-      plan: mode === "SOAP" ? plan.trim() : "",
+      subjective: mode === "Observação Livre" ? subjective.trim() : "",
+      objective: mode === "Observação Livre" ? objective.trim() : "",
+      assessment: mode === "Observação Livre" ? assessment.trim() : freeContent.trim(),
+      plan: mode === "Observação Livre" ? plan.trim() : "",
       pain_level: painLevel,
     };
     if (savedEvolutionId.current) body.recordId = savedEvolutionId.current;
@@ -556,9 +556,9 @@ Custom extensions:
 - **`Backlinks`** (`src/components/evolution/suggestion/backlinks.ts`) — `[[` trigger to link to other sessions/records
 - **`PdfEmbed`** (`src/components/evolution/extensions/PdfEmbed.ts`) — Inline PDF preview
 
-### SOAP-to-Tiptap Migration
+### Observação Livre-to-Tiptap Migration
 
-When SOAP data exists but Tiptap content is empty, the editor auto-migrates:
+When Observação Livre data exists but Tiptap content is empty, the editor auto-migrates:
 
 ```typescript
 useEffect(() => {
@@ -614,11 +614,11 @@ const handleTextChange = (text: string) => {
 
 ---
 
-## 6. AI-Assisted SOAP Notes
+## 6. AI-Assisted Observação Livre Notes
 
 ### Architecture
 
-AI SOAP generation uses **Google Gemini 2.5 Pro** via `@google/generative-ai`. Implementation: `src/lib/ai/soap-assistant.ts`.
+AI Observação Livre generation uses **Google Gemini 2.5 Pro** via `@google/generative-ai`. Implementation: `src/lib/ai/observacao-assistant.ts`.
 
 ```typescript
 const SOAP_AI_CONFIG = {
@@ -647,7 +647,7 @@ interface PatientSOAPContext {
 }
 ```
 
-The builder includes the last 2 SOAP sessions as history:
+The builder includes the last 2 Observação Livre sessions as history:
 
 ```typescript
 function buildPatientSOAPContext(
@@ -666,12 +666,12 @@ function buildPatientSOAPContext(
       medicalHistory: patient.medicalHistory,
       age: calculatePatientAge(patient.birthDate),
     },
-    previousSOAP: previousSOAP?.map((soap) => ({
-      sessionNumber: soap.sessionNumber,
-      subjective: soap.subjective,
-      objective: soap.objective,
-      assessment: soap.assessment,
-      plan: soap.plan,
+    previousSOAP: previousSOAP?.map((observacao) => ({
+      sessionNumber: observacao.sessionNumber,
+      subjective: observacao.subjective,
+      objective: observacao.objective,
+      assessment: observacao.assessment,
+      plan: observacao.plan,
     })),
     sessionNumber,
     sessionType,
@@ -680,13 +680,13 @@ function buildPatientSOAPContext(
 }
 ```
 
-### SOAP Generation Output Schema
+### Observação Livre Generation Output Schema
 
 Zod-validated output schema:
 
 ```typescript
 const SOAPGenerationSchema = z.object({
-  soap: z.object({
+  observacao: z.object({
     subjective: z.string().describe("Patient reported symptoms and complaints in Portuguese"),
     objective: z
       .object({
@@ -723,9 +723,9 @@ const SOAPGenerationSchema = z.object({
 The system prompt instructs Gemini to act as a Brazilian PT documentation assistant:
 
 ```
-You are an expert physical therapist clinical documentation assistant specializing in SOAP note format for Brazilian healthcare.
+You are an expert physical therapist clinical documentation assistant specializing in Observação Livre note format for Brazilian healthcare.
 
-Guidelines for SOAP format:
+Guidelines for Observação Livre format:
 - Subjective (S): Patient's reported symptoms, complaints, and concerns in their own words.
 - Objective (O): Measurable findings from physical examination.
 - Assessment (A): Clinical evaluation including diagnosis, prognosis, and response to treatment.
@@ -752,13 +752,13 @@ const assistant = new SOAPAssistant(apiKey);
 const result = await assistant.generateSOAPFromText(consultationText, patientContext);
 
 if (result.success && result.data) {
-  const { soap, keyFindings, recommendations, redFlags, suggestedCodes } = result.data;
+  const { observacao, keyFindings, recommendations, redFlags, suggestedCodes } = result.data;
 }
 ```
 
-### Voice Transcription + SOAP
+### Voice Transcription + Observação Livre
 
-Audio consultation → transcription → SOAP generation in a single flow:
+Audio consultation → transcription → Observação Livre generation in a single flow:
 
 ```typescript
 const result = await assistant.generateSOAPFromAudio(audioBuffer, "audio/mp3", patientContext);
@@ -772,21 +772,21 @@ The mobile app calls the Workers AI endpoint:
 
 ```typescript
 const handleGenerateWithAI = async () => {
-  const data = await fetchApi("/api/ai/soap-suggestions", {
+  const data = await fetchApi("/api/ai/observacao-suggestions", {
     method: "POST",
     data: {
       patientId,
       appointmentId,
       painLevel,
       mode,
-      context: mode === "SOAP" ? { subjective, objective, assessment, plan } : { freeContent },
+      context: mode === "Observação Livre" ? { subjective, objective, assessment, plan } : { freeContent },
     },
   });
-  if (mode === "SOAP" && data.soap) {
-    setSubjective(data.soap.subjective || subjective);
-    setObjective(data.soap.objective || objective);
-    setAssessment(data.soap.assessment || assessment);
-    setPlan(data.soap.plan || plan);
+  if (mode === "Observação Livre" && data.observacao) {
+    setSubjective(data.observacao.subjective || subjective);
+    setObjective(data.observacao.objective || objective);
+    setAssessment(data.observacao.assessment || assessment);
+    setPlan(data.observacao.plan || plan);
   }
 };
 ```
@@ -803,7 +803,7 @@ window.addEventListener("tiptap-ai-assist", () => {
 
 ### Translation Support
 
-SOAP notes can be translated between Portuguese, English, and Spanish:
+Observação Livre notes can be translated between Portuguese, English, and Spanish:
 
 ```typescript
 const translated = await assistant.translateSOAP(soapNote, "en");
@@ -812,7 +812,7 @@ const translated = await assistant.translateSOAP(soapNote, "en");
 ### Singleton Pattern
 
 ```typescript
-import { getSOAPAssistant, createSOAPAssistant } from "@/lib/ai/soap-assistant";
+import { getSOAPAssistant, createSOAPAssistant } from "@/lib/ai/observacao-assistant";
 
 const assistant = getSOAPAssistant();
 ```
@@ -825,13 +825,13 @@ const assistant = getSOAPAssistant();
 | ---------------------------------------------------------------- | ------------------------------------------------ |
 | `src/types/evolution.ts`                                         | All evolution-related TypeScript types           |
 | `src/types/painMap.ts`                                           | Pain map types (BodyRegion, PainMapPoint, etc.)  |
-| `src/lib/ai/soap-assistant.ts`                                   | AI SOAP generation (Gemini)                      |
-| `src/lib/export/evolutionPdfExport.ts`                           | PDF export with SOAP table                       |
+| `src/lib/ai/observacao-assistant.ts`                                   | AI Observação Livre generation (Gemini)                      |
+| `src/lib/export/evolutionPdfExport.ts`                           | PDF export with Observação Livre table                       |
 | `apps/api/src/routes/evolution.ts`                               | Worker API for treatment sessions & measurements |
 | `apps/api/src/routes/evolutionVersions.ts`                       | Version history API                              |
 | `apps/professional-app/app/evolution-form.tsx`                   | Mobile evolution form                            |
 | `apps/professional-app/lib/api/evolutions.ts`                    | Mobile API client                                |
-| `apps/professional-app/components/evolution/SOAPForm.tsx`        | SOAP mode form                                   |
+| `apps/professional-app/components/evolution/SOAPForm.tsx`        | Observação Livre mode form                                   |
 | `apps/professional-app/components/evolution/TiptapForm.tsx`      | Tiptap mode form (mobile)                        |
 | `apps/professional-app/components/evolution/PainLevelSlider.tsx` | Pain slider (mobile)                             |
 | `apps/professional-app/components/evolution/SlashMenu.tsx`       | Slash commands (mobile)                          |
@@ -841,7 +841,7 @@ const assistant = getSOAPAssistant();
 | `src/components/evolution/SessionExercisesPanel.tsx`             | Exercise tracking per session                    |
 | `src/components/evolution/EvolutionVersionHistory.tsx`           | Version history UI (Sheet)                       |
 | `src/components/evolution/EvolutionTimeline.tsx`                 | Timeline view of all events                      |
-| `src/components/evolution/SOAPFormPanel.tsx`                     | SOAP form panel (web)                            |
+| `src/components/evolution/SOAPFormPanel.tsx`                     | Observação Livre form panel (web)                            |
 | `src/components/evolution/MeasurementCharts.tsx`                 | Measurement visualization                        |
 | `src/components/evolution/TestEvolutionPanel.tsx`                | Standardized test results over time              |
 | `src/components/evolution/ConductReplication.tsx`                | Copy conduct from previous session               |

@@ -17,6 +17,11 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { useFonts } from "expo-font";
 import { nunitoFonts } from "@/constants/biomecanica";
 
+import NetInfo from "@react-native-community/netinfo";
+import { useSyncStore } from "@/store/sync-store";
+import { SyncConflictModal } from "@/components/ui/SyncConflictModal";
+import { fetchApi } from "@/lib/api";
+
 // Initialize Sentry — only in production builds (native SDK not available via Metro)
 const sentryDsn = process.env.EXPO_PUBLIC_SENTRY_DSN;
 if (!__DEV__ && sentryDsn && sentryDsn.startsWith("https://")) {
@@ -96,6 +101,61 @@ function RootLayoutContent() {
     };
     finalizeSetup();
   }, [isLoading]);
+
+  useEffect(() => {
+    const processQueue = async () => {
+      const store = useSyncStore.getState();
+      if (store.isSyncing || store.queue.length === 0 || store.conflict) return;
+
+      store.setSyncing(true);
+
+      try {
+        const currentQueue = [...store.queue];
+        for (const mutation of currentQueue) {
+          if (useSyncStore.getState().conflict) break;
+
+          try {
+            // Skip queue logic inside fetchApi by using a custom flag, 
+            // but actually fetchApi only queues if network fails.
+            await fetchApi(mutation.endpoint, {
+              method: mutation.method,
+              data: mutation.data,
+              params: mutation.params,
+            });
+            useSyncStore.getState().removeMutation(mutation.id);
+          } catch (error: any) {
+            if (error.status === 409 || error.message?.includes('409')) {
+              store.setConflict({
+                id: mutation.id,
+                mutation,
+                serverData: error.serverData || { aviso: 'Versão do servidor atualizada e mais recente.' },
+                localData: mutation.data,
+              });
+              break;
+            } else if (
+              error.message === 'Network request failed' || 
+              error.name === 'AbortError' || 
+              error.message?.includes('Network')
+            ) {
+              break;
+            } else {
+              useSyncStore.getState().removeMutation(mutation.id);
+            }
+          }
+        }
+      } finally {
+        useSyncStore.getState().setSyncing(false);
+      }
+    };
+
+    const unsubscribe = NetInfo.addEventListener(state => {
+      if (state.isConnected && state.isInternetReachable !== false) {
+        processQueue();
+      }
+    });
+
+    return () => unsubscribe();
+  }, []);
 
   if (isLoading || !fontsLoaded) {
     return (
@@ -232,6 +292,7 @@ function RootLayoutContent() {
         />
         <Stack.Screen name="whatsapp-chat/[id]" options={{ headerShown: false }} />
       </Stack>
+      <SyncConflictModal />
     </>
   );
 }

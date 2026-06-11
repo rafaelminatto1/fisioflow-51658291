@@ -21,7 +21,7 @@
 
 ## 🧠 Clinical AI Standards (AI Studio)
 
-- **Voice:** Use `iaStudioApi` (Gemini 1.5 Flash) for Intelligent SOAP notes.
+- **Voice:** Use `iaStudioApi` (Gemini 1.5 Flash) for Intelligent Observação Livre notes.
 - **Vision:** Use verified biomechanical math utilities and real-time frame processors for Cinematic Analysis.
 - **Privacy:** Strict LGPD compliance. All PII (Patient Identifiable Information) must be redacted from Cloudflare logs.
 

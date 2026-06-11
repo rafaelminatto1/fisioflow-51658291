@@ -5,7 +5,7 @@ import { UserRole } from "@/types/auth";
 import { AlertTriangle, RefreshCw, Loader2 } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { AppLoadingSkeleton } from "@/components/ui/AppLoadingSkeleton";
+
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -59,7 +59,7 @@ export function ProtectedRoute({
 
   // Show optimized loading skeleton
   if (!initialized || loading) {
-    return <AppLoadingSkeleton message="Carregando sistema..." />;
+    return null;
   }
 
   // Handle session check failure

@@ -6,7 +6,7 @@ O FisioFlow evoluiu. De um simples sistema de gestão, transformou-se na **Plata
 
 ### 🧠 Clinical AI Studio
 
-- **Scribe por Voz (SOAP):** Transcrição de áudio e formatação automática de prontuários via _Whisper_ e _Gemini 1.5 Flash_.
+- **Scribe por Voz (Observação Livre):** Transcrição de áudio e formatação automática de prontuários via _Whisper_ e _Gemini 1.5 Flash_.
 - **Patient 360° Chat:** Consulta contextual ao prontuário do paciente (RAG) usando _Context Caching_ da IA.
 - **HUD Biomecânico 3D:** Análise cinemática em tempo real para testes de corrida, marcha e salto.
 - **Gêmeo Digital (Digital Twin):** Predição de semanas de alta e alertas de risco de abandono clínico baseados na trajetória.

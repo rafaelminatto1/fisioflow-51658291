@@ -79,7 +79,7 @@
 
 - 50+ testes Python em `testsprite_tests/`
 - Planos JSON para frontend e backend
-- Testes de: Registro de pacientes, Agendamento, SOAP, Financeiro
+- Testes de: Registro de pacientes, Agendamento, Observação Livre, Financeiro
 
 ---
 

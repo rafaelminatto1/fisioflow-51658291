@@ -19,7 +19,7 @@ Em 30/05/2026, 18 modelos Workers AI saem do ar (Llama 3/3.1, Gemma 3, Mistral, 
 
 **Acceptance Scenarios**:
 
-1. **Given** um fisioterapeuta abre uma sessão SOAP, **When** clica em "Sugerir hipótese diagnóstica", **Then** o backend retorna sugestão em <3s sem usar modelo deprecado.
+1. **Given** um fisioterapeuta abre uma sessão Observação Livre, **When** clica em "Sugerir hipótese diagnóstica", **Then** o backend retorna sugestão em <3s sem usar modelo deprecado.
 2. **Given** uma chamada à rota `/api/ai/transcribe`, **When** o request é processado, **Then** o modelo invocado é um dos: `@cf/zai-org/glm-4.7-flash`, `@cf/google/gemma-4-26b-a4b-it`, `@cf/moonshotai/kimi-k2.6`, `@cf/meta/llama-3.3-70b-instruct-fp8-fast`.
 
 ---

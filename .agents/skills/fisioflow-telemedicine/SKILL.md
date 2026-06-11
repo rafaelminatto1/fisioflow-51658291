@@ -232,6 +232,6 @@ telemedicine-recordings/{organizationId}/{roomId}/{timestamp}.mp4
 ## Future Enhancements
 
 - **AI Transcription:** Workers AI speech-to-text for session notes
-- **Auto-SOAP Generation:** Transcribe call → generate SOAP sections
+- **Auto-Observação Livre Generation:** Transcribe call → generate Observação Livre sections
 - **Screen Share Annotation:** Therapist annotates patient exercises in real-time
 - **Multi-participant:** Group telemedicine sessions (already supported by appointment `isGroup`)

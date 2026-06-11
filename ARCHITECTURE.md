@@ -15,7 +15,7 @@ As diretrizes operacionais e restrições do sistema estão documentadas em [Reg
 | **Aceleração**  | Cloudflare Hyperdrive    | Pooling de conexões PostgreSQL distribuído na borda.              |
 | **PDF Engine**  | **Browser Rendering**    | Geração de documentos (Alta/Recibos) via Puppeteer nativo.        |
 | **Sync**        | **Background Sync**      | Sincronização offline robusta via IndexedDB (Pro) e AsyncStorage. |
-| **IA Studio**   | **Google/Meta/Vision**   | IA Generativa (SOAP) e Visão Computacional (Cinemática).          |
+| **IA Studio**   | **Google/Meta/Vision**   | IA Generativa (Observação Livre) e Visão Computacional (Cinemática).          |
 | **Resiliência** | **Geographical DR**      | Backup Neon Branching + R2 Cross-region (SP -> ENAM).             |
 
 ## 📐 Diagrama de Arquitetura

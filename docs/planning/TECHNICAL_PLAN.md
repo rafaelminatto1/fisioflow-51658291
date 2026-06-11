@@ -236,7 +236,7 @@ Este plano abrange exclusivamente a produção de artefatos de processo, configu
 | Testes unitários — Workers APIs | Ampliar para `patients`, `sessions`, `exercises`, `auth`, `boards`          |
 | Testes de integração — DB + ORM | Testar fluxos com Neon branch staging (real DB, sem mocks)                  |
 | Fixtures e seeds                | `tests/fixtures/` com dados representativos por entidade crítica            |
-| Testes e2e — Playwright         | 5 cenários: login, cadastro de paciente, agendamento, evolução SOAP, logout |
+| Testes e2e — Playwright         | 5 cenários: login, cadastro de paciente, agendamento, evolução Observação Livre, logout |
 | CI gate de cobertura            | `--coverage` no Vitest; falha se < 60 % workers / < 70 % APIs críticas      |
 | Testes de migration em staging  | Validar contagem de rows, constraints, índices pós-apply                    |
 

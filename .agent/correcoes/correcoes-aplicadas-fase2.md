@@ -141,5 +141,5 @@ Testar os seguintes fluxos após deploy:
 
 1. **Agendamentos em mobile/touch** - verificar se quickview funciona
 2. **Protocolos dropdown menu** - verificar se ações funcionam
-3. **SOAP form com digitação rápida** - verificar se não há lag/loops
+3. **Observação Livre form com digitação rápida** - verificar se não há lag/loops
 4. **Console do navegador** - verificar se não há avisos React

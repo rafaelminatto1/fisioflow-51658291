@@ -1,4 +1,4 @@
-# SOAP Evolution Style Guide
+# Observação Livre Evolution Style Guide
 
 ## Typography Scale
 
@@ -106,7 +106,7 @@ backgroundColor: `${color}20`;
 - Emoji container: 72x72px circle
 - Value badge: 56x56px circle
 
-### SOAP Field
+### Observação Livre Field
 
 - Badge: 32x32px circle
 - Input border radius: 14px

@@ -41,7 +41,7 @@ All Brazilian competitors (Cliniconect, Ikora, Ninsaúde, EffiClin) offer patien
 
 #### 3. Evolution/Progress Viewing (Read-Only)
 
-- View SOAP evolution summaries (patient-friendly language)
+- View Observação Livre evolution summaries (patient-friendly language)
 - Pain progression charts (from `patient_session_metrics`)
 - Goal status tracking (from `patient_goals`)
 - Biomechanics assessment results

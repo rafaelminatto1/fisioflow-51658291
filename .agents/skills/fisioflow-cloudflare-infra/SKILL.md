@@ -196,7 +196,7 @@ await env.MEDIA_BUCKET.put(key, audioBuffer, {
 ```typescript
 import { rateLimit } from "./middleware/rateLimit";
 
-app.post("/api/ai/soap", rateLimit({ limit: 50, windowSeconds: 3600, endpoint: "ai" }), handler);
+app.post("/api/ai/observacao", rateLimit({ limit: 50, windowSeconds: 3600, endpoint: "ai" }), handler);
 
 app.post(
   "/api/auth/login",
@@ -437,7 +437,7 @@ Binding: `WORKFLOW_NFSE`, Class: `NFSeWorkflow`
 File: `src/workflows/nfseWorkflow.ts`
 
 1. Generate RPS XML (ABRASF standard, Sao Paulo municipality code 3550308)
-2. POST to prefeitura SOAP endpoint
+2. POST to prefeitura Observação Livre endpoint
 3. Parse response for NFS-e number and protocol
 4. Update `nfse` table status
 5. If processing → `waitForEvent('nfse-confirmation', timeout: '30 minutes')`
@@ -542,8 +542,8 @@ const response = await runAi(env, model, input, { cache: true, cacheTtl: 3600 })
 | ------------------------------------------ | -------------------------------------------------------------------------- | ----- |
 | `@cf/deepgram/nova-3`                      | Audio transcription (pt-BR), fallback: `@cf/openai/whisper-large-v3-turbo` | Never |
 | `@cf/deepgram/aura-2-es`                   | Text-to-speech for exercise audio                                          | 24h   |
-| `@cf/meta/llama-3.3-70b-instruct-fp8-fast` | Clinical note summarization, SOAP notes                                    | Never |
-| `@cf/meta/llama-3.1-8b-instruct`           | Fast SOAP suggestions, retention drafts                                    | Never |
+| `@cf/meta/llama-3.3-70b-instruct-fp8-fast` | Clinical note summarization, Observação Livre notes                                    | Never |
+| `@cf/meta/llama-3.1-8b-instruct`           | Fast Observação Livre suggestions, retention drafts                                    | Never |
 | `@cf/meta/llama-4-scout-17b-16e-instruct`  | Clinical image analysis (multimodal vision)                                | Never |
 | `@cf/meta/llama-guard-3-8b`                | Content moderation                                                         | 5min  |
 | `@cf/baai/bge-base-en-v1.5`                | Text embeddings for Vectorize                                              | 24h   |

@@ -13,7 +13,7 @@ Evolução tecnológica do FisioFlow com foco em:
 - **Evolução clínica por voz** (GLM-ASR + LLM)
 - **Visão multimodal** (GLM-5V-Turbo para fotos de postura, exames)
 - **toMarkdown** para documentos clínicos (RAG)
-- **NFSe São Paulo** via webservice SOAP direto da prefeitura
+- **NFSe São Paulo** via webservice Observação Livre direto da prefeitura
 - **Quick Actions PDF** (Browser Run sem Puppeteer)
 
 ---
@@ -49,7 +49,7 @@ Evolução tecnológica do FisioFlow com foco em:
 ### Fluxo AI Gateway
 
 ```
-callAI({ model: 'glm-4.7-flash', task: 'soap' })
+callAI({ model: 'glm-4.7-flash', task: 'observacao' })
   → AI Gateway (cache + rate limit + analytics)
     → Z.AI API (GLM-4.7-Flash, GRÁTIS)
     → Fallback 1: Workers AI (Llama 3.3 70B, GRÁTIS)
@@ -99,7 +99,7 @@ O AI Gateway é **GRÁTIS** (incluído no Workers Paid) e fica entre o Worker e 
 
 ### Economia com Cache
 
-- Templates SOAP repetidos → cache hit instantâneo ($0)
+- Templates Observação Livre repetidos → cache hit instantâneo ($0)
 - Perguntas frequentes do chat → cache hit ($0)
 - Relatórios padrão → cache hit ($0)
 - **Economia estimada: 30-50% do custo mensal de IA**
@@ -209,7 +209,7 @@ INSERT INTO ai_models VALUES
 | --- | --------------------------------- | ------- |
 | 4.1 | POST /api/ai/transcribe (GLM-ASR) | 4h      |
 | 4.2 | POST /api/ai/evolution/voice      | 1 dia   |
-| 4.3 | Pipeline: áudio → texto → SOAP    | 4h      |
+| 4.3 | Pipeline: áudio → texto → Observação Livre    | 4h      |
 | 4.4 | Frontend: botão gravar            | 1 dia   |
 | 4.5 | Mobile (Expo)                     | 1 dia   |
 | 4.6 | Fallback chain voz                | 4h      |
@@ -231,7 +231,7 @@ INSERT INTO ai_models VALUES
 | --- | ------------------------------ | ------- |
 | 6.1 | Instalar `fast-xml-parser`     | 30min   |
 | 6.2 | rpsBuilder.ts (XML ABRASF v2)  | 1 dia   |
-| 6.3 | nfseSPClient.ts (SOAP)         | 1 dia   |
+| 6.3 | nfseSPClient.ts (Observação Livre)         | 1 dia   |
 | 6.4 | Reescrever nfseWorkflow.ts     | 4h      |
 | 6.5 | Unificar schema → nfse_records | 4h      |
 | 6.6 | DANFSe via Quick Actions       | 4h      |
@@ -254,7 +254,7 @@ INSERT INTO ai_models VALUES
 
 | Item                                | Volume/mês        | Custo          |
 | ----------------------------------- | ----------------- | -------------- |
-| GLM-4.7-Flash (chat, SOAP, análise) | ~50K requests     | **$0**         |
+| GLM-4.7-Flash (chat, Observação Livre, análise) | ~50K requests     | **$0**         |
 | Workers AI (Whisper, embeddings)    | incluído          | **$0**         |
 | GLM-ASR (voz)                       | ~200 transcrições | **~$0.50**     |
 | GLM-5V-Turbo (visão)                | ~100 análises     | **~$3**        |
@@ -331,7 +331,7 @@ O Cloudflare Workers Paid é **10x mais barato** que qualquer alternativa equiva
 | Funcionalidade      | Modelo Padrão           | Quando Trocar                   |
 | ------------------- | ----------------------- | ------------------------------- |
 | Chat IA geral       | GLM-4.7-Flash (grátis)  | GLM-5.1 para análises complexas |
-| Evolução SOAP       | GLM-4.7-Flash (grátis)  | GLM-5.1 para thinking mode      |
+| Evolução Observação Livre       | GLM-4.7-Flash (grátis)  | GLM-5.1 para thinking mode      |
 | Transcrição voz     | GLM-ASR-2512            | Whisper (fallback edge)         |
 | Análise visual      | GLM-5V-Turbo            | —                               |
 | Relatórios premium  | GLM-4.7-Flash (grátis)  | GLM-5.1 para mais profundidade  |
