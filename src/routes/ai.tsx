@@ -12,9 +12,6 @@ import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { patientsApi } from "@/api/v2";
 import { PatientHelpers } from "@/types";
 
-// Lazy loads - AI Features
-const IAStudio = lazy(() => import(/* webpackChunkName: "ia-studio" */ "@/pages/IAStudio"));
-const AIHub = lazy(() => import(/* webpackChunkName: "ai-hub" */ "@/pages/AIHub"));
 const IntelligenceHub = lazy(
   () => import(/* webpackChunkName: "intelligence-hub" */ "@/pages/IntelligenceHub"),
 );
@@ -84,24 +81,8 @@ function IntelligentReportsRoute() {
 
 export const aiRoutes = (
   <>
-    {/* IA Studio Central */}
-    <Route
-      path="/ia-studio"
-      element={
-        <ProtectedRoute>
-          <IAStudio />
-        </ProtectedRoute>
-      }
-    />
-
-    <Route
-      path="/ai-hub"
-      element={
-        <ProtectedRoute>
-          <AIHub />
-        </ProtectedRoute>
-      }
-    />
+    <Route path="/ia-studio" element={<Navigate to="/inteligencia?tab=studio" replace />} />
+    <Route path="/ai-hub" element={<Navigate to="/inteligencia?tab=analytics" replace />} />
 
     {/* Intelligence Hub & Legacy Redirects */}
     <Route
@@ -114,10 +95,10 @@ export const aiRoutes = (
         </RouteErrorBoundary>
       }
     />
-    <Route path="/smart-dashboard" element={<Navigate to="/inteligencia?tab=clinica" replace />} />
-    <Route path="/smart-ai" element={<Navigate to="/inteligencia?tab=ai" replace />} />
-    <Route path="/analytics" element={<Navigate to="/inteligencia?tab=analise" replace />} />
-    <Route path="/bi" element={<Navigate to="/inteligencia?tab=analise" replace />} />
+    <Route path="/smart-dashboard" element={<Navigate to="/inteligencia?tab=overview" replace />} />
+    <Route path="/smart-ai" element={<Navigate to="/inteligencia?tab=assistant" replace />} />
+    <Route path="/analytics" element={<Navigate to="/inteligencia?tab=analytics" replace />} />
+    <Route path="/bi" element={<Navigate to="/inteligencia?tab=analytics" replace />} />
 
     {/* Google AI Suite */}
     <Route

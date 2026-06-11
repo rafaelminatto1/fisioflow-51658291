@@ -11,7 +11,8 @@ export const APP_ROUTES = {
   SETTINGS: "/profile",
   EVENTS: "/eventos",
   TASKS: "/tarefas",
-  IA_STUDIO: "/ia-studio",
+  IA_STUDIO: "/inteligencia?tab=studio",
+  INTELLIGENCE: "/inteligencia",
 } as const;
 
 export const patientRoutes = {

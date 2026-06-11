@@ -211,7 +211,7 @@ export const DraggableAptCard = ({
     });
 
   const twoFingerTap = Gesture.Tap()
-    .numberOfPointers(2)
+    .minPointers(2)
     .maxDuration(500)
     .onEnd(() => {
       if (onTwoFingerTap) {
