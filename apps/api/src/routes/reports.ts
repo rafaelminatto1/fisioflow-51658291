@@ -411,7 +411,14 @@ app.get("/chart", requireAuth, async (c) => {
     },
   };
 
-  const url = \`https://quickchart.io/chart?c=\${encodeURIComponent(JSON.stringify(chartConfig))}&w=500&h=300&bkg=white\`;
+  const baseUrl = "https://quickchart.io/chart";
+  const params = new URLSearchParams({
+    c: JSON.stringify(chartConfig),
+    w: "500",
+    h: "300",
+    bkg: "white",
+  });
+  const url = `${baseUrl}?${params.toString()}`;
 
   try {
     const response = await fetch(url);
