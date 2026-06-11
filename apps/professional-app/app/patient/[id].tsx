@@ -29,6 +29,7 @@ import { PainProgressChart } from "@/components/patient/PainProgressChart";
 import { CloudReportActions } from "@/components/patient/CloudReportActions";
 import { SemanticRecommenderMobileWidget } from "@/components/patient/SemanticRecommenderMobileWidget";
 import { WearablesSummaryWidget } from "@/components/patient/WearablesSummaryWidget";
+import { FisioFlowBrainWidget } from "@/components/ai/FisioFlowBrainWidget";
 import { generateEvolutionPDF } from "@/lib/services/pdfGenerator";
 import {
   usePatientFinancialRecords,
@@ -405,6 +406,7 @@ export default function PatientDetailScreen() {
         {selectedTab === "info" && (
           <>
             <View style={styles.infoSection}>
+              <FisioFlowBrainWidget patientId={id as string} />
               <PainProgressChart evolutions={evolutions} />
               {/* Personal Information */}
               <Card

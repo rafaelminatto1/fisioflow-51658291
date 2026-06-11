@@ -122,6 +122,36 @@ export class PatientAgent extends Agent<Env, RetentionState> {
     }
   }
 
+  /**
+   * Consulta o Brain sobre o caso clínico
+   */
+  @callable()
+  async consultBrain(params: { question: string; historyContext: any }) {
+    try {
+      const response = await this.env.AI.run(WORKERS_AI_MODELS.llama_3_1_8b, {
+        messages: [
+          {
+            role: "system",
+            content: `Você é o FisioFlow Brain, assistente especializado em fisioterapia. 
+            Responda de forma técnica, baseada em evidências e focada na reabilitação do paciente.
+            Contexto Clínico: ${JSON.stringify(params.historyContext)}`,
+          },
+          {
+            role: "user",
+            content: params.question,
+          },
+        ],
+        max_tokens: 1000,
+        temperature: 0.3,
+      });
+
+      return { answer: response.response };
+    } catch (error) {
+      console.error("[Brain/DO] Consult failed:", error);
+      throw error;
+    }
+  }
+
   @callable()
   async dismissAction() {
     this.setState({
