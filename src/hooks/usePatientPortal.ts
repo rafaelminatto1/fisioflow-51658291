@@ -40,20 +40,51 @@ export function usePortalExercises() {
   });
 
   const complete = useMutation({
-    mutationFn: ({
+    mutationFn: async ({
       assignmentId,
       data,
     }: {
       assignmentId: string;
       data: { sets_done?: number; reps_done?: number; pain_level?: number; notes?: string };
-    }) => patientPortalApi.completeExercise(assignmentId, data),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: KEYS.exercises });
+    }) => {
+      if (typeof navigator !== "undefined" && !navigator.onLine) {
+        try {
+          const storage = typeof window !== "undefined" ? window.localStorage : null;
+          if (storage) {
+            const queue = JSON.parse(storage.getItem("fisioflow_offline_exercises") || "[]");
+            queue.push({ assignmentId, data, timestamp: Date.now() });
+            storage.setItem("fisioflow_offline_exercises", JSON.stringify(queue));
+          }
+        } catch(e) {}
+        return { offline: true };
+      }
+      return patientPortalApi.completeExercise(assignmentId, data);
+    },
+    onMutate: async ({ assignmentId, data }) => {
+      await qc.cancelQueries({ queryKey: KEYS.exercises });
+      const prev = qc.getQueryData(KEYS.exercises);
+      qc.setQueryData(KEYS.exercises, (old: any) => {
+        if (!old || !Array.isArray(old)) return old;
+        return old.map((ex: any) => ex.id === assignmentId ? { ...ex, completed_today: true, ...data } : ex);
+      });
+      return { prev };
+    },
+    onSuccess: (data) => {
+      if (data && (data as any).offline) {
+        toast({ title: "Salvo offline", description: "O exercício será sincronizado quando houver conexão. 💪" });
+      } else {
+        toast({ title: "Exercício registrado!", description: "Continue assim! 💪 Você ganhou XP!" });
+      }
       qc.invalidateQueries({ queryKey: KEYS.progress });
       qc.invalidateQueries({ queryKey: KEYS.stats });
-      toast({ title: "Exercício registrado!", description: "Continue assim! 💪" });
     },
-    onError: () => toast({ title: "Erro ao registrar exercício", variant: "destructive" }),
+    onError: (err, vars, context) => {
+      if (context?.prev) qc.setQueryData(KEYS.exercises, context.prev);
+      toast({ title: "Erro ao registrar exercício", variant: "destructive" });
+    },
+    onSettled: () => {
+      qc.invalidateQueries({ queryKey: KEYS.exercises });
+    }
   });
 
   return { ...query, complete };
