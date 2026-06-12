@@ -58,9 +58,9 @@ binding = "ANALYTICS"
 dataset = "fisioflow_events"
 
 # ===== AI SEARCH =====
-[[ai_search]]
-binding = "AI_SEARCH"
-instance_name = "fisioflow-rag"
+# [[ai_search]]
+# binding = "AI_SEARCH"
+# instance_name = "fisioflow-rag"
 
 # ===== AGENT MEMORY (PRIVATE BETA) =====
 # Conta ainda nao liberada no beta: wrangler retorna Not allowed [10018].
@@ -270,8 +270,8 @@ binding = "ANALYTICS"
 dataset = "fisioflow_events"
 
 # [[env.production.ai_search]]
-# binding = "AI_SEARCH"
-# instance_name = "fisioflow-rag"
+# # binding = "AI_SEARCH"
+# instance_name = "ai-search-fisioflow-rag"
 
 # [[env.production.agent_memory]]
 # binding = "AGENT_MEMORY"
