@@ -136,6 +136,33 @@ aiSearchApp.post("/ask", requireAuth, async (c) => {
   }
 });
 
+// ─── Sugestões contextuais (retrieval-only, sem geração — barato) ────────────
+
+aiSearchApp.post("/suggest", requireAuth, async (c) => {
+  const user = c.get("user");
+  if (!isInternalRole(user.role)) {
+    return c.json({ error: "Acesso restrito a profissionais da clínica" }, 403);
+  }
+  if (!c.env.AI_SEARCH) return c.json({ data: [] });
+
+  const body = (await c.req.json().catch(() => ({}))) as Record<string, unknown>;
+  const text = String(body.text ?? "").trim();
+  if (text.length < 12) return c.json({ data: [] });
+
+  try {
+    const { sources } = await searchAiSearch(c.env, {
+      query: text.slice(-1500),
+      maxNumResults: 5,
+      matchThreshold: ASK_MATCH_THRESHOLD,
+      rewrite: false,
+    });
+    return c.json({ data: mapAskSources(sources, ASK_MATCH_THRESHOLD) });
+  } catch (error) {
+    console.error("[AI Search] suggest error:", error);
+    return c.json({ data: [] });
+  }
+});
+
 // ─── Listar documentos (via CF REST API) ─────────────────────────────────────
 
 aiSearchApp.get("/items", requireAuth, async (c) => {

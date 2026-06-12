@@ -72,4 +72,59 @@ app.get("/business-kpis", async (c) => {
   return c.json({ data: metrics[0] || null });
 });
 
+/**
+ * GET /wiki-gaps
+ * Perguntas que a busca da wiki não conseguiu responder (últimos 30 dias),
+ * agregadas a partir dos eventos wiki_search_miss no Analytics Engine.
+ */
+app.get("/wiki-gaps", async (c) => {
+  const user = c.get("user");
+  if (!["admin", "owner"].includes(String(user.role ?? ""))) {
+    return c.json({ error: "Acesso restrito a administradores" }, 403);
+  }
+  if (!c.env.CF_API_TOKEN) {
+    return c.json({ data: [], warning: "CF_API_TOKEN não configurado" });
+  }
+
+  const accountId = c.env.CF_ACCOUNT_ID ?? "32156f9a72a32d1ece28ab74bcd398fb";
+  const sqlQuery = `SELECT
+      blob5 AS query,
+      count() AS misses,
+      max(timestamp) AS last_seen
+    FROM fisioflow_events
+    WHERE blob4 IN ('wiki_search_miss', 'patient_assistant_query')
+      AND blob5 != ''
+      AND blob3 = '${String(user.organizationId).replace(/'/g, "")}'
+      AND timestamp > NOW() - INTERVAL '30' DAY
+    GROUP BY blob5
+    ORDER BY misses DESC
+    LIMIT 25`;
+
+  try {
+    const r = await fetch(
+      `https://api.cloudflare.com/client/v4/accounts/${accountId}/analytics_engine/sql`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${c.env.CF_API_TOKEN}`,
+          "Content-Type": "text/plain",
+        },
+        body: sqlQuery,
+      },
+    );
+    if (!r.ok) {
+      const text = await r.text().catch(() => "");
+      console.error("[wiki-gaps] Analytics Engine error:", r.status, text.slice(0, 200));
+      return c.json({ data: [], warning: `Analytics Engine ${r.status}` });
+    }
+    const json = (await r.json()) as {
+      data?: Array<{ query: string; misses: number; last_seen: string }>;
+    };
+    return c.json({ data: json.data ?? [] });
+  } catch (error) {
+    console.error("[wiki-gaps] error:", error);
+    return c.json({ data: [], warning: "Falha ao consultar Analytics Engine" });
+  }
+});
+
 export { app as analyticsRoutes };
