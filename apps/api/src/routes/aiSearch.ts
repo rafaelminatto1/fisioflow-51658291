@@ -2,6 +2,10 @@ import { Hono } from "hono";
 import type { Env } from "../types/env";
 import { requireAuth, type AuthVariables } from "../lib/auth";
 import { createPool } from "../lib/db";
+import {
+  chatAiSearch,
+  searchAiSearch,
+} from "../lib/cloudflareAiSearch";
 
 const AUTORAG_NAME = "fisioflow-rag";
 
@@ -14,11 +18,31 @@ aiSearchApp.post("/", requireAuth, async (c) => {
   const query = String(body.query ?? "").trim();
   if (!query) return c.json({ error: "query é obrigatória" }, 400);
 
-  if (typeof c.env.AI?.autorag !== "function") {
-    return c.json({ error: "AutoRAG não disponível neste ambiente" }, 503);
+  if (!c.env.AI_SEARCH && typeof c.env.AI?.autorag !== "function") {
+    return c.json({ error: "AI Search não disponível neste ambiente" }, 503);
   }
 
   try {
+    if (c.env.AI_SEARCH) {
+      const answer = await chatAiSearch(c.env, {
+        messages: [
+          {
+            role: "system",
+            content:
+              "Você é um assistente clínico da FisioFlow. Responda em Português do Brasil com base na wiki, protocolos e exercícios indexados.",
+          },
+          { role: "user", content: query },
+        ],
+        maxNumResults: 5,
+        matchThreshold: 0.25,
+      });
+      return c.json({
+        response: answer.answer,
+        sources: answer.sources,
+        raw: answer.raw,
+      });
+    }
+
     const rag = c.env.AI.autorag(AUTORAG_NAME);
     const answer = await rag.aiSearch({
       query,
@@ -31,7 +55,7 @@ aiSearchApp.post("/", requireAuth, async (c) => {
     });
     return c.json(answer);
   } catch (error: any) {
-    console.error("[AutoRAG] search error:", error);
+    console.error("[AI Search] search error:", error);
     return c.json({ error: "Falha na busca com IA", details: error.message }, 500);
   }
 });
@@ -39,6 +63,13 @@ aiSearchApp.post("/", requireAuth, async (c) => {
 // ─── Listar documentos (via CF REST API) ─────────────────────────────────────
 
 aiSearchApp.get("/items", requireAuth, async (c) => {
+  if (c.env.AI_SEARCH) {
+    const data = await c.env.AI_SEARCH.items.list({
+      per_page: Math.min(100, Math.max(1, Number(c.req.query("limit") ?? 50))),
+    });
+    return c.json(data);
+  }
+
   const api = getCfApi(c.env);
   if (!api) return c.json({ error: "CF_API_TOKEN e CF_ACCOUNT_ID são necessários" }, 503);
 
@@ -50,13 +81,22 @@ aiSearchApp.get("/items", requireAuth, async (c) => {
 // ─── Upload manual de conteúdo markdown/texto ────────────────────────────────
 
 aiSearchApp.post("/items/upload", requireAuth, async (c) => {
-  const api = getCfApi(c.env);
-  if (!api) return c.json({ error: "CF_API_TOKEN e CF_ACCOUNT_ID são necessários" }, 503);
-
   const body = (await c.req.json().catch(() => ({}))) as Record<string, unknown>;
   const filename = String(body.filename ?? `doc-${Date.now()}.md`);
   const content = String(body.content ?? "").trim();
   if (!content) return c.json({ error: "content é obrigatório" }, 400);
+
+  if (c.env.AI_SEARCH) {
+    const metadata =
+      body.metadata && typeof body.metadata === "object" && !Array.isArray(body.metadata)
+        ? (body.metadata as Record<string, unknown>)
+        : {};
+    const data = await c.env.AI_SEARCH.items.upload(filename, content, { metadata });
+    return c.json(data, 201);
+  }
+
+  const api = getCfApi(c.env);
+  if (!api) return c.json({ error: "CF_API_TOKEN e CF_ACCOUNT_ID são necessários" }, 503);
 
   const form = new FormData();
   form.append("file", new Blob([content], { type: "text/markdown" }), filename);
@@ -69,6 +109,11 @@ aiSearchApp.post("/items/upload", requireAuth, async (c) => {
 // ─── Deletar documento ────────────────────────────────────────────────────────
 
 aiSearchApp.delete("/items/:id", requireAuth, async (c) => {
+  if (c.env.AI_SEARCH) {
+    await c.env.AI_SEARCH.items.delete(c.req.param("id"));
+    return c.json({ deleted: true });
+  }
+
   const api = getCfApi(c.env);
   if (!api) return c.json({ error: "CF_API_TOKEN e CF_ACCOUNT_ID são necessários" }, 503);
 
@@ -87,7 +132,9 @@ export async function syncAutoRAGContent(
   types: Array<"exercises" | "protocols" | "wiki"> = ["exercises", "protocols", "wiki"],
 ): Promise<Record<string, number>> {
   const api = getCfApi(env);
-  if (!api) throw new Error("CF_API_TOKEN e CF_ACCOUNT_ID são necessários para AutoRAG sync");
+  if (!env.AI_SEARCH && !api) {
+    throw new Error("AI_SEARCH ou CF_API_TOKEN e CF_ACCOUNT_ID são necessários para AI Search sync");
+  }
 
   const pool = createPool(env);
   const results: Record<string, number> = {};
@@ -107,6 +154,11 @@ export async function syncAutoRAGContent(
         indexed_at: new Date().toISOString(),
         content_hash: hashHex
     };
+
+    if (env.AI_SEARCH) {
+      await env.AI_SEARCH.items.upload(filename, markdown, { metadata: finalMetadata });
+      return;
+    }
 
     const form = new FormData();
     form.append("file", new Blob([markdown], { type: "text/markdown" }), filename);
@@ -144,7 +196,7 @@ export async function syncAutoRAGContent(
         res.rows
           .slice(i, i + 5)
           .map((row) => uploadDoc(`exercise-${row.id}.md`, buildExerciseDoc(row), {
-              source: "exercise",
+              source: "exercises",
               id: row.id,
               title: row.name,
               category: row.category
@@ -179,7 +231,7 @@ export async function syncAutoRAGContent(
         res.rows
           .slice(i, i + 5)
           .map((row) => uploadDoc(`protocol-${row.id}.md`, buildProtocolDoc(row), {
-              source: "protocol",
+              source: "protocols",
               id: row.id,
               title: row.name,
               condition: row.condition_name
@@ -241,18 +293,18 @@ aiSearchApp.get("/exercises", requireAuth, async (c) => {
   if (!query) return c.json({ error: "query é obrigatória" }, 400);
 
   try {
-    const aiResults = await c.env.AI_SEARCH.search({
+    const { sources } = await searchAiSearch(c.env, {
       messages: [
         { role: "system", content: "Você é um dicionário clínico de fisioterapia. Ajude a encontrar exercícios clínicos relevantes." },
         { role: "user", content: query },
       ],
-      limit: 10,
+      maxNumResults: 10,
       filters: { source: "exercises" },
     });
 
     return c.json({
       query,
-      data: aiResults.sources.map((s) => ({
+      data: sources.map((s) => ({
         id: s.id,
         score: s.score ?? 1,
         name: s.filename,
@@ -277,20 +329,20 @@ aiSearchApp.get("/recommend", requireAuth, async (c) => {
 
     // Busca Wiki e Exercícios em paralelo no AI Search
     const [wikiRes, exerciseRes] = await Promise.all([
-      c.env.AI_SEARCH.search({
+      searchAiSearch(c.env, {
         messages: [
           { role: "system", content: "Find clinical protocols and guides for this condition." },
           { role: "user", content: condition },
         ],
-        limit: 3,
+        maxNumResults: 3,
         filters: { source: "wiki" },
       }),
-      c.env.AI_SEARCH.search({
+      searchAiSearch(c.env, {
         messages: [
           { role: "system", content: "Find relevant therapeutic exercises for this condition." },
           { role: "user", content: condition },
         ],
-        limit: 5,
+        maxNumResults: 5,
         filters: { source: "exercises" },
       }),
     ]).catch(err => {
@@ -301,13 +353,13 @@ aiSearchApp.get("/recommend", requireAuth, async (c) => {
     return c.json({
       condition,
       recommendations: {
-        protocols: (wikiRes.sources || []).map((s) => ({
+        protocols: wikiRes.sources.map((s) => ({
           id: s.id,
           score: s.score ?? 1,
           title: s.filename,
           ...s.metadata,
         })),
-        exercises: (exerciseRes.sources || []).map((s) => ({
+        exercises: exerciseRes.sources.map((s) => ({
           id: s.id,
           score: s.score ?? 1,
           name: s.filename,
@@ -350,12 +402,12 @@ aiSearchApp.get("/unified", requireAuth, async (c) => {
 
     // Buscar no AI Search e Neon
     const [aiSearchRes, patientMatches] = await Promise.all([
-      c.env.AI_SEARCH.search({
+      searchAiSearch(c.env, {
         messages: [
           { role: "system", content: "You are a clinical unified search assistant." },
           { role: "user", content: query },
         ],
-        limit: 8,
+        maxNumResults: 8,
       }),
       (async () => {
         const { getRawSql } = await import("../lib/db");
@@ -423,12 +475,12 @@ aiSearchApp.get("/education", async (c) => {
     // 2. Buscar conteúdo relevante na Wiki via AI Search
     const query = `dicas de saúde e orientações para ${patient.condition} ${patient.diagnosis}`;
     
-    const wikiRes = await c.env.AI_SEARCH.search({
+    const wikiRes = await searchAiSearch(c.env, {
       messages: [
         { role: "system", content: "Find clinical guides and advice for patients." },
         { role: "user", content: query },
       ],
-      limit: 2,
+      maxNumResults: 2,
       filters: { source: "wiki" },
     });
 

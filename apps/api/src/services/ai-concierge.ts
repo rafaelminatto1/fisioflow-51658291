@@ -1,6 +1,7 @@
 import { Env } from "../types/env";
 import { runAi } from "../lib/ai-native";
 import { WORKERS_AI_MODELS } from "../lib/workersAi";
+import { searchAiSearch } from "../lib/cloudflareAiSearch";
 
 export interface ConciergeResponse {
   reply: string;
@@ -28,12 +29,12 @@ export class AIConciergeService {
     let clinicalContext = "";
     try {
       if (env.AI_SEARCH) {
-        const aiResults = await env.AI_SEARCH.search({
+        const aiResults = await searchAiSearch(env, {
           messages: [
             { role: "system", content: "You are a physiotherapy knowledge assistant." },
             { role: "user", content: message },
           ],
-          limit: 2,
+          maxNumResults: 2,
           filters: { source: "wiki" },
         });
         clinicalContext = aiResults.sources.map((s) => `${s.filename}: ${s.content}`).join("\n\n");

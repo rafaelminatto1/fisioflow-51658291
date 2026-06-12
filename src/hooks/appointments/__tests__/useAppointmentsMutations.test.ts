@@ -133,8 +133,8 @@ describe("useCreateAppointment", () => {
       wrapper: makeWrapper(queryClient),
     });
 
-    await act(async () => {
-      const mutationPromise = result.current.mutateAsync({
+    act(() => {
+      result.current.mutate({
         patient_id: "p1",
         patient_name: "Paciente Teste",
         appointment_date: new Date().toISOString(),
@@ -143,17 +143,14 @@ describe("useCreateAppointment", () => {
         type: "Fisioterapia",
         status: "scheduled",
       } as any);
-
-      // Espera um pouco para o onMutate rodar (que é async)
-      await waitFor(() => {
-        const cacheData = queryClient.getQueryData<any>(["appointments_v2", "list", "org-001"]);
-        expect(cacheData?.data?.some((a: any) => a.id?.startsWith("temp-"))).toBe(true);
-      });
-
-      await mutationPromise;
     });
 
-    expect(result.current.isSuccess).toBe(true);
+    // O onMutate roda imediatamente (síncrono)
+    const cacheData = queryClient.getQueryData<any>(["appointments_v2", "list", "org-001"]);
+    expect(cacheData?.data?.some((a: any) => a.id?.startsWith("temp-"))).toBe(true);
+
+    // Espera a mutação completar com sucesso
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
   });
 
   it("faz rollback ao erro", async () => {
@@ -174,10 +171,14 @@ describe("useCreateAppointment", () => {
     });
 
     await act(async () => {
-      result.current.mutate({
-        patient_id: "p1",
-        appointment_date: new Date().toISOString(),
-      } as any);
+      try {
+        await result.current.mutateAsync({
+          patient_id: "p1",
+          appointment_date: new Date().toISOString(),
+        } as any);
+      } catch (e) {
+        // catch mocked error to avoid unhandled rejection
+      }
     });
 
     await waitFor(() => expect(result.current.isError).toBe(true));

@@ -96,6 +96,7 @@ import { triggerDigitalTwinRoutes } from "./routes/admin/trigger-digital-twin";
 import { triggerSessionArchiveRoutes } from "./routes/admin/trigger-session-archive";
 import { sloMetricsRoutes } from "./routes/admin/slo-metrics";
 import { dlqReplayRoutes } from "./routes/admin/dlq-replay";
+import { cloudflareControlRoutes } from "./routes/admin/cloudflare-control";
 import { searchRoutes } from "./routes/search";
 import { reportsPdfRoutes } from "./routes/reportsPdf";
 import { eventsRoutes as businessEventsRoutes } from "./routes/events";
@@ -105,6 +106,8 @@ import { aiConfigRoutes } from "./routes/ai-config";
 import { aiClinicalSearchRoutes } from "./routes/ai-clinical-search";
 import { agendaAppearanceRoutes } from "./routes/agendaAppearance";
 import { fisioBrainRoutes } from "./routes/fisiobrain";
+import { agentMemoryRoutes } from "./routes/agentMemory";
+import { cloudflareAnalyticsRoutes } from "./routes/cloudflareAnalytics";
 import { clinicMetricsRoutes } from "./routes/clinicMetrics";
 import { enterpriseRoutes } from "./routes/enterprise-bi";
 import { aiInsightsRoutes } from "./routes/ai-insights";
@@ -281,6 +284,7 @@ const apiRoutes = [
   ["/api/ai-trigger-dt", triggerDigitalTwinRoutes],
   ["/api/admin/trigger-session-archive", triggerSessionArchiveRoutes],
   ["/api/admin/slo-metrics", sloMetricsRoutes],
+  ["/api/admin/cloudflare-control", cloudflareControlRoutes],
   ["/api/ai-clinical-search", aiClinicalSearchRoutes],
   ["/api/exercises", exercisesRoutes],
   ["/api/protocols", protocolsRoutes],
@@ -381,6 +385,8 @@ const apiRoutes = [
   ["/api/ai-clinical-search", aiClinicalSearchRoutes],
   ["/api/v1/user", agendaAppearanceRoutes],
   ["/api/fisiobrain", fisioBrainRoutes],
+  ["/api/agent-memory", agentMemoryRoutes],
+  ["/api/cloudflare-analytics", cloudflareAnalyticsRoutes],
   ["/api/ai-insights", aiInsightsRoutes],
   ["/api/lgpd", lgpdRoutes],
   ["/api/clinic-metrics", clinicMetricsRoutes],

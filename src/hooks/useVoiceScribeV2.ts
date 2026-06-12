@@ -1,11 +1,14 @@
 import { useEffect, useMemo } from "react";
 import { useVoiceAgent } from "@cloudflare/voice/react";
+import type { AudioCaptureMode, AudioCaptureReason } from "@fisioflow/core";
 
 export interface UseVoiceScribeV2Options {
   organizationId: string;
   patientId: string;
   therapistId: string;
   section?: "S" | "O" | "A" | "P";
+  captureMode?: AudioCaptureMode;
+  captureReason?: AudioCaptureReason;
   /** Persiste a mesma instância DO entre reloads. Default: `${patientId}:${section}`. */
   sessionName?: string;
   /** Override do host. Default: `VITE_WORKERS_API_URL` (sem `https://`). */
@@ -39,6 +42,8 @@ export function useVoiceScribeV2(opts: UseVoiceScribeV2Options) {
       patientId: opts.patientId,
       therapistId: opts.therapistId,
       section: opts.section ?? "S",
+      captureMode: opts.captureMode ?? 30,
+      captureReason: opts.captureReason ?? "soap_section",
     });
   }, [
     voice.connected,
@@ -47,6 +52,8 @@ export function useVoiceScribeV2(opts: UseVoiceScribeV2Options) {
     opts.patientId,
     opts.therapistId,
     opts.section,
+    opts.captureMode,
+    opts.captureReason,
   ]);
 
   const transcribedText = useMemo(

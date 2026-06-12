@@ -4,6 +4,7 @@ import type { Env } from "../types/env";
 import { generateEmbedding, generateTurboSketch, parseTurboSketch } from "../lib/ai-native";
 import { createPool } from "../lib/db";
 import { TurboQuant } from "@fisioflow/core";
+import { searchAiSearch } from "../lib/cloudflareAiSearch";
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
@@ -28,17 +29,17 @@ app.get("/", requireAuth, async (c) => {
   // Tenta AI Search primeiro (gerenciado RAG)
   if (c.env.AI_SEARCH) {
     try {
-      const aiResults = await c.env.AI_SEARCH.search({
+      const { sources } = await searchAiSearch(c.env, {
         messages: [
           { role: "system", content: "You are a physiotherapy knowledge assistant." },
           { role: "user", content: q },
         ],
-        limit: limitNum,
+        maxNumResults: limitNum,
         ...(type !== "all" ? { filters: { source: type } } : {}),
       });
 
       return c.json({
-        results: aiResults.sources.map((r) => ({
+        results: sources.map((r) => ({
           id: r.id,
           score: r.score ?? 1,
           content: r.content,

@@ -4,6 +4,13 @@ export interface ScribeProcessResponse {
   success: boolean;
   rawText: string;
   formattedText: string;
+  capturePolicy?: {
+    captureMode: 0 | 30 | 50 | 100;
+    captureReason: "evaluation" | "measurement" | "clinical_test" | "soap_section" | "full_session";
+    capturedSeconds: number;
+    sessionCoveragePercent: 0 | 30 | 50 | 100;
+    policyVersion: string;
+  };
 }
 
 export interface AtRiskPatient {
@@ -27,10 +34,20 @@ export interface DischargePrediction {
 }
 
 export const iaStudioApi = {
-  processScribeAudio: (patientId: string, section: string, audioBase64: string) =>
+  processScribeAudio: (
+    patientId: string,
+    section: string,
+    audioBase64: string,
+    capture?: {
+      captureMode?: 0 | 30 | 50 | 100;
+      captureReason?: "evaluation" | "measurement" | "clinical_test" | "soap_section" | "full_session";
+      capturedSeconds?: number;
+      sessionCoveragePercent?: 0 | 30 | 50 | 100;
+    },
+  ) =>
     request<ScribeProcessResponse>("/api/ia-studio/scribe/process", {
       method: "POST",
-      body: JSON.stringify({ patientId, section, audioBase64 }),
+      body: JSON.stringify({ patientId, section, audioBase64, ...capture }),
     }),
 
   getAtRiskPatients: () => request<{ data: AtRiskPatient[] }>("/api/ia-studio/retention/at-risk"),

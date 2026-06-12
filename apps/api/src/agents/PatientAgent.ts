@@ -10,6 +10,7 @@ type RetentionState = {
   riskScore: number; // 0-100
   suggestedAction: string | null;
   draftMessage: string | null;
+  pendingClinicalDraft?: unknown;
   status: "monitoring" | "at_risk" | "action_needed" | "recovered";
   settings: {
     autoDraft: boolean;
@@ -125,6 +126,17 @@ export class PatientAgent extends Agent<Env, RetentionState> {
   /**
    * Consulta o Brain sobre o caso clínico
    */
+  /**
+   * Armazena um rascunho clínico (sugestões de exercícios) gerado por IA
+   */
+  @callable()
+  async setPendingClinicalDraft(draft: any) {
+    this.setState({
+      ...this.state,
+      pendingClinicalDraft: draft,
+    });
+  }
+
   @callable()
   async consultBrain(params: { question: string; historyContext: any }) {
     try {

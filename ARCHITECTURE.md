@@ -14,8 +14,10 @@ As diretrizes operacionais e restrições do sistema estão documentadas em [Reg
 | **Storage**     | **Cloudflare R2**        | Armazenamento de mídia (Vídeos/Imagens) via S3 API.               |
 | **Aceleração**  | Cloudflare Hyperdrive    | Pooling de conexões PostgreSQL distribuído na borda.              |
 | **PDF Engine**  | **Browser Rendering**    | Geração de documentos (Alta/Recibos) via Puppeteer nativo.        |
-| **Sync**        | **Background Sync**      | Sincronização offline robusta via IndexedDB (Pro) e AsyncStorage. |
-| **IA Studio**   | **Google/Meta/Vision**   | IA Generativa (Observação Livre) e Visão Computacional (Cinemática).          |
+| Sync         | **Background Sync**      | Sincronização offline robusta via IndexedDB (Pro) e AsyncStorage. |
+| **Vector DB**   | **pgvector (Neon)**      | Armazenamento vetorial para busca semântica e memória clínica.    |
+| **RAG**         | **CF AI Search**         | Recuperação aumentada de literatura científica e protocolos.      |
+| **IA Studio**   | **Google/Meta/Vision**   | IA Generativa (Llama 3.1/Gemini 1.5) e Visão Computacional.       |
 | **Resiliência** | **Geographical DR**      | Backup Neon Branching + R2 Cross-region (SP -> ENAM).             |
 
 ## 📐 Diagrama de Arquitetura

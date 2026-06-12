@@ -1,6 +1,8 @@
 import { Agent } from "agents";
 import { withVoice, WorkersAIFluxSTT, type VoiceTurnContext } from "@cloudflare/voice";
 import type { Env } from "../types/env";
+import { normalizeAudioCapturePolicy, type AudioCaptureMode, type AudioCaptureReason } from "@fisioflow/core";
+import { checkAudioTranscriptionBudget } from "../lib/audioTranscriptionBudget";
 
 const VoiceAgentBase = withVoice(Agent);
 
@@ -9,6 +11,9 @@ type ScribeState = {
   patientId: string | null;
   therapistId: string | null;
   section: "S" | "O" | "A" | "P";
+  captureMode: AudioCaptureMode;
+  captureReason: AudioCaptureReason;
+  budgetBlocked: boolean;
   startedAt: string | null;
   turns: Array<{ text: string; ts: string }>;
 };
@@ -41,6 +46,9 @@ export class VoiceScribeAgent extends VoiceAgentBase<Env, ScribeState> {
     patientId: null,
     therapistId: null,
     section: "S",
+    captureMode: 30,
+    captureReason: "soap_section",
+    budgetBlocked: false,
     startedAt: null,
     turns: [],
   };
@@ -50,16 +58,27 @@ export class VoiceScribeAgent extends VoiceAgentBase<Env, ScribeState> {
     patientId: string;
     therapistId: string;
     section?: "S" | "O" | "A" | "P";
+    captureMode?: AudioCaptureMode;
+    captureReason?: AudioCaptureReason;
   }) {
+    const capturePolicy = normalizeAudioCapturePolicy(input);
+    const budget = await checkAudioTranscriptionBudget(this.env, {
+      organizationId: input.organizationId,
+      professionalUserId: input.therapistId,
+      requestedSeconds: 60,
+    });
     await this.setState({
       ...this.state,
       organizationId: input.organizationId,
       patientId: input.patientId,
       therapistId: input.therapistId,
       section: input.section ?? "S",
+      captureMode: budget.allowed ? capturePolicy.captureMode : 0,
+      captureReason: capturePolicy.captureReason,
+      budgetBlocked: !budget.allowed,
       startedAt: this.state.startedAt ?? new Date().toISOString(),
     });
-    return { ok: true };
+    return { ok: budget.allowed, budget };
   }
 
   /**
@@ -80,6 +99,8 @@ export class VoiceScribeAgent extends VoiceAgentBase<Env, ScribeState> {
         patientId: String(payload.patientId ?? ""),
         therapistId: String(payload.therapistId ?? ""),
         section: payload.section as "S" | "O" | "A" | "P" | undefined,
+        captureMode: payload.captureMode as AudioCaptureMode | undefined,
+        captureReason: payload.captureReason as AudioCaptureReason | undefined,
       });
     } else if (payload.type === "flush") {
       await this.flush();
@@ -88,6 +109,8 @@ export class VoiceScribeAgent extends VoiceAgentBase<Env, ScribeState> {
 
   async onTurn(transcript: string, _context: VoiceTurnContext): Promise<string> {
     const trimmed = transcript.trim();
+    if (this.state.budgetBlocked) return "";
+    if (this.state.captureMode === 0) return "";
     if (!trimmed) return "";
 
     const turn = { text: trimmed, ts: new Date().toISOString() };
@@ -103,6 +126,23 @@ export class VoiceScribeAgent extends VoiceAgentBase<Env, ScribeState> {
     }
 
     const rawText = turns.map((t) => t.text).join(" ");
+    const capturePolicy = normalizeAudioCapturePolicy({
+      captureMode: this.state.captureMode,
+      captureReason: this.state.captureReason,
+      capturedSeconds: this.state.startedAt
+        ? Math.round((Date.now() - new Date(this.state.startedAt).getTime()) / 1000)
+        : 0,
+      sessionCoveragePercent: this.state.captureMode,
+    });
+    const budget = await checkAudioTranscriptionBudget(this.env, {
+      organizationId,
+      professionalUserId: therapistId,
+      requestedSeconds: capturePolicy.capturedSeconds || 60,
+    });
+    if (!budget.allowed) {
+      await this.setState({ ...this.state, turns: [], startedAt: null, budgetBlocked: true });
+      return { ok: false, reason: budget.reason ?? "transcription-budget-exceeded", budget };
+    }
     const url = this.env.NEON_URL || this.env.HYPERDRIVE?.connectionString;
     if (!url) {
       return { ok: false, reason: "no-db-url" };
@@ -112,13 +152,22 @@ export class VoiceScribeAgent extends VoiceAgentBase<Env, ScribeState> {
     const sql = neon(url);
     const [row] = await sql`
       INSERT INTO clinical_scribe_logs
-        (organization_id, patient_id, therapist_id, section, raw_text, consent_source)
+        (
+          organization_id, patient_id, therapist_id, section, raw_text, consent_source,
+          capture_mode, capture_reason, captured_seconds, session_coverage_percent,
+          audio_policy_version, capture_metadata
+        )
       VALUES
-        (${organizationId}, ${patientId}, ${therapistId}, ${section}, ${rawText}, 'voice_scribe_v2')
+        (
+          ${organizationId}, ${patientId}, ${therapistId}, ${section}, ${rawText}, 'voice_scribe_v2',
+          ${capturePolicy.captureMode}, ${capturePolicy.captureReason}, ${capturePolicy.capturedSeconds},
+          ${capturePolicy.sessionCoveragePercent}, ${capturePolicy.policyVersion},
+          ${JSON.stringify({ source: "voice_scribe_v2", turns: turns.length, budget })}::jsonb
+        )
       RETURNING id
     `;
 
-    await this.setState({ ...this.state, turns: [] });
+    await this.setState({ ...this.state, turns: [], startedAt: null });
     return { ok: true, id: row?.id };
   }
 }

@@ -3,6 +3,7 @@ import { createPool } from "../lib/db";
 import { requireAuth, type AuthVariables } from "../lib/auth";
 import type { Env } from "../types/env";
 import { callAI } from "../lib/ai/callAI";
+import { searchAiSearch } from "../lib/cloudflareAiSearch";
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
@@ -228,13 +229,14 @@ app.post("/:id/generate-hep", requireAuth, async (c) => {
   let evidenceRefs: Array<{ title: string; source: string }> = [];
   if (diagnosis && c.env.AI_SEARCH) {
     try {
-      const searchRes = await c.env.AI_SEARCH.search({
+      const searchRes = await searchAiSearch(c.env, {
         messages: [
           { role: "system", content: "You are a physiotherapy evidence search assistant." },
           { role: "user", content: `exercises and protocols for: ${diagnosis}` },
         ],
+        maxNumResults: 5,
       });
-      const sources = (searchRes as any).data || (searchRes as any).sources || [];
+      const sources = searchRes.sources;
       evidenceRefs = sources.slice(0, 3).map((s: any) => ({
         title: s.title || s.filename || "Fonte clínica",
         source: s.metadata?.source || "protocol",
