@@ -318,6 +318,18 @@ interface MemoryInfo {
 // Export singleton instance
 export const performanceMonitor = PerformanceMonitor;
 
+export function withPerformanceTrace<T>(name: string, fn: () => T | Promise<T>): T | Promise<T> {
+  return PerformanceMonitor.measure(name, fn);
+}
+
+export function traceAIOperation<T>(
+  model: string,
+  operation: string,
+  fn: () => T | Promise<T>,
+): T | Promise<T> {
+  return withPerformanceTrace(`ai:${model}:${operation}`, fn);
+}
+
 /**
  * Initialize performance monitoring for the application
  */
