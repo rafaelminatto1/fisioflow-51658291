@@ -1,3 +1,4 @@
+import { ClinicAgentChat } from "@/components/ai/ClinicAgentChat";
 import React, { useState } from "react";
 import { PageLayout } from "@/components/layout/PageLayout";
 import { PageContainer } from "@/components/layout/PageContainer";
@@ -159,6 +160,8 @@ export function BrainDashboardPage() {
             </Card>
           </div>
         </div>
+
+        <ClinicAgentChat />
       </PageContainer>
     </PageLayout>
   );

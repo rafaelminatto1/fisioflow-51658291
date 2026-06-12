@@ -4,6 +4,7 @@ import { createDb, createPool } from "../lib/db";
 import { requireAuth, type AuthUser } from "../lib/auth";
 import type { Env } from "../types/env";
 import { writeEvent } from "../lib/analytics";
+import { WhatsAppService } from "../lib/whatsapp";
 
 const app = new Hono<{ Bindings: Env; Variables: { user: AuthUser } }>();
 
@@ -1015,6 +1016,69 @@ app.post("/templates/sync", requireAuth, async (c) => {
     console.error("[WhatsApp] POST /templates/sync error:", err);
     return c.json({ error: "Sync failed" }, 500);
   }
+});
+
+// ===== FILA DE APROVAÇÃO HUMANA (HITL) =====
+
+app.get("/pending-replies", requireAuth, async (c) => {
+  const user = c.get("user");
+  const pool = createPool(c.env);
+  const result = await pool.query(
+    `SELECT id, wa_id, original_message, suggested_reply, intent, status, created_at
+     FROM whatsapp_pending_replies
+     WHERE organization_id = $1 AND status = 'pending'
+     ORDER BY created_at DESC
+     LIMIT 50`,
+    [user.organizationId],
+  );
+  return c.json({ data: result.rows });
+});
+
+app.post("/pending-replies/:id/approve", requireAuth, async (c) => {
+  const user = c.get("user");
+  const pool = createPool(c.env);
+  const body = (await c.req.json().catch(() => ({}))) as { reply?: string };
+
+  const result = await pool.query(
+    `SELECT id, wa_id, suggested_reply FROM whatsapp_pending_replies
+     WHERE id = $1::uuid AND organization_id = $2 AND status = 'pending'`,
+    [c.req.param("id"), user.organizationId],
+  );
+  const row = result.rows[0];
+  if (!row) return c.json({ error: "Resposta pendente não encontrada" }, 404);
+
+  const finalReply = String(body.reply ?? row.suggested_reply).trim();
+  if (!finalReply) return c.json({ error: "Resposta vazia" }, 400);
+
+  const whatsapp = new WhatsAppService(c.env);
+  await whatsapp.sendTextMessage(row.wa_id, finalReply);
+
+  await pool.query(
+    `UPDATE whatsapp_pending_replies
+     SET status = 'approved', final_reply = $1, reviewed_by = $2, reviewed_at = NOW()
+     WHERE id = $3::uuid`,
+    [finalReply, user.uid, row.id],
+  );
+
+  writeEvent(c.env, { orgId: user.organizationId, event: "whatsapp_reply_approved" });
+  return c.json({ ok: true });
+});
+
+app.post("/pending-replies/:id/reject", requireAuth, async (c) => {
+  const user = c.get("user");
+  const pool = createPool(c.env);
+
+  const result = await pool.query(
+    `UPDATE whatsapp_pending_replies
+     SET status = 'rejected', reviewed_by = $1, reviewed_at = NOW()
+     WHERE id = $2::uuid AND organization_id = $3 AND status = 'pending'
+     RETURNING id`,
+    [user.uid, c.req.param("id"), user.organizationId],
+  );
+  if (result.rows.length === 0) return c.json({ error: "Resposta pendente não encontrada" }, 404);
+
+  writeEvent(c.env, { orgId: user.organizationId, event: "whatsapp_reply_rejected" });
+  return c.json({ ok: true });
 });
 
 export { app as whatsappRoutes };
