@@ -10,6 +10,7 @@ import {
   ChevronLeft, GitCompare, Share2, ChevronUp, ChevronDown, Rewind, FastForward, Play, Pause,
   TrendingUp, TrendingDown, AlertTriangle, Check, PenTool, Eraser, Info, Brain, X
 } from "lucide-react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { bio, font } from "@/constants/biomecanica";
 import { biomechanicsApi } from "@/lib/api/biomechanics";
 import { LineChart } from "react-native-gifted-charts";
