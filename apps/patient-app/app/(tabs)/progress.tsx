@@ -21,7 +21,7 @@ import { format, subDays, startOfDay } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useProgress } from "@/hooks/useProgress";
 import { Evolution } from "@/types/api";
-
+import { LineChart } from "react-native-gifted-charts";
 import { StringFormatter } from "@/lib/formatters";
 
 const SCREEN_PADDING = Spacing.screen;
@@ -224,6 +224,51 @@ export default function ProgressScreen() {
             </View>
           </Card>
         )}
+
+        {/* Biomechanical Symmetry Chart (FisioFlow Brain) */}
+        <Text style={[styles.sectionTitle, { color: colors.text, marginTop: 20 }]}>Análise Biomecânica</Text>
+        <Card style={{ padding: 15, marginBottom: 20 }}>
+          <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 15 }}>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+              <Ionicons name="sparkles" size={16} color={colors.primary} />
+              <Text style={{ fontWeight: "bold", color: colors.text }}>Simetria L/R (Score)</Text>
+            </View>
+            <View style={{ paddingHorizontal: 8, paddingVertical: 4, backgroundColor: colors.success + "20", borderRadius: 8 }}>
+              <Text style={{ fontSize: 10, fontWeight: "bold", color: colors.success }}>PROCESSO OTIMIZADO</Text>
+            </View>
+          </View>
+          
+          <LineChart
+            data={[
+              { value: 65, label: "Sem 1" },
+              { value: 68, label: "Sem 2" },
+              { value: 72, label: "Sem 3" },
+              { value: 78, label: "Sem 4" },
+              { value: 84, label: "Atual" },
+            ]}
+            width={FULL_CARD_WIDTH - 60}
+            height={120}
+            thickness={3}
+            color={colors.primary}
+            dataPointsColor={colors.primary}
+            hideRules
+            yAxisColor="transparent"
+            xAxisColor="transparent"
+            yAxisTextStyle={{ color: colors.textMuted, fontSize: 10 }}
+            xAxisLabelTextStyle={{ color: colors.textMuted, fontSize: 10 }}
+            pointerConfig={{
+              pointerStripColor: colors.primary + "50",
+              pointerStripWidth: 2,
+              pointerColor: colors.primary,
+              radius: 4,
+              pointerLabelComponent: (items: any) => (
+                <View style={{ backgroundColor: colors.primary, padding: 4, borderRadius: 4 }}>
+                  <Text style={{ color: "#fff", fontSize: 10, fontWeight: "bold" }}>{items[0].value}%</Text>
+                </View>
+              ),
+            }}
+          />
+        </Card>
 
         {/* Evolutions Timeline */}
         <Text style={[styles.sectionTitle, { color: colors.text }]}>Histórico de Evoluções</Text>

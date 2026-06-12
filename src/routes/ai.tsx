@@ -42,6 +42,12 @@ const IntelligentReports = lazy(
 const AugmentedRealityExercise = lazy(
   () => import(/* webpackChunkName: "ai-ar" */ "@/components/ar/AugmentedRealityExercise"),
 );
+const BrainDashboardPage = lazy(
+  () => import(/* webpackChunkName: "ai-brain-dashboard" */ "@/pages/ai/BrainDashboardPage"),
+);
+const SemanticSearchPage = lazy(
+  () => import(/* webpackChunkName: "ai-semantic-search" */ "@/pages/ai/SemanticSearchPage"),
+);
 
 // Image Analysis
 const ImageAnalysisDashboard = lazy(
@@ -122,6 +128,22 @@ export const aiRoutes = (
       element={
         <ProtectedRoute>
           <Navigate to="/biomechanics" replace />
+        </ProtectedRoute>
+      }
+    />
+    <Route
+      path="/ai/semantic-search"
+      element={
+        <ProtectedRoute>
+          <SemanticSearchPage />
+        </ProtectedRoute>
+      }
+    />
+    <Route
+      path="/ai/brain-dashboard"
+      element={
+        <ProtectedRoute>
+          <BrainDashboardPage />
         </ProtectedRoute>
       }
     />

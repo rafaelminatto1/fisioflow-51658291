@@ -89,6 +89,15 @@ type SimulationEvaluation = {
 
 const AGENTS = [
   {
+    id: "brain-dashboard",
+    name: "FisioFlow Brain",
+    description: "Pesquise em todo o histórico da clínica e descubra padrões de recuperação.",
+    icon: Activity,
+    color: "text-purple-500",
+    bg: "bg-purple-500/10",
+    prompt: "Olá! Eu sou o FisioFlow Brain. Sobre o que você gostaria de pesquisar no histórico clínico?",
+  },
+  {
     id: "soap-review",
     name: "AI SOAP Reviewer",
     description: "Analise seus prontuários para garantir precisão clínica e faturamento otimizado.",
