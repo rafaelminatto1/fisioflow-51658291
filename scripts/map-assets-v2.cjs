@@ -32,6 +32,7 @@ async function run() {
     let alreadyCorrect = 0;
 
     for (const ex of exercises) {
+      if (!ex.slug) continue;
       const normalizedEx = normalizeForMatch(ex.slug);
       const match = files.find((f) => normalizeForMatch(f.replace(".avif", "")) === normalizedEx);
 

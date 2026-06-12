@@ -9,6 +9,8 @@ import {
 } from "@fisioflow/db";
 import type { Env } from "../../types/env";
 import { runAi } from "../../lib/ai-native";
+import { searchAiSearch } from "../../lib/cloudflareAiSearch";
+import { WORKERS_AI_MODELS } from "../../lib/workersAi";
 
 export interface Resource {
   id: string;
@@ -49,7 +51,7 @@ export class ResourceSearchService {
     // 1. Busca Semântica via Cloudflare AI Search (RAG)
     if (this.env.AI_SEARCH) {
       try {
-        const aiResults = await this.env.AI_SEARCH.search({
+        const aiResults = await searchAiSearch(this.env, {
           messages: [
             { 
                 role: "system", 
@@ -58,10 +60,10 @@ export class ResourceSearchService {
             },
             { role: "user", content: query }
           ],
-          limit: 8,
+          maxNumResults: 8,
         });
 
-        for (const source of aiResults.sources || []) {
+        for (const source of aiResults.sources) {
           const resType = (source.metadata?.source as string) || "wiki";
           if (types.includes(resType) || types.includes("wiki")) {
              allResults.push({
@@ -150,7 +152,7 @@ export class ResourceSearchService {
       Responda APENAS um JSON no formato: {"title": "nome do exercicio", "description": "breve explicação clínica"}`;
       
       try {
-          const res = await runAi(this.env, "@cf/meta/llama-3.1-8b-instruct", { 
+          const res = await runAi(this.env, WORKERS_AI_MODELS.llama_3_1_8b, {
               messages: [{ role: "user", content: prompt }] 
           }, { cache: true, cacheTtl: 86400 });
           

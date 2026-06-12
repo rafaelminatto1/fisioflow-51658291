@@ -25,6 +25,10 @@ async function run() {
 
     for (const ex of exercises) {
       // Se o image_url não contiver a slug (ou parte significativa dela), consideramos pendente de ilustração exclusiva
+      if (!ex.slug) {
+        pending.push(ex);
+        continue;
+      }
       const _slugBase = ex.slug.split("-")[0]; // Simplificação para checagem rápida
       if (!ex.image_url || !ex.image_url.includes(ex.slug)) {
         pending.push(ex);

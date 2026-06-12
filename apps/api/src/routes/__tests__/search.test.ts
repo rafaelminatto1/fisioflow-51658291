@@ -103,8 +103,17 @@ describe("search routes", () => {
         { role: "system", content: "You are a physiotherapy knowledge assistant." },
         { role: "user", content: "lombalgia" },
       ],
-      limit: 5,
-      filters: { source: "exercises" },
+      ai_search_options: {
+        retrieval: {
+          retrieval_type: "hybrid",
+          max_num_results: 5,
+          context_expansion: 0,
+          filters: { source: { $eq: "exercises" } },
+        },
+        query_rewrite: { enabled: true },
+        reranking: { enabled: true },
+        cache: { enabled: true, cache_threshold: "close_enough" },
+      },
     });
   });
 

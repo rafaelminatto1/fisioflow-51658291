@@ -57,10 +57,17 @@ database_id = "9eba3eb7-5486-49d0-9684-c325f8b1ddc2"
 binding = "ANALYTICS"
 dataset = "fisioflow_events"
 
-# ===== AI SEARCH (AutoRAG) =====
+# ===== AI SEARCH =====
 [[ai_search]]
 binding = "AI_SEARCH"
 instance_name = "fisioflow-rag"
+
+# ===== AGENT MEMORY (PRIVATE BETA) =====
+# Conta ainda nao liberada no beta: wrangler retorna Not allowed [10018].
+# Quando a Cloudflare habilitar, criar `fisioflow-memory` e descomentar.
+# [[agent_memory]]
+# binding = "AGENT_MEMORY"
+# namespace = "fisioflow-memory"
 
 # ===== PIPELINES =====
 [[pipelines]]
@@ -263,6 +270,10 @@ dataset = "fisioflow_events"
 [[env.production.ai_search]]
 binding = "AI_SEARCH"
 instance_name = "fisioflow-rag"
+
+# [[env.production.agent_memory]]
+# binding = "AGENT_MEMORY"
+# namespace = "fisioflow-memory"
 
 [[env.production.pipelines]]
 binding = "EVENTS_PIPELINE"

@@ -130,39 +130,39 @@ export interface Env {
 
 
   // AI Search (RAG gerenciado — wiki, protocolos, artigos científicos)
-  // Bound via [[ai_search]] binding = "AI_SEARCH" instance_name = "fisioflow-knowledge"
+  // Bound via [[ai_search]] binding = "AI_SEARCH" instance_name = "fisioflow-rag".
+  // As rotas usam apps/api/src/lib/cloudflareAiSearch.ts para a API atual
+  // com ai_search_options.retrieval e compatibilidade com mocks antigos.
   AI_SEARCH?: {
-    search(options: {
-      messages: Array<{ role: "user" | "assistant" | "system"; content: string }>;
-      limit?: number;
-      filters?: Record<string, string | string[]>;
-    }): Promise<{
-      response: string;
-      sources: Array<{
-        id: string;
-        filename: string;
-        content: string;
-        metadata?: Record<string, unknown>;
-        score?: number;
-      }>;
-    }>;
+    search(options: Record<string, unknown>): Promise<any>;
+    chatCompletions?(options: Record<string, unknown>): Promise<any>;
+    stats?(): Promise<any>;
     items: {
       uploadAndPoll(
         filename: string,
         content: ReadableStream | ArrayBuffer | Blob | string,
-        options?: { metadata?: Record<string, string> },
+        options?: { metadata?: Record<string, unknown>; pollIntervalMs?: number; timeoutMs?: number },
       ): Promise<{ id: string; filename: string; status: string }>;
       upload(
         filename: string,
         content: ReadableStream | ArrayBuffer | Blob | string,
-        options?: { metadata?: Record<string, string> },
+        options?: { metadata?: Record<string, unknown> },
       ): Promise<{ id: string; filename: string; status: string }>;
       delete(itemId: string): Promise<void>;
       list(options?: {
-        limit?: number;
-        cursor?: string;
-      }): Promise<{ items: Array<{ id: string; filename: string; status: string }> }>;
+        page?: number;
+        per_page?: number;
+        search?: string;
+        status?: string;
+        metadata_filter?: string;
+      }): Promise<{ result?: Array<{ id: string; key?: string; filename?: string; status: string; metadata?: Record<string, unknown> }>; items?: Array<{ id: string; filename: string; status: string }> }>;
     };
+  };
+
+  // Agent Memory (private beta). Namespace: fisioflow-memory.
+  AGENT_MEMORY?: {
+    getProfile(profileId: string): Promise<any>;
+    deleteProfile(profileId: string): Promise<void>;
   };
 
   // Pipelines (data warehouse → R2 Iceberg, open beta)

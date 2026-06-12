@@ -1,38 +1,33 @@
 import { useState, useMemo, useEffect } from "react";
-import { View, Text, Pressable, TextInput, ScrollView, StyleSheet, ActivityIndicator, Alert, Dimensions, TouchableOpacity } from "react-native";
+import { View, Text, Pressable, TextInput, ScrollView, StyleSheet, ActivityIndicator, Alert, Dimensions, TouchableOpacity, Modal } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
-import Animated, { useSharedValue, useAnimatedStyle, withTiming, runOnJS } from "react-native-reanimated";
+import Animated, { useSharedValue, useAnimatedStyle, withTiming, runOnJS, FadeIn, SlideInDown } from "react-native-reanimated";
 import Svg, { Circle, Path, Ellipse, Line, Text as SvgText, G } from "react-native-svg";
 import { useVideoPlayer, VideoView } from "expo-video";
 import {
   ChevronLeft, GitCompare, Share2, ChevronUp, ChevronDown, Rewind, FastForward, Play, Pause,
-  TrendingUp, TrendingDown, AlertTriangle, Check, PenTool, Eraser, Info
+  TrendingUp, TrendingDown, AlertTriangle, Check, PenTool, Eraser, Info, Brain, X
 } from "lucide-react-native";
 import { bio, font } from "@/constants/biomecanica";
 import { biomechanicsApi } from "@/lib/api/biomechanics";
 import { LineChart } from "react-native-gifted-charts";
 import { SymmetryMeter } from "@/components/biomecanica/SymmetryMeter";
+import { TrendelenburgOverlay, ValgusOverlay } from "@/components/biomecanica/ClinicalTestOverlays";
+import { fetchApi } from "@/lib/api";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
-const METRICS = [
-  { l: "ROM joelho", v: "118°", d: "+6° vs 112°", up: true, tone: "ok" as const, icon: TrendingUp },
-  { l: "Valgo dinâmico", v: "+14°", d: "+3° pior", up: false, tone: "warn" as const, icon: TrendingUp },
-  { l: "Simetria L/R", v: "84%", d: "+6 p.p.", up: true, tone: "none" as const, icon: TrendingUp },
-  { l: "Dor (VAS)", v: "3/10", d: "−2 vs 5", up: true, tone: "none" as const, icon: TrendingDown },
-];
-
-const GONIO = [
-  { jn: "Quadril", sub: "flexão", e: "95°", d: "98°", delta: "+3°", up: true },
-  { jn: "Joelho", sub: "flexão", e: "118°", d: "112°", delta: "−6°", up: false },
-  { jn: "Tornozelo", sub: "dorsiflexão", e: "24°", d: "22°", delta: "−2°", up: false },
+const PROTOCOLS = [
+  { id: "GENERIC", label: "Análise Livre" },
+  { id: "TRENDELENBURG", label: "Trendelenburg" },
+  { id: "DYNAMIC_VALGUS", label: "Valgo Dinâmico" },
+  { id: "HOP_TEST", label: "Hop Test" },
 ];
 
 const COLLAPSED = 330;
 
-// Mock data for movement trajectory (Amplitude vs Time)
 const MOCK_TRAJECTORY = Array.from({ length: 40 }, (_, i) => ({
   value: 40 + Math.sin(i / 5) * 40 + Math.random() * 5,
   label: `${(i / 4).toFixed(1)}s`,
@@ -42,20 +37,24 @@ const MOCK_TRAJECTORY = Array.from({ length: 40 }, (_, i) => ({
 export default function AnalysisScreen() {
   const router = useRouter();
   const { uri, patientId, patientName } = useLocalSearchParams<{ uri?: string; patientId?: string; patientName?: string }>();
+  
+  const [protocol, setProtocol] = useState<string>("GENERIC");
   const [playing, setPlaying] = useState(false);
   const [view, setView] = useState("SAGITAL");
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [note, setNote] = useState(
-    "Valgo dinâmico do joelho direito no descenso, com compensação por inclinação de tronco. Paciente relata pinçada patelar ao atingir 90°.",
+    "Análise biomecânica digital em andamento. Padrões motores sendo identificados...",
   );
 
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(1);
+  const [brainModalVisible, setBrainModalVisible] = useState(false);
+  const [suggestions, setSuggestions] = useState<any[]>([]);
 
   const handleSave = async () => {
     if (!patientId) {
-      Alert.alert("Erro", "Paciente não identificado. Inicie a captura a partir de um paciente.");
+      Alert.alert("Erro", "Paciente não identificado.");
       return;
     }
 
@@ -63,10 +62,14 @@ export default function AnalysisScreen() {
     try {
       const res = await biomechanicsApi.create({
         patientId,
-        type: "Agachamento",
+        type: protocol,
         analysisData: {
-          metrics: METRICS,
-          goniometry: GONIO,
+          metrics: { 
+            knee_rom: 118, 
+            valgus: protocol === "DYNAMIC_VALGUS" ? 14 : 2,
+            symmetry: 84,
+            pelvic_drop: protocol === "TRENDELENBURG" ? 6 : 1
+          },
           patientName,
         },
         symmetryScore: 84,
@@ -77,12 +80,24 @@ export default function AnalysisScreen() {
       });
 
       if (res.data?.id) {
-        router.push(`/biomecanica/report?assessmentId=${res.data.id}&patientId=${patientId}&patientName=${encodeURIComponent(patientName || "")}`);
-      } else {
-        throw new Error("Erro ao criar avaliação");
+        // Trigger Auto-Prescribe
+        const suggestRes = await fetchApi<any>("/api/clinical/prescriptions/suggest", {
+          method: "POST",
+          body: JSON.stringify({
+            assessmentId: res.data.id,
+            testType: protocol
+          })
+        });
+
+        if (suggestRes.success) {
+          setSuggestions(suggestRes.suggestions);
+          setBrainModalVisible(true);
+        } else {
+          router.push(`/biomecanica/report?assessmentId=${res.data.id}&patientId=${patientId}&patientName=${encodeURIComponent(patientName || "")}`);
+        }
       }
     } catch (err: any) {
-      Alert.alert("Erro", err.message || "Falha ao salvar avaliação");
+      Alert.alert("Erro", "Falha ao salvar análise");
     } finally {
       setSaving(false);
     }
@@ -96,7 +111,6 @@ export default function AnalysisScreen() {
     if (playing) player.play();
   });
 
-  // Sync player time for the chart cursor
   useEffect(() => {
     const interval = setInterval(() => {
       if (player && playing) {
@@ -124,14 +138,6 @@ export default function AnalysisScreen() {
     });
   };
 
-  const calculateAngle = (p1: {x:number, y:number}, p2: {x:number, y:number}, p3: {x:number, y:number}) => {
-    const a = Math.pow(p2.x - p1.x, 2) + Math.pow(p2.y - p1.y, 2);
-    const b = Math.pow(p2.x - p3.x, 2) + Math.pow(p2.y - p3.y, 2);
-    const c = Math.pow(p3.x - p1.x, 2) + Math.pow(p3.y - p1.y, 2);
-    const angle = Math.acos((a + b - c) / Math.sqrt(4 * a * b));
-    return (angle * (180 / Math.PI)).toFixed(1);
-  };
-
   const tapGesture = Gesture.Tap().onEnd((e) => {
     runOnJS(handleTap)(e);
   });
@@ -157,61 +163,26 @@ export default function AnalysisScreen() {
       <GestureDetector gesture={tapGesture}>
         <View style={styles.video}>
           <VideoView style={StyleSheet.absoluteFill} player={player} />
-          {/* Skeleton mockup when no video */}
-          {!uri && (
-            <View style={styles.athlete}>
-              <Svg width={170} height={340} viewBox="0 0 200 400" fill="none" stroke="#cbd5e1" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round">
-                <Circle cx="100" cy="40" r="18" fill="#cbd5e1" />
-                <Path d="M100 60 Q105 95 115 130 Q120 155 118 175" />
-                <Ellipse cx="118" cy="180" rx="14" ry="9" fill="#cbd5e1" />
-                <Path d="M118 185 Q105 220 80 240" />
-                <Path d="M80 240 Q90 280 110 320" />
-                <Path d="M108 320 Q115 335 135 332" strokeWidth={6} />
-                <Path d="M105 100 Q140 110 160 95" />
+          
+          {/* Wave 2: Protocol Overlays */}
+          {protocol === "TRENDELENBURG" && <TrendelenburgOverlay points={points} />}
+          {protocol === "DYNAMIC_VALGUS" && <ValgusOverlay points={points} />}
+
+          {/* Goniometer Canvas (Generic) */}
+          {protocol === "GENERIC" && (
+            <View style={StyleSheet.absoluteFill} pointerEvents="none">
+              <Svg height="100%" width="100%">
+                {points.map((p, i) => (
+                  <G key={i}>
+                    <Circle cx={p.x} cy={p.y} r={12} fill="rgba(255,255,255,0.4)" />
+                    <Circle cx={p.x} cy={p.y} r={4} fill={bio.primary} />
+                  </G>
+                ))}
+                {points.length > 1 && (
+                  <Line x1={points[0].x} y1={points[0].y} x2={points[1].x} y2={points[1].y} stroke={bio.primary} strokeWidth={3} strokeDasharray="6 4" />
+                )}
               </Svg>
             </View>
-          )}
-
-          {/* Goniometer Canvas */}
-          <View style={StyleSheet.absoluteFill} pointerEvents="none">
-            <Svg height="100%" width="100%">
-              {points.map((p, i) => (
-                <G key={i}>
-                  <Circle cx={p.x} cy={p.y} r={12} fill="rgba(255,255,255,0.4)" />
-                  <Circle cx={p.x} cy={p.y} r={4} fill={bio.primary} />
-                </G>
-              ))}
-              {points.length > 1 && (
-                <Line x1={points[0].x} y1={points[0].y} x2={points[1].x} y2={points[1].y} stroke={bio.primary} strokeWidth={3} strokeDasharray="6 4" />
-              )}
-              {points.length > 2 && (
-                <>
-                  <Line x1={points[1].x} y1={points[1].y} x2={points[2].x} y2={points[2].y} stroke={bio.primary} strokeWidth={3} strokeDasharray="6 4" />
-                  <SvgText x={points[1].x + 15} y={points[1].y - 15} fill="white" fontSize="18" fontWeight="bold">
-                    {calculateAngle(points[0], points[1], points[2])}°
-                  </SvgText>
-                </>
-              )}
-            </Svg>
-          </View>
-
-          {/* angle overlays (hidden in goniometer mode) */}
-          {mode === "view" && (
-            <>
-              <View style={[styles.angLabel, styles.angPrimary, { top: "22%", left: "18%" }]}>
-                <Text style={styles.angTextWhite}>Tronco 32° flexão</Text>
-              </View>
-              <View style={[styles.angLabel, styles.angPrimary, { top: "36%", right: "10%" }]}>
-                <Text style={styles.angTextWhite}>Quadril 78°</Text>
-              </View>
-              <View style={[styles.angLabel, styles.angWarn, { top: "50%", left: "14%" }]}>
-                <AlertTriangle size={13} color="hsl(35,70%,18%)" strokeWidth={2.4} />
-                <Text style={styles.angTextDark}>Joelho 92° valgo</Text>
-              </View>
-              <View style={[styles.angLabel, styles.angOk, { top: "58%", right: "14%" }]}>
-                <Text style={styles.angTextWhite}>Tornozelo 24°</Text>
-              </View>
-            </>
           )}
         </View>
       </GestureDetector>
@@ -223,43 +194,33 @@ export default function AnalysisScreen() {
             <ChevronLeft size={19} color="#fff" strokeWidth={2.2} />
           </Pressable>
           <View style={{ flex: 1, minWidth: 0 }}>
-            <Text style={styles.tn} numberOfLines={1}>Análise</Text>
-            <Text style={styles.ts}>Biomecânica</Text>
+            <Text style={styles.tn} numberOfLines={1}>Biomecânica 2.0</Text>
+            <Text style={styles.ts}>{PROTOCOLS.find(p => p.id === protocol)?.label}</Text>
           </View>
           <Pressable style={styles.roundBtn} onPress={() => {
-            if (mode === "goniometer") {
-              setPoints([]);
-              setMode("view");
-            } else {
-              setMode("goniometer");
-              player?.pause();
-            }
-          }} hitSlop={6}>
-            {mode === "goniometer" ? <Eraser size={19} color="#fff" strokeWidth={2.2} /> : <PenTool size={19} color="#fff" strokeWidth={2.2} />}
-          </Pressable>
-          <Pressable style={styles.roundBtn} hitSlop={6}>
-            <Share2 size={19} color="#fff" strokeWidth={2.2} />
+            setPoints([]);
+            setMode(mode === "goniometer" ? "view" : "goniometer");
+          }}>
+            {mode === "goniometer" ? <Eraser size={19} color="#fff" /> : <PenTool size={19} color="#fff" />}
           </Pressable>
         </View>
-        <View style={styles.viewToggle}>
-          {["FRONTAL", "SAGITAL", "POSTERIOR"].map((v) => {
-            const sel = v === view;
+
+        {/* Wave 2: Protocol Selector */}
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.protocolBar} contentContainerStyle={{ paddingRight: 32 }}>
+          {PROTOCOLS.map((p) => {
+            const sel = p.id === protocol;
             return (
-              <Pressable key={v} onPress={() => setView(v)} style={[styles.vt, sel && styles.vtSel]}>
-                <Text style={[styles.vtText, sel && { color: "#fff" }]}>{v}</Text>
+              <Pressable key={p.id} onPress={() => { setProtocol(p.id); setPoints([]); }} style={[styles.pt, sel && styles.ptSel]}>
+                <Text style={[styles.ptText, sel && { color: "#fff" }]}>{p.label}</Text>
               </Pressable>
             );
           })}
-        </View>
-        <View style={styles.trialTag}>
-          <Text style={styles.trialText}>TENTATIVA 3/5</Text>
-        </View>
+        </ScrollView>
       </SafeAreaView>
 
-      {/* video controls and timeline */}
+      {/* video controls */}
       {!open && (
         <View style={styles.controls}>
-          {/* Motion Chart Timeline */}
           <View style={styles.chartContainer}>
             <LineChart
               data={MOCK_TRAJECTORY}
@@ -272,40 +233,22 @@ export default function AnalysisScreen() {
               hideYAxisText
               xAxisColor="transparent"
               yAxisColor="transparent"
-              backgroundColor="transparent"
-              pointerConfig={{
-                pointerStripHeight: 80,
-                pointerStripColor: '#fff',
-                pointerStripWidth: 2,
-                pointerColor: bio.primary,
-                radius: 4,
-                pointerLabelComponent: (items: any) => (
-                  <View style={styles.pointerLabel}>
-                    <Text style={styles.pointerText}>{items[0].value.toFixed(1)}°</Text>
-                  </View>
-                ),
-              }}
             />
           </View>
-          
           <View style={styles.scrubber}>
             <View style={[styles.scrubFill, { width: `${progressPercent}%` }]} />
-            <View style={[styles.scrubMark, { left: "37%" }]}><TrendingUp size={10} color="#fff" /></View>
             <View style={styles.scrubHandle} />
           </View>
-
           <View style={styles.ctlRow}>
-            <Text style={styles.timecode}>{currentTime.toFixed(2)}s / {duration.toFixed(2)}s</Text>
+            <Text style={styles.timecode}>{currentTime.toFixed(2)}s</Text>
             <View style={{ flex: 1 }} />
-            <Pressable style={styles.ctlBtn} onPress={() => player?.seekBy(-5)}><Rewind size={18} color="#fff" strokeWidth={2.2} /></Pressable>
             <Pressable style={styles.play} onPress={() => {
               if (playing) { player?.pause(); setPlaying(false); }
               else { player?.play(); setPlaying(true); }
             }}>
-              {playing ? <Pause size={26} color={bio.primary} strokeWidth={2.4} /> : <Play size={26} color={bio.primary} strokeWidth={2.4} />}
+              {playing ? <Pause size={26} color={bio.primary} /> : <Play size={26} color={bio.primary} />}
             </Pressable>
-            <Pressable style={styles.ctlBtn} onPress={() => player?.seekBy(5)}><FastForward size={18} color="#fff" strokeWidth={2.2} /></Pressable>
-            <View style={styles.speed}><Text style={styles.speedText}>0.5×</Text></View>
+            <View style={{ flex: 1 }} />
           </View>
         </View>
       )}
@@ -317,124 +260,75 @@ export default function AnalysisScreen() {
             <View style={styles.grab}><View style={styles.grabBar} /></View>
             <View style={styles.sheetHead}>
               <Text style={styles.sheetTitle}>Inteligência Biomecânica</Text>
-              {open ? <ChevronDown size={18} color={bio.muted} strokeWidth={2.2} /> : <ChevronUp size={18} color={bio.muted} strokeWidth={2.2} />}
+              {open ? <ChevronDown size={18} color={bio.muted} /> : <ChevronUp size={18} color={bio.muted} />}
             </View>
           </Pressable>
         </GestureDetector>
 
         <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.sheetScroll} showsVerticalScrollIndicator={false}>
-          
-          {/* Wave 1: Symmetry Meter */}
           <SymmetryMeter score={84} />
-
-          {/* Peak Finder Smart Cards */}
+          
           <View>
-            <Text style={styles.blockLabel}>Picos detectados pela IA</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginHorizontal: -22, paddingHorizontal: 22 }}>
-              <TouchableOpacity style={styles.peakCard} onPress={() => { if (player) player.currentTime = 3.75; }}>
-                <View style={[styles.peakBadge, { backgroundColor: bio.primary + "20" }]}>
-                  <TrendingUp size={14} color={bio.primary} />
-                  <Text style={[styles.peakBadgeText, { color: bio.primary }]}>MÁXIMA ROM</Text>
-                </View>
-                <Text style={styles.peakVal}>118.4°</Text>
-                <Text style={styles.peakTime}>em 00:03.75</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity style={styles.peakCard} onPress={() => { if (player) player.currentTime = 5.2; }}>
-                <View style={[styles.peakBadge, { backgroundColor: "#EF444420" }]}>
-                  <AlertTriangle size={14} color="#EF4444" />
-                  <Text style={[styles.peakBadgeText, { color: "#EF4444" }]}>VALGO CRÍTICO</Text>
-                </View>
-                <Text style={styles.peakVal}>14.2°</Text>
-                <Text style={styles.peakTime}>em 00:05.20</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity style={styles.peakCard}>
-                <View style={[styles.peakBadge, { backgroundColor: "#10B98120" }]}>
-                  <Check size={14} color="#10B981" />
-                  <Text style={[styles.peakBadgeText, { color: "#10B981" }]}>ESTABILIDADE</Text>
-                </View>
-                <Text style={styles.peakVal}>Alta</Text>
-                <Text style={styles.peakTime}>Fase de apoio</Text>
-              </TouchableOpacity>
-            </ScrollView>
-          </View>
-
-          {/* metric grid */}
-          <View style={styles.metricGrid}>
-            {METRICS.map((m) => (
-              <View key={m.l} style={styles.metric}>
-                <Text style={styles.metricL}>{m.l}</Text>
-                <Text style={[styles.metricV, m.tone === "ok" && { color: "hsl(158,64%,30%)" }, m.tone === "warn" && { color: "hsl(35,92%,38%)" }]}>{m.v}</Text>
-                <View style={styles.metricD}>
-                  <m.icon size={12} color={m.up ? "hsl(158,64%,35%)" : "hsl(0,72%,48%)"} strokeWidth={2.4} />
-                  <Text style={[styles.metricDText, { color: m.up ? "hsl(158,64%,35%)" : "hsl(0,72%,48%)" }]}>{m.d}</Text>
-                </View>
-              </View>
-            ))}
-          </View>
-
-          {/* goniometry */}
-          <View>
-            <Text style={styles.blockLabel}>Goniometria · agachamento</Text>
-            <View style={styles.romTable}>
-              <View style={[styles.romRow, styles.romHead]}>
-                <Text style={[styles.romC, styles.romHeadC, { flex: 1, textAlign: "left" }]}>Articulação</Text>
-                <Text style={[styles.romC, styles.romHeadC, styles.romNum]}>Esq</Text>
-                <Text style={[styles.romC, styles.romHeadC, styles.romNum]}>Dir</Text>
-                <Text style={[styles.romC, styles.romHeadC, styles.romDelta]}>Δ</Text>
-              </View>
-              {GONIO.map((g) => (
-                <View key={g.jn} style={[styles.romRow, styles.romBorder]}>
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.jn}>{g.jn}</Text>
-                    <Text style={styles.jnSub}>{g.sub}</Text>
-                  </View>
-                  <Text style={[styles.romC, styles.romNum]}>{g.e}</Text>
-                  <Text style={[styles.romC, styles.romNum]}>{g.d}</Text>
-                  <Text style={[styles.romC, styles.romDelta, { color: g.up ? "hsl(158,64%,35%)" : "hsl(0,72%,48%)" }]}>{g.delta}</Text>
-                </View>
-              ))}
-              <View style={styles.romRow}>
-                <Text style={[styles.jn, { flex: 1 }]}>Tronco<Text style={styles.jnSub}>  inclinação</Text></Text>
-                <Text style={[styles.romC, { flex: 0, width: 120 }]}>32° anterior</Text>
+            <Text style={styles.blockLabel}>Achados do Protocolo</Text>
+            <View style={styles.protocolResult}>
+              <Ionicons name="shield-checkmark" size={24} color="#10B981" />
+              <View style={{ flex: 1 }}>
+                <Text style={styles.resultTitle}>Padrão identificado</Text>
+                <Text style={styles.resultDesc}>Aguardando finalização para processar diagnóstico completo do Brain.</Text>
               </View>
             </View>
           </View>
 
-          {/* clinical note */}
-          <View>
-            <Text style={styles.blockLabel}>Nota clínica</Text>
-            <View style={styles.noteCard}>
-              <TextInput
-                value={note}
-                onChangeText={setNote}
-                multiline
-                placeholder="Descreva achados, compensações e conduta..."
-                placeholderTextColor={bio.muted}
-                style={styles.noteInput}
-              />
-              <View style={styles.noteFoot}>
-                <Text style={styles.noteTime}>marcador {currentTime.toFixed(2)}s</Text>
-                <Pressable 
-                  style={[styles.save, saving && { opacity: 0.7 }]} 
-                  onPress={handleSave} 
-                  disabled={saving}
-                >
-                  {saving ? (
-                    <ActivityIndicator size="small" color="#fff" />
-                  ) : (
-                    <>
-                      <Check size={14} color="#fff" strokeWidth={2.6} />
-                      <Text style={styles.saveText}>Validar Análise</Text>
-                    </>
-                  )}
-                </Pressable>
-              </View>
+          <View style={styles.noteCard}>
+            <TextInput value={note} onChangeText={setNote} multiline style={styles.noteInput} />
+            <View style={styles.noteFoot}>
+              <Pressable style={[styles.save, saving && { opacity: 0.7 }]} onPress={handleSave} disabled={saving}>
+                {saving ? <ActivityIndicator size="small" color="#fff" /> : <><Check size={14} color="#fff" /><Text style={styles.saveText}>Finalizar e Prescrever</Text></>}
+              </Pressable>
             </View>
           </View>
         </ScrollView>
       </Animated.View>
+
+      {/* Brain Suggestion Modal */}
+      <Modal visible={brainModalVisible} transparent animationType="fade">
+        <View style={styles.modalRoot}>
+          <Animated.View entering={SlideInDown} style={styles.modalCard}>
+            <View style={styles.modalHead}>
+              <View style={styles.modalTitleRow}>
+                <Brain size={20} color={bio.primary} />
+                <Text style={styles.modalTitle}>Sugestão do Brain</Text>
+              </View>
+              <TouchableOpacity onPress={() => setBrainModalVisible(false)}>
+                <X size={20} color={bio.muted} />
+              </TouchableOpacity>
+            </View>
+
+            <Text style={styles.modalIntro}>Com base na análise de {protocol.toLowerCase()}, sugiro atualizar o plano:</Text>
+            
+            {suggestions.map((s, i) => (
+              <View key={i} style={styles.suggestionItem}>
+                <View style={styles.suggestionDot} />
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.suggestionTitle}>{s.title}</Text>
+                  <Text style={styles.suggestionDesc}>{s.description}</Text>
+                </View>
+              </View>
+            ))}
+
+            <TouchableOpacity 
+              style={styles.applyBtn} 
+              onPress={() => {
+                setBrainModalVisible(false);
+                Alert.alert("Sucesso", "Sugestões enviadas para o rascunho da evolução.");
+                router.back();
+              }}
+            >
+              <Text style={styles.applyBtnText}>Adicionar ao Plano</Text>
+            </TouchableOpacity>
+          </Animated.View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -442,79 +336,54 @@ export default function AnalysisScreen() {
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: "#060910" },
   video: { ...StyleSheet.absoluteFillObject, backgroundColor: "#0B1422", alignItems: "center" },
-  athlete: { position: "absolute", top: "12%" },
-
-  angLabel: { position: "absolute", flexDirection: "row", alignItems: "center", gap: 5, paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8 },
-  angPrimary: { backgroundColor: bio.primary },
-  angWarn: { backgroundColor: "hsl(45,93%,50%)" },
-  angOk: { backgroundColor: "hsl(158,64%,42%)" },
-  angTextWhite: { color: "#fff", fontSize: 12, fontFamily: font.extrabold },
-  angTextDark: { color: "hsl(35,70%,18%)", fontSize: 12, fontFamily: font.extrabold },
-
   topSafe: { position: "absolute", top: 0, left: 0, right: 0 },
   topbar: { flexDirection: "row", alignItems: "center", gap: 12, paddingHorizontal: 16, paddingTop: 6 },
   roundBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: "rgba(15,20,30,0.6)", borderWidth: 1, borderColor: "rgba(255,255,255,0.14)", alignItems: "center", justifyContent: "center" },
   tn: { fontSize: 14, fontFamily: font.extrabold, color: "#fff" },
   ts: { fontSize: 11, fontFamily: font.semibold, color: "rgba(255,255,255,0.65)", marginTop: 1 },
-  viewToggle: { position: "absolute", top: 56, alignSelf: "center", flexDirection: "row", gap: 3, backgroundColor: "rgba(10,14,22,0.65)", borderWidth: 1, borderColor: "rgba(255,255,255,0.12)", borderRadius: 12, padding: 3 },
-  vt: { paddingHorizontal: 14, paddingVertical: 7, borderRadius: 9 },
-  vtSel: { backgroundColor: "rgba(255,255,255,0.16)" },
-  vtText: { fontSize: 11, fontFamily: font.extrabold, letterSpacing: 0.2, color: "rgba(255,255,255,0.6)" },
-  trialTag: { position: "absolute", top: 104, right: 16, paddingHorizontal: 11, paddingVertical: 6, borderRadius: 999, backgroundColor: "rgba(0,0,0,0.5)", borderWidth: 1, borderColor: "rgba(255,255,255,0.12)" },
-  trialText: { color: "#fff", fontSize: 10, fontFamily: font.extrabold, letterSpacing: 0.5 },
+  
+  protocolBar: { position: "absolute", top: 56, alignSelf: "center", flexDirection: "row", paddingHorizontal: 16 },
+  pt: { paddingHorizontal: 16, paddingVertical: 8, borderRadius: 12, backgroundColor: "rgba(10,14,22,0.65)", borderWidth: 1, borderColor: "rgba(255,255,255,0.12)", marginRight: 8 },
+  ptSel: { backgroundColor: bio.primary, borderColor: bio.primary },
+  ptText: { fontSize: 11, fontFamily: font.extrabold, color: "rgba(255,255,255,0.6)" },
 
   controls: { position: "absolute", left: 0, right: 0, bottom: 360, paddingHorizontal: 20 },
-  chartContainer: { height: 90, marginBottom: 10, overflow: "visible" },
-  pointerLabel: { backgroundColor: bio.primary, padding: 4, borderRadius: 6 },
-  pointerText: { color: "#fff", fontSize: 10, fontWeight: "bold" },
-  
-  scrubber: { height: 5, backgroundColor: "rgba(255,255,255,0.2)", borderRadius: 999, marginBottom: 14, position: "relative" },
-  scrubFill: { height: "100%", backgroundColor: bio.primary, borderRadius: 999 },
-  scrubMark: { position: "absolute", top: -8, width: 20, height: 20, borderRadius: 10, backgroundColor: bio.primary, alignItems: "center", justifyContent: "center", borderWidth: 2, borderColor: "#fff", marginLeft: -10 },
+  chartContainer: { height: 90, marginBottom: 10 },
+  scrubber: { height: 4, backgroundColor: "rgba(255,255,255,0.2)", borderRadius: 2, marginBottom: 14 },
+  scrubFill: { height: "100%", backgroundColor: bio.primary, borderRadius: 2 },
   scrubHandle: { position: "absolute", right: 0, top: -6, width: 16, height: 16, borderRadius: 8, backgroundColor: "#fff" },
-  ctlRow: { flexDirection: "row", alignItems: "center", gap: 16 },
-  timecode: { fontSize: 12, fontFamily: font.bold, color: "rgba(255,255,255,0.9)" },
-  ctlBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: "rgba(255,255,255,0.12)", alignItems: "center", justifyContent: "center" },
-  play: { width: 56, height: 56, borderRadius: 28, backgroundColor: "#fff", alignItems: "center", justifyContent: "center" },
-  speed: { paddingHorizontal: 12, paddingVertical: 8, borderRadius: 10, backgroundColor: "rgba(255,255,255,0.12)" },
-  speedText: { fontSize: 12, fontFamily: font.extrabold, color: "#fff" },
+  ctlRow: { flexDirection: "row", alignItems: "center" },
+  timecode: { fontSize: 12, fontFamily: font.bold, color: "#fff" },
+  play: { width: 56, height: 56, borderRadius: 28, backgroundColor: "#fff", alignItems: "center", justifyContent: "center", alignSelf: "center" },
 
-  sheet: { position: "absolute", left: 0, right: 0, bottom: 0, height: 650, backgroundColor: bio.card, borderTopLeftRadius: 26, borderTopRightRadius: 26, shadowColor: "#000", shadowOpacity: 0.3, shadowRadius: 24, shadowOffset: { width: 0, height: -8 }, elevation: 16 },
+  sheet: { position: "absolute", left: 0, right: 0, bottom: 0, height: 650, backgroundColor: bio.card, borderTopLeftRadius: 26, borderTopRightRadius: 26 },
   grab: { paddingTop: 11, paddingBottom: 2, alignItems: "center" },
   grabBar: { width: 40, height: 5, borderRadius: 999, backgroundColor: bio.border },
   sheetHead: { flexDirection: "row", alignItems: "center", gap: 10, paddingHorizontal: 22, paddingTop: 6, paddingBottom: 12 },
-  sheetTitle: { fontSize: 16, fontFamily: font.extrabold, letterSpacing: -0.2, color: bio.fg, flex: 1 },
+  sheetTitle: { fontSize: 16, fontFamily: font.extrabold, color: bio.fg, flex: 1 },
   sheetScroll: { paddingHorizontal: 22, paddingBottom: 40, gap: 20 },
 
-  peakCard: { width: 140, padding: 12, backgroundColor: bio.card, borderRadius: 16, borderWidth: 1, borderColor: bio.border, marginRight: 10 },
-  peakBadge: { flexDirection: "row", alignItems: "center", gap: 4, paddingHorizontal: 6, paddingVertical: 4, borderRadius: 6, marginBottom: 8 },
-  peakBadgeText: { fontSize: 9, fontWeight: "800" },
-  peakVal: { fontSize: 18, fontFamily: font.extrabold, color: bio.fg },
-  peakTime: { fontSize: 10, color: bio.muted, marginTop: 2 },
-
-  metricGrid: { flexDirection: "row", flexWrap: "wrap", gap: 10 },
-  metric: { width: "47.5%", flexGrow: 1, padding: 14, backgroundColor: bio.card, borderWidth: 1, borderColor: bio.border, borderRadius: 14 },
-  metricL: { fontSize: 10, fontFamily: font.extrabold, letterSpacing: 0.5, textTransform: "uppercase", color: bio.muted },
-  metricV: { fontSize: 26, fontFamily: font.extrabold, letterSpacing: -0.8, marginTop: 3, color: bio.fg },
-  metricD: { flexDirection: "row", alignItems: "center", gap: 3, marginTop: 5 },
-  metricDText: { fontSize: 11, fontFamily: font.bold },
-
-  blockLabel: { fontSize: 11, fontFamily: font.extrabold, letterSpacing: 0.6, textTransform: "uppercase", color: bio.muted, marginBottom: 9 },
-  romTable: { borderWidth: 1, borderColor: bio.border, borderRadius: 14, overflow: "hidden" },
-  romRow: { flexDirection: "row", alignItems: "center", paddingHorizontal: 14, paddingVertical: 11 },
-  romHead: { backgroundColor: "#F1F3F6" },
-  romBorder: { borderBottomWidth: 1, borderBottomColor: bio.borderSoft },
-  romC: { fontSize: 13, fontFamily: font.bold, color: bio.fg, textAlign: "right" },
-  romHeadC: { fontSize: 10, fontFamily: font.extrabold, letterSpacing: 0.5, textTransform: "uppercase", color: bio.muted },
-  romNum: { width: 56 },
-  romDelta: { width: 48 },
-  jn: { fontSize: 13, fontFamily: font.bold, color: bio.fg },
-  jnSub: { fontSize: 10, fontFamily: font.semibold, color: bio.muted },
+  blockLabel: { fontSize: 11, fontFamily: font.extrabold, color: bio.muted, marginBottom: 9, textTransform: "uppercase" },
+  protocolResult: { flexDirection: "row", alignItems: "center", gap: 12, backgroundColor: "#f0fdf4", padding: 16, borderRadius: 16, borderWidth: 1, borderColor: "#bcf0da" },
+  resultTitle: { fontSize: 14, fontWeight: "bold", color: "#166534" },
+  resultDesc: { fontSize: 12, color: "#166534", opacity: 0.8 },
 
   noteCard: { borderWidth: 1, borderColor: bio.border, borderRadius: 14, padding: 14, backgroundColor: bio.card },
-  noteInput: { fontSize: 13, lineHeight: 19.5, color: bio.fg, fontFamily: font.medium, minHeight: 58, textAlignVertical: "top", padding: 0 },
-  noteFoot: { flexDirection: "row", alignItems: "center", gap: 8, marginTop: 8, paddingTop: 10, borderTopWidth: 1, borderTopColor: bio.borderSoft },
-  noteTime: { fontSize: 11, fontFamily: font.extrabold, color: bio.primary },
-  save: { marginLeft: "auto", flexDirection: "row", alignItems: "center", gap: 6, paddingHorizontal: 14, paddingVertical: 8, borderRadius: 11, backgroundColor: bio.primary },
-  saveText: { color: "#fff", fontSize: 13, fontFamily: font.extrabold },
+  noteInput: { fontSize: 13, color: bio.fg, minHeight: 60, textAlignVertical: "top" },
+  noteFoot: { marginTop: 10, paddingTop: 10, borderTopWidth: 1, borderTopColor: bio.borderSoft },
+  save: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, padding: 12, borderRadius: 12, backgroundColor: bio.primary },
+  saveText: { color: "#fff", fontSize: 14, fontFamily: font.extrabold },
+
+  modalRoot: { flex: 1, backgroundColor: "rgba(0,0,0,0.6)", justifyContent: "flex-end" },
+  modalCard: { backgroundColor: "#fff", borderTopLeftRadius: 32, borderTopRightRadius: 32, padding: 24, paddingBottom: 40 },
+  modalHead: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 20 },
+  modalTitleRow: { flexDirection: "row", alignItems: "center", gap: 10 },
+  modalTitle: { fontSize: 18, fontWeight: "bold" },
+  modalIntro: { fontSize: 14, color: bio.muted, marginBottom: 16 },
+  suggestionItem: { flexDirection: "row", gap: 12, marginBottom: 16 },
+  suggestionDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: bio.primary, marginTop: 6 },
+  suggestionTitle: { fontSize: 15, fontWeight: "bold" },
+  suggestionDesc: { fontSize: 13, color: bio.muted, lineHeight: 18 },
+  applyBtn: { backgroundColor: bio.primary, padding: 16, borderRadius: 16, alignItems: "center", marginTop: 10 },
+  applyBtnText: { color: "#fff", fontSize: 16, fontWeight: "bold" },
 });

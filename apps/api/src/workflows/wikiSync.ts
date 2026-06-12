@@ -2,7 +2,7 @@
  * WikiSyncWorkflow — Sincroniza páginas Wiki do Neon → AI Search
  *
  * Cron: 02h BRT (05h UTC) diariamente
- * Lógica: busca páginas modificadas nas últimas 25h e indexa no AI Search
+ * Lógica: cron busca páginas modificadas nas últimas 25h; manual faz carga completa
  * Imediato: hook em routes/wiki.ts PUT dispara re-sync ao publicar
  */
 import { WorkflowEntrypoint, WorkflowStep, WorkflowEvent } from "cloudflare:workers";
@@ -42,14 +42,22 @@ export class WikiSyncWorkflow extends WorkflowEntrypoint<Env, WikiSyncParams> {
         return rows as any[];
       }
 
-      const rows = await sql`
-        SELECT id, slug, title, content, html_content, category, tags, is_published
-        FROM wiki_pages
-        WHERE is_published = true
-          AND updated_at >= now() - INTERVAL '25 hours'
-        ORDER BY updated_at DESC
-        LIMIT 200
-      `;
+      const rows = triggerType === "manual"
+        ? await sql`
+          SELECT id, slug, title, content, html_content, category, tags, is_published
+          FROM wiki_pages
+          WHERE is_published = true
+          ORDER BY updated_at DESC
+          LIMIT 200
+        `
+        : await sql`
+          SELECT id, slug, title, content, html_content, category, tags, is_published
+          FROM wiki_pages
+          WHERE is_published = true
+            AND updated_at >= now() - INTERVAL '25 hours'
+          ORDER BY updated_at DESC
+          LIMIT 200
+        `;
       return rows as any[];
     })) as any[];
 
@@ -73,15 +81,17 @@ export class WikiSyncWorkflow extends WorkflowEntrypoint<Env, WikiSyncParams> {
 
       await step.do(`index-wiki-${pageId}`, async () => {
         try {
-          await this.env.AI_SEARCH!.items.upload(filename, markdown, {
-            metadata: {
-              source: "wiki",
-              wiki_id: pageId,
-              title,
-              category,
-              slug: String(page.slug ?? ""),
-            },
-          });
+          await withAiSearchUploadTimeout(
+            this.env.AI_SEARCH!.items.upload(filename, truncateForAiSearch(markdown), {
+              metadata: {
+                source: "wiki",
+                wiki_id: pageId,
+                title,
+                category,
+                slug: String(page.slug ?? ""),
+              },
+            }),
+          );
           synced++;
         } catch (err) {
           console.error(`[WikiSyncWorkflow] Failed to index page ${pageId}:`, err);
@@ -92,5 +102,24 @@ export class WikiSyncWorkflow extends WorkflowEntrypoint<Env, WikiSyncParams> {
 
     console.log(`[WikiSyncWorkflow] Done. synced=${synced} failed=${failed}`);
     return { synced, failed, total: pages.length };
+  }
+}
+
+function truncateForAiSearch(markdown: string, maxChars = 24000): string {
+  if (markdown.length <= maxChars) return markdown;
+  return `${markdown.slice(0, maxChars)}\n\n[Conteudo truncado para indexacao]`;
+}
+
+async function withAiSearchUploadTimeout<T>(upload: Promise<T>, timeoutMs = 30_000): Promise<T> {
+  let timeoutId: ReturnType<typeof setTimeout> | undefined;
+  try {
+    return await Promise.race([
+      upload,
+      new Promise<T>((_, reject) => {
+        timeoutId = setTimeout(() => reject(new Error("ai_search_upload_timeout")), timeoutMs);
+      }),
+    ]);
+  } finally {
+    if (timeoutId) clearTimeout(timeoutId);
   }
 }

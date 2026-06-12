@@ -3,6 +3,7 @@ import { eq, and, inArray, sql } from "drizzle-orm";
 import { createDb, createPool } from "../lib/db";
 import { requireAuth, type AuthVariables } from "../lib/auth";
 import type { Env } from "../types/env";
+import { searchAiSearch } from "../lib/cloudflareAiSearch";
 import {
   exercises,
   exerciseCategories,
@@ -667,17 +668,17 @@ app.get("/search/semantic", async (c) => {
   // 1. If AI Search is available, use it (modern RAG/semantic search)
   if (c.env.AI_SEARCH) {
     try {
-      const aiResults = await c.env.AI_SEARCH.search({
+      const { sources } = await searchAiSearch(c.env, {
         messages: [
           { role: "system", content: "You are a physiotherapy exercise search assistant." },
           { role: "user", content: q },
         ],
-        limit: limitNum,
+        maxNumResults: limitNum,
         filters: { source: "exercises" },
       });
 
-      if (aiResults.sources && aiResults.sources.length > 0) {
-        const matchedIds = aiResults.sources.map((s) => s.id);
+      if (sources.length > 0) {
+        const matchedIds = sources.map((s) => s.id.replace(/^exercise-/, "").replace(/^exercise:/, ""));
         const db = await createDb(c.env);
         const rows = await db
           .select()

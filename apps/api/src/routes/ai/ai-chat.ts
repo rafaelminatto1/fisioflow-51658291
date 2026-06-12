@@ -7,6 +7,7 @@ import { smartChat, smartStructured } from "../../lib/ai/smartAI";
 import { unifiedThinking, unifiedStructured } from "../../lib/ai/unifiedAI";
 import { runAi, summarizeClinicalNote } from "../../lib/ai-native";
 import { logToAxiom } from "../../lib/axiom";
+import { searchAiSearch } from "../../lib/cloudflareAiSearch";
 import {
   ClinicalReportSchema,
   ExerciseSuggestionSchema,
@@ -573,12 +574,12 @@ app.post("/vector-search", async (c) => {
   try {
     // Tenta usar o AI Search (RAG gerenciado)
     if (c.env.AI_SEARCH) {
-      const searchRes = await c.env.AI_SEARCH.search({
+      const searchRes = await searchAiSearch(c.env, {
         messages: [
           { role: "system", content: "You are a physiotherapy knowledge assistant." },
           { role: "user", content: query },
         ],
-        limit: 5,
+        maxNumResults: 5,
         ...(filter ? { filters: filter } : {}),
       });
 

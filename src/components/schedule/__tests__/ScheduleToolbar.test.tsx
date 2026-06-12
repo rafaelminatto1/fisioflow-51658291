@@ -1,7 +1,17 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ScheduleToolbar } from "../ScheduleToolbar";
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: false,
+    },
+  },
+});
+
 
 const mockUseIsMobile = vi.fn();
 
@@ -32,22 +42,24 @@ describe("ScheduleToolbar", () => {
     const onViewChange = vi.fn();
 
     render(
-      <MemoryRouter>
-        <ScheduleToolbar
-          currentDate={new Date("2026-04-22T10:00:00")}
-          viewType="week"
-          onViewChange={onViewChange}
-          onDateChange={vi.fn()}
-          isSelectionMode={false}
-          onToggleSelection={vi.fn()}
-          onCreateAppointment={vi.fn()}
-          filters={{ status: [], types: [], therapists: [] }}
-          onFiltersChange={vi.fn()}
-          onClearFilters={vi.fn()}
-          patientFilter=""
-          onPatientFilterChange={vi.fn()}
-        />
-      </MemoryRouter>,
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <ScheduleToolbar
+            currentDate={new Date("2026-04-22T10:00:00")}
+            viewType="week"
+            onViewChange={onViewChange}
+            onDateChange={vi.fn()}
+            isSelectionMode={false}
+            onToggleSelection={vi.fn()}
+            onCreateAppointment={vi.fn()}
+            filters={{ status: [], types: [], therapists: [] }}
+            onFiltersChange={vi.fn()}
+            onClearFilters={vi.fn()}
+            patientFilter=""
+            onPatientFilterChange={vi.fn()}
+          />
+        </MemoryRouter>
+      </QueryClientProvider>,
     );
 
     fireEvent.click(screen.getByRole("button", { name: "Dia" }));
@@ -62,22 +74,24 @@ describe("ScheduleToolbar", () => {
     mockUseIsMobile.mockReturnValue(true);
 
     render(
-      <MemoryRouter>
-        <ScheduleToolbar
-          currentDate={new Date("2026-04-22T10:00:00")}
-          viewType="week"
-          onViewChange={vi.fn()}
-          onDateChange={vi.fn()}
-          isSelectionMode={false}
-          onToggleSelection={vi.fn()}
-          onCreateAppointment={vi.fn()}
-          filters={{ status: [], types: [], therapists: [] }}
-          onFiltersChange={vi.fn()}
-          onClearFilters={vi.fn()}
-          patientFilter=""
-          onPatientFilterChange={vi.fn()}
-        />
-      </MemoryRouter>,
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <ScheduleToolbar
+            currentDate={new Date("2026-04-22T10:00:00")}
+            viewType="week"
+            onViewChange={vi.fn()}
+            onDateChange={vi.fn()}
+            isSelectionMode={false}
+            onToggleSelection={vi.fn()}
+            onCreateAppointment={vi.fn()}
+            filters={{ status: [], types: [], therapists: [] }}
+            onFiltersChange={vi.fn()}
+            onClearFilters={vi.fn()}
+            patientFilter=""
+            onPatientFilterChange={vi.fn()}
+          />
+        </MemoryRouter>
+      </QueryClientProvider>,
     );
 
     expect(screen.getByRole("button", { name: "Dia" })).toBeInTheDocument();
@@ -89,22 +103,24 @@ describe("ScheduleToolbar", () => {
     const onPatientFilterChange = vi.fn();
 
     render(
-      <MemoryRouter>
-        <ScheduleToolbar
-          currentDate={new Date("2026-04-22T10:00:00")}
-          viewType="week"
-          onViewChange={vi.fn()}
-          onDateChange={vi.fn()}
-          isSelectionMode={false}
-          onToggleSelection={vi.fn()}
-          onCreateAppointment={vi.fn()}
-          filters={{ status: [], types: [], therapists: [] }}
-          onFiltersChange={vi.fn()}
-          onClearFilters={vi.fn()}
-          patientFilter=""
-          onPatientFilterChange={onPatientFilterChange}
-        />
-      </MemoryRouter>,
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <ScheduleToolbar
+            currentDate={new Date("2026-04-22T10:00:00")}
+            viewType="week"
+            onViewChange={vi.fn()}
+            onDateChange={vi.fn()}
+            isSelectionMode={false}
+            onToggleSelection={vi.fn()}
+            onCreateAppointment={vi.fn()}
+            filters={{ status: [], types: [], therapists: [] }}
+            onFiltersChange={vi.fn()}
+            onClearFilters={vi.fn()}
+            patientFilter=""
+            onPatientFilterChange={onPatientFilterChange}
+          />
+        </MemoryRouter>
+      </QueryClientProvider>,
     );
 
     const input = screen.getByLabelText("Buscar paciente");

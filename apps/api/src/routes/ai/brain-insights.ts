@@ -6,6 +6,7 @@ import { requireAuth } from "../../lib/auth";
 import { getRawSql } from "../../lib/db";
 import { isUuid } from "../../lib/validators";
 import { WORKERS_AI_MODELS } from "../../lib/workersAi";
+import { searchAiSearch } from "../../lib/cloudflareAiSearch";
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
@@ -44,14 +45,14 @@ app.get("/:patientId", requireAuth, async (c) => {
     let literatureContext = "";
     if (c.env.AI_SEARCH) {
       try {
-        const searchResult = await c.env.AI_SEARCH.search({
+        const searchResult = await searchAiSearch(c.env, {
           messages: [
             { 
               role: "user", 
               content: `Protocolo de tratamento para ${patient.main_diagnosis || "fisioterapia"}. Considerar dor e amplitude de movimento.` 
             }
           ],
-          limit: 3
+          maxNumResults: 3,
         });
         literatureContext = searchResult.sources.map(s => s.content).join("\n\n");
       } catch (err) {

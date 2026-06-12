@@ -8,6 +8,7 @@ import { Hono } from "hono";
 import { requireAuth, type AuthVariables } from "../lib/auth";
 import { rateLimit } from "../middleware/rateLimit";
 import type { Env } from "../types/env";
+import { chatAiSearch } from "../lib/cloudflareAiSearch";
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
@@ -59,7 +60,7 @@ app.get("/search", async (c) => {
       filters.area_clinica = areaClinica;
     }
 
-    const result = await c.env.AI_SEARCH.search({
+    const result = await chatAiSearch(c.env, {
       messages: [
         {
           role: "system",
@@ -71,11 +72,11 @@ app.get("/search", async (c) => {
         },
         { role: "user", content: query },
       ],
-      limit: 5,
+      maxNumResults: 5,
       ...(Object.keys(filters).length > 0 ? { filters } : {}),
     });
 
-    const sources: FisioBrainSource[] = (result.sources ?? []).map((s) => {
+    const sources: FisioBrainSource[] = result.sources.map((s) => {
       const meta = (s.metadata ?? {}) as Record<string, unknown>;
       return {
         id: s.id,
@@ -88,7 +89,7 @@ app.get("/search", async (c) => {
     });
 
     return c.json({
-      answer: result.response ?? "",
+      answer: result.answer,
       sources,
       configured: true,
     } satisfies FisioBrainResult & { configured: boolean });

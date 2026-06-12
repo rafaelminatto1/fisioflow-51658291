@@ -1,6 +1,6 @@
 import { neon } from "@neondatabase/serverless";
 import { drizzle } from "drizzle-orm/neon-http";
-import * as schema from "../src/server/db/schema/clinical";
+import * as schema from "../packages/db/src/schema/clinical";
 import { builtinClinicalTestsCatalog } from "../src/data/clinicalTestsCatalog";
 import { eq } from "drizzle-orm";
 import dotenv from "dotenv";

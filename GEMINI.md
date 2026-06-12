@@ -29,3 +29,8 @@
 
 - **Strategy:** Offline-first. Mappings (POST/PATCH/DELETE) must be intercepted by the API client and queued in IndexedDB (Pro) or AsyncStorage (Patient).
 - **Recovery:** Automated sequential sync when connectivity is restored.
+
+## 🏢 Clinic-Specific Constraints
+
+- **Scope:** Single-room clinic.
+- **Excluded Features:** Do NOT implement or display "Turmas/Groups" features in the Professional App. These have been hidden from the UI to maintain a focused experience for the user.

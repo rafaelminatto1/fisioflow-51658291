@@ -6,6 +6,8 @@ import { clinicalScribeLogs } from "@fisioflow/db";
 import { transcribeAudio } from "../lib/ai-native";
 import { callAI } from "../lib/ai/callAI";
 import type { Env } from "../types/env";
+import { estimateTranscriptionMinutes, normalizeAudioCapturePolicy } from "@fisioflow/core";
+import { checkAudioTranscriptionBudget } from "../lib/audioTranscriptionBudget";
 
 const app = new Hono<{ Bindings: Env }>();
 
@@ -21,6 +23,26 @@ app.post("/scribe/process", requireAuth, async (c) => {
 
   if (!patientId || !section || !audioBase64) {
     return c.json({ error: "Campos obrigatórios ausentes" }, 400);
+  }
+
+  const capturePolicy = normalizeAudioCapturePolicy(body);
+  if (capturePolicy.captureMode === 0) {
+    return c.json({ error: "Modo 0% nao aceita envio de audio para transcricao" }, 400);
+  }
+  const budgetCheck = await checkAudioTranscriptionBudget(c.env, {
+    organizationId: user.organizationId,
+    professionalUserId: user.uid,
+    requestedSeconds: capturePolicy.capturedSeconds || 60,
+  });
+  if (!budgetCheck.allowed) {
+    return c.json(
+      {
+        error: "Orcamento mensal de transcricao excedido",
+        code: budgetCheck.reason,
+        budget: budgetCheck,
+      },
+      402,
+    );
   }
 
   const db = await createDb(c.env);
@@ -77,9 +99,19 @@ Diretrizes:
       rawText,
       formattedText,
       tokensUsed: result.usage.inputTokens + result.usage.outputTokens,
+      captureMode: capturePolicy.captureMode,
+      captureReason: capturePolicy.captureReason,
+      capturedSeconds: capturePolicy.capturedSeconds,
+      sessionCoveragePercent: capturePolicy.sessionCoveragePercent,
+      audioPolicyVersion: capturePolicy.policyVersion,
+      captureMetadata: {
+        estimatedTranscriptionMinutes: estimateTranscriptionMinutes(capturePolicy.capturedSeconds),
+        budget: budgetCheck,
+        source: "ia_studio_batch",
+      },
     });
 
-    return c.json({ success: true, rawText, formattedText });
+    return c.json({ success: true, rawText, formattedText, capturePolicy });
   } catch (error: any) {
     console.error("[AI-Studio] Erro no processamento do escriba:", error);
     return c.json({ error: "Erro ao processar áudio", details: error.message }, 500);

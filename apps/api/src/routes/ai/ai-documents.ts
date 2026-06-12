@@ -5,6 +5,7 @@ import type { Env } from "../../types/env";
 import { unifiedThinking, unifiedStructured } from "../../lib/ai/unifiedAI";
 import { ClinicalReportSchema, ReceiptOcrSchema } from "../../schemas/ai-schemas";
 import { safeText } from "./ai-helpers";
+import { searchAiSearch } from "../../lib/cloudflareAiSearch";
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
@@ -262,12 +263,12 @@ app.post("/document/chat", async (c) => {
     const { runThinkingModel } = await import("../../lib/ai-native");
 
     // 1. Buscar chunks relevantes no AI Search com filtro de documentId
-    const searchRes = await c.env.AI_SEARCH.search({
+    const searchRes = await searchAiSearch(c.env, {
       messages: [
         { role: "system", content: "You are a helpful assistant analyzing clinical documents." },
         { role: "user", content: message },
       ],
-      limit: 5,
+      maxNumResults: 5,
       filters: { documentId },
     });
 

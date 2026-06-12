@@ -11,6 +11,7 @@ import { ScribeWaveform } from "./ScribeWaveform";
 import { cn } from "@/lib/utils";
 import { iaStudioApi } from "@/api/v2";
 import { toast } from "sonner";
+import type { AudioCaptureMode, AudioCaptureReason } from "@fisioflow/core";
 
 interface ScribeDrawerProps {
   isOpen: boolean;
@@ -19,11 +20,14 @@ interface ScribeDrawerProps {
 }
 
 type SoapSection = "S" | "O" | "A" | "P";
+const MAX_RECORDING_MS = 120_000;
 
 export const ScribeDrawer: React.FC<ScribeDrawerProps> = ({ isOpen, onClose, patientId }) => {
   const [activeSection, setActiveSection] = useState<SoapSection | null>(null);
   const [isRecording, setIsRecording] = useState(false);
   const [consentObtained, setConsentObtained] = useState(false);
+  const [captureMode, setCaptureMode] = useState<AudioCaptureMode>(30);
+  const [captureReason, setCaptureReason] = useState<AudioCaptureReason>("soap_section");
   const [isProcessing, setIsProcessing] = useState(false);
   const [isScanning, setIsScanning] = useState(false);
   const [transcription, setTranscription] = useState<Record<SoapSection, string>>({
@@ -36,8 +40,15 @@ export const ScribeDrawer: React.FC<ScribeDrawerProps> = ({ isOpen, onClose, pat
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const recordingStartedAtRef = useRef<number | null>(null);
+  const recordingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const startRecording = async (section: SoapSection) => {
+    if (captureMode === 0) {
+      toast.info("Captura de áudio desativada para esta sessão.");
+      return;
+    }
+
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const mediaRecorder = new MediaRecorder(stream);
@@ -50,11 +61,22 @@ export const ScribeDrawer: React.FC<ScribeDrawerProps> = ({ isOpen, onClose, pat
 
       mediaRecorder.onstop = async () => {
         const audioBlob = new Blob(audioChunksRef.current, { type: "audio/webm" });
-        await processAudio(section, audioBlob);
+        const capturedSeconds = recordingStartedAtRef.current
+          ? Math.round((Date.now() - recordingStartedAtRef.current) / 1000)
+          : 0;
+        recordingStartedAtRef.current = null;
         stream.getTracks().forEach((track) => track.stop());
+        await processAudio(section, audioBlob, capturedSeconds);
       };
 
       mediaRecorder.start();
+      recordingStartedAtRef.current = Date.now();
+      recordingTimeoutRef.current = setTimeout(() => {
+        if (mediaRecorderRef.current?.state === "recording") {
+          stopRecording();
+          toast.info("Trecho de áudio encerrado no limite de 2 minutos.");
+        }
+      }, MAX_RECORDING_MS);
       setIsRecording(true);
       setActiveSection(section);
     } catch {
@@ -63,13 +85,17 @@ export const ScribeDrawer: React.FC<ScribeDrawerProps> = ({ isOpen, onClose, pat
   };
 
   const stopRecording = () => {
+    if (recordingTimeoutRef.current) {
+      clearTimeout(recordingTimeoutRef.current);
+      recordingTimeoutRef.current = null;
+    }
     if (mediaRecorderRef.current && isRecording) {
       mediaRecorderRef.current.stop();
       setIsRecording(false);
     }
   };
 
-  const processAudio = async (section: SoapSection, blob: Blob) => {
+  const processAudio = async (section: SoapSection, blob: Blob, capturedSeconds: number) => {
     if (!patientId) return toast.error("Paciente não selecionado.");
     setIsProcessing(true);
     try {
@@ -79,7 +105,12 @@ export const ScribeDrawer: React.FC<ScribeDrawerProps> = ({ isOpen, onClose, pat
       });
       reader.readAsDataURL(blob);
       const audioBase64 = await base64Promise;
-      const response = await iaStudioApi.processScribeAudio(patientId, section, audioBase64);
+      const response = await iaStudioApi.processScribeAudio(patientId, section, audioBase64, {
+        captureMode,
+        captureReason,
+        capturedSeconds,
+        sessionCoveragePercent: captureMode,
+      });
       if (response.success) {
         setTranscription((prev) => ({ ...prev, [section]: response.formattedText }));
         toast.success(`Seção ${section} refinada pela IA!`);
@@ -178,6 +209,51 @@ export const ScribeDrawer: React.FC<ScribeDrawerProps> = ({ isOpen, onClose, pat
                     className="data-[state=checked]:bg-emerald-500"
                   />
                 </div>
+
+                <div className="mt-4 space-y-3">
+                  <div className="grid grid-cols-4 gap-1 rounded-2xl bg-slate-950/70 p-1">
+                    {([0, 30, 50, 100] as AudioCaptureMode[]).map((mode) => (
+                      <button
+                        key={mode}
+                        type="button"
+                        disabled={isRecording || isProcessing}
+                        onClick={() => setCaptureMode(mode)}
+                        className={cn(
+                          "h-9 rounded-xl text-[11px] font-black transition-colors",
+                          captureMode === mode
+                            ? "bg-emerald-500 text-slate-950"
+                            : "text-slate-400 hover:bg-white/10",
+                        )}
+                      >
+                        {mode}%
+                      </button>
+                    ))}
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    {([
+                      ["soap_section", "SOAP"],
+                      ["evaluation", "Avaliação"],
+                      ["measurement", "Medida"],
+                      ["clinical_test", "Teste"],
+                    ] as Array<[AudioCaptureReason, string]>).map(([reason, label]) => (
+                      <button
+                        key={reason}
+                        type="button"
+                        disabled={isRecording || isProcessing}
+                        onClick={() => setCaptureReason(reason)}
+                        className={cn(
+                          "h-9 rounded-xl border text-[10px] font-black uppercase tracking-widest transition-colors",
+                          captureReason === reason
+                            ? "border-emerald-400 bg-emerald-500/10 text-emerald-300"
+                            : "border-white/10 bg-white/5 text-slate-500 hover:bg-white/10",
+                        )}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
               </div>
 
               <div className="flex gap-2">
@@ -211,6 +287,7 @@ export const ScribeDrawer: React.FC<ScribeDrawerProps> = ({ isOpen, onClose, pat
                   key={section}
                   disabled={
                     !consentObtained ||
+                    captureMode === 0 ||
                     (activeSection !== null && activeSection !== section) ||
                     isProcessing
                   }
@@ -224,7 +301,8 @@ export const ScribeDrawer: React.FC<ScribeDrawerProps> = ({ isOpen, onClose, pat
                     activeSection === section && isRecording
                       ? "bg-red-500/20 border-red-500 shadow-lg shadow-red-500/10 scale-[1.02]"
                       : "bg-slate-900 border-white/5 hover:border-emerald-500/40 shadow-sm",
-                    !consentObtained && "opacity-30 grayscale cursor-not-allowed",
+                    (!consentObtained || captureMode === 0) &&
+                      "opacity-30 grayscale cursor-not-allowed",
                   )}
                 >
                   <div
@@ -271,7 +349,7 @@ export const ScribeDrawer: React.FC<ScribeDrawerProps> = ({ isOpen, onClose, pat
                           {isProcessing ? "IA Processando..." : "Escutando..."}
                         </Badge>
                         <span className="text-[10px] font-black text-white/50 tracking-widest uppercase">
-                          Max 2:00
+                          {captureMode}% / Max 2:00
                         </span>
                       </div>
                       <ScribeWaveform isRecording={isRecording} />

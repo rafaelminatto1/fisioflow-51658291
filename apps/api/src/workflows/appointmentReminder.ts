@@ -1,5 +1,6 @@
 import { WorkflowEntrypoint, WorkflowStep, WorkflowEvent } from "cloudflare:workers";
 import type { Env } from "../types/env";
+import { WORKERS_AI_MODELS } from "../lib/workersAi";
 
 export type AppointmentReminderParams = {
   appointmentId: string;
@@ -139,9 +140,9 @@ export class AppointmentReminderWorkflow extends WorkflowEntrypoint<
         Nome: ${patientName}, Data: ${dateStr}, Profissional: ${therapistName}. 
         O tom deve ser acolhedor mas reforçar a importância da continuidade para a recuperação. Máximo 200 caracteres.`;
 
-        const aiResponse = await this.env.AI.run("@cf/google/gemini-1.5-flash", {
-          prompt,
-        });
+const aiResponse = await this.env.AI.run(WORKERS_AI_MODELS.llama_3_1_8b, {
+           messages: [{ role: "user", content: prompt }],
+         });
         msg = (aiResponse as any).response || msg;
       } catch (e) {
         console.warn("[Reminder/AI] Failed to generate AI message, using default", e);

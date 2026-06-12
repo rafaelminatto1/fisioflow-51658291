@@ -1,0 +1,4 @@
+DROP INDEX IF EXISTS audio_transcription_budgets_professional_unique;
+DROP INDEX IF EXISTS audio_transcription_budgets_org_unique;
+DROP INDEX IF EXISTS audio_transcription_budgets_org_idx;
+DROP TABLE IF EXISTS audio_transcription_budgets;
