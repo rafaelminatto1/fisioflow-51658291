@@ -136,6 +136,7 @@ export default function ComparisonScreen() {
     type?: string;
   }>();
   const [tab, setTab] = useState<"antes" | "depois">("depois");
+  const [viewMode, setViewMode] = useState<"side-by-side" | "ghost">("ghost");
   const [comparison, setComparison] = useState<BiomechanicsComparison | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -236,19 +237,35 @@ export default function ComparisonScreen() {
           </Pressable>
         </View>
 
-        {/* tabs */}
+        {/* view mode toggle */}
         <View style={styles.tabs}>
-          {(["antes", "depois"] as const).map((t) => {
-            const sel = t === tab;
-            return (
-              <Pressable key={t} onPress={() => setTab(t)} style={[styles.tab, sel && styles.tabSel]}>
-                <Text style={[styles.tabText, sel && { color: t === "depois" ? bio.primary : bio.fg }]}>
-                  {t === "antes" ? "Antes · S03" : "Depois · S12"}
-                </Text>
-              </Pressable>
-            );
-          })}
+          <Pressable onPress={() => setViewMode("ghost")} style={[styles.tab, viewMode === "ghost" && styles.tabSel]}>
+            <Text style={[styles.tabText, viewMode === "ghost" && { color: bio.primary }]}>
+              Ghost Mode (Overlay)
+            </Text>
+          </Pressable>
+          <Pressable onPress={() => setViewMode("side-by-side")} style={[styles.tab, viewMode === "side-by-side" && styles.tabSel]}>
+            <Text style={[styles.tabText, viewMode === "side-by-side" && { color: bio.primary }]}>
+              Lado a Lado
+            </Text>
+          </Pressable>
         </View>
+
+        {/* mobile-only tabs for small screens when side-by-side isn't practical */}
+        {viewMode === "ghost" && (
+          <View style={[styles.tabs, { marginTop: 10, backgroundColor: 'transparent' }]}>
+            {(["antes", "depois"] as const).map((t) => {
+              const sel = t === tab;
+              return (
+                <Pressable key={t} onPress={() => setTab(t)} style={[styles.tab, sel && styles.tabSel]}>
+                  <Text style={[styles.tabText, sel && { color: t === "depois" ? bio.primary : bio.fg }]}>
+                    Foco: {t === "antes" ? "Antes" : "Depois"}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
+        )}
       </SafeAreaView>
 
       <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
@@ -258,7 +275,28 @@ export default function ComparisonScreen() {
             <Text style={styles.loadingText}>Carregando comparativo real...</Text>
           </View>
         ) : null}
-        <Panel which={tab} />
+        
+        {viewMode === "ghost" ? (
+          <View style={styles.ghostContainer}>
+            {/* Base video (Before) with lower opacity */}
+            <View style={[styles.ghostLayer, { opacity: tab === "antes" ? 1 : 0.4 }]}>
+              <Panel which="antes" />
+            </View>
+            {/* Top video (After) */}
+            <View style={[styles.ghostLayer, { opacity: tab === "depois" ? 1 : 0.6 }]} pointerEvents={tab === "depois" ? "auto" : "none"}>
+              <Panel which="depois" />
+            </View>
+          </View>
+        ) : (
+          <View style={styles.sideBySideContainer}>
+            <View style={styles.sidePanel}>
+              <Panel which="antes" />
+            </View>
+            <View style={styles.sidePanel}>
+              <Panel which="depois" />
+            </View>
+          </View>
+        )}
 
         <Text style={styles.blockLabel}>Variação em {intervalWeeks} semanas</Text>
         <View style={styles.verdict}>
@@ -321,6 +359,11 @@ const styles = StyleSheet.create({
   tab: { flex: 1, alignItems: "center", paddingVertical: 10, borderRadius: 10 },
   tabSel: { backgroundColor: bio.card, shadowColor: "#000", shadowOpacity: 0.08, shadowRadius: 3, shadowOffset: { width: 0, height: 1 }, elevation: 2 },
   tabText: { fontSize: 13, fontFamily: font.extrabold, color: bio.muted },
+
+  ghostContainer: { position: "relative", height: 360, marginBottom: 24, borderRadius: 16, overflow: "hidden" },
+  ghostLayer: { position: "absolute", top: 0, left: 0, right: 0, bottom: 0, zIndex: 1 },
+  sideBySideContainer: { flexDirection: "row", gap: 8, marginBottom: 24 },
+  sidePanel: { flex: 1, minWidth: 150 },
 
   scroll: { paddingHorizontal: 16, paddingTop: 14, paddingBottom: 24 },
   loading: { flexDirection: "row", alignItems: "center", gap: 8, paddingVertical: 10 },
