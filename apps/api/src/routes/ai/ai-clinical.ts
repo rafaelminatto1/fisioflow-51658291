@@ -641,7 +641,7 @@ Retorne APENAS o JSON, sem markdown.
  * Gera um relatório de desfecho clínico (resumo de ciclo) para o médico.
  */
 app.get("/medical-report/outcome", async (c) => {
-  const _user = c.get("user");
+  const user = c.get("user");
   const patientId = c.req.query("patientId");
 
   if (!isUuid(patientId)) return c.json({ error: "patientId inválido" }, 400);

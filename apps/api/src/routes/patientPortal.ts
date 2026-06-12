@@ -1031,12 +1031,12 @@ app.post("/exercises/:assignmentId/complete", async (c) => {
       const XP_PER_EXERCISE = 25;
       const gProf = await pool.query(
         `INSERT INTO patient_gamification
-           (patient_id, current_xp, level, current_streak, longest_streak,
+           (organization_id, patient_id, current_xp, level, current_streak, longest_streak,
             total_points, last_activity_date, created_at, updated_at)
-         VALUES ($1, 0, 1, 0, 0, 0, NOW(), NOW(), NOW())
+         VALUES ($1, $2, 0, 1, 0, 0, 0, NOW(), NOW(), NOW())
          ON CONFLICT (patient_id) DO UPDATE SET updated_at = NOW()
          RETURNING *`,
-        [data.patient_id, user.organizationId],
+        [user.organizationId, data.patient_id],
       );
       const prof = gProf.rows[0];
       const newTotal = (prof.total_points || 0) + XP_PER_EXERCISE;
@@ -1070,8 +1070,8 @@ app.post("/exercises/:assignmentId/complete", async (c) => {
       await pool.query(
         `UPDATE patient_gamification SET total_points=$1, current_xp=$1, level=$2,
            current_streak=$3, longest_streak=$4, last_activity_date=NOW(), updated_at=NOW()
-         WHERE patient_id=$5`,
-        [finalTotal, finalXpLevel, streak, longest, data.patient_id],
+         WHERE patient_id=$5 AND organization_id=$6`,
+        [finalTotal, finalXpLevel, streak, longest, data.patient_id, user.organizationId],
       );
 
       await pool.query(

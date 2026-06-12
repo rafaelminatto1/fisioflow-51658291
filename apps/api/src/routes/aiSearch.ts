@@ -375,6 +375,7 @@ aiSearchApp.get("/unified", requireAuth, async (c) => {
  * Retorna dicas de educação em saúde personalizadas baseadas no contexto do paciente via AI Search.
  */
 aiSearchApp.get("/education", async (c) => {
+  const user = c.get("user");
   const patientId = c.req.query("patientId");
   if (!patientId) return c.json({ error: "patientId é obrigatório" }, 400);
   if (!c.env.AI_SEARCH) return c.json({ error: "AI Search não configurado" }, 503);

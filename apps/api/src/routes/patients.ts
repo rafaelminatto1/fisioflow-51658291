@@ -1344,11 +1344,8 @@ app.get("/:id", async (c) => {
 
   try {
     const conditions = withTenant(patients, user.organizationId, eq(patients.id, id));
-    const query = db.select().from(patients).where(conditions).limit(1);
-    const result = await query;
-    if (result && !result.rows) result.rows = result;
-
-    const row = result.rows[0];
+    const result = await db.select().from(patients).where(conditions).limit(1);
+    const row = result[0];
     if (!row) return c.json({ error: "Paciente não encontrado" }, 404);
 
     return c.json({ data: normalizePatientRow(row as DbRow) });
