@@ -458,6 +458,7 @@ aiSearchApp.get("/unified", requireAuth, async (c) => {
  * Retorna dicas de educação em saúde personalizadas baseadas no contexto do paciente via AI Search.
  */
 aiSearchApp.get("/education", async (c) => {
+  const user = c.get("user");
   const patientId = c.req.query("patientId");
   if (!patientId) return c.json({ error: "patientId é obrigatório" }, 400);
   if (!c.env.AI_SEARCH) return c.json({ error: "AI Search não configurado" }, 503);
@@ -468,7 +469,7 @@ aiSearchApp.get("/education", async (c) => {
 
     // 1. Obter diagnóstico e condição do paciente
     const patientRes =
-      await sql`SELECT condition, diagnosis FROM patients WHERE id = ${patientId}::uuid`;
+      await sql`SELECT condition, diagnosis FROM patients WHERE id = ${patientId}::uuid AND organization_id = ${user.organizationId}::uuid`;
     const patient = patientRes.rows[0];
     if (!patient) return c.json({ error: "Paciente não encontrado" }, 404);
 
