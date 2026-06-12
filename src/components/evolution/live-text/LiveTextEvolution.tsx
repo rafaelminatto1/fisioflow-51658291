@@ -15,6 +15,7 @@
  */
 
 import { useMemo, useState } from "react";
+import { WikiSuggestionsPanel } from "@/components/wiki/WikiSuggestionsPanel";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Library, Activity, Dumbbell, ListOrdered } from "lucide-react";
@@ -183,6 +184,8 @@ export function LiveTextEvolution({
           className="min-h-[140px] w-full"
         />
       </section>
+
+      <WikiSuggestionsPanel text={stripHtml(data.observacao || "")} enabled={!disabled} />
 
       {/* 🔵 Histórico de evoluções */}
       <section

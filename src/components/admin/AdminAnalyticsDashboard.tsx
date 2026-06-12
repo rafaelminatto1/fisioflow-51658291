@@ -9,6 +9,7 @@
 
 import React, { useState, useMemo, useCallback } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { WikiGapsCard } from "@/components/admin/WikiGapsCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -1182,6 +1183,8 @@ export function AdminAnalyticsDashboard({ className }: AdminAnalyticsDashboardPr
           </ScrollArea>
         </CardContent>
       </Card>
+
+      <WikiGapsCard />
     </div>
   );
 }
