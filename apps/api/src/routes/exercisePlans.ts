@@ -130,9 +130,9 @@ app.get("/:id/compliance", requireAuth, async (c) => {
     `SELECT p.*, array_agg(i.exercise_id) FILTER (WHERE i.id IS NOT NULL) AS exercise_ids
      FROM exercise_plans p
      LEFT JOIN exercise_plan_items i ON i.plan_id = p.id
-     WHERE p.id = $1
+     WHERE p.id = $1 AND p.organization_id = $2
      GROUP BY p.id`,
-    [planId],
+    [planId, c.get("user").organizationId],
   );
 
   if (!planResult.rows.length) return c.json({ error: "Plano não encontrado" }, 404);
@@ -216,7 +216,7 @@ app.post("/:id/generate-hep", requireAuth, async (c) => {
      FROM exercise_plans ep
      LEFT JOIN patients p ON p.id = ep.patient_id
      WHERE ep.id = $1`,
-    [planId],
+    [planId, c.get("user").organizationId],
   );
   if (!planResult.rows.length) return c.json({ error: "Plan not found" }, 404);
 

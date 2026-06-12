@@ -385,7 +385,7 @@ aiSearchApp.get("/education", async (c) => {
 
     // 1. Obter diagnóstico e condição do paciente
     const patientRes =
-      await sql`SELECT condition, diagnosis FROM patients WHERE id = ${patientId}::uuid`;
+      await sql`SELECT condition, diagnosis FROM patients WHERE id = ${patientId}::uuid AND organization_id = ${user.organizationId}::uuid`;
     const patient = patientRes.rows[0];
     if (!patient) return c.json({ error: "Paciente não encontrado" }, 404);
 

@@ -1,5 +1,5 @@
 import * as LocalAuthentication from "expo-local-authentication";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as SecureStore from "expo-secure-store";
 
 const BIOMETRIC_ENABLED_KEY = "@fisioflow_biometric_enabled";
 const BIOMETRIC_LAST_USED_KEY = "@fisioflow_biometric_last_used";
@@ -27,7 +27,7 @@ export async function getBiometricStatus(): Promise<BiometricStatus> {
     }
 
     const enrolled = await LocalAuthentication.isEnrolledAsync();
-    const isEnabled = (await AsyncStorage.getItem(BIOMETRIC_ENABLED_KEY)) === "true";
+    const isEnabled = (await SecureStore.getItemAsync(BIOMETRIC_ENABLED_KEY)) === "true";
 
     // Determine biometric type
     const types = await LocalAuthentication.supportedAuthenticationTypesAsync();
@@ -74,7 +74,7 @@ export async function authenticateBiometric(
 
     if (result.success) {
       // Save last successful use
-      await AsyncStorage.setItem(BIOMETRIC_LAST_USED_KEY, new Date().toISOString());
+      await SecureStore.setItemAsync(BIOMETRIC_LAST_USED_KEY, new Date().toISOString());
       return true;
     }
 
@@ -98,14 +98,14 @@ export async function authenticateBiometric(
  * Habilita ou desabilita login biométrico
  */
 export async function setBiometricEnabled(enabled: boolean): Promise<void> {
-  await AsyncStorage.setItem(BIOMETRIC_ENABLED_KEY, enabled ? "true" : "false");
+  await SecureStore.setItemAsync(BIOMETRIC_ENABLED_KEY, enabled ? "true" : "false");
 }
 
 /**
  * Verifica se o login biométrico está habilitado
  */
 export async function isBiometricEnabled(): Promise<boolean> {
-  return (await AsyncStorage.getItem(BIOMETRIC_ENABLED_KEY)) === "true";
+  return (await SecureStore.getItemAsync(BIOMETRIC_ENABLED_KEY)) === "true";
 }
 
 /**
@@ -113,7 +113,7 @@ export async function isBiometricEnabled(): Promise<boolean> {
  */
 export async function getLastBiometricUse(): Promise<Date | null> {
   try {
-    const lastUsed = await AsyncStorage.getItem(BIOMETRIC_LAST_USED_KEY);
+    const lastUsed = await SecureStore.getItemAsync(BIOMETRIC_LAST_USED_KEY);
     return lastUsed ? new Date(lastUsed) : null;
   } catch {
     return null;

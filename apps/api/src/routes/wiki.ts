@@ -262,9 +262,9 @@ app.get("/:slug", async (c) => {
     eq(wikiPages.isPublic, true),
     isNull(wikiPages.deletedAt),
   );
-  const query = sql`SELECT * FROM wiki_pages WHERE ${conditions} LIMIT 1`;
-  const result = await db.execute(query);
-  const row = result.rows[0];
+  const query = db.select().from(wikiPages).where(conditions).limit(1);
+  const result = await query;
+  const row = result[0] ? [result[0]] : [];
 
   if (!row) return c.json({ error: "Página não encontrada" }, 404);
 
