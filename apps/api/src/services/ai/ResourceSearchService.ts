@@ -48,30 +48,38 @@ export class ResourceSearchService {
     const allResults: Resource[] = [];
     const seenIds = new Set<string>();
 
+    // Extração básica de região do corpo para booster de relevância
+    const bodyRegions = ["joelho", "ombro", "coluna", "quadril", "tornozelo", "cervical", "lombar", "punho", "mão", "pé"];
+    const detectedRegion = bodyRegions.find(r => query.toLowerCase().includes(r));
+
     // 1. Busca Semântica via Cloudflare AI Search (RAG)
     if (this.env.AI_SEARCH) {
       try {
         const aiResults = await searchAiSearch(this.env, {
           messages: [
-            { 
-                role: "system", 
-                content: `Você é um assistente de busca clínica. Ajude a encontrar recursos de fisioterapia (exercícios, testes, protocolos) para a query do usuário. 
-                Contexto do paciente: Condição=${context?.patientCondition || 'N/A'}, Dor=${context?.painLevel || 'N/A'}, Objetivo=${context?.goal || 'N/A'}`
+            {
+                role: "system",
+                content: `Você é o assistente de busca clínica do FisioFlow.
+                Sua tarefa é encontrar os melhores recursos (testes, exercícios, protocolos) para a necessidade do fisioterapeuta.
+                Seja técnico e preciso. Priorize evidência científica.
+                Contexto do paciente: Condição=${context?.patientCondition || 'N/A'}, Dor=${context?.painLevel || 'N/A'}`
             },
             { role: "user", content: query }
           ],
-          maxNumResults: 8,
+          maxNumResults: 10,
         });
 
-        for (const source of aiResults.sources) {
+        for (const source of aiResults.sources || []) {
           const resType = (source.metadata?.source as string) || "wiki";
           if (types.includes(resType) || types.includes("wiki")) {
+             // Booster se o conteúdo menciona a região detectada
+             const booster = detectedRegion && source.content?.toLowerCase().includes(detectedRegion) ? 0.1 : 0;
              allResults.push({
                id: source.id,
                type: resType as any,
                title: (source.metadata?.title as string) || source.filename || "Recurso Clínico",
                description: source.content?.slice(0, 200) || "",
-               score: source.score || 0.7,
+               score: (source.score || 0.7) + booster,
                source: "ai_search",
                action: { kind: "open_modal", target: source.id },
                metadata: source.metadata
@@ -146,10 +154,16 @@ export class ResourceSearchService {
   }
 
   private async generateExternalSuggestion(query: string): Promise<Resource | null> {
-      const prompt = `Você é um especialista em fisioterapia. 
-      O usuário buscou por "${query}" e não encontramos resultados internos. 
-      Sugira UM exercício terapêutico específico e consagrado para essa queixa.
-      Responda APENAS um JSON no formato: {"title": "nome do exercicio", "description": "breve explicação clínica"}`;
+      const prompt = `Você é um especialista em biomecânica e fisioterapia esportiva.
+      O usuário buscou por "${query}" e não há resultados no banco interno.
+
+      Sugira UM exercício terapêutico baseado em evidências (ex: protocolo de eccêntricos, exercícios de controle motor).
+
+      Responda APENAS um JSON válido (sem markdown, sem explicações extras):
+      {
+        "title": "Título Curto do Exercício",
+        "description": "Explicação clínica concisa (max 150 caracteres) focada no objetivo biomecânico."
+      }`;
       
       try {
           const res = await runAi(this.env, WORKERS_AI_MODELS.llama_3_1_8b, {
@@ -167,11 +181,11 @@ export class ResourceSearchService {
               type: "external_suggestion",
               title: data.title,
               description: data.description,
-              score: 0.6,
+              score: 0.65,
               source: "youtube",
               action: { 
                   kind: "create_suggestion", 
-                  target: `https://www.youtube.com/results?search_query=fisioterapia+${encodeURIComponent(data.title)}`
+                  target: `https://www.youtube.com/results?search_query=fisioterapia+${encodeURIComponent(data.title)}+tutorial+reabilitação`
               }
           };
       } catch (err) {

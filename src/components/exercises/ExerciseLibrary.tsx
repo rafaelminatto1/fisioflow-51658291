@@ -158,15 +158,16 @@ const ExerciseCard = React.memo(function ExerciseCard({
       }}
     >
       {/* Image Section */}
-      <div className="relative h-44 bg-gradient-to-br from-muted to-muted/50 overflow-hidden flex-shrink-0">
+      <div className="relative h-40 bg-white dark:bg-slate-950 overflow-hidden flex-shrink-0">
         {thumbSrc ? (
           <OptimizedImage
             src={thumbSrc}
             alt={exercise.name ?? "Exercício"}
-            className="h-full w-full transition-transform duration-500 group-hover:scale-110"
+            className="h-full w-full transition-transform duration-500 group-hover:scale-[1.03]"
             aspectRatio="4:3"
             fallback="/placeholder.svg"
             priority={imagePriority}
+            style={{ objectFit: "contain" }}
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/5 to-primary/10">
@@ -869,10 +870,10 @@ export function ExerciseLibrary({
           </div>
         </div>
         {/* Card grid skeleton - mimics real cards (image + content) */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-4">
           {Array.from({ length: 9 }).map((_, i) => (
             <Card key={i} className="overflow-hidden">
-              <div className="relative h-44 bg-muted">
+              <div className="relative h-40 bg-muted">
                 <Skeleton className="h-full w-full rounded-none" />
               </div>
               <CardContent className="p-4 space-y-3">
@@ -1065,7 +1066,7 @@ export function ExerciseLibrary({
             </div>
           </div>
         ) : viewMode === "grid" ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-2">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-4 p-2">
             {filteredExercises.slice(0, visibleCount).map((exercise, index) => (
               <div key={exercise.id} className="cv-card relative group animate-in fade-in slide-in-from-bottom-4" style={{ animationDelay: `${(index % 12) * 50}ms` }}>
                 <ExerciseCard

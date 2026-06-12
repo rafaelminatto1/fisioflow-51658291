@@ -53,3 +53,9 @@ curl -X POST https://api-pro.moocafisio.com.br/api/ai-search/sync?types=exercise
 
 ## 4. Verificação de UI
 Abra o Agent Hub no frontend, selecione o **Simulador de Paciente** e pergunte algo clínico como "Qual teste fazer para dor no joelho?". Verifique se os cards aparecem e se o botão "Abrir" exibe o novo modal de preview.
+
+## 5. Testes de Aprimoramento
+Para validar a nova inteligência de busca:
+1. **Body Region Boosting**: No Simulador, pergunte 'Qual exercício para dor no ombro?'. Verifique se os recursos que mencionam 'ombro' nos metadados ou descrição aparecem no topo (o score deve ter um bônus de 10%).
+2. **Sugestão Biomecânica**: Tente uma busca por algo raro, como 'Exercício para síndrome de Parsonage-Turner'. Verifique se a IA gera uma sugestão externa (external_suggestion) com link para o YouTube focado em reabilitação.
+3. **Animações**: Note que os cards agora entram com um efeito de slide e fade-in escalonado, tornando a resposta do simulador mais 'viva'.
