@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { View, Text, Pressable, TextInput, ScrollView, StyleSheet, ActivityIndicator, Alert } from "react-native";
+import { useState, useMemo, useEffect } from "react";
+import { View, Text, Pressable, TextInput, ScrollView, StyleSheet, ActivityIndicator, Alert, Dimensions, TouchableOpacity } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
@@ -8,10 +8,14 @@ import Svg, { Circle, Path, Ellipse, Line, Text as SvgText, G } from "react-nati
 import { useVideoPlayer, VideoView } from "expo-video";
 import {
   ChevronLeft, GitCompare, Share2, ChevronUp, ChevronDown, Rewind, FastForward, Play, Pause,
-  TrendingUp, TrendingDown, AlertTriangle, Check, PenTool, Eraser
+  TrendingUp, TrendingDown, AlertTriangle, Check, PenTool, Eraser, Info
 } from "lucide-react-native";
 import { bio, font } from "@/constants/biomecanica";
 import { biomechanicsApi } from "@/lib/api/biomechanics";
+import { LineChart } from "react-native-gifted-charts";
+import { SymmetryMeter } from "@/components/biomecanica/SymmetryMeter";
+
+const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
 const METRICS = [
   { l: "ROM joelho", v: "118°", d: "+6° vs 112°", up: true, tone: "ok" as const, icon: TrendingUp },
@@ -28,6 +32,13 @@ const GONIO = [
 
 const COLLAPSED = 330;
 
+// Mock data for movement trajectory (Amplitude vs Time)
+const MOCK_TRAJECTORY = Array.from({ length: 40 }, (_, i) => ({
+  value: 40 + Math.sin(i / 5) * 40 + Math.random() * 5,
+  label: `${(i / 4).toFixed(1)}s`,
+  dataPointText: i === 15 ? "118°" : undefined,
+}));
+
 export default function AnalysisScreen() {
   const router = useRouter();
   const { uri, patientId, patientName } = useLocalSearchParams<{ uri?: string; patientId?: string; patientName?: string }>();
@@ -38,6 +49,9 @@ export default function AnalysisScreen() {
   const [note, setNote] = useState(
     "Valgo dinâmico do joelho direito no descenso, com compensação por inclinação de tronco. Paciente relata pinçada patelar ao atingir 90°.",
   );
+
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(1);
 
   const handleSave = async () => {
     if (!patientId) {
@@ -55,6 +69,9 @@ export default function AnalysisScreen() {
           goniometry: GONIO,
           patientName,
         },
+        symmetryScore: 84,
+        trajectoryData: MOCK_TRAJECTORY,
+        aiValidationStatus: "validated",
         observations: note,
         mediaUrl: uri,
       });
@@ -78,6 +95,17 @@ export default function AnalysisScreen() {
     player.loop = true;
     if (playing) player.play();
   });
+
+  // Sync player time for the chart cursor
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (player && playing) {
+        setCurrentTime(player.currentTime);
+        setDuration(player.duration || 1);
+      }
+    }, 100);
+    return () => clearInterval(interval);
+  }, [player, playing]);
 
   const ty = useSharedValue(COLLAPSED);
   const start = useSharedValue(COLLAPSED);
@@ -120,6 +148,8 @@ export default function AnalysisScreen() {
       runOnJS(setOpenState)(toOpen);
     });
   const sheetStyle = useAnimatedStyle(() => ({ transform: [{ translateY: ty.value }] }));
+
+  const progressPercent = (currentTime / duration) * 100;
 
   return (
     <View style={styles.root}>
@@ -226,18 +256,46 @@ export default function AnalysisScreen() {
         </View>
       </SafeAreaView>
 
-      {/* video controls */}
+      {/* video controls and timeline */}
       {!open && (
         <View style={styles.controls}>
+          {/* Motion Chart Timeline */}
+          <View style={styles.chartContainer}>
+            <LineChart
+              data={MOCK_TRAJECTORY}
+              width={SCREEN_WIDTH - 60}
+              height={80}
+              thickness={3}
+              color={bio.primary}
+              hideDataPoints
+              hideRules
+              hideYAxisText
+              xAxisColor="transparent"
+              yAxisColor="transparent"
+              backgroundColor="transparent"
+              pointerConfig={{
+                pointerStripHeight: 80,
+                pointerStripColor: '#fff',
+                pointerStripWidth: 2,
+                pointerColor: bio.primary,
+                radius: 4,
+                pointerLabelComponent: (items: any) => (
+                  <View style={styles.pointerLabel}>
+                    <Text style={styles.pointerText}>{items[0].value.toFixed(1)}°</Text>
+                  </View>
+                ),
+              }}
+            />
+          </View>
+          
           <View style={styles.scrubber}>
-            <View style={styles.scrubFill} />
-            <View style={[styles.scrubMark, { left: "15%" }]} />
-            <View style={[styles.scrubMark, { left: "42%", backgroundColor: "hsl(45,93%,52%)" }]} />
-            <View style={[styles.scrubMark, { left: "68%" }]} />
+            <View style={[styles.scrubFill, { width: `${progressPercent}%` }]} />
+            <View style={[styles.scrubMark, { left: "37%" }]}><TrendingUp size={10} color="#fff" /></View>
             <View style={styles.scrubHandle} />
           </View>
+
           <View style={styles.ctlRow}>
-            <Text style={styles.timecode}>00:04.21 / 00:10.05</Text>
+            <Text style={styles.timecode}>{currentTime.toFixed(2)}s / {duration.toFixed(2)}s</Text>
             <View style={{ flex: 1 }} />
             <Pressable style={styles.ctlBtn} onPress={() => player?.seekBy(-5)}><Rewind size={18} color="#fff" strokeWidth={2.2} /></Pressable>
             <Pressable style={styles.play} onPress={() => {
@@ -258,13 +316,50 @@ export default function AnalysisScreen() {
           <Pressable onPress={toggle}>
             <View style={styles.grab}><View style={styles.grabBar} /></View>
             <View style={styles.sheetHead}>
-              <Text style={styles.sheetTitle}>Métricas da sessão</Text>
+              <Text style={styles.sheetTitle}>Inteligência Biomecânica</Text>
               {open ? <ChevronDown size={18} color={bio.muted} strokeWidth={2.2} /> : <ChevronUp size={18} color={bio.muted} strokeWidth={2.2} />}
             </View>
           </Pressable>
         </GestureDetector>
 
         <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.sheetScroll} showsVerticalScrollIndicator={false}>
+          
+          {/* Wave 1: Symmetry Meter */}
+          <SymmetryMeter score={84} />
+
+          {/* Peak Finder Smart Cards */}
+          <View>
+            <Text style={styles.blockLabel}>Picos detectados pela IA</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginHorizontal: -22, paddingHorizontal: 22 }}>
+              <TouchableOpacity style={styles.peakCard} onPress={() => { if (player) player.currentTime = 3.75; }}>
+                <View style={[styles.peakBadge, { backgroundColor: bio.primary + "20" }]}>
+                  <TrendingUp size={14} color={bio.primary} />
+                  <Text style={[styles.peakBadgeText, { color: bio.primary }]}>MÁXIMA ROM</Text>
+                </View>
+                <Text style={styles.peakVal}>118.4°</Text>
+                <Text style={styles.peakTime}>em 00:03.75</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity style={styles.peakCard} onPress={() => { if (player) player.currentTime = 5.2; }}>
+                <View style={[styles.peakBadge, { backgroundColor: "#EF444420" }]}>
+                  <AlertTriangle size={14} color="#EF4444" />
+                  <Text style={[styles.peakBadgeText, { color: "#EF4444" }]}>VALGO CRÍTICO</Text>
+                </View>
+                <Text style={styles.peakVal}>14.2°</Text>
+                <Text style={styles.peakTime}>em 00:05.20</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity style={styles.peakCard}>
+                <View style={[styles.peakBadge, { backgroundColor: "#10B98120" }]}>
+                  <Check size={14} color="#10B981" />
+                  <Text style={[styles.peakBadgeText, { color: "#10B981" }]}>ESTABILIDADE</Text>
+                </View>
+                <Text style={styles.peakVal}>Alta</Text>
+                <Text style={styles.peakTime}>Fase de apoio</Text>
+              </TouchableOpacity>
+            </ScrollView>
+          </View>
+
           {/* metric grid */}
           <View style={styles.metricGrid}>
             {METRICS.map((m) => (
@@ -320,7 +415,7 @@ export default function AnalysisScreen() {
                 style={styles.noteInput}
               />
               <View style={styles.noteFoot}>
-                <Text style={styles.noteTime}>marcador 00:04.21</Text>
+                <Text style={styles.noteTime}>marcador {currentTime.toFixed(2)}s</Text>
                 <Pressable 
                   style={[styles.save, saving && { opacity: 0.7 }]} 
                   onPress={handleSave} 
@@ -331,7 +426,7 @@ export default function AnalysisScreen() {
                   ) : (
                     <>
                       <Check size={14} color="#fff" strokeWidth={2.6} />
-                      <Text style={styles.saveText}>Salvar nota</Text>
+                      <Text style={styles.saveText}>Validar Análise</Text>
                     </>
                   )}
                 </Pressable>
@@ -369,10 +464,14 @@ const styles = StyleSheet.create({
   trialText: { color: "#fff", fontSize: 10, fontFamily: font.extrabold, letterSpacing: 0.5 },
 
   controls: { position: "absolute", left: 0, right: 0, bottom: 360, paddingHorizontal: 20 },
-  scrubber: { height: 5, backgroundColor: "rgba(255,255,255,0.2)", borderRadius: 999, marginBottom: 14 },
-  scrubFill: { width: "42%", height: "100%", backgroundColor: "#fff", borderRadius: 999 },
-  scrubMark: { position: "absolute", top: -3, width: 2, height: 11, borderRadius: 1, backgroundColor: bio.primary },
-  scrubHandle: { position: "absolute", left: "42%", top: -6, width: 16, height: 16, borderRadius: 8, marginLeft: -8, backgroundColor: "#fff" },
+  chartContainer: { height: 90, marginBottom: 10, overflow: "visible" },
+  pointerLabel: { backgroundColor: bio.primary, padding: 4, borderRadius: 6 },
+  pointerText: { color: "#fff", fontSize: 10, fontWeight: "bold" },
+  
+  scrubber: { height: 5, backgroundColor: "rgba(255,255,255,0.2)", borderRadius: 999, marginBottom: 14, position: "relative" },
+  scrubFill: { height: "100%", backgroundColor: bio.primary, borderRadius: 999 },
+  scrubMark: { position: "absolute", top: -8, width: 20, height: 20, borderRadius: 10, backgroundColor: bio.primary, alignItems: "center", justifyContent: "center", borderWidth: 2, borderColor: "#fff", marginLeft: -10 },
+  scrubHandle: { position: "absolute", right: 0, top: -6, width: 16, height: 16, borderRadius: 8, backgroundColor: "#fff" },
   ctlRow: { flexDirection: "row", alignItems: "center", gap: 16 },
   timecode: { fontSize: 12, fontFamily: font.bold, color: "rgba(255,255,255,0.9)" },
   ctlBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: "rgba(255,255,255,0.12)", alignItems: "center", justifyContent: "center" },
@@ -380,12 +479,18 @@ const styles = StyleSheet.create({
   speed: { paddingHorizontal: 12, paddingVertical: 8, borderRadius: 10, backgroundColor: "rgba(255,255,255,0.12)" },
   speedText: { fontSize: 12, fontFamily: font.extrabold, color: "#fff" },
 
-  sheet: { position: "absolute", left: 0, right: 0, bottom: 0, height: 600, backgroundColor: bio.card, borderTopLeftRadius: 26, borderTopRightRadius: 26, shadowColor: "#000", shadowOpacity: 0.3, shadowRadius: 24, shadowOffset: { width: 0, height: -8 }, elevation: 16 },
+  sheet: { position: "absolute", left: 0, right: 0, bottom: 0, height: 650, backgroundColor: bio.card, borderTopLeftRadius: 26, borderTopRightRadius: 26, shadowColor: "#000", shadowOpacity: 0.3, shadowRadius: 24, shadowOffset: { width: 0, height: -8 }, elevation: 16 },
   grab: { paddingTop: 11, paddingBottom: 2, alignItems: "center" },
   grabBar: { width: 40, height: 5, borderRadius: 999, backgroundColor: bio.border },
   sheetHead: { flexDirection: "row", alignItems: "center", gap: 10, paddingHorizontal: 22, paddingTop: 6, paddingBottom: 12 },
   sheetTitle: { fontSize: 16, fontFamily: font.extrabold, letterSpacing: -0.2, color: bio.fg, flex: 1 },
   sheetScroll: { paddingHorizontal: 22, paddingBottom: 40, gap: 20 },
+
+  peakCard: { width: 140, padding: 12, backgroundColor: bio.card, borderRadius: 16, borderWidth: 1, borderColor: bio.border, marginRight: 10 },
+  peakBadge: { flexDirection: "row", alignItems: "center", gap: 4, paddingHorizontal: 6, paddingVertical: 4, borderRadius: 6, marginBottom: 8 },
+  peakBadgeText: { fontSize: 9, fontWeight: "800" },
+  peakVal: { fontSize: 18, fontFamily: font.extrabold, color: bio.fg },
+  peakTime: { fontSize: 10, color: bio.muted, marginTop: 2 },
 
   metricGrid: { flexDirection: "row", flexWrap: "wrap", gap: 10 },
   metric: { width: "47.5%", flexGrow: 1, padding: 14, backgroundColor: bio.card, borderWidth: 1, borderColor: bio.border, borderRadius: 14 },

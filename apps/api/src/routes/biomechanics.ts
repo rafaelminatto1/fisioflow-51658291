@@ -425,6 +425,9 @@ app.post("/", requireAuth, async (c) => {
       analysisData: body.analysisData || {},
       observations: body.observations,
       conclusions: body.conclusions,
+      symmetryScore: body.symmetryScore ? String(body.symmetryScore) : null,
+      trajectoryData: body.trajectoryData || [],
+      aiValidationStatus: body.aiValidationStatus || 'pending',
     })
     .returning();
 

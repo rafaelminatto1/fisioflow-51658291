@@ -20,6 +20,9 @@ export interface BiomechanicsAnalysisPayload {
   thumbnailUrl?: string;
   observations?: string;
   conclusions?: string;
+  symmetryScore?: number;
+  trajectoryData?: any[];
+  aiValidationStatus?: string;
 }
 
 export interface BiomechanicsAssessment {
@@ -34,6 +37,9 @@ export interface BiomechanicsAssessment {
   analysisData?: Record<string, any> | null;
   observations?: string | null;
   conclusions?: string | null;
+  symmetryScore?: string | null;
+  trajectoryData?: any[] | null;
+  aiValidationStatus?: string | null;
   createdAt: string;
   updatedAt: string;
 }

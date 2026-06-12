@@ -33,6 +33,11 @@ export const biomechanicsAssessments = pgTable(
     type: biomechanicsAssessmentTypeEnum("type").notNull(),
     status: varchar("status", { length: 50 }).default("completed"),
 
+    // New Biomechanics 2.0 fields
+    symmetryScore: numeric("symmetry_score"),
+    trajectoryData: jsonb("trajectory_data").default("[]"),
+    aiValidationStatus: varchar("ai_validation_status", { length: 50 }).default("pending"),
+
     // Media Info
     mediaUrl: text("media_url").notNull(), // R2 URL
     thumbnailUrl: text("thumbnail_url"),
