@@ -10,6 +10,7 @@ export type WikiIndexablePage = {
   htmlContent?: string | null;
   category?: string | null;
   tags?: string[] | null;
+  patientVisible?: boolean | null;
 };
 
 export type WikiIndexDocument = {
@@ -60,12 +61,13 @@ export function serializeWikiPageForIndex(page: WikiIndexablePage): WikiIndexDoc
 export async function upsertWikiPageInIndex(
   env: Env,
   page: WikiIndexablePage,
+  binding: Env["AI_SEARCH"] = env.AI_SEARCH,
 ): Promise<{ ok: boolean; status?: string; error?: string }> {
-  if (!env.AI_SEARCH?.items) return { ok: false, error: "AI_SEARCH não configurado" };
+  if (!binding?.items) return { ok: false, error: "AI_SEARCH não configurado" };
 
   const doc = serializeWikiPageForIndex(page);
   try {
-    const items = env.AI_SEARCH.items;
+    const items = binding.items;
     const result =
       typeof items.uploadAndPoll === "function"
         ? await items.uploadAndPoll(doc.filename, doc.markdown, {
@@ -84,19 +86,20 @@ export async function upsertWikiPageInIndex(
 export async function deleteIndexedItemsByFilenames(
   env: Env,
   filenames: Iterable<string>,
+  binding: Env["AI_SEARCH"] = env.AI_SEARCH,
 ): Promise<{ deleted: number }> {
-  if (!env.AI_SEARCH?.items) return { deleted: 0 };
+  if (!binding?.items) return { deleted: 0 };
 
   let deleted = 0;
   for (const filename of new Set(filenames)) {
     try {
-      const listing = await env.AI_SEARCH.items.list({ search: filename, per_page: 10 });
+      const listing = await binding.items.list({ search: filename, per_page: 10 });
       const items: Array<{ id: string; key?: string; filename?: string }> =
         listing?.result ?? listing?.items ?? [];
       for (const item of items) {
         const key = item.key ?? item.filename ?? "";
         if (key !== filename) continue;
-        await env.AI_SEARCH.items.delete(item.id);
+        await binding.items.delete(item.id);
         deleted++;
       }
     } catch (error) {
@@ -112,8 +115,30 @@ export async function removeWikiPageFromIndex(
   pageId: string,
   slug?: string | null,
 ): Promise<{ deleted: number }> {
-  return deleteIndexedItemsByFilenames(env, [
-    buildWikiIndexFilename(pageId),
-    ...legacyWikiIndexFilenames(pageId, slug),
+  const filenames = [buildWikiIndexFilename(pageId), ...legacyWikiIndexFilenames(pageId, slug)];
+  const [main] = await Promise.all([
+    deleteIndexedItemsByFilenames(env, filenames),
+    deleteIndexedItemsByFilenames(env, filenames, env.AI_SEARCH_PATIENT),
   ]);
+  return main;
+}
+
+// Instância do paciente: opt-in explícito por página (patient_visible).
+export async function syncWikiPagePatientIndex(
+  env: Env,
+  page: WikiIndexablePage,
+): Promise<void> {
+  if (!env.AI_SEARCH_PATIENT?.items) return;
+
+  if (page.patientVisible) {
+    const result = await upsertWikiPageInIndex(env, page, env.AI_SEARCH_PATIENT);
+    if (!result.ok) console.warn("[wikiIndexing] patient upsert failed:", result.error);
+    return;
+  }
+
+  await deleteIndexedItemsByFilenames(
+    env,
+    [buildWikiIndexFilename(page.id), ...legacyWikiIndexFilenames(page.id, page.slug)],
+    env.AI_SEARCH_PATIENT,
+  );
 }

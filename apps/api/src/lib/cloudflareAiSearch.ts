@@ -53,24 +53,37 @@ export function buildAiSearchRequest(params: SearchParams): Record<string, unkno
   return request;
 }
 
+export async function searchAiSearchOn(
+  binding: NonNullable<Env["AI_SEARCH"]> | undefined,
+  params: SearchParams,
+): Promise<{
+  raw: any;
+  sources: AiSearchSource[];
+}> {
+  if (!binding) {
+    throw new Error("AI Search nao configurado");
+  }
+
+  const raw = await binding.search(buildAiSearchRequest(params));
+  return { raw, sources: normalizeAiSearchSources(raw) };
+}
+
 export async function searchAiSearch(env: Env, params: SearchParams): Promise<{
   raw: any;
   sources: AiSearchSource[];
 }> {
-  if (!env.AI_SEARCH) {
-    throw new Error("AI Search nao configurado");
-  }
-
-  const raw = await env.AI_SEARCH.search(buildAiSearchRequest(params));
-  return { raw, sources: normalizeAiSearchSources(raw) };
+  return searchAiSearchOn(env.AI_SEARCH, params);
 }
 
-export async function chatAiSearch(env: Env, params: SearchParams & { model?: string }): Promise<{
+export async function chatAiSearchOn(
+  binding: NonNullable<Env["AI_SEARCH"]> | undefined,
+  params: SearchParams & { model?: string },
+): Promise<{
   raw: any;
   answer: string;
   sources: AiSearchSource[];
 }> {
-  if (!env.AI_SEARCH) {
+  if (!binding) {
     throw new Error("AI Search nao configurado");
   }
 
@@ -81,15 +94,23 @@ export async function chatAiSearch(env: Env, params: SearchParams & { model?: st
   };
 
   const raw =
-    typeof env.AI_SEARCH.chatCompletions === "function"
-      ? await env.AI_SEARCH.chatCompletions(request)
-      : await env.AI_SEARCH.search(request);
+    typeof binding.chatCompletions === "function"
+      ? await binding.chatCompletions(request)
+      : await binding.search(request);
 
   return {
     raw,
     answer: extractAiSearchAnswer(raw),
     sources: normalizeAiSearchSources(raw),
   };
+}
+
+export async function chatAiSearch(env: Env, params: SearchParams & { model?: string }): Promise<{
+  raw: any;
+  answer: string;
+  sources: AiSearchSource[];
+}> {
+  return chatAiSearchOn(env.AI_SEARCH, params);
 }
 
 export function normalizeAiSearchSources(raw: any): AiSearchSource[] {

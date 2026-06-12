@@ -12,7 +12,11 @@ import { requireAuth, verifyToken, type AuthVariables } from "../lib/auth";
 import type { Env } from "../types/env";
 import { wikiPages, wikiPageVersions, wikiDictionary } from "@fisioflow/db";
 import { searchFilter } from "../lib/db-utils";
-import { removeWikiPageFromIndex, upsertWikiPageInIndex } from "../lib/wikiIndexing";
+import {
+  removeWikiPageFromIndex,
+  syncWikiPagePatientIndex,
+  upsertWikiPageInIndex,
+} from "../lib/wikiIndexing";
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
@@ -36,6 +40,7 @@ const wikiPageFullColumns = {
   parentId: wikiPages.parentId,
   isPublished: wikiPages.isPublished,
   isPublic: wikiPages.isPublic,
+  patientVisible: wikiPages.patientVisible,
   organizationId: wikiPages.organizationId,
   createdBy: wikiPages.createdBy,
   updatedBy: wikiPages.updatedBy,
@@ -412,6 +417,11 @@ app.post("/", requireAuth, async (c) => {
   const body = await c.req.json();
   const { comment, ...pageData } = body;
 
+  if ("patient_visible" in pageData) {
+    pageData.patientVisible = Boolean(pageData.patient_visible);
+    delete pageData.patient_visible;
+  }
+
   // Gera slug único a partir do título se não enviado
   if (!pageData.slug && pageData.title) {
     const base = String(pageData.title)
@@ -456,6 +466,11 @@ app.put("/:slug", requireAuth, async (c) => {
   const body = await c.req.json();
   const { comment, ...pageData } = body;
 
+  if ("patient_visible" in pageData) {
+    pageData.patientVisible = Boolean(pageData.patient_visible);
+    delete pageData.patient_visible;
+  }
+
   delete pageData.id;
   delete pageData.createdBy;
   delete pageData.createdAt;
@@ -496,17 +511,20 @@ app.put("/:slug", requireAuth, async (c) => {
   });
 
   // Indexação imediata no AI Search: publicou → upsert; despublicou → remove
+  const indexablePage = {
+    id: updatedPage.id,
+    slug: updatedPage.slug,
+    title: updatedPage.title,
+    content: updatedPage.content,
+    htmlContent: updatedPage.htmlContent,
+    category: updatedPage.category,
+    tags: updatedPage.tags,
+    patientVisible: updatedPage.isPublished ? updatedPage.patientVisible : false,
+  };
+
   if (updatedPage.isPublished) {
     c.executionCtx.waitUntil(
-      upsertWikiPageInIndex(c.env, {
-        id: updatedPage.id,
-        slug: updatedPage.slug,
-        title: updatedPage.title,
-        content: updatedPage.content,
-        htmlContent: updatedPage.htmlContent,
-        category: updatedPage.category,
-        tags: updatedPage.tags,
-      }).then((r) => {
+      upsertWikiPageInIndex(c.env, indexablePage).then((r) => {
         if (!r.ok) console.warn("[wiki PUT] AI Search upsert failed:", r.error);
       }),
     );
@@ -517,6 +535,12 @@ app.put("/:slug", requireAuth, async (c) => {
       ),
     );
   }
+
+  c.executionCtx.waitUntil(
+    syncWikiPagePatientIndex(c.env, indexablePage).catch((err) =>
+      console.warn("[wiki PUT] patient index sync failed:", err),
+    ),
+  );
 
   return c.json({ data: updatedPage });
 });
