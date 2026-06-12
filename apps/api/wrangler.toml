@@ -58,9 +58,11 @@ binding = "ANALYTICS"
 dataset = "fisioflow_events"
 
 # ===== AI SEARCH =====
-# [[ai_search]]
-# binding = "AI_SEARCH"
-# instance_name = "fisioflow-rag"
+# A instancia fisioflow-rag deve ser criada como `wrangler ai-search create fisioflow-rag --type builtin`.
+# Nao apontar para o bucket R2 fisioflow-media: o crawler tenta indexar midia clinica e gera erros.
+[[ai_search]]
+binding = "AI_SEARCH"
+instance_name = "fisioflow-rag"
 
 # ===== AGENT MEMORY (PRIVATE BETA) =====
 # Conta ainda nao liberada no beta: wrangler retorna Not allowed [10018].
@@ -269,9 +271,9 @@ database_id = "9eba3eb7-5486-49d0-9684-c325f8b1ddc2"
 binding = "ANALYTICS"
 dataset = "fisioflow_events"
 
-# [[env.production.ai_search]]
-# # binding = "AI_SEARCH"
-# instance_name = "ai-search-fisioflow-rag"
+[[env.production.ai_search]]
+binding = "AI_SEARCH"
+instance_name = "fisioflow-rag"
 
 # [[env.production.agent_memory]]
 # binding = "AGENT_MEMORY"

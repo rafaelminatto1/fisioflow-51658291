@@ -6,6 +6,7 @@ import {
   chatAiSearch,
   searchAiSearch,
 } from "../lib/cloudflareAiSearch";
+import { upsertWikiPageInIndex } from "../lib/wikiIndexing";
 
 const AUTORAG_NAME = "fisioflow-rag";
 
@@ -258,7 +259,7 @@ export async function syncAutoRAGContent(
     let count = 0;
     for (let i = 0; i < res.rows.length; i += 5) {
       await Promise.all(
-        res.rows.slice(i, i + 5).map((row) => uploadDoc(`wiki-${row.id}.md`, buildWikiDoc(row), {
+        res.rows.slice(i, i + 5).map((row) => uploadDoc(`wiki/${row.id}.md`, buildWikiDoc(row), {
             source: "wiki",
             id: row.id,
             title: row.title,
@@ -524,22 +525,16 @@ export async function surgicalSyncWiki(
   env: Env,
   row: { id: string; title: string; content: string; category: string },
 ) {
-  if (!env.AI_SEARCH) return;
-
-  const docMarkdown = buildWikiDoc(row);
-  const filename = `wiki_${row.id}.md`;
-  
-  try {
-    await env.AI_SEARCH.items.upload(filename, docMarkdown, {
-      metadata: {
-        source: "wiki",
-        category: row.category || "Geral",
-        title: row.title,
-      },
-    });
+  const result = await upsertWikiPageInIndex(env, {
+    id: row.id,
+    title: row.title,
+    content: row.content,
+    category: row.category || "Geral",
+  });
+  if (result.ok) {
     console.log(`[AI Search] Surgically synchronized wiki page: ${row.title}`);
-  } catch (err) {
-    console.error("[AI Search] Surgical wiki sync failed:", err);
+  } else if (result.error) {
+    console.error("[AI Search] Surgical wiki sync failed:", result.error);
   }
 }
 

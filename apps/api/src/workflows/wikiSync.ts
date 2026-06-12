@@ -8,6 +8,7 @@
 import { WorkflowEntrypoint, WorkflowStep, WorkflowEvent } from "cloudflare:workers";
 import type { Env } from "../types/env";
 import { neon } from "@neondatabase/serverless";
+import { serializeWikiPageForIndex } from "../lib/wikiIndexing";
 
 export type WikiSyncParams = {
   triggerType: "cron" | "manual" | "publish";
@@ -68,43 +69,94 @@ export class WikiSyncWorkflow extends WorkflowEntrypoint<Env, WikiSyncParams> {
       return { synced: 0, skipped: 0 };
     }
 
-    // 2. Indexar cada página
-    let synced = 0;
-    let failed = 0;
-
-    for (const page of pages) {
-      const pageId = String(page.id);
-      const title = String(page.title ?? "");
-      const category = String(page.category ?? "geral");
-      const content = String(page.html_content ?? page.content ?? "");
-      const filename = `wiki/${pageId}_${String(page.slug ?? pageId)}.md`;
-
-      const markdown = `# ${title}\n\n${content}`;
-
-      await step.do(`index-wiki-${pageId}`, async () => {
-        try {
-          await withAiSearchUploadTimeout(
-            this.env.AI_SEARCH!.items.upload(filename, truncateForAiSearch(markdown), {
-              metadata: {
-                source: "wiki",
-                wiki_id: pageId,
-                title,
-                category,
-                slug: String(page.slug ?? ""),
-              },
-            }),
-          );
-          synced++;
-        } catch (err) {
-          console.error(`[WikiSyncWorkflow] Failed to index page ${pageId}:`, err);
-          failed++;
-        }
+    // 2. Indexar em lotes para reduzir passos e controlar concorrencia no AI Search beta.
+    const docs = pages.map((page): WikiDocument => {
+      const doc = serializeWikiPageForIndex({
+        id: String(page.id),
+        slug: page.slug ? String(page.slug) : null,
+        title: String(page.title ?? ""),
+        content: page.content ? String(page.content) : null,
+        htmlContent: page.html_content ? String(page.html_content) : null,
+        category: page.category ? String(page.category) : null,
+        tags: Array.isArray(page.tags) ? page.tags.map(String) : null,
       });
-    }
 
-    console.log(`[WikiSyncWorkflow] Done. synced=${synced} failed=${failed}`);
-    return { synced, failed, total: pages.length };
+      return {
+        id: String(page.id),
+        filename: doc.filename,
+        markdown: doc.markdown,
+        metadata: doc.metadata,
+      };
+    });
+
+    const result = await indexWikiDocumentsInBatches(step, docs, async (doc) => {
+      await withAiSearchUploadTimeout(
+        this.env.AI_SEARCH!.items.upload(doc.filename, truncateForAiSearch(doc.markdown), {
+          metadata: doc.metadata,
+        }),
+      );
+    });
+
+    console.log(`[WikiSyncWorkflow] Done. synced=${result.synced} failed=${result.failed}`);
+    return { ...result, total: pages.length };
   }
+}
+
+type WikiDocument = {
+  id: string;
+  filename: string;
+  markdown: string;
+  metadata: Record<string, unknown>;
+};
+
+type WikiBatchResult = {
+  synced: number;
+  failed: number;
+  failures: Array<{ id: string; error: string }>;
+};
+
+async function indexWikiDocumentsInBatches(
+  step: WorkflowStep,
+  docs: WikiDocument[],
+  upload: (doc: WikiDocument) => Promise<void>,
+  batchSize = 10,
+): Promise<WikiBatchResult> {
+  const total: WikiBatchResult = { synced: 0, failed: 0, failures: [] };
+
+  for (let i = 0; i < docs.length; i += batchSize) {
+    const batch = docs.slice(i, i + batchSize);
+    const batchNumber = Math.floor(i / batchSize) + 1;
+    const result = await step.do(`index-wiki-batch-${batchNumber}`, async () => {
+      const outcomes = await Promise.all(
+        batch.map(async (doc) => {
+          try {
+            await upload(doc);
+            return { id: doc.id, ok: true as const };
+          } catch (error) {
+            const message = error instanceof Error ? error.message : String(error);
+            console.error(`[WikiSyncWorkflow] Failed to index page ${doc.id}:`, message);
+            return { id: doc.id, ok: false as const, error: message };
+          }
+        }),
+      );
+
+      const failures = outcomes
+        .filter((item): item is { id: string; ok: false; error: string } => !item.ok)
+        .map(({ id, error }) => ({ id, error }));
+
+      return {
+        synced: outcomes.length - failures.length,
+        failed: failures.length,
+        failures,
+      };
+    });
+
+    total.synced += result.synced;
+    total.failed += result.failed;
+    total.failures.push(...result.failures);
+  }
+
+  return total;
 }
 
 function truncateForAiSearch(markdown: string, maxChars = 24000): string {

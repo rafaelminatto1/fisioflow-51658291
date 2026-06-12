@@ -12,6 +12,7 @@ import { requireAuth, verifyToken, type AuthVariables } from "../lib/auth";
 import type { Env } from "../types/env";
 import { wikiPages, wikiPageVersions, wikiDictionary } from "@fisioflow/db";
 import { searchFilter } from "../lib/db-utils";
+import { removeWikiPageFromIndex, upsertWikiPageInIndex } from "../lib/wikiIndexing";
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
@@ -494,12 +495,27 @@ app.put("/:slug", requireAuth, async (c) => {
     createdBy: user.uid,
   });
 
-  // Re-sync imediato no AI Search se a página foi publicada
-  if (updatedPage.isPublished && c.env.WORKFLOW_WIKI_SYNC) {
-    c.env.WORKFLOW_WIKI_SYNC.create({
-      id: `wiki-sync-page-${updatedPage.id}-v${nextVersion}`,
-      params: { triggerType: "publish", wikiPageId: updatedPage.id },
-    }).catch((err) => console.warn("[wiki PUT] WikiSync trigger failed:", err));
+  // Indexação imediata no AI Search: publicou → upsert; despublicou → remove
+  if (updatedPage.isPublished) {
+    c.executionCtx.waitUntil(
+      upsertWikiPageInIndex(c.env, {
+        id: updatedPage.id,
+        slug: updatedPage.slug,
+        title: updatedPage.title,
+        content: updatedPage.content,
+        htmlContent: updatedPage.htmlContent,
+        category: updatedPage.category,
+        tags: updatedPage.tags,
+      }).then((r) => {
+        if (!r.ok) console.warn("[wiki PUT] AI Search upsert failed:", r.error);
+      }),
+    );
+  } else {
+    c.executionCtx.waitUntil(
+      removeWikiPageFromIndex(c.env, updatedPage.id, updatedPage.slug).catch((err) =>
+        console.warn("[wiki PUT] AI Search remove failed:", err),
+      ),
+    );
   }
 
   return c.json({ data: updatedPage });
@@ -520,6 +536,12 @@ app.delete("/:slug", requireAuth, async (c) => {
     .returning({ id: wikiPages.id });
 
   if (!row) return c.json({ error: "Página não encontrada" }, 404);
+
+  c.executionCtx.waitUntil(
+    removeWikiPageFromIndex(c.env, row.id, slug).catch((err) =>
+      console.warn("[wiki DELETE] AI Search remove failed:", err),
+    ),
+  );
 
   return c.json({ ok: true });
 });
