@@ -128,6 +128,7 @@ export const patientsApi = {
     const qs = buildPatientsQueryString(params);
     return request<PatientsListResponse>(`/api/patients${qs ? `?${qs}` : ""}`);
   },
+  birthdays: () => request<{ data: PatientRow[] }>("/api/patients/birthdays"),
   getByProfile: (profileId: string) =>
     request<{ data: PatientRow | null }>(
       `/api/patients/by-profile/${encodeURIComponent(profileId)}`,
