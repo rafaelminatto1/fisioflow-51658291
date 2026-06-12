@@ -41,7 +41,7 @@ describe("handleScheduled", () => {
     expect(mocks.createPool).not.toHaveBeenCalled();
   });
 
-  it("creates WikiSyncWorkflow at the clinic opening schedule", async () => {
+  it("does not create WikiSyncWorkflow manually — delegated to wrangler schedules", async () => {
     const create = vi.fn().mockResolvedValue(undefined);
 
     await handleScheduled(
@@ -50,16 +50,11 @@ describe("handleScheduled", () => {
       {} as ExecutionContext,
     );
 
-    expect(create).toHaveBeenCalledWith(
-      expect.objectContaining({
-        id: expect.stringMatching(/^wiki-sync-\d{4}-\d{2}-\d{2}$/),
-        params: { triggerType: "cron" },
-      }),
-    );
+    expect(create).not.toHaveBeenCalled();
     expect(mocks.createPool).not.toHaveBeenCalled();
   });
 
-  it("creates KnowledgeSyncWorkflow after the clinic opens on Mondays", async () => {
+  it("does not create KnowledgeSyncWorkflow manually — delegated to wrangler schedules", async () => {
     const create = vi.fn().mockResolvedValue(undefined);
 
     await handleScheduled(
@@ -68,12 +63,7 @@ describe("handleScheduled", () => {
       {} as ExecutionContext,
     );
 
-    expect(create).toHaveBeenCalledWith(
-      expect.objectContaining({
-        id: expect.stringMatching(/^knowledge-sync-\d{4}-\d{2}-\d{2}$/),
-        params: { triggerType: "cron", syncTarget: "all" },
-      }),
-    );
+    expect(create).not.toHaveBeenCalled();
     expect(mocks.createPool).not.toHaveBeenCalled();
   });
 });
