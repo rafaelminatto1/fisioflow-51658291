@@ -83,25 +83,14 @@ export async function handleScheduled(event: ScheduledEvent, env: Env, ctx: Exec
         break;
       }
 
-      case "0 10 * * *": // UTC 10h = BRT 07h — WikiSyncWorkflow na abertura da clínica
-        if (env.WORKFLOW_WIKI_SYNC) {
-          await env.WORKFLOW_WIKI_SYNC.create({
-            id: `wiki-sync-${new Date().toISOString().slice(0, 10)}`,
-            params: { triggerType: "cron" },
-          }).catch((err) => console.error("[Cron] WikiSync create failed:", err));
-        }
+      case "0 10 * * *":
+        // DELEGADO: WikiSyncWorkflow agora usa schedules no wrangler.toml
+        console.log("[Cron] WikiSync delegated to scheduled workflow");
         break;
 
-      case "10 10 * * 1": {
-        // UTC 10h10 Segunda = BRT 07h10 — KnowledgeSync + AutoRAG + Vectorize
-        if (env.WORKFLOW_KNOWLEDGE_SYNC) {
-          await env.WORKFLOW_KNOWLEDGE_SYNC.create({
-            id: `knowledge-sync-${new Date().toISOString().slice(0, 10)}`,
-            params: { triggerType: "cron", syncTarget: "all" },
-          }).catch((err) => console.error("[Cron] KnowledgeSync create failed:", err));
-        }
-
-        // AutoRAG: upload exercícios, protocolos e wiki como markdown para busca semântica com LLM
+      case "10 10 * * 1":
+        // DELEGADO: KnowledgeSyncWorkflow agora usa schedules no wrangler.toml
+        // AutoRAG sync mantido separado - requer credenciais API
         if (env.CF_API_TOKEN && env.CF_ACCOUNT_ID) {
           syncAutoRAGContent(env)
             .then((indexed) => {
@@ -109,12 +98,10 @@ export async function handleScheduled(event: ScheduledEvent, env: Env, ctx: Exec
             })
             .catch((err) => console.error("[Cron] AutoRAG sync failed:", err));
         }
-
-
         break;
-      }
 
-      case "30 10 * * *": // UTC 10h30 = BRT 07h30 — ClinicAgent morning briefing
+      case "30 10 * * *":
+        // ClinicAgent briefings - mantido como RPC pois é DO, não Workflow
         if (env.CLINIC_AGENT) {
           const pool = createPool(env);
           const orgs = await pool.query("SELECT id FROM organizations WHERE is_active = true");
@@ -130,7 +117,8 @@ export async function handleScheduled(event: ScheduledEvent, env: Env, ctx: Exec
         }
         break;
 
-      case "30 21 * * *": // UTC 21h30 = BRT 18h30 — ClinicAgent daily summary
+      case "30 21 * * *":
+        // ClinicAgent daily summary - mantido como RPC pois é DO, não Workflow
         if (env.CLINIC_AGENT) {
           const pool = createPool(env);
           const orgs = await pool.query("SELECT id FROM organizations WHERE is_active = true");
@@ -145,7 +133,8 @@ export async function handleScheduled(event: ScheduledEvent, env: Env, ctx: Exec
         }
         break;
 
-      case "0 12 * * 1": // UTC 12h Segunda = BRT 09h — ClinicAgent missing patients alert
+      case "0 12 * * 1":
+        // ClinicAgent missing patients alert - mantido como RPC
         if (env.CLINIC_AGENT) {
           const pool = createPool(env);
           const orgs = await pool.query("SELECT id FROM organizations WHERE is_active = true");

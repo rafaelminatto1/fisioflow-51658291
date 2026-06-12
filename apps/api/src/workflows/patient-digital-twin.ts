@@ -3,6 +3,7 @@ import type { Env } from "../types/env";
 import { getRawSql, createDb } from "../lib/db";
 import { patients } from "@fisioflow/db";
 import { eq } from "drizzle-orm";
+import { WORKERS_AI_MODELS } from "../lib/workersAi";
 
 /**
  * Workflow: Patient Digital Twin Analysis
@@ -91,13 +92,13 @@ export class PatientDigitalTwinWorkflow extends WorkflowEntrypoint<Env, { patien
 
 			Retorne APENAS um JSON: {"risk": "...", "recoveryWeeks": 12, "confidence": 85}`;
 
-      const response = await this.env.AI.run("@cf/google/gemini-1.5-flash", {
-        prompt,
+      const response = await this.env.AI.run(WORKERS_AI_MODELS.llama_3_1_8b, {
+        messages: [{ role: "user", content: prompt }],
       });
 
       try {
-        const jsonMatch = (response as any).response.match(/\{[\s\S]*\}/);
-        return JSON.parse(jsonMatch?.[0] ?? (response as any).response);
+        const jsonMatch = (response as any).response?.match(/\{[\s\S]*\}/);
+        return JSON.parse(jsonMatch?.[0] ?? JSON.stringify({ risk: "low", recoveryWeeks: 8, confidence: 50 }));
       } catch {
         return { risk: "low", recoveryWeeks: 8, confidence: 50 };
       }

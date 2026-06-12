@@ -17,6 +17,8 @@ export type WikiSyncParams = {
 export class WikiSyncWorkflow extends WorkflowEntrypoint<Env, WikiSyncParams> {
   async run(event: WorkflowEvent<WikiSyncParams>, step: WorkflowStep) {
     const { triggerType, wikiPageId } = event.payload;
+    // Default to "cron" when triggered via schedule (no payload)
+    const syncType = triggerType ?? "cron";
 
     if (!this.env.AI_SEARCH) {
       console.warn("[WikiSyncWorkflow] AI_SEARCH binding not configured, skipping.");
@@ -32,7 +34,7 @@ export class WikiSyncWorkflow extends WorkflowEntrypoint<Env, WikiSyncParams> {
     // 1. Buscar páginas a sincronizar
     const pages = (await step.do("fetch-wiki-pages", async (): Promise<any[]> => {
       const sql = neon(url);
-      if (triggerType === "publish" && wikiPageId) {
+      if (syncType === "publish" && wikiPageId) {
         const rows = await sql`
           SELECT id, slug, title, content, html_content, category, tags, is_published
           FROM wiki_pages
@@ -42,7 +44,7 @@ export class WikiSyncWorkflow extends WorkflowEntrypoint<Env, WikiSyncParams> {
         return rows as any[];
       }
 
-      const rows = triggerType === "manual"
+      const rows = syncType === "manual"
         ? await sql`
           SELECT id, slug, title, content, html_content, category, tags, is_published
           FROM wiki_pages

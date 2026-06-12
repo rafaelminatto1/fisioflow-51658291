@@ -143,7 +143,7 @@ export class AppointmentReminderWorkflow extends WorkflowEntrypoint<
 const aiResponse = await this.env.AI.run(WORKERS_AI_MODELS.llama_3_1_8b, {
            messages: [{ role: "user", content: prompt }],
          });
-        msg = (aiResponse as any).response || msg;
+        msg = (aiResponse as any).response?.trim() || msg;
       } catch (e) {
         console.warn("[Reminder/AI] Failed to generate AI message, using default", e);
       }
