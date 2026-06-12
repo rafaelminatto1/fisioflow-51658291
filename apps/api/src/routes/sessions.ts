@@ -801,6 +801,7 @@ app.delete("/templates/:templateId", requireAuth, async (c) => {
 
 // ===== ANEXOS =====
 app.get("/:id/attachments", requireAuth, async (c) => {
+  const user = c.get("user");
   const db = createDb(c.env);
   const id = c.req.param("id");
   if (!isValidUuid(id)) return c.json({ error: "ID inválido" }, 400);
@@ -878,6 +879,7 @@ app.post("/:id/attachments", requireAuth, async (c) => {
 });
 
 app.delete("/:id/attachments/:attachmentId", requireAuth, async (c) => {
+  const user = c.get("user");
   const db = createDb(c.env);
   const id = c.req.param("id");
   const attachmentId = c.req.param("attachmentId");

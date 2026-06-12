@@ -215,7 +215,7 @@ app.post("/:id/generate-hep", requireAuth, async (c) => {
     `SELECT ep.*, p.main_condition, p.diagnosis
      FROM exercise_plans ep
      LEFT JOIN patients p ON p.id = ep.patient_id
-     WHERE ep.id = $1`,
+     WHERE ep.id = $1 AND ep.organization_id = $2`,
     [planId, c.get("user").organizationId],
   );
   if (!planResult.rows.length) return c.json({ error: "Plan not found" }, 404);
