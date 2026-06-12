@@ -76,6 +76,39 @@ export class ClinicAgent extends Agent<Env, ClinicState> {
   }
 
   @callable()
+  async chat({ message }: { message: string }) {
+    const text = String(message ?? "").trim();
+    if (text.length < 2) return { reply: "Pode detalhar a pergunta?", sources: [] };
+
+    // Contexto da wiki/protocolos via AI Search (retrieval-only)
+    let context = "";
+    let sources: Array<{ title: string; slug: string }> = [];
+    try {
+      if (this.env.AI_SEARCH) {
+        const { searchAiSearch } = await import("../lib/cloudflareAiSearch");
+        const result = await searchAiSearch(this.env, { query: text, maxNumResults: 4 });
+        context = result.sources.map((s) => s.content).join("\n\n").slice(0, 6000);
+        sources = result.sources.map((s) => ({
+          title: String(s.metadata?.title ?? s.filename),
+          slug: String(s.metadata?.slug ?? ""),
+        }));
+      }
+    } catch {
+      // contexto é opcional
+    }
+
+    const result = await callAI(this.env, {
+      task: "chat",
+      prompt: `Você é o assistente operacional da clínica FisioFlow. Responda em português do Brasil, direto ao ponto.
+${context ? `\nCONTEXTO DA BASE CLÍNICA:\n${context}\n` : ""}
+PERGUNTA: ${text}`,
+      organizationId: this.state.orgId,
+    });
+
+    return { reply: result.content, sources, generatedAt: new Date().toISOString() };
+  }
+
+  @callable()
   async runDailySummary() {
     const orgId = this.state.orgId;
     const prompt = `Gere um resumo do dia para a clínica de fisioterapia ${orgId || "atual"}. Inclua: consultas realizadas, evoluções registradas, pendências e próximos passos. Máximo 200 palavras. Responda em português.`;
