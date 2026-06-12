@@ -81,17 +81,14 @@ export async function upsertWikiPageInIndex(
   }
 }
 
-export async function removeWikiPageFromIndex(
+export async function deleteIndexedItemsByFilenames(
   env: Env,
-  pageId: string,
-  slug?: string | null,
+  filenames: Iterable<string>,
 ): Promise<{ deleted: number }> {
   if (!env.AI_SEARCH?.items) return { deleted: 0 };
 
-  const candidates = new Set([buildWikiIndexFilename(pageId), ...legacyWikiIndexFilenames(pageId, slug)]);
   let deleted = 0;
-
-  for (const filename of candidates) {
+  for (const filename of new Set(filenames)) {
     try {
       const listing = await env.AI_SEARCH.items.list({ search: filename, per_page: 10 });
       const items: Array<{ id: string; key?: string; filename?: string }> =
@@ -108,4 +105,15 @@ export async function removeWikiPageFromIndex(
   }
 
   return { deleted };
+}
+
+export async function removeWikiPageFromIndex(
+  env: Env,
+  pageId: string,
+  slug?: string | null,
+): Promise<{ deleted: number }> {
+  return deleteIndexedItemsByFilenames(env, [
+    buildWikiIndexFilename(pageId),
+    ...legacyWikiIndexFilenames(pageId, slug),
+  ]);
 }

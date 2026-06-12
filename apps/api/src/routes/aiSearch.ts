@@ -7,6 +7,7 @@ import {
   searchAiSearch,
 } from "../lib/cloudflareAiSearch";
 import { upsertWikiPageInIndex } from "../lib/wikiIndexing";
+import { buildExerciseDoc, buildProtocolDoc } from "../lib/contentIndexing";
 import {
   ASK_MATCH_THRESHOLD,
   isInternalRole,
@@ -627,57 +628,6 @@ function getCfApi(env: Env) {
     });
 }
 
-function buildExerciseDoc(row: {
-  id: string;
-  name: string;
-  description: string | null;
-  instructions: string | null;
-  category: string | null;
-  difficulty: string | null;
-  muscles_primary: string[] | null;
-  muscles_secondary: string[] | null;
-  body_parts: string[] | null;
-  tips: string | null;
-  precautions: string | null;
-  benefits: string | null;
-}): string {
-  const parts: string[] = [`# Exercício: ${row.name}`];
-  if (row.category) parts.push(`**Categoria:** ${row.category}`);
-  if (row.difficulty) parts.push(`**Dificuldade:** ${row.difficulty}`);
-  if (row.muscles_primary?.length)
-    parts.push(`**Músculos primários:** ${row.muscles_primary.join(", ")}`);
-  if (row.muscles_secondary?.length)
-    parts.push(`**Músculos secundários:** ${row.muscles_secondary.join(", ")}`);
-  if (row.body_parts?.length) parts.push(`**Regiões corporais:** ${row.body_parts.join(", ")}`);
-  if (row.description) parts.push(`\n## Descrição\n${row.description}`);
-  if (row.instructions) parts.push(`\n## Instruções de Execução\n${row.instructions}`);
-  if (row.benefits) parts.push(`\n## Benefícios Clínicos\n${row.benefits}`);
-  if (row.tips) parts.push(`\n## Dicas Clínicas\n${row.tips}`);
-  if (row.precautions) parts.push(`\n## Precauções\n${row.precautions}`);
-  return parts.join("\n");
-}
-
-function buildProtocolDoc(row: {
-  id: string;
-  name: string;
-  description: string | null;
-  condition_name: string | null;
-  weeks_total: number | null;
-  objectives: string | null;
-  contraindications: string | null;
-  evidence_level: string | null;
-  protocol_type: string | null;
-}): string {
-  const parts: string[] = [`# Protocolo Clínico: ${row.name}`];
-  if (row.condition_name) parts.push(`**Condição clínica:** ${row.condition_name}`);
-  if (row.protocol_type) parts.push(`**Tipo:** ${row.protocol_type}`);
-  if (row.evidence_level) parts.push(`**Nível de evidência:** ${row.evidence_level}`);
-  if (row.weeks_total) parts.push(`**Duração:** ${row.weeks_total} semanas`);
-  if (row.description) parts.push(`\n## Descrição do Protocolo\n${row.description}`);
-  if (row.objectives) parts.push(`\n## Objetivos\n${row.objectives}`);
-  if (row.contraindications) parts.push(`\n## Contraindicações\n${row.contraindications}`);
-  return parts.join("\n");
-}
 
 function buildWikiDoc(row: {
   id: string;
