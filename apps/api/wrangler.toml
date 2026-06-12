@@ -64,6 +64,11 @@ dataset = "fisioflow_events"
 binding = "AI_SEARCH"
 instance_name = "fisioflow-rag"
 
+# Instância isolada do assistente do paciente (só conteúdo patient_visible)
+[[ai_search]]
+binding = "AI_SEARCH_PATIENT"
+instance_name = "fisioflow-rag-paciente"
+
 # ===== AGENT MEMORY (PRIVATE BETA) =====
 # Conta ainda nao liberada no beta: wrangler retorna Not allowed [10018].
 # Quando a Cloudflare habilitar, criar `fisioflow-memory` e descomentar.
@@ -274,6 +279,10 @@ dataset = "fisioflow_events"
 [[env.production.ai_search]]
 binding = "AI_SEARCH"
 instance_name = "fisioflow-rag"
+
+[[env.production.ai_search]]
+binding = "AI_SEARCH_PATIENT"
+instance_name = "fisioflow-rag-paciente"
 
 # [[env.production.agent_memory]]
 # binding = "AGENT_MEMORY"

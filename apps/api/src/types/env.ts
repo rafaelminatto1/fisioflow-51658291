@@ -65,6 +65,32 @@ export interface StreamVideoDetails {
  * Cloudflare Workers Environment Bindings
  * Define todas as variáveis e bindings disponíveis no Worker
  */
+export type AiSearchBinding = {
+  search(options: Record<string, unknown>): Promise<any>;
+  chatCompletions?(options: Record<string, unknown>): Promise<any>;
+  stats?(): Promise<any>;
+  items: {
+    uploadAndPoll(
+      filename: string,
+      content: ReadableStream | ArrayBuffer | Blob | string,
+      options?: { metadata?: Record<string, unknown>; pollIntervalMs?: number; timeoutMs?: number },
+    ): Promise<{ id: string; filename: string; status: string }>;
+    upload(
+      filename: string,
+      content: ReadableStream | ArrayBuffer | Blob | string,
+      options?: { metadata?: Record<string, unknown> },
+    ): Promise<{ id: string; filename: string; status: string }>;
+    delete(itemId: string): Promise<void>;
+    list(options?: {
+      page?: number;
+      per_page?: number;
+      search?: string;
+      status?: string;
+      metadata_filter?: string;
+    }): Promise<{ result?: Array<{ id: string; key?: string; filename?: string; status: string; metadata?: Record<string, unknown> }>; items?: Array<{ id: string; filename: string; status: string }> }>;
+  };
+};
+
 export interface Env {
   // Hyperdrive: connection pooler edge → Neon PostgreSQL
   HYPERDRIVE: Hyperdrive;
@@ -133,31 +159,10 @@ export interface Env {
   // Bound via [[ai_search]] binding = "AI_SEARCH" instance_name = "fisioflow-rag".
   // As rotas usam apps/api/src/lib/cloudflareAiSearch.ts para a API atual
   // com ai_search_options.retrieval e compatibilidade com mocks antigos.
-  AI_SEARCH?: {
-    search(options: Record<string, unknown>): Promise<any>;
-    chatCompletions?(options: Record<string, unknown>): Promise<any>;
-    stats?(): Promise<any>;
-    items: {
-      uploadAndPoll(
-        filename: string,
-        content: ReadableStream | ArrayBuffer | Blob | string,
-        options?: { metadata?: Record<string, unknown>; pollIntervalMs?: number; timeoutMs?: number },
-      ): Promise<{ id: string; filename: string; status: string }>;
-      upload(
-        filename: string,
-        content: ReadableStream | ArrayBuffer | Blob | string,
-        options?: { metadata?: Record<string, unknown> },
-      ): Promise<{ id: string; filename: string; status: string }>;
-      delete(itemId: string): Promise<void>;
-      list(options?: {
-        page?: number;
-        per_page?: number;
-        search?: string;
-        status?: string;
-        metadata_filter?: string;
-      }): Promise<{ result?: Array<{ id: string; key?: string; filename?: string; status: string; metadata?: Record<string, unknown> }>; items?: Array<{ id: string; filename: string; status: string }> }>;
-    };
-  };
+  AI_SEARCH?: AiSearchBinding;
+
+  // Instância isolada do assistente do paciente — só conteúdo patient_visible.
+  AI_SEARCH_PATIENT?: AiSearchBinding;
 
   // Agent Memory (private beta). Namespace: fisioflow-memory.
   AGENT_MEMORY?: {

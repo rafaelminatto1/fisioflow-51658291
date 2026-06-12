@@ -877,6 +877,7 @@ export function WikiEditor({ page, draft, onCancel, onSave }: WikiEditorProps) {
   const [category, setCategory] = useState(source?.category || "");
   const [tags, setTags] = useState(source?.tags?.join(", ") || "");
   const [isPublished, setIsPublished] = useState(source?.is_published ?? true);
+  const [patientVisible, setPatientVisible] = useState(source?.patient_visible ?? false);
   const [clinicalMetadata, setClinicalMetadata] = useState<WikiPage["clinical_metadata"]>(
     source?.clinical_metadata || {},
   );
@@ -1101,6 +1102,7 @@ export function WikiEditor({ page, draft, onCancel, onSave }: WikiEditorProps) {
             : [],
           category: category || null,
           is_published: isPublished,
+          patient_visible: patientVisible,
           blocks_count: blocks.length,
           organization_id: organizationId,
           user_id: user?.uid,
@@ -1124,6 +1126,7 @@ export function WikiEditor({ page, draft, onCancel, onSave }: WikiEditorProps) {
             .filter(Boolean)
         : [],
       is_published: isPublished,
+      patient_visible: patientVisible,
       clinical_metadata: clinicalMetadata,
       organization_id: organizationId || "org-1",
       created_by: user?.uid || "user-1",
@@ -1233,11 +1236,13 @@ export function WikiEditor({ page, draft, onCancel, onSave }: WikiEditorProps) {
 
         <WikiEditorMetaSidebar
           isPublished={isPublished}
+          patientVisible={patientVisible}
           category={category}
           tags={tags}
           page={page}
           clinicalMetadata={clinicalMetadata}
           onPublishedChange={setIsPublished}
+          onPatientVisibleChange={setPatientVisible}
           onCategoryChange={setCategory}
           onTagsChange={setTags}
           onClinicalMetadataChange={setClinicalMetadata}
