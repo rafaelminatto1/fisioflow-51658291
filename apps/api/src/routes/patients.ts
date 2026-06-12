@@ -1150,6 +1150,36 @@ app.get("/last-updated", async (c) => {
   }
 });
 
+app.get("/birthdays", async (c) => {
+  const user = c.get("user");
+  const db = createDb(c.env, "read");
+
+  try {
+    const result = await db
+      .select({
+        id: patients.id,
+        fullName: patients.fullName,
+        phone: patients.phone,
+        birthDate: patients.birthDate,
+        photoUrl: patients.photoUrl,
+      })
+      .from(patients)
+      .where(
+        and(
+          withTenant(patients, user.organizationId),
+          sql`EXTRACT(MONTH FROM ${patients.birthDate}) = EXTRACT(MONTH FROM CURRENT_DATE)`,
+          sql`EXTRACT(DAY FROM ${patients.birthDate}) = EXTRACT(DAY FROM CURRENT_DATE)`
+        )
+      );
+
+    c.header("Cache-Control", "no-cache");
+    return c.json({ data: result });
+  } catch (error: any) {
+    console.error("[Patients/Birthdays] Error:", error.message);
+    return c.json({ data: [] });
+  }
+});
+
 app.get("/by-profile/:profileId", async (c) => {
   const user = c.get("user");
   const db = createDb(c.env, "read");
