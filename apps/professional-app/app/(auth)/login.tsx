@@ -85,11 +85,8 @@ export default function LoginScreen() {
     const success = await authenticate("Acesse o FisioFlow Pro");
     if (success) {
       const storedEmail = await SecureStore.getItemAsync("user_email");
-      const storedPassword = await SecureStore.getItemAsync("user_password");
-
-      if (storedEmail && storedPassword) {
+      if (storedEmail) {
         try {
-          await signIn(storedEmail, storedPassword);
           router.replace("/(tabs)");
         } catch {
           setLocalError("Erro na autenticação. Tente login manual.");

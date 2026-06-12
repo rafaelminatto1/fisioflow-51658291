@@ -652,8 +652,8 @@ app.get("/medical-report/outcome", async (c) => {
 
     // 1. Buscar histórico consolidado
     const [patientData, sessions] = await Promise.all([
-      sql`SELECT full_name, diagnosis, condition FROM patients WHERE id = ${patientId}::uuid`,
-      sql`SELECT date AS session_date, observacao, pain_scale, procedures, exercises FROM sessions WHERE patient_id = ${patientId}::uuid ORDER BY date ASC LIMIT 20`,
+      sql`SELECT full_name, diagnosis, condition FROM patients WHERE id = ${patientId}::uuid AND organization_id = ${user.organizationId}::uuid`,
+      sql`SELECT date AS session_date, observacao, pain_scale, procedures, exercises FROM sessions WHERE patient_id = ${patientId}::uuid AND organization_id = ${user.organizationId}::uuid ORDER BY date ASC LIMIT 20`,
     ]);
 
     if (!patientData.rows.length || !sessions.rows.length) {

@@ -1344,8 +1344,9 @@ app.get("/:id", async (c) => {
 
   try {
     const conditions = withTenant(patients, user.organizationId, eq(patients.id, id));
-    const query = sql`SELECT * FROM patients WHERE ${conditions} LIMIT 1`;
-    const result = await db.execute(query);
+    const query = db.select().from(patients).where(conditions).limit(1);
+    const result = await query;
+    if (result && !result.rows) result.rows = result;
 
     const row = result.rows[0];
     if (!row) return c.json({ error: "Paciente não encontrado" }, 404);
