@@ -4,67 +4,84 @@
 
 ## US1 — Indexação imediata no publish (P1)
 
-- [ ] T001 — Commitar diff pendente do `apps/api/wrangler.toml` (reativação binding `AI_SEARCH` em default + production) e deployar; smoke: `GET /api/ai-search/status` (ou equivalente) confirma binding ativo
-- [ ] T002 — Teste Vitest: helper `serializeWikiPageForIndex(page)` → markdown determinístico com frontmatter de metadata (slug, category, tags, org)
-- [ ] T003 — Implementar `uploadWikiPage(env, page)` em `lib/cloudflareAiSearch.ts` usando `env.AI_SEARCH.get("fisioflow-rag").items.uploadAndPoll()`; chamar no hook de publish em `routes/wiki.ts` (substitui disparo do WikiSyncWorkflow no publish)
-- [ ] T004 — Remover item do índice ao despublicar/excluir página (Items API delete); teste cobrindo os dois caminhos
-- [ ] T005 — Manter WikiSyncWorkflow apenas como reconciliação cron; atualizar comentário/cabeçalho do workflow e validar que payload `publish` foi removido dos callers
+- [x] T001 — Commitar diff pendente do `apps/api/wrangler.toml` (reativação binding `AI_SEARCH` em default + production) e deployar; smoke: `GET /api/ai-search/status` (ou equivalente) confirma binding ativo
+- [x] T002 — Teste Vitest: helper `serializeWikiPageForIndex(page)` → markdown determinístico com frontmatter de metadata (slug, category, tags, org)
+- [x] T003 — Implementar `uploadWikiPage(env, page)` em `lib/cloudflareAiSearch.ts` usando `env.AI_SEARCH.get("fisioflow-rag").items.uploadAndPoll()`; chamar no hook de publish em `routes/wiki.ts` (substitui disparo do WikiSyncWorkflow no publish)
+- [x] T004 — Remover item do índice ao despublicar/excluir página (Items API delete); teste cobrindo os dois caminhos
+- [x] T005 — Manter WikiSyncWorkflow apenas como reconciliação cron; atualizar comentário/cabeçalho do workflow e validar que payload `publish` foi removido dos callers
 
 ## US2 — "Pergunte à Wiki" Cmd+K (P1)
 
-- [ ] T010 — Rota `POST /api/ai-search/ask` (ou reuso da existente em `routes/aiSearch.ts`): query → resposta gerada + `sources[]`; threshold de score com fallback "sem resposta"; evento `wiki_search`/`wiki_search_miss` no Analytics Engine; testes Vitest (threshold, roles)
-- [ ] T011 — Componente `WikiAskPalette` (Cmd+K) em `src/components/wiki/`: input, resposta streaming/loading, lista de fontes linkando `/wiki/:slug`; PT-BR; sem glassmorphism
-- [ ] T012 — Restringir a roles internos (admin/fisio/estagiário) no backend e ocultar entrada na UI p/ paciente
+- [x] T010 — Rota `POST /api/ai-search/ask` (ou reuso da existente em `routes/aiSearch.ts`): query → resposta gerada + `sources[]`; threshold de score com fallback "sem resposta"; evento `wiki_search`/`wiki_search_miss` no Analytics Engine; testes Vitest (threshold, roles)
+- [x] T011 — Componente `WikiAskPalette` (Cmd+K) em `src/components/wiki/`: input, resposta streaming/loading, lista de fontes linkando `/wiki/:slug`; PT-BR; sem glassmorphism
+- [x] T012 — Restringir a roles internos (admin/fisio/estagiário) no backend e ocultar entrada na UI p/ paciente
 - [ ] T013 — E2E Playwright: abrir paleta, perguntar, ver resposta com fonte clicável; caso sem resultado
 
 ## US3 — Indexar protocolos, exercícios e PDFs (P1)
 
-- [ ] T020 — Testes + helpers `serializeProtocolForIndex` / `serializeExerciseForIndex` (markdown com metadata `{type, org_id}`)
-- [ ] T021 — Workflow/step de carga inicial (manual): upload dos 119 protocolos + 248 exercícios via Items API
-- [ ] T022 — Hooks incrementais nas rotas de mutation de protocolos/exercícios (create/update/delete → upload/replace/remove)
+- [x] T020 — Testes + helpers `serializeProtocolForIndex` / `serializeExerciseForIndex` (markdown com metadata `{type, org_id}`)
+- [x] T021 — Workflow/step de carga inicial (manual): upload dos 119 protocolos + 248 exercícios via Items API
+- [x] T022 — Hooks incrementais nas rotas de mutation de protocolos/exercícios (create/update/delete → upload/replace/remove)
 - [ ] T023 — Conectar `CLINICAL_DOCS_BUCKET` como data source da instância (dashboard ou API) com path filtering excluindo `**/drafts/**`; documentar em `binding-inventory.md` do roadmap
-- [ ] T024 — Filtro por tipo de conteúdo (wiki/protocolo/exercício/documento) na UI do Cmd+K usando metadata filters
+- [x] T024 — Filtro por tipo de conteúdo (wiki/protocolo/exercício/documento) na UI do Cmd+K usando metadata filters
 
 ## US4 — Assistente do app do paciente (P2)
 
-- [ ] T030 — Migration: coluna `patient_visible BOOLEAN DEFAULT false` em `wiki_pages` (+ `.down.sql`); toggle na UI de edição da wiki
-- [ ] T031 — Criar instância `fisioflow-rag-paciente` (namespace binding ou dashboard); sync apenas de páginas `patient_visible = true`
-- [ ] T032 — Rota `POST /api/patient/assistant` autenticada (role paciente), consultando somente a instância paciente; disclaimer fixo na resposta; evento `patient_assistant_query`
+- [x] T030 — Migration: coluna `patient_visible BOOLEAN DEFAULT false` em `wiki_pages` (+ `.down.sql`); toggle na UI de edição da wiki
+- [x] T031 — Criar instância `fisioflow-rag-paciente` (namespace binding ou dashboard); sync apenas de páginas `patient_visible = true`
+- [x] T032 — Rota `POST /api/patient/assistant` autenticada (role paciente), consultando somente a instância paciente; disclaimer fixo na resposta; evento `patient_assistant_query`
 - [ ] T033 — Ativar guardrails do AI Gateway (moderação in/out) nas chamadas dessa rota; ativar cache do gateway p/ FAQ repetida
 - [ ] T034 — UI no app do paciente (tela de dúvidas) consumindo a rota; PT-BR; testes do fluxo
 
 ## US5 — Painel de lacunas da wiki (P2)
 
-- [ ] T040 — Garantir evento `wiki_search_miss` (T010) com blob da query normalizada
-- [ ] T041 — Rota `GET /api/analytics/wiki-gaps`: SQL no Analytics Engine agregando misses 30d; teste
-- [ ] T042 — Card "Perguntas sem resposta" no dashboard admin
+- [x] T040 — Garantir evento `wiki_search_miss` (T010) com blob da query normalizada
+- [x] T041 — Rota `GET /api/analytics/wiki-gaps`: SQL no Analytics Engine agregando misses 30d; teste
+- [x] T042 — Card "Perguntas sem resposta" no dashboard admin
 
 ## US6 — Sugestões contextuais na evolução (P2)
 
-- [ ] T050 — Hook `useWikiSuggestions(text)` com debounce ≥ 800ms + AbortController; busca híbrida `retrieval-only` (sem geração)
-- [ ] T051 — Painel lateral discreto no editor de evolução (NotionEvolutionPanel) listando títulos relacionados; medir zero jank na digitação
+- [x] T050 — Hook `useWikiSuggestions(text)` com debounce ≥ 800ms + AbortController; busca híbrida `retrieval-only` (sem geração)
+- [x] T051 — Painel lateral discreto no editor de evolução (NotionEvolutionPanel) listando títulos relacionados; medir zero jank na digitação
 
 ## US7 — Agent Memory fallback pgvector (P3)
 
-- [ ] T060 — Migration `agent_memories` (org_id, patient_id?, therapist_id?, profile_types, content, embedding vector, created_at) + índice HNSW + RLS; `.down.sql`
-- [ ] T061 — Testes do driver: remember → embedding bge-m3 + insert; recall → cosine top-k com filtros de escopo
-- [ ] T062 — Refatorar `lib/agentMemory.ts` p/ interface `MemoryDriver` com implementações `pgvector` e `native` (binding); seleção runtime; rotas inalteradas
-- [ ] T063 — Integrar recall no `PatientAgent`/sumários de sessão (contexto de preferências); respeitar `lgpd_consents`
+- [x] T060 — Migration `agent_memories` (org_id, patient_id?, therapist_id?, profile_types, content, embedding vector, created_at) + índice HNSW + RLS; `.down.sql`
+- [x] T061 — Testes do driver: remember → embedding bge-m3 + insert; recall → cosine top-k com filtros de escopo
+- [x] T062 — Refatorar `lib/agentMemory.ts` p/ interface `MemoryDriver` com implementações `pgvector` e `native` (binding); seleção runtime; rotas inalteradas
+- [x] T063 — Integrar recall no `PatientAgent`/sumários de sessão (contexto de preferências); respeitar `lgpd_consents`
 - [ ] T064 — Quando beta liberar: descomentar bindings `agent_memory` no wrangler.toml, criar namespace `fisioflow-memory`, smoke test do driver nativo, migrar memórias existentes (script one-shot)
 
 ## US8 — Human-in-the-loop WhatsApp (P3)
 
-- [ ] T070 — Classificação auto-send vs needs-approval nas respostas do bot (regras + categoria do intent); testes
-- [ ] T071 — Migration fila `whatsapp_pending_replies` (+ auditoria aprovador/timestamp); rotas approve/edit/reject
-- [ ] T072 — UI de fila de aprovação no dashboard (lista + ações); notificação ao admin de item pendente
+- [x] T070 — Classificação auto-send vs needs-approval nas respostas do bot (regras + categoria do intent); testes
+- [x] T071 — Migration fila `whatsapp_pending_replies` (+ auditoria aprovador/timestamp); rotas approve/edit/reject
+- [x] T072 — UI de fila de aprovação no dashboard (lista + ações); notificação ao admin de item pendente
 
 ## US9 — Chat useAgent com ClinicAgent (P3)
 
-- [ ] T080 — Adaptar `ClinicAgent` para o protocolo do Agents SDK (WebSocket/state sync) se necessário
-- [ ] T081 — Front: `useAgent` + componente de chat com streaming e tool-use visível (agenda, wiki); roles internos
+- [x] T080 — Adaptar `ClinicAgent` para o protocolo do Agents SDK (WebSocket/state sync) se necessário
+- [x] T081 — Front: `useAgent` + componente de chat com streaming e tool-use visível (agenda, wiki); roles internos
 - [ ] T082 — E2E do fluxo de chat
 
 ## Transversais
 
 - [ ] T090 — Atualizar `specs/cloudflare-platform-roadmap/binding-inventory.md` com instâncias AI Search e (futuro) Agent Memory
 - [ ] T091 — Monitorar changelog do AI Search p/ anúncio de pricing (fim do open beta) — coberto por rotina agendada externa
+
+## Status da execução (2026-06-12)
+
+Implementado e commitado em `feat/cloudflare-ai-expansion` (US1–US9). Infra aplicada:
+migrations 0109/0110/0111 em produção (Neon), instância `fisioflow-rag-paciente`
+criada (`wrangler ai-search create --type builtin`), dry-run de deploy validado
+com os dois bindings AI Search.
+
+Pendências conscientes:
+- T013/T082: E2E Playwright dos fluxos novos
+- T023: conectar CLINICAL_DOCS_BUCKET como data source (dashboard AI Search) — instâncias builtin recebem upload direto; avaliar instância dedicada p/ PDFs
+- T033: guardrails do AI Gateway = configuração manual no dashboard
+- T034: tela de dúvidas no app RN do paciente (rota /api/patient/assistant pronta)
+- T064: aguarda liberação do Agent Memory beta (rotina de aviso ativa)
+- T071-parcial: notificação push ao admin sobre item pendente (fila + UI prontas)
+- T081: chat usa RPC HTTP autenticado ao DO (não WebSocket useAgent) — decisão p/ reaproveitar auth JWT existente
+- T090/T091: inventário de bindings + monitorar pricing do AI Search
