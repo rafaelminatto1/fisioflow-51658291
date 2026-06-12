@@ -16,7 +16,9 @@ export type KnowledgeSyncParams = {
 
 export class KnowledgeSyncWorkflow extends WorkflowEntrypoint<Env, KnowledgeSyncParams> {
   async run(event: WorkflowEvent<KnowledgeSyncParams>, step: WorkflowStep) {
-    const { syncTarget = "all" } = event.payload;
+    const { syncTarget = "all", triggerType } = event.payload;
+    // Default to "all" when triggered via schedule (no payload)
+    const effectiveSyncTarget = triggerType ? syncTarget : "all";
 
     if (!this.env.AI_SEARCH) {
       console.warn("[KnowledgeSyncWorkflow] AI_SEARCH binding not configured, skipping.");
@@ -29,7 +31,7 @@ export class KnowledgeSyncWorkflow extends WorkflowEntrypoint<Env, KnowledgeSync
     let totalSynced = 0;
 
     // 1. Sincronizar Protocolos
-    if (syncTarget === "all" || syncTarget === "protocols") {
+    if (effectiveSyncTarget === "all" || effectiveSyncTarget === "protocols") {
       const protocols = (await step.do("fetch-protocols", async (): Promise<any[]> => {
         const sql = neon(url);
         const rows = await sql`
@@ -101,7 +103,7 @@ export class KnowledgeSyncWorkflow extends WorkflowEntrypoint<Env, KnowledgeSync
     }
 
     // 2. Sincronizar Exercícios
-    if (syncTarget === "all" || syncTarget === "exercises") {
+    if (effectiveSyncTarget === "all" || effectiveSyncTarget === "exercises") {
       const exercises = (await step.do("fetch-exercises", async (): Promise<any[]> => {
         const sql = neon(url);
         const rows = await sql`

@@ -138,25 +138,37 @@ function escapeHtml(value: unknown) {
     .replace(/'/g, "&#039;");
 }
 
-async function generatePdfQuickAction(html: string): Promise<Uint8Array> {
-  const response = await fetch(`${QUICK_ACTIONS_BASE}/pdf`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      html,
-      options: {
-        format: "A4",
-        printBackground: true,
-        margin: { top: "14mm", right: "12mm", bottom: "14mm", left: "12mm" },
-      },
-    }),
-  });
+async function generatePdfBrowserRun(env: Env, html: string): Promise<Uint8Array> {
+  const browser = env?.BROWSER;
+  if (!browser || !browser.pdf) {
+    const response = await fetch(`${QUICK_ACTIONS_BASE}/pdf`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        html,
+        options: {
+          format: "A4",
+          printBackground: true,
+          margin: { top: "14mm", right: "12mm", bottom: "14mm", left: "12mm" },
+        },
+      }),
+    });
 
-  if (!response.ok) {
-    throw new Error(`Quick Actions PDF failed: ${response.status}`);
+    if (!response.ok) {
+      throw new Error(`Quick Actions PDF failed: ${response.status}`);
+    }
+
+    return new Uint8Array(await response.arrayBuffer());
   }
 
-  return new Uint8Array(await response.arrayBuffer());
+  return await browser.pdf({
+    html,
+    options: {
+      format: "A4",
+      printBackground: true,
+      margin: { top: "14mm", right: "12mm", bottom: "14mm", left: "12mm" },
+    },
+  });
 }
 
 function buildComparisonPayload(from: AssessmentRow | null, to: AssessmentRow) {
@@ -601,7 +613,7 @@ app.post("/:id/pdf", requireAuth, async (c) => {
 
   const patientName = body.patientName?.trim() || `Paciente ${assessment.patientId.slice(0, 8)}`;
   const html = buildBiomechanicsReportHtml({ assessment, patientName, comparison, reportHash });
-  const pdfBytes = await generatePdfQuickAction(html);
+  const pdfBytes = await generatePdfBrowserRun(c.env, html);
   const pdfKey = `documents/biomechanics/${user.organizationId}/${assessment.patientId}/${assessment.id}-${reportHash.slice(
     0,
     12,
