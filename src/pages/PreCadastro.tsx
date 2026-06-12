@@ -87,13 +87,16 @@ const PreCadastro = () => {
 		}
 
 		setSubmitting(true);
+		setError(null);
 		try {
 			await precadastroApi.public.submit(token, formData);
 			setSubmitted(true);
 			toast.success("Admissão digital concluída!");
 		} catch (err) {
+			const message = err instanceof Error ? err.message : "Erro ao enviar dados";
 			logger.error("Error submitting pre-registration", err, "PreCadastro");
-			toast.error(err instanceof Error ? err.message : "Erro ao enviar dados");
+			setError(message);
+			toast.error(message);
 		} finally {
 			setSubmitting(false);
 		}

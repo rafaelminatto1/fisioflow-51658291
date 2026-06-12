@@ -1,0 +1,9 @@
+-- Down migration for 0105_performance_indices
+DROP INDEX IF EXISTS idx_appointments_patient_id;
+DROP INDEX IF EXISTS idx_sessions_patient_id;
+DROP INDEX IF EXISTS idx_sessions_appointment_id;
+DROP INDEX IF EXISTS idx_prescribed_exercises_patient_id;
+DROP INDEX IF EXISTS idx_pain_maps_patient_id;
+DROP INDEX IF EXISTS idx_appointments_org_date;
+DROP INDEX IF EXISTS idx_sessions_org_date;
+DROP INDEX IF EXISTS idx_patients_org_name;

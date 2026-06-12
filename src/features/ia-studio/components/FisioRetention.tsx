@@ -37,7 +37,7 @@ export const FisioRetention: React.FC<FisioRetentionProps> = ({ compact }) => {
     );
   }
 
-  const patients = data?.data || [];
+  const patients = Array.isArray(data?.data) ? data.data : [];
 
   if (compact) {
     return (

@@ -55,10 +55,34 @@ app.get("/", requireAuth, async (c) => {
 app.post("/", requireAuth, async (c) => {
   const user = c.get("user");
   const pool = await createPool(c.env);
-  const body = (await c.req.json()) as Record<string, unknown>;
+  const body = (await c.req.json().catch(() => ({}))) as Record<string, unknown>;
 
   const patientId = String(body.patient_id ?? "").trim();
   if (!patientId) return c.json({ error: "patient_id é obrigatório" }, 400);
+
+  // Validar MIME type
+  const fileType = body.file_type ? String(body.file_type) : null;
+  if (fileType && !ALLOWED_MIME_TYPES.includes(fileType as any)) {
+    return c.json(
+      {
+        error: "file_type_not_allowed",
+        message: `Tipo de arquivo não permitido. Aceitos: ${ALLOWED_MIME_TYPES.join(", ")}`,
+      },
+      400,
+    );
+  }
+
+  // Validar tamanho do arquivo
+  const fileSize = body.file_size != null ? Number(body.file_size) : null;
+  if (fileSize != null && fileSize > MAX_FILE_SIZE_BYTES) {
+    return c.json(
+      {
+        error: "file_too_large",
+        message: `Arquivo excede o limite de ${MAX_FILE_SIZE_BYTES / (1024 * 1024)} MB`,
+      },
+      400,
+    );
+  }
 
   const result = await pool.query(
     `INSERT INTO patient_documents
@@ -347,3 +371,17 @@ app.post("/print", requireAuth, async (c) => {
 });
 
 export { app as documentsRoutes };
+
+// MIME types permitidos para upload de documentos
+const ALLOWED_MIME_TYPES = [
+  "application/pdf",
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "application/msword",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  "application/vnd.ms-excel",
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+] as const;
+
+const MAX_FILE_SIZE_BYTES = 50 * 1024 * 1024; // 50 MB

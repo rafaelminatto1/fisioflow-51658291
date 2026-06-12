@@ -57,6 +57,14 @@ app.get("/", requireAuth, async (c) => {
   try {
     const { dateFrom, dateTo, therapistId, patientId, status, limit = "100" } = c.req.query();
 
+    // Validar formato de datas (YYYY-MM-DD)
+    if (dateFrom && !/^\d{4}-\d{2}-\d{2}$/.test(dateFrom)) {
+      return c.json({ error: "dateFrom deve estar no formato YYYY-MM-DD" }, 400);
+    }
+    if (dateTo && !/^\d{4}-\d{2}-\d{2}$/.test(dateTo)) {
+      return c.json({ error: "dateTo deve estar no formato YYYY-MM-DD" }, 400);
+    }
+
     const organizationId = user.organizationId;
 
     let conditions: any = withTenant(appointments, organizationId);

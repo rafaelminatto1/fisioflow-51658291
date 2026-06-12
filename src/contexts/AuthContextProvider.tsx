@@ -149,18 +149,20 @@ export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({ c
           const dbProfileRes = await Promise.race([profileApi.me(), timeout]);
           if (dbProfileRes?.data) {
             const dbProfile = dbProfileRes.data;
-            setProfile((prev) =>
-              prev
-                ? {
-                    ...prev,
-                    full_name: dbProfile.full_name || prev.full_name,
-                    organization_id: dbProfile.organization_id || prev.organization_id,
-                    role: (dbProfile.role as UserRole) || prev.role,
-                    // Mescla outros campos do DB se disponíveis
-                    ...dbProfile,
-                  }
-                : null,
-            );
+            setProfile((prev) => {
+              if (!prev) return null;
+              // Merge seguro: só sobrescreve campos que existem no DB
+              const merged: Profile = { ...prev };
+              if (dbProfile.full_name) merged.full_name = dbProfile.full_name;
+              if (dbProfile.organization_id) merged.organization_id = dbProfile.organization_id;
+              if (dbProfile.role) merged.role = dbProfile.role as UserRole;
+              for (const [key, value] of Object.entries(dbProfile)) {
+                if (value !== undefined && value !== null && key in merged) {
+                  (merged as unknown as Record<string, unknown>)[key] = value;
+                }
+              }
+              return merged;
+            });
           }
         } catch (e) {
           logger.warn("Falha ao carregar perfil completo do DB", e);

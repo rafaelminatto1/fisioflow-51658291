@@ -64,9 +64,6 @@ app.get("/transactions", requireAuth, async (c) => {
   }
 });
 
-// Alias for compatibility
-app.get("/transacoes", requireAuth, (c) => c.redirect("/api/financial/transactions", 301));
-
 app.post("/transactions", requireAuth, async (c) => {
   const user = c.get("user");
   const db = createDb(c.env);
@@ -103,8 +100,6 @@ app.post("/transactions", requireAuth, async (c) => {
     return c.json({ error: "Error creating transaction", details: e.message }, 500);
   }
 });
-
-app.post("/transacoes", requireAuth, (c) => c.redirect("/api/financial/transactions", 301));
 
 app.put("/transactions/:id", requireAuth, async (c) => {
   const user = c.get("user");
@@ -223,8 +218,6 @@ app.get("/accounts", requireAuth, async (c) => {
   }
 });
 
-app.get("/contas", requireAuth, (c) => c.redirect("/api/financial/accounts", 301));
-
 app.post("/accounts", requireAuth, async (c) => {
   const user = c.get("user");
   const db = createDb(c.env);
@@ -261,8 +254,6 @@ app.post("/accounts", requireAuth, async (c) => {
     return c.json({ error: "Error creating account" }, 500);
   }
 });
-
-app.post("/contas", requireAuth, (c) => c.redirect("/api/financial/accounts", 301));
 
 app.put("/accounts/:id", requireAuth, async (c) => {
   const user = c.get("user");
@@ -492,8 +483,6 @@ app.get("/payments", requireAuth, async (c) => {
   }
 });
 
-app.get("/pagamentos", requireAuth, (c) => c.redirect("/api/financial/payments", 301));
-
 app.post("/payments", requireAuth, async (c) => {
   const user = c.get("user");
   const db = createDb(c.env);
@@ -523,8 +512,6 @@ app.post("/payments", requireAuth, async (c) => {
     return c.json({ error: "Error recording payment" }, 500);
   }
 });
-
-app.post("/pagamentos", requireAuth, (c) => c.redirect("/api/financial/payments", 301));
 
 app.put("/payments/:id", requireAuth, async (c) => {
   const user = c.get("user");

@@ -149,6 +149,10 @@ app.get("/articles", async (c) => {
     return c.json({ data: [] });
   }
 
+  const { limit = "100", offset = "0" } = c.req.query();
+  const limitNum = Math.min(500, Math.max(1, Number(limit) || 100));
+  const offsetNum = Math.max(0, Number(offset) || 0);
+
   try {
     const result = await pool.query(
       `
@@ -156,10 +160,11 @@ app.get("/articles", async (c) => {
         FROM knowledge_articles
         WHERE organization_id = $1
         ORDER BY updated_at DESC, title ASC
+        LIMIT $2 OFFSET $3
       `,
-      [user.organizationId],
+      [user.organizationId, limitNum, offsetNum],
     );
-    return c.json({ data: result.rows.map(normalizeArticle) });
+    return c.json({ data: result.rows.map(normalizeArticle), limit: limitNum, offset: offsetNum });
   } catch (error) {
     if (isMissingSchemaError(error)) {
       logSchemaFallback("articles", error);

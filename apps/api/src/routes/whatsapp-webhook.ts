@@ -102,13 +102,10 @@ async function resolveOrgId(pool: any, phoneNumberId: string | undefined): Promi
     );
     if (result.rows.length > 0) return result.rows[0].id;
 
-    const fallback = await pool.query(
-      `SELECT id, settings FROM organizations WHERE settings ? 'whatsapp_config' LIMIT 1`,
-    );
-    if (fallback.rows.length > 0) return fallback.rows[0].id;
-
+    console.warn("[WhatsApp Webhook] Nenhuma org encontrada para phone_number_id:", phoneNumberId);
     return null;
-  } catch {
+  } catch (error) {
+    console.error("[WhatsApp Webhook] resolveOrgId error:", error);
     return null;
   }
 }

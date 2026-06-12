@@ -15,7 +15,9 @@ const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 app.use("*", requireAuth);
 app.use("*", async (c, next) => {
   const user = c.get("user");
-  if (!["admin", "owner"].includes(String(user.role ?? ""))) {
+  const role = typeof user.role === "string" ? user.role.toLowerCase().trim() : "";
+  const allowedRoles = ["admin", "owner"];
+  if (!allowedRoles.includes(role)) {
     return c.json({ error: "admin_only" }, 403);
   }
   await next();
