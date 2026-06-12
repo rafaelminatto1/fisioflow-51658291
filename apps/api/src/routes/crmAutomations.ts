@@ -41,32 +41,38 @@ app.get("/templates", requireAuth, async (c) => {
 app.post("/", requireAuth, async (c) => {
   const user = c.get("user");
   const pool = createPool(c.env);
-  const body = (await c.req.json()) as Record<string, unknown>;
+  const body = (await c.req.json().catch(() => ({}))) as Record<string, unknown>;
   if (!body.nome || !body.gatilho_tipo) {
     return c.json({ error: "nome e gatilho_tipo são obrigatórios" }, 400);
   }
-  const result = await pool.query(
-    `INSERT INTO crm_automation_rules
+
+  try {
+    const result = await pool.query(
+      `INSERT INTO crm_automation_rules
        (organization_id, nome, descricao, ativo, gatilho_tipo, gatilho_config,
         condicoes, acoes, prioridade, cooldown_minutes, created_by)
      VALUES ($1,$2,$3,COALESCE($4,true),$5,$6::jsonb,$7::jsonb,$8::jsonb,
              COALESCE($9,100),COALESCE($10,0),$11)
      RETURNING *`,
-    [
-      user.organizationId,
-      String(body.nome),
-      (body.descricao as string | null) ?? null,
-      body.ativo as boolean | null,
-      String(body.gatilho_tipo),
-      JSON.stringify(body.gatilho_config ?? {}),
-      JSON.stringify(body.condicoes ?? []),
-      JSON.stringify(body.acoes ?? []),
-      body.prioridade as number | null,
-      body.cooldown_minutes as number | null,
-      user.uid,
-    ],
-  );
-  return c.json({ data: result.rows[0] }, 201);
+      [
+        user.organizationId,
+        String(body.nome),
+        (body.descricao as string | null) ?? null,
+        body.ativo as boolean | null,
+        String(body.gatilho_tipo),
+        JSON.stringify(body.gatilho_config ?? {}),
+        JSON.stringify(body.condicoes ?? []),
+        JSON.stringify(body.acoes ?? []),
+        body.prioridade as number | null,
+        body.cooldown_minutes as number | null,
+        user.uid,
+      ],
+    );
+    return c.json({ data: result.rows[0] }, 201);
+  } catch (error) {
+    console.error("[CRM Automations] create error:", error);
+    return c.json({ error: "Erro interno ao criar regra de automação CRM" }, 500);
+  }
 });
 
 app.put("/:id", requireAuth, async (c) => {
@@ -74,7 +80,7 @@ app.put("/:id", requireAuth, async (c) => {
   const { id } = c.req.param();
   if (!isUuid(id)) return c.json({ error: "id inválido" }, 400);
   const pool = createPool(c.env);
-  const body = (await c.req.json()) as Record<string, unknown>;
+  const body = (await c.req.json().catch(() => ({}))) as Record<string, unknown>;
 
   const sets: string[] = ["updated_at = NOW()"];
   const params: unknown[] = [];
@@ -96,15 +102,20 @@ app.put("/:id", requireAuth, async (c) => {
   }
   if (sets.length === 1) return c.json({ error: "nenhum campo para atualizar" }, 400);
 
-  params.push(id, user.organizationId);
-  const result = await pool.query(
-    `UPDATE crm_automation_rules SET ${sets.join(", ")}
+  try {
+    params.push(id, user.organizationId);
+    const result = await pool.query(
+      `UPDATE crm_automation_rules SET ${sets.join(", ")}
       WHERE id = $${params.length - 1} AND organization_id = $${params.length}
       RETURNING *`,
-    params,
-  );
-  if (!result.rows.length) return c.json({ error: "regra não encontrada" }, 404);
-  return c.json({ data: result.rows[0] });
+      params,
+    );
+    if (!result.rows.length) return c.json({ error: "regra não encontrada" }, 404);
+    return c.json({ data: result.rows[0] });
+  } catch (error) {
+    console.error("[CRM Automations] update error:", error);
+    return c.json({ error: "Erro interno ao atualizar regra de automação CRM" }, 500);
+  }
 });
 
 app.delete("/:id", requireAuth, async (c) => {
@@ -112,16 +123,22 @@ app.delete("/:id", requireAuth, async (c) => {
   const { id } = c.req.param();
   if (!isUuid(id)) return c.json({ error: "id inválido" }, 400);
   const pool = createPool(c.env);
-  const result = await pool.query(
-    `DELETE FROM crm_automation_rules
+
+  try {
+    const result = await pool.query(
+      `DELETE FROM crm_automation_rules
       WHERE id = $1 AND organization_id = $2
       RETURNING id`,
-    [id, user.organizationId],
-  );
-  if (!result.rows.length) {
-    return c.json({ error: "regra não encontrada (templates globais não podem ser apagados)" }, 404);
+      [id, user.organizationId],
+    );
+    if (!result.rows.length) {
+      return c.json({ error: "regra não encontrada (templates globais não podem ser apagados)" }, 404);
+    }
+    return c.json({ ok: true });
+  } catch (error) {
+    console.error("[CRM Automations] delete error:", error);
+    return c.json({ error: "Erro interno ao apagar regra de automação CRM" }, 500);
   }
-  return c.json({ ok: true });
 });
 
 app.get("/:id/executions", requireAuth, async (c) => {
@@ -141,8 +158,13 @@ app.get("/:id/executions", requireAuth, async (c) => {
 
 app.post("/scan", requireAuth, async (c) => {
   const pool = createPool(c.env);
-  const out = await scanPendingExecutions(c.env, pool, 100);
-  return c.json({ data: out });
+  try {
+    const out = await scanPendingExecutions(c.env, pool, 100);
+    return c.json({ data: out });
+  } catch (error) {
+    console.error("[CRM Automations] scan error:", error);
+    return c.json({ error: "Erro interno ao escanear execuções pendentes" }, 500);
+  }
 });
 
 export const crmAutomationsRoutes = app;

@@ -397,7 +397,12 @@ app.get("/:id", async (c) => {
 app.post("/", requireAuth, async (c) => {
   const db = createDb(c.env);
   const user = c.get("user");
-  const body = await c.req.json();
+  let body: Record<string, unknown>;
+  try {
+    body = (await c.req.json()) as Record<string, unknown>;
+  } catch {
+    return c.json({ error: "JSON inválido no corpo da requisição" }, 400);
+  }
   const { items, ...rawData } = body;
 
   console.log(

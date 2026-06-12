@@ -6,6 +6,7 @@ interface PageContainerProps {
   maxWidth?: "sm" | "md" | "lg" | "xl" | "2xl" | "7xl" | "full";
   className?: string;
   noPadding?: boolean;
+  disableAnimation?: boolean;
 }
 
 export const PageContainer: React.FC<PageContainerProps> = ({
@@ -13,11 +14,13 @@ export const PageContainer: React.FC<PageContainerProps> = ({
   maxWidth = "7xl",
   className,
   noPadding = false,
+  disableAnimation = false,
 }) => {
   return (
     <div
       className={cn(
-        "mx-auto w-full transition-all duration-500 animate-slide-up",
+        "mx-auto w-full",
+        !disableAnimation && "transition-all duration-500 animate-slide-up",
         !noPadding && "px-4 md:px-8 pt-6 md:pt-8 pb-4 md:pb-8",
         maxWidth === "sm" && "max-w-sm",
         maxWidth === "md" && "max-w-md",

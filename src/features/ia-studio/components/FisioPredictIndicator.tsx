@@ -16,9 +16,19 @@ export const FisioPredictIndicator: React.FC<{ patientId: string }> = ({ patient
   });
 
   if (isLoading) return <Skeleton className="h-40 w-full rounded-3xl" />;
-  if (!data?.data) return null;
+  if (!data || !data.data || typeof data.data !== "object") return null;
 
-  const p = data.data;
+  const p = data.data as {
+    confidence?: number;
+    remainingSessions?: number;
+    progressPercentage?: number;
+    estimatedDischargeDate?: string;
+    predictedTotal?: number;
+  };
+
+  if (p.confidence == null || p.remainingSessions == null || p.progressPercentage == null) {
+    return null;
+  }
 
   return (
     <Card className="border-none shadow-xl shadow-slate-200/50 dark:shadow-none bg-gradient-to-br from-white to-slate-50 dark:from-slate-900 dark:to-slate-950 rounded-[32px] overflow-hidden">

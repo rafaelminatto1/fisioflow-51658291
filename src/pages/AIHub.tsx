@@ -45,6 +45,7 @@ export function AIAnalyticsHubContent({ embedded = false }: { embedded?: boolean
       .catch((err) => {
         console.error("Error fetching AI analytics", err);
         setLoading(false);
+        setData({ error: true });
       });
   }, []);
 

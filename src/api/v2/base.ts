@@ -101,7 +101,12 @@ export async function request<T>(
       });
 
       if (!retry.ok) {
-        const retryBody = await retry.json().catch(() => ({ error: retry.statusText }));
+        let retryBody: Record<string, unknown> = {};
+        try {
+          retryBody = (await retry.json()) as Record<string, unknown>;
+        } catch {
+          retryBody = { error: retry.statusText, parseError: true };
+        }
         const error = new Error(getErrorMessage(retryBody, `HTTP ${retry.status}`)) as RequestError;
         error.status = retry.status;
         error.payload = retryBody;
@@ -112,7 +117,12 @@ export async function request<T>(
     }
 
     if (!res.ok) {
-      const body = await res.json().catch(() => ({ error: res.statusText }));
+      let body: Record<string, unknown> = {};
+      try {
+        body = (await res.json()) as Record<string, unknown>;
+      } catch {
+        body = { error: res.statusText, parseError: true };
+      }
       const error = new Error(getErrorMessage(body, `HTTP ${res.status}`)) as RequestError;
       error.status = res.status;
       error.payload = body;
@@ -141,6 +151,16 @@ export async function request<T>(
         method,
         body: options.body,
       });
+
+      // Notifica o usuário que a ação foi salva offline
+      try {
+        const { toast } = await import("sonner");
+        toast.info("Você está offline. A ação será sincronizada quando a conexão retornar.", {
+          duration: 5000,
+        });
+      } catch {
+        // toast pode não estar disponível em todos os contextos
+      }
 
       // Simular retorno de sucesso para o hook não quebrar
       return { success: true, offline: true } as unknown as T;

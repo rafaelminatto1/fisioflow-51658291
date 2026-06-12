@@ -17,6 +17,9 @@ import { withOrganizationPolicy } from "./rls_helper";
 import { organizations } from "./organizations";
 import { patients } from "./patients";
 
+// Standard precision for all monetary fields to avoid rounding inconsistencies
+const MONEY = { precision: 10, scale: 2 } as const;
+
 export const transactions = pgTable(
   "transactions",
   {
@@ -26,7 +29,7 @@ export const transactions = pgTable(
       .notNull(),
     userId: text("user_id"),
     type: varchar("type", { length: 50 }).notNull(), // 'receita', 'despesa', etc.
-    amount: numeric("amount", { precision: 12, scale: 2 }).notNull(),
+    amount: numeric("amount", MONEY).notNull(),
     description: text("description"),
     status: varchar("status", { length: 50 }).default("pending"),
     category: varchar("category", { length: 100 }),
@@ -34,9 +37,9 @@ export const transactions = pgTable(
     stripePaymentIntentId: varchar("stripe_payment_intent_id", { length: 255 }),
     stripeRefundId: varchar("stripe_refund_id", { length: 255 }),
     metadata: jsonb("metadata").default({}),
-    deletedAt: timestamp("deleted_at"),
-    createdAt: timestamp("created_at").defaultNow().notNull(),
-    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+    deletedAt: timestamp("deleted_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
   },
   (table) => [
     index("idx_transactions_org_created").on(table.organizationId, table.createdAt),
@@ -52,7 +55,7 @@ export const financialAccounts = pgTable(
       .references(() => organizations.id)
       .notNull(),
     type: text("type").notNull(),
-    amount: numeric("amount", { precision: 12, scale: 2 }).notNull(),
+    amount: numeric("amount", MONEY).notNull(),
     status: text("status").notNull().default("pending"),
     description: text("description"),
     dueDate: date("due_date"),
@@ -62,7 +65,7 @@ export const financialAccounts = pgTable(
     category: text("category"),
     paymentMethod: text("payment_method"),
     notes: text("notes"),
-    deletedAt: timestamp("deleted_at"),
+    deletedAt: timestamp("deleted_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
   },
@@ -126,7 +129,7 @@ export const payments = pgTable(
     eventId: uuid("event_id"),
     appointmentId: uuid("appointment_id"),
     patientId: uuid("patient_id"),
-    amount: numeric("amount", { precision: 12, scale: 2 }).notNull(),
+    amount: numeric("amount", MONEY).notNull(),
     paymentMethod: text("payment_method"),
     status: text("status").notNull().default("paid"),
     paidAt: date("paid_at"),

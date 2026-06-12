@@ -69,7 +69,7 @@ export const appointments = pgTable(
     // Patient & Therapist
     patientId: uuid("patient_id")
       .notNull()
-      .references(() => patients.id),
+      .references(() => patients.id, { onDelete: "cascade" }),
     therapistId: uuid("therapist_id").notNull(), // FK to auth.users or therapists table
 
     // Organization (multi-tenant)

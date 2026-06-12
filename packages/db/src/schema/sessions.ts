@@ -48,7 +48,7 @@ export const sessions = pgTable(
     // Patient & Links
     patientId: uuid("patient_id")
       .notNull()
-      .references(() => patients.id),
+      .references(() => patients.id, { onDelete: "cascade" }),
     appointmentId: uuid("appointment_id").references(() => appointments.id, {
       onDelete: "set null",
     }),
