@@ -14,11 +14,13 @@ import {
   Receipt,
   Activity,
   BookOpen,
+  Sparkles,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { patientsApi } from "@/api/v2/patients";
 import { exercisesApi, protocolsApi } from "@/api/v2/exercises";
 import { patientRoutes } from "@/lib/routing/appRoutes";
+import { WikiAskView } from "@/components/wiki/WikiAskView";
 import type { PatientRow, Exercise, Protocol } from "@/types/workers";
 
 export const GlobalCommandPalette: React.FC = () => {
@@ -28,6 +30,7 @@ export const GlobalCommandPalette: React.FC = () => {
   const [exerciseResults, setExerciseResults] = useState<Exercise[]>([]);
   const [protocolResults, setProtocolResults] = useState<Protocol[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [askQuery, setAskQuery] = useState<string | null>(null);
   const navigate = useNavigate();
 
   // Atalho Cmd+K ou Ctrl+K
@@ -90,6 +93,10 @@ export const GlobalCommandPalette: React.FC = () => {
     return () => clearTimeout(timer);
   }, [query, performGlobalSearch]);
 
+  useEffect(() => {
+    if (!open) setAskQuery(null);
+  }, [open]);
+
   if (!open) return null;
 
   return (
@@ -118,7 +125,42 @@ export const GlobalCommandPalette: React.FC = () => {
             </div>
           </div>
 
+          {askQuery !== null ? (
+            <div className="max-h-[60vh] overflow-y-auto scrollbar-hide">
+              <WikiAskView
+                query={askQuery}
+                onBack={() => setAskQuery(null)}
+                onNavigate={(path) => {
+                  setOpen(false);
+                  navigate(path);
+                }}
+              />
+            </div>
+          ) : (
           <Command.List className="max-h-[50vh] overflow-y-auto p-3 scrollbar-hide">
+            {query.trim().length >= 3 && (
+              <Command.Group>
+                <Command.Item
+                  value={`perguntar-wiki ${query}`}
+                  onSelect={() => setAskQuery(query.trim())}
+                  className="flex items-center gap-4 p-4 rounded-2xl cursor-pointer transition-all aria-selected:bg-blue-50 dark:aria-selected:bg-blue-900/20 group"
+                >
+                  <div className="p-3 bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 group-aria-selected:border-blue-200 dark:group-aria-selected:border-blue-800 transition-all">
+                    <Sparkles className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-black text-slate-800 dark:text-slate-100 truncate">
+                      Perguntar à wiki: “{query.trim()}”
+                    </p>
+                    <p className="text-[10px] uppercase font-black tracking-widest text-slate-400">
+                      Resposta com fontes da base clínica
+                    </p>
+                  </div>
+                  <ArrowRight className="w-4 h-4 text-blue-600 opacity-0 group-aria-selected:opacity-100 transition-opacity" />
+                </Command.Item>
+              </Command.Group>
+            )}
+
             {isLoading && (
               <div className="flex flex-col items-center justify-center py-16 gap-3">
                 <div className="relative">
@@ -351,6 +393,7 @@ export const GlobalCommandPalette: React.FC = () => {
               </Command.Group>
             )}
           </Command.List>
+          )}
 
           <div className="p-4 bg-slate-50 dark:bg-slate-900/80 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center">
             <div className="flex items-center gap-4">

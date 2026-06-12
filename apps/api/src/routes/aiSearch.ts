@@ -7,6 +7,14 @@ import {
   searchAiSearch,
 } from "../lib/cloudflareAiSearch";
 import { upsertWikiPageInIndex } from "../lib/wikiIndexing";
+import {
+  ASK_MATCH_THRESHOLD,
+  isInternalRole,
+  mapAskSources,
+  normalizeAskQuery,
+  resolveAskOutcome,
+} from "../lib/wikiAsk";
+import { writeEvent } from "../lib/analytics";
 
 const AUTORAG_NAME = "fisioflow-rag";
 
@@ -58,6 +66,72 @@ aiSearchApp.post("/", requireAuth, async (c) => {
   } catch (error: any) {
     console.error("[AI Search] search error:", error);
     return c.json({ error: "Falha na busca com IA", details: error.message }, 500);
+  }
+});
+
+// ─── Pergunte à Wiki: resposta gerada + citações, com threshold ──────────────
+
+aiSearchApp.post("/ask", requireAuth, async (c) => {
+  const user = c.get("user");
+  if (!isInternalRole(user.role)) {
+    return c.json({ error: "Acesso restrito a profissionais da clínica" }, 403);
+  }
+
+  const body = (await c.req.json().catch(() => ({}))) as Record<string, unknown>;
+  const query = String(body.query ?? "").trim();
+  if (query.length < 3) return c.json({ error: "query muito curta" }, 400);
+
+  if (!c.env.AI_SEARCH) {
+    return c.json({ error: "AI Search não disponível neste ambiente" }, 503);
+  }
+
+  const filters =
+    typeof body.type === "string" && body.type.length > 0
+      ? { source: body.type }
+      : undefined;
+
+  const started = Date.now();
+  try {
+    const result = await chatAiSearch(c.env, {
+      messages: [
+        {
+          role: "system",
+          content:
+            "Você é o assistente da wiki clínica da FisioFlow. Responda em Português do Brasil usando APENAS o conteúdo recuperado. Se o contexto não cobrir a pergunta, diga que não encontrou na wiki.",
+        },
+        { role: "user", content: query },
+      ],
+      maxNumResults: 8,
+      matchThreshold: ASK_MATCH_THRESHOLD,
+      ...(filters ? { filters } : {}),
+    });
+
+    const outcome = resolveAskOutcome(result.answer, result.sources, ASK_MATCH_THRESHOLD);
+    const latencyMs = Date.now() - started;
+
+    writeEvent(c.env, {
+      route: "/api/ai-search/ask",
+      method: "POST",
+      orgId: user.organizationId,
+      event: outcome.answered ? "wiki_search" : "wiki_search_miss",
+      latencyMs,
+      value: outcome.topScore,
+      detail: outcome.answered ? "" : normalizeAskQuery(query),
+    });
+
+    if (!outcome.answered) {
+      return c.json({ answered: false, answer: null, sources: [], topScore: outcome.topScore });
+    }
+
+    return c.json({
+      answered: true,
+      answer: result.answer,
+      sources: mapAskSources(result.sources, ASK_MATCH_THRESHOLD),
+      topScore: outcome.topScore,
+    });
+  } catch (error: any) {
+    console.error("[AI Search] ask error:", error);
+    return c.json({ error: "Falha ao consultar a wiki", details: error.message }, 500);
   }
 });
 
