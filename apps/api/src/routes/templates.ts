@@ -72,6 +72,21 @@ const exercises = pgTable("exercises", {
   thumbnailUrl: text("thumbnail_url"),
 });
 
+type ExerciseTemplateInsert = typeof exerciseTemplates.$inferInsert;
+type ExerciseTemplateItemInsert = typeof exerciseTemplateItems.$inferInsert;
+
+function asString(value: unknown): string | null {
+  return typeof value === "string" && value.trim().length > 0 ? value : null;
+}
+
+function asBoolean(value: unknown, fallback = false): boolean {
+  return typeof value === "boolean" ? value : fallback;
+}
+
+function asInteger(value: unknown): number | null {
+  return typeof value === "number" && Number.isFinite(value) ? Math.trunc(value) : null;
+}
+
 // ===== CATEGORIAS =====
 app.get("/categories", async (c) => {
   const db = createDb(c.env);
@@ -404,56 +419,69 @@ app.post("/", requireAuth, async (c) => {
     return c.json({ error: "JSON inválido no corpo da requisição" }, 400);
   }
   const { items, ...rawData } = body;
+  const templateItems = Array.isArray(items) ? items : [];
+  const name = asString(rawData.name);
+
+  if (!name) {
+    return c.json({ error: "Nome do template é obrigatório" }, 400);
+  }
 
   console.log(
-    `[Templates/Create] Creating template for org ${user.organizationId} with ${items?.length ?? 0} items`,
+    `[Templates/Create] Creating template for org ${user.organizationId} with ${templateItems.length} items`,
   );
 
   try {
     const result = await db.transaction(async (tx) => {
+      const templateValues: ExerciseTemplateInsert = {
+        name,
+        description: asString(rawData.description),
+        category: asString(rawData.category),
+        conditionName: asString(rawData.condition_name ?? rawData.conditionName),
+        templateVariant: asString(rawData.template_variant ?? rawData.templateVariant) ?? "Personalizado",
+        templateType: asString(rawData.templateType) ?? "custom",
+        patientProfile: asString(rawData.patientProfile ?? rawData.patient_profile),
+        organizationId: user.organizationId ?? null,
+        createdBy: user.uid,
+        isDraft: asBoolean(rawData.isDraft),
+        isActive: true,
+        exerciseCount: templateItems.length,
+        clinicalNotes: asString(rawData.clinicalNotes ?? rawData.clinical_notes),
+        contraindications: asString(rawData.contraindications),
+        precautions: asString(rawData.precautions),
+        progressionNotes: asString(rawData.progressionNotes ?? rawData.progression_notes),
+        evidenceLevel: asString(rawData.evidenceLevel ?? rawData.evidence_level),
+      };
+
       // 1. Inserir o template base
       const [template] = await tx
         .insert(exerciseTemplates)
-        .values({
-          name: rawData.name,
-          description: rawData.description,
-          category: rawData.category,
-          conditionName: rawData.condition_name ?? rawData.conditionName,
-          templateVariant: rawData.template_variant ?? rawData.templateVariant ?? "Personalizado",
-          templateType: rawData.templateType ?? "custom",
-          patientProfile: rawData.patientProfile ?? rawData.patient_profile,
-          organizationId: user.organizationId ?? null,
-          createdBy: user.uid,
-          isDraft: rawData.isDraft ?? false,
-          isActive: true,
-          exerciseCount: items?.length ?? 0,
-          clinicalNotes: rawData.clinicalNotes ?? rawData.clinical_notes,
-          contraindications: rawData.contraindications ?? rawData.contraindications,
-          precautions: rawData.precautions ?? rawData.precautions,
-          progressionNotes: rawData.progressionNotes ?? rawData.progression_notes,
-          evidenceLevel: rawData.evidenceLevel ?? rawData.evidence_level,
-        })
+        .values(templateValues)
         .returning();
 
       let insertedItems: any[] = [];
 
       // 2. Inserir os itens do template se existirem
-      if (items && Array.isArray(items) && items.length > 0) {
+      if (templateItems.length > 0) {
         insertedItems = await tx
           .insert(exerciseTemplateItems)
           .values(
-            items.map((item: any, index: number) => ({
-              templateId: template.id,
-              exerciseId: item.exercise_id ?? item.exerciseId,
-              orderIndex: item.order_index ?? item.orderIndex ?? index,
-              sets: item.sets,
-              repetitions: item.repetitions,
-              duration: item.duration,
-              notes: item.notes,
-              clinicalNotes: item.clinical_notes ?? item.clinicalNotes,
-              focusMuscles: item.focus_muscles ?? item.focusMuscles,
-              purpose: item.purpose,
-            })),
+            templateItems.map((item, index): ExerciseTemplateItemInsert => {
+              const row = item && typeof item === "object" ? item as Record<string, unknown> : {};
+              const focusMuscles = row.focus_muscles ?? row.focusMuscles;
+
+              return {
+                templateId: template.id,
+                exerciseId: String(row.exercise_id ?? row.exerciseId ?? ""),
+                orderIndex: asInteger(row.order_index ?? row.orderIndex) ?? index,
+                sets: asInteger(row.sets),
+                repetitions: asInteger(row.repetitions),
+                duration: asInteger(row.duration),
+                notes: asString(row.notes),
+                clinicalNotes: asString(row.clinical_notes ?? row.clinicalNotes),
+                focusMuscles: Array.isArray(focusMuscles) ? focusMuscles.map(String) : [],
+                purpose: asString(row.purpose),
+              };
+            }),
           )
           .returning();
       }
