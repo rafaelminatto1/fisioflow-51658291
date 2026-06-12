@@ -1158,22 +1158,29 @@ app.get("/birthdays", async (c) => {
     const result = await db
       .select({
         id: patients.id,
+        organizationId: patients.organizationId,
         fullName: patients.fullName,
+        email: patients.email,
         phone: patients.phone,
-        birthDate: patients.birthDate,
+        birthDate: patients.legacyDateOfBirth,
         photoUrl: patients.photoUrl,
+        status: patients.status,
+        isActive: patients.isActive,
+        createdAt: patients.createdAt,
+        updatedAt: patients.updatedAt,
       })
       .from(patients)
       .where(
         and(
           withTenant(patients, user.organizationId),
-          sql`EXTRACT(MONTH FROM ${patients.birthDate}) = EXTRACT(MONTH FROM CURRENT_DATE)`,
-          sql`EXTRACT(DAY FROM ${patients.birthDate}) = EXTRACT(DAY FROM CURRENT_DATE)`
-        )
+          sql`COALESCE(${patients.archived}, FALSE) = FALSE`,
+          sql`EXTRACT(MONTH FROM ${patients.legacyDateOfBirth}) = EXTRACT(MONTH FROM CURRENT_DATE)`,
+          sql`EXTRACT(DAY FROM ${patients.legacyDateOfBirth}) = EXTRACT(DAY FROM CURRENT_DATE)`,
+        ),
       );
 
     c.header("Cache-Control", "no-cache");
-    return c.json({ data: result });
+    return c.json({ data: result.map((row) => normalizePatientRow(row as DbRow)) });
   } catch (error: any) {
     console.error("[Patients/Birthdays] Error:", error.message);
     return c.json({ data: [] });

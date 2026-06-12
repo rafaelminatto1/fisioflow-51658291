@@ -219,8 +219,6 @@ export function useSchedulePageData(date: string, view: ViewType, filters?: Sche
     gcTime: 1000 * 60 * 60 * 24,
   });
 
-
-
   const staffBirthdaysToday = useMemo(
     () => therapists.filter((t) => isBirthdayToday(t.birth_date)),
     [therapists],
