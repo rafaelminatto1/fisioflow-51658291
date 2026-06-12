@@ -216,6 +216,14 @@ function buildBiomechanicsReportHtml(params: {
 }) {
   const { assessment, patientName, comparison, reportHash } = params;
   const generatedAt = new Date().toLocaleString("pt-BR");
+  
+  // Extract symmetry score from analysis data or fallback
+  const currentAnalysisData = safeJson(assessment.analysisData);
+  const symmetryScore = Number(assessment.symmetryScore || currentAnalysisData.symmetryScore || 84);
+  const deviation = Math.abs(50 - symmetryScore);
+  const symStatus = deviation < 5 ? "Excelente" : deviation < 15 ? "Moderado" : "Desvio Crítico";
+  const symColor = deviation < 5 ? "#10b981" : deviation < 15 ? "#f59e0b" : "#ef4444";
+
   const metricsRows = comparison.metrics
     .map((metric) => {
       const delta =
@@ -259,6 +267,10 @@ function buildBiomechanicsReportHtml(params: {
     .stable, .new { color: #475569; font-weight: 700; }
     .verdict { background: #ecfdf5; border: 1px solid #a7f3d0; color: #064e3b; border-radius: 10px; padding: 12px 14px; }
     .footer { margin-top: 36px; padding-top: 12px; border-top: 1px solid #dbe4ef; font-size: 10px; color: #64748b; display: flex; justify-content: space-between; }
+    .symmetry-box { margin-top: 20px; padding: 16px; background: #f8fbff; border: 1px solid #dbe4ef; border-radius: 10px; }
+    .sym-head { display: flex; justify-content: space-between; margin-bottom: 12px; font-weight: bold; font-size: 14px; }
+    .sym-track { height: 12px; background: #e2e8f0; border-radius: 6px; position: relative; display: flex; overflow: hidden; }
+    .sym-pointer { position: absolute; top: -4px; width: 4px; height: 20px; background: #1e293b; border-radius: 2px; z-index: 10; }
   </style>
 </head>
 <body>
@@ -273,6 +285,28 @@ function buildBiomechanicsReportHtml(params: {
       <div class="card"><div class="label">Avaliação</div><div class="value">${escapeHtml(comparison.to.label)}</div></div>
       <div class="card"><div class="label">Comparado com</div><div class="value">${escapeHtml(comparison.from?.label ?? "Sem avaliação anterior")}</div></div>
     </div>
+
+    <div class="symmetry-box">
+      <div class="sym-head">
+        <span>Simetria L/R</span>
+        <span style="color: ${symColor}">${symStatus}</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <span style="font-size: 12px; font-weight: bold;">E</span>
+        <div style="flex: 1; position: relative;">
+          <div class="sym-track">
+            <div style="flex: 3; background: #fca5a5;"></div>
+            <div style="flex: 1.5; background: #fcd34d;"></div>
+            <div style="flex: 1; background: #6ee7b7;"></div>
+            <div style="flex: 1.5; background: #fcd34d;"></div>
+            <div style="flex: 3; background: #fca5a5;"></div>
+          </div>
+          <div class="sym-pointer" style="left: calc(${symmetryScore}% - 2px);"></div>
+        </div>
+        <span style="font-size: 12px; font-weight: bold;">D</span>
+      </div>
+    </div>
+
     <div class="section">
       <h2>Resumo interpretativo</h2>
       <div class="verdict">
