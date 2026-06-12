@@ -18,7 +18,7 @@ import {
   FileCheck,
   ClipboardList,
   BookOpen,
-  Youtube,
+  Video as Youtube,
   ExternalLink,
   PlusCircle,
   PlayCircle,
