@@ -262,9 +262,8 @@ app.get("/:slug", async (c) => {
     eq(wikiPages.isPublic, true),
     isNull(wikiPages.deletedAt),
   );
-  const query = sql`SELECT * FROM wiki_pages WHERE ${conditions} LIMIT 1`;
-  const result = await db.execute(query);
-  const row = result.rows[0];
+  const result = await db.select().from(wikiPages).where(conditions).limit(1);
+  const row = result[0];
 
   if (!row) return c.json({ error: "Página não encontrada" }, 404);
 
@@ -273,10 +272,10 @@ app.get("/:slug", async (c) => {
     db
       .update(wikiPages)
       .set({ viewCount: sql`${wikiPages.viewCount} + 1` })
-      .where(eq(wikiPages.id, row[0].id)),
+      .where(eq(wikiPages.id, row.id)),
   );
 
-  return c.json({ data: row[0] });
+  return c.json({ data: row });
 });
 
 // ===== SUB-PÁGINAS =====

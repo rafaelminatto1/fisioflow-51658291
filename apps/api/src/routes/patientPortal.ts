@@ -883,10 +883,10 @@ app.get("/exercises", async (c) => {
       JOIN exercise_plan_items i ON i.plan_id = ep.id
       ${hasExercises ? "LEFT JOIN exercises e ON e.id = i.exercise_id" : ""}
       ${sessionJoin}
-      WHERE p.id = $1
+      WHERE p.id = $1 AND p.organization_id = $2
       ORDER BY ep.created_at DESC, i.order_index ASC
     `,
-    [data.patient_id],
+    [data.patient_id, user.organizationId],
   );
 
   const exercises = result.rows.map((row) => {
@@ -1031,12 +1031,12 @@ app.post("/exercises/:assignmentId/complete", async (c) => {
       const XP_PER_EXERCISE = 25;
       const gProf = await pool.query(
         `INSERT INTO patient_gamification
-           (patient_id, current_xp, level, current_streak, longest_streak,
+           (organization_id, patient_id, current_xp, level, current_streak, longest_streak,
             total_points, last_activity_date, created_at, updated_at)
-         VALUES ($1, 0, 1, 0, 0, 0, NOW(), NOW(), NOW())
+         VALUES ($1, $2, 0, 1, 0, 0, 0, NOW(), NOW(), NOW())
          ON CONFLICT (patient_id) DO UPDATE SET updated_at = NOW()
          RETURNING *`,
-        [data.patient_id],
+        [user.organizationId, data.patient_id],
       );
       const prof = gProf.rows[0];
       const newTotal = (prof.total_points || 0) + XP_PER_EXERCISE;
@@ -1070,8 +1070,8 @@ app.post("/exercises/:assignmentId/complete", async (c) => {
       await pool.query(
         `UPDATE patient_gamification SET total_points=$1, current_xp=$1, level=$2,
            current_streak=$3, longest_streak=$4, last_activity_date=NOW(), updated_at=NOW()
-         WHERE patient_id=$5`,
-        [finalTotal, finalXpLevel, streak, longest, data.patient_id],
+         WHERE patient_id=$5 AND organization_id=$6`,
+        [finalTotal, finalXpLevel, streak, longest, data.patient_id, user.organizationId],
       );
 
       await pool.query(
@@ -1116,8 +1116,8 @@ app.post("/exercises/:assignmentId/complete", async (c) => {
         );
         await pool
           .query(
-            `UPDATE patient_gamification SET total_badges = total_badges + 1 WHERE patient_id = $1`,
-            [data.patient_id],
+            `UPDATE patient_gamification SET total_badges = total_badges + 1 WHERE patient_id = $1 AND organization_id = $2`,
+            [data.patient_id, user.organizationId],
           )
           .catch(() => {}); // total_badges column might not exist yet
       }
@@ -1300,8 +1300,8 @@ app.get("/stats", async (c) => {
 
   const exercisesCount = (await hasTable(pool, "exercise_sessions"))
     ? await pool.query(
-        "SELECT COUNT(*)::int AS total FROM exercise_sessions WHERE patient_id = $1 AND completed = true",
-        [patientId],
+        "SELECT COUNT(*)::int AS total FROM exercise_sessions WHERE patient_id = $1 AND organization_id = $2 AND completed = true",
+        [patientId, user.organizationId],
       )
     : { rows: [{ total: 0 }] as DbRow[] };
 
@@ -1330,9 +1330,9 @@ app.get("/referral", async (c) => {
 
   const result = await pool.query(
     `SELECT code, reward_value FROM referral_codes 
-     WHERE patient_id = $1 
+     WHERE patient_id = $1 AND organization_id = $2
      ORDER BY created_at DESC LIMIT 1`,
-    [patientId],
+    [patientId, user.organizationId],
   );
 
   let referral = (result.rows[0] as any) || null;
@@ -1367,8 +1367,8 @@ app.get("/digital-twin", async (c) => {
       confidence_score, 
       last_ai_assessment_at 
      FROM patient_longitudinal_summary 
-     WHERE patient_id = $1`,
-    [patientId],
+     WHERE patient_id = $1 AND organization_id = $2`,
+    [patientId, user.organizationId],
   );
 
   const painHistory = await pool.query(
@@ -1493,8 +1493,8 @@ app.get("/gamification", async (c) => {
     .query(
       `SELECT current_xp, level, current_streak, longest_streak, last_activity_date,
             total_points, total_badges
-     FROM patient_gamification WHERE patient_id = $1 LIMIT 1`,
-      [patientId],
+     FROM patient_gamification WHERE patient_id = $1 AND organization_id = $2 LIMIT 1`,
+      [patientId, user.organizationId],
     )
     .catch(() => ({ rows: [] }));
 
@@ -1513,9 +1513,9 @@ app.get("/gamification", async (c) => {
     .query(
       `SELECT achievement_title AS badge_name, unlocked_at AS earned_at
      FROM achievements_log
-     WHERE patient_id = $1
+     WHERE patient_id = $1 AND organization_id = $2
      ORDER BY unlocked_at DESC`,
-      [patientId],
+      [patientId, user.organizationId],
     )
     .catch(() => ({ rows: [] }));
 
@@ -1579,8 +1579,8 @@ app.post("/proms", async (c) => {
   await pool
     .query(
       `UPDATE patient_gamification SET current_xp = current_xp + 5, total_points = total_points + 5,
-     updated_at = NOW() WHERE patient_id = $1`,
-      [patientId],
+     updated_at = NOW() WHERE patient_id = $1 AND organization_id = $2`,
+      [patientId, user.organizationId],
     )
     .catch(() => {});
 
@@ -1633,8 +1633,8 @@ app.get("/media/photos", async (c) => {
   const res = await pool
     .query(
       `SELECT id, r2_key, thumbnail_url, photo_type, body_region, notes, taken_at, created_at
-     FROM patient_photos WHERE patient_id = $1 ORDER BY taken_at DESC NULLS LAST, created_at DESC LIMIT 100`,
-      [patientId],
+     FROM patient_photos WHERE patient_id = $1 AND organization_id = $2 ORDER BY taken_at DESC NULLS LAST, created_at DESC LIMIT 100`,
+      [patientId, user.organizationId],
     )
     .catch(() => ({ rows: [] }));
 
@@ -1652,8 +1652,8 @@ app.get("/media/medical-requests", async (c) => {
     .query(
       `SELECT id, request_type, title, requested_by, scheduled_date, completed_date,
             status, notes, file_r2_key, created_at
-     FROM medical_requests WHERE patient_id = $1 ORDER BY created_at DESC LIMIT 50`,
-      [patientId],
+     FROM medical_requests WHERE patient_id = $1 AND organization_id = $2 ORDER BY created_at DESC LIMIT 50`,
+      [patientId, user.organizationId],
     )
     .catch(() => ({ rows: [] }));
 

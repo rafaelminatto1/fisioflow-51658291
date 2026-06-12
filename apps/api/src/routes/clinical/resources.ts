@@ -181,14 +181,9 @@ export function registerClinicalResourceRoutes(app: ClinicalRouteApp) {
       }
     }
 
-    const query = sql`
-      SELECT * FROM clinical_test_templates
-      WHERE ${and(...conditions)}
-      ORDER BY name ASC
-    `;
-
-    const dataResult = await db.execute(query);
-    const resultRows = dataResult.rows;
+    const query = db.select().from(clinicalTestTemplates).where(and(...conditions)).orderBy(asc(clinicalTestTemplates.name));
+    const dataResult = await query;
+    const resultRows = dataResult;
 
     const data = resultRows.map((row: Record<string, any>) =>
       normalizeClinicalTestTemplateRow(row as any),
@@ -209,9 +204,9 @@ export function registerClinicalResourceRoutes(app: ClinicalRouteApp) {
         sql`${clinicalTestTemplates.organizationId} IS NULL`,
       ),
     );
-    const query = sql`SELECT * FROM clinical_test_templates WHERE ${conditions} LIMIT 1`;
-    const result = await db.execute(query);
-    const row = result.rows[0];
+    const query = db.select().from(clinicalTestTemplates).where(conditions).limit(1);
+    const result = await query;
+    const row = result[0];
 
     if (!row) return c.json({ error: "Teste clínico não encontrado" }, 404);
 

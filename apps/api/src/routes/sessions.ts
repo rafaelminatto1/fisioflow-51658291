@@ -801,6 +801,7 @@ app.delete("/templates/:templateId", requireAuth, async (c) => {
 
 // ===== ANEXOS =====
 app.get("/:id/attachments", requireAuth, async (c) => {
+  const user = c.get("user");
   const db = createDb(c.env);
   const id = c.req.param("id");
   if (!isValidUuid(id)) return c.json({ error: "ID inválido" }, 400);
@@ -808,7 +809,7 @@ app.get("/:id/attachments", requireAuth, async (c) => {
   const results = await db
     .select()
     .from(sessionAttachments)
-    .where(eq(sessionAttachments.sessionId, id))
+    .where(and(eq(sessionAttachments.sessionId, id), eq(sessionAttachments.organizationId, user.organizationId)))
     .orderBy(desc(sessionAttachments.uploadedAt));
 
   return c.json({
@@ -878,13 +879,14 @@ app.post("/:id/attachments", requireAuth, async (c) => {
 });
 
 app.delete("/:id/attachments/:attachmentId", requireAuth, async (c) => {
+  const user = c.get("user");
   const db = createDb(c.env);
   const id = c.req.param("id");
   const attachmentId = c.req.param("attachmentId");
 
   const [deleted] = await db
     .delete(sessionAttachments)
-    .where(and(eq(sessionAttachments.id, attachmentId), eq(sessionAttachments.sessionId, id)))
+    .where(and(eq(sessionAttachments.id, attachmentId), eq(sessionAttachments.sessionId, id), eq(sessionAttachments.organizationId, user.organizationId)))
     .returning();
 
   if (!deleted) return c.json({ error: "Anexo não encontrado" }, 404);
