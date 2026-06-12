@@ -11,6 +11,7 @@ import {
   exerciseMediaAttachments,
   wikiDictionary,
 } from "@fisioflow/db";
+import { removeExerciseFromIndex, syncExerciseToIndex } from "../lib/contentIndexing";
 import { generateEmbedding, generateTurboSketch } from "../lib/ai-native";
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
@@ -556,6 +557,8 @@ app.post("/", requireAuth, async (c) => {
       } catch (e) {
         console.error("[Exercises] Failed to update semantic index sketch:", e);
       }
+
+      await syncExerciseToIndex(c.env, row.id);
     })(),
   );
 
@@ -629,6 +632,8 @@ app.put("/:id", requireAuth, async (c) => {
       } catch (e) {
         console.error("[Exercises] Failed to update semantic index sketch on update:", e);
       }
+
+      await syncExerciseToIndex(c.env, row.id);
     })(),
   );
 
@@ -652,6 +657,7 @@ app.delete("/:id", requireAuth, async (c) => {
   if (!row) return c.json({ error: "Exercício não encontrado" }, 404);
 
   c.executionCtx.waitUntil(invalidateListCache(c.env));
+  c.executionCtx.waitUntil(removeExerciseFromIndex(c.env, id));
   return c.json({ ok: true });
 });
 

@@ -12,6 +12,7 @@ import { and, eq, ilike, or, sql } from "drizzle-orm";
 import { Hono } from "hono";
 import { type AuthVariables, requireAuth } from "../lib/auth";
 import { createDb } from "../lib/db";
+import { removeProtocolFromIndex, syncProtocolToIndex } from "../lib/contentIndexing";
 import type { Env } from "../types/env";
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
@@ -218,6 +219,7 @@ app.post("/", requireAuth, async (c) => {
     .returning();
 
   c.executionCtx.waitUntil(kvDelete(c.env, KV_LIST_PREFIX + "p1:l20", KV_LIST_PREFIX + "p1:l500"));
+  c.executionCtx.waitUntil(syncProtocolToIndex(c.env, created.id));
   return c.json({ data: created }, 201);
 });
 
@@ -305,6 +307,7 @@ app.put("/:id", requireAuth, async (c) => {
   if (!updated) return c.json({ error: "Protocolo não encontrado" }, 404);
 
   c.executionCtx.waitUntil(kvDelete(c.env, KV_LIST_PREFIX + "p1:l20", KV_LIST_PREFIX + "p1:l500"));
+  c.executionCtx.waitUntil(syncProtocolToIndex(c.env, id));
   return c.json({ data: updated });
 });
 
@@ -322,6 +325,7 @@ app.delete("/:id", requireAuth, async (c) => {
   if (!deleted) return c.json({ error: "Protocolo não encontrado" }, 404);
 
   c.executionCtx.waitUntil(kvDelete(c.env, KV_LIST_PREFIX + "p1:l20", KV_LIST_PREFIX + "p1:l500"));
+  c.executionCtx.waitUntil(removeProtocolFromIndex(c.env, id));
   return c.json({ success: true });
 });
 
