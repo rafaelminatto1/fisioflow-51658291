@@ -9,6 +9,7 @@ import { verifyMetaSignature } from "./whatsapp";
 import { WhatsAppService } from "../lib/whatsapp";
 import { writeEvent } from "../lib/analytics";
 import { AIConciergeService } from "../services/ai-concierge";
+import { needsHumanApproval } from "../lib/whatsappApproval";
 
 const app = new Hono<{ Bindings: Env }>();
 
@@ -646,7 +647,19 @@ async function maybeSendConciergeGreeting(
   const concierge = await AIConciergeService.processMessage(env, orgId, text, history);
 
   const whatsapp = new WhatsAppService(env);
-  await whatsapp.sendTextMessage(waId, concierge.reply);
+
+  // HITL: resposta sensível vai para a fila de aprovação em vez de envio direto
+  if (needsHumanApproval(concierge.intent, text)) {
+    await pool.query(
+      `INSERT INTO whatsapp_pending_replies
+         (organization_id, wa_id, conversation_id, original_message, suggested_reply, intent)
+       VALUES ($1, $2, $3::uuid, $4, $5, $6)`,
+      [orgId, waId, conversationId, text.slice(0, 2000), concierge.reply, concierge.intent],
+    );
+    writeEvent(env, { orgId, event: "whatsapp_reply_pending_approval" });
+  } else {
+    await whatsapp.sendTextMessage(waId, concierge.reply);
+  }
 
   // 3. Automated Task Creation based on Intent
   if (concierge.intent !== "other") {

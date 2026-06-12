@@ -39,6 +39,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 import { fetchMetrics, type Metrics } from "@/services/whatsapp-api";
+import { PendingRepliesQueue } from "@/components/whatsapp/PendingRepliesQueue";
 
 function MetricCard({
 	title,
@@ -221,6 +222,8 @@ export default function WhatsAppDashboardPage() {
 								disabled={loading}
 							>
 								<RefreshCw className="h-4 w-4" />
+
+				<PendingRepliesQueue />
 							</Button>
 							{updatedAt && (
 								<Badge

@@ -81,6 +81,7 @@ import { aiStudioRoutes } from "./routes/ai-studio";
 import { fcmTokensRoutes } from "./routes/fcmTokens";
 import { webhooksRoutes } from "./routes/webhooks";
 import { patientPortalRoutes } from "./routes/patientPortal";
+import { patientAssistantRoutes } from "./routes/patientAssistant";
 import { messagingRoutes } from "./routes/messaging";
 import { boardsRoutes } from "./routes/boards";
 import { standardizedTestsRoutes } from "./routes/standardizedTests";
@@ -347,6 +348,7 @@ const apiRoutes = [
   ["/api/exercise-plans", exercisePlansRoutes],
   ["/api/activity-lab", activityLabRoutes],
   ["/api/patient-portal", patientPortalRoutes],
+  ["/api/patient/assistant", patientAssistantRoutes],
   ["/api/audit-logs", auditRoutes],
   ["/api/analytics", analyticsRoutes],
   ["/api/insights", analyticsRoutes],

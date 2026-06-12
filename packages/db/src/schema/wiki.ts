@@ -47,6 +47,7 @@ export const wikiPages = pgTable(
     // Controle de publicação
     isPublished: boolean("is_published").default(true).notNull(),
     isPublic: boolean("is_public").default(true).notNull(), // false = privado da org
+    patientVisible: boolean("patient_visible").default(false).notNull(), // opt-in p/ assistente do paciente
 
     // Estatísticas
     viewCount: integer("view_count").default(0).notNull(),

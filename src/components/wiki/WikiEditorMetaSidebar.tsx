@@ -20,21 +20,25 @@ function formatTimestamp(value: unknown): string {
 
 export function WikiEditorMetaSidebar({
   isPublished,
+  patientVisible,
   category,
   tags,
   page,
   clinicalMetadata,
   onPublishedChange,
+  onPatientVisibleChange,
   onCategoryChange,
   onTagsChange,
   onClinicalMetadataChange,
 }: {
   isPublished: boolean;
+  patientVisible: boolean;
   category: string;
   tags: string;
   page: WikiPage | null;
   clinicalMetadata: WikiPage["clinical_metadata"];
   onPublishedChange: (value: boolean) => void;
+  onPatientVisibleChange: (value: boolean) => void;
   onCategoryChange: (value: string) => void;
   onTagsChange: (value: string) => void;
   onClinicalMetadataChange: (value: WikiPage["clinical_metadata"]) => void;
@@ -44,6 +48,20 @@ export function WikiEditorMetaSidebar({
       <div className="flex items-center justify-between">
         <Label htmlFor="published">Publicar</Label>
         <Switch id="published" checked={isPublished} onCheckedChange={onPublishedChange} />
+      </div>
+
+      <div className="space-y-1">
+        <div className="flex items-center justify-between">
+          <Label htmlFor="patient-visible">Visível p/ pacientes</Label>
+          <Switch
+            id="patient-visible"
+            checked={patientVisible}
+            onCheckedChange={onPatientVisibleChange}
+          />
+        </div>
+        <p className="text-xs text-muted-foreground">
+          Entra no assistente do app do paciente. Use só para orientações revisadas.
+        </p>
       </div>
 
       <div className="space-y-2">
