@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { featureFlags } from "@/lib/config/remote-config";
-import { logger } from "@/lib/logging/logger";
+import { logger } from "@/lib/errors/logger";
 
 export function SemanticSearchPage() {
 	const navigate = useNavigate();

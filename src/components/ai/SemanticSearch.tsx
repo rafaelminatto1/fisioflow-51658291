@@ -13,7 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { logger } from "@/lib/logging/logger";
+import { logger } from "@/lib/errors/logger";
 import { stripHtml } from "@/lib/utils/stripHtml";
 
 interface SemanticSearchProps {
