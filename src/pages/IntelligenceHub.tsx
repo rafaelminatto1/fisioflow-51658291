@@ -17,13 +17,16 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { PageLayout, PageContainer, PageHeader } from "@/components/layout/PageLayout";
 import { cn } from "@/lib/utils";
 
-type IntelligenceTab = "overview" | "studio" | "analytics" | "assistant";
+type IntelligenceTab = "overview" | "studio" | "analytics" | "assistant" | "brain";
 
 const SmartDashboardContent = lazy(() =>
   import("./SmartDashboard").then((module) => ({ default: module.SmartDashboardContent })),
 );
 const SmartAIContent = lazy(() =>
   import("./SmartAI").then((module) => ({ default: module.SmartAIContent })),
+);
+const BrainDashboardContent = lazy(() =>
+  import("./ai/BrainDashboardPage").then((module) => ({ default: module.BrainDashboardPage })),
 );
 const AdvancedAnalyticsContent = lazy(() =>
   import("./AdvancedAnalytics").then((module) => ({ default: module.AdvancedAnalyticsContent })),
@@ -73,9 +76,16 @@ const HUB_TABS: Array<{
     badge: "NEW",
   },
   {
+    value: "brain",
+    label: "Fisio Brain",
+    description: "Busca em histórico, insights proativos e pesquisa clínica.",
+    icon: Brain,
+    badge: "PRO",
+  },
+  {
     value: "assistant",
     label: "Assistente",
-    description: "FisioBrain, wiki clínica, RAG e perguntas clínicas.",
+    description: "Wiki clínica, RAG e perguntas.",
     icon: Bot,
   },
 ];
@@ -284,6 +294,15 @@ export default function IntelligenceHub() {
             </section>
             <Suspense fallback={<IntelligenceContentSkeleton />}>
               <AdvancedAnalyticsContent />
+            </Suspense>
+          </TabsContent>
+
+          <TabsContent
+            value="brain"
+            className="m-0 min-h-[70vh] rounded-[1.75rem] outline-none"
+          >
+            <Suspense fallback={<IntelligenceContentSkeleton />}>
+              <BrainDashboardContent />
             </Suspense>
           </TabsContent>
 
