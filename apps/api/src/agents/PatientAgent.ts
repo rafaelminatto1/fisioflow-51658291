@@ -1,9 +1,11 @@
 import { Agent, callable } from "agents";
 import type { Env } from "../types/env";
 import { WORKERS_AI_MODELS } from "../lib/workersAi";
+import { recallAgentMemory } from "../lib/agentMemory";
 
 type RetentionState = {
   patientId: string;
+  organizationId?: string;
   patientName: string;
   missedSessions: number;
   lastPainLevel: number;
@@ -42,10 +44,16 @@ export class PatientAgent extends Agent<Env, RetentionState> {
    * Atualiza o estado do paciente com novos dados clínicos/agenda
    */
   @callable()
-  async updateClinicalStatus(data: { painLevel?: number; missedSession?: boolean; name?: string }) {
+  async updateClinicalStatus(data: {
+    painLevel?: number;
+    missedSession?: boolean;
+    name?: string;
+    organizationId?: string;
+  }) {
     let { missedSessions, lastPainLevel, status, patientName } = this.state;
 
     if (data.name) patientName = data.name;
+    if (data.organizationId) this.setState({ ...this.state, organizationId: data.organizationId });
     if (data.painLevel !== undefined) lastPainLevel = data.painLevel;
     if (data.missedSession) missedSessions += 1;
 
@@ -90,6 +98,17 @@ export class PatientAgent extends Agent<Env, RetentionState> {
     });
 
     try {
+      // Memória persistente: preferências/restrições do paciente alimentam o rascunho
+      let memoryContext = "";
+      if (this.state.organizationId && this.state.patientId) {
+        const recall = await recallAgentMemory(this.env, {
+          organizationId: this.state.organizationId,
+          patientId: this.state.patientId,
+          query: `preferências, restrições e contexto de ${this.state.patientName}`,
+        }).catch(() => null);
+        if (recall?.answer) memoryContext = `\nContexto conhecido do paciente:\n${recall.answer}`;
+      }
+
       // Uso do Workers AI nativo da Cloudflare (Llama 3.1 8B Instruct)
       const response = await this.env.AI.run(WORKERS_AI_MODELS.llama_3_1_8b, {
         messages: [
@@ -100,7 +119,7 @@ export class PatientAgent extends Agent<Env, RetentionState> {
           },
           {
             role: "user",
-            content: `Paciente: ${this.state.patientName}. Status: ${this.state.missedSessions} sessões faltadas. Último nível de dor: ${this.state.lastPainLevel}/10. Escreva uma mensagem de WhatsApp para incentivá-lo a retomar o tratamento.`,
+            content: `Paciente: ${this.state.patientName}. Status: ${this.state.missedSessions} sessões faltadas. Último nível de dor: ${this.state.lastPainLevel}/10.${memoryContext}\nEscreva uma mensagem de WhatsApp para incentivá-lo a retomar o tratamento.`,
           },
         ],
         max_tokens: 256,

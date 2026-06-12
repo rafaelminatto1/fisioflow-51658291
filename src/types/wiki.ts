@@ -22,6 +22,7 @@ export interface WikiPage {
   tags: string[];
   category?: string;
   is_published: boolean;
+  patient_visible?: boolean; // opt-in: página entra no assistente do paciente
   is_pinned?: boolean; // Novo: Páginas fixadas no topo
   view_count: number;
   attachments: WikiAttachment[];

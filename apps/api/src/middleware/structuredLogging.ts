@@ -6,6 +6,7 @@
  */
 import type { MiddlewareHandler } from "hono";
 import type { Env } from "../types/env";
+import type { CustomVariables } from "./requestId";
 
 interface LogContext {
   requestId: string;
@@ -27,7 +28,7 @@ function log(level: "info" | "warn" | "error", message: string, context: LogCont
   console.log(JSON.stringify(entry));
 }
 
-export function structuredLogging(): MiddlewareHandler<{ Bindings: Env }> {
+export function structuredLogging(): MiddlewareHandler<{ Bindings: Env; Variables: CustomVariables }> {
   return async (c, next) => {
     const start = Date.now();
     const requestId = c.get("requestId") ?? crypto.randomUUID();

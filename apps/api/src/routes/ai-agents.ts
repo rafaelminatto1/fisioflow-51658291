@@ -187,3 +187,23 @@ aiAgentsRoutes.post("/charts/generate", async (c) => {
     return c.json({ error: error.message || "Failed to generate chart config" }, 500);
   }
 });
+
+// ===== CHAT COM O CLINIC AGENT (DO por organização) =====
+aiAgentsRoutes.post("/clinic/chat", requireAuth, async (c) => {
+  const user = c.get("user");
+  if (!c.env.CLINIC_AGENT) return c.json({ error: "ClinicAgent não disponível" }, 503);
+
+  const body = (await c.req.json().catch(() => ({}))) as { message?: string };
+  const message = String(body.message ?? "").trim();
+  if (!message) return c.json({ error: "message é obrigatória" }, 400);
+
+  try {
+    const stub = c.env.CLINIC_AGENT.get(c.env.CLINIC_AGENT.idFromName(user.organizationId));
+    await (stub as any).setOrgId({ orgId: user.organizationId }).catch(() => {});
+    const result = await (stub as any).chat({ message });
+    return c.json({ data: result });
+  } catch (error: any) {
+    console.error("[ClinicAgent chat] error:", error);
+    return c.json({ error: "Falha ao consultar o agente da clínica" }, 500);
+  }
+});

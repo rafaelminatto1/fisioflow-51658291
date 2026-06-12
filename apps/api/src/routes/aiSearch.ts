@@ -6,6 +6,16 @@ import {
   chatAiSearch,
   searchAiSearch,
 } from "../lib/cloudflareAiSearch";
+import { upsertWikiPageInIndex } from "../lib/wikiIndexing";
+import { buildExerciseDoc, buildProtocolDoc } from "../lib/contentIndexing";
+import {
+  ASK_MATCH_THRESHOLD,
+  isInternalRole,
+  mapAskSources,
+  normalizeAskQuery,
+  resolveAskOutcome,
+} from "../lib/wikiAsk";
+import { writeEvent } from "../lib/analytics";
 
 const AUTORAG_NAME = "fisioflow-rag";
 
@@ -57,6 +67,99 @@ aiSearchApp.post("/", requireAuth, async (c) => {
   } catch (error: any) {
     console.error("[AI Search] search error:", error);
     return c.json({ error: "Falha na busca com IA", details: error.message }, 500);
+  }
+});
+
+// ─── Pergunte à Wiki: resposta gerada + citações, com threshold ──────────────
+
+aiSearchApp.post("/ask", requireAuth, async (c) => {
+  const user = c.get("user");
+  if (!isInternalRole(user.role)) {
+    return c.json({ error: "Acesso restrito a profissionais da clínica" }, 403);
+  }
+
+  const body = (await c.req.json().catch(() => ({}))) as Record<string, unknown>;
+  const query = String(body.query ?? "").trim();
+  if (query.length < 3) return c.json({ error: "query muito curta" }, 400);
+
+  if (!c.env.AI_SEARCH) {
+    return c.json({ error: "AI Search não disponível neste ambiente" }, 503);
+  }
+
+  const filters =
+    typeof body.type === "string" && body.type.length > 0
+      ? { source: body.type }
+      : undefined;
+
+  const started = Date.now();
+  try {
+    const result = await chatAiSearch(c.env, {
+      messages: [
+        {
+          role: "system",
+          content:
+            "Você é o assistente da wiki clínica da FisioFlow. Responda em Português do Brasil usando APENAS o conteúdo recuperado. Se o contexto não cobrir a pergunta, diga que não encontrou na wiki.",
+        },
+        { role: "user", content: query },
+      ],
+      maxNumResults: 8,
+      matchThreshold: ASK_MATCH_THRESHOLD,
+      ...(filters ? { filters } : {}),
+    });
+
+    const outcome = resolveAskOutcome(result.answer, result.sources, ASK_MATCH_THRESHOLD);
+    const latencyMs = Date.now() - started;
+
+    writeEvent(c.env, {
+      route: "/api/ai-search/ask",
+      method: "POST",
+      orgId: user.organizationId,
+      event: outcome.answered ? "wiki_search" : "wiki_search_miss",
+      latencyMs,
+      value: outcome.topScore,
+      detail: outcome.answered ? "" : normalizeAskQuery(query),
+    });
+
+    if (!outcome.answered) {
+      return c.json({ answered: false, answer: null, sources: [], topScore: outcome.topScore });
+    }
+
+    return c.json({
+      answered: true,
+      answer: result.answer,
+      sources: mapAskSources(result.sources, ASK_MATCH_THRESHOLD),
+      topScore: outcome.topScore,
+    });
+  } catch (error: any) {
+    console.error("[AI Search] ask error:", error);
+    return c.json({ error: "Falha ao consultar a wiki", details: error.message }, 500);
+  }
+});
+
+// ─── Sugestões contextuais (retrieval-only, sem geração — barato) ────────────
+
+aiSearchApp.post("/suggest", requireAuth, async (c) => {
+  const user = c.get("user");
+  if (!isInternalRole(user.role)) {
+    return c.json({ error: "Acesso restrito a profissionais da clínica" }, 403);
+  }
+  if (!c.env.AI_SEARCH) return c.json({ data: [] });
+
+  const body = (await c.req.json().catch(() => ({}))) as Record<string, unknown>;
+  const text = String(body.text ?? "").trim();
+  if (text.length < 12) return c.json({ data: [] });
+
+  try {
+    const { sources } = await searchAiSearch(c.env, {
+      query: text.slice(-1500),
+      maxNumResults: 5,
+      matchThreshold: ASK_MATCH_THRESHOLD,
+      rewrite: false,
+    });
+    return c.json({ data: mapAskSources(sources, ASK_MATCH_THRESHOLD) });
+  } catch (error) {
+    console.error("[AI Search] suggest error:", error);
+    return c.json({ data: [] });
   }
 });
 
@@ -258,7 +361,7 @@ export async function syncAutoRAGContent(
     let count = 0;
     for (let i = 0; i < res.rows.length; i += 5) {
       await Promise.all(
-        res.rows.slice(i, i + 5).map((row) => uploadDoc(`wiki-${row.id}.md`, buildWikiDoc(row), {
+        res.rows.slice(i, i + 5).map((row) => uploadDoc(`wiki/${row.id}.md`, buildWikiDoc(row), {
             source: "wiki",
             id: row.id,
             title: row.title,
@@ -525,22 +628,16 @@ export async function surgicalSyncWiki(
   env: Env,
   row: { id: string; title: string; content: string; category: string },
 ) {
-  if (!env.AI_SEARCH) return;
-
-  const docMarkdown = buildWikiDoc(row);
-  const filename = `wiki_${row.id}.md`;
-  
-  try {
-    await env.AI_SEARCH.items.upload(filename, docMarkdown, {
-      metadata: {
-        source: "wiki",
-        category: row.category || "Geral",
-        title: row.title,
-      },
-    });
+  const result = await upsertWikiPageInIndex(env, {
+    id: row.id,
+    title: row.title,
+    content: row.content,
+    category: row.category || "Geral",
+  });
+  if (result.ok) {
     console.log(`[AI Search] Surgically synchronized wiki page: ${row.title}`);
-  } catch (err) {
-    console.error("[AI Search] Surgical wiki sync failed:", err);
+  } else if (result.error) {
+    console.error("[AI Search] Surgical wiki sync failed:", result.error);
   }
 }
 
@@ -559,57 +656,6 @@ function getCfApi(env: Env) {
     });
 }
 
-function buildExerciseDoc(row: {
-  id: string;
-  name: string;
-  description: string | null;
-  instructions: string | null;
-  category: string | null;
-  difficulty: string | null;
-  muscles_primary: string[] | null;
-  muscles_secondary: string[] | null;
-  body_parts: string[] | null;
-  tips: string | null;
-  precautions: string | null;
-  benefits: string | null;
-}): string {
-  const parts: string[] = [`# Exercício: ${row.name}`];
-  if (row.category) parts.push(`**Categoria:** ${row.category}`);
-  if (row.difficulty) parts.push(`**Dificuldade:** ${row.difficulty}`);
-  if (row.muscles_primary?.length)
-    parts.push(`**Músculos primários:** ${row.muscles_primary.join(", ")}`);
-  if (row.muscles_secondary?.length)
-    parts.push(`**Músculos secundários:** ${row.muscles_secondary.join(", ")}`);
-  if (row.body_parts?.length) parts.push(`**Regiões corporais:** ${row.body_parts.join(", ")}`);
-  if (row.description) parts.push(`\n## Descrição\n${row.description}`);
-  if (row.instructions) parts.push(`\n## Instruções de Execução\n${row.instructions}`);
-  if (row.benefits) parts.push(`\n## Benefícios Clínicos\n${row.benefits}`);
-  if (row.tips) parts.push(`\n## Dicas Clínicas\n${row.tips}`);
-  if (row.precautions) parts.push(`\n## Precauções\n${row.precautions}`);
-  return parts.join("\n");
-}
-
-function buildProtocolDoc(row: {
-  id: string;
-  name: string;
-  description: string | null;
-  condition_name: string | null;
-  weeks_total: number | null;
-  objectives: string | null;
-  contraindications: string | null;
-  evidence_level: string | null;
-  protocol_type: string | null;
-}): string {
-  const parts: string[] = [`# Protocolo Clínico: ${row.name}`];
-  if (row.condition_name) parts.push(`**Condição clínica:** ${row.condition_name}`);
-  if (row.protocol_type) parts.push(`**Tipo:** ${row.protocol_type}`);
-  if (row.evidence_level) parts.push(`**Nível de evidência:** ${row.evidence_level}`);
-  if (row.weeks_total) parts.push(`**Duração:** ${row.weeks_total} semanas`);
-  if (row.description) parts.push(`\n## Descrição do Protocolo\n${row.description}`);
-  if (row.objectives) parts.push(`\n## Objetivos\n${row.objectives}`);
-  if (row.contraindications) parts.push(`\n## Contraindicações\n${row.contraindications}`);
-  return parts.join("\n");
-}
 
 function buildWikiDoc(row: {
   id: string;

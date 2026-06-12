@@ -29,6 +29,8 @@ type EventData = {
   latencyMs?: number;
   /** Valor numérico extra (ex: custo estimado em tokens) */
   value?: number;
+  /** Texto livre curto (ex: query de busca sem resposta) — blob5 */
+  detail?: string;
 };
 
 /**
@@ -40,6 +42,7 @@ type EventData = {
  *   blob2  → method
  *   blob3  → orgId
  *   blob4  → event
+ *   blob5  → detail (texto livre curto)
  *   double1 → latencyMs
  *   double2 → status
  *   double3 → value
@@ -49,7 +52,13 @@ export function writeEvent(env: Env, data: EventData): void {
   if (!env.ANALYTICS) return;
   try {
     env.ANALYTICS.writeDataPoint({
-      blobs: [data.route ?? "", data.method ?? "", data.orgId ?? "", data.event ?? "request"],
+      blobs: [
+        data.route ?? "",
+        data.method ?? "",
+        data.orgId ?? "",
+        data.event ?? "request",
+        (data.detail ?? "").slice(0, 256),
+      ],
       doubles: [data.latencyMs ?? 0, data.status ?? 200, data.value ?? 0],
       indexes: [data.orgId ?? "global"],
     });

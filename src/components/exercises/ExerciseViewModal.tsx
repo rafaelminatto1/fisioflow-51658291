@@ -120,7 +120,7 @@ export function ExerciseViewModal({
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent
-          className="fixed left-[50%] top-[50%] z-50 !-translate-x-1/2 !-translate-y-1/2 w-[95vw] md:w-[90vw] lg:w-[85vw] max-w-[1400px] max-h-[90vh] p-0 gap-0 overflow-hidden flex flex-col bg-card border-border/50 shadow-2xl rounded-lg exercise-print-layout"
+          className="fixed left-[50%] top-[50%] z-50 !-translate-x-1/2 !-translate-y-1/2 w-[96vw] md:w-[94vw] xl:w-[90vw] max-w-[1680px] max-h-[94dvh] sm:max-h-[92vh] p-0 gap-0 overflow-hidden flex flex-col bg-card border-border/50 shadow-2xl rounded-lg exercise-print-layout"
           onInteractOutside={(e) => e.preventDefault()}
           onEscapeKeyDown={(e) => {
             e.preventDefault();
@@ -128,9 +128,9 @@ export function ExerciseViewModal({
           }}
         >
           {/* Header */}
-          <div className="flex-none p-4 sm:p-6 border-b bg-card z-10 flex items-start justify-between gap-4 exercise-print-header">
-            <div className="space-y-1.5 pt-1">
-              <DialogTitle className="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2 exercise-print-title">
+          <div className="flex-none p-4 sm:p-6 border-b bg-card z-10 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 exercise-print-header">
+            <div className="space-y-1.5 pt-1 min-w-0">
+              <DialogTitle className="text-xl sm:text-2xl font-bold tracking-tight text-foreground flex items-center gap-2 exercise-print-title">
                 {exercise?.name ?? "Exercício"}
               </DialogTitle>
               <DialogDescription className="sr-only">
@@ -160,7 +160,7 @@ export function ExerciseViewModal({
               </div>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 self-end sm:self-start shrink-0">
               <div className="flex items-center gap-1 bg-muted/50 p-1 rounded-lg border border-border/50">
                 <Button
                   variant="ghost"
@@ -231,9 +231,9 @@ export function ExerciseViewModal({
           </div>
 
           {/* Content - Scrollable */}
-          <div className="flex-1 min-h-0 overflow-hidden grid grid-cols-1 lg:grid-cols-12">
-            {/* Left Column - Media (7 cols) */}
-            <div className="lg:col-span-7 bg-muted/10 h-full flex flex-col border-r border-border/50 overflow-hidden relative exercise-print-media">
+          <div className="flex-1 min-h-0 overflow-y-auto lg:overflow-hidden grid grid-cols-1 lg:grid-cols-12">
+            {/* Left Column - Media */}
+            <div className="lg:col-span-7 xl:col-span-8 bg-muted/10 min-h-[420px] lg:min-h-0 lg:h-full flex flex-col border-b lg:border-b-0 lg:border-r border-border/50 overflow-hidden relative exercise-print-media">
               <div className="absolute inset-0 bg-gradient-to-br from-background via-muted/20 to-muted/40 pointer-events-none" />
 
               <Tabs defaultValue={defaultTab} className="flex-1 flex flex-col relative z-0">
@@ -248,7 +248,7 @@ export function ExerciseViewModal({
                   </TabsList>
                 </div>
 
-                <div className="flex-1 p-3 sm:p-6 flex items-center justify-center min-h-0">
+                <div className="flex-1 p-3 sm:p-6 flex items-center justify-center min-h-[320px] lg:min-h-0">
                   <TabsContent
                     value="video"
                     className="w-full h-full mt-0 data-[state=active]:flex data-[state=active]:items-center data-[state=active]:justify-center"
@@ -295,14 +295,15 @@ export function ExerciseViewModal({
                     className="w-full h-full mt-0 data-[state=active]:flex data-[state=active]:items-center data-[state=active]:justify-center"
                   >
                     {hasImage && imageUrl ? (
-                      <div className="relative w-full h-full flex items-center justify-center bg-white/5 rounded-xl overflow-hidden shadow-lg border border-border/50">
+                      <div className="relative w-full h-full flex items-center justify-center bg-white rounded-xl overflow-hidden shadow-lg border border-border/50 p-4 sm:p-6">
                         <OptimizedImage
                           src={imageUrl}
                           alt={exercise?.name ?? "Exercício"}
-                          className="max-w-full max-h-full object-contain"
+                          className="h-full w-full"
                           aspectRatio="auto"
                           priority={true}
-                          sizes="(max-width: 768px) 100vw, (max-width: 1024px) 70vw, 60vw"
+                          sizes="(max-width: 768px) 100vw, (max-width: 1280px) 64vw, 68vw"
+                          style={{ objectFit: "contain" }}
                         />
                       </div>
                     ) : (
@@ -316,9 +317,9 @@ export function ExerciseViewModal({
               </Tabs>
             </div>
 
-            {/* Right Column - Information (5 cols) */}
-            <div className="lg:col-span-5 h-full min-h-0 bg-background flex flex-col">
-              <ScrollArea className="flex-1 h-full min-h-0">
+            {/* Right Column - Information */}
+            <div className="lg:col-span-5 xl:col-span-4 h-auto lg:h-full min-h-0 bg-background flex flex-col">
+              <ScrollArea className="lg:flex-1 lg:h-full lg:min-h-0">
                 <div className="p-4 sm:p-6 space-y-6 sm:space-y-8">
                   {/* Metrics / Parameters */}
                   <div className="grid grid-cols-3 gap-2 sm:gap-4 exercise-print-metrics">

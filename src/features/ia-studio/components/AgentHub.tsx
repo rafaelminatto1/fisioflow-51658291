@@ -603,14 +603,22 @@ export const AgentHub: React.FC<AgentHubProps> = ({ isOpen, onClose }) => {
                                 <Zap className="w-3 h-3 fill-amber-500 text-amber-500" /> 
                                 Recursos Sugeridos
                               </p>
-                              {msg.suggestedResources.map((res) => (
-                                <ResourceCard 
-                                    key={res.id} 
-                                    resource={res} 
-                                    query={messages[i-1]?.content || ""} 
-                                    onPreview={(r) => setPreviewResource(r)}
-                                />
-                              ))}
+                              <div className="space-y-3">
+                                {msg.suggestedResources.map((res, idx) => (
+                                    <motion.div
+                                        key={res.id}
+                                        initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                                        transition={{ delay: 0.1 + idx * 0.05, duration: 0.3 }}
+                                    >
+                                        <ResourceCard
+                                            resource={res}
+                                            query={messages[i-1]?.content || ""}
+                                            onPreview={(r) => setPreviewResource(r)}
+                                        />
+                                    </motion.div>
+                                ))}
+                              </div>
                             </div>
                           )}
                         </div>
