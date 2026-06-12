@@ -204,25 +204,22 @@ export function useSchedulePageData(date: string, view: ViewType, filters?: Sche
 
   const { data: tarefas = [], isLoading: isLoadingTarefas } = useTarefas();
 
-  const { data: patients = [], isLoading: isLoadingPatients } = useQuery({
-    queryKey: ["schedule-patients"],
+  const { data: birthdaysToday = [], isLoading: isLoadingBirthdays } = useQuery({
+    queryKey: ["schedule-birthdays"],
     queryFn: async () => {
       try {
-        const res = await patientsApi.list({ limit: 50, minimal: true });
+        const res = await patientsApi.birthdays();
         return res?.data ?? [];
       } catch (error) {
-        logger.error("Error loading patients", { error }, "useSchedulePage");
+        logger.error("Error loading birthdays", { error }, "useSchedulePage");
         return [];
       }
     },
-    staleTime: 1000 * 60 * 5, // 5 minutos
-    gcTime: 1000 * 60 * 5,
+    staleTime: 1000 * 60 * 60 * 2, // 2 horas (aniversários não mudam durante o dia)
+    gcTime: 1000 * 60 * 60 * 24,
   });
 
-  const birthdaysToday = useMemo(
-    () => patients.filter((p) => isBirthdayToday(p.birth_date)),
-    [patients],
-  );
+
 
   const staffBirthdaysToday = useMemo(
     () => therapists.filter((t) => isBirthdayToday(t.birth_date)),
@@ -301,13 +298,13 @@ export function useSchedulePageData(date: string, view: ViewType, filters?: Sche
   });
 
   const isLoading =
-    isLoadingAppointments || isLoadingTherapists || isLoadingPatients || isLoadingTarefas;
+    isLoadingAppointments || isLoadingTherapists || isLoadingBirthdays || isLoadingTarefas;
 
   return {
     data: {
       appointments,
       therapists,
-      patients,
+      patients: [],
       birthdaysToday,
       staffBirthdaysToday,
       tarefas,
