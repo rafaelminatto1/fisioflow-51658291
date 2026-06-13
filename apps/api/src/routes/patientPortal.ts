@@ -1417,6 +1417,8 @@ app.get("/ai-snapshot", async (c) => {
 
   if (!patientId) return c.json({ error: "Paciente não encontrado" }, 404);
 
+  c.header("Cache-Control", "private, no-store");
+
   // Modelo único pós-migração SOAP→observação. As colunas
   // subjective/objective/assessment/plan foram dropadas; usamos
   // observacao + estruturados.
@@ -1430,44 +1432,40 @@ app.get("/ai-snapshot", async (c) => {
   );
 
   if (history.rows.length === 0) {
-    c.header("Cache-Control", "public, max-age=60");
     return c.json({ data: { mainStatus: "Seu histórico clínico está sendo processado." } });
   }
 
   const { runThinkingModel } = await import("../lib/ai-native");
 
   try {
+    const prompt = `
+      Você é o assistente de saúde virtual do paciente.
+      Resuma as últimas 10 sessões de fisioterapia dele de forma motivadora e clara.
 
-  const prompt = `
-    Você é o assistente de saúde virtual do paciente. 
-    Resuma as últimas 10 sessões de fisioterapia dele de forma motivadora e clara.
-    
-    EVOLUÇÕES:
-    ${JSON.stringify(history.rows)}
+      EVOLUÇÕES:
+      ${JSON.stringify(history.rows)}
 
-    FORMATO DE SAÍDA (Retorne APENAS JSON puro):
-    {
-      "mainStatus": "Resumo motivador do estado atual",
-      "keyWins": ["Sua conquista 1", "Sua conquista 2"],
-      "remainingChallenges": ["Próximo foco 1", "Próximo foco 2"],
-      "clinicalRisk": "low | medium | high"
-    }
-  `.trim();
+      FORMATO DE SAÍDA (Retorne APENAS JSON puro):
+      {
+        "mainStatus": "Resumo motivador do estado atual",
+        "keyWins": ["Sua conquista 1", "Sua conquista 2"],
+        "remainingChallenges": ["Próximo foco 1", "Próximo foco 2"],
+        "clinicalRisk": "low | medium | high"
+      }
+    `.trim();
 
-  const result = await runThinkingModel(c.env, {
-    prompt,
-    model: "gemini-1.5-flash",
-    temperature: 0.2,
-    responseFormat: "json",
-  });
+    const result = await runThinkingModel(c.env, {
+      prompt,
+      model: "gemini-1.5-flash",
+      temperature: 0.2,
+      responseFormat: "json",
+    });
 
-  const jsonMatch = result.content.match(/\{[\s\S]*\}/);
-  const data = JSON.parse(jsonMatch?.[0] ?? result.content);
-    c.header("Cache-Control", "public, max-age=60");
+    const jsonMatch = result.content.match(/\{[\s\S]*\}/);
+    const data = JSON.parse(jsonMatch?.[0] ?? result.content);
     return c.json({ data });
   } catch (err) {
     // Fallback in case of AI failure
-    c.header("Cache-Control", "public, max-age=60");
     return c.json({
       data: {
         mainStatus: "Você demonstrou excelente avanço na redução da dor lombar. Sua estabilidade central está mais forte do que na avaliação inicial.",
