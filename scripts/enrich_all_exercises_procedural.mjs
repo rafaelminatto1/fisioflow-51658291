@@ -1,6 +1,6 @@
 import { neon } from "@neondatabase/serverless";
 
-const DATABASE_URL = "postgresql://neondb_owner:npg_tmxnYprZS93L@ep-wandering-bonus-acj4zwvo-pooler.sa-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require";
+const DATABASE_URL = process.env.NEON_URL || process.env.DATABASE_URL;
 const sql = neon(DATABASE_URL);
 
 // Algoritmo Procedural e Dicionários para Gerar Textos Clínicos
