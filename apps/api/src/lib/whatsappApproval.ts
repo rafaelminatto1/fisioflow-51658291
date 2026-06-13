@@ -1,7 +1,7 @@
 export type ConciergeIntent = "scheduling" | "information" | "urgent" | "other";
 
 const SENSITIVE_PATTERN =
-  /\b(dor|les[ãa]o|cirurgia|medicamento|rem[ée]dio|diagn[óo]stico|piora|inchaço|inchaco|dormência|dormencia|queda|tontura)\b/i;
+  /\b(dor(es)?|les[ãa]o|les[õo]es|cirurgia|medicamento|rem[ée]dio|diagn[óo]stico|pior\w*|incha\w*|dorm[êe]nc\w*|dormente|queda|caiu|tontura|machucad\w*|sangr\w*)\b/i;
 
 /**
  * Respostas sensíveis (urgência ou conteúdo clínico) exigem aprovação humana

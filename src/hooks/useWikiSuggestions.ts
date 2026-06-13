@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from "react";
+import { getWorkersApiUrl } from "../lib/api/config";
 import { apiClient } from "../lib/api/v2/client";
 import type { AskWikiSource } from "./useAskWiki";
 
-const API_BASE =
-  import.meta.env.VITE_WORKERS_API_URL || "https://fisioflow-api.rafalegollas.workers.dev";
+const API_BASE = getWorkersApiUrl();
 
 const DEBOUNCE_MS = 900;
 
@@ -28,7 +28,7 @@ export function useWikiSuggestions(text: string, enabled = true) {
       try {
         const res = await apiClient.post<{ data: AskWikiSource[] }>(
           `${API_BASE}/api/ai-search/suggest`,
-          { text },
+          { text: text.slice(-1500) },
         );
         if (seq === requestSeq.current) setSuggestions(res.data ?? []);
       } catch {
