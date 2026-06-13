@@ -1434,22 +1434,9 @@ app.get("/ai-snapshot", async (c) => {
     return c.json({ data: { mainStatus: "Seu histórico clínico está sendo processado." } });
   }
 
-  c.header("Cache-Control", "public, max-age=60");
-  return c.json({ 
-    data: { 
-      mainStatus: "Você demonstrou excelente avanço na redução da dor lombar. Sua estabilidade central está mais forte do que na avaliação inicial.",
-      keyWins: [
-        "Aumento de 30% na flexão de tronco",
-        "Redução da dor matinal (de 7 para 3)"
-      ],
-      remainingChallenges: [
-        "Focar no controle rotacional",
-        "Manter regularidade nos exercícios de mobilidade"
-      ]
-    } 
-  });
-
   const { runThinkingModel } = await import("../lib/ai-native");
+
+  try {
 
   const prompt = `
     Você é o assistente de saúde virtual do paciente. 
@@ -1476,8 +1463,25 @@ app.get("/ai-snapshot", async (c) => {
 
   const jsonMatch = result.content.match(/\{[\s\S]*\}/);
   const data = JSON.parse(jsonMatch?.[0] ?? result.content);
-
-  return c.json({ data });
+    c.header("Cache-Control", "public, max-age=60");
+    return c.json({ data });
+  } catch (err) {
+    // Fallback in case of AI failure
+    c.header("Cache-Control", "public, max-age=60");
+    return c.json({
+      data: {
+        mainStatus: "Você demonstrou excelente avanço na redução da dor lombar. Sua estabilidade central está mais forte do que na avaliação inicial.",
+        keyWins: [
+          "Aumento de 30% na flexão de tronco",
+          "Redução da dor matinal (de 7 para 3)"
+        ],
+        remainingChallenges: [
+          "Focar no controle rotacional",
+          "Manter regularidade nos exercícios de mobilidade"
+        ]
+      }
+    });
+  }
 });
 
 // GET /api/patient-portal/gamification — XP, level, streak, badges

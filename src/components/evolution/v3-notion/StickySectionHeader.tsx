@@ -22,7 +22,7 @@ interface StickySectionHeaderProps {
   showBackToTop?: boolean;
   onBackToTop?: () => void;
   className?: string;
-  accentColor?: "sky" | "emerald" | "amber" | "rose" | "emerald";
+  accentColor?: "sky" | "emerald" | "amber" | "rose";
 }
 
 const ACCENT_COLORS = {
@@ -30,7 +30,6 @@ const ACCENT_COLORS = {
   emerald: "bg-emerald-500",
   amber: "bg-amber-500",
   rose: "bg-rose-500",
-  emerald: "bg-emerald-500",
 };
 
 export const StickySectionHeader: React.FC<StickySectionHeaderProps> = ({
