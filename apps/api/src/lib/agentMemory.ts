@@ -124,6 +124,8 @@ export async function recallAgentMemory(env: Env, input: AgentMemoryScope & { qu
   };
 }
 
+// bge-m3 (1024 dims) — NÃO trocar por generateEmbedding de ai-native (bge-base, 768 dims):
+// a coluna agent_memories.embedding é vector(1024).
 async function embedText(env: Env, text: string): Promise<number[] | null> {
   try {
     const response = (await env.AI.run("@cf/baai/bge-m3", { text: [text] })) as {

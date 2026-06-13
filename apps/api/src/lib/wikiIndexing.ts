@@ -90,24 +90,23 @@ export async function deleteIndexedItemsByFilenames(
 ): Promise<{ deleted: number }> {
   if (!binding?.items) return { deleted: 0 };
 
-  let deleted = 0;
-  for (const filename of new Set(filenames)) {
-    try {
-      const listing = await binding.items.list({ search: filename, per_page: 10 });
-      const items: Array<{ id: string; key?: string; filename?: string }> =
-        listing?.result ?? listing?.items ?? [];
-      for (const item of items) {
-        const key = item.key ?? item.filename ?? "";
-        if (key !== filename) continue;
-        await binding.items.delete(item.id);
-        deleted++;
+  const counts = await Promise.all(
+    [...new Set(filenames)].map(async (filename) => {
+      try {
+        const listing = await binding.items.list({ search: filename, per_page: 10 });
+        const items: Array<{ id: string; key?: string; filename?: string }> =
+          listing?.result ?? listing?.items ?? [];
+        const matches = items.filter((item) => (item.key ?? item.filename ?? "") === filename);
+        await Promise.all(matches.map((item) => binding.items.delete(item.id)));
+        return matches.length;
+      } catch (error) {
+        console.warn(`[wikiIndexing] remove lookup failed for ${filename}:`, error);
+        return 0;
       }
-    } catch (error) {
-      console.warn(`[wikiIndexing] remove lookup failed for ${filename}:`, error);
-    }
-  }
+    }),
+  );
 
-  return { deleted };
+  return { deleted: counts.reduce((sum, n) => sum + n, 0) };
 }
 
 export async function removeWikiPageFromIndex(

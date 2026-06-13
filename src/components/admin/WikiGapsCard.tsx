@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { getWorkersApiUrl } from "@/lib/api/config";
 import { HelpCircle, MessageSquareWarning } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { apiClient } from "@/lib/api/v2/client";
@@ -9,8 +10,7 @@ interface WikiGap {
   last_seen: string;
 }
 
-const API_BASE =
-  import.meta.env.VITE_WORKERS_API_URL || "https://fisioflow-api.rafalegollas.workers.dev";
+const API_BASE = getWorkersApiUrl();
 
 export function WikiGapsCard() {
   const { data, isLoading } = useQuery({
