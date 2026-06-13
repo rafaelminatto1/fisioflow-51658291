@@ -16,6 +16,10 @@ env:
   NODE_VERSION: "22"
   PNPM_VERSION: "10.33.0"
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+  # Chave pública do Sentry (EXPO_PUBLIC_*): precisa estar no ambiente do
+  # xcodebuild para ser embutida no bundle JS, senão Sentry.init é pulado em
+  # produção e nenhum crash é capturado.
+  EXPO_PUBLIC_SENTRY_DSN: "https://8e146b66341375138584a7006ebdcc40@o4510069182955520.ingest.us.sentry.io/4510933737603072"
 
 jobs:
   build-ios:
