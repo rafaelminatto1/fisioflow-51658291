@@ -143,6 +143,7 @@ export const GlobalCommandPalette: React.FC = () => {
                 <Command.Item
                   value={`perguntar-wiki ${query}`}
                   onSelect={() => setAskQuery(query.trim())}
+                  data-testid="wiki-ask-trigger"
                   className="flex items-center gap-4 p-4 rounded-2xl cursor-pointer transition-all aria-selected:bg-blue-50 dark:aria-selected:bg-blue-900/20 group"
                 >
                   <div className="p-3 bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 group-aria-selected:border-blue-200 dark:group-aria-selected:border-blue-800 transition-all">
