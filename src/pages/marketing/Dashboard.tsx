@@ -332,7 +332,6 @@ export default function MarketingDashboard() {
 			green: "gradient-success-light",
 			emerald: "gradient-accent-teal-light",
 			amber: "gradient-warm-light",
-			emerald: "gradient-success-light",
 		};
 
 		const colorClasses = {
@@ -340,7 +339,6 @@ export default function MarketingDashboard() {
 			green: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
 			emerald: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
 			amber: "bg-amber-500/10 text-amber-600 dark:text-amber-400",
-			emerald: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
 		};
 
 		const cardContent = (

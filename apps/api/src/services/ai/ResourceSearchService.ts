@@ -1,4 +1,4 @@
-import { eq, or, ilike, inArray } from "drizzle-orm";
+import { or, ilike } from "drizzle-orm";
 import { createDb, runWithOrg } from "../../lib/db";
 import { 
   exercises, 

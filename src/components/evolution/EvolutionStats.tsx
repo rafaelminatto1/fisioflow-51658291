@@ -101,13 +101,6 @@ const COLOR_CLASSES: Record<
     border: "border-cyan-500/20",
     progress: "bg-cyan-500",
   },
-  emerald: {
-    bg: "from-emerald-500/5",
-    text: "text-emerald-600 dark:text-emerald-400",
-    icon: "text-emerald-500/30 group-hover:text-emerald-500/50",
-    border: "border-emerald-500/20",
-    progress: "bg-emerald-500",
-  },
 };
 
 export const EvolutionStats = memo(
