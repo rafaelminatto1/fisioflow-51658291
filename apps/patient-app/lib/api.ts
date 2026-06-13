@@ -200,6 +200,20 @@ export const api = {
 };
 
 export const patientApi = {
+  askAssistant: async (
+    query: string,
+  ): Promise<{
+    answered: boolean;
+    answer: string;
+    sources: Array<{ id: string; title: string }>;
+    disclaimer: string;
+  }> =>
+    api.post<{
+      answered: boolean;
+      answer: string;
+      sources: Array<{ id: string; title: string }>;
+      disclaimer: string;
+    }>(`/api/patient/assistant`, { query }),
   bootstrapProfile: async (data: Record<string, unknown>): Promise<PatientProfile> => {
     const response = await api.post<any>(`${PATIENT_PORTAL_PREFIX}/bootstrap`, data);
     return Mappers.patientProfile(response);
