@@ -53,7 +53,6 @@ export class PatientAgent extends Agent<Env, RetentionState> {
     let { missedSessions, lastPainLevel, status, patientName } = this.state;
 
     if (data.name) patientName = data.name;
-    if (data.organizationId) this.setState({ ...this.state, organizationId: data.organizationId });
     if (data.painLevel !== undefined) lastPainLevel = data.painLevel;
     if (data.missedSession) missedSessions += 1;
 
@@ -68,6 +67,7 @@ export class PatientAgent extends Agent<Env, RetentionState> {
 
     this.setState({
       ...this.state,
+      ...(data.organizationId ? { organizationId: data.organizationId } : {}),
       patientName,
       missedSessions,
       lastPainLevel,

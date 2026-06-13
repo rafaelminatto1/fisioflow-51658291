@@ -1,4 +1,5 @@
 import { useRef, useState } from "react";
+import { getWorkersApiUrl } from "@/lib/api/config";
 import { Bot, Loader2, SendHorizonal, User } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -11,8 +12,7 @@ interface ChatMessage {
   sources?: Array<{ title: string; slug: string }>;
 }
 
-const API_BASE =
-  import.meta.env.VITE_WORKERS_API_URL || "https://fisioflow-api.rafalegollas.workers.dev";
+const API_BASE = getWorkersApiUrl();
 
 export function ClinicAgentChat() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);

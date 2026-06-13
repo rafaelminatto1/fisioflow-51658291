@@ -1,4 +1,5 @@
 import { useCallback, useRef, useState } from "react";
+import { getWorkersApiUrl } from "../lib/api/config";
 import { apiClient } from "../lib/api/v2/client";
 
 export interface AskWikiSource {
@@ -26,8 +27,7 @@ export function useAskWiki() {
   const requestSeq = useRef(0);
 
   const ask = useCallback(async (query: string, type?: AskWikiContentType) => {
-    const API_BASE =
-      import.meta.env.VITE_WORKERS_API_URL || "https://fisioflow-api.rafalegollas.workers.dev";
+    const API_BASE = getWorkersApiUrl();
 
     const seq = ++requestSeq.current;
     setLoading(true);

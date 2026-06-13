@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { getWorkersApiUrl } from "@/lib/api/config";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Check, Clock, MessageCircle, X } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -17,8 +18,7 @@ interface PendingReply {
   created_at: string;
 }
 
-const API_BASE =
-  import.meta.env.VITE_WORKERS_API_URL || "https://fisioflow-api.rafalegollas.workers.dev";
+const API_BASE = getWorkersApiUrl();
 
 const INTENT_LABEL: Record<string, string> = {
   urgent: "Urgência",

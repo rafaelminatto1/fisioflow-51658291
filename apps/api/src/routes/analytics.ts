@@ -5,6 +5,7 @@ import type { Env } from "../types/env";
 import { businessMetrics, patientAdherencePredictions, patients } from "@fisioflow/db";
 import { eq, desc, and } from "drizzle-orm";
 import { AdherencePredictor } from "../lib/ai/adherencePredictor";
+import { isUuid } from "../lib/validators";
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
@@ -82,11 +83,14 @@ app.get("/wiki-gaps", async (c) => {
   if (!["admin", "owner"].includes(String(user.role ?? ""))) {
     return c.json({ error: "Acesso restrito a administradores" }, 403);
   }
-  if (!c.env.CF_API_TOKEN) {
-    return c.json({ data: [], warning: "CF_API_TOKEN não configurado" });
+  if (!c.env.CF_API_TOKEN || !c.env.CF_ACCOUNT_ID) {
+    return c.json({ data: [], warning: "CF_API_TOKEN/CF_ACCOUNT_ID não configurados" });
+  }
+  if (!isUuid(user.organizationId)) {
+    return c.json({ data: [] });
   }
 
-  const accountId = c.env.CF_ACCOUNT_ID ?? "32156f9a72a32d1ece28ab74bcd398fb";
+  const accountId = c.env.CF_ACCOUNT_ID;
   const sqlQuery = `SELECT
       blob5 AS query,
       count() AS misses,
@@ -94,7 +98,7 @@ app.get("/wiki-gaps", async (c) => {
     FROM fisioflow_events
     WHERE blob4 IN ('wiki_search_miss', 'patient_assistant_query')
       AND blob5 != ''
-      AND blob3 = '${String(user.organizationId).replace(/'/g, "")}'
+      AND blob3 = '${user.organizationId}'
       AND timestamp > NOW() - INTERVAL '30' DAY
     GROUP BY blob5
     ORDER BY misses DESC
