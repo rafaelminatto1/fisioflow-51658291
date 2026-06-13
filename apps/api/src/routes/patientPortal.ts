@@ -1464,7 +1464,7 @@ app.get("/ai-snapshot", async (c) => {
     const jsonMatch = result.content.match(/\{[\s\S]*\}/);
     const data = JSON.parse(jsonMatch?.[0] ?? result.content);
     return c.json({ data });
-  } catch (err) {
+  } catch {
     // Fallback in case of AI failure
     return c.json({
       data: {
