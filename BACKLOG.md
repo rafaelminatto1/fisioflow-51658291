@@ -47,7 +47,7 @@
 
 ## Próximo ciclo — Prioridade Alta (Lançamento)
 
-- [ ] **Submissão para as Stores** — Iniciar processo com os metadados gerados em `docs/mobile/STORE_METADATA.md`
+- [x] **Submissão para as Stores** — Iniciar processo com os metadados gerados em `docs/mobile/STORE_METADATA.md`
 - [ ] **Configurar GitHub Secrets de staging** (`STAGING_TEST_USER_EMAIL`, `STAGING_TEST_USER_PASSWORD`, `STAGING_BASE_URL`)
 - [ ] **Baselining de SLOs** — monitorar latência em São Paulo (< 60ms edge)
 

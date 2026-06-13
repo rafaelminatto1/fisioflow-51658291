@@ -10,13 +10,11 @@ import { requireAuth, type AuthVariables } from "../lib/auth";
 import { isUuid } from "../lib/validators";
 import type { Env } from "../types/env";
 import {
-  envioRPS,
   testeEnvioLoteRPS,
   consultaNFe,
   consultaLote,
   cancelamentoNFe,
   hasSPCertConfig,
-  debugBuildXmlMessage,
 } from "../lib/nfseSPClient";
 import { generateAndSaveDanfse, getDanfsePresignedUrl, getDanfseR2Key } from "../lib/nfseDanfse";
 import { sendNfseCancellationToAccounting } from "../lib/email";
