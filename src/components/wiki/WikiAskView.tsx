@@ -82,7 +82,7 @@ export const WikiAskView: React.FC<Props> = ({ query, onBack, onNavigate }) => {
       )}
 
       {!loading && !error && result && !result.answered && (
-        <div className="py-10 text-center space-y-2">
+        <div className="py-10 text-center space-y-2" data-testid="wiki-ask-empty">
           <div className="w-12 h-12 bg-slate-50 dark:bg-slate-800 rounded-2xl flex items-center justify-center mx-auto">
             <SearchX className="w-6 h-6 text-slate-300" />
           </div>
@@ -97,7 +97,10 @@ export const WikiAskView: React.FC<Props> = ({ query, onBack, onNavigate }) => {
 
       {!loading && !error && result?.answered && (
         <>
-          <div className="px-4 py-3 rounded-2xl bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 shadow-sm">
+          <div
+            className="px-4 py-3 rounded-2xl bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 shadow-sm"
+            data-testid="wiki-ask-answer"
+          >
             <p className="text-sm text-slate-800 dark:text-slate-100 whitespace-pre-wrap leading-relaxed">
               {result.answer}
             </p>
