@@ -71,6 +71,7 @@ export function ClinicAgentChat() {
             >
               {msg.role === "agent" && <Bot className="w-4 h-4 mt-1 text-blue-600 shrink-0" />}
               <div
+                data-testid={msg.role === "agent" ? "clinic-chat-message" : undefined}
                 className={`rounded-xl px-3 py-2 text-sm max-w-[85%] whitespace-pre-wrap ${
                   msg.role === "user"
                     ? "bg-blue-600 text-white"
