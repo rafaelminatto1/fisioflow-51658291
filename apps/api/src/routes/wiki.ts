@@ -524,8 +524,21 @@ app.put("/:slug", requireAuth, async (c) => {
   if (updatedPage.isPublished) {
     c.executionCtx.waitUntil(
       upsertWikiPageInIndex(c.env, indexablePage).then((r) => {
-        if (!r.ok) console.warn("[wiki PUT] AI Search upsert failed:", r.error);
-      }),
+        if (r.ok) return;
+        console.warn("[wiki PUT] AI Search upsert failed:", r.error);
+        // Fallback: deixa o WikiSyncWorkflow reindexar fora do request
+        return c.env.WORKFLOW_WIKI_SYNC?.create({
+          id: `wiki-sync-page-${updatedPage.id}-v${nextVersion}`,
+          params: { triggerType: "publish", wikiPageId: updatedPage.id },
+        }).then(() => undefined);
+      }).catch((err) => console.warn("[wiki PUT] AI Search upsert fallback failed:", err)),
+    );
+    // Instância do paciente só precisa de sync quando a página está publicada;
+    // no unpublish, removeWikiPageFromIndex já limpa as duas instâncias.
+    c.executionCtx.waitUntil(
+      syncWikiPagePatientIndex(c.env, indexablePage).catch((err) =>
+        console.warn("[wiki PUT] patient index sync failed:", err),
+      ),
     );
   } else {
     c.executionCtx.waitUntil(
@@ -534,12 +547,6 @@ app.put("/:slug", requireAuth, async (c) => {
       ),
     );
   }
-
-  c.executionCtx.waitUntil(
-    syncWikiPagePatientIndex(c.env, indexablePage).catch((err) =>
-      console.warn("[wiki PUT] patient index sync failed:", err),
-    ),
-  );
 
   return c.json({ data: updatedPage });
 });
