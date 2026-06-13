@@ -84,6 +84,13 @@ const quickActions: QuickAction[] = [
     route: "/(tabs)/profile",
     color: "#059669",
   },
+  {
+    id: "5",
+    label: "Tirar dúvidas",
+    icon: "chatbubbles-outline",
+    route: "/duvidas",
+    color: "#7c3aed",
+  },
 ];
 
 export default function DashboardScreen() {
