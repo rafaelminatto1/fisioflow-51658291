@@ -13,6 +13,7 @@ import {
   biomechanicsMetrics,
   biomechanicsProtocols,
   biomechanicsReviewActions,
+  patients,
 } from "@fisioflow/db";
 import type { Env } from "../types/env";
 
@@ -70,6 +71,14 @@ function r2BiomechanicsKey(params: {
   const rawFilename = params.filename?.trim() || `${params.mediaId}.mp4`;
   const filename = rawFilename.replace(/[^a-zA-Z0-9._-]/g, "_").slice(0, 160);
   return `orgs/${params.organizationId}/patients/${params.patientId}/videos/biomechanics/${params.assessmentId}/${filename}`;
+}
+
+function r2PublicUrl(env: Env, key: string) {
+  const baseUrl = env.R2_PUBLIC_URL?.replace(/\/$/, "");
+  if (!baseUrl) {
+    throw new Error("R2_PUBLIC_URL is required to publish biomechanics media URLs");
+  }
+  return `${baseUrl}/${key}`;
 }
 
 function safeJson(value: unknown) {
@@ -534,6 +543,12 @@ app.post("/captures", requireAuth, async (c) => {
   const patientId = String(body.patientId ?? "").trim();
   if (!patientId) return c.json({ error: "Paciente é obrigatório" }, 400);
 
+  const [patient] = await db
+    .select({ id: patients.id })
+    .from(patients)
+    .where(and(eq(patients.id, patientId), eq(patients.organizationId, user.organizationId)));
+  if (!patient) return c.json({ error: "Paciente não encontrado nesta organização" }, 404);
+
   let protocol: ProtocolRow | undefined;
   if (body.protocolId) {
     [protocol] = await db
@@ -689,12 +704,15 @@ app.post("/:id/media/complete", requireAuth, async (c) => {
     .where(and(eq(biomechanicsMedia.id, mediaId || String(assessment.primaryMediaId)), eq(biomechanicsMedia.organizationId, user.organizationId)))
     .returning();
   if (!media) return c.json({ error: "Mídia não encontrada" }, 404);
+  if (media.r2Key && !c.env.R2_PUBLIC_URL) {
+    return c.json({ error: "R2_PUBLIC_URL não configurado para publicar mídia de biomecânica" }, 500);
+  }
 
   await db
     .update(biomechanicsAssessments)
     .set({
       status: "uploaded",
-      mediaUrl: media.r2Key ? `${c.env.R2_PUBLIC_URL.replace(/\/$/, "")}/${media.r2Key}` : assessment.mediaUrl,
+      mediaUrl: media.r2Key ? r2PublicUrl(c.env, media.r2Key) : assessment.mediaUrl,
       qualityScore: media.qualityScore,
       updatedAt: new Date(),
     })
@@ -714,24 +732,31 @@ app.post("/:id/process", requireAuth, async (c) => {
     .where(and(eq(biomechanicsAssessments.id, id), eq(biomechanicsAssessments.organizationId, user.organizationId)));
   if (!assessment) return c.json({ error: "Avaliação não encontrada" }, 404);
 
-  const [job] = assessment.jobId
-    ? await db
-        .select()
-        .from(biomechanicsJobs)
-        .where(and(eq(biomechanicsJobs.id, assessment.jobId), eq(biomechanicsJobs.organizationId, user.organizationId)))
-    : await db
-        .insert(biomechanicsJobs)
-        .values({
-          organizationId: user.organizationId,
-          patientId: assessment.patientId,
-          assessmentId: assessment.id,
-          mediaId: assessment.primaryMediaId,
-          status: "queued",
-          stage: "ingest",
-          progress: 0,
-          createdBy: user.uid,
-        })
-        .returning();
+  const [latestJob] = await db
+    .select()
+    .from(biomechanicsJobs)
+    .where(and(eq(biomechanicsJobs.assessmentId, assessment.id), eq(biomechanicsJobs.organizationId, user.organizationId)))
+    .orderBy(desc(biomechanicsJobs.createdAt))
+    .limit(1);
+
+  if (latestJob && ["queued", "running"].includes(latestJob.status)) {
+    return c.json({ data: { job: latestJob } });
+  }
+
+  const [job] = await db
+    .insert(biomechanicsJobs)
+    .values({
+      organizationId: user.organizationId,
+      patientId: assessment.patientId,
+      assessmentId: assessment.id,
+      mediaId: assessment.primaryMediaId,
+      status: "queued",
+      stage: "ingest",
+      progress: 0,
+      createdBy: user.uid,
+      algorithmVersion: DEFAULT_ALGORITHM_VERSION,
+    })
+    .returning();
 
   await db
     .update(biomechanicsJobs)
@@ -744,11 +769,11 @@ app.post("/:id/process", requireAuth, async (c) => {
     .where(and(eq(biomechanicsAssessments.id, id), eq(biomechanicsAssessments.organizationId, user.organizationId)));
 
   const processPayload = {
-      jobId: job.id,
-      assessmentId: assessment.id,
-      mediaId: job.mediaId ?? assessment.primaryMediaId ?? undefined,
-      patientId: assessment.patientId,
-      organizationId: user.organizationId,
+    jobId: job.id,
+    assessmentId: assessment.id,
+    mediaId: job.mediaId ?? assessment.primaryMediaId ?? undefined,
+    patientId: assessment.patientId,
+    organizationId: user.organizationId,
   };
 
   if (c.env.WORKFLOW_BIOMECHANICS_ANALYSIS) {
@@ -1037,14 +1062,23 @@ app.post("/", requireAuth, async (c) => {
   const user = c.get("user");
   const body = await c.req.json();
   const db = await createDb(c.env);
+  const patientId = String(body.patientId ?? "").trim();
+  if (!patientId) return c.json({ error: "Paciente é obrigatório" }, 400);
+  if (!body.mediaUrl) return c.json({ error: "mediaUrl é obrigatório" }, 400);
+
+  const [patient] = await db
+    .select({ id: patients.id })
+    .from(patients)
+    .where(and(eq(patients.id, patientId), eq(patients.organizationId, user.organizationId)));
+  if (!patient) return c.json({ error: "Paciente não encontrado nesta organização" }, 404);
 
   const [newAssessment] = await db
     .insert(biomechanicsAssessments)
     .values({
-      patientId: body.patientId,
+      patientId,
       organizationId: user.organizationId,
       professionalId: user.uid,
-      type: body.type,
+      type: toBiomechanicsAssessmentType(body.type),
       mediaUrl: body.mediaUrl,
       thumbnailUrl: body.thumbnailUrl,
       analysisData: body.analysisData || {},
@@ -1213,6 +1247,9 @@ app.post("/:id/pdf", requireAuth, async (c) => {
     0,
     12,
   )}.pdf`;
+  if (!c.env.R2_PUBLIC_URL) {
+    return c.json({ error: "R2_PUBLIC_URL não configurado para publicar PDF biomecânico" }, 500);
+  }
 
   await c.env.MEDIA_BUCKET.put(pdfKey, pdfBytes, {
     httpMetadata: {
@@ -1228,7 +1265,7 @@ app.post("/:id/pdf", requireAuth, async (c) => {
     },
   });
 
-  const pdfUrl = `${c.env.R2_PUBLIC_URL.replace(/\/$/, "")}/${pdfKey}`;
+  const pdfUrl = r2PublicUrl(c.env, pdfKey);
   const generatedAt = new Date().toISOString();
   const analysisData = {
     ...currentAnalysisData,
@@ -1284,6 +1321,13 @@ app.post("/:id/sign", requireAuth, async (c) => {
 
   const ip = c.req.header("CF-Connecting-IP") ?? "unknown";
   const now = new Date().toISOString();
+  const contentHash = await crypto.subtle
+    .digest("SHA-256", new TextEncoder().encode(JSON.stringify(assessment.analysisData)))
+    .then((b) =>
+      Array.from(new Uint8Array(b))
+        .map((x) => x.toString(16).padStart(2, "0"))
+        .join(""),
+    );
 
   // Create Signature Metadata (Simulating ICP-Brasil)
   const signatureMetadata = {
@@ -1292,27 +1336,23 @@ app.post("/:id/sign", requireAuth, async (c) => {
     timestamp: now,
     ip,
     userAgent: c.req.header("User-Agent") || "unknown",
-    // SHA-256 of the assessment content to ensure integrity
-    contentHash: await crypto.subtle
-      .digest("SHA-256", new TextEncoder().encode(JSON.stringify(assessment.analysisData)))
-      .then((b) =>
-        Array.from(new Uint8Array(b))
-          .map((x) => x.toString(16).padStart(2, "0"))
-          .join(""),
-      ),
+    contentHash,
   };
 
   const [updated] = await db
     .update(biomechanicsAssessments)
     .set({
       status: "signed",
+      signedAt: new Date(now),
+      reportHash: contentHash,
+      signatureMetadata,
       analysisData: {
         ...(assessment.analysisData as object),
         _signature: signatureMetadata,
       } as any,
       updatedAt: new Date(),
     })
-    .where(eq(biomechanicsAssessments.id, id))
+    .where(and(eq(biomechanicsAssessments.id, id), eq(biomechanicsAssessments.organizationId, user.organizationId)))
     .returning();
 
   return c.json({ success: true, data: updated });
