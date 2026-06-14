@@ -87,8 +87,11 @@ aiSearchApp.post("/ask", requireAuth, async (c) => {
     return c.json({ error: "AI Search não disponível neste ambiente" }, 503);
   }
 
+  // NOTA: filtragem por tipo no AI Search built-in é não-confiável (metadata
+  // customizada exige declarar campos; folder via binding não retorna). Documentos
+  // clínicos são recuperados na busca padrão, sem filtro.
   const filters =
-    typeof body.type === "string" && body.type.length > 0
+    typeof body.type === "string" && body.type.length > 0 && body.type !== "clinical-doc"
       ? { source: body.type }
       : undefined;
 

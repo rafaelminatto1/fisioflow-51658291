@@ -12,7 +12,6 @@ import { toast } from "sonner";
 interface ClinicalDoc {
   id: string;
   title: string;
-  status: string;
 }
 
 const API_BASE = getWorkersApiUrl();
@@ -121,9 +120,6 @@ export function ClinicalDocsManager() {
                 <span className="flex items-center gap-2 min-w-0">
                   <FileText className="w-4 h-4 text-slate-400 shrink-0" />
                   <span className="text-sm truncate">{doc.title}</span>
-                  {doc.status !== "indexed" && (
-                    <span className="text-[10px] font-bold uppercase text-amber-600">{doc.status}</span>
-                  )}
                 </span>
                 <Button
                   size="icon"

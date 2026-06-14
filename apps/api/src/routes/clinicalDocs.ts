@@ -7,7 +7,7 @@ import {
   indexClinicalDoc,
   isPdf,
   listClinicalDocs,
-  removeClinicalDoc,
+  removeClinicalDocFromIndex,
 } from "../lib/clinicalDocsIndexing";
 
 const MAX_PDF_BYTES = 4 * 1024 * 1024; // 4 MB — limite de arquivo do AI Search
@@ -83,7 +83,7 @@ app.delete("/:id", async (c) => {
   const user = c.get("user");
   const id = c.req.param("id");
 
-  const removed = await removeClinicalDoc(c.env, id);
+  const removed = await removeClinicalDocFromIndex(c.env, id);
   if (c.env.CLINICAL_DOCS_BUCKET) {
     await c.env.CLINICAL_DOCS_BUCKET.delete(clinicalDocR2Key(id)).catch(() => {});
   }
