@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import { requireAuth, type AuthVariables } from "../../lib/auth";
+import { requireAuth, requireRole, type AuthVariables } from "../../lib/auth";
 import type { Env } from "../../types/env";
 import {
   checkAudioTranscriptionBudget,
@@ -13,15 +13,7 @@ import { isAgentMemoryConfigured } from "../../lib/agentMemory";
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
 app.use("*", requireAuth);
-app.use("*", async (c, next) => {
-  const user = c.get("user");
-  const role = typeof user.role === "string" ? user.role.toLowerCase().trim() : "";
-  const allowedRoles = ["admin", "owner"];
-  if (!allowedRoles.includes(role)) {
-    return c.json({ error: "admin_only" }, 403);
-  }
-  await next();
-});
+app.use("*", requireRole(["admin", "owner"]));
 
 app.get("/status", async (c) => {
   const user = c.get("user");

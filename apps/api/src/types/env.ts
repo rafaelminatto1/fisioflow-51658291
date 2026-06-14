@@ -135,6 +135,7 @@ export interface Env {
   // Cloudflare R2 Config
   MEDIA_BUCKET: R2Bucket;
   EXAMS_BUCKET?: R2Bucket; // fisioflow-exams: exames, fotos, vídeos clínicos (privado)
+  CLINICAL_DOCS_BUCKET?: R2Bucket; // fisioflow-clinical-docs: PDFs de referência (diretrizes/protocolos)
 
   // Cloudflare Stream (vídeo: encoding adaptativo, HLS, thumbnails) — GA 2026-05-07
   STREAM?: StreamBinding;
