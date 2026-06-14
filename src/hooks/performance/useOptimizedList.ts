@@ -1,5 +1,6 @@
 import { useMemo, useCallback, useState } from "react";
 import { useDebounce } from "./useDebounce";
+import { accentIncludes } from "@/lib/utils/bilingualSearch";
 
 interface PaginationOptions {
   pageSize?: number;
@@ -67,7 +68,7 @@ export function useOptimizedList<T>(
         return searchFields.some((field) => {
           const value = item[field];
           if (typeof value === "string") {
-            return value.toLowerCase().includes(lowerSearch);
+            return accentIncludes(value, debouncedSearch);
           }
           if (typeof value === "number") {
             return value.toString().includes(lowerSearch);
@@ -79,7 +80,7 @@ export function useOptimizedList<T>(
       // Fallback: search in all string values
       return Object.values(item as object).some((value) => {
         if (typeof value === "string") {
-          return value.toLowerCase().includes(lowerSearch);
+          return accentIncludes(value, debouncedSearch);
         }
         return false;
       });

@@ -16,6 +16,7 @@ import { PeriodQuery } from "@/utils/periodCalculations";
 import { useAppointmentsByPeriod } from "./useAppointmentsByPeriod";
 import { useDebounce } from "./use-debounce";
 import { fisioLogger as logger } from "@/lib/errors/logger";
+import { accentIncludes } from "@/lib/utils/bilingualSearch";
 
 /**
  * Filter options for appointments
@@ -55,9 +56,7 @@ function applyFilters(
   return appointments.filter((apt) => {
     // Filter by patient name (case-insensitive partial match)
     if (filters.patientName && filters.patientName.trim().length > 0) {
-      const searchTerm = filters.patientName.toLowerCase().trim();
-      const patientName = (apt.patientName || "").toLowerCase();
-      if (!patientName.includes(searchTerm)) {
+      if (!accentIncludes(apt.patientName || "", filters.patientName.trim())) {
         return false;
       }
     }

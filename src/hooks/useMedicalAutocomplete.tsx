@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils";
+import { accentIncludes } from "@/lib/utils/bilingualSearch";
 /**
  * useMedicalAutocomplete - Autocomplete for clinical terminology
  *
@@ -237,10 +238,8 @@ export const useMedicalAutocomplete = ({
 
     // Filter by query
     if (query) {
-      const lowerQuery = query.toLowerCase();
       suggestions = suggestions.filter(
-        (s) =>
-          s.label.toLowerCase().includes(lowerQuery) || s.value.toLowerCase().includes(lowerQuery),
+        (s) => accentIncludes(s.label, query) || accentIncludes(s.value, query),
       );
     }
 
