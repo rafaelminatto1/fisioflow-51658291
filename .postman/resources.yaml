@@ -1,0 +1,13 @@
+# Use this workspace to collaborate
+workspace:
+  id: aeaca0d3-1d38-4f49-8769-53072bb670cf
+
+localResources:
+  collections:
+    - ../postman/collections/fisioflow-api.postman_collection.json
+    - ../postman/collections/fisioflow-health.postman_collection.json
+  environments:
+    - ../postman/environments/FisioFlow — Prod.environment.yaml
+    - ../postman/environments/FisioFlow — Local.environment.yaml
+  specs:
+    - ../src/docs/openapi.yaml
