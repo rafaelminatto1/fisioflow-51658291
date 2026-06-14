@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { View, Text, ScrollView, Pressable, TextInput, StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
@@ -6,6 +6,7 @@ import Svg, { Circle, Path, Line } from "react-native-svg";
 import { Plus, Search, Clock, Repeat, Ruler, Camera, ArrowRight } from "lucide-react-native";
 import { bio, font } from "@/constants/biomecanica";
 import { BioTabBar } from "@/components/biomecanica/BioTabBar";
+import { biomechanicsApi, type BiomechanicsProtocol } from "@/lib/api/biomechanics";
 
 type Region = "knee" | "gait" | "shoulder" | "trunk";
 
@@ -51,6 +52,52 @@ function TestFigure({ region }: { region: Region }) {
 export default function TestsScreen() {
   const router = useRouter();
   const [sel, setSel] = useState("Todos");
+  const [protocols, setProtocols] = useState<BiomechanicsProtocol[]>([]);
+
+  useEffect(() => {
+    let mounted = true;
+    biomechanicsApi
+      .listProtocols()
+      .then((response) => {
+        if (mounted) setProtocols(response.data ?? []);
+      })
+      .catch(() => {
+        if (mounted) setProtocols([]);
+      });
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  const visibleTests = protocols.length
+    ? protocols.map((protocol) => {
+        const region: Region =
+          protocol.category === "corrida" || protocol.category === "marcha"
+            ? "gait"
+            : protocol.category === "postura"
+              ? "trunk"
+              : "knee";
+        const requirements = protocol.captureRequirements ?? {};
+        const metrics = Array.isArray(protocol.metricDefinitions)
+          ? protocol.metricDefinitions.slice(0, 3).map((metric: any) => String(metric.key ?? metric.label ?? "Métrica"))
+          : ["ROM", "Simetria"];
+        return {
+          id: protocol.id,
+          name: protocol.name,
+          region,
+          views: Array.isArray(requirements.views)
+            ? requirements.views.map((view: string) => view.toUpperCase())
+            : ["SAGITAL"],
+          desc: protocol.description ?? "Protocolo biomecânico padronizado.",
+          metrics,
+          meta: [
+            { icon: Clock, t: requirements.minDurationMs ? `~${Math.ceil(Number(requirements.minDurationMs) / 1000)}s` : "~2 min" },
+            { icon: Repeat, t: requirements.attempts ? `${requirements.attempts} tent.` : "2 tent." },
+          ],
+          protocol,
+        };
+      })
+    : TESTS.map((test) => ({ ...test, protocol: null }));
 
   return (
     <View style={styles.root}>
@@ -85,10 +132,18 @@ export default function TestsScreen() {
 
       <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
         <Text style={styles.secTitle}>Mais usados</Text>
-        {TESTS.map((t) => {
+        {visibleTests.map((t) => {
           const r = REGION[t.region];
           return (
-            <Pressable key={t.id} style={styles.test} onPress={() => router.push("/biomecanica/capture" as never)}>
+            <Pressable
+              key={t.id}
+              style={styles.test}
+              onPress={() =>
+                router.push(
+                  `/biomecanica/capture?protocolId=${encodeURIComponent(t.protocol?.id ?? "")}&protocolName=${encodeURIComponent(t.name)}` as never,
+                )
+              }
+            >
               <View style={[styles.vis, { backgroundColor: r.tint }]}>
                 <TestFigure region={t.region} />
                 <View style={styles.views}>

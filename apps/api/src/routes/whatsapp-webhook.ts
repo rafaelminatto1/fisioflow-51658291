@@ -10,6 +10,7 @@ import { WhatsAppService } from "../lib/whatsapp";
 import { writeEvent } from "../lib/analytics";
 import { AIConciergeService } from "../services/ai-concierge";
 import { needsHumanApproval } from "../lib/whatsappApproval";
+import { notifyOrganization } from "../lib/push";
 
 const app = new Hono<{ Bindings: Env }>();
 
@@ -657,6 +658,14 @@ async function maybeSendConciergeGreeting(
       [orgId, waId, conversationId, text.slice(0, 2000), concierge.reply, concierge.intent],
     );
     writeEvent(env, { orgId, event: "whatsapp_reply_pending_approval" });
+    
+    // Notify admin about the pending item
+    c.executionCtx.waitUntil(
+      notifyOrganization(env, pool, orgId, {
+        title: "Aprovação pendente",
+        body: "Uma resposta da assistente virtual requer aprovação manual.",
+      }).catch((e) => console.error("[Notify] push error:", e))
+    );
   } else {
     await whatsapp.sendTextMessage(waId, concierge.reply);
   }
