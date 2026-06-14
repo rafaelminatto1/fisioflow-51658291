@@ -55,12 +55,12 @@ app.get("/", requireAuth, async (c) => {
 				ce.patient_id as "patientId",
 				p.full_name as "patientName",
 				s.date as "sessionDate",
-				1 - (ce.embedding <=> ${queryEmbedding}::vector) as "similarity"
+				1 - (ce.embedding <=> ${JSON.stringify(queryEmbedding)}::vector) as "similarity"
 			FROM clinical_embeddings ce
 			JOIN patients p ON p.id = ce.patient_id
 			JOIN sessions s ON s.id = ce.evolution_id
 			WHERE ce.organization_id = ${user.organizationId}::uuid
-			ORDER BY ce.embedding <=> ${queryEmbedding}::vector
+			ORDER BY ce.embedding <=> ${JSON.stringify(queryEmbedding)}::vector
 			LIMIT ${limit};
 		`;
 

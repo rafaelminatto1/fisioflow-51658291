@@ -42,7 +42,7 @@ export async function processClinicalEmbedding(
 				${organizationId}::uuid,
 				${patientId}::uuid,
 				${evolutionId}::uuid,
-				${embedding}::vector,
+				${JSON.stringify(embedding)}::vector,
 				${text.substring(0, 500)},
 				NOW()
 			)

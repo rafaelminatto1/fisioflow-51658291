@@ -550,11 +550,11 @@ aiSearchApp.get("/unified", requireAuth, async (c) => {
         return await sql`
           SELECT 
             p.id, p.full_name as name, ce.content_summary as summary,
-            1 - (ce.embedding <=> ${vector}::vector) as similarity
+            1 - (ce.embedding <=> ${JSON.stringify(vector)}::vector) as similarity
           FROM clinical_embeddings ce
           JOIN patients p ON p.id = ce.patient_id
           WHERE ce.organization_id = ${user.organizationId}::uuid
-          ORDER BY ce.embedding <=> ${vector}::vector
+          ORDER BY ce.embedding <=> ${JSON.stringify(vector)}::vector
           LIMIT 3
         `;
       })(),
