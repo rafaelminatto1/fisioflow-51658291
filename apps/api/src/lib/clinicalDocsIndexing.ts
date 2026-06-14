@@ -1,5 +1,4 @@
 import type { Env } from "../types/env";
-import { deleteIndexedItemsByFilenames } from "./wikiIndexing";
 
 export const CLINICAL_DOC_PREFIX = "clinical-doc";
 export const CLINICAL_DOC_R2_PREFIX = "reference";
@@ -12,15 +11,17 @@ export function clinicalDocR2Key(id: string): string {
   return `${CLINICAL_DOC_R2_PREFIX}/${id}.pdf`;
 }
 
+// Filtro de busca por tipo "documento": usa o atributo nativo `folder` do AI
+// Search (filtragem por metadata customizada exigiria declarar o campo).
+export function clinicalDocFolderFilter(): Record<string, unknown> {
+  return { folder: { $gte: `${CLINICAL_DOC_PREFIX}/`, $lt: `${CLINICAL_DOC_PREFIX}0` } };
+}
+
 // PDFs começam com "%PDF-". Evita indexar arquivos que não são PDF de verdade.
 export function isPdf(bytes: ArrayBuffer): boolean {
   const head = new Uint8Array(bytes.slice(0, 5));
   return (
-    head[0] === 0x25 && // %
-    head[1] === 0x50 && // P
-    head[2] === 0x44 && // D
-    head[3] === 0x46 && // F
-    head[4] === 0x2d // -
+    head[0] === 0x25 && head[1] === 0x50 && head[2] === 0x44 && head[3] === 0x46 && head[4] === 0x2d
   );
 }
 
@@ -39,7 +40,6 @@ export async function indexClinicalDoc(
   if (!env.AI_SEARCH?.items) return { ok: false, error: "AI_SEARCH não configurado" };
 
   try {
-    const items = env.AI_SEARCH.items;
     const metadata = {
       source: "clinical-doc",
       type: "clinical-doc",
@@ -48,8 +48,10 @@ export async function indexClinicalDoc(
       org_id: meta.organizationId ?? "",
     };
     // Enfileira (queued) e retorna na hora — a indexação do PDF roda em background.
-    // NÃO usar uploadAndPoll aqui: o poll bloquearia o request além do limite do Worker.
-    const result = await items.upload(clinicalDocIndexFilename(meta.id), bytes, { metadata });
+    // NÃO usar uploadAndPoll: o poll bloquearia o request além do limite do Worker.
+    const result = await env.AI_SEARCH.items.upload(clinicalDocIndexFilename(meta.id), bytes, {
+      metadata,
+    });
     return { ok: true, status: result?.status };
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
@@ -58,41 +60,55 @@ export async function indexClinicalDoc(
   }
 }
 
-export async function removeClinicalDoc(env: Env, id: string): Promise<{ deleted: number }> {
-  return deleteIndexedItemsByFilenames(env, [clinicalDocIndexFilename(id)]);
+// Remove do índice. O `items.list` com `search` casa por prefixo/token; por isso
+// buscamos pelo id e confirmamos a chave exata antes de deletar.
+export async function removeClinicalDocFromIndex(env: Env, id: string): Promise<{ deleted: number }> {
+  if (!env.AI_SEARCH?.items) return { deleted: 0 };
+  const key = clinicalDocIndexFilename(id);
+  let deleted = 0;
+  try {
+    const listing = await env.AI_SEARCH.items.list({ search: id, per_page: 25 });
+    const items: Array<{ id: string; key?: string; filename?: string }> =
+      listing?.result ?? listing?.items ?? [];
+    for (const item of items) {
+      if ((item.key ?? item.filename ?? "") !== key) continue;
+      await env.AI_SEARCH.items.delete(item.id);
+      deleted++;
+    }
+  } catch (error) {
+    console.warn(`[clinicalDocs] remove failed for ${id}:`, error);
+  }
+  return { deleted };
 }
 
 export type ClinicalDocListItem = {
   id: string;
   title: string;
-  status: string;
 };
 
-// Lista os documentos de referência a partir do índice (metadata source=clinical-doc).
+// Fonte da verdade para a lista é o R2 (a metadata customizada do AI Search não
+// fica consultável sem declarar campos). `include: customMetadata` traz o título.
 export async function listClinicalDocs(env: Env): Promise<ClinicalDocListItem[]> {
-  if (!env.AI_SEARCH?.items) return [];
+  if (!env.CLINICAL_DOCS_BUCKET) return [];
   try {
-    const listing = await env.AI_SEARCH.items.list({
-      per_page: 100,
-      metadata_filter: JSON.stringify({ source: { $eq: "clinical-doc" } }),
-    });
-    const items: Array<{ id: string; key?: string; filename?: string; status: string; metadata?: Record<string, unknown> }> =
-      listing?.result ?? listing?.items ?? [];
-    return items
-      .filter((it) => String(it.key ?? it.filename ?? "").startsWith(`${CLINICAL_DOC_PREFIX}/`))
-      .map((it) => ({
-        id: String(it.metadata?.doc_id ?? "").trim() || extractDocId(it.key ?? it.filename ?? ""),
-        title: String(it.metadata?.title ?? it.key ?? "documento"),
-        status: it.status,
-      }))
-      .filter((it) => it.id);
+    const listed = await env.CLINICAL_DOCS_BUCKET.list({
+      prefix: `${CLINICAL_DOC_R2_PREFIX}/`,
+      include: ["customMetadata"],
+    } as R2ListOptions);
+    return listed.objects
+      .map((obj) => {
+        const id = extractIdFromR2Key(obj.key);
+        return { id, title: String(obj.customMetadata?.title ?? id) };
+      })
+      .filter((d) => d.id)
+      .sort((a, b) => a.title.localeCompare(b.title));
   } catch (error) {
     console.error("[clinicalDocs] list failed:", error);
     return [];
   }
 }
 
-function extractDocId(key: string): string {
-  const m = key.match(/clinical-doc\/(.+)\.pdf$/);
+function extractIdFromR2Key(key: string): string {
+  const m = key.match(/reference\/(.+)\.pdf$/);
   return m ? m[1] : "";
 }
