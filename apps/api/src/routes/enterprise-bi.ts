@@ -30,7 +30,7 @@ app.get("/regional-summary", requireAuth, async (c) => {
       `SELECT 
         o.name as clinic_name,
         o.id as clinic_id,
-        (SELECT SUM(valor) FROM pagamentos WHERE organization_id = o.id AND created_at >= date_trunc('month', NOW())) as revenue,
+        (SELECT SUM(amount) FROM payments WHERE organization_id = o.id AND created_at >= date_trunc('month', NOW())) as revenue,
         (SELECT COUNT(*) FROM appointments WHERE organization_id = o.id AND date = CURRENT_DATE) as appointments_today
        FROM organizations o
        WHERE o.id = ANY($1::uuid[])`,
@@ -56,7 +56,7 @@ app.get("/regional-audit", requireAuth, async (c) => {
     const regionalData = await pool.query(
       `SELECT 
         o.name as clinic_name,
-        (SELECT SUM(valor) FROM pagamentos WHERE organization_id = o.id AND created_at >= date_trunc('month', NOW())) as revenue,
+        (SELECT SUM(amount) FROM payments WHERE organization_id = o.id AND created_at >= date_trunc('month', NOW())) as revenue,
         (SELECT COUNT(*) FROM sessions WHERE organization_id = o.id AND session_date >= date_trunc('month', NOW())) as sessions,
         (SELECT ROUND(AVG(nps_score),1) FROM satisfaction_surveys WHERE organization_id = o.id) as avg_nps
        FROM organizations o

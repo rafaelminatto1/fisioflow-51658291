@@ -92,7 +92,7 @@ export function TeamPerformanceKPIs() {
     );
   }
 
-  if (!data || data.therapists.length === 0) return null;
+  if (!data || !data.therapists || data.therapists.length === 0) return null;
 
   const { therapists } = data;
 

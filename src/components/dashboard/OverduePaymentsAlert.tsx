@@ -68,7 +68,7 @@ export function OverduePaymentsAlert() {
     );
   }
 
-  if (!data || data.patients.length === 0) return null;
+  if (!data || !data.patients || data.patients.length === 0) return null;
 
   const { patients, summary } = data;
   const visible = expanded ? patients : patients.slice(0, 3);

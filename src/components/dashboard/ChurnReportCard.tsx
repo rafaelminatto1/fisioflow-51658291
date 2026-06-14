@@ -39,7 +39,7 @@ export function ChurnReportCard() {
     staleTime: 10 * 60 * 1000,
   });
 
-  if (isLoading || !data) return null;
+  if (isLoading || !data || (!Array.isArray(data) && !data.churnedPatients)) return null;
 
   // Evita crash de TypeError se o back-end retornar um array de pacientes inativos
   if (Array.isArray(data)) {

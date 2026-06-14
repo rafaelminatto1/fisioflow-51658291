@@ -38,10 +38,10 @@ app.get("/kpis", requireAuth, async (c) => {
     // 3. Ticket Médio e Receita
     const revenueRes = await pool.query(
       `SELECT 
-        SUM(valor) as total_revenue,
+        SUM(amount) as total_revenue,
         COUNT(*) as total_payments,
-        AVG(valor) as avg_ticket
-       FROM pagamentos
+        AVG(amount) as avg_ticket
+       FROM payments
        WHERE organization_id = $1
          AND created_at >= date_trunc('month', CURRENT_DATE)`,
       [user.organizationId],
@@ -110,12 +110,13 @@ app.get("/team-performance", requireAuth, async (c) => {
       ),
       professional_revenue AS (
         SELECT 
-          therapist_id,
-          SUM(valor) as revenue
-        FROM pagamentos
-        WHERE organization_id = $1
-          AND created_at >= date_trunc('month', CURRENT_DATE)
-        GROUP BY therapist_id
+          a.therapist_id,
+          SUM(p.amount) as revenue
+        FROM payments p
+        JOIN appointments a ON a.id = p.appointment_id
+        WHERE p.organization_id = $1
+          AND p.created_at >= date_trunc('month', CURRENT_DATE)
+        GROUP BY a.therapist_id
       )
       SELECT 
         s.*,

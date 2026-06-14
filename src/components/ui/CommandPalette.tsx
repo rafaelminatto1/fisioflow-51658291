@@ -28,6 +28,7 @@ import {
   Loader2,
   Dumbbell,
   BookOpen,
+  ClipboardList,
   type LucideIcon,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -371,12 +372,13 @@ export function CommandPalette({
           label: item.title,
           description:
             item.type === "patient" ? item.description : item.category || "Conteúdo Clínico",
-          icon: item.type === "exercise" ? Dumbbell : item.type === "wiki" ? BookOpen : Users,
+          icon: item.type === "exercise" ? Dumbbell : item.type === "wiki" ? BookOpen : item.type === "protocol" ? ClipboardList : Users,
           category: "clinical-results",
           action: () => {
-            if (item.type === "patient") navigate(`/pacientes/${item.id}`);
+            if (item.type === "patient") navigate(`/patients/${item.id}`);
             else if (item.type === "wiki") navigate(`/wiki?id=${item.id}`);
-            else if (item.type === "exercise") navigate(`/exercicios/${item.id}`);
+            else if (item.type === "exercise") navigate(`/exercises/${item.id}`);
+            else if (item.type === "protocol") navigate(`/protocols/${item.id}`);
           },
         }));
 
