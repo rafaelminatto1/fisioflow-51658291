@@ -27,6 +27,8 @@
 | `ASSESSMENT_LIVE_SESSION`       | Durable Object    | `AssessmentLiveSession`                                         | `AssessmentLiveSession`                                                 | Yes               | High       | Class shared, namespace env-scoped by Worker |
 | `AI`                            | Workers AI        | Account binding                                                 | Account binding                                                         | No direct storage | Medium     | Shared account capability                    |
 | `BROWSER`                       | Browser Rendering | Account binding                                                 | Account binding                                                         | No direct storage | Medium     | Shared account capability                    |
+| `AI_SEARCH`                     | AI Search         | `fisioflow-rag` & `fisioflow-rag-paciente`                      | `fisioflow-rag-staging`                                                 | Yes               | High       | Isolated                                     |
+| `AGENT_MEMORY`                  | Agent Memory      | Future beta release                                             | Future beta release                                                     | Yes               | High       | Waitlist blocked                             |
 | `BACKGROUND_QUEUE`              | Queue             | `fisioflow-background-tasks`                                    | `fisioflow-background-tasks-staging`                                    | Yes               | Medium     | Isolated                                     |
 
 ## API Variables
