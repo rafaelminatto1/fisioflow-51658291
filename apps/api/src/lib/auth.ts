@@ -252,6 +252,37 @@ function getSessionCandidate(sessionData: any): CandidateAuthContext | null {
   };
 }
 
+export function normalizeRole(role?: string | null): string | null {
+  if (!role || typeof role !== "string") return null;
+  const normalized = role.trim().toLowerCase();
+  return normalized || null;
+}
+
+export function userHasRole(user: AuthUser | undefined | null, allowedRoles: string | string[]): boolean {
+  if (!user) return false;
+  const normalizedRole = normalizeRole(user.role);
+  const allowed = Array.isArray(allowedRoles) ? allowedRoles : [allowedRoles];
+  const normalizedAllowed = allowed.map((role) => role.trim().toLowerCase()).filter(Boolean);
+  if (normalizedRole && normalizedAllowed.includes(normalizedRole)) return true;
+
+  const extraRoles = Array.isArray(user.roles)
+    ? user.roles.map((role) => normalizeRole(role)).filter((role): role is string => Boolean(role))
+    : [];
+  return extraRoles.some((role) => normalizedAllowed.includes(role));
+}
+
+export function requireRole(
+  allowedRoles: string | string[],
+): MiddlewareHandler<{ Bindings: Env; Variables: { user: AuthUser } }> {
+  return async (c, next) => {
+    const user = c.get("user");
+    if (!user || !userHasRole(user, allowedRoles)) {
+      return c.json({ error: "admin_only" }, 403);
+    }
+    await next();
+  };
+}
+
 function looksLikeJwt(token: string): boolean {
   return token.split(".").length === 3;
 }

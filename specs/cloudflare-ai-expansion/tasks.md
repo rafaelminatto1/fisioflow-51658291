@@ -22,7 +22,7 @@
 - [x] T020 — Testes + helpers `serializeProtocolForIndex` / `serializeExerciseForIndex` (markdown com metadata `{type, org_id}`)
 - [x] T021 — Workflow/step de carga inicial (manual): upload dos 119 protocolos + 248 exercícios via Items API
 - [x] T022 — Hooks incrementais nas rotas de mutation de protocolos/exercícios (create/update/delete → upload/replace/remove)
-- [ ] T023 — Conectar `CLINICAL_DOCS_BUCKET` como data source da instância (dashboard ou API) com path filtering excluindo `**/drafts/**`; documentar em `binding-inventory.md` do roadmap
+- [x] T023 — Ingestão de PDFs de referência no RAG: endpoint admin `POST/GET/DELETE /api/clinical-docs` (R2 fonte da verdade + AI Search índice; PDF parseado nativamente, validado por PoC). PDFs de paciente NÃO entram (curadoria admin-only, sem RLS no índice). UI `ClinicalDocsManager` no admin + filtro 'Documentos' no Cmd+K.
 - [x] T024 — Filtro por tipo de conteúdo (wiki/protocolo/exercício/documento) na UI do Cmd+K usando metadata filters
 
 ## US4 — Assistente do app do paciente (P2)

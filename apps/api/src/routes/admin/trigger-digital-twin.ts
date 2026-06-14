@@ -1,7 +1,9 @@
 import { Hono } from "hono";
+import { z } from "zod";
+import { zValidator } from "@hono/zod-validator";
 import type { Env } from "../../types/env";
 import type { AuthVariables } from "../../lib/auth";
-import { requireAuth } from "../../lib/auth";
+import { requireAuth, requireRole } from "../../lib/auth";
 import { createDb } from "../../lib/db";
 import { patients } from "@fisioflow/db";
 import { eq } from "drizzle-orm";
@@ -11,13 +13,21 @@ const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 /**
  * POST /api/admin/trigger-digital-twin
  * Dispara o workflow de análise para todos os pacientes ativos da organização.
+ * Body opcional: { dryRun?: boolean } — se true, apenas lista pacientes sem disparar.
  */
-app.post("/", requireAuth, async (c) => {
+app.use("*", requireAuth);
+app.use("*", requireRole("admin"));
+
+const triggerSchema = z.object({
+  dryRun: z.boolean().optional().default(false),
+});
+
+app.post("/", zValidator("json", triggerSchema), async (c) => {
   const user = c.get("user");
+  const { dryRun } = c.req.valid("json");
   const db = createDb(c.env, "read");
 
   try {
-    // 1. Buscar todos os pacientes ativos
     const activePatients = await db
       .select({ id: patients.id })
       .from(patients)
@@ -25,13 +35,21 @@ app.post("/", requireAuth, async (c) => {
 
     console.log(`[Admin/DigitalTwin] Triggering analysis for ${activePatients.length} patients`);
 
+    if (dryRun) {
+      return c.json({
+        success: true,
+        dryRun: true,
+        patientCount: activePatients.length,
+        patientIds: activePatients.map((p) => p.id),
+      });
+    }
+
     if (!c.env.WORKFLOW_DIGITAL_TWIN) {
       return c.json({ error: "Workflow binding missing" }, 500);
     }
 
     const workflow = c.env.WORKFLOW_DIGITAL_TWIN;
 
-    // 2. Disparar workflow para cada um (em background)
     c.executionCtx.waitUntil(
       (async () => {
         for (const p of activePatients) {
