@@ -14,7 +14,7 @@ import {
   mapAskSources,
   normalizeAskQuery,
   resolveAskOutcome,
-  customMetadataFilterForType,
+  folderFilterForType,
 } from "../lib/wikiAsk";
 import { writeEvent } from "../lib/analytics";
 import { callAI } from "../lib/ai/callAI";
@@ -90,7 +90,7 @@ aiSearchApp.post("/ask", requireAuth, async (c) => {
 
   // Filtro por tipo usa o atributo nativo `folder` (metadata customizada não
   // é filtrável em instâncias built-in). rewrite desligado quando há filtro.
-  const filters = customMetadataFilterForType(body.type);
+  const filters = folderFilterForType(body.type);
   // Escopo estreito escolhido pelo usuário → threshold menor (mostra os melhores
   // do tipo mesmo com poucos itens, ex.: documentos de referência).
   const threshold = filters ? 0.15 : ASK_MATCH_THRESHOLD;
