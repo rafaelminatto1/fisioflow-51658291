@@ -8,7 +8,8 @@ const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 app.get("/", requireAuth, async (c) => {
   const user = c.get("user");
   const pool = await createPool(c.env);
-  const organizationId = c.req.query("organizationId") || user.organizationId;
+  // Sempre usar a organization do token — nunca aceitar do input do usuario (IDOR)
+  const organizationId = user.organizationId;
 
   const fallback = [
     {

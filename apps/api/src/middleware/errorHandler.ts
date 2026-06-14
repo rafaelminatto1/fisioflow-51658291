@@ -111,7 +111,8 @@ export async function errorHandler(err: Error, c: CustomContext) {
     requestId: requestId,
   };
 
-  if (isDev || !isProduction) {
+  // Só expor detalhes completos em development (nunca em staging/production)
+  if (isDev && !isProduction) {
     errorResponse.details = appError.details;
     errorResponse.stack = err.stack;
   }

@@ -119,6 +119,13 @@ pids/
 _design-system-export/
 skills-lock.json
 
+# === MCP / Agent configs (NEVER commit — may contain secrets) ===
+mcp.json
+.cursor/mcp.json
+.opencode/mcp.json
+.claude/mcp.json
+claude_desktop_config.json
+
 # === TypeScript build cache ===
 *.tsbuildinfo
 

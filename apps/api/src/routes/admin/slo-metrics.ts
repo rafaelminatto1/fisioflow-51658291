@@ -41,9 +41,14 @@ async function runAnalyticsSQL(env: Env, query: string): Promise<SqlResult> {
 app.get("/", async (c) => {
   const user = c.get("user");
 
-  const window = c.req.query("window") ?? "24h";
-  const interval = window === "1h" ? "1' HOUR" : window === "7d" ? "7' DAY" : "24' HOUR";
-  const since = `NOW() - INTERVAL '${interval}`;
+  // Allowlist para prevenir SQL injection via INTERVAL
+  const windowIntervals: Record<string, string> = {
+    "1h": "1 HOUR",
+    "7d": "7 DAY",
+  };
+  const rawWindow = c.req.query("window") ?? "24h";
+  const interval = windowIntervals[rawWindow] ?? "24 HOUR";
+  const since = `NOW() - INTERVAL '${interval}'`;
 
   try {
     const [summary, byRoute, errorBreakdown] = await Promise.all([

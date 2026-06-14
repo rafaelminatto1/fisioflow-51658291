@@ -218,7 +218,7 @@ app.post("/login", loginRateLimit, async (c) => {
     });
   } catch (error: any) {
     console.error("[Auth] Login proxy error:", error.message);
-    return c.json({ error: "Erro no servidor", details: error.message }, 500);
+    return c.json({ error: "Erro no servidor" }, 500);
   }
 });
 
@@ -255,7 +255,7 @@ app.post("/signup", signupRateLimit, turnstileVerify, async (c) => {
     });
   } catch (error: any) {
     console.error("[Auth] Signup proxy error:", error.message);
-    return c.json({ error: "Erro ao criar conta", details: error.message }, 500);
+    return c.json({ error: "Erro ao criar conta" }, 500);
   }
 });
 
@@ -279,7 +279,7 @@ app.post("/forgot-password", passwordResetRateLimit, turnstileVerify, async (c) 
     }
     return c.json({ success: true, message: "Email de recuperação enviado" });
   } catch (error: any) {
-    return c.json({ error: "Erro ao processar solicitação", details: error.message }, 500);
+    return c.json({ error: "Erro ao processar solicitação" }, 500);
   }
 });
 
@@ -305,7 +305,7 @@ app.post("/reset-password", passwordResetRateLimit, turnstileVerify, async (c) =
     }
     return c.json({ success: true, message: "Senha redefinida com sucesso" });
   } catch (error: any) {
-    return c.json({ error: "Erro ao processar solicitação", details: error.message }, 500);
+    return c.json({ error: "Erro ao processar solicitação" }, 500);
   }
 });
 

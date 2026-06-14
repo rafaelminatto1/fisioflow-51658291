@@ -5,6 +5,9 @@ import type { Env } from "../types/env";
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
+// Todas as rotas de knowledge requerem autenticacao
+app.use("*", requireAuth);
+
 type Queryable = ReturnType<typeof createPool>;
 type JsonResponder = { json: (body: unknown, status?: number) => Response };
 

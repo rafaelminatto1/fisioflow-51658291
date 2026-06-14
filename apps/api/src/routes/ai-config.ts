@@ -1,9 +1,13 @@
 import { Hono } from "hono";
 import type { Env } from "../types/env";
+import { requireAuth, type AuthVariables } from "../lib/auth";
 import { createModelRegistry } from "../lib/ai/modelRegistry";
 import { getRawSql } from "../lib/db";
 
-export const aiConfigRoutes = new Hono<{ Bindings: Env }>();
+export const aiConfigRoutes = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
+
+// Todas as rotas de AI config requerem autenticacao
+aiConfigRoutes.use("*", requireAuth);
 
 aiConfigRoutes.get("/models", async (c) => {
   const registry = createModelRegistry(c.env);
@@ -29,8 +33,8 @@ aiConfigRoutes.get("/models", async (c) => {
 });
 
 aiConfigRoutes.get("/config", async (c) => {
-  const orgId = c.req.query("organizationId");
-  if (!orgId) return c.json({ error: "organizationId required" }, 400);
+  const user = c.get("user");
+  const orgId = user.organizationId;
 
   const registry = createModelRegistry(c.env);
   const config = await registry.getConfig(orgId);
@@ -38,9 +42,8 @@ aiConfigRoutes.get("/config", async (c) => {
 });
 
 aiConfigRoutes.put("/config", async (c) => {
-  const body = await c.req.json();
-  const orgId = body.organizationId as string;
-  if (!orgId) return c.json({ error: "organizationId required" }, 400);
+  const user = c.get("user");
+  const orgId = user.organizationId;
 
   const registry = createModelRegistry(c.env);
 
@@ -72,11 +75,16 @@ aiConfigRoutes.put("/config", async (c) => {
 });
 
 aiConfigRoutes.get("/usage", async (c) => {
-  const orgId = c.req.query("organizationId");
-  if (!orgId) return c.json({ error: "organizationId required" }, 400);
+  const user = c.get("user");
+  const orgId = user.organizationId;
 
-  const period = c.req.query("period") ?? "month";
-  const intervalDays = period === "week" ? "7" : "30";
+  // Allowlist para prevenir SQL injection via INTERVAL
+  const periodIntervals: Record<string, string> = {
+    week: "7 days",
+    month: "30 days",
+  };
+  const rawPeriod = c.req.query("period") ?? "month";
+  const interval = periodIntervals[rawPeriod] ?? periodIntervals.month;
 
   const sql = getRawSql(c.env);
 
@@ -92,10 +100,10 @@ aiConfigRoutes.get("/usage", async (c) => {
 			SUM(CASE WHEN was_cache_hit THEN 1 ELSE 0 END) as cache_hits,
 			SUM(CASE WHEN was_fallback THEN 1 ELSE 0 END) as fallback_count
 		 FROM ai_usage_logs
-		 WHERE organization_id = $1 AND created_at > now() - INTERVAL '${intervalDays} days'
+		 WHERE organization_id = $1 AND created_at > now() - $2::interval
 		 GROUP BY model_id, task_type
 		 ORDER BY total_cost_usd DESC`,
-    [orgId],
+    [orgId, interval],
   );
 
   const spend = await sql(

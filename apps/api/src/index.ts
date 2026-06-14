@@ -181,6 +181,20 @@ app.use(
     xFrameOptions: "DENY",
     xContentTypeOptions: "nosniff",
     referrerPolicy: "strict-origin-when-cross-origin",
+    contentSecurityPolicy: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      imgSrc: ["'self'", "data:", "https:"],
+      connectSrc: ["'self'"],
+      fontSrc: ["'self'", "data:"],
+      objectSrc: ["'none'"],
+      mediaSrc: ["'self'"],
+      frameSrc: ["'none'"],
+      baseUri: ["'self'"],
+      formAction: ["'self'"],
+      frameAncestors: ["'none'"],
+    },
     permissionsPolicy: {
       camera: ["self"],
       microphone: ["self"],
@@ -248,38 +262,7 @@ app.get("/api/health/db", async (c) => {
   }
 });
 
-app.get("/api/debug/schema", async (c) => {
-  try {
-    const { neon } = await import("@neondatabase/serverless");
-    const url = c.env.DATABASE_URL || (c.env as any).NEON_DATABASE_URL;
-    if (!url) throw new Error("DATABASE_URL not found");
-
-    const sql = neon(url);
-    const rows = await sql`
-      SELECT column_name 
-      FROM information_schema.columns 
-      WHERE table_name = 'patients'
-      AND table_schema = 'public'
-    `;
-    return c.json({ columns: rows.map((r: any) => r.column_name) });
-  } catch (error: any) {
-    return c.json({ error: error.message }, 500);
-  }
-});
-
-app.get("/api/health/schema", async (c) => {
-  try {
-    const sql = getRawSql(c.env);
-    const result = await sql(`
-			SELECT column_name, data_type
-			FROM information_schema.columns
-			WHERE table_name = 'patients'
-		`);
-    return c.json({ table: "patients", columns: result.rows });
-  } catch (error: any) {
-    return c.json({ status: "error", message: error.message }, 500);
-  }
-});
+// Schema inspection removida — expunha metadados sensíveis da tabela patients sem autenticação
 
 // ===== ROTAS =====
 const apiRoutes = [

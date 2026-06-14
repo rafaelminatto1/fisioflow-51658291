@@ -10,15 +10,14 @@ services:
       - "4242:4242" # DICOM port
     environment:
       ORTHANC_NAME: "FISIOFLOW_ORTHANC"
-      # Enable plugins explicitly
       ORTHANC__PLUGINS__ENABLED: "true"
-      # Default credentials (CHANGE IN PRODUCTION)
-      # For dev/internal usage behind proxy, we can keep default or disable auth if purely internal
-      # Using default orthanc:orthanc for now
-      ORTHANC__AUTHENTICATION_ENABLED: "false"
-      # Enable DICOMweb
+      # Autenticacao habilitada — credenciais via secrets (ver README)
+      ORTHANC__AUTHENTICATION_ENABLED: "true"
       ORTHANC__DICOM_WEB__ENABLE: "true"
       ORTHANC__DICOM_WEB__ROOT: "/dicom-web/"
+    secrets:
+      - orthanc_username
+      - orthanc_password
     volumes:
       - orthanc-storage:/var/lib/orthanc/db
     networks:
@@ -26,6 +25,12 @@ services:
 
 volumes:
   orthanc-storage:
+
+secrets:
+  orthanc_username:
+    file: ./secrets/orthanc_username.txt
+  orthanc_password:
+    file: ./secrets/orthanc_password.txt
 
 networks:
   dicom-net:
