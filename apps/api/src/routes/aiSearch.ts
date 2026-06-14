@@ -14,6 +14,7 @@ import {
   mapAskSources,
   normalizeAskQuery,
   resolveAskOutcome,
+  folderFilterForType,
 } from "../lib/wikiAsk";
 import { writeEvent } from "../lib/analytics";
 import { callAI } from "../lib/ai/callAI";
@@ -87,13 +88,12 @@ aiSearchApp.post("/ask", requireAuth, async (c) => {
     return c.json({ error: "AI Search não disponível neste ambiente" }, 503);
   }
 
-  // NOTA: filtragem por tipo no AI Search built-in é não-confiável (metadata
-  // customizada exige declarar campos; folder via binding não retorna). Documentos
-  // clínicos são recuperados na busca padrão, sem filtro.
-  const filters =
-    typeof body.type === "string" && body.type.length > 0 && body.type !== "clinical-doc"
-      ? { source: body.type }
-      : undefined;
+  // Filtro por tipo usa o atributo nativo `folder` (metadata customizada não
+  // é filtrável em instâncias built-in). rewrite desligado quando há filtro.
+  const filters = folderFilterForType(body.type);
+  // Escopo estreito escolhido pelo usuário → threshold menor (mostra os melhores
+  // do tipo mesmo com poucos itens, ex.: documentos de referência).
+  const threshold = filters ? 0.15 : ASK_MATCH_THRESHOLD;
 
   const started = Date.now();
   try {
@@ -101,8 +101,8 @@ aiSearchApp.post("/ask", requireAuth, async (c) => {
     const retrieval = await searchAiSearch(c.env, {
       query,
       maxNumResults: 8,
-      matchThreshold: ASK_MATCH_THRESHOLD,
-      ...(filters ? { filters } : {}),
+      matchThreshold: threshold,
+      ...(filters ? { filters: filters as Record<string, any>, rewrite: false } : {}),
     });
 
     // Geração via callAI → roteada pelo AI Gateway (Guardrails aplicam aqui também).
@@ -130,7 +130,7 @@ aiSearchApp.post("/ask", requireAuth, async (c) => {
       : null;
 
     const result = { answer: generated?.content?.trim() ?? "", sources: retrieval.sources };
-    const outcome = resolveAskOutcome(result.answer, result.sources, ASK_MATCH_THRESHOLD);
+    const outcome = resolveAskOutcome(result.answer, result.sources, threshold);
     const latencyMs = Date.now() - started;
 
     writeEvent(c.env, {
@@ -150,7 +150,7 @@ aiSearchApp.post("/ask", requireAuth, async (c) => {
     return c.json({
       answered: true,
       answer: result.answer,
-      sources: mapAskSources(result.sources, ASK_MATCH_THRESHOLD),
+      sources: mapAskSources(result.sources, threshold),
       topScore: outcome.topScore,
     });
   } catch (error: any) {

@@ -107,3 +107,13 @@ o chip "Documentos" foi removido — os PDFs de referência são recuperados na 
 ("Pergunte à Wiki" sem filtro), validado em produção (score 0.81). Os chips de tipo
 pré-existentes (Wiki/Protocolos/Exercícios) também dependem de source filter e são
 não-funcionais — limpeza/declaração de campos fica como follow-up separado.
+
+
+## Atualização 2026-06-14b: filtros de tipo Wiki/Protocolos/Exercícios FUNCIONANDO
+Solução: filtragem por atributo nativo `folder` (não metadata customizada, que exige
+data source r2/web-crawler — built-in não suporta). Chave: desligar `query_rewrite`
+quando há filtro (o rewrite quebrava o folder filter no binding). Validado em prod:
+type=wiki/exercises/protocols retornam só o conteúdo do tipo. Threshold reduzido p/
+0.15 quando há filtro (escopo estreito). O chip "Documentos" (clinical-doc) ficou de
+fora: o binding não retorna folder esparso (1 PDF) de forma confiável embora o REST
+retorne — docs de referência continuam achados na busca padrão ("Tudo").
