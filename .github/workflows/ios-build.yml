@@ -24,7 +24,7 @@ env:
 jobs:
   build-ios:
     name: Build iOS - ${{ inputs.app }}
-    runs-on: macos-latest
+    runs-on: macos-26 # Xcode 26.2 default — obrigatório para Expo SDK 55 / RN 0.83 (Swift 6). macos-latest = Xcode 16.4 não compila expo-modules-core
     timeout-minutes: 90
 
     steps:
