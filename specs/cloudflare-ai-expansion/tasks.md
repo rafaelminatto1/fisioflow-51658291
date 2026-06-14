@@ -15,7 +15,7 @@
 - [x] T010 — Rota `POST /api/ai-search/ask` (ou reuso da existente em `routes/aiSearch.ts`): query → resposta gerada + `sources[]`; threshold de score com fallback "sem resposta"; evento `wiki_search`/`wiki_search_miss` no Analytics Engine; testes Vitest (threshold, roles)
 - [x] T011 — Componente `WikiAskPalette` (Cmd+K) em `src/components/wiki/`: input, resposta streaming/loading, lista de fontes linkando `/wiki/:slug`; PT-BR; sem glassmorphism
 - [x] T012 — Restringir a roles internos (admin/fisio/estagiário) no backend e ocultar entrada na UI p/ paciente
-- [ ] T013 — E2E Playwright: abrir paleta, perguntar, ver resposta com fonte clicável; caso sem resultado
+- [x] T013 — E2E Playwright: abrir paleta, perguntar, ver resposta com fonte clicável; caso sem resultado
 
 ## US3 — Indexar protocolos, exercícios e PDFs (P1)
 
@@ -31,7 +31,7 @@
 - [x] T031 — Criar instância `fisioflow-rag-paciente` (namespace binding ou dashboard); sync apenas de páginas `patient_visible = true`
 - [x] T032 — Rota `POST /api/patient/assistant` autenticada (role paciente), consultando somente a instância paciente; disclaimer fixo na resposta; evento `patient_assistant_query`
 - [ ] T033 — Ativar guardrails do AI Gateway (moderação in/out) nas chamadas dessa rota; ativar cache do gateway p/ FAQ repetida
-- [ ] T034 — UI no app do paciente (tela de dúvidas) consumindo a rota; PT-BR; testes do fluxo
+- [x] T034 — UI no app do paciente (tela de dúvidas) consumindo a rota; PT-BR; testes do fluxo
 
 ## US5 — Painel de lacunas da wiki (P2)
 
@@ -62,11 +62,11 @@
 
 - [x] T080 — Adaptar `ClinicAgent` para o protocolo do Agents SDK (WebSocket/state sync) se necessário
 - [x] T081 — Front: `useAgent` + componente de chat com streaming e tool-use visível (agenda, wiki); roles internos
-- [ ] T082 — E2E do fluxo de chat
+- [x] T082 — E2E do fluxo de chat
 
 ## Transversais
 
-- [ ] T090 — Atualizar `specs/cloudflare-platform-roadmap/binding-inventory.md` com instâncias AI Search e (futuro) Agent Memory
+- [x] T090 — Atualizar `specs/cloudflare-platform-roadmap/binding-inventory.md` com instâncias AI Search e (futuro) Agent Memory
 - [ ] T091 — Monitorar changelog do AI Search p/ anúncio de pricing (fim do open beta) — coberto por rotina agendada externa
 
 ## Status da execução (2026-06-12)
