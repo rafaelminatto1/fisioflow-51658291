@@ -51,6 +51,14 @@ function trimmedString(value: unknown): string | undefined {
   return normalized.length > 0 ? normalized : undefined;
 }
 
+// Normaliza para busca insensível a acentos/cedilhas e maiúsculas
+function stripAccents(value: string): string {
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
+}
+
 function nullableString(value: unknown): string | null {
   return trimmedString(value) ?? null;
 }
@@ -604,7 +612,8 @@ app.patch("/profile", async (c) => {
 app.get("/therapists", async (c) => {
   const user = c.get("user");
   const pool = await createPool(c.env);
-  const search = trimmedString(c.req.query("search"))?.toLowerCase();
+  const searchRaw = trimmedString(c.req.query("search"));
+  const search = searchRaw ? stripAccents(searchRaw) : undefined;
 
   const result = await pool.query(
     `
@@ -637,7 +646,7 @@ app.get("/therapists", async (c) => {
     .filter((row) => {
       if (!search) return true;
       return [row.name, row.email ?? "", row.invite_code].some((value) =>
-        value.toLowerCase().includes(search),
+        stripAccents(value).includes(search),
       );
     });
 
