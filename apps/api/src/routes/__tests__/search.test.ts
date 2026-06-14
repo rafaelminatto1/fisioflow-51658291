@@ -105,7 +105,7 @@ describe("search routes", () => {
       ],
       ai_search_options: {
         retrieval: {
-          retrieval_type: "hybrid",
+          retrieval_type: "vector",
           max_num_results: 5,
           context_expansion: 0,
           filters: { source: { $eq: "exercises" } },
