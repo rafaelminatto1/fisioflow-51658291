@@ -47,6 +47,8 @@ aiConfigRoutes.put("/config", async (c) => {
 
   const registry = createModelRegistry(c.env);
 
+  const body = await c.req.json<Record<string, unknown>>().catch(() => ({}) as Record<string, unknown>);
+
   const validFields = [
     "chatModel",
     "analysisModel",
@@ -61,7 +63,7 @@ aiConfigRoutes.put("/config", async (c) => {
   for (const field of validFields) {
     if (body[field] !== undefined) {
       if (["chatModel", "analysisModel", "visionModel", "transcriptionModel"].includes(field)) {
-        const model = registry.getModel(body[field]);
+        const model = registry.getModel(body[field] as string);
         if (!model) {
           return c.json({ error: `Unknown model: ${body[field]}` }, 400);
         }
