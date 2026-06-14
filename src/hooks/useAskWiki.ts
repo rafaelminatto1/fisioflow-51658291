@@ -18,7 +18,7 @@ export interface AskWikiResult {
   topScore: number;
 }
 
-export type AskWikiContentType = "wiki" | "protocols" | "exercises";
+export type AskWikiContentType = "wiki" | "protocols" | "exercises" | "clinical-doc";
 
 export function useAskWiki() {
   const [loading, setLoading] = useState(false);
