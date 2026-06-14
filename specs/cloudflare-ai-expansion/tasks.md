@@ -85,3 +85,15 @@ Pendências conscientes:
 - T071-parcial: notificação push ao admin sobre item pendente (fila + UI prontas)
 - T081: chat usa RPC HTTP autenticado ao DO (não WebSocket useAgent) — decisão p/ reaproveitar auth JWT existente
 - T090/T091: inventário de bindings + monitorar pricing do AI Search
+
+
+## Atualização 2026-06-14 — entregue e validado em produção
+
+- **Deploy**: PRs #119/#122/#123/#124/#126/#127 mergeados; produção (api + web) no ar e validada com login real.
+- **Conteúdo paciente**: 12 páginas `orientacoes-paciente` (patient_visible) indexadas em `fisioflow-rag-paciente` e em `fisioflow-rag` (busca da equipe).
+- **Guardrails**: ativados no dashboard (Firewall, all categories Flag; cache 1h). Geração roteada pelo gateway:
+  - `/api/patient/assistant`: retrieval (searchAiSearchOn) + geração (callAI) → passa pelo gateway. Guardrail local determinístico (autoagressão/urgência/medicação).
+  - `/api/ai-search/ask` (staff): também refatorado p/ retrieval + callAI → gateway.
+  - 6 chamadas `env.AI.run` de geração migradas p/ `runAi` (gateway).
+- **Fix de produção**: `retrieval_type` default `hybrid`→`vector` (instâncias built-in só têm índice vetorial) — corrigia 500 em /ask, /patient/assistant, /suggest.
+- **Pendente do usuário (dashboard, sem token p/ agente)**: aba Settings do gateway — Rate Limit (30/60s), Retry (2), Spend Limits (US$10/mês opcional). Acompanhar aba Logs ~1 semana e migrar categorias de Flag→Block conforme abuso real. AI Search continua em open beta (monitorar pricing). Agent Memory beta: rotina diária avisa quando liberar (T064).
