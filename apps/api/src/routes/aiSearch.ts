@@ -19,7 +19,7 @@ import {
 import { writeEvent } from "../lib/analytics";
 import { callAI } from "../lib/ai/callAI";
 
-const AUTORAG_NAME = "fisioflow-rag-v2";
+const AUTORAG_NAME = "fisioflow-rag";
 
 const aiSearchApp = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
@@ -561,13 +561,19 @@ aiSearchApp.get("/unified", requireAuth, async (c) => {
     ]);
 
     const results = [
-      ...aiSearchRes.sources.map((s) => ({
-        id: s.id,
-        type: s.metadata?.source === "wiki" ? "wiki" : "exercise",
-        title: s.filename,
-        category: (s.metadata?.category as string) || "Geral",
-        score: s.score ?? 1,
-      })),
+      ...aiSearchRes.sources.map((s) => {
+        let type = "wiki";
+        if (s.metadata?.source === "exercise") type = "exercise";
+        else if (s.metadata?.source === "protocol") type = "protocol";
+        
+        return {
+          id: s.metadata?.id || s.id,
+          type: type,
+          title: s.metadata?.title || s.metadata?.name || s.filename,
+          category: (s.metadata?.category as string) || "Geral",
+          score: s.score ?? 1,
+        };
+      }),
       ...patientMatches.rows.map((p: any) => ({
         id: p.id,
         type: "patient",
