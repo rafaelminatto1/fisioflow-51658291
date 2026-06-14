@@ -39,7 +39,9 @@ export function buildAiSearchRequest(params: SearchParams): Record<string, unkno
 
   request.ai_search_options = {
     retrieval: {
-      retrieval_type: params.retrievalType ?? "hybrid",
+      // Instâncias built-in (storage interno) só têm índice vetorial — keyword
+      // indexing fica desabilitado, então "hybrid" retorna erro. Default vector.
+      retrieval_type: params.retrievalType ?? "vector",
       max_num_results: params.maxNumResults ?? 10,
       context_expansion: params.contextExpansion ?? 0,
       ...(params.matchThreshold !== undefined ? { match_threshold: params.matchThreshold } : {}),
