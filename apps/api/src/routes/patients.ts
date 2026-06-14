@@ -776,17 +776,17 @@ app.get("/", async (c) => {
       const searchValue = `%${search}%`;
       pushCondition(
         `(
-					directory."fullName" ILIKE $${paramIndex}
-					OR COALESCE(directory.nickname, '') ILIKE $${paramIndex}
-					OR COALESCE(directory."socialName", '') ILIKE $${paramIndex}
-					OR COALESCE(directory.email, '') ILIKE $${paramIndex}
-					OR COALESCE(directory.cpf, '') ILIKE $${paramIndex}
-					OR COALESCE(directory.phone, '') ILIKE $${paramIndex}
-					OR COALESCE(directory."mainCondition", '') ILIKE $${paramIndex}
-					OR ARRAY_TO_STRING(directory."pathologyNames", ', ') ILIKE $${paramIndex}
-					OR COALESCE(directory.origin, '') ILIKE $${paramIndex}
-					OR COALESCE(directory."partnerCompanyName", '') ILIKE $${paramIndex}
-					OR COALESCE(directory."professionalName", '') ILIKE $${paramIndex}
+					unaccent(directory."fullName") ILIKE unaccent($${paramIndex})
+					OR unaccent(COALESCE(directory.nickname, '')) ILIKE unaccent($${paramIndex})
+					OR unaccent(COALESCE(directory."socialName", '')) ILIKE unaccent($${paramIndex})
+					OR unaccent(COALESCE(directory.email, '')) ILIKE unaccent($${paramIndex})
+					OR unaccent(COALESCE(directory.cpf, '')) ILIKE unaccent($${paramIndex})
+					OR unaccent(COALESCE(directory.phone, '')) ILIKE unaccent($${paramIndex})
+					OR unaccent(COALESCE(directory."mainCondition", '')) ILIKE unaccent($${paramIndex})
+					OR unaccent(ARRAY_TO_STRING(directory."pathologyNames", ', ')) ILIKE unaccent($${paramIndex})
+					OR unaccent(COALESCE(directory.origin, '')) ILIKE unaccent($${paramIndex})
+					OR unaccent(COALESCE(directory."partnerCompanyName", '')) ILIKE unaccent($${paramIndex})
+					OR unaccent(COALESCE(directory."professionalName", '')) ILIKE unaccent($${paramIndex})
 				)`,
         searchValue,
       );
