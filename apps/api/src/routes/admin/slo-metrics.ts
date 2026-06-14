@@ -1,8 +1,11 @@
 import { Hono } from "hono";
 import type { Env } from "../../types/env";
-import { requireAuth, type AuthVariables } from "../../lib/auth";
+import { requireAuth, requireRole, type AuthVariables } from "../../lib/auth";
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
+
+app.use("*", requireAuth);
+app.use("*", requireRole("admin"));
 
 const CF_ACCOUNT_ID = "32156f9a72a32d1ece28ab74bcd398fb";
 const SQL_URL = `https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT_ID}/analytics_engine/sql`;
@@ -35,9 +38,8 @@ async function runAnalyticsSQL(env: Env, query: string): Promise<SqlResult> {
  *   blob1 = route, blob2 = method, blob3 = orgId
  *   double1 = duration_ms, double2 = status_code
  */
-app.get("/", requireAuth, async (c) => {
+app.get("/", async (c) => {
   const user = c.get("user");
-  if (user.role !== "admin") return c.json({ error: "admin_only" }, 403);
 
   const window = c.req.query("window") ?? "24h";
   const interval = window === "1h" ? "1' HOUR" : window === "7d" ? "7' DAY" : "24' HOUR";

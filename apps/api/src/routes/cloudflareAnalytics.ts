@@ -1,14 +1,14 @@
 import { Hono } from "hono";
-import { requireAuth, type AuthVariables } from "../lib/auth";
+import { requireAuth, requireRole, type AuthVariables } from "../lib/auth";
 import type { Env } from "../types/env";
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
 app.use("*", requireAuth);
+app.use("*", requireRole(["admin", "owner"]));
 
 app.get("/status", async (c) => {
   const user = c.get("user");
-  if (!isAdmin(user.role)) return c.json({ error: "admin_only" }, 403);
 
   return c.json({
     configured: Boolean(c.env.CF_API_TOKEN && c.env.CF_ACCOUNT_ID),
@@ -18,7 +18,6 @@ app.get("/status", async (c) => {
 
 app.post("/graphql", async (c) => {
   const user = c.get("user");
-  if (!isAdmin(user.role)) return c.json({ error: "admin_only" }, 403);
 
   const body = (await c.req.json().catch(() => ({}))) as {
     query?: string;
@@ -36,7 +35,6 @@ app.post("/graphql", async (c) => {
 
 app.get("/workflows", async (c) => {
   const user = c.get("user");
-  if (!isAdmin(user.role)) return c.json({ error: "admin_only" }, 403);
 
   const hours = Math.min(168, Math.max(1, Number(c.req.query("hours") ?? 24)));
   const since = new Date(Date.now() - hours * 60 * 60 * 1000).toISOString();
@@ -94,8 +92,5 @@ async function cloudflareGraphql(
   return { ok: res.ok, status: res.status, data };
 }
 
-function isAdmin(role?: string | null): boolean {
-  return role === "admin" || role === "owner";
-}
 
 export { app as cloudflareAnalyticsRoutes };

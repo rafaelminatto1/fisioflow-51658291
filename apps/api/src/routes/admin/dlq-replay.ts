@@ -1,17 +1,19 @@
 import { Hono } from "hono";
+import { z } from "zod";
+import { zValidator } from "@hono/zod-validator";
 import type { Env } from "../../types/env";
 import type { AuthVariables } from "../../lib/auth";
-import { requireAuth } from "../../lib/auth";
+import { requireAuth, requireRole } from "../../lib/auth";
 import { writeEvent } from "../../lib/analytics";
 import { summarizeQueueTask, type QueueTask } from "../../queue";
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
-app.get("/", requireAuth, async (c) => {
+app.use("*", requireAuth);
+app.use("*", requireRole("admin"));
+
+app.get("/", async (c) => {
   const user = c.get("user");
-  if (user.role !== "admin") {
-    return c.json({ error: "Acesso restrito a administradores" }, 403);
-  }
 
   writeEvent(c.env, {
     event: "dlq_list_viewed",
@@ -30,18 +32,20 @@ app.get("/", requireAuth, async (c) => {
   });
 });
 
-app.post("/replay", requireAuth, async (c) => {
+const replaySchema = z.object({
+  task: z
+    .object({
+      type: z.string().min(1),
+      payload: z.record(z.string(), z.unknown()),
+    })
+    .required(),
+});
+
+app.post("/replay", zValidator("json", replaySchema), async (c) => {
   const user = c.get("user");
-  if (user.role !== "admin") {
-    return c.json({ error: "Acesso restrito a administradores" }, 403);
-  }
+  const { task } = c.req.valid("json") as { task: QueueTask };
 
-  const body = (await c.req.json().catch(() => ({}))) as { task?: QueueTask };
-  if (!body.task || !body.task.type || !body.task.payload) {
-    return c.json({ error: "Campo 'task' com type e payload é obrigatório" }, 400);
-  }
-
-  const summary = summarizeQueueTask(body.task);
+  const summary = summarizeQueueTask(task);
 
   if (!summary.replayable) {
     writeEvent(c.env, {
@@ -51,14 +55,14 @@ app.post("/replay", requireAuth, async (c) => {
       method: c.req.method,
       status: 422,
     });
-    return c.json({ error: `Task type ${body.task.type} is not replayable`, summary }, 422);
+    return c.json({ error: `Task type ${task.type} is not replayable`, summary }, 422);
   }
 
   try {
     await c.env.BACKGROUND_QUEUE.send({
-      ...body.task,
+      type: task.type,
       payload: {
-        ...body.task.payload,
+        ...task.payload,
         _replay: {
           replayedAt: new Date().toISOString(),
           replayedBy: user.uid,
