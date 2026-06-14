@@ -2,6 +2,7 @@ import { Hono } from "hono";
 import { z } from "zod";
 import type { Env } from "../../types/env";
 import type { AuthVariables } from "../../lib/auth";
+import { runAi } from "../../lib/ai-native";
 import { requireAuth } from "../../lib/auth";
 import { evaluateClinicalTest, type ClinicalTestType } from "../../lib/clinical-rules";
 import { getRawSql } from "../../lib/db";
@@ -71,9 +72,9 @@ app.post("/suggest", requireAuth, async (c) => {
         Como especialista em biomecânica, sugira 3 exercícios de reabilitação para um paciente com: ${evaluation.findings.join(", ")}.
         Responda apenas um array JSON: [{"title": "...", "description": "..."}]
       `;
-      const aiRes = await c.env.AI.run(WORKERS_AI_MODELS.llama_3_1_8b, {
+      const aiRes = await runAi(c.env, WORKERS_AI_MODELS.llama_3_1_8b, {
         messages: [{ role: "user", content: llmPrompt }]
-      });
+      }, { cache: false });
       
       try {
         const jsonMatch = aiRes.response?.match(/\[[\s\S]*\]/);

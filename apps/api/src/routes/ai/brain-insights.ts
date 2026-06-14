@@ -1,6 +1,7 @@
 import { Hono } from "hono";
 import type { Env } from "../../types/env";
 import type { AuthVariables } from "../../lib/auth";
+import { runAi } from "../../lib/ai-native";
 import { requireAuth } from "../../lib/auth";
 import { getRawSql } from "../../lib/db";
 import { isUuid } from "../../lib/validators";
@@ -96,9 +97,9 @@ app.get("/:patientId", requireAuth, async (c) => {
       }
     `;
 
-    const aiResponse = await c.env.AI.run(WORKERS_AI_MODELS.llama_3_1_8b, {
+    const aiResponse = await runAi(c.env, WORKERS_AI_MODELS.llama_3_1_8b, {
       messages: [{ role: "user", content: prompt }],
-    });
+    }, { cache: false });
 
     // Limpeza de resposta para garantir JSON válido
     let content = aiResponse.response || "";

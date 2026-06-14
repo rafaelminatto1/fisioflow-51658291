@@ -2,6 +2,7 @@ import { Agent, callable } from "agents";
 import type { Env } from "../types/env";
 import { WORKERS_AI_MODELS } from "../lib/workersAi";
 import { recallAgentMemory } from "../lib/agentMemory";
+import { runAi } from "../lib/ai-native";
 
 type RetentionState = {
   patientId: string;
@@ -110,7 +111,7 @@ export class PatientAgent extends Agent<Env, RetentionState> {
       }
 
       // Uso do Workers AI nativo da Cloudflare (Llama 3.1 8B Instruct)
-      const response = await this.env.AI.run(WORKERS_AI_MODELS.llama_3_1_8b, {
+      const response = await runAi(this.env, WORKERS_AI_MODELS.llama_3_1_8b, {
         messages: [
           {
             role: "system",
@@ -124,7 +125,7 @@ export class PatientAgent extends Agent<Env, RetentionState> {
         ],
         max_tokens: 256,
         temperature: 0.7,
-      });
+      }, { cache: false });
 
       this.setState({
         ...this.state,
@@ -159,7 +160,7 @@ export class PatientAgent extends Agent<Env, RetentionState> {
   @callable()
   async consultBrain(params: { question: string; historyContext: any }) {
     try {
-      const response = await this.env.AI.run(WORKERS_AI_MODELS.llama_3_1_8b, {
+      const response = await runAi(this.env, WORKERS_AI_MODELS.llama_3_1_8b, {
         messages: [
           {
             role: "system",
@@ -174,7 +175,7 @@ export class PatientAgent extends Agent<Env, RetentionState> {
         ],
         max_tokens: 1000,
         temperature: 0.3,
-      });
+      }, { cache: false });
 
       return { answer: response.response };
     } catch (error) {
