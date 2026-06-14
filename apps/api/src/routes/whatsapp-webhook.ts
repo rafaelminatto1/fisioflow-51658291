@@ -659,7 +659,7 @@ async function maybeSendConciergeGreeting(
     );
     writeEvent(env, { orgId, event: "whatsapp_reply_pending_approval" });
     
-    // Notify admin about the pending item (sem c.executionCtx aqui — função utilitária)
+    // Notify admin about the pending item (função utilitária — sem c.executionCtx)
     await notifyOrganization(env, pool, orgId, {
       title: "Aprovação pendente",
       body: "Uma resposta da assistente virtual requer aprovação manual.",
