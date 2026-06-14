@@ -21,6 +21,7 @@ import {
 	PatientsPageHeader,
 	type HeaderFilterChip,
 } from "@/components/patient";
+import { PatientBirthdaysBanner } from "@/components/patient/PatientBirthdaysBanner";
 import { PatientListItem } from "@/components/patient/PatientListItem";
 import { EmptyState } from "@/components/ui";
 import { Button } from "@/components/ui/button";
@@ -107,6 +108,7 @@ const Patients = () => {
 		inactive60: summary.inactive60,
 		noShowRisk: summary.noShowRisk,
 		hasUnpaid: summary.hasUnpaid,
+		pendingEvaluation: 0, // Placeholder
 	};
 
 	const hasActiveFilters =
@@ -409,6 +411,8 @@ const Patients = () => {
 						</div>
 
 						<TabsContent value="list" className="mt-6 space-y-6">
+							<PatientBirthdaysBanner />
+
 							{showAnalytics && (
 								<div className="bento-card p-4 bg-primary/5 border-primary/10">
 									<LazyComponent

@@ -40,6 +40,7 @@ export interface PatientsPageHeaderStats {
   inactive60: number;
   noShowRisk: number;
   hasUnpaid: number;
+  pendingEvaluation?: number;
 }
 
 export interface HeaderFilterChip {
@@ -135,7 +136,7 @@ export function PatientsPageHeader({
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+              <div className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-6">
                 <HeaderStatCard
                   label="Ativos"
                   value={stats.activeCount}
@@ -167,6 +168,22 @@ export function PatientsPageHeader({
                   isSelected={classificationFilter === "completed"}
                   onClick={() => onClassificationFilterChange?.("completed")}
                   icon={CheckCircle2}
+                />
+                <HeaderStatCard
+                  label="Avaliação Pendente"
+                  value={stats.pendingEvaluation ?? 0}
+                  tone="amber"
+                  isSelected={pathologyStatusFilter === "monitoring"}
+                  onClick={() => onPathologyStatusFilterChange?.(pathologyStatusFilter === "monitoring" ? "all" : "monitoring")}
+                  icon={AlertTriangle}
+                />
+                <HeaderStatCard
+                  label="Em Débito"
+                  value={stats.hasUnpaid}
+                  tone="amber"
+                  isSelected={financialStatusFilter === "pending_balance"}
+                  onClick={() => onFinancialStatusFilterChange?.(financialStatusFilter === "pending_balance" ? "all" : "pending_balance")}
+                  icon={AlertTriangle}
                 />
               </div>
             </div>
@@ -423,7 +440,7 @@ function HeaderStatCard({
   label: string;
   value: number;
   icon: React.ElementType;
-  tone: "emerald" | "blue" | "amber" | "emerald";
+  tone: "emerald" | "blue" | "amber";
   isSelected?: boolean;
   onClick?: () => void;
 }) {
@@ -433,8 +450,6 @@ function HeaderStatCard({
     blue: "border-blue-200/70 bg-blue-50/80 text-blue-700 dark:border-blue-900/60 dark:bg-blue-950/20 dark:text-blue-300",
     amber:
       "border-amber-200/70 bg-amber-50/80 text-amber-700 dark:border-amber-900/60 dark:bg-amber-950/20 dark:text-amber-300",
-    emerald:
-      "border-emerald-200/70 bg-emerald-50/80 text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-950/20 dark:text-emerald-300",
   } satisfies Record<string, string>;
 
   return (

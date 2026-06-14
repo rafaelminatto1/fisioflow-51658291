@@ -82,6 +82,8 @@ app.post("/", requireAuth, async (c) => {
               content: `Conteúdo de orientações:\n${context}\n\nPergunta do paciente: ${query}`,
             },
           ],
+          cacheKey: `patient_assistant_faq_${normalizeAskQuery(query)}`,
+          cacheTtl: 86400, // Cache for 24 hours to handle repeated FAQs
         })
       : null;
 
