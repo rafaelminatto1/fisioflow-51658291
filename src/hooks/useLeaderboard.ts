@@ -9,6 +9,7 @@ import { gamificationApi } from "@/api/v2";
 import { LeaderboardEntry, LeaderboardFilters, EngagementData } from "@/types/gamification";
 import { downloadCSV } from "@/utils/csvExport";
 import { subDays } from "date-fns";
+import { accentIncludes } from "@/lib/utils/bilingualSearch";
 
 // ============================================================================
 // TYPES
@@ -86,9 +87,8 @@ export const useLeaderboard = (
       })) as LeaderboardEntry[];
 
       if (filters.search.trim()) {
-        const searchLower = filters.search.trim().toLowerCase();
         leaderboard = leaderboard.filter((entry) =>
-          entry.patient_name.toLowerCase().includes(searchLower),
+          accentIncludes(entry.patient_name, filters.search.trim()),
         );
       }
 

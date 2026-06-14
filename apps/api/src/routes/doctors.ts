@@ -19,7 +19,7 @@ app.get("/", requireAuth, async (c) => {
 
     if (searchTerm) {
       params.push(`%${searchTerm}%`);
-      where += ` AND (name ILIKE $${params.length} OR specialty ILIKE $${params.length} OR crm ILIKE $${params.length})`;
+      where += ` AND (unaccent(name) ILIKE unaccent($${params.length}) OR unaccent(specialty) ILIKE unaccent($${params.length}) OR unaccent(crm) ILIKE unaccent($${params.length}))`;
     }
 
     const dataParams = [...params, limitNum, offsetNum];

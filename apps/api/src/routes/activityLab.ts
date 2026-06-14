@@ -108,7 +108,7 @@ app.get("/patients", async (c) => {
 
   if (search) {
     params.push(`%${search}%`);
-    where += ` AND (p.full_name ILIKE $${params.length} OR p.cpf ILIKE $${params.length} OR p.email ILIKE $${params.length})`;
+    where += ` AND (unaccent(p.full_name) ILIKE unaccent($${params.length}) OR unaccent(p.cpf) ILIKE unaccent($${params.length}) OR unaccent(p.email) ILIKE unaccent($${params.length}))`;
   }
 
   params.push(limit);

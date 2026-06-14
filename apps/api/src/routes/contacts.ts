@@ -49,7 +49,7 @@ app.get("/", requireAuth, async (c) => {
   if (q) {
     params.push(`%${q}%`);
     conditions.push(
-      `(nome ILIKE $${params.length} OR email ILIKE $${params.length} OR telefone ILIKE $${params.length})`,
+      `(unaccent(nome) ILIKE unaccent($${params.length}) OR unaccent(email) ILIKE unaccent($${params.length}) OR unaccent(telefone) ILIKE unaccent($${params.length}))`,
     );
   }
 

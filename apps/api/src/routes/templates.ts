@@ -4,8 +4,9 @@
  * GET /api/templates/:id      — detalhe com itens
  */
 import { Hono } from "hono";
-import { eq, ilike, and, or, isNull, sql } from "drizzle-orm";
+import { eq, and, or, isNull, sql } from "drizzle-orm";
 import { createDb, createPool } from "../lib/db";
+import { searchFilter } from "../lib/db-utils";
 import type { Env } from "../types/env";
 import { requireAuth, verifyToken, AuthVariables } from "../lib/auth";
 import { pgTable, uuid, varchar, text, boolean, timestamp, integer } from "drizzle-orm/pg-core";
@@ -120,8 +121,8 @@ app.get("/", async (c) => {
 
   const conditions = [eq(exerciseTemplates.isActive, true)];
 
-  if (q) conditions.push(ilike(exerciseTemplates.name, `%${q}%`));
-  if (category) conditions.push(ilike(exerciseTemplates.category, `%${category}%`));
+  if (q) conditions.push(searchFilter(exerciseTemplates.name, q));
+  if (category) conditions.push(searchFilter(exerciseTemplates.category, category));
   if (patientProfile) conditions.push(eq(exerciseTemplates.patientProfile, patientProfile));
   if (isDraft !== undefined) conditions.push(eq(exerciseTemplates.isDraft, isDraft === "true"));
 

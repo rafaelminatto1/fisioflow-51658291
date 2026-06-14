@@ -704,7 +704,7 @@ export async function getInboxConversations(
     }
     if (filters.search) {
       conditions.push(
-        `EXISTS (SELECT 1 FROM whatsapp_contacts wc WHERE wc.id = c.contact_id AND (wc.display_name ILIKE $${idx} OR wc.wa_id ILIKE $${idx} OR wc.username ILIKE $${idx}))`,
+        `EXISTS (SELECT 1 FROM whatsapp_contacts wc WHERE wc.id = c.contact_id AND (unaccent(wc.display_name) ILIKE unaccent($${idx}) OR unaccent(wc.wa_id) ILIKE unaccent($${idx}) OR unaccent(wc.username) ILIKE unaccent($${idx})))`,
       );
       params.push(`%${filters.search}%`);
       idx++;

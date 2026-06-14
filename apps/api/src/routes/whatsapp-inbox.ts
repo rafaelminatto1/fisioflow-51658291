@@ -1310,11 +1310,11 @@ app.get("/contacts", requireAuth, async (c) => {
 				FULL OUTER JOIN patients p ON p.id = wc.patient_id AND p.organization_id = wc.organization_id
 				WHERE (wc.organization_id = $1 OR p.organization_id = $1)
 				AND (
-					wc.display_name ILIKE $2 OR
-					wc.wa_id ILIKE $2 OR
-					wc.username ILIKE $2 OR
-					p.full_name ILIKE $2 OR
-					p.phone ILIKE $2
+					unaccent(wc.display_name) ILIKE unaccent($2) OR
+					unaccent(wc.wa_id) ILIKE unaccent($2) OR
+					unaccent(wc.username) ILIKE unaccent($2) OR
+					unaccent(p.full_name) ILIKE unaccent($2) OR
+					unaccent(p.phone) ILIKE unaccent($2)
 				)
 				ORDER BY COALESCE(wc.updated_at, p.updated_at) DESC NULLS LAST
 				LIMIT $3 OFFSET $4

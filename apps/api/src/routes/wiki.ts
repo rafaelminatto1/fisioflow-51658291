@@ -6,7 +6,7 @@
  * GET /api/wiki/:slug/versions — histórico de versões (auth)
  */
 import { Hono } from "hono";
-import { eq, and, isNull, sql, ilike } from "drizzle-orm";
+import { eq, and, isNull, sql } from "drizzle-orm";
 import { createDb, createPool } from "../lib/db";
 import { requireAuth, verifyToken, type AuthVariables } from "../lib/auth";
 import type { Env } from "../types/env";
@@ -224,7 +224,7 @@ app.get("/", async (c) => {
     isNull(wikiPages.parentId), // apenas páginas raiz
   ];
 
-  if (q) conditions.push(ilike(wikiPages.title, `%${q}%`));
+  if (q) conditions.push(searchFilter(wikiPages.title, q));
   if (category) conditions.push(eq(wikiPages.category, category));
 
   const where = and(...conditions);
@@ -348,7 +348,7 @@ app.get("/org/list", requireAuth, async (c) => {
   if (user.organizationId) {
     conditions.push(eq(wikiPages.organizationId, user.organizationId));
   }
-  if (q) conditions.push(ilike(wikiPages.title, `%${q}%`));
+  if (q) conditions.push(searchFilter(wikiPages.title, q));
   if (category) conditions.push(eq(wikiPages.category, category));
 
   const where = and(...conditions);

@@ -14,6 +14,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useCallback, useRef, useEffect } from "react";
 import { startOfDay, endOfDay, addDays, subDays, format } from "date-fns";
 import { appointmentsApi, type AppointmentRow } from "@/api/v2";
+import { accentIncludes } from "@/lib/utils/bilingualSearch";
 
 // Tipos
 export type ScheduleView = "day" | "week" | "month" | "list";
@@ -243,10 +244,10 @@ export function useScheduleOptimized(options: {
     }
 
     if (filters?.searchQuery) {
-      const query = filters.searchQuery.toLowerCase();
+      const query = filters.searchQuery;
       appointments = appointments.filter(
         (a) =>
-          a.patient_name?.toLowerCase().includes(query) || a.notes?.toLowerCase().includes(query),
+          accentIncludes(a.patient_name ?? "", query) || accentIncludes(a.notes ?? "", query),
       );
     }
 

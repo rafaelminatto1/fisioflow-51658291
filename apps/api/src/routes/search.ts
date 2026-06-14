@@ -115,7 +115,7 @@ async function fallbackTextSearch(
         `SELECT id, name, description, embedding_sketch, 'exercises' AS content_type
          FROM exercises
          WHERE (is_public = true OR organization_id = $1)
-           ${!isSemantic ? "AND (name ILIKE $2 OR description ILIKE $2)" : ""}
+           ${!isSemantic ? "AND (unaccent(name) ILIKE unaccent($2) OR unaccent(description) ILIKE unaccent($2))" : ""}
          LIMIT $3`,
         !isSemantic ? [orgId, searchTerm, fetchLimit] : [orgId, fetchLimit, fetchLimit],
       );
@@ -132,7 +132,7 @@ async function fallbackTextSearch(
         `SELECT id, title AS name, LEFT(content, 300) AS description, embedding_sketch, 'wiki' AS content_type
          FROM wiki_pages
          WHERE (organization_id = $1 OR is_public = true)
-           ${!isSemantic ? "AND (title ILIKE $2 OR content ILIKE $2)" : ""}
+           ${!isSemantic ? "AND (unaccent(title) ILIKE unaccent($2) OR unaccent(content) ILIKE unaccent($2))" : ""}
          LIMIT $3`,
         !isSemantic ? [orgId, searchTerm, fetchLimit] : [orgId, fetchLimit, fetchLimit],
       );

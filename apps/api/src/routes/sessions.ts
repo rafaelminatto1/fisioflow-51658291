@@ -3,8 +3,8 @@ import { createDb } from "../lib/db";
 import { requireAuth, type AuthVariables } from "../lib/auth";
 import type { Env } from "../types/env";
 import { sessions, sessionAttachments, sessionTemplates, patients } from "@fisioflow/db";
-import { eq, and, desc, count, sql, or, ilike } from "drizzle-orm";
-import { withTenant } from "../lib/db-utils";
+import { eq, and, desc, count, sql, or } from "drizzle-orm";
+import { withTenant, searchFilter } from "../lib/db-utils";
 import { stripHtml } from "../lib/stripHtml";
 import { invalidatePatientCache } from "../lib/ai-context-cache";
 import { processClinicalEmbedding } from "../lib/ai/embeddings";
@@ -700,8 +700,8 @@ app.get("/templates", requireAuth, async (c) => {
   if (search) {
     conditions.push(
       or(
-        ilike(sessionTemplates.name, `%${search}%`),
-        ilike(sessionTemplates.description, `%${search}%`),
+        searchFilter(sessionTemplates.name, search),
+        searchFilter(sessionTemplates.description, search),
       ),
     );
   }

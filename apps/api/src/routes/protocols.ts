@@ -8,10 +8,11 @@
  */
 
 import { exerciseProtocols, protocolExercises } from "@fisioflow/db";
-import { and, eq, ilike, or, sql } from "drizzle-orm";
+import { and, eq, or, sql } from "drizzle-orm";
 import { Hono } from "hono";
 import { type AuthVariables, requireAuth } from "../lib/auth";
 import { createDb } from "../lib/db";
+import { searchFilter } from "../lib/db-utils";
 import { removeProtocolFromIndex, syncProtocolToIndex } from "../lib/contentIndexing";
 import type { Env } from "../types/env";
 
@@ -69,7 +70,7 @@ app.get("/", async (c) => {
 
   const conditions = [eq(exerciseProtocols.isActive, true), visibilityCondition];
 
-  if (q) conditions.push(ilike(exerciseProtocols.name, `%${q}%`));
+  if (q) conditions.push(searchFilter(exerciseProtocols.name, q));
   if (type) {
     conditions.push(
       eq(

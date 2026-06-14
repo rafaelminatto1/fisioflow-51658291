@@ -23,6 +23,7 @@ import { parseLocalDate, todayYMD, toLocalYMD } from "@/lib/date-utils";
 
 import type { Appointment } from "@/types/appointment";
 import type { AppointmentRow, PatientRow, TherapistProfileRow } from "@/types/workers";
+import { accentIncludes } from "@/lib/utils/bilingualSearch";
 
 export type ViewType = "day" | "week" | "month";
 
@@ -112,8 +113,7 @@ const matchesScheduleFilters = (appointment: Appointment, filters?: ScheduleFilt
   }
 
   if (filters.patient?.trim()) {
-    const patientQuery = filters.patient.trim().toLowerCase();
-    if (!appointment.patientName.toLowerCase().includes(patientQuery)) {
+    if (!accentIncludes(appointment.patientName ?? "", filters.patient.trim())) {
       return false;
     }
   }
