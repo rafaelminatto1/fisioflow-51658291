@@ -444,6 +444,7 @@ export {
   PatientDigitalTwinWorkflow,
   WikiSyncWorkflow,
   KnowledgeSyncWorkflow,
+  BiomechanicsAnalysisWorkflow,
 } from "./workflows";
 
 // Hono RPC — exporta o tipo da app para type-safe client no frontend

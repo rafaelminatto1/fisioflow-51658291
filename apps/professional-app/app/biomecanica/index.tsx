@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { View, Text, ScrollView, Pressable, StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
@@ -5,6 +6,7 @@ import { Bell, Clock, Video, Users, ChevronRight } from "lucide-react-native";
 import { bio, font } from "@/constants/biomecanica";
 import { BioTabBar } from "@/components/biomecanica/BioTabBar";
 import { Silhouette } from "@/components/biomecanica/Silhouette";
+import { biomechanicsApi, type BiomechanicsAssessment, type BiomechanicsJob } from "@/lib/api/biomechanics";
 
 const KPIS = [
   { icon: Clock, bg: "hsl(28, 92%, 93%)", fg: "hsl(25, 72%, 42%)", v: "5", l: "Análises pendentes" },
@@ -47,6 +49,51 @@ function SectionHead({ title, count, link }: { title: string; count?: string; li
 
 export default function PainelScreen() {
   const router = useRouter();
+  const [jobs, setJobs] = useState<BiomechanicsJob[]>([]);
+  const [assessments, setAssessments] = useState<BiomechanicsAssessment[]>([]);
+  const [counts, setCounts] = useState({ queued: 0, processing: 0, needsReview: 0, failed: 0 });
+
+  useEffect(() => {
+    let mounted = true;
+    biomechanicsApi
+      .dashboard()
+      .then((response) => {
+        if (!mounted) return;
+        setJobs(response.data.jobs ?? []);
+        setAssessments(response.data.recentAssessments ?? []);
+        setCounts(response.data.counts ?? { queued: 0, processing: 0, needsReview: 0, failed: 0 });
+      })
+      .catch(() => {
+        if (!mounted) return;
+        setJobs([]);
+        setAssessments([]);
+      });
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  const kpis = jobs.length || assessments.length
+    ? [
+        { icon: Clock, bg: "hsl(28, 92%, 93%)", fg: "hsl(25, 72%, 42%)", v: String(counts.needsReview), l: "Revisões pendentes" },
+        { icon: Video, bg: "hsl(211, 100%, 93%)", fg: "hsl(211, 100%, 42%)", v: String(counts.processing), l: "Processando" },
+        { icon: Users, bg: "hsl(142, 60%, 92%)", fg: "hsl(142, 55%, 32%)", v: String(assessments.length), l: "Capturas recentes" },
+      ]
+    : KPIS;
+
+  const pending = assessments.length
+    ? assessments
+        .filter((assessment) => ["needs_review", "queued", "processing"].includes(String(assessment.status)))
+        .slice(0, 5)
+        .map((assessment, index) => ({
+          id: assessment.id,
+          initials: "PX",
+          color: [bio.avatarBlue, bio.avatarOrange, bio.avatarPink, bio.avatarGreen][index % 4],
+          name: assessment.analysisData?.patientName ?? "Paciente",
+          test: String(assessment.type).replace(/_/g, " "),
+          when: new Date(assessment.createdAt).toLocaleDateString("pt-BR"),
+        }))
+    : PENDING;
 
   return (
     <View style={styles.root}>
@@ -74,7 +121,7 @@ export default function PainelScreen() {
       >
         {/* KPIs */}
         <View style={styles.kpis}>
-          {KPIS.map((k) => (
+          {kpis.map((k) => (
             <View key={k.l} style={styles.kpi}>
               <View style={[styles.kpiIco, { backgroundColor: k.bg }]}>
                 <k.icon size={17} color={k.fg} strokeWidth={2.2} />
@@ -89,11 +136,11 @@ export default function PainelScreen() {
         <View style={{ gap: 12 }}>
           <SectionHead title="Análises pendentes" count="5" link="Ver todas" />
           <View style={{ gap: 10 }}>
-            {PENDING.map((p) => (
+            {pending.map((p) => (
               <Pressable
                 key={p.id}
                 style={styles.pend}
-                onPress={() => router.push("/biomecanica/analysis" as never)}
+                onPress={() => router.push(`/biomecanica/analysis?assessmentId=${encodeURIComponent(p.id)}` as never)}
               >
                 <View style={[styles.pa, { backgroundColor: p.color }]}>
                   <Text style={styles.paText}>{p.initials}</Text>

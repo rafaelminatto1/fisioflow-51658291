@@ -5,6 +5,7 @@
   },
   "build": {
     "development": {
+      "node": "22.14.0",
       "developmentClient": true,
       "distribution": "internal",
       "channel": "development",
@@ -17,10 +18,13 @@
         "EXPO_PUBLIC_NEON_AUTH_URL": "https://ep-wandering-bonus-acj4zwvo.neonauth.sa-east-1.aws.neon.tech/neondb/auth",
         "EXPO_PUBLIC_LIVEKIT_URL": "wss://fisioflow-2w7ld7bi.livekit.cloud",
         "EXPO_PUBLIC_EXPO_PROJECT_ID": "ca7042a7-03d4-4731-b4e5-6f5de3b48300",
-        "EXPO_USE_SYMLINKS": "1"
+        "EXPO_USE_SYMLINKS": "1",
+        "EAS_BUILD_NPM_CACHE_URL": "http://10.254.24.9:4873",
+        "EAS_PNPM_VERSION": "11.0.9"
       }
     },
     "preview": {
+      "node": "22.14.0",
       "distribution": "internal",
       "channel": "preview",
       "ios": {
@@ -32,13 +36,16 @@
         "EXPO_PUBLIC_API_URL": "https://fisioflow-api.rafalegollas.workers.dev",
         "EXPO_PUBLIC_NEON_AUTH_URL": "https://ep-wandering-bonus-acj4zwvo.neonauth.sa-east-1.aws.neon.tech/neondb/auth",
         "EXPO_PUBLIC_EXPO_PROJECT_ID": "ca7042a7-03d4-4731-b4e5-6f5de3b48300",
-        "EXPO_USE_SYMLINKS": "1"
+        "EXPO_USE_SYMLINKS": "1",
+        "EAS_BUILD_NPM_CACHE_URL": "http://10.254.24.9:4873",
+        "EAS_PNPM_VERSION": "11.0.9"
       },
       "cache": {
         "disabled": true
       }
     },
     "testflight": {
+      "node": "22.14.0",
       "distribution": "internal",
       "channel": "production",
       "ios": {
@@ -56,7 +63,7 @@
       }
     },
     "production": {
-      "node": "22.11.0",
+      "node": "22.14.0",
       "channel": "production",
       "autoIncrement": true,
       "ios": {

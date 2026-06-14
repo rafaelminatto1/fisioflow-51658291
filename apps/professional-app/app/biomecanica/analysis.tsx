@@ -37,7 +37,12 @@ const MOCK_TRAJECTORY = Array.from({ length: 40 }, (_, i) => ({
 
 export default function AnalysisScreen() {
   const router = useRouter();
-  const { uri, patientId, patientName } = useLocalSearchParams<{ uri?: string; patientId?: string; patientName?: string }>();
+  const { uri, patientId, patientName, assessmentId } = useLocalSearchParams<{
+    uri?: string;
+    patientId?: string;
+    patientName?: string;
+    assessmentId?: string;
+  }>();
   
   const [protocol, setProtocol] = useState<string>("GENERIC");
   const [playing, setPlaying] = useState(false);
@@ -52,8 +57,57 @@ export default function AnalysisScreen() {
   const [duration, setDuration] = useState(1);
   const [brainModalVisible, setBrainModalVisible] = useState(false);
   const [suggestions, setSuggestions] = useState<any[]>([]);
+  const [jobStatus, setJobStatus] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!assessmentId) return;
+    let mounted = true;
+    biomechanicsApi
+      .getWorkbench(assessmentId)
+      .then((response) => {
+        if (!mounted) return;
+        const workbench = response.data;
+        setJobStatus(workbench.jobs?.[0]?.status ?? workbench.assessment.status ?? null);
+        const workbenchMetrics = workbench.metrics.reduce((acc: Record<string, number>, metric: any) => {
+          const value = Number(metric.metricValue ?? metric.metric_value);
+          if (Number.isFinite(value)) acc[metric.metricKey ?? metric.metric_key] = value;
+          return acc;
+        }, {});
+        if (Object.keys(workbenchMetrics).length) {
+          setNote(
+            `Análise processada. Qualidade ${workbench.assessment.qualityScore ?? "--"}%. Revise métricas, anotações e valide o laudo.`,
+          );
+        }
+      })
+      .catch(() => {
+        if (mounted) setJobStatus(null);
+      });
+    return () => {
+      mounted = false;
+    };
+  }, [assessmentId]);
 
   const handleSave = async () => {
+    if (assessmentId) {
+      setSaving(true);
+      try {
+        const validated = await biomechanicsApi.validateAssessment(assessmentId, {
+          observations: note,
+          conclusions:
+            "Avaliação biomecânica validada pelo profissional. Correlação clínica necessária para definição de conduta.",
+          notes: "Validação pelo workbench mobile.",
+        });
+        router.push(
+          `/biomecanica/report?assessmentId=${validated.data.id}&patientId=${validated.data.patientId}&patientName=${encodeURIComponent(patientName || "")}`,
+        );
+      } catch {
+        Alert.alert("Erro", "Falha ao validar análise");
+      } finally {
+        setSaving(false);
+      }
+      return;
+    }
+
     if (!patientId) {
       Alert.alert("Erro", "Paciente não identificado.");
       return;
@@ -196,7 +250,9 @@ export default function AnalysisScreen() {
           </Pressable>
           <View style={{ flex: 1, minWidth: 0 }}>
             <Text style={styles.tn} numberOfLines={1}>Biomecânica 2.0</Text>
-            <Text style={styles.ts}>{PROTOCOLS.find(p => p.id === protocol)?.label}</Text>
+            <Text style={styles.ts}>
+              {jobStatus ? `${PROTOCOLS.find(p => p.id === protocol)?.label} · ${jobStatus}` : PROTOCOLS.find(p => p.id === protocol)?.label}
+            </Text>
           </View>
           <Pressable style={styles.roundBtn} onPress={() => {
             setPoints([]);

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { View, Text, Pressable, StyleSheet, useWindowDimensions } from "react-native";
+import { Alert, View, Text, Pressable, StyleSheet, useWindowDimensions } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
@@ -12,6 +12,7 @@ import {
 import { bio, font } from "@/constants/biomecanica";
 import { Camera, useCameraDevice, useCameraPermission } from "react-native-vision-camera";
 import * as ImagePicker from "expo-image-picker";
+import { biomechanicsApi } from "@/lib/api/biomechanics";
 
 const JOINTS: Record<string, [number, number]> = {
   nose: [50, 12], neck: [50, 16], chest: [50, 21], spine: [50, 27], pelvis: [50, 33],
@@ -36,11 +37,16 @@ const COLLAPSED = 300;
 
 export default function CaptureScreen() {
   const router = useRouter();
-  const { patientId, patientName } = useLocalSearchParams<{ patientId?: string; patientName?: string }>();
+  const { patientId, patientName, protocolId, protocolName } = useLocalSearchParams<{
+    patientId?: string;
+    patientName?: string;
+    protocolId?: string;
+    protocolName?: string;
+  }>();
   const { height } = useWindowDimensions();
   const [recording, setRecording] = useState(false);
   const [view, setView] = useState("Sagital");
-  const [protocol, setProtocol] = useState("Agachamento");
+  const [protocol, setProtocol] = useState(protocolName || "Agachamento");
   const [open, setOpen] = useState(false);
 
   const initials = patientName ? patientName.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2) : "CF";
@@ -60,11 +66,43 @@ export default function CaptureScreen() {
     });
     if (!result.canceled) {
       console.log("Video selected:", result.assets[0].uri);
-      // Process video using native module / Frame Processor here
       const params = new URLSearchParams();
       params.append("uri", result.assets[0].uri);
       if (patientId) params.append("patientId", patientId);
       if (patientName) params.append("patientName", patientName);
+      if (patientId) {
+        try {
+          const capture = await biomechanicsApi.createCapture({
+            patientId,
+            protocolId,
+            view: view.toLowerCase() as any,
+            attempt: 1,
+            mediaType: "video",
+            contentType: result.assets[0].mimeType || "video/mp4",
+            durationMs: result.assets[0].duration ? Math.round(result.assets[0].duration) : undefined,
+            width: result.assets[0].width,
+            height: result.assets[0].height,
+            sizeBytes: result.assets[0].fileSize,
+            source: "professional-app-upload",
+            metadata: { localUri: result.assets[0].uri },
+          });
+          const assessmentId = capture.data.assessment.id;
+          const mediaId = capture.data.media.id;
+          await biomechanicsApi.completeMediaUpload(assessmentId, {
+            mediaId,
+            durationMs: result.assets[0].duration ? Math.round(result.assets[0].duration) : undefined,
+            width: result.assets[0].width,
+            height: result.assets[0].height,
+            sizeBytes: result.assets[0].fileSize,
+            qualityScore: 82,
+            metadata: { localUri: result.assets[0].uri, uploadMode: "local-library" },
+          });
+          await biomechanicsApi.process(assessmentId);
+          params.append("assessmentId", assessmentId);
+        } catch (error: any) {
+          Alert.alert("Processamento indisponível", error?.message ?? "Abrindo análise local do vídeo.");
+        }
+      }
       router.push(`/biomecanica/analysis?${params.toString()}`);
     }
   };
