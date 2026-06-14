@@ -1,5 +1,6 @@
-import { or, ilike } from "drizzle-orm";
+import { or } from "drizzle-orm";
 import { createDb, runWithOrg } from "../../lib/db";
+import { searchFilter } from "../../lib/db-utils";
 import { 
   exercises, 
   clinicalTestTemplates, 
@@ -101,7 +102,7 @@ export class ResourceSearchService {
             // Exercícios
             if (types.includes("exercise")) {
                 const internalEx = await db.select().from(exercises)
-                    .where(or(ilike(exercises.name, `%${query}%`), ilike(exercises.description, `%${query}%`)))
+                    .where(or(searchFilter(exercises.name, query), searchFilter(exercises.description, query)))
                     .limit(4);
                 
                 for (const ex of internalEx) {
@@ -122,7 +123,7 @@ export class ResourceSearchService {
             // Testes Padronizados
             if (types.includes("test")) {
                 const internalTests = await db.select().from(clinicalTestTemplates)
-                    .where(or(ilike(clinicalTestTemplates.name, `%${query}%`), ilike(clinicalTestTemplates.targetJoint, `%${query}%`)))
+                    .where(or(searchFilter(clinicalTestTemplates.name, query), searchFilter(clinicalTestTemplates.targetJoint, query)))
                     .limit(3);
 
                 for (const test of internalTests) {
