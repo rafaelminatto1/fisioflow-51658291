@@ -2,6 +2,7 @@ import { WorkflowEntrypoint, WorkflowStep, WorkflowEvent } from "cloudflare:work
 import type { Env } from "../types/env";
 import { getRawSql, createDb } from "../lib/db";
 import { patients } from "@fisioflow/db";
+import { runAi } from "../lib/ai-native";
 import { eq } from "drizzle-orm";
 import { WORKERS_AI_MODELS } from "../lib/workersAi";
 
@@ -92,9 +93,9 @@ export class PatientDigitalTwinWorkflow extends WorkflowEntrypoint<Env, { patien
 
 			Retorne APENAS um JSON: {"risk": "...", "recoveryWeeks": 12, "confidence": 85}`;
 
-      const response = await this.env.AI.run(WORKERS_AI_MODELS.llama_3_1_8b, {
+      const response = await runAi(this.env, WORKERS_AI_MODELS.llama_3_1_8b, {
         messages: [{ role: "user", content: prompt }],
-      });
+      }, { cache: false });
 
       try {
         const jsonMatch = (response as any).response?.match(/\{[\s\S]*\}/);
