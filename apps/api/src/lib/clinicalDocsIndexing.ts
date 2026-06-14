@@ -47,13 +47,9 @@ export async function indexClinicalDoc(
       title: meta.title,
       org_id: meta.organizationId ?? "",
     };
-    const result =
-      typeof items.uploadAndPoll === "function"
-        ? await items.uploadAndPoll(clinicalDocIndexFilename(meta.id), bytes, {
-            metadata,
-            timeoutMs: 120_000,
-          })
-        : await items.upload(clinicalDocIndexFilename(meta.id), bytes, { metadata });
+    // Enfileira (queued) e retorna na hora — a indexação do PDF roda em background.
+    // NÃO usar uploadAndPoll aqui: o poll bloquearia o request além do limite do Worker.
+    const result = await items.upload(clinicalDocIndexFilename(meta.id), bytes, { metadata });
     return { ok: true, status: result?.status };
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
