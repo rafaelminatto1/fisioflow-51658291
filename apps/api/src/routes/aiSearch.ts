@@ -14,12 +14,12 @@ import {
   mapAskSources,
   normalizeAskQuery,
   resolveAskOutcome,
-  folderFilterForType,
+  customMetadataFilterForType,
 } from "../lib/wikiAsk";
 import { writeEvent } from "../lib/analytics";
 import { callAI } from "../lib/ai/callAI";
 
-const AUTORAG_NAME = "fisioflow-rag";
+const AUTORAG_NAME = "fisioflow-rag-v2";
 
 const aiSearchApp = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
@@ -90,7 +90,7 @@ aiSearchApp.post("/ask", requireAuth, async (c) => {
 
   // Filtro por tipo usa o atributo nativo `folder` (metadata customizada não
   // é filtrável em instâncias built-in). rewrite desligado quando há filtro.
-  const filters = folderFilterForType(body.type);
+  const filters = customMetadataFilterForType(body.type);
   // Escopo estreito escolhido pelo usuário → threshold menor (mostra os melhores
   // do tipo mesmo com poucos itens, ex.: documentos de referência).
   const threshold = filters ? 0.15 : ASK_MATCH_THRESHOLD;
@@ -281,8 +281,16 @@ export async function syncAutoRAGContent(
         content_hash: hashHex
     };
 
+    // Sanitize metadata to avoid invalid_metadata_format
+    const sanitizedMetadata: Record<string, string> = {};
+    for (const [k, v] of Object.entries(finalMetadata)) {
+        if (v !== null && v !== undefined) {
+            sanitizedMetadata[k] = String(v);
+        }
+    }
+
     if (env.AI_SEARCH) {
-      await env.AI_SEARCH.items.upload(filename, markdown, { metadata: finalMetadata });
+      await env.AI_SEARCH.items.upload(filename, markdown, { metadata: sanitizedMetadata });
       return;
     }
 

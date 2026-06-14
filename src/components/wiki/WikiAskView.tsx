@@ -11,6 +11,7 @@ const TYPE_FILTERS: Array<{ value: AskWikiContentType | undefined; label: string
   { value: "wiki", label: "Wiki" },
   { value: "protocols", label: "Protocolos" },
   { value: "exercises", label: "Exercícios" },
+  { value: "clinical-doc", label: "Documentos" },
 ];
 
 function sourcePath(source: AskWikiSource): string | null {

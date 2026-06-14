@@ -57,18 +57,8 @@ export function normalizeAskQuery(query: string): string {
   return query.trim().toLowerCase().replace(/\s+/g, " ").slice(0, 256);
 }
 
-// Mapeia o tipo de conteúdo para o atributo NATIVO `folder` do AI Search
-// (filtragem por metadata customizada não está disponível em instâncias built-in).
-const TYPE_TO_FOLDER: Record<string, string> = {
-  wiki: "wiki/",
-  exercises: "exercises/",
-  protocols: "protocols/",
-  "clinical-doc": "clinical-doc/",
-};
-
-export function folderFilterForType(type: unknown): Record<string, unknown> | undefined {
-  const folder = typeof type === "string" ? TYPE_TO_FOLDER[type] : undefined;
-  if (!folder) return undefined;
-  // "starts with folder/" — o caractere após "/" (0x2F) é "0" (0x30).
-  return { folder: { $gte: folder, $lt: folder.slice(0, -1) + "0" } };
+export function customMetadataFilterForType(type: unknown): Record<string, unknown> | undefined {
+  if (typeof type !== "string") return undefined;
+  // Now using the custom_metadata field 'source' that is configured in the v2 instances
+  return { source: { $eq: type } };
 }
