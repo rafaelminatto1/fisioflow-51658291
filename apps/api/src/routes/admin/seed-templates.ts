@@ -6,18 +6,17 @@
  */
 import { Hono } from "hono";
 import { createDb } from "../../lib/db";
-import { requireAuth, type AuthVariables } from "../../lib/auth";
+import { requireAuth, requireRole, type AuthVariables } from "../../lib/auth";
 import type { Env } from "../../types/env";
 import { seedExerciseTemplates } from "../../seed/exercise-templates";
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
-app.post("/", requireAuth, async (c) => {
-  const user = c.get("user");
+app.use("*", requireAuth);
+app.use("*", requireRole(["admin", "owner"]));
 
-  if (user.role !== "admin" && user.role !== "owner") {
-    return c.json({ success: false, error: "Acesso negado: role admin necessário" }, 403);
-  }
+app.post("/", async (c) => {
+  const user = c.get("user");
 
   try {
     const db = createDb(c.env);

@@ -1,3 +1,4 @@
+import { Hono } from "hono";
 import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import type { Env } from "../../types/env";
 
@@ -57,11 +58,17 @@ function makeContext(token?: string): any {
 
 let verifyToken: (typeof import("../auth"))["verifyToken"];
 let DEFAULT_ORG_ID: string;
+let normalizeRole: (typeof import("../auth"))["normalizeRole"];
+let userHasRole: (typeof import("../auth"))["userHasRole"];
+let requireRole: (typeof import("../auth"))["requireRole"];
 
 beforeAll(async () => {
   const auth = await import("../auth");
   verifyToken = auth.verifyToken;
   DEFAULT_ORG_ID = auth.DEFAULT_ORG_ID;
+  normalizeRole = auth.normalizeRole;
+  userHasRole = auth.userHasRole;
+  requireRole = auth.requireRole;
 });
 
 describe("verifyToken", () => {
@@ -158,5 +165,59 @@ describe("verifyToken", () => {
       organizationId: "org-from-token",
       role: "fisioterapeuta",
     });
+  });
+});
+
+describe("role helpers", () => {
+  it("normalizes role names consistently", () => {
+    expect(normalizeRole(" admin ")).toBe("admin");
+    expect(normalizeRole("Owner")).toBe("owner");
+    expect(normalizeRole(undefined)).toBeNull();
+    expect(normalizeRole(null)).toBeNull();
+  });
+
+  it("returns true when user has an allowed primary role", () => {
+    expect(userHasRole({ uid: "u1", organizationId: "org-1", role: "Admin" }, "admin")).toBe(true);
+    expect(userHasRole({ uid: "u1", organizationId: "org-1", role: "owner" }, ["admin", "owner"])) .toBe(true);
+  });
+
+  it("returns true when user has an allowed extra role", () => {
+    expect(
+      userHasRole(
+        { uid: "u1", organizationId: "org-1", role: "viewer", roles: ["admin", "reporter"] },
+        "admin",
+      ),
+    ).toBe(true);
+  });
+
+  it("returns false for users without allowed roles", () => {
+    expect(userHasRole({ uid: "u1", organizationId: "org-1", role: "viewer" }, "admin")).toBe(false);
+  });
+
+  it("returns a 403 from requireRole when the user is not authorized", async () => {
+    const app = new Hono<any>();
+    app.use("/*", (c, next) => {
+      c.set("user", { uid: "u1", organizationId: "org-1", role: "viewer" });
+      return next();
+    });
+    app.use("/*", requireRole("admin"));
+    app.get("/test", (c) => c.json({ ok: true }));
+
+    const res = await app.fetch(new Request("http://localhost/test"), env as any);
+    expect(res.status).toBe(403);
+  });
+
+  it("allows access when the user has an allowed role", async () => {
+    const app = new Hono<any>();
+    app.use("/*", (c, next) => {
+      c.set("user", { uid: "u1", organizationId: "org-1", role: "admin" });
+      return next();
+    });
+    app.use("/*", requireRole(["admin", "owner"]));
+    app.get("/test", (c) => c.json({ ok: true }));
+
+    const res = await app.fetch(new Request("http://localhost/test"), env as any);
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual({ ok: true });
   });
 });
