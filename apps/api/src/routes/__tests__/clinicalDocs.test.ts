@@ -15,11 +15,12 @@ const itemsList = vi.fn();
 const itemsDelete = vi.fn();
 const r2Put = vi.fn();
 const r2Delete = vi.fn();
+const r2List = vi.fn();
 
 function env() {
   return {
     AI_SEARCH: { items: { upload: itemsUpload, uploadAndPoll: vi.fn(), delete: itemsDelete, list: itemsList } },
-    CLINICAL_DOCS_BUCKET: { put: r2Put, delete: r2Delete },
+    CLINICAL_DOCS_BUCKET: { put: r2Put, delete: r2Delete, list: r2List },
     ANALYTICS: { writeDataPoint: vi.fn() },
     ALLOWED_ORIGINS: "*",
     ENVIRONMENT: "development",
@@ -55,6 +56,7 @@ describe("clinical docs ingestion", () => {
     itemsDelete.mockResolvedValue(undefined);
     r2Put.mockResolvedValue(undefined);
     r2Delete.mockResolvedValue(undefined);
+    r2List.mockResolvedValue({ objects: [] });
   });
 
   it("indexa um PDF válido e guarda no R2", async () => {
@@ -94,20 +96,18 @@ describe("clinical docs ingestion", () => {
     expect(r2Delete).toHaveBeenCalledTimes(1); // rollback
   });
 
-  it("lista documentos via metadata filter", async () => {
-    itemsList.mockResolvedValue({
-      result: [
-        { id: "i1", key: "clinical-doc/abc.pdf", status: "indexed", metadata: { doc_id: "abc", title: "Protocolo X", source: "clinical-doc" } },
-      ],
+  it("lista documentos a partir do R2 (título via customMetadata)", async () => {
+    r2List.mockResolvedValue({
+      objects: [{ key: "reference/abc.pdf", customMetadata: { title: "Protocolo X" } }],
     });
     const app = await buildApp();
     const res = await app.fetch(new Request("http://localhost/api/clinical-docs"), env());
     expect(res.status).toBe(200);
     const json = (await res.json()) as any;
-    expect(json.data).toEqual([{ id: "abc", title: "Protocolo X", status: "indexed" }]);
+    expect(json.data).toEqual([{ id: "abc", title: "Protocolo X" }]);
   });
 
-  it("remove do índice e do R2", async () => {
+  it("remove do índice (por id→chave) e do R2", async () => {
     itemsList.mockResolvedValue({
       result: [{ id: "i1", key: "clinical-doc/abc.pdf", status: "indexed" }],
     });
@@ -117,6 +117,7 @@ describe("clinical docs ingestion", () => {
       env(),
     );
     expect(res.status).toBe(200);
+    expect(itemsList).toHaveBeenCalledWith({ search: "abc", per_page: 25 });
     expect(itemsDelete).toHaveBeenCalledWith("i1");
     expect(r2Delete).toHaveBeenCalledTimes(1);
   });

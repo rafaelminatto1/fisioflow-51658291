@@ -17,6 +17,7 @@ import {
 } from "../lib/wikiAsk";
 import { writeEvent } from "../lib/analytics";
 import { callAI } from "../lib/ai/callAI";
+import { clinicalDocFolderFilter } from "../lib/clinicalDocsIndexing";
 
 const AUTORAG_NAME = "fisioflow-rag";
 
@@ -87,10 +88,14 @@ aiSearchApp.post("/ask", requireAuth, async (c) => {
     return c.json({ error: "AI Search não disponível neste ambiente" }, 503);
   }
 
-  const filters =
-    typeof body.type === "string" && body.type.length > 0
-      ? { source: body.type }
-      : undefined;
+  // "Documentos" filtra pelo atributo nativo `folder` (clinical-doc/...), que
+  // funciona sem declarar metadata. Demais tipos usam `source` (legado).
+  const filters: Record<string, any> | undefined =
+    body.type === "clinical-doc"
+      ? clinicalDocFolderFilter()
+      : typeof body.type === "string" && body.type.length > 0
+        ? { source: body.type }
+        : undefined;
 
   const started = Date.now();
   try {
