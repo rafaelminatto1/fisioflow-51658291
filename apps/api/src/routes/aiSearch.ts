@@ -16,6 +16,7 @@ import {
   resolveAskOutcome,
 } from "../lib/wikiAsk";
 import { writeEvent } from "../lib/analytics";
+import { callAI } from "../lib/ai/callAI";
 
 const AUTORAG_NAME = "fisioflow-rag";
 
@@ -93,20 +94,39 @@ aiSearchApp.post("/ask", requireAuth, async (c) => {
 
   const started = Date.now();
   try {
-    const result = await chatAiSearch(c.env, {
-      messages: [
-        {
-          role: "system",
-          content:
-            "Você é o assistente da wiki clínica da FisioFlow. Responda em Português do Brasil usando APENAS o conteúdo recuperado. Se o contexto não cobrir a pergunta, diga que não encontrou na wiki.",
-        },
-        { role: "user", content: query },
-      ],
+    // Recuperação no AI Search (instância interna) — somente busca.
+    const retrieval = await searchAiSearch(c.env, {
+      query,
       maxNumResults: 8,
       matchThreshold: ASK_MATCH_THRESHOLD,
       ...(filters ? { filters } : {}),
     });
 
+    // Geração via callAI → roteada pelo AI Gateway (Guardrails aplicam aqui também).
+    const context = retrieval.sources
+      .map((s) => s.content)
+      .filter(Boolean)
+      .join("\n\n")
+      .slice(0, 8000);
+
+    const generated = context
+      ? await callAI(c.env, {
+          task: "chat",
+          organizationId: user.organizationId,
+          temperature: 0.3,
+          maxTokens: 700,
+          messages: [
+            {
+              role: "system",
+              content:
+                "Você é o assistente da wiki clínica da FisioFlow. Responda em Português do Brasil usando APENAS o conteúdo fornecido. Se o contexto não cobrir a pergunta, diga que não encontrou na wiki.",
+            },
+            { role: "user", content: `Conteúdo da base:\n${context}\n\nPergunta: ${query}` },
+          ],
+        })
+      : null;
+
+    const result = { answer: generated?.content?.trim() ?? "", sources: retrieval.sources };
     const outcome = resolveAskOutcome(result.answer, result.sources, ASK_MATCH_THRESHOLD);
     const latencyMs = Date.now() - started;
 
