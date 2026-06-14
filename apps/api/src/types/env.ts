@@ -9,6 +9,7 @@ import type {
   WikiSyncWorkflow,
   KnowledgeSyncWorkflow,
   SessionSummaryWorkflow,
+  BiomechanicsAnalysisWorkflow,
 } from "../workflows";
 
 /**
@@ -198,6 +199,7 @@ export interface Env {
   WORKFLOW_WIKI_SYNC?: Workflow<WikiSyncWorkflow>;
   WORKFLOW_KNOWLEDGE_SYNC?: Workflow<KnowledgeSyncWorkflow>;
   WORKFLOW_SESSION_SUMMARY?: Workflow<SessionSummaryWorkflow>;
+  WORKFLOW_BIOMECHANICS_ANALYSIS?: Workflow<BiomechanicsAnalysisWorkflow>;
 
   // AI & Browser Rendering
   AI: {

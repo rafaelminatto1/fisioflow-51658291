@@ -28,3 +28,6 @@ export type { SessionSummaryParams } from "./sessionSummary";
 
 export { PatientWearableActivityWorkflow } from "./wearableActivity";
 export type { WearableActivityParams } from "./wearableActivity";
+
+export { BiomechanicsAnalysisWorkflow } from "./biomechanicsAnalysis";
+export type { BiomechanicsAnalysisParams } from "./biomechanicsAnalysis";

@@ -1,14 +1,27 @@
 import { Hono } from "hono";
-import { asc, eq, and, desc } from "drizzle-orm";
+import { asc, eq, and, desc, or, isNull } from "drizzle-orm";
 import { requireAuth, type AuthVariables } from "../lib/auth";
 import { createDb } from "../lib/db";
-import { biomechanicsAssessments, biomechanicsMetrics } from "@fisioflow/db";
+import { R2Service } from "../lib/storage/R2Service";
+import {
+  biomechanicsAnnotations,
+  biomechanicsAssessments,
+  biomechanicsEvents,
+  biomechanicsFrames,
+  biomechanicsJobs,
+  biomechanicsMedia,
+  biomechanicsMetrics,
+  biomechanicsProtocols,
+  biomechanicsReviewActions,
+  patients,
+} from "@fisioflow/db";
 import type { Env } from "../types/env";
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 const QUICK_ACTIONS_BASE = "https://browser.ai.cloudflare.com/api/v1";
 
 type AssessmentRow = typeof biomechanicsAssessments.$inferSelect;
+type ProtocolRow = typeof biomechanicsProtocols.$inferSelect;
 
 type ExtractedMetric = {
   key: string;
@@ -28,6 +41,45 @@ const METRIC_LABELS: Record<string, { label: string; unit: string; lowerIsBetter
   symmetry: { label: "Simetria E/D", unit: "%" },
   pain: { label: "Dor EVA", unit: "/10", lowerIsBetter: true },
 };
+
+const DEFAULT_ALGORITHM_VERSION = "bio-pipeline-1.0.0";
+
+function toBiomechanicsAssessmentType(value: unknown): "static_posture" | "gait_analysis" | "running_analysis" | "functional_movement" {
+  if (value === "static_posture" || value === "gait_analysis" || value === "running_analysis" || value === "functional_movement") {
+    return value;
+  }
+  return "functional_movement";
+}
+
+function normalizeView(value: unknown) {
+  const view = String(value ?? "sagittal").toLowerCase();
+  if (["frontal", "sagittal", "posterior", "superior"].includes(view)) return view;
+  return "sagittal";
+}
+
+function publicOrTenantProtocolFilter(userOrgId: string) {
+  return or(isNull(biomechanicsProtocols.organizationId), eq(biomechanicsProtocols.organizationId, userOrgId));
+}
+
+function r2BiomechanicsKey(params: {
+  organizationId: string;
+  patientId: string;
+  assessmentId: string;
+  mediaId: string;
+  filename?: string;
+}) {
+  const rawFilename = params.filename?.trim() || `${params.mediaId}.mp4`;
+  const filename = rawFilename.replace(/[^a-zA-Z0-9._-]/g, "_").slice(0, 160);
+  return `orgs/${params.organizationId}/patients/${params.patientId}/videos/biomechanics/${params.assessmentId}/${filename}`;
+}
+
+function r2PublicUrl(env: Env, key: string) {
+  const baseUrl = env.R2_PUBLIC_URL?.replace(/\/$/, "");
+  if (!baseUrl) {
+    throw new Error("R2_PUBLIC_URL is required to publish biomechanics media URLs");
+  }
+  return `${baseUrl}/${key}`;
+}
 
 function safeJson(value: unknown) {
   if (!value || typeof value !== "object") return {};
@@ -225,8 +277,9 @@ function buildBiomechanicsReportHtml(params: {
   patientName: string;
   comparison: ReturnType<typeof buildComparisonPayload>;
   reportHash: string;
+  annotations?: Array<{ tool: string; label: string | null; timeMs: number | null; frameIndex: number | null }>;
 }) {
-  const { assessment, patientName, comparison, reportHash } = params;
+  const { assessment, patientName, comparison, reportHash, annotations = [] } = params;
   const generatedAt = new Date().toLocaleString("pt-BR");
   
   // Extract symmetry score from analysis data or fallback
@@ -250,6 +303,18 @@ function buildBiomechanicsReportHtml(params: {
       </tr>`;
     })
     .join("");
+  const annotationRows = annotations.length
+    ? annotations
+        .map(
+          (annotation) => `<tr>
+        <td>${escapeHtml(annotation.tool)}</td>
+        <td>${annotation.timeMs == null ? "—" : `${Math.round(annotation.timeMs / 1000)}s`}</td>
+        <td>${annotation.frameIndex ?? "—"}</td>
+        <td>${escapeHtml(annotation.label || "Sem rótulo")}</td>
+      </tr>`,
+        )
+        .join("")
+    : '<tr><td colspan="4">Nenhuma anotação manual registrada.</td></tr>';
 
   return `<!DOCTYPE html>
 <html lang="pt-BR">
@@ -342,6 +407,13 @@ function buildBiomechanicsReportHtml(params: {
       <h2>Conclusão e conduta</h2>
       <p>${escapeHtml(assessment.conclusions || "Conclusão não registrada.")}</p>
     </div>
+    <div class="section">
+      <h2>Anotações do workbench</h2>
+      <table>
+        <thead><tr><th>Ferramenta</th><th>Tempo</th><th>Frame</th><th>Observação</th></tr></thead>
+        <tbody>${annotationRows}</tbody>
+      </table>
+    </div>
     <div class="footer">
       <span>Documento armazenado na nuvem FisioFlow</span>
       <span>${escapeHtml(assessment.id)}</span>
@@ -350,6 +422,538 @@ function buildBiomechanicsReportHtml(params: {
 </body>
 </html>`;
 }
+
+// GET /api/biomechanics/dashboard — operational hub for the professional app
+app.get("/dashboard", requireAuth, async (c) => {
+  const user = c.get("user");
+  const db = await createDb(c.env, "read");
+
+  const [jobs, recentAssessments] = await Promise.all([
+    db
+      .select()
+      .from(biomechanicsJobs)
+      .where(eq(biomechanicsJobs.organizationId, user.organizationId))
+      .orderBy(desc(biomechanicsJobs.createdAt))
+      .limit(30),
+    db
+      .select()
+      .from(biomechanicsAssessments)
+      .where(eq(biomechanicsAssessments.organizationId, user.organizationId))
+      .orderBy(desc(biomechanicsAssessments.createdAt))
+      .limit(12),
+  ]);
+
+  const counts = jobs.reduce(
+    (acc, job) => {
+      const status = job.status || "unknown";
+      acc[status] = (acc[status] ?? 0) + 1;
+      return acc;
+    },
+    {} as Record<string, number>,
+  );
+
+  return c.json({
+    data: {
+      counts: {
+        queued: counts.queued ?? 0,
+        processing: (counts.running ?? 0) + (counts.waiting_external_model ?? 0),
+        needsReview: recentAssessments.filter((assessment) => assessment.status === "needs_review").length,
+        failed: counts.failed ?? 0,
+      },
+      jobs,
+      recentAssessments,
+    },
+  });
+});
+
+// GET /api/biomechanics/protocols — system + tenant protocols
+app.get("/protocols", requireAuth, async (c) => {
+  const user = c.get("user");
+  const category = c.req.query("category");
+  const db = await createDb(c.env, "read");
+
+  const filters = [publicOrTenantProtocolFilter(user.organizationId)];
+  if (category && category !== "all") filters.push(eq(biomechanicsProtocols.category, category));
+
+  const protocols = await db
+    .select()
+    .from(biomechanicsProtocols)
+    .where(and(...filters))
+    .orderBy(asc(biomechanicsProtocols.category), asc(biomechanicsProtocols.name));
+
+  return c.json({ data: protocols });
+});
+
+// POST /api/biomechanics/protocols — custom tenant protocol
+app.post("/protocols", requireAuth, async (c) => {
+  const user = c.get("user");
+  const body = await c.req.json();
+  const db = await createDb(c.env);
+  const name = String(body.name ?? "").trim();
+  const category = String(body.category ?? "").trim();
+  if (!name) return c.json({ error: "Nome do protocolo é obrigatório" }, 400);
+  if (!category) return c.json({ error: "Categoria do protocolo é obrigatória" }, 400);
+
+  const [protocol] = await db
+    .insert(biomechanicsProtocols)
+    .values({
+      organizationId: user.organizationId,
+      slug: String(body.slug ?? name)
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-|-$/g, ""),
+      name,
+      category,
+      description: body.description ?? null,
+      assessmentType: toBiomechanicsAssessmentType(body.assessmentType),
+      captureRequirements: body.captureRequirements ?? {},
+      metricDefinitions: body.metricDefinitions ?? [],
+      qualityRules: body.qualityRules ?? {},
+      progressionGates: body.progressionGates ?? [],
+      redFlags: body.redFlags ?? [],
+      evidenceRefs: body.evidenceRefs ?? [],
+      isSystem: false,
+      version: body.version ?? "1.0.0",
+    })
+    .returning();
+
+  return c.json({ data: protocol }, 201);
+});
+
+// GET /api/biomechanics/protocols/:id
+app.get("/protocols/:id", requireAuth, async (c) => {
+  const user = c.get("user");
+  const id = c.req.param("id");
+  const db = await createDb(c.env, "read");
+  const [protocol] = await db
+    .select()
+    .from(biomechanicsProtocols)
+    .where(and(eq(biomechanicsProtocols.id, id), publicOrTenantProtocolFilter(user.organizationId)));
+  if (!protocol) return c.json({ error: "Protocolo não encontrado" }, 404);
+  return c.json({ data: protocol });
+});
+
+// POST /api/biomechanics/captures — create assessment + media + initial job
+app.post("/captures", requireAuth, async (c) => {
+  const user = c.get("user");
+  const body = await c.req.json();
+  const db = await createDb(c.env);
+  const patientId = String(body.patientId ?? "").trim();
+  if (!patientId) return c.json({ error: "Paciente é obrigatório" }, 400);
+
+  const [patient] = await db
+    .select({ id: patients.id })
+    .from(patients)
+    .where(and(eq(patients.id, patientId), eq(patients.organizationId, user.organizationId)));
+  if (!patient) return c.json({ error: "Paciente não encontrado nesta organização" }, 404);
+
+  let protocol: ProtocolRow | undefined;
+  if (body.protocolId) {
+    [protocol] = await db
+      .select()
+      .from(biomechanicsProtocols)
+      .where(and(eq(biomechanicsProtocols.id, String(body.protocolId)), publicOrTenantProtocolFilter(user.organizationId)));
+    if (!protocol) return c.json({ error: "Protocolo não encontrado" }, 404);
+  }
+
+  const [assessment] = await db
+    .insert(biomechanicsAssessments)
+    .values({
+      patientId,
+      organizationId: user.organizationId,
+      professionalId: user.uid,
+      protocolId: protocol?.id ?? null,
+      type: toBiomechanicsAssessmentType(protocol?.assessmentType ?? body.type),
+      status: "draft",
+      mediaUrl: body.mediaUrl ?? "pending://biomechanics-upload",
+      thumbnailUrl: body.thumbnailUrl ?? null,
+      captureContext: {
+        protocolSlug: protocol?.slug,
+        view: normalizeView(body.view),
+        attempt: Number(body.attempt ?? 1),
+        checklist: body.checklist ?? {},
+        source: body.source ?? "professional-app",
+      },
+      analysisData: {
+        metrics: {},
+        protocol: protocol
+          ? { id: protocol.id, slug: protocol.slug, name: protocol.name, category: protocol.category }
+          : null,
+      },
+      trajectoryData: [],
+      aiValidationStatus: "pending",
+      algorithmVersion: DEFAULT_ALGORITHM_VERSION,
+    })
+    .returning();
+
+  const [media] = await db
+    .insert(biomechanicsMedia)
+    .values({
+      organizationId: user.organizationId,
+      patientId,
+      assessmentId: assessment.id,
+      mediaType: body.mediaType ?? "video",
+      view: normalizeView(body.view),
+      durationMs: body.durationMs ?? null,
+      fps: body.fps ? String(body.fps) : null,
+      width: body.width ?? null,
+      height: body.height ?? null,
+      contentType: body.contentType ?? "video/mp4",
+      sizeBytes: body.sizeBytes ?? null,
+      metadata: body.metadata ?? {},
+    })
+    .returning();
+
+  const [job] = await db
+    .insert(biomechanicsJobs)
+    .values({
+      organizationId: user.organizationId,
+      patientId,
+      assessmentId: assessment.id,
+      mediaId: media.id,
+      status: "queued",
+      stage: "ingest",
+      progress: 0,
+      createdBy: user.uid,
+      algorithmVersion: DEFAULT_ALGORITHM_VERSION,
+    })
+    .returning();
+
+  const [updatedAssessment] = await db
+    .update(biomechanicsAssessments)
+    .set({
+      primaryMediaId: media.id,
+      jobId: job.id,
+      updatedAt: new Date(),
+    })
+    .where(and(eq(biomechanicsAssessments.id, assessment.id), eq(biomechanicsAssessments.organizationId, user.organizationId)))
+    .returning();
+
+  return c.json({ data: { assessment: updatedAssessment, media, job, protocol: protocol ?? null } }, 201);
+});
+
+// POST /api/biomechanics/:id/media/upload-url
+app.post("/:id/media/upload-url", requireAuth, async (c) => {
+  const user = c.get("user");
+  const id = c.req.param("id");
+  const body = await c.req.json().catch(() => ({}));
+  const db = await createDb(c.env);
+
+  const [assessment] = await db
+    .select()
+    .from(biomechanicsAssessments)
+    .where(and(eq(biomechanicsAssessments.id, id), eq(biomechanicsAssessments.organizationId, user.organizationId)));
+  if (!assessment) return c.json({ error: "Avaliação não encontrada" }, 404);
+
+  const mediaId = String(body.mediaId ?? assessment.primaryMediaId ?? "");
+  const [media] = mediaId
+    ? await db
+        .select()
+        .from(biomechanicsMedia)
+        .where(and(eq(biomechanicsMedia.id, mediaId), eq(biomechanicsMedia.organizationId, user.organizationId)))
+    : [];
+  if (!media) return c.json({ error: "Mídia não encontrada" }, 404);
+
+  const key = r2BiomechanicsKey({
+    organizationId: user.organizationId,
+    patientId: assessment.patientId,
+    assessmentId: assessment.id,
+    mediaId: media.id,
+    filename: body.filename ? String(body.filename) : undefined,
+  });
+  const contentType = String(body.contentType ?? media.contentType ?? "video/mp4");
+  const uploadUrl = await new R2Service(c.env).getUploadUrl(key, contentType);
+
+  const [updatedMedia] = await db
+    .update(biomechanicsMedia)
+    .set({ r2Key: key, contentType, updatedAt: new Date() })
+    .where(and(eq(biomechanicsMedia.id, media.id), eq(biomechanicsMedia.organizationId, user.organizationId)))
+    .returning();
+
+  return c.json({ data: { uploadUrl, key, media: updatedMedia } });
+});
+
+// POST /api/biomechanics/:id/media/complete
+app.post("/:id/media/complete", requireAuth, async (c) => {
+  const user = c.get("user");
+  const id = c.req.param("id");
+  const body = await c.req.json().catch(() => ({}));
+  const db = await createDb(c.env);
+  const mediaId = String(body.mediaId ?? "");
+
+  const [assessment] = await db
+    .select()
+    .from(biomechanicsAssessments)
+    .where(and(eq(biomechanicsAssessments.id, id), eq(biomechanicsAssessments.organizationId, user.organizationId)));
+  if (!assessment) return c.json({ error: "Avaliação não encontrada" }, 404);
+
+  const [media] = await db
+    .update(biomechanicsMedia)
+    .set({
+      durationMs: body.durationMs ?? undefined,
+      fps: body.fps ? String(body.fps) : undefined,
+      width: body.width ?? undefined,
+      height: body.height ?? undefined,
+      sizeBytes: body.sizeBytes ?? undefined,
+      qualityScore: body.qualityScore ? String(body.qualityScore) : undefined,
+      metadata: body.metadata ?? undefined,
+      updatedAt: new Date(),
+    })
+    .where(and(eq(biomechanicsMedia.id, mediaId || String(assessment.primaryMediaId)), eq(biomechanicsMedia.organizationId, user.organizationId)))
+    .returning();
+  if (!media) return c.json({ error: "Mídia não encontrada" }, 404);
+  if (media.r2Key && !c.env.R2_PUBLIC_URL) {
+    return c.json({ error: "R2_PUBLIC_URL não configurado para publicar mídia de biomecânica" }, 500);
+  }
+
+  await db
+    .update(biomechanicsAssessments)
+    .set({
+      status: "uploaded",
+      mediaUrl: media.r2Key ? r2PublicUrl(c.env, media.r2Key) : assessment.mediaUrl,
+      qualityScore: media.qualityScore,
+      updatedAt: new Date(),
+    })
+    .where(and(eq(biomechanicsAssessments.id, id), eq(biomechanicsAssessments.organizationId, user.organizationId)));
+
+  return c.json({ data: { media } });
+});
+
+// POST /api/biomechanics/:id/process
+app.post("/:id/process", requireAuth, async (c) => {
+  const user = c.get("user");
+  const id = c.req.param("id");
+  const db = await createDb(c.env);
+  const [assessment] = await db
+    .select()
+    .from(biomechanicsAssessments)
+    .where(and(eq(biomechanicsAssessments.id, id), eq(biomechanicsAssessments.organizationId, user.organizationId)));
+  if (!assessment) return c.json({ error: "Avaliação não encontrada" }, 404);
+
+  const [latestJob] = await db
+    .select()
+    .from(biomechanicsJobs)
+    .where(and(eq(biomechanicsJobs.assessmentId, assessment.id), eq(biomechanicsJobs.organizationId, user.organizationId)))
+    .orderBy(desc(biomechanicsJobs.createdAt))
+    .limit(1);
+
+  if (latestJob && ["queued", "running"].includes(latestJob.status)) {
+    return c.json({ data: { job: latestJob } });
+  }
+
+  const [job] = await db
+    .insert(biomechanicsJobs)
+    .values({
+      organizationId: user.organizationId,
+      patientId: assessment.patientId,
+      assessmentId: assessment.id,
+      mediaId: assessment.primaryMediaId,
+      status: "queued",
+      stage: "ingest",
+      progress: 0,
+      createdBy: user.uid,
+      algorithmVersion: DEFAULT_ALGORITHM_VERSION,
+    })
+    .returning();
+
+  await db
+    .update(biomechanicsJobs)
+    .set({ status: "queued", stage: "ingest", progress: 0, errorCode: null, errorMessage: null, updatedAt: new Date() })
+    .where(and(eq(biomechanicsJobs.id, job.id), eq(biomechanicsJobs.organizationId, user.organizationId)));
+
+  await db
+    .update(biomechanicsAssessments)
+    .set({ status: "queued", jobId: job.id, updatedAt: new Date() })
+    .where(and(eq(biomechanicsAssessments.id, id), eq(biomechanicsAssessments.organizationId, user.organizationId)));
+
+  const processPayload = {
+    jobId: job.id,
+    assessmentId: assessment.id,
+    mediaId: job.mediaId ?? assessment.primaryMediaId ?? undefined,
+    patientId: assessment.patientId,
+    organizationId: user.organizationId,
+  };
+
+  if (c.env.WORKFLOW_BIOMECHANICS_ANALYSIS) {
+    await c.env.WORKFLOW_BIOMECHANICS_ANALYSIS.create({
+      id: `biomechanics-${job.id}`,
+      params: processPayload,
+    });
+  } else {
+    await c.env.BACKGROUND_QUEUE.send({
+      type: "PROCESS_BIOMECHANICS_MEDIA",
+      payload: processPayload,
+    } as any);
+  }
+
+  return c.json({ data: { job: { ...job, status: "queued", stage: "ingest", progress: 0 } } });
+});
+
+// GET /api/biomechanics/:id/job
+app.get("/:id/job", requireAuth, async (c) => {
+  const user = c.get("user");
+  const id = c.req.param("id");
+  const db = await createDb(c.env, "read");
+  const jobs = await db
+    .select()
+    .from(biomechanicsJobs)
+    .where(and(eq(biomechanicsJobs.assessmentId, id), eq(biomechanicsJobs.organizationId, user.organizationId)))
+    .orderBy(desc(biomechanicsJobs.createdAt))
+    .limit(1);
+  if (!jobs[0]) return c.json({ error: "Job não encontrado" }, 404);
+  return c.json({ data: jobs[0] });
+});
+
+// GET /api/biomechanics/:id/workbench
+app.get("/:id/workbench", requireAuth, async (c) => {
+  const user = c.get("user");
+  const id = c.req.param("id");
+  const db = await createDb(c.env, "read");
+  const [assessment] = await db
+    .select()
+    .from(biomechanicsAssessments)
+    .where(and(eq(biomechanicsAssessments.id, id), eq(biomechanicsAssessments.organizationId, user.organizationId)));
+  if (!assessment) return c.json({ error: "Avaliação não encontrada" }, 404);
+
+  const [media, jobs, metrics, frames, events, annotations] = await Promise.all([
+    db.select().from(biomechanicsMedia).where(and(eq(biomechanicsMedia.assessmentId, id), eq(biomechanicsMedia.organizationId, user.organizationId))),
+    db.select().from(biomechanicsJobs).where(and(eq(biomechanicsJobs.assessmentId, id), eq(biomechanicsJobs.organizationId, user.organizationId))).orderBy(desc(biomechanicsJobs.createdAt)),
+    db.select().from(biomechanicsMetrics).where(and(eq(biomechanicsMetrics.assessmentId, id), eq(biomechanicsMetrics.organizationId, user.organizationId))).orderBy(asc(biomechanicsMetrics.metricKey)),
+    db.select().from(biomechanicsFrames).where(and(eq(biomechanicsFrames.assessmentId, id), eq(biomechanicsFrames.organizationId, user.organizationId))).orderBy(asc(biomechanicsFrames.frameIndex)).limit(120),
+    db.select().from(biomechanicsEvents).where(and(eq(biomechanicsEvents.assessmentId, id), eq(biomechanicsEvents.organizationId, user.organizationId))).orderBy(asc(biomechanicsEvents.timeMs)),
+    db.select().from(biomechanicsAnnotations).where(and(eq(biomechanicsAnnotations.assessmentId, id), eq(biomechanicsAnnotations.organizationId, user.organizationId))).orderBy(asc(biomechanicsAnnotations.createdAt)),
+  ]);
+
+  return c.json({ data: { assessment, media, jobs, metrics, frames, events, annotations } });
+});
+
+// POST /api/biomechanics/:id/annotations
+app.post("/:id/annotations", requireAuth, async (c) => {
+  const user = c.get("user");
+  const id = c.req.param("id");
+  const body = await c.req.json();
+  const db = await createDb(c.env);
+  const [assessment] = await db
+    .select()
+    .from(biomechanicsAssessments)
+    .where(and(eq(biomechanicsAssessments.id, id), eq(biomechanicsAssessments.organizationId, user.organizationId)));
+  if (!assessment) return c.json({ error: "Avaliação não encontrada" }, 404);
+
+  const [annotation] = await db
+    .insert(biomechanicsAnnotations)
+    .values({
+      organizationId: user.organizationId,
+      assessmentId: id,
+      mediaId: body.mediaId ?? assessment.primaryMediaId ?? null,
+      frameIndex: body.frameIndex ?? null,
+      timeMs: body.timeMs ?? null,
+      tool: body.tool ?? "note",
+      geometry: body.geometry ?? {},
+      label: body.label ?? null,
+      createdBy: user.uid,
+    })
+    .returning();
+
+  return c.json({ data: annotation }, 201);
+});
+
+// PATCH /api/biomechanics/:id/metrics/:metricId
+app.patch("/:id/metrics/:metricId", requireAuth, async (c) => {
+  const user = c.get("user");
+  const { id, metricId } = c.req.param();
+  const body = await c.req.json();
+  const db = await createDb(c.env);
+  const [metric] = await db
+    .update(biomechanicsMetrics)
+    .set({
+      metricValue: body.metricValue !== undefined ? String(body.metricValue) : undefined,
+      unit: body.unit ?? undefined,
+      side: body.side ?? undefined,
+      phase: body.phase ?? undefined,
+      view: body.view ?? undefined,
+      confidence: body.confidence !== undefined ? String(body.confidence) : undefined,
+      source: "manual",
+      severity: body.severity ?? undefined,
+      normalRange: body.normalRange ?? undefined,
+      algorithmVersion: body.algorithmVersion ?? DEFAULT_ALGORITHM_VERSION,
+    })
+    .where(
+      and(
+        eq(biomechanicsMetrics.id, metricId),
+        eq(biomechanicsMetrics.assessmentId, id),
+        eq(biomechanicsMetrics.organizationId, user.organizationId),
+      ),
+    )
+    .returning();
+  if (!metric) return c.json({ error: "Métrica não encontrada" }, 404);
+  return c.json({ data: metric });
+});
+
+// POST /api/biomechanics/:id/validate
+app.post("/:id/validate", requireAuth, async (c) => {
+  const user = c.get("user");
+  const id = c.req.param("id");
+  const body = await c.req.json().catch(() => ({}));
+  const db = await createDb(c.env);
+  const [assessment] = await db
+    .select()
+    .from(biomechanicsAssessments)
+    .where(and(eq(biomechanicsAssessments.id, id), eq(biomechanicsAssessments.organizationId, user.organizationId)));
+  if (!assessment) return c.json({ error: "Avaliação não encontrada" }, 404);
+
+  const [updated] = await db
+    .update(biomechanicsAssessments)
+    .set({
+      status: "validated",
+      observations: body.observations ?? assessment.observations,
+      conclusions: body.conclusions ?? assessment.conclusions,
+      validatedBy: user.uid,
+      validatedAt: new Date(),
+      aiValidationStatus: "validated",
+      updatedAt: new Date(),
+    })
+    .where(and(eq(biomechanicsAssessments.id, id), eq(biomechanicsAssessments.organizationId, user.organizationId)))
+    .returning();
+
+  await db.insert(biomechanicsReviewActions).values({
+    organizationId: user.organizationId,
+    assessmentId: id,
+    action: "validate",
+    fromStatus: assessment.status,
+    toStatus: "validated",
+    notes: body.notes ?? null,
+    createdBy: user.uid,
+  });
+
+  return c.json({ data: updated });
+});
+
+// GET /api/biomechanics/patient/:patientId/timeline
+app.get("/patient/:patientId/timeline", requireAuth, async (c) => {
+  const user = c.get("user");
+  const patientId = c.req.param("patientId");
+  const db = await createDb(c.env, "read");
+  const assessments = await db
+    .select()
+    .from(biomechanicsAssessments)
+    .where(and(eq(biomechanicsAssessments.patientId, patientId), eq(biomechanicsAssessments.organizationId, user.organizationId)))
+    .orderBy(desc(biomechanicsAssessments.createdAt));
+
+  return c.json({
+    data: assessments.map((assessment) => ({
+      id: assessment.id,
+      type: assessment.type,
+      status: assessment.status,
+      protocolId: assessment.protocolId,
+      qualityScore: assessment.qualityScore,
+      symmetryScore: assessment.symmetryScore,
+      createdAt: assessment.createdAt,
+      metrics: extractMetrics(assessment),
+    })),
+  });
+});
 
 // Listar avaliações por paciente
 app.get("/patient/:patientId", requireAuth, async (c) => {
@@ -458,14 +1062,23 @@ app.post("/", requireAuth, async (c) => {
   const user = c.get("user");
   const body = await c.req.json();
   const db = await createDb(c.env);
+  const patientId = String(body.patientId ?? "").trim();
+  if (!patientId) return c.json({ error: "Paciente é obrigatório" }, 400);
+  if (!body.mediaUrl) return c.json({ error: "mediaUrl é obrigatório" }, 400);
+
+  const [patient] = await db
+    .select({ id: patients.id })
+    .from(patients)
+    .where(and(eq(patients.id, patientId), eq(patients.organizationId, user.organizationId)));
+  if (!patient) return c.json({ error: "Paciente não encontrado nesta organização" }, 404);
 
   const [newAssessment] = await db
     .insert(biomechanicsAssessments)
     .values({
-      patientId: body.patientId,
+      patientId,
       organizationId: user.organizationId,
       professionalId: user.uid,
-      type: body.type,
+      type: toBiomechanicsAssessmentType(body.type),
       mediaUrl: body.mediaUrl,
       thumbnailUrl: body.thumbnailUrl,
       analysisData: body.analysisData || {},
@@ -586,6 +1199,21 @@ app.post("/:id/pdf", requireAuth, async (c) => {
   const currentAnalysisData = safeJson(assessment.analysisData);
   const previousPdf = safeJson(currentAnalysisData._pdf);
   const comparison = buildComparisonPayload(comparisonAssessment ?? null, assessment);
+  const annotations = await db
+    .select({
+      tool: biomechanicsAnnotations.tool,
+      label: biomechanicsAnnotations.label,
+      timeMs: biomechanicsAnnotations.timeMs,
+      frameIndex: biomechanicsAnnotations.frameIndex,
+    })
+    .from(biomechanicsAnnotations)
+    .where(
+      and(
+        eq(biomechanicsAnnotations.assessmentId, assessment.id),
+        eq(biomechanicsAnnotations.organizationId, user.organizationId),
+      ),
+    )
+    .orderBy(asc(biomechanicsAnnotations.timeMs), asc(biomechanicsAnnotations.createdAt));
   const analysisDataForHash = { ...currentAnalysisData };
   delete analysisDataForHash._pdf;
   const hashInput = stableStringify({
@@ -595,6 +1223,7 @@ app.post("/:id/pdf", requireAuth, async (c) => {
     observations: assessment.observations,
     conclusions: assessment.conclusions,
     comparison,
+    annotations,
   });
   const reportHash = await sha256Hex(hashInput);
 
@@ -612,12 +1241,15 @@ app.post("/:id/pdf", requireAuth, async (c) => {
   }
 
   const patientName = body.patientName?.trim() || `Paciente ${assessment.patientId.slice(0, 8)}`;
-  const html = buildBiomechanicsReportHtml({ assessment, patientName, comparison, reportHash });
+  const html = buildBiomechanicsReportHtml({ assessment, patientName, comparison, reportHash, annotations });
   const pdfBytes = await generatePdfBrowserRun(c.env, html);
   const pdfKey = `documents/biomechanics/${user.organizationId}/${assessment.patientId}/${assessment.id}-${reportHash.slice(
     0,
     12,
   )}.pdf`;
+  if (!c.env.R2_PUBLIC_URL) {
+    return c.json({ error: "R2_PUBLIC_URL não configurado para publicar PDF biomecânico" }, 500);
+  }
 
   await c.env.MEDIA_BUCKET.put(pdfKey, pdfBytes, {
     httpMetadata: {
@@ -633,7 +1265,7 @@ app.post("/:id/pdf", requireAuth, async (c) => {
     },
   });
 
-  const pdfUrl = `${c.env.R2_PUBLIC_URL.replace(/\/$/, "")}/${pdfKey}`;
+  const pdfUrl = r2PublicUrl(c.env, pdfKey);
   const generatedAt = new Date().toISOString();
   const analysisData = {
     ...currentAnalysisData,
@@ -689,6 +1321,13 @@ app.post("/:id/sign", requireAuth, async (c) => {
 
   const ip = c.req.header("CF-Connecting-IP") ?? "unknown";
   const now = new Date().toISOString();
+  const contentHash = await crypto.subtle
+    .digest("SHA-256", new TextEncoder().encode(JSON.stringify(assessment.analysisData)))
+    .then((b) =>
+      Array.from(new Uint8Array(b))
+        .map((x) => x.toString(16).padStart(2, "0"))
+        .join(""),
+    );
 
   // Create Signature Metadata (Simulating ICP-Brasil)
   const signatureMetadata = {
@@ -697,27 +1336,23 @@ app.post("/:id/sign", requireAuth, async (c) => {
     timestamp: now,
     ip,
     userAgent: c.req.header("User-Agent") || "unknown",
-    // SHA-256 of the assessment content to ensure integrity
-    contentHash: await crypto.subtle
-      .digest("SHA-256", new TextEncoder().encode(JSON.stringify(assessment.analysisData)))
-      .then((b) =>
-        Array.from(new Uint8Array(b))
-          .map((x) => x.toString(16).padStart(2, "0"))
-          .join(""),
-      ),
+    contentHash,
   };
 
   const [updated] = await db
     .update(biomechanicsAssessments)
     .set({
       status: "signed",
+      signedAt: new Date(now),
+      reportHash: contentHash,
+      signatureMetadata,
       analysisData: {
         ...(assessment.analysisData as object),
         _signature: signatureMetadata,
       } as any,
       updatedAt: new Date(),
     })
-    .where(eq(biomechanicsAssessments.id, id))
+    .where(and(eq(biomechanicsAssessments.id, id), eq(biomechanicsAssessments.organizationId, user.organizationId)))
     .returning();
 
   return c.json({ success: true, data: updated });
