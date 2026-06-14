@@ -97,3 +97,13 @@ Pendências conscientes:
   - 6 chamadas `env.AI.run` de geração migradas p/ `runAi` (gateway).
 - **Fix de produção**: `retrieval_type` default `hybrid`→`vector` (instâncias built-in só têm índice vetorial) — corrigia 500 em /ask, /patient/assistant, /suggest.
 - **Pendente do usuário (dashboard, sem token p/ agente)**: aba Settings do gateway — Rate Limit (30/60s), Retry (2), Spend Limits (US$10/mês opcional). Acompanhar aba Logs ~1 semana e migrar categorias de Flag→Block conforme abuso real. AI Search continua em open beta (monitorar pricing). Agent Memory beta: rotina diária avisa quando liberar (T064).
+
+
+## Nota T023 (2026-06-14): filtragem por tipo no AI Search built-in
+Descoberto na validação: a filtragem por metadata customizada (ex.: source=clinical-doc)
+NÃO funciona sem declarar campos (até 5/instância via custom_metadata na criação); e o
+filtro por `folder` funciona via REST mas NÃO via binding env.AI_SEARCH.search(). Por isso
+o chip "Documentos" foi removido — os PDFs de referência são recuperados na busca PADRÃO
+("Pergunte à Wiki" sem filtro), validado em produção (score 0.81). Os chips de tipo
+pré-existentes (Wiki/Protocolos/Exercícios) também dependem de source filter e são
+não-funcionais — limpeza/declaração de campos fica como follow-up separado.
