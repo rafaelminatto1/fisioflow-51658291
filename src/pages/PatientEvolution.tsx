@@ -405,10 +405,10 @@ const PatientEvolution = () => {
 				throw err;
 			}
 		},
-		// Debounce curto (1.5s) — feedback imediato similar a Notion/Google Docs.
+		// Debounce curto (800ms) — feedback imediato similar a Notion/Google Docs.
 		// Combinado com mutation scope (P1), idempotency key (P2.1) e version
 		// check (P2.2), saves rápidos não causam race conditions nem duplicação.
-		delay: 1500,
+		delay: 800,
 		enabled: state.autoSaveEnabled && !state.dataLoading,
 	});
 

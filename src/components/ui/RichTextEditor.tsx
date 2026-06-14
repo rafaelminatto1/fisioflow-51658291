@@ -79,6 +79,7 @@ import { WebsocketProvider } from "y-websocket";
 import Collaboration from "@tiptap/extension-collaboration";
 import CollaborationCursor from "@tiptap/extension-collaboration-cursor";
 import { getWorkersApiUrl } from "@/lib/api/config";
+import { shouldApplyExternalValue, normalizeEditorHtml } from "./richTextSync";
 import "./rich-text-editor.css";
 
 const lowlight = createLowlight(common);
@@ -352,8 +353,9 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
       if (isUpdatingFromProp.current) return;
       const html = ed.getHTML();
       if (debounceTimer.current) clearTimeout(debounceTimer.current);
-      pendingValue.current = html === "<p></p>" ? "" : html;
-      debounceTimer.current = setTimeout(flushPendingValue, 500);
+      pendingValue.current = normalizeEditorHtml(html);
+      // Debounce curto — autosave precisa parecer imediato (Notion/Google Docs).
+      debounceTimer.current = setTimeout(flushPendingValue, 300);
     },
     onFocus: () => {
       onFocus?.();
@@ -462,11 +464,14 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
     return () => clearInterval(interval);
   }, [editor, goals, pathologies, evolutions]);
 
-  // Sync external value changes.
-  // Collaborative editors normally own their document through Yjs, so regular
-  // prop changes are ignored. `externalValueRevision` is reserved for explicit
-  // commands such as "Replicar sessão", where replacing the visible content is
-  // the intended user action.
+  // Sync external value changes — editor "semi-controlado".
+  // O editor é dono do seu documento enquanto o usuário digita. O `value`
+  // externo só sobrescreve em: (1) substituição explícita via
+  // `externalValueRevision` (ex.: "Replicar sessão") ou (2) mudança externa
+  // genuína com o campo ocioso. Nunca arrancamos texto debaixo do cursor nem
+  // re-aplicamos ecos do autosave — causa raiz de "o autosave para quando edito
+  // o texto" (ref: tiptap#4828 e o anti-padrão de controlled component).
+  // Colaboração (Yjs) é dona do documento, então prop changes são ignoradas.
   useEffect(() => {
     if (!editor) return;
 
@@ -474,21 +479,30 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
       externalValueRevision !== undefined &&
       externalValueRevision !== lastExternalValueRevision.current;
 
-    // Se o Yjs não estiver carregado de fato (ex: collaborationId mudou após mount),
-    // devemos continuar sincronizando via prop `value`.
-    const isCollaborationLoaded = editor.extensionManager.extensions.some(e => e.name === 'collaboration');
+    const isCollaborationLoaded = editor.extensionManager.extensions.some(
+      (e) => e.name === "collaboration",
+    );
+    if (collaborationId && isCollaborationLoaded && !hasExplicitExternalUpdate) {
+      if (hasExplicitExternalUpdate) lastExternalValueRevision.current = externalValueRevision;
+      return;
+    }
 
-    if (collaborationId && isCollaborationLoaded && !hasExplicitExternalUpdate) return;
-
-    const currentHtml = editor.getHTML();
-    const normalizedCurrent = currentHtml === "<p></p>" ? "" : currentHtml;
+    const incoming = value || "";
     if (
-      value !== normalizedCurrent &&
-      (hasExplicitExternalUpdate || (value !== lastSentValue.current && !debounceTimer.current))
+      shouldApplyExternalValue({
+        incoming,
+        current: normalizeEditorHtml(editor.getHTML()),
+        lastSent: lastSentValue.current,
+        // Há um flush de digitação pendente → tratar como "ainda digitando".
+        isFocused: editor.isFocused || debounceTimer.current !== null,
+        hasExplicitRevision: hasExplicitExternalUpdate,
+      })
     ) {
       isUpdatingFromProp.current = true;
-      editor.commands.setContent(value || "");
-      lastSentValue.current = value || "";
+      // emitUpdate:false — substituição programática NÃO deve disparar onUpdate
+      // (senão volta como "edição do usuário" e gera eco/loop).
+      editor.commands.setContent(incoming, { emitUpdate: false });
+      lastSentValue.current = incoming;
       isUpdatingFromProp.current = false;
     }
 
@@ -498,7 +512,9 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
   }, [value, editor, collaborationId, externalValueRevision]);
 
   useEffect(() => {
-    if (editor) editor.setEditable(!disabled);
+    // emitUpdate:false — alternar editável não pode emitir um update espúrio
+    // (com o doc vazio durante a montagem), que apagaria o conteúdo (tiptap#4828).
+    if (editor) editor.setEditable(!disabled, false);
   }, [disabled, editor]);
 
   useEffect(() => {
