@@ -1,0 +1,10 @@
+name: FisioFlow — Prod
+values:
+  - key: baseUrl
+    value: 'https://fisioflow-api.rafalegollas.workers.dev'
+  - key: jwt
+    value: ''
+  - key: patientId
+    value: ''
+  - key: appointmentId
+    value: ''

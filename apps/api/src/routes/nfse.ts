@@ -153,7 +153,7 @@ app.get("/", requireAuth, async (c) => {
   return c.json({ data: result.rows || [] });
 });
 
-app.get("/test-connection", async (c) => {
+app.get("/test-connection", requireAuth, async (c) => {
   if (!hasSPCertConfig(c.env)) {
     return c.json({ error: "Certificado não configurado", cert: false, mtls: false }, 422);
   }
