@@ -659,13 +659,11 @@ async function maybeSendConciergeGreeting(
     );
     writeEvent(env, { orgId, event: "whatsapp_reply_pending_approval" });
     
-    // Notify admin about the pending item
-    c.executionCtx.waitUntil(
-      notifyOrganization(env, pool, orgId, {
-        title: "Aprovação pendente",
-        body: "Uma resposta da assistente virtual requer aprovação manual.",
-      }).catch((e) => console.error("[Notify] push error:", e))
-    );
+    // Notify admin about the pending item (função utilitária — sem c.executionCtx)
+    await notifyOrganization(env, pool, orgId, {
+      title: "Aprovação pendente",
+      body: "Uma resposta da assistente virtual requer aprovação manual.",
+    }).catch((e) => console.error("[Notify] push error:", e));
   } else {
     await whatsapp.sendTextMessage(waId, concierge.reply);
   }
