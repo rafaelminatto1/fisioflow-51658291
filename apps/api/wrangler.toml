@@ -134,6 +134,11 @@ name = "session-summary"
 binding = "WORKFLOW_SESSION_SUMMARY"
 class_name = "SessionSummaryWorkflow"
 
+[[workflows]]
+name = "biomechanics-analysis"
+binding = "WORKFLOW_BIOMECHANICS_ANALYSIS"
+class_name = "BiomechanicsAnalysisWorkflow"
+
 # ===== DURABLE OBJECTS =====
 [[durable_objects.bindings]]
 name = "ORGANIZATION_STATE"
@@ -347,6 +352,11 @@ schedules = ["10 10 * * 1"]
 name = "session-summary"
 binding = "WORKFLOW_SESSION_SUMMARY"
 class_name = "SessionSummaryWorkflow"
+
+[[env.production.workflows]]
+name = "biomechanics-analysis"
+binding = "WORKFLOW_BIOMECHANICS_ANALYSIS"
+class_name = "BiomechanicsAnalysisWorkflow"
 
 [[env.production.hyperdrive]]
 binding = "HYPERDRIVE"
