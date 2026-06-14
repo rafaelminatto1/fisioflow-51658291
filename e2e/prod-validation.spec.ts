@@ -28,7 +28,7 @@ test.describe("Production Validation - FisioFlow (Official Domain)", () => {
     await page.goto("https://fisioflow.pages.dev/auth");
 
     // Preenche login
-    await page.fill('input[type="email"]', "rafael.minatto@yahoo.com.br");
+    await page.fill('input[type="email"]', process.env.E2E_EMAIL || "");
     await page.fill('input[type="password"]', process.env.E2E_PASSWORD || "");
 
     // Tenta clicar no botão de login usando texto (mais estável)

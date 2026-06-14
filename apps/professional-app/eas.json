@@ -84,7 +84,7 @@
   "submit": {
     "production": {
       "ios": {
-        "appleId": "rafael.minatto@yahoo.com.br",
+        "appleId": "",
         "appName": "FisioFlow Pro",
         "ascAppId": "6504123456",
         "appleTeamId": "G7FDW933SF"

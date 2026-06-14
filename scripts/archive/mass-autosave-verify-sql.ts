@@ -10,7 +10,7 @@ async function main() {
   console.log("=========================================\n");
 
   // 1. Pegar o usuário
-  const userList = await sql`SELECT * FROM profiles WHERE email = 'rafael.minatto@yahoo.com.br' LIMIT 1`;
+  const userList = await sql`SELECT * FROM profiles WHERE email = ${process.env.E2E_EMAIL || ""} LIMIT 1`;
   if (userList.length === 0) {
     console.error("Usuário não encontrado!");
     return;

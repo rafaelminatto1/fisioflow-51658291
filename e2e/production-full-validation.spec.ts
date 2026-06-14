@@ -12,7 +12,7 @@ test.describe("Produção - Validação Completa de Agendamentos", () => {
       await loginTab.click();
     }
 
-    await page.fill('input[type="email"]', "rafael.minatto@yahoo.com.br");
+    await page.fill('input[type="email"]', process.env.E2E_EMAIL || "");
     await page.fill('input[type="password"]', process.env.E2E_PASSWORD || "");
 
     const submitButton = page

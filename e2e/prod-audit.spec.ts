@@ -13,7 +13,7 @@ import * as path from "path";
 // ─── Config ─────────────────────────────────────────────────────────────────
 
 const BASE_URL = "https://moocafisio.com.br";
-const _EMAIL = "rafael.minatto@yahoo.com.br";
+const _EMAIL = process.env.E2E_EMAIL || "";
 const _PASSWORD = process.env.E2E_PASSWORD || "";
 const REPORT_PATH = path.resolve(process.cwd(), "scripts/prod-audit-report.json");
 

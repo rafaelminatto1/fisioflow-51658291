@@ -13,7 +13,7 @@
 import { test, expect } from "@playwright/test";
 import { authenticateBrowserContext } from "./helpers/neon-auth";
 
-const loginEmail = process.env.E2E_LOGIN_EMAIL || "rafael.minatto@yahoo.com.br";
+const loginEmail = process.env.E2E_LOGIN_EMAIL || "";
 const loginPassword = process.env.E2E_LOGIN_PASSWORD || "";
 
 test.describe("Patient Evolution - fluxo completo com preenchimento SOAP", () => {

@@ -94,7 +94,7 @@
   "submit": {
     "production": {
       "ios": {
-        "appleId": "rafael.minatto@yahoo.com.br",
+        "appleId": "",
         "appName": "FisioFlow Paciente",
         "ascAppId": "6504123457",
         "appleTeamId": "G7FDW933SF"

@@ -5,7 +5,7 @@
  */
 
 const API = "https://fisioflow-api.rafalegollas.workers.dev";
-const EMAIL = "rafael.minatto@yahoo.com.br";
+const EMAIL = process.env.E2E_EMAIL || "";
 const PASSWORD = process.env.E2E_PASSWORD || "";
 
 const ok = (msg) => console.log(`  ✅ ${msg}`);

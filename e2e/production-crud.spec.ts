@@ -9,7 +9,7 @@ test.describe("Produção - Validação Completa CRUD (Pacientes e Agendamentos)
 
     // Login inicial
     await page.goto("https://moocafisio.com.br/auth/login");
-    await page.fill('input[type="email"]', "rafael.minatto@yahoo.com.br");
+    await page.fill('input[type="email"]', process.env.E2E_EMAIL || "");
     await page.fill('input[type="password"]', process.env.E2E_PASSWORD || "");
     await page.click('button:has-text("Entrar"), button[type="submit"]');
     await page.waitForURL(

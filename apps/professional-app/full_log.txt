@@ -1280,7 +1280,7 @@ iOS preview (macos-26 / Xcode 26.2)	UNKNOWN STEP	2026-05-07T23:04:06.3682170Z   
 iOS preview (macos-26 / Xcode 26.2)	UNKNOWN STEP	2026-05-07T23:04:06.3682560Z   "submit": {
 iOS preview (macos-26 / Xcode 26.2)	UNKNOWN STEP	2026-05-07T23:04:06.3682850Z     "production": {
 iOS preview (macos-26 / Xcode 26.2)	UNKNOWN STEP	2026-05-07T23:04:06.3683030Z       "ios": {
-iOS preview (macos-26 / Xcode 26.2)	UNKNOWN STEP	2026-05-07T23:04:06.3683530Z         "appleId": "rafael.minatto@yahoo.com.br",
+iOS preview (macos-26 / Xcode 26.2)	UNKNOWN STEP	2026-05-07T23:04:06.3683530Z         "appleId": process.env.E2E_EMAIL || "",
 iOS preview (macos-26 / Xcode 26.2)	UNKNOWN STEP	2026-05-07T23:04:06.3683860Z         "appName": "FisioFlow Pro",
 iOS preview (macos-26 / Xcode 26.2)	UNKNOWN STEP	2026-05-07T23:04:06.3684120Z         "ascAppId": "6504123456",
 iOS preview (macos-26 / Xcode 26.2)	UNKNOWN STEP	2026-05-07T23:04:06.3684440Z         "appleTeamId": "G7FDW933SF"

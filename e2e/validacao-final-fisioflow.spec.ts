@@ -3,7 +3,7 @@ import { test } from "@playwright/test";
 test.describe("FisioFlow - Validação Completa de Fluxo (moocafisio.com.br)", () => {
   const testPatientName = `BOT Teste ${Date.now()}`;
   const credentials = {
-    email: "rafael.minatto@yahoo.com.br",
+    email: process.env.E2E_EMAIL || "",
     pw: process.env.E2E_PASSWORD || "",
   };
 

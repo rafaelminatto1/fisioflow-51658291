@@ -13,8 +13,8 @@ const db = drizzle(sql);
 async function main() {
   console.log("Iniciando inserção massiva...");
   
-  // 1. Pegar o usuário e organização (rafael.minatto@yahoo.com.br)
-  const userList = await db.select().from(profiles).where(eq(profiles.email, "rafael.minatto@yahoo.com.br"));
+  // 1. Pegar o usuário e organização (admin@example.com)
+  const userList = await db.select().from(profiles).where(eq(profiles.email, process.env.E2E_EMAIL || ""));
   if (userList.length === 0) {
     console.error("Usuário não encontrado!");
     return;

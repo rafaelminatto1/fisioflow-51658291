@@ -7,7 +7,7 @@
 import { chromium } from "playwright";
 
 const BASE = process.env.BASE_URL || "http://localhost:8085";
-const EMAIL = "rafael.minatto@yahoo.com.br";
+const EMAIL = process.env.E2E_EMAIL || "";
 const PASS = process.env.E2E_PASSWORD || "";
 
 const consoleLogs = [];

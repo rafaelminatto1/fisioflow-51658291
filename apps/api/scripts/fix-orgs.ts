@@ -13,8 +13,8 @@ async function main() {
 
   // 1. Corrigir perfis
   await sql.query(
-    "UPDATE profiles SET organization_id = $1 WHERE email = 'rafael.minatto@yahoo.com.br'",
-    [REAL_ORG_ID],
+    "UPDATE profiles SET organization_id = $1 WHERE email = $2",
+    [REAL_ORG_ID, process.env.E2E_EMAIL || ""],
   );
 
   // 2. Corrigir pacientes

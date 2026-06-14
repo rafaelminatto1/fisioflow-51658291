@@ -5,7 +5,7 @@
 import { test, expect } from "@playwright/test";
 
 const BASE = "https://fisioflow.pages.dev";
-const EMAIL = "rafael.minatto@yahoo.com.br";
+const EMAIL = process.env.E2E_EMAIL || "";
 const PASSWORD = process.env.E2E_PASSWORD || "";
 
 test.use({

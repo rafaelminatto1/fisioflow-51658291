@@ -14,7 +14,7 @@ async function main() {
   console.log("=========================================\n");
 
   // 1. Pegar o usuário
-  const userList = await db.select().from(profiles).where(eq(profiles.email, "rafael.minatto@yahoo.com.br"));
+  const userList = await db.select().from(profiles).where(eq(profiles.email, process.env.E2E_EMAIL || ""));
   if (userList.length === 0) {
     console.error("Usuário não encontrado!");
     return;

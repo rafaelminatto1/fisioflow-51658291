@@ -7,8 +7,8 @@ const sql = neon(process.env.DATABASE_URL!);
 async function main() {
   console.log("Iniciando inserção massiva usando SQL raw...");
   
-  // 1. Pegar o usuário e organização (rafael.minatto@yahoo.com.br)
-  const userList = await sql`SELECT id, organization_id as "organizationId" FROM profiles WHERE email = 'rafael.minatto@yahoo.com.br'`;
+  // 1. Pegar o usuário e organização (admin@example.com)
+  const userList = await sql`SELECT id, organization_id as "organizationId" FROM profiles WHERE email = ${process.env.E2E_EMAIL || ""}`;
   if (userList.length === 0) {
     console.error("Usuário não encontrado!");
     return;

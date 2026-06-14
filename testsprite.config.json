@@ -35,7 +35,7 @@
   },
   "credentials": {
     "testUser": {
-      "email": "rafael.minatto@yahoo.com.br",
+      "email": "",
       "password": "__SET_VIA_ENV__"
     }
   }

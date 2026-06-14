@@ -13,7 +13,7 @@ import { writeFileSync } from "fs";
 import { resolve } from "path";
 
 const BASE_URL = process.env.BASE_URL || "http://127.0.0.1:8084";
-const LOGIN_EMAIL = process.env.E2E_LOGIN_EMAIL || "rafael.minatto@yahoo.com.br";
+const LOGIN_EMAIL = process.env.E2E_LOGIN_EMAIL || "";
 const LOGIN_PASSWORD = process.env.E2E_LOGIN_PASSWORD || "";
 
 // Páginas públicas (sem login)

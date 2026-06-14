@@ -160,7 +160,7 @@ app.post("/neon-auth", async (c) => {
     try {
       const resend = createResend(c.env);
       if (resend) {
-        const adminEmail = c.env.ADMIN_NOTIFICATION_EMAIL ?? "rafael.minatto@yahoo.com.br";
+        const adminEmail = c.env.ADMIN_NOTIFICATION_EMAIL ?? "";
         const from = c.env.RESEND_FROM_EMAIL ?? "FisioFlow <noreply@moocafisio.com.br>";
         await resend.emails.send({
           from,

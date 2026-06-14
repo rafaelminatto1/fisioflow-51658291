@@ -15,7 +15,7 @@ ALTER TABLE nfse_records ADD COLUMN IF NOT EXISTS enviado_contabilidade_at TIMES
 -- Configurar padrão para o Rafael (Contabilizei)
 UPDATE nfse_config
 SET 
-  contabilidade_email = 'rafael.minatto@yahoo.com.br', -- Placeholder, usuário deve atualizar no painel
+  contabilidade_email = '', -- Placeholder, usuário deve atualizar no painel
   contabilidade_automacao_ativa = true
 WHERE organization_id = (
   SELECT id FROM organizations WHERE cnpj = '54836577000167' LIMIT 1
