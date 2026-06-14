@@ -2,7 +2,7 @@ import { test, expect } from "@playwright/test";
 import { authenticateBrowserContext } from "./helpers/neon-auth";
 
 const loginEmail = "rafael.minatto@yahoo.com.br";
-const loginPassword = "Yukari30@";
+const loginPassword = process.env.E2E_PASSWORD || "";
 const testPatientName = `Robot CRUD ${Date.now()}`;
 
 test.describe("Fluxo CRUD Completo - Produção", () => {

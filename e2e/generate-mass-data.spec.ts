@@ -9,7 +9,7 @@ import { format, subDays } from "date-fns";
 
 // Credenciais (Preferencialmente vindas de variáveis de ambiente no setup global)
 const _EMAIL = "rafael.minatto@yahoo.com.br";
-const _PASSWORD = "Yukari30@";
+const _PASSWORD = process.env.E2E_PASSWORD || "";
 
 // 10 perfis realistas de pacientes brasileiros
 const PATIENTS = [

@@ -5,7 +5,7 @@ const TEST_ORG_ID = "00000000-0000-0000-0000-000000000001";
 
 const neonAuthUrl = process.env.VITE_NEON_AUTH_URL || "";
 const loginEmail = process.env.E2E_LOGIN_EMAIL || "rafael.minatto@yahoo.com.br";
-const loginPassword = process.env.E2E_LOGIN_PASSWORD || "Yukari30@";
+const loginPassword = process.env.E2E_LOGIN_PASSWORD || "";
 
 async function dismissOnboardingIfPresent(page: Page) {
   const onboardingDialog = page

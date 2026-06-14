@@ -1,7 +1,7 @@
 import { chromium } from "playwright";
 
 const loginEmail = "rafael.minatto@yahoo.com.br";
-const loginPassword = "Yukari30@";
+const loginPassword = process.env.E2E_PASSWORD || "";
 const prodUrl = "https://www.moocafisio.com.br";
 
 async function validateSticky() {

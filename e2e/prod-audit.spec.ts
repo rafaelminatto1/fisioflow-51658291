@@ -14,7 +14,7 @@ import * as path from "path";
 
 const BASE_URL = "https://moocafisio.com.br";
 const _EMAIL = "rafael.minatto@yahoo.com.br";
-const _PASSWORD = "Yukari30@";
+const _PASSWORD = process.env.E2E_PASSWORD || "";
 const REPORT_PATH = path.resolve(process.cwd(), "scripts/prod-audit-report.json");
 
 // ─── Routes to audit (from src/routes.ts) ───────────────────────────────────

@@ -27,7 +27,7 @@ async function autoScreenshot() {
     // Login
     console.log("📧 Logging in...");
     await page.fill('input[type="email"]', "rafael.minatto@yahoo.com.br");
-    await page.fill('input[type="password"]', "Yukari30@");
+    await page.fill('input[type="password"]', process.env.E2E_PASSWORD || "");
     await page.click('button[type="submit"]');
 
     // Wait for navigation after login

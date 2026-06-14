@@ -8,7 +8,7 @@ import { chromium } from "playwright";
 
 const BASE = process.env.BASE_URL || "http://localhost:8085";
 const EMAIL = "rafael.minatto@yahoo.com.br";
-const PASS = "Yukari30@";
+const PASS = process.env.E2E_PASSWORD || "";
 
 const consoleLogs = [];
 const consoleErrors = [];

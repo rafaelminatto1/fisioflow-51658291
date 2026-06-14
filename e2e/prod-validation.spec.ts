@@ -29,7 +29,7 @@ test.describe("Production Validation - FisioFlow (Official Domain)", () => {
 
     // Preenche login
     await page.fill('input[type="email"]', "rafael.minatto@yahoo.com.br");
-    await page.fill('input[type="password"]', "Yukari30@");
+    await page.fill('input[type="password"]', process.env.E2E_PASSWORD || "");
 
     // Tenta clicar no botão de login usando texto (mais estável)
     await page.click('button:has-text("Acessar"), button[type="submit"]');

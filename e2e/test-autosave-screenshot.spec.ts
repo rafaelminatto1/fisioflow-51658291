@@ -7,7 +7,7 @@ test("Take screenshot of New Patient Page", async ({ page }) => {
   console.log("Fazendo login...");
   await page.goto("https://moocafisio.com.br/login");
   await page.fill('input[type="email"]', "rafael.minatto@yahoo.com.br");
-  await page.fill('input[type="password"]', "Yukari30@");
+  await page.fill('input[type="password"]', process.env.E2E_PASSWORD || "");
   await page.click('button[type="submit"]');
   await page.waitForURL("**/agenda", { timeout: 15000 });
   console.log("Login OK");

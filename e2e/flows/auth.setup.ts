@@ -6,7 +6,7 @@ const SESSION_FILE = path.join(__dirname, "../.auth/session.json");
 // Executa uma vez antes de todos os testes para reusar a sessão autenticada.
 setup("authenticate", async ({ page }) => {
   const email = process.env.E2E_EMAIL || "rafael.minatto@yahoo.com.br";
-  const password = process.env.E2E_PASSWORD || "Yukari30@";
+  const password = process.env.E2E_PASSWORD || "";
 
   await page.goto("/login");
   await page.waitForLoadState("networkidle");

@@ -2,7 +2,7 @@ import { test, expect } from "@playwright/test";
 
 // Credentials
 const loginEmail = "rafael.minatto@yahoo.com.br";
-const loginPassword = "Yukari30@";
+const loginPassword = process.env.E2E_PASSWORD || "";
 const prodUrl = "https://www.moocafisio.com.br";
 
 test.describe("Validação de Produção - API de Sessões", () => {

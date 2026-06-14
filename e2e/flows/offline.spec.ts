@@ -11,7 +11,7 @@
 import { test, expect, type Page } from "@playwright/test";
 
 const E2E_EMAIL = process.env.E2E_EMAIL || "rafael.minatto@yahoo.com.br";
-const E2E_PASSWORD = process.env.E2E_PASSWORD || "Yukari30@";
+const E2E_PASSWORD = process.env.E2E_PASSWORD || "";
 
 /** Login inline para tornar o spec auto-suficiente (sem depender de auth.setup). */
 async function login(page: Page) {

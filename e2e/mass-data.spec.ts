@@ -7,7 +7,7 @@ import { test, expect } from "@playwright/test";
 
 const BASE_URL = "https://moocafisio.com.br";
 const EMAIL = "rafael.minatto@yahoo.com.br";
-const PASSWORD = "Yukari30@";
+const PASSWORD = process.env.E2E_PASSWORD || "";
 
 // Textos variados para SOAP
 const subjectiveTexts = [

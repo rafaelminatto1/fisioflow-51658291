@@ -1,7 +1,7 @@
 import { test, expect } from "@playwright/test";
 
 const loginEmail = "rafael.minatto@yahoo.com.br";
-const loginPassword = "Yukari30@";
+const loginPassword = process.env.E2E_PASSWORD || "";
 const baseURL = "https://www.moocafisio.com.br";
 
 test.describe("Validação E2E em Produção - Autosave e Nível de Dor (EVA)", () => {

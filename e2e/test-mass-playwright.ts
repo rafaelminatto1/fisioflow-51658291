@@ -12,7 +12,7 @@ async function main() {
     await page.goto("https://moocafisio.com.br/login");
     await page.waitForSelector('input[type="email"]', { state: "visible" });
     await page.fill('input[type="email"]', "rafael.minatto@yahoo.com.br");
-    await page.fill('input[type="password"]', "Yukari30@");
+    await page.fill('input[type="password"]', process.env.E2E_PASSWORD || "");
     
     await Promise.all([
       page.waitForURL("**/agenda", { timeout: 20000 }),

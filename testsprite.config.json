@@ -36,7 +36,7 @@
   "credentials": {
     "testUser": {
       "email": "rafael.minatto@yahoo.com.br",
-      "password": "Yukari30@"
+      "password": "__SET_VIA_ENV__"
     }
   }
 }

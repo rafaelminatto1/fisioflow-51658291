@@ -40,7 +40,7 @@
 2. ✅ `git-filter-repo` instalado e executado
 3. ✅ 3408 commits processados e reescritos
 4. ✅ Credenciais substituídas por `REDACTED`:
-   - Senha `Yukari30@`: 142 commits → 0 commits
+   - Senha `***REDACTED***`: 142 commits → 0 commits
    - Exa API key: 11 commits → 0 commits
    - Context7 API key: 5 commits → 0 commits
    - Email admin: 180 commits → 0 commits
@@ -108,7 +108,7 @@
 1. **🔐 Rotacionar TODAS as credenciais comprometidas:**
 
    ```bash
-   # Neon Auth - Alterar senha "Yukari30@" IMEDIATAMENTE
+   # Neon Auth - Alterar senha "***REDACTED***" IMEDIATAMENTE
    # Acessar: https://console.neon.tech
 
    # Exa API Key - Regenerar
@@ -197,7 +197,7 @@
 ```bash
 # Fase 1
 git rm --cached test-*.mjs opencode.json .cursor/mcp.json # + 28 outros
-echo 'Yukari30@==>REDACTED' > /tmp/credentials-replace.txt
+echo '***REDACTED***==>REDACTED' > /tmp/credentials-replace.txt
 git filter-repo --replace-text /tmp/credentials-replace.txt --force
 
 # Fase 3

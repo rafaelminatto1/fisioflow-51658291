@@ -7,7 +7,7 @@ test.describe("Validação de Autosave via Agenda (SQL Data)", () => {
     console.log("Fazendo login...");
     await page.goto("https://www.moocafisio.com.br/auth");
     await page.fill('input[type="email"]', "rafael.minatto@yahoo.com.br");
-    await page.fill('input[type="password"]', "Yukari30@");
+    await page.fill('input[type="password"]', process.env.E2E_PASSWORD || "");
     await page.click('button[type="submit"]');
 
     await page.waitForURL("**/agenda", { timeout: 15000 });
