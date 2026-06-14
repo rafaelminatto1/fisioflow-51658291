@@ -8,6 +8,7 @@
   "author": "",
   "main": "expo-router/entry",
   "scripts": {
+    "eas-build-pre-install": "corepack enable && corepack prepare pnpm@11.0.9 --activate",
     "start": "expo start",
     "start:tunnel": "./start-tunnel.sh",
     "android": "expo run:android",
