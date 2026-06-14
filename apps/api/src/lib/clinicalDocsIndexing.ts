@@ -11,12 +11,6 @@ export function clinicalDocR2Key(id: string): string {
   return `${CLINICAL_DOC_R2_PREFIX}/${id}.pdf`;
 }
 
-// Filtro de busca por tipo "documento": usa o atributo nativo `folder` do AI
-// Search (filtragem por metadata customizada exigiria declarar o campo).
-export function clinicalDocFolderFilter(): Record<string, unknown> {
-  return { folder: { $gte: `${CLINICAL_DOC_PREFIX}/`, $lt: `${CLINICAL_DOC_PREFIX}0` } };
-}
-
 // PDFs começam com "%PDF-". Evita indexar arquivos que não são PDF de verdade.
 export function isPdf(bytes: ArrayBuffer): boolean {
   const head = new Uint8Array(bytes.slice(0, 5));
