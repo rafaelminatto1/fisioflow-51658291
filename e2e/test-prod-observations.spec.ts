@@ -1,96 +1,76 @@
 import { test, expect } from "@playwright/test";
-import path from "path";
 
-test("Validate Clinical Observations field in Production end-to-end", async ({ page }) => {
+/**
+ * Valida o autosave das Observações Clínicas (editor TipTap) em produção.
+ *
+ * Estratégia robusta (espelha a validação manual que funcionou):
+ *  1. Login (credenciais via env — NÃO hardcode senha no repo).
+ *  2. Captura o Bearer token de uma chamada à API do Worker.
+ *  3. Busca um appointment real pela API e abre /patient-evolution/:id.
+ *  4. Digita no contenteditable `.ProseMirror` (não é mais <textarea>).
+ *  5. Confirma POST /api/sessions/autosave 2xx e persistência após reload.
+ *
+ * Requer: E2E_EMAIL e E2E_PASSWORD no ambiente.
+ */
+
+const BASE = process.env.E2E_BASE_URL || "https://www.moocafisio.com.br";
+const API = process.env.E2E_API_URL || "https://fisioflow-api.rafalegollas.workers.dev";
+const EMAIL = process.env.E2E_EMAIL;
+const PASSWORD = process.env.E2E_PASSWORD;
+
+test("autosave das observações clínicas persiste em produção", async ({ page }) => {
   test.setTimeout(120000);
+  test.skip(!EMAIL || !PASSWORD, "Defina E2E_EMAIL e E2E_PASSWORD para rodar contra produção.");
 
-  console.log("Fazendo login...");
-  await page.goto("https://moocafisio.com.br/login");
+  // Captura o Authorization header que o app envia ao Worker.
+  let bearer: string | null = null;
+  page.on("request", (req) => {
+    const auth = req.headers()["authorization"];
+    if (auth && req.url().includes(".workers.dev")) bearer = auth;
+  });
+
+  // 1. Login
+  await page.goto(`${BASE}/auth`);
   await page.waitForSelector('input[type="email"]', { state: "visible" });
-  await page.fill('input[type="email"]', "rafael.minatto@yahoo.com.br");
-  await page.fill('input[type="password"]', "Yukari30@");
-  
+  await page.fill('input[type="email"]', EMAIL!);
+  await page.fill('input[type="password"]', PASSWORD!);
   await Promise.all([
-    page.waitForURL("**/agenda", { timeout: 15000 }),
-    page.click('button[type="submit"]')
+    page.waitForURL(/\/(agenda|dashboard)/, { timeout: 20000 }),
+    page.click('button[type="submit"]'),
   ]);
-  console.log("Login OK");
 
-  // Criar um novo paciente
-  console.log("Navegando para patients/new...");
-  await page.goto("https://moocafisio.com.br/app/patients/new", { waitUntil: "networkidle" });
-  
-  await page.fill('input[name="full_name"], input[placeholder*="Nome"]', "Autosave Paciente " + Date.now());
-  await page.fill('input[name="phone"], input[placeholder*="telefone"]', "11999999999");
-  
-  await page.click('button:has-text("Finalizar Cadastro"), button[type="submit"]');
-  console.log("Paciente criado.");
-  await page.waitForTimeout(3000); // Aguarda salvar
+  // 2. Espera o token aparecer
+  await expect.poll(() => bearer, { timeout: 15000 }).not.toBeNull();
 
-  // Ir para agenda
-  await page.goto("https://moocafisio.com.br/app/agenda", { waitUntil: "networkidle" });
-  console.log("Na agenda. Vamos criar um agendamento.");
+  // 3. Pega um appointment real e abre a evolução
+  const apptRes = await page.request.get(`${API}/api/appointments?limit=5`, {
+    headers: { Authorization: bearer! },
+  });
+  expect(apptRes.ok()).toBeTruthy();
+  const apptJson = await apptRes.json();
+  const list = Array.isArray(apptJson) ? apptJson : apptJson.data || [];
+  expect(list.length).toBeGreaterThan(0);
+  const appointmentId = list[0].id;
 
-  // Clica num espaço vazio na agenda para abrir o modal de novo agendamento
-  // Como estamos no react-big-calendar, podemos clicar numa rbc-time-slot.
-  await page.locator('.rbc-time-slot').nth(20).click();
-  console.log("Clicou no horário.");
+  await page.goto(`${BASE}/patient-evolution/${appointmentId}`);
+  await page.waitForSelector(".ProseMirror", { state: "visible", timeout: 20000 });
 
-  // Esperar o modal de novo agendamento
-  await page.waitForSelector('text="Novo Agendamento"', { state: "visible" });
-  
-  // Selecionar o paciente recém criado
-  // Nota: o combobox pode ser complexo. 
-  await page.locator('input[placeholder*="Buscar paciente"]').fill("Autosave Paciente");
-  await page.waitForTimeout(2000);
-  await page.locator('[role="option"]').first().click();
+  // 4. Digita no editor TipTap
+  const marker = `E2E autosave ${Date.now()}`;
+  const editor = page.locator(".ProseMirror").first();
+  await editor.click();
+  await page.keyboard.type(marker);
 
-  await page.click('button:has-text("Salvar Agendamento"), button:has-text("Salvar")');
-  console.log("Agendamento criado.");
-  await page.waitForTimeout(3000);
+  // 5a. Confirma o POST de autosave
+  const autosaveResp = await page.waitForResponse(
+    (r) => r.url().includes("/api/sessions/autosave") && r.request().method() === "POST",
+    { timeout: 10000 },
+  );
+  expect(autosaveResp.status()).toBeGreaterThanOrEqual(200);
+  expect(autosaveResp.status()).toBeLessThan(300);
 
-  // Agora procura o evento na agenda
-  const eventCard = page.locator('.rbc-event, [data-testid="event-card"], .cursor-pointer').filter({ hasText: 'Autosave Paciente' }).first();
-  await eventCard.click();
-  console.log("Clicou no agendamento na agenda.");
-
-  const startButton = page.getByRole("button", { name: /Iniciar Atendimento|Continuar Atendimento/i });
-  await startButton.click();
-  console.log("Clicou 'Iniciar Atendimento'.");
-  
-  // Esperar carregar o painel da Evolução
-  await page.waitForSelector('textarea[placeholder*="Orientações gerais"], textarea[placeholder*="Descreva o que o paciente"]', { state: 'visible', timeout: 15000 });
-  console.log("Textarea de evolução carregado.");
-
-  // Escrever texto
-  const obsTextarea = page.locator('textarea[placeholder*="Orientações gerais"], textarea[placeholder*="Descreva o que o paciente"]').first();
-  await obsTextarea.fill("Validando observação clínica em produção com MAGIC TEXTAREA - " + new Date().toISOString());
-  console.log("Preencheu o texto.");
-
-  // Forçar autosave aguardando 2.5 segundos
-  await page.waitForTimeout(2500);
-
-  // Voltar para a Agenda
-  await page.goto("https://moocafisio.com.br/app/agenda", { waitUntil: "networkidle" });
-  console.log("Voltou para agenda.");
-  await page.waitForTimeout(2000);
-
-  // Clicar novamente no atendimento
-  await page.locator('.rbc-event, [data-testid="event-card"], .cursor-pointer').filter({ hasText: 'Autosave Paciente' }).first().click();
-  const continueButton = page.getByRole("button", { name: /Iniciar Atendimento|Continuar Atendimento/i });
-  await continueButton.click();
-  console.log("Reabriu a evolução.");
-
-  // Verificar o texto
-  await page.waitForSelector('textarea[placeholder*="Orientações gerais"], textarea[placeholder*="Descreva o que o paciente"]', { state: 'visible', timeout: 15000 });
-  const valueAfterReload = await obsTextarea.inputValue();
-  console.log(`Valor recarregado: "${valueAfterReload}"`);
-
-  if (valueAfterReload.includes("MAGIC TEXTAREA")) {
-    console.log("SUCCESS: As observações persistiram sem F5! A refatoração do MagicTextarea funcionou!");
-  } else {
-    console.log("FAILURE: O texto não foi carregado.");
-  }
-
-  await page.screenshot({ path: path.join(process.cwd(), "e2e", "prod-observations-result2.png"), fullPage: true });
+  // 5b. Recarrega e confirma persistência (vindo do servidor)
+  await page.reload();
+  await page.waitForSelector(".ProseMirror", { state: "visible", timeout: 20000 });
+  await expect(page.locator(".ProseMirror").first()).toContainText(marker, { timeout: 15000 });
 });
