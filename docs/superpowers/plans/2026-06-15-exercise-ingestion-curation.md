@@ -14,6 +14,28 @@
 
 ---
 
+## Cloudflare AI Architecture (decisão — aplicar nas tasks)
+
+The repo already wires the full Cloudflare AI stack — use it, don't reinvent:
+- **AI Gateway**: `runAi(env, model, input, opts?)` in `apps/api/src/lib/ai-native.ts` routes every
+  Workers AI call through gateway `fisioflow-gateway` (caching, observability, multi-provider).
+  **All AI calls in this plan (embeddings) MUST go through `runAi`, never `env.AI.run` directly.**
+- **Embedding standardization**: model registry has `embeddings_bge_m3` (`@cf/baai/bge-m3`, **1024d**,
+  current) and `embeddings_bge_base` (768d, legacy). `evidence_articles.embedding` is already
+  `vector(1024)`. `exercises.embedding` is legacy `vector(768)`. **Standardize on bge-m3 1024d**
+  (Task 7c migrates the column) so exercise↔article cross-entity semantic search shares one space.
+- **Structured + filtered semantic search** (hard clinical filters: contraindication / equipment /
+  CID-10 / level) → **pgvector in Neon** (already used in `ai-clinical-search.ts`). This is the safe
+  clinical retrieval path; hard filters live in SQL alongside the vector distance.
+- **Conversational RAG with citations** (wiki pages, article summaries, protocols as prose) →
+  **Cloudflare AI Search (AutoRAG)** over an R2 corpus, via the existing `AI_SEARCH` binding
+  (`env.AI.autorag("fisioflow-rag").aiSearch({ query, model })`). **Designed as a follow-on plan**
+  (needs R2 corpus sync + dashboard config; not unit-testable here) — see "Deferred" below.
+- **Vectorize**: managed internally by AI Search. Do NOT stand up a separate manual Vectorize index
+  now (YAGNI) — pgvector covers structured search, AI Search covers RAG.
+
+---
+
 ## File Structure
 
 | File | Responsibility |
@@ -662,6 +684,160 @@ git commit -m "feat(exercise-import): curation route (ingest/list/approve/reject
 
 ---
 
+## Task 7c: Migration 0117 — standardize exercises.embedding to 1024d
+
+**Files:**
+- Create: `apps/api/migrations/0117_exercises_embedding_1024.sql`
+- Create: `apps/api/migrations/0117_exercises_embedding_1024.down.sql`
+- Modify: `packages/db/src/schema/exercises.ts` (vector dim 768 → 1024)
+
+> **Destructive note:** existing `exercises.embedding` values are 768d (legacy bge-base) and
+> incompatible with 1024d. They are dropped and must be re-generated (new approvals embed via
+> Task 7b; a backfill of the existing ~248 exercises is a deferred follow-on). Confirm with the
+> team before applying in prod.
+
+- [ ] **Step 1: Write the up migration**
+
+```sql
+-- 0117_exercises_embedding_1024.sql
+-- Padroniza exercises.embedding em 1024d (bge-m3), alinhando com evidence_articles.
+ALTER TABLE exercises DROP COLUMN IF EXISTS embedding;
+ALTER TABLE exercises ADD COLUMN embedding vector(1024);
+```
+
+- [ ] **Step 2: Write the down migration**
+
+```sql
+-- 0117_exercises_embedding_1024.down.sql
+ALTER TABLE exercises DROP COLUMN IF EXISTS embedding;
+ALTER TABLE exercises ADD COLUMN embedding vector(768);
+```
+
+- [ ] **Step 3: Update Drizzle schema**
+
+In `packages/db/src/schema/exercises.ts`, change the `vector` customType `dataType()` return
+from `"vector(768)"` to `"vector(1024)"`.
+
+- [ ] **Step 4: Apply via Neon MCP (preview first)**
+
+`prepare_database_migration` on a dev branch → verify `\d exercises` shows `embedding vector(1024)`
+→ `complete_database_migration`.
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add apps/api/migrations/0117_exercises_embedding_1024.sql apps/api/migrations/0117_exercises_embedding_1024.down.sql packages/db/src/schema/exercises.ts
+git commit -m "feat(exercise-import): standardize exercises.embedding to 1024d (bge-m3)"
+```
+
+---
+
+## Task 7b: Generate embedding via AI Gateway on approval
+
+**Files:**
+- Create: `apps/api/src/lib/exerciseImport/embed.ts`
+- Modify: `apps/api/src/routes/exercise-import.ts` (embed after promote)
+- Test: `apps/api/src/lib/exerciseImport/__tests__/embed.test.ts`
+
+The embedding text combines name + instructions + muscles so semantic search captures clinical
+intent. Generation goes through `runAi` (AI Gateway) with bge-m3 (1024d).
+
+- [ ] **Step 1: Write the failing test**
+
+```ts
+import { describe, it, expect, vi } from "vitest";
+import { buildEmbeddingText, embedExercise } from "../embed";
+
+describe("buildEmbeddingText", () => {
+  it("combines name, muscles and instructions", () => {
+    const t = buildEmbeddingText({
+      name: "Supino", musclesPrimary: ["peitoral"], instructions: "Deite e empurre",
+    });
+    expect(t).toContain("Supino");
+    expect(t).toContain("peitoral");
+    expect(t).toContain("Deite e empurre");
+  });
+});
+
+describe("embedExercise", () => {
+  it("calls runAi with bge-m3 and returns the vector", async () => {
+    const runAi = vi.fn(async () => ({ data: [[0.1, 0.2, 0.3]] }));
+    const vec = await embedExercise({ name: "X", musclesPrimary: [], instructions: "" }, runAi as any);
+    expect(vec).toEqual([0.1, 0.2, 0.3]);
+    expect(runAi).toHaveBeenCalled();
+    const modelArg = (runAi as any).mock.calls[0][0];
+    expect(String(modelArg)).toContain("bge-m3");
+  });
+  it("returns null when the model yields no data", async () => {
+    const runAi = vi.fn(async () => ({ data: [] }));
+    const vec = await embedExercise({ name: "X", musclesPrimary: [], instructions: "" }, runAi as any);
+    expect(vec).toBeNull();
+  });
+});
+```
+
+- [ ] **Step 2: Run test to verify it fails**
+
+Run: `cd apps/api && npx vitest run src/lib/exerciseImport/__tests__/embed.test.ts`
+Expected: FAIL — module not found.
+
+- [ ] **Step 3: Write minimal implementation**
+
+```ts
+import { WORKERS_AI_MODELS } from "../workersAi";
+
+type EmbedInput = { name: string; musclesPrimary: string[]; instructions: string };
+type RunAi = (model: string, input: unknown) => Promise<{ data?: number[][] }>;
+
+export function buildEmbeddingText(e: EmbedInput): string {
+  return [e.name, e.musclesPrimary.join(", "), e.instructions].filter(Boolean).join("\n");
+}
+
+export async function embedExercise(e: EmbedInput, runAi: RunAi): Promise<number[] | null> {
+  const res = await runAi(WORKERS_AI_MODELS.embeddings_bge_m3, { text: [buildEmbeddingText(e)] });
+  return res?.data?.[0] ?? null;
+}
+```
+
+- [ ] **Step 4: Run test to verify it passes**
+
+Run: `cd apps/api && npx vitest run src/lib/exerciseImport/__tests__/embed.test.ts`
+Expected: PASS (3 tests).
+
+- [ ] **Step 5: Wire into approval (best-effort, non-blocking)**
+
+In `apps/api/src/routes/exercise-import.ts`, add the import
+`import { runAi } from "../lib/ai-native"; import { embedExercise } from "../lib/exerciseImport/embed";`
+and, in the approve handler AFTER the exercise row is created (`newId`), add:
+```ts
+try {
+  const vec = await embedExercise(
+    { name: row.name, musclesPrimary: row.muscles_primary ?? [], instructions: row.instructions ?? "" },
+    (model, input) => runAi(c.env, model, input),
+  );
+  if (vec) {
+    await sql(`UPDATE exercises SET embedding = $1 WHERE id = $2`, [JSON.stringify(vec), newId]);
+  }
+} catch (e) {
+  console.error("[exercise-import] embedding failed", e);
+}
+```
+(Embedding failure must NOT fail the approval — keep it inside try/catch.)
+
+- [ ] **Step 6: Run the route test from Task 7 still passes**
+
+Run: `cd apps/api && npx vitest run src/lib/exerciseImport`
+Expected: PASS.
+
+- [ ] **Step 7: Commit**
+
+```bash
+git add apps/api/src/lib/exerciseImport/embed.ts apps/api/src/routes/exercise-import.ts apps/api/src/lib/exerciseImport/__tests__/embed.test.ts
+git commit -m "feat(exercise-import): embed approved exercises via AI Gateway (bge-m3 1024d)"
+```
+
+---
+
 ## Task 8: Full-suite run + smoke
 
 **Files:** none (verification)
@@ -699,7 +875,13 @@ git add -A && git commit -m "test(exercise-import): full suite green + smoke ver
 
 ## Self-Review Notes (addressed)
 - **Spec coverage (Fase A/B/C):** wger token removed (A) ✓; provenance columns + candidates table (B) ✓; free-exercise-db fetch+map+dedup+insert (C) ✓; curation gate via `review_status` + candidate `status`, approval promotes with `is_public=false` so nothing auto-publishes ✓.
-- **Deferred (separate plans, noted in spec):** wrkout/wger cross-dedup, PT-BR AI translation step, MeSH↔CID-10, evidence-graph linking (`exercises.references`→`evidence_links`), embeddings standardization, UI surfaces, FisioFlow MCP.
+- **Cloudflare AI stack:** all AI via `runAi` (AI Gateway) ✓; embeddings standardized to bge-m3 1024d
+  (Task 7c) + generated on approval (Task 7b) into pgvector ✓; AI Search (AutoRAG) RAG corpus is a
+  designed follow-on (see below).
+- **Deferred (separate plans):** AI Search/AutoRAG RAG corpus over R2 (`fisioflow-rag`) for
+  conversational citations; re-embed backfill of existing ~248 exercises; Evidence Gateway
+  `summarize.ts`→`runAi` refactor; wrkout/wger cross-dedup; PT-BR AI translation step; MeSH↔CID-10;
+  evidence-graph linking (`exercises.references`→`evidence_links`); UI surfaces; FisioFlow MCP.
 - **Placeholder scan:** Task 7 `buildPromoteInsert` had a fragile `.filter` — replaced with explicit instruction to use option (b) (`$15` + `"approved"` in params) so code and test agree.
 - **Type consistency:** `ExerciseCandidate`, `mapFreeExerciseDb`, `dedupKey`, `ingestFreeExerciseDb`, `buildPromoteInsert`, `CandidateRow` consistent across tasks. `sql(text, [params])` array convention matches the Evidence Gateway plan and verified `db.ts`.
 - **Verify-against-codebase flags:** confirm `WGER_API_TOKEN` on Env; confirm `exercises` insert column names match schema (`muscles_primary`, `image_url`, `is_public`, `review_status`, `source*`); confirm admin role string is `"admin"` in this codebase.
