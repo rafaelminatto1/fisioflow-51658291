@@ -172,7 +172,6 @@ const PatientEvolution = () => {
 			// renders iniciais com state vazio (antes da hidratação do servidor)
 			// sobrescrevam o draft local válido.
 			const nextHasContent =
-				!!(next.unifiedItems?.length ?? 0) ||
 				!!(next.procedures?.length ?? 0) ||
 				!!(next.exercises?.length ?? 0) ||
 				!!(next.measurements?.length ?? 0) ||
@@ -206,7 +205,6 @@ const PatientEvolution = () => {
 
 			// Verificar se os dados atuais estão vazios (indicando uma nova evolução)
 			const currentIsEmpty = !(
-				!!(state.evolutionV2Data.unifiedItems?.length ?? 0) ||
 				!!(state.evolutionV2Data.procedures?.length ?? 0) ||
 				!!(state.evolutionV2Data.exercises?.length ?? 0) ||
 				!!(state.evolutionV2Data.measurements?.length ?? 0) ||
@@ -261,7 +259,9 @@ const PatientEvolution = () => {
 			(saved.evolutionText || saved.observations || "").trim() !==
 				(current.evolutionText || current.observations || "").trim() ||
 			(saved.painLevel ?? null) !== (current.painLevel ?? null) ||
-			(saved.unifiedItems?.length ?? 0) !== (current.unifiedItems?.length ?? 0);
+			(saved.procedures?.length ?? 0) !== (current.procedures?.length ?? 0) ||
+			(saved.exercises?.length ?? 0) !== (current.exercises?.length ?? 0) ||
+			(saved.measurements?.length ?? 0) !== (current.measurements?.length ?? 0);
 
 		if (isDifferent) {
 			handleEvolutionV2Change(saved);
@@ -629,12 +629,12 @@ const PatientEvolution = () => {
 		}
 
 		const sortedApts = [...state.allAppointments].sort((a, b) => {
-			const dateA = new Date(a.appointment_date || a.date || 0).getTime();
-			const dateB = new Date(b.appointment_date || b.date || 0).getTime();
+			const dateA = new Date(a.date || 0).getTime();
+			const dateB = new Date(b.date || 0).getTime();
 			if (dateA !== dateB) return dateA - dateB;
 
-			const timeA = a.appointment_time || a.start_time || a.startTime || "";
-			const timeB = b.appointment_time || b.start_time || b.startTime || "";
+			const timeA = a.start_time || "";
+			const timeB = b.start_time || "";
 			return timeA.localeCompare(timeB);
 		});
 
@@ -699,7 +699,7 @@ const PatientEvolution = () => {
 					patientId={state.patientId}
 					evolutionId={state.currentSoapRecordId}
 					collaborationId={undefined}
-					userName={state.user?.full_name || state.user?.name || "Profissional"}
+					userName={state.user?.displayName || "Profissional"}
 					userColor="#10b981"
 					lastSaved={lastSavedAt}
 					onNavigateToHistorico={() => state.setActiveTab("historico")}
@@ -834,6 +834,7 @@ const PatientEvolution = () => {
 										evolutionId={state.currentSoapRecordId!}
 										patient={state.patient}
 										pathologies={state.pathologies}
+										onNavigateToTab={(tab) => state.setActiveTab(tab as EvolutionTab)}
 									/>
 								</Suspense>
 							</TabsContent>

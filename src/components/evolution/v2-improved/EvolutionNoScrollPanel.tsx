@@ -11,6 +11,8 @@ import {
   History,
   Maximize2,
   MapPin,
+  Paperclip,
+  Ruler,
   Stethoscope,
   TrendingDown,
   TrendingUp,
@@ -23,6 +25,7 @@ import type { EvolutionV2Data } from "@/components/evolution/v2-improved/types";
 import { RichTextBlock } from "@/components/evolution/v2-improved/RichTextBlock";
 import { EvolutionBlockV3 } from "@/components/evolution/v3-unified/EvolutionBlockV3";
 import { SessionTimelineStrip } from "@/components/evolution/v2-improved/SessionTimelineStrip";
+import { AttachmentsBlock } from "@/components/evolution/v2-improved/AttachmentsBlock";
 import { PainGauge, painColor, painLabel } from "@/components/evolution/v2-improved/PainGauge";
 import {
   PainTrendSparkline,
@@ -53,6 +56,7 @@ interface EvolutionNoScrollPanelProps {
   evolutionId?: string;
   patient?: any;
   pathologies?: any[];
+  onNavigateToTab?: (tab: string) => void;
 }
 
 const QUALITY_ICON: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -138,21 +142,38 @@ function EvaPicker({
   );
 }
 
-/** Card lateral genérico (Layout E). */
+/** Card lateral genérico — borda superior colorida por seção. */
 function SideCard({
   icon: Icon,
   title,
+  accent = "border-t-slate-300",
+  action,
+  onClick,
   children,
 }: {
   icon: React.ComponentType<{ className?: string }>;
   title: string;
+  /** Classe Tailwind da borda superior, ex.: "border-t-rose-500". */
+  accent?: string;
+  action?: React.ReactNode;
+  onClick?: () => void;
   children: React.ReactNode;
 }) {
   return (
-    <div className="rounded-2xl border border-border bg-card p-4 shadow-sm">
-      <h4 className="mb-3 flex items-center gap-2 text-[11px] font-extrabold uppercase tracking-wider text-muted-foreground">
-        <Icon className="h-3.5 w-3.5" /> {title}
-      </h4>
+    <div
+      onClick={onClick}
+      className={cn(
+        "rounded-2xl border border-t-[3px] border-border bg-card p-4 shadow-sm",
+        accent,
+        onClick && "cursor-pointer transition-colors hover:border-slate-300",
+      )}
+    >
+      <div className="mb-3 flex items-center gap-2">
+        <h4 className="flex items-center gap-2 text-[11px] font-extrabold uppercase tracking-wider text-muted-foreground">
+          <Icon className="h-3.5 w-3.5" /> {title}
+        </h4>
+        {action && <div className="ml-auto">{action}</div>}
+      </div>
       {children}
     </div>
   );
@@ -196,7 +217,15 @@ function extractRom(measurements: any[] = []): number | null {
 }
 
 export const EvolutionNoScrollPanel = memo(
-  ({ data, onChange, patientId, evolutionId, patient, pathologies = [] }: EvolutionNoScrollPanelProps) => {
+  ({
+    data,
+    onChange,
+    patientId,
+    evolutionId,
+    patient,
+    pathologies = [],
+    onNavigateToTab,
+  }: EvolutionNoScrollPanelProps) => {
     const [historyOpen, setHistoryOpen] = useState(false);
     const [focusSection, setFocusSection] = useState<null | "obs" | "condutas">(null);
 
@@ -293,13 +322,18 @@ export const EvolutionNoScrollPanel = memo(
         ),
       [data.measurements],
     );
+    // Medições reais (sem as entradas internas de detalhe de dor).
+    const realMeasurementsCount = useMemo(
+      () => stripPainDetail((data.measurements as any[]) ?? []).length,
+      [data.measurements],
+    );
 
     const observationsValue = data.evolutionText || data.observations || "";
 
     return (
       <div className="grid min-h-0 flex-1 grid-cols-1 gap-4 overflow-hidden p-4 lg:grid-cols-[1fr_minmax(320px,380px)_minmax(320px,380px)]">
         {/* ===================== COLUNA 1 — OBSERVAÇÕES ===================== */}
-        <div className="flex min-h-0 flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+        <div className="flex min-h-0 flex-col overflow-hidden rounded-2xl border border-t-[3px] border-border border-t-[#F59E0B] bg-card shadow-sm">
           <div className="flex items-center gap-3 border-b border-border px-4 py-3">
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-100 text-amber-600">
               <FileText className="h-[18px] w-[18px]" />
@@ -330,7 +364,7 @@ export const EvolutionNoScrollPanel = memo(
         </div>
 
         {/* ===================== COLUNA 2 — CONDUTAS ===================== */}
-        <div className="flex min-h-0 flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+        <div className="flex min-h-0 flex-col overflow-hidden rounded-2xl border border-t-[3px] border-border border-t-primary bg-card shadow-sm">
           <div className="flex items-center gap-3 border-b border-border px-4 py-3">
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-100 text-emerald-600">
               <Stethoscope className="h-[18px] w-[18px]" />
@@ -363,7 +397,7 @@ export const EvolutionNoScrollPanel = memo(
         {/* ===================== COLUNA 3 — DOR + ITENS ===================== */}
         <div className="custom-scrollbar flex min-h-0 flex-col gap-3.5 overflow-y-auto pb-2 pr-1">
           {/* nível de dor — EVA */}
-          <div className="rounded-2xl border border-border bg-card p-4 shadow-sm">
+          <div className="rounded-2xl border border-t-[3px] border-border border-t-rose-500 bg-card p-4 shadow-sm">
             <div className="mb-2 flex items-center gap-2.5">
               <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-rose-100 text-rose-600">
                 <Activity className="h-5 w-5" />
@@ -449,7 +483,7 @@ export const EvolutionNoScrollPanel = memo(
           </div>
 
           {/* tendência */}
-          <SideCard icon={TrendingDown} title="Tendência da dor">
+          <SideCard icon={TrendingDown} title="Tendência da dor" accent="border-t-rose-400">
             <div className="mb-1 flex items-baseline justify-between">
               <span className="text-[30px] font-extrabold tabular-nums tracking-tight">
                 {discharge}
@@ -472,7 +506,7 @@ export const EvolutionNoScrollPanel = memo(
           </SideCard>
 
           {/* qualidade */}
-          <SideCard icon={Fingerprint} title="Qualidade da dor">
+          <SideCard icon={Fingerprint} title="Qualidade da dor" accent="border-t-rose-400">
             {quality.length === 0 ? (
               <p className="text-[11.5px] font-semibold text-muted-foreground">
                 Selecione o tipo de dor no medidor ao lado.
@@ -503,7 +537,7 @@ export const EvolutionNoScrollPanel = memo(
           </SideCard>
 
           {/* vs sessão anterior */}
-          <SideCard icon={GitCompare} title="vs. sessão anterior">
+          <SideCard icon={GitCompare} title="vs. sessão anterior" accent="border-t-blue-500">
             {prevRecord ? (
               <>
                 {prevRecord.pain_scale != null && (
@@ -527,9 +561,62 @@ export const EvolutionNoScrollPanel = memo(
             )}
           </SideCard>
 
+          {/* medições */}
+          <SideCard
+            icon={Ruler}
+            title="Medições"
+            accent="border-t-[#8B5CF6]"
+            action={
+              <button
+                type="button"
+                onClick={() => onNavigateToTab?.("avaliacao")}
+                className="text-[10px] font-extrabold uppercase tracking-wider text-primary hover:underline"
+              >
+                Detalhar
+              </button>
+            }
+          >
+            {realMeasurementsCount > 0 ? (
+              <p className="text-[12px] font-bold text-slate-700">
+                {realMeasurementsCount}{" "}
+                {realMeasurementsCount === 1 ? "registro" : "registros"} nesta sessão
+              </p>
+            ) : (
+              <p className="text-[11.5px] font-semibold text-muted-foreground">
+                Nenhuma medição nesta sessão.
+              </p>
+            )}
+          </SideCard>
+
+          {/* histórico de sessões */}
+          <SideCard
+            icon={History}
+            title="Histórico de sessões"
+            accent="border-t-blue-500"
+            onClick={() => setHistoryOpen(true)}
+            action={<ArrowRight className="h-3.5 w-3.5 text-muted-foreground" />}
+          >
+            <p className="text-[11.5px] font-semibold text-muted-foreground">
+              {previousRecords.length > 0
+                ? `${previousRecords.length} ${previousRecords.length === 1 ? "sessão" : "sessões"} · clique para replicar conduta`
+                : "Abra o histórico completo deste paciente."}
+            </p>
+          </SideCard>
+
+          {/* anexos */}
+          <SideCard icon={Paperclip} title="Anexos" accent="border-t-[#14B8A6]">
+            <AttachmentsBlock
+              patientId={patientId}
+              evolutionId={evolutionId}
+              value={data.attachments ?? []}
+              onChange={(attachments) => onChange({ ...data, attachments })}
+              variant="embedded"
+            />
+          </SideCard>
+
           {/* sinais vitais — condicional */}
           {showVitals && (
-            <SideCard icon={HeartPulse} title="Sinais vitais">
+            <SideCard icon={HeartPulse} title="Sinais vitais" accent="border-t-[#14B8A6]">
               {vitalsList.length > 0 ? (
                 vitalsList.map((m: any) => (
                   <CmpRow key={m.id} label={m.measurement_name || "Sinal"}>

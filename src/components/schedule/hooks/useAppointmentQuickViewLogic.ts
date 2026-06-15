@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
@@ -36,14 +36,30 @@ export const useAppointmentQuickViewLogic = ({
   const [pendingStatus, setPendingStatus] = useState<string | null>(null);
 
   // Local state for optimistic updates
-  const [localStatus, setLocalStatus] = useState(appointment.status);
+  const [localStatus, setLocalStatus] = useState(() => normalizeStatus(appointment.status));
   const [localPaymentStatus, setLocalPaymentStatus] = useState(() =>
     ((appointment.payment_status ?? "pending") as string).toLowerCase(),
   );
   const [localTherapistId, setLocalTherapistId] = useState(appointment.therapistId ?? "");
 
+  // Track whether the user initiated a local status change that hasn't been
+  // confirmed by the server yet. While this is set, we block the useEffect
+  // from reverting localStatus to the stale server value.
+  const pendingStatusChangeRef = useRef<string | null>(null);
+
+  // When the mutation finishes (success or error), clear the lock so the
+  // useEffect can sync from the server value again.
   useEffect(() => {
-    setLocalStatus(normalizeStatus(appointment.status));
+    if (!isUpdatingStatus) {
+      pendingStatusChangeRef.current = null;
+    }
+  }, [isUpdatingStatus]);
+
+  useEffect(() => {
+    const serverStatus = normalizeStatus(appointment.status);
+    // Only sync from server when we're not in the middle of an optimistic update.
+    if (pendingStatusChangeRef.current !== null) return;
+    setLocalStatus(serverStatus);
     setLocalPaymentStatus(((appointment.payment_status ?? "pending") as string).toLowerCase());
     setLocalTherapistId(appointment.therapistId ?? "");
   }, [appointment.status, appointment.payment_status, appointment.therapistId]);
@@ -96,20 +112,23 @@ export const useAppointmentQuickViewLogic = ({
 
   const handleStatusChange = useCallback(
     (newStatus: string) => {
-      if (normalizeStatus(newStatus) === normalizeStatus(appointment.status)) return;
+      const normalized = normalizeStatus(newStatus);
+      if (normalized === normalizeStatus(appointment.status) && normalized === localStatus) return;
       if (newStatus === "falta") {
         setPendingStatus(newStatus);
         setShowNoShowConfirmDialog(true);
         return;
       }
-      setLocalStatus(newStatus as AppointmentStatus);
+      // Lock out the useEffect sync until the mutation finishes (isUpdatingStatus → false)
+      pendingStatusChangeRef.current = normalized;
+      setLocalStatus(normalized as AppointmentStatus);
       updateStatus({ appointmentId: appointment.id, status: newStatus });
       onOpenChange?.(false);
       if ((newStatus === "cancelado" || newStatus === "falta") && hasWaitlistInterest) {
         setTimeout(() => setShowWaitlistNotification(true), 500);
       }
     },
-    [appointment, updateStatus, onOpenChange, hasWaitlistInterest],
+    [appointment, localStatus, updateStatus, onOpenChange, hasWaitlistInterest],
   );
 
   const handleNoShowConfirm = useCallback(() => {

@@ -74,7 +74,6 @@ function ProfileContent() {
     staleTime: 1000 * 60 * 5,
   });
   const profile = profileRes?.data as Record<string, string> | undefined;
-  const [isEditing, setIsEditing] = useState(true);
   const [form, setForm] = useState({
     full_name: "",
     email: "",
