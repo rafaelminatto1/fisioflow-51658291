@@ -197,8 +197,9 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
 
     const baseUrl = getWorkersApiUrl();
     const wsUrl =
-      (baseUrl.startsWith("https") ? baseUrl.replace("https", "wss") : baseUrl.replace("http", "ws")) +
-      `/api/sessions/${collaborationId}/collaboration`;
+      (baseUrl.startsWith("https")
+        ? baseUrl.replace("https", "wss")
+        : baseUrl.replace("http", "ws")) + `/api/sessions/${collaborationId}/collaboration`;
 
     const p = new WebsocketProvider(wsUrl, collaborationId, doc);
     setProvider(p);
@@ -250,100 +251,97 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
     return colors[accentColor];
   };
 
-  const extensions = useMemo(
-    () => {
-      const base = [
-        ForceListContinue,
-        StarterKit.configure({
-          heading: { levels: [1, 2, 3] },
-          link: false,
-          underline: false,
-          codeBlock: false,
-          // Se estiver em colaboração, desativamos o history do StarterKit
-          // para usar o history compartilhado do Yjs.
-          history: !collaborationId,
-        }),
-        Placeholder.configure({ placeholder }),
-        Underline,
-        TextAlign.configure({ types: ["heading", "paragraph"] }),
-        Highlight.configure({ multicolor: true }),
-        TextStyle,
-        Color,
-        Subscript,
-        Superscript,
-        Link.configure({
-          openOnClick: false,
-          HTMLAttributes: { class: "text-primary underline cursor-pointer" },
-        }),
-        ResizableImage.configure({
-          allowBase64: true,
-          HTMLAttributes: {
-            class: "rounded-lg max-w-full h-auto my-4 mx-auto block",
-          },
-        }),
-        Youtube.configure({
-          HTMLAttributes: {
-            class: "rounded-lg max-w-full my-4 mx-auto block aspect-video",
-          },
-        }),
-        TaskList.configure({
-          HTMLAttributes: { class: "notion-task-list" },
-        }),
-        CustomTaskItem.configure({
-          nested: true,
-          HTMLAttributes: { class: "notion-task-item" },
-        }),
-        Table.configure({
-          resizable: true,
-          HTMLAttributes: { class: "notion-table" },
-        }),
-        TableRow,
-        TableHeader,
-        TableCell,
-        CodeBlockLowlight.configure({
-          lowlight,
-          HTMLAttributes: { class: "notion-code-block" },
-        }),
-        SlashCommand.configure({
-          suggestion: suggestionConfig(exercises, { imageUploadFolder }),
-        }),
-        ExerciseAutocomplete.configure({
-          suggestion: exerciseSuggestionConfig(exercises),
-        }),
-      ];
+  const extensions = useMemo(() => {
+    const base = [
+      ForceListContinue,
+      StarterKit.configure({
+        heading: { levels: [1, 2, 3] },
+        link: false,
+        underline: false,
+        codeBlock: false,
+        // Se estiver em colaboração, desativamos o history do StarterKit
+        // para usar o history compartilhado do Yjs.
+        history: !collaborationId,
+      }),
+      Placeholder.configure({ placeholder }),
+      Underline,
+      TextAlign.configure({ types: ["heading", "paragraph"] }),
+      Highlight.configure({ multicolor: true }),
+      TextStyle,
+      Color,
+      Subscript,
+      Superscript,
+      Link.configure({
+        openOnClick: false,
+        HTMLAttributes: { class: "text-primary underline cursor-pointer" },
+      }),
+      ResizableImage.configure({
+        allowBase64: true,
+        HTMLAttributes: {
+          class: "rounded-lg max-w-full h-auto my-4 mx-auto block",
+        },
+      }),
+      Youtube.configure({
+        HTMLAttributes: {
+          class: "rounded-lg max-w-full my-4 mx-auto block aspect-video",
+        },
+      }),
+      TaskList.configure({
+        HTMLAttributes: { class: "notion-task-list" },
+      }),
+      CustomTaskItem.configure({
+        nested: true,
+        HTMLAttributes: { class: "notion-task-item" },
+      }),
+      Table.configure({
+        resizable: true,
+        HTMLAttributes: { class: "notion-table" },
+      }),
+      TableRow,
+      TableHeader,
+      TableCell,
+      CodeBlockLowlight.configure({
+        lowlight,
+        HTMLAttributes: { class: "notion-code-block" },
+      }),
+      SlashCommand.configure({
+        suggestion: suggestionConfig(exercises, { imageUploadFolder }),
+      }),
+      ExerciseAutocomplete.configure({
+        suggestion: exerciseSuggestionConfig(exercises),
+      }),
+    ];
 
-      if (ydoc && collaborationId) {
+    if (ydoc && collaborationId) {
+      base.push(
+        Collaboration.configure({
+          document: ydoc,
+        }),
+      );
+      if (provider) {
         base.push(
-          Collaboration.configure({
-            document: ydoc,
+          CollaborationCursor.configure({
+            provider,
+            user: {
+              name: userName,
+              color: userColor,
+            },
           }),
         );
-        if (provider) {
-          base.push(
-            CollaborationCursor.configure({
-              provider,
-              user: {
-                name: userName,
-                color: userColor,
-              },
-            }),
-          );
-        }
       }
+    }
 
-      return base;
-    },
-    [
-      exercises,
-      placeholder,
-      imageUploadFolder,
-      collaborationId,
-      ydoc,
-      provider,
-      userName,
-      userColor,
-    ],
-  );
+    return base;
+  }, [
+    exercises,
+    placeholder,
+    imageUploadFolder,
+    collaborationId,
+    ydoc,
+    provider,
+    userName,
+    userColor,
+  ]);
 
   const editor = useEditor({
     extensions,
@@ -620,28 +618,98 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
       {showToolbar && editor && (
         <div className="flex flex-wrap items-center gap-0.5 px-2 py-1.5 border border-slate-200 bg-slate-50/80 rounded-t-lg sticky top-0 z-10">
           {[
-            { icon: BoldIcon, action: () => editor.chain().focus().toggleBold().run(), active: editor.isActive("bold"), label: "Negrito" },
-            { icon: ItalicIcon, action: () => editor.chain().focus().toggleItalic().run(), active: editor.isActive("italic"), label: "Itálico" },
-            { icon: UnderlineIcon, action: () => editor.chain().focus().toggleUnderline().run(), active: editor.isActive("underline"), label: "Sublinhado" },
-            { icon: Strikethrough, action: () => editor.chain().focus().toggleStrike().run(), active: editor.isActive("strike"), label: "Tachado" },
+            {
+              icon: BoldIcon,
+              action: () => editor.chain().focus().toggleBold().run(),
+              active: editor.isActive("bold"),
+              label: "Negrito",
+            },
+            {
+              icon: ItalicIcon,
+              action: () => editor.chain().focus().toggleItalic().run(),
+              active: editor.isActive("italic"),
+              label: "Itálico",
+            },
+            {
+              icon: UnderlineIcon,
+              action: () => editor.chain().focus().toggleUnderline().run(),
+              active: editor.isActive("underline"),
+              label: "Sublinhado",
+            },
+            {
+              icon: Strikethrough,
+              action: () => editor.chain().focus().toggleStrike().run(),
+              active: editor.isActive("strike"),
+              label: "Tachado",
+            },
             { sep: true },
-            { icon: Heading2, action: () => editor.chain().focus().toggleHeading({ level: 2 }).run(), active: editor.isActive("heading", { level: 2 }), label: "Título grande" },
-            { icon: Heading3, action: () => editor.chain().focus().toggleHeading({ level: 3 }).run(), active: editor.isActive("heading", { level: 3 }), label: "Subtítulo" },
+            {
+              icon: Heading2,
+              action: () => editor.chain().focus().toggleHeading({ level: 2 }).run(),
+              active: editor.isActive("heading", { level: 2 }),
+              label: "Título grande",
+            },
+            {
+              icon: Heading3,
+              action: () => editor.chain().focus().toggleHeading({ level: 3 }).run(),
+              active: editor.isActive("heading", { level: 3 }),
+              label: "Subtítulo",
+            },
             { sep: true },
-            { icon: ListIcon, action: () => editor.chain().focus().toggleBulletList().run(), active: editor.isActive("bulletList"), label: "Lista" },
-            { icon: ListOrdered, action: () => editor.chain().focus().toggleOrderedList().run(), active: editor.isActive("orderedList"), label: "Lista numerada" },
-            { icon: ListChecks, action: () => editor.chain().focus().toggleTaskList().run(), active: editor.isActive("taskList"), label: "Checklist" },
+            {
+              icon: ListIcon,
+              action: () => editor.chain().focus().toggleBulletList().run(),
+              active: editor.isActive("bulletList"),
+              label: "Lista",
+            },
+            {
+              icon: ListOrdered,
+              action: () => editor.chain().focus().toggleOrderedList().run(),
+              active: editor.isActive("orderedList"),
+              label: "Lista numerada",
+            },
+            {
+              icon: ListChecks,
+              action: () => editor.chain().focus().toggleTaskList().run(),
+              active: editor.isActive("taskList"),
+              label: "Checklist",
+            },
             { sep: true },
-            { icon: Quote, action: () => editor.chain().focus().toggleBlockquote().run(), active: editor.isActive("blockquote"), label: "Citação" },
-            { icon: Highlighter, action: () => editor.chain().focus().toggleHighlight().run(), active: editor.isActive("highlight"), label: "Destacar" },
+            {
+              icon: Quote,
+              action: () => editor.chain().focus().toggleBlockquote().run(),
+              active: editor.isActive("blockquote"),
+              label: "Citação",
+            },
+            {
+              icon: Highlighter,
+              action: () => editor.chain().focus().toggleHighlight().run(),
+              active: editor.isActive("highlight"),
+              label: "Destacar",
+            },
             { sep: true },
-            { icon: Undo2, action: () => editor.chain().focus().undo().run(), active: false, label: "Desfazer" },
-            { icon: Redo2, action: () => editor.chain().focus().redo().run(), active: false, label: "Refazer" },
+            {
+              icon: Undo2,
+              action: () => editor.chain().focus().undo().run(),
+              active: false,
+              label: "Desfazer",
+            },
+            {
+              icon: Redo2,
+              action: () => editor.chain().focus().redo().run(),
+              active: false,
+              label: "Refazer",
+            },
           ].map((tool, idx) => {
             if ("sep" in tool && tool.sep) {
               return <span key={`sep-${idx}`} className="mx-1 h-5 w-px bg-slate-300" aria-hidden />;
             }
-            const t = tool as { icon: typeof BoldIcon; action: () => void; active: boolean; label: string };
+            const t = tool as {
+              icon: typeof BoldIcon;
+              action: () => void;
+              active: boolean;
+              label: string;
+            };
             const Icon = t.icon;
             return (
               <button

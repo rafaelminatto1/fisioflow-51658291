@@ -47,7 +47,9 @@ aiConfigRoutes.put("/config", async (c) => {
 
   const registry = createModelRegistry(c.env);
 
-  const body = await c.req.json<Record<string, unknown>>().catch(() => ({}) as Record<string, unknown>);
+  const body = await c.req
+    .json<Record<string, unknown>>()
+    .catch(() => ({}) as Record<string, unknown>);
 
   const validFields = [
     "chatModel",

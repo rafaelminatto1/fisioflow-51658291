@@ -146,7 +146,7 @@ export const AppointmentCard = React.forwardRef<HTMLDivElement, AppointmentCardP
             <span
               className={cn(
                 "opacity-70 truncate font-medium",
-                compact ? "mt-0.5" : "text-[11px] mt-1"
+                compact ? "mt-0.5" : "text-[11px] mt-1",
               )}
               style={{
                 fontSize: compact ? "calc(var(--agenda-type-font-scale, 1) * 11px)" : undefined,

@@ -4,7 +4,14 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { SectionCard } from "../shared/SectionCard";
 import { EmptyState } from "../shared/EmptyState";
@@ -12,7 +19,13 @@ import { Stepper } from "../shared/Stepper";
 import { cn } from "@/lib/utils";
 import { useScheduleCapacity, type CapacityGroup } from "@/hooks/useScheduleCapacity";
 import { useAppointmentTypes } from "@/hooks/useAppointmentTypes";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const HOUR_MIN = 6;
 const HOUR_MAX = 22;
@@ -85,7 +98,9 @@ function badgeForDays(days: number[]): string {
   if (sorted.length === 5 && sorted[0] === 1 && sorted[4] === 5) return "SEG–SEX";
   if (sorted.length === 6 && sorted[0] === 1 && sorted[5] === 6) return "SEG–SÁB";
   if (sorted.length === 7) return "TODOS";
-  return sorted.map((d) => DAY_OPTIONS.find((o) => o.value === d)?.label.toUpperCase() ?? "").join(", ");
+  return sorted
+    .map((d) => DAY_OPTIONS.find((o) => o.value === d)?.label.toUpperCase() ?? "")
+    .join(", ");
 }
 
 interface FormState {
@@ -155,7 +170,10 @@ export function CapacidadeTab() {
   };
 
   const toggleDay = (d: number) => {
-    setForm((p) => ({ ...p, days: p.days.includes(d) ? p.days.filter((x) => x !== d) : [...p.days, d] }));
+    setForm((p) => ({
+      ...p,
+      days: p.days.includes(d) ? p.days.filter((x) => x !== d) : [...p.days, d],
+    }));
   };
 
   const conflicts = checkConflicts(form.days, form.start_time, form.end_time, editing?.ids);
@@ -254,7 +272,10 @@ export function CapacidadeTab() {
                     <span className="font-mono text-sm font-semibold">
                       {group.start_time}–{group.end_time}
                     </span>
-                    <Badge variant="secondary" className="text-[10px] font-bold uppercase tracking-wider">
+                    <Badge
+                      variant="secondary"
+                      className="text-[10px] font-bold uppercase tracking-wider"
+                    >
                       {badgeForDays(group.days)}
                     </Badge>
                     {group.appointment_type_id ? (
@@ -275,15 +296,28 @@ export function CapacidadeTab() {
                     )}
                   </div>
                   <p className="mt-0.5 text-xs text-muted-foreground">
-                    {group.max_patients} {group.max_patients === 1 ? "paciente" : "pacientes"} por horário · {group.days.length} {group.days.length === 1 ? "dia" : "dias"}
+                    {group.max_patients} {group.max_patients === 1 ? "paciente" : "pacientes"} por
+                    horário · {group.days.length} {group.days.length === 1 ? "dia" : "dias"}
                   </p>
                 </div>
               </div>
               <div className="flex items-center gap-1">
-                <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => duplicate(group)} title="Duplicar">
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="h-8 w-8"
+                  onClick={() => duplicate(group)}
+                  title="Duplicar"
+                >
                   <Copy className="h-3.5 w-3.5" />
                 </Button>
-                <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => openEdit(group)} title="Editar">
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="h-8 w-8"
+                  onClick={() => openEdit(group)}
+                  title="Editar"
+                >
                   <Pencil className="h-3.5 w-3.5" />
                 </Button>
                 <Button
@@ -302,8 +336,10 @@ export function CapacidadeTab() {
           {capacities.length > 0 && (
             <div className="flex items-center justify-between rounded-lg border border-teal-100 bg-teal-50/60 px-4 py-2.5 dark:border-teal-900/40 dark:bg-teal-950/30">
               <p className="text-[11px] font-medium text-teal-900 dark:text-teal-100">
-                {capacityGroups.length} {capacityGroups.length === 1 ? "regra agrupada" : "regras agrupadas"} ·{" "}
-                {capacities.length} {capacities.length === 1 ? "configuração" : "configurações"} ativas
+                {capacityGroups.length}{" "}
+                {capacityGroups.length === 1 ? "regra agrupada" : "regras agrupadas"} ·{" "}
+                {capacities.length} {capacities.length === 1 ? "configuração" : "configurações"}{" "}
+                ativas
               </p>
               <p className="text-[11px] font-bold uppercase tracking-wider text-teal-700 dark:text-teal-300">
                 {capacities.reduce((s, c) => s + c.max_patients, 0)} vagas totais/semana
@@ -316,7 +352,9 @@ export function CapacidadeTab() {
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle>{editing ? "Editar regra de capacidade" : "Nova regra de capacidade"}</DialogTitle>
+            <DialogTitle>
+              {editing ? "Editar regra de capacidade" : "Nova regra de capacidade"}
+            </DialogTitle>
             <DialogDescription>
               Defina os dias, a faixa horária e a quantidade máxima de pacientes por horário.
             </DialogDescription>
@@ -324,7 +362,9 @@ export function CapacidadeTab() {
 
           <div className="space-y-5">
             <div>
-              <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Dias</Label>
+              <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Dias
+              </Label>
               <div className="mt-2 flex flex-wrap gap-2">
                 {DAY_OPTIONS.map((d) => {
                   const selected = form.days.includes(d.value);
@@ -348,7 +388,9 @@ export function CapacidadeTab() {
             </div>
 
             <div>
-              <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Faixa horária</Label>
+              <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Faixa horária
+              </Label>
               <div className="mt-2 flex items-center gap-3">
                 <Input
                   type="time"
@@ -369,7 +411,9 @@ export function CapacidadeTab() {
                   <button
                     key={p.label}
                     type="button"
-                    onClick={() => setForm((prev) => ({ ...prev, start_time: p.start, end_time: p.end }))}
+                    onClick={() =>
+                      setForm((prev) => ({ ...prev, start_time: p.start, end_time: p.end }))
+                    }
                     className="rounded-md border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-medium text-slate-600 hover:border-teal-300 hover:bg-teal-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300"
                   >
                     {p.label} · {p.start}–{p.end}
@@ -379,7 +423,9 @@ export function CapacidadeTab() {
             </div>
 
             <div>
-              <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Pacientes por horário</Label>
+              <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Pacientes por horário
+              </Label>
               <div className="mt-2 flex items-center gap-4">
                 <Stepper
                   value={form.max_patients}
@@ -394,7 +440,9 @@ export function CapacidadeTab() {
             </div>
 
             <div>
-              <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Tipo de atendimento</Label>
+              <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Tipo de atendimento
+              </Label>
               <Select
                 value={form.appointment_type_id ?? "__all__"}
                 onValueChange={(v) =>
@@ -411,7 +459,10 @@ export function CapacidadeTab() {
                     .map((t) => (
                       <SelectItem key={t.id} value={t.id}>
                         <span className="flex items-center gap-2">
-                          <span className="h-2 w-2 rounded-full" style={{ backgroundColor: t.color }} />
+                          <span
+                            className="h-2 w-2 rounded-full"
+                            style={{ backgroundColor: t.color }}
+                          />
                           {t.name}
                         </span>
                       </SelectItem>
@@ -442,7 +493,11 @@ export function CapacidadeTab() {
               disabled={!canSubmit || isCreating || isReplacing}
               className="bg-teal-600 hover:bg-teal-700"
             >
-              {isCreating || isReplacing ? "Salvando…" : editing ? "Salvar alterações" : "Criar regra"}
+              {isCreating || isReplacing
+                ? "Salvando…"
+                : editing
+                  ? "Salvar alterações"
+                  : "Criar regra"}
             </Button>
           </DialogFooter>
         </DialogContent>

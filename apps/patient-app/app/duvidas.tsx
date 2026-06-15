@@ -88,7 +88,9 @@ export default function DuvidasScreen() {
         <View style={{ width: 26 }} />
       </View>
 
-      <View style={[styles.disclaimer, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+      <View
+        style={[styles.disclaimer, { backgroundColor: colors.surface, borderColor: colors.border }]}
+      >
         <Ionicons name="information-circle-outline" size={16} color={colors.textMuted} />
         <Text style={[styles.disclaimerText, { color: colors.textMuted }]}>{FIXED_DISCLAIMER}</Text>
       </View>
@@ -117,7 +119,10 @@ export default function DuvidasScreen() {
                 <TouchableOpacity
                   key={ex}
                   onPress={() => send(ex)}
-                  style={[styles.example, { borderColor: colors.border, backgroundColor: colors.surface }]}
+                  style={[
+                    styles.example,
+                    { borderColor: colors.border, backgroundColor: colors.surface },
+                  ]}
                 >
                   <Text style={[styles.exampleText, { color: colors.text }]}>{ex}</Text>
                 </TouchableOpacity>
@@ -133,7 +138,10 @@ export default function DuvidasScreen() {
             ) : (
               <View
                 key={item.id}
-                style={[styles.botBubble, { backgroundColor: colors.surface, borderColor: colors.border }]}
+                style={[
+                  styles.botBubble,
+                  { backgroundColor: colors.surface, borderColor: colors.border },
+                ]}
               >
                 <Text style={[styles.botText, { color: colors.text }]}>{item.text}</Text>
                 {item.sources && item.sources.length > 0 && (
@@ -151,15 +159,28 @@ export default function DuvidasScreen() {
           )}
 
           {loading && (
-            <View style={[styles.botBubble, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            <View
+              style={[
+                styles.botBubble,
+                { backgroundColor: colors.surface, borderColor: colors.border },
+              ]}
+            >
               <ActivityIndicator color={colors.primary} />
             </View>
           )}
         </ScrollView>
 
-        <View style={[styles.inputBar, { borderTopColor: colors.border, backgroundColor: colors.background }]}>
+        <View
+          style={[
+            styles.inputBar,
+            { borderTopColor: colors.border, backgroundColor: colors.background },
+          ]}
+        >
           <TextInput
-            style={[styles.input, { backgroundColor: colors.surface, color: colors.text, borderColor: colors.border }]}
+            style={[
+              styles.input,
+              { backgroundColor: colors.surface, color: colors.text, borderColor: colors.border },
+            ]}
             placeholder="Escreva sua dúvida..."
             placeholderTextColor={colors.textMuted}
             value={input}
@@ -237,7 +258,12 @@ const styles = StyleSheet.create({
     borderWidth: StyleSheet.hairlineWidth,
   },
   botText: { fontSize: 15, lineHeight: 22 },
-  sources: { marginTop: Spacing.sm, paddingTop: Spacing.sm, borderTopWidth: StyleSheet.hairlineWidth, gap: 2 },
+  sources: {
+    marginTop: Spacing.sm,
+    paddingTop: Spacing.sm,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    gap: 2,
+  },
   sourcesLabel: { fontSize: 11, fontWeight: "700", textTransform: "uppercase", letterSpacing: 0.5 },
   sourceItem: { fontSize: 12, lineHeight: 17 },
   inputBar: {

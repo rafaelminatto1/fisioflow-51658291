@@ -29,7 +29,7 @@ test.describe("Validação de Autosave - Todos os Campos", () => {
     console.log("Aguardando carregamento da evolução...");
     await page.waitForSelector(".tiptap", { state: "visible", timeout: 15000 });
     await page.waitForTimeout(2000); // Aguarda Yjs
-    
+
     console.log("Preenchendo campos...");
     const randomSuffix = Date.now().toString().slice(-4);
     const textObs = `Obs clinica ${randomSuffix}`;
@@ -50,10 +50,10 @@ test.describe("Validação de Autosave - Todos os Campos", () => {
 
     // 3. Modificar Dor (Slider ou Input) - O slider pode ser tricky, vamos ver se tem input numérico
     // Assumimos que o texto será validado depois. Vamos focar nos editores principais primeiro.
-    
+
     // O 2º RichTextEditor geralmente é o Procedimento/Objetivo
     const editors = page.locator(".tiptap");
-    if (await editors.count() > 1) {
+    if ((await editors.count()) > 1) {
       const editorProc = editors.nth(1);
       await editorProc.press("Control+a");
       await editorProc.press("Backspace");
@@ -83,7 +83,7 @@ test.describe("Validação de Autosave - Todos os Campos", () => {
     await page.waitForTimeout(2000); // Aguarda Yjs puxar os dados de volta
 
     console.log("Validando campos salvos...");
-    
+
     // Checa o primeiro editor
     const contentObs = await editors.first().innerText();
     expect(contentObs).toContain(textObs);
@@ -97,7 +97,7 @@ test.describe("Validação de Autosave - Todos os Campos", () => {
     }
 
     // Checa o segundo editor
-    if (await editors.count() > 1) {
+    if ((await editors.count()) > 1) {
       const contentProc = await editors.nth(1).innerText();
       expect(contentProc).toContain(textProc);
       console.log(`✅ Procedimentos validados: ${contentProc}`);

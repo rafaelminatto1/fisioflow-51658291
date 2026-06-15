@@ -111,21 +111,26 @@ export class PatientAgent extends Agent<Env, RetentionState> {
       }
 
       // Uso do Workers AI nativo da Cloudflare (Llama 3.1 8B Instruct)
-      const response = await runAi(this.env, WORKERS_AI_MODELS.llama_3_1_8b, {
-        messages: [
-          {
-            role: "system",
-            content:
-              "Você é um Agente de Retenção empático da clínica FisioFlow. Sua missão é reengajar pacientes em risco de evasão. Escreva em português do Brasil, de forma curta, acolhedora e profissional. Não use emojis em excesso.",
-          },
-          {
-            role: "user",
-            content: `Paciente: ${this.state.patientName}. Status: ${this.state.missedSessions} sessões faltadas. Último nível de dor: ${this.state.lastPainLevel}/10.${memoryContext}\nEscreva uma mensagem de WhatsApp para incentivá-lo a retomar o tratamento.`,
-          },
-        ],
-        max_tokens: 256,
-        temperature: 0.7,
-      }, { cache: false });
+      const response = await runAi(
+        this.env,
+        WORKERS_AI_MODELS.llama_3_1_8b,
+        {
+          messages: [
+            {
+              role: "system",
+              content:
+                "Você é um Agente de Retenção empático da clínica FisioFlow. Sua missão é reengajar pacientes em risco de evasão. Escreva em português do Brasil, de forma curta, acolhedora e profissional. Não use emojis em excesso.",
+            },
+            {
+              role: "user",
+              content: `Paciente: ${this.state.patientName}. Status: ${this.state.missedSessions} sessões faltadas. Último nível de dor: ${this.state.lastPainLevel}/10.${memoryContext}\nEscreva uma mensagem de WhatsApp para incentivá-lo a retomar o tratamento.`,
+            },
+          ],
+          max_tokens: 256,
+          temperature: 0.7,
+        },
+        { cache: false },
+      );
 
       this.setState({
         ...this.state,
@@ -160,22 +165,27 @@ export class PatientAgent extends Agent<Env, RetentionState> {
   @callable()
   async consultBrain(params: { question: string; historyContext: any }) {
     try {
-      const response = await runAi(this.env, WORKERS_AI_MODELS.llama_3_1_8b, {
-        messages: [
-          {
-            role: "system",
-            content: `Você é o FisioFlow Brain, assistente especializado em fisioterapia. 
+      const response = await runAi(
+        this.env,
+        WORKERS_AI_MODELS.llama_3_1_8b,
+        {
+          messages: [
+            {
+              role: "system",
+              content: `Você é o FisioFlow Brain, assistente especializado em fisioterapia. 
             Responda de forma técnica, baseada em evidências e focada na reabilitação do paciente.
             Contexto Clínico: ${JSON.stringify(params.historyContext)}`,
-          },
-          {
-            role: "user",
-            content: params.question,
-          },
-        ],
-        max_tokens: 1000,
-        temperature: 0.3,
-      }, { cache: false });
+            },
+            {
+              role: "user",
+              content: params.question,
+            },
+          ],
+          max_tokens: 1000,
+          temperature: 0.3,
+        },
+        { cache: false },
+      );
 
       return { answer: response.response };
     } catch (error) {

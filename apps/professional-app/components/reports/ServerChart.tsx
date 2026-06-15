@@ -26,17 +26,19 @@ export function ServerChart({ endpoint, width = "100%", height = 220 }: ServerCh
 
   useEffect(() => {
     let mounted = true;
-    getToken().then((t) => {
-      if (mounted) {
-        setToken(t);
-        setLoading(false);
-      }
-    }).catch(() => {
-      if (mounted) {
-        setError(true);
-        setLoading(false);
-      }
-    });
+    getToken()
+      .then((t) => {
+        if (mounted) {
+          setToken(t);
+          setLoading(false);
+        }
+      })
+      .catch(() => {
+        if (mounted) {
+          setError(true);
+          setLoading(false);
+        }
+      });
     return () => {
       mounted = false;
     };
@@ -44,7 +46,9 @@ export function ServerChart({ endpoint, width = "100%", height = 220 }: ServerCh
 
   if (loading) {
     return (
-      <View style={[styles.container, { width, height, backgroundColor: colors.background + "40" }]}>
+      <View
+        style={[styles.container, { width, height, backgroundColor: colors.background + "40" }]}
+      >
         <ActivityIndicator size="small" color={colors.primary} />
       </View>
     );
@@ -52,7 +56,9 @@ export function ServerChart({ endpoint, width = "100%", height = 220 }: ServerCh
 
   if (error || !token) {
     return (
-      <View style={[styles.container, { width, height, backgroundColor: colors.background + "40" }]}>
+      <View
+        style={[styles.container, { width, height, backgroundColor: colors.background + "40" }]}
+      >
         <Ionicons name="image-outline" size={32} color={colors.textMuted} />
         <Text style={[styles.errorText, { color: colors.textSecondary }]}>
           Falha ao carregar gráfico

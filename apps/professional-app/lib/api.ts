@@ -369,17 +369,17 @@ export async function fetchApi<T>(endpoint: string, options: FetchOptions = {}):
     return (await response.json()) as T;
   } catch (error: any) {
     clearTimeout(id);
-    
-    const isNetworkError = 
-      error.message === 'Network request failed' || 
-      error.name === 'AbortError' || 
-      error.message?.includes('Network');
-      
-    const isMutation = ['POST', 'PUT', 'PATCH', 'DELETE'].includes(method.toUpperCase());
+
+    const isNetworkError =
+      error.message === "Network request failed" ||
+      error.name === "AbortError" ||
+      error.message?.includes("Network");
+
+    const isMutation = ["POST", "PUT", "PATCH", "DELETE"].includes(method.toUpperCase());
 
     if (isNetworkError && isMutation) {
-      const { useSyncStore } = require('../store/sync-store');
-      
+      const { useSyncStore } = require("../store/sync-store");
+
       const mutationId = useSyncStore.getState().addMutation({
         endpoint,
         method: method.toUpperCase(),
@@ -389,10 +389,10 @@ export async function fetchApi<T>(endpoint: string, options: FetchOptions = {}):
 
       // Return a mocked successful response for optimistic UI
       // If it's a POST, the generated mutationId can act as a temporary ID
-      return { 
+      return {
         data: { ...data, id: mutationId },
         success: true,
-        ok: true 
+        ok: true,
       } as unknown as T;
     }
 

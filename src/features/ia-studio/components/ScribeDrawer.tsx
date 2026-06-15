@@ -231,12 +231,14 @@ export const ScribeDrawer: React.FC<ScribeDrawerProps> = ({ isOpen, onClose, pat
                   </div>
 
                   <div className="grid grid-cols-2 gap-2">
-                    {([
-                      ["soap_section", "SOAP"],
-                      ["evaluation", "Avaliação"],
-                      ["measurement", "Medida"],
-                      ["clinical_test", "Teste"],
-                    ] as Array<[AudioCaptureReason, string]>).map(([reason, label]) => (
+                    {(
+                      [
+                        ["soap_section", "SOAP"],
+                        ["evaluation", "Avaliação"],
+                        ["measurement", "Medida"],
+                        ["clinical_test", "Teste"],
+                      ] as Array<[AudioCaptureReason, string]>
+                    ).map(([reason, label]) => (
                       <button
                         key={reason}
                         type="button"

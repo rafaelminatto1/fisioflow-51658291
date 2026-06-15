@@ -15,7 +15,11 @@ import { toast } from "sonner";
 interface MobilePoseEstimatorProps {
   exerciseId?: string;
   expectedAngle?: number; // Ângulo alvo de ADM (ex: 90 graus para flexão de joelho)
-  onEstimationComplete?: (metrics: { maxAngle: number; repetitions: number; score: number }) => void;
+  onEstimationComplete?: (metrics: {
+    maxAngle: number;
+    repetitions: number;
+    score: number;
+  }) => void;
   className?: string;
 }
 
@@ -107,20 +111,34 @@ export function MobilePoseEstimator({
             <div className="absolute inset-0 flex flex-col justify-between p-4 z-10">
               {/* Top HUD Row */}
               <div className="flex items-center justify-between">
-                <Badge variant="outline" className="border-blue-500/30 text-blue-400 bg-blue-500/5 animate-pulse">
+                <Badge
+                  variant="outline"
+                  className="border-blue-500/30 text-blue-400 bg-blue-500/5 animate-pulse"
+                >
                   <Activity className="w-3.5 h-3.5 mr-1" />
                   Rastreamento Ativo
                 </Badge>
-                <Badge variant="outline" className="border-emerald-500/30 text-emerald-400 bg-emerald-500/5">
+                <Badge
+                  variant="outline"
+                  className="border-emerald-500/30 text-emerald-400 bg-emerald-500/5"
+                >
                   <Sparkles className="w-3.5 h-3.5 mr-1" />
                   Edge AI Local
                 </Badge>
               </div>
 
               {/* Central Skeleton Visual Overlay (Simulado com SVG dinâmico) */}
-              <svg className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 100 100">
+              <svg
+                className="absolute inset-0 w-full h-full pointer-events-none"
+                viewBox="0 0 100 100"
+              >
                 {/* Cabeça */}
-                <circle cx="50" cy="25" r="4" className="fill-none stroke-blue-400 stroke-[0.8] animate-pulse" />
+                <circle
+                  cx="50"
+                  cy="25"
+                  r="4"
+                  className="fill-none stroke-blue-400 stroke-[0.8] animate-pulse"
+                />
                 {/* Tronco */}
                 <line x1="50" y1="29" x2="50" y2="55" className="stroke-blue-400 stroke-[0.8]" />
                 {/* Ombros */}
@@ -149,12 +167,20 @@ export function MobilePoseEstimator({
               {/* Bottom HUD Row */}
               <div className="flex justify-between items-end bg-black/30 p-3 rounded-2xl border border-white/5">
                 <div className="space-y-0.5">
-                  <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">Angulação Atual</span>
-                  <span className="text-3xl font-black italic text-emerald-400 tabular-nums">{currentAngle}°</span>
+                  <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">
+                    Angulação Atual
+                  </span>
+                  <span className="text-3xl font-black italic text-emerald-400 tabular-nums">
+                    {currentAngle}°
+                  </span>
                 </div>
                 <div className="text-right space-y-0.5">
-                  <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">Repetições</span>
-                  <span className="text-3xl font-black italic text-emerald-400 tabular-nums">{repetitions}</span>
+                  <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">
+                    Repetições
+                  </span>
+                  <span className="text-3xl font-black italic text-emerald-400 tabular-nums">
+                    {repetitions}
+                  </span>
                 </div>
               </div>
             </div>
@@ -164,9 +190,12 @@ export function MobilePoseEstimator({
                 <Activity className="w-8 h-8 text-blue-400" />
               </div>
               <div className="space-y-1">
-                <h3 className="text-base font-black text-white uppercase tracking-wider">HUD Biomecânico 3D</h3>
+                <h3 className="text-base font-black text-white uppercase tracking-wider">
+                  HUD Biomecânico 3D
+                </h3>
                 <p className="text-xs text-slate-400 max-w-xs mx-auto">
-                  A estimativa pose-estimation é processada **100% no seu dispositivo**. A imagem não sai do seu celular.
+                  A estimativa pose-estimation é processada **100% no seu dispositivo**. A imagem
+                  não sai do seu celular.
                 </p>
               </div>
               <Button
@@ -182,16 +211,28 @@ export function MobilePoseEstimator({
         {/* Stats Grid */}
         <div className="grid grid-cols-3 gap-3">
           <div className="p-3.5 bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl text-center">
-            <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest block mb-1">Ângulo Máximo</span>
-            <span className="text-lg font-black italic text-slate-800 dark:text-slate-100 tabular-nums">{maxAngle}°</span>
+            <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest block mb-1">
+              Ângulo Máximo
+            </span>
+            <span className="text-lg font-black italic text-slate-800 dark:text-slate-100 tabular-nums">
+              {maxAngle}°
+            </span>
           </div>
           <div className="p-3.5 bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl text-center">
-            <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest block mb-1">Ângulo Alvo</span>
-            <span className="text-lg font-black italic text-slate-800 dark:text-slate-100 tabular-nums">{expectedAngle}°</span>
+            <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest block mb-1">
+              Ângulo Alvo
+            </span>
+            <span className="text-lg font-black italic text-slate-800 dark:text-slate-100 tabular-nums">
+              {expectedAngle}°
+            </span>
           </div>
           <div className="p-3.5 bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl text-center">
-            <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest block mb-1">Acurácia</span>
-            <span className="text-lg font-black italic text-blue-600 dark:text-blue-400 tabular-nums">{score}%</span>
+            <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest block mb-1">
+              Acurácia
+            </span>
+            <span className="text-lg font-black italic text-blue-600 dark:text-blue-400 tabular-nums">
+              {score}%
+            </span>
           </div>
         </div>
 
@@ -209,7 +250,8 @@ export function MobilePoseEstimator({
         <div className="flex gap-2 p-3.5 rounded-2xl bg-amber-500/5 border border-amber-500/10 text-amber-500">
           <ShieldAlert className="w-4 h-4 flex-shrink-0 mt-0.5" />
           <p className="text-[10px] leading-relaxed font-bold">
-            **Aviso de Privacidade LGPD:** Esta ferramenta processa as imagens localmente via WebGL no browser. Não há gravação ou transferência externa de vídeo.
+            **Aviso de Privacidade LGPD:** Esta ferramenta processa as imagens localmente via WebGL
+            no browser. Não há gravação ou transferência externa de vídeo.
           </p>
         </div>
       </CardContent>

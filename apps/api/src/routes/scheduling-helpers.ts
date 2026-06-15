@@ -199,7 +199,9 @@ export const normalizeCapacityPayload = (body: Record<string, any>) => {
   }
 
   const appointmentTypeId =
-    body.appointment_type_id === null || body.appointment_type_id === undefined || body.appointment_type_id === ""
+    body.appointment_type_id === null ||
+    body.appointment_type_id === undefined ||
+    body.appointment_type_id === ""
       ? null
       : String(body.appointment_type_id);
 

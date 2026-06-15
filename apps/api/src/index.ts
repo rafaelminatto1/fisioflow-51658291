@@ -415,7 +415,6 @@ export { ClinicAgent } from "./agents/ClinicAgent";
 export { VoiceScribeAgent } from "./agents/VoiceScribeAgent";
 export { EvolutionCollaboration } from "./agents/EvolutionCollaboration";
 
-
 export { SessionSummaryWorkflow } from "./workflows/sessionSummary";
 export {
   AppointmentReminderWorkflow,

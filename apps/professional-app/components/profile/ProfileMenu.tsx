@@ -46,7 +46,11 @@ export function ProfileMenuItem({
   return (
     <TouchableOpacity onPress={onPress} style={styles.menuItem} activeOpacity={0.6}>
       <View style={[styles.iconWrapper, { backgroundColor: (iconColor || colors.primary) + "10" }]}>
-        <Ionicons name={icon as keyof typeof Ionicons.glyphMap} size={20} color={iconColor || colors.primary} />
+        <Ionicons
+          name={icon as keyof typeof Ionicons.glyphMap}
+          size={20}
+          color={iconColor || colors.primary}
+        />
       </View>
       <View
         style={[

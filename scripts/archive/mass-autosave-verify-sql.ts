@@ -10,14 +10,15 @@ async function main() {
   console.log("=========================================\n");
 
   // 1. Pegar o usuário
-  const userList = await sql`SELECT * FROM profiles WHERE email = ${process.env.E2E_EMAIL || ""} LIMIT 1`;
+  const userList =
+    await sql`SELECT * FROM profiles WHERE email = ${process.env.E2E_EMAIL || ""} LIMIT 1`;
   if (userList.length === 0) {
     console.error("Usuário não encontrado!");
     return;
   }
   const user = userList[0];
   const orgId = user.organization_id;
-  
+
   if (!orgId) {
     console.error("Usuário sem organização!");
     return;
@@ -29,7 +30,7 @@ async function main() {
   for (let i = 1; i <= 10; i++) {
     const patientId = uuidv4();
     const patientName = `Paciente Autosave QA SQL ${i} - ${Date.now()}`;
-    
+
     await sql`
       INSERT INTO patients (id, organization_id, full_name, phone, status)
       VALUES (${patientId}, ${orgId}, ${patientName}, '11999999999', 'active')
@@ -46,10 +47,10 @@ async function main() {
       const apptId = uuidv4();
       const date = new Date();
       date.setDate(date.getDate() - j);
-      
+
       await sql`
         INSERT INTO appointments (id, organization_id, patient_id, therapist_id, start_time, end_time, date, status, type)
-        VALUES (${apptId}, ${orgId}, ${patientId}, ${user.user_id || user.id}, '10:00:00', '11:00:00', ${date.toISOString().split('T')[0]}, 'agendado', 'session')
+        VALUES (${apptId}, ${orgId}, ${patientId}, ${user.user_id || user.id}, '10:00:00', '11:00:00', ${date.toISOString().split("T")[0]}, 'agendado', 'session')
       `;
       appointmentIds.push(apptId);
     }
@@ -59,12 +60,12 @@ async function main() {
   // 4. Simular o Autosave em TODAS as evoluções para TODOS os agendamentos (100)
   console.log("--> Simulando AUTOSAVE do Front-End para os 100 agendamentos...");
   console.log("Preenchendo: evolution_text, observations, subjective, pain_level, bp, hr...");
-  
+
   for (const apptId of appointmentIds) {
     const sessionId = uuidv4();
     const hr = Math.floor(Math.random() * (120 - 60) + 60);
     const pain = Math.floor(Math.random() * 10);
-    
+
     await sql`
       INSERT INTO clinical_records (
         id, organization_id, appointment_id, patient_id,
@@ -83,16 +84,18 @@ async function main() {
 
   // 5. Verificar (Read-back) para garantir integridade dos dados salvos
   console.log("--> Lendo e verificando banco de dados para confirmar integridade...");
-  
+
   // Pegamos todos pra verificar
   const records = [];
   for (const apptId of appointmentIds) {
     const res = await sql`SELECT * FROM clinical_records WHERE appointment_id = ${apptId}`;
     records.push(...res);
   }
-  
+
   if (records.length !== 100) {
-    console.error(`❌ Falha: Era esperado 100 registros salvos, porém apenas ${records.length} foram encontrados.`);
+    console.error(
+      `❌ Falha: Era esperado 100 registros salvos, porém apenas ${records.length} foram encontrados.`,
+    );
     return;
   }
 
@@ -114,7 +117,9 @@ async function main() {
 
   if (isAllValid) {
     console.log("✅ VERIFICAÇÃO CONCLUÍDA COM SUCESSO!");
-    console.log("Todos os 10 pacientes, 100 agendamentos e 100 evoluções salvaram perfeitamente todos os campos:");
+    console.log(
+      "Todos os 10 pacientes, 100 agendamentos e 100 evoluções salvaram perfeitamente todos os campos:",
+    );
     console.log("- Observações Clínicas");
     console.log("- Evolução/Procedimento");
     console.log("- Queixa Principal (Subjetivo)");

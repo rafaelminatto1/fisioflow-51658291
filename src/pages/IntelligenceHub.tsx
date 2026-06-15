@@ -297,10 +297,7 @@ export default function IntelligenceHub() {
             </Suspense>
           </TabsContent>
 
-          <TabsContent
-            value="brain"
-            className="m-0 min-h-[70vh] rounded-[1.75rem] outline-none"
-          >
+          <TabsContent value="brain" className="m-0 min-h-[70vh] rounded-[1.75rem] outline-none">
             <Suspense fallback={<IntelligenceContentSkeleton />}>
               <BrainDashboardContent />
             </Suspense>

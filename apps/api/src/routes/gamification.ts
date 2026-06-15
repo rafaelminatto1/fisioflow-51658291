@@ -326,9 +326,9 @@ app.get("/quests/:patientId", requireAuth, async (c) => {
 
   // Generate default quests for today
   const generateId = () => {
-    return typeof crypto !== 'undefined' && crypto.randomUUID 
-      ? crypto.randomUUID() 
-      : 'uuid-' + Math.random().toString(36).substring(2, 15);
+    return typeof crypto !== "undefined" && crypto.randomUUID
+      ? crypto.randomUUID()
+      : "uuid-" + Math.random().toString(36).substring(2, 15);
   };
 
   const defaultQuests = [

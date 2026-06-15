@@ -54,12 +54,16 @@ export function buildAgentMemoryProfiles(
         profile: buildAgentMemoryProfile({ ...scope, profileType: type }),
       };
     })
-    .filter((item): item is { type: "organization" | "patient" | "professional"; profile: string } =>
-      Boolean(item),
+    .filter(
+      (item): item is { type: "organization" | "patient" | "professional"; profile: string } =>
+        Boolean(item),
     );
 }
 
-export async function rememberAgentMemory(env: Env, input: AgentMemoryRememberInput): Promise<{
+export async function rememberAgentMemory(
+  env: Env,
+  input: AgentMemoryRememberInput,
+): Promise<{
   configured: boolean;
   driver?: AgentMemoryDriver;
   memories?: Array<{ type: string; profile: string; memory: unknown }>;
@@ -82,11 +86,20 @@ export async function rememberAgentMemory(env: Env, input: AgentMemoryRememberIn
   return { configured: true, driver: "native", memories };
 }
 
-export async function recallAgentMemory(env: Env, input: AgentMemoryScope & { query: string }): Promise<{
+export async function recallAgentMemory(
+  env: Env,
+  input: AgentMemoryScope & { query: string },
+): Promise<{
   configured: boolean;
   driver?: AgentMemoryDriver;
   answer?: string;
-  recalls?: Array<{ type: string; profile: string; answer?: string; candidates?: unknown[]; count?: number }>;
+  recalls?: Array<{
+    type: string;
+    profile: string;
+    answer?: string;
+    candidates?: unknown[];
+    count?: number;
+  }>;
   count?: number;
 }> {
   const driver = getAgentMemoryDriver(env);
@@ -138,7 +151,10 @@ async function embedText(env: Env, text: string): Promise<number[] | null> {
   }
 }
 
-async function rememberPgvector(env: Env, input: AgentMemoryRememberInput): Promise<{
+async function rememberPgvector(
+  env: Env,
+  input: AgentMemoryRememberInput,
+): Promise<{
   configured: boolean;
   driver?: AgentMemoryDriver;
   memories?: Array<{ type: string; profile: string; memory: unknown }>;
@@ -168,20 +184,34 @@ async function rememberPgvector(env: Env, input: AgentMemoryRememberInput): Prom
   return {
     configured: true,
     driver: "pgvector",
-    memories: profiles.map(({ type, profile }) => ({ type, profile, memory: rows.rows?.[0] ?? null })),
+    memories: profiles.map(({ type, profile }) => ({
+      type,
+      profile,
+      memory: rows.rows?.[0] ?? null,
+    })),
   };
 }
 
-async function recallPgvector(env: Env, input: AgentMemoryScope & { query: string }): Promise<{
+async function recallPgvector(
+  env: Env,
+  input: AgentMemoryScope & { query: string },
+): Promise<{
   configured: boolean;
   driver?: AgentMemoryDriver;
   answer?: string;
-  recalls?: Array<{ type: string; profile: string; answer?: string; candidates?: unknown[]; count?: number }>;
+  recalls?: Array<{
+    type: string;
+    profile: string;
+    answer?: string;
+    candidates?: unknown[];
+    count?: number;
+  }>;
   count?: number;
 }> {
   const query = sanitizeRecallQuery(input.query);
   const embedding = await embedText(env, query);
-  if (!embedding) return { configured: true, driver: "pgvector", answer: "", recalls: [], count: 0 };
+  if (!embedding)
+    return { configured: true, driver: "pgvector", answer: "", recalls: [], count: 0 };
 
   const sql = getRawSql(env, "read");
   const result = await sql`

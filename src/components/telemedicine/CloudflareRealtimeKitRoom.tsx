@@ -8,14 +8,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import {
-  VideoOff,
-  Mic,
-  MicOff,
-  PhoneOff,
-  Monitor,
-  Video as VideoIcon,
-} from "lucide-react";
+import { VideoOff, Mic, MicOff, PhoneOff, Monitor, Video as VideoIcon } from "lucide-react";
 import { toast } from "sonner";
 
 interface CloudflareRealtimeKitRoomProps {
@@ -114,7 +107,10 @@ export function CloudflareRealtimeKitRoom({
             {sessionStart && <SessionTimer startTime={sessionStart} />}
           </div>
           <div className="flex items-center gap-1">
-            <Badge variant="outline" className="text-xs border-blue-500/30 text-blue-400 bg-blue-500/5">
+            <Badge
+              variant="outline"
+              className="text-xs border-blue-500/30 text-blue-400 bg-blue-500/5"
+            >
               Cloudflare Edge GRU
             </Badge>
           </div>
@@ -138,11 +134,13 @@ export function CloudflareRealtimeKitRoom({
                 <div className="p-5 bg-white/5 border border-white/10 rounded-full shadow-2xl mb-3 animate-pulse">
                   <VideoIcon className="w-10 h-10 text-blue-400" />
                 </div>
-                
+
                 {/* Active camera watermark badge */}
                 <div className="absolute top-4 left-4 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/40 border border-white/5">
                   <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-ping" />
-                  <span className="text-[9px] font-black uppercase text-green-400 tracking-widest">Câmera Ativa</span>
+                  <span className="text-[9px] font-black uppercase text-green-400 tracking-widest">
+                    Câmera Ativa
+                  </span>
                 </div>
 
                 <p className="text-[11px] font-bold text-slate-400 tracking-wider">
@@ -155,7 +153,9 @@ export function CloudflareRealtimeKitRoom({
               <div className="p-4 bg-red-500/5 border border-red-500/10 rounded-full animate-pulse">
                 <VideoOff className="w-10 h-10 text-red-500/80" />
               </div>
-              <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">Sua câmera está desligada</p>
+              <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">
+                Sua câmera está desligada
+              </p>
             </div>
           )}
 

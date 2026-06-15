@@ -137,7 +137,8 @@ async function loadFeaturesBatch(
     origem: r.origem ?? null,
     estagio: r.estagio ?? null,
     daysSinceCreated: Number(r.days_since_created ?? 0),
-    daysSinceLastContact: r.days_since_last_contact == null ? null : Number(r.days_since_last_contact),
+    daysSinceLastContact:
+      r.days_since_last_contact == null ? null : Number(r.days_since_last_contact),
     daysSinceLastActivity:
       r.days_since_last_activity == null ? null : Number(r.days_since_last_activity),
     activitiesCount: Number(r.activities_count ?? 0),

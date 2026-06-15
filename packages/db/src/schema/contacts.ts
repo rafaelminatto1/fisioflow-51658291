@@ -52,9 +52,7 @@ export const contacts = pgTable(
     cpf: varchar("cpf", { length: 14 }),
 
     // Estado de relacionamento
-    lifecycleStage: contactLifecycleStageEnum("lifecycle_stage")
-      .notNull()
-      .default("lead"),
+    lifecycleStage: contactLifecycleStageEnum("lifecycle_stage").notNull().default("lead"),
     score: integer("score").notNull().default(0),
     scoreTemperature: text("score_temperature"),
     scoredAt: timestamp("scored_at", { withTimezone: true }),
@@ -71,18 +69,14 @@ export const contacts = pgTable(
     primaryPatientId: uuid("primary_patient_id"),
 
     // Metadados
-    tags: text("tags").array().notNull().default(sql`ARRAY[]::text[]`),
-    metadata: jsonb("metadata")
-      .$type<Record<string, unknown>>()
+    tags: text("tags")
+      .array()
       .notNull()
-      .default({}),
+      .default(sql`ARRAY[]::text[]`),
+    metadata: jsonb("metadata").$type<Record<string, unknown>>().notNull().default({}),
 
-    createdAt: timestamp("created_at", { withTimezone: true })
-      .notNull()
-      .defaultNow(),
-    updatedAt: timestamp("updated_at", { withTimezone: true })
-      .notNull()
-      .defaultNow(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
     deletedAt: timestamp("deleted_at", { withTimezone: true }),
   },
   (table) => [
@@ -97,14 +91,8 @@ export const contacts = pgTable(
       .where(sql`cpf IS NOT NULL AND deleted_at IS NULL`),
     index("idx_contacts_org_stage").on(table.organizationId, table.lifecycleStage),
     index("idx_contacts_org_owner").on(table.organizationId, table.ownerId),
-    index("idx_contacts_org_temp").on(
-      table.organizationId,
-      table.scoreTemperature,
-    ),
-    index("idx_contacts_org_updated").on(
-      table.organizationId,
-      table.updatedAt,
-    ),
+    index("idx_contacts_org_temp").on(table.organizationId, table.scoreTemperature),
+    index("idx_contacts_org_updated").on(table.organizationId, table.updatedAt),
     check("contacts_score_range", sql`${table.score} BETWEEN 0 AND 100`),
     check(
       "contacts_temperature_values",
@@ -141,24 +129,13 @@ export const contactActivities = pgTable(
     refCampaignId: uuid("ref_campaign_id"),
     refAutomationId: uuid("ref_automation_id"),
 
-    payload: jsonb("payload")
-      .$type<Record<string, unknown>>()
-      .notNull()
-      .default({}),
+    payload: jsonb("payload").$type<Record<string, unknown>>().notNull().default({}),
     createdBy: text("created_by"),
-    createdAt: timestamp("created_at", { withTimezone: true })
-      .notNull()
-      .defaultNow(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (table) => [
-    index("idx_contact_activities_contact_created").on(
-      table.contactId,
-      table.createdAt,
-    ),
-    index("idx_contact_activities_org_tipo").on(
-      table.organizationId,
-      table.tipo,
-    ),
+    index("idx_contact_activities_contact_created").on(table.contactId, table.createdAt),
+    index("idx_contact_activities_org_tipo").on(table.organizationId, table.tipo),
     withOrganizationPolicy("contact_activities", table.organizationId),
   ],
 );
@@ -175,26 +152,15 @@ export const contactScores = pgTable(
       .references(() => contacts.id, { onDelete: "cascade" }),
     score: integer("score").notNull(),
     temperature: text("temperature").notNull(),
-    features: jsonb("features")
-      .$type<Record<string, unknown>>()
-      .notNull()
-      .default({}),
+    features: jsonb("features").$type<Record<string, unknown>>().notNull().default({}),
     model: text("model").notNull().default("rules-v1"),
     modelVersion: text("model_version"),
-    createdAt: timestamp("created_at", { withTimezone: true })
-      .notNull()
-      .defaultNow(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (table) => [
-    index("idx_contact_scores_contact_created").on(
-      table.contactId,
-      table.createdAt,
-    ),
+    index("idx_contact_scores_contact_created").on(table.contactId, table.createdAt),
     check("contact_scores_range", sql`${table.score} BETWEEN 0 AND 100`),
-    check(
-      "contact_scores_temperature",
-      sql`${table.temperature} IN ('cold','warm','hot')`,
-    ),
+    check("contact_scores_temperature", sql`${table.temperature} IN ('cold','warm','hot')`),
     withOrganizationPolicy("contact_scores", table.organizationId),
   ],
 );
@@ -206,15 +172,12 @@ export const contactsRelations = relations(contacts, ({ many }) => ({
   scores: many(contactScores),
 }));
 
-export const contactActivitiesRelations = relations(
-  contactActivities,
-  ({ one }) => ({
-    contact: one(contacts, {
-      fields: [contactActivities.contactId],
-      references: [contacts.id],
-    }),
+export const contactActivitiesRelations = relations(contactActivities, ({ one }) => ({
+  contact: one(contacts, {
+    fields: [contactActivities.contactId],
+    references: [contacts.id],
   }),
-);
+}));
 
 export const contactScoresRelations = relations(contactScores, ({ one }) => ({
   contact: one(contacts, {

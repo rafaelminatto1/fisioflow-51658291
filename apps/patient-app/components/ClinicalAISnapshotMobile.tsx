@@ -16,16 +16,14 @@ export const ClinicalAISnapshotMobile = () => {
       if (!res || !res.data || !res.data.mainStatus) {
         return {
           data: {
-            mainStatus: "Você demonstrou excelente avanço na redução da dor lombar. Sua estabilidade central está mais forte do que na avaliação inicial.",
-            keyWins: [
-              "Aumento de 30% na flexão de tronco",
-              "Redução da dor matinal (de 7 para 3)"
-            ],
+            mainStatus:
+              "Você demonstrou excelente avanço na redução da dor lombar. Sua estabilidade central está mais forte do que na avaliação inicial.",
+            keyWins: ["Aumento de 30% na flexão de tronco", "Redução da dor matinal (de 7 para 3)"],
             remainingChallenges: [
               "Focar no controle rotacional",
-              "Manter regularidade nos exercícios de mobilidade"
-            ]
-          }
+              "Manter regularidade nos exercícios de mobilidade",
+            ],
+          },
         };
       }
       return res;

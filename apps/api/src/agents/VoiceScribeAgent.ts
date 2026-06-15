@@ -1,7 +1,11 @@
 import { Agent } from "agents";
 import { withVoice, WorkersAIFluxSTT, type VoiceTurnContext } from "@cloudflare/voice";
 import type { Env } from "../types/env";
-import { normalizeAudioCapturePolicy, type AudioCaptureMode, type AudioCaptureReason } from "@fisioflow/core";
+import {
+  normalizeAudioCapturePolicy,
+  type AudioCaptureMode,
+  type AudioCaptureReason,
+} from "@fisioflow/core";
 import { checkAudioTranscriptionBudget } from "../lib/audioTranscriptionBudget";
 
 const VoiceAgentBase = withVoice(Agent);

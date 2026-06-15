@@ -8,13 +8,7 @@ import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -114,8 +108,7 @@ export function NPSDashboard() {
           </CardHeader>
           <CardContent>
             <p className="text-xs text-muted-foreground">
-              Score médio:{" "}
-              {stats?.score_medio == null ? "—" : Number(stats.score_medio).toFixed(2)}
+              Score médio: {stats?.score_medio == null ? "—" : Number(stats.score_medio).toFixed(2)}
             </p>
           </CardContent>
         </Card>
@@ -225,9 +218,7 @@ export function NPSDashboard() {
                     size="sm"
                     className="h-auto p-0 text-xs"
                     onClick={() => {
-                      navigator.clipboard.writeText(
-                        `${window.location.origin}/nps/${s.token}`,
-                      );
+                      navigator.clipboard.writeText(`${window.location.origin}/nps/${s.token}`);
                     }}
                   >
                     Copiar link público

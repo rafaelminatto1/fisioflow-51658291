@@ -190,9 +190,7 @@ export const ExpandedAppointmentCard: React.FC<ExpandedAppointmentCardProps> = (
         </div>
 
         {appointment.notes && (
-          <motion.div
-            className="mt-10 p-6 rounded-[2rem] bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800/50 flex items-start gap-4 group/notes relative overflow-hidden"
-          >
+          <motion.div className="mt-10 p-6 rounded-[2rem] bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800/50 flex items-start gap-4 group/notes relative overflow-hidden">
             <div className="absolute top-0 left-0 bottom-0 w-1.5 bg-amber-400/40" />
             <AlertCircle className="w-5 h-5 text-amber-500 mt-0.5 group-hover/notes:rotate-12 transition-transform shrink-0" />
             <p className="text-sm font-bold text-slate-600 dark:text-slate-300 leading-relaxed italic pr-2">

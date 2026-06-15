@@ -404,16 +404,30 @@ export default function EvolutionFormScreen() {
           {/* Assinatura */}
           {patientSignatureUrl ? (
             <View style={{ marginVertical: 16 }}>
-               <Text style={[styles.headerTitle, { color: colors.text, marginBottom: 8 }]}>Assinatura do Paciente</Text>
-               <View style={{ height: 120, borderWidth: 1, borderColor: colors.border, borderRadius: 8, overflow: 'hidden' }}>
-                 <Image source={{ uri: patientSignatureUrl }} style={{ width: '100%', height: '100%', resizeMode: 'contain' }} alt="Assinatura" />
-               </View>
-               <TouchableOpacity 
-                  style={{ marginTop: 8 }} 
-                  onPress={() => setPatientSignatureUrl(null)}
-               >
-                 <Text style={{ color: colors.error }}>Remover Assinatura</Text>
-               </TouchableOpacity>
+              <Text style={[styles.headerTitle, { color: colors.text, marginBottom: 8 }]}>
+                Assinatura do Paciente
+              </Text>
+              <View
+                style={{
+                  height: 120,
+                  borderWidth: 1,
+                  borderColor: colors.border,
+                  borderRadius: 8,
+                  overflow: "hidden",
+                }}
+              >
+                <Image
+                  source={{ uri: patientSignatureUrl }}
+                  style={{ width: "100%", height: "100%", resizeMode: "contain" }}
+                  alt="Assinatura"
+                />
+              </View>
+              <TouchableOpacity
+                style={{ marginTop: 8 }}
+                onPress={() => setPatientSignatureUrl(null)}
+              >
+                <Text style={{ color: colors.error }}>Remover Assinatura</Text>
+              </TouchableOpacity>
             </View>
           ) : (
             <SignaturePad onSignatureSaved={setPatientSignatureUrl} colors={colors} />

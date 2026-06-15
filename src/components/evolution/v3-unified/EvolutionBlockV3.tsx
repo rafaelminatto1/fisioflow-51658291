@@ -164,234 +164,240 @@ const EvolutionItemRow: React.FC<EvolutionItemRowProps> = ({
             style={{
               ...provided.draggableProps.style,
               // Garante que o width seja mantido quando estiver no portal
-              width: snapshot.isDragging ? "var(--drag-width)" : provided.draggableProps.style?.width,
+              width: snapshot.isDragging
+                ? "var(--drag-width)"
+                : provided.draggableProps.style?.width,
             }}
           >
             {/* Row Header */}
-            <div className="flex items-center gap-2 px-2.5 py-1.5" ref={(el) => {
-              if (el && snapshot.isDragging) {
-                // Captura o width original para usar no portal
-                const parent = el.closest('.droppable-container');
-                if (parent) {
-                  const width = parent.getBoundingClientRect().width;
-                  document.documentElement.style.setProperty('--drag-width', `${width}px`);
-                }
-              }
-            }}>
-
-            {/* Order number */}
-            <span
-              className="shrink-0 w-5 text-center text-[10px] font-bold text-muted-foreground/40 select-none"
-              aria-label={`Item ${index + 1}`}
-            >
-              {index + 1}
-            </span>
             <div
-              {...provided.dragHandleProps}
-              className={cn(
-                "flex h-7 w-6 shrink-0 items-center justify-center rounded-md cursor-grab active:cursor-grabbing",
-                "text-muted-foreground/35 hover:bg-muted/50 hover:text-muted-foreground/80 transition-colors",
-                disabled && "cursor-not-allowed opacity-40",
-              )}
-              aria-label="Arrastar item na sequência"
+              className="flex items-center gap-2 px-2.5 py-1.5"
+              ref={(el) => {
+                if (el && snapshot.isDragging) {
+                  // Captura o width original para usar no portal
+                  const parent = el.closest(".droppable-container");
+                  if (parent) {
+                    const width = parent.getBoundingClientRect().width;
+                    document.documentElement.style.setProperty("--drag-width", `${width}px`);
+                  }
+                }
+              }}
             >
-              <GripVertical className="h-3.5 w-3.5" />
-            </div>
-
-            <Checkbox
-              checked={item.completed}
-              onCheckedChange={() => handleToggleItem(item.id)}
-              disabled={disabled}
-              className="h-4 w-4 rounded data-[state=checked]:bg-primary data-[state=checked]:border-primary"
-            />
-
-            <button
-              type="button"
-              className="flex min-w-0 flex-1 cursor-pointer items-center gap-2 text-left"
-              onClick={() => setExpandedId(isExpanded ? null : item.id)}
-            >
+              {/* Order number */}
               <span
-                className={cn(
-                  "min-w-0 shrink text-sm font-semibold transition-all duration-300 flex items-center gap-2",
-                  item.completed &&
-                    "text-muted-foreground/70 line-through decoration-muted-foreground/30 font-medium",
-                )}
+                className="shrink-0 w-5 text-center text-[10px] font-bold text-muted-foreground/40 select-none"
+                aria-label={`Item ${index + 1}`}
               >
-                {type === "unified" &&
-                  (item.type === "exercise" ? (
-                    <Dumbbell className="h-3.5 w-3.5 text-blue-500/70 shrink-0" />
-                  ) : (
-                    <Stethoscope className="h-3.5 w-3.5 text-emerald-500/70 shrink-0" />
-                  ))}
-                <span className="truncate">{item.name}</span>
+                {index + 1}
               </span>
-
-              {itemDetails.length > 0 && (
-                <div className="flex min-w-0 flex-1 items-center gap-1.5 overflow-hidden">
-                  {itemDetails.slice(0, 2).map((detail) => (
-                    <Badge
-                      key={detail.key}
-                      variant="outline"
-                      title={detail.label}
-                      className={cn(
-                        "h-5 min-w-0 max-w-[9rem] shrink-0 truncate border px-1.5 text-[10px] font-semibold",
-                        item.type === "exercise" && detail.key === "prescription" && "font-mono",
-                        detail.className,
-                      )}
-                    >
-                      <span className="truncate">{detail.label}</span>
-                    </Badge>
-                  ))}
-                  {itemDetails.length > 2 && (
-                    <Badge
-                      variant="outline"
-                      className="h-5 shrink-0 border-slate-200 bg-slate-50 px-1.5 text-[10px] font-semibold text-slate-600"
-                    >
-                      +{itemDetails.length - 2}
-                    </Badge>
-                  )}
-                </div>
-              )}
-
-              {/* Indicators */}
-              <div className="ml-2 flex items-center gap-1.5 opacity-0 group-hover/item:opacity-100 transition-opacity">
-                {(item.prescription || item.notes) && (
-                  <div
-                    className="p-1 rounded-md bg-muted/30 text-muted-foreground/70"
-                    title="Possui detalhes"
-                  >
-                    <Info className="h-3 w-3" />
-                  </div>
+              <div
+                {...provided.dragHandleProps}
+                className={cn(
+                  "flex h-7 w-6 shrink-0 items-center justify-center rounded-md cursor-grab active:cursor-grabbing",
+                  "text-muted-foreground/35 hover:bg-muted/50 hover:text-muted-foreground/80 transition-colors",
+                  disabled && "cursor-not-allowed opacity-40",
                 )}
-                {item.patientFeedback && (
-                  <div
-                    className="p-1 rounded-md bg-sky-500/10 text-sky-600"
-                    title="Possui feedback"
-                  >
-                    <MessageSquare className="h-3 w-3" />
-                  </div>
-                )}
+                aria-label="Arrastar item na sequência"
+              >
+                <GripVertical className="h-3.5 w-3.5" />
               </div>
-            </button>
 
-            <div className="flex items-center gap-1">
-              <Button
-                size="icon"
-                variant="ghost"
+              <Checkbox
+                checked={item.completed}
+                onCheckedChange={() => handleToggleItem(item.id)}
+                disabled={disabled}
+                className="h-4 w-4 rounded data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+              />
+
+              <button
+                type="button"
+                className="flex min-w-0 flex-1 cursor-pointer items-center gap-2 text-left"
                 onClick={() => setExpandedId(isExpanded ? null : item.id)}
-                className="h-7 w-7 rounded-md text-muted-foreground hover:text-primary transition-colors"
               >
-                {isExpanded ? (
-                  <ChevronUp className="h-4 w-4" />
-                ) : (
-                  <ChevronDown className="h-4 w-4" />
+                <span
+                  className={cn(
+                    "min-w-0 shrink text-sm font-semibold transition-all duration-300 flex items-center gap-2",
+                    item.completed &&
+                      "text-muted-foreground/70 line-through decoration-muted-foreground/30 font-medium",
+                  )}
+                >
+                  {type === "unified" &&
+                    (item.type === "exercise" ? (
+                      <Dumbbell className="h-3.5 w-3.5 text-blue-500/70 shrink-0" />
+                    ) : (
+                      <Stethoscope className="h-3.5 w-3.5 text-emerald-500/70 shrink-0" />
+                    ))}
+                  <span className="truncate">{item.name}</span>
+                </span>
+
+                {itemDetails.length > 0 && (
+                  <div className="flex min-w-0 flex-1 items-center gap-1.5 overflow-hidden">
+                    {itemDetails.slice(0, 2).map((detail) => (
+                      <Badge
+                        key={detail.key}
+                        variant="outline"
+                        title={detail.label}
+                        className={cn(
+                          "h-5 min-w-0 max-w-[9rem] shrink-0 truncate border px-1.5 text-[10px] font-semibold",
+                          item.type === "exercise" && detail.key === "prescription" && "font-mono",
+                          detail.className,
+                        )}
+                      >
+                        <span className="truncate">{detail.label}</span>
+                      </Badge>
+                    ))}
+                    {itemDetails.length > 2 && (
+                      <Badge
+                        variant="outline"
+                        className="h-5 shrink-0 border-slate-200 bg-slate-50 px-1.5 text-[10px] font-semibold text-slate-600"
+                      >
+                        +{itemDetails.length - 2}
+                      </Badge>
+                    )}
+                  </div>
                 )}
-              </Button>
 
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    className="h-7 w-7 rounded-md text-muted-foreground opacity-0 group-hover/item:opacity-100 transition-opacity focus-visible:opacity-100"
-                    aria-label="Mais opções"
-                  >
-                    <MoreVertical className="h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-40 rounded-xl">
-                  <DropdownMenuItem
-                    onClick={() => handleRemoveItem(item.id)}
-                    className="text-destructive focus:text-destructive focus:bg-destructive/10 cursor-pointer"
-                  >
-                    <Trash2 className="h-4 w-4 mr-2" />
-                    Remover
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-          </div>
-
-          {/* Expanded Details */}
-          <AnimatePresence>
-            {isExpanded && (
-              <motion.div
-                initial={{ height: 0, opacity: 0 }}
-                animate={{ height: "auto", opacity: 1 }}
-                exit={{ height: 0, opacity: 0 }}
-                transition={{ duration: 0.2 }}
-                className="overflow-hidden"
-              >
-                <div className="px-10 pb-4 pt-1 space-y-4">
-                  {item.type === "exercise" ? (
-                    <>
-                      <div className="space-y-1.5">
-                        <div className="flex items-center gap-1.5 px-1">
-                          <Dumbbell className="h-3 w-3 text-blue-500" />
-                          <label className="text-[10px] font-bold text-muted-foreground/70 uppercase tracking-wider">
-                            Prescrição (Séries, Repetições, Carga)
-                          </label>
-                        </div>
-                        <Input
-                          value={item.prescription || ""}
-                          onChange={(e) =>
-                            handleUpdateItem(item.id, { prescription: e.target.value })
-                          }
-                          placeholder="Ex: 3x12 - 5kg - 30s descanso"
-                          className="h-9 rounded-xl bg-muted/40 border-border/40 focus-visible:ring-blue-500/20 text-sm"
-                          disabled={disabled}
-                        />
-                      </div>
-                      <div className="space-y-1.5">
-                        <div className="flex items-center gap-1.5 px-1">
-                          <MessageSquare className="h-3 w-3 text-indigo-500" />
-                          <label className="text-[10px] font-bold text-muted-foreground/70 uppercase tracking-wider">
-                            Feedback do Paciente
-                          </label>
-                        </div>
-                        <Input
-                          value={item.patientFeedback || ""}
-                          onChange={(e) =>
-                            handleUpdateItem(item.id, { patientFeedback: e.target.value })
-                          }
-                          placeholder="Como o paciente se sentiu? Dor? Facilidade?"
-                          className="h-9 rounded-xl bg-muted/40 border-border/40 focus-visible:ring-indigo-500/20 text-sm"
-                          disabled={disabled}
-                        />
-                      </div>
-                    </>
-                  ) : (
-                    <div className="flex gap-2">
-                      <div className="flex-1 space-y-1.5">
-                        <label className="text-[10px] font-bold text-muted-foreground/70 uppercase tracking-wider px-1">
-                          Intensidade / Parâmetros
-                        </label>
-                        <Input
-                          value={item.intensity || ""}
-                          onChange={(e) => handleUpdateItem(item.id, { intensity: e.target.value })}
-                          placeholder="Ex: 2.0 J/cm² ou 10mA"
-                          className="h-9 rounded-xl bg-muted/40 border-border/40 focus-visible:ring-emerald-500/20 text-sm"
-                          disabled={disabled}
-                        />
-                      </div>
-                      <div className="flex-1 space-y-1.5">
-                        <label className="text-[10px] font-bold text-muted-foreground/70 uppercase tracking-wider px-1">
-                          Notas do Procedimento
-                        </label>
-                        <Input
-                          value={item.notes || ""}
-                          onChange={(e) => handleUpdateItem(item.id, { notes: e.target.value })}
-                          placeholder="Detalhes sobre a técnica, tempo ou resposta..."
-                          className="h-9 rounded-xl bg-muted/40 border-border/40 focus-visible:ring-emerald-500/20 text-sm"
-                          disabled={disabled}
-                        />
-                      </div>
+                {/* Indicators */}
+                <div className="ml-2 flex items-center gap-1.5 opacity-0 group-hover/item:opacity-100 transition-opacity">
+                  {(item.prescription || item.notes) && (
+                    <div
+                      className="p-1 rounded-md bg-muted/30 text-muted-foreground/70"
+                      title="Possui detalhes"
+                    >
+                      <Info className="h-3 w-3" />
+                    </div>
+                  )}
+                  {item.patientFeedback && (
+                    <div
+                      className="p-1 rounded-md bg-sky-500/10 text-sky-600"
+                      title="Possui feedback"
+                    >
+                      <MessageSquare className="h-3 w-3" />
                     </div>
                   )}
                 </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
+              </button>
+
+              <div className="flex items-center gap-1">
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  onClick={() => setExpandedId(isExpanded ? null : item.id)}
+                  className="h-7 w-7 rounded-md text-muted-foreground hover:text-primary transition-colors"
+                >
+                  {isExpanded ? (
+                    <ChevronUp className="h-4 w-4" />
+                  ) : (
+                    <ChevronDown className="h-4 w-4" />
+                  )}
+                </Button>
+
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="h-7 w-7 rounded-md text-muted-foreground opacity-0 group-hover/item:opacity-100 transition-opacity focus-visible:opacity-100"
+                      aria-label="Mais opções"
+                    >
+                      <MoreVertical className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-40 rounded-xl">
+                    <DropdownMenuItem
+                      onClick={() => handleRemoveItem(item.id)}
+                      className="text-destructive focus:text-destructive focus:bg-destructive/10 cursor-pointer"
+                    >
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Remover
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+            </div>
+
+            {/* Expanded Details */}
+            <AnimatePresence>
+              {isExpanded && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: "auto", opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.2 }}
+                  className="overflow-hidden"
+                >
+                  <div className="px-10 pb-4 pt-1 space-y-4">
+                    {item.type === "exercise" ? (
+                      <>
+                        <div className="space-y-1.5">
+                          <div className="flex items-center gap-1.5 px-1">
+                            <Dumbbell className="h-3 w-3 text-blue-500" />
+                            <label className="text-[10px] font-bold text-muted-foreground/70 uppercase tracking-wider">
+                              Prescrição (Séries, Repetições, Carga)
+                            </label>
+                          </div>
+                          <Input
+                            value={item.prescription || ""}
+                            onChange={(e) =>
+                              handleUpdateItem(item.id, { prescription: e.target.value })
+                            }
+                            placeholder="Ex: 3x12 - 5kg - 30s descanso"
+                            className="h-9 rounded-xl bg-muted/40 border-border/40 focus-visible:ring-blue-500/20 text-sm"
+                            disabled={disabled}
+                          />
+                        </div>
+                        <div className="space-y-1.5">
+                          <div className="flex items-center gap-1.5 px-1">
+                            <MessageSquare className="h-3 w-3 text-indigo-500" />
+                            <label className="text-[10px] font-bold text-muted-foreground/70 uppercase tracking-wider">
+                              Feedback do Paciente
+                            </label>
+                          </div>
+                          <Input
+                            value={item.patientFeedback || ""}
+                            onChange={(e) =>
+                              handleUpdateItem(item.id, { patientFeedback: e.target.value })
+                            }
+                            placeholder="Como o paciente se sentiu? Dor? Facilidade?"
+                            className="h-9 rounded-xl bg-muted/40 border-border/40 focus-visible:ring-indigo-500/20 text-sm"
+                            disabled={disabled}
+                          />
+                        </div>
+                      </>
+                    ) : (
+                      <div className="flex gap-2">
+                        <div className="flex-1 space-y-1.5">
+                          <label className="text-[10px] font-bold text-muted-foreground/70 uppercase tracking-wider px-1">
+                            Intensidade / Parâmetros
+                          </label>
+                          <Input
+                            value={item.intensity || ""}
+                            onChange={(e) =>
+                              handleUpdateItem(item.id, { intensity: e.target.value })
+                            }
+                            placeholder="Ex: 2.0 J/cm² ou 10mA"
+                            className="h-9 rounded-xl bg-muted/40 border-border/40 focus-visible:ring-emerald-500/20 text-sm"
+                            disabled={disabled}
+                          />
+                        </div>
+                        <div className="flex-1 space-y-1.5">
+                          <label className="text-[10px] font-bold text-muted-foreground/70 uppercase tracking-wider px-1">
+                            Notas do Procedimento
+                          </label>
+                          <Input
+                            value={item.notes || ""}
+                            onChange={(e) => handleUpdateItem(item.id, { notes: e.target.value })}
+                            placeholder="Detalhes sobre a técnica, tempo ou resposta..."
+                            className="h-9 rounded-xl bg-muted/40 border-border/40 focus-visible:ring-emerald-500/20 text-sm"
+                            disabled={disabled}
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         );
 
@@ -402,7 +408,6 @@ const EvolutionItemRow: React.FC<EvolutionItemRowProps> = ({
         return row;
       }}
     </Draggable>
-
   );
 };
 
@@ -627,7 +632,9 @@ export const EvolutionBlockV3: React.FC<EvolutionBlockV3Props> = ({
               {getIcon()}
             </div>
             <div>
-              <h3 className="font-bold text-base tracking-tight text-foreground/90">{getTitle()}</h3>
+              <h3 className="font-bold text-base tracking-tight text-foreground/90">
+                {getTitle()}
+              </h3>
               <div className="flex items-center gap-2 mt-0.5">
                 <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">
                   {completedCount} de {totalCount} concluídos
@@ -814,7 +821,6 @@ export const EvolutionBlockV3: React.FC<EvolutionBlockV3Props> = ({
                 ref={provided.innerRef}
                 className="space-y-0.5 droppable-container"
               >
-
                 {items.length === 0 ? (
                   <div
                     className={cn(

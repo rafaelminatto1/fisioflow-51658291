@@ -35,7 +35,9 @@ function SortableRow<T extends { id: string }>({
   renderItem: (item: T, dragHandle: ReactNode) => ReactNode;
   id: string;
 }) {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id,
+  });
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,

@@ -87,7 +87,10 @@ export class ClinicAgent extends Agent<Env, ClinicState> {
       if (this.env.AI_SEARCH) {
         const { searchAiSearch } = await import("../lib/cloudflareAiSearch");
         const result = await searchAiSearch(this.env, { query: text, maxNumResults: 4 });
-        context = result.sources.map((s) => s.content).join("\n\n").slice(0, 6000);
+        context = result.sources
+          .map((s) => s.content)
+          .join("\n\n")
+          .slice(0, 6000);
         sources = result.sources.map((s) => ({
           title: String(s.metadata?.title ?? s.filename),
           slug: String(s.metadata?.slug ?? ""),

@@ -35,10 +35,14 @@ export function PoseTrackerOverlay({ pose, status, message }: PoseTrackerOverlay
 
   const getColor = () => {
     switch (status) {
-      case "ok": return "#10B981";
-      case "warn": return "#F59E0B";
-      case "crit": return "#EF4444";
-      default: return "#fff";
+      case "ok":
+        return "#10B981";
+      case "warn":
+        return "#F59E0B";
+      case "crit":
+        return "#EF4444";
+      default:
+        return "#fff";
     }
   };
 

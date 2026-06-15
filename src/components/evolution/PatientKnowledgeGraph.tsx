@@ -512,7 +512,10 @@ const EmptyState: React.FC = () => (
       <Badge variant="outline" className="text-orange-600 border-orange-200 bg-orange-50 text-xs">
         Patologias
       </Badge>
-      <Badge variant="outline" className="text-emerald-600 border-emerald-200 bg-emerald-50 text-xs">
+      <Badge
+        variant="outline"
+        className="text-emerald-600 border-emerald-200 bg-emerald-50 text-xs"
+      >
         Exercícios
       </Badge>
     </div>

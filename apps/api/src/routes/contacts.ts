@@ -124,10 +124,10 @@ app.get("/:id/timeline", requireAuth, async (c) => {
   const { tipo, limit = "100", offset = "0" } = c.req.query();
 
   // RBAC simples: precisa pertencer à org
-  const own = await pool.query(
-    `SELECT 1 FROM contacts WHERE id = $1 AND organization_id = $2`,
-    [id, user.organizationId],
-  );
+  const own = await pool.query(`SELECT 1 FROM contacts WHERE id = $1 AND organization_id = $2`, [
+    id,
+    user.organizationId,
+  ]);
   if (!own.rows.length) return c.json({ error: "Contato não encontrado" }, 404);
 
   const conditions: string[] = ["contact_id = $1"];
@@ -167,7 +167,9 @@ app.post("/:id/convert", requireAuth, async (c) => {
   const contact = contactRes.rows[0];
 
   if (contact.primary_patient_id) {
-    return c.json({ data: { contact_id: id, patient_id: contact.primary_patient_id, already: true } });
+    return c.json({
+      data: { contact_id: id, patient_id: contact.primary_patient_id, already: true },
+    });
   }
 
   const patientRes = await pool.query(

@@ -1,4 +1,4 @@
-import React, {  } from "react";
+import React from "react";
 import { StyleSheet, View, Text, TouchableOpacity, Dimensions, Image } from "react-native";
 import { Camera, useCameraDevice, useFrameProcessor } from "react-native-vision-camera";
 import { detectPose, Pose } from "expo-vision-pose-detector";

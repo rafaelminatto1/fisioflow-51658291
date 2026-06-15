@@ -73,9 +73,9 @@ try {
   await page.screenshot({ path: "/tmp/agent-hub-prod-validation.png", fullPage: true });
 } catch (error) {
   result.error = error instanceof Error ? error.message : String(error);
-  await page.screenshot({ path: "/tmp/agent-hub-prod-validation-error.png", fullPage: true }).catch(
-    () => {},
-  );
+  await page
+    .screenshot({ path: "/tmp/agent-hub-prod-validation-error.png", fullPage: true })
+    .catch(() => {});
 } finally {
   result.currentUrl = page.url();
   await browser.close();

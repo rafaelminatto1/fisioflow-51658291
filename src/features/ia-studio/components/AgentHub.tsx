@@ -95,7 +95,8 @@ const AGENTS = [
     icon: Activity,
     color: "text-purple-500",
     bg: "bg-purple-500/10",
-    prompt: "Olá! Eu sou o FisioFlow Brain. Sobre o que você gostaria de pesquisar no histórico clínico?",
+    prompt:
+      "Olá! Eu sou o FisioFlow Brain. Sobre o que você gostaria de pesquisar no histórico clínico?",
   },
   {
     id: "soap-review",
@@ -335,10 +336,10 @@ export const AgentHub: React.FC<AgentHubProps> = ({ isOpen, onClose }) => {
 
       setMessages((prev) => [
         ...prev,
-        { 
-          role: "assistant", 
+        {
+          role: "assistant",
           content: `${safetyPrefix}${simulatedMessage}`,
-          suggestedResources 
+          suggestedResources,
         },
       ]);
     } catch (error) {
@@ -597,30 +598,32 @@ export const AgentHub: React.FC<AgentHubProps> = ({ isOpen, onClose }) => {
                             {msg.content}
                           </p>
 
-                          {msg.role === "assistant" && msg.suggestedResources && msg.suggestedResources.length > 0 && (
-                            <div className="mt-4 space-y-3">
-                              <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 flex items-center gap-2">
-                                <Zap className="w-3 h-3 fill-amber-500 text-amber-500" /> 
-                                Recursos Sugeridos
-                              </p>
-                              <div className="space-y-3">
-                                {msg.suggestedResources.map((res, idx) => (
+                          {msg.role === "assistant" &&
+                            msg.suggestedResources &&
+                            msg.suggestedResources.length > 0 && (
+                              <div className="mt-4 space-y-3">
+                                <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 flex items-center gap-2">
+                                  <Zap className="w-3 h-3 fill-amber-500 text-amber-500" />
+                                  Recursos Sugeridos
+                                </p>
+                                <div className="space-y-3">
+                                  {msg.suggestedResources.map((res, idx) => (
                                     <motion.div
-                                        key={res.id}
-                                        initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                                        transition={{ delay: 0.1 + idx * 0.05, duration: 0.3 }}
+                                      key={res.id}
+                                      initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                                      transition={{ delay: 0.1 + idx * 0.05, duration: 0.3 }}
                                     >
-                                        <ResourceCard
-                                            resource={res}
-                                            query={messages[i-1]?.content || ""}
-                                            onPreview={(r) => setPreviewResource(r)}
-                                        />
+                                      <ResourceCard
+                                        resource={res}
+                                        query={messages[i - 1]?.content || ""}
+                                        onPreview={(r) => setPreviewResource(r)}
+                                      />
                                     </motion.div>
-                                ))}
+                                  ))}
+                                </div>
                               </div>
-                            </div>
-                          )}
+                            )}
                         </div>
                       </div>
                     ))}
@@ -757,12 +760,15 @@ export const AgentHub: React.FC<AgentHubProps> = ({ isOpen, onClose }) => {
         <DialogContent className="max-w-2xl bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800">
           <DialogHeader>
             <div className="flex items-center gap-2 mb-2">
-                <Badge variant="secondary" className="uppercase tracking-widest text-[10px] font-black">
-                    {previewResource?.type}
-                </Badge>
-                <span className="text-[10px] text-slate-400 font-black uppercase">
-                    {previewResource?.source}
-                </span>
+              <Badge
+                variant="secondary"
+                className="uppercase tracking-widest text-[10px] font-black"
+              >
+                {previewResource?.type}
+              </Badge>
+              <span className="text-[10px] text-slate-400 font-black uppercase">
+                {previewResource?.source}
+              </span>
             </div>
             <DialogTitle className="text-xl font-black text-slate-900 dark:text-white leading-tight">
               {previewResource?.title}
@@ -774,47 +780,47 @@ export const AgentHub: React.FC<AgentHubProps> = ({ isOpen, onClose }) => {
 
           <div className="mt-4 space-y-4">
             {previewResource?.thumbnailUrl && (
-                <div className="aspect-video rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
-                    <img 
-                        src={previewResource.thumbnailUrl} 
-                        alt={previewResource.title}
-                        className="w-full h-full object-cover" 
-                    />
-                </div>
+              <div className="aspect-video rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                <img
+                  src={previewResource.thumbnailUrl}
+                  alt={previewResource.title}
+                  className="w-full h-full object-cover"
+                />
+              </div>
             )}
 
             <div className="bg-slate-50 dark:bg-slate-900/50 rounded-xl p-4 border border-slate-100 dark:border-slate-800/50">
-                <h6 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">
-                    Metadados Clínicos
-                </h6>
-                <div className="grid grid-cols-2 gap-4">
-                    <div>
-                        <p className="text-[11px] text-slate-400">Score de Relevância</p>
-                        <p className="text-sm font-bold text-slate-700 dark:text-slate-200">
-                            {(previewResource?.score || 0 * 100).toFixed(1)}%
-                        </p>
-                    </div>
-                    {previewResource?.metadata?.category && (
-                         <div>
-                            <p className="text-[11px] text-slate-400">Categoria</p>
-                            <p className="text-sm font-bold text-slate-700 dark:text-slate-200">
-                                {previewResource.metadata.category}
-                            </p>
-                        </div>
-                    )}
+              <h6 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">
+                Metadados Clínicos
+              </h6>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-[11px] text-slate-400">Score de Relevância</p>
+                  <p className="text-sm font-bold text-slate-700 dark:text-slate-200">
+                    {(previewResource?.score || 0 * 100).toFixed(1)}%
+                  </p>
                 </div>
+                {previewResource?.metadata?.category && (
+                  <div>
+                    <p className="text-[11px] text-slate-400">Categoria</p>
+                    <p className="text-sm font-bold text-slate-700 dark:text-slate-200">
+                      {previewResource.metadata.category}
+                    </p>
+                  </div>
+                )}
+              </div>
             </div>
 
             <div className="flex justify-end gap-3 pt-4 border-t border-slate-100 dark:border-slate-800">
-                <Button variant="ghost" onClick={() => setPreviewResource(null)}>
-                    Fechar
+              <Button variant="ghost" onClick={() => setPreviewResource(null)}>
+                Fechar
+              </Button>
+              {previewResource?.action.target.startsWith("http") && (
+                <Button onClick={() => window.open(previewResource.action.target, "_blank")}>
+                  Ver Completo
+                  <ExternalLink className="w-4 h-4 ml-2" />
                 </Button>
-                {previewResource?.action.target.startsWith('http') && (
-                    <Button onClick={() => window.open(previewResource.action.target, '_blank')}>
-                        Ver Completo
-                        <ExternalLink className="w-4 h-4 ml-2" />
-                    </Button>
-                )}
+              )}
             </div>
           </div>
         </DialogContent>

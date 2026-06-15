@@ -23,7 +23,7 @@ export const RecoveryTrajectoryMobileWidget = () => {
           trajectory: {
             labels: ["Sem 1", "Sem 2", "Sem 3", "Sem 4", "Sem 5"],
             data: [40, 55, 68, 80, 85], // Score de funcionalidade (subindo)
-          }
+          },
         };
       }
       return res;
@@ -49,8 +49,8 @@ export const RecoveryTrajectoryMobileWidget = () => {
       {
         data: data.trajectory?.data || [50, 60, 70, 85],
         color: (opacity = 1) => colors.primary,
-        strokeWidth: 3
-      }
+        strokeWidth: 3,
+      },
     ],
   };
 
@@ -104,18 +104,18 @@ export const RecoveryTrajectoryMobileWidget = () => {
             color: (opacity = 1) => colors.primary,
             labelColor: (opacity = 1) => colors.textSecondary,
             style: {
-              borderRadius: 16
+              borderRadius: 16,
             },
             propsForDots: {
               r: "4",
               strokeWidth: "2",
-              stroke: colors.surface
-            }
+              stroke: colors.surface,
+            },
           }}
           bezier
           style={{
             marginVertical: 8,
-            borderRadius: 16
+            borderRadius: 16,
           }}
           withVerticalLines={false}
           withHorizontalLines={true}

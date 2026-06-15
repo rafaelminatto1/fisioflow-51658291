@@ -47,10 +47,17 @@ export function FisioFlowBrainWidget({ patientId }: { patientId: string }) {
 
   if (isLoading) {
     return (
-      <View style={[styles.container, { backgroundColor: colors.primary + "10", borderColor: colors.primary + "30" }]}>
+      <View
+        style={[
+          styles.container,
+          { backgroundColor: colors.primary + "10", borderColor: colors.primary + "30" },
+        ]}
+      >
         <View style={styles.header}>
           <ActivityIndicator size="small" color={colors.primary} />
-          <Text style={[styles.headerTitle, { color: colors.primary }]}>Brain analisando histórico...</Text>
+          <Text style={[styles.headerTitle, { color: colors.primary }]}>
+            Brain analisando histórico...
+          </Text>
         </View>
       </View>
     );
@@ -59,14 +66,14 @@ export function FisioFlowBrainWidget({ patientId }: { patientId: string }) {
   if (isError || !data) return null;
 
   return (
-    <Animated.View 
+    <Animated.View
       entering={FadeIn}
       style={[
-        styles.container, 
-        { 
-          backgroundColor: colors.primary + "08", 
+        styles.container,
+        {
+          backgroundColor: colors.primary + "08",
           borderColor: colors.primary + "25",
-        }
+        },
       ]}
     >
       <TouchableOpacity onPress={toggleExpand} style={styles.header}>
@@ -76,38 +83,51 @@ export function FisioFlowBrainWidget({ patientId }: { patientId: string }) {
           </View>
           <Text style={[styles.headerTitle, { color: colors.text }]}>Copiloto Clínico IA</Text>
         </View>
-        <Ionicons name={expanded ? "chevron-up" : "chevron-down"} size={18} color={colors.textMuted} />
+        <Ionicons
+          name={expanded ? "chevron-up" : "chevron-down"}
+          size={18}
+          color={colors.textMuted}
+        />
       </TouchableOpacity>
 
       {expanded && (
         <View style={styles.content}>
           <Text style={[styles.summary, { color: colors.textSecondary }]}>{data.summary}</Text>
-          
-          <ScrollView 
-            horizontal 
-            showsHorizontalScrollIndicator={false} 
+
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.insightsRow}
           >
             {data.insights.map((insight, index) => (
-              <View 
-                key={index} 
+              <View
+                key={index}
                 style={[
-                  styles.insightCard, 
-                  { 
-                    backgroundColor: colors.surface, 
-                    borderColor: insight.severity === "high" ? "#EF444440" : colors.border 
-                  }
+                  styles.insightCard,
+                  {
+                    backgroundColor: colors.surface,
+                    borderColor: insight.severity === "high" ? "#EF444440" : colors.border,
+                  },
                 ]}
               >
                 <View style={styles.insightHeader}>
-                  <Ionicons 
-                    name={insight.type === "plateau" ? "trending-down" : insight.type === "progress" ? "trending-up" : "alert-circle"} 
-                    size={16} 
-                    color={insight.severity === "high" ? "#EF4444" : colors.primary} 
+                  <Ionicons
+                    name={
+                      insight.type === "plateau"
+                        ? "trending-down"
+                        : insight.type === "progress"
+                          ? "trending-up"
+                          : "alert-circle"
+                    }
+                    size={16}
+                    color={insight.severity === "high" ? "#EF4444" : colors.primary}
                   />
                   <Text style={[styles.insightTitle, { color: colors.text }]}>{insight.title}</Text>
                 </View>
-                <Text style={[styles.insightDesc, { color: colors.textSecondary }]} numberOfLines={2}>
+                <Text
+                  style={[styles.insightDesc, { color: colors.textSecondary }]}
+                  numberOfLines={2}
+                >
                   {insight.description}
                 </Text>
                 {insight.citation && (

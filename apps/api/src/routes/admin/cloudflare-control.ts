@@ -127,7 +127,10 @@ app.post("/ai-search/reindex", async (c) => {
     const deleted: string[] = [];
     if (c.env.AI_SEARCH) {
       for (const item of items.items) {
-        await c.env.AI_SEARCH.items.delete(item.id).then(() => deleted.push(item.id)).catch(() => {});
+        await c.env.AI_SEARCH.items
+          .delete(item.id)
+          .then(() => deleted.push(item.id))
+          .catch(() => {});
       }
     }
     cleanupResult = { matched: items.items.length, deleted: deleted.length };

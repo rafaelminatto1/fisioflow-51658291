@@ -3,6 +3,7 @@
 Para que as melhorias do Agent Hub funcionem corretamente em produção, execute as seguintes ações:
 
 ## 1. Banco de Dados (Neon)
+
 Acesse o console do Neon e execute o SQL abaixo para criar a tabela de curadoria e configurar a segurança RLS:
 
 ```sql
@@ -25,8 +26,8 @@ ALTER TABLE "clinical_resource_suggestions" ENABLE ROW LEVEL SECURITY;
 DO $$
 BEGIN
     IF NOT EXISTS (
-        SELECT 1 FROM pg_policies 
-        WHERE tablename = 'clinical_resource_suggestions' 
+        SELECT 1 FROM pg_policies
+        WHERE tablename = 'clinical_resource_suggestions'
         AND policyname = 'policy_clinical_resource_suggestions_isolation'
     ) THEN
         CREATE POLICY "policy_clinical_resource_suggestions_isolation" ON "clinical_resource_suggestions" AS PERMISSIVE FOR ALL TO "authenticated" USING (organization_id = (current_setting('app.org_id'::text))::uuid);
@@ -35,7 +36,9 @@ END $$;
 ```
 
 ## 2. Cloudflare Permissões
+
 O deploy automático falhou por falta de permissão no token atual.
+
 - **Ação**: Atualize o seu `CLOUDFLARE_API_TOKEN` no GitHub Actions ou no ambiente de deploy para incluir a permissão **AI Search: Edit**.
 - **Deploy Manual**: Se preferir, rode o comando abaixo com um token administrativo local:
   ```bash
@@ -43,6 +46,7 @@ O deploy automático falhou por falta de permissão no token atual.
   ```
 
 ## 3. Sincronização de Dados (AutoRAG)
+
 Após o deploy bem-sucedido, acesse o dashboard ou use o comando abaixo para popular o AutoRAG com os novos metadados:
 
 ```bash
@@ -52,10 +56,13 @@ curl -X POST https://api-pro.moocafisio.com.br/api/ai-search/sync?types=exercise
 ```
 
 ## 4. Verificação de UI
+
 Abra o Agent Hub no frontend, selecione o **Simulador de Paciente** e pergunte algo clínico como "Qual teste fazer para dor no joelho?". Verifique se os cards aparecem e se o botão "Abrir" exibe o novo modal de preview.
 
 ## 5. Testes de Aprimoramento
+
 Para validar a nova inteligência de busca:
+
 1. **Body Region Boosting**: No Simulador, pergunte 'Qual exercício para dor no ombro?'. Verifique se os recursos que mencionam 'ombro' nos metadados ou descrição aparecem no topo (o score deve ter um bônus de 10%).
 2. **Sugestão Biomecânica**: Tente uma busca por algo raro, como 'Exercício para síndrome de Parsonage-Turner'. Verifique se a IA gera uma sugestão externa (external_suggestion) com link para o YouTube focado em reabilitação.
 3. **Animações**: Note que os cards agora entram com um efeito de slide e fade-in escalonado, tornando a resposta do simulador mais 'viva'.

@@ -44,7 +44,7 @@ Sem essas métricas, a clínica cresce "por instinto" — não por dados. O obje
 | App mobile paciente (React Native/Expo)                      | ✅ Desenvolvido  | Apenas NinSaúde/WIO   |
 | NFS-e nativo (XML, SP, ABRASF)                               | ✅ Implementado  | Raramente             |
 | Marketing suite (16 módulos: SEO, ROI, referral, reativação) | ✅ Implementado  | Parcial               |
-| Voice Scribe (ditado → Observação Livre via IA)                          | ✅ Implementado  | ❌ Nenhum             |
+| Voice Scribe (ditado → Observação Livre via IA)              | ✅ Implementado  | ❌ Nenhum             |
 | Telemedicina integrada (LiveKit)                             | ✅ Implementado  | Apenas alguns         |
 | Stack edge moderna (Cloudflare + Neon PG)                    | ✅ Implementado  | Infraestrutura legada |
 

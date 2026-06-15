@@ -70,9 +70,7 @@ export function expandSearchQuery(query: string): string[] {
     ];
 
     // Check if any term in the entry matches or contains the query
-    const isMatch = termsInEntry.some(
-      (term) => term.includes(normalizedQuery),
-    );
+    const isMatch = termsInEntry.some((term) => term.includes(normalizedQuery));
 
     if (isMatch) {
       termsInEntry.forEach((term) => equivalentTerms.add(term));

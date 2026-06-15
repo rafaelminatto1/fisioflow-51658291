@@ -17,7 +17,7 @@ app.get("/search", async (c) => {
   // A chave de API pode vir do ambiente, mas por agora usaremos a hardcoded para fins do prompt
   // Num cenário real, isso estaria no env.WGER_API_TOKEN. O usuário passou no prompt:
   const WGER_TOKEN = env.WGER_API_TOKEN || "66adb1c51d3e09cddea5b40b107d55093e852a98";
-  
+
   const client = new WgerClient(WGER_TOKEN);
   try {
     const results = await client.searchExercises(query);
@@ -35,7 +35,7 @@ app.post("/enrich", async (c) => {
 
   const env = c.env;
   const WGER_TOKEN = env.WGER_API_TOKEN || "66adb1c51d3e09cddea5b40b107d55093e852a98";
-  
+
   const wgerClient = new WgerClient(WGER_TOKEN);
   const pubMedClient = new PubMedClient();
 
@@ -52,8 +52,8 @@ app.post("/enrich", async (c) => {
       Analise o seguinte exercício importado do banco de dados wger:
       Nome: ${wgerData.name}
       Descrição: ${wgerData.description}
-      Equipamentos: ${wgerData.equipment.map(e => e.name).join(", ") || "Peso Corporal"}
-      Músculos Primários: ${wgerData.muscles.map(m => m.name).join(", ")}
+      Equipamentos: ${wgerData.equipment.map((e) => e.name).join(", ") || "Peso Corporal"}
+      Músculos Primários: ${wgerData.muscles.map((m) => m.name).join(", ")}
       
       Por favor, retorne UM objeto JSON com as seguintes chaves estritas:
       - difficulty: "Iniciante", "Intermediário" ou "Avançado" (inferido com base na complexidade e carga provável).
@@ -72,7 +72,7 @@ app.post("/enrich", async (c) => {
       precaution_notes: "Avalie o paciente antes da execução",
       category: "Fortalecimento",
       instructions: wgerData.description || "",
-      aliases_pt: [] as string[]
+      aliases_pt: [] as string[],
     };
 
     try {
@@ -80,7 +80,7 @@ app.post("/enrich", async (c) => {
         task: "exercise",
         messages: [{ role: "user", content: prompt }],
         systemInstruction: "Retorne EXATAMENTE UM objeto JSON válido. Nada a mais.",
-        responseFormat: "json"
+        responseFormat: "json",
       });
       if (aiResponse.content) {
         enrichedData = JSON.parse(aiResponse.content);
@@ -96,24 +96,24 @@ app.post("/enrich", async (c) => {
         media.push({
           url: img.image,
           type: "image",
-          caption: `Imagem wger ${i+1}`,
-          orderIndex: i
+          caption: `Imagem wger ${i + 1}`,
+          orderIndex: i,
         });
       });
     }
-    
+
     if (wgerData.videos && wgerData.videos.length > 0) {
       wgerData.videos.forEach((vid, i) => {
         media.push({
           url: vid.video,
           type: "video",
-          caption: `Vídeo wger ${i+1}`,
-          orderIndex: media.length + i
+          caption: `Vídeo wger ${i + 1}`,
+          orderIndex: media.length + i,
         });
       });
     }
 
-    const scientific_references = evidence.map(ev => ({
+    const scientific_references = evidence.map((ev) => ({
       title: ev.title,
       url: ev.url,
       evidence_level: "Observational",
@@ -123,11 +123,11 @@ app.post("/enrich", async (c) => {
     const finalExercise = {
       name: wgerData.name,
       description: wgerData.description,
-      equipment: wgerData.equipment.map(e => e.name),
-      body_parts: wgerData.muscles.map(m => m.name),
+      equipment: wgerData.equipment.map((e) => e.name),
+      body_parts: wgerData.muscles.map((m) => m.name),
       media,
       scientific_references,
-      ...enrichedData
+      ...enrichedData,
     };
 
     return c.json(finalExercise);

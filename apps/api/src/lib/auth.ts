@@ -258,7 +258,10 @@ export function normalizeRole(role?: string | null): string | null {
   return normalized || null;
 }
 
-export function userHasRole(user: AuthUser | undefined | null, allowedRoles: string | string[]): boolean {
+export function userHasRole(
+  user: AuthUser | undefined | null,
+  allowedRoles: string | string[],
+): boolean {
   if (!user) return false;
   const normalizedRole = normalizeRole(user.role);
   const allowed = Array.isArray(allowedRoles) ? allowedRoles : [allowedRoles];

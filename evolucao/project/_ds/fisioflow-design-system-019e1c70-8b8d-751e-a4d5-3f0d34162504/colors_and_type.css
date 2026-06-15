@@ -25,42 +25,58 @@
 @font-face {
   font-family: "Nunito";
   src: url("fonts/Nunito-ExtraLight.ttf") format("truetype");
-  font-weight: 200; font-style: normal; font-display: swap;
+  font-weight: 200;
+  font-style: normal;
+  font-display: swap;
 }
 @font-face {
   font-family: "Nunito";
   src: url("fonts/Nunito-Light.ttf") format("truetype");
-  font-weight: 300; font-style: normal; font-display: swap;
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
 }
 @font-face {
   font-family: "Nunito";
   src: url("fonts/Nunito-Regular.ttf") format("truetype");
-  font-weight: 400; font-style: normal; font-display: swap;
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
 }
 @font-face {
   font-family: "Nunito";
   src: url("fonts/Nunito-Medium.ttf") format("truetype");
-  font-weight: 500; font-style: normal; font-display: swap;
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
 }
 @font-face {
   font-family: "Nunito";
   src: url("fonts/Nunito-SemiBold.ttf") format("truetype");
-  font-weight: 600; font-style: normal; font-display: swap;
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
 }
 @font-face {
   font-family: "Nunito";
   src: url("fonts/Nunito-Bold.ttf") format("truetype");
-  font-weight: 700; font-style: normal; font-display: swap;
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
 }
 @font-face {
   font-family: "Nunito";
   src: url("fonts/Nunito-ExtraBold.ttf") format("truetype");
-  font-weight: 800; font-style: normal; font-display: swap;
+  font-weight: 800;
+  font-style: normal;
+  font-display: swap;
 }
 @font-face {
   font-family: "Nunito";
   src: url("fonts/Nunito-Black.ttf") format("truetype");
-  font-weight: 900; font-style: normal; font-display: swap;
+  font-weight: 900;
+  font-style: normal;
+  font-display: swap;
 }
 
 /* ============================================================================
@@ -69,67 +85,68 @@
    ============================================================================ */
 :root {
   /* ---- Semantic surfaces ---- (HSL channels — @kind color) */
-  --background: 210 20% 98%;          /* @kind color */
-  --foreground: 224 71.4% 4.1%;       /* @kind color */
-  --card: 0 0% 100%;                  /* @kind color */
-  --card-foreground: 224 71.4% 4.1%;  /* @kind color */
-  --popover: 0 0% 100%;               /* @kind color */
+  --background: 210 20% 98%; /* @kind color */
+  --foreground: 224 71.4% 4.1%; /* @kind color */
+  --card: 0 0% 100%; /* @kind color */
+  --card-foreground: 224 71.4% 4.1%; /* @kind color */
+  --popover: 0 0% 100%; /* @kind color */
   --popover-foreground: 224 71.4% 4.1%; /* @kind color */
 
   /* ---- Brand & action ---- */
-  --primary: 211 100% 50%;            /* @kind color */ /* #0080FF — Activity blue */
-  --primary-foreground: 210 20% 98%;  /* @kind color */
-  --secondary: 220 14.3% 95.9%;       /* @kind color */
+  --primary: 211 100% 50%; /* @kind color */ /* #0080FF — Activity blue */
+  --primary-foreground: 210 20% 98%; /* @kind color */
+  --secondary: 220 14.3% 95.9%; /* @kind color */
   --secondary-foreground: 220.9 39.3% 11%; /* @kind color */
-  --muted: 220 14.3% 95.9%;           /* @kind color */
+  --muted: 220 14.3% 95.9%; /* @kind color */
   --muted-foreground: 220 8.9% 46.1%; /* @kind color */
-  --accent: 158 64% 52%;              /* @kind color */ /* clinical teal */
+  --accent: 158 64% 52%; /* @kind color */ /* clinical teal */
   --accent-foreground: 220.9 39.3% 11%; /* @kind color */
-  --destructive: 0 84.2% 60.2%;       /* @kind color */
+  --destructive: 0 84.2% 60.2%; /* @kind color */
   --destructive-foreground: 210 20% 98%; /* @kind color */
 
   /* ---- Structure ---- */
-  --border: 220 13% 91%;              /* @kind color */
-  --input: 220 13% 91%;              /* @kind color */
-  --ring: 211 100% 50%;              /* @kind color */
+  --border: 220 13% 91%; /* @kind color */
+  --input: 220 13% 91%; /* @kind color */
+  --ring: 211 100% 50%; /* @kind color */
 
   /* ---- Sidebar ---- */
-  --sidebar-background: 0 0% 100%;    /* @kind color */
+  --sidebar-background: 0 0% 100%; /* @kind color */
   --sidebar-foreground: 222.2 47.4% 11.2%; /* @kind color */
-  --sidebar-primary: 210 90% 51%;     /* @kind color */
-  --sidebar-accent: 220 13% 95%;      /* @kind color */
-  --sidebar-border: 220 13% 91%;      /* @kind color */
+  --sidebar-primary: 210 90% 51%; /* @kind color */
+  --sidebar-accent: 220 13% 95%; /* @kind color */
+  --sidebar-border: 220 13% 91%; /* @kind color */
 
   /* ---- Pain scale (domain) ---- */
-  --color-pain-0:  #9ca3af;
-  --color-pain-1:  #bef264;
-  --color-pain-3:  #fde047;
-  --color-pain-5:  #fdba74;
-  --color-pain-7:  #f87171;
+  --color-pain-0: #9ca3af;
+  --color-pain-1: #bef264;
+  --color-pain-3: #fde047;
+  --color-pain-5: #fdba74;
+  --color-pain-7: #f87171;
   --color-pain-10: #7f1d1d;
-  --color-pain-gauge-low:    #22c55e;
-  --color-pain-gauge-med:    #eab308;
-  --color-pain-gauge-high:   #ef4444;
+  --color-pain-gauge-low: #22c55e;
+  --color-pain-gauge-med: #eab308;
+  --color-pain-gauge-high: #ef4444;
   --color-pain-gauge-severe: #7f1d1d;
 
   /* ---- Appointment status (domain) ---- */
   --color-status-confirmed: #10b981;
-  --color-status-pending:   #f59e0b;
+  --color-status-pending: #f59e0b;
   --color-status-cancelled: #ef4444;
   --color-status-completed: #3b82f6;
 
   /* ---- Radii ---- */
-  --radius: 1rem;                            /* 16px */
-  --radius-lg: var(--radius);                /* 16px */
-  --radius-md: calc(var(--radius) - 2px);    /* 14px */
-  --radius-sm: calc(var(--radius) - 4px);    /* 12px */
+  --radius: 1rem; /* 16px */
+  --radius-lg: var(--radius); /* 16px */
+  --radius-md: calc(var(--radius) - 2px); /* 14px */
+  --radius-sm: calc(var(--radius) - 4px); /* 12px */
 
   /* ---- Shadows ---- */
   --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.04);
   --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.08), 0 1px 2px -1px rgb(0 0 0 / 0.06);
   --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.08), 0 2px 4px -2px rgb(0 0 0 / 0.06);
-  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.10), 0 4px 6px -4px rgb(0 0 0 / 0.05);
-  --shadow-popover: 0 10px 38px -10px rgba(22,23,24,0.35), 0 10px 20px -15px rgba(22,23,24,0.2);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.05);
+  --shadow-popover:
+    0 10px 38px -10px rgba(22, 23, 24, 0.35), 0 10px 20px -15px rgba(22, 23, 24, 0.2);
   --shadow-glow-primary: 0 0 0 4px hsl(211 100% 50% / 0.15);
 
   /* ---- Spacing scale (Tailwind-aligned) ---- */
@@ -154,33 +171,38 @@
 
 /* -------- Dark mode ------------------------------------------------------ */
 .dark {
-  --background: 222.2 47.4% 7%;       /* @kind color */
-  --foreground: 210 40% 98%;          /* @kind color */
-  --card: 222.2 47.4% 9%;             /* @kind color */
-  --card-foreground: 210 40% 98%;     /* @kind color */
-  --popover: 222.2 47.4% 9%;          /* @kind color */
-  --popover-foreground: 210 40% 98%;  /* @kind color */
-  --primary: 211 100% 50%;            /* @kind color */
-  --primary-foreground: 210 20% 98%;  /* @kind color */
-  --secondary: 217.2 32.6% 17.5%;     /* @kind color */
+  --background: 222.2 47.4% 7%; /* @kind color */
+  --foreground: 210 40% 98%; /* @kind color */
+  --card: 222.2 47.4% 9%; /* @kind color */
+  --card-foreground: 210 40% 98%; /* @kind color */
+  --popover: 222.2 47.4% 9%; /* @kind color */
+  --popover-foreground: 210 40% 98%; /* @kind color */
+  --primary: 211 100% 50%; /* @kind color */
+  --primary-foreground: 210 20% 98%; /* @kind color */
+  --secondary: 217.2 32.6% 17.5%; /* @kind color */
   --secondary-foreground: 210 40% 98%; /* @kind color */
-  --muted: 217.2 32.6% 17.5%;         /* @kind color */
+  --muted: 217.2 32.6% 17.5%; /* @kind color */
   --muted-foreground: 215 20.2% 65.1%; /* @kind color */
-  --accent: 158 64% 52%;              /* @kind color */
-  --accent-foreground: 210 40% 98%;   /* @kind color */
-  --destructive: 0 62.8% 30.6%;       /* @kind color */
+  --accent: 158 64% 52%; /* @kind color */
+  --accent-foreground: 210 40% 98%; /* @kind color */
+  --destructive: 0 62.8% 30.6%; /* @kind color */
   --destructive-foreground: 210 40% 98%; /* @kind color */
-  --border: 217.2 32.6% 17.5%;        /* @kind color */
-  --input: 217.2 32.6% 17.5%;         /* @kind color */
-  --ring: 211 100% 50%;               /* @kind color */
+  --border: 217.2 32.6% 17.5%; /* @kind color */
+  --input: 217.2 32.6% 17.5%; /* @kind color */
+  --ring: 211 100% 50%; /* @kind color */
 }
 
 /* ============================================================================
    BASE STYLES
    ============================================================================ */
-*, *::before, *::after { box-sizing: border-box; }
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
 
-html, body {
+html,
+body {
   margin: 0;
   background: hsl(var(--background));
   color: hsl(var(--foreground));
@@ -192,26 +214,76 @@ html, body {
 }
 
 /* -------- Type scale (semantic) ------------------------------------------ */
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   font-family: var(--font-display);
   font-weight: 600;
   color: hsl(var(--foreground));
   letter-spacing: -0.01em;
   margin: 0;
 }
-h1 { font-size: 28px; line-height: 1.2;  letter-spacing: -0.02em; font-weight: 700; }
-h2 { font-size: 22px; line-height: 1.25; letter-spacing: -0.015em; font-weight: 600; }
-h3 { font-size: 18px; line-height: 1.3;  font-weight: 600; }
-h4 { font-size: 16px; line-height: 1.35; font-weight: 600; }
-h5 { font-size: 14px; line-height: 1.4;  font-weight: 600; }
-h6 { font-size: 12px; line-height: 1.4;  font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: hsl(var(--muted-foreground)); }
+h1 {
+  font-size: 28px;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  font-weight: 700;
+}
+h2 {
+  font-size: 22px;
+  line-height: 1.25;
+  letter-spacing: -0.015em;
+  font-weight: 600;
+}
+h3 {
+  font-size: 18px;
+  line-height: 1.3;
+  font-weight: 600;
+}
+h4 {
+  font-size: 16px;
+  line-height: 1.35;
+  font-weight: 600;
+}
+h5 {
+  font-size: 14px;
+  line-height: 1.4;
+  font-weight: 600;
+}
+h6 {
+  font-size: 12px;
+  line-height: 1.4;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: hsl(var(--muted-foreground));
+}
 
-p  { margin: 0; font-size: 14px; line-height: 1.55; color: hsl(var(--foreground)); }
-small, .text-sm { font-size: 12px; line-height: 1.4; }
-.text-xs { font-size: 11px; line-height: 1.35; }
+p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.55;
+  color: hsl(var(--foreground));
+}
+small,
+.text-sm {
+  font-size: 12px;
+  line-height: 1.4;
+}
+.text-xs {
+  font-size: 11px;
+  line-height: 1.35;
+}
 
 /* Tabular numerals everywhere numbers matter */
-.tabular-nums, table, .num { font-variant-numeric: tabular-nums; }
+.tabular-nums,
+table,
+.num {
+  font-variant-numeric: tabular-nums;
+}
 
 /* -------- Eyebrow / nav-group label (uppercase tracked) ------------------ */
 .eyebrow,
@@ -236,8 +308,12 @@ small, .text-sm { font-size: 12px; line-height: 1.4; }
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
 }
-.dark .glass-panel { background: rgba(15, 23, 42, 0.7); }
-.dark .glass-card  { background: rgba(15, 23, 42, 0.4); }
+.dark .glass-panel {
+  background: rgba(15, 23, 42, 0.7);
+}
+.dark .glass-card {
+  background: rgba(15, 23, 42, 0.4);
+}
 
 /* -------- Focus ring (a11y) ---------------------------------------------- */
 :focus-visible {
@@ -247,4 +323,7 @@ small, .text-sm { font-size: 12px; line-height: 1.4; }
 }
 
 /* -------- Selection ------------------------------------------------------ */
-::selection { background: hsl(var(--primary) / 0.2); color: hsl(var(--foreground)); }
+::selection {
+  background: hsl(var(--primary) / 0.2);
+  color: hsl(var(--foreground));
+}

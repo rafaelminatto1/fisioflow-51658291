@@ -5,7 +5,7 @@ async function main() {
   console.log("Iniciando setup da tabela clinical_resource_suggestions...");
 
   const databaseUrl = process.env.NEON_URL || process.env.DATABASE_URL;
-  
+
   if (!databaseUrl) {
     console.error("ERRO: NEON_URL ou DATABASE_URL não definido nas variáveis de ambiente.");
     process.exit(1);
@@ -51,7 +51,9 @@ async function main() {
     `;
     console.log("✓ Políticas RLS (Tenant Isolation) aplicadas com sucesso.");
 
-    console.log("Setup concluído! A tabela está pronta para uso no ambiente de produção/desenvolvimento.");
+    console.log(
+      "Setup concluído! A tabela está pronta para uso no ambiente de produção/desenvolvimento.",
+    );
   } catch (error) {
     console.error("Erro durante a execução do SQL:", error);
   }

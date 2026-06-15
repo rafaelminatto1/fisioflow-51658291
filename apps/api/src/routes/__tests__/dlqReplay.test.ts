@@ -6,16 +6,16 @@ vi.mock("../../lib/db", () => ({
 
 vi.mock("../../lib/auth", () => ({
   requireAuth: (_c: any, next: any) => next(),
-  requireRole:
-    (allowedRoles: string | string[]) =>
-    async (c: any, next: any) => {
-      const allowed = Array.isArray(allowedRoles) ? allowedRoles : [allowedRoles];
-      const role = String(c.get("user")?.role || "").trim().toLowerCase();
-      if (!role || !allowed.map((r) => r.toLowerCase()).includes(role)) {
-        return c.json({ error: "admin_only" }, 403);
-      }
-      await next();
-    },
+  requireRole: (allowedRoles: string | string[]) => async (c: any, next: any) => {
+    const allowed = Array.isArray(allowedRoles) ? allowedRoles : [allowedRoles];
+    const role = String(c.get("user")?.role || "")
+      .trim()
+      .toLowerCase();
+    if (!role || !allowed.map((r) => r.toLowerCase()).includes(role)) {
+      return c.json({ error: "admin_only" }, 403);
+    }
+    await next();
+  },
 }));
 
 vi.mock("@hono/zod-validator", () => ({

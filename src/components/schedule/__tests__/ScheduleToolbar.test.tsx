@@ -12,7 +12,6 @@ const queryClient = new QueryClient({
   },
 });
 
-
 const mockUseIsMobile = vi.fn();
 
 vi.mock("@/hooks/use-mobile", () => ({

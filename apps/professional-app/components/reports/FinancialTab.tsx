@@ -111,7 +111,10 @@ export function FinancialTab({ selectedPeriod }: FinancialTabProps) {
       {metrics?.revenueByDay && metrics.revenueByDay.length > 0 && (
         <Card style={styles.chartCard} padding="md">
           <Text style={[styles.chartTitle, { color: colors.text }]}>Faturamento Diário</Text>
-          <ServerChart endpoint={`/api/reports/financial-chart?startDate=${dateRange.startDate}&endDate=${dateRange.endDate}`} height={200} />
+          <ServerChart
+            endpoint={`/api/reports/financial-chart?startDate=${dateRange.startDate}&endDate=${dateRange.endDate}`}
+            height={200}
+          />
         </Card>
       )}
 

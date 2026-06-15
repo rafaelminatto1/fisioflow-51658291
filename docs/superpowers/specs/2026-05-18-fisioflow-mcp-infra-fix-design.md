@@ -2,13 +2,14 @@
 
 **Date:** 2026-05-18  
 **Status:** Draft  
-**Author:** Gemini CLI  
+**Author:** Gemini CLI
 
 ---
 
 ## 1. Problem Statement
 
 The FisioFlow project currently faces two primary infrastructure challenges:
+
 1. **Cloudflare CLI Inconsistency:** Errors like `code: 10007` (Worker not found) occur during `wrangler tail` due to environment naming conflicts in the monorepo.
 2. **Limited IA Context:** The Gemini CLI agent lacks direct, tool-based access to the production environment's logs and database, hindering autonomous debugging and clinical analysis.
 
@@ -22,12 +23,14 @@ The FisioFlow project currently faces two primary infrastructure challenges:
 ## 3. Architecture
 
 ### 3.1 Components
+
 - **Client:** Gemini CLI / Smithery.
 - **Protocol:** Model Context Protocol (MCP) over SSE (Server-Sent Events).
 - **Server:** New Cloudflare Worker in `apps/mcp-server`.
 - **Backend:** Cloudflare API (Logs), Neon PostgreSQL (Clinical Data), D1 (Cache).
 
 ### 3.2 Monorepo Structure
+
 ```text
 apps/
   api/          # Main production API
@@ -40,20 +43,23 @@ scripts/
 ## 4. Implementation Details
 
 ### 4.1 Infrastructure Fixes
+
 - **Wrangler Config:** Explicitly define `name` in `[env.production]` blocks to avoid automatic suffixing (`-production`).
 - **Wrapper Script:** Create `scripts/cf-access.sh` to handle `cloudflared access` tokens and proxy commands to the correct worker.
 
 ### 4.2 FisioFlow MCP Server
+
 The server will use the `@cloudflare/agents` SDK and expose the following tools:
 
-| Tool Name | Parameters | Description |
-|-----------|------------|-------------|
-| `get_logs` | `env`, `limit` | Streams or fetches recent logs from Cloudflare Workers Tail API. |
-| `query_db` | `sql_query` | Read-only access to Neon DB via Hyperdrive for clinical data retrieval. |
-| `check_health` | `service` | Checks status of Workers, KV, D1, and R2 buckets. |
-| `deploy_status`| `app` | Returns the latest deployment hash and timestamp. |
+| Tool Name       | Parameters     | Description                                                             |
+| --------------- | -------------- | ----------------------------------------------------------------------- |
+| `get_logs`      | `env`, `limit` | Streams or fetches recent logs from Cloudflare Workers Tail API.        |
+| `query_db`      | `sql_query`    | Read-only access to Neon DB via Hyperdrive for clinical data retrieval. |
+| `check_health`  | `service`      | Checks status of Workers, KV, D1, and R2 buckets.                       |
+| `deploy_status` | `app`          | Returns the latest deployment hash and timestamp.                       |
 
 ### 4.3 Security
+
 - **Authentication:** All requests to the MCP server must be protected by Cloudflare Access.
 - **Permissions:** The `CLOUDFLARE_API_TOKEN` used by the MCP server will have scoped access to logs and analytics only.
 - **Data Redaction:** PII (Patient Identifiable Information) must be masked in log tools.

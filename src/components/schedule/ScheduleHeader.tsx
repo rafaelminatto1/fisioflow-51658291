@@ -28,7 +28,9 @@ export const ScheduleHeader = memo(
                 CLINIC OVERVIEW
               </span>
             </div>
-            <h2 className="text-3xl font-bold text-white tracking-tight mb-1">Olá, {displayName}</h2>
+            <h2 className="text-3xl font-bold text-white tracking-tight mb-1">
+              Olá, {displayName}
+            </h2>
             <p className="text-white/90 font-light">
               Você tem{" "}
               <span className="font-semibold text-white">{consultasRestantes} consultas</span> hoje.

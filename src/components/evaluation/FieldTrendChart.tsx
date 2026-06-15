@@ -9,13 +9,17 @@ interface FieldTrendChartProps {
   inverseLogic?: boolean; // Se true, menor é melhor (ex: Dor)
 }
 
-export const FieldTrendChart: React.FC<FieldTrendChartProps> = ({ data, className, inverseLogic = false }) => {
+export const FieldTrendChart: React.FC<FieldTrendChartProps> = ({
+  data,
+  className,
+  inverseLogic = false,
+}) => {
   if (!data || data.length < 2) return null;
 
   const firstVal = data[0].value;
   const lastVal = data[data.length - 1].value;
   const diff = lastVal - firstVal;
-  
+
   let trend: "up" | "down" | "flat" = "flat";
   if (diff > 0) trend = "up";
   if (diff < 0) trend = "down";
@@ -35,20 +39,29 @@ export const FieldTrendChart: React.FC<FieldTrendChartProps> = ({ data, classNam
   const TrendIcon = trend === "up" ? TrendingUp : trend === "down" ? TrendingDown : Minus;
 
   return (
-    <div className={cn("flex items-center gap-3 bg-slate-50 dark:bg-slate-900/50 p-2 rounded-xl border border-slate-100 dark:border-slate-800", className)} title="Tendência do histórico">
-      <div className={cn("flex items-center gap-1 text-xs font-black tracking-tighter", colorClass)}>
+    <div
+      className={cn(
+        "flex items-center gap-3 bg-slate-50 dark:bg-slate-900/50 p-2 rounded-xl border border-slate-100 dark:border-slate-800",
+        className,
+      )}
+      title="Tendência do histórico"
+    >
+      <div
+        className={cn("flex items-center gap-1 text-xs font-black tracking-tighter", colorClass)}
+      >
         <TrendIcon className="h-3.5 w-3.5" />
-        {diff > 0 ? "+" : ""}{diff.toFixed(1).replace(/\.0$/, '')}
+        {diff > 0 ? "+" : ""}
+        {diff.toFixed(1).replace(/\.0$/, "")}
       </div>
       <div className="h-6 w-16 opacity-70">
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={data}>
-            <YAxis domain={['dataMin', 'dataMax']} hide />
-            <Line 
-              type="monotone" 
-              dataKey="value" 
-              stroke={strokeColor} 
-              strokeWidth={2} 
+            <YAxis domain={["dataMin", "dataMax"]} hide />
+            <Line
+              type="monotone"
+              dataKey="value"
+              stroke={strokeColor}
+              strokeWidth={2}
               dot={false}
               isAnimationActive={false}
             />

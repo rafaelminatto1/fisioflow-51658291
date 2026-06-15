@@ -658,7 +658,7 @@ async function maybeSendConciergeGreeting(
       [orgId, waId, conversationId, text.slice(0, 2000), concierge.reply, concierge.intent],
     );
     writeEvent(env, { orgId, event: "whatsapp_reply_pending_approval" });
-    
+
     // Notify admin about the pending item (função utilitária — sem c.executionCtx)
     await notifyOrganization(env, pool, orgId, {
       title: "Aprovação pendente",

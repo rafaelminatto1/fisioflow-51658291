@@ -88,7 +88,7 @@ describe("search routes", () => {
     );
 
     expect(res.status).toBe(200);
-    const data = await res.json() as any;
+    const data = (await res.json()) as any;
     expect(data.source).toBe("ai_search");
     expect(data.query).toBe("lombalgia");
     expect(data.results).toHaveLength(1);

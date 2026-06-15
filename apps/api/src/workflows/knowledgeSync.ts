@@ -143,9 +143,7 @@ export class KnowledgeSyncWorkflow extends WorkflowEntrypoint<Env, KnowledgeSync
           `**Equipamento:** ${equipment || "Nenhum"}\n\n` +
           `## Descrição\n${description}\n\n` +
           (instructions ? `## Instruções\n${instructions}\n\n` : "") +
-          (exercise.precautions
-            ? `## Precauções\n${exercise.precautions}\n`
-            : "");
+          (exercise.precautions ? `## Precauções\n${exercise.precautions}\n` : "");
 
         return {
           id,

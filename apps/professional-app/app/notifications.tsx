@@ -53,7 +53,10 @@ export default function NotificationsScreen() {
       return;
     }
 
-    const relatedId = notification.metadata?.id || notification.metadata?.appointmentId || notification.metadata?.chatId;
+    const relatedId =
+      notification.metadata?.id ||
+      notification.metadata?.appointmentId ||
+      notification.metadata?.chatId;
 
     switch (notification.type) {
       case "appointment":

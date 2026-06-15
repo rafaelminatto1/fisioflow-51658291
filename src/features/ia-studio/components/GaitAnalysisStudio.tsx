@@ -221,7 +221,8 @@ export const GaitAnalysisStudio: React.FC<GaitAnalysisStudioProps> = ({ isOpen, 
                   >
                     Selecionar Vídeo
                   </Button>
-                  <input aria-label="Input"
+                  <input
+                    aria-label="Input"
                     type="file"
                     hidden
                     ref={fileInputRef}

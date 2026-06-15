@@ -14,7 +14,7 @@ const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 app.use("*", requireAuth);
 app.use("*", requireRole("admin"));
 app.post("/", async (c) => {
-  const user = c.get("user");
+  const _user = c.get("user");
 
   const result = await runSessionArchive(c.env, "manual");
   return c.json({ data: result });

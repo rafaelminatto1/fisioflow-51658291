@@ -25,10 +25,34 @@ export function OverviewTab() {
     !!notificationSettings?.send_reminder_24h || !!notificationSettings?.send_reminder_2h;
 
   const metrics = [
-    { label: "Dias abertos", value: `${openDays}/7`, hint: openDays ? "Expediente configurado" : "Defina horários", icon: Clock, tab: "horarios" },
-    { label: "Regras de capacidade", value: capacityGroups.length, hint: `${totalSeats} vagas somadas`, icon: Gauge, tab: "capacidade" },
-    { label: "Status ativos", value: activeStatuses, hint: "Disponíveis na agenda", icon: Palette, tab: "status" },
-    { label: "Tipos de atendimento", value: types.length, hint: "Serviços cadastrados", icon: Stethoscope, tab: "tipos" },
+    {
+      label: "Dias abertos",
+      value: `${openDays}/7`,
+      hint: openDays ? "Expediente configurado" : "Defina horários",
+      icon: Clock,
+      tab: "horarios",
+    },
+    {
+      label: "Regras de capacidade",
+      value: capacityGroups.length,
+      hint: `${totalSeats} vagas somadas`,
+      icon: Gauge,
+      tab: "capacidade",
+    },
+    {
+      label: "Status ativos",
+      value: activeStatuses,
+      hint: "Disponíveis na agenda",
+      icon: Palette,
+      tab: "status",
+    },
+    {
+      label: "Tipos de atendimento",
+      value: types.length,
+      hint: "Serviços cadastrados",
+      icon: Stethoscope,
+      tab: "tipos",
+    },
   ];
 
   const readiness: Array<{ label: string; ok: boolean; tab: string }> = [
@@ -53,7 +77,9 @@ export function OverviewTab() {
             >
               <Card className="rounded-lg transition hover:border-teal-300 hover:shadow-sm">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">{m.label}</CardTitle>
+                  <CardTitle className="text-sm font-medium text-muted-foreground">
+                    {m.label}
+                  </CardTitle>
                   <Icon className="h-4 w-4 text-teal-600" />
                 </CardHeader>
                 <CardContent>
@@ -80,10 +106,21 @@ export function OverviewTab() {
               </p>
             ) : (
               businessHours.map((h) => (
-                <div key={h.day_of_week} className="grid grid-cols-[3.5rem_minmax(0,1fr)_auto] items-center gap-3 rounded-lg border border-slate-100 px-3 py-2 dark:border-slate-800">
-                  <span className="text-xs font-semibold uppercase">{DAY_LABELS[h.day_of_week]}</span>
+                <div
+                  key={h.day_of_week}
+                  className="grid grid-cols-[3.5rem_minmax(0,1fr)_auto] items-center gap-3 rounded-lg border border-slate-100 px-3 py-2 dark:border-slate-800"
+                >
+                  <span className="text-xs font-semibold uppercase">
+                    {DAY_LABELS[h.day_of_week]}
+                  </span>
                   <div className="h-1.5 rounded-full bg-slate-100 dark:bg-slate-800">
-                    <div className={cn("h-1.5 rounded-full", h.is_open ? "bg-teal-500" : "bg-transparent")} style={{ width: h.is_open ? "100%" : "0%" }} />
+                    <div
+                      className={cn(
+                        "h-1.5 rounded-full",
+                        h.is_open ? "bg-teal-500" : "bg-transparent",
+                      )}
+                      style={{ width: h.is_open ? "100%" : "0%" }}
+                    />
                   </div>
                   <span className="font-mono text-[11px] text-muted-foreground">
                     {h.is_open ? `${h.open_time}–${h.close_time}` : "Fechado"}

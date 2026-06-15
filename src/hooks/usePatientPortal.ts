@@ -55,7 +55,7 @@ export function usePortalExercises() {
             queue.push({ assignmentId, data, timestamp: Date.now() });
             storage.setItem("fisioflow_offline_exercises", JSON.stringify(queue));
           }
-        } catch(e) {}
+        } catch (e) {}
         return { offline: true };
       }
       return patientPortalApi.completeExercise(assignmentId, data);
@@ -65,15 +65,23 @@ export function usePortalExercises() {
       const prev = qc.getQueryData(KEYS.exercises);
       qc.setQueryData(KEYS.exercises, (old: any) => {
         if (!old || !Array.isArray(old)) return old;
-        return old.map((ex: any) => ex.id === assignmentId ? { ...ex, completed_today: true, ...data } : ex);
+        return old.map((ex: any) =>
+          ex.id === assignmentId ? { ...ex, completed_today: true, ...data } : ex,
+        );
       });
       return { prev };
     },
     onSuccess: (data) => {
       if (data && (data as any).offline) {
-        toast({ title: "Salvo offline", description: "O exercício será sincronizado quando houver conexão. 💪" });
+        toast({
+          title: "Salvo offline",
+          description: "O exercício será sincronizado quando houver conexão. 💪",
+        });
       } else {
-        toast({ title: "Exercício registrado!", description: "Continue assim! 💪 Você ganhou XP!" });
+        toast({
+          title: "Exercício registrado!",
+          description: "Continue assim! 💪 Você ganhou XP!",
+        });
       }
       qc.invalidateQueries({ queryKey: KEYS.progress });
       qc.invalidateQueries({ queryKey: KEYS.stats });
@@ -84,7 +92,7 @@ export function usePortalExercises() {
     },
     onSettled: () => {
       qc.invalidateQueries({ queryKey: KEYS.exercises });
-    }
+    },
   });
 
   return { ...query, complete };

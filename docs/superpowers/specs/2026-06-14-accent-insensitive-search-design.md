@@ -25,7 +25,7 @@ Não há migrations nem mudanças de schema. É uma varredura de consistência.
 
 ### Backend (SQL)
 
-- **Rotas Drizzle** — trocar `ilike(col, \`%${q}%\`)` por `searchFilter(col, q)`:
+- **Rotas Drizzle** — trocar `ilike(col, \`%${q}%\`)`por`searchFilter(col, q)`:
   - `apps/api/src/routes/protocols.ts`
   - `apps/api/src/routes/templates.ts`
   - `apps/api/src/routes/sessions.ts` (templates de sessão)

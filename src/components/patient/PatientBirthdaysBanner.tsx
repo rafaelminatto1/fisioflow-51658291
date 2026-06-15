@@ -6,7 +6,6 @@ import { Badge } from "@/components/ui/badge";
 import { patientsApi, type PatientRow } from "@/api/v2";
 import { cn } from "@/lib/utils";
 
-
 export function PatientBirthdaysBanner() {
   const [isDismissed, setIsDismissed] = useState(false);
 
@@ -19,27 +18,29 @@ export function PatientBirthdaysBanner() {
         minimal: true,
       });
       const patients = (res?.data ?? []) as PatientRow[];
-      
+
       const hoje = new Date();
       const currentMonth = hoje.getUTCMonth() + 1;
       const currentDay = hoje.getUTCDate();
-      
+
       return patients
         .filter((p) => {
           if (!p.birth_date) return false;
           const birthDate = new Date(p.birth_date);
           const birthMonth = birthDate.getUTCMonth() + 1;
           const birthDay = birthDate.getUTCDate();
-          
+
           // Aniversariantes do mês atual, com data maior ou igual a hoje (próximos 7 dias)
           if (birthMonth === currentMonth && birthDay >= currentDay && birthDay <= currentDay + 7) {
             return true;
           }
           // Caso a virada de mês esteja próxima (ex: 30 jan -> 5 fev), também pode ser adicionado
           // Para manter simples, vamos filtrar apenas o mês atual ou os próximos 7 dias no máximo
-          const diffTime = Math.abs(hoje.getTime() - birthDate.setUTCFullYear(hoje.getUTCFullYear()));
-          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
-          
+          const diffTime = Math.abs(
+            hoje.getTime() - birthDate.setUTCFullYear(hoje.getUTCFullYear()),
+          );
+          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
           return diffDays <= 7 && diffDays >= 0;
         })
         .map((p) => {
@@ -65,10 +66,10 @@ export function PatientBirthdaysBanner() {
 
   const proximosAniversariantes = useMemo(() => {
     return aniversariantes.filter((a) => {
-        // Pega os de hoje e dos próximos 7 dias
-        if (a.mes === currentMonth && a.dia === currentDay) return true;
-        if (a.mes === currentMonth && a.dia > currentDay && a.dia <= currentDay + 7) return true;
-        return false;
+      // Pega os de hoje e dos próximos 7 dias
+      if (a.mes === currentMonth && a.dia === currentDay) return true;
+      if (a.mes === currentMonth && a.dia > currentDay && a.dia <= currentDay + 7) return true;
+      return false;
     });
   }, [aniversariantes, currentMonth, currentDay]);
 
@@ -102,7 +103,7 @@ export function PatientBirthdaysBanner() {
                 "flex items-center gap-3 bg-white dark:bg-slate-900 rounded-2xl p-2.5 border transition-all hover:scale-105 whitespace-nowrap",
                 a.dia === currentDay && a.mes === currentMonth
                   ? "border-primary/50 shadow-md shadow-primary/10"
-                  : "border-slate-200 dark:border-slate-800"
+                  : "border-slate-200 dark:border-slate-800",
               )}
             >
               <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center font-black text-primary">
@@ -110,10 +111,10 @@ export function PatientBirthdaysBanner() {
               </div>
               <div className="pr-2">
                 <p className="text-sm font-bold text-slate-800 dark:text-white">
-                  {a.name.split(' ')[0]}
+                  {a.name.split(" ")[0]}
                 </p>
                 <p className="text-[10px] font-black uppercase text-slate-400">
-                  {a.idade} anos {a.dia === currentDay ? '🎉 HOJE' : ''}
+                  {a.idade} anos {a.dia === currentDay ? "🎉 HOJE" : ""}
                 </p>
               </div>
             </div>

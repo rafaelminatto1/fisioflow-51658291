@@ -209,7 +209,7 @@ export function PublicProfileTab() {
             <Label>Seu link personalizado</Label>
             <div className="flex gap-2">
               <span className="flex items-center px-3 text-sm text-muted-foreground bg-muted border border-input rounded-l-md">
-                {PAGES_URL}/agendar/
+                {PAGES_URL.replace(/https?:\/\//, "").replace(/\/$/, "")}/agendar/
               </span>
               <Input
                 value={form.slug}

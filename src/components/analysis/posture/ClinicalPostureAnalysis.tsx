@@ -16,7 +16,17 @@ type Step = "upload" | "analysis" | "report";
 type ViewType = "front" | "side" | "back";
 
 // HUD Régua Analógica de Desvio Postural
-const DeviationRuler = ({ value, label, status, unit = "°" }: { value: number; label: string; status: string; unit?: string }) => {
+const DeviationRuler = ({
+  value,
+  label,
+  status,
+  unit = "°",
+}: {
+  value: number;
+  label: string;
+  status: string;
+  unit?: string;
+}) => {
   const min = -10;
   const max = 10;
   const percent = Math.min(Math.max(((value - min) / (max - min)) * 100, 0), 100);
@@ -24,7 +34,7 @@ const DeviationRuler = ({ value, label, status, unit = "°" }: { value: number; 
   let needleColor = "bg-emerald-500";
   let textColor = "text-emerald-600";
   let statusText = "Alinhamento Ideal";
-  
+
   if (status === "warning") {
     needleColor = "bg-orange-500";
     textColor = "text-orange-500";
@@ -40,16 +50,17 @@ const DeviationRuler = ({ value, label, status, unit = "°" }: { value: number; 
       <div className="flex justify-between items-center">
         <span className="text-xs font-black uppercase tracking-wider text-slate-500">{label}</span>
         <span className={`text-sm font-black font-mono ${textColor}`}>
-          {value > 0 ? `+${value}` : value}{unit}
+          {value > 0 ? `+${value}` : value}
+          {unit}
         </span>
       </div>
-      
+
       {/* Régua Analógica */}
       <div className="relative h-6 bg-slate-200/50 dark:bg-slate-800 rounded-full overflow-hidden border border-slate-300/30 dark:border-slate-700/50">
         <div className="absolute inset-y-0 left-1/4 right-1/4 bg-emerald-500/5 border-x border-emerald-500/10" />
         <div className="absolute inset-y-0 left-0 w-1/4 bg-red-500/5" />
         <div className="absolute inset-y-0 right-0 w-1/4 bg-red-500/5" />
-        
+
         {/* Marcações */}
         <div className="absolute inset-0 flex justify-between px-3 text-[7px] text-slate-400 font-mono font-bold select-none pointer-events-none items-center">
           <span>-10°</span>
@@ -60,7 +71,7 @@ const DeviationRuler = ({ value, label, status, unit = "°" }: { value: number; 
         </div>
 
         {/* Agulha de Desvio */}
-        <div 
+        <div
           className={`absolute top-0 bottom-0 w-1 ${needleColor} shadow-[0_0_8px_rgba(0,0,0,0.15)] rounded-full transition-all duration-700 ease-out`}
           style={{ left: `calc(${percent}% - 2px)` }}
         />
@@ -68,9 +79,7 @@ const DeviationRuler = ({ value, label, status, unit = "°" }: { value: number; 
 
       <div className="flex justify-between items-center text-[9px] uppercase font-black tracking-widest text-slate-400">
         <span>Esquerda</span>
-        <span className={`font-black ${textColor}`}>
-          {statusText}
-        </span>
+        <span className={`font-black ${textColor}`}>{statusText}</span>
         <span>Direita</span>
       </div>
     </div>
@@ -142,51 +151,52 @@ const ClinicalPostureAnalysis = () => {
   };
 
   // Cálculo da pontuação de simetria postural baseado nos desvios das métricas
-  const { overallScore, circumference, strokeDashoffset, gaugeColor, bgGaugeColor, textColor } = useMemo(() => {
-    const metrics = report?.metrics || [];
-    if (metrics.length === 0) {
+  const { overallScore, circumference, strokeDashoffset, gaugeColor, bgGaugeColor, textColor } =
+    useMemo(() => {
+      const metrics = report?.metrics || [];
+      if (metrics.length === 0) {
+        return {
+          overallScore: 100,
+          circumference: 2 * Math.PI * 60,
+          strokeDashoffset: 0,
+          gaugeColor: "stroke-emerald-500",
+          bgGaugeColor: "bg-emerald-500/10",
+          textColor: "text-emerald-500",
+        };
+      }
+
+      const totalDev = metrics.reduce((acc, m) => acc + Math.min(Math.abs(m.value), 15), 0);
+      const avgDev = totalDev / metrics.length;
+      const score = Math.max(0, Math.round(100 - avgDev * 6.6)); // 15 graus de desvio médio = 0% de simetria
+
+      const radius = 60;
+      const circ = 2 * Math.PI * radius;
+      const offset = circ - (score / 100) * circ;
+
+      let gColor = "stroke-emerald-500";
+      let bgGColor = "bg-emerald-500/10";
+      let txtColor = "text-emerald-500";
+
+      if (score < 75) {
+        gColor = "stroke-orange-500";
+        bgGColor = "bg-orange-500/10";
+        txtColor = "text-orange-500";
+      }
+      if (score < 50) {
+        gColor = "stroke-red-500";
+        bgGColor = "bg-red-500/10";
+        txtColor = "text-red-500";
+      }
+
       return {
-        overallScore: 100,
-        circumference: 2 * Math.PI * 60,
-        strokeDashoffset: 0,
-        gaugeColor: "stroke-emerald-500",
-        bgGaugeColor: "bg-emerald-500/10",
-        textColor: "text-emerald-500"
+        overallScore: score,
+        circumference: circ,
+        strokeDashoffset: offset,
+        gaugeColor: gColor,
+        bgGaugeColor: bgGColor,
+        textColor: txtColor,
       };
-    }
-
-    const totalDev = metrics.reduce((acc, m) => acc + Math.min(Math.abs(m.value), 15), 0);
-    const avgDev = totalDev / metrics.length;
-    const score = Math.max(0, Math.round(100 - (avgDev * 6.6))); // 15 graus de desvio médio = 0% de simetria
-
-    const radius = 60;
-    const circ = 2 * Math.PI * radius;
-    const offset = circ - (score / 100) * circ;
-
-    let gColor = "stroke-emerald-500";
-    let bgGColor = "bg-emerald-500/10";
-    let txtColor = "text-emerald-500";
-
-    if (score < 75) {
-      gColor = "stroke-orange-500";
-      bgGColor = "bg-orange-500/10";
-      txtColor = "text-orange-500";
-    }
-    if (score < 50) {
-      gColor = "stroke-red-500";
-      bgGColor = "bg-red-500/10";
-      txtColor = "text-red-500";
-    }
-
-    return {
-      overallScore: score,
-      circumference: circ,
-      strokeDashoffset: offset,
-      gaugeColor: gColor,
-      bgGaugeColor: bgGColor,
-      textColor: txtColor
-    };
-  }, [report]);
+    }, [report]);
 
   return (
     <div className="flex flex-col h-full gap-4 p-4">
@@ -238,7 +248,7 @@ const ClinicalPostureAnalysis = () => {
                 <h3 className="text-xs font-black uppercase tracking-widest text-slate-400">
                   Simetria Postural Global
                 </h3>
-                
+
                 {/* SVG Gauge Animado */}
                 <div className="relative h-36 w-36 flex items-center justify-center">
                   <svg className="h-full w-full transform -rotate-90">
@@ -274,11 +284,19 @@ const ClinicalPostureAnalysis = () => {
 
                 <div className="space-y-2">
                   <p className="text-xs text-slate-300 max-w-xs leading-relaxed">
-                    O score geral quantifica o alinhamento corporal em relação às linhas anatômicas de referência (fórmula ponderada dos desvios).
+                    O score geral quantifica o alinhamento corporal em relação às linhas anatômicas
+                    de referência (fórmula ponderada dos desvios).
                   </p>
                   <div className="pt-2">
-                    <Badge variant="outline" className={`border-none ${bgGaugeColor} ${textColor} font-black text-[10px] px-3 py-1 rounded-full uppercase tracking-wider`}>
-                      {overallScore >= 75 ? "Simetria Excelente" : overallScore >= 50 ? "Simetria Funcional" : "Assimetria Clínica"}
+                    <Badge
+                      variant="outline"
+                      className={`border-none ${bgGaugeColor} ${textColor} font-black text-[10px] px-3 py-1 rounded-full uppercase tracking-wider`}
+                    >
+                      {overallScore >= 75
+                        ? "Simetria Excelente"
+                        : overallScore >= 50
+                          ? "Simetria Funcional"
+                          : "Assimetria Clínica"}
                     </Badge>
                   </div>
                 </div>
@@ -291,19 +309,30 @@ const ClinicalPostureAnalysis = () => {
               </h4>
               <div className="space-y-3 text-xs text-slate-600 dark:text-slate-400">
                 <div className="p-3 bg-white dark:bg-slate-900 rounded-xl border border-slate-200/50 dark:border-slate-800">
-                  <p className="font-bold text-slate-700 dark:text-slate-300">Protocolo de Fotogrametria SAPO</p>
-                  <p className="mt-1">Medição e análise angular assistida por computador em conformidade com as diretrizes do Portal SAPO (São Paulo, Brasil).</p>
+                  <p className="font-bold text-slate-700 dark:text-slate-300">
+                    Protocolo de Fotogrametria SAPO
+                  </p>
+                  <p className="mt-1">
+                    Medição e análise angular assistida por computador em conformidade com as
+                    diretrizes do Portal SAPO (São Paulo, Brasil).
+                  </p>
                 </div>
                 <div className="p-3 bg-white dark:bg-slate-900 rounded-xl border border-slate-200/50 dark:border-slate-800">
-                  <p className="font-bold text-slate-700 dark:text-slate-300">Referências e Tolerância de Desvio</p>
-                  <p className="mt-1">Limites de normalidade estabelecidos por Karachalios et al. (1999). Desvios superiores a 3° justificam acompanhamento clínico e exercícios de reeducação postural ativa.</p>
+                  <p className="font-bold text-slate-700 dark:text-slate-300">
+                    Referências e Tolerância de Desvio
+                  </p>
+                  <p className="mt-1">
+                    Limites de normalidade estabelecidos por Karachalios et al. (1999). Desvios
+                    superiores a 3° justificam acompanhamento clínico e exercícios de reeducação
+                    postural ativa.
+                  </p>
                 </div>
               </div>
             </Card>
 
-            <Button 
+            <Button
               onClick={() => window.print()}
-              variant="outline" 
+              variant="outline"
               className="w-full rounded-2xl gap-2 font-bold py-5 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50"
             >
               Exportar Relatório Clínico (PDF)
@@ -315,8 +344,18 @@ const ClinicalPostureAnalysis = () => {
             <Card className="p-6 border-none shadow-sm bg-white dark:bg-slate-950 rounded-[2rem]">
               <div className="flex justify-between items-center border-b pb-4 mb-6">
                 <div>
-                  <h3 className="text-lg font-black tracking-tight">Relatório de Fotogrametria AI ({selectedView === "front" ? "Vista Frontal" : selectedView === "side" ? "Vista Lateral" : "Vista Posterior"})</h3>
-                  <p className="text-xs text-slate-500">Métricas angulares calculadas automaticamente a partir dos marcos anatômicos.</p>
+                  <h3 className="text-lg font-black tracking-tight">
+                    Relatório de Fotogrametria AI (
+                    {selectedView === "front"
+                      ? "Vista Frontal"
+                      : selectedView === "side"
+                        ? "Vista Lateral"
+                        : "Vista Posterior"}
+                    )
+                  </h3>
+                  <p className="text-xs text-slate-500">
+                    Métricas angulares calculadas automaticamente a partir dos marcos anatômicos.
+                  </p>
                 </div>
                 <div className="flex bg-slate-100 dark:bg-slate-900 rounded-lg p-1">
                   <Button
@@ -362,18 +401,15 @@ const ClinicalPostureAnalysis = () => {
               {report.metrics.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {report.metrics.map((m, i) => (
-                    <DeviationRuler
-                      key={i}
-                      value={m.value}
-                      label={m.label}
-                      status={m.status}
-                    />
+                    <DeviationRuler key={i} value={m.value} label={m.label} status={m.status} />
                   ))}
                 </div>
               ) : (
                 <div className="text-center py-12 text-slate-400">
                   <p>Sem métricas disponíveis para esta vista.</p>
-                  <p className="text-xs mt-1">Carregue uma nova foto ou realize a detecção de pontos.</p>
+                  <p className="text-xs mt-1">
+                    Carregue uma nova foto ou realize a detecção de pontos.
+                  </p>
                 </div>
               )}
             </Card>
@@ -383,7 +419,7 @@ const ClinicalPostureAnalysis = () => {
               <h4 className="text-xs font-black uppercase tracking-widest text-slate-500 mb-4 self-start">
                 Mapeamento Esquelético da Análise
               </h4>
-              <div 
+              <div
                 className="relative shadow-md border border-slate-200/50 dark:border-slate-800 rounded-2xl bg-black overflow-hidden flex items-center justify-center max-w-md w-full"
                 style={{ minHeight: "360px" }}
               >
@@ -406,13 +442,16 @@ const ClinicalPostureAnalysis = () => {
             {/* View Selector */}
             <div className="space-y-2">
               <label className="text-sm font-medium">Vista</label>
-              <Tabs value={selectedView} onValueChange={(v) => {
-                setSelectedView(v as ViewType);
-                if (landmarks.length > 0) {
-                  const rep = calculatePostureMetrics(landmarks, v as ViewType);
-                  setReport(rep);
-                }
-              }}>
+              <Tabs
+                value={selectedView}
+                onValueChange={(v) => {
+                  setSelectedView(v as ViewType);
+                  if (landmarks.length > 0) {
+                    const rep = calculatePostureMetrics(landmarks, v as ViewType);
+                    setReport(rep);
+                  }
+                }}
+              >
                 <TabsList className="w-full">
                   <TabsTrigger value="front" className="flex-1">
                     Frontal

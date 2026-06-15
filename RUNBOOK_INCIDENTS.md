@@ -10,11 +10,11 @@
 
 ## 2. Níveis de Severidade
 
-| Nível            | Impacto                                                           | Resposta Esperada              |
-| ---------------- | ----------------------------------------------------------------- | ------------------------------ |
-| **P0 (Crítico)** | Sistema indisponível (5xx em massa), erro de login global.        | Resposta imediata (24/7).      |
-| **P1 (Alto)**    | Feature principal quebrada (Agenda, Observação Livre), latência p95 > 2s.     | Resposta em até 4h comerciais. |
-| **P2 (Médio)**   | Feature secundária com bug (Gamification, NPS), UI inconsistente. | Resposta em até 48h.           |
+| Nível            | Impacto                                                                   | Resposta Esperada              |
+| ---------------- | ------------------------------------------------------------------------- | ------------------------------ |
+| **P0 (Crítico)** | Sistema indisponível (5xx em massa), erro de login global.                | Resposta imediata (24/7).      |
+| **P1 (Alto)**    | Feature principal quebrada (Agenda, Observação Livre), latência p95 > 2s. | Resposta em até 4h comerciais. |
+| **P2 (Médio)**   | Feature secundária com bug (Gamification, NPS), UI inconsistente.         | Resposta em até 48h.           |
 
 ## 3. Procedimentos de Recuperação
 

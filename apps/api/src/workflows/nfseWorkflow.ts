@@ -101,7 +101,10 @@ export class NFSeWorkflow extends WorkflowEntrypoint<Env, NFSeWorkflowParams> {
                 indexes: [organizationId],
               });
             } catch (rollbackErr) {
-              console.error(`[Workflow] Rollback failed for NFSe ${output.numeroNfse}:`, rollbackErr);
+              console.error(
+                `[Workflow] Rollback failed for NFSe ${output.numeroNfse}:`,
+                rollbackErr,
+              );
               this.env.ANALYTICS?.writeDataPoint({
                 blobs: ["rollback_failed", "nfse_cancel", nfseId],
                 doubles: [1],
@@ -147,7 +150,8 @@ export class NFSeWorkflow extends WorkflowEntrypoint<Env, NFSeWorkflowParams> {
       });
     } else {
       await step.do("finalize-failure", async () => {
-        const errorMsg = result.erros?.[0]?.descricao || "Falha definitiva após múltiplas tentativas";
+        const errorMsg =
+          result.erros?.[0]?.descricao || "Falha definitiva após múltiplas tentativas";
         await pool.query(
           `UPDATE nfse_records SET status = 'falhou', ultimo_erro = $1, updated_at = NOW() WHERE id = $2`,
           [errorMsg, nfseId],

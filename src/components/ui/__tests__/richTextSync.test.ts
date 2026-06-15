@@ -11,9 +11,9 @@ const base = {
 
 describe("shouldApplyExternalValue", () => {
   it("não sincroniza quando o conteúdo já é o desejado", () => {
-    expect(
-      shouldApplyExternalValue({ ...base, incoming: "<p>x</p>", current: "<p>x</p>" }),
-    ).toBe(false);
+    expect(shouldApplyExternalValue({ ...base, incoming: "<p>x</p>", current: "<p>x</p>" })).toBe(
+      false,
+    );
   });
 
   it("NÃO sobrescreve o texto enquanto o usuário digita (campo focado)", () => {

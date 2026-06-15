@@ -51,9 +51,12 @@ app.post("/", requireAuth, async (c) => {
     console.error(
       "[EvolutionVersions/POST] Error:",
       err?.message,
-      "Code:", err?.code,
-      "Detail:", err?.detail,
-      "Hint:", err?.hint,
+      "Code:",
+      err?.code,
+      "Detail:",
+      err?.detail,
+      "Hint:",
+      err?.hint,
     );
     return c.json(
       {

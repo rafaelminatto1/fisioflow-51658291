@@ -122,14 +122,11 @@ export function AppProviders({ children }: { children: React.ReactNode }) {
                 shouldDehydrateMutation: (mutation) => {
                   if (defaultShouldDehydrateMutation(mutation)) return true;
                   const isPendingRetry =
-                    mutation.state.status === "pending" &&
-                    mutation.state.failureCount > 0;
+                    mutation.state.status === "pending" && mutation.state.failureCount > 0;
                   if (!isPendingRetry) return false;
                   // Exigir idempotency key nas variables para evitar duplicação
                   // ao resumir (mesma key → server retorna response cacheada)
-                  const vars = mutation.state.variables as
-                    | { idempotencyKey?: string }
-                    | undefined;
+                  const vars = mutation.state.variables as { idempotencyKey?: string } | undefined;
                   return !!vars?.idempotencyKey;
                 },
               },

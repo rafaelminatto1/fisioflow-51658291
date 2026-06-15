@@ -9,12 +9,14 @@ interface PatientAutocompleteProps {
   value: string;
   onSelect: (patient: { id: string; name: string; condition?: string }) => void;
   disabled?: boolean;
+  autoFocus?: boolean;
 }
 
 export function PatientAutocomplete({
   value,
   onSelect,
   disabled = false,
+  autoFocus = false,
 }: PatientAutocompleteProps) {
   const colors = useColors();
   const { medium } = useHaptics();
@@ -44,6 +46,7 @@ export function PatientAutocomplete({
           setShowSuggestions(true);
         }}
         editable={!disabled}
+        autoFocus={autoFocus}
       />
 
       {showSuggestions && !disabled && search.length > 0 && (

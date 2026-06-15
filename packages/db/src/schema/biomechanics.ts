@@ -139,7 +139,9 @@ export const biomechanicsProtocols = pgTable(
     name: varchar("name", { length: 180 }).notNull(),
     category: varchar("category", { length: 80 }).notNull(),
     description: text("description"),
-    assessmentType: biomechanicsAssessmentTypeEnum("assessment_type").notNull().default("functional_movement"),
+    assessmentType: biomechanicsAssessmentTypeEnum("assessment_type")
+      .notNull()
+      .default("functional_movement"),
     captureRequirements: jsonb("capture_requirements").default("{}"),
     metricDefinitions: jsonb("metric_definitions").default("[]"),
     qualityRules: jsonb("quality_rules").default("{}"),

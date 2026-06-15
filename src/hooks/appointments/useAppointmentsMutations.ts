@@ -188,12 +188,10 @@ export function useUpdateAppointment() {
           ),
       );
 
-      queryClient.setQueriesData<Appointment[]>(
-        { queryKey: ["schedule-appointments"] },
-        (old) =>
-          old?.map((apt) =>
-            apt.id === variables.appointmentId ? ({ ...apt, ...parsedUpdates } as Appointment) : apt,
-          ),
+      queryClient.setQueriesData<Appointment[]>({ queryKey: ["schedule-appointments"] }, (old) =>
+        old?.map((apt) =>
+          apt.id === variables.appointmentId ? ({ ...apt, ...parsedUpdates } as Appointment) : apt,
+        ),
       );
 
       return { previousData, previousPeriodQueries, previousScheduleQueries };
@@ -275,8 +273,7 @@ export function useDeleteAppointment() {
       );
       queryClient.setQueriesData(
         { queryKey: appointmentPeriodKeys.all },
-        (old: AppointmentBase[] | undefined) =>
-          old?.filter((apt) => apt.id !== appointmentId),
+        (old: AppointmentBase[] | undefined) => old?.filter((apt) => apt.id !== appointmentId),
       );
 
       return { previousData, previousPeriodQueries };

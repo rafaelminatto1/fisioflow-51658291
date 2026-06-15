@@ -174,7 +174,11 @@ export function PatientsPageHeader({
                   value={stats.pendingEvaluation ?? 0}
                   tone="amber"
                   isSelected={pathologyStatusFilter === "monitoring"}
-                  onClick={() => onPathologyStatusFilterChange?.(pathologyStatusFilter === "monitoring" ? "all" : "monitoring")}
+                  onClick={() =>
+                    onPathologyStatusFilterChange?.(
+                      pathologyStatusFilter === "monitoring" ? "all" : "monitoring",
+                    )
+                  }
                   icon={AlertTriangle}
                 />
                 <HeaderStatCard
@@ -182,7 +186,11 @@ export function PatientsPageHeader({
                   value={stats.hasUnpaid}
                   tone="amber"
                   isSelected={financialStatusFilter === "pending_balance"}
-                  onClick={() => onFinancialStatusFilterChange?.(financialStatusFilter === "pending_balance" ? "all" : "pending_balance")}
+                  onClick={() =>
+                    onFinancialStatusFilterChange?.(
+                      financialStatusFilter === "pending_balance" ? "all" : "pending_balance",
+                    )
+                  }
                   icon={AlertTriangle}
                 />
               </div>

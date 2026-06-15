@@ -1,9 +1,22 @@
 import React, { useState } from "react";
-import { usePatientEvaluationResponses, usePatientEvaluationResponse } from "@/hooks/useEvaluationForms";
+import {
+  usePatientEvaluationResponses,
+  usePatientEvaluationResponse,
+} from "@/hooks/useEvaluationForms";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { History, FileText, Calendar, CheckCircle2, Clock3, ChevronRight, Eye, Printer, X } from "lucide-react";
+import {
+  History,
+  FileText,
+  Calendar,
+  CheckCircle2,
+  Clock3,
+  ChevronRight,
+  Eye,
+  Printer,
+  X,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -25,10 +38,26 @@ interface EvaluationHistorySidebarProps {
 }
 
 const statusConfig = {
-  scheduled: { label: "Agendada", icon: Calendar, color: "bg-blue-50 text-blue-700 border-blue-200" },
-  in_progress: { label: "Em curso", icon: Clock3, color: "bg-amber-50 text-amber-700 border-amber-200" },
-  completed: { label: "Concluída", icon: CheckCircle2, color: "bg-emerald-50 text-emerald-700 border-emerald-200" },
-  cancelled: { label: "Cancelada", icon: History, color: "bg-slate-50 text-slate-600 border-slate-200" },
+  scheduled: {
+    label: "Agendada",
+    icon: Calendar,
+    color: "bg-blue-50 text-blue-700 border-blue-200",
+  },
+  in_progress: {
+    label: "Em curso",
+    icon: Clock3,
+    color: "bg-amber-50 text-amber-700 border-amber-200",
+  },
+  completed: {
+    label: "Concluída",
+    icon: CheckCircle2,
+    color: "bg-emerald-50 text-emerald-700 border-emerald-200",
+  },
+  cancelled: {
+    label: "Cancelada",
+    icon: History,
+    color: "bg-slate-50 text-slate-600 border-slate-200",
+  },
 } as const;
 
 export const EvaluationHistorySidebar: React.FC<EvaluationHistorySidebarProps> = ({
@@ -39,7 +68,7 @@ export const EvaluationHistorySidebar: React.FC<EvaluationHistorySidebarProps> =
   const [viewingEvaluationId, setViewingEvaluationId] = useState<string | null>(null);
 
   // Filter out the current evaluation
-  const historyEvaluations = evaluations.filter(ev => ev.id !== currentEvaluationId);
+  const historyEvaluations = evaluations.filter((ev) => ev.id !== currentEvaluationId);
 
   if (isLoading) {
     return (
@@ -51,7 +80,7 @@ export const EvaluationHistorySidebar: React.FC<EvaluationHistorySidebarProps> =
           </CardTitle>
         </CardHeader>
         <CardContent className="p-4 space-y-4">
-          {[1, 2, 3].map(i => (
+          {[1, 2, 3].map((i) => (
             <div key={i} className="h-20 w-full rounded-2xl bg-muted/40 animate-pulse" />
           ))}
         </CardContent>
@@ -73,12 +102,17 @@ export const EvaluationHistorySidebar: React.FC<EvaluationHistorySidebarProps> =
             {historyEvaluations.length === 0 ? (
               <div className="text-center py-12 px-4">
                 <FileText className="h-10 w-10 mx-auto text-slate-200 mb-3" />
-                <p className="text-xs text-slate-400 font-bold uppercase tracking-tight">Sem registros</p>
-                <p className="text-[10px] text-slate-400 mt-1">Este paciente não possui avaliações passadas.</p>
+                <p className="text-xs text-slate-400 font-bold uppercase tracking-tight">
+                  Sem registros
+                </p>
+                <p className="text-[10px] text-slate-400 mt-1">
+                  Este paciente não possui avaliações passadas.
+                </p>
               </div>
             ) : (
               historyEvaluations.map((ev) => {
-                const status = statusConfig[ev.status as keyof typeof statusConfig] || statusConfig.in_progress;
+                const status =
+                  statusConfig[ev.status as keyof typeof statusConfig] || statusConfig.in_progress;
                 const StatusIcon = status.icon;
                 const date = ev.completed_at || ev.started_at || ev.created_at;
 
@@ -90,7 +124,13 @@ export const EvaluationHistorySidebar: React.FC<EvaluationHistorySidebarProps> =
                   >
                     <div className="p-4 rounded-2xl border border-slate-100 bg-white hover:border-blue-200 hover:bg-blue-50/30 hover:shadow-md space-y-3 transition-all active:scale-[0.98]">
                       <div className="flex items-center justify-between gap-2">
-                        <Badge variant="outline" className={cn("text-[9px] font-black uppercase py-0 px-2 h-5 rounded-lg gap-1.5 border-none", status.color)}>
+                        <Badge
+                          variant="outline"
+                          className={cn(
+                            "text-[9px] font-black uppercase py-0 px-2 h-5 rounded-lg gap-1.5 border-none",
+                            status.color,
+                          )}
+                        >
                           <StatusIcon className="h-3 w-3" />
                           {status.label}
                         </Badge>
@@ -121,8 +161,14 @@ export const EvaluationHistorySidebar: React.FC<EvaluationHistorySidebarProps> =
       </Card>
 
       {/* Detail Sheet */}
-      <Sheet open={!!viewingEvaluationId} onOpenChange={(open) => !open && setViewingEvaluationId(null)}>
-        <SheetContent side="right" className="sm:max-w-2xl p-0 border-l border-blue-100 overflow-hidden flex flex-col">
+      <Sheet
+        open={!!viewingEvaluationId}
+        onOpenChange={(open) => !open && setViewingEvaluationId(null)}
+      >
+        <SheetContent
+          side="right"
+          className="sm:max-w-2xl p-0 border-l border-blue-100 overflow-hidden flex flex-col"
+        >
           {viewingEvaluationId && (
             <EvaluationDetailView
               evaluationId={viewingEvaluationId}
@@ -135,7 +181,13 @@ export const EvaluationHistorySidebar: React.FC<EvaluationHistorySidebarProps> =
   );
 };
 
-const EvaluationDetailView = ({ evaluationId, onClose }: { evaluationId: string, onClose: () => void }) => {
+const EvaluationDetailView = ({
+  evaluationId,
+  onClose,
+}: {
+  evaluationId: string;
+  onClose: () => void;
+}) => {
   const { data: evaluation, isLoading } = usePatientEvaluationResponse(evaluationId);
 
   if (isLoading) {
@@ -163,15 +215,30 @@ const EvaluationDetailView = ({ evaluationId, onClose }: { evaluationId: string,
                 Detalhes da Avaliação
               </SheetTitle>
               <SheetDescription className="text-xs font-bold text-blue-600 uppercase tracking-widest">
-                {evaluation.form_nome} • {evaluation.completed_at ? format(new Date(evaluation.completed_at), "dd 'de' MMMM 'de' yyyy", { locale: ptBR }) : "Data não disponível"}
+                {evaluation.form_nome} •{" "}
+                {evaluation.completed_at
+                  ? format(new Date(evaluation.completed_at), "dd 'de' MMMM 'de' yyyy", {
+                      locale: ptBR,
+                    })
+                  : "Data não disponível"}
               </SheetDescription>
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <Button variant="outline" size="icon" onClick={() => window.print()} className="rounded-xl">
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => window.print()}
+              className="rounded-xl"
+            >
               <Printer className="h-4 w-4" />
             </Button>
-            <Button variant="ghost" size="icon" onClick={onClose} className="rounded-xl hover:bg-rose-50 hover:text-rose-600">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={onClose}
+              className="rounded-xl hover:bg-rose-50 hover:text-rose-600"
+            >
               <X className="h-5 w-5" />
             </Button>
           </div>
@@ -181,8 +248,8 @@ const EvaluationDetailView = ({ evaluationId, onClose }: { evaluationId: string,
       <ScrollArea className="flex-1 p-6 md:p-10 bg-muted/40">
         <div className="max-w-2xl mx-auto space-y-8">
           <DynamicFieldRenderer
-            fields={evaluation.fields as any || []}
-            values={evaluation.responses as any || {}}
+            fields={(evaluation.fields as any) || []}
+            values={(evaluation.responses as any) || {}}
             onChange={() => {}}
             readOnly={true}
           />

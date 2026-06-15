@@ -5,7 +5,10 @@
     "description": "Cloudflare Worker (Hono) API da FisioFlow. Base: {{baseUrl}}. Auth: Bearer {{jwt}} (Neon Auth). Selecione o environment 'FisioFlow — Prod' ou 'Local'. Endpoints derivados de apps/api/src/routes/*.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
-  "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{jwt}}", "type": "string" }] },
+  "auth": {
+    "type": "bearer",
+    "bearer": [{ "key": "token", "value": "{{jwt}}", "type": "string" }]
+  },
   "event": [
     {
       "listen": "test",
@@ -23,120 +26,540 @@
     {
       "name": "Health",
       "item": [
-        { "name": "Health", "request": { "method": "GET", "auth": { "type": "noauth" }, "url": { "raw": "{{baseUrl}}/api/health", "host": ["{{baseUrl}}"], "path": ["api", "health"] } } },
-        { "name": "Health Ready", "request": { "method": "GET", "auth": { "type": "noauth" }, "url": { "raw": "{{baseUrl}}/api/health/ready", "host": ["{{baseUrl}}"], "path": ["api", "health", "ready"] } } },
-        { "name": "Health DB", "request": { "method": "GET", "auth": { "type": "noauth" }, "url": { "raw": "{{baseUrl}}/api/health/db", "host": ["{{baseUrl}}"], "path": ["api", "health", "db"] } } }
+        {
+          "name": "Health",
+          "request": {
+            "method": "GET",
+            "auth": { "type": "noauth" },
+            "url": {
+              "raw": "{{baseUrl}}/api/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "health"]
+            }
+          }
+        },
+        {
+          "name": "Health Ready",
+          "request": {
+            "method": "GET",
+            "auth": { "type": "noauth" },
+            "url": {
+              "raw": "{{baseUrl}}/api/health/ready",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "health", "ready"]
+            }
+          }
+        },
+        {
+          "name": "Health DB",
+          "request": {
+            "method": "GET",
+            "auth": { "type": "noauth" },
+            "url": {
+              "raw": "{{baseUrl}}/api/health/db",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "health", "db"]
+            }
+          }
+        }
       ]
     },
     {
       "name": "Patients",
       "item": [
-        { "name": "List patients", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/patients?status=active", "host": ["{{baseUrl}}"], "path": ["api", "patients"], "query": [{ "key": "status", "value": "active" }] } } },
-        { "name": "Get patient", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/patients/{{patientId}}", "host": ["{{baseUrl}}"], "path": ["api", "patients", "{{patientId}}"] } } },
-        { "name": "Create patient", "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"name\": \"Paciente Teste\",\n  \"email\": \"teste@example.com\",\n  \"phone\": \"11999999999\"\n}", "options": { "raw": { "language": "json" } } }, "url": { "raw": "{{baseUrl}}/api/patients", "host": ["{{baseUrl}}"], "path": ["api", "patients"] } } },
-        { "name": "Update patient", "request": { "method": "PATCH", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"name\": \"Nome Atualizado\"\n}", "options": { "raw": { "language": "json" } } }, "url": { "raw": "{{baseUrl}}/api/patients/{{patientId}}", "host": ["{{baseUrl}}"], "path": ["api", "patients", "{{patientId}}"] } } }
+        {
+          "name": "List patients",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/patients?status=active",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "patients"],
+              "query": [{ "key": "status", "value": "active" }]
+            }
+          }
+        },
+        {
+          "name": "Get patient",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/patients/{{patientId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "patients", "{{patientId}}"]
+            }
+          }
+        },
+        {
+          "name": "Create patient",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Paciente Teste\",\n  \"email\": \"teste@example.com\",\n  \"phone\": \"11999999999\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/patients",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "patients"]
+            }
+          }
+        },
+        {
+          "name": "Update patient",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Nome Atualizado\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/patients/{{patientId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "patients", "{{patientId}}"]
+            }
+          }
+        }
       ]
     },
     {
       "name": "Appointments",
       "item": [
-        { "name": "List appointments", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/appointments", "host": ["{{baseUrl}}"], "path": ["api", "appointments"] } } },
-        { "name": "Create appointment", "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"patientId\": \"{{patientId}}\",\n  \"start\": \"2026-06-20T14:00:00Z\",\n  \"durationMin\": 50\n}", "options": { "raw": { "language": "json" } } }, "url": { "raw": "{{baseUrl}}/api/appointments", "host": ["{{baseUrl}}"], "path": ["api", "appointments"] } } }
+        {
+          "name": "List appointments",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/appointments",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "appointments"]
+            }
+          }
+        },
+        {
+          "name": "Create appointment",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"patientId\": \"{{patientId}}\",\n  \"start\": \"2026-06-20T14:00:00Z\",\n  \"durationMin\": 50\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/appointments",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "appointments"]
+            }
+          }
+        }
       ]
     },
     {
       "name": "Sessions",
       "item": [
-        { "name": "List sessions", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/sessions?patientId={{patientId}}", "host": ["{{baseUrl}}"], "path": ["api", "sessions"], "query": [{ "key": "patientId", "value": "{{patientId}}" }] } } }
+        {
+          "name": "List sessions",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/sessions?patientId={{patientId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "sessions"],
+              "query": [{ "key": "patientId", "value": "{{patientId}}" }]
+            }
+          }
+        }
       ]
     },
     {
       "name": "Exercises",
       "item": [
-        { "name": "List exercises", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/exercises", "host": ["{{baseUrl}}"], "path": ["api", "exercises"] } } },
-        { "name": "List protocols", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/protocols", "host": ["{{baseUrl}}"], "path": ["api", "protocols"] } } }
+        {
+          "name": "List exercises",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/exercises",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "exercises"]
+            }
+          }
+        },
+        {
+          "name": "List protocols",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/protocols",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "protocols"]
+            }
+          }
+        }
       ]
     },
     {
       "name": "Boards & Tarefas",
       "item": [
-        { "name": "List boards", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/boards", "host": ["{{baseUrl}}"], "path": ["api", "boards"] } } },
-        { "name": "List tarefas", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/tarefas", "host": ["{{baseUrl}}"], "path": ["api", "tarefas"] } } }
+        {
+          "name": "List boards",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/boards",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "boards"]
+            }
+          }
+        },
+        {
+          "name": "List tarefas",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/tarefas",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "tarefas"]
+            }
+          }
+        }
       ]
     },
     {
       "name": "Clinical",
       "item": [
-        { "name": "List evolution versions", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/evolution-versions?patientId={{patientId}}", "host": ["{{baseUrl}}"], "path": ["api", "evolution-versions"], "query": [{ "key": "patientId", "value": "{{patientId}}" }] } } },
-        { "name": "List standardized tests", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/standardized-tests", "host": ["{{baseUrl}}"], "path": ["api", "standardized-tests"] } } }
+        {
+          "name": "List evolution versions",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/evolution-versions?patientId={{patientId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "evolution-versions"],
+              "query": [{ "key": "patientId", "value": "{{patientId}}" }]
+            }
+          }
+        },
+        {
+          "name": "List standardized tests",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/standardized-tests",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "standardized-tests"]
+            }
+          }
+        }
       ]
     },
     {
       "name": "Financial",
       "item": [
-        { "name": "List transactions", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/financial/transactions", "host": ["{{baseUrl}}"], "path": ["api", "financial", "transactions"] } } },
-        { "name": "List accounts", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/financial/accounts", "host": ["{{baseUrl}}"], "path": ["api", "financial", "accounts"] } } },
-        { "name": "List cost centers", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/financial/cost-centers", "host": ["{{baseUrl}}"], "path": ["api", "financial", "cost-centers"] } } }
+        {
+          "name": "List transactions",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/financial/transactions",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "financial", "transactions"]
+            }
+          }
+        },
+        {
+          "name": "List accounts",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/financial/accounts",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "financial", "accounts"]
+            }
+          }
+        },
+        {
+          "name": "List cost centers",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/financial/cost-centers",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "financial", "cost-centers"]
+            }
+          }
+        }
       ]
     },
     {
       "name": "Packages",
       "item": [
-        { "name": "List packages", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/packages", "host": ["{{baseUrl}}"], "path": ["api", "packages"] } } },
-        { "name": "Package stats", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/packages/stats", "host": ["{{baseUrl}}"], "path": ["api", "packages", "stats"] } } },
-        { "name": "Packages by patient", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/packages/patient/{{patientId}}", "host": ["{{baseUrl}}"], "path": ["api", "packages", "patient", "{{patientId}}"] } } }
+        {
+          "name": "List packages",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/packages",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "packages"]
+            }
+          }
+        },
+        {
+          "name": "Package stats",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/packages/stats",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "packages", "stats"]
+            }
+          }
+        },
+        {
+          "name": "Packages by patient",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/packages/patient/{{patientId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "packages", "patient", "{{patientId}}"]
+            }
+          }
+        }
       ]
     },
     {
       "name": "Reports",
       "item": [
-        { "name": "Medical templates", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/reports/medical-templates", "host": ["{{baseUrl}}"], "path": ["api", "reports", "medical-templates"] } } },
-        { "name": "Medical reports", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/reports/medical", "host": ["{{baseUrl}}"], "path": ["api", "reports", "medical"] } } },
-        { "name": "Convenio reports", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/reports/convenio", "host": ["{{baseUrl}}"], "path": ["api", "reports", "convenio"] } } }
+        {
+          "name": "Medical templates",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/reports/medical-templates",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "reports", "medical-templates"]
+            }
+          }
+        },
+        {
+          "name": "Medical reports",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/reports/medical",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "reports", "medical"]
+            }
+          }
+        },
+        {
+          "name": "Convenio reports",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/reports/convenio",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "reports", "convenio"]
+            }
+          }
+        }
       ]
     },
     {
       "name": "Commissions",
       "item": [
-        { "name": "Summary", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/commissions/summary", "host": ["{{baseUrl}}"], "path": ["api", "commissions", "summary"] } } },
-        { "name": "Config", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/commissions/config", "host": ["{{baseUrl}}"], "path": ["api", "commissions", "config"] } } }
+        {
+          "name": "Summary",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/commissions/summary",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "commissions", "summary"]
+            }
+          }
+        },
+        {
+          "name": "Config",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/commissions/config",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "commissions", "config"]
+            }
+          }
+        }
       ]
     },
     {
       "name": "NFS-e",
       "item": [
-        { "name": "List NFS-e", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/nfse", "host": ["{{baseUrl}}"], "path": ["api", "nfse"] } } },
-        { "name": "Config", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/nfse/config", "host": ["{{baseUrl}}"], "path": ["api", "nfse", "config"] } } }
+        {
+          "name": "List NFS-e",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/nfse",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "nfse"]
+            }
+          }
+        },
+        {
+          "name": "Config",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/nfse/config",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "nfse", "config"]
+            }
+          }
+        }
       ]
     },
     {
       "name": "CRM",
       "item": [
-        { "name": "List leads", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/crm/leads", "host": ["{{baseUrl}}"], "path": ["api", "crm", "leads"] } } },
-        { "name": "List campanhas", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/crm/campanhas", "host": ["{{baseUrl}}"], "path": ["api", "crm", "campanhas"] } } },
-        { "name": "List CRM tarefas", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/crm/tarefas", "host": ["{{baseUrl}}"], "path": ["api", "crm", "tarefas"] } } }
+        {
+          "name": "List leads",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/crm/leads",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "crm", "leads"]
+            }
+          }
+        },
+        {
+          "name": "List campanhas",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/crm/campanhas",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "crm", "campanhas"]
+            }
+          }
+        },
+        {
+          "name": "List CRM tarefas",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/crm/tarefas",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "crm", "tarefas"]
+            }
+          }
+        }
       ]
     },
     {
       "name": "Marketing",
       "item": [
-        { "name": "Content calendar", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/marketing/content-calendar", "host": ["{{baseUrl}}"], "path": ["api", "marketing", "content-calendar"] } } },
-        { "name": "Recall campaigns", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/marketing/recall-campaigns", "host": ["{{baseUrl}}"], "path": ["api", "marketing", "recall-campaigns"] } } },
-        { "name": "LTV opportunities", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/marketing/ltv-maximizer/opportunities", "host": ["{{baseUrl}}"], "path": ["api", "marketing", "ltv-maximizer", "opportunities"] } } }
+        {
+          "name": "Content calendar",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/marketing/content-calendar",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "marketing", "content-calendar"]
+            }
+          }
+        },
+        {
+          "name": "Recall campaigns",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/marketing/recall-campaigns",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "marketing", "recall-campaigns"]
+            }
+          }
+        },
+        {
+          "name": "LTV opportunities",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/marketing/ltv-maximizer/opportunities",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "marketing", "ltv-maximizer", "opportunities"]
+            }
+          }
+        }
       ]
     },
     {
       "name": "Gamification",
       "item": [
-        { "name": "Leaderboard", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/gamification/leaderboard", "host": ["{{baseUrl}}"], "path": ["api", "gamification", "leaderboard"] } } },
-        { "name": "Achievement definitions", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/gamification/achievement-definitions", "host": ["{{baseUrl}}"], "path": ["api", "gamification", "achievement-definitions"] } } },
-        { "name": "Admin stats", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/gamification/admin/stats", "host": ["{{baseUrl}}"], "path": ["api", "gamification", "admin", "stats"] } } }
+        {
+          "name": "Leaderboard",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/gamification/leaderboard",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "gamification", "leaderboard"]
+            }
+          }
+        },
+        {
+          "name": "Achievement definitions",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/gamification/achievement-definitions",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "gamification", "achievement-definitions"]
+            }
+          }
+        },
+        {
+          "name": "Admin stats",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/gamification/admin/stats",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "gamification", "admin", "stats"]
+            }
+          }
+        }
       ]
     },
     {
       "name": "AI",
       "item": [
-        { "name": "AI search", "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"query\": \"protocolo para lombalgia\"\n}", "options": { "raw": { "language": "json" } } }, "url": { "raw": "{{baseUrl}}/api/ai/search", "host": ["{{baseUrl}}"], "path": ["api", "ai", "search"] } } }
+        {
+          "name": "AI search",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"protocolo para lombalgia\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/ai/search",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "ai", "search"]
+            }
+          }
+        }
       ]
     }
   ]

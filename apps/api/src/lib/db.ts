@@ -149,11 +149,11 @@ export function createDb(env: Env, _mode: "read" | "write" = "write"): FisioDb {
             await pgClient.query(`SELECT set_config('app.org_id', $1, true)`, [orgId]);
           }
 
-          const result = await pgClient.query({
+          const result = (await pgClient.query({
             text: queryText,
             values: queryParams,
             rowMode: queryOpts?.arrayMode ? "array" : undefined,
-          } as any) as any;
+          } as any)) as any;
 
           return {
             rows: result.rows,

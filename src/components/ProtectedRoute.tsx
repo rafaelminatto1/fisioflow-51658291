@@ -6,7 +6,6 @@ import { AlertTriangle, RefreshCw, Loader2 } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 
-
 interface ProtectedRouteProps {
   children: React.ReactNode;
   allowedRoles?: UserRole[];

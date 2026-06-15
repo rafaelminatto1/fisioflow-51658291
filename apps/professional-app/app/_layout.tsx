@@ -116,7 +116,7 @@ function RootLayoutContent() {
           if (useSyncStore.getState().conflict) break;
 
           try {
-            // Skip queue logic inside fetchApi by using a custom flag, 
+            // Skip queue logic inside fetchApi by using a custom flag,
             // but actually fetchApi only queues if network fails.
             await fetchApi(mutation.endpoint, {
               method: mutation.method,
@@ -125,18 +125,20 @@ function RootLayoutContent() {
             });
             useSyncStore.getState().removeMutation(mutation.id);
           } catch (error: any) {
-            if (error.status === 409 || error.message?.includes('409')) {
+            if (error.status === 409 || error.message?.includes("409")) {
               store.setConflict({
                 id: mutation.id,
                 mutation,
-                serverData: error.serverData || { aviso: 'Versão do servidor atualizada e mais recente.' },
+                serverData: error.serverData || {
+                  aviso: "Versão do servidor atualizada e mais recente.",
+                },
                 localData: mutation.data,
               });
               break;
             } else if (
-              error.message === 'Network request failed' || 
-              error.name === 'AbortError' || 
-              error.message?.includes('Network')
+              error.message === "Network request failed" ||
+              error.name === "AbortError" ||
+              error.message?.includes("Network")
             ) {
               break;
             } else {
@@ -149,7 +151,7 @@ function RootLayoutContent() {
       }
     };
 
-    const unsubscribe = NetInfo.addEventListener(state => {
+    const unsubscribe = NetInfo.addEventListener((state) => {
       if (state.isConnected && state.isInternetReachable !== false) {
         processQueue();
       }

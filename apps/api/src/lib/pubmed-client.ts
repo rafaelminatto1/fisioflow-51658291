@@ -11,7 +11,7 @@ export class PubMedClient {
     try {
       // 1. ESearch: Buscar IDs
       const searchUrl = `${PubMedClient.BASE_URL}/esearch.fcgi?db=pubmed&term=${encodeURIComponent(
-        `${term} AND physical therapy AND exercise`
+        `${term} AND physical therapy AND exercise`,
       )}&retmode=json&retmax=${limit}`;
 
       const searchRes = await fetch(searchUrl);
@@ -24,7 +24,7 @@ export class PubMedClient {
 
       // 2. ESummary: Obter Títulos
       const summaryUrl = `${PubMedClient.BASE_URL}/esummary.fcgi?db=pubmed&id=${ids.join(
-        ","
+        ",",
       )}&retmode=json`;
 
       const summaryRes = await fetch(summaryUrl);

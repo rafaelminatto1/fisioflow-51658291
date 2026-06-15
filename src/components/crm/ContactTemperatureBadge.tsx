@@ -49,9 +49,7 @@ export function ContactTemperatureBadge({ temperature, score, compact }: Props) 
     <Badge variant="outline" className={`gap-1 border ${cfg.className}`}>
       <Icon className="h-3 w-3" />
       {!compact && <span>{cfg.label}</span>}
-      {typeof score === "number" && (
-        <span className="font-semibold tabular-nums">{score}</span>
-      )}
+      {typeof score === "number" && <span className="font-semibold tabular-nums">{score}</span>}
     </Badge>
   );
 }

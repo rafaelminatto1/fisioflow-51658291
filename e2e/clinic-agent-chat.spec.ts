@@ -26,13 +26,13 @@ test.describe("ClinicAgentChat - Fluxo de Chat - T082", () => {
 
     // Digitar uma pergunta e enviar
     await chatInput.fill("Como acesso a agenda?");
-    const sendButton = page.locator('button:has(svg.lucide-send-horizonal)');
+    const sendButton = page.locator("button:has(svg.lucide-send-horizonal)");
     await sendButton.click();
 
     // Aguardar a mensagem do bot aparecer
     const botMessage = page.locator('[data-testid="clinic-chat-message"]').last();
     await expect(botMessage).toBeVisible({ timeout: 15000 });
-    
+
     // Verificar que não está vazio
     const textContent = await botMessage.textContent();
     expect(textContent?.length).toBeGreaterThan(5);

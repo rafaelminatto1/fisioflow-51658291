@@ -1,4 +1,4 @@
-import DOMPurify from 'dompurify';
+import DOMPurify from "dompurify";
 /**
  * SessionDetailsModal — visualização detalhada de uma sessão (abas Visão Geral,
  * Observação, Exercícios, Medições, Anexos). Extraído da EvolutionTimeline.
@@ -283,7 +283,9 @@ ${
                         <div className="bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 rounded-xl p-4">
                           <div
                             className="text-sm prose prose-sm max-w-none dark:prose-invert"
-                            dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize((session as any).observacao || "",) }}
+                            dangerouslySetInnerHTML={{
+                              __html: DOMPurify.sanitize((session as any).observacao || ""),
+                            }}
                           />
                         </div>
                       </div>
@@ -330,7 +332,9 @@ ${
                       <div className="bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 rounded-2xl p-4">
                         <div
                           className="text-sm prose prose-sm max-w-none dark:prose-invert"
-                          dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize((session as any).observacao || "",) }}
+                          dangerouslySetInnerHTML={{
+                            __html: DOMPurify.sanitize((session as any).observacao || ""),
+                          }}
                         />
                       </div>
                     ) : (

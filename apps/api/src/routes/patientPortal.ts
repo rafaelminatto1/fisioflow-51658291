@@ -1384,37 +1384,37 @@ app.get("/digital-twin", async (c) => {
     `SELECT date, pain_scale FROM sessions 
      WHERE patient_id = $1 AND pain_scale IS NOT NULL 
      ORDER BY date ASC LIMIT 10`,
-    [patientId]
+    [patientId],
   );
-  
-  const labels = painHistory.rows.length 
-    ? painHistory.rows.map(r => {
+
+  const labels = painHistory.rows.length
+    ? painHistory.rows.map((r) => {
         const d = new Date(r.date as string);
-        return `${d.getDate().toString().padStart(2, '0')}/${(d.getMonth() + 1).toString().padStart(2, '0')}`;
-      }) 
+        return `${d.getDate().toString().padStart(2, "0")}/${(d.getMonth() + 1).toString().padStart(2, "0")}`;
+      })
     : ["Sem 1", "Sem 2", "Sem 3", "Sem 4"];
-    
-  const dataPoints = painHistory.rows.length 
-    ? painHistory.rows.map(r => {
+
+  const dataPoints = painHistory.rows.length
+    ? painHistory.rows.map((r) => {
         const pain = Number(r.pain_scale);
-        return 100 - (pain * 10);
-      }) 
+        return 100 - pain * 10;
+      })
     : [50, 60, 70, 85];
 
   const dbData = result.rows[0] || {
     predicted_recovery_weeks: 4,
-    adherence_score: "85"
+    adherence_score: "85",
   };
 
   c.header("Cache-Control", "public, max-age=60");
-  return c.json({ 
+  return c.json({
     data: {
       ...dbData,
       trajectory: {
         labels: labels,
-        data: dataPoints
-      }
-    } 
+        data: dataPoints,
+      },
+    },
   });
 });
 
@@ -1477,16 +1477,14 @@ app.get("/ai-snapshot", async (c) => {
     // Fallback in case of AI failure
     return c.json({
       data: {
-        mainStatus: "Você demonstrou excelente avanço na redução da dor lombar. Sua estabilidade central está mais forte do que na avaliação inicial.",
-        keyWins: [
-          "Aumento de 30% na flexão de tronco",
-          "Redução da dor matinal (de 7 para 3)"
-        ],
+        mainStatus:
+          "Você demonstrou excelente avanço na redução da dor lombar. Sua estabilidade central está mais forte do que na avaliação inicial.",
+        keyWins: ["Aumento de 30% na flexão de tronco", "Redução da dor matinal (de 7 para 3)"],
         remainingChallenges: [
           "Focar no controle rotacional",
-          "Manter regularidade nos exercícios de mobilidade"
-        ]
-      }
+          "Manter regularidade nos exercícios de mobilidade",
+        ],
+      },
     });
   }
 });

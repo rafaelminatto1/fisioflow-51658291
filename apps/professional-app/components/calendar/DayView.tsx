@@ -149,8 +149,14 @@ export const DayView = ({
           }}
           onPress={() => router.push(`/appointment-form?id=${apt.id}` as Href)}
           onTwoFingerTap={() => {
-            if (apt.status !== 'completed' && apt.status !== 'cancelled' && apt.status !== 'no_show') {
-              router.push(`/evolution-form?patientId=${apt.patientId}&appointmentId=${apt.id}` as Href);
+            if (
+              apt.status !== "completed" &&
+              apt.status !== "cancelled" &&
+              apt.status !== "no_show"
+            ) {
+              router.push(
+                `/evolution-form?patientId=${apt.patientId}&appointmentId=${apt.id}` as Href,
+              );
             }
           }}
         />

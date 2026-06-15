@@ -361,7 +361,9 @@ export default function EvolutionsListScreen() {
         <TouchableOpacity
           onPress={() => {
             medium();
-            router.push(`/evolution-form?patientId=${patientId}&patientName=${patientName}` as Href);
+            router.push(
+              `/evolution-form?patientId=${patientId}&patientName=${patientName}` as Href,
+            );
           }}
           style={styles.addButton}
         >

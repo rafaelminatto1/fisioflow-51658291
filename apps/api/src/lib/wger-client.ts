@@ -80,13 +80,13 @@ interface WgerResponse<T> {
 
 export class WgerClient {
   private static readonly API_URL = "https://wger.de/api/v2";
-  
+
   constructor(private token: string) {}
 
   async searchExercises(query: string, languageId: number = 5): Promise<WgerExercise[]> {
     // languageId 5 é pt (Portuguese) no wger, 2 é en.
     const url = `${WgerClient.API_URL}/exerciseinfo/?language=${languageId}&limit=10&term=${encodeURIComponent(query)}`;
-    
+
     const response = await fetch(url, {
       headers: {
         Authorization: `Token ${this.token}`,
@@ -105,7 +105,7 @@ export class WgerClient {
 
   async getExerciseById(id: number): Promise<WgerExercise> {
     const url = `${WgerClient.API_URL}/exerciseinfo/${id}/`;
-    
+
     const response = await fetch(url, {
       headers: {
         Authorization: `Token ${this.token}`,

@@ -438,7 +438,8 @@ app.post("/", requireAuth, async (c) => {
         description: asString(rawData.description),
         category: asString(rawData.category),
         conditionName: asString(rawData.condition_name ?? rawData.conditionName),
-        templateVariant: asString(rawData.template_variant ?? rawData.templateVariant) ?? "Personalizado",
+        templateVariant:
+          asString(rawData.template_variant ?? rawData.templateVariant) ?? "Personalizado",
         templateType: asString(rawData.templateType) ?? "custom",
         patientProfile: asString(rawData.patientProfile ?? rawData.patient_profile),
         organizationId: user.organizationId ?? null,
@@ -454,10 +455,7 @@ app.post("/", requireAuth, async (c) => {
       };
 
       // 1. Inserir o template base
-      const [template] = await tx
-        .insert(exerciseTemplates)
-        .values(templateValues)
-        .returning();
+      const [template] = await tx.insert(exerciseTemplates).values(templateValues).returning();
 
       let insertedItems: any[] = [];
 
@@ -467,7 +465,7 @@ app.post("/", requireAuth, async (c) => {
           .insert(exerciseTemplateItems)
           .values(
             templateItems.map((item, index): ExerciseTemplateItemInsert => {
-              const row = item && typeof item === "object" ? item as Record<string, unknown> : {};
+              const row = item && typeof item === "object" ? (item as Record<string, unknown>) : {};
               const focusMuscles = row.focus_muscles ?? row.focusMuscles;
 
               return {

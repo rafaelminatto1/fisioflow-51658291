@@ -8,6 +8,7 @@
 ## Contexto
 
 Atual: `src/hooks/useVoiceScribe.ts` faz chamada HTTP curta ao Worker para transcrever áudio gravado (sem streaming, sem reconnect). Novo `@cloudflare/voice`:
+
 - `withVoice(Agent)` mixin: STT contínuo via WebSocket + TTS + persistência SQLite em DO
 - `WorkersAIFluxSTT` para STT
 - `useVoiceAgent` React hook que gerencia mic, playback e reconexão automática
@@ -22,6 +23,7 @@ Atual: `src/hooks/useVoiceScribe.ts` faz chamada HTTP curta ao Worker para trans
 **Why**: Reduz tempo de redação de evolução em 60%+; histórico de turnos persistido permite revisar transcrições; reconexão automática se Wi-Fi cair.
 
 **Acceptance**:
+
 1. Fisio aperta "Iniciar Voice Scribe" → WebSocket abre com `VoiceScribeAgent`
 2. Voz é transcrita em tempo real (latência < 500ms)
 3. Se Wi-Fi cair por 10s, reconecta sem perder histórico
@@ -32,10 +34,12 @@ Atual: `src/hooks/useVoiceScribe.ts` faz chamada HTTP curta ao Worker para trans
 **Persona**: dev mantendo backward-compat.
 
 **Acceptance**:
+
 1. Hook antigo `useVoiceScribe` marcado `@deprecated`, redireciona para `useVoiceScribeV2`
 2. Feature flag `VITE_VOICE_SCRIBE_V2=true` controla cutover
 
 ### Edge Cases
+
 - Mic permission negada: hook retorna erro claro com instrução
 - Áudio com background ruidoso (clínica): WorkersAIFluxSTT já filtra
 - Sessão DO já tem 100+ turnos: limite de armazenamento?

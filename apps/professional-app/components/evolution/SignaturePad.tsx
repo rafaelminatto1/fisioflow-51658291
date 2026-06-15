@@ -1,8 +1,8 @@
-import React, { useRef, useState } from 'react';
-import { View, StyleSheet, TouchableOpacity, Text, ActivityIndicator, Alert } from 'react-native';
-import SignatureScreen from 'react-native-signature-canvas';
-import { Ionicons } from '@expo/vector-icons';
-import { fetchApi } from '@/lib/api';
+import React, { useRef, useState } from "react";
+import { View, StyleSheet, TouchableOpacity, Text, ActivityIndicator, Alert } from "react-native";
+import SignatureScreen from "react-native-signature-canvas";
+import { Ionicons } from "@expo/vector-icons";
+import { fetchApi } from "@/lib/api";
 
 interface SignaturePadProps {
   onSignatureSaved: (url: string) => void;
@@ -10,7 +10,11 @@ interface SignaturePadProps {
   label?: string;
 }
 
-export function SignaturePad({ onSignatureSaved, colors, label = 'Assinatura do Paciente' }: SignaturePadProps) {
+export function SignaturePad({
+  onSignatureSaved,
+  colors,
+  label = "Assinatura do Paciente",
+}: SignaturePadProps) {
   const signatureRef = useRef<any>(null);
   const [isSigning, setIsSigning] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
@@ -38,7 +42,7 @@ export function SignaturePad({ onSignatureSaved, colors, label = 'Assinatura do 
       // 2. Upload to Cloudflare R2
       // Convert base64 to Blob
       const base64Data = signature.replace(/^data:image\/png;base64,/, "");
-      
+
       // In React Native, fetch can handle base64 data URIs
       const response = await fetch(signature);
       const blob = await response.blob();
@@ -91,7 +95,7 @@ export function SignaturePad({ onSignatureSaved, colors, label = 'Assinatura do 
   return (
     <View style={styles.container}>
       <Text style={[styles.label, { color: colors.textSecondary }]}>{label}</Text>
-      
+
       <View style={[styles.signatureContainer, { borderColor: colors.border }]}>
         {isUploading && (
           <View style={styles.loadingOverlay}>
@@ -116,16 +120,19 @@ export function SignaturePad({ onSignatureSaved, colors, label = 'Assinatura do 
           penColor="#000000"
         />
       </View>
-      
+
       <View style={styles.actionRow}>
         <TouchableOpacity
-          style={[styles.actionButton, { backgroundColor: colors.surface, borderColor: colors.border, borderWidth: 1 }]}
+          style={[
+            styles.actionButton,
+            { backgroundColor: colors.surface, borderColor: colors.border, borderWidth: 1 },
+          ]}
           onPress={handleClear}
           disabled={isUploading}
         >
           <Text style={[styles.actionButtonText, { color: colors.text }]}>Limpar</Text>
         </TouchableOpacity>
-        
+
         <TouchableOpacity
           style={[styles.actionButton, { backgroundColor: colors.primary }]}
           onPress={handleConfirm}
@@ -144,40 +151,40 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
     marginBottom: 8,
   },
   openButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     padding: 12,
     borderWidth: 1,
-    borderStyle: 'dashed',
+    borderStyle: "dashed",
     borderRadius: 8,
     gap: 8,
   },
   openButtonText: {
     fontSize: 16,
-    fontWeight: '500',
+    fontWeight: "500",
   },
   signatureContainer: {
     height: 200,
     borderWidth: 1,
     borderRadius: 8,
-    overflow: 'hidden',
-    position: 'relative',
+    overflow: "hidden",
+    position: "relative",
   },
   loadingOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(255,255,255,0.8)',
+    backgroundColor: "rgba(255,255,255,0.8)",
     zIndex: 10,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   actionRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    justifyContent: "space-between",
     marginTop: 12,
     gap: 12,
   },
@@ -185,10 +192,10 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 12,
     borderRadius: 8,
-    alignItems: 'center',
+    alignItems: "center",
   },
   actionButtonText: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
   },
 });

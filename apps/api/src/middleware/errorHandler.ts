@@ -118,13 +118,16 @@ export async function errorHandler(err: Error, c: CustomContext) {
   }
 
   if (appError.statusCode >= 500) {
-    console.error(`[ERROR] Request ${requestId} | ${c.req.method} ${c.req.path}:`, redactPII({
-      type: appError.type,
-      message: appError.message,
-      statusCode: appError.statusCode,
-      details: appError.details,
-      stack: err.stack,
-    }));
+    console.error(
+      `[ERROR] Request ${requestId} | ${c.req.method} ${c.req.path}:`,
+      redactPII({
+        type: appError.type,
+        message: appError.message,
+        statusCode: appError.statusCode,
+        details: appError.details,
+        stack: err.stack,
+      }),
+    );
 
     if (c.env.AXIOM_TOKEN) {
       logToAxiom(c.env, c.executionCtx, {

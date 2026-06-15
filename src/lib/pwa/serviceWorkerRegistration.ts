@@ -66,11 +66,7 @@ export async function registerPeriodicWikiSync(
     await periodicRegistration.periodicSync.register(PERIODIC_WIKI_SYNC_TAG, {
       minInterval: PERIODIC_WIKI_SYNC_INTERVAL_MS,
     });
-    logger.info(
-      "[PWA] Periodic Sync registrado",
-      { tag: PERIODIC_WIKI_SYNC_TAG },
-      "serviceWorker",
-    );
+    logger.info("[PWA] Periodic Sync registrado", { tag: PERIODIC_WIKI_SYNC_TAG }, "serviceWorker");
   } catch (err: unknown) {
     const errorName = (err as { name?: string })?.name ?? "UnknownError";
     logger.debug(

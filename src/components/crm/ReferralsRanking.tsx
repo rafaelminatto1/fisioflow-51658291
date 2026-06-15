@@ -5,13 +5,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Table,
   TableBody,
@@ -42,8 +36,8 @@ export function ReferralsRanking() {
       <div>
         <h2 className="text-xl font-bold">Indicações</h2>
         <p className="text-sm text-muted-foreground">
-          Ranking dos pacientes que mais trazem novos contatos + performance dos seus links
-          públicos (fisio_links).
+          Ranking dos pacientes que mais trazem novos contatos + performance dos seus links públicos
+          (fisio_links).
         </p>
       </div>
 
@@ -107,9 +101,7 @@ export function ReferralsRanking() {
           <CardTitle className="text-base flex items-center gap-2">
             <LinkIcon className="h-4 w-4 text-sky-500" /> Fisio Links públicos
           </CardTitle>
-          <CardDescription>
-            Cliques nos últimos 30 dias por link da clínica.
-          </CardDescription>
+          <CardDescription>Cliques nos últimos 30 dias por link da clínica.</CardDescription>
         </CardHeader>
         <CardContent>
           {loadingLinks ? (

@@ -181,7 +181,11 @@ export function registerClinicalResourceRoutes(app: ClinicalRouteApp) {
       }
     }
 
-    const query = db.select().from(clinicalTestTemplates).where(and(...conditions)).orderBy(asc(clinicalTestTemplates.name));
+    const query = db
+      .select()
+      .from(clinicalTestTemplates)
+      .where(and(...conditions))
+      .orderBy(asc(clinicalTestTemplates.name));
     const dataResult = await query;
     const resultRows = dataResult;
 

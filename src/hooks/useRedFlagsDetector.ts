@@ -28,7 +28,7 @@ interface RedFlagDetectionResult {
 
 export function useRedFlagsDetector(
   richText: string,
-  fieldValues: Record<string, unknown>
+  fieldValues: Record<string, unknown>,
 ): RedFlagDetectionResult {
   const result = useMemo(() => {
     const flags = new Set<string>();

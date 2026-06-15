@@ -60,6 +60,7 @@ export function PatientCombobox({
   const [selectedPatientSnapshot, setSelectedPatientSnapshot] = React.useState<Patient | null>(
     null,
   );
+
   const canCreateNew = typeof onCreateNew === "function";
   const hasFallbackDisplay = Boolean(fallbackDisplayName && (value || disabled));
 
@@ -252,6 +253,7 @@ export function PatientCombobox({
           value={inputValue}
           onValueChange={setInputValue}
           autoFocus={inline}
+          data-autofocus={inline ? "true" : undefined}
           wrapperClassName={cn(
             "mx-0 mt-0 rounded-xl border border-slate-200 bg-white px-3 shadow-sm transition-all focus-within:border-blue-500/50 focus-within:ring-4 focus-within:ring-blue-500/5",
             !inline &&

@@ -22,11 +22,7 @@ type BannerState =
   | { kind: "pending"; count: number }
   | null;
 
-function pickBannerState(
-  isOnline: boolean,
-  pending: number,
-  justSynced: boolean,
-): BannerState {
+function pickBannerState(isOnline: boolean, pending: number, justSynced: boolean): BannerState {
   if (!isOnline) return { kind: "offline", pending };
   if (justSynced) return { kind: "synced" };
   if (pending > 0) return { kind: "pending", count: pending };
@@ -67,10 +63,7 @@ export function OfflineBanner() {
 
   return (
     <>
-      <ConflictResolutionModal
-        open={conflictModalOpen}
-        onOpenChange={setConflictModalOpen}
-      />
+      <ConflictResolutionModal open={conflictModalOpen} onOpenChange={setConflictModalOpen} />
 
       {conflicts > 0 && (
         <div

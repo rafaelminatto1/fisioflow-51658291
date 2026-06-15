@@ -4,14 +4,14 @@
 
 ## Technical Context
 
-| Área | Estado atual | Mudança |
-|---|---|---|
-| AI Search | Binding `AI_SEARCH` → instância `fisioflow-rag` (diff pendente no wrangler.toml reativa). Sync via `WikiSyncWorkflow` (cron diário + publish hook). Lib `apps/api/src/lib/cloudflareAiSearch.ts` (hybrid, rerank, rewrite, cache) | Publish → `items.uploadAndPoll()`; nova instância `fisioflow-rag-paciente`; indexers p/ protocolos/exercícios/PDFs |
-| Embeddings | pgvector no Neon (`clinical_embeddings`, bge-m3 via `env.AI`) | Reusar padrão p/ `agent_memories` (US7) |
-| Agent Memory | `lib/agentMemory.ts` + rota `/api/agent-memory` prontos; beta não liberado (10018); bindings comentados | Implementação dual: nativo quando binding existir, senão pgvector |
-| Agents | `agents@0.15`; DOs `ClinicAgent`, `PatientAgent`, `VoiceScribeAgent` | `useAgent` no front; fila de aprovação WhatsApp |
-| AI Gateway | `fisioflow-gateway` ativo (roteamento) | Ativar guardrails + cache p/ assistente paciente |
-| Observability | Analytics Engine `fisioflow_events` | Novo evento `wiki_search_miss` |
+| Área          | Estado atual                                                                                                                                                                                                                      | Mudança                                                                                                            |
+| ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| AI Search     | Binding `AI_SEARCH` → instância `fisioflow-rag` (diff pendente no wrangler.toml reativa). Sync via `WikiSyncWorkflow` (cron diário + publish hook). Lib `apps/api/src/lib/cloudflareAiSearch.ts` (hybrid, rerank, rewrite, cache) | Publish → `items.uploadAndPoll()`; nova instância `fisioflow-rag-paciente`; indexers p/ protocolos/exercícios/PDFs |
+| Embeddings    | pgvector no Neon (`clinical_embeddings`, bge-m3 via `env.AI`)                                                                                                                                                                     | Reusar padrão p/ `agent_memories` (US7)                                                                            |
+| Agent Memory  | `lib/agentMemory.ts` + rota `/api/agent-memory` prontos; beta não liberado (10018); bindings comentados                                                                                                                           | Implementação dual: nativo quando binding existir, senão pgvector                                                  |
+| Agents        | `agents@0.15`; DOs `ClinicAgent`, `PatientAgent`, `VoiceScribeAgent`                                                                                                                                                              | `useAgent` no front; fila de aprovação WhatsApp                                                                    |
+| AI Gateway    | `fisioflow-gateway` ativo (roteamento)                                                                                                                                                                                            | Ativar guardrails + cache p/ assistente paciente                                                                   |
+| Observability | Analytics Engine `fisioflow_events`                                                                                                                                                                                               | Novo evento `wiki_search_miss`                                                                                     |
 
 ## Decisões de arquitetura
 

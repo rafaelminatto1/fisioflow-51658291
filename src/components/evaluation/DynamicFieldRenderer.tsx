@@ -343,12 +343,24 @@ export function DynamicFieldRenderer({
     [safeFields, checkFieldVisibility],
   );
 
-  const requiredFields = useMemo(() => visibleFields.filter(f => f.obrigatorio), [visibleFields]);
-  const filledRequiredFields = useMemo(() => requiredFields.filter(f => {
-    const val = safeValues[f.id];
-    return val !== undefined && val !== null && val !== "" && (Array.isArray(val) ? val.length > 0 : true);
-  }), [requiredFields, safeValues]);
-  const progressPercent = requiredFields.length > 0 ? Math.round((filledRequiredFields.length / requiredFields.length) * 100) : 100;
+  const requiredFields = useMemo(() => visibleFields.filter((f) => f.obrigatorio), [visibleFields]);
+  const filledRequiredFields = useMemo(
+    () =>
+      requiredFields.filter((f) => {
+        const val = safeValues[f.id];
+        return (
+          val !== undefined &&
+          val !== null &&
+          val !== "" &&
+          (Array.isArray(val) ? val.length > 0 : true)
+        );
+      }),
+    [requiredFields, safeValues],
+  );
+  const progressPercent =
+    requiredFields.length > 0
+      ? Math.round((filledRequiredFields.length / requiredFields.length) * 100)
+      : 100;
 
   const groupedFields = groupFieldsBySection(visibleFields);
   const sections = Object.keys(groupedFields);
@@ -371,7 +383,8 @@ export function DynamicFieldRenderer({
           </div>
           <p className="text-lg font-black text-slate-800 tracking-tight">Anamnese Estruturada</p>
           <p className="text-sm text-slate-500 mt-2 max-w-md mx-auto">
-            Para iniciar o preenchimento, selecione um template clínico acima ou utilize o quadro branco para evolução livre.
+            Para iniciar o preenchimento, selecione um template clínico acima ou utilize o quadro
+            branco para evolução livre.
           </p>
         </CardContent>
       </Card>
@@ -389,12 +402,12 @@ export function DynamicFieldRenderer({
             </span>
           </div>
           <div className="h-2.5 w-full bg-slate-100 rounded-full overflow-hidden">
-            <div 
+            <div
               className={cn(
-                "h-full transition-all duration-500 ease-out", 
-                progressPercent === 100 ? "bg-emerald-500" : "bg-blue-600"
-              )} 
-              style={{ width: `${progressPercent}%` }} 
+                "h-full transition-all duration-500 ease-out",
+                progressPercent === 100 ? "bg-emerald-500" : "bg-blue-600",
+              )}
+              style={{ width: `${progressPercent}%` }}
             />
           </div>
           <p className="text-[10px] text-slate-400 font-bold">
@@ -409,84 +422,92 @@ export function DynamicFieldRenderer({
         </button>
       </div>
 
-      <Accordion 
-        type="multiple" 
-        value={activeSections} 
-        onValueChange={setActiveSections} 
+      <Accordion
+        type="multiple"
+        value={activeSections}
+        onValueChange={setActiveSections}
         className="space-y-6"
       >
-      {Object.entries(groupedFields).map(([section, sectionFields]) => (
-        <AccordionItem
-          key={section}
-          value={section}
-          className="border-none bg-white dark:bg-slate-900 rounded-[32px] overflow-hidden shadow-premium-sm"
-        >
-          <AccordionTrigger className="px-8 py-5 hover:no-underline hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-all border-b border-slate-100/50 dark:border-slate-800/50">
-            <div className="flex items-center gap-4">
-              <div className="h-10 w-10 rounded-2xl bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center border border-blue-100/50">
-                <Sparkles className="h-5 w-5 text-blue-600" />
+        {Object.entries(groupedFields).map(([section, sectionFields]) => (
+          <AccordionItem
+            key={section}
+            value={section}
+            className="border-none bg-white dark:bg-slate-900 rounded-[32px] overflow-hidden shadow-premium-sm"
+          >
+            <AccordionTrigger className="px-8 py-5 hover:no-underline hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-all border-b border-slate-100/50 dark:border-slate-800/50">
+              <div className="flex items-center gap-4">
+                <div className="h-10 w-10 rounded-2xl bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center border border-blue-100/50">
+                  <Sparkles className="h-5 w-5 text-blue-600" />
+                </div>
+                <h3 className="text-sm font-black uppercase tracking-widest text-slate-800 dark:text-slate-200">
+                  {section}
+                </h3>
               </div>
-              <h3 className="text-sm font-black uppercase tracking-widest text-slate-800 dark:text-slate-200">
-                {section}
-              </h3>
-            </div>
-          </AccordionTrigger>
-          <AccordionContent className="px-8 pb-8 pt-6">
-            <div className="grid grid-cols-1 gap-10">
-              {sectionFields.map((field) => {
-                const prevValue = previousValues[field.id];
-                const hasHistory = prevValue !== undefined && prevValue !== null && prevValue !== "";
-                const isNumericField = ["numero", "escala", "range"].includes(field.tipo_campo);
-                const fieldHistory = historicalData[field.id];
-                const hasTrendData = isNumericField && fieldHistory && fieldHistory.length > 1;
-                // Reverse logic for pain maps (e.g. lower is better)
-                const isInverseLogic = field.label.toLowerCase().includes("dor") || field.tipo_campo === "escala";
+            </AccordionTrigger>
+            <AccordionContent className="px-8 pb-8 pt-6">
+              <div className="grid grid-cols-1 gap-10">
+                {sectionFields.map((field) => {
+                  const prevValue = previousValues[field.id];
+                  const hasHistory =
+                    prevValue !== undefined && prevValue !== null && prevValue !== "";
+                  const isNumericField = ["numero", "escala", "range"].includes(field.tipo_campo);
+                  const fieldHistory = historicalData[field.id];
+                  const hasTrendData = isNumericField && fieldHistory && fieldHistory.length > 1;
+                  // Reverse logic for pain maps (e.g. lower is better)
+                  const isInverseLogic =
+                    field.label.toLowerCase().includes("dor") || field.tipo_campo === "escala";
 
-                return (
-                  <div key={field.id} className="group space-y-4">
-                    <div className="flex items-center justify-between gap-4">
-                      <Label htmlFor={field.id} className="text-sm font-black text-slate-700 dark:text-slate-300 tracking-tight">
-                        {field.label}
-                        {field.obrigatorio && (
-                          <span className="text-xs text-rose-500 ml-1.5">*</span>
-                        )}
-                      </Label>
+                  return (
+                    <div key={field.id} className="group space-y-4">
+                      <div className="flex items-center justify-between gap-4">
+                        <Label
+                          htmlFor={field.id}
+                          className="text-sm font-black text-slate-700 dark:text-slate-300 tracking-tight"
+                        >
+                          {field.label}
+                          {field.obrigatorio && (
+                            <span className="text-xs text-rose-500 ml-1.5">*</span>
+                          )}
+                        </Label>
 
-                      <div className="flex items-center gap-2">
-                        {hasHistory && !hasTrendData && !readOnly && (
-                          <Badge variant="outline" className="text-[9px] uppercase font-black bg-slate-50 text-slate-500 border-slate-200 py-0.5 px-2 rounded-lg gap-1.5 flex items-center">
-                            <History className="h-2.5 w-2.5" />
-                            Último: {String(prevValue)}
-                          </Badge>
-                        )}
-                        {hasTrendData && !readOnly && (
-                          <FieldTrendChart data={fieldHistory} inverseLogic={isInverseLogic} />
+                        <div className="flex items-center gap-2">
+                          {hasHistory && !hasTrendData && !readOnly && (
+                            <Badge
+                              variant="outline"
+                              className="text-[9px] uppercase font-black bg-slate-50 text-slate-500 border-slate-200 py-0.5 px-2 rounded-lg gap-1.5 flex items-center"
+                            >
+                              <History className="h-2.5 w-2.5" />
+                              Último: {String(prevValue)}
+                            </Badge>
+                          )}
+                          {hasTrendData && !readOnly && (
+                            <FieldTrendChart data={fieldHistory} inverseLogic={isInverseLogic} />
+                          )}
+                        </div>
+                      </div>
+
+                      {field.description && (
+                        <p className="text-xs text-muted-foreground leading-relaxed italic border-l-2 border-blue-200 pl-4 py-0.5">
+                          {field.description}
+                        </p>
+                      )}
+
+                      <div className="animate-in fade-in slide-in-from-top-1 duration-300">
+                        {renderField(
+                          field,
+                          safeValues[field.id],
+                          (value) => onChange(field.id, value),
+                          readOnly,
                         )}
                       </div>
                     </div>
-
-                    {field.description && (
-                      <p className="text-xs text-muted-foreground leading-relaxed italic border-l-2 border-blue-200 pl-4 py-0.5">
-                        {field.description}
-                      </p>
-                    )}
-
-                    <div className="animate-in fade-in slide-in-from-top-1 duration-300">
-                      {renderField(
-                        field,
-                        safeValues[field.id],
-                        (value) => onChange(field.id, value),
-                        readOnly,
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </AccordionContent>
-        </AccordionItem>
-      ))}
-    </Accordion>
+                  );
+                })}
+              </div>
+            </AccordionContent>
+          </AccordionItem>
+        ))}
+      </Accordion>
     </div>
   );
 }

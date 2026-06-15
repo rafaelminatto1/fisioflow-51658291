@@ -307,11 +307,7 @@ export class PerformanceMonitor {
 
     // Log in development
     if (import.meta.env.DEV && renderTime > this.SLOW_RENDER_THRESHOLD) {
-      logger.performance(
-        "Slow render",
-        { componentName, renderTime, props },
-        "performance",
-      );
+      logger.performance("Slow render", { componentName, renderTime, props }, "performance");
     }
 
     // Alert if very slow
@@ -356,11 +352,7 @@ export class PerformanceMonitor {
 
     // Alert if slow
     if (duration > this.SLOW_API_THRESHOLD) {
-      logger.performance(
-        "Slow API call",
-        { method, endpoint, duration, status },
-        "performance",
-      );
+      logger.performance("Slow API call", { method, endpoint, duration, status }, "performance");
 
       Sentry.captureMessage(`Slow API call: ${method} ${endpoint}`, {
         level: "warning",

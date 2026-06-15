@@ -178,7 +178,9 @@ describe("role helpers", () => {
 
   it("returns true when user has an allowed primary role", () => {
     expect(userHasRole({ uid: "u1", organizationId: "org-1", role: "Admin" }, "admin")).toBe(true);
-    expect(userHasRole({ uid: "u1", organizationId: "org-1", role: "owner" }, ["admin", "owner"])) .toBe(true);
+    expect(
+      userHasRole({ uid: "u1", organizationId: "org-1", role: "owner" }, ["admin", "owner"]),
+    ).toBe(true);
   });
 
   it("returns true when user has an allowed extra role", () => {
@@ -191,7 +193,9 @@ describe("role helpers", () => {
   });
 
   it("returns false for users without allowed roles", () => {
-    expect(userHasRole({ uid: "u1", organizationId: "org-1", role: "viewer" }, "admin")).toBe(false);
+    expect(userHasRole({ uid: "u1", organizationId: "org-1", role: "viewer" }, "admin")).toBe(
+      false,
+    );
   });
 
   it("returns a 403 from requireRole when the user is not authorized", async () => {

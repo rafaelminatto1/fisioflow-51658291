@@ -14,7 +14,13 @@ function suggestionPath(source: AskWikiSource): string | null {
  * Faixa discreta de artigos relacionados ao texto da evolução.
  * Some quando não há sugestões — nunca ocupa espaço à toa.
  */
-export function WikiSuggestionsPanel({ text, enabled = true }: { text: string; enabled?: boolean }) {
+export function WikiSuggestionsPanel({
+  text,
+  enabled = true,
+}: {
+  text: string;
+  enabled?: boolean;
+}) {
   const { suggestions, loading } = useWikiSuggestions(text, enabled);
 
   if (!loading && suggestions.length === 0) return null;

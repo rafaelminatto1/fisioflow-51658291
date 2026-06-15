@@ -22,13 +22,16 @@ const InsightsQuerySchema = z.object({
 app.get("/", requireAuth, async (c) => {
   const user = c.get("user");
   const queryParams = c.req.query();
-  
+
   const validation = InsightsQuerySchema.safeParse(queryParams);
   if (!validation.success) {
-    return c.json({ 
-      error: "Parâmetros inválidos", 
-      details: validation.error.format() 
-    }, 400);
+    return c.json(
+      {
+        error: "Parâmetros inválidos",
+        details: validation.error.format(),
+      },
+      400,
+    );
   }
 
   const { q, minPain, maxPain, limit } = validation.data;
@@ -72,10 +75,13 @@ app.get("/", requireAuth, async (c) => {
     });
   } catch (error: any) {
     console.error("[AI/Insights] Error:", error);
-    return c.json({ 
-      error: "Erro ao processar insights clínicos", 
-      details: error.message 
-    }, 500);
+    return c.json(
+      {
+        error: "Erro ao processar insights clínicos",
+        details: error.message,
+      },
+      500,
+    );
   }
 });
 

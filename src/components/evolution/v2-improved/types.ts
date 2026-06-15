@@ -36,6 +36,10 @@ export interface EvolutionV2Data {
   // Pain level
   painLevel?: number;
   painLocation?: string;
+  // Pain detail (Layout E — dor-cêntrico). Persistido via measurements reservadas.
+  painLevelArrival?: number; // Chegada
+  painLevelDischarge?: number; // Saída
+  painQuality?: { type: string; intensity: "leve" | "moderada" | "intensa" }[];
 
   // Measurements (clinical tests, vitals, etc.)
   measurements?: MeasurementItem[];

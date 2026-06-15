@@ -100,7 +100,11 @@ export const WearablesSummaryWidget: React.FC<WearablesSummaryWidgetProps> = ({ 
         {readings.map((item) => (
           <View key={item.id} style={styles.metric}>
             <View style={[styles.iconBox, { backgroundColor: colors.primary + "10" }]}>
-              <Ionicons name={getIcon(item.data_type) as keyof typeof Ionicons.glyphMap} size={18} color={colors.primary} />
+              <Ionicons
+                name={getIcon(item.data_type) as keyof typeof Ionicons.glyphMap}
+                size={18}
+                color={colors.primary}
+              />
             </View>
             <View>
               <Text style={[styles.metricLabel, { color: colors.textSecondary }]}>

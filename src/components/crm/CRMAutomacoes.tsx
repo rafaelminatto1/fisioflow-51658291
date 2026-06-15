@@ -11,13 +11,7 @@
 import { useState, useMemo } from "react";
 import { formatDistanceToNow, format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -182,9 +176,7 @@ function ExecutionsSheet({
                       {format(new Date(e.scheduled_for), "dd MMM HH:mm", { locale: ptBR })}
                     </span>
                   </div>
-                  {e.error && (
-                    <p className="mt-1 text-xs text-rose-600 break-words">{e.error}</p>
-                  )}
+                  {e.error && <p className="mt-1 text-xs text-rose-600 break-words">{e.error}</p>}
                 </div>
               );
             })
@@ -221,9 +213,7 @@ function RuleCard({
                 </Badge>
               )}
             </CardTitle>
-            <CardDescription className="line-clamp-2">
-              {rule.descricao ?? "—"}
-            </CardDescription>
+            <CardDescription className="line-clamp-2">{rule.descricao ?? "—"}</CardDescription>
           </div>
           {!isTemplate && (
             <Switch
@@ -338,8 +328,7 @@ export function CRMAutomacoes() {
             Regras de Automação
           </h2>
           <p className="text-sm text-muted-foreground">
-            Gatilhos automáticos do CRM. Cron <code>*/15 * * * *</code> executa as
-            ações agendadas.
+            Gatilhos automáticos do CRM. Cron <code>*/15 * * * *</code> executa as ações agendadas.
             {lastUpdatedText && <> Última regra atualizada {lastUpdatedText}.</>}
           </p>
         </div>
@@ -349,9 +338,7 @@ export function CRMAutomacoes() {
           onClick={() => scanMutation.mutate()}
           disabled={scanMutation.isPending}
         >
-          <RefreshCcw
-            className={`h-4 w-4 mr-2 ${scanMutation.isPending ? "animate-spin" : ""}`}
-          />
+          <RefreshCcw className={`h-4 w-4 mr-2 ${scanMutation.isPending ? "animate-spin" : ""}`} />
           Executar scan agora
         </Button>
       </div>
@@ -374,12 +361,7 @@ export function CRMAutomacoes() {
         ) : (
           <div className="grid gap-3 md:grid-cols-2">
             {myRules.map((r) => (
-              <RuleCard
-                key={r.id}
-                rule={r}
-                isTemplate={false}
-                onView={() => setViewingRule(r)}
-              />
+              <RuleCard key={r.id} rule={r} isTemplate={false} onView={() => setViewingRule(r)} />
             ))}
           </div>
         )}
@@ -391,8 +373,8 @@ export function CRMAutomacoes() {
             Templates disponíveis ({availableTemplates.length})
           </h3>
           <p className="text-xs text-muted-foreground -mt-2">
-            Clonar copia o template para sua clínica já ativo. Você pode
-            personalizar ou desativar a qualquer momento.
+            Clonar copia o template para sua clínica já ativo. Você pode personalizar ou desativar a
+            qualquer momento.
           </p>
           <div className="grid gap-3 md:grid-cols-2">
             {availableTemplates.map((t) => (
@@ -413,14 +395,13 @@ export function CRMAutomacoes() {
           <AlertCircle className="h-4 w-4 mt-0.5 flex-shrink-0" />
           <div className="space-y-1">
             <p>
-              <strong>Editor visual de regras</strong> ainda não disponível — para
-              criar regras customizadas (gatilhos compostos, novas ações), use a
-              API <code>POST /api/crm-automations</code> diretamente.
+              <strong>Editor visual de regras</strong> ainda não disponível — para criar regras
+              customizadas (gatilhos compostos, novas ações), use a API{" "}
+              <code>POST /api/crm-automations</code> diretamente.
             </p>
             <p>
-              Ações de envio dependem das credenciais configuradas:{" "}
-              <code>WHATSAPP_*</code> para WhatsApp e <code>NPS_PUBLIC_BASE_URL</code>{" "}
-              para links de NPS.
+              Ações de envio dependem das credenciais configuradas: <code>WHATSAPP_*</code> para
+              WhatsApp e <code>NPS_PUBLIC_BASE_URL</code> para links de NPS.
             </p>
           </div>
         </CardContent>

@@ -17,23 +17,23 @@
 
 ## 3. Garantias técnicas obrigatórias
 
-| # | Garantia | Implementação |
-|---|---|---|
-| G1 | Acesso ao R2 sempre via Worker autenticado (nunca direto) | Bucket privado; presigned URLs assinadas com JWT Neon Auth; checagem de `org_id` antes de gerar URL |
-| G2 | Logs de acesso a sessões (quentes e arquivadas) por 2 anos | Tabela `clinical_access_logs` no Neon; middleware Worker grava em todo `GET/PUT /api/sessions/:id` |
-| G3 | Endpoint LGPD de exclusão que distingue dado clínico (mantém) de cadastral (exclui) | `POST /api/lgpd/data-deletion-request`; resposta automatizada em ≤15 dias úteis citando art. 16, II + Lei 13.787 |
+| #   | Garantia                                                                            | Implementação                                                                                                    |
+| --- | ----------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| G1  | Acesso ao R2 sempre via Worker autenticado (nunca direto)                           | Bucket privado; presigned URLs assinadas com JWT Neon Auth; checagem de `org_id` antes de gerar URL              |
+| G2  | Logs de acesso a sessões (quentes e arquivadas) por 2 anos                          | Tabela `clinical_access_logs` no Neon; middleware Worker grava em todo `GET/PUT /api/sessions/:id`               |
+| G3  | Endpoint LGPD de exclusão que distingue dado clínico (mantém) de cadastral (exclui) | `POST /api/lgpd/data-deletion-request`; resposta automatizada em ≤15 dias úteis citando art. 16, II + Lei 13.787 |
 
 ## 4. Critérios de segurança
 
-| Controle | Estado | Referência |
-|---|---|---|
-| Criptografia em repouso | ✅ R2 server-side AES-256 default | ANAHP Manual LGPD §2.3 |
-| Criptografia em trânsito | ✅ TLS 1.3 Cloudflare | LGPD art. 46 |
-| Controle de acesso multi-tenant | ✅ via Worker + checagem `org_id` | RLS pattern atual |
-| DPA com operador (Cloudflare) | ✅ MSA padrão CF cobre LGPD/GDPR | Anexar ao ROPA |
-| Residência de dados | ⚠️ R2 não tem região BR fixa | Aceito: CF é ISO 27001 + SOC 2, conforme ANAHP §2.3 |
-| Backup imutável | ✅ Iceberg snapshots imutáveis + Neon PITR 7d | — |
-| Auditabilidade | ✅ Cloudflare Logpush + `clinical_access_logs` | LGPDPro §controle de acesso |
+| Controle                        | Estado                                         | Referência                                          |
+| ------------------------------- | ---------------------------------------------- | --------------------------------------------------- |
+| Criptografia em repouso         | ✅ R2 server-side AES-256 default              | ANAHP Manual LGPD §2.3                              |
+| Criptografia em trânsito        | ✅ TLS 1.3 Cloudflare                          | LGPD art. 46                                        |
+| Controle de acesso multi-tenant | ✅ via Worker + checagem `org_id`              | RLS pattern atual                                   |
+| DPA com operador (Cloudflare)   | ✅ MSA padrão CF cobre LGPD/GDPR               | Anexar ao ROPA                                      |
+| Residência de dados             | ⚠️ R2 não tem região BR fixa                   | Aceito: CF é ISO 27001 + SOC 2, conforme ANAHP §2.3 |
+| Backup imutável                 | ✅ Iceberg snapshots imutáveis + Neon PITR 7d  | —                                                   |
+| Auditabilidade                  | ✅ Cloudflare Logpush + `clinical_access_logs` | LGPDPro §controle de acesso                         |
 
 ## 5. Retenção e descarte
 
@@ -44,14 +44,14 @@
 
 ## 6. Direitos do titular (art. 18 LGPD)
 
-| Direito | Tratamento |
-|---|---|
-| Confirmação de tratamento (II) | Endpoint público com login |
-| Acesso a dados (II) | Endpoint `/api/lgpd/data-export` retorna prontuário + cadastro em PDF/JSON |
-| Correção (III) | Já existente via UI de evolução |
-| Eliminação (IV) | **Apenas dados cadastrais**. Prontuário recusado com base no art. 16, II (cumprimento de obrigação legal) — resposta documentada |
-| Portabilidade (V) | Mesmo endpoint do acesso, formato HL7 FHIR (futuro) |
-| Revogação de consentimento (IX) | Para marketing e comunicações; **não revoga base legal do art. 11, II, f** |
+| Direito                         | Tratamento                                                                                                                       |
+| ------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| Confirmação de tratamento (II)  | Endpoint público com login                                                                                                       |
+| Acesso a dados (II)             | Endpoint `/api/lgpd/data-export` retorna prontuário + cadastro em PDF/JSON                                                       |
+| Correção (III)                  | Já existente via UI de evolução                                                                                                  |
+| Eliminação (IV)                 | **Apenas dados cadastrais**. Prontuário recusado com base no art. 16, II (cumprimento de obrigação legal) — resposta documentada |
+| Portabilidade (V)               | Mesmo endpoint do acesso, formato HL7 FHIR (futuro)                                                                              |
+| Revogação de consentimento (IX) | Para marketing e comunicações; **não revoga base legal do art. 11, II, f**                                                       |
 
 ## 7. Comunicação ao titular
 

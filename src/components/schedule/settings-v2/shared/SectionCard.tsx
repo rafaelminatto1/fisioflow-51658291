@@ -10,9 +10,21 @@ interface SectionCardProps {
   className?: string;
 }
 
-export function SectionCard({ title, description, icon, action, children, className }: SectionCardProps) {
+export function SectionCard({
+  title,
+  description,
+  icon,
+  action,
+  children,
+  className,
+}: SectionCardProps) {
   return (
-    <section className={cn("rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950", className)}>
+    <section
+      className={cn(
+        "rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950",
+        className,
+      )}
+    >
       <header className="flex items-start justify-between gap-3 border-b border-slate-200 px-5 py-4 dark:border-slate-800">
         <div className="flex items-start gap-3 min-w-0">
           {icon && (

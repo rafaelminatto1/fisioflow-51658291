@@ -20,6 +20,7 @@ Hoje vídeos de exercícios são uploaded direto para R2 via `src/services/exerc
 **Why this priority**: HLS adaptive bitrate melhora UX em 3G de pacientes (app mobile); thumbnails automáticos eliminam etapa manual; sem CSRF/CORS issues do R2 público.
 
 **Acceptance**:
+
 1. Worker rota `POST /api/exercise-videos/upload-url` retorna direct upload URL do Stream
 2. Frontend faz upload via `tus-js-client` → Stream encoda automaticamente
 3. Webhook do Stream notifica Worker quando `ready` → persiste `stream_video_id` em `exercise_videos.stream_id`
@@ -31,12 +32,14 @@ Hoje vídeos de exercícios são uploaded direto para R2 via `src/services/exerc
 **Persona**: dev mantendo backward-compat.
 
 **Acceptance**:
+
 1. Campo `stream_id` adicionado em `exercise_videos` (nullable)
 2. Rota antiga `POST /api/exercise-videos` continua aceitando URL R2 (fallback)
 3. Script `scripts/migrate-videos-r2-to-stream.mjs` migra os vídeos existentes (opcional, em batch)
 4. Frontend usa Stream se `stream_id` presente, senão R2
 
 ### Edge Cases
+
 - Vídeo >5GB: limite Stream para upload direto
 - Upload abortado (paciente fecha tab): direct upload expira em X horas, sem custo
 - Conta CF sem Stream habilitado: rota deve retornar 503 claro

@@ -38,22 +38,13 @@ export const HelloWorld: React.FC<z.infer<typeof myCompSchema>> = ({
   });
 
   // Move the logo up by 150 pixels once the transition starts
-  const logoTranslation = interpolate(
-    logoTranslationProgress,
-    [0, 1],
-    [0, -150],
-  );
+  const logoTranslation = interpolate(logoTranslationProgress, [0, 1], [0, -150]);
 
   // Fade out the animation at the end
-  const opacity = interpolate(
-    frame,
-    [durationInFrames - 25, durationInFrames - 15],
-    [1, 0],
-    {
-      extrapolateLeft: "clamp",
-      extrapolateRight: "clamp",
-    },
-  );
+  const opacity = interpolate(frame, [durationInFrames - 25, durationInFrames - 15], [1, 0], {
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp",
+  });
 
   // A <AbsoluteFill> is just a absolutely positioned <div>!
   return (

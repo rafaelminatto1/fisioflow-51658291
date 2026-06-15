@@ -40,7 +40,12 @@ export const iaStudioApi = {
     audioBase64: string,
     capture?: {
       captureMode?: 0 | 30 | 50 | 100;
-      captureReason?: "evaluation" | "measurement" | "clinical_test" | "soap_section" | "full_session";
+      captureReason?:
+        | "evaluation"
+        | "measurement"
+        | "clinical_test"
+        | "soap_section"
+        | "full_session";
       capturedSeconds?: number;
       sessionCoveragePercent?: 0 | 30 | 50 | 100;
     },

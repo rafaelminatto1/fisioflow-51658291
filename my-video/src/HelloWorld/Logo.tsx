@@ -1,11 +1,5 @@
 import { zColor } from "@remotion/zod-types";
-import {
-  AbsoluteFill,
-  interpolate,
-  spring,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, interpolate, spring, useCurrentFrame, useVideoConfig } from "remotion";
 import { z } from "zod";
 import { Arc } from "./Arc";
 import { Atom } from "./Atom";
@@ -48,11 +42,7 @@ export const Logo: React.FC<z.infer<typeof myCompSchema2>> = ({
     fps: videoConfig.fps,
   });
 
-  const logoRotation = interpolate(
-    frame,
-    [0, videoConfig.durationInFrames],
-    [0, 360],
-  );
+  const logoRotation = interpolate(frame, [0, videoConfig.durationInFrames], [0, 360]);
 
   return (
     <AbsoluteFill

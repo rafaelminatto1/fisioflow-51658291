@@ -475,8 +475,7 @@ const MemoizedSmartTextarea = memo(
         <div
           className={cn(
             "relative group transition-all duration-300",
-            variant === "default" &&
-              "border rounded-lg shadow-sm bg-card",
+            variant === "default" && "border rounded-lg shadow-sm bg-card",
             variant === "default" &&
               (isFocused
                 ? "ring-2 ring-primary/20 border-primary/50 bg-background"

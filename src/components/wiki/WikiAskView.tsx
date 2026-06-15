@@ -1,10 +1,6 @@
 import React, { useEffect } from "react";
 import { ArrowLeft, ArrowRight, BookOpen, Loader2, SearchX, Sparkles } from "lucide-react";
-import {
-  useAskWiki,
-  type AskWikiContentType,
-  type AskWikiSource,
-} from "@/hooks/useAskWiki";
+import { useAskWiki, type AskWikiContentType, type AskWikiSource } from "@/hooks/useAskWiki";
 
 const TYPE_FILTERS: Array<{ value: AskWikiContentType | undefined; label: string }> = [
   { value: undefined, label: "Tudo" },

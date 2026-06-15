@@ -34,23 +34,23 @@ export function WaitlistManager() {
     mutationFn: async (id: string) => {
       const res = await rpc.api.scheduling.waitlist[":id"].$put({
         param: { id },
-        json: { status: "offered" }
+        json: { status: "offered" },
       });
       if (!res.ok) throw new Error("Falha ao oferecer vaga");
       return res.json();
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["scheduling", "waitlist"] })
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["scheduling", "waitlist"] }),
   });
 
   const removeMutation = useMutation({
     mutationFn: async (id: string) => {
       const res = await rpc.api.scheduling.waitlist[":id"].$delete({
-        param: { id }
+        param: { id },
       });
       if (!res.ok) throw new Error("Falha ao remover");
       return res.json();
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["scheduling", "waitlist"] })
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["scheduling", "waitlist"] }),
   });
 
   return (
@@ -69,9 +69,7 @@ export function WaitlistManager() {
           <SheetTitle className="flex items-center gap-2 text-xl font-black text-brand-blue">
             <Users className="h-5 w-5" /> Fila Dinâmica
           </SheetTitle>
-          <SheetDescription>
-            Gerencie pacientes aguardando horários na clínica.
-          </SheetDescription>
+          <SheetDescription>Gerencie pacientes aguardando horários na clínica.</SheetDescription>
         </SheetHeader>
 
         {isLoading ? (
@@ -115,11 +113,11 @@ export function WaitlistManager() {
                       {item.priority || "Normal"}
                     </Badge>
                   </div>
-                  
+
                   <div className="mt-4 flex gap-2">
-                    <Button 
-                      size="sm" 
-                      variant="default" 
+                    <Button
+                      size="sm"
+                      variant="default"
                       className="flex-1 bg-brand-blue hover:bg-brand-blue/90 h-8 text-[11px] font-bold rounded-xl shadow-sm"
                       onClick={() => offerSlotMutation.mutate(item.id)}
                       disabled={offerSlotMutation.isPending || item.status === "offered"}
@@ -127,9 +125,9 @@ export function WaitlistManager() {
                       <ArrowRight className="h-3 w-3 mr-1.5" />
                       {item.status === "offered" ? "Vaga Oferecida" : "Oferecer Vaga"}
                     </Button>
-                    <Button 
-                      size="sm" 
-                      variant="ghost" 
+                    <Button
+                      size="sm"
+                      variant="ghost"
                       className="h-8 w-8 p-0 text-muted-foreground hover:text-rose-500 rounded-xl"
                       onClick={() => removeMutation.mutate(item.id)}
                       disabled={removeMutation.isPending}
@@ -144,7 +142,10 @@ export function WaitlistManager() {
         )}
 
         <div className="mt-8 border-t border-border/50 pt-6">
-          <Button variant="outline" className="w-full gap-2 border-dashed border-2 hover:border-brand-blue/50 hover:bg-brand-blue/5 rounded-2xl h-12 text-sm font-bold text-muted-foreground hover:text-brand-blue transition-colors">
+          <Button
+            variant="outline"
+            className="w-full gap-2 border-dashed border-2 hover:border-brand-blue/50 hover:bg-brand-blue/5 rounded-2xl h-12 text-sm font-bold text-muted-foreground hover:text-brand-blue transition-colors"
+          >
             <UserPlus className="h-4 w-4" />
             Adicionar à Fila
           </Button>

@@ -11,11 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Video,
-  AlertCircle,
-  CheckCircle,
-} from "lucide-react";
+import { Video, AlertCircle, CheckCircle } from "lucide-react";
 import { request } from "@/api/v2";
 import { toast } from "sonner";
 import { CloudflareRealtimeKitRoom } from "./CloudflareRealtimeKitRoom";

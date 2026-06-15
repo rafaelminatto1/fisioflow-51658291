@@ -99,7 +99,10 @@ class OfflineSyncManager {
 
           if (response.status === 409) {
             // Version conflict! Another user updated this while we were offline.
-            console.warn(`[OfflineSync] Conflict (409) on ${req.method} ${req.url}. Data may be out of sync.`, req);
+            console.warn(
+              `[OfflineSync] Conflict (409) on ${req.method} ${req.url}. Data may be out of sync.`,
+              req,
+            );
             // Delete the request to avoid overwriting newer data, and let the UI know
             await db.delete(STORE_NAME, req.id!);
             window.dispatchEvent(new CustomEvent("fisioflow:sync-conflict", { detail: req }));

@@ -3,7 +3,12 @@ import type { Env } from "../types/env";
 import { requireAuth, type AuthVariables } from "../lib/auth";
 import { searchAiSearchOn } from "../lib/cloudflareAiSearch";
 import { callAI } from "../lib/ai/callAI";
-import { ASK_MATCH_THRESHOLD, mapAskSources, normalizeAskQuery, resolveAskOutcome } from "../lib/wikiAsk";
+import {
+  ASK_MATCH_THRESHOLD,
+  mapAskSources,
+  normalizeAskQuery,
+  resolveAskOutcome,
+} from "../lib/wikiAsk";
 import { writeEvent } from "../lib/analytics";
 import {
   guardPatientAssistantPrompt,

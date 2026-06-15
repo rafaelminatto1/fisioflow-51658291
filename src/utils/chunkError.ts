@@ -26,7 +26,9 @@ export const isChunkLoadError = (error: unknown): boolean => {
     /Failed to fetch dynamically imported module/i.test(message) ||
     /Importing a module script failed/i.test(message) ||
     /error loading dynamically imported module/i.test(message) ||
-    /Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of "text\/html"/i.test(message) ||
+    /Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of "text\/html"/i.test(
+      message,
+    ) ||
     /Failed to load module script/i.test(message) ||
     (/Failed to fetch/i.test(message) && (message.includes(".js") || message.includes(".css")))
   );

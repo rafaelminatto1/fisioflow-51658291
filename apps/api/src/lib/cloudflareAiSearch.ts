@@ -70,7 +70,10 @@ export async function searchAiSearchOn(
   return { raw, sources: normalizeAiSearchSources(raw) };
 }
 
-export async function searchAiSearch(env: Env, params: SearchParams): Promise<{
+export async function searchAiSearch(
+  env: Env,
+  params: SearchParams,
+): Promise<{
   raw: any;
   sources: AiSearchSource[];
 }> {
@@ -107,7 +110,10 @@ export async function chatAiSearchOn(
   };
 }
 
-export async function chatAiSearch(env: Env, params: SearchParams & { model?: string }): Promise<{
+export async function chatAiSearch(
+  env: Env,
+  params: SearchParams & { model?: string },
+): Promise<{
   raw: any;
   answer: string;
   sources: AiSearchSource[];
@@ -143,12 +149,7 @@ export function normalizeAiSearchSources(raw: any): AiSearchSource[] {
 }
 
 export function extractAiSearchAnswer(raw: any): string {
-  return String(
-    raw?.choices?.[0]?.message?.content ??
-      raw?.response ??
-      raw?.answer ??
-      "",
-  );
+  return String(raw?.choices?.[0]?.message?.content ?? raw?.response ?? raw?.answer ?? "");
 }
 
 function normalizeMetadata(value: unknown): Record<string, unknown> {
@@ -157,7 +158,9 @@ function normalizeMetadata(value: unknown): Record<string, unknown> {
     : {};
 }
 
-function normalizeAiSearchFilters(filters: Record<string, AiSearchFilterValue>): Record<string, unknown> {
+function normalizeAiSearchFilters(
+  filters: Record<string, AiSearchFilterValue>,
+): Record<string, unknown> {
   return Object.fromEntries(
     Object.entries(filters).map(([key, value]) => {
       if (Array.isArray(value)) return [key, { $in: value }];

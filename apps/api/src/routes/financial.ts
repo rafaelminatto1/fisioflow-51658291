@@ -89,10 +89,7 @@ app.post("/transactions", requireAuth, async (c) => {
       metadata: body.metadata ?? {},
     };
     console.log("[Financial/Transactions] Inserting:", transactionValues);
-    const [result] = await db
-      .insert(transactions)
-      .values(transactionValues)
-      .returning();
+    const [result] = await db.insert(transactions).values(transactionValues).returning();
 
     return c.json({ data: result }, 201);
   } catch (e: any) {

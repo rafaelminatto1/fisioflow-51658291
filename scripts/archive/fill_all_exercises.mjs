@@ -9,12 +9,13 @@ async function run() {
     SELECT id, name, description, instructions, sets_recommended, reps_recommended, duration_seconds 
     FROM exercises
   `;
-  
+
   let updatedCount = 0;
 
   for (const ex of exercises) {
     let needsUpdate = false;
-    let { sets_recommended, reps_recommended, duration_seconds, description, instructions, name } = ex;
+    let { sets_recommended, reps_recommended, duration_seconds, description, instructions, name } =
+      ex;
 
     if (!sets_recommended) {
       sets_recommended = 3;
@@ -23,7 +24,11 @@ async function run() {
 
     if (!reps_recommended && !duration_seconds) {
       const nameLower = name.toLowerCase();
-      const isIso = nameLower.includes("alongamento") || nameLower.includes("prancha") || nameLower.includes("isometri") || nameLower.includes("mobilidade");
+      const isIso =
+        nameLower.includes("alongamento") ||
+        nameLower.includes("prancha") ||
+        nameLower.includes("isometri") ||
+        nameLower.includes("mobilidade");
       if (isIso) {
         duration_seconds = 30;
       } else {
@@ -32,12 +37,16 @@ async function run() {
       needsUpdate = true;
     }
 
-    if (!description || description.trim() === '') {
+    if (!description || description.trim() === "") {
       description = `Exercício focado em ${name}. Contribui para o fortalecimento, mobilidade e melhora do controle motor da região.`;
       needsUpdate = true;
     }
 
-    if (!instructions || instructions.trim() === '' || instructions.trim() === 'Nenhuma instrução adicional.') {
+    if (
+      !instructions ||
+      instructions.trim() === "" ||
+      instructions.trim() === "Nenhuma instrução adicional."
+    ) {
       instructions = `### Instruções para ${name}\n1. Prepare a postura inicial alinhando corretamente o corpo.\n2. Inicie o movimento de forma controlada.\n3. Mantenha a contração e a respiração constante (não bloqueie a respiração).\n4. Retorne suavemente à posição inicial.\n5. Siga o número de repetições ou o tempo de duração indicados.`;
       needsUpdate = true;
     }
@@ -64,7 +73,7 @@ async function run() {
   console.log(`Finished! Total exercises updated: ${updatedCount}`);
 }
 
-run().catch(err => {
+run().catch((err) => {
   console.error(err);
   process.exit(1);
 });

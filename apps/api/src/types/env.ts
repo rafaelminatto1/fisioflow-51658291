@@ -42,7 +42,10 @@ export interface StreamBinding {
   /** Operações sobre um vídeo específico. */
   video(uid: string): {
     details(): Promise<StreamVideoDetails>;
-    update(params: { meta?: Record<string, string>; allowedOrigins?: string[] }): Promise<StreamVideoDetails>;
+    update(params: {
+      meta?: Record<string, string>;
+      allowedOrigins?: string[];
+    }): Promise<StreamVideoDetails>;
     delete(): Promise<void>;
     generateToken(params?: { exp?: number; nbf?: number; downloadable?: boolean }): Promise<string>;
   };
@@ -88,7 +91,16 @@ export type AiSearchBinding = {
       search?: string;
       status?: string;
       metadata_filter?: string;
-    }): Promise<{ result?: Array<{ id: string; key?: string; filename?: string; status: string; metadata?: Record<string, unknown> }>; items?: Array<{ id: string; filename: string; status: string }> }>;
+    }): Promise<{
+      result?: Array<{
+        id: string;
+        key?: string;
+        filename?: string;
+        status: string;
+        metadata?: Record<string, unknown>;
+      }>;
+      items?: Array<{ id: string; filename: string; status: string }>;
+    }>;
   };
 };
 
@@ -155,7 +167,6 @@ export interface Env {
 
   // Analytics Engine (observabilidade em tempo real, free tier)
   ANALYTICS?: AnalyticsEngineDataset;
-
 
   // AI Search (RAG gerenciado — wiki, protocolos, artigos científicos)
   // Bound via [[ai_search]] binding = "AI_SEARCH" instance_name = "fisioflow-rag".

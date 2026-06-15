@@ -184,7 +184,8 @@ export const EvolutionHeaderV3 = memo(
             </span>
           </div>
           <div className="text-[11px] text-muted-foreground font-semibold tabular-nums truncate">
-            {sessionNumber}ª sessão · {evolutionStats.totalEvolutions} evoluções · {evolutionStats.totalMeasurements} medições ·{" "}
+            {sessionNumber}ª sessão · {evolutionStats.totalEvolutions} evoluções ·{" "}
+            {evolutionStats.totalMeasurements} medições ·{" "}
             <span className="text-[#059669]">100% sucesso</span>
           </div>
         </div>
@@ -197,7 +198,7 @@ export const EvolutionHeaderV3 = memo(
           >
             <Mic className="w-[13px] h-[13px]" /> VOICE SCRIBE
           </button>
-          
+
           <button
             onClick={onOpenHistoryDrawer}
             className="hidden sm:inline-flex items-center gap-1.5 h-[30px] px-3 rounded-full border border-[#BDE0FF] bg-[#F0F7FF] text-[#005CE6] text-[10px] font-extrabold tracking-wider cursor-pointer transition-colors hover:bg-[#E5F0FF]"
@@ -255,7 +256,7 @@ export const EvolutionHeaderV3 = memo(
         </div>
       </div>
     );
-  }
+  },
 );
 
 EvolutionHeaderV3.displayName = "EvolutionHeaderV3";

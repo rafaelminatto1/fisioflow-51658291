@@ -23,8 +23,7 @@ const premiumFieldBaseClass =
 
 const premiumFieldClass = `${premiumFieldBaseClass} h-11 text-xs sm:text-sm`;
 
-const premiumSelectContentClass =
-  "rounded-xl border border-blue-100 bg-white p-1 shadow-lg";
+const premiumSelectContentClass = "rounded-xl border border-blue-100 bg-white p-1 shadow-lg";
 
 interface AppointmentPaymentTabProps {
   disabled: boolean;

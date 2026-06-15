@@ -36,7 +36,9 @@ async function run() {
   try {
     await client.connect();
     console.log("🚀 Connected to Neon DB.");
-    console.log(`📂 Scanning clinical tests in catalog: ${builtinClinicalTestsCatalog.length} found.`);
+    console.log(
+      `📂 Scanning clinical tests in catalog: ${builtinClinicalTestsCatalog.length} found.`,
+    );
 
     let uploadOk = 0;
     let dbUpdates = 0;
@@ -64,7 +66,7 @@ async function run() {
             console.log(`   📤 Uploading ${baseFile} to R2...`);
             execSync(
               `npx wrangler r2 object put ${BUCKET_NAME}/${r2Key} --file "${localPath}" --content-type "image/png"`,
-              { cwd: path.join(__dirname, ".."), stdio: "pipe" }
+              { cwd: path.join(__dirname, ".."), stdio: "pipe" },
             );
             console.log(`   ✅ Upload OK -> ${publicUrl}`);
             imageUrl = publicUrl;
@@ -85,7 +87,7 @@ async function run() {
         (dbTest) =>
           normalizeName(dbTest.name) === normalizedCatName ||
           normalizedCatName.includes(normalizeName(dbTest.name)) ||
-          normalizeName(dbTest.name).includes(normalizedCatName)
+          normalizeName(dbTest.name).includes(normalizedCatName),
       );
 
       const fieldsDefinition = test.fieldsDefinition ? JSON.stringify(test.fieldsDefinition) : "[]";

@@ -1,10 +1,10 @@
 name: FisioFlow — Local
 values:
   - key: baseUrl
-    value: 'http://localhost:8787'
+    value: "http://localhost:8787"
   - key: jwt
-    value: ''
+    value: ""
   - key: patientId
-    value: ''
+    value: ""
   - key: appointmentId
-    value: ''
+    value: ""

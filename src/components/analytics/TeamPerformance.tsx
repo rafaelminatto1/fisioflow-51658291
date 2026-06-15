@@ -55,10 +55,9 @@ function TeamPerformanceComponent() {
       const response = await appointmentsApi.list({ dateFrom: from, dateTo: to, limit: 2000 });
       const appointments = Array.isArray(response?.data) ? response.data : [];
 
-      const therapists =
-        Array.isArray(members)
-          ? members.filter((m) => m.role === "fisioterapeuta" || m.role === "admin")
-          : [];
+      const therapists = Array.isArray(members)
+        ? members.filter((m) => m.role === "fisioterapeuta" || m.role === "admin")
+        : [];
 
       return therapists
         .map((member) => {

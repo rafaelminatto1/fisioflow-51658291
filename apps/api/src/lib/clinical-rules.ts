@@ -29,7 +29,7 @@ export const CLINICAL_THRESHOLDS = {
 
 export function evaluateClinicalTest(
   type: ClinicalTestType,
-  metrics: Record<string, any>
+  metrics: Record<string, any>,
 ): ClinicalTestResult {
   const findings: string[] = [];
   const keywords: string[] = [];

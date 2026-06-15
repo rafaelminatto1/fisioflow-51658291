@@ -27,7 +27,12 @@ aiAgentsRoutes.post("/resources/search", requireAuth, async (c) => {
   const searchService = new ResourceSearchService(c.env);
 
   try {
-    const resources = await searchService.searchResources(query, user.organizationId, context, types);
+    const resources = await searchService.searchResources(
+      query,
+      user.organizationId,
+      context,
+      types,
+    );
     return c.json({ data: { resources } });
   } catch (error: any) {
     return c.json({ error: error.message || "Search failed" }, 500);
@@ -35,19 +40,19 @@ aiAgentsRoutes.post("/resources/search", requireAuth, async (c) => {
 });
 
 aiAgentsRoutes.post("/resources/suggest", requireAuth, async (c) => {
-    const body = await c.req.json().catch(() => ({}));
-    const { resource, query } = body;
-    if (!resource || !query) return c.json({ error: "resource and query are required" }, 400);
+  const body = await c.req.json().catch(() => ({}));
+  const { resource, query } = body;
+  if (!resource || !query) return c.json({ error: "resource and query are required" }, 400);
 
-    const user = c.get("user");
-    const searchService = new ResourceSearchService(c.env);
+  const user = c.get("user");
+  const searchService = new ResourceSearchService(c.env);
 
-    try {
-        await searchService.saveSuggestion(user.organizationId, user.uid, resource, query);
-        return c.json({ success: true });
-    } catch (error: any) {
-        return c.json({ error: error.message || "Failed to save suggestion" }, 500);
-    }
+  try {
+    await searchService.saveSuggestion(user.organizationId, user.uid, resource, query);
+    return c.json({ success: true });
+  } catch (error: any) {
+    return c.json({ error: error.message || "Failed to save suggestion" }, 500);
+  }
 });
 
 aiAgentsRoutes.post("/soap-review", async (c) => {
@@ -133,7 +138,7 @@ aiAgentsRoutes.post("/simulator/chat", async (c) => {
       profile,
       chatHistory,
       agentLastMessage,
-      user.organizationId
+      user.organizationId,
     );
     return c.json({ data: result });
   } catch (error: any) {

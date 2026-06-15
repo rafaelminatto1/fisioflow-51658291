@@ -126,7 +126,11 @@ export default function NotificationPreferencesScreen() {
       <Card style={styles.categoryCard}>
         <View style={styles.categoryHeader}>
           <View style={styles.categoryTitleContainer}>
-            <Ionicons name={icon as keyof typeof Ionicons.glyphMap} size={22} color={colors.primary} />
+            <Ionicons
+              name={icon as keyof typeof Ionicons.glyphMap}
+              size={22}
+              color={colors.primary}
+            />
             <Text style={[styles.categoryTitle, { color: colors.text }]}>{title}</Text>
           </View>
           <Switch

@@ -470,10 +470,7 @@ export function ProcedureChecklistBlock({ procedures, onChange }: ProcedureCheck
       {/* Quick Tips */}
       <div className="flex items-center justify-center gap-4 text-[10px] text-muted-foreground/40 font-medium uppercase tracking-tighter">
         <div className="flex items-center gap-1">
-          <kbd className="px-1.5 py-0.5 rounded border border-white/10 bg-card font-sans">
-            {" "}
-            /{" "}
-          </kbd>
+          <kbd className="px-1.5 py-0.5 rounded border border-white/10 bg-card font-sans"> / </kbd>
           <span>para focar</span>
         </div>
         <div className="w-1 h-1 rounded-full bg-card" />

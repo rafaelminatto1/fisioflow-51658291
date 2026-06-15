@@ -125,7 +125,11 @@ export function TransactionCard({
               <Badge
                 variant={statusConfig.variant}
                 icon={
-                  <Ionicons name={statusConfig.icon as keyof typeof Ionicons.glyphMap} size={12} color={getStatusColor()} />
+                  <Ionicons
+                    name={statusConfig.icon as keyof typeof Ionicons.glyphMap}
+                    size={12}
+                    color={getStatusColor()}
+                  />
                 }
               >
                 {statusConfig.label}
@@ -135,7 +139,11 @@ export function TransactionCard({
 
           <View style={styles.middleRow}>
             <View style={styles.methodContainer}>
-              <Ionicons name={methodIcon as keyof typeof Ionicons.glyphMap} size={14} color={colors.textSecondary} />
+              <Ionicons
+                name={methodIcon as keyof typeof Ionicons.glyphMap}
+                size={14}
+                color={colors.textSecondary}
+              />
               <Text style={[styles.methodText, { color: colors.textSecondary }]}>
                 {paymentMethod || "Outro"}
               </Text>

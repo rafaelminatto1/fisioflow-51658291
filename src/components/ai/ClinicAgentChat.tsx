@@ -73,9 +73,7 @@ export function ClinicAgentChat() {
               <div
                 data-testid={msg.role === "agent" ? "clinic-chat-message" : undefined}
                 className={`rounded-xl px-3 py-2 text-sm max-w-[85%] whitespace-pre-wrap ${
-                  msg.role === "user"
-                    ? "bg-blue-600 text-white"
-                    : "bg-muted text-foreground"
+                  msg.role === "user" ? "bg-blue-600 text-white" : "bg-muted text-foreground"
                 }`}
               >
                 {msg.content}

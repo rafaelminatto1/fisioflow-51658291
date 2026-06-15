@@ -86,7 +86,11 @@ export default function DataTransparencyScreen() {
           <Card key={category.id} style={styles.categoryCard}>
             <View style={styles.categoryHeader}>
               <View style={[styles.iconContainer, { backgroundColor: colors.primary + "15" }]}>
-                <Ionicons name={category.icon as keyof typeof Ionicons.glyphMap} size={24} color={colors.primary} />
+                <Ionicons
+                  name={category.icon as keyof typeof Ionicons.glyphMap}
+                  size={24}
+                  color={colors.primary}
+                />
               </View>
               <Text style={[styles.categoryName, { color: colors.text }]}>{category.name}</Text>
             </View>

@@ -45,7 +45,7 @@ export const EvolutionTabsBar = memo(
                 "flex items-center gap-1.5 px-[11px] py-[8px] text-[11px] font-extrabold tracking-[0.04em] whitespace-nowrap cursor-pointer transition-colors border-b-2 -mb-[1px]",
                 isActive
                   ? "text-primary border-primary"
-                  : "text-muted-foreground border-transparent hover:text-foreground"
+                  : "text-muted-foreground border-transparent hover:text-foreground",
               )}
             >
               {Icon && isActive && <Icon className="w-[13px] h-[13px]" />}
@@ -86,7 +86,7 @@ export const EvolutionTabsBar = memo(
         </div>
       </div>
     );
-  }
+  },
 );
 
 EvolutionTabsBar.displayName = "EvolutionTabsBar";

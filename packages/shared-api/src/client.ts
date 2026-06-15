@@ -8,7 +8,12 @@ import { ApiError } from "./index";
 export interface ClientConfig {
   baseUrl: string;
   getToken: () => Promise<string | null>;
-  onOfflineMutation?: (url: string, method: string, headers: HeadersInit, body: any) => Promise<void>;
+  onOfflineMutation?: (
+    url: string,
+    method: string,
+    headers: HeadersInit,
+    body: any,
+  ) => Promise<void>;
 }
 
 export class FisioFlowClient {
@@ -58,14 +63,20 @@ export class FisioFlowClient {
       const method = options.method || "GET";
       const isMutation = ["POST", "PUT", "PATCH", "DELETE"].includes(method.toUpperCase());
       const isOffline = typeof navigator !== "undefined" && navigator.onLine === false;
-      
+
       // Se for um erro de rede (fetch failed) e estivermos offline com onOfflineMutation configurado
-      if (isMutation && (isOffline || error.name === 'TypeError') && this.config.onOfflineMutation) {
-        console.log(`[FisioFlowClient] Rede indisponível. Enfileirando mutação offline: ${method} ${url}`);
+      if (
+        isMutation &&
+        (isOffline || error.name === "TypeError") &&
+        this.config.onOfflineMutation
+      ) {
+        console.log(
+          `[FisioFlowClient] Rede indisponível. Enfileirando mutação offline: ${method} ${url}`,
+        );
         await this.config.onOfflineMutation(url, method, headers, options.body);
         return { __offline_queued: true } as unknown as T;
       }
-      
+
       throw error;
     }
   }

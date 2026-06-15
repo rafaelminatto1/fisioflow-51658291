@@ -639,7 +639,10 @@ export default function ExerciseFormScreen() {
       } else {
         const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
         if (status !== "granted") {
-          Alert.alert("Permissão necessária", "Precisamos de acesso à galeria para selecionar o vídeo.");
+          Alert.alert(
+            "Permissão necessária",
+            "Precisamos de acesso à galeria para selecionar o vídeo.",
+          );
           return;
         }
         result = await ImagePicker.launchImageLibraryAsync({
@@ -1183,7 +1186,12 @@ export default function ExerciseFormScreen() {
           <Text style={[styles.label, { color: colors.text }]}>Vídeo do Exercício</Text>
           {formData.videoUrl ? (
             <View style={{ marginBottom: 16 }}>
-              <View style={[styles.input, { borderColor: colors.border, backgroundColor: colors.surface, marginBottom: 8 }]}>
+              <View
+                style={[
+                  styles.input,
+                  { borderColor: colors.border, backgroundColor: colors.surface, marginBottom: 8 },
+                ]}
+              >
                 <Text style={{ color: colors.primary }} numberOfLines={1}>
                   {formData.videoUrl}
                 </Text>

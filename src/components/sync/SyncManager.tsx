@@ -139,7 +139,13 @@ export function SyncManager(userOptions: SyncManagerOptions = {}) {
         isCachingRef.current = false;
       }
     },
-    [cacheCriticalData, prefetchWeeklyPatients, stats.pendingActions, connectionType, options.verboseLogging],
+    [
+      cacheCriticalData,
+      prefetchWeeklyPatients,
+      stats.pendingActions,
+      connectionType,
+      options.verboseLogging,
+    ],
   );
 
   /**

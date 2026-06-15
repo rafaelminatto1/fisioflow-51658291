@@ -101,7 +101,11 @@ export function ClinicalDocsManager() {
             className="text-sm"
           />
           <Button onClick={upload} disabled={uploading || !file || !title.trim()}>
-            {uploading ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <Upload className="w-4 h-4 mr-1" />}
+            {uploading ? (
+              <Loader2 className="w-4 h-4 animate-spin mr-1" />
+            ) : (
+              <Upload className="w-4 h-4 mr-1" />
+            )}
             Enviar
           </Button>
         </div>

@@ -10,7 +10,8 @@ import { SortableList } from "../shared/SortableList";
 import { useAppointmentTypes } from "@/hooks/useAppointmentTypes";
 
 export function TiposTab() {
-  const { types, isLoading, addType, updateType, removeType, toggleActive, duplicateType } = useAppointmentTypes();
+  const { types, isLoading, addType, updateType, removeType, toggleActive, duplicateType } =
+    useAppointmentTypes();
 
   const handleReorder = (next: typeof types) => {
     next.forEach((t, idx) => {
@@ -60,7 +61,9 @@ export function TiposTab() {
 
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
                 <div className="lg:col-span-2">
-                  <Label className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Nome</Label>
+                  <Label className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                    Nome
+                  </Label>
                   <Input
                     value={t.name}
                     onChange={(e) => updateType(t.id, { name: e.target.value })}
@@ -68,7 +71,9 @@ export function TiposTab() {
                   />
                 </div>
                 <div>
-                  <Label className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Duração (min)</Label>
+                  <Label className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                    Duração (min)
+                  </Label>
                   <Input
                     type="number"
                     min={5}
@@ -79,29 +84,39 @@ export function TiposTab() {
                   />
                 </div>
                 <div>
-                  <Label className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Buffer antes</Label>
+                  <Label className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                    Buffer antes
+                  </Label>
                   <Input
                     type="number"
                     min={0}
                     max={60}
                     value={t.bufferBeforeMinutes}
-                    onChange={(e) => updateType(t.id, { bufferBeforeMinutes: Number(e.target.value) })}
+                    onChange={(e) =>
+                      updateType(t.id, { bufferBeforeMinutes: Number(e.target.value) })
+                    }
                     className="h-8"
                   />
                 </div>
                 <div>
-                  <Label className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Buffer depois</Label>
+                  <Label className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                    Buffer depois
+                  </Label>
                   <Input
                     type="number"
                     min={0}
                     max={60}
                     value={t.bufferAfterMinutes}
-                    onChange={(e) => updateType(t.id, { bufferAfterMinutes: Number(e.target.value) })}
+                    onChange={(e) =>
+                      updateType(t.id, { bufferAfterMinutes: Number(e.target.value) })
+                    }
                     className="h-8"
                   />
                 </div>
                 <div className="lg:col-span-2">
-                  <Label className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Limite por dia (vazio = sem limite)</Label>
+                  <Label className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                    Limite por dia (vazio = sem limite)
+                  </Label>
                   <Input
                     type="number"
                     min={0}
@@ -130,7 +145,12 @@ export function TiposTab() {
                   <Star className={cn("h-4 w-4", t.isDefault && "fill-amber-500")} />
                 </button>
                 <Switch checked={t.isActive} onCheckedChange={() => toggleActive(t.id)} />
-                <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => duplicateType(t.id)}>
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="h-8 w-8"
+                  onClick={() => duplicateType(t.id)}
+                >
                   <Copy className="h-3.5 w-3.5" />
                 </Button>
                 <Button

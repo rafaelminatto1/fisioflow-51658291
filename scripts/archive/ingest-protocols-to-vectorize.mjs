@@ -50,9 +50,14 @@ async function upsertToVectorize(vectors) {
 }
 
 async function run() {
-  console.log("🔍 Debug Token:", process.env.CLOUDFLARE_API_TOKEN ? process.env.CLOUDFLARE_API_TOKEN.substring(0, 10) + "..." : "not set");
+  console.log(
+    "🔍 Debug Token:",
+    process.env.CLOUDFLARE_API_TOKEN
+      ? process.env.CLOUDFLARE_API_TOKEN.substring(0, 10) + "..."
+      : "not set",
+  );
   console.log("🔍 Debug Account ID:", CF_ACCOUNT_ID);
-  
+
   const client = new Client({
     connectionString: process.env.DATABASE_URL,
   });

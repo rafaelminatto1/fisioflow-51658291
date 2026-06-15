@@ -2,7 +2,7 @@ import type { Env } from "../types/env";
 
 /**
  * EvolutionCollaboration — Durable Object para colaboração em tempo real via Yjs.
- * 
+ *
  * Responsável por:
  * 1. Manter conexões WebSocket ativas para uma evolução específica.
  * 2. Sincronizar atualizações do Yjs (updates binários) entre os clientes.
@@ -49,14 +49,14 @@ export class EvolutionCollaboration implements DurableObject {
     // No protocolo y-websocket, a primeira mensagem costuma ser de sincronização.
     // O Durable Object atua como um relay burro mas eficiente para os updates do Yjs,
     // podendo opcionalmente validar ou persistir dados.
-    
+
     this.sessions.set(ws, {});
 
     ws.addEventListener("message", async (msg) => {
       try {
         // Broadcast para todos os outros clientes conectados nesta sala (ID do DO)
         this.broadcast(msg.data, ws);
-        
+
         // TODO: Implementar persistência parcial ou debounce para save no Neon
       } catch (err) {
         console.error("[EvolutionCollaboration] Erro no broadcast:", err);

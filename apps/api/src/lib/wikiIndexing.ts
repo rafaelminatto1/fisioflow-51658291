@@ -123,10 +123,7 @@ export async function removeWikiPageFromIndex(
 }
 
 // Instância do paciente: opt-in explícito por página (patient_visible).
-export async function syncWikiPagePatientIndex(
-  env: Env,
-  page: WikiIndexablePage,
-): Promise<void> {
+export async function syncWikiPagePatientIndex(env: Env, page: WikiIndexablePage): Promise<void> {
   if (!env.AI_SEARCH_PATIENT?.items) return;
 
   if (page.patientVisible) {

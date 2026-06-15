@@ -7,13 +7,7 @@
  */
 import type { DbPool } from "./db";
 
-export type LifecycleStage =
-  | "lead"
-  | "mql"
-  | "sql"
-  | "opportunity"
-  | "customer"
-  | "churned";
+export type LifecycleStage = "lead" | "mql" | "sql" | "opportunity" | "customer" | "churned";
 
 export interface ContactUpsertInput {
   organizationId: string;
@@ -189,10 +183,7 @@ export async function upsertContact(
   } catch (err) {
     // Race: outro request inseriu o mesmo phone/email/cpf entre find e insert.
     // Retry 1x: agora findContactByIdentity vai achar o registro recém-criado.
-    if (
-      attempt < 1 &&
-      (err as { code?: string }).code === "23505" /* unique_violation */
-    ) {
+    if (attempt < 1 && (err as { code?: string }).code === "23505" /* unique_violation */) {
       return upsertContact(pool, input, attempt + 1);
     }
     throw err;

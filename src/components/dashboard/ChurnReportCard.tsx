@@ -71,10 +71,7 @@ export function ChurnReportCard() {
             </p>
             <div className="space-y-1 max-h-40 overflow-y-auto">
               {data.slice(0, 8).map((p: any) => (
-                <div
-                  key={p.id}
-                  className="flex items-center justify-between text-xs py-0.5"
-                >
+                <div key={p.id} className="flex items-center justify-between text-xs py-0.5">
                   <span className="flex items-center gap-1.5">
                     <UserMinus className="h-3 w-3 text-muted-foreground" />
                     {p.full_name}
@@ -87,9 +84,7 @@ export function ChurnReportCard() {
                 </div>
               ))}
               {data.length > 8 && (
-                <p className="text-xs text-muted-foreground">
-                  +{data.length - 8} pacientes
-                </p>
+                <p className="text-xs text-muted-foreground">+{data.length - 8} pacientes</p>
               )}
             </div>
           </div>

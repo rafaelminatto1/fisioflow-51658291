@@ -157,9 +157,7 @@ export function PatientAnalytics({ totalPatients, classificationStats }: Patient
                     axisLine={false}
                   />
                   <ChartTooltip
-                    content={
-                      <ChartTooltipContent className="rounded-2xl shadow-2xl border-none" />
-                    }
+                    content={<ChartTooltipContent className="rounded-2xl shadow-2xl border-none" />}
                   />
                   <Bar
                     dataKey="value"
@@ -198,9 +196,7 @@ export function PatientAnalytics({ totalPatients, classificationStats }: Patient
                     ))}
                   </Pie>
                   <ChartTooltip
-                    content={
-                      <ChartTooltipContent className="rounded-2xl shadow-2xl border-none" />
-                    }
+                    content={<ChartTooltipContent className="rounded-2xl shadow-2xl border-none" />}
                   />
                 </PieChart>
               </ResponsiveContainer>

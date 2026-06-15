@@ -31,14 +31,12 @@ export function SessionTimelineStrip({
   excludeId,
   onReplicate,
 }: SessionTimelineStripProps) {
-  const { data: rawRecords = [], isLoading } = useSoapRecords(
-    patientId ?? "",
-    maxItems + 1,
-  );
+  const { data: rawRecords = [], isLoading } = useSoapRecords(patientId ?? "", maxItems + 1);
   const pendingSessionIds = usePendingSyncIds("sessions");
 
   const records = useMemo(
-    () => (excludeId ? rawRecords.filter((r) => r.id !== excludeId) : rawRecords).slice(0, maxItems),
+    () =>
+      (excludeId ? rawRecords.filter((r) => r.id !== excludeId) : rawRecords).slice(0, maxItems),
     [rawRecords, excludeId, maxItems],
   );
 
@@ -62,9 +60,7 @@ export function SessionTimelineStrip({
 
   if (!patientId) {
     return (
-      <p className="text-xs text-slate-500 py-4">
-        Salve a sessão para visualizar o histórico.
-      </p>
+      <p className="text-xs text-slate-500 py-4">Salve a sessão para visualizar o histórico.</p>
     );
   }
 
@@ -119,9 +115,7 @@ export function SessionTimelineStrip({
             <p className="text-[11px] text-slate-500">
               {format(item.date, "dd/MM • HH'h'mm", { locale: ptBR })}
             </p>
-            <p className="text-xs text-slate-700 line-clamp-2 leading-snug">
-              {item.conduct}
-            </p>
+            <p className="text-xs text-slate-700 line-clamp-2 leading-snug">{item.conduct}</p>
             {onReplicate && (
               <Button
                 type="button"

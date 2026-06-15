@@ -67,8 +67,8 @@ export const exerciseCategories = pgTable(
     index("idx_exercise_categories_slug").on(table.slug),
     index("idx_exercise_categories_parent_id").on(table.parentId),
     index("idx_exercise_categories_org_id").on(table.organizationId),
-    withPublicOrOrganizationPolicy("exercise_categories", table.organizationId)
-  ]
+    withPublicOrOrganizationPolicy("exercise_categories", table.organizationId),
+  ],
 );
 
 export const exerciseCategoriesRelations = relations(exerciseCategories, ({ one, many }) => ({
@@ -185,7 +185,7 @@ export const exerciseFavorites = pgTable(
     index("idx_exercise_favorites_user_id").on(table.userId),
     index("idx_exercise_favorites_organization_id").on(table.organizationId),
     withOrganizationPolicy("exercise_favorites", table.organizationId),
-  ]
+  ],
 );
 
 export const exerciseFavoritesRelations = relations(exerciseFavorites, ({ one }) => ({

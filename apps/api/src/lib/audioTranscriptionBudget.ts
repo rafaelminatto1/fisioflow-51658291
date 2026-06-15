@@ -91,7 +91,11 @@ export async function checkAudioTranscriptionBudget(
     );
 
     const professional = proBudgetRows[0]
-      ? buildUsage(proBudgetRows[0], Number(usageRows[0]?.professional_seconds ?? 0), requestedMinutes)
+      ? buildUsage(
+          proBudgetRows[0],
+          Number(usageRows[0]?.professional_seconds ?? 0),
+          requestedMinutes,
+        )
       : undefined;
 
     const blockingScope =
@@ -118,7 +122,9 @@ export async function checkAudioTranscriptionBudget(
 export async function listAudioTranscriptionBudgets(
   env: Env,
   organizationId: string,
-): Promise<Array<BudgetRow & { id: string; professional_user_id: string | null; updated_at: string }>> {
+): Promise<
+  Array<BudgetRow & { id: string; professional_user_id: string | null; updated_at: string }>
+> {
   const url = env.NEON_URL || env.HYPERDRIVE?.connectionString;
   if (!url) return [];
   const sql = neon(url);
@@ -128,7 +134,9 @@ export async function listAudioTranscriptionBudgets(
     WHERE organization_id = ${organizationId}
     ORDER BY professional_user_id NULLS FIRST, updated_at DESC
   `;
-  return rows as Array<BudgetRow & { id: string; professional_user_id: string | null; updated_at: string }>;
+  return rows as Array<
+    BudgetRow & { id: string; professional_user_id: string | null; updated_at: string }
+  >;
 }
 
 export async function upsertAudioTranscriptionBudget(
@@ -246,7 +254,11 @@ export async function getAudioTranscriptionMonthlyUsage(
     GROUP BY therapist_id
     ORDER BY used_minutes DESC
   `;
-  return rows as Array<{ therapist_id: string | null; used_minutes: number; captured_seconds: number }>;
+  return rows as Array<{
+    therapist_id: string | null;
+    used_minutes: number;
+    captured_seconds: number;
+  }>;
 }
 
 function buildUsage(row: BudgetRow, usedSeconds: number, requestedMinutes: number): BudgetUsage {

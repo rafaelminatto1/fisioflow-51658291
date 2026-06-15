@@ -26,7 +26,7 @@ const HomeExerciseShareSchema = z.object({
 app.post("/share", requireAuth, async (c) => {
   const user = c.get("user");
   const body = await c.req.json().catch(() => ({}));
-  
+
   const validation = HomeExerciseShareSchema.safeParse(body);
   if (!validation.success) {
     return c.json({ error: "Dados inválidos", details: validation.error.format() }, 400);
@@ -41,11 +41,11 @@ app.post("/share", requireAuth, async (c) => {
     if (videoBase64 && c.env.MEDIA_BUCKET) {
       const key = `home-exercises/${user.uid}/${Date.now()}.mp4`;
       const buffer = Buffer.from(videoBase64, "base64");
-      
+
       await c.env.MEDIA_BUCKET.put(key, buffer, {
-        httpMetadata: { contentType: "video/mp4" }
+        httpMetadata: { contentType: "video/mp4" },
       });
-      
+
       videoUrl = `${c.env.R2_PUBLIC_URL}/${key}`;
     }
 

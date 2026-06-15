@@ -77,6 +77,7 @@ criada (`wrangler ai-search create --type builtin`), dry-run de deploy validado
 com os dois bindings AI Search.
 
 Pendências conscientes:
+
 - T013/T082: E2E Playwright dos fluxos novos
 - T023: conectar CLINICAL_DOCS_BUCKET como data source (dashboard AI Search) — instâncias builtin recebem upload direto; avaliar instância dedicada p/ PDFs
 - T033: guardrails do AI Gateway = configuração manual no dashboard
@@ -85,7 +86,6 @@ Pendências conscientes:
 - T071-parcial: notificação push ao admin sobre item pendente (fila + UI prontas)
 - T081: chat usa RPC HTTP autenticado ao DO (não WebSocket useAgent) — decisão p/ reaproveitar auth JWT existente
 - T090/T091: inventário de bindings + monitorar pricing do AI Search
-
 
 ## Atualização 2026-06-14 — entregue e validado em produção
 
@@ -98,8 +98,8 @@ Pendências conscientes:
 - **Fix de produção**: `retrieval_type` default `hybrid`→`vector` (instâncias built-in só têm índice vetorial) — corrigia 500 em /ask, /patient/assistant, /suggest.
 - **Pendente do usuário (dashboard, sem token p/ agente)**: aba Settings do gateway — Rate Limit (30/60s), Retry (2), Spend Limits (US$10/mês opcional). Acompanhar aba Logs ~1 semana e migrar categorias de Flag→Block conforme abuso real. AI Search continua em open beta (monitorar pricing). Agent Memory beta: rotina diária avisa quando liberar (T064).
 
-
 ## Nota T023 (2026-06-14): filtragem por tipo no AI Search built-in
+
 Descoberto na validação: a filtragem por metadata customizada (ex.: source=clinical-doc)
 NÃO funciona sem declarar campos (até 5/instância via custom_metadata na criação); e o
 filtro por `folder` funciona via REST mas NÃO via binding env.AI_SEARCH.search(). Por isso
@@ -108,8 +108,8 @@ o chip "Documentos" foi removido — os PDFs de referência são recuperados na 
 pré-existentes (Wiki/Protocolos/Exercícios) também dependem de source filter e são
 não-funcionais — limpeza/declaração de campos fica como follow-up separado.
 
-
 ## Atualização 2026-06-14b: filtros de tipo Wiki/Protocolos/Exercícios FUNCIONANDO
+
 Solução: filtragem por atributo nativo `folder` (não metadata customizada, que exige
 data source r2/web-crawler — built-in não suporta). Chave: desligar `query_rewrite`
 quando há filtro (o rewrite quebrava o folder filter no binding). Validado em prod:

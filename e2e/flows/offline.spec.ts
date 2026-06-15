@@ -21,7 +21,10 @@ async function login(page: Page) {
 
   await page.getByRole("textbox", { name: /email/i }).fill(E2E_EMAIL);
   await page.getByRole("textbox", { name: /senha/i }).fill(E2E_PASSWORD);
-  await page.getByRole("button", { name: /acessar|entrar|login/i }).first().click();
+  await page
+    .getByRole("button", { name: /acessar|entrar|login/i })
+    .first()
+    .click();
   await page.waitForURL(/\/(dashboard|agenda|home)/, { timeout: 30000 });
 }
 
@@ -49,13 +52,11 @@ async function settleApp(page: Page) {
 async function findPopulatedWeek(page: Page, maxWeeks = 12): Promise<boolean> {
   for (let i = 0; i < maxWeeks; i++) {
     const count = await page
-      .locator('.fc-event:visible, [data-appointment-popover-anchor]:visible')
+      .locator(".fc-event:visible, [data-appointment-popover-anchor]:visible")
       .count();
     if (count > 0) return true;
     const prev = page
-      .locator(
-        'button[aria-label*="anterior" i], button[aria-label*="prev" i], .fc-prev-button',
-      )
+      .locator('button[aria-label*="anterior" i], button[aria-label*="prev" i], .fc-prev-button')
       .first();
     if (!(await prev.isVisible().catch(() => false))) return false;
     await prev.click();
@@ -89,7 +90,9 @@ test.describe("Offline — Agenda", () => {
     await page.screenshot({ path: "test-results/offline-state.png", fullPage: false });
 
     // Banner global deve aparecer (busca abrangente)
-    const offlineBanner = page.locator("text=/sem conex|offline|aguardando rede|pendente/i").first();
+    const offlineBanner = page
+      .locator("text=/sem conex|offline|aguardando rede|pendente/i")
+      .first();
     await expect(offlineBanner).toBeVisible({ timeout: 8000 });
 
     // Sai e volta pra agenda via navegação SPA — testa hidratação do cache
@@ -146,7 +149,10 @@ test.describe("Offline — Agenda", () => {
       hasText: /salvo localmente|salvo offline|salvo no dispositivo|pendente/i,
     });
     // Se aparecer ótimo; se não, reportar como info (form pode ter validation rules)
-    const toastVisible = await toast.first().isVisible({ timeout: 3000 }).catch(() => false);
+    const toastVisible = await toast
+      .first()
+      .isVisible({ timeout: 3000 })
+      .catch(() => false);
     if (!toastVisible) {
       test.info().annotations.push({
         type: "info",
@@ -231,9 +237,7 @@ test.describe("Offline — Evolução", () => {
       });
       return;
     }
-    const firstAppt = page
-      .locator('[data-appointment-popover-anchor], .fc-event')
-      .first();
+    const firstAppt = page.locator("[data-appointment-popover-anchor], .fc-event").first();
     await firstAppt.click().catch(() => {});
 
     // Procura link/botão "Evolução" ou navega manual
@@ -253,7 +257,9 @@ test.describe("Offline — Evolução", () => {
     await page.waitForTimeout(500);
 
     // Header deve indicar offline ou aguardando rede
-    const offlineIndicator = page.locator("text=/Aguardando rede|Offline.*fila|Modo Offline/i").first();
+    const offlineIndicator = page
+      .locator("text=/Aguardando rede|Offline.*fila|Modo Offline/i")
+      .first();
     await expect(offlineIndicator).toBeVisible({ timeout: 8000 });
 
     await context.setOffline(false);
@@ -271,9 +277,7 @@ test.describe("Offline — Evolução", () => {
       });
       return;
     }
-    const firstAppt = page
-      .locator('[data-appointment-popover-anchor], .fc-event')
-      .first();
+    const firstAppt = page.locator("[data-appointment-popover-anchor], .fc-event").first();
     await firstAppt.click().catch(() => {});
     const evoLink = page.getByRole("link", { name: /evolu[çc][ãa]o/i }).first();
     if (!(await evoLink.isVisible().catch(() => false))) {

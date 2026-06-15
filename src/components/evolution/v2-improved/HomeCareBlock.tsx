@@ -88,9 +88,7 @@ export const HomeCareBlock: React.FC<HomeCareBlockProps> = ({
   const suggestions = useMemo(() => {
     const q = newExerciseName.trim();
     if (q.length < 2) return [];
-    return libraryExercises
-      .filter((ex) => accentIncludes(ex.name, q))
-      .slice(0, 6);
+    return libraryExercises.filter((ex) => accentIncludes(ex.name, q)).slice(0, 6);
   }, [libraryExercises, newExerciseName]);
 
   useEffect(() => {
@@ -366,14 +364,20 @@ export const HomeCareBlock: React.FC<HomeCareBlockProps> = ({
                       {sessionExercises.map((preset, idx) => (
                         <button
                           key={`sess-${idx}`}
-                          onClick={() => handlePresetClick(preset.name, preset.prescription || "3x10")}
+                          onClick={() =>
+                            handlePresetClick(preset.name, preset.prescription || "3x10")
+                          }
                           disabled={disabled}
                           className="flex items-center gap-2 p-2 rounded-lg hover:bg-emerald-50 text-left transition-colors"
                         >
                           <span className="text-base">🏋️</span>
                           <div className="flex flex-col min-w-0">
-                            <span className="text-xs font-medium truncate text-emerald-900">{preset.name}</span>
-                            <span className="text-[10px] text-emerald-600/70">{preset.prescription || "3x10"}</span>
+                            <span className="text-xs font-medium truncate text-emerald-900">
+                              {preset.name}
+                            </span>
+                            <span className="text-[10px] text-emerald-600/70">
+                              {preset.prescription || "3x10"}
+                            </span>
                           </div>
                         </button>
                       ))}

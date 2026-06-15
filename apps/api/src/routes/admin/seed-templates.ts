@@ -16,7 +16,7 @@ app.use("*", requireAuth);
 app.use("*", requireRole(["admin", "owner"]));
 
 app.post("/", async (c) => {
-  const user = c.get("user");
+  const _user = c.get("user");
 
   try {
     const db = createDb(c.env);

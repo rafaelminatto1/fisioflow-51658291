@@ -60,7 +60,12 @@ function storageKey(userId: string) {
   return `${STORAGE_PREFIX}:${userId}`;
 }
 
-function buildConsent(userId: string, name: string, version: string, status: Consent["status"]): Consent {
+function buildConsent(
+  userId: string,
+  name: string,
+  version: string,
+  status: Consent["status"],
+): Consent {
   const metadata = CONSENT_METADATA[name] ?? {
     type: "optional" as const,
     category: "legal" as const,

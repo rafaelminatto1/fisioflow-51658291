@@ -6,19 +6,63 @@ import { Bell, Clock, Video, Users, ChevronRight } from "lucide-react-native";
 import { bio, font } from "@/constants/biomecanica";
 import { BioTabBar } from "@/components/biomecanica/BioTabBar";
 import { Silhouette } from "@/components/biomecanica/Silhouette";
-import { biomechanicsApi, type BiomechanicsAssessment, type BiomechanicsJob } from "@/lib/api/biomechanics";
+import {
+  biomechanicsApi,
+  type BiomechanicsAssessment,
+  type BiomechanicsJob,
+} from "@/lib/api/biomechanics";
 
 const KPIS = [
-  { icon: Clock, bg: "hsl(28, 92%, 93%)", fg: "hsl(25, 72%, 42%)", v: "5", l: "Análises pendentes" },
+  {
+    icon: Clock,
+    bg: "hsl(28, 92%, 93%)",
+    fg: "hsl(25, 72%, 42%)",
+    v: "5",
+    l: "Análises pendentes",
+  },
   { icon: Video, bg: "hsl(211, 100%, 93%)", fg: "hsl(211, 100%, 42%)", v: "8", l: "Capturas hoje" },
-  { icon: Users, bg: "hsl(142, 60%, 92%)", fg: "hsl(142, 55%, 32%)", v: "62", l: "Pacientes ativos" },
+  {
+    icon: Users,
+    bg: "hsl(142, 60%, 92%)",
+    fg: "hsl(142, 55%, 32%)",
+    v: "62",
+    l: "Pacientes ativos",
+  },
 ];
 
 const PENDING = [
-  { id: "1", initials: "CF", color: bio.avatarBlue, name: "Carla Ferreira", test: "Agachamento", when: "hoje 14:30" },
-  { id: "2", initials: "RS", color: bio.avatarOrange, name: "Rafael Souza", test: "Marcha", when: "hoje 11:05" },
-  { id: "3", initials: "JP", color: bio.avatarPink, name: "Juliana Pires", test: "Salto vertical", when: "ontem" },
-  { id: "4", initials: "LM", color: bio.avatarGreen, name: "Lucas Martins", test: "Step-down", when: "ontem" },
+  {
+    id: "1",
+    initials: "CF",
+    color: bio.avatarBlue,
+    name: "Carla Ferreira",
+    test: "Agachamento",
+    when: "hoje 14:30",
+  },
+  {
+    id: "2",
+    initials: "RS",
+    color: bio.avatarOrange,
+    name: "Rafael Souza",
+    test: "Marcha",
+    when: "hoje 11:05",
+  },
+  {
+    id: "3",
+    initials: "JP",
+    color: bio.avatarPink,
+    name: "Juliana Pires",
+    test: "Salto vertical",
+    when: "ontem",
+  },
+  {
+    id: "4",
+    initials: "LM",
+    color: bio.avatarGreen,
+    name: "Lucas Martins",
+    test: "Step-down",
+    when: "ontem",
+  },
 ];
 
 const CAPTURES = [
@@ -29,9 +73,27 @@ const CAPTURES = [
 ];
 
 const AGENDA = [
-  { time: "14:30", name: "Carla Ferreira", desc: "Reavaliação · agachamento + step-down", chip: "EM 1H", now: true },
-  { time: "15:30", name: "Marina Alves", desc: "Avaliação inicial · marcha", chip: "A SEGUIR", now: false },
-  { time: "17:00", name: "Bruno Dias", desc: "Controle · salto vertical", chip: "A SEGUIR", now: false },
+  {
+    time: "14:30",
+    name: "Carla Ferreira",
+    desc: "Reavaliação · agachamento + step-down",
+    chip: "EM 1H",
+    now: true,
+  },
+  {
+    time: "15:30",
+    name: "Marina Alves",
+    desc: "Avaliação inicial · marcha",
+    chip: "A SEGUIR",
+    now: false,
+  },
+  {
+    time: "17:00",
+    name: "Bruno Dias",
+    desc: "Controle · salto vertical",
+    chip: "A SEGUIR",
+    now: false,
+  },
 ];
 
 function SectionHead({ title, count, link }: { title: string; count?: string; link: string }) {
@@ -73,17 +135,38 @@ export default function PainelScreen() {
     };
   }, []);
 
-  const kpis = jobs.length || assessments.length
-    ? [
-        { icon: Clock, bg: "hsl(28, 92%, 93%)", fg: "hsl(25, 72%, 42%)", v: String(counts.needsReview), l: "Revisões pendentes" },
-        { icon: Video, bg: "hsl(211, 100%, 93%)", fg: "hsl(211, 100%, 42%)", v: String(counts.processing), l: "Processando" },
-        { icon: Users, bg: "hsl(142, 60%, 92%)", fg: "hsl(142, 55%, 32%)", v: String(assessments.length), l: "Capturas recentes" },
-      ]
-    : KPIS;
+  const kpis =
+    jobs.length || assessments.length
+      ? [
+          {
+            icon: Clock,
+            bg: "hsl(28, 92%, 93%)",
+            fg: "hsl(25, 72%, 42%)",
+            v: String(counts.needsReview),
+            l: "Revisões pendentes",
+          },
+          {
+            icon: Video,
+            bg: "hsl(211, 100%, 93%)",
+            fg: "hsl(211, 100%, 42%)",
+            v: String(counts.processing),
+            l: "Processando",
+          },
+          {
+            icon: Users,
+            bg: "hsl(142, 60%, 92%)",
+            fg: "hsl(142, 55%, 32%)",
+            v: String(assessments.length),
+            l: "Capturas recentes",
+          },
+        ]
+      : KPIS;
 
   const pending = assessments.length
     ? assessments
-        .filter((assessment) => ["needs_review", "queued", "processing"].includes(String(assessment.status)))
+        .filter((assessment) =>
+          ["needs_review", "queued", "processing"].includes(String(assessment.status)),
+        )
         .slice(0, 5)
         .map((assessment, index) => ({
           id: assessment.id,
@@ -140,7 +223,11 @@ export default function PainelScreen() {
               <Pressable
                 key={p.id}
                 style={styles.pend}
-                onPress={() => router.push(`/biomecanica/analysis?assessmentId=${encodeURIComponent(p.id)}` as never)}
+                onPress={() =>
+                  router.push(
+                    `/biomecanica/analysis?assessmentId=${encodeURIComponent(p.id)}` as never,
+                  )
+                }
               >
                 <View style={[styles.pa, { backgroundColor: p.color }]}>
                   <Text style={styles.paText}>{p.initials}</Text>
@@ -170,7 +257,11 @@ export default function PainelScreen() {
             contentContainerStyle={styles.capRail}
           >
             {CAPTURES.map((c) => (
-              <Pressable key={c.id} style={styles.cap} onPress={() => router.push("/biomecanica/analysis" as never)}>
+              <Pressable
+                key={c.id}
+                style={styles.cap}
+                onPress={() => router.push("/biomecanica/analysis" as never)}
+              >
                 <View style={styles.thumb}>
                   <View style={styles.tag}>
                     <Text style={styles.tagText}>{c.tag}</Text>
@@ -206,7 +297,12 @@ export default function PainelScreen() {
                   <Text style={styles.agDesc}>{a.desc}</Text>
                 </View>
                 <View style={[styles.agChip, a.now ? styles.agChipNow : styles.agChipNext]}>
-                  <Text style={[styles.agChipText, { color: a.now ? "hsl(211, 100%, 38%)" : bio.muted }]}>
+                  <Text
+                    style={[
+                      styles.agChipText,
+                      { color: a.now ? "hsl(211, 100%, 38%)" : bio.muted },
+                    ]}
+                  >
                     {a.chip}
                   </Text>
                 </View>
@@ -224,19 +320,72 @@ export default function PainelScreen() {
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: bio.bg },
   safe: { backgroundColor: bio.bg },
-  header: { flexDirection: "row", alignItems: "center", gap: 12, paddingHorizontal: 20, paddingTop: 6, paddingBottom: 12 },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    paddingHorizontal: 20,
+    paddingTop: 6,
+    paddingBottom: 12,
+  },
   greet: { fontSize: 19, fontFamily: font.extrabold, letterSpacing: -0.4, color: bio.fg },
-  date: { fontSize: 12, fontFamily: font.semibold, color: bio.muted, marginTop: 3, textTransform: "capitalize" },
-  bell: { width: 40, height: 40, borderRadius: 20, backgroundColor: bio.card, borderWidth: 1, borderColor: bio.border, alignItems: "center", justifyContent: "center" },
-  bellDot: { position: "absolute", top: 9, right: 10, width: 8, height: 8, borderRadius: 4, backgroundColor: "hsl(28, 90%, 52%)", borderWidth: 2, borderColor: bio.card },
-  avatar: { width: 40, height: 40, borderRadius: 20, backgroundColor: bio.primarySoft, alignItems: "center", justifyContent: "center" },
+  date: {
+    fontSize: 12,
+    fontFamily: font.semibold,
+    color: bio.muted,
+    marginTop: 3,
+    textTransform: "capitalize",
+  },
+  bell: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: bio.card,
+    borderWidth: 1,
+    borderColor: bio.border,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  bellDot: {
+    position: "absolute",
+    top: 9,
+    right: 10,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: "hsl(28, 90%, 52%)",
+    borderWidth: 2,
+    borderColor: bio.card,
+  },
+  avatar: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: bio.primarySoft,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   avatarText: { fontFamily: font.extrabold, fontSize: 14, color: "hsl(211, 100%, 32%)" },
 
   scroll: { paddingHorizontal: 20, paddingTop: 4, paddingBottom: 24, gap: 22 },
 
   kpis: { flexDirection: "row", gap: 10 },
-  kpi: { flex: 1, backgroundColor: bio.card, borderWidth: 1, borderColor: bio.border, borderRadius: 16, padding: 12, gap: 7 },
-  kpiIco: { width: 32, height: 32, borderRadius: 10, alignItems: "center", justifyContent: "center" },
+  kpi: {
+    flex: 1,
+    backgroundColor: bio.card,
+    borderWidth: 1,
+    borderColor: bio.border,
+    borderRadius: 16,
+    padding: 12,
+    gap: 7,
+  },
+  kpiIco: {
+    width: 32,
+    height: 32,
+    borderRadius: 10,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   kpiV: { fontSize: 26, fontFamily: font.extrabold, letterSpacing: -0.8, color: bio.fg },
   kpiL: { fontSize: 11, fontFamily: font.semibold, color: bio.muted, lineHeight: 14 },
 
@@ -246,28 +395,89 @@ const styles = StyleSheet.create({
   sectionLink: { marginLeft: "auto", flexDirection: "row", alignItems: "center", gap: 2 },
   sectionLinkText: { fontSize: 12, fontFamily: font.bold, color: bio.primary },
 
-  pend: { backgroundColor: bio.card, borderWidth: 1, borderColor: bio.border, borderRadius: 16, padding: 14, flexDirection: "row", alignItems: "center", gap: 12 },
+  pend: {
+    backgroundColor: bio.card,
+    borderWidth: 1,
+    borderColor: bio.border,
+    borderRadius: 16,
+    padding: 14,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
   pa: { width: 42, height: 42, borderRadius: 13, alignItems: "center", justifyContent: "center" },
   paText: { color: "#fff", fontSize: 14, fontFamily: font.extrabold },
   pendName: { fontSize: 14, fontFamily: font.bold, letterSpacing: -0.1, color: bio.fg },
   pendMeta: { flexDirection: "row", alignItems: "center", gap: 6, marginTop: 2 },
   pendMetaText: { fontSize: 12, fontFamily: font.semibold, color: bio.muted },
   sep: { width: 3, height: 3, borderRadius: 2, backgroundColor: bio.mutedSoft },
-  go: { width: 30, height: 30, borderRadius: 15, backgroundColor: "hsl(28, 92%, 94%)", alignItems: "center", justifyContent: "center" },
+  go: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: "hsl(28, 92%, 94%)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
 
   capRail: { gap: 12, paddingVertical: 2 },
-  cap: { width: 150, backgroundColor: bio.card, borderWidth: 1, borderColor: bio.border, borderRadius: 16, overflow: "hidden" },
-  thumb: { height: 96, backgroundColor: bio.videoBg, alignItems: "center", justifyContent: "flex-end" },
-  tag: { position: "absolute", top: 7, left: 7, paddingHorizontal: 7, paddingVertical: 3, borderRadius: 999, backgroundColor: "rgba(255,255,255,0.92)" },
-  tagText: { color: "hsl(224, 60%, 25%)", fontSize: 8, fontFamily: font.extrabold, letterSpacing: 0.4 },
-  dur: { position: "absolute", bottom: 7, right: 7, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6, backgroundColor: "rgba(0,0,0,0.6)" },
+  cap: {
+    width: 150,
+    backgroundColor: bio.card,
+    borderWidth: 1,
+    borderColor: bio.border,
+    borderRadius: 16,
+    overflow: "hidden",
+  },
+  thumb: {
+    height: 96,
+    backgroundColor: bio.videoBg,
+    alignItems: "center",
+    justifyContent: "flex-end",
+  },
+  tag: {
+    position: "absolute",
+    top: 7,
+    left: 7,
+    paddingHorizontal: 7,
+    paddingVertical: 3,
+    borderRadius: 999,
+    backgroundColor: "rgba(255,255,255,0.92)",
+  },
+  tagText: {
+    color: "hsl(224, 60%, 25%)",
+    fontSize: 8,
+    fontFamily: font.extrabold,
+    letterSpacing: 0.4,
+  },
+  dur: {
+    position: "absolute",
+    bottom: 7,
+    right: 7,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 6,
+    backgroundColor: "rgba(0,0,0,0.6)",
+  },
   durText: { color: "#fff", fontSize: 9, fontFamily: font.bold },
   cbody: { paddingHorizontal: 12, paddingTop: 10, paddingBottom: 12 },
   cnm: { fontSize: 13, fontFamily: font.bold, color: bio.fg },
   cwhen: { fontSize: 11, fontFamily: font.semibold, color: bio.muted, marginTop: 1 },
 
-  agenda: { backgroundColor: bio.card, borderWidth: 1, borderColor: bio.border, borderRadius: 16, overflow: "hidden" },
-  agRow: { flexDirection: "row", alignItems: "center", gap: 12, paddingHorizontal: 14, paddingVertical: 13 },
+  agenda: {
+    backgroundColor: bio.card,
+    borderWidth: 1,
+    borderColor: bio.border,
+    borderRadius: 16,
+    overflow: "hidden",
+  },
+  agRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 13,
+  },
   agRowBorder: { borderBottomWidth: 1, borderBottomColor: bio.borderSoft },
   agTime: { fontSize: 13, fontFamily: font.extrabold, color: bio.primary, width: 42 },
   agName: { fontSize: 14, fontFamily: font.bold, letterSpacing: -0.1, color: bio.fg },

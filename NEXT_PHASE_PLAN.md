@@ -64,13 +64,13 @@
 
 ## 🎯 Métricas de Sucesso a Serem Acompanhadas
 
-| Indicador                     | Fonte no FisioFlow | Meta até Dez/2026                     |
-| :---------------------------- | :----------------- | :------------------------------------ |
-| **Aderência do App Paciente** | Auth DB            | > 60% dos pacientes ativos            |
-| **Automação Observação Livre (Voz)**      | AI Logs            | > 80% das evoluções feitas via Scribe |
-| **Taxa de Retenção (LTV)**    | BI Dashboard       | Aumento de 2.5 para 3.5 ciclos médios |
-| **Precisão de Agendamento**   | No-Show BI         | Redução do No-Show para < 10%         |
-| **Eficácia Clínica**          | Quality Dashboard  | Score médio da equipe > 85/100        |
+| Indicador                            | Fonte no FisioFlow | Meta até Dez/2026                     |
+| :----------------------------------- | :----------------- | :------------------------------------ |
+| **Aderência do App Paciente**        | Auth DB            | > 60% dos pacientes ativos            |
+| **Automação Observação Livre (Voz)** | AI Logs            | > 80% das evoluções feitas via Scribe |
+| **Taxa de Retenção (LTV)**           | BI Dashboard       | Aumento de 2.5 para 3.5 ciclos médios |
+| **Precisão de Agendamento**          | No-Show BI         | Redução do No-Show para < 10%         |
+| **Eficácia Clínica**                 | Quality Dashboard  | Score médio da equipe > 85/100        |
 
 ## 🏁 Notas Finais da Arquitetura
 

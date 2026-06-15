@@ -147,7 +147,14 @@ interface EventCardProps {
   compact: boolean;
 }
 
-function EventCard({ event, appearance, slotHeightPx, fontPercentage, opacityValue, compact }: EventCardProps) {
+function EventCard({
+  event,
+  appearance,
+  slotHeightPx,
+  fontPercentage,
+  opacityValue,
+  compact,
+}: EventCardProps) {
   const minHeight = Math.max(slotHeightPx, 20);
   const baseFontSize = fontPercentage / 100;
 

@@ -31,7 +31,10 @@ export interface SimulationEvaluationResult {
 
 const SimulationSchema = z.object({
   simulatedMessage: z.string(),
-  internalThoughtProcess: z.string().optional().default("Resposta gerada sem raciocínio interno estruturado."),
+  internalThoughtProcess: z
+    .string()
+    .optional()
+    .default("Resposta gerada sem raciocínio interno estruturado."),
   safetyTriggered: z.boolean().optional().default(false),
 });
 
@@ -119,28 +122,38 @@ export class PatientSimulatorAgent {
     profile: SimulatorProfile,
     chatHistory: { role: string; content: string }[],
     clinicianLastMessage: string,
-    organizationId: string = "system"
+    organizationId: string = "system",
   ): Promise<SimulationResult> {
     // 1. Detecção de intenção clínica (devemos sugerir recursos?)
     let suggestedResources: Resource[] = [];
     const lowerMessage = clinicianLastMessage.toLowerCase();
     const clinicalIntentPatterns = [
-        "qual teste", "o que avaliar", "que exercicio", "qual exercício", 
-        "qual conduta", "que protocolo", "qual protocolo", "o que fazer"
+      "qual teste",
+      "o que avaliar",
+      "que exercicio",
+      "qual exercício",
+      "qual conduta",
+      "que protocolo",
+      "qual protocolo",
+      "o que fazer",
     ];
-    
-    const hasClinicalIntent = clinicalIntentPatterns.some(p => lowerMessage.includes(p));
+
+    const hasClinicalIntent = clinicalIntentPatterns.some((p) => lowerMessage.includes(p));
 
     if (hasClinicalIntent) {
-        try {
-            const searchService = new ResourceSearchService(this.env);
-            suggestedResources = await searchService.searchResources(clinicianLastMessage, organizationId, {
-                patientCondition: profile.condition,
-                painLevel: profile.painLevel
-            });
-        } catch (err) {
-            console.warn("[PatientSimulator] Failed to fetch resources:", err);
-        }
+      try {
+        const searchService = new ResourceSearchService(this.env);
+        suggestedResources = await searchService.searchResources(
+          clinicianLastMessage,
+          organizationId,
+          {
+            patientCondition: profile.condition,
+            painLevel: profile.painLevel,
+          },
+        );
+      } catch (err) {
+        console.warn("[PatientSimulator] Failed to fetch resources:", err);
+      }
     }
 
     const prompt = `You are a Patient Simulator for a physiotherapy application.
@@ -192,7 +205,7 @@ Retorne SOMENTE JSON válido neste formato:
 
       const jsonMatch = aiResult.content.match(/\{[\s\S]*\}/);
       let result: SimulationResult;
-      
+
       if (!jsonMatch) {
         const content = aiResult.content.trim();
         if (content) {

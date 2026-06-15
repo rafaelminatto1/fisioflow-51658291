@@ -18,6 +18,7 @@ Escala: 10 profissionais, ~700 agendamentos/mês, 100 pacientes no app. Custo pr
 
 **US1 — Indexação imediata no publish**
 Como editor da wiki, quando publico/atualizo uma página, quero que ela fique pesquisável no AI Search em segundos.
+
 - AC1: ao publicar página, `items.uploadAndPoll()` indexa o documento na instância `fisioflow-rag` (substitui o disparo do WikiSyncWorkflow no evento publish).
 - AC2: cron diário do WikiSyncWorkflow permanece como reconciliação.
 - AC3: despublicar/excluir página remove o item do índice.
@@ -25,6 +26,7 @@ Como editor da wiki, quando publico/atualizo uma página, quero que ela fique pe
 
 **US2 — "Pergunte à Wiki" na UI (Cmd+K)**
 Como profissional da clínica, quero perguntar em linguagem natural e receber resposta com citações clicáveis para as páginas-fonte.
+
 - AC1: paleta de busca global (Cmd+K) no dashboard com modo "perguntar".
 - AC2: resposta gerada exibe `sources` (título + score) linkando para `/wiki/:slug`.
 - AC3: estados de loading/erro/sem-resultado em PT-BR; sem resposta inventada quando score < threshold.
@@ -32,6 +34,7 @@ Como profissional da clínica, quero perguntar em linguagem natural e receber re
 
 **US3 — Indexar protocolos, exercícios e PDFs clínicos**
 Como fisioterapeuta, quero que a busca cubra protocolos (119), exercícios (248) e documentos PDF do `CLINICAL_DOCS_BUCKET`.
+
 - AC1: protocolos e exercícios serializados em markdown e indexados com metadata `{type, org_id}`.
 - AC2: PDFs clínicos indexados (AI Search parseia PDF nativamente) com path filtering excluindo rascunhos.
 - AC3: filtros de busca por tipo de conteúdo na UI.
@@ -40,6 +43,7 @@ Como fisioterapeuta, quero que a busca cubra protocolos (119), exercícios (248)
 
 **US4 — Assistente do app do paciente (instância isolada)**
 Como paciente, quero tirar dúvidas (orientações pós-sessão, cuidados, FAQ) e receber apenas conteúdo aprovado para pacientes.
+
 - AC1: instância AI Search separada (`fisioflow-rag-paciente`) contendo somente conteúdo marcado como público-paciente.
 - AC2: guardrails do AI Gateway ativos (moderação de entrada/saída) nas chamadas do assistente.
 - AC3: respostas nunca citam conteúdo interno da equipe (garantido pelo isolamento de instância, não por prompt).
@@ -47,11 +51,13 @@ Como paciente, quero tirar dúvidas (orientações pós-sessão, cuidados, FAQ) 
 
 **US5 — Painel de lacunas da wiki**
 Como admin, quero ver perguntas que a busca não conseguiu responder para pautar novos artigos.
+
 - AC1: queries com score máximo < threshold ou zero resultados logadas no Analytics Engine (`fisioflow_events`).
 - AC2: card no dashboard admin listando top perguntas sem resposta (últimos 30 dias).
 
 **US6 — Sugestões contextuais na evolução**
 Como fisioterapeuta escrevendo evolução, quero ver artigos da wiki relacionados ao texto da sessão.
+
 - AC1: busca híbrida debounced (≥ 800ms idle) com o texto atual; painel lateral discreto.
 - AC2: zero impacto na digitação (busca em background, cancelável).
 
@@ -59,6 +65,7 @@ Como fisioterapeuta escrevendo evolução, quero ver artigos da wiki relacionado
 
 **US7 — Agent Memory com fallback pgvector**
 Como sistema, quero memória persistente por paciente/fisio (preferências, restrições, estilo de escrita) funcionando hoje via pgvector e trocável para o Agent Memory nativo quando o beta liberar.
+
 - AC1: tabela `agent_memories` (org/patient/therapist scoped, embedding bge-m3) atrás da interface existente de `lib/agentMemory.ts`.
 - AC2: implementação selecionada por feature flag/binding: se `AGENT_MEMORY` existir, usa nativo; senão pgvector.
 - AC3: escopo obrigatório por `organization_id` + respeito a `lgpd_consents` para memórias derivadas de conversas de paciente.
@@ -66,11 +73,13 @@ Como sistema, quero memória persistente por paciente/fisio (preferências, rest
 
 **US8 — Human-in-the-loop no WhatsApp**
 Como admin, quero aprovar respostas sugeridas pelo agente antes do envio em casos sensíveis.
+
 - AC1: respostas do bot classificadas (auto-send vs needs-approval); fila de aprovação no dashboard.
 - AC2: aprovação/edição/rejeição com auditoria (quem, quando).
 
 **US9 — Chat em tempo real com ClinicAgent (useAgent)**
 Como profissional, quero um chat com o agente da clínica no dashboard via WebSocket com estado sincronizado.
+
 - AC1: hook `useAgent` do Agents SDK conectado ao `ClinicAgent` existente.
 - AC2: streaming de resposta + tool use visível (consulta agenda, wiki).
 

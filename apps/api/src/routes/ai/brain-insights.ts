@@ -47,14 +47,14 @@ app.get("/:patientId", requireAuth, async (c) => {
       try {
         const searchResult = await searchAiSearch(c.env, {
           messages: [
-            { 
-              role: "user", 
-              content: `Protocolo de tratamento para ${patient.main_diagnosis || "fisioterapia"}. Considerar dor e amplitude de movimento.` 
-            }
+            {
+              role: "user",
+              content: `Protocolo de tratamento para ${patient.main_diagnosis || "fisioterapia"}. Considerar dor e amplitude de movimento.`,
+            },
           ],
           maxNumResults: 3,
         });
-        literatureContext = searchResult.sources.map(s => s.content).join("\n\n");
+        literatureContext = searchResult.sources.map((s) => s.content).join("\n\n");
       } catch (err) {
         console.error("[Brain/RAG] Literature search failed:", err);
       }
@@ -97,18 +97,25 @@ app.get("/:patientId", requireAuth, async (c) => {
       }
     `;
 
-    const aiResponse = await runAi(c.env, WORKERS_AI_MODELS.llama_3_1_8b, {
-      messages: [{ role: "user", content: prompt }],
-    }, { cache: false });
+    const aiResponse = await runAi(
+      c.env,
+      WORKERS_AI_MODELS.llama_3_1_8b,
+      {
+        messages: [{ role: "user", content: prompt }],
+      },
+      { cache: false },
+    );
 
     // Limpeza de resposta para garantir JSON válido
     let content = aiResponse.response || "";
     const jsonMatch = content.match(/\{[\s\S]*\}/);
-    const result = jsonMatch ? JSON.parse(jsonMatch[0]) : { insights: [], summary: "Análise concluída." };
+    const result = jsonMatch
+      ? JSON.parse(jsonMatch[0])
+      : { insights: [], summary: "Análise concluída." };
 
     return c.json({
       success: true,
-      data: result
+      data: result,
     });
   } catch (error: any) {
     console.error("[AI/Brain/Insights] Error:", error);

@@ -2,10 +2,7 @@ import { Hono } from "hono";
 import type { Env } from "../types/env";
 import { requireAuth, type AuthVariables } from "../lib/auth";
 import { createPool } from "../lib/db";
-import {
-  chatAiSearch,
-  searchAiSearch,
-} from "../lib/cloudflareAiSearch";
+import { chatAiSearch, searchAiSearch } from "../lib/cloudflareAiSearch";
 import { upsertWikiPageInIndex } from "../lib/wikiIndexing";
 import { buildExerciseDoc, buildProtocolDoc } from "../lib/contentIndexing";
 import {
@@ -259,13 +256,19 @@ export async function syncAutoRAGContent(
 ): Promise<Record<string, number>> {
   const api = getCfApi(env);
   if (!env.AI_SEARCH && !api) {
-    throw new Error("AI_SEARCH ou CF_API_TOKEN e CF_ACCOUNT_ID são necessários para AI Search sync");
+    throw new Error(
+      "AI_SEARCH ou CF_API_TOKEN e CF_ACCOUNT_ID são necessários para AI Search sync",
+    );
   }
 
   const pool = createPool(env);
   const results: Record<string, number> = {};
 
-  async function uploadDoc(filename: string, markdown: string, metadata: Record<string, any>): Promise<void> {
+  async function uploadDoc(
+    filename: string,
+    markdown: string,
+    metadata: Record<string, any>,
+  ): Promise<void> {
     const encoder = new TextEncoder();
     const data = encoder.encode(markdown);
     const hashBuffer = await crypto.subtle.digest("SHA-256", data);
@@ -274,19 +277,19 @@ export async function syncAutoRAGContent(
       .join("");
 
     const finalMetadata = {
-        ...metadata,
-        embedding_model: "baai/bge-large-en-v1.5", // AutoRAG default ou especificado
-        embedding_version: "1.0",
-        indexed_at: new Date().toISOString(),
-        content_hash: hashHex
+      ...metadata,
+      embedding_model: "baai/bge-large-en-v1.5", // AutoRAG default ou especificado
+      embedding_version: "1.0",
+      indexed_at: new Date().toISOString(),
+      content_hash: hashHex,
     };
 
     // Sanitize metadata to avoid invalid_metadata_format
     const sanitizedMetadata: Record<string, string> = {};
     for (const [k, v] of Object.entries(finalMetadata)) {
-        if (v !== null && v !== undefined) {
-            sanitizedMetadata[k] = String(v);
-        }
+      if (v !== null && v !== undefined) {
+        sanitizedMetadata[k] = String(v);
+      }
     }
 
     if (env.AI_SEARCH) {
@@ -327,14 +330,14 @@ export async function syncAutoRAGContent(
     let count = 0;
     for (let i = 0; i < res.rows.length; i += 5) {
       await Promise.all(
-        res.rows
-          .slice(i, i + 5)
-          .map((row) => uploadDoc(`exercise-${row.id}.md`, buildExerciseDoc(row), {
-              source: "exercises",
-              id: row.id,
-              title: row.name,
-              category: row.category
-          })),
+        res.rows.slice(i, i + 5).map((row) =>
+          uploadDoc(`exercise-${row.id}.md`, buildExerciseDoc(row), {
+            source: "exercises",
+            id: row.id,
+            title: row.name,
+            category: row.category,
+          }),
+        ),
       );
       count += Math.min(5, res.rows.length - i);
     }
@@ -362,14 +365,14 @@ export async function syncAutoRAGContent(
     let count = 0;
     for (let i = 0; i < res.rows.length; i += 5) {
       await Promise.all(
-        res.rows
-          .slice(i, i + 5)
-          .map((row) => uploadDoc(`protocol-${row.id}.md`, buildProtocolDoc(row), {
-              source: "protocols",
-              id: row.id,
-              title: row.name,
-              condition: row.condition_name
-          })),
+        res.rows.slice(i, i + 5).map((row) =>
+          uploadDoc(`protocol-${row.id}.md`, buildProtocolDoc(row), {
+            source: "protocols",
+            id: row.id,
+            title: row.name,
+            condition: row.condition_name,
+          }),
+        ),
       );
       count += Math.min(5, res.rows.length - i);
     }
@@ -392,12 +395,14 @@ export async function syncAutoRAGContent(
     let count = 0;
     for (let i = 0; i < res.rows.length; i += 5) {
       await Promise.all(
-        res.rows.slice(i, i + 5).map((row) => uploadDoc(`wiki/${row.id}.md`, buildWikiDoc(row), {
+        res.rows.slice(i, i + 5).map((row) =>
+          uploadDoc(`wiki/${row.id}.md`, buildWikiDoc(row), {
             source: "wiki",
             id: row.id,
             title: row.title,
-            category: row.category
-        })),
+            category: row.category,
+          }),
+        ),
       );
       count += Math.min(5, res.rows.length - i);
     }
@@ -429,7 +434,11 @@ aiSearchApp.get("/exercises", requireAuth, async (c) => {
   try {
     const { sources } = await searchAiSearch(c.env, {
       messages: [
-        { role: "system", content: "Você é um dicionário clínico de fisioterapia. Ajude a encontrar exercícios clínicos relevantes." },
+        {
+          role: "system",
+          content:
+            "Você é um dicionário clínico de fisioterapia. Ajude a encontrar exercícios clínicos relevantes.",
+        },
         { role: "user", content: query },
       ],
       maxNumResults: 10,
@@ -479,7 +488,7 @@ aiSearchApp.get("/recommend", requireAuth, async (c) => {
         maxNumResults: 5,
         filters: { source: "exercises" },
       }),
-    ]).catch(err => {
+    ]).catch((err) => {
       console.error("[AI Search] Promise.all error:", err);
       throw err;
     });
@@ -503,24 +512,35 @@ aiSearchApp.get("/recommend", requireAuth, async (c) => {
     });
   } catch (error: any) {
     console.error("[AI Search] Recommend error:", error);
-    return c.json({ 
-      error: "Falha ao gerar recomendações clínicas", 
-      details: error.message,
-      _trace: "recommend_fail_v1" 
-    }, 500);
+    return c.json(
+      {
+        error: "Falha ao gerar recomendações clínicas",
+        details: error.message,
+        _trace: "recommend_fail_v1",
+      },
+      500,
+    );
   }
 });
 
 // ─── Sync Exercícios → AI Search (No-op) ─────────────────────────────────────
 
 aiSearchApp.post("/exercises/sync", requireAuth, async (c) => {
-  return c.json({ success: true, count: 0, message: "AI Search sync is managed automatically via R2 sync." });
+  return c.json({
+    success: true,
+    count: 0,
+    message: "AI Search sync is managed automatically via R2 sync.",
+  });
 });
 
 // ─── Sync Wiki → AI Search (No-op) ───────────────────────────────────────────
 
 aiSearchApp.post("/wiki/sync", requireAuth, async (c) => {
-  return c.json({ success: true, count: 0, message: "AI Search sync is managed automatically via R2 sync." });
+  return c.json({
+    success: true,
+    count: 0,
+    message: "AI Search sync is managed automatically via R2 sync.",
+  });
 });
 
 // ─── Busca Unificada Global (Omnisearch via AI Search) ───────────────────────
@@ -565,7 +585,7 @@ aiSearchApp.get("/unified", requireAuth, async (c) => {
         let type = "wiki";
         if (s.metadata?.source === "exercise") type = "exercise";
         else if (s.metadata?.source === "protocol") type = "protocol";
-        
+
         return {
           id: s.metadata?.id || s.id,
           type: type,
@@ -615,7 +635,7 @@ aiSearchApp.get("/education", async (c) => {
 
     // 2. Buscar conteúdo relevante na Wiki via AI Search
     const query = `dicas de saúde e orientações para ${patient.condition} ${patient.diagnosis}`;
-    
+
     const wikiRes = await searchAiSearch(c.env, {
       messages: [
         { role: "system", content: "Find clinical guides and advice for patients." },
@@ -625,9 +645,7 @@ aiSearchApp.get("/education", async (c) => {
       filters: { source: "wiki" },
     });
 
-    const context = wikiRes.sources
-      .map((s) => s.content)
-      .join("\n\n");
+    const context = wikiRes.sources.map((s) => s.content).join("\n\n");
 
     // 3. Usar IA para sintetizar dicas curtas e motivadoras
     const { runThinkingModel } = await import("../lib/ai-native");
@@ -692,7 +710,6 @@ function getCfApi(env: Env) {
       },
     });
 }
-
 
 function buildWikiDoc(row: {
   id: string;

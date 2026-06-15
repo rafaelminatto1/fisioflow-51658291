@@ -41,12 +41,32 @@ import { YBalanceBlock } from "./YBalanceBlock";
 import { type MeasurementItem, MEASUREMENT_TYPES, MEASUREMENT_TYPE_LABELS } from "./types";
 
 const QUICK_TEMPLATES: Array<Partial<MeasurementItem> & { name: string }> = [
-  { name: "Y-Balance Test", measurement_type: "Teste Funcional", measurement_name: "Y-Balance Test", unit: "cm" },
-  { name: "Sinais Vitais", measurement_type: "Sinais Vitais", measurement_name: "Checkup Geral", unit: "" },
+  {
+    name: "Y-Balance Test",
+    measurement_type: "Teste Funcional",
+    measurement_name: "Y-Balance Test",
+    unit: "cm",
+  },
+  {
+    name: "Sinais Vitais",
+    measurement_type: "Sinais Vitais",
+    measurement_name: "Checkup Geral",
+    unit: "",
+  },
   { name: "Goniometria", measurement_type: "Goniometria", measurement_name: "ADM", unit: "graus" },
   { name: "Dor (EVA)", measurement_type: "Dor (EVA)", measurement_name: "EVA", unit: "0-10" },
-  { name: "Força Muscular", measurement_type: "Força Muscular", measurement_name: "Força", unit: "0-5" },
-  { name: "Perimetria", measurement_type: "Perimetria", measurement_name: "Circunferência", unit: "cm" },
+  {
+    name: "Força Muscular",
+    measurement_type: "Força Muscular",
+    measurement_name: "Força",
+    unit: "0-5",
+  },
+  {
+    name: "Perimetria",
+    measurement_type: "Perimetria",
+    measurement_name: "Circunferência",
+    unit: "cm",
+  },
 ];
 
 const generateId = () =>
@@ -138,7 +158,10 @@ const Sparkline: React.FC<{
   height?: number;
   className?: string;
 }> = ({ values, current, width = 56, height = 18, className }) => {
-  const series = [...values, ...(typeof current === "number" && Number.isFinite(current) ? [current] : [])];
+  const series = [
+    ...values,
+    ...(typeof current === "number" && Number.isFinite(current) ? [current] : []),
+  ];
   if (series.length < 2) return null;
   const min = Math.min(...series);
   const max = Math.max(...series);
@@ -154,8 +177,7 @@ const Sparkline: React.FC<{
   const first = series[0];
   const last = series[series.length - 1];
   const trend = last > first ? "up" : last < first ? "down" : "flat";
-  const color =
-    trend === "up" ? "#dc2626" : trend === "down" ? "#16a34a" : "#64748b"; // dor↑=ruim por padrão
+  const color = trend === "up" ? "#dc2626" : trend === "down" ? "#16a34a" : "#64748b"; // dor↑=ruim por padrão
   const lastX = (series.length - 1) * stepX;
   const lastY = height - ((last - min) / range) * height;
   return (
@@ -310,7 +332,10 @@ export const MeasurementsBlock: React.FC<MeasurementsBlockProps> = ({
                   if (filteredTemplates[0]) {
                     handleAddMeasurement(filteredTemplates[0]);
                   } else if (filteredTypes[0]) {
-                    handleAddMeasurement({ measurement_type: filteredTypes[0], measurement_name: "" });
+                    handleAddMeasurement({
+                      measurement_type: filteredTypes[0],
+                      measurement_name: "",
+                    });
                   } else if (search.trim()) {
                     handleAddMeasurement({ measurement_name: search.trim() });
                   }
@@ -551,32 +576,32 @@ const MeasurementCard: React.FC<{
           </div>
 
           {/* Sparkline — tendência das últimas medições com mesmo nome */}
-          {history.length >= 2 && (() => {
-            const currentNum = parseFloat(String(measurement.value ?? "").replace(",", "."));
-            const series = [...history, ...(Number.isFinite(currentNum) ? [currentNum] : [])];
-            const first = series[0];
-            const last = series[series.length - 1];
-            const delta = last - first;
-            const trendArrow = delta > 0 ? "↑" : delta < 0 ? "↓" : "→";
-            const trendColor =
-              delta > 0
-                ? "text-rose-600"
-                : delta < 0
-                  ? "text-emerald-600"
-                  : "text-slate-500";
-            return (
-              <div
-                className="hidden sm:flex items-center gap-1.5 px-1.5"
-                title={`${history.length + (Number.isFinite(currentNum) ? 1 : 0)} medições — variação ${delta > 0 ? "+" : ""}${delta.toFixed(1)}`}
-              >
-                <Sparkline values={history} current={Number.isFinite(currentNum) ? currentNum : undefined} />
-                <span className={cn("text-[10px] font-semibold tabular-nums", trendColor)}>
-                  {trendArrow}
-                  {Math.abs(delta).toFixed(1)}
-                </span>
-              </div>
-            );
-          })()}
+          {history.length >= 2 &&
+            (() => {
+              const currentNum = parseFloat(String(measurement.value ?? "").replace(",", "."));
+              const series = [...history, ...(Number.isFinite(currentNum) ? [currentNum] : [])];
+              const first = series[0];
+              const last = series[series.length - 1];
+              const delta = last - first;
+              const trendArrow = delta > 0 ? "↑" : delta < 0 ? "↓" : "→";
+              const trendColor =
+                delta > 0 ? "text-rose-600" : delta < 0 ? "text-emerald-600" : "text-slate-500";
+              return (
+                <div
+                  className="hidden sm:flex items-center gap-1.5 px-1.5"
+                  title={`${history.length + (Number.isFinite(currentNum) ? 1 : 0)} medições — variação ${delta > 0 ? "+" : ""}${delta.toFixed(1)}`}
+                >
+                  <Sparkline
+                    values={history}
+                    current={Number.isFinite(currentNum) ? currentNum : undefined}
+                  />
+                  <span className={cn("text-[10px] font-semibold tabular-nums", trendColor)}>
+                    {trendArrow}
+                    {Math.abs(delta).toFixed(1)}
+                  </span>
+                </div>
+              );
+            })()}
 
           {/* Expand/collapse */}
           <button

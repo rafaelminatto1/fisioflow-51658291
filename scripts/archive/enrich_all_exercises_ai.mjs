@@ -8,25 +8,26 @@ const CF_API_TOKEN = process.env.CF_API_TOKEN || "";
 
 async function generateWithCloudflareAI(exerciseName) {
   const url = `https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT_ID}/ai/run/@cf/meta/llama-3-8b-instruct`;
-  
+
   const response = await fetch(url, {
     method: "POST",
     headers: {
-      "Authorization": `Bearer ${CF_API_TOKEN}`,
-      "Content-Type": "application/json"
+      Authorization: `Bearer ${CF_API_TOKEN}`,
+      "Content-Type": "application/json",
     },
     body: JSON.stringify({
       messages: [
-        { 
-          role: "system", 
-          content: "Você é um fisioterapeuta especialista. Retorne EXATAMENTE UM JSON para o exercício solicitado, sem markdown ou explicações. O JSON deve ter as chaves (em inglês, valores em português): 'description' (clínica), 'instructions' (passo a passo numerado 1. 2.), 'tips' (dicas de execução), 'precautions' (segurança/alertas) e 'benefits' (benefícios). Exemplo: {\"description\":\"...\",\"instructions\":\"...\",\"tips\":\"...\",\"precautions\":\"...\",\"benefits\":\"...\"}" 
+        {
+          role: "system",
+          content:
+            'Você é um fisioterapeuta especialista. Retorne EXATAMENTE UM JSON para o exercício solicitado, sem markdown ou explicações. O JSON deve ter as chaves (em inglês, valores em português): \'description\' (clínica), \'instructions\' (passo a passo numerado 1. 2.), \'tips\' (dicas de execução), \'precautions\' (segurança/alertas) e \'benefits\' (benefícios). Exemplo: {"description":"...","instructions":"...","tips":"...","precautions":"...","benefits":"..."}',
         },
-        { 
-          role: "user", 
-          content: `Gere as informações clínicas para o exercício: "${exerciseName}"` 
-        }
-      ]
-    })
+        {
+          role: "user",
+          content: `Gere as informações clínicas para o exercício: "${exerciseName}"`,
+        },
+      ],
+    }),
   });
 
   if (!response.ok) {
@@ -37,8 +38,11 @@ async function generateWithCloudflareAI(exerciseName) {
   if (jsonResponse.success && jsonResponse.result && jsonResponse.result.response) {
     let rawText = jsonResponse.result.response.trim();
     // Limpa eventuais marcadores de markdown como ```json ... ```
-    rawText = rawText.replace(/^```(json)?/i, '').replace(/```$/i, '').trim();
-    
+    rawText = rawText
+      .replace(/^```(json)?/i, "")
+      .replace(/```$/i, "")
+      .trim();
+
     try {
       const parsed = JSON.parse(rawText);
       return parsed;
@@ -61,18 +65,22 @@ async function run() {
     SELECT id, name, description, instructions, tips, precautions, benefits
     FROM exercises
   `;
-  
+
   let updatedCount = 0;
 
   for (const ex of exercises) {
     let { name, description, instructions, tips, precautions, benefits } = ex;
-    
+
     // Identificar se o exercício precisa de enriquecimento (descrição genérica "Exercício focado em..."
     // ou se faltam dicas, precauções ou benefícios que não foram preenchidos antes).
     const isDescriptionGeneric = !description || description.includes(`Exercício focado em`);
-    const areInstructionsGeneric = !instructions || instructions.includes(`Instruções para`) || instructions === 'Nenhuma instrução adicional.';
-    
-    const needsEnrichment = isDescriptionGeneric || areInstructionsGeneric || !tips || !precautions || !benefits;
+    const areInstructionsGeneric =
+      !instructions ||
+      instructions.includes(`Instruções para`) ||
+      instructions === "Nenhuma instrução adicional.";
+
+    const needsEnrichment =
+      isDescriptionGeneric || areInstructionsGeneric || !tips || !precautions || !benefits;
 
     if (needsEnrichment) {
       console.log(`Revisando e enriquecendo com Cloudflare AI: ${name}`);
@@ -98,10 +106,9 @@ async function run() {
         `;
         updatedCount++;
         console.log(`[Sucesso] Atualizado: ${name}`);
-        
+
         // Pequeno delay para evitar Rate Limit
-        await new Promise(r => setTimeout(r, 800));
-        
+        await new Promise((r) => setTimeout(r, 800));
       } catch (err) {
         console.error(`Erro ao gerar para ${name}:`, err.message);
       }
@@ -111,7 +118,7 @@ async function run() {
   console.log(`Finalizado! Total de exercícios revisados com IA: ${updatedCount}`);
 }
 
-run().catch(err => {
+run().catch((err) => {
   console.error(err);
   process.exit(1);
 });

@@ -21,7 +21,7 @@ if (!DATABASE_URL) {
 
 const ILLUSTRATIONS_DIR = path.join(
   __dirname,
-  "../android/app/src/main/assets/public/exercises/illustrations"
+  "../android/app/src/main/assets/public/exercises/illustrations",
 );
 
 const BUCKET_NAME = "fisioflow-media";
@@ -64,7 +64,7 @@ async function uploadAndSync() {
       console.log(`📤 Enviando para R2: ${r2Key}`);
       execSync(
         `npx wrangler r2 object put ${BUCKET_NAME}/${r2Key} --file "${filePath}" --content-type "image/png"`,
-        { cwd: path.join(__dirname, ".."), stdio: "pipe" }
+        { cwd: path.join(__dirname, ".."), stdio: "pipe" },
       );
       console.log(`   ✅ Upload OK → ${publicUrl}`);
       uploadOk++;

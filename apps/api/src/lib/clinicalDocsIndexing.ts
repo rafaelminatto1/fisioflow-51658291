@@ -56,7 +56,10 @@ export async function indexClinicalDoc(
 
 // Remove do índice. O `items.list` com `search` casa por prefixo/token; por isso
 // buscamos pelo id e confirmamos a chave exata antes de deletar.
-export async function removeClinicalDocFromIndex(env: Env, id: string): Promise<{ deleted: number }> {
+export async function removeClinicalDocFromIndex(
+  env: Env,
+  id: string,
+): Promise<{ deleted: number }> {
   if (!env.AI_SEARCH?.items) return { deleted: 0 };
   const key = clinicalDocIndexFilename(id);
   let deleted = 0;

@@ -10,12 +10,16 @@ import { useStatusConfig } from "@/hooks/useStatusConfig";
 import { cn } from "@/lib/utils";
 
 export function StatusTab() {
-  const { allStatusRows, updateStatus, deleteStatus, createStatus, isLoading, isSaving } = useStatusConfig();
+  const { allStatusRows, updateStatus, deleteStatus, createStatus, isLoading, isSaving } =
+    useStatusConfig();
 
   const handleAdd = () => {
     const label = window.prompt("Nome do novo status:");
     if (!label) return;
-    const key = label.toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "");
+    const key = label
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "_")
+      .replace(/^_+|_+$/g, "");
     createStatus({
       key,
       label,
@@ -43,7 +47,12 @@ export function StatusTab() {
       title="Status de Atendimento"
       description="Arraste para reordenar. Personalize cores, rótulos e regras de capacidade."
       action={
-        <Button size="sm" onClick={handleAdd} className="bg-teal-600 hover:bg-teal-700" disabled={isSaving}>
+        <Button
+          size="sm"
+          onClick={handleAdd}
+          className="bg-teal-600 hover:bg-teal-700"
+          disabled={isSaving}
+        >
           <Plus className="mr-2 h-3.5 w-3.5" />
           Novo status
         </Button>
@@ -70,7 +79,9 @@ export function StatusTab() {
                 <input
                   type="color"
                   value={row.color}
-                  onChange={(e) => updateStatus(row.id, { color: e.target.value, borderColor: e.target.value })}
+                  onChange={(e) =>
+                    updateStatus(row.id, { color: e.target.value, borderColor: e.target.value })
+                  }
                   className="absolute inset-0 cursor-pointer opacity-0"
                 />
               </label>
@@ -85,14 +96,20 @@ export function StatusTab() {
               </div>
 
               {row.is_default ? (
-                <Badge variant="secondary" className="text-[10px]">Padrão</Badge>
+                <Badge variant="secondary" className="text-[10px]">
+                  Padrão
+                </Badge>
               ) : (
-                <Badge variant="outline" className="text-[10px]">Custom</Badge>
+                <Badge variant="outline" className="text-[10px]">
+                  Custom
+                </Badge>
               )}
 
               <button
                 type="button"
-                onClick={() => updateStatus(row.id, { countsTowardCapacity: !row.counts_toward_capacity })}
+                onClick={() =>
+                  updateStatus(row.id, { countsTowardCapacity: !row.counts_toward_capacity })
+                }
                 title={row.counts_toward_capacity ? "Ocupa vaga na capacidade" : "Não ocupa vaga"}
                 className={cn(
                   "flex h-7 items-center gap-1 rounded-md border px-2 text-[10px] font-bold uppercase tracking-wider transition",
@@ -106,8 +123,13 @@ export function StatusTab() {
               </button>
 
               <div className="flex items-center gap-2">
-                <Switch checked={row.is_active} onCheckedChange={(v) => updateStatus(row.id, { isActive: v })} />
-                <span className="text-[11px] text-muted-foreground">{row.is_active ? "Ativo" : "Oculto"}</span>
+                <Switch
+                  checked={row.is_active}
+                  onCheckedChange={(v) => updateStatus(row.id, { isActive: v })}
+                />
+                <span className="text-[11px] text-muted-foreground">
+                  {row.is_active ? "Ativo" : "Oculto"}
+                </span>
               </div>
 
               <Button

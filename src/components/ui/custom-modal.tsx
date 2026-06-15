@@ -91,11 +91,7 @@ export const CustomModal: React.FC<CustomModalProps> = ({
   const modal = (
     <div
       ref={overlayRef}
-      className={cn(
-        "fixed inset-0 z-40 bg-black/50",
-        "animate-in fade-in duration-200",
-        className,
-      )}
+      className={cn("fixed inset-0 z-40 bg-black/50", "animate-in fade-in duration-200", className)}
       onClick={handleOverlayClick.current}
     >
       <div className={modalContainerClass}>

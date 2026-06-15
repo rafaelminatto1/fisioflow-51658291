@@ -93,13 +93,20 @@ export class PatientDigitalTwinWorkflow extends WorkflowEntrypoint<Env, { patien
 
 			Retorne APENAS um JSON: {"risk": "...", "recoveryWeeks": 12, "confidence": 85}`;
 
-      const response = await runAi(this.env, WORKERS_AI_MODELS.llama_3_1_8b, {
-        messages: [{ role: "user", content: prompt }],
-      }, { cache: false });
+      const response = await runAi(
+        this.env,
+        WORKERS_AI_MODELS.llama_3_1_8b,
+        {
+          messages: [{ role: "user", content: prompt }],
+        },
+        { cache: false },
+      );
 
       try {
         const jsonMatch = (response as any).response?.match(/\{[\s\S]*\}/);
-        return JSON.parse(jsonMatch?.[0] ?? JSON.stringify({ risk: "low", recoveryWeeks: 8, confidence: 50 }));
+        return JSON.parse(
+          jsonMatch?.[0] ?? JSON.stringify({ risk: "low", recoveryWeeks: 8, confidence: 50 }),
+        );
       } catch {
         return { risk: "low", recoveryWeeks: 8, confidence: 50 };
       }

@@ -9,6 +9,7 @@
 O autosave da evolução do paciente (`PatientEvolution.tsx` + `useAutoSave.ts` + `useEvolutionDraft.ts` + `offlineSync`) já entrega o caminho feliz e o caso offline básico. Restam armadilhas conhecidas em redes ruins, multi-tab e refresh durante mutation in-flight. Este spec consolida os próximos passos pesquisados em 2026-05-20 (referências: pz.com.au race-condition guide, 7tech optimistic UI, preetsuthar.me offline patterns, TanStack v5 docs).
 
 P1 já entregue (commit `9a9d487ae`):
+
 - TanStack v5 `scope.id = autosave-evolution-<appointmentId>` serializa mutations da mesma evolução
 - `beforeunload` guard quando há `isDirty || isSaving`
 - `useAutoSave` distingue offline (`navigator.onLine === false || TypeError de fetch`) de erro real
@@ -25,6 +26,7 @@ P1 já entregue (commit `9a9d487ae`):
 **Why**: A fila offline (`offlineSync.ts` + IndexedDB `FisioFlowOffline.offline_actions`) replay POSTs quando rede volta. Se o 1º POST foi recebido mas o ACK perdeu, o retry cria um 2º registro. Hoje o servidor deduplica por `appointment_id + status=draft` (somente para drafts), mas qualquer outro caminho de mutation (atualizações pontuais, sign-off) pode duplicar.
 
 **Acceptance**:
+
 1. Cliente gera `Idempotency-Key: <uuid-v4>` por chamada de autosave (não por debounce — por tentativa)
 2. Worker (`apps/api/src/routes/sessions.ts:155`) consulta KV `FISIOFLOW_CONFIG` antes de executar; se a key existe (TTL 60s), retorna resposta cacheada (mesma response, status 200)
 3. Após executar, Worker grava `{ key, response, expiresAt }` no KV
@@ -38,6 +40,7 @@ P1 já entregue (commit `9a9d487ae`):
 **Why**: Se ambos editam, o último save sobrescreve silenciosamente (sem aviso) — quem perdeu a edição não fica sabendo.
 
 **Acceptance**:
+
 1. Schema `sessions` tem coluna `version INT NOT NULL DEFAULT 1` (já existe — `sessions.version`)
 2. Cliente envia `version` atual no payload de autosave
 3. Worker compara: se `payload.version !== row.version` → 409 + body `{ error: 'conflict', current: <row>, currentVersion: <v> }`
@@ -52,6 +55,7 @@ P1 já entregue (commit `9a9d487ae`):
 **Why**: Hoje há `evolutionData` (canonical, formato server) e `evolutionV2Data` (UI, formato editor) sincronizados manualmente via `useEffect`. Já causou 2 bugs (commit `785ad16e0` e o atual `9a9d487ae`). Mantenibilidade longo prazo exige fonte única.
 
 **Acceptance**:
+
 1. Deletar `evolutionV2Data` useState e o sync effect manual em `usePatientEvolutionState.ts`
 2. `NotionEvolutionPanel` recebe `evolutionData` canonical + um adaptador `useMemo` que deriva a shape V2 (read-only)
 3. Mutations (typing no editor, clique em Nível X) chamam handlers que **escrevem direto no canonical** com `setEvolutionData`
@@ -66,6 +70,7 @@ P1 já entregue (commit `9a9d487ae`):
 **Why**: Hoje o editor já é instantâneo (state local), mas feedback de "salvo" tem delay de 5s (debounce). `useOptimistic` permite mostrar "Salvando..." imediatamente e converger com server.
 
 **Acceptance**:
+
 1. `useOptimistic` wraps `evolutionData`
 2. Indicador no header: "Salvando..." (otimista) → "Salvo HH:MM" (server confirmou) → "Falhou — tentar de novo" (erro)
 3. Em failure, mantém o valor otimista visível (não yanka do usuário); oferece botão "Tentar de novo"
@@ -78,6 +83,7 @@ P1 já entregue (commit `9a9d487ae`):
 **Why**: PersistQueryClient só persiste mutations `paused`. Mutations `pending` morrem com o refresh — fisio precisa redigitar.
 
 **Acceptance**:
+
 1. Customizar `dehydrateMutation` para incluir `pending` quando `failureCount > 0` ou explicitamente marcadas
 2. **Pré-requisito**: idempotency key (US1) — sem ela, retry de in-flight pode duplicar
 3. Ao restaurar, `resumePausedMutations` re-fire com mesma idempotency key
@@ -119,13 +125,13 @@ P1 já entregue (commit `9a9d487ae`):
 
 ## Roadmap de implementação
 
-| Fase | Escopo | Esforço | Dependências |
-|------|--------|---------|--------------|
-| **P2.1** | US1 (idempotency) | ~3h | KV namespace já existe |
-| **P2.2** | US2 (version 409 UX) | ~4h | US1 (idempotency evita re-fire duplicado no retry) |
-| **P2.3** | US3 (state unificado) | ~6-8h + 2h re-teste | US1+US2 estáveis em produção |
-| **P3.1** | US4 (useOptimistic) | ~3h | US3 |
-| **P3.2** | US5 (persist in-flight) | ~2h | US1 (obrigatório) |
+| Fase     | Escopo                  | Esforço             | Dependências                                       |
+| -------- | ----------------------- | ------------------- | -------------------------------------------------- |
+| **P2.1** | US1 (idempotency)       | ~3h                 | KV namespace já existe                             |
+| **P2.2** | US2 (version 409 UX)    | ~4h                 | US1 (idempotency evita re-fire duplicado no retry) |
+| **P2.3** | US3 (state unificado)   | ~6-8h + 2h re-teste | US1+US2 estáveis em produção                       |
+| **P3.1** | US4 (useOptimistic)     | ~3h                 | US3                                                |
+| **P3.2** | US5 (persist in-flight) | ~2h                 | US1 (obrigatório)                                  |
 
 **Total P2+P3**: ~20h de engenharia + ~4h de QA.
 

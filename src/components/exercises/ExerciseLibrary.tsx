@@ -221,10 +221,7 @@ const ExerciseCard = React.memo(function ExerciseCard({
                 Vídeo
               </Badge>
             ) : (
-              <Badge
-                variant="secondary"
-                className="bg-card shadow-lg gap-1"
-              >
+              <Badge variant="secondary" className="bg-card shadow-lg gap-1">
                 <VideoOff className="h-3 w-3" />
                 Sem vídeo
               </Badge>
@@ -559,7 +556,8 @@ const ExerciseCompactCard = React.memo(function ExerciseCompactCard({
     <Card
       className={cn(
         "flex items-center gap-3 p-2 w-[280px] flex-shrink-0 cursor-pointer transition-all border border-slate-200/60 dark:border-slate-800/80 rounded-2xl shadow-sm hover:shadow-md hover:border-primary/40 select-none",
-        isSelected && "bg-slate-100 dark:bg-slate-900 border-emerald-500/50 dark:border-emerald-500 shadow-md scale-[0.98]",
+        isSelected &&
+          "bg-slate-100 dark:bg-slate-900 border-emerald-500/50 dark:border-emerald-500 shadow-md scale-[0.98]",
       )}
       onClick={() => {
         if (isSelectionMode) {
@@ -615,7 +613,9 @@ const ExerciseCompactCard = React.memo(function ExerciseCompactCard({
             variant={isAdded ? "default" : "outline"}
             className={cn(
               "h-8 w-8 rounded-xl",
-              isAdded ? "bg-emerald-500 hover:bg-emerald-600 text-white border-none" : "border-slate-200 dark:border-slate-800"
+              isAdded
+                ? "bg-emerald-500 hover:bg-emerald-600 text-white border-none"
+                : "border-slate-200 dark:border-slate-800",
             )}
             onClick={(e) => {
               e.stopPropagation();
@@ -662,7 +662,7 @@ export function ExerciseLibrary({
           setVisibleCount((prev) => prev + 12);
         }
       },
-      { threshold: 0.1 }
+      { threshold: 0.1 },
     );
 
     if (sentinelRef.current) {
@@ -901,7 +901,7 @@ export function ExerciseLibrary({
       {/* Search and Filters - Sticky Header */}
       <div className="sticky top-0 z-20 bg-card pt-4 pb-4 -mx-4 px-4 sm:-mx-6 sm:px-6 border-b mb-4 transition-all duration-300">
         <div className="flex flex-col gap-4">
-            <div className="flex items-center gap-4">
+          <div className="flex items-center gap-4">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
@@ -918,7 +918,7 @@ export function ExerciseLibrary({
               className="gap-2 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 whitespace-nowrap"
               onClick={() => {
                 // Dispatch custom event to open the modal (handled by parent or top-level layout)
-                window.dispatchEvent(new CustomEvent('open-wger-import'));
+                window.dispatchEvent(new CustomEvent("open-wger-import"));
               }}
             >
               <Download className="h-4 w-4 hidden sm:block" />
@@ -1068,7 +1068,11 @@ export function ExerciseLibrary({
         ) : viewMode === "grid" ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-4 p-2">
             {filteredExercises.slice(0, visibleCount).map((exercise, index) => (
-              <div key={exercise.id} className="cv-card relative group animate-in fade-in slide-in-from-bottom-4" style={{ animationDelay: `${(index % 12) * 50}ms` }}>
+              <div
+                key={exercise.id}
+                className="cv-card relative group animate-in fade-in slide-in-from-bottom-4"
+                style={{ animationDelay: `${(index % 12) * 50}ms` }}
+              >
                 <ExerciseCard
                   exercise={exercise}
                   isFavorite={isFavorite(exercise.id)}
@@ -1096,7 +1100,11 @@ export function ExerciseLibrary({
         ) : viewMode === "list" ? (
           <div className="space-y-2 p-2">
             {filteredExercises.slice(0, visibleCount).map((exercise, index) => (
-              <div key={exercise.id} className="cv-row relative flex items-center gap-2 animate-in fade-in slide-in-from-bottom-2" style={{ animationDelay: `${(index % 12) * 50}ms` }}>
+              <div
+                key={exercise.id}
+                className="cv-row relative flex items-center gap-2 animate-in fade-in slide-in-from-bottom-2"
+                style={{ animationDelay: `${(index % 12) * 50}ms` }}
+              >
                 {isSelectionMode && (
                   <Checkbox
                     checked={selectedExercises.includes(exercise.id)}
@@ -1145,7 +1153,10 @@ export function ExerciseLibrary({
               </div>
             ) : (
               Object.entries(groupedByCategory).map(([category, items]) => (
-                <div key={category} className="space-y-3 border-b border-slate-100 dark:border-slate-800/40 pb-4 last:border-none last:pb-0">
+                <div
+                  key={category}
+                  className="space-y-3 border-b border-slate-100 dark:border-slate-800/40 pb-4 last:border-none last:pb-0"
+                >
                   <div className="flex justify-between items-center px-1">
                     <h4 className="text-xs font-black uppercase tracking-widest text-slate-500">
                       {category}

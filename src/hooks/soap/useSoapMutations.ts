@@ -92,9 +92,7 @@ export type AutosaveMutationVariables = CreateEvolutionData & {
   idempotencyKey?: string;
 };
 
-export const evolutionAutosaveMutationFn = async (
-  data: AutosaveMutationVariables,
-) => {
+export const evolutionAutosaveMutationFn = async (data: AutosaveMutationVariables) => {
   const { recordId, idempotencyKey, ...rest } = data;
   const res = await sessionsApi.autosave({
     ...rest,
@@ -121,7 +119,7 @@ export const useAutoSaveEvolution = (scopeId?: string) => {
       if (result.patient_id) {
         queryClient.setQueryData(evolutionKeys.detail(result.id), result);
         queryClient.invalidateQueries({ queryKey: evolutionKeys.drafts(result.patient_id) });
-        
+
         if (result.appointment_id) {
           queryClient.setQueryData(
             [...evolutionKeys.drafts(result.patient_id), "byAppointment", result.appointment_id],

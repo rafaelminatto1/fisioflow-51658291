@@ -82,7 +82,11 @@ app.get("/", requireAuth, async (c) => {
  * No-op mantido para compatibilidade com o frontend (anteriormente indexava no Vectorize).
  */
 app.post("/index", requireAuth, async (c) => {
-  return c.json({ success: true, indexed: 0, message: "AI Search auto-indexes documents via R2 sync. Vectorize indexing is deprecated." });
+  return c.json({
+    success: true,
+    indexed: 0,
+    message: "AI Search auto-indexes documents via R2 sync. Vectorize indexing is deprecated.",
+  });
 });
 
 /**
@@ -90,7 +94,11 @@ app.post("/index", requireAuth, async (c) => {
  * No-op mantido para compatibilidade com o frontend (anteriormente deletava no Vectorize).
  */
 app.delete("/index/:id", requireAuth, async (c) => {
-  return c.json({ success: true, deleted: true, message: "AI Search auto-manages documents. Vectorize is deprecated." });
+  return c.json({
+    success: true,
+    deleted: true,
+    message: "AI Search auto-manages documents. Vectorize is deprecated.",
+  });
 });
 
 // Busca textual/híbrida no Neon (re-ranking semântico via TurboQuant se sketch disponível)

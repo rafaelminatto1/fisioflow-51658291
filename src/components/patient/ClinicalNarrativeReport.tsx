@@ -1,4 +1,4 @@
-import DOMPurify from 'dompurify';
+import DOMPurify from "dompurify";
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -75,10 +75,12 @@ export const ClinicalNarrativeReport = ({
             ) : (
               <p
                 dangerouslySetInnerHTML={{
-                  __html: DOMPurify.sanitize(patientText.replace(
-                    /\*([^*]+)\*/g,
-                    '<span class="font-bold text-primary border-b border-primary/30 border-dashed cursor-help" title="Veja o glossário abaixo">$1*</span>',
-                  )),
+                  __html: DOMPurify.sanitize(
+                    patientText.replace(
+                      /\*([^*]+)\*/g,
+                      '<span class="font-bold text-primary border-b border-primary/30 border-dashed cursor-help" title="Veja o glossário abaixo">$1*</span>',
+                    ),
+                  ),
                 }}
               />
             )}

@@ -56,17 +56,12 @@ export const BiomechanicsComparison: React.FC<BiomechanicsComparisonProps> = ({
           </div>
 
           <div className="absolute top-4 left-4 z-20">
-            <Badge
-              variant="outline"
-              className="bg-black/60 text-white border-white/20"
-            >
+            <Badge variant="outline" className="bg-black/60 text-white border-white/20">
               Base (Anterior)
             </Badge>
           </div>
           <div className="absolute top-4 right-4 z-20">
-            <Badge className="bg-primary/90 text-white shadow-md">
-              Comparação (Atual)
-            </Badge>
+            <Badge className="bg-primary/90 text-white shadow-md">Comparação (Atual)</Badge>
           </div>
         </div>
       ) : (

@@ -45,15 +45,16 @@ export class WikiSyncWorkflow extends WorkflowEntrypoint<Env, WikiSyncParams> {
         return rows as any[];
       }
 
-      const rows = syncType === "manual"
-        ? await sql`
+      const rows =
+        syncType === "manual"
+          ? await sql`
           SELECT id, slug, title, content, html_content, category, tags, is_published
           FROM wiki_pages
           WHERE is_published = true
           ORDER BY updated_at DESC
           LIMIT 200
         `
-        : await sql`
+          : await sql`
           SELECT id, slug, title, content, html_content, category, tags, is_published
           FROM wiki_pages
           WHERE is_published = true

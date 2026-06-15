@@ -92,10 +92,7 @@ export function PainDetailsForm({
           onValueChange={(v) => onUpdate(parseInt(v) as PainIntensity, painType, description)}
           disabled={readOnly}
         >
-          <SelectTrigger
-            id="intensity"
-            className="h-11 border-white/10 bg-black/20"
-          >
+          <SelectTrigger id="intensity" className="h-11 border-white/10 bg-black/20">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -138,10 +135,7 @@ export function PainDetailsForm({
           onValueChange={(v) => onUpdate(intensity, v as PainType, description)}
           disabled={readOnly}
         >
-          <SelectTrigger
-            id="painType"
-            className="h-11 border-white/10 bg-black/20"
-          >
+          <SelectTrigger id="painType" className="h-11 border-white/10 bg-black/20">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>

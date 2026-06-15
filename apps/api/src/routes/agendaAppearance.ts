@@ -85,9 +85,18 @@ function clampAppearanceState(state: AgendaAppearanceState): AgendaAppearanceSta
       heightScale: clamp(state.global.heightScale, 0, 10),
       fontScale: clamp(state.global.fontScale, 0, 10),
       opacity: clamp(state.global.opacity, 0, 100),
-      timeFontScale: state.global.timeFontScale !== undefined ? clamp(state.global.timeFontScale, 0, 10) : undefined,
-      typeFontScale: state.global.typeFontScale !== undefined ? clamp(state.global.typeFontScale, 0, 10) : undefined,
-      paddingScale: state.global.paddingScale !== undefined ? clamp(state.global.paddingScale, 0, 10) : undefined,
+      timeFontScale:
+        state.global.timeFontScale !== undefined
+          ? clamp(state.global.timeFontScale, 0, 10)
+          : undefined,
+      typeFontScale:
+        state.global.typeFontScale !== undefined
+          ? clamp(state.global.typeFontScale, 0, 10)
+          : undefined,
+      paddingScale:
+        state.global.paddingScale !== undefined
+          ? clamp(state.global.paddingScale, 0, 10)
+          : undefined,
     },
     day: state.day ? clampViewAppearance(state.day) : undefined,
     week: state.week ? clampViewAppearance(state.week) : undefined,

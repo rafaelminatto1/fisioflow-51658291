@@ -24,14 +24,14 @@ app.post("/:patientId", requireAuth, async (c) => {
 
     // No modo real, o stub chamaria consultBrain
     // Como estamos usando a lib 'agents', chamamos via RPC
-    const response = await (stub as any).consultBrain({ 
-      question, 
-      historyContext: context 
+    const response = await (stub as any).consultBrain({
+      question,
+      historyContext: context,
     });
 
     return c.json({
       success: true,
-      answer: response.answer
+      answer: response.answer,
     });
   } catch (error: any) {
     console.error("[AI/Brain/Chat] Error:", error);

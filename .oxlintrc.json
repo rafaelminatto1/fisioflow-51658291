@@ -1,12 +1,23 @@
 {
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
   "ignorePatterns": [
     "scripts/archive/**",
     "evolucao/**",
     "migrate-pages.*",
     "e2e/**",
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "**/*.spec.ts",
+    "**/*.spec.tsx",
     "test-*.js",
+    "test-*.ts",
     "manual-test.js",
     "apps/patient-app/**",
-    "apps/professional-app/**"
-  ]
+    "apps/professional-app/**",
+    ".storybook/**"
+  ],
+  "rules": {
+    "eslint/no-unused-vars": "warn",
+    "eslint/no-useless-catch": "warn"
+  }
 }

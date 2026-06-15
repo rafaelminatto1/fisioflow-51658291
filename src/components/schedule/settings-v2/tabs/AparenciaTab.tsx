@@ -146,13 +146,14 @@ export function AparenciaTab() {
           {/* Densidade */}
           <div>
             <div className="flex items-center justify-between mb-3">
-              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Densidade dos Cards</p>
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Densidade dos Cards
+              </p>
               <div className="flex items-center gap-2">
-                <span className="text-[11px] text-muted-foreground">Ajustar automaticamente com a altura</span>
-                <Switch
-                  checked={autoAdjust}
-                  onCheckedChange={handleAutoAdjustChange}
-                />
+                <span className="text-[11px] text-muted-foreground">
+                  Ajustar automaticamente com a altura
+                </span>
+                <Switch checked={autoAdjust} onCheckedChange={handleAutoAdjustChange} />
               </div>
             </div>
             <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
@@ -371,7 +372,10 @@ export function AparenciaTab() {
                 <h4 className="text-sm font-semibold">Pré-visualização em Tempo Real</h4>
                 <p className="text-xs text-muted-foreground">
                   Veja como os cards serão exibidos no layout de{" "}
-                  <strong>{activeView === "day" ? "Dia" : activeView === "week" ? "Semana" : "Mês"}</strong>.
+                  <strong>
+                    {activeView === "day" ? "Dia" : activeView === "week" ? "Semana" : "Mês"}
+                  </strong>
+                  .
                 </p>
               </div>
 
@@ -392,15 +396,21 @@ export function AparenciaTab() {
               </div>
               <div className="flex justify-between">
                 <span>Fonte do horário:</span>
-                <span className="font-mono">{(0.6 + (appearance.timeFontScale ?? 5) * 0.08).toFixed(2)}x</span>
+                <span className="font-mono">
+                  {(0.6 + (appearance.timeFontScale ?? 5) * 0.08).toFixed(2)}x
+                </span>
               </div>
               <div className="flex justify-between">
                 <span>Fonte do tipo de consulta:</span>
-                <span className="font-mono">{(0.6 + (appearance.typeFontScale ?? 5) * 0.08).toFixed(2)}x</span>
+                <span className="font-mono">
+                  {(0.6 + (appearance.typeFontScale ?? 5) * 0.08).toFixed(2)}x
+                </span>
               </div>
               <div className="flex justify-between">
                 <span>Espaçamento dos cards:</span>
-                <span className="font-mono">{(0.25 + (appearance.paddingScale ?? 5) * 0.075).toFixed(2)}rem</span>
+                <span className="font-mono">
+                  {(0.25 + (appearance.paddingScale ?? 5) * 0.075).toFixed(2)}rem
+                </span>
               </div>
               <div className="flex justify-between">
                 <span>Opacidade dos cards:</span>

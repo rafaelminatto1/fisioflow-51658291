@@ -105,7 +105,11 @@ describe("Stream webhook", () => {
 
   it("503 sem STREAM_WEBHOOK_SECRET", async () => {
     const { app, env } = buildApp({});
-    const res = await app.request("/api/exercise-videos/stream-webhook", { method: "POST", body: "{}" }, env);
+    const res = await app.request(
+      "/api/exercise-videos/stream-webhook",
+      { method: "POST", body: "{}" },
+      env,
+    );
     expect(res.status).toBe(503);
   });
 

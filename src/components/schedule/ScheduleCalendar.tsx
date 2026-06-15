@@ -483,9 +483,7 @@ const ScheduleCalendarInner = (props: ScheduleCalendarProps) => {
       />
 
       <div className="flex min-h-0 flex-1 flex-col">
-        <div
-          className="relative flex min-h-0 w-full flex-1 overflow-hidden border-t border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900 [&>.fc]:flex-1 [&>.fc]:min-h-0"
-        >
+        <div className="relative flex min-h-0 w-full flex-1 overflow-hidden border-t border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900 [&>.fc]:flex-1 [&>.fc]:min-h-0">
           <FullCalendar
             ref={calendarRef}
             plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
@@ -568,7 +566,7 @@ const ScheduleCalendarInner = (props: ScheduleCalendarProps) => {
       )}
     </div>
   );
-}
+};
 
 export const ScheduleCalendar = memo(ScheduleCalendarInner);
 export default ScheduleCalendar;

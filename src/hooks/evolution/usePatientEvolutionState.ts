@@ -14,6 +14,7 @@ import { usePrefetchStrategy } from "@/hooks/evolution/usePrefetchStrategy";
 import { useSessionExercises } from "@/hooks/useSessionExercises";
 import { useDraftSoapRecordByAppointment } from "@/hooks/useSoapRecords";
 import type { EvolutionVersion, EvolutionV2Data } from "@/components/evolution/v2/types";
+import { parsePainDetail, writePainDetail } from "@/lib/evolution/painDetail";
 import type { PainScaleData } from "@/pages/PatientEvolution";
 import type {
   ProcedureItem,
@@ -254,6 +255,10 @@ export function usePatientEvolutionState() {
             })),
           )
         : undefined;
+    const painDetail = parsePainDetail(
+      (evolutionData.measurements ?? []) as MeasurementItem[],
+      evolutionData.painScale,
+    );
     return {
       therapistName: "",
       therapistCrefito: "",
@@ -264,6 +269,10 @@ export function usePatientEvolutionState() {
       evolutionText: evolutionData.observacao ?? "",
       observations: evolutionData.observacao ?? "",
       painLevel: evolutionData.painScale ?? undefined,
+      painLevelArrival: painDetail.arrival,
+      painLevelDischarge: painDetail.discharge ?? (evolutionData.painScale ?? undefined),
+      painQuality: painDetail.quality,
+      painLocation: painDetail.location,
       procedures: procs,
       exercises: exs,
       measurements: evolutionData.measurements ?? [],
@@ -277,6 +286,10 @@ export function usePatientEvolutionState() {
   const setEvolutionV2Data = useCallback(
     (updater: EvolutionV2Data | ((prev: EvolutionV2Data) => EvolutionV2Data)) => {
       setEvolutionData((current) => {
+        const prevPainDetail = parsePainDetail(
+          (current.measurements ?? []) as MeasurementItem[],
+          current.painScale,
+        );
         const prevV2: EvolutionV2Data = {
           therapistName: "",
           therapistCrefito: "",
@@ -285,6 +298,10 @@ export function usePatientEvolutionState() {
           evolutionText: current.observacao ?? "",
           observations: current.observacao ?? "",
           painLevel: current.painScale ?? undefined,
+          painLevelArrival: prevPainDetail.arrival,
+          painLevelDischarge: prevPainDetail.discharge ?? (current.painScale ?? undefined),
+          painQuality: prevPainDetail.quality,
+          painLocation: prevPainDetail.location,
           procedures: (current.procedures as any) ?? [],
           exercises: (current.exercises as any) ?? [],
           measurements: (current.measurements as any) ?? [],
@@ -310,7 +327,7 @@ export function usePatientEvolutionState() {
                 category: item.category,
                 intensity: item.intensity,
               }))
-          : next.procedures ?? current.procedures;
+          : (next.procedures ?? current.procedures);
         const exercises = usesUnified
           ? orderedItems
               .map((item: any, index: number) => ({ item, sequenceOrder: index + 1 }))
@@ -323,7 +340,7 @@ export function usePatientEvolutionState() {
                 prescription: item.prescription,
                 patientFeedback: item.patientFeedback,
               }))
-          : next.exercises ?? current.exercises;
+          : (next.exercises ?? current.exercises);
 
         // homeCareExercises (JSON string) → homeExercises array canonical
         let homeExercises = current.homeExercises;
@@ -366,7 +383,11 @@ export function usePatientEvolutionState() {
         const nextIsEmpty =
           (next.observations === "" || next.observations === undefined) &&
           (next.evolutionText === "" || next.evolutionText === undefined) &&
-          (next.painLevel == null) &&
+          next.painLevel == null &&
+          next.painLevelArrival == null &&
+          next.painLevelDischarge == null &&
+          !((next.painQuality?.length ?? 0) > 0) &&
+          !(next.painLocation && next.painLocation.trim().length > 0) &&
           !((next.unifiedItems?.length ?? 0) > 0) &&
           !((next.procedures?.length ?? 0) > 0) &&
           !((next.exercises?.length ?? 0) > 0) &&
@@ -385,23 +406,34 @@ export function usePatientEvolutionState() {
         // (TipTap dispara onChange com "" antes do value sincronizar) mas
         // current já tem texto. User pode esvaziar via undo/redo do editor.
         const nextObservacaoIncoming =
-          (typeof next.observations === "string" && next.observations.trim().length > 0)
+          typeof next.observations === "string" && next.observations.trim().length > 0
             ? next.observations
-            : (typeof next.evolutionText === "string" && next.evolutionText.trim().length > 0)
+            : typeof next.evolutionText === "string" && next.evolutionText.trim().length > 0
               ? next.evolutionText
               : null;
         const preservedObs =
-          nextObservacaoIncoming !== null
-            ? nextObservacaoIncoming
-            : (current.observacao ?? "");
+          nextObservacaoIncoming !== null ? nextObservacaoIncoming : (current.observacao ?? "");
+
+        // Serializa o detalhe de dor (chegada/saída/qualidade/localização) nas
+        // measurements reservadas (round-trip sem migração). Saída cai no pain_scale.
+        const dischargeLevel = next.painLevelDischarge ?? next.painLevel;
+        const measurementsBase = ((next.measurements as MeasurementItem[]) ??
+          current.measurements ??
+          []) as MeasurementItem[];
+        const measurementsWithPain = writePainDetail(measurementsBase, {
+          arrival: next.painLevelArrival,
+          discharge: dischargeLevel ?? undefined,
+          quality: next.painQuality ?? [],
+          location: next.painLocation,
+        });
 
         return {
           ...current,
           observacao: preservedObs,
-          painScale: next.painLevel ?? current.painScale,
+          painScale: dischargeLevel ?? current.painScale,
           procedures: procedures as any,
           exercises: exercises as any,
-          measurements: (next.measurements as any) ?? current.measurements,
+          measurements: measurementsWithPain as any,
           homeExercises,
         };
       });

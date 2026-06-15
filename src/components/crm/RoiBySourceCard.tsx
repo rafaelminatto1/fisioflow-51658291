@@ -4,13 +4,7 @@
  * ticket médio.
  */
 import { useQuery } from "@tanstack/react-query";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { TrendingUp, Loader2 } from "lucide-react";
 import { contactsApi } from "@/api/v2/contacts";
@@ -60,17 +54,15 @@ export function RoiBySourceCard({ days = 90 }: { days?: number }) {
                     <span className="font-semibold tabular-nums">{BRL.format(receita)}</span>
                   </div>
                   <div className="h-2 w-full overflow-hidden rounded bg-slate-100">
-                    <div
-                      className="h-full bg-emerald-500"
-                      style={{ width: `${pct}%` }}
-                    />
+                    <div className="h-full bg-emerald-500" style={{ width: `${pct}%` }} />
                   </div>
                   <div className="flex items-center justify-between text-xs text-muted-foreground">
                     <span>
                       {r.total_convertidos}/{r.total_contatos} convertidos
                     </span>
                     <Badge variant="outline" className="font-normal">
-                      {Number(r.taxa_conversao).toFixed(1)}% • Ticket {BRL.format(Number(r.ticket_medio))}
+                      {Number(r.taxa_conversao).toFixed(1)}% • Ticket{" "}
+                      {BRL.format(Number(r.ticket_medio))}
                     </Badge>
                   </div>
                 </div>

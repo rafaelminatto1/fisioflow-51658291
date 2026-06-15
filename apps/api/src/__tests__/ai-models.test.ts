@@ -19,7 +19,9 @@ describe("Workers AI model deprecation 2026-05-30", () => {
       for (const dep of DEPRECATED_MODELS_2026_05_30) {
         // regex: modelo seguido de aspas/whitespace/fim — não pode ser `-fast`/`-lora`
         const escaped = dep.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-        const rx = new RegExp(`${escaped}(?!-fast|-lora|-instruct-fast|-instruct-lora)["'\\s,;)\\]}]`);
+        const rx = new RegExp(
+          `${escaped}(?!-fast|-lora|-instruct-fast|-instruct-lora)["'\\s,;)\\]}]`,
+        );
         lines.forEach((line, idx) => {
           if (rx.test(line)) offenders.push(`${file}:${idx + 1}: ${line.trim()}`);
         });

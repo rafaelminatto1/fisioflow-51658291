@@ -168,9 +168,7 @@ app.post("/autosave", requireAuth, async (c) => {
   const idemKey =
     c.req.header("Idempotency-Key") ||
     (typeof body.idempotency_key === "string" ? body.idempotency_key : "");
-  const idemCacheKey = idemKey
-    ? `idem:autosave:${user.organizationId}:${idemKey}`
-    : "";
+  const idemCacheKey = idemKey ? `idem:autosave:${user.organizationId}:${idemKey}` : "";
   if (idemCacheKey && c.env.FISIOFLOW_CONFIG) {
     try {
       const cached = await c.env.FISIOFLOW_CONFIG.get(idemCacheKey);
@@ -809,7 +807,12 @@ app.get("/:id/attachments", requireAuth, async (c) => {
   const results = await db
     .select()
     .from(sessionAttachments)
-    .where(and(eq(sessionAttachments.sessionId, id), eq(sessionAttachments.organizationId, user.organizationId)))
+    .where(
+      and(
+        eq(sessionAttachments.sessionId, id),
+        eq(sessionAttachments.organizationId, user.organizationId),
+      ),
+    )
     .orderBy(desc(sessionAttachments.uploadedAt));
 
   return c.json({
@@ -886,7 +889,13 @@ app.delete("/:id/attachments/:attachmentId", requireAuth, async (c) => {
 
   const [deleted] = await db
     .delete(sessionAttachments)
-    .where(and(eq(sessionAttachments.id, attachmentId), eq(sessionAttachments.sessionId, id), eq(sessionAttachments.organizationId, user.organizationId)))
+    .where(
+      and(
+        eq(sessionAttachments.id, attachmentId),
+        eq(sessionAttachments.sessionId, id),
+        eq(sessionAttachments.organizationId, user.organizationId),
+      ),
+    )
     .returning();
 
   if (!deleted) return c.json({ error: "Anexo não encontrado" }, 404);

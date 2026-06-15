@@ -451,6 +451,7 @@ const updateAppointmentHandler: MiddlewareHandler<{
 
       const parsedDuration =
         rawDuration !== undefined ? parseInt(String(rawDuration), 10) : undefined;
+      console.log("[DEBUG APPT UPDATE]", { id, status: body.status });
       const normalizedStatus =
         status !== undefined ? normalizeStatus(status) : String(current.status ?? "scheduled");
 
@@ -474,9 +475,7 @@ const updateAppointmentHandler: MiddlewareHandler<{
       );
       const newStatusCountsTowardCapacity = countsTowardCapacity(normalizedStatus);
       const statusAddsNewCapacityLoad =
-        status !== undefined &&
-        newStatusCountsTowardCapacity &&
-        !currentStatusCountsTowardCapacity;
+        status !== undefined && newStatusCountsTowardCapacity && !currentStatusCountsTowardCapacity;
       const shouldRecheckCapacity =
         !ignoreCapacity &&
         (date !== undefined ||

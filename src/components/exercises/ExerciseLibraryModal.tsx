@@ -24,8 +24,8 @@ export const ExerciseLibraryModal: React.FC<ExerciseLibraryModalProps> = ({
 
   useEffect(() => {
     const handleOpenWger = () => setIsWgerOpen(true);
-    window.addEventListener('open-wger-import', handleOpenWger);
-    return () => window.removeEventListener('open-wger-import', handleOpenWger);
+    window.addEventListener("open-wger-import", handleOpenWger);
+    return () => window.removeEventListener("open-wger-import", handleOpenWger);
   }, []);
 
   // Combine prop IDs with locally added IDs
@@ -76,11 +76,7 @@ export const ExerciseLibraryModal: React.FC<ExerciseLibraryModalProps> = ({
           </div>
         </DialogContent>
       </Dialog>
-      <WgerImportModal
-        open={isWgerOpen}
-        onOpenChange={setIsWgerOpen}
-        onImport={handleWgerImport}
-      />
+      <WgerImportModal open={isWgerOpen} onOpenChange={setIsWgerOpen} onImport={handleWgerImport} />
     </>
   );
 };

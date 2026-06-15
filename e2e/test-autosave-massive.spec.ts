@@ -29,7 +29,7 @@ test.describe("Validação de Autosave via Agenda (SQL Data)", () => {
     console.log("Aguardando carregamento da evolução...");
     await page.waitForSelector(".tiptap", { state: "visible", timeout: 15000 });
     await page.waitForTimeout(2000); // Wait for Yjs/collaboration initialization
-    
+
     console.log("Digitando texto de teste...");
     const randomText = `Texto de Teste Autosave - ${Date.now()}`;
     const editorBox = page.locator(".tiptap").first();

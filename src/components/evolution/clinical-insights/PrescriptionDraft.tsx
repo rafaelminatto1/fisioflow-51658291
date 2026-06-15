@@ -119,10 +119,7 @@ export const PrescriptionDraft: React.FC<PrescriptionDraftProps> = ({
 
       {/* Backdrop */}
       {isOpen && (
-        <div
-          className="fixed inset-0 z-[55] bg-black/10"
-          onClick={() => setIsOpen(false)}
-        />
+        <div className="fixed inset-0 z-[55] bg-black/10" onClick={() => setIsOpen(false)} />
       )}
     </>
   );

@@ -348,7 +348,13 @@ app.patch("/treatment-sessions/:id", requireAuth, async (c) => {
   if (typeof body.observacao === "string") {
     observacao = body.observacao;
   } else {
-    const legacyParts = [body.subjective, body.objective, body.assessment, body.plan, body.observations]
+    const legacyParts = [
+      body.subjective,
+      body.objective,
+      body.assessment,
+      body.plan,
+      body.observations,
+    ]
       .filter((v) => v != null && String(v).trim())
       .map((v) => String(v));
     if (legacyParts.length) observacao = legacyParts.join("\n\n");
@@ -361,14 +367,18 @@ app.patch("/treatment-sessions/:id", requireAuth, async (c) => {
     painScale = Number(body.pain_level_before);
   }
 
-  const procedures = Array.isArray(body.procedures) ? body.procedures : session.procedures ?? [];
+  const procedures = Array.isArray(body.procedures) ? body.procedures : (session.procedures ?? []);
   const exercises = Array.isArray(body.exercises)
     ? body.exercises
     : Array.isArray(body.exercises_performed)
       ? body.exercises_performed
-      : session.exercises ?? [];
-  const measurements = Array.isArray(body.measurements) ? body.measurements : session.measurements ?? [];
-  const homeExercises = Array.isArray(body.home_exercises) ? body.home_exercises : session.home_exercises ?? [];
+      : (session.exercises ?? []);
+  const measurements = Array.isArray(body.measurements)
+    ? body.measurements
+    : (session.measurements ?? []);
+  const homeExercises = Array.isArray(body.home_exercises)
+    ? body.home_exercises
+    : (session.home_exercises ?? []);
 
   const row = await pool.query(
     `

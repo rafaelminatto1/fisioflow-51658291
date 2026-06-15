@@ -314,15 +314,12 @@ export const sessionsApi = {
     const { idempotencyKey, ...payload } = data;
     const headers: Record<string, string> = {};
     if (idempotencyKey) headers["Idempotency-Key"] = idempotencyKey;
-    return request<{ data: SessionRecord & { isNew?: boolean } }>(
-      "/api/sessions/autosave",
-      {
-        method: "POST",
-        body: JSON.stringify(payload),
-        headers,
-        keepalive: true,
-      },
-    );
+    return request<{ data: SessionRecord & { isNew?: boolean } }>("/api/sessions/autosave", {
+      method: "POST",
+      body: JSON.stringify(payload),
+      headers,
+      keepalive: true,
+    });
   },
 };
 

@@ -12,4 +12,6 @@ async function run() {
   console.log("Lote 2 atualizado com sucesso no banco!");
 }
 
-run().catch(console.error).finally(() => process.exit(0));
+run()
+  .catch(console.error)
+  .finally(() => process.exit(0));

@@ -230,15 +230,15 @@ Este plano abrange exclusivamente a produção de artefatos de processo, configu
 
 **Objetivo:** Ampliar cobertura de testes até as metas definidas em TESTS.md; configurar CI gate de cobertura.
 
-| Item                            | Descrição                                                                   |
-| ------------------------------- | --------------------------------------------------------------------------- |
-| Inventário de testes existentes | Mapear os 20 testes atuais em `appointmentHelpers`; identificar gaps        |
-| Testes unitários — Workers APIs | Ampliar para `patients`, `sessions`, `exercises`, `auth`, `boards`          |
-| Testes de integração — DB + ORM | Testar fluxos com Neon branch staging (real DB, sem mocks)                  |
-| Fixtures e seeds                | `tests/fixtures/` com dados representativos por entidade crítica            |
+| Item                            | Descrição                                                                               |
+| ------------------------------- | --------------------------------------------------------------------------------------- |
+| Inventário de testes existentes | Mapear os 20 testes atuais em `appointmentHelpers`; identificar gaps                    |
+| Testes unitários — Workers APIs | Ampliar para `patients`, `sessions`, `exercises`, `auth`, `boards`                      |
+| Testes de integração — DB + ORM | Testar fluxos com Neon branch staging (real DB, sem mocks)                              |
+| Fixtures e seeds                | `tests/fixtures/` com dados representativos por entidade crítica                        |
 | Testes e2e — Playwright         | 5 cenários: login, cadastro de paciente, agendamento, evolução Observação Livre, logout |
-| CI gate de cobertura            | `--coverage` no Vitest; falha se < 60 % workers / < 70 % APIs críticas      |
-| Testes de migration em staging  | Validar contagem de rows, constraints, índices pós-apply                    |
+| CI gate de cobertura            | `--coverage` no Vitest; falha se < 60 % workers / < 70 % APIs críticas                  |
+| Testes de migration em staging  | Validar contagem de rows, constraints, índices pós-apply                                |
 
 **Owner:** QA/Testing  
 **Duração:** 3 semanas  

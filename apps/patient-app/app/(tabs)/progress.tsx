@@ -226,18 +226,36 @@ export default function ProgressScreen() {
         )}
 
         {/* Biomechanical Symmetry Chart (FisioFlow Brain) */}
-        <Text style={[styles.sectionTitle, { color: colors.text, marginTop: 20 }]}>Análise Biomecânica</Text>
+        <Text style={[styles.sectionTitle, { color: colors.text, marginTop: 20 }]}>
+          Análise Biomecânica
+        </Text>
         <Card style={{ padding: 15, marginBottom: 20 }}>
-          <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 15 }}>
+          <View
+            style={{
+              flexDirection: "row",
+              justifyContent: "space-between",
+              alignItems: "center",
+              marginBottom: 15,
+            }}
+          >
             <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
               <Ionicons name="sparkles" size={16} color={colors.primary} />
               <Text style={{ fontWeight: "bold", color: colors.text }}>Simetria L/R (Score)</Text>
             </View>
-            <View style={{ paddingHorizontal: 8, paddingVertical: 4, backgroundColor: colors.success + "20", borderRadius: 8 }}>
-              <Text style={{ fontSize: 10, fontWeight: "bold", color: colors.success }}>PROCESSO OTIMIZADO</Text>
+            <View
+              style={{
+                paddingHorizontal: 8,
+                paddingVertical: 4,
+                backgroundColor: colors.success + "20",
+                borderRadius: 8,
+              }}
+            >
+              <Text style={{ fontSize: 10, fontWeight: "bold", color: colors.success }}>
+                PROCESSO OTIMIZADO
+              </Text>
             </View>
           </View>
-          
+
           <LineChart
             data={[
               { value: 65, label: "Sem 1" },
@@ -263,7 +281,9 @@ export default function ProgressScreen() {
               radius: 4,
               pointerLabelComponent: (items: any) => (
                 <View style={{ backgroundColor: colors.primary, padding: 4, borderRadius: 4 }}>
-                  <Text style={{ color: "#fff", fontSize: 10, fontWeight: "bold" }}>{items[0].value}%</Text>
+                  <Text style={{ color: "#fff", fontSize: 10, fontWeight: "bold" }}>
+                    {items[0].value}%
+                  </Text>
                 </View>
               ),
             }}

@@ -11,9 +11,21 @@ import { useNoShowPolicy, type NoShowPolicy, type NoShowAction } from "@/hooks/u
 import { cn } from "@/lib/utils";
 
 const NOSHOW_ACTIONS: Array<{ value: NoShowAction; label: string; description: string }> = [
-  { value: "warn", label: "Apenas avisar", description: "Marcar paciente sem impedir agendamentos" },
-  { value: "block_online", label: "Bloquear auto-agendamento", description: "Paciente perde acesso ao portal" },
-  { value: "suspend", label: "Suspender por período", description: "Bloqueia qualquer agendamento por N dias" },
+  {
+    value: "warn",
+    label: "Apenas avisar",
+    description: "Marcar paciente sem impedir agendamentos",
+  },
+  {
+    value: "block_online",
+    label: "Bloquear auto-agendamento",
+    description: "Paciente perde acesso ao portal",
+  },
+  {
+    value: "suspend",
+    label: "Suspender por período",
+    description: "Bloqueia qualquer agendamento por N dias",
+  },
   { value: "charge", label: "Cobrar taxa", description: "Aplica taxa configurada por falta" },
 ];
 
@@ -26,7 +38,11 @@ export function PoliticasTab() {
     isSavingRules,
     isSavingNotifications,
   } = useScheduleSettings();
-  const { data: bookingData, save: saveBookingWindow, isSaving: isSavingBooking } = useBookingWindow();
+  const {
+    data: bookingData,
+    save: saveBookingWindow,
+    isSaving: isSavingBooking,
+  } = useBookingWindow();
   const [booking, setBooking] = useState<BookingWindowData>(bookingData);
   const [bookingDirty, setBookingDirty] = useState(false);
   const { data: nsData, save: saveNoShow, isSaving: isSavingNoShow } = useNoShowPolicy();
@@ -114,7 +130,9 @@ export function PoliticasTab() {
         action={
           <Button
             size="sm"
-            onClick={() => upsertNotificationSettings.mutate(notif, { onSuccess: () => setNotifDirty(false) })}
+            onClick={() =>
+              upsertNotificationSettings.mutate(notif, { onSuccess: () => setNotifDirty(false) })
+            }
             disabled={!notifDirty || isSavingNotifications}
             className="bg-teal-600 hover:bg-teal-700"
           >
@@ -126,24 +144,49 @@ export function PoliticasTab() {
         <FieldRow
           label="Email de confirmação"
           description="Enviado após o agendamento"
-          control={<Switch checked={notif.send_confirmation_email} onCheckedChange={(v) => updateNotif("send_confirmation_email", v)} />}
+          control={
+            <Switch
+              checked={notif.send_confirmation_email}
+              onCheckedChange={(v) => updateNotif("send_confirmation_email", v)}
+            />
+          }
         />
         <FieldRow
           label="WhatsApp de confirmação"
           description="Mensagem automática via WhatsApp"
-          control={<Switch checked={notif.send_confirmation_whatsapp} onCheckedChange={(v) => updateNotif("send_confirmation_whatsapp", v)} />}
+          control={
+            <Switch
+              checked={notif.send_confirmation_whatsapp}
+              onCheckedChange={(v) => updateNotif("send_confirmation_whatsapp", v)}
+            />
+          }
         />
         <FieldRow
           label="Lembrete 24h antes"
-          control={<Switch checked={notif.send_reminder_24h} onCheckedChange={(v) => updateNotif("send_reminder_24h", v)} />}
+          control={
+            <Switch
+              checked={notif.send_reminder_24h}
+              onCheckedChange={(v) => updateNotif("send_reminder_24h", v)}
+            />
+          }
         />
         <FieldRow
           label="Lembrete 2h antes"
-          control={<Switch checked={notif.send_reminder_2h} onCheckedChange={(v) => updateNotif("send_reminder_2h", v)} />}
+          control={
+            <Switch
+              checked={notif.send_reminder_2h}
+              onCheckedChange={(v) => updateNotif("send_reminder_2h", v)}
+            />
+          }
         />
         <FieldRow
           label="Aviso de cancelamento"
-          control={<Switch checked={notif.send_cancellation_notice} onCheckedChange={(v) => updateNotif("send_cancellation_notice", v)} />}
+          control={
+            <Switch
+              checked={notif.send_cancellation_notice}
+              onCheckedChange={(v) => updateNotif("send_cancellation_notice", v)}
+            />
+          }
         />
       </SectionCard>
 
@@ -154,7 +197,9 @@ export function PoliticasTab() {
         action={
           <Button
             size="sm"
-            onClick={() => upsertCancellationRules.mutate(rules, { onSuccess: () => setRulesDirty(false) })}
+            onClick={() =>
+              upsertCancellationRules.mutate(rules, { onSuccess: () => setRulesDirty(false) })
+            }
             disabled={!rulesDirty || isSavingRules}
             className="bg-teal-600 hover:bg-teal-700"
           >
@@ -165,7 +210,12 @@ export function PoliticasTab() {
       >
         <FieldRow
           label="Permitir cancelamento pelo paciente"
-          control={<Switch checked={rules.allow_patient_cancellation} onCheckedChange={(v) => updateRules("allow_patient_cancellation", v)} />}
+          control={
+            <Switch
+              checked={rules.allow_patient_cancellation}
+              onCheckedChange={(v) => updateRules("allow_patient_cancellation", v)}
+            />
+          }
         />
         <FieldRow
           label="Horas mínimas de antecedência"
@@ -197,7 +247,12 @@ export function PoliticasTab() {
         />
         <FieldRow
           label="Cobrar cancelamento tardio"
-          control={<Switch checked={rules.charge_late_cancellation} onCheckedChange={(v) => updateRules("charge_late_cancellation", v)} />}
+          control={
+            <Switch
+              checked={rules.charge_late_cancellation}
+              onCheckedChange={(v) => updateRules("charge_late_cancellation", v)}
+            />
+          }
         />
         {rules.charge_late_cancellation && (
           <FieldRow
@@ -241,7 +296,9 @@ export function PoliticasTab() {
               min={0}
               max={30}
               value={booking.minAdvanceDays}
-              onChange={(e) => updateBooking("minAdvanceDays", Math.max(0, Number(e.target.value) || 0))}
+              onChange={(e) =>
+                updateBooking("minAdvanceDays", Math.max(0, Number(e.target.value) || 0))
+              }
               className="h-9 w-24 text-right"
             />
           }
@@ -255,7 +312,9 @@ export function PoliticasTab() {
               min={1}
               max={365}
               value={booking.maxAdvanceDays}
-              onChange={(e) => updateBooking("maxAdvanceDays", Math.max(1, Number(e.target.value) || 1))}
+              onChange={(e) =>
+                updateBooking("maxAdvanceDays", Math.max(1, Number(e.target.value) || 1))
+              }
               className="h-9 w-24 text-right"
             />
           }
@@ -310,7 +369,10 @@ export function PoliticasTab() {
                   max={20}
                   value={noShow.thresholdCount}
                   onChange={(e) =>
-                    updateNoShow("thresholdCount", Math.max(1, Math.min(20, Number(e.target.value) || 1)))
+                    updateNoShow(
+                      "thresholdCount",
+                      Math.max(1, Math.min(20, Number(e.target.value) || 1)),
+                    )
                   }
                   className="h-9 w-24 text-right"
                 />
@@ -326,7 +388,10 @@ export function PoliticasTab() {
                   max={365}
                   value={noShow.windowDays}
                   onChange={(e) =>
-                    updateNoShow("windowDays", Math.max(7, Math.min(365, Number(e.target.value) || 7)))
+                    updateNoShow(
+                      "windowDays",
+                      Math.max(7, Math.min(365, Number(e.target.value) || 7)),
+                    )
                   }
                   className="h-9 w-24 text-right"
                 />
@@ -371,7 +436,10 @@ export function PoliticasTab() {
                   max={365}
                   value={noShow.suspendDays}
                   onChange={(e) =>
-                    updateNoShow("suspendDays", Math.max(0, Math.min(365, Number(e.target.value) || 0)))
+                    updateNoShow(
+                      "suspendDays",
+                      Math.max(0, Math.min(365, Number(e.target.value) || 0)),
+                    )
                   }
                   className="h-9 w-24 text-right"
                 />
@@ -399,7 +467,9 @@ export function PoliticasTab() {
                       min={0}
                       step={5}
                       value={noShow.feeAmount}
-                      onChange={(e) => updateNoShow("feeAmount", Math.max(0, Number(e.target.value) || 0))}
+                      onChange={(e) =>
+                        updateNoShow("feeAmount", Math.max(0, Number(e.target.value) || 0))
+                      }
                       className="h-9 w-28 text-right"
                     />
                   }

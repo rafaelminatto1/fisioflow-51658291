@@ -12,7 +12,14 @@ const source = (score: number, metadata: Record<string, unknown> = {}): AiSearch
 
 describe("isInternalRole", () => {
   it("aceita papéis internos da clínica", () => {
-    for (const role of ["admin", "owner", "fisioterapeuta", "professional", "estagiario", "intern"]) {
+    for (const role of [
+      "admin",
+      "owner",
+      "fisioterapeuta",
+      "professional",
+      "estagiario",
+      "intern",
+    ]) {
       expect(isInternalRole(role)).toBe(true);
     }
   });
@@ -53,7 +60,12 @@ describe("resolveAskOutcome", () => {
 describe("mapAskSources", () => {
   it("extrai title/slug/category/type da metadata e filtra por threshold", () => {
     const sources = [
-      source(0.9, { title: "Protocolo LCA", slug: "protocolo-lca", category: "protocolos", source: "wiki" }),
+      source(0.9, {
+        title: "Protocolo LCA",
+        slug: "protocolo-lca",
+        category: "protocolos",
+        source: "wiki",
+      }),
       source(0.05, { title: "Irrelevante" }),
     ];
     const mapped = mapAskSources(sources, 0.3);

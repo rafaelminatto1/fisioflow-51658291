@@ -19,9 +19,7 @@ const page = {
 
 describe("buildWikiIndexFilename", () => {
   it("gera nome canônico estável baseado apenas no id", () => {
-    expect(buildWikiIndexFilename(page.id)).toBe(
-      "wiki/11111111-2222-3333-4444-555555555555.md",
-    );
+    expect(buildWikiIndexFilename(page.id)).toBe("wiki/11111111-2222-3333-4444-555555555555.md");
   });
 });
 
@@ -73,7 +71,9 @@ describe("serializeWikiPageForIndex", () => {
 });
 
 function mockAiSearchEnv() {
-  const uploadAndPoll = vi.fn().mockResolvedValue({ id: "item-1", filename: "f", status: "indexed" });
+  const uploadAndPoll = vi
+    .fn()
+    .mockResolvedValue({ id: "item-1", filename: "f", status: "indexed" });
   const upload = vi.fn().mockResolvedValue({ id: "item-1", filename: "f", status: "queued" });
   const del = vi.fn().mockResolvedValue(undefined);
   const list = vi.fn().mockResolvedValue({
@@ -82,7 +82,9 @@ function mockAiSearchEnv() {
     ],
   });
   return {
-    env: { AI_SEARCH: { search: vi.fn(), items: { uploadAndPoll, upload, delete: del, list } } } as any,
+    env: {
+      AI_SEARCH: { search: vi.fn(), items: { uploadAndPoll, upload, delete: del, list } },
+    } as any,
     uploadAndPoll,
     upload,
     del,

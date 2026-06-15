@@ -28,15 +28,18 @@ export interface NpsStats {
 }
 
 export const npsApi = {
-  list: (params?: { classification?: "promoter" | "passive" | "detractor"; status?: "responded" | "pending"; limit?: number }) => {
+  list: (params?: {
+    classification?: "promoter" | "passive" | "detractor";
+    status?: "responded" | "pending";
+    limit?: number;
+  }) => {
     const qs = new URLSearchParams(
       Object.entries(params ?? {}).filter(([, v]) => v != null) as [string, string][],
     ).toString();
     return request<{ data: NpsSurvey[] }>(`/api/nps${qs ? `?${qs}` : ""}`);
   },
 
-  stats: (days = 90) =>
-    request<{ data: NpsStats; days: number }>(`/api/nps/stats?days=${days}`),
+  stats: (days = 90) => request<{ data: NpsStats; days: number }>(`/api/nps/stats?days=${days}`),
 
   get: (id: string) => request<{ data: NpsSurvey }>(`/api/nps/${id}`),
 

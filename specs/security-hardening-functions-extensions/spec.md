@@ -19,6 +19,7 @@ Após RLS aplicada em 267/267 tabelas (PR #84), Neon Data API Advisors flagga **
 **Threat model**: usuário com privilégio para criar function em qualquer schema visível poderia criar `public.now()` que sequestre chamadas. Improvável em prod (apenas `neondb_owner`), mas recomendação Postgres oficial.
 
 **Acceptance**:
+
 - 0 findings de `Function Search Path Mutable` no Advisors
 - Todas as 393 funções têm `ALTER FUNCTION ... SET search_path = pg_catalog, public` (ou `= ''` quando seguro)
 - Testes Vitest do Worker passam sem mudança
@@ -26,6 +27,7 @@ Após RLS aplicada em 267/267 tabelas (PR #84), Neon Data API Advisors flagga **
 ### US2 — Mover extensions para schema dedicado (P3, possivelmente skip)
 
 **Threat model**: extension em `public` significa que objetos da extension (operators, types) estão no search_path padrão. Recomendação Neon, **mas risco alto de aplicar** porque índices em produção dependem dos operators das extensions:
+
 - `vector` → todos os índices `ivfflat`/`hnsw` precisam ser recriados
 - `pg_trgm` → índices GIN com `gin_trgm_ops`
 - `btree_gist` → índices GIST compostos

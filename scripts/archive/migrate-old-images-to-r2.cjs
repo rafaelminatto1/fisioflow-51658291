@@ -23,7 +23,7 @@ const R2_PUBLIC_BASE = "https://media.moocafisio.com.br";
 
 async function runMigration() {
   const sql = neon(DATABASE_URL);
-  
+
   console.log("🚀 Iniciando migração das imagens antigas para o R2...\n");
 
   // Buscar todos os exercícios cuja imagem começa com /images/exercises/
@@ -57,7 +57,7 @@ async function runMigration() {
       console.log(`📤 Enviando para R2: ${r2Key} (${ex.name})`);
       execSync(
         `npx wrangler r2 object put ${BUCKET_NAME}/${r2Key} --file "${localPath}" --content-type "image/png"`,
-        { cwd: path.join(__dirname, ".."), stdio: "pipe" }
+        { cwd: path.join(__dirname, ".."), stdio: "pipe" },
       );
       console.log(`   ✅ Upload OK`);
     } catch (err) {

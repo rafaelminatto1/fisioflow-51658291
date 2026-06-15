@@ -124,7 +124,15 @@ export function summarizeQueueTask(task: QueueTask): QueueTaskSummary {
   const payload = getPayloadRecord(task);
   const entityRefs: Record<string, string> = {};
 
-  for (const key of ["patientId", "appointmentId", "examId", "jobId", "assessmentId", "r2Key", "workflowType"]) {
+  for (const key of [
+    "patientId",
+    "appointmentId",
+    "examId",
+    "jobId",
+    "assessmentId",
+    "r2Key",
+    "workflowType",
+  ]) {
     const value = payload[key];
     if (typeof value === "string" && value) entityRefs[key] = value;
   }
@@ -405,39 +413,161 @@ async function processExamUpload(payload: ExamProcessPayload, env: Env): Promise
 function deterministicBiomechanicsMetrics(type: string) {
   if (type === "running_analysis") {
     return [
-      { key: "cadence", value: 168, unit: "spm", phase: "steady_state", confidence: 0.84, severity: "normal" },
-      { key: "contact_time", value: 248, unit: "ms", phase: "stance", confidence: 0.78, severity: "watch" },
-      { key: "trunk_inclination", value: 9, unit: "deg", phase: "mid_stance", confidence: 0.82, severity: "normal" },
-      { key: "dynamic_valgus", value: 12, unit: "deg", phase: "loading", confidence: 0.76, severity: "watch" },
-      { key: "symmetry", value: 86, unit: "%", phase: "global", confidence: 0.81, severity: "normal" },
+      {
+        key: "cadence",
+        value: 168,
+        unit: "spm",
+        phase: "steady_state",
+        confidence: 0.84,
+        severity: "normal",
+      },
+      {
+        key: "contact_time",
+        value: 248,
+        unit: "ms",
+        phase: "stance",
+        confidence: 0.78,
+        severity: "watch",
+      },
+      {
+        key: "trunk_inclination",
+        value: 9,
+        unit: "deg",
+        phase: "mid_stance",
+        confidence: 0.82,
+        severity: "normal",
+      },
+      {
+        key: "dynamic_valgus",
+        value: 12,
+        unit: "deg",
+        phase: "loading",
+        confidence: 0.76,
+        severity: "watch",
+      },
+      {
+        key: "symmetry",
+        value: 86,
+        unit: "%",
+        phase: "global",
+        confidence: 0.81,
+        severity: "normal",
+      },
     ];
   }
   if (type === "gait_analysis") {
     return [
-      { key: "cadence", value: 104, unit: "spm", phase: "global", confidence: 0.86, severity: "normal" },
-      { key: "stance_time", value: 642, unit: "ms", phase: "stance", confidence: 0.8, severity: "normal" },
-      { key: "step_symmetry", value: 88, unit: "%", phase: "global", confidence: 0.82, severity: "normal" },
-      { key: "pelvic_drop", value: 5, unit: "deg", phase: "mid_stance", confidence: 0.77, severity: "watch" },
+      {
+        key: "cadence",
+        value: 104,
+        unit: "spm",
+        phase: "global",
+        confidence: 0.86,
+        severity: "normal",
+      },
+      {
+        key: "stance_time",
+        value: 642,
+        unit: "ms",
+        phase: "stance",
+        confidence: 0.8,
+        severity: "normal",
+      },
+      {
+        key: "step_symmetry",
+        value: 88,
+        unit: "%",
+        phase: "global",
+        confidence: 0.82,
+        severity: "normal",
+      },
+      {
+        key: "pelvic_drop",
+        value: 5,
+        unit: "deg",
+        phase: "mid_stance",
+        confidence: 0.77,
+        severity: "watch",
+      },
     ];
   }
   if (type === "static_posture") {
     return [
-      { key: "head_alignment", value: 4, unit: "deg", phase: "static", confidence: 0.83, severity: "normal" },
-      { key: "shoulder_asymmetry", value: 6, unit: "deg", phase: "static", confidence: 0.79, severity: "watch" },
-      { key: "pelvic_tilt", value: 3, unit: "deg", phase: "static", confidence: 0.8, severity: "normal" },
-      { key: "knee_alignment", value: 2, unit: "deg", phase: "static", confidence: 0.78, severity: "normal" },
+      {
+        key: "head_alignment",
+        value: 4,
+        unit: "deg",
+        phase: "static",
+        confidence: 0.83,
+        severity: "normal",
+      },
+      {
+        key: "shoulder_asymmetry",
+        value: 6,
+        unit: "deg",
+        phase: "static",
+        confidence: 0.79,
+        severity: "watch",
+      },
+      {
+        key: "pelvic_tilt",
+        value: 3,
+        unit: "deg",
+        phase: "static",
+        confidence: 0.8,
+        severity: "normal",
+      },
+      {
+        key: "knee_alignment",
+        value: 2,
+        unit: "deg",
+        phase: "static",
+        confidence: 0.78,
+        severity: "normal",
+      },
     ];
   }
   return [
-    { key: "knee_rom", value: 118, unit: "deg", phase: "peak_flexion", confidence: 0.84, severity: "normal" },
-    { key: "dynamic_valgus", value: 14, unit: "deg", phase: "loading", confidence: 0.79, severity: "watch" },
-    { key: "trunk_inclination", value: 32, unit: "deg", phase: "descent", confidence: 0.82, severity: "normal" },
-    { key: "pelvic_drop", value: 6, unit: "deg", phase: "single_leg", confidence: 0.76, severity: "watch" },
+    {
+      key: "knee_rom",
+      value: 118,
+      unit: "deg",
+      phase: "peak_flexion",
+      confidence: 0.84,
+      severity: "normal",
+    },
+    {
+      key: "dynamic_valgus",
+      value: 14,
+      unit: "deg",
+      phase: "loading",
+      confidence: 0.79,
+      severity: "watch",
+    },
+    {
+      key: "trunk_inclination",
+      value: 32,
+      unit: "deg",
+      phase: "descent",
+      confidence: 0.82,
+      severity: "normal",
+    },
+    {
+      key: "pelvic_drop",
+      value: 6,
+      unit: "deg",
+      phase: "single_leg",
+      confidence: 0.76,
+      severity: "watch",
+    },
     { key: "symmetry", value: 84, unit: "%", phase: "global", confidence: 0.81, severity: "watch" },
   ];
 }
 
-async function processBiomechanicsMedia(payload: BiomechanicsProcessPayload, env: Env): Promise<void> {
+async function processBiomechanicsMedia(
+  payload: BiomechanicsProcessPayload,
+  env: Env,
+): Promise<void> {
   const pool = await createPoolForOrg(env, payload.organizationId);
   const algorithmVersion = "bio-pipeline-1.0.0";
 

@@ -11,7 +11,7 @@ interface SymmetryMeterProps {
 
 export function SymmetryMeter({ score, leftLabel = "E", rightLabel = "D" }: SymmetryMeterProps) {
   const pointerPos: DimensionValue = `${score}%`;
-  
+
   // Determinamos o tom base no desvio da simetria (50% é o centro perfeito)
   const deviation = Math.abs(50 - score);
   const statusColor = deviation < 5 ? "#10B981" : deviation < 15 ? "#F59E0B" : "#EF4444";
@@ -31,10 +31,21 @@ export function SymmetryMeter({ score, leftLabel = "E", rightLabel = "D" }: Symm
           {/* Gradient-like sections */}
           <View style={[styles.section, { backgroundColor: "#EF444430", flex: 3 }]} />
           <View style={[styles.section, { backgroundColor: "#F59E0B30", flex: 1.5 }]} />
-          <View style={[styles.section, { backgroundColor: "#10B98140", flex: 1, borderLeftWidth: 1, borderRightWidth: 1, borderColor: "#10B981" }]} />
+          <View
+            style={[
+              styles.section,
+              {
+                backgroundColor: "#10B98140",
+                flex: 1,
+                borderLeftWidth: 1,
+                borderRightWidth: 1,
+                borderColor: "#10B981",
+              },
+            ]}
+          />
           <View style={[styles.section, { backgroundColor: "#F59E0B30", flex: 1.5 }]} />
           <View style={[styles.section, { backgroundColor: "#EF444430", flex: 3 }]} />
-          
+
           {/* Pointer */}
           <View style={[styles.pointer, { left: pointerPos, backgroundColor: statusColor }]} />
         </View>

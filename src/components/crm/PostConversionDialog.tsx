@@ -54,10 +54,7 @@ export function PostConversionDialog({ open, onClose, lead }: Props) {
   const [paymentMethod, setPaymentMethod] = useState<string>("pix");
   const [issueNfse, setIssueNfse] = useState(false);
 
-  const selected = useMemo(
-    () => packages.find((p) => p.id === packageId),
-    [packages, packageId],
-  );
+  const selected = useMemo(() => packages.find((p) => p.id === packageId), [packages, packageId]);
 
   // Sugestão inicial quando abre
   useEffect(() => {
@@ -181,11 +178,7 @@ export function PostConversionDialog({ open, onClose, lead }: Props) {
         )}
 
         <div className="flex items-start gap-2 rounded-md border bg-slate-50 p-3">
-          <Checkbox
-            id="nfse"
-            checked={issueNfse}
-            onCheckedChange={(v) => setIssueNfse(!!v)}
-          />
+          <Checkbox id="nfse" checked={issueNfse} onCheckedChange={(v) => setIssueNfse(!!v)} />
           <div className="space-y-0.5">
             <Label htmlFor="nfse" className="cursor-pointer font-medium">
               Emitir NFS-e em seguida

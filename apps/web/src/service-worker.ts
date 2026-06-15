@@ -100,9 +100,7 @@ registerRoute(
 
 // Imagens / ícones / fontes — StaleWhileRevalidate
 registerRoute(
-  ({ request }) =>
-    request.destination === "image" ||
-    request.destination === "font",
+  ({ request }) => request.destination === "image" || request.destination === "font",
   new StaleWhileRevalidate({
     cacheName: "app-static",
     plugins: [
@@ -262,7 +260,7 @@ async function drainOfflineQueue() {
       if (res.ok) {
         await new Promise<void>((resolve, reject) => {
           const tx = db.transaction(STORE_NAME, "readwrite");
-          // No sistema novo, marcamos como synced ou deletamos? 
+          // No sistema novo, marcamos como synced ou deletamos?
           // offlineSync.ts deleta após sucesso.
           tx.objectStore(STORE_NAME).delete(op.id);
           tx.oncomplete = () => resolve();

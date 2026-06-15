@@ -23,13 +23,8 @@
         "method": "GET",
         "url": {
           "raw": "{{baseUrl}}/api/health",
-          "host": [
-            "{{baseUrl}}"
-          ],
-          "path": [
-            "api",
-            "health"
-          ]
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "health"]
         }
       }
     },
@@ -39,14 +34,8 @@
         "method": "GET",
         "url": {
           "raw": "{{baseUrl}}/api/health/ready",
-          "host": [
-            "{{baseUrl}}"
-          ],
-          "path": [
-            "api",
-            "health",
-            "ready"
-          ]
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "health", "ready"]
         }
       }
     },
@@ -56,14 +45,8 @@
         "method": "GET",
         "url": {
           "raw": "{{baseUrl}}/api/health/db",
-          "host": [
-            "{{baseUrl}}"
-          ],
-          "path": [
-            "api",
-            "health",
-            "db"
-          ]
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "health", "db"]
         }
       }
     }

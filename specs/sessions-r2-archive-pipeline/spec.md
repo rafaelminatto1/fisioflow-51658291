@@ -17,6 +17,7 @@ R2 SQL JOINs/CTEs (GA 2026-05-14) permite arquivar dados frios em Iceberg/Parque
 **Why**: LGPD prevê retenção mínima de prontuário (CFM exige 20 anos), mas dados podem ficar fora do banco "quente". Arquivar reduz custo Neon sem violar retenção.
 
 **Acceptance**:
+
 1. Cron Worker mensal copia `sessions.created_at < now() - interval '90 days'` para R2 Iceberg
 2. Origem mantida intocada (write-once, read-many) até auditoria validar parity
 3. Query analítica `SELECT s.observacao, p.name FROM fisioflow_archive.sessions_archive s JOIN patients_archive p ON s.patient_id = p.id WHERE s.created_at BETWEEN ... LIMIT 100` funciona via R2 SQL
@@ -29,6 +30,7 @@ R2 SQL JOINs/CTEs (GA 2026-05-14) permite arquivar dados frios em Iceberg/Parque
 **Acceptance**: Após 12 meses de arquivamento sem incidente, script `purge-archived-sessions.mjs` deleta de Neon o que está em R2.
 
 ### Edge Cases
+
 - Session arquivada precisa ser editada pelo fisio: retornar 410 Gone + instrução para criar nova sessão referente
 - R2 SQL retorna stale: idempotência via `last_archived_at`
 

@@ -1,12 +1,6 @@
 import { request } from "./base";
 
-export type LifecycleStage =
-  | "lead"
-  | "mql"
-  | "sql"
-  | "opportunity"
-  | "customer"
-  | "churned";
+export type LifecycleStage = "lead" | "mql" | "sql" | "opportunity" | "customer" | "churned";
 
 export interface Contact {
   id: string;
@@ -78,7 +72,8 @@ export const contactsApi = {
     q?: string;
     limit?: number;
     offset?: number;
-  }) => request<{ data: Contact[]; limit: number; offset: number }>(`/api/contacts${qs(params ?? {})}`),
+  }) =>
+    request<{ data: Contact[]; limit: number; offset: number }>(`/api/contacts${qs(params ?? {})}`),
 
   get: (id: string) => request<{ data: Contact360 }>(`/api/contacts/${id}`),
 

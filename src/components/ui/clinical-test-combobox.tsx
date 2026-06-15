@@ -52,7 +52,9 @@ export function ClinicalTestCombobox({
     const searchLower = searchTerm.toLowerCase();
     return tests.filter(
       (test) =>
-        String(test.name ?? "").toLowerCase().includes(searchLower) ||
+        String(test.name ?? "")
+          .toLowerCase()
+          .includes(searchLower) ||
         String(test.name_en ?? "")
           .toLowerCase()
           .includes(searchLower) ||

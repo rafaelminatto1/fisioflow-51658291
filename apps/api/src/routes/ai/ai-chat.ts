@@ -613,11 +613,9 @@ app.post("/ingest", async (c) => {
   try {
     if (c.env.AI_SEARCH) {
       const filename = `wiki_${Date.now()}.md`;
-      const uploadRes = await c.env.AI_SEARCH.items.upload(
-        filename,
-        text,
-        { metadata: metadata || {} }
-      );
+      const uploadRes = await c.env.AI_SEARCH.items.upload(filename, text, {
+        metadata: metadata || {},
+      });
       return c.json({ success: true, id: uploadRes.id });
     }
 

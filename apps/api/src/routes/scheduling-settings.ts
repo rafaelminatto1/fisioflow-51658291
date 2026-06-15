@@ -842,7 +842,16 @@ const handleUpsertNoShowPolicy = async (c: any) => {
            notify_admin = EXCLUDED.notify_admin,
            updated_at = NOW()
        RETURNING *`,
-      [user.organizationId, threshold, window, action, suspendDays, chargeFee, feeAmount, notifyAdmin],
+      [
+        user.organizationId,
+        threshold,
+        window,
+        action,
+        suspendDays,
+        chargeFee,
+        feeAmount,
+        notifyAdmin,
+      ],
     );
     await invalidateScheduleCache(c.env, user.organizationId, "no-show-policy");
     return c.json({ data: mapNoShowPolicyRow(result.rows[0]) });

@@ -684,7 +684,9 @@ app.get("/search/semantic", async (c) => {
       });
 
       if (sources.length > 0) {
-        const matchedIds = sources.map((s) => s.id.replace(/^exercise-/, "").replace(/^exercise:/, ""));
+        const matchedIds = sources.map((s) =>
+          s.id.replace(/^exercise-/, "").replace(/^exercise:/, ""),
+        );
         const db = await createDb(c.env);
         const rows = await db
           .select()

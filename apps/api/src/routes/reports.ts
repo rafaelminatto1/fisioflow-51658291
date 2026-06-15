@@ -389,7 +389,12 @@ app.delete("/convenio/:id", requireAuth, async (c) => {
 });
 
 app.get("/chart", requireAuth, async (c) => {
-  const { type = "bar", data = "10,20,30,40", labels = "Jan,Feb,Mar,Apr", title = "Demo Chart" } = c.req.query();
+  const {
+    type = "bar",
+    data = "10,20,30,40",
+    labels = "Jan,Feb,Mar,Apr",
+    title = "Demo Chart",
+  } = c.req.query();
 
   const chartConfig = {
     type,

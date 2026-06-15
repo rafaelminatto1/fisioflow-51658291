@@ -1,4 +1,14 @@
-import { boolean, date, pgTable, uuid, text, timestamp, varchar, integer, jsonb } from "drizzle-orm/pg-core";
+import {
+  boolean,
+  date,
+  pgTable,
+  uuid,
+  text,
+  timestamp,
+  varchar,
+  integer,
+  jsonb,
+} from "drizzle-orm/pg-core";
 import { organizations } from "./organizations";
 import { patients } from "./patients";
 import { profiles } from "./organizations"; // Profiles are in organizations.ts
@@ -24,7 +34,9 @@ export const clinicalScribeLogs = pgTable("clinical_scribe_logs", {
   captureReason: varchar("capture_reason", { length: 40 }).default("soap_section").notNull(),
   capturedSeconds: integer("captured_seconds").default(0).notNull(),
   sessionCoveragePercent: integer("session_coverage_percent").default(100).notNull(),
-  audioPolicyVersion: varchar("audio_policy_version", { length: 20 }).default("2026-06-11").notNull(),
+  audioPolicyVersion: varchar("audio_policy_version", { length: 20 })
+    .default("2026-06-11")
+    .notNull(),
   captureMetadata: jsonb("capture_metadata").$type<Record<string, unknown>>().default({}).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });

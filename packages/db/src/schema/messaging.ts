@@ -16,8 +16,5 @@ export const messages = pgTable(
     readAt: timestamp("read_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   },
-  (table) => [
-    withOrganizationPolicy("messages", table.organizationId),
-  ],
+  (table) => [withOrganizationPolicy("messages", table.organizationId)],
 );
-

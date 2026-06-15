@@ -10,7 +10,16 @@ export function redactPII(data: any): any {
   if (!data || typeof data !== "object") return data;
   if (Array.isArray(data)) return data.map(redactPII);
 
-  const sensitiveKeys = ["cpf", "phone", "email", "patientName", "fullName", "patientId", "name", "password"];
+  const sensitiveKeys = [
+    "cpf",
+    "phone",
+    "email",
+    "patientName",
+    "fullName",
+    "patientId",
+    "name",
+    "password",
+  ];
   const redacted = { ...data };
 
   for (const key in redacted) {
@@ -35,7 +44,10 @@ export async function logToAxiom(env: Env, ctx: ExecutionContext, data: AxiomLog
 
   if (!token || !orgId) {
     // Se não houver token, apenas loga no console
-    console.log(`[LocalLog] ${redactedData.level.toUpperCase()}: ${redactedData.message}`, redactedData);
+    console.log(
+      `[LocalLog] ${redactedData.level.toUpperCase()}: ${redactedData.message}`,
+      redactedData,
+    );
     return;
   }
 

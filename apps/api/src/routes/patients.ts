@@ -615,7 +615,13 @@ app.get("/", async (c) => {
 						p.sessions_completed as "sessionsCompleted",
 						p.total_appointments as "totalAppointments",
 						p.next_appointment_date as "nextAppointmentDate",
-						p.open_balance as "openBalance"
+						p.open_balance as "openBalance",
+						p.cpf,
+						NULL as "mainCondition",
+						ARRAY[]::text[] as "pathologyNames",
+						p.origin,
+						p.partner_company_name as "partnerCompanyName",
+						p.professional_name as "professionalName"
 					FROM patients p
 					WHERE p.organization_id = $1::uuid
 						AND COALESCE(p.archived, FALSE) = FALSE
@@ -1423,9 +1429,15 @@ const updatePatientHandler = async (c: any) => {
     const row = result[0];
     if (!row) {
       if ((body as any).version !== undefined) {
-        const check = await db.select({ id: patients.id }).from(patients).where(withTenant(patients, user.organizationId, eq(patients.id, id)));
+        const check = await db
+          .select({ id: patients.id })
+          .from(patients)
+          .where(withTenant(patients, user.organizationId, eq(patients.id, id)));
         if (check.length > 0) {
-          return c.json({ error: "Conflito de versão. O registro foi atualizado por outro usuário." }, 409);
+          return c.json(
+            { error: "Conflito de versão. O registro foi atualizado por outro usuário." },
+            409,
+          );
         }
       }
       return c.json({ error: "Paciente não encontrado" }, 404);

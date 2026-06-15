@@ -90,14 +90,11 @@ export function useAgendaAppearance(view: AgendaView) {
       "--agenda-type-font-scale": `${0.6 + (Math.max(0, Math.min(10, effectiveForView.typeFontScale ?? 5)) / 10) * 0.8}`,
       "--agenda-card-padding": `${0.25 + (Math.max(0, Math.min(10, effectiveForView.paddingScale ?? 5)) / 10) * 0.75}rem`,
     } as React.CSSProperties,
-    setCardSize: (val: any) =>
-      save({ ...state, [view]: { ...state[view], cardSize: val } }),
+    setCardSize: (val: any) => save({ ...state, [view]: { ...state[view], cardSize: val } }),
     setHeightScale: (val: number) =>
       save({ ...state, [view]: { ...state[view], heightScale: val } }),
-    setFontScale: (val: number) =>
-      save({ ...state, [view]: { ...state[view], fontScale: val } }),
-    setOpacity: (val: number) =>
-      save({ ...state, [view]: { ...state[view], opacity: val } }),
+    setFontScale: (val: number) => save({ ...state, [view]: { ...state[view], fontScale: val } }),
+    setOpacity: (val: number) => save({ ...state, [view]: { ...state[view], opacity: val } }),
     setTimeFontScale: (val: number) =>
       save({ ...state, [view]: { ...state[view], timeFontScale: val } }),
     setTypeFontScale: (val: number) =>

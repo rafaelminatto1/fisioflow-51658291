@@ -4,13 +4,13 @@ Status: **NÃO BLOQUEADOR.** Os arquivos abaixo compilam contra aliases `@deprec
 
 ## Arquivos pendentes
 
-| Arquivo                          | LoC aprox | Consumidores diretos                                                       | Impacto se quebrado            |
-| -------------------------------- | --------- | -------------------------------------------------------------------------- | ------------------------------ |
-| `src/lib/ai/clinical-support.ts` | ~750      | `ClinicalDecisionSupport` em `AssistenteTab.tsx`, `IntelligentReports.tsx` | Sugestões clínicas + red flags |
-| `src/lib/ai/rag-clinical.ts`     | ~350      | `RAGClinicalContext`, busca por casos similares                            | Buscas de evidência clínica    |
-| `src/lib/ai/observacao-assistant.ts`   | ~720      | Apenas tipos (após cleanup da Fase 7)                                      | Tipos legados de transcrição   |
-| `src/lib/ai/pain-analysis.ts`    | ~400      | `PainAnalysisDashboard`, gráficos de evolução de dor                       | Análise de tendência de dor    |
-| `src/lib/ai/exercises.ts`        | ~280      | `ExerciseAIAssistant` em modal de recomendação                             | Sugestão de exercícios         |
+| Arquivo                              | LoC aprox | Consumidores diretos                                                       | Impacto se quebrado            |
+| ------------------------------------ | --------- | -------------------------------------------------------------------------- | ------------------------------ |
+| `src/lib/ai/clinical-support.ts`     | ~750      | `ClinicalDecisionSupport` em `AssistenteTab.tsx`, `IntelligentReports.tsx` | Sugestões clínicas + red flags |
+| `src/lib/ai/rag-clinical.ts`         | ~350      | `RAGClinicalContext`, busca por casos similares                            | Buscas de evidência clínica    |
+| `src/lib/ai/observacao-assistant.ts` | ~720      | Apenas tipos (após cleanup da Fase 7)                                      | Tipos legados de transcrição   |
+| `src/lib/ai/pain-analysis.ts`        | ~400      | `PainAnalysisDashboard`, gráficos de evolução de dor                       | Análise de tendência de dor    |
+| `src/lib/ai/exercises.ts`            | ~280      | `ExerciseAIAssistant` em modal de recomendação                             | Sugestão de exercícios         |
 
 Total: ~2.500 linhas.
 

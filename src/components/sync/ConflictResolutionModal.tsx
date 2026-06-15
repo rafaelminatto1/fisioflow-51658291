@@ -86,9 +86,7 @@ export function ConflictResolutionModal({ open, onOpenChange }: ConflictResoluti
         </DialogHeader>
 
         {conflicts.length === 0 ? (
-          <div className="py-8 text-center text-sm text-slate-500">
-            Nenhum conflito pendente.
-          </div>
+          <div className="py-8 text-center text-sm text-slate-500">Nenhum conflito pendente.</div>
         ) : (
           <div className="space-y-3 max-h-[60vh] overflow-y-auto">
             <p className="text-sm text-slate-600">
@@ -112,9 +110,7 @@ export function ConflictResolutionModal({ open, onOpenChange }: ConflictResoluti
                       <p className="text-xs text-slate-500 truncate">{subtitle}</p>
                       <p className="text-[11px] text-slate-400 mt-0.5">
                         Conflito em {when}
-                        {a.lastError && (
-                          <span className="ml-2 text-rose-600">· {a.lastError}</span>
-                        )}
+                        {a.lastError && <span className="ml-2 text-rose-600">· {a.lastError}</span>}
                       </p>
                     </div>
                   </div>

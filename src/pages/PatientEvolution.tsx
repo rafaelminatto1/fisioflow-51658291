@@ -123,6 +123,7 @@ const LazyNotionEvolutionPanel = lazy(() =>
 );
 
 import { preloadEditorChunks } from "@/lib/evolution/preloadEditors";
+import { stripPainDetail } from "@/lib/evolution/painDetail";
 import type { EvolutionV2Data } from "@/components/evolution/v2-improved/types";
 
 export interface PainScaleData {
@@ -681,7 +682,7 @@ const PatientEvolution = () => {
 				),
 		) || [];
 
-	const measurementsByType = (state.measurements || []).reduce(
+	const measurementsByType = stripPainDetail(state.measurements || []).reduce(
 		(acc: any, current: any) => {
 			const type = current.measurement_type || "outros";
 			if (!acc[type]) acc[type] = [];

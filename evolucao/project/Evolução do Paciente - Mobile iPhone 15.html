@@ -1,1189 +1,1307 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="pt-BR">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>FisioFlow - Evolução Mobile iPhone 15</title>
-<link rel="stylesheet" href="_ds/fisioflow-design-system-019e1c70-8b8d-751e-a4d5-3f0d34162504/colors_and_type.css">
-<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
-<style>
-  :root {
-    --ff-blue: #0080ff;
-    --ff-blue-dark: #005ab6;
-    --ff-green: #10b981;
-    --ff-bg: #f8fafc;
-    --ff-card: #ffffff;
-    --ff-border: #e2e8f0;
-    --ff-muted: #64748b;
-    --ff-text: #0f172a;
-    --ff-soft-blue: #eaf4ff;
-    --ff-soft-green: #dcfce7;
-    --phone-w: 393px;
-    --phone-h: 852px;
-  }
-
-  * { box-sizing: border-box; }
-
-  body {
-    margin: 0;
-    min-height: 100vh;
-    background: #e5e7eb;
-    color: var(--ff-text);
-    font-family: var(--font-sans), Nunito, system-ui, sans-serif;
-    -webkit-font-smoothing: antialiased;
-  }
-
-  button, input, textarea { font: inherit; }
-
-  .stage {
-    min-height: 100vh;
-    padding: 28px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 18px;
-  }
-
-  .brief {
-    width: min(860px, 100%);
-    color: #475569;
-  }
-
-  .brief h1 {
-    margin: 0 0 6px;
-    font-size: 22px;
-    line-height: 1.2;
-    letter-spacing: 0;
-  }
-
-  .brief p {
-    margin: 0;
-    font-size: 13px;
-    line-height: 1.45;
-    color: #64748b;
-  }
-
-  .phone {
-    width: var(--phone-w);
-    height: var(--phone-h);
-    border-radius: 42px;
-    padding: 12px;
-    background: #0f172a;
-    box-shadow: 0 28px 70px rgba(15, 23, 42, 0.28);
-  }
-
-  .screen {
-    position: relative;
-    width: 100%;
-    height: 100%;
-    overflow: hidden;
-    border-radius: 32px;
-    background: var(--ff-bg);
-    border: 1px solid rgba(255,255,255,0.16);
-  }
-
-  .statusbar {
-    height: 28px;
-    padding: 7px 22px 0;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    font-size: 12px;
-    font-weight: 800;
-    letter-spacing: 0;
-    background: rgba(248,250,252,0.96);
-  }
-
-  .status-icons {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-  }
-
-  .signal {
-    width: 17px;
-    height: 10px;
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 1px;
-    align-items: end;
-  }
-
-  .signal span {
-    display: block;
-    width: 3px;
-    border-radius: 2px;
-    background: #0f172a;
-  }
-
-  .signal span:nth-child(1) { height: 4px; }
-  .signal span:nth-child(2) { height: 6px; }
-  .signal span:nth-child(3) { height: 8px; }
-  .signal span:nth-child(4) { height: 10px; }
-
-  .battery {
-    width: 21px;
-    height: 10px;
-    border: 1.5px solid #0f172a;
-    border-radius: 3px;
-    position: relative;
-  }
-
-  .battery::before {
-    content: "";
-    position: absolute;
-    top: 2px;
-    left: 2px;
-    width: 13px;
-    height: 4px;
-    border-radius: 2px;
-    background: #0f172a;
-  }
-
-  .battery::after {
-    content: "";
-    position: absolute;
-    right: -4px;
-    top: 2px;
-    width: 2px;
-    height: 5px;
-    border-radius: 0 2px 2px 0;
-    background: #0f172a;
-  }
-
-  .app {
-    height: calc(100% - 28px);
-    display: flex;
-    flex-direction: column;
-  }
-
-  .topbar {
-    position: relative;
-    z-index: 4;
-    background: rgba(255,255,255,0.96);
-    border-bottom: 1px solid var(--ff-border);
-    padding: 8px 12px 10px;
-    display: grid;
-    grid-template-columns: 36px 36px minmax(0, 1fr) auto;
-    gap: 8px;
-    align-items: center;
-  }
-
-  .iconbtn {
-    width: 36px;
-    height: 36px;
-    border: 1px solid var(--ff-border);
-    background: #fff;
-    border-radius: 12px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    color: #475569;
-    cursor: pointer;
-  }
-
-  .avatar {
-    width: 36px;
-    height: 36px;
-    border-radius: 999px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #075985;
-    background: #dbeafe;
-    font-weight: 900;
-    font-size: 12px;
-  }
-
-  .patient {
-    min-width: 0;
-  }
-
-  .patient strong {
-    display: block;
-    font-size: 13px;
-    line-height: 1.15;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  .patient-meta {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    margin-top: 3px;
-    color: var(--ff-muted);
-    font-size: 10px;
-    font-weight: 700;
-    white-space: nowrap;
-  }
-
-  .badge {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 18px;
-    padding: 0 7px;
-    border-radius: 999px;
-    font-size: 9px;
-    font-weight: 900;
-    letter-spacing: 0.05em;
-    color: #075985;
-    background: #e0f2fe;
-  }
-
-  .saved {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    color: #047857;
-  }
-
-  .finish {
-    height: 36px;
-    border: 0;
-    border-radius: 13px;
-    padding: 0 11px;
-    color: #fff;
-    background: var(--ff-blue);
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    font-size: 10px;
-    font-weight: 900;
-    letter-spacing: 0.04em;
-    cursor: pointer;
-  }
-
-  .content {
-    flex: 1;
-    min-height: 0;
-    overflow-y: auto;
-    padding: 10px 12px 96px;
-    scroll-behavior: smooth;
-  }
-
-  .chip-row {
-    display: flex;
-    gap: 7px;
-    overflow-x: auto;
-    padding-bottom: 8px;
-    scrollbar-width: none;
-  }
-
-  .chip-row::-webkit-scrollbar { display: none; }
-
-  .chip {
-    min-height: 34px;
-    padding: 0 11px;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    white-space: nowrap;
-    border-radius: 999px;
-    border: 1px dashed #cbd5e1;
-    color: #0f172a;
-    background: #fff;
-    font-size: 11px;
-    font-weight: 800;
-  }
-
-  .segments {
-    position: sticky;
-    top: 0;
-    z-index: 3;
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 4px;
-    padding: 4px;
-    margin-bottom: 10px;
-    border-radius: 16px;
-    background: #e2e8f0;
-  }
-
-  .seg {
-    height: 34px;
-    border: 0;
-    border-radius: 12px;
-    background: transparent;
-    color: #64748b;
-    font-size: 11px;
-    font-weight: 900;
-    cursor: pointer;
-  }
-
-  .seg.is-active {
-    background: #fff;
-    color: var(--ff-blue-dark);
-    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.12);
-  }
-
-  .panel { display: none; }
-  .panel.is-active { display: flex; flex-direction: column; gap: 10px; }
-
-  .card {
-    background: var(--ff-card);
-    border: 1px solid var(--ff-border);
-    border-radius: 16px;
-    overflow: hidden;
-    box-shadow: 0 2px 4px rgba(30, 41, 59, 0.04);
-  }
-
-  .card-head {
-    display: flex;
-    align-items: center;
-    gap: 9px;
-    padding: 12px 13px 10px;
-  }
-
-  .card-icon {
-    width: 30px;
-    height: 30px;
-    border-radius: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex: 0 0 auto;
-  }
-
-  .card-title {
-    min-width: 0;
-    flex: 1;
-  }
-
-  .card-title strong {
-    display: block;
-    font-size: 13px;
-    line-height: 1.15;
-  }
-
-  .card-title span {
-    display: block;
-    margin-top: 2px;
-    color: var(--ff-muted);
-    font-size: 10px;
-    font-weight: 700;
-  }
-
-  .mini-action {
-    min-height: 30px;
-    border-radius: 999px;
-    border: 1px solid var(--ff-border);
-    padding: 0 10px;
-    background: #fff;
-    color: #2563eb;
-    font-size: 11px;
-    font-weight: 800;
-    cursor: pointer;
-  }
-
-  .editor-body {
-    border-top: 1px solid #eef2f7;
-    padding: 12px 14px 14px;
-    font-size: 14px;
-    line-height: 1.48;
-  }
-
-  .editor-body p { margin: 0 0 9px; }
-  .editor-body p:last-child { margin-bottom: 0; }
-
-  .toolbar {
-    height: 42px;
-    border-top: 1px solid #eef2f7;
-    background: #f8fafc;
-    display: flex;
-    align-items: center;
-    gap: 3px;
-    padding: 5px 9px;
-  }
-
-  .tool {
-    width: 32px;
-    height: 32px;
-    border: 0;
-    border-radius: 10px;
-    background: transparent;
-    color: #475569;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-  }
-
-  .row {
-    margin: 0 12px 12px;
-    min-height: 46px;
-    border: 1px solid #e2e8f0;
-    border-radius: 13px;
-    background: #fbfdff;
-    padding: 8px 10px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-
-  .check {
-    width: 18px;
-    height: 18px;
-    border-radius: 5px;
-    border: 1.5px solid #94a3b8;
-    flex: 0 0 auto;
-  }
-
-  .row-text {
-    min-width: 0;
-    flex: 1;
-  }
-
-  .row-title {
-    font-size: 13px;
-    font-weight: 900;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  .tag {
-    display: inline-flex;
-    align-items: center;
-    margin-top: 3px;
-    min-height: 18px;
-    padding: 0 7px;
-    border-radius: 999px;
-    color: #047857;
-    background: #d1fae5;
-    font-size: 8.5px;
-    font-weight: 900;
-    letter-spacing: 0.04em;
-  }
-
-  .add-row {
-    margin: 0 12px 12px;
-    display: grid;
-    grid-template-columns: 1fr 58px 42px;
-    gap: 7px;
-  }
-
-  .input {
-    width: 100%;
-    height: 42px;
-    border: 1px solid #cbd5e1;
-    border-radius: 13px;
-    background: #fff;
-    padding: 0 12px;
-    color: #0f172a;
-    outline: 0;
-    font-size: 12px;
-  }
-
-  .dose {
-    height: 42px;
-    border-radius: 13px;
-    background: #f1f5f9;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 12px;
-    font-weight: 900;
-  }
-
-  .add-btn {
-    height: 42px;
-    border: 0;
-    border-radius: 13px;
-    background: var(--ff-blue);
-    color: #fff;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-  }
-
-  .eva-card { padding: 13px; }
-
-  .eva-main {
-    display: grid;
-    grid-template-columns: 58px minmax(0, 1fr);
-    gap: 12px;
-    align-items: center;
-    margin-bottom: 13px;
-  }
-
-  .eva-number {
-    width: 58px;
-    height: 58px;
-    border-radius: 17px;
-    background: #22c55e;
-    color: #fff;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 30px;
-    font-weight: 900;
-    font-variant-numeric: tabular-nums;
-  }
-
-  .eva-copy strong {
-    display: block;
-    color: #16a34a;
-    font-size: 17px;
-    line-height: 1.1;
-  }
-
-  .eva-copy span {
-    display: block;
-    margin-top: 4px;
-    color: #64748b;
-    font-size: 11px;
-    font-weight: 700;
-  }
-
-  .eva-grid {
-    display: grid;
-    grid-template-columns: repeat(11, 1fr);
-    gap: 3px;
-  }
-
-  .eva-btn {
-    height: 31px;
-    border-radius: 9px;
-    border: 1px solid #cbd5e1;
-    background: #fff;
-    color: #475569;
-    padding: 0;
-    font-size: 12px;
-    font-weight: 900;
-    cursor: pointer;
-  }
-
-  .eva-btn.is-active {
-    border-color: #22c55e;
-    background: #22c55e;
-    color: #fff;
-  }
-
-  .eva-bar {
-    position: relative;
-    height: 8px;
-    margin: 11px 1px 0;
-    border-radius: 999px;
-    background: linear-gradient(90deg, #22c55e 0%, #eab308 45%, #ef4444 76%, #7f1d1d 100%);
-  }
-
-  .eva-knob {
-    position: absolute;
-    left: 30%;
-    top: -4px;
-    width: 16px;
-    height: 16px;
-    transform: translateX(-50%);
-    border-radius: 999px;
-    background: #fff;
-    border: 3px solid #22c55e;
-    box-shadow: 0 1px 3px rgba(15,23,42,0.28);
-  }
-
-  .scale-labels {
-    display: flex;
-    justify-content: space-between;
-    margin-top: 6px;
-    color: #64748b;
-    font-size: 9px;
-    font-weight: 800;
-  }
-
-  .metrics-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 9px;
-  }
-
-  .mini-card {
-    min-height: 92px;
-    padding: 12px;
-    border-radius: 16px;
-    background: #fff;
-    border: 1px solid var(--ff-border);
-  }
-
-  .mini-card strong {
-    display: block;
-    margin-top: 9px;
-    font-size: 12px;
-  }
-
-  .mini-card span {
-    display: block;
-    margin-top: 2px;
-    color: #64748b;
-    font-size: 10px;
-    font-weight: 700;
-  }
-
-  .history-card {
-    border-color: #bfdbfe;
-    background: #eff6ff;
-    cursor: pointer;
-  }
-
-  .bottom-actions {
-    position: absolute;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    z-index: 5;
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 5px;
-    padding: 8px 10px 14px;
-    background: rgba(255,255,255,0.96);
-    border-top: 1px solid var(--ff-border);
-  }
-
-  .bottom-action {
-    min-height: 50px;
-    border: 0;
-    border-radius: 15px;
-    background: #f1f5f9;
-    color: #475569;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 3px;
-    font-size: 9.5px;
-    font-weight: 900;
-    cursor: pointer;
-  }
-
-  .bottom-action.primary {
-    background: var(--ff-blue);
-    color: #fff;
-  }
-
-  .bottom-action.success {
-    background: #dcfce7;
-    color: #047857;
-  }
-
-  .sheet-backdrop {
-    position: absolute;
-    inset: 0;
-    z-index: 8;
-    display: none;
-    background: rgba(15, 23, 42, 0.28);
-  }
-
-  .sheet-backdrop.is-open {
-    display: block;
-  }
-
-  .sheet {
-    position: absolute;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    z-index: 9;
-    display: flex;
-    flex-direction: column;
-    max-height: 73%;
-    padding: 9px 12px 16px;
-    border-radius: 28px 28px 0 0;
-    background: #fff;
-    border-top: 1px solid var(--ff-border);
-    box-shadow: 0 -18px 40px rgba(15, 23, 42, 0.18);
-    transform: translateY(105%);
-    transition: transform .22s ease;
-  }
-
-  .sheet.is-open {
-    transform: translateY(0);
-  }
-
-  .grabber {
-    align-self: center;
-    width: 42px;
-    height: 5px;
-    border-radius: 999px;
-    background: #cbd5e1;
-    margin-bottom: 10px;
-  }
-
-  .sheet-head {
-    display: flex;
-    align-items: center;
-    gap: 9px;
-    padding-bottom: 10px;
-    border-bottom: 1px solid #eef2f7;
-  }
-
-  .sheet-title {
-    min-width: 0;
-    flex: 1;
-  }
-
-  .sheet-title strong {
-    display: block;
-    font-size: 14px;
-  }
-
-  .sheet-title span {
-    display: block;
-    color: #64748b;
-    font-size: 11px;
-    font-weight: 700;
-  }
-
-  .session-list {
-    overflow-y: auto;
-    padding-top: 10px;
-    display: flex;
-    flex-direction: column;
-    gap: 9px;
-  }
-
-  .session {
-    border: 1px solid var(--ff-border);
-    border-radius: 15px;
-    overflow: hidden;
-  }
-
-  .session-top {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 9px 10px;
-    background: #f8fafc;
-  }
-
-  .session-top span:last-child {
-    margin-left: auto;
-    color: #047857;
-    font-size: 10px;
-    font-weight: 900;
-  }
-
-  .session-body {
-    padding: 10px;
-  }
-
-  .session-tags {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 5px;
-    margin-bottom: 7px;
-  }
-
-  .session-body p {
-    margin: 0 0 9px;
-    color: #475569;
-    font-size: 11px;
-    line-height: 1.4;
-  }
-
-  .replicate {
-    width: 100%;
-    min-height: 40px;
-    border: 0;
-    border-radius: 13px;
-    background: var(--ff-blue);
-    color: #fff;
-    font-size: 12px;
-    font-weight: 900;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 7px;
-    cursor: pointer;
-  }
-
-  .toast {
-    position: absolute;
-    left: 14px;
-    right: 14px;
-    bottom: 88px;
-    z-index: 12;
-    min-height: 44px;
-    border-radius: 15px;
-    display: none;
-    align-items: center;
-    justify-content: center;
-    color: #065f46;
-    background: #d1fae5;
-    border: 1px solid #86efac;
-    font-size: 12px;
-    font-weight: 900;
-    box-shadow: 0 10px 22px rgba(15, 23, 42, 0.14);
-  }
-
-  .toast.is-open {
-    display: flex;
-  }
-
-  .ios-home {
-    position: absolute;
-    left: 50%;
-    bottom: 5px;
-    z-index: 20;
-    width: 132px;
-    height: 5px;
-    transform: translateX(-50%);
-    border-radius: 999px;
-    background: #0f172a;
-    opacity: .92;
-  }
-
-  @media (max-width: 460px) {
-    .stage {
-      padding: 0;
-      background: #0f172a;
-    }
-    .brief { display: none; }
-    .phone {
-      width: 100vw;
-      height: 100vh;
-      min-height: 780px;
-      padding: 0;
-      border-radius: 0;
-      box-shadow: none;
-    }
-    .screen {
-      border-radius: 0;
-      border: 0;
-    }
-  }
-</style>
-</head>
-<body>
-  <main class="stage">
-    <section class="brief">
-      <h1>Evolução do Paciente - versão mobile iPhone 15</h1>
-      <p>Protótipo do app profissional baseado na versão final desktop e na direção gerada pelo Stitch. Base: iPhone 15 normal, 393x852, com fluxo por abas, bottom sheet de histórico e ações fixas para atendimento.</p>
-    </section>
-
-    <section class="phone" aria-label="iPhone 15 mockup">
-      <div class="screen">
-        <div class="statusbar" aria-hidden="true">
-          <span>10:15</span>
-          <div class="status-icons">
-            <span class="signal"><span></span><span></span><span></span><span></span></span>
-            <span style="font-size: 11px; font-weight: 900;">5G</span>
-            <span class="battery"></span>
-          </div>
-        </div>
-
-        <div class="app">
-          <header class="topbar">
-            <button class="iconbtn" aria-label="Voltar"><i data-lucide="arrow-left" width="17" height="17"></i></button>
-            <div class="avatar">RM</div>
-            <div class="patient">
-              <strong>Rafael Minatto De Martino</strong>
-              <div class="patient-meta">
-                <span class="badge">SESSÃO #3</span>
-                <span>3ª sessão</span>
-                <span class="saved"><i data-lucide="check-circle-2" width="11" height="11"></i> Salvo 10:15</span>
-              </div>
-            </div>
-            <button class="finish"><i data-lucide="check" width="14" height="14"></i> Concluir</button>
-          </header>
-
-          <div class="content" id="content">
-            <div class="chip-row" aria-label="Atalhos clínicos">
-              <button class="chip"><i data-lucide="stethoscope" width="13" height="13"></i> Retorno Médico <i data-lucide="plus" width="12" height="12"></i></button>
-              <button class="chip"><i data-lucide="scissors" width="13" height="13"></i> Cirurgias <i data-lucide="plus" width="12" height="12"></i></button>
-              <button class="chip"><i data-lucide="target" width="13" height="13"></i> Metas 0/0 <i data-lucide="plus" width="12" height="12"></i></button>
-            </div>
-
-            <nav class="segments" aria-label="Seções da evolução">
-              <button class="seg is-active" data-tab="evolucao">Evolução</button>
-              <button class="seg" data-tab="conduta">Conduta</button>
-              <button class="seg" data-tab="dor">Dor</button>
-              <button class="seg" data-tab="mais">Mais</button>
-            </nav>
-
-            <section class="panel is-active" id="tab-evolucao">
-              <article class="card">
-                <div class="card-head">
-                  <div class="card-icon" style="background:#fff7ed;color:#c2410c;"><i data-lucide="file-text" width="16" height="16"></i></div>
-                  <div class="card-title">
-                    <strong>Observações Clínicas</strong>
-                    <span>Registro principal da sessão</span>
-                  </div>
-                  <button class="mini-action">Foco</button>
-                </div>
-                <div class="editor-body">
-                  <p>Paciente refere melhora da dor lombar após a 2ª sessão (EVA 5 -> 3). Mantém desconforto ao permanecer sentado por períodos longos no trabalho.</p>
-                  <p>Conduta de hoje: liberação miofascial de TFL e quadrado lombar à direita, seguida de ativação de core em prancha modificada.</p>
-                </div>
-                <div class="toolbar" aria-label="Ferramentas de texto">
-                  <button class="tool" aria-label="Negrito"><i data-lucide="bold" width="15" height="15"></i></button>
-                  <button class="tool" aria-label="Itálico"><i data-lucide="italic" width="15" height="15"></i></button>
-                  <button class="tool" aria-label="Lista"><i data-lucide="list" width="15" height="15"></i></button>
-                  <button class="tool" aria-label="Checklist"><i data-lucide="list-checks" width="15" height="15"></i></button>
-                  <button class="tool" aria-label="Desfazer"><i data-lucide="undo-2" width="15" height="15"></i></button>
-                </div>
-              </article>
-
-              <article class="card history-card" data-open-history>
-                <div class="card-head">
-                  <div class="card-icon" style="background:#dbeafe;color:#1d4ed8;"><i data-lucide="history" width="16" height="16"></i></div>
-                  <div class="card-title">
-                    <strong style="color:#1d4ed8;">Histórico de Sessões</strong>
-                    <span style="color:#2563eb;">2 sessões · replicar conduta</span>
-                  </div>
-                  <i data-lucide="chevron-up" width="16" height="16" style="color:#2563eb;"></i>
-                </div>
-              </article>
-            </section>
-
-            <section class="panel" id="tab-conduta">
-              <article class="card">
-                <div class="card-head">
-                  <div class="card-icon" style="background:#dcfce7;color:#047857;"><i data-lucide="activity" width="16" height="16"></i></div>
-                  <div class="card-title">
-                    <strong>Procedimentos & Exercícios</strong>
-                    <span>Sessão + plano de casa</span>
-                  </div>
-                  <span class="badge" id="procCount">1</span>
-                </div>
-                <div class="row">
-                  <span class="check"></span>
-                  <div class="row-text">
-                    <div class="row-title">Lib mio manual TFS</div>
-                    <span class="tag">LIBERAÇÃO MIOFASCIAL</span>
-                  </div>
-                  <i data-lucide="chevron-down" width="16" height="16" style="color:#64748b;"></i>
-                </div>
-                <button class="row" style="width:calc(100% - 24px);color:#64748b;border-style:dashed;background:#fff;">
-                  <i data-lucide="plus" width="16" height="16"></i>
-                  <span class="row-title" style="font-weight:800;">Adicionar procedimento...</span>
-                </button>
-              </article>
-
-              <article class="card">
-                <div class="card-head">
-                  <div class="card-icon" style="background:#eff6ff;color:#2563eb;"><i data-lucide="home" width="16" height="16"></i></div>
-                  <div class="card-title">
-                    <strong>Para casa · HEP</strong>
-                    <span>Exercícios orientados</span>
-                  </div>
-                  <button class="mini-action">Biblioteca</button>
-                </div>
-                <div class="add-row">
-                  <input class="input" placeholder="Nome do exercício...">
-                  <div class="dose">3x10</div>
-                  <button class="add-btn" aria-label="Adicionar exercício"><i data-lucide="plus" width="18" height="18"></i></button>
-                </div>
-              </article>
-            </section>
-
-            <section class="panel" id="tab-dor">
-              <article class="card eva-card">
-                <div class="eva-main">
-                  <div class="eva-number" id="evaNumber">3</div>
-                  <div class="eva-copy">
-                    <strong id="evaLabel">Dor leve</strong>
-                    <span>Escala Visual Analógica · 0 a 10</span>
-                  </div>
-                </div>
-                <div class="eva-grid" id="evaGrid" aria-label="Escala EVA"></div>
-                <div class="eva-bar"><span class="eva-knob" id="evaKnob"></span></div>
-                <div class="scale-labels">
-                  <span>Sem dor</span>
-                  <span>Moderada</span>
-                  <span>Máxima</span>
-                </div>
-                <input class="input" style="margin-top:12px;" placeholder="Localização da dor (opcional)">
-              </article>
-            </section>
-
-            <section class="panel" id="tab-mais">
-              <div class="metrics-grid">
-                <article class="mini-card">
-                  <i data-lucide="gauge" width="18" height="18" style="color:#047857;"></i>
-                  <strong>Medições</strong>
-                  <span>0 registradas</span>
-                </article>
-                <article class="mini-card">
-                  <i data-lucide="stethoscope" width="18" height="18" style="color:#2563eb;"></i>
-                  <strong>Retorno Médico</strong>
-                  <span>Adicionar</span>
-                </article>
-                <article class="mini-card">
-                  <i data-lucide="scissors" width="18" height="18" style="color:#7c3aed;"></i>
-                  <strong>Cirurgias</strong>
-                  <span>Nenhuma</span>
-                </article>
-                <article class="mini-card">
-                  <i data-lucide="paperclip" width="18" height="18" style="color:#64748b;"></i>
-                  <strong>Anexos</strong>
-                  <span>Nenhum arquivo</span>
-                </article>
-              </div>
-              <article class="card history-card" data-open-history>
-                <div class="card-head">
-                  <div class="card-icon" style="background:#dbeafe;color:#1d4ed8;"><i data-lucide="history" width="16" height="16"></i></div>
-                  <div class="card-title">
-                    <strong style="color:#1d4ed8;">Histórico de Sessões</strong>
-                    <span style="color:#2563eb;">Abrir gaveta de replicação</span>
-                  </div>
-                </div>
-              </article>
-            </section>
-          </div>
-
-          <nav class="bottom-actions" aria-label="Ações da sessão">
-            <button class="bottom-action"><i data-lucide="mic" width="17" height="17"></i>Voice</button>
-            <button class="bottom-action" data-open-history><i data-lucide="history" width="17" height="17"></i>Histórico</button>
-            <button class="bottom-action success" id="saveBtn"><i data-lucide="save" width="17" height="17"></i>Salvar</button>
-            <button class="bottom-action primary"><i data-lucide="check" width="17" height="17"></i>Concluir</button>
-          </nav>
-        </div>
-
-        <div class="sheet-backdrop" id="sheetBackdrop"></div>
-        <aside class="sheet" id="historySheet" aria-label="Histórico de sessões">
-          <div class="grabber"></div>
-          <div class="sheet-head">
-            <div class="card-icon" style="background:#dbeafe;color:#1d4ed8;"><i data-lucide="history" width="16" height="16"></i></div>
-            <div class="sheet-title">
-              <strong>Histórico de Sessões</strong>
-              <span>Replicar copia a conduta para hoje</span>
-            </div>
-            <button class="iconbtn" id="closeSheet" aria-label="Fechar histórico"><i data-lucide="x" width="16" height="16"></i></button>
-          </div>
-          <div class="session-list">
-            <article class="session">
-              <div class="session-top">
-                <span class="badge">SESSÃO #2</span>
-                <span style="font-size:10px;font-weight:800;color:#64748b;">08/06/2026</span>
-                <span>EVA 5 -> 3</span>
-              </div>
-              <div class="session-body">
-                <div class="session-tags">
-                  <span class="tag">Lib mio manual TFS</span>
-                  <span class="tag">Prancha modificada</span>
-                  <span class="tag">Along. isquiotibiais</span>
-                </div>
-                <p>Redução do espasmo paravertebral. Boa tolerância à progressão de carga no core.</p>
-                <button class="replicate" data-replicate><i data-lucide="copy" width="15" height="15"></i> Replicar conduta</button>
-              </div>
-            </article>
-            <article class="session">
-              <div class="session-top">
-                <span class="badge" style="background:#f1f5f9;color:#475569;">SESSÃO #1</span>
-                <span style="font-size:10px;font-weight:800;color:#64748b;">04/06/2026</span>
-                <span style="color:#b45309;">EVA 7 -> 5</span>
-              </div>
-              <div class="session-body">
-                <div class="session-tags">
-                  <span class="tag">Pompage lombar</span>
-                  <span class="tag">Mobilização L4-L5</span>
-                </div>
-                <p>Anamnese e avaliação postural. Dor lombar mecânica à direita, sem irradiação.</p>
-                <button class="replicate" data-replicate><i data-lucide="copy" width="15" height="15"></i> Replicar conduta</button>
-              </div>
-            </article>
-          </div>
-        </aside>
-
-        <div class="toast" id="toast">Conduta replicada para a sessão atual.</div>
-        <div class="ios-home" aria-hidden="true"></div>
-      </div>
-    </section>
-  </main>
-
-<script>
-  const content = document.getElementById('content');
-  const segments = Array.from(document.querySelectorAll('.seg'));
-  const panels = Array.from(document.querySelectorAll('.panel'));
-  const sheet = document.getElementById('historySheet');
-  const backdrop = document.getElementById('sheetBackdrop');
-  const toast = document.getElementById('toast');
-  const evaGrid = document.getElementById('evaGrid');
-  const evaNumber = document.getElementById('evaNumber');
-  const evaLabel = document.getElementById('evaLabel');
-  const evaKnob = document.getElementById('evaKnob');
-  let toastTimer;
-
-  function showTab(tab) {
-    segments.forEach((seg) => seg.classList.toggle('is-active', seg.dataset.tab === tab));
-    panels.forEach((panel) => panel.classList.toggle('is-active', panel.id === 'tab-' + tab));
-    content.scrollTop = 0;
-    if (window.lucide) window.lucide.createIcons();
-  }
-
-  function openSheet() {
-    backdrop.classList.add('is-open');
-    sheet.classList.add('is-open');
-  }
-
-  function closeSheet() {
-    backdrop.classList.remove('is-open');
-    sheet.classList.remove('is-open');
-  }
-
-  function showToast(message) {
-    toast.textContent = message;
-    toast.classList.add('is-open');
-    window.clearTimeout(toastTimer);
-    toastTimer = window.setTimeout(() => toast.classList.remove('is-open'), 2200);
-  }
-
-  function painMeta(value) {
-    if (value === 0) return { label: 'Sem dor', color: '#9ca3af' };
-    if (value <= 3) return { label: 'Dor leve', color: '#22c55e' };
-    if (value <= 6) return { label: 'Dor moderada', color: '#eab308' };
-    if (value <= 8) return { label: 'Dor intensa', color: '#ef4444' };
-    return { label: 'Dor máxima', color: '#7f1d1d' };
-  }
-
-  function setPain(value) {
-    const meta = painMeta(value);
-    evaNumber.textContent = value;
-    evaNumber.style.background = meta.color;
-    evaLabel.textContent = meta.label;
-    evaLabel.style.color = meta.color;
-    evaKnob.style.left = (value * 10) + '%';
-    evaKnob.style.borderColor = meta.color;
-    Array.from(evaGrid.children).forEach((btn) => {
-      const selected = Number(btn.dataset.value) === value;
-      btn.classList.toggle('is-active', selected);
-      if (selected) {
-        btn.style.background = meta.color;
-        btn.style.borderColor = meta.color;
-      } else {
-        btn.style.background = '#fff';
-        btn.style.borderColor = '#cbd5e1';
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>FisioFlow - Evolução Mobile iPhone 15</title>
+    <link
+      rel="stylesheet"
+      href="_ds/fisioflow-design-system-019e1c70-8b8d-751e-a4d5-3f0d34162504/colors_and_type.css"
+    />
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+    <style>
+      :root {
+        --ff-blue: #0080ff;
+        --ff-blue-dark: #005ab6;
+        --ff-green: #10b981;
+        --ff-bg: #f8fafc;
+        --ff-card: #ffffff;
+        --ff-border: #e2e8f0;
+        --ff-muted: #64748b;
+        --ff-text: #0f172a;
+        --ff-soft-blue: #eaf4ff;
+        --ff-soft-green: #dcfce7;
+        --phone-w: 393px;
+        --phone-h: 852px;
       }
-    });
-  }
 
-  for (let i = 0; i <= 10; i += 1) {
-    const btn = document.createElement('button');
-    btn.className = 'eva-btn';
-    btn.type = 'button';
-    btn.dataset.value = String(i);
-    btn.textContent = String(i);
-    btn.addEventListener('click', () => setPain(i));
-    evaGrid.appendChild(btn);
-  }
+      * {
+        box-sizing: border-box;
+      }
 
-  segments.forEach((seg) => seg.addEventListener('click', () => showTab(seg.dataset.tab)));
-  document.querySelectorAll('[data-open-history]').forEach((el) => el.addEventListener('click', openSheet));
-  document.getElementById('closeSheet').addEventListener('click', closeSheet);
-  backdrop.addEventListener('click', closeSheet);
-  document.querySelectorAll('[data-replicate]').forEach((btn) => {
-    btn.addEventListener('click', () => {
-      closeSheet();
-      showTab('conduta');
-      showToast('Conduta replicada para a sessão atual.');
-    });
-  });
-  document.getElementById('saveBtn').addEventListener('click', () => showToast('Sessão salva às 10:15.'));
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background: #e5e7eb;
+        color: var(--ff-text);
+        font-family: var(--font-sans), Nunito, system-ui, sans-serif;
+        -webkit-font-smoothing: antialiased;
+      }
 
-  setPain(3);
-  if (window.lucide) window.lucide.createIcons();
-</script>
-</body>
+      button,
+      input,
+      textarea {
+        font: inherit;
+      }
+
+      .stage {
+        min-height: 100vh;
+        padding: 28px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 18px;
+      }
+
+      .brief {
+        width: min(860px, 100%);
+        color: #475569;
+      }
+
+      .brief h1 {
+        margin: 0 0 6px;
+        font-size: 22px;
+        line-height: 1.2;
+        letter-spacing: 0;
+      }
+
+      .brief p {
+        margin: 0;
+        font-size: 13px;
+        line-height: 1.45;
+        color: #64748b;
+      }
+
+      .phone {
+        width: var(--phone-w);
+        height: var(--phone-h);
+        border-radius: 42px;
+        padding: 12px;
+        background: #0f172a;
+        box-shadow: 0 28px 70px rgba(15, 23, 42, 0.28);
+      }
+
+      .screen {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        border-radius: 32px;
+        background: var(--ff-bg);
+        border: 1px solid rgba(255, 255, 255, 0.16);
+      }
+
+      .statusbar {
+        height: 28px;
+        padding: 7px 22px 0;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        font-size: 12px;
+        font-weight: 800;
+        letter-spacing: 0;
+        background: rgba(248, 250, 252, 0.96);
+      }
+
+      .status-icons {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+      }
+
+      .signal {
+        width: 17px;
+        height: 10px;
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 1px;
+        align-items: end;
+      }
+
+      .signal span {
+        display: block;
+        width: 3px;
+        border-radius: 2px;
+        background: #0f172a;
+      }
+
+      .signal span:nth-child(1) {
+        height: 4px;
+      }
+      .signal span:nth-child(2) {
+        height: 6px;
+      }
+      .signal span:nth-child(3) {
+        height: 8px;
+      }
+      .signal span:nth-child(4) {
+        height: 10px;
+      }
+
+      .battery {
+        width: 21px;
+        height: 10px;
+        border: 1.5px solid #0f172a;
+        border-radius: 3px;
+        position: relative;
+      }
+
+      .battery::before {
+        content: "";
+        position: absolute;
+        top: 2px;
+        left: 2px;
+        width: 13px;
+        height: 4px;
+        border-radius: 2px;
+        background: #0f172a;
+      }
+
+      .battery::after {
+        content: "";
+        position: absolute;
+        right: -4px;
+        top: 2px;
+        width: 2px;
+        height: 5px;
+        border-radius: 0 2px 2px 0;
+        background: #0f172a;
+      }
+
+      .app {
+        height: calc(100% - 28px);
+        display: flex;
+        flex-direction: column;
+      }
+
+      .topbar {
+        position: relative;
+        z-index: 4;
+        background: rgba(255, 255, 255, 0.96);
+        border-bottom: 1px solid var(--ff-border);
+        padding: 8px 12px 10px;
+        display: grid;
+        grid-template-columns: 36px 36px minmax(0, 1fr) auto;
+        gap: 8px;
+        align-items: center;
+      }
+
+      .iconbtn {
+        width: 36px;
+        height: 36px;
+        border: 1px solid var(--ff-border);
+        background: #fff;
+        border-radius: 12px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: #475569;
+        cursor: pointer;
+      }
+
+      .avatar {
+        width: 36px;
+        height: 36px;
+        border-radius: 999px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #075985;
+        background: #dbeafe;
+        font-weight: 900;
+        font-size: 12px;
+      }
+
+      .patient {
+        min-width: 0;
+      }
+
+      .patient strong {
+        display: block;
+        font-size: 13px;
+        line-height: 1.15;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .patient-meta {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        margin-top: 3px;
+        color: var(--ff-muted);
+        font-size: 10px;
+        font-weight: 700;
+        white-space: nowrap;
+      }
+
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 18px;
+        padding: 0 7px;
+        border-radius: 999px;
+        font-size: 9px;
+        font-weight: 900;
+        letter-spacing: 0.05em;
+        color: #075985;
+        background: #e0f2fe;
+      }
+
+      .saved {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        color: #047857;
+      }
+
+      .finish {
+        height: 36px;
+        border: 0;
+        border-radius: 13px;
+        padding: 0 11px;
+        color: #fff;
+        background: var(--ff-blue);
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        font-size: 10px;
+        font-weight: 900;
+        letter-spacing: 0.04em;
+        cursor: pointer;
+      }
+
+      .content {
+        flex: 1;
+        min-height: 0;
+        overflow-y: auto;
+        padding: 10px 12px 96px;
+        scroll-behavior: smooth;
+      }
+
+      .chip-row {
+        display: flex;
+        gap: 7px;
+        overflow-x: auto;
+        padding-bottom: 8px;
+        scrollbar-width: none;
+      }
+
+      .chip-row::-webkit-scrollbar {
+        display: none;
+      }
+
+      .chip {
+        min-height: 34px;
+        padding: 0 11px;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        white-space: nowrap;
+        border-radius: 999px;
+        border: 1px dashed #cbd5e1;
+        color: #0f172a;
+        background: #fff;
+        font-size: 11px;
+        font-weight: 800;
+      }
+
+      .segments {
+        position: sticky;
+        top: 0;
+        z-index: 3;
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 4px;
+        padding: 4px;
+        margin-bottom: 10px;
+        border-radius: 16px;
+        background: #e2e8f0;
+      }
+
+      .seg {
+        height: 34px;
+        border: 0;
+        border-radius: 12px;
+        background: transparent;
+        color: #64748b;
+        font-size: 11px;
+        font-weight: 900;
+        cursor: pointer;
+      }
+
+      .seg.is-active {
+        background: #fff;
+        color: var(--ff-blue-dark);
+        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.12);
+      }
+
+      .panel {
+        display: none;
+      }
+      .panel.is-active {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .card {
+        background: var(--ff-card);
+        border: 1px solid var(--ff-border);
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 2px 4px rgba(30, 41, 59, 0.04);
+      }
+
+      .card-head {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        padding: 12px 13px 10px;
+      }
+
+      .card-icon {
+        width: 30px;
+        height: 30px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex: 0 0 auto;
+      }
+
+      .card-title {
+        min-width: 0;
+        flex: 1;
+      }
+
+      .card-title strong {
+        display: block;
+        font-size: 13px;
+        line-height: 1.15;
+      }
+
+      .card-title span {
+        display: block;
+        margin-top: 2px;
+        color: var(--ff-muted);
+        font-size: 10px;
+        font-weight: 700;
+      }
+
+      .mini-action {
+        min-height: 30px;
+        border-radius: 999px;
+        border: 1px solid var(--ff-border);
+        padding: 0 10px;
+        background: #fff;
+        color: #2563eb;
+        font-size: 11px;
+        font-weight: 800;
+        cursor: pointer;
+      }
+
+      .editor-body {
+        border-top: 1px solid #eef2f7;
+        padding: 12px 14px 14px;
+        font-size: 14px;
+        line-height: 1.48;
+      }
+
+      .editor-body p {
+        margin: 0 0 9px;
+      }
+      .editor-body p:last-child {
+        margin-bottom: 0;
+      }
+
+      .toolbar {
+        height: 42px;
+        border-top: 1px solid #eef2f7;
+        background: #f8fafc;
+        display: flex;
+        align-items: center;
+        gap: 3px;
+        padding: 5px 9px;
+      }
+
+      .tool {
+        width: 32px;
+        height: 32px;
+        border: 0;
+        border-radius: 10px;
+        background: transparent;
+        color: #475569;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+      }
+
+      .row {
+        margin: 0 12px 12px;
+        min-height: 46px;
+        border: 1px solid #e2e8f0;
+        border-radius: 13px;
+        background: #fbfdff;
+        padding: 8px 10px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .check {
+        width: 18px;
+        height: 18px;
+        border-radius: 5px;
+        border: 1.5px solid #94a3b8;
+        flex: 0 0 auto;
+      }
+
+      .row-text {
+        min-width: 0;
+        flex: 1;
+      }
+
+      .row-title {
+        font-size: 13px;
+        font-weight: 900;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .tag {
+        display: inline-flex;
+        align-items: center;
+        margin-top: 3px;
+        min-height: 18px;
+        padding: 0 7px;
+        border-radius: 999px;
+        color: #047857;
+        background: #d1fae5;
+        font-size: 8.5px;
+        font-weight: 900;
+        letter-spacing: 0.04em;
+      }
+
+      .add-row {
+        margin: 0 12px 12px;
+        display: grid;
+        grid-template-columns: 1fr 58px 42px;
+        gap: 7px;
+      }
+
+      .input {
+        width: 100%;
+        height: 42px;
+        border: 1px solid #cbd5e1;
+        border-radius: 13px;
+        background: #fff;
+        padding: 0 12px;
+        color: #0f172a;
+        outline: 0;
+        font-size: 12px;
+      }
+
+      .dose {
+        height: 42px;
+        border-radius: 13px;
+        background: #f1f5f9;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+        font-weight: 900;
+      }
+
+      .add-btn {
+        height: 42px;
+        border: 0;
+        border-radius: 13px;
+        background: var(--ff-blue);
+        color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+      }
+
+      .eva-card {
+        padding: 13px;
+      }
+
+      .eva-main {
+        display: grid;
+        grid-template-columns: 58px minmax(0, 1fr);
+        gap: 12px;
+        align-items: center;
+        margin-bottom: 13px;
+      }
+
+      .eva-number {
+        width: 58px;
+        height: 58px;
+        border-radius: 17px;
+        background: #22c55e;
+        color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 30px;
+        font-weight: 900;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .eva-copy strong {
+        display: block;
+        color: #16a34a;
+        font-size: 17px;
+        line-height: 1.1;
+      }
+
+      .eva-copy span {
+        display: block;
+        margin-top: 4px;
+        color: #64748b;
+        font-size: 11px;
+        font-weight: 700;
+      }
+
+      .eva-grid {
+        display: grid;
+        grid-template-columns: repeat(11, 1fr);
+        gap: 3px;
+      }
+
+      .eva-btn {
+        height: 31px;
+        border-radius: 9px;
+        border: 1px solid #cbd5e1;
+        background: #fff;
+        color: #475569;
+        padding: 0;
+        font-size: 12px;
+        font-weight: 900;
+        cursor: pointer;
+      }
+
+      .eva-btn.is-active {
+        border-color: #22c55e;
+        background: #22c55e;
+        color: #fff;
+      }
+
+      .eva-bar {
+        position: relative;
+        height: 8px;
+        margin: 11px 1px 0;
+        border-radius: 999px;
+        background: linear-gradient(90deg, #22c55e 0%, #eab308 45%, #ef4444 76%, #7f1d1d 100%);
+      }
+
+      .eva-knob {
+        position: absolute;
+        left: 30%;
+        top: -4px;
+        width: 16px;
+        height: 16px;
+        transform: translateX(-50%);
+        border-radius: 999px;
+        background: #fff;
+        border: 3px solid #22c55e;
+        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.28);
+      }
+
+      .scale-labels {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 6px;
+        color: #64748b;
+        font-size: 9px;
+        font-weight: 800;
+      }
+
+      .metrics-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 9px;
+      }
+
+      .mini-card {
+        min-height: 92px;
+        padding: 12px;
+        border-radius: 16px;
+        background: #fff;
+        border: 1px solid var(--ff-border);
+      }
+
+      .mini-card strong {
+        display: block;
+        margin-top: 9px;
+        font-size: 12px;
+      }
+
+      .mini-card span {
+        display: block;
+        margin-top: 2px;
+        color: #64748b;
+        font-size: 10px;
+        font-weight: 700;
+      }
+
+      .history-card {
+        border-color: #bfdbfe;
+        background: #eff6ff;
+        cursor: pointer;
+      }
+
+      .bottom-actions {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 5;
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 5px;
+        padding: 8px 10px 14px;
+        background: rgba(255, 255, 255, 0.96);
+        border-top: 1px solid var(--ff-border);
+      }
+
+      .bottom-action {
+        min-height: 50px;
+        border: 0;
+        border-radius: 15px;
+        background: #f1f5f9;
+        color: #475569;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 3px;
+        font-size: 9.5px;
+        font-weight: 900;
+        cursor: pointer;
+      }
+
+      .bottom-action.primary {
+        background: var(--ff-blue);
+        color: #fff;
+      }
+
+      .bottom-action.success {
+        background: #dcfce7;
+        color: #047857;
+      }
+
+      .sheet-backdrop {
+        position: absolute;
+        inset: 0;
+        z-index: 8;
+        display: none;
+        background: rgba(15, 23, 42, 0.28);
+      }
+
+      .sheet-backdrop.is-open {
+        display: block;
+      }
+
+      .sheet {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 9;
+        display: flex;
+        flex-direction: column;
+        max-height: 73%;
+        padding: 9px 12px 16px;
+        border-radius: 28px 28px 0 0;
+        background: #fff;
+        border-top: 1px solid var(--ff-border);
+        box-shadow: 0 -18px 40px rgba(15, 23, 42, 0.18);
+        transform: translateY(105%);
+        transition: transform 0.22s ease;
+      }
+
+      .sheet.is-open {
+        transform: translateY(0);
+      }
+
+      .grabber {
+        align-self: center;
+        width: 42px;
+        height: 5px;
+        border-radius: 999px;
+        background: #cbd5e1;
+        margin-bottom: 10px;
+      }
+
+      .sheet-head {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid #eef2f7;
+      }
+
+      .sheet-title {
+        min-width: 0;
+        flex: 1;
+      }
+
+      .sheet-title strong {
+        display: block;
+        font-size: 14px;
+      }
+
+      .sheet-title span {
+        display: block;
+        color: #64748b;
+        font-size: 11px;
+        font-weight: 700;
+      }
+
+      .session-list {
+        overflow-y: auto;
+        padding-top: 10px;
+        display: flex;
+        flex-direction: column;
+        gap: 9px;
+      }
+
+      .session {
+        border: 1px solid var(--ff-border);
+        border-radius: 15px;
+        overflow: hidden;
+      }
+
+      .session-top {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 9px 10px;
+        background: #f8fafc;
+      }
+
+      .session-top span:last-child {
+        margin-left: auto;
+        color: #047857;
+        font-size: 10px;
+        font-weight: 900;
+      }
+
+      .session-body {
+        padding: 10px;
+      }
+
+      .session-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 5px;
+        margin-bottom: 7px;
+      }
+
+      .session-body p {
+        margin: 0 0 9px;
+        color: #475569;
+        font-size: 11px;
+        line-height: 1.4;
+      }
+
+      .replicate {
+        width: 100%;
+        min-height: 40px;
+        border: 0;
+        border-radius: 13px;
+        background: var(--ff-blue);
+        color: #fff;
+        font-size: 12px;
+        font-weight: 900;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 7px;
+        cursor: pointer;
+      }
+
+      .toast {
+        position: absolute;
+        left: 14px;
+        right: 14px;
+        bottom: 88px;
+        z-index: 12;
+        min-height: 44px;
+        border-radius: 15px;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        color: #065f46;
+        background: #d1fae5;
+        border: 1px solid #86efac;
+        font-size: 12px;
+        font-weight: 900;
+        box-shadow: 0 10px 22px rgba(15, 23, 42, 0.14);
+      }
+
+      .toast.is-open {
+        display: flex;
+      }
+
+      .ios-home {
+        position: absolute;
+        left: 50%;
+        bottom: 5px;
+        z-index: 20;
+        width: 132px;
+        height: 5px;
+        transform: translateX(-50%);
+        border-radius: 999px;
+        background: #0f172a;
+        opacity: 0.92;
+      }
+
+      @media (max-width: 460px) {
+        .stage {
+          padding: 0;
+          background: #0f172a;
+        }
+        .brief {
+          display: none;
+        }
+        .phone {
+          width: 100vw;
+          height: 100vh;
+          min-height: 780px;
+          padding: 0;
+          border-radius: 0;
+          box-shadow: none;
+        }
+        .screen {
+          border-radius: 0;
+          border: 0;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="stage">
+      <section class="brief">
+        <h1>Evolução do Paciente - versão mobile iPhone 15</h1>
+        <p>
+          Protótipo do app profissional baseado na versão final desktop e na direção gerada pelo
+          Stitch. Base: iPhone 15 normal, 393x852, com fluxo por abas, bottom sheet de histórico e
+          ações fixas para atendimento.
+        </p>
+      </section>
+
+      <section class="phone" aria-label="iPhone 15 mockup">
+        <div class="screen">
+          <div class="statusbar" aria-hidden="true">
+            <span>10:15</span>
+            <div class="status-icons">
+              <span class="signal"><span></span><span></span><span></span><span></span></span>
+              <span style="font-size: 11px; font-weight: 900">5G</span>
+              <span class="battery"></span>
+            </div>
+          </div>
+
+          <div class="app">
+            <header class="topbar">
+              <button class="iconbtn" aria-label="Voltar">
+                <i data-lucide="arrow-left" width="17" height="17"></i>
+              </button>
+              <div class="avatar">RM</div>
+              <div class="patient">
+                <strong>Rafael Minatto De Martino</strong>
+                <div class="patient-meta">
+                  <span class="badge">SESSÃO #3</span>
+                  <span>3ª sessão</span>
+                  <span class="saved"
+                    ><i data-lucide="check-circle-2" width="11" height="11"></i> Salvo 10:15</span
+                  >
+                </div>
+              </div>
+              <button class="finish">
+                <i data-lucide="check" width="14" height="14"></i> Concluir
+              </button>
+            </header>
+
+            <div class="content" id="content">
+              <div class="chip-row" aria-label="Atalhos clínicos">
+                <button class="chip">
+                  <i data-lucide="stethoscope" width="13" height="13"></i> Retorno Médico
+                  <i data-lucide="plus" width="12" height="12"></i>
+                </button>
+                <button class="chip">
+                  <i data-lucide="scissors" width="13" height="13"></i> Cirurgias
+                  <i data-lucide="plus" width="12" height="12"></i>
+                </button>
+                <button class="chip">
+                  <i data-lucide="target" width="13" height="13"></i> Metas 0/0
+                  <i data-lucide="plus" width="12" height="12"></i>
+                </button>
+              </div>
+
+              <nav class="segments" aria-label="Seções da evolução">
+                <button class="seg is-active" data-tab="evolucao">Evolução</button>
+                <button class="seg" data-tab="conduta">Conduta</button>
+                <button class="seg" data-tab="dor">Dor</button>
+                <button class="seg" data-tab="mais">Mais</button>
+              </nav>
+
+              <section class="panel is-active" id="tab-evolucao">
+                <article class="card">
+                  <div class="card-head">
+                    <div class="card-icon" style="background: #fff7ed; color: #c2410c">
+                      <i data-lucide="file-text" width="16" height="16"></i>
+                    </div>
+                    <div class="card-title">
+                      <strong>Observações Clínicas</strong>
+                      <span>Registro principal da sessão</span>
+                    </div>
+                    <button class="mini-action">Foco</button>
+                  </div>
+                  <div class="editor-body">
+                    <p>
+                      Paciente refere melhora da dor lombar após a 2ª sessão (EVA 5 -> 3). Mantém
+                      desconforto ao permanecer sentado por períodos longos no trabalho.
+                    </p>
+                    <p>
+                      Conduta de hoje: liberação miofascial de TFL e quadrado lombar à direita,
+                      seguida de ativação de core em prancha modificada.
+                    </p>
+                  </div>
+                  <div class="toolbar" aria-label="Ferramentas de texto">
+                    <button class="tool" aria-label="Negrito">
+                      <i data-lucide="bold" width="15" height="15"></i>
+                    </button>
+                    <button class="tool" aria-label="Itálico">
+                      <i data-lucide="italic" width="15" height="15"></i>
+                    </button>
+                    <button class="tool" aria-label="Lista">
+                      <i data-lucide="list" width="15" height="15"></i>
+                    </button>
+                    <button class="tool" aria-label="Checklist">
+                      <i data-lucide="list-checks" width="15" height="15"></i>
+                    </button>
+                    <button class="tool" aria-label="Desfazer">
+                      <i data-lucide="undo-2" width="15" height="15"></i>
+                    </button>
+                  </div>
+                </article>
+
+                <article class="card history-card" data-open-history>
+                  <div class="card-head">
+                    <div class="card-icon" style="background: #dbeafe; color: #1d4ed8">
+                      <i data-lucide="history" width="16" height="16"></i>
+                    </div>
+                    <div class="card-title">
+                      <strong style="color: #1d4ed8">Histórico de Sessões</strong>
+                      <span style="color: #2563eb">2 sessões · replicar conduta</span>
+                    </div>
+                    <i data-lucide="chevron-up" width="16" height="16" style="color: #2563eb"></i>
+                  </div>
+                </article>
+              </section>
+
+              <section class="panel" id="tab-conduta">
+                <article class="card">
+                  <div class="card-head">
+                    <div class="card-icon" style="background: #dcfce7; color: #047857">
+                      <i data-lucide="activity" width="16" height="16"></i>
+                    </div>
+                    <div class="card-title">
+                      <strong>Procedimentos & Exercícios</strong>
+                      <span>Sessão + plano de casa</span>
+                    </div>
+                    <span class="badge" id="procCount">1</span>
+                  </div>
+                  <div class="row">
+                    <span class="check"></span>
+                    <div class="row-text">
+                      <div class="row-title">Lib mio manual TFS</div>
+                      <span class="tag">LIBERAÇÃO MIOFASCIAL</span>
+                    </div>
+                    <i data-lucide="chevron-down" width="16" height="16" style="color: #64748b"></i>
+                  </div>
+                  <button
+                    class="row"
+                    style="
+                      width: calc(100% - 24px);
+                      color: #64748b;
+                      border-style: dashed;
+                      background: #fff;
+                    "
+                  >
+                    <i data-lucide="plus" width="16" height="16"></i>
+                    <span class="row-title" style="font-weight: 800"
+                      >Adicionar procedimento...</span
+                    >
+                  </button>
+                </article>
+
+                <article class="card">
+                  <div class="card-head">
+                    <div class="card-icon" style="background: #eff6ff; color: #2563eb">
+                      <i data-lucide="home" width="16" height="16"></i>
+                    </div>
+                    <div class="card-title">
+                      <strong>Para casa · HEP</strong>
+                      <span>Exercícios orientados</span>
+                    </div>
+                    <button class="mini-action">Biblioteca</button>
+                  </div>
+                  <div class="add-row">
+                    <input class="input" placeholder="Nome do exercício..." />
+                    <div class="dose">3x10</div>
+                    <button class="add-btn" aria-label="Adicionar exercício">
+                      <i data-lucide="plus" width="18" height="18"></i>
+                    </button>
+                  </div>
+                </article>
+              </section>
+
+              <section class="panel" id="tab-dor">
+                <article class="card eva-card">
+                  <div class="eva-main">
+                    <div class="eva-number" id="evaNumber">3</div>
+                    <div class="eva-copy">
+                      <strong id="evaLabel">Dor leve</strong>
+                      <span>Escala Visual Analógica · 0 a 10</span>
+                    </div>
+                  </div>
+                  <div class="eva-grid" id="evaGrid" aria-label="Escala EVA"></div>
+                  <div class="eva-bar"><span class="eva-knob" id="evaKnob"></span></div>
+                  <div class="scale-labels">
+                    <span>Sem dor</span>
+                    <span>Moderada</span>
+                    <span>Máxima</span>
+                  </div>
+                  <input
+                    class="input"
+                    style="margin-top: 12px"
+                    placeholder="Localização da dor (opcional)"
+                  />
+                </article>
+              </section>
+
+              <section class="panel" id="tab-mais">
+                <div class="metrics-grid">
+                  <article class="mini-card">
+                    <i data-lucide="gauge" width="18" height="18" style="color: #047857"></i>
+                    <strong>Medições</strong>
+                    <span>0 registradas</span>
+                  </article>
+                  <article class="mini-card">
+                    <i data-lucide="stethoscope" width="18" height="18" style="color: #2563eb"></i>
+                    <strong>Retorno Médico</strong>
+                    <span>Adicionar</span>
+                  </article>
+                  <article class="mini-card">
+                    <i data-lucide="scissors" width="18" height="18" style="color: #7c3aed"></i>
+                    <strong>Cirurgias</strong>
+                    <span>Nenhuma</span>
+                  </article>
+                  <article class="mini-card">
+                    <i data-lucide="paperclip" width="18" height="18" style="color: #64748b"></i>
+                    <strong>Anexos</strong>
+                    <span>Nenhum arquivo</span>
+                  </article>
+                </div>
+                <article class="card history-card" data-open-history>
+                  <div class="card-head">
+                    <div class="card-icon" style="background: #dbeafe; color: #1d4ed8">
+                      <i data-lucide="history" width="16" height="16"></i>
+                    </div>
+                    <div class="card-title">
+                      <strong style="color: #1d4ed8">Histórico de Sessões</strong>
+                      <span style="color: #2563eb">Abrir gaveta de replicação</span>
+                    </div>
+                  </div>
+                </article>
+              </section>
+            </div>
+
+            <nav class="bottom-actions" aria-label="Ações da sessão">
+              <button class="bottom-action">
+                <i data-lucide="mic" width="17" height="17"></i>Voice
+              </button>
+              <button class="bottom-action" data-open-history>
+                <i data-lucide="history" width="17" height="17"></i>Histórico
+              </button>
+              <button class="bottom-action success" id="saveBtn">
+                <i data-lucide="save" width="17" height="17"></i>Salvar
+              </button>
+              <button class="bottom-action primary">
+                <i data-lucide="check" width="17" height="17"></i>Concluir
+              </button>
+            </nav>
+          </div>
+
+          <div class="sheet-backdrop" id="sheetBackdrop"></div>
+          <aside class="sheet" id="historySheet" aria-label="Histórico de sessões">
+            <div class="grabber"></div>
+            <div class="sheet-head">
+              <div class="card-icon" style="background: #dbeafe; color: #1d4ed8">
+                <i data-lucide="history" width="16" height="16"></i>
+              </div>
+              <div class="sheet-title">
+                <strong>Histórico de Sessões</strong>
+                <span>Replicar copia a conduta para hoje</span>
+              </div>
+              <button class="iconbtn" id="closeSheet" aria-label="Fechar histórico">
+                <i data-lucide="x" width="16" height="16"></i>
+              </button>
+            </div>
+            <div class="session-list">
+              <article class="session">
+                <div class="session-top">
+                  <span class="badge">SESSÃO #2</span>
+                  <span style="font-size: 10px; font-weight: 800; color: #64748b">08/06/2026</span>
+                  <span>EVA 5 -> 3</span>
+                </div>
+                <div class="session-body">
+                  <div class="session-tags">
+                    <span class="tag">Lib mio manual TFS</span>
+                    <span class="tag">Prancha modificada</span>
+                    <span class="tag">Along. isquiotibiais</span>
+                  </div>
+                  <p>
+                    Redução do espasmo paravertebral. Boa tolerância à progressão de carga no core.
+                  </p>
+                  <button class="replicate" data-replicate>
+                    <i data-lucide="copy" width="15" height="15"></i> Replicar conduta
+                  </button>
+                </div>
+              </article>
+              <article class="session">
+                <div class="session-top">
+                  <span class="badge" style="background: #f1f5f9; color: #475569">SESSÃO #1</span>
+                  <span style="font-size: 10px; font-weight: 800; color: #64748b">04/06/2026</span>
+                  <span style="color: #b45309">EVA 7 -> 5</span>
+                </div>
+                <div class="session-body">
+                  <div class="session-tags">
+                    <span class="tag">Pompage lombar</span>
+                    <span class="tag">Mobilização L4-L5</span>
+                  </div>
+                  <p>
+                    Anamnese e avaliação postural. Dor lombar mecânica à direita, sem irradiação.
+                  </p>
+                  <button class="replicate" data-replicate>
+                    <i data-lucide="copy" width="15" height="15"></i> Replicar conduta
+                  </button>
+                </div>
+              </article>
+            </div>
+          </aside>
+
+          <div class="toast" id="toast">Conduta replicada para a sessão atual.</div>
+          <div class="ios-home" aria-hidden="true"></div>
+        </div>
+      </section>
+    </main>
+
+    <script>
+      const content = document.getElementById("content");
+      const segments = Array.from(document.querySelectorAll(".seg"));
+      const panels = Array.from(document.querySelectorAll(".panel"));
+      const sheet = document.getElementById("historySheet");
+      const backdrop = document.getElementById("sheetBackdrop");
+      const toast = document.getElementById("toast");
+      const evaGrid = document.getElementById("evaGrid");
+      const evaNumber = document.getElementById("evaNumber");
+      const evaLabel = document.getElementById("evaLabel");
+      const evaKnob = document.getElementById("evaKnob");
+      let toastTimer;
+
+      function showTab(tab) {
+        segments.forEach((seg) => seg.classList.toggle("is-active", seg.dataset.tab === tab));
+        panels.forEach((panel) => panel.classList.toggle("is-active", panel.id === "tab-" + tab));
+        content.scrollTop = 0;
+        if (window.lucide) window.lucide.createIcons();
+      }
+
+      function openSheet() {
+        backdrop.classList.add("is-open");
+        sheet.classList.add("is-open");
+      }
+
+      function closeSheet() {
+        backdrop.classList.remove("is-open");
+        sheet.classList.remove("is-open");
+      }
+
+      function showToast(message) {
+        toast.textContent = message;
+        toast.classList.add("is-open");
+        window.clearTimeout(toastTimer);
+        toastTimer = window.setTimeout(() => toast.classList.remove("is-open"), 2200);
+      }
+
+      function painMeta(value) {
+        if (value === 0) return { label: "Sem dor", color: "#9ca3af" };
+        if (value <= 3) return { label: "Dor leve", color: "#22c55e" };
+        if (value <= 6) return { label: "Dor moderada", color: "#eab308" };
+        if (value <= 8) return { label: "Dor intensa", color: "#ef4444" };
+        return { label: "Dor máxima", color: "#7f1d1d" };
+      }
+
+      function setPain(value) {
+        const meta = painMeta(value);
+        evaNumber.textContent = value;
+        evaNumber.style.background = meta.color;
+        evaLabel.textContent = meta.label;
+        evaLabel.style.color = meta.color;
+        evaKnob.style.left = value * 10 + "%";
+        evaKnob.style.borderColor = meta.color;
+        Array.from(evaGrid.children).forEach((btn) => {
+          const selected = Number(btn.dataset.value) === value;
+          btn.classList.toggle("is-active", selected);
+          if (selected) {
+            btn.style.background = meta.color;
+            btn.style.borderColor = meta.color;
+          } else {
+            btn.style.background = "#fff";
+            btn.style.borderColor = "#cbd5e1";
+          }
+        });
+      }
+
+      for (let i = 0; i <= 10; i += 1) {
+        const btn = document.createElement("button");
+        btn.className = "eva-btn";
+        btn.type = "button";
+        btn.dataset.value = String(i);
+        btn.textContent = String(i);
+        btn.addEventListener("click", () => setPain(i));
+        evaGrid.appendChild(btn);
+      }
+
+      segments.forEach((seg) => seg.addEventListener("click", () => showTab(seg.dataset.tab)));
+      document
+        .querySelectorAll("[data-open-history]")
+        .forEach((el) => el.addEventListener("click", openSheet));
+      document.getElementById("closeSheet").addEventListener("click", closeSheet);
+      backdrop.addEventListener("click", closeSheet);
+      document.querySelectorAll("[data-replicate]").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          closeSheet();
+          showTab("conduta");
+          showToast("Conduta replicada para a sessão atual.");
+        });
+      });
+      document
+        .getElementById("saveBtn")
+        .addEventListener("click", () => showToast("Sessão salva às 10:15."));
+
+      setPain(3);
+      if (window.lucide) window.lucide.createIcons();
+    </script>
+  </body>
 </html>

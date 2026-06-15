@@ -54,9 +54,7 @@ export function ScheduleEventContent({
       style={{
         borderLeftColor: safeColors.accent,
         backgroundColor:
-          safeColors.background !== "transparent"
-            ? safeColors.background
-            : "hsl(var(--card))",
+          safeColors.background !== "transparent" ? safeColors.background : "hsl(var(--card))",
         color: safeColors.text,
         opacity: isSelected ? 0.9 : 1,
       }}

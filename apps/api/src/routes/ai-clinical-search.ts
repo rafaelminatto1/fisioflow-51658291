@@ -10,14 +10,16 @@ const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 const SearchResultSchema = z.object({
   query: z.string(),
   count: z.number(),
-  data: z.array(z.object({
-    evolutionId: z.string().uuid(),
-    summary: z.string(),
-    patientId: z.string().uuid(),
-    patientName: z.string(),
-    sessionDate: z.any(), // Aceita datas do Postgres
-    similarity: z.number()
-  }))
+  data: z.array(
+    z.object({
+      evolutionId: z.string().uuid(),
+      summary: z.string(),
+      patientId: z.string().uuid(),
+      patientName: z.string(),
+      sessionDate: z.any(), // Aceita datas do Postgres
+      similarity: z.number(),
+    }),
+  ),
 });
 
 /**
@@ -84,14 +86,16 @@ app.get("/", requireAuth, async (c) => {
 });
 
 const SimilarPatientsSchema = z.object({
-  data: z.array(z.object({
-    patientId: z.string().uuid(),
-    patientName: z.string(),
-    evolutionId: z.string().uuid(),
-    summary: z.string(),
-    sessionDate: z.any(),
-    similarity: z.number()
-  }))
+  data: z.array(
+    z.object({
+      patientId: z.string().uuid(),
+      patientName: z.string(),
+      evolutionId: z.string().uuid(),
+      summary: z.string(),
+      sessionDate: z.any(),
+      similarity: z.number(),
+    }),
+  ),
 });
 
 /**

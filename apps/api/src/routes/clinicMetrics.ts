@@ -314,26 +314,30 @@ app.get("/patients/:id/ai-snapshot", requireAuth, async (c) => {
         const jsonMatch = result.content.match(/\{[\s\S]*\}/);
         data = JSON.parse(jsonMatch?.[0] ?? result.content);
       } catch (parseError: any) {
-        console.error("[ClinicMetrics/AI] Failed to parse AI snapshot JSON:", parseError, result.content);
+        console.error(
+          "[ClinicMetrics/AI] Failed to parse AI snapshot JSON:",
+          parseError,
+          result.content,
+        );
         data = {
           mainStatus: "Erro ao processar resposta da IA.",
           keyWins: [],
           remainingChallenges: [],
           clinicalRisk: "medium",
-          _raw: result.content.substring(0, 100)
+          _raw: result.content.substring(0, 100),
         };
       }
 
       return c.json({ data });
     } catch (modelError: any) {
       console.error("[ClinicMetrics/AI] Model error:", modelError);
-      return c.json({ 
-        data: { 
+      return c.json({
+        data: {
           mainStatus: "Análise IA temporariamente indisponível.",
           keyWins: [],
           remainingChallenges: [],
-          clinicalRisk: "medium"
-        } 
+          clinicalRisk: "medium",
+        },
       });
     }
   } catch (error: any) {

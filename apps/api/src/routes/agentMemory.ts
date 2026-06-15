@@ -69,11 +69,14 @@ function safeString(value: unknown): string | undefined {
   return text || undefined;
 }
 
-function parseProfileTypes(value: unknown): Array<"organization" | "patient" | "professional"> | undefined {
+function parseProfileTypes(
+  value: unknown,
+): Array<"organization" | "patient" | "professional"> | undefined {
   if (!Array.isArray(value)) return undefined;
   const allowed = new Set(["organization", "patient", "professional"]);
-  const types = value.filter((item): item is "organization" | "patient" | "professional" =>
-    typeof item === "string" && allowed.has(item),
+  const types = value.filter(
+    (item): item is "organization" | "patient" | "professional" =>
+      typeof item === "string" && allowed.has(item),
   );
   return types.length ? types : undefined;
 }

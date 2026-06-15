@@ -201,7 +201,7 @@ export function useAppointments(options?: UseAppointmentsOptions) {
       } else {
         dateStr = toLocalYMD(new Date());
       }
-      
+
       const startTime = data.time || "09:00";
       const endTime = addMinutesToTime(startTime, data.duration);
 

@@ -34,7 +34,8 @@ function emptyDraft(): DraftMap {
 }
 
 export function HorariosTab() {
-  const { businessHours, isLoadingHours, upsertBusinessHours, isSavingHours } = useScheduleSettings();
+  const { businessHours, isLoadingHours, upsertBusinessHours, isSavingHours } =
+    useScheduleSettings();
   const [draft, setDraft] = useState<DraftMap>(emptyDraft());
   const [dirty, setDirty] = useState(false);
 
@@ -96,7 +97,12 @@ export function HorariosTab() {
       title="Horários de Funcionamento"
       description="Defina os dias, horários e pausas da clínica"
       action={
-        <Button size="sm" onClick={save} disabled={!dirty || isSavingHours} className="bg-teal-600 hover:bg-teal-700">
+        <Button
+          size="sm"
+          onClick={save}
+          disabled={!dirty || isSavingHours}
+          className="bg-teal-600 hover:bg-teal-700"
+        >
           <Save className="mr-2 h-3.5 w-3.5" />
           {isSavingHours ? "Salvando…" : "Salvar"}
         </Button>
@@ -119,7 +125,10 @@ export function HorariosTab() {
               >
                 <div className="flex flex-wrap items-center gap-3">
                   <div className="flex min-w-[10rem] items-center gap-3">
-                    <Switch checked={!!row.is_open} onCheckedChange={(v) => update(day.value, { is_open: v })} />
+                    <Switch
+                      checked={!!row.is_open}
+                      onCheckedChange={(v) => update(day.value, { is_open: v })}
+                    />
                     <span className="text-sm font-medium">{day.label}</span>
                   </div>
 

@@ -23,13 +23,13 @@ Modernizar a plataforma em 4 frentes coordenadas, com **2 frentes P1 com deadlin
 
 _Gate em cada user story; re-verificar após Phase 1._
 
-| Princípio | US1 (AI) | US2 (RLS) | US3 (deps) | US4 (CF primitives) |
-|---|---|---|---|---|
-| **I. Spec-Driven** | ✅ este spec | ✅ este spec | ✅ este spec | ✅ este spec |
-| **II. Multi-plataforma** | ✅ só Worker | ✅ só DB | ⚠️ ver mobile bumps | ✅ só Worker |
-| **III. Privacy/LGPD** | ✅ sem PHI em prompts | ✅ **core** desta US | ✅ neutro | ✅ Voice history em DO isolado |
-| **IV. Test-First** | ✅ teste de modelo ativo antes do refactor | ✅ RLS testada em branch Neon | ✅ suite existente | ✅ teste de upload Stream antes |
-| **V. Observability** | ✅ Analytics Engine traceia model | ✅ Data API Advisors monitora | ✅ neutro | ✅ DO observability=enabled |
+| Princípio                | US1 (AI)                                   | US2 (RLS)                     | US3 (deps)          | US4 (CF primitives)             |
+| ------------------------ | ------------------------------------------ | ----------------------------- | ------------------- | ------------------------------- |
+| **I. Spec-Driven**       | ✅ este spec                               | ✅ este spec                  | ✅ este spec        | ✅ este spec                    |
+| **II. Multi-plataforma** | ✅ só Worker                               | ✅ só DB                      | ⚠️ ver mobile bumps | ✅ só Worker                    |
+| **III. Privacy/LGPD**    | ✅ sem PHI em prompts                      | ✅ **core** desta US          | ✅ neutro           | ✅ Voice history em DO isolado  |
+| **IV. Test-First**       | ✅ teste de modelo ativo antes do refactor | ✅ RLS testada em branch Neon | ✅ suite existente  | ✅ teste de upload Stream antes |
+| **V. Observability**     | ✅ Analytics Engine traceia model          | ✅ Data API Advisors monitora | ✅ neutro           | ✅ DO observability=enabled     |
 
 **Violations**: Nenhuma identificada que exija seção "Complexity Tracking".
 
@@ -79,23 +79,23 @@ pnpm-lock.yaml                      # regenerar
 
 ## Phasing
 
-| Fase | Conteúdo | Saída | Duração |
-|---|---|---|---|
-| **0 — Research** | Auditoria `grep` modelos deprecados em `ai.ts`; `SELECT` 122 tabelas sem RLS; baseline Vite build time | `research.md` (lista exata) | 1 dia |
-| **1 — Design** | Matriz de policy RLS por tabela; mapping modelo deprecado → substituto; testes a adicionar | `data-model.md` + `contracts/` | 1 dia |
-| **2 — Tasks** | `/speckit.tasks` gera tasks.md ordenado por US | `tasks.md` | auto |
-| **3 — Implementation** | PRs incrementais (US1 → US2 → US3 → US4 [opt]) | PRs merged em main | 2 semanas |
+| Fase                   | Conteúdo                                                                                               | Saída                          | Duração   |
+| ---------------------- | ------------------------------------------------------------------------------------------------------ | ------------------------------ | --------- |
+| **0 — Research**       | Auditoria `grep` modelos deprecados em `ai.ts`; `SELECT` 122 tabelas sem RLS; baseline Vite build time | `research.md` (lista exata)    | 1 dia     |
+| **1 — Design**         | Matriz de policy RLS por tabela; mapping modelo deprecado → substituto; testes a adicionar             | `data-model.md` + `contracts/` | 1 dia     |
+| **2 — Tasks**          | `/speckit.tasks` gera tasks.md ordenado por US                                                         | `tasks.md`                     | auto      |
+| **3 — Implementation** | PRs incrementais (US1 → US2 → US3 → US4 [opt])                                                         | PRs merged em main             | 2 semanas |
 
 ## Risks & Mitigations
 
-| Risco | Severidade | Mitigação |
-|---|---|---|
-| Modelo substituto (Gemma 4) com schema de saída diferente | Alto | Parser tolerante + golden tests por modelo em `__tests__/ai.test.ts` |
-| Policy RLS bloqueia query legítima do Worker | Alto | Worker conecta via Hyperdrive como `neondb_owner` → RLS sem FORCE não filtra owner. Validar em branch Neon antes |
-| Zod 4.4 breaking em tuple defaults | Médio | Rodar `pnpm test` em PR isolado de Zod; ajustar schemas afetados |
-| Wrangler 4.92 quebra deploy CI | Médio | Testar `wrangler deploy --dry-run` em branch antes |
-| Stream Binding deprecia API key flow sem aviso | Baixo | Manter rota antiga até cutover validado |
-| Branch Neon esgota tempo gratuito | Baixo | Branch curto (~2h) só para validar migration |
+| Risco                                                     | Severidade | Mitigação                                                                                                        |
+| --------------------------------------------------------- | ---------- | ---------------------------------------------------------------------------------------------------------------- |
+| Modelo substituto (Gemma 4) com schema de saída diferente | Alto       | Parser tolerante + golden tests por modelo em `__tests__/ai.test.ts`                                             |
+| Policy RLS bloqueia query legítima do Worker              | Alto       | Worker conecta via Hyperdrive como `neondb_owner` → RLS sem FORCE não filtra owner. Validar em branch Neon antes |
+| Zod 4.4 breaking em tuple defaults                        | Médio      | Rodar `pnpm test` em PR isolado de Zod; ajustar schemas afetados                                                 |
+| Wrangler 4.92 quebra deploy CI                            | Médio      | Testar `wrangler deploy --dry-run` em branch antes                                                               |
+| Stream Binding deprecia API key flow sem aviso            | Baixo      | Manter rota antiga até cutover validado                                                                          |
+| Branch Neon esgota tempo gratuito                         | Baixo      | Branch curto (~2h) só para validar migration                                                                     |
 
 ## Out of Scope (explicitamente)
 
@@ -111,5 +111,5 @@ pnpm-lock.yaml                      # regenerar
 > Nenhuma violação de Constitution Check identificada. Tabela vazia intencionalmente.
 
 | Violation | Why Needed | Simpler Alternative Rejected Because |
-|-----------|------------|--------------------------------------|
-| _(none)_ | — | — |
+| --------- | ---------- | ------------------------------------ |
+| _(none)_  | —          | —                                    |

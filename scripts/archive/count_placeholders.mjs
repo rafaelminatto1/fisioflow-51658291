@@ -10,4 +10,6 @@ async function checkPlaceholders() {
   console.log(`Faltam ${result[0].count} exercícios usando placeholders.`);
 }
 
-checkPlaceholders().catch(console.error).finally(() => process.exit(0));
+checkPlaceholders()
+  .catch(console.error)
+  .finally(() => process.exit(0));

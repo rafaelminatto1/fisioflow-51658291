@@ -35,7 +35,9 @@ export function isOfflineEnqueuedResponse(value: unknown): value is OfflineEnque
  */
 export type MaybeOffline<T> = T | (Partial<T> & { __offline: true; id: string });
 
-export function isOfflinePlaceholder<T>(value: MaybeOffline<T> | undefined | null): value is Partial<T> & { __offline: true; id: string } {
+export function isOfflinePlaceholder<T>(
+  value: MaybeOffline<T> | undefined | null,
+): value is Partial<T> & { __offline: true; id: string } {
   return (
     typeof value === "object" &&
     value !== null &&

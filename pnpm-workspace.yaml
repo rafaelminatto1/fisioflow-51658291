@@ -12,7 +12,7 @@ allowBuilds:
   "@scarf/scarf": true
   "@sentry-internal/node-cpu-profiler": true
   "@sentry/cli": true
-  '@shopify/react-native-skia': true
+  "@shopify/react-native-skia": true
   "@tree-sitter-grammars/tree-sitter-yaml": true
   "core-js": true
   "core-js-pure": true

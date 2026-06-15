@@ -14,14 +14,17 @@ async function main() {
   console.log("=========================================\n");
 
   // 1. Pegar o usuário
-  const userList = await db.select().from(profiles).where(eq(profiles.email, process.env.E2E_EMAIL || ""));
+  const userList = await db
+    .select()
+    .from(profiles)
+    .where(eq(profiles.email, process.env.E2E_EMAIL || ""));
   if (userList.length === 0) {
     console.error("Usuário não encontrado!");
     return;
   }
   const user = userList[0];
   const orgId = user.organizationId;
-  
+
   if (!orgId) {
     console.error("Usuário sem organização!");
     return;
@@ -33,13 +36,13 @@ async function main() {
   for (let i = 1; i <= 10; i++) {
     const patientId = uuidv4();
     const patientName = `Paciente Autosave QA ${i} - ${Date.now()}`;
-    
+
     await db.insert(patients).values({
       id: patientId,
       organizationId: orgId,
       fullName: patientName,
       phone: "11999999999",
-      status: "active"
+      status: "active",
     });
     patientIds.push(patientId);
   }
@@ -53,7 +56,7 @@ async function main() {
       const apptId = uuidv4();
       const date = new Date();
       date.setDate(date.getDate() - j);
-      
+
       await db.insert(appointments).values({
         id: apptId,
         organizationId: orgId,
@@ -61,7 +64,7 @@ async function main() {
         therapistId: user.userId || user.id,
         startTime: "10:00:00",
         endTime: "11:00:00",
-        date: date.toISOString().split('T')[0],
+        date: date.toISOString().split("T")[0],
         status: "agendado",
         type: "session",
       });
@@ -73,10 +76,10 @@ async function main() {
   // 4. Simular o Autosave em TODAS as evoluções para TODOS os agendamentos (100)
   console.log("--> Simulando AUTOSAVE do Front-End para os 100 agendamentos...");
   console.log("Preenchendo: evolutionText, observations, subjective, dor(VAS), fc, pa, etc...");
-  
+
   for (const apptId of appointmentIds) {
     const sessionId = uuidv4();
-    
+
     // O backend autosave faria exatamente isso (upsert ou insert)
     await db.insert(clinicalRecords).values({
       id: sessionId,
@@ -91,17 +94,22 @@ async function main() {
       hr: Math.floor(Math.random() * (120 - 60) + 60), // Frequência cardíaca
       rr: 18, // Respiração
       spo2: 98,
-      status: "draft"
+      status: "draft",
     });
   }
   console.log(`✅ 100 evoluções submetidas via Autosave pipeline com todos os campos.\n`);
 
   // 5. Verificar (Read-back) para garantir integridade dos dados salvos
   console.log("--> Lendo e verificando banco de dados para confirmar integridade...");
-  const records = await db.select().from(clinicalRecords).where(inArray(clinicalRecords.appointmentId, appointmentIds));
-  
+  const records = await db
+    .select()
+    .from(clinicalRecords)
+    .where(inArray(clinicalRecords.appointmentId, appointmentIds));
+
   if (records.length !== 100) {
-    console.error(`❌ Falha: Era esperado 100 registros salvos, porém apenas ${records.length} foram encontrados.`);
+    console.error(
+      `❌ Falha: Era esperado 100 registros salvos, porém apenas ${records.length} foram encontrados.`,
+    );
     return;
   }
 
@@ -123,7 +131,9 @@ async function main() {
 
   if (isAllValid) {
     console.log("✅ VERIFICAÇÃO CONCLUÍDA COM SUCESSO!");
-    console.log("Todos os 10 pacientes, 100 agendamentos e 100 evoluções salvaram perfeitamente todos os campos:\n- Observações Clínicas\n- Evolução/Procedimento\n- Queixa Principal (Subjetivo)\n- Dor (VAS)\n- Frequência Cardíaca\n- Pressão Arterial");
+    console.log(
+      "Todos os 10 pacientes, 100 agendamentos e 100 evoluções salvaram perfeitamente todos os campos:\n- Observações Clínicas\n- Evolução/Procedimento\n- Queixa Principal (Subjetivo)\n- Dor (VAS)\n- Frequência Cardíaca\n- Pressão Arterial",
+    );
   } else {
     console.log("❌ O teste falhou.");
   }

@@ -15,14 +15,7 @@ import type { Env } from "../types/env";
 
 function stageToLifecycle(
   estagio: string | null | undefined,
-):
-  | "lead"
-  | "mql"
-  | "sql"
-  | "opportunity"
-  | "customer"
-  | "churned"
-  | undefined {
+): "lead" | "mql" | "sql" | "opportunity" | "customer" | "churned" | undefined {
   switch (estagio) {
     case "aguardando":
       return "lead";
@@ -154,10 +147,10 @@ app.post("/leads", requireAuth, async (c) => {
 
   // 3. Liga primary_lead_id se o contact ainda não tem
   if (!contact.primary_lead_id) {
-    await pool.query(
-      `UPDATE contacts SET primary_lead_id = $1, updated_at = NOW() WHERE id = $2`,
-      [result.rows[0].id, contact.id],
-    );
+    await pool.query(`UPDATE contacts SET primary_lead_id = $1, updated_at = NOW() WHERE id = $2`, [
+      result.rows[0].id,
+      contact.id,
+    ]);
   }
 
   await logContactActivity(pool, {

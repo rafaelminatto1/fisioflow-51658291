@@ -5,26 +5,22 @@
  */
 
 import React from "react";
-import {
-	PageLayout,
-	PageContainer,
-	PageHeader,
-} from "@/components/layout/PageLayout";
+import { PageLayout, PageContainer } from "@/components/layout/PageLayout";
 import { BeforeAfterWizard } from "@/components/marketing/BeforeAfterWizard";
 import { useAuth } from "@/contexts/AuthContext";
 
 export default function BeforeAfterPage() {
-	const { user } = useAuth();
+  const { user } = useAuth();
 
-	return (
-		<PageLayout>
-			<PageContainer>
-				<PageHeader
-					title="Criar Antes e Depois"
-					subtitle="Gere comparações profissionais para suas redes sociais"
-				/>
-				<BeforeAfterWizard clinicName={user?.clinicName || "FisioFlow"} />
-			</PageContainer>
-		</PageLayout>
-	);
+  return (
+    <PageLayout>
+      <PageContainer>
+        <PageHeader
+          title="Criar Antes e Depois"
+          subtitle="Gere comparações profissionais para suas redes sociais"
+        />
+        <BeforeAfterWizard clinicName={user?.clinicName || "FisioFlow"} />
+      </PageContainer>
+    </PageLayout>
+  );
 }

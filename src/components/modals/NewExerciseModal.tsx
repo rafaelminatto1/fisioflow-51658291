@@ -268,7 +268,7 @@ export function NewExerciseModal({
     form.setValue("name_en", entry.en);
     form.setValue("description", entry.description_pt);
     form.setValue("category", entry.subcategory || entry.category);
-    
+
     // Mapear aliases se existirem no dicionário
     if (entry.aliases_pt) {
       form.setValue("aliases_pt", entry.aliases_pt);
@@ -292,7 +292,7 @@ export function NewExerciseModal({
         ]);
       }
     }
-    
+
     // Preencher instruções e metadados clínicos se disponíveis
     if (entry.instruction_pt) {
       form.setValue("instructions", entry.instruction_pt);
@@ -598,94 +598,96 @@ export function NewExerciseModal({
             >
               {/* ===== COLUNA ESQUERDA: campos textuais e clínicos ===== */}
               <div className="p-5 sm:p-6 space-y-5 min-w-0">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="name"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="flex justify-between items-center">
-                        <span>Nome (PT)*</span>
-                        <div className="flex items-center gap-1">
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            className="h-6 text-[10px] gap-1 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50"
-                            onClick={() => setIsWgerOpen(true)}
-                          >
-                            <Download className="h-3 w-3" />
-                            Importar do wger
-                          </Button>
-                          <Popover>
-                            <PopoverTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="h-6 text-[10px] gap-1 text-primary hover:text-primary hover:bg-primary/5"
-                              >
-                                <Search className="h-3 w-3" />
-                                Dicionário Clínico
-                              </Button>
-                            </PopoverTrigger>
-                          <PopoverContent className="w-80 p-0" align="end">
-                            <div className="p-2 border-b">
-                              <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider px-2">
-                                Sugestões do Dicionário
-                              </p>
-                            </div>
-                            <div className="max-h-60 overflow-y-auto">
-                              {exerciseDictionary
-                                .filter((e) => {
-                                  const q = (field.value || "").toLowerCase();
-                                  const pt = (e?.pt || "").toLowerCase();
-                                  const aliases = Array.isArray(e?.aliases_pt) ? e.aliases_pt : [];
-                                  return (
-                                    pt.includes(q) ||
-                                    aliases.some((a) => (a || "").toLowerCase().includes(q))
-                                  );
-                                })
-                                .map((entry) => (
-                                  <button
-                                    key={entry.pt}
-                                    type="button"
-                                    onClick={() => handleApplyDictionaryEntry(entry)}
-                                    className="w-full flex flex-col items-start gap-0.5 p-3 text-left hover:bg-slate-50 border-b last:border-0 transition-colors"
-                                  >
-                                    <span className="text-sm font-medium text-slate-900">
-                                      {entry.pt}
-                                    </span>
-                                    <span className="text-[10px] text-slate-500 italic">
-                                      {entry.en}
-                                    </span>
-                                  </button>
-                                ))}
-                            </div>
-                          </PopoverContent>
-                        </Popover>
-                        </div>
-                      </FormLabel>
-                      <FormControl>
-                        <Input {...field} placeholder="Ex: Agachamento Livre" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="name_en"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Nome (EN)</FormLabel>
-                      <FormControl>
-                        <Input {...field} placeholder="Ex: Squat" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="name"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="flex justify-between items-center">
+                          <span>Nome (PT)*</span>
+                          <div className="flex items-center gap-1">
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              className="h-6 text-[10px] gap-1 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50"
+                              onClick={() => setIsWgerOpen(true)}
+                            >
+                              <Download className="h-3 w-3" />
+                              Importar do wger
+                            </Button>
+                            <Popover>
+                              <PopoverTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-6 text-[10px] gap-1 text-primary hover:text-primary hover:bg-primary/5"
+                                >
+                                  <Search className="h-3 w-3" />
+                                  Dicionário Clínico
+                                </Button>
+                              </PopoverTrigger>
+                              <PopoverContent className="w-80 p-0" align="end">
+                                <div className="p-2 border-b">
+                                  <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider px-2">
+                                    Sugestões do Dicionário
+                                  </p>
+                                </div>
+                                <div className="max-h-60 overflow-y-auto">
+                                  {exerciseDictionary
+                                    .filter((e) => {
+                                      const q = (field.value || "").toLowerCase();
+                                      const pt = (e?.pt || "").toLowerCase();
+                                      const aliases = Array.isArray(e?.aliases_pt)
+                                        ? e.aliases_pt
+                                        : [];
+                                      return (
+                                        pt.includes(q) ||
+                                        aliases.some((a) => (a || "").toLowerCase().includes(q))
+                                      );
+                                    })
+                                    .map((entry) => (
+                                      <button
+                                        key={entry.pt}
+                                        type="button"
+                                        onClick={() => handleApplyDictionaryEntry(entry)}
+                                        className="w-full flex flex-col items-start gap-0.5 p-3 text-left hover:bg-slate-50 border-b last:border-0 transition-colors"
+                                      >
+                                        <span className="text-sm font-medium text-slate-900">
+                                          {entry.pt}
+                                        </span>
+                                        <span className="text-[10px] text-slate-500 italic">
+                                          {entry.en}
+                                        </span>
+                                      </button>
+                                    ))}
+                                </div>
+                              </PopoverContent>
+                            </Popover>
+                          </div>
+                        </FormLabel>
+                        <FormControl>
+                          <Input {...field} placeholder="Ex: Agachamento Livre" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="name_en"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Nome (EN)</FormLabel>
+                        <FormControl>
+                          <Input {...field} placeholder="Ex: Squat" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <FormField
@@ -734,283 +736,134 @@ export function NewExerciseModal({
                   />
                 </div>
 
-              <FormField
-                control={form.control}
-                name="description"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Descrição</FormLabel>
-                    <FormControl>
-                      <Textarea {...field} placeholder="Descrição do exercício" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
-                  name="category"
+                  name="description"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Categoria</FormLabel>
+                      <FormLabel>Descrição</FormLabel>
                       <FormControl>
-                        <Input {...field} placeholder="Ex: Fortalecimento" />
+                        <Textarea {...field} placeholder="Descrição do exercício" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
 
-                <FormField
-                  control={form.control}
-                  name="difficulty"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Dificuldade</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Selecione" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="Iniciante">Iniciante</SelectItem>
-                          <SelectItem value="Intermediário">Intermediário</SelectItem>
-                          <SelectItem value="Avançado">Avançado</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              <FormField
-                control={form.control}
-                name="instructions"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Instruções</FormLabel>
-                    <FormControl>
-                      <Textarea {...field} placeholder="Instruções detalhadas" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <p className="text-[11px] text-muted-foreground italic mb-1">
-                📊 Valores médios recomendados — o profissional ajusta na prescrição individual
-              </p>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <FormField
-                  control={form.control}
-                  name="sets"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Séries (Recomendado)</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="number"
-                          {...field}
-                          onChange={(e) =>
-                            field.onChange(e.target.value ? parseInt(e.target.value) : undefined)
-                          }
-                          value={field.value || ""}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="repetitions"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Repetições (Recomendado)</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="number"
-                          {...field}
-                          onChange={(e) =>
-                            field.onChange(e.target.value ? parseInt(e.target.value) : undefined)
-                          }
-                          value={field.value || ""}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="duration"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Duração Recomendada (seg)</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="number"
-                          {...field}
-                          onChange={(e) =>
-                            field.onChange(e.target.value ? parseInt(e.target.value) : undefined)
-                          }
-                          value={field.value || ""}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              {/* Bloco de mídia movido para a coluna direita (sticky) — ver final do <form>. */}
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="indicated_pathologies"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>✅ Indicações Clínicas</FormLabel>
-                      <FormControl>
-                        <MultiSelect
-                          options={getPathologyOptions()}
-                          selected={Array.isArray(field.value) ? field.value : []}
-                          onChange={field.onChange}
-                          allowCustom={true}
-                          placeholder="Selecionar patologias indicadas..."
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="contraindicated_pathologies"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>⚠️ Contraindicações</FormLabel>
-                      <FormControl>
-                        <MultiSelect
-                          options={getPathologyOptions()}
-                          selected={Array.isArray(field.value) ? field.value : []}
-                          onChange={field.onChange}
-                          allowCustom={true}
-                          placeholder="Selecionar contraindicações..."
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="body_parts"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Partes do Corpo</FormLabel>
-                      <FormControl>
-                        <MultiSelect
-                          options={getBodyPartsOptions()}
-                          selected={Array.isArray(field.value) ? field.value : []}
-                          onChange={field.onChange}
-                          allowCustom={true}
-                          placeholder="Selecionar ou digitar..."
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="equipment"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Equipamentos</FormLabel>
-                      <FormControl>
-                        <MultiSelect
-                          options={getEquipmentOptions()}
-                          selected={Array.isArray(field.value) ? field.value : []}
-                          onChange={field.onChange}
-                          allowCustom={true}
-                          placeholder="Selecionar ou digitar..."
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="alternativeEquipment"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Equipamentos Alternativos</FormLabel>
-                      <FormControl>
-                        <MultiSelect
-                          options={getEquipmentOptions()}
-                          selected={Array.isArray(field.value) ? field.value : []}
-                          onChange={field.onChange}
-                          allowCustom={true}
-                          placeholder="Selecionar ou digitar..."
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              <div className="space-y-4 pt-4 border-t mt-4">
-                <h3 className="text-sm font-semibold flex items-center gap-2">
-                  <Sparkles className="h-4 w-4 text-primary" />
-                  Inteligência Clínica & Segurança
-                </h3>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <FormField
                     control={form.control}
-                    name="precaution_level"
+                    name="category"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Nível de Precaução</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormLabel>Categoria</FormLabel>
+                        <FormControl>
+                          <Input {...field} placeholder="Ex: Fortalecimento" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="difficulty"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Dificuldade</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value}>
                           <FormControl>
                             <SelectTrigger>
-                              <SelectValue placeholder="Selecione o nível" />
+                              <SelectValue placeholder="Selecione" />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            {getPrecautionOptions().map((opt) => (
-                              <SelectItem key={opt.value} value={opt.value}>
-                                {opt.label}
-                              </SelectItem>
-                            ))}
+                            <SelectItem value="Iniciante">Iniciante</SelectItem>
+                            <SelectItem value="Intermediário">Intermediário</SelectItem>
+                            <SelectItem value="Avançado">Avançado</SelectItem>
                           </SelectContent>
                         </Select>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
+                </div>
+
+                <FormField
+                  control={form.control}
+                  name="instructions"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Instruções</FormLabel>
+                      <FormControl>
+                        <Textarea {...field} placeholder="Instruções detalhadas" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <p className="text-[11px] text-muted-foreground italic mb-1">
+                  📊 Valores médios recomendados — o profissional ajusta na prescrição individual
+                </p>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <FormField
                     control={form.control}
-                    name="precaution_notes"
+                    name="sets"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Notas de Segurança</FormLabel>
+                        <FormLabel>Séries (Recomendado)</FormLabel>
                         <FormControl>
-                          <Input {...field} placeholder="Ex: Evitar valgo dinâmico" />
+                          <Input
+                            type="number"
+                            {...field}
+                            onChange={(e) =>
+                              field.onChange(e.target.value ? parseInt(e.target.value) : undefined)
+                            }
+                            value={field.value || ""}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="repetitions"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Repetições (Recomendado)</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            {...field}
+                            onChange={(e) =>
+                              field.onChange(e.target.value ? parseInt(e.target.value) : undefined)
+                            }
+                            value={field.value || ""}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="duration"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Duração Recomendada (seg)</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            {...field}
+                            onChange={(e) =>
+                              field.onChange(e.target.value ? parseInt(e.target.value) : undefined)
+                            }
+                            value={field.value || ""}
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -1018,191 +871,342 @@ export function NewExerciseModal({
                   />
                 </div>
 
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <FormLabel className="text-sm font-semibold">
-                      Referências Científicas (Wiki)
-                    </FormLabel>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      className="h-7 text-[10px] gap-1"
-                      onClick={() => {
-                        append({
-                          title: "",
-                          year: new Date().getFullYear(),
-                          evidence_level: "ExpertOpinion",
-                        });
-                      }}
-                    >
-                      <Plus className="h-3 w-3" /> Adicionar Ref.
-                    </Button>
+                {/* Bloco de mídia movido para a coluna direita (sticky) — ver final do <form>. */}
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="indicated_pathologies"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>✅ Indicações Clínicas</FormLabel>
+                        <FormControl>
+                          <MultiSelect
+                            options={getPathologyOptions()}
+                            selected={Array.isArray(field.value) ? field.value : []}
+                            onChange={field.onChange}
+                            allowCustom={true}
+                            placeholder="Selecionar patologias indicadas..."
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="contraindicated_pathologies"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>⚠️ Contraindicações</FormLabel>
+                        <FormControl>
+                          <MultiSelect
+                            options={getPathologyOptions()}
+                            selected={Array.isArray(field.value) ? field.value : []}
+                            onChange={field.onChange}
+                            allowCustom={true}
+                            placeholder="Selecionar contraindicações..."
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="body_parts"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Partes do Corpo</FormLabel>
+                        <FormControl>
+                          <MultiSelect
+                            options={getBodyPartsOptions()}
+                            selected={Array.isArray(field.value) ? field.value : []}
+                            onChange={field.onChange}
+                            allowCustom={true}
+                            placeholder="Selecionar ou digitar..."
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="equipment"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Equipamentos</FormLabel>
+                        <FormControl>
+                          <MultiSelect
+                            options={getEquipmentOptions()}
+                            selected={Array.isArray(field.value) ? field.value : []}
+                            onChange={field.onChange}
+                            allowCustom={true}
+                            placeholder="Selecionar ou digitar..."
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="alternativeEquipment"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Equipamentos Alternativos</FormLabel>
+                        <FormControl>
+                          <MultiSelect
+                            options={getEquipmentOptions()}
+                            selected={Array.isArray(field.value) ? field.value : []}
+                            onChange={field.onChange}
+                            allowCustom={true}
+                            placeholder="Selecionar ou digitar..."
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <div className="space-y-4 pt-4 border-t mt-4">
+                  <h3 className="text-sm font-semibold flex items-center gap-2">
+                    <Sparkles className="h-4 w-4 text-primary" />
+                    Inteligência Clínica & Segurança
+                  </h3>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="precaution_level"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Nível de Precaução</FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Selecione o nível" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {getPrecautionOptions().map((opt) => (
+                                <SelectItem key={opt.value} value={opt.value}>
+                                  {opt.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="precaution_notes"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Notas de Segurança</FormLabel>
+                          <FormControl>
+                            <Input {...field} placeholder="Ex: Evitar valgo dinâmico" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
                   </div>
 
-                  <div className="space-y-4">
-                    {fields.map((fieldItem, index) => (
-                      <div
-                        key={fieldItem.id}
-                        className="flex gap-2 items-start border p-3 rounded-xl bg-slate-50/50 dark:bg-slate-900/50"
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <FormLabel className="text-sm font-semibold">
+                        Referências Científicas (Wiki)
+                      </FormLabel>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="h-7 text-[10px] gap-1"
+                        onClick={() => {
+                          append({
+                            title: "",
+                            year: new Date().getFullYear(),
+                            evidence_level: "ExpertOpinion",
+                          });
+                        }}
                       >
-                        <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-3">
-                          <div className="space-y-1">
-                            <label className="text-[10px] font-bold uppercase text-slate-400 ml-1">
-                              Título do Artigo
-                            </label>
-                            <Input
-                              placeholder="Ex: Efeito do agachamento na dor lombar"
-                              className="h-9 text-xs"
-                              {...form.register(`scientific_references.${index}.title` as any)}
-                            />
-                          </div>
-                          <div className="space-y-1">
-                            <label className="text-[10px] font-bold uppercase text-slate-400 ml-1">
-                              ID Wiki (Opcional)
-                            </label>
-                            <div className="flex gap-2 relative">
-                              <Input
-                                placeholder="ID do Artigo Wiki"
-                                className="h-9 text-xs font-mono pr-8"
-                                {...form.register(
-                                  `scientific_references.${index}.wiki_artifact_id` as any,
-                                )}
-                              />
-                              {form.watch(
-                                `scientific_references.${index}.wiki_artifact_id` as any,
-                              ) &&
-                                knowledgeBase.find(
-                                  (a) =>
-                                    a.id ===
-                                    form.getValues(
-                                      `scientific_references.${index}.wiki_artifact_id` as any,
-                                    ),
-                                ) && (
-                                  <Popover>
-                                    <PopoverTrigger asChild>
-                                      <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        className="h-7 w-7 absolute right-1 top-1 text-sky-600 hover:bg-sky-50"
-                                      >
-                                        <BookOpen className="h-4 w-4" />
-                                      </Button>
-                                    </PopoverTrigger>
-                                    <PopoverContent
-                                      className="w-80 p-3 shadow-xl border-sky-100"
-                                      side="top"
-                                    >
-                                      {(() => {
-                                        const article = knowledgeBase.find(
-                                          (a) =>
-                                            a.id ===
-                                            form.getValues(
-                                              `scientific_references.${index}.wiki_artifact_id` as any,
-                                            ),
-                                        );
-                                        if (!article) return null;
-                                        return (
-                                          <div className="space-y-2">
-                                            <h4 className="font-bold text-sm text-slate-800 leading-tight">
-                                              {article.title}
-                                            </h4>
-                                            <div className="flex items-center gap-2">
-                                              <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-                                                {article.group}
-                                              </span>
-                                              <span className="text-[10px] bg-slate-100 px-1.5 rounded text-slate-500">
-                                                {article.year}
-                                              </span>
-                                            </div>
-                                            {article.highlights &&
-                                              article.highlights.length > 0 && (
-                                                <div className="mt-2 space-y-1">
-                                                  <p className="text-[10px] font-bold text-slate-400 uppercase">
-                                                    Key Findings:
-                                                  </p>
-                                                  <ul className="text-xs text-slate-600 space-y-1">
-                                                    {article.highlights.map((h, i) => (
-                                                      <li key={i} className="flex gap-1.5">
-                                                        <span className="text-sky-500 mt-0.5">
-                                                          •
-                                                        </span>{" "}
-                                                        <span>{h}</span>
-                                                      </li>
-                                                    ))}
-                                                  </ul>
-                                                </div>
-                                              )}
-                                          </div>
-                                        );
-                                      })()}
-                                    </PopoverContent>
-                                  </Popover>
-                                )}
-                            </div>
-                          </div>
-                          <div className="flex gap-3">
+                        <Plus className="h-3 w-3" /> Adicionar Ref.
+                      </Button>
+                    </div>
+
+                    <div className="space-y-4">
+                      {fields.map((fieldItem, index) => (
+                        <div
+                          key={fieldItem.id}
+                          className="flex gap-2 items-start border p-3 rounded-xl bg-slate-50/50 dark:bg-slate-900/50"
+                        >
+                          <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <div className="space-y-1">
                               <label className="text-[10px] font-bold uppercase text-slate-400 ml-1">
-                                Ano
+                                Título do Artigo
                               </label>
                               <Input
-                                type="number"
-                                className="h-9 text-xs w-24"
-                                {...form.register(`scientific_references.${index}.year` as any, {
-                                  valueAsNumber: true,
-                                })}
+                                placeholder="Ex: Efeito do agachamento na dor lombar"
+                                className="h-9 text-xs"
+                                {...form.register(`scientific_references.${index}.title` as any)}
                               />
                             </div>
-                            <div className="flex-1 space-y-1">
+                            <div className="space-y-1">
                               <label className="text-[10px] font-bold uppercase text-slate-400 ml-1">
-                                Nível de Evidência
+                                ID Wiki (Opcional)
                               </label>
-                              <Select
-                                value={form.watch(
-                                  `scientific_references.${index}.evidence_level` as any,
-                                )}
-                                onValueChange={(val) => {
-                                  form.setValue(
+                              <div className="flex gap-2 relative">
+                                <Input
+                                  placeholder="ID do Artigo Wiki"
+                                  className="h-9 text-xs font-mono pr-8"
+                                  {...form.register(
+                                    `scientific_references.${index}.wiki_artifact_id` as any,
+                                  )}
+                                />
+                                {form.watch(
+                                  `scientific_references.${index}.wiki_artifact_id` as any,
+                                ) &&
+                                  knowledgeBase.find(
+                                    (a) =>
+                                      a.id ===
+                                      form.getValues(
+                                        `scientific_references.${index}.wiki_artifact_id` as any,
+                                      ),
+                                  ) && (
+                                    <Popover>
+                                      <PopoverTrigger asChild>
+                                        <Button
+                                          variant="ghost"
+                                          size="icon"
+                                          className="h-7 w-7 absolute right-1 top-1 text-sky-600 hover:bg-sky-50"
+                                        >
+                                          <BookOpen className="h-4 w-4" />
+                                        </Button>
+                                      </PopoverTrigger>
+                                      <PopoverContent
+                                        className="w-80 p-3 shadow-xl border-sky-100"
+                                        side="top"
+                                      >
+                                        {(() => {
+                                          const article = knowledgeBase.find(
+                                            (a) =>
+                                              a.id ===
+                                              form.getValues(
+                                                `scientific_references.${index}.wiki_artifact_id` as any,
+                                              ),
+                                          );
+                                          if (!article) return null;
+                                          return (
+                                            <div className="space-y-2">
+                                              <h4 className="font-bold text-sm text-slate-800 leading-tight">
+                                                {article.title}
+                                              </h4>
+                                              <div className="flex items-center gap-2">
+                                                <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                                                  {article.group}
+                                                </span>
+                                                <span className="text-[10px] bg-slate-100 px-1.5 rounded text-slate-500">
+                                                  {article.year}
+                                                </span>
+                                              </div>
+                                              {article.highlights &&
+                                                article.highlights.length > 0 && (
+                                                  <div className="mt-2 space-y-1">
+                                                    <p className="text-[10px] font-bold text-slate-400 uppercase">
+                                                      Key Findings:
+                                                    </p>
+                                                    <ul className="text-xs text-slate-600 space-y-1">
+                                                      {article.highlights.map((h, i) => (
+                                                        <li key={i} className="flex gap-1.5">
+                                                          <span className="text-sky-500 mt-0.5">
+                                                            •
+                                                          </span>{" "}
+                                                          <span>{h}</span>
+                                                        </li>
+                                                      ))}
+                                                    </ul>
+                                                  </div>
+                                                )}
+                                            </div>
+                                          );
+                                        })()}
+                                      </PopoverContent>
+                                    </Popover>
+                                  )}
+                              </div>
+                            </div>
+                            <div className="flex gap-3">
+                              <div className="space-y-1">
+                                <label className="text-[10px] font-bold uppercase text-slate-400 ml-1">
+                                  Ano
+                                </label>
+                                <Input
+                                  type="number"
+                                  className="h-9 text-xs w-24"
+                                  {...form.register(`scientific_references.${index}.year` as any, {
+                                    valueAsNumber: true,
+                                  })}
+                                />
+                              </div>
+                              <div className="flex-1 space-y-1">
+                                <label className="text-[10px] font-bold uppercase text-slate-400 ml-1">
+                                  Nível de Evidência
+                                </label>
+                                <Select
+                                  value={form.watch(
                                     `scientific_references.${index}.evidence_level` as any,
-                                    val,
-                                  );
-                                }}
-                              >
-                                <SelectTrigger className="h-9 text-xs">
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {getEvidenceLevelOptions().map((opt) => (
-                                    <SelectItem key={opt.value} value={opt.value}>
-                                      {opt.label}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
+                                  )}
+                                  onValueChange={(val) => {
+                                    form.setValue(
+                                      `scientific_references.${index}.evidence_level` as any,
+                                      val,
+                                    );
+                                  }}
+                                >
+                                  <SelectTrigger className="h-9 text-xs">
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {getEvidenceLevelOptions().map((opt) => (
+                                      <SelectItem key={opt.value} value={opt.value}>
+                                        {opt.label}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              </div>
                             </div>
                           </div>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="h-9 w-9 mt-6 text-destructive hover:bg-red-50"
+                            onClick={() => remove(index)}
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
                         </div>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          className="h-9 w-9 mt-6 text-destructive hover:bg-red-50"
-                          onClick={() => remove(index)}
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    ))}
+                      ))}
 
-                    {fields.length === 0 && (
-                      <div className="flex h-20 flex-col items-center justify-center rounded-xl border border-dashed bg-slate-50/50 dark:bg-slate-900/50">
-                        <p className="text-[11px] text-slate-400">Nenhuma referência adicionada</p>
-                      </div>
-                    )}
+                      {fields.length === 0 && (
+                        <div className="flex h-20 flex-col items-center justify-center rounded-xl border border-dashed bg-slate-50/50 dark:bg-slate-900/50">
+                          <p className="text-[11px] text-slate-400">
+                            Nenhuma referência adicionada
+                          </p>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
               </div>
               {/* ===== COLUNA DIREITA: Mídia (sticky) ===== */}
               <aside className="border-t lg:border-t-0 lg:border-l bg-slate-50/40 dark:bg-slate-900/40 lg:sticky lg:top-0 lg:self-start lg:max-h-[calc(92vh-130px)] overflow-y-auto">
@@ -1250,22 +1254,32 @@ export function NewExerciseModal({
                       <PopoverContent className="w-80 p-3" align="end">
                         <div className="space-y-3">
                           <h4 className="text-xs font-bold uppercase">Adicionar via URL</h4>
-                          <Input 
-                            placeholder="https://..." 
-                            className="text-xs h-8" 
+                          <Input
+                            placeholder="https://..."
+                            className="text-xs h-8"
                             onKeyDown={(e) => {
-                              if (e.key === 'Enter') {
+                              if (e.key === "Enter") {
                                 e.preventDefault();
                                 const url = e.currentTarget.value;
                                 if (!url) return;
-                                const type = url.includes('youtube.com') || url.includes('youtu.be') ? 'youtube' : (url.match(/\.(mp4|webm|mov)$/i) ? 'video' : 'image');
+                                const type =
+                                  url.includes("youtube.com") || url.includes("youtu.be")
+                                    ? "youtube"
+                                    : url.match(/\.(mp4|webm|mov)$/i)
+                                      ? "video"
+                                      : "image";
                                 const currentMedia = form.getValues("media") || [];
-                                form.setValue("media", [...currentMedia, { url, type, caption: "", orderIndex: currentMedia.length }]);
+                                form.setValue("media", [
+                                  ...currentMedia,
+                                  { url, type, caption: "", orderIndex: currentMedia.length },
+                                ]);
                                 e.currentTarget.value = "";
                               }
                             }}
                           />
-                          <p className="text-[10px] text-muted-foreground">Cole a URL e pressione Enter.</p>
+                          <p className="text-[10px] text-muted-foreground">
+                            Cole a URL e pressione Enter.
+                          </p>
                         </div>
                       </PopoverContent>
                     </Popover>
@@ -1282,7 +1296,8 @@ export function NewExerciseModal({
                       if (files.length > 0) {
                         toast({
                           title: "Dica",
-                          description: "Use a Galeria para gerenciar seus arquivos permanentemente.",
+                          description:
+                            "Use a Galeria para gerenciar seus arquivos permanentemente.",
                         });
                       }
                     }}
@@ -1478,14 +1493,14 @@ export function NewExerciseModal({
           }}
         />
 
-        <WgerImportModal 
-          open={isWgerOpen} 
-          onOpenChange={setIsWgerOpen} 
+        <WgerImportModal
+          open={isWgerOpen}
+          onOpenChange={setIsWgerOpen}
           onImport={(enrichedData) => {
             const diffMap: any = {
-              "Iniciante": "Iniciante",
-              "Intermediário": "Intermediário",
-              "Avançado": "Avançado",
+              Iniciante: "Iniciante",
+              Intermediário: "Intermediário",
+              Avançado: "Avançado",
             };
             form.setValue("name", enrichedData.name || "");
             form.setValue("description", enrichedData.description || "");
@@ -1495,15 +1510,23 @@ export function NewExerciseModal({
             if (enrichedData.aliases_pt) form.setValue("aliases_pt", enrichedData.aliases_pt);
             if (enrichedData.body_parts) form.setValue("body_parts", enrichedData.body_parts);
             if (enrichedData.equipment) form.setValue("equipment", enrichedData.equipment);
-            if (enrichedData.precaution_level) form.setValue("precaution_level", enrichedData.precaution_level);
-            if (enrichedData.precaution_notes) form.setValue("precaution_notes", enrichedData.precaution_notes);
+            if (enrichedData.precaution_level)
+              form.setValue("precaution_level", enrichedData.precaution_level);
+            if (enrichedData.precaution_notes)
+              form.setValue("precaution_notes", enrichedData.precaution_notes);
             if (enrichedData.scientific_references) replace(enrichedData.scientific_references);
-            
+
             if (enrichedData.media) {
               const currentMedia = form.getValues("media") || [];
-              form.setValue("media", [...currentMedia, ...enrichedData.media.map((m: any, i: number) => ({ ...m, orderIndex: currentMedia.length + i }))]);
+              form.setValue("media", [
+                ...currentMedia,
+                ...enrichedData.media.map((m: any, i: number) => ({
+                  ...m,
+                  orderIndex: currentMedia.length + i,
+                })),
+              ]);
             }
-          }} 
+          }}
         />
       </DialogContent>
     </Dialog>

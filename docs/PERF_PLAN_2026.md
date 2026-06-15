@@ -5,13 +5,13 @@
 
 ## 1. Metas (alvos mensuráveis)
 
-| Métrica | Hoje (prod) | Alvo |
-|---|---|---|
-| Lighthouse **desktop** (cold) | 70 / LCP 2.9s | **≥ 85 / LCP < 2.0s** |
-| Lighthouse **mobile 4G** (cold) | 56 / LCP 10.9s | **≥ 75 / LCP < 4.0s** |
-| Navegação quente (autenticada) | LCP 491ms, CLS 0, TBT ~0 | **manter** |
-| entry `index` | 411 KB | **< 280 KB** |
-| Offline-first | funcional | **funcional (gate)** |
+| Métrica                         | Hoje (prod)              | Alvo                  |
+| ------------------------------- | ------------------------ | --------------------- |
+| Lighthouse **desktop** (cold)   | 70 / LCP 2.9s            | **≥ 85 / LCP < 2.0s** |
+| Lighthouse **mobile 4G** (cold) | 56 / LCP 10.9s           | **≥ 75 / LCP < 4.0s** |
+| Navegação quente (autenticada)  | LCP 491ms, CLS 0, TBT ~0 | **manter**            |
+| entry `index`                   | 411 KB                   | **< 280 KB**          |
+| Offline-first                   | funcional                | **funcional (gate)**  |
 
 ## 2. Gates obrigatórios (não negociáveis)
 
@@ -112,12 +112,12 @@
 
 Implicações por tipo de mudança:
 
-| Mudança | Offline? |
-|---|---|
-| Lazy de **features** (FullCalendar, wiki, PDF…) — Fase 1/3 | ✅ OK. Cacheado no 1º uso online. **É o comportamento atual e já aceito** (feature só funciona offline depois de aberta 1× online). |
-| Tirar `api/v2`/sync do entry — **T1** | ✅ OK **se** o chunk `vendor-data` for adicionado ao **precache** do SW (não só runtime). Assim o reload offline no boot não depende de ter carregado online antes. |
-| Deferir providers (Realtime/Statsig) — **T5** | ✅ OK. Realtime já não funciona offline (precisa de rede); deferir não muda isso. |
-| Dicionários → JSON/KV — **T9** | ⚠️ Cuidar: se um JSON for buscado por rede sob demanda, precisa entrar no precache **ou** runtime-cache para uso offline. Preferir import estático que vira chunk cacheável. |
+| Mudança                                                    | Offline?                                                                                                                                                                     |
+| ---------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Lazy de **features** (FullCalendar, wiki, PDF…) — Fase 1/3 | ✅ OK. Cacheado no 1º uso online. **É o comportamento atual e já aceito** (feature só funciona offline depois de aberta 1× online).                                          |
+| Tirar `api/v2`/sync do entry — **T1**                      | ✅ OK **se** o chunk `vendor-data` for adicionado ao **precache** do SW (não só runtime). Assim o reload offline no boot não depende de ter carregado online antes.          |
+| Deferir providers (Realtime/Statsig) — **T5**              | ✅ OK. Realtime já não funciona offline (precisa de rede); deferir não muda isso.                                                                                            |
+| Dicionários → JSON/KV — **T9**                             | ⚠️ Cuidar: se um JSON for buscado por rede sob demanda, precisa entrar no precache **ou** runtime-cache para uso offline. Preferir import estático que vira chunk cacheável. |
 
 **Único risco real:** um chunk **necessário no boot** que seja movido para fora do
 precache E nunca tenha sido carregado online. Mitigação padrão: **tudo que é crítico
@@ -125,6 +125,7 @@ no boot vai para `globPatterns` do precache.** Features sob demanda continuam no
 runtime-cache (como hoje).
 
 **Teste de regressão offline (rodar a cada fase):**
+
 1. Carregar o app online 1×.
 2. DevTools → Network → Offline.
 3. F5 → app shell abre.
@@ -135,6 +136,7 @@ runtime-cache (como hoje).
 ---
 
 ## 5. Ordem sugerida
+
 Fase 1 (T1→T3) tem o maior ROI no cold-LCP e é onde mora o risco offline (T1) —
 fazer primeiro, com o teste offline acima. Depois Fase 2, 5 (T10 é barato), 3, 4.
 Cada fase: branch → build/type-check → Lighthouse antes/depois → teste offline →

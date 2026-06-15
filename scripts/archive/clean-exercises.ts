@@ -1,4 +1,4 @@
-import { Pool } from 'pg';
+import { Pool } from "pg";
 
 const pool = new Pool({
   connectionString: process.env.NEON_URL || process.env.DATABASE_URL,

@@ -1,6 +1,14 @@
 import React, { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Repeat, CalendarRange, ArrowRight, PlayCircle, Settings, PlusCircle, Infinity as InfinityIcon } from "lucide-react";
+import {
+  Repeat,
+  CalendarRange,
+  ArrowRight,
+  PlayCircle,
+  Settings,
+  PlusCircle,
+  Infinity as InfinityIcon,
+} from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { rpc } from "@/lib/api/rpc-client";
 import { Button } from "@/components/ui/button";
@@ -38,7 +46,7 @@ export function RecurringManager() {
             time: "09:00",
             start_date: "2026-06-01",
             end_date: "2026-12-31",
-            status: "active"
+            status: "active",
           },
           {
             id: "2",
@@ -48,8 +56,8 @@ export function RecurringManager() {
             time: "14:30",
             start_date: "2026-06-05",
             end_date: "2026-10-05",
-            status: "paused"
-          }
+            status: "paused",
+          },
         ];
       }
       return (await (res as any).json()).data;
@@ -108,7 +116,9 @@ export function RecurringManager() {
                   transition={{ delay: idx * 0.05 }}
                   className={cn(
                     "p-4 rounded-2xl border bg-card/60 backdrop-blur-sm shadow-sm transition-all group",
-                    item.status === 'active' ? "border-indigo-200/50 hover:shadow-md" : "border-muted opacity-75"
+                    item.status === "active"
+                      ? "border-indigo-200/50 hover:shadow-md"
+                      : "border-muted opacity-75",
                   )}
                 >
                   <div className="flex items-start justify-between mb-3">
@@ -125,30 +135,34 @@ export function RecurringManager() {
                       variant={item.status === "active" ? "default" : "secondary"}
                       className={cn(
                         "text-[10px] uppercase font-bold",
-                        item.status === "active" ? "bg-indigo-500 hover:bg-indigo-600" : ""
+                        item.status === "active" ? "bg-indigo-500 hover:bg-indigo-600" : "",
                       )}
                     >
                       {item.status === "active" ? "Ativo" : "Pausado"}
                     </Badge>
                   </div>
-                  
+
                   <div className="text-[11px] text-muted-foreground mb-4 bg-muted/30 p-2 rounded-lg flex items-center justify-between">
-                    <span>
-                      Início: {format(new Date(item.start_date), "dd/MM/yyyy")}
-                    </span>
+                    <span>Início: {format(new Date(item.start_date), "dd/MM/yyyy")}</span>
                     <ArrowRight className="h-3 w-3 mx-2 opacity-50" />
-                    <span>
-                      Fim: {format(new Date(item.end_date), "dd/MM/yyyy")}
-                    </span>
+                    <span>Fim: {format(new Date(item.end_date), "dd/MM/yyyy")}</span>
                   </div>
 
                   <div className="flex gap-2">
-                    <Button size="sm" variant="outline" className="flex-1 h-8 text-[11px] font-bold rounded-xl border-indigo-200 text-indigo-700 hover:bg-indigo-50">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="flex-1 h-8 text-[11px] font-bold rounded-xl border-indigo-200 text-indigo-700 hover:bg-indigo-50"
+                    >
                       <Settings className="h-3 w-3 mr-1.5" />
                       Gerenciar
                     </Button>
                     {item.status !== "active" && (
-                      <Button size="sm" variant="ghost" className="h-8 text-[11px] font-bold rounded-xl text-emerald-600 hover:bg-emerald-50 hover:text-emerald-700">
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-8 text-[11px] font-bold rounded-xl text-emerald-600 hover:bg-emerald-50 hover:text-emerald-700"
+                      >
                         <PlayCircle className="h-3 w-3 mr-1.5" />
                         Retomar
                       </Button>
@@ -161,7 +175,10 @@ export function RecurringManager() {
         )}
 
         <div className="mt-8 border-t border-border/50 pt-6">
-          <Button variant="outline" className="w-full gap-2 border-dashed border-2 hover:border-indigo-500/50 hover:bg-indigo-500/5 rounded-2xl h-12 text-sm font-bold text-muted-foreground hover:text-indigo-600 transition-colors">
+          <Button
+            variant="outline"
+            className="w-full gap-2 border-dashed border-2 hover:border-indigo-500/50 hover:bg-indigo-500/5 rounded-2xl h-12 text-sm font-bold text-muted-foreground hover:text-indigo-600 transition-colors"
+          >
             <PlusCircle className="h-4 w-4" />
             Criar Novo Pacote
           </Button>

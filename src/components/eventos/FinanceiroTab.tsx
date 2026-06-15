@@ -182,9 +182,7 @@ export function FinanceiroTab({ eventoId, evento }: FinanceiroTabProps) {
           <div className="flex items-center justify-between border-b pb-3">
             <div>
               <p className="font-medium">Insumos (Checklist)</p>
-              <p className="text-sm text-muted-foreground">
-                {safeChecklistItems.length} item(ns)
-              </p>
+              <p className="text-sm text-muted-foreground">{safeChecklistItems.length} item(ns)</p>
             </div>
             <div className="text-right">
               <p className="text-lg font-semibold">R$ {custoInsumos.toFixed(2)}</p>
@@ -195,9 +193,7 @@ export function FinanceiroTab({ eventoId, evento }: FinanceiroTabProps) {
           <div className="flex items-center justify-between border-b pb-3">
             <div>
               <p className="font-medium">Outros Pagamentos</p>
-              <p className="text-sm text-muted-foreground">
-                {safePagamentos.length} pagamento(s)
-              </p>
+              <p className="text-sm text-muted-foreground">{safePagamentos.length} pagamento(s)</p>
             </div>
             <div className="text-right">
               <p className="text-lg font-semibold">R$ {custoOutros.toFixed(2)}</p>

@@ -205,14 +205,14 @@ INSERT INTO ai_models VALUES
 
 ### Sprint 4 — Evolução por Voz (Semana 4-5)
 
-| #   | Tarefa                            | Esforço |
-| --- | --------------------------------- | ------- |
-| 4.1 | POST /api/ai/transcribe (GLM-ASR) | 4h      |
-| 4.2 | POST /api/ai/evolution/voice      | 1 dia   |
-| 4.3 | Pipeline: áudio → texto → Observação Livre    | 4h      |
-| 4.4 | Frontend: botão gravar            | 1 dia   |
-| 4.5 | Mobile (Expo)                     | 1 dia   |
-| 4.6 | Fallback chain voz                | 4h      |
+| #   | Tarefa                                     | Esforço |
+| --- | ------------------------------------------ | ------- |
+| 4.1 | POST /api/ai/transcribe (GLM-ASR)          | 4h      |
+| 4.2 | POST /api/ai/evolution/voice               | 1 dia   |
+| 4.3 | Pipeline: áudio → texto → Observação Livre | 4h      |
+| 4.4 | Frontend: botão gravar                     | 1 dia   |
+| 4.5 | Mobile (Expo)                              | 1 dia   |
+| 4.6 | Fallback chain voz                         | 4h      |
 
 ### Sprint 5 — Visão + toMarkdown (Semana 5-6)
 
@@ -227,15 +227,15 @@ INSERT INTO ai_models VALUES
 
 ### Sprint 6 — NFSe São Paulo (Semana 6-7)
 
-| #   | Tarefa                         | Esforço |
-| --- | ------------------------------ | ------- |
-| 6.1 | Instalar `fast-xml-parser`     | 30min   |
-| 6.2 | rpsBuilder.ts (XML ABRASF v2)  | 1 dia   |
-| 6.3 | nfseSPClient.ts (Observação Livre)         | 1 dia   |
-| 6.4 | Reescrever nfseWorkflow.ts     | 4h      |
-| 6.5 | Unificar schema → nfse_records | 4h      |
-| 6.6 | DANFSe via Quick Actions       | 4h      |
-| 6.7 | Secrets NFSe                   | 30min   |
+| #   | Tarefa                             | Esforço |
+| --- | ---------------------------------- | ------- |
+| 6.1 | Instalar `fast-xml-parser`         | 30min   |
+| 6.2 | rpsBuilder.ts (XML ABRASF v2)      | 1 dia   |
+| 6.3 | nfseSPClient.ts (Observação Livre) | 1 dia   |
+| 6.4 | Reescrever nfseWorkflow.ts         | 4h      |
+| 6.5 | Unificar schema → nfse_records     | 4h      |
+| 6.6 | DANFSe via Quick Actions           | 4h      |
+| 6.7 | Secrets NFSe                       | 30min   |
 
 ### Sprint 7 — Dashboard + Custos (Semana 7-8)
 
@@ -252,15 +252,15 @@ INSERT INTO ai_models VALUES
 
 ### Cenário Conservador (GLM-4.7-Flash padrão + AI Gateway cache)
 
-| Item                                | Volume/mês        | Custo          |
-| ----------------------------------- | ----------------- | -------------- |
+| Item                                            | Volume/mês        | Custo          |
+| ----------------------------------------------- | ----------------- | -------------- |
 | GLM-4.7-Flash (chat, Observação Livre, análise) | ~50K requests     | **$0**         |
-| Workers AI (Whisper, embeddings)    | incluído          | **$0**         |
-| GLM-ASR (voz)                       | ~200 transcrições | **~$0.50**     |
-| GLM-5V-Turbo (visão)                | ~100 análises     | **~$3**        |
-| Quick Actions PDF                   | ~3.000            | **$0**         |
-| AI Gateway                          | —                 | **$0**         |
-| **Total IA**                        |                   | **~$3.50/mês** |
+| Workers AI (Whisper, embeddings)                | incluído          | **$0**         |
+| GLM-ASR (voz)                                   | ~200 transcrições | **~$0.50**     |
+| GLM-5V-Turbo (visão)                            | ~100 análises     | **~$3**        |
+| Quick Actions PDF                               | ~3.000            | **$0**         |
+| AI Gateway                                      | —                 | **$0**         |
+| **Total IA**                                    |                   | **~$3.50/mês** |
 
 ### Cenário com GLM-5.1 padrão
 
@@ -328,17 +328,17 @@ O Cloudflare Workers Paid é **10x mais barato** que qualquer alternativa equiva
 
 ## 9. Funcionalidades por Modelo
 
-| Funcionalidade      | Modelo Padrão           | Quando Trocar                   |
-| ------------------- | ----------------------- | ------------------------------- |
-| Chat IA geral       | GLM-4.7-Flash (grátis)  | GLM-5.1 para análises complexas |
-| Evolução Observação Livre       | GLM-4.7-Flash (grátis)  | GLM-5.1 para thinking mode      |
-| Transcrição voz     | GLM-ASR-2512            | Whisper (fallback edge)         |
-| Análise visual      | GLM-5V-Turbo            | —                               |
-| Relatórios premium  | GLM-4.7-Flash (grátis)  | GLM-5.1 para mais profundidade  |
-| Busca semântica/RAG | BGE Embeddings (grátis) | —                               |
-| toMarkdown          | Workers AI (grátis)     | —                               |
-| PDF                 | Quick Actions (grátis)  | —                               |
-| NFSe XML            | Sem IA                  | —                               |
+| Funcionalidade            | Modelo Padrão           | Quando Trocar                   |
+| ------------------------- | ----------------------- | ------------------------------- |
+| Chat IA geral             | GLM-4.7-Flash (grátis)  | GLM-5.1 para análises complexas |
+| Evolução Observação Livre | GLM-4.7-Flash (grátis)  | GLM-5.1 para thinking mode      |
+| Transcrição voz           | GLM-ASR-2512            | Whisper (fallback edge)         |
+| Análise visual            | GLM-5V-Turbo            | —                               |
+| Relatórios premium        | GLM-4.7-Flash (grátis)  | GLM-5.1 para mais profundidade  |
+| Busca semântica/RAG       | BGE Embeddings (grátis) | —                               |
+| toMarkdown                | Workers AI (grátis)     | —                               |
+| PDF                       | Quick Actions (grátis)  | —                               |
+| NFSe XML                  | Sem IA                  | —                               |
 
 ---
 

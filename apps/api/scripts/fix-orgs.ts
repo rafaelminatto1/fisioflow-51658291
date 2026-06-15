@@ -12,10 +12,10 @@ async function main() {
   console.log("Iniciando correção de organizações...");
 
   // 1. Corrigir perfis
-  await sql.query(
-    "UPDATE profiles SET organization_id = $1 WHERE email = $2",
-    [REAL_ORG_ID, process.env.E2E_EMAIL || ""],
-  );
+  await sql.query("UPDATE profiles SET organization_id = $1 WHERE email = $2", [
+    REAL_ORG_ID,
+    process.env.E2E_EMAIL || "",
+  ]);
 
   // 2. Corrigir pacientes
   await sql.query(

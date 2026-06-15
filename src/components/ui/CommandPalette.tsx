@@ -372,7 +372,14 @@ export function CommandPalette({
           label: item.title,
           description:
             item.type === "patient" ? item.description : item.category || "Conteúdo Clínico",
-          icon: item.type === "exercise" ? Dumbbell : item.type === "wiki" ? BookOpen : item.type === "protocol" ? ClipboardList : Users,
+          icon:
+            item.type === "exercise"
+              ? Dumbbell
+              : item.type === "wiki"
+                ? BookOpen
+                : item.type === "protocol"
+                  ? ClipboardList
+                  : Users,
           category: "clinical-results",
           action: () => {
             if (item.type === "patient") navigate(`/patients/${item.id}`);

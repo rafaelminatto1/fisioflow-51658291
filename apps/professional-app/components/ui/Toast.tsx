@@ -106,7 +106,11 @@ export function Toast({
     >
       <View style={styles.content}>
         <View style={styles.iconContainer}>
-          <Ionicons name={variantStyles.icon as keyof typeof Ionicons.glyphMap} size={20} color={variantStyles.textColor} />
+          <Ionicons
+            name={variantStyles.icon as keyof typeof Ionicons.glyphMap}
+            size={20}
+            color={variantStyles.textColor}
+          />
         </View>
         <View style={styles.textContainer}>
           {title && <Text style={[styles.title, { color: variantStyles.textColor }]}>{title}</Text>}

@@ -15,7 +15,11 @@ interface ClinicalCopilotPanelProps {
   onAction?: (actionPayload: any) => void;
 }
 
-export function ClinicalCopilotPanel({ insights, isAnalyzing, onAction }: ClinicalCopilotPanelProps) {
+export function ClinicalCopilotPanel({
+  insights,
+  isAnalyzing,
+  onAction,
+}: ClinicalCopilotPanelProps) {
   if (!isAnalyzing && insights.length === 0) return null;
 
   return (
@@ -40,18 +44,23 @@ export function ClinicalCopilotPanel({ insights, isAnalyzing, onAction }: Clinic
           }
 
           return (
-            <div key={idx} className={`flex items-start gap-2 p-2.5 rounded-lg border text-xs ${colorClass}`}>
+            <div
+              key={idx}
+              className={`flex items-start gap-2 p-2.5 rounded-lg border text-xs ${colorClass}`}
+            >
               <Icon className="h-4 w-4 mt-0.5 shrink-0" />
               <div className="flex-1">
                 <p className="font-medium">{insight.message}</p>
                 {insight.source && (
-                  <p className="text-[10px] mt-1 opacity-80 font-semibold italic">Fonte: {insight.source}</p>
+                  <p className="text-[10px] mt-1 opacity-80 font-semibold italic">
+                    Fonte: {insight.source}
+                  </p>
                 )}
               </div>
               {insight.actionPayload && (
-                <Button 
-                  size="sm" 
-                  variant="outline" 
+                <Button
+                  size="sm"
+                  variant="outline"
                   className="h-6 text-[10px] shrink-0 bg-white/50 hover:bg-white"
                   onClick={() => onAction && onAction(insight.actionPayload)}
                 >

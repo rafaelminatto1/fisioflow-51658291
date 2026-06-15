@@ -137,263 +137,263 @@ export const GlobalCommandPalette: React.FC = () => {
               />
             </div>
           ) : (
-          <Command.List className="max-h-[50vh] overflow-y-auto p-3 scrollbar-hide">
-            {query.trim().length >= 3 && (
-              <Command.Group>
-                <Command.Item
-                  value={`perguntar-wiki ${query}`}
-                  onSelect={() => setAskQuery(query.trim())}
-                  data-testid="wiki-ask-trigger"
-                  className="flex items-center gap-4 p-4 rounded-2xl cursor-pointer transition-all aria-selected:bg-blue-50 dark:aria-selected:bg-blue-900/20 group"
-                >
-                  <div className="p-3 bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 group-aria-selected:border-blue-200 dark:group-aria-selected:border-blue-800 transition-all">
-                    <Sparkles className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+            <Command.List className="max-h-[50vh] overflow-y-auto p-3 scrollbar-hide">
+              {query.trim().length >= 3 && (
+                <Command.Group>
+                  <Command.Item
+                    value={`perguntar-wiki ${query}`}
+                    onSelect={() => setAskQuery(query.trim())}
+                    data-testid="wiki-ask-trigger"
+                    className="flex items-center gap-4 p-4 rounded-2xl cursor-pointer transition-all aria-selected:bg-blue-50 dark:aria-selected:bg-blue-900/20 group"
+                  >
+                    <div className="p-3 bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 group-aria-selected:border-blue-200 dark:group-aria-selected:border-blue-800 transition-all">
+                      <Sparkles className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-black text-slate-800 dark:text-slate-100 truncate">
+                        Perguntar à wiki: “{query.trim()}”
+                      </p>
+                      <p className="text-[10px] uppercase font-black tracking-widest text-slate-400">
+                        Resposta com fontes da base clínica
+                      </p>
+                    </div>
+                    <ArrowRight className="w-4 h-4 text-blue-600 opacity-0 group-aria-selected:opacity-100 transition-opacity" />
+                  </Command.Item>
+                </Command.Group>
+              )}
+
+              {isLoading && (
+                <div className="flex flex-col items-center justify-center py-16 gap-3">
+                  <div className="relative">
+                    <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+                    <User className="w-3.5 h-3.5 text-blue-400 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-black text-slate-800 dark:text-slate-100 truncate">
-                      Perguntar à wiki: “{query.trim()}”
-                    </p>
-                    <p className="text-[10px] uppercase font-black tracking-widest text-slate-400">
-                      Resposta com fontes da base clínica
-                    </p>
+                  <p className="text-xs font-black uppercase tracking-widest text-slate-400">
+                    Buscando pacientes...
+                  </p>
+                </div>
+              )}
+
+              {!isLoading && results.length === 0 && query.trim().length > 1 && (
+                <div className="py-16 text-center space-y-2">
+                  <div className="w-12 h-12 bg-slate-50 dark:bg-slate-800 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                    <Search className="w-6 h-6 text-slate-300" />
                   </div>
-                  <ArrowRight className="w-4 h-4 text-blue-600 opacity-0 group-aria-selected:opacity-100 transition-opacity" />
-                </Command.Item>
-              </Command.Group>
-            )}
-
-            {isLoading && (
-              <div className="flex flex-col items-center justify-center py-16 gap-3">
-                <div className="relative">
-                  <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
-                  <User className="w-3.5 h-3.5 text-blue-400 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
+                  <p className="text-sm font-bold text-slate-600 dark:text-slate-300">
+                    Nenhum resultado para "{query}"
+                  </p>
+                  <p className="text-[10px] uppercase font-black tracking-widest text-slate-400">
+                    Tente buscar por nome, telefone ou CPF
+                  </p>
                 </div>
-                <p className="text-xs font-black uppercase tracking-widest text-slate-400">
-                  Buscando pacientes...
-                </p>
-              </div>
-            )}
+              )}
 
-            {!isLoading && results.length === 0 && query.trim().length > 1 && (
-              <div className="py-16 text-center space-y-2">
-                <div className="w-12 h-12 bg-slate-50 dark:bg-slate-800 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                  <Search className="w-6 h-6 text-slate-300" />
-                </div>
-                <p className="text-sm font-bold text-slate-600 dark:text-slate-300">
-                  Nenhum resultado para "{query}"
-                </p>
-                <p className="text-[10px] uppercase font-black tracking-widest text-slate-400">
-                  Tente buscar por nome, telefone ou CPF
-                </p>
-              </div>
-            )}
+              {!isLoading && results.length === 0 && query.trim().length < 2 && (
+                <Command.Empty className="py-16 text-center">
+                  <p className="text-sm font-bold text-slate-400">
+                    Comece a digitar para pesquisar pacientes.
+                  </p>
+                </Command.Empty>
+              )}
 
-            {!isLoading && results.length === 0 && query.trim().length < 2 && (
-              <Command.Empty className="py-16 text-center">
-                <p className="text-sm font-bold text-slate-400">
-                  Comece a digitar para pesquisar pacientes.
-                </p>
-              </Command.Empty>
-            )}
+              {!isLoading && query.trim().length === 0 && (
+                <>
+                  <Command.Group
+                    heading={
+                      <span className="px-3 py-2 text-[10px] font-black uppercase tracking-[0.2em] text-blue-600 dark:text-blue-400 block">
+                        Ações Rápidas
+                      </span>
+                    }
+                  >
+                    <Command.Item
+                      onSelect={() => {
+                        setOpen(false);
+                        navigate("/agenda");
+                      }}
+                      className="flex items-center gap-4 p-4 rounded-2xl cursor-pointer transition-all aria-selected:bg-blue-50 dark:aria-selected:bg-blue-900/20 group"
+                    >
+                      <div className="p-3 bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 group-aria-selected:border-blue-200 dark:group-aria-selected:border-blue-800 transition-all">
+                        <Calendar className="w-5 h-5 text-slate-400 group-aria-selected:text-blue-600 dark:group-aria-selected:text-blue-400" />
+                      </div>
+                      <p className="text-sm font-black text-slate-800 dark:text-slate-100">
+                        Ver Agenda Clínica
+                      </p>
+                    </Command.Item>
 
-            {!isLoading && query.trim().length === 0 && (
-              <>
+                    <Command.Item
+                      onSelect={() => {
+                        setOpen(false);
+                        navigate("/pacientes/novo");
+                      }}
+                      className="flex items-center gap-4 p-4 rounded-2xl cursor-pointer transition-all aria-selected:bg-blue-50 dark:aria-selected:bg-blue-900/20 group"
+                    >
+                      <div className="p-3 bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 group-aria-selected:border-blue-200 dark:group-aria-selected:border-blue-800 transition-all">
+                        <Plus className="w-5 h-5 text-slate-400 group-aria-selected:text-blue-600 dark:group-aria-selected:text-blue-400" />
+                      </div>
+                      <p className="text-sm font-black text-slate-800 dark:text-slate-100">
+                        Cadastrar Novo Paciente
+                      </p>
+                    </Command.Item>
+
+                    <Command.Item
+                      onSelect={() => {
+                        setOpen(false);
+                        navigate("/financial");
+                      }}
+                      className="flex items-center gap-4 p-4 rounded-2xl cursor-pointer transition-all aria-selected:bg-emerald-50 dark:aria-selected:bg-emerald-900/20 group"
+                    >
+                      <div className="p-3 bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 group-aria-selected:border-emerald-200 dark:group-aria-selected:border-emerald-800 transition-all">
+                        <Receipt className="w-5 h-5 text-slate-400 group-aria-selected:text-emerald-600 dark:group-aria-selected:text-emerald-400" />
+                      </div>
+                      <p className="text-sm font-black text-slate-800 dark:text-slate-100">
+                        Financeiro & Faturamento (Workbench)
+                      </p>
+                    </Command.Item>
+
+                    <Command.Item
+                      onSelect={() => {
+                        setOpen(false);
+                        navigate("/configuracoes");
+                      }}
+                      className="flex items-center gap-4 p-4 rounded-2xl cursor-pointer transition-all aria-selected:bg-blue-50 dark:aria-selected:bg-blue-900/20 group"
+                    >
+                      <div className="p-3 bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 group-aria-selected:border-blue-200 dark:group-aria-selected:border-blue-800 transition-all">
+                        <Settings className="w-5 h-5 text-slate-400 group-aria-selected:text-blue-600 dark:group-aria-selected:text-blue-400" />
+                      </div>
+                      <p className="text-sm font-black text-slate-800 dark:text-slate-100">
+                        Configurações do Sistema
+                      </p>
+                    </Command.Item>
+                  </Command.Group>
+                </>
+              )}
+
+              {results.length > 0 && (
                 <Command.Group
                   heading={
                     <span className="px-3 py-2 text-[10px] font-black uppercase tracking-[0.2em] text-blue-600 dark:text-blue-400 block">
-                      Ações Rápidas
+                      Pacientes encontrados
                     </span>
                   }
                 >
-                  <Command.Item
-                    onSelect={() => {
-                      setOpen(false);
-                      navigate("/agenda");
-                    }}
-                    className="flex items-center gap-4 p-4 rounded-2xl cursor-pointer transition-all aria-selected:bg-blue-50 dark:aria-selected:bg-blue-900/20 group"
-                  >
-                    <div className="p-3 bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 group-aria-selected:border-blue-200 dark:group-aria-selected:border-blue-800 transition-all">
-                      <Calendar className="w-5 h-5 text-slate-400 group-aria-selected:text-blue-600 dark:group-aria-selected:text-blue-400" />
-                    </div>
-                    <p className="text-sm font-black text-slate-800 dark:text-slate-100">
-                      Ver Agenda Clínica
-                    </p>
-                  </Command.Item>
-
-                  <Command.Item
-                    onSelect={() => {
-                      setOpen(false);
-                      navigate("/pacientes/novo");
-                    }}
-                    className="flex items-center gap-4 p-4 rounded-2xl cursor-pointer transition-all aria-selected:bg-blue-50 dark:aria-selected:bg-blue-900/20 group"
-                  >
-                    <div className="p-3 bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 group-aria-selected:border-blue-200 dark:group-aria-selected:border-blue-800 transition-all">
-                      <Plus className="w-5 h-5 text-slate-400 group-aria-selected:text-blue-600 dark:group-aria-selected:text-blue-400" />
-                    </div>
-                    <p className="text-sm font-black text-slate-800 dark:text-slate-100">
-                      Cadastrar Novo Paciente
-                    </p>
-                  </Command.Item>
-
-                  <Command.Item
-                    onSelect={() => {
-                      setOpen(false);
-                      navigate("/financial");
-                    }}
-                    className="flex items-center gap-4 p-4 rounded-2xl cursor-pointer transition-all aria-selected:bg-emerald-50 dark:aria-selected:bg-emerald-900/20 group"
-                  >
-                    <div className="p-3 bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 group-aria-selected:border-emerald-200 dark:group-aria-selected:border-emerald-800 transition-all">
-                      <Receipt className="w-5 h-5 text-slate-400 group-aria-selected:text-emerald-600 dark:group-aria-selected:text-emerald-400" />
-                    </div>
-                    <p className="text-sm font-black text-slate-800 dark:text-slate-100">
-                      Financeiro & Faturamento (Workbench)
-                    </p>
-                  </Command.Item>
-
-                  <Command.Item
-                    onSelect={() => {
-                      setOpen(false);
-                      navigate("/configuracoes");
-                    }}
-                    className="flex items-center gap-4 p-4 rounded-2xl cursor-pointer transition-all aria-selected:bg-blue-50 dark:aria-selected:bg-blue-900/20 group"
-                  >
-                    <div className="p-3 bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 group-aria-selected:border-blue-200 dark:group-aria-selected:border-blue-800 transition-all">
-                      <Settings className="w-5 h-5 text-slate-400 group-aria-selected:text-blue-600 dark:group-aria-selected:text-blue-400" />
-                    </div>
-                    <p className="text-sm font-black text-slate-800 dark:text-slate-100">
-                      Configurações do Sistema
-                    </p>
-                  </Command.Item>
-                </Command.Group>
-              </>
-            )}
-
-            {results.length > 0 && (
-              <Command.Group
-                heading={
-                  <span className="px-3 py-2 text-[10px] font-black uppercase tracking-[0.2em] text-blue-600 dark:text-blue-400 block">
-                    Pacientes encontrados
-                  </span>
-                }
-              >
-                {results.map((patient) => (
-                  <Command.Item
-                    key={patient.id}
-                    value={`${patient.full_name} ${patient.phone ?? ""} ${patient.cpf ?? ""}`}
-                    onSelect={() => {
-                      setOpen(false);
-                      navigate(patientRoutes.profile(patient.id));
-                    }}
-                    className="flex items-start gap-4 p-4 rounded-2xl cursor-pointer transition-all aria-selected:bg-blue-50 dark:aria-selected:bg-blue-900/20 group hover:translate-x-1"
-                  >
-                    <div className="p-3 bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 group-aria-selected:border-blue-200 dark:group-aria-selected:border-blue-800 group-aria-selected:shadow-md transition-all">
-                      <User className="w-5 h-5 text-slate-400 group-aria-selected:text-blue-600 dark:group-aria-selected:text-blue-400" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between mb-1.5">
-                        <div className="flex items-center gap-2">
-                          <span className="text-[10px] font-black text-slate-400 uppercase flex items-center gap-1">
-                            <Phone className="w-3 h-3" />
-                            {patient.phone || "Sem telefone"}
-                          </span>
-                          <div className="w-1 h-1 rounded-full bg-slate-200 dark:bg-slate-700" />
-                          <span className="text-[10px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-tighter">
-                            {patient.status || "Paciente"}
-                          </span>
+                  {results.map((patient) => (
+                    <Command.Item
+                      key={patient.id}
+                      value={`${patient.full_name} ${patient.phone ?? ""} ${patient.cpf ?? ""}`}
+                      onSelect={() => {
+                        setOpen(false);
+                        navigate(patientRoutes.profile(patient.id));
+                      }}
+                      className="flex items-start gap-4 p-4 rounded-2xl cursor-pointer transition-all aria-selected:bg-blue-50 dark:aria-selected:bg-blue-900/20 group hover:translate-x-1"
+                    >
+                      <div className="p-3 bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 group-aria-selected:border-blue-200 dark:group-aria-selected:border-blue-800 group-aria-selected:shadow-md transition-all">
+                        <User className="w-5 h-5 text-slate-400 group-aria-selected:text-blue-600 dark:group-aria-selected:text-blue-400" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between mb-1.5">
+                          <div className="flex items-center gap-2">
+                            <span className="text-[10px] font-black text-slate-400 uppercase flex items-center gap-1">
+                              <Phone className="w-3 h-3" />
+                              {patient.phone || "Sem telefone"}
+                            </span>
+                            <div className="w-1 h-1 rounded-full bg-slate-200 dark:bg-slate-700" />
+                            <span className="text-[10px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-tighter">
+                              {patient.status || "Paciente"}
+                            </span>
+                          </div>
+                          {patient.main_condition && (
+                            <span className="px-2 py-0.5 bg-blue-50 dark:bg-blue-900/40 text-[9px] font-bold rounded-full text-blue-600 dark:text-blue-300 border border-blue-100 dark:border-blue-800 truncate max-w-[12rem]">
+                              {patient.main_condition}
+                            </span>
+                          )}
                         </div>
-                        {patient.main_condition && (
-                          <span className="px-2 py-0.5 bg-blue-50 dark:bg-blue-900/40 text-[9px] font-bold rounded-full text-blue-600 dark:text-blue-300 border border-blue-100 dark:border-blue-800 truncate max-w-[12rem]">
-                            {patient.main_condition}
-                          </span>
+                        <p className="text-sm font-black text-slate-800 dark:text-slate-100 truncate">
+                          {patient.full_name}
+                        </p>
+                        {patient.email && (
+                          <p className="text-xs font-medium text-slate-400 truncate">
+                            {patient.email}
+                          </p>
                         )}
                       </div>
-                      <p className="text-sm font-black text-slate-800 dark:text-slate-100 truncate">
-                        {patient.full_name}
-                      </p>
-                      {patient.email && (
-                        <p className="text-xs font-medium text-slate-400 truncate">
-                          {patient.email}
+                      <div className="self-center opacity-0 group-aria-selected:opacity-100 transition-opacity">
+                        <ArrowRight className="w-4 h-4 text-blue-600" />
+                      </div>
+                    </Command.Item>
+                  ))}
+                </Command.Group>
+              )}
+
+              {protocolResults.length > 0 && (
+                <Command.Group
+                  heading={
+                    <span className="px-3 py-2 text-[10px] font-black uppercase tracking-[0.2em] text-emerald-600 dark:text-emerald-400 block">
+                      Protocolos Clínicos
+                    </span>
+                  }
+                >
+                  {protocolResults.map((protocol) => (
+                    <Command.Item
+                      key={protocol.id}
+                      onSelect={() => {
+                        setOpen(false);
+                        navigate(`/protocols/${protocol.id}`);
+                      }}
+                      className="flex items-start gap-4 p-4 rounded-2xl cursor-pointer transition-all aria-selected:bg-emerald-50 dark:aria-selected:bg-emerald-900/20 group hover:translate-x-1"
+                    >
+                      <div className="p-3 bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 group-aria-selected:border-emerald-200 dark:group-aria-selected:border-emerald-800 transition-all">
+                        <BookOpen className="w-5 h-5 text-slate-400 group-aria-selected:text-emerald-600 dark:group-aria-selected:text-emerald-400" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="text-[10px] font-black text-emerald-600 uppercase">
+                            {protocol.type || "Protocolo"}
+                          </span>
+                        </div>
+                        <p className="text-sm font-black text-slate-800 dark:text-slate-100 truncate">
+                          {protocol.name}
                         </p>
-                      )}
-                    </div>
-                    <div className="self-center opacity-0 group-aria-selected:opacity-100 transition-opacity">
-                      <ArrowRight className="w-4 h-4 text-blue-600" />
-                    </div>
-                  </Command.Item>
-                ))}
-              </Command.Group>
-            )}
-
-            {protocolResults.length > 0 && (
-              <Command.Group
-                heading={
-                  <span className="px-3 py-2 text-[10px] font-black uppercase tracking-[0.2em] text-emerald-600 dark:text-emerald-400 block">
-                    Protocolos Clínicos
-                  </span>
-                }
-              >
-                {protocolResults.map((protocol) => (
-                  <Command.Item
-                    key={protocol.id}
-                    onSelect={() => {
-                      setOpen(false);
-                      navigate(`/protocols/${protocol.id}`);
-                    }}
-                    className="flex items-start gap-4 p-4 rounded-2xl cursor-pointer transition-all aria-selected:bg-emerald-50 dark:aria-selected:bg-emerald-900/20 group hover:translate-x-1"
-                  >
-                    <div className="p-3 bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 group-aria-selected:border-emerald-200 dark:group-aria-selected:border-emerald-800 transition-all">
-                      <BookOpen className="w-5 h-5 text-slate-400 group-aria-selected:text-emerald-600 dark:group-aria-selected:text-emerald-400" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="text-[10px] font-black text-emerald-600 uppercase">
-                          {protocol.type || "Protocolo"}
-                        </span>
                       </div>
-                      <p className="text-sm font-black text-slate-800 dark:text-slate-100 truncate">
-                        {protocol.name}
-                      </p>
-                    </div>
-                  </Command.Item>
-                ))}
-              </Command.Group>
-            )}
+                    </Command.Item>
+                  ))}
+                </Command.Group>
+              )}
 
-            {exerciseResults.length > 0 && (
-              <Command.Group
-                heading={
-                  <span className="px-3 py-2 text-[10px] font-black uppercase tracking-[0.2em] text-orange-600 dark:text-orange-400 block">
-                    Exercícios & Biblioteca
-                  </span>
-                }
-              >
-                {exerciseResults.map((exercise) => (
-                  <Command.Item
-                    key={exercise.id}
-                    onSelect={() => {
-                      setOpen(false);
-                      navigate(`/exercises/${exercise.id}`);
-                    }}
-                    className="flex items-start gap-4 p-4 rounded-2xl cursor-pointer transition-all aria-selected:bg-orange-50 dark:aria-selected:bg-orange-900/20 group hover:translate-x-1"
-                  >
-                    <div className="p-3 bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 group-aria-selected:border-orange-200 dark:group-aria-selected:border-orange-800 transition-all">
-                      <Activity className="w-5 h-5 text-slate-400 group-aria-selected:text-orange-600 dark:group-aria-selected:text-orange-400" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="text-[10px] font-black text-orange-600 uppercase">
-                          {exercise.category || "Exercício"}
-                        </span>
+              {exerciseResults.length > 0 && (
+                <Command.Group
+                  heading={
+                    <span className="px-3 py-2 text-[10px] font-black uppercase tracking-[0.2em] text-orange-600 dark:text-orange-400 block">
+                      Exercícios & Biblioteca
+                    </span>
+                  }
+                >
+                  {exerciseResults.map((exercise) => (
+                    <Command.Item
+                      key={exercise.id}
+                      onSelect={() => {
+                        setOpen(false);
+                        navigate(`/exercises/${exercise.id}`);
+                      }}
+                      className="flex items-start gap-4 p-4 rounded-2xl cursor-pointer transition-all aria-selected:bg-orange-50 dark:aria-selected:bg-orange-900/20 group hover:translate-x-1"
+                    >
+                      <div className="p-3 bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 group-aria-selected:border-orange-200 dark:group-aria-selected:border-orange-800 transition-all">
+                        <Activity className="w-5 h-5 text-slate-400 group-aria-selected:text-orange-600 dark:group-aria-selected:text-orange-400" />
                       </div>
-                      <p className="text-sm font-black text-slate-800 dark:text-slate-100 truncate">
-                        {exercise.name}
-                      </p>
-                    </div>
-                  </Command.Item>
-                ))}
-              </Command.Group>
-            )}
-          </Command.List>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="text-[10px] font-black text-orange-600 uppercase">
+                            {exercise.category || "Exercício"}
+                          </span>
+                        </div>
+                        <p className="text-sm font-black text-slate-800 dark:text-slate-100 truncate">
+                          {exercise.name}
+                        </p>
+                      </div>
+                    </Command.Item>
+                  ))}
+                </Command.Group>
+              )}
+            </Command.List>
           )}
 
           <div className="p-4 bg-slate-50 dark:bg-slate-900/80 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center">

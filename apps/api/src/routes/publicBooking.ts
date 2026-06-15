@@ -146,7 +146,7 @@ app.post("/booking", bookingRateLimit, turnstileVerify, async (c) => {
     const profiles = await pool.query(
       `SELECT id, user_id, full_name, organization_id, whatsapp_number 
        FROM profiles WHERE slug = $1 LIMIT 1`,
-      [body.slug]
+      [body.slug],
     );
 
     if (!profiles.rows.length) {
@@ -155,7 +155,7 @@ app.post("/booking", bookingRateLimit, turnstileVerify, async (c) => {
     const profile = profiles.rows[0];
 
     // Format date properly if it comes as ISO string
-    const bookingDate = body.date.split('T')[0];
+    const bookingDate = body.date.split("T")[0];
 
     // 2. Check availability
     const booked = await pool.query(
@@ -163,7 +163,7 @@ app.post("/booking", bookingRateLimit, turnstileVerify, async (c) => {
        WHERE therapist_id = $1 AND appointment_date = $2 AND start_time = $3
          AND status NOT IN ('cancelado', 'falta')
          AND deleted_at IS NULL`,
-      [profile.id, bookingDate, `${body.time}:00`]
+      [profile.id, bookingDate, `${body.time}:00`],
     );
 
     if (booked.rows.length > 0) {
@@ -185,24 +185,26 @@ app.post("/booking", bookingRateLimit, turnstileVerify, async (c) => {
         bookingDate,
         body.time,
         body.patient.notes || null,
-        profile.full_name
-      ]
+        profile.full_name,
+      ],
     );
 
     // 4. Send WhatsApp Notification to Professional
     if (c.env.WHATSAPP_ACCESS_TOKEN && profile.whatsapp_number) {
       const { WhatsAppService } = await import("../lib/whatsapp");
       const wa = new WhatsAppService(c.env);
-      await wa.sendTextMessage(
-        String(profile.whatsapp_number),
-        `🔔 *Novo Agendamento (FisioLink)*\n\n👤 Paciente: ${body.patient.name}\n📅 Data: ${bookingDate.split('-').reverse().join('/')}\n⏰ Horário: ${body.time}\n📞 Contato: ${body.patient.phone}\n\nAcesse o FisioFlow Web para confirmar ou rejeitar.`
-      ).catch(() => {});
+      await wa
+        .sendTextMessage(
+          String(profile.whatsapp_number),
+          `🔔 *Novo Agendamento (FisioLink)*\n\n👤 Paciente: ${body.patient.name}\n📅 Data: ${bookingDate.split("-").reverse().join("/")}\n⏰ Horário: ${body.time}\n📞 Contato: ${body.patient.phone}\n\nAcesse o FisioFlow Web para confirmar ou rejeitar.`,
+        )
+        .catch(() => {});
     }
 
-    return c.json({ 
-      success: true, 
+    return c.json({
+      success: true,
       id: result.rows[0].id,
-      message: "Agendamento solicitado com sucesso! O profissional confirmará em breve." 
+      message: "Agendamento solicitado com sucesso! O profissional confirmará em breve.",
     });
   } catch (error: any) {
     console.error("[Booking] Error:", error);

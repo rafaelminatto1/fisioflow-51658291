@@ -5,714 +5,667 @@
  */
 
 import React, { useState, useEffect } from "react";
-import {
-	PageLayout,
-	PageContainer,
-	PageHeader,
-} from "@/components/layout/PageLayout";
-import {
-	Card,
-	CardContent,
-	CardDescription,
-	CardHeader,
-	CardTitle,
-} from "@/components/ui/card";
+import { PageLayout, PageContainer } from "@/components/layout/PageLayout";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import {
-	Select,
-	SelectContent,
-	SelectItem,
-	SelectTrigger,
-	SelectValue,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@/components/ui/select";
 import {
-	Users,
-	Gift,
-	TrendingUp,
-	Award,
-	CheckCircle2,
-	UserPlus,
-	Percent,
-	DollarSign,
-	Sparkles,
-	Loader2,
+  Users,
+  Gift,
+  TrendingUp,
+  Award,
+  CheckCircle2,
+  UserPlus,
+  Percent,
+  DollarSign,
+  Sparkles,
+  Loader2,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
-	createReferralCode,
-	getReferralStats,
-	redeemReferralCode,
-	generateReferralCode,
+  createReferralCode,
+  getReferralStats,
+  redeemReferralCode,
+  generateReferralCode,
 } from "@/services/marketing/marketingService";
 import { generateMarketingContent } from "@/services/ai/marketingAITemplateService";
 import { useAuth } from "@/contexts/AuthContext";
 
 interface ReferralStats {
-	totalReferrals: number;
-	activeReferrals: number;
-	totalRedemptions: number;
-	pendingRewards: number;
+  totalReferrals: number;
+  activeReferrals: number;
+  totalRedemptions: number;
+  pendingRewards: number;
 }
 
 interface TopReferrer {
-	patientId: string;
-	name: string;
-	referralCount: number;
-	totalUses: number;
+  patientId: string;
+  name: string;
+  referralCount: number;
+  totalUses: number;
 }
 
 export default function ReferralPage() {
-	const { organizationId = "" } = useAuth();
-	const [searchCode, setSearchCode] = useState("");
-	const [redemptionResult, setRedemptionResult] = useState<{
-		success: boolean;
-		reward?: string;
-		error?: string;
-	} | null>(null);
-	const [newPatientId, setNewPatientId] = useState("");
-	const [referralStats, setReferralStats] = useState<ReferralStats>({
-		totalReferrals: 0,
-		activeReferrals: 0,
-		totalRedemptions: 0,
-		pendingRewards: 0,
-	});
-	const [topReferrers, setTopReferrers] = useState<TopReferrer[]>([]);
-	const [createMode, setCreateMode] = useState(false);
-	const [newCodeConfig, setNewCodeConfig] = useState({
-		reward_type: "discount" as "discount" | "session" | "product",
-		reward_value: 10,
-		referrer_reward_type: "discount" as "discount" | "session",
-		referrer_reward_value: 5,
-		max_uses: 50,
-		expires_at: "",
-	});
-	const [isGeneratingAI, setIsGeneratingAI] = useState(false);
+  const { organizationId = "" } = useAuth();
+  const [searchCode, setSearchCode] = useState("");
+  const [redemptionResult, setRedemptionResult] = useState<{
+    success: boolean;
+    reward?: string;
+    error?: string;
+  } | null>(null);
+  const [newPatientId, setNewPatientId] = useState("");
+  const [referralStats, setReferralStats] = useState<ReferralStats>({
+    totalReferrals: 0,
+    activeReferrals: 0,
+    totalRedemptions: 0,
+    pendingRewards: 0,
+  });
+  const [topReferrers, setTopReferrers] = useState<TopReferrer[]>([]);
+  const [createMode, setCreateMode] = useState(false);
+  const [newCodeConfig, setNewCodeConfig] = useState({
+    reward_type: "discount" as "discount" | "session" | "product",
+    reward_value: 10,
+    referrer_reward_type: "discount" as "discount" | "session",
+    referrer_reward_value: 5,
+    max_uses: 50,
+    expires_at: "",
+  });
+  const [isGeneratingAI, setIsGeneratingAI] = useState(false);
 
-	const handleAIGenerateSuggestion = async () => {
-		setIsGeneratingAI(true);
-		try {
-			const result = await generateMarketingContent({
-				type: "caption",
-				context: {
-					contentType: "educational",
-					rewardType: newCodeConfig.reward_type,
-					isReferralProgram: true,
-				},
-				tone: "professional",
-			});
+  const handleAIGenerateSuggestion = async () => {
+    setIsGeneratingAI(true);
+    try {
+      const result = await generateMarketingContent({
+        type: "caption",
+        context: {
+          contentType: "educational",
+          rewardType: newCodeConfig.reward_type,
+          isReferralProgram: true,
+        },
+        tone: "professional",
+      });
 
-			if (result.success && result.template) {
-				// Simple logic to extract a number or just suggest based on type
-				if (newCodeConfig.reward_type === "discount") {
-					setNewCodeConfig((prev) => ({
-						...prev,
-						reward_value: 15,
-						referrer_reward_value: 10,
-					}));
-				} else {
-					setNewCodeConfig((prev) => ({
-						...prev,
-						reward_value: 1,
-						referrer_reward_value: 1,
-					}));
-				}
+      if (result.success && result.template) {
+        // Simple logic to extract a number or just suggest based on type
+        if (newCodeConfig.reward_type === "discount") {
+          setNewCodeConfig((prev) => ({
+            ...prev,
+            reward_value: 15,
+            referrer_reward_value: 10,
+          }));
+        } else {
+          setNewCodeConfig((prev) => ({
+            ...prev,
+            reward_value: 1,
+            referrer_reward_value: 1,
+          }));
+        }
 
-				toast.success("Sugestão da IA aplicada!");
-				if (result.suggestions && result.suggestions.length > 0) {
-					toast.info(`Estratégia: ${result.suggestions[0]}`);
-				}
-			}
-		} catch {
-			toast.error("Erro ao obter sugestão da IA.");
-		} finally {
-			setIsGeneratingAI(false);
-		}
-	};
+        toast.success("Sugestão da IA aplicada!");
+        if (result.suggestions && result.suggestions.length > 0) {
+          toast.info(`Estratégia: ${result.suggestions[0]}`);
+        }
+      }
+    } catch {
+      toast.error("Erro ao obter sugestão da IA.");
+    } finally {
+      setIsGeneratingAI(false);
+    }
+  };
 
-	// Load referral stats
-	useEffect(() => {
-		loadReferralStats();
-	}, []);
+  // Load referral stats
+  useEffect(() => {
+    loadReferralStats();
+  }, []);
 
-	const loadReferralStats = async () => {
-		try {
-			const stats = await getReferralStats(organizationId);
+  const loadReferralStats = async () => {
+    try {
+      const stats = await getReferralStats(organizationId);
 
-			setReferralStats({
-				totalReferrals: stats.totalCodes,
-				activeReferrals: stats.activeCodes,
-				totalRedemptions: stats.totalRedemptions,
-				pendingRewards: stats.pendingRewards,
-			});
-			if (Array.isArray((stats as any).topReferrers)) {
-				setTopReferrers((stats as any).topReferrers as TopReferrer[]);
-			}
-		} catch (error) {
-			console.error("Error loading referral stats:", error);
-		}
-	};
+      setReferralStats({
+        totalReferrals: stats.totalCodes,
+        activeReferrals: stats.activeCodes,
+        totalRedemptions: stats.totalRedemptions,
+        pendingRewards: stats.pendingRewards,
+      });
+      if (Array.isArray((stats as any).topReferrers)) {
+        setTopReferrers((stats as any).topReferrers as TopReferrer[]);
+      }
+    } catch (error) {
+      console.error("Error loading referral stats:", error);
+    }
+  };
 
-	const handleCreateCode = async (patientId: string) => {
-		try {
-			const _codeId = await createReferralCode(
-				patientId,
-				organizationId,
-				newCodeConfig,
-			);
-			toast.success("Código de indicação criado com sucesso");
-			setCreateMode(false);
-			loadReferralStats();
-		} catch {
-			toast.error("Erro ao criar código de indicação");
-		}
-	};
+  const handleCreateCode = async (patientId: string) => {
+    try {
+      const _codeId = await createReferralCode(patientId, organizationId, newCodeConfig);
+      toast.success("Código de indicação criado com sucesso");
+      setCreateMode(false);
+      loadReferralStats();
+    } catch {
+      toast.error("Erro ao criar código de indicação");
+    }
+  };
 
-	const handleRedeemCode = async () => {
-		if (!searchCode || !newPatientId) {
-			toast.error("Preencha o código e o ID do paciente");
-			return;
-		}
+  const handleRedeemCode = async () => {
+    if (!searchCode || !newPatientId) {
+      toast.error("Preencha o código e o ID do paciente");
+      return;
+    }
 
-		const result = await redeemReferralCode(searchCode, newPatientId);
-		setRedemptionResult(result);
+    const result = await redeemReferralCode(searchCode, newPatientId);
+    setRedemptionResult(result);
 
-		if (result.success) {
-			toast.success(`Código resgatado! ${result.reward}`);
-			loadReferralStats();
-		}
-	};
+    if (result.success) {
+      toast.success(`Código resgatado! ${result.reward}`);
+      loadReferralStats();
+    }
+  };
 
-	const copyToClipboard = (text: string) => {
-		navigator.clipboard.writeText(text);
-		toast.success("Copiado para a área de transferência");
-	};
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
+    toast.success("Copiado para a área de transferência");
+  };
 
-	const _shareCode = (code: string) => {
-		const text = `Use meu código de indicação ${code} para ganhar desconto na FisioFlow!`;
-		if (navigator.share) {
-			navigator.share({ text });
-		} else {
-			copyToClipboard(text);
-		}
-	};
+  const _shareCode = (code: string) => {
+    const text = `Use meu código de indicação ${code} para ganhar desconto na FisioFlow!`;
+    if (navigator.share) {
+      navigator.share({ text });
+    } else {
+      copyToClipboard(text);
+    }
+  };
 
-	return (
-		<PageLayout>
-			<PageContainer>
-				<PageHeader
-					title={
-						<>
-							<Users className="h-8 w-8" />
-							Programa de Indicação
-						</>
-					}
-					subtitle="Indique amigos e ganhe benefícios - MGM (Member Get Member)"
-					actions={
-						<>
-							<Button onClick={() => setCreateMode(true)}>
-								<UserPlus className="h-4 w-4 mr-2" />
-								Criar Novo Código
-							</Button>
-						</>
-					}
-				/>
-				<div className="space-y-6">
-					{/* Header */}
+  return (
+    <PageLayout>
+      <PageContainer>
+        <PageHeader
+          title={
+            <>
+              <Users className="h-8 w-8" />
+              Programa de Indicação
+            </>
+          }
+          subtitle="Indique amigos e ganhe benefícios - MGM (Member Get Member)"
+          actions={
+            <>
+              <Button onClick={() => setCreateMode(true)}>
+                <UserPlus className="h-4 w-4 mr-2" />
+                Criar Novo Código
+              </Button>
+            </>
+          }
+        />
+        <div className="space-y-6">
+          {/* Header */}
 
-					{/* Stats */}
-					<div className="grid gap-4 md:grid-cols-4">
-						<Card>
-							<CardHeader className="pb-2">
-								<CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-									<Users className="h-4 w-4" />
-									Total de Códigos
-								</CardTitle>
-							</CardHeader>
-							<CardContent>
-								<div className="text-2xl font-bold">
-									{referralStats.totalReferrals}
-								</div>
-							</CardContent>
-						</Card>
+          {/* Stats */}
+          <div className="grid gap-4 md:grid-cols-4">
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                  <Users className="h-4 w-4" />
+                  Total de Códigos
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{referralStats.totalReferrals}</div>
+              </CardContent>
+            </Card>
 
-						<Card>
-							<CardHeader className="pb-2">
-								<CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-									<CheckCircle2 className="h-4 w-4" />
-									Códigos Ativos
-								</CardTitle>
-							</CardHeader>
-							<CardContent>
-								<div className="text-2xl font-bold text-emerald-600">
-									{referralStats.activeReferrals}
-								</div>
-							</CardContent>
-						</Card>
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                  <CheckCircle2 className="h-4 w-4" />
+                  Códigos Ativos
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-emerald-600">
+                  {referralStats.activeReferrals}
+                </div>
+              </CardContent>
+            </Card>
 
-						<Card>
-							<CardHeader className="pb-2">
-								<CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-									<Award className="h-4 w-4" />
-									Resgates
-								</CardTitle>
-							</CardHeader>
-							<CardContent>
-								<div className="text-2xl font-bold">
-									{referralStats.totalRedemptions}
-								</div>
-							</CardContent>
-						</Card>
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                  <Award className="h-4 w-4" />
+                  Resgates
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{referralStats.totalRedemptions}</div>
+              </CardContent>
+            </Card>
 
-						<Card>
-							<CardHeader className="pb-2">
-								<CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-									<TrendingUp className="h-4 w-4" />
-									Conversão
-								</CardTitle>
-							</CardHeader>
-							<CardContent>
-								<div className="text-2xl font-bold">
-									{referralStats.totalReferrals > 0
-										? (
-												(referralStats.totalRedemptions /
-													referralStats.totalReferrals) *
-												100
-											).toFixed(1)
-										: "0"}
-									%
-								</div>
-							</CardContent>
-						</Card>
-					</div>
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                  <TrendingUp className="h-4 w-4" />
+                  Conversão
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">
+                  {referralStats.totalReferrals > 0
+                    ? (
+                        (referralStats.totalRedemptions / referralStats.totalReferrals) *
+                        100
+                      ).toFixed(1)
+                    : "0"}
+                  %
+                </div>
+              </CardContent>
+            </Card>
+          </div>
 
-					<div className="grid gap-6 md:grid-cols-2">
-						{/* Create/Manage Codes */}
-						<Card>
-							<CardHeader>
-								<CardTitle className="flex items-center gap-2">
-									<Gift className="h-5 w-5" />
-									{createMode ? "Criar Novo Código" : "Gerenciar Códigos"}
-								</CardTitle>
-								<CardDescription>
-									{createMode
-										? "Configure o código de indicação para um paciente"
-										: "Crie e gerencie códigos de indicação"}
-								</CardDescription>
-							</CardHeader>
-							<CardContent className="space-y-4">
-								{createMode ? (
-									<>
-										<div className="space-y-2">
-											<Label>ID do Paciente</Label>
-											<Input
-												placeholder="ID do paciente que irá indicar"
-												value={newPatientId}
-												onChange={(e) => setNewPatientId(e.target.value)}
-											/>
-										</div>
+          <div className="grid gap-6 md:grid-cols-2">
+            {/* Create/Manage Codes */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Gift className="h-5 w-5" />
+                  {createMode ? "Criar Novo Código" : "Gerenciar Códigos"}
+                </CardTitle>
+                <CardDescription>
+                  {createMode
+                    ? "Configure o código de indicação para um paciente"
+                    : "Crie e gerencie códigos de indicação"}
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {createMode ? (
+                  <>
+                    <div className="space-y-2">
+                      <Label>ID do Paciente</Label>
+                      <Input
+                        placeholder="ID do paciente que irá indicar"
+                        value={newPatientId}
+                        onChange={(e) => setNewPatientId(e.target.value)}
+                      />
+                    </div>
 
-										<div className="grid grid-cols-2 gap-4">
-											<div className="space-y-2">
-												<Label>Tipo de Recompensa</Label>
-												<Select
-													value={newCodeConfig.reward_type}
-													onValueChange={(value: unknown) =>
-														setNewCodeConfig({
-															...newCodeConfig,
-															reward_type: value,
-														})
-													}
-												>
-													<SelectTrigger>
-														<SelectValue />
-													</SelectTrigger>
-													<SelectContent>
-														<SelectItem value="discount">
-															Desconto (%)
-														</SelectItem>
-														<SelectItem value="session">
-															Sessões Grátis
-														</SelectItem>
-														<SelectItem value="product">Produto</SelectItem>
-													</SelectContent>
-												</Select>
-											</div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label>Tipo de Recompensa</Label>
+                        <Select
+                          value={newCodeConfig.reward_type}
+                          onValueChange={(value: unknown) =>
+                            setNewCodeConfig({
+                              ...newCodeConfig,
+                              reward_type: value,
+                            })
+                          }
+                        >
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="discount">Desconto (%)</SelectItem>
+                            <SelectItem value="session">Sessões Grátis</SelectItem>
+                            <SelectItem value="product">Produto</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
 
-											<div className="space-y-2">
-												<div className="flex items-center justify-between">
-													<Label>Valor da Recompensa</Label>
-													<Button
-														variant="ghost"
-														size="sm"
-														onClick={handleAIGenerateSuggestion}
-														disabled={isGeneratingAI}
-														className="h-7 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 gap-1 px-2"
-													>
-														{isGeneratingAI ? (
-															<Loader2 className="h-3 w-3 animate-spin" />
-														) : (
-															<Sparkles className="h-3 w-3" />
-														)}
-														<span className="text-[10px]">Sugerir</span>
-													</Button>
-												</div>
-												<Input
-													type="number"
-													value={newCodeConfig.reward_value}
-													onChange={(e) =>
-														setNewCodeConfig({
-															...newCodeConfig,
-															reward_value: parseInt(e.target.value) || 0,
-														})
-													}
-													min={1}
-												/>
-											</div>
-										</div>
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <Label>Valor da Recompensa</Label>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={handleAIGenerateSuggestion}
+                            disabled={isGeneratingAI}
+                            className="h-7 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 gap-1 px-2"
+                          >
+                            {isGeneratingAI ? (
+                              <Loader2 className="h-3 w-3 animate-spin" />
+                            ) : (
+                              <Sparkles className="h-3 w-3" />
+                            )}
+                            <span className="text-[10px]">Sugerir</span>
+                          </Button>
+                        </div>
+                        <Input
+                          type="number"
+                          value={newCodeConfig.reward_value}
+                          onChange={(e) =>
+                            setNewCodeConfig({
+                              ...newCodeConfig,
+                              reward_value: parseInt(e.target.value) || 0,
+                            })
+                          }
+                          min={1}
+                        />
+                      </div>
+                    </div>
 
-										<div className="border-t pt-4">
-											<Label className="text-sm font-semibold mb-3 block">
-												Recompensa para Quem Indica
-											</Label>
-											<div className="grid grid-cols-2 gap-4">
-												<div className="space-y-2">
-													<Label className="text-xs">Tipo</Label>
-													<Select
-														value={newCodeConfig.referrer_reward_type}
-														onValueChange={(value: unknown) =>
-															setNewCodeConfig({
-																...newCodeConfig,
-																referrer_reward_type: value,
-															})
-														}
-													>
-														<SelectTrigger>
-															<SelectValue />
-														</SelectTrigger>
-														<SelectContent>
-															<SelectItem value="discount">
-																Desconto (%)
-															</SelectItem>
-															<SelectItem value="session">
-																Sessões Grátis
-															</SelectItem>
-														</SelectContent>
-													</Select>
-												</div>
+                    <div className="border-t pt-4">
+                      <Label className="text-sm font-semibold mb-3 block">
+                        Recompensa para Quem Indica
+                      </Label>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label className="text-xs">Tipo</Label>
+                          <Select
+                            value={newCodeConfig.referrer_reward_type}
+                            onValueChange={(value: unknown) =>
+                              setNewCodeConfig({
+                                ...newCodeConfig,
+                                referrer_reward_type: value,
+                              })
+                            }
+                          >
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="discount">Desconto (%)</SelectItem>
+                              <SelectItem value="session">Sessões Grátis</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
 
-												<div className="space-y-2">
-													<Label className="text-xs">Valor</Label>
-													<Input
-														type="number"
-														value={newCodeConfig.referrer_reward_value}
-														onChange={(e) =>
-															setNewCodeConfig({
-																...newCodeConfig,
-																referrer_reward_value:
-																	parseInt(e.target.value) || 0,
-															})
-														}
-														min={1}
-													/>
-												</div>
-											</div>
-										</div>
+                        <div className="space-y-2">
+                          <Label className="text-xs">Valor</Label>
+                          <Input
+                            type="number"
+                            value={newCodeConfig.referrer_reward_value}
+                            onChange={(e) =>
+                              setNewCodeConfig({
+                                ...newCodeConfig,
+                                referrer_reward_value: parseInt(e.target.value) || 0,
+                              })
+                            }
+                            min={1}
+                          />
+                        </div>
+                      </div>
+                    </div>
 
-										<div className="grid grid-cols-2 gap-4">
-											<div className="space-y-2">
-												<Label>Máximo de Usos</Label>
-												<Input
-													type="number"
-													value={newCodeConfig.max_uses}
-													onChange={(e) =>
-														setNewCodeConfig({
-															...newCodeConfig,
-															max_uses: parseInt(e.target.value) || 50,
-														})
-													}
-													min={1}
-												/>
-											</div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label>Máximo de Usos</Label>
+                        <Input
+                          type="number"
+                          value={newCodeConfig.max_uses}
+                          onChange={(e) =>
+                            setNewCodeConfig({
+                              ...newCodeConfig,
+                              max_uses: parseInt(e.target.value) || 50,
+                            })
+                          }
+                          min={1}
+                        />
+                      </div>
 
-											<div className="space-y-2">
-												<Label>Expira em</Label>
-												<Input
-													type="date"
-													value={newCodeConfig.expires_at}
-													onChange={(e) =>
-														setNewCodeConfig({
-															...newCodeConfig,
-															expires_at: e.target.value,
-														})
-													}
-												/>
-											</div>
-										</div>
+                      <div className="space-y-2">
+                        <Label>Expira em</Label>
+                        <Input
+                          type="date"
+                          value={newCodeConfig.expires_at}
+                          onChange={(e) =>
+                            setNewCodeConfig({
+                              ...newCodeConfig,
+                              expires_at: e.target.value,
+                            })
+                          }
+                        />
+                      </div>
+                    </div>
 
-										<div className="flex gap-2">
-											<Button
-												variant="outline"
-												className="flex-1"
-												onClick={() => setCreateMode(false)}
-											>
-												Cancelar
-											</Button>
-											<Button
-												className="flex-1"
-												onClick={() =>
-													newPatientId && handleCreateCode(newPatientId)
-												}
-												disabled={!newPatientId}
-											>
-												Criar Código
-											</Button>
-										</div>
-									</>
-								) : (
-									<div className="text-center py-8 space-y-4">
-										<Gift className="h-12 w-12 mx-auto text-muted-foreground opacity-50" />
-										<div>
-											<p className="font-medium">
-												Gerencie códigos por paciente
-											</p>
-											<p className="text-sm text-muted-foreground">
-												Crie códigos personalizados para cada paciente
-											</p>
-										</div>
-										<Button onClick={() => setCreateMode(true)}>
-											Criar Novo Código
-										</Button>
-									</div>
-								)}
-							</CardContent>
-						</Card>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        className="flex-1"
+                        onClick={() => setCreateMode(false)}
+                      >
+                        Cancelar
+                      </Button>
+                      <Button
+                        className="flex-1"
+                        onClick={() => newPatientId && handleCreateCode(newPatientId)}
+                        disabled={!newPatientId}
+                      >
+                        Criar Código
+                      </Button>
+                    </div>
+                  </>
+                ) : (
+                  <div className="text-center py-8 space-y-4">
+                    <Gift className="h-12 w-12 mx-auto text-muted-foreground opacity-50" />
+                    <div>
+                      <p className="font-medium">Gerencie códigos por paciente</p>
+                      <p className="text-sm text-muted-foreground">
+                        Crie códigos personalizados para cada paciente
+                      </p>
+                    </div>
+                    <Button onClick={() => setCreateMode(true)}>Criar Novo Código</Button>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
 
-						{/* Redeem Code */}
-						<Card>
-							<CardHeader>
-								<CardTitle className="flex items-center gap-2">
-									<Award className="h-5 w-5" />
-									Resgatar Código
-								</CardTitle>
-								<CardDescription>
-									Resgate um código de indicação para um novo paciente
-								</CardDescription>
-							</CardHeader>
-							<CardContent className="space-y-4">
-								<div className="space-y-2">
-									<Label>Código de Indicação</Label>
-									<div className="flex gap-2">
-										<Input
-											placeholder="Ex: FISIOA123"
-											value={searchCode}
-											onChange={(e) =>
-												setSearchCode(e.target.value.toUpperCase())
-											}
-											className="uppercase font-mono"
-										/>
-										<Button
-											variant="outline"
-											onClick={() =>
-												setSearchCode(generateReferralCode("temp"))
-											}
-										>
-											Gerar
-										</Button>
-									</div>
-								</div>
+            {/* Redeem Code */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Award className="h-5 w-5" />
+                  Resgatar Código
+                </CardTitle>
+                <CardDescription>
+                  Resgate um código de indicação para um novo paciente
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label>Código de Indicação</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      placeholder="Ex: FISIOA123"
+                      value={searchCode}
+                      onChange={(e) => setSearchCode(e.target.value.toUpperCase())}
+                      className="uppercase font-mono"
+                    />
+                    <Button
+                      variant="outline"
+                      onClick={() => setSearchCode(generateReferralCode("temp"))}
+                    >
+                      Gerar
+                    </Button>
+                  </div>
+                </div>
 
-								<div className="space-y-2">
-									<Label>ID do Novo Paciente</Label>
-									<Input
-										placeholder="ID do paciente que está sendo cadastrado"
-										value={newPatientId}
-										onChange={(e) => setNewPatientId(e.target.value)}
-									/>
-								</div>
+                <div className="space-y-2">
+                  <Label>ID do Novo Paciente</Label>
+                  <Input
+                    placeholder="ID do paciente que está sendo cadastrado"
+                    value={newPatientId}
+                    onChange={(e) => setNewPatientId(e.target.value)}
+                  />
+                </div>
 
-								<Button
-									onClick={handleRedeemCode}
-									disabled={!searchCode || !newPatientId}
-									className="w-full"
-								>
-									Resgatar Código
-								</Button>
+                <Button
+                  onClick={handleRedeemCode}
+                  disabled={!searchCode || !newPatientId}
+                  className="w-full"
+                >
+                  Resgatar Código
+                </Button>
 
-								{redemptionResult && (
-									<div
-										className={cn(
-											"p-4 rounded-lg",
-											redemptionResult.success
-												? "bg-emerald-50 border border-emerald-200 dark:bg-emerald-950 dark:border-emerald-800"
-												: "bg-red-50 border border-red-200 dark:bg-red-950 dark:border-red-800",
-										)}
-									>
-										<div className="flex items-center gap-2">
-											{redemptionResult.success ? (
-												<CheckCircle2 className="h-5 w-5 text-emerald-600" />
-											) : (
-												<div className="h-5 w-5 rounded-full bg-red-600 flex items-center justify-center">
-													<span className="text-white text-xs">✕</span>
-												</div>
-											)}
-											<div>
-												<p
-													className={cn(
-														"font-medium",
-														redemptionResult.success
-															? "text-emerald-900 dark:text-emerald-100"
-															: "text-red-900 dark:text-red-100",
-													)}
-												>
-													{redemptionResult.success
-														? "Código Resgatado!"
-														: "Erro ao Resgatar"}
-												</p>
-												<p
-													className={cn(
-														"text-sm",
-														redemptionResult.success
-															? "text-emerald-800 dark:text-emerald-200"
-															: "text-red-800 dark:text-red-200",
-													)}
-												>
-													{redemptionResult.reward || redemptionResult.error}
-												</p>
-											</div>
-										</div>
-									</div>
-								)}
-							</CardContent>
-						</Card>
-					</div>
+                {redemptionResult && (
+                  <div
+                    className={cn(
+                      "p-4 rounded-lg",
+                      redemptionResult.success
+                        ? "bg-emerald-50 border border-emerald-200 dark:bg-emerald-950 dark:border-emerald-800"
+                        : "bg-red-50 border border-red-200 dark:bg-red-950 dark:border-red-800",
+                    )}
+                  >
+                    <div className="flex items-center gap-2">
+                      {redemptionResult.success ? (
+                        <CheckCircle2 className="h-5 w-5 text-emerald-600" />
+                      ) : (
+                        <div className="h-5 w-5 rounded-full bg-red-600 flex items-center justify-center">
+                          <span className="text-white text-xs">✕</span>
+                        </div>
+                      )}
+                      <div>
+                        <p
+                          className={cn(
+                            "font-medium",
+                            redemptionResult.success
+                              ? "text-emerald-900 dark:text-emerald-100"
+                              : "text-red-900 dark:text-red-100",
+                          )}
+                        >
+                          {redemptionResult.success ? "Código Resgatado!" : "Erro ao Resgatar"}
+                        </p>
+                        <p
+                          className={cn(
+                            "text-sm",
+                            redemptionResult.success
+                              ? "text-emerald-800 dark:text-emerald-200"
+                              : "text-red-800 dark:text-red-200",
+                          )}
+                        >
+                          {redemptionResult.reward || redemptionResult.error}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
 
-					{/* Rewards Information */}
-					<Card className="border-emerald-200 bg-emerald-50 dark:border-emerald-900 dark:bg-emerald-950">
-						<CardHeader>
-							<CardTitle className="flex items-center gap-2 text-emerald-900 dark:text-emerald-100">
-								<Gift className="h-5 w-5" />
-								Como Funciona o Programa de Indicação
-							</CardTitle>
-						</CardHeader>
-						<CardContent className="space-y-4">
-							<div className="grid gap-4 md:grid-cols-3">
-								<div className="flex gap-3">
-									<div className="flex-shrink-0 w-8 h-8 rounded-full bg-emerald-600 text-white flex items-center justify-center font-semibold">
-										1
-									</div>
-									<div>
-										<p className="font-medium text-emerald-900 dark:text-emerald-100">
-											O paciente recebe um código único
-										</p>
-										<p className="text-sm text-emerald-800 dark:text-emerald-200">
-											Cada paciente tem um código personalizado para
-											compartilhar
-										</p>
-									</div>
-								</div>
+          {/* Rewards Information */}
+          <Card className="border-emerald-200 bg-emerald-50 dark:border-emerald-900 dark:bg-emerald-950">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-emerald-900 dark:text-emerald-100">
+                <Gift className="h-5 w-5" />
+                Como Funciona o Programa de Indicação
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid gap-4 md:grid-cols-3">
+                <div className="flex gap-3">
+                  <div className="flex-shrink-0 w-8 h-8 rounded-full bg-emerald-600 text-white flex items-center justify-center font-semibold">
+                    1
+                  </div>
+                  <div>
+                    <p className="font-medium text-emerald-900 dark:text-emerald-100">
+                      O paciente recebe um código único
+                    </p>
+                    <p className="text-sm text-emerald-800 dark:text-emerald-200">
+                      Cada paciente tem um código personalizado para compartilhar
+                    </p>
+                  </div>
+                </div>
 
-								<div className="flex gap-3">
-									<div className="flex-shrink-0 w-8 h-8 rounded-full bg-emerald-600 text-white flex items-center justify-center font-semibold">
-										2
-									</div>
-									<div>
-										<p className="font-medium text-emerald-900 dark:text-emerald-100">
-											Amigo usa o código no cadastro
-										</p>
-										<p className="text-sm text-emerald-800 dark:text-emerald-200">
-											O novo paciente insere o código para ganhar benefício
-										</p>
-									</div>
-								</div>
+                <div className="flex gap-3">
+                  <div className="flex-shrink-0 w-8 h-8 rounded-full bg-emerald-600 text-white flex items-center justify-center font-semibold">
+                    2
+                  </div>
+                  <div>
+                    <p className="font-medium text-emerald-900 dark:text-emerald-100">
+                      Amigo usa o código no cadastro
+                    </p>
+                    <p className="text-sm text-emerald-800 dark:text-emerald-200">
+                      O novo paciente insere o código para ganhar benefício
+                    </p>
+                  </div>
+                </div>
 
-								<div className="flex gap-3">
-									<div className="flex-shrink-0 w-8 h-8 rounded-full bg-emerald-600 text-white flex items-center justify-center font-semibold">
-										3
-									</div>
-									<div>
-										<p className="font-medium text-emerald-900 dark:text-emerald-100">
-											Ambos ganham recompensas
-										</p>
-										<p className="text-sm text-emerald-800 dark:text-emerald-200">
-											Quem indicou e quem foi indicado recebem benefícios
-										</p>
-									</div>
-								</div>
-							</div>
+                <div className="flex gap-3">
+                  <div className="flex-shrink-0 w-8 h-8 rounded-full bg-emerald-600 text-white flex items-center justify-center font-semibold">
+                    3
+                  </div>
+                  <div>
+                    <p className="font-medium text-emerald-900 dark:text-emerald-100">
+                      Ambos ganham recompensas
+                    </p>
+                    <p className="text-sm text-emerald-800 dark:text-emerald-200">
+                      Quem indicou e quem foi indicado recebem benefícios
+                    </p>
+                  </div>
+                </div>
+              </div>
 
-							<div className="flex flex-wrap gap-4 pt-4 border-t border-emerald-200 dark:border-emerald-800">
-								<div className="flex items-center gap-2">
-									<Percent className="h-5 w-5 text-emerald-600" />
-									<span className="text-sm text-emerald-900 dark:text-emerald-100">
-										Desconto no tratamento
-									</span>
-								</div>
-								<div className="flex items-center gap-2">
-									<DollarSign className="h-5 w-5 text-emerald-600" />
-									<span className="text-sm text-emerald-900 dark:text-emerald-100">
-										Sessões bonificadas
-									</span>
-								</div>
-								<div className="flex items-center gap-2">
-									<Award className="h-5 w-5 text-emerald-600" />
-									<span className="text-sm text-emerald-900 dark:text-emerald-100">
-										Produtos exclusivos
-									</span>
-								</div>
-							</div>
-						</CardContent>
-					</Card>
+              <div className="flex flex-wrap gap-4 pt-4 border-t border-emerald-200 dark:border-emerald-800">
+                <div className="flex items-center gap-2">
+                  <Percent className="h-5 w-5 text-emerald-600" />
+                  <span className="text-sm text-emerald-900 dark:text-emerald-100">
+                    Desconto no tratamento
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <DollarSign className="h-5 w-5 text-emerald-600" />
+                  <span className="text-sm text-emerald-900 dark:text-emerald-100">
+                    Sessões bonificadas
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Award className="h-5 w-5 text-emerald-600" />
+                  <span className="text-sm text-emerald-900 dark:text-emerald-100">
+                    Produtos exclusivos
+                  </span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
 
-					{/* Top Promoters Leaderboard */}
-					{topReferrers.length > 0 && (
-						<Card>
-							<CardHeader>
-								<CardTitle className="flex items-center gap-2">
-									<Award className="h-5 w-5 text-amber-500" />
-									Top Promotores
-								</CardTitle>
-								<CardDescription>
-									Pacientes que mais indicaram novos pacientes
-								</CardDescription>
-							</CardHeader>
-							<CardContent>
-								<div className="space-y-3">
-									{topReferrers.map((r, idx) => (
-										<div
-											key={r.patientId}
-											className="flex items-center gap-4 p-3 rounded-lg bg-muted/40"
-										>
-											<div
-												className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${idx === 0 ? "bg-amber-400 text-amber-900" : idx === 1 ? "bg-gray-300 text-gray-700" : idx === 2 ? "bg-orange-300 text-orange-800" : "bg-muted text-muted-foreground"}`}
-											>
-												{idx + 1}
-											</div>
-											<div className="flex-1 min-w-0">
-												<p className="font-medium truncate">{r.name}</p>
-												<p className="text-xs text-muted-foreground">
-													{r.totalUses} indicações convertidas
-												</p>
-											</div>
-											<div className="text-right">
-												<p className="font-semibold text-primary">
-													{r.totalUses}
-												</p>
-												<p className="text-xs text-muted-foreground">
-													conversões
-												</p>
-											</div>
-										</div>
-									))}
-								</div>
-							</CardContent>
-						</Card>
-					)}
-				</div>
-			</PageContainer>
-		</PageLayout>
-	);
+          {/* Top Promoters Leaderboard */}
+          {topReferrers.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Award className="h-5 w-5 text-amber-500" />
+                  Top Promotores
+                </CardTitle>
+                <CardDescription>Pacientes que mais indicaram novos pacientes</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {topReferrers.map((r, idx) => (
+                    <div
+                      key={r.patientId}
+                      className="flex items-center gap-4 p-3 rounded-lg bg-muted/40"
+                    >
+                      <div
+                        className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${idx === 0 ? "bg-amber-400 text-amber-900" : idx === 1 ? "bg-gray-300 text-gray-700" : idx === 2 ? "bg-orange-300 text-orange-800" : "bg-muted text-muted-foreground"}`}
+                      >
+                        {idx + 1}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium truncate">{r.name}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {r.totalUses} indicações convertidas
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-semibold text-primary">{r.totalUses}</p>
+                        <p className="text-xs text-muted-foreground">conversões</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </div>
+      </PageContainer>
+    </PageLayout>
+  );
 }
 
 import { cn } from "@/lib/utils";

@@ -140,7 +140,14 @@ function FramePreview({
   return (
     <View style={styles.frame}>
       <View style={[styles.frameImg, tone === "after" && styles.frameImgAfter]}>
-        <Svg height={104} width={70} viewBox="0 0 100 200" fill="none" stroke={tone === "after" ? "#cbd5e1" : "#94a3b8"} strokeWidth={3}>
+        <Svg
+          height={104}
+          width={70}
+          viewBox="0 0 100 200"
+          fill="none"
+          stroke={tone === "after" ? "#cbd5e1" : "#94a3b8"}
+          strokeWidth={3}
+        >
           <Circle cx="50" cy="22" r="9" fill={tone === "after" ? "#cbd5e1" : "#94a3b8"} />
           <Path d={tone === "after" ? "M50 31 L56 95 L40 125" : "M50 31 L62 95 L68 130"} />
           <Path d={tone === "after" ? "M56 95 Q40 130 55 160" : "M62 95 Q45 120 38 145"} />
@@ -194,7 +201,7 @@ export default function ReportScreen() {
   const resolvedPatientName =
     typeof patientName === "string" && patientName.trim()
       ? patientName
-      : assessment?.analysisData?.patientName ?? "Paciente";
+      : (assessment?.analysisData?.patientName ?? "Paciente");
 
   useEffect(() => {
     if (!resolvedPatientId) return;
@@ -232,7 +239,14 @@ export default function ReportScreen() {
       ["Status", assessment?.status ?? "Concluido"],
       ["Responsavel", "Equipe FisioFlow"],
     ],
-    [assessment?.createdAt, assessment?.status, assessment?.type, comparison?.from?.label, comparison?.to.label, resolvedPatientName],
+    [
+      assessment?.createdAt,
+      assessment?.status,
+      assessment?.type,
+      comparison?.from?.label,
+      comparison?.to.label,
+      resolvedPatientName,
+    ],
   );
 
   const handleGeneratePdf = async (force = false) => {
@@ -291,7 +305,11 @@ export default function ReportScreen() {
         </View>
       </SafeAreaView>
 
-      <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        style={{ flex: 1 }}
+        contentContainerStyle={styles.scroll}
+        showsVerticalScrollIndicator={false}
+      >
         {loading ? (
           <View style={styles.loading}>
             <ActivityIndicator color={bio.primary} />
@@ -315,7 +333,9 @@ export default function ReportScreen() {
 
           <View style={styles.banner}>
             <Text style={styles.bannerT}>LAUDO BIOMECANICO</Text>
-            <Text style={styles.bannerS}>{comparison?.to.label ?? formatDate(assessment?.createdAt)}</Text>
+            <Text style={styles.bannerS}>
+              {comparison?.to.label ?? formatDate(assessment?.createdAt)}
+            </Text>
           </View>
 
           <View style={styles.docBody}>
@@ -339,7 +359,8 @@ export default function ReportScreen() {
                 </View>
                 <Text style={styles.vp}>
                   {improvedCount} metricas mostram evolucao, {worseCount} exigem atencao e{" "}
-                  {Math.max(metrics.length - improvedCount - worseCount, 0)} permanecem estaveis ou sem comparativo.
+                  {Math.max(metrics.length - improvedCount - worseCount, 0)} permanecem estaveis ou
+                  sem comparativo.
                   {assessment?.conclusions ? ` Conduta registrada: ${assessment.conclusions}` : ""}
                 </Text>
               </View>
@@ -375,10 +396,20 @@ export default function ReportScreen() {
                       </Text>
                       <View style={styles.bars}>
                         <View style={styles.barTrack}>
-                          <View style={[styles.barBefore, { width: `${Math.max((from / max) * 100, 6)}%` }]} />
+                          <View
+                            style={[
+                              styles.barBefore,
+                              { width: `${Math.max((from / max) * 100, 6)}%` },
+                            ]}
+                          />
                         </View>
                         <View style={styles.barTrack}>
-                          <View style={[styles.barAfter, { width: `${Math.max((to / max) * 100, 6)}%` }]} />
+                          <View
+                            style={[
+                              styles.barAfter,
+                              { width: `${Math.max((to / max) * 100, 6)}%` },
+                            ]}
+                          />
                         </View>
                       </View>
                     </View>
@@ -401,16 +432,25 @@ export default function ReportScreen() {
               <SecHead n={4} title="Tabela comparativa" />
               <View style={styles.mtable}>
                 <View style={[styles.mrow, styles.mrowHead]}>
-                  <Text style={[styles.mc, styles.mcHead, { flex: 1, textAlign: "left" }]}>Metrica</Text>
+                  <Text style={[styles.mc, styles.mcHead, { flex: 1, textAlign: "left" }]}>
+                    Metrica
+                  </Text>
                   <Text style={[styles.mc, styles.mcHead, styles.mcNum]}>Ant.</Text>
                   <Text style={[styles.mc, styles.mcHead, styles.mcNum]}>Atual</Text>
                   <Text style={[styles.mc, styles.mcHead, styles.mcDelta]}>Delta</Text>
                 </View>
                 {metrics.map((metric, i) => (
-                  <View key={metric.key} style={[styles.mrow, i < metrics.length - 1 && styles.mrowBorder]}>
+                  <View
+                    key={metric.key}
+                    style={[styles.mrow, i < metrics.length - 1 && styles.mrowBorder]}
+                  >
                     <Text style={[styles.mn, { flex: 1 }]}>{metric.label}</Text>
-                    <Text style={[styles.mc, styles.mcNum]}>{formatMetric(metric.fromValue, metric.unit)}</Text>
-                    <Text style={[styles.mc, styles.mcNum]}>{formatMetric(metric.toValue, metric.unit)}</Text>
+                    <Text style={[styles.mc, styles.mcNum]}>
+                      {formatMetric(metric.fromValue, metric.unit)}
+                    </Text>
+                    <Text style={[styles.mc, styles.mcNum]}>
+                      {formatMetric(metric.toValue, metric.unit)}
+                    </Text>
                     <View style={styles.mcDelta}>
                       <Text style={[styles.delta, metricTone(metric)]}>{formatDelta(metric)}</Text>
                     </View>
@@ -422,7 +462,8 @@ export default function ReportScreen() {
             <View style={styles.sec}>
               <SecHead n={5} title="Observacoes e assinatura" />
               <Text style={styles.p}>
-                {assessment?.observations || "Sem observacoes clinicas registradas para esta avaliacao."}
+                {assessment?.observations ||
+                  "Sem observacoes clinicas registradas para esta avaliacao."}
               </Text>
               <View style={styles.sign}>
                 <View style={styles.signed}>
@@ -435,7 +476,11 @@ export default function ReportScreen() {
                   </View>
                 </View>
                 <Text style={styles.signWhen}>
-                  {pdfResult?.cached ? "PDF reaproveitado" : pdfResult?.generated ? "PDF atualizado" : "PDF sob demanda"}
+                  {pdfResult?.cached
+                    ? "PDF reaproveitado"
+                    : pdfResult?.generated
+                      ? "PDF atualizado"
+                      : "PDF sob demanda"}
                 </Text>
               </View>
             </View>
@@ -455,7 +500,11 @@ export default function ReportScreen() {
               <Text style={styles.btnText}>Abrir nuvem</Text>
             </Pressable>
           ) : null}
-          <Pressable style={[styles.btn, styles.btnPrimary]} onPress={() => handleGeneratePdf(false)} disabled={pdfLoading}>
+          <Pressable
+            style={[styles.btn, styles.btnPrimary]}
+            onPress={() => handleGeneratePdf(false)}
+            disabled={pdfLoading}
+          >
             {pdfLoading ? (
               <ActivityIndicator color="#fff" />
             ) : (
@@ -471,41 +520,140 @@ export default function ReportScreen() {
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: bio.bg },
-  appbar: { flexDirection: "row", alignItems: "center", gap: 12, paddingHorizontal: 14, paddingTop: 4, paddingBottom: 12, borderBottomWidth: 1, borderBottomColor: bio.border },
-  roundBtn: { width: 38, height: 38, borderRadius: 19, backgroundColor: bio.card, borderWidth: 1, borderColor: bio.border, alignItems: "center", justifyContent: "center" },
+  appbar: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    paddingHorizontal: 14,
+    paddingTop: 4,
+    paddingBottom: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: bio.border,
+  },
+  roundBtn: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: bio.card,
+    borderWidth: 1,
+    borderColor: bio.border,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   tn: { fontSize: 15, fontFamily: font.extrabold, color: bio.fg },
   ts: { fontSize: 11, fontFamily: font.semibold, color: bio.muted, marginTop: 1 },
   scroll: { padding: 16, paddingBottom: 24 },
   loading: { flexDirection: "row", alignItems: "center", gap: 8, padding: 12 },
   loadingText: { color: bio.muted, fontSize: 12, fontFamily: font.bold },
-  doc: { backgroundColor: "#fff", borderWidth: 1, borderColor: bio.border, borderRadius: 16, overflow: "hidden" },
-  docHead: { padding: 18, paddingTop: 20, borderBottomWidth: 2, borderBottomColor: bio.primary, flexDirection: "row", gap: 12, alignItems: "flex-start" },
-  logo: { width: 40, height: 40, borderRadius: 12, backgroundColor: bio.primarySoft, alignItems: "center", justifyContent: "center" },
+  doc: {
+    backgroundColor: "#fff",
+    borderWidth: 1,
+    borderColor: bio.border,
+    borderRadius: 16,
+    overflow: "hidden",
+  },
+  docHead: {
+    padding: 18,
+    paddingTop: 20,
+    borderBottomWidth: 2,
+    borderBottomColor: bio.primary,
+    flexDirection: "row",
+    gap: 12,
+    alignItems: "flex-start",
+  },
+  logo: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    backgroundColor: bio.primarySoft,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   clinicName: { fontSize: 15, fontFamily: font.extrabold, color: "hsl(224, 71%, 20%)" },
-  clinicX: { fontSize: 10, color: bio.muted, fontFamily: font.semibold, lineHeight: 14, marginTop: 2 },
-  banner: { paddingHorizontal: 18, paddingVertical: 12, backgroundColor: "hsl(211, 100%, 96%)", flexDirection: "row", alignItems: "center", justifyContent: "space-between", borderBottomWidth: 1, borderBottomColor: bio.border },
+  clinicX: {
+    fontSize: 10,
+    color: bio.muted,
+    fontFamily: font.semibold,
+    lineHeight: 14,
+    marginTop: 2,
+  },
+  banner: {
+    paddingHorizontal: 18,
+    paddingVertical: 12,
+    backgroundColor: "hsl(211, 100%, 96%)",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    borderBottomWidth: 1,
+    borderBottomColor: bio.border,
+  },
   bannerT: { fontSize: 12, fontFamily: font.extrabold, letterSpacing: 0.5, color: bio.primary },
   bannerS: { fontSize: 10, fontFamily: font.bold, color: bio.muted },
   docBody: { padding: 18 },
-  pinfo: { flexDirection: "row", flexWrap: "wrap", paddingBottom: 18, borderBottomWidth: 1, borderBottomColor: bio.border, rowGap: 10 },
+  pinfo: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    paddingBottom: 18,
+    borderBottomWidth: 1,
+    borderBottomColor: bio.border,
+    rowGap: 10,
+  },
   pi: { width: "50%", paddingRight: 14 },
-  piK: { fontSize: 9, fontFamily: font.extrabold, letterSpacing: 0.5, textTransform: "uppercase", color: bio.muted },
+  piK: {
+    fontSize: 9,
+    fontFamily: font.extrabold,
+    letterSpacing: 0.5,
+    textTransform: "uppercase",
+    color: bio.muted,
+  },
   piV: { fontSize: 13, fontFamily: font.bold, marginTop: 2, color: bio.fg },
   sec: { marginTop: 20 },
   secHead: { flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 9 },
-  secNum: { width: 20, height: 20, borderRadius: 10, backgroundColor: bio.primary, alignItems: "center", justifyContent: "center" },
+  secNum: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: bio.primary,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   secNumText: { color: "#fff", fontSize: 11, fontFamily: font.extrabold },
-  secTitle: { fontSize: 12, fontFamily: font.extrabold, letterSpacing: 0.4, textTransform: "uppercase", color: bio.primary },
+  secTitle: {
+    fontSize: 12,
+    fontFamily: font.extrabold,
+    letterSpacing: 0.4,
+    textTransform: "uppercase",
+    color: bio.primary,
+  },
   p: { fontSize: 13, lineHeight: 20.8, color: "hsl(220, 20%, 25%)", fontFamily: font.medium },
   frames: { flexDirection: "row", gap: 10, marginTop: 12 },
   frame: { flex: 1, borderWidth: 1, borderColor: bio.border, borderRadius: 12, overflow: "hidden" },
-  frameImg: { height: 130, backgroundColor: bio.videoBg, alignItems: "center", justifyContent: "center" },
+  frameImg: {
+    height: 130,
+    backgroundColor: bio.videoBg,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   frameImgAfter: { backgroundColor: "hsl(218, 24%, 14%)" },
-  ang: { position: "absolute", left: 8, bottom: 8, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 6 },
+  ang: {
+    position: "absolute",
+    left: 8,
+    bottom: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 6,
+  },
   angOk: { backgroundColor: "hsl(158, 64%, 42%)" },
   angWarn: { backgroundColor: "hsl(25, 72%, 48%)" },
   angText: { fontSize: 11, fontFamily: font.extrabold, color: "#fff" },
-  cap: { fontSize: 10, fontFamily: font.bold, paddingHorizontal: 10, paddingVertical: 7, backgroundColor: "#F1F3F6", color: bio.muted },
+  cap: {
+    fontSize: 10,
+    fontFamily: font.bold,
+    paddingHorizontal: 10,
+    paddingVertical: 7,
+    backgroundColor: "#F1F3F6",
+    color: bio.muted,
+  },
   chartCard: { borderWidth: 1, borderColor: bio.border, borderRadius: 12, padding: 12, gap: 10 },
   chartRow: { flexDirection: "row", alignItems: "center", gap: 10 },
   chartLabel: { width: 104, fontSize: 11, fontFamily: font.bold, color: bio.fg },
@@ -517,32 +665,98 @@ const styles = StyleSheet.create({
   legendItem: { flexDirection: "row", alignItems: "center", gap: 5 },
   legendDot: { width: 8, height: 8, borderRadius: 4 },
   legendText: { fontSize: 10, fontFamily: font.bold, color: bio.muted },
-  mtable: { borderWidth: 1, borderColor: bio.border, borderRadius: 12, overflow: "hidden", marginTop: 4 },
+  mtable: {
+    borderWidth: 1,
+    borderColor: bio.border,
+    borderRadius: 12,
+    overflow: "hidden",
+    marginTop: 4,
+  },
   mrow: { flexDirection: "row", alignItems: "center", paddingHorizontal: 12, paddingVertical: 10 },
   mrowHead: { backgroundColor: "#F1F3F6" },
   mrowBorder: { borderBottomWidth: 1, borderBottomColor: bio.borderSoft },
   mn: { fontSize: 12, fontFamily: font.bold, color: bio.fg },
   mc: { fontSize: 12, fontFamily: font.bold, color: bio.fg, textAlign: "right" },
-  mcHead: { fontSize: 9, fontFamily: font.extrabold, letterSpacing: 0.4, textTransform: "uppercase", color: bio.muted },
+  mcHead: {
+    fontSize: 9,
+    fontFamily: font.extrabold,
+    letterSpacing: 0.4,
+    textTransform: "uppercase",
+    color: bio.muted,
+  },
   mcNum: { width: 54 },
   mcDelta: { width: 62, alignItems: "flex-end" },
-  delta: { fontFamily: font.extrabold, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 5, fontSize: 11, overflow: "hidden" },
+  delta: {
+    fontFamily: font.extrabold,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 5,
+    fontSize: 11,
+    overflow: "hidden",
+  },
   deltaUp: { backgroundColor: "hsl(158, 64%, 92%)", color: "hsl(158, 64%, 25%)" },
   deltaWarn: { backgroundColor: "hsl(28, 92%, 92%)", color: "hsl(25, 70%, 32%)" },
   deltaNeutral: { backgroundColor: "#EEF1F5", color: bio.muted },
-  verdict: { marginTop: 12, padding: 14, borderRadius: 12, backgroundColor: "hsl(158, 64%, 96%)", borderWidth: 1, borderColor: "hsl(158, 50%, 80%)" },
+  verdict: {
+    marginTop: 12,
+    padding: 14,
+    borderRadius: 12,
+    backgroundColor: "hsl(158, 64%, 96%)",
+    borderWidth: 1,
+    borderColor: "hsl(158, 50%, 80%)",
+  },
   vh: { flexDirection: "row", alignItems: "center", gap: 6 },
   vhText: { fontSize: 12, fontFamily: font.extrabold, color: "hsl(158, 64%, 22%)" },
-  vp: { fontSize: 12, lineHeight: 18.6, color: "hsl(158, 64%, 18%)", marginTop: 7, fontFamily: font.medium },
-  sign: { marginTop: 22, paddingTop: 16, borderTopWidth: 1, borderTopColor: bio.border, flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 10 },
+  vp: {
+    fontSize: 12,
+    lineHeight: 18.6,
+    color: "hsl(158, 64%, 18%)",
+    marginTop: 7,
+    fontFamily: font.medium,
+  },
+  sign: {
+    marginTop: 22,
+    paddingTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: bio.border,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 10,
+  },
   signed: { flexDirection: "row", alignItems: "center", gap: 8, flex: 1 },
-  signBadge: { width: 38, height: 38, borderRadius: 19, backgroundColor: "hsl(158, 64%, 92%)", alignItems: "center", justifyContent: "center" },
+  signBadge: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: "hsl(158, 64%, 92%)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
   signName: { fontSize: 13, fontFamily: font.extrabold, color: bio.fg },
   signReg: { fontSize: 10, fontFamily: font.semibold, color: bio.muted, marginTop: 1 },
   signWhen: { fontSize: 10, fontFamily: font.bold, color: bio.muted, textAlign: "right" },
   actionbarWrap: { backgroundColor: bio.bg, borderTopWidth: 1, borderTopColor: bio.border },
-  actionbar: { flexDirection: "row", gap: 10, paddingHorizontal: 14, paddingTop: 10, paddingBottom: 8 },
-  btn: { flex: 1, minHeight: 44, borderRadius: 12, backgroundColor: bio.card, borderWidth: 1, borderColor: bio.border, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 7, paddingHorizontal: 10 },
+  actionbar: {
+    flexDirection: "row",
+    gap: 10,
+    paddingHorizontal: 14,
+    paddingTop: 10,
+    paddingBottom: 8,
+  },
+  btn: {
+    flex: 1,
+    minHeight: 44,
+    borderRadius: 12,
+    backgroundColor: bio.card,
+    borderWidth: 1,
+    borderColor: bio.border,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 7,
+    paddingHorizontal: 10,
+  },
   btnPrimary: { backgroundColor: bio.primary, borderColor: bio.primary },
   btnText: { fontSize: 12, fontFamily: font.extrabold, color: bio.fg },
 });

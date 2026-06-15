@@ -286,12 +286,7 @@ export const NotionEvolutionPanel: React.FC<NotionEvolutionPanelProps> = ({
 
   return (
     <>
-      <Card
-        className={cn(
-          "flex flex-col border-none shadow-none bg-background",
-          className,
-        )}
-      >
+      <Card className={cn("flex flex-col border-none shadow-none bg-background", className)}>
         <div className="flex-1 p-3 sm:p-4 xl:p-5">
           <div className="mx-auto flex w-full max-w-[1720px] flex-col gap-4 pb-12">
             {/* Banner: Replicar última sessão (1 clique) */}

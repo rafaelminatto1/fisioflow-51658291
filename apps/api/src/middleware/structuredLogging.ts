@@ -16,7 +16,12 @@ interface LogContext {
   userId?: string;
 }
 
-function log(level: "info" | "warn" | "error", message: string, context: LogContext, extra?: Record<string, unknown>) {
+function log(
+  level: "info" | "warn" | "error",
+  message: string,
+  context: LogContext,
+  extra?: Record<string, unknown>,
+) {
   const entry = {
     level,
     message,
@@ -28,7 +33,10 @@ function log(level: "info" | "warn" | "error", message: string, context: LogCont
   console.log(JSON.stringify(entry));
 }
 
-export function structuredLogging(): MiddlewareHandler<{ Bindings: Env; Variables: CustomVariables }> {
+export function structuredLogging(): MiddlewareHandler<{
+  Bindings: Env;
+  Variables: CustomVariables;
+}> {
   return async (c, next) => {
     const start = Date.now();
     const requestId = c.get("requestId") ?? crypto.randomUUID();

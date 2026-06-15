@@ -71,18 +71,18 @@ Usamos **Conventional Commits** para garantir consistência:
 
 ### Escopos do FisioFlow
 
-| Escopo         | Descrição                |
-| -------------- | ------------------------ |
-| `patients`     | Gestão de Pacientes      |
-| `schedule`     | Agendamento              |
-| `evolution`    | Evolução Clínica (Observação Livre)  |
-| `exercises`    | Biblioteca de Exercícios |
-| `telemedicine` | Telemedicina             |
-| `reports`      | Relatórios               |
-| `auth`         | Autenticação/Permissões  |
-| `mobile`       | Apps Mobile              |
-| `ui`           | Interface de Usuário     |
-| `api`          | API/Backend              |
+| Escopo         | Descrição                           |
+| -------------- | ----------------------------------- |
+| `patients`     | Gestão de Pacientes                 |
+| `schedule`     | Agendamento                         |
+| `evolution`    | Evolução Clínica (Observação Livre) |
+| `exercises`    | Biblioteca de Exercícios            |
+| `telemedicine` | Telemedicina                        |
+| `reports`      | Relatórios                          |
+| `auth`         | Autenticação/Permissões             |
+| `mobile`       | Apps Mobile                         |
+| `ui`           | Interface de Usuário                |
+| `api`          | API/Backend                         |
 
 ## Exemplos de Commits
 

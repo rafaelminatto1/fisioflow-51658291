@@ -15,10 +15,38 @@ interface PainLevelBlockProps {
 }
 
 const LEVEL_TIERS = [
-  { max: 0, label: "Sem dor", icon: Smile, text: "text-emerald-600", chip: "bg-emerald-500 text-white", ring: "ring-emerald-200" },
-  { max: 3, label: "Dor leve", icon: Meh, text: "text-lime-600", chip: "bg-lime-500 text-white", ring: "ring-lime-200" },
-  { max: 6, label: "Dor moderada", icon: Frown, text: "text-amber-600", chip: "bg-amber-500 text-white", ring: "ring-amber-200" },
-  { max: 10, label: "Dor intensa", icon: Angry, text: "text-rose-600", chip: "bg-rose-500 text-white", ring: "ring-rose-200" },
+  {
+    max: 0,
+    label: "Sem dor",
+    icon: Smile,
+    text: "text-emerald-600",
+    chip: "bg-emerald-500 text-white",
+    ring: "ring-emerald-200",
+  },
+  {
+    max: 3,
+    label: "Dor leve",
+    icon: Meh,
+    text: "text-lime-600",
+    chip: "bg-lime-500 text-white",
+    ring: "ring-lime-200",
+  },
+  {
+    max: 6,
+    label: "Dor moderada",
+    icon: Frown,
+    text: "text-amber-600",
+    chip: "bg-amber-500 text-white",
+    ring: "ring-amber-200",
+  },
+  {
+    max: 10,
+    label: "Dor intensa",
+    icon: Angry,
+    text: "text-rose-600",
+    chip: "bg-rose-500 text-white",
+    ring: "ring-rose-200",
+  },
 ] as const;
 
 function getTier(level: number) {

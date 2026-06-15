@@ -83,15 +83,15 @@ new_policies created: 200
 
 ## Resumo executivo
 
-| Métrica | Antes | Depois | Δ |
-|---|---|---|---|
-| Tabelas com RLS | 145/267 (54%) | 267/267 (100%) | ✅ +122 |
-| Modelos AI deprecados em código | 5 arquivos | 0 | ✅ 100% migrado |
-| Vite | 8.0.10 | 8.0.13 | +3 patches (segurança) |
-| Zod | 4.3.6 | 4.4.3 | +minor (atenção tuple/strictObject) |
-| React Router | 7.13.2 | 7.15.1 | +2 minors |
-| TipTap | 3.23.1 | 3.23.4 | +3 patches |
-| compatibility_date | 2026-03-25 | 2026-05-14 | habilita Stream Bindings |
+| Métrica                         | Antes         | Depois         | Δ                                   |
+| ------------------------------- | ------------- | -------------- | ----------------------------------- |
+| Tabelas com RLS                 | 145/267 (54%) | 267/267 (100%) | ✅ +122                             |
+| Modelos AI deprecados em código | 5 arquivos    | 0              | ✅ 100% migrado                     |
+| Vite                            | 8.0.10        | 8.0.13         | +3 patches (segurança)              |
+| Zod                             | 4.3.6         | 4.4.3          | +minor (atenção tuple/strictObject) |
+| React Router                    | 7.13.2        | 7.15.1         | +2 minors                           |
+| TipTap                          | 3.23.1        | 3.23.4         | +3 patches                          |
+| compatibility_date              | 2026-03-25    | 2026-05-14     | habilita Stream Bindings            |
 
 ## Próximos passos (usuário)
 

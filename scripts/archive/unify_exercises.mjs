@@ -24,9 +24,9 @@ async function unify() {
 
   const wordMatches = new Map();
 
-  exercises.forEach(ex => {
+  exercises.forEach((ex) => {
     const norm = normalizeString(ex.name);
-    const words = norm.split(" ").filter(w => w.length > 2);
+    const words = norm.split(" ").filter((w) => w.length > 2);
     if (words.length > 0) {
       const signature = words.slice(0, 2).join(" ");
       if (signature.length > 4) {
@@ -43,7 +43,7 @@ async function unify() {
 
   for (const [signature, group] of wordMatches.entries()) {
     // Filtro para grupos que realmente parecem duplicatas similares (e não grupos muito grandes acidentais)
-    const uniqueNames = new Set(group.map(g => normalizeString(g.name)));
+    const uniqueNames = new Set(group.map((g) => normalizeString(g.name)));
     if (group.length > 1 && uniqueNames.size > 1 && group.length <= 5) {
       console.log(`\nUnificando grupo [${signature}]...`);
 
@@ -89,12 +89,16 @@ async function unify() {
             )
           `;
           await sql`DELETE FROM protocol_exercises WHERE exercise_id = ${sec.id}`;
-        } catch(e) { /* ignore if tables don't exist yet */ }
+        } catch (e) {
+          /* ignore if tables don't exist yet */
+        }
 
         // Para Media Attachments (tabela auxiliar):
         try {
           await sql`UPDATE exercise_media_attachments SET exercise_id = ${primary.id} WHERE exercise_id = ${sec.id}`;
-        } catch(e) { /* ignore */ }
+        } catch (e) {
+          /* ignore */
+        }
 
         // Deleta o exercício secundário
         await sql`DELETE FROM exercises WHERE id = ${sec.id}`;
@@ -102,7 +106,11 @@ async function unify() {
       }
 
       // Atualiza o Primary com as imagens que ele possa ter herdado
-      if (pImageUrl !== primary.image_url || pVideoUrl !== primary.video_url || pThumbUrl !== primary.thumbnail_url) {
+      if (
+        pImageUrl !== primary.image_url ||
+        pVideoUrl !== primary.video_url ||
+        pThumbUrl !== primary.thumbnail_url
+      ) {
         console.log(`   📸 Atualizando imagens no Primary...`);
         await sql`
           UPDATE exercises 
@@ -123,7 +131,7 @@ async function unify() {
   console.log(`============================`);
 }
 
-unify().catch(err => {
+unify().catch((err) => {
   console.error("Erro fatal:", err);
   process.exit(1);
 });

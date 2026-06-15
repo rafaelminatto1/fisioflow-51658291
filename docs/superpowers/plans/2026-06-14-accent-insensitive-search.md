@@ -15,6 +15,7 @@
 ### Task 1: Rotas Drizzle — trocar `ilike` por `searchFilter`
 
 **Files:**
+
 - Modify: `apps/api/src/routes/protocols.ts`
 - Modify: `apps/api/src/routes/templates.ts`
 - Modify: `apps/api/src/routes/sessions.ts`
@@ -32,13 +33,13 @@ import { searchFilter } from "../lib/db-utils";
 Trocar (linha ~72):
 
 ```typescript
-  if (q) conditions.push(ilike(exerciseProtocols.name, `%${q}%`));
+if (q) conditions.push(ilike(exerciseProtocols.name, `%${q}%`));
 ```
 
 por:
 
 ```typescript
-  if (q) conditions.push(searchFilter(exerciseProtocols.name, q));
+if (q) conditions.push(searchFilter(exerciseProtocols.name, q));
 ```
 
 - [ ] **Step 2: `templates.ts` — importar helper e trocar as buscas**
@@ -52,15 +53,15 @@ import { searchFilter } from "../lib/db-utils";
 Trocar (linhas ~123-124):
 
 ```typescript
-  if (q) conditions.push(ilike(exerciseTemplates.name, `%${q}%`));
-  if (category) conditions.push(ilike(exerciseTemplates.category, `%${category}%`));
+if (q) conditions.push(ilike(exerciseTemplates.name, `%${q}%`));
+if (category) conditions.push(ilike(exerciseTemplates.category, `%${category}%`));
 ```
 
 por:
 
 ```typescript
-  if (q) conditions.push(searchFilter(exerciseTemplates.name, q));
-  if (category) conditions.push(searchFilter(exerciseTemplates.category, category));
+if (q) conditions.push(searchFilter(exerciseTemplates.name, q));
+if (category) conditions.push(searchFilter(exerciseTemplates.category, category));
 ```
 
 - [ ] **Step 3: `sessions.ts` — importar helper e trocar a busca**
@@ -74,23 +75,23 @@ import { searchFilter } from "../lib/db-utils";
 Trocar (linhas ~702-705):
 
 ```typescript
-    conditions.push(
-      or(
-        ilike(sessionTemplates.name, `%${search}%`),
-        ilike(sessionTemplates.description, `%${search}%`),
-      ),
-    );
+conditions.push(
+  or(
+    ilike(sessionTemplates.name, `%${search}%`),
+    ilike(sessionTemplates.description, `%${search}%`),
+  ),
+);
 ```
 
 por:
 
 ```typescript
-    conditions.push(
-      or(
-        searchFilter(sessionTemplates.name, search),
-        searchFilter(sessionTemplates.description, search),
-      ),
-    );
+conditions.push(
+  or(
+    searchFilter(sessionTemplates.name, search),
+    searchFilter(sessionTemplates.description, search),
+  ),
+);
 ```
 
 - [ ] **Step 4: `wiki.ts` — trocar os dois `ilike` de título remanescentes**
@@ -98,13 +99,13 @@ por:
 `searchFilter` já está importado em `wiki.ts` (linha 14). Trocar as DUAS ocorrências (linhas ~227 e ~351):
 
 ```typescript
-  if (q) conditions.push(ilike(wikiPages.title, `%${q}%`));
+if (q) conditions.push(ilike(wikiPages.title, `%${q}%`));
 ```
 
 por:
 
 ```typescript
-  if (q) conditions.push(searchFilter(wikiPages.title, q));
+if (q) conditions.push(searchFilter(wikiPages.title, q));
 ```
 
 - [ ] **Step 5: `ResourceSearchService.ts` — importar helper e trocar buscas**
@@ -170,6 +171,7 @@ git commit -m "feat(search): rotas Drizzle usam searchFilter (busca sem acento)"
 ### Task 2: Rotas com SQL cru — envolver colunas/params em `unaccent()`
 
 **Files:**
+
 - Modify: `apps/api/src/routes/patients.ts`
 - Modify: `apps/api/src/routes/contacts.ts`
 - Modify: `apps/api/src/routes/doctors.ts`
@@ -219,13 +221,13 @@ por:
 Trocar:
 
 ```typescript
-      where += ` AND (name ILIKE $${params.length} OR specialty ILIKE $${params.length} OR crm ILIKE $${params.length})`;
+where += ` AND (name ILIKE $${params.length} OR specialty ILIKE $${params.length} OR crm ILIKE $${params.length})`;
 ```
 
 por:
 
 ```typescript
-      where += ` AND (unaccent(name) ILIKE unaccent($${params.length}) OR unaccent(specialty) ILIKE unaccent($${params.length}) OR unaccent(crm) ILIKE unaccent($${params.length}))`;
+where += ` AND (unaccent(name) ILIKE unaccent($${params.length}) OR unaccent(specialty) ILIKE unaccent($${params.length}) OR unaccent(crm) ILIKE unaccent($${params.length}))`;
 ```
 
 - [ ] **Step 4: `activityLab.ts` (linha ~111)**
@@ -233,13 +235,13 @@ por:
 Trocar:
 
 ```typescript
-    where += ` AND (p.full_name ILIKE $${params.length} OR p.cpf ILIKE $${params.length} OR p.email ILIKE $${params.length})`;
+where += ` AND (p.full_name ILIKE $${params.length} OR p.cpf ILIKE $${params.length} OR p.email ILIKE $${params.length})`;
 ```
 
 por:
 
 ```typescript
-    where += ` AND (unaccent(p.full_name) ILIKE unaccent($${params.length}) OR unaccent(p.cpf) ILIKE unaccent($${params.length}) OR unaccent(p.email) ILIKE unaccent($${params.length}))`;
+where += ` AND (unaccent(p.full_name) ILIKE unaccent($${params.length}) OR unaccent(p.cpf) ILIKE unaccent($${params.length}) OR unaccent(p.email) ILIKE unaccent($${params.length}))`;
 ```
 
 - [ ] **Step 5: `whatsapp-inbox.ts` (linhas ~1313-1317)**
@@ -319,6 +321,7 @@ SELECT
   (unaccent('conceicao') ILIKE unaccent('%Conceição%')) AS com_para_sem,
   (unaccent('Maçã') ILIKE unaccent('%maca%')) AS cedilha;
 ```
+
 Expected: `sem_para_com=true, com_para_sem=true, cedilha=true`.
 
 - [ ] **Step 10: Commit**
@@ -333,6 +336,7 @@ git commit -m "feat(search): SQL cru usa unaccent() (busca sem acento/cedilha)"
 ### Task 3: Filtros client-side — padronizar em `accentIncludes`
 
 **Files:**
+
 - Modify: `src/hooks/useScheduleOptimized.ts`
 - Modify: `src/hooks/useSchedulePage.ts`
 - Modify: `src/hooks/useFilteredAppointments.ts`
@@ -387,25 +391,23 @@ import { accentIncludes } from "@/lib/utils/bilingualSearch";
 Trocar:
 
 ```typescript
-    if (filters?.searchQuery) {
-      const query = filters.searchQuery.toLowerCase();
-      appointments = appointments.filter(
-        (a) =>
-          a.patient_name?.toLowerCase().includes(query) || a.notes?.toLowerCase().includes(query),
-      );
-    }
+if (filters?.searchQuery) {
+  const query = filters.searchQuery.toLowerCase();
+  appointments = appointments.filter(
+    (a) => a.patient_name?.toLowerCase().includes(query) || a.notes?.toLowerCase().includes(query),
+  );
+}
 ```
 
 por:
 
 ```typescript
-    if (filters?.searchQuery) {
-      const query = filters.searchQuery;
-      appointments = appointments.filter(
-        (a) =>
-          accentIncludes(a.patient_name ?? "", query) || accentIncludes(a.notes ?? "", query),
-      );
-    }
+if (filters?.searchQuery) {
+  const query = filters.searchQuery;
+  appointments = appointments.filter(
+    (a) => accentIncludes(a.patient_name ?? "", query) || accentIncludes(a.notes ?? "", query),
+  );
+}
 ```
 
 - [ ] **Step 4: `useSchedulePage.ts` (linhas ~115-117)**
@@ -419,22 +421,22 @@ import { accentIncludes } from "@/lib/utils/bilingualSearch";
 Trocar:
 
 ```typescript
-  if (filters.patient?.trim()) {
-    const patientQuery = filters.patient.trim().toLowerCase();
-    if (!appointment.patientName.toLowerCase().includes(patientQuery)) {
-      return false;
-    }
+if (filters.patient?.trim()) {
+  const patientQuery = filters.patient.trim().toLowerCase();
+  if (!appointment.patientName.toLowerCase().includes(patientQuery)) {
+    return false;
   }
+}
 ```
 
 por:
 
 ```typescript
-  if (filters.patient?.trim()) {
-    if (!accentIncludes(appointment.patientName ?? "", filters.patient.trim())) {
-      return false;
-    }
+if (filters.patient?.trim()) {
+  if (!accentIncludes(appointment.patientName ?? "", filters.patient.trim())) {
+    return false;
   }
+}
 ```
 
 - [ ] **Step 5: `useFilteredAppointments.ts` (linhas ~58-63)**
@@ -448,23 +450,23 @@ import { accentIncludes } from "@/lib/utils/bilingualSearch";
 Trocar:
 
 ```typescript
-    if (filters.patientName && filters.patientName.trim().length > 0) {
-      const searchTerm = filters.patientName.toLowerCase().trim();
-      const patientName = (apt.patientName || "").toLowerCase();
-      if (!patientName.includes(searchTerm)) {
-        return false;
-      }
-    }
+if (filters.patientName && filters.patientName.trim().length > 0) {
+  const searchTerm = filters.patientName.toLowerCase().trim();
+  const patientName = (apt.patientName || "").toLowerCase();
+  if (!patientName.includes(searchTerm)) {
+    return false;
+  }
+}
 ```
 
 por:
 
 ```typescript
-    if (filters.patientName && filters.patientName.trim().length > 0) {
-      if (!accentIncludes(apt.patientName || "", filters.patientName.trim())) {
-        return false;
-      }
-    }
+if (filters.patientName && filters.patientName.trim().length > 0) {
+  if (!accentIncludes(apt.patientName || "", filters.patientName.trim())) {
+    return false;
+  }
+}
 ```
 
 - [ ] **Step 6: `useMedicalAutocomplete.tsx` (linhas ~241-246)**
@@ -478,23 +480,22 @@ import { accentIncludes } from "@/lib/utils/bilingualSearch";
 Trocar:
 
 ```typescript
-    if (query) {
-      const lowerQuery = query.toLowerCase();
-      suggestions = suggestions.filter(
-        (s) =>
-          s.label.toLowerCase().includes(lowerQuery) || s.value.toLowerCase().includes(lowerQuery),
-      );
-    }
+if (query) {
+  const lowerQuery = query.toLowerCase();
+  suggestions = suggestions.filter(
+    (s) => s.label.toLowerCase().includes(lowerQuery) || s.value.toLowerCase().includes(lowerQuery),
+  );
+}
 ```
 
 por:
 
 ```typescript
-    if (query) {
-      suggestions = suggestions.filter(
-        (s) => accentIncludes(s.label, query) || accentIncludes(s.value, query),
-      );
-    }
+if (query) {
+  suggestions = suggestions.filter(
+    (s) => accentIncludes(s.label, query) || accentIncludes(s.value, query),
+  );
+}
 ```
 
 - [ ] **Step 7: `useLeaderboard.ts` (linhas ~88-92)**
@@ -508,22 +509,22 @@ import { accentIncludes } from "@/lib/utils/bilingualSearch";
 Trocar:
 
 ```typescript
-      if (filters.search.trim()) {
-        const searchLower = filters.search.trim().toLowerCase();
-        leaderboard = leaderboard.filter((entry) =>
-          entry.patient_name.toLowerCase().includes(searchLower),
-        );
-      }
+if (filters.search.trim()) {
+  const searchLower = filters.search.trim().toLowerCase();
+  leaderboard = leaderboard.filter((entry) =>
+    entry.patient_name.toLowerCase().includes(searchLower),
+  );
+}
 ```
 
 por:
 
 ```typescript
-      if (filters.search.trim()) {
-        leaderboard = leaderboard.filter((entry) =>
-          accentIncludes(entry.patient_name, filters.search.trim()),
-        );
-      }
+if (filters.search.trim()) {
+  leaderboard = leaderboard.filter((entry) =>
+    accentIncludes(entry.patient_name, filters.search.trim()),
+  );
+}
 ```
 
 - [ ] **Step 8: `useOptimizedList.ts` (linhas ~67-76)**
@@ -537,35 +538,35 @@ import { accentIncludes } from "@/lib/utils/bilingualSearch";
 Trocar:
 
 ```typescript
-      if (searchFields.length > 0) {
-        return searchFields.some((field) => {
-          const value = item[field];
-          if (typeof value === "string") {
-            return value.toLowerCase().includes(lowerSearch);
-          }
-          if (typeof value === "number") {
-            return value.toString().includes(lowerSearch);
-          }
-          return false;
-        });
-      }
+if (searchFields.length > 0) {
+  return searchFields.some((field) => {
+    const value = item[field];
+    if (typeof value === "string") {
+      return value.toLowerCase().includes(lowerSearch);
+    }
+    if (typeof value === "number") {
+      return value.toString().includes(lowerSearch);
+    }
+    return false;
+  });
+}
 ```
 
 por:
 
 ```typescript
-      if (searchFields.length > 0) {
-        return searchFields.some((field) => {
-          const value = item[field];
-          if (typeof value === "string") {
-            return accentIncludes(value, debouncedSearch);
-          }
-          if (typeof value === "number") {
-            return value.toString().includes(lowerSearch);
-          }
-          return false;
-        });
-      }
+if (searchFields.length > 0) {
+  return searchFields.some((field) => {
+    const value = item[field];
+    if (typeof value === "string") {
+      return accentIncludes(value, debouncedSearch);
+    }
+    if (typeof value === "number") {
+      return value.toString().includes(lowerSearch);
+    }
+    return false;
+  });
+}
 ```
 
 Nota: também atualizar o "Fallback: search in all string values" logo abaixo (mesmo padrão) — trocar `value.toLowerCase().includes(lowerSearch)` por `accentIncludes(value, debouncedSearch)` no ramo de string. Manter `lowerSearch` para o ramo numérico.
@@ -607,4 +608,7 @@ Run: `cd apps/api && grep -rn "ILIKE \$" src/routes src/lib src/services | grep 
 Expected: vazio (todo ILIKE de busca agora passa por unaccent; ignore eventuais ILIKE de igualdade exata não-busca, se houver, documentando).
 
 - [ ] **Step 4: Resumo final ao usuário** com a lista de arquivos alterados e os resultados dos spot-checks SQL.
+
+```
+
 ```

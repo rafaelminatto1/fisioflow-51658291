@@ -516,9 +516,8 @@ app.post("/summarize-patient", async (c) => {
               const pain = r.pain_scale != null ? ` | EVA ${r.pain_scale}/10` : "";
               const procCount = Array.isArray(r.procedures) ? r.procedures.length : 0;
               const exCount = Array.isArray(r.exercises) ? r.exercises.length : 0;
-              const counts = procCount || exCount
-                ? ` | ${procCount} procedimentos, ${exCount} exercícios`
-                : "";
+              const counts =
+                procCount || exCount ? ` | ${procCount} procedimentos, ${exCount} exercícios` : "";
               return `[${r.session_date}] ${r.observacao ?? ""}${pain}${counts}`;
             })
             .join("\n");

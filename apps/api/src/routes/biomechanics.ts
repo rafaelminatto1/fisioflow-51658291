@@ -44,8 +44,15 @@ const METRIC_LABELS: Record<string, { label: string; unit: string; lowerIsBetter
 
 const DEFAULT_ALGORITHM_VERSION = "bio-pipeline-1.0.0";
 
-function toBiomechanicsAssessmentType(value: unknown): "static_posture" | "gait_analysis" | "running_analysis" | "functional_movement" {
-  if (value === "static_posture" || value === "gait_analysis" || value === "running_analysis" || value === "functional_movement") {
+function toBiomechanicsAssessmentType(
+  value: unknown,
+): "static_posture" | "gait_analysis" | "running_analysis" | "functional_movement" {
+  if (
+    value === "static_posture" ||
+    value === "gait_analysis" ||
+    value === "running_analysis" ||
+    value === "functional_movement"
+  ) {
     return value;
   }
   return "functional_movement";
@@ -58,7 +65,10 @@ function normalizeView(value: unknown) {
 }
 
 function publicOrTenantProtocolFilter(userOrgId: string) {
-  return or(isNull(biomechanicsProtocols.organizationId), eq(biomechanicsProtocols.organizationId, userOrgId));
+  return or(
+    isNull(biomechanicsProtocols.organizationId),
+    eq(biomechanicsProtocols.organizationId, userOrgId),
+  );
 }
 
 function r2BiomechanicsKey(params: {
@@ -87,12 +97,12 @@ function safeJson(value: unknown) {
 }
 
 function metricInfo(key: string) {
-  return METRIC_LABELS[key] ?? {
-    label: key
-      .replace(/_/g, " ")
-      .replace(/\b\w/g, (char) => char.toUpperCase()),
-    unit: "",
-  };
+  return (
+    METRIC_LABELS[key] ?? {
+      label: key.replace(/_/g, " ").replace(/\b\w/g, (char) => char.toUpperCase()),
+      unit: "",
+    }
+  );
 }
 
 function normalizeMetricKey(rawKey: string) {
@@ -100,10 +110,13 @@ function normalizeMetricKey(rawKey: string) {
   if (key.includes("valgo")) return "dynamic_valgus";
   if (key.includes("tronco") || key.includes("trunk")) return "trunk_inclination";
   if (key.includes("simetr")) return "symmetry";
-  if (key.includes("dor") || key.includes("pain") || key.includes("vas") || key.includes("eva")) return "pain";
-  if (key.includes("tornozelo") || key.includes("ankle") || key.includes("dors")) return "ankle_dorsiflexion";
+  if (key.includes("dor") || key.includes("pain") || key.includes("vas") || key.includes("eva"))
+    return "pain";
+  if (key.includes("tornozelo") || key.includes("ankle") || key.includes("dors"))
+    return "ankle_dorsiflexion";
   if (key.includes("quadril") || key.includes("hip")) return "hip_flexion";
-  if (key.includes("joelho") || key.includes("knee")) return key.includes("rom") ? "knee_rom" : "knee_flexion";
+  if (key.includes("joelho") || key.includes("knee"))
+    return key.includes("rom") ? "knee_rom" : "knee_flexion";
   return key.replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "");
 }
 
@@ -142,12 +155,18 @@ function extractMetrics(assessment: AssessmentRow): ExtractedMetric[] {
   Object.entries(metrics).forEach(([key, value]) => put(key, value));
 
   if (Array.isArray(analysisData.angles)) {
-    analysisData.angles.forEach((angle: any) => put(angle.joint ?? angle.label ?? "angle", angle.angle, "deg"));
+    analysisData.angles.forEach((angle: any) =>
+      put(angle.joint ?? angle.label ?? "angle", angle.angle, "deg"),
+    );
   }
 
   if (Array.isArray(analysisData.symmetries)) {
     analysisData.symmetries.forEach((symmetry: any) =>
-      put(symmetry.joint ? `${symmetry.joint}_symmetry` : "symmetry", symmetry.percentage ?? symmetry.diff, "%"),
+      put(
+        symmetry.joint ? `${symmetry.joint}_symmetry` : "symmetry",
+        symmetry.percentage ?? symmetry.diff,
+        "%",
+      ),
     );
   }
 
@@ -224,18 +243,15 @@ async function generatePdfBrowserRun(env: Env, html: string): Promise<Uint8Array
 }
 
 function buildComparisonPayload(from: AssessmentRow | null, to: AssessmentRow) {
-  const fromMetrics = new Map((from ? extractMetrics(from) : []).map((metric) => [metric.key, metric]));
+  const fromMetrics = new Map(
+    (from ? extractMetrics(from) : []).map((metric) => [metric.key, metric]),
+  );
   const toMetrics = extractMetrics(to);
 
   const metrics = toMetrics.map((current) => {
     const previous = fromMetrics.get(current.key);
     const delta = previous ? current.value - previous.value : null;
-    const improved =
-      delta == null
-        ? null
-        : current.lowerIsBetter
-          ? delta < 0
-          : delta > 0;
+    const improved = delta == null ? null : current.lowerIsBetter ? delta < 0 : delta > 0;
 
     return {
       key: current.key,
@@ -244,7 +260,8 @@ function buildComparisonPayload(from: AssessmentRow | null, to: AssessmentRow) {
       fromValue: previous?.value ?? null,
       toValue: current.value,
       delta,
-      direction: improved == null ? "new" : improved ? "improved" : delta === 0 ? "stable" : "worse",
+      direction:
+        improved == null ? "new" : improved ? "improved" : delta === 0 ? "stable" : "worse",
       lowerIsBetter: current.lowerIsBetter,
     };
   });
@@ -277,11 +294,16 @@ function buildBiomechanicsReportHtml(params: {
   patientName: string;
   comparison: ReturnType<typeof buildComparisonPayload>;
   reportHash: string;
-  annotations?: Array<{ tool: string; label: string | null; timeMs: number | null; frameIndex: number | null }>;
+  annotations?: Array<{
+    tool: string;
+    label: string | null;
+    timeMs: number | null;
+    frameIndex: number | null;
+  }>;
 }) {
   const { assessment, patientName, comparison, reportHash, annotations = [] } = params;
   const generatedAt = new Date().toLocaleString("pt-BR");
-  
+
   // Extract symmetry score from analysis data or fallback
   const currentAnalysisData = safeJson(assessment.analysisData);
   const symmetryScore = Number(assessment.symmetryScore || currentAnalysisData.symmetryScore || 84);
@@ -457,7 +479,8 @@ app.get("/dashboard", requireAuth, async (c) => {
       counts: {
         queued: counts.queued ?? 0,
         processing: (counts.running ?? 0) + (counts.waiting_external_model ?? 0),
-        needsReview: recentAssessments.filter((assessment) => assessment.status === "needs_review").length,
+        needsReview: recentAssessments.filter((assessment) => assessment.status === "needs_review")
+          .length,
         failed: counts.failed ?? 0,
       },
       jobs,
@@ -530,7 +553,9 @@ app.get("/protocols/:id", requireAuth, async (c) => {
   const [protocol] = await db
     .select()
     .from(biomechanicsProtocols)
-    .where(and(eq(biomechanicsProtocols.id, id), publicOrTenantProtocolFilter(user.organizationId)));
+    .where(
+      and(eq(biomechanicsProtocols.id, id), publicOrTenantProtocolFilter(user.organizationId)),
+    );
   if (!protocol) return c.json({ error: "Protocolo não encontrado" }, 404);
   return c.json({ data: protocol });
 });
@@ -554,7 +579,12 @@ app.post("/captures", requireAuth, async (c) => {
     [protocol] = await db
       .select()
       .from(biomechanicsProtocols)
-      .where(and(eq(biomechanicsProtocols.id, String(body.protocolId)), publicOrTenantProtocolFilter(user.organizationId)));
+      .where(
+        and(
+          eq(biomechanicsProtocols.id, String(body.protocolId)),
+          publicOrTenantProtocolFilter(user.organizationId),
+        ),
+      );
     if (!protocol) return c.json({ error: "Protocolo não encontrado" }, 404);
   }
 
@@ -579,7 +609,12 @@ app.post("/captures", requireAuth, async (c) => {
       analysisData: {
         metrics: {},
         protocol: protocol
-          ? { id: protocol.id, slug: protocol.slug, name: protocol.name, category: protocol.category }
+          ? {
+              id: protocol.id,
+              slug: protocol.slug,
+              name: protocol.name,
+              category: protocol.category,
+            }
           : null,
       },
       trajectoryData: [],
@@ -628,10 +663,18 @@ app.post("/captures", requireAuth, async (c) => {
       jobId: job.id,
       updatedAt: new Date(),
     })
-    .where(and(eq(biomechanicsAssessments.id, assessment.id), eq(biomechanicsAssessments.organizationId, user.organizationId)))
+    .where(
+      and(
+        eq(biomechanicsAssessments.id, assessment.id),
+        eq(biomechanicsAssessments.organizationId, user.organizationId),
+      ),
+    )
     .returning();
 
-  return c.json({ data: { assessment: updatedAssessment, media, job, protocol: protocol ?? null } }, 201);
+  return c.json(
+    { data: { assessment: updatedAssessment, media, job, protocol: protocol ?? null } },
+    201,
+  );
 });
 
 // POST /api/biomechanics/:id/media/upload-url
@@ -644,7 +687,12 @@ app.post("/:id/media/upload-url", requireAuth, async (c) => {
   const [assessment] = await db
     .select()
     .from(biomechanicsAssessments)
-    .where(and(eq(biomechanicsAssessments.id, id), eq(biomechanicsAssessments.organizationId, user.organizationId)));
+    .where(
+      and(
+        eq(biomechanicsAssessments.id, id),
+        eq(biomechanicsAssessments.organizationId, user.organizationId),
+      ),
+    );
   if (!assessment) return c.json({ error: "Avaliação não encontrada" }, 404);
 
   const mediaId = String(body.mediaId ?? assessment.primaryMediaId ?? "");
@@ -652,7 +700,12 @@ app.post("/:id/media/upload-url", requireAuth, async (c) => {
     ? await db
         .select()
         .from(biomechanicsMedia)
-        .where(and(eq(biomechanicsMedia.id, mediaId), eq(biomechanicsMedia.organizationId, user.organizationId)))
+        .where(
+          and(
+            eq(biomechanicsMedia.id, mediaId),
+            eq(biomechanicsMedia.organizationId, user.organizationId),
+          ),
+        )
     : [];
   if (!media) return c.json({ error: "Mídia não encontrada" }, 404);
 
@@ -669,7 +722,12 @@ app.post("/:id/media/upload-url", requireAuth, async (c) => {
   const [updatedMedia] = await db
     .update(biomechanicsMedia)
     .set({ r2Key: key, contentType, updatedAt: new Date() })
-    .where(and(eq(biomechanicsMedia.id, media.id), eq(biomechanicsMedia.organizationId, user.organizationId)))
+    .where(
+      and(
+        eq(biomechanicsMedia.id, media.id),
+        eq(biomechanicsMedia.organizationId, user.organizationId),
+      ),
+    )
     .returning();
 
   return c.json({ data: { uploadUrl, key, media: updatedMedia } });
@@ -686,7 +744,12 @@ app.post("/:id/media/complete", requireAuth, async (c) => {
   const [assessment] = await db
     .select()
     .from(biomechanicsAssessments)
-    .where(and(eq(biomechanicsAssessments.id, id), eq(biomechanicsAssessments.organizationId, user.organizationId)));
+    .where(
+      and(
+        eq(biomechanicsAssessments.id, id),
+        eq(biomechanicsAssessments.organizationId, user.organizationId),
+      ),
+    );
   if (!assessment) return c.json({ error: "Avaliação não encontrada" }, 404);
 
   const [media] = await db
@@ -701,11 +764,19 @@ app.post("/:id/media/complete", requireAuth, async (c) => {
       metadata: body.metadata ?? undefined,
       updatedAt: new Date(),
     })
-    .where(and(eq(biomechanicsMedia.id, mediaId || String(assessment.primaryMediaId)), eq(biomechanicsMedia.organizationId, user.organizationId)))
+    .where(
+      and(
+        eq(biomechanicsMedia.id, mediaId || String(assessment.primaryMediaId)),
+        eq(biomechanicsMedia.organizationId, user.organizationId),
+      ),
+    )
     .returning();
   if (!media) return c.json({ error: "Mídia não encontrada" }, 404);
   if (media.r2Key && !c.env.R2_PUBLIC_URL) {
-    return c.json({ error: "R2_PUBLIC_URL não configurado para publicar mídia de biomecânica" }, 500);
+    return c.json(
+      { error: "R2_PUBLIC_URL não configurado para publicar mídia de biomecânica" },
+      500,
+    );
   }
 
   await db
@@ -716,7 +787,12 @@ app.post("/:id/media/complete", requireAuth, async (c) => {
       qualityScore: media.qualityScore,
       updatedAt: new Date(),
     })
-    .where(and(eq(biomechanicsAssessments.id, id), eq(biomechanicsAssessments.organizationId, user.organizationId)));
+    .where(
+      and(
+        eq(biomechanicsAssessments.id, id),
+        eq(biomechanicsAssessments.organizationId, user.organizationId),
+      ),
+    );
 
   return c.json({ data: { media } });
 });
@@ -729,13 +805,23 @@ app.post("/:id/process", requireAuth, async (c) => {
   const [assessment] = await db
     .select()
     .from(biomechanicsAssessments)
-    .where(and(eq(biomechanicsAssessments.id, id), eq(biomechanicsAssessments.organizationId, user.organizationId)));
+    .where(
+      and(
+        eq(biomechanicsAssessments.id, id),
+        eq(biomechanicsAssessments.organizationId, user.organizationId),
+      ),
+    );
   if (!assessment) return c.json({ error: "Avaliação não encontrada" }, 404);
 
   const [latestJob] = await db
     .select()
     .from(biomechanicsJobs)
-    .where(and(eq(biomechanicsJobs.assessmentId, assessment.id), eq(biomechanicsJobs.organizationId, user.organizationId)))
+    .where(
+      and(
+        eq(biomechanicsJobs.assessmentId, assessment.id),
+        eq(biomechanicsJobs.organizationId, user.organizationId),
+      ),
+    )
     .orderBy(desc(biomechanicsJobs.createdAt))
     .limit(1);
 
@@ -760,13 +846,30 @@ app.post("/:id/process", requireAuth, async (c) => {
 
   await db
     .update(biomechanicsJobs)
-    .set({ status: "queued", stage: "ingest", progress: 0, errorCode: null, errorMessage: null, updatedAt: new Date() })
-    .where(and(eq(biomechanicsJobs.id, job.id), eq(biomechanicsJobs.organizationId, user.organizationId)));
+    .set({
+      status: "queued",
+      stage: "ingest",
+      progress: 0,
+      errorCode: null,
+      errorMessage: null,
+      updatedAt: new Date(),
+    })
+    .where(
+      and(
+        eq(biomechanicsJobs.id, job.id),
+        eq(biomechanicsJobs.organizationId, user.organizationId),
+      ),
+    );
 
   await db
     .update(biomechanicsAssessments)
     .set({ status: "queued", jobId: job.id, updatedAt: new Date() })
-    .where(and(eq(biomechanicsAssessments.id, id), eq(biomechanicsAssessments.organizationId, user.organizationId)));
+    .where(
+      and(
+        eq(biomechanicsAssessments.id, id),
+        eq(biomechanicsAssessments.organizationId, user.organizationId),
+      ),
+    );
 
   const processPayload = {
     jobId: job.id,
@@ -799,7 +902,12 @@ app.get("/:id/job", requireAuth, async (c) => {
   const jobs = await db
     .select()
     .from(biomechanicsJobs)
-    .where(and(eq(biomechanicsJobs.assessmentId, id), eq(biomechanicsJobs.organizationId, user.organizationId)))
+    .where(
+      and(
+        eq(biomechanicsJobs.assessmentId, id),
+        eq(biomechanicsJobs.organizationId, user.organizationId),
+      ),
+    )
     .orderBy(desc(biomechanicsJobs.createdAt))
     .limit(1);
   if (!jobs[0]) return c.json({ error: "Job não encontrado" }, 404);
@@ -814,16 +922,75 @@ app.get("/:id/workbench", requireAuth, async (c) => {
   const [assessment] = await db
     .select()
     .from(biomechanicsAssessments)
-    .where(and(eq(biomechanicsAssessments.id, id), eq(biomechanicsAssessments.organizationId, user.organizationId)));
+    .where(
+      and(
+        eq(biomechanicsAssessments.id, id),
+        eq(biomechanicsAssessments.organizationId, user.organizationId),
+      ),
+    );
   if (!assessment) return c.json({ error: "Avaliação não encontrada" }, 404);
 
   const [media, jobs, metrics, frames, events, annotations] = await Promise.all([
-    db.select().from(biomechanicsMedia).where(and(eq(biomechanicsMedia.assessmentId, id), eq(biomechanicsMedia.organizationId, user.organizationId))),
-    db.select().from(biomechanicsJobs).where(and(eq(biomechanicsJobs.assessmentId, id), eq(biomechanicsJobs.organizationId, user.organizationId))).orderBy(desc(biomechanicsJobs.createdAt)),
-    db.select().from(biomechanicsMetrics).where(and(eq(biomechanicsMetrics.assessmentId, id), eq(biomechanicsMetrics.organizationId, user.organizationId))).orderBy(asc(biomechanicsMetrics.metricKey)),
-    db.select().from(biomechanicsFrames).where(and(eq(biomechanicsFrames.assessmentId, id), eq(biomechanicsFrames.organizationId, user.organizationId))).orderBy(asc(biomechanicsFrames.frameIndex)).limit(120),
-    db.select().from(biomechanicsEvents).where(and(eq(biomechanicsEvents.assessmentId, id), eq(biomechanicsEvents.organizationId, user.organizationId))).orderBy(asc(biomechanicsEvents.timeMs)),
-    db.select().from(biomechanicsAnnotations).where(and(eq(biomechanicsAnnotations.assessmentId, id), eq(biomechanicsAnnotations.organizationId, user.organizationId))).orderBy(asc(biomechanicsAnnotations.createdAt)),
+    db
+      .select()
+      .from(biomechanicsMedia)
+      .where(
+        and(
+          eq(biomechanicsMedia.assessmentId, id),
+          eq(biomechanicsMedia.organizationId, user.organizationId),
+        ),
+      ),
+    db
+      .select()
+      .from(biomechanicsJobs)
+      .where(
+        and(
+          eq(biomechanicsJobs.assessmentId, id),
+          eq(biomechanicsJobs.organizationId, user.organizationId),
+        ),
+      )
+      .orderBy(desc(biomechanicsJobs.createdAt)),
+    db
+      .select()
+      .from(biomechanicsMetrics)
+      .where(
+        and(
+          eq(biomechanicsMetrics.assessmentId, id),
+          eq(biomechanicsMetrics.organizationId, user.organizationId),
+        ),
+      )
+      .orderBy(asc(biomechanicsMetrics.metricKey)),
+    db
+      .select()
+      .from(biomechanicsFrames)
+      .where(
+        and(
+          eq(biomechanicsFrames.assessmentId, id),
+          eq(biomechanicsFrames.organizationId, user.organizationId),
+        ),
+      )
+      .orderBy(asc(biomechanicsFrames.frameIndex))
+      .limit(120),
+    db
+      .select()
+      .from(biomechanicsEvents)
+      .where(
+        and(
+          eq(biomechanicsEvents.assessmentId, id),
+          eq(biomechanicsEvents.organizationId, user.organizationId),
+        ),
+      )
+      .orderBy(asc(biomechanicsEvents.timeMs)),
+    db
+      .select()
+      .from(biomechanicsAnnotations)
+      .where(
+        and(
+          eq(biomechanicsAnnotations.assessmentId, id),
+          eq(biomechanicsAnnotations.organizationId, user.organizationId),
+        ),
+      )
+      .orderBy(asc(biomechanicsAnnotations.createdAt)),
   ]);
 
   return c.json({ data: { assessment, media, jobs, metrics, frames, events, annotations } });
@@ -838,7 +1005,12 @@ app.post("/:id/annotations", requireAuth, async (c) => {
   const [assessment] = await db
     .select()
     .from(biomechanicsAssessments)
-    .where(and(eq(biomechanicsAssessments.id, id), eq(biomechanicsAssessments.organizationId, user.organizationId)));
+    .where(
+      and(
+        eq(biomechanicsAssessments.id, id),
+        eq(biomechanicsAssessments.organizationId, user.organizationId),
+      ),
+    );
   if (!assessment) return c.json({ error: "Avaliação não encontrada" }, 404);
 
   const [annotation] = await db
@@ -900,7 +1072,12 @@ app.post("/:id/validate", requireAuth, async (c) => {
   const [assessment] = await db
     .select()
     .from(biomechanicsAssessments)
-    .where(and(eq(biomechanicsAssessments.id, id), eq(biomechanicsAssessments.organizationId, user.organizationId)));
+    .where(
+      and(
+        eq(biomechanicsAssessments.id, id),
+        eq(biomechanicsAssessments.organizationId, user.organizationId),
+      ),
+    );
   if (!assessment) return c.json({ error: "Avaliação não encontrada" }, 404);
 
   const [updated] = await db
@@ -914,7 +1091,12 @@ app.post("/:id/validate", requireAuth, async (c) => {
       aiValidationStatus: "validated",
       updatedAt: new Date(),
     })
-    .where(and(eq(biomechanicsAssessments.id, id), eq(biomechanicsAssessments.organizationId, user.organizationId)))
+    .where(
+      and(
+        eq(biomechanicsAssessments.id, id),
+        eq(biomechanicsAssessments.organizationId, user.organizationId),
+      ),
+    )
     .returning();
 
   await db.insert(biomechanicsReviewActions).values({
@@ -938,7 +1120,12 @@ app.get("/patient/:patientId/timeline", requireAuth, async (c) => {
   const assessments = await db
     .select()
     .from(biomechanicsAssessments)
-    .where(and(eq(biomechanicsAssessments.patientId, patientId), eq(biomechanicsAssessments.organizationId, user.organizationId)))
+    .where(
+      and(
+        eq(biomechanicsAssessments.patientId, patientId),
+        eq(biomechanicsAssessments.organizationId, user.organizationId),
+      ),
+    )
     .orderBy(desc(biomechanicsAssessments.createdAt));
 
   return c.json({
@@ -988,7 +1175,7 @@ app.get("/patient/:patientId/metrics/history", requireAuth, async (c) => {
       and(
         eq(biomechanicsMetrics.patientId, patientId),
         eq(biomechanicsMetrics.organizationId, user.organizationId),
-      )
+      ),
     )
     .orderBy(asc(biomechanicsMetrics.createdAt));
 
@@ -1027,7 +1214,9 @@ app.get("/patient/:patientId/comparison", requireAuth, async (c) => {
     (toAssessmentId ? assessments.find((assessment) => assessment.id === toAssessmentId) : null) ??
     assessments[0];
   const from =
-    (fromAssessmentId ? assessments.find((assessment) => assessment.id === fromAssessmentId) : null) ??
+    (fromAssessmentId
+      ? assessments.find((assessment) => assessment.id === fromAssessmentId)
+      : null) ??
     assessments.find((assessment) => assessment.id !== to.id) ??
     null;
 
@@ -1086,7 +1275,7 @@ app.post("/", requireAuth, async (c) => {
       conclusions: body.conclusions,
       symmetryScore: body.symmetryScore ? String(body.symmetryScore) : null,
       trajectoryData: body.trajectoryData || [],
-      aiValidationStatus: body.aiValidationStatus || 'pending',
+      aiValidationStatus: body.aiValidationStatus || "pending",
     })
     .returning();
 
@@ -1241,7 +1430,13 @@ app.post("/:id/pdf", requireAuth, async (c) => {
   }
 
   const patientName = body.patientName?.trim() || `Paciente ${assessment.patientId.slice(0, 8)}`;
-  const html = buildBiomechanicsReportHtml({ assessment, patientName, comparison, reportHash, annotations });
+  const html = buildBiomechanicsReportHtml({
+    assessment,
+    patientName,
+    comparison,
+    reportHash,
+    annotations,
+  });
   const pdfBytes = await generatePdfBrowserRun(c.env, html);
   const pdfKey = `documents/biomechanics/${user.organizationId}/${assessment.patientId}/${assessment.id}-${reportHash.slice(
     0,
@@ -1352,7 +1547,12 @@ app.post("/:id/sign", requireAuth, async (c) => {
       } as any,
       updatedAt: new Date(),
     })
-    .where(and(eq(biomechanicsAssessments.id, id), eq(biomechanicsAssessments.organizationId, user.organizationId)))
+    .where(
+      and(
+        eq(biomechanicsAssessments.id, id),
+        eq(biomechanicsAssessments.organizationId, user.organizationId),
+      ),
+    )
     .returning();
 
   return c.json({ success: true, data: updated });

@@ -12,9 +12,7 @@ export function computeLineDiff(oldText: string, newText: string): DiffLine[] {
   const oldLength = oldLines.length;
   const newLength = newLines.length;
 
-  const dp: number[][] = Array.from({ length: oldLength + 1 }, () =>
-    Array(newLength + 1).fill(0),
-  );
+  const dp: number[][] = Array.from({ length: oldLength + 1 }, () => Array(newLength + 1).fill(0));
 
   for (let i = oldLength - 1; i >= 0; i -= 1) {
     for (let j = newLength - 1; j >= 0; j -= 1) {

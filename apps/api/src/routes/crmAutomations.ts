@@ -89,8 +89,16 @@ app.put("/:id", requireAuth, async (c) => {
     ["descricao", body.descricao],
     ["ativo", body.ativo],
     ["gatilho_tipo", body.gatilho_tipo],
-    ["gatilho_config", body.gatilho_config !== undefined ? JSON.stringify(body.gatilho_config) : undefined, "jsonb"],
-    ["condicoes", body.condicoes !== undefined ? JSON.stringify(body.condicoes) : undefined, "jsonb"],
+    [
+      "gatilho_config",
+      body.gatilho_config !== undefined ? JSON.stringify(body.gatilho_config) : undefined,
+      "jsonb",
+    ],
+    [
+      "condicoes",
+      body.condicoes !== undefined ? JSON.stringify(body.condicoes) : undefined,
+      "jsonb",
+    ],
     ["acoes", body.acoes !== undefined ? JSON.stringify(body.acoes) : undefined, "jsonb"],
     ["prioridade", body.prioridade],
     ["cooldown_minutes", body.cooldown_minutes],
@@ -132,7 +140,10 @@ app.delete("/:id", requireAuth, async (c) => {
       [id, user.organizationId],
     );
     if (!result.rows.length) {
-      return c.json({ error: "regra não encontrada (templates globais não podem ser apagados)" }, 404);
+      return c.json(
+        { error: "regra não encontrada (templates globais não podem ser apagados)" },
+        404,
+      );
     }
     return c.json({ ok: true });
   } catch (error) {

@@ -11,11 +11,14 @@ const sql = neon(databaseUrl);
 
 async function main() {
   console.log("Reading migration SQL...");
-  const sqlPath = path.join(__dirname, "../apps/api/migrations/0100_fix_capacity_and_hyphenated_rls_policies.sql");
-  const rawSql = fs.readFileSync(sqlPath, 'utf8');
+  const sqlPath = path.join(
+    __dirname,
+    "../apps/api/migrations/0100_fix_capacity_and_hyphenated_rls_policies.sql",
+  );
+  const rawSql = fs.readFileSync(sqlPath, "utf8");
 
   console.log("Connecting to production database and running migration...");
-  
+
   try {
     // Corrected to use sql.query for conventional function call
     await sql.query(rawSql);

@@ -65,15 +65,15 @@ export default function ChatDetailScreen() {
     if (ws.current) {
       ws.current.close();
     }
-    
+
     // API endpoint per task instructions
-    const socket = new WebSocket('wss://api-pro.moocafisio.com.br/api/messaging/ws');
-    
+    const socket = new WebSocket("wss://api-pro.moocafisio.com.br/api/messaging/ws");
+
     socket.onopen = () => {
       console.log("WebSocket connected");
       reconnectAttempts.current = 0;
     };
-    
+
     socket.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data);
@@ -84,7 +84,7 @@ export default function ChatDetailScreen() {
         console.error("Error parsing WS message", e);
       }
     };
-    
+
     socket.onclose = () => {
       console.log("WebSocket closed. Reconnecting...");
       if (reconnectAttempts.current < 10) {
@@ -95,7 +95,7 @@ export default function ChatDetailScreen() {
         }, timeout);
       }
     };
-    
+
     socket.onerror = (e) => {
       console.error("WebSocket error", e);
     };

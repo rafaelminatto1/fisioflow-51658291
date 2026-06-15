@@ -270,10 +270,7 @@ export const ScheduleToolbar: React.FC<ScheduleToolbarProps> = ({
               <Sparkles className="w-4 h-4 text-amber-500" />
               Otimizar Agenda (AI)
             </DropdownMenuItem>
-            <DropdownMenuItem
-              className="rounded-xl gap-2 font-medium"
-              onClick={onToggleSelection}
-            >
+            <DropdownMenuItem className="rounded-xl gap-2 font-medium" onClick={onToggleSelection}>
               <CheckSquare className="w-4 h-4 text-primary" />
               {isSelectionMode ? "Sair do modo seleção" : "Seleção em massa"}
             </DropdownMenuItem>

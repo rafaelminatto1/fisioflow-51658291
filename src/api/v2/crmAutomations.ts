@@ -72,8 +72,7 @@ export const crmAutomationsApi = {
       body: JSON.stringify(data),
     }),
 
-  delete: (id: string) =>
-    request<{ ok: true }>(`/api/crm-automations/${id}`, { method: "DELETE" }),
+  delete: (id: string) => request<{ ok: true }>(`/api/crm-automations/${id}`, { method: "DELETE" }),
 
   executions: (id: string, limit = 20) =>
     request<{ data: CrmAutomationExecution[] }>(

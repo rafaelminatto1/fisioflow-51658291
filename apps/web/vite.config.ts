@@ -109,9 +109,24 @@ export default defineConfig(({ mode }) => {
           scope: "/",
           start_url: "/",
           icons: [
-            { src: "/icons/badge-72x72.svg", sizes: "72x72", type: "image/svg+xml", purpose: "any" },
-            { src: "/icons/icon-192x192.svg", sizes: "192x192", type: "image/svg+xml", purpose: "any" },
-            { src: "/icons/icon-512x512.svg", sizes: "512x512", type: "image/svg+xml", purpose: "any" },
+            {
+              src: "/icons/badge-72x72.svg",
+              sizes: "72x72",
+              type: "image/svg+xml",
+              purpose: "any",
+            },
+            {
+              src: "/icons/icon-192x192.svg",
+              sizes: "192x192",
+              type: "image/svg+xml",
+              purpose: "any",
+            },
+            {
+              src: "/icons/icon-512x512.svg",
+              sizes: "512x512",
+              type: "image/svg+xml",
+              purpose: "any",
+            },
           ],
         },
         injectManifest: {

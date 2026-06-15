@@ -85,39 +85,27 @@
         "clinical_scribe_logs_organization_id_organizations_id_fk": {
           "name": "clinical_scribe_logs_organization_id_organizations_id_fk",
           "tableFrom": "clinical_scribe_logs",
-          "columnsFrom": [
-            "organization_id"
-          ],
+          "columnsFrom": ["organization_id"],
           "tableTo": "organizations",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         },
         "clinical_scribe_logs_patient_id_patients_id_fk": {
           "name": "clinical_scribe_logs_patient_id_patients_id_fk",
           "tableFrom": "clinical_scribe_logs",
-          "columnsFrom": [
-            "patient_id"
-          ],
+          "columnsFrom": ["patient_id"],
           "tableTo": "patients",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         },
         "clinical_scribe_logs_therapist_id_profiles_user_id_fk": {
           "name": "clinical_scribe_logs_therapist_id_profiles_user_id_fk",
           "tableFrom": "clinical_scribe_logs",
-          "columnsFrom": [
-            "therapist_id"
-          ],
+          "columnsFrom": ["therapist_id"],
           "tableTo": "profiles",
-          "columnsTo": [
-            "user_id"
-          ],
+          "columnsTo": ["user_id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         }
@@ -170,13 +158,9 @@
         "announcement_reads_announcement_id_announcements_id_fk": {
           "name": "announcement_reads_announcement_id_announcements_id_fk",
           "tableFrom": "announcement_reads",
-          "columnsFrom": [
-            "announcement_id"
-          ],
+          "columnsFrom": ["announcement_id"],
           "tableTo": "announcements",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         }
@@ -255,13 +239,9 @@
         "announcements_organization_id_organizations_id_fk": {
           "name": "announcements_organization_id_organizations_id_fk",
           "tableFrom": "announcements",
-          "columnsFrom": [
-            "organization_id"
-          ],
+          "columnsFrom": ["organization_id"],
           "tableTo": "organizations",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         }
@@ -635,13 +615,9 @@
         "appointments_patient_id_patients_id_fk": {
           "name": "appointments_patient_id_patients_id_fk",
           "tableFrom": "appointments",
-          "columnsFrom": [
-            "patient_id"
-          ],
+          "columnsFrom": ["patient_id"],
           "tableTo": "patients",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         }
@@ -653,9 +629,7 @@
           "name": "policy_appointments_isolation",
           "as": "PERMISSIVE",
           "for": "ALL",
-          "to": [
-            "authenticated"
-          ],
+          "to": ["authenticated"],
           "using": "\"appointments\".\"organization_id\" = (current_setting('app.org_id')::uuid)"
         }
       },
@@ -803,9 +777,7 @@
           "name": "policy_blocked_slots_isolation",
           "as": "PERMISSIVE",
           "for": "ALL",
-          "to": [
-            "authenticated"
-          ],
+          "to": ["authenticated"],
           "using": "\"blocked_slots\".\"organization_id\" = (current_setting('app.org_id')::uuid)"
         }
       },
@@ -909,9 +881,7 @@
           "name": "policy_rooms_isolation",
           "as": "PERMISSIVE",
           "for": "ALL",
-          "to": [
-            "authenticated"
-          ],
+          "to": ["authenticated"],
           "using": "\"rooms\".\"organization_id\" = (current_setting('app.org_id')::uuid)"
         }
       },
@@ -1057,13 +1027,9 @@
         "biomechanics_assessments_patient_id_patients_id_fk": {
           "name": "biomechanics_assessments_patient_id_patients_id_fk",
           "tableFrom": "biomechanics_assessments",
-          "columnsFrom": [
-            "patient_id"
-          ],
+          "columnsFrom": ["patient_id"],
           "tableTo": "patients",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         }
@@ -1075,9 +1041,7 @@
           "name": "policy_biomechanics_assessments_isolation",
           "as": "PERMISSIVE",
           "for": "ALL",
-          "to": [
-            "authenticated"
-          ],
+          "to": ["authenticated"],
           "using": "\"biomechanics_assessments\".\"organization_id\" = (current_setting('app.org_id')::uuid)"
         }
       },
@@ -1175,26 +1139,18 @@
         "biomechanics_metrics_assessment_id_biomechanics_assessments_id_fk": {
           "name": "biomechanics_metrics_assessment_id_biomechanics_assessments_id_fk",
           "tableFrom": "biomechanics_metrics",
-          "columnsFrom": [
-            "assessment_id"
-          ],
+          "columnsFrom": ["assessment_id"],
           "tableTo": "biomechanics_assessments",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         },
         "biomechanics_metrics_patient_id_patients_id_fk": {
           "name": "biomechanics_metrics_patient_id_patients_id_fk",
           "tableFrom": "biomechanics_metrics",
-          "columnsFrom": [
-            "patient_id"
-          ],
+          "columnsFrom": ["patient_id"],
           "tableTo": "patients",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         }
@@ -1206,9 +1162,7 @@
           "name": "policy_biomechanics_metrics_isolation",
           "as": "PERMISSIVE",
           "for": "ALL",
-          "to": [
-            "authenticated"
-          ],
+          "to": ["authenticated"],
           "using": "\"biomechanics_metrics\".\"organization_id\" = (current_setting('app.org_id')::uuid)"
         }
       },
@@ -1285,26 +1239,18 @@
         "clinical_embeddings_patient_id_patients_id_fk": {
           "name": "clinical_embeddings_patient_id_patients_id_fk",
           "tableFrom": "clinical_embeddings",
-          "columnsFrom": [
-            "patient_id"
-          ],
+          "columnsFrom": ["patient_id"],
           "tableTo": "patients",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         },
         "clinical_embeddings_evolution_id_sessions_id_fk": {
           "name": "clinical_embeddings_evolution_id_sessions_id_fk",
           "tableFrom": "clinical_embeddings",
-          "columnsFrom": [
-            "evolution_id"
-          ],
+          "columnsFrom": ["evolution_id"],
           "tableTo": "sessions",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         }
@@ -1313,9 +1259,7 @@
       "uniqueConstraints": {
         "clinical_embeddings_evolution_id_unique": {
           "name": "clinical_embeddings_evolution_id_unique",
-          "columns": [
-            "evolution_id"
-          ],
+          "columns": ["evolution_id"],
           "nullsNotDistinct": false
         }
       },
@@ -1324,9 +1268,7 @@
           "name": "policy_clinical_embeddings_isolation",
           "as": "PERMISSIVE",
           "for": "ALL",
-          "to": [
-            "authenticated"
-          ],
+          "to": ["authenticated"],
           "using": "\"clinical_embeddings\".\"organization_id\" = (current_setting('app.org_id')::uuid)"
         }
       },
@@ -1436,26 +1378,18 @@
         "clinical_reasoning_logs_patient_id_patients_id_fk": {
           "name": "clinical_reasoning_logs_patient_id_patients_id_fk",
           "tableFrom": "clinical_reasoning_logs",
-          "columnsFrom": [
-            "patient_id"
-          ],
+          "columnsFrom": ["patient_id"],
           "tableTo": "patients",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         },
         "clinical_reasoning_logs_evolution_id_sessions_id_fk": {
           "name": "clinical_reasoning_logs_evolution_id_sessions_id_fk",
           "tableFrom": "clinical_reasoning_logs",
-          "columnsFrom": [
-            "evolution_id"
-          ],
+          "columnsFrom": ["evolution_id"],
           "tableTo": "sessions",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         }
@@ -1467,9 +1401,7 @@
           "name": "policy_clinical_reasoning_logs_isolation",
           "as": "PERMISSIVE",
           "for": "ALL",
-          "to": [
-            "authenticated"
-          ],
+          "to": ["authenticated"],
           "using": "\"clinical_reasoning_logs\".\"organization_id\" = (current_setting('app.org_id')::uuid)"
         }
       },
@@ -1578,13 +1510,9 @@
         "patient_longitudinal_summary_patient_id_patients_id_fk": {
           "name": "patient_longitudinal_summary_patient_id_patients_id_fk",
           "tableFrom": "patient_longitudinal_summary",
-          "columnsFrom": [
-            "patient_id"
-          ],
+          "columnsFrom": ["patient_id"],
           "tableTo": "patients",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         }
@@ -1596,9 +1524,7 @@
           "name": "policy_patient_longitudinal_summary_isolation",
           "as": "PERMISSIVE",
           "for": "ALL",
-          "to": [
-            "authenticated"
-          ],
+          "to": ["authenticated"],
           "using": "\"patient_longitudinal_summary\".\"organization_id\" = (current_setting('app.org_id')::uuid)"
         }
       },
@@ -2095,13 +2021,9 @@
         "exercise_prescriptions_patient_id_patients_id_fk": {
           "name": "exercise_prescriptions_patient_id_patients_id_fk",
           "tableFrom": "exercise_prescriptions",
-          "columnsFrom": [
-            "patient_id"
-          ],
+          "columnsFrom": ["patient_id"],
           "tableTo": "patients",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         }
@@ -2184,13 +2106,9 @@
         "generated_reports_patient_id_patients_id_fk": {
           "name": "generated_reports_patient_id_patients_id_fk",
           "tableFrom": "generated_reports",
-          "columnsFrom": [
-            "patient_id"
-          ],
+          "columnsFrom": ["patient_id"],
           "tableTo": "patients",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         }
@@ -2267,13 +2185,9 @@
         "pain_map_points_pain_map_id_pain_maps_id_fk": {
           "name": "pain_map_points_pain_map_id_pain_maps_id_fk",
           "tableFrom": "pain_map_points",
-          "columnsFrom": [
-            "pain_map_id"
-          ],
+          "columnsFrom": ["pain_map_id"],
           "tableTo": "pain_maps",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         }
@@ -2363,13 +2277,9 @@
         "pain_maps_patient_id_patients_id_fk": {
           "name": "pain_maps_patient_id_patients_id_fk",
           "tableFrom": "pain_maps",
-          "columnsFrom": [
-            "patient_id"
-          ],
+          "columnsFrom": ["patient_id"],
           "tableTo": "patients",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         }
@@ -2467,13 +2377,9 @@
         "patient_goals_patient_id_patients_id_fk": {
           "name": "patient_goals_patient_id_patients_id_fk",
           "tableFrom": "patient_goals",
-          "columnsFrom": [
-            "patient_id"
-          ],
+          "columnsFrom": ["patient_id"],
           "tableTo": "patients",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         }
@@ -2558,26 +2464,18 @@
         "patient_objective_assignments_patient_id_patients_id_fk": {
           "name": "patient_objective_assignments_patient_id_patients_id_fk",
           "tableFrom": "patient_objective_assignments",
-          "columnsFrom": [
-            "patient_id"
-          ],
+          "columnsFrom": ["patient_id"],
           "tableTo": "patients",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         },
         "patient_objective_assignments_objective_id_patient_objectives_id_fk": {
           "name": "patient_objective_assignments_objective_id_patient_objectives_id_fk",
           "tableFrom": "patient_objective_assignments",
-          "columnsFrom": [
-            "objective_id"
-          ],
+          "columnsFrom": ["objective_id"],
           "tableTo": "patient_objectives",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         }
@@ -2774,13 +2672,9 @@
         "patient_pathologies_patient_id_patients_id_fk": {
           "name": "patient_pathologies_patient_id_patients_id_fk",
           "tableFrom": "patient_pathologies",
-          "columnsFrom": [
-            "patient_id"
-          ],
+          "columnsFrom": ["patient_id"],
           "tableTo": "patients",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         }
@@ -2792,9 +2686,7 @@
           "name": "policy_patient_pathologies_isolation",
           "as": "PERMISSIVE",
           "for": "ALL",
-          "to": [
-            "authenticated"
-          ],
+          "to": ["authenticated"],
           "using": "\"patient_pathologies\".\"organization_id\" = (current_setting('app.org_id')::uuid)"
         }
       },
@@ -2959,13 +2851,9 @@
         "patient_session_metrics_patient_id_patients_id_fk": {
           "name": "patient_session_metrics_patient_id_patients_id_fk",
           "tableFrom": "patient_session_metrics",
-          "columnsFrom": [
-            "patient_id"
-          ],
+          "columnsFrom": ["patient_id"],
           "tableTo": "patients",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         }
@@ -3070,13 +2958,9 @@
         "prescribed_exercises_patient_id_patients_id_fk": {
           "name": "prescribed_exercises_patient_id_patients_id_fk",
           "tableFrom": "prescribed_exercises",
-          "columnsFrom": [
-            "patient_id"
-          ],
+          "columnsFrom": ["patient_id"],
           "tableTo": "patients",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         }
@@ -3217,13 +3101,9 @@
         "standardized_test_results_patient_id_patients_id_fk": {
           "name": "standardized_test_results_patient_id_patients_id_fk",
           "tableFrom": "standardized_test_results",
-          "columnsFrom": [
-            "patient_id"
-          ],
+          "columnsFrom": ["patient_id"],
           "tableTo": "patients",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         }
@@ -3331,9 +3211,7 @@
           "name": "policy_evaluation_templates_isolation",
           "as": "PERMISSIVE",
           "for": "ALL",
-          "to": [
-            "authenticated"
-          ],
+          "to": ["authenticated"],
           "using": "\"evaluation_templates\".\"organization_id\" = (current_setting('app.org_id')::uuid)"
         }
       },
@@ -3460,9 +3338,7 @@
       "uniqueConstraints": {
         "exercise_categories_slug_unique": {
           "name": "exercise_categories_slug_unique",
-          "columns": [
-            "slug"
-          ],
+          "columns": ["slug"],
           "nullsNotDistinct": false
         }
       },
@@ -3558,13 +3434,9 @@
         "exercise_favorites_exercise_id_exercises_id_fk": {
           "name": "exercise_favorites_exercise_id_exercises_id_fk",
           "tableFrom": "exercise_favorites",
-          "columnsFrom": [
-            "exercise_id"
-          ],
+          "columnsFrom": ["exercise_id"],
           "tableTo": "exercises",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         }
@@ -3899,13 +3771,9 @@
         "exercises_category_id_exercise_categories_id_fk": {
           "name": "exercises_category_id_exercise_categories_id_fk",
           "tableFrom": "exercises",
-          "columnsFrom": [
-            "category_id"
-          ],
+          "columnsFrom": ["category_id"],
           "tableTo": "exercise_categories",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         }
@@ -3914,9 +3782,7 @@
       "uniqueConstraints": {
         "exercises_slug_unique": {
           "name": "exercises_slug_unique",
-          "columns": [
-            "slug"
-          ],
+          "columns": ["slug"],
           "nullsNotDistinct": false
         }
       },
@@ -3992,13 +3858,9 @@
         "centros_custo_organization_id_organizations_id_fk": {
           "name": "centros_custo_organization_id_organizations_id_fk",
           "tableFrom": "centros_custo",
-          "columnsFrom": [
-            "organization_id"
-          ],
+          "columnsFrom": ["organization_id"],
           "tableTo": "organizations",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         }
@@ -4010,9 +3872,7 @@
           "name": "policy_centros_custo_isolation",
           "as": "PERMISSIVE",
           "for": "ALL",
-          "to": [
-            "authenticated"
-          ],
+          "to": ["authenticated"],
           "using": "\"centros_custo\".\"organization_id\" = (current_setting('app.org_id')::uuid)"
         }
       },
@@ -4151,13 +4011,9 @@
         "contas_financeiras_organization_id_organizations_id_fk": {
           "name": "contas_financeiras_organization_id_organizations_id_fk",
           "tableFrom": "contas_financeiras",
-          "columnsFrom": [
-            "organization_id"
-          ],
+          "columnsFrom": ["organization_id"],
           "tableTo": "organizations",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         }
@@ -4169,9 +4025,7 @@
           "name": "policy_contas_financeiras_isolation",
           "as": "PERMISSIVE",
           "for": "ALL",
-          "to": [
-            "authenticated"
-          ],
+          "to": ["authenticated"],
           "using": "\"contas_financeiras\".\"organization_id\" = (current_setting('app.org_id')::uuid)"
         }
       },
@@ -4289,13 +4143,9 @@
         "convenios_organization_id_organizations_id_fk": {
           "name": "convenios_organization_id_organizations_id_fk",
           "tableFrom": "convenios",
-          "columnsFrom": [
-            "organization_id"
-          ],
+          "columnsFrom": ["organization_id"],
           "tableTo": "organizations",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         }
@@ -4307,9 +4157,7 @@
           "name": "policy_convenios_isolation",
           "as": "PERMISSIVE",
           "for": "ALL",
-          "to": [
-            "authenticated"
-          ],
+          "to": ["authenticated"],
           "using": "\"convenios\".\"organization_id\" = (current_setting('app.org_id')::uuid)"
         }
       },
@@ -4402,13 +4250,9 @@
         "empresas_parceiras_organization_id_organizations_id_fk": {
           "name": "empresas_parceiras_organization_id_organizations_id_fk",
           "tableFrom": "empresas_parceiras",
-          "columnsFrom": [
-            "organization_id"
-          ],
+          "columnsFrom": ["organization_id"],
           "tableTo": "organizations",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         }
@@ -4420,9 +4264,7 @@
           "name": "policy_empresas_parceiras_isolation",
           "as": "PERMISSIVE",
           "for": "ALL",
-          "to": [
-            "authenticated"
-          ],
+          "to": ["authenticated"],
           "using": "\"empresas_parceiras\".\"organization_id\" = (current_setting('app.org_id')::uuid)"
         }
       },
@@ -4506,13 +4348,9 @@
         "formas_pagamento_organization_id_organizations_id_fk": {
           "name": "formas_pagamento_organization_id_organizations_id_fk",
           "tableFrom": "formas_pagamento",
-          "columnsFrom": [
-            "organization_id"
-          ],
+          "columnsFrom": ["organization_id"],
           "tableTo": "organizations",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         }
@@ -4524,9 +4362,7 @@
           "name": "policy_formas_pagamento_isolation",
           "as": "PERMISSIVE",
           "for": "ALL",
-          "to": [
-            "authenticated"
-          ],
+          "to": ["authenticated"],
           "using": "\"formas_pagamento\".\"organization_id\" = (current_setting('app.org_id')::uuid)"
         }
       },
@@ -4668,13 +4504,9 @@
         "fornecedores_organization_id_organizations_id_fk": {
           "name": "fornecedores_organization_id_organizations_id_fk",
           "tableFrom": "fornecedores",
-          "columnsFrom": [
-            "organization_id"
-          ],
+          "columnsFrom": ["organization_id"],
           "tableTo": "organizations",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         }
@@ -4686,9 +4518,7 @@
           "name": "policy_fornecedores_isolation",
           "as": "PERMISSIVE",
           "for": "ALL",
-          "to": [
-            "authenticated"
-          ],
+          "to": ["authenticated"],
           "using": "\"fornecedores\".\"organization_id\" = (current_setting('app.org_id')::uuid)"
         }
       },
@@ -4823,13 +4653,9 @@
         "nfse_organization_id_organizations_id_fk": {
           "name": "nfse_organization_id_organizations_id_fk",
           "tableFrom": "nfse",
-          "columnsFrom": [
-            "organization_id"
-          ],
+          "columnsFrom": ["organization_id"],
           "tableTo": "organizations",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         }
@@ -4841,9 +4667,7 @@
           "name": "policy_nfse_isolation",
           "as": "PERMISSIVE",
           "for": "ALL",
-          "to": [
-            "authenticated"
-          ],
+          "to": ["authenticated"],
           "using": "\"nfse\".\"organization_id\" = (current_setting('app.org_id')::uuid)"
         }
       },
@@ -4911,13 +4735,9 @@
         "nfse_config_organization_id_organizations_id_fk": {
           "name": "nfse_config_organization_id_organizations_id_fk",
           "tableFrom": "nfse_config",
-          "columnsFrom": [
-            "organization_id"
-          ],
+          "columnsFrom": ["organization_id"],
           "tableTo": "organizations",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         }
@@ -4929,9 +4749,7 @@
           "name": "policy_nfse_config_isolation",
           "as": "PERMISSIVE",
           "for": "ALL",
-          "to": [
-            "authenticated"
-          ],
+          "to": ["authenticated"],
           "using": "\"nfse_config\".\"organization_id\" = (current_setting('app.org_id')::uuid)"
         }
       },
@@ -4992,26 +4810,18 @@
         "package_usage_organization_id_organizations_id_fk": {
           "name": "package_usage_organization_id_organizations_id_fk",
           "tableFrom": "package_usage",
-          "columnsFrom": [
-            "organization_id"
-          ],
+          "columnsFrom": ["organization_id"],
           "tableTo": "organizations",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         },
         "package_usage_patient_package_id_patient_packages_id_fk": {
           "name": "package_usage_patient_package_id_patient_packages_id_fk",
           "tableFrom": "package_usage",
-          "columnsFrom": [
-            "patient_package_id"
-          ],
+          "columnsFrom": ["patient_package_id"],
           "tableTo": "patient_packages",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         }
@@ -5023,9 +4833,7 @@
           "name": "policy_package_usage_isolation",
           "as": "PERMISSIVE",
           "for": "ALL",
-          "to": [
-            "authenticated"
-          ],
+          "to": ["authenticated"],
           "using": "\"package_usage\".\"organization_id\" = (current_setting('app.org_id')::uuid)"
         }
       },
@@ -5131,13 +4939,9 @@
         "pagamentos_organization_id_organizations_id_fk": {
           "name": "pagamentos_organization_id_organizations_id_fk",
           "tableFrom": "pagamentos",
-          "columnsFrom": [
-            "organization_id"
-          ],
+          "columnsFrom": ["organization_id"],
           "tableTo": "organizations",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         }
@@ -5149,9 +4953,7 @@
           "name": "policy_pagamentos_isolation",
           "as": "PERMISSIVE",
           "for": "ALL",
-          "to": [
-            "authenticated"
-          ],
+          "to": ["authenticated"],
           "using": "\"pagamentos\".\"organization_id\" = (current_setting('app.org_id')::uuid)"
         }
       },
@@ -5314,39 +5116,27 @@
         "patient_packages_organization_id_organizations_id_fk": {
           "name": "patient_packages_organization_id_organizations_id_fk",
           "tableFrom": "patient_packages",
-          "columnsFrom": [
-            "organization_id"
-          ],
+          "columnsFrom": ["organization_id"],
           "tableTo": "organizations",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         },
         "patient_packages_patient_id_patients_id_fk": {
           "name": "patient_packages_patient_id_patients_id_fk",
           "tableFrom": "patient_packages",
-          "columnsFrom": [
-            "patient_id"
-          ],
+          "columnsFrom": ["patient_id"],
           "tableTo": "patients",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         },
         "patient_packages_package_template_id_session_package_templates_id_fk": {
           "name": "patient_packages_package_template_id_session_package_templates_id_fk",
           "tableFrom": "patient_packages",
-          "columnsFrom": [
-            "package_template_id"
-          ],
+          "columnsFrom": ["package_template_id"],
           "tableTo": "session_package_templates",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         }
@@ -5358,9 +5148,7 @@
           "name": "policy_patient_packages_isolation",
           "as": "PERMISSIVE",
           "for": "ALL",
-          "to": [
-            "authenticated"
-          ],
+          "to": ["authenticated"],
           "using": "\"patient_packages\".\"organization_id\" = (current_setting('app.org_id')::uuid)"
         }
       },
@@ -5454,13 +5242,9 @@
         "session_package_templates_organization_id_organizations_id_fk": {
           "name": "session_package_templates_organization_id_organizations_id_fk",
           "tableFrom": "session_package_templates",
-          "columnsFrom": [
-            "organization_id"
-          ],
+          "columnsFrom": ["organization_id"],
           "tableTo": "organizations",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         }
@@ -5472,9 +5256,7 @@
           "name": "policy_session_package_templates_isolation",
           "as": "PERMISSIVE",
           "for": "ALL",
-          "to": [
-            "authenticated"
-          ],
+          "to": ["authenticated"],
           "using": "\"session_package_templates\".\"organization_id\" = (current_setting('app.org_id')::uuid)"
         }
       },
@@ -5586,13 +5368,9 @@
         "transacoes_organization_id_organizations_id_fk": {
           "name": "transacoes_organization_id_organizations_id_fk",
           "tableFrom": "transacoes",
-          "columnsFrom": [
-            "organization_id"
-          ],
+          "columnsFrom": ["organization_id"],
           "tableTo": "organizations",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         }
@@ -5604,9 +5382,7 @@
           "name": "policy_transacoes_isolation",
           "as": "PERMISSIVE",
           "for": "ALL",
-          "to": [
-            "authenticated"
-          ],
+          "to": ["authenticated"],
           "using": "\"transacoes\".\"organization_id\" = (current_setting('app.org_id')::uuid)"
         }
       },
@@ -5706,26 +5482,18 @@
         "user_vouchers_organization_id_organizations_id_fk": {
           "name": "user_vouchers_organization_id_organizations_id_fk",
           "tableFrom": "user_vouchers",
-          "columnsFrom": [
-            "organization_id"
-          ],
+          "columnsFrom": ["organization_id"],
           "tableTo": "organizations",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         },
         "user_vouchers_voucher_id_vouchers_id_fk": {
           "name": "user_vouchers_voucher_id_vouchers_id_fk",
           "tableFrom": "user_vouchers",
-          "columnsFrom": [
-            "voucher_id"
-          ],
+          "columnsFrom": ["voucher_id"],
           "tableTo": "vouchers",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         }
@@ -5737,9 +5505,7 @@
           "name": "policy_user_vouchers_isolation",
           "as": "PERMISSIVE",
           "for": "ALL",
-          "to": [
-            "authenticated"
-          ],
+          "to": ["authenticated"],
           "using": "\"user_vouchers\".\"organization_id\" = (current_setting('app.org_id')::uuid)"
         }
       },
@@ -5820,26 +5586,18 @@
         "voucher_checkout_sessions_organization_id_organizations_id_fk": {
           "name": "voucher_checkout_sessions_organization_id_organizations_id_fk",
           "tableFrom": "voucher_checkout_sessions",
-          "columnsFrom": [
-            "organization_id"
-          ],
+          "columnsFrom": ["organization_id"],
           "tableTo": "organizations",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         },
         "voucher_checkout_sessions_voucher_id_vouchers_id_fk": {
           "name": "voucher_checkout_sessions_voucher_id_vouchers_id_fk",
           "tableFrom": "voucher_checkout_sessions",
-          "columnsFrom": [
-            "voucher_id"
-          ],
+          "columnsFrom": ["voucher_id"],
           "tableTo": "vouchers",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         }
@@ -5851,9 +5609,7 @@
           "name": "policy_voucher_checkout_sessions_isolation",
           "as": "PERMISSIVE",
           "for": "ALL",
-          "to": [
-            "authenticated"
-          ],
+          "to": ["authenticated"],
           "using": "\"voucher_checkout_sessions\".\"organization_id\" = (current_setting('app.org_id')::uuid)"
         }
       },
@@ -5953,13 +5709,9 @@
         "vouchers_organization_id_organizations_id_fk": {
           "name": "vouchers_organization_id_organizations_id_fk",
           "tableFrom": "vouchers",
-          "columnsFrom": [
-            "organization_id"
-          ],
+          "columnsFrom": ["organization_id"],
           "tableTo": "organizations",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         }
@@ -5971,9 +5723,7 @@
           "name": "policy_vouchers_isolation",
           "as": "PERMISSIVE",
           "for": "ALL",
-          "to": [
-            "authenticated"
-          ],
+          "to": ["authenticated"],
           "using": "\"vouchers\".\"organization_id\" = (current_setting('app.org_id')::uuid)"
         }
       },
@@ -6055,9 +5805,7 @@
       "uniqueConstraints": {
         "achievements_code_unique": {
           "name": "achievements_code_unique",
-          "columns": [
-            "code"
-          ],
+          "columns": ["code"],
           "nullsNotDistinct": false
         }
       },
@@ -6066,9 +5814,7 @@
           "name": "policy_achievements_isolation",
           "as": "PERMISSIVE",
           "for": "ALL",
-          "to": [
-            "authenticated"
-          ],
+          "to": ["authenticated"],
           "using": "\"achievements\".\"organization_id\" = (current_setting('app.org_id')::uuid)"
         }
       },
@@ -6128,26 +5874,18 @@
         "achievements_log_patient_id_patients_id_fk": {
           "name": "achievements_log_patient_id_patients_id_fk",
           "tableFrom": "achievements_log",
-          "columnsFrom": [
-            "patient_id"
-          ],
+          "columnsFrom": ["patient_id"],
           "tableTo": "patients",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         },
         "achievements_log_achievement_id_achievements_id_fk": {
           "name": "achievements_log_achievement_id_achievements_id_fk",
           "tableFrom": "achievements_log",
-          "columnsFrom": [
-            "achievement_id"
-          ],
+          "columnsFrom": ["achievement_id"],
           "tableTo": "achievements",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         }
@@ -6159,9 +5897,7 @@
           "name": "policy_achievements_log_isolation",
           "as": "PERMISSIVE",
           "for": "ALL",
-          "to": [
-            "authenticated"
-          ],
+          "to": ["authenticated"],
           "using": "\"achievements_log\".\"organization_id\" = (current_setting('app.org_id')::uuid)"
         }
       },
@@ -6232,13 +5968,9 @@
         "daily_quests_patient_id_patients_id_fk": {
           "name": "daily_quests_patient_id_patients_id_fk",
           "tableFrom": "daily_quests",
-          "columnsFrom": [
-            "patient_id"
-          ],
+          "columnsFrom": ["patient_id"],
           "tableTo": "patients",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         }
@@ -6247,10 +5979,7 @@
       "uniqueConstraints": {
         "daily_quests_patient_id_date_unique": {
           "name": "daily_quests_patient_id_date_unique",
-          "columns": [
-            "patient_id",
-            "date"
-          ],
+          "columns": ["patient_id", "date"],
           "nullsNotDistinct": false
         }
       },
@@ -6259,9 +5988,7 @@
           "name": "policy_daily_quests_isolation",
           "as": "PERMISSIVE",
           "for": "ALL",
-          "to": [
-            "authenticated"
-          ],
+          "to": ["authenticated"],
           "using": "\"daily_quests\".\"organization_id\" = (current_setting('app.org_id')::uuid)"
         }
       },
@@ -6352,13 +6079,9 @@
         "patient_gamification_patient_id_patients_id_fk": {
           "name": "patient_gamification_patient_id_patients_id_fk",
           "tableFrom": "patient_gamification",
-          "columnsFrom": [
-            "patient_id"
-          ],
+          "columnsFrom": ["patient_id"],
           "tableTo": "patients",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         }
@@ -6367,9 +6090,7 @@
       "uniqueConstraints": {
         "patient_gamification_patient_id_unique": {
           "name": "patient_gamification_patient_id_unique",
-          "columns": [
-            "patient_id"
-          ],
+          "columns": ["patient_id"],
           "nullsNotDistinct": false
         }
       },
@@ -6378,9 +6099,7 @@
           "name": "policy_patient_gamification_isolation",
           "as": "PERMISSIVE",
           "for": "ALL",
-          "to": [
-            "authenticated"
-          ],
+          "to": ["authenticated"],
           "using": "\"patient_gamification\".\"organization_id\" = (current_setting('app.org_id')::uuid)"
         }
       },
@@ -6447,13 +6166,9 @@
         "xp_transactions_patient_id_patients_id_fk": {
           "name": "xp_transactions_patient_id_patients_id_fk",
           "tableFrom": "xp_transactions",
-          "columnsFrom": [
-            "patient_id"
-          ],
+          "columnsFrom": ["patient_id"],
           "tableTo": "patients",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         }
@@ -6465,9 +6180,7 @@
           "name": "policy_xp_transactions_isolation",
           "as": "PERMISSIVE",
           "for": "ALL",
-          "to": [
-            "authenticated"
-          ],
+          "to": ["authenticated"],
           "using": "\"xp_transactions\".\"organization_id\" = (current_setting('app.org_id')::uuid)"
         }
       },
@@ -6601,13 +6314,9 @@
         "goals_medical_record_id_medical_records_id_fk": {
           "name": "goals_medical_record_id_medical_records_id_fk",
           "tableFrom": "goals",
-          "columnsFrom": [
-            "medical_record_id"
-          ],
+          "columnsFrom": ["medical_record_id"],
           "tableTo": "medical_records",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         }
@@ -6788,13 +6497,9 @@
         "medical_records_patient_id_patients_id_fk": {
           "name": "medical_records_patient_id_patients_id_fk",
           "tableFrom": "medical_records",
-          "columnsFrom": [
-            "patient_id"
-          ],
+          "columnsFrom": ["patient_id"],
           "tableTo": "patients",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         }
@@ -6806,9 +6511,7 @@
           "name": "policy_medical_records_isolation",
           "as": "PERMISSIVE",
           "for": "ALL",
-          "to": [
-            "authenticated"
-          ],
+          "to": ["authenticated"],
           "using": "\"medical_records\".\"organization_id\" = (current_setting('app.org_id')::uuid)"
         }
       },
@@ -6941,13 +6644,9 @@
         "pathologies_medical_record_id_medical_records_id_fk": {
           "name": "pathologies_medical_record_id_medical_records_id_fk",
           "tableFrom": "pathologies",
-          "columnsFrom": [
-            "medical_record_id"
-          ],
+          "columnsFrom": ["medical_record_id"],
           "tableTo": "medical_records",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         }
@@ -7421,9 +7120,7 @@
       "uniqueConstraints": {
         "patients_cpf_unique": {
           "name": "patients_cpf_unique",
-          "columns": [
-            "cpf"
-          ],
+          "columns": ["cpf"],
           "nullsNotDistinct": false
         }
       },
@@ -7432,9 +7129,7 @@
           "name": "policy_patients_isolation",
           "as": "PERMISSIVE",
           "for": "ALL",
-          "to": [
-            "authenticated"
-          ],
+          "to": ["authenticated"],
           "using": "\"patients\".\"organization_id\" = (current_setting('app.org_id')::uuid)"
         }
       },
@@ -7550,13 +7245,9 @@
         "surgeries_medical_record_id_medical_records_id_fk": {
           "name": "surgeries_medical_record_id_medical_records_id_fk",
           "tableFrom": "surgeries",
-          "columnsFrom": [
-            "medical_record_id"
-          ],
+          "columnsFrom": ["medical_record_id"],
           "tableTo": "medical_records",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         }
@@ -7890,26 +7581,18 @@
         "session_attachments_session_id_sessions_id_fk": {
           "name": "session_attachments_session_id_sessions_id_fk",
           "tableFrom": "session_attachments",
-          "columnsFrom": [
-            "session_id"
-          ],
+          "columnsFrom": ["session_id"],
           "tableTo": "sessions",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         },
         "session_attachments_patient_id_patients_id_fk": {
           "name": "session_attachments_patient_id_patients_id_fk",
           "tableFrom": "session_attachments",
-          "columnsFrom": [
-            "patient_id"
-          ],
+          "columnsFrom": ["patient_id"],
           "tableTo": "patients",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         }
@@ -7921,9 +7604,7 @@
           "name": "policy_session_attachments_isolation",
           "as": "PERMISSIVE",
           "for": "ALL",
-          "to": [
-            "authenticated"
-          ],
+          "to": ["authenticated"],
           "using": "\"session_attachments\".\"organization_id\" = (current_setting('app.org_id')::uuid)"
         }
       },
@@ -8057,9 +7738,7 @@
           "name": "policy_session_templates_isolation",
           "as": "PERMISSIVE",
           "for": "ALL",
-          "to": [
-            "authenticated"
-          ],
+          "to": ["authenticated"],
           "using": "\"session_templates\".\"organization_id\" = (current_setting('app.org_id')::uuid)"
         }
       },
@@ -8459,26 +8138,18 @@
         "sessions_patient_id_patients_id_fk": {
           "name": "sessions_patient_id_patients_id_fk",
           "tableFrom": "sessions",
-          "columnsFrom": [
-            "patient_id"
-          ],
+          "columnsFrom": ["patient_id"],
           "tableTo": "patients",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         },
         "sessions_appointment_id_appointments_id_fk": {
           "name": "sessions_appointment_id_appointments_id_fk",
           "tableFrom": "sessions",
-          "columnsFrom": [
-            "appointment_id"
-          ],
+          "columnsFrom": ["appointment_id"],
           "tableTo": "appointments",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "set null"
         }
@@ -8490,9 +8161,7 @@
           "name": "policy_sessions_isolation",
           "as": "PERMISSIVE",
           "for": "ALL",
-          "to": [
-            "authenticated"
-          ],
+          "to": ["authenticated"],
           "using": "\"sessions\".\"organization_id\" = (current_setting('app.org_id')::uuid)"
         }
       },
@@ -8734,9 +8403,7 @@
       "uniqueConstraints": {
         "exercise_protocols_slug_unique": {
           "name": "exercise_protocols_slug_unique",
-          "columns": [
-            "slug"
-          ],
+          "columns": ["slug"],
           "nullsNotDistinct": false
         }
       },
@@ -8881,13 +8548,9 @@
         "protocol_exercises_protocol_id_exercise_protocols_id_fk": {
           "name": "protocol_exercises_protocol_id_exercise_protocols_id_fk",
           "tableFrom": "protocol_exercises",
-          "columnsFrom": [
-            "protocol_id"
-          ],
+          "columnsFrom": ["protocol_id"],
           "tableTo": "exercise_protocols",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         }
@@ -9014,9 +8677,7 @@
           "name": "policy_wiki_dictionary_hybrid_isolation",
           "as": "PERMISSIVE",
           "for": "ALL",
-          "to": [
-            "authenticated"
-          ],
+          "to": ["authenticated"],
           "using": "(\"wiki_dictionary\".\"organization_id\" IS NULL) OR (\"wiki_dictionary\".\"organization_id\" = (current_setting('app.org_id')::uuid))"
         }
       },
@@ -9095,13 +8756,9 @@
         "wiki_page_versions_page_id_wiki_pages_id_fk": {
           "name": "wiki_page_versions_page_id_wiki_pages_id_fk",
           "tableFrom": "wiki_page_versions",
-          "columnsFrom": [
-            "page_id"
-          ],
+          "columnsFrom": ["page_id"],
           "tableTo": "wiki_pages",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         }
@@ -9113,9 +8770,7 @@
           "name": "policy_wiki_page_versions_hybrid_isolation",
           "as": "PERMISSIVE",
           "for": "ALL",
-          "to": [
-            "authenticated"
-          ],
+          "to": ["authenticated"],
           "using": "(\"wiki_page_versions\".\"organization_id\" IS NULL) OR (\"wiki_page_versions\".\"organization_id\" = (current_setting('app.org_id')::uuid))"
         }
       },
@@ -9274,9 +8929,7 @@
       "uniqueConstraints": {
         "wiki_pages_slug_unique": {
           "name": "wiki_pages_slug_unique",
-          "columns": [
-            "slug"
-          ],
+          "columns": ["slug"],
           "nullsNotDistinct": false
         }
       },
@@ -9285,9 +8938,7 @@
           "name": "policy_wiki_pages_hybrid_isolation",
           "as": "PERMISSIVE",
           "for": "ALL",
-          "to": [
-            "authenticated"
-          ],
+          "to": ["authenticated"],
           "using": "(\"wiki_pages\".\"organization_id\" IS NULL) OR (\"wiki_pages\".\"organization_id\" = (current_setting('app.org_id')::uuid))"
         }
       },
@@ -9354,13 +9005,9 @@
         "task_acknowledgments_task_id_tasks_id_fk": {
           "name": "task_acknowledgments_task_id_tasks_id_fk",
           "tableFrom": "task_acknowledgments",
-          "columnsFrom": [
-            "task_id"
-          ],
+          "columnsFrom": ["task_id"],
           "tableTo": "tasks",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         }
@@ -9372,9 +9019,7 @@
           "name": "policy_task_acknowledgments_isolation",
           "as": "PERMISSIVE",
           "for": "ALL",
-          "to": [
-            "authenticated"
-          ],
+          "to": ["authenticated"],
           "using": "\"task_acknowledgments\".\"organization_id\" = (current_setting('app.org_id')::uuid)"
         }
       },
@@ -9429,13 +9074,9 @@
         "task_assignments_task_id_tasks_id_fk": {
           "name": "task_assignments_task_id_tasks_id_fk",
           "tableFrom": "task_assignments",
-          "columnsFrom": [
-            "task_id"
-          ],
+          "columnsFrom": ["task_id"],
           "tableTo": "tasks",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         }
@@ -9447,9 +9088,7 @@
           "name": "policy_task_assignments_isolation",
           "as": "PERMISSIVE",
           "for": "ALL",
-          "to": [
-            "authenticated"
-          ],
+          "to": ["authenticated"],
           "using": "\"task_assignments\".\"organization_id\" = (current_setting('app.org_id')::uuid)"
         }
       },
@@ -9510,13 +9149,9 @@
         "task_audit_logs_task_id_tasks_id_fk": {
           "name": "task_audit_logs_task_id_tasks_id_fk",
           "tableFrom": "task_audit_logs",
-          "columnsFrom": [
-            "task_id"
-          ],
+          "columnsFrom": ["task_id"],
           "tableTo": "tasks",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         }
@@ -9528,9 +9163,7 @@
           "name": "policy_task_audit_logs_isolation",
           "as": "PERMISSIVE",
           "for": "ALL",
-          "to": [
-            "authenticated"
-          ],
+          "to": ["authenticated"],
           "using": "\"task_audit_logs\".\"organization_id\" = (current_setting('app.org_id')::uuid)"
         }
       },
@@ -9596,9 +9229,7 @@
           "name": "policy_task_boards_isolation",
           "as": "PERMISSIVE",
           "for": "ALL",
-          "to": [
-            "authenticated"
-          ],
+          "to": ["authenticated"],
           "using": "\"task_boards\".\"organization_id\" = (current_setting('app.org_id')::uuid)"
         }
       },
@@ -9661,13 +9292,9 @@
         "task_columns_board_id_task_boards_id_fk": {
           "name": "task_columns_board_id_task_boards_id_fk",
           "tableFrom": "task_columns",
-          "columnsFrom": [
-            "board_id"
-          ],
+          "columnsFrom": ["board_id"],
           "tableTo": "task_boards",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         }
@@ -9679,9 +9306,7 @@
           "name": "policy_task_columns_isolation",
           "as": "PERMISSIVE",
           "for": "ALL",
-          "to": [
-            "authenticated"
-          ],
+          "to": ["authenticated"],
           "using": "\"task_columns\".\"organization_id\" = (current_setting('app.org_id')::uuid)"
         }
       },
@@ -9743,13 +9368,9 @@
         "task_visibility_task_id_tasks_id_fk": {
           "name": "task_visibility_task_id_tasks_id_fk",
           "tableFrom": "task_visibility",
-          "columnsFrom": [
-            "task_id"
-          ],
+          "columnsFrom": ["task_id"],
           "tableTo": "tasks",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         }
@@ -9761,9 +9382,7 @@
           "name": "policy_task_visibility_isolation",
           "as": "PERMISSIVE",
           "for": "ALL",
-          "to": [
-            "authenticated"
-          ],
+          "to": ["authenticated"],
           "using": "\"task_visibility\".\"organization_id\" = (current_setting('app.org_id')::uuid)"
         }
       },
@@ -9870,13 +9489,9 @@
         "tasks_column_id_task_columns_id_fk": {
           "name": "tasks_column_id_task_columns_id_fk",
           "tableFrom": "tasks",
-          "columnsFrom": [
-            "column_id"
-          ],
+          "columnsFrom": ["column_id"],
           "tableTo": "task_columns",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         }
@@ -9888,9 +9503,7 @@
           "name": "policy_tasks_isolation",
           "as": "PERMISSIVE",
           "for": "ALL",
-          "to": [
-            "authenticated"
-          ],
+          "to": ["authenticated"],
           "using": "\"tasks\".\"organization_id\" = (current_setting('app.org_id')::uuid)"
         }
       },
@@ -9942,9 +9555,7 @@
           "name": "policy_exercise_template_categories_hybrid_isolation",
           "as": "PERMISSIVE",
           "for": "ALL",
-          "to": [
-            "authenticated"
-          ],
+          "to": ["authenticated"],
           "using": "(\"exercise_template_categories\".\"organization_id\" IS NULL) OR (\"exercise_template_categories\".\"organization_id\" = (current_setting('app.org_id')::uuid))"
         }
       },
@@ -10062,13 +9673,9 @@
         "exercise_template_items_template_id_exercise_templates_id_fk": {
           "name": "exercise_template_items_template_id_exercise_templates_id_fk",
           "tableFrom": "exercise_template_items",
-          "columnsFrom": [
-            "template_id"
-          ],
+          "columnsFrom": ["template_id"],
           "tableTo": "exercise_templates",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         }
@@ -10080,9 +9687,7 @@
           "name": "policy_exercise_template_items_isolation",
           "as": "PERMISSIVE",
           "for": "ALL",
-          "to": [
-            "authenticated"
-          ],
+          "to": ["authenticated"],
           "using": "\"exercise_template_items\".\"organization_id\" = (current_setting('app.org_id')::uuid)"
         }
       },
@@ -10275,9 +9880,7 @@
           "name": "policy_exercise_templates_hybrid_isolation",
           "as": "PERMISSIVE",
           "for": "ALL",
-          "to": [
-            "authenticated"
-          ],
+          "to": ["authenticated"],
           "using": "(\"exercise_templates\".\"organization_id\" IS NULL) OR (\"exercise_templates\".\"organization_id\" = (current_setting('app.org_id')::uuid))"
         }
       },
@@ -10386,13 +9989,9 @@
         "jules_learnings_pr_review_id_jules_pr_reviews_id_fk": {
           "name": "jules_learnings_pr_review_id_jules_pr_reviews_id_fk",
           "tableFrom": "jules_learnings",
-          "columnsFrom": [
-            "pr_review_id"
-          ],
+          "columnsFrom": ["pr_review_id"],
           "tableTo": "jules_pr_reviews",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "set null"
         }
@@ -10610,13 +10209,9 @@
         "wa_assignments_conversation_id_wa_conversations_id_fk": {
           "name": "wa_assignments_conversation_id_wa_conversations_id_fk",
           "tableFrom": "wa_assignments",
-          "columnsFrom": [
-            "conversation_id"
-          ],
+          "columnsFrom": ["conversation_id"],
           "tableTo": "wa_conversations",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         }
@@ -10628,9 +10223,7 @@
           "name": "policy_wa_assignments_isolation",
           "as": "PERMISSIVE",
           "for": "ALL",
-          "to": [
-            "authenticated"
-          ],
+          "to": ["authenticated"],
           "using": "\"wa_assignments\".\"organization_id\" = (current_setting('app.org_id')::uuid)"
         }
       },
@@ -10750,9 +10343,7 @@
           "name": "policy_wa_automation_rules_isolation",
           "as": "PERMISSIVE",
           "for": "ALL",
-          "to": [
-            "authenticated"
-          ],
+          "to": ["authenticated"],
           "using": "\"wa_automation_rules\".\"organization_id\" = (current_setting('app.org_id')::uuid)"
         }
       },
@@ -10823,26 +10414,18 @@
         "wa_conversation_tags_conversation_id_wa_conversations_id_fk": {
           "name": "wa_conversation_tags_conversation_id_wa_conversations_id_fk",
           "tableFrom": "wa_conversation_tags",
-          "columnsFrom": [
-            "conversation_id"
-          ],
+          "columnsFrom": ["conversation_id"],
           "tableTo": "wa_conversations",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         },
         "wa_conversation_tags_tag_id_wa_tags_id_fk": {
           "name": "wa_conversation_tags_tag_id_wa_tags_id_fk",
           "tableFrom": "wa_conversation_tags",
-          "columnsFrom": [
-            "tag_id"
-          ],
+          "columnsFrom": ["tag_id"],
           "tableTo": "wa_tags",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         }
@@ -10854,9 +10437,7 @@
           "name": "policy_wa_conversation_tags_isolation",
           "as": "PERMISSIVE",
           "for": "ALL",
-          "to": [
-            "authenticated"
-          ],
+          "to": ["authenticated"],
           "using": "\"wa_conversation_tags\".\"organization_id\" = (current_setting('app.org_id')::uuid)"
         }
       },
@@ -11118,26 +10699,18 @@
         "wa_conversations_contact_id_whatsapp_contacts_id_fk": {
           "name": "wa_conversations_contact_id_whatsapp_contacts_id_fk",
           "tableFrom": "wa_conversations",
-          "columnsFrom": [
-            "contact_id"
-          ],
+          "columnsFrom": ["contact_id"],
           "tableTo": "whatsapp_contacts",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         },
         "wa_conversations_patient_id_patients_id_fk": {
           "name": "wa_conversations_patient_id_patients_id_fk",
           "tableFrom": "wa_conversations",
-          "columnsFrom": [
-            "patient_id"
-          ],
+          "columnsFrom": ["patient_id"],
           "tableTo": "patients",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "set null"
         }
@@ -11149,9 +10722,7 @@
           "name": "policy_wa_conversations_isolation",
           "as": "PERMISSIVE",
           "for": "ALL",
-          "to": [
-            "authenticated"
-          ],
+          "to": ["authenticated"],
           "using": "\"wa_conversations\".\"organization_id\" = (current_setting('app.org_id')::uuid)"
         }
       },
@@ -11222,13 +10793,9 @@
         "wa_internal_notes_conversation_id_wa_conversations_id_fk": {
           "name": "wa_internal_notes_conversation_id_wa_conversations_id_fk",
           "tableFrom": "wa_internal_notes",
-          "columnsFrom": [
-            "conversation_id"
-          ],
+          "columnsFrom": ["conversation_id"],
           "tableTo": "wa_conversations",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         }
@@ -11240,9 +10807,7 @@
           "name": "policy_wa_internal_notes_isolation",
           "as": "PERMISSIVE",
           "for": "ALL",
-          "to": [
-            "authenticated"
-          ],
+          "to": ["authenticated"],
           "using": "\"wa_internal_notes\".\"organization_id\" = (current_setting('app.org_id')::uuid)"
         }
       },
@@ -11466,26 +11031,18 @@
         "wa_messages_conversation_id_wa_conversations_id_fk": {
           "name": "wa_messages_conversation_id_wa_conversations_id_fk",
           "tableFrom": "wa_messages",
-          "columnsFrom": [
-            "conversation_id"
-          ],
+          "columnsFrom": ["conversation_id"],
           "tableTo": "wa_conversations",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         },
         "wa_messages_contact_id_whatsapp_contacts_id_fk": {
           "name": "wa_messages_contact_id_whatsapp_contacts_id_fk",
           "tableFrom": "wa_messages",
-          "columnsFrom": [
-            "contact_id"
-          ],
+          "columnsFrom": ["contact_id"],
           "tableTo": "whatsapp_contacts",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         }
@@ -11497,9 +11054,7 @@
           "name": "policy_wa_messages_isolation",
           "as": "PERMISSIVE",
           "for": "ALL",
-          "to": [
-            "authenticated"
-          ],
+          "to": ["authenticated"],
           "using": "\"wa_messages\".\"organization_id\" = (current_setting('app.org_id')::uuid)"
         }
       },
@@ -11577,13 +11132,9 @@
         "wa_opt_in_out_contact_id_whatsapp_contacts_id_fk": {
           "name": "wa_opt_in_out_contact_id_whatsapp_contacts_id_fk",
           "tableFrom": "wa_opt_in_out",
-          "columnsFrom": [
-            "contact_id"
-          ],
+          "columnsFrom": ["contact_id"],
           "tableTo": "whatsapp_contacts",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         }
@@ -11595,9 +11146,7 @@
           "name": "policy_wa_opt_in_out_isolation",
           "as": "PERMISSIVE",
           "for": "ALL",
-          "to": [
-            "authenticated"
-          ],
+          "to": ["authenticated"],
           "using": "\"wa_opt_in_out\".\"organization_id\" = (current_setting('app.org_id')::uuid)"
         }
       },
@@ -11697,9 +11246,7 @@
           "name": "policy_wa_quick_replies_isolation",
           "as": "PERMISSIVE",
           "for": "ALL",
-          "to": [
-            "authenticated"
-          ],
+          "to": ["authenticated"],
           "using": "\"wa_quick_replies\".\"organization_id\" = (current_setting('app.org_id')::uuid)"
         }
       },
@@ -11823,9 +11370,7 @@
           "name": "policy_wa_raw_events_isolation",
           "as": "PERMISSIVE",
           "for": "ALL",
-          "to": [
-            "authenticated"
-          ],
+          "to": ["authenticated"],
           "using": "\"wa_raw_events\".\"organization_id\" = (current_setting('app.org_id')::uuid)"
         }
       },
@@ -11931,9 +11476,7 @@
           "name": "policy_wa_sla_config_isolation",
           "as": "PERMISSIVE",
           "for": "ALL",
-          "to": [
-            "authenticated"
-          ],
+          "to": ["authenticated"],
           "using": "\"wa_sla_config\".\"organization_id\" = (current_setting('app.org_id')::uuid)"
         }
       },
@@ -12055,26 +11598,18 @@
         "wa_sla_tracking_conversation_id_wa_conversations_id_fk": {
           "name": "wa_sla_tracking_conversation_id_wa_conversations_id_fk",
           "tableFrom": "wa_sla_tracking",
-          "columnsFrom": [
-            "conversation_id"
-          ],
+          "columnsFrom": ["conversation_id"],
           "tableTo": "wa_conversations",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         },
         "wa_sla_tracking_sla_config_id_wa_sla_config_id_fk": {
           "name": "wa_sla_tracking_sla_config_id_wa_sla_config_id_fk",
           "tableFrom": "wa_sla_tracking",
-          "columnsFrom": [
-            "sla_config_id"
-          ],
+          "columnsFrom": ["sla_config_id"],
           "tableTo": "wa_sla_config",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         }
@@ -12086,9 +11621,7 @@
           "name": "policy_wa_sla_tracking_isolation",
           "as": "PERMISSIVE",
           "for": "ALL",
-          "to": [
-            "authenticated"
-          ],
+          "to": ["authenticated"],
           "using": "\"wa_sla_tracking\".\"organization_id\" = (current_setting('app.org_id')::uuid)"
         }
       },
@@ -12157,9 +11690,7 @@
           "name": "policy_wa_tags_isolation",
           "as": "PERMISSIVE",
           "for": "ALL",
-          "to": [
-            "authenticated"
-          ],
+          "to": ["authenticated"],
           "using": "\"wa_tags\".\"organization_id\" = (current_setting('app.org_id')::uuid)"
         }
       },
@@ -12328,13 +11859,9 @@
         "whatsapp_contacts_patient_id_patients_id_fk": {
           "name": "whatsapp_contacts_patient_id_patients_id_fk",
           "tableFrom": "whatsapp_contacts",
-          "columnsFrom": [
-            "patient_id"
-          ],
+          "columnsFrom": ["patient_id"],
           "tableTo": "patients",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "set null"
         }
@@ -12346,9 +11873,7 @@
           "name": "policy_whatsapp_contacts_isolation",
           "as": "PERMISSIVE",
           "for": "ALL",
-          "to": [
-            "authenticated"
-          ],
+          "to": ["authenticated"],
           "using": "\"whatsapp_contacts\".\"organization_id\" = (current_setting('app.org_id')::uuid)"
         }
       },
@@ -12495,9 +12020,7 @@
       "uniqueConstraints": {
         "precadastro_tokens_token_unique": {
           "name": "precadastro_tokens_token_unique",
-          "columns": [
-            "token"
-          ],
+          "columns": ["token"],
           "nullsNotDistinct": false
         }
       },
@@ -12506,9 +12029,7 @@
           "name": "policy_precadastro_tokens_isolation",
           "as": "PERMISSIVE",
           "for": "ALL",
-          "to": [
-            "authenticated"
-          ],
+          "to": ["authenticated"],
           "using": "\"precadastro_tokens\".\"organization_id\" = (current_setting('app.org_id')::uuid)"
         }
       },
@@ -12662,13 +12183,9 @@
         "precadastros_token_id_precadastro_tokens_id_fk": {
           "name": "precadastros_token_id_precadastro_tokens_id_fk",
           "tableFrom": "precadastros",
-          "columnsFrom": [
-            "token_id"
-          ],
+          "columnsFrom": ["token_id"],
           "tableTo": "precadastro_tokens",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         }
@@ -12680,19 +12197,14 @@
           "name": "policy_precadastros_public_insert",
           "as": "PERMISSIVE",
           "for": "INSERT",
-          "to": [
-            "anon",
-            "authenticated"
-          ],
+          "to": ["anon", "authenticated"],
           "withCheck": "true"
         },
         "policy_precadastros_tenant_isolation": {
           "name": "policy_precadastros_tenant_isolation",
           "as": "PERMISSIVE",
           "for": "ALL",
-          "to": [
-            "authenticated"
-          ],
+          "to": ["authenticated"],
           "using": "\"precadastros\".\"organization_id\" = (current_setting('app.org_id')::uuid)"
         }
       },
@@ -12799,26 +12311,18 @@
         "exercise_media_attachments_exercise_id_exercises_id_fk": {
           "name": "exercise_media_attachments_exercise_id_exercises_id_fk",
           "tableFrom": "exercise_media_attachments",
-          "columnsFrom": [
-            "exercise_id"
-          ],
+          "columnsFrom": ["exercise_id"],
           "tableTo": "exercises",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         },
         "exercise_media_attachments_media_id_media_gallery_id_fk": {
           "name": "exercise_media_attachments_media_id_media_gallery_id_fk",
           "tableFrom": "exercise_media_attachments",
-          "columnsFrom": [
-            "media_id"
-          ],
+          "columnsFrom": ["media_id"],
           "tableTo": "media_gallery",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "set null"
         }
@@ -12970,13 +12474,9 @@
         "media_gallery_organization_id_organizations_id_fk": {
           "name": "media_gallery_organization_id_organizations_id_fk",
           "tableFrom": "media_gallery",
-          "columnsFrom": [
-            "organization_id"
-          ],
+          "columnsFrom": ["organization_id"],
           "tableTo": "organizations",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         }
@@ -13009,132 +12509,67 @@
     "public.appointment_type": {
       "name": "appointment_type",
       "schema": "public",
-      "values": [
-        "evaluation",
-        "session",
-        "reassessment",
-        "group",
-        "return"
-      ]
+      "values": ["evaluation", "session", "reassessment", "group", "return"]
     },
     "public.payment_status": {
       "name": "payment_status",
       "schema": "public",
-      "values": [
-        "pending",
-        "paid",
-        "partial",
-        "refunded"
-      ]
+      "values": ["pending", "paid", "partial", "refunded"]
     },
     "public.biomechanics_assessment_type": {
       "name": "biomechanics_assessment_type",
       "schema": "public",
-      "values": [
-        "static_posture",
-        "gait_analysis",
-        "running_analysis",
-        "functional_movement"
-      ]
+      "values": ["static_posture", "gait_analysis", "running_analysis", "functional_movement"]
     },
     "public.exercise_difficulty": {
       "name": "exercise_difficulty",
       "schema": "public",
-      "values": [
-        "iniciante",
-        "intermediario",
-        "avancado"
-      ]
+      "values": ["iniciante", "intermediario", "avancado"]
     },
     "public.exercise_protocol_type": {
       "name": "exercise_protocol_type",
       "schema": "public",
-      "values": [
-        "pos_operatorio",
-        "patologia",
-        "preventivo",
-        "esportivo",
-        "funcional"
-      ]
+      "values": ["pos_operatorio", "patologia", "preventivo", "esportivo", "funcional"]
     },
     "public.package_status": {
       "name": "package_status",
       "schema": "public",
-      "values": [
-        "active",
-        "expired",
-        "used",
-        "cancelled"
-      ]
+      "values": ["active", "expired", "used", "cancelled"]
     },
     "public.gender": {
       "name": "gender",
       "schema": "public",
-      "values": [
-        "M",
-        "F",
-        "O"
-      ]
+      "values": ["M", "F", "O"]
     },
     "public.goal_status": {
       "name": "goal_status",
       "schema": "public",
-      "values": [
-        "pending",
-        "in_progress",
-        "achieved",
-        "abandoned"
-      ]
+      "values": ["pending", "in_progress", "achieved", "abandoned"]
     },
     "public.pathology_status": {
       "name": "pathology_status",
       "schema": "public",
-      "values": [
-        "active",
-        "treated",
-        "monitoring"
-      ]
+      "values": ["active", "treated", "monitoring"]
     },
     "public.file_category": {
       "name": "file_category",
       "schema": "public",
-      "values": [
-        "exam",
-        "imaging",
-        "document",
-        "before_after",
-        "other"
-      ]
+      "values": ["exam", "imaging", "document", "before_after", "other"]
     },
     "public.file_type": {
       "name": "file_type",
       "schema": "public",
-      "values": [
-        "pdf",
-        "jpg",
-        "png",
-        "docx",
-        "other"
-      ]
+      "values": ["pdf", "jpg", "png", "docx", "other"]
     },
     "public.session_status": {
       "name": "session_status",
       "schema": "public",
-      "values": [
-        "draft",
-        "finalized",
-        "cancelled"
-      ]
+      "values": ["draft", "finalized", "cancelled"]
     },
     "public.evidence_level": {
       "name": "evidence_level",
       "schema": "public",
-      "values": [
-        "A",
-        "B",
-        "C",
-        "D"
-      ]
+      "values": ["A", "B", "C", "D"]
     },
     "public.protocol_type": {
       "name": "protocol_type",
@@ -13154,21 +12589,12 @@
     "public.task_priority": {
       "name": "task_priority",
       "schema": "public",
-      "values": [
-        "low",
-        "medium",
-        "high",
-        "urgent"
-      ]
+      "values": ["low", "medium", "high", "urgent"]
     },
     "public.media_type": {
       "name": "media_type",
       "schema": "public",
-      "values": [
-        "image",
-        "video",
-        "youtube"
-      ]
+      "values": ["image", "video", "youtube"]
     }
   },
   "schemas": {},

@@ -22,7 +22,7 @@ const AutoPrescribeSchema = z.object({
 app.post("/suggest", requireAuth, async (c) => {
   const user = c.get("user");
   const body = await c.req.json().catch(() => ({}));
-  
+
   const validation = AutoPrescribeSchema.safeParse(body);
   if (!validation.success) {
     return c.json({ error: "Dados inválidos", details: validation.error.format() }, 400);
@@ -38,7 +38,7 @@ app.post("/suggest", requireAuth, async (c) => {
       FROM biomechanics_assessments 
       WHERE id = ${assessmentId}::uuid AND organization_id = ${user.organizationId}::uuid
     `;
-    
+
     const assessment = assessmentRes.rows[0];
     if (!assessment) return c.json({ error: "Avaliação não encontrada" }, 404);
 
@@ -54,12 +54,12 @@ app.post("/suggest", requireAuth, async (c) => {
         const query = `Exercícios de fisioterapia para: ${evaluation.recommendationKeywords.join(", ")}`;
         const searchResult = await c.env.AI_SEARCH.search({
           messages: [{ role: "user", content: query }],
-          limit: 3
+          limit: 3,
         });
         suggestedExercises = searchResult.sources.map((s: any) => ({
           title: s.title || "Exercício Sugerido",
           description: s.content.slice(0, 200) + "...",
-          source: "Literature"
+          source: "Literature",
         }));
       } catch (err) {
         console.error("[AutoPrescribe/RAG] Failed to search literature:", err);
@@ -72,14 +72,19 @@ app.post("/suggest", requireAuth, async (c) => {
         Como especialista em biomecânica, sugira 3 exercícios de reabilitação para um paciente com: ${evaluation.findings.join(", ")}.
         Responda apenas um array JSON: [{"title": "...", "description": "..."}]
       `;
-      const aiRes = await runAi(c.env, WORKERS_AI_MODELS.llama_3_1_8b, {
-        messages: [{ role: "user", content: llmPrompt }]
-      }, { cache: false });
-      
+      const aiRes = await runAi(
+        c.env,
+        WORKERS_AI_MODELS.llama_3_1_8b,
+        {
+          messages: [{ role: "user", content: llmPrompt }],
+        },
+        { cache: false },
+      );
+
       try {
         const jsonMatch = aiRes.response?.match(/\[[\s\S]*\]/);
         if (jsonMatch) suggestedExercises = JSON.parse(jsonMatch[0]);
-      } catch (e) {}
+      } catch {}
     }
 
     // 5. Armazenar no Durable Object para a próxima evolução
@@ -90,14 +95,14 @@ app.post("/suggest", requireAuth, async (c) => {
         assessmentId,
         evaluation,
         suggestions: suggestedExercises,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
     }
 
     return c.json({
       success: true,
       evaluation,
-      suggestions: suggestedExercises
+      suggestions: suggestedExercises,
     });
   } catch (error: any) {
     console.error("[AutoPrescribe] Error:", error);

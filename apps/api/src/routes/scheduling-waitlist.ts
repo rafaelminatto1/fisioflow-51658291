@@ -19,7 +19,8 @@ app.get("/waitlist", requireAuth, async (c) => {
     const { status, priority } = c.req.query();
     const params: unknown[] = [user.organizationId];
     let idx = 2;
-    let sql = "SELECT w.*, p.name as patient_name, p.avatar_url as patient_avatar_url FROM waitlist w LEFT JOIN patients p ON w.patient_id = p.id WHERE w.organization_id = $1";
+    let sql =
+      "SELECT w.*, p.name as patient_name, p.avatar_url as patient_avatar_url FROM waitlist w LEFT JOIN patients p ON w.patient_id = p.id WHERE w.organization_id = $1";
 
     if (status) {
       sql += ` AND w.status = $${idx++}`;

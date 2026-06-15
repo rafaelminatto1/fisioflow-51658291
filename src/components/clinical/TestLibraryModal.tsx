@@ -162,7 +162,9 @@ export function TestLibraryModal({
     return tests.filter((test) => {
       const searchLower = searchTerm.toLowerCase();
       const matchesSearch =
-        String(test.name ?? "").toLowerCase().includes(searchLower) ||
+        String(test.name ?? "")
+          .toLowerCase()
+          .includes(searchLower) ||
         String(test.name_en ?? "")
           .toLowerCase()
           .includes(searchLower) ||

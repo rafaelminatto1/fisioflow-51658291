@@ -14,6 +14,7 @@ import { PatientHelpers } from "@/types";
 import type { EvolutionData } from "./usePatientEvolutionState";
 
 import { stripHtml } from "@/lib/utils/stripHtml";
+import { parsePainDetail } from "@/lib/evolution/painDetail";
 
 export function usePatientEvolutionHandlers({
   patientId,
@@ -54,15 +55,14 @@ export function usePatientEvolutionHandlers({
     (evolution: any) => {
       const homeExercisesList = Array.isArray(evolution.home_exercises)
         ? evolution.home_exercises.map((item: any) => ({
-            id: item.id || '',
-            name: item.name || '',
-            prescription: item.prescription || '',
-            instructions: item.notes || item.instructions || '',
+            id: item.id || "",
+            name: item.name || "",
+            prescription: item.prescription || "",
+            instructions: item.notes || item.instructions || "",
           }))
         : [];
-      const homeCareExercisesString = homeExercisesList.length > 0
-        ? JSON.stringify(homeExercisesList)
-        : "";
+      const homeCareExercisesString =
+        homeExercisesList.length > 0 ? JSON.stringify(homeExercisesList) : "";
 
       // P2.3: V2 é derivado do canonical. Apenas setEvolutionData necessário.
       void homeCareExercisesString; // mantém variável para referência
@@ -90,15 +90,14 @@ export function usePatientEvolutionHandlers({
       const rawHomeExercises = content.home_exercises ?? content.homeExercises;
       const homeExercisesList = Array.isArray(rawHomeExercises)
         ? rawHomeExercises.map((item: any) => ({
-            id: item.id || '',
-            name: item.name || '',
-            prescription: item.prescription || '',
-            instructions: item.notes || item.instructions || '',
+            id: item.id || "",
+            name: item.name || "",
+            prescription: item.prescription || "",
+            instructions: item.notes || item.instructions || "",
           }))
         : [];
-      const homeCareExercisesString = homeExercisesList.length > 0
-        ? JSON.stringify(homeExercisesList)
-        : "";
+      const homeCareExercisesString =
+        homeExercisesList.length > 0 ? JSON.stringify(homeExercisesList) : "";
 
       const observacaoVal = content.observacao ?? content.body ?? "";
       const painScaleVal = content.pain_scale ?? content.painScale ?? null;
@@ -157,6 +156,8 @@ export function usePatientEvolutionHandlers({
 
     if (!patientId) return;
 
+    const painDetail = parsePainDetail(current.measurements as any, current.painScale);
+
     try {
       const record = await autoSaveMutation.mutateAsync({
         patient_id: patientId,
@@ -198,8 +199,8 @@ export function usePatientEvolutionHandlers({
             session_date: new Date().toISOString(),
             observations: stripHtml(current.observacao || ""),
             exercises_performed: current.exercises,
-            pain_level_before: current.painScale ?? undefined,
-            pain_level_after: current.painScale ?? undefined,
+            pain_level_before: painDetail.arrival ?? current.painScale ?? undefined,
+            pain_level_after: painDetail.discharge ?? current.painScale ?? undefined,
           })
           .catch(() => {});
       }

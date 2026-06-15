@@ -16,17 +16,22 @@ test("Take screenshot of New Patient Page", async ({ page }) => {
   console.log("Navegando para patients/new...");
   await page.goto("https://moocafisio.com.br/patients/new");
   await page.waitForLoadState("networkidle");
-  
-  await page.fill('input[name="full_name"], input[placeholder*="Nome"]', "Paciente Autosave Teste Screenshot");
+
+  await page.fill(
+    'input[name="full_name"], input[placeholder*="Nome"]',
+    "Paciente Autosave Teste Screenshot",
+  );
   await page.fill('input[name="phone"], input[placeholder*="telefone"]', "11999999999");
-  
-  const saveBtn = page.locator('button:has-text("Finalizar Cadastro"), button[type="submit"]').first();
+
+  const saveBtn = page
+    .locator('button:has-text("Finalizar Cadastro"), button[type="submit"]')
+    .first();
   await saveBtn.click();
-  
+
   // Wait a bit to see the result
   await page.waitForTimeout(3000);
-  
+
   // Take screenshot
-  await page.screenshot({ path: 'new-patient-error.png', fullPage: true });
+  await page.screenshot({ path: "new-patient-error.png", fullPage: true });
   console.log("Screenshot salvo como new-patient-error.png");
 });

@@ -36,6 +36,7 @@ US4 cobre 3 refactors significativos (Stream Bindings, R2 SQL pipeline, Agents S
 ## Próximo passo
 
 Quando S6 abrir:
+
 1. Criar `specs/voice-scribe-v2-agents-sdk/` (spec + plan + tasks)
 2. Criar `specs/exercise-videos-stream-bindings/`
 3. Criar `specs/sessions-r2-archive-pipeline/`

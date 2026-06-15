@@ -5,9 +5,10 @@ vi.mock("../../lib/auth", () => ({
     c.set("user", { uid: "admin-1", organizationId: "org-1", role: "admin", email: "a@x.com" });
     await next();
   }),
-  requireRole: () => vi.fn(async (_c: any, next: any) => {
-    await next();
-  }),
+  requireRole: () =>
+    vi.fn(async (_c: any, next: any) => {
+      await next();
+    }),
 }));
 
 const itemsUpload = vi.fn();
@@ -19,7 +20,9 @@ const r2List = vi.fn();
 
 function env() {
   return {
-    AI_SEARCH: { items: { upload: itemsUpload, uploadAndPoll: vi.fn(), delete: itemsDelete, list: itemsList } },
+    AI_SEARCH: {
+      items: { upload: itemsUpload, uploadAndPoll: vi.fn(), delete: itemsDelete, list: itemsList },
+    },
     CLINICAL_DOCS_BUCKET: { put: r2Put, delete: r2Delete, list: r2List },
     ANALYTICS: { writeDataPoint: vi.fn() },
     ALLOWED_ORIGINS: "*",
@@ -74,7 +77,9 @@ describe("clinical docs ingestion", () => {
 
   it("rejeita arquivo que não é PDF", async () => {
     const app = await buildApp();
-    const notPdf = new File([new Uint8Array([1, 2, 3, 4, 5])], "x.pdf", { type: "application/pdf" });
+    const notPdf = new File([new Uint8Array([1, 2, 3, 4, 5])], "x.pdf", {
+      type: "application/pdf",
+    });
     const res = await app.fetch(postForm(notPdf, "Qualquer"), env());
     expect(res.status).toBe(400);
     expect(itemsUpload).not.toHaveBeenCalled();

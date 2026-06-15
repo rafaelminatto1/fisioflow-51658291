@@ -75,8 +75,17 @@ export function useFocusTrap(isActive: boolean) {
     const firstElement = focusableElements[0];
     const lastElement = focusableElements[focusableElements.length - 1];
 
-    // Focus the first element
-    firstElement?.focus();
+    // Find if any element explicitly requests focus
+    const autoFocusElement = containerRef.current.querySelector<HTMLElement>(
+      '[data-autofocus="true"], [autofocus]'
+    );
+
+    // Focus the explicitly requested element, or fallback to the first element
+    if (autoFocusElement) {
+      autoFocusElement.focus();
+    } else {
+      firstElement?.focus();
+    }
 
     const handleTab = (e: KeyboardEvent) => {
       if (e.key !== "Tab") return;

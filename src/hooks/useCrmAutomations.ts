@@ -84,7 +84,8 @@ export function useDeleteCrmAutomation() {
 export function useCrmAutomationExecutions(id: string | null) {
   return useQuery({
     queryKey: [...KEY, "executions", id],
-    queryFn: () => (id ? crmAutomationsApi.executions(id).then((r) => r.data) : Promise.resolve([])),
+    queryFn: () =>
+      id ? crmAutomationsApi.executions(id).then((r) => r.data) : Promise.resolve([]),
     enabled: !!id,
   });
 }

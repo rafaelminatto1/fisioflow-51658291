@@ -53,12 +53,14 @@ const fiftyExercises = [
   "Mobilidade de Quadril (Ponte com Alcance Cruzado)",
   "Extensão de Quadril Ativa no Chão",
   "Flexão Ativa de Quadril em Pé (Over Hurdle)",
-  "Abdução de Quadril Ativa em Pé (Swing Lateral)"
+  "Abdução de Quadril Ativa em Pé (Swing Lateral)",
 ];
 
 function generateSlug(name) {
-  return name.toLowerCase()
-    .normalize("NFD").replace(/[\u0300-\u036f]/g, "") // remove acentos
+  return name
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "") // remove acentos
     .replace(/[^a-z0-9\s]/g, "") // remove símbolos
     .trim()
     .replace(/\s+/g, "-");
@@ -86,4 +88,6 @@ async function run() {
   console.log(`✅ ${count} Novos exercícios (sem preenchimento) inseridos com sucesso!`);
 }
 
-run().catch(console.error).finally(() => process.exit(0));
+run()
+  .catch(console.error)
+  .finally(() => process.exit(0));

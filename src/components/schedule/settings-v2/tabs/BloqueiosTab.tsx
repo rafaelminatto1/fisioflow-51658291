@@ -5,7 +5,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import { SectionCard } from "../shared/SectionCard";
 import { EmptyState } from "../shared/EmptyState";
 import { useScheduleSettings } from "@/hooks/useScheduleSettings";
@@ -22,7 +29,13 @@ const RECURRING_DAYS = [
 ];
 
 export function BloqueiosTab() {
-  const { blockedTimes, isLoadingBlocked, createBlockedTime, deleteBlockedTime, isCreatingBlocked } = useScheduleSettings();
+  const {
+    blockedTimes,
+    isLoadingBlocked,
+    createBlockedTime,
+    deleteBlockedTime,
+    isCreatingBlocked,
+  } = useScheduleSettings();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [form, setForm] = useState({
     title: "",
@@ -84,7 +97,11 @@ export function BloqueiosTab() {
       title="Bloqueios de Agenda"
       description="Feriados, recessos e períodos indisponíveis"
       action={
-        <Button size="sm" onClick={() => setDialogOpen(true)} className="bg-teal-600 hover:bg-teal-700">
+        <Button
+          size="sm"
+          onClick={() => setDialogOpen(true)}
+          className="bg-teal-600 hover:bg-teal-700"
+        >
           <Plus className="mr-2 h-3.5 w-3.5" />
           Novo bloqueio
         </Button>
@@ -97,16 +114,31 @@ export function BloqueiosTab() {
           ))}
         </div>
       ) : blockedTimes.length === 0 ? (
-        <EmptyState icon={<CalendarOff className="h-5 w-5" />} title="Nenhum bloqueio cadastrado" description="Crie bloqueios para feriados, folgas e indisponibilidades." />
+        <EmptyState
+          icon={<CalendarOff className="h-5 w-5" />}
+          title="Nenhum bloqueio cadastrado"
+          description="Crie bloqueios para feriados, folgas e indisponibilidades."
+        />
       ) : (
         <div className="space-y-2">
           {blockedTimes.map((b) => (
-            <div key={b.id} className="flex items-center justify-between gap-3 rounded-lg border border-slate-100 px-4 py-3 dark:border-slate-800">
+            <div
+              key={b.id}
+              className="flex items-center justify-between gap-3 rounded-lg border border-slate-100 px-4 py-3 dark:border-slate-800"
+            >
               <div className="min-w-0">
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="text-sm font-medium">{b.title}</span>
-                  {b.is_all_day && <Badge variant="secondary" className="text-[10px]">Dia inteiro</Badge>}
-                  {b.is_recurring && <Badge variant="outline" className="text-[10px]">Semanal</Badge>}
+                  {b.is_all_day && (
+                    <Badge variant="secondary" className="text-[10px]">
+                      Dia inteiro
+                    </Badge>
+                  )}
+                  {b.is_recurring && (
+                    <Badge variant="outline" className="text-[10px]">
+                      Semanal
+                    </Badge>
+                  )}
                 </div>
                 <p className="mt-0.5 font-mono text-[11px] text-muted-foreground">
                   {b.start_date}
@@ -134,21 +166,38 @@ export function BloqueiosTab() {
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>Novo bloqueio</DialogTitle>
-            <DialogDescription>Indique o período em que a agenda ficará indisponível.</DialogDescription>
+            <DialogDescription>
+              Indique o período em que a agenda ficará indisponível.
+            </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div>
               <Label className="text-xs">Título</Label>
-              <Input value={form.title} onChange={(e) => setForm((p) => ({ ...p, title: e.target.value }))} placeholder="Feriado nacional" className="h-9" />
+              <Input
+                value={form.title}
+                onChange={(e) => setForm((p) => ({ ...p, title: e.target.value }))}
+                placeholder="Feriado nacional"
+                className="h-9"
+              />
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <Label className="text-xs">Data início</Label>
-                <Input type="date" value={form.start_date} onChange={(e) => setForm((p) => ({ ...p, start_date: e.target.value }))} className="h-9" />
+                <Input
+                  type="date"
+                  value={form.start_date}
+                  onChange={(e) => setForm((p) => ({ ...p, start_date: e.target.value }))}
+                  className="h-9"
+                />
               </div>
               <div>
                 <Label className="text-xs">Data fim</Label>
-                <Input type="date" value={form.end_date} onChange={(e) => setForm((p) => ({ ...p, end_date: e.target.value }))} className="h-9" />
+                <Input
+                  type="date"
+                  value={form.end_date}
+                  onChange={(e) => setForm((p) => ({ ...p, end_date: e.target.value }))}
+                  className="h-9"
+                />
               </div>
             </div>
             <div className="flex items-center justify-between rounded-lg border border-slate-100 px-3 py-2 dark:border-slate-800">
@@ -156,17 +205,30 @@ export function BloqueiosTab() {
                 <p className="text-sm font-medium">Dia inteiro</p>
                 <p className="text-[11px] text-muted-foreground">Bloqueia todo o expediente</p>
               </div>
-              <Switch checked={form.is_all_day} onCheckedChange={(v) => setForm((p) => ({ ...p, is_all_day: v }))} />
+              <Switch
+                checked={form.is_all_day}
+                onCheckedChange={(v) => setForm((p) => ({ ...p, is_all_day: v }))}
+              />
             </div>
             {!form.is_all_day && (
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <Label className="text-xs">Início</Label>
-                  <Input type="time" value={form.start_time} onChange={(e) => setForm((p) => ({ ...p, start_time: e.target.value }))} className="h-9" />
+                  <Input
+                    type="time"
+                    value={form.start_time}
+                    onChange={(e) => setForm((p) => ({ ...p, start_time: e.target.value }))}
+                    className="h-9"
+                  />
                 </div>
                 <div>
                   <Label className="text-xs">Fim</Label>
-                  <Input type="time" value={form.end_time} onChange={(e) => setForm((p) => ({ ...p, end_time: e.target.value }))} className="h-9" />
+                  <Input
+                    type="time"
+                    value={form.end_time}
+                    onChange={(e) => setForm((p) => ({ ...p, end_time: e.target.value }))}
+                    className="h-9"
+                  />
                 </div>
               </div>
             )}
@@ -204,12 +266,23 @@ export function BloqueiosTab() {
             )}
             <div>
               <Label className="text-xs">Motivo (opcional)</Label>
-              <Input value={form.reason} onChange={(e) => setForm((p) => ({ ...p, reason: e.target.value }))} placeholder="Recesso de fim de ano" className="h-9" />
+              <Input
+                value={form.reason}
+                onChange={(e) => setForm((p) => ({ ...p, reason: e.target.value }))}
+                placeholder="Recesso de fim de ano"
+                className="h-9"
+              />
             </div>
           </div>
           <DialogFooter>
-            <Button variant="ghost" onClick={() => setDialogOpen(false)}>Cancelar</Button>
-            <Button onClick={handleSubmit} disabled={!form.title || !form.start_date || isCreatingBlocked} className="bg-teal-600 hover:bg-teal-700">
+            <Button variant="ghost" onClick={() => setDialogOpen(false)}>
+              Cancelar
+            </Button>
+            <Button
+              onClick={handleSubmit}
+              disabled={!form.title || !form.start_date || isCreatingBlocked}
+              className="bg-teal-600 hover:bg-teal-700"
+            >
               {isCreatingBlocked ? "Criando…" : "Criar bloqueio"}
             </Button>
           </DialogFooter>

@@ -69,7 +69,7 @@ function chunkText(text, maxLength = 1000) {
 
 async function main() {
   console.log("🧠 Iniciando ingestão robusta de documentos clínicos...");
-  
+
   const docsDir = "./clinical_docs";
   let files;
   try {
@@ -79,12 +79,12 @@ async function main() {
     return;
   }
 
-  const validFiles = files.filter(f => {
+  const validFiles = files.filter((f) => {
     const ext = extname(f).toLowerCase();
     return ext === ".txt" || ext === ".md";
   });
 
-  const pdfFiles = files.filter(f => extname(f).toLowerCase() === ".pdf");
+  const pdfFiles = files.filter((f) => extname(f).toLowerCase() === ".pdf");
   if (pdfFiles.length > 0) {
     console.log(`\n⚠️ Encontrados ${pdfFiles.length} arquivos PDF. Para processá-los:`);
     console.log("   Converta-os para .txt ou instale uma biblioteca como `pdf-parse`.");
@@ -101,7 +101,7 @@ async function main() {
   for (const file of validFiles) {
     const filePath = join(docsDir, file);
     console.log(`\n📄 Processando: ${file}...`);
-    
+
     const text = readFileSync(filePath, "utf-8");
     const chunks = chunkText(text);
     console.log(`   Quebrado em ${chunks.length} pedaços.`);
@@ -110,7 +110,7 @@ async function main() {
     for (let i = 0; i < chunks.length; i++) {
       const chunk = chunks[i];
       process.stdout.write(`   🧠 Gerando vetor para pedaço ${i + 1}/${chunks.length}... `);
-      
+
       try {
         const values = await generateEmbedding(chunk);
         vectors.push({

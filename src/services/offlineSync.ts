@@ -335,9 +335,7 @@ class OfflineSyncService {
       // Filter actions that haven't exceeded max retries E que não estão
       // marcadas como conflito (essas exigem resolução manual)
       const validActions = pendingActions.filter(
-        (a) =>
-          a.retryCount < (this.config.maxRetries || DEFAULT_MAX_RETRIES) &&
-          !a.conflictedAt,
+        (a) => a.retryCount < (this.config.maxRetries || DEFAULT_MAX_RETRIES) && !a.conflictedAt,
       );
 
       if (validActions.length === 0) {

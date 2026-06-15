@@ -322,7 +322,9 @@ export default function PatientDetailScreen() {
               style={[styles.addEvolutionBtn, { backgroundColor: colors.primary }]}
               onPress={() => {
                 medium();
-                router.push(`/biomecanica/capture?patientId=${id}&patientName=${encodeURIComponent(name)}`);
+                router.push(
+                  `/biomecanica/capture?patientId=${id}&patientName=${encodeURIComponent(name)}`,
+                );
               }}
             >
               <Ionicons name="scan" size={24} color="#FFFFFF" />
@@ -335,29 +337,90 @@ export default function PatientDetailScreen() {
               biomechanicsData.map((assessment, index) => {
                 const prevAssessment = biomechanicsData[index + 1];
                 return (
-                  <View key={assessment.id} style={{ backgroundColor: colors.surface, padding: 16, borderRadius: 12, marginBottom: 12, borderWidth: 1, borderColor: colors.border }}>
-                    <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 12 }}>
+                  <View
+                    key={assessment.id}
+                    style={{
+                      backgroundColor: colors.surface,
+                      padding: 16,
+                      borderRadius: 12,
+                      marginBottom: 12,
+                      borderWidth: 1,
+                      borderColor: colors.border,
+                    }}
+                  >
+                    <View
+                      style={{
+                        flexDirection: "row",
+                        justifyContent: "space-between",
+                        marginBottom: 12,
+                      }}
+                    >
                       <View>
-                        <Text style={{ color: colors.text, fontWeight: "bold", fontSize: 16 }}>{assessment.type.toUpperCase()}</Text>
-                        <Text style={{ color: colors.textSecondary }}>{format(new Date(assessment.createdAt), "dd 'de' MMM, yyyy", { locale: ptBR })}</Text>
+                        <Text style={{ color: colors.text, fontWeight: "bold", fontSize: 16 }}>
+                          {assessment.type.toUpperCase()}
+                        </Text>
+                        <Text style={{ color: colors.textSecondary }}>
+                          {format(new Date(assessment.createdAt), "dd 'de' MMM, yyyy", {
+                            locale: ptBR,
+                          })}
+                        </Text>
                       </View>
-                      <View style={{ backgroundColor: assessment.status === "completed" ? "#10B98120" : colors.primary + "20", paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8, alignSelf: "flex-start" }}>
-                        <Text style={{ color: assessment.status === "completed" ? "#10B981" : colors.primary, fontWeight: "bold", fontSize: 12 }}>{assessment.status === "completed" ? "Concluído" : "Processando"}</Text>
+                      <View
+                        style={{
+                          backgroundColor:
+                            assessment.status === "completed" ? "#10B98120" : colors.primary + "20",
+                          paddingHorizontal: 8,
+                          paddingVertical: 4,
+                          borderRadius: 8,
+                          alignSelf: "flex-start",
+                        }}
+                      >
+                        <Text
+                          style={{
+                            color: assessment.status === "completed" ? "#10B981" : colors.primary,
+                            fontWeight: "bold",
+                            fontSize: 12,
+                          }}
+                        >
+                          {assessment.status === "completed" ? "Concluído" : "Processando"}
+                        </Text>
                       </View>
                     </View>
-                    
+
                     <View style={{ flexDirection: "row", gap: 8 }}>
                       <TouchableOpacity
-                        style={{ flex: 1, backgroundColor: colors.primary, padding: 10, borderRadius: 8, alignItems: "center" }}
-                        onPress={() => router.push(`/biomecanica/report?patientId=${id}&patientName=${encodeURIComponent(patientName as string)}&assessmentId=${assessment.id}` as any)}
+                        style={{
+                          flex: 1,
+                          backgroundColor: colors.primary,
+                          padding: 10,
+                          borderRadius: 8,
+                          alignItems: "center",
+                        }}
+                        onPress={() =>
+                          router.push(
+                            `/biomecanica/report?patientId=${id}&patientName=${encodeURIComponent(patientName as string)}&assessmentId=${assessment.id}` as any,
+                          )
+                        }
                       >
                         <Text style={{ color: "#fff", fontWeight: "600" }}>Laudo</Text>
                       </TouchableOpacity>
-                      
+
                       {prevAssessment && (
                         <TouchableOpacity
-                          style={{ flex: 1, backgroundColor: "transparent", padding: 10, borderRadius: 8, alignItems: "center", borderWidth: 1, borderColor: colors.border }}
-                          onPress={() => router.push(`/biomecanica/comparison?patientId=${id}&patientName=${encodeURIComponent(name)}&toAssessmentId=${assessment.id}&fromAssessmentId=${prevAssessment.id}` as any)}
+                          style={{
+                            flex: 1,
+                            backgroundColor: "transparent",
+                            padding: 10,
+                            borderRadius: 8,
+                            alignItems: "center",
+                            borderWidth: 1,
+                            borderColor: colors.border,
+                          }}
+                          onPress={() =>
+                            router.push(
+                              `/biomecanica/comparison?patientId=${id}&patientName=${encodeURIComponent(name)}&toAssessmentId=${assessment.id}&fromAssessmentId=${prevAssessment.id}` as any,
+                            )
+                          }
                         >
                           <Text style={{ color: colors.text, fontWeight: "600" }}>Comparar</Text>
                         </TouchableOpacity>
@@ -381,20 +444,54 @@ export default function PatientDetailScreen() {
             {/* Home Activities Shared */}
             {homeExercises && homeExercises.length > 0 && (
               <View style={{ marginTop: 24 }}>
-                <Text style={{ fontSize: 16, fontWeight: "bold", color: colors.text, marginBottom: 12 }}>Atividades Domiciliares Compartilhadas</Text>
+                <Text
+                  style={{ fontSize: 16, fontWeight: "bold", color: colors.text, marginBottom: 12 }}
+                >
+                  Atividades Domiciliares Compartilhadas
+                </Text>
                 {homeExercises.map((ex: any) => (
-                  <View key={ex.id} style={{ backgroundColor: colors.surface, padding: 16, borderRadius: 12, marginBottom: 10, borderWidth: 1, borderColor: colors.border }}>
-                    <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 8 }}>
-                      <Text style={{ fontWeight: "bold", color: colors.text }}>{ex.exerciseName}</Text>
-                      <Text style={{ fontSize: 12, color: colors.textSecondary }}>{format(new Date(ex.createdAt), "dd/MM HH:mm")}</Text>
+                  <View
+                    key={ex.id}
+                    style={{
+                      backgroundColor: colors.surface,
+                      padding: 16,
+                      borderRadius: 12,
+                      marginBottom: 10,
+                      borderWidth: 1,
+                      borderColor: colors.border,
+                    }}
+                  >
+                    <View
+                      style={{
+                        flexDirection: "row",
+                        justifyContent: "space-between",
+                        marginBottom: 8,
+                      }}
+                    >
+                      <Text style={{ fontWeight: "bold", color: colors.text }}>
+                        {ex.exerciseName}
+                      </Text>
+                      <Text style={{ fontSize: 12, color: colors.textSecondary }}>
+                        {format(new Date(ex.createdAt), "dd/MM HH:mm")}
+                      </Text>
                     </View>
                     <Text style={{ fontSize: 13, color: colors.textSecondary }}>
-                      {ex.metrics.reps} reps · {ex.metrics.rom}° ROM · {ex.metrics.compensations?.length || 0} alertas
+                      {ex.metrics.reps} reps · {ex.metrics.rom}° ROM ·{" "}
+                      {ex.metrics.compensations?.length || 0} alertas
                     </Text>
                     {ex.videoUrl && (
-                      <TouchableOpacity style={{ marginTop: 10, flexDirection: "row", alignItems: "center", gap: 5 }}>
+                      <TouchableOpacity
+                        style={{
+                          marginTop: 10,
+                          flexDirection: "row",
+                          alignItems: "center",
+                          gap: 5,
+                        }}
+                      >
                         <Ionicons name="play-circle" size={20} color={colors.primary} />
-                        <Text style={{ color: colors.primary, fontWeight: "600", fontSize: 13 }}>Ver clipe da IA</Text>
+                        <Text style={{ color: colors.primary, fontWeight: "600", fontSize: 13 }}>
+                          Ver clipe da IA
+                        </Text>
                       </TouchableOpacity>
                     )}
                   </View>

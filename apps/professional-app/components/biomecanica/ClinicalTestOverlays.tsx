@@ -13,7 +13,7 @@ export function TrendelenburgOverlay({ points }: OverlayProps) {
 
   const p1 = points[0];
   const p2 = points[1];
-  
+
   // Calculate angle of the line between hips
   const dx = p2.x - p1.x;
   const dy = p2.y - p1.y;
@@ -24,23 +24,40 @@ export function TrendelenburgOverlay({ points }: OverlayProps) {
     <View style={StyleSheet.absoluteFill} pointerEvents="none">
       <Svg height="100%" width="100%">
         <G opacity={0.8}>
-          <Line 
-            x1={p1.x - 50} y1={p1.y} 
-            x2={p2.x + 50} y2={p1.y} 
-            stroke="white" strokeWidth={1} strokeDasharray="5 5" 
+          <Line
+            x1={p1.x - 50}
+            y1={p1.y}
+            x2={p2.x + 50}
+            y2={p1.y}
+            stroke="white"
+            strokeWidth={1}
+            strokeDasharray="5 5"
           />
-          <Line 
-            x1={p1.x} y1={p1.y} 
-            x2={p2.x} y2={p2.y} 
-            stroke={isPositive ? "#EF4444" : bio.primary} 
-            strokeWidth={4} 
+          <Line
+            x1={p1.x}
+            y1={p1.y}
+            x2={p2.x}
+            y2={p2.y}
+            stroke={isPositive ? "#EF4444" : bio.primary}
+            strokeWidth={4}
           />
           <Circle cx={p1.x} cy={p1.y} r={6} fill={isPositive ? "#EF4444" : bio.primary} />
           <Circle cx={p2.x} cy={p2.y} r={6} fill={isPositive ? "#EF4444" : bio.primary} />
         </G>
       </Svg>
-      <View style={[styles.badge, { top: p1.y - 40, left: (p1.x + p2.x)/2 - 40, backgroundColor: isPositive ? "#EF4444" : "#10B981" }]}>
-        <Text style={styles.badgeText}>{Math.abs(angle).toFixed(1)}° {isPositive ? "DROP" : "OK"}</Text>
+      <View
+        style={[
+          styles.badge,
+          {
+            top: p1.y - 40,
+            left: (p1.x + p2.x) / 2 - 40,
+            backgroundColor: isPositive ? "#EF4444" : "#10B981",
+          },
+        ]}
+      >
+        <Text style={styles.badgeText}>
+          {Math.abs(angle).toFixed(1)}° {isPositive ? "DROP" : "OK"}
+        </Text>
       </View>
     </View>
   );
@@ -51,13 +68,13 @@ export function ValgusOverlay({ points }: OverlayProps) {
   if (points.length < 3) return null;
 
   const [p1, p2, p3] = points;
-  
+
   // Angle at knee
   const a = Math.pow(p2.x - p1.x, 2) + Math.pow(p2.y - p1.y, 2);
   const b = Math.pow(p2.x - p3.x, 2) + Math.pow(p2.y - p3.y, 2);
   const c = Math.pow(p3.x - p1.x, 2) + Math.pow(p3.y - p1.y, 2);
   const angle = Math.acos((a + b - c) / Math.sqrt(4 * a * b)) * (180 / Math.PI);
-  
+
   const isPositive = angle < 170; // Medial collapse
 
   return (
@@ -69,7 +86,12 @@ export function ValgusOverlay({ points }: OverlayProps) {
           <Circle cx={p2.x} cy={p2.y} r={8} fill={isPositive ? "#EF4444" : "#10B981"} />
         </G>
       </Svg>
-      <View style={[styles.badge, { top: p2.y, left: p2.x + 20, backgroundColor: isPositive ? "#EF4444" : "#10B981" }]}>
+      <View
+        style={[
+          styles.badge,
+          { top: p2.y, left: p2.x + 20, backgroundColor: isPositive ? "#EF4444" : "#10B981" },
+        ]}
+      >
         <Text style={styles.badgeText}>{isPositive ? "VALGO" : "ALINHADO"}</Text>
       </View>
     </View>

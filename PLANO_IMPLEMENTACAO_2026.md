@@ -805,13 +805,13 @@ Após 14 dias em produção com tráfego real:
 
 # Riscos
 
-| Risco                                           | Probabilidade | Impacto | Mitigação                                     |
-| ----------------------------------------------- | ------------- | ------- | --------------------------------------------- |
-| Background Sync API não suportada em Safari iOS | Alta          | Alto    | Fallback: sync ao abrir app (foreground sync) |
-| Observação Livre da prefeitura SP instável (NFS-e)          | Média         | Médio   | Retry + dead letter + alertas                 |
-| Claude API latência em insights IA              | Baixa         | Médio   | Cache KV 24h, skeleton loading                |
-| Expo push notifications iOS requer APNs         | Alta          | Alto    | Configurar APNs no Sprint 4                   |
-| PDF generation em Workers (limite memória)      | Média         | Médio   | Gerar via Stream + salvar em R2               |
+| Risco                                              | Probabilidade | Impacto | Mitigação                                     |
+| -------------------------------------------------- | ------------- | ------- | --------------------------------------------- |
+| Background Sync API não suportada em Safari iOS    | Alta          | Alto    | Fallback: sync ao abrir app (foreground sync) |
+| Observação Livre da prefeitura SP instável (NFS-e) | Média         | Médio   | Retry + dead letter + alertas                 |
+| Claude API latência em insights IA                 | Baixa         | Médio   | Cache KV 24h, skeleton loading                |
+| Expo push notifications iOS requer APNs            | Alta          | Alto    | Configurar APNs no Sprint 4                   |
+| PDF generation em Workers (limite memória)         | Média         | Médio   | Gerar via Stream + salvar em R2               |
 
 ---
 

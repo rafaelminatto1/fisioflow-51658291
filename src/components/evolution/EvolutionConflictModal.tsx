@@ -65,8 +65,7 @@ export function EvolutionConflictModal({
   if (!conflict) return null;
   const updatedAt = new Date(conflict.current.updated_at).toLocaleString("pt-BR");
 
-  const hasPainDiff =
-    localData && conflict.current.pain_scale !== (localData.painScale ?? null);
+  const hasPainDiff = localData && conflict.current.pain_scale !== (localData.painScale ?? null);
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
@@ -117,7 +116,8 @@ export function EvolutionConflictModal({
               </div>
             </div>
             <div className="font-mono text-[11px] divide-y divide-border/40">
-              {diffLines.length === 0 || (diffLines.length === 1 && diffLines[0].type === "same" && !diffLines[0].text) ? (
+              {diffLines.length === 0 ||
+              (diffLines.length === 1 && diffLines[0].type === "same" && !diffLines[0].text) ? (
                 <div className="p-4 text-center text-muted-foreground italic">
                   Sem alterações no texto principal.
                 </div>
@@ -149,12 +149,12 @@ export function EvolutionConflictModal({
             <p className="font-medium mb-1">O que você quer fazer?</p>
             <ul className="list-disc pl-5 space-y-1 text-xs">
               <li>
-                <strong>Recarregar do servidor</strong> — descarta o que você
-                digitou agora e exibe a versão mais recente
+                <strong>Recarregar do servidor</strong> — descarta o que você digitou agora e exibe
+                a versão mais recente
               </li>
               <li>
-                <strong>Manter minha versão</strong> — sobrescreve a versão do
-                servidor com o que você editou
+                <strong>Manter minha versão</strong> — sobrescreve a versão do servidor com o que
+                você editou
               </li>
             </ul>
           </div>
@@ -165,7 +165,10 @@ export function EvolutionConflictModal({
             <RotateCw className="h-4 w-4 mr-2" />
             Recarregar do servidor
           </Button>
-          <Button onClick={onKeepLocal} className="bg-amber-600 hover:bg-amber-700 flex-1 sm:flex-none">
+          <Button
+            onClick={onKeepLocal}
+            className="bg-amber-600 hover:bg-amber-700 flex-1 sm:flex-none"
+          >
             <Save className="h-4 w-4 mr-2" />
             Manter minha versão
           </Button>

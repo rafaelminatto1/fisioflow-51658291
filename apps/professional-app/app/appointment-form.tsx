@@ -227,14 +227,14 @@ export default function AppointmentFormScreen() {
       } else {
         if (formData.isRecurring) {
           try {
-            await fetch('https://api-pro.moocafisio.com.br/api/recurring-series', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
+            await fetch("https://api-pro.moocafisio.com.br/api/recurring-series", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
               body: JSON.stringify({
                 ...appointmentData,
                 recurrenceType: formData.recurrenceType,
-                recurrenceEndWeeks: formData.recurrenceEndWeeks
-              })
+                recurrenceEndWeeks: formData.recurrenceEndWeeks,
+              }),
             });
             success();
             Alert.alert("Sucesso", "Série de agendamentos criada com sucesso");
@@ -244,7 +244,7 @@ export default function AppointmentFormScreen() {
             throw err;
           }
         }
-        
+
         await createAsync(appointmentData);
         success();
         Alert.alert("Sucesso", "Agendamento criado com sucesso");
@@ -472,7 +472,7 @@ export default function AppointmentFormScreen() {
             variant="secondary"
             style={[{ backgroundColor: colors.success, marginBottom: 16 }] as any}
             leftIcon="play-circle-outline"
-            textStyle={{ color: '#fff' }}
+            textStyle={{ color: "#fff" }}
           />
         )}
 
@@ -489,6 +489,7 @@ export default function AppointmentFormScreen() {
                 setValue("patientName", p.name);
               }}
               disabled={isEditing}
+              autoFocus={!isEditing}
             />
           )}
         />
@@ -672,60 +673,68 @@ export default function AppointmentFormScreen() {
         {/* Recurrence Section - Only for new appointments */}
         {!isEditing && showAdvanced && (
           <View style={styles.row}>
-             <View style={styles.col}>
+            <View style={styles.col}>
+              <Controller
+                control={control}
+                name="isRecurring"
+                render={({ field: { value, onChange } }) => (
+                  <OptionSelector
+                    label="É Recorrente?"
+                    value={value ? "Sim" : "Não"}
+                    options={[
+                      { label: "Sim", value: "Sim" },
+                      { label: "Não", value: "Não" },
+                    ]}
+                    onSelect={(v) => onChange(v === "Sim")}
+                  />
+                )}
+              />
+            </View>
+            {watch("isRecurring") && (
+              <View style={styles.col}>
                 <Controller
                   control={control}
-                  name="isRecurring"
+                  name="recurrenceType"
                   render={({ field: { value, onChange } }) => (
                     <OptionSelector
-                      label="É Recorrente?"
-                      value={value ? "Sim" : "Não"}
-                      options={[{label: "Sim", value: "Sim"}, {label: "Não", value: "Não"}]}
-                      onSelect={(v) => onChange(v === "Sim")}
+                      label="Frequência"
+                      value={value}
+                      options={[
+                        { label: "Diário", value: "daily" },
+                        { label: "Semanal", value: "weekly" },
+                        { label: "Mensal", value: "monthly" },
+                      ]}
+                      onSelect={onChange}
                     />
                   )}
                 />
-             </View>
-             {watch("isRecurring") && (
-               <View style={styles.col}>
-                  <Controller
-                    control={control}
-                    name="recurrenceType"
-                    render={({ field: { value, onChange } }) => (
-                      <OptionSelector
-                        label="Frequência"
-                        value={value}
-                        options={[
-                          {label: "Diário", value: "daily"},
-                          {label: "Semanal", value: "weekly"},
-                          {label: "Mensal", value: "monthly"}
-                        ]}
-                        onSelect={onChange}
-                      />
-                    )}
-                  />
-               </View>
-             )}
+              </View>
+            )}
           </View>
         )}
-        
+
         {!isEditing && showAdvanced && watch("isRecurring") && (
           <View style={styles.row}>
-             <View style={styles.col}>
-               <Text style={[styles.label, { color: colors.textSecondary, marginTop: 12 }]}>Duração (Semanas)</Text>
-               <Controller
-                  control={control}
-                  name="recurrenceEndWeeks"
-                  render={({ field: { value, onChange } }) => (
-                    <TextInput
-                      style={[styles.pickerButton, { color: colors.text, borderColor: colors.border }]}
-                      keyboardType="numeric"
-                      value={String(value)}
-                      onChangeText={(text) => onChange(parseInt(text) || 1)}
-                    />
-                  )}
-                />
-             </View>
+            <View style={styles.col}>
+              <Text style={[styles.label, { color: colors.textSecondary, marginTop: 12 }]}>
+                Duração (Semanas)
+              </Text>
+              <Controller
+                control={control}
+                name="recurrenceEndWeeks"
+                render={({ field: { value, onChange } }) => (
+                  <TextInput
+                    style={[
+                      styles.pickerButton,
+                      { color: colors.text, borderColor: colors.border },
+                    ]}
+                    keyboardType="numeric"
+                    value={String(value)}
+                    onChangeText={(text) => onChange(parseInt(text) || 1)}
+                  />
+                )}
+              />
+            </View>
           </View>
         )}
 
@@ -842,8 +851,6 @@ export default function AppointmentFormScreen() {
             style={styles.saveButton}
           />
         )}
-
-
 
         {isEditing && (
           <Button

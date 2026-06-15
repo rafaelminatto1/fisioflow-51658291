@@ -39,7 +39,7 @@ async function runAnalyticsSQL(env: Env, query: string): Promise<SqlResult> {
  *   double1 = duration_ms, double2 = status_code
  */
 app.get("/", async (c) => {
-  const user = c.get("user");
+  const _user = c.get("user");
 
   // Allowlist para prevenir SQL injection via INTERVAL
   const windowIntervals: Record<string, string> = {

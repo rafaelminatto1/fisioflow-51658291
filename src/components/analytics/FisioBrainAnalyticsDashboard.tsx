@@ -10,15 +10,7 @@ import {
   Wallet,
   RefreshCcw,
 } from "lucide-react";
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts";
+import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { motion, AnimatePresence } from "framer-motion";
 import { rpc } from "@/lib/api/rpc-client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -54,7 +46,12 @@ const itemVariants = {
 };
 
 export function FisioBrainAnalyticsDashboard() {
-  const { data: kpis, isLoading: kpisLoading, isError: kpisError, refetch: refetchKpis } = useQuery({
+  const {
+    data: kpis,
+    isLoading: kpisLoading,
+    isError: kpisError,
+    refetch: refetchKpis,
+  } = useQuery({
     queryKey: ["fisiobrain", "kpis"],
     queryFn: async () => {
       const res = await rpc.api["clinic-metrics"].kpis.$get();
@@ -64,7 +61,12 @@ export function FisioBrainAnalyticsDashboard() {
     refetchInterval: 1000 * 60 * 5, // Atualiza a cada 5 minutos
   });
 
-  const { data: teamPerformance, isLoading: teamLoading, isError: teamError, refetch: refetchTeam } = useQuery({
+  const {
+    data: teamPerformance,
+    isLoading: teamLoading,
+    isError: teamError,
+    refetch: refetchTeam,
+  } = useQuery({
     queryKey: ["fisiobrain", "team-performance"],
     queryFn: async () => {
       const res = await rpc.api["clinic-metrics"]["team-performance"].$get();
@@ -73,7 +75,12 @@ export function FisioBrainAnalyticsDashboard() {
     },
   });
 
-  const { data: churnData, isLoading: churnLoading, isError: churnError, refetch: refetchChurn } = useQuery({
+  const {
+    data: churnData,
+    isLoading: churnLoading,
+    isError: churnError,
+    refetch: refetchChurn,
+  } = useQuery({
     queryKey: ["fisiobrain", "churn"],
     queryFn: async () => {
       const res = await rpc.api["clinic-metrics"].churn.$get();
@@ -98,13 +105,18 @@ export function FisioBrainAnalyticsDashboard() {
     clinical: { avgSessions: 0 },
   };
 
-  const occupancyRate = (kpisData.occupancy.booked / Math.max(1, kpisData.occupancy.capacity)) * 100;
+  const occupancyRate =
+    (kpisData.occupancy.booked / Math.max(1, kpisData.occupancy.capacity)) * 100;
   const noShowRate = (kpisData.noShow.count / Math.max(1, kpisData.noShow.total)) * 100;
 
   return (
     <div className="space-y-6 w-full">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5 }}>
+        <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.5 }}
+        >
           <div className="flex items-center gap-2 mb-1">
             <motion.div
               animate={{ rotate: [0, 10, -10, 0] }}
@@ -120,8 +132,12 @@ export function FisioBrainAnalyticsDashboard() {
             Inteligência de dados em tempo real da sua clínica.
           </p>
         </motion.div>
-        
-        <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.2 }}>
+
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.2 }}
+        >
           <Badge
             variant="outline"
             className="border-brand-blue/30 bg-brand-blue/10 text-brand-blue px-3 py-1 font-semibold rounded-full shadow-sm backdrop-blur-sm"
@@ -136,16 +152,24 @@ export function FisioBrainAnalyticsDashboard() {
       </div>
 
       {error && !loading ? (
-        <motion.div 
-          initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
           className="p-6 rounded-3xl bg-rose-500/10 border border-rose-500/20 flex flex-col items-center justify-center text-center space-y-3"
         >
           <AlertTriangle className="h-8 w-8 text-rose-500 mb-2" />
-          <h3 className="text-lg font-bold text-rose-600 dark:text-rose-400">Falha na Sincronização</h3>
+          <h3 className="text-lg font-bold text-rose-600 dark:text-rose-400">
+            Falha na Sincronização
+          </h3>
           <p className="text-sm text-muted-foreground max-w-md">
-            Não foi possível carregar os dados atualizados de inteligência. Verifique sua conexão com o servidor.
+            Não foi possível carregar os dados atualizados de inteligência. Verifique sua conexão
+            com o servidor.
           </p>
-          <Button onClick={handleRetry} variant="outline" className="mt-4 gap-2 rounded-full border-rose-500/30 text-rose-600 hover:bg-rose-500/10">
+          <Button
+            onClick={handleRetry}
+            variant="outline"
+            className="mt-4 gap-2 rounded-full border-rose-500/30 text-rose-600 hover:bg-rose-500/10"
+          >
             <RefreshCcw className="h-4 w-4" />
             Tentar Novamente
           </Button>
@@ -234,33 +258,46 @@ export function FisioBrainAnalyticsDashboard() {
                 ) : (
                   <div className="h-[300px] w-full mt-2">
                     <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={teamPerformance} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                      <BarChart
+                        data={teamPerformance}
+                        margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
+                      >
                         <defs>
                           <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
                             <stop offset="0%" stopColor={COLORS.cyan} stopOpacity={0.9} />
                             <stop offset="100%" stopColor={COLORS.primary} stopOpacity={0.9} />
                           </linearGradient>
                         </defs>
-                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border)/0.5)" />
+                        <CartesianGrid
+                          strokeDasharray="3 3"
+                          vertical={false}
+                          stroke="hsl(var(--border)/0.5)"
+                        />
                         <XAxis
                           dataKey="full_name"
                           axisLine={false}
                           tickLine={false}
-                          tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12, fontWeight: 600 }}
+                          tick={{
+                            fill: "hsl(var(--muted-foreground))",
+                            fontSize: 12,
+                            fontWeight: 600,
+                          }}
                           dy={10}
                         />
                         <YAxis
                           axisLine={false}
                           tickLine={false}
                           tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }}
-                          tickFormatter={(val) => `R$ ${val >= 1000 ? (val / 1000).toFixed(1) + "k" : val}`}
+                          tickFormatter={(val) =>
+                            `R$ ${val >= 1000 ? (val / 1000).toFixed(1) + "k" : val}`
+                          }
                         />
                         <Tooltip
                           cursor={{ fill: "hsl(var(--muted)/0.2)" }}
                           content={({ active, payload, label }) => {
                             if (active && payload && payload.length) {
                               return (
-                                <motion.div 
+                                <motion.div
                                   initial={{ opacity: 0, scale: 0.95 }}
                                   animate={{ opacity: 1, scale: 1 }}
                                   className="bg-popover/90 backdrop-blur-md border border-border/50 rounded-2xl p-4 shadow-xl"
@@ -282,7 +319,12 @@ export function FisioBrainAnalyticsDashboard() {
                             return null;
                           }}
                         />
-                        <Bar dataKey="monthly_revenue" radius={[8, 8, 0, 0]} fill="url(#barGradient)" barSize={48} />
+                        <Bar
+                          dataKey="monthly_revenue"
+                          radius={[8, 8, 0, 0]}
+                          fill="url(#barGradient)"
+                          barSize={48}
+                        />
                       </BarChart>
                     </ResponsiveContainer>
                   </div>
@@ -312,7 +354,7 @@ export function FisioBrainAnalyticsDashboard() {
                       <motion.div
                         initial={{ opacity: 0, x: 20 }}
                         animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: 0.5 + (idx * 0.1) }}
+                        transition={{ delay: 0.5 + idx * 0.1 }}
                         key={patient.id}
                         className="flex items-center justify-between p-3.5 rounded-2xl bg-background/60 border border-border/40 hover:border-rose-500/40 transition-all hover:bg-rose-500/5 hover:shadow-md hover:-translate-y-0.5 group cursor-pointer"
                       >
@@ -321,17 +363,25 @@ export function FisioBrainAnalyticsDashboard() {
                             {patient.full_name}
                           </p>
                           <p className="text-xs font-medium text-muted-foreground mt-0.5">
-                            Última sessão: <span className="text-foreground/70">{new Date(patient.last_session_date).toLocaleDateString("pt-BR")}</span>
+                            Última sessão:{" "}
+                            <span className="text-foreground/70">
+                              {new Date(patient.last_session_date).toLocaleDateString("pt-BR")}
+                            </span>
                           </p>
                         </div>
-                        <Badge variant="destructive" className="px-2.5 py-1 text-[10px] font-bold shadow-sm bg-rose-500/90 hover:bg-rose-600">
+                        <Badge
+                          variant="destructive"
+                          className="px-2.5 py-1 text-[10px] font-bold shadow-sm bg-rose-500/90 hover:bg-rose-600"
+                        >
                           {patient.days_inactive} dias sumido
                         </Badge>
                       </motion.div>
                     ))}
                     {churnData.length > 5 && (
-                      <motion.div 
-                        initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1 }}
+                      <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: 1 }}
                         className="text-center pt-2"
                       >
                         <p className="text-xs text-muted-foreground font-semibold bg-muted/50 inline-block px-3 py-1 rounded-full">
@@ -371,13 +421,25 @@ function GlassStatCard({
     <Card
       className={cn(
         "relative overflow-hidden rounded-[2rem] border-border/40 bg-card/60 backdrop-blur-xl transition-all hover:shadow-xl group",
-        alert ? "border-rose-500/30 ring-1 ring-rose-500/20 hover:border-rose-500/50 hover:shadow-rose-500/10" : "hover:border-border/60"
+        alert
+          ? "border-rose-500/30 ring-1 ring-rose-500/20 hover:border-rose-500/50 hover:shadow-rose-500/10"
+          : "hover:border-border/60",
       )}
     >
-      <div className={cn("absolute inset-0 bg-gradient-to-br opacity-[0.15] group-hover:opacity-30 transition-opacity duration-500", gradient)} />
+      <div
+        className={cn(
+          "absolute inset-0 bg-gradient-to-br opacity-[0.15] group-hover:opacity-30 transition-opacity duration-500",
+          gradient,
+        )}
+      />
       <CardContent className="relative p-6 z-10">
         <div className="flex items-start justify-between gap-4 mb-4">
-          <div className={cn("p-3.5 rounded-2xl bg-background/90 shadow-sm backdrop-blur-md group-hover:scale-110 transition-transform duration-300", iconColor)}>
+          <div
+            className={cn(
+              "p-3.5 rounded-2xl bg-background/90 shadow-sm backdrop-blur-md group-hover:scale-110 transition-transform duration-300",
+              iconColor,
+            )}
+          >
             <Icon className="h-5 w-5" />
           </div>
           {alert && (

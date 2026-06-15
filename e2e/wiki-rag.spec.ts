@@ -34,18 +34,18 @@ test.describe("Wiki RAG (Cmd+K) - T013", () => {
     // Esperar pela resposta do RAG
     const answerBlock = page.locator('[data-testid="wiki-ask-answer"]');
     await expect(answerBlock).toBeVisible({ timeout: 15000 });
-    
+
     // Verificar se renderizou texto na resposta
     const textContent = await answerBlock.textContent();
     expect(textContent?.length).toBeGreaterThan(10);
 
     // Verificar se as fontes apareceram e clicar na primeira
-    const firstSource = page.locator('button:has(svg.lucide-book-open)').first();
+    const firstSource = page.locator("button:has(svg.lucide-book-open)").first();
     await expect(firstSource).toBeVisible();
-    
+
     // Captura o href que vai navegar
     await firstSource.click();
-    
+
     // Deve sair do command palette e ir para a página de conteúdo
     await expect(page).not.toHaveURL(/dashboard/); // Deve ir para /protocols/* ou /wiki/*
   });

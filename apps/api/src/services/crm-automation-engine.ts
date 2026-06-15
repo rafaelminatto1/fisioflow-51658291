@@ -97,10 +97,7 @@ function evaluateCondition(
  * Match adicional do gatilho_config (ex.: {to:"avaliacao_agendada"} para
  * stage_changed só dispara quando payload.to === "avaliacao_agendada").
  */
-function matchesGatilhoConfig(
-  rule: RuleRow,
-  ctx: TriggerContext,
-): boolean {
+function matchesGatilhoConfig(rule: RuleRow, ctx: TriggerContext): boolean {
   const cfg = rule.gatilho_config ?? {};
   for (const [k, v] of Object.entries(cfg)) {
     if ((ctx.payload as Record<string, unknown>)[k] !== v) return false;
@@ -200,14 +197,10 @@ function interpolate(tpl: string, vars: Record<string, unknown>): string {
   });
 }
 
-async function loadContactVars(
-  pool: DbPool,
-  contactId: string,
-): Promise<Record<string, unknown>> {
-  const res = await pool.query(
-    `SELECT id, nome, telefone, email FROM contacts WHERE id = $1`,
-    [contactId],
-  );
+async function loadContactVars(pool: DbPool, contactId: string): Promise<Record<string, unknown>> {
+  const res = await pool.query(`SELECT id, nome, telefone, email FROM contacts WHERE id = $1`, [
+    contactId,
+  ]);
   return (res.rows[0] as Record<string, unknown>) ?? {};
 }
 
@@ -261,24 +254,26 @@ async function executeAction(
       const survey = surveyRes.rows[0];
       if (!survey) throw new Error("falha ao criar NPS survey");
 
-      const baseUrl = String(action.config.base_url ?? env.NPS_PUBLIC_BASE_URL ?? "https://fisioflow.pages.dev");
+      const baseUrl = String(
+        action.config.base_url ?? env.NPS_PUBLIC_BASE_URL ?? "https://fisioflow.pages.dev",
+      );
       const link = `${baseUrl.replace(/\/$/, "")}/nps/${survey.token}`;
       const phone = vars.telefone as string | undefined;
       if (!phone) throw new Error("contato sem telefone");
 
       const wa = new WhatsAppService(env);
       const body = interpolate(
-        String(action.config.body ?? "Olá {{nome}}, sua opinião é importante! Responda em 30s: {{nps_link}}"),
+        String(
+          action.config.body ??
+            "Olá {{nome}}, sua opinião é importante! Responda em 30s: {{nps_link}}",
+        ),
         { ...vars, nps_link: link },
       );
       const result = await wa.sendTextMessage(phone, body);
       if ((result as { error?: unknown }).error) {
         throw new Error(`whatsapp(nps): ${JSON.stringify(result)}`);
       }
-      await pool.query(
-        `UPDATE nps_surveys SET message_sent = $1 WHERE id = $2`,
-        [body, survey.id],
-      );
+      await pool.query(`UPDATE nps_surveys SET message_sent = $1 WHERE id = $2`, [body, survey.id]);
       await logContactActivity(pool, {
         organizationId,
         contactId,
@@ -291,10 +286,7 @@ async function executeAction(
       break;
     }
     case "create_task": {
-      const titulo = interpolate(
-        String(action.config.titulo ?? "Tarefa automação"),
-        vars,
-      );
+      const titulo = interpolate(String(action.config.titulo ?? "Tarefa automação"), vars);
       await pool.query(
         `INSERT INTO crm_tarefas
            (organization_id, titulo, descricao, status, responsavel_id, due_date)
@@ -320,15 +312,14 @@ async function executeAction(
     case "update_stage": {
       const newStage = String(action.config.estagio ?? "");
       if (!contactId || !newStage) break;
-      const leadRes = await pool.query(
-        `SELECT id FROM leads WHERE contact_id = $1 LIMIT 1`,
-        [contactId],
-      );
+      const leadRes = await pool.query(`SELECT id FROM leads WHERE contact_id = $1 LIMIT 1`, [
+        contactId,
+      ]);
       if (leadRes.rows[0]) {
-        await pool.query(
-          `UPDATE leads SET estagio = $1, updated_at = NOW() WHERE id = $2`,
-          [newStage, leadRes.rows[0].id],
-        );
+        await pool.query(`UPDATE leads SET estagio = $1, updated_at = NOW() WHERE id = $2`, [
+          newStage,
+          leadRes.rows[0].id,
+        ]);
       }
       break;
     }

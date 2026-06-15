@@ -246,8 +246,7 @@ export function useScheduleOptimized(options: {
     if (filters?.searchQuery) {
       const query = filters.searchQuery;
       appointments = appointments.filter(
-        (a) =>
-          accentIncludes(a.patient_name ?? "", query) || accentIncludes(a.notes ?? "", query),
+        (a) => accentIncludes(a.patient_name ?? "", query) || accentIncludes(a.notes ?? "", query),
       );
     }
 
