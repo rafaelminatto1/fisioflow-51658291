@@ -6,7 +6,7 @@ import {
   BookmarkPlus,
   LayoutDashboard,
   FileText,
-  Map,
+  Map as MapIcon,
   Plus,
   Save,
   Camera,
