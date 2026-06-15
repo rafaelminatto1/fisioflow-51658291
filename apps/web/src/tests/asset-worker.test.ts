@@ -1,11 +1,47 @@
 import { describe, expect, it } from "vitest";
 import {
+  default as assetWorker,
   getFileExtension,
   isAssetRequest,
   isNeonAuthProxyRequest,
   rewriteAuthLocation,
   stripCookieDomain,
 } from "../asset-worker";
+
+const worker = assetWorker as {
+  fetch(
+    request: Request,
+    env: { ASSETS: { fetch(request: Request): Promise<Response> } },
+  ): Promise<Response>;
+};
+
+function createAssetEnv() {
+  const requests: string[] = [];
+
+  return {
+    requests,
+    env: {
+      ASSETS: {
+        async fetch(request: Request) {
+          const url = new URL(request.url);
+          requests.push(url.pathname);
+
+          if (url.pathname === "/") {
+            return new Response('<!doctype html><div id="root"></div>', {
+              status: 200,
+              headers: { "content-type": "text/html; charset=utf-8" },
+            });
+          }
+
+          return new Response("Not found", {
+            status: 404,
+            headers: { "content-type": "text/plain; charset=utf-8" },
+          });
+        },
+      },
+    },
+  };
+}
 
 describe("asset-worker helpers", () => {
   describe("getFileExtension", () => {
@@ -91,5 +127,32 @@ describe("asset-worker helpers", () => {
       const google = "https://accounts.google.com/o/oauth2/auth?client_id=1";
       expect(rewriteAuthLocation(google, origin)).toBe(google);
     });
+  });
+});
+
+describe("asset-worker fetch", () => {
+  it("serves index.html for SPA routes without file extensions", async () => {
+    const { env, requests } = createAssetEnv();
+
+    const response = await worker.fetch(new Request("https://www.moocafisio.com.br/agenda"), env);
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get("content-type")).toContain("text/html");
+    expect(await response.text()).toContain("<!doctype html>");
+    expect(requests).toEqual(["/agenda", "/"]);
+  });
+
+  it("keeps missing asset requests as 404 instead of returning index.html", async () => {
+    const { env, requests } = createAssetEnv();
+
+    const response = await worker.fetch(
+      new Request("https://www.moocafisio.com.br/assets/config-Qo05B-wO.js"),
+      env,
+    );
+
+    expect(response.status).toBe(404);
+    expect(response.headers.get("content-type")).toContain("text/plain");
+    expect(await response.text()).toBe("Not found");
+    expect(requests).toEqual(["/assets/config-Qo05B-wO.js"]);
   });
 });

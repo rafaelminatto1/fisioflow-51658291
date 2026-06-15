@@ -1,6 +1,6 @@
 import { precacheAndRoute, cleanupOutdatedCaches, matchPrecache } from "workbox-precaching";
 import { NavigationRoute, registerRoute } from "workbox-routing";
-import { StaleWhileRevalidate, CacheFirst } from "workbox-strategies";
+import { StaleWhileRevalidate, NetworkFirst } from "workbox-strategies";
 import { ExpirationPlugin } from "workbox-expiration";
 import { clientsClaim } from "workbox-core";
 
@@ -12,6 +12,30 @@ declare let self: ServiceWorkerGlobalScope & {
 // Responsável por Caching (PWA), Push Notifications e Background Sync
 
 cleanupOutdatedCaches();
+
+const APP_CHUNKS_CACHE = "app-chunks";
+const LEGACY_CHUNKS_CACHE = "app-chunks";
+
+function isCacheableAssetResponse(request: Request, response: Response): boolean {
+  if (response.status !== 200) return false;
+
+  const url = new URL(request.url);
+  const contentType = response.headers.get("content-type")?.toLowerCase() ?? "";
+
+  if (url.pathname.endsWith(".js")) {
+    return (
+      contentType.includes("javascript") ||
+      contentType.includes("ecmascript") ||
+      contentType.includes("application/wasm")
+    );
+  }
+
+  if (url.pathname.endsWith(".css")) {
+    return contentType.includes("text/css");
+  }
+
+  return true;
+}
 
 // Precaching automático de todos os assets do build (injetado pelo Vite PWA)
 precacheAndRoute(self.__WB_MANIFEST);
@@ -51,15 +75,20 @@ registerRoute(
 );
 
 // ============================================================================
-// RUNTIME CACHING — chunks JS/CSS versionados (assets/) ficam em cache após
-// 1ª visita; navegações offline subsequentes funcionam mesmo que o chunk não
-// estivesse no precache. Cache-first porque os nomes têm hash (imutáveis).
+// RUNTIME CACHING — chunks JS/CSS versionados tentam rede primeiro para evitar
+// HTML antigo/corrompido salvo como módulo JS após deploys. O cache só é usado
+// quando a rede falha e nunca armazena respostas com MIME incompatível.
 // ============================================================================
 registerRoute(
   ({ url }) => url.origin === self.location.origin && /^\/assets\/.+\.(js|css)$/.test(url.pathname),
-  new CacheFirst({
-    cacheName: "app-chunks",
+  new NetworkFirst({
+    cacheName: APP_CHUNKS_CACHE,
+    networkTimeoutSeconds: 3,
     plugins: [
+      {
+        cacheWillUpdate: async ({ request, response }) =>
+          isCacheableAssetResponse(request, response) ? response : null,
+      },
       new ExpirationPlugin({
         maxEntries: 200,
         maxAgeSeconds: 60 * 60 * 24 * 30, // 30 dias
@@ -88,6 +117,10 @@ registerRoute(
 
 self.skipWaiting();
 clientsClaim();
+
+self.addEventListener("activate", (event) => {
+  event.waitUntil(caches.delete(LEGACY_CHUNKS_CACHE));
+});
 
 // Listener para Push Notifications (Backend -> SW)
 self.addEventListener("push", (event) => {

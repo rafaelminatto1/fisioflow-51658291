@@ -1,5 +1,5 @@
 export const getWorkersApiUrl = (): string => {
-  const fallbackUrl = "https://fisioflow-api.rafalegollas.workers.dev";
+  const fallbackUrl = "https://fisioflow-api.rafalegollas.workers.dev/".replace(/\/$/, "");
 
   if (typeof window !== "undefined") {
     const hostname = window.location.hostname;

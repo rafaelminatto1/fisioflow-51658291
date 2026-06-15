@@ -3,7 +3,7 @@
 name = "fisioflow-web"
 main = "apps/web/src/asset-worker.ts"
 compatibility_date = "2026-06-06"
-assets = { directory = "./apps/web/dist", binding = "ASSETS", not_found_handling = "single-page-application" }
+assets = { directory = "./apps/web/dist", binding = "ASSETS" }
 
 [observability]
 enabled = true
@@ -11,9 +11,9 @@ enabled = true
 # Staging Environment
 [env.staging]
 name = "fisioflow-web-staging"
-assets = { directory = "./apps/web/dist", binding = "ASSETS", not_found_handling = "single-page-application" }
+assets = { directory = "./apps/web/dist", binding = "ASSETS" }
 
 # Production Environment
 [env.production]
 name = "fisioflow-web"
-assets = { directory = "./apps/web/dist", binding = "ASSETS", not_found_handling = "single-page-application" }
+assets = { directory = "./apps/web/dist", binding = "ASSETS" }
