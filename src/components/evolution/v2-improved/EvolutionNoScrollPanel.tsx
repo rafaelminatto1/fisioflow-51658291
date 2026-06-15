@@ -297,177 +297,157 @@ export const EvolutionNoScrollPanel = memo(
     const observationsValue = data.evolutionText || data.observations || "";
 
     return (
-      <div className="grid min-h-0 flex-1 grid-cols-1 gap-4 overflow-hidden p-4 lg:grid-cols-[1fr_360px]">
-        {/* ============================ COLUNA PRINCIPAL ============================ */}
-        <div className="custom-scrollbar flex min-h-0 flex-col gap-4 overflow-y-auto pr-1">
-          {/* ---------- PAIN HERO ---------- */}
-          <div className="grid grid-cols-1 items-center gap-6 rounded-2xl border border-border bg-card p-5 shadow-sm md:grid-cols-[280px_1fr]">
+      <div className="grid min-h-0 flex-1 grid-cols-1 gap-4 overflow-hidden p-4 lg:grid-cols-[1fr_minmax(320px,380px)_minmax(320px,380px)]">
+        {/* ===================== COLUNA 1 — OBSERVAÇÕES ===================== */}
+        <div className="flex min-h-0 flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+          <div className="flex items-center gap-3 border-b border-border px-4 py-3">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-100 text-amber-600">
+              <FileText className="h-[18px] w-[18px]" />
+            </div>
             <div>
-              <PainGauge value={discharge} arrival={arrival} />
-              <div className="mt-1 flex justify-center gap-4">
-                <span className="flex items-center gap-1.5 text-[11px] font-bold text-muted-foreground">
-                  <span className="h-2.5 w-2.5 rounded-full border-2 border-rose-500 bg-white" />
-                  Chegada · {arrival ?? "–"}
-                </span>
-                <span className="flex items-center gap-1.5 text-[11px] font-bold text-muted-foreground">
-                  <span
-                    className="h-2.5 w-2.5 rounded-full"
-                    style={{ background: painColor(discharge) }}
-                  />
-                  Saída · {discharge}
-                </span>
+              <div className="text-sm font-extrabold text-slate-800">Observações clínicas</div>
+              <div className="text-[11px] font-semibold text-muted-foreground">
+                Registro principal da sessão
               </div>
             </div>
-
-            <div className="flex flex-col gap-3.5">
-              <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-rose-100 text-rose-600">
-                  <Activity className="h-5 w-5" />
-                </div>
-                <div>
-                  <div className="text-base font-extrabold text-slate-800">Nível de dor — EVA</div>
-                  <div className="text-[11.5px] font-semibold text-muted-foreground">
-                    Escala Visual Analógica · 0 a 10
-                  </div>
-                </div>
-                {delta != null && (
-                  <span
-                    className={cn(
-                      "ml-auto inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-extrabold",
-                      delta <= 0 ? "bg-emerald-100 text-emerald-700" : "bg-rose-100 text-rose-700",
-                    )}
-                  >
-                    {delta <= 0 ? <TrendingDown className="h-3 w-3" /> : <TrendingUp className="h-3 w-3" />}
-                    {delta === 0 ? "estável" : `${delta > 0 ? "+" : "−"}${Math.abs(delta)} na sessão`}
-                  </span>
-                )}
-              </div>
-
-              <div className="flex gap-2.5">
-                <EvaPicker
-                  label="Chegada"
-                  sub={arrival != null ? painLabel(arrival) : "Toque para registrar"}
-                  value={arrival}
-                  onChange={setArrival}
-                />
-                <EvaPicker
-                  label="Saída"
-                  sub={painLabel(discharge)}
-                  value={data.painLevelDischarge ?? data.painLevel}
-                  highlight
-                  onChange={setDischarge}
-                />
-              </div>
-
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="text-[10px] font-extrabold uppercase tracking-wider text-muted-foreground">
-                  Tipo:
-                </span>
-                {PAIN_QUALITY_OPTIONS.map((type) => {
-                  const Icon = QUALITY_ICON[type] ?? Zap;
-                  const active = quality.find((q) => q.type === type);
-                  return (
-                    <button
-                      key={type}
-                      type="button"
-                      onClick={() => toggleQuality(type)}
-                      className={cn(
-                        "inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[11.5px] font-bold transition-colors",
-                        active
-                          ? "bg-rose-100 text-rose-700"
-                          : "bg-slate-100 text-muted-foreground hover:bg-slate-200",
-                      )}
-                      title={active ? `${type} · ${active.intensity}` : type}
-                    >
-                      <Icon className="h-3.5 w-3.5" /> {type}
-                      {active && (
-                        <span className="text-[9px] font-extrabold uppercase opacity-70">
-                          {active.intensity[0]}
-                        </span>
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-
-              <div className="flex items-center gap-2 rounded-xl border border-border bg-slate-50/60 px-3 py-2">
-                <MapPin className="h-4 w-4 shrink-0 text-muted-foreground" />
-                <input
-                  type="text"
-                  value={data.painLocation || ""}
-                  onChange={(e) => setLocation(e.target.value)}
-                  placeholder="Localização da dor (ex.: Ombro D · anterior · arco 70–110°)"
-                  className="w-full bg-transparent text-[12.5px] font-semibold text-slate-700 placeholder:text-slate-400 focus:outline-none"
-                />
-              </div>
-            </div>
+            <button
+              type="button"
+              onClick={() => setFocusSection("obs")}
+              className="ml-auto inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1.5 text-[11px] font-bold text-muted-foreground transition-colors hover:bg-slate-50"
+            >
+              <Maximize2 className="h-3.5 w-3.5" /> Foco
+            </button>
           </div>
-
-          {/* ---------- DESCRIÇÃO ---------- */}
-          <div className="flex flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
-            <div className="flex items-center gap-3 border-b border-border px-4 py-3">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-100 text-amber-600">
-                <FileText className="h-[18px] w-[18px]" />
-              </div>
-              <div>
-                <div className="text-sm font-extrabold text-slate-800">Observações clínicas</div>
-                <div className="text-[11px] font-semibold text-muted-foreground">
-                  Registro principal da sessão
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={() => setFocusSection("obs")}
-                className="ml-auto inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1.5 text-[11px] font-bold text-muted-foreground transition-colors hover:bg-slate-50"
-              >
-                <Maximize2 className="h-3.5 w-3.5" /> Foco
-              </button>
-            </div>
-            <div className="px-3 py-2">
-              <RichTextBlock
-                value={observationsValue}
-                onValueChange={handleObservationsChange}
-                placeholder="Digite a evolução clínica aqui…"
-                showToolbar
-                externalValueRevision={revisionRef.current}
-              />
-            </div>
-          </div>
-
-          {/* ---------- CONDUTAS ---------- */}
-          <div className="flex flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
-            <div className="flex items-center gap-3 border-b border-border px-4 py-3">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-100 text-emerald-600">
-                <Stethoscope className="h-[18px] w-[18px]" />
-              </div>
-              <div>
-                <div className="text-sm font-extrabold text-slate-800">Condutas da sessão</div>
-                <div className="text-[11px] font-semibold text-muted-foreground">
-                  Procedimentos e exercícios — alterne com os botões acima do campo
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={() => setFocusSection("condutas")}
-                className="ml-auto inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1.5 text-[11px] font-bold text-muted-foreground transition-colors hover:bg-slate-50"
-              >
-                <Maximize2 className="h-3.5 w-3.5" /> Foco
-              </button>
-            </div>
-            <div className="p-4">
-              <EvolutionBlockV3
-                items={data.unifiedItems || []}
-                onChange={handleUnifiedItemsChange}
-                patientId={patientId || ""}
-                type="unified"
-                variant="embedded"
-              />
-            </div>
+          <div className="custom-scrollbar flex-1 overflow-y-auto px-3 py-2">
+            <RichTextBlock
+              value={observationsValue}
+              onValueChange={handleObservationsChange}
+              placeholder="Digite a evolução clínica aqui…"
+              showToolbar
+              externalValueRevision={revisionRef.current}
+            />
           </div>
         </div>
 
-        {/* ============================ COLUNA LATERAL ============================ */}
+        {/* ===================== COLUNA 2 — CONDUTAS ===================== */}
+        <div className="flex min-h-0 flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+          <div className="flex items-center gap-3 border-b border-border px-4 py-3">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-100 text-emerald-600">
+              <Stethoscope className="h-[18px] w-[18px]" />
+            </div>
+            <div>
+              <div className="text-sm font-extrabold text-slate-800">Procedimentos &amp; exercícios</div>
+              <div className="text-[11px] font-semibold text-muted-foreground">
+                Alterne procedimento/exercício acima do campo
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => setFocusSection("condutas")}
+              className="ml-auto inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1.5 text-[11px] font-bold text-muted-foreground transition-colors hover:bg-slate-50"
+            >
+              <Maximize2 className="h-3.5 w-3.5" /> Foco
+            </button>
+          </div>
+          <div className="custom-scrollbar flex-1 overflow-y-auto p-4">
+            <EvolutionBlockV3
+              items={data.unifiedItems || []}
+              onChange={handleUnifiedItemsChange}
+              patientId={patientId || ""}
+              type="unified"
+              variant="embedded"
+            />
+          </div>
+        </div>
+
+        {/* ===================== COLUNA 3 — DOR + ITENS ===================== */}
         <div className="custom-scrollbar flex min-h-0 flex-col gap-3.5 overflow-y-auto pb-2 pr-1">
+          {/* nível de dor — EVA */}
+          <div className="rounded-2xl border border-border bg-card p-4 shadow-sm">
+            <div className="mb-2 flex items-center gap-2.5">
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-rose-100 text-rose-600">
+                <Activity className="h-5 w-5" />
+              </div>
+              <div className="min-w-0">
+                <div className="text-sm font-extrabold text-slate-800">Nível de dor — EVA</div>
+                <div className="text-[11px] font-semibold text-muted-foreground">
+                  Escala Visual Analógica · 0 a 10
+                </div>
+              </div>
+              {delta != null && (
+                <span
+                  className={cn(
+                    "ml-auto inline-flex items-center gap-1 rounded-full px-2 py-1 text-[10.5px] font-extrabold",
+                    delta <= 0 ? "bg-emerald-100 text-emerald-700" : "bg-rose-100 text-rose-700",
+                  )}
+                >
+                  {delta <= 0 ? <TrendingDown className="h-3 w-3" /> : <TrendingUp className="h-3 w-3" />}
+                  {delta === 0 ? "estável" : `${delta > 0 ? "+" : "−"}${Math.abs(delta)}`}
+                </span>
+              )}
+            </div>
+
+            <PainGauge value={discharge} arrival={arrival} />
+
+            <div className="mt-2 flex gap-2.5">
+              <EvaPicker
+                label="Chegada"
+                sub={arrival != null ? painLabel(arrival) : "Registrar"}
+                value={arrival}
+                onChange={setArrival}
+              />
+              <EvaPicker
+                label="Saída"
+                sub={painLabel(discharge)}
+                value={data.painLevelDischarge ?? data.painLevel}
+                highlight
+                onChange={setDischarge}
+              />
+            </div>
+
+            <div className="mt-3 flex flex-wrap items-center gap-1.5">
+              <span className="text-[10px] font-extrabold uppercase tracking-wider text-muted-foreground">
+                Tipo:
+              </span>
+              {PAIN_QUALITY_OPTIONS.map((type) => {
+                const Icon = QUALITY_ICON[type] ?? Zap;
+                const active = quality.find((q) => q.type === type);
+                return (
+                  <button
+                    key={type}
+                    type="button"
+                    onClick={() => toggleQuality(type)}
+                    className={cn(
+                      "inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-bold transition-colors",
+                      active
+                        ? "bg-rose-100 text-rose-700"
+                        : "bg-slate-100 text-muted-foreground hover:bg-slate-200",
+                    )}
+                    title={active ? `${type} · ${active.intensity}` : type}
+                  >
+                    <Icon className="h-3 w-3" /> {type}
+                    {active && (
+                      <span className="text-[9px] font-extrabold uppercase opacity-70">
+                        {active.intensity[0]}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+
+            <div className="mt-3 flex items-center gap-2 rounded-xl border border-border bg-slate-50/60 px-3 py-2">
+              <MapPin className="h-4 w-4 shrink-0 text-muted-foreground" />
+              <input
+                type="text"
+                value={data.painLocation || ""}
+                onChange={(e) => setLocation(e.target.value)}
+                placeholder="Localização da dor (opcional)"
+                className="w-full bg-transparent text-[12px] font-semibold text-slate-700 placeholder:text-slate-400 focus:outline-none"
+              />
+            </div>
+          </div>
+
           {/* tendência */}
           <SideCard icon={TrendingDown} title="Tendência da dor">
             <div className="mb-1 flex items-baseline justify-between">

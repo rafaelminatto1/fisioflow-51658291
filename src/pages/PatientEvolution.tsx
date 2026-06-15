@@ -426,6 +426,47 @@ const PatientEvolution = () => {
 						return;
 					}
 
+					// Mesmo profissional editando (defasagem de versão, não conflito real):
+					// re-salva o conteúdo local por cima, sem checagem de versão. O modal de
+					// conflito só deve aparecer quando OUTRO usuário editou a evolução.
+					const currentUserId =
+						(state.user as any)?.id ?? (state.user as any)?.uid ?? (state.user as any)?.sub;
+					const sameAuthor =
+						!!serverCurrent?.created_by &&
+						!!currentUserId &&
+						serverCurrent.created_by === currentUserId;
+					if (sameAuthor) {
+						try {
+							const retryKey =
+								typeof crypto !== "undefined" && crypto.randomUUID
+									? crypto.randomUUID()
+									: `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+							const retried = await autoSaveMutation.mutateAsync({
+								patient_id: state.patientId,
+								appointment_id: state.appointmentId,
+								recordId: serverCurrent.id,
+								idempotencyKey: retryKey,
+								...data,
+							} as any);
+							if (retried?.id) {
+								state.setCurrentSoapRecordId(retried.id);
+								queryClient.setQueryData(
+									[
+										"evolution-records",
+										"drafts",
+										state.patientId,
+										"byAppointment",
+										state.appointmentId,
+									],
+									retried,
+								);
+							}
+							return;
+						} catch {
+							// Falhou a retentativa → cai no fluxo de conflito visível.
+						}
+					}
+
 					setConflict({
 						message:
 							err.payload.message ??
@@ -935,6 +976,27 @@ const PatientEvolution = () => {
 							toast.info("Suas alterações serão salvas", {
 								description:
 									"Sobrescrevendo a versão do servidor no próximo autosave.",
+							});
+						}}
+						onKeepBoth={() => {
+							const serverObs = conflict?.current?.observacao ?? "";
+							setConflict(null);
+							forceOverwriteRef.current = true;
+							// Funde os dois textos num único registro (servidor + local).
+							state.setEvolutionData((prev) => {
+								const localObs = prev.observacao ?? "";
+								const serverHas = stripHtml(serverObs).trim().length > 0;
+								const localHas = stripHtml(localObs).trim().length > 0;
+								const merged =
+									serverHas && localHas
+										? `${serverObs}<p>— — —</p>${localObs}`
+										: serverHas
+											? serverObs
+											: localObs;
+								return { ...prev, observacao: merged };
+							});
+							toast.info("Versões combinadas", {
+								description: "O texto do servidor e o seu foram mesclados.",
 							});
 						}}
 						onClose={() => setConflict(null)}

@@ -8,7 +8,7 @@
  *
  * Ref: specs/autosave-hardening-p2-p3/spec.md US2
  */
-import { AlertTriangle, RotateCw, Save, ArrowRight } from "lucide-react";
+import { AlertTriangle, RotateCw, Save, ArrowRight, GitMerge } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -44,6 +44,7 @@ interface EvolutionConflictModalProps {
   };
   onReload: () => void;
   onKeepLocal: () => void;
+  onKeepBoth: () => void;
   onClose: () => void;
 }
 
@@ -53,6 +54,7 @@ export function EvolutionConflictModal({
   localData,
   onReload,
   onKeepLocal,
+  onKeepBoth,
   onClose,
 }: EvolutionConflictModalProps) {
   const diffLines = useMemo(() => {
@@ -156,6 +158,10 @@ export function EvolutionConflictModal({
                 <strong>Manter minha versão</strong> — sobrescreve a versão do servidor com o que
                 você editou
               </li>
+              <li>
+                <strong>Manter ambas</strong> — junta o texto do servidor com o seu em um único
+                registro
+              </li>
             </ul>
           </div>
         </div>
@@ -164,6 +170,10 @@ export function EvolutionConflictModal({
           <Button variant="outline" onClick={onReload} className="flex-1 sm:flex-none">
             <RotateCw className="h-4 w-4 mr-2" />
             Recarregar do servidor
+          </Button>
+          <Button variant="outline" onClick={onKeepBoth} className="flex-1 sm:flex-none">
+            <GitMerge className="h-4 w-4 mr-2" />
+            Manter ambas
           </Button>
           <Button
             onClick={onKeepLocal}
