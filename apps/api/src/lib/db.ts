@@ -276,7 +276,12 @@ export function createPool(
           await client.connect();
           const effectiveOrgId = getOrgContext() || orgId;
           if (effectiveOrgId) {
-            await client.query(`SELECT set_config('app.org_id', $1, true)`, [effectiveOrgId]);
+            await client.query(
+              `SELECT set_config('app.org_id', $1, true),
+                      set_config('app.organization_id', $1, true),
+                      set_config('app.current_organization_id', $1, true)`,
+              [effectiveOrgId],
+            );
           }
           const res = await client.query(text, params);
           return {
@@ -448,3 +453,4 @@ export async function createPoolForOrg(env: Env, organizationId: string, default
 export async function getDbForOrg(organizationId: string, env: Env) {
   return await runWithOrg(organizationId, async () => createDb(env, "write"));
 }
+

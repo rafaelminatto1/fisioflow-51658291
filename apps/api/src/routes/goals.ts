@@ -256,7 +256,10 @@ app.delete("/:id", requireAuth, async (c) => {
   );
   if (!check.rows.length) return c.json({ error: "Meta não encontrada" }, 404);
 
-  await db.query("DELETE FROM patient_goals WHERE id = $1", [id]);
+  await db.query("DELETE FROM patient_goals WHERE id = $1 AND organization_id = $2", [
+    id,
+    user.organizationId,
+  ]);
   return c.json({ ok: true });
 });
 

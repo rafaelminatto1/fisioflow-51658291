@@ -82,10 +82,10 @@ app.patch("/:id", requireAuth, async (c) => {
   }
   if (!sets.length) return c.json({ error: "No fields to update" }, 400);
   sets.push(`updated_at = NOW()`);
-  params.push(id);
+  params.push(id, user.uid);
 
   const result = await db.query(
-    `UPDATE treatment_cycles SET ${sets.join(", ")} WHERE id = $${idx++} RETURNING *`,
+    `UPDATE treatment_cycles SET ${sets.join(", ")} WHERE id = $${idx++} AND therapist_id = $${idx++} RETURNING *`,
     params,
   );
   if (!result.rowCount) return c.json({ error: "Not found" }, 404);

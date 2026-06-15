@@ -115,9 +115,20 @@ app.patch("/:id", requireAuth, async (c) => {
 
 // Delete plan (cascades to items)
 app.delete("/:id", requireAuth, async (c) => {
+  const user = c.get("user");
   const id = c.req.param("id");
   const db = await createPool(c.env);
-  await db.query(`DELETE FROM exercise_plans WHERE id = $1`, [id]);
+
+  const check = await db.query(
+    "SELECT id FROM exercise_plans WHERE id = $1 AND (organization_id = $2 OR $2 IS NULL)",
+    [id, user.organizationId],
+  );
+  if (!check.rows.length) return c.json({ error: "Plano não encontrado" }, 404);
+
+  await db.query("DELETE FROM exercise_plans WHERE id = $1 AND organization_id = $2", [
+    id,
+    user.organizationId,
+  ]);
   return c.json({ ok: true });
 });
 

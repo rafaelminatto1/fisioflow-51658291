@@ -120,7 +120,10 @@ app.delete("/:id/files/:fileId", requireAuth, async (c) => {
   );
   if (!check.rows.length) return c.json({ error: "Arquivo não encontrado" }, 404);
 
-  await pool.query("DELETE FROM patient_exam_files WHERE id = $1", [fileId]);
+  await pool.query("DELETE FROM patient_exam_files WHERE id = $1 AND organization_id = $2", [
+    fileId,
+    user.organizationId,
+  ]);
   return c.json({ ok: true, file_path: check.rows[0].file_path });
 });
 

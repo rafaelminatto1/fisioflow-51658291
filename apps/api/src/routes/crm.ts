@@ -452,7 +452,10 @@ app.delete("/tarefas/:id", requireAuth, async (c) => {
   );
   if (!check.rows.length) return c.json({ error: "Tarefa não encontrada" }, 404);
 
-  await pool.query("DELETE FROM crm_tarefas WHERE id = $1", [id]);
+  await pool.query("DELETE FROM crm_tarefas WHERE id = $1 AND organization_id = $2", [
+    id,
+    user.organizationId,
+  ]);
   return c.json({ ok: true });
 });
 

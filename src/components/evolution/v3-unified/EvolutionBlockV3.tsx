@@ -152,7 +152,7 @@ const EvolutionItemRow: React.FC<EvolutionItemRowProps> = ({
             ref={provided.innerRef}
             {...provided.draggableProps}
             className={cn(
-              "group/item relative flex flex-col rounded-xl border overflow-hidden mb-1.5 transition-[border-color,box-shadow,background-color,opacity] duration-200",
+              "group/item relative flex flex-col rounded-xl border border-l-[4px] overflow-hidden mb-1.5 transition-[border-color,box-shadow,background-color,opacity] duration-200",
               item.completed
                 ? "bg-muted/5 border-border/40"
                 : "bg-background border-border/60 shadow-sm",
@@ -163,15 +163,21 @@ const EvolutionItemRow: React.FC<EvolutionItemRowProps> = ({
             )}
             style={{
               ...provided.draggableProps.style,
+              // Borda esquerda colorida: procedimento = roxo, exercício = verde.
+              borderLeftColor: item.type === "exercise" ? "#10b981" : "#a855f7",
               // Garante que o width seja mantido quando estiver no portal
               width: snapshot.isDragging
                 ? "var(--drag-width)"
                 : provided.draggableProps.style?.width,
             }}
           >
-            {/* Row Header */}
+            {/* Row Header — arrastável em qualquer ponto da linha */}
             <div
-              className="flex items-center gap-2 px-2.5 py-1.5"
+              {...provided.dragHandleProps}
+              className={cn(
+                "flex items-center gap-2 px-2.5 py-1.5",
+                !disabled && "cursor-grab active:cursor-grabbing",
+              )}
               ref={(el) => {
                 if (el && snapshot.isDragging) {
                   // Captura o width original para usar no portal
@@ -191,13 +197,11 @@ const EvolutionItemRow: React.FC<EvolutionItemRowProps> = ({
                 {index + 1}
               </span>
               <div
-                {...provided.dragHandleProps}
                 className={cn(
-                  "flex h-7 w-6 shrink-0 items-center justify-center rounded-md cursor-grab active:cursor-grabbing",
-                  "text-muted-foreground/35 hover:bg-muted/50 hover:text-muted-foreground/80 transition-colors",
-                  disabled && "cursor-not-allowed opacity-40",
+                  "flex h-7 w-5 shrink-0 items-center justify-center text-muted-foreground/35",
+                  disabled && "opacity-40",
                 )}
-                aria-label="Arrastar item na sequência"
+                aria-hidden="true"
               >
                 <GripVertical className="h-3.5 w-3.5" />
               </div>
@@ -209,29 +213,36 @@ const EvolutionItemRow: React.FC<EvolutionItemRowProps> = ({
                 className="h-4 w-4 rounded data-[state=checked]:bg-primary data-[state=checked]:border-primary"
               />
 
-              <button
-                type="button"
+              <div
+                role="button"
+                tabIndex={0}
                 className="flex min-w-0 flex-1 cursor-pointer items-center gap-2 text-left"
                 onClick={() => setExpandedId(isExpanded ? null : item.id)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    setExpandedId(isExpanded ? null : item.id);
+                  }
+                }}
               >
                 <span
                   className={cn(
-                    "min-w-0 shrink text-sm font-semibold transition-all duration-300 flex items-center gap-2",
+                    "min-w-0 flex-1 text-sm font-semibold transition-all duration-300 flex items-center gap-2",
                     item.completed &&
                       "text-muted-foreground/70 line-through decoration-muted-foreground/30 font-medium",
                   )}
                 >
                   {type === "unified" &&
                     (item.type === "exercise" ? (
-                      <Dumbbell className="h-3.5 w-3.5 text-blue-500/70 shrink-0" />
+                      <Dumbbell className="h-3.5 w-3.5 text-emerald-500/80 shrink-0" />
                     ) : (
-                      <Stethoscope className="h-3.5 w-3.5 text-emerald-500/70 shrink-0" />
+                      <Stethoscope className="h-3.5 w-3.5 text-purple-500/80 shrink-0" />
                     ))}
                   <span className="truncate">{item.name}</span>
                 </span>
 
                 {itemDetails.length > 0 && (
-                  <div className="flex min-w-0 flex-1 items-center gap-1.5 overflow-hidden">
+                  <div className="flex max-w-[42%] shrink-0 items-center gap-1.5 overflow-hidden">
                     {itemDetails.slice(0, 2).map((detail) => (
                       <Badge
                         key={detail.key}
@@ -276,7 +287,7 @@ const EvolutionItemRow: React.FC<EvolutionItemRowProps> = ({
                     </div>
                   )}
                 </div>
-              </button>
+              </div>
 
               <div className="flex items-center gap-1">
                 <Button
