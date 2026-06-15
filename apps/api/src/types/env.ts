@@ -302,6 +302,10 @@ export interface Env {
   VAPID_PRIVATE_KEY?: string;
   VAPID_SUBJECT?: string;
 
+  // NCBI E-utils (PubMed)
+  NCBI_API_KEY?: string;
+  NCBI_EMAIL?: string;
+
   // Wearable OAuth
   GARMIN_CLIENT_ID?: string;
   GARMIN_CLIENT_SECRET?: string;
