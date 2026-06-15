@@ -59,5 +59,5 @@ export async function acquireNcbiSlot(
     .prepare(`SELECT count FROM rate_limits WHERE key = ? AND window_start = ?`)
     .bind(key, windowStart)
     .first()) as { count: number } | null;
-  return (row?.count ?? 0) <= perSecond;
+  return (row?.count ?? 0) < perSecond;
 }
