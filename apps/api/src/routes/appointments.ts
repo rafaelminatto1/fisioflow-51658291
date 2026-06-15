@@ -194,18 +194,6 @@ app.post(
 
       const organizationId = user.organizationId;
 
-      console.log("[Appointments/Create] Input Body:", JSON.stringify(body));
-      console.log("[Appointments/Create] Processed Fields:", {
-        patientId,
-        therapistId,
-        date,
-        startTime,
-        endTime,
-        durationMinutes,
-        status,
-        organizationId,
-      });
-
       if (!patientId) return c.json({ error: "patient_id é obrigatório" }, 400);
       if (!date) return c.json({ error: "date é obrigatório" }, 400);
       if (!startTime) return c.json({ error: "start_time é obrigatório" }, 400);

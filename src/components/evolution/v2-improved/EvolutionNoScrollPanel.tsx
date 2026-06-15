@@ -4,7 +4,6 @@ import {
   Anchor,
   ArrowRight,
   FileText,
-  Fingerprint,
   Flame,
   GitCompare,
   HeartPulse,
@@ -332,7 +331,7 @@ export const EvolutionNoScrollPanel = memo(
     const observationsValue = data.evolutionText || data.observations || "";
 
     return (
-      <div className="grid min-h-0 flex-1 grid-cols-1 gap-4 overflow-hidden p-4 lg:grid-cols-[minmax(0,1fr)_minmax(380px,460px)_minmax(380px,460px)]">
+      <div className="grid min-h-0 flex-1 grid-cols-1 gap-4 overflow-hidden p-4 lg:grid-cols-[minmax(0,1fr)_minmax(380px,540px)_minmax(300px,340px)]">
         {/* ===================== COLUNA 1 — OBSERVAÇÕES ===================== */}
         <div className="flex min-h-0 flex-col overflow-hidden rounded-2xl border border-t-[3px] border-border border-t-[#F59E0B] bg-card shadow-sm">
           <div className="flex items-center gap-3 border-b border-border px-4 py-3">
@@ -521,36 +520,7 @@ export const EvolutionNoScrollPanel = memo(
             />
           </SideCard>
 
-          {/* qualidade */}
-          <SideCard icon={Fingerprint} title="Qualidade da dor" accent="border-t-rose-400">
-            {quality.length === 0 ? (
-              <p className="text-[11.5px] font-semibold text-muted-foreground">
-                Selecione o tipo de dor no medidor ao lado.
-              </p>
-            ) : (
-              <div className="flex flex-col gap-2.5">
-                {quality.map((q) => {
-                  const Icon = QUALITY_ICON[q.type] ?? Zap;
-                  return (
-                    <div key={q.type}>
-                      <div className="mb-1 flex items-center justify-between text-[11.5px] font-bold">
-                        <span className="flex items-center gap-1.5">
-                          <Icon className="h-3 w-3 text-rose-500" /> {q.type}
-                        </span>
-                        <span className="capitalize">{q.intensity}</span>
-                      </div>
-                      <div className="h-[7px] overflow-hidden rounded-full bg-slate-100">
-                        <i
-                          className="block h-full rounded-full bg-rose-500"
-                          style={{ width: INTENSITY_WIDTH[q.intensity] }}
-                        />
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </SideCard>
+
 
           {/* vs sessão anterior */}
           <SideCard icon={GitCompare} title="vs. sessão anterior" accent="border-t-blue-500">

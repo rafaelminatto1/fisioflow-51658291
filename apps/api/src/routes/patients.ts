@@ -1223,21 +1223,15 @@ app.post("/", async (c) => {
   });
 
   const body = (await c.req.json()) as PatientPayload;
-  console.log("[Patients/Create] Body received:", body);
 
   const fullName = trimmedString(body.full_name ?? body.name);
   if (!fullName) {
-    console.log("[Patients/Create] Validation failed: missing fullName");
     return c.json({ error: "Nome é obrigatório" }, 400);
   }
 
   try {
-    console.log("[Patients/Create] Building insert values...");
     const insertValues = buildPatientWritePayload(body, user.organizationId, true);
     insertValues.fullName = fullName;
-
-    console.log("[Patients/Create] Insert values:", insertValues);
-    console.log("[Patients/Create] Executing DB insert...");
 
     // CRM hub: cria/atualiza contact ANTES do INSERT em patients para que o
     // FK contact_id já vá no insert. Dedup por (org, cpf|phone|email).

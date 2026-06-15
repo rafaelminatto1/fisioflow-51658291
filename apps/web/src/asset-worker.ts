@@ -121,7 +121,62 @@ export default {
     const response = await env.ASSETS.fetch(request);
     if (response.status !== 404) return response;
 
-    if (isAssetRequest(url)) return response;
+    if (isAssetRequest(url)) {
+      // Improve 404 responses for assets: ensure proper content-type
+      // and detect when HTML is being served as JS/CSS (stale cache issue)
+      const contentType = response.headers.get("content-type") ?? "";
+      const hasInvalidContentType =
+        contentType === "" ||
+        (url.pathname.endsWith(".js") && !contentType.includes("javascript")) ||
+        (url.pathname.endsWith(".css") && !contentType.includes("css"));
+
+      // Check if response body looks like HTML (indicates fallback SPA being served as asset)
+      const bodyMayBeHtml =
+        !hasInvalidContentType &&
+        (url.pathname.endsWith(".js") || url.pathname.endsWith(".css"));
+
+      if (hasInvalidContentType || bodyMayBeHtml) {
+        // Return proper 404 with correct content-type based on file extension
+        let correctContentType = "text/plain";
+        if (url.pathname.endsWith(".js")) {
+          correctContentType = "application/javascript";
+        } else if (url.pathname.endsWith(".css")) {
+          correctContentType = "text/css";
+        }
+
+        // Try to get the actual body to check if it's HTML
+        const clone = response.clone();
+        const text = await clone.text();
+        
+        // If body looks like HTML (fallback SPA), treat as hard miss and suggest reload
+        if (
+          text.trim().startsWith("<!doctype") ||
+          text.trim().startsWith("<html") ||
+          (text.includes("<head") && text.includes("</head>"))
+        ) {
+          // Return 404 with special header to trigger client-side reload
+          return new Response("Not Found", {
+            status: 404,
+            headers: {
+              "content-type": correctContentType,
+              "x-fisioflow-reload-hint": "true", // Signal to client to consider reload
+              "cache-control": "no-cache, no-store, must-revalidate",
+            },
+          });
+        }
+
+        // Return proper 404 with correct content-type
+        return new Response("Not Found", {
+          status: 404,
+          headers: {
+            "content-type": correctContentType,
+            "cache-control": "no-cache, no-store, must-revalidate",
+          },
+        });
+      }
+
+      return response;
+    }
 
     const indexUrl = new URL("/", url.origin);
     return env.ASSETS.fetch(new Request(indexUrl.toString(), request));

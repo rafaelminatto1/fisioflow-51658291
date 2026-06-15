@@ -98,19 +98,16 @@ export const EvolutionHeaderV3 = memo(
     // Data e horário do agendamento desta sessão.
     const sessionWhen = (() => {
       const a = appointment as any;
-      const rawDate = a?.appointment_date ?? a?.date ?? a?.start_time ?? a?.startTime;
-      const rawTime = a?.appointment_time ?? a?.time;
+      const rawDate = a?.date ?? a?.appointment_date ?? a?.startTime ?? a?.start_time;
+      const rawTime = a?.start_time ?? a?.startTime ?? a?.appointment_time ?? a?.time;
       let out = "";
       try {
         if (rawDate) {
-          const d = parseResponseDate(rawDate) ?? new Date(rawDate);
-          if (d && !Number.isNaN(d.getTime())) {
-            out = format(d, "dd 'de' MMM 'de' yyyy", { locale: ptBR });
-            // hora embutida no datetime quando não há campo separado
-            if (!rawTime && /\d{2}:\d{2}/.test(String(rawDate))) {
-              out += ` · ${format(d, "HH:mm")}`;
-            }
-          }
+          const ymd = String(rawDate).slice(0, 10);
+          const d = /^\d{4}-\d{2}-\d{2}$/.test(ymd)
+            ? new Date(`${ymd}T12:00:00`)
+            : new Date(rawDate);
+          if (!Number.isNaN(d.getTime())) out = format(d, "dd 'de' MMM 'de' yyyy", { locale: ptBR });
         }
         if (rawTime) out += `${out ? " · " : ""}${String(rawTime).slice(0, 5)}`;
       } catch {

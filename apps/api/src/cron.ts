@@ -84,7 +84,11 @@ export async function handleScheduled(event: ScheduledEvent, env: Env, ctx: Exec
       }
 
       case "0 10 * * *":
-        // DELEGADO: WikiSyncWorkflow agora usa schedules no wrangler.toml
+        // UTC 10h = BRT 07h — Segundo prewarm logo antes do horário comercial
+        {
+          const pool = createPool(env);
+          await prewarmDatabase(pool);
+        }
         console.log("[Cron] WikiSync delegated to scheduled workflow");
         break;
 

@@ -88,7 +88,6 @@ app.post("/transactions", requireAuth, async (c) => {
       stripeRefundId: body.stripe_refund_id ?? null,
       metadata: body.metadata ?? {},
     };
-    console.log("[Financial/Transactions] Inserting:", transactionValues);
     const [result] = await db.insert(transactions).values(transactionValues).returning();
 
     return c.json({ data: result }, 201);

@@ -30,7 +30,11 @@ export const isChunkLoadError = (error: unknown): boolean => {
       message,
     ) ||
     /Failed to load module script/i.test(message) ||
-    (/Failed to fetch/i.test(message) && (message.includes(".js") || message.includes(".css")))
+    (/Failed to fetch/i.test(message) && (message.includes(".js") || message.includes(".css"))) ||
+    // New: Detect empty/invalid MIME type for JS/CSS
+    /MIME type of ""/i.test(message) ||
+    /Refused to apply style/i.test(message) ||
+    /The server responded with a status of 404/i.test(message)
   );
 };
 

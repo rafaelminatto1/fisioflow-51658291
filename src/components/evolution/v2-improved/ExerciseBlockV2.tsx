@@ -4,7 +4,7 @@
  * Enhanced exercises block with better UX,
  * professional design, and improved feedback indicators.
  */
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect, useRef } from "react";
 import {
   Dumbbell,
   Plus,
@@ -234,8 +234,38 @@ const ExerciseV2Row: React.FC<{
     onUpdateObservations,
     disabled,
   }) => {
-    const [expanded, setExpanded] = useState(false);
+    const [expanded, setExpanded] = useState(() => {
+      const hasFeedback = !!(
+        exercise.patientFeedback?.pain ||
+        exercise.patientFeedback?.fatigue ||
+        exercise.patientFeedback?.difficultyPerforming
+      );
+      const hasObs = !!exercise.observations?.trim();
+      return hasFeedback || hasObs;
+    });
     const [isRemoving, setIsRemoving] = useState(false);
+
+    const prevHasContentRef = useRef(false);
+
+    useEffect(() => {
+      const hasFeedback = !!(
+        exercise.patientFeedback?.pain ||
+        exercise.patientFeedback?.fatigue ||
+        exercise.patientFeedback?.difficultyPerforming
+      );
+      const hasObs = !!exercise.observations?.trim();
+      const hasContent = hasFeedback || hasObs;
+
+      if (hasContent && !prevHasContentRef.current) {
+        setExpanded(true);
+      }
+      prevHasContentRef.current = hasContent;
+    }, [
+      exercise.patientFeedback?.pain,
+      exercise.patientFeedback?.fatigue,
+      exercise.patientFeedback?.difficultyPerforming,
+      exercise.observations,
+    ]);
 
     const hasFeedbackIssues =
       exercise.patientFeedback?.pain ||

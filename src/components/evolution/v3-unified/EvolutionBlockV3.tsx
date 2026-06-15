@@ -122,8 +122,6 @@ interface EvolutionItemRowProps {
   item: EvolutionItemV3;
   index: number;
   disabled: boolean;
-  expandedId: string | null;
-  setExpandedId: (id: string | null) => void;
   handleToggleItem: (id: string) => void;
   handleRemoveItem: (id: string) => void;
   handleUpdateItem: (id: string, updates: Partial<EvolutionItemV3>) => void;
@@ -134,14 +132,30 @@ const EvolutionItemRow: React.FC<EvolutionItemRowProps> = ({
   item,
   index,
   disabled,
-  expandedId,
-  setExpandedId,
   handleToggleItem,
   handleRemoveItem,
   handleUpdateItem,
   type,
 }) => {
-  const isExpanded = expandedId === item.id;
+  const [isExpanded, setIsExpanded] = useState(() => {
+    const hasNotes = !!(item.notes?.trim() || item.intensity?.trim());
+    const hasFeedback = !!item.patientFeedback?.trim();
+    return hasNotes || hasFeedback;
+  });
+
+  const prevHasContentRef = useRef(false);
+
+  useEffect(() => {
+    const hasNotes = !!(item.notes?.trim() || item.intensity?.trim());
+    const hasFeedback = !!item.patientFeedback?.trim();
+    const hasContent = hasNotes || hasFeedback;
+
+    if (hasContent && !prevHasContentRef.current) {
+      setIsExpanded(true);
+    }
+    prevHasContentRef.current = hasContent;
+  }, [item.notes, item.intensity, item.patientFeedback]);
+
   const itemDetails = formatItemDetail(item);
 
   return (
@@ -217,11 +231,11 @@ const EvolutionItemRow: React.FC<EvolutionItemRowProps> = ({
                 role="button"
                 tabIndex={0}
                 className="flex min-w-0 flex-1 cursor-pointer items-center gap-2 text-left"
-                onClick={() => setExpandedId(isExpanded ? null : item.id)}
+                onClick={() => setIsExpanded(!isExpanded)}
                 onKeyDown={(e) => {
                   if (e.key === "Enter" || e.key === " ") {
                     e.preventDefault();
-                    setExpandedId(isExpanded ? null : item.id);
+                    setIsExpanded(!isExpanded);
                   }
                 }}
               >
@@ -293,7 +307,7 @@ const EvolutionItemRow: React.FC<EvolutionItemRowProps> = ({
                 <Button
                   size="icon"
                   variant="ghost"
-                  onClick={() => setExpandedId(isExpanded ? null : item.id)}
+                  onClick={() => setIsExpanded(!isExpanded)}
                   className="h-7 w-7 rounded-md text-muted-foreground hover:text-primary transition-colors"
                 >
                   {isExpanded ? (
@@ -436,7 +450,6 @@ export const EvolutionBlockV3: React.FC<EvolutionBlockV3Props> = ({
   variant = "card",
 }) => {
   const [newItemName, setNewItemName] = useState("");
-  const [expandedId, setExpandedId] = useState<string | null>(null);
   const [newItemDialogOpen, setNewItemDialogOpen] = useState(false);
   const [pendingItemName, setPendingItemName] = useState("");
   const [isInputFocused, setIsInputFocused] = useState(false);
@@ -920,8 +933,6 @@ export const EvolutionBlockV3: React.FC<EvolutionBlockV3Props> = ({
                       index={index}
                       type={type}
                       disabled={disabled}
-                      expandedId={expandedId}
-                      setExpandedId={setExpandedId}
                       handleToggleItem={handleToggleItem}
                       handleRemoveItem={handleRemoveItem}
                       handleUpdateItem={handleUpdateItem}

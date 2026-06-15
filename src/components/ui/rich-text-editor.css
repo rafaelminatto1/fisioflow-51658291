@@ -74,6 +74,11 @@
   color: hsl(var(--foreground));
 }
 
+/* Variante alta — usada na caixa principal de Observações clínicas */
+.rich-text-editor.rte-tall .ProseMirror {
+  min-height: min(58vh, 640px);
+}
+
 .rich-text-editor .ProseMirror p {
   margin: 0 0 0.5em 0;
 }

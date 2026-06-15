@@ -151,8 +151,8 @@ describe("asset-worker fetch", () => {
     );
 
     expect(response.status).toBe(404);
-    expect(response.headers.get("content-type")).toContain("text/plain");
-    expect(await response.text()).toBe("Not found");
+    expect(response.headers.get("content-type")).toContain("application/javascript");
+    expect(await response.text()).toBe("Not Found");
     expect(requests).toEqual(["/assets/config-Qo05B-wO.js"]);
   });
 });

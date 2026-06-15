@@ -14,6 +14,7 @@ interface RichTextBlockProps {
   onValueChange: (value: string) => void;
   disabled?: boolean;
   className?: string;
+  editorClassName?: string;
   showToolbar?: boolean;
   collaborationId?: string;
   userName?: string;
@@ -27,6 +28,7 @@ export const RichTextBlock: React.FC<RichTextBlockProps> = ({
   onValueChange,
   disabled,
   className,
+  editorClassName,
   showToolbar = false,
   collaborationId,
   userName,
@@ -53,6 +55,7 @@ export const RichTextBlock: React.FC<RichTextBlockProps> = ({
           className={cn(
             "transition-all duration-200 border-transparent hover:bg-slate-50",
             isFocused && "bg-white ring-1 ring-slate-200 shadow-sm",
+            editorClassName,
           )}
         />
       </div>
