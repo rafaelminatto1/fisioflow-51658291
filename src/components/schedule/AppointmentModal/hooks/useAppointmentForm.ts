@@ -22,6 +22,7 @@ import { isAppointmentConflictError } from "@/utils/appointmentErrors";
 import { checkAppointmentConflict } from "@/utils/appointmentValidation";
 import { useScheduleCapacity } from "@/hooks/useScheduleCapacity";
 import { invalidateAppointmentsComprehensive } from "@/utils/cacheInvalidation";
+import { upsertAppointmentIntoScheduleCache } from "@/hooks/useSchedulePage";
 import type { DuplicateConfig } from "../DuplicateAppointmentDialog";
 
 interface UseAppointmentFormProps {
@@ -285,12 +286,17 @@ export const useAppointmentForm = ({
     if (appointmentId) {
       setIsUpdating(true);
       try {
-        await appointmentsApi.update(appointmentId, {
+        const updated = await appointmentsApi.update(appointmentId, {
           ...formattedData,
           organizationId: currentOrganization?.id,
           ignoreCapacity,
         } as any);
-        await invalidateAppointmentsComprehensive(
+        // Atualiza o cache da agenda imediatamente (sem esperar refetch)
+        if (updated?.data) {
+          upsertAppointmentIntoScheduleCache(queryClient, updated.data);
+        }
+        // Reconciliação em background — não bloqueia o fechamento do modal
+        void invalidateAppointmentsComprehensive(
           queryClient,
           appointmentData.appointment_date,
           currentOrganization?.id,
@@ -301,12 +307,18 @@ export const useAppointmentForm = ({
     } else {
       setIsCreating(true);
       try {
-        await appointmentsApi.create({
+        const created = await appointmentsApi.create({
           ...formattedData,
           organizationId: currentOrganization?.id,
           ignoreCapacity,
         });
-        await invalidateAppointmentsComprehensive(
+        // Insere o novo agendamento no cache da agenda para aparecer
+        // INSTANTANEAMENTE no FullCalendar, sem aguardar o round-trip do refetch
+        if (created?.data) {
+          upsertAppointmentIntoScheduleCache(queryClient, created.data);
+        }
+        // Reconciliação em background — não bloqueia o fechamento do modal
+        void invalidateAppointmentsComprehensive(
           queryClient,
           appointmentData.appointment_date,
           currentOrganization?.id,

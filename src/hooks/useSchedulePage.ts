@@ -7,7 +7,13 @@
  * @version 1.0.0 - Library Mode Migration
  */
 
-import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  keepPreviousData,
+  useMutation,
+  useQuery,
+  useQueryClient,
+  type QueryClient,
+} from "@tanstack/react-query";
 import { useMemo } from "react";
 import { toast } from "sonner";
 import { appointmentsApi } from "@/api/v2/appointments";
@@ -20,6 +26,7 @@ import { fisioLogger as logger } from "@/lib/errors/logger";
 import { AppointmentService } from "@/services/appointmentService";
 import { normalizeStatus } from "@/components/schedule/shared/appointment-status";
 import { parseLocalDate, todayYMD, toLocalYMD } from "@/lib/date-utils";
+import { calculatePeriodBounds, isDateInPeriod } from "@/utils/periodCalculations";
 
 import type { Appointment } from "@/types/appointment";
 import type { AppointmentRow, PatientRow, TherapistProfileRow } from "@/types/workers";
@@ -120,6 +127,66 @@ const matchesScheduleFilters = (appointment: Appointment, filters?: ScheduleFilt
 
   return true;
 };
+
+/**
+ * Insere/atualiza (upsert) um agendamento recém-salvo diretamente no cache da
+ * agenda viva (["schedule-appointments", ...]) para que ele apareça
+ * INSTANTANEAMENTE no FullCalendar, sem esperar o refetch da rede.
+ *
+ * Respeita o período (dia/semana/mês) e os filtros de cada query em cache, de
+ * modo que o card só seja injetado nas visões onde ele realmente deveria
+ * aparecer. A revalidação em background (invalidateAppointmentsComprehensive)
+ * reconcilia o cache com o servidor logo em seguida.
+ */
+export function upsertAppointmentIntoScheduleCache(
+  queryClient: QueryClient,
+  row: AppointmentRow,
+): void {
+  const appt = mapAppointmentRowToCalendarAppointment(row as ScheduleAppointmentRow);
+
+  const entries = queryClient.getQueriesData<Appointment[]>({
+    queryKey: ["schedule-appointments"],
+  });
+
+  for (const [key, data] of entries) {
+    if (!Array.isArray(data)) continue;
+
+    const dateStr = key[1] as string | undefined;
+    const view = key[2] as ViewType | undefined;
+    const queryFilters: ScheduleFilters = {
+      status: (key[3] as string[] | undefined) ?? [],
+      types: (key[4] as string[] | undefined) ?? [],
+      therapists: (key[5] as string[] | undefined) ?? [],
+      patient: key[6] as string | undefined,
+    };
+
+    let inPeriod = true;
+    if (dateStr && view) {
+      const bounds = calculatePeriodBounds({
+        viewType: view,
+        date: parseLocalDate(dateStr),
+        organizationId: "",
+      });
+      inPeriod = isDateInPeriod(appt.date, bounds);
+    }
+
+    const belongsHere = inPeriod && matchesScheduleFilters(appt, queryFilters);
+    const exists = data.some((a) => a.id === appt.id);
+
+    let next = data;
+    if (exists) {
+      next = belongsHere
+        ? data.map((a) => (a.id === appt.id ? appt : a))
+        : data.filter((a) => a.id !== appt.id);
+    } else if (belongsHere) {
+      next = [...data, appt];
+    }
+
+    if (next !== data) {
+      queryClient.setQueryData<Appointment[]>(key, next);
+    }
+  }
+}
 
 export function useSchedulePageData(date: string, view: ViewType, filters?: ScheduleFilters) {
   const queryClient = useQueryClient();
