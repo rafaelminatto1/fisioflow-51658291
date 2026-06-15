@@ -14,6 +14,7 @@ import {
   Activity,
 } from "lucide-react";
 import { PageLayout, PageContainer, PageHeader } from "@/components/layout/PageLayout";
+import { cn } from "@/lib/utils";
 import { PatientDashboard360 } from "@/components/patient/dashboard/PatientDashboard360";
 import { PhysicalExamForm } from "@/components/patient/forms/PhysicalExamForm";
 import { PainMapManager } from "@/components/evolution/PainMapManager";
