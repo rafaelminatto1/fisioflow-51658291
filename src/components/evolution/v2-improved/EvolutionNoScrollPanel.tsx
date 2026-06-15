@@ -422,7 +422,7 @@ export const EvolutionNoScrollPanel = memo(
               )}
             </div>
 
-            <PainGauge value={discharge} arrival={arrival} compact />
+            <PainGauge value={discharge} arrival={arrival} compact onChange={setDischarge} />
 
             <div className="mt-2 flex gap-2.5">
               <EvaPicker

@@ -633,7 +633,9 @@ async function prewarmDatabase(pool: any) {
         pg_prewarm('patients')     AS patients_blocks,
         pg_prewarm('exercises')    AS exercises_blocks,
         pg_prewarm('sessions')     AS sessions_blocks,
-        pg_prewarm('exercise_protocols') AS protocols_blocks
+        pg_prewarm('exercise_protocols') AS protocols_blocks,
+        pg_prewarm('organizations') AS orgs_blocks,
+        pg_prewarm('profiles') AS profiles_blocks
     `);
     console.log("[Cron] Database cache prewarmed successfully.");
   } catch (error) {
