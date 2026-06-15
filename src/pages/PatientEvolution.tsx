@@ -732,8 +732,8 @@ const PatientEvolution = () => {
 							<TabsContent value="evolucao" className="m-0 h-full data-[state=active]:flex flex-col">
 								<Suspense fallback={<LoadingSkeleton />}>
 									<EvolutionNoScrollPanel
-										data={state.evolutionDataV2}
-										onChange={state.setEvolutionDataV2}
+										data={state.evolutionV2Data}
+										onChange={state.setEvolutionV2Data}
 										patientId={state.patientId!}
 										evolutionId={state.currentSoapRecordId!}
 									/>
@@ -897,8 +897,8 @@ const PatientEvolution = () => {
 							}));
 						}}
 					/>
-				</ComponentErrorBoundary>
-			</PageContainer>
+				</div>
+			</ComponentErrorBoundary>
 		</PageLayout>
 	);
 };
