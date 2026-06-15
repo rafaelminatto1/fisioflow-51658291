@@ -1,0 +1,12 @@
+{
+  "ignorePatterns": [
+    "scripts/archive/**",
+    "evolucao/**",
+    "migrate-pages.*",
+    "e2e/**",
+    "test-*.js",
+    "manual-test.js",
+    "apps/patient-app/**",
+    "apps/professional-app/**"
+  ]
+}

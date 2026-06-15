@@ -1,0 +1,5 @@
+/* ============================================================================
+   FisioFlow Design System — root stylesheet
+   Single entry point for consumers. Imports the token foundation.
+   ============================================================================ */
+@import "colors_and_type.css";

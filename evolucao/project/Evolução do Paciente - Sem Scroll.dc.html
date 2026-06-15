@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="_ds/fisioflow-design-system-019e1c70-8b8d-751e-a4d5-3f0d34162504/colors_and_type.css">
+  <link rel="stylesheet" href="kit.css">
+  <script src="_ds/fisioflow-design-system-019e1c70-8b8d-751e-a4d5-3f0d34162504/_ds_bundle.js"></script>
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+  <style>
+    body { margin: 0; background: hsl(220 14% 93%); }
+  </style>
+</helmet>
+
+<div style="padding: 26px 36px 56px; display: flex; flex-direction: column; gap: 30px; font-family: var(--font-sans);">
+
+  <div style="display: flex; flex-direction: column; gap: 4px;">
+    <div style="font-size: 20px; font-weight: 800; letter-spacing: -0.01em;">Evolução do Paciente — layouts sem scroll</div>
+    <div style="font-size: 13px; color: hsl(var(--muted-foreground)); max-width: 860px;">A tela cabe inteira na área útil de um notebook 1366×768 (moldura de 1366×660, já descontando navegador e barra do Windows). Retorno Médico / Cirurgias / Metas viraram chips compactos, a barra inferior (PDF · NF-e · Salvar · Concluir) foi eliminada — Concluir vive no cabeçalho e PDF/NF-e ficam no menu "⋮". Esta entrega mantém apenas a <strong>Versão Final</strong>.</div>
+  </div>
+
+  <!-- ============================================================ VERSÃO FINAL -->
+  <section style="display: flex; flex-direction: column; gap: 10px;">
+    <div style="display: flex; flex-direction: column; gap: 3px;">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <span style="display: inline-flex; align-items: center; gap: 6px; padding: 4px 11px; border-radius: 999px; background: hsl(211 100% 50%); color: white; font-size: 10px; font-weight: 800; letter-spacing: 0.08em;"><i data-lucide="check" style="width: 12px; height: 12px;"></i> VERSÃO FINAL</span>
+        <div style="font-size: 16px; font-weight: 800;">Três colunas · EVA na lateral · Histórico em gaveta</div>
+      </div>
+      <div style="font-size: 12.5px; color: hsl(var(--muted-foreground)); max-width: 860px;">Layout final com Observações · Procedimentos + Casa · 3ª coluna. A escala de dor (EVA) saiu da faixa do topo e virou um card completo na 3ª coluna — box colorido, rótulo e barra clicável de 0 a 10. O <strong>Histórico de Sessões</strong> abre numa gaveta lateral: clique no card "Histórico" ou no botão do cabeçalho e use <strong>Replicar conduta</strong> para copiar os procedimentos de uma sessão passada para a de hoje.</div>
+    </div>
+    <div style="{{ fitOuter }}">
+      <div style="{{ fitInner }}">
+        <div data-screen-label="Versão Final" style="width: 1366px; height: 660px; background: hsl(var(--background)); border-radius: 18px; overflow: hidden; display: grid; grid-template-columns: 248px 1fr; border: 2px solid hsl(211 100% 70%); box-shadow: 0 18px 44px rgba(15, 23, 42, 0.16);">
+          <x-import component-from-global-scope="Sidebar" active="pacientes" hint-size="248px,660px" style="display: flex; align-items: stretch; height: 660px; overflow: hidden;"></x-import>
+          <div style="display: flex; flex-direction: column; min-width: 0; min-height: 0; position: relative;">
+
+            <!-- header -->
+            <div style="display: flex; align-items: center; gap: 12px; padding: 9px 18px; border-bottom: 1px solid hsl(var(--border)); background: hsl(var(--card)); flex-shrink: 0;">
+              <button style="width: 30px; height: 30px; border-radius: 10px; border: 1px solid hsl(var(--border)); background: hsl(var(--card)); display: flex; align-items: center; justify-content: center; cursor: pointer; color: hsl(var(--muted-foreground));"><i data-lucide="arrow-left" style="width: 15px; height: 15px;"></i></button>
+              <div style="width: 36px; height: 36px; border-radius: 50%; background: hsl(211 100% 92%); color: hsl(211 100% 30%); display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 13px; flex-shrink: 0;">RM</div>
+              <div style="display: flex; flex-direction: column; gap: 1px; min-width: 0;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <strong style="font-size: 15px; letter-spacing: -0.01em; white-space: nowrap;">Rafael Minatto De Martino</strong>
+                  <span style="display: inline-flex; padding: 2px 9px; border-radius: 999px; background: hsl(211 100% 95%); color: hsl(211 100% 35%); font-size: 9.5px; font-weight: 800; letter-spacing: 0.05em;">SESSÃO #3</span>
+                </div>
+                <div class="tabular-nums" style="font-size: 11px; color: hsl(var(--muted-foreground)); font-weight: 600;">3ª sessão · 3 evoluções · 0 medições · <span style="color: hsl(158 64% 32%);">100% sucesso</span></div>
+              </div>
+              <div style="margin-left: auto; display: flex; align-items: center; gap: 10px;">
+                <button style="display: inline-flex; align-items: center; gap: 6px; height: 30px; padding: 0 12px; border-radius: 999px; border: 1px solid hsl(211 100% 86%); background: hsl(211 100% 96%); color: hsl(211 100% 38%); font-size: 10px; font-weight: 800; letter-spacing: 0.06em; cursor: pointer; font-family: inherit;"><i data-lucide="mic" style="width: 13px; height: 13px;"></i> VOICE SCRIBE</button>
+                <button onClick="{{ toggleFin }}" style="display: inline-flex; align-items: center; gap: 6px; height: 30px; padding: 0 12px; border-radius: 999px; border: 1px solid hsl(211 100% 86%); background: hsl(211 100% 96%); color: hsl(211 100% 38%); font-size: 10px; font-weight: 800; letter-spacing: 0.06em; cursor: pointer; font-family: inherit;"><i data-lucide="history" style="width: 13px; height: 13px;"></i> HISTÓRICO</button>
+                <span style="display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 700; color: hsl(158 64% 32%); white-space: nowrap;"><i data-lucide="check-circle-2" style="width: 13px; height: 13px;"></i> Salvo 10:15</span>
+                <button title="PDF · NF-e · mais ações" style="width: 30px; height: 30px; border-radius: 10px; border: 1px solid hsl(var(--border)); background: hsl(var(--card)); display: flex; align-items: center; justify-content: center; cursor: pointer; color: hsl(var(--muted-foreground));"><i data-lucide="more-vertical" style="width: 15px; height: 15px;"></i></button>
+                <button class="fz-btn fz-btn-primary fz-btn-sm" style="letter-spacing: 0.05em;"><i data-lucide="check" style="width: 14px; height: 14px;"></i> CONCLUIR</button>
+              </div>
+            </div>
+
+            <!-- tabs + chips -->
+            <div style="display: flex; align-items: center; gap: 2px; padding: 0 18px; border-bottom: 1px solid hsl(var(--border)); background: hsl(var(--card)); flex-shrink: 0;">
+              <div style="display: flex; align-items: center; gap: 6px; padding: 8px 11px; font-size: 11px; font-weight: 800; letter-spacing: 0.04em; color: hsl(var(--primary)); border-bottom: 2px solid hsl(var(--primary)); margin-bottom: -1px; cursor: pointer; white-space: nowrap;"><i data-lucide="file-text" style="width: 13px; height: 13px;"></i> EVOLUÇÃO</div>
+              <div style="padding: 8px 11px; font-size: 11px; font-weight: 800; letter-spacing: 0.04em; color: hsl(var(--muted-foreground)); border-bottom: 2px solid transparent; margin-bottom: -1px; cursor: pointer; white-space: nowrap;">AVALIAÇÃO</div>
+              <div style="padding: 8px 11px; font-size: 11px; font-weight: 800; letter-spacing: 0.04em; color: hsl(var(--muted-foreground)); border-bottom: 2px solid transparent; margin-bottom: -1px; cursor: pointer; white-space: nowrap;">TRATAMENTO</div>
+              <div style="padding: 8px 11px; font-size: 11px; font-weight: 800; letter-spacing: 0.04em; color: hsl(var(--muted-foreground)); border-bottom: 2px solid transparent; margin-bottom: -1px; cursor: pointer; white-space: nowrap;">HISTÓRICO</div>
+              <div style="padding: 8px 11px; font-size: 11px; font-weight: 800; letter-spacing: 0.04em; color: hsl(var(--muted-foreground)); border-bottom: 2px solid transparent; margin-bottom: -1px; cursor: pointer; white-space: nowrap;">ASSISTENTE</div>
+              <div style="padding: 8px 11px; font-size: 11px; font-weight: 800; letter-spacing: 0.04em; color: hsl(var(--muted-foreground)); border-bottom: 2px solid transparent; margin-bottom: -1px; cursor: pointer; white-space: nowrap;">MÍDIA</div>
+              <div style="padding: 8px 11px; font-size: 11px; font-weight: 800; letter-spacing: 0.04em; color: hsl(var(--muted-foreground)); border-bottom: 2px solid transparent; margin-bottom: -1px; cursor: pointer; white-space: nowrap;">AJUSTES</div>
+              <div style="flex: 1;"></div>
+              <div style="display: flex; align-items: center; gap: 8px; padding: 4px 0;">
+                <button style="display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 10px; border-radius: 999px; border: 1px dashed hsl(220 13% 80%); background: hsl(var(--card)); font-size: 11px; font-weight: 700; color: hsl(var(--foreground)); cursor: pointer; font-family: inherit;"><i data-lucide="stethoscope" style="width: 13px; height: 13px; color: hsl(var(--muted-foreground));"></i> Retorno Médico <i data-lucide="plus" style="width: 12px; height: 12px; color: hsl(var(--primary));"></i></button>
+                <button style="display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 10px; border-radius: 999px; border: 1px dashed hsl(220 13% 80%); background: hsl(var(--card)); font-size: 11px; font-weight: 700; color: hsl(var(--foreground)); cursor: pointer; font-family: inherit;"><i data-lucide="slice" style="width: 13px; height: 13px; color: hsl(var(--muted-foreground));"></i> Cirurgias <i data-lucide="plus" style="width: 12px; height: 12px; color: hsl(var(--primary));"></i></button>
+                <button style="display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 10px; border-radius: 999px; border: 1px dashed hsl(220 13% 80%); background: hsl(var(--card)); font-size: 11px; font-weight: 700; color: hsl(var(--foreground)); cursor: pointer; font-family: inherit;"><i data-lucide="target" style="width: 13px; height: 13px; color: hsl(var(--muted-foreground));"></i> Metas 0/0 <i data-lucide="plus" style="width: 12px; height: 12px; color: hsl(var(--primary));"></i></button>
+              </div>
+            </div>
+
+            <!-- body: 3 colunas -->
+            <div style="flex: 1; min-height: 0; display: grid; grid-template-columns: 1fr 340px 300px; gap: 12px; padding: 12px 18px;">
+
+              <!-- col 1: observações -->
+              <div style="min-height: 0; display: flex; flex-direction: column; background: hsl(var(--card)); border: 1px solid hsl(var(--border)); border-top: 3px solid hsl(35 92% 55%); border-radius: 14px; overflow: hidden;">
+                <div style="display: flex; align-items: center; gap: 10px; padding: 9px 14px 8px;">
+                  <div style="width: 26px; height: 26px; border-radius: 8px; background: hsl(35 92% 94%); color: hsl(30 85% 40%); display: flex; align-items: center; justify-content: center;"><i data-lucide="file-text" style="width: 14px; height: 14px;"></i></div>
+                  <div style="display: flex; flex-direction: column;">
+                    <div style="font-size: 13px; font-weight: 800;">Observações Clínicas</div>
+                    <div style="font-size: 10px; color: hsl(var(--muted-foreground)); font-weight: 600;">Registro principal da sessão</div>
+                  </div>
+                  <div style="flex: 1;"></div>
+                  <button style="display: inline-flex; align-items: center; gap: 5px; height: 26px; padding: 0 10px; border-radius: 999px; border: 1px solid hsl(var(--border)); background: hsl(var(--card)); font-size: 11px; font-weight: 700; color: hsl(var(--muted-foreground)); cursor: pointer; font-family: inherit;"><i data-lucide="maximize-2" style="width: 12px; height: 12px;"></i> Foco</button>
+                </div>
+                <div style="display: flex; align-items: center; gap: 2px; padding: 4px 10px; border-top: 1px solid hsl(var(--border)); border-bottom: 1px solid hsl(var(--border)); background: hsl(var(--muted) / 0.3); flex-shrink: 0;">
+                  <button style="width: 26px; height: 26px; border-radius: 7px; border: none; background: transparent; color: hsl(220 9% 40%); display: flex; align-items: center; justify-content: center; cursor: pointer;"><i data-lucide="bold" style="width: 13px; height: 13px;"></i></button>
+                  <button style="width: 26px; height: 26px; border-radius: 7px; border: none; background: transparent; color: hsl(220 9% 40%); display: flex; align-items: center; justify-content: center; cursor: pointer;"><i data-lucide="italic" style="width: 13px; height: 13px;"></i></button>
+                  <button style="width: 26px; height: 26px; border-radius: 7px; border: none; background: transparent; color: hsl(220 9% 40%); display: flex; align-items: center; justify-content: center; cursor: pointer;"><i data-lucide="underline" style="width: 13px; height: 13px;"></i></button>
+                  <div style="width: 1px; height: 16px; background: hsl(var(--border)); margin: 0 5px;"></div>
+                  <button style="width: 26px; height: 26px; border-radius: 7px; border: none; background: transparent; color: hsl(220 9% 40%); display: flex; align-items: center; justify-content: center; cursor: pointer;"><i data-lucide="heading-2" style="width: 13px; height: 13px;"></i></button>
+                  <button style="width: 26px; height: 26px; border-radius: 7px; border: none; background: transparent; color: hsl(220 9% 40%); display: flex; align-items: center; justify-content: center; cursor: pointer;"><i data-lucide="list" style="width: 13px; height: 13px;"></i></button>
+                  <button style="width: 26px; height: 26px; border-radius: 7px; border: none; background: transparent; color: hsl(220 9% 40%); display: flex; align-items: center; justify-content: center; cursor: pointer;"><i data-lucide="list-checks" style="width: 13px; height: 13px;"></i></button>
+                  <button style="width: 26px; height: 26px; border-radius: 7px; border: none; background: transparent; color: hsl(220 9% 40%); display: flex; align-items: center; justify-content: center; cursor: pointer;"><i data-lucide="quote" style="width: 13px; height: 13px;"></i></button>
+                  <div style="width: 1px; height: 16px; background: hsl(var(--border)); margin: 0 5px;"></div>
+                  <button style="width: 26px; height: 26px; border-radius: 7px; border: none; background: transparent; color: hsl(220 9% 40%); display: flex; align-items: center; justify-content: center; cursor: pointer;"><i data-lucide="undo-2" style="width: 13px; height: 13px;"></i></button>
+                  <button style="width: 26px; height: 26px; border-radius: 7px; border: none; background: transparent; color: hsl(220 9% 40%); display: flex; align-items: center; justify-content: center; cursor: pointer;"><i data-lucide="redo-2" style="width: 13px; height: 13px;"></i></button>
+                </div>
+                <div style="flex: 1; min-height: 0; padding: 12px 16px; font-size: 13px; line-height: 1.6; color: hsl(var(--foreground)); overflow: hidden;">
+                  <p style="margin: 0 0 8px;">Paciente refere melhora da dor lombar após a 2ª sessão (EVA 5 → 3). Mantém desconforto ao permanecer sentado por períodos longos no trabalho.</p>
+                  <p style="margin: 0;">Conduta de hoje: liberação miofascial de TFL e quadrado lombar à direita, seguida de ativação de core em prancha modificada. Boa tolerância, sem dor irradiada durante a execução.</p>
+                </div>
+              </div>
+
+              <!-- col 2: procedimentos + casa (dinâmico) -->
+              <div style="min-height: 0; display: flex; flex-direction: column; background: hsl(var(--card)); border: 1px solid hsl(var(--border)); border-top: 3px solid hsl(158 64% 45%); border-radius: 14px; overflow: hidden;">
+                <div style="display: flex; align-items: center; gap: 10px; padding: 9px 14px 4px; flex-shrink: 0;">
+                  <div style="width: 26px; height: 26px; border-radius: 8px; background: hsl(158 64% 93%); color: hsl(158 64% 28%); display: flex; align-items: center; justify-content: center;"><i data-lucide="activity" style="width: 14px; height: 14px;"></i></div>
+                  <div style="display: flex; flex-direction: column;">
+                    <div style="font-size: 13px; font-weight: 800;">Procedimentos &amp; Exercícios</div>
+                    <div style="font-size: 10px; color: hsl(var(--muted-foreground)); font-weight: 600;">Sessão + plano de casa</div>
+                  </div>
+                  <span class="tabular-nums" style="display: inline-flex; padding: 2px 8px; border-radius: 999px; background: hsl(var(--secondary)); color: hsl(var(--muted-foreground)); font-size: 10px; font-weight: 800; margin-left: auto;">{{ finProcCount }}</span>
+                </div>
+                <sc-if value="{{ finRepBanner }}" hint-placeholder-val="{{ false }}">
+                  <div style="display: flex; align-items: center; gap: 7px; margin: 4px 12px 0; padding: 6px 11px; border-radius: 9px; background: hsl(158 64% 94%); border: 1px solid hsl(158 64% 85%); color: hsl(158 64% 25%); font-size: 11px; font-weight: 700; flex-shrink: 0;">
+                    <i data-lucide="copy-check" style="width: 13px; height: 13px;"></i> {{ finRepText }}
+                    <button onClick="{{ undoFinRep }}" style="margin-left: auto; border: none; background: transparent; color: hsl(158 64% 28%); font-size: 11px; font-weight: 800; cursor: pointer; font-family: inherit; text-decoration: underline; padding: 0;">Desfazer</button>
+                  </div>
+                </sc-if>
+                <div class="eyebrow" style="padding: 7px 14px 4px; flex-shrink: 0;">Na sessão · {{ finProcCount }}</div>
+                <div style="flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 5px; margin: 0 12px; overflow: auto;">
+                  <sc-for list="{{ finProcs }}" as="p" hint-placeholder-count="1">
+                    <div style="display: flex; align-items: center; gap: 9px; padding: 7px 12px; border: 1px solid hsl(var(--border)); border-radius: 10px; background: hsl(var(--background)); flex-shrink: 0;">
+                      <input type="checkbox" style="width: 14px; height: 14px; accent-color: hsl(var(--primary)); margin: 0;">
+                      <span style="font-size: 12px; font-weight: 700; white-space: nowrap;">{{ p.n }}</span>
+                      <span style="display: inline-flex; padding: 2px 8px; border-radius: 999px; background: hsl(158 64% 92%); color: hsl(158 64% 25%); font-size: 9px; font-weight: 800; letter-spacing: 0.04em; white-space: nowrap;">{{ p.b }}</span>
+                      <div style="flex: 1;"></div>
+                      <i data-lucide="chevron-down" style="width: 14px; height: 14px; color: hsl(var(--muted-foreground));"></i>
+                    </div>
+                  </sc-for>
+                </div>
+                <div style="display: flex; align-items: center; gap: 8px; margin: 8px 12px 0; height: 32px; padding: 0 12px; border: 1px dashed hsl(220 13% 80%); border-radius: 10px; color: hsl(var(--muted-foreground)); font-size: 12px; background: hsl(var(--card)); cursor: text; flex-shrink: 0;">
+                  <i data-lucide="plus" style="width: 14px; height: 14px;"></i> Adicionar procedimento...
+                  <span style="margin-left: auto; font-family: var(--font-mono); font-size: 9px; padding: 2px 5px; border-radius: 5px; background: hsl(var(--secondary)); border: 1px solid hsl(var(--border)); color: hsl(var(--muted-foreground));">ALT+P</span>
+                </div>
+                <div style="height: 1px; background: hsl(var(--border)); margin: 11px 14px 0; flex-shrink: 0;"></div>
+                <div style="display: flex; align-items: center; padding: 8px 14px 6px; flex-shrink: 0;">
+                  <div class="eyebrow">Para casa · HEP</div>
+                  <div style="flex: 1;"></div>
+                  <button style="display: inline-flex; align-items: center; gap: 5px; height: 24px; padding: 0 9px; border-radius: 999px; border: 1px solid hsl(var(--border)); background: hsl(var(--card)); font-size: 10.5px; font-weight: 700; color: hsl(var(--muted-foreground)); cursor: pointer; font-family: inherit;"><i data-lucide="library" style="width: 11px; height: 11px;"></i> Biblioteca</button>
+                </div>
+                <div style="display: flex; align-items: center; gap: 8px; margin: 0 12px 12px; flex-shrink: 0;">
+                  <input class="fz-input fz-input-sm" placeholder="Nome do exercício..." style="flex: 1;">
+                  <span style="font-family: var(--font-mono); font-size: 11px; font-weight: 700; padding: 7px 9px; border-radius: 10px; background: hsl(var(--secondary)); color: hsl(var(--foreground));">3×10</span>
+                  <button style="width: 32px; height: 32px; border-radius: 10px; border: none; background: hsl(var(--primary)); color: white; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0;"><i data-lucide="plus" style="width: 15px; height: 15px;"></i></button>
+                </div>
+              </div>
+
+              <!-- col 3: EVA (estilo B) + resumos -->
+              <div style="min-height: 0; display: flex; flex-direction: column; gap: 10px;">
+                <!-- EVA -->
+                <div style="flex-shrink: 0; background: hsl(var(--card)); border: 1px solid hsl(var(--border)); border-top: 3px solid hsl(0 84% 60%); border-radius: 14px; padding: 12px 14px; display: flex; flex-direction: column; gap: 10px;">
+                  <div style="display: flex; align-items: center; gap: 10px;">
+                    <div style="width: 26px; height: 26px; border-radius: 8px; background: hsl(0 84% 95%); color: hsl(0 70% 45%); display: flex; align-items: center; justify-content: center;"><i data-lucide="heart-pulse" style="width: 14px; height: 14px;"></i></div>
+                    {{ evaBoxFin }}{{ evaLabelFin }}
+                  </div>
+                  {{ evaCtrlFin }}
+                  <input class="fz-input fz-input-sm" placeholder="Localização da dor (opcional)">
+                </div>
+
+                <!-- medições -->
+                <div style="flex-shrink: 0; display: flex; align-items: center; gap: 10px; background: hsl(var(--card)); border: 1px solid hsl(var(--border)); border-top: 3px solid hsl(158 64% 45%); border-radius: 14px; padding: 10px 14px;">
+                  <div style="width: 26px; height: 26px; border-radius: 8px; background: hsl(158 64% 93%); color: hsl(158 64% 28%); display: flex; align-items: center; justify-content: center; flex-shrink: 0;"><i data-lucide="gauge" style="width: 14px; height: 14px;"></i></div>
+                  <div style="flex: 1; min-width: 0;">
+                    <div style="font-size: 12.5px; font-weight: 800;">Medições</div>
+                    <div style="font-size: 10.5px; color: hsl(var(--muted-foreground)); font-weight: 600;">0 registradas · 0 concluídas</div>
+                  </div>
+                  <button style="display: inline-flex; align-items: center; height: 26px; padding: 0 11px; border-radius: 999px; border: 1px solid hsl(var(--border)); background: hsl(var(--card)); font-size: 11px; font-weight: 700; color: hsl(var(--primary)); cursor: pointer; font-family: inherit;">Detalhar</button>
+                </div>
+
+                <!-- histórico (abre gaveta) -->
+                <div onClick="{{ toggleFin }}" style="flex-shrink: 0; display: flex; align-items: center; gap: 10px; background: hsl(211 100% 97%); border: 1px solid hsl(211 100% 88%); border-top: 3px solid hsl(211 100% 50%); border-radius: 14px; padding: 10px 14px; cursor: pointer;">
+                  <div style="width: 26px; height: 26px; border-radius: 8px; background: hsl(211 100% 92%); color: hsl(211 100% 38%); display: flex; align-items: center; justify-content: center; flex-shrink: 0;"><i data-lucide="history" style="width: 14px; height: 14px;"></i></div>
+                  <div style="flex: 1; min-width: 0;">
+                    <div style="font-size: 12.5px; font-weight: 800; color: hsl(211 100% 32%);">Histórico de Sessões</div>
+                    <div style="font-size: 10.5px; color: hsl(211 60% 45%); font-weight: 600;">2 sessões · clique para replicar conduta</div>
+                  </div>
+                  <i data-lucide="panel-right-open" style="width: 15px; height: 15px; color: hsl(211 100% 38%);"></i>
+                </div>
+
+                <!-- anexos -->
+                <div style="flex-shrink: 0; display: flex; align-items: center; gap: 10px; background: hsl(var(--card)); border: 1px solid hsl(var(--border)); border-top: 3px solid hsl(220 13% 80%); border-radius: 14px; padding: 10px 14px;">
+                  <div style="width: 26px; height: 26px; border-radius: 8px; background: hsl(var(--secondary)); color: hsl(var(--muted-foreground)); display: flex; align-items: center; justify-content: center; flex-shrink: 0;"><i data-lucide="paperclip" style="width: 14px; height: 14px;"></i></div>
+                  <div style="flex: 1; min-width: 0;">
+                    <div style="font-size: 12.5px; font-weight: 800;">Anexos</div>
+                    <div style="font-size: 10.5px; color: hsl(var(--muted-foreground)); font-weight: 600;">Nenhum arquivo</div>
+                  </div>
+                  <button style="display: inline-flex; align-items: center; height: 26px; padding: 0 11px; border-radius: 999px; border: 1px solid hsl(var(--border)); background: hsl(var(--card)); font-size: 11px; font-weight: 700; color: hsl(var(--primary)); cursor: pointer; font-family: inherit;">Adicionar</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- drawer histórico -->
+            <sc-if value="{{ finOpen }}" hint-placeholder-val="{{ false }}">
+              <div style="position: absolute; top: 0; right: 0; bottom: 0; width: 396px; background: hsl(var(--card)); border-left: 1px solid hsl(var(--border)); box-shadow: -18px 0 40px rgba(15, 23, 42, 0.14); display: flex; flex-direction: column; z-index: 5;">
+                <div style="display: flex; align-items: center; gap: 10px; padding: 13px 16px; border-bottom: 1px solid hsl(var(--border)); flex-shrink: 0;">
+                  <div style="width: 28px; height: 28px; border-radius: 9px; background: hsl(211 100% 94%); color: hsl(211 100% 38%); display: flex; align-items: center; justify-content: center;"><i data-lucide="history" style="width: 15px; height: 15px;"></i></div>
+                  <div style="display: flex; flex-direction: column;">
+                    <div style="font-size: 13.5px; font-weight: 800;">Histórico de Sessões</div>
+                    <div style="font-size: 10.5px; color: hsl(var(--muted-foreground)); font-weight: 600;">Replicar copia a conduta para a sessão atual</div>
+                  </div>
+                  <div style="flex: 1;"></div>
+                  <button onClick="{{ toggleFin }}" style="width: 28px; height: 28px; border-radius: 9px; border: 1px solid hsl(var(--border)); background: hsl(var(--card)); display: flex; align-items: center; justify-content: center; cursor: pointer; color: hsl(var(--muted-foreground));"><i data-lucide="x" style="width: 14px; height: 14px;"></i></button>
+                </div>
+
+                <div style="flex: 1; min-height: 0; overflow: auto; padding: 12px 14px; display: flex; flex-direction: column; gap: 10px;">
+
+                  <!-- sessão #2 -->
+                  <div style="border: 1px solid hsl(var(--border)); border-radius: 13px; overflow: hidden; flex-shrink: 0;">
+                    <div style="display: flex; align-items: center; gap: 8px; padding: 9px 12px; background: hsl(var(--muted) / 0.4);">
+                      <span style="display: inline-flex; padding: 2px 8px; border-radius: 999px; background: hsl(211 100% 94%); color: hsl(211 100% 35%); font-size: 9.5px; font-weight: 800; letter-spacing: 0.05em;">SESSÃO #2</span>
+                      <span class="tabular-nums" style="font-size: 11px; font-weight: 700; color: hsl(var(--muted-foreground));">08/06/2026 · há 3 dias</span>
+                      <div style="flex: 1;"></div>
+                      <span class="tabular-nums" style="display: inline-flex; align-items: center; gap: 4px; font-size: 10.5px; font-weight: 800; color: hsl(158 64% 30%);"><i data-lucide="trending-down" style="width: 12px; height: 12px;"></i> EVA 5 → 3</span>
+                    </div>
+                    <div style="padding: 10px 12px; display: flex; flex-direction: column; gap: 8px;">
+                      <div style="display: flex; flex-wrap: wrap; gap: 5px;">
+                        <span style="display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px; border-radius: 999px; background: hsl(158 64% 94%); color: hsl(158 64% 25%); font-size: 10.5px; font-weight: 700;"><i data-lucide="hand" style="width: 11px; height: 11px;"></i> Lib mio manual TFS</span>
+                        <span style="display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px; border-radius: 999px; background: hsl(158 64% 94%); color: hsl(158 64% 25%); font-size: 10.5px; font-weight: 700;"><i data-lucide="dumbbell" style="width: 11px; height: 11px;"></i> Prancha modificada</span>
+                        <span style="display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px; border-radius: 999px; background: hsl(158 64% 94%); color: hsl(158 64% 25%); font-size: 10.5px; font-weight: 700;"><i data-lucide="move-vertical" style="width: 11px; height: 11px;"></i> Along. isquiotibiais</span>
+                      </div>
+                      <div style="font-size: 11.5px; line-height: 1.5; color: hsl(var(--muted-foreground)); font-weight: 500; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">Redução do espasmo paravertebral à palpação. Paciente tolerou bem a progressão de carga no core; orientado a manter pausas ativas no trabalho.</div>
+                      <div style="display: flex; align-items: center; gap: 8px;">
+                        <button onClick="{{ repFin2 }}" style="display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 12px; border-radius: 999px; border: none; background: hsl(var(--primary)); color: white; font-size: 11px; font-weight: 800; cursor: pointer; font-family: inherit;"><i data-lucide="copy" style="width: 12px; height: 12px;"></i> Replicar conduta</button>
+                        <button style="display: inline-flex; align-items: center; gap: 5px; height: 28px; padding: 0 11px; border-radius: 999px; border: 1px solid hsl(var(--border)); background: hsl(var(--card)); font-size: 11px; font-weight: 700; color: hsl(var(--muted-foreground)); cursor: pointer; font-family: inherit;">Ver completa</button>
+                        <sc-if value="{{ finRep2 }}" hint-placeholder-val="{{ false }}">
+                          <span style="display: inline-flex; align-items: center; gap: 4px; font-size: 10.5px; font-weight: 800; color: hsl(158 64% 30%); margin-left: auto;"><i data-lucide="check" style="width: 12px; height: 12px;"></i> Replicada</span>
+                        </sc-if>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- sessão #1 -->
+                  <div style="border: 1px solid hsl(var(--border)); border-radius: 13px; overflow: hidden; flex-shrink: 0;">
+                    <div style="display: flex; align-items: center; gap: 8px; padding: 9px 12px; background: hsl(var(--muted) / 0.4);">
+                      <span style="display: inline-flex; padding: 2px 8px; border-radius: 999px; background: hsl(var(--secondary)); color: hsl(var(--muted-foreground)); font-size: 9.5px; font-weight: 800; letter-spacing: 0.05em;">SESSÃO #1</span>
+                      <span class="tabular-nums" style="font-size: 11px; font-weight: 700; color: hsl(var(--muted-foreground));">04/06/2026 · há 7 dias</span>
+                      <div style="flex: 1;"></div>
+                      <span class="tabular-nums" style="display: inline-flex; align-items: center; gap: 4px; font-size: 10.5px; font-weight: 800; color: hsl(35 80% 38%);"><i data-lucide="trending-down" style="width: 12px; height: 12px;"></i> EVA 7 → 5</span>
+                    </div>
+                    <div style="padding: 10px 12px; display: flex; flex-direction: column; gap: 8px;">
+                      <div style="display: flex; flex-wrap: wrap; gap: 5px;">
+                        <span style="display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px; border-radius: 999px; background: hsl(158 64% 94%); color: hsl(158 64% 25%); font-size: 10.5px; font-weight: 700;"><i data-lucide="hand" style="width: 11px; height: 11px;"></i> Pompage lombar</span>
+                        <span style="display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px; border-radius: 999px; background: hsl(158 64% 94%); color: hsl(158 64% 25%); font-size: 10.5px; font-weight: 700;"><i data-lucide="hand" style="width: 11px; height: 11px;"></i> Mobilização L4–L5 grau II</span>
+                      </div>
+                      <div style="font-size: 11.5px; line-height: 1.5; color: hsl(var(--muted-foreground)); font-weight: 500; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">Primeira sessão: anamnese e avaliação postural. Dor lombar mecânica à direita, sem irradiação. Iniciada terapia manual de baixa intensidade.</div>
+                      <div style="display: flex; align-items: center; gap: 8px;">
+                        <button onClick="{{ repFin1 }}" style="display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 12px; border-radius: 999px; border: 1px solid hsl(var(--primary)); background: hsl(var(--card)); color: hsl(var(--primary)); font-size: 11px; font-weight: 800; cursor: pointer; font-family: inherit;"><i data-lucide="copy" style="width: 12px; height: 12px;"></i> Replicar conduta</button>
+                        <button style="display: inline-flex; align-items: center; gap: 5px; height: 28px; padding: 0 11px; border-radius: 999px; border: 1px solid hsl(var(--border)); background: hsl(var(--card)); font-size: 11px; font-weight: 700; color: hsl(var(--muted-foreground)); cursor: pointer; font-family: inherit;">Ver completa</button>
+                        <sc-if value="{{ finRep1 }}" hint-placeholder-val="{{ false }}">
+                          <span style="display: inline-flex; align-items: center; gap: 4px; font-size: 10.5px; font-weight: 800; color: hsl(158 64% 30%); margin-left: auto;"><i data-lucide="check" style="width: 12px; height: 12px;"></i> Replicada</span>
+                        </sc-if>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div style="display: flex; align-items: center; gap: 7px; padding: 8px 11px; border-radius: 10px; background: hsl(var(--muted) / 0.45); font-size: 10.5px; font-weight: 600; color: hsl(var(--muted-foreground)); flex-shrink: 0;">
+                    <i data-lucide="info" style="width: 12px; height: 12px; flex-shrink: 0;"></i> Replicar copia procedimentos e exercícios — observações e dor são sempre registradas de novo.
+                  </div>
+                </div>
+              </div>
+            </sc-if>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = {
+    scale: 0.62,
+    pains: { fin: 3 },
+    finOpen: false,
+    finRep: null,
+    finProcs: [{ n: 'Lib mio manual TFS', b: 'LIBERAÇÃO MIOFASCIAL' }]
+  };
+
+  static E_BASE = [{ n: 'Lib mio manual TFS', b: 'LIBERAÇÃO MIOFASCIAL' }];
+
+  static E_SESSIONS = {
+    s2: {
+      label: '#2',
+      date: 'Sessão #2 · 08/06/2026 · há 3 dias',
+      eva: 'EVA 5 → 3',
+      evaTone: 'good',
+      note: 'Redução do espasmo paravertebral à palpação. Paciente tolerou bem a progressão de carga no core, sem dor irradiada durante a prancha modificada. Orientado a manter pausas ativas a cada 50 minutos no trabalho e aplicar calor local à noite. Próxima sessão: progredir para prancha completa se EVA ≤ 3.',
+      procs: [
+        { n: 'Lib mio manual TFS', b: 'LIBERAÇÃO MIOFASCIAL' },
+        { n: 'Prancha modificada', b: 'CORE' },
+        { n: 'Along. isquiotibiais', b: 'ALONGAMENTO' }
+      ]
+    },
+    s1: {
+      label: '#1',
+      date: 'Sessão #1 · 04/06/2026 · há 7 dias',
+      eva: 'EVA 7 → 5',
+      evaTone: 'warn',
+      note: 'Primeira sessão: anamnese e avaliação postural. Dor lombar mecânica à direita, sem irradiação para membros inferiores. Teste de Lasègue negativo bilateral. Iniciada terapia manual de baixa intensidade com boa resposta imediata — EVA caiu de 7 para 5 ao final. Paciente orientado sobre ergonomia no posto de trabalho.',
+      procs: [
+        { n: 'Pompage lombar', b: 'TERAPIA MANUAL' },
+        { n: 'Mobilização L4–L5 grau II', b: 'TERAPIA MANUAL' }
+      ]
+    }
+  };
+
+  replicateInto(listKey, repKey, sessKey) {
+    const sess = Component.E_SESSIONS[sessKey];
+    this.setState(s => {
+      const merged = [...s[listKey]];
+      sess.procs.forEach(p => {
+        if (!merged.some(m => m.n === p.n)) merged.push(p);
+      });
+      return { [listKey]: merged, [repKey]: sessKey };
+    });
+  }
+
+  componentDidMount() {
+    // O bundle do DS avalia ui.jsx (window.FZ) por último; os componentes que
+    // destructuram window.FZ falham na 1ª passada. Re-injeta o bundle até a
+    // Sidebar registrar — na re-avaliação o FZ já existe.
+    this._ensureDS = (tries) => {
+      if (window.Sidebar) { this.forceUpdate(); return; }
+      if (tries <= 0) return;
+      const s = document.createElement('script');
+      s.src = '_ds/fisioflow-design-system-019e1c70-8b8d-751e-a4d5-3f0d34162504/_ds_bundle.js?r=' + tries;
+      s.onload = () => setTimeout(() => this._ensureDS(tries - 1), 60);
+      s.onerror = () => setTimeout(() => this._ensureDS(tries - 1), 200);
+      document.head.appendChild(s);
+    };
+    this._ensureDS(3);
+    this._onR = () => {
+      const s = Math.min(1, (window.innerWidth - 72) / 1366);
+      this.setState({ scale: Math.max(0.3, s) });
+    };
+    this._onR();
+    window.addEventListener('resize', this._onR);
+    const tick = (n) => {
+      if (window.lucide && window.lucide.createIcons) window.lucide.createIcons();
+      if (n > 0) setTimeout(() => tick(n - 1), 500);
+    };
+    tick(8);
+  }
+
+  componentDidUpdate() {
+    if (window.lucide && window.lucide.createIcons) window.lucide.createIcons();
+  }
+
+  componentWillUnmount() {
+    window.removeEventListener('resize', this._onR);
+  }
+
+  painMeta(v) {
+    const color = v === 0 ? '#9ca3af' : v <= 3 ? '#22c55e' : v <= 6 ? '#eab308' : v <= 8 ? '#ef4444' : '#7f1d1d';
+    const label = v === 0 ? 'Sem dor' : v <= 3 ? 'Dor leve' : v <= 6 ? 'Dor moderada' : v <= 8 ? 'Dor intensa' : 'Dor máxima';
+    return { color, label };
+  }
+
+  setPain(k, v) {
+    this.setState(s => ({ pains: { ...s.pains, [k]: v } }));
+  }
+
+  evaBox(k, size) {
+    const v = this.state.pains[k];
+    const m = this.painMeta(v);
+    return React.createElement('div', {
+      style: {
+        width: size, height: size, borderRadius: Math.round(size * 0.27),
+        background: m.color, color: '#fff', display: 'flex', alignItems: 'center',
+        justifyContent: 'center', fontWeight: 800, fontSize: Math.round(size * 0.46),
+        flexShrink: 0, fontVariantNumeric: 'tabular-nums', transition: 'background .2s'
+      }
+    }, v);
+  }
+
+  evaLabel(k, compact) {
+    const m = this.painMeta(this.state.pains[k]);
+    return React.createElement('div', { style: { display: 'flex', flexDirection: 'column', gap: 1, minWidth: 0, flexShrink: 0 } },
+      React.createElement('div', { style: { fontSize: compact ? 12 : 13.5, fontWeight: 800, color: m.color, whiteSpace: 'nowrap' } }, m.label),
+      React.createElement('div', { style: { fontSize: 10, fontWeight: 600, color: 'hsl(220 8.9% 46.1%)', whiteSpace: 'nowrap' } }, 'Escala de 0 a 10')
+    );
+  }
+
+  evaCtrl(k, opts) {
+    opts = opts || {};
+    const v = this.state.pains[k];
+    const m = this.painMeta(v);
+    const h = opts.h || 26;
+    const btns = [];
+    for (let i = 0; i <= 10; i++) {
+      const sel = i === v;
+      const im = this.painMeta(i);
+      btns.push(React.createElement('button', {
+        key: i,
+        onClick: () => this.setPain(k, i),
+        style: {
+          height: h, borderRadius: 8, padding: 0,
+          border: '1px solid ' + (sel ? 'transparent' : 'hsl(220 13% 87%)'),
+          background: sel ? im.color : '#fff',
+          color: sel ? '#fff' : 'hsl(220 9% 40%)',
+          fontWeight: 700, fontSize: 12, cursor: 'pointer', fontFamily: 'inherit',
+          fontVariantNumeric: 'tabular-nums', transition: 'background .15s'
+        }
+      }, i));
+    }
+    const grid = React.createElement('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(11, 1fr)', gap: 3 } }, btns);
+    if (opts.bar === false) return grid;
+    const bar = React.createElement('div', {
+      style: { position: 'relative', height: 8, borderRadius: 999, background: 'linear-gradient(90deg, #22c55e 0%, #eab308 45%, #ef4444 75%, #7f1d1d 100%)', margin: '9px 2px 0' }
+    }, React.createElement('div', {
+      style: { position: 'absolute', top: -3, left: (v * 10) + '%', transform: 'translateX(-50%)', width: 14, height: 14, borderRadius: '50%', background: '#fff', border: '2.5px solid ' + m.color, boxShadow: '0 1px 3px rgba(0,0,0,.3)', transition: 'left .2s' }
+    }));
+    const caps = React.createElement('div', { style: { display: 'flex', justifyContent: 'space-between', fontSize: 9, fontWeight: 700, color: 'hsl(220 8.9% 46.1%)', margin: '4px 2px 0' } },
+      React.createElement('span', null, 'Sem dor'),
+      React.createElement('span', null, 'Moderada'),
+      React.createElement('span', null, 'Máxima')
+    );
+    return React.createElement('div', null, grid, bar, caps);
+  }
+
+  renderVals() {
+    const s = this.state.scale;
+    return {
+      fitOuter: { width: Math.round(1366 * s) + 'px', height: Math.round(660 * s) + 'px' },
+      fitInner: { width: '1366px', height: '660px', transform: 'scale(' + s + ')', transformOrigin: 'top left' },
+      evaBoxFin: this.evaBox('fin', 44),
+      evaLabelFin: this.evaLabel('fin'),
+      evaCtrlFin: this.evaCtrl('fin'),
+      finOpen: this.state.finOpen,
+      toggleFin: () => this.setState(s => ({ finOpen: !s.finOpen })),
+      finProcs: this.state.finProcs,
+      finProcCount: this.state.finProcs.length,
+      finRepBanner: !!this.state.finRep,
+      finRep1: this.state.finRep === 's1',
+      finRep2: this.state.finRep === 's2',
+      finRepText: this.state.finRep ? ('Conduta da sessão ' + Component.E_SESSIONS[this.state.finRep].label + ' replicada — procedimentos adicionados.') : '',
+      undoFinRep: () => this.setState({ finProcs: Component.E_BASE.slice(), finRep: null }),
+      repFin1: () => { this.replicateInto('finProcs', 'finRep', 's1'); this.setState({ finOpen: false }); },
+      repFin2: () => { this.replicateInto('finProcs', 'finRep', 's2'); this.setState({ finOpen: false }); }
+    };
+  }
+}
+</script>
+</body>
+</html>

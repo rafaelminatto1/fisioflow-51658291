@@ -11,21 +11,8 @@ import {
 	CalendarPlus,
 	Camera,
 	CheckCheck,
-	ChevronDown,
-	Clock,
 	FileText,
-	Filter,
 	MapPin,
-	Mic,
-	MoreVertical,
-	Paperclip,
-	Phone,
-	Search,
-	Send,
-	Smile,
-	Sparkles,
-	StickyNote,
-	UserPlus,
 	Zap,
 } from "lucide-react";
 import {
@@ -40,7 +27,7 @@ const ic = (Icon: typeof Bell, size = 13, style?: React.CSSProperties) => (
 
 type Stage = "lead" | "wait" | "eval" | "treat" | "done";
 
-const STAGE_META: Record<Stage, { label: string; chip: string; dot: string }> =
+const STAGE_META_UNUSED: Record<Stage, { label: string; chip: string; dot: string }> =
 	{
 		lead: {
 			label: "NOVO LEAD",

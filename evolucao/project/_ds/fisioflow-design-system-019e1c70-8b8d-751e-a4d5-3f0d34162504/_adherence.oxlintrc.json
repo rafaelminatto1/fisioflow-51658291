@@ -1,0 +1,193 @@
+{
+  "plugins": [
+    "react",
+    "import"
+  ],
+  "rules": {
+    "react/forbid-elements": [
+      "warn",
+      {
+        "forbid": []
+      }
+    ],
+    "no-restricted-imports": [
+      "warn",
+      {
+        "patterns": [
+          {
+            "group": [
+              "evolucao-sessao/**",
+              "image-slot.js",
+              "ui_kits/patient-app/**",
+              "ui_kits/web/**"
+            ],
+            "message": "Import design-system components from 'index.js', not component internals."
+          }
+        ]
+      }
+    ],
+    "no-restricted-syntax": [
+      "warn",
+      {
+        "selector": "Literal[value=/#[0-9a-fA-F]{3,8}\\b/]",
+        "message": "Raw hex color — use a design-system color token via var()."
+      },
+      {
+        "selector": "Literal[value=/\\b\\d+px\\b/]",
+        "message": "Raw px value — use a design-system spacing token via var()."
+      },
+      {
+        "selector": "Literal[value=/font-family\\s*:\\s*(?!['\\\"]?(?:VAG Rounded|Futura Condensed|Nunito))/i]",
+        "message": "Font not provided by the design system. Available: VAG Rounded, Futura Condensed, Nunito."
+      }
+    ]
+  },
+  "overrides": [
+    {
+      "files": [
+        "**/index.js"
+      ],
+      "rules": {
+        "no-restricted-imports": "off"
+      }
+    }
+  ],
+  "x-omelette": {
+    "components": {},
+    "tokens": [
+      "--accent",
+      "--accent-foreground",
+      "--background",
+      "--border",
+      "--card",
+      "--card-foreground",
+      "--color-pain-0",
+      "--color-pain-1",
+      "--color-pain-10",
+      "--color-pain-3",
+      "--color-pain-5",
+      "--color-pain-7",
+      "--color-pain-gauge-high",
+      "--color-pain-gauge-low",
+      "--color-pain-gauge-med",
+      "--color-pain-gauge-severe",
+      "--color-status-cancelled",
+      "--color-status-completed",
+      "--color-status-confirmed",
+      "--color-status-pending",
+      "--destructive",
+      "--destructive-foreground",
+      "--font-brand",
+      "--font-display",
+      "--font-futura",
+      "--font-mono",
+      "--font-sans",
+      "--foreground",
+      "--input",
+      "--muted",
+      "--muted-foreground",
+      "--popover",
+      "--popover-foreground",
+      "--primary",
+      "--primary-foreground",
+      "--radius",
+      "--radius-lg",
+      "--radius-md",
+      "--radius-sm",
+      "--ring",
+      "--secondary",
+      "--secondary-foreground",
+      "--shadow-glow-primary",
+      "--shadow-lg",
+      "--shadow-md",
+      "--shadow-popover",
+      "--shadow-sm",
+      "--shadow-xs",
+      "--sidebar-accent",
+      "--sidebar-background",
+      "--sidebar-border",
+      "--sidebar-foreground",
+      "--sidebar-primary",
+      "--space-1",
+      "--space-10",
+      "--space-12",
+      "--space-16",
+      "--space-2",
+      "--space-3",
+      "--space-4",
+      "--space-5",
+      "--space-6",
+      "--space-8"
+    ],
+    "tokenKinds": {
+      "--background": "color",
+      "--foreground": "color",
+      "--card": "color",
+      "--card-foreground": "color",
+      "--popover": "color",
+      "--popover-foreground": "color",
+      "--primary": "color",
+      "--primary-foreground": "color",
+      "--secondary": "color",
+      "--secondary-foreground": "color",
+      "--muted": "color",
+      "--muted-foreground": "color",
+      "--accent": "color",
+      "--accent-foreground": "color",
+      "--destructive": "color",
+      "--destructive-foreground": "color",
+      "--border": "color",
+      "--input": "color",
+      "--ring": "color",
+      "--sidebar-background": "color",
+      "--sidebar-foreground": "color",
+      "--sidebar-primary": "color",
+      "--sidebar-accent": "color",
+      "--sidebar-border": "color",
+      "--color-pain-0": "color",
+      "--color-pain-1": "color",
+      "--color-pain-3": "color",
+      "--color-pain-5": "color",
+      "--color-pain-7": "color",
+      "--color-pain-10": "color",
+      "--color-pain-gauge-low": "color",
+      "--color-pain-gauge-med": "color",
+      "--color-pain-gauge-high": "color",
+      "--color-pain-gauge-severe": "color",
+      "--color-status-confirmed": "color",
+      "--color-status-pending": "color",
+      "--color-status-cancelled": "color",
+      "--color-status-completed": "color",
+      "--radius": "radius",
+      "--radius-lg": "radius",
+      "--radius-md": "radius",
+      "--radius-sm": "radius",
+      "--shadow-xs": "shadow",
+      "--shadow-sm": "shadow",
+      "--shadow-md": "shadow",
+      "--shadow-lg": "shadow",
+      "--shadow-popover": "shadow",
+      "--shadow-glow-primary": "shadow",
+      "--space-1": "spacing",
+      "--space-2": "spacing",
+      "--space-3": "spacing",
+      "--space-4": "spacing",
+      "--space-5": "spacing",
+      "--space-6": "spacing",
+      "--space-8": "spacing",
+      "--space-10": "spacing",
+      "--space-12": "spacing",
+      "--space-16": "spacing",
+      "--font-sans": "font",
+      "--font-display": "font",
+      "--font-brand": "font",
+      "--font-futura": "font",
+      "--font-mono": "font"
+    },
+    "fontFamilies": [
+      "Futura Condensed",
+      "Nunito",
+      "VAG Rounded"
+    ]
+  }
+}
