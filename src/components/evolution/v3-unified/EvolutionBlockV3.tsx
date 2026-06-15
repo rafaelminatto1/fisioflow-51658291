@@ -806,56 +806,73 @@ export const EvolutionBlockV3: React.FC<EvolutionBlockV3Props> = ({
     [focusSearchInput],
   );
 
-  // Keyboard shortcuts and navigation inside suggestions
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (shouldShowSuggestions && combinedSuggestions.length > 0) {
-      if (e.key === "ArrowDown") {
-        e.preventDefault();
-        setActiveIndex((prev) => (prev + 1) % combinedSuggestions.length);
-        return;
-      }
-      if (e.key === "ArrowUp") {
-        e.preventDefault();
-        setActiveIndex((prev) => (prev - 1 + combinedSuggestions.length) % combinedSuggestions.length);
-        return;
-      }
-      if (e.key === "Enter") {
-        if (activeIndex >= 0 && activeIndex < combinedSuggestions.length) {
-          e.preventDefault();
-          const selected = combinedSuggestions[activeIndex];
-          if (selected.selectType === "procedure") {
-            handleSelectProcedureSuggestion(selected as any);
-          } else {
-            handleSelectExerciseSuggestion(selected as any);
-          }
-          setActiveIndex(-1);
-          return;
-        }
-      }
-      if (e.key === "Escape") {
-        e.preventDefault();
-        setIsInputFocused(false);
-        setActiveIndex(-1);
-        (e.target as HTMLInputElement).blur();
-        return;
-      }
-    }
+   // Keyboard shortcuts and navigation inside suggestions
+   const handleKeyDown = (e: React.KeyboardEvent) => {
+     if (shouldShowSuggestions && combinedSuggestions.length > 0) {
+       if (e.key === "ArrowDown") {
+         e.preventDefault();
+         setActiveIndex((prev) => (prev + 1) % combinedSuggestions.length);
+         return;
+       }
+       if (e.key === "ArrowUp") {
+         e.preventDefault();
+         setActiveIndex((prev) => (prev - 1 + combinedSuggestions.length) % combinedSuggestions.length);
+         return;
+       }
+       if (e.key === "Enter") {
+         e.preventDefault();
+         // If there's exactly one suggestion, select it automatically
+         // Otherwise, use the active index if it's valid, or select the first one if activeIndex is invalid
+         if (combinedSuggestions.length === 1) {
+           const selected = combinedSuggestions[0];
+           if (selected.selectType === "procedure") {
+             handleSelectProcedureSuggestion(selected as any);
+           } else {
+             handleSelectExerciseSuggestion(selected as any);
+           }
+         } else if (activeIndex >= 0 && activeIndex < combinedSuggestions.length) {
+           const selected = combinedSuggestions[activeIndex];
+           if (selected.selectType === "procedure") {
+             handleSelectProcedureSuggestion(selected as any);
+           } else {
+             handleSelectExerciseSuggestion(selected as any);
+           }
+         } else {
+           // Fallback: select first suggestion if no active index
+           const selected = combinedSuggestions[0];
+           if (selected.selectType === "procedure") {
+             handleSelectProcedureSuggestion(selected as any);
+           } else {
+             handleSelectExerciseSuggestion(selected as any);
+           }
+         }
+         setActiveIndex(-1);
+         return;
+       }
+       if (e.key === "Escape") {
+         e.preventDefault();
+         (e.target as HTMLInputElement).blur();
+         setIsInputFocused(false);
+         setActiveIndex(-1);
+         return;
+       }
+     }
 
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      handleAddItem();
-    }
+     if (e.key === "Enter" && !e.shiftKey) {
+       e.preventDefault();
+       handleAddItem();
+     }
 
-    if (e.altKey && e.key.toLowerCase() === "p") {
-      e.preventDefault();
-      selectItemType("procedure");
-    }
+     if (e.altKey && e.key.toLowerCase() === "p") {
+       e.preventDefault();
+       selectItemType("procedure");
+     }
 
-    if (e.altKey && e.key.toLowerCase() === "e") {
-      e.preventDefault();
-      selectItemType("exercise");
-    }
-  };
+     if (e.altKey && e.key.toLowerCase() === "e") {
+       e.preventDefault();
+       selectItemType("exercise");
+     }
+   };
 
   return (
     <div
