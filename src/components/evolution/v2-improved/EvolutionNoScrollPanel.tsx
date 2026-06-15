@@ -364,8 +364,8 @@ export const EvolutionNoScrollPanel = memo(
                   min={0}
                   max={10}
                   step={1}
-                  value={arrival ?? 0}
-                  onValueChange={([, value]) => setArrival(Number(value))}
+                  value={[arrival ?? 0]}
+                  onValueChange={([value]) => setArrival(Number(value))}
                   aria-label="Nível de dor na chegada"
                   className="h-4"
                 />
@@ -385,8 +385,8 @@ export const EvolutionNoScrollPanel = memo(
                   min={0}
                   max={10}
                   step={1}
-                  value={data.painLevelDischarge ?? data.painLevel ?? 0}
-                  onValueChange={([, value]) => setDischarge(Number(value))}
+                  value={[data.painLevelDischarge ?? data.painLevel ?? 0]}
+                  onValueChange={([value]) => setDischarge(Number(value))}
                   aria-label="Nível de dor na saída"
                   className="h-4"
                 />

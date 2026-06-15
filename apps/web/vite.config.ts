@@ -130,6 +130,9 @@ export default defineConfig(({ mode }) => {
           ],
         },
         injectManifest: {
+          // vite-plugin-pwa 1.3.0 ainda usa inlineDynamicImports no build "es".
+          // O formato iife evita esse caminho e mantém o SW final clássico.
+          rollupFormat: "iife",
           // Precache MINIMALISTA — só o shell crítico (~1.3 MiB, 11 entries).
           // Chunks de feature ficam fora — são cacheados sob demanda via
           // runtime caching `CacheFirst` em /assets/*.js (ver service-worker.ts).

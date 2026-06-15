@@ -2,7 +2,7 @@
  * useAppointmentsMutations — create/update/delete/status com optimistic updates.
  */
 
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient, type QueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { ErrorHandler } from "@/lib/errors/ErrorHandler";
@@ -17,7 +17,6 @@ import type {
   AppointmentStatus,
 } from "@/types/appointment";
 import { isAppointmentConflictError } from "@/utils/appointmentErrors";
-import { invalidateAppointmentsComprehensive } from "@/utils/cacheInvalidation";
 import { requireUserOrganizationId } from "@/utils/userHelpers";
 import { parseUpdatesToAppointment } from "../appointmentOptimistic";
 import { parseLocalDate } from "@/lib/date-utils";
@@ -25,6 +24,48 @@ import { appointmentPeriodKeys } from "../useAppointmentsByPeriod";
 import type { AppointmentsQueryResult } from "./useAppointmentsCache";
 import { appointmentKeys } from "./useAppointmentsData";
 import { isOfflinePlaceholder } from "@/api/v2/base";
+
+async function invalidateAppointmentsCache(
+  queryClient: QueryClient,
+  date?: string | Date,
+  organizationId?: string,
+) {
+  const { invalidateAppointmentsComprehensive } = await import("@/utils/cacheInvalidation");
+  return invalidateAppointmentsComprehensive(queryClient, date, organizationId);
+}
+
+function mergeAppointmentIntoCaches(
+  queryClient: QueryClient,
+  organizationId: string | undefined,
+  appointmentId: string,
+  appointment: Partial<AppointmentBase>,
+) {
+  queryClient.setQueryData(
+    appointmentKeys.list(organizationId),
+    (old: AppointmentsQueryResult | undefined) => ({
+      ...old,
+      data: (old?.data || []).map((apt) =>
+        apt.id === appointmentId ? { ...apt, ...appointment } : apt,
+      ),
+    }),
+  );
+
+  queryClient.setQueriesData(
+    { queryKey: appointmentPeriodKeys.all },
+    (old: AppointmentBase[] | undefined) =>
+      old?.map((apt) => (apt.id === appointmentId ? { ...apt, ...appointment } : apt)),
+  );
+
+  queryClient.setQueriesData<Appointment[]>({ queryKey: ["schedule-appointments"] }, (old) =>
+    old?.map((apt) =>
+      apt.id === appointmentId ? ({ ...apt, ...appointment } as Appointment) : apt,
+    ),
+  );
+
+  queryClient.setQueryData(appointmentKeys.detail(appointmentId), (old: Appointment | undefined) =>
+    old ? ({ ...old, ...appointment } as Appointment) : old,
+  );
+}
 
 export function useCreateAppointment() {
   const queryClient = useQueryClient();
@@ -85,7 +126,7 @@ export function useCreateAppointment() {
       const isPending = typeof data.id === "string" && data.id.startsWith("offline-");
 
       if (isOnline && !isPending) {
-        await invalidateAppointmentsComprehensive(queryClient, data.date, profile?.organization_id);
+        await invalidateAppointmentsCache(queryClient, data.date, profile?.organization_id);
       }
 
       toast({
@@ -200,8 +241,12 @@ export function useUpdateAppointment() {
       const organizationId = profile?.organization_id || "";
       const isOffline = isOfflinePlaceholder<AppointmentBase>(data);
 
+      if (!isOffline && data) {
+        mergeAppointmentIntoCaches(queryClient, organizationId, variables.appointmentId, data);
+      }
+
       if (!isOffline && typeof navigator !== "undefined" && navigator.onLine) {
-        await invalidateAppointmentsComprehensive(queryClient, data.date, organizationId);
+        await invalidateAppointmentsCache(queryClient, data.date, organizationId);
       }
 
       if (!variables.suppressSuccessToast) {
@@ -283,7 +328,7 @@ export function useDeleteAppointment() {
 
       // Quando offline a fila ainda não confirmou — só revalida quando online
       if (typeof navigator !== "undefined" && navigator.onLine) {
-        await invalidateAppointmentsComprehensive(queryClient, appointment?.date, organizationId);
+        await invalidateAppointmentsCache(queryClient, appointment?.date, organizationId);
       }
 
       queryClient.removeQueries({ queryKey: appointmentKeys.detail(appointmentId) });
@@ -389,24 +434,10 @@ export function useUpdateAppointmentStatus() {
 
       // Se tivermos os dados atualizados, injetamos no cache para evitar o "flicker" de refetch
       if (updatedData) {
-        queryClient.setQueryData(
-          appointmentKeys.list(organizationId),
-          (old: AppointmentsQueryResult | undefined) => ({
-            ...old,
-            data: (old?.data || []).map((apt) =>
-              apt.id === appointmentId ? { ...apt, ...updatedData } : apt,
-            ),
-          }),
-        );
-
-        queryClient.setQueriesData(
-          { queryKey: appointmentPeriodKeys.all },
-          (old: AppointmentBase[] | undefined) =>
-            old?.map((apt) => (apt.id === appointmentId ? { ...apt, ...updatedData } : apt)),
-        );
+        mergeAppointmentIntoCaches(queryClient, organizationId, appointmentId, updatedData);
       }
 
-      invalidateAppointmentsComprehensive(queryClient, updatedData?.date, organizationId);
+      invalidateAppointmentsCache(queryClient, updatedData?.date, organizationId);
 
       toast({
         title: "Status atualizado",

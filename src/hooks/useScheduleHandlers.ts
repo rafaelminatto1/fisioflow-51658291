@@ -11,8 +11,8 @@ import {
   APPOINTMENT_CONFLICT_MESSAGE,
 } from "@/utils/appointmentErrors";
 import { fisioLogger as logger } from "@/lib/errors/logger";
-import type { Appointment } from "@/types/appointment";
-import { useRescheduleAppointment } from "@/hooks/useAppointments";
+import type { Appointment, AppointmentStatus } from "@/types/appointment";
+import { useRescheduleAppointment, useUpdateAppointmentStatus } from "@/hooks/useAppointments";
 import { ScheduleModalsState, ScheduleActions } from "@/types/schedule-hooks";
 
 const BUSINESS_HOURS = {
@@ -72,6 +72,7 @@ export function useScheduleHandlers(
   } | null>(null);
 
   const { mutateAsync: rescheduleAppointmentMutation } = useRescheduleAppointment();
+  const { mutateAsync: updateAppointmentStatusMutation } = useUpdateAppointmentStatus();
 
   const handleCreateAppointment = useCallback(() => {
     setSelectedAppointment(null);
@@ -284,12 +285,10 @@ export function useScheduleHandlers(
   const handleUpdateStatus = useCallback(
     async (appointmentId: string, newStatus: string) => {
       try {
-        await AppointmentService.updateStatus(appointmentId, newStatus);
-        toast({
-          title: "✅ Status atualizado",
-          description: `Agendamento marcado como ${newStatus}.`,
+        await updateAppointmentStatusMutation({
+          appointmentId,
+          status: newStatus as AppointmentStatus,
         });
-        refetchAppointments();
       } catch (err) {
         logger.error("Erro ao atualizar status", err, "ScheduleHandlers");
         toast({
@@ -299,7 +298,7 @@ export function useScheduleHandlers(
         });
       }
     },
-    [refetchAppointments],
+    [updateAppointmentStatusMutation],
   );
 
   const actions = useMemo(

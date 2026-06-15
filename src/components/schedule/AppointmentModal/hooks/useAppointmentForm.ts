@@ -21,7 +21,6 @@ import { ErrorHandler } from "@/lib/errors/ErrorHandler";
 import { isAppointmentConflictError } from "@/utils/appointmentErrors";
 import { checkAppointmentConflict } from "@/utils/appointmentValidation";
 import { useScheduleCapacity } from "@/hooks/useScheduleCapacity";
-import { invalidateAppointmentsComprehensive } from "@/utils/cacheInvalidation";
 import { upsertAppointmentIntoScheduleCache } from "@/hooks/useSchedulePage";
 import type { DuplicateConfig } from "../DuplicateAppointmentDialog";
 
@@ -58,6 +57,15 @@ const getAppointmentPatientId = (
   appointment?: AppointmentWithPatientFallback | null,
   fallbackPatientId?: string,
 ) => appointment?.patientId || appointment?.patient_id || fallbackPatientId || "";
+
+async function invalidateAppointmentsCache(
+  queryClient: ReturnType<typeof useQueryClient>,
+  date?: string | Date,
+  organizationId?: string,
+) {
+  const { invalidateAppointmentsComprehensive } = await import("@/utils/cacheInvalidation");
+  return invalidateAppointmentsComprehensive(queryClient, date, organizationId);
+}
 
 export const useAppointmentForm = ({
   appointment,
@@ -270,7 +278,7 @@ export const useAppointmentForm = ({
             ignoreCapacity,
           });
         }
-        await invalidateAppointmentsComprehensive(
+        await invalidateAppointmentsCache(
           queryClient,
           appointmentData.appointment_date,
           currentOrganization?.id,
@@ -296,7 +304,7 @@ export const useAppointmentForm = ({
           upsertAppointmentIntoScheduleCache(queryClient, updated.data);
         }
         // Reconciliação em background — não bloqueia o fechamento do modal
-        void invalidateAppointmentsComprehensive(
+        void invalidateAppointmentsCache(
           queryClient,
           appointmentData.appointment_date,
           currentOrganization?.id,
@@ -318,7 +326,7 @@ export const useAppointmentForm = ({
           upsertAppointmentIntoScheduleCache(queryClient, created.data);
         }
         // Reconciliação em background — não bloqueia o fechamento do modal
-        void invalidateAppointmentsComprehensive(
+        void invalidateAppointmentsCache(
           queryClient,
           appointmentData.appointment_date,
           currentOrganization?.id,
@@ -442,7 +450,7 @@ export const useAppointmentForm = ({
     if (appointment?.id) {
       try {
         await appointmentsApi.cancel(appointment.id);
-        await invalidateAppointmentsComprehensive(
+        await invalidateAppointmentsCache(
           queryClient,
           appointment.date,
           currentOrganization?.id,
@@ -482,7 +490,7 @@ export const useAppointmentForm = ({
           await appointmentsApi.create(duplicateData);
         }
 
-        await invalidateAppointmentsComprehensive(
+        await invalidateAppointmentsCache(
           queryClient,
           config.dates[0],
           currentOrganization?.id,

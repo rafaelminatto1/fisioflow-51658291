@@ -4,7 +4,6 @@ import { patientsApi, type PatientsListFacets, type PatientsListSummary } from "
 import { isOfflineEnqueuedResponse, isOfflinePlaceholder } from "@/api/v2/base";
 import { useAuth } from "@/hooks/useAuth";
 import { fisioLogger as logger } from "@/lib/errors/logger";
-import { invalidatePatientsComprehensive } from "@/utils/cacheInvalidation";
 import type { PatientRow } from "@/types/workers";
 
 export interface PatientsFilters {
@@ -57,6 +56,14 @@ const EMPTY_FACETS: PatientsListFacets = {
   origins: [],
   partners: [],
 };
+
+async function invalidatePatientsCache(
+  queryClient: ReturnType<typeof useQueryClient>,
+  patientId?: string,
+) {
+  const { invalidatePatientsComprehensive } = await import("@/utils/cacheInvalidation");
+  return invalidatePatientsComprehensive(queryClient, patientId);
+}
 
 export function usePatientsPageData(filters: PatientsFilters = {}) {
   const queryClient = useQueryClient();
@@ -162,7 +169,7 @@ export function usePatientsPageData(filters: PatientsFilters = {}) {
         isOfflinePlaceholder<PatientRow>(data) ||
         (typeof data?.id === "string" && data.id.startsWith("offline-"));
       if (!isOffline && typeof navigator !== "undefined" && navigator.onLine) {
-        await invalidatePatientsComprehensive(queryClient);
+        await invalidatePatientsCache(queryClient);
       }
       toast.success(
         isOffline
@@ -190,7 +197,7 @@ export function usePatientsPageData(filters: PatientsFilters = {}) {
     onSuccess: async (data, variables) => {
       const isOffline = isOfflinePlaceholder<PatientRow>(data);
       if (!isOffline && typeof navigator !== "undefined" && navigator.onLine) {
-        await invalidatePatientsComprehensive(queryClient, variables.id);
+        await invalidatePatientsCache(queryClient, variables.id);
       }
       toast.success(
         isOffline
@@ -213,7 +220,7 @@ export function usePatientsPageData(filters: PatientsFilters = {}) {
     },
     onSuccess: async ({ id, offline }) => {
       if (!offline && typeof navigator !== "undefined" && navigator.onLine) {
-        await invalidatePatientsComprehensive(queryClient, id);
+        await invalidatePatientsCache(queryClient, id);
       }
       toast.success(
         offline
@@ -244,7 +251,7 @@ export function usePatientsPageData(filters: PatientsFilters = {}) {
     isLoading,
     error,
     refetch: () => {
-      invalidatePatientsComprehensive(queryClient);
+      void invalidatePatientsCache(queryClient);
     },
   };
 }

@@ -11,7 +11,7 @@ import {
   Wallet,
 } from "lucide-react";
 import { lazy, Suspense } from "react";
-import { TransactionModal } from "@/components/financial";
+import { TransactionModal } from "@/components/financial/TransactionModal";
 import { FinancialCommandCenterSummary } from "@/components/financial/command-center/FinancialCommandCenterSummary";
 import { PageLayout, PageContainer, PageHeader } from "@/components/layout/PageLayout";
 import { EmptyState } from "@/components/ui";
