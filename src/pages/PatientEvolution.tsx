@@ -198,7 +198,61 @@ const PatientEvolution = () => {
 		hydratedKeyRef.current = key;
 
 		const saved = draft.readDraft();
-		if (!saved) return;
+		if (!saved) {
+			// FALLBACK: Tentar restaurar rascunho usando chave baseada em patientId + appointmentId
+			// Isso resolve o problema onde ao criar uma nova evolução, o rascunho anterior
+			// estava salvo com uma chave diferente (sem evolutionId)
+			if (!state.patientId || !state.appointmentId) return;
+
+			// Verificar se os dados atuais estão vazios (indicando uma nova evolução)
+			const currentIsEmpty = !(
+				!!(state.evolutionV2Data.unifiedItems?.length ?? 0) ||
+				!!(state.evolutionV2Data.procedures?.length ?? 0) ||
+				!!(state.evolutionV2Data.exercises?.length ?? 0) ||
+				!!(state.evolutionV2Data.measurements?.length ?? 0) ||
+				!!(state.evolutionV2Data.painLevel != null) ||
+				((state.evolutionV2Data.evolutionText || state.evolutionV2Data.observations || "").trim().length > 0)
+			);
+
+			if (currentIsEmpty) {
+				// Construir chave alternativa seguindo o mesmo padrão do hook useEvolutionDraft
+				const altKey = `fisioflow:evolution-draft:appt:${state.patientId}:${state.appointmentId}`;
+				try {
+					const altRaw = window.localStorage.getItem(altKey);
+					if (altRaw) {
+						const altEnv = JSON.parse(altRaw);
+						if (altEnv && altEnv.version === 1 && (Date.now() - altEnv.savedAt <= 1000 * 60 * 60 * 24 * 14)) {
+							const altData = altEnv.data as any;
+							// Verificar se o rascunho alternativo tem conteúdo significativo
+							const altHasContent = !!(
+								!!(altData.unifiedItems?.length ?? 0) ||
+								!!(altData.procedures?.length ?? 0) ||
+								!!(altData.exercises?.length ?? 0) ||
+								!!(altData.measurements?.length ?? 0) ||
+								!!(altData.painLevel != null) ||
+								((altData.evolutionText || altData.observations || "").trim().length > 0)
+							);
+
+							if (altHasContent) {
+								// Aplicar o rascunho alternativo
+								handleEvolutionV2Change(altData);
+								toast.message("Rascunho restaurado", {
+									description:
+										"Restauramos suas alterações locais não sincronizadas de uma tentativa anterior.",
+								});
+
+								// Limpar o rascunho alternativo após uso bem-sucedido
+								window.localStorage.removeItem(altKey);
+							}
+						}
+					}
+				} catch (err) {
+					// Ignorar erros de parsing ou acesso ao localStorage no fallback
+					console.warn("Falha ao ler rascunho alternativo:", err);
+				}
+			}
+			return;
+		}
 
 		// Se o rascunho é diferente do que veio do servidor, restauramos.
 		// O rascunho é a "verdade do cliente" até que o servidor confirme.

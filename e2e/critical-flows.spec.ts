@@ -889,10 +889,7 @@ test.describe("Fluxos Críticos do FisioFlow", () => {
     await page.waitForURL((url) => url.pathname.includes("/profile"), { timeout: 10000 });
     await page.waitForLoadState("domcontentloaded");
 
-    // Clicar em Editar para habilitar os campos
-    await page.click('[data-testid="edit-profile-button"]');
-
-    // Atualizar nome
+    // Atualizar nome (campos já estão habilitados)
     const nameInput = page.locator('[data-testid="profile-name"]');
     await expect(nameInput).toBeVisible({ timeout: 10000 });
     await nameInput.fill("Dr. Teste Atualizado");

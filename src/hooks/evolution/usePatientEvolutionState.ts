@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { useParams, useLocation } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { appointmentsApi } from "@/api/v2";
@@ -145,14 +145,23 @@ export function usePatientEvolutionState() {
     appointmentId,
   );
 
+  // Espelho da observacao canônica atual (para checar divergência sem re-disparar
+  // o efeito de hidratação a cada tecla).
+  const evolutionDataRef = useRef(evolutionData);
+  useEffect(() => {
+    evolutionDataRef.current = evolutionData;
+  }, [evolutionData]);
+  // Snapshot do último draft que semeamos no canonical (para detectar versões
+  // MAIS NOVAS vindas do servidor vs. cache stale do PersistQueryClient).
+  const seededDraftRef = useRef<{ id?: string; updatedAt?: string; observacao?: string }>({});
+
   // ========== SYNC DRAFTS ==========
   useEffect(() => {
-    if (!draftByAppointment || currentSoapRecordId !== undefined) return;
+    if (!draftByAppointment) return;
 
     const observacao = draftByAppointment.observacao ?? "";
     const painScaleValue = draftByAppointment.pain_scale ?? draftByAppointment.pain_level ?? null;
-
-    setEvolutionData({
+    const incoming: EvolutionData = {
       observacao,
       painScale: painScaleValue,
       procedures: Array.isArray(draftByAppointment.procedures)
@@ -167,21 +176,45 @@ export function usePatientEvolutionState() {
       homeExercises: Array.isArray(draftByAppointment.home_exercises)
         ? (draftByAppointment.home_exercises as HomeExerciseItem[])
         : [],
-    });
+    };
 
-    // P2.3: V2 mirror agora é derivado via useMemo — sync manual eliminado.
-    setSoapData({ subjective: "", objective: "", assessment: "", plan: "" });
+    const isFirstSeed = currentSoapRecordId === undefined;
+    const incomingUpdatedAt = (draftByAppointment as { updated_at?: string }).updated_at;
+    // Servidor tem uma versão mais nova do MESMO registro que a hidratada — ocorre
+    // quando o seed inicial veio de cache stale (PersistQueryClient) e a busca de
+    // rede trouxe conteúdo mais recente. Só adota se o texto local NÃO divergiu do
+    // último seed (não atropela edição em andamento).
+    const isFresherServer =
+      currentSoapRecordId === draftByAppointment.id &&
+      !!incomingUpdatedAt &&
+      !!seededDraftRef.current.updatedAt &&
+      new Date(incomingUpdatedAt).getTime() > new Date(seededDraftRef.current.updatedAt).getTime();
+    const localMatchesSeed =
+      (evolutionDataRef.current.observacao ?? "") === (seededDraftRef.current.observacao ?? "");
 
-    if (painScaleValue != null) {
-      setPainScale({ level: painScaleValue });
-    }
-    setCurrentSoapRecordId(draftByAppointment.id);
+    if (!isFirstSeed && !(isFresherServer && localMatchesSeed)) return;
 
-    const draftTherapistId =
-      draftByAppointment.created_by ||
-      (draftByAppointment as { therapist_id?: string }).therapist_id;
-    if (draftTherapistId) {
-      setSelectedTherapistId(draftTherapistId);
+    setEvolutionData(incoming);
+    seededDraftRef.current = {
+      id: draftByAppointment.id,
+      updatedAt: incomingUpdatedAt,
+      observacao,
+    };
+
+    if (isFirstSeed) {
+      // P2.3: V2 mirror agora é derivado via useMemo — sync manual eliminado.
+      setSoapData({ subjective: "", objective: "", assessment: "", plan: "" });
+      if (painScaleValue != null) {
+        setPainScale({ level: painScaleValue });
+      }
+      setCurrentSoapRecordId(draftByAppointment.id);
+
+      const draftTherapistId =
+        draftByAppointment.created_by ||
+        (draftByAppointment as { therapist_id?: string }).therapist_id;
+      if (draftTherapistId) {
+        setSelectedTherapistId(draftTherapistId);
+      }
     }
   }, [draftByAppointment, currentSoapRecordId]);
 
