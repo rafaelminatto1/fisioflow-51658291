@@ -24,7 +24,7 @@ app.get("/", async (c) => {
       if (authUser) {
         orgId = authUser.organizationId;
       }
-    } catch (_e) {
+    } catch {
       // Ignora erro de auth para requisições de pré-cadastro que passam auth vazia
     }
   }
@@ -119,7 +119,7 @@ app.post("/suggest", async (c) => {
       if (authUser) {
         orgId = authUser.organizationId;
       }
-    } catch (_e) {}
+    } catch {}
   }
 
   // Tentar obter orgId do token de pré-cadastro
