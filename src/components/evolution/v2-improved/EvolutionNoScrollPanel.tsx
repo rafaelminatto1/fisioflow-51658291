@@ -360,6 +360,7 @@ export const EvolutionNoScrollPanel = memo(
               placeholder="Digite a evolução clínica aqui…"
               showToolbar
               externalValueRevision={revisionRef.current}
+              className="h-full [&_.ProseMirror]:min-h-[60vh]"
             />
           </div>
         </div>

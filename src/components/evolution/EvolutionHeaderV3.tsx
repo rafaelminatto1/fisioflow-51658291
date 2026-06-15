@@ -95,6 +95,30 @@ export const EvolutionHeaderV3 = memo(
   }: EvolutionHeaderV3Props) => {
     const navigate = useNavigate();
 
+    // Data e horário do agendamento desta sessão.
+    const sessionWhen = (() => {
+      const a = appointment as any;
+      const rawDate = a?.appointment_date ?? a?.date ?? a?.start_time ?? a?.startTime;
+      const rawTime = a?.appointment_time ?? a?.time;
+      let out = "";
+      try {
+        if (rawDate) {
+          const d = parseResponseDate(rawDate) ?? new Date(rawDate);
+          if (d && !Number.isNaN(d.getTime())) {
+            out = format(d, "dd 'de' MMM 'de' yyyy", { locale: ptBR });
+            // hora embutida no datetime quando não há campo separado
+            if (!rawTime && /\d{2}:\d{2}/.test(String(rawDate))) {
+              out += ` · ${format(d, "HH:mm")}`;
+            }
+          }
+        }
+        if (rawTime) out += `${out ? " · " : ""}${String(rawTime).slice(0, 5)}`;
+      } catch {
+        /* ignora datas inválidas */
+      }
+      return out;
+    })();
+
     const renderSaveStatus = () => {
       const hasPending = (offlineStatus?.pendingActions ?? 0) > 0;
       const isOffline = offlineStatus && !offlineStatus.isOnline;
@@ -187,6 +211,13 @@ export const EvolutionHeaderV3 = memo(
             {sessionNumber}ª sessão · {evolutionStats.totalEvolutions} evoluções ·{" "}
             {evolutionStats.totalMeasurements} medições ·{" "}
             <span className="text-[#059669]">100% sucesso</span>
+            {sessionWhen && (
+              <span className="ml-1 inline-flex items-center gap-1 text-slate-600">
+                <span className="text-muted-foreground/50">·</span>
+                <Clock className="h-3 w-3" />
+                {sessionWhen}
+              </span>
+            )}
           </div>
         </div>
 

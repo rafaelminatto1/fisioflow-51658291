@@ -58,7 +58,7 @@ describe("UserManagement", () => {
     render(<UserManagement />);
 
     expect(screen.getByText("Gerenciamento de Usuários")).toBeInTheDocument();
-    expect(screen.getByText(process.env.E2E_EMAIL || "")).toBeInTheDocument();
+    expect(screen.getAllByText(process.env.E2E_EMAIL || "")[0]).toBeInTheDocument();
     expect(screen.getByText("Data inválida")).toBeInTheDocument();
   });
 });

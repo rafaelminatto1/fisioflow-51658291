@@ -352,6 +352,16 @@ export function NewExerciseModal({
     name: "scientific_references" as any,
   });
 
+  const {
+    fields: mediaFields,
+    append: appendMedia,
+    remove: removeMedia,
+    update: updateMedia,
+  } = useFieldArray({
+    control: form.control,
+    name: "media",
+  });
+
   // Sincronizar mídia quando o formulário reseta (ex: ao abrir para editar)
   useEffect(() => {
     if (currentExercise && currentExercise.media) {
