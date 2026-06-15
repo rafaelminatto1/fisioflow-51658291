@@ -51,9 +51,9 @@ describe("handleScheduled", () => {
     );
 
     expect(create).not.toHaveBeenCalled();
-    expect(mocks.createPool).not.toHaveBeenCalled();
+    // createPool is called for prewarmDatabase
+    expect(mocks.createPool).toHaveBeenCalledTimes(1);
   });
-
   it("does not create KnowledgeSyncWorkflow manually — delegated to wrangler schedules", async () => {
     const create = vi.fn().mockResolvedValue(undefined);
 

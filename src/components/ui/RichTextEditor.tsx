@@ -40,6 +40,15 @@ import {
   Undo2,
   Redo2,
   Quote,
+  AlignLeft,
+  AlignCenter,
+  AlignRight,
+  Image as ImageIcon,
+  Table as TableIcon,
+  Subscript as SubscriptIcon,
+  Superscript as SuperscriptIcon,
+  Link as LinkIcon,
+  Eraser,
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -228,12 +237,38 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
   const [libraryOpen, setLibraryOpen] = useState(false);
   const [librarySearch, setLibrarySearch] = useState("");
   const [testsOpen, setTestsOpen] = useState(false);
+  const imageInputRef = useRef<HTMLInputElement | null>(null);
   const [editingExistingImage, setEditingExistingImage] = useState<{
     src: string;
     alt?: string;
     title?: string;
     updateAttributes: (attrs: Record<string, unknown>) => void;
   } | null>(null);
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !editor) return;
+
+    // Reset input
+    e.target.value = "";
+
+    const loadingToast = toast.loading("Enviando imagem...");
+
+    try {
+      const url = await uploadFile(file, imageUploadFolder || STORAGE_FOLDERS.PATIENTS);
+      editor
+        .chain()
+        .focus()
+        .setImage({ src: url, align: "center", width: "100%" } as any)
+        .run();
+      toast.dismiss(loadingToast);
+      toast.success("Imagem enviada com sucesso!");
+    } catch (error) {
+      console.error("Error uploading image:", error);
+      toast.dismiss(loadingToast);
+      toast.error("Erro ao fazer upload da imagem");
+    }
+  };
 
   const handleInput = useCallback(() => {
     setIsTyping(true);
@@ -615,6 +650,13 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
       )}
       style={isTyping ? ({ "--typing-glow": getAccentGlow() } as React.CSSProperties) : undefined}
     >
+      <input
+        type="file"
+        ref={imageInputRef}
+        className="hidden"
+        accept="image/*"
+        onChange={handleImageUpload}
+      />
       {showToolbar && editor && (
         <div className="flex flex-wrap items-center gap-0.5 px-2 py-1.5 border border-slate-200 bg-slate-50/80 rounded-t-lg sticky top-0 z-10">
           {[
@@ -641,6 +683,34 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
               action: () => editor.chain().focus().toggleStrike().run(),
               active: editor.isActive("strike"),
               label: "Tachado",
+            },
+            {
+              icon: SubscriptIcon,
+              action: () => editor.chain().focus().toggleSubscript().run(),
+              active: editor.isActive("subscript"),
+              label: "Subscrito",
+            },
+            {
+              icon: SuperscriptIcon,
+              action: () => editor.chain().focus().toggleSuperscript().run(),
+              active: editor.isActive("superscript"),
+              label: "Sobrescrito",
+            },
+            { sep: true },
+            {
+              icon: LinkIcon,
+              action: () => {
+                const previousUrl = editor.getAttributes("link").href;
+                const url = window.prompt("URL do link:", previousUrl);
+                if (url === null) return;
+                if (url === "") {
+                  editor.chain().focus().extendMarkRange("link").unsetLink().run();
+                  return;
+                }
+                editor.chain().focus().extendMarkRange("link").setLink({ href: url }).run();
+              },
+              active: editor.isActive("link"),
+              label: "Inserir Link",
             },
             { sep: true },
             {
@@ -699,6 +769,49 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
               action: () => editor.chain().focus().redo().run(),
               active: false,
               label: "Refazer",
+            },
+            {
+              icon: Eraser,
+              action: () => editor.chain().focus().clearNodes().unsetAllMarks().run(),
+              active: false,
+              label: "Limpar formatação",
+            },
+            { sep: true },
+            {
+              icon: AlignLeft,
+              action: () => editor.chain().focus().setTextAlign("left").run(),
+              active: editor.isActive({ textAlign: "left" }),
+              label: "Alinhar à esquerda",
+            },
+            {
+              icon: AlignCenter,
+              action: () => editor.chain().focus().setTextAlign("center").run(),
+              active: editor.isActive({ textAlign: "center" }),
+              label: "Centralizar",
+            },
+            {
+              icon: AlignRight,
+              action: () => editor.chain().focus().setTextAlign("right").run(),
+              active: editor.isActive({ textAlign: "right" }),
+              label: "Alinhar à direita",
+            },
+            { sep: true },
+            {
+              icon: ImageIcon,
+              action: () => imageInputRef.current?.click(),
+              active: false,
+              label: "Inserir Imagem",
+            },
+            {
+              icon: TableIcon,
+              action: () =>
+                editor
+                  .chain()
+                  .focus()
+                  .insertTable({ rows: 3, cols: 3, withHeaderRow: true })
+                  .run(),
+              active: editor.isActive("table"),
+              label: "Tabela",
             },
           ].map((tool, idx) => {
             if ("sep" in tool && tool.sep) {

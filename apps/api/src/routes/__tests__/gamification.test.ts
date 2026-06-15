@@ -16,6 +16,9 @@ vi.mock("../../lib/auth", () => ({
     });
     await next();
   }),
+  requireRole: vi.fn(() => async (_c: any, next: any) => {
+    await next();
+  }),
 }));
 
 async function buildApp() {
