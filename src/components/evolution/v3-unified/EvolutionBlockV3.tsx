@@ -611,6 +611,21 @@ export const EvolutionBlockV3: React.FC<EvolutionBlockV3Props> = ({
     setNewItemDialogOpen(false);
   };
 
+  // Foca o campo de busca (autocomplete) — usado ao alternar Procedimento/Exercício.
+  const focusSearchInput = React.useCallback(() => {
+    requestAnimationFrame(() => {
+      inputWrapRef.current?.querySelector("input")?.focus();
+    });
+  }, []);
+
+  const selectItemType = React.useCallback(
+    (t: EvolutionItemType) => {
+      setNewItemType(t);
+      focusSearchInput();
+    },
+    [focusSearchInput],
+  );
+
   // Keyboard shortcuts
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -620,12 +635,12 @@ export const EvolutionBlockV3: React.FC<EvolutionBlockV3Props> = ({
 
     if (e.altKey && e.key.toLowerCase() === "p") {
       e.preventDefault();
-      setNewItemType("procedure");
+      selectItemType("procedure");
     }
 
     if (e.altKey && e.key.toLowerCase() === "e") {
       e.preventDefault();
-      setNewItemType("exercise");
+      selectItemType("exercise");
     }
   };
 
@@ -709,7 +724,7 @@ export const EvolutionBlockV3: React.FC<EvolutionBlockV3Props> = ({
               <Button
                 size="sm"
                 variant={newItemType === "procedure" ? "default" : "ghost"}
-                onClick={() => setNewItemType("procedure")}
+                onClick={() => selectItemType("procedure")}
                 className={cn(
                   "h-7 rounded-full text-[10px] uppercase font-bold tracking-wider",
                   newItemType === "procedure" && "bg-emerald-600 hover:bg-emerald-700",
@@ -721,7 +736,7 @@ export const EvolutionBlockV3: React.FC<EvolutionBlockV3Props> = ({
               <Button
                 size="sm"
                 variant={newItemType === "exercise" ? "default" : "ghost"}
-                onClick={() => setNewItemType("exercise")}
+                onClick={() => selectItemType("exercise")}
                 className={cn(
                   "h-7 rounded-full text-[10px] uppercase font-bold tracking-wider",
                   newItemType === "exercise" && "bg-blue-600 hover:bg-blue-700",
@@ -911,33 +926,39 @@ export const EvolutionBlockV3: React.FC<EvolutionBlockV3Props> = ({
 
       <Dialog open={newItemDialogOpen} onOpenChange={setNewItemDialogOpen}>
         <DialogContent className="sm:max-w-[460px] rounded-2xl">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Search className="h-5 w-5 text-primary" />
-              Item não encontrado
-            </DialogTitle>
-            <DialogDescription>
-              Não encontramos esse nome na biblioteca. Ajuste o texto ou confirme que é um novo{" "}
-              {(type === "unified" ? newItemType : type) === "exercise"
-                ? "exercício"
-                : "procedimento"}
-              .
-            </DialogDescription>
-          </DialogHeader>
-          <Input
-            value={pendingItemName}
-            onChange={(event) => setPendingItemName(event.target.value)}
-            className="h-10 rounded-xl"
-            autoFocus
-          />
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setNewItemDialogOpen(false)}>
-              Cancelar
-            </Button>
-            <Button onClick={handleConfirmNewItem} disabled={!pendingItemName.trim()}>
-              Adicionar como novo
-            </Button>
-          </DialogFooter>
+          {(() => {
+            const itemKind =
+              (type === "unified" ? newItemType : type) === "exercise" ? "exercício" : "procedimento";
+            return (
+              <>
+                <DialogHeader>
+                  <DialogTitle className="flex items-center gap-2">
+                    <Search className="h-5 w-5 text-primary" />
+                    {itemKind === "exercício" ? "Exercício" : "Procedimento"} não encontrado
+                  </DialogTitle>
+                  <DialogDescription>
+                    “{pendingItemName}” não está na biblioteca. Você pode adicioná-lo{" "}
+                    <strong>somente a esta conduta</strong>, sem cadastrar na biblioteca de{" "}
+                    {itemKind === "exercício" ? "exercícios" : "procedimentos"} — ou ajustar o texto.
+                  </DialogDescription>
+                </DialogHeader>
+                <Input
+                  value={pendingItemName}
+                  onChange={(event) => setPendingItemName(event.target.value)}
+                  className="h-10 rounded-xl"
+                  autoFocus
+                />
+                <DialogFooter>
+                  <Button variant="outline" onClick={() => setNewItemDialogOpen(false)}>
+                    Cancelar
+                  </Button>
+                  <Button onClick={handleConfirmNewItem} disabled={!pendingItemName.trim()}>
+                    Adicionar à conduta
+                  </Button>
+                </DialogFooter>
+              </>
+            );
+          })()}
         </DialogContent>
       </Dialog>
     </div>
