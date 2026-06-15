@@ -67,6 +67,7 @@ import {
 import { useIncrementTemplateUsage } from "@/hooks/useTemplateStats";
 import {
 	usePatientEvaluationResponse,
+	usePatientEvaluationResponses,
 	useUpdatePatientEvaluationResponse,
 } from "@/hooks/useEvaluationForms";
 import { RichTextEditor } from "@/components/ui/RichTextEditor";

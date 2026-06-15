@@ -6,6 +6,7 @@
  */
 
 import * as Sentry from "@sentry/react";
+import { fisioLogger as logger } from "@/lib/errors/logger";
 
 interface PageLoadMetrics {
   page: string;
@@ -17,6 +18,34 @@ interface PageLoadMetrics {
   firstInputDelay?: number;
   cumulativeLayoutShift?: number;
   timeToInteractive?: number;
+  navigation?: NavigationBreakdown;
+}
+
+interface NavigationBreakdown {
+  ttfb: number;
+  domInteractive: number;
+  domContentLoaded: number;
+  loadEventEnd: number;
+  transferSize?: number;
+  encodedBodySize?: number;
+  decodedBodySize?: number;
+}
+
+interface LcpAttribution {
+  value: number;
+  rating: "good" | "needs-improvement" | "poor";
+  route: string;
+  element?: {
+    tagName: string;
+    id?: string;
+    className?: string;
+  };
+  url?: string;
+  size?: number;
+  startTime: number;
+  renderTime?: number;
+  loadTime?: number;
+  navigation?: NavigationBreakdown;
 }
 
 interface ComponentRenderMetrics {
@@ -37,6 +66,7 @@ export class PerformanceMonitor {
   private static readonly SLOW_RENDER_THRESHOLD = 100; // ms
   private static readonly SLOW_API_THRESHOLD = 1000; // ms
   private static readonly SLOW_PAGE_LOAD_THRESHOLD = 3000; // ms
+  private static hasReportedPoorLcp = false;
 
   /**
    * Track page load performance
@@ -65,6 +95,7 @@ export class PerformanceMonitor {
       page: pageName,
       loadTime: navigation.loadEventEnd - navigation.fetchStart,
       domContentLoaded: navigation.domContentLoadedEventEnd - navigation.fetchStart,
+      navigation: this.getNavigationBreakdown(navigation),
     };
 
     // Capture Web Vitals
@@ -86,13 +117,77 @@ export class PerformanceMonitor {
 
     // Alert if slow
     if (metrics.loadTime > this.SLOW_PAGE_LOAD_THRESHOLD) {
-      console.warn(`⚠️ Slow page load: ${pageName} took ${metrics.loadTime}ms`);
+      logger.performance(
+        "Slow page load",
+        {
+          pageName,
+          loadTime: metrics.loadTime,
+          navigation: metrics.navigation,
+          route: window.location.pathname,
+        },
+        "performance",
+      );
 
       Sentry.captureMessage(`Slow page load: ${pageName}`, {
         level: "warning",
         extra: metrics,
       });
     }
+  }
+
+  private static getNavigationBreakdown(
+    navigation: PerformanceNavigationTiming,
+  ): NavigationBreakdown {
+    return {
+      ttfb: navigation.responseStart - navigation.requestStart,
+      domInteractive: navigation.domInteractive - navigation.fetchStart,
+      domContentLoaded: navigation.domContentLoadedEventEnd - navigation.fetchStart,
+      loadEventEnd: navigation.loadEventEnd - navigation.fetchStart,
+      transferSize: navigation.transferSize,
+      encodedBodySize: navigation.encodedBodySize,
+      decodedBodySize: navigation.decodedBodySize,
+    };
+  }
+
+  private static getLcpRating(value: number): LcpAttribution["rating"] {
+    if (value <= 2500) return "good";
+    if (value <= 4000) return "needs-improvement";
+    return "poor";
+  }
+
+  private static getLcpAttribution(
+    entry: PerformanceEntry & {
+      element?: Element;
+      url?: string;
+      size?: number;
+      renderTime?: number;
+      loadTime?: number;
+    },
+    metrics: PageLoadMetrics,
+  ): LcpAttribution {
+    const value = entry.renderTime ?? entry.loadTime ?? entry.startTime;
+    const element = entry.element;
+    const className =
+      typeof element?.className === "string" ? element.className.slice(0, 160) : undefined;
+
+    return {
+      value,
+      rating: this.getLcpRating(value),
+      route: window.location.pathname,
+      element: element
+        ? {
+            tagName: element.tagName.toLowerCase(),
+            id: element.id || undefined,
+            className,
+          }
+        : undefined,
+      url: entry.url,
+      size: entry.size,
+      startTime: entry.startTime,
+      renderTime: entry.renderTime,
+      loadTime: entry.loadTime,
+      navigation: metrics.navigation,
+    };
   }
 
   /**
@@ -120,18 +215,28 @@ export class PerformanceMonitor {
         const lcpObserver = new PerformanceObserver((list) => {
           const entries = list.getEntries();
           const lastEntry = entries[entries.length - 1] as PerformanceEntry & {
+            element?: Element;
+            url?: string;
+            size?: number;
             renderTime?: number;
             loadTime?: number;
           };
-          metrics.largestContentfulPaint = lastEntry.renderTime ?? lastEntry.loadTime ?? 0;
+          const lcpAttribution = this.getLcpAttribution(lastEntry, metrics);
+          metrics.largestContentfulPaint = lcpAttribution.value;
 
           // Good: < 2.5s, Needs Improvement: 2.5s - 4s, Poor: > 4s
-          if (metrics.largestContentfulPaint > 4000) {
-            console.warn("⚠️ Poor LCP:", metrics.largestContentfulPaint);
+          if (metrics.largestContentfulPaint > 4000 && !this.hasReportedPoorLcp) {
+            this.hasReportedPoorLcp = true;
+            logger.performance("Poor LCP", lcpAttribution, "performance");
+
+            Sentry.captureMessage("Poor LCP", {
+              level: "warning",
+              extra: lcpAttribution,
+            });
           }
         });
 
-        lcpObserver.observe({ entryTypes: ["largest-contentful-paint"] });
+        lcpObserver.observe({ type: "largest-contentful-paint", buffered: true });
       }
 
       // First Input Delay (FID) - Core Web Vital
@@ -144,12 +249,16 @@ export class PerformanceMonitor {
 
             // Good: < 100ms, Needs Improvement: 100ms - 300ms, Poor: > 300ms
             if (metrics.firstInputDelay > 300) {
-              console.warn("⚠️ Poor FID:", metrics.firstInputDelay);
+              logger.performance(
+                "Poor FID",
+                { value: metrics.firstInputDelay, route: window.location.pathname },
+                "performance",
+              );
             }
           });
         });
 
-        fidObserver.observe({ entryTypes: ["first-input"] });
+        fidObserver.observe({ type: "first-input", buffered: true });
       }
 
       // Cumulative Layout Shift (CLS) - Core Web Vital
@@ -167,11 +276,15 @@ export class PerformanceMonitor {
 
           // Good: < 0.1, Needs Improvement: 0.1 - 0.25, Poor: > 0.25
           if (clsValue > 0.25) {
-            console.warn("⚠️ Poor CLS:", clsValue);
+            logger.performance(
+              "Poor CLS",
+              { value: clsValue, route: window.location.pathname },
+              "performance",
+            );
           }
         });
 
-        clsObserver.observe({ entryTypes: ["layout-shift"] });
+        clsObserver.observe({ type: "layout-shift", buffered: true });
       }
     } catch (error) {
       console.error("Error capturing Web Vitals:", error);
@@ -194,7 +307,11 @@ export class PerformanceMonitor {
 
     // Log in development
     if (import.meta.env.DEV && renderTime > this.SLOW_RENDER_THRESHOLD) {
-      console.warn(`⚠️ Slow render: ${componentName} took ${renderTime}ms`, props);
+      logger.performance(
+        "Slow render",
+        { componentName, renderTime, props },
+        "performance",
+      );
     }
 
     // Alert if very slow
@@ -239,7 +356,11 @@ export class PerformanceMonitor {
 
     // Alert if slow
     if (duration > this.SLOW_API_THRESHOLD) {
-      console.warn(`⚠️ Slow API call: ${method} ${endpoint} took ${duration}ms`);
+      logger.performance(
+        "Slow API call",
+        { method, endpoint, duration, status },
+        "performance",
+      );
 
       Sentry.captureMessage(`Slow API call: ${method} ${endpoint}`, {
         level: "warning",
