@@ -17,7 +17,6 @@ import {
   X,
   BookOpen,
   Eye,
-  Play,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd";

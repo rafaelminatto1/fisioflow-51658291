@@ -12,6 +12,7 @@
     "jsx": "react-jsx",
     "paths": {
       "@fisioflow/db": ["../../packages/db/src"],
+      "@fisioflow/db/*": ["../../packages/db/src/*"],
       "drizzle-orm": ["../../node_modules/drizzle-orm"],
       "drizzle-orm/*": ["../../node_modules/drizzle-orm/*"]
     }
