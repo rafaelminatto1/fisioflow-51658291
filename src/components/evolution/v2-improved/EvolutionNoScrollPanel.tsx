@@ -163,12 +163,12 @@ function SideCard({
     <div
       onClick={onClick}
       className={cn(
-        "rounded-2xl border border-t-[3px] border-border bg-card p-4 shadow-sm",
+        "rounded-2xl border border-t-[3px] border-border bg-card p-3 shadow-sm",
         accent,
         onClick && "cursor-pointer transition-colors hover:border-slate-300",
       )}
     >
-      <div className="mb-3 flex items-center gap-2">
+      <div className="mb-2 flex items-center gap-2">
         <h4 className="flex items-center gap-2 text-[11px] font-extrabold uppercase tracking-wider text-muted-foreground">
           <Icon className="h-3.5 w-3.5" /> {title}
         </h4>
@@ -228,6 +228,7 @@ export const EvolutionNoScrollPanel = memo(
   }: EvolutionNoScrollPanelProps) => {
     const [historyOpen, setHistoryOpen] = useState(false);
     const [focusSection, setFocusSection] = useState<null | "obs" | "condutas">(null);
+    const [anexosOpen, setAnexosOpen] = useState(false);
 
     // Revisão para forçar o editor a sincronizar quando troca o registro carregado.
     const revisionRef = useRef(0);
@@ -331,7 +332,7 @@ export const EvolutionNoScrollPanel = memo(
     const observationsValue = data.evolutionText || data.observations || "";
 
     return (
-      <div className="grid min-h-0 flex-1 grid-cols-1 gap-4 overflow-hidden p-4 lg:grid-cols-[1fr_minmax(320px,380px)_minmax(320px,380px)]">
+      <div className="grid min-h-0 flex-1 grid-cols-1 gap-4 overflow-hidden p-4 lg:grid-cols-[minmax(0,1fr)_minmax(380px,460px)_minmax(380px,460px)]">
         {/* ===================== COLUNA 1 — OBSERVAÇÕES ===================== */}
         <div className="flex min-h-0 flex-col overflow-hidden rounded-2xl border border-t-[3px] border-border border-t-[#F59E0B] bg-card shadow-sm">
           <div className="flex items-center gap-3 border-b border-border px-4 py-3">
@@ -395,10 +396,10 @@ export const EvolutionNoScrollPanel = memo(
         </div>
 
         {/* ===================== COLUNA 3 — DOR + ITENS ===================== */}
-        <div className="custom-scrollbar flex min-h-0 flex-col gap-3.5 overflow-y-auto pb-2 pr-1">
+        <div className="custom-scrollbar flex min-h-0 flex-col gap-2.5 overflow-y-auto pb-2 pr-1">
           {/* nível de dor — EVA */}
-          <div className="rounded-2xl border border-t-[3px] border-border border-t-rose-500 bg-card p-4 shadow-sm">
-            <div className="mb-2 flex items-center gap-2.5">
+          <div className="rounded-2xl border border-t-[3px] border-border border-t-rose-500 bg-card p-3 shadow-sm">
+            <div className="mb-1 flex items-center gap-2.5">
               <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-rose-100 text-rose-600">
                 <Activity className="h-5 w-5" />
               </div>
@@ -421,7 +422,7 @@ export const EvolutionNoScrollPanel = memo(
               )}
             </div>
 
-            <PainGauge value={discharge} arrival={arrival} />
+            <PainGauge value={discharge} arrival={arrival} compact />
 
             <div className="mt-2 flex gap-2.5">
               <EvaPicker
@@ -439,7 +440,7 @@ export const EvolutionNoScrollPanel = memo(
               />
             </div>
 
-            <div className="mt-3 flex flex-wrap items-center gap-1.5">
+            <div className="mt-2 flex flex-wrap items-center gap-1.5">
               <span className="text-[10px] font-extrabold uppercase tracking-wider text-muted-foreground">
                 Tipo:
               </span>
@@ -470,7 +471,7 @@ export const EvolutionNoScrollPanel = memo(
               })}
             </div>
 
-            <div className="mt-3 flex items-center gap-2 rounded-xl border border-border bg-slate-50/60 px-3 py-2">
+            <div className="mt-2 flex items-center gap-2 rounded-xl border border-border bg-slate-50/60 px-3 py-1.5">
               <MapPin className="h-4 w-4 shrink-0 text-muted-foreground" />
               <input
                 type="text"
@@ -483,26 +484,40 @@ export const EvolutionNoScrollPanel = memo(
           </div>
 
           {/* tendência */}
-          <SideCard icon={TrendingDown} title="Tendência da dor" accent="border-t-rose-400">
-            <div className="mb-1 flex items-baseline justify-between">
-              <span className="text-[30px] font-extrabold tabular-nums tracking-tight">
-                {discharge}
-                <span className="text-sm font-bold text-muted-foreground">/10</span>
-              </span>
-              {trendDelta != null && trendDelta !== 0 && (
-                <span
-                  className={cn(
-                    "inline-flex items-center gap-1 text-[12px] font-extrabold",
-                    trendDelta < 0 ? "text-emerald-600" : "text-rose-600",
-                  )}
-                >
-                  {trendDelta < 0 ? <TrendingDown className="h-3 w-3" /> : <TrendingUp className="h-3 w-3" />}
-                  {trendDelta > 0 ? "+" : "−"}
-                  {Math.abs(trendDelta)} no período
+          <SideCard
+            icon={TrendingDown}
+            title="Tendência da dor"
+            accent="border-t-rose-400"
+            action={
+              <div className="flex items-center gap-2">
+                <span className="text-[17px] font-extrabold tabular-nums leading-none text-slate-800">
+                  {discharge}
+                  <span className="text-[11px] font-bold text-muted-foreground">/10</span>
                 </span>
-              )}
-            </div>
-            <PainTrendSparkline data={trendPoints} meta={discharge > 3 ? 3 : undefined} />
+                {trendDelta != null && trendDelta !== 0 && (
+                  <span
+                    className={cn(
+                      "inline-flex items-center gap-0.5 text-[11px] font-extrabold",
+                      trendDelta < 0 ? "text-emerald-600" : "text-rose-600",
+                    )}
+                  >
+                    {trendDelta < 0 ? (
+                      <TrendingDown className="h-3 w-3" />
+                    ) : (
+                      <TrendingUp className="h-3 w-3" />
+                    )}
+                    {trendDelta > 0 ? "+" : "−"}
+                    {Math.abs(trendDelta)}
+                  </span>
+                )}
+              </div>
+            }
+          >
+            <PainTrendSparkline
+              data={trendPoints}
+              meta={discharge > 3 ? 3 : undefined}
+              heightClass="h-16"
+            />
           </SideCard>
 
           {/* qualidade */}
@@ -603,15 +618,36 @@ export const EvolutionNoScrollPanel = memo(
             </p>
           </SideCard>
 
-          {/* anexos */}
-          <SideCard icon={Paperclip} title="Anexos" accent="border-t-[#14B8A6]">
-            <AttachmentsBlock
-              patientId={patientId}
-              evolutionId={evolutionId}
-              value={data.attachments ?? []}
-              onChange={(attachments) => onChange({ ...data, attachments })}
-              variant="embedded"
-            />
+          {/* anexos — minimizado por padrão */}
+          <SideCard
+            icon={Paperclip}
+            title="Anexos"
+            accent="border-t-[#14B8A6]"
+            action={
+              <button
+                type="button"
+                onClick={() => setAnexosOpen((v) => !v)}
+                className="text-[10px] font-extrabold uppercase tracking-wider text-primary hover:underline"
+              >
+                {anexosOpen ? "Recolher" : (data.attachments?.length ?? 0) > 0 ? "Ver" : "Adicionar"}
+              </button>
+            }
+          >
+            {anexosOpen ? (
+              <AttachmentsBlock
+                patientId={patientId}
+                evolutionId={evolutionId}
+                value={data.attachments ?? []}
+                onChange={(attachments) => onChange({ ...data, attachments })}
+                variant="embedded"
+              />
+            ) : (
+              <p className="text-[11.5px] font-semibold text-muted-foreground">
+                {(data.attachments?.length ?? 0) > 0
+                  ? `${data.attachments?.length} arquivo(s) anexado(s)`
+                  : "Nenhum arquivo."}
+              </p>
+            )}
           </SideCard>
 
           {/* sinais vitais — condicional */}

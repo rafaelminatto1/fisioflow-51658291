@@ -10,6 +10,8 @@ interface PainTrendSparklineProps {
   data: PainTrendPoint[];
   /** Meta/target de dor (linha tracejada de projeção). */
   meta?: number;
+  /** Classe de altura do SVG (default h-24). */
+  heightClass?: string;
 }
 
 const W = 300;
@@ -24,10 +26,10 @@ function y(level: number): number {
 }
 
 /** Mini-gráfico SVG de tendência da dor por sessão (Layout E). */
-export const PainTrendSparkline = memo(({ data, meta }: PainTrendSparklineProps) => {
+export const PainTrendSparkline = memo(({ data, meta, heightClass = "h-24" }: PainTrendSparklineProps) => {
   if (data.length === 0) {
     return (
-      <div className="flex h-24 items-center justify-center text-[11px] font-semibold text-muted-foreground">
+      <div className="flex h-16 items-center justify-center text-[11px] font-semibold text-muted-foreground">
         Sem histórico de dor ainda.
       </div>
     );
@@ -43,7 +45,7 @@ export const PainTrendSparkline = memo(({ data, meta }: PainTrendSparklineProps)
 
   return (
     <div>
-      <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" className="h-24 w-full">
+      <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" className={`${heightClass} w-full`}>
         <g stroke="hsl(220 13% 91%)" strokeWidth={1}>
           <line x1={0} y1={20} x2={W} y2={20} />
           <line x1={0} y1={50} x2={W} y2={50} />

@@ -24,14 +24,54 @@ export const useAppointmentActions = () => {
     mutationFn: async (appointmentId: string) => {
       await AppointmentService.updateStatus(appointmentId, "presenca_confirmada");
     },
+    onMutate: async (appointmentId) => {
+      await queryClient.cancelQueries({ queryKey: appointmentKeys.all });
+      await queryClient.cancelQueries({ queryKey: appointmentPeriodKeys.all });
+      await queryClient.cancelQueries({ queryKey: ["schedule-appointments"] });
+
+      const previousData = queryClient.getQueryData(appointmentKeys.all);
+
+      queryClient.setQueriesData({ queryKey: appointmentKeys.all }, (old: any) => {
+        if (!old?.data) return old;
+        return {
+          ...old,
+          data: old.data.map((apt: any) =>
+            apt.id === appointmentId ? { ...apt, status: "presenca_confirmada" } : apt,
+          ),
+        };
+      });
+
+      queryClient.setQueriesData(
+        { queryKey: appointmentPeriodKeys.all },
+        (old: AppointmentBase[] | undefined) =>
+          old?.map((apt) =>
+            apt.id === appointmentId ? { ...apt, status: "presenca_confirmada" } : apt,
+          ),
+      );
+
+      queryClient.setQueriesData(
+        { queryKey: ["schedule-appointments"] },
+        (old: AppointmentBase[] | undefined) =>
+          old?.map((apt) =>
+            apt.id === appointmentId ? { ...apt, status: "presenca_confirmada" } : apt,
+          ),
+      );
+
+      return { previousData };
+    },
     onSuccess: () => {
       triggerHaptic("medium");
-      queryClient.invalidateQueries({ queryKey: appointmentKeys.all });
-      queryClient.invalidateQueries({ queryKey: appointmentPeriodKeys.all });
       toast.success("Presença confirmada com sucesso");
     },
-    onError: (error: Error) => {
+    onError: (error: Error, _, context) => {
+      if (context?.previousData) {
+        queryClient.setQueryData(appointmentKeys.all, context.previousData);
+      }
       ErrorHandler.handle(error, "useAppointmentActions.confirm");
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: appointmentKeys.all });
+      queryClient.invalidateQueries({ queryKey: appointmentPeriodKeys.all });
     },
   });
 
@@ -39,14 +79,50 @@ export const useAppointmentActions = () => {
     mutationFn: async ({ appointmentId, reason }: { appointmentId: string; reason?: string }) => {
       await AppointmentService.cancelAppointment(appointmentId, reason);
     },
+    onMutate: async ({ appointmentId }) => {
+      await queryClient.cancelQueries({ queryKey: appointmentKeys.all });
+      await queryClient.cancelQueries({ queryKey: appointmentPeriodKeys.all });
+      await queryClient.cancelQueries({ queryKey: ["schedule-appointments"] });
+
+      const previousData = queryClient.getQueryData(appointmentKeys.all);
+
+      queryClient.setQueriesData({ queryKey: appointmentKeys.all }, (old: any) => {
+        if (!old?.data) return old;
+        return {
+          ...old,
+          data: old.data.map((apt: any) =>
+            apt.id === appointmentId ? { ...apt, status: "cancelado" } : apt,
+          ),
+        };
+      });
+
+      queryClient.setQueriesData(
+        { queryKey: appointmentPeriodKeys.all },
+        (old: AppointmentBase[] | undefined) =>
+          old?.map((apt) => (apt.id === appointmentId ? { ...apt, status: "cancelado" } : apt)),
+      );
+
+      queryClient.setQueriesData(
+        { queryKey: ["schedule-appointments"] },
+        (old: AppointmentBase[] | undefined) =>
+          old?.map((apt) => (apt.id === appointmentId ? { ...apt, status: "cancelado" } : apt)),
+      );
+
+      return { previousData };
+    },
     onSuccess: () => {
       triggerHaptic("heavy");
-      queryClient.invalidateQueries({ queryKey: appointmentKeys.all });
-      queryClient.invalidateQueries({ queryKey: appointmentPeriodKeys.all });
       toast.success("Agendamento cancelado");
     },
-    onError: (error: Error) => {
+    onError: (error: Error, _, context) => {
+      if (context?.previousData) {
+        queryClient.setQueryData(appointmentKeys.all, context.previousData);
+      }
       ErrorHandler.handle(error, "useAppointmentActions.cancel");
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: appointmentKeys.all });
+      queryClient.invalidateQueries({ queryKey: appointmentPeriodKeys.all });
     },
   });
 
@@ -88,14 +164,50 @@ export const useAppointmentActions = () => {
     mutationFn: async (appointmentId: string) => {
       await AppointmentService.updateStatus(appointmentId, "atendido");
     },
+    onMutate: async (appointmentId) => {
+      await queryClient.cancelQueries({ queryKey: appointmentKeys.all });
+      await queryClient.cancelQueries({ queryKey: appointmentPeriodKeys.all });
+      await queryClient.cancelQueries({ queryKey: ["schedule-appointments"] });
+
+      const previousData = queryClient.getQueryData(appointmentKeys.all);
+
+      queryClient.setQueriesData({ queryKey: appointmentKeys.all }, (old: any) => {
+        if (!old?.data) return old;
+        return {
+          ...old,
+          data: old.data.map((apt: any) =>
+            apt.id === appointmentId ? { ...apt, status: "atendido" } : apt,
+          ),
+        };
+      });
+
+      queryClient.setQueriesData(
+        { queryKey: appointmentPeriodKeys.all },
+        (old: AppointmentBase[] | undefined) =>
+          old?.map((apt) => (apt.id === appointmentId ? { ...apt, status: "atendido" } : apt)),
+      );
+
+      queryClient.setQueriesData(
+        { queryKey: ["schedule-appointments"] },
+        (old: AppointmentBase[] | undefined) =>
+          old?.map((apt) => (apt.id === appointmentId ? { ...apt, status: "atendido" } : apt)),
+      );
+
+      return { previousData };
+    },
     onSuccess: () => {
       triggerHaptic("light");
-      queryClient.invalidateQueries({ queryKey: appointmentKeys.all });
-      queryClient.invalidateQueries({ queryKey: appointmentPeriodKeys.all });
       toast.success("Consulta marcada como atendida");
     },
-    onError: (error: Error) => {
+    onError: (error: Error, _, context) => {
+      if (context?.previousData) {
+        queryClient.setQueryData(appointmentKeys.all, context.previousData);
+      }
       ErrorHandler.handle(error, "useAppointmentActions.complete");
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: appointmentKeys.all });
+      queryClient.invalidateQueries({ queryKey: appointmentPeriodKeys.all });
     },
   });
 

@@ -221,19 +221,45 @@ export const useCreatePatient = () => {
   return useMutation({
     mutationFn: async (patient: Record<string, unknown>) => {
       const { data, error } = await PatientService.createPatient(patient);
-
       if (error) throw error;
       return data;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["patients"] });
+    onMutate: async (newPatient) => {
+      // Cancel any outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ["patients"] });
+
+      // Snapshot the previous value
+      const previousPatients = queryClient.getQueryData<Patient[]>(["patients"]);
+
+      // Create optimistic patient
+      const optimisticPatient = {
+        ...newPatient,
+        id: `temp-${Date.now()}`,
+        status: "active",
+        created_at: new Date().toISOString(),
+      } as unknown as Patient;
+
+      // Optimistically update to the new value
+      if (previousPatients) {
+        queryClient.setQueryData<Patient[]>(["patients"], [optimisticPatient, ...previousPatients]);
+      }
+
+      return { previousPatients };
+    },
+    onError: (error: Error, _, context) => {
+      if (context?.previousPatients) {
+        queryClient.setQueryData(["patients"], context.previousPatients);
+      }
+      ErrorHandler.handle(error, "useCreatePatient");
+    },
+    onSuccess: (data) => {
       toast({
         title: "Paciente cadastrado",
         description: "O paciente foi cadastrado com sucesso.",
       });
     },
-    onError: (error: Error) => {
-      ErrorHandler.handle(error, "useCreatePatient");
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["patients"] });
     },
   });
 };
@@ -248,20 +274,47 @@ export const useUpdatePatient = () => {
   return useMutation({
     mutationFn: async ({ id, ...updates }: { id: string } & Record<string, unknown>) => {
       const { data, error } = await PatientService.updatePatient(id, updates);
-
       if (error) throw error;
       return data;
     },
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ["patients"] });
-      queryClient.invalidateQueries({ queryKey: ["patient", variables.id] });
+    onMutate: async ({ id, ...updates }) => {
+      await queryClient.cancelQueries({ queryKey: ["patients"] });
+      await queryClient.cancelQueries({ queryKey: ["patient", id] });
+
+      const previousPatients = queryClient.getQueryData<Patient[]>(["patients"]);
+      const previousPatient = queryClient.getQueryData<Patient>(["patient", id]);
+
+      if (previousPatients) {
+        queryClient.setQueryData<Patient[]>(
+          ["patients"],
+          previousPatients.map((p) => (p.id === id ? ({ ...p, ...updates } as Patient) : p)),
+        );
+      }
+
+      if (previousPatient) {
+        queryClient.setQueryData<Patient>(["patient", id], { ...previousPatient, ...updates });
+      }
+
+      return { previousPatients, previousPatient };
+    },
+    onError: (error: Error, variables, context) => {
+      if (context?.previousPatients) {
+        queryClient.setQueryData(["patients"], context.previousPatients);
+      }
+      if (context?.previousPatient) {
+        queryClient.setQueryData(["patient", variables.id], context.previousPatient);
+      }
+      ErrorHandler.handle(error, "useUpdatePatient");
+    },
+    onSuccess: () => {
       toast({
         title: "Paciente atualizado",
         description: "As informações foram atualizadas com sucesso.",
       });
     },
-    onError: (error: Error) => {
-      ErrorHandler.handle(error, "useUpdatePatient");
+    onSettled: (_, __, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["patients"] });
+      queryClient.invalidateQueries({ queryKey: ["patient", variables.id] });
     },
   });
 };
@@ -276,18 +329,38 @@ export const useDeletePatient = () => {
   return useMutation({
     mutationFn: async (patientId: string) => {
       const { error } = await PatientService.deletePatient(patientId);
-
       if (error) throw error;
     },
+    onMutate: async (patientId) => {
+      await queryClient.cancelQueries({ queryKey: ["patients"] });
+      await queryClient.cancelQueries({ queryKey: ["patient", patientId] });
+
+      const previousPatients = queryClient.getQueryData<Patient[]>(["patients"]);
+
+      if (previousPatients) {
+        queryClient.setQueryData<Patient[]>(
+          ["patients"],
+          previousPatients.filter((p) => p.id !== patientId),
+        );
+      }
+
+      return { previousPatients };
+    },
+    onError: (error: Error, _, context) => {
+      if (context?.previousPatients) {
+        queryClient.setQueryData(["patients"], context.previousPatients);
+      }
+      ErrorHandler.handle(error, "useDeletePatient");
+    },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["patients"] });
       toast({
         title: "Paciente arquivado",
         description: "O paciente foi arquivado. Todos os dados foram preservados.",
       });
     },
-    onError: (error: Error) => {
-      ErrorHandler.handle(error, "useDeletePatient");
+    onSettled: (_, __, patientId) => {
+      queryClient.invalidateQueries({ queryKey: ["patients"] });
+      queryClient.invalidateQueries({ queryKey: ["patient", patientId] });
     },
   });
 };

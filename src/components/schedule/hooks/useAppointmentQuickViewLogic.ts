@@ -27,7 +27,7 @@ export const useAppointmentQuickViewLogic = ({
   const { updateStatus, isUpdatingStatus } = useAppointmentActions();
   const { getInterestCount } = useWaitlistMatch();
   const { data: patientPackages = [] } = usePatientPackages(appointment.patientId);
-  const { mutateAsync: updateAppointment } = useUpdateAppointment();
+  const { mutateAsync: updateAppointment, isPending: isUpdatingAppointment } = useUpdateAppointment();
 
   const [showWaitlistNotification, setShowWaitlistNotification] = useState(false);
   const [showWaitlistQuickAdd, setShowWaitlistQuickAdd] = useState(false);
@@ -42,26 +42,43 @@ export const useAppointmentQuickViewLogic = ({
   );
   const [localTherapistId, setLocalTherapistId] = useState(appointment.therapistId ?? "");
 
-  // Track whether the user initiated a local status change that hasn't been
-  // confirmed by the server yet. While this is set, we block the useEffect
-  // from reverting localStatus to the stale server value.
+  // Track whether the user initiated a local status, payment or therapist change
+  // that hasn't been confirmed by the server yet. While these are set, we block
+  // the useEffect from reverting the local state to the stale server values.
   const pendingStatusChangeRef = useRef<string | null>(null);
+  const pendingPaymentStatusChangeRef = useRef<string | null>(null);
+  const pendingTherapistChangeRef = useRef<string | null>(null);
 
-  // When the mutation finishes (success or error), clear the lock so the
-  // useEffect can sync from the server value again.
+  // When the status mutation finishes (success or error), clear the status lock.
   useEffect(() => {
     if (!isUpdatingStatus) {
       pendingStatusChangeRef.current = null;
     }
   }, [isUpdatingStatus]);
 
+  // When the general appointment update mutation finishes, clear the general locks.
+  useEffect(() => {
+    if (!isUpdatingAppointment) {
+      pendingPaymentStatusChangeRef.current = null;
+      pendingTherapistChangeRef.current = null;
+    }
+  }, [isUpdatingAppointment]);
+
   useEffect(() => {
     const serverStatus = normalizeStatus(appointment.status);
+    const serverPaymentStatus = ((appointment.payment_status ?? "pending") as string).toLowerCase();
+    const serverTherapistId = appointment.therapistId ?? "";
+
     // Only sync from server when we're not in the middle of an optimistic update.
-    if (pendingStatusChangeRef.current !== null) return;
-    setLocalStatus(serverStatus);
-    setLocalPaymentStatus(((appointment.payment_status ?? "pending") as string).toLowerCase());
-    setLocalTherapistId(appointment.therapistId ?? "");
+    if (pendingStatusChangeRef.current === null) {
+      setLocalStatus(serverStatus);
+    }
+    if (pendingPaymentStatusChangeRef.current === null) {
+      setLocalPaymentStatus(serverPaymentStatus);
+    }
+    if (pendingTherapistChangeRef.current === null) {
+      setLocalTherapistId(serverTherapistId);
+    }
   }, [appointment.status, appointment.payment_status, appointment.therapistId]);
 
   const appointmentDate = useMemo((): Date => {
@@ -155,6 +172,7 @@ export const useAppointmentQuickViewLogic = ({
   const handleTherapistChange = useCallback(
     async (therapistId: string) => {
       if (therapistId === localTherapistId) return;
+      pendingTherapistChangeRef.current = therapistId;
       setLocalTherapistId(therapistId);
       try {
         await updateAppointment({
@@ -176,6 +194,7 @@ export const useAppointmentQuickViewLogic = ({
         return;
       }
       if (newStatus === localPaymentStatus) return;
+      pendingPaymentStatusChangeRef.current = newStatus;
       setLocalPaymentStatus(newStatus);
       try {
         await updateAppointment({

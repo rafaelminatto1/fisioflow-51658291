@@ -26,12 +26,30 @@ export function useCreateEmpresaParceira() {
       const res = await financialApi.empresasParceiras.create(empresa);
       return (res?.data ?? res) as EmpresaParceira;
     },
+    onMutate: async (newEmpresa) => {
+      await queryClient.cancelQueries({ queryKey: ["empresas-parceiras"] });
+      const previousEmpresas = queryClient.getQueryData<EmpresaParceira[]>(["empresas-parceiras"]);
+
+      if (previousEmpresas) {
+        queryClient.setQueryData<EmpresaParceira[]>(["empresas-parceiras"], [
+          { ...newEmpresa, id: `temp-${Date.now()}` } as unknown as EmpresaParceira,
+          ...previousEmpresas,
+        ]);
+      }
+
+      return { previousEmpresas };
+    },
+    onError: (error: Error, _, context) => {
+      if (context?.previousEmpresas) {
+        queryClient.setQueryData(["empresas-parceiras"], context.previousEmpresas);
+      }
+      toast.error("Erro ao criar empresa: " + error.message);
+    },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["empresas-parceiras"] });
       toast.success("Empresa parceira criada!");
     },
-    onError: (error: Error) => {
-      toast.error("Erro ao criar empresa: " + error.message);
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["empresas-parceiras"] });
     },
   });
 }
@@ -44,12 +62,30 @@ export function useUpdateEmpresaParceira() {
       const res = await financialApi.empresasParceiras.update(id, data);
       return (res?.data ?? res) as EmpresaParceira;
     },
+    onMutate: async ({ id, data }) => {
+      await queryClient.cancelQueries({ queryKey: ["empresas-parceiras"] });
+      const previousEmpresas = queryClient.getQueryData<EmpresaParceira[]>(["empresas-parceiras"]);
+
+      if (previousEmpresas) {
+        queryClient.setQueryData<EmpresaParceira[]>(
+          ["empresas-parceiras"],
+          previousEmpresas.map((e) => (e.id === id ? ({ ...e, ...data } as EmpresaParceira) : e)),
+        );
+      }
+
+      return { previousEmpresas };
+    },
+    onError: (error: Error, _, context) => {
+      if (context?.previousEmpresas) {
+        queryClient.setQueryData(["empresas-parceiras"], context.previousEmpresas);
+      }
+      toast.error("Erro ao atualizar empresa: " + error.message);
+    },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["empresas-parceiras"] });
       toast.success("Empresa atualizada!");
     },
-    onError: (error: Error) => {
-      toast.error("Erro ao atualizar empresa: " + error.message);
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["empresas-parceiras"] });
     },
   });
 }
@@ -61,12 +97,30 @@ export function useDeleteEmpresaParceira() {
     mutationFn: async (id: string) => {
       await financialApi.empresasParceiras.delete(id);
     },
+    onMutate: async (id) => {
+      await queryClient.cancelQueries({ queryKey: ["empresas-parceiras"] });
+      const previousEmpresas = queryClient.getQueryData<EmpresaParceira[]>(["empresas-parceiras"]);
+
+      if (previousEmpresas) {
+        queryClient.setQueryData<EmpresaParceira[]>(
+          ["empresas-parceiras"],
+          previousEmpresas.filter((e) => e.id !== id),
+        );
+      }
+
+      return { previousEmpresas };
+    },
+    onError: (error: Error, _, context) => {
+      if (context?.previousEmpresas) {
+        queryClient.setQueryData(["empresas-parceiras"], context.previousEmpresas);
+      }
+      toast.error("Erro ao remover empresa: " + error.message);
+    },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["empresas-parceiras"] });
       toast.success("Empresa removida!");
     },
-    onError: (error: Error) => {
-      toast.error("Erro ao remover empresa: " + error.message);
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["empresas-parceiras"] });
     },
   });
 }

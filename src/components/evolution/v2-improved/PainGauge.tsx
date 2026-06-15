@@ -1,4 +1,5 @@
 import { memo } from "react";
+import { cn } from "@/lib/utils";
 
 /** Cor da dor por nível (verde → amarelo → laranja → vermelho → vinho). */
 export function painColor(level: number): string {
@@ -36,10 +37,12 @@ interface PainGaugeProps {
   value: number;
   /** Marcador fantasma da dor de chegada. */
   arrival?: number;
+  /** Versão reduzida (menor altura) para colunas estreitas. */
+  compact?: boolean;
 }
 
 /** Medidor radial da EVA (Layout E — dor-cêntrico). */
-export const PainGauge = memo(({ value, arrival }: PainGaugeProps) => {
+export const PainGauge = memo(({ value, arrival, compact }: PainGaugeProps) => {
   const v = Math.max(0, Math.min(10, value));
   const f = v / 10;
   const dash = `${(ARC_LEN * f).toFixed(1)} ${ARC_LEN.toFixed(1)}`;
@@ -47,7 +50,7 @@ export const PainGauge = memo(({ value, arrival }: PainGaugeProps) => {
   const chegada = arrival != null ? pointAt(Math.max(0, Math.min(10, arrival)) / 10) : null;
 
   return (
-    <div className="relative mx-auto w-[260px] max-w-full">
+    <div className={cn("relative mx-auto max-w-full", compact ? "w-[176px]" : "w-[260px]")}>
       <svg viewBox="0 0 260 158" className="w-full h-auto">
         <defs>
           <linearGradient id="paingauge-grad" x1="0" y1="0" x2="1" y2="0">
@@ -84,13 +87,23 @@ export const PainGauge = memo(({ value, arrival }: PainGaugeProps) => {
       </svg>
       <div className="absolute inset-x-0 bottom-0.5 text-center">
         <div
-          className="text-[52px] font-extrabold leading-none tracking-tight tabular-nums"
+          className={cn(
+            "font-extrabold leading-none tracking-tight tabular-nums",
+            compact ? "text-[34px]" : "text-[52px]",
+          )}
           style={{ color: painColor(v) }}
         >
           {v}
-          <span className="text-[20px] font-bold text-muted-foreground">/10</span>
+          <span
+            className={cn("font-bold text-muted-foreground", compact ? "text-[14px]" : "text-[20px]")}
+          >
+            /10
+          </span>
         </div>
-        <div className="mt-0.5 text-xs font-extrabold" style={{ color: painColor(v) }}>
+        <div
+          className={cn("font-extrabold", compact ? "text-[10px]" : "mt-0.5 text-xs")}
+          style={{ color: painColor(v) }}
+        >
           {painLabel(v)}
         </div>
       </div>

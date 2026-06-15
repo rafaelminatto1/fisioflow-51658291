@@ -28,14 +28,32 @@ export function useCreateContaFinanceira() {
       const res = await financialApi.contas.create(conta);
       return (res?.data ?? res) as ContaFinanceira;
     },
+    onMutate: async (newConta) => {
+      await queryClient.cancelQueries({ queryKey: ["contas-financeiras"] });
+      const previousContas = queryClient.getQueryData<ContaFinanceira[]>(["contas-financeiras"]);
+
+      if (previousContas) {
+        queryClient.setQueryData<ContaFinanceira[]>(["contas-financeiras"], [
+          { ...newConta, id: `temp-${Date.now()}` } as ContaFinanceira,
+          ...previousContas,
+        ]);
+      }
+
+      return { previousContas };
+    },
+    onError: (err, newConta, context) => {
+      if (context?.previousContas) {
+        queryClient.setQueryData(["contas-financeiras"], context.previousContas);
+      }
+      toast.error("Erro ao criar conta.");
+    },
     onSuccess: () => {
+      toast.success("Conta criada com sucesso.");
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["contas-financeiras"] });
       queryClient.invalidateQueries({ queryKey: ["resumo-financeiro"] });
       queryClient.invalidateQueries({ queryKey: ["financial-command-center"] });
-      toast.success("Conta criada com sucesso.");
-    },
-    onError: () => {
-      toast.error("Erro ao criar conta.");
     },
   });
 }
@@ -48,14 +66,32 @@ export function useUpdateContaFinanceira() {
       const res = await financialApi.contas.update(id, conta);
       return (res?.data ?? res) as ContaFinanceira;
     },
+    onMutate: async ({ id, ...updates }) => {
+      await queryClient.cancelQueries({ queryKey: ["contas-financeiras"] });
+      const previousContas = queryClient.getQueryData<ContaFinanceira[]>(["contas-financeiras"]);
+
+      if (previousContas) {
+        queryClient.setQueryData<ContaFinanceira[]>(
+          ["contas-financeiras"],
+          previousContas.map((c) => (c.id === id ? ({ ...c, ...updates } as ContaFinanceira) : c)),
+        );
+      }
+
+      return { previousContas };
+    },
+    onError: (err, variables, context) => {
+      if (context?.previousContas) {
+        queryClient.setQueryData(["contas-financeiras"], context.previousContas);
+      }
+      toast.error("Erro ao atualizar conta.");
+    },
     onSuccess: () => {
+      toast.success("Conta atualizada.");
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["contas-financeiras"] });
       queryClient.invalidateQueries({ queryKey: ["resumo-financeiro"] });
       queryClient.invalidateQueries({ queryKey: ["financial-command-center"] });
-      toast.success("Conta atualizada.");
-    },
-    onError: () => {
-      toast.error("Erro ao atualizar conta.");
     },
   });
 }
@@ -67,14 +103,32 @@ export function useDeleteContaFinanceira() {
     mutationFn: async (id: string) => {
       await financialApi.contas.delete(id);
     },
+    onMutate: async (id) => {
+      await queryClient.cancelQueries({ queryKey: ["contas-financeiras"] });
+      const previousContas = queryClient.getQueryData<ContaFinanceira[]>(["contas-financeiras"]);
+
+      if (previousContas) {
+        queryClient.setQueryData<ContaFinanceira[]>(
+          ["contas-financeiras"],
+          previousContas.filter((c) => c.id !== id),
+        );
+      }
+
+      return { previousContas };
+    },
+    onError: (err, id, context) => {
+      if (context?.previousContas) {
+        queryClient.setQueryData(["contas-financeiras"], context.previousContas);
+      }
+      toast.error("Erro ao excluir conta.");
+    },
     onSuccess: () => {
+      toast.success("Conta excluída.");
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["contas-financeiras"] });
       queryClient.invalidateQueries({ queryKey: ["resumo-financeiro"] });
       queryClient.invalidateQueries({ queryKey: ["financial-command-center"] });
-      toast.success("Conta excluída.");
-    },
-    onError: () => {
-      toast.error("Erro ao excluir conta.");
     },
   });
 }

@@ -60,6 +60,34 @@ function logAgentEvent(payload: AgentIngestPayload): void {
 }
 
 export class AppointmentService {
+  static parseResponseDate(dateStr: string | null | undefined): Date {
+    if (!dateStr) return new Date();
+    const cleanDate = dateStr.split("T")[0];
+    const parts = cleanDate.split("-");
+    if (parts.length !== 3) return new Date(dateStr);
+    const [year, month, day] = parts.map(Number);
+    // Use noon local time to avoid DST issues
+    return new Date(year, month - 1, day, 12, 0, 0);
+  }
+
+  static mapApiToAppointmentBase(row: any): AppointmentBase {
+    const therapistId = row.therapist_id || row.therapistId;
+    return {
+      id: row.id,
+      patientId: row.patient_id || row.patientId,
+      patientName: row.patient_name || row.patientName || "Desconhecido",
+      phone: row.patient_phone || row.phone || "",
+      date: AppointmentService.parseResponseDate(row.date || row.appointment_date),
+      time: row.start_time || row.appointment_time || row.time,
+      duration: row.duration_minutes || row.duration || 60,
+      status: row.status as AppointmentStatus,
+      notes: row.notes || "",
+      therapistId: therapistId || undefined,
+      payment_status: row.payment_status || row.paymentStatus || "pending",
+      createdAt: new Date(row.created_at || row.createdAt || Date.now()),
+      updatedAt: new Date(row.updated_at || row.updatedAt || Date.now()),
+    } as AppointmentBase;
+  }
   /**
    * Fetch all appointments for an organization
    */
@@ -538,37 +566,7 @@ export class AppointmentService {
       });
       // #endregion
 
-      // Helper to parse date string as local date (avoiding timezone issues)
-      const parseResponseDate = (dateStr: string | null | undefined): Date => {
-        if (!dateStr) return new Date();
-        const cleanDate = dateStr.split("T")[0];
-        const parts = cleanDate.split("-");
-        if (parts.length !== 3) return new Date(dateStr);
-        const [year, month, day] = parts.map(Number);
-        // Use noon local time to avoid DST issues
-        return new Date(year, month - 1, day, 12, 0, 0);
-      };
-
-      const updatedAppointment: AppointmentBase = {
-        id: fetchedUpdatedAppointment.id,
-        patientId: fetchedUpdatedAppointment.patient_id,
-        patientName: fetchedUpdatedAppointment.patient_name || "Desconhecido",
-        phone: fetchedUpdatedAppointment.patient_phone || "",
-        date: parseResponseDate(
-          fetchedUpdatedAppointment.date || fetchedUpdatedAppointment.appointment_date,
-        ),
-        time: fetchedUpdatedAppointment.start_time || fetchedUpdatedAppointment.appointment_time,
-        duration:
-          fetchedUpdatedAppointment.duration_minutes ||
-          fetchedUpdatedAppointment.duration ||
-          updateDuration ||
-          60,
-        type: fetchedUpdatedAppointment.type as AppointmentType,
-        status: fetchedUpdatedAppointment.status as AppointmentStatus,
-        notes: fetchedUpdatedAppointment.notes || "",
-        createdAt: new Date(fetchedUpdatedAppointment.created_at),
-        updatedAt: new Date(fetchedUpdatedAppointment.updated_at),
-      };
+      const updatedAppointment = AppointmentService.mapApiToAppointmentBase(fetchedUpdatedAppointment);
 
       // We refetch details to complete information
       try {
@@ -628,7 +626,7 @@ export class AppointmentService {
       if (normalizedStatus === "cancelado" || normalizedStatus === "cancelled") {
         const result = await appointmentsApi.cancel(id);
         if (isOfflineEnqueuedResponse(result)) {
-          return { id, status, __offline: true };
+          return { id, status: "cancelado", __offline: true };
         }
         // Log de auditoria: Cancelamento
         try {
@@ -652,7 +650,7 @@ export class AppointmentService {
             "AppointmentService",
           );
         }
-        return result;
+        return { id, status: "cancelado" };
       }
       const result = await appointmentsApi.update(id, { status });
       if (isOfflineEnqueuedResponse(result)) {
@@ -677,7 +675,7 @@ export class AppointmentService {
           "AppointmentService",
         );
       }
-      return result.data;
+      return AppointmentService.mapApiToAppointmentBase(result.data);
     } catch (error) {
       throw AppError.from(error, "AppointmentService.updateStatus");
     }

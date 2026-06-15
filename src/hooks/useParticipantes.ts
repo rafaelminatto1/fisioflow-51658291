@@ -30,14 +30,38 @@ export function useCreateParticipante() {
       const res = await participantesApi.create(participante as Partial<Participante>);
       return (res?.data ?? res) as Participante;
     },
-    onSuccess: (created) => {
-      queryClient.invalidateQueries({
-        queryKey: ["participantes", created.evento_id],
-      });
-      queryClient.invalidateQueries({ queryKey: ["eventos-stats"] });
+    onMutate: async (newParticipante) => {
+      const queryKey = ["participantes", newParticipante.evento_id];
+      await queryClient.cancelQueries({ queryKey });
+
+      const previousParticipantes = queryClient.getQueryData<Participante[]>(queryKey);
+
+      if (previousParticipantes) {
+        queryClient.setQueryData<Participante[]>(queryKey, [
+          { ...newParticipante, id: `temp-${Date.now()}` } as unknown as Participante,
+          ...previousParticipantes,
+        ]);
+      }
+
+      return { previousParticipantes, queryKey };
+    },
+    onError: (error: Error, _, context) => {
+      if (context?.previousParticipantes && context.queryKey) {
+        queryClient.setQueryData(context.queryKey, context.previousParticipantes);
+      }
+      toast.error(`Erro ao adicionar participante: ${error.message}`);
+    },
+    onSuccess: () => {
       toast.success("Participante adicionado com sucesso.");
     },
-    onError: (error: Error) => toast.error(`Erro ao adicionar participante: ${error.message}`),
+    onSettled: (created) => {
+      if (created) {
+        queryClient.invalidateQueries({
+          queryKey: ["participantes", created.evento_id],
+        });
+      }
+      queryClient.invalidateQueries({ queryKey: ["eventos-stats"] });
+    },
   });
 }
 
@@ -57,14 +81,38 @@ export function useUpdateParticipante() {
       const res = await participantesApi.update(id, data as Partial<Participante>);
       return { ...(res?.data ?? res), evento_id: eventoId } as Participante;
     },
-    onSuccess: (updated) => {
-      queryClient.invalidateQueries({
-        queryKey: ["participantes", updated.evento_id],
-      });
-      queryClient.invalidateQueries({ queryKey: ["eventos-stats"] });
+    onMutate: async ({ id, data, eventoId }) => {
+      const queryKey = ["participantes", eventoId];
+      await queryClient.cancelQueries({ queryKey });
+
+      const previousParticipantes = queryClient.getQueryData<Participante[]>(queryKey);
+
+      if (previousParticipantes) {
+        queryClient.setQueryData<Participante[]>(
+          queryKey,
+          previousParticipantes.map((p) => (p.id === id ? ({ ...p, ...data } as Participante) : p)),
+        );
+      }
+
+      return { previousParticipantes, queryKey };
+    },
+    onError: (error: Error, _, context) => {
+      if (context?.previousParticipantes && context.queryKey) {
+        queryClient.setQueryData(context.queryKey, context.previousParticipantes);
+      }
+      toast.error(`Erro ao atualizar participante: ${error.message}`);
+    },
+    onSuccess: () => {
       toast.success("Participante atualizado com sucesso.");
     },
-    onError: (error: Error) => toast.error(`Erro ao atualizar participante: ${error.message}`),
+    onSettled: (updated) => {
+      if (updated) {
+        queryClient.invalidateQueries({
+          queryKey: ["participantes", updated.evento_id],
+        });
+      }
+      queryClient.invalidateQueries({ queryKey: ["eventos-stats"] });
+    },
   });
 }
 
@@ -76,12 +124,36 @@ export function useDeleteParticipante() {
       await participantesApi.delete(id);
       return eventoId;
     },
-    onSuccess: (eventoId) => {
-      queryClient.invalidateQueries({ queryKey: ["participantes", eventoId] });
-      queryClient.invalidateQueries({ queryKey: ["eventos-stats"] });
+    onMutate: async ({ id, eventoId }) => {
+      const queryKey = ["participantes", eventoId];
+      await queryClient.cancelQueries({ queryKey });
+
+      const previousParticipantes = queryClient.getQueryData<Participante[]>(queryKey);
+
+      if (previousParticipantes) {
+        queryClient.setQueryData<Participante[]>(
+          queryKey,
+          previousParticipantes.filter((p) => p.id !== id),
+        );
+      }
+
+      return { previousParticipantes, queryKey };
+    },
+    onError: (error: Error, _, context) => {
+      if (context?.previousParticipantes && context.queryKey) {
+        queryClient.setQueryData(context.queryKey, context.previousParticipantes);
+      }
+      toast.error(`Erro ao remover participante: ${error.message}`);
+    },
+    onSuccess: () => {
       toast.success("Participante removido com sucesso.");
     },
-    onError: (error: Error) => toast.error(`Erro ao remover participante: ${error.message}`),
+    onSettled: (eventoId) => {
+      if (eventoId) {
+        queryClient.invalidateQueries({ queryKey: ["participantes", eventoId] });
+      }
+      queryClient.invalidateQueries({ queryKey: ["eventos-stats"] });
+    },
   });
 }
 

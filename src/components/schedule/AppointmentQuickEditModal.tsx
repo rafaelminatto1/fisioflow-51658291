@@ -18,7 +18,7 @@ import {
   X,
 } from "lucide-react";
 import type React from "react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { appointmentsApi } from "@/api/v2";
@@ -131,6 +131,8 @@ export const AppointmentQuickEditModal: React.FC<AppointmentQuickEditModalProps>
     therapist_id: "",
   });
 
+  const prevAppointmentIdRef = useRef<string | null>(null);
+
   // Query para buscar agendamentos (verificação de conflitos)
   const { data: appointments = [] } = useQuery<AppointmentBase[]>({
     queryKey: ["appointments-for-conflict", open, appointment?.date],
@@ -228,27 +230,35 @@ export const AppointmentQuickEditModal: React.FC<AppointmentQuickEditModalProps>
   // Inicializar formulário quando o agendamento mudar
   useEffect(() => {
     if (appointment) {
-      const dateStr =
-        appointment.date instanceof Date
-          ? format(appointment.date, "yyyy-MM-dd")
-          : String(appointment.date);
+      const isDifferentAppointment = appointment.id !== prevAppointmentIdRef.current;
+      prevAppointmentIdRef.current = appointment.id;
 
-      const aptWithTherapist = appointment as Appointment & {
-        therapist_id?: string;
-      };
+      if (isDifferentAppointment || (!isEditing && !isSaving)) {
+        const dateStr =
+          appointment.date instanceof Date
+            ? format(appointment.date, "yyyy-MM-dd")
+            : String(appointment.date);
 
-      setFormData({
-        appointment_date: dateStr,
-        appointment_time: appointment.time,
-        duration: appointment.duration || 60,
-        status: appointment.status as AppointmentStatus,
-        notes: appointment.notes || "",
-        therapist_id: aptWithTherapist.therapist_id || "",
-      });
-      setIsEditing(false);
-      setConflictError(null);
+        const aptWithTherapist = appointment as Appointment & {
+          therapist_id?: string;
+        };
+
+        setFormData({
+          appointment_date: dateStr,
+          appointment_time: appointment.time,
+          duration: appointment.duration || 60,
+          status: appointment.status as AppointmentStatus,
+          notes: appointment.notes || "",
+          therapist_id: aptWithTherapist.therapist_id || "",
+        });
+
+        if (isDifferentAppointment) {
+          setIsEditing(false);
+          setConflictError(null);
+        }
+      }
     }
-  }, [appointment]);
+  }, [appointment, isEditing, isSaving]);
 
   // Verificar conflitos durante edição
   useEffect(() => {
