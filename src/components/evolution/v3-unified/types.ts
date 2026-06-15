@@ -10,6 +10,8 @@ export interface EvolutionItemV3 {
   exerciseId?: string;
   prescription?: string;
   patientFeedback?: string;
+  image_url?: string;
+  thumbnail_url?: string;
 
   // Specific to procedures
   notes?: string;

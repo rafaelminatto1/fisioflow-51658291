@@ -252,7 +252,7 @@ export const useCreatePatient = () => {
       }
       ErrorHandler.handle(error, "useCreatePatient");
     },
-    onSuccess: (data) => {
+    onSuccess: (_data) => {
       toast({
         title: "Paciente cadastrado",
         description: "O paciente foi cadastrado com sucesso.",

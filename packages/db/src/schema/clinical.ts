@@ -9,9 +9,10 @@ import {
   numeric,
   date,
   index,
+  varchar,
 } from "drizzle-orm/pg-core";
 import { patients } from "./patients";
-import { withOrganizationPolicy } from "./rls_helper";
+import { withOrganizationPolicy, withPublicOrOrganizationPolicy } from "./rls_helper";
 
 export const patientGoals = pgTable("patient_goals", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -297,3 +298,22 @@ export const patientObjectiveAssignments = pgTable("patient_objective_assignment
   deletedAt: timestamp("deleted_at"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
+
+// Catálogo global e de clínicas para busca rápida por autocomplete
+export const autocompleteCatalog = pgTable(
+  "autocomplete_catalog",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    type: varchar("type", { length: 50 }).notNull(), // 'medication', 'allergy_general', 'allergy_medicine', 'pathology'
+    name: varchar("name", { length: 255 }).notNull(),
+    isApproved: boolean("is_approved").default(true).notNull(),
+    organizationId: uuid("organization_id"), // Nulo para catálogo global (plataforma)
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  },
+  (table) => [
+    index("idx_autocomplete_type_approved").on(table.type, table.isApproved),
+    index("idx_autocomplete_name").on(table.name),
+    withPublicOrOrganizationPolicy("autocomplete_catalog", table.organizationId),
+  ],
+);

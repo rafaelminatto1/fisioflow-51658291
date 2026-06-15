@@ -57,11 +57,20 @@ export const ExerciseAutocomplete: React.FC<ExerciseAutocompleteProps> = ({
       </PopoverTrigger>
       <PopoverContent className="w-[400px] p-0" align="start">
         <Command shouldFilter={false}>
-          <CommandInput
-            placeholder="Pesquisar exercício..."
-            value={searchValue}
-            onValueChange={setSearchValue}
-          />
+        <CommandInput
+          placeholder="Pesquisar exercício..."
+          value={searchValue}
+          onValueChange={setSearchValue}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && filteredExercises.length === 1) {
+              // Select the single exercise when Enter is pressed and there's only one result
+              onSelect(filteredExercises[0]);
+              setOpen(false);
+              setSearchValue("");
+              e.preventDefault();
+            }
+          }}
+        />
           <CommandList>
             <CommandEmpty>
               <div className="py-3 px-2 text-center space-y-3">

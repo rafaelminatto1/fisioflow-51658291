@@ -228,6 +228,13 @@ function RootLayoutContent() {
           }}
         />
         <Stack.Screen
+          name="evolution-mobile"
+          options={{
+            title: "Evolução Mobile",
+            headerShown: false,
+          }}
+        />
+        <Stack.Screen
           name="tarefa-form"
           options={{
             title: "Tarefa",

@@ -136,6 +136,9 @@
         if (typeof window.__BUNDLED_DEV__ === "undefined") {
           window.__BUNDLED_DEV__ = false;
         }
+        if (typeof window.__COMPILER_HALT_OFFSET__ === "undefined") {
+          window.__COMPILER_HALT_OFFSET__ = "";
+        }
         if (typeof window.__CLASS__ === "undefined") {
           window.__CLASS__ = "";
         }
@@ -153,9 +156,6 @@
         }
         if (typeof window.__END__ === "undefined") {
           window.__END__ = "";
-        }
-        if (typeof window.__FILE__ === "undefined") {
-          window.__FILE__ = "";
         }
         if (typeof window.__FUNCTION__ === "undefined") {
           window.__FUNCTION__ = "";
@@ -199,9 +199,6 @@
         }
         if (typeof window.__SENTRY_RELEASE__ === "undefined") {
           window.__SENTRY_RELEASE__ = "";
-        }
-        if (typeof window.__SENTRY_SAFE_RANDOM_ID_WRAPPER__ === "undefined") {
-          window.__SENTRY_SAFE_RANDOM_ID_WRAPPER__ = false;
         }
         if (typeof window.__SENTRY_SUPPRESS_TRACING__ === "undefined") {
           window.__SENTRY_SUPPRESS_TRACING__ = false;
@@ -251,6 +248,117 @@
 
       localStorage.setItem("app_version", currentVersion);
       localStorage.setItem("last_build_time", window.__BUILD_TIME__);
+    </script>
+
+    <!-- Script para detecção e recuperação automática de erros de assets -->
+    <script>
+      (() => {
+        'use strict';
+
+        // Contador de tentativas falhas por tipo de asset
+        const failedAttempts = {
+          css: 0,
+          js: 0
+        };
+
+        // Máximo de tentativas antes de forçar reload
+        const MAX_ATTEMPTS = 3;
+
+        // Tempo mínimo entre tentativas (em ms) para evitar spam
+        const MIN_INTERVAL_MS = 5000;
+        let lastAttemptTime = 0;
+
+        // Função para verificar se devemos tentar recuperar
+        function shouldAttemptRecovery() {
+          const now = Date.now();
+          if (now - lastAttemptTime < MIN_INTERVAL_MS) {
+            return false;
+          }
+          return Object.values(failedAttempts).some(count => count >= MAX_ATTEMPTS);
+        }
+
+        // Função para forçar reload com cache bypass
+        function forceReload() {
+          console.log('[Asset Recovery] Forçando reload devido a múltiplos falhas de asset');
+          lastAttemptTime = Date.now();
+          window.location.reload(true); // true = force get from server, bypass cache
+        }
+
+        // Monitorar erros de carregamento de link (CSS) e script (JS)
+        const originalSetAttribute = Element.prototype.setAttribute;
+        Element.prototype.setAttribute = function(name, value) {
+          if (name === 'href' && this.tagName === 'LINK' && value.includes('.css')) {
+            this.addEventListener('error', () => {
+              failedAttempts.css++;
+              console.log(`[Asset Recovery] Falha ao carregar CSS: ${value} (tentativa ${failedAttempts.css})`);
+              
+              if (shouldAttemptRecovery()) {
+                forceReload();
+                // Reset counters after forced reload
+                const keys = Object.keys(failedAttempts);
+                for (let i = 0; i < keys.length; i++) {
+                  failedAttempts[keys[i]] = 0;
+                }
+              }
+            });
+          }
+          
+          if (name === 'src' && this.tagName === 'SCRIPT' && value.includes('.js')) {
+            this.addEventListener('error', () => {
+              failedAttempts.js++;
+              console.log(`[Asset Recovery] Falha ao carregar JS: ${value} (tentativa ${failedAttempts.js})`);
+              
+              if (shouldAttemptRecovery()) {
+                forceReload();
+                // Reset counters after forced reload
+                const keys = Object.keys(failedAttempts);
+                for (let i = 0; i < keys.length; i++) {
+                  failedAttempts[keys[i]] = 0;
+                }
+              }
+            });
+          }
+          
+          return originalSetAttribute.call(this, name, value);
+        };
+
+        // Também monitorar elementos já existentes no DOM
+        const elements = document.querySelectorAll('link[rel="stylesheet"][href*=".css"], script[src*=".js"]');
+        for (let i = 0; i < elements.length; i++) {
+          const el = elements[i];
+          if (el.tagName === 'LINK') {
+            el.addEventListener('error', () => {
+              failedAttempts.css++;
+              console.log(`[Asset Recovery] Falha ao carregar CSS existente: ${el.href} (tentativa ${failedAttempts.css})`);
+              
+              if (shouldAttemptRecovery()) {
+                forceReload();
+                // Reset counters after forced reload
+                const keys = Object.keys(failedAttempts);
+                for (let i = 0; i < keys.length; i++) {
+                  failedAttempts[keys[i]] = 0;
+                }
+              }
+            });
+          }
+          
+          if (el.tagName === 'SCRIPT') {
+            el.addEventListener('error', () => {
+              failedAttempts.js++;
+              console.log(`[Asset Recovery] Falha ao carregar JS existente: ${el.src} (tentativa ${failedAttempts.js})`);
+              
+              if (shouldAttemptRecovery()) {
+                forceReload();
+                // Reset counters after forced reload
+                const keys = Object.keys(failedAttempts);
+                for (let i = 0; i < keys.length; i++) {
+                  failedAttempts[keys[i]] = 0;
+                }
+              }
+            });
+          }
+        }
+      })();
     </script>
 
     <!-- MediaPipe CDN (Defered to avoid blocking initial render) -->

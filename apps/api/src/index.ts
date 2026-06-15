@@ -103,6 +103,7 @@ import { searchRoutes } from "./routes/search";
 import { reportsPdfRoutes } from "./routes/reportsPdf";
 import { eventsRoutes as businessEventsRoutes } from "./routes/events";
 import { wgerRoutes } from "./routes/wger";
+import { autocompleteRoutes } from "./routes/autocomplete";
 import aiSearchApp from "./routes/aiSearch";
 import { aiConfigRoutes } from "./routes/ai-config";
 import { aiClinicalSearchRoutes } from "./routes/ai-clinical-search";
@@ -319,6 +320,7 @@ const apiRoutes = [
   ["/api/whatsapp/webhook", whatsappWebhookRoutes],
   ["/api/whatsapp/inbox", whatsappInboxRoutes],
   ["/api/precadastro", precadastroRoutes],
+  ["/api/autocomplete", autocompleteRoutes],
   ["/api/telemedicine", telemedicineRoutes],
   ["/api/image-processor", imageProcessorRoutes],
   ["/api/calendar", calendarRoutes],

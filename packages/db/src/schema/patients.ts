@@ -133,6 +133,12 @@ export const patients = pgTable(
     maritalStatus: varchar("marital_status", { length: 50 }),
     educationLevel: varchar("education_level", { length: 100 }),
 
+    // Clinical metadata tags for medications, allergies and pathologies
+    allergiesGeneral: text("allergies_general").array().default([]).notNull(),
+    allergiesMedicines: text("allergies_medicines").array().default([]).notNull(),
+    medicationsInUse: text("medications_in_use").array().default([]).notNull(),
+    pathologiesActive: text("pathologies_active").array().default([]).notNull(),
+
     // Compatibility fields kept while the domain is standardized
     weight: doublePrecision("weight"),
     progress: integer("progress"),

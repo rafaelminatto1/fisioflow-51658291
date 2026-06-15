@@ -151,14 +151,23 @@ export const ExerciseQuickAdd: React.FC<ExerciseQuickAddProps> = ({
           <div className="p-3 border-b border-border">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <input
-                type="text"
-                placeholder="Buscar exercício..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 w-full h-10 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
-                aria-label="Buscar exercícios"
-              />
+               <input
+                 type="text"
+                 placeholder="Buscar exercício..."
+                 value={searchQuery}
+                 onChange={(e) => setSearchQuery(e.target.value)}
+                 onKeyDown={(e) => {
+                   if (e.key === "Enter" && filteredExercises.length === 1) {
+                     // Select the single exercise when Enter is pressed and there's only one result
+                     handleAddExercise(filteredExercises[0]);
+                     setOpen(false);
+                     setSearchQuery("");
+                     e.preventDefault();
+                   }
+                 }}
+                 className="pl-10 w-full h-10 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
+                 aria-label="Buscar exercícios"
+               />
             </div>
           </div>
 

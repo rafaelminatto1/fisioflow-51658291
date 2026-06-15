@@ -76,7 +76,7 @@
 
 /* Variante alta — usada na caixa principal de Observações clínicas */
 .rich-text-editor.rte-tall .ProseMirror {
-  min-height: min(58vh, 640px);
+  min-height: 800px;
 }
 
 .rich-text-editor .ProseMirror p {

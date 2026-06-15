@@ -1150,14 +1150,14 @@ export function NewExerciseModal({
                                                       Key Findings:
                                                     </p>
                                                     <ul className="text-xs text-slate-600 space-y-1">
-                                                      {article.highlights.map((h, i) => (
-                                                        <li key={i} className="flex gap-1.5">
-                                                          <span className="text-sky-500 mt-0.5">
-                                                            •
-                                                          </span>{" "}
-                                                          <span>{h}</span>
-                                                        </li>
-                                                      ))}
+{article.highlights.map((h, i) => (
+                                                         <li key={`${i}-${h}`} className="flex gap-1.5">
+                                                           <span className="text-sky-500 mt-0.5">
+                                                             •
+                                                           </span>{" "}
+                                                           <span>{h}</span>
+                                                         </li>
+                                                       ))}
                                                     </ul>
                                                   </div>
                                                 )}

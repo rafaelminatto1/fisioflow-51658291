@@ -12,6 +12,7 @@ import {
   TextInput,
   Alert,
   Linking,
+  useWindowDimensions,
 } from "react-native";
 import { useLocalSearchParams, router, type Href } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -172,6 +173,16 @@ export default function PatientDetailScreen() {
   };
 
   const name = patient?.name || (patientName as string) || "Paciente";
+  const { width } = useWindowDimensions();
+  const isCompactScreen = width <= 430;
+
+  const openEvolution = () => {
+    medium();
+    const route = isCompactScreen ? "/evolution-mobile" : "/evolution-form";
+    router.push(
+      `${route}?patientId=${id}&patientName=${encodeURIComponent(name)}` as Href,
+    );
+  };
 
   const handleWhatsApp = () => {
     if (!patient?.phone) {
@@ -266,8 +277,7 @@ export default function PatientDetailScreen() {
           <TouchableOpacity
             style={[styles.actionBtn, { backgroundColor: colors.info + "E0" }]}
             onPress={() => {
-              medium();
-              router.push(`/evolution-form?patientId=${id}&patientName=${name}` as Href);
+              openEvolution();
             }}
           >
             <Ionicons name="document-text-outline" size={18} color="#FFFFFF" />
@@ -701,8 +711,7 @@ export default function PatientDetailScreen() {
               <TouchableOpacity
                 style={[styles.addEvolutionBtn, { backgroundColor: colors.primary, flex: 1 }]}
                 onPress={() => {
-                  medium();
-                  router.push(`/evolution-form?patientId=${id}&patientName=${name}` as Href);
+                  openEvolution();
                 }}
               >
                 <Ionicons name="add" size={24} color="#FFFFFF" />

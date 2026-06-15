@@ -13,7 +13,7 @@
  */
 import { Hono } from "hono";
 import { createPool } from "../lib/db";
-import { requireAuth, type AuthVariables } from "../lib/auth";
+import { requireAuth, requireRole, type AuthVariables } from "../lib/auth";
 import type { Env } from "../types/env";
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
@@ -931,7 +931,7 @@ app.get("/achievement-definitions", requireAuth, async (c) => {
   }
 });
 
-app.post("/achievement-definitions", requireAuth, async (c) => {
+app.post("/achievement-definitions", requireAuth, requireRole("admin"), async (c) => {
   const pool = await createPool(c.env);
   const body = (await c.req.json()) as Record<string, unknown>;
   const result = await pool.query(
@@ -951,7 +951,7 @@ app.post("/achievement-definitions", requireAuth, async (c) => {
   return c.json({ data: result.rows[0] }, 201);
 });
 
-app.put("/achievement-definitions/:id", requireAuth, async (c) => {
+app.put("/achievement-definitions/:id", requireAuth, requireRole("admin"), async (c) => {
   const pool = await createPool(c.env);
   const { id } = c.req.param();
   const body = (await c.req.json()) as Record<string, unknown>;
@@ -981,7 +981,7 @@ app.put("/achievement-definitions/:id", requireAuth, async (c) => {
   return c.json({ data: result.rows[0] ?? null });
 });
 
-app.delete("/achievement-definitions/:id", requireAuth, async (c) => {
+app.delete("/achievement-definitions/:id", requireAuth, requireRole("admin"), async (c) => {
   const pool = await createPool(c.env);
   const { id } = c.req.param();
   await pool.query("DELETE FROM achievements WHERE id = $1", [id]);
@@ -1002,7 +1002,7 @@ app.get("/quest-definitions", requireAuth, async (c) => {
   }
 });
 
-app.post("/quest-definitions", requireAuth, async (c) => {
+app.post("/quest-definitions", requireAuth, requireRole("admin"), async (c) => {
   const pool = await createPool(c.env);
   const body = (await c.req.json()) as Record<string, unknown>;
   const result = await pool.query(
@@ -1027,7 +1027,7 @@ app.post("/quest-definitions", requireAuth, async (c) => {
   return c.json({ data: result.rows[0] }, 201);
 });
 
-app.put("/quest-definitions/:id", requireAuth, async (c) => {
+app.put("/quest-definitions/:id", requireAuth, requireRole("admin"), async (c) => {
   const pool = await createPool(c.env);
   const { id } = c.req.param();
   const body = (await c.req.json()) as Record<string, unknown>;
@@ -1065,7 +1065,7 @@ app.put("/quest-definitions/:id", requireAuth, async (c) => {
   return c.json({ data: result.rows[0] ?? null });
 });
 
-app.patch("/quest-definitions/:id/active", requireAuth, async (c) => {
+app.patch("/quest-definitions/:id/active", requireAuth, requireRole("admin"), async (c) => {
   const pool = await createPool(c.env);
   const { id } = c.req.param();
   const body = (await c.req.json()) as { is_active: boolean };
@@ -1076,7 +1076,7 @@ app.patch("/quest-definitions/:id/active", requireAuth, async (c) => {
   return c.json({ data: result.rows[0] ?? null });
 });
 
-app.delete("/quest-definitions/:id", requireAuth, async (c) => {
+app.delete("/quest-definitions/:id", requireAuth, requireRole("admin"), async (c) => {
   const pool = await createPool(c.env);
   const { id } = c.req.param();
   await pool.query("DELETE FROM quest_definitions WHERE id = $1", [id]);
@@ -1125,7 +1125,7 @@ app.get("/weekly-challenges", requireAuth, async (c) => {
   return c.json({ data: rows });
 });
 
-app.post("/weekly-challenges", requireAuth, async (c) => {
+app.post("/weekly-challenges", requireAuth, requireRole("admin"), async (c) => {
   const pool = await createPool(c.env);
   const body = (await c.req.json()) as Record<string, unknown>;
   const result = await pool.query(
@@ -1151,7 +1151,7 @@ app.post("/weekly-challenges", requireAuth, async (c) => {
   );
 });
 
-app.put("/weekly-challenges/:id", requireAuth, async (c) => {
+app.put("/weekly-challenges/:id", requireAuth, requireRole("admin"), async (c) => {
   const pool = await createPool(c.env);
   const { id } = c.req.param();
   const body = (await c.req.json()) as Record<string, unknown>;
@@ -1187,7 +1187,7 @@ app.put("/weekly-challenges/:id", requireAuth, async (c) => {
   });
 });
 
-app.patch("/weekly-challenges/:id/active", requireAuth, async (c) => {
+app.patch("/weekly-challenges/:id/active", requireAuth, requireRole("admin"), async (c) => {
   const pool = await createPool(c.env);
   const { id } = c.req.param();
   const body = (await c.req.json()) as { is_active: boolean };
@@ -1200,7 +1200,7 @@ app.patch("/weekly-challenges/:id/active", requireAuth, async (c) => {
   });
 });
 
-app.delete("/weekly-challenges/:id", requireAuth, async (c) => {
+app.delete("/weekly-challenges/:id", requireAuth, requireRole("admin"), async (c) => {
   const pool = await createPool(c.env);
   const { id } = c.req.param();
   await pool.query("DELETE FROM weekly_challenges WHERE id = $1", [id]);
@@ -1268,7 +1268,7 @@ app.post("/shop-items", requireAuth, async (c) => {
   return c.json({ data: result.rows[0] }, 201);
 });
 
-app.put("/shop-items/:id", requireAuth, async (c) => {
+app.put("/shop-items/:id", requireAuth, requireRole("admin"), async (c) => {
   const pool = await createPool(c.env);
   const { id } = c.req.param();
   const body = (await c.req.json()) as Record<string, unknown>;
@@ -1300,7 +1300,7 @@ app.put("/shop-items/:id", requireAuth, async (c) => {
   return c.json({ data: result.rows[0] ?? null });
 });
 
-app.delete("/shop-items/:id", requireAuth, async (c) => {
+app.delete("/shop-items/:id", requireAuth, requireRole("admin"), async (c) => {
   const pool = await createPool(c.env);
   const { id } = c.req.param();
   await pool.query("DELETE FROM shop_items WHERE id = $1", [id]);

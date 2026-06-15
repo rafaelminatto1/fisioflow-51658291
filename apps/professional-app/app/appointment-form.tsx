@@ -144,7 +144,9 @@ export default function AppointmentFormScreen() {
   });
 
   const selectedPatientId = watch("patientId");
+  const selectedPatientName = watch("patientName");
   const isEditing = !!appointmentId;
+  const useMobileEvolution = SCREEN_WIDTH <= 430;
 
   const navigateToAgenda = () => {
     router.replace("/(tabs)/agenda");
@@ -466,7 +468,7 @@ export default function AppointmentFormScreen() {
             title="Iniciar Atendimento"
             onPress={() =>
               router.push(
-                `/evolution-form?patientId=${selectedPatientId}&appointmentId=${appointmentId}` as Href,
+                `${useMobileEvolution ? "/evolution-mobile" : "/evolution-form"}?patientId=${selectedPatientId}&patientName=${encodeURIComponent(selectedPatientName)}&appointmentId=${appointmentId ?? ""}` as Href,
               )
             }
             variant="secondary"

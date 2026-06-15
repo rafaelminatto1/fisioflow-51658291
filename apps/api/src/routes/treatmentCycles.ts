@@ -53,6 +53,7 @@ app.post("/", requireAuth, async (c) => {
 });
 
 app.patch("/:id", requireAuth, async (c) => {
+  const user = c.get("user");
   const id = c.req.param("id");
   const body = await c.req.json();
   const db = await createPool(c.env);
@@ -93,9 +94,13 @@ app.patch("/:id", requireAuth, async (c) => {
 });
 
 app.delete("/:id", requireAuth, async (c) => {
+  const user = c.get("user");
   const id = c.req.param("id");
   const db = await createPool(c.env);
-  await db.query(`DELETE FROM treatment_cycles WHERE id = $1`, [id]);
+  await db.query(`DELETE FROM treatment_cycles WHERE id = $1 AND therapist_id = $2`, [
+    id,
+    user.uid,
+  ]);
   return c.json({ ok: true });
 });
 

@@ -14,6 +14,10 @@ import {
   MessageSquare,
   GripVertical,
   Search,
+  X,
+  BookOpen,
+  Eye,
+  Play,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd";
@@ -39,8 +43,11 @@ import {
 } from "@/components/ui/dropdown-menu";
 import type { EvolutionBlockV3Props, EvolutionItemType, EvolutionItemV3 } from "./types";
 import { COMMON_PROCEDURES } from "../v2-improved/types";
-import { useExercises } from "@/hooks/useExercises";
+import { useExercises, type Exercise } from "@/hooks/useExercises";
 import { accentIncludes } from "@/lib/utils/bilingualSearch";
+import { OptimizedImage } from "@/components/ui/OptimizedImage";
+import { getBestImageUrl } from "@/lib/imageUtils";
+import { ExerciseViewModal } from "../../exercises/ExerciseViewModal";
 
 // Category colors for visual distinction
 const CATEGORY_COLORS: Record<string, string> = {
@@ -80,14 +87,14 @@ function formatItemDetail(item: EvolutionItemV3) {
         ? {
             key: "prescription",
             label: item.prescription,
-            className: "border-blue-200 bg-blue-50 text-blue-700",
+            className: "border-emerald-200 bg-emerald-50 text-emerald-700",
           }
         : null,
       item.patientFeedback
         ? {
             key: "feedback",
             label: item.patientFeedback,
-            className: "border-indigo-200 bg-indigo-50 text-indigo-700",
+            className: "border-teal-200 bg-teal-50 text-teal-700",
           }
         : null,
     ].filter(Boolean) as Array<{ key: string; label: string; className: string }>;
@@ -137,6 +144,7 @@ const EvolutionItemRow: React.FC<EvolutionItemRowProps> = ({
   handleUpdateItem,
   type,
 }) => {
+  const { exercises: libraryExercises } = useExercises();
   const [isExpanded, setIsExpanded] = useState(() => {
     const hasNotes = !!(item.notes?.trim() || item.intensity?.trim());
     const hasFeedback = !!item.patientFeedback?.trim();
@@ -144,6 +152,13 @@ const EvolutionItemRow: React.FC<EvolutionItemRowProps> = ({
   });
 
   const prevHasContentRef = useRef(false);
+
+  const exerciseFromLibrary = useMemo(() => {
+    if (item.type !== "exercise" || !item.exerciseId) return null;
+    return libraryExercises.find(ex => ex.id === item.exerciseId);
+  }, [item.exerciseId, item.type, libraryExercises]);
+
+  const thumbSrc = item.thumbnail_url || item.image_url || exerciseFromLibrary?.thumbnail_url || exerciseFromLibrary?.image_url;
 
   useEffect(() => {
     const hasNotes = !!(item.notes?.trim() || item.intensity?.trim());
@@ -169,7 +184,7 @@ const EvolutionItemRow: React.FC<EvolutionItemRowProps> = ({
               "group/item relative flex flex-col rounded-xl border border-l-[4px] overflow-hidden mb-1.5 transition-[border-color,box-shadow,background-color,opacity] duration-200",
               item.completed
                 ? "bg-muted/5 border-border/40"
-                : "bg-background border-border/60 shadow-sm",
+                : "bg-background border-border/60 shadow-sm hover:shadow-md hover:border-slate-300/80",
               isExpanded && "ring-1 ring-primary/20 border-primary/30 shadow-md",
               snapshot.isDragging &&
                 "z-[100] bg-background shadow-[0_14px_36px_rgba(15,23,42,0.16)] ring-1 ring-primary/35",
@@ -177,8 +192,8 @@ const EvolutionItemRow: React.FC<EvolutionItemRowProps> = ({
             )}
             style={{
               ...provided.draggableProps.style,
-              // Borda esquerda colorida: procedimento = roxo, exercício = verde.
-              borderLeftColor: item.type === "exercise" ? "#10b981" : "#a855f7",
+              // Borda esquerda colorida: procedimento = coral/laranja, exercício = verde.
+              borderLeftColor: item.type === "exercise" ? "#10b981" : "#f97316",
               // Garante que o width seja mantido quando estiver no portal
               width: snapshot.isDragging
                 ? "var(--drag-width)"
@@ -248,9 +263,20 @@ const EvolutionItemRow: React.FC<EvolutionItemRowProps> = ({
                 >
                   {type === "unified" &&
                     (item.type === "exercise" ? (
-                      <Dumbbell className="h-3.5 w-3.5 text-emerald-500/80 shrink-0" />
+                      thumbSrc ? (
+                        <div className="h-7 w-7 rounded-md overflow-hidden bg-slate-100 flex-shrink-0 border border-slate-200/50">
+                          <OptimizedImage 
+                            src={thumbSrc} 
+                            alt={item.name} 
+                            className="h-full w-full object-cover"
+                            aspectRatio="1:1"
+                          />
+                        </div>
+                      ) : (
+                        <Dumbbell className="h-3.5 w-3.5 text-emerald-500/80 shrink-0" />
+                      )
                     ) : (
-                      <Stethoscope className="h-3.5 w-3.5 text-purple-500/80 shrink-0" />
+                      <Stethoscope className="h-3.5 w-3.5 text-orange-500 shrink-0" />
                     ))}
                   <span className="truncate">{item.name}</span>
                 </span>
@@ -356,7 +382,7 @@ const EvolutionItemRow: React.FC<EvolutionItemRowProps> = ({
                       <>
                         <div className="space-y-1.5">
                           <div className="flex items-center gap-1.5 px-1">
-                            <Dumbbell className="h-3 w-3 text-blue-500" />
+                            <Dumbbell className="h-3 w-3 text-emerald-500" />
                             <label className="text-[10px] font-bold text-muted-foreground/70 uppercase tracking-wider">
                               Prescrição (Séries, Repetições, Carga)
                             </label>
@@ -367,13 +393,13 @@ const EvolutionItemRow: React.FC<EvolutionItemRowProps> = ({
                               handleUpdateItem(item.id, { prescription: e.target.value })
                             }
                             placeholder="Ex: 3x12 - 5kg - 30s descanso"
-                            className="h-9 rounded-xl bg-muted/40 border-border/40 focus-visible:ring-blue-500/20 text-sm"
+                            className="h-9 rounded-xl bg-muted/40 border-border/40 focus-visible:ring-emerald-500/20 text-sm"
                             disabled={disabled}
                           />
                         </div>
                         <div className="space-y-1.5">
                           <div className="flex items-center gap-1.5 px-1">
-                            <MessageSquare className="h-3 w-3 text-indigo-500" />
+                            <MessageSquare className="h-3 w-3 text-teal-500" />
                             <label className="text-[10px] font-bold text-muted-foreground/70 uppercase tracking-wider">
                               Feedback do Paciente
                             </label>
@@ -384,7 +410,7 @@ const EvolutionItemRow: React.FC<EvolutionItemRowProps> = ({
                               handleUpdateItem(item.id, { patientFeedback: e.target.value })
                             }
                             placeholder="Como o paciente se sentiu? Dor? Facilidade?"
-                            className="h-9 rounded-xl bg-muted/40 border-border/40 focus-visible:ring-indigo-500/20 text-sm"
+                            className="h-9 rounded-xl bg-muted/40 border-border/40 focus-visible:ring-teal-500/20 text-sm"
                             disabled={disabled}
                           />
                         </div>
@@ -401,7 +427,7 @@ const EvolutionItemRow: React.FC<EvolutionItemRowProps> = ({
                               handleUpdateItem(item.id, { intensity: e.target.value })
                             }
                             placeholder="Ex: 2.0 J/cm² ou 10mA"
-                            className="h-9 rounded-xl bg-muted/40 border-border/40 focus-visible:ring-emerald-500/20 text-sm"
+                            className="h-9 rounded-xl bg-muted/40 border-border/40 focus-visible:ring-orange-500/20 text-sm"
                             disabled={disabled}
                           />
                         </div>
@@ -413,7 +439,7 @@ const EvolutionItemRow: React.FC<EvolutionItemRowProps> = ({
                             value={item.notes || ""}
                             onChange={(e) => handleUpdateItem(item.id, { notes: e.target.value })}
                             placeholder="Detalhes sobre a técnica, tempo ou resposta..."
-                            className="h-9 rounded-xl bg-muted/40 border-border/40 focus-visible:ring-emerald-500/20 text-sm"
+                            className="h-9 rounded-xl bg-muted/40 border-border/40 focus-visible:ring-orange-500/20 text-sm"
                             disabled={disabled}
                           />
                         </div>
@@ -458,6 +484,120 @@ export const EvolutionBlockV3: React.FC<EvolutionBlockV3Props> = ({
 
   const [newItemType, setNewItemType] = useState<EvolutionItemType>("procedure");
   const { exercises: libraryExercises } = useExercises();
+
+  const [procedureLibraryOpen, setProcedureLibraryOpen] = useState(false);
+  const [exerciseLibraryOpen, setExerciseLibraryOpen] = useState(false);
+  const [librarySearchQuery, setLibrarySearchQuery] = useState("");
+  const [tempSelectedProcedures, setTempSelectedProcedures] = useState<string[]>([]);
+  const [tempSelectedExercises, setTempSelectedExercises] = useState<string[]>([]);
+  const [viewExercise, setViewExercise] = useState<Exercise | null>(null);
+
+  useEffect(() => {
+    if (procedureLibraryOpen) {
+      setTempSelectedProcedures(
+        items.filter((item) => item.type === "procedure").map((item) => item.name)
+      );
+      setLibrarySearchQuery("");
+    }
+  }, [procedureLibraryOpen, items]);
+
+  useEffect(() => {
+    if (exerciseLibraryOpen) {
+      setTempSelectedExercises(
+        items.filter((item) => item.type === "exercise" && item.exerciseId).map((item) => item.exerciseId!)
+      );
+      setLibrarySearchQuery("");
+    }
+  }, [exerciseLibraryOpen, items]);
+
+  const handleSaveProcedures = () => {
+    const existingProcs = items.filter(item => item.type === "procedure");
+    const nonProcs = items.filter(item => item.type !== "procedure");
+    
+    // Build new procedures list
+    const newProcs = tempSelectedProcedures.map((name, index) => {
+      const existing = existingProcs.find(item => item.name === name);
+      if (existing) return existing;
+      
+      const template = COMMON_PROCEDURES.find(p => p.name === name);
+      return {
+        id: crypto.randomUUID(),
+        name,
+        completed: false,
+        type: "procedure" as const,
+        category: template?.category || "outro",
+        order: index,
+      };
+    });
+    
+    onChange([...nonProcs, ...newProcs]);
+    setProcedureLibraryOpen(false);
+  };
+
+  const handleSaveExercises = () => {
+    const existingExs = items.filter(item => item.type === "exercise");
+    const nonExs = items.filter(item => item.type !== "exercise");
+    
+    const newExs = tempSelectedExercises.map((id, index) => {
+      const existing = existingExs.find(item => item.exerciseId === id);
+      if (existing) return existing;
+      
+      const template = libraryExercises.find(e => e.id === id);
+      return {
+        id: crypto.randomUUID(),
+        name: template?.name || "Exercício",
+        completed: false,
+        type: "exercise" as const,
+        exerciseId: id,
+        prescription: `${template?.sets || 3}x${template?.repetitions || 10}`,
+        image_url: template?.image_url,
+        thumbnail_url: template?.thumbnail_url,
+        order: index,
+      };
+    });
+    
+    onChange([...nonExs, ...newExs]);
+    setExerciseLibraryOpen(false);
+  };
+
+  const groupedProcedures = useMemo(() => {
+    const filtered = COMMON_PROCEDURES.filter((p) =>
+      accentIncludes(p.name, librarySearchQuery)
+    );
+    
+    // Group by category
+    const groups: Record<string, typeof COMMON_PROCEDURES> = {};
+    filtered.forEach((p) => {
+      if (!groups[p.category]) groups[p.category] = [];
+      groups[p.category].push(p);
+    });
+    return groups;
+  }, [librarySearchQuery]);
+
+  const filteredExercises = useMemo(() => {
+    return libraryExercises.filter((e) =>
+      accentIncludes(e.name, librarySearchQuery)
+    );
+  }, [libraryExercises, librarySearchQuery]);
+
+  const [activeIndex, setActiveIndex] = useState(-1);
+  const [previewImage, setPreviewImage] = useState<{ url: string; title: string } | null>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Reset keyboard selection index when user types or changes the active tab type
+  useEffect(() => {
+    setActiveIndex(-1);
+  }, [newItemName, newItemType]);
+
+  // Keep focus option visible on scroll
+  useEffect(() => {
+    if (activeIndex >= 0 && dropdownRef.current) {
+      const activeEl = dropdownRef.current.querySelector(`[data-index="${activeIndex}"]`);
+      if (activeEl) {
+        activeEl.scrollIntoView({ block: "nearest" });
+      }
+    }
+  }, [activeIndex]);
 
   const completedCount = items.filter((item) => item.completed).length;
   const totalCount = items.length;
@@ -563,7 +703,24 @@ export const EvolutionBlockV3: React.FC<EvolutionBlockV3Props> = ({
     ).slice(0, 8);
   }, [libraryExercises, newItemName, trimmedQuery, showExerciseSlot]);
 
-  const hasSuggestions = procedureSuggestions.length > 0 || exerciseSuggestions.length > 0;
+  const combinedSuggestions = useMemo(() => {
+    const list: Array<
+      | ({ selectType: "procedure" } & (typeof COMMON_PROCEDURES)[0])
+      | ({ selectType: "exercise" } & (typeof libraryExercises)[0])
+    > = [];
+
+    procedureSuggestions.forEach((p) => {
+      list.push({ ...p, selectType: "procedure" as const });
+    });
+
+    exerciseSuggestions.forEach((e) => {
+      list.push({ ...e, selectType: "exercise" as const });
+    });
+
+    return list;
+  }, [procedureSuggestions, exerciseSuggestions]);
+
+  const hasSuggestions = combinedSuggestions.length > 0;
   const shouldShowSuggestions = hasSuggestions && (isInputFocused || trimmedQuery.length > 0);
 
   // Posiciona o dropdown via portal (escapa de containers com overflow).
@@ -650,8 +807,41 @@ export const EvolutionBlockV3: React.FC<EvolutionBlockV3Props> = ({
     [focusSearchInput],
   );
 
-  // Keyboard shortcuts
+  // Keyboard shortcuts and navigation inside suggestions
   const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (shouldShowSuggestions && combinedSuggestions.length > 0) {
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        setActiveIndex((prev) => (prev + 1) % combinedSuggestions.length);
+        return;
+      }
+      if (e.key === "ArrowUp") {
+        e.preventDefault();
+        setActiveIndex((prev) => (prev - 1 + combinedSuggestions.length) % combinedSuggestions.length);
+        return;
+      }
+      if (e.key === "Enter") {
+        if (activeIndex >= 0 && activeIndex < combinedSuggestions.length) {
+          e.preventDefault();
+          const selected = combinedSuggestions[activeIndex];
+          if (selected.selectType === "procedure") {
+            handleSelectProcedureSuggestion(selected as any);
+          } else {
+            handleSelectExerciseSuggestion(selected as any);
+          }
+          setActiveIndex(-1);
+          return;
+        }
+      }
+      if (e.key === "Escape") {
+        e.preventDefault();
+        setIsInputFocused(false);
+        setActiveIndex(-1);
+        (e.target as HTMLInputElement).blur();
+        return;
+      }
+    }
+
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleAddItem();
@@ -744,31 +934,95 @@ export const EvolutionBlockV3: React.FC<EvolutionBlockV3Props> = ({
       {!disabled && (
         <div className="flex flex-col gap-2 mt-2">
           {type === "unified" && (
-            <div className="flex items-center gap-2 mb-1 px-1">
-              <Button
-                size="sm"
-                variant={newItemType === "procedure" ? "default" : "ghost"}
+            <div className="relative flex p-1 bg-slate-100/80 dark:bg-slate-800/40 rounded-full w-fit mb-3 border border-slate-200/50 dark:border-slate-800/50">
+              <button
+                type="button"
                 onClick={() => selectItemType("procedure")}
                 className={cn(
-                  "h-7 rounded-full text-[10px] uppercase font-bold tracking-wider",
-                  newItemType === "procedure" && "bg-emerald-600 hover:bg-emerald-700",
+                  "relative z-10 flex items-center h-8 pl-4 pr-2.5 rounded-full text-[11px] uppercase font-extrabold tracking-wider transition-colors duration-200",
+                  newItemType === "procedure"
+                    ? "text-orange-700 dark:text-orange-300"
+                    : "text-muted-foreground hover:text-slate-800 dark:hover:text-slate-200"
                 )}
               >
-                <Stethoscope className="h-3 w-3 mr-1.5" />
+                <Stethoscope className="h-3.5 w-3.5 mr-1.5" />
                 Procedimento
-              </Button>
-              <Button
-                size="sm"
-                variant={newItemType === "exercise" ? "default" : "ghost"}
+                <span
+                  role="button"
+                  tabIndex={0}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setProcedureLibraryOpen(true);
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setProcedureLibraryOpen(true);
+                    }
+                  }}
+                  className={cn(
+                    "ml-2 p-1 rounded-md hover:bg-orange-500/10 transition-colors cursor-pointer",
+                    newItemType === "procedure"
+                      ? "text-orange-600 dark:text-orange-400 hover:text-orange-700"
+                      : "text-muted-foreground hover:text-slate-800"
+                  )}
+                  title="Abrir biblioteca de procedimentos"
+                >
+                  <BookOpen className="h-3 w-3" />
+                </span>
+                {newItemType === "procedure" && (
+                  <motion.div
+                    layoutId="activeTabBackground"
+                    className="absolute inset-0 bg-white dark:bg-slate-950 shadow-sm rounded-full -z-10 border border-orange-200/30"
+                    transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                  />
+                )}
+              </button>
+              <button
+                type="button"
                 onClick={() => selectItemType("exercise")}
                 className={cn(
-                  "h-7 rounded-full text-[10px] uppercase font-bold tracking-wider",
-                  newItemType === "exercise" && "bg-blue-600 hover:bg-blue-700",
+                  "relative z-10 flex items-center h-8 pl-4 pr-2.5 rounded-full text-[11px] uppercase font-extrabold tracking-wider transition-colors duration-200",
+                  newItemType === "exercise"
+                    ? "text-emerald-700 dark:text-emerald-300"
+                    : "text-muted-foreground hover:text-slate-800 dark:hover:text-slate-200"
                 )}
               >
-                <Dumbbell className="h-3 w-3 mr-1.5" />
+                <Dumbbell className="h-3.5 w-3.5 mr-1.5" />
                 Exercício
-              </Button>
+                <span
+                  role="button"
+                  tabIndex={0}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setExerciseLibraryOpen(true);
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setExerciseLibraryOpen(true);
+                    }
+                  }}
+                  className={cn(
+                    "ml-2 p-1 rounded-md hover:bg-emerald-500/10 transition-colors cursor-pointer",
+                    newItemType === "exercise"
+                      ? "text-emerald-600 dark:text-emerald-400 hover:text-emerald-700"
+                      : "text-muted-foreground hover:text-slate-800"
+                  )}
+                  title="Abrir biblioteca de exercícios"
+                >
+                  <BookOpen className="h-3 w-3" />
+                </span>
+                {newItemType === "exercise" && (
+                  <motion.div
+                    layoutId="activeTabBackground"
+                    className="absolute inset-0 bg-white dark:bg-slate-950 shadow-sm rounded-full -z-10 border border-emerald-200/30"
+                    transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                  />
+                )}
+              </button>
             </div>
           )}
           <div ref={inputWrapRef} className="relative flex items-center group/input">
@@ -787,9 +1041,21 @@ export const EvolutionBlockV3: React.FC<EvolutionBlockV3Props> = ({
                     : "Adicionar procedimento..."
                   : defaultPlaceholder)
               }
-              className="pl-10 pr-12 h-12 rounded-2xl bg-muted/30 border-border/50 focus-visible:ring-primary/20 focus-visible:border-primary/30 transition-all"
+              className={cn(
+                "pl-10 pr-12 h-12 rounded-2xl bg-muted/30 border-border/50 transition-all",
+                (type === "unified" ? newItemType : type) === "exercise"
+                  ? "focus-visible:ring-emerald-500/20 focus-visible:border-emerald-500/30"
+                  : "focus-visible:ring-orange-500/20 focus-visible:border-orange-500/30"
+              )}
             />
-            <Plus className="absolute left-3.5 h-4 w-4 text-muted-foreground transition-colors group-focus-within/input:text-primary" />
+            <Plus
+              className={cn(
+                "absolute left-3.5 h-4 w-4 text-muted-foreground transition-colors",
+                (type === "unified" ? newItemType : type) === "exercise"
+                  ? "group-focus-within/input:text-emerald-500"
+                  : "group-focus-within/input:text-orange-500"
+              )}
+            />
 
             <div className="absolute right-1.5 flex items-center gap-1">
               <div className="hidden sm:flex items-center gap-1.5 mr-2">
@@ -811,7 +1077,12 @@ export const EvolutionBlockV3: React.FC<EvolutionBlockV3Props> = ({
                 variant="ghost"
                 onClick={handleAddItem}
                 disabled={!newItemName.trim()}
-                className="h-9 w-9 rounded-xl hover:bg-primary/10 hover:text-primary transition-colors"
+                className={cn(
+                  "h-9 w-9 rounded-xl transition-colors",
+                  (type === "unified" ? newItemType : type) === "exercise"
+                    ? "hover:bg-emerald-500/10 hover:text-emerald-600 text-emerald-600 disabled:opacity-50"
+                    : "hover:bg-orange-500/10 hover:text-orange-600 text-orange-600 disabled:opacity-50"
+                )}
               >
                 <Plus className="h-4 w-4" />
               </Button>
@@ -822,6 +1093,7 @@ export const EvolutionBlockV3: React.FC<EvolutionBlockV3Props> = ({
               dropdownRect &&
               createPortal(
                 <motion.div
+                  ref={dropdownRef}
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
@@ -833,50 +1105,85 @@ export const EvolutionBlockV3: React.FC<EvolutionBlockV3Props> = ({
                   }}
                   // mousedown antes do blur do input para não fechar antes do clique
                   onMouseDown={(e) => e.preventDefault()}
-                  className="z-[100] p-1.5 rounded-2xl border border-border shadow-2xl bg-background max-h-[320px] overflow-y-auto"
+                  className="z-[100] p-1.5 rounded-2xl border border-border shadow-2xl bg-background max-h-[320px] overflow-y-auto scroll-smooth"
                 >
                   <div className="px-2 py-1.5 mb-1">
                     <span className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest">
                       {trimmedQuery ? "Resultados" : "Sugestões da biblioteca"}
                     </span>
                   </div>
-                  {procedureSuggestions.map((s) => (
-                    <button
-                      key={s.name}
-                      onClick={() => handleSelectProcedureSuggestion(s)}
-                      className="w-full flex items-center justify-between p-2.5 rounded-xl hover:bg-primary/5 text-sm transition-all group/sug"
-                    >
-                      <div className="flex items-center gap-2.5">
-                        <div className={cn("p-1.5 rounded-lg", CATEGORY_COLORS[s.category])}>
-                          <Stethoscope className="h-3.5 w-3.5" />
+                  {procedureSuggestions.map((s, idx) => {
+                    const isSuggestionActive = activeIndex === idx;
+                    return (
+                      <button
+                        key={s.name}
+                        data-index={idx}
+                        onClick={() => handleSelectProcedureSuggestion(s)}
+                        className={cn(
+                          "w-full flex items-center justify-between p-2.5 rounded-xl text-sm transition-all group/sug text-left",
+                          isSuggestionActive
+                            ? "bg-slate-100 dark:bg-slate-800 text-primary"
+                            : "hover:bg-primary/5"
+                        )}
+                      >
+                        <div className="flex items-center gap-2.5">
+                          <div className={cn("p-1.5 rounded-lg", CATEGORY_COLORS[s.category])}>
+                            <Stethoscope className="h-3.5 w-3.5" />
+                          </div>
+                          <span className="font-medium">{s.name}</span>
                         </div>
-                        <span className="font-medium">{s.name}</span>
-                      </div>
-                      <Plus className="h-3.5 w-3.5 text-muted-foreground/40 group-hover/sug:text-primary opacity-0 group-hover/sug:opacity-100 transition-all" />
-                    </button>
-                  ))}
-                  {exerciseSuggestions.map((exercise) => (
-                    <button
-                      key={exercise.id}
-                      onClick={() => handleSelectExerciseSuggestion(exercise)}
-                      className="w-full flex items-center justify-between p-2.5 rounded-xl hover:bg-primary/5 text-sm transition-all group/sug"
-                    >
-                      <div className="flex min-w-0 items-center gap-2.5">
-                        <div className="p-1.5 rounded-lg bg-blue-500/10 text-blue-700">
-                          <Dumbbell className="h-3.5 w-3.5" />
-                        </div>
-                        <div className="min-w-0 text-left">
-                          <span className="block truncate font-medium">{exercise.name}</span>
-                          {exercise.category && (
-                            <span className="block truncate text-xs text-muted-foreground">
-                              {exercise.category}
-                            </span>
+                        <Plus className="h-3.5 w-3.5 text-muted-foreground/40 group-hover/sug:text-primary opacity-0 group-hover/sug:opacity-100 transition-all" />
+                      </button>
+                    );
+                  })}
+                  {exerciseSuggestions.map((exercise, idx) => {
+                    const globalIdx = procedureSuggestions.length + idx;
+                    const isSuggestionActive = activeIndex === globalIdx;
+                    const hasThumbnail = !!(exercise.thumbnail_url || exercise.image_url);
+                    return (
+                      <button
+                        key={exercise.id}
+                        data-index={globalIdx}
+                        onClick={() => handleSelectExerciseSuggestion(exercise)}
+                        className={cn(
+                          "w-full flex items-center justify-between p-2.5 rounded-xl text-sm transition-all group/sug text-left",
+                          isSuggestionActive
+                            ? "bg-slate-100 dark:bg-slate-800 text-primary"
+                            : "hover:bg-primary/5"
+                        )}
+                      >
+                        <div className="flex min-w-0 items-center gap-2.5">
+                          {hasThumbnail ? (
+                            <img
+                              src={exercise.thumbnail_url || exercise.image_url}
+                              alt={exercise.name}
+                              className="h-8 w-8 rounded-lg object-cover cursor-zoom-in border border-slate-200/50 hover:scale-105 active:scale-95 transition-transform"
+                              onClick={(e) => {
+                                e.stopPropagation(); // Evita adicionar o exercício ao clicar na imagem
+                                setPreviewImage({
+                                  url: exercise.image_url || exercise.thumbnail_url || "",
+                                  title: exercise.name,
+                                });
+                              }}
+                            />
+                          ) : (
+                            <div className="p-1.5 rounded-lg bg-blue-500/10 text-blue-700 shrink-0">
+                              <Dumbbell className="h-3.5 w-3.5" />
+                            </div>
                           )}
+                          <div className="min-w-0 text-left">
+                            <span className="block truncate font-medium">{exercise.name}</span>
+                            {exercise.category && (
+                              <span className="block truncate text-xs text-muted-foreground">
+                                {exercise.category}
+                              </span>
+                            )}
+                          </div>
                         </div>
-                      </div>
-                      <Plus className="h-3.5 w-3.5 text-muted-foreground/40 group-hover/sug:text-primary opacity-0 group-hover/sug:opacity-100 transition-all" />
-                    </button>
-                  ))}
+                        <Plus className="h-3.5 w-3.5 text-muted-foreground/40 group-hover/sug:text-primary opacity-0 group-hover/sug:opacity-100 transition-all" />
+                      </button>
+                    );
+                  })}
                 </motion.div>,
                 document.body,
               )}
@@ -886,28 +1193,47 @@ export const EvolutionBlockV3: React.FC<EvolutionBlockV3Props> = ({
 
       {/* Items List with DND and Animations */}
       <div className="mt-2">
+        {isEmbedded && totalCount > 0 && (
+          <div className="flex items-center justify-between px-1.5 py-2 mb-3 bg-slate-50 dark:bg-slate-900/40 rounded-xl border border-slate-100 dark:border-slate-800/80">
+            <span className="text-[10px] font-extrabold text-muted-foreground/80 uppercase tracking-wider">
+              Conclusão da sessão: {completedCount} de {totalCount} itens
+            </span>
+            <div className="flex items-center gap-2">
+              <span className="text-[11px] font-black text-slate-700 dark:text-slate-300">{Math.round(progress)}%</span>
+              <div className="h-1.5 w-24 bg-slate-200 dark:bg-slate-800 overflow-hidden rounded-full">
+                <div
+                  className="h-full bg-gradient-to-r from-orange-500 to-emerald-500 transition-all duration-500 ease-out rounded-full"
+                  style={{ width: `${progress}%` }}
+                />
+              </div>
+            </div>
+          </div>
+        )}
         <DragDropContext onDragEnd={onDragEnd}>
           <Droppable droppableId="evolution-items">
             {(provided) => (
               <div
                 {...provided.droppableProps}
                 ref={provided.innerRef}
-                className="space-y-0.5 droppable-container"
+                className="space-y-1.5 droppable-container"
               >
                 {items.length === 0 ? (
                   <div
                     className={cn(
-                      "flex flex-col items-center justify-center py-8 px-4",
+                      "flex flex-col items-center justify-center py-10 px-4 transition-all duration-300",
                       isEmbedded
-                        ? "rounded-none bg-transparent"
+                        ? "rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 bg-slate-50/30"
                         : "rounded-2xl border border-dashed border-border/60 bg-muted/10",
                     )}
                   >
-                    <div className="p-3 rounded-full bg-muted/20 mb-3">
+                    <div className="p-3 rounded-full bg-muted/20 mb-3 animate-pulse">
                       <Activity className="h-5 w-5 text-muted-foreground/50" />
                     </div>
-                    <p className="text-sm text-muted-foreground font-medium text-center">
-                      Nenhum item adicionado
+                    <p className="text-sm text-muted-foreground font-semibold text-center">
+                      Nenhum item adicionado à sessão
+                    </p>
+                    <p className="text-xs text-muted-foreground/60 text-center mt-1 max-w-[240px]">
+                      Use o campo acima para incluir procedimentos ou exercícios terapêuticos.
                     </p>
                     {!disabled && (
                       <button
@@ -918,7 +1244,7 @@ export const EvolutionBlockV3: React.FC<EvolutionBlockV3Props> = ({
                           );
                           input?.focus();
                         }}
-                        className="mt-3 inline-flex items-center gap-1.5 text-[11px] font-bold text-primary/70 hover:text-primary transition-colors underline-offset-2 hover:underline"
+                        className="mt-4 inline-flex items-center gap-1.5 text-[11px] font-bold text-primary/70 hover:text-primary transition-colors underline-offset-2 hover:underline"
                       >
                         <Plus className="h-3 w-3" />
                         Adicionar primeiro item
@@ -983,6 +1309,241 @@ export const EvolutionBlockV3: React.FC<EvolutionBlockV3Props> = ({
           })()}
         </DialogContent>
       </Dialog>
+
+      {/* Procedure Library Modal */}
+      <Dialog open={procedureLibraryOpen} onOpenChange={setProcedureLibraryOpen}>
+        <DialogContent className="max-w-3xl rounded-3xl max-h-[85vh] flex flex-col p-0 overflow-hidden">
+          <DialogHeader className="px-6 pt-6 pb-4 border-b border-slate-100 dark:border-slate-800/80">
+            <DialogTitle className="flex items-center gap-2 text-orange-600 dark:text-orange-400">
+              <BookOpen className="h-5 w-5" />
+              Biblioteca de Procedimentos
+            </DialogTitle>
+            <DialogDescription>
+              Selecione os procedimentos realizados nesta sessão para adicioná-los à conduta do paciente.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="px-6 py-3 border-b border-slate-100 dark:border-slate-800/80 bg-slate-50/50 dark:bg-slate-900/10">
+            <div className="relative flex items-center">
+              <Search className="absolute left-3.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Buscar procedimentos..."
+                value={librarySearchQuery}
+                onChange={(e) => setLibrarySearchQuery(e.target.value)}
+                className="pl-10 h-10 rounded-xl bg-background border-slate-200"
+              />
+            </div>
+          </div>
+
+          <div className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar">
+            {Object.keys(groupedProcedures).length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                Nenhum procedimento encontrado
+              </div>
+            ) : (
+              Object.entries(groupedProcedures).map(([category, procs]) => (
+                <div key={category} className="space-y-2.5">
+                  <div className="flex items-center gap-2">
+                    <span className={cn(
+                      "px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider border",
+                      CATEGORY_COLORS[category] || CATEGORY_COLORS.outro
+                    )}>
+                      {CATEGORY_LABELS[category] || category}
+                    </span>
+                    <div className="h-[1px] flex-1 bg-slate-100 dark:bg-slate-800" />
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    {procs.map((proc) => {
+                      const isSelected = tempSelectedProcedures.includes(proc.name);
+                      return (
+                        <div
+                          key={proc.name}
+                          onClick={() => {
+                            if (isSelected) {
+                              setTempSelectedProcedures(tempSelectedProcedures.filter(name => name !== proc.name));
+                            } else {
+                              setTempSelectedProcedures([...tempSelectedProcedures, proc.name]);
+                            }
+                          }}
+                          className={cn(
+                            "flex items-center gap-3 p-3 rounded-2xl border cursor-pointer transition-all duration-200 select-none",
+                            isSelected
+                              ? "bg-orange-500/5 border-orange-500/30 text-orange-950 dark:text-orange-200"
+                              : "bg-background border-slate-100 dark:border-slate-800/80 hover:bg-slate-50 dark:hover:bg-slate-900/30"
+                          )}
+                        >
+                          <Checkbox
+                            checked={isSelected}
+                            onCheckedChange={() => {}} // handled by onClick on wrapper
+                            className="rounded border-slate-300 data-[state=checked]:bg-orange-500 data-[state=checked]:border-orange-500"
+                          />
+                          <span className="text-xs font-semibold leading-none">{proc.name}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+
+          <DialogFooter className="px-6 py-4 border-t border-slate-100 dark:border-slate-800/80 bg-slate-50/50 dark:bg-slate-900/10">
+            <Button variant="outline" onClick={() => setProcedureLibraryOpen(false)} className="rounded-xl">
+              Cancelar
+            </Button>
+            <Button onClick={handleSaveProcedures} className="bg-orange-600 hover:bg-orange-700 text-white rounded-xl">
+              Adicionar à Conduta ({tempSelectedProcedures.length})
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Exercise Library Modal */}
+      <Dialog open={exerciseLibraryOpen} onOpenChange={setExerciseLibraryOpen}>
+        <DialogContent className="max-w-3xl rounded-3xl max-h-[85vh] flex flex-col p-0 overflow-hidden">
+          <DialogHeader className="px-6 pt-6 pb-4 border-b border-slate-100 dark:border-slate-800/80">
+            <DialogTitle className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400">
+              <BookOpen className="h-5 w-5" />
+              Biblioteca de Exercícios
+            </DialogTitle>
+            <DialogDescription>
+              Selecione os exercícios prescritos para esta sessão para adicioná-los à conduta do paciente.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="px-6 py-3 border-b border-slate-100 dark:border-slate-800/80 bg-slate-50/50 dark:bg-slate-900/10">
+            <div className="relative flex items-center">
+              <Search className="absolute left-3.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Buscar exercícios..."
+                value={librarySearchQuery}
+                onChange={(e) => setLibrarySearchQuery(e.target.value)}
+                className="pl-10 h-10 rounded-xl bg-background border-slate-200"
+              />
+            </div>
+          </div>
+
+          <div className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar">
+            {filteredExercises.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                Nenhum exercício encontrado
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                {filteredExercises.map((ex) => {
+                  const isSelected = tempSelectedExercises.includes(ex.id);
+                  const thumbSrc = getBestImageUrl(ex);
+                  return (
+                    <div
+                      key={ex.id}
+                      onClick={() => {
+                        if (isSelected) {
+                          setTempSelectedExercises(tempSelectedExercises.filter(id => id !== ex.id));
+                        } else {
+                          setTempSelectedExercises([...tempSelectedExercises, ex.id]);
+                        }
+                      }}
+                      className={cn(
+                        "group flex items-center gap-3 p-3 rounded-2xl border cursor-pointer transition-all duration-200 select-none",
+                        isSelected
+                          ? "bg-emerald-500/5 border-emerald-500/30 text-emerald-950 dark:text-emerald-200"
+                          : "bg-background border-slate-100 dark:border-slate-800/80 hover:bg-slate-50 dark:hover:bg-slate-900/30"
+                      )}
+                    >
+                      <Checkbox
+                        checked={isSelected}
+                        onCheckedChange={() => {}} // handled by onClick on wrapper
+                        className="rounded border-slate-300 data-[state=checked]:bg-emerald-500 data-[state=checked]:border-emerald-500"
+                      />
+                      
+                      {/* Thumbnail */}
+                      <div className="h-10 w-10 rounded-lg overflow-hidden bg-slate-100 dark:bg-slate-800 flex-shrink-0 border border-slate-200/50">
+                        {thumbSrc ? (
+                          <OptimizedImage
+                            src={thumbSrc}
+                            alt={ex.name}
+                            className="h-full w-full object-cover"
+                            aspectRatio="1:1"
+                          />
+                        ) : (
+                          <div className="h-full w-full flex items-center justify-center">
+                            <Dumbbell className="h-4 w-4 text-slate-300" />
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="flex-1 min-w-0">
+                        <span className="block text-xs font-semibold leading-none truncate">{ex.name}</span>
+                        {ex.category && (
+                          <span className="inline-block mt-1 px-1.5 py-0.5 rounded text-[8px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-500">
+                            {ex.category}
+                          </span>
+                        )}
+                      </div>
+
+                      {/* View Details Button */}
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setViewExercise(ex);
+                        }}
+                      >
+                        <Eye className="h-4 w-4 text-slate-400" />
+                      </Button>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          <DialogFooter className="px-6 py-4 border-t border-slate-100 dark:border-slate-800/80 bg-slate-50/50 dark:bg-slate-900/10">
+            <Button variant="outline" onClick={() => setExerciseLibraryOpen(false)} className="rounded-xl">
+              Cancelar
+            </Button>
+            <Button onClick={handleSaveExercises} className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl">
+              Adicionar à Conduta ({tempSelectedExercises.length})
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!previewImage} onOpenChange={(open) => !open && setPreviewImage(null)}>
+        <DialogContent className="sm:max-w-[600px] p-0 rounded-2xl overflow-hidden bg-slate-950 border-none flex flex-col items-center justify-center">
+          {previewImage && (
+            <div className="relative w-full flex flex-col">
+              <div className="flex justify-between items-center px-4 py-3 text-white bg-slate-900 border-b border-slate-800/80 rounded-t-2xl">
+                <span className="text-sm font-semibold truncate mr-4">{previewImage.title}</span>
+                <button
+                  onClick={() => setPreviewImage(null)}
+                  className="p-1.5 rounded-xl hover:bg-white/10 text-white transition-colors"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+              <div className="p-4 flex items-center justify-center bg-slate-950 max-h-[70vh]">
+                <img
+                  src={previewImage.url}
+                  alt={previewImage.title}
+                  className="w-full h-auto max-h-[60vh] object-contain rounded-xl shadow-2xl"
+                />
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Exercise View Modal */}
+      {viewExercise && (
+        <ExerciseViewModal
+          exercise={viewExercise}
+          open={!!viewExercise}
+          onOpenChange={(open) => !open && setViewExercise(null)}
+        />
+      )}
     </div>
   );
 };

@@ -737,7 +737,16 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
           })}
         </div>
       )}
-      <EditorContent editor={editor} onInput={handleInput} />
+      <div
+        className="flex-1 cursor-text"
+        onClick={() => {
+          if (editor && !editor.isFocused) {
+            editor.chain().focus().run();
+          }
+        }}
+      >
+        <EditorContent editor={editor} onInput={handleInput} />
+      </div>
       <ImageEditDialog
         open={!!editingExistingImage}
         sourceUrl={editingExistingImage?.src}

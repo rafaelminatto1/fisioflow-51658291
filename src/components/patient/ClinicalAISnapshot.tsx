@@ -80,7 +80,7 @@ export const ClinicalAISnapshot: React.FC<ClinicalAISnapshotProps> = ({ patientI
               <Trophy className="h-3 w-3" /> Evolução Positiva
             </h4>
             <ul className="space-y-2">
-              {data.keyWins.map((win, i) => (
+              {(data.keyWins || []).map((win, i) => (
                 <li key={i} className="text-xs font-medium text-slate-500 flex gap-2">
                   <span className="text-emerald-500">•</span> {win}
                 </li>
@@ -94,7 +94,7 @@ export const ClinicalAISnapshot: React.FC<ClinicalAISnapshotProps> = ({ patientI
               <Target className="h-3 w-3" /> Foco de Atenção
             </h4>
             <ul className="space-y-2">
-              {data.remainingChallenges.map((challenge, i) => (
+              {(data.remainingChallenges || []).map((challenge, i) => (
                 <li key={i} className="text-xs font-medium text-slate-500 flex gap-2">
                   <span className="text-amber-500">•</span> {challenge}
                 </li>

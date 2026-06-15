@@ -96,11 +96,12 @@ export async function handleScheduled(event: ScheduledEvent, env: Env, ctx: Exec
         // DELEGADO: KnowledgeSyncWorkflow agora usa schedules no wrangler.toml
         // AutoRAG sync mantido separado - requer credenciais API
         if (env.CF_API_TOKEN && env.CF_ACCOUNT_ID) {
-          syncAutoRAGContent(env)
-            .then((indexed) => {
-              console.log("[Cron] AutoRAG sync complete:", JSON.stringify(indexed));
-            })
-            .catch((err) => console.error("[Cron] AutoRAG sync failed:", err));
+          try {
+            const indexed = await syncAutoRAGContent(env);
+            console.log("[Cron] AutoRAG sync complete:", JSON.stringify(indexed));
+          } catch (err) {
+            console.error("[Cron] AutoRAG sync failed:", err);
+          }
         }
         break;
 

@@ -47,6 +47,7 @@ import {
 } from "@/components/ui/sheet";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Slider } from "@/components/ui/slider";
 
 interface EvolutionNoScrollPanelProps {
   data: EvolutionV2Data;
@@ -70,76 +71,6 @@ const INTENSITY_WIDTH: Record<PainQualityIntensity, string> = {
   moderada: "50%",
   intensa: "78%",
 };
-
-/** Picker compacto de EVA 0–10 (chegada/saída). */
-function EvaPicker({
-  label,
-  sub,
-  value,
-  highlight,
-  onChange,
-}: {
-  label: string;
-  sub: string;
-  value?: number;
-  highlight?: boolean;
-  onChange: (v: number) => void;
-}) {
-  const [open, setOpen] = useState(false);
-  const display = value ?? 0;
-  return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <button
-          type="button"
-          className={cn(
-            "flex flex-1 items-center gap-3 rounded-xl border px-3.5 py-2.5 text-left transition-colors",
-            highlight
-              ? "border-amber-200 bg-amber-50/70 hover:bg-amber-50"
-              : "border-border bg-card hover:bg-slate-50",
-          )}
-        >
-          <div
-            className="text-[30px] font-extrabold leading-none tabular-nums"
-            style={{ color: painColor(display) }}
-          >
-            {value == null ? "–" : display}
-          </div>
-          <div className="min-w-0">
-            <div className="text-[10px] font-extrabold uppercase tracking-wider text-muted-foreground">
-              {label}
-            </div>
-            <div className="truncate text-[11px] font-bold text-muted-foreground">{sub}</div>
-          </div>
-        </button>
-      </PopoverTrigger>
-      <PopoverContent className="w-auto p-2" align="start">
-        <div className="mb-1.5 px-1 text-[10px] font-extrabold uppercase tracking-wider text-muted-foreground">
-          {label} · EVA 0–10
-        </div>
-        <div className="grid grid-cols-11 gap-1">
-          {Array.from({ length: 11 }).map((_, i) => (
-            <button
-              key={i}
-              type="button"
-              onClick={() => {
-                onChange(i);
-                setOpen(false);
-              }}
-              className={cn(
-                "flex h-8 w-8 items-center justify-center rounded-lg text-[13px] font-extrabold tabular-nums transition-all",
-                value === i ? "text-white" : "border border-border bg-card hover:border-primary/50",
-              )}
-              style={value === i ? { backgroundColor: painColor(i), borderColor: "transparent" } : undefined}
-            >
-              {i}
-            </button>
-          ))}
-        </div>
-      </PopoverContent>
-    </Popover>
-  );
-}
 
 /** Card lateral genérico — borda superior colorida por seção. */
 function SideCard({
@@ -359,7 +290,7 @@ export const EvolutionNoScrollPanel = memo(
               placeholder="Digite a evolução clínica aqui…"
               showToolbar
               externalValueRevision={revisionRef.current}
-              className="h-full [&_.ProseMirror]:min-h-[60vh]"
+              className="h-full [&_.ProseMirror]:min-h-[800px]"
             />
           </div>
         </div>
@@ -425,19 +356,48 @@ export const EvolutionNoScrollPanel = memo(
             <PainGauge value={discharge} arrival={arrival} compact onChange={setDischarge} />
 
             <div className="mt-2 flex gap-2.5">
-              <EvaPicker
-                label="Chegada"
-                sub={arrival != null ? painLabel(arrival) : "Registrar"}
-                value={arrival}
-                onChange={setArrival}
-              />
-              <EvaPicker
-                label="Saída"
-                sub={painLabel(discharge)}
-                value={data.painLevelDischarge ?? data.painLevel}
-                highlight
-                onChange={setDischarge}
-              />
+              <div className="flex-1 min-w-0">
+                <label className="block text-[10px] font-extrabold uppercase tracking-wider text-muted-foreground mb-1">
+                  Chegada
+                </label>
+                <Slider
+                  min={0}
+                  max={10}
+                  step={1}
+                  value={arrival ?? 0}
+                  onValueChange={([, value]) => setArrival(Number(value))}
+                  aria-label="Nível de dor na chegada"
+                  className="h-4"
+                />
+                {arrival !== null && (
+                  <div className="flex justify-between text-[10px] text-muted-foreground mt-1">
+                    <span>Sem Dor</span>
+                    <span>{painLabel(arrival)}</span>
+                    <span>Dor Máxima</span>
+                  </div>
+                )}
+              </div>
+              <div className="flex-1 min-w-0">
+                <label className="block text-[10px] font-extrabold uppercase tracking-wider text-muted-foreground mb-1">
+                  Saída
+                </label>
+                <Slider
+                  min={0}
+                  max={10}
+                  step={1}
+                  value={data.painLevelDischarge ?? data.painLevel ?? 0}
+                  onValueChange={([, value]) => setDischarge(Number(value))}
+                  aria-label="Nível de dor na saída"
+                  className="h-4"
+                />
+                {(data.painLevelDischarge ?? data.painLevel) !== null && (
+                  <div className="flex justify-between text-[10px] text-muted-foreground mt-1">
+                    <span>Sem Dor</span>
+                    <span>{painLabel(data.painLevelDischarge ?? data.painLevel)}</span>
+                    <span>Dor Máxima</span>
+                  </div>
+                )}
+              </div>
             </div>
 
             <div className="mt-2 flex flex-wrap items-center gap-1.5">
@@ -642,12 +602,17 @@ export const EvolutionNoScrollPanel = memo(
 
         {/* ---------- FOCO (tela cheia) ---------- */}
         <Dialog open={focusSection !== null} onOpenChange={(o) => !o && setFocusSection(null)}>
-          <DialogContent className="flex h-[88vh] max-w-5xl flex-col gap-0 p-0">
+          <DialogContent
+            className={cn(
+              "flex flex-col gap-0 p-0 overflow-hidden transition-all duration-300",
+              focusSection === "condutas" ? "max-w-3xl max-h-[82vh] h-auto rounded-3xl" : "max-w-4xl h-[82vh] rounded-3xl"
+            )}
+          >
             <div className="flex items-center gap-3 border-b border-border px-5 py-3.5">
               {focusSection === "condutas" ? (
-                <Stethoscope className="h-5 w-5 text-emerald-600" />
+                <Stethoscope className="h-5 w-5 text-orange-500 animate-pulse" />
               ) : (
-                <FileText className="h-5 w-5 text-amber-600" />
+                <FileText className="h-5 w-5 text-amber-500 animate-pulse" />
               )}
               <span className="text-sm font-extrabold text-slate-800">
                 {focusSection === "condutas" ? "Condutas da sessão" : "Observações clínicas"}
@@ -655,21 +620,29 @@ export const EvolutionNoScrollPanel = memo(
               <button
                 type="button"
                 onClick={() => setFocusSection(null)}
-                className="ml-auto flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-slate-100"
+                className="ml-auto flex h-8 w-8 items-center justify-center rounded-xl text-muted-foreground hover:bg-slate-100 hover:text-foreground transition-all duration-200"
                 aria-label="Fechar foco"
               >
                 <X className="h-4 w-4" />
               </button>
             </div>
-            <div className="custom-scrollbar flex-1 overflow-y-auto p-5">
+            <div
+              className={cn(
+                "custom-scrollbar flex-1 overflow-y-auto",
+                focusSection === "obs" ? "p-6 bg-slate-50/60 dark:bg-slate-900/10" : "p-5"
+              )}
+            >
               {focusSection === "obs" && (
-                <RichTextBlock
-                  value={observationsValue}
-                  onValueChange={handleObservationsChange}
-                  placeholder="Digite a evolução clínica aqui…"
-                  showToolbar
-                  externalValueRevision={revisionRef.current}
-                />
+                <div className="max-w-3xl mx-auto bg-white dark:bg-slate-950 border border-slate-200/70 dark:border-slate-800/80 shadow-md focus-within:shadow-xl focus-within:border-slate-300 dark:focus-within:border-slate-700 rounded-2xl p-6 min-h-[50vh] transition-all duration-300">
+                  <RichTextBlock
+                    value={observationsValue}
+                    onValueChange={handleObservationsChange}
+                    placeholder="Digite a evolução clínica aqui…"
+                    showToolbar
+                    externalValueRevision={revisionRef.current}
+                    editorClassName="min-h-[800px]"
+                  />
+                </div>
               )}
               {focusSection === "condutas" && (
                 <EvolutionBlockV3

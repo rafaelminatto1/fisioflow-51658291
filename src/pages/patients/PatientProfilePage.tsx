@@ -180,7 +180,7 @@ const PatientProfileContent = () => {
   const { data: evaluationForms = [] } = useEvaluationForms();
 
   // Buscar terapeutas para o modal de agendamento
-  const { data: therapists = [] } = useTherapists();
+  const { therapists = [] } = useTherapists();
 
   const { data: evolutionReportData } = usePatientEvolutionReport(id || "");
 

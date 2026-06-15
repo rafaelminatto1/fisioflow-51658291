@@ -52,29 +52,31 @@ export const ClinicalAISnapshotMobile = () => {
       <Text style={[styles.mainStatus, { color: colors.textSecondary }]}>"{data.mainStatus}"</Text>
 
       <View style={styles.grid}>
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Trophy size={14} color="#22c55e" />
-            <Text style={[styles.sectionTitle, { color: "#22c55e" }]}>Suas Conquistas</Text>
+          {/* Suas Conquistas */}
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Trophy size={14} color="#22c55e" />
+              <Text style={[styles.sectionTitle, { color: "#22c55e" }]}>Suas Conquistas</Text>
+            </View>
+            {(data.keyWins || []).map((win: string, i: number) => (
+              <Text key={i} style={[styles.itemText, { color: colors.text }]}>
+                • {win}
+              </Text>
+            ))}
           </View>
-          {data.keyWins.map((win: string, i: number) => (
-            <Text key={i} style={[styles.itemText, { color: colors.text }]}>
-              • {win}
-            </Text>
-          ))}
-        </View>
 
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Target size={14} color="#f59e0b" />
-            <Text style={[styles.sectionTitle, { color: "#f59e0b" }]}>Próximos Passos</Text>
+          {/* Próximos Passos */}
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Target size={14} color="#f59e0b" />
+              <Text style={[styles.sectionTitle, { color: "#f59e0b" }]}>Próximos Passos</Text>
+            </View>
+            {(data.remainingChallenges || []).map((challenge: string, i: number) => (
+              <Text key={i} style={[styles.itemText, { color: colors.text }]}>
+                • {challenge}
+              </Text>
+            ))}
           </View>
-          {data.remainingChallenges.map((challenge: string, i: number) => (
-            <Text key={i} style={[styles.itemText, { color: colors.text }]}>
-              • {challenge}
-            </Text>
-          ))}
-        </View>
       </View>
     </Card>
   );
