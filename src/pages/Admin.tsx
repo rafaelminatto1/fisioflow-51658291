@@ -8,7 +8,6 @@ import { AdminAnalyticsDashboard } from "@/components/admin";
 import {
 	PageLayout,
 	PageContainer,
-	PageHeader,
 } from "@/components/layout/PageLayout";
 
 function AdminPage() {

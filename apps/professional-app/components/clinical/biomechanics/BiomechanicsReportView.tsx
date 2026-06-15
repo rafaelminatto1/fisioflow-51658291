@@ -244,7 +244,7 @@ export const BiomechanicsReportView: React.FC<BiomechanicsReportViewProps> = ({
 
             <View style={styles.footer}>
               <Text style={styles.footerText}>Avaliação biomecânica gerada via IA FisioFlow</Text>
-              <Text style={styles.footerUrl}>www.fisioflow.com.br</Text>
+              <Text style={styles.footerUrl}>www.moocafisio.com.br</Text>
             </View>
           </View>
         </ViewShot>

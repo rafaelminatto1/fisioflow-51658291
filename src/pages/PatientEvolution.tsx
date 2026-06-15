@@ -50,6 +50,9 @@ import { stripHtml } from "@/lib/utils/stripHtml";
 
 // Componentes
 import { EvolutionHeader } from "@/components/evolution/EvolutionHeader";
+import { EvolutionHeaderV3 } from "@/components/evolution/EvolutionHeaderV3";
+import { EvolutionTabsBar } from "@/components/evolution/EvolutionTabsBar";
+import { EvolutionNoScrollPanel } from "@/components/evolution/v2-improved/EvolutionNoScrollPanel";
 import { AIScribeModal } from "@/components/evolution/clinical-scribe/AIScribeModal";
 import { FloatingActionBar } from "@/components/evolution/FloatingActionBar";
 import { EvolutionKeyboardShortcuts } from "@/components/evolution/EvolutionKeyboardShortcuts";
@@ -689,112 +692,50 @@ const PatientEvolution = () => {
 	);
 
 	return (
-		<PageLayout compactHeader fullWidth>
-			<PageContainer maxWidth="full" noPadding className="px-3 md:px-5 pt-0">
-				<ComponentErrorBoundary componentName="PatientEvolution">
-					<div className="space-y-5 animate-fade-in pb-8">
-						<EvolutionHeader
-							patient={state.patient as any}
-							appointment={state.appointment as any}
-							evolutionStats={evolutionStats}
-							treatmentDuration={treatmentDuration}
-							sessionNumber={sessionNumber}
-							onSave={handlers.handleSave}
-							onComplete={handlers.handleCompleteSession}
-							isSaving={handlers.isSaving}
-							isCompleting={handlers.isCompleting}
-							autoSaveEnabled={state.autoSaveEnabled}
-							toggleAutoSave={() =>
-								state.setAutoSaveEnabled(!state.autoSaveEnabled)
-							}
-							lastSavedAt={lastSavedAt}
-							saveError={autoSaveError}
-							onRetrySave={autoSaveRetry}
-							offlineStatus={{
-								isOnline: offline.isOnline,
-								pendingActions: offline.stats.pendingActions,
-							}}
-							activeTab={state.activeTab}
-							onTabChange={(v) => state.setActiveTab(v as EvolutionTab)}
-							evolutionVersion={state.evolutionVersion}
-							onVersionChange={state.setEvolutionVersion}
-							soapRecordId={state.currentSoapRecordId}
-							onRestoreVersion={handlers.handleRestoreVersion}
-							therapists={state.therapists}
-							selectedTherapistId={state.selectedTherapistId}
-							onTherapistChange={state.setSelectedTherapistId}
-							showInsights={state.showInsights}
-							toggleInsights={() => state.setShowInsights(!state.showInsights)}
-							onShowTemplateModal={() => state.setShowApplyTemplate(true)}
-							onShowKeyboardHelp={() => state.setShowKeyboardHelp(true)}
-							onShowAIScribe={() => state.setShowAIScribe(true)}
-							previousEvolutionsCount={state.previousEvolutions.length}
-							isEdited={state.isEdited}
-							tabsConfig={[
-								{
-									value: "evolucao",
-									label: "Evolução",
-									shortLabel: "Evol",
-									icon: FileText,
-									description: "Evolução clínica",
-								},
-								{
-									value: "avaliacao",
-									label: "Avaliação",
-									shortLabel: "Aval",
-									icon: Activity,
-									description: "Testes e medições",
-								},
-								{
-									value: "tratamento",
-									label: "Tratamento",
-									shortLabel: "Trat",
-									icon: Layers,
-									description: "Condutas e intervenções",
-								},
-								{
-									value: "historico",
-									label: "Histórico",
-									shortLabel: "Hist",
-									icon: History,
-									description: "Sessões anteriores",
-								},
-								{
-									value: "assistente",
-									label: "Assistente",
-									shortLabel: "IA",
-									icon: Bot,
-									description: "Assistente de IA",
-								},
-								{
-									value: "midia",
-									label: "Mídia",
-									shortLabel: "Mídia",
-									icon: Camera,
-									description: "Fotos, vídeos e pedidos médicos",
-								},
-								{
-									value: "configuracoes",
-									label: "Ajustes",
-									shortLabel: "Ajustes",
-									icon: SettingsIcon,
-									description: "Configurações da Evolução",
-								},
-							]}
-						/>
+		<PageLayout compactHeader fullWidth noPadding className="h-screen overflow-hidden">
+			<ComponentErrorBoundary componentName="PatientEvolution">
+				<div className="flex flex-col h-full w-full bg-background overflow-hidden animate-fade-in">
+					<EvolutionHeaderV3
+						patient={state.patient as any}
+						appointment={state.appointment as any}
+						evolutionStats={evolutionStats}
+						treatmentDuration={treatmentDuration}
+						sessionNumber={sessionNumber}
+						onComplete={handlers.handleCompleteSession}
+						isSaving={handlers.isSaving}
+						isCompleting={handlers.isCompleting}
+						autoSaveEnabled={state.autoSaveEnabled}
+						toggleAutoSave={() => state.setAutoSaveEnabled(!state.autoSaveEnabled)}
+						lastSavedAt={lastSavedAt}
+						saveError={autoSaveError}
+						onRetrySave={autoSaveRetry}
+						offlineStatus={{
+							isOnline: offline.isOnline,
+							pendingActions: offline.stats.pendingActions,
+						}}
+						onShowTemplateModal={() => state.setShowApplyTemplate(true)}
+						onShowKeyboardHelp={() => state.setShowKeyboardHelp(true)}
+						onShowAIScribe={() => state.setShowAIScribe(true)}
+					/>
 
+					<EvolutionTabsBar
+						activeTab={state.activeTab}
+						onTabChange={(v) => state.setActiveTab(v as EvolutionTab)}
+					/>
+
+					<div className="flex-1 overflow-y-auto relative bg-background">
 						<Tabs
 							value={state.activeTab}
 							onValueChange={(v) => state.setActiveTab(v as EvolutionTab)}
-							className="w-full pb-20"
+							className="flex flex-col min-h-full"
 						>
-							{/* ... tabs content ... */}
-							<TabsContent value="evolucao" className="mt-0">
+							<TabsContent value="evolucao" className="m-0 h-full data-[state=active]:flex flex-col">
 								<Suspense fallback={<LoadingSkeleton />}>
-									<LazyEvolucaoTab
-										alertsSection={alertsSectionContent}
-										topSection={state.showInsights ? topSectionContent : null}
-										mainGrid={mainGridContent}
+									<EvolutionNoScrollPanel
+										data={state.evolutionDataV2}
+										onChange={state.setEvolutionDataV2}
+										patientId={state.patientId!}
+										evolutionId={state.currentSoapRecordId!}
 									/>
 								</Suspense>
 							</TabsContent>
@@ -879,15 +820,8 @@ const PatientEvolution = () => {
 								</Suspense>
 							</TabsContent>
 						</Tabs>
-
-						<FloatingActionBar
-							onSave={handlers.handleSave}
-							onComplete={handlers.handleCompleteSession}
-							onExportPDF={handlers.handleExportPDF}
-							onGenerateNFSe={() => navigate("/financial")}
-							isSaving={handlers.isSaving}
-						/>
 					</div>
+
 					<ApplyTemplateModal
 						open={state.showApplyTemplate}
 						onOpenChange={state.setShowApplyTemplate}

@@ -11,7 +11,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
+// Badge removed
 import { Separator } from "@/components/ui/separator";
 import { Eye, Edit, Download, FileText, Clock, User, Info } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";

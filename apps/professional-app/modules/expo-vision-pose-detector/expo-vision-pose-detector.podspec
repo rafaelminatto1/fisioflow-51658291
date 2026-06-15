@@ -9,7 +9,7 @@ Pod::Spec.new do |s|
   s.description    = package['description']
   s.license        = 'MIT'
   s.author         = 'FisioFlow'
-  s.homepage       = 'https://fisioflow.com.br'
+  s.homepage       = 'https://moocafisio.com.br'
   s.platform       = :ios, '15.1'
   s.swift_version  = '5.9'
   s.source         = { git: '' }

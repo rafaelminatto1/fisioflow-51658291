@@ -13,7 +13,7 @@ import { ProjectKanban } from "@/components/projects/ProjectKanban";
 import { ProjectTimeline } from "@/components/projects/ProjectTimeline";
 import { ProjectTableView } from "@/components/projects/ProjectTableView";
 import { ProjectModal } from "@/components/projects/ProjectModal";
-import { Badge } from "@/components/ui/badge";
+// Badge removed
 
 export default function ProjectDetailsPage() {
 	const { id } = useParams<{ id: string }>();

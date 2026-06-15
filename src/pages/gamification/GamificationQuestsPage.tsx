@@ -52,7 +52,7 @@ export default function GamificationQuestsPage() {
 	const completedQuests = safeDailyQuests.filter((q) => q.completed).length;
 	const totalQuests = safeDailyQuests.length;
 	const allCompleted = completedQuests === totalQuests && totalQuests > 0;
-	const totalXp = safeDailyQuests.reduce(
+	const _totalXp = safeDailyQuests.reduce(
 		(sum, q) => sum + (q.completed ? q.xp : 0),
 		0,
 	);

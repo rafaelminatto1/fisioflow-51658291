@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Repeat, CalendarRange, ArrowRight, PlayCircle, Settings, PlusCircle, Infinity } from "lucide-react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { Repeat, CalendarRange, ArrowRight, PlayCircle, Settings, PlusCircle, Infinity as InfinityIcon } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { rpc } from "@/lib/api/rpc-client";
 import { Button } from "@/components/ui/button";
@@ -17,7 +17,6 @@ import {
 import { EmptyStateEnhanced } from "@/components/ui/EmptyStateEnhanced";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
 
 export function RecurringManager() {
   const [isOpen, setIsOpen] = useState(false);
@@ -92,7 +91,7 @@ export function RecurringManager() {
           </div>
         ) : !recurringSchedules || recurringSchedules.length === 0 ? (
           <EmptyStateEnhanced
-            icon={Infinity}
+            icon={InfinityIcon}
             title="Nenhuma recorrência"
             description="Nenhum paciente possui pacote ou agendamento recorrente ativo."
             className="py-12 bg-muted/20 border-none"

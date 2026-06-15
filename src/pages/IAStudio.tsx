@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
-import { PageLayout, PageContainer, PageHeader } from "@/components/layout/PageLayout";
+import { PageLayout, PageContainer } from "@/components/layout/PageLayout";
 import {
   Activity,
   TrendingUp,

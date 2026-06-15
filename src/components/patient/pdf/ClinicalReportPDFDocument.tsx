@@ -303,7 +303,7 @@ export const ClinicalReportPDFDocument: React.FC<Props> = ({ reportText, reportI
           </View>
           <View>
             <Text style={styles.clinicInfo}>FisioFlow - Gestão Clínica</Text>
-            <Text style={styles.clinicInfo}>www.fisioflow.com.br</Text>
+            <Text style={styles.clinicInfo}>www.moocafisio.com.br</Text>
           </View>
         </View>
 

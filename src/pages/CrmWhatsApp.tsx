@@ -27,7 +27,7 @@ const ic = (Icon: typeof Bell, size = 13, style?: React.CSSProperties) => (
 
 type Stage = "lead" | "wait" | "eval" | "treat" | "done";
 
-const STAGE_META_UNUSED: Record<Stage, { label: string; chip: string; dot: string }> =
+const _STAGE_META_UNUSED: Record<Stage, { label: string; chip: string; dot: string }> =
 	{
 		lead: {
 			label: "NOVO LEAD",
@@ -67,7 +67,7 @@ interface Conv {
 	active?: boolean;
 }
 
-const CONVERSATIONS: Conv[] = [
+const _CONVERSATIONS: Conv[] = [
 	{
 		initials: "MA",
 		avatar: "linear-gradient(135deg,hsl(264 55% 62%),hsl(264 55% 48%))",
@@ -150,7 +150,7 @@ const CONVERSATIONS: Conv[] = [
 	},
 ];
 
-const PIPELINE = [
+const _PIPELINE = [
 	{ label: "Todos", n: 23, active: true },
 	{ label: "Novos leads", n: 7 },
 	{ label: "Aguardando", n: 5 },
@@ -158,14 +158,14 @@ const PIPELINE = [
 	{ label: "Em tratamento", n: 7 },
 ];
 
-const QUICK_REPLIES = [
+const _QUICK_REPLIES = [
 	{ icon: ic(Zap, 12), label: "Horários disponíveis", tmpl: true },
 	{ icon: ic(MapPin, 12), label: "Endereço" },
 	{ icon: ic(FileText, 12), label: "Tabela de valores" },
 	{ icon: ic(CalendarPlus, 12), label: "Agendar avaliação" },
 ];
 
-const LEAD_DETAILS = [
+const _LEAD_DETAILS = [
 	{
 		k: "Origem",
 		v: (
@@ -181,7 +181,7 @@ const LEAD_DETAILS = [
 	{ k: "Responsável", v: "Dr. Rafael M." },
 ];
 
-function IconBtn({ children }: { children: ReactNode }) {
+function _IconBtn({ children }: { children: ReactNode }) {
 	return (
 		<button className="flex h-9 w-9 items-center justify-center rounded-[10px] border border-transparent bg-transparent text-muted-foreground hover:bg-secondary">
 			{children}

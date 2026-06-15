@@ -15,7 +15,6 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { EmptyStateEnhanced } from "@/components/ui/EmptyStateEnhanced";
-import { cn } from "@/lib/utils";
 
 export function WaitlistManager() {
   const [isOpen, setIsOpen] = useState(false);

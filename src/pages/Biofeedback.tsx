@@ -4,7 +4,6 @@ import {
 	PageHeader,
 } from "@/components/layout/PageLayout";
 import { MovementAnalysis } from "@/components/biofeedback/MovementAnalysis";
-import { Activity } from "lucide-react";
 
 const Biofeedback = () => {
 	return (

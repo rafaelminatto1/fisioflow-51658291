@@ -195,7 +195,7 @@ async function sendPushToSubscription(
 ): Promise<boolean> {
   const vapidPublicKey = env.VAPID_PUBLIC_KEY;
   const vapidPrivateKey = env.VAPID_PRIVATE_KEY;
-  const subject = env.VAPID_SUBJECT || "mailto:admin@fisioflow.com.br";
+  const subject = env.VAPID_SUBJECT || "mailto:admin@moocafisio.com.br";
 
   if (!vapidPublicKey || !vapidPrivateKey) {
     console.warn("[WebPush] VAPID keys not configured — push not sent");

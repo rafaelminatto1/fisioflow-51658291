@@ -20,7 +20,7 @@ app.get("/", requireAuth, async (c) => {
       active: true,
       profiles: {
         full_name: user.email?.split("@")[0] || "Profissional",
-        email: user.email || "contato@fisioflow.com.br",
+        email: user.email || "contato@moocafisio.com.br",
       },
     },
   ];

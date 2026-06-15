@@ -13,13 +13,12 @@ import {
 	BookmarkPlus,
 	LayoutDashboard,
 	FileText,
-	Activity,
 	Map,
 	Plus,
 	Save,
 	Camera,
-	Printer,
 	Mic,
+	Activity,
 } from "lucide-react";
 import {
 	PageLayout,
@@ -73,7 +72,6 @@ import {
 import { RichTextEditor } from "@/components/ui/RichTextEditor";
 import { RichTextToolbar } from "@/components/ui/RichTextToolbar";
 import { RichTextProvider } from "@/contexts/RichTextContext";
-import { Badge } from "@/components/ui/badge";
 
 const KinoveaStudio = lazy(() =>
 	import("@/components/analysis/KinoveaStudio").then((module) => ({
@@ -674,7 +672,7 @@ export default function NewEvaluationPage() {
 											value="pain-map"
 											className="flex-1 min-w-[120px] rounded-xl data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-blue-600 font-bold py-2.5 transition-all gap-2"
 										>
-											<Map className="h-4 w-4" />
+											<MapIcon className="h-4 w-4" />
 											<span>Mapa de Dor</span>
 										</TabsTrigger>
 									</TabsList>
@@ -838,7 +836,7 @@ export default function NewEvaluationPage() {
 																		className="h-8 text-[10px] font-black uppercase tracking-widest text-blue-600 bg-blue-50/50 hover:bg-blue-100 rounded-xl px-3 gap-2"
 																		title="Marcar local da dor no corpo do paciente"
 																	>
-																		<Map className="h-3.5 w-3.5" />
+																		<MapIcon className="h-3.5 w-3.5" />
 																		<span className="hidden sm:inline">
 																			Mapa de Dor
 																		</span>
