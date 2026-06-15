@@ -14,9 +14,8 @@ app.get("/search", async (c) => {
   if (!query) return c.json({ error: "Parâmetro 'q' é obrigatório" }, 400);
 
   const env = c.env;
-  // A chave de API pode vir do ambiente, mas por agora usaremos a hardcoded para fins do prompt
-  // Num cenário real, isso estaria no env.WGER_API_TOKEN. O usuário passou no prompt:
-  const WGER_TOKEN = env.WGER_API_TOKEN || "66adb1c51d3e09cddea5b40b107d55093e852a98";
+  const WGER_TOKEN = env.WGER_API_TOKEN;
+  if (!WGER_TOKEN) return c.json({ error: "Integração wger não configurada" }, 503);
 
   const client = new WgerClient(WGER_TOKEN);
   try {
@@ -34,7 +33,8 @@ app.post("/enrich", async (c) => {
   if (!exerciseId) return c.json({ error: "Parâmetro 'id' do wger é obrigatório" }, 400);
 
   const env = c.env;
-  const WGER_TOKEN = env.WGER_API_TOKEN || "66adb1c51d3e09cddea5b40b107d55093e852a98";
+  const WGER_TOKEN = env.WGER_API_TOKEN;
+  if (!WGER_TOKEN) return c.json({ error: "Integração wger não configurada" }, 503);
 
   const wgerClient = new WgerClient(WGER_TOKEN);
   const pubMedClient = new PubMedClient();
