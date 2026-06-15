@@ -4,7 +4,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PosturalAssessment } from "@/components/physiotherapy/PosturalAssessment";
 import { TreatmentPlan } from "@/components/physiotherapy/TreatmentPlan";
 import { ProgressTracking } from "@/components/physiotherapy/ProgressTracking";
-import { Activity, User, TrendingUp, ClipboardList } from "lucide-react";
+import { User, TrendingUp, ClipboardList } from "lucide-react";
 
 const PhysiotherapyHub = () => {
   const [activeTab, setActiveTab] = useState("assessment");

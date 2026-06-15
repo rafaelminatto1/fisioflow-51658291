@@ -4,7 +4,7 @@
 
 import { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Clock, Play, Pause, Square, TrendingUp, Download, Plus } from "lucide-react";
+import { Play, Pause, Square, TrendingUp, Download, Plus } from "lucide-react";
 import { startOfWeek, endOfWeek, startOfMonth, endOfMonth, subDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
 

@@ -737,6 +737,8 @@ const PatientEvolution = () => {
 										onChange={state.setEvolutionV2Data}
 										patientId={state.patientId!}
 										evolutionId={state.currentSoapRecordId!}
+										patient={state.patient}
+										pathologies={state.pathologies}
 									/>
 								</Suspense>
 							</TabsContent>

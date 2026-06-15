@@ -2,7 +2,6 @@ import { useCallback, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import {
   ArrowLeft,
-  CalendarClock,
   CalendarOff,
   Clock,
   Gauge,

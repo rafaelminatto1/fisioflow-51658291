@@ -5,7 +5,6 @@ import {
   Camera,
   Clock,
   Contrast,
-  Edit,
   Link2,
   Loader2,
   Mail,
@@ -132,7 +131,6 @@ function ProfileContent() {
       }),
     onSuccess: () => {
       toast.success("Perfil atualizado com sucesso!");
-      setIsEditing(false);
       updateAuthProfile({ full_name: form.full_name });
       queryClient.invalidateQueries({ queryKey: ["profile-me"] });
       queryClient.invalidateQueries({ queryKey: ["user-profile"] });
@@ -201,14 +199,12 @@ function ProfileContent() {
                   {getInitials(form.full_name)}
                 </AvatarFallback>
               </Avatar>
-              {isEditing && (
-                <Button
-                  size="sm"
-                  className="absolute bottom-0 right-0 rounded-full w-8 h-8 p-0 bg-primary hover:bg-primary/90"
-                >
-                  <Camera className="w-4 h-4" />
-                </Button>
-              )}
+              <Button
+                size="sm"
+                className="absolute bottom-0 right-0 rounded-full w-8 h-8 p-0 bg-primary hover:bg-primary/90"
+              >
+                <Camera className="w-4 h-4" />
+              </Button>
             </div>
             <div className="text-center">
               <h3 className="font-semibold text-lg">{form.full_name}</h3>

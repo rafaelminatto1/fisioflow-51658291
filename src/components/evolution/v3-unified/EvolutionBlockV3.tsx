@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
 import {
@@ -429,6 +429,8 @@ export const EvolutionBlockV3: React.FC<EvolutionBlockV3Props> = ({
   const [newItemDialogOpen, setNewItemDialogOpen] = useState(false);
   const [pendingItemName, setPendingItemName] = useState("");
   const [isInputFocused, setIsInputFocused] = useState(false);
+  const inputWrapRef = useRef<HTMLDivElement>(null);
+  const [dropdownRect, setDropdownRect] = useState<{ top: number; left: number; width: number } | null>(null);
 
   const [newItemType, setNewItemType] = useState<EvolutionItemType>("procedure");
   const { exercises: libraryExercises } = useExercises();
@@ -539,6 +541,29 @@ export const EvolutionBlockV3: React.FC<EvolutionBlockV3Props> = ({
 
   const hasSuggestions = procedureSuggestions.length > 0 || exerciseSuggestions.length > 0;
   const shouldShowSuggestions = hasSuggestions && (isInputFocused || trimmedQuery.length > 0);
+
+  // Posiciona o dropdown via portal (escapa de containers com overflow).
+  const updateDropdownRect = React.useCallback(() => {
+    const el = inputWrapRef.current;
+    if (!el) return;
+    const r = el.getBoundingClientRect();
+    setDropdownRect({ top: r.bottom + 6, left: r.left, width: r.width });
+  }, []);
+
+  useLayoutEffect(() => {
+    if (shouldShowSuggestions) updateDropdownRect();
+  }, [shouldShowSuggestions, newItemName, updateDropdownRect]);
+
+  useEffect(() => {
+    if (!shouldShowSuggestions) return;
+    const handler = () => updateDropdownRect();
+    window.addEventListener("scroll", handler, true);
+    window.addEventListener("resize", handler);
+    return () => {
+      window.removeEventListener("scroll", handler, true);
+      window.removeEventListener("resize", handler);
+    };
+  }, [shouldShowSuggestions, updateDropdownRect]);
 
   const handleSelectProcedureSuggestion = (suggestion: (typeof COMMON_PROCEDURES)[0]) => {
     appendItem({
@@ -707,7 +732,7 @@ export const EvolutionBlockV3: React.FC<EvolutionBlockV3Props> = ({
               </Button>
             </div>
           )}
-          <div className="relative flex items-center group/input">
+          <div ref={inputWrapRef} className="relative flex items-center group/input">
             <Input
               data-evolution-input={type}
               value={newItemName}
@@ -753,14 +778,23 @@ export const EvolutionBlockV3: React.FC<EvolutionBlockV3Props> = ({
               </Button>
             </div>
 
-            {/* Smart Suggestions Dropdown */}
-            <AnimatePresence>
-              {shouldShowSuggestions && (
+            {/* Smart Suggestions Dropdown (portal — escapa de overflow) */}
+            {shouldShowSuggestions &&
+              dropdownRect &&
+              createPortal(
                 <motion.div
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
-                  className="absolute top-full left-0 right-0 mt-2 z-50 p-1.5 rounded-2xl border border-border shadow-2xl bg-background/95 max-h-[320px] overflow-y-auto"
+                  style={{
+                    position: "fixed",
+                    top: dropdownRect.top,
+                    left: dropdownRect.left,
+                    width: dropdownRect.width,
+                  }}
+                  // mousedown antes do blur do input para não fechar antes do clique
+                  onMouseDown={(e) => e.preventDefault()}
+                  className="z-[100] p-1.5 rounded-2xl border border-border shadow-2xl bg-background max-h-[320px] overflow-y-auto"
                 >
                   <div className="px-2 py-1.5 mb-1">
                     <span className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest">
@@ -804,9 +838,9 @@ export const EvolutionBlockV3: React.FC<EvolutionBlockV3Props> = ({
                       <Plus className="h-3.5 w-3.5 text-muted-foreground/40 group-hover/sug:text-primary opacity-0 group-hover/sug:opacity-100 transition-all" />
                     </button>
                   ))}
-                </motion.div>
+                </motion.div>,
+                document.body,
               )}
-            </AnimatePresence>
           </div>
         </div>
       )}

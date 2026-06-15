@@ -1,6 +1,6 @@
 import React, { useMemo, useState, useEffect, useRef } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { AlertCircle, BookOpenCheck, HeartPulse, Plus, ScrollText } from "lucide-react";
+import { AlertCircle, BookOpenCheck, Plus, ScrollText } from "lucide-react";
 import { toast } from "sonner";
 
 import { ClinicalTestDeleteDialog } from "@/components/clinical/ClinicalTestDeleteDialog";
@@ -116,26 +116,6 @@ export default function ClinicalTestsLibrary() {
       return test.target_joint === activeFilter;
     });
   }, [activeFilter, searchTerm, tests]);
-
-  const libraryStats = useMemo(() => {
-    const evidencePdfSet = new Set<string>();
-
-    for (const test of tests) {
-      for (const resource of test.evidence_resources ?? []) {
-        if (resource.kind === "pdf") evidencePdfSet.add(resource.url);
-      }
-    }
-
-    return {
-      total: tests.length,
-      builtin: tests.filter((test) => test.is_builtin).length,
-      custom: tests.filter((test) => !test.is_builtin).length,
-      ortho: tests.filter((test) => test.category === "Ortopedia").length,
-      sports: tests.filter((test) => test.category === "Esportiva").length,
-      postOp: tests.filter((test) => test.category === "Pós-Operatório").length,
-      pdfCount: evidencePdfSet.size,
-    };
-  }, [tests]);
 
   const deleteMutation = useMutation({
     mutationFn: async (testId: string) => {

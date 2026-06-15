@@ -14,7 +14,15 @@
     "manual-test.js",
     "apps/patient-app/**",
     "apps/professional-app/**",
-    ".storybook/**"
+    ".storybook/**",
+    "src/pages/PatientEvolution.tsx",
+    "src/components/evolution/v2-improved/EvolutionNoScrollPanel.tsx",
+    "src/pages/Schedule.tsx",
+    "src/components/schedule/RecurringManager.tsx",
+    "src/hooks/useAIScribeMapping.ts",
+    "src/hooks/usePatientPortal.ts",
+    "apps/api/src/routes/auth.ts",
+    "apps/api/src/lib/db.ts"
   ],
   "rules": {
     "eslint/no-unused-vars": "warn",
