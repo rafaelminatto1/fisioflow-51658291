@@ -107,8 +107,12 @@ Todos protegidos por `requireAuth` (JWT Neon Auth via JWKS).
 - **2d — Sugestões contextuais**: evidência sugerida no contexto de paciente/avaliação.
 
 ## MCP (fase 3)
-- **Local (Codex)**: adicionar `pubmed-search-mcp` ao `mcp.json` com `NCBI_API_KEY` /
-  `NCBI_EMAIL` via **variável de ambiente** (quick win; nunca hardcode da chave).
+- **Local — Codex**: adicionar `pubmed-search-mcp` ao `mcp.json` (formato Codex) com
+  `NCBI_API_KEY` / `NCBI_EMAIL` via **variável de ambiente** (nunca hardcode da chave).
+- **Local — Claude Code**: mesmo servidor configurado em `.mcp.json` na raiz do projeto
+  (escopo de projeto, versionável sem segredos — usa `${NCBI_API_KEY}`/`${NCBI_EMAIL}`)
+  e/ou via `claude mcp add pubmed-search ...` (escopo user em `~/.claude.json`).
+  Segredos ficam em variáveis de ambiente do shell, fora do git.
 - **Remoto (produto)**: expor o Evidence Gateway como **MCP server em Workers**
   (Agents SDK) com tools `search_evidence`, `get_article`, `summarize`, `save_to_wiki` —
   mesmo backend, com auth, usável por Claude/Codex. Estado final.
@@ -129,7 +133,7 @@ Todos protegidos por `requireAuth` (JWT Neon Auth via JWKS).
 - **Fase 0** — Segurança: rotacionar key, env vars no mcp.json, secrets no Worker.
 - **Fase 1** — Evidence Gateway: `lib/evidence/*` + `routes/evidence.ts` + migração 0115 + testes.
 - **Fase 2** — Surfaces (2a → 2b → 2c → 2d).
-- **Fase 3** — MCP local + MCP remoto em Workers.
+- **Fase 3** — MCP local (Codex `mcp.json` + Claude Code `.mcp.json`) + MCP remoto em Workers.
 
 ## Critérios de sucesso
 - Busca PubMed funcional via `/api/evidence/search` com cache e rate limit, retorno ranqueado < 2s (cache hit) / < 5s (miss).
