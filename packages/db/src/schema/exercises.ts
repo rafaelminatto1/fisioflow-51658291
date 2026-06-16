@@ -25,7 +25,7 @@ import { sql } from "drizzle-orm";
 // Vector Type
 const vector = customType<{ data: number[] }>({
   dataType() {
-    return "vector(768)";
+    return "vector(1024)";
   },
 });
 import { relations } from "drizzle-orm";

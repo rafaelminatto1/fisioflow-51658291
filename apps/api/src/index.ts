@@ -104,6 +104,8 @@ import { reportsPdfRoutes } from "./routes/reportsPdf";
 import { eventsRoutes as businessEventsRoutes } from "./routes/events";
 import { wgerRoutes } from "./routes/wger";
 import { autocompleteRoutes } from "./routes/autocomplete";
+import evidenceRoutes from "./routes/evidence";
+import exerciseImportRoutes from "./routes/exercise-import";
 import aiSearchApp from "./routes/aiSearch";
 import { aiConfigRoutes } from "./routes/ai-config";
 import { aiClinicalSearchRoutes } from "./routes/ai-clinical-search";
@@ -382,6 +384,8 @@ const apiRoutes = [
   ["/api/groups", groupsRoutes],
   ["/api/enterprise", enterpriseRoutes],
   ["/api/wger", wgerRoutes],
+  ["/api/evidence", evidenceRoutes],
+  ["/api/exercise-import", exerciseImportRoutes],
 ] as const;
 
 apiRoutes.forEach(([path, router]) => {
