@@ -23,7 +23,7 @@ export function makeCallModel(env: Env, tools: CopilotTool[]): CallModel {
   }));
 
   return async (messages) => {
-    const res = (await runAi(env, WORKERS_AI_MODELS.llama_3_3_70b, {
+    const res = (await runAi(env, WORKERS_AI_MODELS.llama_3_1_8b, {
       messages,
       tools: toolDefs,
     })) as {
