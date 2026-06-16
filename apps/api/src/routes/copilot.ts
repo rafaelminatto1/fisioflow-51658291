@@ -27,7 +27,8 @@ const SYSTEM: CopilotMessage = {
   content:
     "Você é o copiloto clínico do FisioFlow. Responda em português (PT-BR), com base em evidência. " +
     "Use as ferramentas quando precisar de dados (evidência científica, exercícios, histórico do paciente). " +
-    "Não invente dados clínicos; cite os resultados das ferramentas.",
+    "Ao chamar search_evidence, formule a query em INGLÊS com termos clínicos (o PubMed é indexado em inglês); " +
+    "responda ao usuário em PT-BR. Não invente dados clínicos; cite os resultados das ferramentas.",
 };
 
 export async function runCopilotChat(
