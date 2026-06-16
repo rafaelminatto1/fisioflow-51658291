@@ -1,7 +1,33 @@
 import { z } from "zod";
 import { getRawSql } from "../lib/db";
 import { runSearch } from "../routes/evidence";
+import { runAi } from "../lib/ai-native";
+import { WORKERS_AI_MODELS } from "../lib/workersAi";
 import type { CopilotTool } from "../lib/copilot/types";
+import type { Env } from "../types/env";
+
+const ASCII_ONLY = /^[\x00-\x7F]*$/;
+
+/** PubMed é indexado em inglês; traduz queries não-inglesas para keywords clínicas. */
+async function toEnglishQuery(env: Env, q: string): Promise<string> {
+  if (ASCII_ONLY.test(q)) return q; // já parece inglês (sem acentos)
+  try {
+    const res = (await runAi(env, WORKERS_AI_MODELS.llama_3_1_8b, {
+      messages: [
+        {
+          role: "system",
+          content:
+            "Translate the medical search query to concise English keywords for PubMed. Output ONLY the query text, no quotes, no explanation.",
+        },
+        { role: "user", content: q },
+      ],
+    })) as { response?: string };
+    const translated = (res.response ?? "").trim().replace(/^["']|["']$/g, "");
+    return translated.length >= 3 ? translated : q;
+  } catch {
+    return q;
+  }
+}
 
 export function buildRegistry(): CopilotTool[] {
   return [
@@ -12,7 +38,10 @@ export function buildRegistry(): CopilotTool[] {
         q: z.string().min(3),
         limit: z.coerce.number().int().min(1).max(20).optional(),
       }),
-      execute: (ctx, args) => runSearch(ctx.env, args as Record<string, unknown>),
+      execute: async (ctx, args) => {
+        const q = await toEnglishQuery(ctx.env, String(args.q));
+        return runSearch(ctx.env, { ...args, q });
+      },
     },
     {
       name: "search_exercises",
