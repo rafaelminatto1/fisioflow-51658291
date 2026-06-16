@@ -14,10 +14,10 @@ export function useActionBridge(allFields: TemplateField[], fieldValues: Record<
     let rawSuggestions: ActiveSuggestion[] = [];
     let detectedRedFlag = false;
 
-    clinicalReasoningRules.forEach((rule) => {
+    (clinicalReasoningRules || []).forEach((rule) => {
       let isTriggered = false;
 
-      rule.condition.fieldLabels.forEach((label) => {
+      (rule.condition.fieldLabels || []).forEach((label) => {
         const field = allFields.find((f) => f.label === label);
         if (!field) return;
 
@@ -28,7 +28,7 @@ export function useActionBridge(allFields: TemplateField[], fieldValues: Record<
 
         if (rule.condition.matchAny) {
           // Se for campo de texto (ex: SOAP), buscamos as keywords no conteúdo
-          if (field.type === "text" || field.type === "textarea") {
+          if (field.tipo_campo === "text" || field.tipo_campo === "textarea") {
             const hasMatch = rule.condition.matchAny.some((keyword) =>
               stringValue.includes(keyword.toLowerCase()),
             );
@@ -73,13 +73,13 @@ export function useActionBridge(allFields: TemplateField[], fieldValues: Record<
     // If red flag is detected, prioritize alerts and precautions
     // We might want to filter out exercises or mark them as "restricted"
     const finalSuggestions = detectedRedFlag
-      ? rawSuggestions.map((sug) => ({
+      ? (rawSuggestions || []).map((sug) => ({
           ...sug,
-          suggestions: sug.suggestions.filter(
+          suggestions: (sug.suggestions || []).filter(
             (s) => s.type !== "exercise" || s.priority === "high",
           ),
         }))
-      : rawSuggestions;
+      : (rawSuggestions || []);
 
     return { suggestions: finalSuggestions, hasRedFlag: detectedRedFlag };
   }, [allFields, fieldValues]);
