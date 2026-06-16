@@ -6,21 +6,20 @@ import { WORKERS_AI_MODELS } from "../lib/workersAi";
 import type { CopilotTool } from "../lib/copilot/types";
 import type { Env } from "../types/env";
 
-function hasNonAscii(s: string): boolean {
-  for (let i = 0; i < s.length; i++) if (s.charCodeAt(i) > 127) return true;
-  return false;
-}
-
-/** PubMed é indexado em inglês; traduz queries não-inglesas para keywords clínicas. */
+/**
+ * PubMed é indexado em inglês. O modelo de chat frequentemente envia a query em
+ * PT-BR (com ou sem acentos), retornando zero resultados. Normalizamos sempre para
+ * keywords clínicas em inglês via um modelo rápido antes de consultar.
+ */
 async function toEnglishQuery(env: Env, q: string): Promise<string> {
-  if (!hasNonAscii(q)) return q; // já parece inglês (sem acentos)
   try {
     const res = (await runAi(env, WORKERS_AI_MODELS.llama_3_1_8b, {
       messages: [
         {
           role: "system",
           content:
-            "Translate the medical search query to concise English keywords for PubMed. Output ONLY the query text, no quotes, no explanation.",
+            "You translate a medical search query into concise English keywords for a PubMed search. " +
+            "If the input is already English, return it unchanged. Output ONLY the query text — no quotes, no explanation.",
         },
         { role: "user", content: q },
       ],
