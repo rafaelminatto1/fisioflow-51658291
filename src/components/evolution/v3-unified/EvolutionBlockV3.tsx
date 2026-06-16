@@ -155,7 +155,7 @@ const EvolutionItemRow: React.FC<EvolutionItemRowProps> = ({
 
   const exerciseFromLibrary = useMemo(() => {
     if (item.type !== "exercise" || !item.exerciseId) return null;
-    return libraryExercises.find(ex => ex.id === item.exerciseId);
+    return libraryExercises?.find(ex => ex.id === item.exerciseId);
   }, [item.exerciseId, item.type, libraryExercises]);
 
   const thumbSrc = item.thumbnail_url || item.image_url || exerciseFromLibrary?.thumbnail_url || exerciseFromLibrary?.image_url;

@@ -274,6 +274,8 @@ export function usePatientEvolutionState() {
         type: "exercise" as const,
         prescription: e.prescription,
         patientFeedback: e.patientFeedback,
+        image_url: e.image_url,
+        thumbnail_url: e.thumbnail_url,
         order: e.sequenceOrder ?? procs.length + i,
       })),
     ];

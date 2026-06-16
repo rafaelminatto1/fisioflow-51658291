@@ -24,12 +24,12 @@ interface EvaluationActionBridgeProps {
 }
 
 export function EvaluationActionBridge({
-  suggestions,
+  suggestions = [],
   onProtocolSelect,
   onPrescribeProtocol,
   onPrescribeExercise,
 }: EvaluationActionBridgeProps) {
-  if (suggestions.length === 0) return null;
+  if (!suggestions || suggestions.length === 0) return null;
 
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-700">

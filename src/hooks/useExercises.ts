@@ -54,8 +54,8 @@ export const useExerciseCategories = () => {
     staleTime: 1000 * 60 * 30,
     enabled: authReady,
   });
-  const categories = data?.data ?? [];
-  const categoryMap = new Map(categories.map((c) => [c.id, c.name]));
+  const categories = Array.isArray(data?.data) ? data.data : [];
+  const categoryMap = new Map(categories.map((c: any) => [c.id, c.name]));
   return { categories, categoryMap, isLoading };
 };
 
@@ -72,13 +72,13 @@ export const useWorkersExercises = (filters?: {
   const { categoryMap } = useExerciseCategories();
 
   const { data, isLoading, error, refetch } = useQuery({
-    queryKey: QueryKeys.exercises.lists(),
+    queryKey: QueryKeys.exercises.lists(filters),
     queryFn: () => exercisesApi.list(filters),
     staleTime: 1000 * 60 * 5,
     enabled: authReady,
   });
 
-  const exercises = (data?.data ?? []).map(makeMapper(categoryMap));
+  const exercises = (Array.isArray(data?.data) ? data.data : []).map(makeMapper(categoryMap));
 
   useEffect(() => {
     if (!authReady) return;
