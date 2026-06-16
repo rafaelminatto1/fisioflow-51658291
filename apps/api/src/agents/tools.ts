@@ -6,11 +6,14 @@ import { WORKERS_AI_MODELS } from "../lib/workersAi";
 import type { CopilotTool } from "../lib/copilot/types";
 import type { Env } from "../types/env";
 
-const ASCII_ONLY = /^[\x00-\x7F]*$/;
+function hasNonAscii(s: string): boolean {
+  for (let i = 0; i < s.length; i++) if (s.charCodeAt(i) > 127) return true;
+  return false;
+}
 
 /** PubMed é indexado em inglês; traduz queries não-inglesas para keywords clínicas. */
 async function toEnglishQuery(env: Env, q: string): Promise<string> {
-  if (ASCII_ONLY.test(q)) return q; // já parece inglês (sem acentos)
+  if (!hasNonAscii(q)) return q; // já parece inglês (sem acentos)
   try {
     const res = (await runAi(env, WORKERS_AI_MODELS.llama_3_1_8b, {
       messages: [
