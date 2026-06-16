@@ -1,9 +1,40 @@
 import { Hono } from "hono";
+import { z } from "zod";
 import type { Env } from "../types/env";
 import { requireAuth, type AuthVariables } from "../lib/auth";
 import { createPool } from "../lib/db";
+import { automationDefinitionSchema } from "../lib/automation/types";
+import { runAutomation } from "../lib/automation/runAutomation";
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
+
+const SimulateBody = z.object({
+  definition: automationDefinitionSchema,
+  context: z.record(z.string(), z.unknown()).default({}),
+});
+
+/**
+ * Dry-run de uma automação: executa o motor com handlers no-op (sem efeitos colaterais)
+ * e sleep instantâneo. Retorna o trace para o builder pré-visualizar.
+ */
+export async function runSimulation(input: unknown) {
+  const { definition, context } = SimulateBody.parse(input);
+  const recorded: string[] = [];
+  return runAutomation(definition, context, {
+    actions: new Proxy(
+      {},
+      {
+        get:
+          (_t, name: string) =>
+          async (params: Record<string, unknown>) => {
+            recorded.push(name);
+            return { simulated: true, action: name, params };
+          },
+      },
+    ) as Record<string, never>,
+    sleep: async () => {},
+  });
+}
 
 app.get("/logs", requireAuth, async (c) => {
   const user = c.get("user");
@@ -26,6 +57,15 @@ app.get("/logs", requireAuth, async (c) => {
     return c.json({ data: result.rows || result });
   } catch {
     return c.json({ data: [] });
+  }
+});
+
+app.post("/simulate", requireAuth, async (c) => {
+  try {
+    const result = await runSimulation(await c.req.json());
+    return c.json(result);
+  } catch (e: any) {
+    return c.json({ error: e?.message ?? "definição inválida" }, 400);
   }
 });
 
