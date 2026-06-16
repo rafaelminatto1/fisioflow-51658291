@@ -2,6 +2,7 @@ import { Env } from "./types/env";
 import { createPool } from "./lib/db";
 import { triggerInngestEvent } from "./lib/inngest-client";
 import { sendAppointmentReminderEmail } from "./lib/email";
+import { dispatchMorningBriefing } from "./lib/briefing/sendBriefing";
 import type { WhatsAppQueuePayload } from "./queue";
 import { cleanupRateLimits } from "./middleware/rateLimit";
 import { runHealthMonitor } from "./lib/monitor";
@@ -61,6 +62,12 @@ export async function handleScheduled(event: ScheduledEvent, env: Env, ctx: Exec
         await processBirthdays(pool, env, ctx);
         await processInactivePatients(pool, env, ctx);
         await processRecallCampaigns(pool, env, ctx);
+        try {
+          const sent = await dispatchMorningBriefing(env);
+          if (sent) console.log("[Cron] Morning briefing dispatched");
+        } catch (e) {
+          console.error("[Cron] Morning briefing failed", e);
+        }
         break;
       }
 

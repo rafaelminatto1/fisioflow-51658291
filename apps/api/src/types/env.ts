@@ -273,6 +273,11 @@ export interface Env {
   RESEND_FROM_EMAIL?: string;
   ADMIN_NOTIFICATION_EMAIL?: string;
 
+  // Morning Briefing daily dispatch (off unless explicitly enabled)
+  MORNING_BRIEFING_ENABLED?: string;
+  MORNING_BRIEFING_TO?: string;
+  MORNING_BRIEFING_ORG_ID?: string;
+
   // Stripe
   STRIPE_SECRET_KEY?: string;
 
