@@ -790,7 +790,7 @@ export default function NewEvaluationPage() {
                               {/* Mobile Action Bridge (hidden on desktop) */}
                               <div className="lg:hidden print:hidden">
                                 <EvaluationActionBridge
-                                  suggestions={suggestions}
+                                  suggestions={suggestions.suggestions}
                                   onProtocolSelect={(_id) => {
                                     toast({
                                       title: "Protocolo Sugerido",
@@ -825,7 +825,7 @@ export default function NewEvaluationPage() {
 
                             <div className="hidden lg:block">
                               <EvaluationActionBridge
-                                suggestions={suggestions}
+                                suggestions={suggestions.suggestions}
                                 onProtocolSelect={(_id) => {
                                   toast({
                                     title: "Protocolo Sugerido",
