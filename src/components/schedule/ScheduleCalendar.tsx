@@ -1,6 +1,9 @@
 /**
  * ScheduleCalendar — React-native wrapper around @fullcalendar/react.
  *
+ * 📖 Antes de mexer/depurar a Agenda, leia `docs/AGENDA.md` (fluxo
+ *    drag/modal/status e armadilhas conhecidas, ex.: cache do Hyperdrive).
+ *
  * Primary calendar engine for FisioFlow. Supports appointments,
  * tasks (as all-day events), and blocked times.
  *

@@ -59,8 +59,11 @@ export async function getExercises(options?: {
   data: ApiExercise[];
   meta: { total: number; pages: number; page: number; limit: number };
 }> {
+  const isSemantic = !!options?.search && options.search.trim().length >= 2;
+  const endpoint = isSemantic ? "/api/exercises/search/semantic" : "/api/exercises";
+
   const response = await fetchApi<ApiResponse<{ data: ApiExercise[]; meta: any }>>(
-    "/api/exercises",
+    endpoint,
     {
       params: {
         category: options?.category,

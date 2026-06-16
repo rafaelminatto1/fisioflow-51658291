@@ -211,6 +211,7 @@ export async function getOverlappingAppointments(
   startTime: string,
   endTime: string,
   excludeAppointmentId?: string,
+  useLock?: boolean,
 ): Promise<Array<{ id: string; patientId: string; startTime: string; date: string }>> {
   try {
     const safeOrgId = isUuid(organizationId)
@@ -239,6 +240,7 @@ export async function getOverlappingAppointments(
         AND end_time > ${startTime}::time
         ${excludeAppointmentId && isUuid(excludeAppointmentId) ? sql`AND id != ${excludeAppointmentId}::uuid` : sql``}
       ORDER BY start_time ASC, created_at ASC
+      ${useLock ? sql`FOR UPDATE` : sql``}
     `);
     return (result.rows || []) as any;
   } catch (error: any) {
@@ -282,6 +284,7 @@ export async function enforceCapacity(
     payload.startTime,
     payload.endTime,
     payload.excludeAppointmentId,
+    payload.useLock,
   );
 
   if (conflicts.length < capacity) return null;

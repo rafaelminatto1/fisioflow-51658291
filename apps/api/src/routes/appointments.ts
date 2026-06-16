@@ -1,3 +1,6 @@
+// 📖 Rotas REST da Agenda. Antes de depurar/alterar, leia `docs/AGENDA.md` —
+//    fluxo ponta-a-ponta e armadilhas (ex.: cache de query do Hyperdrive faz a
+//    UI "reverter" alterações mesmo com o PUT retornando 200).
 import { Hono } from "hono";
 import type { MiddlewareHandler } from "hono";
 import type { Env } from "../types/env";
@@ -261,39 +264,43 @@ app.post(
         const row = (response.data as any).data;
         c.executionCtx.waitUntil(
           (async () => {
-            // 1. Push notification
-            await sendPushToOrg(
-              user.organizationId,
-              {
-                title: "Novo agendamento",
-                body: `${row.patient_name ?? "Paciente"} — ${row.date ?? row.appointment_date} às ${row.start_time}`,
-                url: "/agenda",
-                tag: `appointment-new-${row.id}`,
-              },
-              c.env,
-            ).catch(() => {});
+            try {
+              // 1. Push notification
+              await sendPushToOrg(
+                user.organizationId,
+                {
+                  title: "Novo agendamento",
+                  body: `${row.patient_name ?? "Paciente"} — ${row.date ?? row.appointment_date} às ${row.start_time}`,
+                  url: "/agenda",
+                  tag: `appointment-new-${row.id}`,
+                },
+                c.env,
+              ).catch(() => {});
 
-            // 2. Trigger Inngest Event for Automation (WhatsApp confirmation, etc)
-            const patientData = await db.query.patients.findFirst({
-              where: (p, { eq }) => eq(p.id, row.patient_id),
-              columns: { fullName: true, phone: true },
-            });
+              // 2. Trigger Inngest Event for Automation (WhatsApp confirmation, etc)
+              const patientData = await db.query.patients.findFirst({
+                where: (p, { eq }) => eq(p.id, row.patient_id),
+                columns: { fullName: true, phone: true },
+              });
 
-            await triggerInngestEvent(
-              c.env,
-              c.executionCtx,
-              "appointment.created",
-              {
-                appointmentId: row.id,
-                patientId: row.patient_id,
-                patientName: patientData?.fullName,
-                patientPhone: patientData?.phone,
-                date: row.date,
-                startTime: row.start_time,
-                organizationId: row.organization_id,
-              },
-              { id: user.uid },
-            ).catch((err) => console.error("[Appointments/Create] Inngest trigger failed:", err));
+              await triggerInngestEvent(
+                c.env,
+                c.executionCtx,
+                "appointment.created",
+                {
+                  appointmentId: row.id,
+                  patientId: row.patient_id,
+                  patientName: patientData?.fullName,
+                  patientPhone: patientData?.phone,
+                  date: row.date,
+                  startTime: row.start_time,
+                  organizationId: row.organization_id,
+                },
+                { id: user.uid },
+              ).catch((err) => console.error("[Appointments/Create] Inngest trigger failed:", err));
+            } catch (err) {
+              console.error("[Appointments/Create] Background task error:", err);
+            }
           })(),
         );
       }

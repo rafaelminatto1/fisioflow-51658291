@@ -31,6 +31,7 @@ export interface EvolutionConflictData {
     pain_scale?: number | null;
     updated_at: string;
     version?: number;
+    created_by?: string;
     last_edited_by?: string;
   };
 }

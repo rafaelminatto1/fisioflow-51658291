@@ -303,10 +303,8 @@ export default function ExercisesScreen() {
           <TouchableOpacity
             key={assignment.id}
             onPress={() => {
-              // Se clicar no texto, foca em similares (demo TurboQuant)
               setSimilarTo(assignment);
             }}
-            onLongPress={() => toggleExercise(assignment)}
             activeOpacity={0.7}
             disabled={
               completeMutation.isPending &&
@@ -388,6 +386,31 @@ export default function ExercisesScreen() {
                   <Ionicons name="chevron-forward" size={14} color={colors.textSecondary} />
                 </TouchableOpacity>
               )}
+              
+              <TouchableOpacity
+                style={[
+                  styles.actionButton,
+                  { 
+                    backgroundColor: assignment.completed ? colors.surface : colors.primary,
+                    borderColor: assignment.completed ? colors.border : "transparent",
+                    borderWidth: assignment.completed ? 1 : 0
+                  }
+                ]}
+                onPress={() => toggleExercise(assignment)}
+                activeOpacity={0.7}
+              >
+                <Ionicons 
+                  name={assignment.completed ? "arrow-undo-outline" : "checkmark-done-outline"} 
+                  size={18} 
+                  color={assignment.completed ? colors.textSecondary : "#FFFFFF"} 
+                />
+                <Text style={[
+                  styles.actionButtonText, 
+                  { color: assignment.completed ? colors.textSecondary : "#FFFFFF" }
+                ]}>
+                  {assignment.completed ? "Desfazer" : "Marcar como Feito"}
+                </Text>
+              </TouchableOpacity>
             </Card>
           </TouchableOpacity>
         ))}
@@ -608,8 +631,22 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   videoIndicatorText: {
-    fontSize: 11,
-    fontWeight: "500",
+    flex: 1,
+    fontSize: 13,
+    fontWeight: "600",
+  },
+  actionButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 10,
+    borderRadius: 8,
+    marginTop: 12,
+    gap: 6,
+  },
+  actionButtonText: {
+    fontSize: 14,
+    fontWeight: "700",
   },
   emptyState: {
     alignItems: "center",

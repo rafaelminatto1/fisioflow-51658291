@@ -263,10 +263,14 @@ app.post("/patient-package/:id/use", requireAuth, async (c) => {
      SET used_sessions = used_sessions + 1,
          status = CASE WHEN (total_sessions - used_sessions - 1) = 0 THEN 'esgotado' ELSE 'ativo' END,
          updated_at = NOW()
-     WHERE id = $1
+     WHERE id = $1 AND used_sessions < total_sessions
      RETURNING *`,
     [id],
   );
+
+  if (!updateResult.rows.length) {
+    return c.json({ error: "Sessões esgotadas ou falha de concorrência ao deduzir." }, 400);
+  }
 
   const updatedPkg = updateResult.rows[0];
 

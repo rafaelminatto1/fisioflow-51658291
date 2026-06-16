@@ -60,6 +60,7 @@ export default function ChatDetailScreen() {
 
   const ws = useRef<WebSocket | null>(null);
   const reconnectAttempts = useRef(0);
+  const reconnectTimeout = useRef<NodeJS.Timeout | null>(null);
 
   const connectWebSocket = useCallback(() => {
     if (ws.current) {
@@ -89,7 +90,7 @@ export default function ChatDetailScreen() {
       console.log("WebSocket closed. Reconnecting...");
       if (reconnectAttempts.current < 10) {
         const timeout = Math.min(10000, 1000 * Math.pow(2, reconnectAttempts.current));
-        setTimeout(() => {
+        reconnectTimeout.current = setTimeout(() => {
           reconnectAttempts.current += 1;
           connectWebSocket();
         }, timeout);
@@ -110,7 +111,9 @@ export default function ChatDetailScreen() {
     connectWebSocket();
 
     return () => {
+      if (reconnectTimeout.current) clearTimeout(reconnectTimeout.current);
       if (ws.current) {
+        ws.current.onclose = null; // Prevent reconnection trigger
         ws.current.close();
       }
     };

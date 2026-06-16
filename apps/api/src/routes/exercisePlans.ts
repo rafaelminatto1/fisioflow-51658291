@@ -4,6 +4,7 @@ import { requireAuth, type AuthVariables } from "../lib/auth";
 import type { Env } from "../types/env";
 import { callAI } from "../lib/ai/callAI";
 import { searchAiSearch } from "../lib/cloudflareAiSearch";
+import { triggerInngestEvent } from "../lib/inngest-client";
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
@@ -82,7 +83,37 @@ app.post("/", requireAuth, async (c) => {
     insertedItems = itemResults.map((r) => r.rows[0]);
   }
 
+  // Trigger prescription.created event for PDF and Email
+  triggerInngestEvent(c.env, c.executionCtx, "prescription.created", {
+    planId: plan.id,
+    patientId: plan.patient_id,
+    organizationId: user.organizationId,
+  });
+
   return c.json({ data: { ...plan, items: insertedItems } }, 201);
+});
+
+// Generate PDF manually
+app.post("/:id/pdf", requireAuth, async (c) => {
+  const user = c.get("user");
+  const id = c.req.param("id");
+  const db = await createPool(c.env);
+
+  const check = await db.query(
+    "SELECT id, patient_id FROM exercise_plans WHERE id = $1 AND (organization_id = $2 OR $2 IS NULL)",
+    [id, user.organizationId],
+  );
+  if (!check.rows.length) return c.json({ error: "Plano não encontrado" }, 404);
+
+  const plan = check.rows[0];
+
+  triggerInngestEvent(c.env, c.executionCtx, "prescription.created", {
+    planId: plan.id,
+    patientId: plan.patient_id,
+    organizationId: user.organizationId,
+  });
+
+  return c.json({ ok: true, message: "Geração de PDF solicitada com sucesso" });
 });
 
 // Update plan

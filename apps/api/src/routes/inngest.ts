@@ -235,6 +235,82 @@ const googleReviewRequest = inngest.createFunction(
   },
 );
 
+import { sendPrescriptionEmail } from "../lib/email";
+import { R2Service } from "../lib/storage/R2Service";
+import { buildHtml, generatePdfQuickAction } from "./reportsPdf";
+
+/**
+ * Automação: Gerar PDF e Enviar Email de Prescrição
+ */
+const prescriptionCreated = inngest.createFunction(
+  { id: "prescription-created", name: "Gerar PDF e Enviar Email da Prescrição" },
+  { event: "prescription.created" },
+  async ({ event, step, env }: { event: any; step: any; env: Env }) => {
+    const { planId, patientId, organizationId } = event.data;
+
+    const data = await step.run("fetch-plan-data", async () => {
+      const db = createPool(env);
+      const res = await db.query(
+        `SELECT p.full_name as patient_name, p.email, ep.name as plan_name,
+           json_agg(json_build_object('name', ex.title, 'sets', i.sets, 'reps', i.repetitions, 'notes', i.notes) ORDER BY i.order_index) FILTER (WHERE i.id IS NOT NULL) AS items
+         FROM exercise_plans ep
+         JOIN patients p ON p.id = ep.patient_id
+         LEFT JOIN exercise_plan_items i ON i.plan_id = ep.id
+         LEFT JOIN exercises ex ON ex.id = i.exercise_id
+         WHERE ep.id = $1
+         GROUP BY ep.id, p.id`,
+        [planId]
+      );
+      return res.rows[0];
+    });
+
+    if (!data) return { error: "Plano não encontrado" };
+
+    const pdfUrl = await step.run("generate-pdf", async () => {
+      const html = buildHtml({
+        type: "prescription",
+        title: data.plan_name || "Prescrição de Exercícios",
+        patientName: data.patient_name,
+        patientId,
+        data: {
+          content: data.items?.map((i: any) => 
+            `- ${i.name ?? "Exercício"}: ${i.sets || "-"} séries de ${i.reps || "-"} reps. ${i.notes ? `(${i.notes})` : ""}`
+          ).join("\n") || "Nenhum exercício especificado.",
+          indication: "Programa de exercícios domiciliares"
+        }
+      });
+
+      const pdfBuffer = await generatePdfQuickAction(html);
+      const r2 = new R2Service(env);
+      const timestamp = Date.now();
+      const baseKey = `reports/${organizationId}/${patientId}/prescription-${timestamp}`;
+      const pdfKey = `${baseKey}.pdf`;
+      const fileName = `prescription-${data.patient_name.replace(/\\s+/g, "_")}`;
+
+      await r2.uploadFile(
+        pdfKey,
+        new Uint8Array(pdfBuffer as any),
+        "application/pdf",
+        `${fileName}.pdf`,
+      );
+
+      return `${env.R2_PUBLIC_URL}/${pdfKey}`;
+    });
+
+    if (data.email) {
+      await step.run("send-email", async () => {
+        await sendPrescriptionEmail(env, data.email, {
+          patientName: data.patient_name,
+          pdfUrl,
+          title: data.plan_name || "Prescrição de Exercícios"
+        });
+      });
+    }
+
+    return { pdfUrl, emailSent: !!data.email };
+  }
+);
+
 const app = new Hono<{ Bindings: Env }>();
 
 /**
@@ -252,6 +328,7 @@ app.use("/", async (c, _next) => {
       inactiveRecovery,
       paymentConfirmation,
       googleReviewRequest,
+      prescriptionCreated,
     ],
     signingKey: c.env.INNGEST_SIGNING_KEY,
   });

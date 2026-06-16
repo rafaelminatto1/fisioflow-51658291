@@ -23,11 +23,11 @@ export function withOrganizationPolicy(tableName: string, organizationIdColumn: 
  */
 export function withPublicWriteOrganizationPolicy(tableName: string, organizationIdColumn: any) {
   return [
-    // Permitir INSERT para qualquer pessoa (anon e auth)
+    // Permitir INSERT para qualquer pessoa (anon e auth) com a condição que se estiver autenticado, use sua própria org
     pgPolicy(`policy_${tableName}_public_insert`, {
       for: "insert",
       to: ["authenticated", "anon"],
-      withCheck: sql`true`,
+      withCheck: sql`(${organizationIdColumn} = (NULLIF(current_setting('app.org_id', true), '')::uuid)) OR (NULLIF(current_setting('app.org_id', true), '') IS NULL)`,
     }),
     // Restringir SELECT/UPDATE/DELETE apenas para membros da organização
     pgPolicy(`policy_${tableName}_tenant_isolation`, {
@@ -44,10 +44,17 @@ export function withPublicWriteOrganizationPolicy(tableName: string, organizatio
  * Ex: Wiki, Dicionário.
  */
 export function withPublicOrOrganizationPolicy(tableName: string, organizationIdColumn: any) {
-  return pgPolicy(`policy_${tableName}_hybrid_isolation`, {
-    for: "all",
-    to: "authenticated",
-    using: sql`(${organizationIdColumn} IS NULL) OR (${organizationIdColumn} = (NULLIF(current_setting('app.org_id', true), '')::uuid))`,
-    withCheck: sql`(${organizationIdColumn} IS NULL) OR (${organizationIdColumn} = (NULLIF(current_setting('app.org_id', true), '')::uuid))`,
-  });
+  return [
+    pgPolicy(`policy_${tableName}_hybrid_select`, {
+      for: "select",
+      to: "authenticated",
+      using: sql`(${organizationIdColumn} IS NULL) OR (${organizationIdColumn} = (NULLIF(current_setting('app.org_id', true), '')::uuid))`,
+    }),
+    pgPolicy(`policy_${tableName}_hybrid_write`, {
+      for: "all",
+      to: "authenticated",
+      using: sql`${organizationIdColumn} = (NULLIF(current_setting('app.org_id', true), '')::uuid)`,
+      withCheck: sql`${organizationIdColumn} = (NULLIF(current_setting('app.org_id', true), '')::uuid)`,
+    }),
+  ];
 }

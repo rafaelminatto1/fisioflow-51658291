@@ -23,6 +23,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { LoadingSkeleton } from "@/components/ui/loading-skeleton";
 import { useCommandPalette } from "@/hooks/ui/useCommandPalette";
+import { useAuth } from "@/hooks/useAuth";
 import { PatientHelpers } from "@/types";
 import {
 	FileText,
@@ -47,6 +48,7 @@ import {
 	enqueueAction,
 } from "@/services/offlineSync";
 import { stripHtml } from "@/lib/utils/stripHtml";
+import { shouldOpenEvolutionConflictModal } from "./patientEvolutionConflict";
 
 // Componentes
 import { EvolutionHeader } from "@/components/evolution/EvolutionHeader";
@@ -135,6 +137,7 @@ export interface PainScaleData {
 const PatientEvolution = () => {
 	const navigate = useNavigate();
 	const queryClient = useQueryClient();
+	const { user, profile } = useAuth();
 	const { CommandPaletteComponent } = useCommandPalette();
 	const state = usePatientEvolutionState();
 	const handlers = usePatientEvolutionHandlers(state);
@@ -426,16 +429,14 @@ const PatientEvolution = () => {
 						return;
 					}
 
-					// Mesmo profissional editando (defasagem de versão, não conflito real):
-					// re-salva o conteúdo local por cima, sem checagem de versão. O modal de
-					// conflito só deve aparecer quando OUTRO usuário editou a evolução.
-					const currentUserId =
-						(state.user as any)?.id ?? (state.user as any)?.uid ?? (state.user as any)?.sub;
-					const sameAuthor =
-						!!serverCurrent?.created_by &&
-						!!currentUserId &&
-						serverCurrent.created_by === currentUserId;
-					if (sameAuthor) {
+					// Se o conflito veio do mesmo autor da última gravação, o modal é ruído:
+					// retentamos sem `version` e deixamos o servidor aceitar o merge.
+					const currentUserId = profile?.id ?? user?.uid ?? null;
+					const shouldShowModal = shouldOpenEvolutionConflictModal({
+						currentUserId,
+						current: serverCurrent,
+					});
+					if (!shouldShowModal) {
 						try {
 							const retryKey =
 								typeof crypto !== "undefined" && crypto.randomUUID
@@ -699,7 +700,7 @@ const PatientEvolution = () => {
 					patientId={state.patientId}
 					evolutionId={state.currentSoapRecordId}
 					collaborationId={undefined}
-					userName={state.user?.displayName || "Profissional"}
+					userName={user?.displayName || "Profissional"}
 					userColor="#10b981"
 					lastSaved={lastSavedAt}
 					onNavigateToHistorico={() => state.setActiveTab("historico")}

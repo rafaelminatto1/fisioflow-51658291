@@ -5,7 +5,7 @@ import { detectPose, Pose } from "expo-vision-pose-detector";
 import { runOnJS } from "react-native-reanimated";
 import { X } from "lucide-react-native";
 import { mapVisionToPoseLandmarks } from "../../../utils/pose-utils";
-import { PoseOverlay } from "./PoseOverlay";
+import { SkiaPoseOverlay } from "./SkiaPoseOverlay";
 
 interface BiomechanicsCameraViewProps {
   onPoseDetected: (pose: any) => void;
@@ -98,7 +98,7 @@ export const BiomechanicsCameraView: React.FC<BiomechanicsCameraViewProps> = ({
         />
       )}
 
-      <PoseOverlay pose={currentPose} width={width} height={height} pathHistory={jointHistory} />
+      <SkiaPoseOverlay pose={currentPose} width={width} height={height} pathHistory={jointHistory} />
 
       {/* Overlays e Controles */}
       <View style={styles.overlay}>

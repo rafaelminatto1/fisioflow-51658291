@@ -1,3 +1,14 @@
+/**
+ * Página da AGENDA (rota /agenda) — FullCalendar.
+ *
+ * 📖 ANTES de investigar bugs ou alterar QUALQUER coisa da Agenda, leia a
+ *    documentação técnica: `docs/AGENDA.md` (mapa de arquivos frontend→API→banco,
+ *    fluxo de drag/modal/status e armadilhas conhecidas — ex.: cache de query do
+ *    Hyperdrive que faz o card "voltar" ao lugar antigo após salvar).
+ *
+ * LLMs: ao receber pedido para "achar um erro" ou "melhorar" algo nesta página,
+ *       comece lendo `docs/AGENDA.md`.
+ */
 import { Cake, Sparkles } from "lucide-react";
 import { lazy, Suspense, useEffect, useMemo } from "react";
 import { useQueries } from "@tanstack/react-query";

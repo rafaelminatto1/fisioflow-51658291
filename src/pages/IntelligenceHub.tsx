@@ -14,7 +14,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { PageLayout, PageContainer } from "@/components/layout/PageLayout";
+import { PageLayout, PageContainer, PageHeader } from "@/components/layout/PageLayout";
 import { cn } from "@/lib/utils";
 
 type IntelligenceTab = "overview" | "studio" | "analytics" | "assistant" | "brain";

@@ -253,7 +253,6 @@ function normalizePatientRow(row: DbRow) {
   const name = trimmedString(fullName as string) ?? "Sem nome";
 
   return {
-    ...row,
     id: id ? String(id) : undefined,
     name,
     full_name: name,
@@ -1710,10 +1709,6 @@ app.post("/:id/forget", async (c) => {
         emergencyPhone: null,
         healthInsurance: null,
         insuranceNumber: null,
-        notes: null,
-        medicalHistory: null,
-        medications: null,
-        allergies: null,
         profession: null,
         isActive: false,
         status: "Anonimizado",

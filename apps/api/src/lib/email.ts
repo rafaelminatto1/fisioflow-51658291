@@ -126,3 +126,36 @@ export async function sendTestEmail(env: Env, to: string) {
     html: "<p>Email de teste enviado com sucesso via Resend 🎉</p>",
   });
 }
+
+export async function sendPrescriptionEmail(
+  env: Env,
+  to: string,
+  data: { patientName: string; pdfUrl: string; title: string },
+) {
+  const resend = createResend(env);
+  if (!resend) return;
+  await resend.emails.send({
+    from: FROM(env),
+    to,
+    subject: `Sua Prescrição de Fisioterapia: ${data.title}`,
+    html: `
+      <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #eee; padding: 20px; border-radius: 10px;">
+        <h2 style="color: #333;">Prescrição de Exercícios</h2>
+        <p>Olá, <strong>${data.patientName}</strong>!</p>
+        <p>Sua prescrição de fisioterapia (<strong>${data.title}</strong>) foi gerada e está disponível para acesso.</p>
+        
+        <p style="text-align: center; margin-top: 30px; margin-bottom: 30px;">
+          <a href="${data.pdfUrl}" style="background: #000; color: #fff; padding: 12px 25px; text-decoration: none; border-radius: 6px; font-weight: bold;">
+            Visualizar / Baixar Prescrição
+          </a>
+        </p>
+
+        <p>Em caso de dúvidas, não hesite em contatar seu fisioterapeuta.</p>
+        
+        <p style="margin-top: 40px; font-size: 12px; color: #999; border-top: 1px solid #eee; padding-top: 20px;">
+          FisioFlow — Sistema de Gestão de Fisioterapia
+        </p>
+      </div>
+    `,
+  });
+}

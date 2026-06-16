@@ -24,6 +24,14 @@ import { useHaptics } from "@/hooks/useHaptics";
 import { useDebounce } from "@/hooks/useDebounce";
 import { SkeletonExercise } from "@/components/SkeletonExercise";
 import type { Exercise } from "@/types";
+import { useSyncStore } from "@/store/sync-store";
+
+export interface CartItem {
+  exercise: Exercise;
+  sets: string;
+  reps: string;
+  frequency: string;
+}
 
 import { BODY_PARTS } from "@/lib/constants/exerciseConstants";
 
@@ -60,16 +68,11 @@ export default function ExercisesScreen() {
   const [selectedBodyPart, setSelectedBodyPart] = useState<string | null>(null);
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
   const [showFiltersModal, setShowFiltersModal] = useState(false);
-  const [selectedExercise, setSelectedExercise] = useState<Exercise | null>(null);
-  const [showAssignModal, setShowAssignModal] = useState(false);
+  const [cart, setCart] = useState<CartItem[]>([]);
+  const [showCartModal, setShowCartModal] = useState(false);
   const [previewExercise, setPreviewExercise] = useState<Exercise | null>(null);
   const _previewScale = useRef(new Animated.Value(0.8)).current;
   const _previewOpacity = useRef(new Animated.Value(0)).current;
-
-  // Modal State
-  const [sets, setSets] = useState("3");
-  const [reps, setReps] = useState("10");
-  const [frequency, setFrequency] = useState("Diário");
 
   const {
     data: exercises,
@@ -102,33 +105,37 @@ export default function ExercisesScreen() {
     "Funcional",
   ];
 
-  const { assignExercise, isAssigning } = usePatientExerciseAssignments();
+  const addMutation = useSyncStore((state) => state.addMutation);
 
-  const handleAssignExercise = async () => {
-    if (!patientId || !selectedExercise) return;
+  const handleSubmitCart = async () => {
+    if (!patientId || cart.length === 0) return;
     medium();
     try {
-      await assignExercise({
-        patientId,
-        assignment: {
-          exerciseId: selectedExercise.id,
-          sets: parseInt(sets) || 3,
-          reps: parseInt(reps) || 10,
-          frequency,
-          startDate: new Date(),
-          completed: false,
-          progress: 0,
-        } as any,
+      const payload = {
+        patient_id: patientId,
+        name: "Prescrição de Exercícios",
+        items: cart.map((item, idx) => ({
+          exercise_id: item.exercise.id,
+          order_index: idx,
+          sets: parseInt(item.sets) || 3,
+          repetitions: parseInt(item.reps) || 10,
+          notes: item.frequency,
+        })),
+      };
+
+      addMutation({
+        endpoint: "/api/exercise-plans",
+        method: "POST",
+        data: payload,
       });
+
       success();
-      setShowAssignModal(false);
-      setSelectedExercise(null);
-      setSets("3");
-      setReps("10");
-      setFrequency("Diário");
-      Alert.alert("Sucesso", "Exercício prescrito com sucesso!");
+      setShowCartModal(false);
+      setCart([]);
+      Alert.alert("Sucesso", "Prescrição salva na fila de sincronização!");
+      router.back();
     } catch {
-      Alert.alert("Erro", "Não foi possível prescrever o exercício.");
+      Alert.alert("Erro", "Não foi possível prescrever os exercícios.");
     }
   };
 
@@ -149,15 +156,20 @@ export default function ExercisesScreen() {
   };
 
   const renderExerciseItem = useCallback(
-    ({ item: exercise }: { item: Exercise }) => (
+    ({ item: exercise }: { item: Exercise }) => {
+      const isInCart = cart.some((item) => item.exercise.id === exercise.id);
+      return (
       <TouchableOpacity
         activeOpacity={0.9}
         delayLongPress={500}
         onPress={() => {
           light();
           if (patientId) {
-            setSelectedExercise(exercise);
-            setShowAssignModal(true);
+            setCart((prev) => {
+              if (isInCart) return prev.filter((item) => item.exercise.id !== exercise.id);
+              return [...prev, { exercise, sets: "3", reps: "10", frequency: "Diário" }];
+            });
+            success();
           } else {
             router.push(`/exercises/${exercise.id}` as Href);
           }
@@ -169,12 +181,18 @@ export default function ExercisesScreen() {
         style={[
           styles.exerciseCard,
           {
-            backgroundColor: colors.surface,
-            borderColor: colors.border,
+            backgroundColor: isInCart ? colors.primary + "10" : colors.surface,
+            borderColor: isInCart ? colors.primary : colors.border,
+            borderWidth: isInCart ? 2 : 1,
           },
         ]}
       >
         <View style={styles.cardImageContainer}>
+          {isInCart && (
+            <View style={{ position: 'absolute', top: 12, left: 12, zIndex: 10, backgroundColor: colors.primary, borderRadius: 12, width: 24, height: 24, justifyContent: 'center', alignItems: 'center' }}>
+              <Ionicons name="checkmark" size={16} color="#FFF" />
+            </View>
+          )}
           {exercise.imageUrl ? (
             <Image
               source={{ uri: exercise.imageUrl }}
@@ -282,8 +300,8 @@ export default function ExercisesScreen() {
           </View>
         </View>
       </TouchableOpacity>
-    ),
-    [colors, patientId, isFavorite, toggleFavorite, isToggling],
+    )},
+    [colors, patientId, isFavorite, toggleFavorite, isToggling, cart],
   );
 
   const renderFooter = () => {
@@ -520,101 +538,126 @@ export default function ExercisesScreen() {
         contentContainerStyle={styles.listContent}
       />
 
-      {/* Assign Modal */}
-      <Modal visible={showAssignModal} onClose={() => setShowAssignModal(false)} title="Prescrever">
-        {selectedExercise && (
-          <View style={styles.assignModalContent}>
-            <View style={styles.modalHeaderInfo}>
-              <Text style={[styles.modalExerciseName, { color: colors.text }]}>
-                {selectedExercise.name}
-              </Text>
-              <Text style={[styles.modalExerciseCat, { color: colors.primary }]}>
-                {selectedExercise.category} •{" "}
-                {selectedExercise.difficulty === "easy" ||
-                selectedExercise.difficulty === "iniciante"
-                  ? "Fácil"
-                  : selectedExercise.difficulty === "medium" ||
-                      selectedExercise.difficulty === "intermediario"
-                    ? "Médio"
-                    : "Difícil"}
-              </Text>
-            </View>
+      {/* Cart Modal */}
+      <Modal visible={showCartModal} onClose={() => setShowCartModal(false)} title="Carrinho de Prescrição">
+        {cart.length > 0 ? (
+          <FlatList
+            data={cart}
+            keyExtractor={(item) => item.exercise.id}
+            contentContainerStyle={{ paddingBottom: 20 }}
+            renderItem={({ item, index }) => (
+              <View style={{ marginBottom: 20, paddingBottom: 20, borderBottomWidth: 1, borderBottomColor: colors.border }}>
+                <View style={styles.modalHeaderInfo}>
+                  <Text style={[styles.modalExerciseName, { color: colors.text }]}>
+                    {item.exercise.name}
+                  </Text>
+                  <Text style={[styles.modalExerciseCat, { color: colors.primary }]}>
+                    {item.exercise.category}
+                  </Text>
+                </View>
 
-            <View style={styles.formRow}>
-              <View style={styles.formGroupHalf}>
-                <Text style={[styles.label, { color: colors.textSecondary }]}>Séries</Text>
-                <TextInput
-                  style={[
-                    styles.input,
-                    {
-                      backgroundColor: colors.surface,
-                      borderColor: colors.border,
-                      color: colors.text,
-                    },
-                  ]}
-                  value={sets}
-                  onChangeText={setSets}
-                  keyboardType="numeric"
-                  placeholder="3"
-                />
-              </View>
-              <View style={styles.formGroupHalf}>
-                <Text style={[styles.label, { color: colors.textSecondary }]}>Reps</Text>
-                <TextInput
-                  style={[
-                    styles.input,
-                    {
-                      backgroundColor: colors.surface,
-                      borderColor: colors.border,
-                      color: colors.text,
-                    },
-                  ]}
-                  value={reps}
-                  onChangeText={setReps}
-                  keyboardType="numeric"
-                  placeholder="10"
-                />
-              </View>
-            </View>
-
-            <View style={styles.formGroup}>
-              <Text style={[styles.label, { color: colors.textSecondary }]}>Frequência</Text>
-              <View style={styles.frequencyOptions}>
-                {["Diário", "3x/semana", "2x/semana"].map((freq) => (
-                  <TouchableOpacity
-                    key={freq}
-                    style={[
-                      styles.frequencyChip,
-                      { borderColor: colors.border },
-                      frequency === freq && {
-                        backgroundColor: colors.primary,
-                        borderColor: colors.primary,
-                      },
-                    ]}
-                    onPress={() => setFrequency(freq)}
-                  >
-                    <Text
+                <View style={styles.formRow}>
+                  <View style={styles.formGroupHalf}>
+                    <Text style={[styles.label, { color: colors.textSecondary }]}>Séries</Text>
+                    <TextInput
                       style={[
-                        styles.frequencyText,
-                        frequency === freq ? { color: "#FFFFFF" } : { color: colors.textSecondary },
+                        styles.input,
+                        {
+                          backgroundColor: colors.surface,
+                          borderColor: colors.border,
+                          color: colors.text,
+                        },
                       ]}
-                    >
-                      {freq}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            </View>
+                      value={item.sets}
+                      onChangeText={(v) => {
+                        const newCart = [...cart];
+                        newCart[index].sets = v;
+                        setCart(newCart);
+                      }}
+                      keyboardType="numeric"
+                      placeholder="3"
+                    />
+                  </View>
+                  <View style={styles.formGroupHalf}>
+                    <Text style={[styles.label, { color: colors.textSecondary }]}>Reps</Text>
+                    <TextInput
+                      style={[
+                        styles.input,
+                        {
+                          backgroundColor: colors.surface,
+                          borderColor: colors.border,
+                          color: colors.text,
+                        },
+                      ]}
+                      value={item.reps}
+                      onChangeText={(v) => {
+                        const newCart = [...cart];
+                        newCart[index].reps = v;
+                        setCart(newCart);
+                      }}
+                      keyboardType="numeric"
+                      placeholder="10"
+                    />
+                  </View>
+                </View>
 
-            <Button
-              title="Confirmar Prescrição"
-              onPress={handleAssignExercise}
-              loading={isAssigning}
-              style={styles.confirmButton}
-            />
-          </View>
+                <View style={styles.formGroup}>
+                  <Text style={[styles.label, { color: colors.textSecondary }]}>Frequência</Text>
+                  <View style={styles.frequencyOptions}>
+                    {["Diário", "3x/semana", "2x/semana"].map((freq) => (
+                      <TouchableOpacity
+                        key={freq}
+                        style={[
+                          styles.frequencyChip,
+                          { borderColor: colors.border },
+                          item.frequency === freq && {
+                            backgroundColor: colors.primary,
+                            borderColor: colors.primary,
+                          },
+                        ]}
+                        onPress={() => {
+                          const newCart = [...cart];
+                          newCart[index].frequency = freq;
+                          setCart(newCart);
+                        }}
+                      >
+                        <Text
+                          style={[
+                            styles.frequencyText,
+                            item.frequency === freq ? { color: "#FFFFFF" } : { color: colors.textSecondary },
+                          ]}
+                        >
+                          {freq}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                </View>
+              </View>
+            )}
+            ListFooterComponent={
+              <Button
+                title="Finalizar Prescrição"
+                onPress={handleSubmitCart}
+                style={styles.confirmButton}
+              />
+            }
+          />
+        ) : (
+          <Text style={{ textAlign: "center", color: colors.textSecondary, marginTop: 20 }}>Nenhum exercício selecionado.</Text>
         )}
       </Modal>
+
+      {/* Cart Sticky Bar */}
+      {patientId && cart.length > 0 && !showCartModal && (
+        <View style={{ position: "absolute", bottom: 20, left: 20, right: 20 }}>
+          <Button 
+            title={`Ver Carrinho (${cart.length})`} 
+            onPress={() => setShowCartModal(true)} 
+            style={{ shadowColor: "#000", shadowOpacity: 0.2, shadowRadius: 10, shadowOffset: { width: 0, height: 4 }, elevation: 5 }} 
+          />
+        </View>
+      )}
 
       {/* Image Preview Modal */}
       <RNModal

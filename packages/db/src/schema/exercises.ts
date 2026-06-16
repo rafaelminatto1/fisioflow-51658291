@@ -18,16 +18,11 @@ import {
   integer,
   pgEnum,
   index,
-  customType,
+  vector,
 } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 
-// Vector Type
-const vector = customType<{ data: number[] }>({
-  dataType() {
-    return "vector(1024)";
-  },
-});
+
 import { relations } from "drizzle-orm";
 import { protocolExercises } from "./protocols";
 import { exerciseMediaAttachments } from "./media";
@@ -136,7 +131,7 @@ export const exercises = pgTable(
     references: text("references"), // JSON string com {title, authors, year, url}
 
     // Controle
-    embedding: vector("embedding"),
+    embedding: vector("embedding", { dimensions: 768 }),
     embeddingSketch: text("embedding_sketch"),
     referencePose: text("reference_pose"),
     isActive: boolean("is_active").default(true).notNull(),
@@ -155,6 +150,10 @@ export const exercises = pgTable(
     nameSearchIdx: index("idx_exercises_name_search").using(
       "gin",
       sql`to_tsvector('portuguese', ${table.name})`,
+    ),
+    embeddingIdx: index("idx_exercises_embedding").using(
+      "hnsw",
+      table.embedding.op("vector_cosine_ops"),
     ),
   }),
 );

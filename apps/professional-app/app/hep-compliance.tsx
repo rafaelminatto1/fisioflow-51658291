@@ -6,6 +6,7 @@ import {
   ScrollView,
   TouchableOpacity,
   ActivityIndicator,
+  Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams, Stack } from "expo-router";
@@ -13,6 +14,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useColors } from "@/hooks/useColorScheme";
 import { useHaptics } from "@/hooks/useHaptics";
 import { useHEPCompliance, usePatientExercisePlans } from "@/hooks/useHEPCompliance";
+import { useSyncStore } from "@/store/sync-store";
 import type { ThemeColors } from "@/types/theme";
 
 function ComplianceBar({ rate, colors }: { rate: number; colors: ThemeColors }) {
@@ -62,7 +64,9 @@ export default function HEPComplianceScreen() {
     planId?: string;
   }>();
   const colors = useColors();
-  const { light } = useHaptics();
+  const { light, success } = useHaptics();
+
+  const addMutation = useSyncStore((state) => state.addMutation);
 
   const { data: plans = [], isLoading: isLoadingPlans } = usePatientExercisePlans(patientId);
   const [selectedPlanId, setSelectedPlanId] = useState<string | undefined>(
@@ -74,6 +78,17 @@ export default function HEPComplianceScreen() {
   );
 
   const activePlanId = selectedPlanId ?? plans[0]?.id;
+
+  const handleGeneratePDF = (planId: string) => {
+    light();
+    addMutation({
+      endpoint: `/api/exercise-plans/${planId}/pdf`,
+      method: "POST",
+      data: {},
+    });
+    success();
+    Alert.alert("Sucesso", "A geração do PDF foi solicitada. O arquivo será enviado em breve.");
+  };
 
   return (
     <SafeAreaView
@@ -151,7 +166,13 @@ export default function HEPComplianceScreen() {
                 { backgroundColor: colors.surface, borderColor: colors.border },
               ]}
             >
-              <Text style={[styles.cardTitle, { color: colors.text }]}>{compliance.planName}</Text>
+              <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                <Text style={[styles.cardTitle, { color: colors.text, marginBottom: 0 }]}>{compliance.planName}</Text>
+                <TouchableOpacity onPress={() => handleGeneratePDF(activePlanId!)} style={styles.pdfButton}>
+                  <Ionicons name="document-text-outline" size={16} color="#fff" />
+                  <Text style={styles.pdfButtonText}>Gerar PDF</Text>
+                </TouchableOpacity>
+              </View>
               <Text style={[styles.overallLabel, { color: colors.textSecondary }]}>
                 Adesão geral
               </Text>
@@ -250,8 +271,18 @@ const styles = StyleSheet.create({
     padding: 16,
     marginBottom: 16,
   },
-  cardTitle: { fontSize: 15, fontWeight: "700", marginBottom: 12 },
-  overallLabel: { fontSize: 12, marginBottom: 8 },
+  cardTitle: { fontSize: 16, fontWeight: "700", marginBottom: 12 },
+  pdfButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#0EA5E9",
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+    gap: 4,
+  },
+  pdfButtonText: { color: "#fff", fontSize: 13, fontWeight: "600" },
+  overallLabel: { fontSize: 14, marginBottom: 8 },
   barContainer: { flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 4 },
   barTrack: { flex: 1, height: 10, borderRadius: 5, overflow: "hidden" },
   barFill: { height: "100%", borderRadius: 5 },

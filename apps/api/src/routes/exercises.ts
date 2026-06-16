@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import { eq, and, inArray, sql } from "drizzle-orm";
+import { eq, and, inArray, sql, cosineDistance } from "drizzle-orm";
 import { createDb, createPool } from "../lib/db";
 import { requireAuth, type AuthVariables } from "../lib/auth";
 import type { Env } from "../types/env";
@@ -543,13 +543,13 @@ app.post("/", requireAuth, async (c) => {
         const categoryLabel = row.subcategory || row.categoryId || "";
         const textToEmbed =
           `${row.name} ${row.description || ""} ${categoryLabel} ${row.bodyParts?.join(" ") || ""}`.trim();
-        const vector = await generateEmbedding(c.env, textToEmbed);
-        if (vector.length > 0) {
-          const sketch = generateTurboSketch(vector);
-          // Mantemos apenas o sketch no Postgres para busca híbrida local.
+        const vectorData = await generateEmbedding(c.env, textToEmbed);
+        if (vectorData.length > 0) {
+          const sketch = generateTurboSketch(vectorData);
           await db
             .update(exercises)
             .set({
+              embedding: vectorData,
               embeddingSketch: sketch,
             })
             .where(eq(exercises.id, row.id));
@@ -619,12 +619,13 @@ app.put("/:id", requireAuth, async (c) => {
         const categoryLabel = row.subcategory || row.categoryId || "";
         const textToEmbed =
           `${row.name} ${row.description || ""} ${categoryLabel} ${row.bodyParts?.join(" ") || ""}`.trim();
-        const vector = await generateEmbedding(c.env, textToEmbed);
-        if (vector.length > 0) {
-          const sketch = generateTurboSketch(vector);
+        const vectorData = await generateEmbedding(c.env, textToEmbed);
+        if (vectorData.length > 0) {
+          const sketch = generateTurboSketch(vectorData);
           await db
             .update(exercises)
             .set({
+              embedding: vectorData,
               embeddingSketch: sketch,
             })
             .where(eq(exercises.id, row.id));
@@ -703,7 +704,42 @@ app.get("/search/semantic", async (c) => {
     }
   }
 
-  // 2. Fallback to optimized Text Search (websearch)
+  // 2. Fallback to pgvector Search (Busca Inteligente nativa)
+  try {
+    const db = await createDb(c.env);
+    const queryVector = await generateEmbedding(c.env, q);
+    
+    if (queryVector.length > 0) {
+      const similarity = sql<number>`1 - (${cosineDistance(exercises.embedding, queryVector)})`;
+      
+      const vectorRows = await db
+        .select({
+          id: exercises.id,
+          slug: exercises.slug,
+          name: exercises.name,
+          categoryId: exercises.categoryId,
+          difficulty: exercises.difficulty,
+          imageUrl: exercises.imageUrl,
+          thumbnailUrl: exercises.thumbnailUrl,
+          videoUrl: exercises.videoUrl,
+          durationSeconds: exercises.durationSeconds,
+          description: exercises.description,
+          similarity,
+        })
+        .from(exercises)
+        .where(and(eq(exercises.isActive, true), eq(exercises.isPublic, true)))
+        .orderBy(cosineDistance(exercises.embedding, queryVector))
+        .limit(limitNum);
+        
+      if (vectorRows.length > 0) {
+        return c.json({ data: vectorRows, meta: { method: "pgvector" } });
+      }
+    }
+  } catch (e) {
+    console.error("[Exercises] pgvector search error:", e);
+  }
+
+  // 3. Fallback to optimized Text Search (websearch)
   const db = await createDb(c.env);
   const rows = await db
     .select()

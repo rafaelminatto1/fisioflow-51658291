@@ -142,7 +142,9 @@ function RootLayoutContent() {
             ) {
               break;
             } else {
-              useSyncStore.getState().removeMutation(mutation.id);
+              console.error("Sync mutation failed with server error:", error);
+              // Do not silently remove the mutation. Break the queue to safely retry later.
+              break;
             }
           }
         }

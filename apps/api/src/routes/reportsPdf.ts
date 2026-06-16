@@ -5,7 +5,7 @@ import { R2Service } from "../lib/storage/R2Service";
 
 const QUICK_ACTIONS_BASE = "https://browser.ai.cloudflare.com/api/v1";
 
-async function generatePdfQuickAction(html: string): Promise<Uint8Array> {
+export async function generatePdfQuickAction(html: string): Promise<Uint8Array> {
   const response = await fetch(`${QUICK_ACTIONS_BASE}/pdf`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -29,7 +29,7 @@ const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
 type PdfReportType = "soap" | "progress" | "prescription" | "discharge" | "exam";
 
-type PdfRequest = {
+export type PdfRequest = {
   type: PdfReportType;
   title?: string;
   patientName: string;
@@ -155,7 +155,7 @@ app.get("/templates", requireAuth, (c) => {
 
 // ===== HTML TEMPLATES =====
 
-function buildHtml(req: PdfRequest): string {
+export function buildHtml(req: PdfRequest): string {
   const content = buildContent(req);
   const date = new Date().toLocaleDateString("pt-BR", {
     day: "2-digit",
