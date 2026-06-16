@@ -18,6 +18,14 @@ export async function runCopilot(opts: {
     if (!reply.toolCalls || reply.toolCalls.length === 0) {
       return { answer: reply.content ?? lastContent, toolCalls: executed };
     }
+
+    // Append the assistant turn that requested the tools (OpenAI threading).
+    messages.push({
+      role: "assistant",
+      content: reply.content ?? "",
+      tool_calls: reply.rawToolCalls,
+    });
+
     for (const call of reply.toolCalls) {
       executed.push(call);
       const tool = tools.find((t) => t.name === call.name);
@@ -36,7 +44,12 @@ export async function runCopilot(opts: {
           }
         }
       }
-      messages.push({ role: "tool", name: call.name, content: JSON.stringify(result) });
+      messages.push({
+        role: "tool",
+        name: call.name,
+        tool_call_id: call.id,
+        content: JSON.stringify(result),
+      });
     }
   }
   return { answer: lastContent || "Não foi possível concluir.", toolCalls: executed };
