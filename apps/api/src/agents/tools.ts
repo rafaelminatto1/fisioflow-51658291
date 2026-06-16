@@ -23,8 +23,9 @@ async function toEnglishQuery(env: Env, q: string): Promise<string> {
         },
         { role: "user", content: q },
       ],
-    })) as { response?: string };
-    const translated = (res.response ?? "").trim().replace(/^["']|["']$/g, "");
+    })) as { response?: string; choices?: Array<{ message?: { content?: string } }> };
+    const text = res.response ?? res.choices?.[0]?.message?.content ?? "";
+    const translated = text.trim().replace(/^["']|["']$/g, "").split("\n")[0].trim();
     return translated.length >= 3 ? translated : q;
   } catch {
     return q;
