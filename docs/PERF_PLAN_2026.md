@@ -97,8 +97,11 @@
   `GET /api/appointments?...` disparou 3× e `GET /api/patients?...minimal` 2×.
   Unificar query keys / `staleTime` para eliminar chamadas redundantes.
 - **T11 — Cold start do Worker** (`/api/health` 0.6–0.9s frio vs 0.11–0.19s quente).
-  Avaliar Smart Placement (já local-GRU), warmup cron leve, e cache do Hyperdrive
-  para leituras não-clínicas.
+  Avaliar Smart Placement (já local-GRU) e warmup cron leve.
+  > ⛔ **NÃO** usar o cache de query do Hyperdrive como alavanca de perf: ele serve
+  > leituras stale e quebra write-then-read em dados clínicos (agenda reverte
+  > alterações). Manter `caching.disabled = true`. Ver `docs/AGENDA.md` §4.1 e o
+  > AVISO no `docs/operations/neon-cost-analysis-2026-05-04.md`.
 
 ---
 

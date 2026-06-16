@@ -1,5 +1,22 @@
 # Analise de custo Neon/Cloudflare - 2026-05-04
 
+> ## ⛔ AVISO CRITICO — NAO ligar o cache de query do Hyperdrive
+> Este documento (Prioridade 3) sugeria usar/aumentar o **cache de query do
+> Hyperdrive** (`max_age`) para reduzir custo do Neon. **NAO FACA ISSO.**
+>
+> Dados clinicos exigem leitura **fresca** (write-then-read). Com o cache ligado,
+> uma mutacao (`PUT/PATCH`) persiste no banco mas o `GET` seguinte e servido da
+> lista **stale** do Hyperdrive por ate `max_age` segundos, e a UI "reverte" a
+> alteracao (agenda: card volta ao lugar/status antigo apos salvar).
+>
+> **Estado correto e obrigatorio:** `caching.disabled = true` no Hyperdrive
+> `fisioflow-neon` (id `12b9fefcfbc04074a63342a9212e1b4f`).
+>
+> Historico: cache foi ligado (300s/60s) seguindo este doc, causou o bug acima em
+> 14/jun/2026, e foi desativado em 16/jun/2026. Detalhes: `docs/AGENDA.md` §4.1.
+> Para economia de custo, use os outros itens (scale-to-zero, cron, D1/KV) — NAO
+> o cache do Hyperdrive.
+
 ## Resumo executivo
 
 A fatura alta deste mes nao parece vir de armazenamento nem de volume real de dados. O banco Neon `minatto` tem cerca de 30 MB, mas o compute da branch `production` ficou praticamente sempre ativo no inicio do ciclo de maio.
@@ -139,14 +156,23 @@ O helper `queryWithCache` existe, mas nao e usado. Aplicar cache em:
 - Analytics/dashboard financeiro: TTL 5min durante expediente; TTL ate 8h fora do expediente.
 - Feriados nacionais e listas estaticas: mover integralmente para D1/KV.
 
-### Prioridade 3 - ajustar Hyperdrive
+### Prioridade 3 - ajustar Hyperdrive ⛔ REVOGADO (NAO LIGAR O CACHE)
 
-O Hyperdrive real esta com cache 300s/60s. Para dados estaticos, considerar:
+> **Esta recomendacao foi REVOGADA em 16/jun/2026.** Ligar/aumentar o cache de
+> query do Hyperdrive quebra a consistencia write-then-read de dados clinicos
+> (ver AVISO CRITICO no topo deste doc e `docs/AGENDA.md` §4.1). Manter
+> **`caching.disabled = true`**. O texto abaixo fica apenas como registro
+> historico do que foi avaliado e descartado.
 
-- `max_age=3600`
-- `stale_while_revalidate=300`
+~~O Hyperdrive real esta com cache 300s/60s. Para dados estaticos, considerar:~~
 
-Mas isso so ajuda queries que passam pelo Hyperdrive/TCP. Parte do codigo usa `createDb()` com `neon-http`; essas queries nao aproveitam o cache do Hyperdrive.
+- ~~`max_age=3600`~~
+- ~~`stale_while_revalidate=300`~~
+
+~~Mas isso so ajuda queries que passam pelo Hyperdrive/TCP.~~ Parte do codigo usa
+`createDb()` com `neon-http`; essas queries nao aproveitam o cache do Hyperdrive
+de qualquer forma. Para reduzir custo, prefira scale-to-zero + cron enxuto + mover
+listas estaticas para D1/KV (Prioridades 1 e 2), nunca o cache do Hyperdrive.
 
 ### Prioridade 4 - padronizar acesso ao banco
 

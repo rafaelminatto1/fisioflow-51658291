@@ -108,6 +108,31 @@ SELECT pg_prewarm('sessions');
 
 ---
 
+### Cenário 3b — Agenda "reverte" alterações (card volta após salvar)
+
+**Sintomas:** ao arrastar/editar/mudar status de um agendamento, o toast diz
+"sucesso" mas o card volta para a posição/status anterior em ~1s. Vale para
+drag-and-drop, modal e mudança de status.
+
+**Causa quase certa:** cache de query do **Hyperdrive** ligado → o `PUT` persiste,
+mas o `GET /api/appointments` seguinte vem do cache stale.
+
+```bash
+# 1. Verificar a config de caching do Hyperdrive
+wrangler hyperdrive get 12b9fefcfbc04074a63342a9212e1b4f
+#    Esperado: caching: { disabled: true }
+
+# 2. Se aparecer disabled:false / max_age:N  → DESATIVAR:
+wrangler hyperdrive update 12b9fefcfbc04074a63342a9212e1b4f --caching-disabled
+
+# 3. Confirmar no worker que o PUT realmente retorna 200 (descarta bug de backend):
+#    Cloudflare Observability → service fisioflow-api → filtrar "PUT /api/appointments"
+```
+
+NÃO é bug de código; é config de infra. Detalhes completos em `docs/AGENDA.md` §4.1.
+
+---
+
 ### Cenário 4 — Deploy falhou no CI
 
 **Sintomas:** GitHub Actions CI vermelho, `deploy-api` ou `deploy-web` com erro.
