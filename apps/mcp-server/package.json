@@ -1,0 +1,22 @@
+{
+  "name": "@fisioflow/mcp-server",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "agents": "^0.15.0",
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "wrangler": "4.100.0",
+    "vitest": "^4.1.8",
+    "typescript": "^6.0.3",
+    "@cloudflare/workers-types": "^4.20260609.1"
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "name": "fisioflow-mcp-server",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-05-14",
+  "compatibility_flags": ["nodejs_compat"],
+  "vars": { "FISIOFLOW_API_URL": "https://fisioflow-api.rafalegollas.workers.dev" },
+  "durable_objects": {
+    "bindings": [{ "name": "MCP_OBJECT", "class_name": "FisioFlowMCP" }]
+  },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["FisioFlowMCP"] }]
+}
