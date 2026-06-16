@@ -10,7 +10,7 @@ export function buildRegistry(): CopilotTool[] {
       description: "Busca evidência científica (PubMed) por palavra-chave clínica.",
       parameters: z.object({
         q: z.string().min(3),
-        limit: z.number().int().min(1).max(20).optional(),
+        limit: z.coerce.number().int().min(1).max(20).optional(),
       }),
       execute: (ctx, args) => runSearch(ctx.env, args as Record<string, unknown>),
     },
@@ -19,7 +19,7 @@ export function buildRegistry(): CopilotTool[] {
       description: "Busca exercícios na biblioteca da clínica.",
       parameters: z.object({
         q: z.string().min(2),
-        limit: z.number().int().min(1).max(20).optional(),
+        limit: z.coerce.number().int().min(1).max(20).optional(),
       }),
       execute: async (ctx, args) => {
         const sql = getRawSql(ctx.env, "read");
@@ -65,7 +65,7 @@ export function buildRegistry(): CopilotTool[] {
         patientId: z.string().uuid(),
         date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
         startTime: z.string().regex(/^\d{2}:\d{2}$/),
-        durationMinutes: z.number().int().min(5).max(480).optional(),
+        durationMinutes: z.coerce.number().int().min(5).max(480).optional(),
         notes: z.string().max(2000).optional(),
       }),
       execute: async (ctx, args) => {
