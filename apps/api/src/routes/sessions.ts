@@ -99,6 +99,8 @@ function rowToRecord(row: any) {
     signed_at: row.finalizedAt ? new Date(row.finalizedAt).toISOString() : undefined,
     is_edited: row.isEdited,
     last_edited_by: row.lastEditedBy ? String(row.lastEditedBy) : undefined,
+    last_edited_device_id:
+      typeof row.lastEditedDeviceId === "string" ? row.lastEditedDeviceId : undefined,
     edit_reason: row.editReason ?? undefined,
     version: row.version ?? 1,
   };
@@ -200,11 +202,16 @@ app.post("/autosave", requireAuth, async (c) => {
   const measurements = toJsonArray(body.measurements);
   const homeExercises = toJsonArray(body.home_exercises);
   const durationNum = body.duration_minutes != null ? Number(body.duration_minutes) : undefined;
+  const clientDeviceId =
+    typeof body.client_device_id === "string" && body.client_device_id.trim().length > 0
+      ? body.client_device_id.trim()
+      : undefined;
 
   const buildUpdatePayload = () => {
     const payload: any = {
       lastAutoSaveAt: new Date(),
       updatedAt: new Date(),
+      lastEditedBy: isValidUuid(user.uid) ? user.uid : null,
     };
     if (observacao !== undefined) payload.observacao = observacao;
     if (painScale !== undefined) payload.painScale = painScale;
@@ -216,6 +223,7 @@ app.post("/autosave", requireAuth, async (c) => {
     if (body.therapist_id && isValidUuid(String(body.therapist_id))) {
       payload.therapistId = String(body.therapist_id);
     }
+    if (clientDeviceId !== undefined) payload.lastEditedDeviceId = clientDeviceId;
     return payload;
   };
 
@@ -321,6 +329,8 @@ app.post("/autosave", requireAuth, async (c) => {
     homeExercises: homeExercises ?? [],
     status: "draft",
     lastAutoSaveAt: new Date(),
+    lastEditedBy: isValidUuid(user.uid) ? user.uid : null,
+    lastEditedDeviceId: clientDeviceId ?? null,
   };
 
   const [newSession] = await db.insert(sessions).values(insertValues).returning();
@@ -584,6 +594,16 @@ app.put("/:id", requireAuth, async (c) => {
   ) {
     updatePayload.isEdited = true;
     updatePayload.lastEditedBy = user.uid as any;
+  }
+  if (!("lastEditedBy" in updatePayload)) {
+    updatePayload.lastEditedBy = isValidUuid(user.uid) ? user.uid : null;
+  }
+  const clientDeviceId =
+    typeof body.client_device_id === "string" && body.client_device_id.trim().length > 0
+      ? body.client_device_id.trim()
+      : undefined;
+  if (clientDeviceId !== undefined) {
+    updatePayload.lastEditedDeviceId = clientDeviceId;
   }
 
   const [updated] = await db

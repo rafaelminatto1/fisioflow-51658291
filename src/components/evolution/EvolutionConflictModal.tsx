@@ -33,6 +33,7 @@ export interface EvolutionConflictData {
     version?: number;
     created_by?: string;
     last_edited_by?: string;
+    last_edited_device_id?: string;
   };
 }
 

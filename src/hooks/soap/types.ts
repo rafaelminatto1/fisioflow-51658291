@@ -67,6 +67,7 @@ export interface EvolutionRecord {
   signature_hash?: string;
   is_edited?: boolean;
   last_edited_by?: string;
+  last_edited_device_id?: string;
   edit_reason?: string;
   /** @deprecated SOAP foi removido. Mantido transitoriamente até Fase 7. */
   subjective?: string;
@@ -91,6 +92,7 @@ export interface CreateEvolutionData {
   patient_id: string;
   appointment_id?: string;
   therapist_id?: string;
+  client_device_id?: string;
   observacao?: string;
   pain_scale?: number | null;
   procedures?: ProcedureItem[];

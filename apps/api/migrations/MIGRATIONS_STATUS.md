@@ -53,6 +53,7 @@
 | `0071_patient_media.sql`                            | Tabelas `patient_photos`, `patient_videos`, `medical_requests` + RLS           | ✅      | ✅   | ❌   | Confirmado 2026-05-12 via psql — tabelas e índices presentes                                                       |
 | `0080_fix_schema_mismatches.sql`                    | Corrige divergências de schema usadas por rotas Workers                        | ✅      | ✅   | ✅   | Aplicada 2026-05-13 via psql; idempotente, vários objetos já existiam                                              |
 | `0100_fix_capacity_and_hyphenated_rls_policies.sql` | Corrige políticas de RLS com hífens (schedule_capacity e outras)               | ⏳      | ⏳   | ✅   | Criada para resolver falha de salvamento de capacidade da agenda                                                   |
+| `0118_sessions_last_edited_device.sql`              | Adiciona last_edited_device_id em sessions para conflitos de autosave          | ✅      | ✅   | ✅   | Aplicada via psql na master em 2026-06-16                                                                          |
 
 ---
 

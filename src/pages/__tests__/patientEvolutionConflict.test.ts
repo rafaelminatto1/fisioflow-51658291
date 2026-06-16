@@ -18,23 +18,54 @@ describe("patientEvolutionConflict", () => {
     expect(
       shouldOpenEvolutionConflictModal({
         currentUserId: "therapist-1",
+        currentDeviceId: "device-1",
         current: {
           created_by: "therapist-1",
           last_edited_by: "therapist-1",
+          last_edited_device_id: "device-1",
         },
       }),
     ).toBe(false);
+  });
+
+  it("opens the modal when the same user edited from another device", () => {
+    expect(
+      shouldOpenEvolutionConflictModal({
+        currentUserId: "therapist-1",
+        currentDeviceId: "device-1",
+        current: {
+          created_by: "therapist-1",
+          last_edited_by: "therapist-1",
+          last_edited_device_id: "device-2",
+        },
+      }),
+    ).toBe(true);
   });
 
   it("opens the modal when the last edit belongs to another user", () => {
     expect(
       shouldOpenEvolutionConflictModal({
         currentUserId: "therapist-1",
+        currentDeviceId: "device-1",
         current: {
           created_by: "therapist-1",
           last_edited_by: "therapist-2",
+          last_edited_device_id: "device-2",
         },
       }),
     ).toBe(true);
+  });
+
+  it("keeps the old no-modal fallback when the same user has no device metadata yet", () => {
+    expect(
+      shouldOpenEvolutionConflictModal({
+        currentUserId: "therapist-1",
+        currentDeviceId: "device-1",
+        current: {
+          created_by: "therapist-1",
+          last_edited_by: "therapist-1",
+        },
+      }),
+    ).toBe(false);
   });
 });

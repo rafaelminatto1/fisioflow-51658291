@@ -36,6 +36,9 @@ export const toEvolutionRecord = (record: Record<string, unknown>): EvolutionRec
   signed_at: record.signed_at ? String(record.signed_at) : undefined,
   is_edited: Boolean(record.is_edited),
   last_edited_by: record.last_edited_by ? String(record.last_edited_by) : undefined,
+  last_edited_device_id: record.last_edited_device_id
+    ? String(record.last_edited_device_id)
+    : undefined,
   edit_reason: record.edit_reason ? String(record.edit_reason) : undefined,
 });
 

@@ -188,6 +188,7 @@ export const sessions = pgTable(
     // Audit/Change Control
     isEdited: boolean("is_edited").default(false).notNull(),
     lastEditedBy: uuid("last_edited_by"),
+    lastEditedDeviceId: varchar("last_edited_device_id", { length: 120 }),
     editReason: text("edit_reason"),
 
     version: integer("version").default(1).notNull(),

@@ -48,6 +48,7 @@ import {
 	enqueueAction,
 } from "@/services/offlineSync";
 import { stripHtml } from "@/lib/utils/stripHtml";
+import { getOrCreateEvolutionDeviceId } from "@/lib/evolution/evolutionDeviceId";
 import { shouldOpenEvolutionConflictModal } from "./patientEvolutionConflict";
 
 // Componentes
@@ -157,6 +158,7 @@ const PatientEvolution = () => {
 
 	// Status offline (queue de ações pendentes + navigator.onLine)
 	const offline = useOfflineSync();
+	const deviceIdRef = useRef<string>(getOrCreateEvolutionDeviceId());
 
 	// Persistência local do rascunho (sobrevive a reload/fechar aba)
 	const draft = useEvolutionDraft<EvolutionV2Data>({
@@ -375,6 +377,7 @@ const PatientEvolution = () => {
 					patient_id: state.patientId,
 					appointment_id: state.appointmentId,
 					recordId: state.currentSoapRecordId,
+					client_device_id: deviceIdRef.current,
 					idempotencyKey,
 					...(version !== undefined ? { version } : {}),
 					...data,
@@ -434,6 +437,7 @@ const PatientEvolution = () => {
 					const currentUserId = profile?.id ?? user?.uid ?? null;
 					const shouldShowModal = shouldOpenEvolutionConflictModal({
 						currentUserId,
+						currentDeviceId: deviceIdRef.current,
 						current: serverCurrent,
 					});
 					if (!shouldShowModal) {
@@ -446,6 +450,7 @@ const PatientEvolution = () => {
 								patient_id: state.patientId,
 								appointment_id: state.appointmentId,
 								recordId: serverCurrent.id,
+								client_device_id: deviceIdRef.current,
 								idempotencyKey: retryKey,
 								...data,
 							} as any);
@@ -489,6 +494,7 @@ const PatientEvolution = () => {
 						patient_id: state.patientId,
 						appointment_id: state.appointmentId,
 						recordId: state.currentSoapRecordId,
+						client_device_id: deviceIdRef.current,
 						idempotencyKey,
 						...(version !== undefined ? { version } : {}),
 						...data,

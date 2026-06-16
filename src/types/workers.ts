@@ -208,6 +208,9 @@ export interface SessionRecord {
   updated_at: string;
   signed_at?: string;
   version?: number;
+  last_edited_by?: string;
+  last_edited_device_id?: string;
+  client_device_id?: string;
 }
 
 export interface PatientDocument {
