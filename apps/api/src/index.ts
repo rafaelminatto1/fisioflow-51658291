@@ -106,6 +106,7 @@ import { wgerRoutes } from "./routes/wger";
 import { autocompleteRoutes } from "./routes/autocomplete";
 import evidenceRoutes from "./routes/evidence";
 import copilotRoutes from "./routes/copilot";
+import briefingRoutes from "./routes/briefing";
 import exerciseImportRoutes from "./routes/exercise-import";
 import aiSearchApp from "./routes/aiSearch";
 import { aiConfigRoutes } from "./routes/ai-config";
@@ -388,6 +389,7 @@ const apiRoutes = [
   ["/api/evidence", evidenceRoutes],
   ["/api/exercise-import", exerciseImportRoutes],
   ["/api/copilot", copilotRoutes],
+  ["/api/briefing", briefingRoutes],
 ] as const;
 
 apiRoutes.forEach(([path, router]) => {
