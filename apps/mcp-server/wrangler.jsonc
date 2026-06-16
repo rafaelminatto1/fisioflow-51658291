@@ -1,5 +1,5 @@
 {
-  "name": "fisioflow-mcp",
+  "name": "fisioflow-mcp-server",
   "main": "src/index.ts",
   "compatibility_date": "2026-05-14",
   "compatibility_flags": ["nodejs_compat"],
