@@ -138,6 +138,26 @@ export const copilotApi = {
     }),
 };
 
+export type ActivityFeedItem = { kind: "automation" | "calendar"; title: string; status: string; at: string };
+
+export const eventsApi = {
+  feed: () => request<{ data: ActivityFeedItem[] }>("/api/events/feed"),
+};
+
+export type DailyBriefing = {
+  date: string;
+  total: number;
+  countsByStatus: Record<string, number>;
+  appointmentsToday: Array<{ id: string; startTime: string | null; status: string; patientId: string | null }>;
+  noShowsYesterday: number;
+  inactivePatients: number;
+  summary: string;
+};
+
+export const briefingApi = {
+  get: () => request<DailyBriefing>("/api/briefing"),
+};
+
 export const pushSubscriptionsApi = {
   list: (params?: { userId?: string; activeOnly?: boolean }) =>
     request<{ data: PushSubscription[] }>(withQuery("/api/push-subscriptions", params)),
