@@ -80,4 +80,39 @@ app.get("/library", requireAuth, async (c) => {
   return c.json({ data: res.rows ?? [] });
 });
 
+export const EVIDENCE_TARGET_TYPES = ["exercise", "protocol", "wiki", "patient", "assessment"] as const;
+export function isEvidenceTargetType(v: unknown): v is (typeof EVIDENCE_TARGET_TYPES)[number] {
+  return typeof v === "string" && (EVIDENCE_TARGET_TYPES as readonly string[]).includes(v);
+}
+
+// GET /api/evidence/links?targetType=exercise&targetId=:id — artigos vinculados a um alvo
+app.get("/links", requireAuth, async (c) => {
+  const user = c.get("user");
+  const targetType = c.req.query("targetType");
+  const targetId = c.req.query("targetId");
+  if (!isEvidenceTargetType(targetType) || !targetId) {
+    return c.json({ error: "targetType/targetId inválidos" }, 400);
+  }
+  const sql = getRawSql(c.env, "read");
+  const res = await sql(
+    `SELECT l.id, l.article_pmid, l.evidence_level, l.note, l.created_at,
+            a.title, a.journal, a.pub_date, a.doi
+       FROM evidence_links l
+       JOIN evidence_articles a ON a.pmid = l.article_pmid
+      WHERE l.org_id = $1 AND l.target_type = $2 AND l.target_id = $3
+      ORDER BY l.created_at DESC`,
+    [user.organizationId, targetType, targetId],
+  );
+  return c.json({ data: res.rows ?? [] });
+});
+
+// DELETE /api/evidence/link/:id — remove um vínculo (org-scoped via RLS)
+app.delete("/link/:id", requireAuth, async (c) => {
+  const user = c.get("user");
+  const id = c.req.param("id");
+  const sql = getRawSql(c.env, "write");
+  await sql(`DELETE FROM evidence_links WHERE id = $1 AND org_id = $2`, [id, user.organizationId]);
+  return c.json({ ok: true });
+});
+
 export default app;
