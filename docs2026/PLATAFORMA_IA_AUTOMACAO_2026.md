@@ -109,5 +109,20 @@ Itens adicionados: **Copiloto Clínico** + **Base de Conhecimento** (Inteligênc
 `0115` evidence · `0116` exercise provenance/curation · `0117` exercises embedding 1024 ·
 `0118` sessions device · `0119` automations · `0120` sessions blocks.
 
+## 12. IA estruturada (saída JSON) — PRs #184–#188
+
+Helper genérico de saída estruturada + 3 aplicações.
+
+- **Helper:** `apps/api/src/lib/ai/hermes.ts` — `structuredJson(env, system, user)` + `parseJsonLoose` (tolera markdown/objeto) + `readAiContent` (lê `.response` E `choices[].message.content`, pois os modelos `-fast` usam formato OpenAI).
+- ⚠️ **Hermes 2 Pro DEPRECADO no Cloudflare Workers AI em 2026-05-30.** `STRUCTURED_MODEL` usa **`@cf/meta/llama-3.3-70b-instruct-fp8-fast`** (ativo, forte em JSON). Em geral, modelos `-fast` permanecem após deprecações (ver `DEPRECATED_MODELS_2026_05_30` em `workersAi.ts`).
+- **Extração texto→blocos:** `POST /api/evolution/extract-blocks {text}` → blocos validados (`coerceBlocks`); botão "Gerar blocos do texto (IA)" no `EvolutionBlocksEditor`. (#184)
+- **NL→condição de automação:** `POST /api/automation/nl-condition {text}` → `{field, op, value}` (`coerceCondition`). Ex.: "se a dor for maior que 7" → `{field:"evolution.painScale", op:"gt", value:7}`. (#188)
+- **Copilot A/B de modelo:** `POST /api/copilot/chat` aceita `model` opcional (`llama_3_1_8b` default | `llama_3_3_70b`). Achado do A/B: o **70b entra em loop de tool-calls sem concluir**; o **8b (default) é melhor** para o tool-calling do Copilot. (#188)
+
+### Survey — onde mais aplicar harness e IA estruturada
+- **Harness (Cloudflare Agents SDK):** já usado no MCP server (`McpAgent`). Próximos: Copilot como agente persistente (estado por paciente via DO), agente de triagem reativo sobre o event bus.
+- **IA estruturada (`structuredJson`):** classificar intenção de WhatsApp; sugerir metas (goals) a partir da avaliação; extrair medições/PROMs de texto; mapear CID-10 livres → código; gerar rascunho de laudo.
+- **Cuidado:** structuredJson não é determinístico — sempre validar com Zod/coerce (como fazemos) e manter o humano no loop para dados clínicos.
+
 ## Pendência operacional
 🔴 **Rotação de credenciais** expostas durante o desenvolvimento (NCBI/wger/Neon/Yahoo/Google secret) — ação do dono das contas.
