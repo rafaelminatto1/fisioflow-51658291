@@ -2,6 +2,8 @@ import { Hono } from "hono";
 import { createPool } from "../lib/db";
 import { requireAuth, type AuthVariables } from "../lib/auth";
 import type { Env } from "../types/env";
+import { appointmentToGoogleEvent } from "../lib/googleCalendar/mapEvent";
+import { refreshAccessToken, insertCalendarEvent } from "../lib/googleCalendar/client";
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
@@ -413,19 +415,46 @@ app.post("/google/calendar/sync-appointment", async (c) => {
     user.organizationId,
     user.email ?? null,
   );
-  const externalEventId = crypto.randomUUID();
+  // Push real ao Google Calendar quando há tokens conectados; senão registra como pendente.
+  const tokens = (integration.tokens ?? {}) as { refresh_token?: string; access_token?: string };
+  const calendarId =
+    ((integration.settings ?? {}) as { default_calendar_id?: string }).default_calendar_id ?? "primary";
+
+  let externalEventId = "";
+  let status: "success" | "error" | "pending" = "pending";
+  let message = "Sem conexão Google: agendamento não enviado";
+
+  if (tokens.refresh_token || tokens.access_token) {
+    try {
+      const accessToken =
+        (tokens.refresh_token && (await refreshAccessToken(c.env, tokens.refresh_token))) ||
+        tokens.access_token ||
+        "";
+      if (!accessToken) throw new Error("sem access_token");
+      const event = appointmentToGoogleEvent(body as Record<string, unknown>);
+      const created = await insertCalendarEvent(accessToken, calendarId, event);
+      externalEventId = created.id;
+      status = "success";
+      message = "Agendamento enviado ao Google Calendar";
+    } catch (e) {
+      status = "error";
+      message = `Falha ao enviar ao Google Calendar: ${(e as Error).message}`;
+    }
+  }
 
   await pool.query(
     `
       INSERT INTO google_sync_logs (
         integration_id, action, status, event_type, event_id, external_event_id, message, metadata
       )
-      VALUES ($1, 'sync', 'success', 'appointment', $2, $3, 'Agendamento enviado ao Google Calendar', $4::jsonb)
+      VALUES ($1, 'sync', $2, 'appointment', $3, $4, $5, $6::jsonb)
     `,
     [
       integration.id,
+      status,
       String(body.id ?? ""),
       externalEventId,
+      message,
       JSON.stringify({
         patientName: body.patientName ?? body.patient_name ?? null,
         startsAt: body.start_time ?? body.startAt ?? null,
@@ -433,16 +462,18 @@ app.post("/google/calendar/sync-appointment", async (c) => {
     ],
   );
 
-  await pool.query(
-    `
+  if (status === "success") {
+    await pool.query(
+      `
       UPDATE google_integrations
       SET last_synced_at = NOW(), events_synced_count = COALESCE(events_synced_count, 0) + 1, updated_at = NOW()
       WHERE id = $1
     `,
-    [integration.id],
-  );
+      [integration.id],
+    );
+  }
 
-  return c.json({ data: { success: true, externalEventId } });
+  return c.json({ data: { success: status === "success", status, externalEventId, message } });
 });
 
 app.get("/google/docs/templates", async (c) => {
