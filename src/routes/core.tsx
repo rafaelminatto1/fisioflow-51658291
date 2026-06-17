@@ -48,6 +48,9 @@ const EventMonitor = lazy(
 const BriefingDashboard = lazy(
   () => import(/* webpackChunkName: "briefing-dashboard" */ "@/pages/briefing/BriefingDashboardPage"),
 );
+const BlocksEditorDemo = lazy(
+  () => import(/* webpackChunkName: "blocks-editor-demo" */ "@/pages/evolution/BlocksEditorDemo"),
+);
 const EvolucaoClinica = lazy(
   () => import(/* webpackChunkName: "evolucao-clinica" */ "@/pages/EvolucaoClinica"),
 );
@@ -146,6 +149,16 @@ export const coreRoutes = (
         <RouteErrorBoundary routeName="BriefingDashboard">
           <ProtectedRoute>
             <BriefingDashboard />
+          </ProtectedRoute>
+        </RouteErrorBoundary>
+      }
+    />
+    <Route
+      path="/editor-blocos"
+      element={
+        <RouteErrorBoundary routeName="BlocksEditorDemo">
+          <ProtectedRoute>
+            <BlocksEditorDemo />
           </ProtectedRoute>
         </RouteErrorBoundary>
       }
