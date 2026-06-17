@@ -62,6 +62,21 @@ export function buildActionHandlers(env: Env): Record<string, ActionHandler> {
       return { created: true, titulo };
     },
 
+    send_webhook: async (params, context) => {
+      const url = String(params.url ?? "");
+      if (!url.startsWith("https://")) return { skipped: "url inválida (use https)" };
+      try {
+        const res = await fetch(url, {
+          method: String(params.method ?? "POST"),
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(params.body ?? { event: context }),
+        });
+        return { delivered: res.ok, status: res.status };
+      } catch (e) {
+        return { error: String((e as Error)?.message ?? e) };
+      }
+    },
+
     log_event: async (params, context) => {
       console.log("[Automation] log_event", { params, context });
       return { logged: true };
