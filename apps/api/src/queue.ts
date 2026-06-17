@@ -1,5 +1,5 @@
 import type { Env } from "./types/env";
-import { createPool, createPoolForOrg, getRawSql } from "./lib/db";
+import { createPool, createPoolForOrg, getRawSql, runWithOrg } from "./lib/db";
 import { runAutomationsForEvent } from "./lib/automation/triggerAutomations";
 import { writeEvent } from "./lib/analytics";
 import { transcribeAudio, analyzeClinicImage } from "./lib/ai-native";
@@ -227,9 +227,13 @@ export async function handleQueue(batch: MessageBatch<QueueTask>, env: Env): Pro
       // Event-driven automations (gated by AUTOMATION_EXECUTION_ENABLED; no-op otherwise)
       try {
         const evt = task as any;
-        if (evt?.data && typeof evt.type === "string") {
-          const sql = getRawSql(env, "write");
-          await runAutomationsForEvent((q, p) => sql(q, p), env, { type: evt.type, data: evt.data });
+        const evtOrg = evt?.data?.organizationId ?? evt?.data?.orgId ?? evt?.data?.organization_id;
+        if (evt?.data && typeof evt.type === "string" && evtOrg) {
+          // Run inside the org context so RLS on `automations` resolves app.org_id.
+          await runWithOrg(String(evtOrg), async () => {
+            const sql = getRawSql(env, "write");
+            await runAutomationsForEvent((q, p) => sql(q, p), env, { type: evt.type, data: evt.data });
+          });
         }
       } catch (autoErr) {
         console.error(`[Queue] Automation trigger failed for ${task.type}:`, autoErr);

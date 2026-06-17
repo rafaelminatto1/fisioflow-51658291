@@ -37,6 +37,8 @@ describe("runAutomationsForEvent", () => {
     expect(log).toHaveBeenCalled();
     // org + event type scoped query
     expect(sql.mock.calls[0][1]).toEqual(["o1", "evolution.updated"]);
+    // writes an automation_logs row
+    expect(sql.mock.calls.some((c) => String(c[0]).includes("INSERT INTO automation_logs"))).toBe(true);
   });
 
   it("creates a durable Workflow when WORKFLOW_AUTOMATION is bound", async () => {
