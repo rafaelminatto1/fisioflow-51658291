@@ -92,9 +92,40 @@ export const notificationPreferencesApi = {
     }),
 };
 
+export type AutomationRecord = {
+  id: string;
+  name: string;
+  description?: string | null;
+  trigger_event?: string | null;
+  enabled: boolean;
+  definition: unknown;
+  created_at?: string;
+};
+
+type AutomationWrite = {
+  name: string;
+  description?: string;
+  triggerEvent?: string;
+  enabled?: boolean;
+  definition: unknown;
+};
+
 export const automationApi = {
   logs: (params?: { limit?: number }) =>
     request<{ data: AutomationLogEntry[] }>(withQuery("/api/automation/logs", params)),
+  list: () => request<{ data: AutomationRecord[] }>("/api/automation"),
+  get: (id: string) => request<{ data: AutomationRecord }>(`/api/automation/${id}`),
+  create: (data: AutomationWrite) =>
+    request<{ data: AutomationRecord }>("/api/automation", { method: "POST", body: JSON.stringify(data) }),
+  update: (id: string, data: AutomationWrite) =>
+    request<{ data: AutomationRecord }>(`/api/automation/${id}`, { method: "PUT", body: JSON.stringify(data) }),
+  remove: (id: string) =>
+    request<{ ok: boolean }>(`/api/automation/${id}`, { method: "DELETE" }),
+  simulate: (definition: unknown, context: Record<string, unknown> = {}) =>
+    request<{ trace: Array<Record<string, unknown>>; steps: number; completed: boolean }>(
+      "/api/automation/simulate",
+      { method: "POST", body: JSON.stringify({ definition, context }) },
+    ),
 };
 
 export const pushSubscriptionsApi = {
