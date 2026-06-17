@@ -5,6 +5,8 @@ import { requireAuth, type AuthVariables } from "../lib/auth";
 import { createPool } from "../lib/db";
 import { automationDefinitionSchema } from "../lib/automation/types";
 import { runAutomation } from "../lib/automation/runAutomation";
+import { structuredJson } from "../lib/ai/hermes";
+import { NL_CONDITION_SYSTEM, coerceCondition } from "../lib/automation/nlCondition";
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
@@ -170,6 +172,21 @@ app.post("/simulate", requireAuth, async (c) => {
     return c.json(result);
   } catch (e: any) {
     return c.json({ error: e?.message ?? "definição inválida" }, 400);
+  }
+});
+
+// POST /api/automation/nl-condition { text } → nó de condição {field, op, value} (via IA estruturada)
+app.post("/nl-condition", requireAuth, async (c) => {
+  const body = (await c.req.json().catch(() => ({}))) as { text?: string };
+  const text = String(body.text ?? "").trim();
+  if (text.length < 3) return c.json({ error: "Texto muito curto" }, 400);
+  try {
+    const raw = await structuredJson(c.env, NL_CONDITION_SYSTEM, text.slice(0, 500));
+    const cond = coerceCondition(raw);
+    if (!cond) return c.json({ error: "Não consegui interpretar a condição" }, 422);
+    return c.json({ data: cond });
+  } catch (e) {
+    return c.json({ error: "Falha na interpretação", details: (e as Error).message }, 500);
   }
 });
 

@@ -22,7 +22,11 @@ type RawToolCall = {
   arguments?: unknown;
 };
 
-export function makeCallModel(env: Env, tools: CopilotTool[]): CallModel {
+export function makeCallModel(
+  env: Env,
+  tools: CopilotTool[],
+  model: string = WORKERS_AI_MODELS.llama_3_1_8b,
+): CallModel {
   // Workers AI `-fast` models route through vLLM's OpenAI-compatible endpoint,
   // which requires the OpenAI tool format: { type: "function", function: {...} }.
   const toolDefs = tools.map((t) => ({
@@ -35,7 +39,7 @@ export function makeCallModel(env: Env, tools: CopilotTool[]): CallModel {
   }));
 
   return async (messages) => {
-    const res = (await runAi(env, WORKERS_AI_MODELS.llama_3_1_8b, {
+    const res = (await runAi(env, model, {
       messages,
       tools: toolDefs,
     })) as {
