@@ -87,6 +87,30 @@ app.post("/", requireAuth, async (c) => {
   return c.json({ data: result.rows?.[0] ?? null }, 201);
 });
 
+app.get("/logs", requireAuth, async (c) => {
+  const user = c.get("user");
+  const pool = await createPool(c.env);
+  const limit = Math.min(200, Math.max(10, Number(c.req.query("limit") ?? 50)));
+
+  const result = await pool.query(
+    `
+      SELECT id, automation_id, automation_name, status,
+             started_at, completed_at, duration_ms, error
+      FROM automation_logs
+      WHERE organization_id = $1
+      ORDER BY started_at DESC
+      LIMIT $2
+    `,
+    [user.organizationId, limit],
+  );
+
+  try {
+    return c.json({ data: result.rows || result });
+  } catch {
+    return c.json({ data: [] });
+  }
+});
+
 app.get("/:id", requireAuth, async (c) => {
   const id = c.req.param("id");
   if (!UUID_RE.test(id)) return c.json({ error: "id inválido" }, 400);
@@ -138,30 +162,6 @@ app.delete("/:id", requireAuth, async (c) => {
   const pool = await createPool(c.env);
   await pool.query(`DELETE FROM automations WHERE id = $1 AND org_id = $2`, [id, user.organizationId]);
   return c.json({ ok: true });
-});
-
-app.get("/logs", requireAuth, async (c) => {
-  const user = c.get("user");
-  const pool = await createPool(c.env);
-  const limit = Math.min(200, Math.max(10, Number(c.req.query("limit") ?? 50)));
-
-  const result = await pool.query(
-    `
-      SELECT id, automation_id, automation_name, status,
-             started_at, completed_at, duration_ms, error
-      FROM automation_logs
-      WHERE organization_id = $1
-      ORDER BY started_at DESC
-      LIMIT $2
-    `,
-    [user.organizationId, limit],
-  );
-
-  try {
-    return c.json({ data: result.rows || result });
-  } catch {
-    return c.json({ data: [] });
-  }
 });
 
 app.post("/simulate", requireAuth, async (c) => {
