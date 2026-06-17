@@ -10,7 +10,6 @@ import ReactFlow, {
   useEdgesState,
   type Connection,
   type Edge,
-  type Node,
   type NodeProps,
 } from "reactflow";
 import "reactflow/dist/style.css";
