@@ -1,6 +1,11 @@
 import type { Env } from "../../types/env";
 import { createResend } from "../email";
+import { getRawSql, runWithOrg } from "../db";
 import type { ActionHandler } from "./runAutomation";
+
+function orgOf(context: Record<string, unknown>): string {
+  return String(context.organizationId ?? context.orgId ?? context.organization_id ?? "");
+}
 
 /**
  * Real action handlers for automations triggered from the event bus.
@@ -21,6 +26,40 @@ export function buildActionHandlers(env: Env): Record<string, ActionHandler> {
         html: String(params.html ?? params.message ?? ""),
       });
       return { sent: true, to };
+    },
+
+    send_whatsapp: async (params, context) => {
+      if (!env.BACKGROUND_QUEUE) return { skipped: "fila indisponível" };
+      const to = String(params.to ?? context.patientPhone ?? "");
+      if (!to) return { skipped: "sem destinatário" };
+      await env.BACKGROUND_QUEUE.send({
+        type: "SEND_WHATSAPP",
+        payload: {
+          to,
+          templateName: String(params.templateName ?? ""),
+          languageCode: String(params.languageCode ?? "pt_BR"),
+          bodyParameters: Array.isArray(params.bodyParameters) ? params.bodyParameters : [],
+          organizationId: orgOf(context),
+          patientId: String(context.patientId ?? ""),
+          messageText: String(params.message ?? ""),
+          appointmentId: String(context.appointmentId ?? ""),
+        },
+      });
+      return { enqueued: true, to };
+    },
+
+    create_task: async (params, context) => {
+      const orgId = orgOf(context);
+      if (!orgId) return { skipped: "sem org" };
+      const titulo = String(params.title ?? params.titulo ?? "Tarefa da automação");
+      await runWithOrg(orgId, async () => {
+        const sql = getRawSql(env, "write");
+        await sql(
+          `INSERT INTO tarefas (organization_id, created_by, titulo, descricao) VALUES ($1,$2,$3,$4)`,
+          [orgId, "automation", titulo, params.description ?? params.descricao ?? null],
+        );
+      });
+      return { created: true, titulo };
     },
 
     log_event: async (params, context) => {
