@@ -263,3 +263,29 @@ export const templatesApi = {
       body: JSON.stringify(data ?? {}),
     }),
 };
+
+export type ImportCandidate = {
+  id: string;
+  name: string;
+  name_en?: string;
+  difficulty?: string;
+  muscles_primary?: string[];
+  muscles_secondary?: string[];
+  equipment?: string[];
+  body_parts?: string[];
+  instructions?: string;
+  category?: string;
+  image_urls?: string[];
+  source?: string;
+  source_url?: string;
+  status?: string;
+};
+
+export const exerciseImportApi = {
+  candidates: (status: "pending" | "approved" | "rejected" = "pending") =>
+    request<{ data: ImportCandidate[] }>(`/api/exercise-import/candidates?status=${status}`),
+  approve: (id: string) =>
+    request<{ ok: boolean }>(`/api/exercise-import/candidates/${id}/approve`, { method: "POST" }),
+  reject: (id: string) =>
+    request<{ ok: boolean }>(`/api/exercise-import/candidates/${id}/reject`, { method: "POST" }),
+};

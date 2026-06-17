@@ -124,6 +124,7 @@ const clinicaMenuItems = [
   { icon: Activity, label: "Evolução Clínica", href: "/evolucao-clinica" },
   { icon: Activity, label: "Exercícios", href: APP_ROUTES.EXERCISES },
   { icon: Sparkles, label: "Busca IA (Exercícios)", href: "/exercicios/busca-ia" },
+  { icon: ClipboardList, label: "Curadoria de Exercícios", href: "/exercicios/curadoria" },
   { icon: Target, label: "Protocolos", href: "/protocols" },
   { icon: FlaskConical, label: "Testes Clínicos", href: "/clinical-tests" },
   { icon: ClipboardList, label: "Avaliações", href: "/templates" },
