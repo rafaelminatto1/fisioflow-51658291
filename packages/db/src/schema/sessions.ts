@@ -66,6 +66,9 @@ export const sessions = pgTable(
     // Observação clínica principal (HTML do TipTap)
     observacao: text("observacao"),
 
+    // Editor modular (blocos estilo Notion) — coexiste com `observacao`
+    blocks: jsonb("blocks").$type<Array<Record<string, unknown>>>().default([]),
+
     // EVA (escala visual analógica de dor) 0–10
     painScale: smallint("pain_scale"),
 
