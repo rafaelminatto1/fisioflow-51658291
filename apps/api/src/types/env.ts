@@ -278,6 +278,9 @@ export interface Env {
   MORNING_BRIEFING_TO?: string;
   MORNING_BRIEFING_ORG_ID?: string;
 
+  // Automation real-action execution from event bus (off by default until enabled)
+  AUTOMATION_EXECUTION_ENABLED?: string;
+
   // Stripe
   STRIPE_SECRET_KEY?: string;
 
