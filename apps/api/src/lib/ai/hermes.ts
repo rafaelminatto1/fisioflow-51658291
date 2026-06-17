@@ -1,17 +1,35 @@
 import type { Env } from "../../types/env";
-import { runThinkingModel } from "../ai-native";
+import { runAi } from "../ai-native";
 
-/** Hermes 2 Pro (Nous Research) — forte em function-calling / saída estruturada (JSON). */
-export const HERMES_MODEL = "@hf/nousresearch/hermes-2-pro-mistral-7b";
+/**
+ * Modelo para saída estruturada (JSON).
+ * NOTA: Hermes 2 Pro (@hf/nousresearch/hermes-2-pro-mistral-7b) foi DEPRECADO no Cloudflare
+ * Workers AI em 2026-05-30. Usamos o llama-3.3-70b `-fast` (ativo, forte em JSON) no lugar.
+ */
+export const STRUCTURED_MODEL = "@cf/meta/llama-3.3-70b-instruct-fp8-fast";
+
+/** Extrai o texto de resposta de Workers AI em ambos os formatos: `.response` ou OpenAI `choices[].message.content`. */
+function readAiContent(resp: unknown): string {
+  const r = resp as {
+    response?: unknown;
+    choices?: Array<{ message?: { content?: unknown } }>;
+  };
+  if (typeof r?.response === "string") return r.response;
+  const c = r?.choices?.[0]?.message?.content;
+  if (typeof c === "string") return c;
+  if (r?.response && typeof r.response === "object") return JSON.stringify(r.response);
+  return "";
+}
 
 /**
  * Extrai um bloco JSON de uma resposta de LLM (tolerante a cercas markdown e texto ao redor).
- * Retorna o objeto/array parseado ou null.
+ * Retorna o objeto/array parseado ou null. Aceita não-string (alguns gateways já retornam objeto).
  */
-export function parseJsonLoose(text: string): unknown {
+export function parseJsonLoose(text: unknown): unknown {
+  if (text == null) return null;
+  if (typeof text !== "string") return text;
   if (!text) return null;
   let s = text.trim();
-  // remove cercas ```json ... ``` ou ``` ... ```
   const fence = s.match(/```(?:json)?\s*([\s\S]*?)```/i);
   if (fence) s = fence[1].trim();
   try {
@@ -41,18 +59,25 @@ export function parseJsonLoose(text: string): unknown {
 }
 
 /**
- * Roda o Hermes pedindo JSON e retorna o parse (ou null). `system` deve descrever o schema esperado.
+ * Roda o modelo estruturado pedindo JSON e retorna o parse (ou null). `system` descreve o schema.
  */
-export async function hermesJson<T = unknown>(
+export async function structuredJson<T = unknown>(
   env: Env,
   system: string,
   user: string,
 ): Promise<T | null> {
-  const res = await runThinkingModel(env, {
-    prompt: `${system}\n\nEntrada:\n${user}\n\nResponda APENAS com JSON válido.`,
-    model: HERMES_MODEL,
-    responseFormat: "json",
-    temperature: 0.2,
-  });
-  return parseJsonLoose(res.content) as T | null;
+  const resp = await runAi(
+    env,
+    STRUCTURED_MODEL,
+    {
+      messages: [
+        { role: "system", content: `${system} Responda APENAS com JSON válido, sem markdown.` },
+        { role: "user", content: user },
+      ],
+      temperature: 0.2,
+      max_tokens: 2048,
+    },
+    { cache: false },
+  );
+  return parseJsonLoose(readAiContent(resp)) as T | null;
 }
