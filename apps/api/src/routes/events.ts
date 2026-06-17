@@ -2,8 +2,35 @@ import { Hono } from "hono";
 import { requireAuth, type AuthVariables } from "../lib/auth";
 import type { Env } from "../types/env";
 import { writeEvent } from "../lib/analytics";
+import { getRawSql } from "../lib/db";
+import { mergeFeed } from "../lib/events/feed";
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
+
+// GET /api/events/feed — feed de atividades da org (automações + sync Calendar).
+app.get("/feed", requireAuth, async (c) => {
+  const user = c.get("user");
+  const sql = getRawSql(c.env, "read");
+  const autos = await sql(
+    `SELECT automation_name, event_type, status, created_at
+       FROM automation_logs WHERE organization_id = $1 ORDER BY created_at DESC LIMIT 50`,
+    [user.organizationId],
+  );
+  let gcalRows: Record<string, unknown>[] = [];
+  try {
+    const gcal = await sql(
+      `SELECT gsl.message, gsl.status, gsl.created_at
+         FROM google_sync_logs gsl
+         JOIN google_integrations gi ON gi.id = gsl.integration_id
+        WHERE gi.organization_id = $1 ORDER BY gsl.created_at DESC LIMIT 50`,
+      [user.organizationId],
+    );
+    gcalRows = gcal.rows ?? [];
+  } catch {
+    gcalRows = [];
+  }
+  return c.json({ data: mergeFeed(autos.rows ?? [], gcalRows) });
+});
 
 type BusinessEvent = {
   type: string;
