@@ -163,12 +163,21 @@ const PatientEvolution = () => {
 	const offline = useOfflineSync();
 	const deviceIdRef = useRef<string>(getOrCreateEvolutionDeviceId());
 
-	// FLAG (default OFF): editor modular de blocos como editor principal da evolução.
-	// Ativa via ?blocks=1. Sincroniza blocksToText → observacao (autosave/finalização preservados).
-	const blocksEditorEnabled = useMemo(
-		() => typeof window !== "undefined" && new URLSearchParams(window.location.search).get("blocks") === "1",
-		[],
-	);
+	// Editor modular de blocos: preferência por usuário (localStorage), default OFF (editor clássico).
+	// Override por ?blocks=1 (testes). Sincroniza blocksToText → observacao (autosave/finalização preservados).
+	const [blocksEditorEnabled, setBlocksEditorEnabled] = useState<boolean>(() => {
+		if (typeof window === "undefined") return false;
+		if (new URLSearchParams(window.location.search).get("blocks") === "1") return true;
+		return localStorage.getItem("ff_blocks_editor") === "1";
+	});
+	const toggleBlocksEditor = useCallback((on: boolean) => {
+		setBlocksEditorEnabled(on);
+		try {
+			localStorage.setItem("ff_blocks_editor", on ? "1" : "0");
+		} catch {
+			/* ignore */
+		}
+	}, []);
 	const [evolutionBlocks, setEvolutionBlocks] = useState<EvolutionBlock[]>([]);
 	const blocksSeededRef = useRef<string | undefined>(undefined);
 	const blocksSaveTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
@@ -897,6 +906,20 @@ const PatientEvolution = () => {
 							className="flex flex-col min-h-full"
 						>
 							<TabsContent value="evolucao" className="m-0 h-full data-[state=active]:flex flex-col">
+								<div className="mb-3 flex items-center justify-end gap-1 rounded-lg bg-slate-100 p-1 text-xs font-bold w-fit self-end">
+									<button
+										onClick={() => toggleBlocksEditor(false)}
+										className={`rounded-md px-3 py-1.5 ${!blocksEditorEnabled ? "bg-white text-slate-800 shadow-sm" : "text-slate-500"}`}
+									>
+										Clássico
+									</button>
+									<button
+										onClick={() => toggleBlocksEditor(true)}
+										className={`rounded-md px-3 py-1.5 ${blocksEditorEnabled ? "bg-white text-blue-700 shadow-sm" : "text-slate-500"}`}
+									>
+										Blocos (beta)
+									</button>
+								</div>
 								{blocksEditorEnabled ? (
 									<div className="rounded-2xl border border-slate-200 bg-white p-5">
 										<div className="mb-4">
