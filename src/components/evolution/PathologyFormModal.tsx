@@ -187,6 +187,11 @@ export const PathologyFormModal: React.FC<PathologyFormModalProps> = ({
 
   const createMutation = useMutation({
     mutationFn: (data: PathologyFormData) => PathologyService.addPathology(data),
+    onMutate: async () => {
+      await queryClient.cancelQueries({ queryKey: ["patient-pathologies", patientId] });
+      const previous = queryClient.getQueryData(["patient-pathologies", patientId]);
+      return { previous };
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: ["patient-pathologies", patientId],
@@ -195,7 +200,10 @@ export const PathologyFormModal: React.FC<PathologyFormModalProps> = ({
       onOpenChange(false);
       onSuccess?.();
     },
-    onError: () => {
+    onError: (_, __, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(["patient-pathologies", patientId], context.previous);
+      }
       toast.error("Erro ao registrar patologia");
     },
   });
@@ -203,6 +211,15 @@ export const PathologyFormModal: React.FC<PathologyFormModalProps> = ({
   const updateMutation = useMutation({
     mutationFn: ({ id, data }: { id: string; data: Partial<PathologyFormData> }) =>
       PathologyService.updatePathology(id, { ...data, patient_id: patientId }),
+    onMutate: async ({ id, data }) => {
+      await queryClient.cancelQueries({ queryKey: ["patient-pathologies", patientId] });
+      const previous = queryClient.getQueryData<any[]>(["patient-pathologies", patientId]);
+      queryClient.setQueryData<any[]>(["patient-pathologies", patientId], (old) => {
+        if (!old) return old;
+        return old.map((item) => (item.id === id ? { ...item, ...data } : item));
+      });
+      return { previous };
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: ["patient-pathologies", patientId],
@@ -211,13 +228,25 @@ export const PathologyFormModal: React.FC<PathologyFormModalProps> = ({
       onOpenChange(false);
       onSuccess?.();
     },
-    onError: () => {
+    onError: (_, __, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(["patient-pathologies", patientId], context.previous);
+      }
       toast.error("Erro ao atualizar patologia");
     },
   });
 
   const deleteMutation = useMutation({
     mutationFn: (id: string) => PathologyService.deletePathology(id, patientId),
+    onMutate: async (id) => {
+      await queryClient.cancelQueries({ queryKey: ["patient-pathologies", patientId] });
+      const previous = queryClient.getQueryData<any[]>(["patient-pathologies", patientId]);
+      queryClient.setQueryData<any[]>(["patient-pathologies", patientId], (old) => {
+        if (!old) return old;
+        return old.filter((item) => item.id !== id);
+      });
+      return { previous };
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: ["patient-pathologies", patientId],
@@ -226,7 +255,10 @@ export const PathologyFormModal: React.FC<PathologyFormModalProps> = ({
       onOpenChange(false);
       onSuccess?.();
     },
-    onError: () => {
+    onError: (_, __, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(["patient-pathologies", patientId], context.previous);
+      }
       toast.error("Erro ao remover patologia");
     },
   });

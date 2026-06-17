@@ -110,6 +110,13 @@ export function useFinancialPageData(period: PeriodType = "monthly") {
       const res = await financialApi.transacoes.create(data);
       return res?.data ?? res;
     },
+    onMutate: async (newTransaction) => {
+      await queryClient.cancelQueries({ queryKey: ["financial-transactions", organizationId, period] });
+      const previous = queryClient.getQueryData(["financial-transactions", organizationId, period]);
+      // For create, we might not have a full ID yet, so optimistic insert is tricky.
+      // But we can just rely on onSuccess invalidate without flicker if we don't clear old data.
+      return { previous };
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: ["financial-transactions"],
@@ -119,7 +126,10 @@ export function useFinancialPageData(period: PeriodType = "monthly") {
       });
       toast.success("Transação criada com sucesso");
     },
-    onError: (error) => {
+    onError: (error, _, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(["financial-transactions", organizationId, period], context.previous);
+      }
       logger.error("Error creating transaction", { error }, "useFinancialPage");
       toast.error("Erro ao criar transação");
     },
@@ -130,6 +140,17 @@ export function useFinancialPageData(period: PeriodType = "monthly") {
       const res = await financialApi.transacoes.update(data.id, data.transaction);
       return res?.data ?? res;
     },
+    onMutate: async ({ id, transaction }) => {
+      await queryClient.cancelQueries({ queryKey: ["financial-transactions", organizationId, period] });
+      const previous = queryClient.getQueryData<Transaction[]>(["financial-transactions", organizationId, period]);
+      
+      queryClient.setQueryData<Transaction[]>(["financial-transactions", organizationId, period], (old) => {
+        if (!old) return old;
+        return old.map((t) => (t.id === id ? { ...t, ...transaction } : t));
+      });
+
+      return { previous };
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: ["financial-transactions"],
@@ -139,7 +160,10 @@ export function useFinancialPageData(period: PeriodType = "monthly") {
       });
       toast.success("Transação atualizada com sucesso");
     },
-    onError: (error) => {
+    onError: (error, _, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(["financial-transactions", organizationId, period], context.previous);
+      }
       logger.error("Error updating transaction", { error }, "useFinancialPage");
       toast.error("Erro ao atualizar transação");
     },
@@ -148,6 +172,17 @@ export function useFinancialPageData(period: PeriodType = "monthly") {
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
       await financialApi.transacoes.delete(id);
+    },
+    onMutate: async (id) => {
+      await queryClient.cancelQueries({ queryKey: ["financial-transactions", organizationId, period] });
+      const previous = queryClient.getQueryData<Transaction[]>(["financial-transactions", organizationId, period]);
+      
+      queryClient.setQueryData<Transaction[]>(["financial-transactions", organizationId, period], (old) => {
+        if (!old) return old;
+        return old.filter((t) => t.id !== id);
+      });
+
+      return { previous };
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
@@ -158,7 +193,10 @@ export function useFinancialPageData(period: PeriodType = "monthly") {
       });
       toast.success("Transação excluída com sucesso");
     },
-    onError: (error) => {
+    onError: (error, _, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(["financial-transactions", organizationId, period], context.previous);
+      }
       logger.error("Error deleting transaction", { error }, "useFinancialPage");
       toast.error("Erro ao excluir transação");
     },
@@ -167,6 +205,17 @@ export function useFinancialPageData(period: PeriodType = "monthly") {
   const markAsPaidMutation = useMutation({
     mutationFn: async (id: string) => {
       await financialApi.transacoes.update(id, { status: "pago" });
+    },
+    onMutate: async (id) => {
+      await queryClient.cancelQueries({ queryKey: ["financial-transactions", organizationId, period] });
+      const previous = queryClient.getQueryData<Transaction[]>(["financial-transactions", organizationId, period]);
+      
+      queryClient.setQueryData<Transaction[]>(["financial-transactions", organizationId, period], (old) => {
+        if (!old) return old;
+        return old.map((t) => (t.id === id ? { ...t, status: "pago" } : t));
+      });
+
+      return { previous };
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
@@ -177,7 +226,10 @@ export function useFinancialPageData(period: PeriodType = "monthly") {
       });
       toast.success("Pagamento registrado com sucesso");
     },
-    onError: (error) => {
+    onError: (error, _, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(["financial-transactions", organizationId, period], context.previous);
+      }
       logger.error("Error marking as paid", { error }, "useFinancialPage");
       toast.error("Erro ao registrar pagamento");
     },

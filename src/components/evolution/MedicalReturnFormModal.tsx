@@ -117,6 +117,11 @@ export const MedicalReturnFormModal: React.FC<MedicalReturnFormModalProps> = ({
 
   const createMutation = useMutation({
     mutationFn: (data: MedicalReturnFormData) => MedicalReturnService.addMedicalReturn(data),
+    onMutate: async () => {
+      await queryClient.cancelQueries({ queryKey: ["patient-medical-returns", patientId] });
+      const previous = queryClient.getQueryData(["patient-medical-returns", patientId]);
+      return { previous };
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: ["patient-medical-returns", patientId],
@@ -125,7 +130,10 @@ export const MedicalReturnFormModal: React.FC<MedicalReturnFormModalProps> = ({
       onOpenChange(false);
       onSuccess?.();
     },
-    onError: () => {
+    onError: (_, __, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(["patient-medical-returns", patientId], context.previous);
+      }
       toast.error("Erro ao registrar retorno médico");
     },
   });
@@ -136,6 +144,15 @@ export const MedicalReturnFormModal: React.FC<MedicalReturnFormModalProps> = ({
         ...data,
         patient_id: patientId,
       }),
+    onMutate: async ({ id, data }) => {
+      await queryClient.cancelQueries({ queryKey: ["patient-medical-returns", patientId] });
+      const previous = queryClient.getQueryData<any[]>(["patient-medical-returns", patientId]);
+      queryClient.setQueryData<any[]>(["patient-medical-returns", patientId], (old) => {
+        if (!old) return old;
+        return old.map((item) => (item.id === id ? { ...item, ...data } : item));
+      });
+      return { previous };
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: ["patient-medical-returns", patientId],
@@ -144,13 +161,25 @@ export const MedicalReturnFormModal: React.FC<MedicalReturnFormModalProps> = ({
       onOpenChange(false);
       onSuccess?.();
     },
-    onError: () => {
+    onError: (_, __, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(["patient-medical-returns", patientId], context.previous);
+      }
       toast.error("Erro ao atualizar retorno médico");
     },
   });
 
   const deleteMutation = useMutation({
     mutationFn: (id: string) => MedicalReturnService.deleteMedicalReturn(id, patientId),
+    onMutate: async (id) => {
+      await queryClient.cancelQueries({ queryKey: ["patient-medical-returns", patientId] });
+      const previous = queryClient.getQueryData<any[]>(["patient-medical-returns", patientId]);
+      queryClient.setQueryData<any[]>(["patient-medical-returns", patientId], (old) => {
+        if (!old) return old;
+        return old.filter((item) => item.id !== id);
+      });
+      return { previous };
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: ["patient-medical-returns", patientId],
@@ -159,7 +188,10 @@ export const MedicalReturnFormModal: React.FC<MedicalReturnFormModalProps> = ({
       onOpenChange(false);
       onSuccess?.();
     },
-    onError: () => {
+    onError: (_, __, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(["patient-medical-returns", patientId], context.previous);
+      }
       toast.error("Erro ao remover retorno médico");
     },
   });
