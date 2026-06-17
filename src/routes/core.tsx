@@ -54,6 +54,9 @@ const BlocksEditorDemo = lazy(
 const SemanticExerciseSearch = lazy(
   () => import(/* webpackChunkName: "semantic-exercise-search" */ "@/pages/exercises/SemanticExerciseSearch"),
 );
+const ExerciseCuration = lazy(
+  () => import(/* webpackChunkName: "exercise-curation" */ "@/pages/exercises/ExerciseCuration"),
+);
 const EvolucaoClinica = lazy(
   () => import(/* webpackChunkName: "evolucao-clinica" */ "@/pages/EvolucaoClinica"),
 );
@@ -172,6 +175,16 @@ export const coreRoutes = (
         <RouteErrorBoundary routeName="SemanticExerciseSearch">
           <ProtectedRoute>
             <SemanticExerciseSearch />
+          </ProtectedRoute>
+        </RouteErrorBoundary>
+      }
+    />
+    <Route
+      path="/exercicios/curadoria"
+      element={
+        <RouteErrorBoundary routeName="ExerciseCuration">
+          <ProtectedRoute>
+            <ExerciseCuration />
           </ProtectedRoute>
         </RouteErrorBoundary>
       }
