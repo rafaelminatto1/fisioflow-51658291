@@ -128,6 +128,16 @@ export const automationApi = {
     ),
 };
 
+export type CopilotChatMessage = { role: "system" | "user" | "assistant" | "tool"; content: string };
+
+export const copilotApi = {
+  chat: (messages: CopilotChatMessage[]) =>
+    request<{ answer: string; toolCalls: Array<{ name: string }> }>("/api/copilot/chat", {
+      method: "POST",
+      body: JSON.stringify({ messages }),
+    }),
+};
+
 export const pushSubscriptionsApi = {
   list: (params?: { userId?: string; activeOnly?: boolean }) =>
     request<{ data: PushSubscription[] }>(withQuery("/api/push-subscriptions", params)),

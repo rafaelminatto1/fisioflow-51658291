@@ -39,6 +39,9 @@ const EditTemplatePage = lazy(
 const AutomationBuilder = lazy(
   () => import(/* webpackChunkName: "automation-builder" */ "@/pages/automations/AutomationBuilderPage"),
 );
+const CopilotChat = lazy(
+  () => import(/* webpackChunkName: "copilot-chat" */ "@/pages/copilot/CopilotChatPage"),
+);
 const EvolucaoClinica = lazy(
   () => import(/* webpackChunkName: "evolucao-clinica" */ "@/pages/EvolucaoClinica"),
 );
@@ -107,6 +110,16 @@ export const coreRoutes = (
         <RouteErrorBoundary routeName="AutomationBuilder">
           <ProtectedRoute>
             <AutomationBuilder />
+          </ProtectedRoute>
+        </RouteErrorBoundary>
+      }
+    />
+    <Route
+      path="/copiloto"
+      element={
+        <RouteErrorBoundary routeName="CopilotChat">
+          <ProtectedRoute>
+            <CopilotChat />
           </ProtectedRoute>
         </RouteErrorBoundary>
       }
