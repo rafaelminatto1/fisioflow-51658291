@@ -31,3 +31,6 @@ export type { WearableActivityParams } from "./wearableActivity";
 
 export { BiomechanicsAnalysisWorkflow } from "./biomechanicsAnalysis";
 export type { BiomechanicsAnalysisParams } from "./biomechanicsAnalysis";
+
+export { AutomationExecutor } from "./automationExecutor";
+export type { AutomationWorkflowParams } from "./automationExecutor";

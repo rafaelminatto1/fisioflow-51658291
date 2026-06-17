@@ -38,4 +38,17 @@ describe("runAutomationsForEvent", () => {
     // org + event type scoped query
     expect(sql.mock.calls[0][1]).toEqual(["o1", "evolution.updated"]);
   });
+
+  it("creates a durable Workflow when WORKFLOW_AUTOMATION is bound", async () => {
+    const sql = vi.fn(async (_q: string, _p?: unknown[]) => ({ rows: [{ id: "au1", definition: def }] }));
+    const create = vi.fn(async (_o: any) => ({ id: "wf1" }));
+    const out = await runAutomationsForEvent(
+      sql as any,
+      { AUTOMATION_EXECUTION_ENABLED: "true", WORKFLOW_AUTOMATION: { create } } as any,
+      { type: "evolution.updated", data: { organizationId: "o1" } },
+    );
+    expect(out.ran).toBe(1);
+    expect(create).toHaveBeenCalledOnce();
+    expect(create.mock.calls[0][0].params.automationId).toBe("au1");
+  });
 });
