@@ -1,5 +1,6 @@
 import type { Env } from "./types/env";
-import { createPool, createPoolForOrg } from "./lib/db";
+import { createPool, createPoolForOrg, getRawSql } from "./lib/db";
+import { runAutomationsForEvent } from "./lib/automation/triggerAutomations";
 import { writeEvent } from "./lib/analytics";
 import { transcribeAudio, analyzeClinicImage } from "./lib/ai-native";
 import { sendPushToUser, sendPushToOrg, type PushPayload } from "./lib/webpush";
@@ -221,6 +222,17 @@ export async function handleQueue(batch: MessageBatch<QueueTask>, env: Env): Pro
           }
           break;
         }
+      }
+
+      // Event-driven automations (gated by AUTOMATION_EXECUTION_ENABLED; no-op otherwise)
+      try {
+        const evt = task as any;
+        if (evt?.data && typeof evt.type === "string") {
+          const sql = getRawSql(env, "write");
+          await runAutomationsForEvent((q, p) => sql(q, p), env, { type: evt.type, data: evt.data });
+        }
+      } catch (autoErr) {
+        console.error(`[Queue] Automation trigger failed for ${task.type}:`, autoErr);
       }
 
       message.ack();
