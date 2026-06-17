@@ -157,6 +157,11 @@ export const SurgeryFormModal: React.FC<SurgeryFormModalProps> = ({
 
   const createMutation = useMutation({
     mutationFn: (data: SurgeryFormData) => SurgeryService.addSurgery(data),
+    onMutate: async () => {
+      await queryClient.cancelQueries({ queryKey: ["patient-surgeries", patientId] });
+      const previous = queryClient.getQueryData(["patient-surgeries", patientId]);
+      return { previous };
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: ["patient-surgeries", patientId],
@@ -165,7 +170,10 @@ export const SurgeryFormModal: React.FC<SurgeryFormModalProps> = ({
       onOpenChange(false);
       onSuccess?.();
     },
-    onError: () => {
+    onError: (_, __, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(["patient-surgeries", patientId], context.previous);
+      }
       toast.error("Erro ao registrar cirurgia");
     },
   });
@@ -173,6 +181,15 @@ export const SurgeryFormModal: React.FC<SurgeryFormModalProps> = ({
   const updateMutation = useMutation({
     mutationFn: ({ id, data }: { id: string; data: Partial<SurgeryFormData> }) =>
       SurgeryService.updateSurgery(id, { ...data, patient_id: patientId }),
+    onMutate: async ({ id, data }) => {
+      await queryClient.cancelQueries({ queryKey: ["patient-surgeries", patientId] });
+      const previous = queryClient.getQueryData<any[]>(["patient-surgeries", patientId]);
+      queryClient.setQueryData<any[]>(["patient-surgeries", patientId], (old) => {
+        if (!old) return old;
+        return old.map((item) => (item.id === id ? { ...item, ...data } : item));
+      });
+      return { previous };
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: ["patient-surgeries", patientId],
@@ -181,13 +198,25 @@ export const SurgeryFormModal: React.FC<SurgeryFormModalProps> = ({
       onOpenChange(false);
       onSuccess?.();
     },
-    onError: () => {
+    onError: (_, __, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(["patient-surgeries", patientId], context.previous);
+      }
       toast.error("Erro ao atualizar cirurgia");
     },
   });
 
   const deleteMutation = useMutation({
     mutationFn: (id: string) => SurgeryService.deleteSurgery(id, patientId),
+    onMutate: async (id) => {
+      await queryClient.cancelQueries({ queryKey: ["patient-surgeries", patientId] });
+      const previous = queryClient.getQueryData<any[]>(["patient-surgeries", patientId]);
+      queryClient.setQueryData<any[]>(["patient-surgeries", patientId], (old) => {
+        if (!old) return old;
+        return old.filter((item) => item.id !== id);
+      });
+      return { previous };
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: ["patient-surgeries", patientId],
@@ -196,7 +225,10 @@ export const SurgeryFormModal: React.FC<SurgeryFormModalProps> = ({
       onOpenChange(false);
       onSuccess?.();
     },
-    onError: () => {
+    onError: (_, __, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(["patient-surgeries", patientId], context.previous);
+      }
       toast.error("Erro ao remover cirurgia");
     },
   });
