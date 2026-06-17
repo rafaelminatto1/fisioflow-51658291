@@ -233,6 +233,17 @@ export async function generateEmbedding(env: Env, text: string): Promise<number[
   return ((response as any).data?.[0] ?? []) as number[];
 }
 
+/** Embedding 1024d (bge-m3) — usar para colunas vector(1024) (ex: exercises.embedding, evidence_articles). */
+export async function generateEmbedding1024(env: Env, text: string): Promise<number[]> {
+  const response = await runAi(
+    env,
+    "@cf/baai/bge-m3",
+    { text: [text] },
+    { cache: true, cacheTtl: 86400 },
+  );
+  return ((response as any).data?.[0] ?? []) as number[];
+}
+
 export interface ThinkingModelInput {
   prompt: string;
   model?: string;
