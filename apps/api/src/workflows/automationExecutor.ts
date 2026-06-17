@@ -4,6 +4,7 @@ import type { AutomationDefinition, AutomationNode } from "../lib/automation/typ
 import { evaluateCondition } from "../lib/automation/conditions";
 import { nextNodeId } from "../lib/automation/runAutomation";
 import { buildActionHandlers } from "../lib/automation/actionHandlers";
+import { getRawSql, runWithOrg } from "../lib/db";
 
 export type AutomationWorkflowParams = {
   automationId?: string;
@@ -20,6 +21,10 @@ export class AutomationExecutor extends WorkflowEntrypoint<Env, AutomationWorkfl
     const { definition, context } = event.payload;
     const handlers = buildActionHandlers(this.env);
     const byId = new Map<string, AutomationNode>(definition.nodes.map((n) => [n.id, n]));
+
+    const startedAt = Date.now();
+    const orgId = String(context.organizationId ?? context.orgId ?? context.organization_id ?? "");
+    const automationId = String(event.payload.automationId ?? "");
 
     let current: AutomationNode | undefined = definition.nodes.find((n) => n.type === "trigger");
     let steps = 0;
@@ -54,6 +59,35 @@ export class AutomationExecutor extends WorkflowEntrypoint<Env, AutomationWorkfl
       current = nextId ? byId.get(nextId) : undefined;
     }
 
-    return { steps, completed: !current };
+    const completed = !current;
+    if (orgId) {
+      await step.do("log-completion", async () => {
+        try {
+          await runWithOrg(orgId, async () => {
+            const sql = getRawSql(this.env, "write");
+            await sql(
+              `INSERT INTO automation_logs
+                 (organization_id, automation_id, automation_name, event_type, status, started_at, completed_at, duration_ms, error)
+               VALUES ($1,$2,$3,$4,$5, to_timestamp($6/1000.0), now(), $7, $8)`,
+              [
+                orgId,
+                automationId,
+                "",
+                String(context.eventType ?? ""),
+                completed ? "completed" : "incomplete",
+                startedAt,
+                Date.now() - startedAt,
+                null,
+              ],
+            );
+          });
+        } catch (e) {
+          console.error("[AutomationExecutor] completion log failed", e);
+        }
+        return { logged: true };
+      });
+    }
+
+    return { steps, completed };
   }
 }
