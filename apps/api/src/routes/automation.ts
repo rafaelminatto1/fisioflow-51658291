@@ -36,6 +36,110 @@ export async function runSimulation(input: unknown) {
   });
 }
 
+export const CreateAutomationBody = z.object({
+  name: z.string().min(1).max(200),
+  description: z.string().max(2000).optional(),
+  triggerEvent: z.string().max(120).optional(),
+  enabled: z.boolean().optional(),
+  definition: automationDefinitionSchema,
+});
+export type CreateAutomationInput = z.infer<typeof CreateAutomationBody>;
+
+export function buildAutomationInsert(body: CreateAutomationInput, orgId: string, createdBy: string) {
+  return {
+    text: `INSERT INTO automations (org_id, name, description, trigger_event, enabled, definition, created_by)
+           VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING *`,
+    params: [
+      orgId,
+      body.name,
+      body.description ?? null,
+      body.triggerEvent ?? null,
+      body.enabled ?? false,
+      JSON.stringify(body.definition),
+      createdBy,
+    ],
+  };
+}
+
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+app.get("/", requireAuth, async (c) => {
+  const user = c.get("user");
+  const pool = await createPool(c.env);
+  const result = await pool.query(
+    `SELECT * FROM automations WHERE org_id = $1 ORDER BY created_at DESC LIMIT 200`,
+    [user.organizationId],
+  );
+  return c.json({ data: result.rows ?? [] });
+});
+
+app.post("/", requireAuth, async (c) => {
+  const user = c.get("user");
+  let body: CreateAutomationInput;
+  try {
+    body = CreateAutomationBody.parse(await c.req.json());
+  } catch (e: any) {
+    return c.json({ error: e?.message ?? "dados inválidos" }, 400);
+  }
+  const pool = await createPool(c.env);
+  const ins = buildAutomationInsert(body, user.organizationId, user.uid);
+  const result = await pool.query(ins.text, ins.params);
+  return c.json({ data: result.rows?.[0] ?? null }, 201);
+});
+
+app.get("/:id", requireAuth, async (c) => {
+  const id = c.req.param("id");
+  if (!UUID_RE.test(id)) return c.json({ error: "id inválido" }, 400);
+  const user = c.get("user");
+  const pool = await createPool(c.env);
+  const result = await pool.query(`SELECT * FROM automations WHERE id = $1 AND org_id = $2`, [
+    id,
+    user.organizationId,
+  ]);
+  const row = result.rows?.[0];
+  if (!row) return c.json({ error: "não encontrado" }, 404);
+  return c.json({ data: row });
+});
+
+app.put("/:id", requireAuth, async (c) => {
+  const id = c.req.param("id");
+  if (!UUID_RE.test(id)) return c.json({ error: "id inválido" }, 400);
+  const user = c.get("user");
+  let body: CreateAutomationInput;
+  try {
+    body = CreateAutomationBody.parse(await c.req.json());
+  } catch (e: any) {
+    return c.json({ error: e?.message ?? "dados inválidos" }, 400);
+  }
+  const pool = await createPool(c.env);
+  const result = await pool.query(
+    `UPDATE automations
+        SET name=$1, description=$2, trigger_event=$3, enabled=$4, definition=$5, updated_at=now()
+      WHERE id=$6 AND org_id=$7 RETURNING *`,
+    [
+      body.name,
+      body.description ?? null,
+      body.triggerEvent ?? null,
+      body.enabled ?? false,
+      JSON.stringify(body.definition),
+      id,
+      user.organizationId,
+    ],
+  );
+  const row = result.rows?.[0];
+  if (!row) return c.json({ error: "não encontrado" }, 404);
+  return c.json({ data: row });
+});
+
+app.delete("/:id", requireAuth, async (c) => {
+  const id = c.req.param("id");
+  if (!UUID_RE.test(id)) return c.json({ error: "id inválido" }, 400);
+  const user = c.get("user");
+  const pool = await createPool(c.env);
+  await pool.query(`DELETE FROM automations WHERE id = $1 AND org_id = $2`, [id, user.organizationId]);
+  return c.json({ ok: true });
+});
+
 app.get("/logs", requireAuth, async (c) => {
   const user = c.get("user");
   const pool = await createPool(c.env);
