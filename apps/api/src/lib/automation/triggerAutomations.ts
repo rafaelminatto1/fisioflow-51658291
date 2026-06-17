@@ -30,7 +30,7 @@ export async function runAutomationsForEvent(
   let rows: any[] = [];
   try {
     const res = await sql(
-      `SELECT id, definition FROM automations
+      `SELECT id, name, definition FROM automations
         WHERE org_id = $1 AND trigger_event = $2 AND enabled = true LIMIT 50`,
       [orgId, event.type],
     );
@@ -46,6 +46,9 @@ export async function runAutomationsForEvent(
       typeof row.definition === "string" ? JSON.parse(row.definition) : row.definition,
     );
     if (!parsed.success) continue;
+    const startedAt = Date.now();
+    let status = "triggered";
+    let errMsg: string | null = null;
     try {
       if (env.WORKFLOW_AUTOMATION) {
         // Durable execution: step.sleep survives restarts, actions get retries (slice 2b).
@@ -53,14 +56,51 @@ export async function runAutomationsForEvent(
           id: `auto-${row.id}-${Date.now()}`,
           params: { automationId: row.id, definition: parsed.data, context: event.data ?? {} },
         });
+        status = "triggered"; // durable run continues async; completion tracked by the Workflow
       } else {
         // Fallback: inline run with no-op waits (no durable binding available).
         await runAutomation(parsed.data, event.data ?? {}, { actions: handlers, sleep: async () => {} });
+        status = "completed";
       }
       ran++;
     } catch (e) {
+      status = "failed";
+      errMsg = String((e as Error)?.message ?? e);
       console.error("[Automation] run failed", row.id, e);
     }
+    await logAutomationRun(sql, {
+      orgId,
+      automationId: String(row.id),
+      automationName: String(row.name ?? ""),
+      eventType: event.type,
+      status,
+      durationMs: Date.now() - startedAt,
+      error: errMsg,
+    });
   }
   return { matched: rows.length, ran };
+}
+
+async function logAutomationRun(
+  sql: Sql,
+  log: {
+    orgId: string;
+    automationId: string;
+    automationName: string;
+    eventType: string;
+    status: string;
+    durationMs: number;
+    error: string | null;
+  },
+): Promise<void> {
+  try {
+    await sql(
+      `INSERT INTO automation_logs
+         (organization_id, automation_id, automation_name, event_type, status, started_at, completed_at, duration_ms, error)
+       VALUES ($1,$2,$3,$4,$5, now(), now(), $6, $7)`,
+      [log.orgId, log.automationId, log.automationName, log.eventType, log.status, log.durationMs, log.error],
+    );
+  } catch (e) {
+    console.error("[Automation] log insert failed", e);
+  }
 }
