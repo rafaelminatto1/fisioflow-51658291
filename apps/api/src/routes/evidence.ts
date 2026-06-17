@@ -9,6 +9,7 @@ import { fetchOpenAccessFullText } from "../lib/evidence/sources/europepmc";
 import { rankArticles } from "../lib/evidence/rank";
 import { queryCacheKey, getCachedSearch, setCachedSearch, upsertArticles } from "../lib/evidence/cache";
 import { summarizeArticles } from "../lib/evidence/summarize";
+import { lookupCid10 } from "../lib/evidence/cid10Physio";
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
@@ -78,6 +79,13 @@ app.get("/library", requireAuth, async (c) => {
     [user.organizationId],
   );
   return c.json({ data: res.rows ?? [] });
+});
+
+// GET /api/evidence/cid10/:code — resolve um CID-10 de fisioterapia para rótulo + query PubMed
+app.get("/cid10/:code", requireAuth, async (c) => {
+  const entry = lookupCid10(c.req.param("code"));
+  if (!entry) return c.json({ error: "CID-10 sem mapeamento de fisioterapia" }, 404);
+  return c.json({ data: entry });
 });
 
 export const EVIDENCE_TARGET_TYPES = ["exercise", "protocol", "wiki", "patient", "assessment"] as const;
