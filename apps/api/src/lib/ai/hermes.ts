@@ -1,8 +1,12 @@
 import type { Env } from "../../types/env";
 import { runThinkingModel } from "../ai-native";
 
-/** Hermes 2 Pro (Nous Research) — forte em function-calling / saída estruturada (JSON). */
-export const HERMES_MODEL = "@hf/nousresearch/hermes-2-pro-mistral-7b";
+/**
+ * Modelo para saída estruturada (JSON).
+ * NOTA: Hermes 2 Pro (@hf/nousresearch/hermes-2-pro-mistral-7b) foi DEPRECADO no Cloudflare
+ * Workers AI em 2026-05-30. Usamos o llama-3.3-70b `-fast` (ativo, forte em JSON) no lugar.
+ */
+export const STRUCTURED_MODEL = "@cf/meta/llama-3.3-70b-instruct-fp8-fast";
 
 /**
  * Extrai um bloco JSON de uma resposta de LLM (tolerante a cercas markdown e texto ao redor).
@@ -43,14 +47,14 @@ export function parseJsonLoose(text: string): unknown {
 /**
  * Roda o Hermes pedindo JSON e retorna o parse (ou null). `system` deve descrever o schema esperado.
  */
-export async function hermesJson<T = unknown>(
+export async function structuredJson<T = unknown>(
   env: Env,
   system: string,
   user: string,
 ): Promise<T | null> {
   const res = await runThinkingModel(env, {
     prompt: `${system}\n\nEntrada:\n${user}\n\nResponda APENAS com JSON válido.`,
-    model: HERMES_MODEL,
+    model: STRUCTURED_MODEL,
     responseFormat: "json",
     temperature: 0.2,
   });
