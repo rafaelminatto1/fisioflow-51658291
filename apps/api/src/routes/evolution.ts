@@ -3,7 +3,7 @@ import type { Env } from "../types/env";
 import { requireAuth, type AuthVariables } from "../lib/auth";
 import { createPool } from "../lib/db";
 import { jsonSerialize } from "../lib/utils";
-import { hermesJson } from "../lib/ai/hermes";
+import { structuredJson } from "../lib/ai/hermes";
 import { EXTRACT_BLOCKS_SYSTEM, coerceBlocks } from "../lib/evolution/extractBlocks";
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
@@ -14,7 +14,7 @@ app.post("/extract-blocks", requireAuth, async (c) => {
   const text = String(body.text ?? "").trim();
   if (text.length < 10) return c.json({ error: "Texto muito curto" }, 400);
   try {
-    const raw = await hermesJson(c.env, EXTRACT_BLOCKS_SYSTEM, text.slice(0, 4000));
+    const raw = await structuredJson(c.env, EXTRACT_BLOCKS_SYSTEM, text.slice(0, 4000));
     return c.json({ data: coerceBlocks(raw) });
   } catch (e) {
     return c.json({ error: "Falha na extração", details: (e as Error).message }, 500);
