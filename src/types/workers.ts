@@ -190,6 +190,7 @@ export interface SessionRecord {
   patient_id: string;
   appointment_id?: string;
   session_number?: number;
+  blocks?: Array<Record<string, unknown>>;
   subjective?: string;
   objective?: string;
   assessment?: string;
