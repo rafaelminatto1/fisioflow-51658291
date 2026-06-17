@@ -12,7 +12,7 @@ import {
   wikiDictionary,
 } from "@fisioflow/db";
 import { removeExerciseFromIndex, syncExerciseToIndex } from "../lib/contentIndexing";
-import { generateEmbedding, generateTurboSketch } from "../lib/ai-native";
+import { generateEmbedding1024, generateTurboSketch } from "../lib/ai-native";
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
@@ -543,7 +543,7 @@ app.post("/", requireAuth, async (c) => {
         const categoryLabel = row.subcategory || row.categoryId || "";
         const textToEmbed =
           `${row.name} ${row.description || ""} ${categoryLabel} ${row.bodyParts?.join(" ") || ""}`.trim();
-        const vectorData = await generateEmbedding(c.env, textToEmbed);
+        const vectorData = await generateEmbedding1024(c.env, textToEmbed);
         if (vectorData.length > 0) {
           const sketch = generateTurboSketch(vectorData);
           await db
@@ -619,7 +619,7 @@ app.put("/:id", requireAuth, async (c) => {
         const categoryLabel = row.subcategory || row.categoryId || "";
         const textToEmbed =
           `${row.name} ${row.description || ""} ${categoryLabel} ${row.bodyParts?.join(" ") || ""}`.trim();
-        const vectorData = await generateEmbedding(c.env, textToEmbed);
+        const vectorData = await generateEmbedding1024(c.env, textToEmbed);
         if (vectorData.length > 0) {
           const sketch = generateTurboSketch(vectorData);
           await db
@@ -707,7 +707,7 @@ app.get("/search/semantic", async (c) => {
   // 2. Fallback to pgvector Search (Busca Inteligente nativa)
   try {
     const db = await createDb(c.env);
-    const queryVector = await generateEmbedding(c.env, q);
+    const queryVector = await generateEmbedding1024(c.env, q);
     
     if (queryVector.length > 0) {
       const similarity = sql<number>`1 - (${cosineDistance(exercises.embedding, queryVector)})`;
@@ -775,7 +775,7 @@ app.post("/embeddings/backfill", requireAuth, async (c) => {
     const text = [r.name, r.description].filter(Boolean).join(". ").slice(0, 1000);
     if (text.length < 3) continue;
     try {
-      const vec = await generateEmbedding(c.env, text);
+      const vec = await generateEmbedding1024(c.env, text);
       if (vec.length > 0) {
         await sqlRaw(`UPDATE exercises SET embedding = $1::vector WHERE id = $2`, [
           JSON.stringify(vec),
