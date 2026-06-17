@@ -20,7 +20,14 @@ const BodySchema = z.object({
       }),
     )
     .min(1),
+  // A/B: modelo de tool-calling (allowlist de modelos ativos). Default = llama_3_1_8b.
+  model: z.enum(["llama_3_1_8b", "llama_3_3_70b"]).optional(),
 });
+
+const COPILOT_MODELS: Record<string, string> = {
+  llama_3_1_8b: "@cf/meta/llama-3.1-8b-instruct-fast",
+  llama_3_3_70b: "@cf/meta/llama-3.3-70b-instruct-fp8-fast",
+};
 
 const SYSTEM: CopilotMessage = {
   role: "system",
@@ -38,9 +45,11 @@ export async function runCopilotChat(
   token: string,
   baseUrl: string,
   messages: CopilotMessage[],
+  modelKey?: string,
 ) {
   const tools = buildRegistry();
-  const callModel = makeCallModel(env, tools);
+  const model = (modelKey && COPILOT_MODELS[modelKey]) || undefined;
+  const callModel = makeCallModel(env, tools, model);
   return runCopilot({
     callModel,
     tools,
@@ -59,7 +68,7 @@ app.post(
     const auth = c.req.header("Authorization") ?? "";
     const token = auth.toLowerCase().startsWith("bearer ") ? auth.slice(7) : "";
     const baseUrl = new URL(c.req.url).origin;
-    const out = await runCopilotChat(c.env, user, token, baseUrl, body.messages as CopilotMessage[]);
+    const out = await runCopilotChat(c.env, user, token, baseUrl, body.messages as CopilotMessage[], body.model);
     return c.json(out);
   },
 );
