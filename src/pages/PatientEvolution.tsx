@@ -128,6 +128,8 @@ const LazyNotionEvolutionPanel = lazy(() =>
 import { preloadEditorChunks } from "@/lib/evolution/preloadEditors";
 import { stripPainDetail } from "@/lib/evolution/painDetail";
 import type { EvolutionV2Data } from "@/components/evolution/v2-improved/types";
+import { EvolutionBlocksEditor } from "@/components/evolution/blocks/EvolutionBlocksEditor";
+import { blocksToText, type EvolutionBlock } from "@/components/evolution/blocks/blockUtils";
 
 export interface PainScaleData {
 	level: number;
@@ -159,6 +161,14 @@ const PatientEvolution = () => {
 	// Status offline (queue de ações pendentes + navigator.onLine)
 	const offline = useOfflineSync();
 	const deviceIdRef = useRef<string>(getOrCreateEvolutionDeviceId());
+
+	// FLAG (default OFF): editor modular de blocos como editor principal da evolução.
+	// Ativa via ?blocks=1. Sincroniza blocksToText → observacao (autosave/finalização preservados).
+	const blocksEditorEnabled = useMemo(
+		() => typeof window !== "undefined" && new URLSearchParams(window.location.search).get("blocks") === "1",
+		[],
+	);
+	const [evolutionBlocks, setEvolutionBlocks] = useState<EvolutionBlock[]>([]);
 
 	// Persistência local do rascunho (sobrevive a reload/fechar aba)
 	const draft = useEvolutionDraft<EvolutionV2Data>({
@@ -698,6 +708,29 @@ const PatientEvolution = () => {
 	);
 
 	const mainGridContent = useMemo(() => {
+		if (blocksEditorEnabled) {
+			return (
+				<div className="rounded-2xl border border-slate-200 bg-white p-5">
+					<div className="mb-4">
+						<h2 className="text-lg font-extrabold text-slate-800">Evolução em blocos</h2>
+						<p className="text-sm text-slate-500">
+							Editor modular (beta). O conteúdo é salvo na observação clínica via autosave.
+						</p>
+					</div>
+					<EvolutionBlocksEditor
+						blocks={evolutionBlocks}
+						onChange={(next) => {
+							setEvolutionBlocks(next);
+							handleEvolutionV2Change({
+								...state.evolutionV2Data,
+								evolutionText: blocksToText(next),
+								observations: blocksToText(next),
+							});
+						}}
+					/>
+				</div>
+			);
+		}
 		return (
 			<Suspense fallback={<LoadingSkeleton type="card" />}>
 				<LazyNotionEvolutionPanel
@@ -713,7 +746,7 @@ const PatientEvolution = () => {
 				/>
 			</Suspense>
 		);
-	}, [state, autoSaveMutation.isPending, lastSavedAt]);
+	}, [state, autoSaveMutation.isPending, lastSavedAt, blocksEditorEnabled, evolutionBlocks, handleEvolutionV2Change, user]);
 
 	if (state.dataLoading)
 		return (
