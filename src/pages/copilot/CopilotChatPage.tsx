@@ -43,7 +43,7 @@ export default function CopilotChatPage() {
   }
 
   return (
-    <div className="mx-auto flex h-[calc(100vh-4rem)] max-w-3xl flex-col font-[Nunito,sans-serif]">
+    <div className="mx-auto flex h-full min-h-0 max-w-3xl flex-col font-[Nunito,sans-serif]">
       {/* Header */}
       <header className="flex items-center gap-3 border-b border-slate-200 px-5 py-4">
         <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-600 text-white">
