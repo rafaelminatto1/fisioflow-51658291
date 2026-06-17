@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import { eq, and, inArray, sql, cosineDistance } from "drizzle-orm";
-import { createDb, createPool } from "../lib/db";
+import { createDb, createPool, getRawSql } from "../lib/db";
 import { requireAuth, type AuthVariables } from "../lib/auth";
 import type { Env } from "../types/env";
 import { searchAiSearch } from "../lib/cloudflareAiSearch";
@@ -759,6 +759,36 @@ app.get("/search/semantic", async (c) => {
     .limit(limitNum);
 
   return c.json({ data: rows, meta: { method: "text" } });
+});
+
+// POST /api/exercises/embeddings/backfill — gera embeddings (bge-m3) p/ exercícios sem vetor (lotes).
+app.post("/embeddings/backfill", requireAuth, async (c) => {
+  const user = c.get("user");
+  if (user.role !== "admin") return c.json({ error: "Apenas admin" }, 403);
+  const sqlRaw = getRawSql(c.env, "write");
+  const sel = await sqlRaw(
+    `SELECT id, name, description FROM exercises WHERE embedding IS NULL LIMIT 20`,
+    [],
+  );
+  let processed = 0;
+  for (const r of (sel.rows ?? []) as Array<{ id: string; name: string; description?: string }>) {
+    const text = [r.name, r.description].filter(Boolean).join(". ").slice(0, 1000);
+    if (text.length < 3) continue;
+    try {
+      const vec = await generateEmbedding(c.env, text);
+      if (vec.length > 0) {
+        await sqlRaw(`UPDATE exercises SET embedding = $1::vector WHERE id = $2`, [
+          JSON.stringify(vec),
+          r.id,
+        ]);
+        processed++;
+      }
+    } catch (e) {
+      console.error("[Exercises] backfill embedding error", e);
+    }
+  }
+  const rem = await sqlRaw(`SELECT count(*)::int AS n FROM exercises WHERE embedding IS NULL`, []);
+  return c.json({ processed, remaining: (rem.rows?.[0] as { n?: number })?.n ?? 0 });
 });
 
 export { app as exercisesRoutes };
