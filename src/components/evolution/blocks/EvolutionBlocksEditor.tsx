@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import {
   Type,
   Activity,
@@ -10,8 +10,10 @@ import {
   ChevronUp,
   ChevronDown,
   Plus,
+  Wand2,
 } from "lucide-react";
 import { type EvolutionBlock, type BlockType, newBlock } from "./blockUtils";
+import { evolutionAiApi } from "@/api/v2/evolution";
 
 const PALETTE: Array<{ type: BlockType; label: string; icon: typeof Type }> = [
   { type: "text", label: "Texto", icon: Type },
@@ -59,8 +61,70 @@ export function EvolutionBlocksEditor({
     [blocks, onChange],
   );
 
+  const [aiOpen, setAiOpen] = useState(false);
+  const [aiText, setAiText] = useState("");
+  const [aiBusy, setAiBusy] = useState(false);
+  const [aiError, setAiError] = useState<string | null>(null);
+
+  const extractFromText = useCallback(async () => {
+    const text = aiText.trim();
+    if (text.length < 10 || aiBusy) return;
+    setAiBusy(true);
+    setAiError(null);
+    try {
+      const res = await evolutionAiApi.extractBlocks(text);
+      const newBlocks = (res.data ?? []) as unknown as EvolutionBlock[];
+      if (newBlocks.length === 0) {
+        setAiError("A IA não encontrou blocos no texto.");
+      } else {
+        onChange([...blocks, ...newBlocks]);
+        setAiText("");
+        setAiOpen(false);
+      }
+    } catch (e) {
+      setAiError((e as Error).message ?? "Falha na extração");
+    } finally {
+      setAiBusy(false);
+    }
+  }, [aiText, aiBusy, blocks, onChange]);
+
   return (
     <div className="font-[Nunito,sans-serif]">
+      {!disabled && (
+        <div className="mb-3">
+          {!aiOpen ? (
+            <button
+              onClick={() => setAiOpen(true)}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-blue-200 bg-blue-50 px-3 py-1.5 text-sm font-semibold text-blue-700 hover:bg-blue-100"
+            >
+              <Wand2 className="h-3.5 w-3.5" /> Gerar blocos do texto (IA)
+            </button>
+          ) : (
+            <div className="rounded-xl border border-blue-200 bg-blue-50/50 p-3">
+              <textarea
+                value={aiText}
+                onChange={(e) => setAiText(e.target.value)}
+                rows={3}
+                placeholder="Cole/escreva a evolução em texto livre. A IA (Hermes) extrai EVA, goniometria, condutas…"
+                className="w-full resize-y rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-blue-400 focus:outline-none"
+              />
+              {aiError && <p className="mt-1 text-xs text-red-600">{aiError}</p>}
+              <div className="mt-2 flex items-center gap-2">
+                <button
+                  onClick={extractFromText}
+                  disabled={aiBusy || aiText.trim().length < 10}
+                  className="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-blue-700 disabled:opacity-40"
+                >
+                  <Wand2 className="h-3.5 w-3.5" /> {aiBusy ? "Gerando…" : "Gerar blocos"}
+                </button>
+                <button onClick={() => setAiOpen(false)} className="text-xs font-semibold text-slate-500 hover:text-slate-700">
+                  Cancelar
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
       <div className="space-y-3">
         {blocks.map((b, idx) => {
           const meta = TYPE_META[b.type];
