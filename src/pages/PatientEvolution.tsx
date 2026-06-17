@@ -130,6 +130,7 @@ import { stripPainDetail } from "@/lib/evolution/painDetail";
 import type { EvolutionV2Data } from "@/components/evolution/v2-improved/types";
 import { EvolutionBlocksEditor } from "@/components/evolution/blocks/EvolutionBlocksEditor";
 import { blocksToText, type EvolutionBlock } from "@/components/evolution/blocks/blockUtils";
+import { sessionsApi } from "@/api/v2/clinical";
 
 export interface PainScaleData {
 	level: number;
@@ -169,6 +170,36 @@ const PatientEvolution = () => {
 		[],
 	);
 	const [evolutionBlocks, setEvolutionBlocks] = useState<EvolutionBlock[]>([]);
+	const blocksSeededRef = useRef<string | undefined>(undefined);
+	const blocksSaveTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+
+	// Seed dos blocos a partir da sessão carregada (uma vez por evolução).
+	useEffect(() => {
+		if (!blocksEditorEnabled) return;
+		const id = state.currentSoapRecordId;
+		if (!id || blocksSeededRef.current === id) return;
+		blocksSeededRef.current = id;
+		sessionsApi
+			.get(id)
+			.then((r) => {
+				const b = r.data?.blocks;
+				if (Array.isArray(b) && b.length) setEvolutionBlocks(b as EvolutionBlock[]);
+			})
+			.catch(() => {});
+	}, [blocksEditorEnabled, state.currentSoapRecordId]);
+
+	// Persiste o JSON dos blocos (debounced, best-effort) — separado do autosave de observacao.
+	const persistBlocks = useCallback(
+		(next: EvolutionBlock[]) => {
+			const id = state.currentSoapRecordId;
+			if (!id) return;
+			if (blocksSaveTimer.current) clearTimeout(blocksSaveTimer.current);
+			blocksSaveTimer.current = setTimeout(() => {
+				sessionsApi.update(id, { blocks: next as Array<Record<string, unknown>> }).catch(() => {});
+			}, 800);
+		},
+		[state.currentSoapRecordId],
+	);
 
 	// Persistência local do rascunho (sobrevive a reload/fechar aba)
 	const draft = useEvolutionDraft<EvolutionV2Data>({
@@ -878,6 +909,7 @@ const PatientEvolution = () => {
 											blocks={evolutionBlocks}
 											onChange={(next) => {
 												setEvolutionBlocks(next);
+												persistBlocks(next);
 												handleEvolutionV2Change({
 													...state.evolutionV2Data,
 													evolutionText: blocksToText(next),
