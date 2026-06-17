@@ -60,6 +60,9 @@ const ExerciseCuration = lazy(
 const ExerciseEvidence = lazy(
   () => import(/* webpackChunkName: "exercise-evidence" */ "@/pages/exercises/ExerciseEvidence"),
 );
+const KnowledgeAsk = lazy(
+  () => import(/* webpackChunkName: "knowledge-ask" */ "@/pages/knowledge/KnowledgeAsk"),
+);
 const EvolucaoClinica = lazy(
   () => import(/* webpackChunkName: "evolucao-clinica" */ "@/pages/EvolucaoClinica"),
 );
@@ -198,6 +201,16 @@ export const coreRoutes = (
         <RouteErrorBoundary routeName="ExerciseEvidence">
           <ProtectedRoute>
             <ExerciseEvidence />
+          </ProtectedRoute>
+        </RouteErrorBoundary>
+      }
+    />
+    <Route
+      path="/base-conhecimento"
+      element={
+        <RouteErrorBoundary routeName="KnowledgeAsk">
+          <ProtectedRoute>
+            <KnowledgeAsk />
           </ProtectedRoute>
         </RouteErrorBoundary>
       }

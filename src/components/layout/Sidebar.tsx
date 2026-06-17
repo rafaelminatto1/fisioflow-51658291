@@ -161,6 +161,7 @@ const inteligenciaMenuItems = [
     badge: "AI",
   },
   { icon: MessageSquare, label: "Copiloto Clínico", href: "/copiloto", badge: "AI" },
+  { icon: Sparkles, label: "Base de Conhecimento", href: "/base-conhecimento", badge: "AI" },
 ];
 
 const operacionalMenuItems = [
