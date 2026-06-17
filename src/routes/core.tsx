@@ -7,6 +7,7 @@ import { lazy } from "react";
 import { Route, Navigate } from "react-router-dom";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { RouteErrorBoundary } from "@/components/error";
+import { PageLayout } from "@/components/layout/PageLayout";
 
 const GoogleCallback = lazy(
   () => import(/* webpackChunkName: "google-callback" */ "@/pages/auth/GoogleCallback"),
@@ -130,7 +131,9 @@ export const coreRoutes = (
       element={
         <RouteErrorBoundary routeName="AutomationBuilder">
           <ProtectedRoute>
-            <AutomationBuilder />
+            <PageLayout fullWidth noPadding>
+              <AutomationBuilder />
+            </PageLayout>
           </ProtectedRoute>
         </RouteErrorBoundary>
       }
@@ -140,7 +143,9 @@ export const coreRoutes = (
       element={
         <RouteErrorBoundary routeName="CopilotChat">
           <ProtectedRoute>
-            <CopilotChat />
+            <PageLayout fullWidth noPadding>
+              <CopilotChat />
+            </PageLayout>
           </ProtectedRoute>
         </RouteErrorBoundary>
       }
@@ -150,7 +155,9 @@ export const coreRoutes = (
       element={
         <RouteErrorBoundary routeName="EventMonitor">
           <ProtectedRoute>
-            <EventMonitor />
+            <PageLayout noPadding>
+              <EventMonitor />
+            </PageLayout>
           </ProtectedRoute>
         </RouteErrorBoundary>
       }
@@ -160,7 +167,9 @@ export const coreRoutes = (
       element={
         <RouteErrorBoundary routeName="BriefingDashboard">
           <ProtectedRoute>
-            <BriefingDashboard />
+            <PageLayout noPadding>
+              <BriefingDashboard />
+            </PageLayout>
           </ProtectedRoute>
         </RouteErrorBoundary>
       }
@@ -170,7 +179,9 @@ export const coreRoutes = (
       element={
         <RouteErrorBoundary routeName="BlocksEditorDemo">
           <ProtectedRoute>
-            <BlocksEditorDemo />
+            <PageLayout noPadding>
+              <BlocksEditorDemo />
+            </PageLayout>
           </ProtectedRoute>
         </RouteErrorBoundary>
       }
@@ -180,7 +191,9 @@ export const coreRoutes = (
       element={
         <RouteErrorBoundary routeName="SemanticExerciseSearch">
           <ProtectedRoute>
-            <SemanticExerciseSearch />
+            <PageLayout noPadding>
+              <SemanticExerciseSearch />
+            </PageLayout>
           </ProtectedRoute>
         </RouteErrorBoundary>
       }
@@ -190,7 +203,9 @@ export const coreRoutes = (
       element={
         <RouteErrorBoundary routeName="ExerciseCuration">
           <ProtectedRoute>
-            <ExerciseCuration />
+            <PageLayout noPadding>
+              <ExerciseCuration />
+            </PageLayout>
           </ProtectedRoute>
         </RouteErrorBoundary>
       }
@@ -200,7 +215,9 @@ export const coreRoutes = (
       element={
         <RouteErrorBoundary routeName="ExerciseEvidence">
           <ProtectedRoute>
-            <ExerciseEvidence />
+            <PageLayout noPadding>
+              <ExerciseEvidence />
+            </PageLayout>
           </ProtectedRoute>
         </RouteErrorBoundary>
       }
@@ -210,7 +227,9 @@ export const coreRoutes = (
       element={
         <RouteErrorBoundary routeName="KnowledgeAsk">
           <ProtectedRoute>
-            <KnowledgeAsk />
+            <PageLayout noPadding>
+              <KnowledgeAsk />
+            </PageLayout>
           </ProtectedRoute>
         </RouteErrorBoundary>
       }
