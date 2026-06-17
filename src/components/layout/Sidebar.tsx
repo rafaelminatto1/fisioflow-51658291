@@ -157,9 +157,13 @@ const inteligenciaMenuItems = [
     href: "/inteligencia",
     badge: "AI",
   },
+  { icon: MessageSquare, label: "Copiloto Clínico", href: "/copiloto", badge: "AI" },
 ];
 
 const operacionalMenuItems = [
+  { icon: BarChart3, label: "Briefing do Dia", href: "/briefing" },
+  { icon: Zap, label: "Automações", href: "/automacoes" },
+  { icon: Activity, label: "Monitor de Atividades", href: "/monitor" },
   { icon: CalendarDays, label: "Eventos", href: "/eventos" },
   { icon: LayoutGrid, label: "Boards", href: "/boards" },
   { icon: FileText, label: "Cadastros", href: "/cadastros" },
