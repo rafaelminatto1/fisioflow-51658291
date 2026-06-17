@@ -10,6 +10,7 @@ import type {
   KnowledgeSyncWorkflow,
   SessionSummaryWorkflow,
   BiomechanicsAnalysisWorkflow,
+  AutomationExecutor,
 } from "../workflows";
 
 /**
@@ -211,6 +212,7 @@ export interface Env {
   WORKFLOW_KNOWLEDGE_SYNC?: Workflow<KnowledgeSyncWorkflow>;
   WORKFLOW_SESSION_SUMMARY?: Workflow<SessionSummaryWorkflow>;
   WORKFLOW_BIOMECHANICS_ANALYSIS?: Workflow<BiomechanicsAnalysisWorkflow>;
+  WORKFLOW_AUTOMATION?: Workflow<AutomationExecutor>;
 
   // AI & Browser Rendering
   AI: {

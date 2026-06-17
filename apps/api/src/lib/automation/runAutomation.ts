@@ -12,7 +12,7 @@ export type RunDeps = {
   maxSteps?: number;
 };
 
-function nextNodeId(def: AutomationDefinition, fromId: string, branch?: "true" | "false"): string | null {
+export function nextNodeId(def: AutomationDefinition, fromId: string, branch?: "true" | "false"): string | null {
   const edges = def.edges.filter((e) => e.from === fromId);
   if (branch) {
     const match = edges.find((e) => e.branch === branch);
