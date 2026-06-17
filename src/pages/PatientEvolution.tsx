@@ -866,17 +866,39 @@ const PatientEvolution = () => {
 							className="flex flex-col min-h-full"
 						>
 							<TabsContent value="evolucao" className="m-0 h-full data-[state=active]:flex flex-col">
-								<Suspense fallback={<LoadingSkeleton />}>
-									<EvolutionNoScrollPanel
-										data={state.evolutionV2Data}
-										onChange={state.setEvolutionV2Data}
-										patientId={state.patientId!}
-										evolutionId={state.currentSoapRecordId!}
-										patient={state.patient}
-										pathologies={state.pathologies}
-										onNavigateToTab={(tab) => state.setActiveTab(tab as EvolutionTab)}
-									/>
-								</Suspense>
+								{blocksEditorEnabled ? (
+									<div className="rounded-2xl border border-slate-200 bg-white p-5">
+										<div className="mb-4">
+											<h2 className="text-lg font-extrabold text-slate-800">Evolução em blocos</h2>
+											<p className="text-sm text-slate-500">
+												Editor modular (beta). O conteúdo é salvo na observação clínica via autosave.
+											</p>
+										</div>
+										<EvolutionBlocksEditor
+											blocks={evolutionBlocks}
+											onChange={(next) => {
+												setEvolutionBlocks(next);
+												handleEvolutionV2Change({
+													...state.evolutionV2Data,
+													evolutionText: blocksToText(next),
+													observations: blocksToText(next),
+												});
+											}}
+										/>
+									</div>
+								) : (
+									<Suspense fallback={<LoadingSkeleton />}>
+										<EvolutionNoScrollPanel
+											data={state.evolutionV2Data}
+											onChange={state.setEvolutionV2Data}
+											patientId={state.patientId!}
+											evolutionId={state.currentSoapRecordId!}
+											patient={state.patient}
+											pathologies={state.pathologies}
+											onNavigateToTab={(tab) => state.setActiveTab(tab as EvolutionTab)}
+										/>
+									</Suspense>
+								)}
 							</TabsContent>
 							<TabsContent value="avaliacao">
 								<Suspense fallback={<LoadingSkeleton />}>
