@@ -47,10 +47,16 @@ export async function runAutomationsForEvent(
     );
     if (!parsed.success) continue;
     try {
-      await runAutomation(parsed.data, event.data ?? {}, {
-        actions: handlers,
-        sleep: async () => {}, // durable waits handled by Workflow (slice 2b); no-op here
-      });
+      if (env.WORKFLOW_AUTOMATION) {
+        // Durable execution: step.sleep survives restarts, actions get retries (slice 2b).
+        await env.WORKFLOW_AUTOMATION.create({
+          id: `auto-${row.id}-${Date.now()}`,
+          params: { automationId: row.id, definition: parsed.data, context: event.data ?? {} },
+        });
+      } else {
+        // Fallback: inline run with no-op waits (no durable binding available).
+        await runAutomation(parsed.data, event.data ?? {}, { actions: handlers, sleep: async () => {} });
+      }
       ran++;
     } catch (e) {
       console.error("[Automation] run failed", row.id, e);

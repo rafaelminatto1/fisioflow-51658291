@@ -139,6 +139,11 @@ name = "biomechanics-analysis"
 binding = "WORKFLOW_BIOMECHANICS_ANALYSIS"
 class_name = "BiomechanicsAnalysisWorkflow"
 
+[[workflows]]
+name = "automation-executor"
+binding = "WORKFLOW_AUTOMATION"
+class_name = "AutomationExecutor"
+
 # ===== DURABLE OBJECTS =====
 [[durable_objects.bindings]]
 name = "ORGANIZATION_STATE"
@@ -357,6 +362,11 @@ class_name = "SessionSummaryWorkflow"
 name = "biomechanics-analysis"
 binding = "WORKFLOW_BIOMECHANICS_ANALYSIS"
 class_name = "BiomechanicsAnalysisWorkflow"
+
+[[env.production.workflows]]
+name = "automation-executor"
+binding = "WORKFLOW_AUTOMATION"
+class_name = "AutomationExecutor"
 
 [[env.production.hyperdrive]]
 binding = "HYPERDRIVE"
