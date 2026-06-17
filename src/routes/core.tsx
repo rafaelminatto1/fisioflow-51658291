@@ -42,6 +42,12 @@ const AutomationBuilder = lazy(
 const CopilotChat = lazy(
   () => import(/* webpackChunkName: "copilot-chat" */ "@/pages/copilot/CopilotChatPage"),
 );
+const EventMonitor = lazy(
+  () => import(/* webpackChunkName: "event-monitor" */ "@/pages/events/EventMonitorPage"),
+);
+const BriefingDashboard = lazy(
+  () => import(/* webpackChunkName: "briefing-dashboard" */ "@/pages/briefing/BriefingDashboardPage"),
+);
 const EvolucaoClinica = lazy(
   () => import(/* webpackChunkName: "evolucao-clinica" */ "@/pages/EvolucaoClinica"),
 );
@@ -120,6 +126,26 @@ export const coreRoutes = (
         <RouteErrorBoundary routeName="CopilotChat">
           <ProtectedRoute>
             <CopilotChat />
+          </ProtectedRoute>
+        </RouteErrorBoundary>
+      }
+    />
+    <Route
+      path="/monitor"
+      element={
+        <RouteErrorBoundary routeName="EventMonitor">
+          <ProtectedRoute>
+            <EventMonitor />
+          </ProtectedRoute>
+        </RouteErrorBoundary>
+      }
+    />
+    <Route
+      path="/briefing"
+      element={
+        <RouteErrorBoundary routeName="BriefingDashboard">
+          <ProtectedRoute>
+            <BriefingDashboard />
           </ProtectedRoute>
         </RouteErrorBoundary>
       }
