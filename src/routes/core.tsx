@@ -36,6 +36,9 @@ const NewTemplatePage = lazy(
 const EditTemplatePage = lazy(
   () => import(/* webpackChunkName: "template-builder" */ "@/pages/templates/EditTemplatePage"),
 );
+const AutomationBuilder = lazy(
+  () => import(/* webpackChunkName: "automation-builder" */ "@/pages/automations/AutomationBuilderPage"),
+);
 const EvolucaoClinica = lazy(
   () => import(/* webpackChunkName: "evolucao-clinica" */ "@/pages/EvolucaoClinica"),
 );
@@ -94,6 +97,16 @@ export const coreRoutes = (
         <RouteErrorBoundary routeName="Exercises">
           <ProtectedRoute>
             <Exercises />
+          </ProtectedRoute>
+        </RouteErrorBoundary>
+      }
+    />
+    <Route
+      path="/automacoes"
+      element={
+        <RouteErrorBoundary routeName="AutomationBuilder">
+          <ProtectedRoute>
+            <AutomationBuilder />
           </ProtectedRoute>
         </RouteErrorBoundary>
       }
