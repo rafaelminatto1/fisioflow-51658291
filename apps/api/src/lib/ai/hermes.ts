@@ -3,8 +3,9 @@ import { runAi } from "../ai-native";
 
 /**
  * Modelo para saída estruturada (JSON).
- * NOTA: Hermes 2 Pro (@hf/nousresearch/hermes-2-pro-mistral-7b) foi DEPRECADO no Cloudflare
- * Workers AI em 2026-05-30. Usamos o llama-3.3-70b `-fast` (ativo, forte em JSON) no lugar.
+ * NOTA: o Hermes 2 Pro (Nous Research) foi DEPRECADO no Cloudflare Workers AI em 2026-05-30.
+ * Usamos o llama-3.3-70b `-fast` (ativo, forte em JSON) no lugar. Modelos `-fast` permanecem
+ * após deprecações (ver DEPRECATED_MODELS_2026_05_30 em workersAi.ts).
  */
 export const STRUCTURED_MODEL = "@cf/meta/llama-3.3-70b-instruct-fp8-fast";
 
