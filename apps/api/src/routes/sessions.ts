@@ -6,6 +6,7 @@ import { sessions, sessionAttachments, sessionTemplates, patients } from "@fisio
 import { eq, and, desc, count, sql, or } from "drizzle-orm";
 import { withTenant, searchFilter } from "../lib/db-utils";
 import { stripHtml } from "../lib/stripHtml";
+import { parseBlocks } from "../lib/evolution/blocks";
 import { invalidatePatientCache } from "../lib/ai-context-cache";
 import { processClinicalEmbedding } from "../lib/ai/embeddings";
 import { triggerFiscalCycleNotification } from "../lib/fiscal/notificationTrigger";
@@ -80,6 +81,7 @@ function rowToRecord(row: any) {
     appointment_id: row.appointmentId ?? undefined,
     session_number: row.sessionNumber != null ? Number(row.sessionNumber) : undefined,
     observacao: typeof row.observacao === "string" ? row.observacao : "",
+    blocks: Array.isArray(row.blocks) ? row.blocks : [],
     pain_scale: row.painScale ?? null,
     procedures: Array.isArray(row.procedures) ? row.procedures : [],
     exercises: Array.isArray(row.exercises) ? row.exercises : [],
@@ -196,6 +198,7 @@ app.post("/autosave", requireAuth, async (c) => {
   };
 
   const observacao = typeof body.observacao === "string" ? body.observacao : undefined;
+  const blocks = "blocks" in body ? parseBlocks(body.blocks) : undefined;
   const painScale = toPainScale(body.pain_scale);
   const procedures = toJsonArray(body.procedures);
   const exercises = toJsonArray(body.exercises);
@@ -214,6 +217,7 @@ app.post("/autosave", requireAuth, async (c) => {
       lastEditedBy: isValidUuid(user.uid) ? user.uid : null,
     };
     if (observacao !== undefined) payload.observacao = observacao;
+    if (blocks !== undefined) payload.blocks = blocks;
     if (painScale !== undefined) payload.painScale = painScale;
     if (procedures !== undefined) payload.procedures = procedures;
     if (exercises !== undefined) payload.exercises = exercises;
@@ -568,6 +572,7 @@ app.put("/:id", requireAuth, async (c) => {
   if ("measurements" in body) updatePayload.measurements = toJsonArray(body.measurements) ?? [];
   if ("home_exercises" in body)
     updatePayload.homeExercises = toJsonArray(body.home_exercises) ?? [];
+  if ("blocks" in body) updatePayload.blocks = parseBlocks(body.blocks);
   if (body.duration_minutes != null) updatePayload.duration = Number(body.duration_minutes);
   if ("status" in body) {
     const status = normalizeSessionStatusInput(body.status);
