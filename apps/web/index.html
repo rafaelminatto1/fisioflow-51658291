@@ -262,11 +262,15 @@
         };
 
         // Máximo de tentativas antes de forçar reload
-        const MAX_ATTEMPTS = 3;
+        const MAX_ATTEMPTS = 1;
 
         // Tempo mínimo entre tentativas (em ms) para evitar spam
         const MIN_INTERVAL_MS = 5000;
         let lastAttemptTime = 0;
+
+        // Prevenir loop infinito usando sessionStorage
+        const RECOVERY_KEY = 'fisioflow_asset_recovery_count';
+        const MAX_RELOADS = 3;
 
         // Função para verificar se devemos tentar recuperar
         function shouldAttemptRecovery() {
@@ -274,31 +278,41 @@
           if (now - lastAttemptTime < MIN_INTERVAL_MS) {
             return false;
           }
+          
+          const recoveryCount = parseInt(sessionStorage.getItem(RECOVERY_KEY) || '0', 10);
+          if (recoveryCount >= MAX_RELOADS) {
+            console.error('[Asset Recovery] Limite de reloads atingido. Abortando recuperação.');
+            return false;
+          }
+
           return Object.values(failedAttempts).some(count => count >= MAX_ATTEMPTS);
         }
 
         // Função para forçar reload com cache bypass
         function forceReload() {
-          console.log('[Asset Recovery] Forçando reload devido a múltiplos falhas de asset');
+          console.log('[Asset Recovery] Forçando reload devido a falha de asset');
+          const currentCount = parseInt(sessionStorage.getItem(RECOVERY_KEY) || '0', 10);
+          sessionStorage.setItem(RECOVERY_KEY, (currentCount + 1).toString());
+          
           lastAttemptTime = Date.now();
-          window.location.reload(true); // true = force get from server, bypass cache
+          window.location.reload(); // Deixa o SW lidar com a rede
         }
 
-        // Monitorar erros de carregamento de link (CSS) e script (JS)
+        // Limpar contador se a página carregou com sucesso (após 5 segundos)
+        setTimeout(() => {
+          sessionStorage.removeItem(RECOVERY_KEY);
+        }, 5000);
+
+        // Monitorar erros de carregamento
         const originalSetAttribute = Element.prototype.setAttribute;
         Element.prototype.setAttribute = function(name, value) {
-          if (name === 'href' && this.tagName === 'LINK' && value.includes('.css')) {
+          if (name === 'href' && this.tagName === 'LINK' && (value.includes('.css') || value.includes('.js'))) {
             this.addEventListener('error', () => {
               failedAttempts.css++;
-              console.log(`[Asset Recovery] Falha ao carregar CSS: ${value} (tentativa ${failedAttempts.css})`);
+              console.log(`[Asset Recovery] Falha ao carregar LINK: ${value} (tentativa ${failedAttempts.css})`);
               
               if (shouldAttemptRecovery()) {
                 forceReload();
-                // Reset counters after forced reload
-                const keys = Object.keys(failedAttempts);
-                for (let i = 0; i < keys.length; i++) {
-                  failedAttempts[keys[i]] = 0;
-                }
               }
             });
           }
@@ -310,11 +324,6 @@
               
               if (shouldAttemptRecovery()) {
                 forceReload();
-                // Reset counters after forced reload
-                const keys = Object.keys(failedAttempts);
-                for (let i = 0; i < keys.length; i++) {
-                  failedAttempts[keys[i]] = 0;
-                }
               }
             });
           }
@@ -323,21 +332,16 @@
         };
 
         // Também monitorar elementos já existentes no DOM
-        const elements = document.querySelectorAll('link[rel="stylesheet"][href*=".css"], script[src*=".js"]');
+        const elements = document.querySelectorAll('link[href*=".css"], link[href*=".js"], script[src*=".js"]');
         for (let i = 0; i < elements.length; i++) {
           const el = elements[i];
           if (el.tagName === 'LINK') {
             el.addEventListener('error', () => {
               failedAttempts.css++;
-              console.log(`[Asset Recovery] Falha ao carregar CSS existente: ${el.href} (tentativa ${failedAttempts.css})`);
+              console.log(`[Asset Recovery] Falha ao carregar LINK existente: ${el.href} (tentativa ${failedAttempts.css})`);
               
               if (shouldAttemptRecovery()) {
                 forceReload();
-                // Reset counters after forced reload
-                const keys = Object.keys(failedAttempts);
-                for (let i = 0; i < keys.length; i++) {
-                  failedAttempts[keys[i]] = 0;
-                }
               }
             });
           }
@@ -349,11 +353,6 @@
               
               if (shouldAttemptRecovery()) {
                 forceReload();
-                // Reset counters after forced reload
-                const keys = Object.keys(failedAttempts);
-                for (let i = 0; i < keys.length; i++) {
-                  failedAttempts[keys[i]] = 0;
-                }
               }
             });
           }
