@@ -11,9 +11,25 @@ import {
   ChevronDown,
   Plus,
   Wand2,
+  Mic,
+  Square,
 } from "lucide-react";
 import { type EvolutionBlock, type BlockType, newBlock } from "./blockUtils";
 import { evolutionAiApi } from "@/api/v2/evolution";
+import { useAudioRecorder } from "@/hooks/useAudioRecorder";
+
+function blobToBase64(blob: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const b64 = reader.result?.toString().split(",")[1];
+      if (b64) resolve(b64);
+      else reject(new Error("Failed to convert to base64"));
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+}
 
 const PALETTE: Array<{ type: BlockType; label: string; icon: typeof Type }> = [
   { type: "text", label: "Texto", icon: Type },
@@ -66,6 +82,40 @@ export function EvolutionBlocksEditor({
   const [aiBusy, setAiBusy] = useState(false);
   const [aiError, setAiError] = useState<string | null>(null);
 
+  const { isRecording, startRecording, stopRecording } = useAudioRecorder();
+  const [isTranscribing, setIsTranscribing] = useState(false);
+
+  const handleRecordToggle = useCallback(async () => {
+    if (isRecording) {
+      setIsTranscribing(true);
+      setAiError(null);
+      try {
+        const audioBlob = await stopRecording();
+        const base64 = await blobToBase64(audioBlob);
+        const res = await evolutionAiApi.transcribeBlocks(base64);
+        const newBlocks = (res.data?.blocks ?? []) as unknown as EvolutionBlock[];
+        if (newBlocks.length === 0) {
+          setAiError("A IA não encontrou blocos no áudio (ou a transcrição falhou).");
+        } else {
+          onChange([...blocks, ...newBlocks]);
+          setAiOpen(false);
+        }
+      } catch (e) {
+        setAiError((e as Error).message ?? "Falha ao gravar/transcrever áudio.");
+      } finally {
+        setIsTranscribing(false);
+      }
+    } else {
+      try {
+        setAiError(null);
+        setAiOpen(true);
+        await startRecording();
+      } catch (e) {
+        setAiError("Sem permissão de microfone.");
+      }
+    }
+  }, [isRecording, startRecording, stopRecording, blocks, onChange]);
+
   const extractFromText = useCallback(async () => {
     const text = aiText.trim();
     if (text.length < 10 || aiBusy) return;
@@ -93,12 +143,29 @@ export function EvolutionBlocksEditor({
       {!disabled && (
         <div className="mb-3">
           {!aiOpen ? (
-            <button
-              onClick={() => setAiOpen(true)}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-blue-200 bg-blue-50 px-3 py-1.5 text-sm font-semibold text-blue-700 hover:bg-blue-100"
-            >
-              <Wand2 className="h-3.5 w-3.5" /> Gerar blocos do texto (IA)
-            </button>
+            <div className="flex flex-col gap-2">
+              <div className="flex flex-wrap gap-2">
+                <button
+                  onClick={() => setAiOpen(true)}
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-blue-200 bg-blue-50 px-3 py-1.5 text-sm font-semibold text-blue-700 hover:bg-blue-100"
+                >
+                  <Wand2 className="h-3.5 w-3.5" /> Gerar blocos (Texto)
+                </button>
+                <button
+                  onClick={handleRecordToggle}
+                  disabled={isTranscribing}
+                  className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-sm font-semibold transition-colors disabled:opacity-50 ${
+                    isRecording
+                      ? "border-red-200 bg-red-50 text-red-700 hover:bg-red-100 animate-pulse"
+                      : "border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100"
+                  }`}
+                >
+                  {isRecording ? <Square className="h-3.5 w-3.5" /> : <Mic className="h-3.5 w-3.5" />}
+                  {isTranscribing ? "Transcrevendo..." : isRecording ? "Parar Gravação" : "Scribe de Voz"}
+                </button>
+              </div>
+              {aiError && <p className="text-xs text-red-600">{aiError}</p>}
+            </div>
           ) : (
             <div className="rounded-xl border border-blue-200 bg-blue-50/50 p-3">
               <textarea
