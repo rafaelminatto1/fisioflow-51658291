@@ -5,6 +5,7 @@ import { createPool } from "../lib/db";
 import { jsonSerialize } from "../lib/utils";
 import { structuredJson } from "../lib/ai/hermes";
 import { EXTRACT_BLOCKS_SYSTEM, coerceBlocks } from "../lib/evolution/extractBlocks";
+import { transcribeAudio } from "../lib/ai-native";
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
@@ -18,6 +19,22 @@ app.post("/extract-blocks", requireAuth, async (c) => {
     return c.json({ data: coerceBlocks(raw) });
   } catch (e) {
     return c.json({ error: "Falha na extração", details: (e as Error).message }, 500);
+  }
+});
+
+// POST /api/evolution/transcribe-blocks { audioBase64 } → { transcript, blocks }
+// Áudio → transcrição (Deepgram) → blocos estruturados (IA) num passo.
+app.post("/transcribe-blocks", requireAuth, async (c) => {
+  const body = (await c.req.json().catch(() => ({}))) as { audioBase64?: string };
+  const audioBase64 = String(body.audioBase64 ?? "");
+  if (!audioBase64) return c.json({ error: "audioBase64 é obrigatório" }, 400);
+  try {
+    const transcript = (await transcribeAudio(c.env, audioBase64)).trim();
+    if (transcript.length < 5) return c.json({ data: { transcript, blocks: [] } });
+    const raw = await structuredJson(c.env, EXTRACT_BLOCKS_SYSTEM, transcript.slice(0, 4000));
+    return c.json({ data: { transcript, blocks: coerceBlocks(raw) } });
+  } catch (e) {
+    return c.json({ error: "Falha na transcrição/extração", details: (e as Error).message }, 500);
   }
 });
 
