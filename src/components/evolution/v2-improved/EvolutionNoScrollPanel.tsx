@@ -370,10 +370,10 @@ export const EvolutionNoScrollPanel = memo(
                   className="h-4"
                 />
                 {arrival !== null && (
-                  <div className="flex justify-between text-[10px] text-muted-foreground mt-1">
-                    <span>Sem Dor</span>
-                    <span>{painLabel(arrival)}</span>
-                    <span>Dor Máxima</span>
+                  <div className="flex justify-between text-[10px] text-muted-foreground mt-1 h-8 items-start">
+                    <span className="leading-tight text-left max-w-[30%]">Sem Dor</span>
+                    <span className="leading-tight text-center max-w-[40%]">{painLabel(arrival)}</span>
+                    <span className="leading-tight text-right max-w-[30%]">Dor Máxima</span>
                   </div>
                 )}
               </div>
@@ -391,10 +391,10 @@ export const EvolutionNoScrollPanel = memo(
                   className="h-4"
                 />
                 {(data.painLevelDischarge ?? data.painLevel) !== null && (
-                  <div className="flex justify-between text-[10px] text-muted-foreground mt-1">
-                    <span>Sem Dor</span>
-                    <span>{painLabel(data.painLevelDischarge ?? data.painLevel)}</span>
-                    <span>Dor Máxima</span>
+                  <div className="flex justify-between text-[10px] text-muted-foreground mt-1 h-8 items-start">
+                    <span className="leading-tight text-left max-w-[30%]">Sem Dor</span>
+                    <span className="leading-tight text-center max-w-[40%]">{painLabel(data.painLevelDischarge ?? data.painLevel)}</span>
+                    <span className="leading-tight text-right max-w-[30%]">Dor Máxima</span>
                   </div>
                 )}
               </div>
