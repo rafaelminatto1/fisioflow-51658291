@@ -620,7 +620,9 @@ app.get("/", async (c) => {
 						ARRAY[]::text[] as "pathologyNames",
 						p.origin,
 						p.partner_company_name as "partnerCompanyName",
-						p.professional_name as "professionalName"
+						p.professional_name as "professionalName",
+						0 AS "noShowCount",
+						0 AS "upcomingAppointmentsCount"
 					FROM patients p
 					WHERE p.organization_id = $1::uuid
 						AND COALESCE(p.archived, FALSE) = FALSE
