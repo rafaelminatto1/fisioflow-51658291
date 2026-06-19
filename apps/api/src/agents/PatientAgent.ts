@@ -89,6 +89,14 @@ export class PatientAgent extends Agent<Env, RetentionState> {
   }
 
   /**
+   * Retorna o estado atual do agente (proxy REST)
+   */
+  @callable()
+  async getStatus() {
+    return this.state;
+  }
+
+  /**
    * Gera um rascunho de mensagem de WhatsApp hiper-personalizado usando Workers AI (Llama 3.1)
    */
   @callable()
