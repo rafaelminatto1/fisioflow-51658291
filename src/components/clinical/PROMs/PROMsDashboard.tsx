@@ -4,12 +4,13 @@
  * Mostra: último resultado de cada escala + botão "Aplicar" + histórico (timeline)
  */
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { request } from "@/api/v2";
 import { unwrapList } from "@/lib/api/unwrapData";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Plus,
   TrendingUp,
@@ -23,9 +24,17 @@ import {
   PersonStanding,
   Bone,
   ClipboardList,
+  Sparkles,
+  Loader2,
+  Check,
 } from "lucide-react";
 import { PROMSelector } from "./PROMSelector";
 import { PROMTimeline } from "./PROMTimeline";
+import {
+  useExtractMeasures,
+  useCreateStandardizedTest,
+  type ExtractedMeasure,
+} from "@/hooks/useStandardizedTests";
 
 interface StandardizedTestResult {
   id: string;
@@ -251,6 +260,36 @@ export function PROMsDashboard({ patientId, sessionId }: PROMsDashboardProps) {
   const [selectorOpen, setSelectorOpen] = useState(false);
   const [defaultScale, setDefaultScale] = useState<ScaleKey | undefined>();
   const [activeTimeline, setActiveTimeline] = useState<ScaleKey | null>(null);
+  const queryClient = useQueryClient();
+
+  const extractMeasures = useExtractMeasures();
+  const createTest = useCreateStandardizedTest();
+  const [extractOpen, setExtractOpen] = useState(false);
+  const [extractText, setExtractText] = useState("");
+  const [extracted, setExtracted] = useState<ExtractedMeasure[]>([]);
+  const [savedKeys, setSavedKeys] = useState<Set<string>>(new Set());
+
+  const handleExtract = async () => {
+    const text = extractText.trim();
+    if (text.length < 5) return;
+    setExtracted([]);
+    setSavedKeys(new Set());
+    const list = await extractMeasures.mutateAsync(text);
+    setExtracted(list);
+  };
+
+  const handleSaveMeasure = async (m: ExtractedMeasure, key: string) => {
+    await createTest.mutateAsync({
+      patient_id: patientId,
+      scale_name: m.scale,
+      score: m.score,
+      interpretation: m.interpretation,
+      session_id: sessionId,
+      notes: m.maxScore ? `Máx: ${m.maxScore}` : undefined,
+    });
+    setSavedKeys((prev) => new Set(prev).add(key));
+    queryClient.invalidateQueries({ queryKey: ["standardized-tests", patientId, "all"] });
+  };
 
   const { data, isLoading } = useQuery<StandardizedTestResult[]>({
     queryKey: ["standardized-tests", patientId, "all"],
@@ -322,18 +361,99 @@ export function PROMsDashboard({ patientId, sessionId }: PROMsDashboardProps) {
           <ClipboardList className="h-5 w-5 text-primary" />
           <h3 className="font-semibold">Desfechos Clínicos (PROMs)</h3>
         </div>
-        <Button
-          size="sm"
-          onClick={() => {
-            setDefaultScale(undefined);
-            setSelectorOpen(true);
-          }}
-          className="gap-1"
-        >
-          <Plus className="h-4 w-4" />
-          Aplicar Escala
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => setExtractOpen((v) => !v)}
+            className="gap-1"
+          >
+            <Sparkles className="h-4 w-4" />
+            Extrair de texto (IA)
+          </Button>
+          <Button
+            size="sm"
+            onClick={() => {
+              setDefaultScale(undefined);
+              setSelectorOpen(true);
+            }}
+            className="gap-1"
+          >
+            <Plus className="h-4 w-4" />
+            Aplicar Escala
+          </Button>
+        </div>
       </div>
+
+      {/* Extração por IA */}
+      {extractOpen && (
+        <Card className="border-primary/20 bg-primary/[0.02]">
+          <CardContent className="p-4 space-y-3">
+            <Textarea
+              value={extractText}
+              onChange={(e) => setExtractText(e.target.value)}
+              rows={3}
+              placeholder="Cole a evolução/avaliação. Ex.: 'EVA 7/10, Oswestry 42%, LEFS 55'… A IA extrai as escalas."
+            />
+            <Button
+              size="sm"
+              onClick={handleExtract}
+              disabled={extractMeasures.isPending || extractText.trim().length < 5}
+              className="gap-1"
+            >
+              {extractMeasures.isPending ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Extraindo…
+                </>
+              ) : (
+                <>
+                  <Sparkles className="h-4 w-4" />
+                  Extrair escalas
+                </>
+              )}
+            </Button>
+            {!extractMeasures.isPending && extracted.length === 0 && extractMeasures.isSuccess && (
+              <p className="text-sm text-muted-foreground">Nenhuma escala encontrada no texto.</p>
+            )}
+            {extracted.length > 0 && (
+              <div className="space-y-2">
+                {extracted.map((m, i) => {
+                  const key = `${m.scale}-${i}`;
+                  const saved = savedKeys.has(key);
+                  return (
+                    <div
+                      key={key}
+                      className="flex items-center justify-between gap-3 rounded-lg border bg-white p-2.5"
+                    >
+                      <div className="flex-1 min-w-0">
+                        <span className="font-semibold text-sm">{m.scale}</span>
+                        <span className="ml-2 text-sm text-muted-foreground">
+                          {m.score}
+                          {m.maxScore ? ` / ${m.maxScore}` : ""}
+                        </span>
+                        {m.interpretation && (
+                          <span className="ml-2 text-xs text-muted-foreground">
+                            · {m.interpretation}
+                          </span>
+                        )}
+                      </div>
+                      <Button
+                        size="sm"
+                        variant={saved ? "secondary" : "default"}
+                        disabled={saved || createTest.isPending}
+                        onClick={() => handleSaveMeasure(m, key)}
+                      >
+                        {saved ? <Check className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
+                      </Button>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       {/* Summary */}
       {!isLoading && totalAssessments > 0 && (
