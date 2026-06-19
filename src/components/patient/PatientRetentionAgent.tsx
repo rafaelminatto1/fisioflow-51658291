@@ -6,6 +6,7 @@ import { Progress } from "@/components/ui/progress";
 import { Bot, CheckCircle2, Send, XCircle, RefreshCcw, Zap } from "lucide-react";
 import { toast } from "sonner";
 import { getWorkersApiUrl } from "@/lib/api/config";
+import { apiClient } from "@/lib/api/v2/client";
 import { cn } from "@/lib/utils";
 
 interface RetentionState {
@@ -22,6 +23,8 @@ interface PatientRetentionAgentProps {
   patientName: string;
 }
 
+const API_BASE = getWorkersApiUrl();
+
 export const PatientRetentionAgent: React.FC<PatientRetentionAgentProps> = ({
   patientId,
   patientName,
@@ -30,16 +33,13 @@ export const PatientRetentionAgent: React.FC<PatientRetentionAgentProps> = ({
   const [isLoading, setIsLoading] = useState(true);
   const [isUpdating, setIsUpdating] = useState(false);
 
-  // Simulação de conexão com o Agente (Durable Object) via API do Worker
+  // Lê o estado do PatientAgent (Durable Object SQLite) via proxy REST autenticado do Worker.
   const fetchAgentStatus = async () => {
     try {
-      // No mundo real, usaríamos useAgent do Agents SDK.
-      // Aqui, vamos bater na rota do Worker que faz o proxy para o Durable Object.
-      const res = await fetch(`${getWorkersApiUrl()}/agents/patient-agent/${patientId}`);
-      if (res.ok) {
-        const data = await res.json();
-        setState(data.state);
-      }
+      const res = await apiClient.get<{ data: RetentionState }>(
+        `${API_BASE}/api/ai/retention/${patientId}`,
+      );
+      setState(res.data);
     } catch (e) {
       console.error("Failed to fetch agent status", e);
     } finally {
@@ -58,17 +58,12 @@ export const PatientRetentionAgent: React.FC<PatientRetentionAgentProps> = ({
     setIsUpdating(true);
     try {
       // Trigger manual para o agente reavaliar o paciente
-      const res = await fetch(
-        `${getWorkersApiUrl()}/agents/patient-agent/${patientId}/updateClinicalStatus`,
-        {
-          method: "POST",
-          body: JSON.stringify({ name: patientName }),
-        },
+      const res = await apiClient.post<{ data: RetentionState }>(
+        `${API_BASE}/api/ai/retention/${patientId}/update`,
+        { name: patientName },
       );
-      if (res.ok) {
-        toast.success("Agente atualizado com sucesso!");
-        fetchAgentStatus();
-      }
+      setState(res.data);
+      toast.success("Agente atualizado com sucesso!");
     } catch {
       toast.error("Erro ao comunicar com o agente.");
     } finally {
@@ -78,12 +73,15 @@ export const PatientRetentionAgent: React.FC<PatientRetentionAgentProps> = ({
 
   const handleDismiss = async () => {
     try {
-      await fetch(`${getWorkersApiUrl()}/agents/patient-agent/${patientId}/dismissAction`, {
-        method: "POST",
-      });
+      const res = await apiClient.post<{ data: RetentionState }>(
+        `${API_BASE}/api/ai/retention/${patientId}/dismiss`,
+        {},
+      );
+      setState(res.data);
       toast.info("Ação arquivada pelo Agente.");
-      fetchAgentStatus();
-    } catch {}
+    } catch {
+      toast.error("Erro ao arquivar a ação.");
+    }
   };
 
   if (isLoading) return <div className="h-20 animate-pulse bg-muted rounded-xl" />;

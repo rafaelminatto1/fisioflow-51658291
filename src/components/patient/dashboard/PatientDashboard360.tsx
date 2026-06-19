@@ -35,6 +35,7 @@ import {
 import { MetaFormModal } from "@/components/evolution/MetaFormModal";
 import { GoalSuggestModal } from "@/components/evolution/GoalSuggestModal";
 import { PathologyFormModal } from "@/components/evolution/PathologyFormModal";
+import { PatientRetentionAgent } from "@/components/patient/PatientRetentionAgent";
 import type { PatientGoal, Pathology } from "@/types/evolution";
 import { Link } from "react-router-dom";
 
@@ -368,6 +369,13 @@ export const PatientDashboard360 = ({
           </CardContent>
         </Card>
       </div>
+
+      {/* Agente Autônomo de Retenção (Cloudflare Durable Object) */}
+      {patientId && (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <PatientRetentionAgent patientId={patientId} patientName={patientName} />
+        </div>
+      )}
 
       {/* Gamification Section */}
       {patientId && profile && (

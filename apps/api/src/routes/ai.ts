@@ -10,6 +10,7 @@ import { aiClinicalRoutes } from "./ai/ai-clinical";
 import { aiInsightsRoutes } from "./ai/ai-insights";
 import { aiBrainInsightsRoutes } from "./ai/brain-insights";
 import { aiBrainChatRoutes } from "./ai/brain-chat";
+import { aiRetentionRoutes } from "./ai/retention";
 import { aiDictationRoutes } from "./ai/aiDictation";
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
@@ -25,6 +26,7 @@ app.route("/", aiClinicalRoutes);
 app.route("/insights", aiInsightsRoutes);
 app.route("/brain/insights", aiBrainInsightsRoutes);
 app.route("/brain/chat", aiBrainChatRoutes);
+app.route("/retention", aiRetentionRoutes);
 app.route("/", aiDictationRoutes);
 
 export { app as aiRoutes };
