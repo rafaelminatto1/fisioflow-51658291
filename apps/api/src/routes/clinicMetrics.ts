@@ -6,6 +6,49 @@ import type { Env } from "../types/env";
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
+type OverduePatientAggregateRow = {
+  patient_id: string | null;
+  full_name: string | null;
+  phone: string | null;
+  whatsapp: string | null;
+  overdue_count: string | number | null;
+  overdue_total: string | number | null;
+  oldest_overdue_date: string | null;
+};
+
+type OverdueSummaryAggregateRow = {
+  total_patients: string | number | null;
+  total_overdue: string | number | null;
+};
+
+function toNumber(value: unknown): number {
+  const parsed = Number(value ?? 0);
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function toText(value: unknown, fallback = ""): string {
+  return typeof value === "string" ? value : fallback;
+}
+
+export function mapOverduePatientRow(row: OverduePatientAggregateRow) {
+  return {
+    patient_id: toText(row.patient_id),
+    full_name: toText(row.full_name, "Paciente sem nome"),
+    phone: typeof row.phone === "string" ? row.phone : null,
+    whatsapp: typeof row.whatsapp === "string" ? row.whatsapp : null,
+    overdue_count: toNumber(row.overdue_count),
+    overdue_total: toNumber(row.overdue_total),
+    oldest_overdue_date: toText(row.oldest_overdue_date),
+  };
+}
+
+export function mapOverdueSummaryRow(row?: OverdueSummaryAggregateRow) {
+  return {
+    total_patients: toNumber(row?.total_patients),
+    total_overdue: toNumber(row?.total_overdue),
+  };
+}
+
 app.get("/kpis", requireAuth, async (c) => {
   const user = c.get("user");
   const pool = createPool(c.env);
@@ -575,52 +618,56 @@ app.get("/revenue-forecast", requireAuth, async (c) => {
 
 /**
  * GET /api/clinic-metrics/overdue-payments
- * Pagamentos pendentes com data de vencimento passada.
- * Usa tabelas: payments (status = 'pending', payment_date < hoje)
+ * Recebíveis vencidos por paciente.
+ * Usa contas_financeiras como fonte de verdade para inadimplência.
  */
 app.get("/overdue-payments", requireAuth, async (c) => {
   const user = c.get("user");
   const pool = createPool(c.env);
 
   try {
-    const result = await pool.query(
+    const result = await pool.query<OverduePatientAggregateRow>(
       `SELECT 
-        p.id as patient_id,
+        p.id::text as patient_id,
         p.full_name,
         p.phone,
-        COUNT(pay.id) as overdue_count,
-        SUM(pay.amount) as overdue_total,
-        MIN(pay.paid_at) as oldest_overdue_date
-      FROM payments pay
-      JOIN patients p ON p.id = pay.patient_id
-      WHERE pay.organization_id = $1
-        AND pay.status = 'pending'
-        AND pay.paid_at < CURRENT_DATE
-        AND pay.deleted_at IS NULL
-      GROUP BY p.id, p.full_name, p.phone
-      ORDER BY overdue_total DESC`,
+        p.whatsapp,
+        COUNT(cf.id)::int as overdue_count,
+        COALESCE(SUM(cf.valor), 0) as overdue_total,
+        MIN(COALESCE(cf.data_vencimento, cf.created_at::date))::text as oldest_overdue_date
+      FROM contas_financeiras cf
+      JOIN patients p
+        ON p.id = cf.patient_id
+       AND p.organization_id = cf.organization_id
+      WHERE cf.organization_id = $1
+        AND cf.deleted_at IS NULL
+        AND cf.tipo IN ('receber', 'receita')
+        AND cf.status IN ('pendente', 'atrasado')
+        AND COALESCE(cf.data_vencimento, cf.created_at::date) < CURRENT_DATE
+        AND cf.patient_id IS NOT NULL
+      GROUP BY p.id, p.full_name, p.phone, p.whatsapp
+      ORDER BY overdue_total DESC, oldest_overdue_date ASC`,
       [user.organizationId],
     );
 
-    const summaryRes = await pool.query(
+    const summaryRes = await pool.query<OverdueSummaryAggregateRow>(
       `SELECT 
-        COUNT(*) as total_payments,
-        SUM(CASE WHEN status = 'pending' AND payment_date < CURRENT_DATE THEN 1 ELSE 0 END) as total_overdue
-      FROM payments
-      WHERE organization_id = $1`,
+        COUNT(DISTINCT cf.patient_id)::int as total_patients,
+        COALESCE(SUM(cf.valor), 0) as total_overdue
+      FROM contas_financeiras cf
+      WHERE cf.organization_id = $1
+        AND cf.deleted_at IS NULL
+        AND cf.tipo IN ('receber', 'receita')
+        AND cf.status IN ('pendente', 'atrasado')
+        AND COALESCE(cf.data_vencimento, cf.created_at::date) < CURRENT_DATE
+        AND cf.patient_id IS NOT NULL`,
       [user.organizationId],
     );
 
     return c.json({
       data: {
-        patients: result.rows.map((r) => ({
-          ...r,
-          overdue_total_reais: (Number(r.overdue_total_cents || 0) / 100).toFixed(2),
-        })),
-        summary: {
-          total_payments: Number(summaryRes.rows[0]?.total_payments || 0),
-          total_overdue: Number(summaryRes.rows[0]?.total_overdue || 0),
-        },
+        patients: result.rows.map(mapOverduePatientRow),
+        summary: mapOverdueSummaryRow(summaryRes.rows[0]),
       },
     });
   } catch (error) {

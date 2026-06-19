@@ -1,3 +1,8 @@
+// ============================================================================
+// DOCUMENTAÇÃO E DIRETRIZES PARA DESENVOLVEDORES E LLMs:
+// Consulte o guia detalhado em: docs/clinical-tests.md antes de alterar este arquivo.
+// ============================================================================
+
 import React, { useMemo, useState, useEffect, useRef } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { AlertCircle, BookOpenCheck, Plus, ScrollText } from "lucide-react";

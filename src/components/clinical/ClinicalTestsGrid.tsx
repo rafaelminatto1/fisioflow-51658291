@@ -1,3 +1,8 @@
+// ============================================================================
+// DOCUMENTAÇÃO E DIRETRIZES PARA DESENVOLVEDORES E LLMs:
+// Consulte o guia detalhado em: docs/clinical-tests.md antes de alterar este arquivo.
+// ============================================================================
+
 import { ArrowRight, FileText, Image as ImageIcon, Search, Sparkles } from "lucide-react";
 
 import { Button } from "@/components/ui/button";

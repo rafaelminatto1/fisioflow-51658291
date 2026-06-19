@@ -1,3 +1,10 @@
+// ============================================================================
+// DOCUMENTAÇÃO E DIRETRIZES PARA DESENVOLVEDORES E LLMs:
+// Consulte o guia detalhado em: docs/clinical-tests.md antes de alterar este arquivo.
+// Certifique-se de adicionar aliases adequados em aliases_pt caso novos testes
+// venham com variações de nomes do banco de dados (Neon DB).
+// ============================================================================
+
 import type { ClinicalTestTemplateRecord } from "@/types/workers";
 
 const CATALOG_TIMESTAMP = "2026-04-01T00:00:00.000Z";
@@ -457,6 +464,7 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
     sort_order: 40,
     illustration: "shoulder-impingement",
     imageUrl: "/clinical-tests/illustrations/neer-sign.avif",
+    aliases_pt: ["Teste de Neer", "Sinal de Neer"],
     fieldsDefinition: [{ id: "pain_nprs", label: "Dor no Arco (0-10)", type: "nprs" }],
     lr_positive: 1.7,
     lr_negative: 0.3,
@@ -1154,6 +1162,7 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
     sort_order: 90,
     illustration: "nerve-tension",
     imageUrl: "/clinical-tests/illustrations/lasegue-test.avif",
+    aliases_pt: ["Teste de Lasègue", "Lasègue (SLR)"],
     fieldsDefinition: [
       { id: "angle", label: "Ângulo Início (°)", type: "number" },
       { id: "pain_nprs", label: "Dor (0-10)", type: "nprs" },
@@ -1180,7 +1189,7 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
     sort_order: 10,
     illustration: "knee-stability",
     imageUrl: "/clinical-tests/illustrations/anterior-drawer-knee.avif",
-    aliases_pt: ["Teste de Gaveta Anterior (Joelho)"],
+    aliases_pt: ["Teste de Gaveta Anterior (Joelho)", "Teste de Gaveta Anterior"],
     fieldsDefinition: [
       { id: "translation_mm", label: "Translação (mm)", type: "number" },
       {
@@ -1603,7 +1612,7 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
     purpose: "Diferenciar lesão de menisco de lesão ligamentar.",
     execution:
       "1. Paciente em decúbito ventral, joelho fletido a 90°. 2. Examinador aplica compressão axial e roda a tíbia.",
-    positive_sign: "Dor durante a compressão e rotação.",
+    positive_sign: "Dor durante a compressão and rotação.",
     reference: "Apley, A. G. (1947). The diagnosis of meniscus injuries.",
     tags: ["joelho", "menisco", "provocação"],
     evidence_label: "Evidência Clínica",
@@ -1612,6 +1621,7 @@ export const builtinClinicalTestsCatalog: ClinicalTestCatalogRecord[] = [
     sort_order: 22,
     imageUrl: "/clinical-tests/illustrations/apley-compression.avif",
     illustration: "knee-stability",
+    aliases_pt: ["Teste de Compressão de Apley", "Teste de Compressão de Appley", "Compressão de Appley"],
     fieldsDefinition: [
       {
         id: "pain_rotation",

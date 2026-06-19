@@ -19,7 +19,7 @@ interface OverduePatient {
 
 interface OverdueData {
   patients: OverduePatient[];
-  summary: { total_appointments: number; total_overdue: number };
+  summary: { total_patients: number; total_overdue: number };
 }
 
 function useOverduePayments() {
