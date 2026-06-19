@@ -57,7 +57,6 @@ export const PatientRetentionAgent: React.FC<PatientRetentionAgentProps> = ({
   const handleManualUpdate = async () => {
     setIsUpdating(true);
     try {
-      // Trigger manual para o agente reavaliar o paciente
       const res = await apiClient.post<{ data: RetentionState }>(
         `${API_BASE}/api/ai/retention/${patientId}/update`,
         { name: patientName },
