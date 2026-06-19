@@ -10,6 +10,8 @@ import { Hono } from "hono";
 import { createPool } from "../lib/db";
 import { requireAuth, type AuthVariables } from "../lib/auth";
 import type { Env } from "../types/env";
+import { structuredJson } from "../lib/ai/hermes";
+import { SUGGEST_GOALS_SYSTEM, coerceGoals } from "../lib/goals/suggestGoals";
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
@@ -55,6 +57,21 @@ function normalizePriority(value: unknown): string | undefined {
 function cleanupMetadata(metadata: Record<string, unknown>): Record<string, unknown> {
   return Object.fromEntries(Object.entries(metadata).filter(([, value]) => value !== undefined));
 }
+
+// POST /api/goals/suggest { text } → { data: SuggestedGoal[] }
+// Sugere metas SMART a partir de avaliação/evolução em texto livre (IA). Não persiste — o
+// fisioterapeuta revisa e cria via POST /api/goals (humano no loop).
+app.post("/suggest", requireAuth, async (c) => {
+  const body = (await c.req.json().catch(() => ({}))) as { text?: string };
+  const text = String(body.text ?? "").trim();
+  if (text.length < 10) return c.json({ error: "text é obrigatório (mín. 10 caracteres)" }, 400);
+  try {
+    const raw = await structuredJson(c.env, SUGGEST_GOALS_SYSTEM, text.slice(0, 4000));
+    return c.json({ data: coerceGoals(raw) });
+  } catch (e) {
+    return c.json({ error: "Falha ao sugerir metas", details: (e as Error).message }, 500);
+  }
+});
 
 app.get("/", requireAuth, async (c) => {
   const user = c.get("user");
