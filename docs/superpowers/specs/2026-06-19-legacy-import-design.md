@@ -383,7 +383,7 @@ Implementation should include:
 - route test showing partial success when one patient fails and another succeeds
 - route test proving cleanup is scoped to the authenticated organization
 - route test proving duplicate full names are imported as separate patients
-- route test rejecting UUID-shaped `therapistId` values that do not resolve to `profiles.id` in the authenticated organization
+- route test confirming UUID-shaped `therapistId` values that do not resolve to `profiles.id` in the authenticated organization fall back to the authenticated local `profileId` and emit a warning
 - route test for therapist fallback to authenticated `profileId`
 - route test for therapist failure when neither payload nor auth provides a valid UUID
 - route test for missing evolution date fallback
