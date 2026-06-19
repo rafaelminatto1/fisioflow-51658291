@@ -207,9 +207,13 @@ new_classes = ["EvolutionCollaboration"]
 # PatientAgent/ClinicAgent estendem o Agents SDK (requer SQLite), mas foram criados como
 # KV (new_classes v6/v8) → setState falhava (500). Recria como SQLite. Sem perda de dados
 # relevante (o estado nunca persistiu). KV→SQLite in-place não é suportado pela Cloudflare.
+# Delete e recriação precisam de tags separadas (uma classe não pode ser alvo de 2 ops no mesmo tag).
 [[migrations]]
 tag = "v11"
 deleted_classes = ["PatientAgent", "ClinicAgent"]
+
+[[migrations]]
+tag = "v12"
 new_sqlite_classes = ["PatientAgent", "ClinicAgent"]
 
 # ===== AI & BROWSER RENDERING =====
@@ -416,6 +420,9 @@ new_classes = ["EvolutionCollaboration"]
 [[env.production.migrations]]
 tag = "v11"
 deleted_classes = ["PatientAgent", "ClinicAgent"]
+
+[[env.production.migrations]]
+tag = "v12"
 new_sqlite_classes = ["PatientAgent", "ClinicAgent"]
 
 [env.production.ai]
