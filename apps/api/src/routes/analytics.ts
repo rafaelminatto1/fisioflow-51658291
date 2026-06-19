@@ -3,7 +3,7 @@ import { createDb } from "../lib/db";
 import { requireAuth, type AuthVariables } from "../lib/auth";
 import type { Env } from "../types/env";
 import { businessMetrics, patientAdherencePredictions, patients } from "@fisioflow/db";
-import { eq, desc, and } from "drizzle-orm";
+import { eq, desc, and, sql } from "drizzle-orm";
 import { AdherencePredictor } from "../lib/ai/adherencePredictor";
 import { isUuid } from "../lib/validators";
 
@@ -128,6 +128,90 @@ app.get("/wiki-gaps", async (c) => {
   } catch (error) {
     console.error("[wiki-gaps] error:", error);
     return c.json({ data: [], warning: "Falha ao consultar Analytics Engine" });
+  }
+});
+
+/**
+ * GET /dashboard
+ * Dashboard de insights consolidado (usado pela Central de Inteligência).
+ * Path completo: /api/insights/dashboard
+ */
+app.get("/dashboard", async (c) => {
+  const user = c.get("user");
+  const db = createDb(c.env);
+
+  try {
+    const period = c.req.query("period") || "month";
+    let dateFilterSql: ReturnType<typeof sql>;
+    let truncPeriod: "day" | "week" | "month" = "month";
+
+    switch (period) {
+      case "today":
+        dateFilterSql = sql`AND a.date = CURRENT_DATE`;
+        truncPeriod = "day";
+        break;
+      case "week":
+        dateFilterSql = sql`AND a.date >= date_trunc('week', CURRENT_DATE) AND a.date < date_trunc('week', CURRENT_DATE) + interval '1 week'`;
+        truncPeriod = "week";
+        break;
+      case "month":
+      default:
+        dateFilterSql = sql`AND a.date >= date_trunc('month', CURRENT_DATE) AND a.date < date_trunc('month', CURRENT_DATE) + interval '1 month'`;
+        truncPeriod = "month";
+        break;
+    }
+
+    // Agendamentos no período
+    const appointmentsRes = await db.execute(sql`
+      SELECT 
+        COUNT(*)::int as total,
+        COUNT(*) filter (where status IN ('completed', 'realizado'))::int as completed,
+        COUNT(*) filter (where status = 'no_show')::int as no_shows,
+        COUNT(*) filter (where status IN ('confirmed', 'scheduled'))::int as upcoming
+      FROM appointments a
+      WHERE a.organization_id = ${user.organizationId} ${dateFilterSql}
+    `);
+
+    // Receita no período
+    const revenueRes = await db.execute(sql`
+      SELECT 
+        COALESCE(SUM(amount), 0)::float as total_revenue,
+        COUNT(*)::int as total_payments,
+        AVG(amount)::float as avg_ticket
+      FROM payments
+      WHERE organization_id = ${user.organizationId}
+        AND created_at >= date_trunc(${sql.raw(truncPeriod)}, CURRENT_DATE)
+    `);
+
+    // Novos pacientes no período
+    const newPatientsRes = await db.execute(sql`
+      SELECT COUNT(*)::int as count
+      FROM patients
+      WHERE organization_id = ${user.organizationId}
+        AND created_at >= date_trunc(${sql.raw(truncPeriod)}, CURRENT_DATE)
+        AND deleted_at IS NULL
+    `);
+
+    return c.json({
+      data: {
+        period,
+        appointments: {
+          total: Number(appointmentsRes.rows[0]?.total || 0),
+          completed: Number(appointmentsRes.rows[0]?.completed || 0),
+          no_shows: Number(appointmentsRes.rows[0]?.no_shows || 0),
+          upcoming: Number(appointmentsRes.rows[0]?.upcoming || 0),
+        },
+        financial: {
+          total_revenue: Number(revenueRes.rows[0]?.total_revenue || 0),
+          total_payments: Number(revenueRes.rows[0]?.total_payments || 0),
+          avg_ticket: Number(revenueRes.rows[0]?.avg_ticket || 0),
+        },
+        new_patients: Number(newPatientsRes.rows[0]?.count || 0),
+      },
+    });
+  } catch (error) {
+    console.error("[Analytics] Insights Dashboard error:", error);
+    return c.json({ error: "Failed to fetch insights dashboard" }, 500);
   }
 });
 

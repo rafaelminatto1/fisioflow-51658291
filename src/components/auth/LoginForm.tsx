@@ -97,7 +97,8 @@ export function LoginForm({
       email: defaultEmail,
       password: "",
     },
-    mode: "onBlur", // Validate on blur for better UX
+    mode: "onSubmit",
+    reValidateMode: "onSubmit",
   });
 
   // Form submission handler

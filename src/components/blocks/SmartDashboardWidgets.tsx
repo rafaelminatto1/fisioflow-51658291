@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { AlertTriangle, DollarSign, Activity, MessageCircle, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { getWorkersApiUrl } from "@/lib/api/config";
+import { request } from "@/api/v2";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -12,12 +12,9 @@ export function SmartDashboardWidgets() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch(`${getWorkersApiUrl()}/api/ai-insights/widgets`, {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
-      },
-    })
-      .then((res) => res.json())
+    request<{ churnRisk: any[]; financialAlerts: any[]; dailyBriefing: string }>(
+      "/api/ai-insights/widgets",
+    )
       .then((json) => {
         setData(json);
         setLoading(false);

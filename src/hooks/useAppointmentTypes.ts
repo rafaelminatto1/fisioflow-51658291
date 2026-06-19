@@ -39,6 +39,12 @@ function clientToApi(t: Partial<AppointmentType>): Record<string, unknown> {
   };
 }
 
+const LOCAL_ID_PREFIXES = ["custom-", "eval", "return", "rehab", "electro", "myofascial"];
+
+function isLocalId(id: string): boolean {
+  return LOCAL_ID_PREFIXES.some((prefix) => id.startsWith(prefix));
+}
+
 const QUERY_KEY = "schedule-appointment-types";
 
 export function useAppointmentTypes() {
@@ -105,20 +111,22 @@ export function useAppointmentTypes() {
     onSuccess: () => invalidate(),
     onError: (error) => {
       console.error("Erro ao atualizar tipo de atendimento:", error);
-      toast({ title: "Erro ao atualizar tipo de atendimento", variant: "destructive" });
+      const errMsg = error instanceof Error ? error.message : "";
+      if (errMsg.includes("Tipo de atendimento não encontrado") || errMsg.includes("404")) {
+        toast({
+          title: "Tipo não encontrado no servidor",
+          description: "O tipo de atendimento ainda não foi sincronizado. Tente novamente.",
+          variant: "destructive",
+        });
+      } else {
+        toast({ title: "Erro ao atualizar tipo de atendimento", variant: "destructive" });
+      }
     },
   });
 
   const removeType = useMutation({
     mutationFn: async (id: string) => {
-      if (
-        id.startsWith("custom-") ||
-        id.startsWith("eval") ||
-        id.startsWith("return") ||
-        id.startsWith("rehab") ||
-        id.startsWith("electro") ||
-        id.startsWith("myofascial")
-      ) {
+      if (isLocalId(id)) {
         return null;
       }
       await schedulingApi.appointmentTypes.delete(id);
@@ -134,14 +142,7 @@ export function useAppointmentTypes() {
 
   const toggleActive = useMutation({
     mutationFn: async ({ id, isActive }: { id: string; isActive: boolean }) => {
-      if (
-        id.startsWith("custom-") ||
-        id.startsWith("eval") ||
-        id.startsWith("return") ||
-        id.startsWith("rehab") ||
-        id.startsWith("electro") ||
-        id.startsWith("myofascial")
-      ) {
+      if (isLocalId(id)) {
         return null;
       }
       const res = await schedulingApi.appointmentTypes.update(id, { is_active: isActive });

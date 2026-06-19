@@ -13,7 +13,10 @@ args = ["shadcn@latest", "mcp", "-c", "/home/rafael/Documents/fisioflow/fisioflo
 startup_timeout_sec = 30
 
 [mcp_servers.github]
-url = "https://server.smithery.ai/smithery-ai/github/mcp"
+url = "https://server.smithery.ai/github/mcp"
+
+[mcp_servers.consensus]
+enabled = false
 
 [mcp_servers.cloudflare-api]
 enabled = true

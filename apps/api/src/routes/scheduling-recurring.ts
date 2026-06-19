@@ -229,25 +229,50 @@ app.put("/appointment-types/:id", requireAuth, async (c) => {
   const { id } = c.req.param();
   try {
     const body = await c.req.json();
-    const current = await pool.query(
+
+    // Check if record exists to support partial updates
+    const existing = await pool.query(
       "SELECT * FROM appointment_types WHERE id = $1 AND organization_id = $2 LIMIT 1",
       [id, user.organizationId],
     );
-    if (!current.rows[0]) {
-      return c.json({ error: "Tipo de atendimento não encontrado" }, 404);
+
+    if (!existing.rows[0]) {
+      // Record doesn't exist yet — create it (upsert behavior for local/fallback IDs)
+      const n = normalizeAppointmentTypePayload(body);
+      const result = await pool.query(
+        `INSERT INTO appointment_types (id, organization_id, name, duration_minutes, buffer_before_minutes, buffer_after_minutes, color, max_per_day, is_active, is_default, sort_order)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+         RETURNING *`,
+        [
+          id,
+          user.organizationId,
+          n.name,
+          n.durationMinutes,
+          n.bufferBefore,
+          n.bufferAfter,
+          n.color,
+          n.maxPerDay,
+          n.isActive,
+          n.isDefault,
+          n.sortOrder,
+        ],
+      );
+      return c.json({ data: mapAppointmentTypeRow(result.rows[0]) });
     }
 
-    const merged = {
-      name: body.name ?? current.rows[0].name,
-      duration_minutes: body.duration_minutes ?? current.rows[0].duration_minutes,
-      buffer_before_minutes: body.buffer_before_minutes ?? current.rows[0].buffer_before_minutes,
-      buffer_after_minutes: body.buffer_after_minutes ?? current.rows[0].buffer_after_minutes,
-      color: body.color ?? current.rows[0].color,
-      max_per_day: body.max_per_day !== undefined ? body.max_per_day : current.rows[0].max_per_day,
-      is_active: body.is_active !== undefined ? body.is_active : current.rows[0].is_active,
-      is_default: body.is_default !== undefined ? body.is_default : current.rows[0].is_default,
-      sort_order: body.sort_order ?? current.rows[0].sort_order,
-    };
+    // Record exists — merge partial update with existing data
+    const cur = existing.rows[0];
+    const n = normalizeAppointmentTypePayload({
+      name: body.name ?? cur.name,
+      duration_minutes: body.duration_minutes ?? cur.duration_minutes,
+      buffer_before_minutes: body.buffer_before_minutes ?? cur.buffer_before_minutes,
+      buffer_after_minutes: body.buffer_after_minutes ?? cur.buffer_after_minutes,
+      color: body.color ?? cur.color,
+      max_per_day: body.max_per_day !== undefined ? body.max_per_day : cur.max_per_day,
+      is_active: body.is_active !== undefined ? body.is_active : cur.is_active,
+      is_default: body.is_default !== undefined ? body.is_default : cur.is_default,
+      sort_order: body.sort_order ?? cur.sort_order,
+    });
 
     const result = await pool.query(
       `UPDATE appointment_types
@@ -256,19 +281,24 @@ app.put("/appointment-types/:id", requireAuth, async (c) => {
        WHERE id = $10 AND organization_id = $11
        RETURNING *`,
       [
-        merged.name,
-        merged.duration_minutes,
-        merged.buffer_before_minutes,
-        merged.buffer_after_minutes,
-        merged.color,
-        merged.max_per_day,
-        merged.is_active,
-        merged.is_default,
-        merged.sort_order,
+        n.name,
+        n.durationMinutes,
+        n.bufferBefore,
+        n.bufferAfter,
+        n.color,
+        n.maxPerDay,
+        n.isActive,
+        n.isDefault,
+        n.sortOrder,
         id,
         user.organizationId,
       ],
     );
+
+    if (!result.rows[0]) {
+      return c.json({ error: "Tipo de atendimento não encontrado" }, 404);
+    }
+
     return c.json({ data: mapAppointmentTypeRow(result.rows[0]) });
   } catch (error: any) {
     return c.json({ error: error.message }, 500);

@@ -456,4 +456,228 @@ app.get("/clinical-alerts", requireAuth, async (c) => {
   }
 });
 
+/**
+ * GET /api/clinic-metrics/at-risk-patients
+ * Pacientes em risco de abandono (sem sessão há mais de 21 dias e status ativo).
+ */
+app.get("/at-risk-patients", requireAuth, async (c) => {
+  const user = c.get("user");
+  const pool = createPool(c.env);
+
+  try {
+    const result = await pool.query(
+      `WITH last_activity AS (
+        SELECT 
+          patient_id,
+          MAX(date) as last_session_date
+        FROM appointments
+        WHERE organization_id = $1 
+          AND status IN ('confirmed', 'completed', 'realizado')
+        GROUP BY patient_id
+      )
+      SELECT 
+        p.id,
+        p.full_name,
+        p.phone,
+        p.whatsapp,
+        la.last_session_date,
+        CURRENT_DATE - la.last_session_date::date as days_since_last_session,
+        CASE 
+          WHEN CURRENT_DATE - la.last_session_date::date > 45 THEN 0.9
+          WHEN CURRENT_DATE - la.last_session_date::date > 30 THEN 0.7
+          ELSE 0.5
+        END as dropout_risk,
+        CASE 
+          WHEN CURRENT_DATE - la.last_session_date::date > 45 THEN 'Ligar para reengajamento'
+          WHEN CURRENT_DATE - la.last_session_date::date > 30 THEN 'Enviar mensagem de acompanhamento'
+          ELSE 'Monitorar'
+        END as suggested_action
+      FROM patients p
+      JOIN last_activity la ON la.patient_id = p.id
+      WHERE p.organization_id = $1
+        AND p.deleted_at IS NULL
+        AND p.status = 'active'
+        AND la.last_session_date < CURRENT_DATE - INTERVAL '21 days'
+      ORDER BY days_since_last_session DESC`,
+      [user.organizationId],
+    );
+
+    return c.json({ data: result.rows });
+  } catch (error) {
+    console.error("[Metrics] At-Risk Patients error:", error);
+    return c.json({ error: "Failed to fetch at-risk patients" }, 500);
+  }
+});
+
+/**
+ * GET /api/clinic-metrics/revenue-forecast
+ * Previsão de receita para os próximos 30 dias baseada em agendamentos confirmados.
+ */
+app.get("/revenue-forecast", requireAuth, async (c) => {
+  const user = c.get("user");
+  const pool = createPool(c.env);
+
+  try {
+    // Receita confirmada dos próximos 30 dias
+    const confirmedRes = await pool.query(
+      `SELECT 
+        COALESCE(SUM(COALESCE(a.price, COALESCE(s.price, 0))), 0) as confirmed_revenue,
+        COUNT(*) as confirmed_appointments
+      FROM appointments a
+      LEFT JOIN services s ON s.id = a.service_id
+      WHERE a.organization_id = $1
+        AND a.status IN ('confirmed', 'scheduled')
+        AND a.date >= CURRENT_DATE
+        AND a.date <= CURRENT_DATE + INTERVAL '30 days'`,
+      [user.organizationId],
+    );
+
+    // Receita histórica média dos últimos 30 dias para comparação
+    const historicalRes = await pool.query(
+      `SELECT 
+        COALESCE(SUM(COALESCE(a.price, COALESCE(s.price, 0))), 0) as historical_revenue,
+        COUNT(*) as historical_appointments
+      FROM appointments a
+      LEFT JOIN services s ON s.id = a.service_id
+      WHERE a.organization_id = $1
+        AND a.status IN ('completed', 'realizado')
+        AND a.date >= CURRENT_DATE - INTERVAL '30 days'
+        AND a.date < CURRENT_DATE`,
+      [user.organizationId],
+    );
+
+    const confirmedRevenue = Number(confirmedRes.rows[0]?.confirmed_revenue || 0);
+    const historicalRevenue = Number(historicalRes.rows[0]?.historical_revenue || 0);
+
+    return c.json({
+      data: {
+        forecast: {
+          next_30_days: {
+            confirmed_revenue: confirmedRevenue,
+            confirmed_appointments: Number(confirmedRes.rows[0]?.confirmed_appointments || 0),
+          },
+          previous_30_days: {
+            revenue: historicalRevenue,
+            appointments: Number(historicalRes.rows[0]?.historical_appointments || 0),
+          },
+          trend: historicalRevenue > 0 
+            ? ((confirmedRevenue - historicalRevenue) / historicalRevenue * 100).toFixed(1)
+            : "0",
+        },
+      },
+    });
+  } catch (error) {
+    console.error("[Metrics] Revenue Forecast error:", error);
+    return c.json({ error: "Failed to calculate revenue forecast" }, 500);
+  }
+});
+
+/**
+ * GET /api/clinic-metrics/overdue-payments
+ * Pagamentos atrasados (faturas com status pending e vencimento passado).
+ */
+app.get("/overdue-payments", requireAuth, async (c) => {
+  const user = c.get("user");
+  const pool = createPool(c.env);
+
+  try {
+    const result = await pool.query(
+      `SELECT 
+        p.id as patient_id,
+        p.full_name,
+        p.phone,
+        p.whatsapp,
+        COUNT(i.id) as overdue_count,
+        SUM(i.amount) as overdue_total,
+        MIN(i.due_date) as oldest_overdue_date
+      FROM invoices i
+      JOIN patients p ON p.id = i.patient_id
+      WHERE i.organization_id = $1
+        AND i.status = 'pending'
+        AND i.due_date < CURRENT_DATE
+      GROUP BY p.id, p.full_name, p.phone, p.whatsapp
+      ORDER BY overdue_total DESC`,
+      [user.organizationId],
+    );
+
+    const summaryRes = await pool.query(
+      `SELECT 
+        COUNT(*) as total_appointments,
+        SUM(CASE WHEN status = 'pending' AND due_date < CURRENT_DATE THEN 1 ELSE 0 END) as total_overdue
+      FROM invoices
+      WHERE organization_id = $1`,
+      [user.organizationId],
+    );
+
+    return c.json({
+      data: {
+        patients: result.rows,
+        summary: {
+          total_appointments: Number(summaryRes.rows[0]?.total_appointments || 0),
+          total_overdue: Number(summaryRes.rows[0]?.total_overdue || 0),
+        },
+      },
+    });
+  } catch (error) {
+    console.error("[Metrics] Overdue Payments error:", error);
+    return c.json({ error: "Failed to fetch overdue payments" }, 500);
+  }
+});
+
+/**
+ * GET /api/clinic-metrics/packages-expiring
+ * Pacotes de sessões com saldo baixo ou próximos da expiração.
+ */
+app.get("/packages-expiring", requireAuth, async (c) => {
+  const user = c.get("user");
+  const pool = createPool(c.env);
+
+  try {
+    const result = await pool.query(
+      `SELECT 
+        pkg.id,
+        pkg.patient_id,
+        p.full_name as patient_name,
+        p.phone,
+        p.whatsapp,
+        pkg.name as package_name,
+        pkg.remaining_sessions,
+        pkg.total_sessions,
+        pkg.expires_at,
+        CASE 
+          WHEN pkg.expires_at IS NOT NULL 
+          THEN (pkg.expires_at::date - CURRENT_DATE)
+          ELSE NULL
+        END as days_until_expiry,
+        CASE 
+          WHEN pkg.remaining_sessions = 0 THEN 'zero'
+          WHEN pkg.remaining_sessions <= 2 THEN 'low'
+          WHEN pkg.expires_at IS NOT NULL AND pkg.expires_at::date <= CURRENT_DATE + INTERVAL '14 days' THEN 'expiring_soon'
+          ELSE 'ok'
+        END as alert_type
+      FROM patient_packages pkg
+      JOIN patients p ON p.id = pkg.patient_id
+      WHERE pkg.organization_id = $1
+        AND pkg.status = 'active'
+        AND (
+          pkg.remaining_sessions <= 2
+          OR (pkg.expires_at IS NOT NULL AND pkg.expires_at::date <= CURRENT_DATE + INTERVAL '14 days')
+        )
+      ORDER BY 
+        CASE 
+          WHEN pkg.remaining_sessions = 0 THEN 0
+          WHEN pkg.remaining_sessions <= 2 THEN 1
+          ELSE 2
+        END,
+        pkg.expires_at ASC NULLS LAST`,
+      [user.organizationId],
+    );
+
+    return c.json({ data: result.rows });
+  } catch (error) {
+    console.error("[Metrics] Packages Expiring error:", error);
+    return c.json({ error: "Failed to fetch expiring packages" }, 500);
+  }
+});
+
 export { app as clinicMetricsRoutes };
