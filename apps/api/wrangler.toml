@@ -213,6 +213,12 @@ new_classes = ["EvolutionCollaboration"]
 tag = "v11"
 new_sqlite_classes = ["PatientAgentSql", "ClinicAgentSql"]
 
+# Limpeza das classes KV órfãs (sem binding desde v11/#207). Delete em deploy separado da
+# troca de binding (CF code 10061 proíbe deletar uma classe ainda referenciada por binding).
+[[migrations]]
+tag = "v12"
+deleted_classes = ["PatientAgent", "ClinicAgent"]
+
 # ===== AI & BROWSER RENDERING =====
 [ai]
 binding = "AI"
@@ -417,6 +423,10 @@ new_classes = ["EvolutionCollaboration"]
 [[env.production.migrations]]
 tag = "v11"
 new_sqlite_classes = ["PatientAgentSql", "ClinicAgentSql"]
+
+[[env.production.migrations]]
+tag = "v12"
+deleted_classes = ["PatientAgent", "ClinicAgent"]
 
 [env.production.ai]
 binding = "AI"
