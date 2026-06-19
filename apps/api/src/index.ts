@@ -419,11 +419,13 @@ app.onError(errorHandler);
 import { handleScheduled } from "./cron";
 import { handleQueue } from "./queue";
 export { OrganizationState } from "./lib/realtime";
-// Exportadas com sufixo Sql: as classes KV originais (PatientAgent/ClinicAgent) foram
-// substituídas por DOs SQLite (Agents SDK exige SQLite). Ver migrations v11/v12 em wrangler.toml.
-export { PatientAgent as PatientAgentSql } from "./agents/PatientAgent";
+// PatientAgentSql/ClinicAgentSql: DOs SQLite (Agents SDK exige SQLite) que substituem as
+// classes KV originais nos bindings (ver migration v11). As classes KV antigas (PatientAgent/
+// ClinicAgent) continuam exportadas mas SEM binding (órfãs, nunca instanciadas) — não dá para
+// deletá-las no mesmo deploy em que o binding muda (CF code 10061). Limpeza opcional depois.
+export { PatientAgent, PatientAgent as PatientAgentSql } from "./agents/PatientAgent";
 export { AssessmentLiveSession } from "./agents/AssessmentLiveSession";
-export { ClinicAgent as ClinicAgentSql } from "./agents/ClinicAgent";
+export { ClinicAgent, ClinicAgent as ClinicAgentSql } from "./agents/ClinicAgent";
 export { VoiceScribeAgent } from "./agents/VoiceScribeAgent";
 export { EvolutionCollaboration } from "./agents/EvolutionCollaboration";
 
