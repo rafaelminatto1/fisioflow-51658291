@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/dialog";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
-import { Target, Plus, Calendar, CheckCircle2, Clock, Trophy, Loader2 } from "lucide-react";
+import { Target, Plus, Calendar, CheckCircle2, Clock, Trophy, Loader2, Sparkles } from "lucide-react";
 import { format, differenceInDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import {
@@ -24,6 +24,15 @@ import {
   useCompleteGoal,
   type PatientGoal,
 } from "@/hooks/usePatientEvolution";
+import { goalsApi } from "@/api/v2";
+
+type SuggestedGoal = {
+  title: string;
+  category?: string;
+  priority: "baixa" | "media" | "alta" | "critica";
+  targetValue?: string;
+  rationale?: string;
+};
 
 interface GoalsManagerProps {
   patientId: string;
@@ -44,6 +53,50 @@ export const GoalsManager: React.FC<GoalsManagerProps> = ({ patientId }) => {
   const createMutation = useCreateGoal();
   const updateMutation = useUpdateGoal();
   const completeMutation = useCompleteGoal();
+
+  const [aiOpen, setAiOpen] = useState(false);
+  const [aiText, setAiText] = useState("");
+  const [aiBusy, setAiBusy] = useState(false);
+  const [aiError, setAiError] = useState<string | null>(null);
+  const [suggestions, setSuggestions] = useState<SuggestedGoal[]>([]);
+  const [addedTitles, setAddedTitles] = useState<Set<string>>(new Set());
+
+  const runSuggest = async () => {
+    const text = aiText.trim();
+    if (text.length < 10 || aiBusy) return;
+    setAiBusy(true);
+    setAiError(null);
+    setSuggestions([]);
+    try {
+      const res = await goalsApi.suggest(text);
+      const list = res?.data ?? [];
+      if (list.length === 0) setAiError("A IA não encontrou metas no texto.");
+      setSuggestions(list);
+    } catch (e) {
+      setAiError((e as Error).message ?? "Falha ao sugerir metas");
+    } finally {
+      setAiBusy(false);
+    }
+  };
+
+  const addSuggested = async (s: SuggestedGoal) => {
+    await createMutation.mutateAsync({
+      patient_id: patientId,
+      goal_title: s.title,
+      goal_description: s.rationale ?? "",
+      category: s.category,
+      target_value: s.targetValue,
+      priority: s.priority,
+    });
+    setAddedTitles((prev) => new Set(prev).add(s.title));
+  };
+
+  const resetAi = () => {
+    setAiText("");
+    setAiError(null);
+    setSuggestions([]);
+    setAddedTitles(new Set());
+  };
 
   const activeGoals = goals.filter((g) => g.status === "em_andamento");
   const completedGoals = goals.filter((g) => g.status === "concluido");
@@ -149,6 +202,98 @@ export const GoalsManager: React.FC<GoalsManagerProps> = ({ patientId }) => {
             <Target className="h-5 w-5 text-primary" />
             Objetivos e Metas
           </CardTitle>
+          <div className="flex items-center gap-2">
+          <Dialog
+            open={aiOpen}
+            onOpenChange={(o) => {
+              setAiOpen(o);
+              if (!o) resetAi();
+            }}
+          >
+            <DialogTrigger asChild>
+              <Button variant="outline">
+                <Sparkles className="h-4 w-4 mr-2" />
+                Sugerir com IA
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-lg">
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2">
+                  <Sparkles className="h-5 w-5 text-primary" />
+                  Sugerir metas (IA)
+                </DialogTitle>
+                <DialogDescription>
+                  Cole a avaliação ou a evolução do paciente. A IA propõe metas SMART para você revisar e adicionar.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-3">
+                <Textarea
+                  value={aiText}
+                  onChange={(e) => setAiText(e.target.value)}
+                  placeholder="Ex.: Paciente com lombalgia crônica, EVA 7/10, limitação de flexão de tronco, dificuldade para sentar/levantar…"
+                  rows={4}
+                />
+                {aiError && <p className="text-sm text-red-600">{aiError}</p>}
+                <Button onClick={runSuggest} disabled={aiBusy || aiText.trim().length < 10} className="w-full">
+                  {aiBusy ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Gerando sugestões…
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="h-4 w-4 mr-2" />
+                      Gerar sugestões
+                    </>
+                  )}
+                </Button>
+                {suggestions.length > 0 && (
+                  <div className="space-y-2 max-h-72 overflow-y-auto pt-1">
+                    {suggestions.map((s, i) => {
+                      const added = addedTitles.has(s.title);
+                      return (
+                        <div key={i} className="rounded-lg border p-3">
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="flex-1">
+                              <p className="font-medium text-sm">{s.title}</p>
+                              {s.targetValue && (
+                                <p className="text-xs text-muted-foreground mt-0.5">Alvo: {s.targetValue}</p>
+                              )}
+                              {s.rationale && (
+                                <p className="text-xs text-muted-foreground mt-1">{s.rationale}</p>
+                              )}
+                              <div className="flex items-center gap-2 mt-2">
+                                {s.category && (
+                                  <Badge variant="outline" className="text-[10px]">
+                                    {s.category}
+                                  </Badge>
+                                )}
+                                <Badge variant="outline" className="text-[10px] capitalize">
+                                  {s.priority}
+                                </Badge>
+                              </div>
+                            </div>
+                            <Button
+                              size="sm"
+                              variant={added ? "secondary" : "default"}
+                              disabled={added || createMutation.isPending}
+                              onClick={() => addSuggested(s)}
+                            >
+                              {added ? (
+                                <CheckCircle2 className="h-4 w-4" />
+                              ) : (
+                                <Plus className="h-4 w-4" />
+                              )}
+                            </Button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            </DialogContent>
+          </Dialog>
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
               <Button onClick={resetForm}>
@@ -253,6 +398,7 @@ export const GoalsManager: React.FC<GoalsManagerProps> = ({ patientId }) => {
               </div>
             </DialogContent>
           </Dialog>
+          </div>
         </div>
       </CardHeader>
       <CardContent>
