@@ -39,10 +39,11 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Activity, Calendar, Check, ChevronsUpDown, MapPin } from "lucide-react";
+import { Loader2, Activity, Calendar, Check, ChevronsUpDown, MapPin, Sparkles } from "lucide-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { PathologyService } from "@/lib/services/pathologyService";
 import type { Pathology, PathologyFormData } from "@/types/evolution";
+import { evidenceApi, type CidSuggestion } from "@/api/v2/evidence";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
@@ -147,6 +148,8 @@ export const PathologyFormModal: React.FC<PathologyFormModalProps> = ({
   const queryClient = useQueryClient();
   const isEditing = !!pathology;
   const [cidOpen, setCidOpen] = useState(false);
+  const [cidSuggesting, setCidSuggesting] = useState(false);
+  const [cidSuggestions, setCidSuggestions] = useState<CidSuggestion[]>([]);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -294,6 +297,32 @@ export const PathologyFormModal: React.FC<PathologyFormModalProps> = ({
     setCidOpen(false);
   };
 
+  const handleSuggestCid = async () => {
+    const text = (form.getValues("pathology_name") || form.getValues("notes") || "").trim();
+    if (text.length < 3) {
+      toast.info("Digite o nome da patologia ou uma observação para sugerir o CID.");
+      return;
+    }
+    setCidSuggesting(true);
+    setCidSuggestions([]);
+    try {
+      const res = await evidenceApi.suggestCid(text);
+      const list = res?.data ?? [];
+      if (list.length === 0) toast.info("Nenhum CID sugerido para esse texto.");
+      setCidSuggestions(list);
+    } catch (e) {
+      toast.error((e as Error).message ?? "Falha ao sugerir CID");
+    } finally {
+      setCidSuggesting(false);
+    }
+  };
+
+  const applyCidSuggestion = (s: CidSuggestion) => {
+    form.setValue("cid_code", s.code);
+    if (!form.getValues("pathology_name")?.trim()) form.setValue("pathology_name", s.label);
+    setCidSuggestions([]);
+  };
+
   const isPending =
     createMutation.isPending || updateMutation.isPending || deleteMutation.isPending;
 
@@ -314,7 +343,44 @@ export const PathologyFormModal: React.FC<PathologyFormModalProps> = ({
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             {/* CID Autocomplete */}
             <div className="space-y-2">
-              <FormLabel>CID (busca rápida)</FormLabel>
+              <div className="flex items-center justify-between">
+                <FormLabel>CID (busca rápida)</FormLabel>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 text-[11px] font-bold text-primary hover:bg-primary/5"
+                  onClick={handleSuggestCid}
+                  disabled={cidSuggesting}
+                >
+                  {cidSuggesting ? (
+                    <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <Sparkles className="mr-1 h-3.5 w-3.5" />
+                  )}
+                  Sugerir CID (IA)
+                </Button>
+              </div>
+              {cidSuggestions.length > 0 && (
+                <div className="space-y-1 rounded-lg border border-blue-100 bg-blue-50/30 p-2">
+                  {cidSuggestions.map((s) => (
+                    <button
+                      key={s.code}
+                      type="button"
+                      onClick={() => applyCidSuggestion(s)}
+                      className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm hover:bg-white"
+                    >
+                      <span className="font-mono text-xs font-bold text-blue-700">{s.code}</span>
+                      <span className="flex-1 truncate">{s.label}</span>
+                      {typeof s.confidence === "number" && (
+                        <Badge variant="outline" className="text-[10px]">
+                          {Math.round(s.confidence * 100)}%
+                        </Badge>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              )}
               <Popover open={cidOpen} onOpenChange={setCidOpen}>
                 <PopoverTrigger asChild>
                   <Button

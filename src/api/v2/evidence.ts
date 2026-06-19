@@ -23,6 +23,8 @@ export type EvidenceLink = {
 
 export type Cid10Entry = { code: string; label: string; query: string };
 
+export type CidSuggestion = { code: string; label: string; confidence?: number };
+
 export const evidenceApi = {
   search: (q: string, limit = 10) =>
     request<{ count: number; data: EvidenceArticle[]; cached: boolean }>(
@@ -50,4 +52,10 @@ export const evidenceApi = {
     request<{ ok: boolean }>(`/api/evidence/link/${id}`, { method: "DELETE" }),
 
   cid10: (code: string) => request<{ data: Cid10Entry }>(`/api/evidence/cid10/${encodeURIComponent(code)}`),
+
+  suggestCid: (text: string) =>
+    request<{ data: CidSuggestion[] }>("/api/evidence/cid10/suggest", {
+      method: "POST",
+      body: JSON.stringify({ text }),
+    }),
 };
