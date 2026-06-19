@@ -7,7 +7,7 @@
  */
 
 import { useState, useMemo, memo, useEffect } from "react";
-import { Target, Plus, CheckCircle2, Clock, Edit, Trophy, RefreshCw } from "lucide-react";
+import { Target, Plus, CheckCircle2, Clock, Edit, Trophy, RefreshCw, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -15,6 +15,7 @@ import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { usePatientGoals, useCompleteGoal } from "@/hooks/usePatientEvolution";
 import { MetaFormModal } from "./MetaFormModal";
+import { GoalSuggestModal } from "./GoalSuggestModal";
 import type { PatientGoal } from "@/types/evolution";
 import { parseISO, isPast, isToday } from "date-fns";
 import { formatDetailedDuration } from "@/utils/dateUtils";
@@ -45,6 +46,7 @@ export const MetasCard = memo(function MetasCard({
   const completeGoal = useCompleteGoal();
 
   const [modalOpen, setModalOpen] = useState(false);
+  const [suggestOpen, setSuggestOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(defaultCollapsed);
   const [editingGoal, setEditingGoal] = useState<PatientGoal | null>(null);
 
@@ -68,6 +70,11 @@ export const MetasCard = memo(function MetasCard({
     e.stopPropagation();
     setEditingGoal(null);
     setModalOpen(true);
+  };
+
+  const handleSuggest = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setSuggestOpen(true);
   };
 
   const handleEdit = (goal: PatientGoal, e: React.MouseEvent) => {
@@ -133,15 +140,26 @@ export const MetasCard = memo(function MetasCard({
               )}
             </CardTitle>
           </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleAdd}
-            className="h-7 w-7 p-0 hover:bg-primary/5 text-slate-400 hover:text-primary transition-colors"
-            title="Adicionar meta"
-          >
-            <Plus className="h-4 w-4" />
-          </Button>
+          <div className="flex items-center gap-0.5">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleSuggest}
+              className="h-7 w-7 p-0 hover:bg-primary/5 text-slate-400 hover:text-primary transition-colors"
+              title="Sugerir metas com IA"
+            >
+              <Sparkles className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleAdd}
+              className="h-7 w-7 p-0 hover:bg-primary/5 text-slate-400 hover:text-primary transition-colors"
+              title="Adicionar meta"
+            >
+              <Plus className="h-4 w-4" />
+            </Button>
+          </div>
         </CardHeader>
 
         {!isCollapsed && (
@@ -237,6 +255,8 @@ export const MetasCard = memo(function MetasCard({
         patientId={patientId}
         goal={editingGoal}
       />
+
+      <GoalSuggestModal open={suggestOpen} onOpenChange={setSuggestOpen} patientId={patientId} />
     </>
   );
 });
