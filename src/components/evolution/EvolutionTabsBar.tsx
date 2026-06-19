@@ -25,6 +25,7 @@ export const EvolutionTabsBar = memo(
       { id: "evolucao" as EvolutionTab, label: "EVOLUÇÃO", icon: FileText },
       { id: "avaliacao" as EvolutionTab, label: "AVALIAÇÃO" },
       { id: "tratamento" as EvolutionTab, label: "TRATAMENTO" },
+      { id: "escalas" as EvolutionTab, label: "ESCALAS" },
       { id: "historico" as EvolutionTab, label: "HISTÓRICO" },
       { id: "assistente" as EvolutionTab, label: "ASSISTENTE" },
       { id: "midia" as EvolutionTab, label: "MÍDIA" },
